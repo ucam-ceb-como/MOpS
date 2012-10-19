@@ -29,20 +29,20 @@ namespace Camflow{
         double sumVector(std::vector<double>& vec1, std::vector<double>& vec2);
         //double dydx(double nr1, double nr2, double dr);
         //lagrange interpolation
-        doublereal interpolateLG(doublereal at, int size, Array2D &prime,
-                                 const std::vector<doublereal>& val);
+        double interpolateLG(double at, int size, Array2D &prime,
+                                 const std::vector<double>& val);
 
         void binomCoeff(int n, Array2D &bCoeff);
         void prime(int size, Array2D &prime);
-        void TDMA(std::vector<doublereal>& a, std::vector<doublereal>&b,
-                  std::vector<doublereal>&c, std::vector<doublereal>& r,
-                  std::vector<doublereal>& u);
+        void TDMA(std::vector<double>& a, std::vector<double>&b,
+                  std::vector<double>&c, std::vector<double>& r,
+                  std::vector<double>& u);
 
-        doublereal erf(doublereal x);
-        doublereal erfc(doublereal x);
-        doublereal erfccheb(doublereal z);
-        doublereal inverfc(doublereal p);
-        doublereal inverf(doublereal p);
+        double erf(double x);
+        double erfc(double x);
+        double erfccheb(double z);
+        double inverfc(double p);
+        double inverf(double p);
 
         template<class T>
         inline T SQR(const T a){
@@ -51,7 +51,7 @@ namespace Camflow{
 
     private:
         static const int ncof=28;
-        static const doublereal cof[28];
+        static const double cof[28];
 
 
     };

@@ -90,7 +90,7 @@ public:
     static bool IsBeforePoint(const GasPoint &lhs, const GasPoint &rhs);
 
     // Returns true if the current point is before the given time.
-    static bool IsBeforeTime(const GasPoint &lhs, real t);
+    static bool IsBeforeTime(const GasPoint &lhs, double t);
 
     // Returns true if the current point is after the given point
     // in time.
@@ -101,7 +101,7 @@ public:
     static bool IsAfterPoint(const GasPoint &lhs, const GasPoint &rhs);
 
     // Returns true if the current point is after the given time.
-    static bool IsAfterTime(const GasPoint &lhs, real t);
+    static bool IsAfterTime(const GasPoint &lhs, double t);
 
     //Checks that two entries have the same time point
     static bool IsEqualTime(const GasPoint &lhs, const GasPoint &rhs);
@@ -109,7 +109,7 @@ public:
     // DATA.
 
     // Time at which gas conditions are valid.
-    real Time;
+    double Time;
 
     // Gas conditions.
     Sprog::Thermo::IdealGas Gas;
@@ -123,7 +123,7 @@ void SortGasProfile(GasProfile &prof);
 
 // Returns the last GasPoint defined before the given time.  If the time
 // is out-of-range then returns the end() of the vector.
-GasProfile::const_iterator LocateGasPoint(const GasProfile &prof, real t);
+GasProfile::const_iterator LocateGasPoint(const GasProfile &prof, double t);
 };
 
 #endif

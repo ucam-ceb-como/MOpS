@@ -228,7 +228,7 @@ public:
     // SCALING AND PARTICLE DOUBLING.
 
     //! Returns the scaling factor due to particle operations.
-    real Scaling() const;
+    double Scaling() const;
 
     //! Resets the scaling parameters.
     void ResetScaling();
@@ -247,7 +247,7 @@ public:
 
     // Returns the sum of one particle property with the given index
     // from the binary tree.
-    real GetSum(
+    double GetSum(
         Sweep::PropID id // ID of the ParticleData property.
         ) const;
 
@@ -255,7 +255,7 @@ public:
     void Update(unsigned int i);
 
     //! Get alpha for the ensemble (ABF model)
-    real Alpha(real T) const;
+    double Alpha(double T) const;
 
     // READ/WRITE/COPY.
 
@@ -291,7 +291,7 @@ private:
     unsigned int m_numofInceptedPAH;  // Number of starting PAH in the ensemble
 
     // ENSEMBLE SCALING VARIABLES.
-    real m_contfactor;       // Contraction scaling factor, precalculated for speed.
+    double m_contfactor;       // Contraction scaling factor, precalculated for speed.
     unsigned int m_ncont;    // Number of ensemble contractions that have occurred.
     bool m_contwarn;         // Has a contraction warning msg been printed?
 
@@ -329,14 +329,14 @@ private:
     void ClearMain();
 
     //! Functor to extract weights from nodes of the new binary tree
-    class WeightExtractor : public std::unary_function<const particle_cache_type&, real>
+    class WeightExtractor : public std::unary_function<const particle_cache_type&, double>
     {
     public:
         //! Set up an extractor for an indexed property
         WeightExtractor(const Sweep::PropID id);
 
         //! Extract a weight from a cache
-        real operator()(const particle_cache_type& cache) const;
+        double operator()(const particle_cache_type& cache) const;
 
     private:
         //! Id of property to extract

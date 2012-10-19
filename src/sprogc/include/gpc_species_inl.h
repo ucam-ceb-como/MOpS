@@ -58,11 +58,11 @@ inline const ElCompVector &Species::Composition() const {return m_elcomp;};
 inline unsigned int Species::ComponentCount(void) const {return m_elcomp.size();};
 
 // SPECIES MOLECULAR WEIGHT.
-inline real Species::MolWt() const {return m_molwt;};
+inline double Species::MolWt() const {return m_molwt;};
 
 // THERMODYNAMIC FITTING PARAMETERS.
 inline unsigned int Species::ThermoRangeCount(void) const {return m_thermoparams.size();};
-inline void Species::SetThermoStartTemperature(const real T) {m_T1 = T;};
+inline void Species::SetThermoStartTemperature(const double T) {m_T1 = T;};
 
 // PARENT MECHANISM.
 inline const Sprog::Mechanism *const Species::Mechanism(void) const {return m_mech;};

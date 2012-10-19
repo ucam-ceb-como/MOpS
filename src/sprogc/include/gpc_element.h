@@ -68,7 +68,7 @@ public:
     Element(const Element &e); // Copy constructor.
     Element(                   // Initialising constructor.
         const std::string &name,  // - Element name.
-        const real molwt          // - Molecular weight.
+        const double molwt          // - Molecular weight.
         );
     Element(std::istream &in);
 
@@ -95,10 +95,10 @@ public:
     // MOLECULAR WEIGHT.
 
     // Returns molecular weight of the element.
-    real MolWt() const;
+    double MolWt() const;
 
     // Sets the molecular weight of the element.
-    void SetMolWt(const real molwt);
+    void SetMolWt(const double molwt);
 
     // Searches for the element in the library of known elements.
     bool SetMolWtFromLibrary();
@@ -143,7 +143,7 @@ public:
 private:
     // Element data.
     std::string m_name;       // Element name/symbol.
-    real m_molwt;             // Molecular weight (kg/mol).
+    double m_molwt;             // Molecular weight (kg/mol).
     Sprog::Mechanism *m_mech; // Parent mechanism.
 
     // Library of known elements.

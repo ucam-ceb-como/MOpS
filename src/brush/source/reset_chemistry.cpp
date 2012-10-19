@@ -195,9 +195,9 @@ const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
  *  - The x column heading is replaced by Z
  *  - wdotA4 The formation rate of pyrene (\f$\mathrm{mol\,m^{-3}\,s^{-1}}\f$)
  *  - D_z The mixture fraction diffusion coefficient  (\f$\mathrm{m^2\,s^{-1}}\f$)
- *  - GradZ Gradient in real space of the mixture fraction (\f$\mathrm{m^{-1}}\f$)
- *  - LaplZ Laplacian in real space of the mixture fraction (\f$\mathrm{m^{-2}}\f$)
- *  - GradT Gradient in real space of the temperature (\f$\mathrm{K\,m^{-1}}\f$)
+ *  - GradZ Gradient in double space of the mixture fraction (\f$\mathrm{m^{-1}}\f$)
+ *  - LaplZ Laplacian in double space of the mixture fraction (\f$\mathrm{m^{-2}}\f$)
+ *  - GradT Gradient in double space of the temperature (\f$\mathrm{K\,m^{-1}}\f$)
  *
  * Mandatory columns in the file are (Premix format \ref InputFileType)
  * - x Spatial position to which the row of data applies (\f$\mathrm{cm}\f$)
@@ -205,7 +205,7 @@ const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
  * - rho Mass density of the gas mixture (\f$\mathrm{g\,cm^{-3}}\f$)
  * - u Velocity of gas mixture (\f$\mathrm{cm\,s^{-1}}\f$)
  * - wdotA4 The formation rate of pyrene (\f$\mathrm{mol\,cm^{-3}\,s^{-1}}\f$)
- * - GradT Gradient in real space of the temperature (\f$\mathrm{K\,cm^{-1}}\f$)
+ * - GradT Gradient in double space of the temperature (\f$\mathrm{K\,cm^{-1}}\f$)
  * - A column of mole fraction data must be provided for each species in the
  *   mechanism and the column headings for these species must be identical to the
  *   strings specified as species names when the mechanism was constructed.
@@ -385,7 +385,7 @@ Brush::ResetChemistry::ResetChemistry(const std::string &fname, const InputFileT
 //                std::cerr << speciesNames[i] << ' ';
 //                std::cerr << lineEntries[speciesFileIndices[i]].length() << std::endl;
                 std::string fracText = lineEntries[speciesFileIndices[i]];
-                real frac = atof(fracText.c_str());
+                double frac = atof(fracText.c_str());
 
                 if(verbosity > 1) {
                     std::cout << speciesNames[i] << ' ' << frac << ' ';
@@ -610,7 +610,7 @@ ResetChemistry::ResetChemistry(const fvector &x, const fvector &Temp,
  *
  * This will crash horribly if there is no data.
  */
-real Brush::ResetChemistry::startLocation() const {
+double Brush::ResetChemistry::startLocation() const {
     return mInputChemistryData.front().front();
 }
 
@@ -619,7 +619,7 @@ real Brush::ResetChemistry::startLocation() const {
  *
  * This will crash horribly if there is no data.
  */
-real Brush::ResetChemistry::endLocation() const {
+double Brush::ResetChemistry::endLocation() const {
     return mInputChemistryData.back().front();
 }
 
@@ -637,7 +637,7 @@ real Brush::ResetChemistry::endLocation() const {
  *\param[in]        x       Position to which to interpolate the data
  *\param[in,out]    reac    Reactor whose chemistry will be replaced
  */
-void Brush::ResetChemistry::apply(const real x, Sweep::Cell &reac) const {
+void Brush::ResetChemistry::apply(const double x, Sweep::Cell &reac) const {
     data_point dataToUse(interpolateData(x));
 
     // Build a chemical mixture object
@@ -740,17 +740,17 @@ void Brush::ResetChemistry::apply(const real x, Sweep::Cell &reac) const {
  *
  *\return       Interpolated data
  */
- ResetChemistry::data_point Brush::ResetChemistry::interpolate(const real x,
+ ResetChemistry::data_point Brush::ResetChemistry::interpolate(const double x,
                                                const data_point &leftData,
                                                const data_point &rightData) const {
      // Calculate the distance between the two data points
-     const real leftPos = leftData.front();
-     const real rightPos = rightData.front();
-     const real distance = rightPos - leftPos;
+     const double leftPos = leftData.front();
+     const double rightPos = rightData.front();
+     const double distance = rightPos - leftPos;
 
      // And the weights to use in the interpolation
-     real leftWeight  = (rightPos - x) / distance;
-     real rightWeight = (x - leftPos)  / distance;
+     double leftWeight  = (rightPos - x) / distance;
+     double rightWeight = (x - leftPos)  / distance;
 
      // Now interpolate term by term
      data_point result(leftData.size());
@@ -761,7 +761,7 @@ void Brush::ResetChemistry::apply(const real x, Sweep::Cell &reac) const {
      return result;
  }
 
-Brush::ResetChemistry::data_point Brush::ResetChemistry::interpolateData(const real x) const {
+Brush::ResetChemistry::data_point Brush::ResetChemistry::interpolateData(const double x) const {
     // Create an empty entry to use in the seach
     data_point dummyDataPoint(mInputChemistryData.front().size(), 0);
 

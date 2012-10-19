@@ -96,7 +96,7 @@ void readInceptedComposition(const CamXML::Element &xml, Sweep::Processes::Incep
 		if (id >= 0) {
 			// Get component change.
 			str = (*j)->GetAttributeValue("dx");
-			Sweep::real dx = cdble(str);
+			double dx = cdble(str);
 			// Set component change.
 			icn.SetParticleComp(id, dx);
 		} else {
@@ -125,7 +125,7 @@ void readInceptedTrackers(const CamXML::Element &xml, Sweep::Processes::Inceptio
 		if (id >= 0) {
 			// Get tracker change.
 			str = (*j)->GetAttributeValue("dx");
-			Sweep::real dx = cdble(str);
+			double dx = cdble(str);
 			// Set tracker change.
 			icn.SetParticleTracker(id, dx);
 		} else {
@@ -181,7 +181,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 
             if(str == "StokesCunningham") {
                 // Parameters of the drag expression
-                real A, B, E;
+                double A, B, E;
 
                 CamXML::Element* numberXML = (*i)->GetFirstChild("A");
                 if(numberXML != NULL) {
@@ -219,7 +219,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 
                 // Get constant of proportionality between drag and temperature
                 CamXML::Element* numberXML = (*i)->GetFirstChild("A");
-                real coeff;
+                double coeff;
                 if(numberXML != NULL) {
                     coeff = atof(numberXML->Data().c_str());
                 }
@@ -782,7 +782,7 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 
 
     // Rate scaling now that a process has been created
-    real A = 0.0;
+    double A = 0.0;
     const CamXML::Element *el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
@@ -871,7 +871,7 @@ void MechParser::readSiliconInception(CamXML::Element &xml, Processes::SiliconIn
 
 
     // Rate scaling now that a process has been created
-    real A = 0.0;
+    double A = 0.0;
     CamXML::Element *el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
@@ -1011,7 +1011,7 @@ void MechParser::readConstantInception(CamXML::Element &xml, Processes::Constant
     // Read the fixed rate (particles per cm^3 per s)
     CamXML::Element *el = xml.GetFirstChild("rate");
     if (el != NULL) {
-    	real rate = std::atof(el->Data().c_str());
+    	double rate = std::atof(el->Data().c_str());
     	// But store with units of particles per m^3 per s
     	icn.setConstantVolumetricInceptionRate(rate * 1.0e6);
     }
@@ -1020,7 +1020,7 @@ void MechParser::readConstantInception(CamXML::Element &xml, Processes::Constant
     }
 
     // Rate scaling now that a process has been created
-    real A = 0.0;
+    double A = 0.0;
     el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
@@ -1031,7 +1031,7 @@ void MechParser::readConstantInception(CamXML::Element &xml, Processes::Constant
     el = xml.GetFirstChild("fixedposition");
     if (el != NULL) {
         // Read position in cm (for consistency with rest of input file ...
-        real posn = std::atof(el->Data().c_str());
+        double posn = std::atof(el->Data().c_str());
         // ..., but store position in m
         icn.setFixedPosition(posn/100);
         icn.useFixedPosition(true);
@@ -1347,7 +1347,7 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
     assert((cond.CompChange().size() > 0) || (cond.TrackChange().size() > 0));
 
     // Read Arrhenius rate parameters.
-    real A = 0.0;
+    double A = 0.0;
     CamXML::Element *el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
@@ -1659,7 +1659,7 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                 }
 
                 // Rate scaling now that a process has been created
-                real A = 0.0;
+                double A = 0.0;
                 CamXML::Element *el = (*it)->GetFirstChild("A");
                 if (el != NULL) {
                     A = cdble(el->Data());
@@ -1793,7 +1793,7 @@ void MechParser::readReactantMDs(CamXML::Element &xml,
     for (i=items.begin(); i!=items.end(); ++i) {
         // Get species mass
         string str = (*i)->GetAttributeValue("m");
-        real m = cdble(str);
+        double m = cdble(str);
         if (m > 0.0) {
             mass.push_back(m*1.0e-3); // Convert from g to kg.
         } else {
@@ -1804,7 +1804,7 @@ void MechParser::readReactantMDs(CamXML::Element &xml,
 
         // Get species diameter
         str = (*i)->GetAttributeValue("d");
-        real d = cdble(str);
+        double d = cdble(str);
         if (d > 0.0) {
             diam.push_back(d*1.0e-2); // Convert from cm to m.
         } else {
@@ -1832,7 +1832,7 @@ void MechParser::readCompChanges(CamXML::Element &xml, ParticleProcess &proc)
         if (id >= 0) {
             // Get component change.
             str = (*i)->GetAttributeValue("dx");
-            real dx = cdble(str);
+            double dx = cdble(str);
             // Set component change.
             proc.SetCompChange(id, dx);
         } else {
@@ -1859,7 +1859,7 @@ void MechParser::readTrackChanges(CamXML::Element &xml, ParticleProcess &proc)
         if (id >= 0) {
             // Get component change.
             str = (*i)->GetAttributeValue("dx");
-            real dx = cdble(str);
+            double dx = cdble(str);
             // Set component change.
             proc.SetTrackChange(id, dx);
         } else {

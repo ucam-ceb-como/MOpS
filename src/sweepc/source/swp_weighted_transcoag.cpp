@@ -114,7 +114,7 @@ Sweep::Processes::WeightedTransitionCoagulation::WeightedTransitionCoagulation(s
  *
  * \return      Sum of all rate terms for this process
  */
-Sweep::real Sweep::Processes::WeightedTransitionCoagulation::Rate(real t, const Cell &sys,
+double Sweep::Processes::WeightedTransitionCoagulation::Rate(double t, const Cell &sys,
                                                                   const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
@@ -123,14 +123,14 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::Rate(real t, const 
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
-        real T = sys.GasPhase().Temperature();
-        real P = sys.GasPhase().Pressure();
+        double T = sys.GasPhase().Temperature();
+        double P = sys.GasPhase().Pressure();
 
         // Create a vector so we can call through to RateTerms
         Sweep::fvector vec(TYPE_COUNT);
         fvector::iterator it = vec.begin();
 
-        return RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/sys.GasPhase().Viscosity(),
+        return RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T/sys.GasPhase().Viscosity(),
                 MeanFreePathAir(T,P), sys.SampleVolume(), it);
     } else {
         // Not enough particles so return 0
@@ -159,7 +159,7 @@ unsigned int Sweep::Processes::WeightedTransitionCoagulation::TermCount() const 
  *
  * \return      Sum of all rate terms for this process
  */
-Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(real t, const Cell &sys,
+double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(double t, const Cell &sys,
                                                                        const Geometry::LocalGeometry1d &local_geom,
                                                                        fvector::iterator &iterm) const
 {
@@ -169,10 +169,10 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(real t, c
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
-        real T = sys.GasPhase().Temperature();
-        real P = sys.GasPhase().Pressure();
+        double T = sys.GasPhase().Temperature();
+        double P = sys.GasPhase().Pressure();
 
-        real r = RateTerms(sys.Particles().GetSums(), (real)n, sqrt(T), T/sys.GasPhase().Viscosity(),
+        double r = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T/sys.GasPhase().Viscosity(),
                 MeanFreePathAir(T,P), sys.SampleVolume(), iterm);
         return r;
 
@@ -206,33 +206,33 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(real t, c
  *
  * \return      Sum of all rate terms for this process
  */
-Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
-		const Ensemble::particle_cache_type &data, real n, real sqrtT,
-        real T_mu, real MFP, real vol,
+double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
+		const Ensemble::particle_cache_type &data, double n, double sqrtT,
+        double T_mu, double MFP, double vol,
         fvector::iterator &iterm) const
 {
     // Some prerequisites.
-    real n_1 = n - 1.0;
-    real a   = CSF * T_mu * A();
-    real b   = a * MFP * 1.257 * 2.0;
-    real c   = CFMMAJ * m_efm * CFM * sqrtT * A();
+    double n_1 = n - 1.0;
+    double a   = CSF * T_mu * A();
+    double b   = a * MFP * 1.257 * 2.0;
+    double c   = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    const real d        = data.Property(Sweep::iDcol);
-    const real d2       = data.Property(Sweep::iD2);
-    const real d_1      = data.Property(Sweep::iD_1);
-    const real d_2      = data.Property(Sweep::iD_2);
-    const real m_1_2    = data.Property(Sweep::iM_1_2);
-    const real d2m_1_2  = data.Property(Sweep::iD2_M_1_2);
+    const double d        = data.Property(Sweep::iDcol);
+    const double d2       = data.Property(Sweep::iD2);
+    const double d_1      = data.Property(Sweep::iD_1);
+    const double d_2      = data.Property(Sweep::iD_2);
+    const double m_1_2    = data.Property(Sweep::iM_1_2);
+    const double d2m_1_2  = data.Property(Sweep::iD2_M_1_2);
 
     // Weighted particle specific properties
-    const real w        = data.Property(Sweep::iW);
-    const real dw       = data.Property(Sweep::iDW);
-    const real d2w	    = data.Property(Sweep::iD2W);
-    const real d_1w     = data.Property(Sweep::iD_1W);
-    const real d_2w     = data.Property(Sweep::iD_2W);
-    const real m_1_2w   = data.Property(Sweep::iM_1_2W);
-    const real d2m_1_2w = data.Property(Sweep::iD2_M_1_2W);
+    const double w        = data.Property(Sweep::iW);
+    const double dw       = data.Property(Sweep::iDW);
+    const double d2w	    = data.Property(Sweep::iD2W);
+    const double d_1w     = data.Property(Sweep::iD_1W);
+    const double d_2w     = data.Property(Sweep::iD_2W);
+    const double m_1_2w   = data.Property(Sweep::iM_1_2W);
+    const double d2m_1_2w = data.Property(Sweep::iD2_M_1_2W);
 
     fvector::iterator ifm = iterm;
     fvector::iterator isf = iterm+4;
@@ -258,8 +258,8 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
     ++iterm;
 
     // Sum up total coagulation rates for different regimes.
-    real fm = *(ifm) + *(ifm+1) + *(ifm+2) + *(ifm+3);
-    real sf = *(isf) + *(isf+1) + *(isf+2) + *(isf+3) + *(isf+4) + *(isf+5) + *(isf+6);
+    double fm = *(ifm) + *(ifm+1) + *(ifm+2) + *(ifm+3);
+    double sf = *(isf) + *(isf+1) + *(isf+2) + *(isf+3) + *(isf+4) + *(isf+5) + *(isf+6);
     //cout << "fm =" << fm << "sf = " << sf << endl;
     if ((sf>0.0) || (fm>0.0)) {
         // There is some coagulation.
@@ -296,7 +296,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
  * \exception   logic_error     Unrecognised rate term index (ie iterm value)
  */
 int Sweep::Processes::WeightedTransitionCoagulation::Perform(
-        Sweep::real t, Sweep::Cell &sys,
+        double t, Sweep::Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
         rng_type &rng) const
@@ -392,14 +392,14 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
  *
  *\return       Value of kernel
  */
-Sweep::real Sweep::Processes::WeightedTransitionCoagulation::CoagKernel(const Particle &sp1,
+double Sweep::Processes::WeightedTransitionCoagulation::CoagKernel(const Particle &sp1,
                                                                 const Particle &sp2,
                                                                 const Cell &sys) const
 {
-    const real T = sys.GasPhase().Temperature();
-    const real P = sys.GasPhase().Pressure();
-    const real fm = FreeMolKernel(sp1, sp2, T, P, false);
-    const real sf = SlipFlowKernel(sp1, sp2, T, P, sys.GasPhase().Viscosity(), false);
+    const double T = sys.GasPhase().Temperature();
+    const double P = sys.GasPhase().Pressure();
+    const double fm = FreeMolKernel(sp1, sp2, T, P, false);
+    const double sf = SlipFlowKernel(sp1, sp2, T, P, sys.GasPhase().Viscosity(), false);
     return (fm*sf)/(fm+sf);
 }
 
@@ -413,7 +413,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::CoagKernel(const Pa
  *
  *\return       Value of kernel
  */
-Sweep::real Sweep::Processes::WeightedTransitionCoagulation::MajorantKernel(const Particle &sp1,
+double Sweep::Processes::WeightedTransitionCoagulation::MajorantKernel(const Particle &sp1,
                                                                     const Particle &sp2,
                                                                     const Cell &sys,
                                                                     const MajorantType maj) const
@@ -452,18 +452,18 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::MajorantKernel(cons
  *
  *\return       Value of kernel
  */
-Sweep::real Sweep::Processes::WeightedTransitionCoagulation::FreeMolKernel(const Particle &sp1, const Particle &sp2,
-                                real T, real P, bool maj) const
+double Sweep::Processes::WeightedTransitionCoagulation::FreeMolKernel(const Particle &sp1, const Particle &sp2,
+                                double T, double P, bool maj) const
 {
     // This routine calculate the free molecular coagulation kernel for two particles.
     // There are two forms of kernel; a majorant form and a non-majorant form.
 
     // Collect the particle properties
-    const real d1 = sp1.CollDiameter();
-    const real d2 = sp2.CollDiameter();
-    const real invm1 = 1.0 / sp1.Mass();
-    const real invm2 = 1.0 / sp2.Mass();
-    const real w2 = sp2.getStatisticalWeight();
+    const double d1 = sp1.CollDiameter();
+    const double d2 = sp2.CollDiameter();
+    const double invm1 = 1.0 / sp1.Mass();
+    const double invm2 = 1.0 / sp2.Mass();
+    const double w2 = sp2.getStatisticalWeight();
 
     if (maj) {
         // The majorant form is always >= the non-majorant form.
@@ -471,7 +471,7 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::FreeMolKernel(const
                (std::sqrt(invm1) + std::sqrt(invm2)) *
                (d1 * d1 + d2 * d2);
     } else {
-        const real dterm = d1 + d2;
+        const double dterm = d1 + d2;
         return m_efm * CFM * A() * w2 *
                sqrt(T * (invm1 + invm2)) *
                dterm * dterm;
@@ -492,13 +492,13 @@ Sweep::real Sweep::Processes::WeightedTransitionCoagulation::FreeMolKernel(const
  *
  *\return       Value of kernel
  */
-Sweep::real Sweep::Processes::WeightedTransitionCoagulation::SlipFlowKernel(const Particle &sp1, const Particle &sp2,
-                                 real T, real P, real mu, bool maj) const
+double Sweep::Processes::WeightedTransitionCoagulation::SlipFlowKernel(const Particle &sp1, const Particle &sp2,
+                                 double T, double P, double mu, bool maj) const
 {
     // Collect the particle properties
-    const real d1 = sp1.CollDiameter();
-    const real d2 = sp2.CollDiameter();
-    const real w2 = sp2.getStatisticalWeight();
+    const double d1 = sp1.CollDiameter();
+    const double d2 = sp2.CollDiameter();
+    const double w2 = sp2.getStatisticalWeight();
 
     // For the slip-flow kernel the majorant and non-majorant forms are identical.
     return ((1.257 * 2.0 * MeanFreePathAir(T,P) *

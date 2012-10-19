@@ -862,7 +862,7 @@ void Mechanism::BuildStoichXRef()
     unsigned int i, j;
     int k;
     RxnStoichMap::iterator ij;
-    real mu;
+    double mu;
 
     // Clear current table.
     m_stoich_xref.clear();

@@ -46,7 +46,7 @@ void FlameLet::checkSetup()
 
     if (stoichZ <= 0.0)
         throw std::invalid_argument("The stoichiometric mixture fraction is not"
-                                    " a positive real!");
+                                    " a positive double!");
 
 }
 
@@ -54,7 +54,7 @@ void FlameLet::checkSetup()
 *this is called by the model object. The boolean interface decides
 *if the call originates from the interface or from camflow kernel
 */
-void FlameLet::setRestartTime(doublereal t){
+void FlameLet::setRestartTime(double t){
     restartTime = t;
 }
 
@@ -140,8 +140,8 @@ void FlameLet::solve
 void FlameLet::solve
 (
     vector<Thermo::Mixture>& cstrs,
-    const vector<vector<doublereal> >& iniSource,
-    const vector<vector<doublereal> >& fnlSource,
+    const vector<vector<double> >& iniSource,
+    const vector<vector<double> >& fnlSource,
     Mechanism& mech,
     CamControl& cc,
     CamAdmin& ca,
@@ -186,7 +186,7 @@ void FlameLet::solve
     *  Interior mesh points
     */
     for(int i=iMesh_s; i<iMesh_e;i++){
-        vector<doublereal> massFrac;
+        vector<double> massFrac;
         cstrs[i-1].GetMassFractions(massFrac);
         for(int l=0; l<nSpc; l++){
             solvect[i*nVar+l] = massFrac[l];
@@ -241,7 +241,7 @@ void FlameLet::initSolutionVector()
     *initialize the ODE vector
     */
     solvect.resize(nEqn,0.0);
-    vector<doublereal> vSpec, vT, vMom_rho;		// ank25: Solve Mr/rho and not Mr in soot flamelet
+    vector<double> vSpec, vT, vMom_rho;		// ank25: Solve Mr/rho and not Mr in soot flamelet
     /*
     * actual signature follows (left,right,cc,vSpec)
     * but in the case of flamelets the species mass fractions
@@ -257,14 +257,14 @@ void FlameLet::initSolutionVector()
     *a linear profile
     */
     //initTempGauss(vT);
-    doublereal inrsctOx, inrsctFl;
-    doublereal slopeOx, slopeFl;
+    double inrsctOx, inrsctFl;
+    double slopeOx, slopeFl;
     inrsctOx = oxid.T;
 
     slopeOx = (2000.0-oxid.T)/stoichZ;
     slopeFl = (2000.0-fuel.T)/(stoichZ-1.0);
     inrsctFl = fuel.T - slopeFl;
-    vector<doublereal> position = reacGeom_.getAxpos();
+    vector<double> position = reacGeom_.getAxpos();
     int len = position.size();
     vT.resize(len,0.0);
     for (size_t i=0; i<dz.size();i++)
@@ -330,7 +330,7 @@ void FlameLet::initSolutionVector()
             for (size_t l=1; l<nMoments; ++l)
             {
                 // ank25: Do we need to multiply by 1e6 here?
-                //vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(doublereal(sootMom_.getAtomsPerDiamer()));
+                //vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(double(sootMom_.getAtomsPerDiamer()));
                 vMom_rho[i*nMoments+l] = vMom_rho[i*nMoments+l-1] * 1e3;
                 //cout << "vMom[i*nMoments+l]  " << i*nMoments+l <<"  " << vMom[i*nMoments+l] << endl;
             }
@@ -440,7 +440,7 @@ void FlameLet::csolve
         // Calculate the mixture viscosity.
         for (int i=0; i<mCord; ++i)
         {
-            std::vector<doublereal> mf;
+            std::vector<double> mf;
             for(int l=0; l<nSpc; l++)
             {
                 mf.push_back(solvect[i*nVar+l]);
@@ -473,8 +473,8 @@ void FlameLet::csolve
 
         eqn_slvd = EQN_ALL;
 
-        std::vector<doublereal> relTolVector;
-        std::vector<doublereal> absTolVector;
+        std::vector<double> relTolVector;
+        std::vector<double> absTolVector;
 
         relTolVector.push_back(control_.getSpeciesRelTol());
         absTolVector.push_back(control_.getSpeciesAbsTol());
@@ -510,14 +510,14 @@ void FlameLet::csolve
 /*
 *mass matrix evaluation
 */
-void FlameLet::massMatrix(doublereal** M)
+void FlameLet::massMatrix(double** M)
 {}
 
 /*
 *restart the solution. This is normally called from the interface routine
 *The solver is reinitialized each time with the previous solution.
 */
-void FlameLet::restart(doublereal flameTime)
+void FlameLet::restart(double flameTime)
 {
     // Assumption is that a restart is always a Lagrangian flamelet (i.e. not steady state)
     //steadyStateAtFlameBase = false;
@@ -552,7 +552,7 @@ void FlameLet::restart(doublereal flameTime)
         // Calculate the mixture viscosity.
         for (int i=0; i<mCord; ++i)
         {
-            std::vector<doublereal> mf;
+            std::vector<double> mf;
             for(int l=0; l<nSpc; l++)
             {
                 mf.push_back(solvect[i*nVar+l]);
@@ -594,7 +594,7 @@ void FlameLet::ssolve
 {
 
     int seg_eqn, band;
-    vector<doublereal> seg_soln_vec;
+    vector<double> seg_soln_vec;
 
     if ( solverID == control_.CVODE){
 
@@ -653,7 +653,7 @@ void FlameLet::ssolve
     // Calculate the mixture viscosity.
     for (int i=0; i<mCord; ++i)
     {
-        std::vector<doublereal> mf;
+        std::vector<double> mf;
         for(int l=0; l<nSpc; l++)
         {
             mf.push_back(solvect[i*nVar+l]);
@@ -691,10 +691,10 @@ void FlameLet::splitSolve
 {
 
     int seg_eqn, band;
-    vector<doublereal> seg_soln_vec;
+    vector<double> seg_soln_vec;
 
     // Get the time to which we are integrating.
-    doublereal nextTime = control_.getMaxTime();
+    double nextTime = control_.getMaxTime();
 
     // Break this time step into Nsteps small steps
     // todo: Get NSteps via function call and ultimately from xml file or similar
@@ -706,8 +706,8 @@ void FlameLet::splitSolve
     // NOT TRUE:  Flamelet restart has a restart time.  Fix this !!
 
     int Nsteps = 100;
-    doublereal deltaTime = nextTime / (doublereal)Nsteps;
-    doublereal intermediateTime = 0.0 ;
+    double deltaTime = nextTime / (double)Nsteps;
+    double intermediateTime = 0.0 ;
 
     if ( solverID == control_.CVODE){
 
@@ -796,7 +796,7 @@ void FlameLet::splitSolve
     // Calculate the mixture viscosity.
     for (int i=0; i<mCord; ++i)
     {
-        std::vector<doublereal> mf;
+        std::vector<double> mf;
         for(int l=0; l<nSpc; l++)
         {
             mf.push_back(solvect[i*nVar+l]);
@@ -829,9 +829,9 @@ void FlameLet::splitSolve
 */
 void FlameLet::residual
 (
-    const doublereal& t,
-    doublereal* y,
-    doublereal* f
+    const double& t,
+    double* y,
+    double* f
 )
 {
 
@@ -930,11 +930,11 @@ void FlameLet::residual
 
 }
 
-doublereal FlameLet::getResidual()
+double FlameLet::getResidual()
 const
 {
 
-    doublereal resNorm=0;
+    double resNorm=0;
 
     for (int i=0; i<nSpc*mCord; ++i)
     {
@@ -961,17 +961,17 @@ const
 */
 void FlameLet::speciesResidual
 (
-    const doublereal& t,
-    doublereal* y,
-    doublereal* f
+    const double& t,
+    double* y,
+    double* f
 )
 {
 
-    doublereal grad_e, grad_w;
-    doublereal zPE, zPW;
-    doublereal sdr, sdrPE, sdrPW;
-    doublereal source;
-    doublereal deltax = 0;
+    double grad_e, grad_w;
+    double zPE, zPW;
+    double sdr, sdrPE, sdrPW;
+    double source;
+    double deltax = 0;
 
     /*
     *starting with mixture fraction zero: i.e oxidizer
@@ -1006,7 +1006,7 @@ void FlameLet::speciesResidual
 
         sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
-        doublereal diffusionConstant = sdr/(2.0*dz[i]);
+        double diffusionConstant = sdr/(2.0*dz[i]);
         for (int l=0; l<nSpc; ++l)
         {
             grad_e = (s_mf(i+1,l)-s_mf(i,l))/zPE;
@@ -1022,7 +1022,7 @@ void FlameLet::speciesResidual
             sdrPE = scalarDissipationRate_(reacGeom_.getAxpos()[i+1],t);
             sdrPW = scalarDissipationRate_(reacGeom_.getAxpos()[i-1],t);
 
-            doublereal convectionConstant
+            double convectionConstant
                     = 0.25/m_rho[i]
                         *(
                             (m_rho[i+1]*sdrPE - m_rho[i-1]*sdrPW)/deltax
@@ -1060,16 +1060,16 @@ void FlameLet::speciesResidual
 */
 void FlameLet::sootMomentResidual
 (
-    const doublereal& t,
-    doublereal* y,
-    doublereal* f
+    const double& t,
+    double* y,
+    double* f
 )
 {
-    doublereal grad_e, grad_w;
-    doublereal zPE, zPW;
-    doublereal source;
-    doublereal deltax = 0;
-    doublereal sdr, sdrPE, sdrPW;
+    double grad_e, grad_w;
+    double zPE, zPW;
+    double source;
+    double deltax = 0;
+    double sdr, sdrPE, sdrPW;
 
     for (int l=0; l<nMoments; ++l)
     {
@@ -1093,7 +1093,7 @@ void FlameLet::sootMomentResidual
         	// The independent variable is Mr/rho not Mr.
         	// So divide moments by rho
 
-            doublereal diffusionConstant = sdr/(2.0*dz[i]);
+            double diffusionConstant = sdr/(2.0*dz[i]);
             for (int l=0; l<nMoments; ++l)
             {
                 grad_e = (moments(i+1,l)/m_rho[i+1]-moments(i,l)/m_rho[i])/zPE;
@@ -1126,7 +1126,7 @@ void FlameLet::sootMomentResidual
             sdrPW = scalarDissipationRate_(reacGeom_.getAxpos()[i-1],t);
 
             // This bit same as for gas phase species
-            doublereal convectionConstant
+            double convectionConstant
                     = 0.25/m_rho[i]
                         *(
                             (m_rho[i+1]*sdrPE - m_rho[i-1]*sdrPW)/deltax
@@ -1178,9 +1178,9 @@ void FlameLet::sootMomentResidual
 
 void FlameLet::sootMomentResidualZeroedOut
 (
-    const doublereal& t,
-    doublereal* y,
-    doublereal* f
+    const double& t,
+    double* y,
+    double* f
 )
 {
     for (int i=iMesh_s-1; i<iMesh_e+1; ++i)
@@ -1198,17 +1198,17 @@ void FlameLet::sootMomentResidualZeroedOut
 */
 void FlameLet::energyResidual
 (
-    const doublereal& t,
-    doublereal* y,
-    doublereal* f
+    const double& t,
+    double* y,
+    double* f
 )
 {
 
-    doublereal grad_e=0, grad_w=0;
-    doublereal zPE=0, zPW=0;
-    doublereal source=0;
-    doublereal deltax=0;
-    doublereal sdr, sdrPE, sdrPW;
+    double grad_e=0, grad_w=0;
+    double zPE=0, zPW=0;
+    double source=0;
+    double deltax=0;
+    double sdr, sdrPE, sdrPW;
 
     /*
     *starting with mixture fraction zero: i.e oxidizer
@@ -1247,9 +1247,9 @@ void FlameLet::energyResidual
         */
         if (admin_.getFlameletEquationType() == admin_.COMPLETE)
         {
-            doublereal tGrad = (m_T[i+1]-m_T[i-1])/deltax;
-            doublereal cpGrad = (m_cp[i+1]-m_cp[i-1])/deltax;
-            doublereal sumYGrad = 0.0;
+            double tGrad = (m_T[i+1]-m_T[i-1])/deltax;
+            double cpGrad = (m_cp[i+1]-m_cp[i-1])/deltax;
+            double sumYGrad = 0.0;
             for (int l=0; l<nSpc; ++l)
             {
                 sumYGrad += (1.0/Lewis(i,l)) * CpSpec(i,l) * (s_mf(i+1,l)-s_mf(i-1,l))/deltax;
@@ -1284,20 +1284,20 @@ void FlameLet::energyResidual
 *save the mixture property
 * \todo This should be trivially parallelisable. A lot of time is spent here.
 */
-void FlameLet::saveMixtureProp(doublereal* y)
+void FlameLet::saveMixtureProp(double* y)
 {
 
-    vector<doublereal> mf;
-    vector<doublereal> htemp(nSpc,0.0);
-    vector<doublereal> temp(nSpc,0.0);
-    vector<doublereal> cptemp(nSpc,0.0);
-    vector<doublereal> moments_dot_temp(nMoments,0.0);
-    vector<doublereal> mom_rho_temp(nMoments,0.0);		// ank25: This is Mr/rho
-    vector<doublereal> mom_temp(nMoments,0.0);			// ank25: This is Mr
-    vector<doublereal> exp_mom_temp(nMoments,0.0);
-    vector<doublereal> conc(nSpc,0.0);
-    vector<doublereal> wdotSootGasPhase(nMoments,0.0);
-    vector<doublereal> sootComponentRatesTemp(nMoments*4,0.0);
+    vector<double> mf;
+    vector<double> htemp(nSpc,0.0);
+    vector<double> temp(nSpc,0.0);
+    vector<double> cptemp(nSpc,0.0);
+    vector<double> moments_dot_temp(nMoments,0.0);
+    vector<double> mom_rho_temp(nMoments,0.0);		// ank25: This is Mr/rho
+    vector<double> mom_temp(nMoments,0.0);			// ank25: This is Mr
+    vector<double> exp_mom_temp(nMoments,0.0);
+    vector<double> conc(nSpc,0.0);
+    vector<double> wdotSootGasPhase(nMoments,0.0);
+    vector<double> sootComponentRatesTemp(nMoments*4,0.0);
 
     for (int i=0; i<mCord; ++i)
     {
@@ -1424,7 +1424,7 @@ void FlameLet::saveMixtureProp(doublereal* y)
     }
 }
 
-doublereal FlameLet::stoichiometricMixtureFraction()
+double FlameLet::stoichiometricMixtureFraction()
 {
     /*
     *check for C and H atoms
@@ -1438,8 +1438,8 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     /*
     *fuel inlet
     */
-    map<string, doublereal> species;
-    map<string, doublereal>::iterator sIterator;
+    map<string, double> species;
+    map<string, double>::iterator sIterator;
     CamBoundary& fuelInlet = admin_.getLeftBoundary();
     species = fuelInlet.getInletSpecies();
     sIterator = species.begin();
@@ -1459,11 +1459,11 @@ doublereal FlameLet::stoichiometricMixtureFraction()
 
     int cAtoms=0;
     int hAtoms=0;
-    doublereal avgMolWt=0;
-    doublereal fuelMassFrac=0;
+    double avgMolWt=0;
+    double fuelMassFrac=0;
     unsigned int i;
 
-    vector<doublereal> temp = getInletMassFrac(fuelInlet);
+    vector<double> temp = getInletMassFrac(fuelInlet);
 
     int iN2 = camMech_->FindSpecies("N2");
     int iAR = camMech_->FindSpecies("AR");
@@ -1483,7 +1483,7 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     }
 
     temp = getInletMassFrac(oxInlet);
-    doublereal o2MassFrac = temp[iO2];
+    double o2MassFrac = temp[iO2];
 
 
     cout << "Number of H Atoms in the fuel species  " << hAtoms << endl;
@@ -1493,12 +1493,12 @@ doublereal FlameLet::stoichiometricMixtureFraction()
     cout << "Total fuel mass fraction " << fuelMassFrac << endl;
     cout << "O2 mass frac " << temp[iO2] << endl;
 
-    doublereal stO2 = cAtoms + hAtoms/4.0;
+    double stO2 = cAtoms + hAtoms/4.0;
 
     /*
     *stoichiometric mass ratio
     */
-    doublereal smr = stO2*0.032/avgMolWt;
+    double smr = stO2*0.032/avgMolWt;
     cout << "Avg mol wt " << avgMolWt << endl;
     /*
     *stoichiometric mixture fraction
@@ -1511,20 +1511,20 @@ doublereal FlameLet::stoichiometricMixtureFraction()
 
 }
 
-void FlameLet::setExternalStrainRate(const doublereal strainRate)
+void FlameLet::setExternalStrainRate(const double strainRate)
 {
     scalarDissipationRate_.setStrainRate(strainRate);
 }
 
-void FlameLet::setExternalSDR(const doublereal sdr)
+void FlameLet::setExternalSDR(const double sdr)
 {
     scalarDissipationRate_.setSDRRate(sdr);
 }
 
 void FlameLet::setExternalTimeSDR
 (
-    const std::vector<doublereal>& time,
-    const std::vector<doublereal>& sdr
+    const std::vector<double>& time,
+    const std::vector<double>& sdr
 )
 {
     scalarDissipationRate_.setExternalScalarDissipationRate(time,sdr);
@@ -1535,15 +1535,15 @@ void FlameLet::setExternalTimeSDR
 */
 int FlameLet::eval
 (
-    doublereal x,
-    doublereal* y,
-    doublereal* ydot,
+    double x,
+    double* y,
+    double* ydot,
     bool jacEval
 )
 {
 
     //Sets soot volume fraction vector to zeros
-    setExternalSootVolumeFraction(std::vector<doublereal>(mCord, 0.0));
+    setExternalSootVolumeFraction(std::vector<double>(mCord, 0.0));
     residual(x,y,ydot);
     return 0;
 
@@ -1552,7 +1552,7 @@ int FlameLet::eval
 /*
 *consol output function
 */
-void FlameLet::report(doublereal x, doublereal* solution, doublereal& res)
+void FlameLet::report(double x, double* solution, double& res)
 {
 
     static int nStep=0;
@@ -1568,16 +1568,16 @@ void FlameLet::report(doublereal x, doublereal* solution, doublereal& res)
 /*
 *output function for file output
 */
-void FlameLet::reportToFile(std::string fileName, doublereal t, std::vector<double>& soln)
+void FlameLet::reportToFile(std::string fileName, double t, std::vector<double>& soln)
 {
 
-    doublereal sum;
+    double sum;
     reporter_->openFile(fileName,false);
 
     reporter_->writeCustomHeader(header());
 
-    vector<doublereal> data, axpos;
-    vector<doublereal> molfrac, massfrac, temperatureVec;
+    vector<double> data, axpos;
+    vector<double> molfrac, massfrac, temperatureVec;
     axpos = reacGeom_.getAxpos();
     int len = axpos.size();
 
@@ -1710,7 +1710,7 @@ std::vector<std::string> FlameLet::header()
 *@param[in]    soot_fv     Vector of soot volume fractions, one for each grid cell
 */
 void
-FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv)
+FlameLet::setExternalSootVolumeFraction(const std::vector<double>& soot_fv)
 {
     m_SootFv = soot_fv;
 
@@ -1727,7 +1727,7 @@ FlameLet::setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv)
 *  Note:  This is not used to pass wdotA4 to interface.
 */
 void
-FlameLet::getWdotA4(std::vector<doublereal>& wdotA4)
+FlameLet::getWdotA4(std::vector<double>& wdotA4)
 const
 {
 
@@ -1750,10 +1750,10 @@ const
 /*
 *output function for file output
 */
-void FlameLet::reportSootRatesToFile(std::string fileName, doublereal t, Array2D& rates)
+void FlameLet::reportSootRatesToFile(std::string fileName, double t, Array2D& rates)
 {
 
-    doublereal sum;
+    double sum;
 
     std::cout << "Reporting Component Soot Rates to File" << std::endl;
 
@@ -1761,9 +1761,9 @@ void FlameLet::reportSootRatesToFile(std::string fileName, doublereal t, Array2D
 
     reporter_->writeCustomHeader(sootRatesHeader());
 
-    vector<doublereal> data, axpos;
+    vector<double> data, axpos;
 
-    //vector<doublereal> molfrac, massfrac, temperatureVec;
+    //vector<double> molfrac, massfrac, temperatureVec;
     axpos = reacGeom_.getAxpos();
     int len = axpos.size();
 

@@ -66,7 +66,7 @@ public:
               const ResetChemistry &reset_chem,
               const std::string& output_file,
               const Sweep::Stats::IModelStats::StatBound &stat_bound,
-              const bool split_diffusion, const real drift_adjustment,
+              const bool split_diffusion, const double drift_adjustment,
               const bool split_advection, const bool strang_splitting,
               const bool cstr_transport);
 
@@ -74,7 +74,7 @@ public:
     void runSimulation(const size_t seed_offset);
 
     //! Calculate and save statistics in a text file
-    static void saveParticleStats(const Reactor1d &reac, const real t,
+    static void saveParticleStats(const Reactor1d &reac, const double t,
                            const Sweep::Stats::IModelStats::StatBound &stat_bound,
                            std::ostream &out);
 
@@ -83,10 +83,10 @@ protected:
     void runOnePath(const int seed);
 
     //! Save list of particles in a text file
-    void saveParticleList(const Reactor1d &reac, const real t, std::ostream &out);
+    void saveParticleList(const Reactor1d &reac, const double t, std::ostream &out);
 
     //! Save process rates in a text file
-    void saveProcessRates(const Reactor1d &reac, const real t, std::ostream &out);
+    void saveProcessRates(const Reactor1d &reac, const double t, std::ostream &out);
 
     //! Build the name of the moments file for a path
     std::string buildParticleStatsFileName(const int seed) const;
@@ -105,16 +105,16 @@ private:
     size_t mCorrectorIterations;
 
     //! Relative error tolerance for ODE solver for chemistry
-    real mRtol;
+    double mRtol;
 
     //! Absolute error tolerance for ODE solver for chemistry
-    real mAtol;
+    double mAtol;
 
     //! Whether to perform split simulation of particle diffusion
     bool mSplitDiffusion;
 
     //! Scaling factor that interpolates between different stochastic integrals, see \ref PredCorrSolver::mDiffusionDriftAdjustment
-    real mDiffusionDriftAdjustment;
+    double mDiffusionDriftAdjustment;
 
     //! Whether to perform split simulation of particle advection
     bool mSplitAdvection;

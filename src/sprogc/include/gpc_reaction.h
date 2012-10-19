@@ -102,7 +102,7 @@ public:
     void AddReactant(const Stoich &reac, const std::string &spName);
 
     // Adds a reactant given the species name.
-    void AddReactant(const std::string &name, real stoich);
+    void AddReactant(const std::string &name, double stoich);
 
     // Removes a reactant, given by name, from the reaction.
     void RemoveReactant(const std::string &name);
@@ -123,7 +123,7 @@ public:
     void AddProduct(const Stoich &prod, const std::string &spName);
 
     // Adds a product given the species name.
-    void AddProduct(const std::string &name, real stoich);
+    void AddProduct(const std::string &name, double stoich);
 
     // Removes a product, given by name, from the reaction.
     void RemoveProduct(const std::string &name);
@@ -140,13 +140,13 @@ public:
     
     
     // Returns the total stoichiometry of the reaction.
-    real TotalStoich() const;
+    double TotalStoich() const;
 
     // Returns the reactant stoichiometry of the reaction.
-    real ReactantStoich() const;
+    double ReactantStoich() const;
 
     // Returns the product stoichiometry of the reaction.
-    real ProductStoich() const;
+    double ProductStoich() const;
     
 
 	// STOICH CHANGES in each phase
@@ -230,7 +230,7 @@ public:
 	const std::vector<FORD> &FordReac(void) const;
 
 	// Sets the Ford parameters.
-	void SetFord(const real c, const std::string &name);
+	void SetFord(const double c, const std::string &name);
 
 	// Returns the coefficient for the ith ford of the reaction.
 	FORD FORDElement(unsigned int i) const;
@@ -275,7 +275,7 @@ public:
 	COVERAGE CoverageElement(unsigned int i) const;
 
 	// Sets the Coverage parameters.
-	void SetCoverage(const real e, const real m, const real eps, const std::string &name);
+	void SetCoverage(const double e, const double m, const double eps, const std::string &name);
 
 	// Count the number of coverage params 
 	int COVERAGECount() const;
@@ -320,10 +320,10 @@ public:
     void AddThirdBody(const Stoich &tb);
 
     // Adds a third body to the reaction.
-    void AddThirdBody(unsigned int sp, real coeff);
+    void AddThirdBody(unsigned int sp, double coeff);
 
     // Adds a third body given the species name.
-    void AddThirdBody(const std::string &name, real coeff);
+    void AddThirdBody(const std::string &name, double coeff);
 
     // Removes a third body, given by name, from the reaction.
     void RemoveThirdBody(const std::string &name);
@@ -363,15 +363,15 @@ public:
     // Sets the fall-off type and parameters.
     void SetFallOffParams(
         const FALLOFF_FORM form,
-        const real params[FALLOFF_PARAMS::MAX_FALLOFF_PARAMS]
+        const double params[FALLOFF_PARAMS::MAX_FALLOFF_PARAMS]
         );
 
 
     // FALL-OFF FUNCTIONS.
 
-    real FTROE3(real T, real logpr) const; // 3-parameter Troe fall-off form.
-    real FTROE4(real T, real logpr) const; // 4-parameter Troe fall-off form.
-    real FSRI(real T, real logpr) const;   // SRI fall-off form.
+    double FTROE3(double T, double logpr) const; // 3-parameter Troe fall-off form.
+    double FTROE4(double T, double logpr) const; // 4-parameter Troe fall-off form.
+    double FSRI(double T, double logpr) const;   // SRI fall-off form.
     //FallOffFnPtr FallOffFn() const;        // Custom fall-off function.
 
 
@@ -391,12 +391,12 @@ public:
     // RATE CALCULATION.
 
     // Calculates the rate of progress of this reaction.
-    real RateOfProgress(
-        real density,        // Mixture molar density.
-        const real *const x, // Species mole fractions.
+    double RateOfProgress(
+        double density,        // Mixture molar density.
+        const double *const x, // Species mole fractions.
         unsigned int n,      // Number of values in x array.
-        real kforward,       // Forward rate constant.
-        real kreverse        // Reverse rate constant.
+        double kforward,       // Forward rate constant.
+        double kreverse        // Reverse rate constant.
         ) const;
 
 
@@ -435,8 +435,7 @@ public:
     // reaction data.  This is used to debug.
     void WriteDiagnostics(std::ostream &out) const;
 
-    //! Indicates whether the pre-exponential should be converted to cgs
-    bool ConvertPreexponential(void) const;
+   
 
     //! Writes the reduced mechanism reactions to the output file
     void WriteReducedMechReacs(std::ostream &out, std::vector<std::string> RejectSpecies) const;
@@ -453,7 +452,7 @@ protected:
     std::vector<Stoich> m_reac, m_prod;    // reactant & product stoichiometry.
     std::vector<std::string> m_phaseVector;       // Vector of phase name for delta stoich
     DeltaStoichPtrVector m_deltaStoich;  // Vector of stoichiometric changes defined by mechanism. 
-    real m_dstoich, m_dreac, m_dprod;      // Total stoichiometry changes.
+    double m_dstoich, m_dreac, m_dprod;      // Total stoichiometry changes.
     ARRHENIUS m_arrf, *m_arrr;             // Forward and reverse Arrhenius parameters.
     LTCOEFFS *m_lt, *m_revlt;              // Landau-Teller forward and reverse coefficients.
     COVERAGE m_covr; // for Deserialisation and Serialisation 

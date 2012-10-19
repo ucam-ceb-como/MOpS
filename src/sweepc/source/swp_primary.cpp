@@ -61,7 +61,7 @@ AggModels::Primary::Primary(void)
 }
 
 // Initialising constructor.
-AggModels::Primary::Primary(real time, const Sweep::ParticleModel &model)
+AggModels::Primary::Primary(double time, const Sweep::ParticleModel &model)
 {
     init();
     m_pmodel  = &model;
@@ -106,9 +106,9 @@ AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
         // components and tracker values.
         if (rhs.m_pmodel == m_pmodel) {
             // Copy composition.
-            memcpy(&m_comp[0], &rhs.m_comp[0], sizeof(real)*m_comp.size());        
+            memcpy(&m_comp[0], &rhs.m_comp[0], sizeof(double)*m_comp.size());        
             // Copy tracker variables.
-            memcpy(&m_values[0], &rhs.m_values[0], sizeof(real)*m_values.size());
+            memcpy(&m_values[0], &rhs.m_values[0], sizeof(double)*m_values.size());
         } else {
             // Set the particle model.
             m_pmodel = rhs.m_pmodel;
@@ -151,7 +151,7 @@ const fvector &AggModels::Primary::Composition() const
 }
 
 // Returns the ith component value.  Returns 0.0 if i is invalid.
-real AggModels::Primary::Composition(unsigned int i) const
+double AggModels::Primary::Composition(unsigned int i) const
 {
 	if (i < m_comp.size()) {
 		return m_comp[i];
@@ -176,7 +176,7 @@ const fvector &AggModels::Primary::Values() const
 }
 
 // Returns the ith tracker variable value.  Returns 0.0 if i is invalid.
-real AggModels::Primary::Values(unsigned int i) const
+double AggModels::Primary::Values(unsigned int i) const
 {
 	if (i < m_values.size()) {
 		return m_values[i];
@@ -192,7 +192,7 @@ void AggModels::Primary::SetValues(const fvector &vals)
 }
 
 // Sets the ith trackervalue.
-void AggModels::Primary::SetValue(unsigned int i, real val)
+void AggModels::Primary::SetValue(unsigned int i, double val)
 {
 	if (i < m_values.size()) {
 		m_values[i] = val;
@@ -203,16 +203,16 @@ void AggModels::Primary::SetValue(unsigned int i, real val)
 // PRIMARY CREATE TIME.
 
 // Returns the primary create time.
-real AggModels::Primary::CreateTime() const {return m_createt;}
+double AggModels::Primary::CreateTime() const {return m_createt;}
 
 
 // LAST UPDATE TIME.
 
 // Returns the primary last update time.
-real AggModels::Primary::LastUpdateTime() const {return m_time;}
+double AggModels::Primary::LastUpdateTime() const {return m_time;}
 
 // Sets the last update time of the primary.
-void AggModels::Primary::SetTime(real t) {m_time = t;}
+void AggModels::Primary::SetTime(double t) {m_time = t;}
 
 
 // AGGREGATION MODEL.
@@ -225,7 +225,7 @@ AggModels::AggModelType AggModels::Primary::AggID(void) const {return AggModels:
 // Calculates the derived properties from the unique properties.
 void AggModels::Primary::UpdateCache(void)
 {
-    real m = 0.0;
+    double m = 0.0;
 
     // Loop over composition and calculate mass and volume.
     m_mass = m_vol = 0.0;
@@ -244,32 +244,32 @@ void AggModels::Primary::UpdateCache(void)
 }
 
 // Returns the particle equivalent sphere diameter.
-real AggModels::Primary::SphDiameter(void) const {return m_diam;}
+double AggModels::Primary::SphDiameter(void) const {return m_diam;}
 
 // Returns the collision diameter.
-real AggModels::Primary::CollDiameter(void) const {return m_dcol;}
+double AggModels::Primary::CollDiameter(void) const {return m_dcol;}
 
 // Rethrns the mobility diameter.
-real AggModels::Primary::MobDiameter(void) const {return m_dmob;}
+double AggModels::Primary::MobDiameter(void) const {return m_dmob;}
 
 // Returns the surface area.
-real AggModels::Primary::SurfaceArea(void) const {return m_surf;}
+double AggModels::Primary::SurfaceArea(void) const {return m_surf;}
 
 // Returns the equivalent sphere surface area, based
 // on the volume.
-real AggModels::Primary::SphSurfaceArea(void) const
+double AggModels::Primary::SphSurfaceArea(void) const
 {
     return PI * m_diam * m_diam;
 }
 
 // Returns the volume.
-real AggModels::Primary::Volume(void) const {return m_vol;}
+double AggModels::Primary::Volume(void) const {return m_vol;}
 
 // Returns the mass.
-real AggModels::Primary::Mass(void) const {return m_mass;}
+double AggModels::Primary::Mass(void) const {return m_mass;}
 
 // Returns the property with the given ID.
-real AggModels::Primary::Property(const Sweep::PropID id) const
+double AggModels::Primary::Property(const Sweep::PropID id) const
 {
     switch (id) {
         case iDsph:      // Equivalent sphere diameter.
@@ -295,22 +295,22 @@ real AggModels::Primary::Property(const Sweep::PropID id) const
 // BASIC DERIVED PROPERTY OVERWRITES.
 
 // Sets the spherical particle diameter
-void AggModels::Primary::SetSphDiameter(real diam) {m_diam = diam;}
+void AggModels::Primary::SetSphDiameter(double diam) {m_diam = diam;}
 
 // Sets the collision diameter of the particle.
-void AggModels::Primary::SetCollDiameter(real dcol) {m_dcol = dcol;}
+void AggModels::Primary::SetCollDiameter(double dcol) {m_dcol = dcol;}
 
 // Sets the mobility diameter.
-void AggModels::Primary::SetMobDiameter(real dmob) {m_dmob = dmob;}
+void AggModels::Primary::SetMobDiameter(double dmob) {m_dmob = dmob;}
 
 // Sets the surface area, subject to minimum spherical area condition.
-void AggModels::Primary::SetSurfaceArea(real surf) {m_surf = surf;}
+void AggModels::Primary::SetSurfaceArea(double surf) {m_surf = surf;}
 
 // Sets the volume.
-void AggModels::Primary::SetVolume(real vol) {m_vol = vol;}
+void AggModels::Primary::SetVolume(double vol) {m_vol = vol;}
 
 // Sets the mass.
-void AggModels::Primary::SetMass(real m) {m_mass = m;}
+void AggModels::Primary::SetMass(double m) {m_mass = m;}
 
 /*!
  * Check that this primary is a physically valid particle.  This currently
@@ -346,12 +346,12 @@ unsigned int AggModels::Primary::Adjust(const fvector &dcomp, const fvector &dva
 
 	// Add the components.
 	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
-		m_comp[i] += dcomp[i] * (real)n;
+		m_comp[i] += dcomp[i] * (double)n;
 	}
 
 	// Add the tracker values.
 	for (i=0; i!=min(m_values.size(),dvalues.size()); ++i) {
-		m_values[i] += dvalues[i] * (real)n;
+		m_values[i] += dvalues[i] * (double)n;
 	}
 
     // Update property cache.
@@ -446,10 +446,10 @@ AggModels::Primary &AggModels::Primary::Coagulate(const Primary &rhs, rng_type &
 
 // This routine sinters the Primary for the given length of
 // time using the provided sintering model.
-void AggModels::Primary::Sinter(real dt, Cell &sys,
+void AggModels::Primary::Sinter(double dt, Cell &sys,
                      const Processes::SinteringModel &model,
                      rng_type &rng,
-                     real wt)
+                     double wt)
 {
     // Spherical primaries don't sinter.
 	
@@ -464,9 +464,9 @@ void AggModels::Primary::Sinter(real dt, Cell &sys,
  *
  * @return      Ratio of number of second to first component
  */
-real AggModels::Primary::GetCoverageFraction() const
+double AggModels::Primary::GetCoverageFraction() const
 {
-    real val = 1.0;
+    double val = 1.0;
 
     if (m_pmodel->ComponentCount() > 1 && m_comp[0] > 0.0) {
         val = m_comp[1]/m_comp[0];
@@ -573,7 +573,7 @@ void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleMode
                 // Read components.
                 for (unsigned int i=0; i!=n; ++i) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_comp.push_back((real)val);
+                    m_comp.push_back((double)val);
                 }
 
                 // Read number of tracker values.
@@ -582,40 +582,40 @@ void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleMode
                 // Read values.
                 for (unsigned int i=0; i!=n; ++i) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_values.push_back((real)val);
+                    m_values.push_back((double)val);
                 }
 
                 // Read create time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_createt = (real)val;
+                m_createt = (double)val;
 
                 // Read last update time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_time = (real)val;
+                m_time = (double)val;
 
                 // Read equivalent sphere diameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_diam = (real)val;
+                m_diam = (double)val;
 
                 // Read collision diameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_dcol = (real)val;
+                m_dcol = (double)val;
 
                 // Read mobility diameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_dmob = (real)val;
+                m_dmob = (double)val;
 
                 // Read surface area.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_surf = (real)val;
+                m_surf = (double)val;
 
                 // Read volume.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_vol = (real)val;
+                m_vol = (double)val;
 
                 // Read mass.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_mass = (real)val;
+                m_mass = (double)val;
     
                 break;
             default:

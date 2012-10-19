@@ -93,7 +93,7 @@ double CamPremix::dydx(double nr1, double nr2, double nr3, double dr) const
 }
 
 
-int CamPremix::eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval)
+int CamPremix::eval(double t, double* y, double* ydot, bool jacEval)
 {
     /*
      *this is called by the DAE wrapper object. Given y, ydot is returned
@@ -105,15 +105,15 @@ int CamPremix::eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval)
 
 void CamPremix::speciesResidual
 (
-    const doublereal& time, 
-    doublereal* y,
-    doublereal* f
+    const double& time, 
+    double* y,
+    double* f
 )
 {
     /*
      *prepare flux terms
      */
-    doublereal convection, diffusion, source;
+    double convection, diffusion, source;
 
     for (int i= iMesh_s; i< iMesh_e; i++ )
     {
@@ -139,16 +139,16 @@ void CamPremix::speciesResidual
 
 void CamPremix::energyResidual
 (
-    const doublereal& time,
-    doublereal* y,
-    doublereal* f
+    const double& time,
+    double* y,
+    double* f
 )
 {
     bool flxTrans = false;
 
     if (admin_.getEnergyModel() == admin_.ADIABATIC)
     {
-        doublereal sumHSource, flxk, sumFlx;;
+        double sumHSource, flxk, sumFlx;;
         for (int i=iMesh_s; i<iMesh_e; i++)
         {
             /*
@@ -166,12 +166,12 @@ void CamPremix::energyResidual
             /*
              *convection
              */
-            doublereal convection =  -m_u[i]*dydx(m_T[i],m_T[i-1],dz[i]);
-            //doublereal convection = -m_u[i]*dydx(m_T[i+1], m_T[i], m_T[i-1], dz[i]);
+            double convection =  -m_u[i]*dydx(m_T[i],m_T[i-1],dz[i]);
+            //double convection = -m_u[i]*dydx(m_T[i+1], m_T[i], m_T[i-1], dz[i]);
             /*
              *conduction
              */
-            doublereal conduction = dydx(m_q[i+1],m_q[i],dz[i]);
+            double conduction = dydx(m_q[i+1],m_q[i],dz[i]);
             /*
              *flux transport
              */
@@ -205,7 +205,7 @@ void CamPremix::energyResidual
  *@parameter[in]    y       current solution value
  *@parameter[out]   f       residuals
  */
-void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f)
+void CamPremix::residual(const double& t, double* y, double* f)
 {
     resSp.resize(cellEnd*nSpc,0);
     resT.resize(cellEnd,0);
@@ -284,9 +284,9 @@ void CamPremix::residual(const doublereal& t, doublereal* y, doublereal* f)
 
 void CamPremix::massFlowResidual
 (
-    const doublereal& time,
-    doublereal* y,
-    doublereal* f
+    const double& time,
+    double* y,
+    double* f
 )
 {
     for (int i=iMesh_s; i<iMesh_e; i++)
@@ -299,9 +299,9 @@ void CamPremix::massFlowResidual
 
 void CamPremix::massFlowBoundary
 (
-    const doublereal& t,
-    doublereal* y,
-    doublereal* f)
+    const double& t,
+    double* y,
+    double* f)
 {
     //f[0] = ud_inlet.FlowRate - y[0]
     //f[iMesh_e] = y[iMesh_e-1] - y[iMesh_e];
@@ -319,9 +319,9 @@ void CamPremix::massFlowBoundary
 
 void CamPremix::speciesBoundary
 (
-    const doublereal& t,
-    doublereal* y,
-    doublereal* f
+    const double& t,
+    double* y,
+    double* f
 )
 {
     //-------------------------------------------
@@ -330,7 +330,7 @@ void CamPremix::speciesBoundary
     //
     //------------------------------------------
 
-    doublereal convection, diffusion;
+    double convection, diffusion;
 
     for (int l=0; l<nSpc ; l++)
     {
@@ -361,9 +361,9 @@ void CamPremix::speciesBoundary
  */
 void CamPremix::momentBoundary
 (
-    const doublereal& t,
-    doublereal* y,
-    doublereal* f
+    const double& t,
+    double* y,
+    double* f
 )
 {
     //-------------------------------------------
@@ -381,11 +381,11 @@ void CamPremix::momentBoundary
     //  Right Boundary Settings
     //
     //------------------------------------------
-    doublereal convection;
+    double convection;
     for (int l=0; l<nMoments; l++)
     {
-        doublereal phi_e = y[iMesh_e*nVar+nSpc+l];
-        doublereal phi_w = y[(iMesh_e-1)*nVar+nSpc+l];
+        double phi_e = y[iMesh_e*nVar+nSpc+l];
+        double phi_w = y[(iMesh_e-1)*nVar+nSpc+l];
         convection = -m_u[iMesh_e]*(phi_e-phi_w)/dz[iMesh_e];
         f[iMesh_e*nMoments+l] = convection;
     }
@@ -394,9 +394,9 @@ void CamPremix::momentBoundary
 
 void CamPremix::energyBoundary
 (
-    const doublereal& t,
-    doublereal* y,
-    doublereal* f
+    const double& t,
+    double* y,
+    double* f
 )
 {
     //-------------------------------------------
@@ -494,8 +494,8 @@ void CamPremix::saveInlet()
 void CamPremix::solve
 (
     vector<Thermo::Mixture>& cstrs,
-    const vector< vector<doublereal> >& iniSource,
-    const vector< vector<doublereal> >& fnlSource,
+    const vector< vector<double> >& iniSource,
+    const vector< vector<double> >& fnlSource,
     Mechanism& mech,
     CamControl& control_,
     CamAdmin& ca,
@@ -554,7 +554,7 @@ void CamPremix::solve
     int len = cstrs.size();
     for (int i=iMesh_s; i<iMesh_e; i++)
     {
-        vector<doublereal> massFrac;
+        vector<double> massFrac;
         cstrs[i-1].GetMassFractions(massFrac);
 
         for (int l=0; l<nSpc; l++)
@@ -605,7 +605,7 @@ void CamPremix::solve
      */
     for (int i=iMesh_s; i<iMesh_e; i++)
     {
-        vector<doublereal> massfracs;
+        vector<double> massfracs;
 
         for (int l=0; l<nSpc; l++)
         {
@@ -636,9 +636,9 @@ void CamPremix::initSolutionVector(CamBoundary& cb)
     //createSolnVector(cb,control_,solvect);
     solvect.resize(nEqn, 0);
 
-    vector<doublereal> vMass = initMassFlow(cb);
-    vector<doublereal> vSpec = initSpecies(cb);
-    vector<doublereal> vT = initTemperature(cb);
+    vector<double> vMass = initMassFlow(cb);
+    vector<double> vSpec = initSpecies(cb);
+    vector<double> vT = initTemperature(cb);
 
     cout<< "ptrF " << ptrF << " ptrT " << ptrT << endl;
 
@@ -701,7 +701,7 @@ void CamPremix::ssolve()
      *preparations
      */
     int seg_eqn, band;
-    vector<doublereal> seg_soln_vec;
+    vector<double> seg_soln_vec;
 
     int solverID = control_.getSolver();
 
@@ -796,7 +796,7 @@ void CamPremix::ssolve()
 /*
  *console output
  */
-void CamPremix::report(doublereal t, doublereal* soln)
+void CamPremix::report(double t, double* soln)
 {
     static int nSteps=0;
     cout.width(5);
@@ -810,7 +810,7 @@ void CamPremix::report(doublereal t, doublereal* soln)
 /*
  *console output with residual monitoring
  */
-void CamPremix::report(doublereal t, doublereal* soln, doublereal& res)
+void CamPremix::report(double t, double* soln, double& res)
 {
     static int nStep=0;
     cout.width(5);
@@ -821,15 +821,15 @@ void CamPremix::report(doublereal t, doublereal* soln, doublereal& res)
 }
 
 
-void CamPremix::reportToFile(doublereal t, doublereal* soln)
+void CamPremix::reportToFile(double t, double* soln)
 {
     saveMixtureProp(t,soln,false,false);
-    doublereal sum =0;
+    double sum =0;
 
     reporter_->openFiles();
     reporter_->writeHeader(headerData);
-    vector<doublereal> data, axpos;
-    vector<doublereal> molfrac, massfrac;
+    vector<double> data, axpos;
+    vector<double> molfrac, massfrac;
     axpos = reacGeom_.getAxpos();
     int len = axpos.size();
 
@@ -882,7 +882,7 @@ void CamPremix::reportToFile(doublereal t, doublereal* soln)
 
 
 //return the initial solution vector
-void CamPremix::getInitial(vector<doublereal>& initial)
+void CamPremix::getInitial(vector<double>& initial)
 {
     initial = solvect;
 }
@@ -920,7 +920,7 @@ void CamPremix::updateThermo()
 /*
  *save flow variables
  */
-void CamPremix::saveFlowVariables(doublereal* y)
+void CamPremix::saveFlowVariables(double* y)
 {
     m_u.clear();
     m_flow.clear();
@@ -951,7 +951,7 @@ void CamPremix::header()
 
 
 // Mass matrix evaluation
-void CamPremix::massMatrix(doublereal** M)
+void CamPremix::massMatrix(double** M)
 {
 //    /*
 //     *inlet boundary: all governing equations are algebraic except energy

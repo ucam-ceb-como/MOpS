@@ -62,7 +62,7 @@ Stoichiometry::Stoichiometry(const Sprog::Stoichiometry &s)
 }
 
 // Initialising constructor.
-Stoichiometry::Stoichiometry(unsigned int isp, const real &mu)
+Stoichiometry::Stoichiometry(unsigned int isp, const double &mu)
 {
     m_species = isp;
     m_stoich = mu;
@@ -111,18 +111,18 @@ void Stoichiometry::SetSpeciesPhase(const Sprog::Species &species)
 // STOICHIOMETRY VALUE.
 
 // Returns the stoichiometry value.
-const real &Stoichiometry::Mu() const
+const double &Stoichiometry::Mu() const
 {
     return m_stoich;
 }
 
 // Sets the stoichiometry value.
-void Stoichiometry::SetMu(const real &mu)
+void Stoichiometry::SetMu(const double &mu)
 {
     m_stoich = mu;
 }
 // Add the stoichiometry
-void Stoichiometry::IncMu(const real &mu)
+void Stoichiometry::IncMu(const double &mu)
 {
     m_stoich += mu;
 }

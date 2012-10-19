@@ -78,7 +78,7 @@ public:
     static bool IsBeforePoint(const SrcPoint &lhs, const SrcPoint &rhs);
 
     // Returns true if the current point is before the given time.
-    static bool IsBeforeTime(const SrcPoint &lhs, real t);
+    static bool IsBeforeTime(const SrcPoint &lhs, double t);
 
     // Returns true if the current point is after the given point
     // in time.
@@ -89,12 +89,12 @@ public:
     static bool IsAfterPoint(const SrcPoint &lhs, const SrcPoint &rhs);
 
     // Returns true if the current point is after the given time.
-    static bool IsAfterTime(const SrcPoint &lhs, real t);
+    static bool IsAfterTime(const SrcPoint &lhs, double t);
 
     // DATA.
 
     // Time at which source terms are valid.
-    real Time;
+    double Time;
 
     // Source terms.
     fvector Terms;
@@ -108,14 +108,14 @@ void SortSrcProfile(SrcProfile &prof);
 
 // Returns the last GasPoint defined before the given time.  If the time
 // is out-of-range then returns the end() of the vector.
-SrcProfile::const_iterator LocateSrcPoint(const SrcProfile &prof, real t);
+SrcProfile::const_iterator LocateSrcPoint(const SrcProfile &prof, double t);
 
 // Typedef of a function pointer which defines how source terms are used
 // to calculate the reactor ODE RHSs.
 typedef void (*SrcTermFnPtr)(
-    real *rhs,             // ODE right-hand sides (to be updated)
+    double *rhs,             // ODE right-hand sides (to be updated)
     unsigned int n,        // Number of values in rhs array.
-    real t,                // Current time.
+    double t,                // Current time.
     const SrcProfile &prof // Source term profile.
     );
 };

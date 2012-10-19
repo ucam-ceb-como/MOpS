@@ -6,7 +6,7 @@
  *  Project:        sweepc (population balance solver)
  *  Sourceforge:    http://sourceforge.net/projects/mopssuite
  *
- * \brief  Vector like structure for summing real properties in binary tree
+ * \brief  Vector like structure for summing double properties in binary tree
  *
  Licence:
     This file is part of "sweepc".
@@ -94,69 +94,69 @@ public:
     // BASIC PROPERTIES.
 
     //! Returns the particle equivalent sphere diameter.
-    real SphDiameter(void) const;
+    double SphDiameter(void) const;
 
     //! Returns the collision diameter.
-    real CollDiameter(void) const;
+    double CollDiameter(void) const;
 
     //! Returns the mobility diameter.
-    real MobDiameter(void) const;
+    double MobDiameter(void) const;
 
     //! Returns the surface area.
-    real SurfaceArea(void) const;
+    double SurfaceArea(void) const;
 
     //! Cached for surface area of volume equivalent spheres
-    real SphSurfaceArea(void) const;
+    double SphSurfaceArea(void) const;
 
     //! Returns the cached volume.
-    real Volume(void) const;
+    double Volume(void) const;
 
     //! Returns the cached mass.
-    real Mass(void) const;
+    double Mass(void) const;
 
     // Returns the property with the given ID.
-    real Property(PropID id) const;
+    double Property(PropID id) const;
 
-	//real Sintered();
+	//double Sintered();
 
     // BASIC DERIVED PROPERTY OVERWRITES.
 
     /*// Sets the spherical particle diameter
-    void SetSphDiameter(real diam);
+    void SetSphDiameter(double diam);
 
     // Sets the collision diameter of the particle.
-    void SetCollDiameter(real dcol);
+    void SetCollDiameter(double dcol);
 
     // Sets the mobility diameter.
-    void SetMobDiameter(real dmob);
+    void SetMobDiameter(double dmob);
 
     // Sets the surface area, subject to minimum spherical area condition.
-    void SetSurfaceArea(real surf);
+    void SetSurfaceArea(double surf);
 
     // Sets the volume.
-    void SetVolume(real vol);
+    void SetVolume(double vol);
 
     // Sets the mass.
-    void SetMass(real m);
+    void SetMass(double m);
 
 
 
     // COLLISION RATE CALCULATION PARTICLE PROPERTIES.
 
     // Collision diameter squared (cm2).
-    real CollDiamSquared() const;
+    double CollDiamSquared() const;
 
     // Inverse collision diameter (cm-1).
-    real InvCollDiam() const;
+    double InvCollDiam() const;
 
     // Inverse squared collision diameter (cm-2).
-    real InvCollDiamSquared() const;
+    double InvCollDiamSquared() const;
 
     // Inverse of square root of mass (g-1/2).
-    real InvSqrtMass() const;
+    double InvSqrtMass() const;
 
     // Collision diameter squared times the inverse square root of mass.
-    real CollDiamSqrdInvSqrtMass() const;*/
+    double CollDiamSqrdInvSqrtMass() const;*/
 
 
     // READ/WRITE/COPY.
@@ -174,34 +174,34 @@ private:
 
     // Basic properties
     //! Equivalent spherical diameter.
-    real m_sphdiam;
+    double m_sphdiam;
 
     //! Collision diameter.
-    real m_dcol;
+    double m_dcol;
 
     //! Mobility diameter.
-    real m_dmob;
+    double m_dmob;
 
     //! Surface area.
-    real m_surf;
+    double m_surf;
 
     //! Volume.
-    real m_vol;
+    double m_vol;
 
     //! Mass.
-    real m_mass;
+    double m_mass;
 
     // Collision rate calculation particle properties.
-    real m_dcolsqr;      // Collision diameter squared.
-    real m_inv_dcol;     // Inverse collision diameter.
-    real m_inv_dcolsqr;  // Inverse of the diameter squared.
-    real m_inv_sqrtmass; // Inverse of the square-root of the mass.
-    real m_d2_m_1_2;     // D^2 * M^-1/2.
+    double m_dcolsqr;      // Collision diameter squared.
+    double m_inv_dcol;     // Inverse collision diameter.
+    double m_inv_dcolsqr;  // Inverse of the diameter squared.
+    double m_inv_sqrtmass; // Inverse of the square-root of the mass.
+    double m_d2_m_1_2;     // D^2 * M^-1/2.
 
 
 
 	// The free surface available for other particles to sinter
-	real m_freesurface;
+	double m_freesurface;
 
 	//! Number of Carbon atoms
 	unsigned int m_numcarbon;

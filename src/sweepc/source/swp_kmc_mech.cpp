@@ -61,7 +61,7 @@ typedef Sweep::KMC_ARS::KMCGasPoint ggg;
 // Default
 KMCMechanism::KMCMechanism() {
     m_jplist = obtainJumpProcess();
-    m_rates = std::vector<real>(m_jplist.size(),0);
+    m_rates = std::vector<double>(m_jplist.size(),0);
     m_totalrate = 0;
     isACopy = false;
 }
@@ -95,15 +95,15 @@ void KMCMechanism::loadProcesses(std::vector<JumpProcess*> (*jp)()) {//how##
 //    // temporary vector to store rates of each JumpProcess
 //    rvector temp; 
 //    for(int i=0; i!= (int)p.size(); i++) {
-//        real a = p[i]->getRate(); // gets rate
+//        double a = p[i]->getRate(); // gets rate
 //        temp.push_back(a); // store in temporary vector
 //    }
 //    return temp;
 //}
 //! Calculates total jump rates
-//real KMCMechanism::getTotalRate(const rvector& jrate) {
+//double KMCMechanism::getTotalRate(const rvector& jrate) {
 //    // calculates sum of all elements of jrate
-//    real sum=0;
+//    double sum=0;
 //    for(int i=0; i!=(int) jrate.size(); i++) {
 //        sum += jrate[i];
 //    }
@@ -111,9 +111,9 @@ void KMCMechanism::loadProcesses(std::vector<JumpProcess*> (*jp)()) {//how##
 //}
 //! Choosing a reaction to be taken place, returns pointer to jump process
 ChosenProcess KMCMechanism::chooseReaction(rng_type &rng) const {
-    // chooses index from a vector of weights (real number in this case) randomly
-    boost::uniform_01<rng_type &, real> uniformGenerator(rng);
-    size_t ind = chooseIndex<real>(m_rates, uniformGenerator);
+    // chooses index from a vector of weights (double number in this case) randomly
+    boost::uniform_01<rng_type &, double> uniformGenerator(rng);
+    size_t ind = chooseIndex<double>(m_rates, uniformGenerator);
     return ChosenProcess(m_jplist[ind], ind);
 }
 typedef Sweep::KMC_ARS::KMCGasPoint sp;
@@ -172,9 +172,9 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 //! Calculates jump rate for each jump process
 void KMCMechanism::calculateRates(const KMCGasPoint& gp, 
                     PAHProcess& st, 
-                    const real& t) {
-    real temp=0;
-    real pressure = gp[gp.P]/1e5;
+                    const double& t) {
+    double temp=0;
+    double pressure = gp[gp.P]/1e5;
     // Choose suitable mechanism according to P
     if(pressure > 0.5 && pressure <= 5) { // mechanism at 1 atm 
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
@@ -206,12 +206,12 @@ std::vector<JumpProcess*> KMCMechanism::JPList() const {
 }
 
 //! Returns vector of jump rates
-std::vector<real> KMCMechanism::Rates() const {
+std::vector<double> KMCMechanism::Rates() const {
     return m_rates;
 }
 
 //! Returns total rates
-real KMCMechanism::TotalRate() const {
+double KMCMechanism::TotalRate() const {
     return m_totalrate;
 }
 
@@ -262,13 +262,13 @@ void G6R_AC::initialise() {
     m_ID = 1;
 }
 // Jump rate calculation
-real G6R_AC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double G6R_AC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -276,10 +276,10 @@ real G6R_AC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const re
     else r_f=0;
     return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
 }
-real G6R_AC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double G6R_AC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real G6R_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double G6R_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 // 
@@ -325,14 +325,14 @@ void G6R_FE::initialise() {
     m_ID = 2;
 }
 // Jump rate calculation
-real G6R_FE::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double G6R_FE::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]);
-    real r_f; // radical fraction
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]);
+    double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -340,10 +340,10 @@ real G6R_FE::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const re
     else r_f=0;
     return m_rate = (m_r[5]+m_r[6])*r_f* site_count; // Rate Equation
 }
-real G6R_FE::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double G6R_FE::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 // 
@@ -386,14 +386,14 @@ void L6_BY6::initialise() {
     m_ID = 3;
 }
 // Jump rate calculation
-real L6_BY6::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double L6_BY6::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -401,10 +401,10 @@ real L6_BY6::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const re
     else r_f=0;
     return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
 }
-real L6_BY6::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double L6_BY6::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real L6_BY6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double L6_BY6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 // 
@@ -448,26 +448,26 @@ void PH_benz::initialise() {
     m_ID = 4;
 }
 // Jump rate calculation
-real PH_benz::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double PH_benz::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    if((real)pah_st.getSiteCount(R5)!=0) site_count++;
+    if((double)pah_st.getSiteCount(R5)!=0) site_count++;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
 }
-real PH_benz::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double PH_benz::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real PH_benz::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double PH_benz::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 // 
@@ -510,13 +510,13 @@ void D6R_FE3::initialise() {
     m_ID = 5;
 }
 // Jump rate calculation
-real D6R_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double D6R_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -524,10 +524,10 @@ real D6R_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const r
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
 }
-real D6R_FE3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double D6R_FE3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 // ************************************************************
@@ -569,13 +569,13 @@ void O6R_FE3_O2::initialise() {
     m_ID = 6;
 }
 // Jump rate calculation
-real O6R_FE3_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE3_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -583,13 +583,13 @@ real O6R_FE3_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
 }
-real O6R_FE3_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE3_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -597,7 +597,7 @@ real O6R_FE3_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
 }
-real O6R_FE3_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE3_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p12(gp, pah_st);
 }
 // ************************************************************
@@ -639,14 +639,14 @@ void O6R_FE3_OH::initialise() {
     m_ID = 7;
 }
 // Jump rate calculation
-real O6R_FE3_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE3_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -654,13 +654,13 @@ real O6R_FE3_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
     else r_f=0;
     return m_rate = m_r[6]*r_f* site_count; // Rate Equation
 }
-real O6R_FE3_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE3_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
-    //real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    //real r_f; // radical fraction 
+    //double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    //double r_f; // radical fraction 
     //if(r_denom>0) {
     //    r_f = (m_r[0]+m_r[2])/r_denom; 
     //    r_f = r_f/(r_f+1.0);
@@ -668,7 +668,7 @@ real O6R_FE3_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
     //else r_f=0;
     return m_rate = m_r[0]*site_count; // Rate Equation
 }
-real O6R_FE3_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE3_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p12(gp, pah_st);
 }
 // ************************************************************
@@ -710,13 +710,13 @@ void O6R_FE_HACA_O2::initialise() {
     m_ID = 8;
 }
 // Jump rate calculation
-real O6R_FE_HACA_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE_HACA_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -724,13 +724,13 @@ real O6R_FE_HACA_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, 
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
 }
-real O6R_FE_HACA_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE_HACA_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -738,7 +738,7 @@ real O6R_FE_HACA_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, co
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
 }
-real O6R_FE_HACA_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE_HACA_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p12(gp, pah_st);
 }
 
@@ -781,13 +781,13 @@ void O6R_FE_HACA_OH::initialise() {
     m_ID = 9;
 }
 // Jump rate calculation
-real O6R_FE_HACA_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE_HACA_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
 
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -795,13 +795,13 @@ real O6R_FE_HACA_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, 
     else r_f=0;
     return m_rate = m_r[6]*r_f* site_count; // Rate Equation
 }
-real O6R_FE_HACA_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE_HACA_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
 
-    //real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    //real r_f; // radical fraction 
+    //double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    //double r_f; // radical fraction 
     //if(r_denom>0) {
     //    r_f = (m_r[0]+m_r[2])/r_denom; 
     //    r_f = r_f/(r_f+1.0);
@@ -809,7 +809,7 @@ real O6R_FE_HACA_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, co
     //else r_f=0;
     return m_rate = m_r[0]* site_count; // Rate Equation
 }
-real O6R_FE_HACA_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE_HACA_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p12(gp, pah_st);
 }
 
@@ -853,13 +853,13 @@ void G5R_ZZ::initialise() {
     m_ID = 10;
 }
 // Jump rate calculation
-real G5R_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double G5R_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -867,15 +867,15 @@ real G5R_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const re
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
 }
-real G5R_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double G5R_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
-    real r4f = m_r[5];
+    double r4f = m_r[5];
     if(gp[gp.T] < 800) r4f = m_r[6];
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+r4f);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+r4f);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -883,7 +883,7 @@ real G5R_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real
     else r_f=0;
     return m_rate = r4f*r_f* site_count; // Rate Equation
 }
-real G5R_ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double G5R_ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 
@@ -932,28 +932,28 @@ void D5R_R5::initialise() {
     m_ID = 11;
 }
 // Jump rate calculation
-real D5R_R5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double D5R_R5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
 
     // Calculating r3f
-    real T = gp[gp.T];
-    real M = (2*gp[gp.H2])+(6*gp[gp.H2O])+(2*gp[gp.CH4])+(1.5*gp[gp.CO])+(2*gp[gp.CO2])+(3*gp[gp.C2H6]);
-    real k_o = m_r[5];
-    real k_inf = m_r[6];
-    real F_cent = 0.218 * exp(-T/207.5) + 0.782*exp(-T/2663) + exp(-6095/T);
-    real logF_cent = log(F_cent);
-    real r_c = k_inf/(1+ (k_inf/(k_o*M)));
-    real N0 = 0.75- 1.27*logF_cent;
-    real C0 = -0.4 - 0.67*logF_cent;
-    real logP_r = log(k_o*M/k_inf);
-    real F = exp(logF_cent/(1+ pow(((logP_r+C0)/(N0-0.14*(logP_r+C0))),2)));
+    double T = gp[gp.T];
+    double M = (2*gp[gp.H2])+(6*gp[gp.H2O])+(2*gp[gp.CH4])+(1.5*gp[gp.CO])+(2*gp[gp.CO2])+(3*gp[gp.C2H6]);
+    double k_o = m_r[5];
+    double k_inf = m_r[6];
+    double F_cent = 0.218 * exp(-T/207.5) + 0.782*exp(-T/2663) + exp(-6095/T);
+    double logF_cent = log(F_cent);
+    double r_c = k_inf/(1+ (k_inf/(k_o*M)));
+    double N0 = 0.75- 1.27*logF_cent;
+    double C0 = -0.4 - 0.67*logF_cent;
+    double logP_r = log(k_o*M/k_inf);
+    double F = exp(logF_cent/(1+ pow(((logP_r+C0)/(N0-0.14*(logP_r+C0))),2)));
     r_c *= F;
-    real r3f = r_c* gp[gp.H];
+    double r3f = r_c* gp[gp.H];
 
-    real r_denom = (m_r[1]+m_r[3]+r3f+m_r[4]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+r3f+m_r[4]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -961,16 +961,16 @@ real D5R_R5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const re
     else r_f=0;
     return m_rate = m_r[4]*r_f* site_count; // Rate Equation
 }
-real D5R_R5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double D5R_R5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real D5R_R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double D5R_R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1017,14 +1017,14 @@ void C6R_AC_FE3::initialise() {
     m_ID = 12;
 }
 // Jump rate calculation
-real C6R_AC_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C6R_AC_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     
     
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1032,10 +1032,10 @@ real C6R_AC_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
 }
-real C6R_AC_FE3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C6R_AC_FE3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real C6R_AC_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C6R_AC_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 
@@ -1085,36 +1085,36 @@ void C5R_RFE::initialise() {
     m_ID = 13;
 }
 // Jump rate calculation
-real C5R_RFE::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C5R_RFE::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
-        real f_R5H = m_r[7]/(m_r[8] + (m_r[0]/r_denom * (m_r[5]+m_r[6]))); 
+        double f_R5H = m_r[7]/(m_r[8] + (m_r[0]/r_denom * (m_r[5]+m_r[6]))); 
         r_f *= f_R5H;
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
     return m_rate = (m_r[5]+m_r[6])*r_f* site_count; // Rate Equation
 }
-real C5R_RFE::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C5R_RFE::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real C5R_RFE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C5R_RFE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r4f = m_r[5]+m_r[6];
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+r4f);
-    real r_f; // radical fraction 
+    double r4f = m_r[5]+m_r[6];
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+r4f);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
-        real f_R5H = m_r[0]/(m_r[1] + ((m_r[0]/r_denom) * r4f)); 
+        double f_R5H = m_r[0]/(m_r[1] + ((m_r[0]/r_denom) * r4f)); 
         r_f = r_f*f_R5H;
         r_f = r_f/(r_f+1.0);
     }
@@ -1158,14 +1158,14 @@ void C5R_RAC::initialise() {
     m_ID = 14;
 }
 // Jump rate calculation
-real C5R_RAC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C5R_RAC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
-    real r_denom = (m_r[1]+m_r[3]+r3f);
-    real r_f; // radical fraction 
+    double r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
+    double r_denom = (m_r[1]+m_r[3]+r3f);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1173,14 +1173,14 @@ real C5R_RAC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const r
     else r_f=0;
     return m_rate = 1.34e12*r_f* site_count; // Rate Equation
 }
-real C5R_RAC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C5R_RAC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
-    real r_denom = (m_r[1]+m_r[3]+r3f);
-    real r_f; // radical fraction 
+    double r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
+    double r_denom = (m_r[1]+m_r[3]+r3f);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1188,14 +1188,14 @@ real C5R_RAC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const rea
     else r_f=0;
     return m_rate = r3f*r_f* site_count; // Rate Equation
 }
-real C5R_RAC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C5R_RAC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r3f = 1.34e12; 
-    real r_denom = (m_r[1]+m_r[3]+r3f);
-    real r_f; // radical fraction 
+    double r3f = 1.34e12; 
+    double r_denom = (m_r[1]+m_r[3]+r3f);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1241,14 +1241,14 @@ void M5R_RZZ::initialise() {
     m_ID = 15;
 }
 // Jump rate calculation
-real M5R_RZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double M5R_RZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
-    real r_denom = (m_r[1]+m_r[3]+r3f);
-    real r_f; // radical fraction 
+    double r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
+    double r_denom = (m_r[1]+m_r[3]+r3f);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1256,14 +1256,14 @@ real M5R_RZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const r
     else r_f=0;
     return m_rate = 1.34e12*r_f* site_count; // Rate Equation
 }
-real M5R_RZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double M5R_RZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
-    real r_denom = (m_r[1]+m_r[3]+r3f);
-    real r_f; // radical fraction 
+    double r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
+    double r_denom = (m_r[1]+m_r[3]+r3f);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1271,14 +1271,14 @@ real M5R_RZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const rea
     else r_f=0;
     return m_rate = r3f*r_f* site_count; // Rate Equation
 }
-real M5R_RZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double M5R_RZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r3f = 1.34e12;
-    real r_denom = (m_r[1]+m_r[3]+r3f);
-    real r_f; // radical fraction 
+    double r3f = 1.34e12;
+    double r_denom = (m_r[1]+m_r[3]+r3f);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1316,13 +1316,13 @@ void C6R_BY5_FE3::initialise() {
     m_ID = 16;
 }
 // Jump rate calculation
-real C6R_BY5_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C6R_BY5_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1330,10 +1330,10 @@ real C6R_BY5_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
 }
-real C6R_BY5_FE3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C6R_BY5_FE3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real C6R_BY5_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C6R_BY5_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 
@@ -1365,13 +1365,13 @@ void C6R_BY5_FE3violi::initialise() {
     m_ID = 17;
 }
 // Jump rate calculation
-real C6R_BY5_FE3violi::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C6R_BY5_FE3violi::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1379,10 +1379,10 @@ real C6R_BY5_FE3violi::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
 }
-real C6R_BY5_FE3violi::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C6R_BY5_FE3violi::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real C6R_BY5_FE3violi::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double C6R_BY5_FE3violi::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 // ************************************************************
@@ -1445,13 +1445,13 @@ void L5R_BY5::initialise() {
     m_ID = 18;
 }
 // Jump rate calculation
-real L5R_BY5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double L5R_BY5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         if(violi)
             r_f = (m_r[0]+m_r[2])/r_denom; 
@@ -1462,10 +1462,10 @@ real L5R_BY5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const r
     else r_f=0;
     return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
 }
-real L5R_BY5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double L5R_BY5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real L5R_BY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double L5R_BY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 // ************************************************************
@@ -1496,13 +1496,13 @@ void M6R_BY5_FE3::initialise() {
     m_ID = 19;
 }
 // Jump rate calculation
-real M6R_BY5_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double M6R_BY5_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1510,10 +1510,10 @@ real M6R_BY5_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
 }
-real M6R_BY5_FE3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double M6R_BY5_FE3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-real M6R_BY5_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double M6R_BY5_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 
@@ -1556,13 +1556,13 @@ void O6R_FE2_OH::initialise() {
     m_ID = 20;
 }
 // Jump rate calculation
-real O6R_FE2_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE2_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
 
-    real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    real r_f; // radical fraction 
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
@@ -1570,13 +1570,13 @@ real O6R_FE2_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
     else r_f=0;
     return m_rate = m_r[6]*r_f* site_count; // Rate Equation
 }
-real O6R_FE2_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE2_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    real site_count = ((real)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
 
-    //real r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    //real r_f; // radical fraction 
+    //double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    //double r_f; // radical fraction 
     //if(r_denom>0) {
     //    r_f = (m_r[0]+m_r[2])/r_denom; 
     //    r_f = r_f/(r_f+1.0);
@@ -1584,6 +1584,6 @@ real O6R_FE2_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
     //else r_f=0;
     return m_rate = m_r[0]* site_count; // Rate Equation
 }
-real O6R_FE2_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/) {
+double O6R_FE2_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p12(gp, pah_st);
 }

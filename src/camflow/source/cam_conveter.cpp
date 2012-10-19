@@ -47,7 +47,7 @@
 using namespace Camflow;
 using namespace Strings;
 
-Camflow::doublereal CamConverter::getConvertionFactor(std::string unit){
+double CamConverter::getConvertionFactor(std::string unit){
     std::string unitName = convertToCaps(unit);
     if(!unitName.compare("CM") ){
         factor = 0.01;
@@ -89,18 +89,18 @@ std::string CamConverter::getString(int n){
     return out.str();
 }
 
-std::string CamConverter::getString(doublereal a){
+std::string CamConverter::getString(double a){
     std::stringstream out;
     out << a;
     return out.str();
 }
 
 //convert from mole 2 mass
-Camflow::doublereal CamConverter::mole2mass(std::vector<doublereal>& mole,
-                std::vector<doublereal>& mass, Mechanism &mech ){
+double CamConverter::mole2mass(std::vector<double>& mole,
+                std::vector<double>& mass, Mechanism &mech ){
 
     const SpeciesPtrVector spv = mech.Species();
-    doublereal avgMolWt = 0;
+    double avgMolWt = 0;
     int len = mole.size();
     for (int l = 0; l < len; l++) {
         avgMolWt += mole[l]* spv[l]->MolWt();
@@ -116,11 +116,11 @@ Camflow::doublereal CamConverter::mole2mass(std::vector<doublereal>& mole,
 }
 
 
-Camflow::doublereal CamConverter::mass2mole(std::vector<doublereal>& mass,
-                                            std::vector<doublereal>& mole,
+double CamConverter::mass2mole(std::vector<double>& mass,
+                                            std::vector<double>& mole,
                                             Mechanism& mech){
     const SpeciesPtrVector spv = mech.Species();
-    doublereal avgMolWt = 0;
+    double avgMolWt = 0;
     int len = mass.size();
     for(int i=0; i<len; i++){
         avgMolWt += mass[i]/spv[i]->MolWt();

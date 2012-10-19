@@ -109,46 +109,46 @@ namespace Camflow {
             /*
              *function called by solver
              */
-            int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
+            int eval(double x, double* y, double* ydot, bool jacEval);
             //console output
-            void report(doublereal x, doublereal* solution);
+            void report(double x, double* solution);
             //console output with residuals
-            void report(doublereal x, doublereal* solution, doublereal& res);
-            void reportToFile(doublereal time, doublereal* solution);
+            void report(double x, double* solution, double& res);
+            void reportToFile(double time, double* solution);
 
             void solve();
 
             //return the initial solution vector
-            void getInitial(std::vector<doublereal>& initial);
+            void getInitial(std::vector<double>& initial);
 
             //residual function definition----------------
-            void residual(const doublereal& time, doublereal *y, doublereal *f);
+            void residual(const double& time, double *y, double *f);
             //species residual
-            void speciesResidual(const doublereal& time, doublereal *y, doublereal *f);
+            void speciesResidual(const double& time, double *y, double *f);
 
             //temperature
-            void energyResidual(const doublereal& time, doublereal *y, doublereal *f);
+            void energyResidual(const double& time, double *y, double *f);
 
             //soot residual
-            void sootResidual(const doublereal& time, doublereal *y, doublereal *f);
+            void sootResidual(const double& time, double *y, double *f);
 
             //update the mixture properties
-            void updateMixture(doublereal *y);
+            void updateMixture(double *y);
 
             //header information
             std::vector<std::string> header();
 
             //! Get the residual for use in radauWrapper.
-            doublereal getResidual() const;
+            double getResidual() const;
 
             //! Mass matrix evaluation. Called by radauWrapper.
-            void massMatrix(doublereal **M);
+            void massMatrix(double **M);
 
         private:
 
             int batchType;
-            std::vector<doublereal> momRates;
-            std::vector<doublereal> wdotSootGasPhase;
+            std::vector<double> momRates;
+            std::vector<double> wdotSootGasPhase;
 
     }; // End class Batch
 

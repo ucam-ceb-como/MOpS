@@ -54,9 +54,9 @@ Component::Component()
 }
 
 // Initialising constructor.
-Component::Component(Sweep::real molwt, 
-                     Sweep::real dens,
-                     Sweep::real min,
+Component::Component(double molwt, 
+                     double dens,
+                     double min,
                      const std::string &name)
 {
     // Initialise the component properties.
@@ -110,7 +110,7 @@ Component &Component::operator=(const Component &rhs)
  *@return       True if it is possible for a valid particle to have the 
  *              specifed amount of this component
  */
-bool Component::IsValidValue(const real r) const {
+bool Component::IsValidValue(const double r) const {
     return r >= m_minValid;
 }
 
@@ -170,15 +170,15 @@ void Component::Deserialize(std::istream &in)
             case 0:
                 // Read molecular weight.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_molwt = (real)val;
+                m_molwt = (double)val;
 
                 // Read density
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_density = (real)val;
+                m_density = (double)val;
 
                 // Read minimum value for a valid particle
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_minValid = static_cast<real>(val);
+                m_minValid = static_cast<double>(val);
 
                 // Read the length of the species name.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

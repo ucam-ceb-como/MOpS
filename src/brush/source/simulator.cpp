@@ -86,7 +86,7 @@ Brush::Simulator::Simulator(const size_t n_paths,
                             const std::string& output_file,
                             const Sweep::Stats::IModelStats::StatBound &stat_bound,
                             const bool split_diffusion,
-                            const real drift_adjustment,
+                            const double drift_adjustment,
                             const bool split_advection,
                             const bool strang_splitting,
                             const bool cstr_transport)
@@ -212,7 +212,7 @@ void Brush::Simulator::runOnePath(const int seed) {
     // Now loop over the user specified time steps
     for(Mops::timevector::const_iterator it = mOutputTimeSteps.begin(); it != mOutputTimeSteps.end(); ++it) {
         const Mops::TimeInterval &tInt = *it;
-        const real dt = tInt.StepSize();
+        const double dt = tInt.StepSize();
 
         std::cout << "stepping from " << tInt.StartTime() << '\n';
 
@@ -220,9 +220,9 @@ void Brush::Simulator::runOnePath(const int seed) {
             //std::cout << "solving from " << reac.getTime() << '\n';
 
             // Distance into this set of splittings
-            const real ti = i * dt;
+            const double ti = i * dt;
 
-            const real dt2 = dt / tInt.SubSplittingStepCount();
+            const double dt2 = dt / tInt.SubSplittingStepCount();
             for(unsigned int j = 0; j != tInt.SubSplittingStepCount(); ++j) {
                 solver.solve(reac, tInt.StartTime() + ti +  j      * dt2,
                                    tInt.StartTime() + ti + (j + 1) * dt2,
@@ -262,7 +262,7 @@ void Brush::Simulator::runOnePath(const int seed) {
  *\param[in]    stat_bound  Specify particles to exclude from statistics
  *\param[in]    out         File handle into which to write the moment data
  */
-void Brush::Simulator::saveParticleStats(const Reactor1d &reac, const real t,
+void Brush::Simulator::saveParticleStats(const Reactor1d &reac, const double t,
                                          const Sweep::Stats::IModelStats::StatBound &stat_bound,
                                          std::ostream &out) {
     // Create a stats object to now so there are not a lot of string operations
@@ -302,7 +302,7 @@ void Brush::Simulator::saveParticleStats(const Reactor1d &reac, const real t,
  *\param[in]    t           Time to which list applies
  *\param[in]    out         File handle into which to write the moment data
  */
-void Brush::Simulator::saveParticleList(const Reactor1d &reac, const real t, std::ostream &out) {
+void Brush::Simulator::saveParticleList(const Reactor1d &reac, const double t, std::ostream &out) {
     // Create a stats object to now so there are not a lot of string operations
     // each time one is needed below
     Sweep::Stats::EnsembleStats stats(mInitialReactor.getParticleMechanism());
@@ -344,7 +344,7 @@ void Brush::Simulator::saveParticleList(const Reactor1d &reac, const real t, std
  *\param[in]    t           Time to which rates apply
  *\param[in]    out         File handle into which to write the data
  */
-void Brush::Simulator::saveProcessRates(const Reactor1d &reac, const real t, std::ostream &out) {
+void Brush::Simulator::saveProcessRates(const Reactor1d &reac, const double t, std::ostream &out) {
     for(size_t i = 0; i < reac.getNumCells(); ++i) {
         // Collect the rates
         fvector rates;

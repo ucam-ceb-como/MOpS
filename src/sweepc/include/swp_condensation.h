@@ -84,16 +84,16 @@ public:
     // Sets the coagulation kernel parameters given the mass and
     // collision diameter of the condensing species.
     void SetCondensingSpecies(
-        real m, // Mass of the condensing species.
-        real d  // Diameter of the condensing species.
+        double m, // Mass of the condensing species.
+        double d  // Diameter of the condensing species.
         );
 
 
     // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
     // Returns rate of the process for the given system.
-    real Rate(
-        real t,          // Time.
+    double Rate(
+        double t,          // Time.
         const Cell &sys, // System for which to calculate rate.
         const Geometry::LocalGeometry1d &local_geom
         ) const;
@@ -103,16 +103,16 @@ public:
 
     // Returns the rate of the process for the given particle in
     // the system. Process must be linear in particle number.
-    real Rate(
-        real t,             // Current time (s).
+    double Rate(
+        double t,             // Current time (s).
         const Cell &sys,    // System to which the particle belongs.
         const Particle &sp  // Particle for which to calculate rate.
         ) const;
 
 
     // Returns majorant rate of the process for the given system.
-    real MajorantRate(
-        real t,             // Current time (s).
+    double MajorantRate(
+        double t,             // Current time (s).
         const Cell &sys,    // System to which the particle belongs.
         const Particle &sp  // Particle for which to calculate rate.
         ) const;
@@ -125,11 +125,11 @@ public:
     // Returns the number of rate terms for this process.
     unsigned int TermCount(void) const;
 
-    // Calculates the rate terms given an iterator to a real vector. The 
+    // Calculates the rate terms given an iterator to a double vector. The 
     // iterator is advanced to the position after the last term for this
     // process.
-    real RateTerms(
-        real t,                  // Time.
+    double RateTerms(
+        double t,                  // Time.
         const Cell &sys,         // System for which to calculate rate terms.
         const Geometry::LocalGeometry1d &local_geom,                  // position information
         fvector::iterator &iterm // Iterator to the first term.
@@ -140,7 +140,7 @@ public:
 
     //! Perform one condensation event
     virtual int Perform(
-        real t,
+        double t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
@@ -150,7 +150,7 @@ public:
     // Performs the process on a given particle in the system.  Particle
     // is given by index.  The process is performed n times.
     int Perform(
-        real t,        // Current time (s).
+        double t,        // Current time (s).
         Cell &sys,     // System to which the particle belongs.
         Particle &sp,  // Particle for which to perform process.
         rng_type &rng, // Random number for leaf node
@@ -182,12 +182,12 @@ protected:
 
     // Condensation majorant parameter.  The true rate
     // is multiplied by this parameter to get the majorised rate.
-    static const real m_majfactor;
+    static const double m_majfactor;
 
     // Free-molecular enhancement factor.
-    const real m_efm;
+    const double m_efm;
 
-    real m_kfm1, m_kfm2, m_kfm3; // Free-mol term parameters.
+    double m_kfm1, m_kfm2, m_kfm3; // Free-mol term parameters.
 
     // Default constructor is protected to prevent condensations being
     // defined without knowledge of the parent mechanism.

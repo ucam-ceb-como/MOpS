@@ -86,11 +86,11 @@ Solver::~Solver(void)
 // Performs stochastic stepping algorithm up to specified stop time using
 // the given mechanism to define the stochastic processes.  Updates given
 // system accordingly.  On error returns <0, otherwise returns 0.
-int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
+int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
                 rng_type &rng)
 {
     int err = 0;
-    real tsplit, dtg, jrate;
+    double tsplit, dtg, jrate;
     static fvector rates(mech.TermCount(), 0.0);
     // Global maximum time step.
     dtg     = tstop - t;
@@ -141,12 +141,12 @@ int Solver::Run(real &t, real tstop, Cell &sys, const Mechanism &mech,
  *
  *@return	End time for next splitting step
  */
-real Solver::calcSplitTime(real t, real tstop, real jrate,
+double Solver::calcSplitTime(double t, double tstop, double jrate,
                            unsigned int n) const
 {
     // Calculate the splitting time step, ensuring that it is
     // not longer than the maximum allowable time.
-    real tsplit = (n + 1) * m_splitratio / (jrate + 1.0);
+    double tsplit = (n + 1) * m_splitratio / (jrate + 1.0);
 
     // Now put the split end time into tsplit, again
     // checking that it is not beyond the stop time.
@@ -169,26 +169,26 @@ real Solver::calcSplitTime(real t, real tstop, real jrate,
  *@pre      t <= t_stop
  *@post     t <= t_stop
  */
-void Solver::timeStep(real &t, real t_stop, Cell &sys, const Geometry::LocalGeometry1d &geom,
-                      const Mechanism &mech, const fvector &rates, real jrate,
+void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::LocalGeometry1d &geom,
+                      const Mechanism &mech, const fvector &rates, double jrate,
                       rng_type &rng)
 {
     // The purpose of this routine is to perform a single stochastic jump process.  This
     // involves summing the total rate of all processes, generating a waiting time,
     // selecting a process and performing that process.
-    real dt;
+    double dt;
 
     //std::cout << "Solver::timeStep in cell " << &sys << " from " << t << " with rate " << jrate;
 
     // Calculate exponentially distributed time step size.
     if (jrate > 0.0) {
-        boost::exponential_distribution<real> waitDistrib(jrate);
-        boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<real> > waitGenerator(rng, waitDistrib);
+        boost::exponential_distribution<double> waitDistrib(jrate);
+        boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<double> > waitGenerator(rng, waitDistrib);
         dt = waitGenerator();
         //std::cout << ' ' << dt;
     } else {
         // Avoid divide by zero.
-        dt = std::numeric_limits<real>::max();
+        dt = std::numeric_limits<double>::max();
     }
 
     // Truncate if step is too long or select a process
@@ -208,20 +208,20 @@ void Solver::timeStep(real &t, real t_stop, Cell &sys, const Geometry::LocalGeom
 
 // Selects a process using a DIV algorithm and the process rates
 // as weights.
-int Solver::chooseProcess(const fvector &rates, real (*rand_u01)())
+int Solver::chooseProcess(const fvector &rates, double (*rand_u01)())
 {
     // This routine implements a DIV algorithm to select a process from a
     // discrete list of processes when each process's rate is given.
 
     // Add together all process rates.
     fvector::const_iterator i;
-    real sum = 0.0;
+    double sum = 0.0;
     for (i=rates.begin(); i!=rates.end(); ++i) {
         sum += *i;
     }
 
     // Generate a uniform random number.
-    real r = rand_u01() * sum ;
+    double r = rand_u01() * sum ;
 
     // Select a process using DIV algorithm.
     int j=-1;

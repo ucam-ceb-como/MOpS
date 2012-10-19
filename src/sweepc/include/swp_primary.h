@@ -96,7 +96,7 @@ public:
     //          Primary being created without knowledge of the
     //          defining particle model.
     Primary(                              // Initialising constructor.
-        real time,                        //  - Create time.
+        double time,                        //  - Create time.
         const Sweep::ParticleModel &model //  - Defining particle model.
         );
     Primary(const Primary &copy); // Copy constructor.
@@ -123,7 +123,7 @@ public:
     const fvector &Composition(void) const;
 
     // Returns the ith component value.  Returns 0.0 if i invalid.
-    real Composition(unsigned int i) const;
+    double Composition(unsigned int i) const;
 
     // Sets the composition vector.
     void SetComposition(const fvector &comp);
@@ -135,19 +135,19 @@ public:
     const fvector &Values(void) const;
 
     // Returns the ith value.  Returns 0.0 if i invalid.
-    real Values(unsigned int i) const;
+    double Values(unsigned int i) const;
 
     // Sets the values vector.
     void SetValues(const fvector &vals);
 
     // Sets the ith trackervalue.
-    void SetValue(unsigned int i, real val);
+    void SetValue(unsigned int i, double val);
 
 
     // PRIMARY CREATE TIME.
 
     // Returns the particle create time.
-    real CreateTime(void) const;
+    double CreateTime(void) const;
 
 
     // LAST UPDATE TIME.
@@ -155,10 +155,10 @@ public:
     //   to other programs/libraries outside sweep.
 
     // Returns the last update time of the particle.
-    real LastUpdateTime(void) const;
+    double LastUpdateTime(void) const;
 
     // Sets the last update time of the particle.
-    virtual void SetTime(real t);
+    virtual void SetTime(double t);
 
 
     // AGGREGATION MODEL.
@@ -172,50 +172,50 @@ public:
     virtual void UpdateCache(void);
 
     // Returns the equivalent-sphere diameter.
-    real SphDiameter(void) const;
+    double SphDiameter(void) const;
 
     // Returns the collision diameter.
-    real CollDiameter(void) const;
+    double CollDiameter(void) const;
 
     // Returns the mobility diameter.
-    real MobDiameter(void) const;
+    double MobDiameter(void) const;
 
     // Returns the surface area.
-    real SurfaceArea(void) const;
+    double SurfaceArea(void) const;
 
     // Returns the equivalent sphere surface area, based
     // on the volume.
-    real SphSurfaceArea(void) const;
+    double SphSurfaceArea(void) const;
 
     // Returns the volume.
-    real Volume(void) const;
+    double Volume(void) const;
 
     // Returns the mass.
-    real Mass(void) const;
+    double Mass(void) const;
 
     //! Returns the property with the given ID.
-    real Property(const Sweep::PropID id) const;
+    double Property(const Sweep::PropID id) const;
 
 
     // BASIC DERIVED PROPERTY OVERWRITES.
 
     // Sets the spherical particle diameter
-    void SetSphDiameter(real diam);
+    void SetSphDiameter(double diam);
 
     // Sets the collision diameter of the particle.
-    void SetCollDiameter(real dcol);
+    void SetCollDiameter(double dcol);
 
     // Sets the mobility diameter.
-    void SetMobDiameter(real dmob);
+    void SetMobDiameter(double dmob);
 
     // Sets the surface area, subject to minimum spherical area condition.
-    void SetSurfaceArea(real surf);
+    void SetSurfaceArea(double surf);
 
     // Sets the volume.
-    void SetVolume(real vol);
+    void SetVolume(double vol);
 
     // Sets the mass.
-    void SetMass(real m);
+    void SetMass(double m);
 
     //! Check particle still meets physical conditions for being a particle.
     bool IsValid() const;
@@ -249,11 +249,11 @@ public:
     // This routine sinters the Primary for the given length of
     // time using the provided sintering model.
     virtual void Sinter(
-        real dt, // Delta-t for sintering to occur.
+        double dt, // Delta-t for sintering to occur.
         Cell &sys, // System which defines primary's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
         rng_type &rng,  // Random number generator
-        real wt     // Statistical weight
+        double wt     // Statistical weight
         );
 
     // READ/WRITE/COPY.
@@ -271,12 +271,12 @@ public:
         );
 
 	//! Number of active sites (only implemented for some particle models).
-	virtual real GetSites() const { return 0; }
+	virtual double GetSites() const { return 0; }
 
 	// Return the sintering rate for a SilicaPrimary
-	virtual real GetSintRate() const { return 0.0; }
+	virtual double GetSintRate() const { return 0.0; }
 
-	virtual real GetCoverageFraction() const;
+	virtual double GetCoverageFraction() const;
 
 protected:
     // Particle model used to define the Primary.
@@ -285,16 +285,16 @@ protected:
     // Unique properties.
     fvector m_comp;   // Primary composition.
     fvector m_values; // Other primary values (defined at run time).
-    real m_createt;   // Time at which primary was created.
-    real m_time;      // Last time primary was updated.  Required for LPDA.
+    double m_createt;   // Time at which primary was created.
+    double m_time;      // Last time primary was updated.  Required for LPDA.
 
     // Basic derived properties (calculated from above properties).
-    real m_diam; // Equivalent spherical diameter.
-    real m_dcol; // Collision diameter.
-    real m_dmob; // Mobility diameter.
-    real m_surf; // Surface area.
-    real m_vol;  // Volume.
-    real m_mass; // Mass.
+    double m_diam; // Equivalent spherical diameter.
+    double m_dcol; // Collision diameter.
+    double m_dmob; // Mobility diameter.
+    double m_surf; // Surface area.
+    double m_vol;  // Volume.
+    double m_mass; // Mass.
 
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.

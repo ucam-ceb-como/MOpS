@@ -50,8 +50,8 @@ using namespace Strings;
 Array1D CamSoot::sizeMoments;
 Array1D CamSoot::reducedMoments;
 
-const doublereal CamSoot::cMass = 0.012; //kg/mol
-const doublereal CamSoot::ohMass = 0.017; //kg/mol
+const double CamSoot::cMass = 0.012; //kg/mol
+const double CamSoot::ohMass = 0.017; //kg/mol
 
 CamSoot::CamSoot()
 :
@@ -136,7 +136,7 @@ void CamSoot::readSoot
         subnode = soot->GetFirstChild("dPAH");
         if (subnode!=NULL){
             std::string atrVal = subnode->GetAttributeValue("unit");
-            doublereal convertL = convert.getConvertionFactor(atrVal);
+            double convertL = convert.getConvertionFactor(atrVal);
             dia_PAH = cdble(subnode->Data())*convertL;
         }
 
@@ -179,7 +179,7 @@ bool CamSoot::active() const {
     return momentON;
 }
 
-doublereal CamSoot::getFirstMoment() const {
+double CamSoot::getFirstMoment() const {
 	return firstMom;
 }
 
@@ -191,7 +191,7 @@ int CamSoot::getAtomsPerDiamer() const {
 /*
  *calculate the sum of surface growth term
  */
-void CamSoot::sums(int hMoment, doublereal massAdded, doublereal coeff,
+void CamSoot::sums(int hMoment, double massAdded, double coeff,
                         realVector& rates){
     for (int r = 1; r < hMoment; r++) {
         rates[r] = 0.0;
@@ -207,9 +207,9 @@ void CamSoot::sums(int hMoment, doublereal massAdded, doublereal coeff,
 //------ OLD SOOT FUNCTIONS CULLED FROM HERE ----
 
 
-doublereal CamSoot::gridFunction(const int k, const int n, const int m)
+double CamSoot::gridFunction(const int k, const int n, const int m)
 {
-    doublereal gfun = 0;
+    double gfun = 0;
     for (int l=0; l<=k; ++l)
     {
         int i = 6*(k-l+n);
@@ -226,26 +226,26 @@ doublereal CamSoot::gridFunction(const int k, const int n, const int m)
 
 
 
-void CamSoot::linear(int n, realVector& y, doublereal& a, doublereal& b,
-                        doublereal& rsq)
+void CamSoot::linear(int n, realVector& y, double& a, double& b,
+                        double& rsq)
 {
-    doublereal sum = 1.0*n;
-    doublereal x1 = 0.0;
-    doublereal x2 = 0.0;
-    doublereal y1 = 0.0;
-    doublereal y2 = 0.0;
+    double sum = 1.0*n;
+    double x1 = 0.0;
+    double x2 = 0.0;
+    double y1 = 0.0;
+    double y2 = 0.0;
 
-    doublereal yMean, ess, yss,yPred;
+    double yMean, ess, yss,yPred;
 
     for (int i=1; i<n; ++i)
     {
-        x1 += doublereal(i);
-        x2 += doublereal(i)*doublereal(i);
+        x1 += double(i);
+        x2 += double(i)*double(i);
 
         y1 += y[i];
-        y2 += y[i]*doublereal(i);
+        y2 += y[i]*double(i);
     }
-    doublereal d = sum*x2 - x1*x1;
+    double d = sum*x2 - x1*x1;
     a = (y1*x2 - x1*y2)/d;
     b = (sum*y2 - y1*x1)/d;
     yMean = y1/n;
@@ -379,7 +379,7 @@ void CamSoot::initMoments(realVector& soln,int nCells){
     for(int i=1; i<nMoments; i++){
 
     	// ank25: Do we need to multiply by 1e6 here?
-        soln.push_back(soln[i-1+st] * log(doublereal(atomsPerDimer)));
+        soln.push_back(soln[i-1+st] * log(double(atomsPerDimer)));
 
     }
 }
@@ -415,10 +415,10 @@ void CamSoot::initMomentsConstants(Mechanism &mech){
      */
 
      //molecular weight if PAH
-    doublereal mwPAH = numCAtomInception*cMass;
+    double mwPAH = numCAtomInception*cMass;
 
      //mass of PAH
-    doublereal mPAH = mwPAH/NA;
+    double mPAH = mwPAH/NA;
     /*
      *      nucleation kernel  Balthase thesis
      *               |-----------
@@ -459,18 +459,18 @@ void CamSoot::initMomentsConstants(Mechanism &mech){
      */
     Beta_cd = 2.2*sqrt(PI*kB/(2*cMass/NA))*NA;
     //diameter of one particle
-    doublereal CD1 = pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0);
+    double CD1 = pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0);
     //cout << "D1_PAH after unit conv: " << D1_PAH << endl;
 
-    doublereal CD1_PAH = D1_PAH*sqrt(2.0/3.0);
-    doublereal CH2 = Beta_cd*CD1_PAH*CD1_PAH;
-    doublereal CHS = Beta_cd* 2* CD1_PAH*CD1;
-    doublereal CS2 = Beta_cd*CD1*CD1;
+    double CD1_PAH = D1_PAH*sqrt(2.0/3.0);
+    double CH2 = Beta_cd*CD1_PAH*CD1_PAH;
+    double CHS = Beta_cd* 2* CD1_PAH*CD1;
+    double CS2 = Beta_cd*CD1*CD1;
     powPAH.resize(5,nMoments);
     for(int i=1; i<nMoments; i++){
-        doublereal x = (2.0*i+1)/2.0;
-        powPAH(1,i) = CH2 * pow(doublereal(numCAtomInception),x);
-        powPAH(2,i) = CHS * pow(doublereal(numCAtomInception),i);
+        double x = (2.0*i+1)/2.0;
+        powPAH(1,i) = CH2 * pow(double(numCAtomInception),x);
+        powPAH(2,i) = CHS * pow(double(numCAtomInception),i);
         x  = (2.0*i-1)/2.0;
         powPAH(3,i) = CS2 * pow(numCAtomInception,x);
     }
@@ -481,23 +481,23 @@ void CamSoot::initMomentsConstants(Mechanism &mech){
     // Be careful with the units of Beta_surf
     // In this code all surface reactions are done in cgs units
     // and then converted to m3 units at end.
-    doublereal CD1_CGS = pow((6*(cMass*1e3/NA)/(PI*rhoSoot*1e-3)),1.0/3.0) ;
+    double CD1_CGS = pow((6*(cMass*1e3/NA)/(PI*rhoSoot*1e-3)),1.0/3.0) ;
     Beta_surf_CGS = lambda*PI*CD1_CGS*CD1_CGS;
 
     // CBOH is OH+SOOT oxidation constant (again keep in cgs)
     // CBOH = CD1^2 * SQRT(PI * BOLTZMANN / 2 / OH_MASS) * NA ;
 
-    doublereal kB_CGS = kB * 1e7;   // 1.3807D-16;
-    doublereal OH_MASS = ohMass*1e3/NA;  // mass per single molecule
-    doublereal CBOHCGS = pow(CD1_CGS,2.0) * sqrt(PI * kB_CGS / (2.0 * OH_MASS)) * NA ;
+    double kB_CGS = kB * 1e7;   // 1.3807D-16;
+    double OH_MASS = ohMass*1e3/NA;  // mass per single molecule
+    double CBOHCGS = pow(CD1_CGS,2.0) * sqrt(PI * kB_CGS / (2.0 * OH_MASS)) * NA ;
 }
 
 void CamSoot::residual
 (
-    const doublereal& time,
+    const double& time,
     realVector& wdot,
-    doublereal* y,
-    doublereal* f
+    double* y,
+    double* f
 )
 {
     for (int r=0; r<nMoments; ++r)
@@ -510,8 +510,8 @@ CamSoot::realVector CamSoot::rateAll
 (
     const realVector& conc,     //species concentration
     const realVector& moments,  //moments
-    const doublereal& T,        //temperature
-    const doublereal& p,        //pressure
+    const double& T,        //temperature
+    const double& p,        //pressure
     const int cellID
 )
 {
@@ -519,7 +519,7 @@ CamSoot::realVector CamSoot::rateAll
     realVector rates;  // Total rate of change of moments
     //realVector nucRates, coagRates, cdRates, sRates;	// Rate of change of moments
     realVector prodRates; 	// Rate of change of has phase species due to surface chem
-    doublereal prodRatePAHCond; 	// Rate of change of PAH due to condensation
+    double prodRatePAHCond; 	// Rate of change of PAH due to condensation
 
     rates.resize(moments.size(),0.0);
     nucRates.resize(moments.size(),0.0);
@@ -575,7 +575,7 @@ CamSoot::realVector CamSoot::rateAll
     // Call this after coagulation. Reduced moments are calculated in Coag
     // cdRates is rate of change of moments due to condensation
     // prodRatePAHCond is rate of change in PAH due to condensation.
-    //doublereal tempPAHConc = conc[iInception];
+    //double tempPAHConc = conc[iInception];
 
     if (moments[0] > m0Threshold)		// Threshold check
     {
@@ -615,7 +615,7 @@ CamSoot::realVector CamSoot::rateAll
             f[r] = log(reducedMoments(6*r));
         }
 
-        doublereal a, b, rsq;
+        double a, b, rsq;
         linear(nMoments,f,a,b,rsq);
 
         for(int n = 4; n<(6*nMoments-2); n += 6){
@@ -679,8 +679,8 @@ CamSoot::realVector CamSoot::rateAll
 
 CamSoot::realVector CamSoot::rateNucleation
 (
-    const doublereal& concPAH,
-    const doublereal& T
+    const double& concPAH,
+    const double& T
 )
 // Note: This function does not return rate of change of PAH.
 // Do this outside this function using:
@@ -689,7 +689,7 @@ CamSoot::realVector CamSoot::rateNucleation
 
     realVector nucRates;
 
-    doublereal kNucl = Beta_nucl*sqrt(T);
+    double kNucl = Beta_nucl*sqrt(T);
     nucRates.resize(nMoments,0.0);
     /*
      *nucleation rate for the zeroth moment
@@ -699,7 +699,7 @@ CamSoot::realVector CamSoot::rateNucleation
     /*
      *number of carbon atoms per dimer
      */
-    doublereal cDimer = 2*numCAtomInception;
+    double cDimer = 2*numCAtomInception;
     /*
      *nucleation rate for higher moments
      */
@@ -715,12 +715,12 @@ CamSoot::realVector CamSoot::rateNucleation
 CamSoot::realVector CamSoot::rateCoagulation
 (
     const realVector& mom,
-    const doublereal& T
+    const double& T
 )
 {
 
     realVector coagRates;
-    doublereal kCoag = Beta_fm * sqrt(T);
+    double kCoag = Beta_fm * sqrt(T);
     CamMath cm;
 
     /*
@@ -745,39 +745,39 @@ CamSoot::realVector CamSoot::rateCoagulation
 
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,0,0));
-    doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
+    double crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
     f.clear();
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,1,1));
-    doublereal crk2 = kCoag*cm.interpolateLG(0.5,4,prime,f);
+    double crk2 = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
     f.clear();
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,1,2));
-    doublereal crk3 = kCoag*cm.interpolateLG(0.5,4,prime,f);
+    double crk3 = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
     f.clear();
     for(int i=0; i<3; i++)
         f.push_back(gridFunction(i,1,3));
-    doublereal crk4a = kCoag*cm.interpolateLG(0.5,3,prime,f);
+    double crk4a = kCoag*cm.interpolateLG(0.5,3,prime,f);
 
     f.clear();
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,2,2));
-    doublereal crk4b = kCoag*cm.interpolateLG(0.5,4,prime,f);
+    double crk4b = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
     f.clear();
     for(int i=0; i<2; i++)
         f.push_back(gridFunction(i,1,4));
-    doublereal crk5a = kCoag*cm.interpolateLG(0.5,2,prime,f);
+    double crk5a = kCoag*cm.interpolateLG(0.5,2,prime,f);
 
     f.clear();
     for(int i=0; i<3; i++)
         f.push_back(gridFunction(i,2,3));
-    doublereal crk5b = kCoag*cm.interpolateLG(0.5,3,prime,f);
+    double crk5b = kCoag*cm.interpolateLG(0.5,3,prime,f);
 
-    doublereal M02 = mom[0]*mom[0];
+    double M02 = mom[0]*mom[0];
 
     coagRates.resize(nMoments,0.0);
 
@@ -795,30 +795,30 @@ CamSoot::realVector CamSoot::rateCoagulation
 
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,0,0));
-    doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
+    double crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
     f.clear();
     for(int i=0; i<4; i++)
         f.push_back(gridFunction(i,1,1));
-    doublereal crk2 = kCoag*cm.interpolateLG(0.5,4,prime,f);
+    double crk2 = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
     f.clear();
     for(int i=0; i<3; i++)
         f.push_back(gridFunction(i,1,2));
-    doublereal crk3 = kCoag*cm.interpolateLG(0.5,3,prime,f);
+    double crk3 = kCoag*cm.interpolateLG(0.5,3,prime,f);
 
     f.clear();
     for(int i=0; i<2; i++)
         f.push_back(gridFunction(i,1,3));
-    doublereal crk4a = kCoag*cm.interpolateLG(0.5,2,prime,f);
+    double crk4a = kCoag*cm.interpolateLG(0.5,2,prime,f);
 
     f.clear();
     for(int i=0; i<3; i++)
         f.push_back(gridFunction(i,2,2));
-    doublereal crk4b = kCoag*cm.interpolateLG(0.5,3,prime,f);
+    double crk4b = kCoag*cm.interpolateLG(0.5,3,prime,f);
 
 
-    doublereal M02 = mom[0]*mom[0];
+    double M02 = mom[0]*mom[0];
 
     coagRates.resize(nMoments,0.0);
 
@@ -835,20 +835,20 @@ CamSoot::realVector CamSoot::rateCoagulation
 
       for(int i=0; i<4; i++)
           f.push_back(gridFunction(i,0,0));
-      doublereal crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
+      double crk = kCoag*cm.interpolateLG(0.5,4,prime,f);
 
       f.clear();
       for(int i=0; i<3; i++)
           f.push_back(gridFunction(i,1,1));
-      doublereal crk2 = kCoag*cm.interpolateLG(0.5,3,prime,f);
+      double crk2 = kCoag*cm.interpolateLG(0.5,3,prime,f);
 
       f.clear();
       for(int i=0; i<2; i++)
           f.push_back(gridFunction(i,1,2));
-      doublereal crk3 = kCoag*cm.interpolateLG(0.5,2,prime,f);
+      double crk3 = kCoag*cm.interpolateLG(0.5,2,prime,f);
 
 
-      doublereal M02 = mom[0]*mom[0];
+      double M02 = mom[0]*mom[0];
 
       coagRates.resize(nMoments,0.0);
 
@@ -864,14 +864,14 @@ CamSoot::realVector CamSoot::rateCoagulation
 
         for(int i=0; i<3; i++)
             f.push_back(gridFunction(i,0,0));
-        doublereal crk = kCoag*cm.interpolateLG(0.5,3,prime,f);
+        double crk = kCoag*cm.interpolateLG(0.5,3,prime,f);
 
         f.clear();
         for(int i=0; i<2; i++)
             f.push_back(gridFunction(i,1,1));
-        doublereal crk2 = kCoag*cm.interpolateLG(0.5,2,prime,f);
+        double crk2 = kCoag*cm.interpolateLG(0.5,2,prime,f);
 
-        doublereal M02 = mom[0]*mom[0];
+        double M02 = mom[0]*mom[0];
 
         coagRates.resize(nMoments,0.0);
 
@@ -888,10 +888,10 @@ CamSoot::realVector CamSoot::rateCoagulation
  * Condensation rates
  */
 CamSoot::realVector CamSoot::rateCondensation(const realVector& mom,
-									const doublereal& T,
-                                    const doublereal& concPAH){
+									const double& T,
+                                    const double& concPAH){
 
-    doublereal k_coeff = sqrt(T)*concPAH*mom[0];
+    double k_coeff = sqrt(T)*concPAH*mom[0];
     realVector cdRates;
     cdRates.resize(nMoments,0.0);
     for(int r=1; r<nMoments; r++){
@@ -919,7 +919,7 @@ CamSoot::realVector CamSoot::rateCondensation(const realVector& mom,
  * sRates is the rate of change of moments due to surface chem
  */
 void CamSoot::rateSurface(const realVector& conc,
-                            const doublereal& T,
+                            const double& T,
                             const realVector& mom,
                             realVector& prodRates,
                             realVector& sRates){
@@ -930,26 +930,26 @@ void CamSoot::rateSurface(const realVector& conc,
 	// and outputs (rates of moments and rates of species).
 
 	// Divide all concentration by 1e6 below. (SI --> cgs)
-    doublereal RT = 1.987e-3*T;
-    doublereal fr1 = 4.2e13*exp(-13.0/RT)*conc[iH]/1e6;		 // ank25: was 4.2e12.  Appel has 4.2e13 !!
-    doublereal rr1 = 3.9e12*exp(-11.0/RT)*conc[iH2]/1e6;
-    doublereal fr2 = 1.0e10 * pow(T,0.734) * exp(-1.43/RT)*conc[iOH]/1e6;
-    doublereal rr2 = 3.68e08 * pow(T,1.139) * exp(-17.1/RT)*conc[iH2O]/1e6;
-    doublereal fr3 = 2e13 * conc[iH]/1e6;
-    doublereal fr4 = 8.0e7*pow(T,1.56)*exp(-3.8/RT)*conc[iC2H2]/1e6;     // ank25: Was 8.0e13 (should be 8e7)
-    doublereal fr5 = 2.2e12*exp(-7.5/RT)*conc[iO2]/1e6;
-    doublereal fr6 = 0.13*conc[iOH]/1e6;
+    double RT = 1.987e-3*T;
+    double fr1 = 4.2e13*exp(-13.0/RT)*conc[iH]/1e6;		 // ank25: was 4.2e12.  Appel has 4.2e13 !!
+    double rr1 = 3.9e12*exp(-11.0/RT)*conc[iH2]/1e6;
+    double fr2 = 1.0e10 * pow(T,0.734) * exp(-1.43/RT)*conc[iOH]/1e6;
+    double rr2 = 3.68e08 * pow(T,1.139) * exp(-17.1/RT)*conc[iH2O]/1e6;
+    double fr3 = 2e13 * conc[iH]/1e6;
+    double fr4 = 8.0e7*pow(T,1.56)*exp(-3.8/RT)*conc[iC2H2]/1e6;     // ank25: Was 8.0e13 (should be 8e7)
+    double fr5 = 2.2e12*exp(-7.5/RT)*conc[iO2]/1e6;
+    double fr6 = 0.13*conc[iOH]/1e6;
 
     // ank25: No unit change here
-    doublereal par_a = 12.65 - 5.63e-03*T;
-    doublereal par_b = -1.38 + 6.80e-04*T;
+    double par_a = 12.65 - 5.63e-03*T;
+    double par_b = -1.38 + 6.80e-04*T;
 
     // reducedMoments(6) is first reduced whole moment.
-    doublereal alpha = tanh(par_a/log10(reducedMoments(6)) + par_b );
+    double alpha = tanh(par_a/log10(reducedMoments(6)) + par_b );
 
-    doublereal denom = rr1+rr2+fr3+fr4+fr5;
+    double denom = rr1+rr2+fr3+fr4+fr5;
     realVector rateC2H2, rateO2, rateOH;		// In cgs units.
-    doublereal coef;
+    double coef;
     prodRates.resize(conc.size(),0.0);			// In cgs.
 
     // ank25: rateC2H2, rateO2, rateOH are vectors describing
@@ -957,10 +957,10 @@ void CamSoot::rateSurface(const realVector& conc,
     // prodRates is a vector describing the rate of change to gas phase species.
 
     if(denom != 0){
-        doublereal ssRatio = (fr1+fr2)/denom;
-        doublereal cArea = alpha*Beta_surf_CGS*mom[0]/1e6;
+        double ssRatio = (fr1+fr2)/denom;
+        double cArea = alpha*Beta_surf_CGS*mom[0]/1e6;
         // Moment unit conv.  And beta_surf in units of CGS
-        doublereal cRad = cArea * ssRatio;
+        double cRad = cArea * ssRatio;
 
         // C2H2
         rateC2H2.resize(nMoments,0.0);
@@ -1054,25 +1054,25 @@ void CamSoot::interpolateReducedMoments(realVector& wom){
  */
 void CamSoot::momentResidual
 (
-    const doublereal& time,
+    const double& time,
     const int iMesh_s,
     const int iMesh_e,
     const realVector& dz,
     const realVector& u,
     const realVector& rho,
-    const doublereal* y,
-    doublereal* f,
+    const double* y,
+    double* f,
     const int nVar,
     const int nSpec
 )
 {
-    doublereal convection;
+    double convection;
     for (int i=iMesh_s; i<iMesh_e; ++i)
     {
         for (int l=0; l<nMoments; ++l)
         {
-            doublereal phi_e = y[i*nVar+l+nSpec];
-            doublereal phi_w = y[(i-1)*nVar+l+nSpec];
+            double phi_e = y[i*nVar+l+nSpec];
+            double phi_w = y[(i-1)*nVar+l+nSpec];
             convection = -u[i]*(phi_e - phi_w)/dz[i];
             f[i*nMoments+l] =  convection + wdot(i,l);
             //std::cout << "moment resid " << phi_e << "  " << phi_w << "  " << wdot(i,l) << std::endl;
@@ -1087,14 +1087,14 @@ void CamSoot::momentResidual
  */
 void CamSoot::momentResidual
 (
-    const doublereal& time,
+    const double& time,
     const int iMesh_s,
     const int iMesh_e,
     const realVector& dz,
     const realVector& u,
     const realVector& rho,
-    const doublereal* y,
-    doublereal* f
+    const double* y,
+    double* f
 )
 {
     momentResidual(time,iMesh_s,iMesh_e,dz,u,rho,y,f,nMoments,0);
@@ -1160,28 +1160,28 @@ CamSoot::realVector CamSoot::showSootComponentRates(int nMoments)
 	return rates;
 }
 
-doublereal CamSoot::avgSootDiam()
+double CamSoot::avgSootDiam()
 {
-	doublereal sootDiam = CD1 * reducedMoments(2);
+	double sootDiam = CD1 * reducedMoments(2);
 	return sootDiam;
 }
 
-doublereal CamSoot::dispersion()
+double CamSoot::dispersion()
 {
-	doublereal disp = reducedMoments(12) * reducedMoments(6) * reducedMoments(6);
-	// doublereal disp = moments(2) * moments(2) * moment(1);
+	double disp = reducedMoments(12) * reducedMoments(6) * reducedMoments(6);
+	// double disp = moments(2) * moments(2) * moment(1);
 	return disp;
 }
 
-doublereal CamSoot::sootSurfaceArea(doublereal M0)
+double CamSoot::sootSurfaceArea(double M0)
 {
-    doublereal surfaceArea = PI * CD1 * CD1 * CD1 * reducedMoments(4) * M0;
+    double surfaceArea = PI * CD1 * CD1 * CD1 * reducedMoments(4) * M0;
     return surfaceArea;
 }
 
-doublereal CamSoot::sootVolumeFraction(doublereal M0)
+double CamSoot::sootVolumeFraction(double M0)
 {
-    doublereal volumeFraction = PI * CD1 * CD1 * CD1 * reducedMoments(6) * M0 / 6.0;
+    double volumeFraction = PI * CD1 * CD1 * CD1 * reducedMoments(6) * M0 / 6.0;
     return volumeFraction;
 }
 

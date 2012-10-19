@@ -107,7 +107,7 @@ void ImgNode::CopySPT(const Particle *sp)
 // Adds a primary into the tree.  Algorithm maintains
 // well-balanced binary tree structure by observing
 // the minimum branch depth below node.
-void ImgNode::Insert(real radius)
+void ImgNode::Insert(double radius)
 {
     // Check for an empty tree.
     if ((m_left == NULL) && (m_right == NULL)) {
@@ -191,7 +191,7 @@ void ImgNode::Project()
 
 // Translates (moves) the aggregate node and child structure
 // by the given amounts along the cartesian axes.
-void ImgNode::Translate(real dx, real dy, real dz)
+void ImgNode::Translate(double dx, double dy, double dz)
 {
     // Translate child branches.
     if (m_left != NULL) m_left->Translate(dx, dy, dz);
@@ -215,7 +215,7 @@ void ImgNode::CentreBoundSph(void)
 
 // Rotates the aggregate node and child structure about its centre
 // of mass by the given angles (spherical coordinates).
-void ImgNode::RotateCOM(real dtheta, real dphi)
+void ImgNode::RotateCOM(double dtheta, double dphi)
 {
     // Move the aggregate so that its centre-of-mass
     // is at the origin.  Store the coordinates, so that
@@ -241,7 +241,7 @@ void ImgNode::RotateCOM(real dtheta, real dphi)
 
 // Rotates the aggregate node and child structure about its bounding
 // sphere centre by the given angles (spherical coordinates).
-void ImgNode::RotateBoundSph(real dtheta, real dphi)
+void ImgNode::RotateBoundSph(double dtheta, double dphi)
 {
     // Move the aggregate so that its bounding sphere
     // is at the origin.  Store the coordinates, so that
@@ -267,7 +267,7 @@ void ImgNode::RotateBoundSph(real dtheta, real dphi)
 
 // Rotates the aggregate node and child structure about the
 // coordinate system origin by the given angles (spherical coordinates).
-void ImgNode::RotateOrigin(real dtheta, real dphi)
+void ImgNode::RotateOrigin(double dtheta, double dphi)
 {
     // Create transformation matrix.
     Coords::Matrix M;
@@ -301,13 +301,13 @@ const Coords::Vector &ImgNode::BoundSphCentre(void) const
 }
 
 // Returns the bounding sphere radius.
-real ImgNode::Radius(void) const
+double ImgNode::Radius(void) const
 {
     return m_r;
 }
 
 // Sets the radius of the bounding sphere.
-void ImgNode::setRadius(real r)
+void ImgNode::setRadius(double r)
 {
     m_r  = r;
     m_r2 = r * r;
@@ -324,9 +324,9 @@ void ImgNode::CalcBoundSph(void)
         m_right->CalcBoundSph();
 
         // Calculate translation between left and right spheres.
-        real dx = m_right->m_cen_bsph[0] - m_left->m_cen_bsph[0];
-        real dy = m_right->m_cen_bsph[1] - m_left->m_cen_bsph[1];
-        real dz = m_right->m_cen_bsph[2] - m_left->m_cen_bsph[2];
+        double dx = m_right->m_cen_bsph[0] - m_left->m_cen_bsph[0];
+        double dy = m_right->m_cen_bsph[1] - m_left->m_cen_bsph[1];
+        double dz = m_right->m_cen_bsph[2] - m_left->m_cen_bsph[2];
 
         // Calculate bounding sphere centre.
         m_cen_bsph[0] = m_left->m_cen_bsph[0] + (0.5 * dx);
@@ -359,9 +359,9 @@ void ImgNode::CalcCOM(void)
 
         // Mass is proportional to r^3.  Calculated total
         // mass (inverse) of left and right children.
-    //    real invtotmass = 1.0 / (m_left->m_r3 + m_right->m_r3);
+    //    double invtotmass = 1.0 / (m_left->m_r3 + m_right->m_r3);
         m_mass=m_left->m_mass + m_right->m_mass;
-        real invtotmass = 1.0 / m_mass;
+        double invtotmass = 1.0 / m_mass;
         // Now calculate centre of mass.
         for (unsigned int i=0; i!=3; ++i) {
             //m_cen_mass[i]  = m_left->m_cen_mass[i] * m_left->m_r3;

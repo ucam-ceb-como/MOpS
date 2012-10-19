@@ -117,7 +117,7 @@ Reactor &Reactor::operator=(const Mops::Reactor &rhs)
         SetMech(*rhs.m_mech);
 
         // Copy ODE workspace, incl. derivatives.
-        memcpy(m_deriv, rhs.m_deriv, sizeof(real)*m_neq);
+        memcpy(m_deriv, rhs.m_deriv, sizeof(double)*m_neq);
     }
     return *this;
 }
@@ -126,13 +126,13 @@ Reactor &Reactor::operator=(const Mops::Reactor &rhs)
 // REACTOR SOLUTION.
 
 // Returns the current reactor time.
-Mops::real Reactor::Time() const
+double Reactor::Time() const
 {
     return m_time;
 }
 
 // Sets the current reactor time.
-void Reactor::SetTime(real t)
+void Reactor::SetTime(double t)
 {
     m_time = t;
 }
@@ -190,7 +190,7 @@ void Reactor::SetMech(const Mops::Mechanism &mech)
 
     // Allocate the derivative array.
     if (m_deriv != NULL) delete [] m_deriv;
-    m_deriv = new real[m_neq];
+    m_deriv = new double[m_neq];
 }
 
 
@@ -246,20 +246,20 @@ void Reactor::DisableTempFunc(void) {m_Tfunc = NULL;}
 // Adds a dT/dt functional to the internal profile.  This
 // automatically tells the Reactor object to use its
 // default dT/dt calculation function.
-void Reactor::Add_dTdt(real t, const Sweep::Maths::Functional &fun)
+void Reactor::Add_dTdt(double t, const Sweep::Maths::Functional &fun)
 {
     UseDefaultTempFunc();
     m_dTdt_profile[t] = fun.Clone();
 }
 
 // Definition of RHS function for adiabatic energy model.
-Mops::real Reactor::_RHS_dTdt_profile(real t, const real *const y,
-                                const real *const ydot, 
+double Reactor::_RHS_dTdt_profile(double t, const double *const y,
+                                const double *const ydot, 
                                 const Reactor &r)
 {
     // Locate the first time point after t, or end() if
     // the profile is not long enough.
-    map<real,Sweep::Maths::Functional*>::const_reverse_iterator i;
+    map<double,Sweep::Maths::Functional*>::const_reverse_iterator i;
     for (i=r.m_dTdt_profile.rbegin(); i!=r.m_dTdt_profile.rend(); ++i) {
         if (i->first <= t) {
             break;
@@ -365,7 +365,7 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
             case 0:
                 // Read the time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_time = (real)val;
+                m_time = (double)val;
 
                 // Read the mixture.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -393,10 +393,10 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                 // Read derivatives array.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n == 1) {
-                    m_deriv = new real[m_neq];
+                    m_deriv = new double[m_neq];
                     for (unsigned int i=0; i<m_neq; i++) {
                         in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                        m_deriv[i] = (real)val;
+                        m_deriv[i] = (double)val;
                     }
                 }
                 
@@ -439,10 +439,10 @@ unsigned int Reactor::ODE_Count() const
 }
 
 // Definition of RHS form for constant temperature energy equation.
-void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
+void Reactor::RHS_ConstT(double t, const double *const y,  double *ydot) const
 {
     static fvector wdot, sdot;
-    real wtot = 0.0, stot= 0.0, avrMW = 0.0;
+    double wtot = 0.0, stot= 0.0, avrMW = 0.0;
 	// Currently direct input Volume and ARea 
 
     //double Volume = 1.4/1000; // m^3
@@ -501,10 +501,10 @@ void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
 }
 
 // Definition of RHS form for adiabatic energy equation.
-void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
+void Reactor::RHS_Adiabatic(double t, const double *const y,  double *ydot) const
 {
     static fvector wdot, sdot, Hs, Us;
-    real wtot = 0.0, Cp = 0.0, stot =0.0, avrMW =0.0, Cv = 0.0;
+    double wtot = 0.0, Cp = 0.0, stot =0.0, avrMW =0.0, Cv = 0.0;
 
     // Calculate mixture thermodynamic properties.
     m_mix->GasPhase().CalcHs_RT(y[m_iT], Hs);
@@ -582,9 +582,9 @@ void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
 
 // Definition of Jacobian evaluator function for constant
 // temperature model.
-void Reactor::Jacobian(real t, real *const y, 
-                       real **J,
-                       real uround) const
+void Reactor::Jacobian(double t, double *const y, 
+                       double **J,
+                       double uround) const
 {
     m_mech->GasMech().Reactions().CalcJacobian(y[m_iT], y[m_iDens], y,
                                      m_nsp, m_mix->GasPhase(), uround, J,
@@ -597,9 +597,9 @@ void Reactor::Jacobian(real t, real *const y,
 @param[in, out]     J       Jacobian array
 @param[in]          uround  The value of the perturbation factor for finite differencing.
 */
-void Reactor::RateJacobian(real t, real *const y, 
-                       real **J,
-                       real uround) const
+void Reactor::RateJacobian(double t, double *const y, 
+                       double **J,
+                       double uround) const
 {
     m_mech->GasMech().Reactions().RateJacobian(y[m_iT], y[m_iDens], y,
                                      m_nsp, m_mix->GasPhase(), uround, J,

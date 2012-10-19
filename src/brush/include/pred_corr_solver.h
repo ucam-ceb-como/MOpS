@@ -80,34 +80,34 @@ public:
     //! Create with an object with details of the chemistry, which is time invariant
     PredCorrSolver(const ResetChemistry& reset_chem,
                    const size_t corrector_iterations,
-                   const real rtol, const real atol,
-                   const bool split_diffusion, const real drift_correction,
+                   const double rtol, const double atol,
+                   const bool split_diffusion, const double drift_correction,
                    const bool split_advection, const bool strang_splitting,
                    const bool cstr_transport);
 
     //! Advance solution to specified time
-    void solve(Reactor1d &reac, const real t_start, const real t_stop, const int n_steps,
+    void solve(Reactor1d &reac, const double t_start, const double t_stop, const int n_steps,
                const int n_iter, const size_t seed) const;
 
 protected:
     //! Perform one time step using a predictor followed by some corrector iterations
-    void predictorCorrectorStep(Reactor1d &reac, const real t_start, const real t_stop, const int n_iter,
+    void predictorCorrectorStep(Reactor1d &reac, const double t_start, const double t_stop, const int n_iter,
                                 std::vector<Sweep::rng_type>& cell_rngs) const;
 
     //! Advance particle population to specified time
-    void solveParticlesByCell(Reactor1d &reac, const real t_start, const real t_stop,
+    void solveParticlesByCell(Reactor1d &reac, const double t_start, const double t_stop,
                               std::vector<Sweep::rng_type>& cell_rngs) const;
 
     //! Advance particle population to specified time
     void solveParticlesInOneCell(Sweep::Cell &cell, const Geometry::LocalGeometry1d &geom,
-                                 const Sweep::Mechanism &mech, real t, real t_stop,
+                                 const Sweep::Mechanism &mech, double t, double t_stop,
                                  Sweep::rng_type &rng) const;
 
     //! Advance chemistry over specified time interval
-    void solveChemistry(Reactor1d & reac, const real t_stop) const; //,?some kind of workspace for ODE solver);
+    void solveChemistry(Reactor1d & reac, const double t_stop) const; //,?some kind of workspace for ODE solver);
 
     //! Carry out split transport on all particles from all cells
-    void splitParticleTransport(Reactor1d &reac, const real t_start, const real t_stop,
+    void splitParticleTransport(Reactor1d &reac, const double t_start, const double t_stop,
                                 std::vector<Sweep::rng_type>& cell_rngs) const;
 
 private:
@@ -115,14 +115,14 @@ private:
     PredCorrSolver();
 
     //! Calculate and set a new position on one particle
-    void updateParticlePosition(const real t_start, const real t_stop, const Sweep::Cell &mix,
+    void updateParticlePosition(const double t_start, const double t_stop, const Sweep::Cell &mix,
                                 const Sweep::Mechanism &mech,
                                 const Geometry::LocalGeometry1d & geom,
                                 const std::vector<const Sweep::Cell*> & neighbouring_cells,
                                 Sweep::Particle& sp, Sweep::rng_type &rng) const;
     
     //! Move particle to centre of this or next cell according to CSTR probabilities
-    void updateParticlePositionCSTR(const real t_start, const real t_stop, const Sweep::Cell &mix,
+    void updateParticlePositionCSTR(const double t_start, const double t_stop, const Sweep::Cell &mix,
                                     const Sweep::Mechanism &mech,
                                     const Geometry::LocalGeometry1d & geom,
                                     const std::vector<const Sweep::Cell*> & neighbouring_cells,
@@ -137,7 +137,7 @@ private:
     typedef std::vector<std::list<Sweep::Particle*> > inflow_lists_vector;
 
     //! Take the particles from a cell and put them in lists according to their new positions
-    inflow_lists_vector updateParticleListPositions(const real t_start, const real t_stop, Sweep::Cell &mix,
+    inflow_lists_vector updateParticleListPositions(const double t_start, const double t_stop, Sweep::Cell &mix,
                                                     const size_t cell_index, const Sweep::Mechanism &mech,
                                                     const Geometry::Geometry1d &geom,
                                                     const std::vector<const Sweep::Cell*> &neighbouring_cells,
@@ -148,7 +148,7 @@ private:
     ResetChemistry mResetChemistry;
 
     //! Expected number of events deferred per particle between fixed updates
-    real mDeferralRatio;
+    double mDeferralRatio;
 
     //! Indicate if diffusion is to be split from the main particle processes
     bool mSplitDiffusion;
@@ -205,7 +205,7 @@ private:
      *
      * Note that the diffusion coefficient \f$D(x) = \frac{1}{2}\sigma(x)^2\f$.
      */
-    real mDiffusionDriftAdjustment;
+    double mDiffusionDriftAdjustment;
 
     //! Indicate if advection is to be split from the main particle processes or simply ignored
     bool mSplitAdvection;

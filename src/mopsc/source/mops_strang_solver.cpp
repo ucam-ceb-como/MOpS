@@ -68,7 +68,7 @@ StrangSolver::~StrangSolver(void)
 // Solves the coupled reactor using a Strang splitting algorithm
 // up to the stop time.  calls the output routine once at the
 // end of the function.  niter is ignored.
-void StrangSolver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
+void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter, 
                          Sweep::rng_type &rng,
                          OutFnPtr out, void *data)
 {
@@ -77,17 +77,17 @@ void StrangSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
     clock_t totmark = clock();
 
     // Time counters.
-    real t2 = r.Time();
-    real dt = (tstop - t2) / (real)nsteps; // Step size.
-    real h  = dt * 0.5; // Half step size.
+    double t2 = r.Time();
+    double dt = (tstop - t2) / (double)nsteps; // Step size.
+    double h  = dt * 0.5; // Half step size.
 
     // Sweep time counters.
-    real ts1 = r.Time();
-    real ts2 = ts1;
+    double ts1 = r.Time();
+    double ts2 = ts1;
 
     // Variables required to ensure particle number density is correctly
     // scaled with gas-phase expansion.
-    real rho = 0.0;
+    double rho = 0.0;
 
     m_cpu_mark = clock();
         // Solve first half-step of gas-phase chemistry.
@@ -141,8 +141,8 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
                                 unsigned int nruns)
 {
     unsigned int icon;
-    real t1;     // Current time.
-    real dt, t2; // Stop time for each step.
+    double t1;     // Current time.
+    double dt, t2; // Stop time for each step.
 
     // Store the initial conditions.
     Mixture initmix(r.Mech()->ParticleMech());
@@ -228,20 +228,20 @@ void StrangSolver::SolveReactor(Mops::Reactor &r,
 
 // SOLUTION ROUTINES.
 
-void StrangSolver::multiStrangStep(Mops::real dt, unsigned int n, Mops::Reactor &r,
+void StrangSolver::multiStrangStep(double dt, unsigned int n, Mops::Reactor &r,
                                    Sweep::rng_type &rng)
 {
     // Time counters.
-    real t2 = r.Time();
-    real h  = dt * 0.5; // Half step size.
+    double t2 = r.Time();
+    double h  = dt * 0.5; // Half step size.
 
     // Sweep time counters.
-    real ts1 = r.Time();
-    real ts2 = ts1;
+    double ts1 = r.Time();
+    double ts2 = ts1;
 
     // Variables required to ensure particle number density is correctly
     // scaled with gas-phase expansion.
-    real rho = 0.0;
+    double rho = 0.0;
 
     m_cpu_mark = clock();
         // Solve first half-step of gas-phase chemistry.

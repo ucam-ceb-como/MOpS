@@ -77,13 +77,13 @@ namespace Kinetics
     const std::string &Name(void) const;
 
     //Returns the total stoichiometry change of this species. (inline)
-    const real &TotalStoich(void) const;
+    const double &TotalStoich(void) const;
 
    //Returns the reactant stoichiometry change of this species. (inline)
-    const real &ReacStoich(void) const;
+    const double &ReacStoich(void) const;
 
     //Returns the product stoichiometry change of this species. (inline)
-    const real &ProdStoich(void) const;
+    const double &ProdStoich(void) const;
 
     // Sets the species name.
     void SetSpeciesName(const std::string &name);
@@ -92,13 +92,13 @@ namespace Kinetics
     void SetPhaseName(const std::string &name);
 
     // Sets/change the total stoichiometry change of this species. 
-    void IncrementTotalStoich(const real &value); // can be + or -
+    void IncrementTotalStoich(const double &value); // can be + or -
     
     // Sets/change the reactant stoichiometry change of this species. 
-    void IncrementReacStoich(const real &value); // can be + or -
+    void IncrementReacStoich(const double &value); // can be + or -
     
    // Sets/change the product stoichiometry change of this species. 
-    void IncrementProdStoich(const real &value); // can be + or -
+    void IncrementProdStoich(const double &value); // can be + or -
 
     // Sets the parent reaction.
     void SetReaction(Sprog::Kinetics::Reaction &rct);
@@ -136,9 +136,9 @@ namespace Kinetics
 private:
     // Data.
     std::string m_spName;
-    real total_stoich_sp;
-    real reac_stoich_sp;
-    real prod_stoich_sp;
+    double total_stoich_sp;
+    double reac_stoich_sp;
+    double prod_stoich_sp;
 };
 // Inline function definitions.
 #include "gpc_delta_stoich_inl.h"

@@ -104,10 +104,10 @@ public:
     void SetMaxPartCount(unsigned int n);
 
     //! Returns the max. M0, for initial ensemble scaling.
-    real MaxM0(void) const;
+    double MaxM0(void) const;
 
     //! Sets max. M0.
-    void SetMaxM0(real m0);
+    void SetMaxM0(double m0);
 
     // CONSOLE OUTPUT.
 
@@ -186,8 +186,8 @@ public:
     // Set simulator to output data of a given statistical range.
     void SetOutputStatBoundary(
         const Sweep::PropID pid,
-        real lower,
-        real upper
+        double lower,
+        double upper
         );
 
     // POVRAY OUTPUT.
@@ -247,7 +247,7 @@ private:
     unsigned int m_pcount;
 
     //! Max. M0 value, for initial scaling of ensemble.
-    real m_maxm0;
+    double m_maxm0;
 
     // COMPUTATION TIME.
 
@@ -501,7 +501,7 @@ private:
     // Multiplies all values in a vector by a scaling factor.
     static void multVals(
         fvector &vals, // The values to multiply by the scaling factor.
-        real scale     // The scaling factor (numner of runs).
+        double scale     // The scaling factor (numner of runs).
         );
 
     // Takes vectors of vectors of variable sums and sums of squares, which
@@ -523,7 +523,7 @@ private:
     // vector.
     static void buildOutputVector(
         unsigned int step, // Step number.
-        real time,         // Step time.
+        double time,         // Step time.
         fvector &avg,      // Averages.
         const fvector &err // Confidence intervals (will be inserted into avg).
         );
@@ -684,15 +684,15 @@ private:
     void calculateM0(
         fvector &m_xmer,
         fvector &m_M0,
-        real Pcount,
-        real PM0
+        double Pcount,
+        double PM0
         );
     // calculate M0 for mutiple runs
     void calculateM0(
         fvector &m_mass,
         fvector &m_m0,
-        std::vector<std::vector<real> > &m_allmass,
-        std::vector<std::vector<real> > &m_allm0
+        std::vector<std::vector<double> > &m_allmass,
+        std::vector<std::vector<double> > &m_allm0
         );
 
 };

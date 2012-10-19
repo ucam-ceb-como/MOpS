@@ -131,15 +131,15 @@ void KMCSimulator::targetPAH(PAHStructure& pah) {
 // the results of those tests turned out that it did not affect the results too much. 
 // Details can be find in Ongoing\Projects\c4e-dc516-Soot\Hard_coded_Parameters_mops\tests_for_waitingSteps_KMC
 void KMCSimulator::updatePAH(PAHStructure* pah, 
-                            const real tstart, 
-                            const real dt,  
+                            const double tstart, 
+                            const double dt,  
                             const int waitingSteps,  
                             rng_type &rng,
-                            real r_factor,
+                            double r_factor,
                             int PAH_ID) {
     initReactionCount();
     m_t = tstart;
-    real t_max = m_t + dt;
+    double t_max = m_t + dt;
     targetPAH(*pah);
     /*if(m_simPAHp.checkCoordinates())
         cout<<"Coordinates of structure OK. Commencing updatePAH..\n";
@@ -161,9 +161,9 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
         throw std::runtime_error(msg.str());
         assert(false);
     }*/
-    real t_next = m_t;
-    real t_step_max = dt/waitingSteps;
-    //real oldtnext;
+    double t_next = m_t;
+    double t_step_max = dt/waitingSteps;
+    //double oldtnext;
     int loopcount=0;
     while (m_t < t_max) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
@@ -175,10 +175,10 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
         m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
 
         // Calculate time step, update time
-        typedef boost::exponential_distribution<real> exponential_distrib;
+        typedef boost::exponential_distribution<double> exponential_distrib;
         exponential_distrib waitingTimeDistrib(m_kmcmech.TotalRate());
         boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
-        real t_step = waitingTimeGenerator();
+        double t_step = waitingTimeGenerator();
         t_next = m_t+t_step;
         if(t_next < t_max && t_step < t_step_max) {
 
@@ -213,16 +213,16 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
 }
 
 //! Outputs rates into a csv file (assuming all site counts as 1)
-void KMCSimulator::TestRates(const real tstart, const real tstop, const int intervals) {
+void KMCSimulator::TestRates(const double tstart, const double tstop, const int intervals) {
     // set name of output file
     //setCSVratesName(filename);
     std::cout << "Saving Rates...\n";
     m_rates_csv.Open(m_rates_name, true);
     rvector rates(m_kmcmech.JPList().size(), 0);
-    real dt = (tstop-tstart)/intervals;
+    double dt = (tstop-tstart)/intervals;
     m_simPAHp.m_rates_save = true;
     // for each interval
-    for(real t=tstart; t<= tstop; t+=dt) {
+    for(double t=tstart; t<= tstop; t+=dt) {
         // interpolate & calculate rates
         m_gas->Interpolate(t);
         m_kmcmech.calculateRates(*m_gas, m_simPAHp, t);
@@ -235,7 +235,7 @@ void KMCSimulator::TestRates(const real tstart, const real tstop, const int inte
 }
 
 //! Obtains rates of PAH reactions with the current structure
-rvector KMCSimulator::CurrentRates(PAHStructure* pah, real t) {
+rvector KMCSimulator::CurrentRates(PAHStructure* pah, double t) {
     m_simPAHp.setPAH(*pah);
     rvector rates(m_kmcmech.JPList().size(), 0);
     m_gas->Interpolate(t);
@@ -244,16 +244,16 @@ rvector KMCSimulator::CurrentRates(PAHStructure* pah, real t) {
     return rates;
 }
 //! Outputs gas concentrations into a csv file
-void KMCSimulator::TestConc(const real& t_start, const real& t_stop, const int intervals, const std::string& filename) {
+void KMCSimulator::TestConc(const double& t_start, const double& t_stop, const int intervals, const std::string& filename) {
     CSV_IO csvio(filename, true);
-    real dt = (t_stop-t_start)/intervals;
+    double dt = (t_stop-t_start)/intervals;
     std::vector<string> species(m_gas->m_total-2);
     rvector temp(m_gas->m_total-2); //exclude T & P
     for(size_t i=1; i<(temp.size()); i++) {
         species[i] = m_gas->SpNames()[i+1];
     }
     csvio.Write(species);
-    for(real t=t_start; t<=t_stop; t+=dt) {
+    for(double t=t_start; t<=t_stop; t+=dt) {
         temp[0] = t;
         m_gas->Interpolate(t);
         for(size_t i=1; i<(temp.size()-1); i++) {
@@ -268,9 +268,9 @@ void KMCSimulator::TestConc(const real& t_start, const real& t_stop, const int i
     for(int run=1; run<=totalruns; run++) {
         clock_t timerStart = clock();
         int total_interval = 10;
-        real maxtime = 0.0222029;
-        real step = maxtime/total_interval;
-        real tnow=0;
+        double maxtime = 0.0222029;
+        double step = maxtime/total_interval;
+        double tnow=0;
         // loop counts
         int count = 0;
         // Start timer
@@ -361,13 +361,13 @@ void KMCSimulator::writeCHSiteCountCSV() {
     m_pah_csv.Write(temp);
 }
 //! Writes data for rates count (csv)
-void KMCSimulator::writeRatesCSV(real& time, rvector& v_rates) {
+void KMCSimulator::writeRatesCSV(double& time, rvector& v_rates) {
     int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21};
     //int convM[] = {1, 2,14,15, 8,10,11,12,13, 3, 7, 9, 5, 4, 6,22,24,16,21};
     int ID;
     //if(runNo==1) {
     int total_jp = 21;
-    std::vector<real> temp(total_jp+1,0);
+    std::vector<double> temp(total_jp+1,0);
     temp[0] = time;
     for(int i=0; i!=(int)v_rates.size(); i++) {
         ID = m_kmcmech.JPList()[i]->getID();
@@ -412,7 +412,7 @@ void KMCSimulator::initReactionCount() {
 void KMCSimulator::LoadGasProfiles(const std::string gasphase, const std::string chemfile, const std::string thermfile) {
     m_mech = new Sprog::Mechanism();
     Sprog::IO::MechanismParser::ReadChemkin(chemfile, *m_mech, thermfile, 0);
-    map<real,real> alpha_prof;
+    map<double,double> alpha_prof;
 
     // Clear the current gas-phase profile.
     m_gasprof->clear();
@@ -493,18 +493,18 @@ void KMCSimulator::LoadGasProfiles(const std::string gasphase, const std::string
         // Now we can read the profile.
         while(!getline(fin, line).eof()) {
             // Set t=0 and create a new IdealGas object.
-            real t = 0.0;
-            real T = 0.0;
-            real P = 0.0;
-            real alpha = 0.0;
-            real PAHRate = 0.0;
+            double t = 0.0;
+            double T = 0.0;
+            double P = 0.0;
+            double alpha = 0.0;
+            double PAHRate = 0.0;
             GasPoint gpoint(m_mech->Species());
 
             // Split the line by columns.
             split(line, subs, delim);
 
             // Check that the mole fractions sum to 1
-            real checkSum = 0.0;
+            double checkSum = 0.0;
 
             // Loop over all the elements in the line and save them
             // to the correct gas-phase variable.
@@ -527,7 +527,7 @@ void KMCSimulator::LoadGasProfiles(const std::string gasphase, const std::string
                     // This is a gas-phase species column.
                     map<unsigned int,int>::iterator isp = spcols.find(i);
                     if (isp != spcols.end()) {
-                        const real frac = cdble(subs[i]);
+                        const double frac = cdble(subs[i]);
                         assert(isp->second >= 0);
                         gpoint.Gas.RawData()[isp->second] = frac;
                         checkSum += frac;
@@ -629,7 +629,7 @@ void KMCSimulator::saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID) {
         m_simPAHp.saveDOT(filename);
 }
 //! Save the structure DOT file after every X simulation sec interval
-void KMCSimulator::saveDOTperXsec(const real& X, const int& seed, const real &time, const real &time_max, KMCMechanism& copyMod, int& intervalcount) {
+void KMCSimulator::saveDOTperXsec(const double& X, const int& seed, const double &time, const double &time_max, KMCMechanism& copyMod, int& intervalcount) {
     int interval = (int) ceil(time/X);
     std::string graphTitle;
     if(intervalcount == -1) {
@@ -643,9 +643,9 @@ void KMCSimulator::saveDOTperXsec(const real& X, const int& seed, const real &ti
         intervalcount = 0;
     }
     while(interval > intervalcount || time == time_max) {
-        real timenow = intervalcount * X;
+        double timenow = intervalcount * X;
         int sec = (int) floor(timenow);
-        int dec = (int) (floor((timenow - (real) sec)*100000));
+        int dec = (int) (floor((timenow - (double) sec)*100000));
         std::string dec_str;
         if(dec<10) dec_str = "0000";
         else if(dec<100) dec_str = "000";
@@ -671,7 +671,7 @@ CSV_data::CSV_data(KMCSimulator& st) {
     m_sim = &st;
 }
 CSV_data::~CSV_data() {}
-void CSV_data::initData(int max_runs, int no_of_interv, real max_time, intpair N_CH_initial, KMCGasPoint& gp) {
+void CSV_data::initData(int max_runs, int no_of_interv, double max_time, intpair N_CH_initial, KMCGasPoint& gp) {
     cout<<"Initialising CH_data vector...\n";
     // vector of zeros for each run
     intvector zeros(no_of_interv+1, 0);
@@ -683,10 +683,10 @@ void CSV_data::initData(int max_runs, int no_of_interv, real max_time, intpair N
     m_dt = max_time/no_of_interv;
     // initialising time values
     for(int i=0; i<=no_of_interv; i++){
-        real timetemp = m_dt*i;
+        double timetemp = m_dt*i;
         m_time.push_back(timetemp);
         gp.Interpolate(timetemp);
-        real Ttemp = gp[gp.T];
+        double Ttemp = gp[gp.T];
         m_T.push_back(Ttemp);
     }
     // setting all values to zero for all runs
@@ -702,7 +702,7 @@ void CSV_data::initData(int max_runs, int no_of_interv, real max_time, intpair N
     cout<<"CH_data initialised!!\n";
 }
 // Compares time and adds data if interval reached
-void CSV_data::addData(intpair N_CH, real time, int runNo, PAHProcess& pp, bool savedot) {
+void CSV_data::addData(intpair N_CH, double time, int runNo, PAHProcess& pp, bool savedot) {
     // Zakwan's code
     int& c = m_intervalcount;
     // how many intervals have passed
@@ -711,7 +711,7 @@ void CSV_data::addData(intpair N_CH, real time, int runNo, PAHProcess& pp, bool 
     if(interv_now > c) {
         // to find how many data points skipped if time step larger than interval
         int intervals_jumped = 0;
-        real Temp;
+        double Temp;
         if((interv_now-c) > 1) {
             
             intervals_jumped = interv_now - c -1;
@@ -722,9 +722,9 @@ void CSV_data::addData(intpair N_CH, real time, int runNo, PAHProcess& pp, bool 
                 m_dataH[runNo-1][c+i] = m_dataH[runNo-1][c+i-1];
                 if(savedot) {
                 std::string filename = "KMC_DEBUG/";
-                real timenow = (c+i)*m_dt;
+                double timenow = (c+i)*m_dt;
                 int sec = (int) floor(timenow);
-                int dec = (int) (floor((timenow - (real) sec)*100000));
+                int dec = (int) (floor((timenow - (double) sec)*100000));
                 std::string dec_str;
                 if(dec<10) dec_str = "0000";
                 else if(dec<100) dec_str = "000";
@@ -746,7 +746,7 @@ void CSV_data::addData(intpair N_CH, real time, int runNo, PAHProcess& pp, bool 
             if(savedot){
             std::string filename = "KMC_DEBUG/";
             int sec = (int) floor(time);
-            int dec = (int) (floor((time - (real) sec)*100000));
+            int dec = (int) (floor((time - (double) sec)*100000));
             std::string dec_str;
             if(dec<10) dec_str = "0000";
             else if(dec<100) dec_str = "000";
@@ -767,7 +767,7 @@ void CSV_data::addData(intpair N_CH, real time, int runNo, PAHProcess& pp, bool 
             if(savedot) {
             std::string filename = "KMC_DEBUG/";
             int sec = (int) floor(time);
-            int dec = (int) (floor((time - (real) sec)*100000));
+            int dec = (int) (floor((time - (double) sec)*100000));
             std::string dec_str;
             if(dec<10) dec_str = "0000";
             else if(dec<100) dec_str = "000";
@@ -781,7 +781,7 @@ void CSV_data::addData(intpair N_CH, real time, int runNo, PAHProcess& pp, bool 
         }
     }else return;
     /* Abhijeet's
-    real c = m_intervalcount*m_dt;
+    double c = m_intervalcount*m_dt;
     // how many intervals have passed
     //int interv_now = (int) floor(time/m_dt);
     if(time >= c) {
@@ -854,7 +854,7 @@ void CSV_data::writeCSV(bool col, bool keep_data) {
 // and writes values of profile on console.
 void KMCSimulator::TestGP() {
     cout<<endl<<"---(Sweep, KMC_ARS::KMCSimulator) Testing KMCGasPoint---"<<endl;
-    for(real t=0; t<0.005; t+=0.001) {
+    for(double t=0; t<0.005; t+=0.001) {
         cout << "--At time "<<t <<"--"<<endl;
         m_gas->Interpolate(t);
         for(int i=0; i<m_gas->m_total; i++) {

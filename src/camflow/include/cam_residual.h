@@ -107,27 +107,27 @@ namespace Camflow
             /*
              * residual evaluation function for ODE and DAEs
              */
-            virtual int eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval) = 0;
+            virtual int eval(double t, double* y, double* ydot, bool jacEval) = 0;
 
             //mass matrix evaluation
-            virtual void massMatrix(doublereal **M) = 0;
+            virtual void massMatrix(double **M) = 0;
 
             /*
              *console output for monitoring the integration process
              */
-            virtual void report(doublereal t, doublereal* solution){}
+            virtual void report(double t, double* solution){}
             /*
              *console output for monitoring the integration process
              *with residual output
              */
-            virtual void report(doublereal t, doublereal* solutio, doublereal& res) = 0;
+            virtual void report(double t, double* solutio, double& res) = 0;
 
             /*
              *call to solve the reactor from the external interface
              */
             virtual void solve(std::vector<Thermo::Mixture>& cstrs,
-                    const std::vector< std::vector<doublereal> >& iniSource,
-                    const std::vector< std::vector<doublereal> >& fnlSource,
+                    const std::vector< std::vector<double> >& iniSource,
+                    const std::vector< std::vector<double> >& fnlSource,
                     Sprog::Mechanism& mech,
                     CamControl &cc,
                     CamAdmin &ca,
@@ -138,31 +138,31 @@ namespace Camflow
             /*
              * residual evaluation for newton solvers
              */
-            virtual int eval(doublereal* y, doublereal* ydot);
+            virtual int eval(double* y, double* ydot);
 
             /*
              * base class definition for species residuals. This function can be used for
              * any boundary value problems. The boundary condition has to be implemented
              * in the respective reactor models
              */
-            virtual void speciesResidual(const doublereal& time, doublereal* y, doublereal* f) = 0;
+            virtual void speciesResidual(const double& time, double* y, double* f) = 0;
 
             /*
              * base class definition for energy residuals. This function can be used for
              * any boundary value problems. The boundary condition has to be implemented
              * in the respective reactor models
              */
-            virtual void energyResidual(const doublereal& time, doublereal* y, doublereal* f) = 0;
+            virtual void energyResidual(const double& time, double* y, double* f) = 0;
 
             /*
              * flow field evaluation (algebraic equation system)
              */
-            virtual void calcFlowField(const doublereal& time, doublereal* y);
+            virtual void calcFlowField(const double& time, double* y);
 
             /**
              *set the scalar dissipation rate in case of flamelet odel
              */
-            virtual void setExternalSDR(const doublereal sr)
+            virtual void setExternalSDR(const double sr)
             {
                 throw std::logic_error("Why are you calling this virtual function?!");
             };
@@ -173,7 +173,7 @@ namespace Camflow
              * species transport properties and thermal properties are
              * dependent on the species compositions
              */
-            virtual void saveMixtureProp(const doublereal time, doublereal* y, bool thermo, bool mom);
+            virtual void saveMixtureProp(const double time, double* y, bool thermo, bool mom);
 
 
 
@@ -224,48 +224,48 @@ namespace Camflow
             /*
              *return the average molar weight of the mixture to the calling program
              */
-            virtual void getAverageMolarWeight(std::vector<doublereal>& avgMolWt_);
+            virtual void getAverageMolarWeight(std::vector<double>& avgMolWt_);
             /*
              *return the temperature
              */
-            virtual void getTemperatureVector(std::vector<doublereal>& temp);
+            virtual void getTemperatureVector(std::vector<double>& temp);
             /*
              *return the average soot diameter
              */
-            virtual void getSootAverageDiameterVector(std::vector<doublereal>& temp);
+            virtual void getSootAverageDiameterVector(std::vector<double>& temp);
             /*
              *return the soot dispersion
              */
-            virtual void getSootDispersionVector(std::vector<doublereal>& temp);
+            virtual void getSootDispersionVector(std::vector<double>& temp);
             /*
              *return the soot surface area
              */
-            virtual void getSootSurfaceAreaVector(std::vector<doublereal>& temp);
+            virtual void getSootSurfaceAreaVector(std::vector<double>& temp);
             /*
              *return the soot volume fraction
              */
-            virtual void getSootVolumeFractionVector(std::vector<doublereal>& temp);
+            virtual void getSootVolumeFractionVector(std::vector<double>& temp);
             /*
              *return the rate of production of A4
             */
-            virtual void getWdotA4interface(std::vector<doublereal>& temp);
+            virtual void getWdotA4interface(std::vector<double>& temp);
             /*
              *return the density vector
              */
-            virtual void getDensityVector(std::vector<doublereal>& density);
+            virtual void getDensityVector(std::vector<double>& density);
             /*
              *return the viscosity vector
              */
-            virtual void getViscosityVector(std::vector<doublereal>& viscosity);
+            virtual void getViscosityVector(std::vector<double>& viscosity);
             /*
              *return point velocities
              */
-            virtual void getVelocity(std::vector<doublereal>& vel);
+            virtual void getVelocity(std::vector<double>& vel);
 
             /*
              *  return the specific heat
              */
-            virtual void getSpecificHeat(std::vector<doublereal>& spHeat);
+            virtual void getSpecificHeat(std::vector<double>& spHeat);
             /*
              * return a 2D array for Diffusion coefficient
              */
@@ -273,42 +273,42 @@ namespace Camflow
             /*
              * Return the thermal conductivity
              */
-            virtual void getThermalConductivity(std::vector<doublereal>& lambda);
+            virtual void getThermalConductivity(std::vector<double>& lambda);
             /*
              *return the independant variable
              */
-            virtual void getIndepedantVar(std::vector<doublereal>& indVar);
+            virtual void getIndepedantVar(std::vector<double>& indVar);
 
             //Get the species residual
-            virtual doublereal getResidual() const = 0;
+            virtual double getResidual() const = 0;
 
             /*
              *store the particle source terms for use in species residual
              *by passing the initial and final source terms
              */
-            virtual void setParticleSource(const std::vector< std::vector<doublereal> >& initial,
-                   const  std::vector< std::vector<doublereal> >& final);
+            virtual void setParticleSource(const std::vector< std::vector<double> >& initial,
+                   const  std::vector< std::vector<double> >& final);
 
             /*
              *extract various dependent variabes from the master
              *solution vector
              */
-            void extractContinuity(std::vector<doublereal>& vec);
-            void extractSpeciesVector(std::vector<doublereal>& vec);
-            void extractEnergyVector(std::vector<doublereal>& vec);
-            void extractMomentum(std::vector<doublereal>& vec);
-            void extractSootMoments(std::vector<doublereal>& vec);
-            void extractSpeciesAndEnergyVector(std::vector<doublereal>& vec);
+            void extractContinuity(std::vector<double>& vec);
+            void extractSpeciesVector(std::vector<double>& vec);
+            void extractEnergyVector(std::vector<double>& vec);
+            void extractMomentum(std::vector<double>& vec);
+            void extractSootMoments(std::vector<double>& vec);
+            void extractSpeciesAndEnergyVector(std::vector<double>& vec);
             /*
              *merge the denepdent variables to the
              *master solution vector
              */
-            void mergeContinuity(doublereal* vec);
-            void mergeSpeciesVector(doublereal* vec);
-            void mergeEnergyVector(doublereal* vec);
-            void mergeMomentum(doublereal* vec);
-            void mergeSootMoments(doublereal* vec);
-            void mergeSpeciesAndEnergyVector(doublereal* vec);
+            void mergeContinuity(double* vec);
+            void mergeSpeciesVector(double* vec);
+            void mergeEnergyVector(double* vec);
+            void mergeMomentum(double* vec);
+            void mergeSootMoments(double* vec);
+            void mergeSpeciesAndEnergyVector(double* vec);
 
             // \todo Hack for cam_premix
             void set_nVar(int n)
@@ -336,7 +336,7 @@ namespace Camflow
 
             const SpeciesPtrVector* spv_;
 
-            doublereal opPre;                        //operating pressure
+            double opPre;                        //operating pressure
 
             const int mCord;   // this is the mixture fraction coordinates
             const int iMesh_s, cellBegin;//first cell
@@ -355,12 +355,12 @@ namespace Camflow
             int nEqn;    //number of equations
 
             //members for the reactor models
-            std::vector<doublereal> solvect, rTol, aTol;
-            doublereal vel,rho, Ac, As;
+            std::vector<double> solvect, rTol, aTol;
+            double vel,rho, Ac, As;
 
             const int solverID;
 
-            std::vector<doublereal> resSp, resT, resFlow, resMoment, resAxVel, resMom;
+            std::vector<double> resSp, resT, resFlow, resMoment, resAxVel, resMom;
 
 
             Array2D s_mf;
@@ -374,30 +374,30 @@ namespace Camflow
             Array2D moments;	    // ank25: soot moments
             Array2D moments_dot;    // ank25: moments rate analogous to s_wdot
 
-            std::vector<doublereal> m_T;                  //mixture temperature
-            std::vector<doublereal> m_rho;                //mixture density
-            std::vector<doublereal> m_cp;                 //mixture specific heat
-            std::vector<doublereal> m_mu;                 //viscosity
-            std::vector<doublereal> m_u;                  //axial velocity
-            std::vector<doublereal> m_k;                  //mixture thermal conductivity
-            std::vector<doublereal> m_v_grd;              //radial velocity gradient
-            std::vector<doublereal> m_q;                  //thermal conduction flux
-            std::vector<doublereal> m_flow;               //mass flow
-            std::vector<doublereal> m_G;                  //radial velocity gradient
-            std::vector<doublereal> m_shear;              //shear rate
-            std::vector<doublereal> m_eigen;              //pressure gradient eigen value
-            std::vector<doublereal> wdot;                 //rate of production
-            const std::vector<doublereal>& dz;            //grid spacing
-            std::vector<doublereal> axpos;                //axial position
-            std::vector<doublereal> avgMolWt;             //average molecular weight
-            std::vector<doublereal> slopes;               //slopes of piece-wise linear particle sources
-            std::vector<doublereal> radiation;            //radiative heat loss term for output to profile.h
+            std::vector<double> m_T;                  //mixture temperature
+            std::vector<double> m_rho;                //mixture density
+            std::vector<double> m_cp;                 //mixture specific heat
+            std::vector<double> m_mu;                 //viscosity
+            std::vector<double> m_u;                  //axial velocity
+            std::vector<double> m_k;                  //mixture thermal conductivity
+            std::vector<double> m_v_grd;              //radial velocity gradient
+            std::vector<double> m_q;                  //thermal conduction flux
+            std::vector<double> m_flow;               //mass flow
+            std::vector<double> m_G;                  //radial velocity gradient
+            std::vector<double> m_shear;              //shear rate
+            std::vector<double> m_eigen;              //pressure gradient eigen value
+            std::vector<double> wdot;                 //rate of production
+            const std::vector<double>& dz;            //grid spacing
+            std::vector<double> axpos;                //axial position
+            std::vector<double> avgMolWt;             //average molecular weight
+            std::vector<double> slopes;               //slopes of piece-wise linear particle sources
+            std::vector<double> radiation;            //radiative heat loss term for output to profile.h
 
-            std::vector<doublereal> avgSootDiamMaster;	  // soot properties derived from moments.
-            std::vector<doublereal> dispersionMaster;
-            std::vector<doublereal> sootSurfaceAreaMaster;
-            std::vector<doublereal> sootVolumeFractionMaster;
-            std::vector<doublereal> wdotA4Master;
+            std::vector<double> avgSootDiamMaster;	  // soot properties derived from moments.
+            std::vector<double> dispersionMaster;
+            std::vector<double> sootSurfaceAreaMaster;
+            std::vector<double> sootVolumeFractionMaster;
+            std::vector<double> wdotA4Master;
 
     }; // End CamResidual class declaration.
 

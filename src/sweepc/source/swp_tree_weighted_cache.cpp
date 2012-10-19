@@ -172,7 +172,7 @@ void Sweep::TreeWeightedCache::Clear(void)
 /*!
  *  Returns one of the values stored in the cache
  */
-Sweep::real Sweep::TreeWeightedCache::Property(PropID id) const
+double Sweep::TreeWeightedCache::Property(PropID id) const
 {
     switch (id) {
         case iDsph:      // Equivalent sphere diameter.

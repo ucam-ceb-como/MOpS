@@ -55,7 +55,7 @@ using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
 
-const real Processes::SurfaceReaction::m_majfactor = 2.0;
+const double Processes::SurfaceReaction::m_majfactor = 2.0;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -130,17 +130,17 @@ void SurfaceReaction::SetPropertyID(PropID pid)
 // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
 // Returns rate of the process for the given system.
-real SurfaceReaction::Rate(real t, const Cell &sys,
+double SurfaceReaction::Rate(double t, const Cell &sys,
                            const Geometry::LocalGeometry1d &local_geom) const
 {
     // Rate constant.
-    real rate = m_arr.A;
+    double rate = m_arr.A;
 
     // Chemical species concentration dependence.
     rate *= chemRatePart(sys.GasPhase());
 
     // Temperature dependance.
-    real T = sys.GasPhase().Temperature();
+    double T = sys.GasPhase().Temperature();
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
     // Particle dependence.
@@ -160,16 +160,16 @@ real SurfaceReaction::Rate(real t, const Cell &sys,
 
 // Returns the rate of the process for the given particle in
 // the system. Process must be linear in particle number.
-real SurfaceReaction::Rate(real t, const Cell &sys, const Particle &sp) const
+double SurfaceReaction::Rate(double t, const Cell &sys, const Particle &sp) const
 {
     // Rate constant.
-    real rate = m_arr.A;
+    double rate = m_arr.A;
 
     // Chemical species concentration dependence.
     rate *= chemRatePart(sys.GasPhase());
 
     // Temperature dependance.
-    real T = sys.GasPhase().Temperature();
+    double T = sys.GasPhase().Temperature();
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
     // Paticle dependence.
@@ -179,7 +179,7 @@ real SurfaceReaction::Rate(real t, const Cell &sys, const Particle &sp) const
 }
 
 // Returns majorant rate of the process for the given system.
-real SurfaceReaction::MajorantRate(real t, const Cell &sys,
+double SurfaceReaction::MajorantRate(double t, const Cell &sys,
                                    const Particle &sp) const
 {
     return Rate(t, sys, sp) * m_majfactor;
@@ -193,10 +193,10 @@ real SurfaceReaction::MajorantRate(real t, const Cell &sys,
 // Returns the number of rate terms for this process.
 unsigned int SurfaceReaction::TermCount(void) const {return 1;}
 
-// Calculates the rate terms given an iterator to a real vector. The
+// Calculates the rate terms given an iterator to a double vector. The
 // iterator is advanced to the position after the last term for this
 // process.
-real SurfaceReaction::RateTerms(real t, const Cell &sys,
+double SurfaceReaction::RateTerms(double t, const Cell &sys,
                                 const Geometry::LocalGeometry1d &local_geom,
                                 fvector::iterator &iterm) const
 {
@@ -217,7 +217,7 @@ real SurfaceReaction::RateTerms(real t, const Cell &sys,
  *
  * \return      0 on success, otherwise negative.
  */
-int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys, 
+int SurfaceReaction::Perform(double t, Sweep::Cell &sys, 
                              const Geometry::LocalGeometry1d& local_geom,
                              unsigned int iterm,
                              rng_type &rng) const
@@ -232,12 +232,12 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
         // Update particle with deferred processes.
         if (m_mech->AnyDeferred()) {
             // Calculate majorant rate then update the particle.
-            real majr = MajorantRate(t, sys, *sp);
+            double majr = MajorantRate(t, sys, *sp);
             m_mech->UpdateParticle(*sp, sys, t, rng);
 
             // Check that the particle is still valid.
             if (sp->IsValid()) {
-                real truer = Rate(t, sys, *sp);
+                double truer = Rate(t, sys, *sp);
 
                 if (!Fictitious(majr, truer, rng)) {
                     // Adjust particle.
@@ -278,7 +278,7 @@ int SurfaceReaction::Perform(Sweep::real t, Sweep::Cell &sys,
 
 // Performs the process on a given particle in the system.  Particle
 // is given by index.  The process is performed n times.
-int SurfaceReaction::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
+int SurfaceReaction::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
                              unsigned int n) const
 {
     unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
@@ -353,9 +353,9 @@ void SurfaceReaction::Deserialize(std::istream &in, const Sweep::Mechanism &mech
                 in.read(reinterpret_cast<char*>(&A), sizeof(A));
                 in.read(reinterpret_cast<char*>(&nn), sizeof(nn));
                 in.read(reinterpret_cast<char*>(&E), sizeof(E));
-                m_arr.A = (real)A;
-                m_arr.n = (real)nn;
-                m_arr.E = (real)E;
+                m_arr.A = (double)A;
+                m_arr.n = (double)nn;
+                m_arr.E = (double)E;
 
                 // Read particle property ID.
                 in.read(reinterpret_cast<char*>(&m_pid), sizeof(m_pid));

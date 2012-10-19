@@ -55,31 +55,31 @@ using namespace std;
 const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
     std::string("Avg. Number of PAHs"),
     std::string("Number of PAHs cm-3"),
-    std::string("Surface real Part"),
-    std::string("Avg. Mass real Part"),
-    std::string("Avg. PAH real Part"),
+    std::string("Surface double Part"),
+    std::string("Avg. Mass double Part"),
+    std::string("Avg. PAH double Part"),
     std::string("Avg. PAH Collision Diameter"),
 	std::string("Avg. Number of Carbon Atoms"),
 	std::string("Avg. Number of Hydrogen Atoms"),
 	std::string("Avg. Number of Edge Carbon Atoms"),
 	std::string("Avg. Number of Rings"),
     std::string("Avg. Coalesc Threshold"),
-    std::string("Num Primaries real Part"),
+    std::string("Num Primaries double Part"),
 };
 
 const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. Number of PAHs.
     IModelStats::Sum,  // Number of PAHs.
-    IModelStats::Sum,  // Surface real Part
-    IModelStats::Avg,  // Avg. Mass real Part
-    IModelStats::Avg,  // Avg. PAH real Part
+    IModelStats::Sum,  // Surface double Part
+    IModelStats::Avg,  // Avg. Mass double Part
+    IModelStats::Avg,  // Avg. PAH double Part
     IModelStats::Avg,  // Avg. PAH Collision Diameter
 	IModelStats::Avg,  // Avg. Number of Carbon atoms
 	IModelStats::Avg,  // Avg. Number of Hydrogen atoms
 	IModelStats::Avg,  // Avg. Number of Edge Carbon Atoms
 	IModelStats::Avg,  // Avg. Number of Rings
     IModelStats::Avg,  // Avg. Coalesc Threshold
-    IModelStats::Avg,  // Num Primaries real Part
+    IModelStats::Avg,  // Num Primaries double Part
 };
 
 const std::string PAHStats::m_const_pslnames[PAHStats::PSL_COUNT] = {
@@ -155,15 +155,15 @@ unsigned int PAHStats::Count() const
 }
 
 // Calculates the model stats for a particle ensemble.
-void PAHStats::Calculate(const Ensemble &e, real scale)
+void PAHStats::Calculate(const Ensemble &e, double scale)
 {
     // Empty the stats array.
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
-    // Forward define sum of 'real particle' weights
+    // Forward define sum of 'double particle' weights
     // used to count particles with more than one PAH
-	// real part properties => particle only considered, sum of X / num of particle
-    real wtreal = 0.0;
+	// double part properties => particle only considered, sum of X / num of particle
+    double wtreal = 0.0;
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
@@ -171,8 +171,8 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
     for (ip=e.begin(); ip!=e.end(); ++ip) {
 		const AggModels::PAHPrimary *pah = NULL;
 			pah = dynamic_cast<const AggModels::PAHPrimary*>((*(*ip)).Primary());
-        real sz = (*ip)->Property(m_statbound.PID);
-        real wt = (*ip)->getStatisticalWeight();
+        double sz = (*ip)->Property(m_statbound.PID);
+        double wt = (*ip)->getStatisticalWeight();
 
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
@@ -191,14 +191,14 @@ void PAHStats::Calculate(const Ensemble &e, real scale)
                 m_stats[iPARTSURF]+=(*ip)->SurfaceArea() * wt;
                 m_stats[iNPRIM]+= pah->Numprimary() * wt;
                 m_stats[iPARTMASS]+=(*ip)->Primary()->Mass() * wt;
-                m_stats[iNAVGPAH]+= pah->NumPAH() * wt;  //used to calculate Avg. PAH real Part
+                m_stats[iNAVGPAH]+= pah->NumPAH() * wt;  //used to calculate Avg. PAH double Part
             }
         }
     }
 
     // Calculate total weight
-    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
-    real invRealWeight = wtreal==0.0 ? 1.0/wtreal : 0.0;
+    double invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+    double invRealWeight = wtreal==0.0 ? 1.0/wtreal : 0.0;
 
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=0; i!=STAT_COUNT; ++i) {
@@ -323,7 +323,7 @@ void PAHStats::PSL_Names(std::vector<std::string> &names,
 }
 
 // Returns the PSL entry for the given particle.
-void PAHStats::PSL(const Sweep::Particle &sp, real time,
+void PAHStats::PSL(const Sweep::Particle &sp, double time,
                        fvector &psl, unsigned int start) const
 {
     // Resize vector if too small.
@@ -342,18 +342,18 @@ void PAHStats::PSL(const Sweep::Particle &sp, real time,
 
     // Get the PSL stats.
     if (pah != NULL) {
-		*(++j) = (real)(pah->NumPAH());
-		*(++j) = (real)(pah->PAHCollDiameter())*1e9;			//convert to nm
-		*(++j) = (real) (pah->NumCarbon());
-		*(++j) = (real) (pah->NumHydrogen());
-		*(++j) = (real) (pah->Numprimary());
-        *(++j) = (real) (pah->NumEdgeC());
-        *(++j) = (real) (pah->NumRings());
-        *(++j) = (real) (pah->sqrtLW());
-		*(++j) = (real) (pah->LdivW());
-		*(++j) = (real) (pah->PrimaryDiam())*1e9/(real)(pah->Numprimary());//convert to nm
-        *(++j) = (real) (pah->Rg())*1e9;
-        *(++j) = (real) (pah->Fdim());
+		*(++j) = (double)(pah->NumPAH());
+		*(++j) = (double)(pah->PAHCollDiameter())*1e9;			//convert to nm
+		*(++j) = (double) (pah->NumCarbon());
+		*(++j) = (double) (pah->NumHydrogen());
+		*(++j) = (double) (pah->Numprimary());
+        *(++j) = (double) (pah->NumEdgeC());
+        *(++j) = (double) (pah->NumRings());
+        *(++j) = (double) (pah->sqrtLW());
+		*(++j) = (double) (pah->LdivW());
+		*(++j) = (double) (pah->PrimaryDiam())*1e9/(double)(pah->Numprimary());//convert to nm
+        *(++j) = (double) (pah->Rg())*1e9;
+        *(++j) = (double) (pah->Fdim());
 
     } else {
         fill (j+1, j+2, 0.0);
@@ -445,7 +445,7 @@ void PAHStats::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                 // Read stats.
                 for (unsigned int i=0; i!=n; ++i) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_stats.push_back((real)val);
+                    m_stats.push_back((double)val);
                 }
 
                 // Read number of stat names in vector.

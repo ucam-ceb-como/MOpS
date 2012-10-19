@@ -130,7 +130,7 @@ unsigned int SurfVolHydrogenStats::Count() const
 }
 
 // Calculates the model stats for a particle ensemble.
-void SurfVolHydrogenStats::Calculate(const Ensemble &e, real scale)
+void SurfVolHydrogenStats::Calculate(const Ensemble &e, double scale)
 {
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
@@ -141,8 +141,8 @@ void SurfVolHydrogenStats::Calculate(const Ensemble &e, real scale)
         // Get surface-volume cache.
         const AggModels::SurfVolHydrogenPrimary * const primary =
             dynamic_cast<const AggModels::SurfVolHydrogenPrimary *>((*ip)->Primary());
-        real sz = (*ip)->Property(m_statbound.PID);
-        real wt = (*ip)->getStatisticalWeight();
+        double sz = (*ip)->Property(m_statbound.PID);
+        double wt = (*ip)->getStatisticalWeight();
 
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
@@ -156,7 +156,7 @@ void SurfVolHydrogenStats::Calculate(const Ensemble &e, real scale)
     }
 
     // Calculate total weight
-    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+    double invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
 
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {
@@ -238,19 +238,19 @@ void SurfVolHydrogenStats::Names(std::vector<std::string> &names,
 // AVAILABLE BASIC STATS.
 
 // Returns the total equivalent-sphere surface area.
-real SurfVolHydrogenStats::SphSurfaceArea(void) const {return m_stats[iS];}
+double SurfVolHydrogenStats::SphSurfaceArea(void) const {return m_stats[iS];}
 
 // Returns the average equivalent-sphere surface area.
-real SurfVolHydrogenStats::AvgSphSurfaceArea(void) const {return m_stats[iS+1];}
+double SurfVolHydrogenStats::AvgSphSurfaceArea(void) const {return m_stats[iS+1];}
 
 // Returns the total primary particle count.
-real SurfVolHydrogenStats::PriPartCount(void) const {return m_stats[iPPN];}
+double SurfVolHydrogenStats::PriPartCount(void) const {return m_stats[iPPN];}
 
 // Returns the average primary particle count.
-real SurfVolHydrogenStats::AvgPriPartCount(void) const {return m_stats[iPPN+1];}
+double SurfVolHydrogenStats::AvgPriPartCount(void) const {return m_stats[iPPN+1];}
 
 // Returns the average primary particle diameter.
-real SurfVolHydrogenStats::AvgPriPartDiameter(void) const {return m_stats[iPPD];}
+double SurfVolHydrogenStats::AvgPriPartDiameter(void) const {return m_stats[iPPD];}
 
 
 // PARTICLE SIZE LISTS.
@@ -290,7 +290,7 @@ void SurfVolHydrogenStats::PSL_Names(std::vector<std::string> &names,
 }
 
 // Returns the PSL entry for the given particle.
-void SurfVolHydrogenStats::PSL(const Sweep::Particle &sp, real time,
+void SurfVolHydrogenStats::PSL(const Sweep::Particle &sp, double time,
                        fvector &psl, unsigned int start) const
 {
     // Resize vector if too small.
@@ -397,7 +397,7 @@ void SurfVolHydrogenStats::Deserialize(std::istream &in, const Sweep::ParticleMo
                 // Read stats.
                 for (unsigned int i=0; i!=n; ++i) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_stats.push_back((real)val);
+                    m_stats.push_back((double)val);
                 }
 
                 // Read number of stat names in vector.

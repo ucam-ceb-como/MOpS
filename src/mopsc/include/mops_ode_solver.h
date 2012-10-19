@@ -97,33 +97,33 @@ public:
     void ResetSolver(Reactor &reac);
 
     // Sets the time in the ODE solver.
-//    void SetTime(real time);
+//    void SetTime(double time);
 
 
     // RUNNING THE SOLVER.
 
     // Solves the reactor equations up to the given time, assuming
     // that it is in future to the current time.
-    void Solve(Reactor &reac, real stop_time);
+    void Solve(Reactor &reac, double stop_time);
 
 
     // ERROR TOLERANCES.
 
     // Returns the absolute error tolerance used for ODE
     // calculations.
-    real ATOL() const;
+    double ATOL() const;
 
     // Sets the absolute error tolerance used for ODE
     // calculations.
-    void SetATOL(real atol);
+    void SetATOL(double atol);
 
     // Returns the relative error tolerance used for ODE
     // calculations.
-    real RTOL() const;
+    double RTOL() const;
 
     // Sets the relative error tolerance used for ODE
     // calculations.
-    void SetRTOL(real rtol);
+    void SetRTOL(double rtol);
 
 
     // EXTERNAL SOURCE TERMS.
@@ -193,17 +193,17 @@ private:
 
 protected:
     // ODE solution variables.
-    real m_rtol, m_atol;    // Relative and absolute tolerances.
+    double m_rtol, m_atol;    // Relative and absolute tolerances.
     unsigned int m_neq;     // Number of equations solved.
 //    unsigned int m_nsp;     // Number of species in current mechanism.
 //    int m_iT;               // Index of temperature in solution vectors.
 //    int m_iDens;            // Index of density in solution vectors.
 
     // Solution variables.
-    real m_time;        // Current solution time.
+    double m_time;        // Current solution time.
     Reactor *m_reactor; // The reactor being solved.
-    real *m_soln;       // Pointer to solution array (comes from Reactor object).
-    real *m_deriv;      // Array to hold current solution derivatives.
+    double *m_soln;       // Pointer to solution array (comes from Reactor object).
+    double *m_deriv;      // Array to hold current solution derivatives.
 
     // External source terms.
     const SrcProfile *m_srcterms; // Vector of externally defined source terms on  the RHS.

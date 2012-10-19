@@ -56,20 +56,20 @@ ThermoInterface::~ThermoInterface(void)
 
 // INTERNAL ENERGY.
 
-real ThermoInterface::CalcBulkU(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkU(double T, const Sprog::fvector &x) const
 {
     return CalcBulkU(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkU(Sprog::real T, 
+double ThermoInterface::CalcBulkU(double T, 
                                 const Sprog::fvector &x, 
                                 Sprog::fvector &U) const
 {
     return CalcBulkU(T, &x[0], x.size(), U);
 }
 
-real ThermoInterface::CalcBulkU(Sprog::real T, 
-                                const Sprog::real *const x, 
+double ThermoInterface::CalcBulkU(double T, 
+                                const double *const x, 
                                 unsigned int n) const
 {
     return CalcBulkU(T, x, n, m_tmpvec);
@@ -78,20 +78,20 @@ real ThermoInterface::CalcBulkU(Sprog::real T,
 
 // DIMENSIONLESS INTERNAL ENERGY.
 
-real ThermoInterface::CalcBulkU_RT(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkU_RT(double T, const Sprog::fvector &x) const
 {
     return CalcBulkU_RT(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkU_RT(Sprog::real T, 
+double ThermoInterface::CalcBulkU_RT(double T, 
                                    const Sprog::fvector &x, 
                                    Sprog::fvector &U) const
 {
     return CalcBulkU_RT(T, &x[0], x.size(), U);
 }
 
-real ThermoInterface::CalcBulkU_RT(Sprog::real T, 
-                                   const Sprog::real *const x, 
+double ThermoInterface::CalcBulkU_RT(double T, 
+                                   const double *const x, 
                                    unsigned int n) const
 {
     return CalcBulkU_RT(T, x, n, m_tmpvec);
@@ -100,20 +100,20 @@ real ThermoInterface::CalcBulkU_RT(Sprog::real T,
 
 // ENTHALPY.
 
-real ThermoInterface::CalcBulkH(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkH(double T, const Sprog::fvector &x) const
 {
     return CalcBulkH(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkH(Sprog::real T, 
+double ThermoInterface::CalcBulkH(double T, 
                                 const Sprog::fvector &x, 
                                 Sprog::fvector &H) const
 {
     return CalcBulkH(T, &x[0], x.size(), H);
 }
 
-real ThermoInterface::CalcBulkH(Sprog::real T, 
-                                const Sprog::real *const x, 
+double ThermoInterface::CalcBulkH(double T, 
+                                const double *const x, 
                                 unsigned int n) const
 {
     return CalcBulkH(T, x, n, m_tmpvec);
@@ -122,19 +122,19 @@ real ThermoInterface::CalcBulkH(Sprog::real T,
 
 // DIMENSIONLESS ENTHALPY.
 
-real ThermoInterface::CalcBulkH_RT(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkH_RT(double T, const Sprog::fvector &x) const
 {
     return CalcBulkH_RT(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkH_RT(Sprog::real T, const Sprog::fvector &x, 
+double ThermoInterface::CalcBulkH_RT(double T, const Sprog::fvector &x, 
                                    Sprog::fvector &H) const
 {
     return CalcBulkH_RT(T, &x[0], x.size(), H);
 }
 
-real ThermoInterface::CalcBulkH_RT(Sprog::real T, 
-                                   const Sprog::real *const x, 
+double ThermoInterface::CalcBulkH_RT(double T, 
+                                   const double *const x, 
                                    unsigned int n) const
 {
     return CalcBulkH_RT(T, x, n, m_tmpvec);
@@ -143,20 +143,20 @@ real ThermoInterface::CalcBulkH_RT(Sprog::real T,
 
 // ENTROPY.
 
-real ThermoInterface::CalcBulkS(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkS(double T, const Sprog::fvector &x) const
 {
     return CalcBulkS(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkS(Sprog::real T, 
+double ThermoInterface::CalcBulkS(double T, 
                                 const Sprog::fvector &x, 
                                 Sprog::fvector &S) const
 {
     return CalcBulkS(T, &x[0], x.size(), S);
 }
 
-real ThermoInterface::CalcBulkS(Sprog::real T, 
-                                const Sprog::real *const x, 
+double ThermoInterface::CalcBulkS(double T, 
+                                const double *const x, 
                                 unsigned int n) const
 {
     return CalcBulkS(T, x, n, m_tmpvec);
@@ -165,20 +165,20 @@ real ThermoInterface::CalcBulkS(Sprog::real T,
 
 // DIMENSIONLESS ENTROPY.
 
-real ThermoInterface::CalcBulkS_R(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkS_R(double T, const Sprog::fvector &x) const
 {
     return CalcBulkS_R(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkS_R(Sprog::real T, 
+double ThermoInterface::CalcBulkS_R(double T, 
                                   const Sprog::fvector &x, 
                                   Sprog::fvector &S) const
 {
     return CalcBulkS_R(T, &x[0], x.size(), S);
 }
 
-real ThermoInterface::CalcBulkS_R(Sprog::real T, 
-                                  const Sprog::real *const x, 
+double ThermoInterface::CalcBulkS_R(double T, 
+                                  const double *const x, 
                                   unsigned int n) const
 {
     return CalcBulkS_R(T, x, n, m_tmpvec);
@@ -187,20 +187,20 @@ real ThermoInterface::CalcBulkS_R(Sprog::real T,
 
 // GIBBS FREE ENERGY.
 
-real ThermoInterface::CalcBulkG(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkG(double T, const Sprog::fvector &x) const
 {
     return CalcBulkG(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkG(Sprog::real T, 
+double ThermoInterface::CalcBulkG(double T, 
                                 const Sprog::fvector &x, 
                                 Sprog::fvector &G) const
 {
     return CalcBulkG(T, &x[0], x.size(), G);
 }
 
-real ThermoInterface::CalcBulkG(Sprog::real T, 
-                                const Sprog::real *const x, 
+double ThermoInterface::CalcBulkG(double T, 
+                                const double *const x, 
                                 unsigned int n) const
 {
     return CalcBulkG(T, x, n, m_tmpvec);
@@ -209,20 +209,20 @@ real ThermoInterface::CalcBulkG(Sprog::real T,
 
 // DIMENSIONLESS GIBBS FREE ENERGY.
 
-real ThermoInterface::CalcBulkG_RT(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkG_RT(double T, const Sprog::fvector &x) const
 {
     return CalcBulkG_RT(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkG_RT(Sprog::real T, 
+double ThermoInterface::CalcBulkG_RT(double T, 
                                    const Sprog::fvector &x, 
                                    Sprog::fvector &G) const
 {
     return CalcBulkG_RT(T, &x[0], x.size(), G);
 }
 
-real ThermoInterface::CalcBulkG_RT(Sprog::real T, 
-                                   const Sprog::real *const x, 
+double ThermoInterface::CalcBulkG_RT(double T, 
+                                   const double *const x, 
                                    unsigned int n) const
 {
     return CalcBulkG_RT(T, x, n, m_tmpvec);
@@ -231,20 +231,20 @@ real ThermoInterface::CalcBulkG_RT(Sprog::real T,
 
 // CONSTANT PRESSURE HEAT CAPACITY.
 
-real ThermoInterface::CalcBulkCp(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkCp(double T, const Sprog::fvector &x) const
 {
     return CalcBulkCp(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkCp(Sprog::real T, 
+double ThermoInterface::CalcBulkCp(double T, 
                                  const Sprog::fvector &x, 
                                  Sprog::fvector &Cp) const
 {
     return CalcBulkCp(T, &x[0], x.size(), Cp);
 }
 
-real ThermoInterface::CalcBulkCp(Sprog::real T, 
-                                 const Sprog::real *const x, 
+double ThermoInterface::CalcBulkCp(double T, 
+                                 const double *const x, 
                                  unsigned int n) const
 {
     return CalcBulkCp(T, x, n, m_tmpvec);
@@ -253,20 +253,20 @@ real ThermoInterface::CalcBulkCp(Sprog::real T,
 
 // DIMENSIONLESS CONSTANT PRESSURE HEAT CAPACITY.
 
-real ThermoInterface::CalcBulkCp_R(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkCp_R(double T, const Sprog::fvector &x) const
 {
     return CalcBulkCp_R(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkCp_R(Sprog::real T, 
+double ThermoInterface::CalcBulkCp_R(double T, 
                                    const Sprog::fvector &x, 
                                    Sprog::fvector &Cp) const
 {
     return CalcBulkCp_R(T, &x[0], x.size(), Cp);
 }
 
-real ThermoInterface::CalcBulkCp_R(Sprog::real T, 
-                                   const Sprog::real *const x, 
+double ThermoInterface::CalcBulkCp_R(double T, 
+                                   const double *const x, 
                                    unsigned int n) const
 {
     return CalcBulkCp_R(T, x, n, m_tmpvec);
@@ -275,20 +275,20 @@ real ThermoInterface::CalcBulkCp_R(Sprog::real T,
 
 // CONSTANT VOLUME HEAT CAPACITY.
 
-real ThermoInterface::CalcBulkCv(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkCv(double T, const Sprog::fvector &x) const
 {
     return CalcBulkCv(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkCv(Sprog::real T, 
+double ThermoInterface::CalcBulkCv(double T, 
                                  const Sprog::fvector &x, 
                                  Sprog::fvector &Cv) const
 {
     return CalcBulkCv(T, &x[0], x.size(), Cv);
 }
 
-real ThermoInterface::CalcBulkCv(Sprog::real T, 
-                                 const Sprog::real *const x, 
+double ThermoInterface::CalcBulkCv(double T, 
+                                 const double *const x, 
                                  unsigned int n) const
 {
     return CalcBulkCv(T, x, n, m_tmpvec);
@@ -297,20 +297,20 @@ real ThermoInterface::CalcBulkCv(Sprog::real T,
 
 // DIMENSIONLESS CONSTANT VOLUME HEAT CAPACITY.
 
-real ThermoInterface::CalcBulkCv_R(Sprog::real T, const Sprog::fvector &x) const
+double ThermoInterface::CalcBulkCv_R(double T, const Sprog::fvector &x) const
 {
     return CalcBulkCv_R(T, &x[0], x.size());
 }
 
-real ThermoInterface::CalcBulkCv_R(Sprog::real T, 
+double ThermoInterface::CalcBulkCv_R(double T, 
                                    const Sprog::fvector &x, 
                                    Sprog::fvector &Cv) const
 {
     return CalcBulkCv_R(T, &x[0], x.size(), Cv);
 }
 
-real ThermoInterface::CalcBulkCv_R(Sprog::real T, 
-                                   const Sprog::real *const x, 
+double ThermoInterface::CalcBulkCv_R(double T, 
+                                   const double *const x, 
                                    unsigned int n) const
 {
     return CalcBulkCv_R(T, x, n, m_tmpvec);

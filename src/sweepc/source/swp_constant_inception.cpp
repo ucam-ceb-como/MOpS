@@ -114,7 +114,7 @@ Sweep::Processes::ConstantInception &Sweep::Processes::ConstantInception::operat
  *
  * \return      0 on success, otherwise negative.
  */
-int Sweep::Processes::ConstantInception::Perform(const real t, Cell &sys,
+int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
                           const Geometry::LocalGeometry1d &local_geom,
                           const unsigned int iterm,
                           rng_type &rng) const {
@@ -124,7 +124,7 @@ int Sweep::Processes::ConstantInception::Perform(const real t, Cell &sys,
     Particle * const sp = m_mech->CreateParticle(t);
 
     // Position of newly incepted particle
-    real posn;
+    double posn;
 
     if(mUseFixedPosition) {
         // If there is a fixed position the rate should only be positive for the cell containing the fixed position
@@ -142,8 +142,8 @@ int Sweep::Processes::ConstantInception::Perform(const real t, Cell &sys,
         // but 1d is assumed for now.
         posn = vertices.front();
 
-        const real width = vertices.back() - posn;
-        boost::uniform_01<rng_type&, real> unifDistrib(rng);
+        const double width = vertices.back() - posn;
+        boost::uniform_01<rng_type&, double> unifDistrib(rng);
         posn += width * unifDistrib();
     }
 
@@ -173,10 +173,10 @@ int Sweep::Processes::ConstantInception::Perform(const real t, Cell &sys,
  *
  *@return   Process rate
  */
-Sweep::real Sweep::Processes::ConstantInception::Rate(real t, const Cell &sys,
+double Sweep::Processes::ConstantInception::Rate(double t, const Cell &sys,
                                                       const Geometry::LocalGeometry1d &local_geom) const
 {
-    real rate =  mRate * A() * sys.SampleVolume();
+    double rate =  mRate * A() * sys.SampleVolume();
 
     if(mUseFixedPosition) {
         if(local_geom.isInCell(mFixedPosition)) {
@@ -199,10 +199,10 @@ Sweep::real Sweep::Processes::ConstantInception::Rate(real t, const Cell &sys,
 // Returns the number of rate terms for this process (one).
 unsigned int Sweep::Processes::ConstantInception::TermCount() const {return 1;}
 
-// Calculates the rate terms given an iterator to a real vector. The
+// Calculates the rate terms given an iterator to a double vector. The
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
-Sweep::real Sweep::Processes::ConstantInception::RateTerms(const real t, const Cell &sys,
+double Sweep::Processes::ConstantInception::RateTerms(const double t, const Cell &sys,
                                                            const Geometry::LocalGeometry1d &local_geom,
                                                            fvector::iterator &iterm) const
 {

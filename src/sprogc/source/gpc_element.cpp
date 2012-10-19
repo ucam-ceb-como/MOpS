@@ -74,7 +74,7 @@ Element::Element(const Element &e)
 }
 
 // Initialising constructor.
-Element::Element(const std::string &name, const Sprog::real molwt)
+Element::Element(const std::string &name, const double molwt)
 {
     m_name  = name;
     m_molwt = molwt;
@@ -158,7 +158,7 @@ void Element::SetName(const std::string &name)
 // MOLECULAR WEIGHT.
 
 // Sets the element molecular weight.
-void Element::SetMolWt(const real molwt)
+void Element::SetMolWt(const double molwt)
 {
     if (molwt > 0.0) {
         m_molwt = molwt;
@@ -295,7 +295,7 @@ void Element::Deserialize(std::istream &in)
 
                 // Read the element mol. wt.
                 in.read(reinterpret_cast<char*>(&wt), sizeof(wt));
-                m_molwt = (real)wt;
+                m_molwt = (double)wt;
 
                 break;
             default:

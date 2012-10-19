@@ -52,26 +52,26 @@ using namespace Sprog;
 
 namespace Camflow{
     class CamConverter{
-        doublereal factor;
+        double factor;
     public:
         CamConverter(){}
         ~CamConverter(){}
         //return the conversion factor based in the string argument
-        doublereal getConvertionFactor(std::string unit);
+        double getConvertionFactor(std::string unit);
 
         //return a string given an integer
         std::string getString(int n);
 
-        //return a string given a doublereal
-        std::string getString(doublereal a);
+        //return a string given a double
+        std::string getString(double a);
 
         //convert from mole to mass and returns tha average molecular weight
-        doublereal mole2mass(std::vector<doublereal>& mole,
-                             std::vector<doublereal>& mass,
+        double mole2mass(std::vector<double>& mole,
+                             std::vector<double>& mass,
                              Mechanism &mech );
         // convert from mass to mole
-        doublereal mass2mole(std::vector<doublereal>& mass,
-                             std::vector<doublereal>& mole,
+        double mass2mole(std::vector<double>& mass,
+                             std::vector<double>& mole,
                              Mechanism &mech);
     };
 }

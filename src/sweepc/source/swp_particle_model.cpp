@@ -324,7 +324,7 @@ Processes::SinteringModel &ParticleModel::SintModel(void) const {return m_sint_m
  * by the caller.
  *
  */
-Sweep::Particle *const ParticleModel::CreateParticle(const real time) const
+Sweep::Particle *const ParticleModel::CreateParticle(const double time) const
 {
     // Create new primary using the aggregation model currently
     // set in this model.
@@ -352,7 +352,7 @@ Sweep::Particle *const ParticleModel::CreateParticle(const real time) const
  * by the caller.
  *
  */
-Sweep::Particle *const ParticleModel::CreateParticle(const real time, const real position) const
+Sweep::Particle *const ParticleModel::CreateParticle(const double time, const double position) const
 {
     // Create new primary using the aggregation model currently
     // set in this model.
@@ -514,7 +514,7 @@ void ParticleModel::Serialize(std::ostream &out) const
         out.write((char*)&flag, sizeof(flag));
 
         // Write the coalescence threshold
-        real var(0.0);
+        double var(0.0);
         var = m_bintree_coalthresh;
         out.write((char*)&var, sizeof(var));
 
@@ -565,7 +565,7 @@ void ParticleModel::Deserialize(std::istream &in)
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
         unsigned int n=0;
-        real var(0.0);
+        double var(0.0);
         bool flag(false);
 
         switch (version) {
@@ -720,7 +720,7 @@ void ParticleModel::releaseMem(void)
  *@param[in]    B   Constant B from above table
  *@param[in]    E   Constant E from above table
  */
-void ParticleModel::SetKnudsenDragConstants(const real A, const real B, const real E) {
+void ParticleModel::SetKnudsenDragConstants(const double A, const double B, const double E) {
     m_DragA = A;
     m_DragB = B;
     m_DragE = E;
@@ -728,22 +728,22 @@ void ParticleModel::SetKnudsenDragConstants(const real A, const real B, const re
 
 
 //! SET PARAMETER FOR abhjeet's COLLISION EFFICIENCY MODEL
-void Sweep::ParticleModel::SetCollisionEffPara(const real A, const real B, const real C) {
+void Sweep::ParticleModel::SetCollisionEffPara(const double A, const double B, const double C) {
     colliParaA = A;
     colliParaB = B;
     colliParaC = C;
 }
 
 //! return parameters of abhjeet's collision efficiency model
-real ParticleModel::ColliParaA() const {return colliParaA;}
-real ParticleModel::ColliParaB() const {return colliParaB;}
-real ParticleModel::ColliParaC() const {return colliParaC;}
+double ParticleModel::ColliParaA() const {return colliParaA;}
+double ParticleModel::ColliParaB() const {return colliParaB;}
+double ParticleModel::ColliParaC() const {return colliParaC;}
 
 //! set threshold for collision efficiency model
 void ParticleModel::SetThreshold(const int target) {m_threshold = target;}
 
 //! return threshold of collision efficency model
-real ParticleModel::Threshold() const {return m_threshold;}
+double ParticleModel::Threshold() const {return m_threshold;}
 
 //! set mode for collision efficiency model, currently 4 modes are supported, min, max, combined and reduced
 void ParticleModel::SetMode(const std::string &mode) {m_mode = mode;}
@@ -791,11 +791,11 @@ const ParticleModel::PostProcessStartingStr &ParticleModel::InceptedPAH() const 
  *
  *@return       Drag coefficient
  */
-real ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const {
-    const real Kn = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
+double ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const {
+    const double Kn = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
 
     // 3 * pi = 9.424777962 and note that diameter not radius is used below
-    const real numerator = 9.424777962 * sp.CollDiameter() * sys.GasPhase().Viscosity();
+    const double numerator = 9.424777962 * sp.CollDiameter() * sys.GasPhase().Viscosity();
 
 //    std::cout << "Knudsen " << Kn << ", " << numerator
 //              << ", MFP " << Sweep::MeanFreePathAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure())
@@ -820,8 +820,8 @@ real ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp) 
  *
  *@return       Drag coefficient
  */
-real ParticleModel::FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const {
-    const real d = sp.CollDiameter();
+double ParticleModel::FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const {
+    const double d = sp.CollDiameter();
     // 4.818546232410640188 = sqrt(2 * pi * k * NA) * 2 / 3
     return 4.818546232410640188 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex))
                                 * sys.GasPhase().MolarDensity() * d * d;
@@ -838,7 +838,7 @@ real ParticleModel::FreeMolDragCoefficient(const Cell &sys, const Particle &sp) 
  *
  *@return       Drag coefficient
  */
-real ParticleModel::TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const {
+double ParticleModel::TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const {
     return m_DragA * sys.GasPhase().Temperature();
 }
 
@@ -859,16 +859,16 @@ real ParticleModel::TemperatureDragCoefficient(const Cell &sys, const Particle &
  *
  *@return       Drag coefficient
  */
-real ParticleModel::LiWangDragCoefficient(const Cell &sys, const Particle &sp) const {
-    const real omega = Omega1_1_avg(sys, sp);
+double ParticleModel::LiWangDragCoefficient(const Cell &sys, const Particle &sp) const {
+    const double omega = Omega1_1_avg(sys, sp);
 
     // 3.247911159372846712e-24 = sqrt((2*pi)/(k*NA)) * 9 / 4 / NA
-    real alpha = 3.24791159e-24 / sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex));
+    double alpha = 3.24791159e-24 / sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex));
     alpha *= sys.GasPhase().Viscosity() / sys.GasPhase().MolarDensity() / sp.CollDiameter();
     alpha /= omega;
 
     // 4.818546232410640188 = sqrt(2 * pi * k * NA) * 2 / 3
-    real drag = 4.81854623 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex))
+    double drag = 4.81854623 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex))
                 * sys.GasPhase().MolarDensity() * sp.CollDiameter() * sp.CollDiameter() * omega
                 * pow(pow(1 + alpha, -1.143),-0.875);
 
@@ -911,14 +911,14 @@ real ParticleModel::LiWangDragCoefficient(const Cell &sys, const Particle &sp) c
  *
  *@return       Drag coefficient
  */
-real ParticleModel::LiWangPatDragCoefficient(const Cell &sys, const Particle &sp) const {
-    const real omega = Omega1_1_avg(sys, sp);
-    const real knudsen = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(),
+double ParticleModel::LiWangPatDragCoefficient(const Cell &sys, const Particle &sp) const {
+    const double omega = Omega1_1_avg(sys, sp);
+    const double knudsen = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(),
                                            sp.CollDiameter());
 
     // 4.818546232410640188 = sqrt(2 * pi * k * NA) * 2 / 3
     // 1.2044286e+24 = 2 * NA
-    real drag = 4.818546232410640188 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex))
+    double drag = 4.818546232410640188 * std::sqrt(sys.GasPhase().Temperature() * sys.GasPhase().PropertyValue(m_AvgMolWtIndex))
                 * sys.GasPhase().MolarDensity() * sp.CollDiameter() * omega * knudsen
                 * (1 - sys.GasPhase().PropertyValue(m_AvgMolWtIndex) / sp.Mass() / 1.2044283e+24);
 
@@ -940,7 +940,7 @@ real ParticleModel::LiWangPatDragCoefficient(const Cell &sys, const Particle &sp
  *
  *@return       Diffusion coefficient
  */
-real ParticleModel::EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const {
+double ParticleModel::EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const {
     switch(m_DragType) {
         case KnudsenDrag:
             return Sweep::KB * sys.GasPhase().Temperature() / KnudsenDragCoefficient(sys, sp);
@@ -976,15 +976,15 @@ real ParticleModel::EinsteinDiffusionCoefficient(const Cell &sys, const Particle
  *
  *@return       Diffusion coefficient gradient
  */
-real ParticleModel::GradDiffusionCoefficient(const Cell &sys, const Particle &sp,
+double ParticleModel::GradDiffusionCoefficient(const Cell &sys, const Particle &sp,
                                              const std::vector<const Cell*> &neighbours,
                                              const Geometry::LocalGeometry1d &geom) const {
     if((neighbours[0] != NULL) && (neighbours[1] != NULL)) {
-        const real dx = geom.calcSpacing(Geometry::left) +
+        const double dx = geom.calcSpacing(Geometry::left) +
                         geom.calcSpacing(Geometry::right);
 
-        const real leftD  = DiffusionCoefficient(*(neighbours[0]), sp);
-        const real rightD = DiffusionCoefficient(*(neighbours[1]), sp);
+        const double leftD  = DiffusionCoefficient(*(neighbours[0]), sp);
+        const double rightD = DiffusionCoefficient(*(neighbours[1]), sp);
 
         return (rightD - leftD) / dx;
     }
@@ -1009,7 +1009,7 @@ real ParticleModel::GradDiffusionCoefficient(const Cell &sys, const Particle &sp
  *
  *@exception    std::runtime_error      Unrecognised diffusion type
  */
-real ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) const {
+double ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) const {
     switch(m_DiffusionType) {
         case EinsteinDiffusion:
             return EinsteinDiffusionCoefficient(sys, sp);
@@ -1037,7 +1037,7 @@ real ParticleModel::DiffusionCoefficient(const Cell &sys, const Particle &sp) co
  *@return       Advection velocity
  *@exception    std::runtime_error  Unrecognised advection type
  */
-real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
+double ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
                                       const std::vector<const Cell*> &neighbours,
                                       const Geometry::LocalGeometry1d &geom) const {
     switch(m_AdvectionType) {
@@ -1047,11 +1047,11 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
         case FlameletAdvection:
         {
             // Mass of soot per unit volume of gas [kg m^-3] is needed repeatedly
-            const real sootMassDensity = sys.Particles().GetSum(Sweep::iM)
+            const double sootMassDensity = sys.Particles().GetSum(Sweep::iM)
                                          / sys.SampleVolume();
 
             // Thermophoretic drift term
-            real v = sys.GasPhase().PropertyValue(m_MixFracGradientIndex) * ThermophoreticVelocity(sys, sp)
+            double v = sys.GasPhase().PropertyValue(m_MixFracGradientIndex) * ThermophoreticVelocity(sys, sp)
                      * sootMassDensity;
 
             // Difference in diffusion of soot and mixture fraction
@@ -1067,30 +1067,30 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
             // @todo Use one sided derivatives at the boundary
             {
                 // Distance between the two Z values
-                const real dZ = geom.calcSpacing(Geometry::left) +
+                const double dZ = geom.calcSpacing(Geometry::left) +
                                 geom.calcSpacing(Geometry::right);
 
                 // rho D_Z at z_{i-1}
-                const real leftRhoDZ  = neighbours[0]->GasPhase().MassDensity() *
+                const double leftRhoDZ  = neighbours[0]->GasPhase().MassDensity() *
                                         neighbours[0]->GasPhase().PropertyValue(m_MixFracDiffusionIndex);
                 // rho D_Z at z_{i+1}
-                const real rightRhoDZ = neighbours[1]->GasPhase().MassDensity() *
+                const double rightRhoDZ = neighbours[1]->GasPhase().MassDensity() *
                                         neighbours[1]->GasPhase().PropertyValue(m_MixFracDiffusionIndex);
                 // Now calculate the gradient estimate for the product
                 // of gas mass density and mixture fraction diffusion
                 // coefficient.
-                const real gradRhoDZ = (rightRhoDZ - leftRhoDZ) / dZ;
+                const double gradRhoDZ = (rightRhoDZ - leftRhoDZ) / dZ;
 
                 // Same process for product of soot mass per unit volume of gas
                 // and particle diffusion coefficient of this particle.
-                const real leftVal  = neighbours[0]->Particles().GetSum(Sweep::iM) /
+                const double leftVal  = neighbours[0]->Particles().GetSum(Sweep::iM) /
                                       neighbours[0]->SampleVolume() *
                                       EinsteinDiffusionCoefficient(*neighbours[0], sp);
-                const real rightVal = neighbours[1]->Particles().GetSum(Sweep::iM) /
+                const double rightVal = neighbours[1]->Particles().GetSum(Sweep::iM) /
                                       neighbours[1]->SampleVolume() *
                                       EinsteinDiffusionCoefficient(*neighbours[1], sp);
                 // Finish the gradient calculation
-                const real grad = (rightVal - leftVal) / dZ;
+                const double grad = (rightVal - leftVal) / dZ;
 
 
                 // Put together this term in the equation and add it to the
@@ -1119,10 +1119,10 @@ real ParticleModel::AdvectionVelocity(const Cell &sys, const Particle &sp,
  *@return       Thermophoretic velocity
  *@exception    std::runtime_error  Unrecognised thermophoresis type
  */
-real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) const {
+double ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) const {
 
     // Declare outside the switch statement to keep the compiler happy
-    real tempFactor = 0.0;
+    double tempFactor = 0.0;
 
     switch(m_ThermophoresisType) {
         case WaldmannThermophoresis:
@@ -1162,22 +1162,22 @@ real ParticleModel::ThermophoreticVelocity(const Cell &sys, const Particle &sp) 
  *
  *@return       Collision integral interpolated between diffuse and specular limits
  */
-real ParticleModel::Omega1_1_avg(const Cell &sys, const Particle &sp) const {
+double ParticleModel::Omega1_1_avg(const Cell &sys, const Particle &sp) const {
     // Reduced collision diameter
-    const real sigmaPrime = collisionIntegralDiameter(sys, sp);
+    const double sigmaPrime = collisionIntegralDiameter(sys, sp);
 
     // Modified temperature to power -1/4
-    const real TStar = std::pow(collisionIntegralTemperature(sys, sp), -0.25);
+    const double TStar = std::pow(collisionIntegralTemperature(sys, sp), -0.25);
 
     // Collision integrals calculated for pure specular and pure diffusion scattering
-    const real specular = Omega1_1_spec(TStar, sigmaPrime);
-    const real diffuse  = Omega1_1_diff(TStar, sigmaPrime);
-    const real Kn = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
+    const double specular = Omega1_1_spec(TStar, sigmaPrime);
+    const double diffuse  = Omega1_1_diff(TStar, sigmaPrime);
+    const double Kn = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
 
     //std::cout << "Omega1_1_avg: " << specular << ", " << diffuse << ", " << Kn << '\n';
 
     // Build up the return value in stages, so that one can debug the process
-    real omega = diffuse;
+    double omega = diffuse;
     omega += Kn * (0.9 * diffuse + 0.1 * specular);
     omega -= Kn * 0.9 * (diffuse - specular) / (1 + std::pow(sp.CollDiameter() / 5.0e-9, 15));
     omega /= (1 + Kn);
@@ -1195,22 +1195,22 @@ real ParticleModel::Omega1_1_avg(const Cell &sys, const Particle &sp) const {
  *
  *@return       Collision integral interpolated between diffuse and specular limits
  */
-real ParticleModel::Omega1_2_avg(const Cell &sys, const Particle &sp) const {
+double ParticleModel::Omega1_2_avg(const Cell &sys, const Particle &sp) const {
     // Reduced collision diameter
-    const real sigmaPrime = collisionIntegralDiameter(sys, sp);
+    const double sigmaPrime = collisionIntegralDiameter(sys, sp);
 
     // Modified temperature to power -1/4
-    const real TStar = std::pow(collisionIntegralTemperature(sys, sp), -0.25);
+    const double TStar = std::pow(collisionIntegralTemperature(sys, sp), -0.25);
 
     // Collision integrals calculated for pure specular and pure diffusion scattering
-    const real specular = Omega1_2_spec(TStar, sigmaPrime);
-    const real diffuse  = Omega1_2_diff(TStar, sigmaPrime);
-    const real Kn = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
+    const double specular = Omega1_2_spec(TStar, sigmaPrime);
+    const double diffuse  = Omega1_2_diff(TStar, sigmaPrime);
+    const double Kn = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
 
     //std::cout << "Omega1_1_avg: " << specular << ", " << diffuse << ", " << Kn << '\n';
 
     // Build up the return value in stages, so that one can debug the process
-    real omega = diffuse;
+    double omega = diffuse;
     omega += Kn * (0.9 * diffuse + 0.1 * specular);
     omega -= Kn * 0.9 * (diffuse - specular) / (1 + std::pow(sp.CollDiameter() / 5.0e-9, 15));
     omega /= (1 + Kn);
@@ -1228,9 +1228,9 @@ real ParticleModel::Omega1_2_avg(const Cell &sys, const Particle &sp) const {
  *
  *@return   Collision integral calculated with diffuse scattering
  */
-real ParticleModel::Omega1_1_diff(const real t_star_1_4, const real sigma_prime) const {
+double ParticleModel::Omega1_1_diff(const double t_star_1_4, const double sigma_prime) const {
     // 1 + pi/8
-    real integral = 1.3926;
+    double integral = 1.3926;
 
     //std::cout << "Omega1_1_diff: " << t_star_1_4 << ", " << sigma_prime << '\n';
 
@@ -1253,8 +1253,8 @@ real ParticleModel::Omega1_1_diff(const real t_star_1_4, const real sigma_prime)
  *
  *@return   Collision integral calculated with specular scattering
  */
-real ParticleModel::Omega1_1_spec(const real t_star_1_4, const real sigma_prime) const {
-    real integral = 1.0;
+double ParticleModel::Omega1_1_spec(const double t_star_1_4, const double sigma_prime) const {
+    double integral = 1.0;
 
     integral += sigma_prime * (0.316 + 1.47 * t_star_1_4
                                + 0.476 * t_star_1_4 * t_star_1_4);
@@ -1275,9 +1275,9 @@ real ParticleModel::Omega1_1_spec(const real t_star_1_4, const real sigma_prime)
  *
  *@return   Collision integral calculated with diffuse scattering
  */
-real ParticleModel::Omega1_2_diff(const real t_star_1_4, const real sigma_prime) const {
+double ParticleModel::Omega1_2_diff(const double t_star_1_4, const double sigma_prime) const {
     // 1 + 5 * pi/48
-    real integral = 1.3272;
+    double integral = 1.3272;
 
     integral += sigma_prime * (1.159 + 1.506 * t_star_1_4
                                + 1.204 * t_star_1_4 * t_star_1_4);
@@ -1298,8 +1298,8 @@ real ParticleModel::Omega1_2_diff(const real t_star_1_4, const real sigma_prime)
  *
  *@return   Collision integral calculated with specular scattering
  */
-real ParticleModel::Omega1_2_spec(const real t_star_1_4, const real sigma_prime) const {
-    real integral = 1.0;
+double ParticleModel::Omega1_2_spec(const double t_star_1_4, const double sigma_prime) const {
+    double integral = 1.0;
 
     integral += sigma_prime * (0.338 + 1.315 * t_star_1_4
                                + 0.412 * t_star_1_4 * t_star_1_4);
@@ -1321,10 +1321,10 @@ real ParticleModel::Omega1_2_spec(const real t_star_1_4, const real sigma_prime)
  *
  *@return       Lennard Jones collision radius divided by particle collision radius
  */
-real ParticleModel::collisionIntegralDiameter(const Cell &sys, const Particle &sp) const {
+double ParticleModel::collisionIntegralDiameter(const Cell &sys, const Particle &sp) const {
     // Value of Lennard Jones radius (m) taken from Table IV of above cited paper
     // using combination rules to combine values for gaseous and solid phases.
-    //@TODO this assumes Carbon (as protein!) and nitrogen - need to use real material properties
+    //@TODO this assumes Carbon (as protein!) and nitrogen - need to use double material properties
     return 7.152e-10 / sp.CollDiameter();
 }
 
@@ -1339,13 +1339,13 @@ real ParticleModel::collisionIntegralDiameter(const Cell &sys, const Particle &s
  *
  *@return       Temperature divided by Lennard Jones well depth and collision cross-section cubed
  */
-real ParticleModel::collisionIntegralTemperature(const Cell &sys, const Particle &sp) const {
+double ParticleModel::collisionIntegralTemperature(const Cell &sys, const Particle &sp) const {
     // Value of well depth (K, ie divided by k) taken from Table IV of above cited paper
     // using combination rules to combine values for Carbon (as protein!) and N2 gas
     // @TODO This needs to be based on inputs
-    const real wellDepth = 57.24;
+    const double wellDepth = 57.24;
     // Interaction diameter from same source as well depth: 3.576e-10 m
-    const real interactionDiameterCubed = 4.5729086976e-29;
+    const double interactionDiameterCubed = 4.5729086976e-29;
 
     // 1.107e-29 is volume occupied by 1 Carbon atom assuming bulk density 1800 kg m^-3 (value for soot)
     //@TODO this needs to be calculated for the material in use
@@ -1367,9 +1367,9 @@ real ParticleModel::collisionIntegralTemperature(const Cell &sys, const Particle
  *
  *@return       Accomodation function, \f$\phi\f$
  */
-real ParticleModel::accomodationFunction(const Cell &sys, const Particle &sp) const {
+double ParticleModel::accomodationFunction(const Cell &sys, const Particle &sp) const {
     // Particle radius in nm divided by 2.5
-    real switchTerm = sp.CollDiameter() / 5e-9;
+    double switchTerm = sp.CollDiameter() / 5e-9;
 
     // High power to switch aggressively between regimes
     switchTerm = std::pow(switchTerm, 15);
@@ -1378,7 +1378,7 @@ real ParticleModel::accomodationFunction(const Cell &sys, const Particle &sp) co
     switchTerm = 1.0 - 1.0 / switchTerm;
 
     // Knudsen number is used to interpolate between the specular and diffuse integrals
-    const real knudsen = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
+    const double knudsen = Sweep::KnudsenAir(sys.GasPhase().Temperature(), sys.GasPhase().Pressure(), sp.CollDiameter());
 
     return (1.0 + 0.9 * knudsen * switchTerm) / (1.0 + knudsen);
 }

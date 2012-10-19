@@ -49,13 +49,13 @@
  */
 namespace Camflow{
     class CamControl{
-        doublereal relTolSp, absTolSp;        //species rel and abs tols
-        doublereal relTolT, absTolT;          //temperature rel and abs tols
-        doublereal relTolFlow, absTolFlow;    //flow rel and abs tols
-        doublereal resTol;                    //residual tolerence
-        doublereal iniStep, maxStep,minStep;  //solver stepsize control
-        doublereal maxTime;                   //max integration time
-        doublereal urSpecies;                 //under relaxation for species sources
+        double relTolSp, absTolSp;        //species rel and abs tols
+        double relTolT, absTolT;          //temperature rel and abs tols
+        double relTolFlow, absTolFlow;    //flow rel and abs tols
+        double resTol;                    //residual tolerence
+        double iniStep, maxStep,minStep;  //solver stepsize control
+        double maxTime;                   //max integration time
+        double urSpecies;                 //under relaxation for species sources
         bool resMonitor;
     protected:
         int solMode;                    //solution mode steady or trans
@@ -94,25 +94,25 @@ namespace Camflow{
         ~CamControl(){}
 
         //set the species rel tol
-        void setSpeciesRelTol(doublereal tol);
+        void setSpeciesRelTol(double tol);
 
         //set the species abs tol
-        void setSpeciesAbsTol(doublereal tol);
+        void setSpeciesAbsTol(double tol);
 
         //set the temperature rel tol
-        void setTempRelTol(doublereal tol);
+        void setTempRelTol(double tol);
 
         //set temperature abs tol
-        void setTempAbsTol(doublereal tol);
+        void setTempAbsTol(double tol);
 
         //set the flow rel tol
-        void setFlowRelTol(doublereal tol);
+        void setFlowRelTol(double tol);
 
         //set the flow abs tol
-        void setFlowAbsTol(doublereal tol);
+        void setFlowAbsTol(double tol);
 
         //set the residual tolerence
-        void setResTol(doublereal tol);
+        void setResTol(double tol);
 
         //set the solution option
         void setSolutionMode(int n);
@@ -121,16 +121,16 @@ namespace Camflow{
         void setReportInterval(int n);
 
         //set initial step size
-        void setIniStep(doublereal step);
+        void setIniStep(double step);
 
         //set the maximum allowed step size
-        void setMaxStep(doublereal step);
+        void setMaxStep(double step);
 
         //set the minimum allowed step
-        void setMinStep(doublereal step);
+        void setMinStep(double step);
 
         //set max integration time
-        void setMaxTime(doublereal time);
+        void setMaxTime(double time);
 
         //set the solver
         void setSolver(int n);
@@ -138,31 +138,31 @@ namespace Camflow{
         void setResidualMonitor(bool lopt);
 
         //set the under relaxation for the species
-        void setSpeciesUnderRelax(doublereal ur);
+        void setSpeciesUnderRelax(double ur);
 
         //number of iterations
         void setNumIterations(int n);
         
         //return the species rel tol
-        doublereal getSpeciesRelTol() const;
+        double getSpeciesRelTol() const;
 
         //return the species abs tol
-        doublereal getSpeciesAbsTol() const;
+        double getSpeciesAbsTol() const;
 
         //return the temperature rel tol
-        doublereal getTempRelTol() const;
+        double getTempRelTol() const;
 
         //return the temperature abs tol
-        doublereal getTempAbsTol() const;
+        double getTempAbsTol() const;
 
         //return the flow rel tol
-        doublereal getFlowRelTol() const;
+        double getFlowRelTol() const;
 
         //return the flow abs tol
-        doublereal getFlowAbsTol() const;
+        double getFlowAbsTol() const;
 
         //return the residual tolerence
-        doublereal getResTol() const;
+        double getResTol() const;
 
         //return the solution option
         int getSolutionMode() const;
@@ -174,16 +174,16 @@ namespace Camflow{
         int getSolver() const;
 
         //return the initial step
-        doublereal getIniStep() const;
+        double getIniStep() const;
 
         //return the maximum step size
-        doublereal getMaxStep() const;
+        double getMaxStep() const;
 
         //return the minimum step size
-        doublereal getMinStep() const;
+        double getMinStep() const;
 
         //return the max integration time
-        doublereal getMaxTime() const;
+        double getMaxTime() const;
 
         bool getResidualMonitor() const;
 
@@ -191,7 +191,7 @@ namespace Camflow{
         int getNumIterations() const;
 
         //return the species under relaxation factor
-        doublereal getSpeciesUnderRelax() const;
+        double getSpeciesUnderRelax() const;
 
     };
 }

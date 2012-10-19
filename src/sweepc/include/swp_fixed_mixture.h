@@ -65,37 +65,37 @@ public:
 
     //==== Methods implementing the EnvironmentInterface interface ====//
     //! Pressure in Pa
-    virtual real Pressure() const {return mPressure;}
+    virtual double Pressure() const {return mPressure;}
 
     //! Temperature in K
-    virtual real Temperature() const {return mTemperature;}
+    virtual double Temperature() const {return mTemperature;}
 
     //! Velocity in
-    virtual real Velocity() const {return mVelocity;}
+    virtual double Velocity() const {return mVelocity;}
 
     //! Viscosity in Pa.s
-    virtual real Viscosity() const {return mViscosity;}
+    virtual double Viscosity() const {return mViscosity;}
 
     //! Density in \f$\mathrm{kg}\,\mathrm{m}^{-3}\f$
-    virtual real MassDensity() const {return mMassDensity;}
+    virtual double MassDensity() const {return mMassDensity;}
 
     //! Total concentration in \f$\mathrm{mol}\,\mathrm{m}^{-3}\f$
-    virtual real MolarDensity() const {return mMolarDensity;}
+    virtual double MolarDensity() const {return mMolarDensity;}
 
     //! Concentration of species in \f$\mathrm{mol}\,\mathrm{m}^{-3}\f$
-    virtual real SpeciesConcentration(const SpeciesIndex index) const;
+    virtual double SpeciesConcentration(const SpeciesIndex index) const;
 
     //! Value of some mixture property that is not a species concentration
-    virtual real PropertyValue(const PropertyIndex index) const;
+    virtual double PropertyValue(const PropertyIndex index) const;
     //===== End of EnvironmentInterface implementation ================//
 
 private:
-    real mMassDensity; //! Mixture density (kg/m3)
-    real mMolarDensity; //! Concentration of molecules (mol/m3)
-    real mPressure; //! Pressure (Pa)
-    real mTemperature; //! Temperature (K)
-    real mVelocity; //! Velocity (m/s)
-    real mViscosity; //! Viscosity (kg/m/s = Pa s)
+    double mMassDensity; //! Mixture density (kg/m3)
+    double mMolarDensity; //! Concentration of molecules (mol/m3)
+    double mPressure; //! Pressure (Pa)
+    double mTemperature; //! Temperature (K)
+    double mVelocity; //! Velocity (m/s)
+    double mViscosity; //! Viscosity (kg/m/s = Pa s)
 
     fvector mSpecies; //! Species concentrations (mol/m3)
 };

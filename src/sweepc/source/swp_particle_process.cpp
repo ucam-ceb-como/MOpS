@@ -115,7 +115,7 @@ const fvector &ParticleProcess::CompChange(void) const
 }
 
 // Returns the amount of the ith component of the new particle.
-real ParticleProcess::CompChange(unsigned int i) const
+double ParticleProcess::CompChange(unsigned int i) const
 {
     if (i < m_dcomp.size()) {
         return m_dcomp[i];
@@ -131,7 +131,7 @@ void ParticleProcess::SetCompChange(const fvector &comp)
 }
 
 // Sets the amount of the ith component in the new particle.
-void ParticleProcess::SetCompChange(unsigned int i, real comp)
+void ParticleProcess::SetCompChange(unsigned int i, double comp)
 {
     if (i < m_mech->ComponentCount()) {
         // Ensure vector is sufficiently long.
@@ -151,7 +151,7 @@ const fvector &ParticleProcess::TrackChange(void) const
 
 // Returns the value of the ith tracker variable of the
 // new particle.
-real ParticleProcess::TrackChange(unsigned int i) const
+double ParticleProcess::TrackChange(unsigned int i) const
 {
     if (i < m_dvals.size()) {
         return m_dvals[i];
@@ -168,7 +168,7 @@ void ParticleProcess::SetTrackChange(const fvector &track)
 
 // Sets the value of the ith tracker variable in the
 // new particle.
-void ParticleProcess::SetTrackChange(unsigned int i, real track)
+void ParticleProcess::SetTrackChange(unsigned int i, double track)
 {
     if (i < m_mech->TrackerCount()) {
         // Ensure vector is sufficiently long.
@@ -184,14 +184,14 @@ void ParticleProcess::SetTrackChange(unsigned int i, real track)
 // RATE CALCULATION.
 
 // Calculates the rates of multiple particle processes.
-real ParticleProcess::CalcRates(real t, const Cell &sys,
+double ParticleProcess::CalcRates(double t, const Cell &sys,
                                 const Geometry::LocalGeometry1d &local_geom,
                                 const PartProcPtrVector &proc,
                                 fvector &rates, unsigned int start)
 {
     PartProcPtrVector::const_iterator p;
     fvector::iterator i = (rates.begin()+start);
-    real sum = 0.0;
+    double sum = 0.0;
     for (p=proc.begin(); p!=proc.end(); ++p,++i) {
         *i = (*p)->Rate(t, sys, local_geom);
         sum += *i;

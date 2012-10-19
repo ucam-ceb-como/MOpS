@@ -22,35 +22,35 @@ namespace Camflow{
     class CVodeWrapper{
         void *cvode_mem;
         N_Vector y,yPrime,  aTolVector;
-        doublereal atol, currentTime, maxTime;
+        double atol, currentTime, maxTime;
         int eqnSize;
         CamResidual *reacPtr;
-        doublereal resNorm;
+        double resNorm;
     public:
         CVodeWrapper();
         ~CVodeWrapper();
-        void init(int n, std::vector<doublereal> &solnVec, 
-                                        doublereal atol,
-                                        doublereal rtol,
-                                        doublereal maxIntTime,
+        void init(int n, std::vector<double> &solnVec, 
+                                        double atol,
+                                        double rtol,
+                                        double maxIntTime,
                                         int band,
-                                        CamResidual &cr, doublereal iniTime=0);
+                                        CamResidual &cr, double iniTime=0);
         
-        void initVectorTol(int n, std::vector<doublereal>& solnVec,
-										doublereal aTolTemp[],
-										doublereal rtol,
-										doublereal maxIntTime ,
+        void initVectorTol(int n, std::vector<double>& solnVec,
+										double aTolTemp[],
+										double rtol,
+										double maxIntTime ,
 										int band,
-										CamResidual &cr, doublereal iniTime=0);
+										CamResidual &cr, double iniTime=0);
 
         /*
          *additional solver control
          */
-        void setIniStep(doublereal istep);
-        void setMaxStep(doublereal maxStep);
-        doublereal& solve(int stopMode);
-        void solve(int stopMode, doublereal resTol);
-        void solveDAE(int stopMode, doublereal resTol);
+        void setIniStep(double istep);
+        void setMaxStep(double maxStep);
+        double& solve(int stopMode);
+        void solve(int stopMode, double resTol);
+        void solveDAE(int stopMode, double resTol);
         void calcResNorm();
         void destroy();
     };

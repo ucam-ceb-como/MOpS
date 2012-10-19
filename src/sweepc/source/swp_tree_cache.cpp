@@ -159,33 +159,33 @@ void Sweep::TreeCache::Clear(void)
 // BASIC DERIVED PARTICLE PROPERTIES.
 
 // Returns the particle equivalent sphere diameter.
-Sweep::real Sweep::TreeCache::SphDiameter(void) const {return m_sphdiam;}
+double Sweep::TreeCache::SphDiameter(void) const {return m_sphdiam;}
 
 // Returns the collision diameter.
-Sweep::real Sweep::TreeCache::CollDiameter(void) const {return m_dcol;}
+double Sweep::TreeCache::CollDiameter(void) const {return m_dcol;}
 
 // Rethrns the mobility diameter.
-Sweep::real Sweep::TreeCache::MobDiameter(void) const {return m_dmob;}
+double Sweep::TreeCache::MobDiameter(void) const {return m_dmob;}
 
 // Returns the surface area.
-Sweep::real Sweep::TreeCache::SurfaceArea(void) const {return m_surf;}
+double Sweep::TreeCache::SurfaceArea(void) const {return m_surf;}
 
 // Returns the equivalent sphere surface area, based
 // on the volume.
-Sweep::real Sweep::TreeCache::SphSurfaceArea(void) const
+double Sweep::TreeCache::SphSurfaceArea(void) const
 {
     return PI * pow(m_vol * 6.0 / PI, TWO_THIRDS);
 }
 
 // Returns the volume.
-Sweep::real Sweep::TreeCache::Volume(void) const {return m_vol;}
+double Sweep::TreeCache::Volume(void) const {return m_vol;}
 
 // Returns the mass.
-Sweep::real Sweep::TreeCache::Mass(void) const {return m_mass;}
+double Sweep::TreeCache::Mass(void) const {return m_mass;}
 
 
 // Returns the property with the given ID.
-Sweep::real Sweep::TreeCache::Property(PropID id) const
+double Sweep::TreeCache::Property(PropID id) const
 {
     switch (id) {
         case iDsph:      // Equivalent sphere diameter.

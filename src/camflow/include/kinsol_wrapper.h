@@ -21,13 +21,13 @@ namespace Camflow{
     public:
         KinsolWrapper(){}
         ~KinsolWrapper(){}
-        void init(int n, vector<doublereal> &solnVec, doublereal rtol, int band, CamResidual &cr);
+        void init(int n, vector<double> &solnVec, double rtol, int band, CamResidual &cr);
         void solve();
         void destroy();
 
     private:
         N_Vector y, scale;
-        doublereal fnormtol, fnorm;
+        double fnormtol, fnorm;
         void *kmem;
         int mset, msubset, flag;
     };

@@ -24,7 +24,7 @@ namespace Camflow{
         GiantWrapper(){}
         virtual ~GiantWrapper(){};
         void solve(int neq,
-                doublereal tol,std::vector<doublereal>& iniGuess,CamResidual& cr);
+                double tol,std::vector<double>& iniGuess,CamResidual& cr);
 
     private:
         //struct GIANT_FUN *resid;

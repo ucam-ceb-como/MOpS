@@ -102,7 +102,7 @@ bool GasPoint::IsEqualTime(const GasPoint &lhs, const GasPoint &rhs)
 }
 
 // Returns true if the current point is before the given time.
-bool GasPoint::IsBeforeTime(const GasPoint &lhs, real t)
+bool GasPoint::IsBeforeTime(const GasPoint &lhs, double t)
 {
     return lhs.Time < t;
 }
@@ -122,7 +122,7 @@ bool GasPoint::IsAfterPoint(const GasPoint &lhs, const GasPoint &rhs)
 }
 
 // Returns true if the current point is after the given time.
-bool GasPoint::IsAfterTime(const GasPoint &lhs, real t)
+bool GasPoint::IsAfterTime(const GasPoint &lhs, double t)
 {
     return lhs.Time > t;
 }
@@ -165,7 +165,7 @@ void Sweep::SortGasProfile(Sweep::GasProfile &prof)
 
 // Returns the first GasPoint defined after the given time.  If the time
 // is out-of-range then returns the end() of the vector.
-GasProfile::const_iterator Sweep::LocateGasPoint(const GasProfile &prof, real t)
+GasProfile::const_iterator Sweep::LocateGasPoint(const GasProfile &prof, double t)
 {
     for (GasProfile::const_iterator i=prof.begin(); i!=prof.end(); ++i) {
         if (GasPoint::IsAfterTime(*i, t)) return i;

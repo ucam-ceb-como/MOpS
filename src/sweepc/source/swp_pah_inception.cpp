@@ -115,7 +115,7 @@ PAHInception &PAHInception::operator =(const PAHInception &rhs)
  *
  * \return      0 on success, otherwise negative.
  */
-int PAHInception::Perform(const real t, Cell &sys,
+int PAHInception::Perform(const double t, Cell &sys,
                           const Geometry::LocalGeometry1d &local_geom,
                           const unsigned int iterm,
                           rng_type &rng) const {
@@ -128,13 +128,13 @@ int PAHInception::Perform(const real t, Cell &sys,
     // Sample a uniformly distributed position, note that this method
     // works whether the vertices come in increasing or decreasing order,
     // but 1d is assumed for now.
-    real posn = vertices.front();
+    double posn = vertices.front();
 
-    const real width = vertices.back() - posn;
+    const double width = vertices.back() - posn;
 
     if(width > 0) {
-        boost::uniform_01<rng_type&, real> uniformGenerator(rng);
-        // There is some real spatial detail
+        boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+        // There is some double spatial detail
         posn += width * uniformGenerator();
         sp = m_mech->CreateParticle(t, posn);
     }
@@ -167,7 +167,7 @@ int PAHInception::Perform(const real t, Cell &sys,
  *
  * \return      0 on success, otherwise negative.
  */
-int PAHInception::AddInceptedPAH(const int i, const real t, Cell &sys,rng_type &rng) const {
+int PAHInception::AddInceptedPAH(const int i, const double t, Cell &sys,rng_type &rng) const {
 
     Particle *sp = NULL;
 
@@ -208,10 +208,10 @@ int PAHInception::AddInceptedPAH(const int i, const real t, Cell &sys,rng_type &
 // TOTAL RATE CALCULATIONS.
 
 // Returns rate of the process for the given system.
-real PAHInception::Rate(real t, const Cell &sys,
+double PAHInception::Rate(double t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 {
-    const real rate = NA * sys.GasPhase().PropertyValue(mPAHFormationIndex) * A();
+    const double rate = NA * sys.GasPhase().PropertyValue(mPAHFormationIndex) * A();
 
     // PAHFormation rate may be negative which means no inception
     if(rate < 0.0)
@@ -226,10 +226,10 @@ real PAHInception::Rate(real t, const Cell &sys,
 // Returns the number of rate terms for this process (one).
 unsigned int PAHInception::TermCount(void) const {return 1;}
 
-// Calculates the rate terms given an iterator to a real vector. The
+// Calculates the rate terms given an iterator to a double vector. The
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
-real PAHInception::RateTerms(const real t, const Cell &sys,
+double PAHInception::RateTerms(const double t, const Cell &sys,
                              const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
 {

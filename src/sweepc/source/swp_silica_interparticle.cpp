@@ -55,7 +55,7 @@ using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
 
-const real InterParticle::m_majfactor = 2.0;
+const double InterParticle::m_majfactor = 2.0;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -162,32 +162,32 @@ void InterParticle::SetPropertyID(PropID pid)
  * 
  * @return      Rate of process
  */
-real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const
+double InterParticle::Rate(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const
 {
 
 	// From theoretical calculations: R_int = R_surf - sintering_contribution + R_inc
-    real rate = 0.0;
+    double rate = 0.0;
 
 	// First calculate surface reaction contribution:
-	real T = sys.GasPhase().Temperature();
+	double T = sys.GasPhase().Temperature();
 
 	// Get the total number of OH sites from cache
-	real numOH = sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
+	double numOH = sys.Particles().GetSum(static_cast<Sweep::PropID>(m_pid));
 
 	// Calculate the concentration of SiOH4
 	// Note that the usual ParticleProcess interface can NOT be used, as this
 	// would erroneously remove H4O4SI from the gas-phase.
-	real conc = sys.GasPhase().SpeciesConcentration(m_H4O4SI_Index);
+	double conc = sys.GasPhase().SpeciesConcentration(m_H4O4SI_Index);
 
 	// Rate of surface reaction
-	real R_surf = m_arr.A * conc *pow(T, m_arr.n)
+	double R_surf = m_arr.A * conc *pow(T, m_arr.n)
 			* exp(-m_arr.E / (R * T)) * numOH;
 
 	// Forward-declare the total sintering rate
-	real total_sint_rate = 0;
+	double total_sint_rate = 0;
 
 	// Get total surface area from cache
-	real surface = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iS));
+	double surface = sys.Particles().GetSum(static_cast<Sweep::PropID>(Sweep::iS));
 
 	// Check if particle surface area exists. If not, set the sintering rate to zero.
 	if (surface == 0) {
@@ -199,9 +199,9 @@ real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1
 	}
 
 	// Calculate the total surface density of sites
-	real rho_s =  numOH/surface;
+	double rho_s =  numOH/surface;
 	//Rate of sintering
-	real R_sint = (rho_s*total_sint_rate)/(2.0);
+	double R_sint = (rho_s*total_sint_rate)/(2.0);
 
 	rate += (R_surf - R_sint);
 
@@ -236,36 +236,36 @@ real InterParticle::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1
  * 
  * @return      Rate of process
  */
-real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
+double InterParticle::Rate(double t, const Cell &sys, const Particle &sp) const
 {
 
 	// Rate constant.
-    real rate = m_arr.A;
+    double rate = m_arr.A;
 
     // Calculate the concentration of SiOH4
     // Note that the usual ParticleProcess interface can NOT be used, as this
     // would erroneously remove H4O4SI from the gas-phase.
-    real conc = sys.GasPhase().SpeciesConcentration(m_H4O4SI_Index);
+    double conc = sys.GasPhase().SpeciesConcentration(m_H4O4SI_Index);
 
     // Do calculation for surface-reaction part of rate:
     // Chemical species concentration dependence.
     rate *= conc;
 
     // Temperature dependance.
-    real T = sys.GasPhase().Temperature();
+    double T = sys.GasPhase().Temperature();
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
 	// Get the number of OH sites from cache
-	real numOH = sp.Property(static_cast<Sweep::PropID>(m_pid));
+	double numOH = sp.Property(static_cast<Sweep::PropID>(m_pid));
 	rate *= numOH;
 
 	// Do calculation for sintering part of rate:
     // Forward-declare some parameters
-    real sint_rate = 0.0;
-    real rho_s = 0.0;
+    double sint_rate = 0.0;
+    double rho_s = 0.0;
 
 	// Get surface area from cache
-    real surface = sp.Property(static_cast<Sweep::PropID>(Sweep::iS));
+    double surface = sp.Property(static_cast<Sweep::PropID>(Sweep::iS));
 
 	if(surface == 0) {
 		rho_s = 1;
@@ -277,7 +277,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
 	}
 
 
-	real sint_comp = (sint_rate*rho_s)/(2.0);
+	double sint_comp = (sint_rate*rho_s)/(2.0);
 
 	// Sintering rate dependency
 	rate -= sint_comp;
@@ -297,7 +297,7 @@ real InterParticle::Rate(real t, const Cell &sys, const Particle &sp) const
  * 
  * @return      Rate of process
  */
-real InterParticle::MajorantRate(real t, const Cell &sys, const Particle &sp) const
+double InterParticle::MajorantRate(double t, const Cell &sys, const Particle &sp) const
 {
     // Return the single particle rate multiplied by the
     // majorant factor.
@@ -315,13 +315,13 @@ unsigned int InterParticle::TermCount(void) const {return 1;}
 /*!
  * @brief       Passes the system rate to an iterator
  * 
- * Calculates the rate terms given an iterator to a real vector. The
+ * Calculates the rate terms given an iterator to a double vector. The
  * iterator is advanced to the position after the last term for this
  * process.
  * 
  * @return      Rate of process
  */
-real InterParticle::RateTerms(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
+double InterParticle::RateTerms(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
 {
     return *(iterm++) = Rate(t, sys, local_geom);
@@ -344,7 +344,7 @@ real InterParticle::RateTerms(real t, const Cell &sys, const Geometry::LocalGeom
  *
  * @return      0 on success, otherwise negative.
  */
-int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
+int InterParticle::Perform(double t, Sweep::Cell &sys,
                              const Geometry::LocalGeometry1d& local_geom,
                              unsigned int iterm,
                              rng_type &rng) const
@@ -358,12 +358,12 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
         // Update particle with deferred processes.
         if (m_mech->AnyDeferred()) {
             // Calculate majorant rate then update the particle.
-            real majr = MajorantRate(t, sys, *sp);
+            double majr = MajorantRate(t, sys, *sp);
             m_mech->UpdateParticle(*sp, sys, t, rng);
 
             // Check that the particle is still valid.
             if (sp->IsValid()) {
-                real truer = Rate(t, sys, *sp);
+                double truer = Rate(t, sys, *sp);
 
                 if (!Fictitious(majr, truer, rng)) {
                     // Adjust particle.
@@ -411,7 +411,7 @@ int InterParticle::Perform(Sweep::real t, Sweep::Cell &sys,
  * @param[in]   rng Random number generator
  * @param[in]   n   Number of times to do process
  */
-int InterParticle::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
+int InterParticle::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
                           unsigned int n) const
 {
     unsigned int m = sp.AdjustIntPar(m_dcomp, m_dvals, rng, n);
@@ -480,9 +480,9 @@ void InterParticle::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                 in.read(reinterpret_cast<char*>(&A), sizeof(A));
                 in.read(reinterpret_cast<char*>(&nn), sizeof(nn));
                 in.read(reinterpret_cast<char*>(&E), sizeof(E));
-                m_arr.A = (real)A;
-                m_arr.n = (real)nn;
-                m_arr.E = (real)E;
+                m_arr.A = (double)A;
+                m_arr.n = (double)nn;
+                m_arr.E = (double)E;
 
                 // Read particle property ID.
                 in.read(reinterpret_cast<char*>(&m_pid), sizeof(m_pid));

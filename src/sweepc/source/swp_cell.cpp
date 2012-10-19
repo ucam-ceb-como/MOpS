@@ -126,7 +126,7 @@ unsigned int Cell::ParticleCount(void) const
 void Cell::SetParticles(
         std::list<Particle*>::iterator particle_list_begin,
         std::list<Particle*>::iterator particle_list_end,
-        real statistical_weight, rng_type &rng)
+        double statistical_weight, rng_type &rng)
 {
     assert(statistical_weight > 0);
     // This puts the particles into the ensemble and clears any scaling
@@ -152,7 +152,7 @@ void Cell::SetParticles(
 void Cell::SetParticles(
         std::list<Particle*>::iterator particle_list_begin,
         std::list<Particle*>::iterator particle_list_end,
-        real statistical_weight)
+        double statistical_weight)
 {
     assert(statistical_weight > 0);
     // This puts the particles into the ensemble and clears any scaling
@@ -178,8 +178,8 @@ void Cell::GetVitalStats(Stats::EnsembleStats &stats) const
 
 // SCALING ROUTINES INCL. SAMPLE VOLUME.
 
-// Returns the real system to stochastic system scaling factor.
-real Cell::SampleVolume() const
+// Returns the double system to stochastic system scaling factor.
+double Cell::SampleVolume() const
 {
     return m_smpvol * m_ensemble.Scaling();
 }
@@ -192,10 +192,10 @@ real Cell::SampleVolume() const
  *
  *@pre      scale_factor > 0
  */
-void Cell::AdjustSampleVolume(real scale_factor)
+void Cell::AdjustSampleVolume(double scale_factor)
 {
     assert(scale_factor > 0);
-    assert(scale_factor <= std::numeric_limits<real>::max());
+    assert(scale_factor <= std::numeric_limits<double>::max());
     m_smpvol = SampleVolume() * scale_factor;
 
     // The effects of ensemble rescalings are now incorporated in this sample
@@ -217,7 +217,7 @@ unsigned int Cell::NumOfStartingSpecies(const int index) const
  *
  *@param[in]    m0              Particle number density for full ensemble (units \f$\mathrm{m}^{-3}\f$)
  */
-void Cell::Reset(const real m0)
+void Cell::Reset(const double m0)
 {
     assert(m0 > 0.0);
     m_ensemble.Clear();
@@ -299,7 +299,7 @@ void Cell::AddOutflow(Processes::DeathProcess &out)
 }
 
 // Add an outflow process with the given rate to the Cell.
-void Cell::AddOutflow(real rate, const Sweep::Mechanism &mech)
+void Cell::AddOutflow(double rate, const Sweep::Mechanism &mech)
 {
     Processes::DeathProcess *death = new Processes::DeathProcess(mech);
     death->SetA(rate);
@@ -354,7 +354,7 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 
                 // Read the sample volume.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_smpvol = (real)val;
+                m_smpvol = (double)val;
 
                 // Read if fixed chem.
                 in.read(reinterpret_cast<char*>(&m_fixed_chem), sizeof(m_fixed_chem));

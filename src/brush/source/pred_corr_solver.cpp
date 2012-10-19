@@ -84,9 +84,9 @@ using namespace Brush;
  */
 Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
                                       const size_t,
-                                      const real , const real ,
+                                      const double , const double ,
                                       const bool split_diffusion,
-                                      const real drift_adjustment,
+                                      const double drift_adjustment,
                                       const bool split_advection,
                                       const bool strang_splitting,
                                       const bool cstr_transport)
@@ -110,9 +110,9 @@ Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
  *\param[in]            n_iter      Number of corrector iterations per step
  *\param[in]            seed        Value that is unique to this particular time interval and path to use in seeding the RNGs
  */
-void Brush::PredCorrSolver::solve(Reactor1d &reac, const real t_start, const real t_stop, const int n_steps,
+void Brush::PredCorrSolver::solve(Reactor1d &reac, const double t_start, const double t_stop, const int n_steps,
                                   const int n_iter, size_t seed) const {
-    const real dt = (t_stop - t_start) / n_steps;
+    const double dt = (t_stop - t_start) / n_steps;
 
     // Start building a RNG seed for this part of the calculation.  The
     // result should be different in each call, if this function is called
@@ -147,8 +147,8 @@ void Brush::PredCorrSolver::solve(Reactor1d &reac, const real t_start, const rea
  *
  *\pre  reac.getNumCells() == cell_rngs.size()
  */
-void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const real t_start,
-                                                   const real t_stop, const int n_iter,
+void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const double t_start,
+                                                   const double t_stop, const int n_iter,
                                                    std::vector<Sweep::rng_type>& cell_rngs) const {
     //std::cout << "Predictor corrector step from " << t_start << " to " << t_stop << '\n';
 
@@ -180,7 +180,7 @@ void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const real t
  *\param[in,out]        reac        Reactor describing system state
  *\param[in]            t_stop      Time to which to advance solution
  */
-void Brush::PredCorrSolver::solveChemistry(Reactor1d &reac, const real t_stop) const {
+void Brush::PredCorrSolver::solveChemistry(Reactor1d &reac, const double t_stop) const {
 
     // Expansion and contraction of the gas phase changes the particle
     // concentration, since the same mass of gas still contains the same
@@ -218,14 +218,14 @@ void Brush::PredCorrSolver::solveChemistry(Reactor1d &reac, const real t_stop) c
  *\param[in]            t_stop      Time to which to advance solution
  *\param[in]            cell_rngs   Vector of independent RNGs, one for each cell
  */
-void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_start, const real t_stop,
+void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const double t_start, const double t_stop,
                                                  std::vector<Sweep::rng_type>& cell_rngs) const {
 
     const size_t numCells = reac.getNumCells();
     const Sweep::Mechanism &mech = reac.getParticleMechanism();
 
     // Select time step for Strang or first order splitting
-    const real firstStop = mStrangTransportSplitting ? (t_start + t_stop) / 2.0 : t_stop;
+    const double firstStop = mStrangTransportSplitting ? (t_start + t_stop) / 2.0 : t_stop;
 
 #pragma omp parallel for schedule(dynamic) ordered
     for(size_t i = numCells; i > 0; --i) {
@@ -270,7 +270,7 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const real t_s
  *\param[in,out]        rng         RNG to use for the simulation
  */
 void Brush::PredCorrSolver::solveParticlesInOneCell(Sweep::Cell &cell, const Geometry::LocalGeometry1d &geom,
-                                                    const Sweep::Mechanism &mech, real t, real t_stop,
+                                                    const Sweep::Mechanism &mech, double t, double t_stop,
                                                     Sweep::rng_type &rng) const {
     // Carry out a repeated sequence of jump process simulation (with LPDA updates
     // for particles involved in jumps) followed by LPDA updates for the full
@@ -278,15 +278,15 @@ void Brush::PredCorrSolver::solveParticlesInOneCell(Sweep::Cell &cell, const Geo
     do {
         // Ignore the individual rate term information in the final argument
         fvector dummyVec;
-        const real deferredRate = mech.CalcDeferredRateTerms(t, cell ,geom, dummyVec);
+        const double deferredRate = mech.CalcDeferredRateTerms(t, cell ,geom, dummyVec);
 
         // Calculate both the rates of the individual jump processes and the total
         fvector jumpRates;
-        real jumpRate = mech.CalcJumpRateTerms(t, cell, geom, jumpRates);
+        double jumpRate = mech.CalcJumpRateTerms(t, cell, geom, jumpRates);
 
         // Calculate the latest time at which all particles must be updated
         // with deferred events.
-        real maxDeferralEnd = t_stop;
+        double maxDeferralEnd = t_stop;
         if(deferredRate / jumpRate > mDeferralRatio) {
             // A large number of deferred events are expected between jump events
             // so force updates to take place more frequently by shortening the
@@ -296,7 +296,7 @@ void Brush::PredCorrSolver::solveParticlesInOneCell(Sweep::Cell &cell, const Geo
 
         // Simulate jumps upto maxDeferralEnd
         // Put a very small tolerance on the comparison
-        while(t <= maxDeferralEnd * (1.0 - std::numeric_limits<real>::epsilon())) {
+        while(t <= maxDeferralEnd * (1.0 - std::numeric_limits<double>::epsilon())) {
             // Perform one non-deferred event
 
             jumpRate = mech.CalcJumpRateTerms(t, cell, geom, jumpRates);
@@ -308,7 +308,7 @@ void Brush::PredCorrSolver::solveParticlesInOneCell(Sweep::Cell &cell, const Geo
         if (mech.AnyDeferred()) {
             mech.LPDA(maxDeferralEnd, cell, rng);
         }
-    } while(t <= t_stop * (1.0 - std::numeric_limits<real>::epsilon()));
+    } while(t <= t_stop * (1.0 - std::numeric_limits<double>::epsilon()));
 
  }
 
@@ -318,8 +318,8 @@ void Brush::PredCorrSolver::solveParticlesInOneCell(Sweep::Cell &cell, const Geo
  *@param[in]        t_stop      Time upto which transport is to be simulated
  *@param[in,out]    cell_rngs   Random number generators, one per cell
  */
-void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t_start,
-                                                   const real t_stop, std::vector<Sweep::rng_type>& cell_rngs) const {
+void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const double t_start,
+                                                   const double t_stop, std::vector<Sweep::rng_type>& cell_rngs) const {
     const size_t numCells = reac.getNumCells();
 
     // Element i of the outer vector will contain the outflow from cell i of the reactor.
@@ -327,10 +327,10 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
     // After this vector of vectors of lists had been populated, it will be necessary to merge
     // the lists of particles being transported into each cell of the reactor.
     std::vector<inflow_lists_vector> inflowLists(numCells, inflow_lists_vector(numCells));
-    std::vector<real> statisticalWeights(numCells);
-    std::vector<real> cellVolumes(numCells);
-    std::vector<real> maxCapacities(numCells);
-    std::vector<real> velocities(numCells);
+    std::vector<double> statisticalWeights(numCells);
+    std::vector<double> cellVolumes(numCells);
+    std::vector<double> maxCapacities(numCells);
+    std::vector<double> velocities(numCells);
 
     // Loop over each cell updating particles positions and removing any
     // particles that are moving to new cells.
@@ -357,7 +357,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
         // The weight will be needed when the particles are put back into the cell
         statisticalWeights[i] = 1.0 / mix.SampleVolume();
         cellVolumes[i] = geom.cellVolume();
-        maxCapacities[i] = static_cast<real>(mix.Particles().Capacity());
+        maxCapacities[i] = static_cast<double>(mix.Particles().Capacity());
         velocities[i] = mix.GasPhase().Velocity();
 
         // Remove all particles from the cell and add them
@@ -382,10 +382,10 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
 
         for(size_t j = 0; j != numCells; ++j) {
             // Adjustment factor for particle statistical weight
-            const real weightFactor = (maxCapacities[j] * statisticalWeights[j]) /
+            const double weightFactor = (maxCapacities[j] * statisticalWeights[j]) /
                                       (maxCapacities[i] * statisticalWeights[i]);
 
-            const real repeatCountConst =  cellVolumes[j] * maxCapacities[i] * velocities[i]
+            const double repeatCountConst =  cellVolumes[j] * maxCapacities[i] * velocities[i]
                                          / cellVolumes[i] / maxCapacities[j] / velocities[j];
 //            if(i == j + 1) {
 //                std::cout << j << ' ' << " max capac " << maxCapacities[j] << " inv sample vol " << statisticalWeights[j] << " cell volume " << cellVolumes[j] <<std::endl;
@@ -399,7 +399,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
             while(it != itEnd) {
                 // Repeat count in destination cell (may be less than one), fractional parts are probability
                 // of a particle being added to destination.
-                real repeatCount = repeatCountConst;
+                double repeatCount = repeatCountConst;
 
                 (*it)->setStatisticalWeight((*it)->getStatisticalWeight() * weightFactor);
 
@@ -410,7 +410,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
                     else {
                         // Final copy of the particle can be the original, but is only added with
                         // probability repeatCount.
-                        boost::random::bernoulli_distribution<real> particleDecider(repeatCount);
+                        boost::random::bernoulli_distribution<double> particleDecider(repeatCount);
                         if(particleDecider(cell_rngs[i]))
                             partList.push_back((*it));
                         else {
@@ -439,30 +439,30 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const real t
  *@param[in,out]    sp                  Particle requiring updated position
  *@param[in,out]    rng                 Random number generator
  */
-void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const real t_stop, const Sweep::Cell &mix,
+void Brush::PredCorrSolver::updateParticlePosition(const double t_start, const double t_stop, const Sweep::Cell &mix,
                                                    const Sweep::Mechanism &mech,
                                                    const Geometry::LocalGeometry1d & geom,
                                                    const std::vector<const Sweep::Cell*> & neighbouringCells,
                                                    Sweep::Particle& sp, Sweep::rng_type &rng) const
 {
-    real newPosition = sp.getPosition();
+    double newPosition = sp.getPosition();
     {
-        const real dt = t_stop - t_start; //sp.getPositionTime();
+        const double dt = t_stop - t_start; //sp.getPositionTime();
         assert(dt >= 0.0);
         if(mSplitAdvection){
-            const real velocity = mech.AdvectionVelocity(mix, sp, neighbouringCells, geom);
+            const double velocity = mech.AdvectionVelocity(mix, sp, neighbouringCells, geom);
             newPosition += dt * velocity;
         }
         if(mSplitDiffusion){
-            const real diffusionCoeff = mech.DiffusionCoefficient(mix, sp);
-            typedef boost::normal_distribution<real> normal_distrib;
+            const double diffusionCoeff = mech.DiffusionCoefficient(mix, sp);
+            typedef boost::normal_distribution<double> normal_distrib;
             normal_distrib diffusionDistrib(0.0, std::sqrt(diffusionCoeff * dt));
             boost::variate_generator<Sweep::rng_type&, normal_distrib> diffusionGenerator(rng, diffusionDistrib);
             newPosition += diffusionGenerator();
 
             if(mDiffusionDriftAdjustment > 0.0) {
                 // Drift correction to allow for different forms of stochastic integral
-                const real drift = mDiffusionDriftAdjustment * mech.GradDiffusionCoefficient(mix, sp, neighbouringCells, geom);
+                const double drift = mDiffusionDriftAdjustment * mech.GradDiffusionCoefficient(mix, sp, neighbouringCells, geom);
                 newPosition += dt * drift;
             }
         }
@@ -491,24 +491,24 @@ void Brush::PredCorrSolver::updateParticlePosition(const real t_start, const rea
  *
  *@pre      The expected residence time of the particle must be greater than the time step length.
  */
-void Brush::PredCorrSolver::updateParticlePositionCSTR(const real t_start, const real t_stop, const Sweep::Cell &mix,
+void Brush::PredCorrSolver::updateParticlePositionCSTR(const double t_start, const double t_stop, const Sweep::Cell &mix,
                                                        const Sweep::Mechanism &mech,
                                                        const Geometry::LocalGeometry1d & geom,
                                                        const std::vector<const Sweep::Cell*> & neighbouringCells,
                                                        Sweep::Particle& sp, Sweep::rng_type &rng) const
 {
     // Time over which transport is occurring
-    const real dt = t_stop - t_start;
+    const double dt = t_stop - t_start;
 
     // Probability according to CSTR that particle leaves cell in this time step
-    const real p = mech.AdvectionVelocity(mix, sp, neighbouringCells, geom) * dt / geom.cellVolume();
+    const double p = mech.AdvectionVelocity(mix, sp, neighbouringCells, geom) * dt / geom.cellVolume();
     assert(p <= 1);
 
     // The particle will either end up at the centre of this cell or the next
-    real newPosition = geom.cellCentre();
+    double newPosition = geom.cellCentre();
 
     // Generate a sample to decide if the particle leaves
-    boost::random::bernoulli_distribution<real> leaveCell(p);
+    boost::random::bernoulli_distribution<double> leaveCell(p);
     if(leaveCell(rng))
         // Add the distance to the next cell centre
         newPosition += geom.calcSpacing(Geometry::right);
@@ -530,7 +530,7 @@ void Brush::PredCorrSolver::updateParticlePositionCSTR(const real t_start, const
  *@return       Vector of lists of particles to be transported into other cells
  */
 Brush::PredCorrSolver::inflow_lists_vector
-  Brush::PredCorrSolver::updateParticleListPositions(const real t_start, const real t_stop, Sweep::Cell &mix,
+  Brush::PredCorrSolver::updateParticleListPositions(const double t_start, const double t_stop, Sweep::Cell &mix,
                                                      const size_t cell_index, const Sweep::Mechanism &mech,
                                                      const Geometry::Geometry1d & geom,
                                                      const std::vector<const Sweep::Cell*> & neighbouringCells,

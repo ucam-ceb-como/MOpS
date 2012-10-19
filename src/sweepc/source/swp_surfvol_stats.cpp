@@ -135,13 +135,13 @@ unsigned int SurfVolStats::Count() const
 }
 
 // Calculates the model stats for a particle ensemble.
-void SurfVolStats::Calculate(const Ensemble &e, real scale)
+void SurfVolStats::Calculate(const Ensemble &e, double scale)
 {
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
     // Calculate total weight
-    real TotalWeight = e.Count()>0 ? e.GetSum(iW) : 0.0;
-    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+    double TotalWeight = e.Count()>0 ? e.GetSum(iW) : 0.0;
+    double invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
@@ -156,8 +156,8 @@ void SurfVolStats::Calculate(const Ensemble &e, real scale)
         // Get surface-volume cache.
         const AggModels::SurfVolPrimary * const primary =
             dynamic_cast<const AggModels::SurfVolPrimary *>((*ip)->Primary());
-        real sz = (*ip)->Property(m_statbound.PID);
-        real wt = (*ip)->getStatisticalWeight() * invTotalWeight;
+        double sz = (*ip)->Property(m_statbound.PID);
+        double wt = (*ip)->getStatisticalWeight() * invTotalWeight;
 
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
@@ -267,7 +267,7 @@ fvector SurfVolStats::GetGeometricStdev(
     // Now we can get the geometric stdevs
     fvector stdevs;
     stdevs.resize(num, 0.0);
-    real dev(0.0);
+    double dev(0.0);
     for (i = 0; i != diams.size(); i++) {
         // Loop over diameter types
         for (j = 0; j != num; j++) {
@@ -322,19 +322,19 @@ void SurfVolStats::Names(std::vector<std::string> &names,
 // AVAILABLE BASIC STATS.
 
 // Returns the total equivalent-sphere surface area.
-real SurfVolStats::SphSurfaceArea(void) const {return m_stats[iS];}
+double SurfVolStats::SphSurfaceArea(void) const {return m_stats[iS];}
 
 // Returns the average equivalent-sphere surface area.
-real SurfVolStats::AvgSphSurfaceArea(void) const {return m_stats[iS+1];}
+double SurfVolStats::AvgSphSurfaceArea(void) const {return m_stats[iS+1];}
 
 // Returns the total primary particle count.
-real SurfVolStats::PriPartCount(void) const {return m_stats[iPPN];}
+double SurfVolStats::PriPartCount(void) const {return m_stats[iPPN];}
 
 // Returns the average primary particle count.
-real SurfVolStats::AvgPriPartCount(void) const {return m_stats[iPPN+1];}
+double SurfVolStats::AvgPriPartCount(void) const {return m_stats[iPPN+1];}
 
 // Returns the average primary particle diameter.
-real SurfVolStats::AvgPriPartDiameter(void) const {return m_stats[iPPD];}
+double SurfVolStats::AvgPriPartDiameter(void) const {return m_stats[iPPD];}
 
 
 // PARTICLE SIZE LISTS.
@@ -374,7 +374,7 @@ void SurfVolStats::PSL_Names(std::vector<std::string> &names,
 }
 
 // Returns the PSL entry for the given particle.
-void SurfVolStats::PSL(const Sweep::Particle &sp, real time,
+void SurfVolStats::PSL(const Sweep::Particle &sp, double time,
                        fvector &psl, unsigned int start) const
 {
     // Resize vector if too small.
@@ -481,7 +481,7 @@ void SurfVolStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mod
                 // Read stats.
                 for (unsigned int i=0; i!=n; ++i) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_stats.push_back((real)val);
+                    m_stats.push_back((double)val);
                 }
 
                 // Read number of stat names in vector.

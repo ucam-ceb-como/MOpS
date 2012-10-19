@@ -149,8 +149,8 @@ public:
 
     // Get total rates of all processes.  Returns the sum of
     // all rates.
-    real CalcRates(
-        real t,          // Time at which to get rates.
+    double CalcRates(
+        double t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &rates,  // Return vector for process rates.
@@ -158,8 +158,8 @@ public:
         ) const;
 
     //! Get total number of jumps of all processes
-    real CalcJumps(
-        real t,          // Time at which to get rates.
+    double CalcJumps(
+        double t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &jumps  // Return vector for process rates.
@@ -173,8 +173,8 @@ public:
     // selection by different properties for the same process.
     // In particular this is used for the condensation and
     // coagulation processes.  Returns the sum of all rates.
-    real CalcRateTerms(
-        real t,          // Time at which to get rates.
+    double CalcRateTerms(
+        double t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &terms   // Return vector for process rates.
@@ -182,16 +182,16 @@ public:
 
     // Get total rates of non-deferred processes.  Returns the sum
     // of all rates.
-    real CalcJumpRateTerms(
-        real t,          // Time at which to get rates.
+    double CalcJumpRateTerms(
+        double t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &rates   // Return vector for process rates.
         ) const;
 
     //! Rate of processes that are deferred
-    real CalcDeferredRateTerms(
-        real t,          // Time at which to get rates.
+    double CalcDeferredRateTerms(
+        double t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &rates   // Return vector for process rates.
@@ -200,7 +200,7 @@ public:
     // Calculates the rates-of-change of the chemical species fractions, 
     // gas-phase temperature and density due to particle processes.
     void CalcGasChangeRates(
-        real t,          // Time at which to get rates.
+        double t,          // Time at which to get rates.
         const Cell &sys, // System cell for which to get rates.
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         fvector &rates   // Return vector for rates-of-change.
@@ -213,7 +213,7 @@ public:
     // an inception, particle process or a coagulation event.
     void DoProcess(
         unsigned int i, // Index of process to perform.
-        real t,         // Current time (s).
+        double t,         // Current time (s).
         Cell &sys,      // System to update (includes ensemble).
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
         rng_type &rng
@@ -222,7 +222,7 @@ public:
     // transfer mass from gas-phase to particle ensemble used for PAH-PP model
     void MassTransfer(
         int i,          // the number of pyrene supposed in the emsemble
-        real t,         // Current time (s).
+        double t,         // Current time (s).
         Cell &sys,      // System to update (includes ensemble).
         rng_type &rng   // Random number generator
         ) const;
@@ -232,7 +232,7 @@ public:
 
     //! LPDA for all particles
     void LPDA(
-        real t,   // Time up to which to integrate.
+        double t,   // Time up to which to integrate.
         Cell &sys,// System to update.
         rng_type &rng
         ) const;
@@ -242,7 +242,7 @@ public:
     void UpdateParticle(
         Particle &sp, // Particle to update.
         Cell &sys,    // System to which the particle belongs.
-        real t,       // Time up to which to integrate.
+        double t,       // Time up to which to integrate.
         rng_type &rng
         ) const;
 
@@ -294,7 +294,7 @@ private:
     void releaseMem(void);
 
     //time when the last particle emsenble has been written to a file
-    mutable real last3dout;
+    mutable double last3dout;
 
 };
 } // namespace Sweep

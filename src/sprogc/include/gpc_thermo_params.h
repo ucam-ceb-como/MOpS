@@ -60,7 +60,7 @@ namespace Thermo
     struct THERMO_PARAMS
     {
         unsigned int Count;
-        real Params[S_PARAM_COUNT];
+        double Params[S_PARAM_COUNT];
 
         // Writes the element to a binary data stream.
         template<class Archive>
@@ -72,7 +72,7 @@ namespace Thermo
 
     };
 
-    typedef std::map<real, THERMO_PARAMS> ThermoMap;
+    typedef std::map<double, THERMO_PARAMS> ThermoMap;
 };
 };
 #endif

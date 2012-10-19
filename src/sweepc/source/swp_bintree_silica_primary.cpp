@@ -61,7 +61,7 @@ BinTreeSilicaPrimary::BinTreeSilicaPrimary() {}
  * @return          Initialised particle
  */
 BinTreeSilicaPrimary::BinTreeSilicaPrimary(
-        const real time,
+        const double time,
         const Sweep::ParticleModel &model
         )
 : BinTreePrimary(time, model) {
@@ -129,10 +129,10 @@ Sweep::AggModels::AggModelType BinTreeSilicaPrimary::AggID(void) const
  *
  * @exception   std::runtime_error  Could not cast gas phase to SprogIdealGasWrapper
  */
-void BinTreeSilicaPrimary::Sinter(real dt, Cell &sys,
-                            const Processes::SinteringModel &model,
-                            rng_type &rng,
-                            real wt)
+void BinTreeSilicaPrimary::Sinter(double dt, Sweep::Cell &sys,
+                            const Sweep::Processes::SinteringModel &model,
+                            Sweep::rng_type &rng,
+                            double wt)
 {
     // Only update the time on the root node
     if (m_parent == NULL) {
@@ -141,7 +141,7 @@ void BinTreeSilicaPrimary::Sinter(real dt, Cell &sys,
     }
 
     // For use later, only on root node
-    const Sweep::real n_OH_i = GetComponent("hydroxide");
+    const double n_OH_i = GetComponent("hydroxide");
 
     // Do only if there is a particle to sinter
     if (m_leftparticle!=NULL && m_rightparticle!=NULL) {
@@ -188,7 +188,7 @@ void BinTreeSilicaPrimary::Sinter(real dt, Cell &sys,
 
         // Adjust the gas-phase
         // Use n_OH (old) - n_OH (new) for better mass conservation
-        Sweep::real d_water =
+        double d_water =
                 0.5 * (n_OH_i - GetComponent("hydroxide")) * wt / (NA * sys.SampleVolume());
 
         newConcs[Sprog::Species::Find(std::string("H2O"),*(gas->Species()))]
@@ -218,18 +218,18 @@ void BinTreeSilicaPrimary::Sinter(real dt, Cell &sys,
  * @exception   std::runtime_error  Sintering gave initial surface < final surface
  */
 void BinTreeSilicaPrimary::SinterNode(
-        Sweep::real dt,
-        Cell &sys,
-        const Processes::SinteringModel &model,
-        rng_type &rng,
-        real wt
+        double dt,
+        Sweep::Cell &sys,
+        const Sweep::Processes::SinteringModel &model,
+        Sweep::rng_type &rng,
+        double wt
         ) {
 
     if (m_leftparticle!=NULL && m_rightparticle!=NULL) {
 
     // Store some useful variables
-    Sweep::real initial_surface = m_children_surf;
-    Sweep::real n_OH = GetComponent("hydroxide");
+    double initial_surface = m_children_surf;
+    double n_OH = GetComponent("hydroxide");
 
     // Call to parent class to sinter this node
     BinTreePrimary::SinterNode(dt, sys, model, rng, wt);
@@ -237,7 +237,7 @@ void BinTreeSilicaPrimary::SinterNode(
     // Estimate the number of chemical units to be changed
     // NOTE: different to SurfVolSilicaPrimary as d_comp is split across
     // the two leaf node particles
-    Sweep::real d_comp = 0.5 * n_OH * (initial_surface - m_children_surf) / m_surf;
+    double d_comp = 0.5 * n_OH * (initial_surface - m_children_surf) / m_surf;
 
     if (d_comp < 0.0) {
         // Somehow we got a unphysical sintering process

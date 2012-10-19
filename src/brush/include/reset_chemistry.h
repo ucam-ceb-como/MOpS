@@ -60,10 +60,10 @@ class Reactor1d;
  * Data for each interpolation node is held in an object of type data_point and
  * when an interpolation is requested these are searched using the functor defined
  * within this class to find the two nearest points for linear interpolation.  All
- * instances of data_point (which is a typedef for an std::vector of real numbers
+ * instances of data_point (which is a typedef for an std::vector of double numbers
  * should be of the same length), but there is no checking of this at present.
  *
- * The comparison functor performs real number ordering using only the first entry
+ * The comparison functor performs double number ordering using only the first entry
  * of the data_point vectors.  The first few entries in these vectors contain bulk
  * property information (see the constructor documentation for details).  The remaining
  * enties are species mass fractions.
@@ -103,16 +103,16 @@ public:
                    const std::vector<fvector> &massFracs);
 
     //! Overwrite chemistry information with that stored in this object
-    void apply(const real x, Sweep::Cell &reac) const;
+    void apply(const double x, Sweep::Cell &reac) const;
     
     //! Access interpolated raw data
-    data_point interpolateData(const real x) const;
+    data_point interpolateData(const double x) const;
 
     //! Position of first data point
-    real startLocation() const;
+    double startLocation() const;
 
     //! Position of final data point
-    real endLocation() const;
+    double endLocation() const;
 
 private:
     //! Type of full set of data
@@ -138,7 +138,7 @@ private:
     };
 
     //! Linearly interpolate between the two data points
-    data_point interpolate(const real x, const data_point &leftData,
+    data_point interpolate(const double x, const data_point &leftData,
                            const data_point &rightData) const;
 
     //! Number of data items that are not species mass or mol fractions or concentrations etc

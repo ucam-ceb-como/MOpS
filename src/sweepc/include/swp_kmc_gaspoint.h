@@ -70,7 +70,7 @@ namespace KMC_ARS {
             //! Initialise data point
             void initData();
             //! Interpolate data
-            void Interpolate(real t, real fact=1);
+            void Interpolate(double t, double fact=1);
             //! Convert Mole frac to Conc
             void ConvertMoleFrac();
             
@@ -93,14 +93,14 @@ namespace KMC_ARS {
 
             static const int    m_total = 15;
             //! Accessing data
-            real operator[](const int n) const;
+            double operator[](const int n) const;
             KMCGasPoint& operator=(const KMCGasPoint& gp);
             //! Get species names
             std::vector<std::string> SpNames() const;
 
         private:
             //! Datapoint for each variable (arranged according to above const int order)
-            std::vector<real> m_data;
+            std::vector<double> m_data;
             Sweep::GasProfile* m_gasprof;
             std::vector<std::string> m_spnames;
 

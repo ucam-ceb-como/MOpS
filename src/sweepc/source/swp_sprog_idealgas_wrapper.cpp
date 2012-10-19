@@ -73,35 +73,35 @@ Sweep::SprogIdealGasWrapper::SprogIdealGasWrapper(const ParticleModel& model)
 /*!
  * @return    Pressure in \f$\mathrm{Pa}\f$
  */
-Sweep::real Sweep::SprogIdealGasWrapper::Pressure() const {
+double Sweep::SprogIdealGasWrapper::Pressure() const {
     return mGas.Pressure();
 }
 
 /*!
  * @return      Absolute temperature of mixture
  */
-Sweep::real Sweep::SprogIdealGasWrapper::Temperature() const {
+double Sweep::SprogIdealGasWrapper::Temperature() const {
     return mGas.Temperature();
 }
 
 /*!
  *
  */
-Sweep::real Sweep::SprogIdealGasWrapper::Velocity() const {
+double Sweep::SprogIdealGasWrapper::Velocity() const {
     return mGas.Velocity();
 }
 
 /*!
  *@return Viscosity in \f$\mathrm{Pa.s}\f$
  */
-Sweep::real Sweep::SprogIdealGasWrapper::Viscosity() const {
+double Sweep::SprogIdealGasWrapper::Viscosity() const {
     return mGas.getViscosity();
 }
 
 /*!
  *@return Mass Density in \f$\mathrm{kg}\,\mathrm{m}^{-3}\f$
  */
-Sweep::real Sweep::SprogIdealGasWrapper::MassDensity() const {
+double Sweep::SprogIdealGasWrapper::MassDensity() const {
     return mGas.MassDensity();
 }
 
@@ -111,7 +111,7 @@ Sweep::real Sweep::SprogIdealGasWrapper::MassDensity() const {
  *
  *@return total concentration in \f$\mathrm{kg}\,\mathrm{m}^{-3}\f$
  */
-Sweep::real Sweep::SprogIdealGasWrapper::MolarDensity() const {
+double Sweep::SprogIdealGasWrapper::MolarDensity() const {
     // See note about historic naming in sprog
     return mGas.Density();
 }
@@ -121,7 +121,7 @@ Sweep::real Sweep::SprogIdealGasWrapper::MolarDensity() const {
  *
  *@return       Concentration of species in \f$\mathrm{mol}\,\mathrm{m}^{-3}\f$
  */
-Sweep::real Sweep::SprogIdealGasWrapper::SpeciesConcentration(const SpeciesIndex index) const {
+double Sweep::SprogIdealGasWrapper::SpeciesConcentration(const SpeciesIndex index) const {
     return mGas.MolarConc(index);
 }
 
@@ -133,7 +133,7 @@ Sweep::real Sweep::SprogIdealGasWrapper::SpeciesConcentration(const SpeciesIndex
  *
  *@exception    std::runtime_error      Unrecognised property index
  */
-Sweep::real Sweep::SprogIdealGasWrapper::PropertyValue(const PropertyIndex index) const {
+double Sweep::SprogIdealGasWrapper::PropertyValue(const PropertyIndex index) const {
     switch(index) {
     case sTemperatureGradientIndex:
         return mGas.GradientTemperature();
@@ -155,7 +155,7 @@ Sweep::real Sweep::SprogIdealGasWrapper::PropertyValue(const PropertyIndex index
         throw std::runtime_error(msg.str());
     }
     // Avoid compiler warnings by providing a return value
-    return std::numeric_limits<real>::quiet_NaN();
+    return std::numeric_limits<double>::quiet_NaN();
 }
 
 /*!

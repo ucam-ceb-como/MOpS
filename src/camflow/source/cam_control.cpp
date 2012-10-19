@@ -62,31 +62,31 @@ CamControl::CamControl(){
     setSpeciesUnderRelax(1.0);
 }
 
-void CamControl::setSpeciesRelTol(doublereal tol){
+void CamControl::setSpeciesRelTol(double tol){
     if(tol != 0)this->relTolSp = tol;
 }
 
-void CamControl::setSpeciesAbsTol(doublereal tol){
+void CamControl::setSpeciesAbsTol(double tol){
     if(tol != 0) this->absTolSp = tol;
 }
 
-void CamControl::setTempRelTol(doublereal tol){
+void CamControl::setTempRelTol(double tol){
     if(tol != 0) this->relTolT = tol;
 }
 
-void CamControl::setTempAbsTol(doublereal tol){
+void CamControl::setTempAbsTol(double tol){
     if(tol != 0) this->absTolT = tol;
 }
 
-void CamControl::setFlowRelTol(doublereal tol){
+void CamControl::setFlowRelTol(double tol){
     if(tol != 0) this->relTolFlow = tol;
 }
 
-void CamControl::setFlowAbsTol(doublereal tol){
+void CamControl::setFlowAbsTol(double tol){
     if(tol != 0) this->absTolFlow = tol;
 }
 
-void CamControl::setResTol(doublereal tol){
+void CamControl::setResTol(double tol){
     if(tol != 0) this->resTol = tol;
 }
 
@@ -98,19 +98,19 @@ void CamControl::setReportInterval(int n){
     this->repotMode = n;
 }
 
-void CamControl::setIniStep(doublereal step){
+void CamControl::setIniStep(double step){
     this->iniStep = step;
 }
 
-void CamControl::setMinStep(doublereal step){
+void CamControl::setMinStep(double step){
     this->minStep = step;
 }
 
-void CamControl::setMaxStep(doublereal step){
+void CamControl::setMaxStep(double step){
     this->maxStep = step;
 }
 
-void CamControl::setMaxTime(doublereal time){
+void CamControl::setMaxTime(double time){
     this->maxTime = time;
 }
 
@@ -127,35 +127,35 @@ void CamControl::setNumIterations(int n){
     nIter = n;
 }
 
-void CamControl::setSpeciesUnderRelax(doublereal ur){
+void CamControl::setSpeciesUnderRelax(double ur){
     urSpecies = ur;
 }
 
-doublereal CamControl::getSpeciesRelTol() const{   
+double CamControl::getSpeciesRelTol() const{   
     return this->relTolSp;
 }
 
-doublereal CamControl::getSpeciesAbsTol() const{
+double CamControl::getSpeciesAbsTol() const{
     return this->absTolSp;
 }
 
-doublereal CamControl::getTempRelTol() const{
+double CamControl::getTempRelTol() const{
     return this->relTolT;
 }
 
-doublereal CamControl::getTempAbsTol() const{
+double CamControl::getTempAbsTol() const{
     return this->absTolT;
 }
 
-doublereal CamControl::getFlowRelTol() const{
+double CamControl::getFlowRelTol() const{
     return this->relTolFlow;
 }
 
-doublereal CamControl::getFlowAbsTol() const{
+double CamControl::getFlowAbsTol() const{
     return this->absTolFlow;
 }
 
-doublereal CamControl::getResTol() const{
+double CamControl::getResTol() const{
     return this->resTol;
 }
 
@@ -171,19 +171,19 @@ int CamControl::getSolver() const{
     return this->solver;
 }
 
-doublereal CamControl::getIniStep() const{
+double CamControl::getIniStep() const{
     return this->iniStep;
 }
 
-doublereal CamControl::getMinStep() const{
+double CamControl::getMinStep() const{
     return this->minStep;
 }
 
-doublereal CamControl::getMaxStep() const{
+double CamControl::getMaxStep() const{
     return this->maxStep;
 }
 
-doublereal CamControl::getMaxTime() const{
+double CamControl::getMaxTime() const{
     return this->maxTime;
 }
 
@@ -195,7 +195,7 @@ int CamControl::getNumIterations() const{
     return nIter;
 }
 
-doublereal CamControl::getSpeciesUnderRelax() const{
+double CamControl::getSpeciesUnderRelax() const{
     return urSpecies;
 }
 

@@ -67,10 +67,10 @@ namespace Geometry {
     };
 
     //! Floating point type to use throughout
-    typedef double real;
+    // typedef double double;
 
     //! Vector of floating point numbers
-    typedef std::vector<real> fvector;
+    typedef std::vector<double> fvector;
 
     //! Specify how solution behaves at edges of domain
     enum BoundaryConditionType {

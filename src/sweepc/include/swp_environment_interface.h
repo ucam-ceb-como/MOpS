@@ -72,28 +72,28 @@ public:
     typedef unsigned PropertyIndex;
 
     //! Pressure in
-    virtual real Pressure() const = 0;
+    virtual double Pressure() const = 0;
 
     //! Temperature in K
-    virtual real Temperature() const = 0;
+    virtual double Temperature() const = 0;
 
     //! Velocity in
-    virtual real Velocity() const = 0;
+    virtual double Velocity() const = 0;
 
     //! Viscosity in Pa.s
-    virtual real Viscosity() const = 0;
+    virtual double Viscosity() const = 0;
 
     //! Density in \f$\mathrm{kg}\,\mathrm{m}^{-3}\f$
-    virtual real MassDensity() const = 0;
+    virtual double MassDensity() const = 0;
 
     //! Total concentration in \f$\mathrm{mol}\,\mathrm{m}^{-3}\f$
-    virtual real MolarDensity() const = 0;
+    virtual double MolarDensity() const = 0;
 
     //! Concentration of species in \f$\mathrm{mol}\,\mathrm{m}^{-3}\f$
-    virtual real SpeciesConcentration(const SpeciesIndex index) const = 0;
+    virtual double SpeciesConcentration(const SpeciesIndex index) const = 0;
 
     //! Value of some mixture property that is not a species concentration
-    virtual real PropertyValue(const PropertyIndex index) const = 0;
+    virtual double PropertyValue(const PropertyIndex index) const = 0;
 
 }; //class EnvironmentInterface
 

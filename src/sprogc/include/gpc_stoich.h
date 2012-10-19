@@ -57,7 +57,7 @@ public:
     // Constructors.
     Stoichiometry(void); // Default constructor.
     Stoichiometry(const Stoichiometry &s); // Copy constructor.
-    Stoichiometry(unsigned int isp, const real &mu); // Initialising constructor.
+    Stoichiometry(unsigned int isp, const double &mu); // Initialising constructor.
 
     // Destructor.
     ~Stoichiometry(){}
@@ -74,9 +74,9 @@ public:
     
 
     // Stoichiometry value.
-    const real &Mu(void) const; // Returns the stoichiometry value.
-    void SetMu(const real &mu); // Sets the stoichiometry value.
-    void IncMu(const real &mu); // Increments the stoichiometry value.
+    const double &Mu(void) const; // Returns the stoichiometry value.
+    void SetMu(const double &mu); // Sets the stoichiometry value.
+    void IncMu(const double &mu); // Increments the stoichiometry value.
 
 
 
@@ -92,7 +92,7 @@ public:
 private:
     // Data.
     int m_species;
-    real m_stoich;
+    double m_stoich;
     //std::string m_phaseName;
 };
 
@@ -100,8 +100,8 @@ private:
 typedef Stoichiometry Stoich;   // Stoichiometry data.
 
 // Typedefs and structure for species/reaction stoichiometry cross-referencing.
-typedef std::map<unsigned int, real> RxnStoichMap;
-typedef std::pair<unsigned int, real> RxnStoichPair;
+typedef std::map<unsigned int, double> RxnStoichMap;
+typedef std::pair<unsigned int, double> RxnStoichPair;
 struct StoichXRef
 {
     unsigned int Species;
@@ -117,7 +117,7 @@ struct StoichXRef
 typedef std::vector<StoichXRef> StoichXRefVector;
 
 // Alternative method of defining stoichiometry.
-typedef std::map<unsigned int, real> StoichMap;
+typedef std::map<unsigned int, double> StoichMap;
 
 };
 

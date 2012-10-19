@@ -121,19 +121,19 @@ void Sprog::Kinetics::DeltaStoich::SetSpeciesName(const std::string &name)
 
 
 // Sets/change the total stoichiometry change of this species. 
-void Sprog::Kinetics::DeltaStoich::IncrementTotalStoich(const real &value) // value can be + or -
+void Sprog::Kinetics::DeltaStoich::IncrementTotalStoich(const double &value) // value can be + or -
 {
 total_stoich_sp += value;
 }
     
 // Sets/change the reactant stoichiometry change of this species. 
-void Sprog::Kinetics::DeltaStoich::IncrementReacStoich(const real &value) // value can be + or -
+void Sprog::Kinetics::DeltaStoich::IncrementReacStoich(const double &value) // value can be + or -
 {
 reac_stoich_sp += value;
 }    
 
 // Sets/change the product stoichiometry change of this species. 
-void Sprog::Kinetics::DeltaStoich::IncrementProdStoich(const real &value) // value can be + or -
+void Sprog::Kinetics::DeltaStoich::IncrementProdStoich(const double &value) // value can be + or -
 {
 prod_stoich_sp += value;
 }
@@ -150,7 +150,7 @@ void Sprog::Kinetics::DeltaStoich::SetReaction(Sprog::Kinetics::Reaction &rct)
 void Sprog::Kinetics::DeltaStoich::WriteDiagnostics(std::ostream &out) const
 {
   string data = "";
-    real val = 0.0;
+    double val = 0.0;
 
  if (out.good()) {
         // Species Name.
@@ -244,15 +244,15 @@ void Sprog::Kinetics::DeltaStoich::Deserialize(std::istream &in)
 
 		// Read the total stoich.
                 in.read(reinterpret_cast<char*>(&totl), sizeof(totl));
-				total_stoich_sp = (real)totl;
+				total_stoich_sp = (double)totl;
 
 		// Read the react stoich.
                 in.read(reinterpret_cast<char*>(&rea), sizeof(rea));
-				reac_stoich_sp = (real)rea;
+				reac_stoich_sp = (double)rea;
 
 		 // Read the prod stoich.
                 in.read(reinterpret_cast<char*>(&pro), sizeof(pro));
-				prod_stoich_sp = (real)pro;
+				prod_stoich_sp = (double)pro;
                 break;
             default:
                 throw runtime_error("DeltaStoich serialized version number "

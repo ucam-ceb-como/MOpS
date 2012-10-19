@@ -66,7 +66,7 @@ SurfVolPrimary::SurfVolPrimary(void)
 }
 
 // Initialising constructor.
-SurfVolPrimary::SurfVolPrimary(real time, const Sweep::ParticleModel &model)
+SurfVolPrimary::SurfVolPrimary(double time, const Sweep::ParticleModel &model)
 : Primary(time, model), m_sphsurf(0.0)
 {
 }
@@ -142,7 +142,7 @@ AggModels::AggModelType SurfVolPrimary::AggID(void) const {return AggModels::Sur
 void SurfVolPrimary::UpdateCache(void)
 {
     // Store the correct surface area.
-    real s = m_surf;
+    double s = m_surf;
 
     // Pretend that the primary is spherical and set the cache
     // accordingly.
@@ -160,7 +160,7 @@ void SurfVolPrimary::UpdateCache(void)
 }
 
 // Returns the equivalent spherical particle surface area.
-real SurfVolPrimary::SphSurfaceArea(void) const {return m_sphsurf;}
+double SurfVolPrimary::SphSurfaceArea(void) const {return m_sphsurf;}
 
 // Returns the number of primary particles if the aggregate is assumed
 // to consist of mono-sized primaries.
@@ -173,7 +173,7 @@ unsigned int SurfVolPrimary::PP_Count(void) const
 
 // Returns the primary particle diameter if the aggregate is assumed
 // to consist of mono-sized primaries.
-real SurfVolPrimary::PP_Diameter(void) const
+double SurfVolPrimary::PP_Diameter(void) const
 {
     // This should always be <= equiv. sphere diameter.
     return 6.0 * m_vol / m_surf;
@@ -190,23 +190,23 @@ unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues
                                     unsigned int n)
 {
     // Store initial surface and volume
-    real surfOld = m_surf;
-    real volOld  = m_vol;
+    double surfOld = m_surf;
+    double volOld  = m_vol;
 
     // Adjust the particle assuming that it is spherical.
     n = Primary::Adjust(dcomp, dvalues, rng, n);
 
 
     // Calculate change in volume.
-    real dvol = 0.0;
+    double dvol = 0.0;
     for (unsigned int i=0; i!=dcomp.size(); ++i) {
         dvol += dcomp[i] * m_pmodel->Components(i)->MolWt() / 
                 m_pmodel->Components(i)->Density();
     }
-    dvol *= (real)n / NA;
+    dvol *= (double)n / NA;
 
     // Calculate change in surface area.
-    real invRadius = 0.0;
+    double invRadius = 0.0;
     if (dvol > 0.0) {
         // Inverse growth radius.
         invRadius = sqrt(4.0 * PI / surfOld);
@@ -216,7 +216,7 @@ unsigned int SurfVolPrimary::Adjust(const fvector &dcomp, const fvector &dvalues
     }
 
     // Save new surface area.
-    real s = surfOld + (2.0 * dvol * invRadius);
+    double s = surfOld + (2.0 * dvol * invRadius);
 
     // Set correct surface area, which was incorrectly set by
     // Primary::Adjust.
@@ -244,7 +244,7 @@ SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
 {
     // Store the resultant surface area.
-    real s = m_surf + rhs.SurfaceArea();
+    double s = m_surf + rhs.SurfaceArea();
 
     // Perform the coagulation.
     Primary::Coagulate(rhs, rng);
@@ -266,26 +266,26 @@ SurfVolPrimary &SurfVolPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
 // This routine sinters the Primary for the given length of
 // time using the provided sintering model.
-void SurfVolPrimary::Sinter(real dt, Cell &sys,
+void SurfVolPrimary::Sinter(double dt, Cell &sys,
                             const Processes::SinteringModel &model,
                             rng_type &rng,
-                            real wt)
+                            double wt)
 {
     // Perform a first order integration method to sinter
     // the primary for the given time.
     
     // Declare time step variables.
-    real t1=0.0, delt=0.0, tstop=dt;
-    real r=0.0;
+    double t1=0.0, delt=0.0, tstop=dt;
+    double r=0.0;
 
     // Define the maximum allowed change in surface
     // area in one internal time step (10% spherical surface).
-    real dAmax = 0.1 * m_sphsurf;
+    double dAmax = 0.1 * m_sphsurf;
 
     // The scale parameter discretises the delta-S when using
     // the Poisson distribution.  This allows a smoother change
     // (smaller scale = higher precision).
-    real scale = 0.01;
+    double scale = 0.01;
 
     // Perform integration loop.
     while (t1 < tstop) {
@@ -299,7 +299,7 @@ void SurfVolPrimary::Sinter(real dt, Cell &sys,
 
             // Approximate sintering by a poisson process.  Calculate
             // number of poisson events.
-            real mean;
+            double mean;
             if (tstop > (t1+delt)) {
                 // A sub-step, we have changed surface by dAmax, on average
                 mean = 1.0 / scale;
@@ -307,7 +307,7 @@ void SurfVolPrimary::Sinter(real dt, Cell &sys,
                 // Step until end.  Calculate degree of sintering explicitly.
                 mean = r * (tstop - t1) / (scale*dAmax);
             }
-            boost::random::poisson_distribution<unsigned, real> repeatDistribution(mean);
+            boost::random::poisson_distribution<unsigned, double> repeatDistribution(mean);
             const unsigned n = repeatDistribution(rng);
 
             // Adjust the surface area.
@@ -380,7 +380,7 @@ void SurfVolPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &m
 
                 // Read spherical surface area.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_sphsurf = (real)val;
+                m_sphsurf = (double)val;
 
                 break;
             default:

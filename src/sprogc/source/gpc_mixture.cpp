@@ -119,13 +119,13 @@ Mixture &Mixture::operator=(const Mixture &mix)
 }
 
 // Returns the PAH formation rate. 
-real Mixture::PAHFormationRate() const
+double Mixture::PAHFormationRate() const
 {
     return m_data[PAHFormationIndex()];
 }
 
 // Set the PAH formation rate.
-void Mixture::SetPAHFormationRate(Sprog::real r)
+void Mixture::SetPAHFormationRate(double r)
 {
     m_data[PAHFormationIndex()] = r;
 }
@@ -134,14 +134,14 @@ void Mixture::SetPAHFormationRate(Sprog::real r)
 // TEMPERATURE.
 
 // Returns the mixture temperature.
-real Mixture::Temperature() const
+double Mixture::Temperature() const
 {
     return m_data[temperatureIndex()];
 }
 
 
 // Set the mixture temperature.
-void Mixture::SetTemperature(Sprog::real T)
+void Mixture::SetTemperature(double T)
 {
     m_data[temperatureIndex()] = T;
 }
@@ -163,7 +163,7 @@ void Mixture::GetConcs(fvector &concs) const
     concs.resize(numSpecies);
 
     // Loop over all mole fractions and convert to concentrations.
-    const real density = m_data[densityIndex()];
+    const double density = m_data[densityIndex()];
     for (unsigned int i = 0; i != gasSpeciesCount; ++i) {
         concs[i] = m_data[i] * density;
     }
@@ -188,7 +188,7 @@ void Mixture::GetMassFractions(fvector &fracs) const
 
     // Loop over all mole fractions and convert to mass fractions:
     //   y = x * wt / sum(x*wt)
-    real val, tot = 0.0;
+    double val, tot = 0.0;
     for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
         val = m_data[i] * (*m_species)[i]->MolWt();
         fracs[i] = val;
@@ -201,7 +201,7 @@ void Mixture::GetMassFractions(fvector &fracs) const
 	
 	
 	
-	std::vector<real> TOT; 
+	std::vector<double> TOT; 
 	
 	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		val, tot = 0.0;
@@ -232,7 +232,7 @@ void Mixture::GetMassFractions(fvector &fracs) const
 }
 
 // Returns the mole fraction of species i. (UNMODIFIED) (C)
-real Mixture::MoleFraction(unsigned int i) const
+double Mixture::MoleFraction(unsigned int i) const
 {
     if (i < m_species->size()) {
         return m_data[i];
@@ -242,7 +242,7 @@ real Mixture::MoleFraction(unsigned int i) const
 }
 
 // Returns the molar concentration of species i. (Modified by mm864, currently unused in mops-sprogc) (C)
-real Mixture::MolarConc(unsigned int i) const
+double Mixture::MolarConc(unsigned int i) const
 {
     if (i < gasSpeciesCount) {
         return m_data[i] * m_data[densityIndex()];
@@ -253,7 +253,7 @@ real Mixture::MolarConc(unsigned int i) const
 }
 
 // Returns the molar surface concentration of species i. (Modified by mm864) (C, currently unused in mops-sprogc)
-real Mixture::MolarSurfConc(unsigned int i) const
+double Mixture::MolarSurfConc(unsigned int i) const
 {
     if ((i >= gasSpeciesCount) && (i < m_species->size()) ) {
       string phName = (*m_species)[i]->PhaseName();
@@ -268,11 +268,11 @@ real Mixture::MolarSurfConc(unsigned int i) const
 }
 
 // Returns the mass fraction of species i. (modified by mm864)  (C, currently unused in mops-sprogc)
-real Mixture::MassFraction(unsigned int i) const
+double Mixture::MassFraction(unsigned int i) const
 {
     if (i < gasSpeciesCount) {
         // Get total x * W.
-        real tot = 0.0;
+        double tot = 0.0;
         for (unsigned int j=0; j!=gasSpeciesCount; ++j) {
             tot += m_data[j] * (*m_species)[j]->MolWt();
         }
@@ -298,7 +298,7 @@ real Mixture::MassFraction(unsigned int i) const
 // Sets the vector of species mole fractions. (modified by mm864) (C, debugged)
 void Mixture::SetFracs(const fvector &fracs)
 {
-    real tot =0.0;
+    double tot =0.0;
 
     // Set the mole fractions.
     for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
@@ -316,10 +316,10 @@ void Mixture::SetFracs(const fvector &fracs)
     
 	
 	// Surface species
-	std::vector<real> Z; 
+	std::vector<double> Z; 
 
 	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
-	real ztot = 0.0;
+	double ztot = 0.0;
 	std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
 	cout << "phasename" << phname << endl;
 		for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
@@ -352,13 +352,13 @@ void Mixture::SetFracs(const fvector &fracs)
 }
 
 // Sets the species mole fractions from an array of values. (modified by mm864) (C, currently not used in mops-sprogc)
-void Mixture::SetFracs(const Sprog::real fracs[], int n)
+void Mixture::SetFracs(const double fracs[], int n)
 {
 
 	/*
     // Check that the array of of sufficient length.
     if ((unsigned)n >= gasSpeciesCount) {
-        real tot = 0.0;
+        double tot = 0.0;
 
         // Set the fractions.
         for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
@@ -381,10 +381,10 @@ void Mixture::SetFracs(const Sprog::real fracs[], int n)
         // Set the fractions.
         
 		// Surface and gas species
-		std::vector<real> Z; 
+		std::vector<double> Z; 
 		
 		for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
-		real fractot = 0.0;
+		double fractot = 0.0;
 		std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
 		cout << "phasename" << phname << endl;
 		for (unsigned int i=0; i!=m_species->size(); ++i) {
@@ -435,7 +435,7 @@ void Mixture::SetConcs(const fvector &concs) // Is this correct?
         }
 
         // Convert values to mole fractions.
-        real invdens = 1.0 / m_data[densityIndex()];
+        double invdens = 1.0 / m_data[densityIndex()];
         for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
             m_data[i] *= invdens;
         }
@@ -457,7 +457,7 @@ void Mixture::SetMassFracs(const fvector &fracs)
 {
     // Check that the mass fraction vector is of sufficient length.
     if (fracs.size() >= m_species->size()) {
-        real val = 0.0, tot = 0.0, totfrac = 0.0;
+        double val = 0.0, tot = 0.0, totfrac = 0.0;
 	
         // Check that the fractions are normalised by summing up
         // the total fractions, and dividing the values by this
@@ -491,7 +491,7 @@ void Mixture::SetMassFracs(const fvector &fracs)
 		// Surface Mole Fraction from mass fraction 
 		
 		
-		std::vector<real> TOT; 
+		std::vector<double> TOT; 
 	
 	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		val = 0.0, tot = 0.0, totfrac = 0.0;
@@ -531,7 +531,7 @@ void Mixture::SetMassFracs(const fvector &fracs)
 // to one. (Modified by mm864) (C, Debugged)
 void Mixture::Normalise()
 {
-    real xtot = 0.0;
+    double xtot = 0.0;
 
     for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
         if (m_data[i] < 0.0) m_data[i] = 0.0;
@@ -544,10 +544,10 @@ void Mixture::Normalise()
         }
     }
 	
-	std::vector<real> Z; 
+	std::vector<double> Z; 
 	
 	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
-	real ztot = 0.0;
+	double ztot = 0.0;
 	std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
 	
 	for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
@@ -583,15 +583,15 @@ void Mixture::Normalise()
 // MIXTURE DENSITY. (UPDATED)
 
 // Returns the mixture molar density. (C)
-real Mixture::Density() const
+double Mixture::Density() const
 {
     return m_data[densityIndex()];
 }
 
 // Returns the mixture mass density. (include gas phase only) (C, currently not in used for mops-sprogc)
-real Mixture::MassDensity() const
+double Mixture::MassDensity() const
 {
-    real rho = 0.0;
+    double rho = 0.0;
 
     // Calcualate mass density:
     //   rho_mass = rho_mole * sum(x * wt)
@@ -603,15 +603,15 @@ real Mixture::MassDensity() const
 }
 
 // Sets the mixture molar density. (C, debugged)
-void Mixture::SetDensity(Sprog::real dens)
+void Mixture::SetDensity(double dens)
 {
     m_data[densityIndex()] = dens;
 }
 
 // Sets the molar density using the supplied mass density. (THIS SHOULD BE: SET MOLAR DENSITY) (C, currently not in used for mops-sprogc)
-void Mixture::SetMassDensity(Sprog::real dens) // (include gas phase only)
+void Mixture::SetMassDensity(double dens) // (include gas phase only)
 {
-    real sum = 0.0;
+    double sum = 0.0;
 
     // Calcualate molar density:
     //   rho_mass = rho_mole * sum(x * wt)
@@ -653,12 +653,12 @@ void Mixture::SetSpecies(const Sprog::SpeciesPtrVector &sp)
 
 // RAW DATA. (NO NEED CHANGING)
 
-real *const Mixture::RawData()
+double *const Mixture::RawData()
 {
     return &(m_data[0]);
 }
 
-const real *const Mixture::RawData() const
+const double *const Mixture::RawData() const
 {
     return &(m_data[0]);
 }
@@ -678,17 +678,17 @@ Serial_MixtureType Mixture::SerialType() const
 }
 
 // returns the avg mol wt given the mass fractions added by Vinod (modified by mm864, not in used for mops-sprogc)
-real Mixture::getAvgMolWt(Sprog::fvector &massFrac) const{
-	real avgMolWt = 0.0;
+double Mixture::getAvgMolWt(Sprog::fvector &massFrac) const{
+	double avgMolWt = 0.0;
 	for(unsigned int i=0; i!= gasSpeciesCount; i++)
 		avgMolWt += massFrac[i]/(*m_species)[i]->MolWt();
 
 	return 1.0/avgMolWt;
 }
 
-real Mixture::getAvgMolWt() const { // (modified by mm864, not in used for mops-sprogc)
-    real avgMolWt = 0.0;
-    vector<real> moleFrac = MoleFractions();
+double Mixture::getAvgMolWt() const { // (modified by mm864, not in used for mops-sprogc)
+    double avgMolWt = 0.0;
+    vector<double> moleFrac = MoleFractions();
     for(unsigned int i=0; i!= gasSpeciesCount; i++) 
         avgMolWt += moleFrac[i]*(*m_species)[i]->MolWt();
 
@@ -704,8 +704,8 @@ real Mixture::getAvgMolWt() const { // (modified by mm864, not in used for mops-
  *
  * @return Mean collision cross-sectional area in \f$m^2\f$.
  */
-real Mixture::getMeanCollisionSection() const { // Restricted to gas phase (mm864)
-    real avgColDiam2 = 0.0;
+double Mixture::getMeanCollisionSection() const { // Restricted to gas phase (mm864)
+    double avgColDiam2 = 0.0;
     for (unsigned i = 0; i!= gasSpeciesCount; ++i) {
         avgColDiam2 += MoleFraction(i) * (*m_species)[i]->getCollisionDiameter() * (*m_species)[i]->getCollisionDiameter();
     }
@@ -714,7 +714,7 @@ real Mixture::getMeanCollisionSection() const { // Restricted to gas phase (mm86
 
 // Following transport related routines are added by Vinod
 // returns the mixture viscosity in Kg/m-s
-real Mixture::getViscosity() const{
+double Mixture::getViscosity() const{
 
 	Sprog::Transport::MixtureTransport mt;
 	return mt.getViscosity(Temperature(),*this);
@@ -743,38 +743,38 @@ void Mixture::checkForTransportData() const
 }
 
 // returns the mixture thermal conductivity in J/m-s-K
-real Mixture::getThermalConductivity(real pre) const{
+double Mixture::getThermalConductivity(double pre) const{
 	Sprog::Transport::MixtureTransport mt;
 	return mt.getThermalConductivity(Temperature(),pre,*this);
 }
 
-const vector<real> Mixture::getMolarSpecificHeat(){
+const vector<double> Mixture::getMolarSpecificHeat(){
 
-        vector<real> cpMols;
+        vector<double> cpMols;
 	Sprog::Thermo::IdealGas ig(*this->Species());
 	ig.CalcCps(Temperature(),cpMols);
         return cpMols;
 }
 
-const vector<real> Mixture::getMolarEnthalpy(real T){
-	vector<real> enthalpy;
+const vector<double> Mixture::getMolarEnthalpy(double T){
+	vector<double> enthalpy;
 	Sprog::Thermo::IdealGas ig(*this->Species());
 	ig.CalcHs(T,enthalpy);
 	return enthalpy;
 
 }
 
-const vector<real> Mixture::getMolarEnthalpy(){
-    vector<real> enthalpy;
+const vector<double> Mixture::getMolarEnthalpy(){
+    vector<double> enthalpy;
     Sprog::Thermo::IdealGas ig(*this->Species());
     ig.CalcHs(Temperature(),enthalpy);
     return enthalpy;
 }
 
 // returns the mixture specific heat capacity in J/Kg K (modified by mm864)
-real Mixture::getSpecificHeatCapacity(Sprog::real T){
-	real cp = 0.0;
-	vector<real> cpMols, massFrac;
+double Mixture::getSpecificHeatCapacity(double T){
+	double cp = 0.0;
+	vector<double> cpMols, massFrac;
 	Sprog::Thermo::IdealGas ig(*this->Species());
 	ig.CalcCps(T,cpMols);
 	GetMassFractions(massFrac);
@@ -785,9 +785,9 @@ real Mixture::getSpecificHeatCapacity(Sprog::real T){
 }
 
 //return the specific heat capacity for the given mixture in J/kg K (modified by mm864)
-real Mixture::getSpecificHeatCapacity(){
-	real cp = 0.0;
-	vector<real> cpMols, massFrac;
+double Mixture::getSpecificHeatCapacity(){
+	double cp = 0.0;
+	vector<double> cpMols, massFrac;
 	Sprog::Thermo::IdealGas ig(*this->Species());
 	ig.CalcCps(Temperature(),cpMols);
 	GetMassFractions(massFrac);
@@ -798,7 +798,7 @@ real Mixture::getSpecificHeatCapacity(){
 }
 
 // returns the vector of mixture diffusion coefficient in m^2/s
-const vector<real> Mixture::getMixtureDiffusionCoeff(const real pre) const{
+const vector<double> Mixture::getMixtureDiffusionCoeff(const double pre) const{
 	Sprog::Transport::MixtureTransport mt;
 	return mt.getMixtureDiffusionCoeff(Temperature(),pre,*this);
 }
@@ -859,7 +859,7 @@ void Mixture::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&sz), sizeof(sz));
 
                 // Fill the data vector.
-                real val;
+                double val;
                 m_data.reserve(sz);
                 for (unsigned int i=0; i<sz; i++) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));

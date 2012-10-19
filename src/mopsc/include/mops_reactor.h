@@ -60,10 +60,10 @@ class Reactor
 public:
     // Type definition of RHS functional form to return
     // single derivative.
-    typedef real (*RHS1_FnPtr) (
-        real t,                 // Flow time.
-        const real *const y,    // Solution values.
-        const real *const ydot, // Derivatives to return.
+    typedef double (*RHS1_FnPtr) (
+        double t,                 // Flow time.
+        const double *const y,    // Solution values.
+        const double *const ydot, // Derivatives to return.
         const Reactor &r        // Calling reactor.
         );
 
@@ -95,10 +95,10 @@ public:
     // REACTOR TIME.
     
     // Returns the current reaction time.
-    real Time() const;
+    double Time() const;
 
     // Sets the current reaction time.
-    void SetTime(real t);
+    void SetTime(double t);
 
 
     // REACTOR CONTENTS.
@@ -172,7 +172,7 @@ public:
     // automatically tells the Reactor object to use its
     // default dT/dt calculation function.
     void Add_dTdt(
-        real t, // Time from which functional is valid.
+        double t, // Time from which functional is valid.
         const Sweep::Maths::Functional &fun // Functional.
         );
 
@@ -204,33 +204,33 @@ public:
 
     // Definition of RHS function for constant temperature energy model.
     virtual void RHS_ConstT(
-        real t,              // Flow time.
-        const real *const y, // Solution values.
-        real *ydot           // Derivatives to return.
+        double t,              // Flow time.
+        const double *const y, // Solution values.
+        double *ydot           // Derivatives to return.
         ) const;
 
     // Definition of RHS function for adiabatic energy model.
     virtual void RHS_Adiabatic(
-        real t,              // Flow time.
-        const real *const y, // Solution values.
-        real *ydot           // Derivatives to return.
+        double t,              // Flow time.
+        const double *const y, // Solution values.
+        double *ydot           // Derivatives to return.
         ) const;
 
     // Definition of Jacobian evaluator function for constant
     // temperature model.
     virtual void Jacobian(
-        real t,                 // Flow time.
-        real *const y,          // Solution values.
-        real **J,               // Jacobian Matrix J[j][i] = dFi/dYj.
-        real uround             // Perturbation size parameter.
+        double t,                 // Flow time.
+        double *const y,          // Solution values.
+        double **J,               // Jacobian Matrix J[j][i] = dFi/dYj.
+        double uround             // Perturbation size parameter.
         ) const;    
     
     //! Calculates Jacobian domegai/dcj instead of d/dxj[dxi/dt], as is done above.
     void RateJacobian(
-        real t,                 // Flow time.
-        real *const y,          // Solution values.
-        real **J,               // Jacobian Matrix J[j][i] = domegai/dcj.
-        real uround             // Perturbation size parameter.
+        double t,                 // Flow time.
+        double *const y,          // Solution values.
+        double **J,               // Jacobian Matrix J[j][i] = domegai/dcj.
+        double uround             // Perturbation size parameter.
         ) const;
 
     //!Create the Jacobian memory space and initialise to Identity Matrix
@@ -241,7 +241,7 @@ public:
 
 protected:
     // Reactor variables.
-    real m_time;                   // The current reaction time.
+    double m_time;                   // The current reaction time.
     Mops::Mixture *m_mix;          // The mixture contained in the reactor.
     const Mops::Mechanism *m_mech; // The mechanism which defines 
 									// what happens in the reactor.
@@ -259,14 +259,14 @@ protected:
     // the Reactor class by defining a map of functional against
     // time (from which functional is valid).  There is also a
     // default function (see below) for using this profile.
-    std::map<real,Sweep::Maths::Functional*> m_dTdt_profile;
+    std::map<double,Sweep::Maths::Functional*> m_dTdt_profile;
     
     // Derived reactor properties.
     unsigned int m_neq;     // Number of equations solved.
     unsigned int m_nsp;     // Number of species in current mechanism.
     int m_iT;               // Index of temperature in solution vectors.
     int m_iDens;            // Index of density in solution vectors.
-    real *m_deriv;          // Array to hold current solution derivatives.
+    double *m_deriv;          // Array to hold current solution derivatives.
 
     // Reactors should not be defined without knowledge of a Mechanism
     // object.  Therefore the default constructor is declared as protected.
@@ -276,10 +276,10 @@ protected:
     // IMPOSED dT/dt PROFILE.
 
     // Definition of RHS function for adiabatic energy model.
-    static real _RHS_dTdt_profile(
-        real t,                 // Flow time.
-        const real *const y,    // Solution values.
-        const real *const ydot, // Derivatives to return.
+    static double _RHS_dTdt_profile(
+        double t,                 // Flow time.
+        const double *const y,    // Solution values.
+        const double *const ydot, // Derivatives to return.
         const Reactor &r        // Calling reactor.
         );
 

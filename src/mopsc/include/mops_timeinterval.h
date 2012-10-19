@@ -68,18 +68,18 @@ public:
     // START TIME.
 
     // Returns the start time.
-    real StartTime() const;
+    double StartTime() const;
 
     // Sets the start time.
-    void SetStartTime(real t);
+    void SetStartTime(double t);
 
 
     // END TIME.
 
     // Returns the end time.
-    real EndTime() const;
+    double EndTime() const;
     // Sets the end time.
-    void SetEndTime(real t);
+    void SetEndTime(double t);
 
 
     // STEP COUNT.
@@ -105,10 +105,10 @@ public:
     // STEP SIZE CALCULATION.
 
     // Calculates the output step size.
-    real StepSize() const;
+    double StepSize() const;
 
     // Calculates the splitting step size.
-    real SplitStepSize() const;
+    double SplitStepSize() const;
 
 
     // READ/WRITE/COPY.
@@ -121,7 +121,7 @@ public:
 
 private:
     // Start and end times (s).
-    real m_start, m_end;
+    double m_start, m_end;
 
     //! Number of output steps to take before this time.
     unsigned int m_steps;

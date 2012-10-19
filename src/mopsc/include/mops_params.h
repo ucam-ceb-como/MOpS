@@ -46,7 +46,7 @@
 
 namespace Mops
 {
-    typedef Sprog::real real;
+    // typedef double double;
     typedef Sprog::fvector fvector;
 };
 

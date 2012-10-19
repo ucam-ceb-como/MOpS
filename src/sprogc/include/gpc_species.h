@@ -146,11 +146,11 @@ public:
     // MOLECULAR WEIGHT.
 
     // Returns the species molecular weight.
-    real MolWt(void) const;
+    double MolWt(void) const;
 
     // Recalculates the molecular weight of the
     // species using the elements in the parent mechanism.
-    real CalcMolWt(void);
+    double CalcMolWt(void);
 
 
     // Elements.
@@ -166,19 +166,19 @@ public:
     unsigned int ThermoRangeCount(void) const;
 
     // Sets the start temperature for the thermo parameter range.
-    void SetThermoStartTemperature(const real T);
+    void SetThermoStartTemperature(const double T);
 
     // Returns the set of thermo parameters valid for the given temperature.
-    const Sprog::Thermo::THERMO_PARAMS &ThermoParams(const real T) const;
+    const Sprog::Thermo::THERMO_PARAMS &ThermoParams(const double T) const;
 
     // Adds a set of thermo parameters with the given end point temperature.
     void AddThermoParams(
-        const real T, // Maximum temperature for which parameters are valid.
+        const double T, // Maximum temperature for which parameters are valid.
         const Sprog::Thermo::THERMO_PARAMS &params // Thermo params to add.
         );
 
     // Removes the parameters from the list valid for the given temperature.
-    void RemoveThermoParams(const real T);
+    void RemoveThermoParams(const double T);
 
 
     // PARENT MECHANISM.
@@ -243,7 +243,7 @@ public:
 	double getThermalConductivity(double T, double p, double cp) const;
 
 	//! Collision diameter in m
-	real getCollisionDiameter() const;
+	double getCollisionDiameter() const;
 
 	//! Check for transport data
 	bool hasTransportData() const;
@@ -253,7 +253,7 @@ protected:
     std::string m_name;              // Name/symbol.
 
     ElCompVector m_elcomp;           // Elemental composition.
-    real m_molwt;                    // Molecular weight (kg/mol).
+    double m_molwt;                    // Molecular weight (kg/mol).
     Sprog::Mechanism *m_mech;        // Parent mechanism.
     
     //double activity;                 // Bulk species activity (NOT YET).  
@@ -262,7 +262,7 @@ protected:
     // Thermo parameters for different temperature ranges.  The map key is the
     // end point temperature up to which the parameters are valid.
     Sprog::Thermo::ThermoMap m_thermoparams;
-    real m_T1; // Start temperature for range.
+    double m_T1; // Start temperature for range.
     
     int site_occupancy;              // Site occupancy for surface species (sigma).
    

@@ -51,7 +51,7 @@ namespace Brush {
 namespace Settings_IO {
 
     //! Read a 1d spatial profile of elements with specified name
-    std::vector<std::pair<real, real> > readProfile(const CamXML::Element * const document,
+    std::vector<std::pair<double, double> > readProfile(const CamXML::Element * const document,
                                                     const std::string &name);
 
 } // namespace Settings_IO

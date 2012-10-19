@@ -57,11 +57,11 @@ using namespace Sweep::Processes;
 using namespace std;
 
 // Mass of a silicon monomer, kg
-const real SiliconInception::m_m1  = 4.664e-26;
+const double SiliconInception::m_m1  = 4.664e-26;
 // Vol of a silicon atom, m3
-const real SiliconInception::m_v1  = 2.003e-29;
+const double SiliconInception::m_v1  = 2.003e-29;
 // Spherical diameter of a bulk silicon atom, m
-const real SiliconInception::m_d1  = 3.369e-10;
+const double SiliconInception::m_d1  = 3.369e-10;
 
 
 // CONSTRUCTORS AND DESTRUCTORS.
@@ -147,7 +147,7 @@ SiliconInception &SiliconInception::operator =(const SiliconInception &rhs)
  *
  * \return      0 on success, otherwise negative.
  */
-int SiliconInception::Perform(const real t, Cell &sys,
+int SiliconInception::Perform(const double t, Cell &sys,
                             const Geometry::LocalGeometry1d &local_geom,
                             const unsigned int iterm,
                             rng_type &rng) const {
@@ -164,10 +164,10 @@ int SiliconInception::Perform(const real t, Cell &sys,
     // Sample a uniformly distributed position, note that this method
     // works whether the vertices come in increasing or decreasing order,
     // but 1d is assumed for now.
-    real posn = vertices.front();
+    double posn = vertices.front();
 
-    const real width = vertices.back() - posn;
-    boost::uniform_01<rng_type&, real> uniformGenerator(rng);
+    const double width = vertices.back() - posn;
+    boost::uniform_01<rng_type&, double> uniformGenerator(rng);
     posn += width * uniformGenerator();
 
     sp->setPositionAndTime(posn, t);
@@ -226,13 +226,13 @@ int SiliconInception::Perform(const real t, Cell &sys,
  * @param[in]    d1    diameter of first molecule
  * @param[in]    d2    diameter of second molecule
  */
-void SiliconInception::SetInceptingSpecies(real m1, real m2, real d1, real d2)
+void SiliconInception::SetInceptingSpecies(double m1, double m2, double d1, double d2)
 {
     // The free mol part can be handled by the free mol specific method
     SetInceptingSpeciesFreeMol(m1, m2, d1, d2);
 
     // Now the slip flow part
-    real invd1=1.0/d1, invd2=1.0/d2;
+    double invd1=1.0/d1, invd2=1.0/d2;
     m_ksf1 = CSF * (d1+d2);
     m_ksf2 = 2.0 * 1.257 * m_ksf1 * ((invd1*invd1) + (invd2*invd2));
     m_ksf1 = m_ksf1 * (invd1+invd2);
@@ -250,7 +250,7 @@ void SiliconInception::SetInceptingSpecies(real m1, real m2, real d1, real d2)
  * @param[in]    d1    diameter of first molecule
  * @param[in]    d2    diameter of second molecule
  */
-void SiliconInception::SetInceptingSpeciesFreeMol(real m1, real m2, real d1, real d2)
+void SiliconInception::SetInceptingSpeciesFreeMol(double m1, double m2, double d1, double d2)
 {
     // This routine sets the free-mol and slip flow kernel parameters given
     // the mass and diameter of the incepting species.
@@ -269,7 +269,7 @@ void SiliconInception::SetInceptingSpeciesFreeMol(real m1, real m2, real d1, rea
  */
 void SiliconInception::SetInceptingVolume(const Sweep::Mechanism &mech)
 {
-    real v1(0.0);
+    double v1(0.0);
     CompPtrVector comp = mech.Components();
     for (unsigned int i=0; i!=comp.size(); i++) {
         // returns in m3, due to Density()
@@ -293,14 +293,14 @@ void SiliconInception::SetInceptingVolume(const Sweep::Mechanism &mech)
 void SiliconInception::SetInceptingDiameter(const Sweep::Mechanism &mech)
 {
     if (m_itype != iCollisional) {
-        real dmin(1.0);
+        double dmin(1.0);
         for (unsigned int i=0; i!=m_sidata.size(); i++) {
             if (m_sidata[i]._diam < dmin) dmin = m_sidata[i]._diam;
         }
         m_di = dmin;
     } else {
         //Pre-define volume and diameters
-        real v(0.0), d(0.0);
+        double v(0.0), d(0.0);
 
         // Loop over list of components in incepting particle to find initial vol
         for (unsigned int i=0; i!=ParticleComp().size(); i++) {
@@ -344,7 +344,7 @@ void SiliconInception::GenerateSpeciesData(const Sweep::Mechanism &mech)
             data->_track.resize(comp.size(), 0.0);
 
             // Initialise variable for volume
-            real v(0.0);
+            double v(0.0);
 
             // Loop over particle components to work out how many the
             // gas-phase species of interest will  contribute
@@ -386,13 +386,13 @@ const SiliconInception::SiliconData* SiliconInception::ChooseData(const Sweep::C
     // weight the choice based on mole fractions.
     const SiliconData* ans(NULL);
 
-    real dcrit = GetCriticalNucleus(sys);
+    double dcrit = GetCriticalNucleus(sys);
 
     // Hold fractions of available species in vector
     fvector availFracs;
     std::vector<const SiliconData*> availSpecies;
-    real sum(0.0);
-    real frac(0.0);
+    double sum(0.0);
+    double frac(0.0);
 
     // Loop over candidate species
     for (unsigned int i=0; i != m_sidata.size(); i++) {
@@ -432,7 +432,7 @@ const SiliconInception::SiliconData* SiliconInception::ChooseData(const Sweep::C
  */
 void SiliconInception::adjustGasPhase(Sweep::Cell &sys,
         const SiliconInception::SiliconData &species,
-        real wt) const
+        double wt) const
 {
     if(!sys.FixedChem()) {
     // This method requires write access to the gas phase, which is not
@@ -449,7 +449,7 @@ void SiliconInception::adjustGasPhase(Sweep::Cell &sys,
     fvector newConcs;
     gas->GetConcs(newConcs);
 
-    real n_NAvol = wt / (NA * sys.SampleVolume());
+    double n_NAvol = wt / (NA * sys.SampleVolume());
 
     // Update the internal counters
     m_reacs[species._fracIndex] += 1;
@@ -499,10 +499,10 @@ bool SiliconInception::IsCandidate(std::string name) const
  * @param sys   System for analysis
  * @return      Mole fraction of precursor
  */
-real SiliconInception::GetPrecursorFraction(const Sweep::Cell &sys) const
+double SiliconInception::GetPrecursorFraction(const Sweep::Cell &sys) const
 {
     // Initialise the fraction
-    real frac(0.0);
+    double frac(0.0);
 
     // Loop over all gas-phase species
     for (unsigned int i=0; i!=m_sidata.size(); i++) {
@@ -526,9 +526,9 @@ real SiliconInception::GetPrecursorFraction(const Sweep::Cell &sys) const
  * @param sys   System for which to calculate
  * @return      Supersaturation (-)
  */
-real SiliconInception::GetSupersaturation(const Sweep::Cell &sys) const
+double SiliconInception::GetSupersaturation(const Sweep::Cell &sys) const
 {
-    real s(1.0);
+    double s(1.0);
 
     // First get the silicon pressure
     s *= (GetPrecursorFraction(sys) * sys.GasPhase().Pressure());
@@ -548,7 +548,7 @@ real SiliconInception::GetSupersaturation(const Sweep::Cell &sys) const
  * @param T     Temperature (K)
  * @return      Surface energy (N/m)
  */
-real SiliconInception::GetSurfaceEnergy(real T) const
+double SiliconInception::GetSurfaceEnergy(double T) const
 {
     return 1.152 - 1.574e-4 * T;
 }
@@ -561,7 +561,7 @@ real SiliconInception::GetSurfaceEnergy(real T) const
  * @param T     Temperature (K)
  * @return      Saturation vapour pressure (Pa)
  */
-real SiliconInception::GetSatVapourPressure(real T) const
+double SiliconInception::GetSatVapourPressure(double T) const
 {
     return 101325.0 * pow(10, 7.534 - (23399 / T));
 }
@@ -575,9 +575,9 @@ real SiliconInception::GetSatVapourPressure(real T) const
  * @param T     Temperature (K)
  * @return      Sat. monomer number concentration (#/m3)
  */
-real SiliconInception::GetMonomerConc(real T) const
+double SiliconInception::GetMonomerConc(double T) const
 {
-    real psat = GetSatVapourPressure(T);
+    double psat = GetSatVapourPressure(T);
     psat *= (NA / (T * R));
     return psat;
 }
@@ -598,13 +598,13 @@ real SiliconInception::GetMonomerConc(real T) const
  * @param sys   System for analysis
  * @return      Critical diameter, in metres
  */
-real SiliconInception::GetCriticalNucleus(const Sweep::Cell &sys) const
+double SiliconInception::GetCriticalNucleus(const Sweep::Cell &sys) const
 {
-    real d = 4.0/Sweep::KB;
-    real s = GetSupersaturation(sys);
+    double d = 4.0/Sweep::KB;
+    double s = GetSupersaturation(sys);
 
     // Get chemical conditions
-    real T = sys.GasPhase().Temperature();      // in K
+    double T = sys.GasPhase().Temperature();      // in K
 
     // Set d to an arbitrarily high value if psi = 0 (i.e. no precursor)
     if (s <= 1.0) {
@@ -632,11 +632,11 @@ bool SiliconInception::IsInceptionAllowed(const Sweep::Cell &sys) const
 // TOTAL RATE CALCULATIONS.
 
 // Returns rate of the process for the given system.
-real SiliconInception::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const
+double SiliconInception::Rate(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the current chemical conditions.
-    real T = sys.GasPhase().Temperature();
-    real P = sys.GasPhase().Pressure();
+    double T = sys.GasPhase().Temperature();
+    double P = sys.GasPhase().Pressure();
 
     // Calculate the rate.
     return Rate(sys.GasPhase(), sqrt(T),
@@ -660,17 +660,17 @@ real SiliconInception::Rate(real t, const Cell &sys, const Geometry::LocalGeomet
  *
  * @return    Inception rate for a cell of size vol. (\f$ \mathrm{s}^{-1}\f$)
  */
-real SiliconInception::Rate(const EnvironmentInterface &gas, real sqrtT,
-                     real T_mu, real MFP, real vol, const Cell &sys) const
+double SiliconInception::Rate(const EnvironmentInterface &gas, double sqrtT,
+                     double T_mu, double MFP, double vol, const Cell &sys) const
 {
-    real rate(1.0);
-    real fm(0.0);
-    real sf(0.0);
-    real n(0.0);
-    real s(0.0);
-    real y(0.0);
-    real Theta(0.0);
-    real T = sys.GasPhase().Temperature();
+    double rate(1.0);
+    double fm(0.0);
+    double sf(0.0);
+    double n(0.0);
+    double s(0.0);
+    double y(0.0);
+    double Theta(0.0);
+    double T = sys.GasPhase().Temperature();
 
     // Check if the rate is > 0 as found by homogeneous nucleation
     if (IsInceptionAllowed(sys)) {
@@ -736,16 +736,16 @@ real SiliconInception::Rate(const EnvironmentInterface &gas, real sqrtT,
  *
  * @param[in]    gas      interface to gas mixture
  */
-real SiliconInception::chemRatePart(const EnvironmentInterface &gas) const
+double SiliconInception::chemRatePart(const EnvironmentInterface &gas) const
 {
     // Factor of 0.5 adjusts for doubling counting of pairs of molecules in the number
     // of possible collisions.
-    real rate = 0.5;
+    double rate = 0.5;
 
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
         //std::cerr << "Mole frac to use " << fracs[i->first] << std::endl;
-        real conc = gas.SpeciesConcentration(i->first);
+        double conc = gas.SpeciesConcentration(i->first);
         for (int j=0; j!=i->second; ++j) {
             rate *= (NA * conc);
         }
@@ -760,16 +760,16 @@ real SiliconInception::chemRatePart(const EnvironmentInterface &gas) const
 // Returns the number of rate terms for this process (one).
 unsigned int SiliconInception::TermCount(void) const {return 1;}
 
-// Calculates the rate terms given an iterator to a real vector. The
+// Calculates the rate terms given an iterator to a double vector. The
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
-real SiliconInception::RateTerms(const real t, const Cell &sys,
+double SiliconInception::RateTerms(const double t, const Cell &sys,
                                const Geometry::LocalGeometry1d &local_geom,
                                fvector::iterator &iterm) const
 {
     // Get the current chemical conditions.
-    real T = sys.GasPhase().Temperature();
-    real P = sys.GasPhase().Pressure();
+    double T = sys.GasPhase().Temperature();
+    double P = sys.GasPhase().Pressure();
 
     // Calculate the single rate term and advance iterator.
     *iterm = Rate(sys.GasPhase(), sqrt(T),
@@ -843,21 +843,21 @@ void SiliconInception::Deserialize(std::istream &in, const Sweep::Mechanism &mec
 
                 // Read free-mol parameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_kfm = (real)val;
+                m_kfm = (double)val;
 
                 // Read slip-flow parameters.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_ksf1 = (real)val;
+                m_ksf1 = (double)val;
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_ksf2 = (real)val;
+                m_ksf2 = (double)val;
 
                 // Read HNT parameters
                 in.read(reinterpret_cast<char*>(&num), sizeof(num));
                 m_itype = (InceptionType)num;
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_vi = (real)val;
+                m_vi = (double)val;
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_di = (real)val;
+                m_di = (double)val;
 
                 break;
             default:

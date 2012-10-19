@@ -69,7 +69,7 @@ class Phase
     Phase(  
 	  const std::string &name,  // - Element name.
 	  const std::string &id,
-	  const real siteden          // - Molecular weight.
+	  const double siteden          // - Molecular weight.
         );
     */
 

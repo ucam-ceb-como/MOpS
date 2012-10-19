@@ -64,7 +64,7 @@ public:
     //          SurfVolHydrogenPrimary being created without knowledge of the
     //          defining particle model.
     SurfVolHydrogenPrimary(                       // Initialising constructor.
-        real time,                        //  - Create time.
+        double time,                        //  - Create time.
         const Sweep::ParticleModel &model //  - Defining particle model.
         );
     SurfVolHydrogenPrimary(const SurfVolHydrogenPrimary &copy); // Copy constructor.
@@ -92,7 +92,7 @@ public:
     virtual void UpdateCache(void);
 
     // Returns the equivalent spherical particle surface area.
-    real SphSurfaceArea(void) const;
+    double SphSurfaceArea(void) const;
 
     // Returns the number of primary particles if the aggregate is assumed
     // to consist of mono-sized primaries.
@@ -100,7 +100,7 @@ public:
 
     // Returns the primary particle diameter if the aggregate is assumed
     // to consist of mono-sized primaries.
-    real PP_Diameter(void) const;
+    double PP_Diameter(void) const;
 
 
     // OPERATIONS.
@@ -124,11 +124,11 @@ public:
     // This routine sinters the Primary for the given length of
     // time using the provided sintering model.
     virtual void Sinter(
-        real dt, // Delta-t for sintering to occur.
+        double dt, // Delta-t for sintering to occur.
         Cell &sys, // System which defines primary's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
         rng_type &rng,   // Random number generator
-        real wt     // Statistical weight
+        double wt     // Statistical weight
         );
 
 
@@ -138,7 +138,7 @@ public:
     virtual SurfVolHydrogenPrimary *const Clone(void) const;
 
     //! Number of active sites (only implemented for some particle models).
-    virtual real GetSites() const;
+    virtual double GetSites() const;
 
     //! Writes the object to a binary stream.
     virtual void Serialize(std::ostream &out) const;

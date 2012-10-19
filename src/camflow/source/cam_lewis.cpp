@@ -139,7 +139,7 @@ void LewisNumber::readFromFile(const std::string& fixedLewisFile)
             }
             else
             {
-                doublereal LeNumber = boost::lexical_cast<double>((*p)->Data());
+                double LeNumber = boost::lexical_cast<double>((*p)->Data());
                 std::cout << "    " << speciesName << " " << LeNumber << std::endl;
                 for (size_t i=0; i<mCord_; ++i) Le(i,speciesIndex) = LeNumber;
             }
@@ -154,7 +154,7 @@ void LewisNumber::calculateLe()
 
 }
 
-doublereal
+double
 LewisNumber::operator()
 (
     const int& Z,
@@ -167,7 +167,7 @@ const
 
 }
 
-doublereal&
+double&
 LewisNumber::calcLewis
 (
     const int& Z,

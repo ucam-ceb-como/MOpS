@@ -80,7 +80,7 @@ public:
     // TOTAL RATE CALCULATION.
 
     // Returns the rate of the process for the given system.
-    virtual real Rate(real t,          // Time.
+    virtual double Rate(double t,          // Time.
                       const Cell &sys, // System for which to calculate rate.
                       const Geometry::LocalGeometry1d &local_geom
                       ) const;
@@ -91,11 +91,11 @@ public:
     // Returns the number of rate terms for this process.
     virtual unsigned int TermCount(void) const;
 
-    // Calculates the rate terms given an iterator to a real vector. The 
+    // Calculates the rate terms given an iterator to a double vector. The 
     // iterator is advanced to the position after the last term for this
     // process.  Returns the sum of all rate terms.
-    virtual real RateTerms(
-        real t,                  // Time.
+    virtual double RateTerms(
+        double t,                  // Time.
         const Cell &sys,         // System for which to calculate rate terms.
         const Geometry::LocalGeometry1d &local_geom, // Spatial position information
         fvector::iterator &iterm // Iterator to the first term.
@@ -106,7 +106,7 @@ public:
 
     //! Perform a coagulation with particles chosen according to the transition regime kernel
     virtual int Perform(
-        real t,
+        double t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
@@ -114,14 +114,14 @@ public:
 
 protected:
     //! Transition coagulation kernel between two particles
-    virtual real CoagKernel(
+    virtual double CoagKernel(
         const Particle &sp1, // First particle.
         const Particle &sp2, // Second particle.
         const Cell &sys
         ) const;
 
     //! Majorant coagulation kernel between two particles
-    virtual real MajorantKernel(
+    virtual double MajorantKernel(
         const Particle &sp1, // First particle.
         const Particle &sp2, // Second particle.
         const Cell &sys,
@@ -142,30 +142,30 @@ private:
     
 
     // Free-molecular enhancement factor.
-    const real m_efm;
+    const double m_efm;
 
         // More efficient rate routine for coagulation only.  
     // All parameters required to calculate rate passed 
     // as arguments.
-    real Rate(
+    double Rate(
         const TreeTransCoagWeightedCache &data, // Particle model data.
-        real n,     // Number of particles.
-        real sqrtT, // Square root of the temperature.
-        real T_mu,  // T / viscosity
-        real MFP,   // Gas mean-free path.
-        real vol    // System sample volume.
+        double n,     // Number of particles.
+        double sqrtT, // Square root of the temperature.
+        double T_mu,  // T / viscosity
+        double MFP,   // Gas mean-free path.
+        double vol    // System sample volume.
         ) const;
 
     // More efficient rate routine for coagulation only.  
     // All parameters required to calculate rate terms
     // passed as arguments.
-    real RateTerms(
+    double RateTerms(
         const TreeTransCoagWeightedCache &data, // Particle model data.
-        real n,     // Number of particles.
-        real sqrtT, // Square root of the temperature
-        real T_mu,  // T / viscosity
-        real MFP,   // Gas mean-free path.
-        real vol,   // System sample volume.
+        double n,     // Number of particles.
+        double sqrtT, // Square root of the temperature
+        double T_mu,  // T / viscosity
+        double MFP,   // Gas mean-free path.
+        double vol,   // System sample volume.
         fvector::iterator &iterm // Iterator to first coagulation term.
         ) const;
 
@@ -174,23 +174,23 @@ private:
     // Returns the free-molecular coagulation kernel value for the 
     // two given particles.  Can return either the majorant or
     // true kernel.
-    real FreeMolKernel(
+    double FreeMolKernel(
         const Particle &sp1, // First particle.
         const Particle &sp2, // Second particle.
-        real T,              // Temperature.
-        real P,              // Pressure.
+        double T,              // Temperature.
+        double P,              // Pressure.
         const bool maj       // true=majorant kernel, false=true kernel.
         ) const;
 
     // Returns the slip-flow coagulation kernel value for the 
     // two given particles.  Can return either the majorant or
     // true kernel.
-    real SlipFlowKernel(
+    double SlipFlowKernel(
         const Particle &sp1, // First particle.
         const Particle &sp2, // Second particle.
-        real T,              // Temperature.
-        real P,              // Pressure.
-        real mu,             // Viscosity
+        double T,              // Temperature.
+        double P,              // Pressure.
+        double mu,             // Viscosity
         const bool maj       // true=majorant kernel, false=true kernel.
         ) const;
 

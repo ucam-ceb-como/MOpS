@@ -67,11 +67,11 @@ namespace Camflow{
 
         //initialise the solver parameters
         void initSolver(int nEq,
-                        const doublereal tBeg,
-                        const doublereal tEnd,
-                        std::vector<doublereal>& y,
-                        std::vector<doublereal>& rTol,
-                        std::vector<doublereal>& aTol,
+                        const double tBeg,
+                        const double tEnd,
+                        std::vector<double>& y,
+                        std::vector<double>& rTol,
+                        std::vector<double>& aTol,
                         CamResidual &cr);
 
         //integrate the DAE system

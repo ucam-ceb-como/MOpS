@@ -57,11 +57,11 @@
  *@exception    std::runtime_error  No data
  *@exception    std::runtime_error  Mixture of global and local data
  */
-std::vector<std::pair<Brush::real, Brush::real> >
+std::vector<std::pair<double, double> >
   Brush::Settings_IO::readProfile(const CamXML::Element * const document,
                                   const std::string &name) {
     // Use to build up the return value
-    std::vector<std::pair<real, real> > profile;
+    std::vector<std::pair<double, double> > profile;
 
     // Extract the relevant XML elements
     std::vector<CamXML::Element*> profileElements;
@@ -79,11 +79,11 @@ std::vector<std::pair<Brush::real, Brush::real> >
         for(std::vector<CamXML::Element*>::const_iterator it = profileElements.begin();
             it != profileElements.end(); ++it) {
             // Loop over the pcount entries
-            const real value = std::atof((*it)->Data().c_str());
+            const double value = std::atof((*it)->Data().c_str());
 
             // Look for position information
             const CamXML::Attribute* const  posnAttrib = (*it)->GetAttribute("x");
-            real x = 0;
+            double x = 0;
             if(posnAttrib) {
                 //Found a position so store the full setting
                 x = std::atof(posnAttrib->GetValue().c_str());
@@ -102,7 +102,7 @@ std::vector<std::pair<Brush::real, Brush::real> >
                 msg += "> must be supplied without an x attribute";
                 throw std::runtime_error(msg);
             }
-            profile.push_back(std::make_pair<real, real>(x, value));
+            profile.push_back(std::make_pair<double, double>(x, value));
         }
     }
     return profile;

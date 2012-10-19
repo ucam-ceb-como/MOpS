@@ -140,12 +140,12 @@ public:
     // File postprocessing.
     static void PostProcess(const std::string &filename);
 
-    // Parameter pointer to array of real. This is needed by CVODES.
+    // Parameter pointer to array of double. This is needed by CVODES.
     // CVODES will access and change these parameters.
-    real *ParamsPtr();
+    double *ParamsPtr();
 
     // Parameter scaling factors. approx by original params.
-    real *ParamBarsPtr();
+    double *ParamBarsPtr();
 
     // Set a pointer to last sensitivity output result.
     void SetSensResult(N_Vector *sens_matrix);
@@ -183,9 +183,9 @@ private:
     // PARAMETERS' MEMORIES
     // Number of sensitivity parameters
     unsigned int m_NS;
-    real *m_org_params;
-    real *m_params;
-    real *m_parambars;
+    double *m_org_params;
+    double *m_params;
+    double *m_parambars;
     std::vector<SENS_PARAM> m_sens_params;
 
     // SENSITIVITY TEMP RESULT
@@ -200,7 +200,7 @@ private:
 
     // Read Sensitivity Matrix block.
     // Read block of n x m from fin to matrix and simulation time.
-    static void ReadSensMatrix(std::ifstream &fin, const unsigned int n, const unsigned int m, real &time, real ** matrix, real ** matrix_sqr);
+    static void ReadSensMatrix(std::ifstream &fin, const unsigned int n, const unsigned int m, double &time, double ** matrix, double ** matrix_sqr);
 
 
 };

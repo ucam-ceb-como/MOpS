@@ -62,7 +62,7 @@ namespace {
 
 // Returns the temperature in K by reading the value from the given
 // XML node and checking the units.
-Mops::real readTemperature(const CamXML::Element &node)
+double readTemperature(const CamXML::Element &node)
 {
     // Check the temperature units.
     const CamXML::Attribute *attr;
@@ -77,7 +77,7 @@ Mops::real readTemperature(const CamXML::Element &node)
     }
 
     // Read the temperature (and convert if necessary).
-    Mops::real T = Strings::cdble(node.Data());
+    double T = Strings::cdble(node.Data());
     switch (units) {
         case Sprog::Celcius:
             T += 273.15;
@@ -91,7 +91,7 @@ Mops::real readTemperature(const CamXML::Element &node)
 
 // Returns the pressure in Pa by reading the value from the given
 // XML node and checking the units.
-Mops::real readPressure(const CamXML::Element &node)
+double readPressure(const CamXML::Element &node)
 {
     // Check the pressure units.
     const CamXML::Attribute *attr;
@@ -108,7 +108,7 @@ Mops::real readPressure(const CamXML::Element &node)
     }
 
     // Read the pressure (and convert if necessary).
-    Mops::real P = Strings::cdble(node.Data());
+    double P = Strings::cdble(node.Data());
     switch (units) {
         case Sprog::Bar:
             P *= 1.0e5;
@@ -176,7 +176,7 @@ void readGlobalSettings(const CamXML::Element &node,
 Reactor *const readReactor(const CamXML::Element &node,
                                         const Mechanism &mech,
                                         const unsigned int max_particle_count,
-										const Mops::real maxM0,
+										const double maxM0,
 										Mops::Simulator &sim)
 {
     Reactor *reac = NULL;
@@ -398,7 +398,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         Sweep::PartPtrList fileParticleList;
         Sweep::PartPtrList inxParticleList;
         Sweep::PartPtrList allParticleList;
-        Mops::real initialM0 = 0;
+        double initialM0 = 0;
 
         // Find the overall number density represented by the population
         CamXML::Element* m0Node = subnode->GetFirstChild("m0");
@@ -431,7 +431,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         const Sweep::PartPtrList::const_iterator itEnd = allParticleList.end();
 
         // Get the total weights of *all* initialised particles
-        Mops::real weightSum = 0;
+        double weightSum = 0;
         while(it != itEnd) {
             weightSum += (*it++)->getStatisticalWeight();
         }
@@ -511,7 +511,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         // Read the residence time.
         subnode = node.GetFirstChild("residencetime");
         if (subnode != NULL) {
-        	Mops::real tau = Strings::cdble(subnode->Data());
+        	double tau = Strings::cdble(subnode->Data());
             dynamic_cast<PSR*>(reac)->SetResidenceTime(tau);
         }
     }
@@ -1231,7 +1231,7 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
 
     // See if there is a spatial position for the particles
     const CamXML::Attribute *attr = population_xml.GetAttribute("x");
-    real position = 0.0;
+    double position = 0.0;
     if(attr) {
         position = atof(attr->GetValue().c_str());
     }
@@ -1309,7 +1309,7 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
  *@exception    std::runtime_error      Upper bound less than or equal to lower bound
  */
 void Settings_IO::ReadStatsBound(const CamXML::Element &node, Sweep::PropID &property_id,
-                                 real &lower_bound, real &upper_bound) {
+                                 double &lower_bound, double &upper_bound) {
 
     const CamXML::Element *lobonode = node.GetFirstChild("lower");
     const CamXML::Element *upbonode = node.GetFirstChild("upper");

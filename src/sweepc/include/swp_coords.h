@@ -55,22 +55,22 @@ namespace Coords
     class Vector
     {
     private:
-        real A[3]; // Vector data.
+        double A[3]; // Vector data.
     public:
         // Constructor.
-        Vector() {memset(&A[0], 0, sizeof(real)*3);}
+        Vector() {memset(&A[0], 0, sizeof(double)*3);}
         // Cartesian coordinates.
-        inline real &X(void) {return A[0];}
-        inline real &Y(void) {return A[1];}
-        inline real &Z(void) {return A[2];}
+        inline double &X(void) {return A[0];}
+        inline double &Y(void) {return A[1];}
+        inline double &Z(void) {return A[2];}
         // Operators to return vector elements.
-        real &operator[](int i) {return A[i];}
-        const real &operator[](int i) const {return A[i];}
+        double &operator[](int i) {return A[i];}
+        const double &operator[](int i) const {return A[i];}
 
         // VECTOR TRANSLATION.
 
         // Translates the vector the given deviations.
-        inline void Translate(real dx, real dy, real dz) {A[0]+=dx; A[1]+=dy; A[2]+=dz;}
+        inline void Translate(double dx, double dy, double dz) {A[0]+=dx; A[1]+=dy; A[2]+=dz;}
         inline void Translate(Vector D) {A[0]+=D[0]; A[1]+=D[1]; A[2]+=D[2];}
 
     };
@@ -79,16 +79,16 @@ namespace Coords
     class Matrix 
     {
     private:
-        real A[3][3]; // The matrix data [row][col].
+        double A[3][3]; // The matrix data [row][col].
     public:
         // Constructor.
-        Matrix() {memset(&A[0][0], 0, sizeof(real)*9);}
+        Matrix() {memset(&A[0][0], 0, sizeof(double)*9);}
 
         // OPERATORS.
 
         // Operators to return matrix elements.
-        real* operator[](int i) {return &A[i][0];}
-        const real *const operator[](int i) const {return &A[i][0];}
+        double* operator[](int i) {return &A[i][0];}
+        const double *const operator[](int i) const {return &A[i][0];}
 
         // MATRIX MULTIPLICATION.
 
@@ -142,17 +142,17 @@ namespace Coords
         // COORDINATE ROTATION.
 
         // Adds a rotation to the transform matrix around the Z-axis.
-        inline void RotateZ(real phi)
+        inline void RotateZ(double phi)
         {
             // Precalculate cos and sin.
-            real cosp = cos(phi);
-            real sinp = sin(phi);
+            double cosp = cos(phi);
+            double sinp = sin(phi);
 
             // This function requires one temporary storage variable (a0)
             // to account for a change in the left column before it is used.
 
             // Top row.
-            real a0 = A[0][0];
+            double a0 = A[0][0];
             A[0][0] = + (a0*cosp) + (A[0][1]*sinp);
             A[0][1] = - (a0*sinp) + (A[0][1]*cosp);
             //A[0][2] = A[0][2];
@@ -170,7 +170,7 @@ namespace Coords
 
         // Sets the matrix to be a transform matrix for rotation around
         // the z-axis.
-        inline void SetRotZ(real phi)
+        inline void SetRotZ(double phi)
         {
             A[0][2] =   A[1][2] = A[2][0] = A[2][1] = 0.0;
             A[0][0] =   (A[1][1] = cos(phi));
@@ -179,17 +179,17 @@ namespace Coords
         }
 
         // Adds a rotation to the transform matrix around the x-axis
-        inline void RotateX(real theta)
+        inline void RotateX(double theta)
         {
             // Precalculate cos and sin.
-            real cosp = cos(theta);
-            real sinp = sin(theta);
+            double cosp = cos(theta);
+            double sinp = sin(theta);
 
             // This function requires one temporary storage variable (a1)
             // to account for a change in the middle column before it is used.
 
             // Top row.
-            real a1 = A[0][1];
+            double a1 = A[0][1];
             //A[0][0] = A[0][0];
             A[0][1] = + (a1*cosp) + (A[0][2]*sinp);
             A[0][2] = - (a1*sinp) + (A[0][2]*cosp);
@@ -207,7 +207,7 @@ namespace Coords
 
         // Sets the matrix to be a transform matrix for rotation
         // about the x-axis.
-        inline void SetRotX(real theta)
+        inline void SetRotX(double theta)
         {
             A[0][0] =   1.0;
             A[0][1] =   A[0][2] = A[1][0] = A[2][0] = 0.0;
@@ -218,17 +218,17 @@ namespace Coords
         // Sets the matrix to be a transform matrix for rotations
         // about the x-axis and the z-axis.
         inline void Rotate(
-            real theta, // X-axis rotation (radians).
-            real phi    // Z-axis rotation (radians).
+            double theta, // X-axis rotation (radians).
+            double phi    // Z-axis rotation (radians).
             )
         {
             // M = Z x X.
 
             // Precalculate trig terms.
-            real sinp = sin(phi);
-            real cosp = cos(phi);
-            real sint = sin(theta);
-            real cost = cos(theta);
+            double sinp = sin(phi);
+            double cosp = cos(phi);
+            double sint = sin(theta);
+            double cost = cos(theta);
             // Set matrix.
             A[0][0] =   cosp;
             A[0][1] = - sinp * cost;

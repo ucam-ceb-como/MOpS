@@ -111,7 +111,7 @@ void Sweep::TreeAddWeightedCache::Clear(void)
 /*!
  *  Returns one of the values stored in the cache
  */
-Sweep::real Sweep::TreeAddWeightedCache::Property(PropID id) const
+double Sweep::TreeAddWeightedCache::Property(PropID id) const
 {
     switch (id) {
         case iM:      // Mass.

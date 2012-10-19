@@ -127,7 +127,7 @@ PAHPrimary::PAHPrimary() : Primary(),
  * @param[in]       model       Model which defines the meaning of the primary
  *
  */
-PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model)
+PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numcarbon(0),
     m_numH(0),
@@ -173,7 +173,7 @@ PAHPrimary::PAHPrimary(const real time, const Sweep::ParticleModel &model)
  * @param[in]       model       Model which defines the meaning of the primary
  *
  */
-PAHPrimary::PAHPrimary(const real time, const real position,
+PAHPrimary::PAHPrimary(const double time, const double position,
                        const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numcarbon(0),
@@ -216,7 +216,7 @@ PAHPrimary::PAHPrimary(const real time, const real position,
 
 
 // Initialising constructor.
-PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
+PAHPrimary::PAHPrimary(double time, const Sweep::ParticleModel &model, bool noPAH)
 : Primary(time, model),
     m_numcarbon(0),
     m_numH(0),
@@ -264,7 +264,7 @@ PAHPrimary::PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH)
 
  * @param[in]   model       Particle model containing molecule database
 */
-void PAHPrimary::AddPAH(real time,const Sweep::ParticleModel &model)
+void PAHPrimary::AddPAH(double time,const Sweep::ParticleModel &model)
 {
     boost::shared_ptr<PAH> new_PAH (new PAH(time, model.InceptedPAH()));
     new_PAH->PAH_ID=ID;
@@ -978,7 +978,7 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
  * The actual interval over which the update is carried out on a PAH is from
  * lastupdated to t.
  */
-void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell &sys, rng_type &rng)
+void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Cell &sys, rng_type &rng)
 {
     // Either the primary has two children or it is a leaf of the
     // tree
@@ -1011,7 +1011,7 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             bool m_PAHchanged = false;
             const double minPAH = model.Components(0)->MinPAH();
 
-            real growthfact = 1.0;
+            double growthfact = 1.0;
             if (m_numPAH>=minPAH)
             {
                 // concentration of gasphase species is reduced by this factor to 
@@ -1021,7 +1021,7 @@ void PAHPrimary::UpdatePAHs(const real t, const Sweep::ParticleModel &model,Cell
             }
 
             // Time for one particular PAH to grow
-            const real growtime = t - (*it)->lastupdated;
+            const double growtime = t - (*it)->lastupdated;
             assert(growtime >= 0.0);
 
             const int oldNumCarbon = (*it)->m_pahstruct->numofC(); 
@@ -1524,7 +1524,7 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
             m_numprimary=1;
 
             // Check that the primary is begin kept up to date
-//            const real oldNumCarbons = m_numcarbon;
+//            const double oldNumCarbons = m_numcarbon;
 //            UpdatePrimary();
 //            if(m_numcarbon != oldNumCarbons)
 //                std::cerr << "UpdatePrimary has changed num carbons inside UpdateCache\n";
@@ -1565,7 +1565,7 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
             // there are m_numprimary-1 connections between the primary particles
             m_avg_coalesc=m_avg_coalesc/(m_numprimary-1);
             //approxmiate the surface of the particle
-            const real numprim_1_3=pow(m_numprimary,-0.333333);
+            const double numprim_1_3=pow(m_numprimary,-0.333333);
             m_surf=4*PI*spherical_radius*spherical_radius/
                 (m_avg_coalesc*(1-numprim_1_3)+numprim_1_3);
 
@@ -1759,7 +1759,7 @@ void PAHPrimary::SerializePrimary(std::ostream &out) const
     if (out.good()) {
 
         int  val_int(0);
-        real val(0.0);
+        double val(0.0);
         // Serialise state space
         val_int = m_numcarbon;
         out.write((char*)&val_int, sizeof(val_int));
@@ -1889,7 +1889,7 @@ void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel
     if (in.good()) {
 
         int  val_int(0);
-        real val(0.0);
+        double val(0.0);
 
         // Serialise state space
         in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
@@ -2058,10 +2058,10 @@ PAHPrimary* PAHPrimary::descendPath(PAHPrimary *here,
  * @param[in]   rng     Random number generator
  * @param[in]   wt      Statistical weight
  */
-void PAHPrimary::Sinter(real dt, Cell &sys,
+void PAHPrimary::Sinter(double dt, Cell &sys,
                             const Processes::SinteringModel &model,
                             rng_type &rng,
-                            real wt)
+                            double wt)
 {
     //Only update the time on the root node
     if (m_parent == NULL) {
@@ -2073,22 +2073,22 @@ void PAHPrimary::Sinter(real dt, Cell &sys,
 	if (m_leftparticle!=NULL)
     {
         // Store the old surface area of particles
-        // real surf_old = m_children_surf;
+        // double surf_old = m_children_surf;
 
         // Calculate the spherical surface
-        const real spherical_surface=4*PI*m_children_radius*m_children_radius;
+        const double spherical_surface=4*PI*m_children_radius*m_children_radius;
         // Declare time step variables.
-        real t1=0.0, delt=0.0, tstop=dt;
-        real r=0.0;
+        double t1=0.0, delt=0.0, tstop=dt;
+        double r=0.0;
 
         // Define the maximum allowed change in surface
         // area in one internal time step (10% spherical surface).
-        real dAmax = 0.1 * spherical_surface;
+        double dAmax = 0.1 * spherical_surface;
 
         // The scale parameter discretises the delta-S when using
         // the Poisson distribution.  This allows a smoother change
         // (smaller scale = higher precision).
-        real scale = 0.01;
+        double scale = 0.01;
 
         // Perform integration loop.
         while (t1 < tstop)
@@ -2103,7 +2103,7 @@ void PAHPrimary::Sinter(real dt, Cell &sys,
 
                 // Approximate sintering by a poisson process.  Calculate
                 // number of poisson events.
-                real mean;
+                double mean;
 
                 if (tstop > (t1+delt)) {
                     // A sub-step, we have changed surface by dAmax, on average
@@ -2112,12 +2112,12 @@ void PAHPrimary::Sinter(real dt, Cell &sys,
                     // Step until end.  Calculate degree of sintering explicitly.
                     mean = r * (tstop - t1) / (scale*dAmax);
                 }
-                boost::random::poisson_distribution<unsigned, real> repeatDistribution(mean);
+                boost::random::poisson_distribution<unsigned, double> repeatDistribution(mean);
                 const unsigned n = repeatDistribution(rng);
 
                 // Adjust the surface area.
                 if (n > 0) {
-                    m_children_surf -= (real)n * scale * dAmax;
+                    m_children_surf -= (double)n * scale * dAmax;
 
                     // Check that primary is not completely sintered.
                     if (m_children_surf <= spherical_surface) {
@@ -2154,14 +2154,14 @@ void PAHPrimary::Sinter(real dt, Cell &sys,
         //// Adjust the gas-phase concentration
         //fvector dc(sys.GasPhase().Species()->size(), 0.0);
 
-        //real n_NAvol_sint = wt * (real)num_H2O / (NA * sys.SampleVolume());
+        //double n_NAvol_sint = wt * (double)num_H2O / (NA * sys.SampleVolume());
         //dc[Sprog::Species::Find(string("H2O"),*sys.GasPhase().Species())] += n_NAvol_sint;
         //sys.AdjustConcs(dc);
         m_children_roundingLevel=RoundingLevel();
     }  // endif m_leftparticle != NULL
 }
 
-void PAHPrimary::SetSinteringTime(real time) 
+void PAHPrimary::SetSinteringTime(double time) 
 {
     m_sint_time = time;
     // Update children
@@ -2181,9 +2181,9 @@ double PAHPrimary::RoundingLevel()
 {
     if (m_leftparticle!=NULL) {
         // Calculate the spherical surface
-        const real spherical_surface=4*PI*m_children_radius*m_children_radius;
-        const real two_1_3=0.79370052231642452;
-        real slevel;
+        const double spherical_surface=4*PI*m_children_radius*m_children_radius;
+        const double two_1_3=0.79370052231642452;
+        double slevel;
 
         if (m_children_surf <= spherical_surface) {
             m_children_surf = spherical_surface;

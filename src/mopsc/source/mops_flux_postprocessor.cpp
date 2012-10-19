@@ -53,7 +53,7 @@ FluxAnalyser::FluxAnalyser(const Mechanism &mech,
     m_agprevrates = &agprevrates;
     m_atemperatures = &atemperatures;
     // Make all time points and time stop points.
-    real t = times.at(0).StartTime();
+    double t = times.at(0).StartTime();
     m_times.push_back(t);
     for (unsigned int i = 0; i < times.size(); i++) {
         for (unsigned int j = 1; j <= times.at(i).StepCount(); j++) {
@@ -143,10 +143,10 @@ void FluxAnalyser::calculateFluxAt(unsigned int index, unsigned int iel, Mops::F
             // Integer Stoichiometry
             for (int j = 0; j < m_mech->GasMech().Reactions(i)->ReactantCount(); j++) {
                 for (int k = 0; k < m_mech->GasMech().Reactions(i)->ProductCount(); k++) {
-                    real n_total_stoi = getTotalElementStoi(*m_mech->GasMech().Reactions(i), iel);
-                    real n_A_elem     = getNumberOfElementAtom(m_mech->GasMech().Reactions(i)->Reactant(j), iel);
-                    real n_B_elem     = getNumberOfElementAtom(m_mech->GasMech().Reactions(i)->Product(k), iel);
-                    real flux_fraction = 0.0;
+                    double n_total_stoi = getTotalElementStoi(*m_mech->GasMech().Reactions(i), iel);
+                    double n_A_elem     = getNumberOfElementAtom(m_mech->GasMech().Reactions(i)->Reactant(j), iel);
+                    double n_B_elem     = getNumberOfElementAtom(m_mech->GasMech().Reactions(i)->Product(k), iel);
+                    double flux_fraction = 0.0;
                     if (n_total_stoi > 0) {
                         flux_fraction = n_A_elem * n_B_elem / n_total_stoi;
                     } else {
@@ -277,19 +277,19 @@ void FluxAnalyser::writeHeader(std::ofstream &fout, unsigned int npoints) {
 
 }
 
-real FluxAnalyser::getTotalElementStoi(const Sprog::Kinetics::Reaction &rxn, unsigned int iel) {
-    real n = 0.0;
+double FluxAnalyser::getTotalElementStoi(const Sprog::Kinetics::Reaction &rxn, unsigned int iel) {
+    double n = 0.0;
     for (int i = 0; i < rxn.ReactantCount(); i++) {
         n += getNumberOfElementAtom(rxn.Reactant(i), iel);
     }
     return n;
 }
 
-real FluxAnalyser::getNumberOfElementAtom(const Sprog::Stoich &sc, unsigned int iel) {
+double FluxAnalyser::getNumberOfElementAtom(const Sprog::Stoich &sc, unsigned int iel) {
     Sprog::Species * sp = m_mech->GasMech().GetSpecies(sc.Index());
     if (sp != NULL) {
-        real n = (real) sp->AtomCount(iel);
-        return n * ((real) sc.Mu());
+        double n = (double) sp->AtomCount(iel);
+        return n * ((double) sc.Mu());
     } else {
         return 0.0;
     }

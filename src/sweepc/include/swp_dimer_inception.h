@@ -78,8 +78,8 @@ public:
 	// TOTAL RATE CALCULATIONS.
 
     // Returns rate of the process for the given system.
-    real Rate(
-        real t,          // Time.
+    double Rate(
+        double t,          // Time.
         const Cell &sys, // System for which to calculate rate.
         const Geometry::LocalGeometry1d& local_geom // Information regarding surrounding cells and boundaries
         ) const;
@@ -88,7 +88,7 @@ public:
 
     //! Performs the process on the given system.
     virtual int Perform(
-        real t,
+        double t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
@@ -100,11 +100,11 @@ public:
     // Returns the number of rate terms for this process.
     unsigned int TermCount(void) const;
 
-    // Calculates the rate terms given an iterator to a real vector. The 
+    // Calculates the rate terms given an iterator to a double vector. The 
     // iterator is advanced to the position after the last term for this
     // process.  Returns the sum of all terms.
-    real RateTerms(
-        real t,                  // Time.
+    double RateTerms(
+        double t,                  // Time.
         const Cell &sys,         // System for which to calculate rate terms.
         const Geometry::LocalGeometry1d &local_geom,                  // position information
         fvector::iterator &iterm // Iterator to the first term.
@@ -114,14 +114,14 @@ public:
     // Sets the coagulation kernel constants given incepting species
     // masses and diameters.
     void SetInceptingSpecies(
-        real m1, // Mass of species 1.
-        real m2, // Mass of species 2.
-        real d1, // Collision diameter of species 1.
-        real d2  // Collision diameter of species 2.
+        double m1, // Mass of species 1.
+        double m2, // Mass of species 2.
+        double d1, // Collision diameter of species 1.
+        double d2  // Collision diameter of species 2.
         );
 
     //! Inception only according to free mol kernel with these sizes
-    void SetInceptingSpeciesFreeMol(real m1, real m2, real d1, real d2);
+    void SetInceptingSpeciesFreeMol(double m1, double m2, double d1, double d2);
 
     // READ/WRITE/COPY.
 
@@ -147,27 +147,27 @@ protected:
     DimerInception(void);
 
     //! A faster rate calculation routine for Inception events only.
-    real Rate(
+    double Rate(
         const EnvironmentInterface &gas,
-        real sqrtT,           // Square-root of temperature.
-        real MFP,             // Gas mean free path.
-        real vol              // Particle ensemble sample volume.
+        double sqrtT,           // Square-root of temperature.
+        double MFP,             // Gas mean free path.
+        double vol              // Particle ensemble sample volume.
         ) const;
 
     // Calculates the gas-phase chemistry contribution to the rate
     // expression.  This is overloaded as Avogadro's number must be
     // included in the terms for inception processes.
-    real chemRatePart(
+    double chemRatePart(
         const EnvironmentInterface &gas
         ) const;
 
 private:
     // Rate parameters.
-    real m_kfm;          // Free-molecular kernel parameter.
-    real m_ksf1, m_ksf2; // Slip-flow kernel parameters.
+    double m_kfm;          // Free-molecular kernel parameter.
+    double m_ksf1, m_ksf2; // Slip-flow kernel parameters.
 
     // Free-molecular enhancement factor.
-    const real m_efm;
+    const double m_efm;
 };
 }
 }

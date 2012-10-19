@@ -347,13 +347,13 @@ void ReactionSet::Clear()
 // of progress of each reaction. 
 // GetMolarProdRates 1
 
-real ReactionSet::GetMolarProdRates(const fvector &rop,
+double ReactionSet::GetMolarProdRates(const fvector &rop,
                                     fvector &wdot) const
 {
     unsigned int k;
     const RxnStoichMap *mu;
     RxnStoichMap::const_iterator i;
-    real wtot = 0.0;
+    double wtot = 0.0;
 	unsigned int size_gas_rxns = m_rxns.size() - m_surface_rxns.size();
 
     // Assign sufficient memory for output.
@@ -401,13 +401,13 @@ real ReactionSet::GetMolarProdRates(const fvector &rop,
 // of progress of each reaction. 
 // GetMolarProdRates 1
 
-real ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
+double ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
                                     fvector &sdot) const
 {
     unsigned int k, l, m;
     const RxnStoichMap *mu;
     RxnStoichMap::const_iterator i;
-    real stot = 0.0;
+    double stot = 0.0;
 	unsigned int size_gas_rxns = m_rxns.size() - m_surface_rxns.size();
 
     // Assign sufficient memory for output.
@@ -454,7 +454,7 @@ real ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
 }
 
 // Calculates the molar production rates of all species. GetMolarProdRates 2
-real ReactionSet::GetMolarProdRates(const Sprog::Thermo::GasPhase &gas,
+double ReactionSet::GetMolarProdRates(const Sprog::Thermo::GasPhase &gas,
                                     fvector &wdot) const
 {
     static fvector rop;
@@ -463,7 +463,7 @@ real ReactionSet::GetMolarProdRates(const Sprog::Thermo::GasPhase &gas,
 }
 
 // Calculates the molar production rates of all species.GetMolarProdRates 3
-real ReactionSet::GetMolarProdRates(real T, real density, const real *const x,
+double ReactionSet::GetMolarProdRates(double T, double density, const double *x,
                                     unsigned int n,
                                     const Sprog::Thermo::ThermoInterface &thermo,
                                     fvector &wdot) const
@@ -475,7 +475,7 @@ real ReactionSet::GetMolarProdRates(real T, real density, const real *const x,
 
 
 // Calculates the molar production rates of surface and gas species.GetSurfaceMolarProdRates 2
-real ReactionSet::GetSurfaceMolarProdRates(real T, real density, const real *const x,
+double ReactionSet::GetSurfaceMolarProdRates(double T, double density, const double * x,
                                     unsigned int n,
                                     const Sprog::Thermo::ThermoInterface &thermo,
                                     fvector &sdot) const
@@ -503,8 +503,8 @@ void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) 
 
 // Calculates the rate of progress of each reaction given the
 // precalculated rate constants. // GetRatesOfProgress 1
-void ReactionSet::GetRatesOfProgress(real density,
-                                     const real *const x,
+void ReactionSet::GetRatesOfProgress(double density,
+                                     const double *x,
                                      unsigned int n,
                                      const fvector &kforward,
                                      const fvector &kreverse,
@@ -733,8 +733,8 @@ void ReactionSet::GetRatesOfProgress(real density,
 
 // Calculates the rate of progress of each reaction given the
 // precalculated rate constants. // GetRatesOfProgress 2
-void ReactionSet::GetRatesOfProgress(real density,
-                                     const real *const x,
+void ReactionSet::GetRatesOfProgress(double density,
+                                     const double * x,
                                      unsigned int n,
                                      const fvector &kforward,
                                      const fvector &kreverse,
@@ -780,7 +780,7 @@ void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &gas,
 }
 
 // Calculates the rate of progress of each reaction. GetRatesOfProgress 6
-void ReactionSet::GetRatesOfProgress(real T, real density, const real *const x,
+void ReactionSet::GetRatesOfProgress(double T, double density, const double *x,
                                      unsigned int n,
                                      const Sprog::Thermo::ThermoInterface &thermo,
                                      fvector &rop) const
@@ -795,9 +795,9 @@ void ReactionSet::GetRatesOfProgress(real T, real density, const real *const x,
 
 // Calculates the forward and reverse rate constants of all reactions
 // given the mixture temperature, density and species mole fractions. // GetRateConstant 1
-void ReactionSet::GetRateConstants(real T,
-                                   real density,
-                                   const real *const x,
+void ReactionSet::GetRateConstants(double T,
+                                   double density,
+                                   const double *x,
                                    unsigned int n,
                                    const fvector &Gs,
                                    fvector &kf,
@@ -856,9 +856,9 @@ void ReactionSet::GetRateConstants(real T,
 // Calculates the forward and reverse rate constants
 // of all reactions given a mixture object. // GetRateConstant 2
 void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
-                                   const std::vector<real> &Gs,
-                                   std::vector<real> &kforward,
-                                   std::vector<real> &kreverse) const
+                                   const std::vector<double> &Gs,
+                                   std::vector<double> &kforward,
+                                   std::vector<double> &kreverse) const
 {
     GetRateConstants(mix.Temperature(), mix.Density(), &(mix.MoleFractions()[0]),
                      m_mech->Species().size(), Gs, kforward, kreverse); // Calling GetRateConstant 1
@@ -867,9 +867,9 @@ void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
 // Calculates the forward and reverse rate constants of all reactions
 // given the mixture temperature, density and species mole fractions.
 // GetRateConstant 3
-void ReactionSet::GetRateConstants(real T,
-                                   real density,
-                                   const real *const x,
+void ReactionSet::GetRateConstants(double T,
+                                   double density,
+                                   const double * x,
                                    unsigned int n,
                                    const Sprog::Thermo::ThermoInterface &thermo,
                                    fvector &kforward,
@@ -883,8 +883,8 @@ void ReactionSet::GetRateConstants(real T,
 // Calculates the forward and reverse rate constants
 // of all reactions given a mixture object.// GetRateConstant 4
 void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
-                                   std::vector<real> &kforward,
-                                   std::vector<real> &kreverse) const
+                                   std::vector<double> &kforward,
+                                   std::vector<double> &kreverse) const
 {
     static fvector Gs;
     mix.Gs_RT(Gs);
@@ -895,10 +895,10 @@ void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
 
 // Calculates the concentration-independent portions
 // of the rates constants. 
-void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
+void ReactionSet::calcRateConstantsT(double T, const fvector &Gs,
                                      fvector &kf, fvector &kr) const
 {
-    real lnT=0.0, invRT=0.0, RT=0.0, Patm_RT=0.0, T_1_3=0.0, T_2_3=0.0;
+    double lnT=0.0, invRT=0.0, RT=0.0, Patm_RT=0.0, T_1_3=0.0, T_2_3=0.0;
     RxnPtrVector::const_iterator i;
     RxnMap::const_iterator im;
     int j, k, m, n;
@@ -1255,15 +1255,15 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
 
 // Calculates the concentration dependent rate constant of type COVERAGE
 
-void ReactionSet::calcCOVERAGE(real T, const real *const x, fvector &kf) const
+void ReactionSet::calcCOVERAGE(double T, const double *const x, fvector &kf) const
 {
 
    RxnMap::const_iterator im;
   unsigned int i, n, j;
   int k;
-  real invRT;
+  double invRT;
   double lnT = log(T);
-  real RT;
+  double RT;
   
     switch (m_mech->Units()) {
         case SI :
@@ -1430,7 +1430,7 @@ void ReactionSet::calcCOVERAGE(real T, const real *const x, fvector &kf) const
 // Calculates third-body concentrations for all reactions.  These
 // values will be multiplied by the rate constants, therefore if
 // a reaction does not have third-bodies the tbconcs is set to 1.0.
-void ReactionSet::calcTB_Concs(real density, const real *const x,
+void ReactionSet::calcTB_Concs(double density, const double *x,
                                unsigned int n, fvector &tbconcs) const
 {
     RxnPtrVector::const_iterator i;
@@ -1465,11 +1465,11 @@ void ReactionSet::calcTB_Concs(real density, const real *const x,
 // constant expressions.  This function multiplies the rate constants
 // by the fall-off terms.  This function may also change the values in
 // the tbconcs vector.
-void ReactionSet::calcFallOffTerms(real T, real density, const real *const x,
+void ReactionSet::calcFallOffTerms(double T, double density, const double *x,
                                    unsigned int n, fvector &tbconcs,
                                    fvector &kf, fvector &kr) const
 {
-    real lowk=0.0, pr=0.0, logpr=0.0, lnT=log(T), invRT=0.0;
+    double lowk=0.0, pr=0.0, logpr=0.0, lnT=log(T), invRT=0.0;
     RxnPtrVector::const_iterator i;
     RxnMap::const_iterator im;
     int j;
@@ -1548,16 +1548,16 @@ void ReactionSet::calcFallOffTerms(real T, real density, const real *const x,
 // i with respect to i: dFi/dYj.  It is assumed that the Jacobian
 // matrix array J has already been allocated for NSP+2 variables
 // (all species, temperature and density).
-void ReactionSet::CalcJacobian(real T, real density, real *const x,
+void ReactionSet::CalcJacobian(double T, double density, double *const x,
                                unsigned int n,
                                const Sprog::Thermo::ThermoInterface &thermo,
-                               real pfac, real **J,
+                               double pfac, double **J,
                                bool constV, bool constT) const
 {
     bool fallocated=false;
     fvector tbconcs, kfT, krT, kf, kr, Gs, rop0,
                    rop1, wdot0, wdot1, Hs, xdot0, xdot1;
-    real wtot0=0.0, wtot1=0.0, //invrho=1.0 / density,
+    double wtot0=0.0, wtot1=0.0, //invrho=1.0 / density,
          Tdot0=0.0, Tdot1=0.0, Cp=0.0, xsave=0.0, dx=0.0, invdx=0.0;
 
     // SETUP WORKSPACE.
@@ -1595,8 +1595,8 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     // Copy conc-independent rate constants into total rate
     // constant vectors.  As the vectors are equal lengths we
     // can just use the memcpy function.
-    memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-    memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+    memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+    memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
 
     // Calculate COVERAGE
     calcCOVERAGE(T, x, kf);
@@ -1628,7 +1628,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     wtot0 = GetMolarProdRates(rop0, wdot0);
 
     // Copy rates-of-progess to working vector using memcpy.
-    memcpy(&rop1[0], &rop0[0], sizeof(real)*m_rxns.size());
+    memcpy(&rop1[0], &rop0[0], sizeof(double)*m_rxns.size());
 
     // Calculate unperturbed dx/dt.
     for (unsigned int i=0; i!=m_mech->SpeciesCount(); ++i) {
@@ -1670,8 +1670,8 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
 
         // Copy back in the concentration-independent parts of
         // the rate constant expressions.
-        memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-        memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+        memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+        memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
 
         // Calculate concentration-dependent terms.
         // TODO:  Optimise this to only calculate for affected reactions.
@@ -1686,8 +1686,8 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
         // RECALCULATE RATES-OF-PROGRESS.
 
         // Copy unperturbed values.
-        memcpy(&rop1[0], &rop0[0], sizeof(real)*m_rxns.size());
-        // memcpy(&wdot1[0], &wdot0[0], sizeof(real)*m_mech->SpeciesCount());
+        memcpy(&rop1[0], &rop0[0], sizeof(double)*m_rxns.size());
+        // memcpy(&wdot1[0], &wdot0[0], sizeof(double)*m_mech->SpeciesCount());
 
         // Recalculate third-body and fall-off reaction rates-of-progress.
         for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
@@ -1756,7 +1756,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     // Density affects (almost) all reaction rates.
 
     // Perturb density.
-    real Dpert = density;
+    double Dpert = density;
     // dx    = sqrt(1.0e-16 * max(1.0e-8, abs(density)));
     dx    = sqrt(pfac) * abs(density);
     invdx = 1.0 / dx;
@@ -1765,8 +1765,8 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     // Copy conc-independent rate constants into total rate
     // constant vectors.  As the vectors are equal lengths we
     // can just use the memcpy function.
-    memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-    memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+    memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+    memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
 
     // Recalculate all rate constants.
     calcTB_Concs(Dpert, x, n, tbconcs);
@@ -1818,7 +1818,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     // Temperature affects all reaction rates.
 
     // Perturb temperature.
-    real Tpert = T;
+    double Tpert = T;
     // dx    = sqrt(1.0e-16 * max(1.0e-8, abs(T)));
     dx    = sqrt(pfac) * abs(T);
     invdx = 1.0 / dx;
@@ -1898,19 +1898,19 @@ will be deleted when the Jacobian is implemented in the correct manner.
 @param[in]      constT      Temperature (constant).
 */
 void ReactionSet::RateJacobian(
-        real T,
-        real density,
-        real *const x,
+        double T,
+        double density,
+        double *const x,
         unsigned int n,
         const Sprog::Thermo::ThermoInterface &thermo,
-        real pfac,
-        real **J,
+        double pfac,
+        double **J,
         bool constV, bool constT
         ) const
 {
     bool fallocated=false;
     fvector tbconcs, kfT, krT, kf, kr, rop0, rop1, wdot0, wdot1, Gs, Hs;
-    real wtot0=0.0, wtot1=0.0,
+    double wtot0=0.0, wtot1=0.0,
          Tdot0=0.0, Tdot1=0.0, Cp=0.0, xsave=0.0, dconc=0.0, invdconc=0.0;
 
     // SETUP WORKSPACE.
@@ -1946,8 +1946,8 @@ void ReactionSet::RateJacobian(
     // Copy conc-independent rate constants into total rate
     // constant vectors.  As the vectors are equal lengths we
     // can just use the memcpy function.
-    memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-    memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+    memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+    memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
 
     // Calculate third-body concentrations for all reactions.  These
     // values will be multiplied by the rate constants, therefore if
@@ -1976,7 +1976,7 @@ void ReactionSet::RateJacobian(
     GetMolarProdRates(rop0, wdot0);
 
     // Copy rates-of-progess to working vector using memcpy.
-    memcpy(&rop1[0], &rop0[0], sizeof(real)*m_rxns.size());
+    memcpy(&rop1[0], &rop0[0], sizeof(double)*m_rxns.size());
 
     // Calculate unperturbed temperature term dT/dt.
     Tdot0 = 0.0;
@@ -2012,8 +2012,8 @@ void ReactionSet::RateJacobian(
 
         // Copy back in the concentration-independent parts of
         // the rate constant expressions.
-        memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-        memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+        memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+        memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
 
         // Calculate concentration-dependent terms.
         // TODO:  Optimise this to only calculate for affected reactions.
@@ -2028,8 +2028,8 @@ void ReactionSet::RateJacobian(
         // RECALCULATE RATES-OF-PROGRESS.
 
         // Copy unperturbed values.
-        memcpy(&rop1[0], &rop0[0], sizeof(real)*m_rxns.size());
-        // memcpy(&wdot1[0], &wdot0[0], sizeof(real)*m_mech->SpeciesCount());
+        memcpy(&rop1[0], &rop0[0], sizeof(double)*m_rxns.size());
+        // memcpy(&wdot1[0], &wdot0[0], sizeof(double)*m_mech->SpeciesCount());
 
         // Recalculate third-body and fall-off reaction rates-of-progress.
         for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
@@ -2093,7 +2093,7 @@ void ReactionSet::RateJacobian(
     // Density affects (almost) all reaction rates.
 
     // Perturb density.
-    real Dpert = density;
+    double Dpert = density;
     // dconc    = sqrt(1.0e-16 * max(1.0e-8, abs(density)));
     dconc    = sqrt(pfac) * abs(density);
     invdconc = 1.0 / dconc;
@@ -2102,8 +2102,8 @@ void ReactionSet::RateJacobian(
     // Copy conc-independent rate constants into total rate
     // constant vectors.  As the vectors are equal lengths we
     // can just use the memcpy function.
-    memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-    memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+    memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+    memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
 
     // Recalculate all rate constants.
     calcTB_Concs(Dpert, x, n, tbconcs);
@@ -2145,7 +2145,7 @@ void ReactionSet::RateJacobian(
     // Temperature affects all reaction rates.
 
     // Perturb temperature.
-    real Tpert = T;
+    double Tpert = T;
     // dconc    = sqrt(1.0e-16 * max(1.0e-8, abs(T)));
     dconc    = sqrt(pfac) * abs(T);
     invdconc = 1.0 / dconc;

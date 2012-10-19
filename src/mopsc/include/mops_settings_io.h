@@ -104,7 +104,7 @@ namespace Settings_IO
 
     //! Read limits that define extreme particles to be excluded from particle population statistics
     void ReadStatsBound(const CamXML::Element &node, Sweep::PropID &property_id,
-                        real &lower_bound, real &upper_bound);
+                        double &lower_bound, double &upper_bound);
 
 } //namespace Settings_IO
 } //namespace Mops

@@ -75,7 +75,7 @@ public:
     // Calculates the model stats for a particle ensemble.
     virtual void Calculate(
         const Ensemble &e, // Ensemble from which to get stats.
-        real scale         // Scaling factor to unit volume (summed stats).
+        double scale         // Scaling factor to unit volume (summed stats).
         ) = 0;
 
     // Returns a vector containing the stats.
@@ -111,7 +111,7 @@ public:
     //! Build the PSL entry for the given particle.
     virtual void PSL(
         const Sweep::Particle &sp, // Particle from which to get PSL data.
-        real time,                      // Current flow time (used to calculate particle age).
+        double time,                      // Current flow time (used to calculate particle age).
         fvector &psl,                   // Output vector.
         unsigned int start = 0          // Optional start index for the first variable.
         ) const = 0;
@@ -138,12 +138,12 @@ public:
     // Statistical Boundaries. Properties outside this range will not be
     // included in Statistical Calculations.
     struct StatBound {
-        real Lower;
-        real Upper;
+        double Lower;
+        double Upper;
         Sweep::PropID PID;
 
         //! Default to something that should accept all particles
-        StatBound() : Lower(0.0), Upper(std::numeric_limits<real>::max()), PID(Sweep::iDcol) {}
+        StatBound() : Lower(0.0), Upper(std::numeric_limits<double>::max()), PID(Sweep::iDcol) {}
     };
     // Set statbound to this abstract class
     void SetStatBoundary(const StatBound &sb) { m_statbound = sb; }

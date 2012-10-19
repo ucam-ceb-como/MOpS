@@ -69,7 +69,7 @@ namespace Camflow
 
             typedef struct
             {
-                std::vector<doublereal> a, b, c;
+                std::vector<double> a, b, c;
             } tdma_coeff;
 
             StagFlow
@@ -105,31 +105,31 @@ namespace Camflow
             */
             int eval
             (
-                doublereal t,
-                doublereal* y,
-                doublereal *ydot,
+                double t,
+                double* y,
+                double *ydot,
                 bool jacEval
             );
 
-            void residual(const doublereal& t, doublereal* y, doublereal* f);
+            void residual(const double& t, double* y, double* f);
 
-            doublereal getResidual() const;
+            double getResidual() const;
 
             void speciesResidual
             (
-                const doublereal& time,
-                doublereal* y,
-                doublereal* f
+                const double& time,
+                double* y,
+                double* f
             );
 
             void energyResidual
             (
-                const doublereal& time,
-                doublereal* y,
-                doublereal* f
+                const double& time,
+                double* y,
+                double* f
             );
 
-            void massMatrix(doublereal** M);
+            void massMatrix(double** M);
 
             double dydx(double nr1, double nr2, double dr) const;
 
@@ -145,20 +145,20 @@ namespace Camflow
             /*
             *calculate flow field
             */
-            void calcFlowField(const doublereal& time, doublereal* y);
+            void calcFlowField(const double& time, double* y);
 
-            void calcVelocity(std::vector<doublereal>& flow);
+            void calcVelocity(std::vector<double>& flow);
 
-            void calcMomentum(std::vector<doublereal>& mom);
+            void calcMomentum(std::vector<double>& mom);
 
             /*
             *species boundary condition
             */
             void speciesBoundary
             (
-                const doublereal& t,
-                doublereal* y,
-                doublereal* f
+                const double& t,
+                double* y,
+                double* f
             );
 
             /*
@@ -166,9 +166,9 @@ namespace Camflow
             */
             void energyBoundary
             (
-                const doublereal& t,
-                doublereal* y,
-                doublereal* f
+                const double& t,
+                double* y,
+                double* f
             );
 
             /*
@@ -194,16 +194,16 @@ namespace Camflow
             /*
             *report functions
             */
-            void report(doublereal t, doublereal* solution);
+            void report(double t, double* solution);
 
-            void report(doublereal t, doublereal* solutio, doublereal& res);
+            void report(double t, double* solutio, double& res);
 
             void header(std::vector<std::string>& headerData);
 
-            void reportToFile(doublereal t, doublereal* soln);
+            void reportToFile(double t, double* soln);
 
             //! Calculate the mixture fraction variable using Bilger's formula.
-            doublereal getBilgerMixFrac(const int& cell);
+            double getBilgerMixFrac(const int& cell);
 
 
         private:
@@ -212,7 +212,7 @@ namespace Camflow
             tdma_coeff tdmaFlow;
             int configID;
 
-            doublereal strainRate;
+            double strainRate;
 
     }; // End StagFlow class declaration.
 

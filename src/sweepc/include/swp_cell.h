@@ -106,13 +106,13 @@ public:
     void SetParticles(
             std::list<Particle*>::iterator particle_list_begin,
             std::list<Particle*>::iterator particle_list_end,
-            real statistical_weight, rng_type &rng);
+            double statistical_weight, rng_type &rng);
 
     //! Initialise with some particles, which must not exceed the ensemble capacity
     void SetParticles(
             std::list<Particle*>::iterator particle_list_begin,
             std::list<Particle*>::iterator particle_list_end,
-            real statistical_weight);
+            double statistical_weight);
 
     // THE PARTICLE MODEL.
 
@@ -123,14 +123,14 @@ public:
 
     // SCALING ROUTINES INCL. SAMPLE VOLUME.
 
-    //! Returns the real system to stochastic system scaling factor.
-    real SampleVolume() const;
+    //! Returns the double system to stochastic system scaling factor.
+    double SampleVolume() const;
 
     //! Multiply the sample volume by a scaling factor
-    void AdjustSampleVolume(real scale_factor);
+    void AdjustSampleVolume(double scale_factor);
 
     //! Empty the cell and set the sample volume so a full particle ensemble would have the specified m0
-    void Reset(real m0);
+    void Reset(double m0);
 
     // FIXED/VARIABLE CHEMISTRY.
 
@@ -177,7 +177,7 @@ public:
 
     // Add an outflow process with the given rate to the Cell.
     void AddOutflow(
-        real rate, // Rate constant for outflow.
+        double rate, // Rate constant for outflow.
         const Sweep::Mechanism &mech // Mechanism which defines LPDA for outflow.
         );
 
@@ -211,8 +211,8 @@ private:
     //! Particle model.
     const Sweep::ParticleModel *m_model;
 
-    //! The volume in which the ensemble represents the complete real system.
-    real m_smpvol;
+    //! The volume in which the ensemble represents the complete double system.
+    double m_smpvol;
 
     // Flag determining whether or not the chemistry in this system is fixed.
     // If the chemical conditions are fixed, then they cannot be altered by

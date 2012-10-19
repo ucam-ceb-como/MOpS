@@ -112,8 +112,8 @@ namespace Camflow
 
             //! Continulation call from an external code that solves the population balance.
             void solve(std::vector<Thermo::Mixture>& cstrs,
-                       const std::vector< std::vector<doublereal> >& iniSource,
-                       const std::vector< std::vector<doublereal> >& fnlSource,
+                       const std::vector< std::vector<double> >& iniSource,
+                       const std::vector< std::vector<double> >& fnlSource,
                        Sprog::Mechanism& mech,
                        CamControl& cc,
                        CamAdmin& ca,
@@ -133,56 +133,56 @@ namespace Camflow
             void splitSolve(bool interface=false);
 
             //! Restart the solution with the converged solution.
-            void restart(doublereal flameTime);
+            void restart(double flameTime);
 
             //! Save the solution vector.
-            void saveMixtureProp(doublereal* y);
+            void saveMixtureProp(double* y);
 
             //! Called by ODE/DAE solver to evaluate residuals.
-            int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
+            int eval(double x, double* y, double* ydot, bool jacEval);
 
             //! Residual definitions.
-            void residual(const doublereal& t, doublereal* y, doublereal* f);
+            void residual(const double& t, double* y, double* f);
 
             //! Species residual calculation.
-            void speciesResidual(const doublereal& t, doublereal* y, doublereal* f);
+            void speciesResidual(const double& t, double* y, double* f);
 
             //! Soot moments residual calculation.
-            void sootMomentResidual(const doublereal& t,doublereal* y,doublereal* f);
+            void sootMomentResidual(const double& t,double* y,double* f);
 
             //! Soot moments residual calculation. (When SS at base of flame)
-            void sootMomentResidualZeroedOut(const doublereal& t,doublereal* y,doublereal* f);
+            void sootMomentResidualZeroedOut(const double& t,double* y,double* f);
 
             //! Energy residual calculation.
-            void energyResidual(const doublereal& t, doublereal* y, doublereal* f);
+            void energyResidual(const double& t, double* y, double* f);
 
             //! Calculate the stoichiometric mixture fraction.
-            doublereal stoichiometricMixtureFraction();
+            double stoichiometricMixtureFraction();
 
-            void setExternalStrainRate(const doublereal strainRate);
+            void setExternalStrainRate(const double strainRate);
 
-            void setExternalSDR(const doublereal sdr);
+            void setExternalSDR(const double sdr);
 
             void setExternalTimeSDR
             (
-                const std::vector<doublereal>& time,
-                const std::vector<doublereal>& sdr
+                const std::vector<double>& time,
+                const std::vector<double>& sdr
             );
 
             //! Provide a soot volume fraction from an external calculation.
-            void setExternalSootVolumeFraction(const std::vector<doublereal>& soot_fv);
+            void setExternalSootVolumeFraction(const std::vector<double>& soot_fv);
 
             //! Get the residual for use in radauWrapper.
-            doublereal getResidual() const;
+            double getResidual() const;
 
             //! Mass matrix evaluation. Called by radauWrapper.
-            void massMatrix(doublereal **M);
+            void massMatrix(double **M);
 
             //! Set the restart time for the solver.
-            void setRestartTime(doublereal t);
+            void setRestartTime(double t);
 
             //! Get a vector for the rate of production of pyrene.
-            void getWdotA4(std::vector<doublereal>& wdotA4) const;
+            void getWdotA4(std::vector<double>& wdotA4) const;
 
             //! Create header for file output.
             std::vector<std::string> header();
@@ -191,27 +191,27 @@ namespace Camflow
             std::vector<std::string> sootRatesHeader();
 
             //! Console output with residuals.
-            void report(doublereal x, doublereal* solution, doublereal& res);
+            void report(double x, double* solution, double& res);
 
             //! File output.
-            void reportToFile(std::string fileName, doublereal x, std::vector<double>& solution);
+            void reportToFile(std::string fileName, double x, std::vector<double>& solution);
 
             // Output soot compoent rates to file
-            void reportSootRatesToFile(std::string fileName, doublereal t, Array2D& rates);
+            void reportSootRatesToFile(std::string fileName, double t, Array2D& rates);
 
 
 
         private:
 
-            doublereal stoichZ; //stoichiometric mixture fraction
-            doublereal sdr;     // scalar dissipation rate
-            doublereal restartTime;
+            double stoichZ; //stoichiometric mixture fraction
+            double sdr;     // scalar dissipation rate
+            double restartTime;
             bool sootResidualZeroed;
-            //doublereal sootFlameTimeThreshold;  // Flametime beyond which we switch off soot.
-            std::vector< std::vector<doublereal> > cfdMixFracCoords; // Mixture Fraction coords from CFD.
+            //double sootFlameTimeThreshold;  // Flametime beyond which we switch off soot.
+            std::vector< std::vector<double> > cfdMixFracCoords; // Mixture Fraction coords from CFD.
 
             //! Spatial profile of soot volume fraction
-            std::vector<doublereal> m_SootFv;
+            std::vector<double> m_SootFv;
 
 
             bool timeHistory, sdrProfile, sdrAnalytic;

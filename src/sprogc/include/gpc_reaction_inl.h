@@ -63,9 +63,9 @@ inline const std::vector<Stoich> &Reaction::Reactants() const {return m_reac;};
 inline const std::vector<Stoich> &Reaction::Products() const {return m_prod;};
 
 // STOICHIOMETRY.
-inline real Reaction::TotalStoich() const {return m_dstoich;};
-inline real Reaction::ReactantStoich() const {return m_dreac;};
-inline real Reaction::ProductStoich() const {return m_dprod;};
+inline double Reaction::TotalStoich() const {return m_dstoich;};
+inline double Reaction::ReactantStoich() const {return m_dreac;};
+inline double Reaction::ProductStoich() const {return m_dprod;};
 
 // ARRHENIUS COEFFICIENTS.
 inline const ARRHENIUS &Reaction::Arrhenius() const {return m_arrf;};

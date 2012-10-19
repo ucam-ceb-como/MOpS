@@ -49,33 +49,33 @@
 // MOLECULAR WEIGHT
 
 // Returns component molecular weight (kg/mol).
-inline Sweep::real Sweep::Component::MolWt() const {return m_molwt;};
+inline double Sweep::Component::MolWt() const {return m_molwt;};
 
 // Sets the molecular weight (kg/mol).
-inline void Sweep::Component::SetMolWt(const Sweep::real molwt) {m_molwt = molwt;};
+inline void Sweep::Component::SetMolWt(const double molwt) {m_molwt = molwt;};
 
 // DENSITY.
 
 //! Returns the coalescence threshold 
-inline Sweep::real Sweep::Component::CoalescThresh() const {return m_coalesc_thresh;};
+inline double Sweep::Component::CoalescThresh() const {return m_coalesc_thresh;};
 
 //! Returns the growhtfact 
-inline Sweep::real Sweep::Component::GrowthFact() const {return m_growthfact;};
+inline double Sweep::Component::GrowthFact() const {return m_growthfact;};
 
 //! Returns the minpah 
-inline Sweep::real Sweep::Component::MinPAH() const {return m_minPAH;};
+inline double Sweep::Component::MinPAH() const {return m_minPAH;};
 
 //! Returns component density (kg/m3).
-inline Sweep::real Sweep::Component::Density() const {return m_density;};
+inline double Sweep::Component::Density() const {return m_density;};
 
 //! Sets the density (g/cm3).
-inline void Sweep::Component::SetDensity(const Sweep::real dens) {m_density = dens;};
+inline void Sweep::Component::SetDensity(const double dens) {m_density = dens;};
 
 //! Sets the coalescence threshold 
-inline void Sweep::Component::SetCoalescThresh(const Sweep::real ct) {m_coalesc_thresh = ct;};
+inline void Sweep::Component::SetCoalescThresh(const double ct) {m_coalesc_thresh = ct;};
 
 //! Sets the growhtfact 
-inline void Sweep::Component::SetGrowthFact(const Sweep::real gf) {m_growthfact = gf;};
+inline void Sweep::Component::SetGrowthFact(const double gf) {m_growthfact = gf;};
 
 //! Sets the minimum number of PAHs
 inline void Sweep::Component::SetMinPAH(const int mp) {m_minPAH = mp;};

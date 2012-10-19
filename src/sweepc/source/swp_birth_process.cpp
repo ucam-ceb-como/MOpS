@@ -112,7 +112,7 @@ BirthProcess &BirthProcess::operator =(const BirthProcess &rhs)
  *
  *@return   Process rate
  */
-real BirthProcess::Rate(real t, const Cell &sys,
+double BirthProcess::Rate(double t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 
 {
@@ -128,10 +128,10 @@ real BirthProcess::Rate(real t, const Cell &sys,
 // Returns the number of rate terms for this process (one).
 unsigned int BirthProcess::TermCount(void) const {return 1;}
 
-// Calculates the rate terms given an iterator to a real vector. The
+// Calculates the rate terms given an iterator to a double vector. The
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
-real BirthProcess::RateTerms(const real t, const Cell &sys,
+double BirthProcess::RateTerms(const double t, const Cell &sys,
                              const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
 {
@@ -156,7 +156,7 @@ real BirthProcess::RateTerms(const real t, const Cell &sys,
  *
  * \return      0 on success, otherwise negative.
  */
-int BirthProcess::Perform(Sweep::real t, Sweep::Cell &sys, 
+int BirthProcess::Perform(double t, Sweep::Cell &sys, 
                           const Geometry::LocalGeometry1d& local_geom,
                           unsigned int iterm,
                           rng_type &rng) const

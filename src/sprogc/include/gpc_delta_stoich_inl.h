@@ -54,15 +54,15 @@ inline const std::string &DeltaStoich::Name() const {return m_spName;};
 
 // TOTAL STOICHIOMETRY FOR EACH SPECIES
 
-inline const real &DeltaStoich::TotalStoich(void) const {return total_stoich_sp;};
+inline const double &DeltaStoich::TotalStoich(void) const {return total_stoich_sp;};
 
 // REACTANT STOICHIOMETRY FOR EACH SPECIES
 
-inline const real &DeltaStoich::ReacStoich() const {return reac_stoich_sp;};
+inline const double &DeltaStoich::ReacStoich() const {return reac_stoich_sp;};
 
 // PRODUCT STOICHIOMETRY FOR EACH SPECIES
 
-inline const real &DeltaStoich::ProdStoich() const {return prod_stoich_sp;};
+inline const double &DeltaStoich::ProdStoich() const {return prod_stoich_sp;};
 
 // CLONING.
 inline DeltaStoich *const DeltaStoich::Clone(void) const {return new DeltaStoich(*this);};

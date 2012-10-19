@@ -138,9 +138,9 @@ void StagFlow::initSolutionVector(CamControl& cc)
     */
     solvect.resize(nEqn, 0.0);
 
-    std::vector<doublereal> vSpec = initSpecies(left, right);
+    std::vector<double> vSpec = initSpecies(left, right);
 
-    std::vector<doublereal> vT = initTemperature(left);
+    std::vector<double> vT = initTemperature(left);
 
     if (admin_.getEnergyModel() == CamAdmin::ADIABATIC)
     {
@@ -181,11 +181,11 @@ void StagFlow::initMassFlow()
     /*
     *setting up TDMA coefficients
     */
-    std::vector<doublereal> a, b,c;
+    std::vector<double> a, b,c;
     a.resize(mCord - 2, 0);
     b = c = a;
 
-    doublereal oneBydelEP, oneBydelPW;
+    double oneBydelEP, oneBydelPW;
     //1st cell
     int i = 1;
     oneBydelEP = 1.0/(0.5*(dz[i] + dz[i+1]));
@@ -272,7 +272,7 @@ void StagFlow::csolve(CamControl& cc)
 void StagFlow::ssolve(CamControl& cc)
 {
     int seg_eqn, band;
-    std::vector<doublereal> seg_soln_vec;
+    std::vector<double> seg_soln_vec;
 
     int solverID = cc.getSolver();
 
@@ -342,21 +342,21 @@ void StagFlow::ssolve(CamControl& cc)
 /*
 *mass matrix evaluation
 */
-void StagFlow::massMatrix(doublereal** M)
+void StagFlow::massMatrix(double** M)
 {}
 
 
 /*
 *function called by the solver (DAEs and ODEs)
 */
-int StagFlow::eval(doublereal t, doublereal* y, doublereal* ydot, bool jacEval)
+int StagFlow::eval(double t, double* y, double* ydot, bool jacEval)
 {
     residual(t,y,ydot);
     return 0;
 }
 
 
-doublereal StagFlow::getResidual() const
+double StagFlow::getResidual() const
 {
     return 0;
 }
@@ -365,7 +365,7 @@ doublereal StagFlow::getResidual() const
 /*
 *residual function
 */
-void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f)
+void StagFlow::residual(const double& t, double* y, double* f)
 {
     reportToFile(1, &solvect[0]);
 
@@ -436,18 +436,18 @@ void StagFlow::residual(const doublereal& t, doublereal* y, doublereal* f)
 
 void StagFlow::speciesResidual
 (
-    const doublereal& time,
-    doublereal* y,
-    doublereal* f
+    const double& time,
+    double* y,
+    double* f
 )
 {
     // prepare flux terms
-    doublereal convection, diffusion, source;
+    double convection, diffusion, source;
 
     for (int i = iMesh_s; i < iMesh_e; ++i)
     {
-        doublereal density = m_rho[i];
-        doublereal velocity = -m_u[i];
+        double density = m_rho[i];
+        double velocity = -m_u[i];
 
         for (int l = 0; l < nSpc; ++l)
         {
@@ -469,9 +469,9 @@ void StagFlow::speciesResidual
 
 void StagFlow::energyResidual
 (
-    const doublereal& time,
-    doublereal* y,
-    doublereal* f
+    const double& time,
+    double* y,
+    double* f
 )
 {
     bool fluxTrans = true;
@@ -483,26 +483,26 @@ void StagFlow::energyResidual
             /*
              *evaluate the summation terms
              */
-            doublereal sumHSource = 0.0;
-            doublereal sumFlx = 0.0;
+            double sumHSource = 0.0;
+            double sumFlx = 0.0;
 
             for (int l=0; l<nSpc; l++)
             {
                 sumHSource += s_Wdot(i,l)*s_H(i,l);
-                doublereal flxk = 0.5*(s_jk(i-1,l) + s_jk(i,l));
+                double flxk = 0.5*(s_jk(i-1,l) + s_jk(i,l));
                 sumFlx += flxk*s_cp(i,l)/(*spv_)[l]->MolWt();
             }
 
             /*
              *convection
              */
-            doublereal convection = -m_u[i]
+            double convection = -m_u[i]
                                     *dydx(i, m_T[i+1], m_T[i], m_T[i-1], dz[i]);
 
             /*
              *conduction
              */
-            doublereal conduction = dydx(m_q[i+1], m_q[i], dz[i]);
+            double conduction = dydx(m_q[i+1], m_q[i], dz[i]);
             /*
              *flux transport
              */
@@ -551,7 +551,7 @@ double StagFlow::dydx
     double dr
 ) const
 {
-    doublereal val = m_u[i] > 0
+    double val = m_u[i] > 0
                    ? (nr2 - nr3)/dr
                    : (nr1 - nr2)/dr;
     return val;
@@ -565,9 +565,9 @@ double StagFlow::dydx
 */
 void StagFlow::speciesBoundary
 (
-    const doublereal& t,
-    doublereal* y,
-    doublereal* f
+    const double& t,
+    double* y,
+    double* f
 )
 {
     //-------------------------------------------
@@ -576,7 +576,7 @@ void StagFlow::speciesBoundary
     //
     //------------------------------------------
 
-    doublereal convection, diffusion;
+    double convection, diffusion;
 
     for (int l=0; l<nSpc; l++)
     {
@@ -616,7 +616,7 @@ void StagFlow::speciesBoundary
 /*
 *energy boundary
 */
-void StagFlow::energyBoundary(const doublereal& t, doublereal* y, doublereal* f)
+void StagFlow::energyBoundary(const double& t, double* y, double* f)
 {
     /*--------------------------------------------------------------------------
     * Left Boundary:
@@ -639,7 +639,7 @@ void StagFlow::energyBoundary(const doublereal& t, doublereal* y, doublereal* f)
 /*
 *calculate the axial velocity
 */
-void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
+void StagFlow::calcFlowField(const double& time, double* y)
 {
     /*
     *prepare
@@ -685,7 +685,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
             oxid.FlowRate = m_flow[iMesh_e];
         }
 
-        std::vector<doublereal> flow;
+        std::vector<double> flow;
         calcVelocity(flow);
 
         for (int i=1; i<iMesh_e; i++)
@@ -700,7 +700,7 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
             m_G[iMesh_e] = 1.0;
         }
 
-        std::vector<doublereal> mom;
+        std::vector<double> mom;
         calcMomentum(mom);
         for (int i=1; i<iMesh_e;i++)
         {
@@ -731,9 +731,9 @@ void StagFlow::calcFlowField(const doublereal& time, doublereal* y)
 *
 *\return       Value of var at a given pos.
 */
-void StagFlow::calcVelocity(std::vector<doublereal>& u)
+void StagFlow::calcVelocity(std::vector<double>& u)
 {
-    std::vector<doublereal> r;
+    std::vector<double> r;
     u.resize(tdmaFlow.b.size(),0);
     r = u;
 
@@ -742,12 +742,12 @@ void StagFlow::calcVelocity(std::vector<doublereal>& u)
     */
     //first cell
     int i = 1;
-    doublereal rho_e = 0.5*(m_rho[i+1]+m_rho[i]);
-    doublereal rho_w = m_rho[i-1];
-    doublereal Ge = 0.5*(m_G[i]+m_G[i+1]);
-    doublereal Gw = m_G[i-1];
-    doublereal rhoGe = rho_e*Ge;
-    doublereal rhoGw = rho_w*Gw;
+    double rho_e = 0.5*(m_rho[i+1]+m_rho[i]);
+    double rho_w = m_rho[i-1];
+    double Ge = 0.5*(m_G[i]+m_G[i+1]);
+    double Gw = m_G[i-1];
+    double rhoGe = rho_e*Ge;
+    double rhoGw = rho_w*Gw;
     r[i-1] = 2*strainRate*(rhoGe - rhoGw) +
             (2*fuel.FlowRate/dz[i]);
 
@@ -783,7 +783,7 @@ void StagFlow::calcVelocity(std::vector<doublereal>& u)
 /*
 *calculate the momentum
 */
-void StagFlow::calcMomentum(std::vector<doublereal>& mom)
+void StagFlow::calcMomentum(std::vector<double>& mom)
 {
     /*
     * This evaluates the g equation using TDMA.
@@ -798,10 +798,10 @@ void StagFlow::calcMomentum(std::vector<doublereal>& mom)
     *preparation
     */
     int i;
-    doublereal De, fe, Dw, fw;
-    doublereal delPW, delPE;
-    doublereal mu_e, mu_w;
-    std::vector<doublereal> a,b,c,r;
+    double De, fe, Dw, fw;
+    double delPW, delPE;
+    double mu_e, mu_w;
+    std::vector<double> a,b,c,r;
     c.resize(mCord - 2, 0.0);
     mom = a = b = r = c;
 
@@ -885,15 +885,15 @@ void StagFlow::updateDiffusionFluxes()
     /*
     *flux at the oxidizer inlet
     */
-//    doublereal delta = 0.5*(dz[iMesh_e]+dz[iMesh_e-1]);
-//    std::vector<doublereal> flx;
+//    double delta = 0.5*(dz[iMesh_e]+dz[iMesh_e-1]);
+//    std::vector<double> flx;
 //    flx.resize(nSpc,0);
 //    //preperation for flux correction
-//    doublereal jCorr = 0;
+//    double jCorr = 0;
 //    for(int l=0; l<nSpc; l++){
-//        doublereal grad = dydx(s_mf(iMesh_e,l),s_mf(iMesh_e-1,l),delta);
-//        doublereal avgRho = 0.5*(m_rho[iMesh_e]+m_rho[iMesh_e-1]);
-//        doublereal avgD = (s_Diff(iMesh_e,l)+s_Diff(iMesh_e-1,l))/2.0;
+//        double grad = dydx(s_mf(iMesh_e,l),s_mf(iMesh_e-1,l),delta);
+//        double avgRho = 0.5*(m_rho[iMesh_e]+m_rho[iMesh_e-1]);
+//        double avgD = (s_Diff(iMesh_e,l)+s_Diff(iMesh_e-1,l))/2.0;
 //        flx[l] = -avgD*avgRho*grad;
 //
 //        jCorr += flx[l];
@@ -910,10 +910,10 @@ void StagFlow::updateDiffusionFluxes()
 /*
 *report functions
 */
-void StagFlow::report(doublereal t, doublereal* solution)
+void StagFlow::report(double t, double* solution)
 {}
 
-void StagFlow::report(doublereal t, doublereal* solutio, doublereal& res)
+void StagFlow::report(double t, double* solutio, double& res)
 {
     static int nStep = 0;
     std::cout.width(5);
@@ -944,16 +944,16 @@ void StagFlow::header(std::vector<std::string>& headerData)
     headerData.push_back("sumfracs");
 }
 
-void StagFlow::reportToFile(doublereal t, doublereal* soln)
+void StagFlow::reportToFile(double t, double* soln)
 {
     saveMixtureProp(t, soln, false, true);
-    doublereal sum;
+    double sum;
     reporter_->openFiles();
     std::vector<std::string> headerData;
     header(headerData);
     reporter_->writeHeader(headerData);
-    std::vector<doublereal> data, axpos;
-    std::vector<doublereal> molfrac, massfrac;
+    std::vector<double> data, axpos;
+    std::vector<double> molfrac, massfrac;
     axpos = reacGeom_.getAxpos();
     int len = axpos.size();
 
@@ -1022,15 +1022,15 @@ void StagFlow::reportToFile(doublereal t, doublereal* soln)
 *
 *\return       Mixture fraction \f$ (\xi) \f$ in the grid cell.
 */
-doublereal StagFlow::getBilgerMixFrac(const int& cell)
+double StagFlow::getBilgerMixFrac(const int& cell)
 {
-    doublereal Z_C = 0.0, Z_Co = 0.0, Z_Cf = 0.0;
-    doublereal Z_H = 0.0, Z_Ho = 0.0, Z_Hf = 0.0;
-    doublereal Z_O = 0.0, Z_Oo = 0.0, Z_Of = 0.0;
-    doublereal W_C = 0.0, W_H = 0.0, W_O = 0.0;
-    doublereal carbonCell = 0.0, carbonBoundary = 0.0;
-    doublereal hydrogenCell = 0.0, hydrogenBoundary = 0.0;
-    doublereal oxygenCell = 0.0, oxygenBoundary = 0.0;
+    double Z_C = 0.0, Z_Co = 0.0, Z_Cf = 0.0;
+    double Z_H = 0.0, Z_Ho = 0.0, Z_Hf = 0.0;
+    double Z_O = 0.0, Z_Oo = 0.0, Z_Of = 0.0;
+    double W_C = 0.0, W_H = 0.0, W_O = 0.0;
+    double carbonCell = 0.0, carbonBoundary = 0.0;
+    double hydrogenCell = 0.0, hydrogenBoundary = 0.0;
+    double oxygenCell = 0.0, oxygenBoundary = 0.0;
 
     // Get the vector of species.
     Sprog::SpeciesPtrVector species = camMech_->Species();
@@ -1039,8 +1039,8 @@ doublereal StagFlow::getBilgerMixFrac(const int& cell)
     CamBoundary& fuelInlet = admin_.getLeftBoundary();
     CamBoundary& oxidiserInlet = admin_.getRightBoundary();
 
-    std::vector<doublereal> fuelInletMassFracs = getInletMassFrac(fuelInlet);
-    std::vector<doublereal> oxidiserInletMassFracs =
+    std::vector<double> fuelInletMassFracs = getInletMassFrac(fuelInlet);
+    std::vector<double> oxidiserInletMassFracs =
         getInletMassFrac(oxidiserInlet);
 
     // Get the element indices.

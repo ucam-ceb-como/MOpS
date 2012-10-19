@@ -50,8 +50,8 @@ using namespace std;
 using namespace Mops;
 
 /*!
-@param[in]        J           a real matrix
-@param[in]        Sensi       a real N_Vector
+@param[in]        J           a double matrix
+@param[in]        Sensi       a double N_Vector
 @param[in]        LOI         a double vector array, stores LOI
 @param[in]        n_species   number of species in the reaction mechanism
 @param[in]        n_sensi     number of sensitivities calculated in the reaction mechanism

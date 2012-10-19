@@ -196,18 +196,18 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         // Now we can read the profile.
         while(!getline(fin, line).eof()) {
             // Set t=0 and create a new IdealGas object.
-            real t = 0.0;
-            real T = 0.0;
-            real P = 0.0;
-            real alpha = 0.0;
-            real PAHRate = 0.0;
+            double t = 0.0;
+            double T = 0.0;
+            double P = 0.0;
+            double alpha = 0.0;
+            double PAHRate = 0.0;
             GasPoint gpoint(mech.GasMech().Species());
 
             // Split the line by columns.
             split(line, subs, delim);
 
             // Check that the mole fractions sum to 1
-            real checkSum = 0.0;
+            double checkSum = 0.0;
 
             // Loop over all the elements in the line and save them
             // to the correct gas-phase variable.
@@ -230,7 +230,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                     // This is a gas-phase species column.
                     map<unsigned int,int>::iterator isp = spcols.find(i);
                     if (isp != spcols.end()) {
-                        const real frac = cdble(subs[i]);
+                        const double frac = cdble(subs[i]);
                         assert(isp->second >= 0);
                         gpoint.Gas.RawData()[isp->second] = frac;
                         checkSum += frac;
@@ -294,10 +294,10 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 // flavour the gas-phase chemistry is interpolated from a vector of
 // IdealGas objects rather than being taken from the given system object.
 // However, the particles in the system object are updated accordingly.
-void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
+void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
                         rng_type &rng, Mops::Solver::OutFnPtr out, void *data)
 {
-    real tsplit, dtg, jrate;
+    double tsplit, dtg, jrate;
 
     // construct kmcsimulater and initialize gasphase info for kmcsimulater 
     if (r.Mixture()->Particles().Simulator()==NULL)
@@ -318,7 +318,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
     r.Mixture()->SetFixedChem();
 
     // Global maximum time step.
-    real t  = r.Time();
+    double t  = r.Time();
     dtg     = tstop - t;
 
     // Set the chemical conditions.
@@ -332,7 +332,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
         double old_dens = r.Mixture()->GasPhase().MassDensity();
 
         // Update the chemical conditions.
-        const real gasTimeStep = linInterpGas(t, r.Mixture()->GasPhase());
+        const double gasTimeStep = linInterpGas(t, r.Mixture()->GasPhase());
 
         // Scale particle M0 according to gas-phase expansion.
         // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
@@ -406,7 +406,7 @@ void FlameSolver::Solve(Mops::Reactor &r, real tstop, int nsteps, int niter,
  *              that is for which it should be reasonable to use the gas object.
  */
 
-Mops::real FlameSolver::linInterpGas(Sweep::real t,
+double FlameSolver::linInterpGas(double t,
                                Sprog::Thermo::IdealGas &gas) const
 {
     // Get the time point after the required time.
@@ -429,23 +429,23 @@ Mops::real FlameSolver::linInterpGas(Sweep::real t,
         gas = i->Gas;
         
         // Calculate time interval between points i and j.
-        real dt_pro = j->Time - i->Time;
+        double dt_pro = j->Time - i->Time;
 
         // Calculate time interval between point i and current time.
-        real dt = t - i->Time;
+        double dt = t - i->Time;
 
         // Calculate the intermediate gas-phase mole fractions by linear
         // interpolation of the molar concentrations.
-        real dens = 0.0;
+        double dens = 0.0;
         for (unsigned int k=0; k<gas.Species()->size(); ++k) {
-            real dc = (j->Gas.MolarConc(k) - i->Gas.MolarConc(k)) * dt / dt_pro;
+            double dc = (j->Gas.MolarConc(k) - i->Gas.MolarConc(k)) * dt / dt_pro;
             gas.RawData()[k] = gas.MolarConc(k) + dc;
             dens += gas.RawData()[k];
         }
         gas.Normalise();
 
         // Now use linear interpolation to calculate the temperature.
-        real dT = (j->Gas.Temperature() - i->Gas.Temperature()) * dt / dt_pro;
+        double dT = (j->Gas.Temperature() - i->Gas.Temperature()) * dt / dt_pro;
         gas.SetTemperature(gas.Temperature()+dT);
 
         // Now set the gas density, calculated using the values above.
@@ -457,7 +457,7 @@ Mops::real FlameSolver::linInterpGas(Sweep::real t,
         return ((j+1)->Time - j->Time);
     else
     // Past the end of the data there is no spacing
-        return std::numeric_limits<real>::max();
+        return std::numeric_limits<double>::max();
 }
 
 GasProfile* FlameSolver::Gasphase(void){

@@ -80,15 +80,15 @@ namespace Sweep {
             //! Adds reaction
             void addReaction(std::vector<Sweep::KMC_ARS::Reaction>& rxnv, const Sweep::KMC_ARS::Reaction& rxn);
             //! Calculate rates of each elementary reaction
-            void calculateElemRxnRate(std::vector<Sweep::KMC_ARS::Reaction>& rxnv, const KMCGasPoint& gp/*, const real t_now*/);
+            void calculateElemRxnRate(std::vector<Sweep::KMC_ARS::Reaction>& rxnv, const KMCGasPoint& gp/*, const double t_now*/);
             //! Calculates jump process rates and store (for Pressures 0.0267, 0.12 & 1 atm; defined in derived classes)
-            virtual real setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
-            virtual real setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
-            virtual real setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/);
+            virtual double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+            virtual double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+            virtual double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 
             // Read Processes
             //! Jump Rate
-            real getRate() const;
+            double getRate() const;
             //! Gets site type associated with the jump process
             kmcSiteType getSiteType() const;
             //! Returns name of process
@@ -108,9 +108,9 @@ namespace Sweep {
             std::vector<Sweep::KMC_ARS::Reaction> m_rxnvector0p12;
             std::vector<Sweep::KMC_ARS::Reaction> m_rxnvector1;
             //! Vector which stores rates of elementary reactions
-            std::vector<real> m_r;
+            std::vector<double> m_r;
             //! Rate of reaction
-            real m_rate;
+            double m_rate;
             //! Name of process
             std::string m_name;
             //! ID of process

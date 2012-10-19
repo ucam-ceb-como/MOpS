@@ -70,7 +70,7 @@ int Geometry::LocalGeometry1d::calcDestination(const Direction direction) const 
 /*!
  *\return       Position of cell centre
  */
-Geometry::real Geometry::LocalGeometry1d::cellCentre() const {
+double Geometry::LocalGeometry1d::cellCentre() const {
     return mGeom->cellCentre(mIndex);
 }
 
@@ -81,7 +81,7 @@ Geometry::real Geometry::LocalGeometry1d::cellCentre() const {
  *
  *@return       Size of grid in specified direction
  */
-Geometry::real Geometry::LocalGeometry1d::calcSpacing(const Direction direction) const {
+double Geometry::LocalGeometry1d::calcSpacing(const Direction direction) const {
     return mGeom->calcSpacing(mIndex, direction);
 }
 
@@ -110,7 +110,7 @@ Geometry::fvector Geometry::LocalGeometry1d::cellVertices() const {
  *
  *@return       True iff x is inside the local cell
  */
-bool Geometry::LocalGeometry1d::isInCell(const real x) const {
+bool Geometry::LocalGeometry1d::isInCell(const double x) const {
     if(mGeom != NULL) {
         // Have some information to check against
         return mGeom->isInCell(mIndex, x);
@@ -123,7 +123,7 @@ bool Geometry::LocalGeometry1d::isInCell(const real x) const {
 /*!
  *@return Physical volume covered by the local cell
  */
-Geometry::real Geometry::LocalGeometry1d::cellVolume() const {
+double Geometry::LocalGeometry1d::cellVolume() const {
     return mGeom->cellVolume(mIndex);
 }
 
@@ -132,7 +132,7 @@ Geometry::real Geometry::LocalGeometry1d::cellVolume() const {
  *
  *@return       Physical volume of next cell in indicated direction
  */
-Geometry::real Geometry::LocalGeometry1d::cellVolume(const Direction direction) const {
+double Geometry::LocalGeometry1d::cellVolume(const Direction direction) const {
     return mGeom->cellVolume(mGeom->calcDestination(mIndex, direction));
 }
 

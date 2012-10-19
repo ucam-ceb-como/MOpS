@@ -71,29 +71,29 @@ public:
     //SootFlamelet& operator=(const SootFlamelet &rhs);
 
     //! Advance flamelet time
-    void run(const std::vector<real>& data_times,
-             const std::vector<real>& mix_frac_diff,
-             const std::vector<real>& grad_mix_frac,
-             const std::vector<real>& lapl_mix_frac,
-             const std::vector<real>& grad_T);
+    void run(const std::vector<double>& data_times,
+             const std::vector<double>& mix_frac_diff,
+             const std::vector<double>& grad_mix_frac,
+             const std::vector<double>& lapl_mix_frac,
+             const std::vector<double>& grad_T);
 
     //! Load in chemistry solution from a file instead of solving a flamelet.
     //! Use for debug purposes. lrm29.
-    void run(const real stop_time, const std::string fileName);
+    void run(const double stop_time, const std::string fileName);
 
     //! Soot population average properties
-    std::vector<real> getSootStatistics(const real position) const;
+    std::vector<double> getSootStatistics(const double position) const;
 
     //! List of individual soot particles and their basic properties
-    std::list<std::vector<real> > getSootParticleList(const real position) const;
+    std::list<std::vector<double> > getSootParticleList(const double position) const;
 
 protected:
     //! Build a brush object that will set the gas phase mixture details on the 1d reactor
-    Brush::ResetChemistry buildResetChemistry(const std::vector<real>& data_times,
-                                              const std::vector<real>& mix_frac_diff,
-                                              const std::vector<real>& grad_mix_frac,
-                                              const std::vector<real>& lapl_mix_frac,
-                                              const std::vector<real>& grad_T);
+    Brush::ResetChemistry buildResetChemistry(const std::vector<double>& data_times,
+                                              const std::vector<double>& mix_frac_diff,
+                                              const std::vector<double>& grad_mix_frac,
+                                              const std::vector<double>& lapl_mix_frac,
+                                              const std::vector<double>& grad_T);
 
     //! Build a brush style geometry object
     Geometry::Geometry1d buildBrushGeometry();

@@ -68,14 +68,14 @@ namespace Camflow
 
             //! Structure containing inlet conditions.
             typedef struct{
-                std::vector<doublereal> Species;
-                doublereal FlowRate;
-                doublereal Vel;
-                doublereal rVelGrad;
-                doublereal Dens;
-                doublereal T;
-                std::vector<doublereal> Dk;
-                std::vector<doublereal> jk;
+                std::vector<double> Species;
+                double FlowRate;
+                double Vel;
+                double rVelGrad;
+                double Dens;
+                double T;
+                std::vector<double> Dk;
+                std::vector<double> jk;
             } inletStruct;
 
             CamSetup
@@ -92,31 +92,31 @@ namespace Camflow
             virtual ~CamSetup();
 
             //! Return the inlet species mass fractions for the given boundary.
-            std::vector<doublereal> getInletMassFrac(CamBoundary &cb);
+            std::vector<double> getInletMassFrac(CamBoundary &cb);
 
             //! Return the inlet temperature.
-            doublereal getInletTemperature(CamBoundary &cb);
+            double getInletTemperature(CamBoundary &cb);
 
             //! Return the inlet flow rate.
-            doublereal getInletFlowRate(CamBoundary &cb);
+            double getInletFlowRate(CamBoundary &cb);
 
             //! Return the inlet velocity.
-            doublereal getInletVelocity(CamBoundary &cb);
+            double getInletVelocity(CamBoundary &cb);
 
             //! Initialise the species vector.
-            std::vector<doublereal> initSpecies(CamBoundary &cb);
+            std::vector<double> initSpecies(CamBoundary &cb);
 
             //! Initialize the species vector for a counter flow flame.
-            std::vector<doublereal> initSpecies(CamBoundary &left, CamBoundary &right);
+            std::vector<double> initSpecies(CamBoundary &left, CamBoundary &right);
 
             //! Initialise the mass flow rate.
-            std::vector<doublereal> initMassFlow(CamBoundary& cb);
+            std::vector<double> initMassFlow(CamBoundary& cb);
 
             //! Initialise the temperature.
-            std::vector<doublereal> initTemperature(CamBoundary& cb);
+            std::vector<double> initTemperature(CamBoundary& cb);
 
             //! Initialise the temperature field with a Gaussian profile.
-            void initTempGauss(std::vector<doublereal> &soln);
+            void initTempGauss(std::vector<double> &soln);
 
             //! Store the inlet conditions.
             void storeInlet(CamBoundary &cb, inletStruct& ud_inlet);

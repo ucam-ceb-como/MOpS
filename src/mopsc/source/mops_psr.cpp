@@ -113,13 +113,13 @@ Mops::PSR &Mops::PSR::operator=(const Mops::PSR &rhs)
 // RESIDENCE TIME.
 
 // Returns the reactor residence time.
-Mops::real PSR::ResidenceTime(void) const
+double PSR::ResidenceTime(void) const
 {
     return m_restime;
 }
 
 // Sets the reactor residence time.
-void PSR::SetResidenceTime(real t)
+void PSR::SetResidenceTime(double t)
 {
     if (t > 0.0) {
         m_restime = t;
@@ -216,7 +216,7 @@ void PSR::Deserialize(std::istream &in, const Mops::Mechanism &mech)
 
                 // Read the residence time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_restime = (real)val;
+                m_restime = (double)val;
 
                 // Calculate inverse RT.
                 m_invrt = m_restime;
@@ -251,10 +251,10 @@ Serial_ReactorType PSR::SerialType() const
 // GOVERNING EQUATIONS.
 
 // Definition of RHS form for constant temperature energy equation.
-void PSR::RHS_ConstT(real t, const real *const y,  real *ydot) const
+void PSR::RHS_ConstT(double t, const double *const y,  double *ydot) const
 {
     static fvector wdot, sdot;
-    real wtot = 0.0, stot =0.0, avrMW = 0.0;
+    double wtot = 0.0, stot =0.0, avrMW = 0.0;
 	// Currently direct input of  Volume and ARea 
 
 	//double Volume = 1.4/1000; // m^3
@@ -329,10 +329,10 @@ void PSR::RHS_ConstT(real t, const real *const y,  real *ydot) const
 }
 
 // Definition of RHS form for adiabatic energy equation.
-void PSR::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
+void PSR::RHS_Adiabatic(double t, const double *const y,  double *ydot) const
 {
     static fvector wdot, Hs, Cps, sdot;
-    real wtot = 0.0, Cp = 0.0, H = 0.0, stot =0.0, avrMW = 0.0;
+    double wtot = 0.0, Cp = 0.0, H = 0.0, stot =0.0, avrMW = 0.0;
 
     // Calculate mixture thermodynamic properties.
     m_mix->GasPhase().CalcHs_RT(y[m_iT], Hs);

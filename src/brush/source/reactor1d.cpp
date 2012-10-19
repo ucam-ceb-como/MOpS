@@ -57,8 +57,8 @@
  */
 Brush::Reactor1d::Reactor1d(const Geometry::Geometry1d &geom, const Sprog::Mechanism &g_mech,
                             const Sweep::Mechanism &p_mech,
-                            const Utils::LinearInterpolator<real, real> &max_particle_counts,
-                            const Utils::LinearInterpolator<real, real> &max_m0s)
+                            const Utils::LinearInterpolator<double, double> &max_particle_counts,
+                            const Utils::LinearInterpolator<double, double> &max_m0s)
     : mGasMech(g_mech)
     , mParticleMech(p_mech)
     , mGeometry(geom)
@@ -73,8 +73,8 @@ Brush::Reactor1d::Reactor1d(const Geometry::Geometry1d &geom, const Sprog::Mecha
         ReactorType &r = mReactors[i];
 
         // Interpolate particle count and max m0 to the cell centre
-        real posn = getCellCentre(i);
-        real maxM0 = max_m0s.interpolate(posn);
+        double posn = getCellCentre(i);
+        double maxM0 = max_m0s.interpolate(posn);
         const unsigned int particleCount = static_cast<unsigned int>(max_particle_counts.interpolate(posn) + 0.5);
 
         r.Particles().Initialise(particleCount);

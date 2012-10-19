@@ -75,10 +75,10 @@ public:
     // RESIDENCE TIME.
 
     // Returns the reactor residence time.
-    real ResidenceTime(void) const;
+    double ResidenceTime(void) const;
 
     // Sets the reactor residence time.
-    void SetResidenceTime(real t);
+    void SetResidenceTime(double t);
 
 
     // INFLOW CONDITIONS.
@@ -117,29 +117,29 @@ protected:
 
     // Definition of RHS function for constant temperature energy model.
     virtual void RHS_ConstT(
-        real t,              // Flow time.
-        const real *const y, // Solution values.
-        real *ydot           // Derivatives to return.
+        double t,              // Flow time.
+        const double *const y, // Solution values.
+        double *ydot           // Derivatives to return.
         ) const;
 
     // Definition of RHS function for adiabatic energy model.
     virtual void RHS_Adiabatic(
-        real t,              // Flow time.
-        const real *const y, // Solution values.
-        real *ydot           // Derivatives to return.
+        double t,              // Flow time.
+        const double *const y, // Solution values.
+        double *ydot           // Derivatives to return.
         ) const;
 
 private:
     // PSR variables.
-    real m_restime; // Residence time.
+    double m_restime; // Residence time.
 
     // PSR inflow and outflow.
     Mops::FlowStream *m_in;  // Inflow stream.
     Mops::FlowStream *m_out; // Outflow stream.
 
     // Precalculated values.
-    real m_invrt;    // Inverse residence time.
-    real m_infH;     // Inflow enthalpy.
+    double m_invrt;    // Inverse residence time.
+    double m_infH;     // Inflow enthalpy.
     fvector m_infHs; // Inflow species enthalpies.
 
     // INITIALISATION AND DESTRUCTION.

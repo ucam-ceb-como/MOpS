@@ -6,7 +6,7 @@
  *  Project:        sweepc (population balance solver)
  *  Sourceforge:    http://sourceforge.net/projects/mopssuite
  *
- * \brief  Vector like structure for summing real properties in binary tree
+ * \brief  Vector like structure for summing double properties in binary tree
  *
  Licence:
     This file is part of "sweepc".
@@ -96,58 +96,58 @@ public:
     void Clear(void);
 
     //!Returns the property with the given ID.
-    real Property(PropID id) const;
+    double Property(PropID id) const;
 
 private:
 
     // Basic properties
     
     //! Equivalent spherical diameter.
-    real m_sphdiam;
+    double m_sphdiam;
 
     //! Collision diameter.
-    real m_dcol;
+    double m_dcol;
 
     //! Mobility diameter.
-    real m_dmob;
+    double m_dmob;
 
     //! Surface area.
-    real m_surf;
+    double m_surf;
 
     //! Volume.
-    real m_vol;
+    double m_vol;
 
     //! Mass.
-    real m_mass;
+    double m_mass;
 
     // Collision rate calculation particle properties.
-    real m_dcolsqr;      //!< Collision diameter squared.
-    real m_inv_dcol;     //!< Inverse collision diameter.
-    real m_inv_dcolsqr;  //!< Inverse of the diameter squared.
-    real m_inv_sqrtmass; //!< Inverse of the square-root of the mass.
-    real m_d2_m_1_2;     //!< D^2 * M^-1/2.
+    double m_dcolsqr;      //!< Collision diameter squared.
+    double m_inv_dcol;     //!< Inverse collision diameter.
+    double m_inv_dcolsqr;  //!< Inverse of the diameter squared.
+    double m_inv_sqrtmass; //!< Inverse of the square-root of the mass.
+    double m_d2_m_1_2;     //!< D^2 * M^-1/2.
 
     // Particle properties required for the weighted transition kernel (dcol used)
-    real m_weight;            //!< Statistical weight
-    real m_weight_mass;       //!< W * M
-    real m_d_w;               //!< D * M
-    real m_d2_w;              //!< D^2 * W
-    real m_d_1_w;             //!< D^-1 * W
-    real m_d_2_w;             //!< D^_2 * W
-    real m_m_1_2_w;           //!< M^-1/2 * W
-    real m_d2m_1_2_w;         //!< D^2 * M^-1/2 * W
+    double m_weight;            //!< Statistical weight
+    double m_weight_mass;       //!< W * M
+    double m_d_w;               //!< D * M
+    double m_d2_w;              //!< D^2 * W
+    double m_d_1_w;             //!< D^-1 * W
+    double m_d_2_w;             //!< D^_2 * W
+    double m_m_1_2_w;           //!< M^-1/2 * W
+    double m_d2m_1_2_w;         //!< D^2 * M^-1/2 * W
 
     // SilicaPrimary properties
     
     //! Number of sites to which reaction is proportional
-    real m_sites;
+    double m_sites;
 
     //! Sintering rate of a particle
-    real m_sinterrate;
+    double m_sinterrate;
 
     // Silicon model properties
     //! Coverage fraction of active sites (ratio of components)
-    real m_coverage;
+    double m_coverage;
 };
 }
 

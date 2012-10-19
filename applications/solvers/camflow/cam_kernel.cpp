@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
     //Following is a test call to the interface
 //-----------------------------------------------------------
 //    try{
-//        vector<doublereal> dz; dz.clear();
+//        vector<double> dz; dz.clear();
 //        Thermo::Mixture mix(mech.Species());
 //        vector<Thermo::Mixture> mixtures;
 //        //CamPremix cp;

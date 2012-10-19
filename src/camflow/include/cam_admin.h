@@ -54,10 +54,10 @@ class CamAdmin
     public CamConc
 {
 
-        doublereal T, T_wall;     //temperature in case of isothermal operation
-        doublereal pre;   //constant pressure system
-        doublereal strain; // strain rate
-        doublereal stepIgnition;    //step change of temperature for ignition
+        double T, T_wall;     //temperature in case of isothermal operation
+        double pre;   //constant pressure system
+        double strain; // strain rate
+        double stepIgnition;    //step change of temperature for ignition
         int energyModel;
         int speciesOut;  //identifier for species output mass/mole
         CamBoundary left; //fuel
@@ -89,16 +89,16 @@ class CamAdmin
         };
 
         //set the temperature
-        //void setTemperature(doublereal T_);
+        //void setTemperature(double T_);
 
         //set the operating pressure
-        void setPressure(doublereal p_);
+        void setPressure(double p_);
 
         //set the step for ignition temp
-        void setIgnitionStep(doublereal step);
+        void setIgnitionStep(double step);
 
         //set the wall temperature
-        void setWallTemp(doublereal Tw);
+        void setWallTemp(double Tw);
 
         //set the flamelet equation type
         void setFlameletEquationType(const std::string type);
@@ -131,16 +131,16 @@ class CamAdmin
         int getSpeciesOut() const;
 
         //return the temperature
-        //doublereal getTemperature() const;
+        //double getTemperature() const;
 
         //return the wall temperature
-        doublereal getWallTemp() const;
+        double getWallTemp() const;
 
         //return the pressure
-        doublereal getPressure()const;
+        double getPressure()const;
 
         //return the ignition step
-        doublereal getIgnitionStep() const;
+        double getIgnitionStep() const;
 
         //get the flamelet equation type
         int getFlameletEquationType() const;
@@ -165,36 +165,36 @@ class CamAdmin
         const std::string& getRestartFile() const;
 
         //Evaluation of dimensionaless numbers
-        doublereal getNre(const doublereal& hd, //hydraulic dia
-                const doublereal& u, //velocity
-                const doublereal& rho,//density
-                const doublereal& eta // viscosity
+        double getNre(const double& hd, //hydraulic dia
+                const double& u, //velocity
+                const double& rho,//density
+                const double& eta // viscosity
                 );
 
         //return the prandtl number
-        doublereal getPrandtl(const doublereal& eta, //viscosity
-                const doublereal& lambda,//thermal conductivity
-                const doublereal& cp //specific heat
+        double getPrandtl(const double& eta, //viscosity
+                const double& lambda,//thermal conductivity
+                const double& cp //specific heat
                 );
 
         //return the Graetz number
-        doublereal getGraetzInv(const doublereal& x,//axial position
-                    const doublereal& dh,   //hydraulic dia
-                    const doublereal& Nre,  //Reynolds number
-                    const doublereal& Pr    //Prandtl number
+        double getGraetzInv(const double& x,//axial position
+                    const double& dh,   //hydraulic dia
+                    const double& Nre,  //Reynolds number
+                    const double& Pr    //Prandtl number
                     );
 
         //return the nussult number
-        doublereal getNusselt(const doublereal& gzInv);
+        double getNusselt(const double& gzInv);
 
         //return the heat transfer coefficient
-        doublereal getHeatTransferCoeff(const doublereal& x,
-                                        const doublereal& vel,
-                                        const doublereal& hd,
-                                        const doublereal& rho,
-                                        const doublereal& eta,
-                                        const doublereal& lambda,
-                                        const doublereal& cp);
+        double getHeatTransferCoeff(const double& x,
+                                        const double& vel,
+                                        const double& hd,
+                                        const double& rho,
+                                        const double& eta,
+                                        const double& lambda,
+                                        const double& cp);
 
 };
 

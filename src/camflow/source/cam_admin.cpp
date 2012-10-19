@@ -54,14 +54,14 @@ bool CamAdmin::radiation = false;
 /*
  *set the reactor pressure
  */
-void CamAdmin::setPressure(doublereal p_){
+void CamAdmin::setPressure(double p_){
     this->pre = p_;
 }
 
 /**
  *  Set the ignition step for temperature
  */
-void CamAdmin::setIgnitionStep(doublereal step){
+void CamAdmin::setIgnitionStep(double step){
     this->stepIgnition = step;
 }
 
@@ -69,7 +69,7 @@ void CamAdmin::setIgnitionStep(doublereal step){
  *set the wall temperature
  */
 
-void CamAdmin::setWallTemp(doublereal Tw){
+void CamAdmin::setWallTemp(double Tw){
     T_wall = Tw;
 }
 
@@ -113,7 +113,7 @@ void CamAdmin::setEnergyModel(std::string model){
 }
 
 
-doublereal CamAdmin::getIgnitionStep() const{
+double CamAdmin::getIgnitionStep() const{
     return stepIgnition;
 }
 
@@ -165,15 +165,15 @@ int CamAdmin::getSpeciesOut() const{
     return speciesOut;
 }
 
-doublereal CamAdmin::getPressure() const{
+double CamAdmin::getPressure() const{
     return this->pre;
 }
 
-//doublereal CamAdmin::getTemperature() const{
+//double CamAdmin::getTemperature() const{
 //    return this->T;
 //}
 
-doublereal CamAdmin::getWallTemp() const{
+double CamAdmin::getWallTemp() const{
     return this->T_wall;
 }
 
@@ -209,46 +209,46 @@ const std::string& CamAdmin::getRestartFile() const
     return restartFile_;
 }
 
-doublereal CamAdmin::getNre(const doublereal& hd,
-                            const doublereal& u,
-                            const doublereal& rho,
-                            const doublereal& eta){
+double CamAdmin::getNre(const double& hd,
+                            const double& u,
+                            const double& rho,
+                            const double& eta){
 
     return (hd*u*rho/eta);
 }
 
-doublereal CamAdmin::getPrandtl(const doublereal& eta,
-                                const doublereal& lambda,
-                                const doublereal& cp){
+double CamAdmin::getPrandtl(const double& eta,
+                                const double& lambda,
+                                const double& cp){
     return (cp*eta/lambda);
 }
 
-doublereal CamAdmin::getGraetzInv(const doublereal& x,
-                                    const doublereal& dh,
-                                    const doublereal& Nre,
-                                    const doublereal& Pr){
+double CamAdmin::getGraetzInv(const double& x,
+                                    const double& dh,
+                                    const double& Nre,
+                                    const double& Pr){
 
     return ((x+1e-10)/(dh*Nre*Pr));
 }
 
-doublereal CamAdmin::getNusselt(const doublereal& gzInv){
+double CamAdmin::getNusselt(const double& gzInv){
 
     //this is strictly valid for non reacting cylindrical tubes
      return  3.657+ 8.827*pow(1000.0*gzInv,-0.545)*exp(-48.2*gzInv);
 }
 
-doublereal CamAdmin::getHeatTransferCoeff(  const doublereal& x,
-                                            const doublereal& vel,
-                                            const doublereal& hd,
-                                            const doublereal& rho,
-                                            const doublereal& eta,
-                                            const doublereal& lambda,
-                                            const doublereal& cp){
+double CamAdmin::getHeatTransferCoeff(  const double& x,
+                                            const double& vel,
+                                            const double& hd,
+                                            const double& rho,
+                                            const double& eta,
+                                            const double& lambda,
+                                            const double& cp){
 
-    doublereal nre = getNre(hd,vel,rho,eta);
-    doublereal pr = getPrandtl(eta,lambda,cp);
-    doublereal greInv = getGraetzInv(x,hd,nre,pr);
-    doublereal nusselt = getNusselt(greInv);
+    double nre = getNre(hd,vel,rho,eta);
+    double pr = getPrandtl(eta,lambda,cp);
+    double greInv = getGraetzInv(x,hd,nre,pr);
+    double nusselt = getNusselt(greInv);
     return (nusselt*lambda/hd);
 
 }

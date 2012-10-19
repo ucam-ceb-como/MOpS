@@ -232,7 +232,7 @@ void Process::AddProduct(unsigned int isp, int mu)
  *
  * @return      True with probability 1-truer/majr, otherwise false
  */
-bool Process::Fictitious(real majr, real truer, rng_type &rng)
+bool Process::Fictitious(double majr, double truer, rng_type &rng)
 {
     // ensure truer <= maj, otherwise it will crash the program.
     if (truer>majr)
@@ -241,7 +241,7 @@ bool Process::Fictitious(real majr, real truer, rng_type &rng)
         std::cerr<<"maj is still smaller than true"<<std::endl;
         return false;
     }
-    typedef boost::bernoulli_distribution<real> bernoulli_distrib;
+    typedef boost::bernoulli_distribution<double> bernoulli_distrib;
     bernoulli_distrib fictitiousDistrib(1.0 - truer/majr);
     boost::variate_generator<rng_type&, bernoulli_distrib> fictitiousGenerator(rng, fictitiousDistrib);
     const bool isFictitious = fictitiousGenerator();
@@ -362,7 +362,7 @@ void Process::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                 }
 
                 // Read scaling factor
-                real a;
+                double a;
                 in.read(reinterpret_cast<char*>(&a), sizeof(a));
                 SetA(a);
 
@@ -385,13 +385,13 @@ void Process::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
  *
  *@return       Gas phase part of reaction rate
  */
-real Process::chemRatePart(const EnvironmentInterface &gas) const
+double Process::chemRatePart(const EnvironmentInterface &gas) const
 {
-    real rate = 1.0;
+    double rate = 1.0;
 
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
-        real conc = gas.SpeciesConcentration(i->first) ;
+        double conc = gas.SpeciesConcentration(i->first) ;
         for (int j=0; j!=i->second; ++j) {
             rate *= conc;
         }
@@ -422,7 +422,7 @@ real Process::chemRatePart(const EnvironmentInterface &gas) const
  *
  * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
  */
-void Process::adjustGas(Cell &sys, real wt, unsigned int n) const
+void Process::adjustGas(Cell &sys, double wt, unsigned int n) const
 {
     if(!sys.FixedChem()) {
         // This method requires write access to the gas phase, which is not
@@ -441,11 +441,11 @@ void Process::adjustGas(Cell &sys, real wt, unsigned int n) const
 
         // Now adjust the concentrations
         Sprog::StoichMap::const_iterator i;
-        real n_NAvol = wt * (real)n / (NA * sys.SampleVolume());
+        double n_NAvol = wt * (double)n / (NA * sys.SampleVolume());
         for (i=m_reac.begin(); i!=m_reac.end(); ++i)
-            newConcs[i->first] -= (real)(i->second) * n_NAvol;
+            newConcs[i->first] -= (double)(i->second) * n_NAvol;
         for (i=m_prod.begin(); i!=m_prod.end(); ++i)
-            newConcs[i->first] +=(real)(i->second) * n_NAvol;
+            newConcs[i->first] +=(double)(i->second) * n_NAvol;
 
         // Set the new data
         gas->SetConcs(newConcs);

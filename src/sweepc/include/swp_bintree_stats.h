@@ -78,7 +78,7 @@ public:
     unsigned int Count() const {return STAT_COUNT;}
 
     //! Calculate the stats for the given ensemble
-    void Calculate(const Ensemble &e, real scale);
+    void Calculate(const Ensemble &e, double scale);
 
     //! Returns a vector containing the stats.
     const fvector &Get() const {return m_stats;}
@@ -102,7 +102,7 @@ public:
     //! Build the PSL entry for the given particle.
     void PSL(
         const Sweep::Particle &sp,      // Particle from which to get PSL data.
-        real time,                      // Current flow time (used to calculate particle age).
+        double time,                      // Current flow time (used to calculate particle age).
         fvector &psl,                   // Output vector.
         unsigned int start = 0          // Optional start index for the first variable.
         ) const;

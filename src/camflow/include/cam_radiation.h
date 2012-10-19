@@ -73,30 +73,30 @@ class Radiation
 {
 
     //! Conversion factor.
-    static const doublereal AtmToPascal;
+    static const double AtmToPascal;
 
     //! Names of the radiative species.
     std::vector<std::string> radiativeSpecies_;
     //! Indices of the species for looking up in Sprog::Mechanism.
-    std::vector<doublereal> speciesIndex_;
+    std::vector<double> speciesIndex_;
     //! Molecular weights of each species.
-    std::vector<doublereal> speciesMolWt_;
+    std::vector<double> speciesMolWt_;
 
     //! Absorption coefficients of each species.
-    std::vector<doublereal> absorption;
+    std::vector<double> absorption;
     //! Partial pressures for each species.
-    std::vector<doublereal> partialPress;
+    std::vector<double> partialPress;
 
     //! Stores the radiation sources.
-    std::vector<doublereal> radiation;
+    std::vector<double> radiation;
 
     const Sprog::Mechanism *const mech_;
-    const std::vector<doublereal>& avgMolWt_;
+    const std::vector<double>& avgMolWt_;
     const Array2D& speciesMassFracs_;
 
     //! Computes the Planck mean absorption constants,
     //! as input to the radiative heat loss dissipation model.
-    void PlanckAbsorption(const doublereal Temperature);
+    void PlanckAbsorption(const double Temperature);
 
 public:
 
@@ -106,7 +106,7 @@ public:
         const std::string& inputFileName,
         const int totalCells,
         const Sprog::Mechanism *const mech,
-        const std::vector<doublereal>& avgMolWt,
+        const std::vector<double>& avgMolWt,
         const Array2D& s_mf
     );
 
@@ -118,12 +118,12 @@ public:
     void calculateRadiativeHeatLoss
     (
         const int i,
-        const doublereal& Temperature,
-        const doublereal& opPre,
-        const doublereal& soot_vol_frac
+        const double& Temperature,
+        const double& opPre,
+        const double& soot_vol_frac
     );
 
-    inline const doublereal& getRadiation(const int i)
+    inline const double& getRadiation(const int i)
     {
         return radiation[i];
     }

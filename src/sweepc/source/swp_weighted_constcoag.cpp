@@ -47,7 +47,7 @@
 #include "swp_property_indices.h"
 
 
-const Sweep::real Sweep::Processes::WeightedConstantCoagulation::s_MajorantFactor = 1.5;
+const double Sweep::Processes::WeightedConstantCoagulation::s_MajorantFactor = 1.5;
 
 /**
  * Main way of building a new coagulation object
@@ -94,7 +94,7 @@ Sweep::Processes::WeightedConstantCoagulation::WeightedConstantCoagulation(std::
  *
  * @return      Sum of all rate terms for this process
  */
-Sweep::real Sweep::Processes::WeightedConstantCoagulation::Rate(real t, const Cell &sys,
+double Sweep::Processes::WeightedConstantCoagulation::Rate(double t, const Cell &sys,
                             const Geometry::LocalGeometry1d &local_geom) const {
     // Create a vector so we can call through to RateTerms
     Sweep::fvector vec(TYPE_COUNT);
@@ -121,14 +121,14 @@ unsigned int Sweep::Processes::WeightedConstantCoagulation::TermCount() const {r
  *
  * @return      Sum of all rate terms for this process
  */
-Sweep::real Sweep::Processes::WeightedConstantCoagulation::RateTerms(real t, const Cell &sys,
+double Sweep::Processes::WeightedConstantCoagulation::RateTerms(double t, const Cell &sys,
                             const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
     const unsigned int n = sys.ParticleCount();
 
     if(n > 1) {
-        const real r1 = (n - 1) * sys.Particles().GetSum(Sweep::iW)
+        const double r1 = (n - 1) * sys.Particles().GetSum(Sweep::iW)
                         * s_MajorantFactor * A() / sys.SampleVolume();
         *iterm++ = r1;
         return r1;
@@ -153,7 +153,7 @@ Sweep::real Sweep::Processes::WeightedConstantCoagulation::RateTerms(real t, con
  * \exception   logic_error     Unrecognised rate term index (ie iterm value)
  */
 int Sweep::Processes::WeightedConstantCoagulation::Perform(
-        Sweep::real t, Sweep::Cell &sys,
+        double t, Sweep::Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
         rng_type &rng) const
@@ -194,7 +194,7 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
  *
  *@return       Value of kernel
  */
-Sweep::real Sweep::Processes::WeightedConstantCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2,
+double Sweep::Processes::WeightedConstantCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2,
                                      const Cell& sys) const
 {
     return A() * sp2.getStatisticalWeight();
@@ -211,7 +211,7 @@ Sweep::real Sweep::Processes::WeightedConstantCoagulation::CoagKernel(const Part
  *
  *@return       Value of majorant kernel
  */
-Sweep::real Sweep::Processes::WeightedConstantCoagulation::MajorantKernel(const Particle &sp1,
+double Sweep::Processes::WeightedConstantCoagulation::MajorantKernel(const Particle &sp1,
                                                                           const Particle &sp2,
                                                                           const Cell& sys,
                                                                           const MajorantType maj) const

@@ -309,7 +309,7 @@ void Species::AddElement(const Sprog::ElComp &elcomp)
             if (!found) m_elcomp.push_back(elcomp);
 
             // Update species molecular weight:  Sum of element weights.
-            m_molwt += (m_mech->Elements(elcomp.Index())->MolWt() * (real)elcomp.Count());
+            m_molwt += (m_mech->Elements(elcomp.Index())->MolWt() * (double)elcomp.Count());
         } else {
             // Element index in elcomp is out-of-range.
             throw out_of_range("Element index is out of range "
@@ -344,7 +344,7 @@ void Species::AddElement(unsigned int i, unsigned int n)
             if (!found) m_elcomp.push_back(ElComp(i, n));
 
             // Update species molecular weight:  Sum of element weights.
-            m_molwt += (m_mech->Elements(i)->MolWt() * (real)n);
+            m_molwt += (m_mech->Elements(i)->MolWt() * (double)n);
         } else {
             // Element index is out-of-range.
             throw out_of_range("Element index is out of range "
@@ -384,7 +384,7 @@ void Species::AddElement(const std::string &name, unsigned int n)
             if (!found) m_elcomp.push_back(ElComp(i, n));
 
             // Update species molecular weight:  Sum of element weights.
-            m_molwt += (m_mech->Elements(i)->MolWt() * (real)n);
+            m_molwt += (m_mech->Elements(i)->MolWt() * (double)n);
         } else {
             // We have got here because the element wasn't found in the list.
             throw invalid_argument(string(name).append(" not found in "
@@ -460,7 +460,7 @@ bool Species::ContainsElement(const std::string &name) const
 // MOLECULAR WEIGHT.
 
 // Recalculates the species molecular weight using the elements.
-real Species::CalcMolWt()
+double Species::CalcMolWt()
 {
     m_molwt = 0.0; // Reset.
 
@@ -468,7 +468,7 @@ real Species::CalcMolWt()
         // Loop over composition vector, summing up the molecular weight.
         ElCompVector::const_iterator el;
         for (el=m_elcomp.begin(); el!=m_elcomp.end(); el++) {
-            m_molwt += m_mech->Elements(el->Index())->MolWt() * (real)el->Count();
+            m_molwt += m_mech->Elements(el->Index())->MolWt() * (double)el->Count();
         }
         return m_molwt;
     } else {
@@ -479,7 +479,7 @@ real Species::CalcMolWt()
 }
 
 /*
- void SurfPhase::setCoverages(const doublereal* theta) {
+ void SurfPhase::setCoverages(const double* theta) {
     double sum = 0.0;
     int k;
     for (k = 0; k < m_kk; k++) {
@@ -504,7 +504,7 @@ setConcentrations(DATA_PTR(m_work));
   }
 
   void SurfPhase::
-  setCoveragesNoNorm(const doublereal* theta) {
+  setCoveragesNoNorm(const double* theta) {
     for (int k = 0; k < m_kk; k++) {
       m_work[k] = m_n0*theta[k]/(size(k));
     }
@@ -516,7 +516,7 @@ setConcentrations(DATA_PTR(m_work));
     setConcentrations(DATA_PTR(m_work));
   }
 
-  void SurfPhase::getCoverages(doublereal* theta) const {
+  void SurfPhase::getCoverages(double* theta) const {
     getConcentrations(theta);
     for (int k = 0; k < m_kk; k++) {
       theta[k] *= size(k)/m_n0; 
@@ -531,7 +531,7 @@ setConcentrations(DATA_PTR(m_work));
       cc[speciesName(k)] = -1.0;
     }
     parseCompString(cov, cc);
-    doublereal c;
+    double c;
     vector_fp cv(kk, 0.0);
     bool ifound = false;
     for (k = 0; k < kk; k++) { 
@@ -570,7 +570,7 @@ void Species::SetElements(const Sprog::ElementPtrVector *const els)
 // THERMODYNAMIC FITTING PARAMETERS.
 
 // Returns the thermo parameters which are valid for the given temperature.
-const Thermo::THERMO_PARAMS &Species::ThermoParams(const Sprog::real T) const
+const Thermo::THERMO_PARAMS &Species::ThermoParams(const double T) const
 {
     if (T >= m_T1) {
         // The thermo params are indexed by temperature.  The lower_bound() function
@@ -597,7 +597,7 @@ const Thermo::THERMO_PARAMS &Species::ThermoParams(const Sprog::real T) const
 
 // Adds a set of thermo parameters valid up to the given temperature to the
 // species object.
-void Species::AddThermoParams(const Sprog::real T,
+void Species::AddThermoParams(const double T,
                               const Sprog::Thermo::THERMO_PARAMS &params)
 {
     m_thermoparams[T] = params;
@@ -605,7 +605,7 @@ void Species::AddThermoParams(const Sprog::real T,
 
 // Removes the thermo parameters associated with the given temperature, assuming
 // it is in the list.
-void Species::RemoveThermoParams(const Sprog::real T)
+void Species::RemoveThermoParams(const double T)
 {
     m_thermoparams.erase(T);
 }
@@ -626,7 +626,7 @@ void Species::SetMechanism(Sprog::Mechanism &mech)
 void Species::WriteDiagnostics(std::ostream &out) const
 {
     string data = "";
-    real val = 0.0;
+    double val = 0.0;
     int ival = 0;
 
     if (out.good()) {
@@ -733,7 +733,7 @@ double Species::getThermalConductivity(double T, double p, double cp) const{
 	return pst.getThermalConductivity(T,p,cp, *this);
 }
 
-real Species::getCollisionDiameter() const {
+double Species::getCollisionDiameter() const {
     return m_transport->getCollisionDiameter();
 }
 
@@ -885,7 +885,7 @@ void Species::Deserialize(std::istream &in)
 				
                 // Read the species mol. wt.
                 in.read(reinterpret_cast<char*>(&wt), sizeof(wt));
-                m_molwt = (real)wt;
+                m_molwt = (double)wt;
 
                 // Read the number of thermo parameters .
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -906,16 +906,16 @@ void Species::Deserialize(std::istream &in)
                     for (unsigned int j=0; j<m; j++) {
                         double param = 0.0;
                         in.read(reinterpret_cast<char*>(&param), sizeof(param));
-                        params.Params[j] = (real)param;
+                        params.Params[j] = (double)param;
                     }
 
                     // Add the parameters to the thermo map.
-                    m_thermoparams[(real)T] = params;
+                    m_thermoparams[(double)T] = params;
                 }
 
                 // Read the start temperature for the thermo range.
                 in.read(reinterpret_cast<char*>(&T), sizeof(T));
-                m_T1 = (real)T;
+                m_T1 = (double)T;
 
 
 		// Read the length of the phase name.
@@ -934,7 +934,7 @@ void Species::Deserialize(std::istream &in)
 				/*
                 // Read the species bulk activity. - Added by mm864
                 in.read(reinterpret_cast<char*>(&act), sizeof(act));
-                activity = (real)act;
+                activity = (double)act;
 				*/
 				
                 break;

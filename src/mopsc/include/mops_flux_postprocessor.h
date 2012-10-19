@@ -58,7 +58,7 @@ public:
     struct FluxPath {
         int SourceSpecies;
         int TargetSpecies;
-        real Rate;
+        double Rate;
         FluxPath() {
             SourceSpecies = -1;
             TargetSpecies = -1;
@@ -104,8 +104,8 @@ private:
     void writeFluxAt(unsigned int iel, std::ofstream &fout, Mops::FluxAnalyser::FluxNetwork &flux_network);
 
     void writeHeader(std::ofstream &fout, unsigned int npoints);
-    real getTotalElementStoi(const Sprog::Kinetics::Reaction &rxn, unsigned int iel);
-    real getNumberOfElementAtom(const Sprog::Stoich &sc, unsigned int iel);
+    double getTotalElementStoi(const Sprog::Kinetics::Reaction &rxn, unsigned int iel);
+    double getNumberOfElementAtom(const Sprog::Stoich &sc, unsigned int iel);
     std::string formatWhiteSpace(std::string str, unsigned int len, bool isright = true);
 };
 }

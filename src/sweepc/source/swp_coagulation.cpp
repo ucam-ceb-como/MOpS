@@ -74,7 +74,7 @@ using namespace std;
  *
  * @return      Total rate of all the coagulation processes
  */
-real Coagulation::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
+double Coagulation::CalcRates(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
                             const CoagPtrVector &coags, fvector &rates, unsigned int start)
 {
     // Iterators for the coagulation processes
@@ -85,7 +85,7 @@ real Coagulation::CalcRates(real t, const Cell &sys, const Geometry::LocalGeomet
     fvector::iterator it = (rates.begin()+start);
 
     // Use this variable to accumulate the overall sum of the rates
-    real sum = 0.0;
+    double sum = 0.0;
     while(itCoag != itCoagEnd) {
         // Store the rate and move on to the next coagulation process
         *it = (*itCoag++)->Rate(t, sys, local_geom);
@@ -105,14 +105,14 @@ real Coagulation::CalcRates(real t, const Cell &sys, const Geometry::LocalGeomet
  *
  * @return      Total rate of all the coagulation processes
  */
-real Coagulation::CalcRateTerms(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
+double Coagulation::CalcRateTerms(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
                                 const CoagPtrVector &coags, fvector::iterator &iterm) {
     // Iterators for the coagulation processes
     CoagPtrVector::const_iterator itCoag = coags.begin();
     const CoagPtrVector::const_iterator itCoagEnd = coags.end();
 
     // Use this variable to accumulate the overall sum of the rates
-    real sum = 0.0;
+    double sum = 0.0;
     while(itCoag != itCoagEnd) {
         // The next line does three things, effectively in the following order
         // i) Calls RateTerms on *itCoag
@@ -135,14 +135,14 @@ real Coagulation::CalcRateTerms(real t, const Cell &sys, const Geometry::LocalGe
  *
  *@return       Index of new, larger particle
  */
-int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
+int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
                                const int ip2, Particle *sp2,
                                Cell &sys, rng_type &rng) const {
 
     // Position for particle after coagulation, default is to take whatever happens
     // to be in sp1
-    real newPos = sp1->getPosition();
-    real newPosTime = sp1->getPositionTime();
+    double newPos = sp1->getPosition();
+    double newPosTime = sp1->getPositionTime();
     if(mPositionChoice == UniformPositionChoice) {
         // Change to position of sp2 with prob 0.5 (bernoulli distribution defaults to prob 0.5)
         boost::bernoulli_distribution<> bernoulliDistrib;
@@ -154,8 +154,8 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
     }
     else if (mPositionChoice == MassPositionChoice) {
         // Change to position of sp2 with prob sp2->Mass()/(sp1->Mass() + sp2->Mass())
-        boost::bernoulli_distribution<real> bernoulliDistrib(sp2->Mass()/(sp1->Mass() + sp2->Mass()));
-        boost::variate_generator<rng_type &, boost::bernoulli_distribution<real> > positionChooser(rng, bernoulliDistrib);
+        boost::bernoulli_distribution<double> bernoulliDistrib(sp2->Mass()/(sp1->Mass() + sp2->Mass()));
+        boost::variate_generator<rng_type &, boost::bernoulli_distribution<double> > positionChooser(rng, bernoulliDistrib);
 
         if(positionChooser()) {
             newPos = sp2->getPosition();
@@ -204,7 +204,7 @@ int Coagulation::JoinParticles(const real t, const int ip1, Particle *sp1,
  * Weighted coagulation is not symmetric, nothing happens to the second particle,
  * it simply defined a size increment for the first particle.
  */
-int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
+int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
                                  const Sweep::PropID prop2,
                                  const Sweep::Processes::CoagWeightRule weight_rule,
                                  Cell &sys, rng_type &rng,
@@ -236,7 +236,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
     }
 
     //Calculate the majorant rate before updating the particles
-    const real majk = MajorantKernel(*sp1, *sp2, sys, maj);
+    const double majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
     //Update the particles
     m_mech->UpdateParticle(*sp1, sys, t, rng);
@@ -272,7 +272,7 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
         // Must check for ficticious event now by comparing the original
         // majorant rate and the current (after updates) true rate.
 
-        real truek = CoagKernel(*sp1, *sp2, sys);
+        double truek = CoagKernel(*sp1, *sp2, sys);
 
         if (majk<truek)
             std::cout << "maj< true"<< std::endl;
@@ -293,8 +293,8 @@ int Coagulation::WeightedPerform(const real t, const Sweep::PropID prop1,
                 break;
             case Sweep::Processes::CoagWeightRule4 : {
                 // This is an arbitrary weighting for illustrative purposes
-                const real x1 = sp1->Mass() / std::sqrt(sp1->getStatisticalWeight());
-                const real x2 = sp1->Mass() / std::sqrt(sp2->getStatisticalWeight());
+                const double x1 = sp1->Mass() / std::sqrt(sp1->getStatisticalWeight());
+                const double x2 = sp1->Mass() / std::sqrt(sp2->getStatisticalWeight());
                 sp1->setStatisticalWeight(sp1->getStatisticalWeight() * x1 /
                                           (x1 + x2));
                 break;

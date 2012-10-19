@@ -243,15 +243,15 @@ Reaction &Reaction::operator=(const Sprog::Kinetics::Reaction &rxn)
 void Reaction::AddReactant(const Sprog::Stoich &reac, const std::string &spName)
 {
     // We must check if the reactant is already defined in this reaction.  Need to
-    // check both integer and real reactants.
+    // check both integer and double reactants.
 
     // Add the new contribution to the total stoichiometry sums.
     m_dstoich -= reac.Mu();
     m_dreac += reac.Mu();
     AddDeltaStoich(spName);
-    const real min_val = -(reac.Mu());
+    const double min_val = -(reac.Mu());
     DeltaStoich(spName)->IncrementTotalStoich(min_val);
-    const real val = reac.Mu();
+    const double val = reac.Mu();
     DeltaStoich(spName)->IncrementReacStoich(val);
 
     // reactants.
@@ -272,7 +272,7 @@ void Reaction::AddReactant(const Sprog::Stoich &reac, const std::string &spName)
 
 
 // Adds a reactant to the reaction given the species name.
-void Reaction::AddReactant(const std::string &name, real stoich)
+void Reaction::AddReactant(const std::string &name, double stoich)
 {
     if (m_mech != NULL) {
         // Find the species in the list by name.
@@ -318,9 +318,9 @@ void Reaction::RemoveReactant(const std::string &name)
                     m_dstoich += (*j).Mu();
                     m_dreac -= (*j).Mu();
 
-		    const real val = (*j).Mu();
+		    const double val = (*j).Mu();
 		    DeltaStoich(m_mech->Species(i)->Name())->IncrementTotalStoich(val);
-		    const real min_val = -((*j).Mu());
+		    const double min_val = -((*j).Mu());
 		    DeltaStoich(m_mech->Species(i)->Name())->IncrementReacStoich(min_val);
 
                     // We have found the species in the list.
@@ -358,13 +358,13 @@ int Reaction::ReactantCount() const
 void Reaction::AddProduct(const Sprog::Stoich &prod, const std::string &spName)
 {
     // We must check if the product is already defined in this reaction.  Need to
-    // check both integer and real products.
+    // check both integer and double products.
 
     // Add the new contribution to the total stoichiometry sums.
     m_dstoich += prod.Mu();
     m_dprod += prod.Mu();
     AddDeltaStoich(spName);
-    const real val = (prod.Mu());
+    const double val = (prod.Mu());
     DeltaStoich(spName)->IncrementTotalStoich(val);
     DeltaStoich(spName)->IncrementProdStoich(val);
 
@@ -387,7 +387,7 @@ void Reaction::AddProduct(const Sprog::Stoich &prod, const std::string &spName)
 
 
 // Adds an integer product to the reaction given the species name.
-void Reaction::AddProduct(const std::string &name, real stoich)
+void Reaction::AddProduct(const std::string &name, double stoich)
 {
     if (m_mech != NULL) {
         // Find the species in the list by name.
@@ -431,7 +431,7 @@ void Reaction::RemoveProduct(const std::string &name)
                     // Remove contribution from the total stoichiometry sums.
                     m_dstoich -= (*j).Mu();
                     m_dprod -= (*j).Mu();
-		    const real min_val = -((*j).Mu());
+		    const double min_val = -((*j).Mu());
 		    DeltaStoich(m_mech->Species(i)->Name())->IncrementTotalStoich(min_val);
 		    DeltaStoich(m_mech->Species(i)->Name())->IncrementProdStoich(min_val);
 
@@ -715,7 +715,7 @@ COVERAGE Reaction::CoverageElement(unsigned int i) const
 }
 
 // Sets the Coverage (always forward) parameters.
-void Reaction::SetCoverage(const real e, const real m, const real eps, const std::string &name)
+void Reaction::SetCoverage(const double e, const double m, const double eps, const std::string &name)
 {
     m_isCoverage = true;
 
@@ -754,7 +754,7 @@ FORD Reaction::FORDElement(unsigned int i) const
 }
 
 // Sets the Ford (always forward) parameters.
-void Reaction::SetFord(const real c, const std::string &name)
+void Reaction::SetFord(const double c, const std::string &name)
 {
     m_isFord = true;
 
@@ -802,7 +802,7 @@ void Reaction::AddThirdBody(const Sprog::Stoich &tb)
 
 // Adds a third body to the reaction given the species and the
 // coefficient.
-void Reaction::AddThirdBody(const unsigned int sp, Sprog::real coeff)
+void Reaction::AddThirdBody(const unsigned int sp, double coeff)
 {
     // Add a new Stoichf to the array of third bodies.
     m_usetb = true;
@@ -810,7 +810,7 @@ void Reaction::AddThirdBody(const unsigned int sp, Sprog::real coeff)
 }
 
 // Adds a third body to the reaction given the species name.
-void Reaction::AddThirdBody(const std::string &name, Sprog::real coeff)
+void Reaction::AddThirdBody(const std::string &name, double coeff)
 {
     if (m_mech != NULL) {
         // Find the species in the mechanism with the given name.
@@ -923,7 +923,7 @@ const Kinetics::FALLOFF_PARAMS &Reaction::FallOffParams() const
 
 // Sets the fall-off type and parameters.
 void Reaction::SetFallOffParams(const FALLOFF_FORM form,
-                                const real params[FALLOFF_PARAMS::MAX_FALLOFF_PARAMS])
+                                const double params[FALLOFF_PARAMS::MAX_FALLOFF_PARAMS])
 {
     m_fotype = form;
 
@@ -936,10 +936,10 @@ void Reaction::SetFallOffParams(const FALLOFF_FORM form,
 // FALL-OFF FUNCTIONAL FORMS.
 
 // 3-parameter Troe fall-off form.
-real Reaction::FTROE3(real T, real logpr) const
+double Reaction::FTROE3(double T, double logpr) const
 {
-    real fcent, c, n, F;
-    const real d = 0.14;
+    double fcent, c, n, F;
+    const double d = 0.14;
 
     fcent = log10(((1.0 - m_foparams.Params[0]) * exp(-T / m_foparams.Params[1])) +
                   (m_foparams.Params[0] * exp(-T / m_foparams.Params[2])));
@@ -951,10 +951,10 @@ real Reaction::FTROE3(real T, real logpr) const
 }
 
 // 4-parameter Troe fall-off form.
-real Reaction::FTROE4(real T, real logpr) const
+double Reaction::FTROE4(double T, double logpr) const
 {
-    real fcent, c, n, F;
-    const real d = 0.14;
+    double fcent, c, n, F;
+    const double d = 0.14;
 
     fcent = log10(((1.0 - m_foparams.Params[0]) * exp(-T / m_foparams.Params[1])) +
                   (m_foparams.Params[0] * exp(-T / m_foparams.Params[2])) +
@@ -967,10 +967,10 @@ real Reaction::FTROE4(real T, real logpr) const
 }
 
 // SRI fall-off form.
-real Reaction::FSRI(real T, real logpr) const
+double Reaction::FSRI(double T, double logpr) const
 {
-    real x = 1.0 / (1.0 + (logpr * logpr));
-    real F = m_foparams.Params[3] * pow(T, m_foparams.Params[4]) *
+    double x = 1.0 / (1.0 + (logpr * logpr));
+    double F = m_foparams.Params[3] * pow(T, m_foparams.Params[4]) *
              pow((m_foparams.Params[0]*exp(-m_foparams.Params[1]/T)) +
                  exp(-T/m_foparams.Params[2]), x);
     return F;
@@ -1000,13 +1000,13 @@ void Reaction::SetMechanism(Sprog::Mechanism &mech)
 // RATE CALCULATION.
 
 // Calculates the rate of progress of this reaction.
-real Reaction::RateOfProgress(real density, const real *const x,
-                              unsigned int n, real kforward,
-                              real kreverse) const
+double Reaction::RateOfProgress(double density, const double *const x,
+                              unsigned int n, double kforward,
+                              double kreverse) const
 {
     int j=0;
     unsigned int k=0;
-    real rop=0.0, rev=0.0;
+    double rop=0.0, rev=0.0;
 
     if (n >= m_mech->Species().size()) {
         // Use rop to store forward rates of production,
@@ -1054,7 +1054,7 @@ void Reaction::WriteDiagnostics(std::ostream &out) const
 {
  
     string data = "";
-    real val = 0.0;
+    double val = 0.0;
     int ival = 0;
 
     if (out.good()) {
@@ -1266,21 +1266,7 @@ void Reaction::WriteDiagnostics(std::ostream &out) const
     }
 }
 
-/* @brief       Should the pre-exponential factor be converted to cgs?
- *
- * Only three-body reactions include the [M] term explicitly in their rate
- * expression, that is, falloff reactions DO NOT require conversion of the
- * high-pressure pre-exponential's units $A_\infty$.
- *
- * @return
- */
-bool Reaction::ConvertPreexponential(void) const {
-    bool ans(false);
-    if ((m_usetb) && (m_fotype == Sprog::Kinetics::None)) {
-        ans = true;
-    }
-    return ans;
-}
+
 
 
 /*!
@@ -1867,19 +1853,19 @@ void Reaction::Deserialize(std::istream &in)
 		
                 // Read stoichiometry changes.
                 in.read(reinterpret_cast<char*>(&A), sizeof(A));
-                m_dstoich = (real)A;
+                m_dstoich = (double)A;
                 in.read(reinterpret_cast<char*>(&A), sizeof(A));
-                m_dreac = (real)A;
+                m_dreac = (double)A;
                 in.read(reinterpret_cast<char*>(&A), sizeof(A));
-                m_dprod = (real)A;
+                m_dprod = (double)A;
 
                 // Read forward Arrhenius coefficients.
                 in.read(reinterpret_cast<char*>(&A), sizeof(A));
                 in.read(reinterpret_cast<char*>(&nn), sizeof(nn));
                 in.read(reinterpret_cast<char*>(&E), sizeof(E));
-                m_arrf.A = (real)A;
-                m_arrf.n = (real)nn;
-                m_arrf.E = (real)E;
+                m_arrf.A = (double)A;
+                m_arrf.n = (double)nn;
+                m_arrf.E = (double)E;
 
                 // Read reverse Arrhenius coefficients.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -1888,9 +1874,9 @@ void Reaction::Deserialize(std::istream &in)
                     in.read(reinterpret_cast<char*>(&nn), sizeof(nn));
                     in.read(reinterpret_cast<char*>(&E), sizeof(E));
                     m_arrr = new Kinetics::ARRHENIUS();
-                    m_arrr->A = (real)A;
-                    m_arrr->n = (real)nn;
-                    m_arrr->E = (real)E;
+                    m_arrr->A = (double)A;
+                    m_arrr->n = (double)nn;
+                    m_arrr->E = (double)E;
                 }
 
                 // Read forward LT parameters.
@@ -1899,8 +1885,8 @@ void Reaction::Deserialize(std::istream &in)
                     in.read(reinterpret_cast<char*>(&A), sizeof(A));
                     in.read(reinterpret_cast<char*>(&E), sizeof(E));
                     m_lt = new LTCOEFFS();
-                    m_lt->B = (real)A;
-                    m_lt->C = (real)E;
+                    m_lt->B = (double)A;
+                    m_lt->C = (double)E;
                 }
 
                 // Read reverse LT parameters.
@@ -1909,8 +1895,8 @@ void Reaction::Deserialize(std::istream &in)
                     in.read(reinterpret_cast<char*>(&A), sizeof(A));
                     in.read(reinterpret_cast<char*>(&E), sizeof(E));
                     m_revlt = new LTCOEFFS();
-                    m_revlt->B = (real)A;
-                    m_revlt->C = (real)E;
+                    m_revlt->B = (double)A;
+                    m_revlt->C = (double)E;
                 }
 
                 // Read third body flag.
@@ -2001,8 +1987,8 @@ void Reaction::Deserialize(std::istream &in)
                     delete [] name;
 		    
 		    
-                    m_fo.F_k = (real)coef;
-		    cout << (real)coef << endl; 
+                    m_fo.F_k = (double)coef;
+		    cout << (double)coef << endl; 
 		    m_fo.spName = speciesName;
 		    
 		    // Add covr to vector.
@@ -2044,9 +2030,9 @@ void Reaction::Deserialize(std::istream &in)
                     delete [] name;
 		   
 
-                    m_covr.Eta = (real)e;
-                    m_covr.Miu = (real)m;
-                    m_covr.Epsilon = (real)epsil;
+                    m_covr.Eta = (double)e;
+                    m_covr.Miu = (double)m;
+                    m_covr.Epsilon = (double)epsil;
 		    m_covr.spName = speciesName;
 		    
 		    // Add covr to vector.
@@ -2062,9 +2048,9 @@ void Reaction::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&A), sizeof(A));
                 in.read(reinterpret_cast<char*>(&nn), sizeof(nn));
                 in.read(reinterpret_cast<char*>(&E), sizeof(E));
-                m_foparams.LowP_Limit.A = (real)A;
-                m_foparams.LowP_Limit.n = (real)nn;
-                m_foparams.LowP_Limit.E = (real)E;
+                m_foparams.LowP_Limit.A = (double)A;
+                m_foparams.LowP_Limit.n = (double)nn;
+                m_foparams.LowP_Limit.E = (double)E;
 
                 // Read fall-off third body.
                 in.read(reinterpret_cast<char*>(&itb), sizeof(itb));
@@ -2076,7 +2062,7 @@ void Reaction::Deserialize(std::istream &in)
                 // Read fall-off parameters.
                 for (unsigned int i=0; i<n; i++) {
                     in.read(reinterpret_cast<char*>(&A), sizeof(A));
-                    m_foparams.Params[i] = (real)A;
+                    m_foparams.Params[i] = (double)A;
                 }
 
                 break;

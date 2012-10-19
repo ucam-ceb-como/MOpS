@@ -63,7 +63,7 @@ public:
     //          SurfVolPrimary being created without knowledge of the
     //          defining particle model.
     SurfVolPrimary(                       // Initialising constructor.
-        real time,                        //  - Create time.
+        double time,                        //  - Create time.
         const Sweep::ParticleModel &model //  - Defining particle model.
         );
     SurfVolPrimary(const SurfVolPrimary &copy); // Copy constructor.
@@ -90,7 +90,7 @@ public:
     virtual void UpdateCache(void);
 
     // Returns the equivalent spherical particle surface area.
-    real SphSurfaceArea(void) const;
+    double SphSurfaceArea(void) const;
 
     // Returns the number of primary particles if the aggregate is assumed
     // to consist of mono-sized primaries.
@@ -98,7 +98,7 @@ public:
 
     // Returns the primary particle diameter if the aggregate is assumed
     // to consist of mono-sized primaries.
-    real PP_Diameter(void) const;
+    double PP_Diameter(void) const;
 
 
     // OPERATIONS.
@@ -122,11 +122,11 @@ public:
     // This routine sinters the Primary for the given length of
     // time using the provided sintering model.
     virtual void Sinter(
-        real dt, // Delta-t for sintering to occur.
+        double dt, // Delta-t for sintering to occur.
         Cell &sys, // System which defines primary's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
         rng_type &rng,   // Random number generator
-        real wt     // Statistical weight
+        double wt     // Statistical weight
         );
 
 
@@ -168,7 +168,7 @@ public:
 
 protected:
     // The equivalent spherical-particle surface area.
-    real m_sphsurf;
+    double m_sphsurf;
 
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.

@@ -62,7 +62,7 @@ int main() {
     Sweep::FixedMixture fixedMixTestObject(data, mech);
 
     // tolerance for the numerical comparisons
-    const double tol = 10.0 * std::numeric_limits<Sweep::real>::epsilon();
+    const double tol = 10.0 * std::numeric_limits<double>::epsilon();
 
     // Now check the individual quantities
     {

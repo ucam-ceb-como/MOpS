@@ -303,7 +303,7 @@ void MechanismParser::ReadChemkin(
             size_t sizeSRI = chemkinReader.reactions()[i].getSRI().size();
             if (sizeSRI == 3 && chemkinReader.reactions()[i].hasSRI())
             {
-                real paramSRI[3];
+                double paramSRI[3];
                 for (size_t j=0; j<3; ++j)
                 {
                     paramSRI[j] = chemkinReader.reactions()[i].getSRI()[j];
@@ -316,7 +316,7 @@ void MechanismParser::ReadChemkin(
                 size_t sizeTROE = chemkinReader.reactions()[i].getTROE().size();
                 if (sizeTROE == 3)
                 {
-                    real paramTROE[3];
+                    double paramTROE[3];
                     for (size_t j=0; j<3; ++j)
                     {
                         paramTROE[j] = chemkinReader.reactions()[i].getTROE()[j];
@@ -325,7 +325,7 @@ void MechanismParser::ReadChemkin(
                 }
                 else if (sizeTROE == 4)
                 {
-                    real paramTROE[4];
+                    double paramTROE[4];
                     for (size_t j=0; j<4; ++j)
                     {
                         paramTROE[j] = chemkinReader.reactions()[i].getTROE()[j];

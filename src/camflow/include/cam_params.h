@@ -2,7 +2,7 @@
  * \file   cam_params.h
  * \author V. Janardhanan
  *
- * \brief Definition of Camflow real type variables.
+ * \brief Definition of Camflow double type variables.
  *
  *  Copyright (C) 2009 Vinod Janardhanan.
  *
@@ -51,11 +51,11 @@
  */
 namespace Camflow {
 
-    //! Typedef for doublereal.
-    typedef Sprog::real doublereal;
+    //! Typedef for double.
+    // typedef double double;
 
     //! cgs units used in the soot model.
-    const doublereal kB_cgs = 1.3806504e-16;
+    const double kB_cgs = 1.3806504e-16;
     
 }
 

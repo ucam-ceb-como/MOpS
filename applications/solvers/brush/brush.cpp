@@ -179,9 +179,9 @@ int main(int argc, char* argv[])
     Mops::timevector timeIntervals;
     int runs, iterations;
     std::string outputFileBaseName;
-    std::vector<std::pair<real, real> > maxPCounts, maxM0s;
+    std::vector<std::pair<double, double> > maxPCounts, maxM0s;
     bool splitDiffusion = false;
-    real diffusionCorrection = 0.0; // Ito version, Fick's law is 1.0
+    double diffusionCorrection = 0.0; // Ito version, Fick's law is 1.0
     bool splitAdvection = false;
     bool strangTransport = false;
     bool CSTRTransport = false; // Default to continuous transport
@@ -290,8 +290,8 @@ int main(int argc, char* argv[])
             if(statsBoundNode != NULL) {
                 // Read the data from the file
                 Sweep::PropID statsboundPropertyID;
-                real statsLowerBound;
-                real statsUpperBound;
+                double statsLowerBound;
+                double statsUpperBound;
                 Mops::Settings_IO::ReadStatsBound(*statsBoundNode, statsboundPropertyID, statsLowerBound, statsUpperBound);
 
                 // Adjust statBound with the newly read data

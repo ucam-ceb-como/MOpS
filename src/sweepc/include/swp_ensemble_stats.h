@@ -81,7 +81,7 @@ public:
     // Calculates the model stats for a particle ensemble.
     void Calculate(
         const Ensemble &e, // Ensemble from which to get stats.
-        real scale         // Scaling factor to unit volume (summed stats).
+        double scale         // Scaling factor to unit volume (summed stats).
         );
 
     // Returns a vector containing the stats.
@@ -121,9 +121,9 @@ public:
     void PSL(
         const Sweep::Particle &sp,      // Particle from which to get PSL data.
         const Sweep::ParticleModel& model, // Model by which particle is to be interpreted
-        real time,                      // Current flow time (used to calculate particle age).
+        double time,                      // Current flow time (used to calculate particle age).
         fvector &psl,                   // Output vector.
-        real scale     				    // Scaling factor to unit volume.
+        double scale     				    // Scaling factor to unit volume.
         );
 
 

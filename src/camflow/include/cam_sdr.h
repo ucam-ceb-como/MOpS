@@ -64,31 +64,31 @@ class ScalarDissipationRate
 
     int sdrType_;
 
-    const doublereal& stoichZ_;
-    doublereal strainRate_;
-    doublereal stoichSDR_;
+    const double& stoichZ_;
+    double strainRate_;
+    double stoichSDR_;
 
-    const std::vector<doublereal>& mixFracCoords_;
+    const std::vector<double>& mixFracCoords_;
 
     //! Stoichiometric scalar dissipation rate that has a time history.
-    std::vector<doublereal> v_stoichSDR;
+    std::vector<double> v_stoichSDR;
 
     //! Time profile of the scalar dissipation rates.
-    std::vector<doublereal> v_time;
+    std::vector<double> v_time;
 
     //! SDR profile with a time history.
     //! The second index is 'time coordinate'.
     //! The first index is 'mixture fraction coordinate'.
-    std::vector< std::vector<doublereal> > scalarDissipationRate_;
+    std::vector< std::vector<double> > scalarDissipationRate_;
 
-    Utils::LinearInterpolator<doublereal, doublereal>*  interpolator_;
-    Utils::LinearInterpolator<doublereal, doublereal>*  interpolatorZeroTime_;
-    Utils::LinearInterpolator<doublereal, doublereal>*  interpolatorNextTime_;
+    Utils::LinearInterpolator<double, double>*  interpolator_;
+    Utils::LinearInterpolator<double, double>*  interpolatorZeroTime_;
+    Utils::LinearInterpolator<double, double>*  interpolatorNextTime_;
 
     void readStrainRate(const std::string& inputFileName);
-    doublereal calculate(const doublereal& mixtureFraction) const;
-    doublereal scalarDissipationRate(const doublereal& mixtureFraction) const;
-    doublereal strainRate(const doublereal& mixtureFraction) const;
+    double calculate(const double& mixtureFraction) const;
+    double scalarDissipationRate(const double& mixtureFraction) const;
+    double strainRate(const double& mixtureFraction) const;
 
 public:
 
@@ -96,27 +96,27 @@ public:
     ScalarDissipationRate
     (
         const std::string& inputFileName,
-        const doublereal& stoichZ,
-        const std::vector<doublereal>& mixFracCoords,
+        const double& stoichZ,
+        const std::vector<double>& mixFracCoords,
         const int n_TimePoints
     );
 
     //! Destructor.
     ~ScalarDissipationRate();
 
-    void setStrainRate(const doublereal strainRate);
+    void setStrainRate(const double strainRate);
 
-    void setSDRRate(const doublereal sdr);
+    void setSDRRate(const double sdr);
 
     void setExternalScalarDissipationRate
     (
-        const std::vector<doublereal>& time,
-        const std::vector<doublereal>& sdr
+        const std::vector<double>& time,
+        const std::vector<double>& sdr
     );
 
-    doublereal operator()(const doublereal& Z, const doublereal& time) const;
+    double operator()(const double& Z, const double& time) const;
 
-    inline const doublereal& getStoichSDR() const
+    inline const double& getStoichSDR() const
     {
         return stoichSDR_;
     }

@@ -20,14 +20,14 @@ namespace Camflow{
     class IDAWrapper{
         void *ida_mem;
         N_Vector y0, yp0;
-        doublereal atol, currentTime, maxTime;
+        double atol, currentTime, maxTime;
         int flag;
         CamResidual *reacPtr;
     public:
         IDAWrapper(){}
         ~IDAWrapper(){}
-        void init(int n, vector<doublereal> &solnVec, doublereal tol,
-                                        doublereal maxIntTime,
+        void init(int n, vector<double> &solnVec, double tol,
+                                        double maxIntTime,
                                         int band,
                                         CamResidual &cr);
 

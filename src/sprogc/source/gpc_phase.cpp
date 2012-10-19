@@ -400,7 +400,7 @@ void Phase::SetMechanism(Sprog::Mechanism &mech)
 void Phase::WriteDiagnostics(std::ostream &out) const
 {
     string data = "";
-    real val = 0.0;
+    double val = 0.0;
     int ival = 0;
 
     if (out.good()) {
@@ -542,7 +542,7 @@ void Phase::Deserialize(std::istream &in)
 
 		// Read the species site density. - Added by mm864
                 in.read(reinterpret_cast<char*>(&den), sizeof(den));
-				m_siteden = (real)den;
+				m_siteden = (double)den;
                 break;
             default:
                 throw runtime_error("Phase serialized version number "

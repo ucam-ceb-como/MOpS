@@ -87,7 +87,7 @@ public:
     // Calculates the model stats for a particle ensemble.
     void Calculate(
         const Ensemble &e, // Ensemble from which to get stats.
-        real scale         // Scaling factor to unit volume (summed stats).
+        double scale         // Scaling factor to unit volume (summed stats).
         );
 
     // Returns a vector containing the stats.
@@ -122,7 +122,7 @@ public:
     //! Build the PSL entry for the given particle.
     void PSL(
         const Sweep::Particle &sp,      // Particle from which to get PSL data.
-        real time,                      // Current flow time (used to calculate particle age).
+        double time,                      // Current flow time (used to calculate particle age).
         fvector &psl,                   // Output vector.
         unsigned int start = 0          // Optional start index for the first variable.
         ) const;
@@ -154,7 +154,7 @@ private:
         iNPAH=0,      // m_numPAH
         iPARTSURF=2,  // m_surf, the surface area for primary partilcle
         iPARTMASS=3,  // m_mass, the mass for primary partilcle
-        iNAVGPAH=4,   // Avg. PAH real Part
+        iNAVGPAH=4,   // Avg. PAH double Part
         iPAHD=5,      // m_PAHCollDiameter
         iNCARB=6,     // m_numcarbon
         iNHYDROGEN=7, // m_numH
