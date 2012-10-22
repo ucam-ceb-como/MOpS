@@ -163,17 +163,17 @@ void SurfVolPrimary::UpdateCache(void)
     m_dcol = (m_diam + sqrt(m_surf / PI)) * 0.5;
 
     // Calculate mobility diameter
-    real dmob = PP_Diameter();
+    m_dmob = PP_Diameter();
     if (false) {
         // SF regime mobility diameter
-        dmob *= 0.9 * sqrt(m_pmodel->GetFractDim() / (m_pmodel->GetFractDim() + 2));
-        dmob *= pow(PP_Count(), (1.0/m_pmodel->GetFractDim()));
+        m_dmob *= 0.9 * sqrt(m_pmodel->GetFractDim() / (m_pmodel->GetFractDim() + 2));
+        m_dmob *= pow(PP_Count(), (1.0/m_pmodel->GetFractDim()));
     } else {
         // FM regime mobility diameter
-        dmob *= sqrt(0.802*(PP_Count()-1) + 1);
+        m_dmob *= sqrt(0.802*(PP_Count()-1) + 1);
     }
 
-    if (dmob < m_diam) dmob = m_diam;
+    if (m_dmob < m_diam) m_dmob = m_diam;
 }
 
 // Returns the equivalent spherical particle surface area.
