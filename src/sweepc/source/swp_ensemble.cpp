@@ -675,7 +675,7 @@ double Sweep::Ensemble::GetSum(Sweep::PropID id) const
  *
  * @return          Alpha for the ensemble (ABF model)
  */
-double Sweep::Ensemble::Alpha(real T) const {
+double Sweep::Ensemble::Alpha(double T) const {
     double alpha(0.0), mu1(0.0);
 
     // Get mu1 (average mass per particle)
