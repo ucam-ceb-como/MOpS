@@ -254,13 +254,12 @@ int main(int argc, char *argv[])
                 break;
         }
     } catch (std::logic_error &le) {
-        printf("mops: Failed to initialise solver due to bad inputs.  Message:\n  ");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to initialise solver due to bad inputs.  Message:\n  "
+                << le.what() << "\n\n";
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to initialise solver due to a program error.  Message:\n  ");
-        printf(re.what());
+        std::cerr << "mops: Failed to initialise solver due to a program error.  Message:\n  "
+                << re.what() << "\n\n";
         printf("\n\n");
         return -1;
     }
@@ -284,15 +283,13 @@ int main(int argc, char *argv[])
             dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
         }
     } catch (std::logic_error &le) {
-        printf("mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n"
+            << le.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to read chemical mechanism/profile due to a program error.  Message:\n\n");
-        printf(re.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to read chemical mechanism/profile due to a program error.  Message:\n\n"
+            << re.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     }
@@ -337,15 +334,13 @@ int main(int argc, char *argv[])
 	    
         }
     } catch (std::logic_error &le) {
-        printf("mops: Failed to read particle mechanism due to bad inputs.  Message:\n  ");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to read particle mechanism due to bad inputs.  Message:\n  "
+            << le.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to read particle mechanism due to a program error.  Message:\n  ");
-        printf(re.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to read particle mechanism due to a program error.  Message:\n  "
+            << re.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     }
@@ -362,15 +357,13 @@ int main(int argc, char *argv[])
 	    std::cout << "XML/INX read" << endl; // for debugging
         }
     } catch (std::logic_error &le) {
-        printf("mops: Failed to load settings file due to bad inputs.  Message:\n  ");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to load settings file due to bad inputs.  Message:\n  "
+            << le.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to load settings file due to a program error.  Message:\n  ");
-        printf(re.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to load settings file due to a program error.  Message:\n  "
+            << re.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     }
@@ -401,9 +394,8 @@ int main(int argc, char *argv[])
 
 	cout << "Sensitivity Analyser set" << endl;// for debugging
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to load sensitivity setting files due to a program error.  Message:\n  ");
-        printf(re.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to load sensitivity setting files due to a program error.  Message:\n  "
+            << re.what() << "\n\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
@@ -419,16 +411,14 @@ int main(int argc, char *argv[])
             sim.RunSimulation(*reactor, *solver, 456 + randomSeedOffset);
         }
     } catch (std::logic_error &le) {
-        printf("mops: Failed to solve reactor due to bad inputs.  Message:\n  ");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to solve reactor due to bad inputs.  Message:\n  "
+                << le.what() << "\n\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to solve reactor due to a program error.  Message:\n  ");
-        printf(re.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to solve reactor due to a program error.  Message:\n  "
+            << re.what() << "\n\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
@@ -465,16 +455,14 @@ int main(int argc, char *argv[])
 #endif
         if (fpostprocess) sim.PostProcess();
     } catch (std::logic_error &le) {
-        printf("mops: Failed to post-process due to bad inputs.  Message:\n  ");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to post-process due to bad inputs.  Message:\n  "
+            << le.what() << "\n\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to post-process due to a program error.  Message:\n  ");
-        printf(re.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to post-process due to a program error.  Message:\n  "
+            << re.what() << "\n\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;

@@ -197,6 +197,9 @@ double SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) con
 				   exp((m_E* (1 - pow( (m_dpmin/dp) - (sys.GasPhase().Temperature()/4100.0) , 3.76))
 				     /sys.GasPhase().Temperature()));
         	break;
+        case Constant:
+            // Only dependent on the 'pre-exponential' (has units s in this case)
+            return m_A;
     }
 }
 

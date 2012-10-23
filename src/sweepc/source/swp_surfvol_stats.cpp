@@ -59,8 +59,10 @@ const std::string SurfVolStats::m_statnames[SurfVolStats::STAT_COUNT] = {
     std::string("Est. Primary Particle Count"),
     std::string("Avg. Est. Primary Particle Count"),
     std::string("Avg. Est. Primary Particle Diameter (nm)"),
-    std::string("GStdev of Mean Collision Diameter (-)"),
-    std::string("GStdev of Mean Est. Primary Diameter (-)")
+    std::string("GStdev of Collision Diameter (-)"),
+    std::string("GStdev of Est. Primary Diameter (-)"),
+    std::string("GMean of Collision Diameter (m)"),
+    std::string("GMean of Est. Primary Diameter (m)")
 };
 
 const IModelStats::StatType SurfVolStats::m_mask[SurfVolStats::STAT_COUNT] = {
@@ -69,8 +71,10 @@ const IModelStats::StatType SurfVolStats::m_mask[SurfVolStats::STAT_COUNT] = {
     IModelStats::Sum,  // Est. primary particle count.
     IModelStats::Avg,  // Avg. est. primary particle count.
     IModelStats::Avg,  // Avg. est. primary particle diameter.
-    IModelStats::Avg,  // GStdev of Mean Collision Diameter.
-    IModelStats::Avg   // GStdev of Mean Est. Primary Diameter
+    IModelStats::Avg,  // GStdev of Collision Diameter.
+    IModelStats::Avg,  // GStdev of Est. Primary Diameter
+    IModelStats::Avg,  // GMean of Collision Diameter.
+    IModelStats::Avg   // GMean of Est. Primary Diameter
 
 };
 
@@ -180,10 +184,12 @@ void SurfVolStats::Calculate(const Ensemble &e, double scale)
 
     // Now get the geometric standard devs, using [0] for dcol, [1] for dpri
     // Default to 1.0 GSTDEV (Can't have GSTDEV=0)
-    fvector gstdevs;
-    gstdevs = GetGeometricStdev(2u, diams, weights);
+    fvector gstdevs, gmeans;
+    GetGeometricStdev(2u, diams, weights, gmeans, gstdevs);
     m_stats[iCollGStdev] = gstdevs[0];
     m_stats[iPrimGStdev] = gstdevs[1];
+    m_stats[iCollGMean] = gmeans[0];
+    m_stats[iPrimGMean] = gmeans[1];
 
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {
@@ -235,53 +241,54 @@ void SurfVolStats::Get(fvector &stats, unsigned int start) const
  * @param diams         Vector of length number of particles, containing
  *                          a fvector of diameters for that particle.
  * @param weights       Vector of length number of particles storing weights
- * @return              Vector with geo stdevs for diameter types
+ * @param gmeans        Output vector for gmeans
+ * @param gstdevs       Output vector for gstdevs
  */
-fvector SurfVolStats::GetGeometricStdev(
+void SurfVolStats::GetGeometricStdev(
         const unsigned int num,
         std::vector<fvector> diams,
-        fvector weights) const {
+        fvector weights,
+        fvector &gmeans,
+        fvector &gstdevs) const {
 
     // Some checks first
-    if (diams.size() < size_t(1u)) {
-        // Return a default of 1.0 gstdev if no particles
-        return fvector(num,1.0);
-    }
     if (diams.size() != weights.size())
         throw std::runtime_error("Failed getting weights and diameters "
-                "in BinTreeStats::GetGeometricStdev()");
-    unsigned int i(0u); // Iterate number of particles
-    unsigned int j(0u); // Iterate diameter types
+                "in SurfVolStats::GetGeometricStdev()");
+    if (diams.size() < size_t(1u)) {
+        // Don't calculate if there aren't enough particles.
+        gmeans.resize(num, 0.0);
+        gstdevs.resize(num, 1.0);
+    } else {
+        unsigned int i(0u); // Iterate number of particles
+        unsigned int j(0u); // Iterate diameter types
 
-    // Then we must calculate the geometric means
-    fvector means;
-    means.resize(num, 1.0);
+        // Then we must calculate the geometric means
+        gmeans.resize(num, 1.0);
 
-    for (i = 0; i != diams.size(); i++) {
-        // Loop over diameter types
-        for (j = 0; j != diams[i].size(); j++) {
-            means[j] *= pow(diams[i].at(j), weights[i]);
+        for (i = 0; i != diams.size(); i++) {
+            // Loop over diameter types
+            for (j = 0; j != diams[i].size(); j++) {
+                gmeans[j] *= pow(diams[i].at(j), weights[i]);
+            }
         }
-    }
 
-    // Now we can get the geometric stdevs
-    fvector stdevs;
-    stdevs.resize(num, 0.0);
-    double dev(0.0);
-    for (i = 0; i != diams.size(); i++) {
-        // Loop over diameter types
+        // Now we can get the geometric stdevs
+        gstdevs.resize(num, 0.0);
+        double dev(0.0);
+        for (i = 0; i != diams.size(); i++) {
+            // Loop over diameter types
+            for (j = 0; j != num; j++) {
+                dev = log(diams[i].at(j) / gmeans[j]);
+                gstdevs[j] += weights[i] * dev * dev;
+            }
+        }
+
+        // Just need to do a bit more to the sums...
         for (j = 0; j != num; j++) {
-            dev = log(diams[i].at(j) / means[j]);
-            stdevs[j] += weights[i] * dev * dev;
+            gstdevs[j] = exp(sqrt(gstdevs[j]));
         }
     }
-
-    // Just need to do a bit more to the sums...
-    for (j = 0; j != num; j++) {
-        stdevs[j] = exp(sqrt(stdevs[j]));
-    }
-
-    return stdevs;
 }
 
 // Returns a vector containing the stat names.

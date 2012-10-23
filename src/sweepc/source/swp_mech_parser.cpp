@@ -425,6 +425,9 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else if (str == "silicon") {
             // Solid-state diffusion (d^3)
             mech.SintModel().SetType(SinteringModel::Silicon);
+        } else if (str == "constant") {
+            // Constant characterisitic sintering time
+            mech.SintModel().SetType(SinteringModel::Constant);
         } else {
             // Grain-boundary diffusion is the default.
             mech.SintModel().SetType(SinteringModel::GBD);
