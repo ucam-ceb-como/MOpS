@@ -15,12 +15,12 @@ fi
 # An optional second argument may specify the working directory
 if test -n "$2"
   then
-    cd $2
+    cd "$2"
 fi
 
 echo "sweep.FixedChem"
 # run the test
-$program
+"$program" ## Needs double quotation marks
 
 # capture exit value of simulation
 simulationResult=$?
