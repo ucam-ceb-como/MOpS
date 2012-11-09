@@ -96,6 +96,8 @@ add_test(mops.bintree1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/b
 
 add_test(mops.imaging1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1)
 
+add_test(mops.titania1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titania1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titania1)
+
 ########## The PAH-KMC Application ######################
 add_executable(PAHkmc-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/PAHkmc/kmc_model.cpp)
 target_link_libraries(PAHkmc-app sweep ${Boost_LIBRARIES})

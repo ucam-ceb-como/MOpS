@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mechanism name="Titanium Dioxide" units="CGS">
+    <component id="Rutile">
+      <description>Rutile</description>
+      <density>4.26</density>
+      <molwt>79.87</molwt>
+    </component>
+    
+    <particle id="[Ru]" model="spherical" subtree="false">
+      <description>A rutile particle.</description>
+    </particle>
+    
+    <coagulation>
+        <A>0.0</A>
+        <kernel>transition</kernel>
+    </coagulation>
+    
+    <!-- Ti addition reactions. -->
+    <!-- both need to be proportional to s, surface area in cm2-->
+    <!-- use the pseudo steady state model for fraction of available sites-->
+    <reaction type="titania" name="Eley-Rideal: TiCl4 Adsorption" form="adsorption" defer="true">
+        <formula>[Rutile_n] + TICL4 + 1.0 O2 to Rutile_n+1 + 2.0 CL2</formula>
+        <reactant id="TICL4" stoich="1.0" />
+        <A>1.192e27</A> <!-- cm/mols-->
+        <!-- 5.777e18 #/m2 * 1e-4 m2/cm2 * 2.1e12 cm3/mols-->
+        <n>0.0</n>
+        <E units="kcal/mol">11.9503</E> <!-- 50 kJ/mol -->
+        <particleterm id="s" power="1.0"/>
+        <!-- assume no increase in rutile here-->
+        <component id="Rutile" dx="+0.0"/>
+    </reaction>
+    
+    <reaction type="titania" name="Eley-Rideal: O2 Adsorption" form="desorption" defer="true">
+        <formula>[Rutile_n] + TICL4 + 1.0 O2 to Rutile_n+1 + 2.0 CL2</formula>
+        <reactant id="O2" stoich="1.0" />
+        <product id="CL2" stoich="2.0" />
+        <A>3.860e26</A> <!-- cm/mols-->
+        <!-- 6.8e11 #/m2 * 1e-4 m2/cm2 * 2.1e12 cm3/mols-->
+        <n>0.5</n>
+        <E units="kcal/mol">5.972</E> <!-- 25 kJ/mol -->
+        <particleterm id="s" power="1.0"/>
+        <component id="Rutile" dx="+1.0"/>
+    </reaction>
+</mechanism>

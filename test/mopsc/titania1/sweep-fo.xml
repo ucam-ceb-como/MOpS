@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mechanism name="Titanium Dioxide" units="CGS">
+    <component id="Rutile">
+      <description>Rutile</description>
+      <density>4.26</density>
+      <molwt>79.87</molwt>
+    </component>
+    
+    <particle id="[Ru]" model="spherical" subtree="false">
+      <description>A rutile particle.</description>
+    </particle>
+    
+    <coagulation>
+        <A>0.0</A>
+        <kernel>transition</kernel>
+    </coagulation>
+    
+    <reaction type="titania" name="TiCl4 addition" form="firstorder" defer="true">
+        <formula>[Rutile_n] + TICL4 + 1.0 O2 to Rutile_n+1 + 2.0 CL2</formula>
+        <reactant id="TICL4" stoich="1.0" />
+        <reactant id="O2"  stoich="1.0" />
+        <product id="CL2" stoich="2.0" />
+        <A units="cm m3/mol2 s">1.2044e+028</A>
+        <n>0.0</n>
+        <E units="cal">11.9503</E> <!-- kcal/mol -->
+        <particleterm id="s" power="1.0"/>
+        <component id="Rutile" dx="+1.0"/>
+    </reaction>   
+</mechanism>
