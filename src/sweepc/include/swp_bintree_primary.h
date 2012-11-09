@@ -135,9 +135,6 @@ public:
     //! Gets the sintering rate
     double GetSintRate() const;
 
-    //! Gets the number of active sites (always component 0)
-    virtual double GetSites() const {return m_comp[0];}
-
     //! Gets the sintering time
     double GetSintTime() const {return m_sint_time;}
 

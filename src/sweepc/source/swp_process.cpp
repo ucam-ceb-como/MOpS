@@ -430,7 +430,7 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n) const
         // phase interface
         SprogIdealGasWrapper *gasWrapper = dynamic_cast<SprogIdealGasWrapper*>(&sys.GasPhase());
         if(gasWrapper == NULL)
-            throw std::runtime_error("Coult not cast gas phase to SprogIdealGasWrapper in SilicaPrimary::Sinter");
+            throw std::runtime_error("Could not cast gas phase to SprogIdealGasWrapper in Process::adjustGas");
 
         // If excecution reaches here, the cast must have been successful
         Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();

@@ -46,6 +46,7 @@
 #include "swp_inception.h"
 #include "swp_constant_inception.h"
 #include "swp_surface_reaction.h"
+#include "swp_titania_surface_reaction.h"
 #include "swp_actsites_reaction.h"
 #include "swp_condensation.h"
 #include "swp_transcoag.h"
@@ -1073,6 +1074,24 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
         } else if (str.compare("bp")==0) {
             // This is a Blanquart Pitsch active-sites enabled reaction.
             rxn = new ActSiteReaction(mech, ActSiteReaction::BPRadicalSiteModel, SprogIdealGasWrapper::sAlphaIndex);
+        } else if (str.compare("titania")==0) {
+            // This is a titania surface reaction
+            // Create a new reaction of a certain form
+            string str2 = (*i)->GetAttributeValue("form");
+            if (str2.compare("firstorder")==0) {
+                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iFirstOrder);
+            } else if (str2.compare("ghoshtagore")==0) {
+                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iGhoshtagore);
+            } else if (str2.compare("adsorption")==0) {
+                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iEleyRidealAdsorption);
+            } else if (str2.compare("desorption")==0) {
+                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iEleyRidealDesorption);
+            } else if (str2.compare("multivariate")==0) {
+                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iMultivariate);
+            } else {
+                throw runtime_error("Unrecognised titania reaction form" + str2 +
+                        "in MechParser::readSurfRxns");
+            }
         } else {
             // Unrecognised reaction type.
             throw runtime_error("Unrecognised reaction type: " + str +
@@ -1146,14 +1165,8 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
         rxn.SetDeferred(false);
     }
 
+    // Read reactants
     readReactants(xml, rxn);
-    if(rxn.ReactantCount() > 1) {
-        std::ostringstream msg;
-        msg << "Soot surface reactions may not have more than one reactant, but "
-            << rxn.Name() << " has " << rxn.ReactantCount()
-            << "MechParser::readSurfRxn";
-        throw std::runtime_error(msg.str());
-    }
 
     // Read products.
     readProducts(xml, rxn);
@@ -1225,7 +1238,6 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
             // Must scale rate constant from cm3 to m3, surface area
             // is multiplied by the site density so that it is a dimensionless
             // quantity hence A has units cm^3 s^-1.
-            //arr.A *= (1.0e-6);
 			arr.A *= (1.0e-6);
 		}
         else if (str.compare("d")==0) {

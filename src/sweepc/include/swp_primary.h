@@ -270,8 +270,8 @@ public:
         const Sweep::ParticleModel &model // Defining particle model.
         );
 
-	//! Number of active sites (only implemented for some particle models).
-	virtual double GetSites() const { return 0; }
+	//! Gets the number of active sites (always component 0)
+	virtual double GetSites() const { return m_comp[0]; }
 
 	// Return the sintering rate for a SilicaPrimary
 	virtual double GetSintRate() const { return 0.0; }
