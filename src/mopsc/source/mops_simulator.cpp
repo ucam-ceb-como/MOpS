@@ -483,7 +483,6 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
 void Simulator::PostProcess()
 {
-	cout << "Simulator::PostProcess() in here" << endl;
     // READ AUXILLIARY INFORMATION.
 
     // Read auxilliary information about the simulation (mechanism
@@ -492,9 +491,9 @@ void Simulator::PostProcess()
     Mops::timevector times;
     unsigned int ncput = 0;
     vector<string> cput_head; // CPU time headings.
-	cout << "Simulator::PostProcess() cput head" << endl;
+
     readAux(mech, times, ncput, cput_head);
-	cout << "Simulator::PostProcess() Aux Read" << endl;
+
     // SETUP OUTPUT DATA STRUCTURES.
 
     // Get reference to particle mechanism.
@@ -551,7 +550,6 @@ void Simulator::PostProcess()
                                  "(Mops, Simulator::PostProcess).");
     }
 
-	cout << "Simulator::PostProcess() Simulator Input File Openned Read" << endl;
     // READ INITIAL CONDITIONS.
 
     // The initial conditions were only written to the file
@@ -559,14 +557,12 @@ void Simulator::PostProcess()
     readGasPhaseDataPoint(fin, mech, achem[0], echem[0], true);
     readParticleDataPoint(fin, pmech, astat[0], estat[0], true);
 
-	cout << "Simulator::PostProcess() GasParticleDataPoint Read" << endl;
     readGasRxnDataPoint(fin, mech,
                         agprates[0], egprates[0],
                         agpfwdrates[0], egpfwdrates[0],
                         agprevrates[0], egprevrates[0],
                         agpwdot[0], egpwdot[0], agpsdot[0], egpsdot[0], // added by mm864
                         true);
-	cout << "Simulator::PostProcess() GasRxnDataPoint Read" << endl;
     readPartRxnDataPoint(fin, mech.ParticleMech(),
                          apprates[0], epprates[0],
                          appwdot[0], eppwdot[0],
@@ -636,7 +632,7 @@ void Simulator::PostProcess()
 
     // Now we must read the reactor conditions at all time points
     // and all runs.
-	cout << "postprocessing "<<m_nruns<<" runs"<<endl;
+	cout << "mops: postprocessing "<<m_nruns<<" runs"<<endl;
     for(unsigned int irun=0; irun!=m_nruns; ++irun) {
         // Loop over all time intervals.
         unsigned int step = 1;
@@ -1122,10 +1118,8 @@ void Simulator::readAux(Mops::Mechanism &mech,
         throw runtime_error("Failed to open file for simulation "
                             "post-processing (Mops, Simulator::readAux).");
     }
-	cout << "Simulator::PostProcess() about to mech Deserialize" << endl;
     // Read the mechanism from the file.
     mech.Deserialize(fin);
-	cout << "Simulator::PostProcess() mech Deserialize" << endl;
     // Read the time intervals from the file.
     times.clear();
     unsigned int ntimes;
@@ -1133,7 +1127,6 @@ void Simulator::readAux(Mops::Mechanism &mech,
     for (unsigned int i=0; i<ntimes; i++) {
         times.push_back(Mops::TimeInterval(fin));
     }
-	cout << "Simulator::PostProcess() mech Time Interval " << endl;
     // Read simulator settings.
     Deserialize(fin);
 
@@ -2408,7 +2401,6 @@ void Simulator::postProcessPAHinfo(const Mechanism &mech,
     fvector temp;//use to hold all the psl information
     vector<unsigned int> temp_max; 
     fvector temp_PAH_mass;  // store number density of each Xmer
-    double max_mass=0.0;
     pair<unsigned int, double> m_index_mass;
     vector<pair<unsigned int, double> > index_mass;
     // Get reference to the particle mechanism.

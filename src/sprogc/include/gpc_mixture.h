@@ -326,9 +326,9 @@ protected:
     //unsigned int GasSpCount = m_mech->GasSpeciesCount();
 
 
-	int gasSpeciesCount;
+	unsigned int gasSpeciesCount;
 
-	int surfSpeciesCount; 
+	unsigned int surfSpeciesCount;
 
 
 private:

@@ -1616,16 +1616,12 @@ void Reaction::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
-	cout << "STICK ::Serialise Flag" << m_sticking << endl; 
-
 	 // Write Mott-Wise flag.
         if (m_mottwise) {
             out.write((char*)&trueval, sizeof(trueval));
         } else {
             out.write((char*)&falseval, sizeof(falseval));
         }
-
-	cout << "MW ::Serialise Flag" << m_mottwise << endl; 
 
 	 // Write ford flag.
         if (m_isFord) {
@@ -1634,13 +1630,10 @@ void Reaction::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
-	cout << "FORD::Serialise Flag" << m_isFord << endl; 
-
 	// Write ford count.
         n = m_ford.size();
         out.write((char*)&n, sizeof(n));
 
-	cout << "FORD::Serialise Count" << n << endl; 
 
 	// Write ford.
         for (unsigned int i=0; i<n; i++) {
@@ -1665,13 +1658,9 @@ void Reaction::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
-	cout << "COV::Serialise Flag" << m_isCoverage << endl; 
-
 	// Write coverage count.
         n = m_coverage.size();
         out.write((char*)&n, sizeof(n)); 
-
-	cout << "COV::Serialise Count" << n << endl; 
 
 	// Write coverage.
         for (unsigned int i=0; i<n; i++) {
@@ -1934,8 +1923,6 @@ void Reaction::Deserialize(std::istream &in)
                     m_isSurface = false;
                 }
 
-		cout << "SURF::Deserialise " << m_isSurface << endl; 
-
 		// Read STICK flag 
 		in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n == 1) {
@@ -1944,8 +1931,6 @@ void Reaction::Deserialize(std::istream &in)
                     m_sticking = false;
                 }
 
-		cout << "STICK::Deserialise " << m_sticking << endl; 
-
 		// Read Mott-Wise flag
 		in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n == 1) {
@@ -1953,8 +1938,6 @@ void Reaction::Deserialize(std::istream &in)
                 } else {
                     m_mottwise = false;
                 }
-
-		cout << "MW::Deserialise " << m_mottwise << endl; 
 		
 		// Read FORD flag
 		in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -1963,14 +1946,11 @@ void Reaction::Deserialize(std::istream &in)
                 } else {
                     m_isFord = false;
                 }
-		cout << "FORD::Deserialise " << m_isFord << endl; 
 
 		// Read FORD count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_ford.reserve(n);
 
-
-		cout << "FORD::Count " << n << endl; 
 
 		 // Read FORD.
                 for (unsigned int i=0; i<n; i++) {
@@ -2004,13 +1984,9 @@ void Reaction::Deserialize(std::istream &in)
                     m_isCoverage = false;
                 }
 
-		cout << "Coverage " << m_isCoverage << endl;
-
 		// Read COVERAGE count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_coverage.reserve(n);
-
-		cout << "covr count" << n << endl;
 
 		 // Read COVERAGE.
                 for (unsigned int i=0; i<n; i++) {

@@ -208,8 +208,6 @@ Reactor *const readReactor(const CamXML::Element &node,
             reac = ReactorFactory::Create(Serial_Batch, mech);
         }
     }
-    
-    std::cout << "ReadReactor: Reactor Type Read"<< endl;
 
     // Now check for constant temperature.  If not constant temperature
     // then the reactor is solved using the adiabatic energy equation.
@@ -228,7 +226,6 @@ Reactor *const readReactor(const CamXML::Element &node,
         // energy equation.
         reac->SetEnergyEquation(Reactor::Adiabatic);
     }
-    std::cout << "ReadReactor: Temperature Setting- const T or Adiabatic"<< endl;
 
     // Now check for constant volume.
     attr = node.GetAttribute("constv");
@@ -285,8 +282,6 @@ Reactor *const readReactor(const CamXML::Element &node,
         // The volume attribute is undefined, so set it to default
         reac->SetVolume(1.0);
     }
-	
-	std::cout << "ReadReactor: Volume and Area Set"<< endl;
 
     // REACTOR INITIAL CONDITIONS.
 
@@ -338,8 +333,6 @@ Reactor *const readReactor(const CamXML::Element &node,
         throw std::runtime_error("No initial condition for pressure (Mops, Settings_IO::readReactor).");
     }
 
-    std::cout << "ReadReactor: Temperature and Pressure Read"<< endl;
-
     // Fill the mixture object.
     node.GetChildren("component", nodes);
     for (i=nodes.begin(); i!=nodes.end(); ++i) {
@@ -366,8 +359,6 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     }
 
-    	cout << "Mixture object filled " << std::endl;
-
     bool doubling_activated;
     subnode = node.GetFirstChild("DoublingAlgorithm");
     if (subnode != NULL) {
@@ -380,7 +371,6 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     } else doubling_activated = true;
 
-    	cout << "Doubling algorithm " << std::endl;
     // Assign the species mole fraction vector to the reactor mixture.
     mix->GasPhase().SetFracs(molefracs);
     std::cout << "ReadReactor: MoleFrac assigned"<< endl;
@@ -438,7 +428,6 @@ Reactor *const readReactor(const CamXML::Element &node,
 
         mix->SetParticles(allParticleList.begin(), allParticleList.end(), initialM0 / weightSum);
     }
-    std::cout << "ReadReactor: Reactor Particle Read"<< endl;
 
     // TEMPERATURE GRADIENT PROFILE.
 
@@ -452,8 +441,6 @@ Reactor *const readReactor(const CamXML::Element &node,
             reac->Add_dTdt(Strings::cdble(attr->GetValue()), fun);
         }
     }
-
-    std::cout << "ReadReactor: dTdt Read"<< endl;
 
     // PSR SPECIFIC SETTINGS.
 

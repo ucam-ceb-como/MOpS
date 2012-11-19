@@ -404,7 +404,7 @@ double ReactionSet::GetMolarProdRates(const fvector &rop,
 double ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
                                     fvector &sdot) const
 {
-    unsigned int k, l, m;
+    unsigned int k;
     const RxnStoichMap *mu;
     RxnStoichMap::const_iterator i;
     double stot = 0.0;
@@ -901,8 +901,8 @@ void ReactionSet::calcRateConstantsT(double T, const fvector &Gs,
     double lnT=0.0, invRT=0.0, RT=0.0, Patm_RT=0.0, T_1_3=0.0, T_2_3=0.0;
     RxnPtrVector::const_iterator i;
     RxnMap::const_iterator im;
-    int j, k, m, n;
-      //unsigned int l; 
+    int j, k;
+    unsigned int m, n;
 
     // Precalculate some temperature parameters. (p/RT)
     lnT = log(T);
@@ -1143,7 +1143,6 @@ void ReactionSet::calcRateConstantsT(double T, const fvector &Gs,
 		if (m_rxns[j]->IsFORD()){ // If FORD TYPE 
 		 	
 		double ford_surf = 0.0;
-		double stoich_to_replace = 0.0;
 		double v = m_rxns[j]->DeltaStoich(n)->ReacStoich();
 						for (int count_Ford = 0; count_Ford!= m_rxns[j]->FORDCount();count_Ford++){
 						
@@ -1222,7 +1221,6 @@ void ReactionSet::calcRateConstantsT(double T, const fvector &Gs,
 		if (m_rxns[j]->IsFORD()){ // If FORD TYPE 
 		 	
 		double ford_surf = 0.0;
-		double stoich_to_replace = 0.0;
 		double v = m_rxns[j]->DeltaStoich(n)->ReacStoich();
 						for (int count_Ford = 0; count_Ford!= m_rxns[j]->FORDCount();count_Ford++){
 						
@@ -1260,7 +1258,6 @@ void ReactionSet::calcCOVERAGE(double T, const double *const x, fvector &kf) con
 
    RxnMap::const_iterator im;
   unsigned int i, n, j;
-  int k;
   double invRT;
   double lnT = log(T);
   double RT;
@@ -1349,7 +1346,6 @@ void ReactionSet::calcCOVERAGE(double T, const double *const x, fvector &kf) con
 		if (m_rxns[j]->IsFORD()){ // If FORD TYPE 
 		 	
 		double ford_surf = 0.0;
-		double stoich_to_replace = 0.0;
 		double v = m_rxns[j]->DeltaStoich(n)->ReacStoich();
 						for (int count_Ford = 0; count_Ford!= m_rxns[j]->FORDCount();count_Ford++){
 						
@@ -1400,15 +1396,15 @@ void ReactionSet::calcCOVERAGE(double T, const double *const x, fvector &kf) con
      double val = 1.0;
 
 		
-	for (n=0; n!=m_rxns[i]->COVERAGECount(); ++n){ 
+	for (int m=0; m!=m_rxns[i]->COVERAGECount(); ++m){
 	  
-	  string COVsp = m_rxns[i]->CoverageElement(n).spName;
+	  string COVsp = m_rxns[i]->CoverageElement(m).spName;
 	  unsigned int idx = m_rxns[i]->Mechanism()->FindSpecies(COVsp);
 	  string specName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name(); // use this and if  to double check
 	      if (specName.compare(COVsp) == 0){
-                double Eta = m_rxns[i]->CoverageElement(n).Eta;
-		double Miu = m_rxns[i]->CoverageElement(n).Miu;
-		double Epsilon = m_rxns[i]->CoverageElement(n).Epsilon;
+                double Eta = m_rxns[i]->CoverageElement(m).Eta;
+		double Miu = m_rxns[i]->CoverageElement(m).Miu;
+		double Epsilon = m_rxns[i]->CoverageElement(m).Epsilon;
 		//cout << "Eta= " << Eta << " Miu= " << Miu << " Eps= " << Epsilon << endl;
                 //cout << specName << " = " << x[idx] << endl;
 		//cout << "Z_k power miu = " << pow(x[idx], Miu) << endl;

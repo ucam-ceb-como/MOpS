@@ -63,10 +63,10 @@ Species::Species(void)
     , m_molwt(0.0)
     , m_mech(NULL)
     , m_T1(0.0)
-    , m_transport(NULL)
+    , site_occupancy(0)
     , m_phaseName("")  // Add few more member functions (mm864)
     , m_phase(NULL)  
-    , site_occupancy(0)
+    , m_transport(NULL)
 {}
 
 // Stream-reading constructor.
@@ -82,10 +82,10 @@ Species::Species(const Sprog::Species &sp)
     , m_molwt(0.0)
     , m_mech(NULL)
     , m_T1(0.0)
-    , m_transport(NULL)
+    , site_occupancy(0)
     , m_phaseName("")  // Add few more member functions (mm864)
     , m_phase(NULL) 
-    , site_occupancy(0) 
+    , m_transport(NULL)
 {
     *this  = sp;
 }
@@ -495,11 +495,6 @@ double Species::CalcMolWt()
     for (k = 0; k < m_kk; k++) {
       m_work[k] = m_n0*theta[k]/(sum*size(k));
     }
-    /*
-     * Call the State:: class function
-     * setConcentrations.
-     */
-   /*
 setConcentrations(DATA_PTR(m_work));
   }
 
@@ -508,10 +503,6 @@ setConcentrations(DATA_PTR(m_work));
     for (int k = 0; k < m_kk; k++) {
       m_work[k] = m_n0*theta[k]/(size(k));
     }
-     /*
-     * Call the State:: class function
-     * setConcentrations.
-    
 
     setConcentrations(DATA_PTR(m_work));
   }
@@ -852,7 +843,6 @@ void Species::Deserialize(std::istream &in)
         char *phase = NULL; 
         double T =0.0, wt=0.0;
         int site_occ = 0;
-		cout << "VERSION ="  << version << endl;
         switch (version) {
             case 0:
                 // Read the length of the species name.

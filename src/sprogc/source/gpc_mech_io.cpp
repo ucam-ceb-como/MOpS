@@ -154,7 +154,6 @@ void MechanismParser::ReadChemkin(
         el = NULL;
     }
 
-	cout << "Mech IO Element Parsed" << endl; 
 	// Read Species.
     for (size_t i=0; i<numSpecies; ++i)
     {
@@ -184,8 +183,6 @@ void MechanismParser::ReadChemkin(
         sp->AddThermoParams(chemkinReader.species()[i].thermo().getTHigh(), up);
         sp = NULL;
     }
-
-	cout << "Mech IO Species Parsed" << endl; 
 	
 	// Read Phase.
     for (size_t i=0; i<numPhases; ++i)
@@ -206,8 +203,6 @@ void MechanismParser::ReadChemkin(
 		
 		
     }
-    
-	cout << "Mech IO Phase Parsed" << endl; 
     
 	
     
@@ -345,7 +340,7 @@ void MechanismParser::ReadChemkin(
 	  
 	 
 	  // cout << "No of Ford " << chemkinReader.reactions()[i].fordParamCount()<< endl; // for checking
-	  for (int j = 0; j < chemkinReader.reactions()[i].fordParamCount(); j++){
+	  for (unsigned int j = 0; j < chemkinReader.reactions()[i].fordParamCount(); j++){
 	    
 	    rxn->SetFord((chemkinReader.reactions()[i].getFORD())[j].F_k,(chemkinReader.reactions()[i].getFORD())[j].spName);
 	    
@@ -355,7 +350,7 @@ void MechanismParser::ReadChemkin(
 	rxn->SetUseCOV(chemkinReader.reactions()[i].hasCOV());
 	if (chemkinReader.reactions()[i].hasCOV()){
 			
-	  for (int j = 0; j < chemkinReader.reactions()[i].coverageParamCount(); j++){
+	  for (unsigned int j = 0; j < chemkinReader.reactions()[i].coverageParamCount(); j++){
 			
      
 	    rxn->SetCoverage((chemkinReader.reactions()[i].getCOV())[j].Eta,(chemkinReader.reactions()[i].getCOV())[j].Miu,(chemkinReader.reactions()[i].getCOV())[j].Epsilon,(chemkinReader.reactions()[i].getCOV())[j].spName);
@@ -389,18 +384,14 @@ void MechanismParser::ReadChemkin(
 	count ++; 
 	//cout << "Reaction passed so far" << count << endl;
     }
-
-	cout << "Mech IO Reaction Parsed" << endl;
 	
     mech.BuildStoichXRef();
-	cout << "Mech IO BuildStoichXRef Done" << endl; 
 	
     // Write mechanism (for MoDS debugging)
     //mech.WriteReducedMech("chem-test.inp",
     //        std::vector<std::string>( mech.SpeciesCount(), "" ));
 
     mech.SetUnits(SI);
-	cout << "Mech IO Set Units Done" << endl; 
 	
 }
 
@@ -429,8 +420,6 @@ void MechanismParser::ReadTransport
                 );
         }
     }
-
-	cout << "Mech IO Transport Parsed" << endl; 
 }
 
 

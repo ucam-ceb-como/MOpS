@@ -485,7 +485,7 @@ unsigned int Mechanism::GasSpeciesCount(void) const
 {
 
   unsigned int gas_sp = 0;
-  for (int j = 0; j < m_species.size(); ++j ){
+  for (unsigned int j = 0; j < m_species.size(); ++j ){
     std::string nm = FindPhaseName(m_species[j]->Name()); 
     
     if (FindID(nm).compare("g")==0){
@@ -1188,12 +1188,9 @@ void Mechanism::Deserialize(std::istream &in)
                     throw;
                 }
 
-		cout << "Mech::Deserialize element" << endl; 
                 // Read the number of species and reserve memory.
                 in.read(reinterpret_cast<char*>(&u), sizeof(u));
                 m_species.reserve(u);
-				cout << "Mech::Deserialize sp :: after reserve" << endl; 
-				cout << "No of species " << u << endl;
                 // Read the species.
                 try {
                     for (unsigned int i=0; i<u; i++) {
@@ -1201,7 +1198,6 @@ void Mechanism::Deserialize(std::istream &in)
                         // appropriate constructor.
                         Sprog::Species *sp = new Sprog::Species(in);
                         sp->SetMechanism(*this);
-			// cout << "Mech::Deserialize sp :: inside for" << endl; 
                         // Add the species to the vector.
                         m_species.push_back(sp);
                     }
@@ -1212,7 +1208,6 @@ void Mechanism::Deserialize(std::istream &in)
                     throw;
                 }
 		
-		cout << "Mech::Deserialize species" << endl; 
 	       	// Read the number of phase and reserve memory.
                 in.read(reinterpret_cast<char*>(&u), sizeof(u));
                 m_phase.reserve(u);
@@ -1235,7 +1230,6 @@ void Mechanism::Deserialize(std::istream &in)
                     throw;
                 }
 			
-		cout << "Mech::Deserialize phase" << endl; 
                 // Read the reaction set.
                 try {
                     m_rxns.SetMechanism(*this);
@@ -1246,7 +1240,7 @@ void Mechanism::Deserialize(std::istream &in)
                     releaseMemory();
                     throw;
                 }
-		  cout << "Mech::Deserialize reaction set" << endl;
+		  
                 // Rebuild the stoich xref.
                 BuildStoichXRef();
 

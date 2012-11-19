@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
     bool fwriteparticles = false;
     bool postpocessPAH   = false;
     SolverType soltype = GPC;
-    int diag = 1; // Diagnostics level.
+    int diag = 0; // Diagnostics level.
 
     // Offset for random number sequence so that independent realisations
     // can be computed in separated program instances.
@@ -310,14 +310,13 @@ int main(int argc, char *argv[])
             dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
         }
     } catch (std::logic_error &le) {
-        printf("mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n"
+                << le.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to read chemical mechanism/profile due to a program error.  Message:\n\n");
-        printf(re.what());
+        std::cerr << "mops: Failed to read chemical mechanism/profile due to a program error.  Message:\n\n"
+                << re.what() << "\n\n";
         printf("\n\n");
         delete solver; // Must clear memory now.
         return -1;

@@ -204,7 +204,8 @@ void Mixture::GetMassFractions(fvector &fracs) const
 	std::vector<double> TOT; 
 	
 	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
-		val, tot = 0.0;
+		val = 0.0;
+		tot = 0.0;
 		std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
 		for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
 			if (((*m_species)[i]->PhaseName()).compare(phname) == 0 ){
@@ -258,7 +259,6 @@ double Mixture::MolarSurfConc(unsigned int i) const
     if ((i >= gasSpeciesCount) && (i < m_species->size()) ) {
       string phName = (*m_species)[i]->PhaseName();
       double siteDen = 0.0; 
-      unsigned int n;
       siteDen = (*m_species)[0]->Mechanism()->FindSiteDensity(phName);
 
       return m_data[i] * siteDen / ((*m_species)[i]->SiteOccupancy()); // m_data should contains site fraction !! 
@@ -443,7 +443,6 @@ void Mixture::SetConcs(const fvector &concs) // Is this correct?
 	for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
 		string phName = (*m_species)[i]->PhaseName();
 		double siteDen = 0.0; 
-		unsigned int n;
 		siteDen = (*m_species)[0]->Mechanism()->FindSiteDensity(phName);
 		m_data[i] = concs [i] * ((*m_species)[i]->SiteOccupancy()) / siteDen; // m_data should contains site fraction !! 
 	}
@@ -639,7 +638,7 @@ void Mixture::SetSpecies(const Sprog::SpeciesPtrVector &sp)
 	gasSpeciesCount =0;
 
 
-	for (int j = 0; j != m_species->size(); j++){
+	for (unsigned int j = 0; j != m_species->size(); j++){
 		if (((*m_species)[j]->PhaseName()).compare("gas") == 0){
 	
 			gasSpeciesCount++; 
