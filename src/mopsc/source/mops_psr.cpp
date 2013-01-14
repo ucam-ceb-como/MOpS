@@ -254,11 +254,7 @@ Serial_ReactorType PSR::SerialType() const
 void PSR::RHS_ConstT(double t, const double *const y,  double *ydot) const
 {
     static fvector wdot, sdot;
-    double wtot = 0.0, stot =0.0, avrMW = 0.0;
-	// Currently direct input of  Volume and ARea 
-
-	//double Volume = 1.4/1000; // m^3
-	//double Area = 5.9; // m^2
+    double wtot = 0.0, stot =0.0;
 
     // Calculate molar production rates.
     wtot = m_mech->GasMech().Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y,
@@ -266,43 +262,29 @@ void PSR::RHS_ConstT(double t, const double *const y,  double *ydot) const
 	
 	stot = m_mech->GasMech().Reactions().GetSurfaceMolarProdRates(y[m_iT], y[m_iDens], y,
                                                  m_nsp, m_mix->GasPhase(), sdot);
-												 
-	for(unsigned int i=0; i!= m_mech->GasMech().GasSpeciesCount(); i++) {
-        avrMW += y[i]*m_mech->GasMech().Species(i)->MolWt();
 
-   }											 
-												 
-    // Calculate mole fraction derivatives.
-   
-	if (Area == 0){ 
-		for (unsigned int i=0; i!=m_nsp; ++i) {
-		  ydot[i] = ((wdot[i] - (y[i]*wtot)) +
-                  // Inflow/Outflow term:
-                  (m_in->Mixture()->GasPhase().Density() * m_invrt *
-                   (m_in->Mixture()->GasPhase().MoleFraction(i) - y[i]) )) / y[m_iDens];
-		}
-		} 
-		
-	else {
-
-		for (unsigned int i=0; i!=m_mech->GasMech().GasSpeciesCount(); ++i) {
-		  ydot[i] = ((wdot[i] - (y[i]*wtot))  + (sdot[i] * Area /(Volume))   -  ( y[i] * stot * Area/( Volume) ) +
-                  // Inflow/Outflow term:
-                  (m_in->Mixture()->GasPhase().Density() * m_invrt *
-                   (m_in->Mixture()->GasPhase().MoleFraction(i) - y[i]) )) / y[m_iDens];
-		}
-
-		for (unsigned int i=m_mech->GasMech().GasSpeciesCount(); i!=m_nsp; ++i) {
-		   string speciesName = m_mech->GasMech().Species(i)->Name();
-		   string phaseName =  m_mech->GasMech().Species(i)->PhaseName();
-		   double siteDensity = m_mech->GasMech().FindSiteDensity(phaseName);
-		   int siteOccupancy =  m_mech->GasMech().FindSiteOccup(speciesName);
-		   ydot[i] = sdot[i]*siteOccupancy / siteDensity;
-		}	
-
+    // Calculate mole fraction derivatives of gas-phase species.
+	for (unsigned int i=0; i!=m_mech->GasMech().GasSpeciesCount(); ++i) {
+	    ydot[i] = wdot[i] - y[i] * wtot;
+	    // Deal with the flow terms
+	    ydot[i] += (m_in->Mixture()->GasPhase().Density()
+	            * m_in->Mixture()->GasPhase().MoleFraction(i) - y[m_iDens] * y[i])
+	            / m_restime;
+	    // Add any surface terms
+	    if (Area > 0.0)
+	        ydot[i] += (sdot[i] - y[i] * stot) * Area / Volume;
+	    // Normalise to mole fractions
+	    ydot[i] /= y[m_iDens];
 	}
 
-    
+	// Calculate mole fraction derivatives of surface species.
+	if (Area > 0.0) {
+        for (unsigned int i=m_mech->GasMech().GasSpeciesCount(); i!=m_nsp; ++i) {
+        ydot[i] = sdot[i]
+                * double(m_mech->GasMech().FindSiteOccup(m_mech->GasMech().Species(i)->Name()))
+                / m_mech->GasMech().FindSiteDensity(m_mech->GasMech().Species(i)->PhaseName());
+        }
+	}
 
     // Temperature derivative.
     if (m_Tfunc) {
@@ -316,12 +298,9 @@ void PSR::RHS_ConstT(double t, const double *const y,  double *ydot) const
     // Density derivative.
     if (m_constv) {
         // Constant volume.
-		if (Area != 0){
-        ydot[m_iDens] =  wtot  + stot * Area / (Volume) + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
-		}
-		else{
-		 ydot[m_iDens] =  wtot  + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
-		}
+        ydot[m_iDens] = wtot + (m_invrt * (m_in->Mixture()->GasPhase().Density() - y[m_iDens]));
+        if (Area > 0.0) ydot[m_iDens] += stot * Area / (Volume);
+
 	} else {
         // Constant pressure.
         ydot[m_iDens] = 0.0; // NOT SURE

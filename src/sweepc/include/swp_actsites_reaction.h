@@ -64,7 +64,8 @@ public:
     //! Rule for calculating what fraction of surface Hydrogens are radicals
     enum RadicalSiteFractionModel {
         ABFRadicalSiteModel, //! ABF see radicalSiteFractionABF
-        BPRadicalSiteModel   //! Blanquart & Pitsch see radicalSiteFractionBP
+        BPRadicalSiteModel,  //! Blanquart & Pitsch see radicalSiteFractionBP
+        ABFConstant          //! ABF with alpha = 1.0
     };
 
     // Constructors.

@@ -242,6 +242,9 @@ double ActSiteReaction::SiteDensity(const Cell &sys) const
         return 2.3e19 * radicalSiteFractionABF(sys.GasPhase()) * alpha;
     case BPRadicalSiteModel:
         return radicalSiteFractionBP(sys.GasPhase());
+    case ABFConstant:
+        // Same as ABFRadicalSiteModel except here alpha = 1.0.
+        return 2.3e19 * radicalSiteFractionABF(sys.GasPhase());
     default:
         throw std::runtime_error("Unrecognised radical site model in ActSiteReaction::radicalSiteFraction");
         return 0.0;

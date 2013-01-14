@@ -1074,6 +1074,9 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
         } else if (str.compare("bp")==0) {
             // This is a Blanquart Pitsch active-sites enabled reaction.
             rxn = new ActSiteReaction(mech, ActSiteReaction::BPRadicalSiteModel, SprogIdealGasWrapper::sAlphaIndex);
+        } else if (str.compare("abfconst")==0) {
+            // This is an ABF active-sites reaction with alpha constant (=1).
+            rxn = new ActSiteReaction(mech, ActSiteReaction::ABFConstant, SprogIdealGasWrapper::sAlphaIndex);
         } else if (str.compare("titania")==0) {
             // This is a titania surface reaction
             // Create a new reaction of a certain form
