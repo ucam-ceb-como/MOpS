@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
     bool save_dots = false;
     std::string CHOutput;
     int total_runs=0;
-    Sweep::real t_start=0;
-    Sweep::real t_end=0;
+    double t_start=0;
+    double t_end=0;
     int no_of_steps = 100;
     int no_of_rxnsteps = 500;
     StartingStructure startStruct = NONE;
@@ -214,10 +214,10 @@ int main(int argc, char *argv[])
         // be made unique to the loop.
         Sweep::rng_type rng(123);
 
-        Sweep::real step_size=(t_end-t_start)/no_of_steps;
+        double step_size=(t_end-t_start)/no_of_steps;
 
         std::vector< std::vector< pair<int,int> > > PAH_CH;
-        std::vector<Sweep::real> PAH_time;
+        std::vector<double> PAH_time;
         
         if(save_CH) {
             PAH_time.push_back(0);
@@ -246,9 +246,9 @@ int main(int argc, char *argv[])
                 
 
             for(int j=0; j<no_of_steps; j++) {
-                Sweep::real t_now = t_start+(j*step_size);
+                double t_now = t_start+(j*step_size);
                 if(save_rates && rates_mode == "R") {
-                    std::vector<Sweep::real> rates = Simulator->CurrentRates(pah[i],t_now);
+                    std::vector<double> rates = Simulator->CurrentRates(pah[i],t_now);
                     Simulator->writeRatesCSV(t_now,
                         rates);
                 }

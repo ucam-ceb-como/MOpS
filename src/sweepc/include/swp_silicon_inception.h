@@ -100,8 +100,8 @@ public:
     // TOTAL RATE CALCULATIONS.
 
     //! Returns rate of the process for the given system.
-    real Rate(
-        real t,          // Time.
+    double Rate(
+        double t,          // Time.
         const Cell &sys, // System for which to calculate rate.
         const Geometry::LocalGeometry1d& local_geom // Information regarding surrounding cells and boundaries
         ) const;
@@ -110,7 +110,7 @@ public:
 
     //! Performs the process on the given system.
     virtual int Perform(
-        real t,
+        double t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
@@ -122,11 +122,11 @@ public:
     //! Returns the number of rate terms for this process.
     unsigned int TermCount(void) const;
 
-    // Calculates the rate terms given an iterator to a real vector. The
+    // Calculates the rate terms given an iterator to a double vector. The
     // iterator is advanced to the position after the last term for this
     // process.  Returns the sum of all terms.
-    real RateTerms(
-        real t,                  // Time.
+    double RateTerms(
+        double t,                  // Time.
         const Cell &sys,         // System for which to calculate rate terms.
         const Geometry::LocalGeometry1d &local_geom,                  // position information
         fvector::iterator &iterm // Iterator to the first term.
@@ -136,14 +136,14 @@ public:
     // Sets the coagulation kernel constants given incepting species
     // masses and diameters.
     void SetInceptingSpecies(
-        real m1, // Mass of species 1.
-        real m2, // Mass of species 2.
-        real d1, // Collision diameter of species 1.
-        real d2  // Collision diameter of species 2.
+        double m1, // Mass of species 1.
+        double m2, // Mass of species 2.
+        double d1, // Collision diameter of species 1.
+        double d2  // Collision diameter of species 2.
         );
 
     //! Inception only according to free mol kernel with these sizes
-    void SetInceptingSpeciesFreeMol(real m1, real m2, real d1, real d2);
+    void SetInceptingSpeciesFreeMol(double m1, double m2, double d1, double d2);
 
     //! Sets the volume of an incepting particle
     void SetInceptingVolume(const Sweep::Mechanism &mech);
@@ -154,13 +154,13 @@ public:
     void GenerateSpeciesData(const Sweep::Mechanism &mech);
 
     //! Calculates the precursor concentration
-    real GetPrecursorFraction(const Cell &sys) const;
+    double GetPrecursorFraction(const Cell &sys) const;
 
     //! Returns the supersaturation
-    real GetSupersaturation(const Sweep::Cell &sys) const;
+    double GetSupersaturation(const Sweep::Cell &sys) const;
 
     //! Calculates the critical nucleus size
-    real GetCriticalNucleus(const Cell &sys) const;
+    double GetCriticalNucleus(const Cell &sys) const;
 
     //! Checks whether inception should proceed, based on dcrit
     bool IsInceptionAllowed(const Cell &sys) const;
@@ -185,7 +185,7 @@ public:
         fvector _track;
 
         //! The incepting diameter of the species
-        real _diam;
+        double _diam;
 
         //! Default constructor
         SiliconData() :
@@ -217,18 +217,18 @@ protected:
     // A faster rate calculation routine for Inception events only.  Requires all the
     // parameters that would otherwise be calculated by the routine to be passed as
     // arguments.
-    real Rate(
+    double Rate(
         const EnvironmentInterface &gas,
-        real sqrtT,           // Square-root of temperature.
-        real T_mu,            // T / viscosity
-        real MFP,             // Gas mean free path.
-        real vol,             // Particle ensemble sample volume.
+        double sqrtT,           // Square-root of temperature.
+        double T_mu,            // T / viscosity
+        double MFP,             // Gas mean free path.
+        double vol,             // Particle ensemble sample volume.
         const Cell &sys       // System for which to calculate rate terms.
         ) const;
 
 
     //! Calculates the gas-phase chemistry contribution to the rate expression
-    real chemRatePart(
+    double chemRatePart(
         const EnvironmentInterface &gas
         ) const;
 
@@ -260,42 +260,42 @@ private:
 
     //! Adjusts the gas-phase based on the silicon species data
     void adjustGasPhase(Sweep::Cell &sys,
-            const SiliconData &species, real wt) const;
+            const SiliconData &species, double wt) const;
 
     //! Returns the surface energy of silicon
-    real GetSurfaceEnergy(real T) const;
+    double GetSurfaceEnergy(double T) const;
 
     //! Returns the saturation vapour pressure of silicon
-    real GetSatVapourPressure(real T) const;
+    double GetSatVapourPressure(double T) const;
 
     //! Returns the saturated monomer number concentration
-    real GetMonomerConc(real T) const;
+    double GetMonomerConc(double T) const;
 
     // Rate parameters.
     //! Free-molecular kernel parameter.
-    real m_kfm;
-    real m_ksf1, m_ksf2; //! Slip-flow kernel parameters.
+    double m_kfm;
+    double m_ksf1, m_ksf2; //! Slip-flow kernel parameters.
 
     //! Free-molecular enhancement factor.
-    const real m_efm;
+    const double m_efm;
 
     //! Inception equation type
     InceptionType m_itype;
 
     //! Volume of a monomer (Si atom), hardcoded
-    static const real m_v1;
+    static const double m_v1;
 
     //! Mass of a monomer (Si atom), hardcoded
-    static const real m_m1;
+    static const double m_m1;
 
     //! Diameter of a monomer (Si atom), hardcoded
-    static const real m_d1;
+    static const double m_d1;
 
     //! Volume of an incepting particle
-    real m_vi;
+    double m_vi;
 
     //! Diameter of an incepting particle
-    real m_di;
+    double m_di;
 
     //! A container for the silicon species data
     std::vector <SiliconData> m_sidata;
@@ -304,7 +304,7 @@ private:
     mutable std::vector<unsigned int> m_reacs;
 
     //! Counter of amount of concentration lost to an inception
-    mutable std::vector<real> m_concs;
+    mutable std::vector<double> m_concs;
 };
 
 } // Processes

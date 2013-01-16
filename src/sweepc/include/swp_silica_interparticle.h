@@ -115,8 +115,8 @@ public:
     // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
      //! Returns rate of the process for the given system.
-     real Rate(
-         real t,          // Time.
+     double Rate(
+         double t,          // Time.
          const Cell &sys, // System for which to calculate rate.
          const Geometry::LocalGeometry1d& local_geom // Information regarding surrounding cells and boundaries
          ) const;
@@ -125,16 +125,16 @@ public:
      // SINGLE PARTICLE RATE CALCULATIONS.
 
      //! Returns the rate of the process for the given particle.
-     real Rate(
-         real t,             // Current time (s).
+     double Rate(
+         double t,             // Current time (s).
          const Cell &sys,    // System to which the particle belongs.
          const Particle &sp  // Particle for which to calculate rate.
          ) const;
 
 
      //! Returns majorant rate of the process for the given system.
-     real MajorantRate(
-         real t,             // Current time (s).
+     double MajorantRate(
+         double t,             // Current time (s).
          const Cell &sys,    // System to which the particle belongs.
          const Particle &sp  // Particle for which to calculate rate.
          ) const;
@@ -148,9 +148,9 @@ public:
      unsigned int TermCount(void) const;
 
 
-     //! Calculates the rate terms given an iterator to a real vector.
-     real RateTerms(
-         real t,                  // Time.
+     //! Calculates the rate terms given an iterator to a double vector.
+     double RateTerms(
+         double t,                  // Time.
          const Cell &sys,         // System for which to calculate rate terms.
          const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells and boundaries
          fvector::iterator &iterm // Iterator to the first term.
@@ -161,7 +161,7 @@ public:
 
      //! Performs one interparticle reaction event
      virtual int Perform(
-         real t,
+         double t,
          Cell &sys,
          const Geometry::LocalGeometry1d& local_geom,
          unsigned int iterm,
@@ -169,7 +169,7 @@ public:
 
      //! Performs n interparticle reaction events
      virtual int Perform(
-         real t,        // Current time (s).
+         double t,        // Current time (s).
          Cell &sys,     // System to which the particle belongs.
          Particle &sp,  // Particle for which to perform process.
          rng_type &rng,  // Random generator
@@ -196,7 +196,7 @@ public:
 
 protected:
     //! Surface reaction majorant parameter. 
-    const static real m_majfactor;
+    const static double m_majfactor;
 
     //! Arrhenius rate parameters.
     Sprog::Kinetics::ARRHENIUS m_arr;

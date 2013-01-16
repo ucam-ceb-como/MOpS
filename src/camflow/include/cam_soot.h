@@ -73,13 +73,13 @@ namespace Camflow {
  */
 class CamSoot {
 
-    typedef std::vector<doublereal> realVector;
+    typedef std::vector<double> realVector;
     typedef std::vector<std::string> stringVector;
     typedef std::vector<int> intVector;
 
     // Should get these from Sprog::Mechanism
-    static const doublereal cMass;
-    static const doublereal ohMass;
+    static const double cMass;
+    static const double ohMass;
 
     public:
 
@@ -110,7 +110,7 @@ class CamSoot {
         int getNumMoments() const;
 
         //! Get the user specified initial value of M0
-        doublereal getFirstMoment() const;
+        double getFirstMoment() const;
 
         //! Get number of atoms per diamer
         int getAtomsPerDiamer() const;
@@ -119,30 +119,30 @@ class CamSoot {
         bool active() const;
 
         void linear(int n, realVector& y,
-                    doublereal& a, doublereal& b, doublereal& rsq);
+                    double& a, double& b, double& rsq);
 
         void setSizeMoments(realVector& conc);
 
-        void sums(int hMoment, doublereal massAdded, doublereal coeff,
+        void sums(int hMoment, double massAdded, double coeff,
                   realVector& rates);
 
         //! These are probably to be called from the flamelet code.
         // No longer needed. Flamelt code has its own residual
-        void momentResidual(const doublereal& time,
+        void momentResidual(const double& time,
                             const int iMesh_s, const int iMesh_e,
                             const realVector& dz,
                             const realVector& u,
                             const realVector& rho,
-                            const doublereal* y, doublereal* f,
+                            const double* y, double* f,
                             const int nVar, const int nSpec);
 
         //! This just calls the other momentResidual function.
-        void momentResidual(const doublereal& time,
+        void momentResidual(const double& time,
                             const int iMesh_s, const int iMesh_e,
                             const realVector& dz,
                             const realVector& u,
                             const realVector& rho,
-                            const doublereal* y, doublereal* f);
+                            const double* y, double* f);
 
         //void clearRates(int ncells);
         //void clearRates();
@@ -176,31 +176,31 @@ class CamSoot {
          * Calculate the residual functions for moments. There does not seem to
          * be any point to this -> it just assigns wdot to f.
          */
-        void residual(const doublereal& time, realVector& wdot,
-                                doublereal* y, doublereal* f );
+        void residual(const double& time, realVector& wdot,
+                                double* y, double* f );
 
         /*!
          * This calculates all of the moment rates and returns a vector of them.
          */
         realVector rateAll(const realVector& conc,
                 const realVector& moments,
-                const doublereal& T,
-                const doublereal& p,
+                const double& T,
+                const double& p,
                 const int cellID=0);
 
         realVector showGasPhaseRates(int nSpecies);
 
         realVector showSootComponentRates(int nMoments);
 
-        doublereal avgSootDiam();
-        doublereal dispersion();
-        doublereal sootSurfaceArea(doublereal M0);
-        doublereal sootVolumeFraction(doublereal M0);
+        double avgSootDiam();
+        double dispersion();
+        double sootSurfaceArea(double M0);
+        double sootVolumeFraction(double M0);
 
     private:
 
-        const doublereal rhoSoot;
-        const doublereal lambda;
+        const double rhoSoot;
+        const double lambda;
         int atomsPerDimer;
         int numCAtomInception;
         int nMoments;
@@ -212,19 +212,19 @@ class CamSoot {
         int iCO, iH, iH2, iH2O, iO2, iOH, iC2H2, iInception;
         bool momentON;
         std::string iSpecies;
-        doublereal particleDia;
-        doublereal constNucleation;
-        doublereal betaFree;
-        doublereal betaContinuum;
-        doublereal Kf,Kc_;
-        doublereal kOH;
-        doublereal kSurf;
-        doublereal kPAH;
-        doublereal dia_PAH;
-        doublereal m0Threshold;
-        doublereal D1_PAH;
-        doublereal firstMom;
-        doublereal CD1;
+        double particleDia;
+        double constNucleation;
+        double betaFree;
+        double betaContinuum;
+        double Kf,Kc_;
+        double kOH;
+        double kSurf;
+        double kPAH;
+        double dia_PAH;
+        double m0Threshold;
+        double D1_PAH;
+        double firstMom;
+        double CD1;
 
         stringVector sootSpecies;
 
@@ -243,41 +243,41 @@ class CamSoot {
         // Better to have these as local to rates All.
         // realVector nucRate, cgRate, cdRate;
 
-        //map<string,doublereal> surfProdRate; //surface production rate
+        //map<string,double> surfProdRate; //surface production rate
         std::map<std::string, realVector > smRates; //moment rates due to surface reactions
 
         /*
          *New variables
          */
         // Beta_surf in CGS units. (as surface chem done in CGS)
-        doublereal Beta_nucl, Beta_fm, Beta_cd, Beta_surf_CGS, CBOHCGS;
+        double Beta_nucl, Beta_fm, Beta_cd, Beta_surf_CGS, CBOHCGS;
 
         /*
          *calculate nucleation rate
          */
-        realVector rateNucleation(const doublereal& concPAH,  // conc of PAH 4 nucln
-                                  const doublereal& T);       // temperature
+        realVector rateNucleation(const double& concPAH,  // conc of PAH 4 nucln
+                                  const double& T);       // temperature
 
         /*
          * Calculate coagulation rate.
          * Seems to follow Eq 19. in Frenklach (2002).
          */
         realVector rateCoagulation(const realVector& mom,     // vector of moments
-                                   const doublereal& T);      // temperature
+                                   const double& T);      // temperature
 
         /*
          *calculate condensation rate
          */
         realVector rateCondensation(const realVector& mom, //vector of moments
-        		const doublereal& T,           //temperature
-        		const doublereal& concPAH     //PAH concentration
+        		const double& T,           //temperature
+        		const double& concPAH     //PAH concentration
                             );
 
         /*
          *calculate surface reaction rates
          */
         void rateSurface(const realVector& conc,          //concentration
-                            const doublereal& T,           //temperature
+                            const double& T,           //temperature
                             const realVector& mom,        //moment vector
                             realVector& prodRates,  //surf prod rates
                             realVector& sRates);//rates returned
@@ -288,7 +288,7 @@ class CamSoot {
          * The grid function.
          * k = , n = , m =
          */
-        doublereal gridFunction(const int k, const int n, const int m);
+        double gridFunction(const int k, const int n, const int m);
 
 
 }; // End Class CamSoot

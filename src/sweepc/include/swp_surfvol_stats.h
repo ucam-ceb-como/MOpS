@@ -89,7 +89,7 @@ public:
     // Calculates the model stats for a particle ensemble.
     void Calculate(
         const Ensemble &e, // Ensemble from which to get stats.
-        real scale         // Scaling factor to unit volume (summed stats).
+        double scale         // Scaling factor to unit volume (summed stats).
         );
 
     // Returns a vector containing the stats.
@@ -115,19 +115,19 @@ public:
 
 
     // Returns the total equivalent-sphere surface area.
-    real SphSurfaceArea(void) const;
+    double SphSurfaceArea(void) const;
 
     // Returns the avg. equivalent-sphere surface area.
-    real AvgSphSurfaceArea(void) const;
+    double AvgSphSurfaceArea(void) const;
 
     // Returns the total estimated primary particle count.
-    real PriPartCount(void) const;
+    double PriPartCount(void) const;
 
     // Returns the average estimated primary particle count.
-    real AvgPriPartCount(void) const;
+    double AvgPriPartCount(void) const;
 
     // Returns the average estimated primary particle diameter.
-    real AvgPriPartDiameter(void) const;
+    double AvgPriPartDiameter(void) const;
 
 
     // PARTICLE SIZE LISTS.
@@ -144,7 +144,7 @@ public:
     //! Build the PSL entry for the given particle.
     void PSL(
         const Sweep::Particle &sp,      // Particle from which to get PSL data.
-        real time,                      // Current flow time (used to calculate particle age).
+        double time,                      // Current flow time (used to calculate particle age).
         fvector &psl,                   // Output vector.
         unsigned int start = 0          // Optional start index for the first variable.
         ) const;
@@ -169,9 +169,19 @@ public:
         );
 
 private:
+    //! Get geometric standard deviation of a list of diameters
+    void GetGeometricStdev(
+            const unsigned int num,
+            std::vector<fvector> diams,
+            fvector weights,
+            fvector &gmeans,
+            fvector &gstdevs
+            ) const;
+
     // Stats count and indices.
-    static const unsigned int STAT_COUNT = 5;
-    enum StatIndices {iS=0, iPPN=2, iPPD=4};
+    static const unsigned int STAT_COUNT = 9;
+    enum StatIndices {iS=0, iPPN=2, iPPD=4, iCollGStdev=5, iPrimGStdev=6,
+        iCollGMean=7, iPrimGMean=8};
 
     // PSL count and indices.
     static const unsigned int PSL_COUNT = 3;

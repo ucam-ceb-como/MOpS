@@ -50,7 +50,8 @@
 
 #include "camxml.h"
 #include "string_functions.h"
-
+#include <iostream>
+#include <sstream>
 #include <memory>
 #include <cstdlib>
 
@@ -61,7 +62,7 @@ namespace {
 
 // Returns the temperature in K by reading the value from the given
 // XML node and checking the units.
-Mops::real readTemperature(const CamXML::Element &node)
+double readTemperature(const CamXML::Element &node)
 {
     // Check the temperature units.
     const CamXML::Attribute *attr;
@@ -76,7 +77,7 @@ Mops::real readTemperature(const CamXML::Element &node)
     }
 
     // Read the temperature (and convert if necessary).
-    Mops::real T = Strings::cdble(node.Data());
+    double T = Strings::cdble(node.Data());
     switch (units) {
         case Sprog::Celcius:
             T += 273.15;
@@ -90,7 +91,7 @@ Mops::real readTemperature(const CamXML::Element &node)
 
 // Returns the pressure in Pa by reading the value from the given
 // XML node and checking the units.
-Mops::real readPressure(const CamXML::Element &node)
+double readPressure(const CamXML::Element &node)
 {
     // Check the pressure units.
     const CamXML::Attribute *attr;
@@ -107,7 +108,7 @@ Mops::real readPressure(const CamXML::Element &node)
     }
 
     // Read the pressure (and convert if necessary).
-    Mops::real P = Strings::cdble(node.Data());
+    double P = Strings::cdble(node.Data());
     switch (units) {
         case Sprog::Bar:
             P *= 1.0e5;
@@ -175,7 +176,7 @@ void readGlobalSettings(const CamXML::Element &node,
 Reactor *const readReactor(const CamXML::Element &node,
                                         const Mechanism &mech,
                                         const unsigned int max_particle_count,
-										const Mops::real maxM0,
+										const double maxM0,
 										Mops::Simulator &sim)
 {
     Reactor *reac = NULL;
@@ -226,7 +227,6 @@ Reactor *const readReactor(const CamXML::Element &node,
         reac->SetEnergyEquation(Reactor::Adiabatic);
     }
 
-
     // Now check for constant volume.
     attr = node.GetAttribute("constv");
     if (attr != NULL) {
@@ -243,7 +243,45 @@ Reactor *const readReactor(const CamXML::Element &node,
         // pressure reactor.
         reac->SetConstP();
     }
-
+    
+	
+	 // Now initialise for surface area (surface kinetics purposes).
+    attr = node.GetAttribute("surfaceArea");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.length() > 0) {
+			stringstream AREA(str);
+			double ar;
+			AREA >> ar;
+            // This is a surface area.
+            reac->SetArea(ar);
+        } else {
+            // This is a default value for area. 
+            reac->SetArea(0.0);
+        }
+    } else {
+        // The area attribute is undefined, so set it to default
+        reac->SetArea(0.0);
+    }
+    
+	// Now initialise for volume.
+    attr = node.GetAttribute("volume");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.length() > 0) {
+			stringstream VOLUME(str);
+			double vol;
+			VOLUME >> vol;
+            // This is a volume. 
+            reac->SetVolume(vol);
+        } else {
+            // This is a a default value for volume. 
+            reac->SetVolume(1.0);
+        }
+    } else {
+        // The volume attribute is undefined, so set it to default
+        reac->SetVolume(1.0);
+    }
 
     // REACTOR INITIAL CONDITIONS.
 
@@ -309,7 +347,7 @@ Reactor *const readReactor(const CamXML::Element &node,
 
             // Set the species mole fraction.
             if (j >= 0) {
-                molefracs[j] = Strings::cdble((*i)->Data());
+                molefracs[j] = Strings::cdble((*i)->Data()); // from inx input
             } else {
                 throw std::runtime_error("No initial condition for species " + str +
                                     " (Mops, Settings_IO::readReactor).");
@@ -318,6 +356,7 @@ Reactor *const readReactor(const CamXML::Element &node,
             throw std::runtime_error("Initial condition must have ID "
                                 "(Mops, Settings_IO::readReactor)");
         }
+
     }
 
     bool doubling_activated;
@@ -334,9 +373,12 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     // Assign the species mole fraction vector to the reactor mixture.
     mix->GasPhase().SetFracs(molefracs);
+    std::cout << "ReadReactor: MoleFrac assigned"<< endl;
     mix->Particles().Initialise(max_particle_count, doubling_activated);
 	mix->Reset(maxM0);
     reac->Fill(*mix);
+
+    
 
     // Particles
     subnode = node.GetFirstChild("population");
@@ -346,7 +388,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         Sweep::PartPtrList fileParticleList;
         Sweep::PartPtrList inxParticleList;
         Sweep::PartPtrList allParticleList;
-        Mops::real initialM0 = 0;
+        double initialM0 = 0;
 
         // Find the overall number density represented by the population
         CamXML::Element* m0Node = subnode->GetFirstChild("m0");
@@ -379,14 +421,13 @@ Reactor *const readReactor(const CamXML::Element &node,
         const Sweep::PartPtrList::const_iterator itEnd = allParticleList.end();
 
         // Get the total weights of *all* initialised particles
-        Mops::real weightSum = 0;
+        double weightSum = 0;
         while(it != itEnd) {
             weightSum += (*it++)->getStatisticalWeight();
         }
 
         mix->SetParticles(allParticleList.begin(), allParticleList.end(), initialM0 / weightSum);
     }
-
 
     // TEMPERATURE GRADIENT PROFILE.
 
@@ -457,7 +498,7 @@ Reactor *const readReactor(const CamXML::Element &node,
         // Read the residence time.
         subnode = node.GetFirstChild("residencetime");
         if (subnode != NULL) {
-        	Mops::real tau = Strings::cdble(subnode->Data());
+        	double tau = Strings::cdble(subnode->Data());
             dynamic_cast<PSR*>(reac)->SetResidenceTime(tau);
         }
     }
@@ -729,6 +770,8 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
                 reac = ReactorFactory::Create(Serial_Batch, mech);
             }
         }
+	
+	std::cout << "Load from old xml Reactor Type Passed"<< endl;
 
         // Now check for constant temperature.  If not constant temperature
         // then the reactor is solved using the adiabatic energy equation.
@@ -1011,6 +1054,8 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         readGlobalSettings(*root, sim, solver);
 
+	std::cout << "Load from NEW xml Global Setting Read"<< endl;
+
         // OUTPUT SETTINGS.
         // wjm34: read output settings before reactor, so we can check if ensemble/g.p.
         // files are consistent with some more simulation settings.
@@ -1038,11 +1083,13 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         node = root->GetFirstChild("reactor");
         if (node != NULL) {
 			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0(), sim);
+			std::cout << "Load from NEW xml Reactor Read"<< endl;
         } else {
             throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
         }
 
+	
         // MECHANISM REDUCTION.
 
         node = root->GetFirstChild("LOI");
@@ -1171,7 +1218,7 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
 
     // See if there is a spatial position for the particles
     const CamXML::Attribute *attr = population_xml.GetAttribute("x");
-    real position = 0.0;
+    double position = 0.0;
     if(attr) {
         position = atof(attr->GetValue().c_str());
     }
@@ -1249,7 +1296,7 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
  *@exception    std::runtime_error      Upper bound less than or equal to lower bound
  */
 void Settings_IO::ReadStatsBound(const CamXML::Element &node, Sweep::PropID &property_id,
-                                 real &lower_bound, real &upper_bound) {
+                                 double &lower_bound, double &upper_bound) {
 
     const CamXML::Element *lobonode = node.GetFirstChild("lower");
     const CamXML::Element *upbonode = node.GetFirstChild("upper");

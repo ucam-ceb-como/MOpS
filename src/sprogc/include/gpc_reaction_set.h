@@ -97,32 +97,54 @@ public:
     void Clear(void);
 
 
+	
     // SPECIES MOLAR PRODUCTION RATES.
 
-    // Calculates the molar production rates of all species.  Returns
+    // Calculates the molar production rates of gas species.  Returns
     // the total molar production rate.
-    real GetMolarProdRates(
-        const fvector &rop, // Rate of Progress of each reaction.
+    double GetMolarProdRates(
+        const fvector &rop, // Rate of Progress of each gas reaction.
         fvector &wdot       // Return vector for molar prod. rates.
         ) const;
 
+
+	// Calculates the molar production rates of surface and gas species.  Returns
+    // the total molar production rate.
+    double GetSurfaceMolarProdRates(
+        const fvector &rop, // Rate of Progress of each surface reaction.
+        fvector &sdot       // Return vector for molar prod. rates.
+        ) const;
+
+
     // Calculates the molar production rates of all species.  Returns
     // the total molar production rate.
-    real GetMolarProdRates(
+    double GetMolarProdRates(
         const Sprog::Thermo::GasPhase &gas, // The gas for which to calculate the rates.
         fvector &wdot                       // Return vector for molar prod. rates.
         ) const;
 
+	// Calculates the surface molar production rates of all species.  Returns
+    // the total molar production rate.
+     double GetSurfaceMolarProdRates(
+        double T,              // The mixture temperature.
+        double density,        // Mixture molar density.
+        const double *const x, // Species mole fractions.
+        unsigned int n,      // Number of values in x array.
+        const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
+        fvector &sdot		  // Return vector for surface molar prod. rates.
+		) const;
+
+
     // Calculates the molar production rates of all species.  Returns
     // the total molar production rate.
-    real GetMolarProdRates(
-        real T,              // The mixture temperature.
-        real density,        // Mixture molar density.
-        const real *const x, // Species mole fractions.
+    double GetMolarProdRates(
+        double T,              // The mixture temperature.
+        double density,        // Mixture molar density.
+        const double *const x, // Species mole fractions.
         unsigned int n,      // Number of values in x array.
         const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
         fvector &wdot        // Return vector for molar prod. rates.
-        ) const;
+		) const;
 
 	void GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) const;
 
@@ -142,8 +164,8 @@ public:
 
     // Calculates the rate of progress of each reaction.
     void GetRatesOfProgress(
-        real density,            // Mixture molar density.
-        const real *const x,     // Species mole fractions.
+        double density,            // Mixture molar density.
+        const double *const x,     // Species mole fractions.
         unsigned int n,          // Number of values in x array.
         const fvector &kforward, // Forward rate constants of all reactions.
         const fvector &kreverse, // Reverse rate constants of all reactions.
@@ -152,8 +174,8 @@ public:
 
     // Calculates the rate of progress of each reaction.
     void GetRatesOfProgress(
-        real density,            // Mixture molar density.
-        const real *const x,     // Species mole fractions.
+        double density,            // Mixture molar density.
+        const double *const x,     // Species mole fractions.
         unsigned int n,          // Number of values in x array.
         const fvector &kforward, // Forward rate constants of all reactions.
         const fvector &kreverse, // Reverse rate constants of all reactions.
@@ -179,9 +201,9 @@ public:
 
     // Calculates the rate of progress of each reaction.
     void GetRatesOfProgress(
-        real T,              // The mixture temperature.
-        real density,        // Mixture molar density.
-        const real *const x, // Species mole fractions.
+        double T,              // The mixture temperature.
+        double density,        // Mixture molar density.
+        const double *const x, // Species mole fractions.
         unsigned int n,      // Number of values in x array.
         const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
         fvector &rop         // Return vector for rates of progress.
@@ -202,9 +224,9 @@ public:
     // of all reactions given mixture temperature, density
     // and species mole fractions.
     void GetRateConstants(
-        real T,              // The mixture temperature.
-        real density,        // Mixture molar density.
-        const real *const x, // Species mole fractions.
+        double T,              // The mixture temperature.
+        double density,        // Mixture molar density.
+        const double *const x, // Species mole fractions.
         unsigned int n,      // Number of values in x array.
         const fvector &Gs,   // Dimensionless Gibbs free energy of each species (1/mol).
         fvector &kforward,   // Return vector for forward rate constants.
@@ -223,9 +245,9 @@ public:
     // of all reactions given mixture temperature, density
     // and species mole fractions.
     void GetRateConstants(
-        real T,              // The mixture temperature.
-        real density,        // Mixture molar density.
-        const real *const x, // Species mole fractions.
+        double T,              // The mixture temperature.
+        double density,        // Mixture molar density.
+        const double *const x, // Species mole fractions.
         unsigned int n,      // Number of values in x array.
         const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
         fvector &kforward,   // Return vector for forward rate constants.
@@ -241,26 +263,26 @@ public:
     // matrix array J has already been allocated for NSP+2 variables
     // (all species, temperature and density).
     void CalcJacobian(
-        real T,           // The mixture temperature.
-        real density,     // Mixture molar density.
-        real *const x,    // Species mole fractions.
+        double T,           // The mixture temperature.
+        double density,     // Mixture molar density.
+        double *const x,    // Species mole fractions.
         unsigned int n,   // Number of values in x array.
         const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
-        real pfac,        // Perturbation factor for calculating J entries.
-        real **J,         // Jacobian matrix array.
+        double pfac,        // Perturbation factor for calculating J entries.
+        double **J,         // Jacobian matrix array.
         bool constV=true, // Is system constant volume or constant pressure?
         bool constT=false // Is system constant temperature or adiabatic?
         ) const;
 
 //! Calculates domegai/dcj as opposed to above which calculates d(dxi/dt)/dxj
     void RateJacobian(
-        real T,           // The mixture temperature.
-        real density,     // Mixture molar density.
-        real *const x,    // Species mole fractions.
+        double T,           // The mixture temperature.
+        double density,     // Mixture molar density.
+        double *const x,    // Species mole fractions.
         unsigned int n,   // Number of values in x array.
         const Sprog::Thermo::ThermoInterface &thermo, // Thermodynamics interface.
-        real pfac,        // Perturbation factor for calculating J entries.
-        real **J,         // Jacobian matrix array.
+        double pfac,        // Perturbation factor for calculating J entries.
+        double **J,         // Jacobian matrix array.
         bool constV=true, // Is system constant volume or constant pressure?
         bool constT=false // Is system constant temperature or adiabatic?
         ) const;
@@ -285,8 +307,7 @@ public:
 
         ar & m_rxns & m_rev_rxns
            & m_tb_rxns & m_fo_rxns
-           & m_lt_rxns & m_revlt_rxns
-           & m_mech;
+           & m_lt_rxns & m_revlt_rxns & m_surface_rxns & m_ford_rxns & m_cov_rxns & m_stick_rxns & m_mottw_rxns & m_mech;
     }
 
     // Writes the element to a binary data stream.
@@ -301,18 +322,26 @@ protected:
     // Calculates the concentration-independent portions
     // of the rates constants.
     void calcRateConstantsT(
-        real T,            // The mixture temperature.
+        double T,            // The mixture temperature.
         const fvector &Gs, // Dimensionless Gibbs free energy of each species (1/mol).
         fvector &kf,       // Return vector for forward rate constants.
         fvector &kr        // Return vector for reverse rate constants.
         ) const;
 
+    // Calculates the concentration dependent COVERAGE rate constant expression 
+    void calcCOVERAGE(
+				double T,            // The mixture temperature. 
+		      const double *const x, // Species mole fractions.
+		      fvector &kf         // Return vector for forward rate constants.	      
+		      ) const;
+    
+
     // Calculates third-body concentrations for all reactions.  These
     // values will be multiplied by the rate constants, therefore if
     // a reaction does not have third-bodies the tbconcs is set to 1.0.
     void calcTB_Concs(
-        real density,        // Mixture molar density.
-        const real *const x, // Species mole fractions.
+        double density,        // Mixture molar density.
+        const double *const x, // Species mole fractions.
         unsigned int n,      // Number of values in x array.
         fvector &tbconcs     // Return vector of third-body concentrations.
         ) const;
@@ -322,9 +351,9 @@ protected:
     // by the fall-off terms.  This function may also change the values in
     // the tbconcs vector.
     void calcFallOffTerms(
-        real T,              // The mixture temperature.
-        real density,        // Mixture molar density.
-        const real *const x, // Species mole fractions.
+        double T,              // The mixture temperature.
+        double density,        // Mixture molar density.
+        const double *const x, // Species mole fractions.
         unsigned int n,      // Number of values in x array.
         fvector &tbconcs,    // Vector of third-body concentrations (alterable).
         fvector &kf,         // Return vector for forward rate constants.
@@ -347,8 +376,12 @@ private:
     RxnMap m_tb_rxns;    // Map of third body reactions.
     RxnMap m_fo_rxns;    // Map of fall-off reactions.
     RxnMap m_lt_rxns;    // Map of reactions with Landau Teller parameters.
-    RxnMap m_revlt_rxns; // Map of reactions with reverse Landau Teller parameters.
-
+    RxnMap m_revlt_rxns; // Map of reactions with reverse Landau Teller parameters. 
+    RxnMap m_surface_rxns; // Map of  surface reactions of any types. 
+    RxnMap m_ford_rxns;  // Map of reactions with FORD parameters.
+    RxnMap m_cov_rxns;   // Map of reactions with COV parameters.
+    RxnMap m_stick_rxns;  // Map of reactions with STICK 
+    RxnMap m_mottw_rxns;  // Map of reactions with Mott-Wise 
 
     // Pointer to mechanism to which this ReactionSet belongs.
     Sprog::Mechanism *m_mech;

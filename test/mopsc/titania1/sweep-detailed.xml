@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mechanism name="Titanium Dioxide" units="CGS">
+    
+    <!--particle models take first component as 'active sites' one-->
+    <component id="chlorine">
+      <description>chlorine</description>
+      <density>4.26</density>
+      <molwt>12.01</molwt>
+    </component>
+    <component id="titanium">
+      <description>titanium</description>
+      <density>4.26</density>
+      <molwt>47.88</molwt>
+    </component>
+    <component id="oxygen">
+      <description>oxygen</description>
+      <density>4.26</density>
+      <molwt>16.00</molwt>
+    </component>
+    
+    <particle id="[Ru]" model="spherical" subtree="false">
+        <description>A rutile particle.</description>
+        <fractdim>1.8</fractdim>
+        <coalthresh>1.0</coalthresh>
+        <sintering enable="false" model="rutile">
+            <A units="s/m4K">3.7E16</A>
+            <E units="K">31032</E>
+            <Dpmin units="m">3.4e-9</Dpmin>
+        </sintering>
+    </particle>
+    
+    <coagulation>
+        <A>0.0</A>
+        <kernel>transition</kernel>
+    </coagulation>
+    
+    <reaction type="titania" name="Eley Ridel: TiCl4 Adsorption" form="multivariate" defer="true">
+        <formula>TiCL4 + P() -> P(Ti+1, O, Cl+4)</formula>
+        <reactant id="TICL4" stoich="1.0" />
+        <A units="cm3/s">2.1e12</A> <!-- k1 -->
+        <n>0.0</n>
+        <E units="kcal/mol">11.9503</E>
+        <!-- as Cl is 1st component, asn = # Cls in particle -->
+        <particleterm id="asn" power="1.0"/>
+        <component id="titanium" dx="1.0"/>
+        <component id="oxygen" dx="0"/>
+        <component id="chlorine" dx="4.0"/>
+    </reaction>
+    
+    <reaction type="surface" name="Eley Ridel: O2 Adsorption" defer="true">
+        <formula>O2 + P() -> P(Ti, O+2, Cl-4) + 2Cl2</formula>
+        <reactant id="O2" stoich="1.0" />
+        <product id="CL2" stoich="2.0" />
+        <A units="cm3/mol.s">1.7e11</A> <!-- k2 / 4 -->
+        <n>0.5</n>
+        <E units="kcal/mol">5.97</E>
+        <!-- need asn term here for correct conversion of A-->
+        <particleterm id="asn" power="1.0"/>
+        <component id="titanium" dx="0.0"/>
+        <component id="oxygen" dx="2.0"/>
+        <component id="chlorine" dx="-4.0"/>
+    </reaction>
+</mechanism>

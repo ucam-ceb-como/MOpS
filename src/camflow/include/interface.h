@@ -112,9 +112,9 @@
  *  Making successive calls
  *--------------------------------------------------------------------------------------
  *  camFlowInterface.solve(vector<Thermo::Mixture>& cstrs,
-                const vector<doublereal>& dz,
-                const vector< vector<doublereal> >& initalSource,
-                const vector< vector<doublereal> >& finalSource,
+                const vector<double>& dz,
+                const vector< vector<double> >& initalSource,
+                const vector< vector<double> >& finalSource,
                 CamControl& ccObj,
                 CamConfig& confObj,
                 Mechanism& mech_in,
@@ -205,9 +205,9 @@ namespace Camflow {
  *  Making successive calls
  *--------------------------------------------------------------------------------------
  *  camFlowInterface.solve(vector<Thermo::Mixture>& cstrs,
-                const vector<doublereal>& dz,
-                const vector< vector<doublereal> >& initalSource,
-                const vector< vector<doublereal> >& finalSource,
+                const vector<double>& dz,
+                const vector< vector<double> >& initalSource,
+                const vector< vector<double> >& finalSource,
                 CamControl& ccObj,
                 CamConfig& confObj,
                 Mechanism& mech_in,
@@ -257,47 +257,47 @@ namespace Camflow {
              *
              */
             Interface(Mechanism& mech_in,
-                    std::vector<doublereal>& dz,
+                    std::vector<double>& dz,
                     std::vector<Thermo::Mixture>& cstrs,
                     void* rModel,
-                    const doublereal sdr=0
+                    const double sdr=0
                     );
 
              //! Default destructor.
             ~Interface();
 
             //! Calling interface to solve flamelets with time-history scalar dissipation rates.
-            void flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation=false);
+            void flamelet(const std::vector<double>& sdr, const std::vector<double>& intTime, bool continuation=false);
 
             //! Call to solve a flamelet for a given strain rate.
-            void flameletStrainRate(const doublereal& strainRate);
+            void flameletStrainRate(const double& strainRate);
 
             //! Call to solve a flamelet for a given SDR rate.
-            void flameletSDR(const doublereal& SDR);
+            void flameletSDR(const double& SDR);
 
             //! Calling interface to solve flamelets with a profile of SDRs with a time history.
-            void flameletSDRprofile(const std::vector< std::vector<doublereal> >& sdr,
-                                    const std::vector< std::vector<doublereal> >& Zcoords,
-                                    const std::vector<doublereal>& intTime,
+            void flameletSDRprofile(const std::vector< std::vector<double> >& sdr,
+                                    const std::vector< std::vector<double> >& Zcoords,
+                                    const std::vector<double>& intTime,
                                     bool continuation=false);
 
             //! Interface for use when soot volume fraction is available.
-            void flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr,
-                                  const std::vector<doublereal>& intTime, bool continuation=false);
+            void flameletWithSoot(const std::vector<double>& soot_fv, const std::vector<double>& sdr,
+                                  const std::vector<double>& intTime, bool continuation=false);
 
             //! Assign the species mass fractions, temperature, density, and velocity into the vector of mixture objects.
             void resetMixtures(std::vector<Thermo::Mixture>& cstrs);
 
             //! Solve the reactor for the successive calls.
             void solve(std::vector<Thermo::Mixture>& cstrs,                      //Sprog mixture for each cell
-                       const std::vector<doublereal>& dz,                                   //geomtry cell widths
-                       const std::vector< std::vector<doublereal> >& initalSource,       //initial source terms ( under relaxed )
-                       const std::vector< std::vector<doublereal> >& finalSource,         //final source terms (under relaxed)
+                       const std::vector<double>& dz,                                   //geomtry cell widths
+                       const std::vector< std::vector<double> >& initalSource,       //initial source terms ( under relaxed )
+                       const std::vector< std::vector<double> >& finalSource,         //final source terms (under relaxed)
                        CamControl& ccObj,                                                    //Solver control
                        CamConfiguration& confObj,                                   //configuration object
                        Mechanism& mech_in,                                             //mechanism object
                        void* reactorModel,                                                  //reactor model to solve
-                       const doublereal sdr = 0);                                        //scalar dissipation rate in case of flamelets
+                       const double sdr = 0);                                        //scalar dissipation rate in case of flamelets
 
             //! Return a vector of species names.
             std::vector<std::string> getSpeciesNames();
@@ -312,78 +312,78 @@ namespace Camflow {
             int getNumberOfReactions() const;
 
             //! Return the species mass fraction given the independent variable.
-            doublereal getMassFrac(const int spIndex, const doublereal axpos);
+            double getMassFrac(const int spIndex, const double axpos);
 
             //! Return the soot moment given the independent variable.
-            doublereal getMoment(const int momIndex, const doublereal axpos);
+            double getMoment(const int momIndex, const double axpos);
 
             //! Return the soot moment rates given the independent variable.
             // ank25 added for ELFM
-            doublereal getMomentWdot(const int momIndex, const doublereal axpos);
+            double getMomentWdot(const int momIndex, const double axpos);
 
             //! Return the species mole fraction given the independent variable.
-            doublereal getMoleFrac(const int spIndex, const doublereal axpos);
+            double getMoleFrac(const int spIndex, const double axpos);
 
             //! Get spatial profile of one species.
-            std::vector<doublereal> getMassFracsBySpecies(const int spIndex) const;
+            std::vector<double> getMassFracsBySpecies(const int spIndex) const;
 
             //! Get spatial profile of one moment
-            std::vector<doublereal> getMomentsByIndex(const int momentIndex) const;
+            std::vector<double> getMomentsByIndex(const int momentIndex) const;
 
             //! Get spatial profile of rate of change of one moment
             // ank25 added for ELFM
-            std::vector<doublereal> getMomentsWdotByIndex(const int momentWdotIndex) const;
+            std::vector<double> getMomentsWdotByIndex(const int momentWdotIndex) const;
 
             //! Get mass fractions for all species at one point.
-            std::vector<doublereal> getMassFracsByPoint(const int indVarIndex) const;
+            std::vector<double> getMassFracsByPoint(const int indVarIndex) const;
 
             //! Return the temperature given the independent variable.
-            doublereal getTemperature(const doublereal axpos);
+            double getTemperature(const double axpos);
 
             //! Return a vector of temperatures at all the independent variable points.
-            const std::vector<doublereal>& getTemperatures() const {return TVector;}
+            const std::vector<double>& getTemperatures() const {return TVector;}
 
             //! Return the density given the independent variable.
-            doublereal getDensity(const doublereal axpos);
+            double getDensity(const double axpos);
 
             //! Return the viscosity given the independent variable.
-            doublereal getViscosity(const doublereal axpos);
+            double getViscosity(const double axpos);
 
             //! Return the specific heat given the independent variable.
-            doublereal getSpecificHeat(const doublereal axPos);
+            double getSpecificHeat(const double axPos);
 
             //! return the sootAverageDiameter
-            doublereal getSootAverageDiameter(const doublereal axpos);
+            double getSootAverageDiameter(const double axpos);
 
             //!return the sootDispersion
-            doublereal getSootDispersion(const doublereal axpos);
+            double getSootDispersion(const double axpos);
 
              //!return the sootSurfaceArea
-            doublereal getSootSurfaceArea(const doublereal axpos);
+            double getSootSurfaceArea(const double axpos);
 
              //!return the sootVolumeFraction
-            doublereal getSootVolumeFraction(const doublereal axpos);
+            double getSootVolumeFraction(const double axpos);
 
             //! Return the thermal conductivity given the independent variable.
-            doublereal getThermalConductivity(const doublereal axPos);
+            double getThermalConductivity(const double axPos);
 
             //! Return a vector of diffusion coefficents (size equals number of gas phase species).
-            std::vector<doublereal> getDiffusionCoefficients(const doublereal axPos);
+            std::vector<double> getDiffusionCoefficients(const double axPos);
 
             //! Return pyrene production rate.
-            doublereal getWdotA4(const doublereal axPos);
+            double getWdotA4(const double axPos);
 
             //! Return the stoichiometric mixture fraction.
-            doublereal getStMixtureFrac();
+            double getStMixtureFrac();
 
             //! Return a vector of densities at all the independent variable points.
-            const std::vector<doublereal>& getDensities() const {return rhoVector;}
+            const std::vector<double>& getDensities() const {return rhoVector;}
 
             //! Return a vector of the independent variable values.
-            const std::vector<doublereal>& getIndepVars() const {return indVar;}
+            const std::vector<double>& getIndepVars() const {return indVar;}
 
             //! Return a vector of velocities at all the independent variable points.
-            const std::vector<doublereal>& getVelocities() const {return mVelocity;}
+            const std::vector<double>& getVelocities() const {return mVelocity;}
 
 
             //! Return the controller object.
@@ -430,32 +430,32 @@ namespace Camflow {
             Array2D spMassFracs;            //species mass fractions
             Array2D sootMoments;			// Soot moments
             Array2D sootMomentsWdot;		// ank25 added for ELFM
-            std::vector<doublereal> TVector;     //temperature
-            std::vector<doublereal> rhoVector;   //density
-            std::vector<doublereal> muVector;    //viscosity
-            std::vector<doublereal> indVar;      //independant variable
-            std::vector<doublereal> spHeat;      //specific heats
-            std::vector<doublereal> lambda;      //thermal conductivity
-            std::vector<doublereal> mVelocity;   //velocity
-            std::vector<doublereal> avgMolWtVector;   // Average Molar Weight of the mixture
-            std::vector<doublereal> wdotA4;   // rate of production of pyrene
-            std::vector<doublereal> sootAverageDiameterVector;
-            std::vector<doublereal> sootDispersionVector;
-            std::vector<doublereal> sootSurfaceAreaVector;
-            std::vector<doublereal> sootVolumeFractionVector;
+            std::vector<double> TVector;     //temperature
+            std::vector<double> rhoVector;   //density
+            std::vector<double> muVector;    //viscosity
+            std::vector<double> indVar;      //independant variable
+            std::vector<double> spHeat;      //specific heats
+            std::vector<double> lambda;      //thermal conductivity
+            std::vector<double> mVelocity;   //velocity
+            std::vector<double> avgMolWtVector;   // Average Molar Weight of the mixture
+            std::vector<double> wdotA4;   // rate of production of pyrene
+            std::vector<double> sootAverageDiameterVector;
+            std::vector<double> sootDispersionVector;
+            std::vector<double> sootSurfaceAreaVector;
+            std::vector<double> sootVolumeFractionVector;
 
             Array2D mDiff;                  //Diffusion coefficients
 
-            doublereal stMixtureFrac;       //stoichiometric mixture fraction
+            double stMixtureFrac;       //stoichiometric mixture fraction
 
             //! Pointer to flamelet class.
             FlameLet* flmlt;
 
             //! Calling interface to solve a flamelet with a given scalar dissipation rate.
-            void flamelet(doublereal sdr, doublereal intTime=0, bool continuation=false);
+            void flamelet(double sdr, double intTime=0, bool continuation=false);
 
             //! Function to return a variable's value given the independent variable.
-            doublereal getVariableAt(const doublereal& pos, const std::vector<doublereal>& var) const;
+            double getVariableAt(const double& pos, const std::vector<double>& var) const;
 
             void getFlameletVariables(FlameLet* const flmlt);
 

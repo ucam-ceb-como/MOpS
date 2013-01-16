@@ -185,7 +185,7 @@ unsigned int ParticleStats::Count() const
 }
 
 // Calculates the model stats for a particle ensemble.
-void ParticleStats::Calculate(const Ensemble &e, real scale)
+void ParticleStats::Calculate(const Ensemble &e, double scale)
 {
     m_stats.assign(m_stats.size(), 0.0);
 
@@ -198,10 +198,10 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
     for (ip=e.begin(); ip!=e.end(); ++ip) {
-        real sz = (*ip)->Property(m_statbound.PID);
+        double sz = (*ip)->Property(m_statbound.PID);
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
-            const real wt = (*ip)->getStatisticalWeight();
+            const double wt = (*ip)->getStatisticalWeight();
             // Sum stats from this particle.
             m_stats[iM0]   += wt;
             m_stats[iD]    += (*ip)->SphDiameter() * wt;
@@ -211,7 +211,7 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
             m_stats[iS+1]  += (*ip)->SurfaceArea() * wt;
             m_stats[iV]    += (*ip)->Volume() * wt;
             m_stats[iV+1]  += (*ip)->Volume() * wt;
-            const real m = (*ip)->Mass();
+            const double m = (*ip)->Mass();
             m_stats[iM]    += m * wt;
             m_stats[iM+1]  += m * wt;
             m_stats[iM2]   += m * m * wt;
@@ -239,16 +239,16 @@ void ParticleStats::Calculate(const Ensemble &e, real scale)
     }
 
     // Get the particle count.
-    m_stats[iNP] = (real)e.Count();
+    m_stats[iNP] = (double)e.Count();
 
     // also the maximum number of coag events that has occurred to one particle
-    m_stats[iMaxCoag] = static_cast<real>(maxNumCoag);
+    m_stats[iMaxCoag] = static_cast<double>(maxNumCoag);
 
     // Now calculate the denominator for the average per particle quantities.
     // Note that m_stats[iM0] at this point does not in fact contain an M0 value,
     // since it has not yet been scaled by sample volume.  This is intentional
     // since here one should divide by the total statistical weight of all particles.
-    const real invWeight = (e.Count()>0) ? 1.0 / m_stats[iM0] : 0.0;
+    const double invWeight = (e.Count()>0) ? 1.0 / m_stats[iM0] : 0.0;
 
     // Scale the summed stats and calculate the averages,
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {
@@ -338,37 +338,37 @@ void ParticleStats::Names(std::vector<std::string> &names,
 // AVAILABLE BASIC STATS.
 
 // Returns the particle count.
-real ParticleStats::PCount(void) const {return m_stats[iNP];}
+double ParticleStats::PCount(void) const {return m_stats[iNP];}
 
 // Returns the number density.
-real ParticleStats::M0(void) const {return m_stats[iM0];}
+double ParticleStats::M0(void) const {return m_stats[iM0];}
 
 // Returns the avg. equiv. sphere diameter.
-real ParticleStats::AvgDiam(void) const {return m_stats[iD];}
+double ParticleStats::AvgDiam(void) const {return m_stats[iD];}
 
 // Returns the avg. collision diameter.
-real ParticleStats::AvgCollDiam(void) const {return m_stats[iDcol];}
+double ParticleStats::AvgCollDiam(void) const {return m_stats[iDcol];}
 
 // Returns the avg. mobility diameter.
-real ParticleStats::AvgMobDiam(void) const {return m_stats[iDmob];}
+double ParticleStats::AvgMobDiam(void) const {return m_stats[iDmob];}
 
 // Returns the total surface area.
-real ParticleStats::SurfaceArea(void) const {return m_stats[iS];}
+double ParticleStats::SurfaceArea(void) const {return m_stats[iS];}
 
 // Returns the avg. surface area.
-real ParticleStats::AvgSurfaceArea(void) const {return m_stats[iS+1];}
+double ParticleStats::AvgSurfaceArea(void) const {return m_stats[iS+1];}
 
 // Returns the total volume.
-real ParticleStats::Fv(void) const {return m_stats[iV];}
+double ParticleStats::Fv(void) const {return m_stats[iV];}
 
 // Returns the average volume.
-real ParticleStats::AvgVolume(void) const {return m_stats[iV+1];}
+double ParticleStats::AvgVolume(void) const {return m_stats[iV+1];}
 
 // Returns the total mass.
-real ParticleStats::Mass(void) const {return m_stats[iM];}
+double ParticleStats::Mass(void) const {return m_stats[iM];}
 
 // Returns the average mass.
-real ParticleStats::AvgMass(void) const {return m_stats[iM+1];}
+double ParticleStats::AvgMass(void) const {return m_stats[iM+1];}
 
 
 // PARTICLE SIZE LISTS.
@@ -408,7 +408,7 @@ void ParticleStats::PSL_Names(std::vector<std::string> &names,
 }
 
 // Returns the PSL entry for the given particle.
-void ParticleStats::PSL(const Sweep::Particle &sp, real time,
+void ParticleStats::PSL(const Sweep::Particle &sp, double time,
                         fvector &psl, unsigned int start) const
 {
     // Resize vector if too small.
@@ -538,7 +538,7 @@ void ParticleStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
                 // Read stats.
                 for (unsigned int i=0; i!=n; ++i) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_stats.push_back((real)val);
+                    m_stats.push_back((double)val);
                 }
 
                 // Read number of stat names in vector.

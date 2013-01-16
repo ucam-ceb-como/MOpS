@@ -304,13 +304,13 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
 
 // Get total rates of all processes.  Returns the sum of
 // all rates.
-real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &rates, bool scale) const
+double Mechanism::CalcRates(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &rates, bool scale) const
 {
     // Ensure rates vector is the correct length, then set to zero.
     rates.resize(m_processcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
     fill(rates.begin(), rates.end(), 0.0);
 
-    real sum = 0.0;
+    double sum = 0.0;
 
     // Get rates of inception processes.
     sum += Inception::CalcRates(t, sys, local_geom, m_inceptions, rates);
@@ -338,7 +338,7 @@ real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry
 
     if (!scale) {
         // Need to return the rates to per unit vol.
-        real invvol = 1.0 / sys.SampleVolume();
+        double invvol = 1.0 / sys.SampleVolume();
         for(i=rates.begin(); i!=rates.end(); ++i) {
             *i *= invvol;
         }
@@ -360,7 +360,7 @@ real Mechanism::CalcRates(real t, const Cell &sys, const Geometry::LocalGeometry
  * @param jumps         Vector containing the number of jumps
  * @return              Sum of jump events
  */
-real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &jumps) const
+double Mechanism::CalcJumps(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &jumps) const
 {
     // Ensure jumps vector is the correct length, then set to zero.
     jumps.resize(m_processcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
@@ -369,7 +369,7 @@ real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry
     // Iterator for filling jumps vector
     fvector::iterator iterm = jumps.begin();
 
-    real sum = 0.0;
+    double sum = 0.0;
 
     // Get number of inception jumps
     for (unsigned int j=0; j!=m_inceptions.size(); ++j) {
@@ -386,7 +386,7 @@ real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry
     // Get number of coagulation jumps.
     unsigned int coagterms(0);       // Number of terms already used
     for (unsigned int j=0; j!=m_coags.size(); ++j) {
-        unsigned int coagsum(0);     // Sum of real and fictitious jumps
+        unsigned int coagsum(0);     // Sum of double and fictitious jumps
         // Sum up all terms of this process
         for (unsigned int k=0; k!=m_coags[j]->TermCount(); ++k) {
             coagsum += m_proccount[k+m_inceptions.size()+m_processes.size()+coagterms];
@@ -407,7 +407,7 @@ real Mechanism::CalcJumps(real t, const Cell &sys, const Geometry::LocalGeometry
  * accurate capturing of information from CalcJumps
  */
 void Mechanism::ResetJumpCount() const {
-    // Do for number of real jumps
+    // Do for number of double jumps
     fill(m_proccount.begin(), m_proccount.end(), 0.0);
     // Do for number of fictitious jumps
     fill(m_fictcount.begin(), m_fictcount.end(), 0.0);
@@ -419,13 +419,13 @@ void Mechanism::ResetJumpCount() const {
 // selection by different properties for the same process.
 // In particular this is used for the condensation and
 // coagulation processes.  Returns the sum of all rates.
-real Mechanism::CalcRateTerms(real t, const Cell &sys, const Geometry::LocalGeometry1d& local_geom, fvector &terms) const
+double Mechanism::CalcRateTerms(double t, const Cell &sys, const Geometry::LocalGeometry1d& local_geom, fvector &terms) const
 {
     // Ensure rates vector is the correct length.
     terms.resize(m_termcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
     fvector::iterator iterm = terms.begin();
 
-    real sum = 0.0;
+    double sum = 0.0;
 
     // Get rates of inception processes.
     IcnPtrVector::const_iterator ii;
@@ -465,7 +465,7 @@ real Mechanism::CalcRateTerms(real t, const Cell &sys, const Geometry::LocalGeom
 
 // Get total rates of non-deferred processes.  Returns the sum
 // of all rates.
-real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::LocalGeometry1d& local_geom, fvector &terms) const
+double Mechanism::CalcJumpRateTerms(double t, const Cell &sys, const Geometry::LocalGeometry1d& local_geom, fvector &terms) const
 {
     // This routine only calculates the rates of those processes which are
     // not deferred.  The rate terms of deferred processes are returned
@@ -475,7 +475,7 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::Local
     terms.resize(m_termcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
     fvector::iterator iterm = terms.begin();
 
-    real sum = 0.0;
+    double sum = 0.0;
 
     // Get rates of inception processes.
     IcnPtrVector::const_iterator ii;
@@ -536,7 +536,7 @@ real Mechanism::CalcJumpRateTerms(real t, const Cell &sys, const Geometry::Local
  *
  *@return   The total rate of all deferred processes
  */
-real Mechanism::CalcDeferredRateTerms(real t, const Cell &sys, const Geometry::LocalGeometry1d& local_geom, fvector &terms) const
+double Mechanism::CalcDeferredRateTerms(double t, const Cell &sys, const Geometry::LocalGeometry1d& local_geom, fvector &terms) const
 {
     // This routine only calculates the rates of those processes which are
     // deferred.  The rate terms of non-deferred processes are returned
@@ -547,7 +547,7 @@ real Mechanism::CalcDeferredRateTerms(real t, const Cell &sys, const Geometry::L
     terms.resize(m_termcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
     fvector::iterator iterm = terms.begin();
 
-    real sum = 0.0;
+    double sum = 0.0;
 
     // Query other processes for their rates.
     if (sys.ParticleCount() > 0) {
@@ -575,7 +575,7 @@ real Mechanism::CalcDeferredRateTerms(real t, const Cell &sys, const Geometry::L
  *@post  rates.size() == m_species.size() + 2
  * There is no precondition on rates.size().
  */
-void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
+void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
                                    const Geometry::LocalGeometry1d &local_geom,
                                    fvector &rates) const
 {
@@ -584,10 +584,10 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
     fill(rates.begin(), rates.end(), 0.0);
 
     // Rate of change of total concentration
-    real idrho(0.0);
+    double idrho(0.0);
 
     // Precalculate parameters.
-    real invVolNA = 1.0 / (sys.SampleVolume() * NA);
+    double invVolNA = 1.0 / (sys.SampleVolume() * NA);
 
     // Inceptions and surface processes can affect the gas-phase chemistry
     // at the moment.
@@ -597,12 +597,12 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
          i!=m_inceptions.end(); ++i) {
 
         // Calculate the inception rate.
-        real rate = (*i)->Rate(t, sys, local_geom);
+        double rate = (*i)->Rate(t, sys, local_geom);
 
         // Loop over all reactants, subtracting their contributions.
         for (Sprog::StoichMap::const_iterator j=(*i)->Reactants().begin();
              j!=(*i)->Reactants().end(); ++j) {
-            real dc = rate * (real)j->second * invVolNA;
+            double dc = rate * (double)j->second * invVolNA;
             rates[j->first] -= dc;
             idrho -= dc;
         }
@@ -610,7 +610,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
         // Loop over all products, adding their contributions.
         for (Sprog::StoichMap::const_iterator j=(*i)->Products().begin();
              j!=(*i)->Products().end(); ++j) {
-            real dc = rate * (real)j->second * invVolNA;
+            double dc = rate * (double)j->second * invVolNA;
             rates[j->first] += dc;
             idrho += dc;
         }
@@ -621,12 +621,12 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
          i!=m_processes.end(); ++i) {
 
         // Calculate the process rate.
-        real rate = (*i)->Rate(t, sys, local_geom);
+        double rate = (*i)->Rate(t, sys, local_geom);
 
         // Loop over all reactants, subtracting their contributions.
         for (Sprog::StoichMap::const_iterator j=(*i)->Reactants().begin();
              j!=(*i)->Reactants().end(); ++j) {
-            real dc = rate * (real)j->second * invVolNA;
+            double dc = rate * (double)j->second * invVolNA;
             rates[j->first] -= dc;
             idrho -= dc;
         }
@@ -634,14 +634,14 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
         // Loop over all products, adding their contributions.
         for (Sprog::StoichMap::const_iterator j=(*i)->Products().begin();
              j!=(*i)->Products().end(); ++j) {
-            real dc = rate * (real)j->second * invVolNA;
+            double dc = rate * (double)j->second * invVolNA;
             rates[j->first] += dc;
             idrho += dc;
         }
     }
 
     // Now convert to changes in mole fractions.
-    real invrho = 1.0 / sys.GasPhase().MolarDensity();
+    double invrho = 1.0 / sys.GasPhase().MolarDensity();
     for (unsigned int k=0; k!=m_species->size(); ++k) {
         // Quotient rule for dXk/dt = d(Ck/CT)/dt
         rates[k] = (invrho * rates[k]) - (invrho * invrho * sys.GasPhase().SpeciesConcentration(k) * idrho);
@@ -664,7 +664,7 @@ void Mechanism::CalcGasChangeRates(real t, const Cell &sys,
  * The support for transport processes may well no longer be needed, in that it is
  * rarely efficient to simulate such phenomena with stochastic jumps.
  */
-void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
+void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
                           const Geometry::LocalGeometry1d& local_geom,
                           rng_type &rng) const
 {
@@ -742,7 +742,7 @@ void Mechanism::DoProcess(unsigned int i, real t, Cell &sys,
  * The support for transport processes may well no longer be needed, in that it is
  * rarely efficient to simulate such phenomena with stochastic jumps.
  */
-void Mechanism::MassTransfer(int i, real t, Cell &sys, rng_type &rng) const
+void Mechanism::MassTransfer(int i, double t, Cell &sys, rng_type &rng) const
 {
         // Test for now
         assert(sys.ParticleModel() != NULL);
@@ -761,7 +761,7 @@ void Mechanism::MassTransfer(int i, real t, Cell &sys, rng_type &rng) const
  *@param[in]        t           Time upto which particles to be updated
  *@param[in,out]    rng         Random number generator
  */
-void Mechanism::LPDA(real t, Cell &sys, rng_type &rng) const
+void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 {
     // Check that there are particles to update and that there are
     // deferred processes to perform.
@@ -799,13 +799,13 @@ void Mechanism::LPDA(real t, Cell &sys, rng_type &rng) const
  *@param[in]        t           Time upto which particle to be updated
  *@param[in,out]    rng         Random number generator
  */
-void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) const
+void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng) const
 {
     // Deal with the growth of the PAHs
     if (AggModel() == AggModels::PAH_KMC_ID)
     {
         // Calculate delta-t and update particle time.
-        real dt;
+        double dt;
         dt = t - sp.LastUpdateTime();
         sp.SetTime(t);
 
@@ -836,7 +836,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
             && AggModel() != AggModels::PAH_KMC_ID) {
 
         // Calculate delta-t and update particle time.
-        real dt;
+        double dt;
         dt = t - sp.LastUpdateTime();
         sp.SetTime(t);
 
@@ -851,7 +851,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
     // If there are no deferred processes then stop right now.
     if (m_anydeferred) {
         PartProcPtrVector::const_iterator i;
-        real rate, dt;
+        double rate, dt;
 
         while ((sp.LastUpdateTime() < t) && sp.IsValid()) {
             // Calculate delta-t and update particle time.
@@ -869,7 +869,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, real t, rng_type &rng) c
                     // times to perform the process.  If the rate is
                     // 0 then the count is guaranteed to be 0
                     if(rate > 0) {
-                         boost::random::poisson_distribution<unsigned, real> repeatDistrib(rate);
+                         boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
                          unsigned num = repeatDistrib(rng);
                          if (num > 0) {
                              // Do the process to the particle.

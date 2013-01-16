@@ -63,15 +63,15 @@ public:
     //! Creates a new primary particle of the given type.
     static AggModels::Primary *const CreatePrimary(
         const AggModels::AggModelType id, // Model ID.
-        const real time,                  // Primary create time.
+        const double time,                  // Primary create time.
         const ParticleModel &model        // Defining particle model.
         );
 
     //! Creates a new primary particle of the given type.
     static AggModels::Primary *const CreatePrimary(
         const AggModels::AggModelType id, // Model ID.
-        const real time,                  // Primary create time.
-        const real position,
+        const double time,                  // Primary create time.
+        const double position,
         const ParticleModel &model        // Defining particle model.
         );
 

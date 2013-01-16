@@ -70,7 +70,7 @@
  *\param[in]         solution_nodes      Distances from start of reactor (in m) at which velocity values are specified
  *\param[in]         velocity            Flow velocity in \f$\mathrm{ms}^{-1}\f$
  */
-Brush::real minimumResidenceTime(const Geometry::Geometry1d& geom, const size_t solution_length,
+double minimumResidenceTime(const Geometry::Geometry1d& geom, const size_t solution_length,
                                  const double solution_nodes[], const double velocity[])
 {
     const Utils::LinearInterpolator<double, double> velocityProfile(std::vector<double>(solution_nodes, solution_nodes + solution_length),
@@ -122,7 +122,7 @@ Brush::MooNMDInterface::particle_reactor_pointer
     // Variables to hold data read from the input file
     Mops::timevector timeIntervals;
     std::string outputFileBaseName;
-    std::vector<std::pair<real, real> > maxPCounts, maxM0s;
+    std::vector<std::pair<double, double> > maxPCounts, maxM0s;
     Sweep::Stats::IModelStats::StatBound statBound;
 
     {
@@ -161,8 +161,8 @@ Brush::MooNMDInterface::particle_reactor_pointer
             if(statsBoundNode != NULL) {
                 // Read the data from the file
                 Sweep::PropID statsboundPropertyID;
-                real statsLowerBound;
-                real statsUpperBound;
+                double statsLowerBound;
+                double statsUpperBound;
                 Mops::Settings_IO::ReadStatsBound(*statsBoundNode, statsboundPropertyID, statsLowerBound, statsUpperBound);
 
                 // Adjust statBound with the newly read data

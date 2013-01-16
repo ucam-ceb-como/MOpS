@@ -103,7 +103,7 @@ public:
     // Calculates the model stats for a particle ensemble.
     void Calculate(
         const Ensemble &e, // Ensemble from which to get stats.
-        real scale         // Scaling factor to unit volume (summed stats).
+        double scale         // Scaling factor to unit volume (summed stats).
         );
 
     // Returns a vector containing the stats.
@@ -128,37 +128,37 @@ public:
     // AVAILABLE BASIC STATS.
 
     //! Returns the particle count.
-    real PCount(void) const;
+    double PCount(void) const;
 
     //! Returns the number density.
-    real M0(void) const;
+    double M0(void) const;
 
     // Returns the avg. equiv. sphere diameter.
-    real AvgDiam(void) const;
+    double AvgDiam(void) const;
 
     // Returns the avg. collision diameter.
-    real AvgCollDiam(void) const;
+    double AvgCollDiam(void) const;
 
     // Returns the avg. mobility diameter.
-    real AvgMobDiam(void) const;
+    double AvgMobDiam(void) const;
 
     // Returns the total surface area.
-    real SurfaceArea(void) const;
+    double SurfaceArea(void) const;
 
     // Returns the avg. surface area.
-    real AvgSurfaceArea(void) const;
+    double AvgSurfaceArea(void) const;
 
     // Returns the total volume.
-    real Fv(void) const;
+    double Fv(void) const;
 
     // Returns the average volume.
-    real AvgVolume(void) const;
+    double AvgVolume(void) const;
 
     // Returns the total mass.
-    real Mass(void) const;
+    double Mass(void) const;
 
     // Returns the average mass.
-    real AvgMass(void) const;
+    double AvgMass(void) const;
 
 
     // PARTICLE SIZE LISTS.
@@ -175,7 +175,7 @@ public:
     //! Build the PSL entry for the given particle.
     void PSL(
         const Sweep::Particle &sp,      // Particle from which to get PSL data.
-        real time,                      // Current flow time (used to calculate particle age).
+        double time,                      // Current flow time (used to calculate particle age).
         fvector &psl,                   // Output vector.
         unsigned int start = 0          // Optional start index for the first variable.
         ) const;

@@ -59,7 +59,7 @@ class PAH
 	friend class PAHPrimary;
 public:
     //! Build a new PAH with time
-    PAH(real time, Sweep::ParticleModel::PostProcessStartingStr str);
+    PAH(double time, Sweep::ParticleModel::PostProcessStartingStr str);
 
     PAH(const PAH &copy); // Copy constructor.
     ~PAH();

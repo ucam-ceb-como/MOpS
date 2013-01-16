@@ -88,25 +88,25 @@ TimeInterval::~TimeInterval(void)
 // PROPERTIES.
 
 // Returns the start time.
-Mops::real TimeInterval::StartTime() const
+double TimeInterval::StartTime() const
 {
     return m_start;
 }
 
 // Sets the start time.
-void TimeInterval::SetStartTime(real t)
+void TimeInterval::SetStartTime(double t)
 {
     m_start = t;
 }
 
 // Returns the end time.
-Mops::real TimeInterval::EndTime() const
+double TimeInterval::EndTime() const
 {
     return m_end;
 }
 
 // Sets the end time.
-void TimeInterval::SetEndTime(real t)
+void TimeInterval::SetEndTime(double t)
 {
     m_end = t;
 }
@@ -153,15 +153,15 @@ void TimeInterval::SetSubSplittingStepCount(unsigned int n)
 
 
 // Calculates the output step size.
-Mops::real TimeInterval::StepSize() const
+double TimeInterval::StepSize() const
 {
-    return (m_end - m_start) / (real)m_steps;
+    return (m_end - m_start) / (double)m_steps;
 }
 
 // Calculates the splitting step size.
-Mops::real TimeInterval::SplitStepSize() const
+double TimeInterval::SplitStepSize() const
 {
-    return StepSize() / (real)m_splits;
+    return StepSize() / (double)m_splits;
 }
 
 
@@ -213,11 +213,11 @@ void TimeInterval::Deserialize(std::istream &in)
 
                 // Read the start time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_start = (real)val;
+                m_start = (double)val;
 
                 // Read the end time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_end = (real)val;
+                m_end = (double)val;
 
                 // Read the number of steps.
                 in.read(reinterpret_cast<char*>(&m_steps), sizeof(m_steps));

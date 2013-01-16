@@ -116,7 +116,7 @@ void KMCGasPoint::initData() {
 }
 
 //! Interpolate data
-void KMCGasPoint::Interpolate(real t, real fact) {
+void KMCGasPoint::Interpolate(double t, double fact) {
     // get time point after t
     GasProfile::const_iterator j = LocateGasPoint(*m_gasprof, t);
     if(j == m_gasprof->begin() || j == m_gasprof->end()) {
@@ -129,10 +129,10 @@ void KMCGasPoint::Interpolate(real t, real fact) {
         }
     }else {
         GasProfile::const_iterator i = j; --i;
-        real dt_ij = j->Time - i->Time;
-        real dt = t - i->Time;
-        real wx = dt/dt_ij;
-        real wy = 1-wx;
+        double dt_ij = j->Time - i->Time;
+        double dt = t - i->Time;
+        double wx = dt/dt_ij;
+        double wy = 1-wx;
         m_data[Time] = t;
         m_data[T] = i->Gas.Temperature()*wy + j->Gas.Temperature()*wx;
         m_data[P] = i->Gas.Pressure()*wy + j->Gas.Pressure()*wx;
@@ -146,13 +146,13 @@ void KMCGasPoint::Interpolate(real t, real fact) {
 
 //! Convert Mole frac to Conc
 void KMCGasPoint::ConvertMoleFrac() {
-    real factor = m_data[P]/(R*m_data[T]*1e6); // convert to mol/cm^3
+    double factor = m_data[P]/(R*m_data[T]*1e6); // convert to mol/cm^3
     for(int k=H2; k<(m_total-2); k++)
         m_data[k] *= factor;
 }
 
 //! Accessing data
-real KMCGasPoint::operator[](const int n) const {
+double KMCGasPoint::operator[](const int n) const {
     return m_data[n];
 }
 KMCGasPoint& KMCGasPoint::operator=(const KMCGasPoint& gp) {

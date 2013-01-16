@@ -1,12 +1,12 @@
 /*
-  Author(s):      Matthew Celnik (msc37)
+  Author(s):      Matthew Celnik (msc37) && Martin Martin (mm864)
   Project:        sprog (gas-phase chemical kinetics).
   Sourceforge:    http://sourceforge.net/projects/mopssuite
 
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
-    This files contains structures which define reaction rate parameter sets.
+    This files contains structures which define reaction rate parameter sets and those for surface chemistry
 
   Licence:
     This file is part of "sprog".
@@ -41,8 +41,9 @@
 
 #ifndef GPC_RATE_PARAMS_H
 #define GPC_RATE_PARAMS_H
-
 #include "gpc_params.h"
+#include <string>
+using namespace std; 
 
 namespace Sprog
 {
@@ -53,14 +54,14 @@ namespace Kinetics
     // Arrhenius parameters.
     struct ARRHENIUS
     {
-        real A; // Pre-exponential factor.
-        real n; // Temperature exponent.
-        real E; // Activation energy.
+        double A; // Pre-exponential factor.
+        double n; // Temperature exponent.
+        double E; // Activation energy.
 
         // Constructors.
         ARRHENIUS(void) // Default constructor.
         {A=n=E=0.0;};
-        ARRHENIUS(real aA, real an, real aE) // Initialising constructor.
+        ARRHENIUS(double aA, double an, double aE) // Initialising constructor.
         {A=aA; n=an; E=aE;};
 
         // Writes the element to a binary data stream.
@@ -73,14 +74,61 @@ namespace Kinetics
 
     };
 
+	// Surface Coverage parameters.
+    struct COVERAGE
+    {
+        double Eta; // Eta.
+        double Miu; // Miu.
+        double Epsilon; // e.
+		std::string spName; // species name associated with the coverage param. 
+		
+        // Constructors.
+        COVERAGE(void) // Default constructor.
+        {Eta=Miu=Epsilon=0.0;
+		spName = "";};
+      COVERAGE(double e, double m, double eps, std::string &name) // Initialising constructor.
+        {Eta=e; Miu=m; Epsilon=eps; spName=name;};
+
+        // Writes the element to a binary data stream.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int /* file_version */)
+        {
+            ar & Eta & Miu & Epsilon & spName;
+        }
+        friend class boost::serialization::access;
+    };
+	
+	//  FORD parameters.
+    struct FORD
+    {
+        double F_k; // Forward reaction order.
+		std::string spName; // species name associated with the reaction order. 
+		
+        // Constructors.
+        FORD(void) // Default constructor.
+        {F_k=0.0;
+		spName = "";};
+      FORD(double f, std::string &name) // Initialising constructor.
+        {F_k = f; spName=name;};
+
+        // Writes the element to a binary data stream.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int /* file_version */)
+        {
+            ar & F_k & spName;
+        }
+        friend class boost::serialization::access;
+    };
+	
+	
     // Landau Teller reaction parameters.
     struct LTCOEFFS
     {
-        real B, C;
+        double B, C;
 
         // Constructors.
         LTCOEFFS(void) {B=C=0.0;}; // Default constructor.
-        LTCOEFFS(real aB, real aC) {B=aB; C=aC;}; // Initialising constructor.
+        LTCOEFFS(double aB, double aC) {B=aB; C=aC;}; // Initialising constructor.
 
         // Writes the element to a binary data stream.
         template<class Archive>
@@ -111,17 +159,17 @@ namespace Kinetics
 
         ARRHENIUS LowP_Limit; // Low pressure limit Arrhenius parameters.
         int ThirdBody;        // Index of the species to use as the third body.  -1 for all.
-        real Params[MAX_FALLOFF_PARAMS]; // Fall-off parameters specific to whichever form is used:
+        double Params[MAX_FALLOFF_PARAMS]; // Fall-off parameters specific to whichever form is used:
                                          //   Lindemann:  No other parameters required.
                                          //   TROE3(4):  0=alpha, 1=T***, 2=T*, (3=T**).
                                          //   SRI:  0=a, 1=b, 2=c, 3=d, 4=e.
         // Constructors.
         FALLOFF_PARAMS(void) {ThirdBody=-1,Params[0]=Params[1]=Params[2]=Params[3]=Params[4]=0.0;};
-        FALLOFF_PARAMS(ARRHENIUS lowp, int tb, real a=0.0, real b=0.0, real c=0.0, real d=0.0, real e=0.0) {
+        FALLOFF_PARAMS(ARRHENIUS lowp, int tb, double a=0.0, double b=0.0, double c=0.0, double d=0.0, double e=0.0) {
             LowP_Limit=lowp; ThirdBody=tb; Params[0]=a; Params[1]=b; Params[2]=c; Params[3]=d; Params[4]=e;
         };
-        FALLOFF_PARAMS(real lpa, real lpn, real lpe, int tb, real a=0.0, real b=0.0, real c=0.0,
-                       real d=0.0, real e=0.0) {
+        FALLOFF_PARAMS(double lpa, double lpn, double lpe, int tb, double a=0.0, double b=0.0, double c=0.0,
+                       double d=0.0, double e=0.0) {
             LowP_Limit=ARRHENIUS(lpa,lpn,lpe); ThirdBody=tb; Params[0]=a; Params[1]=b;
             Params[2]=c; Params[3]=d; Params[4]=e;
         };
@@ -139,11 +187,11 @@ namespace Kinetics
     // A function pointer type for a custom fall-off reaction.
     /*typedef void (*FallOffFnPtr)(
         const Reaction &rxn, // The reaction for which the fall-off is defined.
-        real lowk, // The pre-calculated low-pressure limit rate constant.
-        real tbc,  // The pre-calculated third-body concentration.
-        real T,    // Temperature.
-        real &kf,  // Forward rate constant (will be adjusted).
-        real &kr   // Reverse rate constant (will be adjusted).
+        double lowk, // The pre-calculated low-pressure limit rate constant.
+        double tbc,  // The pre-calculated third-body concentration.
+        double T,    // Temperature.
+        double &kf,  // Forward rate constant (will be adjusted).
+        double &kr   // Reverse rate constant (will be adjusted).
         );*/
 };
 };

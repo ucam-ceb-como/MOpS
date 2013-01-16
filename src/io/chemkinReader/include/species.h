@@ -15,6 +15,7 @@
 #include "transport.h"
 #include "thermo.h"
 #include "element.h"
+#include "phase.h" 
 
 namespace IO
 {
@@ -23,8 +24,9 @@ namespace IO
     {
 
             std::string name_;
-            double molecularWeight_;
-
+	    int siteOccupancy_; // Added by mm864 
+            double molecularWeight_;	
+	    std::string phaseName_;     
             Transport transport_;
             Thermo thermo_;
 
@@ -39,15 +41,26 @@ namespace IO
 
             ~Species();
 
-            std::string name() const
+            std::string name() const 
             {return name_;}
+
+	    std::string phasename() const
+            {return phaseName_;}
+			
+	    void setSiteOccupancy(const int OccupancyNo);  
+		
+	    void setPhaseName(const std::string &phName);
+
+	    const int& getSiteOccupancy() const; 
 
             Transport& transport();
             const Transport& transport() const;
 
             Thermo& thermo();
             const Thermo& thermo() const;
+           
 
+			
             //void checkElementsInSpecies(const std::vector<IO::Element>& elements);
 
             friend std::ostream& operator<<(std::ostream& output, const Species& element);

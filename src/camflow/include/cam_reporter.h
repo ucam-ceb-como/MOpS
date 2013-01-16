@@ -82,9 +82,9 @@ namespace Camflow{
         void writeHeader(std::vector<std::string>& stdHeader, std::vector<std::string>& ratesHeader);
         void wrteHeader(std::vector<std::string>& stdHeader, std::vector<std::string>& ratesHeader, std::vector<std::string>& transHeader);
         void writeToFile(std::string fname,CamResidual &resid);
-        void writeStdFileOut(std::vector<doublereal>& data);
+        void writeStdFileOut(std::vector<double>& data);
         void writeCustomHeader(std::vector<std::string> header);
-        void writeCustomFileOut(std::vector<doublereal>& data);
+        void writeCustomFileOut(std::vector<double>& data);
 
     };
 }

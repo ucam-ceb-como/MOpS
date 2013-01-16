@@ -75,7 +75,7 @@ public:
     // TOTAL RATE CALCULATION.
 
     // Returns the rate of the process for the given system.
-    virtual real Rate(real t,          // Time.
+    virtual double Rate(double t,          // Time.
                       const Cell &sys, // System for which to calculate rate.
                       const Geometry::LocalGeometry1d &local_geom //position information
                       ) const;
@@ -86,11 +86,11 @@ public:
     // Returns the number of rate terms for this process.
     virtual unsigned int TermCount(void) const;
 
-    // Calculates the rate terms given an iterator to a real vector. The 
+    // Calculates the rate terms given an iterator to a double vector. The 
     // iterator is advanced to the position after the last term for this
     // process.  Returns the sum of all rate terms.
-    virtual real RateTerms(
-        real t,                  // Time.
+    virtual double RateTerms(
+        double t,                  // Time.
         const Cell &sys,       // Indicates true kernel (not majorant).
         const Geometry::LocalGeometry1d &local_geom, //position information
         fvector::iterator &iterm // Iterator to the first term.
@@ -98,7 +98,7 @@ public:
 
     //! Perform a coagulation with particles chosen according to the additive kernel
     virtual int Perform(
-        real t,
+        double t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
@@ -113,15 +113,15 @@ private:
     };
 
     //* Calculate kernel between two particles
-    virtual real CoagKernel(const Particle &sp1, const Particle &sp2,
+    virtual double CoagKernel(const Particle &sp1, const Particle &sp2,
                             const Cell& sys) const;
 
     //* Calculate majorant kernel between two particles
-    virtual real MajorantKernel(const Particle &sp1, const Particle &sp2,
+    virtual double MajorantKernel(const Particle &sp1, const Particle &sp2,
                                 const Cell& sys, const MajorantType maj) const;
 
     //* Arbitrary factor to give some headroom for LPDA
-    static const real s_MajorantFactor;
+    static const double s_MajorantFactor;
 };
 
 } // namespace Processes

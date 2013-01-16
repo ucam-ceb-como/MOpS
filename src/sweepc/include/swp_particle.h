@@ -76,14 +76,14 @@ class Particle
 public:
 	// Constructors.
     Particle(                             // Initialising constructor.
-        real time,                        // Create time.
+        double time,                        // Create time.
         const Sweep::ParticleModel &model // Defining particle model.
         );
 
     //! Create a particle with a specified statistical weight
     Particle(
-        real time,
-        real weight,
+        double time,
+        double weight,
         const Sweep::ParticleModel &model
         );
 
@@ -115,41 +115,41 @@ public:
     // BASIC PROPERTIES.
 
     //! Returns the particle equivalent sphere diameter.
-    real SphDiameter(void) const;
+    double SphDiameter(void) const;
 
     //! Returns the collision diameter.
-    real CollDiameter(void) const;
+    double CollDiameter(void) const;
 
     //! Returns the mobility diameter.
-    real MobDiameter(void) const;
+    double MobDiameter(void) const;
 
     //! Returns the surface area.
-    real SurfaceArea(void) const;
+    double SurfaceArea(void) const;
 
     //! Returns the equivalent sphere surface area, based on the volume.
-    real SphSurfaceArea(void) const;
+    double SphSurfaceArea(void) const;
 
     //! Returns the volume.
-    real Volume(void) const;
+    double Volume(void) const;
 
     //! Returns the mass.
-    real Mass(void) const;
+    double Mass(void) const;
 
     //! Returns the number of surface reaction sites.
-    real GetSites(void) const;
+    double GetSites(void) const;
 
     //! Returns the sintering rate (silica).
-    real GetSintRate(void) const;
+    double GetSintRate(void) const;
 
     //! Returns the coverage fraction
-    real GetCoverageFraction(void) const;
+    double GetCoverageFraction(void) const;
 
     //! Geometric average diameter of aggregate sub-units
-    real avgeomdiam(double) const;
+    double avgeomdiam(double) const;
 
 
     //! Returns the property with the given ID.
-    real Property(Sweep::PropID id) const;
+    double Property(Sweep::PropID id) const;
 
 
 
@@ -159,7 +159,7 @@ public:
     const fvector &Composition(void) const;
 
     //! Returns the ith component value.  Returns 0.0 if i invalid.
-    real Composition(unsigned int i) const;
+    double Composition(unsigned int i) const;
 
 
     // TRACKER VALUES.
@@ -168,37 +168,37 @@ public:
     const fvector &Values(void) const;
 
     //! Returns the ith tracked value.  Returns 0.0 if i invalid.
-    real Values(unsigned int i) const;
+    double Values(unsigned int i) const;
 
 
     // POSITION DATA
     
     //! Get spatial position
-    real getPosition() const {return m_Position;}
+    double getPosition() const {return m_Position;}
     
     //! Get time at which spatial position was valid
-    real getPositionTime() const {return m_PositionTime;}
+    double getPositionTime() const {return m_PositionTime;}
     
     //! Set spatial position of particle and time at which it applied
-    void setPositionAndTime(const real x, const real t);
+    void setPositionAndTime(const double x, const double t);
 
     // STATISTICAL WEIGHT
     //! Get statistical weight
-    real getStatisticalWeight() const {return m_StatWeight;}
+    double getStatisticalWeight() const {return m_StatWeight;}
 
     //! Set statistical weight
-    void setStatisticalWeight(real wt) {m_StatWeight = wt;}
+    void setStatisticalWeight(double wt) {m_StatWeight = wt;}
 
     // CREATE TIME
     //! Time particle was created.
-    real CreateTime(void) const {return m_createt;}
+    double CreateTime(void) const {return m_createt;}
 
     // LAST UPDATE TIME FOR LPDA
     //! Time at which LPDA was last performed on this particle.
-    void SetTime(real t);
+    void SetTime(double t);
 
     //! Time at which LPDA was last performed on this particle.
-    real LastUpdateTime(void) const {return mLPDAtime;}
+    double LastUpdateTime(void) const {return mLPDAtime;}
 
     // COAG COUNT
     //! Number of coagulations since count was reset
@@ -233,11 +233,11 @@ public:
 
     //! Sinter over a given time step
     void Sinter(
-        real dt,         // Delta-t for sintering.
+        double dt,         // Delta-t for sintering.
         Cell &sys, // System which defines particle's environment.
         const Processes::SinteringModel &model, // Sintering model to use.
         rng_type &rng,   // Random number generator
-        real wt     // Statistical weight
+        double wt     // Statistical weight
         );
 
 
@@ -263,13 +263,13 @@ public:
 private:
 
     //! Spatial position of particle
-    real m_Position;
+    double m_Position;
 
     //! Time at which position was valid
-    real m_PositionTime;
+    double m_PositionTime;
 
     //! Statistical weight of particle units: \f$ m^{-3}\f$
-    real m_StatWeight;
+    double m_StatWeight;
 
     //! Primary particle containing physical details of this particle
     Sweep::AggModels::Primary *m_primary;
@@ -278,10 +278,10 @@ private:
     unsigned int m_CoagCount;
 
     //! Time at which particle was created (earliest part).
-    real m_createt;
+    double m_createt;
 
     //! Last time particle was updated.  Required for LPDA.
-    real mLPDAtime;
+    double mLPDAtime;
 
     // Can't create a particle without knowledge of the components
     // and the tracker variables.

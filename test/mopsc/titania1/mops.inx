@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mops version="2">
+  <runs>2</runs>
+  <atol>1.0e-17</atol> 
+  <rtol>1.0e-4</rtol>
+  <pcount>512</pcount>
+  <maxm0>1.0e14</maxm0>
+  
+  <reactor type="batch" constt="true" constv="false" id="Test_System" units="mol/mol">
+    <temperature units="K">1100</temperature>
+    <pressure units="bar">4.00</pressure>
+    <component id="TICL4">0.01</component>
+    <component id="O2">0.99</component>  
+    <population>
+        <m0>1.0e15</m0>
+        <particle count="512">
+            <weight>1.0</weight>
+            <component id="Rutile" dx="100"/>
+        </particle>
+    </population>
+  </reactor>
+
+  <timeintervals>
+    <start>0.0</start>
+    <time steps="20" splits="4">0.001</time>
+  </timeintervals>
+  
+  <output>
+    <filename>Z1</filename>
+    <statsbound property="dcol">
+      <lower>0</lower>
+      <upper>1.0e30</upper>
+    </statsbound>
+    
+    <console interval="1" msgs="true">
+      <tabular>
+        <column fmt="sci">time</column>
+        <column fmt="float">#sp</column>
+        <column fmt="sci">TICL4</column>
+        <column fmt="sci">O2</column>
+        <column fmt="sci">M0</column>
+        <column fmt="sci">T</column>
+      </tabular>
+    </console>
+    <ptrack enable="false" ptcount="50"/>
+  </output>
+</mops>

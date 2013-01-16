@@ -47,7 +47,7 @@
 
 using namespace Sweep::Processes;
 
-const Sweep::real Sweep::Processes::ConstantCoagulation::s_MajorantFactor = 1.5;
+const double Sweep::Processes::ConstantCoagulation::s_MajorantFactor = 1.5;
 
 /**
  * Main way of building a new coagulation object
@@ -69,7 +69,7 @@ Sweep::Processes::ConstantCoagulation::ConstantCoagulation(std::istream &in, con
 }
 
 // Returns the rate of the process for the given system.
-Sweep::real Sweep::Processes::ConstantCoagulation::Rate(real t, const Cell &sys,
+double Sweep::Processes::ConstantCoagulation::Rate(double t, const Cell &sys,
                                                         const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
@@ -96,7 +96,7 @@ unsigned int Sweep::Processes::ConstantCoagulation::TermCount() const {return TY
  * @param[in]     local_geom   Position information
  * @param[in,out] iterm        Pointer to start of sequence to hold the rate terms, returned as one past the end.
  */
-Sweep::real Sweep::Processes::ConstantCoagulation::RateTerms(real t, const Cell &sys,
+double Sweep::Processes::ConstantCoagulation::RateTerms(double t, const Cell &sys,
                                                              const Geometry::LocalGeometry1d &local_geom,
                                                              fvector::iterator &iterm) const
 {
@@ -114,7 +114,7 @@ Sweep::real Sweep::Processes::ConstantCoagulation::RateTerms(real t, const Cell 
  *
  * \return      0 on success, otherwise negative.
  */
-int ConstantCoagulation::Perform(Sweep::real t, Sweep::Cell &sys, 
+int ConstantCoagulation::Perform(double t, Sweep::Cell &sys, 
                              const Geometry::LocalGeometry1d& local_geom,
                              unsigned int iterm,
                              Sweep::rng_type &rng) const
@@ -157,7 +157,7 @@ int ConstantCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
     }
 
     //Calculate the majorant rate before updating the particles
-    const real majk = MajorantKernel(*sp1, *sp2, sys, Default);
+    const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
 
     //Update the particles
     m_mech->UpdateParticle(*sp1, sys, t, rng);
@@ -193,7 +193,7 @@ int ConstantCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
         // Must check for ficticious event now by comparing the original
         // majorant rate and the current (after updates) true rate.
 
-        real truek = CoagKernel(*sp1, *sp2, sys);
+        double truek = CoagKernel(*sp1, *sp2, sys);
 
         if (!Fictitious(majk, truek, rng)) {
             JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
@@ -227,7 +227,7 @@ int ConstantCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
  *
  *@return       Value of kernel
  */
-Sweep::real Sweep::Processes::ConstantCoagulation::CoagKernel(const Particle &sp1,
+double Sweep::Processes::ConstantCoagulation::CoagKernel(const Particle &sp1,
                                                               const Particle &sp2,
                                                               const Cell& sys) const
 {
@@ -246,7 +246,7 @@ Sweep::real Sweep::Processes::ConstantCoagulation::CoagKernel(const Particle &sp
  *
  *@return       Value of majorant kernel
  */
-Sweep::real Sweep::Processes::ConstantCoagulation::MajorantKernel(const Particle &sp1,
+double Sweep::Processes::ConstantCoagulation::MajorantKernel(const Particle &sp1,
                                                                   const Particle &sp2,
                                                                   const Cell& sys,
                                                                   const MajorantType maj) const

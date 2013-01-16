@@ -83,29 +83,29 @@ void JumpProcess::addReaction(std::vector<Sweep::KMC_ARS::Reaction>& rxnv, const
     rxnv.push_back(rxn);
 }
 //! Calculate rates of each elementary reaction
-void JumpProcess::calculateElemRxnRate(std::vector<Sweep::KMC_ARS::Reaction>& rxnv, const KMCGasPoint& gp/*, const real t_now*/) {
+void JumpProcess::calculateElemRxnRate(std::vector<Sweep::KMC_ARS::Reaction>& rxnv, const KMCGasPoint& gp/*, const double t_now*/) {
     m_r.clear();
     for(int i=0; i<(int) rxnv.size(); i++) {
         m_r.push_back(rxnv[i].getRate(gp));
     }
 }
 //! Calculates jump process rates and store (for Pressures 0.0267, 0.12 & 1 atm; defined in derived classes)
-real JumpProcess::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/){
+double JumpProcess::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/){
     cout<<"....Base Class setRate0p0267 called....\n\n";
     return 0.00;
 }
-real JumpProcess::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/){
+double JumpProcess::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/){
     cout<<"....Base Class setRate0p12 called....\n\n";
     return 0.00;
 }
-real JumpProcess::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const real& time_now*/){
+double JumpProcess::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/){
     cout<<"....Base Class setRate1 called....\n\n";
     return 0.00;
 }
 
 // Read Process
 //! Jump rate
-real JumpProcess::getRate() const {
+double JumpProcess::getRate() const {
     return m_rate;
 }
 //! Gets site type associated with the jump process

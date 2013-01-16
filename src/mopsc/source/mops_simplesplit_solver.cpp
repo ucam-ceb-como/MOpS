@@ -68,7 +68,7 @@ SimpleSplitSolver::~SimpleSplitSolver(void)
 // Solves the coupled reactor using a Strang splitting algorithm
 // up to the stop time.  calls the output routine once at the
 // end of the function.  niter is ignored.
-void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
+void SimpleSplitSolver::Solve(Reactor &r, double tstop, int nsteps, int niter, 
                               Sweep::rng_type &rng, OutFnPtr out, void *data)
 {
     // Mark the time at the start of the step, in order to
@@ -76,18 +76,18 @@ void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
     clock_t totmark = clock();
 
     // Time counters.
-	real t1 = r.Time();
-    real t2 = r.Time();
-    real dt = (tstop - t2) / (real)nsteps; // Step size.
-    //real h  = dt * 0.5; // Half step size.
+	double t1 = r.Time();
+    double t2 = r.Time();
+    double dt = (tstop - t2) / (double)nsteps; // Step size.
+    //double h  = dt * 0.5; // Half step size.
 
     // Sweep time counters.
-    //real ts1 = r.Time();
-    //real ts2 = ts1;
+    //double ts1 = r.Time();
+    //double ts2 = ts1;
 
     // Variables required to ensure particle number density is correctly
     // scaled with gas-phase expansion.
-    real rho = 0.0;
+    double rho = 0.0;
 
     /* m_cpu_mark = clock();
         // Solve first half-step of gas-phase chemistry.
@@ -138,20 +138,20 @@ void SimpleSplitSolver::Solve(Reactor &r, real tstop, int nsteps, int niter,
 
 // SOLUTION ROUTINES.
 
-void SimpleSplitSolver::multiSplitStep(Mops::real dt, unsigned int n,
+void SimpleSplitSolver::multiSplitStep(double dt, unsigned int n,
                                        Mops::Reactor &r, Sweep::rng_type &rng)
 {
     // Time counters.
-    real t2 = r.Time();
-    //real h  = dt * 0.5; // Half step size.
+    double t2 = r.Time();
+    //double h  = dt * 0.5; // Half step size.
 
     // Sweep time counters.
-    real ts1 = r.Time();
-    real ts2 = ts1;
+    double ts1 = r.Time();
+    double ts2 = ts1;
 
     // Variables required to ensure particle number density is correctly
     // scaled with gas-phase expansion.
-    real rho = 0.0;
+    double rho = 0.0;
 
     /* m_cpu_mark = clock();
         // Solve first half-step of gas-phase chemistry.

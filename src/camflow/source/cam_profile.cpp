@@ -67,13 +67,13 @@ CamProfile::~CamProfile()
 /*
  *set products
  */
-void CamProfile::setProductSpecies(std::map<std::string,doublereal> spec){
+void CamProfile::setProductSpecies(std::map<std::string,double> spec){
     list_prdt = spec;
 }
 /*
  *set intermediates
  */
-void CamProfile::setIntermediateSpecies(std::map<std::string,doublereal> spec){
+void CamProfile::setIntermediateSpecies(std::map<std::string,double> spec){
     list_intmd = spec;
 }
 /*
@@ -96,13 +96,13 @@ void CamProfile::setGeometryObj(CamGeometry& cg){
 /*
  *set mixing center
  */
-void CamProfile::setMixingCenter(doublereal len){
+void CamProfile::setMixingCenter(double len){
     mCenter = len;
 }
 /*
  *set the mixing width
  */
-void CamProfile::setMixingWidth(doublereal len){
+void CamProfile::setMixingWidth(double len){
     mWidth = len;
 }
 
@@ -124,8 +124,8 @@ void CamProfile::setStartprofile(CamBoundary& left, CamBoundary& right,
  */
 void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
 
-    std::vector<doublereal> m_in = cb.getInletMassfracs();
-    std::vector<doublereal> position = geom.getAxpos();
+    std::vector<double> m_in = cb.getInletMassfracs();
+    std::vector<double> position = geom.getAxpos();
     int len = position.size();
 
     start.resize(len,mech.SpeciesCount());
@@ -140,15 +140,15 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
             /*
              *sum the intermediates
              */
-            doublereal sumInter=0;
+            double sumInter=0;
             for(unsigned int l=0; l<mech.SpeciesCount();l++){
                 sumInter += start(i,l);
             }
-            doublereal factor = 1-sumInter;
+            double factor = 1-sumInter;
             /*
              * scaling factor
              */
-            doublereal f_prdt, f_reac;
+            double f_prdt, f_reac;
             if(position[i] <= (mCenter-mWidth/2.0)) {
                 f_prdt = 0.0;
             }else{
@@ -160,8 +160,8 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
             }
             f_reac = 1-f_prdt;
 
-            std::map<std::string, doublereal>::iterator p;
-            std::map<std::string,doublereal> spec = cb.getInletSpecies();
+            std::map<std::string, double>::iterator p;
+            std::map<std::string,double> spec = cb.getInletSpecies();
             p = spec.begin();
             while(p!= spec.end()){
                 int index = mech.FindSpecies(p->first);
@@ -199,13 +199,13 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
  *set the gaussian
  */
 void CamProfile::setGaussian(Mechanism& mech){
-    std::vector<doublereal> position = geom.getAxpos();
+    std::vector<double> position = geom.getAxpos();
     size_t len = position.size();
-    std::map<std::string, doublereal>::iterator p;
+    std::map<std::string, double>::iterator p;
     p = list_intmd.begin();
     while(p!=list_intmd.end()){
         size_t index = mech.FindSpecies(convertToCaps(trim(p->first)));
-        doublereal gWidth = -log(0.15*m_intmd[index])/pow(mWidth/2.0,2);
+        double gWidth = -log(0.15*m_intmd[index])/pow(mWidth/2.0,2);
         for(size_t i=0; i<len; i++){
             start(i,index) = m_intmd[index]*exp(-gWidth*pow(position[i]-mCenter,2));
         }
@@ -218,18 +218,18 @@ void CamProfile::setGaussian(Mechanism& mech){
  *set the temperature profile based on a guassian distribution
  */
 
-void CamProfile::setGaussTempProfile(std::vector<doublereal>& vTemp){
+void CamProfile::setGaussTempProfile(std::vector<double>& vTemp){
 
     if(mWidth == 0.0 || mCenter == 0.0){
         throw CamError("Invalid mixing center and mixing width definition\n");
     }
-    doublereal dmax = 1.0;
-    std::vector<doublereal> position = geom.getAxpos();
+    double dmax = 1.0;
+    std::vector<double> position = geom.getAxpos();
     size_t len = position.size();
     vTemp.resize(len,0.0);
-    doublereal gWidth = -log(0.15*dmax)/pow(mWidth/2.0,2);
+    double gWidth = -log(0.15*dmax)/pow(mWidth/2.0,2);
     for(size_t i=0; i<len; i++){
-        doublereal temp = exp(-gWidth*pow(position[i]-mCenter,2));
+        double temp = exp(-gWidth*pow(position[i]-mCenter,2));
         vTemp[i] = temp*2000+300;
     }
 }
@@ -241,12 +241,12 @@ Array2D& CamProfile::getStartProfile(){
     return start;
 }
 //return the species initial guesses
-void CamProfile::getmassFracs(std::map<std::string,doublereal>& spec, Mechanism& mech, std::vector<doublereal>& frac){
+void CamProfile::getmassFracs(std::map<std::string,double>& spec, Mechanism& mech, std::vector<double>& frac){
     int index;
     frac.resize(mech.SpeciesCount(),0.0);
-    std::vector<doublereal> temp;
+    std::vector<double> temp;
     temp.resize(mech.SpeciesCount(),0.0);
-    std::map<std::string,doublereal>::iterator p;
+    std::map<std::string,double>::iterator p;
     p = spec.begin();
     while(p!=spec.end()){
         index = mech.FindSpecies(convertToCaps(trim(p->first)));
@@ -266,14 +266,14 @@ void CamProfile::getmassFracs(std::map<std::string,doublereal>& spec, Mechanism&
 
 }
 
-void CamProfile::setUserTemp(doublereal pos, doublereal temp)
+void CamProfile::setUserTemp(double pos, double temp)
 {
     flag_loadTemp = true;
     u_pos.push_back(pos);
     u_temp.push_back(temp);
 }
 
-void CamProfile::setUserFrac(doublereal pos, doublereal temp, std::string species)
+void CamProfile::setUserFrac(double pos, double temp, std::string species)
 {
     flag_loadFracs = true;
     u_species_pos.push_back(pos);
@@ -282,11 +282,11 @@ void CamProfile::setUserFrac(doublereal pos, doublereal temp, std::string specie
 }
 
 //return the user defined temperature
-doublereal CamProfile::getUserDefTemp(const doublereal& pos)
+double CamProfile::getUserDefTemp(const double& pos)
 {
 
     size_t len = u_pos.size();
-    Utils::LinearInterpolator<doublereal, doublereal> mTempInterpolator(u_pos, u_temp);
+    Utils::LinearInterpolator<double, double> mTempInterpolator(u_pos, u_temp);
 
     for (size_t i=0; i<len; ++i)
     {
@@ -302,10 +302,10 @@ doublereal CamProfile::getUserDefTemp(const doublereal& pos)
 
 }
 
-doublereal CamProfile::getUserDefFracs(const doublereal& pos, const std::string species)
+double CamProfile::getUserDefFracs(const double& pos, const std::string species)
 {
 
-    std::vector<doublereal> fracs,species_pos;
+    std::vector<double> fracs,species_pos;
     size_t speciesIndex;
     size_t len = u_species_pos.size()/9;
 
@@ -324,7 +324,7 @@ doublereal CamProfile::getUserDefFracs(const doublereal& pos, const std::string 
         species_pos.push_back(u_species_pos[i]);
     }
 
-    Utils::LinearInterpolator<doublereal, doublereal> mFracInterpolator(species_pos, fracs);
+    Utils::LinearInterpolator<double, double> mFracInterpolator(species_pos, fracs);
 
     for (size_t i=0; i<len; ++i)
     {
@@ -339,6 +339,6 @@ doublereal CamProfile::getUserDefFracs(const doublereal& pos, const std::string 
     }
 
 }
-std::vector<doublereal>& CamProfile::getPosition(){
+std::vector<double>& CamProfile::getPosition(){
     return this->u_pos;
 }

@@ -260,6 +260,9 @@ void CSV_IO::writeLine(const std::vector<T> &values)
     if (m_file.is_open() && m_file.good() && (values.size()>0)) {
         // Declare vector iterator and set it to beginning of values.
         typename vector<T>::const_iterator it = values.begin();
+		
+		//Added for better comparison with Chemkin.
+		m_file.precision(15);
 
         // Output the comma-separated values.
         m_file << *(it++);

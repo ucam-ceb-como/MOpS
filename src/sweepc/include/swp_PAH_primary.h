@@ -82,10 +82,10 @@ public:
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
 
     //! Build a new primary with one molecule
-    PAHPrimary(const real time, const Sweep::ParticleModel &model);
+    PAHPrimary(const double time, const Sweep::ParticleModel &model);
 
     //! Build a new primary with one molecule
-    PAHPrimary(const real time, const real position,
+    PAHPrimary(const double time, const double position,
                const Sweep::ParticleModel &model);
 
     PAHPrimary(const PAHPrimary &copy); // Copy constructor.
@@ -95,7 +95,7 @@ public:
         );
 
 
-    PAHPrimary(real time, const Sweep::ParticleModel &model, bool noPAH);
+    PAHPrimary(double time, const Sweep::ParticleModel &model, bool noPAH);
 
     // Destructors.
     virtual ~PAHPrimary(void);
@@ -110,10 +110,10 @@ public:
     PAHPrimary &Coagulate(const Primary &rhs, rng_type &rng);
 
     //! investigate the sintering of PAH cluster
-    void Sinter(real dt, Cell &sys,
+    void Sinter(double dt, Cell &sys,
                 const Processes::SinteringModel &model,
                 rng_type &rng,
-                real wt);
+                double wt);
 
     //! prints the tree to a file that can be converted to a graph using graphviz
     void PrintTree(std::string filename);
@@ -125,7 +125,7 @@ public:
 	void UpdatePAHs(double t, const Sweep::ParticleModel &model, Cell &sys, rng_type &rng);
 
     //! adds a PAH to a particle
-    void AddPAH(real time, const Sweep::ParticleModel &model);
+    void AddPAH(double time, const Sweep::ParticleModel &model);
 
     //! returns the rounding level due to mass addition
     double CoalescenceLevel();
@@ -253,7 +253,7 @@ private:
     void inputPAHs(std::istream &in, const Sweep::ParticleModel &model,  const int PAHcount);
 
     //! Set the sintering time of a tree
-    void SetSinteringTime(real time);
+    void SetSinteringTime(double time);
 
     //some basic properties
     //derived from the PAHs by UpdataCache()

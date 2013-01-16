@@ -71,9 +71,25 @@ int main(int argc, char *argv[])
 	 MPI_Get_processor_name(processor_name, &namelen);
      printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
 #endif
+
+     /* 
+       surface Chemistry switch = 0 - OFF  
+                                = 1 - ON // controlled by arguments "-surf"
+      */ 	
+     int surfaceCapability = 0; 
+	
+	 
+	 
 	// Command line arguments with default values.
     string chemfile("chem.inp");
     string thermfile("therm.dat");
+	
+    /*
+	* To take the additional inputs of surface chemistry 
+	*/
+    string chemSurfFile("NOT READ"); // added by mm864
+    string thermSurfFile("NOT READ"); // added by mm864
+    
     string settfile("mops.inx");
     string swpfile("sweep.xml");
     string sensifile("sensi.xml");
@@ -139,7 +155,9 @@ int main(int argc, char *argv[])
             // human-readable CSV formatted files with the results.
             fsolve       = false;
             fpostprocess = true;
-
+		} else if (strcmp(argv[i], "-surf") == 0) {
+            surfaceCapability = 1; // Surface on 
+			
         // The next statements select the type of solver to use.  The
         // default is to solve gas-phase only, with no particle system.
 
@@ -174,7 +192,7 @@ int main(int argc, char *argv[])
             diag = 3;
         } else if (strcmp(argv[i], "-diag4") == 0) {
             diag = 4; // Full diagnostics.
-
+		 
         } else {
             // Currently nothing else is implemented here.  However, in future
             // the settings file name will not be set with the -r switch and
@@ -184,6 +202,14 @@ int main(int argc, char *argv[])
         }
     }
 
+	if (surfaceCapability == 1)
+    {
+
+	// Now set the surface chemistry input and surface thermodynamics inputs
+			chemSurfFile.assign("surfchem.inp"); // added by mm864
+			thermSurfFile.assign("surftherm.dat"); // added by mm864
+		}
+	
     // Define all the objects required to run the simulation.
     Solver *solver   = NULL; // The solver.
     Reactor *reactor = NULL; // Reactor to solve.
@@ -228,59 +254,92 @@ int main(int argc, char *argv[])
                 break;
         }
     } catch (std::logic_error &le) {
-        printf("mops: Failed to initialise solver due to bad inputs.  Message:\n  ");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to initialise solver due to bad inputs.  Message:\n  "
+                << le.what() << "\n\n";
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to initialise solver due to a program error.  Message:\n  ");
-        printf(re.what());
+        std::cerr << "mops: Failed to initialise solver due to a program error.  Message:\n  "
+                << re.what() << "\n\n";
         printf("\n\n");
         return -1;
     }
 
+    std::cout << "Solving Type" << soltype << endl; // for debugging
+
     // Read the chemical mechanism / profile.
+	
+	if (surfaceCapability  == 1){
+	
     try {
-        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag, transfile);
+        Sprog::IO::MechanismParser::ReadChemkin(chemfile, chemSurfFile, mech.GasMech(), thermfile, thermSurfFile, diag, transfile);
         mech.ParticleMech().SetSpecies(mech.GasMech().Species());
         if (diag>0) 
             mech.GasMech().WriteDiagnostics("ckmech.diag");
+	
+	std::cout << "Particle Mech set species done - surface mode" << endl; // for debugging
+
+        if (soltype == FlamePP){
+  
+            dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
+        }
+    } catch (std::logic_error &le) {
+        std::cerr << "mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n"
+            << le.what() << "\n\n";
+        delete solver; // Must clear memory now.
+        return -1;
+    } catch (std::runtime_error &re) {
+        std::cerr << "mops: Failed to read chemical mechanism/profile due to a program error.  Message:\n\n"
+            << re.what() << "\n\n";
+        delete solver; // Must clear memory now.
+        return -1;
+    }
+
+	
+	} else {
+	
+	try {
+        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag, transfile);
+        mech.ParticleMech().SetSpecies(mech.GasMech().Species());
+        if (diag>0) 
+	  { mech.GasMech().WriteDiagnostics("ckmech.diag");}
+
+	std::cout << "Particle Mech set species done - gas only mode" << endl; // for debugging
 
         if (soltype == FlamePP){
             //Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
             dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
         }
     } catch (std::logic_error &le) {
-        printf("mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n"
+                << le.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to read chemical mechanism/profile due to a program error.  Message:\n\n");
-        printf(re.what());
+        std::cerr << "mops: Failed to read chemical mechanism/profile due to a program error.  Message:\n\n"
+                << re.what() << "\n\n";
         printf("\n\n");
         delete solver; // Must clear memory now.
         return -1;
     }
-
+	
+	}
     // Read the particle mechanism.
     try {
-        if (soltype != GPC) {
+      if (soltype != GPC) { // If NOT GPC 
             mech.ParticleMech().SetSpecies(mech.GasMech().Species());
-            Sweep::MechParser::Read(swpfile, mech.ParticleMech());
+	    std::cout << "Sweep Mech Parser" << endl; // for debugging
 
+            Sweep::MechParser::Read(swpfile, mech.ParticleMech());
+	    
         }
     } catch (std::logic_error &le) {
-        printf("mops: Failed to read particle mechanism due to bad inputs.  Message:\n  ");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to read particle mechanism due to bad inputs.  Message:\n  "
+            << le.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to read particle mechanism due to a program error.  Message:\n  ");
-        printf(re.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to read particle mechanism due to a program error.  Message:\n  "
+            << re.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     }
@@ -292,18 +351,18 @@ int main(int argc, char *argv[])
             reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, sim, *solver, mech);
         } else {
             // New format.
+	  std::cout << "About to read the XML/INX" << endl; // for debugging
             reactor = Settings_IO::LoadFromXML(settfile, reactor, times, sim, *solver, mech);
+	    std::cout << "XML/INX read" << endl; // for debugging
         }
     } catch (std::logic_error &le) {
-        printf("mops: Failed to load settings file due to bad inputs.  Message:\n  ");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to load settings file due to bad inputs.  Message:\n  "
+            << le.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to load settings file due to a program error.  Message:\n  ");
-        printf(re.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to load settings file due to a program error.  Message:\n  "
+            << re.what() << "\n\n";
         delete solver; // Must clear memory now.
         return -1;
     }
@@ -331,10 +390,11 @@ int main(int argc, char *argv[])
 
         }
         delete sensi;
+
+	cout << "Sensitivity Analyser set" << endl;// for debugging
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to load sensitivity setting files due to a program error.  Message:\n  ");
-        printf(re.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to load sensitivity setting files due to a program error.  Message:\n  "
+            << re.what() << "\n\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
@@ -350,16 +410,14 @@ int main(int argc, char *argv[])
             sim.RunSimulation(*reactor, *solver, 456 + randomSeedOffset);
         }
     } catch (std::logic_error &le) {
-        printf("mops: Failed to solve reactor due to bad inputs.  Message:\n  ");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to solve reactor due to bad inputs.  Message:\n  "
+                << le.what() << "\n\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to solve reactor due to a program error.  Message:\n  ");
-        printf(re.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to solve reactor due to a program error.  Message:\n  "
+            << re.what() << "\n\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
@@ -396,16 +454,14 @@ int main(int argc, char *argv[])
 #endif
         if (fpostprocess) sim.PostProcess();
     } catch (std::logic_error &le) {
-        printf("mops: Failed to post-process due to bad inputs.  Message:\n  ");
-        printf(le.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to post-process due to bad inputs.  Message:\n  "
+            << le.what() << "\n\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
     } catch (std::runtime_error &re) {
-        printf("mops: Failed to post-process due to a program error.  Message:\n  ");
-        printf(re.what());
-        printf("\n\n");
+        std::cerr << "mops: Failed to post-process due to a program error.  Message:\n  "
+            << re.what() << "\n\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;

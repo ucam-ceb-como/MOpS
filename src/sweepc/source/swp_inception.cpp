@@ -105,7 +105,7 @@ Inception &Inception::operator =(const Inception &rhs)
 const fvector &Inception::ParticleComp(void) const {return m_newcomp;}
 
 // Returns the amount of the ith component of the new particle.
-real Inception::ParticleComp(unsigned int i) const
+double Inception::ParticleComp(unsigned int i) const
 {
 
     if (i < m_newcomp.size()) {
@@ -122,7 +122,7 @@ void Inception::SetParticleComp(const fvector &comp)
 }
 
 // Sets the amount of the ith component in the new particle.
-void Inception::SetParticleComp(unsigned int i, real comp)
+void Inception::SetParticleComp(unsigned int i, double comp)
 {
     if (i < m_mech->ComponentCount()) {
         // Ensure vector is sufficiently long.
@@ -142,7 +142,7 @@ const fvector &Inception::ParticleTrackers(void) const
 
 // Returns the value of the ith tracker variable of the
 // new particle.
-real Inception::ParticleTrackers(unsigned int i) const
+double Inception::ParticleTrackers(unsigned int i) const
 {
     if (i < m_newvals.size()) {
         return m_newvals[i];
@@ -159,7 +159,7 @@ void Inception::SetParticleTrackers(const fvector &track)
 
 // Sets the value of the ith tracker variable in the
 // new particle.
-void Inception::SetParticleTracker(unsigned int i, real track)
+void Inception::SetParticleTracker(unsigned int i, double track)
 {
     if (i < m_mech->TrackerCount()) {
         // Ensure vector is sufficiently long.
@@ -178,14 +178,14 @@ void Inception::SetParticleTracker(unsigned int i, real track)
 // Calculates the rate of multiple inceptions given a
 // vector of inceptions and an iterator to a vector of
 // reals for output.
-real Inception::CalcRates(real t, const Cell &sys,
+double Inception::CalcRates(double t, const Cell &sys,
                           const Geometry::LocalGeometry1d &local_geom,
                           const IcnPtrVector &icns,
                           fvector &rates, unsigned int start)
 {
     IcnPtrVector::const_iterator p;
     fvector::iterator i = (rates.begin()+start);
-    real sum = 0.0;
+    double sum = 0.0;
     for (p=icns.begin(); p!=icns.end(); ++p,++i) {
         *i = (*p)->Rate(t, sys, local_geom);
         sum += *i;
@@ -264,7 +264,7 @@ void Inception::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                 // Read component values.
                 for (unsigned int i=0; i!=n; ++i) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_newcomp.push_back((real)val);
+                    m_newcomp.push_back((double)val);
                 }
 
                 // Read new tracker values count.
@@ -273,7 +273,7 @@ void Inception::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                 // Read tracker values.
                 for (unsigned int i=0; i!=n; ++i) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_newvals.push_back((real)val);
+                    m_newvals.push_back((double)val);
                 }
 
                 break;

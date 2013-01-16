@@ -1915,7 +1915,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
     int calc_total = 2*m_pah->m_rings + (CarbonListSize()+m_pah->m_rings5)/2 + numberOfBridges() + m_pah->m_rings5 + 1;
     if(calc_total != getCHCount().first) {
         saveDOT("KMC_DEBUG/KMC_C_Counts_ERROR.dot");
-        cout<<"Calculated total did not tally with real C counts!\n";
+        cout<<"Calculated total did not tally with double C counts!\n";
         cout<<"Last performed process: "<<jp.getName()<<", ID"<<jp.getID()<<'\n';
         std::ostringstream msg;
         msg << "\nCalculated total: "<<calc_total<<'\n'

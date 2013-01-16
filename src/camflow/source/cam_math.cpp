@@ -39,15 +39,15 @@ double CamMath::sumVector(std::vector<double>& vec1, std::vector<double>& vec2){
     return sum<double>(vec1,vec2);
 }
 
-doublereal CamMath::interpolateLG(doublereal at, int size, Array2D& dPrime,
-                                      const std::vector<doublereal>& val){
-    doublereal prod = 1;
+double CamMath::interpolateLG(double at, int size, Array2D& dPrime,
+                                      const std::vector<double>& val){
+    double prod = 1;
     for( int i=0; i< size; i++ )
         prod *= (at-i);
 
-    doublereal retVal = 1;
+    double retVal = 1;
     for( int i=0; i<size; i++){
-        doublereal expnt = prod/((at-i)*dPrime(size,i+1));
+        double expnt = prod/((at-i)*dPrime(size,i+1));
         retVal *= pow(val[i],expnt);
     }
 
@@ -99,15 +99,15 @@ void CamMath::prime(int size, Array2D& prime){
  \endverbatim
  *
  */
-void CamMath::TDMA(     std::vector<doublereal>& a,
-                        std::vector<doublereal>& b,
-                        std::vector<doublereal>& c,
-                        std::vector<doublereal>& r,
-                        std::vector<doublereal>& u){
+void CamMath::TDMA(     std::vector<double>& a,
+                        std::vector<double>& b,
+                        std::vector<double>& c,
+                        std::vector<double>& r,
+                        std::vector<double>& u){
 
     int n = a.size();
-    std::vector<doublereal> gam(n);
-    doublereal bet;
+    std::vector<double> gam(n);
+    double bet;
     if(b[0] == 0.0){
         throw CamError("Error in TDMA\n");
     }
@@ -126,7 +126,7 @@ void CamMath::TDMA(     std::vector<doublereal>& a,
 }
 
 
-const doublereal CamMath::cof[28] = {-1.3026537197817094, 6.4196979235649026e-1,
+const double CamMath::cof[28] = {-1.3026537197817094, 6.4196979235649026e-1,
 	1.9476473204185836e-2,-9.561514786808631e-3,-9.46595344482036e-4,
 	3.66839497852761e-4,4.2523324806907e-5,-2.0278578112534e-5,
 	-1.624290004647e-6,1.303655835580e-6,1.5626441722e-8,-8.5238095915e-8,
@@ -135,9 +135,9 @@ const doublereal CamMath::cof[28] = {-1.3026537197817094, 6.4196979235649026e-1,
 	-1.12708e-13,3.81e-16,7.106e-15,-1.523e-15,-9.4e-17,1.21e-16,-2.8e-17};
 
 
-doublereal CamMath::erfccheb(doublereal z){
+double CamMath::erfccheb(double z){
     int j;
-    doublereal t,ty,tmp,d=0.,dd=0.;
+    double t,ty,tmp,d=0.,dd=0.;
     if (z < 0.) throw CamError("erfccheb requires nonnegative argument");
     t = 2./(2.+z);
     ty = 4.*t - 2.;
@@ -149,8 +149,8 @@ doublereal CamMath::erfccheb(doublereal z){
     return t*exp(-z*z + 0.5*(cof[0] + ty*d) - dd);
 }
 
-doublereal CamMath::inverfc(doublereal p){
-    doublereal x,err,t,pp;
+double CamMath::inverfc(double p){
+    double x,err,t,pp;
     if (p >= 2.0) return -100.;
     if (p <= 0.0) return 100.;
     pp = (p < 1.0)? p : 2. - p;
@@ -165,12 +165,12 @@ doublereal CamMath::inverfc(doublereal p){
 
 
 
-doublereal CamMath::erf(doublereal x){
+double CamMath::erf(double x){
     if (x >=0.) return 1.0 - erfccheb(x);
     else return erfccheb(-x) - 1.0;
 }
 
-doublereal CamMath::erfc(doublereal x){
+double CamMath::erfc(double x){
     if (x >= 0.) return erfccheb(x);
     else return 2.0 - erfccheb(-x);
 }

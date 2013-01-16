@@ -61,6 +61,32 @@ const regex IO::ReactionParser::pressureDependent
     "\\(\\+(.*?)\\)"
 );
 
+const regex IO::ReactionParser::STICK // Checked by mm864!
+(
+    "(STICK)"
+);
+
+const regex IO::ReactionParser::COV // Checked by mm864!
+(
+    "(COV)\\s*\\/\\s*(.*?)\\s+(.*?)\\s+(.*?)\\s+(.*?)\\s*\\/"
+);
+
+const regex IO::ReactionParser::FORD // Checked by mm864!
+(
+    "(FORD)\\s*\\/\\s*(.*?)\\s+(.*?)\\s*\\/"
+);
+
+const regex IO::ReactionParser::MWON// Checked by mm864!
+(
+    "(MWON)"
+);
+
+const regex IO::ReactionParser::MWOFF // Checked by mm864!
+(
+    "(MWOFF)"
+);
+
+
 // Empty default constructor, can be removed but leave it there just in case.
 IO::ReactionParser::ReactionParser
 (
@@ -82,6 +108,11 @@ IO::ReactionParser::ReactionParser
     }
 }
 
+void IO::ReactionParser::setSurfaceReactionUnit(const std::string &units){
+
+surfaceUnits = units; 
+}
+
 void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
 {
 
@@ -92,7 +123,7 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
 
         Reaction reaction;
 
-        // Check for pressure dependency now as it screws up reactionSingleRegex.
+        // Check for pressure dependency now as it screws up reactionSingleRegex. It is only for gas phase reaction (added comment by mm864)
         if (checkForPressureDependentReaction(reactionStringLines_[i]))
         {
             reactionStringLines_[i] = regex_replace(reactionStringLines_[i], pressureDependent, "");
@@ -110,13 +141,36 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
             if (what[2] == "=>") reaction.setReversible(false);
 
             reaction.setProducts(parseReactionSpecies(what[3]));
+		
+	    	if ((surfaceUnits == "KJOULES/MOL") || (surfaceUnits == "KJOULES/MOLE")){	
+            	reaction.setArrhenius
+           	 (
+                from_string<double>(what[4]),
+                from_string<double>(what[5]),
+                from_string<double>(what[6])*239.005736 // KJOULES/mol to cal/mol
+            	);
+			}
+			
+			else if ((surfaceUnits == "JOULES/MOL") || (surfaceUnits == "JOULES/MOLE")){	
+            	reaction.setArrhenius
+           	 (
+                from_string<double>(what[4]),
+                from_string<double>(what[5]),
+                from_string<double>(what[6])*239.005736/1000 // JOULES/mol to cal/mol
+            	);
+			}
 
-            reaction.setArrhenius
-            (
+		else {
+	    	reaction.setArrhenius
+            	(
                 from_string<double>(what[4]),
                 from_string<double>(what[5]),
                 from_string<double>(what[6])
-            );
+            	);
+
+
+		}
+
 
             while (i < reactionStringLines_.size()-1)
             {
@@ -169,6 +223,59 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
                         ++i;
                     }
                 }
+		else if (regex_search(start, end, COV))
+		{
+		   smatch result;
+		   string::const_iterator start = reactionStringLines_[i+1].begin();
+		   string::const_iterator end = reactionStringLines_[i+1].end();
+		   regex_search(start, end, result, COV);
+
+		   std::string speciesName =  result[2];
+		   double eta = from_string<double>(result[3]);
+		   double miu = from_string<double>(result[4]);
+		   double epsilon = from_string<double>(result[5]);
+		   
+			if ((surfaceUnits == "KJOULES/MOL") || (surfaceUnits == "KJOULES/MOLE")) {	
+			epsilon = from_string<double>(result[5])*1000; // Convert to Joules 
+			}
+		   
+		   reaction.setCOV(eta, miu, epsilon, speciesName);  
+		   // Skip one line when looking for the next reaction.
+		   ++i;
+		}
+		else if (regex_search(start, end, FORD))
+		  {
+		    smatch result;
+		    string::const_iterator start = reactionStringLines_[i+1].begin();
+			string::const_iterator end = reactionStringLines_[i+1].end(); 
+		    regex_search(start, end, result, FORD);
+
+		    std::string speciesName =  result[2];
+		    double coeff = from_string<double>(result[3]);
+
+		    reaction.setFORD(coeff, speciesName);  
+
+		    // Skip one line when looking for the next reaction.
+		    ++i;
+		  }
+				
+		else if (regex_search(start, end, STICK))
+		  {
+		  reaction.setSTICK();
+
+                 // Skip one line when looking for the next reaction.
+		  ++i;
+                 //break;
+		  }
+				
+		else if (regex_search(start, end, MWON))
+		  {
+		    reaction.setMWON();
+                    // Skip one line when looking for the next reaction.
+                    ++i;
+                    //break;
+		  }
+				
                 else
                 {
                     throw std::logic_error("Reaction "+reactionStringLines_[i+1]+" is not supported.");
@@ -228,7 +335,7 @@ IO::ReactionParser::parseReactionSpecies(string reactionSpecies)
                 pair<string,double>
                 (
                     trim_copy(speciesName),
-                    from_string<double>(splitStoic[1])
+                    from_string<double>(splitStoic[1]) // this is the stoichiometry number
                 )
             );
         }

@@ -98,7 +98,7 @@ public:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int /* file_version */)
     {
-        ar & m_index & m_count;
+      ar & m_index & m_count; // setting for m_elcomp in gpc_species.h
     }
 
     friend class boost::serialization::access;

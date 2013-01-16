@@ -63,9 +63,9 @@ inline const std::vector<Stoich> &Reaction::Reactants() const {return m_reac;};
 inline const std::vector<Stoich> &Reaction::Products() const {return m_prod;};
 
 // STOICHIOMETRY.
-inline real Reaction::TotalStoich() const {return m_dstoich;};
-inline real Reaction::ReactantStoich() const {return m_dreac;};
-inline real Reaction::ProductStoich() const {return m_dprod;};
+inline double Reaction::TotalStoich() const {return m_dstoich;};
+inline double Reaction::ReactantStoich() const {return m_dreac;};
+inline double Reaction::ProductStoich() const {return m_dprod;};
 
 // ARRHENIUS COEFFICIENTS.
 inline const ARRHENIUS &Reaction::Arrhenius() const {return m_arrf;};
@@ -75,6 +75,21 @@ inline const ARRHENIUS &Reaction::Arrhenius() const {return m_arrf;};
 // this function returns a NULL pointer.  This provides a way of checking
 // for explicit reverse parameters.
 inline const ARRHENIUS *const Reaction::RevArrhenius(void) const {return m_arrr;};
+
+
+// SURFACE REACTION
+inline bool Reaction::IsSURF() const {return m_isSurface;}; 
+
+inline bool Reaction::IsCOVERAGE() const {return m_isCoverage;};
+inline void Reaction::SetUseCOV(const bool isCov) {m_isCoverage=isCov;};
+
+inline bool Reaction::IsFORD() const {return m_isFord;};
+inline void Reaction::SetUseFORD(const bool isFord) {m_isFord=isFord;};
+
+inline bool Reaction::IsSTICK() const {return m_sticking;};
+inline void Reaction::SetUseSTICK(const bool isSticking) {m_sticking=isSticking;};
+inline bool Reaction::IsMottWise() const {return m_mottwise;};
+inline void Reaction::SetUseMottWise(const bool isMott) {m_mottwise=isMott;};
 
 
 // LANDAU TELLER COEFFICIENTS.

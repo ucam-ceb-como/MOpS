@@ -71,7 +71,7 @@ using namespace std;
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
 AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
-                                                      const real time, const real position,
+                                                      const double time, const double position,
                                                       const ParticleModel &model)
 {
     switch (id) {
@@ -102,7 +102,7 @@ AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelT
  * @return      Pointer to dynamically allocated primary (caller must delete)
  */
 AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
-                                                      const real time, const ParticleModel &model)
+                                                      const double time, const ParticleModel &model)
 {
     switch (id) {
         case AggModels::SurfVol_ID:

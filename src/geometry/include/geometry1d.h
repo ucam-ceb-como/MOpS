@@ -86,25 +86,25 @@ public:
     size_t numCells() const;
 
     //! Position of cell centre
-    real cellCentre(const size_t cell_index) const;
+    double cellCentre(const size_t cell_index) const;
 
     //! List of cell vertices
     fvector cellVertices(const size_t cell_index) const;
 
     //! Volume of cell
-    real cellVolume(const size_t cell_index) const;
+    double cellVolume(const size_t cell_index) const;
 
     //! Index of cell containing specified position
-    int containingCell(const real x) const;
+    int containingCell(const double x) const;
 
     //! Find destination of a particle being transported
     int calcDestination(const size_t origin_index, const Direction direction) const;
 
     //! Calculate grid spacing in specified direction
-    real calcSpacing(const size_t cell_index, const Direction direction) const;
+    double calcSpacing(const size_t cell_index, const Direction direction) const;
 
     //! Check if position is in a particular cell
-    bool isInCell(const size_t cell_index, const real x) const;
+    bool isInCell(const size_t cell_index, const double x) const;
 
 private:
     //! Cells ends (should be 1 longer than array of reactors)
@@ -117,7 +117,7 @@ private:
     BoundaryConditionType mRightBoundary;
 
     //! Reactors are assumed to have a constant cross-section.
-    static const real sCrossSectionalArea;
+    static const double sCrossSectionalArea;
 };
 
 } //namespace Geometry

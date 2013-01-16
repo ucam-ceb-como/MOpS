@@ -70,8 +70,8 @@ public:
     // the given mechanism to define the stochastic processes.  Updates given
     // system accordingly.  On error returns <0, otherwise returns 0.
     int Run(
-        real &t,        // Simulation start time.  Will return the stop time.
-        real tstop,     // Stop time for simulation.
+        double &t,        // Simulation start time.  Will return the stop time.
+        double tstop,     // Stop time for simulation.
         Cell &sys,      // System to solve.
         const Mechanism &mech, // Mechanism to use to solve system.
         rng_type &rng
@@ -79,13 +79,13 @@ public:
 
     //! Performs a single stochastic event on the ensemble
     static void timeStep(
-        real &t,                // Current solution time.
-        real t_stop,            // Steps may not go past this time
+        double &t,                // Current solution time.
+        double t_stop,            // Steps may not go past this time
         Cell &sys,              // System to update.
         const Geometry::LocalGeometry1d &geom, // Details of cell size
         const Mechanism &mech,  // Mechanism to use.
         const fvector &rates,   // Current process rates as an array.
-        real jrate,             // The total jump rate (non-deferred processes).
+        double jrate,             // The total jump rate (non-deferred processes).
         rng_type &rng
         );
 
@@ -94,22 +94,22 @@ protected:
 
     // Calculates the splitting end time after which all particles
     // shallbe updated using LPDA.
-    real calcSplitTime(
-        real t,         // Current time.
-        real tstop,     // Stop time.
-        real jrate,     // Sum of all jump process rates.
+    double calcSplitTime(
+        double t,         // Current time.
+        double tstop,     // Stop time.
+        double jrate,     // Sum of all jump process rates.
         unsigned int n  // Number of particles.
         ) const;
 
     // Selects a process using a DIV algorithm and the process rates
     // as weights.
-    static int chooseProcess(const fvector &rates, real (*rand_u01)());
+    static int chooseProcess(const fvector &rates, double (*rand_u01)());
 
 private:
     // Numerical parameters.
 
     //! Parameter defining number of LPDA updates per particle events.
-    real m_splitratio;
+    double m_splitratio;
 
 
 };

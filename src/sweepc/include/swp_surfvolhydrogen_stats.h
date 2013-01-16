@@ -89,7 +89,7 @@ public:
     // Calculates the model stats for a particle ensemble.
     void Calculate(
         const Ensemble &e, // Ensemble from which to get stats.
-        real scale         // Scaling factor to unit volume (summed stats).
+        double scale         // Scaling factor to unit volume (summed stats).
         );
 
     // Returns a vector containing the stats.
@@ -115,19 +115,19 @@ public:
 
 
     // Returns the total equivalent-sphere surface area.
-    real SphSurfaceArea(void) const;
+    double SphSurfaceArea(void) const;
 
     // Returns the avg. equivalent-sphere surface area.
-    real AvgSphSurfaceArea(void) const;
+    double AvgSphSurfaceArea(void) const;
 
     // Returns the total estimated primary particle count.
-    real PriPartCount(void) const;
+    double PriPartCount(void) const;
 
     // Returns the average estimated primary particle count.
-    real AvgPriPartCount(void) const;
+    double AvgPriPartCount(void) const;
 
     // Returns the average estimated primary particle diameter.
-    real AvgPriPartDiameter(void) const;
+    double AvgPriPartDiameter(void) const;
 
 
     // PARTICLE SIZE LISTS.
@@ -144,7 +144,7 @@ public:
     //! Build the PSL entry for the given particle.
     void PSL(
         const Sweep::Particle &sp,      // Particle from which to get PSL data.
-        real time,                      // Current flow time (used to calculate particle age).
+        double time,                      // Current flow time (used to calculate particle age).
         fvector &psl,                   // Output vector.
         unsigned int start = 0          // Optional start index for the first variable.
         ) const;

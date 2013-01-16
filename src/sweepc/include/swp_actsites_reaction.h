@@ -64,7 +64,8 @@ public:
     //! Rule for calculating what fraction of surface Hydrogens are radicals
     enum RadicalSiteFractionModel {
         ABFRadicalSiteModel, //! ABF see radicalSiteFractionABF
-        BPRadicalSiteModel   //! Blanquart & Pitsch see radicalSiteFractionBP
+        BPRadicalSiteModel,  //! Blanquart & Pitsch see radicalSiteFractionBP
+        ABFConstant          //! ABF with alpha = 1.0
     };
 
     // Constructors.
@@ -80,8 +81,8 @@ public:
     // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
     // Returns rate of the process for the given system.
-    virtual real Rate(
-        real t,         // Time.
+    virtual double Rate(
+        double t,         // Time.
         const Cell &sys, // System for which to calculate rate.
         const Geometry::LocalGeometry1d &local_geom // cell location information
         ) const;
@@ -91,14 +92,14 @@ public:
 
     // Returns the rate of the process for the given particle in
     // the system. Process must be linear in particle number.
-    virtual real Rate(
-        real t,             // Current time (s).
+    virtual double Rate(
+        double t,             // Current time (s).
         const Cell &sys,    // System to which the particle belongs.
         const Particle &sp  // Particle for which to calculate rate.
         ) const;
 
     //! Concentration of surface sites participating in this reaction (?units)
-    real SiteDensity(const EnvironmentInterface &gas) const;
+    double SiteDensity(const Cell &sys) const;
 
     //! Index for looking up an active sites factor in the gas phase
     void setActiveSitesIndex(const EnvironmentInterface::PropertyIndex index) {mAlphaIndex = index;}
@@ -127,10 +128,10 @@ protected:
     ActSiteReaction(void);
 
     //! Fraction of surface hydrogen sites that are radicals in the ABF model
-    real radicalSiteFractionABF(const EnvironmentInterface &gas) const;
+    double radicalSiteFractionABF(const EnvironmentInterface &gas) const;
 
     //! Fraction of surface hydrogen sites that are radicals according to Blanquart & Pitsch
-    real radicalSiteFractionBP(const EnvironmentInterface &gas) const;
+    double radicalSiteFractionBP(const EnvironmentInterface &gas) const;
 
 private:
     //! Index of acetylene in mechanism and gas phase mixture data

@@ -132,7 +132,7 @@ ODE_Solver &ODE_Solver::operator=(const Mops::ODE_Solver &rhs)
         }
 
         // Copy ODE workspace, incl. derivatives.
-        memcpy(m_deriv, rhs.m_deriv, sizeof(real)*m_neq);
+        memcpy(m_deriv, rhs.m_deriv, sizeof(double)*m_neq);
     }
     return *this;
 }
@@ -151,7 +151,7 @@ void ODE_Solver::Initialise(Reactor &reac)
 
     // Fill derivative vector.
     delete [] m_deriv;
-    m_deriv = new real[m_neq];
+    m_deriv = new double[m_neq];
     for (unsigned int i=0; i!=m_neq; ++i) {
         m_deriv[i] = 0.0;
     }
@@ -271,7 +271,7 @@ void ODE_Solver::ResetSolver(Reactor &reac)
 // SOLVING THE REACTOR.
 
 // Solves the reactor up to the given time.
-void ODE_Solver::Solve(Reactor &reac, real stop_time)
+void ODE_Solver::Solve(Reactor &reac, double stop_time)
 {
     // Check that the reactor has the same problem size
     // as set in the solver.
@@ -387,22 +387,22 @@ unsigned int ODE_Solver::GetNSensitivities() const
 
 // ERROR TOLERANCES.
 
-Mops::real ODE_Solver::ATOL() const
+double ODE_Solver::ATOL() const
 {
     return m_atol;
 }
 
-void ODE_Solver::SetATOL(real atol)
+void ODE_Solver::SetATOL(double atol)
 {
     m_atol = atol;
 }
 
-Mops::real ODE_Solver::RTOL() const
+double ODE_Solver::RTOL() const
 {
     return m_rtol;
 }
 
-void ODE_Solver::SetRTOL(real rtol)
+void ODE_Solver::SetRTOL(double rtol)
 {
     m_rtol = rtol;
 }
@@ -503,13 +503,13 @@ void ODE_Solver::Deserialize(std::istream &in)
             case 0:
                 // Read the time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_time = (real)val;
+                m_time = (double)val;
 
                 // Read the error tolerances.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_atol = (real)val;
+                m_atol = (double)val;
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_rtol = (real)val;
+                m_rtol = (double)val;
 
                 // Read equation count + special indices.
                 in.read(reinterpret_cast<char*>(&m_neq), sizeof(m_neq));
@@ -520,10 +520,10 @@ void ODE_Solver::Deserialize(std::istream &in)
                 // Read derivatives array.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n == 1) {
-                    m_deriv = new real[m_neq];
+                    m_deriv = new double[m_neq];
                     for (unsigned int i=0; i<m_neq; i++) {
                         in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                        m_deriv[i] = (real)val;
+                        m_deriv[i] = (double)val;
                     }
                 }
 

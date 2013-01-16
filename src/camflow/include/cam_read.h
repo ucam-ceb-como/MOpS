@@ -119,10 +119,10 @@ namespace Camflow{
     private:
 
         //read tolerences
-        void readTol(const CamXML::Element &node, doublereal& atol, doublereal& rtol);
+        void readTol(const CamXML::Element &node, double& atol, double& rtol);
 
         //read mass or mole fractions
-        void readFrac(std::string& member, std::map<std::string,doublereal>& fracs, const CamXML::Element &subnode);
+        void readFrac(std::string& member, std::map<std::string,double>& fracs, const CamXML::Element &subnode);
 
 
     };

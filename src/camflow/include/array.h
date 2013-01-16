@@ -82,7 +82,7 @@ namespace Camflow{
             }
 
             //! Create an m X n Array and initialize with zeros.
-            Array2D(int m, int n, doublereal v=0.0){
+            Array2D(int m, int n, double v=0.0){
                 nRows = m;
                 nCols = n;
                 aData.resize(m*n,v);
@@ -109,29 +109,29 @@ namespace Camflow{
             virtual ~Array2D(){}
 
             //! Resize the array.
-            void resize(int m, int n, doublereal v=0.0){
+            void resize(int m, int n, double v=0.0){
                 nRows = m;
                 nCols = n;
                 aData.resize(m*n,v);
             }
 
             //! Element setting column major.
-            doublereal& operator()(int i, int j){
+            double& operator()(int i, int j){
                 return value(i,j);
             }
 
             //! Retrive the elements column major.
-            doublereal operator()(int i, int j) const{
+            double operator()(int i, int j) const{
                 return value(i,j);
             }
 
             //! Access an element in the array.
-            doublereal& value(int i, int j){
+            double& value(int i, int j){
                 return aData[nCols*i + j];
             }
 
             //! Access an element in the array.
-            doublereal value(int i, int j) const{
+            double value(int i, int j) const{
                 return aData[nCols*i + j];
             }
 
@@ -142,7 +142,7 @@ namespace Camflow{
 
         protected:
 
-            std::vector<doublereal> aData;
+            std::vector<double> aData;
             size_t nRows, nCols;
 
     };
@@ -163,7 +163,7 @@ namespace Camflow{
                 aData.clear();
             }
 
-            Array1D(int m, int n, doublereal v=0.0){
+            Array1D(int m, int n, double v=0.0){
                 int size = n-m;
                 minIndex = m;
                 maxIndex = n;
@@ -185,7 +185,7 @@ namespace Camflow{
                 return *this;
             }
 
-            void resize(int m, int n, doublereal v=0.0){
+            void resize(int m, int n, double v=0.0){
                 int size = n-m;
                 minIndex = m;
                 maxIndex = n;
@@ -193,27 +193,27 @@ namespace Camflow{
 
             }
 
-            doublereal& operator ()(int i){
+            double& operator ()(int i){
                 return value(i);
             }
 
-            doublereal operator ()(int i) const{
+            double operator ()(int i) const{
                 return value(i);
             }
 
-            doublereal value(int i) const{
+            double value(int i) const{
 
                 return aData[i-minIndex];
             }
 
-            doublereal& value(int i){
+            double& value(int i){
                 return aData[i-minIndex];
             }
 
 
         protected:
 
-            std::vector<doublereal> aData;
+            std::vector<double> aData;
             int minIndex, maxIndex;
 
     };

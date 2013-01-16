@@ -3,14 +3,14 @@
 
 using namespace Camflow;
 
-const doublereal Radiation::AtmToPascal = 101325.0;
+const double Radiation::AtmToPascal = 101325.0;
 
 Radiation::Radiation
 (
     const std::string& inputFileName,
     const int totalCells,
     const Sprog::Mechanism *const mech,
-    const std::vector<doublereal>& avgMolWt,
+    const std::vector<double>& avgMolWt,
     const Array2D& s_mf
 )
 :
@@ -93,18 +93,18 @@ Radiation::~Radiation()
  */
 void Radiation::PlanckAbsorption
 (
-    const doublereal temperature
+    const double temperature
 )
 {
 
     //This quantity is reused repeatedly in the equations below
-    const doublereal beta = 1000/temperature;
+    const double beta = 1000/temperature;
 
     //This helps avoid repeated, costly calls to pow().  There is a modest tradeoff of speed vs. accuracy here.
-    const doublereal beta2 = beta * beta;
-    const doublereal beta3 = beta2 * beta;
-    const doublereal beta4 = beta3 * beta;
-    const doublereal beta5 = beta4 * beta;
+    const double beta2 = beta * beta;
+    const double beta3 = beta2 * beta;
+    const double beta4 = beta3 * beta;
+    const double beta5 = beta4 * beta;
 
     for (size_t i=0; i<radiativeSpecies_.size(); ++i)
     {
@@ -182,19 +182,19 @@ void
 Radiation::calculateRadiativeHeatLoss
 (
     const int i,
-    const doublereal& temperature,
-    const doublereal& opPre,
-    const doublereal& soot_vol_frac
+    const double& temperature,
+    const double& opPre,
+    const double& soot_vol_frac
 )
 {
 
     // RadiativeLoss requires a background setting temperature.  It is usually assumed to be 300K, unless experimental conditions
     // suggest another temperature. Used 300^4 which is 81e8 in temperaturePowers below.
-    //const doublereal BackgroundTemp = 300;
+    //const double BackgroundTemp = 300;
 
-    doublereal temperature2 = temperature*temperature;
-	doublereal temperature4 = temperature2*temperature2;
-	doublereal temperature5 = temperature4*temperature;
+    double temperature2 = temperature*temperature;
+	double temperature4 = temperature2*temperature2;
+	double temperature5 = temperature4*temperature;
 
     // The function calls PlanckAbsorption to produce the absorption coefficients.
     PlanckAbsorption(temperature);
@@ -209,7 +209,7 @@ Radiation::calculateRadiativeHeatLoss
 
     for (size_t j=0; j<radiativeSpecies_.size(); ++j)
     {
-        doublereal speciesMoleFraction
+        double speciesMoleFraction
         =
         speciesMassFracs_(i,speciesIndex_[j])
         *avgMolWt_[i]
@@ -219,9 +219,9 @@ Radiation::calculateRadiativeHeatLoss
     }
 
     //The following is used repeatedly in the loop below
-    const doublereal temperaturePowers = 4 * 5.669e-8 * (temperature4 - 81e8);
+    const double temperaturePowers = 4 * 5.669e-8 * (temperature4 - 81e8);
 
-    doublereal spectralRadiation = 0;   //An intermediate result
+    double spectralRadiation = 0;   //An intermediate result
     for (size_t j = 0; j < radiativeSpecies_.size(); ++j)
     {
         // 0 = H2O,  1 = CO2,  2 = CO

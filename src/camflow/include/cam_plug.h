@@ -63,19 +63,19 @@ namespace Camflow{
          *the following 3 functions are called by
          *the DAE solver
          */
-        int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
+        int eval(double x, double* y, double* ydot, bool jacEval);
         //console output
-        void report(doublereal x, doublereal* soln);
+        void report(double x, double* soln);
         //console output with residuals
-        void report(doublereal x, doublereal* soln, doublereal& res);
+        void report(double x, double* soln, double& res);
         //prepare the data vector for output
-        void vectorize(doublereal x, doublereal* soln, std::vector<doublereal>& data);
+        void vectorize(double x, double* soln, std::vector<double>& data);
         //create the cummary file
         void createSummary();
         //write the summary
-        void reportSummary(doublereal x, doublereal * soln);
+        void reportSummary(double x, double * soln);
         //mass matrix evaluation
-        void massMatrix(doublereal **M);
+        void massMatrix(double **M);
 
         
         //solve
@@ -87,29 +87,29 @@ namespace Camflow{
         void integrate(CamBoundary& cb, CamControl& cc);
         
         //return the initial solution vector
-        void getInitial(std::vector<doublereal>& initial);
+        void getInitial(std::vector<double>& initial);
         
         //residual function definition----------------
-        void residual(const doublereal& x, doublereal *y, doublereal *f);
+        void residual(const double& x, double *y, double *f);
         //species residual
-        void speciesResidual(const doublereal& x, doublereal *y, doublereal *f);
+        void speciesResidual(const double& x, double *y, double *f);
         //mass flow
-        void massFlowResidual(const doublereal& x, doublereal *y, doublereal *f);
+        void massFlowResidual(const double& x, double *y, double *f);
         //temperature
-        void energyResidual(const doublereal& x, doublereal *y, doublereal *f);
+        void energyResidual(const double& x, double *y, double *f);
         //residence time
-        void residenceTime(const doublereal& x, doublereal *y, doublereal *f);
+        void residenceTime(const double& x, double *y, double *f);
         
         //update the mixture properties
-        void updateMixture(const doublereal& x, doublereal *y);
+        void updateMixture(const double& x, double *y);
 
         //header information
         void header();
 
     private:
         bool ignited;
-        doublereal TStep;
-        doublereal Tignition;
+        double TStep;
+        double Tignition;
 
 
     };

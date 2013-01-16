@@ -74,25 +74,25 @@ public:
     //bool zeroGradient(const Direction direction) const;
 
     //! Centre of current cell
-    real cellCentre() const;
+    double cellCentre() const;
 
     //! Find index of destination cell
     int calcDestination(const Direction direction) const;
 
     //! Distance to next cell centre in specified direction
-    real calcSpacing(const Direction direction) const;
+    double calcSpacing(const Direction direction) const;
 
     //! Unordered list of cell vertices
     fvector cellVertices() const;
 
     //! Check if a position is within the local cell
-    bool isInCell(const real x) const;
+    bool isInCell(const double x) const;
 
     //! Volume of cell
-    real cellVolume() const;
+    double cellVolume() const;
 
     //! Volume of cell
-    real cellVolume(const Direction direction) const;
+    double cellVolume(const Direction direction) const;
 
 private:
     //! Original geometry object which holds the layout information

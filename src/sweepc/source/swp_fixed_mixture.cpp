@@ -101,7 +101,7 @@ Sweep::EnvironmentInterface* Sweep::FixedMixture::Clone() const {
  *
  * @return        Concentration of species
  */
-Sweep::real Sweep::FixedMixture::SpeciesConcentration(const SpeciesIndex index) const {
+double Sweep::FixedMixture::SpeciesConcentration(const SpeciesIndex index) const {
     return mSpecies[index];
 }
 
@@ -110,7 +110,7 @@ Sweep::real Sweep::FixedMixture::SpeciesConcentration(const SpeciesIndex index) 
  *
  * @return       Value associated with specified property
  */
-Sweep::real Sweep::FixedMixture::PropertyValue(const PropertyIndex index) const {
+double Sweep::FixedMixture::PropertyValue(const PropertyIndex index) const {
     throw std::runtime_error("PropertyValue not yet supported in Sweep::FixedMixture::PropertyValue");
     return 0.0;
 }

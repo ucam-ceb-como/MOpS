@@ -99,40 +99,40 @@ public:
     const fvector &CompChange(void) const;
 
     // Returns the amount of the ith component of the new particle.
-    real CompChange(unsigned int i) const;
+    double CompChange(unsigned int i) const;
 
     // Sets the particle composition vector.
     void SetCompChange(const fvector &comp);
 
     // Sets the amount of the ith component in the new particle.
-    void SetCompChange(unsigned int i, real comp);
+    void SetCompChange(unsigned int i, double comp);
 
     // Returns the tracker variable vector of the new particle.
     const fvector &TrackChange(void) const;
 
     // Returns the value of the ith tracker variable of the
     // new particle.
-    real TrackChange(unsigned int i) const;
+    double TrackChange(unsigned int i) const;
 
     // Sets the new particle tracker variable vector.
     void SetTrackChange(const fvector &track);
 
     // Sets the value of the ith tracker variable in the
     // new particle.
-    void SetTrackChange(unsigned int i, real track);
+    void SetTrackChange(unsigned int i, double track);
 
     
     // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
     // Returns rate of the process for the given system.
-    virtual real Rate(
-        real t,          // Time.
+    virtual double Rate(
+        double t,          // Time.
         const Cell &sys, // System for which to calculate rate.
         const Geometry::LocalGeometry1d &local_geom
         ) const = 0;
 
-    static real CalcRates(
-        real t, // Time.
+    static double CalcRates(
+        double t, // Time.
         const Cell &sys, // System for which to calculate rates.
         const Geometry::LocalGeometry1d &local_geom, // Position information
         const PartProcPtrVector &proc, // Vector of processes to calculate.
@@ -144,8 +144,8 @@ public:
 
     // Returns the rate of the process for the given particle in
     // the system. Process must be linear in particle number.
-    virtual real Rate(
-        real t,             // Current time (s).
+    virtual double Rate(
+        double t,             // Current time (s).
         const Cell &sys,    // System to which the particle belongs.
         const Particle &sp  // Particle for which to calculate rate.
         ) const = 0;
@@ -159,7 +159,7 @@ public:
 
     //! Declared in parent class, implemented in dervied classes
     virtual int Perform(
-        real t,
+        double t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
@@ -169,7 +169,7 @@ public:
     // Performs the process on a given particle in the system.  Particle
     // is given by index.  The process is performed n times.
     virtual int Perform(
-        real t,        // Current time (s).
+        double t,        // Current time (s).
         Cell &sys,     // System to which the particle belongs.
         Particle &sp,  // Particle for which to perform process.
         rng_type &rng,

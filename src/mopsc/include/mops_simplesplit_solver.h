@@ -71,7 +71,7 @@ public:
     // end of the function.  niter is ignored.
     virtual void Solve(
             Reactor &r,   // The reactor to solve.
-            real tstop,   // The end time for the step.
+            double tstop,   // The end time for the step.
             int nsteps,   // Number of internal steps to take.
             int niter,    // Number of internal iterations to take.
             Sweep::rng_type &rng,  // Random number generator
@@ -84,7 +84,7 @@ private:
 
     // Performs n simple splitting steps.
     void multiSplitStep(
-        real dt,        // Splitting step size.
+        double dt,        // Splitting step size.
         unsigned int n, // Number of splitting steps.
         Reactor &r,     // Reactor to solve.
         Sweep::rng_type &rng  // Random number generator

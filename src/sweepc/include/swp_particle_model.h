@@ -170,10 +170,10 @@ public:
     // PARTICLE FUNCTIONS.
 
     //! Create a new particle on the heap
-    Particle *const CreateParticle(const real time) const;
+    Particle *const CreateParticle(const double time) const;
 
     //! Create a new particle on the heap
-    Particle *const CreateParticle(const real time, const real position) const;
+    Particle *const CreateParticle(const double time, const double position) const;
 
 
     // READ/WRITE/COPY.
@@ -190,23 +190,23 @@ public:
     double CollisionEff(Particle *p1, Particle *p2) const;
 
     //! Initialise the Knudsem drag coefficient  calculation
-    void SetKnudsenDragConstants(const real A, const real B, const real E);
+    void SetKnudsenDragConstants(const double A, const double B, const double E);
 
     //! Particle diffusion coefficient
-    real DiffusionCoefficient(const Cell &sys, const Particle &sp) const;
+    double DiffusionCoefficient(const Cell &sys, const Particle &sp) const;
 
     //! Gradient of particle diffusion coefficient
-    real GradDiffusionCoefficient(const Cell &sys, const Particle &sp,
+    double GradDiffusionCoefficient(const Cell &sys, const Particle &sp,
                                   const std::vector<const Cell*> &neighbours,
                                   const Geometry::LocalGeometry1d &geom) const;
 
     //! Calculate the advection velocity
-    real AdvectionVelocity(const Cell &sys, const Particle &sp,
+    double AdvectionVelocity(const Cell &sys, const Particle &sp,
                            const std::vector<const Cell*> &neighbours,
                            const Geometry::LocalGeometry1d &geom) const;
 
     //! Calculate the thermophoretic velocity
-    real ThermophoreticVelocity(const Cell &sys, const Particle &sp) const;
+    double ThermophoreticVelocity(const Cell &sys, const Particle &sp) const;
 
     //! Select between possible drag models for use in diffusion coefficients
     enum DragType {
@@ -273,14 +273,14 @@ public:
     //! Choose the thermophoresis model
     void setThermophoresisType(const ThermophoresisType& therm) {m_ThermophoresisType = therm;}
 
-	real ColliParaA() const;
-    real ColliParaB() const;
-    real ColliParaC() const;
+	double ColliParaA() const;
+    double ColliParaB() const;
+    double ColliParaC() const;
 
-    void SetCollisionEffPara(real A, real B, real C);
+    void SetCollisionEffPara(double A, double B, double C);
 
     void SetThreshold(int target) ;
-    real Threshold() const ;
+    double Threshold() const ;
 
     void SetMode(const std::string &mode);
     const std::string &Mode() const;
@@ -296,22 +296,22 @@ public:
     const bool WriteBinaryTrees() const {return m_write_bintree;}
 
     //! Sets the value of the binary tree coalescence threshold
-    void SetBinTreeCoalThresh(real ct) {m_bintree_coalthresh = ct;}
+    void SetBinTreeCoalThresh(double ct) {m_bintree_coalthresh = ct;}
 
     //! Return the coalescence threshold for bintree particle models.
-    const real GetBinTreeCoalThresh() const {return m_bintree_coalthresh;}
+    const double GetBinTreeCoalThresh() const {return m_bintree_coalthresh;}
 
     //! Sets the value of the binary tree coalescence threshold
-    void SetFractDim(real df) {m_fract_dim = df;}
+    void SetFractDim(double df) {m_fract_dim = df;}
 
     //! Return the coalescence threshold for bintree particle models.
-    const real GetFractDim() const {return m_fract_dim;}
+    const double GetFractDim() const {return m_fract_dim;}
 
     //! Sets the value of the free-molecular enhancement factor.
-    void SetEnhancementFM(real efm) {m_efm = efm;}
+    void SetEnhancementFM(double efm) {m_efm = efm;}
 
     //! Returns the value of the free-molecular enhancement factor.
-    const real GetEnhancementFM() const {return m_efm;}
+    const double GetEnhancementFM() const {return m_efm;}
 
     //! Index for temperature gradient in gas phase interface
     void setTGradIndex(const EnvironmentInterface::PropertyIndex index) {m_TemperatureGradientIndex = index;}
@@ -348,52 +348,52 @@ protected:
     mutable Processes::SinteringModel m_sint_model;
 
     //! Calculate a phsyical particle diffusion coefficient from its drag
-    real EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const;
+    double EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const;
 
     //! Calculate the drag coefficient for a particle using the Knudsen correction
-    real KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const;
+    double KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const;
 
     //! Calculate the drag coefficient for a particle using the Knudsen correction
-    real FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const;
+    double FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const;
 
     //! Calculate the drag coefficient for a particle as constant times temperature
-    real TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const;
+    double TemperatureDragCoefficient(const Cell &sys, const Particle &sp) const;
 
     //! Calculate the drag coefficient for a particle using the Li & Wang expressions
-    real LiWangDragCoefficient(const Cell &sys, const Particle &sp) const;
+    double LiWangDragCoefficient(const Cell &sys, const Particle &sp) const;
 
     //! Calculate the drag coefficient for a particle similar to the Li & Wang expressions
-    real LiWangPatDragCoefficient(const Cell &sys, const Particle &sp) const;
+    double LiWangPatDragCoefficient(const Cell &sys, const Particle &sp) const;
 
     //==== Collision integrals ==========================
 
     //! Modified reduced diameter for use in collision integral calculations(should perhaps be input)
-    real collisionIntegralDiameter(const Cell &sys, const Particle &sp) const;
+    double collisionIntegralDiameter(const Cell &sys, const Particle &sp) const;
 
     //! Dimensionless temperature for use in collision  integral calculations(should perhaps be input)
-    real collisionIntegralTemperature(const Cell &sys, const Particle &sp) const;
+    double collisionIntegralTemperature(const Cell &sys, const Particle &sp) const;
 
     //! Blending function between diffuse and specular scattering for collision integrals
-    real accomodationFunction(const Cell &sys, const Particle &sp) const;
+    double accomodationFunction(const Cell &sys, const Particle &sp) const;
 
     //! Knudsen based average of specular and diffusive 1,1 integrals
-    real Omega1_1_avg(const Cell &sys, const Particle &sp) const;
+    double Omega1_1_avg(const Cell &sys, const Particle &sp) const;
 
     //! Diffuse scattering 1,1 collision integral approximation
-    real Omega1_1_diff(const real t_star, const real sigma_prime) const;
+    double Omega1_1_diff(const double t_star, const double sigma_prime) const;
 
     //! Specular scattering 1,1 collision integral approximation
-    real Omega1_1_spec(const real t_star, const real sigma_prime) const;
+    double Omega1_1_spec(const double t_star, const double sigma_prime) const;
 
 
     //! Knudsen based average of specular and diffusive 1,2 integrals
-    real Omega1_2_avg(const Cell &sys, const Particle &sp) const;
+    double Omega1_2_avg(const Cell &sys, const Particle &sp) const;
 
     //! Diffuse scattering 1,2 collision integral approximation
-    real Omega1_2_diff(const real t_star, const real sigma_prime) const;
+    double Omega1_2_diff(const double t_star, const double sigma_prime) const;
 
     //! Specular scattering 1,2 collision integral approximation
-    real Omega1_2_spec(const real t_star, const real sigma_prime) const;
+    double Omega1_2_spec(const double t_star, const double sigma_prime) const;
 
     // MEMORY MANAGEMENT.
 
@@ -406,13 +406,13 @@ protected:
 
 private:
     //! Constant A from Knudsen drag coefficient expression
-    real m_DragA;
+    double m_DragA;
 
     //! Constant B from Knudsen drag coefficient expression
-    real m_DragB;
+    double m_DragB;
 
     //! Constant E from Knudsen drag coefficient expression
-    real m_DragE;
+    double m_DragE;
 
     //! Drag expression to use
     DragType m_DragType;
@@ -427,10 +427,10 @@ private:
     ThermophoresisType m_ThermophoresisType;
 	
 	//! Three parameter for Abhjeet's collision efficiency model
-    real colliParaA, colliParaB, colliParaC;
+    double colliParaA, colliParaB, colliParaC;
 
     //! Threshould for particular mode
-    real m_threshold;
+    double m_threshold;
 
     //! Define three modes, collision efficience depends on the smaller, the bigger, the combined mass or reduced mass
     std::string m_mode;
@@ -442,13 +442,13 @@ private:
     bool m_write_bintree;
 
     //! Coalescene threshold for multicomponent binary tree particle models
-    real m_bintree_coalthresh;
+    double m_bintree_coalthresh;
 
     //! Fractal dimension (bintree particle model)
-    real m_fract_dim;
+    double m_fract_dim;
 
     //! Free molecular enhancement factor (coag., cond. & incep.)
-    real m_efm;
+    double m_efm;
 
     //! Index for temperature gradient
     EnvironmentInterface::PropertyIndex m_TemperatureGradientIndex;

@@ -102,9 +102,9 @@ cp(cg)
  *mechanism object
  */
 Interface::Interface(Mechanism& mech_in,
-        std::vector<doublereal>& dz,
+        std::vector<double>& dz,
         std::vector<Thermo::Mixture>& cstrs,
-        void* rModel, const doublereal sdr
+        void* rModel, const double sdr
 )
 :
 model(NULL),
@@ -163,7 +163,7 @@ void Interface::resetMixtures(std::vector<Thermo::Mixture>& cstrs){
     model->getSpeciesMassFracs(massFracs);
 
     //storage for density, velocity, and temperature
-    std::vector<doublereal> density, vel, temp;
+    std::vector<double> density, vel, temp;
 
     //Get the density
     model->getDensityVector(density);
@@ -178,7 +178,7 @@ void Interface::resetMixtures(std::vector<Thermo::Mixture>& cstrs){
             throw("size of mixtures is not consistant with the grid\n");
         int nSp = mech.SpeciesCount();
         for(int i=0; i<nCells-2;i++){
-            std::vector<doublereal> mf;
+            std::vector<double> mf;
             for(int l=0; l<nSp; l++){
                 mf.push_back(massFracs(i+1,l));
             }
@@ -194,7 +194,7 @@ void Interface::resetMixtures(std::vector<Thermo::Mixture>& cstrs){
         Thermo::Mixture mix(mech.Species());
         int nSp = mech.SpeciesCount();
         for(int i=0; i<nCells-2;i++){
-            std::vector<doublereal> mf;
+            std::vector<double> mf;
             for(int l=0; l<nSp; l++){
                 mf.push_back(massFracs(i+1,l));
             }
@@ -212,14 +212,14 @@ void Interface::resetMixtures(std::vector<Thermo::Mixture>& cstrs){
  *solve the reactor problem
  */
 void Interface::solve(std::vector<Thermo::Mixture>& cstrs,
-        const std::vector<doublereal>& dz,
-        const std::vector< std::vector<doublereal> >& initalSource,
-        const std::vector< std::vector<doublereal> >& finalSource,
+        const std::vector<double>& dz,
+        const std::vector< std::vector<double> >& initalSource,
+        const std::vector< std::vector<double> >& finalSource,
         CamControl& ccObj,
         CamConfiguration& confObj,
         Mechanism& mech_in,
         void* reactorModel,
-        const doublereal sdr){
+        const double sdr){
 
 
     cc = ccObj;
@@ -301,7 +301,7 @@ void Interface::getFlameletVariables(FlameLet* const flmlt)
  *  This function is called by the external code that
  *  passes a scalar dissipation rate with time history
  */
-void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<doublereal>& intTime, bool continuation){
+void Interface::flamelet(const std::vector<double>& sdr, const std::vector<double>& intTime, bool continuation){
 
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
@@ -314,7 +314,7 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
     flmlt->setExternalTimeSDR(intTime,sdr);
 
     // Build up a vector of zero soot volume fractions
-    std::vector<doublereal> zeroSoot(cg.getnCells(), 0.0);
+    std::vector<double> zeroSoot(cg.getnCells(), 0.0);
     // \todo Check if can get rid of this.
     flmlt->setExternalSootVolumeFraction(zeroSoot);
 
@@ -335,7 +335,7 @@ void Interface::flamelet(const std::vector<doublereal>& sdr, const std::vector<d
  *\param[in]    lnone				 If 'true', Le=1.
  *
  */
-void Interface::flameletStrainRate(const doublereal& strainRate) {
+void Interface::flameletStrainRate(const double& strainRate) {
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
 
@@ -357,7 +357,7 @@ void Interface::flameletStrainRate(const doublereal& strainRate) {
  *\param[in]    lnone                If 'true', Le=1.
  *
  */
-void Interface::flameletSDR(const doublereal& SDR) {
+void Interface::flameletSDR(const double& SDR) {
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
 
@@ -377,9 +377,9 @@ void Interface::flameletSDR(const doublereal& SDR) {
 /**
  * This is called when an sdr profile is required instead of just a constant one.
  */
-void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >& sdr,
-								   const std::vector< std::vector<doublereal> >& Zcoords,
-								   const std::vector<doublereal>& intTime,
+void Interface::flameletSDRprofile(const std::vector< std::vector<double> >& sdr,
+								   const std::vector< std::vector<double> >& Zcoords,
+								   const std::vector<double>& intTime,
 								   bool continuation) {
 
     if(sdr.size() != intTime.size())
@@ -398,7 +398,7 @@ void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >&
 
 
     // Build up a vector of zero soot volume fractions
-    std::vector<doublereal> zeroSoot(cg.getnCells(), 0.0);
+    std::vector<double> zeroSoot(cg.getnCells(), 0.0);
     flmlt->setExternalSootVolumeFraction(zeroSoot);
 
     try{
@@ -422,8 +422,8 @@ void Interface::flameletSDRprofile(const std::vector< std::vector<doublereal> >&
  *  passes a scalar dissipation rate with time history
  *  and a spatial profile of soot volume fraction.
  */
-void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const std::vector<doublereal>& sdr,
-                                 const std::vector<doublereal>& intTime, bool continuation){
+void Interface::flameletWithSoot(const std::vector<double>& soot_fv, const std::vector<double>& sdr,
+                                 const std::vector<double>& intTime, bool continuation){
 
     if(sdr.size() != intTime.size())
         throw CamError("Mismatch in the size of SDR and TIME vector\n");
@@ -456,7 +456,7 @@ void Interface::flameletWithSoot(const std::vector<doublereal>& soot_fv, const s
  *integration time, the program return with the converged solution.
  */
 
-void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
+void Interface::flamelet(double sdr, double intTime, bool continuation){
 
     if(intTime!=0)cc.setMaxTime(intTime);
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
@@ -484,7 +484,7 @@ void Interface::flamelet(doublereal sdr, doublereal intTime, bool continuation){
 /*
  *return the stoichiometric mixture fraction
  */
-doublereal Interface::getStMixtureFrac()
+double Interface::getStMixtureFrac()
 {
     if (flmlt == NULL)
     {
@@ -503,9 +503,9 @@ doublereal Interface::getStMixtureFrac()
  *
  *return the density
  */
-doublereal Interface::getDensity(const doublereal axpos){
+double Interface::getDensity(const double axpos){
 
-    doublereal dens = getVariableAt(axpos,rhoVector);
+    double dens = getVariableAt(axpos,rhoVector);
     return dens;
 }
 
@@ -514,11 +514,11 @@ doublereal Interface::getDensity(const doublereal axpos){
  *
  *@return   Vector of mass fractions at all the independent variable points
  */
-std::vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) const {
+std::vector<double> Interface::getMassFracsBySpecies(const int spIndex) const {
     // Find the length of the mass fraction profile and create an empty
     // vector with this much space
     const size_t len = indVar.size();
-    std::vector<doublereal> mf(len);
+    std::vector<double> mf(len);
 
     for(size_t i=0; i<len; i++){
         mf[i] = spMassFracs(i,spIndex);
@@ -527,11 +527,11 @@ std::vector<doublereal> Interface::getMassFracsBySpecies(const int spIndex) cons
     return mf;
 }
 
-std::vector<doublereal> Interface::getMomentsByIndex(const int momentIndex) const {
+std::vector<double> Interface::getMomentsByIndex(const int momentIndex) const {
     // Find the length of the moment profile and create an empty
     // vector with this much space
     const size_t len = indVar.size();
-    std::vector<doublereal> momentProfile(len);
+    std::vector<double> momentProfile(len);
 
     for(size_t i=0; i<len; i++){
         momentProfile[i] = sootMoments(i,momentIndex);
@@ -540,11 +540,11 @@ std::vector<doublereal> Interface::getMomentsByIndex(const int momentIndex) cons
 }
 
 // ank25 added for ELFM
-std::vector<doublereal> Interface::getMomentsWdotByIndex(const int momentWdotIndex) const {
+std::vector<double> Interface::getMomentsWdotByIndex(const int momentWdotIndex) const {
     // Find the length of the moment profile and create an empty
     // vector with this much space
     const size_t len = indVar.size();
-    std::vector<doublereal> momentWdotProfile(len);
+    std::vector<double> momentWdotProfile(len);
 
     for(size_t i=0; i<len; i++){
         momentWdotProfile[i] = sootMomentsWdot(i,momentWdotIndex);
@@ -559,8 +559,8 @@ std::vector<doublereal> Interface::getMomentsWdotByIndex(const int momentWdotInd
  *
  *@return   Vector of all mass fractions at one independent variable point
  */
-std::vector<doublereal> Interface::getMassFracsByPoint(const int indVarIndex) const {
-    std::vector<doublereal> mf(nSpecies);
+std::vector<double> Interface::getMassFracsByPoint(const int indVarIndex) const {
+    std::vector<double> mf(nSpecies);
 
     for(int i = 0; i < nSpecies; i++){
         mf[i] = spMassFracs(indVarIndex, i);
@@ -571,16 +571,16 @@ std::vector<doublereal> Interface::getMassFracsByPoint(const int indVarIndex) co
 /*
  *return the mass fractions
  */
-doublereal Interface::getMassFrac(const int spIndex, const doublereal axpos){
-    doublereal massfrac = getVariableAt(axpos, getMassFracsBySpecies(spIndex));
+double Interface::getMassFrac(const int spIndex, const double axpos){
+    double massfrac = getVariableAt(axpos, getMassFracsBySpecies(spIndex));
     return massfrac;
 }
 
 /*
  *return the moments
  */
-doublereal Interface::getMoment(const int momIndex, const doublereal axpos){
-    doublereal moment = getVariableAt(axpos, getMomentsByIndex(momIndex));
+double Interface::getMoment(const int momIndex, const double axpos){
+    double moment = getVariableAt(axpos, getMomentsByIndex(momIndex));
     return moment;
 }
 
@@ -589,8 +589,8 @@ doublereal Interface::getMoment(const int momIndex, const doublereal axpos){
  *return the moments rates
  *ank25 added for ELFM
  */
-doublereal Interface::getMomentWdot(const int momIndex, const doublereal axpos){
-    doublereal momentWdot = getVariableAt(axpos, getMomentsWdotByIndex(momIndex));
+double Interface::getMomentWdot(const int momIndex, const double axpos){
+    double momentWdot = getVariableAt(axpos, getMomentsWdotByIndex(momIndex));
     return momentWdot;
 }
 
@@ -599,84 +599,84 @@ doublereal Interface::getMomentWdot(const int momIndex, const doublereal axpos){
 /*
  *return the mole fractions
  */
-doublereal Interface::getMoleFrac(const int spIndex, const doublereal axpos){
+double Interface::getMoleFrac(const int spIndex, const double axpos){
 
-    const doublereal speciesMolwt = (*speciesPointerVector)[spIndex] -> MolWt();
-    const doublereal averageMolwt = getVariableAt(axpos,avgMolWtVector);
+    const double speciesMolwt = (*speciesPointerVector)[spIndex] -> MolWt();
+    const double averageMolwt = getVariableAt(axpos,avgMolWtVector);
 
-    doublereal molefrac = getVariableAt(axpos, getMassFracsBySpecies(spIndex))*(averageMolwt/speciesMolwt);
+    double molefrac = getVariableAt(axpos, getMassFracsBySpecies(spIndex))*(averageMolwt/speciesMolwt);
 
     return molefrac;
 }
 /*
  *return the temperature
  */
-doublereal Interface::getTemperature(const doublereal axpos){
+double Interface::getTemperature(const double axpos){
 
-    doublereal temp = getVariableAt(axpos,TVector);
+    double temp = getVariableAt(axpos,TVector);
     return temp;
 }
 /*
  *return the sootAverageDiameter
  */
-doublereal Interface::getSootAverageDiameter(const doublereal axpos){
+double Interface::getSootAverageDiameter(const double axpos){
 
-    doublereal temp = getVariableAt(axpos,sootAverageDiameterVector);
+    double temp = getVariableAt(axpos,sootAverageDiameterVector);
     return temp;
 }
 /*
  *return the sootDispersion
  */
-doublereal Interface::getSootDispersion(const doublereal axpos){
+double Interface::getSootDispersion(const double axpos){
 
-    doublereal temp = getVariableAt(axpos,sootDispersionVector);
+    double temp = getVariableAt(axpos,sootDispersionVector);
     return temp;
 }
 /*
  *return the sootSurfaceArea
  */
-doublereal Interface::getSootSurfaceArea(const doublereal axpos){
+double Interface::getSootSurfaceArea(const double axpos){
 
-    doublereal temp = getVariableAt(axpos,sootSurfaceAreaVector);
+    double temp = getVariableAt(axpos,sootSurfaceAreaVector);
     return temp;
 }
 /*
  *return the sootVolumeFraction
  */
-doublereal Interface::getSootVolumeFraction(const doublereal axpos){
+double Interface::getSootVolumeFraction(const double axpos){
 
-    doublereal temp = getVariableAt(axpos,sootVolumeFractionVector);
+    double temp = getVariableAt(axpos,sootVolumeFractionVector);
     return temp;
 }
 /*
  *return the viscosity
  */
-doublereal Interface::getViscosity(const doublereal axpos){
+double Interface::getViscosity(const double axpos){
 
-    doublereal temp = getVariableAt(axpos,muVector);
+    double temp = getVariableAt(axpos,muVector);
     return temp;
 }
 
 /**
  *  Return the specific heat
  */
-doublereal Interface::getSpecificHeat(const doublereal axPos){
-    doublereal temp = getVariableAt(axPos,spHeat);
+double Interface::getSpecificHeat(const double axPos){
+    double temp = getVariableAt(axPos,spHeat);
     return temp;
 }
 
 /**
  *  Return the thermal conductivity
  */
-doublereal Interface::getThermalConductivity(const doublereal axPos){
-    doublereal temp = getVariableAt(axPos,lambda);
+double Interface::getThermalConductivity(const double axPos){
+    double temp = getVariableAt(axPos,lambda);
     return temp;
 }
 /**
  *  Return a vector of diffusion coefficients
  */
-std::vector<doublereal> Interface::getDiffusionCoefficients(const doublereal axPos){
-    std::vector<doublereal> diff, rmDiff;
+std::vector<double> Interface::getDiffusionCoefficients(const double axPos){
+    std::vector<double> diff, rmDiff;
     int len = indVar.size();
     rmDiff.clear();
     for(int k=0; k<nSpecies; k++){
@@ -685,7 +685,7 @@ std::vector<doublereal> Interface::getDiffusionCoefficients(const doublereal axP
         for(int i=0; i<len; i++){
             diff.push_back(mDiff(i,k));
         }
-        doublereal spDiff = getVariableAt(axPos,diff);
+        double spDiff = getVariableAt(axPos,diff);
         rmDiff.push_back(spDiff);
     }
 
@@ -700,9 +700,9 @@ std::vector<doublereal> Interface::getDiffusionCoefficients(const doublereal axP
  *
  *\return       Rate of formation of pyrene (\f$\mathrm{mol\,m^{-3}\,s^{-1}}\f$).
  */
-doublereal Interface::getWdotA4(const doublereal axpos){
+double Interface::getWdotA4(const double axpos){
 
-    doublereal temp = getVariableAt(axpos,wdotA4);
+    double temp = getVariableAt(axpos,wdotA4);
     return temp;
 }
 
@@ -714,15 +714,15 @@ doublereal Interface::getWdotA4(const doublereal axpos){
  *
  *\return       Value of var at a given pos.
  */
-doublereal Interface::getVariableAt
+double Interface::getVariableAt
 (
-    const doublereal& pos,
-    const std::vector<doublereal>& var
+    const double& pos,
+    const std::vector<double>& var
 )
 const
 {
 
-    Utils::LinearInterpolator<doublereal, doublereal> interpolator
+    Utils::LinearInterpolator<double, double> interpolator
     (
         indVar,
         var

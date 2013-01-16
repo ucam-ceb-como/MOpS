@@ -99,8 +99,8 @@ public:
     // TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
     // Returns rate of the process for the given system.
-    virtual real Rate(
-        real t,         // Time.
+    virtual double Rate(
+        double t,         // Time.
         const Cell &sys, // System for which to calculate rate.
         const Geometry::LocalGeometry1d &local_geom // cell location information
         ) const;
@@ -110,15 +110,15 @@ public:
 
     // Returns the rate of the process for the given particle in
     // the system. Process must be linear in particle number.
-    virtual real Rate(
-        real t,             // Current time (s).
+    virtual double Rate(
+        double t,             // Current time (s).
         const Cell &sys,    // System to which the particle belongs.
         const Particle &sp  // Particle for which to calculate rate.
         ) const;
 
     // Returns majorant rate of the process for the given system.
-    real MajorantRate(
-        real t,             // Current time (s).
+    double MajorantRate(
+        double t,             // Current time (s).
         const Cell &sys,    // System to which the particle belongs.
         const Particle &sp  // Particle for which to calculate rate.
         ) const;
@@ -131,11 +131,11 @@ public:
     // Returns the number of rate terms for this process.
     virtual unsigned int TermCount(void) const;
 
-    // Calculates the rate terms given an iterator to a real vector. The
+    // Calculates the rate terms given an iterator to a double vector. The
     // iterator is advanced to the position after the last term for this
     // process.
-    virtual real RateTerms(
-        real t,                  // Time.
+    virtual double RateTerms(
+        double t,                  // Time.
         const Cell &sys,         // System for which to calculate rate terms.
         const Geometry::LocalGeometry1d &local_geom, //Position information
         fvector::iterator &iterm // Iterator to the first term.
@@ -146,7 +146,7 @@ public:
 
     //! Perform one surface reaction event
     virtual int Perform(
-        real t,
+        double t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
@@ -156,7 +156,7 @@ public:
     // Performs the process on a given particle in the system.  Particle
     // is given by index.  The process is performed n times.
     virtual int Perform(
-        real t,        // Current time (s).
+        double t,        // Current time (s).
         Cell &sys,     // System to which the particle belongs.
         Particle &sp,  // Particle for which to perform process.
         rng_type &rng,
@@ -185,7 +185,7 @@ public:
 protected:
     // Surface reaction majorant parameter.  The true rate
     // is multiplied by this parameter to get the majorised rate.
-    const static real m_majfactor;
+    const static double m_majfactor;
 
     // Arrhenius rate parameters.
     Sprog::Kinetics::ARRHENIUS m_arr;

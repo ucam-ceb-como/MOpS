@@ -53,7 +53,7 @@ using namespace std;
 PAH::PAH():time_created(0),lastupdated(0),PAH_ID(0),m_pahstruct(new PAHStructure()){
 }
 
-PAH::PAH(real time, Sweep::ParticleModel::PostProcessStartingStr str):
+PAH::PAH(double time, Sweep::ParticleModel::PostProcessStartingStr str):
 time_created(time),
 lastupdated(time),
 PAH_ID(0),

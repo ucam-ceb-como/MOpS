@@ -58,22 +58,22 @@ class TransportFactory
 
 private:
 
-    static real Omega22Matrix[37 * 5];
-    static real Omega11Matrix[37 * 5];
-    static real TStar[37];
+    static double Omega22Matrix[37 * 5];
+    static double Omega11Matrix[37 * 5];
+    static double TStar[37];
 
 public:
     TransportFactory (){}
     virtual ~TransportFactory (){}
 
     //helper function for doing lookup and curve fit
-    real polyFitOmega (real delta, real *matrixPtr) const;
-    real QuadInterPol (int imin, real *oPtr, real Tr) const;
-    void getTempInterval (const real rT, int &iMin, int &iMax) const;
+    double polyFitOmega (double delta, double *matrixPtr) const;
+    double QuadInterPol (int imin, double *oPtr, double Tr) const;
+    void getTempInterval (const double rT, int &iMin, int &iMax) const;
 
-    real getReducedTemp (const real T, const Sprog::Species &sp) const;
-    real getOmega11 (real rT, const real deltaStar) const;
-    real getOmega22 (const real T, const Sprog::Species &sp) const;
+    double getReducedTemp (const double T, const Sprog::Species &sp) const;
+    double getOmega11 (double rT, const double deltaStar) const;
+    double getOmega22 (const double T, const Sprog::Species &sp) const;
 };
 
 class PureSpeciesTransport
@@ -85,22 +85,22 @@ public:
     virtual ~PureSpeciesTransport (){}
 
     //returns the viscosity in Kg/m-s
-    real getViscosity (const real T, const Sprog::Species &sp) const;
+    double getViscosity (const double T, const Sprog::Species &sp) const;
 
     //returns the diffusion coefficeint in m^2/s
-    real getSlefDiffusionCoeff
+    double getSlefDiffusionCoeff
     (
-        const real T,
-        real p,
+        const double T,
+        double p,
         const Sprog::Species &sp
     ) const;
 
     //returns the thermal conductivity in J/m-s-K
-    real getThermalConductivity
+    double getThermalConductivity
     (
-        const real T,
-        const real p,
-        const real cp,
+        const double T,
+        const double p,
+        const double cp,
         const Sprog::Species &sp
     ) const;
 };
@@ -110,40 +110,40 @@ class MixtureTransport
     public TransportFactory
 {
 
-    static const real oneByRootEight;
-    static const real deltaStarCoeff;
-    static const real binaryDiffCoeff;
+    static const double oneByRootEight;
+    static const double deltaStarCoeff;
+    static const double binaryDiffCoeff;
 
 public:
     MixtureTransport (){}
     virtual ~MixtureTransport (){}
 
     //returns the viscosity in Kg/m-s
-    real getViscosity (const real T, const Sprog::Thermo::Mixture &mix) const;
+    double getViscosity (const double T, const Sprog::Thermo::Mixture &mix) const;
 
     //returns the thermal conductivity in J/m-s-K
-    real getThermalConductivity
+    double getThermalConductivity
     (
-        const real T,
-        real p,
+        const double T,
+        double p,
         const Sprog::Thermo::Mixture &mix
     ) const;
 
     //returns the diffusion coefficeint in m^2/s
-    real binaryDiffusionCoeff
+    double binaryDiffusionCoeff
     (
         const int j,
         const int k,
-        const real T,
-        const real p,
+        const double T,
+        const double p,
         const Sprog::Thermo::Mixture &mix
     ) const;
 
     //returns the diffusion coefficeint in m^2/s
     std::vector<double> getMixtureDiffusionCoeff
     (
-        const real T,
-        const real p,
+        const double T,
+        const double p,
         const Sprog::Thermo::Mixture &mix
     ) const;
 

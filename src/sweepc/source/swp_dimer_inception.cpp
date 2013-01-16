@@ -117,7 +117,7 @@ DimerInception &DimerInception::operator =(const DimerInception &rhs)
  *
  * \return      0 on success, otherwise negative.
  */
-int DimerInception::Perform(const real t, Cell &sys,
+int DimerInception::Perform(const double t, Cell &sys,
                             const Geometry::LocalGeometry1d &local_geom,
                             const unsigned int iterm,
                             rng_type &rng) const {
@@ -134,10 +134,10 @@ int DimerInception::Perform(const real t, Cell &sys,
     // Sample a uniformly distributed position, note that this method
     // works whether the vertices come in increasing or decreasing order,
     // but 1d is assumed for now.
-    real posn = vertices.front();
+    double posn = vertices.front();
 
-    const real width = vertices.back() - posn;
-    boost::uniform_01<rng_type&, real> uniformGenerator(rng);
+    const double width = vertices.back() - posn;
+    boost::uniform_01<rng_type&, double> uniformGenerator(rng);
     posn += width * uniformGenerator();
 
     sp->setPositionAndTime(posn, t);
@@ -173,13 +173,13 @@ int DimerInception::Perform(const real t, Cell &sys,
  * @param[in]    d1    diameter of first molecule
  * @param[in]    d2    diameter of second molecule
  */
-void DimerInception::SetInceptingSpecies(real m1, real m2, real d1, real d2)
+void DimerInception::SetInceptingSpecies(double m1, double m2, double d1, double d2)
 {
     // The free mol part can be handled by the free mol specific method
     SetInceptingSpeciesFreeMol(m1, m2, d1, d2);
 
     // Now the slip flow part
-    real invd1=1.0/d1, invd2=1.0/d2;
+    double invd1=1.0/d1, invd2=1.0/d2;
     m_ksf1 = CSF * (d1+d2);
     m_ksf2 = 2.0 * 1.257 * m_ksf1 * ((invd1*invd1) + (invd2*invd2));
     m_ksf1 = m_ksf1 * (invd1+invd2);
@@ -197,7 +197,7 @@ void DimerInception::SetInceptingSpecies(real m1, real m2, real d1, real d2)
  * @param[in]    d1    diameter of first molecule
  * @param[in]    d2    diameter of second molecule
  */
-void DimerInception::SetInceptingSpeciesFreeMol(real m1, real m2, real d1, real d2)
+void DimerInception::SetInceptingSpeciesFreeMol(double m1, double m2, double d1, double d2)
 {
     // This routine sets the free-mol and slip flow kernel parameters given
     // the mass and diameter of the incepting species.
@@ -209,11 +209,11 @@ void DimerInception::SetInceptingSpeciesFreeMol(real m1, real m2, real d1, real 
 // TOTAL RATE CALCULATIONS.
 
 // Returns rate of the process for the given system.
-real DimerInception::Rate(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const
+double DimerInception::Rate(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the current chemical conditions.
-    real T = sys.GasPhase().Temperature();
-    real P = sys.GasPhase().Pressure();
+    double T = sys.GasPhase().Temperature();
+    double P = sys.GasPhase().Pressure();
 
     // Calculate the rate.
     return Rate(sys.GasPhase(), sqrt(T),
@@ -239,20 +239,20 @@ real DimerInception::Rate(real t, const Cell &sys, const Geometry::LocalGeometry
  *
  * @return    Inception rate for a cell of size vol. (\f$ \mathrm{s}^{-1}\f$)
  */
-real DimerInception::Rate(const EnvironmentInterface &gas, real sqrtT,
-                     real MFP, real vol) const
+double DimerInception::Rate(const EnvironmentInterface &gas, double sqrtT,
+                     double MFP, double vol) const
 {
-    real rate = A() * vol * chemRatePart(gas);
+    double rate = A() * vol * chemRatePart(gas);
 
-    const real fm   = sqrtT * m_kfm;
+    const double fm   = sqrtT * m_kfm;
     if((m_ksf1 > 0) || (m_ksf2 > 0))  {
-        const real Temperature = gas.Temperature();
+        const double Temperature = gas.Temperature();
 
         // Temperature divided by viscosity
-        real T_viscosity = Temperature / gas.Viscosity();
+        double T_viscosity = Temperature / gas.Viscosity();
 
         // Transition regime
-        real sf   = T_viscosity  * (m_ksf1 + (MFP*m_ksf2));
+        double sf   = T_viscosity  * (m_ksf1 + (MFP*m_ksf2));
         rate *= ((fm*sf) / (fm+sf));
     }
     else {
@@ -270,16 +270,16 @@ real DimerInception::Rate(const EnvironmentInterface &gas, real sqrtT,
  *
  * @param[in]    gas      Gas phase mixture
  */
-real DimerInception::chemRatePart(const EnvironmentInterface &gas) const
+double DimerInception::chemRatePart(const EnvironmentInterface &gas) const
 {
     // Factor of 0.5 adjusts for doubling counting of pairs of molecules in the number
     // of possible collisions.
-    real rate = 0.5;
+    double rate = 0.5;
 
     Sprog::StoichMap::const_iterator i;
     for (i=m_reac.begin(); i!=m_reac.end(); ++i) {
         //std::cerr << "Mole frac to use " << fracs[i->first] << std::endl;
-        real conc = gas.SpeciesConcentration(i->first);
+        double conc = gas.SpeciesConcentration(i->first);
         for (int j=0; j!=i->second; ++j) {
             rate *= (NA * conc);
         }
@@ -294,16 +294,16 @@ real DimerInception::chemRatePart(const EnvironmentInterface &gas) const
 // Returns the number of rate terms for this process (one).
 unsigned int DimerInception::TermCount(void) const {return 1;}
 
-// Calculates the rate terms given an iterator to a real vector. The
+// Calculates the rate terms given an iterator to a double vector. The
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
-real DimerInception::RateTerms(const real t, const Cell &sys,
+double DimerInception::RateTerms(const double t, const Cell &sys,
                                const Geometry::LocalGeometry1d &local_geom,
                                fvector::iterator &iterm) const
 {
     // Get the current chemical conditions.
-    real T = sys.GasPhase().Temperature();
-    real P = sys.GasPhase().Pressure();
+    double T = sys.GasPhase().Temperature();
+    double P = sys.GasPhase().Pressure();
 
     // Calculate the single rate term and advance iterator.
     *iterm = Rate(sys.GasPhase(), sqrt(T),
@@ -368,13 +368,13 @@ void DimerInception::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 
                 // Read free-mol parameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_kfm = (real)val;
+                m_kfm = (double)val;
 
                 // Read slip-flow parameters.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_ksf1 = (real)val;
+                m_ksf1 = (double)val;
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_ksf2 = (real)val;
+                m_ksf2 = (double)val;
 
                 break;
             default:

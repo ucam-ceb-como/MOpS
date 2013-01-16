@@ -96,10 +96,10 @@ public:
     //   and do not need to be redefined here.
 
     // Returns pressure in current units.
-    virtual real Pressure(void) const = 0;
+    virtual double Pressure(void) const = 0;
 
     // Sets the pressure of the gas phase.
-    virtual void SetPressure(real p) = 0;
+    virtual void SetPressure(double p) = 0;
 
 
     // MIXTURE THERMODYNAMIC PROPERTIES.
@@ -163,29 +163,29 @@ public:
     // BULK MIXTURE PROPERTIES.
 
     // Calculates the bulk internal energies in current units.
-    real BulkU() const;
+    double BulkU() const;
 
     // Calculates the bulk enthalpy in current units.
-    real BulkH() const;
+    double BulkH() const;
 
     // Calculates the bulk entropy in current units.
-    real BulkS() const;
+    double BulkS() const;
 
     // Calculates the bulk Gibbs free energies in current units.
-    real BulkG() const;
+    double BulkG() const;
 
     // Calculates the mean molar heat capacity at const. P.
-    real BulkCp() const;
+    double BulkCp() const;
 
     // Calculates the mean molar heat capacity at const. V.
-    real BulkCv() const;
+    double BulkCv() const;
 
 
 protected:
     // As in the Mixture class, the default constructor is protected to prevent
     // mixtures being created with no knowledge of the defining species set.
     GasPhase(void);
-
+	Sprog::Mechanism *m_mech;
     /*
     // Flag to tell GasPhase class whether or not it should
     // store pre-calculated values or not.  This option may be

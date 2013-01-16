@@ -92,23 +92,23 @@ void Solver::Reset(Reactor &r)
 
 // ERROR TOLERANCES.
 
-Mops::real Solver::ATOL() const
+double Solver::ATOL() const
 {
     return m_atol;
 }
 
-void Solver::SetATOL(real atol)
+void Solver::SetATOL(double atol)
 {
     m_atol = atol;
     m_ode.SetATOL(atol);
 }
 
-Mops::real Solver::RTOL() const
+double Solver::RTOL() const
 {
     return m_rtol;
 }
 
-void Solver::SetRTOL(real rtol)
+void Solver::SetRTOL(double rtol)
 {
     m_rtol = rtol;
     m_ode.SetRTOL(rtol);
@@ -176,13 +176,13 @@ std::vector<std::string> Solver::ReturnKeptSpecies()
 // UNDER-RELAXATION.
 
 // Returns the under-relaxation coefficient.
-Mops::real Solver::UnderRelaxCoeff(void) const
+double Solver::UnderRelaxCoeff(void) const
 {
     return m_rlx_coeff;
 }
 
 // Sets the under-relaxation coefficient.
-void Solver::SetUnderRelaxCoeff(real relax) {m_rlx_coeff = relax;}
+void Solver::SetUnderRelaxCoeff(double relax) {m_rlx_coeff = relax;}
 
 
 // SOLVING REACTORS.
@@ -194,7 +194,7 @@ void Solver::SetUnderRelaxCoeff(real relax) {m_rlx_coeff = relax;}
 // an adaptive method (NOT YET IMPLEMENTED).  Internal solver
 // output is provided after each step/iteration by passing
 // a function pointer.
-void Solver::Solve(Reactor &r, real tstop, int nsteps, int niter,
+void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
                    Sweep::rng_type &rng, OutFnPtr out, void *data)
 {
     // Mark the current time.

@@ -46,6 +46,7 @@
 #include "gpc_params.h"
 #include "gpc_species.h"
 #include "gpc_stoich.h"
+#include "gpc_delta_stoich.h"
 #include "gpc_rate_params.h"
 #include <vector>
 #include <string>
@@ -94,11 +95,14 @@ public:
     // Returns the vector of integer stoichiometric reactant coefficients.
     const std::vector<Stoich> &Reactants(void) const;
 
+    // Returns the vector of integer stoichiometric reactant coefficients of a given phaseName (type).
+    // const std::vector<Stoich> &Reactants(const Mechanism::Phase &ph) const;
+
     // Adds a reactant to the reaction.
-    void AddReactant(const Stoich &reac);
+    void AddReactant(const Stoich &reac, const std::string &spName);
 
     // Adds a reactant given the species name.
-    void AddReactant(const std::string &name, real stoich);
+    void AddReactant(const std::string &name, double stoich);
 
     // Removes a reactant, given by name, from the reaction.
     void RemoveReactant(const std::string &name);
@@ -116,10 +120,10 @@ public:
     const std::vector<Stoich> &Products(void) const;
 
     // Adds a product to the reaction.
-    void AddProduct(const Stoich &prod);
+    void AddProduct(const Stoich &prod, const std::string &spName);
 
     // Adds a product given the species name.
-    void AddProduct(const std::string &name, real stoich);
+    void AddProduct(const std::string &name, double stoich);
 
     // Removes a product, given by name, from the reaction.
     void RemoveProduct(const std::string &name);
@@ -133,15 +137,70 @@ public:
 
     // STOICHIOMETRY.
 
+    
+    
     // Returns the total stoichiometry of the reaction.
-    real TotalStoich() const;
+    double TotalStoich() const;
 
     // Returns the reactant stoichiometry of the reaction.
-    real ReactantStoich() const;
+    double ReactantStoich() const;
 
     // Returns the product stoichiometry of the reaction.
-    real ProductStoich() const;
+    double ProductStoich() const;
+    
 
+	// STOICH CHANGES in each phase
+	/*
+	* Added by mm864
+	*
+	*/
+
+// Returns the number of delta stoich.
+    unsigned int PhaseCount(void) const;
+
+ // Returns phase at index i.  NULL if not found.  This
+    // function returns a delta stoich object.
+    const std::string GetPhaseName(const unsigned int i) const;
+
+// Adds an PHASE vector to the reaction.
+ void AddPhaseName(const std::string &phName);
+
+// Find an PHASE vector to the reaction.
+ int FindPhaseName(const std::string &phName) const;
+
+
+	
+    // Returns the number of phase in the reaction.
+    unsigned int DeltaStoichCount(void) const;
+
+	 // Returns the vector of delta stoich.
+    const DeltaStoichPtrVector &DeltaStoich(void) const;
+
+    // Returns a pointer to the ith delta stoich.  Returns NULL if i is invalid.
+    const Sprog::Kinetics::DeltaStoich *const DeltaStoich(unsigned int i) const;
+
+    // Returns pointer to delta stoich with given name.  NULL if not found.
+    Sprog::Kinetics::DeltaStoich *const DeltaStoich(const std::string &name) const;
+
+
+    // Returns index of delta stoich.  Returns -1 if not found.
+    int FindDeltaStoich(const std::string &name) const;
+
+    // Adds an empty  delta stoich to the reaction.
+    Sprog::Kinetics::DeltaStoich *const AddDeltaStoich(const std::string &spName);
+
+    // Copies given delta stoich into the reaction.
+    Sprog::Kinetics::DeltaStoich *const AddDeltaStoich(const Sprog::Kinetics::DeltaStoich &delta_st, const std::string &spName);
+
+    // Returns pointer to delta stoich at index i.  NULL if not found.  This
+    // function returns a modifiable (non-const) delta stoich object.
+    Sprog::Kinetics::DeltaStoich *const GetDeltaStoich(const unsigned int i) const;
+
+    // Returns pointer to delta stoich with given name.  NULL if not found.  Thi
+    // function returns a modifiable (non-const) delta stoich object.
+    Sprog::Kinetics::DeltaStoich *const GetDeltaStoich(const std::string &name) const;
+    
+	
     // FORWARD ARRHENIUS COEFFICIENTS.
 
     // Returns the forward Arrhenius rate parameters.
@@ -159,7 +218,68 @@ public:
     // Sets the reverse Arrhenius parameters.
     void SetRevArrhenius(const ARRHENIUS &arr);
 
+	
+	// FORD
+	// Returns true if this reaction uses ford.
+	bool IsFORD() const;
+	
+	// Sets whether or not this reaction uses ford.
+	void SetUseFORD(const bool isFord); 
+	
+	// Returns a pointer to the Ford parameters.
+	const std::vector<FORD> &FordReac(void) const;
 
+	// Sets the Ford parameters.
+	void SetFord(const double c, const std::string &name);
+
+	// Returns the coefficient for the ith ford of the reaction.
+	FORD FORDElement(unsigned int i) const;
+
+	
+	
+	// Count the number of ford params 
+	int FORDCount() const;
+	
+	// SURFACE 
+	// Returns true if one of the reactants or products is surface type
+	bool IsSURF() const;
+
+	// Sets whether or not this reaction is surface types
+	void SetIsSurface(const std::string &phName);  
+
+	// STICK
+	// Returns true if this reaction uses stick.
+	bool IsSTICK() const;
+	
+	// Sets whether or not this reaction uses stick.
+	void SetUseSTICK(const bool isSticking);
+	
+	// MWON
+	// Returns true if this reaction uses Mott-Wise.
+	bool IsMottWise() const;
+	// Sets whether or not this reaction uses Mott-Wise.
+	void SetUseMottWise(const bool isMott);
+	
+	
+	// COVERAGE 
+	// Returns true if this reaction uses coverage.
+	bool IsCOVERAGE() const; // (inline)
+	
+	// Sets whether or not this reaction uses coverage.
+	void SetUseCOV(const bool isCov); // (inline)
+	
+	// Returns the vector of the Coverage parameters.
+	const std::vector<COVERAGE> &CoverageReac(void) const;
+
+	// Returns the coefficient for the ith coverage.
+	COVERAGE CoverageElement(unsigned int i) const;
+
+	// Sets the Coverage parameters.
+	void SetCoverage(const double e, const double m, const double eps, const std::string &name);
+
+	// Count the number of coverage params 
+	int COVERAGECount() const;
+	
     // FORWARD LANDAU-TELLER PARAMETERS.
 
     // Returns a pointer to the forward Landau Teller coefficients.
@@ -181,10 +301,10 @@ public:
     // THIRD BODIES.
 
     // Returns true if this reaction uses third bodies.
-    bool UseThirdBody() const;
+    bool UseThirdBody() const; // (inline)
 
     // Sets whether or not this reaction uses third bodies.
-    void SetUseThirdBody(bool usetb);
+    void SetUseThirdBody(bool usetb); // (inline)
 
     // Returns the vector of third-body coefficients.
     const std::vector<Stoich> &ThirdBodies(void) const;
@@ -200,10 +320,10 @@ public:
     void AddThirdBody(const Stoich &tb);
 
     // Adds a third body to the reaction.
-    void AddThirdBody(unsigned int sp, real coeff);
+    void AddThirdBody(unsigned int sp, double coeff);
 
     // Adds a third body given the species name.
-    void AddThirdBody(const std::string &name, real coeff);
+    void AddThirdBody(const std::string &name, double coeff);
 
     // Removes a third body, given by name, from the reaction.
     void RemoveThirdBody(const std::string &name);
@@ -243,15 +363,15 @@ public:
     // Sets the fall-off type and parameters.
     void SetFallOffParams(
         const FALLOFF_FORM form,
-        const real params[FALLOFF_PARAMS::MAX_FALLOFF_PARAMS]
+        const double params[FALLOFF_PARAMS::MAX_FALLOFF_PARAMS]
         );
 
 
     // FALL-OFF FUNCTIONS.
 
-    real FTROE3(real T, real logpr) const; // 3-parameter Troe fall-off form.
-    real FTROE4(real T, real logpr) const; // 4-parameter Troe fall-off form.
-    real FSRI(real T, real logpr) const;   // SRI fall-off form.
+    double FTROE3(double T, double logpr) const; // 3-parameter Troe fall-off form.
+    double FTROE4(double T, double logpr) const; // 4-parameter Troe fall-off form.
+    double FSRI(double T, double logpr) const;   // SRI fall-off form.
     //FallOffFnPtr FallOffFn() const;        // Custom fall-off function.
 
 
@@ -271,17 +391,20 @@ public:
     // RATE CALCULATION.
 
     // Calculates the rate of progress of this reaction.
-    real RateOfProgress(
-        real density,        // Mixture molar density.
-        const real *const x, // Species mole fractions.
+    double RateOfProgress(
+        double density,        // Mixture molar density.
+        const double *const x, // Species mole fractions.
         unsigned int n,      // Number of values in x array.
-        real kforward,       // Forward rate constant.
-        real kreverse        // Reverse rate constant.
+        double kforward,       // Forward rate constant.
+        double kreverse        // Reverse rate constant.
         ) const;
 
 
     // READ/WRITE/COPY FUNCTIONS.
 
+	 //! Indicates whether the pre-exponential should be converted to cgs
+    bool ConvertPreexponential(void) const;
+	
     // Creates a copy of the species object.
     Reaction *Clone(void) const;
 
@@ -291,13 +414,15 @@ public:
     void serialize(Archive & ar, const unsigned int /* file_version */)
     {
         ar.template register_type<ARRHENIUS>();
+	//ar.template register_type<COVERAGE>();
+	//ar.template register_type<FORD>();
         ar.template register_type<Sprog::Stoichiometry>();
         ar.register_type(static_cast<LTCOEFFS *>(NULL));
 
         ar & m_name & m_reversible
            & m_reac & m_prod & m_dstoich & m_dreac & m_dprod
-           & m_arrf & m_arrr & m_lt & m_revlt & m_usetb
-           & m_thirdbodies & m_fotype & m_foparams & m_mech;
+           & m_arrf & m_arrr & m_lt & m_revlt & m_fo & m_covr & m_usetb
+	   & m_thirdbodies & m_fotype & m_foparams & m_isSurface & m_sticking & m_mottwise & m_isCoverage & m_coverage & m_isFord & m_ford & m_mech & m_deltaStoich & m_phaseVector;
     }
 
     // Writes the element to a binary data stream.
@@ -310,8 +435,7 @@ public:
     // reaction data.  This is used to debug.
     void WriteDiagnostics(std::ostream &out) const;
 
-    //! Indicates whether the pre-exponential should be converted to cgs
-    bool ConvertPreexponential(void) const;
+   
 
     //! Writes the reduced mechanism reactions to the output file
     void WriteReducedMechReacs(std::ostream &out, std::vector<std::string> RejectSpecies) const;
@@ -320,15 +444,34 @@ protected:
     // Reaction data.
     std::string m_name;                    // Reaction description.
     bool m_reversible;                     // Is the reaction reversible or not?
+    bool m_sticking;                       // Is the reaction involves sticking reaction 
+    bool m_mottwise;                       // Is the MottWise evaluation used to solve the sticking reaction  
+    bool  m_isCoverage;
+    bool m_isFord;
+    bool m_isSurface;                      // Is the reaction surface reaction of any types.  
     std::vector<Stoich> m_reac, m_prod;    // reactant & product stoichiometry.
-    real m_dstoich, m_dreac, m_dprod;      // Total stoichiometry changes.
+    std::vector<std::string> m_phaseVector;       // Vector of phase name for delta stoich
+    DeltaStoichPtrVector m_deltaStoich;  // Vector of stoichiometric changes defined by mechanism. 
+    double m_dstoich, m_dreac, m_dprod;      // Total stoichiometry changes.
     ARRHENIUS m_arrf, *m_arrr;             // Forward and reverse Arrhenius parameters.
     LTCOEFFS *m_lt, *m_revlt;              // Landau-Teller forward and reverse coefficients.
+    COVERAGE m_covr; // for Deserialisation and Serialisation 
 
+    FORD m_fo; // for Deserialisation and Serialisation     
     // Third bodies.
     bool m_usetb; // Set to true if this reaction requires third bodies.
     std::vector<Stoich> m_thirdbodies; // Reaction third bodies and their coefficients.
 
+    
+
+    // Ford reaction 
+
+    std::vector<FORD> m_ford; // Vector of FORD struct, storing species name and its ford coefficient 
+    
+    // Sticking reaction 
+
+    std::vector<COVERAGE> m_coverage; // Vector of COVERAGE struct, storing species name and their parameters 
+    
     // Fall-off data.
     FALLOFF_FORM m_fotype;     // The type of the fall-off reaction.
     FALLOFF_PARAMS m_foparams; // Fall-off parameters.
@@ -345,6 +488,7 @@ protected:
 
 // Inline function definitions.
 #include "gpc_reaction_inl.h"
+ 
 
 // A typedef for a STL vector of reactions.
 typedef std::vector<Reaction> RxnVector;

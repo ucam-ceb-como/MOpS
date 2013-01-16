@@ -93,19 +93,19 @@ public:
 
     // Returns the absolute error tolerance used for ODE
     // calculations.
-    real ATOL() const;
+    double ATOL() const;
 
     // Sets the absolute error tolerance used for ODE
     // calculations.
-    void SetATOL(real atol);
+    void SetATOL(double atol);
 
     // Returns the relative error tolerance used for ODE
     // calculations.
-    real RTOL() const;
+    double RTOL() const;
 
     // Sets the relative error tolerance used for ODE
     // calculations.
-    void SetRTOL(real rtol);
+    void SetRTOL(double rtol);
 
     // LOI STATUS FOR ODE SOLVER.
 
@@ -127,10 +127,10 @@ public:
     // UNDER-RELAXATION.
 
     // Returns the under-relaxation coefficient.
-    real UnderRelaxCoeff(void) const;
+    double UnderRelaxCoeff(void) const;
 
     // Sets the under-relaxation coefficient.
-    void SetUnderRelaxCoeff(real relax);
+    void SetUnderRelaxCoeff(double relax);
 
     // SOLUTION.
 
@@ -143,7 +143,7 @@ public:
     // a function pointer.
     virtual void Solve(
             Reactor &r,   // The reactor to solve.
-            real tstop,   // The end time for the step.
+            double tstop,   // The end time for the step.
             int nsteps,   // Number of internal steps to take.
             int niter,    // Number of internal iterations to take.
             Sweep::rng_type &rng,  // Random number generator
@@ -209,7 +209,7 @@ protected:
     // SOLVER SETTINGS.
 
     // Default error tolerances for the ODE solver.
-    real m_atol, m_rtol;
+    double m_atol, m_rtol;
 
     // SENSITIVITY SETTINGS
 
@@ -220,7 +220,7 @@ protected:
     double m_LOIComp;
 
     // Under-relaxation coefficient.
-    real m_rlx_coeff;
+    double m_rlx_coeff;
 
     // LOI KEPT SPECIES
 
@@ -235,7 +235,7 @@ protected:
     unsigned int m_pcount;
 
     // Max. M0 value, for initial scaling of ensemble.
-    real m_maxm0;
+    double m_maxm0;
 */
 
     // COMPUTATION TIME.
@@ -356,7 +356,7 @@ protected:
     // vector.
     static void buildOutputVector(
         unsigned int step, // Step number.
-        real time,         // Step time.
+        double time,         // Step time.
         fvector &avg,      // Averages.
         const fvector &err // Confidence intervals (will be inserted into avg).
         );

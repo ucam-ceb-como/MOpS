@@ -61,7 +61,7 @@ SurfVolSilicaPrimary::SurfVolSilicaPrimary() {}
  * @return          Initialised particle
  */
 SurfVolSilicaPrimary::SurfVolSilicaPrimary(
-        real time,
+        double time,
         const Sweep::ParticleModel &model
         )
 : SurfVolPrimary(time, model),
@@ -141,24 +141,24 @@ Sweep::AggModels::AggModelType
  * @exception   std::runtime_error  Could not cast gas phase to SprogIdealGasWrapper
  */
 void SurfVolSilicaPrimary::Sinter(
-        real dt,
-        Cell &sys,
-        const Processes::SinteringModel &model,
-        rng_type &rng,
-        real wt
+        double dt,
+        Sweep::Cell &sys,
+        const Sweep::Processes::SinteringModel &model,
+        Sweep::rng_type &rng,
+        double wt
         )
 {
     // Store some values needed after sintering
-    Sweep::real initial_surface = m_surf;
+    double initial_surface = m_surf;
 
     // Pass through to SurfVolPrimary to sinter the particle
     SurfVolPrimary::Sinter(dt, sys, model, rng, wt);
     m_sinter_rate = model.Rate(0.0, sys, *this);
 
     // Estimate the number of chemical units to be changed
-    Sweep::real n_OH = GetComponent("hydroxide");
-    Sweep::real n_O  = GetComponent("oxygen");
-    Sweep::real d_comp = n_OH * (initial_surface - m_surf) / m_surf;
+    double n_OH = GetComponent("hydroxide");
+    double n_O  = GetComponent("oxygen");
+    double d_comp = n_OH * (initial_surface - m_surf) / m_surf;
 
     if (d_comp < 0.0)
         throw std::runtime_error("Sintering particle gave initial surface < final surface"
@@ -197,7 +197,7 @@ void SurfVolSilicaPrimary::UpdateCache()
     SurfVolPrimary::UpdateCache();
 
     // Estimate diameter using the same formula as SilicaPrimary
-    m_dcol = real(PP_Diameter()) * pow(PP_Count(), 1.0/m_pmodel->GetFractDim());
+    m_dcol = double(PP_Diameter()) * pow(PP_Count(), 1.0/m_pmodel->GetFractDim());
     m_dmob = m_dcol;
 }
 
@@ -207,7 +207,7 @@ void SurfVolSilicaPrimary::UpdateCache()
  * @param name  Name of component
  * @return      Number of units of a component
  */
-Sweep::real SurfVolSilicaPrimary::GetComponent(std::string name) const
+double SurfVolSilicaPrimary::GetComponent(std::string name) const
 {
     try {
         return m_comp[m_pmodel->ComponentIndex(name)];
@@ -222,7 +222,7 @@ Sweep::real SurfVolSilicaPrimary::GetComponent(std::string name) const
  * @param name  Name of component
  * @param val   Value to set
  */
-void SurfVolSilicaPrimary::SetComponent(std::string name, Sweep::real val)
+void SurfVolSilicaPrimary::SetComponent(std::string name, double val)
 {
     try {
         m_comp[m_pmodel->ComponentIndex(name)] = val;
@@ -251,9 +251,9 @@ void SurfVolSilicaPrimary::Deserialize(std::istream &in, const Sweep::ParticleMo
         // Read base class.
         SurfVolPrimary::Deserialize(in, model);
 
-        Sweep::real val(0.0);
+        double val(0.0);
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_sinter_rate = (real)val;
+        m_sinter_rate = (double)val;
     } else {
         throw std::invalid_argument("Input stream not ready "
                                "(Sweep, SurfVolSilicaPrimary::Deserialize).");

@@ -100,7 +100,7 @@ bool SrcPoint::IsBeforePoint(const SrcPoint &lhs, const SrcPoint &rhs)
 }
 
 // Returns true if the current point is before the given time.
-bool SrcPoint::IsBeforeTime(const SrcPoint &lhs, real t)
+bool SrcPoint::IsBeforeTime(const SrcPoint &lhs, double t)
 {
     return lhs.Time < t;
 }
@@ -120,7 +120,7 @@ bool SrcPoint::IsAfterPoint(const SrcPoint &lhs, const SrcPoint &rhs)
 }
 
 // Returns true if the current point is after the given time.
-bool SrcPoint::IsAfterTime(const SrcPoint &lhs, real t)
+bool SrcPoint::IsAfterTime(const SrcPoint &lhs, double t)
 {
     return lhs.Time > t;
 }
@@ -135,7 +135,7 @@ void Mops::SortSrcProfile(Mops::SrcProfile &prof)
 
 // Returns the first SrcPoint defined after the given time.  If the time
 // is out-of-range then returns the end() of the vector.
-SrcProfile::const_iterator Mops::LocateSrcPoint(const SrcProfile &prof, real t)
+SrcProfile::const_iterator Mops::LocateSrcPoint(const SrcProfile &prof, double t)
 {
     for (SrcProfile::const_iterator i=prof.begin(); i!=prof.end(); ++i) {
         if (SrcPoint::IsAfterTime(*i, t)) return i;

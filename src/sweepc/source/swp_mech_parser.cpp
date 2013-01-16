@@ -46,6 +46,7 @@
 #include "swp_inception.h"
 #include "swp_constant_inception.h"
 #include "swp_surface_reaction.h"
+#include "swp_titania_surface_reaction.h"
 #include "swp_actsites_reaction.h"
 #include "swp_condensation.h"
 #include "swp_transcoag.h"
@@ -98,7 +99,7 @@ void readInceptedComposition(const CamXML::Element &xml, Sweep::Processes::Incep
 		if (id >= 0) {
 			// Get component change.
 			str = (*j)->GetAttributeValue("dx");
-			Sweep::real dx = cdble(str);
+			double dx = cdble(str);
 			// Set component change.
 			icn.SetParticleComp(id, dx);
 		} else {
@@ -127,7 +128,7 @@ void readInceptedTrackers(const CamXML::Element &xml, Sweep::Processes::Inceptio
 		if (id >= 0) {
 			// Get tracker change.
 			str = (*j)->GetAttributeValue("dx");
-			Sweep::real dx = cdble(str);
+			double dx = cdble(str);
 			// Set tracker change.
 			icn.SetParticleTracker(id, dx);
 		} else {
@@ -183,7 +184,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 
             if(str == "StokesCunningham") {
                 // Parameters of the drag expression
-                real A, B, E;
+                double A, B, E;
 
                 CamXML::Element* numberXML = (*i)->GetFirstChild("A");
                 if(numberXML != NULL) {
@@ -221,7 +222,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 
                 // Get constant of proportionality between drag and temperature
                 CamXML::Element* numberXML = (*i)->GetFirstChild("A");
-                real coeff;
+                double coeff;
                 if(numberXML != NULL) {
                     coeff = atof(numberXML->Data().c_str());
                 }
@@ -427,6 +428,9 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else if (str == "silicon") {
             // Solid-state diffusion (d^3)
             mech.SintModel().SetType(SinteringModel::Silicon);
+        } else if (str == "constant") {
+            // Constant characterisitic sintering time
+            mech.SintModel().SetType(SinteringModel::Constant);
         } else {
             // Grain-boundary diffusion is the default.
             mech.SintModel().SetType(SinteringModel::GBD);
@@ -784,7 +788,7 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 
 
     // Rate scaling now that a process has been created
-    real A = 0.0;
+    double A = 0.0;
     const CamXML::Element *el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
@@ -873,7 +877,7 @@ void MechParser::readSiliconInception(CamXML::Element &xml, Processes::SiliconIn
 
 
     // Rate scaling now that a process has been created
-    real A = 0.0;
+    double A = 0.0;
     CamXML::Element *el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
@@ -1013,7 +1017,7 @@ void MechParser::readConstantInception(CamXML::Element &xml, Processes::Constant
     // Read the fixed rate (particles per cm^3 per s)
     CamXML::Element *el = xml.GetFirstChild("rate");
     if (el != NULL) {
-    	real rate = std::atof(el->Data().c_str());
+    	double rate = std::atof(el->Data().c_str());
     	// But store with units of particles per m^3 per s
     	icn.setConstantVolumetricInceptionRate(rate * 1.0e6);
     }
@@ -1022,7 +1026,7 @@ void MechParser::readConstantInception(CamXML::Element &xml, Processes::Constant
     }
 
     // Rate scaling now that a process has been created
-    real A = 0.0;
+    double A = 0.0;
     el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
@@ -1033,7 +1037,7 @@ void MechParser::readConstantInception(CamXML::Element &xml, Processes::Constant
     el = xml.GetFirstChild("fixedposition");
     if (el != NULL) {
         // Read position in cm (for consistency with rest of input file ...
-        real posn = std::atof(el->Data().c_str());
+        double posn = std::atof(el->Data().c_str());
         // ..., but store position in m
         icn.setFixedPosition(posn/100);
         icn.useFixedPosition(true);
@@ -1072,6 +1076,27 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
         } else if (str.compare("bp")==0) {
             // This is a Blanquart Pitsch active-sites enabled reaction.
             rxn = new ActSiteReaction(mech, ActSiteReaction::BPRadicalSiteModel, SprogIdealGasWrapper::sAlphaIndex);
+        } else if (str.compare("abfconst")==0) {
+            // This is an ABF active-sites reaction with alpha constant (=1).
+            rxn = new ActSiteReaction(mech, ActSiteReaction::ABFConstant, SprogIdealGasWrapper::sAlphaIndex);
+        } else if (str.compare("titania")==0) {
+            // This is a titania surface reaction
+            // Create a new reaction of a certain form
+            string str2 = (*i)->GetAttributeValue("form");
+            if (str2.compare("firstorder")==0) {
+                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iFirstOrder);
+            } else if (str2.compare("ghoshtagore")==0) {
+                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iGhoshtagore);
+            } else if (str2.compare("adsorption")==0) {
+                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iEleyRidealAdsorption);
+            } else if (str2.compare("desorption")==0) {
+                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iEleyRidealDesorption);
+            } else if (str2.compare("multivariate")==0) {
+                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iMultivariate);
+            } else {
+                throw runtime_error("Unrecognised titania reaction form" + str2 +
+                        "in MechParser::readSurfRxns");
+            }
         } else {
             // Unrecognised reaction type.
             throw runtime_error("Unrecognised reaction type: " + str +
@@ -1145,14 +1170,8 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
         rxn.SetDeferred(false);
     }
 
+    // Read reactants
     readReactants(xml, rxn);
-    if(rxn.ReactantCount() > 1) {
-        std::ostringstream msg;
-        msg << "Soot surface reactions may not have more than one reactant, but "
-            << rxn.Name() << " has " << rxn.ReactantCount()
-            << "MechParser::readSurfRxn";
-        throw std::runtime_error(msg.str());
-    }
 
     // Read products.
     readProducts(xml, rxn);
@@ -1224,7 +1243,6 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
             // Must scale rate constant from cm3 to m3, surface area
             // is multiplied by the site density so that it is a dimensionless
             // quantity hence A has units cm^3 s^-1.
-            //arr.A *= (1.0e-6);
 			arr.A *= (1.0e-6);
 		}
         else if (str.compare("d")==0) {
@@ -1349,7 +1367,7 @@ void MechParser::readCondensation(CamXML::Element &xml, Processes::Condensation 
     assert((cond.CompChange().size() > 0) || (cond.TrackChange().size() > 0));
 
     // Read Arrhenius rate parameters.
-    real A = 0.0;
+    double A = 0.0;
     CamXML::Element *el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
@@ -1661,7 +1679,7 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                 }
 
                 // Rate scaling now that a process has been created
-                real A = 0.0;
+                double A = 0.0;
                 CamXML::Element *el = (*it)->GetFirstChild("A");
                 if (el != NULL) {
                     A = cdble(el->Data());
@@ -1795,7 +1813,7 @@ void MechParser::readReactantMDs(CamXML::Element &xml,
     for (i=items.begin(); i!=items.end(); ++i) {
         // Get species mass
         string str = (*i)->GetAttributeValue("m");
-        real m = cdble(str);
+        double m = cdble(str);
         if (m > 0.0) {
             mass.push_back(m*1.0e-3); // Convert from g to kg.
         } else {
@@ -1806,7 +1824,7 @@ void MechParser::readReactantMDs(CamXML::Element &xml,
 
         // Get species diameter
         str = (*i)->GetAttributeValue("d");
-        real d = cdble(str);
+        double d = cdble(str);
         if (d > 0.0) {
             diam.push_back(d*1.0e-2); // Convert from cm to m.
         } else {
@@ -1834,7 +1852,7 @@ void MechParser::readCompChanges(CamXML::Element &xml, ParticleProcess &proc)
         if (id >= 0) {
             // Get component change.
             str = (*i)->GetAttributeValue("dx");
-            real dx = cdble(str);
+            double dx = cdble(str);
             // Set component change.
             proc.SetCompChange(id, dx);
         } else {
@@ -1861,7 +1879,7 @@ void MechParser::readTrackChanges(CamXML::Element &xml, ParticleProcess &proc)
         if (id >= 0) {
             // Get component change.
             str = (*i)->GetAttributeValue("dx");
-            real dx = cdble(str);
+            double dx = cdble(str);
             // Set component change.
             proc.SetTrackChange(id, dx);
         } else {

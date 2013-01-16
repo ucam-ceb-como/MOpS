@@ -78,7 +78,7 @@ public:
     unsigned int Count() const {return STAT_COUNT;}
 
     //! Calculate the stats for the given ensemble
-    void Calculate(const Ensemble &e, real scale);
+    void Calculate(const Ensemble &e, double scale);
 
     //! Returns a vector containing the stats.
     const fvector &Get() const {return m_stats;}
@@ -102,7 +102,7 @@ public:
     //! Build the PSL entry for the given particle.
     void PSL(
         const Sweep::Particle &sp,      // Particle from which to get PSL data.
-        real time,                      // Current flow time (used to calculate particle age).
+        double time,                      // Current flow time (used to calculate particle age).
         fvector &psl,                   // Output vector.
         unsigned int start = 0          // Optional start index for the first variable.
         ) const;
@@ -125,18 +125,21 @@ public:
 
 private:
     //! Get geometric standard deviation of a list of diameters
-    fvector GetGeometricStdev(
+    void GetGeometricStdev(
             const unsigned int num,
             std::vector<fvector> diams,
-            fvector weights
+            fvector weights,
+            fvector &gmeans,
+            fvector &gstdevs
             ) const;
 
     //! Number of statistics entries
-    static const unsigned int STAT_COUNT = 8;
+    static const unsigned int STAT_COUNT = 10;
 
     //! Indices for stats headers
     enum StatIndices {iNPrim=0, iPrimDiam=1, iSintLevel=2, iSintRate=3,
-        iSintTime=4, iCollGStdev=5, iPrimGStdev=6, iGStdevMean=7};
+        iSintTime=4, iCollGStdev=5, iPrimGStdev=6, iGStdevMean=7, iCollGMean=8,
+        iPrimGMean=9};
 
     //! The stats
     fvector m_stats;

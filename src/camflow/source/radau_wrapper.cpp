@@ -63,7 +63,7 @@ extern "C"{
      *@y - solution vector at x
      *@f - residual function f dy/dt or dy/dz
      */
-    void residual(doublereal x, doublereal* y, doublereal* f, void* udata, bool jacCall){
+    void residual(double x, double* y, double* f, void* udata, bool jacCall){
         CamResidual *residual = (CamResidual*)udata;
         residual->eval(x,y,f, jacCall);
     }
@@ -76,10 +76,10 @@ extern "C"{
     /*
      *function called by radau for writing the output
      */
-    double report(doublereal x, doublereal* y, void* udata){
+    double report(double x, double* y, void* udata){
 
         CamResidual *residual = (CamResidual*)udata;
-        doublereal resNorm = residual->getResidual();
+        double resNorm = residual->getResidual();
         // Output time and residual to screen.
         std::cout << x << "    " << resNorm << std::endl;
 
@@ -90,7 +90,7 @@ extern "C"{
 
     }
 
-    void massMatrix(doublereal **M, void* udata){
+    void massMatrix(double **M, void* udata){
         CamResidual *residual = (CamResidual*)udata;
         residual->massMatrix(M);
     }
@@ -100,11 +100,11 @@ extern "C"{
 
 //solver init
 void RadauWrapper::initSolver(  int nEq,
-                                const doublereal tBeg,
-                                const doublereal tEnd,
-                                std::vector<doublereal>& y,
-                                std::vector<doublereal>& rTol,
-                                std::vector<doublereal>& aTol,
+                                const double tBeg,
+                                const double tEnd,
+                                std::vector<double>& y,
+                                std::vector<double>& rTol,
+                                std::vector<double>& aTol,
                                 CamResidual &cr){
     /*
      *initialisation of the Radau solver

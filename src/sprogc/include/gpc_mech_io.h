@@ -66,6 +66,22 @@ public:
         const std::string &transFile = "NOT READ"
 	);
 
+	/*
+	* Added by mm864 to take into account surf chem.  
+	*
+	*/
+	static void ReadChemkin
+	(
+        const std::string &filename,
+		const std::string &Surffilename,
+        Sprog::Mechanism &mech,
+        const std::string &thermofile,
+		const std::string &Surfthermofile,
+		const int verbose = 0,
+        const std::string &transFile = "NOT READ"
+	);
+	
+		
 private:
 
     // Reads a CHEMKIN input file.
@@ -74,6 +90,7 @@ private:
         ::IO::ChemkinReader& chemkinReader,
         Sprog::Mechanism &mech
     );
+
 
     //! method to read transport data
     static void ReadTransport
@@ -86,6 +103,8 @@ private:
     static void parseCK_Units(
         const std::string &rxndef,          // String containing the REACTION statement.
         Sprog::Kinetics::ARRHENIUS &scale); // Scaling factors.
+   
+    
 
 };
 };

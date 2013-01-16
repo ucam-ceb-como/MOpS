@@ -84,8 +84,8 @@ void CamReporter::problemDescription(CamBoundary& cb, CamResidual& cr)
     cout << "\t Initializing solution vector...\n";
     cout << "\t Inlet velocity: "<<cb.getVelocity() <<  " m/s" << endl;
     cout << "\t Inlet temperature "<< cb.getTemperature() << " K"<< endl;
-    map<string, doublereal> species = cb.getInletSpecies();
-    map<string, doublereal>::iterator p = species.begin();
+    map<string, double> species = cb.getInletSpecies();
+    map<string, double>::iterator p = species.begin();
     //inlet species mass/mole fraction
     cout << "\n\t Inlet species mass/mole fraction...\n";
     cout << "\t----------------------------------------\n";
@@ -191,13 +191,13 @@ void CamReporter::writeHeader
 }
 
 
-void CamReporter::writeStdFileOut(vector<doublereal>& data)
+void CamReporter::writeStdFileOut(vector<double>& data)
 {
     standard->write(data);
 }
 
 
-void CamReporter::writeCustomFileOut(vector<doublereal>& data)
+void CamReporter::writeCustomFileOut(vector<double>& data)
 {
     custom->write(data);
 }

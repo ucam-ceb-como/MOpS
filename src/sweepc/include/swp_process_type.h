@@ -66,6 +66,7 @@ namespace Processes
         // Surface reactions.
         SurfaceReaction_ID=100, // Surface reaction.
         ActSiteRxn_ID=101,      // Active-sites surface reaction.
+        TitaniaSR_ID=102,       // Titania surface reaction
 
         // Condensation processes.
         Condensation_ID=200,    // Condensation process.

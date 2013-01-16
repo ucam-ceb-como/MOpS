@@ -99,27 +99,27 @@ public:
     const fvector &ParticleComp(void) const;
 
     // Returns the amount of the ith component of the new particle.
-    real ParticleComp(unsigned int i) const;
+    double ParticleComp(unsigned int i) const;
 
     // Sets the particle composition vector.
     void SetParticleComp(const fvector &comp);
 
     // Sets the amount of the ith component in the new particle.
-    void SetParticleComp(unsigned int i, real comp);
+    void SetParticleComp(unsigned int i, double comp);
 
     // Returns the tracker variable vector of the new particle.
     const fvector &ParticleTrackers(void) const;
 
     // Returns the value of the ith tracker variable of the
     // new particle.
-    real ParticleTrackers(unsigned int i) const;
+    double ParticleTrackers(unsigned int i) const;
 
     // Sets the new particle tracker variable vector.
     void SetParticleTrackers(const fvector &track);
 
     // Sets the value of the ith tracker variable in the
     // new particle.
-    void SetParticleTracker(unsigned int i, real track);
+    void SetParticleTracker(unsigned int i, double track);
 
     //! Should new particles be considered for the secondary population
     void SetUseSecondary(bool use_secondary);
@@ -132,8 +132,8 @@ public:
     // Calculates the rate of multiple inceptions given a
     // vector of inceptions and an iterator to a vector of
     // reals for output.
-    static real CalcRates(
-        real t,                   // Time.
+    static double CalcRates(
+        double t,                   // Time.
         const Cell &sys,          // System for which to calculate rates.
         const Geometry::LocalGeometry1d &local_geom,
         const IcnPtrVector &icns, // Vector of inception processes.
@@ -149,7 +149,7 @@ public:
     // so it will be implemented in the PAHInception class
     int AddPyrene(
     int i,
-    real t,
+    double t,
     Cell &sys,
     rng_type &rng) const;
 

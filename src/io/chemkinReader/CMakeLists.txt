@@ -19,6 +19,7 @@ add_library(chemkinReader
             source/transportParser.cpp
             source/reactionParser.cpp
             source/chemkinReader.cpp
+			source/phase.cpp
 			${INCS})
 
 include_directories(include

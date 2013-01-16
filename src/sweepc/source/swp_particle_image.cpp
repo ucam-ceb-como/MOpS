@@ -55,7 +55,7 @@ using namespace Sweep::Imaging;
 using namespace std;
 using namespace Strings;
 
-const real ParticleImage::m_necking = 1.000;
+const double ParticleImage::m_necking = 1.000;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -158,7 +158,7 @@ void ParticleImage::Write3dout(std::ofstream &file, double x, double y, double z
 {
     if (file.good()) {
         string line;
-        real val = 0.0;
+        double val = 0.0;
 
         // vector of arrays to store primary coordinates.  First
         // 3 values are the cartesian coordinates, final value
@@ -292,7 +292,7 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
 {
     if (file.good()) {
         string line;
-        real val = 0.0;
+        double val = 0.0;
 
         // vector of arrays to store primary coordinates.  First
         // 3 values are the cartesian coordinates, final value
@@ -364,15 +364,15 @@ void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng)
         // spheres are at the origin.
 
         // Rotate left node randomly about CoM.
-        // Generate a random number on [0,1)-real-interval
-        boost::uniform_01<rng_type&, real> uniformGenerator(rng);
-        real phi1   = uniformGenerator() * 2.0 * PI;
-        real theta1 = ((2.0*uniformGenerator())-1.0) * PI;
+        // Generate a random number on [0,1)-double-interval
+        boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+        double phi1   = uniformGenerator() * 2.0 * PI;
+        double theta1 = ((2.0*uniformGenerator())-1.0) * PI;
         target->RotateCOM(theta1, phi1);
 
         // Rotate right node randomly about CoM.
-        real phi2   = uniformGenerator() * 2.0 * PI;
-        real theta2 = ((2.0*uniformGenerator())-1.0) * PI;
+        double phi2   = uniformGenerator() * 2.0 * PI;
+        double theta2 = ((2.0*uniformGenerator())-1.0) * PI;
         bullet->RotateCOM(theta2, phi2);
 
         // Move both spheres so that the bounding spheres
@@ -385,7 +385,7 @@ void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng)
         // x-y displacement means that the aggregates cannot
         // collide in the z-direction.
         Coords::Vector D;
-        real sumr=0.0;
+        double sumr=0.0;
         bool hit = false;
         while (!hit) {
             // Need to reset target and bullet here, in case
@@ -456,10 +456,10 @@ void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng)
  */
 bool ParticleImage::minCollZ(const ImgNode &target,
                              const ImgNode &bullet,
-                             real dx, real dy, real &dz)
+                             double dx, double dy, double &dz)
 {
     bool hit=false, hit1=false;
-    real dz2=0.0, dz3=0.0, dz4=0.0;
+    double dz2=0.0, dz3=0.0, dz4=0.0;
 
     if (target.IsLeaf()) {
         // Target is a leaf
@@ -547,30 +547,30 @@ bool ParticleImage::minCollZ(const ImgNode &target,
  * @param dz    ?
  * @return      Have the nodes collided?
  */
-bool ParticleImage::calcCollZ(const Coords::Vector &p1, real r1,
-                              const Coords::Vector &p2, real r2,
-                              real dx, real dy, real &dz)
+bool ParticleImage::calcCollZ(const Coords::Vector &p1, double r1,
+                              const Coords::Vector &p2, double r2,
+                              double dx, double dy, double &dz)
 {
     // Calculate the square of the sum of the radii.
-    real sumrsqr = r1 + r2; sumrsqr *= sumrsqr;
+    double sumrsqr = r1 + r2; sumrsqr *= sumrsqr;
 
     // Calculate dx, dy and dz.  Remember to include
     // argument contributions.
-    real xdev = p2[0] - p1[0] + dx;
-    real ydev = p2[1] - p1[1] + dy;
-    real zdev = p2[2] - p1[2];
+    double xdev = p2[0] - p1[0] + dx;
+    double ydev = p2[1] - p1[1] + dy;
+    double zdev = p2[2] - p1[2];
 
     // Calculate dx, dy and dz squared.
-    real dxsqr = xdev * xdev;
-    real dysqr = ydev * ydev;
-    real dzsqr = zdev * zdev;
+    double dxsqr = xdev * xdev;
+    double dysqr = ydev * ydev;
+    double dzsqr = zdev * zdev;
 
     // Calculate quadratic terms.
-    real b = 2.0 * zdev;
-    real c = dxsqr + dysqr + dzsqr - sumrsqr;
+    double b = 2.0 * zdev;
+    double c = dxsqr + dysqr + dzsqr - sumrsqr;
 
     // Calculate determinant.
-    real det = (b*b) - (4.0*c);
+    double det = (b*b) - (4.0*c);
 
     if (det >= 0.0) {
         // Spheres intersect.

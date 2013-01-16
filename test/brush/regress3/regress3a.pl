@@ -58,8 +58,10 @@ my @simulationCommand = ($program,
 # Run the simulation and wait for it to finish
 system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";
 
+
 # Collect all the moment data together
-system("../../applications/solvers/brush/bin/merge-partstats.sh regress3a-adv-diffn") == 0 or die "ERR: failed to merge moment files: $!";
+system('../../applications/solvers/brush/bin/merge-partstats.sh regress3a-adv-diffn') == 0 or die "ERR: failed to merge moment files: $!";
+#`../../applications/solvers/brush/bin/merge-partstats.sh regress3a-adv-diffn` == 0 or die `ERR: failed to merge moment files: $!`;
 
 # Parse the moments file
 my $momentFile;

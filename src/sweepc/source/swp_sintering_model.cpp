@@ -109,27 +109,27 @@ void SinteringModel::Disable(void) {m_enable = false;}
 // PRE-EXPONENTIAL CONSTANT.
 
 // Returns the pre-exponential constant.
-real SinteringModel::A(void) const {return m_A;}
+double SinteringModel::A(void) const {return m_A;}
 
 // Sets the pre-exponential constant.
-void SinteringModel::SetA(real a) {m_A = a;}
+void SinteringModel::SetA(double a) {m_A = a;}
 
 
 // ENERGY PARAMETER.
 
 // Returns the characteristic temperature (E) in Kelvin.
-real SinteringModel::E(void) const {return m_E;}
+double SinteringModel::E(void) const {return m_E;}
 
 // Sets the characteristic temperature (E) in Kelvin.
-void SinteringModel::SetE(real e) {m_E = e;}
+void SinteringModel::SetE(double e) {m_E = e;}
 
 // MINIMUM PRIMARY PARTICLE DIAMETER PARAMETER.
 
 // Returns the minimum primary particle diameter in the system (Dpmin) in m.
-real SinteringModel::Dpmin(void) const {return m_dpmin;}
+double SinteringModel::Dpmin(void) const {return m_dpmin;}
 
 // Sets the minimum primary particle diameter in the system (Dpmin) in m.
-void SinteringModel::SetDpmin(real dpmin) {m_dpmin = dpmin;}
+void SinteringModel::SetDpmin(double dpmin) {m_dpmin = dpmin;}
 
 
 // SINTERING MODEL TYPE.
@@ -145,7 +145,7 @@ void SinteringModel::SetType(SinteringModel::SintType t) {m_type = t;}
 
 // Returns the characteristic sintering time for the
 // given particle.
-real SinteringModel::SintTime(const Cell &sys, const Particle &p) const
+double SinteringModel::SintTime(const Cell &sys, const Particle &p) const
 {
     if (p.Primary() != NULL) {
         return SintTime(sys, *p.Primary());
@@ -156,9 +156,9 @@ real SinteringModel::SintTime(const Cell &sys, const Particle &p) const
 
 // Returns the characteristic sintering time for the
 // given primary.
-real SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) const
+double SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) const
 {
-    real dp = 6.0 * p.Volume() / p.SurfaceArea();
+    double dp = 6.0 * p.Volume() / p.SurfaceArea();
     switch (m_type) {
         case ViscousFlow:
             return m_A * dp * 
@@ -197,6 +197,9 @@ real SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) const
 				   exp((m_E* (1 - pow( (m_dpmin/dp) - (sys.GasPhase().Temperature()/4100.0) , 3.76))
 				     /sys.GasPhase().Temperature()));
         	break;
+        case Constant:
+            // Only dependent on the 'pre-exponential' (has units s in this case)
+            return m_A;
     }
 }
 
@@ -204,16 +207,16 @@ real SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) const
 
 // Returns the rate of the process for the given particle.
 // wjm34: include max() catch on tau to prevent getting stuck in infinite Sinter() loops
-real SinteringModel::Rate(real t, const Cell &sys, const Particle &p) const
+double SinteringModel::Rate(double t, const Cell &sys, const Particle &p) const
 {
-    real tau = max(1.0e-30, SintTime(sys, p));
+    double tau = max(1.0e-30, SintTime(sys, p));
     return (p.SurfaceArea() - p.SphSurfaceArea()) / tau;
 }
 
 // Returns the rate of the process for the given primary.
-real SinteringModel::Rate(real t, const Cell &sys, const AggModels::Primary &p) const
+double SinteringModel::Rate(double t, const Cell &sys, const AggModels::Primary &p) const
 {
-    real tau = max(1.0e-30, SintTime(sys, p));
+    double tau = max(1.0e-30, SintTime(sys, p));
     return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);
 }
 
@@ -281,11 +284,11 @@ void SinteringModel::Deserialize(std::istream &in)
 
                 // Read pre-exponential factor.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_A = (real)val;
+                m_A = (double)val;
 
                 // Read characteristic temperature.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_E = (real)val;
+                m_E = (double)val;
 
                 // Read type.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

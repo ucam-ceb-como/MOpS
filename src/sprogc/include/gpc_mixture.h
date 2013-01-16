@@ -64,7 +64,8 @@ class Mixture
 public:
     // Constructors.  It makes no sense to have a mixture without knowledge
     // of the species list, therefore the default constructor is protected.
-    Mixture(const SpeciesPtrVector &sp); // Default constructor (requires species list).
+	Mixture(const SpeciesPtrVector &sp); // Default constructor (requires species list).
+    //Mixture(const SpeciesPtrVector &sp, const int NumGasSp, const int NumSurfSp); // Default constructor (requires species list).
     Mixture(const Mixture &copy);        // Copy constructor.
     Mixture(                       // Stream-reading constructor.
         std::istream &in,          //   - Stream from which to read.
@@ -88,57 +89,57 @@ public:
     // TEMPERATURE.
 
     // Returns temperature.
-    real Temperature(void) const;
+    double Temperature(void) const;
 
     // Set the temperature.
-    void SetTemperature(const real T);
+    void SetTemperature(const double T);
 
 
     // Returns the PAH formation rate.
-    real PAHFormationRate() const;
+    double PAHFormationRate() const;
 
     // Set the PAH formation rate.
-    void SetPAHFormationRate(const real r);
+    void SetPAHFormationRate(const double r);
 
     //! Return bulk gas velocity
-    real Velocity() const {return m_data[velocityIndex()];}
+    double Velocity() const {return m_data[velocityIndex()];}
 
     //! Set bulk gas velocity (species must be defined already)
-    void SetVelocity(const real v) {m_data[velocityIndex()] = v;}
+    void SetVelocity(const double v) {m_data[velocityIndex()] = v;}
 
 
 
-    //PARTICLE RELATED DATA
+    //PARTICLE RELATED DATA (NO NEED CHANGING)
 
     //! Return mixture fraction diffusion coefficient
-    real MixFracDiffCoeff() const {return m_data[MixFracDiffCoeffIndex()];}
+    double MixFracDiffCoeff() const {return m_data[MixFracDiffCoeffIndex()];}
 
     //! Set mixture fraction diffusion coefficient
-    void SetMixFracDiffCoeff (const real d) {m_data[MixFracDiffCoeffIndex()]= d;}
+    void SetMixFracDiffCoeff (const double d) {m_data[MixFracDiffCoeffIndex()]= d;}
 
     //! Return derivative of mixture fraction
-    real GradientMixFrac() const {return m_data[GradientMixFracIndex()];}
+    double GradientMixFrac() const {return m_data[GradientMixFracIndex()];}
 
     //! Set derivative of mixture fraction
-    void SetGradientMixFrac (const real g) {m_data[GradientMixFracIndex()] = g;}
+    void SetGradientMixFrac (const double g) {m_data[GradientMixFracIndex()] = g;}
 
     //! Return second derivative of mixture fraction
-    real LaplacianMixFrac() const {return m_data[LaplacianMixFracIndex()];}
+    double LaplacianMixFrac() const {return m_data[LaplacianMixFracIndex()];}
 
     //! Set second derivative of mixture fraction
-    void SetLaplacianMixFrac (const real l) {m_data[LaplacianMixFracIndex()] = l;}
+    void SetLaplacianMixFrac (const double l) {m_data[LaplacianMixFracIndex()] = l;}
 
     //! Return derivative of density times mixture fraction diffusion coefficient
-    real GradientTemperature() const {return m_data[GradientTemperatureIndex()];}
+    double GradientTemperature() const {return m_data[GradientTemperatureIndex()];}
 
     //! Set derivative of density times mixture fraction diffusion coefficient
-    void SetGradientTemperature (const real g) {m_data[GradientTemperatureIndex()] = g;}
+    void SetGradientTemperature (const double g) {m_data[GradientTemperatureIndex()] = g;}
 
     //! Alpha factor (used in ABF model to scale certain reaction rates)
-    real Alpha() const {return m_data[AlphaIndex()];}
+    double Alpha() const {return m_data[AlphaIndex()];}
 
     //! Set alpha factor (used in ABF model to scale certain reaction rates)
-    void SetAlpha(const real a) {m_data[AlphaIndex()] = a;}
+    void SetAlpha(const double a) {m_data[AlphaIndex()] = a;}
 
 
     // SPECIES CONCENTRATIONS/FRACTIONS.
@@ -153,20 +154,29 @@ public:
     void GetMassFractions(fvector &fracs) const;
 
     // Returns the mole fraction of species i.
-    real MoleFraction(unsigned int i) const;
+    double MoleFraction(unsigned int i) const;
 
     // Returns the molar concentration of species i.
-    real MolarConc(unsigned int i) const;
+    double MolarConc(unsigned int i) const;
+
+
+    /* Added by mm864
+     *
+     */ 
+
+    //Return the molar concentration of surface species i checking phase
+    double MolarSurfConc(unsigned int i) const; 
+
 
     // Returns the mass fraction of species i.
-    real MassFraction(unsigned int i) const;
+    double MassFraction(unsigned int i) const;
 
     // Sets the mole fractions of all species.
     void SetFracs(const fvector &fracs);
 
     // Sets the mole fractions of all species from an array of values.
     void SetFracs(
-        const real fracs[], // The array of mole fractions.
+        const double fracs[], // The array of mole fractions.
         int n               // The length of the array.
         );
 
@@ -185,16 +195,16 @@ public:
     // MIXTURE DENSITY.
 
     // Returns molar density in current units.
-    real Density(void) const;
+    double Density(void) const;
 
     // Returns mass density in current units.
-    real MassDensity(void) const;
+    double MassDensity(void) const;
 
     // Sets the molar density.
-    void SetDensity(real dens);
+    void SetDensity(double dens);
 
     // Sets the mass density.
-    void SetMassDensity(real dens);
+    void SetMassDensity(double dens);
 
 
     // SPECIES WHICH DEFINE THE MIXTURE.
@@ -212,8 +222,8 @@ public:
     // and density)  This function is provided in order to allow
     // numerical operations to be performed on the mixture, for example
     // integration of ODEs.
-    real *const RawData();
-    const real *const RawData() const;
+    double *const RawData();
+    const double *const RawData() const;
 
 
     // READ/WRITE/COPY FUNCTIONS.
@@ -237,37 +247,37 @@ public:
 
 
     // return the molar enthalpy of all species as a vector J/mol.
-    const std::vector<real> getMolarEnthalpy(real T);
+    const std::vector<double> getMolarEnthalpy(double T);
         //return the molar enthalpy for th given mixture
-        const std::vector<real> getMolarEnthalpy();
+        const std::vector<double> getMolarEnthalpy();
 
     // routine to return the avg moleculat weight in Kg/mol.
-    real getAvgMolWt(fvector &massFrac) const;
+    double getAvgMolWt(fvector &massFrac) const;
 
     //! Mixture fraction weighted average molecular weight
-    real getAvgMolWt() const;
+    double getAvgMolWt() const;
 
     //! RMS molecule collision diameter
-    real getMeanCollisionSection() const;
+    double getMeanCollisionSection() const;
 
     //TRANSPORT RELATED
 
     // returns the mixture viscosity in Kg/m-s.
-    real getViscosity() const;
+    double getViscosity() const;
 
     //! Checks the mixture has sufficient transport data.
     void checkForTransportData() const;
 
     // returns the mixture thermal conductivity in J/m-s-K    .
-    real getThermalConductivity(real pre) const;
+    double getThermalConductivity(double pre) const;
     // returns the mixture specific heat capacity in J/Kg K.
-    real getSpecificHeatCapacity(real T);
+    double getSpecificHeatCapacity(double T);
         //return the specifi heat capacity for a given temp in J/Kg K.
-        real getSpecificHeatCapacity();
+        double getSpecificHeatCapacity();
         //return the molar specific heats
-        const std::vector<real> getMolarSpecificHeat();
+        const std::vector<double> getMolarSpecificHeat();
     // returns the vector of mixture diffusion coefficient in m^2/s.
-    const std::vector<real> getMixtureDiffusionCoeff(const real pre)const;
+    const std::vector<double> getMixtureDiffusionCoeff(const double pre)const;
 
     //! Index of temperature in m_data
     size_t temperatureIndex() const {return m_species->size();}
@@ -305,15 +315,26 @@ public:
     // Reads the mixture data from a binary data stream.
     virtual void Deserialize(std::istream &in);
 
+    
+
 protected:
     // The default constructor is protected to prevent mixture objects being
     // generated without knowledge of the defining species list.
     Mixture(void);
+    
+	 
+    //unsigned int GasSpCount = m_mech->GasSpeciesCount();
+
+
+	unsigned int gasSpeciesCount;
+
+	unsigned int surfSpeciesCount;
+
 
 private:
     // The data vector contains, in order, the species mole fractions,
     // the mixture temperature and the mixture density.
-    fvector m_data;
+    fvector m_data; // vector of double, i.e vector <double>
 
     // Vector of species for which this mixture is defined.
     const SpeciesPtrVector *m_species;

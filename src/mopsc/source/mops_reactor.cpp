@@ -117,7 +117,7 @@ Reactor &Reactor::operator=(const Mops::Reactor &rhs)
         SetMech(*rhs.m_mech);
 
         // Copy ODE workspace, incl. derivatives.
-        memcpy(m_deriv, rhs.m_deriv, sizeof(real)*m_neq);
+        memcpy(m_deriv, rhs.m_deriv, sizeof(double)*m_neq);
     }
     return *this;
 }
@@ -126,13 +126,13 @@ Reactor &Reactor::operator=(const Mops::Reactor &rhs)
 // REACTOR SOLUTION.
 
 // Returns the current reactor time.
-Mops::real Reactor::Time() const
+double Reactor::Time() const
 {
     return m_time;
 }
 
 // Sets the current reactor time.
-void Reactor::SetTime(real t)
+void Reactor::SetTime(double t)
 {
     m_time = t;
 }
@@ -164,7 +164,7 @@ void Reactor::Fill(Mops::Mixture &mix, bool clearfirst)
     m_mix = &mix;
 
     // Ensure that the reactor and mixture are using the same
-    // mechanism.
+    // mechanism. (see mops_mechanism.h)
     m_mix->GasPhase().SetSpecies(m_mech->GasMech().Species());
 }
 
@@ -190,7 +190,7 @@ void Reactor::SetMech(const Mops::Mechanism &mech)
 
     // Allocate the derivative array.
     if (m_deriv != NULL) delete [] m_deriv;
-    m_deriv = new real[m_neq];
+    m_deriv = new double[m_neq];
 }
 
 
@@ -246,20 +246,20 @@ void Reactor::DisableTempFunc(void) {m_Tfunc = NULL;}
 // Adds a dT/dt functional to the internal profile.  This
 // automatically tells the Reactor object to use its
 // default dT/dt calculation function.
-void Reactor::Add_dTdt(real t, const Sweep::Maths::Functional &fun)
+void Reactor::Add_dTdt(double t, const Sweep::Maths::Functional &fun)
 {
     UseDefaultTempFunc();
     m_dTdt_profile[t] = fun.Clone();
 }
 
 // Definition of RHS function for adiabatic energy model.
-Mops::real Reactor::_RHS_dTdt_profile(real t, const real *const y,
-                                const real *const ydot, 
+double Reactor::_RHS_dTdt_profile(double t, const double *const y,
+                                const double *const ydot, 
                                 const Reactor &r)
 {
     // Locate the first time point after t, or end() if
     // the profile is not long enough.
-    map<real,Sweep::Maths::Functional*>::const_reverse_iterator i;
+    map<double,Sweep::Maths::Functional*>::const_reverse_iterator i;
     for (i=r.m_dTdt_profile.rbegin(); i!=r.m_dTdt_profile.rend(); ++i) {
         if (i->first <= t) {
             break;
@@ -365,7 +365,7 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
             case 0:
                 // Read the time.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_time = (real)val;
+                m_time = (double)val;
 
                 // Read the mixture.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -393,10 +393,10 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                 // Read derivatives array.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n == 1) {
-                    m_deriv = new real[m_neq];
+                    m_deriv = new double[m_neq];
                     for (unsigned int i=0; i<m_neq; i++) {
                         in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                        m_deriv[i] = (real)val;
+                        m_deriv[i] = (double)val;
                     }
                 }
                 
@@ -416,6 +416,17 @@ Serial_ReactorType Reactor::SerialType() const
     return Serial_Reactor;
 }
 
+// Set the reactor surface area
+void Reactor::SetArea(double ar) 
+{
+Area = ar; 
+}
+
+// Set the reactor volume 
+void Reactor::SetVolume(double vol) 
+{
+Volume = vol; 
+}
 
 // RHS FUNCTION AND GOVERNING EQUATIONS.
 
@@ -428,80 +439,152 @@ unsigned int Reactor::ODE_Count() const
 }
 
 // Definition of RHS form for constant temperature energy equation.
-void Reactor::RHS_ConstT(real t, const real *const y,  real *ydot) const
+void Reactor::RHS_ConstT(double t, const double *const y,  double *ydot) const
 {
-    static fvector wdot;
-    real wtot = 0.0;
+    static fvector wdot, sdot;
+    double wtot = 0.0, stot= 0.0, avrMW = 0.0;
+	// Currently direct input Volume and ARea 
+
+    //double Volume = 1.4/1000; // m^3
+    //double Area = 5.9; // m^2 
 
     // Calculate molar production rates.
     wtot = m_mech->GasMech().Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y,
                                                  m_nsp, m_mix->GasPhase(), wdot);
 
-    // Calculate mole fraction derivatives.
-    for (unsigned int i=0; i!=m_neq-2; ++i) {
-        ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]);
-    }
+	stot = m_mech->GasMech().Reactions().GetSurfaceMolarProdRates(y[m_iT], y[m_iDens], y,
+                                                 m_nsp, m_mix->GasPhase(), sdot);
+	  
+	  
+	 for(unsigned int i=0; i!= m_mech->GasMech().GasSpeciesCount(); i++) {
+        avrMW += y[i]*m_mech->GasMech().Species(i)->MolWt();
 
+   }
+    // Calculate mole fraction derivatives.
+    
+		if (Area == 0){
+		for (unsigned int i=0; i!=m_neq-2; ++i) {
+        ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]);
+		}
+		} else {
+		for (unsigned int i=0; i!=m_mech->GasMech().GasSpeciesCount(); ++i) {
+		ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) + (sdot[i] * Area /(Volume * y[m_iDens]))   -  ( y[i] * stot * Area /( y[m_iDens] * Volume) );
+		}
+		for (unsigned int i=m_mech->GasMech().GasSpeciesCount(); i!=m_neq-2; ++i) {
+		   string speciesName = m_mech->GasMech().Species(i)->Name();
+		   string phaseName =  m_mech->GasMech().Species(i)->PhaseName();
+		   double siteDensity = m_mech->GasMech().FindSiteDensity(phaseName);
+		   int siteOccupancy =  m_mech->GasMech().FindSiteOccup(speciesName);
+		   ydot[i] = sdot[i]*siteOccupancy / siteDensity;
+		}
+		}
     // Temperature derivative.
     if (m_Tfunc) {
         // Add imposed temperature gradient, if defined.
         ydot[m_iT] = m_Tfunc(t, y, ydot, *this);
     } else {
         // Constant temperature.
-        ydot[m_iT] = 0.0;
+        ydot[m_iT] = 0.0; // Means that surface T also constant
     }
 
     // Density derivative.
     if (m_constv) {
-        ydot[m_iDens] = wtot; // Constant volume.
+		if (Area != 0){
+        ydot[m_iDens] =   wtot +  stot * Area / (Volume); // Constant volume.
+		}
+		else {
+		ydot[m_iDens] = wtot ;
+		}
     } else {
-        ydot[m_iDens] = 0.0;  // Constant pressure.
+        ydot[m_iDens] = 0.0;  // Constant pressure. (Volume is compensating the change in density , including that caused by surface reactions)
     }
 }
 
 // Definition of RHS form for adiabatic energy equation.
-void Reactor::RHS_Adiabatic(real t, const real *const y,  real *ydot) const
+void Reactor::RHS_Adiabatic(double t, const double *const y,  double *ydot) const
 {
-    static fvector wdot, Hs;
-    real wtot = 0.0, Cp = 0.0;
+    static fvector wdot, sdot, Hs, Us;
+    double wtot = 0.0, Cp = 0.0, stot =0.0, avrMW =0.0, Cv = 0.0;
 
     // Calculate mixture thermodynamic properties.
     m_mix->GasPhase().CalcHs_RT(y[m_iT], Hs);
-    Cp = m_mix->GasPhase().ThermoInterface::CalcBulkCp_R(y[m_iT], y, m_nsp);
-    
+	m_mix->GasPhase().CalcUs_RT(y[m_iT], Us);
+	int No_of_gas_sp = m_mech->GasMech().GasSpeciesCount();
+    Cp = m_mix->GasPhase().ThermoInterface::CalcBulkCp_R(y[m_iT], y, No_of_gas_sp);
+    Cv = m_mix->GasPhase().ThermoInterface::CalcBulkCv_R(y[m_iT], y, No_of_gas_sp);
+	// H_bulk = m_mix->GasPhase().ThermoInterface::CalcBulkH(y[m_iT], y, No_of_gas_sp);
     // Calculate molar production rates.
     wtot = m_mech->GasMech().Reactions().GetMolarProdRates(y[m_iT], y[m_iDens], y,
                                                  m_nsp, m_mix->GasPhase(), wdot);
 
+	stot = m_mech->GasMech().Reactions().GetSurfaceMolarProdRates(y[m_iT], y[m_iDens], y,
+                                                 m_nsp, m_mix->GasPhase(), sdot);
+	
+  
+    for(unsigned int i=0; i!= m_mech->GasMech().GasSpeciesCount(); i++) {
+        avrMW += y[i]*m_mech->GasMech().Species(i)->MolWt();
 
+   }
+	
+	
+	
     // Calculate mole fraction and temperature derivatives.
     ydot[m_iT] = 0.0;
-    for (unsigned int i=0; i!=m_nsp; ++i) {
+    
+      if (Area == 0){
+		for (unsigned int i=0; i!=m_nsp; ++i) {
         ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]);
-        ydot[m_iT] += wdot[i] * Hs[i];
+        }
+	  }
+      else{
+	     for (unsigned int i=0; i!=m_mech->GasMech().GasSpeciesCount(); ++i) {
+		 ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]) + (sdot[i] * Area /(Volume * y[m_iDens]))   -  ( y[i] * stot * Area/( y[m_iDens] * Volume) );
+		 }
+		 for (unsigned int i=m_mech->GasMech().GasSpeciesCount(); i!=m_neq-2; ++i) {
+		   string speciesName = m_mech->GasMech().Species(i)->Name();
+		   string phaseName =  m_mech->GasMech().Species(i)->PhaseName();
+		   double siteDensity = m_mech->GasMech().FindSiteDensity(phaseName);
+		   int siteOccupancy =  m_mech->GasMech().FindSiteOccup(speciesName);
+		   ydot[i] = sdot[i]*siteOccupancy / siteDensity;
+		 }
+      }
+
+	
+	for (unsigned int i=0; i!=m_nsp; ++i) {
+        ydot[m_iT] +=   Area / Volume * sdot[i] * Us[i]; // addded the surface source term by mm864
+    }  
+	  
+	  
+	for (unsigned int i=0; i!=m_nsp; ++i) {
+        ydot[m_iT] +=  wdot[i] * Us[i] /* * m_mech->GasMech().Species(i)->MolWt() / avrMW */ ;
     }
 
+	
     // Complete temperature derivative.
-    ydot[m_iT] *= - y[m_iT] / (Cp * y[m_iDens]);
+    ydot[m_iT] *= - y[m_iT] / (Cv * y[m_iDens] ); //don't divide by avrMW
 
     // Add imposed temperature gradient, if defined.
     if (m_Tfunc) ydot[m_iT] += m_Tfunc(t, y, ydot, *this);
 
     // Calculate density derivative.
-    if (m_constv) {
-        // Constant volume.
-        ydot[m_iDens] = wtot;
+     if (m_constv) {
+		if (Area != 0){
+        ydot[m_iDens] =   wtot + stot * Area / (Volume); // Constant volume.
+		}
+		else {
+		ydot[m_iDens] =  wtot;
+		}
     } else {
-        // Constant pressure (Use EoS to calculate).
-        ydot[m_iDens] = - (y[m_iDens] * ydot[m_iT] / y[m_iT]);
+        // Constant pressure (Use EoS to calculate). (THIS INCLUDES THE SURFACE SOURCE TERM in dT/dt) 
+        ydot[m_iDens] = - (y[m_iDens] * ydot[m_iT] / y[m_iT]) + stot * Area / (Volume);
     }
 }
 
 // Definition of Jacobian evaluator function for constant
 // temperature model.
-void Reactor::Jacobian(real t, real *const y, 
-                       real **J,
-                       real uround) const
+void Reactor::Jacobian(double t, double *const y, 
+                       double **J,
+                       double uround) const
 {
     m_mech->GasMech().Reactions().CalcJacobian(y[m_iT], y[m_iDens], y,
                                      m_nsp, m_mix->GasPhase(), uround, J,
@@ -514,9 +597,9 @@ void Reactor::Jacobian(real t, real *const y,
 @param[in, out]     J       Jacobian array
 @param[in]          uround  The value of the perturbation factor for finite differencing.
 */
-void Reactor::RateJacobian(real t, real *const y, 
-                       real **J,
-                       real uround) const
+void Reactor::RateJacobian(double t, double *const y, 
+                       double **J,
+                       double uround) const
 {
     m_mech->GasMech().Reactions().RateJacobian(y[m_iT], y[m_iDens], y,
                                      m_nsp, m_mix->GasPhase(), uround, J,

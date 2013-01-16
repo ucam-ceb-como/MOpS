@@ -4,6 +4,10 @@
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :         H2 | Stoich : 1
@@ -26,12 +30,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :         H2 | Stoich : 1
@@ -55,12 +65,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :          H | Stoich : 1
@@ -84,12 +100,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :         H2 | Stoich : 1
@@ -113,12 +135,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :          H | Stoich : 1
@@ -144,12 +172,18 @@
             Name :        H2O | Efficiency Factor : 21
             Name :         O2 | Efficiency Factor : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :          H | Stoich : 1
@@ -174,12 +208,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :        HO2 | Stoich : 1
@@ -203,12 +243,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :          H | Stoich : 1
@@ -231,12 +277,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :        HO2 | Stoich : 1
@@ -260,12 +312,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :         OH | Stoich : 2
@@ -288,12 +346,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :         H2 | Stoich : 1
@@ -319,12 +383,18 @@
             Name :         H2 | Efficiency Factor : 3
             Name :        H2O | Efficiency Factor : 6
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :         O2 | Stoich : 1
@@ -347,12 +417,18 @@
         (
             Third Body : 1
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :          H | Stoich : 1
@@ -376,12 +452,18 @@
             Third Body : 1
             Name :        H2O | Efficiency Factor : 20
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :          H | Stoich : 1
@@ -405,12 +487,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :        HO2 | Stoich : 1
@@ -434,12 +522,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :       H2O2 | Stoich : 1
@@ -462,12 +556,18 @@
         (
             Third Body : 1
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :          H | Stoich : 1
@@ -491,12 +591,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :       H2O2 | Stoich : 1
@@ -520,12 +626,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :      C5H11 | Stoich : 1
@@ -548,12 +660,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :      C5H11 | Stoich : 1
@@ -576,12 +694,18 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
     Reaction Data
     (
         Reversible  : 1
         P Dependent : 0
         Duplicate : 0
+        Stick : 0
+        MottWise : 0
+        COV : 0
+        FORD : 0
         Reactants
         (
             Name :      C5H11 | Stoich : 1
@@ -604,5 +728,7 @@
         (
             Third Body : 0
         )
+           Coverage : 
+           Ford : 
     )
 ]

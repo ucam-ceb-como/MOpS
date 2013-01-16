@@ -6,7 +6,7 @@
  *  Project:        sweepc (population balance solver)
  *  Sourceforge:    http://sourceforge.net/projects/mopssuite
  *
- * \brief  Vector like structure for summing real properties in binary tree
+ * \brief  Vector like structure for summing double properties in binary tree
  *
  Licence:
     This file is part of "sweepc".
@@ -99,17 +99,17 @@ public:
     void Clear(void);
 
     // Returns the property with the given ID.
-    real Property(PropID id) const;
+    double Property(PropID id) const;
 
 private:
     //! Mass.
-    real m_mass;
+    double m_mass;
 
     //! Statistical weight
-    real m_weight;
+    double m_weight;
 
     //! Product of statistical weight and mass
-    real m_weight_mass;
+    double m_weight_mass;
 };
 }
 

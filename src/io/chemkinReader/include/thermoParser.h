@@ -26,6 +26,8 @@ namespace IO {
 
         ThermoParser(const std::string thermo_file);
 
+	ThermoParser(const std::string thermo_file, const std::string thermoSurf_file);
+
         ~ThermoParser() {
         }
 
@@ -34,8 +36,11 @@ namespace IO {
     private:
 
         const std::string thermo_file_;
+	const std::string thermoSurf_file_;
         const std::string thermo_file_string_;
+	const std::string thermoSurf_file_string_;
         const std::vector<std::string> lines_;
+	const std::vector<std::string> linesSurf_;
         std::vector<IO::Thermo> thermos_;
 
         double globalLowT_, globalCommonT_, globalHighT_;
@@ -75,7 +80,7 @@ namespace IO {
          */
         std::string extractSpeciesName(const std::string& speciesString) const;
 
-        void getGlobalTemperatures();
+        void getGlobalTemperatures(std::string Thermo_File_string_);
 
     };
 

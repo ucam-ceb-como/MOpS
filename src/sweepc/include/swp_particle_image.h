@@ -93,7 +93,7 @@ private:
     ImgNode m_root;
 
     // Amount of necking between particles in output.
-    static const real m_necking;
+    static const double m_necking;
 
     // AGGREGATE SPHERE-TREE CONSTRUCTORS (FREE-MOLECULAR).
 
@@ -155,19 +155,19 @@ private:
     //! Calculates the z-displacement of a sphere
     static bool calcCollZ(
         const Coords::Vector &p1, // Positional vector of sphere 1.
-        real r1,                  // Radius of sphere 1.
+        double r1,                  // Radius of sphere 1.
         const Coords::Vector &p2, // Positional vector of sphere 2.
-        real r2,                  // Radius of sphere 2.
-        real dx, real dy,         // Sphere 2 x and y displacements.
-        real &dz                  // The output z-axis displacement of the bullet (+ve).
+        double r2,                  // Radius of sphere 2.
+        double dx, double dy,         // Sphere 2 x and y displacements.
+        double &dz                  // The output z-axis displacement of the bullet (+ve).
         );
 
     //! Calculates the minimum collision distance
     static bool minCollZ(
         const ImgNode &target, // Target node.
         const ImgNode &bullet, // Bullet node.
-        real dx, real dy,      // Bullet x-y displacements.
-        real &dz               // Return minimum distance.
+        double dx, double dy,      // Bullet x-y displacements.
+        double &dz               // Return minimum distance.
         );
 
     // OUTPUT FUNCTIONS.

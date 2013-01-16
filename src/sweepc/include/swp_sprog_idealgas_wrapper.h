@@ -65,28 +65,28 @@ public:
     EnvironmentInterface* Clone() const;
 
     //! Pressure in
-    real Pressure() const;
+    double Pressure() const;
 
     //! Temperature in K
-    real Temperature() const;
+    double Temperature() const;
 
     //! Velocity in
-    real Velocity() const;
+    double Velocity() const;
 
     //! Viscosity in Pa.s
-    real Viscosity() const;
+    double Viscosity() const;
 
     //! Density in \f$\mathrm{kg}\,\mathrm{m}^{-3}\f$
-    real MassDensity() const;
+    double MassDensity() const;
 
     //! Total concentration in \f$\mathrm{mol}\,\mathrm{m}^{-3}\f$
-    real MolarDensity() const;
+    double MolarDensity() const;
 
     //! Concentration of species in \f$\mathrm{mol}\,\mathrm{m}^{-3}\f$
-    real SpeciesConcentration(const SpeciesIndex index) const;
+    double SpeciesConcentration(const SpeciesIndex index) const;
 
     //! Value of some mixture property that is not a species concentration
-    real PropertyValue(const PropertyIndex index) const;
+    double PropertyValue(const PropertyIndex index) const;
 
     //! Access an older interface provided by sprog
     const Sprog::Thermo::IdealGas * Implementation() const {return &mGas;}

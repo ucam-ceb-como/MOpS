@@ -79,19 +79,19 @@ public:
     ConstantInception &operator=(const ConstantInception &rhs);
 
     //! Set the constant inception rate per unit volume
-    void setConstantVolumetricInceptionRate(const real r) {mRate = r;}
+    void setConstantVolumetricInceptionRate(const double r) {mRate = r;}
 
     //! Turn fixed position inception on or off
     void useFixedPosition(const bool b) {mUseFixedPosition = b;}
 
     //! Specify location for fixed position inception
-    void setFixedPosition(const real r) {mFixedPosition = r;}
+    void setFixedPosition(const double r) {mFixedPosition = r;}
 
     // PERFORMING THE PROCESS.
 
     //! Perform a coagulation with particles chosen according to the additive kernel
     virtual int Perform(
-        real t,
+        double t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
@@ -101,18 +101,18 @@ public:
 	// TOTAL RATE CALCULATIONS.
 
     //! Rate of the process for the given system.
-    real Rate(real t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const;
+    double Rate(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom) const;
 
 	// RATE TERM CALCULATIONS.
 
     //! Number of rate terms for this process.
     unsigned int TermCount() const;
 
-    // Calculates the rate terms given an iterator to a real vector. The 
+    // Calculates the rate terms given an iterator to a double vector. The 
     // iterator is advanced to the position after the last term for this
     // process.  Returns the sum of all terms.
-    real RateTerms(
-        real t,                  // Time.
+    double RateTerms(
+        double t,                  // Time.
         const Cell &sys,         // System for which to calculate rate terms.
         const Geometry::LocalGeometry1d &local_geom,                  // position information
         fvector::iterator &iterm // Iterator to the first term.
@@ -139,13 +139,13 @@ protected:
 
 private:
     //! Rate units of \f$ \mathrm{m}^{-3}\mathrm{s}^{-1}\f$
-    real mRate;
+    double mRate;
 
     //! Indicate the all particles are to be incepted at exactly the same fixed position
     bool mUseFixedPosition;
 
     //! Locate for fixed position inception see mUseFixedPosition
-    real mFixedPosition;
+    double mFixedPosition;
 };
 }
 }

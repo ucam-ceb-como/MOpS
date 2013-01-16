@@ -63,7 +63,7 @@ Reaction::Reaction() {
     m_r_species = 0;
 }
 //! Constructor from Arrhenius constants
-Reaction::Reaction(real A_c, real n_c, real E_c, int species_c) {
+Reaction::Reaction(double A_c, double n_c, double E_c, int species_c) {
     m_A = A_c;
     m_n = n_c;
     m_E = E_c;
@@ -75,10 +75,10 @@ Reaction::~Reaction() {
 }
 
 //! Get Rate
-real Reaction::getRate(const KMCGasPoint& gp/*, const real& t*/) const {
-    real T = gp[gp.T]; // Temperature
-    real spc_conc = gp[m_r_species]; // Species Concentration
-    real B = exp(-m_E / (RCAL*T)); // e^(-E/RT)
-    real temp= m_A * pow(T, m_n) * B * spc_conc; // rate equation
+double Reaction::getRate(const KMCGasPoint& gp/*, const double& t*/) const {
+    double T = gp[gp.T]; // Temperature
+    double spc_conc = gp[m_r_species]; // Species Concentration
+    double B = exp(-m_E / (RCAL*T)); // e^(-E/RT)
+    double temp= m_A * pow(T, m_n) * B * spc_conc; // rate equation
     return temp;
 }

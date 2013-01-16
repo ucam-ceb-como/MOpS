@@ -56,11 +56,11 @@ namespace Camflow {
 
     class CamBoundary : public CamConc {
 
-        doublereal velocity;
-        doublereal flowRate;
-        doublereal T;
-        std::map<std::string, doublereal> species;
-        std::vector<doublereal> inletFracs;
+        double velocity;
+        double flowRate;
+        double T;
+        std::map<std::string, double> species;
+        std::vector<double> inletFracs;
         int fracType;
 
         // Disallow copy constructor
@@ -73,22 +73,22 @@ namespace Camflow {
 
 
         //set the inlet velocity
-        void setVelocity(doublereal vel);
+        void setVelocity(double vel);
 
         //set the temperature
-        void setTemperature(doublereal T);
+        void setTemperature(double T);
 
         //set fraction type
         //void setFractionType(int n);
 
         //set flow rate
-        void setFlowRate(doublereal flow);
+        void setFlowRate(double flow);
 
         //set the inlet species
-        void setSpecies(std::map<std::string, doublereal> species);
+        void setSpecies(std::map<std::string, double> species);
 
         //set the inlet mass fraction
-        void setInletMassfracs(std::vector<doublereal> fracs);
+        void setInletMassfracs(std::vector<double> fracs);
 
         /*set the inlet mass fraction vector based on the
          *species map and the mechanism object. This function
@@ -100,26 +100,26 @@ namespace Camflow {
          *an instance of CamError. If the validity check is
          *successful the function will return the inlet mass/mole vector
          */
-        std::vector<doublereal>& setInletfracs( Mechanism &mech);
+        std::vector<double>& setInletfracs( Mechanism &mech);
 
         //return the velocity
-        const doublereal& getVelocity() const;
+        const double& getVelocity() const;
 
         //return the temperature
-        const doublereal& getTemperature() const;
+        const double& getTemperature() const;
 
         //return the fraction type
         //const int& getFractionType() const;
 
         //return the flow rate
-        const doublereal& getFlowRate() const;
+        const double& getFlowRate() const;
 
         //return the inlet species
-        const std::map<std::string,doublereal>& getInletSpecies() const;
+        const std::map<std::string,double>& getInletSpecies() const;
 
 
         //return the inlet mass fractions
-        const std::vector<doublereal>& getInletMassfracs() const;
+        const std::vector<double>& getInletMassfracs() const;
 
     };
 }

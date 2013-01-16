@@ -90,7 +90,7 @@ BinTreePrimary::BinTreePrimary() : Primary(),
  * @param[in]   model       Model which defines the meaning of the primary
  *
  */
-BinTreePrimary::BinTreePrimary(const real time,
+BinTreePrimary::BinTreePrimary(const double time,
         const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numprimary(0),
@@ -423,7 +423,7 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
  *
  * @param time      Total time for which particles have been sintered
  */
-void BinTreePrimary::SetSinteringTime(real time) {
+void BinTreePrimary::SetSinteringTime(double time) {
     m_sint_time = time;
 
     // Update children
@@ -449,7 +449,7 @@ void BinTreePrimary::SetSinteringTime(real time) {
  *
  * @param t     LDPA update time
  */
-void BinTreePrimary::SetTime(real t) {
+void BinTreePrimary::SetTime(double t) {
     m_time = t;
 
     // Set LDPA time of children
@@ -518,13 +518,13 @@ BinTreePrimary *BinTreePrimary::SelectRandomSubparticleLoop(int target)
  *
  * @return   Sintering level
  */
-real BinTreePrimary::SinteringLevel()
+double BinTreePrimary::SinteringLevel()
 {
     if (m_leftchild != NULL && m_rightchild != NULL) {
         // Calculate the spherical surface
-        const real spherical_surface =
+        const double spherical_surface =
                 4 * PI * m_children_radius * m_children_radius;
-        real slevel(0.0);
+        double slevel(0.0);
 
         if (m_children_surf == 0.0) {
             slevel = 0.0;
@@ -756,7 +756,7 @@ void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *targe
 {
     if(m_rightparticle == source) {
         m_rightparticle = target;
-        real sphericalsurface =
+        double sphericalsurface =
             4 * PI * pow(3 * (m_leftparticle->Volume() +
                     m_rightparticle->Volume()) /(4 * PI), TWO_THIRDS);
         m_children_surf = sphericalsurface / (m_children_sintering *
@@ -764,7 +764,7 @@ void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *targe
     }
     if(m_leftparticle == source){
         m_leftparticle = target;
-        real sphericalsurface =
+        double sphericalsurface =
             4 * PI * pow(3 * (m_leftparticle->Volume() +
                     m_rightparticle->Volume()) /(4 * PI), TWO_THIRDS);
         m_children_surf = sphericalsurface / (m_children_sintering *
@@ -875,7 +875,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         // example, the coagulation kernel
         if (this == root) {
              // Get spherical equivalent radius and diameter
-            real spherical_radius = pow(3 * m_vol / (4*PI), ONE_THIRD);
+            double spherical_radius = pow(3 * m_vol / (4*PI), ONE_THIRD);
             m_diam = 2 * spherical_radius;
 
             // There are m_numprimary-1 connections between the primary
@@ -885,12 +885,12 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 
             // Approxmiate the surface of the particle
             // (same as in ChangePointer)
-            const real numprim_1_3 = pow(m_numprimary,-1.0 * ONE_THIRD);
+            const double numprim_1_3 = pow(m_numprimary,-1.0 * ONE_THIRD);
             m_surf = 4 * PI * spherical_radius * spherical_radius /
                     (m_avg_sinter * (1 - numprim_1_3) + numprim_1_3);
 
             // Calculate dcol based-on formula given in Lavvas et al. (2011)
-            const real aggcolldiam = (6* m_vol / m_surf) *
+            const double aggcolldiam = (6* m_vol / m_surf) *
                     pow(pow(m_surf, 3) / (36 * PI * m_vol * m_vol),
                             (1.0/m_pmodel->GetFractDim()));
             m_dmob = MobDiameter();
@@ -919,9 +919,9 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
  *
  *@return   Mobility diameter of particle
  */
-real BinTreePrimary::MobDiameter() const
+double BinTreePrimary::MobDiameter() const
 {
-    real dmob(1.0);
+    double dmob(1.0);
 
     // Is this a single particle?
     if (m_leftchild == NULL && m_parent == NULL) {
@@ -933,12 +933,12 @@ real BinTreePrimary::MobDiameter() const
 
         if (false) {
             // SF regime mobility diameter
-            dmob *= 0.9 * m_primarydiam / (real)m_numprimary;
+            dmob *= 0.9 * m_primarydiam / (double)m_numprimary;
             dmob *= sqrt(m_pmodel->GetFractDim() / (m_pmodel->GetFractDim() + 2));
             dmob *= pow(m_numprimary, (1.0/m_pmodel->GetFractDim()));
         } else {
             // FM regime mobility diameter
-            dmob *= m_primarydiam / (real)m_numprimary;
+            dmob *= m_primarydiam / (double)m_numprimary;
             dmob *= sqrt(0.802*(m_numprimary-1) + 1);
         }
 
@@ -1063,8 +1063,8 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 {
 
     if (m_leftchild == NULL && m_rightchild == NULL) {
-        real dV(0.0);
-        real volOld = m_vol;
+        double dV(0.0);
+        double volOld = m_vol;
 
         // Call to Primary to adjust the state space
         n = Primary::Adjust(dcomp, dvalues, rng, n);
@@ -1075,7 +1075,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
             UpdatePrimary();
 
             dV = m_vol - volOld;
-            real dS(0.0);
+            double dS(0.0);
 
             if (dV > 0.0) {
                 // Surface change due to volume addition
@@ -1112,7 +1112,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
  *
  * @param[in]   dS      Surface area increment to adjust area by
  */
-void BinTreePrimary::UpdateParents(real dS) {
+void BinTreePrimary::UpdateParents(double dS) {
     if (m_parent != NULL) {
         m_parent->m_children_surf += dS;
         m_parent->m_children_sintering = m_parent->SinteringLevel();
@@ -1165,10 +1165,10 @@ unsigned int BinTreePrimary::AdjustIntPar(const fvector &dcomp,
  * @param[in]   rng     Random number generator
  * @param[in]   wt      Statistical weight
  */
-void BinTreePrimary::Sinter(real dt, Cell &sys,
+void BinTreePrimary::Sinter(double dt, Cell &sys,
                             const Processes::SinteringModel &model,
                             rng_type &rng,
-                            real wt)
+                            double wt)
 {
     // Only update the time on the root node
     if (m_parent == NULL) {
@@ -1198,9 +1198,9 @@ void BinTreePrimary::Sinter(real dt, Cell &sys,
 }
 
 //! Returns the sintering rate
-real BinTreePrimary::GetSintRate() const
+double BinTreePrimary::GetSintRate() const
 {
-    real sint_rate = m_sint_rate;
+    double sint_rate = m_sint_rate;
     if(m_leftchild!=NULL)
     {
         sint_rate += (m_leftchild->GetSintRate() +
@@ -1221,27 +1221,27 @@ real BinTreePrimary::GetSintRate() const
  * @param[in]   wt      Statistical weight
  */
 void BinTreePrimary::SinterNode(
-        real dt,
+        double dt,
         Cell &sys,
         const Processes::SinteringModel &model,
         rng_type &rng,
-        real wt
+        double wt
         ) {
     // Calculate the spherical surface
-    const real spherical_surface=4*PI*m_children_radius*m_children_radius;
+    const double spherical_surface=4*PI*m_children_radius*m_children_radius;
 
     // Declare time step variables.
-    real t1=0.0, delt=0.0, tstop=dt;
-    real r=0.0;
+    double t1=0.0, delt=0.0, tstop=dt;
+    double r=0.0;
 
     // Define the maximum allowed change in surface
     // area in one internal time step (10% spherical surface).
-    real dAmax = 0.1 * spherical_surface;
+    double dAmax = 0.1 * spherical_surface;
 
     // The scale parameter discretises the delta-S when using
     // the Poisson distribution.  This allows a smoother change
     // (smaller scale = higher precision).
-    real scale = 0.01;
+    double scale = 0.01;
 
     // Perform integration loop.
     while (t1 < tstop)
@@ -1256,7 +1256,7 @@ void BinTreePrimary::SinterNode(
 
             // Approximate sintering by a poisson process.  Calculate
             // number of poisson events.
-            real mean;
+            double mean;
 
             if (tstop > (t1+delt)) {
                 // A sub-step, we have changed surface by dAmax, on average
@@ -1265,12 +1265,12 @@ void BinTreePrimary::SinterNode(
                 // Step until end.  Calculate degree of sintering explicitly.
                 mean = r * (tstop - t1) / (scale*dAmax);
             }
-            boost::random::poisson_distribution<unsigned, real> repeatDistribution(mean);
+            boost::random::poisson_distribution<unsigned, double> repeatDistribution(mean);
             const unsigned n = repeatDistribution(rng);
 
             // Adjust the surface area.
             if (n > 0) {
-                m_children_surf -= (real)n * scale * dAmax;
+                m_children_surf -= (double)n * scale * dAmax;
 
                 // Check that primary is not completely sintered.
                 if (m_children_surf <= spherical_surface) {
@@ -1296,7 +1296,7 @@ void BinTreePrimary::SinterNode(
  * @param name  Name of component
  * @return      Number of units of a component
  */
-Sweep::real BinTreePrimary::GetComponent(std::string name) const
+double BinTreePrimary::GetComponent(std::string name) const
 {
     try {
         return m_comp[m_pmodel->ComponentIndex(name)];
@@ -1311,7 +1311,7 @@ Sweep::real BinTreePrimary::GetComponent(std::string name) const
  * @param name  Name of component
  * @param val   Value to set
  */
-void BinTreePrimary::SetComponent(std::string name, Sweep::real val)
+void BinTreePrimary::SetComponent(std::string name, double val)
 {
     try {
         m_comp[m_pmodel->ComponentIndex(name)] = val;
@@ -1323,12 +1323,12 @@ void BinTreePrimary::SetComponent(std::string name, Sweep::real val)
 /*!
  * @return  Arithmetic standard dev. of primary diameter
  */
-Sweep::real BinTreePrimary::GetPrimaryAStdDev() const
+double BinTreePrimary::GetPrimaryAStdDev() const
 {
     // Get a list of all primary diameters first
     fvector diams;
     GetAllPrimaryDiameters(diams);
-    Sweep::real dpri = GetPrimaryDiam() / ((real) GetNumPrimary());
+    double dpri = GetPrimaryDiam() / ((double) GetNumPrimary());
 
     // If binary tree writing hasn't been enabled, an erroneous
     // value will be returned. So just give zero.
@@ -1337,7 +1337,7 @@ Sweep::real BinTreePrimary::GetPrimaryAStdDev() const
 
     // Loop over diameters to get stdev
     unsigned int i(0);
-    Sweep::real stdev(0.0), dev(0.0);
+    double stdev(0.0), dev(0.0);
     for (i = 0; i != diams.size(); i++) {
         dev = (diams[i] - dpri);
         stdev += dev * dev;
@@ -1350,7 +1350,7 @@ Sweep::real BinTreePrimary::GetPrimaryAStdDev() const
 /*!
  * @return  Geometric mean primary diameter
  */
-Sweep::real BinTreePrimary::GetPrimaryGMean() const
+double BinTreePrimary::GetPrimaryGMean() const
 {
     // Get a list of all primary diameters first
     fvector diams;
@@ -1362,8 +1362,8 @@ Sweep::real BinTreePrimary::GetPrimaryGMean() const
         return 0.0;
 
     // Calculate the geometric mean diameter
-    real dpri(1.0);
-    real inv_n = 1.0 / (real) diams.size();
+    double dpri(1.0);
+    double inv_n = 1.0 / (double) diams.size();
     unsigned int i(0);
     for (i = 0; i != diams.size(); i++) {
         dpri *= pow(diams[i], inv_n);
@@ -1376,12 +1376,12 @@ Sweep::real BinTreePrimary::GetPrimaryGMean() const
  *
  * @return  Geometric stdev of primary diameter
  */
-Sweep::real BinTreePrimary::GetPrimaryGStdDev() const
+double BinTreePrimary::GetPrimaryGStdDev() const
 {
     // Get a list of all primary diameters first
     fvector diams;
     GetAllPrimaryDiameters(diams);
-    real dpri = GetPrimaryGMean();
+    double dpri = GetPrimaryGMean();
 
     // If binary tree writing hasn't been enabled, an erroneous
     // value will be returned. So just give zero.
@@ -1390,7 +1390,7 @@ Sweep::real BinTreePrimary::GetPrimaryGStdDev() const
 
     // Loop over diameters to get stdev
     unsigned int i(0);
-    Sweep::real stdev(0.0), dev(0.0);
+    double stdev(0.0), dev(0.0);
     for (i = 0; i != diams.size(); i++) {
         dev = log(diams[i] / dpri); // (natural log)
         stdev += dev * dev;
@@ -1455,7 +1455,7 @@ void BinTreePrimary::SerializePrimary(std::ostream &out) const
     if (out.good()) {
 
         int  val_int(0);
-        real val(0.0);
+        double val(0.0);
 
         val_int = m_numprimary;
         out.write((char*)&val_int, sizeof(val_int));
@@ -1543,7 +1543,7 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
     if (in.good()) {
 
         int  val_int(0);
-        real val(0.0);
+        double val(0.0);
 
         in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
         m_numprimary = val_int;

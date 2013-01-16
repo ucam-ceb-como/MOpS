@@ -66,10 +66,10 @@ class BinTreePrimary: public Primary {
 public:
 
     //! Build a new primary with one molecule
-    BinTreePrimary(const real time, const Sweep::ParticleModel &model);
+    BinTreePrimary(const double time, const Sweep::ParticleModel &model);
 
     //! Build a new primary with one molecule
-    BinTreePrimary(const real time, const real position,
+    BinTreePrimary(const double time, const double position,
                const Sweep::ParticleModel &model);
 
     //! Stream-reading constructor
@@ -100,7 +100,7 @@ public:
     void UpdateCache();
 
     //! Updates sintering level
-    real SinteringLevel();
+    double SinteringLevel();
 
     //! Prints the tree to a file that can be converted to a graph using graphviz
     void PrintTree(std::string filename) const;
@@ -114,47 +114,44 @@ public:
             const fvector &dvalues, rng_type &rng, unsigned int n);
 
     //! Sinters a particle for time dt
-    void Sinter(real dt, Cell &sys, const Processes::SinteringModel &model,
+    void Sinter(double dt, Cell &sys, const Processes::SinteringModel &model,
             rng_type &rng,
-            real wt);
+            double wt);
 
 
     // GENERAL DATA ACCESS METHODS
     //! Overload of the Mobility Diameter
-    real MobDiameter() const;
+    double MobDiameter() const;
 
     //! Get the number of primaries in the particle
     int  GetNumPrimary() const {return m_numprimary;}
 
     //! Get the total primary diameter of the particle (dpri,1 + dpri,2..)
-    real GetPrimaryDiam() const {return m_primarydiam;}
+    double GetPrimaryDiam() const {return m_primarydiam;}
 
     //! Gets the average sintering level
-    real GetAvgSinterLevel() const {return m_avg_sinter;}
+    double GetAvgSinterLevel() const {return m_avg_sinter;}
 
     //! Gets the sintering rate
-    real GetSintRate() const;
-
-    //! Gets the number of active sites (always component 0)
-    virtual real GetSites() const {return m_comp[0];}
+    double GetSintRate() const;
 
     //! Gets the sintering time
-    real GetSintTime() const {return m_sint_time;}
+    double GetSintTime() const {return m_sint_time;}
 
     //! Gets the arithmetic standard deviation of primary diameter
-    real GetPrimaryAStdDev() const;
+    double GetPrimaryAStdDev() const;
 
     //! Get the geometric mean primary diameter
-    real GetPrimaryGMean() const;
+    double GetPrimaryGMean() const;
 
     //! Gets the geometric standard deviation of primary diameter
-    real GetPrimaryGStdDev() const;
+    double GetPrimaryGStdDev() const;
 
     //! Gets the value of one of the chemical components
-    Sweep::real GetComponent(std::string name) const;
+    double GetComponent(std::string name) const;
 
     //! Sets the value of one of the chemical components
-    void SetComponent(std::string name, Sweep::real val);
+    void SetComponent(std::string name, double val);
 
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
@@ -190,20 +187,20 @@ protected:
     void UpdateAllPointers( const BinTreePrimary *source);
 
     //! Sinter a node for time dt
-    void SinterNode(real dt,
+    void SinterNode(double dt,
             Cell &sys,
             const Processes::SinteringModel &model,
             rng_type &rng,
-            real wt);
+            double wt);
 
     //! Checks if the sintering level, merges particles if necessary
     bool CheckSintering();
 
     //! Set the sintering time of a tree
-    void SetSinteringTime(real time);
+    void SetSinteringTime(double time);
 
     //! Set the last LPDA time throughout the particle tree
-    void SetTime(real t);
+    void SetTime(double t);
 
 
     // STATE SPACE OF PARTICLE MODEL
@@ -216,28 +213,28 @@ protected:
     int m_numprimary;
 
     //! Sum of the diameter of the primaries under this treenode
-    real m_primarydiam;
+    double m_primarydiam;
 
     //! Equivalent spherical radius of sum of childrens' volume
-    real m_children_radius;
+    double m_children_radius;
 
     //! Total volume of children under this node
-    real m_children_vol;
+    double m_children_vol;
 
     //! Common surface area between two connected children
-    real m_children_surf;
+    double m_children_surf;
 
     //! Sintering level of children connected by this node
-    real m_children_sintering;
+    double m_children_sintering;
 
     //! Average sintering level of primaries under this node
-    real m_avg_sinter;
+    double m_avg_sinter;
 
     //! Sintering rate of particle
-    real m_sint_rate;
+    double m_sint_rate;
 
     //! Absolute amount of time for which particles are sintered
-    real m_sint_time;
+    double m_sint_time;
 
     // TREE STRUCTURE PROPERTIES
     // The children are the next nodes in the binary tree and are used to
@@ -268,7 +265,7 @@ private:
     void UpdateCache(BinTreePrimary *root);
 
     //! Update the tree structure's surface area by increment dS
-    void UpdateParents(real dS);
+    void UpdateParents(double dS);
 
     //! Helper function to get a list of all primary diameters
     void GetAllPrimaryDiameters(fvector &diams) const;

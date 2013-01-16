@@ -77,7 +77,7 @@ public:
     // TOTAL RATE CALCULATION.
 
     //! Rate of the process
-    virtual real Rate(real t,          // Time.
+    virtual double Rate(double t,          // Time.
                       const Cell &sys, // System for which to calculate rate.
                       const Geometry::LocalGeometry1d& local_geom // Information regarding surrounding cells and boundaries
                       ) const;
@@ -88,8 +88,8 @@ public:
     virtual unsigned int TermCount(void) const;
 
     //! Put the different parts of the rate expression into the supplied vector
-    virtual real RateTerms(
-        real t,                  // Time.
+    virtual double RateTerms(
+        double t,                  // Time.
         const Cell &sys,       // Indicates true kernel (not majorant).
         const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells and boundaries
         fvector::iterator &iterm // Iterator to the first term.
@@ -97,7 +97,7 @@ public:
 
     //! Perform a coagulation with particles chosen according to the additive kernel
     virtual int Perform(
-        real t,
+        double t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
@@ -115,15 +115,15 @@ private:
     };
 
     //! Calculate kernel between two particles
-    virtual real CoagKernel(const Particle &sp1, const Particle &sp2,
+    virtual double CoagKernel(const Particle &sp1, const Particle &sp2,
                             const Cell& sys) const;
 
     //! Calculate majorant kernel between two particles
-    virtual real MajorantKernel(const Particle &sp1, const Particle &sp2,
+    virtual double MajorantKernel(const Particle &sp1, const Particle &sp2,
                                 const Cell& sys, const MajorantType maj) const;
 
     //! Arbitrary factor to give some headroom for LPDA
-    static const real s_MajorantFactor;
+    static const double s_MajorantFactor;
 
     //! Specify what to do with weights on coagulation
     CoagWeightRule m_CoagWeightRule;

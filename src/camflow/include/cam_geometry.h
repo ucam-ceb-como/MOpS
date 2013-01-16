@@ -58,20 +58,20 @@ namespace Camflow{
     class CamGeometry
     {
 
-        doublereal length;                   //length of the model geometry
-        doublereal dia;                      //rector diameter
+        double length;                   //length of the model geometry
+        double dia;                      //rector diameter
 
         int nCell;                           //total number of FV cells
-        std::vector<doublereal> dz, axPos;        //cell width
+        std::vector<double> dz, axPos;        //cell width
         std::string gridFile;
 
         /*
          *grid refinement, not well implemented in the present version
          */
-        doublereal a_slope;
-        doublereal curve;
-        doublereal minRange;
-        doublereal mPrune;
+        double a_slope;
+        double curve;
+        double minRange;
+        double mPrune;
         std::map<int, int> z_loc, z_keep;
 
     public:
@@ -87,36 +87,36 @@ namespace Camflow{
         //void discretize();
 
         //set the reactor length
-        void setLength(doublereal len);
+        void setLength(double len);
         //set the reactor diameter
-        void setDia(doublereal dia);
+        void setDia(double dia);
 
         //get the name of the grid input file.
         std::string getGridFileName() const;
 
         //return the reactor dia
-        doublereal getDia() const;
+        double getDia() const;
 
         //return the cross sectional area
-        doublereal getArea() const;
+        double getArea() const;
 
         //return the surface area
-        doublereal getSurfArea();
+        double getSurfArea();
 
         //return the surface area per unit length
-        doublereal getSurfAres_l() const;
+        double getSurfAres_l() const;
 
         //return the length of the model geometry
-        doublereal getLenth() const;
+        double getLenth() const;
 
         //return the total number of cells
         int getnCells() const;
 
         //reuturn the geometry info
-        const std::vector<doublereal>& getGeometry() const ;
+        const std::vector<double>& getGeometry() const ;
 
         //return the axial position vector
-        const std::vector<doublereal>& getAxpos() const ;
+        const std::vector<double>& getAxpos() const ;
         //add cells with zero width
         void addZeroWidthCells();
 
@@ -124,10 +124,10 @@ namespace Camflow{
          * set the geometry information. this will set the vector of
          *cell widths into dz vctor
          */
-        void setGeometry(const std::vector<doublereal>& dz_);
+        void setGeometry(const std::vector<double>& dz_);
 
         //refine the grid
-        void refine(doublereal* y, const int nVar, const int nSpec, int ptrT=0);
+        void refine(double* y, const int nVar, const int nSpec, int ptrT=0);
 
     };
 }

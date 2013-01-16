@@ -70,7 +70,7 @@ Particle::Particle(void)
 }
 
 // Initialising constructor.
-Particle::Particle(real time, const Sweep::ParticleModel &model)
+Particle::Particle(double time, const Sweep::ParticleModel &model)
 : m_Position(0.0)
 , m_PositionTime(0.0)
 , m_StatWeight(1.0)
@@ -86,7 +86,7 @@ Particle::Particle(real time, const Sweep::ParticleModel &model)
  * @param[in]	weight	Statistical weight of new particle
  * @param[in]	model	Particle model that interprets contents of particle
  */
-Particle::Particle(real time, real weight, const Sweep::ParticleModel &model)
+Particle::Particle(double time, double weight, const Sweep::ParticleModel &model)
 : m_Position(0.0)
 , m_PositionTime(0.0)
 , m_StatWeight(weight)
@@ -212,7 +212,7 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
     const CamXML::Element* const pWeightNode = xml.GetFirstChild("weight");
     if(pWeightNode != NULL) {
     	std::string str = pWeightNode->Data();
-    	const real wt = Strings::cdble(str);
+    	const double wt = Strings::cdble(str);
     	if(wt <= 0) {
     		throw std::runtime_error("Particle statistical weight must be >0, not " + str +
     				                 "(Sweep, Particle::createFromXMLNode).");
@@ -226,7 +226,7 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
         const CamXML::Element* const pSurfNode = xml.GetFirstChild("surf");
         if (pSurfNode != NULL) {
             std::string str = pSurfNode->Data();
-            const real surf = Strings::cdble(str);
+            const double surf = Strings::cdble(str);
             if(surf <= 0) {
                 throw std::runtime_error("Particle surface area must be >0, not " + str +
                                          "(Sweep, Particle::createFromXMLNode).");
@@ -300,7 +300,7 @@ const Sweep::AggModels::Primary *const Particle::Primary() const
 /*!
  * Pass through to primary particle
  */
-Sweep::real Particle::SphDiameter() const
+double Particle::SphDiameter() const
 {
     return m_primary->SphDiameter();
 }
@@ -308,7 +308,7 @@ Sweep::real Particle::SphDiameter() const
 /*!
  * Pass through to primary particle
  */
-Sweep::real Particle::CollDiameter() const
+double Particle::CollDiameter() const
 {
     return m_primary->CollDiameter();
 }
@@ -316,7 +316,7 @@ Sweep::real Particle::CollDiameter() const
 /*!
  * Pass through to primary particle
  */
-Sweep::real Particle::MobDiameter() const
+double Particle::MobDiameter() const
 {
     return m_primary->MobDiameter();
 }
@@ -324,7 +324,7 @@ Sweep::real Particle::MobDiameter() const
 /*!
  * Pass through to primary particle
  */
-Sweep::real Particle::SurfaceArea() const
+double Particle::SurfaceArea() const
 {
     return m_primary->SurfaceArea();
 }
@@ -332,7 +332,7 @@ Sweep::real Particle::SurfaceArea() const
 /*!
  * Pass through to primary particle
  */
-Sweep::real Particle::SphSurfaceArea() const
+double Particle::SphSurfaceArea() const
 {
     return m_primary->SphSurfaceArea();
 }
@@ -340,7 +340,7 @@ Sweep::real Particle::SphSurfaceArea() const
 /*!
  * Pass through to primary particle
  */
-Sweep::real Particle::Volume() const
+double Particle::Volume() const
 {
     return m_primary->Volume();
 }
@@ -348,7 +348,7 @@ Sweep::real Particle::Volume() const
 /*!
  * Pass through to primary particle
  */
-Sweep::real Particle::Mass(void) const
+double Particle::Mass(void) const
 {
     return m_primary->Mass();
 }
@@ -356,7 +356,7 @@ Sweep::real Particle::Mass(void) const
 /*!
  * Pass through to primary particle
  */
-Sweep::real Particle::GetSites(void) const
+double Particle::GetSites(void) const
 {
     return m_primary->GetSites();
 }
@@ -364,7 +364,7 @@ Sweep::real Particle::GetSites(void) const
 /*!
  * Pass through to primary particle
  */
-Sweep::real Particle::GetSintRate(void) const
+double Particle::GetSintRate(void) const
 {
     return m_primary->GetSintRate();
 }
@@ -372,7 +372,7 @@ Sweep::real Particle::GetSintRate(void) const
 /*!
  * Pass through to primary particle
  */
-Sweep::real Particle::GetCoverageFraction(void) const
+double Particle::GetCoverageFraction(void) const
 {
     return m_primary->GetCoverageFraction();
 }
@@ -385,7 +385,7 @@ Sweep::real Particle::GetCoverageFraction(void) const
  *
  * @return      Geometric mean of sub-unit diameter
  */
-real Particle::avgeomdiam(double oneovernumsubpart) const
+double Particle::avgeomdiam(double oneovernumsubpart) const
 {
     return std::pow(m_primary->Property(Sweep::iDsph),oneovernumsubpart);
 }
@@ -403,7 +403,7 @@ real Particle::avgeomdiam(double oneovernumsubpart) const
  *
  *@pre          A valid primary particle is present (the data is not stored in SubParticle)
  */
-real Particle::Property(PropID id) const
+double Particle::Property(PropID id) const
 {
     switch (id) {
         case iDsph:      // Equivalent sphere diameter.
@@ -461,7 +461,7 @@ const fvector &Particle::Composition() const
 }
 
 // Returns the ith component value.  Returns 0.0 if i is invalid.
-real Particle::Composition(unsigned int i) const
+double Particle::Composition(unsigned int i) const
 {
     if (i < Composition().size()) {
         return Composition()[i];
@@ -481,7 +481,7 @@ const fvector &Particle::Values() const
 }
 
 // Returns the ith tracker variable value.  Returns 0.0 if i is invalid.
-real Particle::Values(unsigned int i) const
+double Particle::Values(unsigned int i) const
 {
     if (i < Values().size()) {
         return Values()[i];
@@ -498,7 +498,7 @@ real Particle::Values(unsigned int i) const
  *@param[in]    x       New position of particle
  *@param[in]    t       Time at which new position is correct
  */
-void Particle::setPositionAndTime(const real x, const real t) {
+void Particle::setPositionAndTime(const double x, const double t) {
     m_Position = x;
     m_PositionTime = t;
 }
@@ -508,7 +508,7 @@ void Particle::setPositionAndTime(const real x, const real t) {
  *
  *@param[in]    t   Time to which LPDA has just been performed
  */
-void Particle::SetTime(real t)
+void Particle::SetTime(double t)
 {
     m_primary->SetTime(t);
     mLPDAtime = t;
@@ -613,10 +613,10 @@ Particle &Particle::Coagulate(const Particle &rhs, rng_type &rng)
  *@param[in,out]    rng     Random number generator object
  *@param[in]        wt      Statistical weight of particle
  */
-void Particle::Sinter(real dt, Cell &sys,
+void Particle::Sinter(double dt, Cell &sys,
                       const Processes::SinteringModel &model,
                       rng_type &rng,
-                      real wt)
+                      double wt)
 {
     m_primary->Sinter(dt, sys, model, rng, wt);
 }

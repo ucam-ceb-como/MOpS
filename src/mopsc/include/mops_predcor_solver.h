@@ -86,7 +86,7 @@ public:
     // each iteration of the last internal step.
     virtual void Solve(
             Reactor &r,   // The reactor to solve.
-            real tstop,   // The end time for the step.
+            double tstop,   // The end time for the step.
             int nsteps,   // Number of internal steps to take.
             int niter,    // Number of internal iterations to take.
             Sweep::rng_type &rng,  // Random number generator
@@ -114,10 +114,10 @@ public:
     // UNDER-RELAXATION.
 
     // Returns the under-relaxation coefficient.
-    real UnderRelaxCoeff(void) const;
+    double UnderRelaxCoeff(void) const;
 
     // Sets the under-relaxation coefficient.
-    void SetUnderRelaxCoeff(real relax);
+    void SetUnderRelaxCoeff(double relax);
 */
 
     // SOURCE TERM CALCULATION (REQUIRED FOR REACTOR ODE SOLVER).
@@ -125,9 +125,9 @@ public:
     // Adds the source term contribution to the RHS supplied by the
     // reactor class.
     static void AddSourceTerms(
-        real *rhs,             // ODE right-hand sides (to be updated)
+        double *rhs,             // ODE right-hand sides (to be updated)
         unsigned int n,        // Number of values in rhs array.
-        real t,                // Current time.
+        double t,                // Current time.
         const SrcProfile &prof // Source term profile.
         );
 
@@ -143,7 +143,7 @@ private:
     Reactor *m_reac_copy;
 
     // Under-relaxation coefficient.
-//    real m_rlx_coeff;
+//    double m_rlx_coeff;
 
     // A copy of the ODE solver.
     ODE_Solver m_ode_copy;
@@ -163,14 +163,14 @@ private:
     void beginIteration(
         Reactor &r,        // The reactor which is being solved.
         unsigned int step, // The step number.
-        real dt            // The size of the next time step.
+        double dt            // The size of the next time step.
         );
 
     // Performs a step-wise iteration on the reactor to recalculate
     // the source terms for the gas-phase effect on the particle model.
     void iteration(
         Reactor &r, // Reactor to solve.
-        real dt,    // Time step size.
+        double dt,    // Time step size.
         Sweep::rng_type &rng  // Random number generator
         );
 
@@ -182,7 +182,7 @@ private:
     // source terms.
     void generateChemProfile(
         Reactor &r, // Reactor to solve.
-        real dt     // Time step size over which to calculate profile.
+        double dt     // Time step size over which to calculate profile.
         );
 
     // Calculates the instantaneous source terms.
@@ -193,7 +193,7 @@ private:
 
     // Calculate the adiabatic temperature change rate due to the
     // species source terms.
-    real energySrcTerm(
+    double energySrcTerm(
         const Reactor &r, // Reactor used to calculate terms.
         fvector &src      // Vector of species source terms.
         );
@@ -204,7 +204,7 @@ private:
     static void linExSrcTerms(
         SrcPoint &src,          // The point to which to extrapolate.
         const SrcProfile &prof, // The profile of previous points used to find gradient.
-        real dt                 // The delta-t from the last profile point to the new point.
+        double dt                 // The delta-t from the last profile point to the new point.
         );
 
     // Applies under-relaxation to the first source point, using the
@@ -212,7 +212,7 @@ private:
     static void relaxSrcTerms(
         SrcPoint &src,        // Source terms to relax.
         const SrcPoint &init, // Initial source terms.
-        real rcoeff           // Under-relaxation coefficient.
+        double rcoeff           // Under-relaxation coefficient.
         );
 
     // Applies under-relaxation to the first source point, using the
@@ -228,7 +228,7 @@ private:
     // Multiplies all values in a vector by a scaling factor.
     static void multVals(
         fvector &vals, // The values to multiply by the scaling factor.
-        real scale     // The scaling factor (numner of runs).
+        double scale     // The scaling factor (numner of runs).
         );
 */
 };

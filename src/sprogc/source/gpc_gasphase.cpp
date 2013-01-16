@@ -42,7 +42,6 @@
 
 #include "gpc_gasphase.h"
 #include<vector>
-
 using namespace Sprog;
 using namespace Sprog::Thermo;
 using namespace std;
@@ -70,7 +69,7 @@ GasPhase::GasPhase(void)
 }
 
 // Default constructor (public, requires species vector).
-GasPhase::GasPhase(const SpeciesPtrVector &sp) : Mixture(sp)
+GasPhase::GasPhase(const SpeciesPtrVector &sp): Mixture(sp)
 {
 }
 
@@ -148,37 +147,37 @@ void GasPhase::Cvs_R(Sprog::fvector &Cv) const
 // BULK MIXTURE PROPERTIES.
 
 // Calculates the bulk internal energies in current units.
-real GasPhase::BulkU() const
+double GasPhase::BulkU() const
 {
-    return CalcBulkU(Temperature(), &MoleFractions().front(), Species()->size());
+    return CalcBulkU(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }
 
 // Calculates the bulk enthalpy in current units.
-real GasPhase::BulkH() const
+double GasPhase::BulkH() const
 {
-    return CalcBulkH(Temperature(), &MoleFractions().front(), Species()->size());
+    return CalcBulkH(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }
 
 // Calculates the bulk entropy in current units.
-real GasPhase::BulkS() const
+double GasPhase::BulkS() const
 {
-    return CalcBulkS(Temperature(), &MoleFractions().front(), Species()->size());
+    return CalcBulkS(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }
 
 // Calculates the bulk Gibbs free energies in current units.
-real GasPhase::BulkG() const
+double GasPhase::BulkG() const
 {
-    return CalcBulkG(Temperature(), &MoleFractions().front(), Species()->size());
+    return CalcBulkG(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }
 
 // Calculates the mean molar heat capacity at const. P.
-real GasPhase::BulkCp() const
+double GasPhase::BulkCp() const
 {
-    return CalcBulkCp(Temperature(), &MoleFractions().front(), Species()->size());
+    return CalcBulkCp(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }
 
 // Calculates the mean molar heat capacity at const. V.
-real GasPhase::BulkCv() const
+double GasPhase::BulkCv() const
 {
-    return CalcBulkCv(Temperature(), &MoleFractions().front(), Species()->size());
+    return CalcBulkCv(Temperature(), &MoleFractions().front(), gasSpeciesCount);
 }

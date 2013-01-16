@@ -50,7 +50,7 @@
 #include <sstream>
 #include <limits>
 
-const Geometry::real Geometry::Geometry1d::sCrossSectionalArea = 1.0;
+const double Geometry::Geometry1d::sCrossSectionalArea = 1.0;
 
 /*!
  * Read the geometry from an xml tree which should have a root node of
@@ -86,7 +86,7 @@ Geometry::Geometry1d::Geometry1d(const CamXML::Element &xml) {
             std::string textData = (*it++)->Data();
 
             // Convert the string into a number and store it
-            real boundary = atof(textData.c_str());
+            double boundary = atof(textData.c_str());
             mCellEnds.push_back(boundary);
         }
 
@@ -190,7 +190,7 @@ size_t Geometry::Geometry1d::numCells() const {
  *
  *\return       Position of cell centre
  */
-Geometry::real Geometry::Geometry1d::cellCentre(const size_t cell_index) const {
+double Geometry::Geometry1d::cellCentre(const size_t cell_index) const {
     return (mCellEnds[cell_index] + mCellEnds[cell_index + 1]) / 2;
 }
 
@@ -227,7 +227,7 @@ Geometry::fvector Geometry::Geometry1d::cellVertices(const size_t cell_index) co
  *
  *@return       Physical volume covered by the cell
  */
-Geometry::real Geometry::Geometry1d::cellVolume(const size_t cell_index) const {
+double Geometry::Geometry1d::cellVolume(const size_t cell_index) const {
     return (mCellEnds[cell_index + 1] - mCellEnds[cell_index]) * sCrossSectionalArea;
 }
 
@@ -243,7 +243,7 @@ Geometry::real Geometry::Geometry1d::cellVolume(const size_t cell_index) const {
  *
  *@return       Cell index or -1 if x is outside the range of the geometry
  */
-int Geometry::Geometry1d::containingCell(const real x) const {
+int Geometry::Geometry1d::containingCell(const double x) const {
     const fvector::const_iterator it = std::upper_bound(mCellEnds.begin(), mCellEnds.end(), x);
 
    if(it == mCellEnds.begin()) {
@@ -312,8 +312,8 @@ int Geometry::Geometry1d::calcDestination(const size_t origin_index, const Direc
  *
  *\return   Distance to next cell centre
  */
-Geometry::real Geometry::Geometry1d::calcSpacing(const size_t cell_index, const Direction direction) const {
-    real space;
+double Geometry::Geometry1d::calcSpacing(const size_t cell_index, const Direction direction) const {
+    double space;
 
     // Only one cell so use its length
     if(numCells() == 0) {
@@ -353,7 +353,7 @@ Geometry::real Geometry::Geometry1d::calcSpacing(const size_t cell_index, const 
  *
  *@return       True iff x in contained in cell with index cell_index
  */
-bool Geometry::Geometry1d::isInCell(const size_t cell_index, const real x) const {
+bool Geometry::Geometry1d::isInCell(const size_t cell_index, const double x) const {
     return (mCellEnds[cell_index] <= x && x < mCellEnds[cell_index + 1]);
 }
 

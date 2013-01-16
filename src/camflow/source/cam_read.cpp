@@ -77,7 +77,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
     //vector<CamXML::Element*>::iterator p;
     const CamXML::Attribute *attr;
     std::string attrValue;
-    doublereal factor = 1.0;
+    double factor = 1.0;
 
     reactorNode = node.GetFirstChild("reactor");
     if(reactorNode != NULL){
@@ -114,8 +114,8 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         }
 
         // Read the grid in from the file, usually grid.inp.
-        std::vector<doublereal> grid;
-        std::vector<doublereal> dz;
+        std::vector<double> grid;
+        std::vector<double> dz;
         std::ifstream inf;
         inf.open(cg.getGridFileName().c_str(), std::ios::in);
         if (inf.good())
@@ -190,7 +190,7 @@ void CamRead::readProcessConditions
         subnode = opNode->GetFirstChild("twall");
         if(subnode!= NULL){
             std::string val = subnode->GetAttributeValue("unit");
-            doublereal factor = convert.getConvertionFactor(val);
+            double factor = convert.getConvertionFactor(val);
             ca.setWallTemp(cdble(subnode->Data())+factor);
         }
 
@@ -198,8 +198,8 @@ void CamRead::readProcessConditions
         subnode = opNode->GetFirstChild("pressure");
         if(subnode !=NULL){
             std::string unit = subnode->GetAttribute("unit")->GetValue();
-            doublereal fact = convert.getConvertionFactor(unit);
-            doublereal pre = cdble(subnode->Data())*fact;
+            double fact = convert.getConvertionFactor(unit);
+            double pre = cdble(subnode->Data())*fact;
             ca.setPressure(pre);
         }else{
             throw CamError("operating pressure not defined\n");
@@ -293,7 +293,7 @@ void CamRead::readNozzle(CamBoundary& cb,
 
     CamXML::Element *subnode;
     const CamXML::Attribute *atr;
-    std::map<std::string, doublereal> fracs;
+    std::map<std::string, double> fracs;
     std::string atrVal;
 
 
@@ -301,8 +301,8 @@ void CamRead::readNozzle(CamBoundary& cb,
     if(subnode != NULL){
         atr = subnode->GetAttribute("unit");
         atrVal = atr->GetValue();
-        doublereal fact = convert.getConvertionFactor(atrVal);
-        doublereal vel = cdble(subnode->Data())*fact;
+        double fact = convert.getConvertionFactor(atrVal);
+        double vel = cdble(subnode->Data())*fact;
         cb.setVelocity(vel);
     }else{
         cb.setVelocity(0.0);
@@ -312,8 +312,8 @@ void CamRead::readNozzle(CamBoundary& cb,
     if(subnode != NULL){
         atr = subnode->GetAttribute("unit");
         atrVal = atr->GetValue();
-        doublereal fact = convert.getConvertionFactor(atrVal);
-        doublereal temp = cdble(subnode->Data()) + fact;
+        double fact = convert.getConvertionFactor(atrVal);
+        double temp = cdble(subnode->Data()) + fact;
         cb.setTemperature(temp);
     }else{
         throw CamError("Temperature at the inlet must be specified\n");
@@ -324,8 +324,8 @@ void CamRead::readNozzle(CamBoundary& cb,
     if(subnode != NULL){
         atr = subnode->GetAttribute("unit");
         atrVal = atr->GetValue();
-        doublereal fact = convert.getConvertionFactor(atrVal);
-        doublereal flow = cdble(subnode->Data())*fact;
+        double fact = convert.getConvertionFactor(atrVal);
+        double flow = cdble(subnode->Data())*fact;
         cb.setFlowRate(flow);
     }else{
         cb.setFlowRate(0.0);
@@ -346,14 +346,14 @@ void CamRead::readNozzle(CamBoundary& cb,
 }
 
 //function to read the mole or mass fractions for any element
-void CamRead::readFrac(std::string& member, std::map<std::string,doublereal>& fracs, const CamXML::Element& subnode){
+void CamRead::readFrac(std::string& member, std::map<std::string,double>& fracs, const CamXML::Element& subnode){
 
     std::vector<CamXML::Element*> subnodes;
     std::vector<CamXML::Element*>::const_iterator p;
     const CamXML::Attribute *atr;
     std::string atrVal;
     std::string frac,finalSpecies;
-    doublereal sumfrac = 0.0;
+    double sumfrac = 0.0;
     subnode.GetChildren(member,subnodes);
     for(p=subnodes.begin(); p<subnodes.end(); ++p){
         atr = (*p)->GetAttribute("name");
@@ -443,7 +443,7 @@ void CamRead::readControl(CamControl& cc, const CamXML::Element& node){
             if(tols != NULL){
                 cc.setResTol(cdble(tols->Data()));
             }
-            doublereal atol, rtol;
+            double atol, rtol;
             tols = subnode->GetFirstChild("species");
             if(tols != NULL) {
                 readTol(*tols,atol,rtol);
@@ -472,7 +472,7 @@ void CamRead::readControl(CamControl& cc, const CamXML::Element& node){
 
 }
 //funtion to read tolerence
-void CamRead::readTol(const CamXML::Element& node, doublereal& atol, doublereal& rtol){
+void CamRead::readTol(const CamXML::Element& node, double& atol, double& rtol){
 
     CamXML::Element *subnode;
     atol = 0;
@@ -521,7 +521,7 @@ void CamRead::readInitialGuess
         {
             const CamXML::Attribute *length;
             length = subsubnode->GetAttribute("unit");
-            doublereal convertL = convert.getConvertionFactor(length->GetValue());
+            double convertL = convert.getConvertionFactor(length->GetValue());
             cp.setMixingCenter(cdble(subsubnode->Data())*convertL);
         }
         //mixing width
@@ -530,7 +530,7 @@ void CamRead::readInitialGuess
         {
             const CamXML::Attribute *length;
             length = subsubnode->GetAttribute("unit");
-            doublereal convertL = convert.getConvertionFactor(length->GetValue());
+            double convertL = convert.getConvertionFactor(length->GetValue());
             cp.setMixingWidth(cdble(subsubnode->Data())*convertL);
         }
 
@@ -541,14 +541,14 @@ void CamRead::readInitialGuess
             const CamXML::Attribute *length, *temp;
             length = subsubnode->GetAttribute("unit_L");
             temp = subsubnode->GetAttribute("unit_T");
-            doublereal convertL = convert.getConvertionFactor(length->GetValue());
-            doublereal convertT = convert.getConvertionFactor(temp->GetValue());
+            double convertL = convert.getConvertionFactor(length->GetValue());
+            double convertT = convert.getConvertionFactor(temp->GetValue());
 
             subsubnode->GetChildren("position",subsubnodes);
 
             for(p=subsubnodes.begin(); p<subsubnodes.end(); ++p){
-                doublereal pos = cdble((*p)->GetAttributeValue("x"))*convertL;
-                doublereal temp = cdble((*p)->Data())+convertT;
+                double pos = cdble((*p)->GetAttributeValue("x"))*convertL;
+                double temp = cdble((*p)->Data())+convertT;
                 cp.setUserTemp(pos,temp);
                 std::cout << pos << " " << temp << std::endl;
             }
@@ -557,7 +557,7 @@ void CamRead::readInitialGuess
         //intermediate and product species
         std::string mem1 = "product";
         std::string mem2 = "intrmdt";
-        std::map<std::string,doublereal> fracs;
+        std::map<std::string,double> fracs;
         subsubnode = initialize->GetFirstChild("massfrac");
         if(subsubnode!=NULL)
         {
@@ -585,8 +585,8 @@ void CamRead::readInitialGuess
 
                     for (r=subsubnodes.begin(); r<subsubnodes.end(); ++r)
                     {
-                        doublereal pos = cdble((*r)->GetAttributeValue("x"));
-                        doublereal temp = cdble((*r)->Data());
+                        double pos = cdble((*r)->GetAttributeValue("x"));
+                        double temp = cdble((*r)->Data());
                         cp.setUserFrac(pos,temp,species->GetValue());
                     }
                 }

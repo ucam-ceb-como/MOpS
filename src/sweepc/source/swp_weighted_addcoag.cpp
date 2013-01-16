@@ -47,7 +47,7 @@
 #include "swp_property_indices.h"
 
 
-const Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::s_MajorantFactor = 1.5;
+const double Sweep::Processes::WeightedAdditiveCoagulation::s_MajorantFactor = 1.5;
 
 /**
  * Main way of building a new coagulation object
@@ -94,7 +94,7 @@ Sweep::Processes::WeightedAdditiveCoagulation::WeightedAdditiveCoagulation(std::
  *
  * @return      Sum of all rate terms for this process
  */
-Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::Rate(real t, const Cell &sys,
+double Sweep::Processes::WeightedAdditiveCoagulation::Rate(double t, const Cell &sys,
                             const Geometry::LocalGeometry1d &local_geom) const {
     // Create a vector so we can call through to RateTerms
     Sweep::fvector vec(TYPE_COUNT);
@@ -122,7 +122,7 @@ unsigned int Sweep::Processes::WeightedAdditiveCoagulation::TermCount() const {r
  *
  * @return      Sum of all rate terms for this process
  */
-Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::RateTerms(real t, const Cell &sys,
+double Sweep::Processes::WeightedAdditiveCoagulation::RateTerms(double t, const Cell &sys,
                             const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
@@ -130,13 +130,13 @@ Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::RateTerms(real t, con
 
     if(n > 1) {
         // this value is used twice below
-        const real sum_iWM = sys.Particles().GetSums().Property(iWM);
+        const double sum_iWM = sys.Particles().GetSums().Property(iWM);
         // Calculate the two contributions to the rate
-        const real r1 = A() * s_MajorantFactor
+        const double r1 = A() * s_MajorantFactor
                        * (sys.Particles().GetSums().Property(Sweep::iM)
                           * sys.Particles().GetSums().Property(Sweep::iW)
                           - sum_iWM) / sys.SampleVolume();
-        const real r2 = A() * (n - 1) * s_MajorantFactor
+        const double r2 = A() * (n - 1) * s_MajorantFactor
                             * sum_iWM / sys.SampleVolume();
 
         // Now deal with the output
@@ -165,7 +165,7 @@ Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::RateTerms(real t, con
  * \exception   logic_error     Unrecognised rate term index (ie iterm value)
  */
 int Sweep::Processes::WeightedAdditiveCoagulation::Perform(
-        Sweep::real t, Sweep::Cell &sys,
+        double t, Sweep::Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
         rng_type &rng) const
@@ -210,7 +210,7 @@ int Sweep::Processes::WeightedAdditiveCoagulation::Perform(
  *
  *@return       Value of kernel
  */
-Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2,
+double Sweep::Processes::WeightedAdditiveCoagulation::CoagKernel(const Particle &sp1, const Particle &sp2,
                                      const Cell& sys) const
 {
     return (sp1.Mass() + sp2.Mass()) * A() * sp2.getStatisticalWeight();
@@ -227,7 +227,7 @@ Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::CoagKernel(const Part
  *
  *@return       Value of majorant kernel
  */
-Sweep::real Sweep::Processes::WeightedAdditiveCoagulation::MajorantKernel(const Particle &sp1,
+double Sweep::Processes::WeightedAdditiveCoagulation::MajorantKernel(const Particle &sp1,
                                                                           const Particle &sp2,
                                                                           const Cell& sys,
                                                                           const MajorantType maj) const

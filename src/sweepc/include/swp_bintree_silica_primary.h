@@ -60,7 +60,7 @@ public:
 
     //! Build a new primary with one molecule
     BinTreeSilicaPrimary(
-        const real time,
+        const double time,
         const Sweep::ParticleModel &model
     );
 
@@ -86,25 +86,25 @@ public:
     AggModels::AggModelType AggID(void) const;
 
     //! Overload of parent class sinter
-    void Sinter(real dt,
+    void Sinter(double dt,
             Cell &sys,
             const Processes::SinteringModel &model,
             rng_type &rng,
-            real wt);
+            double wt);
 
     //! Return the number of hydroxide sites
-    Sweep::real GetSites() const { return GetComponent("hydroxide"); }
+    double GetSites() const { return GetComponent("hydroxide"); }
 
 private:
     //! Default constructor (private)
     BinTreeSilicaPrimary();
 
     //! Sinter a node for time dt
-    void SinterNode(real dt,
+    void SinterNode(double dt,
             Cell &sys,
             const Processes::SinteringModel &model,
             rng_type &rng,
-            real wt);
+            double wt);
 };
 
 }

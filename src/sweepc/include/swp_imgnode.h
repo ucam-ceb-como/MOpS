@@ -77,7 +77,7 @@ public:
     // Adds a primary into the tree.  Algorithm maintains
     // well-balanced binary tree structure by observing
     // the minimum branch depth below node.
-    void Insert(real radius);
+    void Insert(double radius);
 
 	void CopySPT(const Particle *sp);
 
@@ -94,7 +94,7 @@ public:
 
     // Translates (moves) the aggregate node and child structure
     // by the given amounts along the cartesian axes.
-    void Translate(real dx, real dy, real dz);
+    void Translate(double dx, double dy, double dz);
 
     // Put the centre-of-mass at the origin.
     void CentreCOM(void);
@@ -104,15 +104,15 @@ public:
 
     // Rotates the aggregate node and child structure about its centre
     // of mass by the given angles (spherical coordinates).
-    void RotateCOM(real dtheta, real dphi);
+    void RotateCOM(double dtheta, double dphi);
 
     // Rotates the aggregate node and child structure about its bounding
     // sphere centre by the given angles (spherical coordinates).
-    void RotateBoundSph(real dtheta, real dphi);
+    void RotateBoundSph(double dtheta, double dphi);
 
     // Rotates the aggregate node and child structure about the
     // coordinate system origin by the given angles (spherical coordinates).
-    void RotateOrigin(real dtheta, real dphi);
+    void RotateOrigin(double dtheta, double dphi);
     
 
     // BOUNDING SPHERE.
@@ -121,7 +121,7 @@ public:
     const Coords::Vector &BoundSphCentre(void) const;
 
     // Returns the bounding sphere radius.
-    real Radius(void) const;
+    double Radius(void) const;
 
     // Calculates the bounding sphere position and radius using
     // the left and right child node values.
@@ -141,11 +141,11 @@ public:
 
 private:
     // Size.
-    real m_r;  // Bounding sphere radius of aggregate/primary.
-    real m_r2; // r squared (useful for efficient collision detection computation).
-    real m_r3; // r cubed (useful for calculating centre-of-mass).
+    double m_r;  // Bounding sphere radius of aggregate/primary.
+    double m_r2; // r squared (useful for efficient collision detection computation).
+    double m_r3; // r cubed (useful for calculating centre-of-mass).
 
-    real m_mass;
+    double m_mass;
 
     // Position.
     Coords::Vector m_cen_bsph; // Bounding-sphere centre.
@@ -159,7 +159,7 @@ private:
     ImgNode *m_left, *m_right; // Left and right child nodes.
 
     // Sets the radius of the bounding sphere.
-    void setRadius(real r);
+    void setRadius(double r);
 
     // Transforms the node coordinates using the given
     // transformation matrix.

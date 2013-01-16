@@ -59,27 +59,69 @@ int main(int argc, char* argv[])
 
     std::cout << "\nChemkin Reader Test\n";
 
+	// SWITCH 0 = NO SURF, 1 = SURF
+	int surf_switch = 0; // Have to change this to test surface chemistry
+	
+	
+	if (surf_switch == 1){
     // Using arguments like this is rather ugly, but it saves writing full argument
+    // handling code in a test program.
+    const std::string chemfile(argv[1]);
+	const std::string chemSurfFile (argv[2]); 
+    const std::string thermfile(argv[3]);
+	const std::string thermSurfFile(argv[4]);
+    const std::string transfile(argv[5]);    
+	
+	IO::ChemkinReader chemkinReader(chemfile, chemSurfFile, thermfile, thermSurfFile,transfile);
+	
+	chemkinReader.read();
+    chemkinReader.check();
+
+	std::cout << "INPUT READER CHECKING" << std::endl; 
+    std::cout << chemkinReader.elements()[0].getName() << std::endl;
+    std::cout << chemkinReader.species()[0].name() << std::endl;
+    std::cout << chemkinReader.species()[0].thermo().getPhase() << std::endl;
+    std::cout << chemkinReader.species()[0].transport().getCollisionDiameter() << std::endl;
+    chemkinReader.setSpecies()[0].transport().setCollisionDiameter(1.0);
+	
+	std::cout << chemkinReader.phase()[0].getPhaseName() << std::endl;
+	std::cout << chemkinReader.phase()[0].getPhaseID() << std::endl;
+	std::cout << chemkinReader.phase()[0].getSiteDensity() << std::endl;
+	std::cout << chemkinReader.species()[0].phasename() << std::endl;
+	
+	
+    std::cout << chemkinReader.species()[0].transport().getCollisionDiameter() << std::endl;
+	std::cout << "END OF INPUT READER CHECKING" << std::endl; 
+	}
+	
+	
+	
+	
+	else{
+	// Using arguments like this is rather ugly, but it saves writing full argument
     // handling code in a test program.
     const std::string chemfile(argv[1]);
     const std::string thermfile(argv[2]);
     const std::string transfile(4 == argc?argv[3]:"NOT READ");
-
+	
     IO::ChemkinReader chemkinReader(chemfile,thermfile,transfile);
     
     chemkinReader.read();
     chemkinReader.check();
 
+	// std::cout << "INPUT READER CHECKING" << std::endl; 
     std::cout << chemkinReader.elements()[0].getName() << std::endl;
-
     std::cout << chemkinReader.species()[0].name() << std::endl;
     std::cout << chemkinReader.species()[0].thermo().getPhase() << std::endl;
     std::cout << chemkinReader.species()[0].transport().getCollisionDiameter() << std::endl;
-
     chemkinReader.setSpecies()[0].transport().setCollisionDiameter(1.0);
-
+	
     std::cout << chemkinReader.species()[0].transport().getCollisionDiameter() << std::endl;
-
+	// std::cout << "END OF INPUT READER CHECKING" << std::endl; 
+	
+	}
+	
+	
     return 0;
 
 }

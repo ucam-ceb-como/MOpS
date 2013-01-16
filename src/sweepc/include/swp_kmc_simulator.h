@@ -106,7 +106,7 @@ namespace Sweep{
             //! Writes data for CH_site_list.csv
             void writeCHSiteCountCSV();
             //! Writes data for rates count (csv)
-            void writeRatesCSV(real& time, rvector& v_rates);
+            void writeRatesCSV(double& time, rvector& v_rates);
             //! Initialise CSV_IOs
             void initCSVIO();
             //! Initialise reaction count
@@ -120,21 +120,21 @@ namespace Sweep{
             //! Save the structure DOT file for particular PAH (ID)
             void saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID);
             //! Save the structure DOT file after every X simulation sec interval
-            void saveDOTperXsec(const real& X, const int& seed, const real& time, const real &time_max, KMCMechanism& copyMod, int& intervalcount);
+            void saveDOTperXsec(const double& X, const int& seed, const double& time, const double &time_max, KMCMechanism& copyMod, int& intervalcount);
             //! Update structure of PAH after time dt
             void updatePAH(PAHStructure* pah, // structure of pah
-                           const real tstart, // start time
-                           const real dt,     // growth time
+                           const double tstart, // start time
+                           const double dt,     // growth time
                            const int waitingSteps,  // waiting step used to calculate maximum time interval, currently use 1. 
                            rng_type &rng,
-                           real r_factor,     // growth factor g, one important parameter used in this model.
+                           double r_factor,     // growth factor g, one important parameter used in this model.
                            int PAH_ID);       // ID of this pah, used for debugging.
             //! Outputs rates into a csv file (assuming all site counts as 1)
-            void TestRates(const real tstart, const real tstop, const int intervals);
+            void TestRates(const double tstart, const double tstop, const int intervals);
             //! Obtains rates of PAH reactions with the current structure
-            rvector CurrentRates(PAHStructure* pah, real t);
+            rvector CurrentRates(PAHStructure* pah, double t);
             //! Outputs gas concentrations into a csv file
-            void TestConc(const real& t_start, const real& t_stop, const int intervals, const std::string& filename);
+            void TestConc(const double& t_start, const double& t_stop, const int intervals, const std::string& filename);
             //void testSimulation(PAHStructure& pah, const unsigned long seed, int totalruns);
             void writetimestep(const std::vector<double>& timestep);
             void setCSVtimestep(const std::string &filename);
@@ -176,7 +176,7 @@ namespace Sweep{
             //! The PAH data structure
             PAHStructure* m_simPAH;
             //! Current simulation time
-            real m_t;
+            double m_t;
             //! Check if profile obtained from file rather than mops
             bool m_fromfile;
             //! KMC Mechanism
@@ -193,9 +193,9 @@ namespace Sweep{
             CSV_data(KMCSimulator& st);
             virtual ~CSV_data();
             // initialise data storage
-            void initData(int max_runs, int no_of_interv, real max_time, intpair N_CH_initial, KMCGasPoint& gp);
+            void initData(int max_runs, int no_of_interv, double max_time, intpair N_CH_initial, KMCGasPoint& gp);
             // Compares time and adds data if interval reached
-            void addData(intpair N_CH, real time, int runNo, PAHProcess& pp, bool savedot);
+            void addData(intpair N_CH, double time, int runNo, PAHProcess& pp, bool savedot);
             // delete data of run
             void delData(int runNo);
             // Set name of output csv file containing C-H values
@@ -218,7 +218,7 @@ namespace Sweep{
             // specifies the number of times data should be saved for whole simulation
             int m_intervalcount;
             // the length of an interval (max time / interval count)
-            real m_dt;
+            double m_dt;
         };
     }
 }

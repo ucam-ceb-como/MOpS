@@ -53,7 +53,7 @@ using namespace Sweep::Processes;
 using namespace std;
 
 const unsigned int Condensation::TERM_COUNT = 3;
-const real Condensation::m_majfactor       = 2.0;
+const double Condensation::m_majfactor       = 2.0;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -116,7 +116,7 @@ Condensation &Condensation::operator=(const Condensation &rhs)
 
 // Sets the coagulation kernel parameters given the mass and
 // collision diameter of the condensing species.
-void Condensation::SetCondensingSpecies(const real m, const real d)
+void Condensation::SetCondensingSpecies(const double m, const double d)
 {
     // Calculate the free-mol terms for condensation.  This must be done
     // before the condensation process is used.
@@ -135,11 +135,11 @@ void Condensation::SetCondensingSpecies(const real m, const real d)
  *
  *@return   Process rate
  */
-real Condensation::Rate(real t, const Cell &sys,
+double Condensation::Rate(double t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 {
     // Calculate temperature terms.
-    real cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
+    double cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
 
      // Chemical species concentration dependence.
     cterm *= chemRatePart(sys.GasPhase());
@@ -164,17 +164,17 @@ real Condensation::Rate(real t, const Cell &sys,
 
 // Returns the rate of the process for the given particle in
 // the system. Process must be linear in particle number.
-real Condensation::Rate(real t, const Cell &sys, const Particle &sp) const
+double Condensation::Rate(double t, const Cell &sys, const Particle &sp) const
 {
     // Calculate temperature terms.
-    real cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
-//    real trm[3];
+    double cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
+//    double trm[3];
 
     // Chemical species concentration dependence.
     cterm *= chemRatePart(sys.GasPhase());
 
     // Get particle property
-    const real d = sp.CollDiameter();
+    const double d = sp.CollDiameter();
     // Free molecular terms.
 //    trm[0] = cterm * m_kfm1;
 //    trm[1] = cterm * (m_kfm2 * sp.CollDiameter());
@@ -186,7 +186,7 @@ real Condensation::Rate(real t, const Cell &sys, const Particle &sp) const
 }
 
 // Returns majorant rate of the process for the given system.
-real Condensation::MajorantRate(real t, const Cell &sys, const Particle &sp) const
+double Condensation::MajorantRate(double t, const Cell &sys, const Particle &sp) const
 {
     // Return the single particle rate multiplied by the 
     // condensation majorant factor.
@@ -201,15 +201,15 @@ real Condensation::MajorantRate(real t, const Cell &sys, const Particle &sp) con
 // Returns the number of rate terms for this process.
 unsigned int Condensation::TermCount(void) const {return TERM_COUNT;}
 
-// Calculates the rate terms given an iterator to a real vector. The 
+// Calculates the rate terms given an iterator to a double vector. The 
 // iterator is advanced to the position after the last term for this
 // process.
-real Condensation::RateTerms(real t, const Cell &sys,
+double Condensation::RateTerms(double t, const Cell &sys,
                              const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
 {
     // Calculate temperature terms.
-    real cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
+    double cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
 
      // Chemical species concentration dependence.
     cterm *= chemRatePart(sys.GasPhase());
@@ -220,7 +220,7 @@ real Condensation::RateTerms(real t, const Cell &sys,
     if (m_mech->AnyDeferred()) cterm *= m_majfactor;
 
     // Free molecular terms.
-    real sum = 0.0;
+    double sum = 0.0;
     sum += *(iterm++) = m_kfm1 * cterm * sys.ParticleCount();
     sum += *(iterm++) = m_kfm2 * cterm * sys.Particles().GetSum(Sweep::iDcol);
     sum += *(iterm++) = m_kfm3 * cterm * 
@@ -242,7 +242,7 @@ real Condensation::RateTerms(real t, const Cell &sys,
  *
  * \return      0 on success, otherwise negative.
  */
-int Condensation::Perform(Sweep::real t, Sweep::Cell &sys, 
+int Condensation::Perform(double t, Sweep::Cell &sys, 
                           const Geometry::LocalGeometry1d& local_geom,
                           unsigned int iterm,
                           rng_type &rng) const
@@ -270,7 +270,7 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
 
-        real majr = MajorantRate(t, sys, *sp);
+        double majr = MajorantRate(t, sys, *sp);
 
         if (m_mech->AnyDeferred()) {
             // Update particle with deferred processes.
@@ -280,7 +280,7 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
         // Check that the particle is still valid.
         if (sp->IsValid()) {
             // Get the true process rate (after updates).
-            real truer = Rate(t, sys, *sp);
+            double truer = Rate(t, sys, *sp);
 
             // Check that the event is not ficticious by comparing the
             // majorant rate with the true rate.
@@ -313,7 +313,7 @@ int Condensation::Perform(Sweep::real t, Sweep::Cell &sys,
 
 // Performs the process on a given particle in the system.  Particle
 // is given by index.  The process is performed n times.
-int Condensation::Perform(real t, Cell &sys, Particle &sp, rng_type &rng,
+int Condensation::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
                           unsigned int n) const
 {
     unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
@@ -384,11 +384,11 @@ void Condensation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 
                 // Read free-mol parameter.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_kfm1 = (real)val;
+                m_kfm1 = (double)val;
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_kfm2 = (real)val;
+                m_kfm2 = (double)val;
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_kfm3 = (real)val;
+                m_kfm3 = (double)val;
 
                 break;
             default:

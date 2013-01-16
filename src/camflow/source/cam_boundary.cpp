@@ -46,31 +46,31 @@
 using namespace Camflow;
 using namespace Strings;
 
-void CamBoundary::setVelocity(doublereal vel){
+void CamBoundary::setVelocity(double vel){
     this->velocity = vel;
 }
 
-void CamBoundary::setTemperature(doublereal T){
+void CamBoundary::setTemperature(double T){
     this->T = T;
 }
 
 
-void CamBoundary::setFlowRate(doublereal flow){
+void CamBoundary::setFlowRate(double flow){
     this->flowRate = flow;
 }
 
-void CamBoundary::setSpecies(std::map<std::string,doublereal> species){
+void CamBoundary::setSpecies(std::map<std::string,double> species){
     this->species = species;
 }
 
-void CamBoundary::setInletMassfracs(std::vector<doublereal> fracs){
+void CamBoundary::setInletMassfracs(std::vector<double> fracs){
     this->inletFracs = fracs;
 }
 
-std::vector<doublereal>& CamBoundary::setInletfracs(Mechanism& mech){
+std::vector<double>& CamBoundary::setInletfracs(Mechanism& mech){
     int index;
     inletFracs.resize(mech.SpeciesCount(),0.0);
-    std::map<std::string,doublereal>::iterator p;
+    std::map<std::string,double>::iterator p;
     p = species.begin();
     while(p!=species.end()){
         index = mech.FindSpecies(convertToCaps(trim(p->first)));
@@ -84,23 +84,23 @@ std::vector<doublereal>& CamBoundary::setInletfracs(Mechanism& mech){
     return inletFracs;
 }
 
-const doublereal& CamBoundary::getVelocity() const{
+const double& CamBoundary::getVelocity() const{
     return this->velocity;
 }
 
-const doublereal& CamBoundary::getTemperature() const{
+const double& CamBoundary::getTemperature() const{
     return this->T;
 }
 
-const doublereal& CamBoundary::getFlowRate() const{
+const double& CamBoundary::getFlowRate() const{
     return this->flowRate;
 }
 
-const std::map<std::string,doublereal>& CamBoundary::getInletSpecies() const{
+const std::map<std::string,double>& CamBoundary::getInletSpecies() const{
     return this->species;
 }
 
-const std::vector<doublereal>& CamBoundary::getInletMassfracs() const{
+const std::vector<double>& CamBoundary::getInletMassfracs() const{
     return this->inletFracs;
 }
 

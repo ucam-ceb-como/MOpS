@@ -168,7 +168,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity, bool doubling_activated)
 
     // Calculate nearest power of 2 capacity.  Ensemble capacity must be a power
     // of 2.  This constraint is due to the binary tree implementation.
-    real rl    = log((real)capacity) / log(2.0);
+    double rl    = log((double)capacity) / log(2.0);
     m_levels   = static_cast<int>(rl + 0.5);
 
     // Capacity is 2^levels, which is most efficiently calculated with a bit shift.
@@ -192,7 +192,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity, bool doubling_activated)
 
     // Initialise scaling.
     m_ncont      = 0;
-    m_contfactor = (real)(m_capacity) / (real)(m_capacity+1);
+    m_contfactor = (double)(m_capacity) / (double)(m_capacity+1);
     m_contwarn   = false;
 
     // Initialise doubling.
@@ -203,8 +203,8 @@ void Sweep::Ensemble::Initialise(unsigned int capacity, bool doubling_activated)
 
     // if doubling_activated is false, m_dblecutoff will be two times the capacity, it means that the doubling will be not activated anymore.
     if (!doubling_activated) 
-        m_dblecutoff = (int)(2.0 * (real)m_capacity);
-    else m_dblecutoff = (int)(3.0 * (real)m_capacity / 4.0);
+        m_dblecutoff = (int)(2.0 * (double)m_capacity);
+    else m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0);
 
     m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
@@ -261,7 +261,7 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
         iterator it = begin();
         const iterator itEnd = end();
         while(it != itEnd) {
-            (*it)->setStatisticalWeight((*it)->getStatisticalWeight() * static_cast<real>(count) / static_cast<real>(m_capacity));
+            (*it)->setStatisticalWeight((*it)->getStatisticalWeight() * static_cast<double>(count) / static_cast<double>(m_capacity));
             ++it;
         }
     }
@@ -365,7 +365,7 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         i = indexGenerator();
 
         ++m_ncont;
-        if (!m_contwarn && ((real)(m_ncont)/(real)m_capacity > 0.01)) {
+        if (!m_contwarn && ((double)(m_ncont)/(double)m_capacity > 0.01)) {
             m_contwarn = true;
             printf("sweep: Ensemble contracting too often; "
                    "possible stiffness issue.\n");
@@ -602,8 +602,8 @@ int Sweep::Ensemble::Select(Sweep::PropID id, rng_type &rng) const
 
     // Calculate random number weighted by sum of desired property (wtid).
     // Set up the rng sample
-    boost::uniform_01<rng_type&, real> unifDistrib(rng);
-    real r = unifDistrib() * m_tree.head().Property(id);
+    boost::uniform_01<rng_type&, double> unifDistrib(rng);
+    double r = unifDistrib() * m_tree.head().Property(id);
 
     WeightExtractor we(id);
     assert(abs((m_tree.head().Property(id) - we(m_tree.head()))/m_tree.head().Property(id)) < 1e-9);
@@ -615,7 +615,7 @@ int Sweep::Ensemble::Select(Sweep::PropID id, rng_type &rng) const
 // SCALING AND PARTICLE DOUBLING.
 
 // Returns the scaling factor due to internal ensemble processes.
-real Sweep::Ensemble::Scaling() const
+double Sweep::Ensemble::Scaling() const
 {
     // The scaling factor includes the contraction term and the doubling term.
     return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
@@ -641,12 +641,57 @@ const Sweep::Ensemble::particle_cache_type & Sweep::Ensemble::GetSums(void) cons
 
 // Returns the sum of a property in the ParticleData class
 // over all particles.
-real Sweep::Ensemble::GetSum(Sweep::PropID id) const
+double Sweep::Ensemble::GetSum(Sweep::PropID id) const
 {
     if(id != Sweep::iUniform)
         return m_tree.head().Property(id);
     else
         return m_count;
+}
+
+/*!
+ * Returns the fitting factor 'alpha' for the particle ensemble. Reference is
+ * Appel, J. et al (2000) Combustion & Flame 121, 122-136, also known as the
+ * ABF soot model.
+ *
+ *  alpha = tanh(a/log10{mu1} + b)
+ *
+ *  a = 12.65 - 0.00563 * T
+ *  b = -1.38 + 0.00068 * T
+ *  mu1 = average number of C atoms per particle
+ *
+ * Note that mu1 is called the 'reduced first size moment' and is usually the
+ * average mass of particles in the ensemble; however in the referenced
+ * version the mass is represented by the number of carbon atoms per particle.
+ * See Frenklach & Wang (1994) in Soot Formation in Combustion: Mechanisms
+ * and Models pp 165.
+ *
+ * Here the average mass is first estimated using the Tree Cache, then the
+ * number of C atoms using the the molecular weight of carbon (hard-coded).
+ * Could automatically get MW through something like:
+ * m_particles[0]->Primary()->ParticleModel()->Components()[0]->MolWt()
+ *
+ * @param[in]   T   Local temperature
+ *
+ * @return          Alpha for the ensemble (ABF model)
+ */
+double Sweep::Ensemble::Alpha(double T) const {
+    double alpha(0.0), mu1(0.0);
+
+    // Get mu1 (average mass per particle)
+    // Use the cache for MUCH faster calculation.
+    double mW = Count()>0 ? GetSum(iWM) : 0.0;
+    double invTotalWeight = Count()>0 ? 1.0/GetSum(iW) : 0.0;
+    mu1 = mW * invTotalWeight * Sweep::NA / 0.01201;    // Mw in kg/mol
+
+    // Now find alpha
+    if (mu1 > 0.0) {
+        double a = 12.65 - 0.00563 * T;
+        double b = -1.38 + 0.00068 * T;
+        alpha = std::max(0.0, tanh((a / log10(mu1)) + b));
+    }
+
+    return alpha;
 }
 
 // UPDATE ENSEMBLE.
@@ -1017,6 +1062,6 @@ Ensemble::WeightExtractor::WeightExtractor(const Sweep::PropID id)
  *
  * @return      The weight extracted from the cache
  */
-real Ensemble::WeightExtractor::operator()(const particle_cache_type& cache) const {
+double Ensemble::WeightExtractor::operator()(const particle_cache_type& cache) const {
     return cache.Property(mId);
 }

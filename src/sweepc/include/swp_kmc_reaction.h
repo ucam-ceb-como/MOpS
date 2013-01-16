@@ -60,23 +60,23 @@ namespace Sweep {
         class PAHStructure;
         class Reaction {
         public:
-            //typedef Utils::LinearInterpolator<real, real> Interpolator;
+            //typedef Utils::LinearInterpolator<double, double> Interpolator;
             //! Default Constructor
             Reaction();
             //! Constructor from Arrhenius constants
-            Reaction(real A_c, real n_c, real E_c, int species_c);
+            Reaction(double A_c, double n_c, double E_c, int species_c);
             //! Destructors
             virtual ~Reaction();//default
 
             // Read Processes
             //! Calculate rate of equation using gas profiles in model at time t
-            real getRate(const KMCGasPoint& gp/*, const real& t*/) const;
+            double getRate(const KMCGasPoint& gp/*, const double& t*/) const;
 
         private:
             //! Arrhenius Constants arranged in order: A, n, E
-            real m_A;
-            real m_n;
-            real m_E;
+            double m_A;
+            double m_n;
+            double m_E;
             // Species name
             int m_r_species;
         };

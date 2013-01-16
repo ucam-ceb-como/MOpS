@@ -91,7 +91,7 @@ public:
 
     //! Perform a coagulation with particles chosen according to the additive kernel
     virtual int Perform(
-        real t,
+        double t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
@@ -100,15 +100,15 @@ public:
     //! Perform an event to transfer mass from gasphase to particle pahse. This function is only used for PAH-PP model
     int AddInceptedPAH(
         int i,
-        real t,
+        double t,
         Cell &sys,
         rng_type &rng) const;
 
 	// TOTAL RATE CALCULATIONS.
 
     // Returns rate of the process for the given system.
-    real Rate(
-        real t,          // Time.
+    double Rate(
+        double t,          // Time.
         const Cell &sys, // System for which to calculate rate.
         const Geometry::LocalGeometry1d &local_geom
         ) const;
@@ -118,11 +118,11 @@ public:
     // Returns the number of rate terms for this process.
     unsigned int TermCount(void) const;
 
-    // Calculates the rate terms given an iterator to a real vector. The 
+    // Calculates the rate terms given an iterator to a double vector. The 
     // iterator is advanced to the position after the last term for this
     // process.  Returns the sum of all terms.
-    real RateTerms(
-        real t,                  // Time.
+    double RateTerms(
+        double t,                  // Time.
         const Cell &sys,         // System for which to calculate rate terms.
         const Geometry::LocalGeometry1d &local_geom,                  // position information
         fvector::iterator &iterm // Iterator to the first term.

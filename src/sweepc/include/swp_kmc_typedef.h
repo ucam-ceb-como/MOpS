@@ -102,7 +102,7 @@ namespace Sweep {
             TEST_STRUCT, NONE};
 
         //! typedefs used in the model
-        typedef std::vector<real> rvector;
+        typedef std::vector<double> rvector;
         typedef std::vector<int> intvector;
         typedef int angletype;
         typedef int coordtype;

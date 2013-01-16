@@ -78,7 +78,7 @@ public:
     // However, the particles in the system object are updated accordingly.
     void Solve(
         Mops::Reactor &r,           // The reactor to solve.
-        real tstop,                 // The end time for the step.
+        double tstop,                 // The end time for the step.
         int nsteps,                 // Number of internal steps to take.
         int niter,                  // Number of internal iterations to take.
         rng_type &rng,              // Random number generator
@@ -97,8 +97,8 @@ private:
 
     // Uses linear interpolation to return the chemical conditions
     // at a given time using a profile of Idealgas objects.
-    real linInterpGas(
-        real t,                      // Time.
+    double linInterpGas(
+        double t,                      // Time.
         Sprog::Thermo::IdealGas &gas // Output gas conditions.
         ) const;
 };

@@ -57,11 +57,11 @@ using namespace Sprog;
 namespace Camflow{
     class CamProfile : public CamConc {
 
-        std::vector<doublereal> u_pos, u_temp, u_species_pos, u_frac;
+        std::vector<double> u_pos, u_temp, u_species_pos, u_frac;
         std::vector<std::string> u_species;
-        std::map<std::string, doublereal> list_prdt, list_intmd;
-        std::vector<doublereal> m_prdt, m_intmd;
-        doublereal mWidth, mCenter;
+        std::map<std::string, double> list_prdt, list_intmd;
+        std::vector<double> m_prdt, m_intmd;
+        double mWidth, mCenter;
         int fracType;
         bool flag_loadFracs, flag_loadTemp;
         Array2D start;
@@ -81,8 +81,8 @@ namespace Camflow{
         /*
          *set mixing length and mixing width
          */
-        void setMixingCenter(doublereal len);
-        void setMixingWidth(doublereal len);
+        void setMixingCenter(double len);
+        void setMixingWidth(double len);
         /*
          *populte the product and intermediate mass fracs
          */
@@ -106,17 +106,17 @@ namespace Camflow{
         Array2D& getStartProfile();
 
         //set guess for products
-        void setProductSpecies(std::map<std::string, doublereal> spec);
+        void setProductSpecies(std::map<std::string, double> spec);
         //set guess for intermediates
-        void setIntermediateSpecies(std::map<std::string, doublereal> spec);
+        void setIntermediateSpecies(std::map<std::string, double> spec);
 
         //return the initial species guess
-        void getmassFracs(std::map<std::string,doublereal>& spec, Mechanism& mech, std::vector<doublereal>& frac);
+        void getmassFracs(std::map<std::string,double>& spec, Mechanism& mech, std::vector<double>& frac);
 
         //set the user defined temp profile
-        void setUserTemp(doublereal pos, doublereal temp);
+        void setUserTemp(double pos, double temp);
 
-        void setUserFrac(doublereal pos, doublereal temp, std::string species);
+        void setUserFrac(double pos, double temp, std::string species);
 
         const bool flagLoadFracs() const
         {
@@ -129,13 +129,13 @@ namespace Camflow{
         };
 
         //return the user defined temperature based on the interpolation
-        doublereal getUserDefTemp(const doublereal& pos);
-        doublereal getUserDefFracs(const doublereal& pos, const std::string species);
+        double getUserDefTemp(const double& pos);
+        double getUserDefFracs(const double& pos, const std::string species);
         //set temperature based on a gaussian
-        void setGaussTempProfile(std::vector<doublereal>& vTemp);
+        void setGaussTempProfile(std::vector<double>& vTemp);
 
         //return the position vector
-        std::vector<doublereal>& getPosition();
+        std::vector<double>& getPosition();
 
 
     };

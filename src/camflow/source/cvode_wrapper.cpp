@@ -4,7 +4,7 @@ using namespace Camflow;
 
 extern "C"{
 
-    int cvodeResid(doublereal time, N_Vector y, N_Vector ydot, void *udata){
+    int cvodeResid(double time, N_Vector y, N_Vector ydot, void *udata){
         ((CamResidual*)(udata))->eval(time,NV_DATA_S(y),NV_DATA_S(ydot), false);
         return 0;
     }
@@ -21,8 +21,8 @@ CVodeWrapper::~CVodeWrapper()
     destroy();
 }
 
-void CVodeWrapper::init(int n, std::vector<doublereal>& solnVec, doublereal tol,
-               doublereal rtol,doublereal maxIntTime ,int band, CamResidual& cr, doublereal iniTime){
+void CVodeWrapper::init(int n, std::vector<double>& solnVec, double tol,
+               double rtol,double maxIntTime ,int band, CamResidual& cr, double iniTime){
 
     reacPtr = &cr;
 
@@ -52,8 +52,8 @@ void CVodeWrapper::init(int n, std::vector<doublereal>& solnVec, doublereal tol,
 
 }
 
-void CVodeWrapper::initVectorTol(int n, std::vector<doublereal>& solnVec, doublereal aTolTemp[],
-               doublereal rtol,doublereal maxIntTime ,int band, CamResidual& cr, doublereal iniTime){
+void CVodeWrapper::initVectorTol(int n, std::vector<double>& solnVec, double aTolTemp[],
+               double rtol,double maxIntTime ,int band, CamResidual& cr, double iniTime){
 
     reacPtr = &cr;
 
@@ -93,17 +93,17 @@ void CVodeWrapper::initVectorTol(int n, std::vector<doublereal>& solnVec, double
 /*
  *additional solver control
  */
-void CVodeWrapper::setIniStep(doublereal istep){
+void CVodeWrapper::setIniStep(double istep){
     CVodeSetInitStep(cvode_mem,istep);
 }
 /*
  *set the max allowed step size
  */
-void CVodeWrapper::setMaxStep(doublereal maxStep){
+void CVodeWrapper::setMaxStep(double maxStep){
     CVodeSetMaxStep(cvode_mem,maxStep);
 }
 
-doublereal& CVodeWrapper::solve(int stopMode){
+double& CVodeWrapper::solve(int stopMode){
 
     int flag;
     do{
@@ -124,7 +124,7 @@ doublereal& CVodeWrapper::solve(int stopMode){
 
 }
 
-void CVodeWrapper::solve(int stopMode, doublereal resTol){
+void CVodeWrapper::solve(int stopMode, double resTol){
 
     int flag;
     do{
@@ -142,7 +142,7 @@ void CVodeWrapper::solve(int stopMode, doublereal resTol){
 
 }
 
-void CVodeWrapper::solveDAE(int stopMode, doublereal resTol){
+void CVodeWrapper::solveDAE(int stopMode, double resTol){
 
     int flag;
     static int iter = 0;
@@ -181,7 +181,7 @@ void CVodeWrapper::destroy(){
 
 void CVodeWrapper::calcResNorm(){
     resNorm = 0;
-    doublereal *yp;
+    double *yp;
     yp = NV_DATA_S(yPrime);
     for(int i=0; i<eqnSize; i++)
         resNorm += yp[i]*yp[i];

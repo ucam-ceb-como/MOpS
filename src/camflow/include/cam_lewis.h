@@ -39,7 +39,7 @@ public:
        EXTENDEDLAGRANGIAN
     };
 
-    doublereal sootFlameTimeThreshold;
+    double sootFlameTimeThreshold;
 
     LewisNumber
     (
@@ -54,8 +54,8 @@ public:
     inline const int& type() const {return lewisType_;}
     inline const int& sootFlameletType() const {return sootFlameletType_;}
 
-    doublereal operator()(const int& Z, const int& species) const;
-    doublereal& calcLewis(const int& Z, const int& species);
+    double operator()(const int& Z, const int& species) const;
+    double& calcLewis(const int& Z, const int& species);
 
 };
 

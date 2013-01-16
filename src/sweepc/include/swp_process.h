@@ -111,10 +111,10 @@ public:
 
     // SCALING FACTOR
     //! Scaling factor for rate.
-    real A(void) const {return m_a;}
+    double A(void) const {return m_a;}
 
     //! Sets the rate constant.
-    void SetA(real a) {m_a = a;}
+    void SetA(double a) {m_a = a;}
 
     // REACTANTS.
 
@@ -163,8 +163,8 @@ public:
 	// TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
     //! Rate of the process for the given system.
-    virtual real Rate(
-        real t,          // Time.
+    virtual double Rate(
+        double t,          // Time.
         const Cell &sys, // System for which to calculate rate.
         const Geometry::LocalGeometry1d& local_geom
         ) const = 0;
@@ -176,11 +176,11 @@ public:
     //! Returns the number of rate terms for this process.
     virtual unsigned int TermCount(void) const = 0;
 
-    // Calculates the rate terms given an iterator to a real vector. The 
+    // Calculates the rate terms given an iterator to a double vector. The 
     // iterator is advanced to the position after the last term for this
     // process.  Returns the sum of all rate terms.
-    virtual real RateTerms(
-        real t,                  // Time.
+    virtual double RateTerms(
+        double t,                  // Time.
         const Cell &sys,         // System for which to calculate rate terms.
         const Geometry::LocalGeometry1d& local_geom,
         fvector::iterator &iterm // Iterator to the first term.
@@ -200,7 +200,7 @@ public:
      * \return      0 on success, otherwise negative.
      */
     virtual int Perform(
-        real t,
+        double t,
         Cell &sys,
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
@@ -211,7 +211,7 @@ public:
     // FICTICIOUS EVENTS.
 
     //! See whether an event is fictitious
-    static bool Fictitious(real majr, real truer, rng_type &rng);
+    static bool Fictitious(double majr, double truer, rng_type &rng);
 
     // READ/WRITE/COPY.
 
@@ -241,14 +241,14 @@ protected:
     Sprog::StoichMap m_prod; // Product species stoichiometry.
 
     // Process rate scaling factor
-    real m_a;
+    double m_a;
 
     // Default constructor is protected so that processes cannot
     // be defined without knowledge of the parent mechanism.
     Process(void);
 
     //!Gas-phase chemistry contribution to the rate expression.
-    real chemRatePart(
+    double chemRatePart(
         const EnvironmentInterface &gas
         ) const;
 
@@ -256,7 +256,7 @@ protected:
     // products defined for this process.
     void adjustGas(
         Cell &sys,     // System to update.
-        real wt,       // Stochastic weight of particle
+        double wt,       // Stochastic weight of particle
         unsigned int n // Number of times to apply process.
          = 1           //  - Default is one time.
          ) const;

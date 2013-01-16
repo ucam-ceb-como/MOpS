@@ -75,13 +75,13 @@ public:
     virtual Coagulation *const Clone(void) const = 0;
 
     //! Calculate rates for a sequence of coagulation processes
-    static real CalcRates(real t, const Cell &sys,
+    static double CalcRates(double t, const Cell &sys,
                           const Geometry::LocalGeometry1d &local_geom,
                           const CoagPtrVector &coags,
                           fvector &rates, unsigned int start = 0);
 
     //! Calculate rate terms for a sequence of coagulation processes
-    static real CalcRateTerms(real t, const Cell &sys,
+    static double CalcRateTerms(double t, const Cell &sys,
                               const Geometry::LocalGeometry1d &local_geom,
                               const CoagPtrVector &coags,
                               fvector::iterator &iterm);
@@ -136,25 +136,25 @@ protected:
     Coagulation(void) {};
     
     //! Actually stick two particles together (intended for DSA use)
-    int JoinParticles(const real t, const int ip1, Particle *sp1,
+    int JoinParticles(const double t, const int ip1, Particle *sp1,
                       const int ip2, Particle *sp2,
                       Cell &sys, rng_type &rng) const;
 
     //! Select two particles and stick them together in a weighted particle event
-    int WeightedPerform(const real t, const Sweep::PropID prop1,
+    int WeightedPerform(const double t, const Sweep::PropID prop1,
                         const Sweep::PropID prop2,
                         const Sweep::Processes::CoagWeightRule weight_rule,
                         Cell &sys, rng_type &rng,
                         Sweep::Processes::Coagulation::MajorantType maj) const;
 
     //! Calculate kernel between two particles
-    virtual real CoagKernel(const Particle &sp1, const Particle &sp2,
+    virtual double CoagKernel(const Particle &sp1, const Particle &sp2,
                     const Cell& sys) const = 0;
 
 
 
     //! Calculate majorant kernel between two particles
-    virtual real MajorantKernel(const Particle &sp1, const Particle &sp2,
+    virtual double MajorantKernel(const Particle &sp1, const Particle &sp2,
                                 const Cell& sys, const MajorantType maj) const = 0;
 private:
 

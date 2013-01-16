@@ -67,7 +67,7 @@ namespace Camflow
 
         inletStruct soln_inlet;
 
-        doublereal resNorm;
+        double resNorm;
 
         std::vector<std::string> headerData;
 
@@ -95,22 +95,22 @@ namespace Camflow
          *the following 3 functions are called by
          *the DAE solver
          */
-        int eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval);
+        int eval(double x, double* y, double* ydot, bool jacEval);
 
         /*
          * report the results without residual monitoring
          */
-        void report(doublereal t, doublereal* solution);
+        void report(double t, double* solution);
 
         /*
          * console output with resisual monitoring
          */
-        void report(doublereal t, doublereal* solution, doublereal& res);
+        void report(double t, double* solution, double& res);
 
         /*
          * write the results to output file
          */
-        void reportToFile(doublereal t, doublereal* soln);
+        void reportToFile(double t, double* soln);
 
         /*
          *solve the premix reactor for the stand alone case
@@ -124,8 +124,8 @@ namespace Camflow
         void solve
         (
             std::vector<Thermo::Mixture>& cstrs,
-            const std::vector< std::vector<doublereal> >& iniSource,
-            const std::vector< std::vector<doublereal> >& fnlSource,
+            const std::vector< std::vector<double> >& iniSource,
+            const std::vector< std::vector<double> >& fnlSource,
             Mechanism& mech,
             CamControl& cc,
             CamAdmin& ca,
@@ -158,21 +158,21 @@ namespace Camflow
         /*
          * return the initial solution vector
          */
-        void getInitial(std::vector<doublereal>& initial);
+        void getInitial(std::vector<double>& initial);
 
         /*
          *residual function definition.
          */
-        void residual(const doublereal& t, doublereal *y, doublereal *f);
+        void residual(const double& t, double *y, double *f);
 
         /*
          *definition of boundary condition for the total continuity
          */
         void massFlowBoundary
         (
-            const doublereal& t,
-            doublereal *y,
-            doublereal *f
+            const double& t,
+            double *y,
+            double *f
         );
 
         /*
@@ -182,25 +182,25 @@ namespace Camflow
          */
         void massFlowResidual
         (
-            const doublereal& time,
-            doublereal* y,
-            doublereal* f
+            const double& time,
+            double* y,
+            double* f
         );
 
         /*
          *definition of species boundary conditions
          */
-        void speciesBoundary(const doublereal& t, doublereal *y, doublereal *f);
+        void speciesBoundary(const double& t, double *y, double *f);
 
         /*
          *definition of energy equation boundary conditions
          */
-        void energyBoundary(const doublereal& t, doublereal *y, doublereal *f);
+        void energyBoundary(const double& t, double *y, double *f);
 
         /*
          *definition of moment conditions for soot model
          */
-        void momentBoundary(const doublereal& t, doublereal *y, doublereal *f);
+        void momentBoundary(const double& t, double *y, double *f);
 
         /*
          * set up the solution vector of dependent variables
@@ -227,25 +227,25 @@ namespace Camflow
          * save the flow variables. i.e. extract the bulk velocity
          * and store it for later use
          */
-        void saveFlowVariables(doublereal* y);
+        void saveFlowVariables(double* y);
 
-        doublereal getResidual() const { return 0.0; };
+        double getResidual() const { return 0.0; };
 
         void speciesResidual
         (
-            const doublereal& time,
-            doublereal* y,
-            doublereal* f
+            const double& time,
+            double* y,
+            double* f
         );
 
         void energyResidual
         (
-            const doublereal& time,
-            doublereal* y,
-            doublereal* f
+            const double& time,
+            double* y,
+            double* f
         );
 
-        void massMatrix(doublereal** M);
+        void massMatrix(double** M);
     };
 
 } // End Camflow Namespace

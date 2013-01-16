@@ -149,8 +149,8 @@ void Batch::solve()
 
       RadauWrapper radauWrapper;
 
-        std::vector<doublereal> relTolVector;
-        std::vector<doublereal> absTolVector;
+        std::vector<double> relTolVector;
+        std::vector<double> absTolVector;
 
         relTolVector.push_back(control_.getSpeciesRelTol());
         absTolVector.push_back(control_.getSpeciesAbsTol());
@@ -186,7 +186,7 @@ void Batch::solve()
 /*
  * function called by the ODE solver
  */
-int Batch::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval)
+int Batch::eval(double x, double* y, double* ydot, bool jacEval)
 {
     residual(x,y,ydot);
     return 0;
@@ -194,7 +194,7 @@ int Batch::eval(doublereal x, doublereal* y, doublereal* ydot, bool jacEval)
 
 
 //residual definitions
-void Batch::residual(const doublereal& time, doublereal* y, doublereal* f)
+void Batch::residual(const double& time, double* y, double* f)
 {
     updateMixture(y);               // saves the dependent variables
     speciesResidual(time,y,f);      // solve species residual
@@ -202,16 +202,16 @@ void Batch::residual(const doublereal& time, doublereal* y, doublereal* f)
     sootResidual(time,y,f);         // solve soot residual
 }
 
-void Batch::updateMixture(doublereal* y)
+void Batch::updateMixture(double* y)
 {
     /*
      *update the mixture with the current mass fraction,
      *temperature and density
      */
-    doublereal temperature = y[ptrT];
-    std::vector<doublereal> massfracs(nSpc,0.0);
-    std::vector<doublereal> concentrations(nSpc,0.0);
-    std::vector<doublereal> moments(nMoments,0.0);
+    double temperature = y[ptrT];
+    std::vector<double> massfracs(nSpc,0.0);
+    std::vector<double> concentrations(nSpc,0.0);
+    std::vector<double> moments(nMoments,0.0);
     for (int l=0; l< nSpc; ++l)
     {
         massfracs[l] = y[l];
@@ -266,7 +266,7 @@ void Batch::updateMixture(doublereal* y)
 }
 
 //species residual definition
-void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f)
+void Batch::speciesResidual(const double& x, double* y, double* f)
 {
 
     for (int l = 0; l < nSpc; ++l)
@@ -277,7 +277,7 @@ void Batch::speciesResidual(const doublereal& x, doublereal* y, doublereal* f)
 }
 
 //temperature residual
-void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f)
+void Batch::energyResidual(const double& x, double* y, double* f)
 {
 
     int engModel = admin_.getEnergyModel();
@@ -290,11 +290,11 @@ void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f)
     {
         //get the molar enthalpy
         CamMath cm;
-        std::vector<doublereal> eth = camMixture_->getMolarEnthalpy();
-        doublereal cp = camMixture_->getSpecificHeatCapacity();
+        std::vector<double> eth = camMixture_->getMolarEnthalpy();
+        double cp = camMixture_->getSpecificHeatCapacity();
         //heat release due to chemical reactions
-        doublereal heat = cm.sumVector(eth,wdot);
-        doublereal extSource = 0.0;
+        double heat = cm.sumVector(eth,wdot);
+        double extSource = 0.0;
 
         /*
          * Calculation of heat flux from the reactor wall
@@ -305,10 +305,10 @@ void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f)
          */
         if(engModel == admin_.NONISOTHERMAL)
         {
-            doublereal lambda = camMixture_->getThermalConductivity(opPre);
-            doublereal eta = camMixture_->getViscosity();
-            doublereal dia = reacGeom_.getDia();
-            doublereal ht = admin_.getHeatTransferCoeff(x,vel,dia,rho,eta,lambda,cp);
+            double lambda = camMixture_->getThermalConductivity(opPre);
+            double eta = camMixture_->getViscosity();
+            double dia = reacGeom_.getDia();
+            double ht = admin_.getHeatTransferCoeff(x,vel,dia,rho,eta,lambda,cp);
             extSource = ht*reacGeom_.getSurfAres_l()*(admin_.getWallTemp() - y[ptrT]);
         }
 
@@ -319,7 +319,7 @@ void Batch::energyResidual(const doublereal& x, doublereal* y, doublereal* f)
 
 
 // soot residual definition
-void Batch::sootResidual(const doublereal& x, doublereal* y, doublereal* f)
+void Batch::sootResidual(const double& x, double* y, double* f)
 {
     /*
      *moment residuals
@@ -332,7 +332,7 @@ void Batch::sootResidual(const doublereal& x, doublereal* y, doublereal* f)
         }
 
     	/*
-    	std::vector<doublereal> mom;
+    	std::vector<double> mom;
         for (int m=0; m<nMoments; ++m)
         {
             mom.push_back(y[nSpc+m]);
@@ -383,7 +383,7 @@ std::vector<std::string> Batch::header(){
 
 }
 //report the solution
-void Batch::report(doublereal x, doublereal* soln){
+void Batch::report(double x, double* soln){
     //std::setw(5); std::setprecision(4);
     static int nStep =0;
     std::cout.width(5);
@@ -399,7 +399,7 @@ void Batch::report(doublereal x, doublereal* soln){
 /*
  *this is a dummy function
  */
-void Batch::report(doublereal x, doublereal* soln, doublereal& res){
+void Batch::report(double x, double* soln, double& res){
     static int nStep = 0;
     std::cout.width(5);
     std::cout.setf(std::ios::scientific);
@@ -410,12 +410,12 @@ void Batch::report(doublereal x, doublereal* soln, doublereal& res){
     nStep++;
 }
 
-void Batch::reportToFile(doublereal time, doublereal* soln)
+void Batch::reportToFile(double time, double* soln)
 {
 
     //prepare to report
-    doublereal sum =0;
-    std::vector<doublereal> data;
+    double sum =0;
+    std::vector<double> data;
     data.clear();
     data.push_back(time);
     data.push_back(opPre);
@@ -423,7 +423,7 @@ void Batch::reportToFile(doublereal time, doublereal* soln)
     data.push_back(soln[ptrT]);
 
     if(admin_.getSpeciesOut()==admin_.MOLE){
-        std::vector<doublereal> molefracs;
+        std::vector<double> molefracs;
         molefracs = camMixture_->MoleFractions();
         sum =0.0;
         for (int l = 0; l < nSpc; l++) {
@@ -435,7 +435,7 @@ void Batch::reportToFile(doublereal time, doublereal* soln)
         }
 
     }else{
-        std::vector<doublereal> massfracs;
+        std::vector<double> massfracs;
         camMixture_->GetMassFractions(massfracs);
         sum =0.0;
         for (int l = 0; l < nSpc; l++) {
@@ -460,11 +460,11 @@ void Batch::reportToFile(doublereal time, doublereal* soln)
 
 }
 
-doublereal Batch::getResidual()
+double Batch::getResidual()
 const
 {
 
-    doublereal resNorm=0;
+    double resNorm=0;
 
     for (int i=0; i<nSpc*mCord; ++i)
     {
@@ -482,5 +482,5 @@ const
 /*
  *mass matrix evaluation
  */
-void Batch::massMatrix(doublereal** M)
+void Batch::massMatrix(double** M)
 {}

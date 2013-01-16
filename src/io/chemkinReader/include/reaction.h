@@ -12,6 +12,8 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <string>
+using namespace std;
 
 namespace IO
 {
@@ -24,6 +26,34 @@ namespace IO
         double E; // Activation energy.
     };
 
+	struct Cov
+	{
+		double Eta; // Eta.
+		double Miu; // Miu.
+		double Epsilon; // e.
+		std::string spName; // species name associated with the coverage param. 
+		 
+		template<class Archive>
+		void serialize(Archive & ar, const unsigned int /* file_version */)
+		{
+          ar & spName & Eta & Miu & Epsilon;
+		}
+	};
+	struct Ford
+	{
+		double F_k; // Forward reaction order.
+		std::string spName; // species name associated with the coverage param. 
+		
+		template<class Archive>
+		void serialize(Archive & ar, const unsigned int /* file_version */)
+		{
+          ar & spName & F_k;
+		}
+	}; 
+	
+	typedef std::vector<Cov> CovVector;
+	typedef std::vector<Ford> FordVector; 
+	
     class Reaction
     {
 
@@ -47,16 +77,26 @@ namespace IO
             // Third bodies.
             //! Set to true if this reaction requires third bodies.
             bool flagThirdBody_;
-            bool flagLOW_, flagTROE_, flagSRI_;
+            bool flagLOW_, flagTROE_, flagSRI_; 
+			bool flagFORD_, flagSTICK_, flagCOV_, flagMWON_;
             //! Set if (+M) or e.g. (+H2O) is found.
             bool flagPressureDependent_;
             //! Reaction third bodies and their coefficients.
             std::multimap<std::string, double> thirdBodies_;
 
             std::string fallOffBody_;
+			
+			Cov coverageParam_; 
+			Ford fordParam_; 
 
-            std::vector<double> LOW_, TROE_, SRI_;
-
+			//! Set to true if this surface reaction has flag
+			
+            std::vector<double> LOW_, TROE_, SRI_; // No need MWOFF_ or MWON_, STICK_ since both using ARRHENIUS PARAMS (NO ADDITIONAL PARAMS). 
+			CovVector COV_; 
+			FordVector FORD_; 
+			
+		
+			
         public:
 
             Reaction();
@@ -96,6 +136,24 @@ namespace IO
             const std::vector<double>& getSRI() const;
             const bool& hasSRI() const;
 
+	    void setFORD(double F, std::string &name);
+            const std::vector<Ford>& getFORD() const;
+	    //Ford *const getFORDElement(unsigned int a) const;
+            const bool& hasFORD() const;
+	    unsigned int fordParamCount() const;  
+			
+	    void setCOV(double e, double m, double eps, std::string &name);
+            const std::vector<Cov>& getCOV() const;
+	    //Cov *getCOVElement(unsigned int a) const;
+            const bool& hasCOV() const;
+	    unsigned int coverageParamCount() const;  
+			
+	    void setSTICK();
+            const bool& hasSTICK() const;
+			
+	    void setMWON();
+            const bool& hasMWON() const;
+			
             void setPressureDependent();
             const bool& isPressureDependent() const;
 

@@ -57,9 +57,11 @@ const std::string BinTreeStats::m_statnames[BinTreeStats::STAT_COUNT] = {
     std::string("Avg. Sintering Level (-)"),
     std::string("Avg. Sintering Rate (m2/s)"),
     std::string("Avg. Sintering Time (s)"),
-    std::string("GStdev of Mean Collision Diameter (-)"),
-    std::string("GStdev of Mean Avg. Primary Diameter (-)"),
-    std::string("Mean GStdev of Primary Diameter (-)")
+    std::string("GStdev of Collision Diameter (-)"),
+    std::string("GStdev of Avg. Primary Diameter (-)"),
+    std::string("Mean GStdev of Primary Diameter (-)"),
+    std::string("GMean of Collision Diameter (m)"),
+    std::string("GMean of Avg. Primary Diameter (m)")
 };
 
 const IModelStats::StatType BinTreeStats::m_mask[BinTreeStats::STAT_COUNT] = {
@@ -70,7 +72,9 @@ const IModelStats::StatType BinTreeStats::m_mask[BinTreeStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. sint time,
     IModelStats::Avg,  // Gstdev of mean dcol
     IModelStats::Avg,  // Gstdev of mean dpri
-    IModelStats::Avg   // Mean gstdev of dpri
+    IModelStats::Avg,  // Mean gstdev of dpri
+    IModelStats::Avg,  // Gmean of dcol
+    IModelStats::Avg   // Gmean of avg dpri
 };
 
 const std::string BinTreeStats::m_const_pslnames[BinTreeStats::PSL_COUNT] = {
@@ -129,14 +133,14 @@ BinTreeStats &BinTreeStats::operator=(const BinTreeStats &rhs)
  * @param e         Ensemble to do the stats for
  * @param scale     Scale factor
  */
-void BinTreeStats::Calculate(const Ensemble &e, real scale)
+void BinTreeStats::Calculate(const Ensemble &e, double scale)
 {
     // Empty the stats array.
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
     // Calculate total weight
-    real TotalWeight = e.Count()>0 ? e.GetSum(iW) : 0.0;
-    real invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+    double TotalWeight = e.Count()>0 ? e.GetSum(iW) : 0.0;
+    double invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
@@ -153,15 +157,15 @@ void BinTreeStats::Calculate(const Ensemble &e, real scale)
         const AggModels::BinTreePrimary * const prim =
                 dynamic_cast<const AggModels::BinTreePrimary*>((*ip)->Primary());
 
-        real sz = (*ip)->Property(m_statbound.PID);
-        real wt = (*ip)->getStatisticalWeight() * invTotalWeight;
+        double sz = (*ip)->Property(m_statbound.PID);
+        double wt = (*ip)->getStatisticalWeight() * invTotalWeight;
 
         // Check if the value of the property is within the stats bound
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
             m_stats[iNPrim]     += prim->GetNumPrimary()  * wt;
             m_stats[iPrimDiam]  += prim->GetPrimaryDiam() * wt
-                    / (real) prim->GetNumPrimary();
+                    / (double) prim->GetNumPrimary();
             m_stats[iSintLevel] += prim->GetAvgSinterLevel() * wt;
             m_stats[iSintRate]  += prim->GetSintRate() * wt;
             m_stats[iSintTime]  += prim->GetSintTime() * wt;
@@ -169,7 +173,7 @@ void BinTreeStats::Calculate(const Ensemble &e, real scale)
 
             // Collect the collision and primary diameters
             d.push_back(prim->CollDiameter());
-            d.push_back(prim->GetPrimaryDiam() / (real) prim->GetNumPrimary());
+            d.push_back(prim->GetPrimaryDiam() / (double) prim->GetNumPrimary());
             diams.push_back(d);
             weights.push_back(wt);
             d.clear();
@@ -180,10 +184,12 @@ void BinTreeStats::Calculate(const Ensemble &e, real scale)
 
     // Now get the geometric standard devs, using [0] for dcol, [1] for dpri
     // Default to 1.0 GSTDEV (Can't have GSTDEV=0)
-    fvector gstdevs;
-    gstdevs = GetGeometricStdev(2u, diams, weights);
+    fvector gstdevs, gmeans;
+    GetGeometricStdev(2u, diams, weights, gmeans, gstdevs);
     m_stats[iCollGStdev] = gstdevs[0];
     m_stats[iPrimGStdev] = gstdevs[1];
+    m_stats[iCollGMean] = gmeans[0];
+    m_stats[iPrimGMean] = gmeans[1];
 
     // Scale the summed stats and calculate the averages.
     for (unsigned int i=0; i!=STAT_COUNT; ++i) {
@@ -205,53 +211,54 @@ void BinTreeStats::Calculate(const Ensemble &e, real scale)
  * @param diams         Vector of length number of particles, containing
  *                          a fvector of diameters for that particle.
  * @param weights       Vector of length number of particles storing weights
- * @return              Vector with geo stdevs for diameter types
+ * @param gmeans        Output vector for gmeans
+ * @param gstdevs       Output vector for gstdevs
  */
-fvector BinTreeStats::GetGeometricStdev(
+void BinTreeStats::GetGeometricStdev(
         const unsigned int num,
         std::vector<fvector> diams,
-        fvector weights) const {
+        fvector weights,
+        fvector &gmeans,
+        fvector &gstdevs) const {
 
     // Some checks first
-    if (diams.size() < size_t(1u)) {
-        // Return a default of 1.0 gstdev if no particles
-        return fvector(num,1.0);
-    }
     if (diams.size() != weights.size())
         throw std::runtime_error("Failed getting weights and diameters "
                 "in BinTreeStats::GetGeometricStdev()");
-    unsigned int i(0u); // Iterate number of particles
-    unsigned int j(0u); // Iterate diameter types
+    if (diams.size() < size_t(1u)) {
+        // Don't calculate if there aren't enough particles.
+        gmeans.resize(num, 0.0);
+        gstdevs.resize(num, 1.0);
+    } else {
+        unsigned int i(0u); // Iterate number of particles
+        unsigned int j(0u); // Iterate diameter types
 
-    // Then we must calculate the geometric means
-    fvector means;
-    means.resize(num, 1.0);
+        // Then we must calculate the geometric means
+        gmeans.resize(num, 1.0);
 
-    for (i = 0; i != diams.size(); i++) {
-        // Loop over diameter types
-        for (j = 0; j != diams[i].size(); j++) {
-            means[j] *= pow(diams[i].at(j), weights[i]);
+        for (i = 0; i != diams.size(); i++) {
+            // Loop over diameter types
+            for (j = 0; j != diams[i].size(); j++) {
+                gmeans[j] *= pow(diams[i].at(j), weights[i]);
+            }
         }
-    }
 
-    // Now we can get the geometric stdevs
-    fvector stdevs;
-    stdevs.resize(num, 0.0);
-    real dev(0.0);
-    for (i = 0; i != diams.size(); i++) {
-        // Loop over diameter types
+        // Now we can get the geometric stdevs
+        gstdevs.resize(num, 0.0);
+        double dev(0.0);
+        for (i = 0; i != diams.size(); i++) {
+            // Loop over diameter types
+            for (j = 0; j != num; j++) {
+                dev = log(diams[i].at(j) / gmeans[j]);
+                gstdevs[j] += weights[i] * dev * dev;
+            }
+        }
+
+        // Just need to do a bit more to the sums...
         for (j = 0; j != num; j++) {
-            dev = log(diams[i].at(j) / means[j]);
-            stdevs[j] += weights[i] * dev * dev;
+            gstdevs[j] = exp(sqrt(gstdevs[j]));
         }
     }
-
-    // Just need to do a bit more to the sums...
-    for (j = 0; j != num; j++) {
-        stdevs[j] = exp(sqrt(stdevs[j]));
-    }
-
-    return stdevs;
 }
 
 // Returns a vector containing the stats.
@@ -339,7 +346,7 @@ void BinTreeStats::PSL_Names(std::vector<std::string> &names,
 
 
 // Returns the PSL entry for the given particle.
-void BinTreeStats::PSL(const Sweep::Particle &sp, real time,
+void BinTreeStats::PSL(const Sweep::Particle &sp, double time,
                        fvector &psl, unsigned int start) const
 {
     // Resize vector if too small.
@@ -356,8 +363,8 @@ void BinTreeStats::PSL(const Sweep::Particle &sp, real time,
 
     // Get the PSL stats.
     if (prim != NULL) {
-        *(++j) = (real) prim->GetNumPrimary();
-        *(++j) = prim->GetPrimaryDiam() * 1.0e9 / (real)(prim->GetNumPrimary());
+        *(++j) = (double) prim->GetNumPrimary();
+        *(++j) = prim->GetPrimaryDiam() * 1.0e9 / (double)(prim->GetNumPrimary());
         *(++j) = prim->GetAvgSinterLevel();
         *(++j) = prim->GetSintTime();
         *(++j) = 1.0e9 * prim->GetPrimaryAStdDev();
@@ -444,7 +451,7 @@ void BinTreeStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mod
                 // Read stats.
                 for (unsigned int i=0; i!=n; ++i) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_stats.push_back((real)val);
+                    m_stats.push_back((double)val);
                 }
 
                 // Read number of stat names in vector.

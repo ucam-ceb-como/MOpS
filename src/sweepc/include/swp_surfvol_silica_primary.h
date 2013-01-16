@@ -61,7 +61,7 @@ public:
 
     //! Initialising constructor
     SurfVolSilicaPrimary(
-        real time,
+        double time,
         const Sweep::ParticleModel &model
     );
 
@@ -88,21 +88,21 @@ public:
 
     //! Sinters a primary for a given time
     void Sinter(
-        real dt,
+        double dt,
         Cell &sys,
         const Processes::SinteringModel &model,
         rng_type &rng,
-        real wt
+        double wt
         );
 
     //! Updates properties of the particle
     void UpdateCache();
 
     //! Gets the number of active sites (hydroxides)
-    Sweep::real GetSites() const { return GetComponent("hydroxide"); }
+    double GetSites() const { return GetComponent("hydroxide"); }
 
     //! Gets the sintering rate of the particle
-    Sweep::real GetSintRate() const {return m_sinter_rate; }
+    double GetSintRate() const {return m_sinter_rate; }
 
     //! Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;
@@ -118,13 +118,13 @@ private:
     SurfVolSilicaPrimary();
 
     //! Gets the value of one of the chemical components
-    Sweep::real GetComponent(std::string name) const;
+    double GetComponent(std::string name) const;
 
     //! Sets the value of one of the chemical components
-    void SetComponent(std::string name, Sweep::real val);
+    void SetComponent(std::string name, double val);
 
     // Sintering rate of particles
-    Sweep::real m_sinter_rate;
+    double m_sinter_rate;
 };
 
 }

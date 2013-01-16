@@ -45,7 +45,7 @@
 namespace Brush
 {
     //! Default floating point type
-    typedef Sprog::real real;
+    
 
     //! Default vector of floating point values
     typedef Sprog::fvector fvector;

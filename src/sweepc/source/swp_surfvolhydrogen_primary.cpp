@@ -62,7 +62,7 @@ SurfVolHydrogenPrimary::SurfVolHydrogenPrimary(void)
 }
 
 // Initialising constructor.
-SurfVolHydrogenPrimary::SurfVolHydrogenPrimary(real time, const Sweep::ParticleModel &model)
+SurfVolHydrogenPrimary::SurfVolHydrogenPrimary(double time, const Sweep::ParticleModel &model)
 : Primary(time, model)
 , iH(1u)
 {
@@ -127,7 +127,7 @@ AggModels::AggModelType SurfVolHydrogenPrimary::AggID(void) const {return AggMod
 void SurfVolHydrogenPrimary::UpdateCache(void)
 {
     // Store the correct surface area.
-    const real s = m_surf;
+    const double s = m_surf;
 
     // Pretend that the primary is spherical and set the cache
     // accordingly.  This will set m_surf the the surface are
@@ -145,7 +145,7 @@ void SurfVolHydrogenPrimary::UpdateCache(void)
 }
 
 // Returns the equivalent spherical particle surface area.
-real SurfVolHydrogenPrimary::SphSurfaceArea(void) const {return PI * std::pow(6.0 * m_vol / PI, TWO_THIRDS);}
+double SurfVolHydrogenPrimary::SphSurfaceArea(void) const {return PI * std::pow(6.0 * m_vol / PI, TWO_THIRDS);}
 
 // Returns the number of primary particles if the aggregate is assumed
 // to consist of mono-sized primaries.
@@ -158,7 +158,7 @@ unsigned int SurfVolHydrogenPrimary::PP_Count(void) const
 
 // Returns the primary particle diameter if the aggregate is assumed
 // to consist of mono-sized primaries.
-real SurfVolHydrogenPrimary::PP_Diameter(void) const
+double SurfVolHydrogenPrimary::PP_Diameter(void) const
 {
     // This should always be <= equiv. sphere diameter.
     return 6.0 * m_vol / m_surf;
@@ -175,15 +175,15 @@ unsigned int SurfVolHydrogenPrimary::Adjust(const fvector &dcomp, const fvector 
                                     unsigned int n)
 {
     // Calculate change in volume.
-    real dvol = 0.0;
+    double dvol = 0.0;
     for (unsigned int i=0; i!=dcomp.size(); ++i) {
         dvol += dcomp[i] * m_pmodel->Components(i)->MolWt() / 
                 m_pmodel->Components(i)->Density();
     }
-    dvol *= (real)n / NA;
+    dvol *= (double)n / NA;
 
     // Calculate change in surface area.
-    real invRadius = 0.0;
+    double invRadius = 0.0;
     if (dvol > 0.0) {
         // Inverse growth radius.
         invRadius = sqrt(4.0 * PI / m_surf);
@@ -193,8 +193,8 @@ unsigned int SurfVolHydrogenPrimary::Adjust(const fvector &dcomp, const fvector 
     }
 
     // Save new and old surface areas
-    const real oldS = m_surf;
-    const real s = m_surf + (2.0 * dvol * invRadius);
+    const double oldS = m_surf;
+    const double s = m_surf + (2.0 * dvol * invRadius);
 
     // Adjust the particle assuming that it is spherical.
     Primary::Adjust(dcomp, dvalues, rng, n);
@@ -233,7 +233,7 @@ SurfVolHydrogenPrimary &SurfVolHydrogenPrimary::Coagulate(const Primary &rhs, rn
 
 {
     // Store the resultant surface area.
-    const real s = m_surf + rhs.SurfaceArea();
+    const double s = m_surf + rhs.SurfaceArea();
 
     // Perform the coagulation.
     Primary::Coagulate(rhs, rng);
@@ -254,10 +254,10 @@ SurfVolHydrogenPrimary &SurfVolHydrogenPrimary::Coagulate(const Primary &rhs, rn
 
 // This routine sinters the Primary for the given length of
 // time using the provided sintering model.
-void SurfVolHydrogenPrimary::Sinter(real dt, Cell &sys,
+void SurfVolHydrogenPrimary::Sinter(double dt, Cell &sys,
                             const Processes::SinteringModel &model,
                             rng_type &rng,
-                            real wt)
+                            double wt)
 {
   throw std::runtime_error("sintering not implemented at present for SurfVolHydrogenPrimary");
 }
@@ -274,7 +274,7 @@ SurfVolHydrogenPrimary *const SurfVolHydrogenPrimary::Clone(void) const
 /*!
  * \return      Number of surface Hydrogens (active sites)
  */
-real SurfVolHydrogenPrimary::GetSites() const
+double SurfVolHydrogenPrimary::GetSites() const
 {
     return Composition()[iH];
 }

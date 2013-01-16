@@ -135,13 +135,13 @@ void PredCorSolver::Reset(Reactor &r)
 // Solves the coupled reactor using the predictor-corrector splitting
 // algorithm up to the stop time.  Calls the output function after
 // each iteration of the last internal step.
-void PredCorSolver::Solve(Reactor &r, real tstop, int nsteps, int niter, 
+void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter, 
                           Sweep::rng_type &rng, OutFnPtr out, void *data)
 {
     int step=0, iter=0;
 
     // Calculate step size.
-    real dt = (tstop - r.Time()) / (real)nsteps;
+    double dt = (tstop - r.Time()) / (double)nsteps;
 
     // Internal splits without file output.
     for (step=0; step<nsteps-1; ++step) {
@@ -179,8 +179,8 @@ void PredCorSolver::SolveReactor(Mops::Reactor &r,
                                  unsigned int nruns)
 {
     unsigned int icon;
-    real t1;     // Current time.
-    real dt, t2; // Stop time for each step.
+    double t1;     // Current time.
+    double dt, t2; // Stop time for each step.
 
     // Start the CPU timing clock.
     m_cpu_start = clock();
@@ -296,11 +296,11 @@ void PredCorSolver::SolveReactor(Mops::Reactor &r,
 // guess the chemistry is assumed to be constant in this interval.  The
 // initial source terms from sweep are then calculated using this chemistry
 // profile.
-void PredCorSolver::beginIteration(Reactor &r, unsigned int step, real dt)
+void PredCorSolver::beginIteration(Reactor &r, unsigned int step, double dt)
 {
     // Calculate gas profile time interval based on number of profile
     // points.
-    real h = dt / (m_gas_prof.size()-1);
+    double h = dt / (m_gas_prof.size()-1);
 
     // Generate the initial chemistry profile over this step.  The
     // first point should have already been set before this routine
@@ -348,13 +348,13 @@ void PredCorSolver::beginIteration(Reactor &r, unsigned int step, real dt)
 
 // Performs a step-wise iteration on the reactor to recalculate
 // the source terms for the gas-phase effect on the particle model.
-void PredCorSolver::iteration(Reactor &r, real dt, Sweep::rng_type &rng)
+void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
 {
     // Reset reactor and solver for another iteration.
     r = *m_reac_copy;
 
     // Note the start time.
-    real ts1=r.Time();
+    double ts1=r.Time();
 
     // Refresh from the copy of the ODE solver.
     m_ode = m_ode_copy;
@@ -375,7 +375,7 @@ void PredCorSolver::iteration(Reactor &r, real dt, Sweep::rng_type &rng)
     // source terms.
     m_cpu_mark = clock();
         // Set the stop time.    
-        real ts2 = ts1+dt;
+        double ts2 = ts1+dt;
 
         // Scale M0 according to gas-phase expansion.
         r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()
@@ -403,11 +403,11 @@ void PredCorSolver::endIteration()
 // Generates a chemistry profile over the required time interval
 // by solving the gas-phase chemistry equations with the current
 // source terms.
-void PredCorSolver::generateChemProfile(Reactor &r, real dt)
+void PredCorSolver::generateChemProfile(Reactor &r, double dt)
 {
     // Calculate time interval between gas profile points.
-    real h = dt / (real)(m_gas_prof.size()-1);
-    real t1 = r.Time();
+    double h = dt / (double)(m_gas_prof.size()-1);
+    double t1 = r.Time();
 
     // Save initial profile point.
     m_gas_prof[0].Time = t1;
@@ -449,12 +449,12 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
 
 // Calculate the adiabatic temperature change rate due to the
 // species source terms.
-Mops::real PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
+double PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
 {
     if (r.EnergyEquation() == Reactor::Adiabatic) {
         // Adiabatic temperature model.
         fvector Hs;
-        real C;
+        double C;
 
         // Calculate species enthalpies
         r.Mixture()->GasPhase().Hs(Hs);
@@ -469,7 +469,7 @@ Mops::real PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
         }
 
         // Calculate and return temperature source term.
-        real Tdot = 0.0;
+        double Tdot = 0.0;
         for (unsigned int i=0; i!=r.Mech()->GasMech().SpeciesCount(); ++i) {
             Tdot -= Hs[i] * src[i];
         }
@@ -489,7 +489,7 @@ Mops::real PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
 // allows the third point to be calculated.
 void PredCorSolver::linExSrcTerms(SrcPoint &src, 
                                   const SrcProfile &prof, 
-                                  real dt)
+                                  double dt)
 {
     if (prof.size() > 1) {
         // Set the time.
@@ -498,7 +498,7 @@ void PredCorSolver::linExSrcTerms(SrcPoint &src,
         // Pre-calculate gradient factors (use only last 2 profile points).
         SrcProfile::const_iterator j1 = prof.begin()+(prof.size()-2);
         SrcProfile::const_iterator j2 = prof.begin()+(prof.size()-1);
-        real t_ratio = dt / (j2->Time - j1->Time);
+        double t_ratio = dt / (j2->Time - j1->Time);
 
         // Find new source terms with linear extrapolation.
         for (unsigned int i=0; i!=j2->Terms.size(); ++i) {
@@ -525,7 +525,7 @@ void PredCorSolver::linExSrcTerms(SrcPoint &src,
 // Applies under-relaxation to the first source point, using the
 // second source point as the initial values.
 void PredCorSolver::relaxSrcTerms(SrcPoint &src, const SrcPoint &init, 
-                                  real rcoeff)
+                                  double rcoeff)
 {
     for (unsigned int i=0; i!=src.Terms.size(); ++i) {
         src.Terms[i] = ((1.0-rcoeff)*src.Terms[i]) + (rcoeff*init.Terms[i]);
@@ -648,7 +648,7 @@ void PredCorSolver::PostProcess(const std::string &filename,
 }
 
 // Multiplies all values in a vector by a scaling factor.
-void PredCorSolver::multVals(fvector &vals, real scale)
+void PredCorSolver::multVals(fvector &vals, double scale)
 {
     for (fvector::iterator i=vals.begin(); i!=vals.end(); ++i) {
         (*i) *= scale;
@@ -659,21 +659,21 @@ void PredCorSolver::multVals(fvector &vals, real scale)
 // UNDER-RELAXATION.
 
 // Returns the under-relaxation coefficient.
-real PredCorSolver::UnderRelaxCoeff(void) const
+double PredCorSolver::UnderRelaxCoeff(void) const
 {
     return m_rlx_coeff;
 }
 
 // Sets the under-relaxation coefficient.
-void PredCorSolver::SetUnderRelaxCoeff(real relax) {m_rlx_coeff = relax;}
+void PredCorSolver::SetUnderRelaxCoeff(double relax) {m_rlx_coeff = relax;}
 */
 
 // SOURCE TERM CALCULATION (REQUIRED FOR REACTOR ODE SOLVER).
 
 // Adds the source term contribution to the RHS supplied by the
 // reactor class.
-void PredCorSolver::AddSourceTerms(real *rhs, unsigned int n, 
-                                   real t, const SrcProfile &src)
+void PredCorSolver::AddSourceTerms(double *rhs, unsigned int n, 
+                                   double t, const SrcProfile &src)
 {
     // Locate the first src point after the given time t.
     SrcProfile::const_iterator j = LocateSrcPoint(src, t);
@@ -695,7 +695,7 @@ void PredCorSolver::AddSourceTerms(real *rhs, unsigned int n,
         // Use linear interpolation (trapezium rule) to calculate the 
         // source terms.
         SrcProfile::const_iterator i = j; --i; // Point before j;
-        real tterm = (t - i->Time) / (j->Time - i->Time);
+        double tterm = (t - i->Time) / (j->Time - i->Time);
         for (unsigned int k=0; k!=min(n,(unsigned int)min(i->Terms.size(),j->Terms.size())); ++k) {
             rhs[k] += i->Terms[k] + (tterm * (j->Terms[k] - i->Terms[k]));
         }

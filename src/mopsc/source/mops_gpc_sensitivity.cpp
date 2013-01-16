@@ -98,9 +98,9 @@ SensitivityAnalyzer &SensitivityAnalyzer::operator=(const SensitivityAnalyzer &r
             m_NS = rhs.m_NS;
             // No memory allocation require if m_NS is zero.
             if (m_NS != 0) {
-                m_org_params = new real[m_NS];
-                m_params = new real[m_NS];
-                m_parambars = new real[m_NS];
+                m_org_params = new double[m_NS];
+                m_params = new double[m_NS];
+                m_parambars = new double[m_NS];
             }
         }
         m_sens_params.clear();
@@ -323,12 +323,12 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
             // Sensitivity is also disable if there is no parameter defined.
             m_enable = m_enable && (m_NS > 0);
             // Allocating memories.
-            m_org_params = new Mops::real[m_NS];
-            m_params     = new Mops::real[m_NS];
-            m_parambars  = new Mops::real[m_NS];
+            m_org_params = new double[m_NS];
+            m_params     = new double[m_NS];
+            m_parambars  = new double[m_NS];
             // Initializing allocated memories.
             for (unsigned int i = 0; i < m_sens_params.size(); i++) {
-                Mops::real val = 0.0;
+                double val = 0.0;
                 if (m_sens_params.at(i).Type == ARR_A) {
                     val = m_mech->GasMech().Reactions(m_sens_params.at(i).Index)->Arrhenius().A;
                 } else if (m_sens_params.at(i).Type == ARR_n) {
@@ -371,14 +371,14 @@ void SensitivityAnalyzer::ReadSettingV1(const CamXML::Element &elemSA)
             // Sensitivity is also disable if there is no parameter defined.
             m_enable = m_enable && (m_NS > 0);
             // Allocating memories.
-            m_org_params = new Mops::real[m_NS];
-            m_params     = new Mops::real[m_NS];
-            m_parambars  = new Mops::real[m_NS];
+            m_org_params = new double[m_NS];
+            m_params     = new double[m_NS];
+            m_parambars  = new double[m_NS];
             // Initializing allocated memories.
             unsigned int i_temp = m_reactor->Mixture()->GasPhase().temperatureIndex();
             unsigned int i_dens = m_reactor->Mixture()->GasPhase().densityIndex();
             for (unsigned int i = 0; i < m_sens_params.size(); i++) {
-                Mops::real val = 0.0;
+                double val = 0.0;
                 if (m_sens_params.at(i).Type == INIT_T) {
                     val = m_reactor->Mixture()->GasPhase().RawData()[i_temp];
                 } else if (m_sens_params.at(i).Type == INIT_D) {
@@ -545,15 +545,15 @@ void SensitivityAnalyzer::OutputSens(std::fstream &fout, const Mops::Reactor &r,
     } else {
         if (m_sens_matrix != NULL) {
             // Write simulation time.
-            real time = r.Time();
+            double time = r.Time();
             fout.write((char*)&time, sizeof(time));
             //cout << "Time : " << r.Time() << std::endl;
             // Write main sensitivity matrix.
             for (unsigned int i = 0; i < m_NS; ++i) {
-                real *sdata;
+                double *sdata;
                 sdata = NV_DATA_S(m_sens_matrix[i]);
                 for (unsigned int j = 0; j < n_vars; ++j) {
-                    real val = sdata[j];
+                    double val = sdata[j];
                     fout.write((char*)&val, sizeof(val));
                     //cout << val << ", " ;
                 }
@@ -636,25 +636,25 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
             arr_params.push_back(arr);
         }
         // Allocating memories for calculated results
-        // Total memories require = 2 * n_timesteps * NS * n_vars * sizeof(real);
-        //unsigned int mem_space = 2 * n_timesteps * NS * n_vars * sizeof(real);
+        // Total memories require = 2 * n_timesteps * NS * n_vars * sizeof(double);
+        //unsigned int mem_space = 2 * n_timesteps * NS * n_vars * sizeof(double);
         //if (mem_space < 209715200) {
         //  // if require mem less than 200MB then will calculate it on RAM.
-        real *** avg;
-        real *** err_sd;
-        real **  temp_sum;
-        real **  temp_sum_sqr;
-        real *times = new real [n_timesteps];
+        double *** avg;
+        double *** err_sd;
+        double **  temp_sum;
+        double **  temp_sum_sqr;
+        double *times = new double [n_timesteps];
         
         // Allocate memories for overall result
-        avg     = new real ** [n_timesteps];
-        err_sd  = new real ** [n_timesteps];
+        avg     = new double ** [n_timesteps];
+        err_sd  = new double ** [n_timesteps];
         for (unsigned int i = 0; i < n_timesteps; ++i) {
-            avg[i]     = new real * [NS];
-            err_sd[i]  = new real * [NS];
+            avg[i]     = new double * [NS];
+            err_sd[i]  = new double * [NS];
             for (unsigned int j = 0; j < NS; ++j) {
-                avg[i][j]     = new real [n_vars];
-                err_sd[i][j] = new real [n_vars];
+                avg[i][j]     = new double [n_vars];
+                err_sd[i][j] = new double [n_vars];
                 for (unsigned int k = 0; k < n_vars; ++k) {
                     avg[i][j][k]     = 0.0;
                     err_sd[i][j][k]  = 0.0;
@@ -662,11 +662,11 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
             }
         }
         // Allocate memories for temporarily calculations.
-        temp_sum     = new real * [NS];
-        temp_sum_sqr = new real * [NS];
+        temp_sum     = new double * [NS];
+        temp_sum_sqr = new double * [NS];
         for (unsigned int i = 0; i < NS; ++i) {
-            temp_sum[i]     = new real [n_vars];
-            temp_sum_sqr[i] = new real [n_vars];
+            temp_sum[i]     = new double [n_vars];
+            temp_sum_sqr[i] = new double [n_vars];
             for (unsigned int j = 0; j < n_vars; ++j) {
                 temp_sum[i][j]     = 0.0;
                 temp_sum_sqr[i][j] = 0.0;
@@ -740,21 +740,21 @@ void SensitivityAnalyzer::PostProcess(const std::string &filename)
 
 // Read Sensitivity Matrix block.
 // Read block of n x m from fin to matrix and simulation time.
-void SensitivityAnalyzer::ReadSensMatrix(std::ifstream &fin, const unsigned int n, const unsigned int m, real &time, real ** matrix, real ** matrix_sql)
+void SensitivityAnalyzer::ReadSensMatrix(std::ifstream &fin, const unsigned int n, const unsigned int m, double &time, double ** matrix, double ** matrix_sql)
 {
     fin.read(reinterpret_cast<char*>(&time), sizeof(time));
 
     for (unsigned int i = 0; i < n; ++i) {
         for (unsigned int j = 0; j < m; ++j) {
-            fin.read(reinterpret_cast<char*>(&matrix[i][j]), sizeof(real));
+            fin.read(reinterpret_cast<char*>(&matrix[i][j]), sizeof(double));
             matrix_sql[i][j] = matrix[i][j] * matrix[i][j];
         }
     }
 }
 
-// Parameter pointer to array of real. This is needed by CVODES.
+// Parameter pointer to array of double. This is needed by CVODES.
 // CVODES will access and change these parameters.
-Mops::real * SensitivityAnalyzer::ParamsPtr()
+double * SensitivityAnalyzer::ParamsPtr()
 {
     return m_params;
 }
@@ -804,7 +804,7 @@ SensitivityAnalyzer::SensitivityType SensitivityAnalyzer::ProblemType()
 }
 
 // Parameter scaling factors. approx by original params.
-Mops::real * SensitivityAnalyzer::ParamBarsPtr()
+double * SensitivityAnalyzer::ParamBarsPtr()
 {
     return m_parambars;
 }

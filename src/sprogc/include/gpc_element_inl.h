@@ -48,6 +48,6 @@
 inline const std::string Element::Name(void) const {return m_name;};
 
 // MOLECULAR WEIGHT.
-inline real Element::MolWt(void) const {return m_molwt;};
+inline double Element::MolWt(void) const {return m_molwt;};
 
 #endif

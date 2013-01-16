@@ -50,6 +50,7 @@ using namespace Sprog;
 Stoichiometry::Stoichiometry(void)
 {
     m_species = -1;
+    //m_phaseName = ""; // Added by mm864
 }
 
 // Copy constructor.
@@ -57,13 +58,15 @@ Stoichiometry::Stoichiometry(const Sprog::Stoichiometry &s)
 {
     m_species = s.m_species;
     m_stoich = s.m_stoich;
+    // m_phaseName = s.m_phaseName; // Added by mm864
 }
 
 // Initialising constructor.
-Stoichiometry::Stoichiometry(unsigned int isp, const real &mu)
+Stoichiometry::Stoichiometry(unsigned int isp, const double &mu)
 {
     m_species = isp;
     m_stoich = mu;
+    //m_phaseName = ""; 
 }
 
 // OPERATOR OVERLOADING.
@@ -75,6 +78,7 @@ Stoichiometry &Stoichiometry::operator=(const Sprog::Stoichiometry &s)
     if (this != &s) {
         m_species = s.m_species;
         m_stoich = s.m_stoich;
+        //m_phaseName = s.m_phaseName; 
     }
 
     return *this;
@@ -95,22 +99,30 @@ void Stoichiometry::SetSpecies(const unsigned int &sp)
     m_species = sp;
 }
 
+/*
+// Sets the associated speciePhase
+void Stoichiometry::SetSpeciesPhase(const Sprog::Species &species)
+{
+  m_phaseName = species.PhaseName();
+}
+*/
+
 
 // STOICHIOMETRY VALUE.
 
 // Returns the stoichiometry value.
-const real &Stoichiometry::Mu() const
+const double &Stoichiometry::Mu() const
 {
     return m_stoich;
 }
 
 // Sets the stoichiometry value.
-void Stoichiometry::SetMu(const real &mu)
+void Stoichiometry::SetMu(const double &mu)
 {
     m_stoich = mu;
 }
-
-void Stoichiometry::IncMu(const real &mu)
+// Add the stoichiometry
+void Stoichiometry::IncMu(const double &mu)
 {
     m_stoich += mu;
 }

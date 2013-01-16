@@ -126,10 +126,10 @@ ActSiteReaction::ActSiteReaction(std::istream &in, const Sweep::Mechanism &mech)
  *
  *@return   Process rate
  */
-real ActSiteReaction::Rate(real t, const Cell &sys,
+double ActSiteReaction::Rate(double t, const Cell &sys,
                            const Geometry::LocalGeometry1d &local_geom) const
 {
-    return SurfaceReaction::Rate(t, sys, local_geom) * SiteDensity(sys.GasPhase());
+    return SurfaceReaction::Rate(t, sys, local_geom) * SiteDensity(sys);
 }
 
 
@@ -137,9 +137,9 @@ real ActSiteReaction::Rate(real t, const Cell &sys,
 
 // Returns the rate of the process for the given particle in
 // the system. Process must be linear in particle number.
-real ActSiteReaction::Rate(real t, const Cell &sys, const Particle &sp) const
+double ActSiteReaction::Rate(double t, const Cell &sys, const Particle &sp) const
 {
-    return SurfaceReaction::Rate(t, sys, sp) * SiteDensity(sys.GasPhase());
+    return SurfaceReaction::Rate(t, sys, sp) * SiteDensity(sys);
 }
 
 /*!
@@ -151,11 +151,11 @@ real ActSiteReaction::Rate(real t, const Cell &sys, const Particle &sp) const
  *\return       Fraction of surface sites which are radicals.
  *
  */
-real ActSiteReaction::radicalSiteFractionABF(const EnvironmentInterface &gas) const
+double ActSiteReaction::radicalSiteFractionABF(const EnvironmentInterface &gas) const
 {
-    real r1f, r1b, r2f, r2b, r3f, r4f, r5f, rdenom;
-    real T  = gas.Temperature();
-    real RT = RCAL * T;
+    double r1f, r1b, r2f, r2b, r3f, r4f, r5f, rdenom;
+    double T  = gas.Temperature();
+    double RT = RCAL * T;
 
     // Calculate the forward and back reaction rates.
     r1f = 4.2e+07 * exp(-13.0/RT)                * gas.SpeciesConcentration(iH);
@@ -168,7 +168,7 @@ real ActSiteReaction::radicalSiteFractionABF(const EnvironmentInterface &gas) co
     rdenom = r1b+r2b+r3f+r4f+r5f;
 
     if (rdenom > 0.0) {
-        real f = (r1f+r2f) / rdenom;
+        double f = (r1f+r2f) / rdenom;
         return f / (f + 1.0);
     } else {
         return 0.0;
@@ -185,25 +185,25 @@ real ActSiteReaction::radicalSiteFractionABF(const EnvironmentInterface &gas) co
  *\return       Fraction of surface hydrogens which are radicals.
  *
  */
-real ActSiteReaction::radicalSiteFractionBP(const EnvironmentInterface &gas) const
+double ActSiteReaction::radicalSiteFractionBP(const EnvironmentInterface &gas) const
 {
-    const real T  = gas.Temperature();
-    const real RT = R * T / 1000;
+    const double T  = gas.Temperature();
+    const double RT = R * T / 1000;
 
     // Calculate the forward and back reaction rates.
-    const real r1f = 1.0e+08  * std::exp(-68.42/RT)  * std::pow(T,1.8)   * gas.SpeciesConcentration(iH);
-    const real r1b = 8.68e+04 * std::exp(-25.46/RT)  * std::pow(T,2.36)  * gas.SpeciesConcentration(iH2);
-    const real r2f = 6.72e+01 * std::exp(-6.09/RT)   * std::pow(T,3.33)  * gas.SpeciesConcentration(iOH);
-    const real r2b = 6.44e-01 * std::exp(-27.96/RT)  * std::pow(T,3.79)  * gas.SpeciesConcentration(iH2O);
-    const real r3f = 1.13e+16 * std::exp(-476.05/RT) * std::pow(T,-0.06);
-    const real r3b = 4.17e+13 *                        std::pow(T,0.15)  * gas.SpeciesConcentration(iH);
-    const real r4f = 2.52e+09 * std::exp(-17.13/RT)  * std::pow(T,1.10)  * gas.SpeciesConcentration(iC2H2);
+    const double r1f = 1.0e+08  * std::exp(-68.42/RT)  * std::pow(T,1.8)   * gas.SpeciesConcentration(iH);
+    const double r1b = 8.68e+04 * std::exp(-25.46/RT)  * std::pow(T,2.36)  * gas.SpeciesConcentration(iH2);
+    const double r2f = 6.72e+01 * std::exp(-6.09/RT)   * std::pow(T,3.33)  * gas.SpeciesConcentration(iOH);
+    const double r2b = 6.44e-01 * std::exp(-27.96/RT)  * std::pow(T,3.79)  * gas.SpeciesConcentration(iH2O);
+    const double r3f = 1.13e+16 * std::exp(-476.05/RT) * std::pow(T,-0.06);
+    const double r3b = 4.17e+13 *                        std::pow(T,0.15)  * gas.SpeciesConcentration(iH);
+    const double r4f = 2.52e+09 * std::exp(-17.13/RT)  * std::pow(T,1.10)  * gas.SpeciesConcentration(iC2H2);
 
     // This is a quasi-steady state calculation, the number of radical active sites is
     // calculated by assuming that there is a steady state between radical and non-radical
     // surface hydrogens.
-    const real radicalDepletion = r1b + r2b + r3b + r4f;
-    const real radicalProduction  = r1f + r2f + r3f;
+    const double radicalDepletion = r1b + r2b + r3b + r4f;
+    const double radicalProduction  = r1f + r2f + r3f;
 
     if (radicalProduction > 0.0) {
         return radicalProduction / (radicalProduction + radicalDepletion);
@@ -219,22 +219,32 @@ real ActSiteReaction::radicalSiteFractionBP(const EnvironmentInterface &gas) con
  *  1614-1626, which requires the modelling of the number of surface hydrogen atoms
  *  on a particle (surf vol hydrogen model).
  *
- *\param[in]    gas     Gas mixture containing the soot particles
+ *\param[in]    sys     System for which rate is to be calculated
  *
  *\return       Concentration of surface sites available for reaction
  *
  */
-real ActSiteReaction::SiteDensity(const EnvironmentInterface &gas) const
+double ActSiteReaction::SiteDensity(const Cell &sys) const
 {
+    double alpha(0.0);
+
+    if (!sys.FixedChem())
+        alpha = sys.Particles().Alpha(sys.GasPhase().Temperature());
+    else
+        alpha = sys.GasPhase().PropertyValue(mAlphaIndex);
+
     switch(mRadicalSiteModel) {
     case ABFRadicalSiteModel:
         // This value of 2.3e19m^-2 is the density of H sites (whether active or not)
         // on the surface of a soot particle.  It can be found on p179 of the article
         // by Frenklach & Wang in "Soot Formation in Combustion", ed Bockhorn,
         // pub Springer 1994.
-        return 2.3e19 * radicalSiteFractionABF(gas) * gas.PropertyValue(mAlphaIndex);
+        return 2.3e19 * radicalSiteFractionABF(sys.GasPhase()) * alpha;
     case BPRadicalSiteModel:
-        return radicalSiteFractionBP(gas);
+        return radicalSiteFractionBP(sys.GasPhase());
+    case ABFConstant:
+        // Same as ABFRadicalSiteModel except here alpha = 1.0.
+        return 2.3e19 * radicalSiteFractionABF(sys.GasPhase());
     default:
         throw std::runtime_error("Unrecognised radical site model in ActSiteReaction::radicalSiteFraction");
         return 0.0;

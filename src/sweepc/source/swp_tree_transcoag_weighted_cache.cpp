@@ -127,7 +127,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
     m_d2m_1_2_w   = m_d2_m_1_2 * m_weight;
 
     // Silica parameters
-    m_sites =       (real)part.GetSites();
+    m_sites =       (double)part.GetSites();
     m_sinterrate =  part.GetSintRate();
 
     // Silicon parameters
@@ -212,7 +212,7 @@ void Sweep::TreeTransCoagWeightedCache::Clear(void)
  * \param[in]    id    PropID corresponding to particle property of interest.
  * \return       value of the property requested.
  */
-Sweep::real Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
+double Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
 {
     switch (id) {
         case iDsph:      // Equivalent sphere diameter.

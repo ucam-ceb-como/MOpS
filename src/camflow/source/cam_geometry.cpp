@@ -62,7 +62,7 @@ mPrune(-0.001)
 }
 
 /*void CamGeometry::discretize(){
-    vector<doublereal> grid;
+    vector<double> grid;
     ifstream inf;
     inf.open(gridFile.c_str(),ios::in);
     if(inf.good()){
@@ -83,7 +83,7 @@ mPrune(-0.001)
     }
     nCell = dz.size();
     //axial position info cell centers
-    doublereal pos =0;
+    double pos =0;
     for(int i=0; i<nCell; i++){
         pos += dz[i];
         axPos.push_back((pos - dz[i]/2.0));
@@ -91,23 +91,23 @@ mPrune(-0.001)
     length = grid[len];
 }*/
 
-void CamGeometry::setGeometry(const vector<doublereal>& dz_){
+void CamGeometry::setGeometry(const vector<double>& dz_){
     dz = dz_;
     nCell=dz.size();
     //axial position info cell centers
-    doublereal pos =0;
+    double pos =0;
     for(int i=0; i<nCell; i++){
         pos += dz[i];
         axPos.push_back((pos - dz[i]/2.0));
     }
 }
 
-void CamGeometry::setLength(doublereal len){
+void CamGeometry::setLength(double len){
     this->length = len;
 }
 
 
-doublereal CamGeometry::getLenth() const{
+double CamGeometry::getLenth() const{
     if(length == 0)
         throw CamError("Length not specified\n");
     else
@@ -118,7 +118,7 @@ int CamGeometry::getnCells() const{
     return this->nCell;
 }
 
-void CamGeometry::setDia(doublereal d){
+void CamGeometry::setDia(double d){
     dia = d;
 }
 
@@ -126,34 +126,34 @@ std::string CamGeometry::getGridFileName() const{
     return gridFile;
 }
 
-doublereal CamGeometry::getDia() const{
+double CamGeometry::getDia() const{
     return dia;
 }
 
-doublereal CamGeometry::getArea() const{
+double CamGeometry::getArea() const{
     return (PI*dia*dia/4.0);
 }
 
-doublereal CamGeometry::getSurfArea() {
+double CamGeometry::getSurfArea() {
     //if(length==0)discretize();
     return (PI*dia*length);
 } 
 
-doublereal CamGeometry::getSurfAres_l() const{
+double CamGeometry::getSurfAres_l() const{
     return (PI*dia);
 }
 
-const vector<doublereal>& CamGeometry::getGeometry() const {
+const vector<double>& CamGeometry::getGeometry() const {
     return dz;
 }
 
-const vector<doublereal>& CamGeometry::getAxpos() const {
+const vector<double>& CamGeometry::getAxpos() const {
     return axPos;
 }
 
 void CamGeometry::addZeroWidthCells()
 {
-    vector<doublereal> temp = dz;
+    vector<double> temp = dz;
     dz.clear();
     dz.push_back(1e-08);
     int len = temp.size();
@@ -176,8 +176,8 @@ void CamGeometry::addZeroWidthCells()
     nCell = dz.size();
 }
 
-static doublereal mcPrec(){
-    doublereal x = 1.0;
+static double mcPrec(){
+    double x = 1.0;
     while(1.0+x != 1.0) x*= 0.5;
     return sqrt(x);
 
@@ -186,7 +186,7 @@ static doublereal mcPrec(){
 /*
  *grid refinement
  */
-void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptrT){
+void CamGeometry::refine(double* y, const int nVar, const int nSpec, int ptrT){
 
     std::cout << "Refining Grid" << endl;
    /* std::cout << "Grid Size = " << axPos.size()
@@ -199,10 +199,10 @@ void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptr
         cout << axPos[i] << endl;
     }*/
 
-    vector<doublereal> v,slope;
-    doublereal vmin, vmax, smin, smax;
-    doublereal maxAbsV, maxAbsS;
-    doublereal thresh;
+    vector<double> v,slope;
+    double vmin, vmax, smin, smax;
+    double maxAbsV, maxAbsS;
+    double thresh;
     thresh = mcPrec();
 
     v.resize(nCell,0);
@@ -239,9 +239,9 @@ void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptr
             //maximum allowable difference in value between
             //adjucent points
 
-            doublereal dmax = a_slope*(vmax-vmin)+thresh;
+            double dmax = a_slope*(vmax-vmin)+thresh;
             for(int i=0; i<nCell-1; ++i){
-                doublereal r = fabs(v[i+1]-v[i])/dmax;
+                double r = fabs(v[i+1]-v[i])/dmax;
                 if(r>1.0){
                     z_loc[i] = 1;
                     z_keep[i] = 1;
@@ -261,10 +261,10 @@ void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptr
          */
         if( (smax-smin) > minRange*maxAbsS ){
 
-            doublereal dmax = curve*(smax-smin);
+            double dmax = curve*(smax-smin);
 
             for(int i=0; i<nCell-2; ++i){
-                doublereal r = fabs(slope[i+1]-slope[i])/(dmax + thresh/dz[i]);
+                double r = fabs(slope[i+1]-slope[i])/(dmax + thresh/dz[i]);
                 if( r>1.0){
                     z_loc[i] =1;
                     z_loc[i+1] =1;
@@ -282,7 +282,7 @@ void CamGeometry::refine(doublereal* y, const int nVar, const int nSpec, int ptr
     }
 
     int nCells = 0;
-    vector<doublereal> temp = axPos;
+    vector<double> temp = axPos;
     axPos.clear();
     for(int j=0; j<nCell-1; ++j){
         nCells++;

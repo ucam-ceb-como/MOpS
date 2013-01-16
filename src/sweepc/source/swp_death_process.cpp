@@ -95,7 +95,7 @@ DeathProcess &DeathProcess::operator =(const DeathProcess &rhs)
 // TOTAL RATE CALCULATIONS.
 
 // Returns rate of the process for the given system.
-real DeathProcess::Rate(real t, const Cell &sys,
+double DeathProcess::Rate(double t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 {
     return m_a * sys.ParticleCount();
@@ -106,10 +106,10 @@ real DeathProcess::Rate(real t, const Cell &sys,
 // Returns the number of rate terms for this process (one).
 unsigned int DeathProcess::TermCount(void) const {return 1;}
 
-// Calculates the rate terms given an iterator to a real vector. The 
+// Calculates the rate terms given an iterator to a double vector. The 
 // iterator is advanced to the position after the last term for this
 // process.  Returns the sum of all terms.
-real DeathProcess::RateTerms(const real t, const Cell &sys,
+double DeathProcess::RateTerms(const double t, const Cell &sys,
                              const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
 {
@@ -130,7 +130,7 @@ real DeathProcess::RateTerms(const real t, const Cell &sys,
  *
  * \return      0 on success, otherwise negative.
  */
-int DeathProcess::Perform(Sweep::real t, Sweep::Cell &sys, 
+int DeathProcess::Perform(double t, Sweep::Cell &sys, 
                           const Geometry::LocalGeometry1d& local_geom,
                           unsigned int iterm,
                           rng_type &rng) const

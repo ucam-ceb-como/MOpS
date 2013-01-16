@@ -286,10 +286,10 @@ int decc(const int n, double **AR, double **AI, int *ip)
 		AR, AI		matrix to be triangularized
 		
 	Output:
-		AR[i][j], i <= j	upper triangular factor, U; real part
+		AR[i][j], i <= j	upper triangular factor, U; double part
 		AI[i][j], i <= j	upper triangular factor, U; imaginary part
 		AR[i][j], i > j		multipliers = lower triangular factor, i - l 
-								real part
+								double part
 		AI[i][j], i > j		multipliers = lower triangular factor, i - l
 								imaginary part
 		ip[k], k < n - 1	index of k-th pivot row
@@ -472,10 +472,10 @@ int dechc(const int n, double **AR, double **AI, int lb, int *ip)
 		AR, AI		matrix to be triangularized
 		
 	Output:
-		AR[i][j], i <= j	upper triangular factor, U; real part
+		AR[i][j], i <= j	upper triangular factor, U; double part
 		AI[i][j], i <= j	upper triangular factor, U; imaginary part
 		AR[i][j], i > j		multipliers = lower triangular factor, i - l 
-								real part
+								double part
 		AI[i][j], i > j		multipliers = lower triangular factor, i - l 
 								imaginary part
 		lb					lower bandwidth of A (diagonal not counted), lb >= 1
@@ -826,7 +826,7 @@ int decbc(const int n, double **AR, double **AI, int ml, int mu, int *ip)
 		n			order of the original matrix A
 		AR, AI		contains the matrix in band storage.
 					The columns of the matrix are stored in the columns
-					of AR (real part) and AI (imaginary part) and the 
+					of AR (double part) and AI (imaginary part) and the 
 					diagonals of the matrix are stored in rows ml through
 					2*ml+mu of AR and AI
 		ml			lower bandwidth of A (diagonal is not counted)
@@ -972,16 +972,16 @@ void solbc(const int n, double **AR, double **AI, int ml, int mu,
 	Input:
 		n			order of matrix
 		AR, AI		triangularized matrix obtained from decb
-						(real and imaginary parts)
+						(double and imaginary parts)
 		ml			lower bandwidth of A (diagonal is not counted)
 		mu			upper bandwidth of A (diagonal is not counted)
-		br, bi		right hand side vector (real and imaginary parts)
+		br, bi		right hand side vector (double and imaginary parts)
 		ip			pivot vector obtained from decbc
 		
 	Do not use if decbc has set ier != 0
 	
 	Output:
-		br, bi		solution vector, x (real and imaginary parts)
+		br, bi		solution vector, x (double and imaginary parts)
 
 -----------------------------------------------------------------------*/
 	  
@@ -1051,7 +1051,7 @@ void elmhes(const int n, int low, int igh, double **A, int *inter)
 	Num. Math. 12, 349-368(1968) by Martin and Wilkinson.
 	Handbook for Auto. Comp., Vol.II-Linear Algebra, 339-358(1971).
 
-	Given a real general matrix, this subroutine reduces a submatrix 
+	Given a double general matrix, this subroutine reduces a submatrix 
 	situated in rows and columns low through igh to upper Hessenberg 
 	form by stabilized elementary similarity transformations.
 

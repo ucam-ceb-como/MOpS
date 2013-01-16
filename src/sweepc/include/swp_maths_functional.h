@@ -67,9 +67,9 @@ class Functional
 public:
     // INTERFACE.
     // Sets the value of the ith parameter.
-    virtual void SetParam(unsigned int i, real val) = 0;
+    virtual void SetParam(unsigned int i, double val) = 0;
     // Returns the function evaluation.
-    virtual real Evaluate(real x) const = 0;
+    virtual double Evaluate(double x) const = 0;
     // Outputs the functional to a binary stream.
     virtual void Serialize(std::ostream &out) const = 0;
     // Read the functional from a binary stream.
@@ -114,21 +114,21 @@ public:
     // PARAMETERS.
 
     // Returns the gradient.
-    inline real Gradient(void) const {return m_m;}
+    inline double Gradient(void) const {return m_m;}
 
     // Sets the gradient.
-    inline void SetGradient(real m) {m_m = m;}
+    inline void SetGradient(double m) {m_m = m;}
 
     // Returns the constant term.
-    inline real Constant(void) const {return m_c;}
+    inline double Constant(void) const {return m_c;}
 
     // Sets the constant term.
-    inline void SetConstant(real c) {m_c = c;}
+    inline void SetConstant(double c) {m_c = c;}
 
     // FUNCTIONAL INTERFACE.
 
     // Sets the value of the ith parameter.
-    inline void SetParam(unsigned int i, real val) {
+    inline void SetParam(unsigned int i, double val) {
         if (i==0)
             m_m = val;
         else
@@ -136,7 +136,7 @@ public:
     }
 
     // Returns the function evaluation.
-    inline real Evaluate(real x) const {return (m_m*x)+m_c;}
+    inline double Evaluate(double x) const {return (m_m*x)+m_c;}
 
     // Outputs the functional to a binary stream.
     inline void Serialize(std::ostream &out) const {
@@ -153,9 +153,9 @@ public:
         if (in.good()) {
             double val = 0.0;
             in.read(reinterpret_cast<char*>(&val), sizeof(val));
-            m_m = (real)val;
+            m_m = (double)val;
             in.read(reinterpret_cast<char*>(&val), sizeof(val));
-            m_c = (real)val;
+            m_c = (double)val;
         }
     }
 
@@ -167,7 +167,7 @@ public:
 
 private:
     // Gradient and constant parameters.
-    real m_m, m_c;
+    double m_m, m_c;
 };
 };
 };

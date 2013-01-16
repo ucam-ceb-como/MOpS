@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 2.6)
 project (MOPSSUITE)
 
 IF(WIN32)
-  SET(Boost_ADDITIONAL_VERSIONS "1.47" "1.47.0")
+  SET(Boost_ADDITIONAL_VERSIONS "1.47" "1.47.0" "1.49" "1.49.0" "1.51" "1.51.0")
   SET(BOOST_ROOT "C:/Program Files/boost")
   SET(Boost_USE_STATIC_LIBS TRUE)
   SET(MSVC_BUILD_DIR "/\${CTEST_CONFIGURATION_TYPE}")
@@ -55,8 +55,8 @@ add_executable(camflowGridGenerator ${MOPSSUITE_SOURCE_DIR}/applications/utiliti
 target_link_libraries(camflowGridGenerator ${Boost_LIBRARIES})
 
 # Regression tests for CamFlow
-add_test(camflow.hydrogenBatchReactor sh ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/camflow-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
-add_test(camflow.hydrogenFlamelet sh ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/camflow-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet)
+add_test(camflow.hydrogenBatchReactor ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/camflow-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
+add_test(camflow.hydrogenFlamelet ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/camflow-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet)
 
 
 ######### The Mops application ##########################
@@ -95,6 +95,8 @@ add_test(mops.silica2 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/si
 add_test(mops.bintree1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/bintree1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 add_test(mops.imaging1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1)
+
+add_test(mops.titania1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titania1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titania1)
 
 ########## The PAH-KMC Application ######################
 add_executable(PAHkmc-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/PAHkmc/kmc_model.cpp)
@@ -143,8 +145,7 @@ add_test(NAME utils.lininterp1 COMMAND linInterp-test)
 ########## Test program for Sweep::FixedChemistry ##############
 add_executable(sweepFixedMix-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sweepc/fixedmix_test.cpp)
 target_link_libraries(sweepFixedMix-test brush ${Boost_LIBRARIES})
-
-add_test(NAME sweep.FixedMix COMMAND ${MOPSSUITE_SOURCE_DIR}/test/sweepc/fixedmix.sh $<TARGET_FILE:sweepFixedMix-test> ${MOPSSUITE_SOURCE_DIR}/test/sweepc/fixedmix)
+add_test(NAME sweep.FixedMix COMMAND ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/sweepc/fixedmix.sh $<TARGET_FILE:sweepFixedMix-test> ${MOPSSUITE_SOURCE_DIR}/test/sweepc/fixedmix)
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)

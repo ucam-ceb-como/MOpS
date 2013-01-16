@@ -8,8 +8,8 @@ using namespace Camflow;
 ScalarDissipationRate::ScalarDissipationRate
 (
     const std::string& inputFileName,
-    const doublereal& stoichZ,
-    const std::vector<doublereal>& mixFracCoords,
+    const double& stoichZ,
+    const std::vector<double>& mixFracCoords,
     const int n_TimePoints
 )
 :
@@ -35,7 +35,7 @@ ScalarDissipationRate::ScalarDissipationRate
         scalarDissipationRate_[0][i] = calculate(mixFracCoords[i]);
     }
 
-    interpolator_ = new Utils::LinearInterpolator<doublereal, doublereal>
+    interpolator_ = new Utils::LinearInterpolator<double, double>
                         (
                             mixFracCoords_,
                             scalarDissipationRate_[0]
@@ -96,23 +96,23 @@ ScalarDissipationRate::readStrainRate(const std::string& inputFileName)
 /*
  * Calculate the scalar dissipation rate profile. Method 1 in Carbonell(2009).
  */
-doublereal
-ScalarDissipationRate::calculate(const doublereal& mixtureFraction)
+double
+ScalarDissipationRate::calculate(const double& mixtureFraction)
 const
 {
     CamMath cm;
-    doublereal fZ = exp(-2*cm.SQR(cm.inverfc(2*mixtureFraction)));
-    doublereal fZst = exp(-2*cm.SQR(cm.inverfc(2*stoichZ_)));
+    double fZ = exp(-2*cm.SQR(cm.inverfc(2*mixtureFraction)));
+    double fZst = exp(-2*cm.SQR(cm.inverfc(2*stoichZ_)));
 
-    /*Utils::LinearInterpolator<doublereal, doublereal> rhoInterpolate(reacGeom_.getAxpos(),m_rho);
-    doublereal rhoStoich = rhoInterpolate.interpolate(stoichZ);
+    /*Utils::LinearInterpolator<double, double> rhoInterpolate(reacGeom_.getAxpos(),m_rho);
+    double rhoStoich = rhoInterpolate.interpolate(stoichZ);
 
-    doublereal phi = 0.75 *
+    double phi = 0.75 *
                      (
                          cm.SQR(std::sqrt(m_rho[0]/m_rho[cell])+1.0)
                        / (2.0*std::sqrt(m_rho[0]/m_rho[cell])+1.0)
                      );
-    doublereal phist = 0.75 *
+    double phist = 0.75 *
                        (
                            cm.SQR(std::sqrt(m_rho[0]/rhoStoich)+1.0)
                          / (2.0*std::sqrt(m_rho[0]/rhoStoich)+1.0)
@@ -124,25 +124,25 @@ const
 /*!
  * Eq. 9.38 SummerSchool by N. Peters
  */
-doublereal
-ScalarDissipationRate::scalarDissipationRate(const doublereal& mixtureFraction)
+double
+ScalarDissipationRate::scalarDissipationRate(const double& mixtureFraction)
 const
 {
     CamMath cm;
-    doublereal fZ = exp(-2*cm.SQR(cm.inverfc(2*mixtureFraction)));
+    double fZ = exp(-2*cm.SQR(cm.inverfc(2*mixtureFraction)));
     return strainRate_*fZ/Sprog::PI;
 }
 
-doublereal
-ScalarDissipationRate::strainRate(const doublereal& mixtureFraction)
+double
+ScalarDissipationRate::strainRate(const double& mixtureFraction)
 const
 {
     CamMath cm;
-    doublereal fZ = exp(-2*cm.SQR(cm.inverfc(2*mixtureFraction)));
+    double fZ = exp(-2*cm.SQR(cm.inverfc(2*mixtureFraction)));
     return stoichSDR_*Sprog::PI/fZ;
 }
 
-void ScalarDissipationRate::setStrainRate(const doublereal strainRate)
+void ScalarDissipationRate::setStrainRate(const double strainRate)
 {
 
     sdrType_ = notFromCFD;
@@ -153,14 +153,14 @@ void ScalarDissipationRate::setStrainRate(const doublereal strainRate)
         scalarDissipationRate_[0][i] = calculate(mixFracCoords_[i]);
     }
     delete interpolator_;
-    interpolator_ = new Utils::LinearInterpolator<doublereal, doublereal>
+    interpolator_ = new Utils::LinearInterpolator<double, double>
                         (
                             mixFracCoords_,
                             scalarDissipationRate_[0]
                         );
 }
 
-void ScalarDissipationRate::setSDRRate(const doublereal sdr)
+void ScalarDissipationRate::setSDRRate(const double sdr)
 {
 
     sdrType_ = notFromCFD;
@@ -171,7 +171,7 @@ void ScalarDissipationRate::setSDRRate(const doublereal sdr)
         scalarDissipationRate_[0][i] = calculate(mixFracCoords_[i]);
     }
     delete interpolator_;
-    interpolator_ = new Utils::LinearInterpolator<doublereal, doublereal>
+    interpolator_ = new Utils::LinearInterpolator<double, double>
                         (
                             mixFracCoords_,
                             scalarDissipationRate_[0]
@@ -187,8 +187,8 @@ void ScalarDissipationRate::setSDRRate(const doublereal sdr)
  */
 void ScalarDissipationRate::setExternalScalarDissipationRate
 (
-    const std::vector<doublereal>& time,
-    const std::vector<doublereal>& sdr
+    const std::vector<double>& time,
+    const std::vector<double>& sdr
 )
 {
 
@@ -213,12 +213,12 @@ void ScalarDissipationRate::setExternalScalarDissipationRate
         }
     }
 
-    interpolatorZeroTime_ = new Utils::LinearInterpolator<doublereal, doublereal>
+    interpolatorZeroTime_ = new Utils::LinearInterpolator<double, double>
                             (
                                 mixFracCoords_,
                                 scalarDissipationRate_[0]
                             );
-    interpolatorNextTime_ = new Utils::LinearInterpolator<doublereal, doublereal>
+    interpolatorNextTime_ = new Utils::LinearInterpolator<double, double>
                             (
                                 mixFracCoords_,
                                 scalarDissipationRate_[1]
@@ -232,9 +232,9 @@ void ScalarDissipationRate::setExternalScalarDissipationRate
 // */
 /*void ScalarDissipationRate::setExternalScalarDissipationRate
 (
-    const std::vector<doublereal>& time,
-    const std::vector< std::vector<doublereal> >& sdr,
-    const std::vector< std::vector<doublereal> >& Zcoords
+    const std::vector<double>& time,
+    const std::vector< std::vector<double> >& sdr,
+    const std::vector< std::vector<double> >& Zcoords
 )
 {
 
@@ -249,12 +249,12 @@ void ScalarDissipationRate::setExternalScalarDissipationRate
 /**
  *  Interpolate and return the scalar dissipation rate
  */
-/*doublereal
-ScalarDissipationRate::getSDR(const doublereal time)
+/*double
+ScalarDissipationRate::getSDR(const double time)
 const
 {
 
-    Utils::LinearInterpolator<doublereal, doublereal> timeInterpolate(v_time, v_sdr);
+    Utils::LinearInterpolator<double, double> timeInterpolate(v_time, v_sdr);
 
     return timeInterpolate.interpolate(time);
 
@@ -263,11 +263,11 @@ const
 /*!
  *  Interpolate and return the scalar dissipation rate from a profile that varies through time.
  */
-doublereal
+double
 ScalarDissipationRate::operator()
 (
-    const doublereal& Z,
-    const doublereal& time
+    const double& Z,
+    const double& time
 )
 const
 {
@@ -278,11 +278,11 @@ const
     }
     else if (sdrType_ == constant_fromCFD)
     {
-        std::vector<doublereal> sdrAtTime_i;
+        std::vector<double> sdrAtTime_i;
         sdrAtTime_i.push_back(interpolatorZeroTime_->interpolate(Z));
         sdrAtTime_i.push_back(interpolatorNextTime_->interpolate(Z));
 
-        Utils::LinearInterpolator<doublereal, doublereal> interpolateOverTime
+        Utils::LinearInterpolator<double, double> interpolateOverTime
         (v_time, sdrAtTime_i);
 
         return interpolateOverTime.interpolate(Z);

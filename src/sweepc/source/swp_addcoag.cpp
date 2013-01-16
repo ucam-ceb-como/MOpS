@@ -47,7 +47,7 @@
 
 using namespace Sweep::Processes;
 
-const Sweep::real Sweep::Processes::AdditiveCoagulation::s_MajorantFactor = 1.5;
+const double Sweep::Processes::AdditiveCoagulation::s_MajorantFactor = 1.5;
 
 /**
  * Main way of building a new coagulation object
@@ -69,7 +69,7 @@ Sweep::Processes::AdditiveCoagulation::AdditiveCoagulation(std::istream &in, con
 }
 
 // Returns the rate of the process for the given system.
-Sweep::real Sweep::Processes::AdditiveCoagulation::Rate(real t, const Cell &sys,
+double Sweep::Processes::AdditiveCoagulation::Rate(double t, const Cell &sys,
                                                         const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
@@ -78,9 +78,9 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::Rate(real t, const Cell &sys,
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
-        real massSum = sys.Particles().GetSums().Property(Sweep::iM);
+        double massSum = sys.Particles().GetSums().Property(Sweep::iM);
 
-        //real vol = sys.SampleVolume());
+        //double vol = sys.SampleVolume());
         return A() * (n - 1) * massSum * s_MajorantFactor / sys.SampleVolume();
     } else {
         return 0.0;
@@ -105,7 +105,7 @@ unsigned int Sweep::Processes::AdditiveCoagulation::TermCount() const {return TY
  * @param[in]       local_geom  Spatial configuration information (ignored)
  * @param[in,out]   iterm       Pointer to start of sequence to hold the rate terms, returned as one past the end.
  */
-Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell &sys,
+double Sweep::Processes::AdditiveCoagulation::RateTerms(double t, const Cell &sys,
                             const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
@@ -123,7 +123,7 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::RateTerms(real t, const Cell 
  *
  * \return      0 on success, otherwise negative.
  */
-int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys, 
+int AdditiveCoagulation::Perform(double t, Sweep::Cell &sys, 
                              const Geometry::LocalGeometry1d& local_geom,
                              unsigned int iterm,
                              Sweep::rng_type &rng) const
@@ -166,7 +166,7 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
     }
 
     //Calculate the majorant rate before updating the particles
-    const real majk = MajorantKernel(*sp1, *sp2, sys, Default);
+    const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
 
     //Update the particles
     m_mech->UpdateParticle(*sp1, sys, t, rng);
@@ -202,7 +202,7 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
         // Must check for ficticious event now by comparing the original
         // majorant rate and the current (after updates) true rate.
 
-        real truek = CoagKernel(*sp1, *sp2, sys);
+        double truek = CoagKernel(*sp1, *sp2, sys);
 
         if (!Fictitious(majk, truek, rng)) {
             JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
@@ -236,7 +236,7 @@ int AdditiveCoagulation::Perform(Sweep::real t, Sweep::Cell &sys,
  *
  *@return       Value of kernel
  */
-Sweep::real Sweep::Processes::AdditiveCoagulation::CoagKernel(const Particle &sp1,
+double Sweep::Processes::AdditiveCoagulation::CoagKernel(const Particle &sp1,
                                                               const Particle &sp2,
                                                               const Cell& sys) const
 {
@@ -255,7 +255,7 @@ Sweep::real Sweep::Processes::AdditiveCoagulation::CoagKernel(const Particle &sp
  *
  *@return       Value of majorant kernel
  */
-Sweep::real Sweep::Processes::AdditiveCoagulation::MajorantKernel(const Particle &sp1,
+double Sweep::Processes::AdditiveCoagulation::MajorantKernel(const Particle &sp1,
                                                                   const Particle &sp2,
                                                                   const Cell& sys,
                                                                   const MajorantType maj) const

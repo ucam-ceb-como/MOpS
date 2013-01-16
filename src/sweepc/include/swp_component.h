@@ -59,9 +59,9 @@ public:
     // Constructors.
     Component(void); // Default constructor.
     Component(                  // Initialising constructor.
-        real molwt,             //   - Component molecular weight.
-        real dens,              //   - Component density.
-        real min,               //   - Min value for a valid particle
+        double molwt,             //   - Component molecular weight.
+        double dens,              //   - Component density.
+        double min,               //   - Min value for a valid particle
         const std::string &name //   - Component name or symbol.
         );
     Component(const Component &copy); // Copy constructor.
@@ -77,29 +77,29 @@ public:
     // MOLECULAR WEIGHT
     
     // Returns component molecular weight (g/mol).
-    real MolWt() const;
+    double MolWt() const;
 
     // Sets the molecular weight (g/mol).
-    void SetMolWt(real molwt);
+    void SetMolWt(double molwt);
 
 
     // DENSITY.
 
     // Returns component density (g/cm3).
-    real Density() const;
+    double Density() const;
 
-    real CoalescThresh() const;
+    double CoalescThresh() const;
 
-    real GrowthFact() const;
+    double GrowthFact() const;
 
-    real MinPAH() const;
+    double MinPAH() const;
 
     // Sets the density (g/cm3).
-    void SetDensity(real dens);
+    void SetDensity(double dens);
 
-    void SetCoalescThresh(real ct);
+    void SetCoalescThresh(double ct);
 
-    void SetGrowthFact(real gf);
+    void SetGrowthFact(double gf);
 
     void SetMinPAH(int mp);
 
@@ -111,13 +111,13 @@ public:
 
     // MINIMUM VALID VALUE
     //! Get the minimum amount that a valid particle may have of this component
-    real MinValid() const {return m_minValid;}
+    double MinValid() const {return m_minValid;}
 
     //! Set the minimum amount that a valid particle must have of this component
-    void SetMinValid(const real min) {m_minValid = min;}
+    void SetMinValid(const double min) {m_minValid = min;}
 
     //! Check is a valid particle can have specified amount of this component
-    bool IsValidValue(const real r) const;
+    bool IsValidValue(const double r) const;
 
     // READ/WRITE/COPY.
 
@@ -131,19 +131,19 @@ public:
     void Deserialize(std::istream &in);
 
 private:
-    real m_density;     // Component density (g/cm3).
-    real m_molwt;       // Component molecular weight (g/mol).
+    double m_density;     // Component density (g/cm3).
+    double m_molwt;       // Component molecular weight (g/mol).
 
     //! Minimum value a valid particle can have for this component
-    real m_minValid;
+    double m_minValid;
 
     std::string m_name; // Component symbol or name.
 
     //! threshold after which two individual primaries are replaced by one
-    real m_coalesc_thresh;
+    double m_coalesc_thresh;
 
     //! factor with which the PAH growth is multiplied
-    real m_growthfact;
+    double m_growthfact;
 
     //! minimum number of PAHs withinin the primary that are needed to apply m_growthfact
     int m_minPAH;

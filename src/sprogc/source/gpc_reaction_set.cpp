@@ -47,9 +47,12 @@
 #include "gpc_idealgas.h"
 #include <iostream>
 #include <cmath>
+#include <math.h>
 #include <stdexcept>
 #include <memory.h>
 #include <iostream>
+#include <algorithm>
+
 using namespace Sprog;
 using namespace Sprog::Kinetics;
 using namespace std;
@@ -110,6 +113,23 @@ ReactionSet &ReactionSet::operator=(const ReactionSet &rxns)
 
         // Build fall-off reaction map.
         m_fo_rxns = rxns.m_fo_rxns;
+
+	// Build surface reaction map of any kinds 
+        m_surface_rxns = rxns.m_surface_rxns; 
+
+	// Build ford reaction map.
+	m_ford_rxns = rxns.m_ford_rxns;
+
+	// Build cov reaction map. 
+	m_cov_rxns = rxns.m_cov_rxns;
+
+	// Build STICK reaction map.
+	m_stick_rxns = rxns.m_stick_rxns;
+
+	// Build MOTT WISE reaction map.
+	m_mottw_rxns = rxns.m_mottw_rxns; 
+
+	// Build 
     }
 
     return *this;
@@ -163,6 +183,37 @@ ReactionSet &ReactionSet::operator+=(const ReactionSet &rxns)
         for (jrxn=rxns.m_fo_rxns.begin(); jrxn!=rxns.m_fo_rxns.end(); jrxn++) {
             m_fo_rxns.push_back(n + *jrxn);
         }
+
+	// Build all surface reaction map.
+        m_surface_rxns.reserve(m_surface_rxns.size() + rxns.m_surface_rxns.size());
+        for (jrxn=rxns.m_surface_rxns.begin(); jrxn!=rxns.m_surface_rxns.end(); jrxn++) {
+            m_surface_rxns.push_back(n + *jrxn);
+        }
+	
+	// Build ford reaction map.
+	m_ford_rxns.reserve(m_ford_rxns.size() + rxns.m_ford_rxns.size());
+	for (jrxn=rxns.m_ford_rxns.begin(); jrxn!=rxns.m_ford_rxns.end(); jrxn++) {
+            m_ford_rxns.push_back(n + *jrxn);
+        }
+
+	// Build cov reaction map. 
+	m_cov_rxns.reserve(m_cov_rxns.size() + rxns.m_cov_rxns.size());
+	for (jrxn=rxns.m_cov_rxns.begin(); jrxn!=rxns.m_cov_rxns.end(); jrxn++) {
+            m_cov_rxns.push_back(n + *jrxn);
+        }
+
+	// Build STICK reaction map.
+	m_stick_rxns.reserve(m_stick_rxns.size() + rxns.m_stick_rxns.size());
+	for (jrxn=rxns.m_stick_rxns.begin(); jrxn!=rxns.m_stick_rxns.end(); jrxn++) {
+            m_stick_rxns.push_back(n + *jrxn);
+        }
+	
+	// Build MOTT WISE reaction map.
+	m_mottw_rxns.reserve(m_mottw_rxns.size() + rxns.m_mottw_rxns.size()); 
+	for (jrxn=rxns.m_mottw_rxns.begin(); jrxn!=rxns.m_mottw_rxns.end(); jrxn++) {
+            m_mottw_rxns.push_back(n + *jrxn);
+        }
+
     }
 
     return *this;
@@ -222,6 +273,7 @@ Reaction *const ReactionSet::AddReaction(const Sprog::Kinetics::Reaction &rxn)
     Reaction *pr = rxn.Clone();
     m_rxns.push_back(pr);
 
+    
 
     // Check for reverse parameters.
     if (rxn.RevArrhenius() != NULL) {
@@ -249,6 +301,32 @@ Reaction *const ReactionSet::AddReaction(const Sprog::Kinetics::Reaction &rxn)
         m_fo_rxns.push_back(m_rxns.size()-1);
     }
 
+    // Check for surface parameters.
+    if (rxn.IsSURF() != None) {
+        m_surface_rxns.push_back(m_rxns.size()-1);
+    }
+
+    // Check for FORD parameters.
+    if (rxn.IsFORD()) {
+        m_ford_rxns.push_back(m_rxns.size()-1);
+    }
+
+    // Check for COV parameters.
+    if (rxn.IsCOVERAGE()) {
+        m_cov_rxns.push_back(m_rxns.size()-1);
+    }
+
+
+    // Check for STICK parameters. 
+    if (rxn.IsSTICK()){
+       m_stick_rxns.push_back(m_rxns.size()-1);
+      }
+
+    // Check for Mott-Wise parameters. 
+    if (rxn.IsMottWise()) {
+        m_mottw_rxns.push_back(m_rxns.size()-1);
+    }
+
     return pr;
 }
 
@@ -262,23 +340,27 @@ void ReactionSet::Clear()
 }
 
 
-// MOLAR PRODUCTION RATES RATES.
+
+// MOLAR PRODUCTION RATES.
 
 // Calculates the molar production rates of all species given the rate
-// of progress of each reaction.
-real ReactionSet::GetMolarProdRates(const fvector &rop,
+// of progress of each reaction. 
+// GetMolarProdRates 1
+
+double ReactionSet::GetMolarProdRates(const fvector &rop,
                                     fvector &wdot) const
 {
     unsigned int k;
     const RxnStoichMap *mu;
     RxnStoichMap::const_iterator i;
-    real wtot = 0.0;
+    double wtot = 0.0;
+	unsigned int size_gas_rxns = m_rxns.size() - m_surface_rxns.size();
 
     // Assign sufficient memory for output.
-    wdot.resize(m_mech->SpeciesCount());
-
+    wdot.resize(m_mech->SpeciesCount()); 
+ 
     // Loop over all species in mechanism.
-    for (k=0; k!=m_mech->SpeciesCount(); ++k) {
+    for (k=0; k!=m_mech->SpeciesCount(); ++k) { // if it is surface species, wdot (k) will be 0 
         // Reset prod. rate of this species to zero.
         wdot[k] = 0.0;
 
@@ -289,59 +371,140 @@ real ReactionSet::GetMolarProdRates(const fvector &rop,
         //   first  = index of reaction.
         //   second = stoichiometry of species in reaction.
         for (i=mu->begin(); i!= mu->end(); i++) {
-            wdot[k] += (*i).second * rop[(*i).first];
-        }
 
-        // Sum up total production rate.
+	  if (((*i).first) < size_gas_rxns){
+            wdot[k] += (*i).second * rop[(*i).first];
+	    // unsigned int idx = (*i).first; // for debugging
+	    // cout << "is surface? " << m_rxns[idx]->IsSURF() << endl;
+	  }
+	  
+	  
+	}
+
+    
+    // Sum up total production rate.
         wtot += wdot[k];
     }
-
+	
+	/* FOR DEBUGGING
+	for (k=m_mech->GasSpeciesCount(); k!=m_mech->SpeciesCount(); ++k) {
+	cout << m_mech->GetSpecies(k)->Name() << " wdot= " << wdot[k] << endl;
+	}
+		*/
+    // cout << "wtot " << wtot << endl;
     return wtot;
 }
 
-// Calculates the molar production rates of all species.
-real ReactionSet::GetMolarProdRates(const Sprog::Thermo::GasPhase &gas,
+// MOLAR PRODUCTION RATES.
+
+// Calculates the molar production rates of all species given the rate
+// of progress of each reaction. 
+// GetMolarProdRates 1
+
+double ReactionSet::GetSurfaceMolarProdRates(const fvector &rop,
+                                    fvector &sdot) const
+{
+    unsigned int k;
+    const RxnStoichMap *mu;
+    RxnStoichMap::const_iterator i;
+    double stot = 0.0;
+	unsigned int size_gas_rxns = m_rxns.size() - m_surface_rxns.size();
+
+    // Assign sufficient memory for output.
+    sdot.resize(m_mech->SpeciesCount());
+    // sdot.resize(m_mech->SpeciesCount());
+
+    // Loop over all species in mechanism.
+    for (k=0; k!=m_mech->SpeciesCount(); ++k) {
+        // Reset prod. rate of this species to zero.
+        sdot[k] = 0.0;
+
+        // Get the map of reaction stoichiometry for this species.
+        mu = &m_mech->GetStoichXRef(k);
+
+        // Sum up the production rate of this species from all reactions.
+        //   first  = index of reaction.
+        //   second = stoichiometry of species in reaction.
+        for (i=mu->begin(); i!= mu->end(); i++) {
+
+			if (((*i).first) >= size_gas_rxns){ // surface reaction only
+
+            sdot[k] += (*i).second * rop[(*i).first];
+			//unsigned int idx = (*i).first; // for debugging
+			//cout << "is surface? " << m_rxns[idx]->IsSURF() << endl;
+			//cout << "stoich " << (*i).second << endl;
+			// cout << "ROP Surf " << rop [(*i).first] <<  "Surface s= " << sdot[k] << endl;
+			}
+	  
+	  }
+
+			
+	
+	//	cout << m_mech->GetSpecies(k)->Name() << " " << sdot[k] << endl;
+    }
+
+	for (k=0; k!=m_mech->GasSpeciesCount(); ++k) {
+	  // cout << "sp included in stot" << m_mech->GetSpecies(k)->Name() << endl;
+        // Sum up total production rate for gas species only 
+        stot += sdot[k] /* * m_mech->Species(k)->MolWt()*/; // Don't times the molecular weight
+    }
+
+	//	std::cout << "stot " << stot << endl;
+    return stot;
+}
+
+// Calculates the molar production rates of all species. GetMolarProdRates 2
+double ReactionSet::GetMolarProdRates(const Sprog::Thermo::GasPhase &gas,
                                     fvector &wdot) const
 {
     static fvector rop;
-    GetRatesOfProgress(gas, rop);
-    return GetMolarProdRates(rop, wdot);
+    GetRatesOfProgress(gas, rop);//  Calling GetRatesofProgress 4 
+    return GetMolarProdRates(rop, wdot); // Caling GetMolarProdRates 1
 }
 
-// Calculates the molar production rates of all species.
-real ReactionSet::GetMolarProdRates(real T, real density, const real *const x,
+// Calculates the molar production rates of all species.GetMolarProdRates 3
+double ReactionSet::GetMolarProdRates(double T, double density, const double *x,
                                     unsigned int n,
                                     const Sprog::Thermo::ThermoInterface &thermo,
                                     fvector &wdot) const
 {
     static fvector rop;
-    GetRatesOfProgress(T, density, x, n, thermo, rop);
-    return GetMolarProdRates(rop, wdot);
+    GetRatesOfProgress(T, density, x, n, thermo, rop); //  Calling GetRatesofProgress6
+    return GetMolarProdRates(rop, wdot); // Caling GetMolarProdRates 1
+}
+
+
+// Calculates the molar production rates of surface and gas species.GetSurfaceMolarProdRates 2
+double ReactionSet::GetSurfaceMolarProdRates(double T, double density, const double * x,
+                                    unsigned int n,
+                                    const Sprog::Thermo::ThermoInterface &thermo,
+                                    fvector &sdot) const
+{
+    static fvector rop;
+    GetRatesOfProgress(T, density, x, n, thermo, rop); //  Calling GetRatesofProgress6
+    return GetSurfaceMolarProdRates(rop, sdot); // Caling GetMolarProdRates 1
 }
 
 
 
 
-
-// returns the molar production rate given the species mixture
+// returns the molar production rate given the species mixture GetMolarProdRates 4
 void ReactionSet::GetMolarProdRates(Sprog::Thermo::Mixture &mix, fvector &wdot) const{
 
    	fvector kfrwd,krev,rop,Gs;
 	Sprog::Thermo::IdealGas ig(*mix.Species());
 	ig.CalcGs_RT(mix.Temperature(),Gs);
- 	GetRateConstants(mix.Temperature(),mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),Gs,kfrwd,krev);
-	GetRatesOfProgress(mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),kfrwd,krev,rop);
-	GetMolarProdRates(rop,wdot);
-
+ 	GetRateConstants(mix.Temperature(),mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),Gs,kfrwd,krev);// Caling GetRateConstant 1
+	GetRatesOfProgress(mix.Density(),&(mix.MoleFractions()[0]),m_mech->SpeciesCount(),kfrwd,krev,rop); // Calling GetRateofProgress 2
+	GetMolarProdRates(rop,wdot);// Caling GetMolarProdRates 1
+	// GetSurfaceMolarProdRates(rop,sdot);// Caling GetSurfaceMolarProdRates NOT INCLUDED DUE TO BEING USED IN residual, batch and flamelet
 }
 
 
-// REACTION RATES OF PROGRESS.
-
 // Calculates the rate of progress of each reaction given the
-// precalculated rate constants.
-void ReactionSet::GetRatesOfProgress(real density,
-                                     const real *const x,
+// precalculated rate constants. // GetRatesOfProgress 1
+void ReactionSet::GetRatesOfProgress(double density,
+                                     const double *x,
                                      unsigned int n,
                                      const fvector &kforward,
                                      const fvector &kreverse,
@@ -349,8 +512,9 @@ void ReactionSet::GetRatesOfProgress(real density,
                                      fvector &rfwd,
                                      fvector &rrev) const
 {
-    unsigned int i;
-    int j, k;
+  unsigned int i;
+  RxnMap::const_iterator im;
+    int j, k, l;
 
     // Resize output vector to sufficient length.
     rop.resize(m_rxns.size(), 0.0);
@@ -360,8 +524,13 @@ void ReactionSet::GetRatesOfProgress(real density,
         rfwd.resize(m_rxns.size(), 0.0);
         rrev.resize(m_rxns.size(), 0.0);
 
+
+
         // Loop over all reactions.
-        for (i=0; i!=m_rxns.size(); ++i) {
+
+	unsigned int size_gas_rxns = m_rxns.size() - m_surface_rxns.size();
+
+        for (i=0; i!=size_gas_rxns; ++i) {
             // Use rfwd to store forward rates of production,
             // and rrev to store reverse rates.
             rfwd[i] = kforward[i];
@@ -387,25 +556,196 @@ void ReactionSet::GetRatesOfProgress(real density,
 
             // Calculate the net rates of production.
             rop[i] = rfwd[i] - rrev[i];
+	    //cout << "ROP Gas" << rop[i] << endl;
+	    //cout << "is surface? " << m_rxns[i]->IsSURF() << endl;
         }
+
+	
+	// Loop over all SURFACE reactions.
+        for (i=size_gas_rxns; i!=m_rxns.size(); ++i) {
+        
+            // Use rfwd to store forward rates of production,
+            // and rrev to store reverse rates.
+            rfwd[i] = kforward[i];
+            rrev[i] = kreverse[i];
+
+	    // Integer reactants
+	 
+	    for (k=0; k!=m_rxns[i]->ReactantCount(); ++k) {
+                // As the stoichiometry is integer, it is more computationally efficient
+                // to multiply the values together than to use the pow() function.
+
+	      unsigned int idx = m_rxns[i]->Reactants()[k].Index(); 
+	      string spName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name(); 
+	      if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){
+                for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
+                    rfwd[i] *= density * x[m_rxns[i]->Reactants()[k].Index()];
+                }
+	      }
+	      else{
+		string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName(); 
+		//cout << spName << " phase "<< phName << endl;
+		double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
+		int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
+		 for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
+		   rfwd[i] *= site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()];
+                }
+	      }
+	      
+            }
+
+	    // Integer products.
+
+	    for (k=0; k!=m_rxns[i]->ProductCount(); ++k) {
+                // As the stoichiometry is integer, it is more computationally efficient
+                // to multiply the values together than to use the pow() function.
+
+	      unsigned int idx = m_rxns[i]->Products()[k].Index(); 
+	      string spName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name(); 
+	      if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){
+                for (j=0; j!=m_rxns[i]->Products()[k].Mu(); ++j) {
+                    rrev[i] *= density * x[m_rxns[i]->Products()[k].Index()];
+                }
+	      }
+	      else{
+		string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName();
+
+		//cout << "phase "<< phName << endl;
+		double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
+		int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
+		 for (j=0; j!=m_rxns[i]->Products()[k].Mu(); ++j) {
+		   rrev[i] *= site_d/sp_occ * x[m_rxns[i]->Products()[k].Index()];
+                }
+	      }
+	      
+            }
+	    // Calculate the net rates of production.
+            rop[i] = rfwd[i] - rrev[i];
+	    //cout << "ROP Surf" << rop[i] << endl; 
+	    // cout << "is surface? " << m_rxns[i]->IsSURF() << endl;
+	} 
+
+		// Loop over all FORD reactions to replace the value of Mu.
+        for (im=m_ford_rxns.begin(); im!=m_ford_rxns.end(); ++im) {
+	  i = *im;
+
+	  // Use rfwd to store forward rates of production,
+	  // and rrev to store reverse rates.
+	  rfwd[i] = kforward[i];
+	  rrev[i] = kreverse[i];
+	
+	  // Integer reactants.
+
+	  
+	      
+	  for (k=0; k!=m_rxns[i]->ReactantCount(); ++k) {
+	    unsigned int idx = m_rxns[i]->Reactants()[k].Index();
+	    string spName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name();
+	    bool flag = false;
+	    string species_ford ="";
+	    double Fordcoeff = 0.0;
+	    for (l=0; l!=m_rxns[i]->FORDCount(); ++l) {
+	      species_ford = m_rxns[i]->FORDElement(l).spName;
+	      flag = spName.compare(species_ford) == 0;
+	      if (flag){ 
+		Fordcoeff = m_rxns[i]->FORDElement(l).F_k;
+
+	      } 
+	      if (m_rxns[i]->Reactants()[k].Mu() == 0){ // Remember that the stoich if they are explicitly written as two identical reactant species, one will be set to 0. This can be a bug
+		flag = false; 
+	      }
+	      if (flag) break;
+	    }
+
+	    if (flag)
+		{
+
+		  if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){ 
+		    // FORD coefficient can be a decimal so cannot use for loop
+		    rfwd[i] *= pow(density * x[m_rxns[i]->Reactants()[k].Index()], Fordcoeff);
+		    // cout << "gas species FORD " << spName << endl;
+		  }
+		  else {
+		    	string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName();
+			double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
+			int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
+			rfwd[i] *= pow(site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()], Fordcoeff);
+			// cout << "surf species FORD " << spName << " = " << rfwd[i] << endl;
+		  }
+		}
+
+	      else {
+		if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){ 
+		  for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
+		    rfwd[i] *= density * x[m_rxns[i]->Reactants()[k].Index()];
+		    // cout << "gas species not FORD " << spName << " = " << rfwd[i] << endl; 
+		  }
+		}
+		else {
+		  string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName();
+		  double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
+		  int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
+		  for (j=0; j!=m_rxns[i]->Reactants()[k].Mu(); ++j) {
+		    rfwd[i] *= site_d/sp_occ * x[m_rxns[i]->Reactants()[k].Index()];
+		    // cout << "surface species not FORD " << spName << " = " << rfwd[i] << endl; 
+		  }
+		}
+	      }
+
+	    }
+	
+	      
+	   
+	  // Integer products.
+
+	    for (k=0; k!=m_rxns[i]->ProductCount(); ++k) {
+                // As the stoichiometry is integer, it is more computationally efficient
+                // to multiply the values together than to use the pow() function.
+
+	      unsigned int idx = m_rxns[i]->Products()[k].Index(); 
+	      string spName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name(); 
+	      if ((m_rxns[i]->Mechanism()->FindPhaseName(spName)).compare("gas") == 0){
+                for (j=0; j!=m_rxns[i]->Products()[k].Mu(); ++j) {
+                    rrev[i] *= density * x[m_rxns[i]->Products()[k].Index()];
+                }
+	      }
+	      else{
+		string phName = m_rxns[i]->Mechanism()->GetSpecies(spName)->PhaseName();
+		double site_d =  m_rxns[i]->Mechanism()->FindSiteDensity(phName);
+		int sp_occ = m_rxns[i]->Mechanism()->FindSiteOccup(spName);
+		 for (j=0; j!=m_rxns[i]->Products()[k].Mu(); ++j) {
+		   rrev[i] *= site_d/sp_occ * x[m_rxns[i]->Products()[k].Index()];
+                }
+	      }
+	      
+            }
+	    // Calculate the net rates of production.
+            rop[i] = rfwd[i] - rrev[i];
+	    // cout << "is ford? " << m_rxns[i]->IsFORD() << endl;
+
+	}
+       
+   
     }
 }
 
+
+
 // Calculates the rate of progress of each reaction given the
-// precalculated rate constants.
-void ReactionSet::GetRatesOfProgress(real density,
-                                     const real *const x,
+// precalculated rate constants. // GetRatesOfProgress 2
+void ReactionSet::GetRatesOfProgress(double density,
+                                     const double * x,
                                      unsigned int n,
                                      const fvector &kforward,
                                      const fvector &kreverse,
                                      fvector &rop) const
 {
     static fvector rfwd, rrev;
-    GetRatesOfProgress(density, x, n, kforward, kreverse, rop, rfwd, rrev);
+    GetRatesOfProgress(density, x, n, kforward, kreverse, rop, rfwd, rrev); // Calling GetRatesOfProgress 1
 }
 
 // Returns the rates of progress of all reactions given the mixture
-// object.
+// object. GetRatesOfProgress 3
 void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix,
                                      const fvector &kforward,
                                      const fvector &kreverse,
@@ -413,51 +753,51 @@ void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &mix,
 {
     GetRatesOfProgress(mix.Density(), &(mix.MoleFractions()[0]),
                        m_mech->Species().size(),
-                       kforward, kreverse, rop);
+                       kforward, kreverse, rop); // Calling GetRatesOfProgress 2
 }
 
 
 
-// Calculates the rate of progress of each reaction.
+// Calculates the rate of progress of each reaction. GetRatesOfProgress 4
 void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &gas, fvector &rop) const
 {
     static fvector kf, kr;
-    GetRateConstants(gas, kf, kr);
-    GetRatesOfProgress(gas, kf, kr, rop);
+    GetRateConstants(gas, kf, kr); // Calling GetRateConstants 4
+    GetRatesOfProgress(gas, kf, kr, rop);// Calling GetRatesOfProgress 3
 }
 
-// Calculates the rate of progress of each reaction.
+// Calculates the rate of progress of each reaction. GetRatesOfProgress 5
 void ReactionSet::GetRatesOfProgress(const Sprog::Thermo::GasPhase &gas,
                                      fvector &rop,
                                      fvector &rfwd,
                                      fvector &rrev) const
 {
     static fvector kf, kr;
-    GetRateConstants(gas, kf, kr);
+    GetRateConstants(gas, kf, kr); // Calling GetRateConstants 4
     GetRatesOfProgress(gas.Density(), &(gas.MoleFractions()[0]),
                        m_mech->Species().size(),
-                       kf, kr, rop, rfwd, rrev);
+                       kf, kr, rop, rfwd, rrev); // Calling GetRatesOfProgress 1
 }
 
-// Calculates the rate of progress of each reaction.
-void ReactionSet::GetRatesOfProgress(real T, real density, const real *const x,
+// Calculates the rate of progress of each reaction. GetRatesOfProgress 6
+void ReactionSet::GetRatesOfProgress(double T, double density, const double *x,
                                      unsigned int n,
                                      const Sprog::Thermo::ThermoInterface &thermo,
                                      fvector &rop) const
 {
     static fvector kf, kr;
-    GetRateConstants(T, density, x, n, thermo, kf, kr);
-    GetRatesOfProgress(density, x, n, kf, kr, rop);
+    GetRateConstants(T, density, x, n, thermo, kf, kr); // Calling GetRateConstants 3
+    GetRatesOfProgress(density, x, n, kf, kr, rop); // Calling GetRatesOfProgress 2
 }
 
 
 // RATE CONSTANTS.
 
 // Calculates the forward and reverse rate constants of all reactions
-// given the mixture temperature, density and species mole fractions.
-void ReactionSet::GetRateConstants(real T,
-                                   real density,
-                                   const real *const x,
+// given the mixture temperature, density and species mole fractions. // GetRateConstant 1
+void ReactionSet::GetRateConstants(double T,
+                                   double density,
+                                   const double *x,
                                    unsigned int n,
                                    const fvector &Gs,
                                    fvector &kf,
@@ -489,6 +829,9 @@ void ReactionSet::GetRateConstants(real T,
     // Calculate concentration-independent rate constants.
     calcRateConstantsT(T, Gs, kf, kr);
 
+    // Calculate COVERAGE rate constants (concentration dependent)
+    calcCOVERAGE(T, x, kf);
+
     // Calculate third-body concentrations for all reactions.  These
     // values will be multiplied by the rate constants, therefore if
     // a reaction does not have third-bodies then tbconcs is set to 1.0.
@@ -511,21 +854,22 @@ void ReactionSet::GetRateConstants(real T,
 }
 
 // Calculates the forward and reverse rate constants
-// of all reactions given a mixture object.
+// of all reactions given a mixture object. // GetRateConstant 2
 void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
-                                   const std::vector<real> &Gs,
-                                   std::vector<real> &kforward,
-                                   std::vector<real> &kreverse) const
+                                   const std::vector<double> &Gs,
+                                   std::vector<double> &kforward,
+                                   std::vector<double> &kreverse) const
 {
     GetRateConstants(mix.Temperature(), mix.Density(), &(mix.MoleFractions()[0]),
-                     m_mech->Species().size(), Gs, kforward, kreverse);
+                     m_mech->Species().size(), Gs, kforward, kreverse); // Calling GetRateConstant 1
 }
 
 // Calculates the forward and reverse rate constants of all reactions
 // given the mixture temperature, density and species mole fractions.
-void ReactionSet::GetRateConstants(real T,
-                                   real density,
-                                   const real *const x,
+// GetRateConstant 3
+void ReactionSet::GetRateConstants(double T,
+                                   double density,
+                                   const double * x,
                                    unsigned int n,
                                    const Sprog::Thermo::ThermoInterface &thermo,
                                    fvector &kforward,
@@ -533,42 +877,45 @@ void ReactionSet::GetRateConstants(real T,
 {
     static fvector Gs;
     thermo.CalcGs_RT(T, Gs);
-    GetRateConstants(T, density, x, n, Gs, kforward, kreverse);
+    GetRateConstants(T, density, x, n, Gs, kforward, kreverse); // Calling GetRateConstants 1
 }
 
 // Calculates the forward and reverse rate constants
-// of all reactions given a mixture object.
+// of all reactions given a mixture object.// GetRateConstant 4
 void ReactionSet::GetRateConstants(const Sprog::Thermo::GasPhase &mix,
-                                   std::vector<real> &kforward,
-                                   std::vector<real> &kreverse) const
+                                   std::vector<double> &kforward,
+                                   std::vector<double> &kreverse) const
 {
     static fvector Gs;
     mix.Gs_RT(Gs);
     GetRateConstants(mix.Temperature(), mix.Density(), &(mix.MoleFractions()[0]),
-                     m_mech->Species().size(), Gs, kforward, kreverse);
+                     m_mech->Species().size(), Gs, kforward, kreverse); // Calling GetRateConstant 3
 }
 
 
 // Calculates the concentration-independent portions
-// of the rates constants.
-void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
+// of the rates constants. 
+void ReactionSet::calcRateConstantsT(double T, const fvector &Gs,
                                      fvector &kf, fvector &kr) const
 {
-    real lnT=0.0, invRT=0.0, Patm_RT=0.0, T_1_3=0.0, T_2_3=0.0;
+    double lnT=0.0, invRT=0.0, RT=0.0, Patm_RT=0.0, T_1_3=0.0, T_2_3=0.0;
     RxnPtrVector::const_iterator i;
     RxnMap::const_iterator im;
     int j, k;
+    unsigned int m, n;
 
-    // Precalculate some temperature parameters.
+    // Precalculate some temperature parameters. (p/RT)
     lnT = log(T);
     switch (m_mech->Units()) {
         case SI :
             invRT = 1.0 / (R * T);
             Patm_RT = 101325.0 * invRT;
+	    RT= R*T; 
             break;
         case CGS :
             invRT = 1.0 / (R_CGS * T);
             Patm_RT = 1013250.0 * invRT;
+	    RT= R_CGS*T;
             break;
         default:
             // Something has gone wrong to end up here.
@@ -584,7 +931,9 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
     for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); ++i,++j) {
         kf[j] = (*i)->Arrhenius().A *
                       exp(((*i)->Arrhenius().n * lnT) -
-                          ((*i)->Arrhenius().E * invRT));
+                          ((*i)->Arrhenius().E * invRT)); // This is equal to k_f = A_i T^{beta_i} exp(-Ei / RcT)
+
+	// cout << "classic Arrhenius " << kf[j] << endl; 
     }
 
     // Landau-Teller rate expressions.
@@ -592,49 +941,492 @@ void ReactionSet::calcRateConstantsT(real T, const fvector &Gs,
         j = *im;
         kf[j] *= exp((m_rxns[j]->LTCoeffs()->B / T_1_3) +
                            (m_rxns[j]->LTCoeffs()->C / T_2_3));
+
+	// cout << "Landau " << kf[j] << endl; 
     }
 
+
+    
     // Reverse rate constants.
     for (i=m_rxns.begin(),j=0; i!=m_rxns.end(); ++i,++j) {
-        if ((*i)->RevArrhenius() != NULL) {
+
+	
+	  if ((*i)->RevArrhenius() != NULL) {
             // This reaction has explicit reverse rate parameters.
             kr[j] = (*i)->RevArrhenius()->A *
-                          exp(((*i)->RevArrhenius()->n * lnT) -
-                              ((*i)->RevArrhenius()->E * invRT));
-        } else if ((*i)->IsReversible()) {
+	      exp(((*i)->RevArrhenius()->n * lnT) -
+		  ((*i)->RevArrhenius()->E * invRT));
+	  } else if ((*i)->IsReversible()) {
             // Must find the reverse rate constants by equilibrium.
             kr[j] = 0.0;
 
             // Calculate the Gibbs free energy change for reaction i and sum up
             // the stoichiometric coefficients.
             for (k=0; k!=(*i)->ReactantCount(); ++k) {
-                // Integer Reactants.
-                kr[j] += (*i)->Reactants()[k].Mu() * Gs[(*i)->Reactants()[k].Index()];
+	      // Integer Reactants.
+	      kr[j] += (*i)->Reactants()[k].Mu() * Gs[(*i)->Reactants()[k].Index()];
             }
             for (k=0; k!=(*i)->ProductCount(); ++k) {
-                // Integer Products.
-                kr[j] -= (*i)->Products()[k].Mu() * Gs[(*i)->Products()[k].Index()];
+	      // Integer Products.
+	      kr[j] -= (*i)->Products()[k].Mu() * Gs[(*i)->Products()[k].Index()];
             }
 
             // Calculate the reverse rate constant.
             kr[j]  = exp(min(kr[j], log(1.0e250)));
             kr[j] *= pow(Patm_RT, (*i)->TotalStoich());
             kr[j]  = kf[j] / max(kr[j], 1.0e-250);
-        }
+	  }
+
+	  // cout << "classic reverse Arrhenius " << kr[j] << endl; 
+
+    }
+	
+    for (im=m_surface_rxns.begin(),j=0; im!=m_surface_rxns.end(); ++im) {
+      j = *im; 
+
+	  // Explicit surface reactions 
+	  unsigned int NumberOfPhase = m_rxns[j]->PhaseCount();
+	  unsigned int NumberOfSpecies = m_rxns[j]->DeltaStoichCount();
+	  double result_surf =1.0;
+	  double result_gas= 1.0; 
+	  double deltaSigma_n_i;
+	  double K_c_i = 0.0;
+	   
+	    for (m=0; m!=NumberOfPhase; ++m){  
+   
+	      string phName = m_rxns[j]->GetPhaseName(m);
+	      deltaSigma_n_i = 0.0;
+	      double result1 = 1.0;
+
+	      if ((phName != "gas")) {
+      
+		for (n=0; n!=NumberOfSpecies; ++n) {
+
+		  string spName = m_rxns[j]->DeltaStoich(n)->Name();
+		  string species_phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName(); 
+
+		  if ( (species_phName.compare(phName) == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0 || m_rxns[j]->DeltaStoich(n)->ProdStoich() > 0 ) ) { // This should be specific for each surf phase
+		  
+		  // The later is since if they are written as A + A -> B + C, then the first reactant ReacStoich will be 2 and the second will be 0. The same with the products if they are expressed in A + C -> B + B. Suppose that a reaction has O2 + Pt -> Pt + O + O, then the above will still hold provided that DeltaStoich object for 'Pt Reactant' and 'Pt Product' stored separately.   
+		    
+		    double v_k_i= m_rxns[j]->GetDeltaStoich(spName)->TotalStoich();
+		    deltaSigma_n_i += v_k_i*m_rxns[j]->Mechanism()->GetSpecies(spName)->SiteOccupancy();  
+		    v_k_i = -v_k_i; // take minus of it     
+		    result1 *= pow( m_rxns[j]->Mechanism()->GetSpecies(spName)->SiteOccupancy(), v_k_i );
+		  }
+		  
+		}
+		
+		// These two must be applied to surface ONLY so put inside the if statement
+	      double siteDensity = m_rxns[j]->Mechanism()->GetPhase(phName)->SiteDen(); 
+	      result_surf *= (pow(siteDensity, deltaSigma_n_i)*result1);
+	      }
+   
+
+	      else{
+
+		double sum_v_i_gas = 0.0;
+		for (n=0; n!=NumberOfSpecies; ++n) {
+
+		  string spName =  m_rxns[j]->DeltaStoich(n)->Name();
+		  string species_phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName(); 
+
+		  if ( ( species_phName.compare(phName) == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0 || m_rxns[j]->DeltaStoich(n)->ProdStoich() > 0 )) { 
+
+		    double v_k_i= m_rxns[j]->GetDeltaStoich(spName)->TotalStoich();
+		    sum_v_i_gas += v_k_i;  
+		  }
+
+		}
+
+		result_gas = pow(Patm_RT, sum_v_i_gas);  
+	      }
+
+	    }
+        
+	    K_c_i = result_gas*result_surf; 
+
+	    if (m_rxns[j]->RevArrhenius() != NULL) {
+	      // This reaction has explicit reverse rate parameters.
+	      kr[j] = m_rxns[j]->RevArrhenius()->A *
+		exp((m_rxns[j]->RevArrhenius()->n * lnT) -
+		  (m_rxns[j]->RevArrhenius()->E * invRT));
+	    } else if (m_rxns[j]->IsReversible()) {
+	      // Must find the reverse rate constants by equilibrium.
+	      kr[j] = 0.0;
+	      
+	      // Calculate the Gibbs free energy change for reaction i and sum up
+	      // the stoichiometric coefficients.
+	      for (k=0; k!=m_rxns[j]->ReactantCount(); ++k) {
+		// Integer Reactants.
+		kr[j] += m_rxns[j]->Reactants()[k].Mu() * Gs[m_rxns[j]->Reactants()[k].Index()];
+	      }
+	      for (k=0; k!=m_rxns[j]->ProductCount(); ++k) {
+		// Integer Products.
+		kr[j] -= m_rxns[j]->Products()[k].Mu() * Gs[m_rxns[j]->Products()[k].Index()];
+	      }
+
+	      // Calculate the reverse rate constant.
+	      kr[j]  = exp(min(kr[j], log(1.0e250))); // Calculating K_pi
+	      kr[j] *= K_c_i;
+	      kr[j]  = kf[j] / max(kr[j], 1.0e-250);
+	    }
+
+	    // cout << "surface reverse Arrhenius " << kr[j] << endl; 
+
     }
 
+
+	 
+
     // Explicit reverse Landau-Teller parameters.
-    for (im=m_revlt_rxns.begin(); im!=m_revlt_rxns.end(); ++im) {
+      for (im=m_revlt_rxns.begin(); im!=m_revlt_rxns.end(); ++im) {
         j = *im;
         kr[j] *= exp((m_rxns[j]->RevLTCoeffs()->B / T_1_3) +
                            (m_rxns[j]->RevLTCoeffs()->C / T_2_3));
+      }
+
+
+
+  
+      
+
+
+      //STICK parameters 
+      for (im=m_stick_rxns.begin(); im!=m_stick_rxns.end(); ++im) {
+        j = *im;
+		
+		
+	
+	kf[j] = m_rxns[j]->Arrhenius().A *
+	  exp((m_rxns[j]->Arrhenius().n * lnT) -
+	      (m_rxns[j]->Arrhenius().E * invRT));
+	
+	
+	
+	const double val = kf[j]; 
+	double gamma = std::min(1.0, val); 
+	// cout << "gamma_i = " << gamma << std::endl; 
+	double W_k = 0.0;
+	unsigned int NumberOfSpecies = m_rxns[j]->DeltaStoichCount();
+	// cout << "DeltaStoichCount= " << NumberOfSpecies << endl; // for debugging
+	for (n=0; n!=NumberOfSpecies; ++n) {
+	  string spName = m_rxns[j]->DeltaStoich(n)->Name(); 
+	  string species_phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName();   
+	  if((species_phName.compare("gas") == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
+	  
+	    W_k += m_rxns[j]->Mechanism()->GetSpecies(spName)->CalcMolWt(); 
+	  }
+	}
+	//cout << "Wk " << W_k << endl; // for debugging
+
+	unsigned int NumberOfPhase = m_rxns[j]->Mechanism()->PhaseCount();
+	double totalSiteDensity = 0.0;
+	for (n=0; n!=NumberOfPhase; ++n) {
+	  string phName = m_rxns[j]->Mechanism()->Phase(n)->Name(); 
+	  // cout << "phname " << phName << endl; // for debugging
+	  if ((m_rxns[j]->Mechanism()->FindID(phName)).compare("s") ==0 ){
+	    totalSiteDensity += m_rxns[j]->Mechanism()->FindSiteDensity(phName);
+	  }
+	}
+	// cout << "GammaTot " << totalSiteDensity << endl; // for debugging
+	double m_val = 0.0; 
+	double sigma_pw_vk = 1.0;
+	for (n=0; n!=NumberOfSpecies; ++n) {
+	  string spName = m_rxns[j]->DeltaStoich(n)->Name();
+	  string phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName();   
+	  string species_id = m_rxns[j]->Mechanism()->FindID(phName);   
+	  if((species_id.compare("s") == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
+	     
+	    double stocc =  m_rxns[j]->Mechanism()->FindSiteOccup(spName);
+		
+		if (m_rxns[j]->IsFORD()){ // If FORD TYPE 
+		 	
+		double ford_surf = 0.0;
+		double v = m_rxns[j]->DeltaStoich(n)->ReacStoich();
+						for (int count_Ford = 0; count_Ford!= m_rxns[j]->FORDCount();count_Ford++){
+						
+						string Fordspecies = m_rxns[j]->FORDElement(count_Ford).spName;
+								
+								if (Fordspecies.compare(spName) == 0){
+								ford_surf = m_rxns[j]->FORDElement(count_Ford).F_k;
+								v = ford_surf;
+								}				
+						}
+		m_val += v;
+		sigma_pw_vk *= pow (stocc, v); 
+		}
+		else // Not FORD type 
+		{
+		m_val += m_rxns[j]->DeltaStoich(n)->ReacStoich(); 	
+		sigma_pw_vk *= pow (stocc, m_rxns[j]->DeltaStoich(n)->ReacStoich()); 
+		}
+		
+		
+	  }
+	}
+	// cout << "m= " << m_val << endl; // for debugging
+	// cout << "product sigma= " << sigma_pw_vk << endl; // for debugging
+
+	kf[j] = gamma*sigma_pw_vk*sqrt(double ((RT)/ (2*PI*W_k)) )/(pow(totalSiteDensity ,m_val));
+	// cout << "R= " << R << " ,T = " << T << endl; 
+	// cout << sqrt(double ((R*T)/ (2*PI*W_k)) ) << endl;
+	// cout << (pow(totalSiteDensity ,m_val)) << endl;
+	// cout << "sticking forward " << kf[j] << endl; 
+	
+      }
+
+
+
+      //Mott-Wise parameters  
+
+      for (im=m_mottw_rxns.begin(); im!=m_mottw_rxns.end(); ++im) {
+        j = *im;
+	kf[j] = m_rxns[j]->Arrhenius().A *
+	  exp((m_rxns[j]->Arrhenius().n * lnT) -
+	      (m_rxns[j]->Arrhenius().E * invRT));
+	const double val = kf[j]; 
+	double gamma = std::min(1.0, val); 
+	double W_k = 0.0;
+	unsigned int NumberOfSpecies = m_rxns[j]->DeltaStoichCount();
+
+	for (n=0; n!=NumberOfSpecies; ++n) {
+	  string spName = m_rxns[j]->DeltaStoich(n)->Name(); 
+	  string species_phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName();   
+	  if(species_phName.compare("gas") == 0 && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
+	  
+	    W_k += m_rxns[j]->Mechanism()->GetSpecies(spName)->CalcMolWt(); 
+	  }
+	}
+
+	unsigned int NumberOfPhase = m_rxns[j]->Mechanism()->PhaseCount();
+	double totalSiteDensity = 0.0;
+	for (n=0; n!=NumberOfPhase; ++n) {
+	  string phName =  m_rxns[j]->Mechanism()->Phase(n)->Name(); 
+	  
+	  if ((m_rxns[j]->Mechanism()->FindID(phName)).compare("s") ==0 ){
+	    totalSiteDensity += m_rxns[j]->Mechanism()->FindSiteDensity(phName);
+	  }
+	}
+	double m_val = 0.0; 
+	double sigma_pw_vk = 1.0;
+	for (n=0; n!=NumberOfSpecies; ++n) {
+	  string spName = m_rxns[j]->DeltaStoich(n)->Name(); 
+	  string phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName();   
+	  string species_id = m_rxns[j]->Mechanism()->FindID(phName);   
+	  if((species_id.compare("s") == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
+	 
+	    double stocc =  m_rxns[j]->Mechanism()->FindSiteOccup(spName);
+	   
+		if (m_rxns[j]->IsFORD()){ // If FORD TYPE 
+		 	
+		double ford_surf = 0.0;
+		double v = m_rxns[j]->DeltaStoich(n)->ReacStoich();
+						for (int count_Ford = 0; count_Ford!= m_rxns[j]->FORDCount();count_Ford++){
+						
+						string Fordspecies = m_rxns[j]->FORDElement(count_Ford).spName;
+								
+								if (Fordspecies.compare(spName) == 0){
+								ford_surf = m_rxns[j]->FORDElement(count_Ford).F_k;
+								v = ford_surf;
+								}				
+						}
+		m_val += v;
+		sigma_pw_vk *= pow (stocc, v); 
+		}
+		else // Not FORD type 
+		{
+		m_val += m_rxns[j]->DeltaStoich(n)->ReacStoich(); 	
+		sigma_pw_vk *= pow (stocc, m_rxns[j]->DeltaStoich(n)->ReacStoich()); 
+		}
+		
+	  }
+	}
+
+
+	kf[j] = gamma*sigma_pw_vk*sqrt(double ((RT)/ (2*PI*W_k)) )/( (1-gamma/2) * pow(totalSiteDensity ,m_val) );
+				
+      }
+
+
+} 
+
+// Calculates the concentration dependent rate constant of type COVERAGE
+
+void ReactionSet::calcCOVERAGE(double T, const double *const x, fvector &kf) const
+{
+
+   RxnMap::const_iterator im;
+  unsigned int i, n, j;
+  double invRT;
+  double lnT = log(T);
+  double RT;
+  
+    switch (m_mech->Units()) {
+        case SI :
+            invRT = 1.0 / (R * T);
+			RT= R*T; 
+            break;
+        case CGS :
+            invRT = 1.0 / (R_CGS * T);
+			RT= R_CGS*T;
+            break;
+        default:
+            // Something has gone wrong to end up here.
+            invRT = 0.0;
+
     }
+	
+	//STICK parameters 
+      for (im=m_stick_rxns.begin(); im!=m_stick_rxns.end(); ++im) {
+        j = *im;
+		
+	if (m_rxns[j]->CoverageElement(0).Epsilon != 0){ // ONLY VALID IF STICK FOLLOWED BY 1 COV 
+	
+	 // A_modification is always 0 (an assumption)
+	 double E_modification = m_rxns[j]->Arrhenius().E;
+	 
+	  
+	  string COVsp = m_rxns[j]->CoverageElement(0).spName;
+	  unsigned int idx = m_rxns[j]->Mechanism()->FindSpecies(COVsp);
+	  string specName = m_rxns[j]->Mechanism()->GetSpecies(idx)->Name(); // use this and if  to double check
+	      if (specName.compare(COVsp) == 0){
+         
+		double Epsilon = m_rxns[j]->CoverageElement(0).Epsilon;
+		E_modification += Epsilon * x[idx] ;
+              
+	      }      
+	
+	 
+	 
+	 
+	 kf[j] = m_rxns[j]->Arrhenius().A *
+       exp((m_rxns[j]->Arrhenius().n * lnT) -
+	   (E_modification * invRT));
+	
+
+	
+	
+	const double val = kf[j]; 
+	double gamma = std::min(1.0, val); 
+	// cout << "gamma_i = " << gamma << std::endl; 
+	double W_k = 0.0;
+	unsigned int NumberOfSpecies = m_rxns[j]->DeltaStoichCount();
+	// cout << "DeltaStoichCount= " << NumberOfSpecies << endl; // for debugging
+	for (n=0; n!=NumberOfSpecies; ++n) {
+	  string spName = m_rxns[j]->DeltaStoich(n)->Name(); 
+	  string species_phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName();   
+	  if((species_phName.compare("gas") == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
+	  
+	    W_k += m_rxns[j]->Mechanism()->GetSpecies(spName)->CalcMolWt(); 
+	  }
+	}
+	//cout << "Wk " << W_k << endl; // for debugging
+
+	unsigned int NumberOfPhase = m_rxns[j]->Mechanism()->PhaseCount();
+	double totalSiteDensity = 0.0;
+	for (n=0; n!=NumberOfPhase; ++n) {
+	  string phName = m_rxns[j]->Mechanism()->Phase(n)->Name(); 
+	  // cout << "phname " << phName << endl; // for debugging
+	  if ((m_rxns[j]->Mechanism()->FindID(phName)).compare("s") ==0 ){
+	    totalSiteDensity += m_rxns[j]->Mechanism()->FindSiteDensity(phName);
+	  }
+	}
+	// cout << "GammaTot " << totalSiteDensity << endl; // for debugging
+	double m_val = 0.0; 
+	double sigma_pw_vk = 1.0;
+	for (n=0; n!=NumberOfSpecies; ++n) {
+	  string spName = m_rxns[j]->DeltaStoich(n)->Name();
+	  string phName = m_rxns[j]->Mechanism()->GetSpecies(spName)->PhaseName();   
+	  string species_id = m_rxns[j]->Mechanism()->FindID(phName);   
+	  if((species_id.compare("s") == 0) && (m_rxns[j]->DeltaStoich(n)->ReacStoich() > 0)){
+	     
+	    double stocc =  m_rxns[j]->Mechanism()->FindSiteOccup(spName);
+		
+		if (m_rxns[j]->IsFORD()){ // If FORD TYPE 
+		 	
+		double ford_surf = 0.0;
+		double v = m_rxns[j]->DeltaStoich(n)->ReacStoich();
+						for (int count_Ford = 0; count_Ford!= m_rxns[j]->FORDCount();count_Ford++){
+						
+						string Fordspecies = m_rxns[j]->FORDElement(count_Ford).spName;
+								
+								if (Fordspecies.compare(spName) == 0){
+								ford_surf = m_rxns[j]->FORDElement(count_Ford).F_k;
+								v = ford_surf;
+								}				
+						}
+		m_val += v;
+		sigma_pw_vk *= pow (stocc, v); 
+		}
+		else // Not FORD type 
+		{
+		m_val += m_rxns[j]->DeltaStoich(n)->ReacStoich(); 	
+		sigma_pw_vk *= pow (stocc, m_rxns[j]->DeltaStoich(n)->ReacStoich()); 
+		}
+		
+		
+	  }
+	}
+	// cout << "m= " << m_val << endl; // for debugging
+	// cout << "product sigma= " << sigma_pw_vk << endl; // for debugging
+
+	kf[j] = gamma*sigma_pw_vk*sqrt(double ((RT)/ (2*PI*W_k)) )/(pow(totalSiteDensity ,m_val));
+
+	
+      }
+	 }
+	
+	
+ 
+  
+
+  for (im=m_cov_rxns.begin(); im!=m_cov_rxns.end(); ++im){
+     i = *im;
+
+	
+	 
+     kf[i] = m_rxns[i]->Arrhenius().A *
+       exp((m_rxns[i]->Arrhenius().n * lnT) -
+	   (m_rxns[i]->Arrhenius().E * invRT));
+  
+     //cout << "Arrhenius kf " << kf[i] << endl;
+     //cout << "COV count =" << m_rxns[i]->COVERAGECount() << endl; 
+
+     double val = 1.0;
+
+		
+	for (int m=0; m!=m_rxns[i]->COVERAGECount(); ++m){
+	  
+	  string COVsp = m_rxns[i]->CoverageElement(m).spName;
+	  unsigned int idx = m_rxns[i]->Mechanism()->FindSpecies(COVsp);
+	  string specName = m_rxns[i]->Mechanism()->GetSpecies(idx)->Name(); // use this and if  to double check
+	      if (specName.compare(COVsp) == 0){
+                double Eta = m_rxns[i]->CoverageElement(m).Eta;
+		double Miu = m_rxns[i]->CoverageElement(m).Miu;
+		double Epsilon = m_rxns[i]->CoverageElement(m).Epsilon;
+		//cout << "Eta= " << Eta << " Miu= " << Miu << " Eps= " << Epsilon << endl;
+                //cout << specName << " = " << x[idx] << endl;
+		//cout << "Z_k power miu = " << pow(x[idx], Miu) << endl;
+		//cout << "10 power Eta = " << pow(10,(Eta * x[idx])) << endl;
+		val *= pow(10,(Eta * x[idx])) * pow(x[idx], Miu)* exp (-Epsilon * x[idx] * invRT );
+              
+	      }      
+	}
+      
+
+   kf[i] *= val;  
+
+   //cout << "COV kf= " << kf[i] << endl; 
+  }
+
 }
+
 
 // Calculates third-body concentrations for all reactions.  These
 // values will be multiplied by the rate constants, therefore if
 // a reaction does not have third-bodies the tbconcs is set to 1.0.
-void ReactionSet::calcTB_Concs(real density, const real *const x,
+void ReactionSet::calcTB_Concs(double density, const double *x,
                                unsigned int n, fvector &tbconcs) const
 {
     RxnPtrVector::const_iterator i;
@@ -659,20 +1451,21 @@ void ReactionSet::calcTB_Concs(real density, const real *const x,
         else
         {
             // This reaction has no third body requirement.
-            tbconcs[j] = density;
+            tbconcs[j] = density; // Changed as recommended by Will Menz
         }
     }
 }
+
 
 // Calculates the pressure-dependent fall-off terms in the rate
 // constant expressions.  This function multiplies the rate constants
 // by the fall-off terms.  This function may also change the values in
 // the tbconcs vector.
-void ReactionSet::calcFallOffTerms(real T, real density, const real *const x,
+void ReactionSet::calcFallOffTerms(double T, double density, const double *x,
                                    unsigned int n, fvector &tbconcs,
                                    fvector &kf, fvector &kr) const
 {
-    real lowk=0.0, pr=0.0, logpr=0.0, lnT=log(T), invRT=0.0;
+    double lowk=0.0, pr=0.0, logpr=0.0, lnT=log(T), invRT=0.0;
     RxnPtrVector::const_iterator i;
     RxnMap::const_iterator im;
     int j;
@@ -751,16 +1544,16 @@ void ReactionSet::calcFallOffTerms(real T, real density, const real *const x,
 // i with respect to i: dFi/dYj.  It is assumed that the Jacobian
 // matrix array J has already been allocated for NSP+2 variables
 // (all species, temperature and density).
-void ReactionSet::CalcJacobian(real T, real density, real *const x,
+void ReactionSet::CalcJacobian(double T, double density, double *const x,
                                unsigned int n,
                                const Sprog::Thermo::ThermoInterface &thermo,
-                               real pfac, real **J,
+                               double pfac, double **J,
                                bool constV, bool constT) const
 {
     bool fallocated=false;
     fvector tbconcs, kfT, krT, kf, kr, Gs, rop0,
                    rop1, wdot0, wdot1, Hs, xdot0, xdot1;
-    real wtot0=0.0, wtot1=0.0, //invrho=1.0 / density,
+    double wtot0=0.0, wtot1=0.0, //invrho=1.0 / density,
          Tdot0=0.0, Tdot1=0.0, Cp=0.0, xsave=0.0, dx=0.0, invdx=0.0;
 
     // SETUP WORKSPACE.
@@ -798,8 +1591,12 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     // Copy conc-independent rate constants into total rate
     // constant vectors.  As the vectors are equal lengths we
     // can just use the memcpy function.
-    memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-    memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+    memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+    memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
+
+    // Calculate COVERAGE
+    calcCOVERAGE(T, x, kf);
+
 
     // Calculate third-body concentrations for all reactions.  These
     // values will be multiplied by the rate constants, therefore if
@@ -827,7 +1624,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     wtot0 = GetMolarProdRates(rop0, wdot0);
 
     // Copy rates-of-progess to working vector using memcpy.
-    memcpy(&rop1[0], &rop0[0], sizeof(real)*m_rxns.size());
+    memcpy(&rop1[0], &rop0[0], sizeof(double)*m_rxns.size());
 
     // Calculate unperturbed dx/dt.
     for (unsigned int i=0; i!=m_mech->SpeciesCount(); ++i) {
@@ -869,8 +1666,8 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
 
         // Copy back in the concentration-independent parts of
         // the rate constant expressions.
-        memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-        memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+        memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+        memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
 
         // Calculate concentration-dependent terms.
         // TODO:  Optimise this to only calculate for affected reactions.
@@ -885,8 +1682,8 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
         // RECALCULATE RATES-OF-PROGRESS.
 
         // Copy unperturbed values.
-        memcpy(&rop1[0], &rop0[0], sizeof(real)*m_rxns.size());
-        // memcpy(&wdot1[0], &wdot0[0], sizeof(real)*m_mech->SpeciesCount());
+        memcpy(&rop1[0], &rop0[0], sizeof(double)*m_rxns.size());
+        // memcpy(&wdot1[0], &wdot0[0], sizeof(double)*m_mech->SpeciesCount());
 
         // Recalculate third-body and fall-off reaction rates-of-progress.
         for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
@@ -955,7 +1752,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     // Density affects (almost) all reaction rates.
 
     // Perturb density.
-    real Dpert = density;
+    double Dpert = density;
     // dx    = sqrt(1.0e-16 * max(1.0e-8, abs(density)));
     dx    = sqrt(pfac) * abs(density);
     invdx = 1.0 / dx;
@@ -964,8 +1761,8 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     // Copy conc-independent rate constants into total rate
     // constant vectors.  As the vectors are equal lengths we
     // can just use the memcpy function.
-    memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-    memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+    memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+    memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
 
     // Recalculate all rate constants.
     calcTB_Concs(Dpert, x, n, tbconcs);
@@ -1017,7 +1814,7 @@ void ReactionSet::CalcJacobian(real T, real density, real *const x,
     // Temperature affects all reaction rates.
 
     // Perturb temperature.
-    real Tpert = T;
+    double Tpert = T;
     // dx    = sqrt(1.0e-16 * max(1.0e-8, abs(T)));
     dx    = sqrt(pfac) * abs(T);
     invdx = 1.0 / dx;
@@ -1097,19 +1894,19 @@ will be deleted when the Jacobian is implemented in the correct manner.
 @param[in]      constT      Temperature (constant).
 */
 void ReactionSet::RateJacobian(
-        real T,
-        real density,
-        real *const x,
+        double T,
+        double density,
+        double *const x,
         unsigned int n,
         const Sprog::Thermo::ThermoInterface &thermo,
-        real pfac,
-        real **J,
+        double pfac,
+        double **J,
         bool constV, bool constT
         ) const
 {
     bool fallocated=false;
     fvector tbconcs, kfT, krT, kf, kr, rop0, rop1, wdot0, wdot1, Gs, Hs;
-    real wtot0=0.0, wtot1=0.0,
+    double wtot0=0.0, wtot1=0.0,
          Tdot0=0.0, Tdot1=0.0, Cp=0.0, xsave=0.0, dconc=0.0, invdconc=0.0;
 
     // SETUP WORKSPACE.
@@ -1145,8 +1942,8 @@ void ReactionSet::RateJacobian(
     // Copy conc-independent rate constants into total rate
     // constant vectors.  As the vectors are equal lengths we
     // can just use the memcpy function.
-    memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-    memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+    memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+    memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
 
     // Calculate third-body concentrations for all reactions.  These
     // values will be multiplied by the rate constants, therefore if
@@ -1175,7 +1972,7 @@ void ReactionSet::RateJacobian(
     GetMolarProdRates(rop0, wdot0);
 
     // Copy rates-of-progess to working vector using memcpy.
-    memcpy(&rop1[0], &rop0[0], sizeof(real)*m_rxns.size());
+    memcpy(&rop1[0], &rop0[0], sizeof(double)*m_rxns.size());
 
     // Calculate unperturbed temperature term dT/dt.
     Tdot0 = 0.0;
@@ -1211,8 +2008,8 @@ void ReactionSet::RateJacobian(
 
         // Copy back in the concentration-independent parts of
         // the rate constant expressions.
-        memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-        memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+        memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+        memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
 
         // Calculate concentration-dependent terms.
         // TODO:  Optimise this to only calculate for affected reactions.
@@ -1227,8 +2024,8 @@ void ReactionSet::RateJacobian(
         // RECALCULATE RATES-OF-PROGRESS.
 
         // Copy unperturbed values.
-        memcpy(&rop1[0], &rop0[0], sizeof(real)*m_rxns.size());
-        // memcpy(&wdot1[0], &wdot0[0], sizeof(real)*m_mech->SpeciesCount());
+        memcpy(&rop1[0], &rop0[0], sizeof(double)*m_rxns.size());
+        // memcpy(&wdot1[0], &wdot0[0], sizeof(double)*m_mech->SpeciesCount());
 
         // Recalculate third-body and fall-off reaction rates-of-progress.
         for (RxnMap::const_iterator i=m_tb_rxns.begin(); i!=m_tb_rxns.end(); ++i) {
@@ -1292,7 +2089,7 @@ void ReactionSet::RateJacobian(
     // Density affects (almost) all reaction rates.
 
     // Perturb density.
-    real Dpert = density;
+    double Dpert = density;
     // dconc    = sqrt(1.0e-16 * max(1.0e-8, abs(density)));
     dconc    = sqrt(pfac) * abs(density);
     invdconc = 1.0 / dconc;
@@ -1301,8 +2098,8 @@ void ReactionSet::RateJacobian(
     // Copy conc-independent rate constants into total rate
     // constant vectors.  As the vectors are equal lengths we
     // can just use the memcpy function.
-    memcpy(&kf[0], &kfT[0], sizeof(real)*m_rxns.size());
-    memcpy(&kr[0], &krT[0], sizeof(real)*m_rxns.size());
+    memcpy(&kf[0], &kfT[0], sizeof(double)*m_rxns.size());
+    memcpy(&kr[0], &krT[0], sizeof(double)*m_rxns.size());
 
     // Recalculate all rate constants.
     calcTB_Concs(Dpert, x, n, tbconcs);
@@ -1344,7 +2141,7 @@ void ReactionSet::RateJacobian(
     // Temperature affects all reaction rates.
 
     // Perturb temperature.
-    real Tpert = T;
+    double Tpert = T;
     // dconc    = sqrt(1.0e-16 * max(1.0e-8, abs(T)));
     dconc    = sqrt(pfac) * abs(T);
     invdconc = 1.0 / dconc;
@@ -1429,6 +2226,11 @@ void ReactionSet::releaseMemory()
     m_revlt_rxns.clear();
     m_tb_rxns.clear();
     m_fo_rxns.clear();
+    m_surface_rxns.clear();
+    m_ford_rxns.clear();
+    m_cov_rxns.clear();
+    m_stick_rxns.clear();
+    m_mottw_rxns.clear();
 
     // Delete the reactions.
     RxnPtrVector::iterator i;
@@ -1515,6 +2317,70 @@ void ReactionSet::Serialize(std::ostream &out) const
             out.write((char*)&ix, sizeof(ix));
         }
 
+	/*
+	// Write number of reactions with all SURFACE parameters.
+        n = m_surface_rxns.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write map of Surface reactions.
+        for (RxnMap::const_iterator i=m_surface_rxns.begin(); i!=m_surface_rxns.end(); i++) {
+            // Write the reaction index in the main vector.  The pointer doesn't
+            // need to be written.
+            unsigned int ix = *i;
+            out.write((char*)&ix, sizeof(ix));
+        }
+	*/
+
+
+	// Write number of reactions with Ford parameters.
+        n = m_ford_rxns.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write map of Ford reactions.
+        for (RxnMap::const_iterator i=m_ford_rxns.begin(); i!=m_ford_rxns.end(); i++) {
+            // Write the reaction index in the main vector.  The pointer doesn't
+            // need to be written.
+            unsigned int ix = *i;
+            out.write((char*)&ix, sizeof(ix));
+        }
+
+	// Write number of reactions with Coverage parameters.
+        n = m_cov_rxns.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write map of Coverage reactions.
+        for (RxnMap::const_iterator i=m_cov_rxns.begin(); i!=m_cov_rxns.end(); i++) {
+            // Write the reaction index in the main vector.  The pointer doesn't
+            // need to be written.
+            unsigned int ix = *i;
+            out.write((char*)&ix, sizeof(ix));
+        }
+
+	// Write number of reactions with STICK parameters.
+        n = m_stick_rxns.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write map of STICK reactions.
+        for (RxnMap::const_iterator i=m_stick_rxns.begin(); i!=m_stick_rxns.end(); i++) {
+            // Write the reaction index in the main vector.  The pointer doesn't
+            // need to be written.
+            unsigned int ix = *i;
+            out.write((char*)&ix, sizeof(ix));
+        }
+
+	// Write number of reactions with Mott-Wise parameters.
+        n = m_mottw_rxns.size();
+        out.write((char*)&n, sizeof(n));
+
+        // Write map of Mott-Wise reactions.
+        for (RxnMap::const_iterator i=m_mottw_rxns.begin(); i!=m_mottw_rxns.end(); i++) {
+            // Write the reaction index in the main vector.  The pointer doesn't
+            // need to be written.
+            unsigned int ix = *i;
+            out.write((char*)&ix, sizeof(ix));
+        }
+
+
     } else {
         throw invalid_argument("Output stream not ready (Sprog, ReactionSet::Serialize).");
     }
@@ -1574,11 +2440,11 @@ void ReactionSet::Deserialize(std::istream &in)
                     m_rev_rxns[i] = ix;
                 }
 
-                // Write number of third body reactions.
+                // Read number of third body reactions.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_tb_rxns.resize(n);
 
-                // Write map of third body reactions.
+                // Read map of third body reactions.
                 for (unsigned int i=0; i<n; i++) {
                     // Read reaction index from the stream.
                     unsigned int ix = 0;
@@ -1588,11 +2454,11 @@ void ReactionSet::Deserialize(std::istream &in)
                     m_tb_rxns[i] = ix;
                 }
 
-                // Write number of fall-off reactions.
+                // Read number of fall-off reactions.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_fo_rxns.resize(n);
 
-                // Write map of fall-off reactions.
+                // Read map of fall-off reactions.
                 for (unsigned int i=0; i<n; i++) {
                     // Read reaction index from the stream.
                     unsigned int ix = 0;
@@ -1602,11 +2468,11 @@ void ReactionSet::Deserialize(std::istream &in)
                     m_fo_rxns[i] = ix;
                 }
 
-                // Write number of reactions with Landau Teller parameters.
+                // Read number of reactions with Landau Teller parameters.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_lt_rxns.resize(n);
 
-                // Write map of Landau Teller reactions.
+                // Read map of Landau Teller reactions.
                 for (unsigned int i=0; i<n; i++) {
                     // Read reaction index from the stream.
                     unsigned int ix = 0;
@@ -1616,11 +2482,11 @@ void ReactionSet::Deserialize(std::istream &in)
                     m_lt_rxns[i] = ix;
                 }
 
-                // Write number of reactions with explicit reverse LT parameters.
+                // Read number of reactions with explicit reverse LT parameters.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_revlt_rxns.resize(n);
 
-                // Write map of reverse Landau Teller reactions.
+                // Read map of reverse Landau Teller reactions.
                 for (unsigned int i=0; i<n; i++) {
                     // Read reaction index from the stream.
                     unsigned int ix = 0;
@@ -1628,6 +2494,77 @@ void ReactionSet::Deserialize(std::istream &in)
 
                     // Add the reaction to map.
                     m_revlt_rxns[i] = ix;
+                }
+		/*
+		 // Read number of reactions with ALL SURFACE parameters.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_surface_rxns.resize(n);
+
+                // Read map of ALL SURFACE reactions.
+                for (unsigned int i=0; i<n; i++) {
+                    // Read reaction index from the stream.
+                    unsigned int ix = 0;
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+
+                    // Add the reaction to map.
+                    m_surface_rxns[i] = ix;
+                }
+		*/
+
+		 // Read number of reactions with Ford parameters.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_ford_rxns.resize(n);
+
+                // Read map of Ford reactions.
+                for (unsigned int i=0; i<n; i++) {
+                    // Read reaction index from the stream.
+                    unsigned int ix = 0;
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+
+                    // Add the reaction to map.
+                    m_ford_rxns[i] = ix;
+                }
+
+		 // Read number of reactions with Coverage parameters.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_cov_rxns.resize(n);
+
+                // Read map of Coverage reactions.
+                for (unsigned int i=0; i<n; i++) {
+                    // Read reaction index from the stream.
+                    unsigned int ix = 0;
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+
+                    // Add the reaction to map.
+                    m_cov_rxns[i] = ix;
+                }
+
+		 // Read number of reactions with Stick parameters.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_stick_rxns.resize(n);
+
+                // Read map of Stick reactions.
+                for (unsigned int i=0; i<n; i++) {
+                    // Read reaction index from the stream.
+                    unsigned int ix = 0;
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+
+                    // Add the reaction to map.
+                    m_stick_rxns[i] = ix;
+                }
+
+		 // Write number of reactions with Mott-Wise parameters.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_mottw_rxns.resize(n);
+
+                // Write map of Mott-Wise reactions.
+                for (unsigned int i=0; i<n; i++) {
+                    // Read reaction index from the stream.
+                    unsigned int ix = 0;
+                    in.read(reinterpret_cast<char*>(&ix), sizeof(ix));
+
+                    // Add the reaction to map.
+                    m_mottw_rxns[i] = ix;
                 }
 
                 break;

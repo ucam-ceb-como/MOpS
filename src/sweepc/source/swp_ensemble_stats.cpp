@@ -113,7 +113,7 @@ unsigned int EnsembleStats::Count(void) const
 }
 
 // Calculates the model stats for a particle ensemble.
-void EnsembleStats::Calculate(const Ensemble &e, real scale)
+void EnsembleStats::Calculate(const Ensemble &e, double scale)
 {
     m_basicstats->Calculate(e, scale);
     if (m_aggstats!=NULL)
@@ -204,7 +204,7 @@ void EnsembleStats::PSL_Names(std::vector<std::string> &names, unsigned int star
 // Returns the PSL entry for the given particle.  The particle weight
 // is set to 1.0 because there is only one particle.
 void EnsembleStats::PSL(const Sweep::Particle &sp, const Sweep::ParticleModel& model,
-		                real time, fvector &psl, real scale)
+		                double time, fvector &psl, double scale)
 {
     unsigned int start = 1;
 

@@ -69,10 +69,10 @@ class ResetChemistry;
  */
 struct ParticlePopulationPoint1d {
     //! Position to which this population applied
-    real position;
+    double position;
 
     //! Number density of this population
-    real m0;
+    double m0;
 
     //! Collection of pointers to particles
     Sweep::PartPtrList particleList;
@@ -102,13 +102,13 @@ public:
     //! Initialise all cells with the given mech and particle capacity
     Reactor1d(const Geometry::Geometry1d &geom, const Sprog::Mechanism &g_mech,
               const Sweep::Mechanism &p_mech,
-              const Utils::LinearInterpolator<real, real> &max_particle_counts,
-              const Utils::LinearInterpolator<real, real> &max_m0s);
+              const Utils::LinearInterpolator<double, double> &max_particle_counts,
+              const Utils::LinearInterpolator<double, double> &max_m0s);
 
     Reactor1d(const Reactor1d &src);
 
     //! Position of centre of cell
-    real getCellCentre(const size_t i) const {return mGeometry.cellCentre(i);}
+    double getCellCentre(const size_t i) const {return mGeometry.cellCentre(i);}
 
     //! Number of cells
     size_t getNumCells() const {return mGeometry.numCells();}
@@ -135,7 +135,7 @@ public:
     template<typename IteratorType> void ReplaceParticles(const IteratorType& itBegin, const IteratorType& itEnd);
 
     //! Set the time on the constituent reactors
-    void setTime(const real t);
+    void setTime(const double t);
 
 private:
     //! Type in which to hold the reactors for the cells

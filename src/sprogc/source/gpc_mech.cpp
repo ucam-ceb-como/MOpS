@@ -89,6 +89,7 @@ Mechanism &Mechanism::operator=(const Sprog::Mechanism &mech)
         m_units = mech.m_units;
 
         // Copy new elements and species into mechanism.
+        copyInPhase(mech.m_phase); // Added by mm864
         copyInElements(mech.m_elements);
         copyInSpecies(mech.m_species);
 
@@ -103,6 +104,12 @@ Mechanism &Mechanism::operator=(const Sprog::Mechanism &mech)
             (*sp)->SetMechanism(*this);
         }
 
+       // Inform phase of new species vector and mechanism. 
+	PhasePtrVector::iterator ph;
+        for (ph=m_phase.begin(); ph!=m_phase.end(); ph++) {
+            (*ph)->SetMechanism(*this);
+        }
+		
         // Inform reactions of new species vector and mechanism.
         unsigned int i;
         for (i=0; i<m_rxns.Count(); i++) {
@@ -152,21 +159,155 @@ void Mechanism::SetUnits(Sprog::UnitSystem u)
                 (*isp)->CalcMolWt();
             }
 
+	     
+	     // Scale phase site density to mol/m2. (Added by mm864)
+            PhasePtrVector::iterator iph;
+            for (iph=m_phase.begin(); iph!=m_phase.end(); iph++) {
+		                 
+		// Recalculate site density.
+                (*iph)->SetSiteDensity((*iph)->SiteDen()*1.0e4, (*iph)->Name());
+            }	
+	     			
             // Scale reaction coefficients.
             for (unsigned int irxn=0; irxn!=m_rxns.Count(); ++irxn) {
                 // Convert volumes from cm3 to m3, and convert energies from ergs/mol to
                 // J/mol.
-
+				double gasReactantStoich = 0.0, surfReactantStoich = 0.0, gasProductStoich = 0.0, surfProductStoich = 0.0;
+				
+				for (unsigned int dS = 0; dS!= m_rxns[irxn]->DeltaStoichCount(); ++dS){
+					
+					string spName = m_rxns[irxn]->DeltaStoich(dS)->Name();
+					string phName = m_rxns[irxn]->Mechanism()->GetSpecies(spName)->PhaseName(); 
+					
+					if ((phName.compare("gas") == 0) && (m_rxns[irxn]->DeltaStoich(dS)->ReacStoich() > 0)){
+					gasReactantStoich += m_rxns[irxn]->DeltaStoich(dS)->ReacStoich();
+					}
+					else if ((phName.compare("gas") == 0) && (m_rxns[irxn]->DeltaStoich(dS)->ProdStoich() > 0)){
+					gasProductStoich += m_rxns[irxn]->DeltaStoich(dS)->ProdStoich();
+					}
+					else if ((phName.compare("gas") != 0) && (m_rxns[irxn]->DeltaStoich(dS)->ReacStoich() > 0)){
+					surfReactantStoich += m_rxns[irxn]->DeltaStoich(dS)->ReacStoich();
+					}
+					else{
+					surfProductStoich += m_rxns[irxn]->DeltaStoich(dS)->ProdStoich();
+					}
+				}
+				
                 // Forward rate coefficients.
                 arr = m_rxns[irxn]->Arrhenius();
-                arr.A *= pow(1.0e-6, m_rxns[irxn]->ReactantStoich()-1.0);
-                arr.E *= 1.0e-7;
+                if (m_rxns[irxn]->IsSURF()){
+					
+				
+					if (m_rxns[irxn]->IsFORD()) {
+						
+						double total_surf_Reactant_stoich_to_Replace = 0.0;
+						double total_gas_Reactant_stoich_to_Replace = 0.0;
+						double total_ford_surf = 0.0;
+						double total_ford_gas = 0.0;
+						
+						for (int count_Ford = 0; count_Ford!= m_rxns[irxn]->FORDCount();count_Ford++){
+						
+						string Fordspecies = m_rxns[irxn]->FORDElement(count_Ford).spName;
+						string FordSpeciesPhase =  FindPhaseName(Fordspecies);
+						
+							// calculate the total stoich of the reactants replaced by Ford	(this is if the COVERAGE with FORD or ONLY FORD )					
+							double single_sp_stoich_to_Replace = m_rxns[irxn]->DeltaStoich(Fordspecies)->ReacStoich();
+							
+								if (FordSpeciesPhase.compare("gas") == 0){
+								total_gas_Reactant_stoich_to_Replace += single_sp_stoich_to_Replace; 
+								total_ford_gas += m_rxns[irxn]->FORDElement(count_Ford).F_k;
+								}
+								else {
+								total_surf_Reactant_stoich_to_Replace += single_sp_stoich_to_Replace; 
+								total_ford_surf += m_rxns[irxn]->FORDElement(count_Ford).F_k;
+								}
+							
+						}
+						
+						if((m_rxns[irxn]->IsSTICK()) || (m_rxns[irxn]->IsMottWise())) {
+							
+							for (int count_Ford = 0; count_Ford!= m_rxns[irxn]->FORDCount();count_Ford++){
+							string Fordspecies = m_rxns[irxn]->FORDElement(count_Ford).spName;
+							string FordSpeciesPhase =  FindPhaseName(Fordspecies);
+							
+								if (FordSpeciesPhase.compare("gas") == 0){
+								throw runtime_error("FORD gas species modification cannot exist with STICK/MOTTWISE ");
+								}
+								else {
+								arr.A = arr.A ; // No Units
+								}
+								
+							}
+						}
+						
+						
+						else if (m_rxns[irxn]->IsCOVERAGE()) { // FORD and COVERAGE
+						// This assume that if FORD species should be all gas or all surface if they are more than one (just use the first ford species as a way to indicate the phase)
+						string FordSp = m_rxns[irxn]->FORDElement(0).spName; 
+						string FordPh = FindPhaseName(FordSp);
+						
+							if (FordPh.compare("gas") != 0){
+							arr.A *= pow(1.0e-6, gasReactantStoich) * pow (1.0e-4, (surfReactantStoich - total_surf_Reactant_stoich_to_Replace -1 +total_ford_surf ));
+							}
+							else{
+							arr.A *= pow(1.0e-4, surfReactantStoich - 1) * pow (1.0e-6, (gasReactantStoich - total_gas_Reactant_stoich_to_Replace +total_ford_gas ));
+							}
+						}
+						
+						else { // If it is FORD only reaction
+						
+						// This assume that if FORD species should be all gas or all surface if they are more than one (just use the first ford as a way to indicate the phase)
+						string FordSp = m_rxns[irxn]->FORDElement(0).spName; 
+						string FordPh = FindPhaseName(FordSp);
+						
+							if (FordPh.compare("gas") != 0){
+							arr.A *= pow(1.0e-6, gasReactantStoich) * pow (1.0e-4, (surfReactantStoich - total_surf_Reactant_stoich_to_Replace -1 +total_ford_surf ));
+							}
+							else{
+							arr.A *= pow(1.0e-4, surfReactantStoich - 1) * pow (1.0e-6, (gasReactantStoich - total_gas_Reactant_stoich_to_Replace +total_ford_gas ));
+							}
+							  /*
+
+							  if ( m_rxns[irxn]->IsSURF() == false){ // Gas phase reaction
+							  arr.A *= pow (1.0e-6, (gasReactantStoich - total_gas_Reactant_stoich_to_Replace +total_ford_gas ));  
+
+							  }
+							  */
+
+						
+						}
+					
+					}
+					else if ((m_rxns[irxn]->IsSTICK()) || (m_rxns[irxn]->IsMottWise())){
+					arr.A = arr.A ; // No Units
+					}
+					else { // COV ONLY or NORMAL SURFACE REACTIONS 
+					arr.A *= pow(1.0e-6, gasReactantStoich) * pow(1.0e-4, surfReactantStoich-1.0); 
+					}
+				}
+				else{
+				arr.A *= pow(1.0e-6, m_rxns[irxn]->ReactantStoich()-1.0);
+                }
+				arr.E *= 1.0e-7; // Ergs to Joules
                 m_rxns[irxn]->SetArrhenius(arr);
 
                 // Reverse rate coefficients.
                 if (m_rxns[irxn]->RevArrhenius() != NULL) {
                     arr = *(m_rxns[irxn]->RevArrhenius());
-                    arr.A *= pow(1.0e-6, m_rxns[irxn]->ProductStoich()-1.0);
+					
+                    if (m_rxns[irxn]->IsSURF()){
+					
+						if ((m_rxns[irxn]->IsSTICK()) || (m_rxns[irxn]->IsMottWise())){
+						arr.A = arr.A ; // No Units
+						}
+						else { // FORD cannot be applied to Reversible (Unless Rord also specified)
+						arr.A *= pow(1.0e-6, gasProductStoich) * pow(1.0e-4, surfProductStoich-1.0); 
+						}
+					}
+					else{
+					arr.A *= pow(1.0e-6, m_rxns[irxn]->ProductStoich()-1.0);
+					}
+					
                     arr.E *= 1.0e-7;
                     m_rxns[irxn]->SetRevArrhenius(arr);
                 }
@@ -333,10 +474,27 @@ void Mechanism::CheckElementChanges(const Element &el)
 
 // SPECIES.
 
-// Returns the number of species in the mechanism.
+// Returns the total number of species in the mechanism.
 unsigned int Mechanism::SpeciesCount(void) const
 {
     return m_species.size();
+}
+
+// Returns the total number of gas species in the mechanism.
+unsigned int Mechanism::GasSpeciesCount(void) const
+{
+
+  unsigned int gas_sp = 0;
+  for (unsigned int j = 0; j < m_species.size(); ++j ){
+    std::string nm = FindPhaseName(m_species[j]->Name()); 
+    
+    if (FindID(nm).compare("g")==0){
+      gas_sp++; 			     
+    }
+ }
+  
+  return gas_sp;
+
 }
 
 // Returns the vector of chemical species.
@@ -463,6 +621,198 @@ Sprog::Species *const Mechanism::GetSpecies(const std::string &name) const
     }
 }
 
+// Returns site occupancy of species.  Returns 0 if not found.
+int Mechanism::FindSiteOccup(const std::string &name) const
+
+{
+   int i = FindSpecies(name);
+    if (i >= 0) {
+      return m_species[i]->SiteOccupancy();
+    } else {
+        return 0;
+    }
+
+}
+
+// Returns phase Name of species.  Returns "" if not found.
+std::string Mechanism::FindPhaseName(const std::string &name) const
+
+{
+   int i = FindSpecies(name);
+    if (i >= 0) {
+      return m_species[i]->PhaseName();
+    } else {
+        return "";
+    }
+
+}
+
+
+
+// CHEMICAL PHASES.
+
+// Returns the number of phases.
+unsigned int Mechanism::PhaseCount(void) const
+{
+    return m_phase.size();
+}
+
+// Returns the vector of phases.
+const PhasePtrVector &Mechanism::Phase() const
+{
+    return m_phase;
+}
+
+// Returns a pointer to the ith phase.  NULL if i invalid.
+const Sprog::Phase *const Mechanism::Phase(unsigned int i) const
+{
+    if (i < m_phase.size()) {
+        return m_phase[i];
+    } else {
+        return NULL;
+    }
+}
+
+// Returns pointer to phase with given name.  NULL if not found.
+const Sprog::Phase *const Mechanism::Phase(const std::string &name) const
+{
+    int i = FindPhase(name);
+    if (i >= 0) {
+        return m_phase[i];
+    } else {
+        return NULL;
+    }
+}
+
+// Returns iterator to first phase.
+Mechanism::phase_iterator Mechanism::PhaseBegin() 
+{return m_phase.begin();}
+
+// Returns const iterator to first phase.
+Mechanism::const_phase_iterator Mechanism::PhaseBegin() const 
+{return m_phase.begin();}
+
+// Returns iterator to position after last phase.
+Mechanism::phase_iterator Mechanism::PhaseEnd() 
+{return m_phase.end();}
+
+// Returns const iterator to position after last phase.
+Mechanism::const_phase_iterator Mechanism::PhaseEnd() const 
+{return m_phase.end();}
+
+// Adds an empty phase to the mechansism and returns a reference to it.
+Phase *const Mechanism::AddPhase()
+{
+    // Adds species to vector.
+    Sprog::Phase ph;
+    return AddPhase(ph);
+}
+
+// Copies phase into mechanism and returns a reference to
+// the copy.
+Phase *const Mechanism::AddPhase(const Sprog::Phase &phase)
+{
+    // First check phase vector to see if a phase with the
+    // same name is already defined.  We can only have one phase
+    // per name.
+    int i = FindPhase(phase.Name());
+    if (i >= 0) {
+        // A phase with this name has been found.
+        return m_phase.at(i);
+    }
+
+    // Adds phase to vector.
+    Sprog::Phase *phasenew = phase.Clone();
+    m_phase.push_back(phasenew);
+
+    // Set up phase.
+    phasenew->SetMechanism(*this);
+
+    // Return phase reference.
+    return phasenew;
+}
+
+// Returns index of phase.  Returns -1 if not found.
+int Mechanism::FindPhase(const Sprog::Phase &phase) const
+{
+    // Loop over phases to find index.
+    unsigned int i;
+    for (i=0; i<m_phase.size(); i++) {
+        if (phase == *m_phase[i]) {
+            // Found phase!
+            return i;
+        }
+    }
+
+    // We are here because the phase wasn't found.
+    return -1;
+}
+
+
+
+// Returns index of phase.  Returns -1 if not found.
+int Mechanism::FindPhase(const std::string &name) const
+{
+    // Loop over phases to find index.
+    unsigned int i;
+    for (i=0; i<m_phase.size(); i++) {
+        if (*m_phase[i] == name) {
+            // Found phase!
+            return i;
+        }
+    }
+
+    // We are here because the phase wasn't found.
+    return -1;
+}
+
+
+// Returns the phase id given the phase name.  Returns NULL if not found.
+string Mechanism::FindID(const std::string &name) const
+{
+    int i = FindPhase(name);
+    if (i >= 0) {
+      return m_phase[i]->ID();
+    } else {
+        return "";
+    }
+}
+
+// Returns the phase site density given the phase name.  Returns NULL if not found.
+double Mechanism::FindSiteDensity(const std::string &name) const
+{
+    int i = FindPhase(name);
+    if (i >= 0) {
+      return m_phase[i]->SiteDen();
+    } else {
+        return 0.0;
+    }
+}
+
+
+// Returns a pointer to the phase at the given index.  Returns NULL if not found.
+Sprog::Phase *const Mechanism::GetPhase(const unsigned int i) const
+{
+    if (i < m_phase.size()) {
+        return m_phase[i];
+    } else {
+        return NULL;
+    }
+}
+
+// Returns a pointer to the phase with the given name.  Returns NULL if not found.
+Sprog::Phase *const Mechanism::GetPhase(const std::string &name) const
+{
+    int i = FindPhase(name);
+    if (i >= 0) {
+        return m_phase[i];
+    } else {
+        return NULL;
+    }
+}
+
+
+
 
 // REACTIONS.
 
@@ -512,7 +862,7 @@ void Mechanism::BuildStoichXRef()
     unsigned int i, j;
     int k;
     RxnStoichMap::iterator ij;
-    real mu;
+    double mu;
 
     // Clear current table.
     m_stoich_xref.clear();
@@ -601,6 +951,16 @@ void Mechanism::copyInSpecies(const Sprog::SpeciesPtrVector &sps)
     }
 }
 
+// Copies phase from given array into this mechanism.
+void Mechanism::copyInPhase(const Sprog::PhasePtrVector &phs)
+{
+    PhasePtrVector::const_iterator ph;
+    for (ph=phs.begin(); ph!=phs.end(); ph++) {
+        // Use Clone() function to create a copy of the phase object.
+        m_phase.push_back((*ph)->Clone());
+    }
+}
+
 
 // MEMORY MANAGEMENT.
 
@@ -621,6 +981,13 @@ void Mechanism::releaseMemory()
     }
     m_species.clear();
 
+	// Clear phases.
+    PhasePtrVector::iterator ph;
+    for (ph=m_phase.begin(); ph!=m_phase.end(); ph++) {
+        delete *ph;
+    }
+    m_phase.clear();
+	
     // Clear reactions.
     m_rxns.Clear();
 
@@ -659,6 +1026,15 @@ void Mechanism::WriteDiagnostics(const std::string &filename) const
     data = "End of species.\n";
     fout.write(data.c_str(), data.length());
 
+    // Write the Phase to the file.
+    data = "Phase:\n";
+    fout.write(data.c_str(), data.length());
+    for (unsigned int i=0; i!=m_phase.size(); ++i) {
+        m_phase[i]->WriteDiagnostics(fout);
+    }
+    data = "End of phase.\n";
+    fout.write(data.c_str(), data.length());
+	
     // Write the reactions to the file.
     data = "Reactions:\n";
     fout.write(data.c_str(), data.length());
@@ -698,6 +1074,16 @@ void Mechanism::WriteReducedMech(const std::string &filename, std::vector<std::s
     }
     fout << "END\n\n";
 
+	/*
+	// Write the Phase to the file.
+    fout << "PHASE\n";
+    for (unsigned int i = 0; i != m_phase.size(); ++i) {
+        if (m_phase[i]-> !(ContainsSpecies(RejectSpecies[i]))) // If the phase doesn't contain rejected species
+            m_phase[i]->WritePhase(fout);
+    }
+    fout << "END\n\n";
+	*/
+	
     // Write the reactions to the file.
     fout << "REAC\n";
     for (unsigned int i = 0; i != m_rxns.Count(); ++i) {
@@ -738,6 +1124,15 @@ void Mechanism::Serialize(std::ostream &out) const
             (*isp)->Serialize(out);
         }
 
+	// Write the number of phase to the stream.
+        u = m_phase.size();
+        out.write((char*)&u, sizeof(u));
+
+        // Write the phase to the stream.
+        for (PhasePtrVector::const_iterator iph=m_phase.begin(); iph!=m_phase.end(); iph++) {
+            (*iph)->Serialize(out);
+        }
+		
         // Write the reaction set to the stream.
         m_rxns.Serialize(out);
 
@@ -796,7 +1191,6 @@ void Mechanism::Deserialize(std::istream &in)
                 // Read the number of species and reserve memory.
                 in.read(reinterpret_cast<char*>(&u), sizeof(u));
                 m_species.reserve(u);
-
                 // Read the species.
                 try {
                     for (unsigned int i=0; i<u; i++) {
@@ -804,7 +1198,6 @@ void Mechanism::Deserialize(std::istream &in)
                         // appropriate constructor.
                         Sprog::Species *sp = new Sprog::Species(in);
                         sp->SetMechanism(*this);
-
                         // Add the species to the vector.
                         m_species.push_back(sp);
                     }
@@ -814,7 +1207,29 @@ void Mechanism::Deserialize(std::istream &in)
                     releaseMemory();
                     throw;
                 }
+		
+	       	// Read the number of phase and reserve memory.
+                in.read(reinterpret_cast<char*>(&u), sizeof(u));
+                m_phase.reserve(u);
+	
+                // Read the phase.
+                try {
+                    for (unsigned int i=0; i<u; i++) {
+                        // Read the phase from the stream using the
+                        // appropriate constructor.
+                        Sprog::Phase *ph = new Sprog::Phase(in);
+                        ph->SetMechanism(*this);
 
+                        // Add the species to the vector.
+                        m_phase.push_back(ph);
+                    }
+                } catch (exception &e) {
+                    // Ensure the mechanism is cleared before throwing
+                    // the exception to the next layer up.
+                    releaseMemory();
+                    throw;
+                }
+			
                 // Read the reaction set.
                 try {
                     m_rxns.SetMechanism(*this);
@@ -825,7 +1240,7 @@ void Mechanism::Deserialize(std::istream &in)
                     releaseMemory();
                     throw;
                 }
-
+		  
                 // Rebuild the stoich xref.
                 BuildStoichXRef();
 

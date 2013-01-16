@@ -87,7 +87,8 @@ public:
         GBD,          // Grain-boundary diffusion (e.g. titania).
         SSD,         // Solid state diffusion (d^3)
         Rutile,		 // Special MD fit for GBD sintering of rutile
-        Silicon      // Special MD fit for sintering of silicon
+        Silicon,     // Special MD fit for sintering of silicon
+        Constant     // Independent of T, D
     };
 
     // Constructors.
@@ -119,27 +120,27 @@ public:
     // PRE-EXPONENTIAL CONSTANT.
 
     // Returns the pre-exponential constant.
-    real A(void) const;
+    double A(void) const;
 
     // Sets the pre-exponential constant.
-    void SetA(real a);
+    void SetA(double a);
 
 
     // ENERGY PARAMETER.
 
     // Returns the characteristic temperature (E) in Kelvin.
-    real E(void) const;
+    double E(void) const;
 
     // Sets the characteristic temperature (E) in Kelvin.
-    void SetE(real e);
+    void SetE(double e);
 
     // MINIMUM PRIMARY PARTICLE DIAMETER PARAMETER.
 
     // Returns the minimum primary particle diameter in the system (Dpmin) in m.
-    real Dpmin(void) const;
+    double Dpmin(void) const;
 
     // Sets the minimum primary particle diameter in the system (Dpmin) in m.
-    void SetDpmin(real dpmin);
+    void SetDpmin(double dpmin);
 
     // SINTERING MODEL TYPE.
 
@@ -154,14 +155,14 @@ public:
 
     // Returns the characteristic sintering time for the
     // given particle.
-    real SintTime(
+    double SintTime(
         const Cell &sys,  // System to which the particle belongs (for T).
         const Particle &p // Particle for which to calculate time.
         ) const;
 
     // Returns the characteristic sintering time for the
     // given primary.
-    real SintTime(
+    double SintTime(
         const Cell &sys, // System to which the particle belongs (for T).
         const AggModels::Primary &p // Particle for which to calculate time.
         ) const;
@@ -169,15 +170,15 @@ public:
     // RATE CALCULATION.
 
     // Returns the rate of the process for the given particle.
-    real Rate(
-        real t,           // Time.
+    double Rate(
+        double t,           // Time.
         const Cell &sys,  // System to which the particle belongs (for T).
         const Particle &p // Particle for which to calculate rate.
         ) const;
 
     // Returns the rate of the process for the given primary.
-    real Rate(
-        real t,          // Time.
+    double Rate(
+        double t,          // Time.
         const Cell &sys, // System to which the particle belongs (for T).
         const AggModels::Primary &p // Particle for which to calculate rate.
         ) const;
@@ -200,13 +201,13 @@ private:
     bool m_enable;
 
     // Pre-exponential rate constant.
-    real m_A;
+    double m_A;
 
     // Characteristic temperature (energy) in Kelvin.
-    real m_E;
+    double m_E;
 
     // Minimum primary particle diameter in the system (Dpmin) in m.
-    real m_dpmin;
+    double m_dpmin;
 
     // Sintering model type.
     SintType m_type;
