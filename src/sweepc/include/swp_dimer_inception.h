@@ -123,6 +123,9 @@ public:
     //! Inception only according to free mol kernel with these sizes
     void SetInceptingSpeciesFreeMol(double m1, double m2, double d1, double d2);
 
+    //! Set constant inception
+    void SetConstantInception(bool c) {m_const = c;}
+
     // READ/WRITE/COPY.
 
     // Creates a copy of the inception.
@@ -168,6 +171,9 @@ private:
 
     // Free-molecular enhancement factor.
     const double m_efm;
+
+    // Use constant inception.
+    bool m_const;
 };
 }
 }

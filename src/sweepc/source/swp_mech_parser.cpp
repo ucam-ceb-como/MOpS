@@ -713,6 +713,42 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
             // takes control of the inception object for memory management.
             mech.AddInception(*icn);
 
+        }
+        else if (inceptype == "const") {
+            // Create a constant inception process.
+            std::cout << "Warning, constant inception process selected." << std::endl;
+            DimerInception *icn = new DimerInception(mech);
+            icn->SetMechanism(mech);
+            icn->SetName("Inception " + cstr(k));
+
+            try {
+                // Read Name
+                str = (*(*i)).GetAttributeValue("name");
+                if (str != "") icn->SetName(str);
+
+                // Read reactants.
+                readReactants(*(*i), *icn);
+
+                // Rate scaling now that a process has been created
+                double A = 0.0;
+                const CamXML::Element *el = (*(*i)).GetFirstChild("A");
+                if (el != NULL) {
+                    A = cdble(el->Data());
+                    icn->SetA(A);
+                }
+
+                // Ensure constant inception is set.
+                icn->SetConstantInception(true);
+
+                // Read composition
+                readInceptedComposition(*(*i), *icn);
+            } catch (std::exception &e) {
+                delete icn;
+                throw e.what();
+            }
+
+            mech.AddInception(*icn);
+
         } else {
 
             // Create new inception.
@@ -1223,6 +1259,11 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
             // is multiplied by the site density so that it is a dimensionless
             // quantity hence A has units cm^3 s^-1.
             arr.A *= (1.0e-6);
+        }
+        else if (str.compare("u")==0) {
+            // Reaction is not dependent on any particle property and is a
+            // constant rate.
+            rxn.SetPropertyID(Sweep::iUniform);
         }
         else if (str.compare("s")==0) {
             // This reaction depends on surface area.  Ignore power,
