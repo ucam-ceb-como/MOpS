@@ -47,7 +47,7 @@
 
 /*!
  *\param[in]    data    Values of species concentrations and other quantities
- *\param[in]    mech    Gas phase mechanism to which the concentrations refer
+ *\param[in]    species Details of the species to which the species concentrations refer
  *
  * The order of the entries in data is important and must be as follows (all SI units)
  * - 0 Skipped (intended for position)
@@ -62,11 +62,11 @@
  *\exception    std::runtime_error  Input data does not match number of species plus other items
  */
 Sweep::FixedMixture::FixedMixture(const fvector& data,
-                                  const Sprog::Mechanism& mech) {
-    if(data.size() != (7 + mech.SpeciesCount())) {
+                                  const Sprog::SpeciesPtrVector &species) {
+    if(data.size() != (7 + species.size())) {
         std::ostringstream msg;
         msg << "Found " << data.size() << " data items, but mechanism has "
-            << mech.SpeciesCount() << " and 7 further items are also required "
+            << species.size() << " and 7 further items are also required "
             << "(Sweep::FixedMixture::FixedMixture)";
         throw std::runtime_error(msg.str());
     }

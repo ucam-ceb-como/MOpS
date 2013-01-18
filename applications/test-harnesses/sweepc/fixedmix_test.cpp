@@ -59,7 +59,7 @@ int main() {
     Sweep::fvector data(chemInputData.interpolateData(1.55e-4));
 
     // Now set up the FixedMixture object to test
-    Sweep::FixedMixture fixedMixTestObject(data, mech);
+    Sweep::FixedMixture fixedMixTestObject(data, mech.Species());
 
     // tolerance for the numerical comparisons
     const double tol = 10.0 * std::numeric_limits<double>::epsilon();

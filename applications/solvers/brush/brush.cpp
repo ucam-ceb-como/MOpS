@@ -445,7 +445,9 @@ int main(int argc, char* argv[])
     }
 
     //========= Build the initial reactor ========================
-    Reactor1d initialReactor(*pGeom, mech.GasMech(), mech.ParticleMech(), maxPCounts, maxM0s);
+    // Spot the fixed chemistry by the input file type (more general solution probably needed).
+    Reactor1d initialReactor(*pGeom, mech.GasMech(), (chemFileType == ResetChemistry::FixedChemistry),
+                             mech.ParticleMech(), maxPCounts, maxM0s);
 
     // Put the initial species concentrations into the reactor.
     // Second argument indicates chemical conditions are fixed and not updated

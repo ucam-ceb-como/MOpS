@@ -58,10 +58,15 @@ using namespace std;
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (public).
-Cell::Cell(const Sweep::ParticleModel &model)
-: m_gas(new Sweep::SprogIdealGasWrapper(model)), m_ensemble(), m_model(&model),
+Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
+: m_ensemble(), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false)
 {
+    if(const_gas)
+        m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
+    else
+        m_gas = new Sweep::SprogIdealGasWrapper(*model.Species());
+
 }
 
 // Copy constructor.
@@ -73,7 +78,7 @@ Cell::Cell(const Cell &copy)
 
 // Stream-reading constructor.
 Cell::Cell(std::istream &in, const Sweep::ParticleModel &model)
-: m_gas(new Sweep::SprogIdealGasWrapper(model))
+: m_gas(new Sweep::SprogIdealGasWrapper(*model.Species()))
 {
     Deserialize(in, model);
 }
@@ -377,7 +382,7 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
             case 1:
             {
                 //SprogIdealGasWrapper
-                Sweep::SprogIdealGasWrapper *pGas = new Sweep::SprogIdealGasWrapper(model);
+                Sweep::SprogIdealGasWrapper *pGas = new Sweep::SprogIdealGasWrapper(*model.Species());
                 pGas->Implementation()->Deserialize(in);
                 // Set the species, because the pointer gets reset in Sprog::Mixture::Deserialize
                 pGas->Implementation()->SetSpecies(*model.Species());

@@ -101,7 +101,7 @@ public:
 
     //! Initialise all cells with the given mech and particle capacity
     Reactor1d(const Geometry::Geometry1d &geom, const Sprog::Mechanism &g_mech,
-              const Sweep::Mechanism &p_mech,
+              const bool constant_gas, const Sweep::Mechanism &p_mech,
               const Utils::LinearInterpolator<double, double> &max_particle_counts,
               const Utils::LinearInterpolator<double, double> &max_m0s);
 

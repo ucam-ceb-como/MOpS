@@ -282,7 +282,7 @@ Brush::MooNMDInterface::particle_reactor_pointer
     }
 
     //========= Build the initial reactor ========================
-    Reactor1d *pReactor = new Reactor1d(*pGeom, mech.GasMech(), mech.ParticleMech(), maxPCounts, maxM0s);
+    Reactor1d *pReactor = new Reactor1d(*pGeom, mech.GasMech(), false, mech.ParticleMech(), maxPCounts, maxM0s);
 
     std::cout << "Setting the initial continuum solution\n";
     pReactor->ReplaceChemistry(initChem, true);

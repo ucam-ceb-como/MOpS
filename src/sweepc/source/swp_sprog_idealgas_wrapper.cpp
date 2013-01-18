@@ -66,8 +66,8 @@ const Sweep::EnvironmentInterface::PropertyIndex Sweep::SprogIdealGasWrapper::sP
 /*!
  * @param[in]   model       Particle model containing gas phase mechanism
  */
-Sweep::SprogIdealGasWrapper::SprogIdealGasWrapper(const ParticleModel& model)
-: mGas(*model.Species())
+Sweep::SprogIdealGasWrapper::SprogIdealGasWrapper(const Sprog::SpeciesPtrVector& species)
+: mGas(species)
 {}
 
 /*!
@@ -174,9 +174,9 @@ void Sweep::SprogIdealGasWrapper::Serialize(std::ostream &out) const {
 
 /*!
  * @param[in,out]   in      Input stream
- * @param[in]       model   Particle model containing gas phase mechanism that defines the meaning of the data
+ * @param[in]       species Gas phase species that help define the meaning of the data
  */
-void Sweep::SprogIdealGasWrapper::Deserialize(std::istream &in, const Sweep::ParticleModel &model) {
+void Sweep::SprogIdealGasWrapper::Deserialize(std::istream &in, const Sprog::SpeciesPtrVector &species) {
     mGas.Deserialize(in);
-    mGas.SetSpecies(*model.Species());
+    mGas.SetSpecies(species);
 }

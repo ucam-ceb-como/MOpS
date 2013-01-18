@@ -70,7 +70,7 @@ class Cell
 {
 public:
     // Constructors.
-    Cell(const Sweep::ParticleModel &model); // Default constructor.
+    Cell(const Sweep::ParticleModel &model, const bool const_gas = false); // Default constructor.
     Cell(const Cell &copy);                  // Copy constructor.
     Cell(                                 // Stream-reading constructor.
         std::istream &in,                 //   - Stream from which to read.

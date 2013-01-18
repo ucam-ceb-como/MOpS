@@ -47,7 +47,6 @@
 #include "gpc_idealgas.h"
 
 #include "swp_params.h"
-#include "swp_particle_model.h"
 
 #include <iostream>
 
@@ -59,7 +58,7 @@ namespace Sweep {
 class SprogIdealGasWrapper : public EnvironmentInterface {
 public:
     //! Construct from a mechanism
-    SprogIdealGasWrapper(const Sweep::ParticleModel &model);
+    SprogIdealGasWrapper(const Sprog::SpeciesPtrVector& species);
 
     //! Virtual equivalent of copy constructor
     EnvironmentInterface* Clone() const;
@@ -99,8 +98,8 @@ public:
 
     //! Reads the object from a binary stream.
     virtual void Deserialize(
-        std::istream &in,                 // Input stream.
-        const Sweep::ParticleModel &model // Model used to define particles.
+        std::istream &in,                          // Input stream.
+        const Sprog::SpeciesPtrVector &species     // Details of gas phase species
         );
 
     //! Index for the temperature gradient in \f$\mathrm{K}\,\mathrm{m}^{-1}\f$
