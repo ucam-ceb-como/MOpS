@@ -271,6 +271,17 @@ void Cell::AddInflow(Processes::BirthProcess &inf)
     m_inflow.push_back(inf.Clone());
 }
 
+// Checks whether any of the inflows have particles in their cell.
+// This is needed for the particle solver.
+bool Cell::HasInflowParticles() const
+{
+    bool ans(false);
+    for (unsigned int i=0; i!=m_inflow.size(); ++i) {
+        if (m_inflow[i]->HasParticlesInCell()) ans = true;
+    }
+    return ans;
+}
+
 
 // PARTICLE OUTFLOW PROCESSES.
 

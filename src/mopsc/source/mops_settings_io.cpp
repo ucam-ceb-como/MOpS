@@ -172,6 +172,60 @@ void readGlobalSettings(const CamXML::Element &node,
     }
 }
 
+
+
+void readInitialPopulation(
+        const CamXML::Element &subnode,
+        Mops::Simulator &sim,
+        const Mops::Mechanism &mech,
+        Mops::Reactor &reac,
+        Mops::Mixture &mix) {
+    // Initialise some storage
+    Sweep::PartPtrList fileParticleList;
+    Sweep::PartPtrList inxParticleList;
+    Sweep::PartPtrList allParticleList;
+    double initialM0 = 0;
+
+    // Find the overall number density represented by the population
+    CamXML::Element* m0Node = subnode.GetFirstChild("m0");
+    if(!m0Node) {
+        throw std::runtime_error("m0 (number density) must be specified for initial particle population \
+                                 (Mops, Settings_IO::readReactor)");
+    }
+    initialM0 = std::atof((m0Node->Data()).c_str());
+    if(initialM0 < 0) {
+        throw std::runtime_error("m0 for initial particle population may not be negative \
+                                 (Mops, Settings_IO::readReactor)");
+    }
+
+    // Check if a binary file has been specified for particles..
+    CamXML::Element* fileNode = subnode.GetFirstChild("file");
+    if (fileNode) {
+        std::string filename;
+        filename = fileNode->Data();
+        std::cout << "parser: binary file " << filename << " specified for input.\n";
+        fileParticleList = sim.ReadEnsembleFile(reac, filename);
+    }
+
+    // Now read in the list of particles and sum up their statistical weights
+    inxParticleList = Settings_IO::ReadInitialParticles(subnode, mech.ParticleMech());
+
+    // Join the particle lists
+    allParticleList.splice(allParticleList.end(), fileParticleList);
+    allParticleList.splice(allParticleList.end(), inxParticleList);
+    Sweep::PartPtrList::const_iterator it = allParticleList.begin();
+    const Sweep::PartPtrList::const_iterator itEnd = allParticleList.end();
+
+    // Get the total weights of *all* initialised particles
+    double weightSum = 0;
+    while(it != itEnd) {
+        weightSum += (*it++)->getStatisticalWeight();
+    }
+
+    mix.SetParticles(allParticleList.begin(), allParticleList.end(), initialM0 / weightSum);
+}
+
+
 // Reads the reactor initial settings from the given XML node.
 Reactor *const readReactor(const CamXML::Element &node,
                                         const Mechanism &mech,
@@ -373,7 +427,6 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     // Assign the species mole fraction vector to the reactor mixture.
     mix->GasPhase().SetFracs(molefracs);
-    std::cout << "ReadReactor: MoleFrac assigned"<< endl;
     mix->Particles().Initialise(max_particle_count, doubling_activated);
 	mix->Reset(maxM0);
     reac->Fill(*mix);
@@ -382,52 +435,7 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     // Particles
     subnode = node.GetFirstChild("population");
-
-    // List will be empty unless a population node is present
-    if(subnode) {
-        Sweep::PartPtrList fileParticleList;
-        Sweep::PartPtrList inxParticleList;
-        Sweep::PartPtrList allParticleList;
-        double initialM0 = 0;
-
-        // Find the overall number density represented by the population
-        CamXML::Element* m0Node = subnode->GetFirstChild("m0");
-        if(!m0Node) {
-            throw std::runtime_error("m0 (number density) must be specified for initial particle population \
-                                     (Mops, Settings_IO::readReactor)");
-        }
-        initialM0 = std::atof((m0Node->Data()).c_str());
-        if(initialM0 < 0) {
-            throw std::runtime_error("m0 for initial particle population may not be negative \
-                                     (Mops, Settings_IO::readReactor)");
-        }
-
-        // Check if a binary file has been specified for particles..
-        CamXML::Element* fileNode = subnode->GetFirstChild("file");
-        if (fileNode) {
-            std::string filename;
-            filename = fileNode->Data();
-            std::cout << "parser: binary file " << filename << " specified for input.\n";
-            fileParticleList = sim.ReadEnsembleFile(*reac, filename);
-        }
-
-        // Now read in the list of particles and sum up their statistical weights
-        inxParticleList = Settings_IO::ReadInitialParticles(*subnode, mech.ParticleMech());
-
-        // Join the particle lists
-        allParticleList.splice(allParticleList.end(), fileParticleList);
-        allParticleList.splice(allParticleList.end(), inxParticleList);
-        Sweep::PartPtrList::const_iterator it = allParticleList.begin();
-        const Sweep::PartPtrList::const_iterator itEnd = allParticleList.end();
-
-        // Get the total weights of *all* initialised particles
-        double weightSum = 0;
-        while(it != itEnd) {
-            weightSum += (*it++)->getStatisticalWeight();
-        }
-
-        mix->SetParticles(allParticleList.begin(), allParticleList.end(), initialM0 / weightSum);
-    }
+    if(subnode) {readInitialPopulation(*subnode, sim, mech, *reac, *mix);}
 
     // TEMPERATURE GRADIENT PROFILE.
 
@@ -486,10 +494,21 @@ Reactor *const readReactor(const CamXML::Element &node,
                 }
             }
 
+            // Particles
+            subsubnode = subnode->GetFirstChild("population");
+            if(subsubnode) {
+                // First initialise the ensemble from the reactor ensemble properties.
+                // Doubling is not relevant for the inflow ensemble as it is not depleted.
+                inf->Mixture()->Particles().Initialise(
+                        mix->Particles().Capacity(),
+                        false);
+                readInitialPopulation(*subsubnode, sim, mech, *reac, *(inf->Mixture()));
+            }
+
             // Assign the species mole fraction vector
             // to the reactor inflow mixture.
             inf->Mixture()->GasPhase().SetFracs(molefracs);
-            dynamic_cast<PSR*>(reac)->SetInflow(*inf);
+            dynamic_cast<PSR*>(reac)->SetInflow(*inf, mech);
         } else {
             throw std::runtime_error("Inflow conditions must be defined for a PSR "
                                 "(Mops, Settings_IO::readReactor)");
@@ -505,6 +524,7 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     return reac;
 }
+
 
 /*!
 @param[in]     node    XML node for input streams
@@ -893,7 +913,7 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
             // Assign the species mole fraction vector
             // to the reactor inflow mixture.
             inf->Mixture()->GasPhase().SetFracs(molefracs);
-            dynamic_cast<PSR*>(reac)->SetInflow(*inf);
+            dynamic_cast<PSR*>(reac)->SetInflow(*inf, mech);
 
             // Read the residence time.
             node = root->GetFirstChild("residencetime");
@@ -1054,8 +1074,6 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 
         readGlobalSettings(*root, sim, solver);
 
-	std::cout << "Load from NEW xml Global Setting Read"<< endl;
-
         // OUTPUT SETTINGS.
         // wjm34: read output settings before reactor, so we can check if ensemble/g.p.
         // files are consistent with some more simulation settings.
@@ -1083,7 +1101,6 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         node = root->GetFirstChild("reactor");
         if (node != NULL) {
 			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0(), sim);
-			std::cout << "Load from NEW xml Reactor Read"<< endl;
         } else {
             throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");

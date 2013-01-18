@@ -66,6 +66,7 @@ BirthProcess::BirthProcess(const Sweep::Mechanism &mech)
 
 // Copy constructor.
 BirthProcess::BirthProcess(const BirthProcess &copy)
+: m_particle(copy.m_particle), m_cell(copy.m_cell)
 {
     *this = copy;
 }
@@ -102,6 +103,13 @@ BirthProcess &BirthProcess::operator =(const BirthProcess &rhs)
     return *this;
 }
 
+
+// INFORMATION FOR THE SOLVER
+// Does the Cell inflow have particles present?
+bool BirthProcess::HasParticlesInCell() const {
+    if (m_cell->Particles().Count()>0u) return true;
+    else return false;
+}
 
 // TOTAL RATE CALCULATIONS.
 

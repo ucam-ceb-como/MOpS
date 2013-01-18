@@ -138,7 +138,7 @@ void PSR::SetResidenceTime(double t)
 const Mops::FlowStream *const PSR::Inflow(void) const {return m_in;}
 
 // Sets the mixture which describes the inflow conditions.
-void PSR::SetInflow(Mops::FlowStream &inf)
+void PSR::SetInflow(Mops::FlowStream &inf, const Mops::Mechanism &mech)
 {
     // Delete current inflow stream.
     delete m_in;
@@ -151,6 +151,12 @@ void PSR::SetInflow(Mops::FlowStream &inf)
     // later calculations.
     m_infH = m_in->Mixture()->GasPhase().BulkH() / (Sprog::R * m_in->Mixture()->GasPhase().Temperature());
     m_in->Mixture()->GasPhase().Hs_RT(m_infHs);
+
+    // Add a birth process to the PSR
+    Sweep::Processes::BirthProcess bp(mech.ParticleMech());
+    bp.SetCell(m_in->Mixture());
+    // Add it to the Mixture, which clones it and takes ownership.
+    m_mix->AddInflow(bp);
 }
 
 

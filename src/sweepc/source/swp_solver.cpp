@@ -98,7 +98,8 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
-        if (mech.AnyDeferred() && (sys.ParticleCount() > 0)) {
+        if ((mech.AnyDeferred() && (sys.ParticleCount() > 0)) ||
+                sys.HasInflowParticles())  {
             // Get the process jump rates (and the total rate).
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
 

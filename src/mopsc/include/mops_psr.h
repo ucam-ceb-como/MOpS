@@ -86,8 +86,8 @@ public:
     // Returns the flow-stream which describes the inflow conditions.
     const Mops::FlowStream *const Inflow(void) const;
 
-    // Sets the mixture which describes the inflow conditions.
-    void SetInflow(Mops::FlowStream &inf);
+    //! Sets the mixture which describes the inflow conditions.
+    void SetInflow(Mops::FlowStream &inf, const Mops::Mechanism &mech);
 
 
     // READ/WRITE/COPY FUNCTIONS.

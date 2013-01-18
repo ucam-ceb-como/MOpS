@@ -80,7 +80,17 @@ public:
     BirthProcess &operator=(const BirthProcess &rhs);
 
 
-    // DEFAULT PARTICLE.
+    // INFORMATION FOR THE SOLVER
+    //! Does the Cell inflow have particles present?
+    bool HasParticlesInCell() const;
+
+    // SET PROCESS PROPERTIES
+
+    //! Set the Cell from which this process samples.
+    void SetCell(Cell* c) {m_cell = c;}
+
+    //! Set the default particle.
+    void SetParticle(Particle* p) {m_particle = p;}
 
     // Returns a pointer to the default particle used for
     // the birth process.

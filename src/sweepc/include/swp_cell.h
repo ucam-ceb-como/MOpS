@@ -159,6 +159,9 @@ public:
     // Add an inflow process to the Cell. The process is copied.
     void AddInflow(Processes::BirthProcess &inf);
 
+    //! Check if there are any particles in the inflow.
+    bool HasInflowParticles() const;
+
 
     // PARTICLE OUTFLOW PROCESSES.
 
