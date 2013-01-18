@@ -44,6 +44,8 @@
 #include "swp_particle_model.h"
 #include "swp_birth_process.h"
 #include "swp_death_process.h"
+#include "swp_sprog_idealgas_wrapper.h"
+#include "swp_fixed_mixture.h"
 
 #include <stdexcept>
 
@@ -56,22 +58,27 @@ using namespace std;
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (public).
-Cell::Cell(const Sweep::ParticleModel &model)
-: m_gas(model), m_ensemble(), m_model(&model),
+Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
+: m_ensemble(), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false)
 {
+    if(const_gas)
+        m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
+    else
+        m_gas = new Sweep::SprogIdealGasWrapper(*model.Species());
+
 }
 
 // Copy constructor.
 Cell::Cell(const Cell &copy)
-: m_gas(copy.m_gas)
+: m_gas(copy.m_gas->Clone())
 {
     *this = copy;
 }
 
 // Stream-reading constructor.
 Cell::Cell(std::istream &in, const Sweep::ParticleModel &model)
-: m_gas(model)
+: m_gas(new Sweep::SprogIdealGasWrapper(*model.Species()))
 {
     Deserialize(in, model);
 }
@@ -79,6 +86,7 @@ Cell::Cell(std::istream &in, const Sweep::ParticleModel &model)
 // Default destructor.
 Cell::~Cell(void)
 {
+    delete m_gas;
 }
 
 
@@ -88,7 +96,8 @@ Cell::~Cell(void)
 Cell &Cell::operator=(const Sweep::Cell &rhs)
 {
     if (this != &rhs) {
-        m_gas        = rhs.m_gas;
+        delete m_gas;
+        m_gas        = rhs.m_gas->Clone();
         m_ensemble   = rhs.m_ensemble;
         m_model      = rhs.m_model;
         m_smpvol     = rhs.m_smpvol;
@@ -320,16 +329,34 @@ void Cell::AddOutflow(double rate, const Sweep::Mechanism &mech)
 
 // READ/WRITE/COPY.
 
-// Writes the object to a binary stream.
+/*!
+ * Writes the object to a binary stream.
+ *
+ *@param[in,out]    out     output stream
+ */
 void Cell::Serialize(std::ostream &out) const
 {
     if (out.good()) {
-        // Output the version ID (=0 at the moment).
-        const unsigned int version = 0;
-        out.write((char*)&version, sizeof(version));
-
         // Output the gas mixture
-        m_gas.Serialize(out);
+        // First check how the mixture is stored
+        const SprogIdealGasWrapper *pSprogWrapper = dynamic_cast<const SprogIdealGasWrapper*>(m_gas);
+        const FixedMixture *pFixedMix = dynamic_cast<const FixedMixture*>(m_gas);
+
+        // Now serialise with a label to say what type of object has been serialised
+        // so that it can be correctly deserialised.
+        if(NULL != pSprogWrapper) {
+            const int sprogWrapperID = 1;
+            out.write(reinterpret_cast<const char *>(&sprogWrapperID), sizeof(sprogWrapperID));
+            pSprogWrapper->Serialize(out);
+        }
+        else if(NULL != pFixedMix) {
+            const int FixedMixID = 2;
+            out.write(reinterpret_cast<const char *>(&FixedMixID), sizeof(FixedMixID));
+            throw std::logic_error("Serialisation of Sweep::FixedMixture not supported in Sweep::Cell::Serialize");
+        }
+        else {
+            throw std::logic_error("Unsupported gas phase mixture type in Sweep::Cell::Serialize");
+        }
 
         // Output the sample volume.
         double v = (double)m_smpvol;
@@ -346,41 +373,51 @@ void Cell::Serialize(std::ostream &out) const
     }
 }
 
-// Reads the object from a binary stream.
+/*!
+ * Read object state from a binary stream.
+ *
+ *@param[in,out]        in      Stream from which to read
+ *@param[in]            model   Model for interpreting the particles in the cell
+ *
+ *@pre  m_gas is initialised
+ */
 void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
     if (in.good()) {
-        // Read the output version.  Currently there is only one
-        // output version, so we don't do anything with this variable.
-        // Still needs to be read though.
-        unsigned int version = 0;
-        in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        double val = 0.0;
+        // Find out what kind of mixture to read, see Serialize() method for possible values
+        int mixID;
+        in.read(reinterpret_cast<char *>(&mixID), sizeof(mixID));
 
-        switch (version) {
-            case 0:
-                // Read the base class.
-                m_gas.Implementation()->Deserialize(in);
-
-                // Read the sample volume.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_smpvol = (double)val;
-
-                // Read if fixed chem.
-                in.read(reinterpret_cast<char*>(&m_fixed_chem), sizeof(m_fixed_chem));
-
-                // Read the ensemble.
-                m_ensemble.Deserialize(in, model);
-
-                // Set the species.
-                m_gas.Implementation()->SetSpecies(*model.Species());
-
+        switch(mixID) {
+            case 1:
+            {
+                //SprogIdealGasWrapper
+                Sweep::SprogIdealGasWrapper *pGas = new Sweep::SprogIdealGasWrapper(*model.Species());
+                pGas->Implementation()->Deserialize(in);
+                // Set the species, because the pointer gets reset in Sprog::Mixture::Deserialize
+                pGas->Implementation()->SetSpecies(*model.Species());
+                m_gas = pGas;
+                break;
+            }
+            case 2:
+                // FixedMixture - not currently supported
+                throw std::logic_error("Deserialisation of Sweep::FixedMixture not supported in Sweep::Cell::Deserialize");
                 break;
             default:
-                throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, Cell::Deserialize).");
+                throw std::logic_error("Unrecognised gas-phase mixture type in Sweep::Cell::Deserialize");
+                break;
         }
+
+        // Read the sample volume.
+        in.read(reinterpret_cast<char*>(&m_smpvol), sizeof(m_smpvol));
+
+        // Read if fixed chem.
+        in.read(reinterpret_cast<char*>(&m_fixed_chem), sizeof(m_fixed_chem));
+
+        // Read the ensemble.
+        m_ensemble.Deserialize(in, model);
+
     } else {
         throw invalid_argument("Input stream not ready "
                                "(Sweep, Cell::Deserialize).");

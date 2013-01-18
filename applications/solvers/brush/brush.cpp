@@ -138,6 +138,9 @@ int main(int argc, char* argv[])
         else if (strcmp(argv[i], "--premix-alpha") == 0) {
             chemFileType = ResetChemistry::PremixAlpha;
         }
+        else if (strcmp(argv[i], "--fixed-chem") == 0) {
+            chemFileType = ResetChemistry::FixedChemistry;
+        }
         else if (strcmp(argv[i], "-h") == 0) {
             // Print help message and exit
             printUsage();
@@ -442,7 +445,9 @@ int main(int argc, char* argv[])
     }
 
     //========= Build the initial reactor ========================
-    Reactor1d initialReactor(*pGeom, mech.GasMech(), mech.ParticleMech(), maxPCounts, maxM0s);
+    // Spot the fixed chemistry by the input file type (more general solution probably needed).
+    Reactor1d initialReactor(*pGeom, mech.GasMech(), (chemFileType == ResetChemistry::FixedChemistry),
+                             mech.ParticleMech(), maxPCounts, maxM0s);
 
     // Put the initial species concentrations into the reactor.
     // Second argument indicates chemical conditions are fixed and not updated

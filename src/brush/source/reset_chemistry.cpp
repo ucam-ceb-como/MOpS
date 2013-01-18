@@ -41,6 +41,8 @@
 
 #include "gpc_mech.h"
 #include "swp_cell.h"
+#include "swp_sprog_idealgas_wrapper.h"
+#include "swp_fixed_mixture.h"
 
 #include <fstream>
 #include <vector>
@@ -213,6 +215,18 @@ const size_t ResetChemistry::sLaplacianMixFracIndex = 8;
  * The PremixAlpha file format is the same as the premix format, except that
  * the requirement for a wdotA4 column is replaced by the requirement for an
  * Alpha column.
+ *
+ * Mandatory columns in the file for the Fixed Chemistry format are (\ref InputFileType),
+ * the unit specifications in square brackets are part of the required column headings
+ * - x[m] Spatial position to which the row of data applies
+ * - T[K] Temperature
+ * - rho[kg/m3] Mass density of the mixture
+ * - u[m/s] Velocity of the mixture
+ * - n[mol/m3] Total molar concentration
+ * - P[Pa] Pressure in mixture
+ * - mu[Pa.s] Viscosity of mixture
+ * - One column of concentration data for each species in the mechanism (\f$\mathrm{mol\,m^{-3}}\f$).
+ *
  *
  *\param[in]    fname       Path of file from which to read the data
  *\param[in]    file_type   Style of data in file
@@ -632,7 +646,9 @@ double Brush::ResetChemistry::endLocation() const {
  *
  * Behaviour is not defined if this ResetChemistry was
  * not constructed with an identical mechanism to that
- * of the 1d reactor.
+ * of the 1d reactor.  The function has to first work
+ * out what sort of gas mixture is used in the reactor
+ * and then create another of the same type.
  *
  *\param[in]        x       Position to which to interpolate the data
  *\param[in,out]    reac    Reactor whose chemistry will be replaced
@@ -640,91 +656,94 @@ double Brush::ResetChemistry::endLocation() const {
 void Brush::ResetChemistry::apply(const double x, Sweep::Cell &reac) const {
     data_point dataToUse(interpolateData(x));
 
-    // Build a chemical mixture object
-    Sprog::Thermo::IdealGas chemMixture(*(reac.ParticleModel()->Species()));
+    Sweep::SprogIdealGasWrapper *gasWrapper;
+    Sweep::FixedMixture *fixedWrapper;
 
-    // Set the species data
-    fvector speciesData(dataToUse.begin() + sNumNonSpeciesData, dataToUse.end());
-    if(mMassFractionData) {
-        chemMixture.SetMassFracs(speciesData);
+    // Capture the results of the casts in appropriately named variables and test them
+    if(NULL != (fixedWrapper = dynamic_cast<Sweep::FixedMixture*>(&reac.GasPhase()))) {
+        // Currently the order of data returned by interpolateData (and stored in dataToUse) matches
+        // the order expected by Sweep::FixedMixture.  Add processing code here if the data layouts
+        // diverge in the future.
+        *fixedWrapper = Sweep::FixedMixture(dataToUse, *reac.ParticleModel()->Species());
     }
-    else {
-        chemMixture.SetFracs(speciesData);
+    else if(NULL != (gasWrapper = dynamic_cast<Sweep::SprogIdealGasWrapper*>(&reac.GasPhase()))) {
+        // Build a chemical mixture object
+        Sprog::Thermo::IdealGas chemMixture(*(reac.ParticleModel()->Species()));
+
+        // Set the species data
+        fvector speciesData(dataToUse.begin() + sNumNonSpeciesData, dataToUse.end());
+        if(mMassFractionData) {
+            chemMixture.SetMassFracs(speciesData);
+        }
+        else {
+            chemMixture.SetFracs(speciesData);
+        }
+
+
+        // Set the bulk properties
+        chemMixture.SetTemperature(dataToUse[sTemperatureIndex]);
+        // Mass density cannot be set until after mass fractions are set,
+        // because there is an internal conversion to molar density that
+        // requires the mass fractions.
+        chemMixture.SetMassDensity(dataToUse[sDensityIndex]);
+
+        // Other properties that have been addded to the mixture
+        chemMixture.SetVelocity(dataToUse[sVelocityIndex]);
+        chemMixture.SetPAHFormationRate(dataToUse[sPAHFormationIndex]);
+        chemMixture.SetMixFracDiffCoeff(dataToUse[sMixFracDiffCoeffIndex]);
+        chemMixture.SetGradientMixFrac(dataToUse[sGradientMixFracIndex]);
+        chemMixture.SetLaplacianMixFrac(dataToUse[sLaplacianMixFracIndex]);
+        chemMixture.SetGradientTemperature(dataToUse[sGradientTemperatureIndex]);
+        // PAH formation is reused for ABF alpha since they can never appear together and
+        // saves re-engineering this function (riap2 27 Oct 2011)
+        chemMixture.SetAlpha(dataToUse[sPAHFormationIndex]);
+
+        // Finally set the data
+        *gasWrapper->Implementation() = chemMixture;
+
+        // Uncomment this code to check molar concentrations
+        /*unsigned int logIndices[14];
+        for(unsigned int i = 0; i < reac.ParticleModel()->Species()->size(); ++i) {
+            if(reac.ParticleModel()->Species()->at(i)->Name() == "H2")
+                logIndices[0] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "H")
+                logIndices[1] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "O")
+                logIndices[2] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "O2")
+                logIndices[3] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "OH")
+                logIndices[4] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "H2O")
+                logIndices[5] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "CH4")
+                logIndices[6] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "CO")
+                logIndices[7] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "CO2")
+                logIndices[8] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "C2H2")
+                logIndices[9] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "C2H4")
+                logIndices[10] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "AR")
+                logIndices[11] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "N2")
+                logIndices[12] = i;
+            else if(reac.ParticleModel()->Species()->at(i)->Name() == "A4")
+                logIndices[13] = i;
+
+        }
+
+        // Output in PSDF_input.dat format
+        std::cout << x << '\t' << std::scientific << std::setprecision(6)
+                  << reac.GasPhase().Temperature() << '\t';
+        for(unsigned int j = 0; j != 14; ++j) {
+            std::cout <<  reac.GasPhase().MolarConc(logIndices[j]) << '\t';
+        }
+        std::cout << reac.GasPhase().Pressure() << '\t'
+                  << reac.GasPhase().Density() << '\n';*/
     }
-
-
-    // Set the bulk properties
-    chemMixture.SetTemperature(dataToUse[sTemperatureIndex]);
-    // Mass density cannot be set until after mass fractions are set,
-    // because there is an internal conversion to molar density that
-    // requires the mass fractions.
-    chemMixture.SetMassDensity(dataToUse[sDensityIndex]);
-
-    // Other properties that have been addded to the mixture
-    chemMixture.SetVelocity(dataToUse[sVelocityIndex]);
-    chemMixture.SetPAHFormationRate(dataToUse[sPAHFormationIndex]);
-    chemMixture.SetMixFracDiffCoeff(dataToUse[sMixFracDiffCoeffIndex]);
-    chemMixture.SetGradientMixFrac(dataToUse[sGradientMixFracIndex]);
-    chemMixture.SetLaplacianMixFrac(dataToUse[sLaplacianMixFracIndex]);
-    chemMixture.SetGradientTemperature(dataToUse[sGradientTemperatureIndex]);
-    // PAH formation is reused for ABF alpha since they can never appear together and
-    // saves re-engineering this function (riap2 27 Oct 2011)
-    chemMixture.SetAlpha(dataToUse[sPAHFormationIndex]);
-
-    //reac.SetGasPhase(chemMixture);
-
-    // This method requires write access to the gas phase, which is not
-    // standard in sweep.  This means it cannot use the generic gas
-    // phase interface
-    Sweep::SprogIdealGasWrapper *gasWrapper = dynamic_cast<Sweep::SprogIdealGasWrapper*>(&reac.GasPhase());
-    if(gasWrapper == NULL)
-        throw std::runtime_error("Could not cast gas phase to SprogIdealGasWrapper in Brush::ResetChemistry::apply");
-
-    // If execution reaches here, the cast must have been successful
-    *gasWrapper->Implementation() = chemMixture;
-
-    // Uncomment this code to check molar concentrations
-    /*unsigned int logIndices[14];
-    for(unsigned int i = 0; i < reac.ParticleModel()->Species()->size(); ++i) {
-        if(reac.ParticleModel()->Species()->at(i)->Name() == "H2")
-            logIndices[0] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "H")
-            logIndices[1] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "O")
-            logIndices[2] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "O2")
-            logIndices[3] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "OH")
-            logIndices[4] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "H2O")
-            logIndices[5] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "CH4")
-            logIndices[6] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "CO")
-            logIndices[7] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "CO2")
-            logIndices[8] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "C2H2")
-            logIndices[9] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "C2H4")
-            logIndices[10] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "AR")
-            logIndices[11] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "N2")
-            logIndices[12] = i;
-        else if(reac.ParticleModel()->Species()->at(i)->Name() == "A4")
-            logIndices[13] = i;
-
-    }
-
-    // Output in PSDF_input.dat format
-    std::cout << x << '\t' << std::scientific << std::setprecision(6)
-              << reac.GasPhase().Temperature() << '\t';
-    for(unsigned int j = 0; j != 14; ++j) {
-        std::cout <<  reac.GasPhase().MolarConc(logIndices[j]) << '\t';
-    }
-    std::cout << reac.GasPhase().Pressure() << '\t'
-              << reac.GasPhase().Density() << '\n';*/
 }
 
 /*!

@@ -40,6 +40,8 @@
 #ifndef SWEEP_FIXED_MIXTURE_H
 #define	SWEEP_FIXED_MIXTURE_H
 
+#include "gpc_species.h"
+
 #include "swp_params.h"
 #include "swp_environment_interface.h"
 
@@ -61,9 +63,12 @@ namespace Sweep {
 class FixedMixture : public EnvironmentInterface{
 public:
     //! Read in the data needed for the given mechanism
-    FixedMixture(const fvector& data, const Sprog::Mechanism& mech);
+    FixedMixture(const fvector& data, const Sprog::SpeciesPtrVector &species);
 
     //==== Methods implementing the EnvironmentInterface interface ====//
+    //! Virtual equivalent of copy constructor
+    virtual EnvironmentInterface* Clone() const;
+
     //! Pressure in Pa
     virtual double Pressure() const {return mPressure;}
 
@@ -86,6 +91,7 @@ public:
     virtual double SpeciesConcentration(const SpeciesIndex index) const;
 
     //! Value of some mixture property that is not a species concentration
+
     virtual double PropertyValue(const PropertyIndex index) const;
     //===== End of EnvironmentInterface implementation ================//
 

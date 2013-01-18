@@ -49,7 +49,7 @@
 #include "swp_ensemble_stats.h"
 #include "swp_birth_process.h"
 #include "swp_death_process.h"
-#include "swp_sprog_idealgas_wrapper.h"
+#include "swp_environment_interface.h"
 
 #include <string>
 #include <iostream>
@@ -70,7 +70,7 @@ class Cell
 {
 public:
     // Constructors.
-    Cell(const Sweep::ParticleModel &model); // Default constructor.
+    Cell(const Sweep::ParticleModel &model, const bool const_gas = false); // Default constructor.
     Cell(const Cell &copy);                  // Copy constructor.
     Cell(                                 // Stream-reading constructor.
         std::istream &in,                 //   - Stream from which to read.
@@ -86,9 +86,9 @@ public:
     // THE GAS-PHASE INTERFACE.
 
     //!Returns the description of the gas-phase mixture.
-    const EnvironmentInterface &GasPhase(void) const {return m_gas;};
+    const EnvironmentInterface &GasPhase(void) const {return *m_gas;};
     //!Returns the description of the gas-phase mixture.
-    EnvironmentInterface &GasPhase(void) {return m_gas;};
+    EnvironmentInterface &GasPhase(void) {return *m_gas;};
 
     // THE PARTICLE ENSEMBLE.
 
@@ -206,7 +206,7 @@ protected:
 
 private:
     //! Gas mixture
-    SprogIdealGasWrapper m_gas;
+    EnvironmentInterface *m_gas;
 
     //! Particle ensemble.
     Ensemble m_ensemble;

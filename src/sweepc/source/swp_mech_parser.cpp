@@ -57,6 +57,8 @@
 #include "swp_weighted_transcoag.h"
 #include "swp_coag_weight_rules.h"
 #include "swp_silica_interparticle.h"
+#include "swp_sprog_idealgas_wrapper.h"
+
 #include "swp_tempReadColliPara.h" //temporarily used to read collision efficiency parameters, including mode, NONE, MAX, MIN, COMBINED
 
 #include "gpc_species.h"

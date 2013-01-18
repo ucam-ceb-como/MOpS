@@ -51,18 +51,19 @@
  *
  *\param[in]    geom                    Geometry of new 1d reactor
  *\param[in]    g_mech                  Gas phase mechanism to use in all the reactors
+ *\param[in]    constant_gas            Gas phase to use a simplified constant mixture
  *\param[in]    p_mech                  Particle mechanism to use in all the reactors
  *\param[in]    max_particle_counts     Maximum number of computatioal particles per cell
  *\param[in]    max_m0s                 Maximum particle concentrations (units \f$\mathrm{m}^{-3}\f$)
  */
 Brush::Reactor1d::Reactor1d(const Geometry::Geometry1d &geom, const Sprog::Mechanism &g_mech,
-                            const Sweep::Mechanism &p_mech,
+                            const bool constant_gas,const Sweep::Mechanism &p_mech,
                             const Utils::LinearInterpolator<double, double> &max_particle_counts,
                             const Utils::LinearInterpolator<double, double> &max_m0s)
     : mGasMech(g_mech)
     , mParticleMech(p_mech)
     , mGeometry(geom)
-    , mReactors(geom.numCells(), ReactorType(mParticleMech))
+    , mReactors(geom.numCells(), ReactorType(mParticleMech, constant_gas))
 {
     // Make sure the particle mechanism references the correct gas phase mechanism instance.
     mParticleMech.SetSpecies(mGasMech.Species());

@@ -44,7 +44,7 @@
 
 #include "swp_params.h"
 #include "swp_mechanism.h"
-#include "swp_environment_interface.h"
+#include "swp_sprog_idealgas_wrapper.h"
 
 #include <stdexcept>
 
