@@ -170,6 +170,8 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
                           rng_type &rng) const
 {
     Particle *p = NULL;
+    double wtFactor = (double)m_cell->Particles().Capacity() * sys.SampleVolume()
+            / (sys.Particles().Capacity() * m_cell->SampleVolume());
 
     if (m_cell || (m_cell->ParticleCount()==0)) {
         // Uniformly select a particle from the sampling
@@ -177,13 +179,13 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
         int i = m_cell->Particles().Select(rng);
         if (i >= 0) {
             p = m_cell->Particles().At(i)->Clone();
+            p->setStatisticalWeight(p->getStatisticalWeight() * wtFactor);
         } else {
             // If sampling failed, then just use the default
             // particle.  This is a serious error, and really
             // should never happen.
-            p = m_particle->Clone();
-            printf("sweep: Ensemble sampling failed.  Using default particle "
-                   "(Sweep, BirthProcess::Perform).");
+            throw std::runtime_error("Ensemble sampling failed."
+                    "(Sweep, BirthProcess::Perform).");
         }
     } else {
         // Create a copy of the default particle, if there
