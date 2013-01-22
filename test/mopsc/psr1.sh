@@ -51,7 +51,7 @@ if test -n "$2"
     echo "changed directory to $2"
 fi
 
-cd cstrtest
+cd psr1
 
 "$program" -p
 simulationResult=$?
