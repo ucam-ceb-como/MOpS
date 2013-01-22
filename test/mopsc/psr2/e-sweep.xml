@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<mechanism name="Test" units="CGS">
+    <component id="silicon" type="bulk">
+      <description>silicon</description>
+      <density units="g/cm3">1.0</density>
+      <!-- MW = Avogadro's number to yield the same dimensions as the test-->
+      <molwt units="g/mol">6.023e29</molwt> 
+    </component>
+    
+    <particle id="[silicon]" model="spherical" subtree="false">
+      <description>Test</description>
+    </particle>
+
+    <coagulation>
+        <A>1.0</A>
+        <weightrule>w3</weightrule>
+        <kernel>weightedconstant</kernel>
+    </coagulation>
+</mechanism>

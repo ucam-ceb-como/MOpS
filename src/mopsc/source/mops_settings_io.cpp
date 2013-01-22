@@ -453,8 +453,17 @@ Reactor *const readReactor(const CamXML::Element &node,
     // PSR SPECIFIC SETTINGS.
 
     if (reac->SerialType() == Serial_PSR) {
-        subnode = node.GetFirstChild("inflow");
 
+        // Read the residence time first so that the inflow's rate is
+        // correctly set.
+        subnode = node.GetFirstChild("residencetime");
+        if (subnode != NULL) {
+            double tau = Strings::cdble(subnode->Data());
+            dynamic_cast<PSR*>(reac)->SetResidenceTime(tau);
+        }
+
+        // Read inflow
+        subnode = node.GetFirstChild("inflow");
         if (subnode != NULL) {
             // Create a new Mixture object for inflow.
             FlowStream *inf = new FlowStream(mech);
@@ -512,13 +521,6 @@ Reactor *const readReactor(const CamXML::Element &node,
         } else {
             throw std::runtime_error("Inflow conditions must be defined for a PSR "
                                 "(Mops, Settings_IO::readReactor)");
-        }
-
-        // Read the residence time.
-        subnode = node.GetFirstChild("residencetime");
-        if (subnode != NULL) {
-        	double tau = Strings::cdble(subnode->Data());
-            dynamic_cast<PSR*>(reac)->SetResidenceTime(tau);
         }
     }
 
@@ -913,13 +915,15 @@ Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
             // Assign the species mole fraction vector
             // to the reactor inflow mixture.
             inf->Mixture()->GasPhase().SetFracs(molefracs);
-            dynamic_cast<PSR*>(reac)->SetInflow(*inf, mech);
 
             // Read the residence time.
             node = root->GetFirstChild("residencetime");
             if (node != NULL) {
                 dynamic_cast<PSR*>(reac)->SetResidenceTime(Strings::cdble(node->Data()));
             }
+
+            // Set the inflow AFTER residence time to ensure correct rate factor
+            dynamic_cast<PSR*>(reac)->SetInflow(*inf, mech);
         }
 
 

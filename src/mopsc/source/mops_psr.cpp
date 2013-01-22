@@ -155,6 +155,7 @@ void PSR::SetInflow(Mops::FlowStream &inf, const Mops::Mechanism &mech)
     // Add a birth process to the PSR
     Sweep::Processes::BirthProcess bp(mech.ParticleMech());
     bp.SetCell(m_in->Mixture());
+    bp.SetA(m_invrt);
     // Add it to the Mixture, which clones it and takes ownership.
     m_mix->AddInflow(bp);
 }
