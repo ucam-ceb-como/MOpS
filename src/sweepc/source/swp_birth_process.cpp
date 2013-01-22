@@ -124,12 +124,10 @@ double BirthProcess::Rate(double t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 
 {
-    if (m_cell->Particles().Count() > 0u) {
-        // Physical birth rate needs to be scaled by the sample volume of
-        // the previous Cell.
-        return m_a * m_cell->Particles().GetSum(iW) * sys.SampleVolume() / m_cell->SampleVolume();
+    if (m_cell) {
+        return m_a * m_cell->ParticleCount(); // Rate depends on birth cell.
     } else {
-        return 0.0; // Zero rate if no particles.
+        return m_a; // Constant rate.
     }
 }
 
@@ -145,7 +143,11 @@ double BirthProcess::RateTerms(const double t, const Cell &sys,
                              const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
 {
-    *iterm = Rate(t, sys, local_geom);
+    if (m_cell) {
+        *iterm = m_a * m_cell->ParticleCount(); // Rate depends on birth cell.
+    } else {
+        *iterm = m_a; // Constant rate.
+    }
     return *(iterm++);
 }
 
@@ -171,7 +173,7 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
     double wtFactor = (double)m_cell->Particles().Capacity() * sys.SampleVolume()
             / (sys.Particles().Capacity() * m_cell->SampleVolume());
 
-    if (m_cell->ParticleCount() > 0) {
+    if (m_cell || (m_cell->ParticleCount()==0)) {
         // Uniformly select a particle from the sampling
         // cell.
         int i = m_cell->Particles().Select(rng);

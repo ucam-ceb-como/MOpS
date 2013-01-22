@@ -327,6 +327,8 @@ int main(int argc, char *argv[])
     try {
       if (soltype != GPC) { // If NOT GPC 
             mech.ParticleMech().SetSpecies(mech.GasMech().Species());
+	    std::cout << "Sweep Mech Parser" << endl; // for debugging
+
             Sweep::MechParser::Read(swpfile, mech.ParticleMech());
 	    
         }
@@ -349,7 +351,9 @@ int main(int argc, char *argv[])
             reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, sim, *solver, mech);
         } else {
             // New format.
+	  std::cout << "About to read the XML/INX" << endl; // for debugging
             reactor = Settings_IO::LoadFromXML(settfile, reactor, times, sim, *solver, mech);
+	    std::cout << "XML/INX read" << endl; // for debugging
         }
     } catch (std::logic_error &le) {
         std::cerr << "mops: Failed to load settings file due to bad inputs.  Message:\n  "

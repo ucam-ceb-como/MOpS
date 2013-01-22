@@ -98,9 +98,7 @@ DeathProcess &DeathProcess::operator =(const DeathProcess &rhs)
 double DeathProcess::Rate(double t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 {
-    // Count doesn't seem right for weighted particles...
-    // TODO: understand why this is the case
-    return m_a * sys.Particles().Count();
+    return m_a * sys.ParticleCount();
 }
 
 // RATE TERM CALCULATIONS.
@@ -115,7 +113,7 @@ double DeathProcess::RateTerms(const double t, const Cell &sys,
                              const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
 {
-    *iterm = Rate(t, sys, local_geom);
+    *iterm = m_a * sys.ParticleCount();
     return *(iterm++);
 }
 
