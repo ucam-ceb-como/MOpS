@@ -207,17 +207,17 @@ void ODE_Solver::InitCVode(void)
     } else {
         // CVDlsSetDenseJacFn(m_odewk, &jacFn_CVODE);
     }
-    int flag = 0;
+
     if (m_sensi.isEnable()) {
         m_yS = N_VCloneVectorArray_Serial(m_sensi.NParams(), m_yvec);
         m_sensi.InitSensMatrix(m_yS);
-        flag = CVodeSensInit(m_odewk, m_sensi.NParams(), m_sensi.GetMethod(), NULL, m_yS);
+        CVodeSensInit(m_odewk, m_sensi.NParams(), m_sensi.GetMethod(), NULL, m_yS);
 
-        flag = CVodeSensEEtolerances(m_odewk);
-        //flag = CVodeSensSStolerances(m_odewk, m_rtol, &m_atol);
-        flag = CVodeSetSensErrCon(m_odewk, m_sensi.isEnableErrorControl());
+        CVodeSensEEtolerances(m_odewk);
+        //CVodeSensSStolerances(m_odewk, m_rtol, &m_atol);
+        CVodeSetSensErrCon(m_odewk, m_sensi.isEnableErrorControl());
 
-        flag = CVodeSetSensParams(m_odewk, m_sensi.ParamsPtr(), m_sensi.ParamBarsPtr(), NULL);
+        CVodeSetSensParams(m_odewk, m_sensi.ParamsPtr(), m_sensi.ParamBarsPtr(), NULL);
 
     } else {
         //printf("Sensitivity: NO ");

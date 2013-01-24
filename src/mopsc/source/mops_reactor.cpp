@@ -504,13 +504,13 @@ void Reactor::RHS_ConstT(double t, const double *const y,  double *ydot) const
 void Reactor::RHS_Adiabatic(double t, const double *const y,  double *ydot) const
 {
     static fvector wdot, sdot, Hs, Us;
-    double wtot = 0.0, Cp = 0.0, stot =0.0, avrMW =0.0, Cv = 0.0;
+    double wtot = 0.0, stot =0.0, avrMW =0.0, Cv = 0.0;
 
     // Calculate mixture thermodynamic properties.
     m_mix->GasPhase().CalcHs_RT(y[m_iT], Hs);
 	m_mix->GasPhase().CalcUs_RT(y[m_iT], Us);
 	int No_of_gas_sp = m_mech->GasMech().GasSpeciesCount();
-    Cp = m_mix->GasPhase().ThermoInterface::CalcBulkCp_R(y[m_iT], y, No_of_gas_sp);
+    //p = m_mix->GasPhase().ThermoInterface::CalcBulkCp_R(y[m_iT], y, No_of_gas_sp);
     Cv = m_mix->GasPhase().ThermoInterface::CalcBulkCv_R(y[m_iT], y, No_of_gas_sp);
 	// H_bulk = m_mix->GasPhase().ThermoInterface::CalcBulkH(y[m_iT], y, No_of_gas_sp);
     // Calculate molar production rates.
