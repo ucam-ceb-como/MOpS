@@ -56,7 +56,7 @@ using namespace std;
 
 // Default constructor (protected).
 DimerInception::DimerInception(void)
-: Inception(), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0), m_efm(2.2), m_const(false)
+: Inception(), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0), m_efm(2.2)
 {
     m_name = "DimerInception";
 }
@@ -64,7 +64,7 @@ DimerInception::DimerInception(void)
 // Initialising constructor.
 DimerInception::DimerInception(const Sweep::Mechanism &mech)
 : Inception(mech), m_kfm(0.0), m_ksf1(0.0), m_ksf2(0.0),
-  m_efm(mech.GetEnhancementFM()), m_const(false)
+  m_efm(mech.GetEnhancementFM())
 {
     m_name = "DimerInception";
 }
@@ -98,7 +98,6 @@ DimerInception &DimerInception::operator =(const DimerInception &rhs)
         m_kfm  = rhs.m_kfm;
         m_ksf1 = rhs.m_ksf1;
         m_ksf2 = rhs.m_ksf2;
-        m_const = rhs.m_const;
     }
     return *this;
 }
@@ -246,10 +245,7 @@ double DimerInception::Rate(const EnvironmentInterface &gas, double sqrtT,
     double rate = A() * vol * chemRatePart(gas);
 
     const double fm   = sqrtT * m_kfm;
-    if (m_const) {
-        // Do nothing, except adjust for \ref chemRatePart.
-        rate *= 2.0;
-    } else if((m_ksf1 > 0) || (m_ksf2 > 0))  {
+    if((m_ksf1 > 0) || (m_ksf2 > 0))  {
         const double Temperature = gas.Temperature();
 
         // Temperature divided by viscosity
@@ -347,10 +343,6 @@ void DimerInception::Serialize(std::ostream &out) const
         v = (double)m_ksf2;
         out.write((char*)&v, sizeof(v));
 
-        // Write flag for constant inception
-        bool c = m_const;
-        out.write((char*)&c, sizeof(c));
-
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, DimerInception::Serialize).");
@@ -368,7 +360,6 @@ void DimerInception::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
         double val = 0.0;
-        bool c(false);
 
         switch (version) {
             case 0:
@@ -384,10 +375,6 @@ void DimerInception::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                 m_ksf1 = (double)val;
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_ksf2 = (double)val;
-
-                // Write flag for constant inception
-                in.read(reinterpret_cast<char*>(&c), sizeof(c));
-                m_const = (bool)c;
 
                 break;
             default:
