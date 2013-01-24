@@ -1014,23 +1014,13 @@ void MechParser::readConstantInception(CamXML::Element &xml, Processes::Constant
     // Read initial tracker variable values.
     readInceptedTrackers(xml, icn);
 
-    // Read the fixed rate (particles per cm^3 per s)
-    CamXML::Element *el = xml.GetFirstChild("rate");
-    if (el != NULL) {
-    	double rate = std::atof(el->Data().c_str());
-    	// But store with units of particles per m^3 per s
-    	icn.setConstantVolumetricInceptionRate(rate * 1.0e6);
-    }
-    else {
-    	throw std::runtime_error("No rate provided for constant inception (Sweep::MechParser::readConstantInception)");
-    }
-
-    // Rate scaling now that a process has been created
+    // Rate scaling now that a process has been created (particles per cm^3 per s)
     double A = 0.0;
-    el = xml.GetFirstChild("A");
+    CamXML::Element* el = xml.GetFirstChild("A");
     if (el != NULL) {
         A = cdble(el->Data());
-        icn.SetA(A);
+        // But store with units of particles per m^3 per s
+        icn.SetA(A * 1.0e6);
     }
 
     // See if the inception is at a fixed position
@@ -1225,8 +1215,11 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
             // is multiplied by the site density so that it is a dimensionless
             // quantity hence A has units cm^3 s^-1.
             arr.A *= (1.0e-6);
-        }
-        else if (str.compare("s")==0) {
+        } else if (str.compare("u")==0) {
+            // Reaction is not dependent on any particle property and is a
+            // constant rate.
+            rxn.SetPropertyID(Sweep::iUniform);
+        } else if (str.compare("s")==0) {
             // This reaction depends on surface area.  Ignore power,
             // they must have meant 1.
             rxn.SetPropertyID(Sweep::iS);

@@ -53,6 +53,7 @@
 #include "swp_pah_inception.h"
 #include "swp_dimer_inception.h"
 #include "swp_silicon_inception.h"
+#include "swp_constant_inception.h"
 #include "swp_silica_interparticle.h"
 #include "swp_titania_surface_reaction.h"
 #include <stdexcept>
@@ -88,6 +89,9 @@ Inception *const ProcessFactory::ReadInception(std::istream &in,
                 break;
             case PAH_Inception_ID:
                 proc = new PAHInception(in, mech);
+                break;
+            case Constant_Inception_ID:
+                proc = new ConstantInception(in, mech);
                 break;
             default:
                 throw runtime_error("Invalid inception type read from "

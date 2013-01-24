@@ -78,9 +78,6 @@ public:
     //! Assign
     ConstantInception &operator=(const ConstantInception &rhs);
 
-    //! Set the constant inception rate per unit volume
-    void setConstantVolumetricInceptionRate(const double r) {mRate = r;}
-
     //! Turn fixed position inception on or off
     void useFixedPosition(const bool b) {mUseFixedPosition = b;}
 
@@ -138,9 +135,6 @@ protected:
     ConstantInception(void);
 
 private:
-    //! Rate units of \f$ \mathrm{m}^{-3}\mathrm{s}^{-1}\f$
-    double mRate;
-
     //! Indicate the all particles are to be incepted at exactly the same fixed position
     bool mUseFixedPosition;
 

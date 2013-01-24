@@ -91,7 +91,6 @@ Sweep::Processes::ConstantInception &Sweep::Processes::ConstantInception::operat
 
     }
 
-    mRate = rhs.mRate;
     mUseFixedPosition = rhs.mUseFixedPosition;
     mFixedPosition = rhs.mFixedPosition;
 
@@ -176,7 +175,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 double Sweep::Processes::ConstantInception::Rate(double t, const Cell &sys,
                                                       const Geometry::LocalGeometry1d &local_geom) const
 {
-    double rate =  mRate * A() * sys.SampleVolume();
+    double rate =  A() * sys.SampleVolume();
 
     if(mUseFixedPosition) {
         if(local_geom.isInCell(mFixedPosition)) {
@@ -238,9 +237,6 @@ void Sweep::Processes::ConstantInception::Serialize(std::ostream &out) const
         // Serialize base class.
         Inception::Serialize(out);
 
-        // Constant rate value
-        out.write(reinterpret_cast<const char*>(&mRate), sizeof(mRate));
-
         // Fixed position support
         out.write(reinterpret_cast<const char*>(&mUseFixedPosition), sizeof(mUseFixedPosition));
         out.write(reinterpret_cast<const char*>(&mFixedPosition), sizeof(mFixedPosition));
@@ -264,9 +260,6 @@ void Sweep::Processes::ConstantInception::Deserialize(std::istream &in, const Sw
             case 0:
                 // Deserialize base class.
                 Inception::Deserialize(in, mech);
-
-                // Constant rate
-                in.read(reinterpret_cast<char*>(&mRate), sizeof(mRate));
 
                 // Fixed position support
                 in.read(reinterpret_cast<char*>(&mUseFixedPosition), sizeof(mUseFixedPosition));

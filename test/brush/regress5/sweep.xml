@@ -23,7 +23,7 @@
     <model type="advection" id="physical"/>
 
     <constantinception>
-      <rate>2.0e-6</rate>
+      <A>2.0e-6</A>
       <component id="pah" dx="1" />
       <fixedposition>0.0</fixedposition>
     </constantinception>
