@@ -76,7 +76,7 @@ errs="5.86E+011 9.71E-016 6.94E-011 5.38E-011 0.003847"
 
 # Run calculation
 echo "Running MOPS for free-molecular kernel case."
-"$program" -p -strang -rr "mops-fm.inx" > /dev/null
+"$program" -p --strang -r "mops-fm.inx" > /dev/null
 CheckErr $?
 
 # Parse CSV to check values.
@@ -118,7 +118,7 @@ errs="1.09E+013 7.64E-012 3.11E-009 5.97E-011 0.0077061"
 
 # Run calculation
 echo "Running MOPS for slip flow kernel case."
-"$program" -p -strang -rr "mops-sf.inx" > /dev/null
+"$program" -p --strang -r "mops-sf.inx" > /dev/null
 CheckErr $?
 
 # Parse CSV to check values.

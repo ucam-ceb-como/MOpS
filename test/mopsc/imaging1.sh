@@ -58,7 +58,7 @@ true="sphere {<0, 0, 0>, 16.8459, 1.0}"
 
 # Run calculation
 echo "Running MOPS for spherical primary case."
-"$program" -p -strang -rr "mops.spherical.inx" -s "sweep.spherical.xml" > /dev/null
+"$program" -p --strang -r "mops.spherical.inx" -s "sweep.spherical.xml" > /dev/null
 CheckErr $?
 
 # Check that the particle given by $true is exactly the same.
@@ -77,7 +77,7 @@ true="22"   # 22 particles obtained with specified surface area & diam
 
 # Run calculation
 echo "Running MOPS for spherical primary case."
-"$program" -p -strang -rr "mops.surfvol.inx" -s "sweep.surfvol.xml" > /dev/null
+"$program" -p --strang -r "mops.surfvol.inx" -s "sweep.surfvol.xml" > /dev/null
 CheckErr $?
 
 # Check that the particle given by $true is exactly the same.
@@ -97,7 +97,7 @@ fi
 
 # Run calculation
 echo "Running MOPS for bintree primary case."
-"$program" -p -strang -rr "mops.bintree.inx" -s "sweep.bintree.xml" > /dev/null
+"$program" -p --strang -r "mops.bintree.inx" -s "sweep.bintree.xml" > /dev/null
 CheckErr $?
 
 # Check that there are four POV and -track CSV files.

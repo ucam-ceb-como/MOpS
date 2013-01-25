@@ -120,7 +120,7 @@ m3True=45400.9277986
 
 # Run MOPS
 echo "Running MOPS for CASE A..."
-$exe -p -strang -s "a-sweep.xml" -rr "a-mops.inx" > /dev/null
+$exe -p --strang -s "a-sweep.xml" -r "a-mops.inx" > /dev/null
 CheckErr $?
 
 CheckTest
@@ -136,7 +136,7 @@ m3True=249691.654296
 
 # Run MOPS
 echo "Running MOPS for CASE B..."
-$exe -p -strang -s "b-sweep.xml" -rr "a-mops.inx" > /dev/null
+$exe -p --strang -s "b-sweep.xml" -r "a-mops.inx" > /dev/null
 CheckErr $?
 
 CheckTest
@@ -152,7 +152,7 @@ m3True=25901213879.0
 
 # Run MOPS
 echo "Running MOPS for CASE C..."
-$exe -p -strang -s "c-sweep.xml" -rr "c-mops.inx" > /dev/null
+$exe -p --strang -s "c-sweep.xml" -r "c-mops.inx" > /dev/null
 CheckErr $?
 
 CheckTest
@@ -168,7 +168,7 @@ m3True=1000000000.0
 
 # Run MOPS
 echo "Running MOPS for CASE D..."
-$exe -p -strang -s "a-sweep.xml" -rr "d-mops.inx" > /dev/null
+$exe -p --strang -s "a-sweep.xml" -r "d-mops.inx" > /dev/null
 CheckErr $?
 
 CheckTest
@@ -184,7 +184,7 @@ m3True=6982310054.91
 
 # Run MOPS
 echo "Running MOPS for CASE E..."
-$exe -p -strang -s "e-sweep.xml" -rr "d-mops.inx" > /dev/null
+$exe -p --strang -s "e-sweep.xml" -r "d-mops.inx" > /dev/null
 CheckErr $?
 
 CheckTest

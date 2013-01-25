@@ -19,7 +19,7 @@ if test -n "$2"
 fi
 
 # run mops on a very simple problem
-"$program" -flamepp -p -gp regress1/regress1.inp -rr regress1/regress1.inx -s regress1/regress1.xml -c regress1/chem.inp -t regress1/therm.dat
+"$program" --flamepp -p -g regress1/regress1.inp -r regress1/regress1.inx -s regress1/regress1.xml -c regress1/chem.inp -t regress1/therm.dat
 
 # capture exit value of simulation
 simulationResult=$?

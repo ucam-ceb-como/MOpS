@@ -58,11 +58,11 @@ fi
 
 cd sinter1
 
-"$program" -p -strang -rr mops-finite.inx -s sweep-finite.xml
+"$program" -p --strang -r mops-finite.inx -s sweep-finite.xml
 r1=$?
-"$program" -p -strang -rr mops-spherical.inx -s sweep-spherical.xml
+"$program" -p --strang -r mops-spherical.inx -s sweep-spherical.xml
 r2=$?
-"$program" -p -strang -rr mops-nosinter.inx -s sweep-nosinter.xml
+"$program" -p --strang -r mops-nosinter.inx -s sweep-nosinter.xml
 r3=$?
 
 if((r1==0 && r2==0 && r3==0))

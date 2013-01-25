@@ -1,463 +1,384 @@
- /*
-  Author(s):      Matthew Celnik (msc37)
-  Project:        mopsc (gas-phase chemistry solver).
-  Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
-  Copyright (C) 2008 Matthew S Celnik.
-
-  File purpose:
-    This is the main file for the mops solver.  Includes the driver
-    program.
-
-  Licence:
-    This file is part of "mops".
-
-    mops is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-  Contact:
-    Dr Markus Kraft
-    Dept of Chemical Engineering
-    University of Cambridge
-    New Museums Site
-    Pembroke Street
-    Cambridge
-    CB2 3RA
-    UK
-
-    Email:       mk306@cam.ac.uk
-    Website:     http://como.cheng.cam.ac.uk
+ /*!
+  * @file   mops.cpp
+  * @author Matthew Celnik, William Menz
+  * @brief  Main source file for MOPS
+  *
+  *   Licence:
+  *
+  *      mops is free software; you can redistribute it and/or
+  *      modify it under the terms of the GNU Lesser General Public License
+  *      as published by the Free Software Foundation; either version 2
+  *      of the License, or (at your option) any later version.
+  *
+  *      This program is distributed in the hope that it will be useful,
+  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  *      GNU Lesser General Public License for more details.
+  *
+  *      You should have received a copy of the GNU Lesser General Public
+  *      License along with this program; if not, write to the Free Software
+  *      Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  *      02111-1307, USA.
+  *
+  *   Contact:
+  *      Prof Markus Kraft
+  *      Dept of Chemical Engineering
+  *      University of Cambridge
+  *      New Museums Site
+  *      Pembroke Street
+  *      Cambridge
+  *      CB2 3RA, UK
+  *
+  *      Email:       mk306@cam.ac.uk
+  *      Website:     http://como.cheng.cam.ac.uk
 */
 
-// The MPI versions works at the moment only for PAH stacking simulations				ms785
-//#define USE_MPI
-#ifdef USE_MPI
-#include <mpi.h>
-#include "string_functions.h"
-using namespace Strings;
-#endif
+
+
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
+
+#include <iostream>
+#include <string>
 
 #include "mops.h"
 #include "mops_simulator.h"
-#include "sprog.h"
-#include "sweep.h"
-
-#include <vector>
-#include <string>
-#include <stdexcept>
-
-using namespace Mops;
 using namespace std;
 
-int main(int argc, char *argv[])
-{ 
-#ifdef USE_MPI
-	 int numprocs, rank, namelen;
-	 char processor_name[MPI_MAX_PROCESSOR_NAME];
-	 MPI_Init(&argc, &argv);
-	 MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-	 MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	 MPI_Get_processor_name(processor_name, &namelen);
-     printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
-#endif
+int main(int argc, char* argv[])
+{
+    // Declare empty filenames
+    string ifile("");       // Main input file
+    string cfile("");       // Chemical mechanism
+    string tfile("");       // Thermochemical data
+    string tranfile("");    // Transport data
+    string sfile("");       // Particle mechanism
+    string senfile("");     // Sensitivity
+    string gpfile("");      // Gas-phase profile
+    string surfcfile("");   // Surface chemistry
+    string surftfile("");   // Surface thermocehmical data
 
-     /* 
-       surface Chemistry switch = 0 - OFF  
-                                = 1 - ON // controlled by arguments "-surf"
-      */ 	
-     int surfaceCapability = 0; 
-	
-	 
-	 
-	// Command line arguments with default values.
-    string chemfile("chem.inp");
-    string thermfile("therm.dat");
-	
-    /*
-	* To take the additional inputs of surface chemistry 
-	*/
-    string chemSurfFile("NOT READ"); // added by mm864
-    string thermSurfFile("NOT READ"); // added by mm864
-    
-    string settfile("mops.inx");
-    string swpfile("sweep.xml");
-    string sensifile("sensi.xml");
-    string gasphase("gasphase.inp");
-    string transfile("NOT READ");
-    bool fsolve        = true;  // Default is to solve ..
-    bool fpostprocess  = false; // .. but not post-process.
-    bool foldfmt       = false;
-    bool fwritejumps   = false;
-    bool fwriteparticles = false;
-    bool postpocessPAH   = false;
-    SolverType soltype = GPC;
-    int diag = 0; // Diagnostics level.
+    // Declare solver options
+    size_t rand(0);         // Random seed
+    Mops::SolverType soltype = Mops::GPC;
+    bool fsurf(false);      // Surface capability on?
+    bool fsen(false);       // Sensitivity analysis on?
 
-    // Offset for random number sequence so that independent realisations
-    // can be computed in separated program instances.
-    size_t randomSeedOffset = 0;
+    // Output options
+    int diag(0);            // Diagnostics
+    bool fpostproc(false);  // Should the binary files be postprocessed?
+    bool fsolve(true);      // Should the system be solved?
+    bool fjumps(false);     // Should a jumps file be written?
+    bool fpah(false);       // Should full PAHPP data be postprocessed?
+    bool fensembles(false); // Should an *.ens file be written?
 
-    // Read command line arguments.
-    for (int i=1; i!=argc; ++i) {
-        if (strcmp(argv[i], "-c") == 0) {
-            // Chemical mechanism file (CK format).
-            chemfile = argv[++i];
+    try {
+
+        // Generic options for the program
+        po::options_description generic("Generic options");
+
+        generic.add_options()
+        ("help,h", "print usage message")
+        ("version,v", "print version number")
+        ;
+
+        // Paths to input files
+        po::options_description inpfiles("Input file options");
+
+        inpfiles.add_options()
+        ("mops,r", po::value(&ifile)->default_value("mops.inx"), "path to main input file")
+        ("chem,c", po::value(&cfile)->default_value("chem.inp"), "path to chemical mechanism")
+        ("therm,t", po::value(&tfile)->default_value("therm.dat"), "path to thermochemical data")
+        ("trans,n", po::value(&sfile)->default_value("tran.dat"), "path to transport data")
+        ("gasphase,g", po::value(&gpfile)->default_value("gasphase.inp"), "path to gas phase profile")
+        ("sweep,s", po::value(&sfile)->default_value("sweep.xml"), "path to particle mechanism")
+        ("sensi,q", po::value(&senfile)->default_value("sensi.xml"), "path to particle mechanism")
+        ("schem", po::value(&surfcfile)->default_value("surfchem.inp"), "path to particle mechanism")
+        ("stherm", po::value(&surftfile)->default_value("surftherm.dat"), "path to particle mechanism")
+        ;
+
+        // Solver options
+        po::options_description opt_solver("Solver options");
+
+        opt_solver.add_options()
+        ("rand,e", po::value(&rand)->default_value(456), "adjust random seed value")
+        ("surf", "turn-on surface chemistry")
+        ("opsplit", "use (simple) opsplit solver")
+        ("strang", "use strang solver")
+        ("predcor", "use predcor solver")
+        ("flamepp", "use flamepp solver")
+        ;
+
+        // Output options
+        po::options_description opt_out("Output options");
+
+        opt_out.add_options()
+        ("postproc,p", "postprocess files")
+        ("only,o", "postprocess files only (don't solve)")
+        ("diag", po::value(&diag)->default_value(0), "set diagnostics level (0-4)")
+        ("ensemble", "write full ensembles to binary files")
+        ("ppah", "write full PAHPP data")
+        ("jumps", "write stochastic jumps data")
+        ;
+
+        // Combine sets of program options
+        po::options_description cmdline_options;
+        cmdline_options.add(generic).add(inpfiles).add(opt_solver).add(opt_out);
+
+        // Parse the command line
+        po::variables_map vm;
+        po::parsed_options parsed
+            = po::command_line_parser(argc, argv).options(cmdline_options).run();
+        store(parsed, vm);
+
+        // Print program help and exit
+        if (vm.count("help")) {
+            cout << cmdline_options << "\n";
+            return 0;
         }
-        else if (strcmp(argv[i], "-gp") == 0) {
-            // Gas-phase profile for flame pp mode.
-            gasphase = argv[++i];
-        }   else if (strcmp(argv[i], "-t") == 0) {
-            // Thermodynamic properties file (CK format).
-            thermfile = argv[++i];
-        }   else if (strcmp(argv[i], "-tr") == 0) {
-            // Transport properties file.
-            transfile = argv[++i];
-        } else if (strcmp(argv[i], "-r") == 0) {
-            // Settings file (F90 mops format).
-            settfile = argv[++i];
-            foldfmt  = true;
-        } else if (strcmp(argv[i], "-rr") == 0) {
-            // Settings file new format.
-            settfile = argv[++i];
-            foldfmt  = false;
-        } else if (strcmp(argv[i], "-s") == 0) {
-            // Sweep mechanism file.
-            swpfile = argv[++i];
-        } else if (strcmp(argv[i], "-ss") == 0) {
-            // Sensitivity setup file.
-            sensifile = argv[++i];
-        } else if (strcmp(argv[i], "-e") == 0) {
-            // Random seed offset
-            randomSeedOffset = atoi(argv[++i]);
-        } else if (strcmp(argv[i], "-jumps") == 0) {
-            // Flag to write number of jump events
-            fwritejumps = true;
-        } else if (strcmp(argv[i], "-ensemble") == 0) {
-            // Flag to write the ensemble to a binary file
-            fwriteparticles = true;
-        } else if (strcmp(argv[i], "-p") == 0) {
-            // Post-processing switch.  Used to turn PP on.
-            fpostprocess = true;
-        } else if (strcmp(argv[i], "-po") == 0) {
-            // "Post-process only" switch.  Post-processes but doesn't solve.
-            // Use this if you have previously run a simulation and want
-            // human-readable CSV formatted files with the results.
-            fsolve       = false;
-            fpostprocess = true;
-		} else if (strcmp(argv[i], "-surf") == 0) {
-            surfaceCapability = 1; // Surface on 
-			
-        // The next statements select the type of solver to use.  The
-        // default is to solve gas-phase only, with no particle system.
 
-        } else if (strcmp(argv[i], "-ppah") == 0) {
-            // post-process pah info from particle ensemble.
-            postpocessPAH = true;
-		}else if (strcmp(argv[i], "-gpc") == 0) {
-            // Solver gas-phase chemistry only.
-            soltype = GPC;
-		} else if (strcmp(argv[i], "-opsplit") == 0) {
-            // Use Simple operator splitting to couple gas-phase
-			// and particle system.
-            soltype = OpSplit;
-        } else if (strcmp(argv[i], "-strang") == 0) {
-            // Use Strang splitting to couple gas-phase and particle
-            // system.
-            soltype = Strang;
-        } else if (strcmp(argv[i], "-predcor") == 0) {
-            // Use Split-Predictor---Split-Corrector algorithm to 
-            // couple gas-phase and particle system.
-            soltype = PredCor;
-        } else if (strcmp(argv[i], "-flamepp") == 0) {
-            // Post-process a flame gas-phase chemistry
-            // profile, just like sweep1.
-            soltype = FlamePP;
-        // the next statements determine diagnostics level (if any).
-        } else if (strcmp(argv[i], "-diag1") == 0) {
-            diag = 1; // Minimal diagnostics printed to console.
-        } else if (strcmp(argv[i], "-diag2") == 0) {
-            diag = 2;
-        } else if (strcmp(argv[i], "-diag3") == 0) {
-            diag = 3;
-        } else if (strcmp(argv[i], "-diag4") == 0) {
-            diag = 4; // Full diagnostics.
-		 
+        po::notify(vm);
+
+        // Print version number and exit
+        if (vm.count("version")) {
+            cout << "2.0\n";
+            return 0;
+        }
+
+        // Assign command-line variables to filenames
+        ifile = vm["mops"].as< string >();
+        cfile = vm["chem"].as< string >();
+        tfile = vm["therm"].as< string >();
+        sfile = vm["sweep"].as< string >();
+        gpfile = vm["gasphase"].as< string >();
+        if (!(vm["sensi"].defaulted())) {
+            senfile = vm["sensi"].as< string >();
+            fsen = true;
+        }
+        if (vm["trans"].defaulted()) tranfile = "NOT READ";
+
+        // Check for surface chemistry
+        if (vm.count("surf")) fsurf = true;
+        if (!fsurf) {
+            surfcfile = "NOT READ";
+            surftfile = "NOT READ";
         } else {
-            // Currently nothing else is implemented here.  However, in future
-            // the settings file name will not be set with the -r switch and
-            // shall be read in this section.
-            settfile = argv[i];
-            foldfmt  = false;
+            surfcfile = vm["schem"].as< std::string >();
+            surftfile = vm["stherm"].as< std::string >();
         }
+
+        // Get the solver type
+        if (vm.count("opsplit")) soltype = Mops::OpSplit;
+        if (vm.count("strang")) soltype = Mops::Strang;
+        if (vm.count("predcor")) soltype = Mops::PredCor;
+        if (vm.count("flamepp")) soltype = Mops::FlamePP;
+
+        // Get the seed
+        rand = vm["rand"].as< size_t >();
+
+        // Get the output options
+        if (vm.count("postproc")) fpostproc = true;
+        if (vm.count("only")) {fsolve = false; fpostproc = true;}
+        diag = vm["diag"].as< int >();
+        if (vm.count("ppah")) fpah = true;
+        if (vm.count("jumps")) fjumps = true;
+        if (vm.count("ensemble")) fensembles = true;
     }
 
-	if (surfaceCapability == 1)
-    {
+    // Display any error messages from incorrect command-line flags
+    catch(exception& e) {
+        std::cerr << "mops: Error getting options. Message:\n"
+            << e.what() << "\n";
+        return 1;
+    }
 
-	// Now set the surface chemistry input and surface thermodynamics inputs
-			chemSurfFile.assign("surfchem.inp"); // added by mm864
-			thermSurfFile.assign("surftherm.dat"); // added by mm864
-		}
-	
+    // Start main program
+    cout << "Using the following files for input:\n" <<
+        "  main: " << ifile << "\n" <<
+        "  chem: " << cfile << "\n" <<
+        "  therm: " << tfile << "\n";
+    if (tranfile != "NOT READ") cout << "  trans: " << tranfile << "\n";
+    if (soltype != Mops::GPC) cout << "  sweep: " << sfile << "\n";
+    if (soltype == Mops::FlamePP) cout << "  gasphase: " << gpfile << "\n";
+    if (fsen) cout << "  sensitivity: " << senfile << "\n";
+    if (fsurf) {
+        cout << "  schem: " << surfcfile << "\n" <<
+                "  stherm: " << surftfile << "\n";
+    }
+
     // Define all the objects required to run the simulation.
-    Solver *solver   = NULL; // The solver.
-    Reactor *reactor = NULL; // Reactor to solve.
-    Mechanism mech;          // Chemical and particle mechanism.
-    timevector times;        // A list of output times and step counts.
-    Simulator sim;           // The simulator.
+    Mops::Solver *solver   = NULL; // The solver.
+    Mops::Reactor *reactor = NULL; // Reactor to solve.
+    Mops::Mechanism mech;          // Chemical and particle mechanism.
+    Mops::timevector times;        // A list of output times and step counts.
+    Mops::Simulator sim;           // The simulator.
 
-    // Activate jump writing output
-    sim.SetWriteJumpFile(fwritejumps);
+    // Activate output options
+    sim.SetWriteJumpFile(fjumps);
+    sim.SetWriteEnsembleFile(fensembles);
+    sim.SetWritePAH(fpah);
 
-    // Activate particle and/or gasphase binary output
-    sim.SetWriteEnsembleFile(fwriteparticles);
-
-    // Active detailed PAHs output instead of original psl file
-    sim.SetWritePAH(postpocessPAH);
-
-    // Create the solver.
-    try {
-        switch (soltype) {
-            case OpSplit:
-		solver = new SimpleSplitSolver();
-		break;
-            case Strang:
-                solver = new StrangSolver();
-                break;
-            case PredCor:
-                solver = new PredCorSolver();
-                sim.SetOutputEveryIter(true);
-                break;
-            case MoMIC:
-                // Not implemented yet.
-                printf("Attempted to use MoMIC solver, which is not"
-                       " yet implemented (mops, main).\n\n");
-                return -1;
-            case FlamePP:
-                // Post-process a gas-phase profile.
-                solver = new Sweep::FlameSolver();
-                break;
-            case GPC:
-            default:
-                solver = new Solver();
-                break;
-        }
-    } catch (std::logic_error &le) {
-        std::cerr << "mops: Failed to initialise solver due to bad inputs.  Message:\n  "
-                << le.what() << "\n\n";
-        return -1;
-    } catch (std::runtime_error &re) {
-        std::cerr << "mops: Failed to initialise solver due to a program error.  Message:\n  "
-                << re.what() << "\n\n";
-        printf("\n\n");
-        return -1;
+    // Create the solver
+    switch (soltype) {
+    case Mops::OpSplit:
+        solver = new SimpleSplitSolver();
+        break;
+    case Mops::Strang:
+        solver = new StrangSolver();
+        break;
+    case Mops::PredCor:
+        solver = new PredCorSolver();
+        sim.SetOutputEveryIter(true);
+        break;
+    case Mops::FlamePP:
+        // Post-process a gas-phase profile.
+        solver = new Sweep::FlameSolver();
+        break;
+    case Mops::GPC:
+    default:
+        solver = new Solver();
+        break;
     }
 
-    std::cout << "Solving Type" << soltype << endl; // for debugging
-
-    // Read the chemical mechanism / profile.
-	
-	if (surfaceCapability  == 1){
-	
+    // Load the (chemical) mechanism
     try {
-        Sprog::IO::MechanismParser::ReadChemkin(chemfile, chemSurfFile, mech.GasMech(), thermfile, thermSurfFile, diag, transfile);
-        mech.ParticleMech().SetSpecies(mech.GasMech().Species());
-        if (diag>0) 
-            mech.GasMech().WriteDiagnostics("ckmech.diag");
-	
-	std::cout << "Particle Mech set species done - surface mode" << endl; // for debugging
-
-        if (soltype == FlamePP){
-  
-            dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
+        if (fsurf) {
+            Sprog::IO::MechanismParser::ReadChemkin(
+                    cfile,
+                    surfcfile,
+                    mech.GasMech(),
+                    tfile,
+                    surftfile,
+                    diag,
+                    tranfile);
+        } else {
+            Sprog::IO::MechanismParser::ReadChemkin(
+                    cfile,
+                    mech.GasMech(),
+                    tfile,
+                    diag,
+                    tranfile);
         }
     } catch (std::logic_error &le) {
-        std::cerr << "mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n"
-            << le.what() << "\n\n";
+        std::cerr << "mops: Failed to read chemical mechanism due to bad inputs. Message:\n"
+            << le.what() << "\n";
         delete solver; // Must clear memory now.
         return -1;
     } catch (std::runtime_error &re) {
-        std::cerr << "mops: Failed to read chemical mechanism/profile due to a program error.  Message:\n\n"
-            << re.what() << "\n\n";
+        std::cerr << "mops: Failed to read chemical mechanism due to program error. Message:\n"
+            << re.what() << "\n";
         delete solver; // Must clear memory now.
         return -1;
     }
 
-	
-	} else {
-	
-	try {
-        Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech.GasMech(), thermfile, diag, transfile);
-        mech.ParticleMech().SetSpecies(mech.GasMech().Species());
-        if (diag>0) 
-	  { mech.GasMech().WriteDiagnostics("ckmech.diag");}
+    // Set the sepcies in the particle mechanism
+    // (needed even if only gas-phase solver called)
+    mech.ParticleMech().SetSpecies(mech.GasMech().Species());
 
-	std::cout << "Particle Mech set species done - gas only mode" << endl; // for debugging
+    try {
+        // Load the gas profile for flamepp calculations
+        if (soltype == Mops::FlamePP)
+            dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gpfile, mech);
 
-        if (soltype == FlamePP){
-            //Sprog::IO::MechanismParser::ReadChemkin(chemfile, mech, thermfile, diag);
-            dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gasphase, mech);
-        }
     } catch (std::logic_error &le) {
-        std::cerr << "mops: Failed to read chemical mechanism/profile due to bad inputs.  Message:\n\n"
-                << le.what() << "\n\n";
+        std::cerr << "mops: Failed to read chemical profile due to bad inputs. Message:\n"
+            << le.what() << "\n";
         delete solver; // Must clear memory now.
         return -1;
     } catch (std::runtime_error &re) {
-        std::cerr << "mops: Failed to read chemical mechanism/profile due to a program error.  Message:\n\n"
-                << re.what() << "\n\n";
-        printf("\n\n");
+        std::cerr << "mops: Failed to read chemical profile due to program error. Message:\n"
+            << re.what() << "\n";
         delete solver; // Must clear memory now.
         return -1;
     }
-	
-	}
-    // Read the particle mechanism.
+
+    // Write some diagnostics
+    if (diag > 0) mech.GasMech().WriteDiagnostics("ckmech.diag");
+
     try {
-      if (soltype != GPC) { // If NOT GPC 
-            mech.ParticleMech().SetSpecies(mech.GasMech().Species());
-            Sweep::MechParser::Read(swpfile, mech.ParticleMech());
-	    
+        if (soltype != GPC) {
+            Sweep::MechParser::Read(sfile, mech.ParticleMech());
         }
     } catch (std::logic_error &le) {
-        std::cerr << "mops: Failed to read particle mechanism due to bad inputs.  Message:\n  "
-            << le.what() << "\n\n";
+        std::cerr << "mops: Failed to read particle mechanism due to bad inputs. Message:\n  "
+            << le.what() << "\n";
         delete solver; // Must clear memory now.
         return -1;
     } catch (std::runtime_error &re) {
-        std::cerr << "mops: Failed to read particle mechanism due to a program error.  Message:\n  "
-            << re.what() << "\n\n";
+        std::cerr << "mops: Failed to read particle mechanism due to a program error. Message:\n  "
+            << re.what() << "\n";
         delete solver; // Must clear memory now.
         return -1;
     }
 
     // Read the settings file.
     try {
-        if (foldfmt) {
-            // Old file format.
-            reactor = Settings_IO::LoadFromXML_V1(settfile, reactor, times, sim, *solver, mech);
-        } else {
-            // New format.
-            reactor = Settings_IO::LoadFromXML(settfile, reactor, times, sim, *solver, mech);
+        reactor = Mops::Settings_IO::LoadFromXML(ifile, reactor, times, sim, *solver, mech);
+    } catch (std::logic_error &le) {
+        std::cerr << "mops: Failed to load MOPS settings file due to bad inputs. Message:\n  "
+            << le.what() << "\n";
+        delete solver; // Must clear memory now.
+        return -1;
+    } catch (std::runtime_error &re) {
+        std::cerr << "mops: Failed to load MOPS settings file due to a program error. Message:\n  "
+            << re.what() << "\n";
+        delete solver; // Must clear memory now.
+        return -1;
+    }
+
+    // Load the sensitivity analyser if applicable
+    try {
+        if (fsen) {
+            SensitivityAnalyzer *sensi = new SensitivityAnalyzer();
+            sensi->SetupProblem(mech, *reactor, senfile);
+
+            if (sensi->isEnable()) solver->AttachSensitivity(*sensi);
+            delete sensi;
         }
     } catch (std::logic_error &le) {
-        std::cerr << "mops: Failed to load settings file due to bad inputs.  Message:\n  "
-            << le.what() << "\n\n";
+        std::cerr << "mops: Failed to load sensitivity file due to bad inputs. Message:\n  "
+            << le.what() << "\n";
         delete solver; // Must clear memory now.
         return -1;
     } catch (std::runtime_error &re) {
-        std::cerr << "mops: Failed to load settings file due to a program error.  Message:\n  "
-            << re.what() << "\n\n";
+        std::cerr << "mops: Failed to load sensitivity file due to a program error. Message:\n  "
+            << re.what() << "\n";
         delete solver; // Must clear memory now.
         return -1;
     }
-    
-    // This is needed by Sensitivity Analyzer.
-    // - Sensitivity Analyzer (SA) object requires access to mechanism object's parameters so it is
-    //   necessary that SA has a pointer to a non-constant Mop::Mechanism (mech). SA is attached
-    //   to the solver and paas on to ODE_Solver. Ideally, it should access Mop::Mechanism object from
-    //   Mop::Reactor. However, current reactor keeps a pointer to constant mechanism object so SA
-    //   would not be able to change mechanism parameters. So it is required here to pass the same 
-    //   mechanism object which is passed on to reactor to SA object be fore attach it to the solver.
-    // - Valuse in sensitivity object is in SI unit.
-    if (soltype == GPC){
-    try {
-        // The sensitvity analyzer.
-        SensitivityAnalyzer *sensi = new SensitivityAnalyzer();
-        // Constructor taking both mech and reactor is in in fact not a good idea.
-        // Only reactor should be enough but reactor contains constant mechanism
-        // so taking meachanism is neccessary here. In the future, reactor should be modified to only
-        // keep non-constant mechanism.
-        sensi->SetupProblem(mech, *reactor, sensifile);
-        if (sensi->isEnable()) {
-            // a copy of sensi is made during attaching so you can delete it aftrwards.
-            solver->AttachSensitivity(*sensi);
 
-        }
-        delete sensi;
-
-	cout << "Sensitivity Analyser set" << endl;// for debugging
-    } catch (std::runtime_error &re) {
-        std::cerr << "mops: Failed to load sensitivity setting files due to a program error.  Message:\n  "
-            << re.what() << "\n\n";
-        delete solver; // Must clear memory now.
-        delete reactor;
-        return -1;
-    }
-    }
-
-    // Solve reactor.
+    // Solve the reactor
     try {
         if (fsolve) {
             sim.SetTimeVector(times);
-            // 456 is an arbitrary fixed seed.  One can change this to be the time, or allow the seed
-            // to be passed in as a program argument, more like in brush.
-            sim.RunSimulation(*reactor, *solver, 456 + randomSeedOffset);
+            sim.RunSimulation(*reactor, *solver, rand);
         }
     } catch (std::logic_error &le) {
         std::cerr << "mops: Failed to solve reactor due to bad inputs.  Message:\n  "
-                << le.what() << "\n\n";
+                << le.what() << "\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
     } catch (std::runtime_error &re) {
         std::cerr << "mops: Failed to solve reactor due to a program error.  Message:\n  "
-            << re.what() << "\n\n";
+            << re.what() << "\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
     }
-	
-	#ifdef USE_MPI
-	  MPI_Finalize();
-	#endif
 
     // Post-process.
     try {
-#ifdef USE_MPI
-		if (rank==0)
-		{
-			ofstream out;
-			ifstream in;
-			string infilename, outfilename;
-            outfilename=sim.OutputFile().c_str();
-            outfilename=outfilename +  + ".sim";
-            cout << outfilename;
-			out.open(outfilename.c_str() , ios::app );
-			for (int i=0;i<numprocs;i++)
-			{	
-				infilename=sim.OutputFile().c_str() + cstr(i) + ".sim";
-				in.open(infilename.c_str(), ios::out );
-				out << in.rdbuf();
-				in.close();
-			}
-			out.close();
-			cout <<"postprocessing"<<endl;
-		}
-		
-		if (rank==0)
-#endif
-        if (fpostprocess) sim.PostProcess();
+        if (fpostproc) sim.PostProcess();
     } catch (std::logic_error &le) {
         std::cerr << "mops: Failed to post-process due to bad inputs.  Message:\n  "
-            << le.what() << "\n\n";
+            << le.what() << "\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
     } catch (std::runtime_error &re) {
         std::cerr << "mops: Failed to post-process due to a program error.  Message:\n  "
-            << re.what() << "\n\n";
+            << re.what() << "\n";
         delete solver; // Must clear memory now.
         delete reactor;
         return -1;
@@ -470,6 +391,5 @@ int main(int argc, char *argv[])
     printf("mops: Simulation completed successfully!\n");
     printf("mops: Thank you for choosing mops for your particle modelling!\n");
 
-
-	return 0;
+    return 0;
 }

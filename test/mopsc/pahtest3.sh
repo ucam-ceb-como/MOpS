@@ -59,14 +59,14 @@ dos2unix gasphase.inp
 dos2unix therm.dat
 dos2unix pahtest3.pl
 
-"$program" -p -flamepp -ppah -ensemble 
+"$program" -p --flamepp --ppah --ensemble 
 #> /dev/null
 R CMD BATCH --no-save --no-restore stats.r Routput.txt &
 R2pid=$!
 wait $R2pid
 ./pahtest3.pl 
 
-"$program" -p -flamepp -ppah -rr mops-ens.inx -gp gasphase-ens.inp 
+"$program" -p --flamepp --ppah -r mops-ens.inx -g gasphase-ens.inp 
 echo "Second run Finished"
 ./pahtest3-ens.pl 
 #Capture the exit value
