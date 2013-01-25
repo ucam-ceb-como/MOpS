@@ -220,12 +220,6 @@ public:
     // Writes the simulator to a binary data stream.
     void Serialize(std::ostream &out) const;
 
-    //! Reads an ensemble file (public definition for IO access)
-    Sweep::PartPtrList ReadEnsembleFile(
-        Reactor &r,                 // Reactor
-        const std::string fname          // File name for loading
-        );
-
     // Reads the simulator data from a binary data stream.
     void Deserialize(std::istream &in);
 
@@ -636,9 +630,6 @@ private:
         unsigned int run,     // Run number.
         const Mechanism &mech // Mechanism used to define reactor.
         ) const;
-
-    //! Checks if coagulation kernels are compatible.
-    bool checkCoagulationKernel(int old_id, int this_id) const;
 
     // Processes the PSLs at each save point into single files.
     void postProcessPSLs(

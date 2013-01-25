@@ -173,38 +173,151 @@ void readGlobalSettings(const CamXML::Element &node,
 }
 
 
+/*!
+ * @brief           Helper function to determine if coag kernels are compatible
+ *
+ * This is here to check if, upon loading an ensemble, that the old and new
+ * coagulation kernels are compatible. There are four cases:
+ * 1: WPM -> WPM
+ * 2: WPM -> DSA
+ * 3: DSA -> DSA
+ * 4: DSA -> WPM
+ * Of these, only number 2 doesn't work. This is because all of the DSA coag
+ * kernel calculations assume particles have equal weight.
+ *
+ * @param old_id    ProcessType ID of binary file's coagulation mechanism
+ * @param this_id   ProcessType ID of this simulation
+ * @return          Boolean indicating if kernels are compatible
+ */
+bool checkCoagulationKernel(int old_id, int this_id) {
+    bool ans(false);
+    if (old_id == Sweep::Processes::Weighted_Additive_Coagulation_ID
+            || old_id == Sweep::Processes::Weighted_Constant_Coagulation_ID
+            || old_id == Sweep::Processes::Weighted_Transition_Coagulation_ID
+            || old_id == Sweep::Processes::Transition_Coagulation_ID) {
+        if (old_id == this_id) {
+            // This is fine, we've got the same kernel
+            ans = true;
+        } else {
+            if (this_id == Sweep::Processes::Additive_Coagulation_ID
+                    || this_id == Sweep::Processes::Constant_Coagulation_ID
+                    || this_id == Sweep::Processes::Transition_Coagulation_ID) {
+                // Uh oh.. we've gone WPM -> DSA
+                ans = false;
+            } else {
+                // This is fine, we've gone WPMi -> WPMj
+                ans = true;
+            }
+        }
+    }
+    return ans;
+}
+
+/*!
+ * @brief           Reads an ensemble .ens file.
+ *
+ * This function is to be used when loading a *.ens file to initialise
+ * particles in the system at t=0. Files are specified in the <reactor> block
+ * of the mops.inx file in the following manner:
+ *     <population>
+ *          <file>silica-fm(0)-SP(100).ens</file>
+ *          <m0>3.0e15</m0>
+ *     </population>
+ *
+ */
+Sweep::PartPtrList readEnsembleFile(
+        const string fname,
+        const Sweep::Mechanism &smech) {
+    // Open the save point file.
+    ifstream fin;
+    fin.open(fname.c_str(), ios_base::in | ios_base::binary);
+
+    // Create empty particle pointer list
+    Sweep::PartPtrList particles;
+
+    if (fin.good()) {
+
+        // First read-in and check the particle model
+        Sweep::Mechanism::ParticleModel filemodel;      // model to be loaded
+        filemodel.Deserialize(fin);
+        if (filemodel.AggModel() == smech.AggModel()) {
+            std::cout << "parser: correct particle model found!\n";
+        } else {
+            throw runtime_error("Wrong particle model specified in sweep.xml!");
+        }
+
+        // For binary-tree based particles, check that the tree status is the same.
+        if (filemodel.WriteBinaryTrees() == smech.WriteBinaryTrees()) {
+            std::cout << "parser: binary tree status okay!\n";
+        } else {
+            throw runtime_error("Wrong binary tree output flag in mops.inx.");
+        }
+
+        // Now, check the coagulation kernel, assuming only one coagulation process
+        int id(0);
+        fin.read(reinterpret_cast<char*>(&id), sizeof(id));
+        if (checkCoagulationKernel(id, smech.Coagulations()[0]->ID())) {
+            std::cout << "parser: coagulation process okay!\n";
+        } else {
+            throw runtime_error("Conflicting coagulation kernel specification!");
+        }
+
+        // Now it's time to load the particle ensemble.
+        Sweep::Ensemble fileensemble;
+        fileensemble.Deserialize(fin, smech);
+
+        // Begin adding the particles of fileensemble to the simulation's ensemble
+        Sweep::Particle *sp;
+        for (unsigned int i(0); i != fileensemble.Count(); ++i) {
+            // note we need to use Clone, because fileensemble will be deleted once
+            // we leave the scope of this function.
+            sp = fileensemble.At(i)->Clone();
+            particles.push_back(sp);
+        }
+
+        // Close the input file.
+        fin.close();
+
+    } else {
+        // Throw error if the output file failed to open.
+        throw runtime_error("Failed to open ensemble file "
+                            "input (Mops, Simulator::readEnsembleFile).");
+    }
+
+    return particles;
+}
+
+
 
 void readInitialPopulation(
         const CamXML::Element &subnode,
-        Mops::Simulator &sim,
         const Mops::Mechanism &mech,
-        Mops::Reactor &reac,
         Mops::Mixture &mix) {
     // Initialise some storage
-    Sweep::PartPtrList fileParticleList;
-    Sweep::PartPtrList inxParticleList;
-    Sweep::PartPtrList allParticleList;
-    double initialM0 = 0;
+    Sweep::PartPtrList fileParticleList, inxParticleList, allParticleList;
+    CamXML::Element *m0node, *fnode, *nnode;
+    double initialM0(0.0);
+    unsigned int nmax(0);
 
     // Find the overall number density represented by the population
-    CamXML::Element* m0Node = subnode.GetFirstChild("m0");
-    if(!m0Node) {
-        throw std::runtime_error("m0 (number density) must be specified for initial particle population \
-                                 (Mops, Settings_IO::readReactor)");
+    m0node = subnode.GetFirstChild("m0");
+    if (!m0node) {
+        throw std::runtime_error("Must specify M0 for initial population"
+                                 "(Mops::Settings_IO::readInitialPopulation)");
     }
-    initialM0 = std::atof((m0Node->Data()).c_str());
-    if(initialM0 < 0) {
-        throw std::runtime_error("m0 for initial particle population may not be negative \
-                                 (Mops, Settings_IO::readReactor)");
+    initialM0 = std::atof((m0node->Data()).c_str());
+    if (initialM0 <= 0.) {
+        throw std::runtime_error("m0 for initial particle population may not be negative"
+                                 "(Mops::Settings_IO::readInitialPopulation)");
     }
 
     // Check if a binary file has been specified for particles..
-    CamXML::Element* fileNode = subnode.GetFirstChild("file");
-    if (fileNode) {
+    fnode = subnode.GetFirstChild("file");
+    if (fnode) {
         std::string filename;
-        filename = fileNode->Data();
+        filename = fnode->Data();
         std::cout << "parser: binary file " << filename << " specified for input.\n";
-        fileParticleList = sim.ReadEnsembleFile(reac, filename);
+        fileParticleList = ::readEnsembleFile(filename, mech.ParticleMech());
     }
 
     // Now read in the list of particles and sum up their statistical weights
@@ -222,9 +335,15 @@ void readInitialPopulation(
         weightSum += (*it++)->getStatisticalWeight();
     }
 
+    // Get the number of SPs if it is set, otherwise use the number of particles
+    // set in the particle list.
+    nnode = subnode.GetFirstChild("pcount");
+    if (nnode == NULL) nmax = (unsigned int) allParticleList.size();
+    else nmax = std::atoi(nnode->Data().c_str());
+    mix.Particles().Initialise(nmax, true);
+
     mix.SetParticles(allParticleList.begin(), allParticleList.end(), initialM0 / weightSum);
 }
-
 
 // Reads the reactor initial settings from the given XML node.
 Reactor *const readReactor(const CamXML::Element &node,
@@ -435,7 +554,7 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     // Particles
     subnode = node.GetFirstChild("population");
-    if(subnode) {readInitialPopulation(*subnode, sim, mech, *reac, *mix);}
+    if(subnode) {readInitialPopulation(*subnode, mech, *mix);}
 
     // TEMPERATURE GRADIENT PROFILE.
 
@@ -511,7 +630,7 @@ Reactor *const readReactor(const CamXML::Element &node,
                 inf->Mixture()->Particles().Initialise(
                         mix->Particles().Capacity(),
                         false);
-                readInitialPopulation(*subsubnode, sim, mech, *reac, *(inf->Mixture()));
+                readInitialPopulation(*subsubnode, mech, *(inf->Mixture()));
             }
 
             // Assign the species mole fraction vector
