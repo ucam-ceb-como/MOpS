@@ -143,13 +143,17 @@ public:
     // Operators.
     Ensemble &operator=(const Ensemble &rhs);
 
+    //! Overload of the << operator
+    friend std::ostream& operator<<(
+            std::ostream &os,
+            const Sweep::Ensemble &e);
+
 
     // INITIALISATION.
 
     // Initialises the ensemble with the given capacity.
     void Initialise(
-        unsigned int capacity,             // Max. number of particles.
-        bool doubling_activated = true            // whether the doubling algorithm is activated, by default, it is activated
+        unsigned int capacity             // Max. number of particles
         );
 
     //! Initialise with some particles, downsampling as necessary
@@ -158,6 +162,8 @@ public:
 
     //! Empty the tree and pass on ownership of the particles
     PartPtrList TakeParticles();
+
+    void SetDoubling(const bool val);
 
     // PARTICLE ADDITION AND REMOVAL.
 

@@ -89,6 +89,40 @@ Simulator::~Simulator(void)
 {
 }
 
+// Copy constructor.
+Simulator::Simulator(const Mops::Simulator &copy)
+{
+    *this = copy;
+}
+
+// Assignment operator
+Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
+    if (this != &rhs) {
+        m_nruns = rhs.m_nruns;
+        m_niter = rhs.m_niter;
+        m_pcount = rhs.m_pcount;
+        m_maxm0 = rhs.m_maxm0;
+        m_cpu_start = rhs.m_cpu_start;
+        m_cpu_mark = rhs.m_cpu_mark;
+        m_runtime = rhs.m_runtime;
+        m_console_interval = rhs.m_console_interval;
+        m_console_msgs = rhs.m_console_msgs;
+        m_output_filename = rhs.m_output_filename;
+        m_output_every_iter = rhs.m_output_every_iter;
+        m_output_step = rhs.m_output_step;
+        m_output_iter = rhs.m_output_iter;
+        m_write_jumps = rhs.m_write_jumps;
+        m_write_ensemble_file = rhs.m_write_ensemble_file;
+        m_write_PAH = rhs.m_write_PAH;
+        m_mass_spectra = rhs.m_mass_spectra;
+        m_mass_spectra_ensemble = rhs.m_mass_spectra_ensemble;
+        m_mass_spectra_xmer = rhs.m_mass_spectra_xmer;
+        m_mass_spectra_frag = rhs.m_mass_spectra_frag;
+        m_ptrack_count = rhs.m_ptrack_count;
+    }
+    return *this;
+}
+
 
 // SIMULATION SETTINGS.
 
@@ -379,20 +413,10 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         consoleOutput(r);
 
         unsigned int istep;
-        double uround = 1.0e-7;
-        double **J;
 
-        //Necessary variables for LOI reduction only.
-        std::string KeptMech("KeptMech.inp");
-        vector<fvector> LOI(s.GetNumSens(), fvector(r.Mech()->GasMech().SpeciesCount()));
-        std::ofstream LOIFile;
-        std::vector<std::string> rejectSpecies;
-        
-        if (s.GetLOIStatus() == true){
-            LOIFile.open(LOIReduction::buildLOIFileName().c_str());
-            s.InitialiseSensMatrix(s.GetNumSens(),r.Mech()->GasMech().SpeciesCount());
-            LOIReduction::CreateLOIFile(LOIFile, r.Mech());  
-        }
+        // Initialise some LOI stuff
+        if (s.GetLOIStatus() == true) setupLOI(r, s);
+
         // Loop over the time intervals.
         unsigned int global_step = 0;
         timevector::const_iterator iint;
@@ -413,14 +437,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
                 //Set up and solve Jacobian here
                 if (s.GetLOIStatus() == true)
-                    {
-                    if (istep == 0){
-                        J = r.CreateJac(r.Mech()->GasMech().SpeciesCount());
-                    }
-                    r.RateJacobian(t2, r.Mixture()->GasPhase().RawData(), J, uround);
-                    LOI = LOIReduction::CalcLOI(J, s.GetSensSolution(s.GetNumSens(), r.Mech()->GasMech().SpeciesCount()), LOI, r.Mech()->GasMech().SpeciesCount(), s.GetNumSens());
-                    LOIReduction::SaveLOI(LOI, t2, LOIFile, r.Mech());
-                }
+                    solveLOIJacobian(r, s, istep, t2);
 
                 m_runtime += calcDeltaCT(m_cpu_mark);
                 // Generate console output.
@@ -431,7 +448,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
                     consoleOutput(r);
                     icon = m_console_interval;
                 }
-            }
+            } // number of steps
 
             // Create a save point at the end of this time
             // interval.
@@ -443,16 +460,17 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
             createSavePoint(r, global_step, irun);
             if (s.GetLOIStatus() == true){
-                r.DestroyJac(J, r.Mech()->GasMech().SpeciesCount());
+                r.DestroyJac(m_loi_J, r.Mech()->GasMech().SpeciesCount());
             }
 
             // Write the ensemble or gas-phase files
             if (m_write_ensemble_file) createEnsembleFile(r, global_step, irun);
-            //if (m_write_gasphase_file)
-        }
-        if (s.GetLOIStatus() == true){
-            LOIReduction::RejectSpecies(LOI, s.ReturnCompValue(), r.Mech(), rejectSpecies, s.ReturnKeptSpecies());
-            r.Mech()->GasMech().WriteReducedMech(KeptMech, rejectSpecies);
+
+        } // number of time intervals
+        if (s.GetLOIStatus() == true) {
+            std::vector<std::string> rejects;
+            LOIReduction::RejectSpecies(m_loi_data, s.ReturnCompValue(), r.Mech(), rejects, s.ReturnKeptSpecies());
+            r.Mech()->GasMech().WriteReducedMech(OutputFile() + std::string("-kept.inp"), rejects);
         }
 
         // Print run time to the console.
@@ -469,7 +487,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
 		 closeOutputFile();			//ms785
 	#else
-	}
+	} // (number of runs)
 	#endif
 
 	#ifdef USE_MPI
@@ -477,6 +495,55 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     // Close the output files.
     closeOutputFile();
 	#endif
+}
+
+/*!
+ * Set up the LOI details before a run
+ *
+ * @param r         Reactor object
+ * @param s         Solver object
+ */
+void Simulator::setupLOI(const Mops::Reactor &r, Mops::Solver &s) {
+
+    m_loi_file.open(LOIReduction::buildLOIFileName(OutputFile()).c_str());
+    s.InitialiseSensMatrix(s.GetNumSens(),r.Mech()->GasMech().SpeciesCount());
+    LOIReduction::CreateLOIFile(m_loi_file, r.Mech());
+
+    m_loi_data.clear();
+    fvector z = Mops::fvector(r.Mech()->GasMech().SpeciesCount());
+    m_loi_data.resize(s.GetNumSens(), z);
+
+}
+
+
+/*!
+ * Solve the Jacobian matrix for LOI calculations
+ *
+ * @param r         Reactor object
+ * @param s         Solver object
+ * @param istep     Step number
+ * @param t2        Time
+ */
+void Simulator::solveLOIJacobian(
+        Mops::Reactor &r,
+        Mops::Solver &s,
+        const unsigned int istep,
+        const double t2) {
+    if (istep == 0) {
+        m_loi_J = r.CreateJac(r.Mech()->GasMech().SpeciesCount());
+    }
+    // wjm34: 1.0e-7 is hard-coded, not sure why?
+    r.RateJacobian(t2, r.Mixture()->GasPhase().RawData(), m_loi_J, 1.0e-7);
+    m_loi_data = LOIReduction::CalcLOI(
+            m_loi_J,
+            s.GetSensSolution(
+                    s.GetNumSens(),
+                    r.Mech()->GasMech().SpeciesCount()),
+            m_loi_data,
+            r.Mech()->GasMech().SpeciesCount(),
+            s.GetNumSens()
+            );
+    LOIReduction::SaveLOI(m_loi_data, t2, m_loi_file, r.Mech());
 }
 
 // POST-PROCESSING.
@@ -493,17 +560,36 @@ void Simulator::PostProcess()
     vector<string> cput_head; // CPU time headings.
 
     readAux(mech, times, ncput, cput_head);
-
-    // SETUP OUTPUT DATA STRUCTURES.
-
-    // Get reference to particle mechanism.
-    Sweep::Mechanism &pmech = mech.ParticleMech();
 	
     // Calculate number of output points.
     unsigned int npoints = 1; // 1 for initial conditions.
     for(Mops::timevector::const_iterator i=times.begin(); i!=times.end(); ++i) {
         npoints += i->StepCount();
     }
+
+    Simulator::postProcessSimulation(mech, times, npoints, ncput, cput_head);
+
+}
+
+/*!
+ * Post process the results from a binary file.
+ *
+ * @param mech      Gas/particle mechanism
+ * @param times     Time vector describing simulation output points
+ * @param npoints   Number of points
+ * @param ncput     Number of CPU time poinst
+ * @param cput_head CPU time headers
+ */
+void Simulator::postProcessSimulation(
+    Mops::Mechanism &mech,
+    Mops::timevector &times,
+    unsigned int npoints,
+    unsigned int ncput,
+    std::vector<std::string> cput_head
+    ) const {
+
+    // Get reference to particle mechanism.
+    Sweep::Mechanism &pmech = mech.ParticleMech();
 
     // Declare chemistry outputs (averages and errors).
     vector<fvector> achem(npoints), echem(npoints);
@@ -537,9 +623,9 @@ void Simulator::PostProcess()
 
     // Build the simulation input file name.
     string fname = m_output_filename + ".sim";
-	std::ostringstream ranstream;
-//	ranstream << getpid();
-//	string fname = "/scratch/ms785/"+m_output_filename+ranstream.str()+".sim";
+    std::ostringstream ranstream;
+//  ranstream << getpid();
+//  string fname = "/scratch/ms785/"+m_output_filename+ranstream.str()+".sim";
 
     // Open the simulation input file.
     fstream fin(fname.c_str(), ios_base::in | ios_base::binary);
@@ -587,7 +673,7 @@ void Simulator::PostProcess()
         multVals(agpfwdrates[0], m_nruns*m_niter);
         multVals(agprevrates[0], m_nruns*m_niter);
         multVals(agpwdot[0], m_nruns*m_niter);
-	multVals(agpsdot[0], m_nruns*m_niter); // added by mm864
+    multVals(agpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(apprates[0], m_nruns*m_niter);
         multVals(appjumps[0], m_nruns*m_niter);
         multVals(appwdot[0], m_nruns*m_niter);
@@ -598,7 +684,7 @@ void Simulator::PostProcess()
         multVals(egpfwdrates[0], m_nruns*m_niter);
         multVals(egprevrates[0], m_nruns*m_niter);
         multVals(egpwdot[0], m_nruns*m_niter);
-	multVals(egpsdot[0], m_nruns*m_niter); // added by mm864
+    multVals(egpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(epprates[0], m_nruns*m_niter);
         multVals(eppjumps[0], m_nruns*m_niter);
         multVals(eppwdot[0], m_nruns*m_niter);
@@ -610,7 +696,7 @@ void Simulator::PostProcess()
         multVals(agpfwdrates[0], m_nruns);
         multVals(agprevrates[0], m_nruns);
         multVals(agpwdot[0], m_nruns);
-	multVals(agpsdot[0], m_nruns); // added by mm864
+    multVals(agpsdot[0], m_nruns); // added by mm864
         multVals(apprates[0], m_nruns);
         multVals(appjumps[0], m_nruns);
         multVals(appwdot[0], m_nruns);
@@ -621,7 +707,7 @@ void Simulator::PostProcess()
         multVals(egpfwdrates[0], m_nruns);
         multVals(egprevrates[0], m_nruns);
         multVals(egpwdot[0], m_nruns);
-	multVals(egpsdot[0], m_nruns); // added by mm864
+    multVals(egpsdot[0], m_nruns); // added by mm864
         multVals(epprates[0], m_nruns);
         multVals(eppjumps[0], m_nruns);
         multVals(eppwdot[0], m_nruns);
@@ -632,7 +718,7 @@ void Simulator::PostProcess()
 
     // Now we must read the reactor conditions at all time points
     // and all runs.
-	cout << "mops: postprocessing "<<m_nruns<<" runs"<<endl;
+    cout << "mops: postprocessing "<<m_nruns<<" runs"<<endl;
     for(unsigned int irun=0; irun!=m_nruns; ++irun) {
         // Loop over all time intervals.
         unsigned int step = 1;
@@ -691,7 +777,7 @@ void Simulator::PostProcess()
         calcAvgConf(agpfwdrates, egpfwdrates, m_nruns*m_niter);
         calcAvgConf(agprevrates, egprevrates, m_nruns*m_niter);
         calcAvgConf(agpwdot, egpwdot, m_nruns*m_niter);
-	calcAvgConf(agpsdot, egpsdot, m_nruns*m_niter); // added by mm864
+    calcAvgConf(agpsdot, egpsdot, m_nruns*m_niter); // added by mm864
         calcAvgConf(apprates, epprates, m_nruns*m_niter);
         calcAvgConf(appjumps, eppjumps, m_nruns*m_niter);
         calcAvgConf(appwdot, eppwdot, m_nruns*m_niter);
@@ -703,7 +789,7 @@ void Simulator::PostProcess()
         calcAvgConf(agpfwdrates, egpfwdrates, m_nruns);
         calcAvgConf(agprevrates, egprevrates, m_nruns);
         calcAvgConf(agpwdot, egpwdot, m_nruns);
-	calcAvgConf(agpsdot, egpsdot, m_nruns); // added by mm864
+    calcAvgConf(agpsdot, egpsdot, m_nruns); // added by mm864
         calcAvgConf(apprates, epprates, m_nruns);
         calcAvgConf(appjumps, eppjumps, m_nruns);
         calcAvgConf(appwdot, eppwdot, m_nruns);
@@ -2652,7 +2738,7 @@ void Simulator::writeElementFluxOutput(const std::string &filename,
                                const timevector &times,
                                const std::vector<fvector> &agpfwdrates,
                                const std::vector<fvector> &agprevrates,
-                               const std::vector<fvector> &achem)
+                               const std::vector<fvector> &achem) const
 {
     if(mech.GasMech().ReactionCount() > 0) {
         Mops::fvector atemperatures;

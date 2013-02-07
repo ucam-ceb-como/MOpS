@@ -74,6 +74,10 @@ Solver::Solver(void)
 
 }
 
+//! Copy constructor
+Solver::Solver(const Solver &sol)
+: m_splitratio(sol.m_splitratio) {}
+
 // Default destructor.
 Solver::~Solver(void)
 {

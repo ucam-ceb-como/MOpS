@@ -22,13 +22,13 @@
 	</inflow>
 	<temperature units="K">1373</temperature>
 	<pressure units="bar">0.025</pressure>
-	<residencetime unit="s">10.0</residencetime>  
+	<restime unit="s">10.0</restime>
    </reactor>
 
   <!--Output time sequence-->
   <timeintervals splits="1">
     <start>0.0</start>
-    <time steps="400" splits="30">20</time>
+    <time steps="100" splits="10">20</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->

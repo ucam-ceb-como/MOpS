@@ -60,6 +60,12 @@ public:
     // Constructors.
     StrangSolver(void); // Default constructor.
 
+    //! Copy constructor
+    StrangSolver(const StrangSolver &sol);
+
+    //! Clone the object
+    StrangSolver *const Clone() const;
+
     // Destructors.
     ~StrangSolver(void); // Default destructor.
 
@@ -78,23 +84,6 @@ public:
             OutFnPtr out, // Output function pointer.
             void *data    // Custom data object which will be passed as argument to out().
         );
-
-    /*
-    // Run the solver for the given reactor and the 
-    // given time intervals.
-    void SolveReactor(
-        Reactor &r,              // Reactor object to solve.
-        const timevector &times, // Vector of time intervals.
-        unsigned int nruns = 1   // Number of runs to perform.
-        );
-
-    // Post-processes binary output files with the given file name
-    // into CSV files.
-    void PostProcess(
-        const std::string &filename, // Filename to post-process.
-        unsigned int nruns = 1       // Number of runs.
-        ) const;
-*/
 
 private:
     // SIMULATION.

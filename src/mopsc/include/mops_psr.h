@@ -54,6 +54,10 @@
 
 namespace Mops
 {
+
+// Forward-declare the flowstream class
+class FlowStream;
+
 class PSR : public Reactor
 {
 public:
@@ -71,6 +75,11 @@ public:
     // Operators.
     PSR &operator=(const PSR &rhs);
 
+    //! Overload of the << operator
+    friend std::ostream& operator<<(
+            std::ostream &os,
+            const Mops::PSR &r);
+
 
     // RESIDENCE TIME.
 
@@ -81,13 +90,31 @@ public:
     void SetResidenceTime(double t);
 
 
-    // INFLOW CONDITIONS.
+    // FLOW CONDITIONS.
 
-    // Returns the flow-stream which describes the inflow conditions.
-    const Mops::FlowStream *const Inflow(void) const;
+    //! Returns the flow-stream which describes the inflow conditions.
+    Mops::FlowStream *const Inflow(void) const;
+
+    //! Returns the flow-stream which describes the outflow conditions.
+    Mops::FlowStream *const Outflow(void) const;
+
+    //! Intialise the inflow's birth process
+    void InitialiseInflow();
+
+    //! Initialise the outflow's death process
+    void InitialiseOutflow();
 
     //! Sets the mixture which describes the inflow conditions.
-    void SetInflow(Mops::FlowStream &inf, const Mops::Mechanism &mech);
+    void SetInflow(Mops::FlowStream &inf);
+
+    //! Sets the outflow
+    void SetOutflow(Mops::FlowStream &out);
+
+    //! Does the reactor have an outflow set?
+    bool HasOutflow() const {if (m_out!=NULL) return true; else return false;}
+
+    //! Does the reactor have an inflow set?
+    bool HasInflow() const {if (m_in!=NULL) return true; else return false;}
 
 
     // READ/WRITE/COPY FUNCTIONS.

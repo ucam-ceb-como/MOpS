@@ -46,49 +46,53 @@
 #include <cmath>
 #include <stdexcept>
 
-using namespace Mops;
+
 using namespace std;
+
+namespace Mops {
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor (protected).
-PSR::PSR(void)
-{
-    init();
-}
-
 // Default constructor (public, requires mechanism).
 PSR::PSR(const Mops::Mechanism &mech)
-: Reactor(mech)
+: Reactor(mech),
+  m_restime(1.0),
+  m_in(NULL),
+  m_out(NULL),
+  m_invrt(1.0),
+  m_infH(0.0)
 {
-    init();
     m_infHs.resize(m_neq);
 }
 
 // Copy constructor.
 PSR::PSR(const Mops::PSR &copy)
-{
-    init();
-    *this = copy;
+: Reactor(copy),
+  m_restime(copy.m_restime),
+  m_in(NULL),
+  m_out(copy.m_out),
+  m_invrt(copy.m_invrt),
+  m_infH(copy.m_infH),
+  m_infHs(copy.m_infHs) {
+    if (copy.m_in) m_in = copy.m_in->Clone();
 }
 
 // Stream-reading constructor.
 PSR::PSR(std::istream &in, const Mops::Mechanism &mech)
 : Reactor(mech)
 {
-    init();
     Deserialize(in, mech);
 }
 
 // Default destructor.
 PSR::~PSR(void)
 {
-    releaseMemory();
+    if (m_in != NULL) delete m_in;
 }
 
 // OPERATORS.
 
-Mops::PSR &Mops::PSR::operator=(const Mops::PSR &rhs)
+Mops::PSR &PSR::operator=(const Mops::PSR &rhs)
 {
     if (this != &rhs) {
         // Copy base class.
@@ -109,6 +113,23 @@ Mops::PSR &Mops::PSR::operator=(const Mops::PSR &rhs)
     return *this;
 }
 
+/*!
+ * @param os    Output stream
+ * @param net   PSR object to print
+ * @return      Output stream
+ */
+std::ostream& operator<<(
+        std::ostream &os,
+        const Mops::PSR &r) {
+    os << "[PSR]," <<
+            " ConstP=" << r.IsConstP() <<
+            " ConstV=" << r.IsConstV() <<
+            "\n";
+    os << "filled with: " << *(r.Mixture());
+    os << "with inflow: " << *(r.Inflow()->Mixture());
+    return os;
+}
+
 
 // RESIDENCE TIME.
 
@@ -124,7 +145,6 @@ void PSR::SetResidenceTime(double t)
     if (t > 0.0) {
         m_restime = t;
         m_invrt = 1.0 / m_restime;
-        m_mix->AddOutflow(m_invrt, m_mech->ParticleMech());
     } else {
         throw out_of_range("Residence time must be greater "
                            "than zero (Mops, PSR::SetResidenceTime).");
@@ -134,30 +154,66 @@ void PSR::SetResidenceTime(double t)
 
 // INFLOW CONDITIONS.
 
-// Returns the mixture which describes the inflow conditions.
-const Mops::FlowStream *const PSR::Inflow(void) const {return m_in;}
+// Returns the inflow stream
+Mops::FlowStream *const PSR::Inflow(void) const {return m_in;}
 
-// Sets the mixture which describes the inflow conditions.
-void PSR::SetInflow(Mops::FlowStream &inf, const Mops::Mechanism &mech)
-{
-    // Delete current inflow stream.
-    delete m_in;
+// Returns the outflow stream
+Mops::FlowStream *const PSR::Outflow(void) const {return m_out;}
 
-    // Currently clone stream, as PSR retains ownership
-    // of the inflow.
-    m_in = inf.Clone();
+/*!
+ * Intialise the inflow's birth process
+ */
+void PSR::InitialiseInflow() {
 
-    // Calculate inflow enthalpies to speed up
-    // later calculations.
-    m_infH = m_in->Mixture()->GasPhase().BulkH() / (Sprog::R * m_in->Mixture()->GasPhase().Temperature());
+    // Calculate inflow enthalpies
+    // TODO: ensure dynamic mixtures have proper enthalpies
+    m_infH = m_in->Mixture()->GasPhase().BulkH() /
+            (Sprog::R * m_in->Mixture()->GasPhase().Temperature());
     m_in->Mixture()->GasPhase().Hs_RT(m_infHs);
 
-    // Add a birth process to the PSR
-    Sweep::Processes::BirthProcess bp(mech.ParticleMech());
+    // Create a new birth process
+    Sweep::Processes::BirthProcess bp(Mech()->ParticleMech());
     bp.SetCell(m_in->Mixture());
     bp.SetA(m_invrt);
-    // Add it to the Mixture, which clones it and takes ownership.
+
+    // Add the process to the Mixture, which clones it and takes ownership
     m_mix->AddInflow(bp);
+}
+
+/*!
+ * Intialise the outflow's death process
+ */
+void PSR::InitialiseOutflow() {
+
+    m_mix->AddOutflow(m_invrt, Mech()->ParticleMech());
+}
+
+/*!
+ * Sets the flowstream which points to the inflow mixture conditions. The
+ * reactor takes ownership of the flowstream and therefore responsiblity
+ * for its deletion.
+ *
+ * @param inf   Inflow stream
+ */
+void PSR::SetInflow(Mops::FlowStream &inf)
+{
+    if (m_in != NULL) delete m_in;
+    m_in = inf.Clone();
+
+    // Initialise the inflow
+    InitialiseInflow();
+}
+
+/*!
+ * Sets the reactors out pointer to an outflow stream, then creates a new
+ * death process in the reactor's mixture.
+ *
+ * @param out   Outflow stream
+ */
+void PSR::SetOutflow(Mops::FlowStream &out) {
+    m_out = &out;
+
+    InitialiseOutflow();
 }
 
 
@@ -203,8 +259,6 @@ void PSR::Serialize(std::ostream &out) const
 // Reads the Reactor data from a binary data stream.
 void PSR::Deserialize(std::istream &in, const Mops::Mechanism &mech)
 {
-    // Clear current reactor data.
-    releaseMemory();
 
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -395,24 +449,4 @@ void PSR::RHS_Adiabatic(double t, const double *const y,  double *ydot) const
     }
 }
 
-
-// INITIALISATION.
-
-// Initialises the PSR to a default state, this is called
-// by the constructors.
-void PSR::init(void)
-{
-    m_restime = 0.0;
-    m_in      = NULL;
-    m_out     = NULL;
-    m_invrt   = 0.0;
-    m_infH    = 0.0;
-    m_infHs.clear();
-}
-
-// Releases all object memory.
-void PSR::releaseMemory(void)
-{
-    if (m_in != NULL) delete m_in;
-    init();
-}
+} // Mops namespace

@@ -89,9 +89,6 @@ public:
     //! Set the Cell from which this process samples.
     void SetCell(Cell* c) {m_cell = c;}
 
-    //! Set the default particle.
-    void SetParticle(Particle* p) {m_particle = p;}
-
     // Returns a pointer to the default particle used for
     // the birth process.
 
@@ -152,7 +149,6 @@ public:
 protected:
 
     // Particle sampling.
-    Particle *m_particle; // A uniform birth process particle.
     Cell *m_cell; // The cell from which to sample particle.
 
     // Default constructor is protected to prevent a process being

@@ -83,6 +83,11 @@ public:
     //! Overwrite contents
     Cell &operator=(const Cell &rhs);
 
+    //! Overload of the << operator
+    friend std::ostream& operator<<(
+            std::ostream &os,
+            const Sweep::Cell &c);
+
     // THE GAS-PHASE INTERFACE.
 
     //!Returns the description of the gas-phase mixture.

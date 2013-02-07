@@ -150,6 +150,22 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
 }
 
 
+/*!
+ * @param os    Output stream
+ * @param net   Ensemble object to print
+ * @return      Output stream
+ */
+std::ostream& Sweep::operator<<(
+        std::ostream &os,
+        const Sweep::Ensemble &e)
+{
+  os << "[Ensemble],";
+  os << " nmax=" << e.Capacity();
+  os << " n(t)=" << e.Count();
+  os << "\n";
+  return os;
+}
+
 // INITIALISATION.
 
 /*!
@@ -157,7 +173,7 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
  *
  * Any particles in the ensemble will be destroyed
  */
-void Sweep::Ensemble::Initialise(unsigned int capacity, bool doubling_activated)
+void Sweep::Ensemble::Initialise(unsigned int capacity)
 {
     // Clear current ensemble.
     Clear();
@@ -200,14 +216,19 @@ void Sweep::Ensemble::Initialise(unsigned int capacity, bool doubling_activated)
     m_ndble      = 0;
     m_dbleon     = true;
     m_dbleactive = false;
-
-    // if doubling_activated is false, m_dblecutoff will be two times the capacity, it means that the doubling will be not activated anymore.
-    if (!doubling_activated) 
-        m_dblecutoff = (int)(2.0 * (double)m_capacity);
-    else m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0);
+    m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0);
 
     m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
+}
+
+/*!
+ * Turn on (true) or off (false) doubling.
+ *
+ * @param val   Switch for doubling.
+ */
+void Sweep::Ensemble::SetDoubling(const bool val) {
+    m_dbleon = val;
 }
 
 /**

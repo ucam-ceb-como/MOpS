@@ -13,7 +13,7 @@
     <temperature units="K">1000</temperature>
     <pressure units="Pa">101325</pressure>
     
-    <residencetime unit="s">1.0</residencetime>  
+    <restime unit="s">1.0</restime>
     <inflow>
         <temperature>1000</temperature>
         <pressure units="Pa">101325</pressure>

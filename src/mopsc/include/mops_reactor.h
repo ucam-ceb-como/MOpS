@@ -91,6 +91,16 @@ public:
     // Operators.
     virtual Reactor &operator=(const Reactor &rhs);
 
+    //! Overload of the << operator
+    friend std::ostream& operator<<(
+            std::ostream &os,
+            const Mops::Reactor &r);
+
+    //! Set the name of the reactor
+    void SetName(const std::string& n) {m_name = n;}
+
+    //! Get the name of the reactor
+    std::string GetName() const {return m_name;}
 
     // REACTOR TIME.
     
@@ -284,6 +294,10 @@ protected:
         );
 
 private:
+
+    //! An arbitrary name for the reactor
+    std::string m_name;
+
     // INITIALISATION AND DESTRUCTION.
     
     // Initialises the reactor to the default state.

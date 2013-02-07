@@ -76,6 +76,12 @@ public:
     // Constructors.
     Solver(void); // Default constructor.
 
+    //! Copy constructor
+    Solver(const Mops::Solver &sol);
+
+    //! Clone the object
+    virtual Solver *const Clone() const;
+
     // Destructors.
     virtual ~Solver(void); // Default destructor.
 
@@ -198,12 +204,11 @@ public:
 
     // Outputs sensitivity results to given file stream.
     void OutputSensitivity(std::fstream &fout, const Mops::Reactor &r, void *sim) const;
-    //const ODE_Solver &GetODE_Solver() const { return m_ode; };
 
 protected:
     // ODE SOLVER.
-
-    ODE_Solver m_ode; // The ODE solver used by the mops solver.
+    //! The ODE solver used by the mops solver.
+    ODE_Solver m_ode;
 
 
     // SOLVER SETTINGS.
@@ -227,189 +232,14 @@ protected:
     //! String vector containing the names of kept species
     std::vector<std::string> Kept_Spec;
 
-/*
-    // Number of runs to perform.
-    unsigned int m_nruns;
-
-    // Max. number of stochastic particles in sweep.
-    unsigned int m_pcount;
-
-    // Max. M0 value, for initial scaling of ensemble.
-    double m_maxm0;
-*/
-
     // COMPUTATION TIME.
 
     clock_t m_cpu_start, m_cpu_mark;
     double m_tottime, m_chemtime;
 
-/*
-    // CONSOLE OUTPUT PARAMETERS.
-
-    // Interval of console output data (in terms of time steps).
-    unsigned int m_console_interval;
-    
-    // Console column variable names.
-    std::vector<std::string> m_console_vars;
-
-    // Console variable mask.
-    std::vector<unsigned int> m_console_mask;
-
-    // Set to true if the console is to print messages.
-    bool m_console_msgs; 
-
-    // Console output class.
-    Console_IO m_console;
-
-
-    // FILE OUTPUT PARAMETERS.
-
-    // Name of output file.
-    std::string m_output_filename;
-
-    // Output file stream.
-    mutable std::fstream m_file;
-
-
-    // FILE OUTPUT.
-
-    // Opens an output file for the given run number.
-    void openOutputFile(unsigned int run) const;
-
-    // Closes the output file.
-    void closeOutputFile() const;
-
-    // Writes the gas-phase conditions of the given reactor to
-    // the binary output file.
-    void outputGasPhase(const Reactor &r) const;
-
-    
-    // CONSOLE OUTPUT.
-
-    // Sets up console output using the given mechanism as a template.
-    void setupConsole(const Mechanism &mech);
-
-    // Writes current reactor state to the console.
-    void consoleOutput(const Reactor &r) const;
-
-
-    // POST-PROCESSING ROUTINES.
-
-    // Writes the auxilliary post-processing information using
-    // the given file name.  This information is the chemical mechanism
-    // and the output time intervals.
-    static void writeAux(
-        const std::string &filename,  // Root filename.
-        const Mops::Mechanism &mech,  // Mechanism which defines the reactor.
-        const Mops::timevector &times // Vector of time intervals.
-        );
-
-    // Reads auxilliary post-processing information using the
-    // given file name.  This information is the chemical mechanism
-    // and the output time intervals.
-    static void readAux(
-        const std::string &filename, // Root filename.
-        Mops::Mechanism &mech,       // Mechanism which defined the reactor.
-        Mops::timevector &times      // Vector of time intervals.
-        );
-
-    // Reads a gas-phase chemistry data point from the binary file.
-    // To allow the averages and confidence intervals to be calculated
-    // the data point is added to a vector of sums, and the squares are
-    // added to the vector sumsqr if necessary.
-    static void readGasPhaseDataPoint(
-        std::istream &in,            // Input stream.
-        const Mops::Mechanism &mech, // Chemical mechanism.
-        fvector &sum,                // Sums of chemistry data.
-        fvector &sumsqr,             // Sums of the squares.
-        bool calcsqrs = false        // Set =true to also calculate sums of squares.
-        );
-
-    // Reads a CPU timing data from the binary file.
-    // To allow the averages and confidence intervals to be calculated
-    // the data point is added to a vector of sums, and the squares are
-    // added to the vector sumsqr if necessary.
-    static void readCTDataPoint(
-        std::istream &in,     // Input stream.
-        unsigned int N,       // Number of CT points that were written to the file.
-        fvector &sum,         // Sums of CPU timing data.
-        fvector &sumsqr,      // Sums of the squares.
-        bool calcsqrs = false // Set =true to also calculate sums of squares.
-        );
-
-    // Takes vectors of vectors of variable sums and sums of squares, which
-    // are converted into the average values and the confidence intervals.
-    static void calcAvgConf(
-        std::vector<fvector> &avg, // Input=sums, output=averages.
-        std::vector<fvector> &err, // Input=sums of squares, output=confidence intervals.
-        unsigned int nruns         // Number of runs.
-        );
-
-    // Takes a vector of average values and a vector with the confidence
-    // bound of each variable and combines them into a single vector:
-    // BEFORE:
-    // avg = (a1, a2, a3, ..., aN)
-    // err = (e1, e2, e3, ..., eN)
-    // AFTER:
-    // avg = (a1, e1, a2, e2, a3, e3, ..., aN, eN)
-    // The step number and time are insert at the beginning of the avg
-    // vector.
-    static void buildOutputVector(
-        unsigned int step, // Step number.
-        double time,         // Step time.
-        fvector &avg,      // Averages.
-        const fvector &err // Confidence intervals (will be inserted into avg).
-        );
-
-    // Writes gas-phase conditions profile to a CSV file.
-    static void writeGasPhaseCSV(
-        const std::string &filename,     // Output file name (incl. extension).
-        const Mechanism &mech,           // Mechanism defining chemical species.
-        const timevector &times,         // Output time profile.
-        std::vector<fvector> &avg,       // Vector of gas-phase time points.
-        const std::vector<fvector> &err  // Vector of confidence intervals.
-        );
-
-    // Writes computation times profile to a CSV file.
-    virtual void writeCT_CSV(
-        const std::string &filename,     // Output file name (incl. extension).
-        const timevector &times,         // Output time profile.
-        std::vector<fvector> &avg,       // Vector of computation-time time points.
-        const std::vector<fvector> &err  // Vector of confidence intervals.
-        ) const;
-
-
-    // SAVE POINTS.
-
-    // Creates a simulation save point.  The save points can be
-    // used to restart an interrupted simulation.
-    void createSavePoint(
-        const Reactor &r,  // Reactor to output.
-        unsigned int step, // Step number.
-        unsigned int run   // Run number.
-        ) const;
-
-    // Reads a save point file.
-    Reactor *const readSavePoint(
-        unsigned int step,    // Step number.
-        unsigned int run,     // Run number.
-        const Mechanism &mech // Mechanism used to define reactor.
-        ) const;
-*/
-
-    // COMPUTATION TIME CALCULATION.
-
-    // Calculates the time duration from a time mark to the
-    // current time.
+    //! Calculates the time duration from a time mark to the current time.
     double calcDeltaCT(double markt) const;
 
-private:
-/*
-    // FILE OUTPUT.
-
-    // Writes the current reactor state to the output file.
-    void fileOutput(const Reactor &r) const;
-*/
 };
 };
 

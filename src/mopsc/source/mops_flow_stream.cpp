@@ -47,40 +47,41 @@ using namespace Mops;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor (protected).
-Mops::FlowStream::FlowStream()
-{
-    init();
-}
-
 // Initialising constructor.
 Mops::FlowStream::FlowStream(const Mops::Mechanism &mech)
+: m_in(NULL),
+  m_out(NULL),
+  m_mix(NULL),
+  m_mech(&mech)
 {
-    init();
-    m_mech = &mech;
     // Initialise the mixture.
     m_mix = new Mops::Mixture(mech.ParticleMech());
 }
 
 // Copy constructor.
 Mops::FlowStream::FlowStream(const Mops::FlowStream &copy)
-{
-    init();
-    // Use assignment operator.
-    *this = copy;
-}
+: m_in(NULL),
+  m_out(NULL),
+  m_mix(NULL),
+  m_mech(copy.m_mech)
+{*this = copy;}
 
 // Stream-reading constructor.
-Mops::FlowStream::FlowStream(std::istream &in, const Mops::Mechanism &mech)
+Mops::FlowStream::FlowStream(
+        std::istream &in,
+        const Mops::Mechanism &mech)
+: m_in(NULL),
+  m_out(NULL),
+  m_mix(NULL),
+  m_mech(&mech)
 {
-    init();
     Deserialize(in, mech);
 }
 
 // Default destructor.
 Mops::FlowStream::~FlowStream()
 {
-    releaseMemory();
+    if (!m_in) delete m_mix;
 }
 
 // OPERATORS.
@@ -106,10 +107,6 @@ Mops::FlowStream &Mops::FlowStream::operator=(const Mops::FlowStream &rhs)
 
 // FLOW STREAM PROPERTIES.
 
-// Returns a pointer to the mixture currently occupying
-// the reactor.
-Mops::Mixture *const Mops::FlowStream::Mixture() const {return m_mix;}
-
 // Sets the flow stream mixture conditions, if they are
 // not dictated by the inflow.
 void Mops::FlowStream::SetConditions(const Mops::Mixture &mix)
@@ -125,17 +122,7 @@ void Mops::FlowStream::SetConditions(const Mops::Mixture &mix)
 
 // FLOW STREAM CONNECTIONS.
 
-// Returns the reactor which is the inflow to this stream.
-Mops::Reactor *const Mops::FlowStream::Inflow(void) const {return m_in;}
-
-// Returns the reactor which receives the outflow 
-// of this stream.
-Mops::Reactor *const Mops::FlowStream::Outflow(void) const {return m_out;}
-
-// Connects the flow stream as an output of the given
-// reactor (i.e. the stream conditions become those
-// of the reactor).
-void Mops::FlowStream::ConnectInflow(Mops::Reactor &r)
+void Mops::FlowStream::ConnectInflow(Mops::PSR &r)
 {
     // If the inflow is currently undefined then we 
     // need to delete the mixture memory.
@@ -148,10 +135,8 @@ void Mops::FlowStream::ConnectInflow(Mops::Reactor &r)
     m_mix = r.Mixture();
 }
 
-// Connects the flow stream as an input to the given 
-// reactor (i.e. the reactor receives the output from
-// the stream).
-void Mops::FlowStream::ConnectOutflow(Mops::Reactor &r)
+
+void Mops::FlowStream::ConnectOutflow(Mops::PSR &r)
 {
     m_out = &r;
 }
@@ -165,26 +150,6 @@ void Mops::FlowStream::DisconnectInflow(void)
         m_mix = m_in->Mixture()->Clone();
     }
     m_in = NULL;
-}
-
-// Disconnects the flow-stream outflow reactor.
-void Mops::FlowStream::DisconnectOutflow(void) {m_out = NULL;}
-
-// FLOW STREAM MECHANISM.
-
-// Returns the current mechanism.
-const Mops::Mechanism *const Mops::FlowStream::Mech() const {return m_mech;}
-
-// Returns the current mechanism.
-void Mops::FlowStream::SetMech(const Mops::Mechanism &mech)
-{
-    if (!m_in) {
-        // Need to redefine the mixture if the mechanism
-        // is changed.
-        delete m_mix;
-        m_mix = new Mops::Mixture(mech.ParticleMech());
-    }
-    m_mech = &mech;
 }
 
 // READ/WRITE/COPY FUNCTIONS.
@@ -223,8 +188,6 @@ void Mops::FlowStream::Serialize(std::ostream &out) const
 // Reads the stream data from a binary data stream.
 void Mops::FlowStream::Deserialize(std::istream &in, const Mops::Mechanism &mech)
 {
-    // Clear current flow-stream data.
-    releaseMemory();
 
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -258,20 +221,3 @@ void Mops::FlowStream::Deserialize(std::istream &in, const Mops::Mechanism &mech
     }
 }
 
-// INITIALISATION AND DESTRUCTION.
-
-// Initialises the flow-stream to the default state.
-void Mops::FlowStream::init(void)
-{
-    m_in   = NULL;
-    m_out  = NULL;
-    m_mix  = NULL;
-    m_mech = NULL;
-}
-
-// Releases all memory used by the flow-stream object.
-void Mops::FlowStream::releaseMemory(void)
-{
-    if (!m_in) delete m_mix;
-    init();
-}

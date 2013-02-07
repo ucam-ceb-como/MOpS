@@ -42,7 +42,6 @@ namespace po = boost::program_options;
 #include <string>
 
 #include "mops.h"
-#include "mops_simulator.h"
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -71,6 +70,7 @@ int main(int argc, char* argv[])
     bool fjumps(false);     // Should a jumps file be written?
     bool fpah(false);       // Should full PAHPP data be postprocessed?
     bool fensembles(false); // Should an *.ens file be written?
+    bool fnew(false);       // Should the new network interface be used?
 
     try {
 
@@ -80,6 +80,7 @@ int main(int argc, char* argv[])
         generic.add_options()
         ("help,h", "print usage message")
         ("version,v", "print version number")
+        ("new,w", "use new network interface")
         ;
 
         // Paths to input files
@@ -92,9 +93,9 @@ int main(int argc, char* argv[])
         ("trans,n", po::value(&sfile)->default_value("tran.dat"), "path to transport data")
         ("gasphase,g", po::value(&gpfile)->default_value("gasphase.inp"), "path to gas phase profile")
         ("sweep,s", po::value(&sfile)->default_value("sweep.xml"), "path to particle mechanism")
-        ("sensi,q", po::value(&senfile)->default_value("sensi.xml"), "path to particle mechanism")
-        ("schem", po::value(&surfcfile)->default_value("surfchem.inp"), "path to particle mechanism")
-        ("stherm", po::value(&surftfile)->default_value("surftherm.dat"), "path to particle mechanism")
+        ("sensi,q", po::value(&senfile)->default_value("sensi.xml"), "path to sensitivity analysis")
+        ("schem", po::value(&surfcfile)->default_value("surfchem.inp"), "path to surface chemical mechanism")
+        ("stherm", po::value(&surftfile)->default_value("surftherm.dat"), "path to surface thermochemical data")
         ;
 
         // Solver options
@@ -112,6 +113,7 @@ int main(int argc, char* argv[])
         // Output options
         po::options_description opt_out("Output options");
 
+        // TODO: Move output options to .inx file specifications
         opt_out.add_options()
         ("postproc,p", "postprocess files")
         ("only,o", "postprocess files only (don't solve)")
@@ -144,6 +146,8 @@ int main(int argc, char* argv[])
             cout << "2.0\n";
             return 0;
         }
+
+        if (vm.count("new")) fnew = true;
 
         // Assign command-line variables to filenames
         ifile = vm["mops"].as< string >();
@@ -212,6 +216,8 @@ int main(int argc, char* argv[])
     Mops::Mechanism mech;          // Chemical and particle mechanism.
     Mops::timevector times;        // A list of output times and step counts.
     Mops::Simulator sim;           // The simulator.
+    Mops::ReactorNetwork *net;     // The network.
+    Mops::NetworkSimulator *nsim;  // The network simulator.
 
     // Activate output options
     sim.SetWriteJumpFile(fjumps);
@@ -219,26 +225,9 @@ int main(int argc, char* argv[])
     sim.SetWritePAH(fpah);
 
     // Create the solver
-    switch (soltype) {
-    case Mops::OpSplit:
-        solver = new SimpleSplitSolver();
-        break;
-    case Mops::Strang:
-        solver = new StrangSolver();
-        break;
-    case Mops::PredCor:
-        solver = new PredCorSolver();
-        sim.SetOutputEveryIter(true);
-        break;
-    case Mops::FlamePP:
-        // Post-process a gas-phase profile.
-        solver = new Sweep::FlameSolver();
-        break;
-    case Mops::GPC:
-    default:
-        solver = new Solver();
-        break;
-    }
+    solver = Mops::SolverFactory::Create(soltype);
+
+    if (soltype == Mops::PredCor) sim.SetOutputEveryIter(true);
 
     // Load the (chemical) mechanism
     try {
@@ -313,7 +302,11 @@ int main(int argc, char* argv[])
 
     // Read the settings file.
     try {
-        reactor = Mops::Settings_IO::LoadFromXML(ifile, reactor, times, sim, *solver, mech);
+        if (fnew) {
+            net = Mops::Settings_IO::LoadNetwork(ifile, times, sim, *solver, mech);
+            nsim = new Mops::NetworkSimulator(sim, times);
+        } else
+            reactor = Mops::Settings_IO::LoadFromXML(ifile, reactor, times, sim, *solver, mech);
     } catch (std::logic_error &le) {
         std::cerr << "mops: Failed to load MOPS settings file due to bad inputs. Message:\n  "
             << le.what() << "\n";
@@ -350,8 +343,13 @@ int main(int argc, char* argv[])
     // Solve the reactor
     try {
         if (fsolve) {
-            sim.SetTimeVector(times);
-            sim.RunSimulation(*reactor, *solver, rand);
+            // Solve the network if enabled..
+            if (fnew) {
+                nsim->Run(*net, *solver, rand);
+            } else {
+                sim.SetTimeVector(times);
+                sim.RunSimulation(*reactor, *solver, rand);
+            }
         }
     } catch (std::logic_error &le) {
         std::cerr << "mops: Failed to solve reactor due to bad inputs.  Message:\n  "
@@ -369,7 +367,12 @@ int main(int argc, char* argv[])
 
     // Post-process.
     try {
-        if (fpostproc) sim.PostProcess();
+        if (fpostproc) {
+            if (fnew)
+                nsim->PostProcess();
+            else
+                sim.PostProcess();
+        }
     } catch (std::logic_error &le) {
         std::cerr << "mops: Failed to post-process due to bad inputs.  Message:\n  "
             << le.what() << "\n";
@@ -387,6 +390,7 @@ int main(int argc, char* argv[])
     // Clear up memory.
     delete solver;
     delete reactor;
+    if (fnew) {delete net; delete nsim;}
 
     printf("mops: Simulation completed successfully!\n");
     printf("mops: Thank you for choosing mops for your particle modelling!\n");

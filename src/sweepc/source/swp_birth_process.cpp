@@ -52,21 +52,18 @@ using namespace std;
 
 // Default constructor (protected).
 BirthProcess::BirthProcess(void)
-: m_particle(NULL), m_cell(NULL)
+: m_cell(NULL)
 {
 }
 
 // Initialising constructor.
 BirthProcess::BirthProcess(const Sweep::Mechanism &mech)
-: Process(mech), m_particle(NULL), m_cell(NULL)
-{
-    // Create a default inflow particle.
-    m_particle = new Particle(0.0, mech);
-}
+: Process(mech), m_cell(NULL)
+{}
 
 // Copy constructor.
 BirthProcess::BirthProcess(const BirthProcess &copy)
-: m_particle(copy.m_particle), m_cell(copy.m_cell)
+: m_cell(copy.m_cell)
 {
     *this = copy;
 }
@@ -79,9 +76,7 @@ BirthProcess::BirthProcess(std::istream &in, const Sweep::Mechanism &mech)
 
 // Default destructor.
 BirthProcess::~BirthProcess(void)
-{
-    delete m_particle;
-}
+{}
 
 // OPERATOR OVERLOADS.
 
@@ -90,13 +85,6 @@ BirthProcess &BirthProcess::operator =(const BirthProcess &rhs)
 {
     if (this != &rhs) {
         Process::operator =(rhs);
-        // Copy default particle.
-        delete m_particle;
-        if (rhs.m_particle) {
-            m_particle = rhs.m_particle->Clone();
-        } else {
-            m_particle = NULL;
-        }
         // Copy pointer to sampling ensemble.
         m_cell = rhs.m_cell;
     }
@@ -174,7 +162,7 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
     if (m_cell->ParticleCount() > 0) {
         // Uniformly select a particle from the sampling
         // cell.
-        int i = m_cell->Particles().Select(rng);
+        int i = m_cell->Particles().Select(Sweep::iW, rng);
         if (i >= 0) {
             p = m_cell->Particles().At(i)->Clone();
             p->setStatisticalWeight(p->getStatisticalWeight() * wtFactor);
@@ -188,7 +176,8 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
     } else {
         // Create a copy of the default particle, if there
         // is no sampling cell.
-        p = m_particle->Clone();
+        throw std::runtime_error("Birth process should not be selected with no particles in Cell."
+                            "(Sweep, BirthProcess::Perform).");
     }
 
     // Add the new particle to the ensemble.
@@ -210,8 +199,6 @@ ProcessType BirthProcess::ID(void) const {return Birth_ID;}
 void BirthProcess::Serialize(std::ostream &out) const
 {
     if (out.good()) {
-        const unsigned int trueval  = 1;
-        const unsigned int falseval = 0;
 
         // Output the version ID (=0 at the moment).
         const unsigned int version = 0;
@@ -220,13 +207,6 @@ void BirthProcess::Serialize(std::ostream &out) const
         // Serialize base class.
         Process::Serialize(out);
 
-        // Write default particle.
-        if (m_particle) {
-            out.write((char*)&trueval, sizeof(trueval));
-            m_particle->Serialize(out);
-        } else {
-            out.write((char*)&falseval, sizeof(falseval));
-        }
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, BirthProcess::Serialize).");
@@ -236,8 +216,6 @@ void BirthProcess::Serialize(std::ostream &out) const
 // Reads the object from a binary stream.
 void BirthProcess::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 {
-    delete m_particle; m_particle = NULL;
-
     if (in.good()) {
         // Read the output version.  Currently there is only one
         // output version, so we don't do anything with this variable.
@@ -245,19 +223,11 @@ void BirthProcess::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
         unsigned int version = 0;
         in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-        unsigned int n = 0;
-
         switch (version) {
             case 0:
                 // Deserialize base class.
                 Process::Deserialize(in, mech);
 
-                // Read default particle.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                if (n==1) {
-                    m_particle = new Particle(in, mech);
-                }
-                break;
             default:
                 throw runtime_error("Serialized version number is invalid "
                                     "(Sweep, BirthProcess::Deserialize).");

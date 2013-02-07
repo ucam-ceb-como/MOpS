@@ -50,8 +50,9 @@
 #include <stdexcept>
 #include <memory>
 
-using namespace Mops;
 using namespace std;
+
+namespace Mops {
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -120,6 +121,22 @@ Reactor &Reactor::operator=(const Mops::Reactor &rhs)
         memcpy(m_deriv, rhs.m_deriv, sizeof(double)*m_neq);
     }
     return *this;
+}
+
+/*!
+ * @param os    Output stream
+ * @param net   Reactor object to print
+ * @return      Output stream
+ */
+std::ostream& operator<<(
+        std::ostream &os,
+        const Mops::Reactor &r) {
+    os << "[Reactor]," <<
+            " ConstP=" << r.IsConstP() <<
+            " ConstV=" << r.IsConstV() <<
+            "\n";
+    os << "filled with...\n" << *(r.Mixture());
+    return os;
 }
 
 
@@ -672,3 +689,5 @@ void Reactor::releaseMemory(void)
     if (m_deriv != NULL) delete [] m_deriv;
     m_deriv = NULL;
 }
+
+}; // Mops namespace
