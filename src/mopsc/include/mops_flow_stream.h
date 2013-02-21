@@ -106,6 +106,9 @@ public:
     //! Has an inflow? Keep different from PSR one for clarity
     bool HasReacInflow() const {if (m_in!=NULL) return true; else return false;}
 
+    //! Has an outflow? Keep different from PSR one for clarity
+    bool HasReacOutflow() const {if (m_out!=NULL) return true; else return false;}
+
     //! Returns the current mechanism.
     const Mops::Mechanism *const Mech() const {return m_mech;}
 

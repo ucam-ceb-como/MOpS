@@ -89,9 +89,6 @@ public:
     //! Set the Cell from which this process samples.
     void SetCell(Cell* c) {m_cell = c;}
 
-    // Returns a pointer to the default particle used for
-    // the birth process.
-
 	// TOTAL RATE CALCULATIONS.
 
     // Returns rate of the process for the given system.
@@ -127,6 +124,12 @@ public:
         rng_type &rng
         ) const;
 
+    //! Perform the process over time dt
+    void PerformDT (
+            const double t,
+            const double dt,
+            Sweep::Cell &sys,
+            rng_type &rng) const;
 
     // READ/WRITE/COPY.
 
@@ -136,6 +139,18 @@ public:
     // Returns the process type.  Used to identify different
     // processes and for serialisation.
     ProcessType ID(void) const;
+
+    //! Available birth processes
+    enum BirthType {
+        iStochastic,        // A jump process
+        iContinuous         // A continuous process
+    };
+
+    //! Sets the birth process type
+    void SetBirthType(const BirthType t) {m_btype = t;}
+
+    //! Turn the process on or off
+    void SetProcessSwitch(const bool s) {m_on = s;}
 
     // Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;
@@ -154,6 +169,25 @@ protected:
     // Default constructor is protected to prevent a process being
     // defined without knowledge of the parent mechanism.
     BirthProcess(void);
+
+private:
+
+    //! Returns the scaling factor for moving particles between cells
+    double F(const Cell &sys) const;
+
+    //! Do the birth for particle of index isp
+    void DoParticleBirth(
+            const double t,
+            const int isp,
+            Sweep::Cell &sys,
+            const double wt,
+            rng_type &rng) const;
+
+    //! The process birth type
+    BirthType m_btype;
+
+    //! Is the process on or off?
+    bool m_on;
 };
 typedef std::vector<BirthProcess*> BirthPtrVector;
 };

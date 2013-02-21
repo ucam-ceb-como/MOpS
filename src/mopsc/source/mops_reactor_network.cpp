@@ -287,10 +287,13 @@ void ReactorNetwork::ResetNetwork() {
 
         // And regenerate the pointer of the outflow to the reactor's mixture
         if (r->HasOutflow()) r->Outflow()->ConnectInflow(*r);
+    }
 
-        // Now create any birth/death processes required for the flowstreams
-        r->InitialiseInflow();
-        r->InitialiseOutflow();
+    // Once the pointer structure has been reestablished, initialise the
+    // birth and death processes
+    for (ReactorNetwork::r_iter it=this->Begin(); it!=this->End(); ++it) {
+        (*it)->InitialiseInflow();
+        (*it)->InitialiseOutflow();
     }
 }
 

@@ -73,7 +73,10 @@ double readTemperature(const CamXML::Element &node)
             units = Sprog::Kelvin;
         } else if (attr->GetValue() == "oC") {
             units = Sprog::Celcius;
-        }
+        } else
+            throw std::runtime_error("Unknown temperature unit "
+                    + std::string(attr->GetValue()) + " specified"
+                    + " (::readTemperature).");
     }
 
     // Read the temperature (and convert if necessary).
@@ -104,7 +107,9 @@ double readPressure(const CamXML::Element &node)
             units = Sprog::Bar;
         } else if (attr->GetValue() == "atm") {
             units = Sprog::Atm;
-        }
+        } else throw std::runtime_error("Unknown pressure unit "
+                + std::string(attr->GetValue()) + " specified"
+                + " (::readPressure).");
     }
 
     // Read the pressure (and convert if necessary).

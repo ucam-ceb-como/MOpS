@@ -160,8 +160,8 @@ void NetworkSimulator::Run(
             for (istep=0; istep<iint->StepCount(); ++istep, ++global_step) {
 
                 // Note incrementation of t2 here
-                std::cout << "Solving for t="
-                        << t2 << " to t=" << (t2+dt) << ".. ";
+                std::cout << "Stepping "
+                        << t2 << " - " << (t2+dt) << "." << std::endl;
                 t2 += dt;
 
                 // Run the solver
@@ -172,7 +172,7 @@ void NetworkSimulator::Run(
                             it->sim->m_niter, rng, &Mops::Simulator::fileOutput,
                             (void*)(it->sim));
 
-                    std::cout << it->reac->GetName() << " done. ";
+                    std::cout << it->reac->GetName() << " done. " << std::endl;
 
                     // Do LOI calculation here
                     if (it->sol->GetLOIStatus()) {

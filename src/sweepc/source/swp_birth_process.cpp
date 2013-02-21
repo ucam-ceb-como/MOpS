@@ -39,7 +39,7 @@
     Email:       mk306@cam.ac.uk
     Website:     http://como.cheng.cam.ac.uk
 */
-
+#include <boost/random/bernoulli_distribution.hpp>
 #include "swp_birth_process.h"
 #include "swp_mechanism.h"
 #include <stdexcept>
@@ -52,13 +52,18 @@ using namespace std;
 
 // Default constructor (protected).
 BirthProcess::BirthProcess(void)
-: m_cell(NULL)
+: m_cell(NULL),
+  m_btype(BirthProcess::iStochastic),
+  m_on(true)
 {
 }
 
 // Initialising constructor.
 BirthProcess::BirthProcess(const Sweep::Mechanism &mech)
-: Process(mech), m_cell(NULL)
+: Process(mech),
+  m_cell(NULL),
+  m_btype(BirthProcess::iStochastic),
+  m_on(true)
 {}
 
 // Copy constructor.
@@ -87,6 +92,8 @@ BirthProcess &BirthProcess::operator =(const BirthProcess &rhs)
         Process::operator =(rhs);
         // Copy pointer to sampling ensemble.
         m_cell = rhs.m_cell;
+        m_btype = rhs.m_btype;
+        m_on = rhs.m_on;
     }
     return *this;
 }
@@ -101,6 +108,11 @@ bool BirthProcess::HasParticlesInCell() const {
 
 // TOTAL RATE CALCULATIONS.
 
+// Get the cell-transfer scaling factor.
+double BirthProcess::F(const Cell &sys) const {
+    return sys.SampleVolume() / m_cell->SampleVolume();
+}
+
 /*!
  *@param[in]            t           Time at which rate is being calculated
  *@param[in]            sys         System for which rate is to be calculated
@@ -112,13 +124,15 @@ double BirthProcess::Rate(double t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 
 {
-    if (m_cell->Particles().Count() > 0u) {
-        // Physical birth rate needs to be scaled by the sample volume of
-        // the previous Cell.
-        return m_a * m_cell->Particles().GetSum(iW) * sys.SampleVolume() / m_cell->SampleVolume();
-    } else {
-        return 0.0; // Zero rate if no particles.
+    if (m_btype == BirthProcess::iStochastic && m_on) {
+        if (m_cell == NULL)
+            throw runtime_error("No cell specified for sampling."
+                    " (Sweep, BirthProcess::Rate)");
+
+        if (m_cell->ParticleCount() > 0u)
+            return A() * m_cell->Particles().Count();
     }
+    return 0.0;
 }
 
 // RATE TERM CALCULATIONS.
@@ -140,7 +154,7 @@ double BirthProcess::RateTerms(const double t, const Cell &sys,
 // PERFORMING THE PROCESS.
 
 /*!
- * 
+ * Deprecated Perform process.
  *
  * \param[in]       t           Time
  * \param[in,out]   sys         System to update
@@ -155,36 +169,98 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
                           unsigned int iterm,
                           rng_type &rng) const
 {
-    Particle *p = NULL;
-    double wtFactor = (double)m_cell->Particles().Capacity() * sys.SampleVolume()
-            / (sys.Particles().Capacity() * m_cell->SampleVolume());
+    if (m_cell == NULL)
+        throw runtime_error("No cell specified for sampling."
+            " (Sweep, BirthProcess::Perform)");
 
-    if (m_cell->ParticleCount() > 0) {
-        // Uniformly select a particle from the sampling
-        // cell.
-        int i = m_cell->Particles().Select(Sweep::iW, rng);
-        if (i >= 0) {
-            p = m_cell->Particles().At(i)->Clone();
-            p->setStatisticalWeight(p->getStatisticalWeight() * wtFactor);
-        } else {
-            // If sampling failed, then just use the default
-            // particle.  This is a serious error, and really
-            // should never happen.
-            throw std::runtime_error("Ensemble sampling failed."
-                    "(Sweep, BirthProcess::Perform).");
+    // Only do if the process is turned-on and stochastic.
+    if (m_btype == BirthProcess::iStochastic && m_on) {
+        if (m_cell->ParticleCount() > 0u) {
+            int i = m_cell->Particles().Select(rng);
+
+            DoParticleBirth(t, i, sys,
+                    m_cell->Particles().At(i)->getStatisticalWeight() * F(sys),
+                    rng);
         }
-    } else {
-        // Create a copy of the default particle, if there
-        // is no sampling cell.
-        throw std::runtime_error("Birth process should not be selected with no particles in Cell."
-                            "(Sweep, BirthProcess::Perform).");
-    }
+    } else if (m_btype == BirthProcess::iContinuous)
+        throw runtime_error("Perform should not be called when birth is continuous."
+                " (Sweep, BirthProcess::Perform)");
 
-    // Add the new particle to the ensemble.
-    sys.Particles().Add(*p, rng);
     return 0;
 }
 
+/*!
+ * Create particles over time dt.
+ *
+ * @param t     Current time of the system
+ * @param dt    Time to remove particles over
+ * @param sys   The system to do transport for
+ * @param rng   Random number generator
+ */
+void BirthProcess::PerformDT (
+        double t,
+        double dt,
+        Sweep::Cell &sys,
+        rng_type &rng) const {
+
+    if (m_btype == BirthProcess::iContinuous) {
+
+        Process::PerformDT(dt, t, sys, rng);
+
+        // Initialise some variables
+        double weightToAdd = m_cell->Particles().GetSum(iW) * dt * A();
+        const double f = F(sys);
+        const double div = std::max(0.001 / (dt * A()),  f);
+        double wt(0.0);
+        int i(0);
+
+        // Add particles up to the maximum weight
+        while (weightToAdd > 0.0) {
+            i = m_cell->Particles().Select(rng);
+            wt = m_cell->Particles().At(i)->getStatisticalWeight() / div;
+
+            if (wt < weightToAdd) {
+                DoParticleBirth(t, i, sys, wt * f, rng);
+
+            } else {
+                // Use a bernoulli distribution to decide whether to add the
+                // particle
+                boost::random::bernoulli_distribution<double> decider(weightToAdd / wt);
+                if (decider(rng)) DoParticleBirth(t, i, sys, wt * f, rng);
+
+            }
+            weightToAdd -= wt;
+        }
+    }
+
+}
+
+/*!
+ * Create the particle in this system's cell.
+ *
+ * @param t     Time to create particle at
+ * @param isp   Index of particle to clone
+ * @param sys   System to put particle into
+ * @param wt    Weight of the particle
+ * @param rng   Random number generator
+ */
+void BirthProcess::DoParticleBirth(
+        const double t,
+        const int isp,
+        Sweep::Cell &sys,
+        const double wt,
+        rng_type &rng) const {
+
+    // Make a copy of the sampled particle
+    Sweep::Particle *sp = m_cell->Particles().At(isp)->Clone();
+
+    // Adjust its weight and add
+    sp->setStatisticalWeight(wt);
+    sp->resetCoagCount();
+    sp->SetTime(t);     // Set LPDA update time.
+    sys.Particles().Add(*sp, rng);
+
+}
 
 // READ/WRITE/COPY.
 

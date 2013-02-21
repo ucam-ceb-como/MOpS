@@ -31,9 +31,9 @@
    </reactor>
 
   <!-- Output time sequence. -->
-  <timeintervals splits="1">
+  <timeintervals splits="10">
     <start>0.0</start>
-    <time steps="50">10.0</time>
+    <time steps="100">10.0</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->

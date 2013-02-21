@@ -39,7 +39,7 @@
     Email:       mk306@cam.ac.uk
     Website:     http://como.cheng.cam.ac.uk
 */
-
+#include <boost/random/bernoulli_distribution.hpp>
 #include "swp_death_process.h"
 #include "swp_mechanism.h"
 #include <stdexcept>
@@ -52,14 +52,22 @@ using namespace std;
 
 // Default constructor (protected).
 DeathProcess::DeathProcess(void)
-: Process()
+: Process(),
+  m_dtype(DeathProcess::iDeathDelete),
+  m_adaptive(false),
+  m_toggled(false),
+  m_cell(NULL)
 {
     m_name = "Death Process";
 }
 
 // Initialising constructor.
 DeathProcess::DeathProcess(const Sweep::Mechanism &mech)
-: Process(mech)
+: Process(mech),
+  m_dtype(DeathProcess::iDeathDelete),
+  m_adaptive(false),
+  m_toggled(false),
+  m_cell(NULL)
 {
     m_name = "Death Process";
 }
@@ -88,6 +96,11 @@ DeathProcess &DeathProcess::operator =(const DeathProcess &rhs)
 {
     if (this != &rhs) {
         Process::operator =(rhs);
+
+        m_dtype = rhs.m_dtype;
+        m_adaptive = rhs.m_adaptive;
+        m_toggled = rhs.m_toggled;
+        m_cell = rhs.m_cell;
     }
     return *this;
 }
@@ -98,9 +111,9 @@ DeathProcess &DeathProcess::operator =(const DeathProcess &rhs)
 double DeathProcess::Rate(double t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 {
-    // Count doesn't seem right for weighted particles...
-    // TODO: understand why this is the case
-    return m_a * sys.Particles().Count();
+    throw std::runtime_error("DeathProcesses are no longer jump processes."
+            " (Sweep::DeathProcess::Perform");
+    return 0.0;
 }
 
 // RATE TERM CALCULATIONS.
@@ -122,7 +135,7 @@ double DeathProcess::RateTerms(const double t, const Cell &sys,
 // PERFORMING THE PROCESS.
 
 /*!
- * 
+ * Deprecated death process.
  *
  * \param[in]       t           Time
  * \param[in,out]   sys         System to update
@@ -137,13 +150,145 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
                           unsigned int iterm,
                           rng_type &rng) const
 {
-    // Select a particle for deletion.
-    int i = sys.Particles().Select(rng);
-    // Delete the particle.
-    if (i>=0) sys.Particles().Remove(i);
+    throw std::runtime_error("DeathProcesses are no longer jump processes."
+            " (Sweep::DeathProcess::Rate");
     return 0;
 }
 
+/*!
+ * Remove particles over time dt.
+ *
+ * @param t     Current time of the system
+ * @param dt    Time to remove particles over
+ * @param sys   The system to do transport for
+ * @param rng   Random number generator
+ */
+void DeathProcess::PerformDT (
+        const double t,
+        const double dt,
+        Sweep::Cell &sys,
+        rng_type &rng) const {
+
+    Process::PerformDT(t, dt, sys, rng);
+
+    if (m_dtype == DeathProcess::iDeathRescale) {
+        // Don't delete anything, just rescale the sample volume
+        sys.AdjustSampleVolume(1.0/(1.0 - (dt) * A()));
+    } else {
+        // Set up some variables
+        double weightToRemove = sys.Particles().GetSum(iW) * dt * A();
+        double wt(0.0);
+        int i(0);
+
+        // Remove particles up to the maximum weight
+        while (weightToRemove > 0.0) {
+            i = sys.Particles().Select(rng);
+            wt = sys.Particles().At(i)->getStatisticalWeight();
+
+            if (wt < weightToRemove) {
+                DoParticleDeath(t, i, sys, rng);
+            } else {
+                boost::random::bernoulli_distribution<double> decider(weightToRemove/wt);
+                if (decider(rng)) {
+                    DoParticleDeath(t, i, sys, rng);
+                }
+            }
+
+            weightToRemove -= wt;
+        }
+    }
+}
+
+/*!
+ * Carry out the death of a particle.
+ *
+ * @param t     System time
+ * @param isp   The index of the particle to remove
+ * @param sys   System to remove the particle from
+ * @param rng   Random number generator
+ */
+void DeathProcess::DoParticleDeath(
+        const double t,
+        const int isp,
+        Sweep::Cell &sys,
+        rng_type &rng) const {
+    Sweep::Particle *sp = sys.Particles().At(isp);
+
+    if (m_dtype == DeathProcess::iDeathDelete) {
+        // Just delete the particle
+        sys.Particles().Remove(isp, true);
+
+    } else if (m_dtype == DeathProcess::iDeathMove) {
+        // Move it to a downstream cell
+        if (m_cell == NULL)
+            throw std::runtime_error("No cell to move the particle to!"
+                    " (Sweep::DeathProcess::DoParticleDeath).");
+
+        double wtFactor = (double)m_cell->Particles().Capacity() * sys.SampleVolume()
+                    / ((double)sys.Particles().Capacity() * m_cell->SampleVolume());
+        sp->setStatisticalWeight(sp->getStatisticalWeight() / wtFactor);
+        sp->SetTime(t);
+
+        // Remove the particle from the ensemble but don't delete
+        sys.Particles().Remove(isp, false);
+
+        // Now add to the new ensemble
+        m_cell->Particles().Add(*sp, rng);
+    }
+}
+
+/*!
+ * Changes the nature of the death process of the current cell and the inflow
+ * processes of any downstream cells. If N(t) = Nmax, we can reduce the
+ * number of ensemble contractions by moving outflow particles directly
+ * downstream.
+ *
+ * @param sys
+ */
+void DeathProcess::Adapt(Sweep::Cell &sys) {
+
+    if (m_adaptive && !m_toggled) {
+        if (sys.Particles().Count() == sys.Particles().Capacity()) {
+            // We have a full ensemble.
+
+            std::cout << "sweep: Enabling move-on-death and turning-off inflow." << std::endl;
+
+            // Change this Death process to move particles
+            m_dtype = DeathProcess::iDeathMove;
+
+            // Turn-off the downstream birth processes
+            Sweep::Processes::BirthPtrVector bps = m_cell->Inflows();
+            Sweep::Processes::BirthPtrVector::iterator i;
+            for (i = bps.begin(); i != bps.end(); ++i) {
+                (*i)->SetProcessSwitch(false);
+            }
+
+            // Indicate that this process has been toggled-on
+            m_toggled = true;
+        }
+    }
+
+    if (m_adaptive && m_toggled) {
+        if (sys.Particles().Count() <
+                (unsigned int) (0.8 * (double) sys.Particles().Capacity())) {
+            // Uh oh, our ensemble has depleted to 80% capacity (arbitrary)
+
+            // Change to ensemble rescaling to refill the ensemble
+            m_dtype = DeathProcess::iDeathRescale;
+
+            // Now re-enable downstream birth processes
+            Sweep::Processes::BirthPtrVector bps = m_cell->Inflows();
+            Sweep::Processes::BirthPtrVector::iterator i;
+            for (i = bps.begin(); i != bps.end(); ++i) {
+                (*i)->SetProcessSwitch(true);
+            }
+
+            // Toggle off
+            m_toggled = false;
+        }
+    }
+
+}
 
 // READ/WRITE/COPY.
 

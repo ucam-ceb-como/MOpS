@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<mechanism name="Test" units="CGS">
+    <component id="silicon" type="bulk">
+      <description>silicon</description>
+      <density units="g/cm3">1.0</density>
+      <!-- MW = Avogadro's number to yield the same dimensions as the test-->
+      <molwt units="g/mol">6.023e29</molwt> 
+    </component>
+    
+    <particle id="[silicon]" model="spherical" subtree="false">
+      <description>Test</description>
+    </particle>
+
+    <coagulation>
+        <A>1.0</A>
+        <weightrule>w3</weightrule>
+        <kernel>weightedconstant</kernel>
+    </coagulation>
+
+   <reaction defer="false" name="SR" type="surface">     
+        <A>1.0</A> 
+        <n>0.0</n>
+        <E>0.0</E>
+        <particleterm id="u"/>
+        <component dx="1" id="silicon"/>
+   </reaction>
+
+   <constantinception name="INCEP">
+        <component dx="+1" id="silicon"/>
+        <A>1.0e-6</A>
+        <!-- gets internally scaled by MOPS-->
+   </constantinception>
+
+</mechanism>

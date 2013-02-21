@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<mops version="3">
+    <runs>6</runs>
+    <atol>1.0e-18</atol> 
+    <rtol>1.0e-4</rtol>
+    <pcount>16384</pcount>
+    <maxm0>1e-6</maxm0>
+  
+    <mixture id="inert">
+        <component id="AR">1.0</component>
+        <temperature units="K">1000</temperature>
+        <pressure units="Pa">101325</pressure>
+    </mixture>
+  
+    <reactor constt="true" id="r1" type="psr" order="1">
+        <initial>inert</initial>
+        <inflow>inert</inflow>
+        <restime unit="s">1.0</restime>  
+    </reactor>
+  
+    <reactor constt="true" id="r2" type="psr" order="2">
+        <initial>inert</initial>
+        <inflow>r1</inflow>
+        <restime unit="s">1.0</restime>  
+    </reactor>
+  
+  <!-- Output time sequence. -->
+  <timeintervals splits="10">
+    <start>0.0</start>
+    <time steps="100">3.0</time>
+  </timeintervals>
+  
+  <!-- Simulation output settings. -->
+  <output>
+    <console interval="1" msgs="true">
+      <tabular>
+        <column fmt="sci">time</column>
+        <column fmt="float">#sp</column>
+        <column fmt="sci">m0</column>
+        <column fmt="sci">T</column>
+        <column fmt="sci">SIH4</column>
+        <column fmt="sci">ct</column>
+      </tabular>
+    </console>
+    <ptrack enable="false" ptcount="50"/>
+
+    <!-- File name for output (excluding extensions). -->
+    <filename>psrtest</filename>
+  </output>
+</mops>

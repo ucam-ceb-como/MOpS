@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<mops version="3">
+    <runs>10</runs>
+    <atol>1.0e-18</atol> 
+    <rtol>1.0e-4</rtol>
+    <pcount>16384</pcount>
+    <maxm0>1e-6</maxm0>
+  
+    <mixture id="inert">
+        <component id="AR">1.0</component>
+        <temperature units="K">1000</temperature>
+        <pressure units="Pa">101325</pressure>
+    </mixture>
+    
+    <mixture id="newwts">
+        <component id="AR">1.0</component>
+        <temperature units="K">1000</temperature>
+        <pressure units="Pa">101325</pressure>
+        
+        <population>
+            <m0>1.0</m0>
+            <particle count="4096">
+              <weight>0.5</weight>
+              <component id="silicon" dx="1"/>
+            </particle>
+            <particle count="4096">
+              <weight>0.2</weight>
+              <component id="silicon" dx="3"/>
+            </particle>
+            <particle count="4096">
+              <weight>0.2</weight>
+              <component id="silicon" dx="5"/>
+            </particle>
+            <particle count="4096">
+              <weight>0.1</weight>
+              <component id="silicon" dx="7"/>
+            </particle>
+        </population>
+    </mixture>
+    
+    <mixture id="simple">
+        <component id="AR">1.0</component>
+        <temperature units="K">1000</temperature>
+        <pressure units="Pa">101325</pressure>
+        
+        <population>
+            <m0>1.0</m0>
+            <particle count="8192">
+              <weight>0.5</weight>
+              <component id="silicon" dx="1"/>
+            </particle>
+            <particle count="8192">
+              <weight>0.2</weight>
+              <component id="silicon" dx="5"/>
+            </particle>
+        </population>
+    </mixture>
+  
+    <reactor constt="true" id="r1" type="psr" order="1">
+        <initial>simple</initial>
+        <inflow>newwts</inflow>
+        <restime unit="s">1.0</restime>  
+    </reactor>
+  
+  <!-- Output time sequence. -->
+  <timeintervals splits="20">
+    <start>0.0</start>
+    <time steps="200">8.0</time>
+  </timeintervals>
+  
+  <!-- Simulation output settings. -->
+  <output>
+    <console interval="1" msgs="true">
+      <tabular>
+        <column fmt="sci">time</column>
+        <column fmt="float">#sp</column>
+        <column fmt="sci">m0</column>
+        <column fmt="sci">T</column>
+        <column fmt="sci">SIH4</column>
+        <column fmt="sci">ct</column>
+      </tabular>
+    </console>
+    <ptrack enable="false" ptcount="50"/>
+
+    <!-- File name for output (excluding extensions). -->
+    <filename>psrtest</filename>
+  </output>
+</mops>

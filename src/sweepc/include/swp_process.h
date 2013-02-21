@@ -69,6 +69,9 @@ class EnvironmentInterface;
 
 namespace Processes
 {
+class Process;
+typedef std::vector<Process*> ProcessPtrVector;
+
 class Process
 /*!
  * \brief Define an interface for all processes
@@ -206,6 +209,13 @@ public:
         unsigned int iterm,
         rng_type &rng
         ) const = 0;
+
+    //! Performs the process over time dt on the given system.
+    virtual void PerformDT (
+            const double t,
+            const double dt,
+            Sweep::Cell &sys,
+            rng_type &rng) const;
 
 
     // FICTICIOUS EVENTS.

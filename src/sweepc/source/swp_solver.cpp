@@ -94,7 +94,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
                 rng_type &rng)
 {
     int err = 0;
-    double tsplit, dtg, jrate;
+    double tsplit, dtg, jrate, tflow(t);
     static fvector rates(mech.TermCount(), 0.0);
     // Global maximum time step.
     dtg     = tstop - t;
@@ -102,8 +102,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
-        if ((mech.AnyDeferred() && (sys.ParticleCount() > 0)) ||
-                sys.HasInflowParticles())  {
+        if (mech.AnyDeferred() && (sys.ParticleCount() > 0))  {
             // Get the process jump rates (and the total rate).
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
 
@@ -117,10 +116,16 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
+
             // Sweep does not do transport
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
             timeStep(t, std::min(t + dtg / 3.0, tsplit), sys, Geometry::LocalGeometry1d(),
                      mech, rates, jrate, rng);
+
+            // Do particle transport
+            if (sys.OutflowCount() > 0 || sys.InflowCount() > 0)
+                mech.DoParticleFlow(t, t - tflow, sys, Geometry::LocalGeometry1d(), rng);
+            tflow = t;
         }
 
         // Perform Linear Process Deferment Algorithm to

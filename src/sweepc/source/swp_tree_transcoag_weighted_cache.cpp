@@ -127,7 +127,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
     m_d2m_1_2_w   = m_d2_m_1_2 * m_weight;
 
     // Silica parameters
-    m_sites =       (double)part.GetSites();
+    m_sites =       part.GetSites();
     m_sinterrate =  part.GetSintRate();
 
     // Silicon parameters

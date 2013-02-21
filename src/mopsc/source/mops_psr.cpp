@@ -173,6 +173,7 @@ void PSR::InitialiseInflow() {
 
     // Create a new birth process
     Sweep::Processes::BirthProcess bp(Mech()->ParticleMech());
+    bp.SetBirthType(Sweep::Processes::BirthProcess::iStochastic);
     bp.SetCell(m_in->Mixture());
     bp.SetA(m_invrt);
 
@@ -185,12 +186,25 @@ void PSR::InitialiseInflow() {
  */
 void PSR::InitialiseOutflow() {
 
-    m_mix->AddOutflow(m_invrt, Mech()->ParticleMech());
+    Sweep::Processes::DeathProcess dp(Mech()->ParticleMech());
+
+    // Set the cell to rescale the sample volume instead of killing particles
+    dp.SetDeathType(Sweep::Processes::DeathProcess::iDeathRescale);
+    dp.SetA(m_invrt);
+
+    // Set the outlet cell if a reactor is present for outflow
+    if (m_out != NULL) {
+        if (m_out->HasReacOutflow()) {
+            dp.SetCell(m_out->Outflow()->Mixture());
+            dp.SetAdaptive(false);}
+    }
+
+    m_mix->AddOutflow(dp);
 }
 
 /*!
  * Sets the flowstream which points to the inflow mixture conditions. The
- * reactor takes ownership of the flowstream and therefore responsiblity
+ * reactor takes ownership of the flowstream and therefore responsibility
  * for its deletion.
  *
  * @param inf   Inflow stream

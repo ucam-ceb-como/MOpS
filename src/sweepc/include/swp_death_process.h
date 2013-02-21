@@ -115,6 +115,12 @@ public:
         rng_type &rng
         ) const;
 
+    //! Perform the process over time dt
+    void PerformDT (
+            const double t,
+            const double dt,
+            Sweep::Cell &sys,
+            rng_type &rng) const;
 
     // READ/WRITE/COPY.
 
@@ -125,11 +131,51 @@ public:
     // processes and for serialisation.
     ProcessType ID(void) const;
 
+    //! Available death processes
+    enum DeathType {
+        iDeathDelete,       // Deletes a particle from the ensemble
+        iDeathMove,         // Moves a particle downstream
+        iDeathRescale       // Rescale the sample volume of the cell
+    };
+
+    //! Set the type of process
+    void SetDeathType(const DeathType t) {m_dtype = t;}
+
+    //! Set whether adaptive death should be used
+    void SetAdaptive(const bool a) {m_adaptive = a;}
+
+    //! Activate changes to cells when the adaptive process is toggled
+    void Adapt(Sweep::Cell &sys);
+
+    //! Set the downstream cell
+    void SetCell(Cell* c) {m_cell = c;}
+
 protected:
 
     // Default constructor is protected to prevent a process being
     // defined without knowledge of the parent mechanism.
     DeathProcess(void);
+
+private:
+    //! Flag for type of death process
+    DeathType m_dtype;
+
+    //! Should the adaptive death process be used?
+    bool m_adaptive;
+
+    //! Has the adaptive process been toggled? (True = ON)
+    bool m_toggled;
+
+    //! The downstream cell
+    Cell *m_cell;
+
+    //! A helper function for doing the process
+    void DoParticleDeath(
+            const double t,
+            const int isp,
+            Sweep::Cell &sys,
+            rng_type &rng) const;
+
 };
 typedef std::vector<DeathProcess*> DeathPtrVector;
 };
