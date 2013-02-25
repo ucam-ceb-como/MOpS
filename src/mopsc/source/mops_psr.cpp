@@ -382,6 +382,25 @@ void PSR::RHS_ConstT(double t, const double *const y,  double *ydot) const
     }
 }
 
+/*!
+ * Gets the bulk inflow enthalpy. Best to access via this method, as if the
+ * mixture is dynamic the cached value could be incorrect.
+ *
+ * @return  Bulk enthalpy of the inflow
+ */
+double PSR::InflowBulkEnthalpy() const {
+    double infH(0.0);
+    if (m_in != NULL) {
+        if (m_in->HasReacInflow()) infH = m_in->Mixture()->GasPhase().BulkH() /
+                (Sprog::R * m_in->Mixture()->GasPhase().Temperature());
+        else infH = m_infH;
+    } else {
+        throw std::runtime_error("Couldn't find an inflow to calculate H for."
+                " Mops, (PSR::InflowBulkEnthalpy)");
+    }
+    return infH;
+}
+
 // Definition of RHS form for adiabatic energy equation.
 void PSR::RHS_Adiabatic(double t, const double *const y,  double *ydot) const
 {
@@ -443,7 +462,7 @@ void PSR::RHS_Adiabatic(double t, const double *const y,  double *ydot) const
     // Complete temperature derivative (including inflow/outflow term).
     ydot[m_iT] *= - y[m_iT] / (Cp * y[m_iDens] * Volume);
     ydot[m_iT] += (m_in->Mixture()->GasPhase().Density() / (y[m_iDens] * Cp * m_restime)) *
-                  ((H*y[m_iT]) - (m_infH * m_in->Mixture()->GasPhase().Temperature()));
+                  ((H*y[m_iT]) - (InflowBulkEnthalpy() * m_in->Mixture()->GasPhase().Temperature()));
 
     // Add imposed temperature gradient, if defined.
     if (m_Tfunc) ydot[m_iT] += m_Tfunc(t, y, ydot, *this);

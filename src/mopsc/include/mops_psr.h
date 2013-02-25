@@ -176,6 +176,9 @@ private:
 
     // Releases all memory used by the reactor object.
     void releaseMemory(void);
+
+    //! Returns the bulk enthalpy of the inflow
+    double InflowBulkEnthalpy() const;
 };
 };
 
