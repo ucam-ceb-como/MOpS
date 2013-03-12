@@ -1,45 +1,53 @@
-/*
-  Author(s):      Matthew Celnik (msc37)
-  Project:        sweep (population balance solver)
-  Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
-  Copyright (C) 2008 Matthew S Celnik.
+ /*!
+  * @file   swp_death_process.h
+  * @author Matthew Celnik, William Menz
+  * @brief  Declaration of a death process
+  *
+  *   About:
+  *      Death processes model the outflow of particles from a reactor.
+  *      Several types have been developed in this class. Like birth processes,
+  *      they can be stochastic (using the normal jump rate interface) or
+  *      continuous (LPDA-like). Each of the process types is explained below.
+  *
+  *      Delete: just deletes a particle from the ensemble
+  *      Move: move a particle downstream (will turn off any inception terms
+  *            for the downstream reactor)
+  *      Rescale: Model ouflow by rescaling the sample volume
+  *      Adaptive: Change the death process depending on the state of the
+  *                particle ensemble
+  *
+  *      Again, the form of the death process's Perform depends on whether DSA
+  *      or SWAs are being used. As such, the coagulation kernel type is cached.
+  *
+  *   Licence:
+  *      sweepc is free software; you can redistribute it and/or
+  *      modify it under the terms of the GNU Lesser General Public License
+  *      as published by the Free Software Foundation; either version 2
+  *      of the License, or (at your option) any later version.
+  *
+  *      This program is distributed in the hope that it will be useful,
+  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  *      GNU Lesser General Public License for more details.
+  *
+  *      You should have received a copy of the GNU Lesser General Public
+  *      License along with this program; if not, write to the Free Software
+  *      Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  *      02111-1307, USA.
+  *
+  *   Contact:
+  *      Prof Markus Kraft
+  *      Dept of Chemical Engineering
+  *      University of Cambridge
+  *      New Museums Site
+  *      Pembroke Street
+  *      Cambridge
+  *      CB2 3RA, UK
+  *
+  *      Email:       mk306@cam.ac.uk
+  *      Website:     http://como.cheng.cam.ac.uk
+  */
 
-  File purpose:
-    Definition of a uniform death process.  Particles are uniformly
-    deleted at the calculated rate.  This provides a method for
-    simulating Cell outflow events.
-
-  Licence:
-    This file is part of "sweepc".
-
-    sweepc is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-  Contact:
-    Dr Markus Kraft
-    Dept of Chemical Engineering
-    University of Cambridge
-    New Museums Site
-    Pembroke Street
-    Cambridge
-    CB2 3RA
-    UK
-
-    Email:       mk306@cam.ac.uk
-    Website:     http://como.cheng.cam.ac.uk
-*/
 
 #ifndef SWEEP_DEATH_PROCESS_H
 #define SWEEP_DEATH_PROCESS_H
@@ -66,13 +74,6 @@ public:
     // Constructors.
     DeathProcess(const Sweep::Mechanism &mech); // Initialising constructor.
     DeathProcess(const DeathProcess &copy);     // Copy constructor.
-    DeathProcess(                               // Stream-reading constructor.
-        std::istream &in,                       //  - Input stream.
-        const Sweep::Mechanism &mech            //  - Parent mechanism.
-        );
-
-    // Destructors.
-    ~DeathProcess(void);
 
     // Operators.
     DeathProcess &operator=(const DeathProcess &rhs);
@@ -120,6 +121,7 @@ public:
             const double t,
             const double dt,
             Sweep::Cell &sys,
+            const Geometry::LocalGeometry1d& local_geom,
             rng_type &rng) const;
 
     // READ/WRITE/COPY.
@@ -133,22 +135,27 @@ public:
 
     //! Available death processes
     enum DeathType {
-        iDeathDelete,       // Deletes a particle from the ensemble
-        iDeathMove,         // Moves a particle downstream
-        iDeathRescale       // Rescale the sample volume of the cell
+        // 'Continuous' processes
+        iContDelete,       // Deletes a particle from the ensemble
+        iContMove,         // Moves a particle downstream
+        iContRescale,      // Rescale the sample volume of the cell
+        iContAdaptive,     // Changes the nature of the death process
+        // 'Stochastic' processes
+        iStochDelete,
+        iStochMove
     };
 
     //! Set the type of process
-    void SetDeathType(const DeathType t) {m_dtype = t;}
+    void SetDeathType(const DeathType t);
 
-    //! Set whether adaptive death should be used
-    void SetAdaptive(const bool a) {m_adaptive = a;}
+    //! Get the type of the process
+    DeathType GetDeathType() const;
+
+    //! Set the downstream cell
+    void SetCell(Cell* c);
 
     //! Activate changes to cells when the adaptive process is toggled
     void Adapt(Sweep::Cell &sys);
-
-    //! Set the downstream cell
-    void SetCell(Cell* c) {m_cell = c;}
 
 protected:
 
@@ -160,14 +167,14 @@ private:
     //! Flag for type of death process
     DeathType m_dtype;
 
-    //! Should the adaptive death process be used?
-    bool m_adaptive;
-
     //! Has the adaptive process been toggled? (True = ON)
     bool m_toggled;
 
     //! The downstream cell
     Cell *m_cell;
+
+    //! Store the coagulation process type to handle DSA/SWAs
+    Sweep::Processes::ProcessType m_ptype;
 
     //! A helper function for doing the process
     void DoParticleDeath(
@@ -175,6 +182,15 @@ private:
             const int isp,
             Sweep::Cell &sys,
             rng_type &rng) const;
+
+    //! Helper function to get the rate.
+    double InternalRate(
+            double t,
+            const Cell &sys,
+            const Geometry::LocalGeometry1d &local_geom) const;
+
+    //! Is the process of stochastic type?
+    bool IsStochastic() const;
 
 };
 typedef std::vector<DeathProcess*> DeathPtrVector;

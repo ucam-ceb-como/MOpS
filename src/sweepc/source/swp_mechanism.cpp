@@ -308,7 +308,7 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
 double Mechanism::CalcRates(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &rates, bool scale) const
 {
     // Ensure rates vector is the correct length, then set to zero.
-    rates.resize(m_processcount+sys.InflowCount(), 0.0);
+    rates.resize(m_processcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
     fill(rates.begin(), rates.end(), 0.0);
 
     double sum = 0.0;
@@ -326,6 +326,14 @@ double Mechanism::CalcRates(double t, const Cell &sys, const Geometry::LocalGeom
     fvector::iterator i = rates.begin() + m_inceptions.size() + m_processes.size() + m_coags.size();
     const BirthPtrVector &inf = sys.Inflows();
     for (BirthPtrVector::const_iterator j=inf.begin(); j!=inf.end(); ++j) {
+        *i = (*j)->Rate(t, sys, local_geom);
+        sum += *i;
+        ++i;
+    }
+
+    // Get death rates from the Cell.
+    const DeathPtrVector &outf = sys.Outflows();
+    for (DeathPtrVector::const_iterator j=outf.begin(); j!=outf.end(); ++j) {
         *i = (*j)->Rate(t, sys, local_geom);
         sum += *i;
         ++i;
@@ -418,7 +426,7 @@ void Mechanism::ResetJumpCount() const {
 double Mechanism::CalcRateTerms(double t, const Cell &sys, const Geometry::LocalGeometry1d& local_geom, fvector &terms) const
 {
     // Ensure rates vector is the correct length.
-    terms.resize(m_termcount+sys.InflowCount(), 0.0);
+    terms.resize(m_termcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
     fvector::iterator iterm = terms.begin();
 
     double sum = 0.0;
@@ -452,6 +460,12 @@ double Mechanism::CalcRateTerms(double t, const Cell &sys, const Geometry::Local
         sum += (*j)->RateTerms(t, sys, local_geom, iterm);
     }
 
+    // Death processes
+    const DeathPtrVector &outf = sys.Outflows();
+    for (DeathPtrVector::const_iterator j=outf.begin(); j!=outf.end(); ++j) {
+        sum += (*j)->RateTerms(t, sys, local_geom, iterm);
+    }
+
     return sum;
 }
 
@@ -464,7 +478,7 @@ double Mechanism::CalcJumpRateTerms(double t, const Cell &sys, const Geometry::L
     // as zero.
 
     // Ensure vector is the correct length, then set to zero.
-    terms.resize(m_termcount+sys.InflowCount(), 0.0);
+    terms.resize(m_termcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
     fvector::iterator iterm = terms.begin();
 
     double sum = 0.0;
@@ -505,6 +519,11 @@ double Mechanism::CalcJumpRateTerms(double t, const Cell &sys, const Geometry::L
         sum += (*j)->RateTerms(t, sys, local_geom, iterm);
     }
 
+    const DeathPtrVector &outf = sys.Outflows();
+    for (DeathPtrVector::const_iterator j=outf.begin(); j!=outf.end(); ++j) {
+        sum += (*j)->RateTerms(t, sys, local_geom, iterm);
+    }
+
     return sum;
 }
 
@@ -532,7 +551,7 @@ double Mechanism::CalcDeferredRateTerms(double t, const Cell &sys, const Geometr
 
     // Ensure vector is the correct length and full of zeros.
     fill(terms.begin(), terms.end(), 0.0);
-    terms.resize(m_termcount+sys.InflowCount(), 0.0);
+    terms.resize(m_termcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
     fvector::iterator iterm = terms.begin();
 
     double sum = 0.0;
@@ -703,8 +722,16 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
 
         if ((j < (int)sys.InflowCount()) && (j>=0)) {
             // An inflow process.
-            sys.Inflows(j)->SetMechanism(*this);
             sys.Inflows(j)->Perform(t, sys, local_geom, 0, rng);
+            return;
+        } else {
+            // Hopefully a death process then!
+            j -= sys.InflowCount();;
+        }
+
+        if ((j < (int)sys.OutflowCount()) && (j>=0)) {
+            // An outflow process.
+            sys.Outflows(j)->Perform(t, sys, local_geom, 0, rng);
         } else {
             throw std::runtime_error("Unknown index of process, couldn't Perform."
                     " (Sweep, Mechanism::DoProcess)");
@@ -757,7 +784,7 @@ void Mechanism::DoParticleFlow(
         j = dist(rng);
 
         // Do the process
-        flows.at(j)->PerformDT(t, dt, sys, rng);
+        flows.at(j)->PerformDT(t, dt, sys, local_geom, rng);
 
         // Remove the process and its rates from the distribution
         rates.erase(rates.begin() + j);

@@ -227,12 +227,14 @@ void Process::AddProduct(unsigned int isp, int mu)
  * @param t     Current time of the system
  * @param dt    Time to remove particles over
  * @param sys   The system to do transport for
+ * @param local_geom    Geometry of the process
  * @param rng   Random number generator
  */
 void Process::PerformDT (
         const double t,
         const double dt,
         Sweep::Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
         rng_type &rng) const {
     assert(dt > 0.0);
 }
@@ -466,4 +468,17 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n) const
         // Set the new data
         gas->SetConcs(newConcs);
     }
+}
+
+/*!
+ * @param t     The process type under question
+ * @return      Whether it is a DSA (false) or SWA (true) process
+ */
+bool Process::IsWeighted(ProcessType t) {
+    bool val(false);
+    if (t == Processes::Weighted_Additive_Coagulation_ID ||
+            t == Processes::Weighted_Constant_Coagulation_ID ||
+            t == Processes::Weighted_Transition_Coagulation_ID)
+        val = true;
+    return val;
 }

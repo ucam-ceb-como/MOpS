@@ -60,7 +60,9 @@ PSR::PSR(const Mops::Mechanism &mech)
   m_in(NULL),
   m_out(NULL),
   m_invrt(1.0),
-  m_infH(0.0)
+  m_infH(0.0),
+  m_default_birth(Sweep::Processes::BirthProcess::iStochastic),
+  m_default_death(Sweep::Processes::DeathProcess::iContRescale)
 {
     m_infHs.resize(m_neq);
 }
@@ -73,7 +75,10 @@ PSR::PSR(const Mops::PSR &copy)
   m_out(copy.m_out),
   m_invrt(copy.m_invrt),
   m_infH(copy.m_infH),
-  m_infHs(copy.m_infHs) {
+  m_infHs(copy.m_infHs),
+  m_default_birth(copy.m_default_birth),
+  m_default_death(copy.m_default_death)
+{
     if (copy.m_in) m_in = copy.m_in->Clone();
 }
 
@@ -109,6 +114,10 @@ Mops::PSR &PSR::operator=(const Mops::PSR &rhs)
         // Precalculated terms.
         m_infH = rhs.m_infH;
         m_infHs.assign(rhs.m_infHs.begin(), rhs.m_infHs.end());
+
+        // Birth and death types
+        m_default_birth = rhs.m_default_birth;
+        m_default_death = rhs.m_default_death;
     }
     return *this;
 }
@@ -173,9 +182,21 @@ void PSR::InitialiseInflow() {
 
     // Create a new birth process
     Sweep::Processes::BirthProcess bp(Mech()->ParticleMech());
-    bp.SetBirthType(Sweep::Processes::BirthProcess::iStochastic);
+    bp.SetBirthType(m_default_birth);
     bp.SetCell(m_in->Mixture());
     bp.SetA(m_invrt);
+
+    // If an upstream process is a move process, ensure the inflow is turned-off
+    if (m_in->Mixture()->OutflowCount() > 0) {
+        const Sweep::Processes::DeathPtrVector &outf = m_in->Mixture()->Outflows();
+        for (Sweep::Processes::DeathPtrVector::const_iterator it = outf.begin();
+                it != outf.end(); ++it) {
+            if ((*it)->GetDeathType() == Sweep::Processes::DeathProcess::iContMove
+                    || (*it)->GetDeathType() == Sweep::Processes::DeathProcess::iStochMove) {
+                bp.SetProcessSwitch(false);
+            }
+        }
+    }
 
     // Add the process to the Mixture, which clones it and takes ownership
     m_mix->AddInflow(bp);
@@ -188,15 +209,13 @@ void PSR::InitialiseOutflow() {
 
     Sweep::Processes::DeathProcess dp(Mech()->ParticleMech());
 
-    // Set the cell to rescale the sample volume instead of killing particles
-    dp.SetDeathType(Sweep::Processes::DeathProcess::iDeathRescale);
+    // Set the form of the death process.
+    dp.SetDeathType(m_default_death);
     dp.SetA(m_invrt);
 
     // Set the outlet cell if a reactor is present for outflow
     if (m_out != NULL) {
-        if (m_out->HasReacOutflow()) {
-            dp.SetCell(m_out->Outflow()->Mixture());
-            dp.SetAdaptive(false);}
+        if (m_out->HasReacOutflow()) dp.SetCell(m_out->Outflow()->Mixture());
     }
 
     m_mix->AddOutflow(dp);
@@ -230,6 +249,27 @@ void PSR::SetOutflow(Mops::FlowStream &out) {
     InitialiseOutflow();
 }
 
+// Does the reactor have an outflow set?
+bool PSR::HasOutflow() const {
+    if (m_out!=NULL) return true;
+    else return false;
+}
+
+// Does the reactor have an inflow set?
+bool PSR::HasInflow() const {
+    if (m_in!=NULL) return true;
+    else return false;
+}
+
+// Set the inflow process type
+void PSR::SetInflowType(Sweep::Processes::BirthProcess::BirthType btype) {
+    m_default_birth = btype;
+}
+
+// Set the inflow process type
+void PSR::SetOutflowType(Sweep::Processes::DeathProcess::DeathType dtype) {
+    m_default_death = dtype;
+}
 
 // READ/WRITE/COPY FUNCTIONS.
 

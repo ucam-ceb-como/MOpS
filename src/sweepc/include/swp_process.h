@@ -215,6 +215,7 @@ public:
             const double t,
             const double dt,
             Sweep::Cell &sys,
+            const Geometry::LocalGeometry1d& local_geom,
             rng_type &rng) const;
 
 
@@ -270,6 +271,9 @@ protected:
         unsigned int n // Number of times to apply process.
          = 1           //  - Default is one time.
          ) const;
+
+    //! Returns whether a weighte coagulation process is being used.
+    static bool IsWeighted (ProcessType t);
 }; // class Process
 } // namespace Processes
 } // namespace Sweep

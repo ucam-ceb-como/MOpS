@@ -111,11 +111,16 @@ public:
     void SetOutflow(Mops::FlowStream &out);
 
     //! Does the reactor have an outflow set?
-    bool HasOutflow() const {if (m_out!=NULL) return true; else return false;}
+    bool HasOutflow() const;
 
     //! Does the reactor have an inflow set?
-    bool HasInflow() const {if (m_in!=NULL) return true; else return false;}
+    bool HasInflow() const;
 
+    //! Set the inflow process type
+    void SetInflowType(Sweep::Processes::BirthProcess::BirthType btype);
+
+    //! Set the inflow process type
+    void SetOutflowType(Sweep::Processes::DeathProcess::DeathType dtype);
 
     // READ/WRITE/COPY FUNCTIONS.
 
@@ -168,6 +173,10 @@ private:
     double m_invrt;    // Inverse residence time.
     double m_infH;     // Inflow enthalpy.
     fvector m_infHs; // Inflow species enthalpies.
+
+    // Cached inflow and outflow types
+    Sweep::Processes::BirthProcess::BirthType m_default_birth;
+    Sweep::Processes::DeathProcess::DeathType m_default_death;
 
     // INITIALISATION AND DESTRUCTION.
     

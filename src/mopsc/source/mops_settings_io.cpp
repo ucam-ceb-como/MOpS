@@ -546,6 +546,39 @@ Mops::PSR *const readPSR(
         reac->SetVolume(1.0);
     }
 
+    // Get birth and death types
+    attr = NULL;
+    attr = node.GetAttribute("btype");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.compare("stochastic") == 0)
+            reac->SetInflowType(Sweep::Processes::BirthProcess::iStochastic);
+        else if (str.compare("continuous") == 0)
+            reac->SetInflowType(Sweep::Processes::BirthProcess::iContinuous);
+        else
+            throw std::runtime_error("Unrecognised birth process type. (::readPSR)");
+    }
+
+    attr = NULL;
+    attr = node.GetAttribute("dtype");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.compare("cdelete") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iContDelete);
+        else if (str.compare("cmove") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iContMove);
+        else if (str.compare("rescale") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iContRescale);
+        else if (str.compare("adaptive") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iContAdaptive);
+        else if (str.compare("sdelete") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iStochDelete);
+        else if (str.compare("smove") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iStochMove);
+        else
+            throw std::runtime_error("Unrecognised death process type. (::readPSR)");
+    }
+
     // TEMPERATURE GRADIENT PROFILE.
 
     node.GetChildren("dTdt", nodes);
