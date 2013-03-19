@@ -108,6 +108,12 @@ public:
 
         //! Always take the position of the largest particle
         LargestMassPositionChoice,
+
+        //! Take the midpoint position
+        MidpointPositionChoice,
+
+        //! Centre of mass
+        CentreOfMassPositionChoice,
     };
 
     //! Rule for choosing post coagulation position (not relevant to homogeneous sims)

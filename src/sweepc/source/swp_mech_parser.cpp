@@ -1626,6 +1626,10 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                             coag->SetPositionChoiceRule(Processes::Coagulation::MassPositionChoice);
                         else if (choice == "largestmass")
                             coag->SetPositionChoiceRule(Processes::Coagulation::LargestMassPositionChoice);
+                        else if (choice == "midpoint")
+                            coag->SetPositionChoiceRule(Processes::Coagulation::MidpointPositionChoice);
+                        else if (choice == "centreofmass")
+                            coag->SetPositionChoiceRule(Processes::Coagulation::CentreOfMassPositionChoice);
                         else
                             // Unrecognised option
                             throw std::runtime_error("Position choice rule " + choice + " not yet available \

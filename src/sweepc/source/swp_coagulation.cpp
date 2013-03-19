@@ -173,6 +173,17 @@ int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
             newPosTime = sp1->getPositionTime();
         }
     }
+    else if (mPositionChoice == MidpointPositionChoice) {
+        // Pick the half way point
+        newPos = (sp1->getPosition() + sp2->getPosition()) / 2;
+        newPosTime = (sp1->getPositionTime() + sp2->getPositionTime()) / 2;
+    }
+    else if (mPositionChoice == CentreOfMassPositionChoice) {
+        const real m1 = sp1->Mass();
+        const real m2 = sp2->Mass();
+        newPos = (m1 * sp1->getPosition() + m2 * sp2->getPosition()) / (m1 + m2);
+        newPosTime = (m1 * sp1->getPositionTime() + m2 * sp2->getPositionTime()) / (m1 + m2);
+    }
 
 
     sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
