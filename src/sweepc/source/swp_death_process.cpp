@@ -284,11 +284,12 @@ void DeathProcess::DoParticleDeath(
             sp->setStatisticalWeight(sp->getStatisticalWeight() / F);
         sp->SetTime(t);
 
-        // Remove the particle from the ensemble but don't delete
-        sys.Particles().Remove(isp, false);
-
         // Now add to the new ensemble
         if (IsWeighted(m_ptype)) {
+
+            // Remove the particle from the ensemble but don't delete
+            sys.Particles().Remove(isp, false);
+
             // If it's a weighted process, just add the particle right away.
             m_cell->Particles().Add(*sp, rng);
         } else {
@@ -298,10 +299,13 @@ void DeathProcess::DoParticleDeath(
                 if (repeats >= 1.0) m_cell->Particles().Add(*(sp->Clone()), rng);
                 else {
                     boost::random::bernoulli_distribution<double> decider(repeats);
-                    if (decider(rng)) m_cell->Particles().Add(*sp, rng);
+                    if (decider(rng)) m_cell->Particles().Add(*(sp->Clone()), rng);
                 }
                 repeats -= 1.0;
             }
+
+            // Remove the particle from the ensemble and delete the original
+            sys.Particles().Remove(isp, true);
         }
 
     }

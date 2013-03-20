@@ -300,7 +300,7 @@ void BirthProcess::DoParticleBirth(
         const double wt,
         rng_type &rng) const {
 
-    // Make a copy of the sampled particle
+    // Get reference to a particle.
     Sweep::Particle *sp = m_cell->Particles().At(isp)->Clone();
 
     // Adjust its weight and add
@@ -314,14 +314,19 @@ void BirthProcess::DoParticleBirth(
     } else {
         // Otherwise, add some copies of the particle
         double repeats = F(sys);
+        int counter(-1);
         while (repeats > 0.0) {
             if (repeats >= 1.0) sys.Particles().Add(*(sp->Clone()), rng);
             else {
                 boost::random::bernoulli_distribution<double> decider(repeats);
-                if (decider(rng)) sys.Particles().Add(*sp, rng);
+                if (decider(rng))
+                    counter = sys.Particles().Add(*sp, rng);
             }
             repeats -= 1.0;
         }
+
+        // Delete the particle copy if it wasn't added by the decider
+        if (counter < 0) delete sp;
     }
 
 
