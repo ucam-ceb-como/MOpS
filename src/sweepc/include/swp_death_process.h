@@ -16,9 +16,6 @@
   *      Adaptive: Change the death process depending on the state of the
   *                particle ensemble
   *
-  *      Again, the form of the death process's Perform depends on whether DSA
-  *      or SWAs are being used. As such, the coagulation kernel type is cached.
-  *
   *   Licence:
   *      sweepc is free software; you can redistribute it and/or
   *      modify it under the terms of the GNU Lesser General Public License
@@ -172,9 +169,6 @@ private:
 
     //! The downstream cell
     Cell *m_cell;
-
-    //! Store the coagulation process type to handle DSA/SWAs
-    Sweep::Processes::ProcessType m_ptype;
 
     //! A helper function for doing the process
     void DoParticleDeath(

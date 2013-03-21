@@ -469,16 +469,3 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n) const
         gas->SetConcs(newConcs);
     }
 }
-
-/*!
- * @param t     The process type under question
- * @return      Whether it is a DSA (false) or SWA (true) process
- */
-bool Process::IsWeighted(ProcessType t) {
-    bool val(false);
-    if (t == Processes::Weighted_Additive_Coagulation_ID ||
-            t == Processes::Weighted_Constant_Coagulation_ID ||
-            t == Processes::Weighted_Transition_Coagulation_ID)
-        val = true;
-    return val;
-}

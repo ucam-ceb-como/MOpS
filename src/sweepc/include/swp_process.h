@@ -272,8 +272,6 @@ protected:
          = 1           //  - Default is one time.
          ) const;
 
-    //! Returns whether a weighte coagulation process is being used.
-    static bool IsWeighted (ProcessType t);
 }; // class Process
 } // namespace Processes
 } // namespace Sweep

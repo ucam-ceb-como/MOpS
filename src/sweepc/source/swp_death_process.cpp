@@ -48,8 +48,7 @@ DeathProcess::DeathProcess(void)
 : Process(),
   m_dtype(DeathProcess::iContRescale),
   m_toggled(false),
-  m_cell(NULL),
-  m_ptype(Processes::Weighted_Transition_Coagulation_ID)
+  m_cell(NULL)
 {
     m_name = "Death Process";
 }
@@ -64,14 +63,9 @@ DeathProcess::DeathProcess(const Sweep::Mechanism &mech)
 : Process(mech),
   m_dtype(DeathProcess::iContRescale),
   m_toggled(false),
-  m_cell(NULL),
-  m_ptype(Processes::Weighted_Transition_Coagulation_ID)
+  m_cell(NULL)
 {
     m_name = "Death Process";
-
-    // Get the coagulation process type from the mechanism.
-    const Processes::CoagPtrVector &coags = mech.Coagulations();
-    if (coags.size() > 0) m_ptype = coags[0]->ID();
 }
 
 // Copy constructor.
@@ -280,33 +274,21 @@ void DeathProcess::DoParticleDeath(
         // Only adjust the particle weight if SWA coagulation.
         const double F = (double)m_cell->Particles().Capacity() * sys.SampleVolume()
                     / ((double)sys.Particles().Capacity() * m_cell->SampleVolume());
-        if (IsWeighted(m_ptype))
-            sp->setStatisticalWeight(sp->getStatisticalWeight() / F);
+
         sp->SetTime(t);
 
-        // Now add to the new ensemble
-        if (IsWeighted(m_ptype)) {
-
-            // Remove the particle from the ensemble but don't delete
-            sys.Particles().Remove(isp, false);
-
-            // If it's a weighted process, just add the particle right away.
-            m_cell->Particles().Add(*sp, rng);
-        } else {
-            // Otherwise, add some copies of the particle
-            double repeats = 1.0/F;
-            while (repeats > 0.0) {
-                if (repeats >= 1.0) m_cell->Particles().Add(*(sp->Clone()), rng);
-                else {
-                    boost::random::bernoulli_distribution<double> decider(repeats);
-                    if (decider(rng)) m_cell->Particles().Add(*(sp->Clone()), rng);
-                }
-                repeats -= 1.0;
+        // Add some copies of the particle
+        double repeats = 1.0/F;
+        while (repeats > 0.0) {
+            if (repeats >= 1.0) m_cell->Particles().Add(*(sp->Clone()), rng);
+            else {
+                boost::random::bernoulli_distribution<double> decider(repeats);
+                if (decider(rng)) m_cell->Particles().Add(*(sp->Clone()), rng);
             }
-
-            // Remove the particle from the ensemble and delete the original
-            sys.Particles().Remove(isp, true);
+            repeats -= 1.0;
         }
+        // Remove the particle from the ensemble and delete the original
+        sys.Particles().Remove(isp, true);
 
     }
 }

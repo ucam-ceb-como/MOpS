@@ -48,8 +48,7 @@ using namespace std;
 BirthProcess::BirthProcess(void)
 : m_cell(NULL),
   m_btype(BirthProcess::iStochastic),
-  m_on(true),
-  m_ptype(Processes::Weighted_Transition_Coagulation_ID)
+  m_on(true)
 {
     m_name = "Birth Process";
 }
@@ -64,14 +63,9 @@ BirthProcess::BirthProcess(const Sweep::Mechanism &mech)
 : Process(mech),
   m_cell(NULL),
   m_btype(BirthProcess::iStochastic),
-  m_on(true),
-  m_ptype(Processes::Weighted_Transition_Coagulation_ID)
+  m_on(true)
 {
     m_name = "Birth Process";
-
-    // Get the coagulation process type from the mechanism.
-    const Processes::CoagPtrVector &coags = mech.Coagulations();
-    if (coags.size() > 0) m_ptype = coags[0]->ID();
 }
 
 /*!
@@ -97,7 +91,6 @@ BirthProcess &BirthProcess::operator =(const BirthProcess &rhs)
         m_cell = rhs.m_cell;
         m_btype = rhs.m_btype;
         m_on = rhs.m_on;
-        m_ptype = rhs.m_ptype;
     }
     return *this;
 }
@@ -253,31 +246,6 @@ void BirthProcess::PerformDT (
             }
         }
 
-        // Initialise some variables
-        /*
-        double weightToAdd = m_cell->Particles().GetSum(iW) * dt * A();
-        const double f = F(sys);
-        const double div = std::max(0.001 / (dt * A()),  f);
-        double wt(0.0);
-        int i(0);
-
-        // Add particles up to the maximum weight
-        while (weightToAdd > 0.0) {
-            i = m_cell->Particles().Select(rng);
-            wt = m_cell->Particles().At(i)->getStatisticalWeight() / div;
-
-            if (wt < weightToAdd) {
-                DoParticleBirth(t, i, sys, wt * f, rng);
-
-            } else {
-                // Use a bernoulli distribution to decide whether to add the
-                // particle
-                boost::random::bernoulli_distribution<double> decider(weightToAdd / wt);
-                if (decider(rng)) DoParticleBirth(t, i, sys, wt * f, rng);
-
-            }
-            weightToAdd -= wt;
-        }*/
     }
     // Don't do anything for the iStochastic case, as the Perform() will be called
     // in the usual manner for jump processes.
@@ -303,32 +271,28 @@ void BirthProcess::DoParticleBirth(
     // Get reference to a particle.
     Sweep::Particle *sp = m_cell->Particles().At(isp)->Clone();
 
-    // Adjust its weight and add
-    if (IsWeighted(m_ptype)) sp->setStatisticalWeight(wt);
+    // Reset some properties
     sp->resetCoagCount();
     sp->SetTime(t);     // Set LPDA update time.
 
-    if (IsWeighted(m_ptype)) {
-        // If it's a weighted process, just add the particle right away.
-        sys.Particles().Add(*sp, rng);
-    } else {
-        // Otherwise, add some copies of the particle
-        double repeats = F(sys);
-        int counter(-1);
-        while (repeats > 0.0) {
-            if (repeats >= 1.0) sys.Particles().Add(*(sp->Clone()), rng);
-            else {
-                boost::random::bernoulli_distribution<double> decider(repeats);
-                if (decider(rng))
-                    counter = sys.Particles().Add(*sp, rng);
-            }
-            repeats -= 1.0;
-        }
+    // Note that we could just adjust the weight of isp and add it (SWAs only),
+    // but this makes the ensemble more sensitive to depletion for very
+    // downstream reactors.
 
-        // Delete the particle copy if it wasn't added by the decider
-        if (counter < 0) delete sp;
+    double repeats = F(sys);
+    int counter(-1);
+    while (repeats > 0.0) {
+        if (repeats >= 1.0) sys.Particles().Add(*(sp->Clone()), rng);
+        else {
+            boost::random::bernoulli_distribution<double> decider(repeats);
+            if (decider(rng))
+                counter = sys.Particles().Add(*sp, rng);
+        }
+        repeats -= 1.0;
     }
 
+    // Delete the particle copy if it wasn't added by the decider
+    if (counter < 0) delete sp;
 
 }
 
