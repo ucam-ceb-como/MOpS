@@ -332,6 +332,8 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::SurfVolHydrogen_ID);
     } else if (str == "surfvolsilica") {
         mech.SetAggModel(AggModels::SurfVolSilica_ID);
+    } else if (str == "surfvolcubic") {
+        mech.SetAggModel(AggModels::SurfVolCubic_ID);
     } else if (str == "PAH") {
 	// Reject all old style input files
 		throw std::runtime_error("PAH-PP MODEL are no longer supported (Sweep::MechParser::readV1), you can use NEW PAH_KMC model");

@@ -46,6 +46,7 @@
 #include "swp_surfvol_primary.h"
 #include "swp_surfvolhydrogen_primary.h"
 #include "swp_surfvol_silica_primary.h"
+#include "swp_surfvol_cubic_primary.h"
 #include "swp_PAH_primary.h"
 #include "swp_particle_stats.h"
 #include "swp_surfvol_stats.h"
@@ -87,6 +88,8 @@ AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelT
             return new AggModels::BinTreePrimary(time, model);
         case AggModels::BinTreeSilica_ID:
             return new AggModels::BinTreeSilicaPrimary(time, model);
+        case AggModels::SurfVolCubic_ID:
+            return new AggModels::SurfVolCubicPrimary(time, model);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
@@ -117,6 +120,8 @@ AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelT
             return new AggModels::BinTreePrimary(time, model);
         case AggModels::BinTreeSilica_ID:
             return new AggModels::BinTreeSilicaPrimary(time, model);
+        case AggModels::SurfVolCubic_ID:
+            return new AggModels::SurfVolCubicPrimary(time, model);
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
@@ -162,6 +167,9 @@ AggModels::Primary *const ModelFactory::ReadPrimary(std::istream &in,
                 break;
             case AggModels::BinTreeSilica_ID:
                 pri = new AggModels::BinTreeSilicaPrimary(in, model);
+                break;
+            case AggModels::SurfVolCubic_ID:
+                pri = new AggModels::SurfVolCubicPrimary(in, model);
                 break;
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "
@@ -255,8 +263,10 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
             return new Stats::PAHStats();       // ms785: postprocessing not yet implemented
 		case AggModels::BinTree_ID:
 		    return new Stats::BinTreeStats();
-	      case AggModels::BinTreeSilica_ID:
+        case AggModels::BinTreeSilica_ID:
 	            return new Stats::BinTreeStats();
+        case AggModels::SurfVolCubic_ID:
+            return NULL;
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggStats).");

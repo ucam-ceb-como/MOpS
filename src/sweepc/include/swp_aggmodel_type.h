@@ -45,8 +45,6 @@
 #ifndef SWEEP_AGGMODEL_TYPE_H
 #define SWEEP_AGGMODEL_TYPE_H
 
-#include <set>
-
 namespace Sweep
 {
     namespace AggModels
@@ -64,9 +62,8 @@ namespace Sweep
 			BinTree_ID      = 10007,  // Generalised form of silica and PAH-PP models for multicomponent systems (wjm34)
 			SurfVolSilica_ID = 10008, // Surfvol implementation of the silica model
 			BinTreeSilica_ID = 10009, // Binary tree implementation of the silica model
+			SurfVolCubic_ID = 10010, //! Surface volume approximation for cuboidal crystals
         };
-
-        typedef std::set<AggModelType> AggModelTypeSet;
-    };
-};
+    }
+}
 #endif
