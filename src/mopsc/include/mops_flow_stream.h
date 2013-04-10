@@ -82,7 +82,6 @@ public:
     //! Sets the Mixture in the flowstream
     void SetConditions(const Mops::Mixture &mix);
 
-
     // FLOW STREAM CONNECTIONS.
 
     //! Returns the reactor which is the inflow to this stream
@@ -97,17 +96,17 @@ public:
     //! Connects the ouflow of the stream to a reactor inflow
     void ConnectOutflow(PSR &r);
 
-    //! Disconnects the flow-stream inflow reactor
-    void DisconnectInflow();
-
-    //! Disconnects the flow-stream outflow reactor
-    void DisconnectOutflow() {m_out = NULL;}
-
     //! Has an inflow? Keep different from PSR one for clarity
     bool HasReacInflow() const {if (m_in!=NULL) return true; else return false;}
 
     //! Has an outflow? Keep different from PSR one for clarity
     bool HasReacOutflow() const {if (m_out!=NULL) return true; else return false;}
+
+    //! Set the flow rate
+    void SetFlowFraction(double ff) {m_flow_frac = ff;}
+
+    //! Get the flow rate
+    double GetFlowFraction() const {return m_flow_frac;}
 
     //! Returns the current mechanism.
     const Mops::Mechanism *const Mech() const {return m_mech;}
@@ -141,6 +140,9 @@ private:
 
     // Defining mechanism.
     const Mops::Mechanism *m_mech;
+
+    //! The fraction of the total reactor flowrate that this stream represents
+    double m_flow_frac;
 };
 };
 

@@ -58,7 +58,7 @@
   
     <reactor constt="true" id="r1" type="psr" order="1">
         <initial>simple</initial>
-        <inflow>newwts</inflow>
+        <flow dir="in" frac="1.0">newwts</flow>
         <restime unit="s">1.0</restime>  
     </reactor>
   

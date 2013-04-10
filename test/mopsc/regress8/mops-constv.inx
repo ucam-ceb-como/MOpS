@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<mops version="3">
-    <runs>6</runs>
+<mops version="2">
+    <runs>1</runs>
     <atol>1.0e-18</atol> 
     <rtol>1.0e-4</rtol>
     <pcount>16384</pcount>
@@ -11,23 +11,25 @@
         <temperature units="K">1000</temperature>
         <pressure units="Pa">101325</pressure>
     </mixture>
+    
+    <mixture id="silane">
+        <component id="SIH4">0.05</component>
+        <component id="AR">0.9</component>
+        <temperature units="K">1000</temperature>
+        <pressure units="Pa">101325</pressure>
+    </mixture>
   
-    <reactor constt="true" id="r1" type="psr" order="1">
-        <initial>inert</initial>
-        <flow dir="in" frac="1.0">inert</flow>
-        <restime unit="s">1.0</restime>  
-    </reactor>
-  
-    <reactor constt="true" id="r2" type="psr" order="2">
-        <initial>inert</initial>
-        <flow dir="in" frac="1.0">r1</flow>
-        <restime unit="s">1.0</restime>  
+    <reactor constt="false" constv="true" id="r1" type="pfr" order="1">
+        <component id="SIH4">0.1</component>
+        <component id="AR">0.9</component>
+        <temperature units="K">1000</temperature>
+        <pressure units="Pa">101325</pressure>
     </reactor>
   
   <!-- Output time sequence. -->
   <timeintervals splits="10">
     <start>0.0</start>
-    <time steps="100">3.0</time>
+    <time steps="100">0.4</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->
@@ -45,6 +47,6 @@
     <ptrack enable="false" ptcount="50"/>
 
     <!-- File name for output (excluding extensions). -->
-    <filename>psrtest</filename>
+    <filename>adiabatic</filename>
   </output>
 </mops>

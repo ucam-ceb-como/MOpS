@@ -52,7 +52,8 @@ Mops::FlowStream::FlowStream(const Mops::Mechanism &mech)
 : m_in(NULL),
   m_out(NULL),
   m_mix(NULL),
-  m_mech(&mech)
+  m_mech(&mech),
+  m_flow_frac(1.0)
 {
     // Initialise the mixture.
     m_mix = new Mops::Mixture(mech.ParticleMech());
@@ -63,7 +64,8 @@ Mops::FlowStream::FlowStream(const Mops::FlowStream &copy)
 : m_in(NULL),
   m_out(NULL),
   m_mix(NULL),
-  m_mech(copy.m_mech)
+  m_mech(copy.m_mech),
+  m_flow_frac(copy.m_flow_frac)
 {*this = copy;}
 
 // Stream-reading constructor.
@@ -73,7 +75,8 @@ Mops::FlowStream::FlowStream(
 : m_in(NULL),
   m_out(NULL),
   m_mix(NULL),
-  m_mech(&mech)
+  m_mech(&mech),
+  m_flow_frac(1.0)
 {
     Deserialize(in, mech);
 }
@@ -139,17 +142,6 @@ void Mops::FlowStream::ConnectInflow(Mops::PSR &r)
 void Mops::FlowStream::ConnectOutflow(Mops::PSR &r)
 {
     m_out = &r;
-}
-
-// Disconnects the flow-stream inflow reactor.
-void Mops::FlowStream::DisconnectInflow(void)
-{
-    if (m_in) {
-        // First copy the mixture, as the flow-stream will
-        // take ownership of its conditions.
-        m_mix = m_in->Mixture()->Clone();
-    }
-    m_in = NULL;
 }
 
 // READ/WRITE/COPY FUNCTIONS.

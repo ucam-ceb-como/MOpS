@@ -495,6 +495,12 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     // Close the output files.
     closeOutputFile();
 	#endif
+
+    // If we have a PSR, clear any stream memory.
+    if (r.SerialType() == Mops::Serial_PSR) {
+        Mops::PSR* psr = dynamic_cast<Mops::PSR *>(&r);
+        psr->ClearStreamMemory();
+    }
 }
 
 /*!

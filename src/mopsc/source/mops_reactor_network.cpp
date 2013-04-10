@@ -56,7 +56,7 @@ ReactorNetwork::ReactorNetwork(const Mops::Mechanism &mech)
  */
 ReactorNetwork::~ReactorNetwork() {
     // Delete mixtures
-    std::cout << "Destructing a network." << std::endl;
+    std::cout << "mops: Destructing a network." << std::endl;
     for (MixtureMap::const_iterator i = mMixtures.begin();
             i != mMixtures.end(); ++i)
         delete i->second;
@@ -64,6 +64,11 @@ ReactorNetwork::~ReactorNetwork() {
     // Delete reactors
     for (ReactorMap::const_iterator i = mReactors.begin();
             i != mReactors.end(); ++i)
+        delete i->second;
+
+    // Delete flowstreams
+    for (StreamMap::const_iterator i = mStreams.begin();
+            i != mStreams.end(); ++i)
         delete i->second;
 }
 
@@ -142,62 +147,102 @@ void ReactorNetwork::FillReactor(
 }
 
 
-/*!
- * Connects an inflow to a reactor using string keys
- *
- * @param reac      Key of the reactor receiving the inflow
- * @param inflow    Mixture or reactor key for inflow
- */
+void ReactorNetwork::ConnectReacAndReac(
+        Mops::FlowStream &fs,
+        const std::string &source,
+        const std::string &sink) {
+
+    std::cout << "Connecting sink reactor (" << sink << ") with source reactor ("
+                    << source << ")." << std::endl;
+
+    // Connecting the inflow will also set the stream's mixture to
+    // that of the inflow (sink) reactor
+    fs.ConnectInflow(*(GetReactor(source)));
+    fs.ConnectOutflow(*(GetReactor(sink)));
+
+    // Create a copy of the inflow and take ownership by the reactor
+    // receiving it
+    // fs:out to sink:in
+    GetReactor(sink)->SetInflow(fs);
+
+    // Now join up outflow reactor connections to the cloned inflow of
+    // downstream reactor
+    // source:out to fs:in
+    GetReactor(source)->SetOutflow(fs);
+
+}
+
+void ReactorNetwork::ConnectReacAndMix(
+        Mops::FlowStream &fs,
+        const std::string &reac,
+        const std::string &mix) {
+
+    // The inflow key is a mixture key
+    std::cout << "Connecting reactor (" << reac << ") with mixture ("
+                                << mix << ")." << std::endl;
+
+    // Set only the mixture of the stream, leave the inflow alone
+    fs.SetConditions(*(GetMixture(mix)));
+    fs.ConnectOutflow(*(GetReactor(reac)));
+
+    // And the connection for "this" reactor
+    // fs:out to reac:in
+    GetReactor(reac)->SetInflow(fs);
+
+}
+
+void ReactorNetwork::ConnectReacAndBlank(
+        Mops::FlowStream &fs,
+        const std::string &reac) {
+
+    std::cout << "Connecting reactor (" << reac << ") to exhaust." << std::endl;
+
+    //Set r:out to fs:in and fs:in to r:out
+    GetReactor(reac)->SetOutflow(fs);
+    fs.ConnectInflow(*(GetReactor(reac)));
+}
+
 void ReactorNetwork::Connect(
         const std::string &reac,
-        const std::string &inflow) {
+        const std::string &flow,
+        bool in,
+        double frac) {
+    // Create a new flowstream
+    Mops::FlowStream* fs = new Mops::FlowStream(*mMech);
+    fs->SetFlowFraction(frac);
+
+    // Check for blank stream
+    bool blank(false);
+    if (!in && flow.size() == 0) blank = true;
 
     if (HasKey(mReactors, reac)) {
-        if (HasKey(mReactors, inflow)) {
-            // The inflow key is a reactor key
-            std::cout << "Connecting reactor (" << reac << ") with reactor ("
-                            << inflow << ")." << std::endl;
 
-            // Create a new flowstream
-            Mops::FlowStream fs = Mops::FlowStream(*mMech);
-            // Connecting the inflow will also set the stream's mixture to
-            // that of the inflow reactor
-            fs.ConnectInflow(*(GetReactor(inflow)));
-            fs.ConnectOutflow(*(GetReactor(reac)));
+        if (HasKey(mReactors, flow) || blank) {
+            // We're connecting a reactor to a reactor
+            if (in) {
+                // We're connecting an inflow.
+                ConnectReacAndReac(*fs, flow, reac);
+            } else {
+                // We're connecting an outflow
+                if (blank) ConnectReacAndBlank(*fs, reac);
+                else ConnectReacAndReac(*fs, reac, flow);
+            }
+        } else if (HasKey(mMixtures, flow)) {
+            // We're connecting a reactor to a mixture
+            if (in) {
+                ConnectReacAndMix(*fs, reac, flow);
+            } else {
+                throw std::runtime_error("Error, can't connect a mixture as an outflow!");
+            }
+        } else {
+            throw std::runtime_error(std::string("Error, couldn't find flow key ") + flow);
+        }
+    } else {
+        throw std::runtime_error(std::string("Error, couldn't find reactor key ") + reac);
+    }
 
-            mStreams.insert(std::make_pair(inflow+std::string("-")+reac, &fs));
-
-            // Create a copy of the inflow and take ownership by the reactor
-            // receiving it
-            // fs:out to reac:in
-            GetReactor(reac)->SetInflow(fs);
-
-            // Now join up outflow reactor connections to the cloned inflow of
-            // downstream reactor
-            // inflow:out to fs:in
-            GetReactor(inflow)->SetOutflow(*(GetReactor(reac)->Inflow()));
-
-        } else if (HasKey(mMixtures, inflow)) {
-            // The inflow key is a mixture key
-            std::cout << "Connecting reactor (" << reac << ") with mixture ("
-                                        << inflow << ")." << std::endl;
-
-            // Create a new flowstream
-            Mops::FlowStream fs = Mops::FlowStream(*mMech);
-            // Set only the mixture of the stream, leave the inflow alone
-            fs.SetConditions(*(GetMixture(inflow)));
-            fs.ConnectOutflow(*(GetReactor(reac)));
-
-            mStreams.insert(std::make_pair(inflow+std::string("-")+reac, &fs));
-
-            // And the connection for "this" reactor
-            // fs:out to reac:in
-            GetReactor(reac)->SetInflow(fs);
-
-        } else
-            throw std::runtime_error(std::string("Error, couldn't find inflow key ") + inflow);
-    } else
-        throw std::runtime_error(std::string("Error, couldn't find inflow key ") + reac);
+    // Add it to the stream map?
+    mStreams.insert(std::make_pair(flow+std::string("-")+reac, fs));
 }
 
 /*!
@@ -224,12 +269,22 @@ void ReactorNetwork::SpecifyPaths(
 /*!
  * @param r         Pointer to the PSR object
  * @param order     Reverse path order vector
+ * @param guard     Stops the system getting stuck in a loop
  */
-void ReactorNetwork::GenerateRevPaths(Mops::PSR* r, ReactorPath &order) {
+void ReactorNetwork::GenerateRevPaths(
+        Mops::PSR* r,
+        ReactorPath &order,
+        unsigned int &guard) {
+    if (guard > 1000)
+        throw std::runtime_error("Looped network detected, use manual reactor definition.");
+    else guard++;
+
     order.push_back(r);
-    if (r->Inflow() != NULL) {
-        if (r->Inflow()->HasReacInflow())
-            GenerateRevPaths(static_cast<PSR*>(r->Inflow()->Inflow()), order);
+    Mops::FlowPtrVector iptrs = r->Inflows();
+    for (Mops::FlowPtrVector::iterator it=iptrs.begin();
+            it!=iptrs.end(); ++it) {
+        if ((*it)->HasReacInflow())
+            GenerateRevPaths(static_cast<PSR*>((*it)->Inflow()), order, guard);
     }
 }
 
@@ -253,14 +308,16 @@ void ReactorNetwork::FindPaths() {
     }
     // If we don't find one, choose the first
     // (some sort of recycle loop MUST be present in this case)
-    if (end == NULL) end = mReactors.begin()->second;
+    if (end == NULL)
+        throw std::runtime_error("Possibly a recycle loop in network, use manual definition.");
 
     // Now, loop over the pointers find the inflow with now
-    GenerateRevPaths(end, rev_order);
+    unsigned guard(0);
+    GenerateRevPaths(end, rev_order, guard);
 
     // If the above hasn't linked all reactors, throw error
     if(rev_order.size() != mReactors.size())
-        throw std::runtime_error("Couldn't link all reactors, try manual order definition");
+        throw std::runtime_error("Couldn't link all reactors, try manual order definition.");
 
     // Now create the reactor path from the order found
     for (unsigned int i(rev_order.size()); i-- > 0; ) {
@@ -286,28 +343,31 @@ void ReactorNetwork::ResetNetwork() {
         r->Fill(*m, true);
 
         // And regenerate the pointer of the outflow to the reactor's mixture
-        if (r->HasOutflow()) r->Outflow()->ConnectInflow(*r);
+        Mops::FlowPtrVector optrs = r->Outflows();
+        for (Mops::FlowPtrVector::iterator it=optrs.begin();
+                it!=optrs.end(); ++it) {
+            (*it)->ConnectInflow(*r);
+        }
     }
 
     // Once the pointer structure has been reestablished, initialise the
     // birth and death processes
     for (ReactorNetwork::r_iter it=this->Begin(); it!=this->End(); ++it) {
-        (*it)->InitialiseInflow();
-        (*it)->InitialiseOutflow();
+        (*it)->InitialiseInflows();
+        (*it)->InitialiseOutflows();
     }
 }
 
-
+/*!
+ * Cheks that the PSR has an outflow, if it doesn't, this method will
+ * create one; connecting it to a 'blank' source.
+ */
 void ReactorNetwork::CheckOutflow() {
     for (ReactorNetwork::r_iter it=this->Begin(); it!=this->End(); ++it) {
         if (!(*it)->HasOutflow()) {
-            std::cout << "Attaching an outflow to "
-                    << (*it)->GetName() << "." << std::endl;
             Mops::FlowStream* fs = new Mops::FlowStream(*mMech);
-            (*it)->SetOutflow(*fs);
-
+            ConnectReacAndBlank(*fs, (*it)->GetName());
             mStreams.insert(std::make_pair((*it)->GetName()+std::string("-out"), fs));
-            fs->ConnectInflow(*(*it));
         }
     }
 }
@@ -320,5 +380,9 @@ ReactorNetwork::r_iter ReactorNetwork::End() {
     return mReactorPath.end();
 }
 
+// Returns the number of reactors in the network
+unsigned int ReactorNetwork::ReactorCount() const {
+    return mReactors.size();
+}
 
 }

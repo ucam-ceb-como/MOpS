@@ -49,6 +49,7 @@
 
 #include "mops_params.h"
 #include "mops_reactor.h"
+#include "mops_psr.h"
 #include "mops_timeinterval.h"
 #include "mops_solver.h"
 #include "mops_mechanism.h"

@@ -77,8 +77,8 @@ public:
     //! Fill a reactor with a mixture
     void FillReactor(const std::string &rid, const std::string &mid);
 
-    //! Connect an inflow to a reactor
-    void Connect(const std::string &reac, const std::string &inflow);
+    //! Connect a flow or reactor to a reactor
+    void Connect(const std::string &reac, const std::string &flow, bool in, double frac);
 
     //! Specify the order in which to solve the reactors
     void SpecifyPaths(const std::map<unsigned int, std::string> order);
@@ -100,6 +100,9 @@ public:
 
     //! Returns an iterator to the end of the reactor end
     r_iter End();
+
+    //! Returns the number of reactors in the network
+    unsigned int ReactorCount() const;
 
 protected:
     template <typename T>
@@ -129,7 +132,24 @@ private:
     Mops::PSR* GetReactor(const std::string& id) {return mReactors.at(id);}
 
     //! Recursive helper function for SpecifyPaths()
-    void GenerateRevPaths(Mops::PSR* r, ReactorPath &order);
+    void GenerateRevPaths(Mops::PSR* r, ReactorPath &order, unsigned int &guard);
+
+    //! Connect two reactors
+    void ConnectReacAndReac(
+            Mops::FlowStream &fs,
+            const std::string &source,
+            const std::string &sink);
+
+    //! Connect two reactors
+    void ConnectReacAndMix(
+            Mops::FlowStream &fs,
+            const std::string &reac,
+            const std::string &mix);
+
+    //! Connect a reactor to an empty outflow.
+    void ConnectReacAndBlank(
+            Mops::FlowStream &fs,
+            const std::string &reac);
 
     //! The mechanism used for the reactor
     const Mops::Mechanism* mMech;

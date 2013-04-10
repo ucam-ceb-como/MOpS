@@ -1,0 +1,18 @@
+ELEMENTS 
+SI
+H
+AR
+END
+
+SPECIES
+AR
+H2
+SIH4
+SI
+END
+
+REACTIONS
+!Simple pyrolysis reaction
+SIH4 => SI + 2H2           1.0e0 0.0 0.0
+END
+

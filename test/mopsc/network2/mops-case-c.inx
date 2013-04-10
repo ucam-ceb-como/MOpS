@@ -1,55 +1,44 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <mops version="3">
     <runs>1</runs>
-    <atol>1.0e-18</atol>
+    <atol>1.0e-18</atol> 
     <rtol>1.0e-4</rtol>
     <pcount>16384</pcount>
     <maxm0>1e-6</maxm0>
-
+  
     <mixture id="inert">
         <component id="AR">1.0</component>
         <temperature units="K">1000</temperature>
         <pressure units="Pa">101325</pressure>
     </mixture>
-
+    
     <mixture id="silane">
-        <component id="SIH4">1.0</component>
+        <component id="SIH4">0.1</component>
+        <component id="AR">0.9</component>
         <temperature units="K">1000</temperature>
         <pressure units="Pa">101325</pressure>
     </mixture>
-
-    <reactor constt="true" constv="false" id="r1" type="psr" order="1">
+  
+    <reactor constt="true" constv="true" id="r1" type="psr" order="1">
         <initial>inert</initial>
-        <inflow>silane</inflow>
-        <restime unit="s">0.5</restime>
+        <flow dir="in" frac="0.6">silane</flow>
+        <flow dir="in" frac="0.4">r2</flow>
+        <restime unit="s">1.0</restime>  
     </reactor>
-
-    <reactor constt="true" constv="false" id="r2" type="psr" order="2">
+  
+    <reactor constt="true" constv="true" id="r2" type="psr" order="2">
         <initial>inert</initial>
-        <inflow>r1</inflow>
-        <restime unit="s">0.5</restime>
+        <flow dir="in" frac="1.0">r1</flow>
+        <flow dir="out" frac="0.6"></flow>
+        <restime unit="s">1.0</restime>  
     </reactor>
-
-    <reactor constt="true" constv="false" id="r3" type="psr" order="3">
-        <initial>inert</initial>
-        <inflow>r2</inflow>
-        <restime unit="s">0.5</restime>
-    </reactor>
-
-    <reactor constt="true" constv="false" id="r4" type="psr" order="4">
-        <initial>inert</initial>
-        <inflow>r3</inflow>
-        <restime unit="s">0.5</restime>
-    </reactor>
-
+  
   <!-- Output time sequence. -->
   <timeintervals splits="10">
     <start>0.0</start>
-    <time steps="100">0.04</time>
-    <time steps="100">0.4</time>
-    <time steps="100">4.0</time>
+    <time steps="400">3.0</time>
   </timeintervals>
-
+  
   <!-- Simulation output settings. -->
   <output>
     <console interval="1" msgs="true">
@@ -65,6 +54,6 @@
     <ptrack enable="false" ptcount="50"/>
 
     <!-- File name for output (excluding extensions). -->
-    <filename>chain</filename>
+    <filename>casec</filename>
   </output>
 </mops>

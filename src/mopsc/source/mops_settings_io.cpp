@@ -60,6 +60,22 @@ using namespace Mops;
 //! Anonymous namespace for function only used within this file
 namespace {
 
+struct flowNode {
+public:
+    //! Is the stream an inflow (true) or outflow (false)?
+    bool mIn;
+    //! Mixture key
+    std::string mMixture;
+    //! Reactor key
+    std::string mReactor;
+    //! Fraction of the total in/outflow
+    double mFrac;
+
+    //! Constructor
+    flowNode():
+        mIn(true), mMixture(""), mReactor(""), mFrac(1.0) {};
+};
+
 // Returns the temperature in K by reading the value from the given
 // XML node and checking the units.
 double readTemperature(const CamXML::Element &node)
@@ -755,18 +771,22 @@ Reactor *const readReactor(const CamXML::Element &node,
     fvector molefracs;
     if (reac->SerialType() == Serial_PSR) {
 
+        Mops::PSR* psr = dynamic_cast<PSR*>(reac);
+
         // Read the residence time first so that the inflow's rate is
         // correctly set.
         subnode = node.GetFirstChild("restime");
         if (subnode != NULL) {
             double tau = Strings::cdble(subnode->Data());
-            dynamic_cast<PSR*>(reac)->SetResidenceTime(tau);
+            psr->SetResidenceTime(tau);
         } else
             throw std::runtime_error("Res. time must be defined for a PSR "
                     "(Mops, Settings_IO::readReactor)");
 
         // Initialise an outflow
-        dynamic_cast<PSR*>(reac)->InitialiseOutflow();
+        FlowStream *outf = new FlowStream(mech);
+        outf->ConnectInflow(*psr);
+        psr->SetOutflow(*outf);
 
         // Read inflow
         subnode = node.GetFirstChild("inflow");
@@ -778,7 +798,7 @@ Reactor *const readReactor(const CamXML::Element &node,
             mix = ::readMixture(*subnode, mech, max_particle_count, maxM0, id);
             inf->SetConditions(*mix);
 
-            dynamic_cast<PSR*>(reac)->SetInflow(*inf);
+            psr->SetInflow(*inf);
 
         } else {
             throw std::runtime_error("Inflow conditions must be defined for a PSR "
@@ -801,7 +821,7 @@ void readNetwork(
     CamXML::Element* node;
     std::vector<CamXML::Element*> nodes, inodes;
     std::vector<CamXML::Element*>::const_iterator i, k;
-    std::map<std::string, std::vector<std::string> > reacs_and_inflows;
+    std::vector<flowNode> flows;
     std::map<unsigned int, std::string> reac_order;
     std::string id, mid, iid;
     const CamXML::Attribute *attr;
@@ -868,27 +888,47 @@ void readNetwork(
             }
             j++;
 
-            // Store the names of the inflows
-            (*i)->GetChildren("inflow", inodes);
-            if (inodes.size() < 1) throw std::runtime_error("No inflow defined for reactor! (::readNetwork)");
+            // Store the names of the flow
+            (*i)->GetChildren("flow", inodes);
+            if (inodes.size() < 1) throw std::runtime_error("No flows defined for reactor! (::readNetwork)");
             for (k=inodes.begin(); k!=inodes.end(); ++k) {
-                        iid = (*k)->Data();
-                        reacs_and_inflows[id].push_back((iid));
-                    }
-        }
+                flowNode fn = flowNode();
+                std::string val;
+                double fval(0.0);
 
-        // Now that the reactors are loaded, we need to make connections
-        // between them.
-        for (std::map<std::string, std::vector<std::string> >::iterator it=reacs_and_inflows.begin();
-                it!=reacs_and_inflows.end(); ++it) {
-            // Load the reactor ID
-            id = it->first;
-            for (std::vector<string>::iterator it2=it->second.begin();
-                    it2!=it->second.end(); ++it2) {
-                // Connect the found inflow to this reactor
-                iid = (*it2);
-                network.Connect(id, iid);
+                // Get the mixture id
+                fn.mMixture = (*k)->Data();
+                fn.mReactor = id;
+
+                // Get the direction
+                attr = NULL;
+                attr = (*k)->GetAttribute("dir");
+                if (attr != NULL) {
+                    val = attr->GetValue().c_str();
+                    if (val.compare("in")==0) fn.mIn = true;
+                    else if (val.compare("out")==0) fn.mIn = false;
+                    else {
+                        throw std::runtime_error(std::string("Unknown flow direction: ")+val);
+                    }
+                }
+
+                // Get the flowrate
+                attr = NULL;
+                attr = (*k)->GetAttribute("frac");
+                if (attr != NULL) {
+                    fval = (double) std::atof(attr->GetValue().c_str());
+                    if (fval > 0.0) fn.mFrac = fval;
+                    else {
+                        throw std::runtime_error(std::string("Flow fraction must be positive!"));
+                    }
+                }
+
+                flows.push_back(fn);
             }
+        }
+        // Now that the reactors have been loaded, make node connections.
+        for (std::vector<flowNode>::iterator it=flows.begin(); it!=flows.end(); ++it) {
+            network.Connect(it->mReactor, it->mMixture, it->mIn, it->mFrac);
         }
     } else {
         throw std::runtime_error("No reactor blocks found in the settings file."
@@ -897,7 +937,7 @@ void readNetwork(
 
     // Now that we've loaded the reactors, we need to initialise the path
     // in which the reactors are solved.
-    if (reac_order.size() == reacs_and_inflows.size()) {
+    if (reac_order.size() == network.ReactorCount()) {
         // First try using the manually specified order
         network.SpecifyPaths(reac_order);
     } else {
