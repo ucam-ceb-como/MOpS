@@ -33,7 +33,7 @@ if test -n "$3"
   then
     cases="$3"
   else
-    cases="a b c"
+    cases="a b c d"
 fi
 
 # Set the global relative error tolerance (3%)
@@ -99,7 +99,7 @@ cd $rundir
 # #################################################################
 # True values obtained from ODE solution.
 if [ $(contains "$cases" "a") -eq 1 ]; then
-    fname="psrtest(r1)-part.csv"
+    fname="casea(r1)-part.csv"
 
     m0True=0.732050815536
     fvTrue=2.7999704928
@@ -112,6 +112,8 @@ if [ $(contains "$cases" "a") -eq 1 ]; then
     CheckErr $?
 
     CheckTest
+    
+    rm casea*
 fi
 
 ###################################################################
@@ -120,7 +122,7 @@ fi
 # #################################################################
 # True values obtained from ODE solution (of the second reactor)
 if [ $(contains "$cases" "b") -eq 1 ]; then
-    fname="psrtest(r2)-part.csv"
+    fname="caseb(r2)-part.csv"
 
     m0True=0.999500562156
     fvTrue=2.79860157404
@@ -133,6 +135,8 @@ if [ $(contains "$cases" "b") -eq 1 ]; then
     CheckErr $?
 
     CheckTest
+    
+    rm caseb*
 fi
 
 ###################################################################
@@ -141,7 +145,7 @@ fi
 # #################################################################
 # True values obtained from ODE solution (of the second reactor)
 if [ $(contains "$cases" "c") -eq 1 ]; then
-    fname="psrtest(r2)-part.csv"
+    fname="casec(r2)-part.csv"
 
     m0True=1.10029111766
     fvTrue=3.18909564028
@@ -154,12 +158,39 @@ if [ $(contains "$cases" "c") -eq 1 ]; then
     CheckErr $?
 
     CheckTest
+    
+    rm cased*
+fi
+
+###################################################################
+# CASE D: 'TRIANGULAR' NETWORK WITH NO PARTICLE PROCESSES
+#
+#   inf--->R1--->|‾‾‾‾|
+#                | R3 |---->
+#   inf--->R2--->|____|
+#
+#   with M0(inf) = 1.0 #/m3, all with RT = 1.0s
+# #################################################################
+# True values obtained from ODE solution (of the second reactor)
+if [ $(contains "$cases" "d") -eq 1 ]; then
+    fname="cased(r3)-part.csv"
+    m0True=0.9595715909
+    fvTrue=0.9595715909
+    m2True=959571.590851
+    m3True=959571590.851
+
+    # Run MOPS
+    echo "Running MOPS for CASE D..."
+    $exe -p --strang -s "sweep-nocoag.xml" -r "d-mops.inx" -w > /dev/null
+    CheckErr $?
+
+    CheckTest
+    
+    rm cased*
 fi
 
 # If we've made it here, everything has been going well!
 echo "All tests passed. :D"
-# Remove temporary files
-rm -f psrtest*
 
 cd ..
 

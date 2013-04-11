@@ -83,6 +83,6 @@
     <ptrack enable="false" ptcount="50"/>
 
     <!-- File name for output (excluding extensions). -->
-    <filename>psrtest</filename>
+    <filename>casea</filename>
   </output>
 </mops>

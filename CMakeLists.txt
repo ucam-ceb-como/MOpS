@@ -109,6 +109,8 @@ add_test(mops.network1b ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/
 
 add_test(mops.network1c ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1 "c")
 
+add_test(mops.network1d ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1 "d")
+
 add_test(mops.network2 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network2)
 
 ########## The PAH-KMC Application ######################

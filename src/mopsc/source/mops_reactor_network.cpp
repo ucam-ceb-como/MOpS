@@ -356,6 +356,11 @@ void ReactorNetwork::ResetNetwork() {
         (*it)->InitialiseInflows();
         (*it)->InitialiseOutflows();
     }
+
+    // And re-normalise the flow rates in case of multiple inlets.
+    for (ReactorNetwork::r_iter it=this->Begin(); it!=this->End(); ++it) {
+        (*it)->NormaliseIOProcessRates();
+    }
 }
 
 /*!

@@ -61,6 +61,7 @@ PSR::PSR(const Mops::Mechanism &mech)
   m_outflow_ptrs(),
   m_invrt(1.0),
   m_iscaling(1.0),
+  m_oscaling(1.0),
   m_default_birth(Sweep::Processes::BirthProcess::iStochastic),
   m_default_death(Sweep::Processes::DeathProcess::iContRescale)
 {
@@ -74,6 +75,7 @@ PSR::PSR(const Mops::PSR &copy)
   m_outflow_ptrs(copy.m_outflow_ptrs),
   m_invrt(copy.m_invrt),
   m_iscaling(copy.m_iscaling),
+  m_oscaling(copy.m_oscaling),
   m_default_birth(copy.m_default_birth),
   m_default_death(copy.m_default_death)
 {
@@ -104,6 +106,7 @@ Mops::PSR &PSR::operator=(const Mops::PSR &rhs)
         m_restime = rhs.m_restime;
         m_invrt = rhs.m_invrt;
         m_iscaling = rhs.m_iscaling;
+        m_oscaling = rhs.m_oscaling;
 
         // Create links to IO streams
         for (Mops::FlowPtrVector::const_iterator it=rhs.m_inflow_ptrs.begin();
@@ -291,6 +294,15 @@ void PSR::SetInflow(Mops::FlowStream &inf)
 void PSR::SetOutflow(Mops::FlowStream &out) {
     m_outflow_ptrs.push_back(&out);
 
+    // Recalculate the scaling factor
+    double sum(0.0);
+    for (Mops::FlowPtrVector::const_iterator it=m_outflow_ptrs.begin();
+            it!=m_outflow_ptrs.end(); ++it) {
+        sum += (*it)->GetFlowFraction();
+    }
+    assert(sum > 0.0);
+    m_oscaling = 1.0/sum;
+
     InitialiseOutflow(out);
 }
 
@@ -304,6 +316,27 @@ bool PSR::HasOutflow() const {
 bool PSR::HasInflow() const {
     if (m_inflow_ptrs.size() > 0) return true;
     else return false;
+}
+
+/*!
+ * Ensure that all the 'fractional flowrates' specified for the FlowStreams
+ * add up to 1.0, for inflows and outflows. This is necessary to check that
+ * each reactor receives the correct volumetric flow.
+ */
+void PSR::NormaliseIOProcessRates() {
+    // First loop over inflow processes
+    Sweep::Processes::BirthPtrVector bps = m_mix->Inflows();
+    for (Sweep::Processes::BirthPtrVector::iterator it=bps.begin();
+            it!=bps.end(); ++it) {
+        (*it)->SetA((*it)->A() * m_iscaling);
+    }
+
+    // Then do the outflow processes
+    Sweep::Processes::DeathPtrVector dps = m_mix->Outflows();
+    for (Sweep::Processes::DeathPtrVector::iterator it=dps.begin();
+            it!=dps.end(); ++it) {
+        (*it)->SetA((*it)->A() * m_oscaling);
+    }
 }
 
 /*!

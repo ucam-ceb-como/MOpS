@@ -130,6 +130,9 @@ public:
     //! Set the inflow process type
     void SetOutflowType(Sweep::Processes::DeathProcess::DeathType dtype);
 
+    //! Normalise the particle birth/death process rates.
+    void NormaliseIOProcessRates();
+
     //! Clear the memory associated with any flow streams
     void ClearStreamMemory();
 
@@ -197,6 +200,10 @@ private:
 
     //! Scaling factor for inflow streams' flow fractions
     double m_iscaling;
+
+    // (Not used for the gas-phase solver)
+    //! Scaling factor for the outflow streams' flow fractions
+    double m_oscaling;
 
     // Cached inflow and outflow types
     Sweep::Processes::BirthProcess::BirthType m_default_birth;

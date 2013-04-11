@@ -283,6 +283,11 @@ void NetworkSimulator::Initialise(
     // And ensure each reactor has an outflow
     net.CheckOutflow();
 
+    // Finally, normalise the birth/death process rates in case some streams
+    // have multiple in/outflows.
+    for (ReactorNetwork::r_iter it=net.Begin(); it!=net.End(); ++it) {
+        (*it)->NormaliseIOProcessRates();
+    }
 }
 
 /*!
