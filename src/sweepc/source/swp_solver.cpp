@@ -95,7 +95,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 {
     int err = 0;
     double tsplit, dtg, jrate, tflow(t);
-    static fvector rates(mech.TermCount(), 0.0);
+    fvector rates(mech.TermCount(), 0.0);
     // Global maximum time step.
     dtg     = tstop - t;
 
