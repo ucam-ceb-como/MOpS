@@ -49,6 +49,7 @@
 
 #include "mops_params.h"
 #include "mops_reactor.h"
+#include "mops_psr.h"
 #include "mops_timeinterval.h"
 #include "mops_solver.h"
 #include "mops_mechanism.h"
@@ -62,6 +63,9 @@
 namespace Mops
 {
 
+// Forward declare the network simulator
+class NetworkSimulator;
+
 class Simulator
 {
 public:
@@ -71,6 +75,13 @@ public:
     // Destructors.
     ~Simulator(void); // Default destructor.
 
+    // Copy constructor.
+    Simulator(const Mops::Simulator &copy);
+
+    Simulator &operator=(const Simulator &rhs);
+
+    // The NetworkSimulator needs full access to the Simulator
+    friend class Mops::NetworkSimulator;
 
     // SIMULATION SETTINGS.
 
@@ -205,8 +216,7 @@ public:
         Solver &s,               // Solver to use for simulation.
         size_t seed);
 
-    // Post-processes binary output files with the given file name
-    // into CSV files.
+    //! Post-processes binary output files into CSV files.
     void PostProcess(void);
 
     // Add element for flux analysis postprocessor
@@ -219,12 +229,6 @@ public:
 
     // Writes the simulator to a binary data stream.
     void Serialize(std::ostream &out) const;
-
-    //! Reads an ensemble file (public definition for IO access)
-    Sweep::PartPtrList ReadEnsembleFile(
-        Reactor &r,                 // Reactor
-        const std::string fname          // File name for loading
-        );
 
     // Reads the simulator data from a binary data stream.
     void Deserialize(std::istream &in);
@@ -284,6 +288,15 @@ private:
     // Sensitivity output file stream.
     mutable std::fstream m_senfile;
 
+    //! Output stream for the LOI file data
+    mutable std::ofstream m_loi_file;
+
+    //! Object to hold LOI data
+    std::vector<Mops::fvector> m_loi_data;
+
+    //! The Jacobian for LOI
+    double** m_loi_J;
+
     // Flag controlling iteration output.  If true then output
     // is performed for every iteration at the end of a time step,
     // otherwise output is only performed after all iterations have
@@ -339,6 +352,18 @@ private:
     // A vector list containing pointers to elements which are wanted to analyse the flux of
     // that element.
     std::vector<std::string> m_flux_elements;
+
+    // LOI THINGS
+
+    //! Set up the LOI calculation
+    void setupLOI(const Mops::Reactor &r, Mops::Solver &s);
+
+    //! Solve the LOI Jacobian
+    void solveLOIJacobian(
+            Mops::Reactor &r,
+            Mops::Solver &s,
+            const unsigned int istep,
+            const double t2);
 
 
     // FILE OUTPUT.
@@ -637,8 +662,14 @@ private:
         const Mechanism &mech // Mechanism used to define reactor.
         ) const;
 
-    //! Checks if coagulation kernels are compatible.
-    bool checkCoagulationKernel(int old_id, int this_id) const;
+    //! Do the grunt work for postprocessing a binary file
+    void postProcessSimulation(
+        Mechanism &mech,
+        timevector &times,
+        unsigned int npoints,
+        unsigned int ncput,
+        std::vector<std::string> cput_head
+        ) const;
 
     // Processes the PSLs at each save point into single files.
     void postProcessPSLs(
@@ -672,7 +703,7 @@ private:
         const std::vector<fvector> &agpfwdrates,       // Vector of gas-phase reaction time points.
         const std::vector<fvector> &agprevrates,       // Vector of gas-phase reaction time points.
         const std::vector<fvector> &achem  // Vector of confidence intervals.
-        );
+        ) const;
 
     // COMPUTATION TIME CALCULATION.
 

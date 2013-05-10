@@ -221,6 +221,24 @@ void Process::AddProduct(unsigned int isp, int mu)
     m_prod[isp] = mu;
 }
 
+/*!
+ * Virtual parent class function.
+ *
+ * @param t     Current time of the system
+ * @param dt    Time to remove particles over
+ * @param sys   The system to do transport for
+ * @param local_geom    Geometry of the process
+ * @param rng   Random number generator
+ */
+void Process::PerformDT (
+        const double t,
+        const double dt,
+        Sweep::Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
+        rng_type &rng) const {
+    assert(dt > 0.0);
+}
+
 // FICTICIOUS EVENTS.
 
 /*!

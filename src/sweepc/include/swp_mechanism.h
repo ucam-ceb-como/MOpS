@@ -219,6 +219,14 @@ public:
         rng_type &rng
         ) const;
 
+    //! Perform the transport processes in and out of the cell.
+    void DoParticleFlow(
+            double t,
+            double dt,
+            Cell &sys,
+            const Geometry::LocalGeometry1d& local_geom,
+            rng_type &rng) const;
+
     // transfer mass from gas-phase to particle ensemble used for PAH-PP model
     void MassTransfer(
         int i,          // the number of pyrene supposed in the emsemble
@@ -292,9 +300,6 @@ private:
 
     // Clears the mechanism from memory.
     void releaseMem(void);
-
-    //time when the last particle emsenble has been written to a file
-    mutable double last3dout;
 
 };
 } // namespace Sweep

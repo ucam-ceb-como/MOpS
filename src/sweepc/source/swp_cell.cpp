@@ -52,8 +52,10 @@
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
-using namespace Sweep;
+
 using namespace std;
+
+namespace Sweep {
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
@@ -107,6 +109,26 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
     }
     return *this;
 }
+
+/*!
+ * @param os    Output stream
+ * @param net   Cell object to print
+ * @return      Output stream
+ */
+std::ostream& operator<<(
+        std::ostream &os,
+        const Sweep::Cell &c)
+{
+  os << "[Sweep::Cell]\n";
+  if (&(c.Particles()) != NULL) os << " with " << c.Particles();
+  os << " with [EnvInterface]," <<
+          " T=" << c.GasPhase().Temperature() <<
+          " P=" << c.GasPhase().Pressure() <<
+          " SP0=" << c.GasPhase().SpeciesConcentration(0) <<
+          " \n";
+  return os;
+}
+
 
 // THE PARTICLE ENSEMBLE.
 
@@ -280,17 +302,6 @@ void Cell::AddInflow(Processes::BirthProcess &inf)
     m_inflow.push_back(inf.Clone());
 }
 
-// Checks whether any of the inflows have particles in their cell.
-// This is needed for the particle solver.
-bool Cell::HasInflowParticles() const
-{
-    bool ans(false);
-    for (unsigned int i=0; i!=m_inflow.size(); ++i) {
-        if (m_inflow[i]->HasParticlesInCell()) ans = true;
-    }
-    return ans;
-}
-
 
 // PARTICLE OUTFLOW PROCESSES.
 
@@ -423,3 +434,5 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
                                "(Sweep, Cell::Deserialize).");
     }
 }
+
+} // Sweep namespace

@@ -61,6 +61,21 @@ PredCorSolver::PredCorSolver(void)
 {
 }
 
+//! Copy constructor
+PredCorSolver::PredCorSolver(const PredCorSolver &sol)
+: FlameSolver(sol),
+  m_srcterms(sol.m_srcterms),
+  m_srcterms_copy(sol.m_srcterms_copy),
+  m_reac_copy(sol.m_reac_copy),
+  m_ode_copy(sol.m_ode_copy),
+  m_ncalls(sol.m_ncalls) {}
+
+//! Clone the object
+PredCorSolver *const PredCorSolver::Clone() const {
+    return new PredCorSolver(*this);
+}
+
+
 // Default destructor.
 PredCorSolver::~PredCorSolver(void)
 {

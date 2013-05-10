@@ -60,6 +60,22 @@ using namespace Mops;
 //! Anonymous namespace for function only used within this file
 namespace {
 
+struct flowNode {
+public:
+    //! Is the stream an inflow (true) or outflow (false)?
+    bool mIn;
+    //! Mixture key
+    std::string mMixture;
+    //! Reactor key
+    std::string mReactor;
+    //! Fraction of the total in/outflow
+    double mFrac;
+
+    //! Constructor
+    flowNode():
+        mIn(true), mMixture(""), mReactor(""), mFrac(1.0) {};
+};
+
 // Returns the temperature in K by reading the value from the given
 // XML node and checking the units.
 double readTemperature(const CamXML::Element &node)
@@ -73,7 +89,10 @@ double readTemperature(const CamXML::Element &node)
             units = Sprog::Kelvin;
         } else if (attr->GetValue() == "oC") {
             units = Sprog::Celcius;
-        }
+        } else
+            throw std::runtime_error("Unknown temperature unit "
+                    + std::string(attr->GetValue()) + " specified"
+                    + " (::readTemperature).");
     }
 
     // Read the temperature (and convert if necessary).
@@ -104,7 +123,9 @@ double readPressure(const CamXML::Element &node)
             units = Sprog::Bar;
         } else if (attr->GetValue() == "atm") {
             units = Sprog::Atm;
-        }
+        } else throw std::runtime_error("Unknown pressure unit "
+                + std::string(attr->GetValue()) + " specified"
+                + " (::readPressure).");
     }
 
     // Read the pressure (and convert if necessary).
@@ -173,38 +194,152 @@ void readGlobalSettings(const CamXML::Element &node,
 }
 
 
+/*!
+ * @brief           Helper function to determine if coag kernels are compatible
+ *
+ * This is here to check if, upon loading an ensemble, that the old and new
+ * coagulation kernels are compatible. There are four cases:
+ * 1: WPM -> WPM
+ * 2: WPM -> DSA
+ * 3: DSA -> DSA
+ * 4: DSA -> WPM
+ * Of these, only number 2 doesn't work. This is because all of the DSA coag
+ * kernel calculations assume particles have equal weight.
+ *
+ * @param old_id    ProcessType ID of binary file's coagulation mechanism
+ * @param this_id   ProcessType ID of this simulation
+ * @return          Boolean indicating if kernels are compatible
+ */
+bool checkCoagulationKernel(int old_id, int this_id) {
+    bool ans(false);
+    if (old_id == Sweep::Processes::Weighted_Additive_Coagulation_ID
+            || old_id == Sweep::Processes::Weighted_Constant_Coagulation_ID
+            || old_id == Sweep::Processes::Weighted_Transition_Coagulation_ID
+            || old_id == Sweep::Processes::Transition_Coagulation_ID) {
+        if (old_id == this_id) {
+            // This is fine, we've got the same kernel
+            ans = true;
+        } else {
+            if (this_id == Sweep::Processes::Additive_Coagulation_ID
+                    || this_id == Sweep::Processes::Constant_Coagulation_ID
+                    || this_id == Sweep::Processes::Transition_Coagulation_ID) {
+                // Uh oh.. we've gone WPM -> DSA
+                ans = false;
+            } else {
+                // This is fine, we've gone WPMi -> WPMj
+                ans = true;
+            }
+        }
+    }
+    return ans;
+}
+
+/*!
+ * @brief           Reads an ensemble .ens file.
+ *
+ * This function is to be used when loading a *.ens file to initialise
+ * particles in the system at t=0. Files are specified in the <reactor> block
+ * of the mops.inx file in the following manner:
+ *     <population>
+ *          <file>silica-fm(0)-SP(100).ens</file>
+ *          <m0>3.0e15</m0>
+ *     </population>
+ *
+ */
+Sweep::PartPtrList readEnsembleFile(
+        const string fname,
+        const Sweep::Mechanism &smech) {
+    // Open the save point file.
+    ifstream fin;
+    fin.open(fname.c_str(), ios_base::in | ios_base::binary);
+
+    // Create empty particle pointer list
+    Sweep::PartPtrList particles;
+
+    if (fin.good()) {
+
+        // First read-in and check the particle model
+        Sweep::Mechanism::ParticleModel filemodel;      // model to be loaded
+        filemodel.Deserialize(fin);
+        if (filemodel.AggModel() == smech.AggModel()) {
+            std::cout << "parser: correct particle model found!\n";
+        } else {
+            throw runtime_error("Wrong particle model specified in sweep.xml!");
+        }
+
+        // For binary-tree based particles, check that the tree status is the same.
+        if (filemodel.WriteBinaryTrees() == smech.WriteBinaryTrees()) {
+            std::cout << "parser: binary tree status okay!\n";
+        } else {
+            throw runtime_error("Wrong binary tree output flag in mops.inx.");
+        }
+
+        // Now, check the coagulation kernel, assuming only one coagulation process
+        int id(0);
+        fin.read(reinterpret_cast<char*>(&id), sizeof(id));
+        if (checkCoagulationKernel(id, smech.Coagulations()[0]->ID())) {
+            std::cout << "parser: coagulation process okay!\n";
+        } else {
+            throw runtime_error("Conflicting coagulation kernel specification!");
+        }
+
+        // Now it's time to load the particle ensemble.
+        Sweep::Ensemble fileensemble;
+        fileensemble.Deserialize(fin, smech);
+
+        // Begin adding the particles of fileensemble to the simulation's ensemble
+        Sweep::Particle *sp;
+        for (unsigned int i(0); i != fileensemble.Count(); ++i) {
+            // note we need to use Clone, because fileensemble will be deleted once
+            // we leave the scope of this function.
+            sp = fileensemble.At(i)->Clone();
+            particles.push_back(sp);
+        }
+
+        // Close the input file.
+        fin.close();
+
+    } else {
+        // Throw error if the output file failed to open.
+        throw runtime_error("Failed to open ensemble file "
+                            "input (Mops, Simulator::readEnsembleFile).");
+    }
+
+    return particles;
+}
+
+
+
+
 
 void readInitialPopulation(
         const CamXML::Element &subnode,
-        Mops::Simulator &sim,
         const Mops::Mechanism &mech,
-        Mops::Reactor &reac,
         Mops::Mixture &mix) {
     // Initialise some storage
-    Sweep::PartPtrList fileParticleList;
-    Sweep::PartPtrList inxParticleList;
-    Sweep::PartPtrList allParticleList;
-    double initialM0 = 0;
+    Sweep::PartPtrList fileParticleList, inxParticleList, allParticleList;
+    CamXML::Element *m0node, *fnode;
+    double initialM0(0.0);
 
     // Find the overall number density represented by the population
-    CamXML::Element* m0Node = subnode.GetFirstChild("m0");
-    if(!m0Node) {
-        throw std::runtime_error("m0 (number density) must be specified for initial particle population \
-                                 (Mops, Settings_IO::readReactor)");
+    m0node = subnode.GetFirstChild("m0");
+    if (!m0node) {
+        throw std::runtime_error("Must specify M0 for initial population"
+                                 "(Mops::Settings_IO::readInitialPopulation)");
     }
-    initialM0 = std::atof((m0Node->Data()).c_str());
-    if(initialM0 < 0) {
-        throw std::runtime_error("m0 for initial particle population may not be negative \
-                                 (Mops, Settings_IO::readReactor)");
+    initialM0 = std::atof((m0node->Data()).c_str());
+    if (initialM0 <= 0.) {
+        throw std::runtime_error("m0 for initial particle population may not be negative"
+                                 "(Mops::Settings_IO::readInitialPopulation)");
     }
 
     // Check if a binary file has been specified for particles..
-    CamXML::Element* fileNode = subnode.GetFirstChild("file");
-    if (fileNode) {
+    fnode = subnode.GetFirstChild("file");
+    if (fnode) {
         std::string filename;
-        filename = fileNode->Data();
+        filename = fnode->Data();
         std::cout << "parser: binary file " << filename << " specified for input.\n";
-        fileParticleList = sim.ReadEnsembleFile(reac, filename);
+        fileParticleList = ::readEnsembleFile(filename, mech.ParticleMech());
     }
 
     // Now read in the list of particles and sum up their statistical weights
@@ -226,15 +361,280 @@ void readInitialPopulation(
 }
 
 
+Mops::Mixture* readMixture(
+        const CamXML::Element &node,
+        const Mops::Mechanism &mech,
+        const unsigned int pcount,
+        const double maxm0,
+        std::string &name
+        ) {
+    std::vector<CamXML::Element*> nodes;
+    const CamXML::Element *subnode;
+    std::vector<CamXML::Element*>::const_iterator i;
+    const CamXML::Attribute *attr;
+
+    // Get the ID of the mixture
+    attr = node.GetAttribute("id");
+    if (attr) name = attr->GetValue();
+
+    // Create the mixture
+    Mixture *mix = NULL;
+    mix = new Mops::Mixture(mech.ParticleMech());
+
+    // Read some values
+    double val(0.0);
+    subnode = node.GetFirstChild("temperature");
+    if (subnode != NULL)
+        val = ::readTemperature(*subnode);
+    else
+        throw std::runtime_error("No temperature specified for the mixture (::readMixture).");
+    mix->GasPhase().SetTemperature(val);
+
+    subnode = NULL;
+    subnode = node.GetFirstChild("pressure");
+    if (subnode != NULL)
+        val = ::readPressure(*(node.GetFirstChild("pressure")));
+    else
+        throw std::runtime_error("No temperature specified for the mixture (::readMixture).");
+    mix->GasPhase().SetPressure(val);
+
+    // Look for components...
+    fvector molefracs(mech.GasMech().SpeciesCount(), 0.0);
+    node.GetChildren("component", nodes);
+    for (i=nodes.begin(); i!=nodes.end(); ++i) {
+        // Check the ID attribute.
+        attr = (*i)->GetAttribute("id");
+        if (attr != NULL) {
+            std::string str = attr->GetValue();
+            // Get the species index.
+            int j = mech.GasMech().FindSpecies(attr->GetValue());
+
+            // Set the species mole fraction.
+            if (j >= 0) {
+                molefracs[j] = Strings::cdble((*i)->Data()); // from inx input
+            } else {
+                throw std::runtime_error("No initial condition for species " + str +
+                                    " (::readMixture).");
+            }
+        } else {
+            throw std::runtime_error("Initial condition must have ID "
+                                " (::readMixture).");
+        }
+    }
+    mix->GasPhase().SetFracs(molefracs);
+
+    // Get viscosity
+    subnode = NULL;
+    subnode = node.GetFirstChild("viscosity");
+    if(subnode != NULL) {
+        std::string m = subnode->GetAttributeValue("model");
+        if (m.compare("air") == 0) {
+            mix->GasPhase().SetViscosityModel(Sprog::iAir);
+        } else if (m.compare("chapman-enskog") == 0) {
+            // Stop program if not enough transport data
+            mix->GasPhase().checkForTransportData();
+            mix->GasPhase().SetViscosityModel(Sprog::iChapmanEnskog);
+        } else if (m.compare("argon") == 0) {
+            mix->GasPhase().SetViscosityModel(Sprog::iArgon);
+        } else if (m.compare("hydrogen") == 0) {
+            mix->GasPhase().SetViscosityModel(Sprog::iHydrogen);
+        } else {
+            throw std::runtime_error("Unrecognised viscosity model"
+                    " (::readMixture).");
+        }
+    }
+
+    // Now load some particles
+    mix->Particles().Initialise(pcount);
+    mix->Reset(maxm0);
+    subnode = NULL; subnode = node.GetFirstChild("population");
+    if (subnode != NULL) {
+        if (mech.ParticleMech().ComponentCount() < 1) {
+            throw std::runtime_error("Error loading initial population, no particle mechanism loaded. \n"
+                    "Ensure a particle solver and sweep file are used (::readMixture).");
+        } else {
+            ::readInitialPopulation(*subnode, mech, *mix);
+        }
+    }
+
+    return mix;
+}
+
+Mops::PSR *const readPSR(
+        const CamXML::Element &node,
+        const Mechanism &mech,
+        std::string &name) {
+
+    Mops::PSR *reac = NULL;
+    const CamXML::Element *subnode;
+    std::vector<CamXML::Element*> nodes;
+    std::vector<CamXML::Element*>::const_iterator i;
+    const CamXML::Attribute *attr;
+    std::string str;
+
+    // Get the ID of the reactor
+    attr = node.GetAttribute("id");
+    if (attr) name = attr->GetValue();
+
+    // First read the system type.  This is where we initialise
+    // the reactor type.
+    attr = node.GetAttribute("type");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.compare("psr") == 0) {
+            reac = new Mops::PSR(mech);
+        } else
+            throw std::runtime_error("Only PSR presently supported for networking."
+                    " (::readPSR)");
+    }
+
+    // Now check for constant temperature.  If not constant temperature
+    // then the reactor is solved using the adiabatic energy equation.
+    attr = node.GetAttribute("constt");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.compare("true") == 0) {
+            // This is a constant temperature reactor.
+            reac->SetEnergyEquation(Reactor::ConstT);
+        } else {
+            // Use the adiabatic energy equation.
+            reac->SetEnergyEquation(Reactor::Adiabatic);
+        }
+    } else {
+        // The constt attribute is undefined, so use adiabatic
+        // energy equation.
+        reac->SetEnergyEquation(Reactor::Adiabatic);
+    }
+
+    // Now check for constant volume.
+    attr = node.GetAttribute("constv");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.compare("true") == 0) {
+            // This is a constant volume reactor.
+            reac->SetConstV();
+        } else {
+            // This is a constant pressure reactor.
+            reac->SetConstP();
+        }
+    } else {
+        // The constv attribute is undefined, so use constant
+        // pressure reactor.
+        reac->SetConstP();
+    }
+
+
+     // Now initialise for surface area (surface kinetics purposes).
+    attr = node.GetAttribute("surfaceArea");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.length() > 0) {
+            stringstream AREA(str);
+            double ar;
+            AREA >> ar;
+            // This is a surface area.
+            reac->SetArea(ar);
+        } else {
+            // This is a default value for area.
+            reac->SetArea(0.0);
+        }
+    } else {
+        // The area attribute is undefined, so set it to default
+        reac->SetArea(0.0);
+    }
+
+    // Now initialise for volume.
+    attr = node.GetAttribute("volume");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.length() > 0) {
+            stringstream VOLUME(str);
+            double vol;
+            VOLUME >> vol;
+            // This is a volume.
+            reac->SetVolume(vol);
+        } else {
+            // This is a a default value for volume.
+            reac->SetVolume(1.0);
+        }
+    } else {
+        // The volume attribute is undefined, so set it to default
+        reac->SetVolume(1.0);
+    }
+
+    // Get birth and death types
+    attr = NULL;
+    attr = node.GetAttribute("btype");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.compare("stochastic") == 0)
+            reac->SetInflowType(Sweep::Processes::BirthProcess::iStochastic);
+        else if (str.compare("continuous") == 0)
+            reac->SetInflowType(Sweep::Processes::BirthProcess::iContinuous);
+        else
+            throw std::runtime_error("Unrecognised birth process type. (::readPSR)");
+    }
+
+    attr = NULL;
+    attr = node.GetAttribute("dtype");
+    if (attr != NULL) {
+        str = attr->GetValue();
+        if (str.compare("cdelete") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iContDelete);
+        else if (str.compare("cmove") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iContMove);
+        else if (str.compare("rescale") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iContRescale);
+        else if (str.compare("adaptive") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iContAdaptive);
+        else if (str.compare("sdelete") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iStochDelete);
+        else if (str.compare("smove") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iStochMove);
+        else
+            throw std::runtime_error("Unrecognised death process type. (::readPSR)");
+    }
+
+    // TEMPERATURE GRADIENT PROFILE.
+
+    node.GetChildren("dTdt", nodes);
+    for (i=nodes.begin(); i!=nodes.end(); ++i) {
+        // Get the start time attribute.
+        attr = (*i)->GetAttribute("startt");
+        if (attr != NULL) {
+            Sweep::Maths::Linear fun;
+            fun.SetParam(1, Strings::cdble((*i)->Data()));
+            reac->Add_dTdt(Strings::cdble(attr->GetValue()), fun);
+        }
+    }
+
+    //TODO: read PSR-specific settings
+    if (reac->SerialType() == Serial_PSR) {
+
+            // Read the residence time first so that the inflow's rate is
+            // correctly set.
+            subnode = node.GetFirstChild("restime");
+            if (subnode != NULL) {
+                double tau = Strings::cdble(subnode->Data());
+                reac->SetResidenceTime(tau);
+            } else {
+                throw std::runtime_error("Residence time not specified for PSR!"
+                        " (::readPSR)");
+            }
+        }
+
+    return reac;
+}
+
 // Reads the reactor initial settings from the given XML node.
 Reactor *const readReactor(const CamXML::Element &node,
                                         const Mechanism &mech,
                                         const unsigned int max_particle_count,
 										const double maxM0,
-										Mops::Simulator &sim)
+										const Mops::Simulator &sim)
 {
     Reactor *reac = NULL;
-    const CamXML::Element *subnode, *subsubnode;
+    const CamXML::Element *subnode;
     std::vector<CamXML::Element*> nodes;
     std::vector<CamXML::Element*>::const_iterator i;
     const CamXML::Attribute *attr;
@@ -340,102 +740,19 @@ Reactor *const readReactor(const CamXML::Element &node,
     // REACTOR INITIAL CONDITIONS.
 
     // Create a new Mixture object.
-    Mixture *mix = new Mixture(mech.ParticleMech());
+    std::string id;
+    Mixture *mix = ::readMixture(node, mech, max_particle_count, maxM0, id);
+    reac->Fill(*mix);
 
-    // VISCOSITY MODEL
-
-    subnode = node.GetFirstChild("viscosity");
-    if(subnode != NULL) {
-        std::string m = subnode->GetAttributeValue("model");
-        if (m.compare("air") == 0) {
-            mix->GasPhase().SetViscosityModel(Sprog::iAir);
-        } else if (m.compare("chapman-enskog") == 0) {
-            // Stop program if not enough transport data
-            mix->GasPhase().checkForTransportData();
-            mix->GasPhase().SetViscosityModel(Sprog::iChapmanEnskog);
-        } else if (m.compare("argon") == 0) {
-            mix->GasPhase().SetViscosityModel(Sprog::iArgon);
-        } else if (m.compare("hydrogen") == 0) {
-            mix->GasPhase().SetViscosityModel(Sprog::iHydrogen);
-        } else {
-            throw std::runtime_error("Unrecognised viscosity model. (Mops, Settings_IO::readReactor).");
-        }
-    }
-    else {
-        // Use air by default
-        mix->GasPhase().SetViscosityModel(Sprog::iAir);
-    }
-
-
-    fvector molefracs(mech.GasMech().SpeciesCount(), 0.0);
-
-    // Get the temperature.
-    subnode = node.GetFirstChild("temperature");
-    if(subnode != NULL) {
-        mix->GasPhase().SetTemperature(readTemperature(*subnode));
-    }
-    else {
-        throw std::runtime_error("No initial condition for temperature (Mops, Settings_IO::readReactor).");
-    }
-
-    // Get the pressure.
-    subnode = node.GetFirstChild("pressure");
-    if(subnode != NULL) {
-        mix->GasPhase().SetPressure(readPressure(*subnode));
-    }
-    else {
-        throw std::runtime_error("No initial condition for pressure (Mops, Settings_IO::readReactor).");
-    }
-
-    // Fill the mixture object.
-    node.GetChildren("component", nodes);
-    for (i=nodes.begin(); i!=nodes.end(); ++i) {
-        // Check the ID attribute.
-        attr = (*i)->GetAttribute("id");
-        if (attr != NULL) {
-            str = attr->GetValue();
-            // This should be a species initial concentration.
-
-            // Get the species index.
-            int j = mech.GasMech().FindSpecies(str);
-
-            // Set the species mole fraction.
-            if (j >= 0) {
-                molefracs[j] = Strings::cdble((*i)->Data()); // from inx input
-            } else {
-                throw std::runtime_error("No initial condition for species " + str +
-                                    " (Mops, Settings_IO::readReactor).");
-            }
-        } else {
-            throw std::runtime_error("Initial condition must have ID "
-                                "(Mops, Settings_IO::readReactor)");
-        }
-
-    }
-
-    bool doubling_activated;
-    subnode = node.GetFirstChild("DoublingAlgorithm");
+    // Investigate whether doubling is activated
+    subnode = node.GetFirstChild("doubling");
     if (subnode != NULL) {
         std::string str_enable = subnode->GetAttributeValue("enable");
         if (str_enable.compare("false") == 0) {
             std::cout << "sweep: Warning! doubling is turned off by user.\n";
-            doubling_activated = false;
-        } 
-        else doubling_activated = true;
-
-    } else doubling_activated = true;
-
-    // Assign the species mole fraction vector to the reactor mixture.
-    mix->GasPhase().SetFracs(molefracs);
-    mix->Particles().Initialise(max_particle_count, doubling_activated);
-	mix->Reset(maxM0);
-    reac->Fill(*mix);
-
-    
-
-    // Particles
-    subnode = node.GetFirstChild("population");
-    if(subnode) {readInitialPopulation(*subnode, sim, mech, *reac, *mix);}
+            reac->Mixture()->Particles().SetDoubling(false);
+        } else reac->Mixture()->Particles().SetDoubling(true);
+    }
 
     // TEMPERATURE GRADIENT PROFILE.
 
@@ -451,73 +768,38 @@ Reactor *const readReactor(const CamXML::Element &node,
     }
 
     // PSR SPECIFIC SETTINGS.
-
+    fvector molefracs;
     if (reac->SerialType() == Serial_PSR) {
+
+        Mops::PSR* psr = dynamic_cast<PSR*>(reac);
 
         // Read the residence time first so that the inflow's rate is
         // correctly set.
-        subnode = node.GetFirstChild("residencetime");
+        subnode = node.GetFirstChild("restime");
         if (subnode != NULL) {
             double tau = Strings::cdble(subnode->Data());
-            dynamic_cast<PSR*>(reac)->SetResidenceTime(tau);
-        }
+            psr->SetResidenceTime(tau);
+        } else
+            throw std::runtime_error("Res. time must be defined for a PSR "
+                    "(Mops, Settings_IO::readReactor)");
+
+        // Initialise an outflow
+        FlowStream *outf = new FlowStream(mech);
+        outf->ConnectInflow(*psr);
+        psr->SetOutflow(*outf);
 
         // Read inflow
         subnode = node.GetFirstChild("inflow");
         if (subnode != NULL) {
-            // Create a new Mixture object for inflow.
             FlowStream *inf = new FlowStream(mech);
-            molefracs.assign(mech.GasMech().SpeciesCount(), 0.0);
 
-            // Get the temperature.
-            subsubnode = subnode->GetFirstChild("temperature");
-            inf->Mixture()->GasPhase().SetTemperature(readTemperature(*subsubnode));
+            // Create a new Mixture object for inflow. Note that the inflow takes
+            // a copy of the one loaded from XML.
+            mix = ::readMixture(*subnode, mech, max_particle_count, maxM0, id);
+            inf->SetConditions(*mix);
 
-            // Get the pressure.
-            subsubnode = subnode->GetFirstChild("pressure");
-            inf->Mixture()->GasPhase().SetPressure(readPressure(*subsubnode));
+            psr->SetInflow(*inf);
 
-            // Fill the inflow Mixture object.
-            subnode->GetChildren("component", nodes);
-            for (i=nodes.begin(); i!=nodes.end(); ++i) {
-                // Check the ID attribute.
-                attr = (*i)->GetAttribute("id");
-                if (attr != NULL) {
-                    str = attr->GetValue();
-
-                    // This should be a species initial concentration.
-
-                    // Get the species index.
-                    int j = mech.GasMech().FindSpecies(str);
-
-                    // Set the species mole fraction.
-                    if (j >= 0) {
-                        molefracs[j] = Strings::cdble((*i)->Data());
-                    } else {
-                        throw std::runtime_error("Unknown species inflow condition "
-                                            "(Mops, Settings_IO::readReactor).");
-                    }
-                } else {
-                    throw std::runtime_error("Inflow condition must have ID! "
-                                        "(Mops, Settings_IO::readReactor)");
-                }
-            }
-
-            // Particles
-            subsubnode = subnode->GetFirstChild("population");
-            if(subsubnode) {
-                // First initialise the ensemble from the reactor ensemble properties.
-                // Doubling is not relevant for the inflow ensemble as it is not depleted.
-                inf->Mixture()->Particles().Initialise(
-                        mix->Particles().Capacity(),
-                        false);
-                readInitialPopulation(*subsubnode, sim, mech, *reac, *(inf->Mixture()));
-            }
-
-            // Assign the species mole fraction vector
-            // to the reactor inflow mixture.
-            inf->Mixture()->GasPhase().SetFracs(molefracs);
-            dynamic_cast<PSR*>(reac)->SetInflow(*inf, mech);
         } else {
             throw std::runtime_error("Inflow conditions must be defined for a PSR "
                                 "(Mops, Settings_IO::readReactor)");
@@ -525,6 +807,144 @@ Reactor *const readReactor(const CamXML::Element &node,
     }
 
     return reac;
+}
+
+
+void readNetwork(
+        const CamXML::Element &root,
+        const Mops::Simulator &sim,
+        const Mops::Mechanism &mech,
+        Mops::ReactorNetwork &network) {
+
+    // Set up some storage
+    CamXML::Document doc;
+    CamXML::Element* node;
+    std::vector<CamXML::Element*> nodes, inodes;
+    std::vector<CamXML::Element*>::const_iterator i, k;
+    std::vector<flowNode> flows;
+    std::map<unsigned int, std::string> reac_order;
+    std::string id, mid, iid;
+    const CamXML::Attribute *attr;
+
+    // Look for mixtures first
+    root.GetChildren("mixture", nodes);
+    unsigned int j(0u);
+    if (nodes.size() > 0) {
+        for (i=nodes.begin(); i!=nodes.end(); ++i) {
+            Mops::Mixture* mix = ::readMixture(*(*i), mech, sim.MaxPartCount(), sim.MaxM0(), id);
+
+            // Generate a name if one wasn't loaded.
+            if (id.size() < 1) {
+                std::stringstream sstm;
+                sstm << "mix" << j;
+                id = sstm.str();
+            }
+            network.AddMixture(id, *mix);
+            j++;
+        }
+    }
+
+
+    // Now look for reactors
+    nodes.clear();
+    root.GetChildren("reactor", nodes);
+    if (nodes.size() > 0) {
+        for (i=nodes.begin(); i!=nodes.end(); ++i) {
+            id = "";
+            Mops::PSR* reac = ::readPSR(*(*i), mech, id);
+
+            // Generate a name if one wasn't loaded.
+            if (id.size() < 1) {
+                std::stringstream sstm;
+                sstm << "reac" << j;
+                id = sstm.str();
+
+            }
+
+            network.AddReactor(id, *reac);
+
+            // Check if it has an order attribute
+           attr = (*i)->GetAttribute("order");
+           if (attr != NULL)
+               reac_order[(unsigned int) atoi(attr->GetValue().c_str())] = id;
+
+
+            // Fill the reactor with its intial state
+            node = (*i)->GetFirstChild("initial");
+            if (node != NULL) {
+                mid = node->Data();
+                network.FillReactor(id, mid);
+            }
+
+            // Check if doubling should be turned-on
+            node = NULL;
+            node = (*i)->GetFirstChild("doubling");
+            if (node != NULL) {
+                std::string str_enable = node->GetAttributeValue("enable");
+                if (str_enable.compare("false") == 0) {
+                    std::cout << "sweep: Warning! doubling is turned off by user.\n";
+                    reac->Mixture()->Particles().SetDoubling(false);
+                } else reac->Mixture()->Particles().SetDoubling(true);
+            }
+            j++;
+
+            // Store the names of the flow
+            (*i)->GetChildren("flow", inodes);
+            if (inodes.size() < 1) throw std::runtime_error("No flows defined for reactor! (::readNetwork)");
+            for (k=inodes.begin(); k!=inodes.end(); ++k) {
+                flowNode fn = flowNode();
+                std::string val;
+                double fval(0.0);
+
+                // Get the mixture id
+                fn.mMixture = (*k)->Data();
+                fn.mReactor = id;
+
+                // Get the direction
+                attr = NULL;
+                attr = (*k)->GetAttribute("dir");
+                if (attr != NULL) {
+                    val = attr->GetValue().c_str();
+                    if (val.compare("in")==0) fn.mIn = true;
+                    else if (val.compare("out")==0) fn.mIn = false;
+                    else {
+                        throw std::runtime_error(std::string("Unknown flow direction: ")+val);
+                    }
+                }
+
+                // Get the flowrate
+                attr = NULL;
+                attr = (*k)->GetAttribute("frac");
+                if (attr != NULL) {
+                    fval = (double) std::atof(attr->GetValue().c_str());
+                    if (fval > 0.0) fn.mFrac = fval;
+                    else {
+                        throw std::runtime_error(std::string("Flow fraction must be positive!"));
+                    }
+                }
+
+                flows.push_back(fn);
+            }
+        }
+        // Now that the reactors have been loaded, make node connections.
+        for (std::vector<flowNode>::iterator it=flows.begin(); it!=flows.end(); ++it) {
+            network.Connect(it->mReactor, it->mMixture, it->mIn, it->mFrac);
+        }
+    } else {
+        throw std::runtime_error("No reactor blocks found in the settings file."
+                " (::readNetwork)");
+    }
+
+    // Now that we've loaded the reactors, we need to initialise the path
+    // in which the reactors are solved.
+    if (reac_order.size() == network.ReactorCount()) {
+        // First try using the manually specified order
+        network.SpecifyPaths(reac_order);
+    } else {
+        // Incomplete data... try guessing.
+        network.FindPaths();
+    }
+
 }
 
 
@@ -743,303 +1163,23 @@ void readOutput(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
     } else {
         sim.ClearFluxElements();
     }
+
+    // PAH KMC POSTPROCESSING
+
+    if (mech.ParticleMech().AggModel() == Sweep::AggModels::PAH_KMC_ID){
+        // currently only the data for mass spectra is provided,
+        // but the capacity will be extended according to the purpose of the project
+        subnode = node.GetFirstChild("postprocess");
+        if (subnode != NULL) {
+            readPostprocess(*subnode, sim, mech);
+        } else {
+            // mass spectra data will not be generated, this should be only for the old test files
+            sim.SetMassSpectra(false);
+        }
+    }
 }
 
 } // anonymous namespace
-
-
-Reactor *const Settings_IO::LoadFromXML_V1(const std::string &filename,
-                                           Mops::Reactor *reac,
-                                           std::vector<TimeInterval> &times,
-                                           Simulator &sim, Solver &solver,
-                                           const Mechanism &mech)
-{
-    CamXML::Document doc;
-    const CamXML::Element *root, *node;
-    std::vector<CamXML::Element*> nodes;
-    std::vector<CamXML::Element*>::const_iterator i;
-    const CamXML::Attribute *attr;
-    std::string str;
-
-    // We need a blank reactor object to create.  If the pointer
-    // passed to this function is valid then it needs to be
-    // deleted.
-    if (reac != NULL) delete reac;
-
-    // Attempt to load XML document.
-    if (doc.Load(filename) == 0) {
-        // Get the root element.
-        root = doc.Root();
-
-        // SYSTEM TYPE AND ATTRIBUTES.
-
-        // First read the system type.  This is where we initialise
-        // the reactor type.
-        attr = root->GetAttribute("system");
-        if (attr != NULL) {
-            str = attr->GetValue();
-            if (str.compare("batch") == 0) {
-                // This is a batch (const. P) reactor.
-                reac = ReactorFactory::Create(Serial_Batch, mech);
-            } else if (str.compare("psr") == 0) {
-                // This is a perfectly-stirred reactor.
-                reac = ReactorFactory::Create(Serial_PSR, mech);
-            } else if (str.compare("shocktube") == 0) {
-                // This is a shocktube (const. V batch).
-                throw std::invalid_argument("Shocktube not currently implemented");
-            } else {
-                // Default reactor is a batch reactor.
-                reac = ReactorFactory::Create(Serial_Batch, mech);
-            }
-        }
-	
-	std::cout << "Load from old xml Reactor Type Passed"<< endl;
-
-        // Now check for constant temperature.  If not constant temperature
-        // then the reactor is solved using the adiabatic energy equation.
-        attr = root->GetAttribute("constt");
-        if (attr != NULL) {
-            str = attr->GetValue();
-            if (str.compare("true") == 0) {
-                // This is a constant temperature reactor.
-                reac->SetEnergyEquation(Reactor::ConstT);
-            } else {
-                // Use the adiabatic energy equation.
-                reac->SetEnergyEquation(Reactor::Adiabatic);
-            }
-        } else {
-            // The constt attribute is undefined, so use adiabatic
-            // energy equation.
-            reac->SetEnergyEquation(Reactor::Adiabatic);
-        }
-
-
-        // Now check for constant volume.
-        attr = root->GetAttribute("constv");
-        if (attr != NULL) {
-            str = attr->GetValue();
-            if (str.compare("true") == 0) {
-                // This is a constant volume reactor.
-                reac->SetConstV();
-            } else {
-                // This is a constant pressure reactor.
-                reac->SetConstP();
-            }
-        } else {
-            // The constv attribute is undefined, so use constant
-            // pressure reactor.
-            reac->SetConstP();
-        }
-
-
-        // REACTOR INITIAL CONDITIONS.
-
-        // Create a new Mixture object.
-        Mixture *mix = new Mixture(mech.ParticleMech());
-
-        fvector molefracs(mech.GasMech().SpeciesCount(), 0.0);
-
-        // Fill the mixture object.
-        root->GetChildren("init", nodes);
-        for (i=nodes.begin(); i!=nodes.end(); i++) {
-            // Check the ID attribute.
-            attr = (*i)->GetAttribute("id");
-            if (attr != NULL) {
-                str = attr->GetValue();
-
-                if (str.compare("T")==0) {
-                    // This is the initial temperature.
-                    mix->GasPhase().SetTemperature(Strings::cdble((*i)->Data()));
-                } else if (str.compare("P")==0) {
-                    // This is the initial pressure (Remember to convert to Pa).
-                    mix->GasPhase().SetPressure(1.0e5 * Strings::cdble((*i)->Data()));
-                } else {
-                    // This should be a species initial concentration.
-
-                    // Get the species index.
-                    int j = mech.GasMech().FindSpecies(str);
-
-                    // Set the species mole fraction.
-                    if (j >= 0) {
-                        molefracs[j] = Strings::cdble((*i)->Data());
-                    } else {
-                        throw std::runtime_error("Unknown species initial condition "
-                                            "(Mops, Settings_IO::LoadFromXML_V1).");
-                    }
-                }
-            } else {
-                throw std::invalid_argument("Initial condition must have ID!");
-            }
-        }
-
-        // Assign the species mole fraction vector to the reactor mixture.
-        mix->GasPhase().SetFracs(molefracs);
-        reac->Fill(*mix);
-
-
-        // PSR SPECIFIC SETTINGS.
-
-        if (reac->SerialType() == Serial_PSR) {
-            // Create a new Mixture object for inflow.
-            FlowStream *inf = new FlowStream(mech);
-            molefracs.assign(mech.GasMech().SpeciesCount(), 0.0);
-
-            // Fill the inflow Mixture object.
-            root->GetChildren("inflow", nodes);
-            for (i=nodes.begin(); i!=nodes.end(); i++) {
-                // Check the ID attribute.
-                attr = (*i)->GetAttribute("id");
-                if (attr != NULL) {
-                    str = attr->GetValue();
-
-                    if (str.compare("T")==0) {
-                        // This is the initial temperature.
-                        inf->Mixture()->GasPhase().SetTemperature(Strings::cdble((*i)->Data()));
-                    } else if (str.compare("P")==0) {
-                        // This is the initial pressure (Remember to convert to Pa).
-                        inf->Mixture()->GasPhase().SetPressure(1.0e5 * Strings::cdble((*i)->Data()));
-                    } else {
-                        // This should be a species initial concentration.
-
-                        // Get the species index.
-                        int j = mech.GasMech().FindSpecies(str);
-
-                        // Set the species mole fraction.
-                        molefracs[j] = Strings::cdble((*i)->Data());
-                    }
-                } else {
-                    throw std::invalid_argument("Inflow condition must have ID!");
-                }
-            }
-
-            // Assign the species mole fraction vector
-            // to the reactor inflow mixture.
-            inf->Mixture()->GasPhase().SetFracs(molefracs);
-
-            // Read the residence time.
-            node = root->GetFirstChild("residencetime");
-            if (node != NULL) {
-                dynamic_cast<PSR*>(reac)->SetResidenceTime(Strings::cdble(node->Data()));
-            }
-
-            // Set the inflow AFTER residence time to ensure correct rate factor
-            dynamic_cast<PSR*>(reac)->SetInflow(*inf, mech);
-        }
-
-
-        // GLOBAL SETTINGS.
-
-        // Read the relative error tolerance.
-        node = root->GetFirstChild("rtol");
-        if (node != NULL) {
-            solver.SetRTOL(Strings::cdble(node->Data()));
-        }
-
-        // Read the absolute error tolerance.
-        node = root->GetFirstChild("atol");
-        if (node != NULL) {
-            solver.SetATOL(Strings::cdble(node->Data()));
-        }
-
-        // Read the number of runs.
-        node = root->GetFirstChild("runs");
-        if (node != NULL) {
-            sim.SetRunCount((int)Strings::cdble(node->Data()));
-        }
-
-        // Read stochastic particle count.
-        node = root->GetFirstChild("pcount");
-        if (node != NULL) {
-            sim.SetMaxPartCount((int)Strings::cdble(node->Data()));
-        }
-
-        // Read max M0, for scaling.
-        node = root->GetFirstChild("maxm0");
-        if (node != NULL) {
-            sim.SetMaxM0(Strings::cdble(node->Data())*1.0e6); // Convert from #/cm3 to #/m3.
-        }
-
-        // TIME INTERVALS.
-
-        // Read splits per step.
-        unsigned int splits = 1;
-        node = root->GetFirstChild("splitsperstep");
-        if (node != NULL) {
-            splits = (unsigned int)Strings::cdble(node->Data());
-        }
-
-        TimeInterval *ti = NULL;
-
-        root->GetChildren("time", nodes);
-        for (i=nodes.begin(); i!=nodes.end(); i++) {
-            attr = (*i)->GetAttribute("start");
-
-            if (attr != NULL) {
-                // This is the start time.  Create a new time inteval
-                // and set the start time.
-                ti = new TimeInterval();
-                ti->SetStartTime(Strings::cdble((*i)->Data()));
-                ti->SetSplittingStepCount(splits);
-            } else {
-                // This is not the start time.  Need to set the end time of
-                // the previous time interval before creating a new one.
-                ti->SetEndTime(Strings::cdble((*i)->Data()));
-
-                // Check for steps attribute.
-                attr = (*i)->GetAttribute("steps");
-                if (attr != NULL) {
-                    ti->SetStepCount((unsigned int)Strings::cdble(attr->GetValue()));
-                } else {
-                    if (ti != NULL) delete ti;
-                    throw std::invalid_argument("Time interval must define number of steps.");
-                }
-
-                // Add the completed time interval to the vector.
-                times.push_back(*ti);
-
-                // Create a new time interval and set the start time.
-                delete ti; ti = new TimeInterval();
-                ti->SetStartTime(Strings::cdble((*i)->Data()));
-            }
-        }
-
-        // Clear memory used to load time intervals.
-        if (ti != NULL) delete ti; ti = NULL;
-
-
-        // CONSOLE OUTPUT.
-
-        node = root->GetFirstChild("console");
-
-        if (node != NULL) {
-            // Check the console interval.
-            attr = node->GetAttribute("interval");
-            if (attr != NULL) {
-                sim.SetConsoleInterval((unsigned int)Strings::cdble(attr->GetValue()));
-            }
-
-            // Read the column variables.
-            str = node->Data();
-            std::vector<std::string> cvars;
-            Strings::split(str, cvars, " ");
-            for (unsigned int j=0; j!=cvars.size(); ++j) {
-                sim.AddConsoleVariable(cvars[j]);
-            }
-        }
-
-
-        // FILE OUTPUT.
-
-        // Read the output file name.
-        node = root->GetFirstChild("output");
-        if (node != NULL) {
-            sim.SetOutputFile(node->Data());
-        }
-    }
-
-    return reac;
-}
-
 
 
 
@@ -1090,16 +1230,6 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
                                 " information (Mops::Settings_IO::LoadFromXML).");
         }
 
-        if (mech.ParticleMech().AggModel() == Sweep::AggModels::PAH_KMC_ID){
-            //currently only the data for mass spectra is provided, but the capacity will be extrend according to the purpose of the project
-            node = root->GetFirstChild("postprocess");
-            if (node != NULL) {
-                readPostprocess(*node, sim, mech);
-            } else {
-                // mass spectra data will not be generated, this should be only for the old test files
-                sim.SetMassSpectra(false);
-            }
-        }
         // REACTOR.
 
         node = root->GetFirstChild("reactor");
@@ -1354,5 +1484,73 @@ void Settings_IO::ReadStatsBound(const CamXML::Element &node, Sweep::PropID &pro
     } else {
         throw std::runtime_error("No particle property specified in XML passed to (MOPS, Settings_IO::ReadStatsBound).");
     }
+}
+
+
+
+Mops::ReactorNetwork* Settings_IO::LoadNetwork(
+        const std::string &filename,
+        std::vector<TimeInterval> &times,
+        Simulator &sim,
+        Solver &solver,
+        Mechanism &mech) {
+
+    // Set up some storage
+    CamXML::Document doc;
+    const CamXML::Element *root, *node;
+    Mops::ReactorNetwork* net = new Mops::ReactorNetwork(mech);
+
+    // Attempt to load XML document.
+    if (doc.Load(filename) == 0) {
+        // Get the root element.
+        root = doc.Root();
+
+        // Check the mops file version.
+        const CamXML::Attribute *attr = root->GetAttribute("version");
+
+        if ((attr!=NULL) && (attr->GetValue() != "3")) {
+            throw std::runtime_error("Settings file has wrong version number (expecting 3)"
+                                " (Mops::Settings_IO::LoadNetwork).");
+        }
+
+        // GLOBAL SETTINGS.
+
+        readGlobalSettings(*root, sim, solver);
+
+        // OUTPUT SETTINGS.
+        // wjm34: read output settings before reactor, so we can check if ensemble/g.p.
+        // files are consistent with some more simulation settings.
+
+        node = root->GetFirstChild("output");
+        if (node != NULL) {
+            readOutput(*node, sim, mech);
+        } else {
+            throw std::runtime_error("Settings file does not contain output"
+                                " information (Mops::Settings_IO::LoadFromXML).");
+        }
+
+        // NETWORK.
+        ::readNetwork(*root, sim, mech, *net);
+        std::cout << *net;
+
+        // MECHANISM REDUCTION.
+
+        node = root->GetFirstChild("LOI");
+        if (node!= NULL) {
+            ReadLOIStatus(*node, solver);
+        }
+
+        // TIME INTERVALS.
+
+        node = root->GetFirstChild("timeintervals");
+        if (node != NULL) {
+            readTimeIntervals(*node, times);
+        } else {
+            throw std::runtime_error("Settings file does not contain a time intervals"
+                                " (Mops::Settings_IO::LoadFromXML).");
+        }
+    }
+
+    return net;
 }
 

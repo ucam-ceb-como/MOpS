@@ -1,45 +1,39 @@
-/*
-  Author(s):      Matthew Celnik (msc37)
-  Project:        sweepc (population balance solver)
-  Sourceforge:    http://sourceforge.net/projects/mopssuite
+ /*!
+  * @file   swp_birth_process.cpp
+  * @author Matthew Celnik, William Menz
+  * @brief  Implementation of a birth process
+  *
+  *   Licence:
+  *      mops is free software; you can redistribute it and/or
+  *      modify it under the terms of the GNU Lesser General Public License
+  *      as published by the Free Software Foundation; either version 2
+  *      of the License, or (at your option) any later version.
+  *
+  *      This program is distributed in the hope that it will be useful,
+  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  *      GNU Lesser General Public License for more details.
+  *
+  *      You should have received a copy of the GNU Lesser General Public
+  *      License along with this program; if not, write to the Free Software
+  *      Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  *      02111-1307, USA.
+  *
+  *   Contact:
+  *      Prof Markus Kraft
+  *      Dept of Chemical Engineering
+  *      University of Cambridge
+  *      New Museums Site
+  *      Pembroke Street
+  *      Cambridge
+  *      CB2 3RA, UK
+  *
+  *      Email:       mk306@cam.ac.uk
+  *      Website:     http://como.cheng.cam.ac.uk
+  */
 
-  Copyright (C) 2008 Matthew S Celnik.
-
-  File purpose:
-    Implementation of the BirthProcess class declared in the
-    swp_death_process.h header file.
-
-  Licence:
-    This file is part of "sweepc".
-
-    sweepc is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-  Contact:
-    Dr Markus Kraft
-    Dept of Chemical Engineering
-    University of Cambridge
-    New Museums Site
-    Pembroke Street
-    Cambridge
-    CB2 3RA
-    UK
-
-    Email:       mk306@cam.ac.uk
-    Website:     http://como.cheng.cam.ac.uk
-*/
-
+#include <boost/random/bernoulli_distribution.hpp>
+#include <boost/random/poisson_distribution.hpp>
 #include "swp_birth_process.h"
 #include "swp_mechanism.h"
 #include <stdexcept>
@@ -52,35 +46,38 @@ using namespace std;
 
 // Default constructor (protected).
 BirthProcess::BirthProcess(void)
-: m_particle(NULL), m_cell(NULL)
+: m_cell(NULL),
+  m_btype(BirthProcess::iStochastic),
+  m_on(true)
 {
+    m_name = "Birth Process";
 }
 
-// Initialising constructor.
+/*!
+ * Initialising constructor
+ *
+ * @param mech  The mechanism defining the process
+ * @return      A new BirthProcess
+ */
 BirthProcess::BirthProcess(const Sweep::Mechanism &mech)
-: Process(mech), m_particle(NULL), m_cell(NULL)
+: Process(mech),
+  m_cell(NULL),
+  m_btype(BirthProcess::iStochastic),
+  m_on(true)
 {
-    // Create a default inflow particle.
-    m_particle = new Particle(0.0, mech);
+    m_name = "Birth Process";
 }
 
-// Copy constructor.
+/*!
+ * Copy constructor
+ *
+ * @param copy  Process to copy
+ * @return      A new BirthProcess, copy of the original
+ */
 BirthProcess::BirthProcess(const BirthProcess &copy)
-: m_particle(copy.m_particle), m_cell(copy.m_cell)
+: m_cell(copy.m_cell)
 {
     *this = copy;
-}
-
-// Stream-reading constructor.
-BirthProcess::BirthProcess(std::istream &in, const Sweep::Mechanism &mech)
-{
-    Deserialize(in, mech);
-}
-
-// Default destructor.
-BirthProcess::~BirthProcess(void)
-{
-    delete m_particle;
 }
 
 // OPERATOR OVERLOADS.
@@ -90,17 +87,27 @@ BirthProcess &BirthProcess::operator =(const BirthProcess &rhs)
 {
     if (this != &rhs) {
         Process::operator =(rhs);
-        // Copy default particle.
-        delete m_particle;
-        if (rhs.m_particle) {
-            m_particle = rhs.m_particle->Clone();
-        } else {
-            m_particle = NULL;
-        }
         // Copy pointer to sampling ensemble.
         m_cell = rhs.m_cell;
+        m_btype = rhs.m_btype;
+        m_on = rhs.m_on;
     }
     return *this;
+}
+
+//! Set the Cell from which this process samples.
+void BirthProcess::SetCell(Cell* c) {
+    m_cell = c;
+}
+
+//! Sets the birth process type
+void BirthProcess::SetBirthType(const BirthType t) {
+    m_btype = t;
+}
+
+//! Turn the process on or off
+void BirthProcess::SetProcessSwitch(const bool s) {
+    m_on = s;
 }
 
 
@@ -114,6 +121,16 @@ bool BirthProcess::HasParticlesInCell() const {
 // TOTAL RATE CALCULATIONS.
 
 /*!
+ * Weights are scaled by this quantity when particles move from cell to cell.
+ *
+ * @param sys   System to evaluate scaling factor for
+ * @return      The cell-transfer scaling factor
+ */
+double BirthProcess::F(const Cell &sys) const {
+    return sys.SampleVolume() / m_cell->SampleVolume();
+}
+
+/*!
  *@param[in]            t           Time at which rate is being calculated
  *@param[in]            sys         System for which rate is to be calculated
  *@param[in]            local_geom  Spatial configuration information (ignored)
@@ -124,13 +141,27 @@ double BirthProcess::Rate(double t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 
 {
-    if (m_cell->Particles().Count() > 0u) {
-        // Physical birth rate needs to be scaled by the sample volume of
-        // the previous Cell.
-        return m_a * m_cell->Particles().GetSum(iW) * sys.SampleVolume() / m_cell->SampleVolume();
-    } else {
-        return 0.0; // Zero rate if no particles.
+    if (m_btype == BirthProcess::iStochastic && m_on) {
+        return InternalRate(t, sys, local_geom);
     }
+    return 0.0;
+}
+
+/*!
+ *@param[in]            t           Time at which rate is being calculated
+ *@param[in]            sys         System for which rate is to be calculated
+ *@param[in]            local_geom  Spatial configuration information (ignored)
+ *
+ *@return   Process rate
+ */
+double BirthProcess::InternalRate(
+        double t,
+        const Cell &sys,
+        const Geometry::LocalGeometry1d &local_geom) const {
+    if (m_cell == NULL) throw runtime_error("No cell specified for sampling."
+                " (Sweep, BirthProcess::InternalRate)");
+
+    return A() * (double) m_cell->Particles().Count();
 }
 
 // RATE TERM CALCULATIONS.
@@ -138,9 +169,14 @@ double BirthProcess::Rate(double t, const Cell &sys,
 // Returns the number of rate terms for this process (one).
 unsigned int BirthProcess::TermCount(void) const {return 1;}
 
-// Calculates the rate terms given an iterator to a double vector. The
-// iterator is advanced to the position after the last term for this
-// process.  Returns the sum of all terms.
+/*!
+ *
+ * @param t             Time at which rate is being calculated
+ * @param sys           System for which rate is to be calculated
+ * @param local_geom    Spatial configuration information (ignored)
+ * @param iterm         Iterator on rates vector
+ * @return              Rate of birth process
+ */
 double BirthProcess::RateTerms(const double t, const Cell &sys,
                              const Geometry::LocalGeometry1d &local_geom,
                              fvector::iterator &iterm) const
@@ -152,8 +188,6 @@ double BirthProcess::RateTerms(const double t, const Cell &sys,
 // PERFORMING THE PROCESS.
 
 /*!
- * 
- *
  * \param[in]       t           Time
  * \param[in,out]   sys         System to update
  * \param[in]       local_geom  Details of local phsyical layout
@@ -167,35 +201,100 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
                           unsigned int iterm,
                           rng_type &rng) const
 {
-    Particle *p = NULL;
-    double wtFactor = (double)m_cell->Particles().Capacity() * sys.SampleVolume()
-            / (sys.Particles().Capacity() * m_cell->SampleVolume());
+    if (m_cell == NULL)
+        throw runtime_error("No cell specified for sampling."
+            " (Sweep, BirthProcess::Perform)");
 
-    if (m_cell->ParticleCount() > 0) {
-        // Uniformly select a particle from the sampling
-        // cell.
-        int i = m_cell->Particles().Select(rng);
-        if (i >= 0) {
-            p = m_cell->Particles().At(i)->Clone();
-            p->setStatisticalWeight(p->getStatisticalWeight() * wtFactor);
-        } else {
-            // If sampling failed, then just use the default
-            // particle.  This is a serious error, and really
-            // should never happen.
-            throw std::runtime_error("Ensemble sampling failed."
-                    "(Sweep, BirthProcess::Perform).");
-        }
-    } else {
-        // Create a copy of the default particle, if there
-        // is no sampling cell.
-        p = m_particle->Clone();
-    }
+    int i = m_cell->Particles().Select(rng);
 
-    // Add the new particle to the ensemble.
-    sys.Particles().Add(*p, rng);
+    DoParticleBirth(t, i, sys,
+        m_cell->Particles().At(i)->getStatisticalWeight() * F(sys),
+        rng);
+
     return 0;
 }
 
+/*!
+ * Create particles over time dt.
+ *
+ * @param t     Current time of the system
+ * @param dt    Time to remove particles over
+ * @param sys   The system to do transport for
+ * @param local_geom    Geometry of the system
+ * @param rng   Random number generator
+ */
+void BirthProcess::PerformDT (
+        double t,
+        double dt,
+        Sweep::Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
+        rng_type &rng) const {
+
+    if (m_btype == BirthProcess::iContinuous) {
+
+        Process::PerformDT(dt, t, sys, local_geom, rng);
+
+        // Get the rate, and do n times like a LPDA process
+        double rate = InternalRate(t, sys, local_geom) * dt;
+        if (rate > 0.0) {
+            boost::random::poisson_distribution<unsigned, double> rpt(rate);
+            unsigned num = rpt(rng);
+            while (num > 0) {
+                // Do the process to the particle.
+                Perform(t, sys, local_geom, 0, rng);
+                num--;
+            }
+        }
+
+    }
+    // Don't do anything for the iStochastic case, as the Perform() will be called
+    // in the usual manner for jump processes.
+
+}
+
+/*!
+ * Create the particle in this system's cell.
+ *
+ * @param t     Time to create particle at
+ * @param isp   Index of particle to clone
+ * @param sys   System to put particle into
+ * @param wt    Weight of the particle
+ * @param rng   Random number generator
+ */
+void BirthProcess::DoParticleBirth(
+        const double t,
+        const int isp,
+        Sweep::Cell &sys,
+        const double wt,
+        rng_type &rng) const {
+
+    // Get reference to a particle.
+    Sweep::Particle *sp = m_cell->Particles().At(isp)->Clone();
+
+    // Reset some properties
+    sp->resetCoagCount();
+    sp->SetTime(t);     // Set LPDA update time.
+
+    // Note that we could just adjust the weight of isp and add it (SWAs only),
+    // but this makes the ensemble more sensitive to depletion for very
+    // downstream reactors.
+
+    double repeats = F(sys);
+    int counter(-1);
+    while (repeats > 0.0) {
+        if (repeats >= 1.0) sys.Particles().Add(*(sp->Clone()), rng);
+        else {
+            boost::random::bernoulli_distribution<double> decider(repeats);
+            if (decider(rng))
+                counter = sys.Particles().Add(*sp, rng);
+        }
+        repeats -= 1.0;
+    }
+
+    // Delete the particle copy if it wasn't added by the decider
+    if (counter < 0) delete sp;
+
+}
 
 // READ/WRITE/COPY.
 
@@ -206,64 +305,3 @@ BirthProcess *const BirthProcess::Clone(void) const {return new BirthProcess(*th
 // processes and for serialisation.
 ProcessType BirthProcess::ID(void) const {return Birth_ID;}
 
-// Writes the object to a binary stream.
-void BirthProcess::Serialize(std::ostream &out) const
-{
-    if (out.good()) {
-        const unsigned int trueval  = 1;
-        const unsigned int falseval = 0;
-
-        // Output the version ID (=0 at the moment).
-        const unsigned int version = 0;
-        out.write((char*)&version, sizeof(version));
-
-        // Serialize base class.
-        Process::Serialize(out);
-
-        // Write default particle.
-        if (m_particle) {
-            out.write((char*)&trueval, sizeof(trueval));
-            m_particle->Serialize(out);
-        } else {
-            out.write((char*)&falseval, sizeof(falseval));
-        }
-    } else {
-        throw invalid_argument("Output stream not ready "
-                               "(Sweep, BirthProcess::Serialize).");
-    }
-}
-
-// Reads the object from a binary stream.
-void BirthProcess::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
-{
-    delete m_particle; m_particle = NULL;
-
-    if (in.good()) {
-        // Read the output version.  Currently there is only one
-        // output version, so we don't do anything with this variable.
-        // Still needs to be read though.
-        unsigned int version = 0;
-        in.read(reinterpret_cast<char*>(&version), sizeof(version));
-
-        unsigned int n = 0;
-
-        switch (version) {
-            case 0:
-                // Deserialize base class.
-                Process::Deserialize(in, mech);
-
-                // Read default particle.
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                if (n==1) {
-                    m_particle = new Particle(in, mech);
-                }
-                break;
-            default:
-                throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, BirthProcess::Deserialize).");
-        }
-    } else {
-        throw invalid_argument("Input stream not ready "
-                               "(Sweep, BirthProcess::Deserialize).");
-    }
-}

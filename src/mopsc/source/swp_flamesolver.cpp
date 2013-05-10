@@ -64,6 +64,17 @@ FlameSolver::FlameSolver()
 {
 }
 
+//! Copy constructor
+FlameSolver::FlameSolver(const FlameSolver &sol)
+: ParticleSolver(sol),
+  Sweep::Solver(sol),
+  m_gas_prof(sol.m_gas_prof) {}
+
+//! Clone the object
+FlameSolver *const FlameSolver::Clone() const {
+    return new FlameSolver(*this);
+}
+
 // Default destructor.
 FlameSolver::~FlameSolver()
 {
@@ -82,7 +93,7 @@ FlameSolver::~FlameSolver()
 void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
 {
     // Clear the current gas-phase profile.
-    m_gasprof.clear();
+    m_gas_prof.clear();
 	
     // Open the file to read.
     ifstream fin(file.c_str(), ios::in);
@@ -259,7 +270,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetAlpha(alpha);
 
             // Add the profile point.
-            m_gasprof.push_back(gpoint);
+            m_gas_prof.push_back(gpoint);
 
             // Output in PSDF_input.dat format
             //std::cout << t << '\t' << std::scientific << std::setprecision(6) << T << '\t';
@@ -275,7 +286,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         fin.close();
 
         // Sort the profile by time.
-        SortGasProfile(m_gasprof);
+        SortGasProfile(m_gas_prof);
 
     } else {
         // There was no data in the file.
@@ -410,13 +421,13 @@ double FlameSolver::linInterpGas(double t,
                                Sprog::Thermo::IdealGas &gas) const
 {
     // Get the time point after the required time.
-    GasProfile::const_iterator j = Sweep::LocateGasPoint(m_gasprof, t); //gasphase.upper_bound(t);
+    GasProfile::const_iterator j = Sweep::LocateGasPoint(m_gas_prof, t); //gasphase.upper_bound(t);
     
-    if (j == m_gasprof.begin()) {
+    if (j == m_gas_prof.begin()) {
         // This time is before the beginning of the profile.  Return
         // the first time point.
         gas = j->Gas;
-    } else if (j == m_gasprof.end()) {
+    } else if (j == m_gas_prof.end()) {
         // This time is after the profile.  Return the last time
         // point
         --j;
@@ -453,7 +464,7 @@ double FlameSolver::linInterpGas(double t,
     }
 
     // Give some indication of the data spacing
-    if((j != m_gasprof.end()) && ((j+1) != m_gasprof.end()))
+    if((j != m_gas_prof.end()) && ((j+1) != m_gas_prof.end()))
         return ((j+1)->Time - j->Time);
     else
     // Past the end of the data there is no spacing
@@ -461,5 +472,5 @@ double FlameSolver::linInterpGas(double t,
 }
 
 GasProfile* FlameSolver::Gasphase(void){
-	return &m_gasprof;
+	return &m_gas_prof;
 }

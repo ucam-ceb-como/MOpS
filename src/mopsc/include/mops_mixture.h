@@ -72,6 +72,7 @@ public:
     // Operators.
     Mixture &operator=(const Mixture &rhs);
 
+
     // READ/WRITE/COPY.
 
     // Creates a clone of the mixture object.

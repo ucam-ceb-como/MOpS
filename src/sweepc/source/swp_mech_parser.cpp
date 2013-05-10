@@ -411,9 +411,6 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         str = (*i)->GetAttributeValue("enable");
         if (str == "true") {
             mech.SintModel().Enable();
-        } else {
-            mech.SintModel().Disable();
-        }
 
         // Get sintering model type.
         str = (*i)->GetAttributeValue("model");
@@ -452,6 +449,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             str = (*i)->GetFirstChild("Dpmin")->Data();
             mech.SintModel().SetDpmin(cdble(str));
         }
+
+        } else {
+            mech.SintModel().Disable();
+        }
+
     } else {
         // No sintering model defined.
         mech.SintModel().Disable();

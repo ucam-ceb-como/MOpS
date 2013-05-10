@@ -69,6 +69,9 @@ class EnvironmentInterface;
 
 namespace Processes
 {
+class Process;
+typedef std::vector<Process*> ProcessPtrVector;
+
 class Process
 /*!
  * \brief Define an interface for all processes
@@ -207,6 +210,14 @@ public:
         rng_type &rng
         ) const = 0;
 
+    //! Performs the process over time dt on the given system.
+    virtual void PerformDT (
+            const double t,
+            const double dt,
+            Sweep::Cell &sys,
+            const Geometry::LocalGeometry1d& local_geom,
+            rng_type &rng) const;
+
 
     // FICTICIOUS EVENTS.
 
@@ -260,6 +271,7 @@ protected:
         unsigned int n // Number of times to apply process.
          = 1           //  - Default is one time.
          ) const;
+
 }; // class Process
 } // namespace Processes
 } // namespace Sweep

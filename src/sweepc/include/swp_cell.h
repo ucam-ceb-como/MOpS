@@ -83,6 +83,11 @@ public:
     //! Overwrite contents
     Cell &operator=(const Cell &rhs);
 
+    //! Overload of the << operator
+    friend std::ostream& operator<<(
+            std::ostream &os,
+            const Sweep::Cell &c);
+
     // THE GAS-PHASE INTERFACE.
 
     //!Returns the description of the gas-phase mixture.
@@ -146,36 +151,30 @@ public:
 
     // PARTICLE INFLOW PROCESSES.
 
-    // Returns the number of inflow processes defined
-    // for this Cell.
+    //! Returns the number of inflow processes defined for this Cell.
     unsigned int InflowCount(void) const;
 
-    // Returns the vector of particle inflow processes.
+    //! Returns the vector of particle inflow processes.
     const Processes::BirthPtrVector &Inflows(void) const;
 
-    // Returns the ith particle inflow process.
+    //! Returns the ith particle inflow process.
     Processes::BirthProcess *const Inflows(unsigned int i) const;
 
-    // Add an inflow process to the Cell. The process is copied.
+    //! Add an inflow process to the Cell. The process is copied.
     void AddInflow(Processes::BirthProcess &inf);
-
-    //! Check if there are any particles in the inflow.
-    bool HasInflowParticles() const;
-
 
     // PARTICLE OUTFLOW PROCESSES.
 
-    // Returns the number of outflow processes defined
-    // for this Cell.
+    //! Returns the number of outflow processes defined for this Cell
     unsigned int OutflowCount(void) const;
 
-    // Returns the vector of particle outflow processes.
+    //! Returns the vector of particle outflow processes.
     const Processes::DeathPtrVector &Outflows(void) const;
 
-    // Returns the ith particle outflow process.
+    //! Returns the ith particle outflow process.
     Processes::DeathProcess *const Outflows(unsigned int i) const;
 
-    // Add an outflow process to the Cell. The process is copied.
+    //! Add an outflow process to the Cell. The process is copied.
     void AddOutflow(Processes::DeathProcess &out);
 
     // Add an outflow process with the given rate to the Cell.

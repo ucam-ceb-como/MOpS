@@ -26,7 +26,7 @@ rm regression3a*
 
 # run mops on a very simple problem with weighted particles and additive kernel
 echo "Weighted particle simulation of additive coagulation kernel"
-"$program" -flamepp -p -gp ./regress3/regress3.inp -rr ./regress3/regress3.inx -s ./regress3/regress3.xml -c ./regress3/chem.inp -t ./regress3/therm.dat
+"$program" --flamepp -p -g ./regress3/regress3.inp -r ./regress3/regress3.inx -s ./regress3/regress3.xml -c ./regress3/chem.inp -t ./regress3/therm.dat
 echo "Finished simulation"
 echo "========================"
 

@@ -18,7 +18,7 @@ rm regression4a*
 
 
 echo "Weighted particle simulation of constant coagulation kernel"
-"$program" -flamepp -p -gp ./regress4/regress4.inp -rr ./regress4/regress4.inx -s ./regress4/regress4.xml -c ./regress4/chem.inp -t ./regress4/therm.dat
+"$program" --flamepp -p -g ./regress4/regress4.inp -r ./regress4/regress4.inx -s ./regress4/regress4.xml -c ./regress4/chem.inp -t ./regress4/therm.dat
 echo "Finished simulation"
 echo "========================"
 

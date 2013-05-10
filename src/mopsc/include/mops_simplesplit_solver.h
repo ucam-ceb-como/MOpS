@@ -60,6 +60,11 @@ public:
     // Constructors.
     SimpleSplitSolver(void); // Default constructor.
 
+    //! Copy constructor
+    SimpleSplitSolver(const SimpleSplitSolver &sol);
+
+    SimpleSplitSolver *const Clone() const;
+
     // Destructors.
     ~SimpleSplitSolver(void); // Default destructor.
 

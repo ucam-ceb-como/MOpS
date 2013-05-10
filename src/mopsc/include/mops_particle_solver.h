@@ -63,6 +63,12 @@ public:
     // Constructors.
     ParticleSolver(void); // Default constructor.
 
+    //! Copy constructor
+    ParticleSolver(const ParticleSolver &sol);
+
+    //! Clone the object
+    ParticleSolver *const Clone() const;
+
     // Destructors.
     virtual ~ParticleSolver(void); // Default destructor.
 

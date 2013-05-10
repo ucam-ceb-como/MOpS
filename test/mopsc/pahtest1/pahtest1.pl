@@ -48,12 +48,12 @@ if($#outputFiles > 0) {
 my $program = $ARGV[0];
 
 # Arguments for simulation
-my @simulationCommand = ($program, "-flamepp", "-p",
-                         "-gp", "pahtest1/gasphase.inp",
+my @simulationCommand = ($program, "--flamepp", "-p",
+                         "-g", "pahtest1/gasphase.inp",
                          "-c",  "pahtest1/chem.inp",
                          "-t",  "pahtest1/therm.dat",
                          "-s",  "pahtest1/sweep.xml",
-                         "-rr", "pahtest1/mops.inx");
+                         "-r", "pahtest1/mops.inx");
 
 # Run the simulation and wait for it to finish
 system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";

@@ -85,14 +85,6 @@ public:
         const Sweep::Mechanism &mech // Parent mechanism.
         );
 
-    // Reads a death process from a binary stream.  The first item read
-    // is the process ID which tells the ModelFactory what type
-    // of death process to read.
-    static DeathProcess *const ReadDeath(
-        std::istream &in,            // Input stream.
-        const Sweep::Mechanism &mech // Parent mechanism.
-        );
-
 
     // STREAM OUTPUT.
 

@@ -56,6 +56,12 @@ public:
     // Constructors.
     FlameSolver(void); // Default constructor.
 
+    //! Copy constructor
+    FlameSolver(const FlameSolver &sol);
+
+    //! Clone the object
+    FlameSolver *const Clone() const;
+
     // Destructors.
     virtual ~FlameSolver(void); // Default destructor.
 
@@ -88,10 +94,10 @@ public:
 
     GasProfile* Gasphase(void);
 
-private:
+protected:
 
     //* The gas-phase chemistry profile.
-    GasProfile m_gasprof;
+    GasProfile m_gas_prof;
 
     // HELPER FUNCTIONS.
 

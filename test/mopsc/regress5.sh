@@ -18,7 +18,7 @@ rm -f regression5a*
 
 
 echo "DSA for constant coagulation kernel"
-"$program" -flamepp -p -gp ./regress5/regress5.inp -rr ./regress5/regress5.inx -s ./regress5/regress5.xml -c ./regress5/chem.inp -t ./regress5/therm.dat
+"$program" --flamepp -p -g ./regress5/regress5.inp -r ./regress5/regress5.inx -s ./regress5/regress5.xml -c ./regress5/chem.inp -t ./regress5/therm.dat
 echo "Finished simulation"
 echo "========================"
 

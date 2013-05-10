@@ -53,14 +53,13 @@
 #include "mops_mixture.h"
 #include "mops_mechanism.h"
 
+#include "mops_reactor_network.h"
+#include "mops_network_simulator.h"
+
 #include "mops_settings_io.h"
 #include "mops_timeinterval.h"
 
-#include "mops_solvertype.h"
-#include "mops_solver.h"
-#include "mops_simplesplit_solver.h"
-#include "mops_strang_solver.h"
-#include "mops_predcor_solver.h"
+#include "mops_solver_factory.h"
 
 #include "mops_flux_postprocessor.h"
 #include "mops_gpc_sensitivity.h"

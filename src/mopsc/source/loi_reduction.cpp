@@ -133,10 +133,10 @@ void Mops::LOIReduction::CreateLOIFile(std::ofstream &LOIFile, const Mechanism *
 /*!
 return      name        Returns the name of the LOI file
 */
-std::string Mops::LOIReduction::buildLOIFileName()
+std::string Mops::LOIReduction::buildLOIFileName(const std::string& n)
 {
     std::stringstream name;
-    name << "LOIReduction.csv";
+    name << n << std::string("-loi.csv");
     return name.str();
 
 }
