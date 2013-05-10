@@ -1023,6 +1023,11 @@ void MechParser::readConstantInception(CamXML::Element &xml, Processes::Constant
         icn.SetA(A * 1.0e6);
     }
 
+    // Prevent silent skipping of rate elements
+    if (xml.GetFirstChild("rate") != NULL) {
+        throw std::runtime_error("<rate> element no longer supported (Sweep::MechParser::readConstantInception)");
+    }
+
     // See if the inception is at a fixed position
     el = xml.GetFirstChild("fixedposition");
     if (el != NULL) {
@@ -1115,7 +1120,7 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
  *
  * Rate expressions are of the form
  * \f[
- *    A \left[Y\right] T^n e^\frac{E}{RT} \times particle property,
+ *    A \left[Y\right] T^n e^\frac{E}{RT} \times \mathrm{particle\ property},
  * \f]
  * where \f$\left[Y\right]\f$ gives the number of moles of a gas
  * phase species \f$Y\f$ per cubic centimetre and the \f$T^n\f$ term is
@@ -1124,7 +1129,7 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
  * be \f$\mathrm{cm}^3 \mathrm{mol}^{-1} \mathrm{s}^{-1}\f$.  If the
  * particle property has dimensions, for example collision diameter
  * raised to the power \f$k\f$, then \f$A\f$ has different units:
- * \f$\mathrm{cm}^{3-n} \mathrm{mol}^{-1} \mathrm{s}^{-1}\f$.  If the
+ * \f$\mathrm{cm}^{3-k} \mathrm{mol}^{-1} \mathrm{s}^{-1}\f$.  If the
  * particle property is surface or active surface then any power
  * specified for the property in the input is ignored.
  * Active surface is also treated like a dimensionless quantity,
@@ -1275,7 +1280,7 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
     rxn.SetArrhenius(arr);
     // Ensure the Process object has the same pre-exponential in case it
     // is mistakenly used instead of the Arrhenius object.
-    rxn.SetA(arr.A);
+    //rxn.SetA(arr.A);
 
 }
 
