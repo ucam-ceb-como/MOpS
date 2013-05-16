@@ -78,6 +78,8 @@ add_test(mops.regress6 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/r
 
 add_test(mops.regress7 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress7.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
+add_test(mops.regress8 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress8.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/regress8)
+
 add_test(mops.psr1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/psr1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 add_test(mops.psr2 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/psr2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/psr2)
@@ -99,6 +101,17 @@ add_test(mops.bintree1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/b
 add_test(mops.imaging1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/imaging1)
 
 add_test(mops.titania1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titania1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titania1)
+
+# Networking interface tests
+add_test(mops.network1a ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1 "a")
+
+add_test(mops.network1b ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1 "b")
+
+add_test(mops.network1c ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1 "c")
+
+add_test(mops.network1d ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1 "d")
+
+add_test(mops.network2 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network2)
 
 ########## The PAH-KMC Application ######################
 add_executable(PAHkmc-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/PAHkmc/kmc_model.cpp)

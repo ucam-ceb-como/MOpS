@@ -187,11 +187,10 @@ protected:
     // is multiplied by this parameter to get the majorised rate.
     const static double m_majfactor;
 
-    // Arrhenius rate parameters.
+    //! Arrhenius rate parameters.
     Sprog::Kinetics::ARRHENIUS m_arr;
 
-    // Particle property to which the rate of the process is
-    // proportional.
+    //! Particle property to which the rate of the process is proportional.
     Sweep::PropID m_pid;
 
     // Default constructor is protected to prevent reactions being

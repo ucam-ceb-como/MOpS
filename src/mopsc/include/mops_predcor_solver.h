@@ -66,6 +66,12 @@ public:
     // Constructors.
     PredCorSolver(void); // Default constructor.
 
+    //! Copy constructor
+    PredCorSolver(const PredCorSolver &sol);
+
+    //! Clone the object
+    PredCorSolver *const Clone() const;
+
     // Destructors.
     ~PredCorSolver(void); // Default destructor.
 
@@ -132,9 +138,6 @@ public:
         );
 
 private:
-    // The gas-phase profile, used to run sweep.
-    Sweep::GasProfile m_gas_prof;
-
     // The source terms which describe the effect of the soot processes
     // on the gas-phase conditions.
     SrcProfile m_srcterms, m_srcterms_copy;

@@ -16,17 +16,20 @@ add_library(mops source/cvodes_utils.cpp
                  source/mops_gpc_sensitivity.cpp
                  source/mops_mechanism.cpp
                  source/mops_mixture.cpp
+                 source/mops_network_simulator.cpp
                  source/mops_ode_solver.cpp
                  source/mops_particle_solver.cpp
                  source/mops_predcor_solver.cpp
                  source/mops_psr.cpp
                  source/mops_reactor.cpp
                  source/mops_reactor_factory.cpp
+                 source/mops_reactor_network.cpp
                  source/mops_rhs_func.cpp
                  source/mops_settings_io.cpp
                  source/mops_simplesplit_solver.cpp
                  source/mops_simulator.cpp
                  source/mops_solver.cpp
+                 source/mops_solver_factory.cpp
                  source/mops_src_terms.cpp
                  source/mops_strang_solver.cpp
                  source/mops_timeinterval.cpp

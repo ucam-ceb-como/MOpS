@@ -63,6 +63,9 @@ public:
     // Constructors.
     Solver(void); // Default constructor.
 
+    //! Copy constructor
+    Solver(const Solver &sol);
+
     // Destructor.
     ~Solver(void);
 

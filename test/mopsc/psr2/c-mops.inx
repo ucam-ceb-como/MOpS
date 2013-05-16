@@ -13,7 +13,7 @@
     <temperature units="K">1000</temperature>
     <pressure units="Pa">101325</pressure>
     
-    <residencetime unit="s">1.0</residencetime>  
+    <restime unit="s">1.0</restime> 
     <inflow>
         <temperature>1000</temperature>
         <pressure units="Pa">101325</pressure>
@@ -23,9 +23,9 @@
    </reactor>
 
   <!-- Output time sequence. -->
-  <timeintervals splits="1">
+  <timeintervals splits="5">
     <start>0.0</start>
-    <time steps="50">10.0</time>
+    <time steps="100">10.0</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->

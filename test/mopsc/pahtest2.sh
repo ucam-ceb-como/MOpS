@@ -59,7 +59,7 @@ dos2unix gasphase.inp
 dos2unix therm.dat
 dos2unix pahtest2.pl
 
-"$program" -p -flamepp -ppah > /dev/null
+"$program" -p --flamepp --ppah > /dev/null
 R CMD BATCH --no-save --no-restore stats.r Routput.txt &
 R2pid=$!
 wait $R2pid

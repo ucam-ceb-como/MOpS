@@ -51,6 +51,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <boost/random/poisson_distribution.hpp>
+#include <boost/random/discrete_distribution.hpp>
 
 #include "string_functions.h"
 #include "swp_particle.h"
@@ -321,7 +322,7 @@ double Mechanism::CalcRates(double t, const Cell &sys, const Geometry::LocalGeom
     // Get coagulation rate.
     sum += Coagulation::CalcRates(t, sys, local_geom, m_coags, rates, m_inceptions.size() + m_processes.size());
 
-    // Get birth and death rates from the Cell.
+    // Get birth rates from the Cell.
     fvector::iterator i = rates.begin() + m_inceptions.size() + m_processes.size() + m_coags.size();
     const BirthPtrVector &inf = sys.Inflows();
     for (BirthPtrVector::const_iterator j=inf.begin(); j!=inf.end(); ++j) {
@@ -329,8 +330,10 @@ double Mechanism::CalcRates(double t, const Cell &sys, const Geometry::LocalGeom
         sum += *i;
         ++i;
     }
-    const DeathPtrVector &out = sys.Outflows();
-    for (DeathPtrVector::const_iterator j=out.begin(); j!=out.end(); ++j) {
+
+    // Get death rates from the Cell.
+    const DeathPtrVector &outf = sys.Outflows();
+    for (DeathPtrVector::const_iterator j=outf.begin(); j!=outf.end(); ++j) {
         *i = (*j)->Rate(t, sys, local_geom);
         sum += *i;
         ++i;
@@ -352,7 +355,8 @@ double Mechanism::CalcRates(double t, const Cell &sys, const Geometry::LocalGeom
  * @brief               Calculates the number of jump events for each process
  *
  * Calculates the absolute number of jump events for each inception, particle
- * process and coagulation event. Returns the sum of the jump events.
+ * process and coagulation event. Returns the sum of the jump events. Ignores
+ * transport processes.
  *
  * @param t             Time
  * @param sys           Particle population
@@ -363,7 +367,7 @@ double Mechanism::CalcRates(double t, const Cell &sys, const Geometry::LocalGeom
 double Mechanism::CalcJumps(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom, fvector &jumps) const
 {
     // Ensure jumps vector is the correct length, then set to zero.
-    jumps.resize(m_processcount+sys.InflowCount()+sys.OutflowCount(), 0.0);
+    jumps.resize(m_processcount, 0.0);
     fill(jumps.begin(), jumps.end(), 0.0);
 
     // Iterator for filling jumps vector
@@ -450,13 +454,15 @@ double Mechanism::CalcRateTerms(double t, const Cell &sys, const Geometry::Local
     // Coagulation
     sum += Coagulation::CalcRateTerms(t, sys, local_geom, m_coags, iterm);
 
-    // Get birth and death rates from the Cell.
+    // Birth processes
     const BirthPtrVector &inf = sys.Inflows();
     for (BirthPtrVector::const_iterator j=inf.begin(); j!=inf.end(); ++j) {
         sum += (*j)->RateTerms(t, sys, local_geom, iterm);
     }
-    const DeathPtrVector &out = sys.Outflows();
-    for (DeathPtrVector::const_iterator j=out.begin(); j!=out.end(); ++j) {
+
+    // Death processes
+    const DeathPtrVector &outf = sys.Outflows();
+    for (DeathPtrVector::const_iterator j=outf.begin(); j!=outf.end(); ++j) {
         sum += (*j)->RateTerms(t, sys, local_geom, iterm);
     }
 
@@ -507,13 +513,14 @@ double Mechanism::CalcJumpRateTerms(double t, const Cell &sys, const Geometry::L
     // Get coagulation rate.
     sum += Coagulation::CalcRateTerms(t, sys, local_geom, m_coags, iterm);
 
-    // Get birth and death rates from the Cell.
+    // Get birth rates from the Cell.
     const BirthPtrVector &inf = sys.Inflows();
     for (BirthPtrVector::const_iterator j=inf.begin(); j!=inf.end(); ++j) {
         sum += (*j)->RateTerms(t, sys, local_geom, iterm);
     }
-    const DeathPtrVector &out = sys.Outflows();
-    for (DeathPtrVector::const_iterator j=out.begin(); j!=out.end(); ++j) {
+
+    const DeathPtrVector &outf = sys.Outflows();
+    for (DeathPtrVector::const_iterator j=outf.begin(); j!=outf.end(); ++j) {
         sum += (*j)->RateTerms(t, sys, local_geom, iterm);
     }
 
@@ -713,22 +720,86 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
             }
         }
 
-        // The coagulation process is undefined, so it
-        // must be either a birth or death process from
-        // the cell.
         if ((j < (int)sys.InflowCount()) && (j>=0)) {
             // An inflow process.
-            sys.Inflows(j)->SetMechanism(*this);
             sys.Inflows(j)->Perform(t, sys, local_geom, 0, rng);
+            return;
         } else {
-            j -= sys.InflowCount();
-            if ((j < (int)sys.OutflowCount()) && (j>=0)) {
-                // An outflow process.
-                sys.Outflows(j)->SetMechanism(*this);
-                sys.Outflows(j)->Perform(t, sys, local_geom, 0, rng);
-            }
+            // Hopefully a death process then!
+            j -= sys.InflowCount();;
         }
+
+        if ((j < (int)sys.OutflowCount()) && (j>=0)) {
+            // An outflow process.
+            sys.Outflows(j)->Perform(t, sys, local_geom, 0, rng);
+        } else {
+            throw std::runtime_error("Unknown index of process, couldn't Perform."
+                    " (Sweep, Mechanism::DoProcess)");
+        }
+
     }
+}
+
+
+/*!
+ * The equivalent of the DoProcess function, but for particle transport
+ * due to reactor flow and over time dt. The processes are done in a
+ * pseudorandom order, as preliminary investigations indicated that a
+ * set order (e.g. inflow first, then outflow) led to a statistically
+ * significant difference in moments.
+ *
+ * @param t             Current system time
+ * @param dt            Time over which to do process
+ * @param sys           The system to perform the process on
+ * @param local_geom    Geometry information
+ * @param rng           Random number generator
+ */
+void Mechanism::DoParticleFlow(
+        double t,
+        double dt,
+        Cell &sys,
+        const Geometry::LocalGeometry1d& local_geom,
+        rng_type &rng) const {
+    Processes::ProcessPtrVector flows;
+    std::vector<double> rates;
+
+    // Get the processes and their 'rates' first
+    for (Processes::BirthPtrVector::const_iterator it = sys.Inflows().begin();
+            it != sys.Inflows().end(); ++it) {
+        flows.push_back(*it);
+        rates.push_back((*it)->A());
+    }
+    for (Processes::DeathPtrVector::const_iterator it = sys.Outflows().begin();
+            it != sys.Outflows().end(); ++it) {
+        flows.push_back(*it);
+        rates.push_back((*it)->A());
+    }
+
+    // Using a discrete distribution weighted by the relative rates of each
+    // process, progressively PerformDT each one.
+    unsigned int i(0), j(0), nprocs(flows.size());
+    while (i != nprocs) {
+        // Get the vector index of the process to perform.
+        boost::random::discrete_distribution<> dist(rates);
+        j = dist(rng);
+
+        // Do the process
+        flows.at(j)->PerformDT(t, dt, sys, local_geom, rng);
+
+        // Remove the process and its rates from the distribution
+        rates.erase(rates.begin() + j);
+        flows.erase(flows.begin() + j);
+
+        // Increment the iterator
+        i++;
+    }
+
+    // Now check if the death process needs adapting.
+    for (Processes::DeathPtrVector::const_iterator it = sys.Outflows().begin();
+            it != sys.Outflows().end(); ++it) {
+        (*it)->Adapt(sys);
+    }
+
 }
 
 /*!

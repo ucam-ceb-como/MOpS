@@ -41,7 +41,7 @@ function CheckErr {
 }
 
 # Run the executable
-"$program" -p -strang -ensemble  > /dev/null
+"$program" -p --strang --ensemble  > /dev/null
 CheckErr $?
 
 # Run the perl script as a here document (laziness)

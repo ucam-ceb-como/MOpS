@@ -28,11 +28,14 @@ Release/
 *.dir/
 *.project
 *.cproject
+Makefile
 src/brush/Makefile
 src/camflow/Makefile
 src/io/camxml/Makefile
 src/io/comostrings/Makefile
-src/io/chemkinreader/Makefile
+src/io/chemkinReader/Makefile
+src/io/odesolvers/cvode/Makefile
+src/io/odesolvers/cvodes/Makefile
 src/geometry/Makefile
 src/mopsc/Makefile
 src/sprogc/Makefile

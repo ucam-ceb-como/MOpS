@@ -49,12 +49,12 @@ if($#outputFiles > 0) {
 my $program = $ARGV[0];
 
 # Arguments for simulation
-my @simulationCommand = ($program, "-flamepp", "-p",
-                         "-gp", "regress6/regress6.inp",
+my @simulationCommand = ($program, "--flamepp", "-p",
+                         "-g", "regress6/regress6.inp",
                          "-s", "regress6/regress6a.xml",
 			"-c", "regress6/chem.inp",
 			"-t", "regress6/therm.dat",
-                         "-rr", "regress6/regress6a.inx");
+                         "-r", "regress6/regress6a.inx");
 
 # Run the simulation and wait for it to finish
 system(@simulationCommand) == 0 or die "ERR: simulation failed: $!";

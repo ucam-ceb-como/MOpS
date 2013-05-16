@@ -57,6 +57,15 @@ SimpleSplitSolver::SimpleSplitSolver(void)
 {
 }
 
+//! Copy constructor
+SimpleSplitSolver::SimpleSplitSolver(const SimpleSplitSolver &sol)
+: Mops::ParticleSolver(sol),
+  Sweep::Solver(sol) {}
+
+SimpleSplitSolver *const SimpleSplitSolver::Clone() const {
+    return new SimpleSplitSolver(*this);
+}
+
 // Default destructor.
 SimpleSplitSolver::~SimpleSplitSolver(void)
 {

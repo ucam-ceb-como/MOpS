@@ -71,7 +71,7 @@ namespace LOIReduction
     void CreateLOIFile(std::ofstream &LOIFile, const Mechanism *const mech);
 
     //! Build the name for the LOI file.
-    std::string buildLOIFileName();
+    std::string buildLOIFileName(const std::string &n);
 
     //! Save the data from one run in the file created by the function above.
     void SaveLOI(std::vector<fvector> LOI, double t, std::ofstream &out, const Mechanism *const mech);

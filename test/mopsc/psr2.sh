@@ -17,23 +17,23 @@
 # time. To keep them as a constant rate, leave them as t*0 + const. The
 # tests also assume a residence time of 1.0.
 # 
-# CASE A: INITIALISED PARTICLES AND OUTFLOW
+# CASE A: INITIALISED PARTICLES AND IN/OUTFLOW
 # All process rates at 0, e.g. K = lambda t: t*0.0 + 0.0
 # NINIT = [1.0]
 # 
-# CASE B: REACTOR FILLED WITH PARTICLES, OUTFLOW + COAG ONLY.
+# CASE B: REACTOR FILLED WITH PARTICLES, IN/OUTFLOW + COAG ONLY.
 # NINIT = [1.0]
 # K = lambda t: t*0.0 + 1.0
 # 
-# CASE C: REACTOR EMPTY, INCEPTION, SR AND OUTFLOW ONLY.
+# CASE C: REACTOR EMPTY, INCEPTION, SR AND IN/OUTFLOW ONLY.
 # NINIT = [0.0]
 # S = lambda t: t*0.0 + 1.0
 # I = lambda t: t*0.0 + 1.0
 # 
-# CASE D: REACTOR EMPTY; INFLOW AND OUTFLOW ONLY
+# CASE D: REACTOR EMPTY; PARTICLE INFLOW AND OUTFLOW ONLY
 # NIN = [1.0]
 # 
-# CASE E: REACTOR EMPTY; INFLOW, OUTFLOW AND WEIGHTED COAG
+# CASE E: REACTOR EMPTY; PARTICLE INFLOW, OUTFLOW AND WEIGHTED COAG
 # NINIT = [0.0]
 # NIN = [1.0]
 # K = lambda t: t*0.0 + 1.0
@@ -120,7 +120,7 @@ m3True=45400.9277986
 
 # Run MOPS
 echo "Running MOPS for CASE A..."
-$exe -p -strang -s "a-sweep.xml" -rr "a-mops.inx" > /dev/null
+$exe -p --strang -s "a-sweep.xml" -r "a-mops.inx" > /dev/null
 CheckErr $?
 
 CheckTest
@@ -136,7 +136,7 @@ m3True=249691.654296
 
 # Run MOPS
 echo "Running MOPS for CASE B..."
-$exe -p -strang -s "b-sweep.xml" -rr "a-mops.inx" > /dev/null
+$exe -p --strang -s "b-sweep.xml" -r "a-mops.inx" > /dev/null
 CheckErr $?
 
 CheckTest
@@ -152,7 +152,7 @@ m3True=25901213879.0
 
 # Run MOPS
 echo "Running MOPS for CASE C..."
-$exe -p -strang -s "c-sweep.xml" -rr "c-mops.inx" > /dev/null
+$exe -p --strang -s "c-sweep.xml" -r "c-mops.inx" > /dev/null
 CheckErr $?
 
 CheckTest
@@ -168,7 +168,7 @@ m3True=1000000000.0
 
 # Run MOPS
 echo "Running MOPS for CASE D..."
-$exe -p -strang -s "a-sweep.xml" -rr "d-mops.inx" > /dev/null
+$exe -p --strang -s "a-sweep.xml" -r "d-mops.inx" > /dev/null
 CheckErr $?
 
 CheckTest
@@ -184,7 +184,7 @@ m3True=6982310054.91
 
 # Run MOPS
 echo "Running MOPS for CASE E..."
-$exe -p -strang -s "e-sweep.xml" -rr "d-mops.inx" > /dev/null
+$exe -p --strang -s "e-sweep.xml" -r "d-mops.inx" > /dev/null
 CheckErr $?
 
 CheckTest

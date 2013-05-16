@@ -68,6 +68,25 @@ Solver::~Solver(void)
 {
 }
 
+// Copy constructor
+Solver::Solver(const Mops::Solver &sol)
+: m_ode(sol.m_ode),
+  m_atol(sol.m_atol),
+  m_rtol(sol.m_rtol),
+  m_LOIEnable(sol.m_LOIEnable),
+  m_LOIComp(sol.m_LOIComp),
+  m_rlx_coeff(sol.m_rlx_coeff),
+  Kept_Spec(sol.Kept_Spec),
+  m_cpu_start(sol.m_cpu_start),
+  m_cpu_mark(sol.m_cpu_mark),
+  m_tottime(sol.m_tottime),
+  m_chemtime(sol.m_chemtime)
+{}
+
+//! Clone the object
+Solver *const Solver::Clone() const {
+    return new Solver(*this);
+}
 
 // SOLVER INITIALISATION AND RESET.
 

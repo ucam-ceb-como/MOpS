@@ -48,14 +48,13 @@
 #ifndef MOPS_FLOW_STREAM_H
 #define MOPS_FLOW_STREAM_H
 
-#include "mops_params.h"
+#include "mops_psr.h"
 #include "mops_mixture.h"
-#include "mops_mechanism.h"
 #include <iostream>
 
 namespace Mops
 {
-class Reactor; // Forward declare.
+class PSR; // Forward declare.
 
 class FlowStream
 {
@@ -68,7 +67,7 @@ public:
         const Mechanism &mech //   - Mechanism which defines the stream.
         );
 
-    // Destructor.
+    //! Destructor.
     ~FlowStream(void); // Default destructor.
 
     // Operators.
@@ -77,67 +76,62 @@ public:
 
     // FLOW STREAM PROPERTIES.
 
-    // Returns a pointer to the mixture currently occupying
-    // the reactor.
-    Mops::Mixture *const Mixture() const;
+    //! Returns a pointer to the Mixture in the flowstream
+    Mops::Mixture *const Mixture() const {return m_mix;}
 
-    // Sets the flow stream mixture conditions, if they are
-    // not dictated by the inflow.
+    //! Sets the Mixture in the flowstream
     void SetConditions(const Mops::Mixture &mix);
-
 
     // FLOW STREAM CONNECTIONS.
 
-    // Returns the reactor which is the inflow to this stream.
-    Reactor *const Inflow(void) const;
+    //! Returns the reactor which is the inflow to this stream
+    PSR *const Inflow() const {return m_in;}
 
-    // Returns the reactor which receives the outflow 
-    // of this stream.
-    Reactor *const Outflow(void) const;
+    //! Returns the reactor which receives the outflow of this stream
+    PSR *const Outflow() const {return m_out;}
 
-    // Connects the flow stream as an output of the given
-    // reactor (i.e. the stream conditions become those
-    // of the reactor).
-    void ConnectInflow(Reactor &r);
+    //! Connects the inflow of the stream to a reactor outflow
+    void ConnectInflow(PSR &r);
 
-    // Connects the flow stream as an input to the given 
-    // reactor (i.e. the reactor receives the output from
-    // the stream).
-    void ConnectOutflow(Reactor &r);
+    //! Connects the ouflow of the stream to a reactor inflow
+    void ConnectOutflow(PSR &r);
 
-    // Disconnects the flow-stream inflow reactor.
-    void DisconnectInflow(void);
+    //! Has an inflow? Keep different from PSR one for clarity
+    bool HasReacInflow() const {if (m_in!=NULL) return true; else return false;}
 
-    // Disconnects the flow-stream outflow reactor.
-    void DisconnectOutflow(void);
+    //! Has an outflow? Keep different from PSR one for clarity
+    bool HasReacOutflow() const {if (m_out!=NULL) return true; else return false;}
 
+    //! Set the flow rate
+    void SetFlowFraction(double ff) {m_flow_frac = ff;}
 
-    // FLOW STREAM MECHANISM.
+    //! Get the flow rate
+    double GetFlowFraction() const {return m_flow_frac;}
 
-    // Returns the current mechanism.
-    const Mops::Mechanism *const Mech() const;
-
-    // Returns the current mechanism.
-    void SetMech(const Mops::Mechanism &mech);
+    //! Returns the current mechanism.
+    const Mops::Mechanism *const Mech() const {return m_mech;}
 
 
     // READ/WRITE/COPY FUNCTIONS.
 
-    // Creates a copy of the flow-stream object.
+    //! Creates a copy of the flow-stream object
     FlowStream* Clone() const;
 
-    // Writes the stream to a binary data stream.
+    //! Writes the stream to a binary data stream
     void Serialize(std::ostream &out) const;
 
-    // Reads the stream data from a binary data stream.
+    //! Reads the stream data from a binary data stream
     void Deserialize(
         std::istream &in,           // Input stream.
         const Mops::Mechanism &mech // Mechanism which defines stream.
         );
 
-protected:
+
+private:
+    //! Private default constructor
+    FlowStream();
     // Flow stream inflow and outflow.
-    Reactor *m_in, *m_out;
+    Mops::PSR *m_in, *m_out;
 
     // Stream mixture conditions.  The flow-stream object
     // may control this mixture (if no inflow is specified)
@@ -147,18 +141,8 @@ protected:
     // Defining mechanism.
     const Mops::Mechanism *m_mech;
 
-    // FlowStreams should not be defined without knowledge of a Mechanism
-    // object.  Therefore the default constructor is declared as protected.
-    FlowStream(void);
-
-private:
-    // INITIALISATION AND DESTRUCTION.
-    
-    // Initialises the flow-stream to the default state.
-    void init(void);
-
-    // Releases all memory used by the flow-stream object.
-    void releaseMemory(void);
+    //! The fraction of the total reactor flowrate that this stream represents
+    double m_flow_frac;
 };
 };
 

@@ -44,6 +44,8 @@
 #ifndef MOPS_SETTINGS_IO_H
 #define MOPS_SETTINGS_IO_H
 
+#include "mops_reactor_network.h"
+#include "mops_mixture.h"
 #include "mops_timeinterval.h"
 #include "swp_particle.h"
 #include "camxml.h"
@@ -105,6 +107,14 @@ namespace Settings_IO
     //! Read limits that define extreme particles to be excluded from particle population statistics
     void ReadStatsBound(const CamXML::Element &node, Sweep::PropID &property_id,
                         double &lower_bound, double &upper_bound);
+
+    //! Read a reactor network from an XML file.
+    Mops::ReactorNetwork* LoadNetwork(
+            const std::string &filename,
+            std::vector<TimeInterval> &times,
+            Simulator &sim,
+            Solver &solver,
+            Mechanism &mech);
 
 } //namespace Settings_IO
 } //namespace Mops

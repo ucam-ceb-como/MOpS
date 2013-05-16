@@ -75,7 +75,7 @@ absErrTiCl4="0.01e-9"
 
 # Run calculation
 echo "Running MOPS for FIRST ORDER IN OXYGEN case."
-"$program" -p -strang -s "sweep-fo.xml" > /dev/null
+"$program" -p --strang -s "sweep-fo.xml" > /dev/null
 CheckErr $?
 
 # Parse CSV to check values.
@@ -102,7 +102,7 @@ absErrTiCl4="0.01e-7"
 
 # Run calculation
 echo "Running MOPS for SIMPLE ELEY-RIDEAL MODEL case."
-"$program" -p -strang -s "sweep-eley-simple.xml" > /dev/null
+"$program" -p --strang -s "sweep-eley-simple.xml" > /dev/null
 CheckErr $?
 
 # Parse CSV to check values.
@@ -130,7 +130,7 @@ absErrTiCl4="0.01e-7"
 
 # Run calculation
 echo "Running MOPS for DETAILED ELEY-RIDEAL MODEL case."
-"$program" -p -strang -s "sweep-detailed.xml" -rr "mops-detailed.inx" > /dev/null
+"$program" -p --strang -s "sweep-detailed.xml" -r "mops-detailed.inx" > /dev/null
 CheckErr $?
 
 # Parse CSV to check values.

@@ -61,6 +61,16 @@ ParticleSolver::ParticleSolver(void)
 {
 }
 
+// Copy constructor
+ParticleSolver::ParticleSolver(const ParticleSolver &sol)
+: Solver(sol),
+  m_swp_ctime(sol.m_swp_ctime) {}
+
+// Clone the object
+ParticleSolver *const ParticleSolver::Clone() const {
+    return new ParticleSolver(*this);
+}
+
 // Default destructor.
 ParticleSolver::~ParticleSolver(void)
 {
