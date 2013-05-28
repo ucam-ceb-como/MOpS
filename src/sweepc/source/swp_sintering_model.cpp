@@ -187,6 +187,21 @@ double SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) con
                    4.69e-7 * exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature())
                    );
             break;
+        case SilicaKirchoff:
+            // Kirchoff et al., J. Aerosol Sci., 2012, 45, 26-39
+            // http://dx.doi.org/10.1016/j.jaerosci.2011.10.006
+            // form: tau = A * r_sph^2 * exp (Ea/RT)
+            //  where: A = (1-exp(-1)) / (2^(2/3) * k_S)
+            //         r_sph = equiv. spherical radius
+            //         k_S = 3.5e-4 m2/s
+            //         Ea = 3.8 eV
+            //  defaults:
+            //         A = 284.44 s/m2
+            //         Ea = 44080 K
+            // Recalculate d_sph
+            dp = pow(6.0 * p.Volume() / Sweep::PI, Sweep::ONE_THIRD);
+            return m_A * dp * dp * exp(m_E / sys.GasPhase().Temperature());
+            break;
         case Rutile:
         	// Buesser et al., J. Phys. Chem. C, 2011, 115, 11030-11035
         	// SintTime function from MD calculations

@@ -88,6 +88,7 @@ public:
         SSD,         // Solid state diffusion (d^3)
         Rutile,		 // Special MD fit for GBD sintering of rutile
         Silicon,     // Special MD fit for sintering of silicon
+        SilicaKirchoff, // Experimental silica sintering (VF-vdW)
         Constant     // Independent of T, D
     };
 
