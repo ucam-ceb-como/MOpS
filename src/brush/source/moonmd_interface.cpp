@@ -50,7 +50,7 @@
 
 #include "linear_interpolator.hpp"
 
-#include "boost/filesystem.hpp"
+#include <boost/filesystem/operations.hpp>
 
 #include <memory>
 #include <iostream>
