@@ -427,6 +427,9 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else if (str == "silicon") {
             // Solid-state diffusion (d^3)
             mech.SintModel().SetType(SinteringModel::Silicon);
+        } else if (str == "kirchoff") {
+            // Constant characterisitic sintering time
+            mech.SintModel().SetType(SinteringModel::SilicaKirchoff);
         } else if (str == "constant") {
             // Constant characterisitic sintering time
             mech.SintModel().SetType(SinteringModel::Constant);

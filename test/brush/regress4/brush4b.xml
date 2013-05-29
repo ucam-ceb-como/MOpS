@@ -32,6 +32,11 @@
     <time steps="5" splits="10">0.26</time>
     <time steps="5" splits="10">0.28</time>
     <time steps="5" splits="10">0.30</time>
+    <time steps="5" splits="10">0.32</time>
+    <time steps="5" splits="10">0.34</time>
+    <time steps="5" splits="10">0.36</time>
+    <time steps="5" splits="10">0.38</time>
+    <time steps="5" splits="10">0.40</time>
   </timeintervals>
 
 
