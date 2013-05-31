@@ -383,7 +383,7 @@ Brush::MooNMDInterface::particle_reactor_pointer Brush::MooNMDInterface::RunPart
     double minResidence = minimumResidenceTime(reac.getGeometry(), solution_length, solution_nodes, velocity);
     unsigned numSplittings = std::ceil(10 * t_stop / minResidence);
     std::cout << "Num splittings " << numSplittings << ", min residence " << minResidence << std::endl;
-    solver.solve(reac, 0.0, t_stop, numSplittings, 0, path_id);
+    solver.solve(reac, 0.0, t_stop, numSplittings, path_id);
     Brush::Simulator::saveParticleStats(reac, t_stop, Sweep::Stats::IModelStats::StatBound(), moment_output);
 
     //======== Estimate the source terms to return to the client =====

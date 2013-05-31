@@ -79,7 +79,7 @@ class PredCorrSolver {
 public:
     //! Create with an object with details of the chemistry, which is time invariant
     PredCorrSolver(const ResetChemistry& reset_chem,
-                   const size_t corrector_iterations,
+                   const unsigned corrector_iterations,
                    const double rtol, const double atol,
                    const bool split_diffusion, const double drift_correction,
                    const bool split_advection, const bool strang_splitting,
@@ -87,11 +87,11 @@ public:
 
     //! Advance solution to specified time
     void solve(Reactor1d &reac, const double t_start, const double t_stop, const int n_steps,
-               const int n_iter, const size_t seed) const;
+               const size_t seed) const;
 
 protected:
     //! Perform one time step using a predictor followed by some corrector iterations
-    void predictorCorrectorStep(Reactor1d &reac, const double t_start, const double t_stop, const int n_iter,
+    void predictorCorrectorStep(Reactor1d &reac, const double t_start, const double t_stop,
                                 std::vector<Sweep::rng_type>& cell_rngs) const;
 
     //! Advance particle population to specified time
@@ -146,6 +146,9 @@ private:
 
     //! Object for setting reactor chemistry to fixed values (? just use pointer)
     ResetChemistry mResetChemistry;
+
+    //! Number of corrector iterations (there will always be a predictor)
+    unsigned mCorrectorIterations;
 
     //! Expected number of events deferred per particle between fixed updates
     double mDeferralRatio;

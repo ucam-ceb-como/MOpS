@@ -44,6 +44,7 @@
 
 #include "reactor1d.h"
 #include "reset_chemistry.h"
+#include "pred_corr_solver.h"
 
 #include "mops_timeinterval.h"
 
@@ -60,15 +61,12 @@ namespace Brush {
 class Simulator {
 public:
     //! Construct from individual components
-    Simulator(const size_t n_paths, const size_t n_corrector_iterations,
+    Simulator(const size_t n_paths,
               const Mops::timevector &output_times,
               const Reactor1d &initial_reactor,
-              const ResetChemistry &reset_chem,
               const std::string& output_file,
               const Sweep::Stats::IModelStats::StatBound &stat_bound,
-              const bool split_diffusion, const double drift_adjustment,
-              const bool split_advection, const bool strang_splitting,
-              const bool cstr_transport);
+              const PredCorrSolver &solver);
 
     //! Run the simulation paths and store output
     void runSimulation(const size_t seed_offset);
@@ -77,6 +75,9 @@ public:
     static void saveParticleStats(const Reactor1d &reac, const double t,
                            const Sweep::Stats::IModelStats::StatBound &stat_bound,
                            std::ostream &out);
+
+    //! Type of solver used to advance the solution
+    typedef PredCorrSolver solver_type;
 
 protected:
     //! Run a single Monte Carlo path
@@ -101,44 +102,20 @@ private:
     //! Number of paths to run
     size_t mPaths;
 
-    //! Number of corrector iterations to perform per fundamental time step
-    size_t mCorrectorIterations;
-
-    //! Relative error tolerance for ODE solver for chemistry
-    double mRtol;
-
-    //! Absolute error tolerance for ODE solver for chemistry
-    double mAtol;
-
-    //! Whether to perform split simulation of particle diffusion
-    bool mSplitDiffusion;
-
-    //! Scaling factor that interpolates between different stochastic integrals, see \ref PredCorrSolver::mDiffusionDriftAdjustment
-    double mDiffusionDriftAdjustment;
-
-    //! Whether to perform split simulation of particle advection
-    bool mSplitAdvection;
-
-    //! Whether to use Strang splitting for transport between cells
-    bool mStrangTransportSplitting;
-
-    //! True if transport should be CSTR like random jumps between cell centres.
-    bool mCSTRTransport;
-
     //! Use specified output steps
     Mops::timevector mOutputTimeSteps;
 
     //! Initial condition
     Reactor1d mInitialReactor;
 
-    //! Object for setting reactor chemistry to fixed values
-    ResetChemistry mResetChemistry;
-
     //! Base string for output file names
     std::string mOutputFile;
 
     //! Statsbound decides which particles to ignore when calculating particle population statistics
     Sweep::Stats::IModelStats::StatBound mStatBound;
+
+    //! Solver to use for advancing the solution
+    solver_type mSolver;
 
     //! Default simulator is meaningless
     Simulator();

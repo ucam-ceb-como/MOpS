@@ -54,17 +54,11 @@ const size_t Brush::Simulator::sFirstSeed = 123;
 
 /*!
  *@param[in]    n_paths                     Number of independent paths to simulation
- *@param[in]    n_corrector_iterations      Number of corrector iterations per step
  *@param[in]    output_times                Times at which to save output
  *@param[in]    initial_reactor             Initial condition
- *@param[in]    reset_chem                  Object to specify chemical conditions
  *@param[in]    output_file                 Base output file name
  *@param[in]    stat_bound                  Decide which particles to ignore when calculating population statistics
- *@param[in]    split_diffusion             Activate split simulation of diffusion
- *@param[in]    drift_adjustment            Interpolate between different stochastic integrals, see \ref PredCorrSolver::mDiffusionDriftAdjustment
- *@param[in]    split_advection             Activate split simulation of advection
- *@param[in]    weighted_transport          Adjust weights during inter-cell transport to avoid killing/cloning particles
- *@param[in]    cstr_transport              Transport between cell centres with CSTR random jumps
+ *@param[in]    solver                      Solver to use to advance the solution
  *
  * The time discretisation and output for the simulations are specified on several levels:
  * At the top level are Mops::TimeInterval instances, and at the end
@@ -79,31 +73,17 @@ const size_t Brush::Simulator::sFirstSeed = 123;
  * to the solver to control its internal time discretisation.
  */
 Brush::Simulator::Simulator(const size_t n_paths,
-                            const size_t n_corrector_iterations,
                             const Mops::timevector &output_times,
                             const Reactor1d &initial_reactor,
-                            const ResetChemistry &reset_chem,
                             const std::string& output_file,
                             const Sweep::Stats::IModelStats::StatBound &stat_bound,
-                            const bool split_diffusion,
-                            const double drift_adjustment,
-                            const bool split_advection,
-                            const bool strang_splitting,
-                            const bool cstr_transport)
+                            const PredCorrSolver &solver)
         : mPaths(n_paths)
-        , mCorrectorIterations(n_corrector_iterations)
-        , mRtol(0.0)
-        , mAtol(0.0)
-        , mSplitDiffusion(split_diffusion)
-        , mDiffusionDriftAdjustment(drift_adjustment)
-        , mSplitAdvection(split_advection)
-        , mStrangTransportSplitting(strang_splitting)
-        , mCSTRTransport(cstr_transport)
         , mOutputTimeSteps(output_times)
         , mInitialReactor(initial_reactor)
-        , mResetChemistry(reset_chem)
         , mOutputFile(output_file)
         , mStatBound(stat_bound)
+        , mSolver(solver)
 {}
 
 
@@ -132,13 +112,6 @@ void Brush::Simulator::runOnePath(const int seed) {
 
     // Create a reactor instance to be modified by the solver
     Reactor1d reac(mInitialReactor);
-
-    // It might be better to change the solver from a class
-    // to a namespace
-    PredCorrSolver solver(mResetChemistry, mCorrectorIterations, mRtol, mAtol,
-                          mSplitDiffusion, mDiffusionDriftAdjustment,
-                          mSplitAdvection, mStrangTransportSplitting,
-                          mCSTRTransport);
 
     //==================== File to store the moments for this run
     std::ofstream momentsFile(buildParticleStatsFileName(seed).c_str());
@@ -224,9 +197,9 @@ void Brush::Simulator::runOnePath(const int seed) {
 
             const double dt2 = dt / tInt.SubSplittingStepCount();
             for(unsigned int j = 0; j != tInt.SubSplittingStepCount(); ++j) {
-                solver.solve(reac, tInt.StartTime() + ti +  j      * dt2,
-                                   tInt.StartTime() + ti + (j + 1) * dt2,
-                             tInt.SplittingStepCount(), mCorrectorIterations, seed);
+                mSolver.solve(reac, tInt.StartTime() + ti +  j      * dt2,
+                                    tInt.StartTime() + ti + (j + 1) * dt2,
+                              tInt.SplittingStepCount(), seed);
             }
 
             //std::cout << "solved up to " << tInt.StartTime() + i * dt  + (j + 1) * dt2 << ' ' << reac.getTime() << '\n';

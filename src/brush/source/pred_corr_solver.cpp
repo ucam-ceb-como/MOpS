@@ -67,6 +67,7 @@ using namespace Brush;
  * the header file and should be copied here when they are needed.
  *
  *@param[in]    reset_chem              Chemical species concentrations as function of spatial position
+ *@param[in]    corrector_iterations    Number of corrector iterations to perform during full coupling
  *@param[in]    split_diffusion         True if diffusion is to be simulated via splitting
  *@param[in]    drift_adjustment        Only relevant when split_diffusion is true, see \ref mDiffusionDriftAdjustment
  *@param[in]    split_advection         True if advection is to be simulated via splitting
@@ -78,12 +79,11 @@ using namespace Brush;
 /*
  * Following parameters are skipped from the doxygen documentation, becuase they are not
  * names, which is because they are not yet used.
- * param[in]                            Number of corrector iterations to perform during full coupling
  * param[in]                            Relative tolerance for ODE solver used for gas phase
  * param[in]                            Absolute tolerance for ODE solver used for gas phase
  */
 Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
-                                      const size_t,
+                                      const unsigned corrector_iterations,
                                       const double , const double ,
                                       const bool split_diffusion,
                                       const double drift_adjustment,
@@ -91,6 +91,7 @@ Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
                                       const bool strang_splitting,
                                       const bool cstr_transport)
     : mResetChemistry(reset_chem)
+    , mCorrectorIterations(corrector_iterations)
     , mDeferralRatio(10.0)
     , mSplitDiffusion(split_diffusion)
     , mDiffusionDriftAdjustment(drift_adjustment)
@@ -107,11 +108,10 @@ Brush::PredCorrSolver::PredCorrSolver(const ResetChemistry& reset_chem,
  *\param[in]            t_start     Time from which to advance solution
  *\param[in]            t_stop      Time to which to advance solution
  *\param[in]            n_steps     Number of predictor corrector steps (ie number of splits between transport and particle processes)
- *\param[in]            n_iter      Number of corrector iterations per step
  *\param[in]            seed        Value that is unique to this particular time interval and path to use in seeding the RNGs
  */
 void Brush::PredCorrSolver::solve(Reactor1d &reac, const double t_start, const double t_stop, const int n_steps,
-                                  const int n_iter, size_t seed) const {
+                                  size_t seed) const {
     const double dt = (t_stop - t_start) / n_steps;
 
     // Start building a RNG seed for this part of the calculation.  The
@@ -131,7 +131,7 @@ void Brush::PredCorrSolver::solve(Reactor1d &reac, const double t_start, const d
     }
 
     for(int i = 1; i <= n_steps; ++i) {
-        predictorCorrectorStep(reac, t_start + (i - 1) * dt, t_start + i * dt, n_iter, cellRNGs);
+        predictorCorrectorStep(reac, t_start + (i - 1) * dt, t_start + i * dt, cellRNGs);
     }
 }
 
@@ -142,13 +142,12 @@ void Brush::PredCorrSolver::solve(Reactor1d &reac, const double t_start, const d
  *\param[in,out]        reac        Reactor describing system state
  *\param[in]            t_start     Time from which to advance solution
  *\param[in]            t_stop      Time to which to advance solution
- *\param[in]            n_iter      Number of corrector iterations per step
  *\param[in]            cell_rngs   Vector of independent RNGs, one for each cell
  *
  *\pre  reac.getNumCells() == cell_rngs.size()
  */
 void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const double t_start,
-                                                   const double t_stop, const int n_iter,
+                                                   const double t_stop,
                                                    std::vector<Sweep::rng_type>& cell_rngs) const {
     //std::cout << "Predictor corrector step from " << t_start << " to " << t_stop << '\n';
 
@@ -166,7 +165,7 @@ void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const double
 //    std::cout << std::endl;
 
     //=========== Corrector steps ====================
-    for(int i = 0; i < n_iter; ++i) {
+    for(unsigned i = 0; i < mCorrectorIterations; ++i) {
         ;
     }
 }

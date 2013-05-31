@@ -458,10 +458,14 @@ int main(int argc, char* argv[])
     // Put the initial particles into the reactor
     initialReactor.ReplaceParticles(initialPopulationPoints.begin(), initialPopulationPoints.end());
 
+    //========= Set up the solvers ===============================
+    PredCorrSolver brushSolver(*pInitialChem, iterations, 0.0, 0.0,
+                               splitDiffusion, diffusionCorrection,
+                               splitAdvection, strangTransport, CSTRTransport);
+
     //========= Now run the simulation ===========================
-    Simulator sim(runs, iterations, timeIntervals, initialReactor, *pInitialChem,
-                  outputFileBaseName, statBound, splitDiffusion, diffusionCorrection,
-                  splitAdvection, strangTransport, CSTRTransport);
+    Simulator sim(runs, timeIntervals, initialReactor,
+                  outputFileBaseName, statBound, brushSolver);
     sim.runSimulation(randomSeedOffset);
 
     //========= Output ===========================================
