@@ -49,8 +49,6 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
 #include "gpc_params.h"
-#include "string_functions.h"
-using namespace Strings;
 
 namespace Sprog
 {

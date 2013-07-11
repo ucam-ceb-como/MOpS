@@ -339,7 +339,7 @@ void readInitialPopulation(
         std::string filename;
         filename = fnode->Data();
         std::cout << "parser: binary file " << filename << " specified for input.\n";
-        fileParticleList = ::readEnsembleFile(filename, mech.ParticleMech());
+        fileParticleList = readEnsembleFile(filename, mech.ParticleMech());
     }
 
     // Now read in the list of particles and sum up their statistical weights
@@ -385,7 +385,7 @@ Mops::Mixture* readMixture(
     double val(0.0);
     subnode = node.GetFirstChild("temperature");
     if (subnode != NULL)
-        val = ::readTemperature(*subnode);
+        val = readTemperature(*subnode);
     else
         throw std::runtime_error("No temperature specified for the mixture (::readMixture).");
     mix->GasPhase().SetTemperature(val);
@@ -393,7 +393,7 @@ Mops::Mixture* readMixture(
     subnode = NULL;
     subnode = node.GetFirstChild("pressure");
     if (subnode != NULL)
-        val = ::readPressure(*(node.GetFirstChild("pressure")));
+        val = readPressure(*(node.GetFirstChild("pressure")));
     else
         throw std::runtime_error("No temperature specified for the mixture (::readMixture).");
     mix->GasPhase().SetPressure(val);
@@ -453,7 +453,7 @@ Mops::Mixture* readMixture(
             throw std::runtime_error("Error loading initial population, no particle mechanism loaded. \n"
                     "Ensure a particle solver and sweep file are used (::readMixture).");
         } else {
-            ::readInitialPopulation(*subnode, mech, *mix);
+            readInitialPopulation(*subnode, mech, *mix);
         }
     }
 
@@ -741,7 +741,7 @@ Reactor *const readReactor(const CamXML::Element &node,
 
     // Create a new Mixture object.
     std::string id;
-    Mixture *mix = ::readMixture(node, mech, max_particle_count, maxM0, id);
+    Mixture *mix = readMixture(node, mech, max_particle_count, maxM0, id);
     reac->Fill(*mix);
 
     // Investigate whether doubling is activated
@@ -795,7 +795,7 @@ Reactor *const readReactor(const CamXML::Element &node,
 
             // Create a new Mixture object for inflow. Note that the inflow takes
             // a copy of the one loaded from XML.
-            mix = ::readMixture(*subnode, mech, max_particle_count, maxM0, id);
+            mix = readMixture(*subnode, mech, max_particle_count, maxM0, id);
             inf->SetConditions(*mix);
 
             psr->SetInflow(*inf);
@@ -831,7 +831,7 @@ void readNetwork(
     unsigned int j(0u);
     if (nodes.size() > 0) {
         for (i=nodes.begin(); i!=nodes.end(); ++i) {
-            Mops::Mixture* mix = ::readMixture(*(*i), mech, sim.MaxPartCount(), sim.MaxM0(), id);
+            Mops::Mixture* mix = readMixture(*(*i), mech, sim.MaxPartCount(), sim.MaxM0(), id);
 
             // Generate a name if one wasn't loaded.
             if (id.size() < 1) {
@@ -851,7 +851,7 @@ void readNetwork(
     if (nodes.size() > 0) {
         for (i=nodes.begin(); i!=nodes.end(); ++i) {
             id = "";
-            Mops::PSR* reac = ::readPSR(*(*i), mech, id);
+            Mops::PSR* reac = readPSR(*(*i), mech, id);
 
             // Generate a name if one wasn't loaded.
             if (id.size() < 1) {
@@ -1530,7 +1530,7 @@ Mops::ReactorNetwork* Settings_IO::LoadNetwork(
         }
 
         // NETWORK.
-        ::readNetwork(*root, sim, mech, *net);
+        readNetwork(*root, sim, mech, *net);
         std::cout << *net;
 
         // MECHANISM REDUCTION.

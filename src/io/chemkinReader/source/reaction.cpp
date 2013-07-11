@@ -375,7 +375,7 @@ namespace IO
        }
        output << "        )\n";
        output << "           Coverage : " << "\n";
-       for (int i = 0; i < reaction.COV_.size(); i++)
+       for (std::size_t i = 0; i < reaction.COV_.size(); i++)
        {
 	 output << "           COVERAGE : " << reaction.COV_[i].spName << "\n"
 	        << "           ETA = " << reaction.COV_[i].Eta << "\n"
@@ -383,7 +383,7 @@ namespace IO
 	        << "           EPSILON = " << reaction.COV_[i].Epsilon << "\n";
        }
        output << "           Ford : " << "\n";
-       for (int i = 0; i < reaction.FORD_.size(); i++)
+       for (std::size_t i = 0; i < reaction.FORD_.size(); i++)
        {
 	 output << "           FORD : " << reaction.FORD_[i].spName << "\n"
 		<< "           COEFFICIENT = " << reaction.FORD_[i].F_k << "\n";

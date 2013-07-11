@@ -470,7 +470,7 @@ void Reactor::RHS_ConstT(double t, const double *const y,  double *ydot) const
     }
 
     // Calculate mole fraction derivatives.
-    if (! m_sarea > 0.0) {
+    if ( m_sarea <= 0.0) {
         for (unsigned int i=0; i!=m_neq-2; ++i) {
             ydot[i] = ((wdot[i] - (y[i]*wtot)) / y[m_iDens]);
         }
