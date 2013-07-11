@@ -81,7 +81,8 @@ while(<$momentFile>) {
   }
 }
 
-if (46 != @m1samples) {
+my $expectedNumSamples=71;
+if ($expectedNumSamples != @m1samples) {
   my $numSamples = @m1samples;
   die "Found $numSamples, but there should have been 46";
 }
@@ -96,8 +97,8 @@ foreach $val (@m1samples) {
   $sumsq += $val * $val;
 }
 
-my $mean = $sum / 46;
-my $var  = $sumsq / 46 - $mean * $mean;
+my $mean = $sum / $expectedNumSamples;
+my $var  = $sumsq / $expectedNumSamples - $mean * $mean;
 
 # git revision 89649c7... gives
 # mean 8.390e-21

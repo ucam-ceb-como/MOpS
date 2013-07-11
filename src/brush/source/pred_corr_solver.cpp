@@ -154,7 +154,7 @@ void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const double
 
     //=========== Predictor step =====================
     // Advance the chemistry
-    solveChemistry(reac, t_stop);
+    solveChemistry(reac, t_start, t_stop);
 
 
     solveParticlesByCell(reac, t_start, t_stop, cell_rngs);
@@ -178,18 +178,29 @@ void Brush::PredCorrSolver::predictorCorrectorStep(Reactor1d &reac, const double
  * is interpolated from the reset object for the reactor time.
  *
  *\param[in,out]        reac        Reactor describing system state
+ *\param[in]            t_start     Time from which to advance solution
  *\param[in]            t_stop      Time to which to advance solution
  */
-void Brush::PredCorrSolver::solveChemistry(Reactor1d &reac, const double t_stop) const {
+void Brush::PredCorrSolver::solveChemistry(Reactor1d &reac,
+                                           const double t_start, const double t_stop) const {
 
     // Expansion and contraction of the gas phase changes the particle
     // concentration, since the same mass of gas still contains the same
     // number of soot particles.  The change in volume containing a fixed mass
     // of gas is inversely proportional to the change in gas mass density.
     const size_t numCells = reac.getNumCells();
+    const Sweep::Mechanism &mech = reac.getParticleMechanism();
+
     fvector oldDensity(numCells);
     for(size_t i = 0; i != numCells; ++i) {
-        oldDensity[i] = reac.getCell(i).GasPhase().MassDensity();
+        Sweep::Cell & mix = reac.getCell(i);
+        oldDensity[i] = mix.GasPhase().MassDensity();
+
+//        fvector chemRates;
+//    	mech.CalcGasChangeRates(t_start, mix, Geometry::LocalGeometry1d(reac.getGeometry(), i),
+//    	                        chemRates);
+//    	//create system object (rhs functor) here
+
     }
 
     // Update the chemistry to the new time
@@ -228,7 +239,7 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const double t
     const double firstStop = mStrangTransportSplitting ? (t_start + t_stop) / 2.0 : t_stop;
 
 #pragma omp parallel for schedule(dynamic) ordered
-    for(size_t i = numCells; i > 0; --i) {
+    for(int i = numCells; i > 0; --i) {
         // Get details of cell i
         Sweep::Cell& cell = reac.getCell(i - 1);
         Geometry::LocalGeometry1d geom(reac.getGeometry(), i - 1);
@@ -244,7 +255,7 @@ void Brush::PredCorrSolver::solveParticlesByCell(Reactor1d &reac, const double t
     if(mStrangTransportSplitting) {
         // Do the second part of the particle simulation for the Strang splitting
 #pragma omp parallel for schedule(dynamic) ordered
-        for(size_t i = numCells; i > 0; --i) {
+        for(int i = numCells; i > 0; --i) {
             // Get details of cell i
             Sweep::Cell& cell = reac.getCell(i - 1);
             Geometry::LocalGeometry1d geom(reac.getGeometry(), i - 1);

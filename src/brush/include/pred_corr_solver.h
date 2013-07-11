@@ -104,7 +104,7 @@ protected:
                                  Sweep::rng_type &rng) const;
 
     //! Advance chemistry over specified time interval
-    void solveChemistry(Reactor1d & reac, const double t_stop) const; //,?some kind of workspace for ODE solver);
+    void solveChemistry(Reactor1d & reac, const double t_start, const double t_stop) const; //,?some kind of workspace for ODE solver);
 
     //! Carry out split transport on all particles from all cells
     void splitParticleTransport(Reactor1d &reac, const double t_start, const double t_stop,

@@ -33,10 +33,25 @@ else
   exit 255
 fi
 
-if (diff logIN logOUT >/dev/null \
-    && diff serializeTest serializeTestOriginal >/dev/null \
-    && diff reactionsParsed reactionsParsedOriginal >/dev/null \
-    && diff speciesParsed speciesParsedOriginal >/dev/null);
+#Default to failed tests
+testLog=1
+testSerialize=1
+testReactions=1
+testSpecies=1
+
+diff --brief logIN logOUT
+testLog=$?
+
+diff --brief serializeTest serializeTestOriginal
+testSerialize=$?
+
+diff --brief reactionsParsed reactionsParsedOriginal
+testReaction=$?
+
+diff --brief speciesParsed speciesParsedOriginal
+testSpecies=$?
+
+if ((testLog==0 && testSerialize==0 && testReaction==0 && testSpecies==0));
 then
   # All tests passed
   echo "All tests passed"
