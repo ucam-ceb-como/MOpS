@@ -1321,6 +1321,8 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
 {
     if (m_leftchild!=NULL)
         m_leftchild->OutputPAHPSL(out, index, density);
+    if (m_rightchild!=NULL) m_rightchild->OutputPAHPSL(out, index, density);
+
 
     std::vector<double> temp;
 
