@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 2.6)
 
 project (SWEEP)
 
-file(GLOB_RECURSE INCS "include/*.h")
+file(GLOB_RECURSE INCS "include/*.h" "include/*.hpp")
 source_group("Header Files" FILES ${INCS})
 
 add_library(sweep source/swp_actsites_reaction.cpp
@@ -42,6 +42,8 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_particle_model.cpp
                   source/swp_particle_process.cpp
                   source/swp_particle_stats.cpp
+                  source/swp_pri_list_cache.cpp
+                  source/swp_pri_list_node.cpp
                   source/swp_primary.cpp
                   source/swp_process.cpp
                   source/swp_process_factory.cpp

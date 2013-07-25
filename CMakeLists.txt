@@ -162,6 +162,9 @@ add_executable(sweepFixedMix-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harn
 target_link_libraries(sweepFixedMix-test brush ${Boost_LIBRARIES})
 add_test(NAME sweep.FixedMix COMMAND ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/sweepc/fixedmix.sh $<TARGET_FILE:sweepFixedMix-test> ${MOPSSUITE_SOURCE_DIR}/test/sweepc/fixedmix)
 
+add_executable(sweepParticleModel-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sweepc/particle_model.cpp)
+target_link_libraries(sweepParticleModel-test sweep ${Boost_LIBRARIES})
+
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/comostrings)
