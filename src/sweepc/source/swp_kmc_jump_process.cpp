@@ -54,17 +54,31 @@ using namespace Sweep;
 using namespace Sweep::KMC_ARS;
 
 //! Default Constructor
-JumpProcess::JumpProcess() {
-    m_rate = 0;
-}
+JumpProcess::JumpProcess():
+	m_sType(),
+	m_rxnvector0p0267(),
+	m_rxnvector0p12(),
+	m_rxnvector1(),
+	m_r(),
+	m_rate(0.0),
+	m_name(""),
+	m_ID(0)
+{}
+
 //! Copy Constructor
-JumpProcess::JumpProcess(const JumpProcess& p) {
+JumpProcess::JumpProcess(const JumpProcess& p):
+	m_sType(),
+	m_rxnvector0p0267(),
+	m_rxnvector0p12(),
+	m_rxnvector1(),
+	m_r(),
+	m_rate(p.m_rate),
+	m_name(p.m_name),
+	m_ID(p.m_ID) {
     m_sType = p.m_sType;
     m_rxnvector0p0267 = p.m_rxnvector0p0267;
     m_rxnvector0p12 = p.m_rxnvector0p12;
     m_rxnvector1 = p.m_rxnvector1;
-    m_rate = p.m_rate;
-    m_name = p.m_name;
 }
 //! Destructor
 JumpProcess::~JumpProcess() {
@@ -84,10 +98,11 @@ void JumpProcess::addReaction(std::vector<Sweep::KMC_ARS::Reaction>& rxnv, const
 }
 //! Calculate rates of each elementary reaction
 void JumpProcess::calculateElemRxnRate(std::vector<Sweep::KMC_ARS::Reaction>& rxnv, const KMCGasPoint& gp/*, const double t_now*/) {
-    m_r.clear();
-    for(int i=0; i<(int) rxnv.size(); i++) {
-        m_r.push_back(rxnv[i].getRate(gp));
-    }
+
+	m_r.resize(rxnv.size(), 0.0);
+	for (size_t i(0); i != rxnv.size(); ++i) {
+		m_r[i] = rxnv[i].getRate(gp);
+	}
 }
 //! Calculates jump process rates and store (for Pressures 0.0267, 0.12 & 1 atm; defined in derived classes)
 double JumpProcess::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/){
