@@ -164,6 +164,8 @@ add_test(NAME sweep.FixedMix COMMAND ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR
 
 add_executable(sweepParticleModel-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sweepc/particle_model.cpp)
 target_link_libraries(sweepParticleModel-test sweep ${Boost_LIBRARIES})
+add_test(NAME sweep.prilist COMMAND ${SHELL_INTERPRETER} ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/sweepParticleModel-test${EXE_SUFFIX})
+
 
 # Subsidiary libraries for the solvers
 add_subdirectory(${MOPSSUITE_SOURCE_DIR}/src/io/chemkinReader)

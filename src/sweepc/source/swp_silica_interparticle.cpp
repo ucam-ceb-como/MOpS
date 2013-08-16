@@ -41,7 +41,6 @@
 */
 
 #include "swp_silica_interparticle.h"
-#include "swp_sintering_model.h"
 #include "swp_particle_model.h"
 #include "swp_mechanism.h"
 #include "swp_process_type.h"

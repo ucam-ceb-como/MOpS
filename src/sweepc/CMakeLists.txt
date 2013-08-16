@@ -42,7 +42,6 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_particle_model.cpp
                   source/swp_particle_process.cpp
                   source/swp_particle_stats.cpp
-                  source/swp_pri_list_cache.cpp
                   source/swp_pri_list_node.cpp
                   source/swp_primary.cpp
                   source/swp_process.cpp

@@ -2096,7 +2096,7 @@ void PAHPrimary::Sinter(double dt, Cell &sys,
         while (t1 < tstop)
         {
             // Calculate sintering rate.
-            r = model.Rate(m_time+t1, sys, *this);
+            r = model.Rate(m_time+t1, sys.GasPhase().Temperature(), *this);
 
             if (r > 0) {
                 // Calculate next time-step end point so that the

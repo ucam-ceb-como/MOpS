@@ -61,16 +61,15 @@
 
 #include "swp_params.h"
 #include <iostream>
+#include <limits>
 
 namespace Sweep
 {
 // Forward declare required classes.
-class Cell;
 class Particle;
 
 namespace AggModels {
 class Primary;
-class PriPartPrimary;
 }
 
 namespace Processes
@@ -86,7 +85,7 @@ public:
         ViscousFlow, // Viscous flow model (e.g. silica).
         GBD,          // Grain-boundary diffusion (e.g. titania).
         SSD,         // Solid state diffusion (d^3)
-        Rutile,		 // Special MD fit for GBD sintering of rutile
+        Rutile,      // Special MD fit for GBD sintering of rutile
         Silicon,     // Special MD fit for sintering of silicon
         SilicaKirchoff, // Experimental silica sintering (VF-vdW)
         Constant     // Independent of T, D
@@ -152,37 +151,31 @@ public:
     void SetType(SintType t);
 
 
-    // CHARACTERISTIC SINTERING TIME.
+    //! Return the characteristic sintering time from a temperature and diameter
+    double SintTime(double temp, double diam) const;
 
-    // Returns the characteristic sintering time for the
-    // given particle.
-    double SintTime(
-        const Cell &sys,  // System to which the particle belongs (for T).
-        const Particle &p // Particle for which to calculate time.
-        ) const;
 
-    // Returns the characteristic sintering time for the
-    // given primary.
-    double SintTime(
-        const Cell &sys, // System to which the particle belongs (for T).
-        const AggModels::Primary &p // Particle for which to calculate time.
-        ) const;
+    /*!
+     * @brief Return the rate of sintering given two primary objects
+     *SintTime(sys.GasPhase().Temperature()
+     * @param t          Current time
+     * @param Temp       Temperature
+     * @param pri        Primary or connector for which to calculate rate
+     * @return           Rate of sintering for the particle pair
+     */
+    template <typename T>
+    double Rate(double t, double Temp, const T &pri) const {
 
-    // RATE CALCULATION.
+    	// First calculate the particle diameter
+    	double dp = 6.0 * pri.Volume() / pri.SurfaceArea();
 
-    // Returns the rate of the process for the given particle.
-    double Rate(
-        double t,           // Time.
-        const Cell &sys,  // System to which the particle belongs (for T).
-        const Particle &p // Particle for which to calculate rate.
-        ) const;
+    	// Then get the sintering characteristic time
+    	double tau_s = std::max(
+    			std::numeric_limits<double>::min(),
+    			SintTime(Temp, dp));
 
-    // Returns the rate of the process for the given primary.
-    double Rate(
-        double t,          // Time.
-        const Cell &sys, // System to which the particle belongs (for T).
-        const AggModels::Primary &p // Particle for which to calculate rate.
-        ) const;
+    	return (pri.SurfaceArea() - pri.SphSurfaceArea()) / tau_s;
+    }
 
     // READ/WRITE/COPY.
 
