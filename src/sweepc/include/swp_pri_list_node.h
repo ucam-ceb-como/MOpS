@@ -1,12 +1,10 @@
-// This class has the actual physical functionality of the tree.
-// That is, a Primary object added to the tree is converted into one of these nodes
-// The idea is that if a new particle model is to be added, this can be subclassed and inserted into the 
-// binary tree template without having to worry about the caching and connectivity rubbish
-// all other properties stored in the cache?
 
 #ifndef SWEEP_PRI_LIST_NODE
 #define SWEEP_PRI_LIST_NODE
 
+#include <boost/serialization/vector.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
 #include "swp_particle_model.h"
 #include "swp_primary.h"
 
@@ -40,11 +38,17 @@ public:
         const Sweep::AggModels::PrimaryListNode &pri);
 
     // DATA ACCESS METHODS
+    //! Return the value of component i
+    double Component(unsigned int i) const;
+
     //! Return the volume of the node
     double Volume() const;
 
     //! Return the surface area
     double SurfaceArea() const;
+
+    //! Return the surface area (static access)
+    static double SurfaceArea(double diam);
 
     //! Return the mass
     double Mass() const;
@@ -52,23 +56,34 @@ public:
     //! Return the diameter
     double Diameter() const;
 
+    //! Return the diameter (static access)
+    static double Diameter(double vol);
+
     // STATE SPACE ADJUSTMENT
     //! Add dcomp to the state space
     unsigned int Adjust(
         const fvector &dcomp,
         unsigned int n);
 
+    //! Merge this particle with rhs
+    void Merge(PrimaryListNode &rhs);
+
 protected:
     //! Particle model used to define the node
-    const Sweep::ParticleModel* mPModel;
+    const Sweep::ParticleModel* m_pmodel;
 
     //! The composition vector of the node
-    fvector mComp;
+    fvector m_comp;
 
-private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version) const {
+        ar & m_comp;
+    }
+
     //! Default constructor is meaningless
     PrimaryListNode(void);
- 
+
 };
 
 } // AggModels

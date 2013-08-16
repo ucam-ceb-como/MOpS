@@ -41,9 +41,6 @@
 */
 
 #include "swp_sintering_model.h"
-#include "swp_primary.h"
-#include "swp_particle.h"
-#include "swp_cell.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -143,97 +140,71 @@ void SinteringModel::SetType(SinteringModel::SintType t) {m_type = t;}
 
 // CHARACTERISTIC SINTERING TIME.
 
-// Returns the characteristic sintering time for the
-// given particle.
-double SinteringModel::SintTime(const Cell &sys, const Particle &p) const
-{
-    if (p.Primary() != NULL) {
-        return SintTime(sys, *p.Primary());
-    } else {
-        return 0.0;
-    }
+/*!
+ *
+ * @param temp    Temperature to evaluate at (K)
+ * @param diam    Diameter of particle (m)
+ * @return        Characteristic sintering time (s)
+ */
+double SinteringModel::SintTime(double temp, double diam) const {
+	double tau_s(m_A);
+	switch (m_type) {
+	case ViscousFlow:
+		tau_s *= diam * exp((m_E*(1-(m_dpmin/diam)))/temp);
+		break;
+	case GBD:
+		tau_s *= diam * diam * diam * diam * temp * exp((m_E*(1-(m_dpmin/diam)))/temp);
+		break;
+	case SSD:
+		tau_s *= diam * diam * diam * temp * exp((m_E*(1-(m_dpmin/diam)))/temp);
+		break;
+	case Silicon:
+        // Zachariah & Carrier, J. Aerosol Sci., 1999, 30, 1139-1151
+        // implementation of the SSD silicon sintering kinetic
+        // form: tau = A * d^3 * T / (gamma * diff)
+        //       gamma = surface energy = 1.152 - 1.574e-4*T(K)    N/m
+        //       diff. = SSD diffusivity = 4.69e-7 exp(-m_E / T)   m2/s
+        // default: m_A = 5396 J/K.m3
+        //          m_E = 7562 K
+        //          m_dpmin = 0 nm
+		tau_s *= diam * diam * diam * temp / (
+                (1.152 - 1.574e-4 * temp) *
+                4.69e-7 * exp((m_E*(1-(m_dpmin/diam)))/temp)
+                );
+		break;
+	case SilicaKirchoff:
+        // Kirchoff et al., J. Aerosol Sci., 2012, 45, 26-39
+        // http://dx.doi.org/10.1016/j.jaerosci.2011.10.006
+        // form: tau = A * r_sph^2 * exp (Ea/RT)
+        //  where: A = (1-exp(-1)) / (2^(2/3) * k_S)
+        //         r_sph = equiv. spherical radius
+        //         k_S = 3.5e-4 m2/s
+        //         Ea = 3.8 eV
+        //  defaults:
+        //         A = 284.44 s/m2
+        //         Ea = 44080 K
+        // EXPECTING diam AS SPHERICAL DIAMETER
+		tau_s *= diam * diam * exp(m_E / temp);
+		break;
+	case Rutile:
+    	// Buesser et al., J. Phys. Chem. C, 2011, 115, 11030-11035
+    	// SintTime function from MD calculations
+    	// default: m_A = 3.7E16 s/m4K,
+    	//			m_E = 258 kJ/mol = 31032 K
+    	//			m_dpmin = 3.4 nm
+    	tau_s *= diam * diam * diam * diam * temp *
+			   exp((m_E* (1 - pow( (m_dpmin/diam) - (temp/4100.0) , 3.76))/temp));
+		break;
+	case Constant:
+		// Do nothing.
+		break;
+	default:
+		throw std::runtime_error("Unknown sintering model requested, "
+				"Sweep::Processes::SinteringModel::SintTime.");
+	}
+	return tau_s;
 }
 
-// Returns the characteristic sintering time for the
-// given primary.
-double SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) const
-{
-    double dp = 6.0 * p.Volume() / p.SurfaceArea();
-    switch (m_type) {
-        case ViscousFlow:
-            return m_A * dp * 
-                   exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature());
-            break;
-        case GBD:
-        default:
-            return m_A * dp * dp * dp * dp * sys.GasPhase().Temperature() *
-                   exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature());
-            break;
-        case SSD:
-            return m_A * dp * dp * dp * sys.GasPhase().Temperature() *
-                   exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature());
-            break;
-        case Silicon:
-            // Zachariah & Carrier, J. Aerosol Sci., 1999, 30, 1139-1151
-            // implementation of the SSD silicon sintering kinetic
-            // form: tau = A * d^3 * T / (gamma * diff)
-            //       gamma = surface energy = 1.152 - 1.574e-4*T(K)    N/m
-            //       diff. = SSD diffusivity = 4.69e-7 exp(-m_E / T)   m2/s
-            // default: m_A = 5396 J/K.m3
-            //          m_E = 7562 K
-            //          m_dpmin = 0 nm
-            return m_A * dp * dp * dp * sys.GasPhase().Temperature() / (
-                   (1.152 - 1.574e-4 * sys.GasPhase().Temperature()) *
-                   4.69e-7 * exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature())
-                   );
-            break;
-        case SilicaKirchoff:
-            // Kirchoff et al., J. Aerosol Sci., 2012, 45, 26-39
-            // http://dx.doi.org/10.1016/j.jaerosci.2011.10.006
-            // form: tau = A * r_sph^2 * exp (Ea/RT)
-            //  where: A = (1-exp(-1)) / (2^(2/3) * k_S)
-            //         r_sph = equiv. spherical radius
-            //         k_S = 3.5e-4 m2/s
-            //         Ea = 3.8 eV
-            //  defaults:
-            //         A = 284.44 s/m2
-            //         Ea = 44080 K
-            // Recalculate d_sph
-            dp = pow(6.0 * p.Volume() / Sweep::PI, Sweep::ONE_THIRD);
-            return m_A * dp * dp * exp(m_E / sys.GasPhase().Temperature());
-            break;
-        case Rutile:
-        	// Buesser et al., J. Phys. Chem. C, 2011, 115, 11030-11035
-        	// SintTime function from MD calculations
-        	// default: m_A = 3.7E16 s/m4K,
-        	//			m_E = 258 kJ/mol = 31032 K
-        	//			m_dpmin = 3.4 nm
-        	return m_A * dp * dp * dp * dp * sys.GasPhase().Temperature() *
-				   exp((m_E* (1 - pow( (m_dpmin/dp) - (sys.GasPhase().Temperature()/4100.0) , 3.76))
-				     /sys.GasPhase().Temperature()));
-        	break;
-        case Constant:
-            // Only dependent on the 'pre-exponential' (has units s in this case)
-            return m_A;
-    }
-}
-
-// RATE CALCULATION.
-
-// Returns the rate of the process for the given particle.
-// wjm34: include max() catch on tau to prevent getting stuck in infinite Sinter() loops
-double SinteringModel::Rate(double t, const Cell &sys, const Particle &p) const
-{
-    double tau = max(1.0e-30, SintTime(sys, p));
-    return (p.SurfaceArea() - p.SphSurfaceArea()) / tau;
-}
-
-// Returns the rate of the process for the given primary.
-double SinteringModel::Rate(double t, const Cell &sys, const AggModels::Primary &p) const
-{
-    double tau = max(1.0e-30, SintTime(sys, p));
-    return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);
-}
 
 // READ/WRITE/COPY.
 

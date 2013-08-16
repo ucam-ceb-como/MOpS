@@ -67,6 +67,7 @@ namespace Sweep
 {
 // Forward declare the Particle class.
 class Particle;
+class Cell;
 
 //! Class that defines the interpretation of the data in a particle
 class ParticleModel

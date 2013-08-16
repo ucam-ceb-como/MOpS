@@ -153,7 +153,7 @@ void SurfVolSilicaPrimary::Sinter(
 
     // Pass through to SurfVolPrimary to sinter the particle
     SurfVolPrimary::Sinter(dt, sys, model, rng, wt);
-    m_sinter_rate = model.Rate(0.0, sys, *this);
+    m_sinter_rate = model.Rate(0.0, sys.GasPhase().Temperature(), *this);
 
     // Estimate the number of chemical units to be changed
     double n_OH = GetComponent("hydroxide");
@@ -209,11 +209,7 @@ void SurfVolSilicaPrimary::UpdateCache()
  */
 double SurfVolSilicaPrimary::GetComponent(std::string name) const
 {
-    try {
-        return m_comp[m_pmodel->ComponentIndex(name)];
-    } catch(std::exception& e) {
-        throw e.what();
-    }
+    return m_comp[m_pmodel->ComponentIndex(name)];
 }
 
 /*!

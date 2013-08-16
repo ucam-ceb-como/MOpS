@@ -41,6 +41,7 @@
  *      Website:     http://como.cheng.cam.ac.uk
 */
 
+#include "swp_cell.h"
 #include "swp_bintree_primary.h"
 #include "swp_bintree_serializer.h"
 #include <boost/random/poisson_distribution.hpp>
@@ -1247,7 +1248,7 @@ void BinTreePrimary::SinterNode(
     while (t1 < tstop)
     {
         // Calculate sintering rate.
-        r = model.Rate(m_time+t1, sys, *this);
+        r = model.Rate(m_time+t1, sys.GasPhase().Temperature(), *this);
 
         if (r > 0) {
             // Calculate next time-step end point so that the
@@ -1298,7 +1299,8 @@ void BinTreePrimary::SinterNode(
  */
 double BinTreePrimary::GetComponent(std::string name) const
 {
-	return m_comp[m_pmodel->ComponentIndex(name)];
+    return m_comp[m_pmodel->ComponentIndex(name)];
+
 }
 
 /*!

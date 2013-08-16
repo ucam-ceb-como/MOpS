@@ -44,6 +44,7 @@
     Website:     http://como.cheng.cam.ac.uk
 */
 
+#include "swp_cell.h"
 #include "swp_primary.h"
 #include "swp_surfvol_primary.h"
 #include "swp_aggmodel_type.h"
@@ -307,7 +308,7 @@ void SurfVolPrimary::Sinter(double dt, Cell &sys,
     // Perform integration loop.
     while (t1 < tstop) {
         // Calculate sintering rate.
-        r = model.Rate(m_time+t1, sys, *this);
+        r = model.Rate(m_time+t1, sys.GasPhase().Temperature(), *this);
 
         if(r > 0) {
             // Calculate next time-step end point so that the
