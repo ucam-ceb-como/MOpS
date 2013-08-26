@@ -405,10 +405,7 @@ void KMCSimulator::initCSVIO() {
 }
 //! Initialise reaction count
 void KMCSimulator::initReactionCount() {
-    m_rxn_count.clear();
-    for(int i=0; i<(int)m_kmcmech.JPList().size(); i++) {
-        m_rxn_count.push_back(0);
-    }
+    m_rxn_count.assign(m_kmcmech.JPList().size(), 0);
 }
 //! Reads chemical mechanism / profile (if not obtained from Mops)
 //! Similar function as Sweep::Flamesolver::LoadGasProfile
