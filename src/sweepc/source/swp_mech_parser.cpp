@@ -558,7 +558,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (el!=NULL) {
             str = el->Data();
             if (str != "") {
-                comp->SetCoalescThresh(cdble(str));
+                mech.SetBinTreeCoalThresh(cdble(str));
             } else {
                 // coalthresh contains no data.
                 std::string msg("Component ");
@@ -569,7 +569,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
                 throw runtime_error(msg);
             }
         } else {
-            comp->SetCoalescThresh(1.0);
+        	mech.SetBinTreeCoalThresh(1.0);
         }
 
 
@@ -578,7 +578,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (el!=NULL) {
             str = el->Data();
             if (str != "") {
-                comp->SetGrowthFact(cdble(str));
+                mech.SetPAHGrowthFactor(cdble(str));
             } else {
                 // coalthresh contains no data.
                 std::string msg("Component ");
@@ -589,7 +589,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
                 throw runtime_error(msg);
             }
         } else {
-            comp->SetGrowthFact(1.0);
+        	mech.SetPAHGrowthFactor(1.0);
         }
 
 
@@ -598,7 +598,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (el!=NULL) {
             str = el->Data();
             if (str != "") {
-                comp->SetMinPAH(int(cdble(str)));
+                mech.SetPAHMinPAHsForGrowth((unsigned int) cdble(str));
             } else {
                 // coalthresh contains no data.
                 std::string msg("Component ");
@@ -609,7 +609,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
                 throw runtime_error(msg);
             }
         } else {
-            comp->SetMinPAH(0);
+        	mech.SetPAHMinPAHsForGrowth(0);
         }
 
         // Get component mol. wt.

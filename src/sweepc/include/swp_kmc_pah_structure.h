@@ -101,12 +101,21 @@ namespace Sweep{
             void setnumofRings(int val); // 6-membered
             void setnumofRings5(int val); // 5-membered
 
-            //! check PAH have bridge or not
-            bool havebridgeC();
-
             Sweep::AggModels::PAH* m_parent; // pointer to parent PAH
             
+            //! Save the PAH structure as a DOT file
+            void SaveDOT(const std::string &filename, const std::string& title) const;
+
             void saveDOTperLoop(int PAH_ID, int i);
+
+            //! Print the structure of the PAH to console
+            void PrintStruct() const;
+
+            //! Print the site list to console
+            void PrintSites() const;
+
+            //! Print sites and site members to console
+            void PrintSitesMemb() const;
 
             //! serialization (incomplete)
             void Serialize(std::ostream &out) const;

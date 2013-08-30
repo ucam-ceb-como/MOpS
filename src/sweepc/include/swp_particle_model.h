@@ -313,6 +313,18 @@ public:
     //! Returns the value of the free-molecular enhancement factor.
     const double GetEnhancementFM() const {return m_efm;}
 
+    //! Set the PAH growth factor
+    void SetPAHGrowthFactor(double gf);
+
+    //! Get the PAH growth factor
+    double GetPAHGrowthFactor() const;
+
+    //! Set the minimum PAH value for growth to apply
+    void SetPAHMinPAHsForGrowth(unsigned int f);
+
+    //! Get the PAH growth factor
+    double GetPAHMinPAHsForGrowth() const;
+
     //! Index for temperature gradient in gas phase interface
     void setTGradIndex(const EnvironmentInterface::PropertyIndex index) {m_TemperatureGradientIndex = index;}
 
@@ -468,6 +480,11 @@ private:
     //! Index for thermal conductivity of mixture
     EnvironmentInterface::PropertyIndex m_ThermalConductivityIndex;
 
+    //! Factor by which the PAH growth is multiplied
+    double m_pah_growthfact;
+
+    //! Minimum number of PAHs need to apply the growth factor
+    unsigned int m_pah_minpah;
 
 };
 } //namespace Sweep

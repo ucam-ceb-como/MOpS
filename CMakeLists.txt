@@ -117,6 +117,11 @@ add_test(mops.network2 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/n
 add_executable(PAHkmc-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/PAHkmc/kmc_model.cpp)
 target_link_libraries(PAHkmc-app sweep ${Boost_LIBRARIES})
 
+add_executable(test-kmc-pah ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/sweepc/kmc_pah.cpp)
+target_link_libraries(test-kmc-pah sweep ${Boost_LIBRARIES})
+add_test(NAME sweep.kmc COMMAND ${SHELL_INTERPRETER} ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/test-kmc-pah${EXE_SUFFIX})
+
+
 ########## The Brush application #######################
 add_executable(brush-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/brush/brush.cpp)
 target_link_libraries(brush-app brush ${Boost_LIBRARIES})

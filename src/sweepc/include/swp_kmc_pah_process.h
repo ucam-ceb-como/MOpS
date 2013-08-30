@@ -76,7 +76,6 @@ public:
     virtual ~PAHProcess();
 
     PAHStructure* returnPAH();
-    bool havebridgeC();
 
     // Check to validate if coordinates of C matches bond angles
     bool checkCoordinates() const;
@@ -89,7 +88,6 @@ public:
     void setPAH(PAHStructure& pah);
     //! Returns a copy of PAH structure
     PAHStructure* clonePAH() const;
-    PAHStructure* clonePAH_new() const; // --> new method
 
     size_t SiteListSize() const;
     size_t CarbonListSize() const;
@@ -119,20 +117,9 @@ public:
     intpair getRingsCount() const;
     //! Get number of bridges
     int numberOfBridges() const;
-    //! Print structure in console
-    void printStruct() const;
-    //! Print Structure in console, with arrow pointing at current C
-    void printStruct(Cpointer c) const;
-    //! Print sites in console
-    void printSites() const;
-    //! Print sites & site members in console, with arrow pointing at site stt
-    void printSitesMemb(Spointer& stt) const;
-    void printSitesMemb() const;
-    //! Print sites in console, with an arrow pointing at site stt
-    void printSites(Spointer& stt) const;
+
     //! Store structure results in external file, returns success/failure
     bool saveDOT(const std::string &filename) const;
-    bool saveDOT(const std::string &filename, const std::string &title) const;
     //! obtains a vector of the PAH site list
     std::vector<kmcSiteType> SiteVector() const;
     //! obtains a string containing the PAH site list
@@ -174,15 +161,7 @@ public:
 
 private:
     // Read Process
-    //! Get other member of the site a particular C atom is a member of
-    Cpointer getPair(
-        const Cpointer Carb, 
-        // Is position of other member preceeding or after the C atom?
-        // 0:prev, 1:next
-        bool after 
-        ) const;
-    //! Move current and previous Carbon iterator to the next carbon
-    Cpointer moveCPointer(Cpointer &previous, Cpointer &current) const;
+
     //! Check if process is allowed
     bool allowed(const Spointer& st, StructureProc proc) const;
     //! Choose a random site of site type st

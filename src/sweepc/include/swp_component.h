@@ -67,86 +67,59 @@ public:
     Component(const Component &copy); // Copy constructor.
     Component(std::istream &in); // Stream-reading constructor.
 
-    // Destructor.
+    //! Default destructor.
     ~Component(void);
 
-    // Operators.
+    //! Equals operator
     Component &operator=(const Component &rhs);
-
-
-    // MOLECULAR WEIGHT
     
-    // Returns component molecular weight (g/mol).
+    //! Returns component molecular weight (g/mol).
     double MolWt() const;
 
-    // Sets the molecular weight (g/mol).
+    //! Sets the molecular weight (g/mol).
     void SetMolWt(double molwt);
 
-
-    // DENSITY.
-
-    // Returns component density (g/cm3).
+    //! Returns component density (g/cm3).
     double Density() const;
 
-    double CoalescThresh() const;
-
-    double GrowthFact() const;
-
-    double MinPAH() const;
-
-    // Sets the density (g/cm3).
+    //! Sets the density (g/cm3).
     void SetDensity(double dens);
 
-    void SetCoalescThresh(double ct);
-
-    void SetGrowthFact(double gf);
-
-    void SetMinPAH(int mp);
-
-    // Returns component symbol or name.
+    //! Returns component symbol or name.
     const std::string &Name() const;
 
-    // Sets the symbol or name.
+    //! Sets the symbol or name.
     void SetName(const std::string &name);
 
     // MINIMUM VALID VALUE
-    //! Get the minimum amount that a valid particle may have of this component
-    double MinValid() const {return m_minValid;}
-
     //! Set the minimum amount that a valid particle must have of this component
-    void SetMinValid(const double min) {m_minValid = min;}
+    void SetMinValid(double min);
 
     //! Check is a valid particle can have specified amount of this component
-    bool IsValidValue(const double r) const;
+    bool IsValidValue(double r) const;
 
     // READ/WRITE/COPY.
 
-    // Creates a copy of the component.
+    //! Creates a copy of the component.
     Component *const Clone(void) const;
 
-    // Writes the object to a binary stream.
+    //! Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;
 
-    // Reads the object from a binary stream.
+    //! Reads the object from a binary stream.
     void Deserialize(std::istream &in);
 
 private:
-    double m_density;     // Component density (g/cm3).
-    double m_molwt;       // Component molecular weight (g/mol).
+    //! Component density (g/cm3)
+    double m_density;
+
+    //! Component molecular weight (g/mol)
+    double m_molwt;
 
     //! Minimum value a valid particle can have for this component
-    double m_minValid;
+    double m_min_valid;
 
     std::string m_name; // Component symbol or name.
-
-    //! threshold after which two individual primaries are replaced by one
-    double m_coalesc_thresh;
-
-    //! factor with which the PAH growth is multiplied
-    double m_growthfact;
-
-    //! minimum number of PAHs withinin the primary that are needed to apply m_growthfact
-    int m_minPAH;
 };
 
 // Typedef of a vector of pointers to Component objects.

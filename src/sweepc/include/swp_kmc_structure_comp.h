@@ -69,6 +69,9 @@ namespace Sweep {
         public:
             Carbon();
 
+            //! Returns the next carbon atom after current, coming from the previous
+            static Cpointer MoveCPointer(Cpointer &previous, Cpointer &current);
+
             //! Default Destructor
             ~Carbon();
             //! Neighbouring carbon atoms
@@ -90,8 +93,7 @@ namespace Sweep {
             cpair coords;
         };
 
-        //static Ccontainer NULLSET(1, Carbon());
-        static Cpointer NULLC(new Carbon);//SET.begin();
+        static Cpointer NULLC(new Carbon);
 
         //! Active site on PAH edges
         struct Site {

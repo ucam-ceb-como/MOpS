@@ -736,7 +736,7 @@ double PAHPrimary::CoalescenceLevel()
         //update the children volume, this value is used to calculate dV n the next timestep
         m_children_vol=m_rightparticle->m_vol+m_leftparticle->m_vol;
         //calculate dS, at the moment it is assumed that the particles always grow
-        double ct=m_pmodel->Components(0)->CoalescThresh();
+        double ct=m_pmodel->GetBinTreeCoalThresh();
         const double dS=dV*ct/m_children_radius;
         //update the radius for the next event
         m_children_radius=pow(3.0/(4.0*PI)*(m_children_vol),(ONE_THIRD));
@@ -1009,7 +1009,7 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
             // PAHs the growth rate of each PAH is reduced according to the
             // growth factor
             bool m_PAHchanged = false;
-            const double minPAH = model.Components(0)->MinPAH();
+            const double minPAH = model.GetPAHMinPAHsForGrowth();
 
             double growthfact = 1.0;
             if (m_numPAH>=minPAH)
@@ -1017,7 +1017,7 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
                 // concentration of gasphase species is reduced by this factor to 
                 // reflect the slower growth of molecules that are closely surrounded
                 // by many other PAHs.
-                growthfact = model.Components(0)->GrowthFact();
+                growthfact = model.GetPAHGrowthFactor();
             }
 
             // Time for one particular PAH to grow

@@ -762,7 +762,27 @@ void ParticleModel::SetInceptedPAH(const std::string &name)
     else throw std::runtime_error("no information about the incepted PAH is available, only A1 A2 and A4 are supported now (Sweep::ParticleModel::SetInceptedPAH())");
 }
 
-//! return mode of collision efficency model
+// Set the PAH growth factor
+void ParticleModel::SetPAHGrowthFactor(double gf) {
+    m_pah_growthfact = gf;
+}
+
+// Get the PAH growth factor
+double ParticleModel::GetPAHGrowthFactor() const {
+    return m_pah_growthfact;
+}
+
+// Set the minimum PAH value for growth to apply
+void ParticleModel::SetPAHMinPAHsForGrowth(unsigned int f) {
+    m_pah_minpah = f;
+}
+
+// Get the PAH growth factor
+double ParticleModel::GetPAHMinPAHsForGrowth() const {
+    return m_pah_minpah;
+}
+
+// return mode of collision efficency model
 const std::string &ParticleModel::Mode() const {return m_mode;}
 
 const ParticleModel::PostProcessStartingStr &ParticleModel::InceptedPAH() const {return m_InceptedPAH;}
