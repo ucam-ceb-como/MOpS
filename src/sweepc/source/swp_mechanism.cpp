@@ -803,15 +803,13 @@ void Mechanism::DoParticleFlow(
 }
 
 /*!
- * Performs the a specified process.
+ * Transfer InceptedPAH molecule (i.e. A1, A2 or A4), from the gas phase to the particle ensemble and vice versa used for PAH-PP model only
+ * 
+ * @param[in]       i           the number of pyrene supposed in the emsemble
+ * @param[in]       t           Time at which event is to take place
+ * @param[in,out]   sys         System in which event is to take place
+ * @param[in,out]   rng         Random number generator
  *
- * \param[in]       i           the number of pyrene supposed in the emsemble
- * \param[in]       t           Time at which event is to take place
- * \param[in,out]   sys         System in which event is to take place
- * \param[in,out]   rng         Random number generator
- *
- * The support for transport processes may well no longer be needed, in that it is
- * rarely efficient to simulate such phenomena with stochastic jumps.
  */
 void Mechanism::MassTransfer(int i, double t, Cell &sys, rng_type &rng) const
 {

@@ -155,9 +155,10 @@ int PAHInception::Perform(const double t, Cell &sys,
 }
 
 /*!
- * Create a new particle and add it to the ensemble
+ * Ensure the number of InceptedPAHs in the particle ensemble is consistent with that in the gas phase
+ * If the number of InceptedPAHs (i.e. A1, A2 or A4) in the particle ensemble is less than that in the gas phase, new InceptedPAHs will be created (transfer from gas phase) and added to the ensemble. In contrast, if the number of InceptedPAHs in the particle ensemble are more than that in the gas phase, the redundant InceptedPAH will be removed accordingly.
  * This function is only used for PAH-PP model currently
- * The mass form gasphase will be transfered to particle ensemble by using this function
+ * The mass form gas phase will be transfered to particle ensemble by using this function
  *
  * \param[in]       i           number of pyrene supposed in the ensemble
  * \param[in]       t           Time
@@ -172,17 +173,15 @@ int PAHInception::AddInceptedPAH(const int i, const double t, Cell &sys,rng_type
     Particle *sp = NULL;
 
     // return current number of pyrene in the emsemble
-
     int j = sys.Particles().NumOfInceptedPAH();
+
     if (i>j)
     {
         while (i>j)
         {
             // Ignore all questions of position
             sp = m_mech->CreateParticle(t);
-
             sp->UpdateCache();
-
             // Add particle to main ensemble.
             sys.Particles().Add(*sp, rng);
 
