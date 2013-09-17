@@ -353,7 +353,7 @@ protected:
     //! Calculate the drag coefficient for a particle using the Knudsen correction
     double KnudsenDragCoefficient(const Cell &sys, const Particle &sp) const;
 
-    //! Calculate the drag coefficient for a particle using the Knudsen correction
+    //! Calculate the drag coefficient for a particle in the free molecular regime
     double FreeMolDragCoefficient(const Cell &sys, const Particle &sp) const;
 
     //! Calculate the drag coefficient for a particle as constant times temperature
