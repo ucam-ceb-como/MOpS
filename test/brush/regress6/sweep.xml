@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="lognormal inception mechanism" units="CGS">
+    
+    
+    <!-- Define particle components. -->
+    
+    <component id="pah" type="bulk">
+      <description>
+        amorphous carbon
+      </description>
+      <density units="g/cm3">1</density>
+      <molwt units="g/mol">6.0221415e26</molwt>
+    </component> 
+    
+
+    <particle id="[soot]" model="spherical" subtree="false">
+      <description>
+        A soot particle.
+      </description>
+    </particle>
+
+    <model type="advection" id="physical"/>
+
+    <constantinception>
+      <A>2.0e-7</A>
+      <component id="pah" distribution="lognormal" location="5" scale="0.2"/>
+    </constantinception>
+    
+    <coagulation>
+        <kernel>weightedadditive</kernel>
+        <A>0.0</A>
+        <weightrule>w3</weightrule>
+    </coagulation>
+
+</mechanism>

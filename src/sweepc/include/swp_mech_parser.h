@@ -125,7 +125,7 @@ private:
     static void readPAHInception(CamXML::Element &xml, Processes::PAHInception &icn);
 
     /*!
-    * reads a PAH inception process
+    * reads all PAH inception process
     * node that do not contain pahinception will be ignored
     @param[in] xml      XML node with one or more children of type pahinception
     @param[in,out] mech  Mechanism to which the processes will be added
@@ -133,16 +133,9 @@ private:
     static void readPAHInceptions(CamXML::Document &xml, Sweep::Mechanism &mech);
 
     /*!
-    * reads a constant inception process
-    @param[in] xml      XML node of type constantinception
-    @param[in,out] icn      Inception process to initialise
-    */
-    static void readConstantInception(CamXML::Element &xml, Processes::ConstantInception &icn);
-
-    /*!
-    * reads a constant inception process
-    * node that do not contain constant will be ignored
-    @param[in] xml      XML node with one or more children of type constant
+    * reads all constant inception processes
+    * nodes that do not contain constant inception processes will be ignored
+    @param[in] xml      XML node with one or more children of type constantinception
     @param[in,out] mech  Mechanism to which the processes will be added
     */
     static void readConstantInceptions(CamXML::Document &xml, Sweep::Mechanism &mech);

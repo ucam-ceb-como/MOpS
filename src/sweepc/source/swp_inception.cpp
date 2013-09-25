@@ -115,12 +115,6 @@ double Inception::ParticleComp(unsigned int i) const
     }
 }
 
-// Sets the particle composition vector.
-void Inception::SetParticleComp(const fvector &comp)
-{
-    m_newcomp.assign(comp.begin(), comp.end());
-}
-
 // Sets the amount of the ith component in the new particle.
 void Inception::SetParticleComp(unsigned int i, double comp)
 {

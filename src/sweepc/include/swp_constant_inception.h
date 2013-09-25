@@ -42,6 +42,8 @@
 
 #include "swp_inception.h"
 
+#include <boost/random/lognormal_distribution.hpp>
+
 namespace Geometry
 {
     // Forward declaration
@@ -58,13 +60,17 @@ namespace Processes
 
 /*!
  *  Incept particles at a constant rate, independent of conditions.  This
- *  is useful for testing.
+ *  is useful for testing.  The particle size does not have to be constant,
+ *  currently log normal size distributions are supported, with constant
+ *  size being handled as the zero variance case.
  */
 class ConstantInception : public Inception
 {
 public: 
     //! Create as part of a mechanism
-	ConstantInception(const Sweep::Mechanism &mech);
+	ConstantInception(const Sweep::Mechanism &mech, const double rate,
+                      const std::vector<double>& locations,
+                      const std::vector<double>& scales);
 
 	//! Create a copy
 	ConstantInception(const ConstantInception &copy);
@@ -140,6 +146,13 @@ private:
 
     //! Locate for fixed position inception see mUseFixedPosition
     double mFixedPosition;
+
+    //! Scale (variance of logarithm) of the components
+    /*! This variable is mutable, because the log normal generators may cache some random
+     * number generation data, which can change even while the object is logically unchanged.
+     * I am not sure this is a very good idea, because it raises various possible bugs.
+     */
+    mutable std::vector<boost::random::lognormal_distribution<double> > mComponentDistributions;
 };
 }
 }

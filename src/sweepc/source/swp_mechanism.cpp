@@ -162,8 +162,7 @@ const Inception *const Mechanism::Inceptions(unsigned int i) const
 // Adds an inception to the mechanism.
 void Mechanism::AddInception(Inception &icn)
 {
-    // Add the inception to the mechanism.
-    m_inceptions.push_back(&icn);
+
     m_termcount += icn.TermCount();
     ++m_processcount;
     m_proccount.resize(m_termcount, 0);
@@ -171,6 +170,9 @@ void Mechanism::AddInception(Inception &icn)
 
     // Set the inception to belong to this mechanism.
     icn.SetMechanism(*this);
+
+    // Add the inception to the mechanism last as a step towards exception safety.
+    m_inceptions.push_back(&icn);
 }
 
 

@@ -6,8 +6,8 @@
   <iter>2</iter>
   <atol>1.0e-2</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount x="1.0">512</pcount>
-  <pcount x="0.2">512</pcount>
+  <pcount x="1.0">1024</pcount>
+  <pcount x="0.2">1024</pcount>
   <maxm0 x="0.01">1.28e4</maxm0>
   <relax>0.5</relax>
   <advection>split</advection>
