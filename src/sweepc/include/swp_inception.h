@@ -101,9 +101,6 @@ public:
     // Returns the amount of the ith component of the new particle.
     double ParticleComp(unsigned int i) const;
 
-    // Sets the particle composition vector.
-    void SetParticleComp(const fvector &comp);
-
     // Sets the amount of the ith component in the new particle.
     void SetParticleComp(unsigned int i, double comp);
 
@@ -120,12 +117,6 @@ public:
     // Sets the value of the ith tracker variable in the
     // new particle.
     void SetParticleTracker(unsigned int i, double track);
-
-    //! Should new particles be considered for the secondary population
-    void SetUseSecondary(bool use_secondary);
-
-    //! Should new particles be considered for the secondary population
-    bool UseSecondary() const;
 
 	// TOTAL RATE CALCULATIONS.
 

@@ -201,12 +201,12 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
 }
 
 //! Returns vector of jump processes
-std::vector<JumpProcess*> KMCMechanism::JPList() const {
+const std::vector<JumpProcess*>& KMCMechanism::JPList() const {
     return m_jplist;
 }
 
 //! Returns vector of jump rates
-std::vector<double> KMCMechanism::Rates() const {
+const std::vector<double>& KMCMechanism::Rates() const {
     return m_rates;
 }
 

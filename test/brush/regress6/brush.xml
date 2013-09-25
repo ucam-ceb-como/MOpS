@@ -6,8 +6,8 @@
   <iter>2</iter>
   <atol>1.0e-2</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>1024</pcount>
-  <maxm0>1.3e0</maxm0>
+  <pcount>128</pcount>
+  <maxm0>0.3e0</maxm0>
   <relax>0.5</relax>
 
   <advection>split</advection>
@@ -18,12 +18,11 @@
     <start>0.0</start>
     <time steps="20" splits="50">1.0</time>
     <time steps="20" splits="50">2.0</time>
-    <time steps="4" splits="50">2.2</time>
   </timeintervals>
 
 
   <output>
-    <filename>regress5-addw</filename>
+    <filename>regress6-lognorm</filename>
   </output>
   
 </brush>

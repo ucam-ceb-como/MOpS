@@ -76,9 +76,9 @@ Reaction::~Reaction() {
 
 //! Get Rate
 double Reaction::getRate(const KMCGasPoint& gp/*, const double& t*/) const {
-    double T = gp[gp.T]; // Temperature
-    double spc_conc = gp[m_r_species]; // Species Concentration
-    double B = exp(-m_E / (RCAL*T)); // e^(-E/RT)
-    double temp= m_A * pow(T, m_n) * B * spc_conc; // rate equation
-    return temp;
+	double T(gp[gp.T]);
+
+	// Putting the nlog(T) into the exp is faster than using pow separately
+	// (for n != int, n < 1 or n > 3)
+	return m_A * gp[m_r_species] * exp(m_n * log(T) - m_E / (RCAL * T));
 }

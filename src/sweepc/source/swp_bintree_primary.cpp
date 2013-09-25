@@ -598,7 +598,7 @@ BinTreePrimary &BinTreePrimary::Merge()
             // particle.
 
             // Sum up the components first
-            for (unsigned int i=0; i != m_comp.size(); i++) {
+            for (size_t i=0; i != m_comp.size(); i++) {
                 m_comp[i] = m_leftparticle->Composition(i) +
                         m_rightparticle->Composition(i);
             }
@@ -640,7 +640,7 @@ BinTreePrimary &BinTreePrimary::Merge()
                 // Append to left subtree because there are fewer primaries
                 // (this is only to keep the tree balanced)
                 BinTreePrimary *oldleftparticle = m_leftparticle;
-                for (unsigned int i=0; i != m_comp.size(); i++) {
+                for (size_t i=0; i != m_comp.size(); i++) {
                     m_rightparticle->m_comp[i] =
                             m_leftparticle->Composition(i) +
                             m_rightparticle->Composition(i);
@@ -690,7 +690,7 @@ BinTreePrimary &BinTreePrimary::Merge()
             {
                 // Append to right subtree
                 BinTreePrimary *oldrightparticle = m_rightparticle;
-                for (unsigned int i=0; i != m_comp.size(); i++) {
+                for (size_t i=0; i != m_comp.size(); i++) {
                     m_leftparticle->m_comp[i] =
                             m_leftparticle->Composition(i) +
                             m_rightparticle->Composition(i);
@@ -843,7 +843,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
     if (m_leftchild!=NULL)
     {
         // Sum up the components first
-        for (unsigned int i=0; i != m_comp.size(); i++) {
+        for (size_t i=0; i != m_comp.size(); i++) {
             m_comp[i] = m_leftchild->m_comp[i] + m_rightchild->m_comp[i];
         }
 
@@ -1027,7 +1027,7 @@ void BinTreePrimary::PrintTreeNode(std::ostream &out) const
         << "|m_child_sint="      << this->m_children_sintering
         << "|m_child_rad="       << this->m_children_radius
         << "|m_child_surf="      << this->m_children_surf;
-        for (unsigned int i=0; i != m_comp.size(); i++) {
+        for (size_t i=0; i != m_comp.size(); i++) {
             out << "|" + string(m_pmodel->Components(i)->Name()) + "=" <<
                     m_comp[i];
         }
@@ -1038,7 +1038,7 @@ void BinTreePrimary::PrintTreeNode(std::ostream &out) const
 
 void BinTreePrimary::PrintComponents() const
 {
-    for (unsigned int i=0; i != m_comp.size(); i++) {
+    for (size_t i=0; i != m_comp.size(); i++) {
         cout << m_pmodel->Components(i)->Name() << " " << m_comp[i] << " ";
     }
     cout << endl;
@@ -1298,11 +1298,7 @@ void BinTreePrimary::SinterNode(
  */
 double BinTreePrimary::GetComponent(std::string name) const
 {
-    try {
-        return m_comp[m_pmodel->ComponentIndex(name)];
-    } catch(std::exception& e) {
-        throw e.what();
-    }
+	return m_comp[m_pmodel->ComponentIndex(name)];
 }
 
 /*!
@@ -1336,9 +1332,8 @@ double BinTreePrimary::GetPrimaryAStdDev() const
         return 0.0;
 
     // Loop over diameters to get stdev
-    unsigned int i(0);
     double stdev(0.0), dev(0.0);
-    for (i = 0; i != diams.size(); i++) {
+    for (size_t i = 0; i != diams.size(); i++) {
         dev = (diams[i] - dpri);
         stdev += dev * dev;
     }
@@ -1364,8 +1359,7 @@ double BinTreePrimary::GetPrimaryGMean() const
     // Calculate the geometric mean diameter
     double dpri(1.0);
     double inv_n = 1.0 / (double) diams.size();
-    unsigned int i(0);
-    for (i = 0; i != diams.size(); i++) {
+    for (size_t i = 0; i != diams.size(); i++) {
         dpri *= pow(diams[i], inv_n);
     }
 
@@ -1389,9 +1383,8 @@ double BinTreePrimary::GetPrimaryGStdDev() const
         return 0.0;
 
     // Loop over diameters to get stdev
-    unsigned int i(0);
     double stdev(0.0), dev(0.0);
-    for (i = 0; i != diams.size(); i++) {
+    for (size_t i = 0; i != diams.size(); i++) {
         dev = log(diams[i] / dpri); // (natural log)
         stdev += dev * dev;
     }

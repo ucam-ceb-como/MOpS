@@ -965,88 +965,128 @@ void MechParser::readPAHInception(CamXML::Element &xml, Processes::PAHInception 
 }
 
 /*!
- * Read constant rate inception processes from a sweep mechanism XML file.
+ * Read constant inception processes from a sweep mechanism XML file.
  *
- *@param[in]		xml		XML node with constantinception children
+ *@param[in]        xml     XML node with constantinception children
+ *@param[in]        mech    Mechanism of which the inceptions are to be part
+ *
+ *@exception    std::runtime_error  Missing parameters for the lognormal distributions
  */
 void MechParser::readConstantInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 {
-    vector<CamXML::Element*> items, subitems;
-    vector<CamXML::Element*>::iterator i, j;
-    string str;
-    unsigned int k = 0;
 
     // Get list of inceptions from XML data.
-    xml.Root()->GetChildren("constantinception", items);
+    vector<CamXML::Element*> inceptions;
+    xml.Root()->GetChildren("constantinception", inceptions);
 
-    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
-        // Create new inception.
-        ConstantInception *icn = new ConstantInception(mech);
-        icn->SetMechanism(mech);
-        icn->SetName("ConstantInception " + cstr(k));
+    vector<CamXML::Element*>::iterator i = inceptions.begin();
+    for (unsigned k=0; i!=inceptions.end(); ++i,++k) {
+        // Read the data before creating the object
+        vector<CamXML::Element*> components;
+        (*i)->GetChildren("component", components);
 
-        try {
-            readConstantInception(*(*i), *icn);
+        // Parameters specifying the log normal distributions for each component
+        std::vector<double> locations, scales;
+        // Component ids in the mechanism
+        std::vector<int> ids;
+
+        for (vector<CamXML::Element*>::iterator j=components.begin(); j!=components.end(); ++j) {
+            // Get component ID.
+            std::string str = (*j)->GetAttributeValue("id");
+            ids.push_back(mech.ComponentIndex(str));
+
+            if (ids.back() >= 0) {
+                std::string str = (*j)->GetAttributeValue("dx");
+                if(str != "") {
+                    // Deterministic size increment specified
+                    double val = atof(str.c_str());
+                    if(val <= 0)
+                        throw std::runtime_error("Amount of component in a newly incepted particle must be strictly positive, not "
+                                                 + str + ". MechParser::readConstantInceptions");
+                    locations.push_back(log(cdble(str)));
+                    // Set the standard deviation parameter to 0
+                    scales.push_back(0.0);
+
+                }
+                else {
+                    str = (*j)->GetAttributeValue("distribution");
+                    if(str == "lognormal") {
+                        // Lognormal component distribution
+                        // Mean of the logarithm of the amount of this component
+                        str = (*j)->GetAttributeValue("location");
+                        double val = atof(str.c_str());
+                        if(val <= 0)
+                            throw std::runtime_error("Location of lognormal size distribution must be positive, not "
+                                                     + str + ". MechParser::readConstantInceptions");
+                        locations.push_back(cdble(str));
+
+                        // This is the std dev of the amount of this component
+                        str = (*j)->GetAttributeValue("scale");
+                        val =  atof(str.c_str());
+                        if(val < 0)
+                            throw std::runtime_error("Scale of lognormal size distribution must be non-negative, not "
+                                                     + str + ". MechParser::readConstantInceptions");
+                        scales.push_back(cdble(str));
+                    }
+                    else
+                        throw std::runtime_error("Unrecognised component distribution " + str
+                                                 + " in MechParser::readConstantInceptions");
+                }
+            }
+            else {
+                // Unknown component in mechanism.
+                throw std::runtime_error(str + ": Component not found in mechanism (readConstantInceptions)");
+            }
         }
-        catch (std::exception &e) {
-            delete icn;
-            throw;
+
+        if(ids.size() != mech.ComponentCount())
+            throw std::runtime_error("Missing component in (readConstantInceptions)");
+
+        // Sort the component data by component id
+        std::vector<double> locationsSorted(mech.ComponentCount()), scalesSorted(mech.ComponentCount());
+        std::cerr << mech.ComponentCount() << ',' << ids.size() << ',' << locations.size() << ',' << scales.size() << std::endl;
+        for(unsigned l = 0; l < mech.ComponentCount(); ++l) {
+            std::cerr << l << ',' << ids[l] << std::endl;
+            locationsSorted[ids[l]] = locations[l];
+            scalesSorted[ids[l]]    = scales[l];
         }
+
+        // Rate of inception events
+        double A = 0.0;
+        CamXML::Element* el = (*i)->GetFirstChild("A");
+        if (el != NULL) {
+            A = cdble(el->Data());
+            // But store with units of particles per m^3 per s
+            A *= 1.0e6;
+        }
+
+        std::auto_ptr<ConstantInception> icn(new ConstantInception(mech, A, locationsSorted, scalesSorted));
+
+        // See if the inception is at a fixed position
+        el = (*i)->GetFirstChild("fixedposition");
+        if (el != NULL) {
+            // Read position in cm (for consistency with rest of input file ...
+            double posn = std::atof(el->Data().c_str());
+            // ..., but store position in m
+            icn->setFixedPosition(posn/100);
+            icn->useFixedPosition(true);
+        }
+
+        std::string str = (*i)->GetAttributeValue("name");
+        if (str != "")
+            icn->SetName(str);
+        else
+            icn->SetName("ConstantInception" + cstr(k));
+
+        // Read initial tracker variable values.
+        readInceptedTrackers(**i, *icn);
 
         // Add inception to mechanism.  Once entered into mechanism, the mechanism
         // takes control of the inception object for memory management.
         mech.AddInception(*icn);
+        icn.release();
     }
 }
-
-/*!
- *@param[in]		xml		XML node of type constantinception
- *@param[in,out]	icn		Instance of ConstantInception on which to set data
- *
- *@exception	std::runtime_error		No rate specified
- */
-void MechParser::readConstantInception(CamXML::Element &xml, Processes::ConstantInception &icn)
-{
-    std::string str;
-    vector<CamXML::Element*> items, subitems;
-    vector<CamXML::Element*>::iterator j;
-
-    // Read name.
-    str = xml.GetAttributeValue("name");
-    if (str != "") icn.SetName(str);
-
-     // Read initial particle composition.
-    readInceptedComposition(xml, icn);
-
-    // Read initial tracker variable values.
-    readInceptedTrackers(xml, icn);
-
-    // Rate scaling now that a process has been created (particles per cm^3 per s)
-    double A = 0.0;
-    CamXML::Element* el = xml.GetFirstChild("A");
-    if (el != NULL) {
-        A = cdble(el->Data());
-        // But store with units of particles per m^3 per s
-        icn.SetA(A * 1.0e6);
-    }
-
-    // Prevent silent skipping of rate elements
-    if (xml.GetFirstChild("rate") != NULL) {
-        throw std::runtime_error("<rate> element no longer supported (Sweep::MechParser::readConstantInception)");
-    }
-
-    // See if the inception is at a fixed position
-    el = xml.GetFirstChild("fixedposition");
-    if (el != NULL) {
-        // Read position in cm (for consistency with rest of input file ...
-        double posn = std::atof(el->Data().c_str());
-        // ..., but store position in m
-        icn.setFixedPosition(posn/100);
-        icn.useFixedPosition(true);
-    }
-}
-
-
 
 // SURFACE REACTIONS.
 

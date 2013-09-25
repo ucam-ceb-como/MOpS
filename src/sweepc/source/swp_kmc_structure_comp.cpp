@@ -17,8 +17,6 @@ Carbon::Carbon(): C1(NULLC),
     coords(0,0)
 {
 }
-Carbon::Carbon(const Carbon& copy){
 
-}
 Carbon::~Carbon(){
 }

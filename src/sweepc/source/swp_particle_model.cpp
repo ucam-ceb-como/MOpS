@@ -806,7 +806,7 @@ double ParticleModel::KnudsenDragCoefficient(const Cell &sys, const Particle &sp
 }
 
 /*!
- * The drag coefficient for the free molecular regimes is calculated using a
+ * The drag coefficient for the free molecular regime is calculated using a
  * reduced collision integral of 1 following the formula in table I of Li & Wang,
  * Phys. Rev. E 68, 061206 (2003).
  * The formula is
@@ -829,7 +829,7 @@ double ParticleModel::FreeMolDragCoefficient(const Cell &sys, const Particle &sp
 
 /*!
  * For testing purposes it is useful to have a drag coefficient that is
- * proprtional to temperature so that the diffusion constant calculated using
+ * proportional to temperature so that the diffusion constant calculated using
  * Einstein's relation \see{DiffusionCoefficient} is a constant independent of
  * particle properties and the gaseous environment.
  *

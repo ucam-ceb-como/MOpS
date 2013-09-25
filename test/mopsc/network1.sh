@@ -159,7 +159,7 @@ if [ $(contains "$cases" "c") -eq 1 ]; then
 
     CheckTest
     
-    rm cased*
+    rm casec*
 fi
 
 ###################################################################

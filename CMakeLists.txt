@@ -130,6 +130,7 @@ add_test(brush.regress4 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/
 
 add_test(brush.regress5 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/regress5.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/brush)
 
+add_test(brush.regress6 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/brush/regress6.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/brush-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/brush)
 ########## A small program to exercise the Brush interface for moonmd #######################
 add_executable(brush-moonmd-test ${MOPSSUITE_SOURCE_DIR}/applications/test-harnesses/brush/moonmd_test.cpp)
 target_link_libraries(brush-moonmd-test brush ${Boost_LIBRARIES})

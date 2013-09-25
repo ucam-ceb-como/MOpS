@@ -44,6 +44,7 @@
 #include "local_geometry1d.h"
 
 #include <boost/random/uniform_01.hpp>
+#include <boost/random/lognormal_distribution.hpp>
 
 
 // CONSTRUCTORS AND DESTRUCTORS.
@@ -52,17 +53,43 @@
 Sweep::Processes::ConstantInception::ConstantInception()
 : Inception()
 , mUseFixedPosition(false)
+, mFixedPosition(0.0)
 {
     m_name = "ConstantInception";
 }
 
-// Initialising constructor.
-Sweep::Processes::ConstantInception::ConstantInception(const Sweep::Mechanism &mech)
+/*!
+ * Initialising constructor
+ *
+ * @param[in]       mech        Mechanism of which process will be part
+ * @param[in]       rate        Rate of inception jumps
+ * @param[in]       locations   Location parameters for lognormal component distributions, ordered to match the components in the mechanism
+ * @param[in]       scales      Scale parameters for lognormal component distributions, ordered to match the components in the mechanism
+ *
+ * @exception       std::runtime_error   Distribution parameters not specified for all components
+ */
+Sweep::Processes::ConstantInception::ConstantInception(const Sweep::Mechanism &mech, const double rate,
+                                                       const std::vector<double>& locations,
+                                                       const std::vector<double>& scales)
 : Inception(mech)
 , mUseFixedPosition(false)
+, mFixedPosition(0.0)
+, mComponentDistributions(mech.ComponentCount())
 {
+    if((mech.ComponentCount() != locations.size()) || (mech.ComponentCount() != scales.size()))
+            throw std::runtime_error("Details must be supplied for all components in ConstantInception::ConstantInception");
+
+    SetA(rate);
     m_name = "ConstantInception";
+
+    // It is important that the ordering corresponding to the ordering of the components in the mechanism,
+    // just having the same number of entries is necessary, but not sufficient.
+    for(unsigned i = 0; i < mech.ComponentCount(); ++i) {
+            mComponentDistributions[i] = std::make_pair(locations[i], scales[i]);
+            SetParticleComp(i, exp(locations[i] + 0.5 * scales[i] * scales[i]));
+    }
 }
+
 
 // Copy constructor.
 Sweep::Processes::ConstantInception::ConstantInception(const ConstantInception &copy)
@@ -93,6 +120,7 @@ Sweep::Processes::ConstantInception &Sweep::Processes::ConstantInception::operat
 
     mUseFixedPosition = rhs.mUseFixedPosition;
     mFixedPosition = rhs.mFixedPosition;
+    mComponentDistributions  = rhs.mComponentDistributions;
 
     return *this;
 }
@@ -150,7 +178,17 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 
 
     // Initialise the new particle.
-    sp->Primary()->SetComposition(ParticleComp());
+    std::vector<double> newComposition(mComponentDistributions.size());
+    for(unsigned i = 0; i < mComponentDistributions.size(); ++i) {
+        // Construct the distribution on the fly.  If this becomes a performance
+        // bottleneck some optimisations might be possible, but caching the distribution
+        // object in the mechanism is a bad idea, because the mechanism is potentially
+        // shared between threads, which is very dangerous for cached data!
+        newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
+                                                                  mComponentDistributions[i].second)(rng);
+    }
+    sp->Primary()->SetComposition(newComposition);
+
     sp->Primary()->SetValues(ParticleTrackers());
     sp->UpdateCache();
 
@@ -241,7 +279,15 @@ void Sweep::Processes::ConstantInception::Serialize(std::ostream &out) const
         out.write(reinterpret_cast<const char*>(&mUseFixedPosition), sizeof(mUseFixedPosition));
         out.write(reinterpret_cast<const char*>(&mFixedPosition), sizeof(mFixedPosition));
 
-    } else {
+        // Component distributions
+        const unsigned int n = mComponentDistributions.size();
+        out.write(reinterpret_cast<const char*>(&n), sizeof(n));
+        for(unsigned int i = 0; i < n; ++i) {
+            out.write(reinterpret_cast<const char*>(&mComponentDistributions[i].first),  sizeof(mComponentDistributions[i].first));
+            out.write(reinterpret_cast<const char*>(&mComponentDistributions[i].second), sizeof(mComponentDistributions[i].second));
+        }
+    }
+    else {
         throw std::invalid_argument("Output stream not ready (Sweep, Sweep::Processes::ConstantInception::Serialize).");
     }
 }
@@ -258,6 +304,7 @@ void Sweep::Processes::ConstantInception::Deserialize(std::istream &in, const Sw
 
         switch (version) {
             case 0:
+            {
                 // Deserialize base class.
                 Inception::Deserialize(in, mech);
 
@@ -265,7 +312,16 @@ void Sweep::Processes::ConstantInception::Deserialize(std::istream &in, const Sw
                 in.read(reinterpret_cast<char*>(&mUseFixedPosition), sizeof(mUseFixedPosition));
                 in.read(reinterpret_cast<char*>(&mFixedPosition), sizeof(mFixedPosition));
 
-                 break;
+                // Component distributions
+                unsigned int n = 0;
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                mComponentDistributions.resize(n);
+                for(unsigned int i = 0; i < n; ++i) {
+                    in.read(reinterpret_cast<char*>(&mComponentDistributions[i].first),  sizeof(mComponentDistributions[i].first));
+                    in.read(reinterpret_cast<char*>(&mComponentDistributions[i].second), sizeof(mComponentDistributions[i].second));
+                }
+                break;
+            }
             default:
                 throw std::runtime_error("Serialized version number is invalid (Sweep, Sweep::Processes::ConstantInception::Deserialize).");
         }

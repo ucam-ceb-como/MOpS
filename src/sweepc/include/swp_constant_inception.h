@@ -42,6 +42,8 @@
 
 #include "swp_inception.h"
 
+#include <utility>
+
 namespace Geometry
 {
     // Forward declaration
@@ -58,13 +60,17 @@ namespace Processes
 
 /*!
  *  Incept particles at a constant rate, independent of conditions.  This
- *  is useful for testing.
+ *  is useful for testing.  The particle size does not have to be constant,
+ *  currently log normal size distributions are supported, with constant
+ *  size being handled as the zero variance case.
  */
 class ConstantInception : public Inception
 {
 public: 
     //! Create as part of a mechanism
-	ConstantInception(const Sweep::Mechanism &mech);
+	ConstantInception(const Sweep::Mechanism &mech, const double rate,
+                      const std::vector<double>& locations,
+                      const std::vector<double>& scales);
 
 	//! Create a copy
 	ConstantInception(const ConstantInception &copy);
@@ -140,6 +146,9 @@ private:
 
     //! Locate for fixed position inception see mUseFixedPosition
     double mFixedPosition;
+
+    //! mean (1st) and stddev (2nd) of logarithm of the components
+    std::vector<std::pair<double, double> > mComponentDistributions;
 };
 }
 }

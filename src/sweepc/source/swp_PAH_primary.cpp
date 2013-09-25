@@ -1143,7 +1143,7 @@ void PAHPrimary::FindXmer(std::vector<std::vector<double> > &out, int target_num
 	if (m_rightchild != NULL)
 		m_rightchild->FindXmer(out,target_num_PAH);
     if (target_num_PAH-10<=0) std::cout<<"Warning: (target_num_PAH-10) return 0 or negative value in PAHPrimary::FindXmer()"<<std::endl;
-	if (m_PAH.size() <= (target_num_PAH+10) && m_PAH.size() >= (target_num_PAH-10))	
+	if (m_PAH.size() <= size_t(target_num_PAH+10) && m_PAH.size() >= size_t(target_num_PAH-10))
 		mass_PAH(out);
 }
 
@@ -1321,6 +1321,8 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
 {
     if (m_leftchild!=NULL)
         m_leftchild->OutputPAHPSL(out, index, density);
+    if (m_rightchild!=NULL) m_rightchild->OutputPAHPSL(out, index, density);
+
 
     std::vector<double> temp;
 

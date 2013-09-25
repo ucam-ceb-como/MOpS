@@ -89,25 +89,25 @@ KMCSimulator::KMCSimulator(const std::string gasphase, const std::string chemfil
     m_fromfile = true;
 }
 //! Constructor from a GasProfile object
-KMCSimulator::KMCSimulator(Sweep::GasProfile& gprofile)
+KMCSimulator::KMCSimulator(Sweep::GasProfile& gprofile):
+	m_gasprof(), m_mech(), m_gas(), m_simPAH(), m_t(0.0), m_fromfile(false), m_kmcmech(), m_simPAHp()
 {
     std::cout << this << endl;
-    m_t = 0;
     m_gasprof = &gprofile;
-    m_fromfile = false;
     m_gas = new KMCGasPoint(gprofile, *gprofile[0].Gas.Species());
     m_mech = NULL;
 }
 
 //! Copy Constructor
-KMCSimulator::KMCSimulator(KMCSimulator& s): m_kmcmech(s.m_kmcmech)
+KMCSimulator::KMCSimulator(KMCSimulator& s):
+		m_gasprof(), m_mech(), m_gas(), m_simPAH(), m_t(s.m_t), m_fromfile(false),
+		m_kmcmech(s.m_kmcmech),m_simPAHp()
+
 {
     m_gasprof = s.m_gasprof;
-    m_t = s.m_t;
     m_gas = new KMCGasPoint(*s.m_gas);
     //m_simPAH = new PAHStructure(*(s.m_simPAH));
     m_simPAHp = PAHProcess(*m_simPAH);
-    m_fromfile = false;
 }
 
 //! Default Destructor
@@ -137,7 +137,8 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
                             rng_type &rng,
                             double r_factor,
                             int PAH_ID) {
-    initReactionCount();
+	// wjm34: remove call to initReaction count to save time in updating.
+    //initReactionCount();
     m_t = tstart;
     double t_max = m_t + dt;
     targetPAH(*pah);
@@ -193,7 +194,7 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             //dotname << "KMC_DEBUG/p_" << (t_next*1e8) << ".dot";
             //m_simPAHp.saveDOT(dotname.str());
             // Update data structure
-            bool process_success = m_simPAHp.performProcess(*jp_perf.first, rng);
+            m_simPAHp.performProcess(*jp_perf.first, rng);
 
             /*if(m_simPAH->m_parent->ID() % 100000 == 609) {
             if(!m_simPAHp.checkCoordinates()) {
@@ -201,9 +202,11 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
                     <<jp_perf->getName()<<" (ID" <<jp_id<<")\n";
             }
             }*/
+            /*
+             * wjm34: remove updating of jump counts to save time
             if(process_success) {
                 m_rxn_count[jp_perf.second]++;
-            }
+            }*/
         }else {
             //oldtnext = t_next;
             t_next = m_t+t_step_max;
@@ -402,10 +405,7 @@ void KMCSimulator::initCSVIO() {
 }
 //! Initialise reaction count
 void KMCSimulator::initReactionCount() {
-    m_rxn_count.clear();
-    for(int i=0; i<(int)m_kmcmech.JPList().size(); i++) {
-        m_rxn_count.push_back(0);
-    }
+    m_rxn_count.assign(m_kmcmech.JPList().size(), 0);
 }
 //! Reads chemical mechanism / profile (if not obtained from Mops)
 //! Similar function as Sweep::Flamesolver::LoadGasProfile
@@ -667,7 +667,9 @@ void KMCSimulator::saveDOTperXsec(const double& X, const int& seed, const double
 }
 
 // CSV data ----
-CSV_data::CSV_data(KMCSimulator& st) {
+CSV_data::CSV_data(KMCSimulator& st):
+		m_sim(NULL), m_name(), m_dataC(), m_dataH(), m_time(), m_T(),
+		m_intervalcount(0), m_dt(0.0) {
     m_sim = &st;
 }
 CSV_data::~CSV_data() {}

@@ -42,9 +42,11 @@
 
 #include "gpc_delta_stoich.h"
 #include "gpc_reaction.h"
+#include "string_functions.h"
 #include <string>
 #include <cmath>
 #include <stdexcept>
+using namespace Strings;
 using namespace Sprog::Kinetics; 
 using namespace std;
 

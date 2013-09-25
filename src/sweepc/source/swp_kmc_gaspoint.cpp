@@ -52,20 +52,20 @@ using namespace Sweep::KMC_ARS;
 
 // Constructors and Destructor
 //! Default Constructor
-KMCGasPoint::KMCGasPoint()//: 
-        //Time(0), T(1), H2(2), H(3), O2(4), OH(5), C2H2(6),
-            //C2H6(7), C6H6(8), H2O(9), CH4(10), CO(11), CO2(12),
-            //P(13), None(14), m_total(15)
-{
-    m_gasprof = NULL;
-}
+KMCGasPoint::KMCGasPoint():
+		m_data(),
+		m_gasprof(NULL),
+		m_spnames(),
+		m_prof_in()
+{}
 
 //! Constructor from a GasProfile object
 KMCGasPoint::KMCGasPoint(Sweep::GasProfile& gasprof,
-    const Sprog::SpeciesPtrVector& sptrv)//: 
-        //Time(0), T(1), H2(2), H(3), O2(4), OH(5), C2H2(6),
-            //C2H6(7), C6H6(8), H2O(9), CH4(10), CO(11), CO2(12),
-            //P(13), None(14), m_total(15)
+    const Sprog::SpeciesPtrVector& sptrv):
+				m_data(),
+				m_gasprof(NULL),
+				m_spnames(),
+				m_prof_in()
 {
     m_gasprof = &gasprof;
     initData();
@@ -78,10 +78,11 @@ KMCGasPoint::KMCGasPoint(Sweep::GasProfile& gasprof,
 }
 
 //! Copy Constructor
-KMCGasPoint::KMCGasPoint(const KMCGasPoint &gp)//: 
-        //Time(0), T(1), H2(2), H(3), O2(4), OH(5), C2H2(6),
-            //C2H6(7), C6H6(8), H2O(9), CH4(10), CO(11), CO2(12),
-            //P(13), None(14), m_total(15)
+KMCGasPoint::KMCGasPoint(const KMCGasPoint &gp):
+				m_data(),
+				m_gasprof(NULL),
+				m_spnames(),
+				m_prof_in()
 {
     *this = gp;
 }

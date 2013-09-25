@@ -68,8 +68,7 @@ namespace Sweep {
         class Carbon {
         public:
             Carbon();
-            //! Copy Constructor
-            Carbon(const Carbon& copy);
+
             //! Default Destructor
             ~Carbon();
             //! Neighbouring carbon atoms

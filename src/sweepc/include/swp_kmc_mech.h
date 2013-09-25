@@ -110,10 +110,10 @@ namespace KMC_ARS {
         // DATA ACCESS
 
         //! Returns vector of jump processes
-        std::vector<JumpProcess*> JPList() const;
+        const std::vector<JumpProcess*>& JPList() const;
         
         //! Returns vector of jump rates
-        std::vector<double> Rates() const;
+        const std::vector<double>& Rates() const;
 
         //! Returns total rates
         double TotalRate() const;
