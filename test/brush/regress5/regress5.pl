@@ -111,6 +111,9 @@ $m2 /= $count;
 # population mean of
 #m0: (0.4845 +- 0.0015) m^-3
 #m2: (4.124  +- 0.027) kg^2 m^-6
+# The actual test settings (2 runs max 1024 particles, but slightly longer
+# run times to give a total of 40 samples) should
+# have confidence intervals sqrt(64) times larger.
 
 print "$m0, $m0var, $m2, $m2var, ($count)\n";
 if(abs($m0 - 0.4904) > 0.01) {
@@ -121,7 +124,7 @@ if(abs($m0 - 0.4904) > 0.01) {
   exit 1;
 }
 
-if(abs($m2 - 4.158) > 0.16) {
+if(abs($m2 - 4.158) > 0.20) {
   print "Simulated mean M2 was $m2, when 4.158 kg^-2 m^-6 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

@@ -44,6 +44,7 @@
 #include "local_geometry1d.h"
 
 #include <boost/random/uniform_01.hpp>
+#include <boost/random/lognormal_distribution.hpp>
 
 
 // CONSTRUCTORS AND DESTRUCTORS.
@@ -84,7 +85,7 @@ Sweep::Processes::ConstantInception::ConstantInception(const Sweep::Mechanism &m
     // It is important that the ordering corresponding to the ordering of the components in the mechanism,
     // just having the same number of entries is necessary, but not sufficient.
     for(unsigned i = 0; i < mech.ComponentCount(); ++i) {
-            mComponentDistributions[i] = boost::random::lognormal_distribution<double>(locations[i], scales[i]);
+            mComponentDistributions[i] = std::make_pair(locations[i], scales[i]);
             SetParticleComp(i, exp(locations[i] + 0.5 * scales[i] * scales[i]));
     }
 }
@@ -179,7 +180,12 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
     // Initialise the new particle.
     std::vector<double> newComposition(mComponentDistributions.size());
     for(unsigned i = 0; i < mComponentDistributions.size(); ++i) {
-        newComposition[i] = mComponentDistributions[i](rng);
+        // Construct the distribution on the fly.  If this becomes a performance
+        // bottleneck some optimisations might be possible, but caching the distribution
+        // object in the mechanism is a bad idea, because the mechanism is potentially
+        // shared between threads, which is very dangerous for cached data!
+        newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
+                                                                  mComponentDistributions[i].second)(rng);
     }
     sp->Primary()->SetComposition(newComposition);
 
@@ -276,10 +282,12 @@ void Sweep::Processes::ConstantInception::Serialize(std::ostream &out) const
         // Component distributions
         const unsigned int n = mComponentDistributions.size();
         out.write(reinterpret_cast<const char*>(&n), sizeof(n));
-        for(unsigned int i = 0; i < n; ++i)
-            out << mComponentDistributions[i];
-
-    } else {
+        for(unsigned int i = 0; i < n; ++i) {
+            out.write(reinterpret_cast<const char*>(&mComponentDistributions[i].first),  sizeof(mComponentDistributions[i].first));
+            out.write(reinterpret_cast<const char*>(&mComponentDistributions[i].second), sizeof(mComponentDistributions[i].second));
+        }
+    }
+    else {
         throw std::invalid_argument("Output stream not ready (Sweep, Sweep::Processes::ConstantInception::Serialize).");
     }
 }
@@ -308,10 +316,11 @@ void Sweep::Processes::ConstantInception::Deserialize(std::istream &in, const Sw
                 unsigned int n = 0;
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 mComponentDistributions.resize(n);
-                for(unsigned int i = 0; i < n; ++i)
-                    in >> mComponentDistributions[i];
-
-                 break;
+                for(unsigned int i = 0; i < n; ++i) {
+                    in.read(reinterpret_cast<char*>(&mComponentDistributions[i].first),  sizeof(mComponentDistributions[i].first));
+                    in.read(reinterpret_cast<char*>(&mComponentDistributions[i].second), sizeof(mComponentDistributions[i].second));
+                }
+                break;
             }
             default:
                 throw std::runtime_error("Serialized version number is invalid (Sweep, Sweep::Processes::ConstantInception::Deserialize).");

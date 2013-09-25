@@ -42,7 +42,7 @@
 
 #include "swp_inception.h"
 
-#include <boost/random/lognormal_distribution.hpp>
+#include <utility>
 
 namespace Geometry
 {
@@ -147,12 +147,8 @@ private:
     //! Locate for fixed position inception see mUseFixedPosition
     double mFixedPosition;
 
-    //! Scale (variance of logarithm) of the components
-    /*! This variable is mutable, because the log normal generators may cache some random
-     * number generation data, which can change even while the object is logically unchanged.
-     * I am not sure this is a very good idea, because it raises various possible bugs.
-     */
-    mutable std::vector<boost::random::lognormal_distribution<double> > mComponentDistributions;
+    //! mean (1st) and stddev (2nd) of logarithm of the components
+    std::vector<std::pair<double, double> > mComponentDistributions;
 };
 }
 }

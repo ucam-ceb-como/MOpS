@@ -18,6 +18,7 @@
     <start>0.0</start>
     <time steps="20" splits="50">1.0</time>
     <time steps="20" splits="50">2.0</time>
+    <time steps="4" splits="50">2.2</time>
   </timeintervals>
 
 
