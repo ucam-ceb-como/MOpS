@@ -138,16 +138,20 @@ void Condensation::SetCondensingSpecies(const double m, const double d)
 double Condensation::Rate(double t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 {
-    // Calculate temperature terms.
-    double cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
+	double cterm = 0.0;
+	if(sys.ParticleCount() > 0) {
+		// Calculate temperature terms.
+		cterm = m_a * sqrt(sys.GasPhase().Temperature()) * NA;
 
-     // Chemical species concentration dependence.
-    cterm *= chemRatePart(sys.GasPhase());
+		 // Chemical species concentration dependence.
+		cterm *= chemRatePart(sys.GasPhase());
 
-    // Free molecular terms.
-    cterm *= (m_kfm1 * sys.ParticleCount()) + 
-             (m_kfm2 * sys.Particles().GetSum(Sweep::iDcol)) +
-             (m_kfm3 * sys.Particles().GetSum(Sweep::iD2));
+		// Free molecular terms.
+		cterm *= (m_kfm1 * sys.ParticleCount()) +
+				 (m_kfm2 * sys.Particles().GetSum(Sweep::iDcol)) +
+				 (m_kfm3 * sys.Particles().GetSum(Sweep::iD2));
+	}
+	//else cterm was initialised to 0, so nothing to do
 
     // If the mechanism contains any deferred processes then we must use the
     // majorant form of the rate, in order to account for any changes to
