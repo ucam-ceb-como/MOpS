@@ -125,7 +125,7 @@ $avgcoag /= $count;
 # should be an integer.
 
 printf "%G %G %G %G \n", $m0, $m0sq, $m1, $m1sq;
-if(abs($m0 - 1.25e9) > 1e8) {
+if(!(abs($m0 - 1.25e9) < 1e8)) {
   print "Simulated mean M0 was $m0, when 1.25e9 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -133,7 +133,7 @@ if(abs($m0 - 1.25e9) > 1e8) {
   exit 1;
 }
 
-if(abs($m1 - 3.77e9) > 2e8) {
+if(!(abs($m1 - 3.77e9) < 2e8)) {
   print "Simulated mean M1 was $m1, when 3.77e9 kg m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

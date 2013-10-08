@@ -120,7 +120,7 @@ my $failures = 0;
 #m1: (4.648+-0.100)e-8 kg m^-3
 
 print "$m0, $m0var, $m1, $m1var\n";
-if(abs($m0 - 4.43e16) > 5e14) {
+if(!(abs($m0 - 4.43e16) < 5e14)) {
   print "Simulated mean M0 was $m0, when 4.43e16 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -128,7 +128,7 @@ if(abs($m0 - 4.43e16) > 5e14) {
   ++$failures;
 }
 
-if(abs($m1 - 4.61e-8) > 8e-10) {
+if(!(abs($m1 - 4.61e-8) < 8e-10)) {
   print "Simulated mean M1 was $m1, when 4.61e-8 kg m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

@@ -117,7 +117,7 @@ $m2 /= $count;
 # be 4 times larger.
 
 print "$m0, $m0var, $m2, $m2var, ($count)\n";
-if(abs($m0 - 0.195) > 0.01) {
+if(!(abs($m0 - 0.195) < 0.01)) {
   print "Simulated mean M0 was $m0, when 0.195 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -125,7 +125,7 @@ if(abs($m0 - 0.195) > 0.01) {
   exit 1;
 }
 
-if(abs($m2 - 4652.9) > 200.0) {
+if(!(abs($m2 - 4652.9) < 200.0)) {
   print "Simulated mean M2 was $m2, when 4652.9 kg^-2 m^-6 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

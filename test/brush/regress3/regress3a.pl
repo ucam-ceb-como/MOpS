@@ -102,7 +102,7 @@ $m0bsq = sqrt(($m0bsq / $countb - $m0b * $m0b) / $countb);
 print "$m0a $m0asq\n";
 print "$m0b $m0bsq\n";
 
-if(abs($m0a - 1.7e2) > 2e1) {
+if(!(abs($m0a - 1.7e2) < 2e1)) {
   print "Simulated M0 at t=0.2 near x=0.017 was $m0a, when analytic solution is 1.7e2\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -110,7 +110,7 @@ if(abs($m0a - 1.7e2) > 2e1) {
   exit 1;
 }
 
-if(abs($m0b - 2.6e2) > 3e1) {
+if(!(abs($m0b - 2.6e2) < 3e1)) {
   print "Simulated M0 at t=0.3 near x=0.0245 was $m0b, when analytic solution is 2.6e2\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";

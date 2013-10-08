@@ -116,7 +116,7 @@ $m2 /= $count;
 # have confidence intervals sqrt(64) times larger.
 
 print "$m0, $m0var, $m2, $m2var, ($count)\n";
-if(abs($m0 - 0.4904) > 0.01) {
+if(!(abs($m0 - 0.4904) < 0.01)) {
   print "Simulated mean M0 was $m0, when 0.4904 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -124,7 +124,7 @@ if(abs($m0 - 0.4904) > 0.01) {
   exit 1;
 }
 
-if(abs($m2 - 4.158) > 0.20) {
+if(!(abs($m2 - 4.158) < 0.20)) {
   print "Simulated mean M2 was $m2, when 4.158 kg^-2 m^-6 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
