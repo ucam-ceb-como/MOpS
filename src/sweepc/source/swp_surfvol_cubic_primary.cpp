@@ -92,6 +92,7 @@ SurfVolCubicPrimary::~SurfVolCubicPrimary()
 SurfVolCubicPrimary &SurfVolCubicPrimary::operator=(const Primary &rhs)
 {
     operator=(dynamic_cast<const SurfVolCubicPrimary&>(rhs));
+    return *this;
 }
 
 // AGGREGATION MODEL.
