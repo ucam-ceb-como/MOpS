@@ -6,7 +6,6 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include "swp_primary.h"
-#include "swp_pri_list_cache.hpp"
 #include "swp_pri_list_connector.hpp"
 
 
@@ -34,9 +33,6 @@ protected:
 
     //! The list of connectors of primaries
     ConnectorPtrVector m_connectors;
-
-    //! A pointer to the particle data cache being used
-    PrimaryListCache<NodeT>* m_cache;
 
     //! The average primary diameter of the particle
     double m_avg_dpri;
@@ -255,8 +251,6 @@ protected:
 
 public:
     // BASIC CREATION AND DELETION METHODS
-    // The cache must be a friend of the list class
-    friend class PrimaryListCache<NodeT>;
     friend class boost::serialization::access;
 
     //! Construct a primary at time
@@ -264,23 +258,14 @@ public:
         Primary(time, model),
         m_primaries(),
         m_connectors(),
-        m_cache(NULL),
-        m_avg_dpri(0.0) {
-
-        // Create a new cache for use with this particle.
-        m_cache = new PrimaryListCache<NodeT>;
-    }
+        m_avg_dpri(0.0) {}
 
     //! Copy constructor
     PrimaryList(const PrimaryList &copy):
         Primary(copy),
         m_primaries(),
         m_connectors(),
-        m_cache(NULL),
         m_avg_dpri(copy.m_avg_dpri) {
-
-        // Clone the cache
-        m_cache = new PrimaryListCache<NodeT>(*(copy.m_cache));
 
         // Clone the particle structure from the copy into *this*'s primaries
         // and connectors vectors
@@ -292,7 +277,6 @@ public:
         Primary(in, model),
         m_primaries(),
         m_connectors(),
-        m_cache(NULL),
         m_avg_dpri (0.0) {}
 
     //! Constructor including position
@@ -303,7 +287,6 @@ public:
     virtual ~PrimaryList(void) {
         // Delete memory associated with primaries and cache
         ClearPrimaries();
-        delete m_cache;
     }
 
     //! Equals operator
@@ -374,8 +357,38 @@ public:
         ResetCachedProperties();
 
         // Get sums of various quantities from the cache
-        //m_vol = mCache->GetSum(*this, &NodeT::Volume);
-        m_cache->FastUpdate(*this);
+        // Initialise some working values
+        double vol(0.0);
+        m_mass = 0.0;
+        m_vol = 0.0;
+        m_avg_dpri = 0.0;
+
+
+        // Loop over primaries - get the mass and the volume
+        for (typename PrimaryList<NodeT>::PrimaryPtrVector::const_iterator i  = begin();
+                i != end(); ++i) {
+            // Loop over the components and sum them up
+            for (size_t j(0); j != m_comp.size(); ++j) {
+                double c = (*i)->Component(j);
+                m_comp[j] += c;
+                m_mass += c * m_pmodel->Components(j)->MolWt() / Sweep::NA;
+            }
+
+            // Get volume
+            vol = (*i)->Volume();
+            m_vol += vol;
+            m_avg_dpri += (*i)->Diameter(vol);
+        }
+        m_avg_dpri /= (double) size();
+        m_diam = NodeT::Diameter(m_vol);
+
+        // Get the surface area
+        // Note that spherical surface is handled by Primary::SphSurfaceArea
+        m_surf = CalcSurfaceArea();
+
+        // Now calculate collision and mobility diameter
+        m_dcol = CalcCollisionDiameter();
+        m_dmob = CalcMobilityDiameter();
     }
 
     /*!

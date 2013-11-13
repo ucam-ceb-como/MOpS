@@ -9,6 +9,9 @@
 namespace Sweep {
 namespace AggModels {
 
+// Forward-declare the list class
+template <class NodeT> class PrimaryList;
+
 template <class NodeT>
 class PrimaryListConnector {
 protected:
