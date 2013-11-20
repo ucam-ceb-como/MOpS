@@ -126,7 +126,7 @@ public:
     double Composition(unsigned int i) const;
 
     // Sets the composition vector.
-    void SetComposition(const fvector &comp);
+    virtual void SetComposition(const fvector &comp);
 
 
     // PRIMARY TRACKER VALUES.
@@ -198,7 +198,7 @@ public:
 
 
     // BASIC DERIVED PROPERTY OVERWRITES.
-
+    // TODO: Remove these after reformulation of binary tree
     // Sets the spherical particle diameter
     void SetSphDiameter(double diam);
 
@@ -261,6 +261,15 @@ public:
     // Returns a copy of the primary.
     virtual Primary *const Clone(void) const;
 
+    //! Boost serialisation of the Primary class (ONLY USED BY PRIMARYLIST FOR NOW)
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* version */) {
+        // TODO: serialize particle model only when all of sweep is on boost
+        //ar & m_pmodel;
+        ar & m_comp & m_values;
+        ar & m_createt & m_time & m_diam & m_dcol & m_dmob & m_surf & m_vol & m_mass;
+    }
+
     // Writes the object to a binary stream.
     virtual void Serialize(std::ostream &out) const;
 
@@ -277,6 +286,9 @@ public:
 	virtual double GetSintRate() const { return 0.0; }
 
 	virtual double GetCoverageFraction() const;
+
+    //! Calculate the number of allowable adjustments for a LPDA process
+    static unsigned int CalculateMaxAdjustments(const fvector &comp, const fvector &dcomp, unsigned int n);
 
 protected:
     // Particle model used to define the Primary.
@@ -305,9 +317,6 @@ protected:
 
     // Sets the particle cache to that of a spherical particle.
     void setSphereCache(void);
-
-    //! Calculate the number of allowable adjustments for a LPDA process
-    unsigned int CalculateMaxAdjustments(const fvector &dcomp, unsigned int n) const;
 
     // MEMORY MANAGEMENT.
 

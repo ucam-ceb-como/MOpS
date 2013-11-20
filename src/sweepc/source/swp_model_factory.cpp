@@ -55,6 +55,8 @@
 #include "swp_bintree_primary.h"
 #include "swp_bintree_silica_primary.h"
 #include "swp_bintree_stats.h"
+#include "swp_pri_list.hpp"
+#include "swp_pri_list_node.h"
 #include <stdexcept>
 #include <iostream>
 
@@ -90,6 +92,10 @@ AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelT
             return new AggModels::BinTreeSilicaPrimary(time, model);
         case AggModels::SurfVolCubic_ID:
             return new AggModels::SurfVolCubicPrimary(time, model);
+        case AggModels::PrimaryList_ID:
+            return new AggModels::PrimaryList<AggModels::PrimaryListNode>(time, model);
+        case AggModels::PrimaryListSilica_ID:
+            throw std::runtime_error("Silica model not implemented in this template yet.");
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
@@ -122,6 +128,10 @@ AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelT
             return new AggModels::BinTreeSilicaPrimary(time, model);
         case AggModels::SurfVolCubic_ID:
             return new AggModels::SurfVolCubicPrimary(time, model);
+        case AggModels::PrimaryList_ID:
+            return new AggModels::PrimaryList<AggModels::PrimaryListNode>(time, model);
+        case AggModels::PrimaryListSilica_ID:
+            throw std::runtime_error("Silica model not implemented in this template yet.");
         case AggModels::Spherical_ID:
             // Spherical primary model is default.
         default:
@@ -171,6 +181,11 @@ AggModels::Primary *const ModelFactory::ReadPrimary(std::istream &in,
             case AggModels::SurfVolCubic_ID:
                 pri = new AggModels::SurfVolCubicPrimary(in, model);
                 break;
+            case AggModels::PrimaryList_ID:
+                pri = new AggModels::PrimaryList<AggModels::PrimaryListNode>(in, model);
+                break;
+            case AggModels::PrimaryListSilica_ID:
+                throw std::runtime_error("Silica model not implemented in this template yet.");
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "
                                        "ModelFactory::ReadPrimary).");
@@ -267,6 +282,11 @@ Stats::IModelStats *const ModelFactory::CreateAggStats(AggModels::AggModelType i
 	            return new Stats::BinTreeStats();
         case AggModels::SurfVolCubic_ID:
             return NULL;
+        case AggModels::PrimaryList_ID:
+            //TODO: implement stats objects for the template
+            return NULL;
+        case AggModels::PrimaryListSilica_ID:
+            throw std::runtime_error("Silica model not implemented in this template yet.");
         default:
             throw invalid_argument("Invalid model ID (Sweep, "
                                    "ModelFactory::CreateAggStats).");
@@ -310,6 +330,7 @@ Stats::IModelStats *const ModelFactory::ReadAggStats(std::istream &in,
             case AggModels::BinTreeSilica_ID:
                 stats = new Stats::BinTreeStats(in, model);
                 break;
+                //TODO: add primary list stats
             default:
                 throw invalid_argument("Invalid model ID (Sweep, "
                                        "ModelFactory::ReadAggStats).");

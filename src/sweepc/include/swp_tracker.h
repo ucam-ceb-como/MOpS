@@ -79,6 +79,12 @@ public:
     // Returns a copy of the tracker variable.
     Tracker *const Clone(void) const;
 
+    //! Boost serialisation of the Tracker class
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* version */) {
+        ar & m_name;
+    }
+
     // Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;
 

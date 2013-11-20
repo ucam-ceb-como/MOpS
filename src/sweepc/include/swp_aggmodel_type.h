@@ -63,7 +63,10 @@ namespace Sweep
             SurfVolSilica_ID = 10008, // Surfvol implementation of the silica model
             BinTreeSilica_ID = 10009, // Binary tree implementation of the silica model
             SurfVolCubic_ID = 10010, //! Surface volume approximation for cuboidal crystals
-            PrimaryList_ID = 20000, // Primary list model
+
+            // Templates of the Primary List model
+            PrimaryList_ID = 20000,        // Primary list model with basic node class
+            PrimaryListSilica_ID = 20001,  // Primary list model with silica node class (not implemented)
         };
 
     };

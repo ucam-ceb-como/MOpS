@@ -346,7 +346,8 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::BinTree_ID);
     } else if (str == "bintreesilica") {
         mech.SetAggModel(AggModels::BinTreeSilica_ID);
-
+    } else if (str == "prilist") {
+        mech.SetAggModel(AggModels::PrimaryList_ID);
     } else {
         mech.SetAggModel(AggModels::Spherical_ID);
     }

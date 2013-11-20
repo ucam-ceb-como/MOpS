@@ -124,6 +124,14 @@ public:
     // Creates a copy of the component.
     Component *const Clone(void) const;
 
+    //! Boost serialisation of the Component class
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* version */) {
+        ar & m_density & m_molwt  & m_coalesc_thresh;
+        ar & m_growthfact & m_minValid & m_minPAH;
+        ar & m_name;
+    }
+
     // Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;
 

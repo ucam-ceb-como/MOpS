@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -147,18 +147,18 @@ void SinteringModel::SetType(SinteringModel::SintType t) {m_type = t;}
  * @return        Characteristic sintering time (s)
  */
 double SinteringModel::SintTime(double temp, double diam) const {
-	double tau_s(m_A);
-	switch (m_type) {
-	case ViscousFlow:
-		tau_s *= diam * exp((m_E*(1-(m_dpmin/diam)))/temp);
-		break;
-	case GBD:
-		tau_s *= diam * diam * diam * diam * temp * exp((m_E*(1-(m_dpmin/diam)))/temp);
-		break;
-	case SSD:
-		tau_s *= diam * diam * diam * temp * exp((m_E*(1-(m_dpmin/diam)))/temp);
-		break;
-	case Silicon:
+    double tau_s(m_A);
+    switch (m_type) {
+    case ViscousFlow:
+        tau_s *= diam * exp((m_E*(1-(m_dpmin/diam)))/temp);
+        break;
+    case GBD:
+        tau_s *= diam * diam * diam * diam * temp * exp((m_E*(1-(m_dpmin/diam)))/temp);
+        break;
+    case SSD:
+        tau_s *= diam * diam * diam * temp * exp((m_E*(1-(m_dpmin/diam)))/temp);
+        break;
+    case Silicon:
         // Zachariah & Carrier, J. Aerosol Sci., 1999, 30, 1139-1151
         // implementation of the SSD silicon sintering kinetic
         // form: tau = A * d^3 * T / (gamma * diff)
@@ -167,12 +167,12 @@ double SinteringModel::SintTime(double temp, double diam) const {
         // default: m_A = 5396 J/K.m3
         //          m_E = 7562 K
         //          m_dpmin = 0 nm
-		tau_s *= diam * diam * diam * temp / (
+        tau_s *= diam * diam * diam * temp / (
                 (1.152 - 1.574e-4 * temp) *
                 4.69e-7 * exp((m_E*(1-(m_dpmin/diam)))/temp)
                 );
-		break;
-	case SilicaKirchoff:
+        break;
+    case SilicaKirchoff:
         // Kirchoff et al., J. Aerosol Sci., 2012, 45, 26-39
         // http://dx.doi.org/10.1016/j.jaerosci.2011.10.006
         // form: tau = A * r_sph^2 * exp (Ea/RT)
@@ -184,25 +184,25 @@ double SinteringModel::SintTime(double temp, double diam) const {
         //         A = 284.44 s/m2
         //         Ea = 44080 K
         // EXPECTING diam AS SPHERICAL DIAMETER
-		tau_s *= diam * diam * exp(m_E / temp);
-		break;
-	case Rutile:
-    	// Buesser et al., J. Phys. Chem. C, 2011, 115, 11030-11035
-    	// SintTime function from MD calculations
-    	// default: m_A = 3.7E16 s/m4K,
-    	//			m_E = 258 kJ/mol = 31032 K
-    	//			m_dpmin = 3.4 nm
-    	tau_s *= diam * diam * diam * diam * temp *
-			   exp((m_E* (1 - pow( (m_dpmin/diam) - (temp/4100.0) , 3.76))/temp));
-		break;
-	case Constant:
-		// Do nothing.
-		break;
-	default:
-		throw std::runtime_error("Unknown sintering model requested, "
-				"Sweep::Processes::SinteringModel::SintTime.");
-	}
-	return tau_s;
+        tau_s *= diam * diam * exp(m_E / temp);
+        break;
+    case Rutile:
+        // Buesser et al., J. Phys. Chem. C, 2011, 115, 11030-11035
+        // SintTime function from MD calculations
+        // default: m_A = 3.7E16 s/m4K,
+        //          m_E = 258 kJ/mol = 31032 K
+        //          m_dpmin = 3.4 nm
+        tau_s *= diam * diam * diam * diam * temp *
+               exp((m_E* (1 - pow( (m_dpmin/diam) - (temp/4100.0) , 3.76))/temp));
+        break;
+    case Constant:
+        // Do nothing.
+        break;
+    default:
+        throw std::runtime_error("Unknown sintering model requested, "
+                "Sweep::Processes::SinteringModel::SintTime.");
+    }
+    return tau_s;
 }
 
 

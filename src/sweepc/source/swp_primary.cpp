@@ -340,19 +340,19 @@ bool AggModels::Primary::IsValid() const {
 // it was adjusted.
 unsigned int AggModels::Primary::Adjust(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
 {
-	unsigned int i = 0;
+    unsigned int i = 0;
 
-	n = CalculateMaxAdjustments(dcomp, n);
+    n = CalculateMaxAdjustments(m_comp, dcomp, n);
 
-	// Add the components.
-	for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
-		m_comp[i] += dcomp[i] * (double)n;
-	}
+    // Add the components.
+    for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+        m_comp[i] += dcomp[i] * (double)n;
+    }
 
-	// Add the tracker values.
-	for (i=0; i!=min(m_values.size(),dvalues.size()); ++i) {
-		m_values[i] += dvalues[i] * (double)n;
-	}
+    // Add the tracker values.
+    for (i=0; i!=min(m_values.size(),dvalues.size()); ++i) {
+        m_values[i] += dvalues[i] * (double)n;
+    }
 
     // Update property cache.
     AggModels::Primary::UpdateCache();
@@ -365,16 +365,19 @@ unsigned int AggModels::Primary::Adjust(const fvector &dcomp, const fvector &dva
  *
  * This is relevant for Processes which remove components from a Primary,
  * particularly where multiple components are present in a particle.
+ * Static access provided for the PrimaryListNode class.
  *
+ * @param comp      The composition vector of a particle
  * @param dcomp     The component changes for the Process
  * @param n         Number of times requested
  * @return          Actual number of times allowed
  */
 unsigned int AggModels::Primary::CalculateMaxAdjustments(
+        const fvector &comp,
         const fvector &dcomp,
-        unsigned int n) const
+        unsigned int n)
 {
-    unsigned int i;
+    size_t i;
 
     // First check if there is a negative in dcomp
     bool neg_change(false);
@@ -385,9 +388,9 @@ unsigned int AggModels::Primary::CalculateMaxAdjustments(
     // Calculate the actual number of events only if there is a negative
     // change in the component amount
     if (neg_change) {
-        for (i=0; i!=min(m_comp.size(),dcomp.size()); ++i) {
+        for (i=0; i!=min(comp.size(),dcomp.size()); ++i) {
             if (dcomp[i] < 0.0)
-                n = std::min(n, (unsigned int) abs(m_comp[i]/dcomp[i]));
+                n = std::min(n, (unsigned int) abs(comp[i]/dcomp[i]));
         }
     }
 

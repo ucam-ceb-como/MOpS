@@ -45,9 +45,36 @@ protected:
         return sl;
     }
 
+    /*!
+     * Update the common surface area information for this connection by
+     * calculating it from the sintering level. This should only be used
+     * when estimating the surface area of a connection whose LHS/RHS nodes
+     * have been affected by a merge event.
+     */
+    void UpdateSurfaceAreaFromSinteringLevel() {
+        m_common_surface = SphSurfaceArea() /
+                (m_sint_level * (1.0 - Sweep::TWO_ONE_THIRD) + Sweep::TWO_ONE_THIRD);
+    }
+
+    /*!
+     * Call this when updating a connector from a surface growth process.
+     * In the case of a negative volume (and therefore surface) change,
+     * we need to check that C_{ij} does not exceed the sum of the spherical
+     * surface areas, S_{sph,i} + S_{sph,j}
+     *
+     * @param dS    Surface area to add/remove
+     */
+    void AddSurface(double dS) {
+        m_common_surface += dS;
+        Update();
+        if (dS <= 0.0 && m_sint_level == 0.0) {
+            m_common_surface = m_left->SurfaceArea() + m_right->SurfaceArea();
+        }
+    }
+
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive &ar, const unsigned int version) const {
+    void serialize(Archive &ar, const unsigned int version) {
         ar & m_left;
         ar & m_right;
         ar & m_common_surface;
@@ -102,13 +129,13 @@ public:
         const Sweep::AggModels::PrimaryListConnector<NodeT> &conn) {
             os << "[Primary List Connector],";
             os <<  " csurf=" << conn.m_common_surface;
+            os <<  " sl=" << conn.m_sint_level;
             os <<  ", add=" << static_cast<void const *>(&conn) << std::endl;
             os << "  LHS: " << *(conn.m_left);
             os << "  RHS: " << *(conn.m_right);
 
             return os;
     }
-
 
     //! Default destructor
     virtual ~PrimaryListConnector() {
@@ -144,9 +171,18 @@ public:
     void Update() {
         // Just need to update the sintering level at this stage
         m_sint_level = CalcSinteringLevel();
+        if (m_sint_level > 0.95) m_merge_me = true;
     }
 
-    // Sinter the connection
+    /*!
+     * Sinter the connector.
+     *
+     * @param dt     Time to sinter over
+     * @param t      Last time the primary was updated (not really used)
+     * @param sys    Cell to do it in
+     * @param model  Sintering model to use
+     * @param rng    Random number generator
+     */
     void Sinter(
             double dt,
             double t,
@@ -209,8 +245,12 @@ public:
 
                 // Set t1 for next time step.
                 t1 += delt;
+            } else {
+                std::cerr << "Failed with connection, sph. surf=" << SphSurfaceArea()
+                        << ", r_sint=" << r << ".\n"
+                        << *this << "\n";
+                throw std::runtime_error("Negative sintering rate obtained.");
             }
-
         }
 
         Update();

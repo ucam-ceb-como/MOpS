@@ -182,6 +182,29 @@ public:
     // Creates a copy of the mechanism.
     ParticleModel *const Clone(void) const;
 
+    //! Boost serialisation of the Particle Model class (NOT USED CURRENTLY)
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* version */) {
+        ar & colliParaA & colliParaB & colliParaC;
+        ar & m_AdvectionType & m_aggmodel & m_AvgMolWtIndex;
+        ar & m_bintree_coalthresh;
+        ar & m_components;
+        ar & m_DiffusionType;
+        ar & m_DragA & m_DragB & m_DragE & m_DragType;
+        ar & m_efm;
+        ar & m_fract_dim;
+        ar & m_InceptedPAH;
+        ar & m_MixFracDiffusionIndex & m_MixFracGradientIndex & m_MixFracLaplacianIndex;
+        ar & m_mode;
+        ar & m_sint_model;
+        // TODO: fix dependency hell once all sweep is on boost::serialize
+        //ar & m_species;
+        ar & m_TemperatureGradientIndex & m_ThermalConductivityIndex & m_ThermophoresisType;
+        ar & m_threshold;
+        ar & m_trackers;
+        ar & m_write_bintree;
+    }
+
     // Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;
 

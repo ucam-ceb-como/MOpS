@@ -60,6 +60,9 @@ public:
     static double Diameter(double vol);
 
     // STATE SPACE ADJUSTMENT
+    //! Set the particle model pointer
+    void SetParticleModel(const Sweep::ParticleModel &model);
+
     //! Add dcomp to the state space
     unsigned int Adjust(
         const fvector &dcomp,
@@ -77,8 +80,10 @@ protected:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive &ar, const unsigned int version) const {
+    void serialize(Archive &ar, const unsigned int /* version */) {
         ar & m_comp;
+        // Prevent a clone of the original particle model from being serialized.
+        //ar & m_pmodel;
     }
 
     //! Default constructor is meaningless

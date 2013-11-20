@@ -76,8 +76,12 @@ protected:
         return index;
     }
 
-    // PHYSICAL AND CHEMICAL MANIPULATION OF THE CLASS
-    //! Select a node in the list
+    /*!
+     * Randomly select a node in the tree
+     *
+     * @param rng     Random number generator
+     * @return        A pointer ot the selected node
+     */
     NodeT* SelectNode(rng_type &rng) const {
         // TODO: Expand in the future to weight selection
         // e.g., Select bigger nodes instead of smaller ones
@@ -85,6 +89,19 @@ protected:
         return m_primaries[dist(rng)];
     }
 
+    ConnectorPtrVector LocateConnectors(NodeT* node_ptr) const {
+        ConnectorPtrVector connectors;
+
+        for (typename PrimaryList<NodeT>::ConnectorPtrVector::const_iterator i = m_connectors.begin();
+                i != m_connectors.end(); ++i) {
+            if ((*i)->m_left == node_ptr || (*i)->m_right == node_ptr) {
+                connectors.push_back((*i));
+            }
+        }
+        return connectors;
+    }
+
+    // PHYSICAL AND CHEMICAL MANIPULATION OF THE CLASS
     //! Clear the cached properties of the particle
     void ResetCachedProperties() {
         m_mass = 0.0;
@@ -128,8 +145,9 @@ protected:
 
     //! Calculates the surface area from cached particle properties
     virtual double CalcSurfaceArea() const {
-        // If there's just one primary, it's easy..
-        if (size() == (size_t)1) return (m_primaries[0])->SurfaceArea();
+        // If there's just one or two primaries, it's easy..
+        if (size() == (size_t)1) return m_primaries[0]->SurfaceArea();
+        if (size() == (size_t)2) return m_connectors[0]->SurfaceArea();
 
         double sl(0.0);
         double n_1_3 = pow((double)size(), - Sweep::ONE_THIRD);
@@ -139,7 +157,7 @@ protected:
                 i != m_connectors.end(); ++i) {
             sl += (*i)->SinteringLevel();
         }
-        sl /= (double) size();
+        sl /= ((double) size() - 1);
 
         return SphSurfaceArea() / (sl * (1.0 - n_1_3) + n_1_3);
     }
@@ -196,6 +214,39 @@ protected:
     }
 
     /*!
+     * Identify the connections to merge, and call the merge connection method.
+     * Also clean-up memory associated with old connections and particles.
+     */
+    void CheckConnections() {
+        // Loop over the connectors, merging those with their merge activated
+        std::vector<unsigned int> ids_to_merge;
+        bool merged(false);
+        for (size_t i(0); i != m_connectors.size(); ++i) {
+            if (m_connectors[i]->Merge()) {
+                merged = true;
+                // MergeConnection adds the state space of the nodes and keeps
+                // the pointer structure intact
+                MergeConnection(*(m_connectors[i]));
+                // Also need to flag this connector for deletion
+                ids_to_merge.push_back(i);
+            }
+        }
+
+        // Delete any now-redundant connectors (reversed to avoid segfault)
+        for (size_t i = ids_to_merge.size(); i-- > 0; ) {
+            DeleteFrom(m_connectors, i);
+        }
+
+        // And loop over the remaining connectors to ensure the surface area
+        // is correct for any merged nodes
+        if (merged) {
+            for (size_t i(0); i != m_connectors.size(); ++i) {
+                m_connectors[i]->UpdateSurfaceAreaFromSinteringLevel();
+            }
+        }
+    }
+
+    /*!
      * Merge the connector object, passed by reference
      *
      * @param conn   Connector object to merge
@@ -243,9 +294,11 @@ protected:
      * @param ar   A boost archive object
      */
     template <class Archive>
-    void serialize(Archive &ar, const unsigned int version) const {
+    void serialize(Archive &ar, const unsigned int /* version */) {
+        ar & boost::serialization::base_object<Primary>(*this);
         ar & m_primaries;
         ar & m_connectors;
+        ar & m_avg_dpri;
     }
 
 
@@ -272,12 +325,16 @@ public:
         copy.CloneStructure(m_primaries, m_connectors);
     }
 
-    //! Stream-reading constructor
+    //! Stream-reading constructor (DON'T SERIALIZE PRIMARY IN CONSTRUCTOR)
     PrimaryList(std::istream &in, const Sweep::ParticleModel &model):
-        Primary(in, model),
+        Primary(),
         m_primaries(),
         m_connectors(),
-        m_avg_dpri (0.0) {}
+        m_avg_dpri (0.0) {
+
+        // Read the stream into the object
+        Deserialize(in, model);
+    }
 
     //! Constructor including position
     //PrimaryList(const double time, const double position,
@@ -421,14 +478,35 @@ public:
 
         // Select a primary randomly and adjust it
         NodeT* pri = SelectNode(rng);
+        double vol_old = pri->Volume();
         n = pri->Adjust(dcomp, n);
+
+        // Now update the surface area
+        if (n > 0) {
+            double dV = pri->Volume() - vol_old;
+            double dS(0.0);
+            if (dV > 0.0) dS = dV * 2.0 * m_pmodel->GetBinTreeCoalThresh() / pri->Diameter();
+            // TODO: Add formula for surface area reduction
+
+            // Now update the surface area of the parent connectors
+            ConnectorPtrVector connectors = LocateConnectors(pri);
+
+            // Assume that the surface area addition is divided equally among connectors
+            dS /= (double) connectors.size();
+            for (typename PrimaryList<NodeT>::ConnectorPtrVector::const_iterator i = connectors.begin();
+                            i != connectors.end(); ++i) {
+                (*i)->AddSurface(dS);
+            }
+
+        }
 
         // Add the tracker values (only implemented for the 'master' particle)
         for (size_t i(0); i != std::min(m_values.size(), dvalues.size()); ++i) {
             m_values[i] += dvalues[i] * (double)n;
         }
 
-        // Update the cache
+        // Check for particles to be merged and update the cache
+        CheckConnections();
         UpdateCache();
 
         return n;
@@ -464,35 +542,15 @@ public:
         const Processes::SinteringModel &model,
         rng_type &rng,
         double wt) {
-
         // Loop over the connectors, calculating the sintering of each
         // connection between nodes
         for (typename PrimaryList<NodeT>::ConnectorPtrVector::iterator it = m_connectors.begin();
                         it != m_connectors.end(); ++it) {
             (*it)->Sinter(dt, m_time, sys, model, rng);
         }
-
-        // Now loop over the connectors again, merging those with their merge
-        // activated
-        std::vector<unsigned int> ids_to_merge;
-        for (size_t i(0); i != m_connectors.size(); ++i) {
-            if (m_connectors[i]->Merge()) {
-                // MergeConnection adds the state space of the nodes and keeps
-                // the pointer structure intact
-                MergeConnection(*(m_connectors[i]));
-                // Also need to flag this connector for deletion
-                ids_to_merge.push_back(i);
-            }
-        }
-
-        // Delete any now-redundant connectors (reversed to avoid segfault)
-        for (size_t i = ids_to_merge.size(); i-- > 0; ) {
-            DeleteFrom(m_connectors, i);
-        }
-
-        // And finally, update the particle cache
+        // And finally, check connections and update the particle cache
+        CheckConnections();
         UpdateCache();
-
     }
 
 
@@ -504,7 +562,8 @@ public:
      */
     void Serialize(std::ostream &out) const {
         boost::archive::binary_oarchive oa(out);
-        serialize(oa, 0);
+        oa << *this;
+        //serialize(oa, 0);
     }
 
     /*!
@@ -520,11 +579,16 @@ public:
 
         // Get boost to do the hard work for us
         boost::archive::binary_iarchive ia(in);
-        //serialize(ia, 0);
+        ia >> *this;
 
         // Now need to make sure the particle model pointers are correct,
         // and update the particle
         m_pmodel = &model;
+        for (size_t i(0); i != size(); ++i) {
+            // This is only needed while there are separate boost and 'old'
+            // serialisation functions
+            m_primaries[i]->SetParticleModel(model);
+        }
         UpdateCache();
     }
 

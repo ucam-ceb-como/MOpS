@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37) and Markus Sander (ms785)
   Project:        sweep (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-  
+
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -96,7 +96,7 @@ public:
     SinteringModel(const SinteringModel &copy); // Copy-constructor.
     SinteringModel(      // Stream-reading constructor.
         std::istream &in //  - Input stream.
-        );        
+        );
 
     // Destructor.
     ~SinteringModel(void);
@@ -166,21 +166,29 @@ public:
     template <typename T>
     double Rate(double t, double Temp, const T &pri) const {
 
-    	// First calculate the particle diameter
-    	double dp = 6.0 * pri.Volume() / pri.SurfaceArea();
+        // First calculate the particle diameter
+        double dp = 6.0 * pri.Volume() / pri.SurfaceArea();
 
-    	// Then get the sintering characteristic time
-    	double tau_s = std::max(
-    			std::numeric_limits<double>::min(),
-    			SintTime(Temp, dp));
+        // Then get the sintering characteristic time
+        double tau_s = std::max(
+                std::numeric_limits<double>::min(),
+                SintTime(Temp, dp));
 
-    	return (pri.SurfaceArea() - pri.SphSurfaceArea()) / tau_s;
+        return (pri.SurfaceArea() - pri.SphSurfaceArea()) / tau_s;
     }
 
     // READ/WRITE/COPY.
 
     // Creates a copy of the sintering model.
     SinteringModel *const Clone(void) const;
+
+    //! Boost serialisation of the Sintering Model class
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* version */) {
+        ar & m_enable;
+        ar & m_A & m_E & m_dpmin;
+        ar & m_type;
+    }
 
     // Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;

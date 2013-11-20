@@ -155,6 +155,22 @@ double PrimaryListNode::Diameter(double vol) {
 }
 
 /*!
+ * Set the reference to the particle model.
+ * TODO: Remove once sweep convered to boost::serialize
+ *
+ * This should be removed and the serialize function updated to include the
+ * particle model reference once sweep is converted to use boost::serialize.
+ * (currently, including pmodel in the serialize would cause an extra
+ * ParticleModel object to be saved/loaded... memory issues!)
+ *
+ * @param model
+ */
+void PrimaryListNode::SetParticleModel(const Sweep::ParticleModel &model) {
+    m_pmodel = &model;
+}
+
+
+/*!
  * Adjust the particle state space after a surface reaction
  *
  * @param dcomp    Component changes
@@ -164,8 +180,9 @@ double PrimaryListNode::Diameter(double vol) {
 unsigned int PrimaryListNode::Adjust(
     const fvector &dcomp,
     unsigned int n) {
+
+    n = Primary::CalculateMaxAdjustments(m_comp, dcomp, n);
     for (size_t i(0); i != m_comp.size(); ++i) {
-        // TODO: protect against negative dcomps
         m_comp[i] += dcomp[i] * (double) n;
     }
     return n;
