@@ -309,7 +309,21 @@ public:
     void SetMode(const std::string &mode);
     const std::string &Mode() const;
 
+    //! Set the type of PAH to be incepted when a particle is created
     void SetInceptedPAH(const std::string &name);
+
+    //! Set the growth factor for PAHs
+    void SetPAHGrowthFactor(double gf);
+
+    //! Get the growth factor for PAHs
+    double GetPAHGrowthFactor() const;
+
+    //! Set the minimum number of units needed to apply the growth factor
+    void SetPAHMinimumNumberForGrowth(unsigned int minPAH);
+
+    //! Get the minimum number of units needed to apply the growth factor
+    unsigned int GetPAHMinimumNumberForGrowth() const;
+
     const PostProcessStartingStr &InceptedPAH() const;
     //bool IsPyreneInception() const;
 
@@ -473,6 +487,12 @@ private:
 
     //! Free molecular enhancement factor (coag., cond. & incep.)
     double m_efm;
+
+    //! factor with which the PAH growth is multiplied
+    double m_pah_growth_factor;
+
+    //! minimum number of PAHs withinin the primary that are needed to apply m_pah_growth_factor
+    unsigned int m_pah_min_for_growth;
 
     //! Index for temperature gradient
     EnvironmentInterface::PropertyIndex m_TemperatureGradientIndex;

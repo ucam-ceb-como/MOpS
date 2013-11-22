@@ -49,34 +49,23 @@ using namespace Sweep;
 
 // Default constructor.
 Component::Component()
-: m_density(0.0), m_molwt(0.0), m_minValid(0.0), m_name(""),m_coalesc_thresh(1.0), m_growthfact(1.0), m_minPAH(0)
-{
-}
+: m_density(0.0), m_molwt(0.0), m_minValid(0.0), m_name("") {}
 
 // Initialising constructor.
 Component::Component(double molwt, 
                      double dens,
                      double min,
                      const std::string &name)
-{
-    // Initialise the component properties.
-    m_density = dens;
-    m_molwt   = molwt;
-    m_minValid = min;
-    m_name    = name;
-    m_coalesc_thresh = 1.0;     //added by ms785, do not coalesce particles by default
-    m_growthfact=1.0;           //added by ms785
-    m_minPAH=0;                 //added by ms785
-}
+: m_density(dens), m_molwt(molwt), m_minValid(min), m_name(name) {}
 
 // Copy constructor.
-Component::Component(const Component &copy) 
-{
-    *this = copy;
-}
+Component::Component(const Component &copy)
+: m_density(copy.m_density), m_molwt(copy.m_molwt),
+  m_minValid(copy.m_minValid), m_name(copy.m_name) {}
 
 // Stream-reading constructor.
-Component::Component(std::istream &in) 
+Component::Component(std::istream &in)
+: m_density(0.0), m_molwt(0.0), m_minValid(0.0), m_name("")
 {
     Deserialize(in);
 }
@@ -86,7 +75,6 @@ Component::~Component()
 {
 }
 
-
 // OPERATOR OVERLOADS.
 Component &Component::operator=(const Component &rhs)
 {
@@ -95,25 +83,56 @@ Component &Component::operator=(const Component &rhs)
         m_molwt   = rhs.m_molwt;
         m_minValid = rhs.m_minValid;
         m_name    = rhs.m_name;
-        m_coalesc_thresh= rhs.m_coalesc_thresh;
-        m_growthfact= rhs.m_growthfact;
-        m_minPAH= rhs.m_minPAH;
     }
     return *this;
 }
 
-/*! 
+// Sets the symbol or name.
+void Component::SetName(const std::string &name) {
+    m_name = name;
+}
+
+// Sets the molecular weight (kg/mol).
+void Component::SetMolWt(double molwt) {
+    m_molwt = molwt;
+}
+
+// Sets the density (kg/m3).
+void Component::SetDensity(double dens) {
+    m_density = dens;
+}
+
+// Set minimum valid components
+void Component::SetMinValid(double mv) {
+    m_minValid = mv;
+}
+
+// Get name
+const std::string &Component::Name() const {
+    return m_name;
+}
+
+// Get density (kg/m3)
+double Component::Density() const {
+    return m_density;
+}
+
+// Get molwt (kg/mol)
+double Component::MolWt() const {
+    return m_molwt;
+}
+
+/*!
  * Method intended for use in Particle::IsValid()
  *
  *@param[in]    r   Amount of this component in a particle
  *
- *@return       True if it is possible for a valid particle to have the 
+ *@return       True if it is possible for a valid particle to have the
  *              specifed amount of this component
  */
 bool Component::IsValidValue(const double r) const {
     return r >= m_minValid;
 }
-
 
 // READ/WRITE/COPY.
 

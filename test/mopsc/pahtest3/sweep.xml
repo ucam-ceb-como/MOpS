@@ -9,17 +9,27 @@
     
     <component id="soot" type="bulk">
       <description>soot</description>
-	  <InceptedPAH>A4</InceptedPAH>
       <density units="g/cm3">1.47</density>
       <molwt units="g/mol">0.0</molwt>
-      <coalthresh>0.98</coalthresh>
-      <growthfact>0.05</growthfact>
-      <minPAH>2</minPAH>
     </component> 
     
 
     <particle id="[soot]" model="PAH_KMC" subtree="false">
       <description />
+      
+      <InceptedPAH>A4</InceptedPAH>
+      <coalthresh>0.98</coalthresh>
+      <growthfact>0.05</growthfact>
+      <minPAH>2</minPAH>
+      
+      <!-- collision parameters new format added for info purposes-->
+      <!-- modes allowed: MIN, MAX, COMBINED, NONE. -->
+      <!--collision mode="COMBINED">
+        <threshold>32</threshold>
+        <A>2</A>
+        <B>980</B>
+        <C>10</C>
+      </collision-->
     </particle>
 
     <pahinception />

@@ -126,6 +126,10 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_bintree_coalthresh    = rhs.m_bintree_coalthresh;
         m_fract_dim             = rhs.m_fract_dim;
 
+        // PAHPP stuff
+        m_pah_growth_factor = rhs.m_pah_growth_factor;
+        m_pah_min_for_growth = rhs.m_pah_min_for_growth;
+
         // Indices for various mixture properties
          m_TemperatureGradientIndex = rhs.m_TemperatureGradientIndex;
          m_MixFracGradientIndex = rhs.m_MixFracGradientIndex;
@@ -680,6 +684,10 @@ void ParticleModel::init(void)
     m_bintree_coalthresh    = 1.0;
     m_fract_dim             = 1.8;
 
+    // PAH stuff
+    m_pah_growth_factor = 1.0;
+    m_pah_min_for_growth = 0;
+
     // Default FM enhancement factor is 2.2
     m_efm = 2.2;
 }
@@ -762,19 +770,29 @@ void ParticleModel::SetInceptedPAH(const std::string &name)
     else throw std::runtime_error("no information about the incepted PAH is available, only A1 A2 and A4 are supported now (Sweep::ParticleModel::SetInceptedPAH())");
 }
 
+// Set the growth factor for PAHs
+void ParticleModel::SetPAHGrowthFactor(double gf) {
+    m_pah_growth_factor = gf;
+}
+
+// Get the growth factor for PAHs
+double ParticleModel::GetPAHGrowthFactor() const {return m_pah_growth_factor;}
+
+// Set the minimum number of units needed to apply the growth factor
+void ParticleModel::SetPAHMinimumNumberForGrowth(unsigned int minPAH) {
+    m_pah_min_for_growth = minPAH;
+}
+
+// Get the minimum number of units needed to apply the growth factor
+unsigned int ParticleModel::GetPAHMinimumNumberForGrowth() const {
+    return m_pah_min_for_growth;
+}
+
 //! return mode of collision efficency model
 const std::string &ParticleModel::Mode() const {return m_mode;}
 
 const ParticleModel::PostProcessStartingStr &ParticleModel::InceptedPAH() const {return m_InceptedPAH;}
 
-//bool ParticleModel::IsPyreneInception() const
-//{
-//    if (m_InceptedPAH == "A4" || m_InceptedPAH == "pyrene")
-//        return true;
-//    else if (m_InceptedPAH == "A1" || m_InceptedPAH == "benzene")
-//        return false;
-//    else throw std::runtime_error("no information about the incepted PAH is available (Sweep::ParticleModel::IsPyreneInception())");
-//}
 /*!
  * The drag coefficient is calculated using the the Knudsen correction to the
  * Stokes formula for the drag coefficient, see table I of Li & Wang,

@@ -11,14 +11,15 @@
       <description>soot</description>
       <density units="g/cm3">1.47</density>
       <molwt units="g/mol">0.0</molwt>
-      <coalthresh>0.98</coalthresh>
-      <growthfact>0.05</growthfact>
-      <minPAH>2</minPAH>
     </component> 
     
 
     <particle id="[soot]" model="PAH_KMC" subtree="false">
       <description />
+      
+      <coalthresh>0.98</coalthresh>
+      <growthfact>0.05</growthfact>
+      <minPAH>2</minPAH>
     </particle>
 
     <pahinception />

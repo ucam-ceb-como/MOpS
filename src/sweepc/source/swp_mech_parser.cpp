@@ -58,9 +58,6 @@
 #include "swp_coag_weight_rules.h"
 #include "swp_silica_interparticle.h"
 #include "swp_sprog_idealgas_wrapper.h"
-
-#include "swp_tempReadColliPara.h" //temporarily used to read collision efficiency parameters, including mode, NONE, MAX, MIN, COMBINED
-
 #include "gpc_species.h"
 
 #include "camxml.h"
@@ -83,59 +80,59 @@ namespace {
 /*!
  * Read and set initial particle composition for an inception
  *
- *@param[in]		xml		XML node with component children
- *@param[in,out]	icn		Inception instance for which to set composition of newly incepted particles
+ *@param[in]        xml     XML node with component children
+ *@param[in,out]    icn     Inception instance for which to set composition of newly incepted particles
  */
 void readInceptedComposition(const CamXML::Element &xml, Sweep::Processes::Inception &icn) {
     // Get the component (= composition) XML
-	vector<CamXML::Element*> subitems;
+    vector<CamXML::Element*> subitems;
     xml.GetChildren("component", subitems);
 
-	for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); ++j) {
-		// Get component ID.
-		std::string str = (*j)->GetAttributeValue("id");
-		int id = icn.Mechanism()->ComponentIndex(str);
+    for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); ++j) {
+        // Get component ID.
+        std::string str = (*j)->GetAttributeValue("id");
+        int id = icn.Mechanism()->ComponentIndex(str);
 
-		if (id >= 0) {
-			// Get component change.
-			str = (*j)->GetAttributeValue("dx");
-			double dx = cdble(str);
-			// Set component change.
-			icn.SetParticleComp(id, dx);
-		} else {
-			// Unknown component in mechanism.
-			throw runtime_error(str + ": Component not found in mechanism (loadInceptedComposition)");
-		}
-	}
+        if (id >= 0) {
+            // Get component change.
+            str = (*j)->GetAttributeValue("dx");
+            double dx = cdble(str);
+            // Set component change.
+            icn.SetParticleComp(id, dx);
+        } else {
+            // Unknown component in mechanism.
+            throw runtime_error(str + ": Component not found in mechanism (loadInceptedComposition)");
+        }
+    }
 }
 
 /*!
  * Read and set initial particle tracker values for an inception
  *
- *@param[in]		xml		XML node with track children
- *@param[in,out]	icn		Inception instance for which to set tracker values of newly incepted particles
+ *@param[in]        xml     XML node with track children
+ *@param[in,out]    icn     Inception instance for which to set tracker values of newly incepted particles
  */
 void readInceptedTrackers(const CamXML::Element &xml, Sweep::Processes::Inception &icn) {
     // Get the component (= composition) XML
-	vector<CamXML::Element*> subitems;
-	xml.GetChildren("track", subitems);
+    vector<CamXML::Element*> subitems;
+    xml.GetChildren("track", subitems);
 
-	for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); j++) {
-		// Get tracker ID.
-		std::string str = (*j)->GetAttributeValue("id");
-		int id = icn.Mechanism()->GetTrackerIndex(str);
+    for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); j++) {
+        // Get tracker ID.
+        std::string str = (*j)->GetAttributeValue("id");
+        int id = icn.Mechanism()->GetTrackerIndex(str);
 
-		if (id >= 0) {
-			// Get tracker change.
-			str = (*j)->GetAttributeValue("dx");
-			double dx = cdble(str);
-			// Set tracker change.
-			icn.SetParticleTracker(id, dx);
-		} else {
-			// Unknown tracker variable in mechanism.
-			throw runtime_error(str + ": Tracker variable not found in mechanism (loadInceptedTrackers)");
-		}
-	}
+        if (id >= 0) {
+            // Get tracker change.
+            str = (*j)->GetAttributeValue("dx");
+            double dx = cdble(str);
+            // Set tracker change.
+            icn.SetParticleTracker(id, dx);
+        } else {
+            // Unknown tracker variable in mechanism.
+            throw runtime_error(str + ": Tracker variable not found in mechanism (loadInceptedTrackers)");
+        }
+    }
 }
 
 } // anonymous namespace
@@ -335,11 +332,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     } else if (str == "surfvolcubic") {
         mech.SetAggModel(AggModels::SurfVolCubic_ID);
     } else if (str == "PAH") {
-	// Reject all old style input files
-		throw std::runtime_error("PAH-PP MODEL are no longer supported (Sweep::MechParser::readV1), you can use NEW PAH_KMC model");
+    // Reject all old style input files
+        throw std::runtime_error("PAH-PP MODEL are no longer supported (Sweep::MechParser::readV1), you can use NEW PAH_KMC model");
     } else if (str == "PAH_KMC") {
         mech.SetAggModel(AggModels::PAH_KMC_ID);
-	} else if (str == "silica") {
+    } else if (str == "silica") {
         throw std::runtime_error("Old silica model is deprecated. Use bintreesilica or surfvolsilica."
                 " in Sweep::MechParser::readV1");
     } else if (str == "bintree") {
@@ -359,20 +356,27 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 
     // Get the coalescence threshold for a multicomponent binary tree model
     const CamXML::Element* el = particleXML->GetFirstChild("coalthresh");
-    if (mech.AggModel() == AggModels::BinTree_ID) {
-        if (el != NULL) {
-            double ct = cdble(el->Data());
-            if (ct < 0.0 || ct > 2.0) {
-                throw std::runtime_error("Coalescence threshold must be 0<ct<2.0. (Sweep::MechParser::readV1)");
-            } else {
-            mech.SetBinTreeCoalThresh(ct);
-            }
+    bool ct_set(false);
+    if (el != NULL) {
+        double ct = cdble(el->Data());
+        if (ct < 0.0 || ct > 2.0) {
+            throw std::runtime_error("Coalescence threshold must be 0<ct<2.0. (Sweep::MechParser::readV1)");
         } else {
-            throw std::runtime_error("Must specify coalescence threshold in <particle>"
-                    "block with tag <coalthresh> for bintree particle model. (Sweep::MechParser::readV1)");
+        mech.SetBinTreeCoalThresh(ct);
+        ct_set = true;
         }
     }
 
+    // Issue a warning if not set
+    if (! ct_set && (
+            mech.AggModel() == AggModels::BinTree_ID ||
+            mech.AggModel() == AggModels::BinTreeSilica_ID ||
+            mech.AggModel() == AggModels::PAH_KMC_ID ||
+            mech.AggModel() == AggModels::PrimaryList_ID)) {
+        std::cerr << "Warning, no coalescence threshold set for particle model." << std::endl;
+    }
+
+    el = NULL; // Reset pointer
     el = particleXML->GetFirstChild("fractdim");
     // Get the fractal dimension
     if (el != NULL) {
@@ -389,6 +393,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetFractDim(1.8);
     }
 
+    el = NULL; // Reset pointer
     el = particleXML->GetFirstChild("efm");
     // Get the free molecular enhancement factor
     if (el != NULL) {
@@ -403,6 +408,97 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         // Kazakov & Frenklach, Combustion & Flame, 1998 113:484-501
         // for coagulation of spherical non-polar soot particles
         mech.SetEnhancementFM(2.2);
+    }
+
+
+    // Set data for the PAH model
+    if (mech.AggModel() == AggModels::PAH_KMC_ID) {
+
+        // Get InceptedPAH, only pyrene and benzene are supported.
+        el = NULL; // Reset pointer
+        el = particleXML->GetFirstChild("InceptedPAH");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                mech.SetInceptedPAH(str);
+            } else {
+                throw runtime_error("InceptedPAH contains no data.");
+            }
+        } else {
+            mech.SetInceptedPAH("A4");
+        }
+
+        // Get m_growthfact.
+        el = NULL; // Reset pointer
+        el = particleXML->GetFirstChild("growthfact");
+        if (el != NULL) {
+            double gf = cdble(el->Data());
+            if (gf < 0.0) {
+                throw std::runtime_error("Growth factor must be > 0.0");
+            } else {
+            mech.SetPAHGrowthFactor(gf);
+            }
+        } else {
+            throw std::runtime_error("Must specify PAH growth factor in <particle> "
+                    "block with tag <growthfact> for PAHPP particle model.");
+        }
+
+        // Get minPAH.
+        el = NULL; // Reset pointer
+        el = particleXML->GetFirstChild("minPAH");
+        if (el != NULL) {
+            unsigned int mp = (unsigned int) cdble(el->Data());
+            if (mp < 0) {
+                throw std::runtime_error("Minimum PAH number must be > 0");
+            } else {
+            mech.SetPAHMinimumNumberForGrowth(mp);
+            }
+        } else {
+            throw std::runtime_error("Must specify minimum PAHs to apply growth factor in <particle> "
+                    "block with tag <minPAH> for PAHPP particle model.");
+        }
+    } // End PAHPP specific parameters
+
+    // Get the collision efficiency parameters
+    items.clear();
+    particleXML->GetChildren("collision", items);
+    if (items.size() > 0) {
+        i = items.begin();
+
+        // First get the collision efficiency mode
+        str = (*i)->GetAttributeValue("mode");
+        if (str == "MAX" || str == "MIN" || str == "COMBINED" || str == "REDUCED")
+            mech.SetMode(str);
+        else
+            throw runtime_error("Unrecognised collision efficiency mode.");
+
+        // Now get the threshold
+        str = "";
+        str = (*i)->GetFirstChild("threshold")->Data();
+        if (str != "")
+            mech.SetThreshold((int) cdble(str));
+        else
+            throw runtime_error("Threshold must be specified for a collision efficiency model.");
+
+        // Now get the the other parameters A, B, C
+        CamXML::Element *el0, *el1, *el2;
+        el0 = (*i)->GetFirstChild("A");
+        el1 = (*i)->GetFirstChild("B");
+        el2 = (*i)->GetFirstChild("C");
+        if (el0 != NULL && el1 != NULL && el2 != NULL) {
+            std::string str0 = el0->Data();
+            std::string str1 = el1->Data();
+            std::string str2 = el2->Data();
+            if (str0 != "" && str1 != "" && str2 != "")
+                mech.SetCollisionEffPara(cdble(str0), cdble(str1), cdble(str2));
+            else
+                throw runtime_error("One of collision parameters is empty.");
+        } else
+            throw runtime_error("One of the collision parameters A, B, C is omitted.");
+    } else {
+        // Set to the default one abhjeet's choice, apparently needed to pass
+        // the pahpp regression tests
+        mech.SetCollisionEffPara(2, 1100, 5);
     }
 
     // Get the sintering model.
@@ -420,8 +516,8 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (str == "viscous_flow") {
             mech.SintModel().SetType(SinteringModel::ViscousFlow);
         } else if (str == "rutile") {
-        	// Special MD fit for GBD sintering of rutile
-        	mech.SintModel().SetType(SinteringModel::Rutile);
+            // Special MD fit for GBD sintering of rutile
+            mech.SintModel().SetType(SinteringModel::Rutile);
         } else if (str == "ssd") {
             // Solid-state diffusion (d^3)
             mech.SintModel().SetType(SinteringModel::SSD);
@@ -535,85 +631,15 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw runtime_error(msg);
         }
 
-        readColliPara(i,mech);
-
-        // Get InceptedPAH, only pyrene and benzene are supported.
-        el = (*i)->GetFirstChild("InceptedPAH");
-        if (el!=NULL) {
-            str = el->Data();
-            if (str != "") {
-                mech.SetInceptedPAH(str);
-            } else {
-                // coalthresh contains no data.
-                std::string msg("Component ");
-                msg += comp->Name();
-                msg += " InceptedPAH contains no data (Sweep, MechParser::readComponents).";
-
-                delete comp;
-                throw runtime_error(msg);
-            }
-        } else {
-            mech.SetInceptedPAH("A4");
-        }
-
-        // Get coalesc threshold.
+        // Check for deprecated inclusion of some flags in the component block
         el = (*i)->GetFirstChild("coalthresh");
-        if (el!=NULL) {
-            str = el->Data();
-            if (str != "") {
-                comp->SetCoalescThresh(cdble(str));
-            } else {
-                // coalthresh contains no data.
-                std::string msg("Component ");
-                msg += comp->Name();
-                msg += " coalthresh contains no data (Sweep, MechParser::readComponents).";
-
-                delete comp;
-                throw runtime_error(msg);
-            }
-        } else {
-            comp->SetCoalescThresh(1.0);
-        }
-
-
-        // Get m_growthfact.
+        if (el != NULL) throw runtime_error("Move coalthresh element to <particle> block.");
         el = (*i)->GetFirstChild("growthfact");
-        if (el!=NULL) {
-            str = el->Data();
-            if (str != "") {
-                comp->SetGrowthFact(cdble(str));
-            } else {
-                // coalthresh contains no data.
-                std::string msg("Component ");
-                msg += comp->Name();
-                msg += " growthfact contains no data (Sweep, MechParser::readComponents).";
-
-                delete comp;
-                throw runtime_error(msg);
-            }
-        } else {
-            comp->SetGrowthFact(1.0);
-        }
-
-
-        // Get minPAH.
+        if (el != NULL) throw runtime_error("Move growthfact element to <particle> block.");
         el = (*i)->GetFirstChild("minPAH");
-        if (el!=NULL) {
-            str = el->Data();
-            if (str != "") {
-                comp->SetMinPAH(int(cdble(str)));
-            } else {
-                // coalthresh contains no data.
-                std::string msg("Component ");
-                msg += comp->Name();
-                msg += " minPAH contains no data (Sweep, MechParser::readComponents).";
-
-                delete comp;
-                throw runtime_error(msg);
-            }
-        } else {
-            comp->SetMinPAH(0);
-        }
+        if (el != NULL) throw runtime_error("Move minPAH element to <particle> block.");
+        el = (*i)->GetFirstChild("mode");
+        if (el != NULL) throw runtime_error("Move collision parameters to <particle> block.");
 
         // Get component mol. wt.
         el = (*i)->GetFirstChild("molwt");
@@ -640,7 +666,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw runtime_error(msg);
         }
 
-		// Get minimum valid value for component
+        // Get minimum valid value for component
         el = (*i)->GetFirstChild("min");
         if (el!=NULL) {
             str = el->Data();
@@ -1283,14 +1309,14 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
             // the constant does not require scaling as its units are s^-1.
             rxn.SetPropertyID(Sweep::iCoverage);
         }
-		else if (str.compare("asn")==0) {
+        else if (str.compare("asn")==0) {
             rxn.SetPropertyID(Sweep::iASN);
 
             // Must scale rate constant from cm3 to m3, surface area
             // is multiplied by the site density so that it is a dimensionless
             // quantity hence A has units cm^3 s^-1.
-			arr.A *= (1.0e-6);
-		}
+            arr.A *= (1.0e-6);
+        }
         else if (str.compare("d")==0) {
             // This reaction depends on some power of the diameter.
             switch (power) {
@@ -1448,7 +1474,7 @@ void MechParser::readInterParticles(CamXML::Document &xml, Mechanism &mech)
             throw std::runtime_error("Could not find species H4O4SI in MechParser::ReadInterParticles");
 
         // Create a new interparticle object.
-    	InterParticle *intpar = new InterParticle(mech, isp);
+        InterParticle *intpar = new InterParticle(mech, isp);
 
         // Set default name.
         intpar->SetName("Inter Particle " + cstr(k));
@@ -1479,9 +1505,9 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
     // Is reaction deferred.
     str = xml.GetAttributeValue("defer");
     if (str=="true") {
-    	intpar.SetDeferred(true);
+        intpar.SetDeferred(true);
     } else {
-    	intpar.SetDeferred(false);
+        intpar.SetDeferred(false);
     }
 
     readReactants(xml, intpar);
@@ -1543,35 +1569,35 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
         else if (str.compare("s")==0) {
             // This reaction depends on surface area.  Ignore power,
             // they must have meant 1.
-        	intpar.SetPropertyID(Sweep::iS);
+            intpar.SetPropertyID(Sweep::iS);
             arr.A *= (1.0e-2);
         }
-		else if (str.compare("asn")==0) {
+        else if (str.compare("asn")==0) {
             intpar.SetPropertyID(Sweep::iASN);
 
             // Must scale rate constant from cm3 to m3, surface area
             // is multiplied by the site density so that it is a dimensionless
             // quantity hence A has units cm^3 s^-1.
             //arr.A *= (1.0e-6);
-			arr.A *= (1.0e-6);
+            arr.A *= (1.0e-6);
         }
         else if (str.compare("d")==0) {
             // This reaction depends on some power of the diameter.
             switch (power) {
                 case 1:
-                	intpar.SetPropertyID(Sweep::iDcol);
+                    intpar.SetPropertyID(Sweep::iDcol);
                     arr.A *= (1.0e-4);
                     break;
                 case 2:
-                	intpar.SetPropertyID(Sweep::iD2);
+                    intpar.SetPropertyID(Sweep::iD2);
                     arr.A *= (1.0e-2);
                     break;
                 case -1:
-					intpar.SetPropertyID(Sweep::iD_1);
+                    intpar.SetPropertyID(Sweep::iD_1);
                     arr.A *= (1.0e2);
                     break;
                 case -2:
-					intpar.SetPropertyID(Sweep::iD_2);
+                    intpar.SetPropertyID(Sweep::iD_2);
                     arr.A *= (1.0e4);
                     break;
                 default:
