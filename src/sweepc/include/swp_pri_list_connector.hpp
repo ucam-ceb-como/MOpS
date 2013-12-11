@@ -72,6 +72,10 @@ protected:
         }
     }
 
+public:
+    // The PrimaryList must be a friend class
+    friend class PrimaryList<NodeT>;
+
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive &ar, const unsigned int version) {
@@ -81,11 +85,6 @@ protected:
         ar & m_sint_level;
         ar & m_merge_me;
     }
-
-public:
-    // The PrimaryList must be a friend class
-    friend class PrimaryList<NodeT>;
-
 
     //! Default constructor
     PrimaryListConnector():

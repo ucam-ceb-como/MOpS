@@ -80,6 +80,7 @@ protected:
 
     friend class boost::serialization::access;
     template <class Archive>
+
     void serialize(Archive &ar, const unsigned int /* version */) {
         ar & m_comp;
         // Prevent a clone of the original particle model from being serialized.

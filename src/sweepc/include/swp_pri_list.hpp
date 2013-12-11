@@ -283,7 +283,9 @@ protected:
         DeleteFrom(m_primaries, rhs_id);
     }
 
-
+public:
+    // BASIC CREATION AND DELETION METHODS
+    friend class boost::serialization::access;
     /*!
      * Use Boost's inbuilt serialization to write out this object. We serialize
      * the following data (in this order):
@@ -301,11 +303,6 @@ protected:
         ar & m_avg_dpri;
     }
 
-
-public:
-    // BASIC CREATION AND DELETION METHODS
-    friend class boost::serialization::access;
-
     //! Construct a primary at time
     PrimaryList(const double time, const Sweep::ParticleModel &model):
         Primary(time, model),
@@ -319,7 +316,6 @@ public:
         m_primaries(),
         m_connectors(),
         m_avg_dpri(copy.m_avg_dpri) {
-
         // Clone the particle structure from the copy into *this*'s primaries
         // and connectors vectors
         copy.CloneStructure(m_primaries, m_connectors);
@@ -413,7 +409,6 @@ public:
     void UpdateCache() {
         ResetCachedProperties();
 
-        // Get sums of various quantities from the cache
         // Initialise some working values
         double vol(0.0);
         m_mass = 0.0;
@@ -548,8 +543,26 @@ public:
                         it != m_connectors.end(); ++it) {
             (*it)->Sinter(dt, m_time, sys, model, rng);
         }
-        // And finally, check connections and update the particle cache
-        CheckConnections();
+
+        // Now loop over the connectors again, merging those with their merge
+        // activated
+        std::vector<unsigned int> ids_to_merge;
+        for (size_t i(0); i != m_connectors.size(); ++i) {
+            if (m_connectors[i]->Merge()) {
+                // MergeConnection adds the state space of the nodes and keeps
+                // the pointer structure intact
+                MergeConnection(*(m_connectors[i]));
+                // Also need to flag this connector for deletion
+                ids_to_merge.push_back(i);
+            }
+        }
+
+        // Delete any now-redundant connectors (reversed to avoid segfault)
+        for (size_t i = ids_to_merge.size(); i-- > 0; ) {
+            DeleteFrom(m_connectors, i);
+        }
+
+        // And finally, update the particle cache
         UpdateCache();
     }
 
@@ -580,6 +593,7 @@ public:
         // Get boost to do the hard work for us
         boost::archive::binary_iarchive ia(in);
         ia >> *this;
+        //serialize(ia, 0);
 
         // Now need to make sure the particle model pointers are correct,
         // and update the particle

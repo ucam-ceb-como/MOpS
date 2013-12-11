@@ -1300,7 +1300,6 @@ void BinTreePrimary::SinterNode(
 double BinTreePrimary::GetComponent(std::string name) const
 {
     return m_comp[m_pmodel->ComponentIndex(name)];
-
 }
 
 /*!
