@@ -314,6 +314,15 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
                 throw std::logic_error("Unrecognised weight rule (Coagulation::WeightedPerform)");
             }
 
+            // In the weighted particle method the contents of particle 2
+            // is added to particle 1 while particle 2 is left unchanged.
+            // If particle 1 is a single primary particle made up one PAH:
+            // the incepted PAH, after the coagulate event there is then
+            // one less incepted PAH. This is what the check does. If
+            // particle 1 is a PAH other than the incepted PAH, there is
+            // not a need to made an adjustment to the number of incepted PAHs.
+			sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
+
             // Add contents of particle 2 onto particle 1
             sp1->Coagulate(*sp2, rng);
             sp1->SetTime(t);
