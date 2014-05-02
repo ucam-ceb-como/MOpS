@@ -1032,6 +1032,7 @@ void PAHProcess::addCount(int C_in, int H_in) {
 void PAHProcess::updateA(Cpointer C, char sp) {
     if(C->bridge) {
         C->A = 'C'; // a bridge is obviously connected to 3 other C atoms
+        C->bondAngle2=normAngle(C->bondAngle1+120);
     }else {
         // Check if C is a reactive surface carbon by finding angle it makes with neighbours
         angletype x = normAngle(C->bondAngle1 - C->C1->bondAngle1);
