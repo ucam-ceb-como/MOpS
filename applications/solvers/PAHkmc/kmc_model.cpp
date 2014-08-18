@@ -129,9 +129,10 @@ int main(int argc, char *argv[])
         t_end = Strings::cdble(node->Data());
 
         node = root->GetFirstChild("startStruct");
-        if(node->Data() == "PYRENE") startStruct = PYRENE_C;
-        else if(node->Data() == "BENZENE") startStruct = BENZENE_C;
+        if(node->Data() == "BENZENE") startStruct = BENZENE_C;
         else if(node->Data() == "NAPHTHALENE") startStruct = NAPHTHALENE_C;
+        else if(node->Data() == "PYRENE") startStruct = PYRENE_C;
+		else if(node->Data() == "BENZOPYRENE") startStruct = BENZOPYRENE_C;
         else if(node->Data() == "CORONENE") startStruct = CORONENE_C;
         else if(node->Data() == "TEST") startStruct = TEST_STRUCT;
         else {

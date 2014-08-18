@@ -1307,6 +1307,10 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
     std::string PYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,FE,FE,ZZ,FE";
     intpair PYRENE_Rings(4,0);
     intpair PYRENE_CH(16,10);
+    // Structure for BENZOPYRENE
+    std::string BENZOPYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,ZZ,FE,FE,FE,AC,FE";
+    intpair BENZOPYRENE_Rings(5,0);
+    intpair BENZOPYRENE_CH(20,12);
     // Structure for Coronene
     std::string CORONENE_Sites = "FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ";
     intpair CORONENE_Rings(7,0);
@@ -1322,15 +1326,20 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
         rings = BENZENE_Rings;
         CH = BENZENE_CH;
         break;
+    case NAPHTHALENE_C:
+        chosen = NAPHTHALENE_Sites;
+        rings = NAPHTHALENE_Rings;
+        CH = NAPHTHALENE_CH;
+        break;
     case PYRENE_C:
         chosen = PYRENE_Sites;
         rings = PYRENE_Rings;
         CH = PYRENE_CH;
         break;
-    case NAPHTHALENE_C:
-        chosen = NAPHTHALENE_Sites;
-        rings = NAPHTHALENE_Rings;
-        CH = NAPHTHALENE_CH;
+    case BENZOPYRENE_C:
+        chosen = BENZOPYRENE_Sites;
+        rings = BENZOPYRENE_Rings;
+        CH = BENZOPYRENE_CH;
         break;
     case CORONENE_C:
         chosen = CORONENE_Sites;
@@ -1393,6 +1402,34 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         updateCombinedSites();
         //cout << "Benzene Initialised!\n";
         break;
+    case NAPHTHALENE_C:
+        // add first C atom
+        m_pah->m_cfirst = addC();
+        // adds next C atoms according to structure
+        newC = addC(m_pah->m_cfirst, 0, 0);
+        newC = addC(newC, 60, 0);
+        newC = addC(newC, 0, 0);
+        newC = addC(newC, -60, 0);
+        newC = addC(newC, -120, 0);
+        newC = addC(newC, -180, 0);
+        newC = addC(newC, -120, 0);
+        newC = addC(newC, -180, 0);
+        // adds the last C atom, with bond angle towards m_cfirst
+        m_pah->m_clast = addC(newC, 120, 60);
+        // closes structure
+        connectToC(m_pah->m_clast, m_pah->m_cfirst);
+        // update H atoms
+        updateA(m_pah->m_cfirst, m_pah->m_clast, 'H');
+        // set C & H counts
+        setCount(10, 8);
+        // set ring counts
+        m_pah->m_rings = 2;
+        m_pah->m_rings5 = 0;
+        // update all sites and combined sites
+        updateSites();
+        updateCombinedSites();
+        //cout << "Naphthalene Initialised!\n";
+        break;
     case PYRENE_C:
         // add first C atom
         m_pah->m_cfirst = addC();
@@ -1425,33 +1462,41 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         updateCombinedSites();
         //cout << "Pyrene Initialised!\n";
         break;
-    case NAPHTHALENE_C:
+    case BENZOPYRENE_C:
         // add first C atom
         m_pah->m_cfirst = addC();
         // adds next C atoms according to structure
         newC = addC(m_pah->m_cfirst, 0, 0);
-        newC = addC(newC, 60, 0);
+        newC = addC(newC, -60, 0);
         newC = addC(newC, 0, 0);
         newC = addC(newC, -60, 0);
         newC = addC(newC, -120, 0);
         newC = addC(newC, -180, 0);
         newC = addC(newC, -120, 0);
         newC = addC(newC, -180, 0);
+        newC = addC(newC, 120, 0);
+        newC = addC(newC, 180, 0);
+        newC = addC(newC, 120, 0);
+		newC = addC(newC, 180, 0);
+		newC = addC(newC, 120, 0);
+		newC = addC(newC, 60, 0);
+		newC = addC(newC, 0, 0);
+		newC = addC(newC, -60, 0);
         // adds the last C atom, with bond angle towards m_cfirst
-        m_pah->m_clast = addC(newC, 120, 60);
+        m_pah->m_clast = addC(newC, 0, 60);
         // closes structure
         connectToC(m_pah->m_clast, m_pah->m_cfirst);
         // update H atoms
         updateA(m_pah->m_cfirst, m_pah->m_clast, 'H');
         // set C & H counts
-        setCount(10, 8);
+        setCount(BENZOPYRENE_C, BENZOPYRENE_H);
         // set ring counts
-        m_pah->m_rings = 2;
+        m_pah->m_rings = 5;
         m_pah->m_rings5 = 0;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
-        //cout << "Naphthalene Initialised!\n";
+        //cout << "Benzopyrene Initialised!\n";
         break;
      default: 
             std::cout<<"ERROR: Starting Structure undefined.. (PAHProcess::initialise)\n\n";

@@ -1085,6 +1085,9 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
     case ParticleModel::A4:
         m_control=Sweep::KMC_ARS::PYRENE_C;
         break;
+    case ParticleModel::A5:
+        m_control=Sweep::KMC_ARS::BENZOPYRENE_C;
+        break;
     default:
         throw std::runtime_error("no information about the incepted PAH is available (Sweep::PAHPrimary::CheckInvalidPAHs())");
     }
@@ -1178,6 +1181,11 @@ int PAHPrimary::InceptedPAH() const
             break;
         case ParticleModel::A4:
             if (NumCarbon() == PYRENE_C && NumHydrogen() == PYRENE_H)
+                return 1;
+            else return 0;
+            break;
+        case ParticleModel::A5:
+            if (NumCarbon() == BENZOPYRENE_C && NumHydrogen() == BENZOPYRENE_H)
                 return 1;
             else return 0;
             break;

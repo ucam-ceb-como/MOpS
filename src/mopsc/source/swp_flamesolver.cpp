@@ -362,8 +362,11 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
                 case ParticleModel::A4:
                     index=r.Mech()->GasMech().FindSpecies("A4");
                     break;
+                case ParticleModel::A5:
+                    index=r.Mech()->GasMech().FindSpecies("A5");
+                    break;
                 default:
-                    throw std::runtime_error("no information about the incepted PAH is available, only A1 A2 and A4 are supported now (Sweep::FlameSolver::Solve())");
+                    throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4 and A5 are supported now (Sweep::FlameSolver::Solve())");
             }
             // calculate the amount of stochastic pyrene particles in the ensemble
             unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);

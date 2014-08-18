@@ -258,7 +258,7 @@ public:
     };
 
     enum PostProcessStartingStr {
-        A1, A2, A4
+        A1, A2, A4, A5
     };
 
     //! Choose between drag models

@@ -69,6 +69,9 @@ m_pahstruct(new PAHStructure())
     case ParticleModel::A4:
         m_pahstruct->initialise(PYRENE_C);
         break;
+    case ParticleModel::A5:
+        m_pahstruct->initialise(BENZOPYRENE_C);
+        break;
     }
 }
 

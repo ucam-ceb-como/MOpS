@@ -97,8 +97,8 @@ namespace Sweep {
         
         //! Enumeration of starting structures
         enum StartingStructure {
-            BENZENE_C=6,BENZENE_H=6, PYRENE_C=16,PYRENE_H=10, NAPHTHALENE_C=10,NAPHTHALENE_H=8,
-            CORONENE_C=24,CORONENE_H=12,
+            BENZENE_C=6, BENZENE_H=6, NAPHTHALENE_C=10, NAPHTHALENE_H=8, PYRENE_C=16, PYRENE_H=10, 
+            BENZOPYRENE_C=20, BENZOPYRENE_H=12, CORONENE_C=24, CORONENE_H=12,
             TEST_STRUCT, NONE};
 
         //! typedefs used in the model
