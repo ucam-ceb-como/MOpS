@@ -1217,11 +1217,22 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
             if(S2->type == FE && moveIt(S2,1)->type != FE) {
                 st->comb = FE2;
                 m_pah->m_siteMap[FE2].push_back(st);
+		//
+                // An FE2 site is a combined site where an FE site has an FE site only 
+                // For example, for ZZ - FE - FE - ZZ, both of the FE sites has a combi
+                //
+                // Zig-zag oxidation reactions are based on the number of side-by-side 
+                // If these reactions were based on the number of FE2 sites, we would o
+                // So we can either calculate the rate based on the number of FE2 sites
+                // or - as has been done here - remove half of the FE2 sites.
+                //
+                if(S2->comb == FE2) delSiteFromMap(S2->comb, st);
+                //
                 if(S2->comb != FE2) updateCombinedSites(S2);
             } else if(S1->type == FE && moveIt(S1,-1)->type != FE) {
                 st->comb = FE2;
                 m_pah->m_siteMap[FE2].push_back(st);
-                delSiteFromMap(S1->comb, st);
+                if(S1->comb == FE2) delSiteFromMap(S1->comb, st);
                 if(S1->comb != FE2) updateCombinedSites(S1);
             } else
                 st->comb = None;
