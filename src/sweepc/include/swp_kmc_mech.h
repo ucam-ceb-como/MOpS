@@ -271,6 +271,13 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+    class O6R_FE2_O2 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
+    public:
+        double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
 }
 
 }
