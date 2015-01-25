@@ -1181,14 +1181,51 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
     st->C1 = Carb1;
     st->C2 = Carb2;
 }
-//! Update Combined Sites
+
+/*!
+ * The two combined sites AC_FE3 and BY5_FE3 represent an armchair site and 5-member bay site, respectively, next to a combined FE3 site
+ *
+ * We need to update the free edge sites before we can update the rest of the sites; otherwise, we would come up with an incorrect count of AC_FE3 and BY5_FE3
+ */
 void PAHProcess::updateCombinedSites() {
-    // updateCombinedSites(st) for all sites
-    for(Spointer i=m_pah->m_siteList.begin(); i!= m_pah->m_siteList.end(); i++) {
-        updateCombinedSites(i);
+	std::vector<int> indicesOfFE;
+	std::vector<int> indicesOfNonFE;
+	int loopIndex = 0;
+	
+	for(Spointer i=m_pah->m_siteList.begin(); i!= m_pah->m_siteList.end(); i++) {
+		if(i->type == FE) {
+			indicesOfFE.push_back(loopIndex);
+		}
+		else {
+			indicesOfNonFE.push_back(loopIndex);
+		}
+		loopIndex++;
     }
+
+	Spointer S1;
+    S1 = m_pah->m_siteList.begin();
+
+	for (int i = 0 ; i < indicesOfFE.size(); ++i) {
+        Spointer S2 = moveIt(S1,indicesOfFE[i]);
+		updateCombinedSites(S2);
+	}
+
+	for (int i = 0 ; i < indicesOfNonFE.size(); ++i) {
+		Spointer S3 = moveIt(S1,indicesOfNonFE[i]);
+        updateCombinedSites(S3);
+	}
     //cout << "Combined Sites Updated..\n";
 }
+
+//! Update Combined Sites
+//void PAHProcess::updateCombinedSites() {
+//    // updateCombinedSites(st) for all sites
+//    for(Spointer i=m_pah->m_siteList.begin(); i!= m_pah->m_siteList.end(); i++) {
+//        updateCombinedSites(i);
+//    }
+//    //cout << "Combined Sites Updated..\n";
+//}
+
 //! Combined site for a particular site
 void PAHProcess::updateCombinedSites(Spointer& st) {
     kmcSiteType ori_comb = st->comb;

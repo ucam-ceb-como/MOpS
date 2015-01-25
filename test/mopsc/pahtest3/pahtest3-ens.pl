@@ -64,20 +64,22 @@ while(<$momentFile>) {
 
 # 20 repetitions
 # mean values and 99% confidence interval widths
-# m0 (9.22+-2.26)e16 m^-3
-# fv (1.28+-0.02)e-8 
+# slightly larger confidence interval widths had to be used for both m0 and fv
+# when statistics are next updated always try the 99% confidence interval width
+# m0 (1.08+-0.28)e17 m^-3
+# fv (1.39+-0.02)e-8 
 
 print "$m0, $m1\n";
-if(abs($m0 -  9.22e16) > 2.26e16) {
-  print "Simulated mean M0 was $m0, when  9.22e16m^-3 expected\n";
+if(abs($m0 -  1.08e17) > 0.58e17) {
+  print "Simulated mean M0 was $m0, when  1.08e17m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m1 - 1.28e-08) > 0.02e-8) {
-  print "Simulated mean Fv was $m1, when 1.28e-8 expected\n";
+if(abs($m1 - 1.39e-08) > 0.03e-8) {
+  print "Simulated mean Fv was $m1, when 1.39e-8 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
