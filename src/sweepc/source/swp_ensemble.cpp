@@ -2,7 +2,7 @@
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
-
+  
   Copyright (C) 2008 Matthew S Celnik.
 
   File purpose:
@@ -123,7 +123,7 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             m_capacity = rhs.m_capacity;
             m_halfcap  = rhs.m_halfcap;
             m_count    = rhs.m_count;
-            m_numofInceptedPAH = rhs.m_numofInceptedPAH;
+            //m_numofInceptedPAH = rhs.m_numofInceptedPAH;
             // Scaling.
             m_ncont      = rhs.m_ncont;
             m_contfactor = rhs.m_contfactor;
@@ -199,7 +199,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_halfcap  = m_capacity / 2;
 
     m_count    = 0;
-    m_numofInceptedPAH = 0;
+    //m_numofInceptedPAH = 0;
 
     // Reserve memory for ensemble.
     m_particles.resize(m_capacity, NULL);
@@ -398,7 +398,7 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         i=m_count++;
         m_particles[i] = &sp;
         m_tree.push_back(tree_type::value_type(sp, m_particles.begin() + i));
-        m_numofInceptedPAH++;
+        //m_numofInceptedPAH++;
     } else if ((unsigned)i < m_capacity) {
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
@@ -435,7 +435,7 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
     //            --m_numofInceptedPAH;
     //        }
     //    }
-    SetNumOfInceptedPAH(-1,m_particles[i]->Primary());
+    //SetNumOfInceptedPAH(-1,m_particles[i]->Primary());
     // Check that particle index is valid.
     if (i<m_count-1) {
         // First delete particle from memory, then
@@ -535,8 +535,8 @@ void Sweep::Ensemble::Replace(unsigned int i, Particle &sp)
     //    }
     //    m_numofInceptedPAH++;
     //}
-    SetNumOfInceptedPAH(-1, m_particles[i]->Primary());
-    SetNumOfInceptedPAH(1);
+    //SetNumOfInceptedPAH(-1, m_particles[i]->Primary());
+    //SetNumOfInceptedPAH(1);
     // Check index is within range.
     if (i<m_count) {
         // First delete current particle, then
@@ -570,7 +570,7 @@ void Sweep::Ensemble::ClearMain()
         m_particles[i] = NULL;
     }
     m_count = 0;
-    m_numofInceptedPAH = 0;
+    //m_numofInceptedPAH = 0;
 
     m_ncont = 0; // No contractions any more.
 
@@ -791,7 +791,7 @@ void Sweep::Ensemble::dble()
             //    if (rhsparticle->Pyrene()!=0)
             //        m_numofInceptedPAH++;
             //}
-                SetNumOfInceptedPAH(1, m_particles[i]->Primary());
+                //SetNumOfInceptedPAH(1, m_particles[i]->Primary());
                 size_t iCopy = prevCount + i;
                 // Create a copy of a particle and add it to the ensemble.
                 m_particles[iCopy] = m_particles[i]->Clone();
@@ -1009,7 +1009,7 @@ void Sweep::Ensemble::init(void)
     m_capacity   = 0;
     m_halfcap    = 0;
     m_count      = 0;
-    m_numofInceptedPAH = 0;
+    //m_numofInceptedPAH = 0;
 
     // Scaling.
     m_contfactor = 0;
@@ -1027,8 +1027,8 @@ void Sweep::Ensemble::init(void)
 
 }
 
-int Sweep::Ensemble::NumOfInceptedPAH() const
-{
+//int Sweep::Ensemble::NumOfInceptedPAH() const
+//{
     //int numofpyrene = 0;
     //for (int i =0;i<m_count;i++){
     //    const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
@@ -1039,7 +1039,24 @@ int Sweep::Ensemble::NumOfInceptedPAH() const
     //if (numofpyrene!= m_numofInceptedPAH)
     //    std::cout<<"something goes wrong, the number ofPAH in ensemble is not consistent"<<std::endl;
     //return numofpyrene;
-    return m_numofInceptedPAH;
+//    return m_numofInceptedPAH;
+//}
+
+/*!
+ * Iterate through all the stochastic particles and count the number of incepted PAHs
+ *
+ * An incepted PAH is a stochastic particle made up of a single primary and a single PAH matching the gas transfer species (PAH that bridges gas-phase profile and MOPS)
+ */
+int Sweep::Ensemble::NumOfInceptedPAH() const
+{
+    int numOfInceptedPAHs = 0;
+    for (int i = 0; i < m_count; i++){
+        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+        rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+
+        numOfInceptedPAHs += rhsparticle->InceptedPAH();
+        }
+    return numOfInceptedPAHs;
 }
 
 int Sweep::Ensemble::IndexOfInceptedPAH() const
@@ -1053,24 +1070,24 @@ int Sweep::Ensemble::IndexOfInceptedPAH() const
     return -1;
 }
 
-void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount, Sweep::AggModels::Primary *m_primary)
-{
-    if (m_primary->AggID() ==AggModels::PAH_KMC_ID)
-    {
-        //m_primary->ParticleModel()->IsPyreneInception()
-        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-        rhsparticle = dynamic_cast<const Sweep::AggModels::PAHPrimary*>(m_primary);
-
-        if (rhsparticle->InceptedPAH()!=0)
-            // rhsparticle is pyrene
-            SetNumOfInceptedPAH(m_amount);
-    }
-
-}
-void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount)
-{
-    m_numofInceptedPAH += m_amount;
-}
+//void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount, Sweep::AggModels::Primary *m_primary)
+//{
+//    if (m_primary->AggID() ==AggModels::PAH_KMC_ID)
+//    {
+//        //m_primary->ParticleModel()->IsPyreneInception()
+//        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+//        rhsparticle = dynamic_cast<const Sweep::AggModels::PAHPrimary*>(m_primary);
+//
+//        if (rhsparticle->InceptedPAH()!=0)
+//            // rhsparticle is pyrene
+//            SetNumOfInceptedPAH(m_amount);
+//    }
+//
+//}
+//void Sweep::Ensemble::SetNumOfInceptedPAH(int m_amount)
+//{
+//    m_numofInceptedPAH += m_amount;
+//}
 /*!
  * @param[in]   id      Index of property which will be extracted
  */

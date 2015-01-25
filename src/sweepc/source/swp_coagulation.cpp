@@ -186,7 +186,7 @@ int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
     }
 
 
-    sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
+    //sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
 
     // Add contents of particle 2 onto particle 1
     sp1->Coagulate(*sp2, rng);
@@ -321,7 +321,7 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
             // one less incepted PAH. This is what the check does. If
             // particle 1 is a PAH other than the incepted PAH, there is
             // not a need to made an adjustment to the number of incepted PAHs.
-			sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
+			//sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
 
             // Add contents of particle 2 onto particle 1
             sp1->Coagulate(*sp2, rng);

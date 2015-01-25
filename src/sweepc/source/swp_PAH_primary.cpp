@@ -1057,14 +1057,14 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
         // area by iterating through all the PAHs.  This call is rather expensive.
         if(m_PAHclusterchanged) {
             UpdatePrimary();
-             if (m_InceptedPAH!=0) {
-                    sys.Particles().SetNumOfInceptedPAH(-1);
-                    //sys.Particles().NumOfInceptedPAH();
-             }
-            else if (m_InceptedPAH == 0 && InceptedPAH()==1){
-                    sys.Particles().SetNumOfInceptedPAH(1);
-                    //sys.Particles().NumOfInceptedPAH();
-            }
+            // if (m_InceptedPAH!=0) {
+            //        sys.Particles().SetNumOfInceptedPAH(-1);
+            //        //sys.Particles().NumOfInceptedPAH();
+            // }
+            //else if (m_InceptedPAH == 0 && InceptedPAH()==1){
+            //        sys.Particles().SetNumOfInceptedPAH(1);
+            //        //sys.Particles().NumOfInceptedPAH();
+            //}
         }
         // otherwise there is no need to update
     }
