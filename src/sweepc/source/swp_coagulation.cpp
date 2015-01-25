@@ -284,9 +284,16 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
         // majorant rate and the current (after updates) true rate.
 
         double truek = CoagKernel(*sp1, *sp2, sys);
-
+        double ceff=0;
         if (majk<truek)
             std::cout << "maj< true"<< std::endl;
+
+		//added by ms785 to include the collision efficiency in the calculation of the rate
+		if (sys.ParticleModel()->AggModel()==AggModels::PAH_KMC_ID)
+		{
+			 ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
+			 truek*=ceff;
+		}
 
         if (!Fictitious(majk, truek, rng)) {
             //Adjust the statistical weight
