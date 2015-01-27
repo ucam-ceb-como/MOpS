@@ -300,10 +300,10 @@ unsigned int PAHProcess::getSiteCount(const kmcSiteType& st) const {
         }
         return sum;
     }
-    if(st==FE3) {
-        if(getCHCount().first == 6) return 0;
-        return (unsigned int) (m_pah->m_siteMap[st].size());
-    }
+    //if(st==FE3) {
+    //    if(getCHCount().first == 6) return 0;
+    //    return (unsigned int) (m_pah->m_siteMap[st].size());
+    //}
     return (unsigned int) m_pah->m_siteMap[st].size();
 }
 //! Get Ring Counts
