@@ -89,7 +89,7 @@ public:
     void setPAH(PAHStructure& pah);
     //! Returns a copy of PAH structure
     PAHStructure* clonePAH() const;
-    PAHStructure* clonePAH_new() const; // --> new method
+    //PAHStructure* clonePAH_new() const; // --> new method
 
     size_t SiteListSize() const;
     size_t CarbonListSize() const;
@@ -103,8 +103,6 @@ public:
     virtual PAHStructure& initialise_new(StartingStructure ss);
     //! Initialisation of structure given a string of site types (separated by ',')
     virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num);
-    //! Clear Structure
-    void clearStructure();
     //! Create Structure from vector of site types and number of rings
     void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5);
     //! Structure processes: returns success or failure

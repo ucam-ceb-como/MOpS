@@ -96,192 +96,6 @@ PAHStructure* PAHProcess::clonePAH() const {
     p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5);
     return temp;
 }
-//! Returns a copy of PAH structure (obsolete)
-PAHStructure* PAHProcess::clonePAH_new() const {
-    if(!checkCoordinates()) {
-        std::cout<<"Source structure has invalid coordinates. Aborting..\n";
-        std::cout<<"Site List:\n";
-        printSites();
-        std::ostringstream msg;
-        msg << "ERROR: Structure to be cloned did not pass PAHProcess::checkCoordinates."
-            << " PAH ID: "<<m_pah->m_parent->ID()
-            << " (Sweep::KMC_ARS::PAHProcess::clonePAH)";
-        throw std::runtime_error(msg.str());
-        assert(false);
-        abort();
-    }
-    /*if(m_pah->m_parent->ID() == 1722807){
-        saveDOT(std::string("KMC_DEBUG/1722807_before_cloning.dot"));
-        std::cout<<"Sites list of PAH 1722807 to be cloned:\n";
-        printSites();
-    };*/
-    // new PAHStructure
-    PAHStructure* temp = new PAHStructure();
-    PAHProcess p = PAHProcess(*temp);
-    // set to track bridged C atoms copied
-    std::set<Cpointer> Cbridges;
-    // map to track the bridge copies
-    std::map<Cpointer, Cpointer> Cbridgecopies;
-    // iterate to first site in list
-    std::list<Site>::const_iterator i = m_pah->m_siteList.begin();
-    Cpointer ori_now = i->C1;
-    // define the ending point for copying
-    Cpointer ori_end = i->C1->C1;
-    // create a C atom
-    Cpointer now;
-    now = p.addC();
-    now->A = ori_now->A;
-    now->bridge = ori_now->bridge;
-    now->bondAngle2 = ori_now->bondAngle2;
-    temp->m_cfirst = now;
-    // iterate through all sites in list
-    for(; i!=m_pah->m_siteList.end(); ++i) {
-        ori_now = i->C1;
-        Site newSite;
-        newSite.type = i->type;
-        newSite.comb = i->comb;
-        newSite.C1 = now;
-        // find the number of C to add
-        unsigned int n_C;
-        switch (i->type) {
-        case R5:
-        case FE: n_C = 1; break;
-        case RFE:
-        case ZZ: n_C = 2; break;
-        case RZZ:
-        case RFER:
-        case AC: n_C = 3; break;
-        case RAC:
-        case RZZR:
-        case BY5: n_C = 4; break;
-        case RBY5:
-        case RACR:
-        case BY6: n_C = 5; break;
-        default: 
-            std::cout<<"ERROR: Site type undefined.. (PAHProcess::clonePAH)\n\n";
-            assert(false);
-            abort();
-        }
-        // start adding C
-        for(unsigned int k=0; k!= n_C; k++) {
-            // check if reached endpoint
-            if(ori_now == ori_end) {
-                if(temp->m_siteList.size() == (m_pah->m_siteList.size()-1)) {
-                temp->m_clast = now;
-                now->bondAngle1 = ori_now->bondAngle1;
-                p.connectToC(temp->m_clast, temp->m_cfirst);
-                now = temp->m_cfirst;
-                // check if position of m_cfirst is proper
-                cpair test = jumpToPos(temp->m_clast->coords, temp->m_clast->bondAngle1);
-                if(test != temp->m_cfirst->coords) 
-                    std::cout<<"ERROR: c_last and c_first has incorrect coordinates.."
-                    <<"\n from m_clast: "<<temp->m_clast->coords.first<<','<<temp->m_clast->coords.second
-                    <<"\n tested position: "<<test.first<<','<<test.second
-                    <<"\n coord of m_cfirst: "<<temp->m_cfirst->coords.first<<','<<temp->m_cfirst->coords.second<<'\n';
-                break;
-                }
-            }
-            // check if new C is not a bridge
-            if(!ori_now->bridge) {
-                // what about the next C connected to it?
-                if(ori_now->C2->bridge) {
-                    // if this one is a bridge, check if it has been copied before
-                    if(Cbridges.find(ori_now->C2) != Cbridges.end()) {
-                        // so it has been copied before, which makes this a loop to be 
-                        // closed. close the loop and skip the bridge
-                        p.connectToC(now, Cbridgecopies[ori_now->C2]);
-                        now->bondAngle1 = ori_now->bondAngle1;
-                        now = now->C2->C3;
-                        ori_now = ori_now->C2->C3;
-                        k++; // we skipped a C atom so this is required
-                    }
-                    else { // then we should add C as usual..
-                        now = p.addC(now, ori_now->bondAngle1, 0);
-                        ori_now = ori_now->C2;
-                        now->A = ori_now->A;
-                        now->bondAngle2 = ori_now->bondAngle2;
-                    }
-                }else { // not a bridge, add C as usual
-                    now = p.addC(now, ori_now->bondAngle1, 0);
-                    ori_now = ori_now->C2;
-                    now->A = ori_now->A;
-                    now->bondAngle2 = ori_now->bondAngle2;
-                }
-            }
-            // so it is a bridge, have we copied it previously?
-            else if(Cbridges.find(ori_now) == Cbridges.end()){
-                // this is the first time encountering this bridge. Track it as encountered
-                Cbridges.insert(ori_now);
-                Cbridgecopies[ori_now] = now;
-                // copy bridged C and the next C
-                now = p.bridgeC(now); // bondAngle2 already specified in bridgeC function
-                now->A = ori_now->A;
-                ori_now = ori_now->C3; // move on to reference PAH's bridged C
-                Cbridges.insert(ori_now); // track the new bridged C
-                Cbridgecopies[ori_now] = now;
-                // add next C
-                now = p.addC(now, ori_now->bondAngle1, 0);
-                ori_now = ori_now->C2;
-                now->A = ori_now->A;
-                now->bondAngle2 = ori_now->bondAngle2;
-                k++; // since we're adding two C atoms here, this is required
-            }
-            else if(Cbridges.find(ori_now) != Cbridges.end()){
-                // it is a previously copied bridge, we end up here after closing loop
-                // above.
-                if(ori_now->C2->bridge && Cbridges.find(ori_now->C2) != Cbridges.end()) {// check if we have to close another loop
-                    //close the loop and skip the bridge
-                    p.connectToC(now, Cbridgecopies[ori_now->C2]);
-                    now->bondAngle1 = ori_now->bondAngle1;
-                    now = now->C2->C3;
-                    ori_now = ori_now->C2->C3;
-                    k++;
-                }else {
-                    //add C as usual
-                    now = p.addC(now, ori_now->bondAngle1, 0);
-                    ori_now = ori_now->C2;
-                    now->A = ori_now->A;
-                    now->bondAngle2 = ori_now->bondAngle2;
-                }
-            
-            }
-        }
-        newSite.C2 = now;
-        Spointer st = temp->m_siteList.insert(temp->m_siteList.end(), newSite);
-        temp->m_siteMap[newSite.type].push_back(st);
-        if(newSite.comb != None) temp->m_siteMap[newSite.comb].push_back(st);
-    }
-    temp->m_counts = m_pah->m_counts;
-    temp->m_rings = m_pah->m_rings;
-    temp->m_rings5 = m_pah->m_rings5;
-    /*if(!p.checkCoordinates()) {
-        std::cout<<"ERROR: ClonePAH did not pass checkCoordinates..\n";
-        p.printStruct();
-    }
-    if(!p.checkSiteContinuity()) {
-        std::cout<<"ERROR: ClonePAH did not pass checkSiteContinuity..\n";
-        p.printStruct();
-    }*/
-    //saveDOT(std::string("KMC_DEBUG/"+Strings::cstr(m_pah->m_parent->ID())+"source_PAH.dot"));
-    //p.saveDOT(std::string("KMC_DEBUG/"+Strings::cstr(m_pah->m_parent->ID())+"cloned_PAH.dot"));
-    if(!p.checkCoordinates()) {
-        std::ostringstream msg;
-        msg << "ERROR: Resulting PAH structure from ClonePAH did not pass checkCoordinates..\n"
-            << " Source PAH ID: "<<m_pah->m_parent->ID()
-            << "\nNew PAH ID: "<<m_pah->m_parent->ID()+100000
-            << " (Sweep::KMC_ARS::PAHProcess::clonePAH)";
-        saveDOT(std::string("KMC_DEBUG/source_"+Strings::cstr(m_pah->m_parent->ID())+".dot"));
-        throw std::runtime_error(msg.str());
-        assert(false);
-        abort();
-    }
-    /*if(m_pah->m_parent->ID() == 1722807){
-        p.saveDOT(std::string("KMC_DEBUG/1722807_after_cloning.dot"));
-        std::cout<<"Sites list of PAH 1722807 after cloned:\n";
-        p.printSites();
-    };*/
-    return temp;
-}
 // Public Read Processes
 //! Returns C and H counts
 intpair PAHProcess::getCHCount() const {
@@ -1409,12 +1223,17 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
     //printSites(m_pah->m_siteList.begin());
 }
 
+/*!
+ * @param[in]    ss    Initialise the PAH structure corresponding to the starting structure, ss
+ *
+ * @return       Initialized PAH structure
+ */
 PAHStructure& PAHProcess::initialise(StartingStructure ss){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
         m_pah = pah;
     }else if(m_pah->m_cfirst != NULL)
-        clearStructure();
+         m_pah->clear();
     switch(ss) {
         Cpointer newC;
         
@@ -1553,14 +1372,22 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
     }
     return *m_pah;
 }
-//! Initialisation of structure given a string of site types (separated by ','),
-//! and number of 6- and 5-membered rings
+
+/*!
+ * Initialization of PAH structure given a list of site types and number of 6 and 5-member rings
+ *
+ * @param[in]    siteList_str    Comma-separated string of site types
+ * @param[in]    R6_num          Number of 6-member rings
+ * @param[in]    R5_num          Number of 5-member rings
+ *
+ * @return       Initialized PAH structure
+ */
 PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
         m_pah = pah;
     }else if(m_pah->m_cfirst != NULL)
-        clearStructure();
+        m_pah->clear();
     // create a vector from the string
     std::vector<std::string> siteList_strvec;
     Strings::split(siteList_str, siteList_strvec, std::string(","));
@@ -1581,71 +1408,6 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
     }
     createPAH(siteList_vec, R6_num, R5_num);
     return *m_pah;
-}
-//! Clear Structure
-void PAHProcess::clearStructure() {
-    // Delete all Carbons starting from first to last
-    // set iterator to starting point
-    //Cpointer now= m_pah->m_cfirst;
-    //Cpointer prev = m_pah->m_clast;
-    //set<Cpointer> temp;
-    //do {
-    //    // temporarily stores C iterator
-    //    Cpointer oldprev = prev;
-    //    Cpointer oldnow = now;
-    //    // move current iterator to next C
-    //    now = moveCPointer(prev, now);
-    //    prev = oldnow;
-    //    temp.insert(oldprev);
-    //    //delete oldprev;
-    //}
-    //while (prev != m_pah->m_clast);
-    // iterator stops at last Carbon
-    //delete m_pah->m_clast;
-    for(set<Cpointer>::iterator i=m_pah->m_carbonList.begin(); i!=m_pah->m_carbonList.end(); i++) 
-        delete *i;
-    // clear all data
-    m_pah->m_carbonList.clear();
-    m_pah->m_siteMap.clear();
-    m_pah->m_siteList.clear();
-    m_pah->m_cfirst = NULL;
-    m_pah->m_clast = NULL;
-    setCount(0,0);
-    m_pah->m_cpositions.clear();
-    m_pah->m_rings = 0;
-    m_pah->m_rings5 = 0;
-    /*
-    //cout << "Clearing Structure....\n";
-    // Delete all Carbons starting from first to last
-    Cpointer now=m_pah->m_cfirst->C2;
-    Cpointer prev=m_pah->m_cfirst;
-    //cout << "CFIRST ---> "<<m_pah->m_cfirst<<'\n';
-    //cout << "CLAST ---> "<<m_pah->m_clast<<'\n';
-    do {
-        //cout << "Deleting " << prev << "...\n";
-        // stores current iterators
-        Cpointer oldprev = prev;
-        Cpointer oldnow = now;
-        // move iterator
-        now = moveCPointer(prev, now);
-        prev = oldnow;
-        // delete Carbon atom
-        delete oldprev;
-        //cout << oldprev << " deleted!!\n";
-    }
-    while (prev != m_pah->m_clast);
-    //cout << "Deleting " << m_pah->m_clast << "...\n";
-    // iterator stops at last Carbon, delete it
-    delete m_pah->m_clast;
-    //cout << m_pah->m_clast << " deleted!!\n";
-    // clear all data
-    m_pah->m_siteMap.clear();
-    m_pah->m_siteList.clear();
-    m_pah->m_cfirst = NULL;
-    m_pah->m_clast = NULL;
-    setCount(0,0);
-    m_pah->m_cpositions.clear();
-    //cout << "Structure Cleared!!\n";*/
 }
 
 // Create Structure from vector of site types

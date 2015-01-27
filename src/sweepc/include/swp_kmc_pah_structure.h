@@ -70,6 +70,9 @@ namespace Sweep{
             //! Default Destructor
             ~PAHStructure();
             
+            //! Remove all data and free any memory
+            void clear();
+
             void setParent(Sweep::AggModels::PAH* parent);
 
             //! Overloaded Operators
@@ -112,7 +115,7 @@ namespace Sweep{
             void Serialize(std::ostream &out) const;
             void Deserialize(std::istream &in);
 
-        protected:
+        private:
             //! First and last Carbon atom in list
             Cpointer m_cfirst;
             Cpointer m_clast;

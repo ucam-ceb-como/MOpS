@@ -101,9 +101,26 @@ PAHStructure::~PAHStructure() {
     //delete m_cfirst;
     //delete m_clast;
     PAHProcess pp(*this);
-    pp.clearStructure();
+    clear();
     m_siteMap.clear();
     m_siteList.clear();
+}
+
+//! Remove all data and release any memory
+void PAHStructure::clear() {
+    for(set<Cpointer>::iterator i=m_carbonList.begin(); i!=m_carbonList.end(); i++)
+        delete *i;
+    // clear all data
+    m_carbonList.clear();
+    m_siteMap.clear();
+    m_siteList.clear();
+    m_cfirst = NULL;
+    m_clast = NULL;
+    m_counts.first = 0;
+    m_counts.second = 0;
+    m_cpositions.clear();
+    m_rings = 0;
+    m_rings5 = 0;
 }
 
 void PAHStructure::setParent(Sweep::AggModels::PAH* parent) {
