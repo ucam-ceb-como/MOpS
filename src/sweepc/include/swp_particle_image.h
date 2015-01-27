@@ -86,20 +86,7 @@ public:
     void WritePOVRAY(
         std::ofstream &file // Output file stream.
         );
-
-private:
-
-    // The image aggregate structure root node.
-    ImgNode m_root;
-
-    // Amount of necking between particles in output.
-    static const double m_necking;
-
-    // AGGREGATE SPHERE-TREE CONSTRUCTORS (FREE-MOLECULAR).
-
-    //! Generate the free-molecular structure of a particle
-    static void calc_FM(ImgNode &node, Sweep::rng_type &rng);
-
+    
     /*!
      * @brief       Loop helper function to construct particle images
      *
@@ -119,6 +106,19 @@ private:
             m_root.Insert(p->SphDiameter()*0.5e9);
         }
     };
+
+private:
+
+    // The image aggregate structure root node.
+    ImgNode m_root;
+
+    // Amount of necking between particles in output.
+    static const double m_necking;
+
+    // AGGREGATE SPHERE-TREE CONSTRUCTORS (FREE-MOLECULAR).
+
+    //! Generate the free-molecular structure of a particle
+    static void calc_FM(ImgNode &node, Sweep::rng_type &rng);
 
     /*!
      * @brief      Constructs a binary tree image
