@@ -65,6 +65,8 @@
 
 #include <iostream>
 #include <stack>
+#include <map>
+#include <set>
 
 namespace Sweep
 {
@@ -204,6 +206,12 @@ public:
 
     //! Deserialise a single PAHPrimary
     void DeserializePrimary(std::istream &in, const Sweep::ParticleModel &model);
+
+    //! For use while avoiding repeated deserialisation of a single PAH
+    typedef std::map<void*, boost::shared_ptr<PAH> > PahDeserialisationMap;
+
+    //! For use while avoiding repeated serialisation of a single PAH
+    typedef std::set<void*> PahSerialisationMap;
 
 protected:
     //! Empty primary not meaningful

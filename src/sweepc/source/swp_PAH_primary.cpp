@@ -1856,15 +1856,34 @@ void PAHPrimary::SerializePrimary(std::ostream &out) const
     }
 }
 
+/*
+ * @param[in]    out    File handle into which to write the data
+ */
 void PAHPrimary::outputPAHs(std::ostream &out) const
 {
     if (m_PAH.size() != 0) {
         //count the number of PAH should be serialized
-        unsigned m_count = 0;
-        while (m_count != m_PAH.size())
+        unsigned count = 0;
+        
+        // Keep a record of which PAHs have been serialised to avoid serialising the same
+        // memory location twice.
+        PahSerialisationMap pahUniqueAdresses;
+
+        while (count != m_PAH.size())
         {
-            m_PAH[m_count]->Serialize(out);
-            ++m_count;
+            // Serialise the raw memory locations of the PAHs, so that we
+            // can recognise PAHs that are referenced multiple times on
+            // deserialisation.
+            void *ptr = m_PAH[count].get();
+            out.write(reinterpret_cast<char*>(&ptr), sizeof(ptr));
+            if(pahUniqueAdresses.find(m_PAH[count].get()) == pahUniqueAdresses.end()) {
+                m_PAH[count]->Serialize(out);
+                pahUniqueAdresses.insert(m_PAH[count].get());
+            }
+            else {
+                //std::cout << "PAH at " << m_PAH[count].get() << " has already been serialised\n";
+            }
+            ++count;
         }
     }
 }
@@ -1989,14 +2008,37 @@ void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel
     }
 }
 
+/*
+ * @param[in]    in          File handle from which to read data
+ * @param[in]    model       Particle model being used
+ * @param[in]    PAHcount    Number of PAHs in particle
+ */
 void PAHPrimary::inputPAHs(std::istream &in, const Sweep::ParticleModel &model, const int PAHcount)
 {
     int m_count=0;
+    
+    PahDeserialisationMap pahPointerMappings;
     while (m_count != PAHcount)
     {
-        boost::shared_ptr<PAH> new_PAH (new PAH());
-        new_PAH->Deserialize(in);
-        m_PAH.push_back(new_PAH);
+        // Raw memory location of PAH prior to serialisation.
+        void* preSerializePointer;
+        in.read(reinterpret_cast<char*>(&preSerializePointer), sizeof(preSerializePointer));
+        //cout << preSerializePointer;
+
+        // See if this PAH has already been deserialised
+        PahDeserialisationMap::iterator searchResult = pahPointerMappings.find(preSerializePointer);
+        if(searchResult != pahPointerMappings.end())
+        {
+            // Found PAH in list that has already been deserialised
+            m_PAH.push_back(searchResult->second);
+        }
+        else {
+            // create a new PAH to load in its details
+            boost::shared_ptr<PAH> new_PAH (new PAH());
+            new_PAH->Deserialize(in);
+            m_PAH.push_back(new_PAH);
+            pahPointerMappings.insert(std::make_pair(preSerializePointer, new_PAH));
+        }
         ++m_count;
     }
 }
