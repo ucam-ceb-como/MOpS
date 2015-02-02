@@ -836,10 +836,13 @@ Sweep::PartPtrList Sweep::Ensemble::TakeParticles() {
     return listOfParticles;
 }
 
-
-// READ/WRITE/COPY.
-
-// Writes the object to a binary stream.
+/*
+ * @brief Writes the object to a binary stream.
+ *
+ * @param        out                 Output binary stream
+ *
+ * @exception    invalid_argument    Stream not ready
+ */
 void Sweep::Ensemble::Serialize(std::ostream &out) const
 {
     const unsigned int trueval  = 1;
@@ -863,8 +866,9 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
         out.write((char*)&n, sizeof(n));
 
         // Output the particles.
+		std::set<void*> uniquePAHAdresses;
         for (unsigned int i=0; i!=m_count; ++i) {
-            m_particles[i]->Serialize(out);
+            m_particles[i]->Serialize(out, &uniquePAHAdresses);
         }
 
         // Output number of contractions.
@@ -902,7 +906,15 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
     }
 }
 
-// Reads the object from a binary stream.
+/*
+ * @brief Reads the object from the binary stream.
+ *
+ * @param[in,out]    in                  Input binary stream
+ * @param[in]        model	             Particle model defining interpretation of particle data
+ *
+ * @exception        invalid_argument    Stream not ready
+ * @exception        runtime_error       Invalid serialized version number
+ */
 void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
     Clear();
@@ -918,6 +930,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
 
         switch (version) {
             case 0:
+			{
                 // Read the ensemble capacity.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
 
@@ -933,8 +946,10 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 m_count = n;
 
                 // Read the particles.
+                // Provide a way to detect multiple instances of PAHs
+                std::map<void*, boost::shared_ptr<AggModels::PAHPrimary> > duplicates;
                 for (unsigned int i=0; i!=m_count; ++i) {
-                    Particle *p = new Particle(in, model);
+                    Particle *p = new Particle(in, model, &duplicates);
                     m_particles[i] = p;
                 }
 
@@ -974,6 +989,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 rebuildTree();
 
                 break;
+			}
             default:
                 throw std::runtime_error("Serialized version number is invalid "
                                     "(Sweep, Ensemble::Deserialize).");
@@ -983,7 +999,6 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                                "(Sweep, Ensemble::Deserialize).");
     }
 }
-
 
 // MEMORY MANAGEMENT.
 

@@ -118,18 +118,20 @@ Particle::Particle(const Sweep::Particle &copy)
 }
 
 /*!
- * Read particle from binary stream.  This method must read the data in
- * the same way in which it is written in Serialize.
+ * @brief Read the particle from the binary stream. 
  *
- * @param[in,out]		in		Stream from which to read
- * @param[in]			model	Particle model defining interpretation of particle data
+ * This method must read the data in the same way in which it is written in Serialize.
  *
- * @exception		invalid_argument	Stream not ready
+ * @param[in,out]	 in		             Input binary stream
+ * @param[in]        model	             Particle model defining interpretation of particle data
+ * @param[in,out]    duplicates          Addresses of PAHs for use when reading primary particles
+ *
+ * @exception		 invalid_argument    Stream not ready
  */
-Particle::Particle(std::istream &in, const Sweep::ParticleModel &model)
+Particle::Particle(std::istream &in, const Sweep::ParticleModel &model, void *duplicates)
 {
     if(in.good()) {
-        m_primary = ModelFactory::ReadPrimary(in, model);
+        m_primary = ModelFactory::ReadPrimary(in, model, duplicates);
 
         in.read(reinterpret_cast<char*>(&m_Position), sizeof(m_Position));
         in.read(reinterpret_cast<char*>(&m_PositionTime), sizeof(m_PositionTime));
@@ -657,18 +659,20 @@ void Particle::writeParticlePOVRAY(std::ofstream &out) const
 }
 
 /*!
- * @param[in,out]	out		Stream to which binary representation should be written
+ * @brief Writes the object to a binary stream
  *
- * @exception		invalid_argument	Output stream not ready
+ * @param[in,out]	 out		         Output binary stream
+ * @param[in,out]    duplicates          Addresses of PAHs that have already been serialised
+ * @exception		 invalid_argument    Output stream not ready
  *
- * @pre     IsValid returns true indicating (amongst other things) that the primary particle is initialised
+ * @pre              IsValid             returns true indicating (amongst other things) that the primary particle is initialised
  */
-void Particle::Serialize(std::ostream &out) const
+void Particle::Serialize(std::ostream &out, void *duplicates) const
 {
 	assert(IsValid());
 
     if (out.good()) {
-        ModelFactory::WritePrimary(*m_primary, out);
+        ModelFactory::WritePrimary(*m_primary, out, duplicates);
 
         // Output the data members in this class
         out.write((char*)&m_Position, sizeof(m_Position));

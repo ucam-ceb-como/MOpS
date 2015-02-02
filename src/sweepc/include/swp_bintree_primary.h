@@ -306,11 +306,11 @@ private:
 
     // SERIALISATION
     //! Serialise a BinTreePrimary node
-    virtual void SerializePrimary(std::ostream &out) const;
+    virtual void SerializePrimary(std::ostream &out, void*) const;
 
     //! Deserialise a BinTreePrimary node
     virtual void DeserializePrimary(std::istream &in,
-            const Sweep::ParticleModel &model);
+            const Sweep::ParticleModel &model, void*);
 
 };
 

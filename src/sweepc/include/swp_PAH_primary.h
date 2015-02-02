@@ -83,6 +83,12 @@ public:
     template <class ParticleClass>
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
 
+    //! For use while avoiding repeated deserialisation of a single PAH
+    typedef std::map<void*, boost::shared_ptr<PAH> > PahDeserialisationMap;
+
+    //! For use while avoiding repeated serialisation of a single PAH
+    typedef std::set<void*> PahSerialisationMap;
+
     //! Build a new primary with one molecule
     PAHPrimary(const double time, const Sweep::ParticleModel &model);
 
@@ -91,9 +97,12 @@ public:
                const Sweep::ParticleModel &model);
 
     PAHPrimary(const PAHPrimary &copy); // Copy constructor.
-    PAHPrimary(                       // Stream-reading constructor.
-        std::istream &in,                 //  - Input stream.
-        const Sweep::ParticleModel &model //  - Defining particle model.
+    
+    //! Stream-reading constructor
+    PAHPrimary(                       
+        std::istream &in,                        // Input stream
+        const Sweep::ParticleModel &model,       // Defining particle model
+        PahDeserialisationMap &pah_duplicates    // Information on duplicated PAH
         );
 
 
@@ -144,9 +153,17 @@ public:
     //! Updates the fractal dimension
     void CalcFractalDimension();
 
-    //serialize
-    void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
-    void Serialize(std::ostream &out) const;
+    //! Deserialize object from input binary stream
+    void Deserialize(std::istream &in, const Sweep::ParticleModel &model, PahDeserialisationMap &pah_duplicates);
+    
+    //! Serialize object to output binary stream
+    void Serialize(std::ostream &out, void *duplicates) const;
+
+    //! Serialise a single PAHPrimary
+    void SerializePrimary(std::ostream &out, void *duplicates) const;
+
+    //! Deserialise a single PAHPrimary
+    void DeserializePrimary(std::istream &in, const Sweep::ParticleModel &model, void *duplicates);
 
     AggModels::AggModelType AggID(void) const;
 
@@ -201,18 +218,6 @@ public:
 
     double ReducedMass()const;
 
-    //! Serialise a single PAHPrimary
-    void SerializePrimary(std::ostream &out) const;
-
-    //! Deserialise a single PAHPrimary
-    void DeserializePrimary(std::istream &in, const Sweep::ParticleModel &model);
-
-    //! For use while avoiding repeated deserialisation of a single PAH
-    typedef std::map<void*, boost::shared_ptr<PAH> > PahDeserialisationMap;
-
-    //! For use while avoiding repeated serialisation of a single PAH
-    typedef std::set<void*> PahSerialisationMap;
-
 protected:
     //! Empty primary not meaningful
     PAHPrimary();
@@ -257,8 +262,11 @@ private:
     static PAHPrimary* descendPath(PAHPrimary *here,
                                    std::stack<bool> &takeLeftBranch);
 
-    void outputPAHs(std::ostream &out) const;
-    void inputPAHs(std::istream &in, const Sweep::ParticleModel &model,  const int PAHcount);
+    //! Writes individual PAHs to a binary stream 
+    void outputPAHs(std::ostream &out, PahSerialisationMap &pah_duplicates) const;
+
+    //! Reads individual PAHs from the binary stream 
+    void inputPAHs(std::istream &in, const Sweep::ParticleModel &model,  const int PAHcount, PahDeserialisationMap &pah_duplicates);
 
     //! Set the sintering time of a tree
     void SetSinteringTime(double time);

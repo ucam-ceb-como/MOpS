@@ -77,21 +77,20 @@ public:
 
     // PRIMARY PARTICLE STREAM INPUT.
 
-    // Reads a primary particle from a binary stream.  First reads
-    // the primary type ID, in order to create a primary of the
-    // correct type.
+    //! Reads a primary particle from a binary stream. First reads the primary type ID, in order to create a primary of the correct type.
     static AggModels::Primary *const ReadPrimary(
-        std::istream &in,          // Input stream.
-        const ParticleModel &model // Defining particle model.
+        std::istream &in,              // Input stream
+        const ParticleModel &model,    // Defining particle model
+        void *duplicates               // Information on duplicate PAHs
         );
 
     // PRIMARY PARTICLE STREAM OUTPUT.
 
-    // Writes a primary particle, along with its
-    // ID, to an output stream.
+    //! Writes a primary particle, along with its ID, to an output stream
     static void WritePrimary(
-        const AggModels::Primary &pri, // Primary to write.
-        std::ostream &out   // Output stream.
+        const AggModels::Primary &pri,    // Primary to write
+        std::ostream &out,                // Output stream
+        void *duplicates                  // Information on duplicated PAHs
         );
 
 

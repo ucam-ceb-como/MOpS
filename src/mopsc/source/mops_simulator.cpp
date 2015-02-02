@@ -919,7 +919,11 @@ void Simulator::outputParticleStats(const Reactor &r) const
     stats.Serialize(m_file);
 }
 
-// Writes tracked particles to the binary output file.
+/*
+ * @brief Writes tracked particles to the binary output file.
+ *
+ * @param[in]    r    Reactor to output
+ */
 void Simulator::outputPartTrack(const Reactor &r) const
 {
     // Write the number of tracked particles.
@@ -932,8 +936,10 @@ void Simulator::outputPartTrack(const Reactor &r) const
 
     if (n > 0) {
         // Serialize the particles for tracking
+		// Provide a way to detect multiple instances of PAHs
+        std::map<void*, boost::shared_ptr<Sweep::AggModels::PAHPrimary> > duplicates;
         for (unsigned int i=0; i!=n; ++i) {
-            r.Mixture()->Particles().At(i)->Serialize(m_file);
+            r.Mixture()->Particles().At(i)->Serialize(m_file, &duplicates);
         }
     }
 }
@@ -1501,9 +1507,13 @@ void Simulator::readPartRxnDataPoint(std::istream &in, const Sweep::Mechanism &m
     }
 }
 
-// Reads the tracked particles from the binary file.  The particles are
-// processed so that only a vector of vectors is returned, which contains
-// the PSL data for each tracked particle at that point.
+/*
+ * @brief Reads the tracked particles from the binary file
+ *
+ * @param[in]        in       Input binary stream from which data is read
+ * @param[in]        mech     Mechanism defining the particle processes
+ * @param[in,out]    pdata    A vector (number of tracked particles) of vectors (PSL data) at that time point
+ */
 void Simulator::readPartTrackPoint(std::istream &in,
                                    const Sweep::Mechanism &mech,
                                    std::vector<fvector> &pdata) const
@@ -1533,9 +1543,11 @@ void Simulator::readPartTrackPoint(std::istream &in,
 
         // Read the tracked particles and retrieve the PSL stats
         // using the EnsembleStats class.
+		// Provide a way to detect multiple instances of PAHs
+        std::map<void*, boost::shared_ptr<Sweep::AggModels::PAHPrimary> > duplicates;
         i = pdata.begin();
         for (unsigned int j=0; j!=n; ++j) {
-            Sweep::Particle sp(in, mech);
+            Sweep::Particle sp(in, mech, &duplicates);
             stats.PSL(sp, mech, (double)t, *(i++), 1.0);
         }
         Sweep::Particle empty(t, mech);

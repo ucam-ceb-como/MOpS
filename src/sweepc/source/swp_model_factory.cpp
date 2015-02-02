@@ -128,14 +128,19 @@ AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelT
             return new AggModels::Primary(time, model);
     }
 }
-
-// PRIMARY PARTICLE STREAM INPUT.
-
-// Reads a primary particle from a binary stream.  First reads
-// the primary type ID, in order to create a primary of the
-// correct type.
+/*
+ * @brief PRIMARY PARTICLE STREAM INPUT.
+ *
+ * Reads the primary particle from the binary stream. First reads the primary type ID, in order to create a primary of the correct type.
+ *
+ * @param[in,out]	 in		             Input binary stream
+ * @param[in]        model	             Particle model defining interpretation of particle data
+ * @param[in,out]    duplicates          Addresses of PAHs for use when reading primary particles
+ *
+ * @exception		 invalid_argument    Either invalid model type or stream is not ready
+ */
 AggModels::Primary *const ModelFactory::ReadPrimary(std::istream &in,
-                                                    const ParticleModel &model)
+                                                    const ParticleModel &model, void *duplicates)
 {
     if (in.good()) {
         AggModels::Primary *pri = NULL;
@@ -160,8 +165,13 @@ AggModels::Primary *const ModelFactory::ReadPrimary(std::istream &in,
                 pri = new AggModels::SurfVolSilicaPrimary(in, model);
                 break;
 			case AggModels::PAH_KMC_ID:
-                pri = new AggModels::PAHPrimary(in, model);
+            {
+                // This is a dangerous conversion, but it avoids having to expose the type
+                // of the duplicate information too widely
+                AggModels::PAHPrimary::PahDeserialisationMap* pah_duplicates = reinterpret_cast<AggModels::PAHPrimary::PahDeserialisationMap*>(duplicates);
+                pri = new AggModels::PAHPrimary(in, model, *pah_duplicates);
                 break;
+            }
             case AggModels::BinTree_ID:
                 pri = new AggModels::BinTreePrimary(in, model);
                 break;
@@ -183,11 +193,18 @@ AggModels::Primary *const ModelFactory::ReadPrimary(std::istream &in,
     }
 }
 
-// PRIMARY PARTICLE STREAM OUTPUT.
-
-// Writes a primary particle, along with its
-// ID, to an output stream.
-void ModelFactory::WritePrimary(const AggModels::Primary &pri, std::ostream &out)
+/*
+ * @brief PRIMARY PARTICLE STREAM OUTPUT
+ *
+ * Writes a primary particle, along with its ID, to an output stream
+ *
+ * @param[in]        pri                 Primary particle object
+ * @param[in,out]	 out		         Output binary stream
+ * @param[in,out]    duplicates          Addresses of PAHs that have already been serialised
+ *
+ * @exception		 invalid_argument    Stream not ready
+ */ 
+void ModelFactory::WritePrimary(const AggModels::Primary &pri, std::ostream &out, void *duplicates)
 {
     if (out.good()) {
         // Write the model Serial signature type to the stream.
@@ -195,7 +212,12 @@ void ModelFactory::WritePrimary(const AggModels::Primary &pri, std::ostream &out
         out.write((char*)&type, sizeof(type));
 
         // Serialize the model object.
-        pri.Serialize(out);
+        const AggModels::PAHPrimary * pahPrimary = dynamic_cast<const AggModels::PAHPrimary*>(&pri);
+        if(pahPrimary) {
+            pahPrimary->Serialize(out, duplicates);
+        }
+        else
+            pri.Serialize(out);
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ModelFactory::WritePrimary).");

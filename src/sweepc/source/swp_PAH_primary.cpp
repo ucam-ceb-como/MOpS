@@ -346,11 +346,16 @@ PAHPrimary &PAHPrimary::operator=(const Primary &rhs)
     return *this;
 }
 
-
-// Stream-reading constructor.
-PAHPrimary::PAHPrimary(std::istream &in, const Sweep::ParticleModel &model)
+/*
+ * @brief Stream-reading constructor
+ *
+ * @param[in,out]	 in		       Input binary stream  
+ * @param[in]        model	       Particle model defining interpretation of particle data
+ * @param[in,out]    duplicates    Addresses of PAHs for use when reading primary particles
+ */ 
+PAHPrimary::PAHPrimary(std::istream &in, const Sweep::ParticleModel &model, PahDeserialisationMap &pah_duplicates)
 {
-    Deserialize(in, model);
+    Deserialize(in, model, pah_duplicates);
 }
 
 
@@ -408,11 +413,26 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
 		    m_PAH.resize(source->m_PAH.size());
             m_PAH.clear();
     for (size_t i=0; i!=source->m_PAH.size();++i){
-            boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
-            //m_PAH[i]=source->m_PAH[i]->Clone();
-            new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
-            m_PAH.push_back(new_m_PAH);
-    //plus 100000 to tell which pah is cloned and also according to Id, we could easily calculate how many times this pah duplicate
+		
+        //Create a copy of the shared pointers for PAHs in particles
+		//if (source->m_PAH.size() > 1) {
+  //          boost::shared_ptr<PAH> new_m_PAH = source->m_PAH[i];
+  //          new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+  //          m_PAH.push_back(new_m_PAH);
+  //      }
+  //      //Always create new shared pointers for single PAHs
+  //      else {
+  //          boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
+  //          new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+  //          m_PAH.push_back(new_m_PAH);
+  //      }
+		
+        //Create new shared pointers for single PAHs or PAHs in particles
+        boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
+        //m_PAH[i]=source->m_PAH[i]->Clone();
+        new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+        m_PAH.push_back(new_m_PAH);
+//    //plus 100000 to tell which pah is cloned and also according to Id, we could easily calculate how many times this pah duplicate
         }
     }
     else m_PAH.assign(source->m_PAH.begin(),source->m_PAH.end());
@@ -1736,9 +1756,15 @@ PAHPrimary *const PAHPrimary::Clone(void) const
 // Returns the aggregation model which this primary describes.
 AggModels::AggModelType PAHPrimary::AggID(void) const {return AggModels::PAH_KMC_ID;}
 
-
-// Writes the object to a binary stream.
-void PAHPrimary::Serialize(std::ostream &out) const
+/*
+ * @brief Writes a object to a binary stream
+ *
+ * @param[in,out]    out                 Output binary stream
+ * @param[in,out]    duplicates          Addresses of PAHs that have already been serialised
+ *
+ * @exception		 invalid_argument    Stream not ready
+ */
+void PAHPrimary::Serialize(std::ostream &out, void *duplicates) const
 {
     if (out.good()) {
         // Output the version ID (=0 at the moment).
@@ -1748,10 +1774,10 @@ void PAHPrimary::Serialize(std::ostream &out) const
         if (m_pmodel->WriteBinaryTrees()) {
             // Call the binary tree serialiser...
             BinTreeSerializer <PAHPrimary> tree;
-            tree.Serialize(out, this);
+            tree.Serialize(out, this, duplicates);
         } else {
             // Just serialise the root node.
-            SerializePrimary(out);
+            SerializePrimary(out, duplicates);
         }
 
     } else {
@@ -1761,10 +1787,14 @@ void PAHPrimary::Serialize(std::ostream &out) const
 }
 
 /*!
- * @brief       Writes an individual primary to binary stream
- * @param out   Output binary stream
+ * @brief Writes an individual primary to a binary stream
+ *
+ * @param[in,out]    out                 Output binary stream
+ * @param[in,out]    duplicates          Addresses of PAHs that have already been serialised
+ *
+ * @exception		 invalid_argument    Stream not ready
  */
-void PAHPrimary::SerializePrimary(std::ostream &out) const
+void PAHPrimary::SerializePrimary(std::ostream &out, void *duplicates) const
 {
     if (out.good()) {
 
@@ -1845,7 +1875,8 @@ void PAHPrimary::SerializePrimary(std::ostream &out) const
         out.write((char*)&val_int, sizeof(val_int));
 
         // write the PAH stack (m_PAH)
-        outputPAHs(out); 
+		PahSerialisationMap *pahDuplicates = reinterpret_cast<PahSerialisationMap*>(duplicates);
+        outputPAHs(out, *pahDuplicates);
 
         // Output base class.
         Primary::Serialize(out);
@@ -1857,17 +1888,21 @@ void PAHPrimary::SerializePrimary(std::ostream &out) const
 }
 
 /*
- * @param[in]    out    File handle into which to write the data
+ * @brief Writes individual PAHs to a binary stream 
+ *
+ * @param[in]        out               Output binary stream
+ * @param[in,out]    pah_duplicates    Addresses of PAHs that have already been serialised
  */
-void PAHPrimary::outputPAHs(std::ostream &out) const
+void PAHPrimary::outputPAHs(std::ostream &out, PahSerialisationMap &pah_duplicates) const
 {
     if (m_PAH.size() != 0) {
         //count the number of PAH should be serialized
         unsigned count = 0;
+		int PAHSize= m_PAH.size();
         
         // Keep a record of which PAHs have been serialised to avoid serialising the same
         // memory location twice.
-        PahSerialisationMap pahUniqueAdresses;
+        //PahSerialisationMap pahUniqueAdresses;
 
         while (count != m_PAH.size())
         {
@@ -1876,11 +1911,18 @@ void PAHPrimary::outputPAHs(std::ostream &out) const
             // deserialisation.
             void *ptr = m_PAH[count].get();
             out.write(reinterpret_cast<char*>(&ptr), sizeof(ptr));
-            if(pahUniqueAdresses.find(m_PAH[count].get()) == pahUniqueAdresses.end()) {
-                m_PAH[count]->Serialize(out);
-                pahUniqueAdresses.insert(m_PAH[count].get());
-            }
-            else {
+            //if(pahUniqueAdresses.find(m_PAH[count].get()) == pahUniqueAdresses.end()) {
+            //    m_PAH[count]->Serialize(out);
+            //    pahUniqueAdresses.insert(m_PAH[count].get());
+            //}
+            //else {
+            //    std::cout << "PAH at " << m_PAH[count].get() << " has already been serialised\n";
+            //}
+			if(pah_duplicates.find(m_PAH[count].get()) == pah_duplicates.end()){
+				m_PAH[count]->Serialize(out);
+				pah_duplicates.insert(m_PAH[count].get());
+			}
+			else {
                 //std::cout << "PAH at " << m_PAH[count].get() << " has already been serialised\n";
             }
             ++count;
@@ -1888,8 +1930,16 @@ void PAHPrimary::outputPAHs(std::ostream &out) const
     }
 }
 
-// Reads the object from a binary stream.
-void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
+/* 
+ * @brief Reads the object from a binary stream.
+ *
+ * @param[in,out]	 in		             Stream from which to read
+ * @param[in]        model	             Particle model defining interpretation of particle data
+ * @param[in,out]    duplicates          Addresses of PAHs for use when reading primary particles
+ *
+ * @exception		 invalid_argument    Stream not ready
+ */
+void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model, PahDeserialisationMap &pah_duplicates)
 {
 	if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -1901,10 +1951,10 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
         if (model.WriteBinaryTrees()) {
             // Call the binary tree serialiser...
             BinTreeSerializer <PAHPrimary> tree;
-            tree.Deserialize(in, this, model);
+            tree.Deserialize(in, this, model, &pah_duplicates);
         } else {
             // Just deserialise the root node.
-            DeserializePrimary(in, model);
+            DeserializePrimary(in, model, &pah_duplicates);
         }
     } else {
         throw invalid_argument("Input stream not ready "
@@ -1912,8 +1962,16 @@ void PAHPrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model
     }
 }
 
-
-void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel &model)
+/*
+ * @brief Reads an individual primary from the binary stream
+ *
+ * @param[in,out]	 in		             Input binary stream
+ * @param[in]        model	             Particle model defining interpretation of particle data
+ * @param[in,out]    duplicates          Addresses of PAHs for use when reading primary particles
+ *
+ * @exception		 invalid_argument    Stream not ready
+ */
+void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel &model, void *duplicates)
 {
     if (in.good()) {
 
@@ -1991,8 +2049,9 @@ void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel
         // the size of m_PAH
         const int PAHcount = val_int;
         // read the PAH stack (m_PAH)
+        PahDeserialisationMap *pahDuplicates = reinterpret_cast<PahDeserialisationMap*>(duplicates);
         if (PAHcount != 0)
-            inputPAHs(in, model, PAHcount); 
+            inputPAHs(in, model, PAHcount, *pahDuplicates);
 
         m_leftchild = NULL;
         m_rightchild = NULL;
@@ -2009,15 +2068,18 @@ void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel
 }
 
 /*
- * @param[in]    in          File handle from which to read data
- * @param[in]    model       Particle model being used
- * @param[in]    PAHcount    Number of PAHs in particle
+ * @brief Reads individual PAHs from the binary stream 
+ *
+ * @param[in]        in                Input binary stream
+ * @param[in]        model	           Particle model defining interpretation of particle data
+ * @param[in]        PAHcount          Number of PAHs in the particle
+ * @param[in,out]    pah_duplicates    Addresses of PAHs for use when reading primary particles
  */
-void PAHPrimary::inputPAHs(std::istream &in, const Sweep::ParticleModel &model, const int PAHcount)
+void PAHPrimary::inputPAHs(std::istream &in, const Sweep::ParticleModel &model, const int PAHcount, PahDeserialisationMap &pah_duplicates)
 {
     int m_count=0;
     
-    PahDeserialisationMap pahPointerMappings;
+    //PahDeserialisationMap pahPointerMappings;
     while (m_count != PAHcount)
     {
         // Raw memory location of PAH prior to serialisation.
@@ -2026,8 +2088,21 @@ void PAHPrimary::inputPAHs(std::istream &in, const Sweep::ParticleModel &model, 
         //cout << preSerializePointer;
 
         // See if this PAH has already been deserialised
-        PahDeserialisationMap::iterator searchResult = pahPointerMappings.find(preSerializePointer);
-        if(searchResult != pahPointerMappings.end())
+        //PahDeserialisationMap::iterator searchResult = pahPointerMappings.find(preSerializePointer);
+        //if(searchResult != pahPointerMappings.end())
+        //{
+        //    // Found PAH in list that has already been deserialised
+        //    m_PAH.push_back(searchResult->second);
+        //}
+        //else {
+        //    // create a new PAH to load in its details
+        //    boost::shared_ptr<PAH> new_PAH (new PAH());
+        //    new_PAH->Deserialize(in);
+        //    m_PAH.push_back(new_PAH);
+        //    pahPointerMappings.insert(std::make_pair(preSerializePointer, new_PAH));
+        //}
+        PahDeserialisationMap::iterator searchResult = pah_duplicates.find(preSerializePointer);
+        if(searchResult != pah_duplicates.end())
         {
             // Found PAH in list that has already been deserialised
             m_PAH.push_back(searchResult->second);
@@ -2037,7 +2112,7 @@ void PAHPrimary::inputPAHs(std::istream &in, const Sweep::ParticleModel &model, 
             boost::shared_ptr<PAH> new_PAH (new PAH());
             new_PAH->Deserialize(in);
             m_PAH.push_back(new_PAH);
-            pahPointerMappings.insert(std::make_pair(preSerializePointer, new_PAH));
+            pah_duplicates.insert(std::make_pair(preSerializePointer, new_PAH));
         }
         ++m_count;
     }

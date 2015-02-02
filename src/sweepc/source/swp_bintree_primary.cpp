@@ -1412,9 +1412,11 @@ void BinTreePrimary::GetAllPrimaryDiameters(fvector &diams) const
 }
 
 /*!
- * @brief       Writes a particle to the binary stream
+ * @brief Writes a particle to a binary stream
  *
- * @param out   Output stream
+ * @param[in,out]    out                 Output binary stream
+ *
+ * @exception        invalid_argument    Stream not ready
  */
 void BinTreePrimary::Serialize(std::ostream &out) const
 {
@@ -1426,10 +1428,10 @@ void BinTreePrimary::Serialize(std::ostream &out) const
         if (m_pmodel->WriteBinaryTrees()) {
             // Call the binary tree serialiser...
             BinTreeSerializer <BinTreePrimary> tree;
-            tree.Serialize(out, this);
+            tree.Serialize(out, this, NULL);
         } else {
             // Just serialise the root node.
-            SerializePrimary(out);
+            SerializePrimary(out, NULL);
         }
 
     } else {
@@ -1439,11 +1441,14 @@ void BinTreePrimary::Serialize(std::ostream &out) const
 }
 
 /*!
- * @brief       Writes an individual primary to binary stream
+ * @brief Writes an individual primary to a binary stream
  *
- * @param out   Output binary stream
+ * @param[in,out]    out                 Output binary stream
+ * @param            void                It is a pointer, but the type that it points to is not known
+ *
+ * @exception        invalid_argument    Stream not ready
  */
-void BinTreePrimary::SerializePrimary(std::ostream &out) const
+void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
 {
     if (out.good()) {
 
@@ -1489,14 +1494,16 @@ void BinTreePrimary::SerializePrimary(std::ostream &out) const
 
 
 /*!
- * @brief       Deserialise the binary tree
+ * @brief Deserialise the binary tree
  *
  * Will only deserialise the full binary tree if the particle model has
  * writing/reading of trees activated. Otherwise, it will just load the
  * root node data.
  *
- * @param in        Input binary stream
- * @param model     Particle model being used
+ * @param[in,out]    in                  Input binary stream
+ * @param[in]        model               Particle model defining interpretation of particle data
+ *
+ * @exception        invalid_argument    Stream not ready
  */
 void BinTreePrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
@@ -1511,10 +1518,10 @@ void BinTreePrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &m
         if (model.WriteBinaryTrees()) {
             // Call the binary tree serialiser...
             BinTreeSerializer <BinTreePrimary> tree;
-            tree.Deserialize(in, this, model);
+            tree.Deserialize(in, this, model, NULL);
         } else {
             // Just deserialise the root node.
-            DeserializePrimary(in, model);
+            DeserializePrimary(in, model, NULL);
         }
 
 
@@ -1525,13 +1532,17 @@ void BinTreePrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &m
 }
 
 /*!
- * @brief           Deserialise attributes of a single particle node
+ * @brief Deserialise attributes of a single particle node
  *
- * @param in        Input binary stream
- * @param model     Particle model being used
+ * @param[in,out]    in                  Input binary stream
+ * @param[in]        model               Particle model defining interpretation of particle data
+ * @param            void                It is a pointer, but the type that it points to is not known.
+ *
+ * @exception        invalid_argument    Stream not ready
  */
 void BinTreePrimary::DeserializePrimary(std::istream &in,
-        const Sweep::ParticleModel &model)
+        const Sweep::ParticleModel &model,
+        void*)
 {
     if (in.good()) {
 

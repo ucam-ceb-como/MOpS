@@ -68,12 +68,13 @@ public:
     ~BinTreeSerializer() {};
 
     /*!
-     * @brief       Serializes a particle binary tree structure
+     * @brief Serializes a particle binary tree structure
      *
-     * @param out   Output binary stream
-     * @param root  Pointer to the root node of the tree
-     */
-    void Serialize(std::ostream &out, const ParticleClass* root) const
+     * @param[in,out]    out           Output binary stream
+     * @param[in]        root          Pointer to the root node of the tree
+     * @param[in,out]    duplicates    Addresses of PAHs that have already been serialised  
+	 */
+    void Serialize(std::ostream &out, const ParticleClass* root, void *duplicates) const
     {
 
         if (out.good()) {
@@ -82,22 +83,23 @@ public:
             out.write((char*)&version, sizeof(version));
 
             // Call the recursive Serializer!
-            SerializeLoop(out, root, root);
+            SerializeLoop(out, root, root, duplicates);
 
         }
     }
 
     /*!
-     * @brief       Helper function to write the primary state space and connectivity
+     * @brief Helper function to write the primary state space and connectivity
      *
-     * @param out   Output binary stream
-     * @param root  Pointer to the root node of the tree
-     * @param node  Pointer to the node to be investigated
+     * @param[in,out]    out           Output binary stream
+     * @param[in]        root          Pointer to the root node of the tree
+     * @param[in]        node          Pointer to the node to be investigated
+     * @param[in,out]    duplicates    Addresses of PAHs that have already been serialised
      */
-    void SerializeLoop(std::ostream &out, const ParticleClass* root, const ParticleClass* node) const
+    void SerializeLoop(std::ostream &out, const ParticleClass* root, const ParticleClass* node, void *duplicates) const
     {
         // Serialize the state space first
-        node->SerializePrimary(out);
+        node->SerializePrimary(out, duplicates);
 
         // Does this primary have children?
         bool children(false);
@@ -105,8 +107,8 @@ public:
         out.write((char*)&children, sizeof(children));
 
         // Now serialize the children
-        if (children) SerializeLoop(out, root, node->m_leftchild);
-        if (children) SerializeLoop(out, root, node->m_rightchild);
+        if (children) SerializeLoop(out, root, node->m_leftchild, duplicates);
+        if (children) SerializeLoop(out, root, node->m_rightchild, duplicates);
 
         // Now write the left/right particle connectivity
         int val(0);
@@ -177,11 +179,16 @@ public:
     }
 
     /*!
-     * @brief       Deserializes a binary tree structure
-     * @param in    Input binary stream
-     * @param root  Pointer to the root node of the tree
+     * @brief Deserializes a binary tree structure
+     *
+     * @param[in,out]    in                Input binary stream
+     * @param[in]        root              Pointer to the root node of the tree
+     * @param[in]        model	           Particle model defining interpretation of particle data
+     * @param[in,out]    pah_duplicates    Addresses of PAHs for use when reading primary particles
+     *
+     * @exception        runtime_error     Incorrect version number
      */
-    void Deserialize(std::istream &in, ParticleClass *root, const Sweep::ParticleModel &model)
+    void Deserialize(std::istream &in, ParticleClass *root, const Sweep::ParticleModel &model, void *duplicates)
     {
         if (in.good()) {
             // Read version
@@ -189,7 +196,7 @@ public:
             in.read(reinterpret_cast<char*>(&version), sizeof(version));
 
             if (version == 1) {
-                DeserializeLoop(in, root, root, model);
+                DeserializeLoop(in, root, root, model, duplicates);
             } else {
                 throw std::runtime_error("Incorrect version number "
                         "(Sweep::AggModels::BinTreeSerializer::Deserialize).");
@@ -199,15 +206,19 @@ public:
     }
 
     /*!
-     * @brief       Helper function to read the state space and connectivity
-     * @param in    Input binary stream
-     * @param root  Pointer to the root node of the tree
-     * @param node  Pointer to the current node being investigated
+     * @brief Helper function to read the state space and connectivity
+     *
+     * @param[in,out]    in            Input binary stream
+     * @param[in]        root          Pointer to the root node of the tree
+     * @param[in]        node          Pointer to the current node being investigated
+     * @param[in]        model	       Particle model defining interpretation of particle data    
+     * @param[in,out]    duplicates    Addresses of PAHs for use when reading primary particles
      */
-    void DeserializeLoop(std::istream &in, ParticleClass* root, ParticleClass* node, const Sweep::ParticleModel &model)
+    void DeserializeLoop(std::istream &in, ParticleClass* root, ParticleClass* node, const Sweep::ParticleModel &model,
+                         void *duplicates)
     {
         // Read in the state space first
-        node->DeserializePrimary(in, model);
+        node->DeserializePrimary(in, model, duplicates);
 
         // Does the primary have children?
         bool children(false);
@@ -219,9 +230,9 @@ public:
             node->m_rightchild = new ParticleClass();
 
             // Read in the children
-            DeserializeLoop(in, root, node->m_leftchild, model);
+            DeserializeLoop(in, root, node->m_leftchild, model, duplicates);
             node->m_leftchild->m_parent = node;
-            DeserializeLoop(in, root, node->m_rightchild, model);
+            DeserializeLoop(in, root, node->m_rightchild, model, duplicates);
             node->m_rightchild->m_parent = node;
         }
         /*

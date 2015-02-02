@@ -89,9 +89,12 @@ public:
 
     Particle(Sweep::AggModels::Primary &pri);        // Initialising constructor (from primary).
     Particle(const Particle &copy);       // Copy constructor.
-    Particle(                             // Stream-reading constructor.
-        std::istream &in,                 //  - Input stream.
-        const Sweep::ParticleModel &model //  - Model to which this particle subscribes.
+    
+    //! Stream-reading constructor
+    Particle(
+        std::istream &in,                     // Input stream       
+        const Sweep::ParticleModel &model,    // Model to which this particle subscribes
+        void *duplicates                      // Information on duplicated PAH
         );
 
 	// Destructor.
@@ -256,7 +259,7 @@ public:
     void writeParticlePOVRAY(std::ofstream &out) const;
 
     //! Write the object to a binary stream.
-    virtual void Serialize(std::ostream &out) const;
+	virtual void Serialize(std::ostream &out, void *duplicates) const;
 
     // Deserialisation is handled through the stream reading constructor
 
