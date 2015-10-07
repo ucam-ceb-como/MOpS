@@ -96,6 +96,9 @@ namespace Sweep{
             int numofEdgeC() const;
             //! return num of site
             int numofSite() const;
+			//! return complete list of quantities for each site type
+			//! [FE, ZZ, AC, BY5, BY6, R5]
+			int* numofST() const;
             //! set number of carbon and hydrogen for particular PAH
             void setnumofC(int val);
             void setnumofH(int val);

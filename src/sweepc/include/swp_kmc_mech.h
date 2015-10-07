@@ -278,7 +278,39 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
-}
+	// ID22 R5 oxidation by O2 (wj250)
+	class O5R_R5_O2 : public Sweep::KMC_ARS::JumpProcess { //R5 oxidation by O2 (wj250)
+    public:
+        double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+	// ID23 R5 oxidation by OH2 (wj250)
+	class O5R_R5_OH : public Sweep::KMC_ARS::JumpProcess { //R5 oxidation by OH (wj250)
+    public:
+        double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+	};
+	// ID24 R6 desorption on AC (wj250) 
+	 class D6R_AC : public Sweep::KMC_ARS::JumpProcess { //R6 desorption on AC
+    public:
+		 double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+	 // ID25 Addition of acetylene onto an embedded 5-membered ring (GR6_ACBY5) (wj250) 
+	 class GR6_ACBY5 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption on AC
+    public:
+		 double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+	}
 
 }
 

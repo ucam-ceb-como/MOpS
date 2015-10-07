@@ -258,7 +258,8 @@ int main(int argc, char *argv[])
                     1,//no_of_steps,
                     rng,
                     1,
-                    ID+i);
+                    ID+i,
+					0);
                 if(save_CH) {
                     CH_counts.push_back(pahp.getCHCount());
                 }

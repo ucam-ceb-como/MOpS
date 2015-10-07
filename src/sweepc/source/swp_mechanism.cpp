@@ -872,7 +872,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
  */
 void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng) const
 {
-    // Deal with the growth of the PAHs
+	    // Deal with the growth of the PAHs
     if (AggModel() == AggModels::PAH_KMC_ID)
     {
         // Calculate delta-t and update particle time.

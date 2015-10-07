@@ -60,11 +60,41 @@
 #include "string_functions.h"
 #include "swp_kmc_simulator.h"
 
-
 using namespace std;
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
 using namespace Strings;
+
+// Necessary for reaction count output
+#include <boost/filesystem.hpp>
+int JP_type;
+
+// Overall count of JPs //(wj250)
+int JPs [22] = {0};
+int JP_ID1 = 0;
+int JP_ID2 = 0;
+int JP_ID3= 0;
+int JP_ID4 = 0;
+int JP_ID5 = 0;
+int JP_ID6 = 0;
+int JP_ID7 = 0;
+int JP_ID8 = 0;
+int JP_ID9 = 0;
+int JP_ID10 = 0;
+int JP_ID11 = 0;
+int JP_ID12 = 0;
+int JP_ID13 = 0;
+int JP_ID14 = 0;
+int JP_ID15 = 0;
+int JP_ID16 = 0;
+int JP_ID17 = 0;
+int JP_ID18 = 0;
+int JP_ID19 = 0;
+int JP_ID20 = 0;
+int JP_ID21 = 0;
+int JP_ID22 = 0;
+int JP_ID23 = 0;
+int JP_ID24 = 0;
 
 // Default names for CSV outputs if not specified
 std::string default_timer_csv = "KMC_Model/PAH_loop_timer.csv";
@@ -141,12 +171,43 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
                             const int waitingSteps,  
                             rng_type &rng,
                             double r_factor,
-                            int PAH_ID) {
+                            int PAH_ID,
+							const double t)		{
 	// wjm34: remove call to initReaction count to save time in updating.
     //initReactionCount();
     m_t = tstart;
     double t_max = m_t + dt;
     targetPAH(*pah);
+
+	// Set up Output CSV file and include header
+	static int Counter1;
+	if(Counter1 == 0){
+		if (boost::filesystem::exists("surfaceGrowthProcessCounter.csv")) {
+			remove("surfaceGrowthProcessCounter.csv");
+		}
+		if (boost::filesystem::exists("surfaceGrowthProcessCounter_detailed.csv")) {
+			remove("surfaceGrowthProcessCounter_detailed.csv");
+		}
+		
+		// Output file with JP overview
+		std::ofstream outfile1;
+		outfile1.open("surfaceGrowthProcessCounter.csv", std::ios_base::app);
+
+		outfile1 << "t" << ", " << "JP_ID24" << ", ";
+		outfile1 << "t" << ", " << "JP_ID1" << ", " << "JP_ID2" << ", " 	<< "JP_ID3" << ", " 	<< "JP_ID4" << ", " 
+				 << "JP_ID5" << ", " << "JP_ID6" << ", " << "JP_ID7" << ", " << "JP_ID8" << ", " 
+				 << "JP_ID9" << ", " << "JP_ID10" << ", " << "JP_ID11" << ", " << "JP_ID12" << ", " 
+				 << "JP_ID13" << ", " << "JP_ID14" << ", "	<< "JP_ID15" << ", " << "JP_ID16" << ", " 
+				 << "JP_ID17" << ", " << "JP_ID18" << ", " << "JP_ID19" << ", " << "JP_ID20" << ", " << "JP_ID21" << ", " << "JP_ID22" << ", " << "JP_ID23" <<" , " << "JP_ID24" <<"\n";
+		outfile1.close();
+
+		Counter1++;
+	}
+	
+
+
+
+
     /*if(m_simPAHp.checkCoordinates())
         cout<<"Coordinates of structure OK. Commencing updatePAH..\n";
     else {
@@ -201,7 +262,7 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             // Update data structure
 
             // Allow for the removal of benzene (A1) when a 6-member ring desorption on a free-edge site (Jump process ID 5), or a 6-member ring oxidation by OH or O2 on a free-edge site is chosen (Jump process ID 6 and 7, respectively)
-            // Made invalid by setting the number of carbons to 5
+            // Made invalid by setting the number of carbons to 5 >> there is a function in which is hardcoded called invalidpah which deletes pahs which does not satisfy certain parameter hence we can delete this 6 membered ring.
             // Break loop before jump process may be performed 
 			if (pah->numofC() == 6 && (jp_perf.first->getID() == 5 || jp_perf.first->getID() == 6 || jp_perf.first->getID() == 7)){
 				m_simPAH->setnumofC(5);
@@ -209,6 +270,107 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
 			}
 
             m_simPAHp.performProcess(*jp_perf.first, rng);
+
+			//These commands are for the production of a CSV file with the counter for each jump processes // Surfacegrowthcounter // surface growth counter (wj250)
+
+
+			JP_type = jp_perf.first->getID();{
+				if (JP_type == 1){			// 1- R6 Growth on AC
+					JPs[0] ++;
+					JP_ID1++;}
+				else if (JP_type == 2){		// 2- R6 Growth on FE
+					JPs[1] ++;
+					JP_ID2++;}
+				else if (JP_type == 3){		// 3- BY6 closure
+					JPs[2] ++;
+					JP_ID3++;}
+				else if (JP_type == 4){		// 4- phenyl addition
+					JPs[3] ++;
+					JP_ID4++;}
+				else if (JP_type == 5){		// 5- R6 Desorption at FE
+					JPs[4] ++;
+					JP_ID5++;}
+				else if (JP_type == 6){		// 6- R6 Oxidation at FE by O2
+					JPs[5] ++;
+					JP_ID6++;}
+				else if (JP_type == 7){		// 7- R6 Oxidation at FE by OH
+					JPs[6] ++;
+					JP_ID7++;}
+				else if (JP_type == 8){		// 8- R6 Oxidation at AC by O2
+					JPs[7] ++;
+					JP_ID8++;}
+				else if (JP_type == 9){		// 9- R6 Oxidation at AC by OH
+					JPs[8] ++;
+					JP_ID9++;}
+				else if (JP_type == 10){	// 10- R5 growth at ZZ
+					JPs[9] ++;
+					JP_ID10++;}
+				else if (JP_type == 11){	// 11- R5 desorption
+					JPs[10] ++;
+					JP_ID11++;}
+				else if (JP_type == 12){	// 12- R6 conversion to R5
+					JPs[11] ++;
+					JP_ID12++;}
+				else if (JP_type == 13){	// 13- R5 conversion to R6 on FE
+					JPs[12] ++;
+					JP_ID13++;}
+				else if (JP_type == 14){	// 14- R5 conversion to R6 on AC
+					JPs[13] ++;
+					JP_ID14++;}
+				else if (JP_type == 15){	// 15- R5 migration to neighbouring ZZ
+					JPs[14] ++;
+					JP_ID15++;}
+				else if (JP_type == 16){	// 16- R6 migration & conversion to R5 at BY5
+					JPs[15] ++;
+					JP_ID16++;}
+				else if (JP_type == 17){	// 17- R6 migration & conversion to R5 at BY5
+					JPs[16] ++;
+					JP_ID17++;}
+				else if (JP_type == 18){	// 18- BY5 closure
+					JPs[17] ++;
+					JP_ID18++;}
+				else if (JP_type == 19){	// 19- R6 desorption at bay -> pyrene
+					JPs[18] ++;
+					JP_ID19++;}
+				else if (JP_type == 20){	// 20- R6 Oxidation at ZZ by OH
+					JPs[19] ++;
+					JP_ID20++;}
+				else if (JP_type == 21){	// 21- R6 Oxidation at ZZ
+					JPs[20] ++;
+					JP_ID21++;}	
+				else if (JP_type == 22){	// 22- R5 Oxidation at ZZ by O2
+					JPs[21] ++;
+					JP_ID22++;}	
+				else if (JP_type == 23){	// 23- R5 Oxidation at ZZ by OH
+					JPs[22] ++;
+					JP_ID23++;}		
+				else if (JP_type == 24){	// 24- R6 desporption on AC
+					JPs[23] ++;
+					JP_ID24++;}		
+			}
+
+
+	// Short output CSV  //(wj250)
+			//cout << "\n";
+			std::ofstream outfile1;
+			outfile1.open("surfaceGrowthProcessCounter.csv", std::ios_base::app);
+			outfile1 << t << ", ";
+			for (int i=23; i<24; i++){
+				outfile1 << JPs [i] << ", ";
+			}
+			outfile1 << t;
+			outfile1 << ", " << JP_ID1 << ", " << JP_ID2 << ", " << JP_ID3 << ", " << JP_ID4 << ", " << JP_ID5 << ", " << JP_ID6 << ", " << JP_ID7 << ", " << JP_ID8 << ", " << JP_ID9 << ","
+					<< JP_ID10 << ", " << JP_ID11 << ", " << JP_ID12 << ", " << JP_ID13 << ", " << JP_ID14 << ", " << JP_ID15 << ", " << JP_ID16 << ", " << JP_ID17 << ", " << JP_ID18 << ", " << JP_ID19 << ", "
+					<< JP_ID20 << ", "<< JP_ID21 << ", "<< JP_ID22 << ", " << JP_ID23 << ", " << JP_ID24 <<"\n";
+			outfile1.close();
+
+			//std::ostringstream dotname;
+            //dotname << "KMC_DEBUG/p_" << (t_next*1e8) << ".dot";
+            //m_simPAHp.saveDOT(dotname.str());
+
+			/*
+            // Update data structure
+
 
             /*if(m_simPAH->m_parent->ID() % 100000 == 609) {
             if(!m_simPAHp.checkCoordinates()) {
@@ -221,7 +383,8 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             if(process_success) {
                 m_rxn_count[jp_perf.second]++;
             }*/
-        }else {
+        }
+	else {
             //oldtnext = t_next;
             t_next = m_t+t_step_max;
         }
@@ -331,7 +494,7 @@ void KMCSimulator::setCSVtimerName(const std::string& filename) {
 void KMCSimulator::setCSVreactioncountName(const std::string& filename) {
     m_rxncount_name = filename;
 }
-//! Set output CSV file name to keep track of CH and site counts
+ //! Set output CSV file name to keep track of CH and site counts
 void KMCSimulator::setCSVpahlistName(const std::string &filename) {
     m_pahlist_name = filename;
 }
@@ -379,11 +542,11 @@ void KMCSimulator::writeCHSiteCountCSV() {
 }
 //! Writes data for rates count (csv)
 void KMCSimulator::writeRatesCSV(double& time, rvector& v_rates) {
-    int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21};
+    int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23};
     //int convM[] = {1, 2,14,15, 8,10,11,12,13, 3, 7, 9, 5, 4, 6,22,24,16,21};
     int ID;
     //if(runNo==1) {
-    int total_jp = 21;
+    int total_jp = 23;
     std::vector<double> temp(total_jp+1,0);
     temp[0] = time;
     for(int i=0; i!=(int)v_rates.size(); i++) {

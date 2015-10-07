@@ -2296,6 +2296,15 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         header.push_back("#Rings6");
         header.push_back("#Rings5");
         header.push_back("#EdgeC");
+		header.push_back("#FE");  //(wj250)
+		header.push_back("#ZZ");//(wj250)
+		header.push_back("#AC");//(wj250)
+		header.push_back("#BY5");//(wj250)
+		header.push_back("#BY6");//(wj250)
+		header.push_back("#R5");//(wj250)
+		header.push_back("#FE2");
+		header.push_back("#FE3");
+		header.push_back("#FE_HACA");
         header.push_back("Mass(u)");
         header.push_back("Mass(kg)");
         header.push_back("PAHCollDiameter (m)");

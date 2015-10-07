@@ -1000,7 +1000,7 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
  */
 void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Cell &sys, rng_type &rng)
 {
-    // Either the primary has two children or it is a leaf of the
+	    // Either the primary has two children or it is a leaf of the
     // tree
     if (m_leftchild!=NULL)
     {
@@ -1050,7 +1050,7 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
             // Here updatePAH function in KMC_ARS model is called.
             // waitingSteps is set to be 1 by dc516, details seeing KMCSimulator::updatePAH()
             sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1,
-                                                   rng, growthfact, (*it)->PAH_ID);
+                                                   rng, growthfact, (*it)->PAH_ID, t);
 
             (*it)->lastupdated=t;
 
@@ -1358,6 +1358,9 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
     {
         int num_C=0;
         int num_H=0;
+		// pointer to quantities of each site type returned from numofST()
+		// [FE, ZZ, AC, BY5, BY6, R5]
+		int *quant;
         double val=0.0;
         double m_mass=0.0;
         double PAHCollDiameter=0.0;
@@ -1371,6 +1374,14 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
         temp.push_back(m_PAH[i]->m_pahstruct->numofRings());
         temp.push_back(m_PAH[i]->m_pahstruct->numofRings5());
         temp.push_back(m_PAH[i]->m_pahstruct->numofEdgeC());
+		quant = m_PAH[i]->m_pahstruct->numofST();
+		for (int j=0;j<9;j++)
+		{
+			// cout << quant[j] << "\n";
+			temp.push_back(quant[j]);
+			// reset static ST_array[j] value
+			quant[j]=0;
+		}
 
         // PAH mass (u)
         val = 12*num_C + num_H;
@@ -1406,6 +1417,9 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
         // index of PAH
         val = m_PAH[i]->PAH_ID;
         temp.push_back(val);
+
+		// Print out files for plotting PAH structures
+		m_PAH[i]->saveDOTperLoop(m_PAH[i]->PAH_ID,index);
 
         out.push_back(temp);
         temp.clear();

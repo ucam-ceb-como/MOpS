@@ -1327,7 +1327,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
-        //cout << "Pyrene Initialised!\n";
+        //cout << "Pyrene Initialized!\n";
         break;
     case BENZOPYRENE_C:
         // add first C atom
@@ -1709,9 +1709,19 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
         case 5:
             proc_D6R_FE3(site_perf, site_C1, site_C2); break;
         case 6:
-            proc_O6R_FE3_O2(site_perf, site_C1, site_C2); break;
+            //dotname << "KMC_DEBUG/" << site_perf->C1 << "_1.dot";
+            //dotname2 << "KMC_DEBUG/" << site_perf->C1 << "_2.dot";
+			//saveDOT(dotname.str());
+			proc_O6R_FE3_O2(site_perf, site_C1, site_C2);
+			//saveDOT(dotname2.str());
+			break;
         case 7:
-            proc_O6R_FE3_OH(site_perf, site_C1, site_C2); break;
+			//dotname << "KMC_DEBUG/" << site_perf->C1 << "_1.dot";
+            //dotname2 << "KMC_DEBUG/" << site_perf->C1 << "_2.dot";
+			//saveDOT(dotname.str());
+            proc_O6R_FE3_OH(site_perf, site_C1, site_C2); 
+			//saveDOT(dotname2.str());
+			break;
         case 8:
             proc_O6R_FE_HACA_O2(site_perf, site_C1, site_C2); break;
         case 9:
@@ -1719,7 +1729,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
         case 10:
             proc_G5R_ZZ(site_perf, site_C1, site_C2); break;
         case 11:
-            proc_D5R_R5(site_perf, site_C1, site_C2); break;
+           // proc_D5R_R5(site_perf, site_C1, site_C2); break;
         case 12:
             proc_C6R_AC_FE3(site_perf, site_C1, site_C2, rng); break;
         case 13:
@@ -1733,14 +1743,39 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
         case 17:
             proc_C6R_BY5_FE3violi(site_perf, site_C1, site_C2, rng); break;
         case 18:
-            proc_L5R_BY5(site_perf, site_C1, site_C2); break;
+			//dotname << "KMC_DEBUG/" << site_perf->C1 << "_1.dot";
+            //dotname2 << "KMC_DEBUG/" << site_perf->C1 << "_2.dot";
+			//saveDOT(dotname.str());
+            proc_L5R_BY5(site_perf, site_C1, site_C2); 
+			//saveDOT(dotname2.str());
+			break;
         case 19:
             proc_M6R_BY5_FE3(site_perf, site_C1, site_C2, rng); break;
         case 20:
+			//dotname << "KMC_DEBUG/" << site_perf->C1 << "_1.dot";
+            //dotname2 << "KMC_DEBUG/" << site_perf->C1 << "_2.dot";
+			//saveDOT(dotname.str());
             proc_O6R_FE2(site_perf, site_C1, site_C2);
+		    //saveDOT(dotname2.str());
             break;
         case 21:
             proc_O6R_FE2(site_perf, site_C1, site_C2); break;
+		case 22:
+			//dotname << "KMC_DEBUG/" << site_perf->C1 << "_1.dot";
+            //dotname2 << "KMC_DEBUG/" << site_perf->C1 << "_2.dot";
+			//saveDOT(dotname.str());
+			proc_O5R_R5_O2(site_perf, site_C1, site_C2); 
+			//saveDOT(dotname2.str());
+			break;
+		case 23: 
+			//dotname << "KMC_DEBUG/" << site_perf->C1 << "_1.dot";
+           //dotname2 << "KMC_DEBUG/" << site_perf->C1 << "_2.dot";
+			//saveDOT(dotname.str());
+			proc_O5R_R5_OH(site_perf, site_C1, site_C2); 
+			//saveDOT(dotname2.str());
+			break;
+		case 24: 
+			proc_D6R_AC(site_perf, site_C1, site_C2); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -2116,7 +2151,7 @@ void PAHProcess::proc_O6R_FE3_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 void PAHProcess::proc_O6R_FE3_OH(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     proc_D6R_FE3(stt, C_1, C_2);
-}
+		}
 // ************************************************************
 // ID8- R6 oxidation at AC by O2 (AR12 in Matlab)
 // ************************************************************
@@ -2620,11 +2655,12 @@ void PAHProcess::proc_C6R_BY5_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2
     proc_C6R_BY5_FE3(stt, C_1, C_2, rng);
 }
 // ************************************************************
-// ID18- BY5 closure (AR16 in Matlab)
+// ID18- BY5 closure (AR16 in Matlab) (wj250) (TBC)
 // ************************************************************
 void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     cout<<"WARNING: BY5 closure called. Process not specified yet.\n";
 }
+
 // ************************************************************
 // ID19- R6 desorption at bay -> pyrene (AR21 in Matlab)
 // ************************************************************
@@ -2775,6 +2811,31 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     addCount(0,-1);
     m_pah->m_rings--;
     //saveDOT(dotname2.str());
+}
+// ************************************************************
+// ID22- R5 oxidation by O2 (wj250)
+// ************************************************************
+void PAHProcess::proc_O5R_R5_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+    proc_D5R_R5(stt, C_1, C_2);
+}
+// ************************************************************
+// ID23- R5 oxidation by OH (wj250)
+// ************************************************************
+void PAHProcess::proc_O5R_R5_OH(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+    proc_D5R_R5(stt, C_1, C_2);
+}
+// 
+// ************************************************************
+// ID24- R6 desorption at AC (wj250)
+// ************************************************************
+void PAHProcess::proc_D6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+    proc_O6R_FE_HACA_O2(stt, C_1, C_2);
+}
+// ************************************************************
+// ID25- Addition of acetylene onto an embedded 5-membered ring (GR6_ACBY5) (wj250) (TBC)
+// ************************************************************
+void PAHProcess::proc_GR6_ACBY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+    cout<<"WARNING: C2H2 addition on BY5 closure called. Process not specified yet.\n";
 }
 
 size_t PAHProcess::SiteListSize() const {

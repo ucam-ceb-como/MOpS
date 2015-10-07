@@ -164,6 +164,44 @@ int PAHStructure::numofSite() const
 {
     return m_siteList.size();
 }
+
+// Extract quantities for all site types for detailed JP analysis
+int* PAHStructure::numofST() const
+{	
+	//  Array has be static to allow access from swp_PAH_primary.cpp to write in Excel Sheet
+	static int ST_array[9]={0};
+	std::string st;
+	std::string cb;
+	std::list<Site>::const_iterator i;
+	for(i=m_siteList.begin(); i!=m_siteList.end(); i++) 
+	{	
+		// convert site type into string
+		// "standard" site types
+		st = kmcSiteName(i->type);
+		if (st == "FE") 
+			{	++ST_array[0];	}
+		else if (st == "ZZ") 
+			{	++ST_array[1];	}
+		else if (st == "AC") 
+			{	++ST_array[2];	}
+		else if (st == "BY5") 
+			{	++ST_array[3];	}
+		else if (st == "BY6") 
+			{	++ST_array[4];	}
+		else if (st == "R5") 
+			{	++ST_array[5];	}
+		// combined site
+		cb = kmcSiteName(i->comb);
+		if (cb == "FE2") 
+			{	++ST_array[6];	}
+		else if (cb == "FE3") 
+			{	++ST_array[7];	}
+		else if (cb == "FE_HACA") 
+			{	++ST_array[8];	}
+	}
+	return ST_array;
+}
+
 void PAHStructure::setnumofC(int val)
 {
     m_counts.first=val;

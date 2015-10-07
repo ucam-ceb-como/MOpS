@@ -128,7 +128,8 @@ namespace Sweep{
                            const int waitingSteps,  // waiting step used to calculate maximum time interval, currently use 1. 
                            rng_type &rng,
                            double r_factor,     // growth factor g, one important parameter used in this model.
-                           int PAH_ID);       // ID of this pah, used for debugging.
+                           int PAH_ID,			// ID of this pah, used for debugging..
+						   const double t);     // current time
             //! Outputs rates into a csv file (assuming all site counts as 1)
             void TestRates(const double tstart, const double tstop, const int intervals);
             //! Obtains rates of PAH reactions with the current structure
