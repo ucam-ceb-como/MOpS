@@ -102,7 +102,7 @@ std::vector<std::pair<double, double> >
                 msg += "> must be supplied without an x attribute";
                 throw std::runtime_error(msg);
             }
-            profile.push_back(std::make_pair<double, double>(x, value));
+            profile.push_back(std::make_pair(x, value));
         }
     }
     return profile;
