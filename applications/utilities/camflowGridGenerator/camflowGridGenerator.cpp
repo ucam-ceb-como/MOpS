@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iomanip>
 #include <numeric>
+#include <iostream>
 
 using namespace boost::program_options;
 using namespace boost::math;
