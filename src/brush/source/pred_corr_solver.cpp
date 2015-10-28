@@ -345,7 +345,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const double
     // Loop over each cell updating particles positions and removing any
     // particles that are moving to new cells.
 #pragma omp parallel for schedule(dynamic)
-    for(unsigned int i = 0; i < numCells; ++i) {
+    for(long int i = 0; i < numCells; ++i) {
         Sweep::Cell &mix = reac.getCell(i);
 
         // Flamelet advection needs some information on adjoining cells to calculate gradients
@@ -383,7 +383,7 @@ void Brush::PredCorrSolver::splitParticleTransport(Reactor1d &reac, const double
     // have been calculated.
 
 #pragma omp parallel for schedule(dynamic)
-    for(size_t i = 0; i < numCells; ++i) {
+    for(long int i = 0; i < numCells; ++i) {
         // i is the index of the destination cell
 
         // Build up a list of particle pointers to pass into the cell
