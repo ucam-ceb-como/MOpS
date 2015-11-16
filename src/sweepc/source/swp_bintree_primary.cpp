@@ -856,6 +856,12 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         m_vol           = m_leftchild->m_vol + m_rightchild->m_vol;
         m_mass          = m_leftchild->m_mass + m_rightchild->m_mass;
 
+		////////////////////// added this to correctly update m_children_radius used for sintering /////csl37-surface
+		if (m_leftparticle!=NULL  && m_rightparticle!=NULL){
+		m_children_radius   = pow(3.0/(4.0*PI)*(m_leftparticle->m_vol + m_rightparticle->m_vol),(ONE_THIRD));
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////
+
         // Calculate the sintering level of the two primaries connected by this node
         m_children_sintering = SinteringLevel();
         if (m_children_sintering > 0.95) CheckSintering();
@@ -1584,3 +1590,47 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
                                "(Sweep, BinTreePrimary::DeserializePrimary).");
     }
 }
+
+/////////////////////////////////////////////////////////////////////// csl37-pp
+/*!
+ * Works down the binary tree and outputs surface area
+ * common to both children unless it is a leaf node (a primary).
+ */
+void BinTreePrimary::PrintPrimary(vector<fvector> &surface, fvector &primary_diameter, int k) const
+{
+	fvector primary(8);	
+
+	if ((m_leftchild==NULL) && (m_rightchild==NULL)){
+		//if leaf then print diameter
+		primary_diameter.push_back(m_diam);
+		if (m_parent == NULL){	//single particle case
+			primary[0] = k+1;
+			primary[1] = m_numprimary;
+			primary[2] = 0.0;
+			primary[3] = 1.0;
+			primary[4] = m_diam;
+			primary[5] = 0.0;	
+			primary[6] = reinterpret_cast<uintptr_t>(this);
+			primary[7] = 0.0;
+
+			surface.push_back(primary);
+		}
+	} else {
+		//if non-leaf node then print node and continue down the tree
+		primary[0] = k+1;
+		primary[1] = m_numprimary;
+		primary[2] = m_children_surf;
+		primary[3] = m_children_sintering;
+		primary[4] = m_leftparticle->m_diam;
+		primary[5] = m_rightparticle->m_diam;	
+		primary[6] = reinterpret_cast<uintptr_t>(m_leftparticle);
+		primary[7] = reinterpret_cast<uintptr_t>(m_rightparticle);
+		
+		surface.push_back(primary);
+		
+		m_leftchild->PrintPrimary(surface, primary_diameter, k);
+		m_rightchild->PrintPrimary(surface, primary_diameter, k);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////
