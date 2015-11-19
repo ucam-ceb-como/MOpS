@@ -2202,7 +2202,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	fvector primary_diameter;
 	CSV_IO surfout(m_output_filename + "-primary-surface.csv", true);
 	CSV_IO diamout(m_output_filename + "-primary-diameter.csv", true);
-	//////////////////////////////////////////
+	///////////////////////////////////////////
 
     // Get reference to the particle mechanism.
     const Sweep::Mechanism &pmech = mech.ParticleMech();

@@ -524,6 +524,7 @@ double BinTreePrimary::SinteringLevel()
         // Calculate the spherical surface
         const double spherical_surface =
                 4 * PI * m_children_radius * m_children_radius;
+		
         double slevel(0.0);
 
         if (m_children_surf == 0.0) {
@@ -588,7 +589,6 @@ bool BinTreePrimary::CheckSintering()
  */
 BinTreePrimary &BinTreePrimary::Merge()
 {
-
     // Make sure this primary has children to merge
     if( m_leftchild!=NULL) {
         if (m_leftchild==m_leftparticle && m_rightchild==m_rightparticle)
@@ -856,15 +856,15 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         m_vol           = m_leftchild->m_vol + m_rightchild->m_vol;
         m_mass          = m_leftchild->m_mass + m_rightchild->m_mass;
 
-		////////////////////// added this to correctly update m_children_radius used for sintering /////csl37-surface
-		if (m_leftparticle!=NULL  && m_rightparticle!=NULL){
-		m_children_radius   = pow(3.0/(4.0*PI)*(m_leftparticle->m_vol + m_rightparticle->m_vol),(ONE_THIRD));
+		////////////////////// added this to correctly update m_children_radius used for sintering //////////csl37-surface
+		if ((m_leftparticle!=NULL) && (m_rightparticle!=NULL)){
+			m_children_radius = pow((3.0/(4.0*PI))*(m_leftparticle->Volume() + m_rightparticle->Volume()),(ONE_THIRD));	
 		}
 		/////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Calculate the sintering level of the two primaries connected by this node
-        m_children_sintering = SinteringLevel();
-        if (m_children_sintering > 0.95) CheckSintering();
+        m_children_sintering = SinteringLevel();		
+		if (m_children_sintering > 0.95) CheckSintering();
 
         // Sum up the avg sintering level (now that sintering is done)
         if((m_leftchild != NULL) && (m_rightchild != NULL)) {
@@ -879,7 +879,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         // Calculate the different diameters only for the root node because
         // this is the only part of the tree seen by the other code, for
         // example, the coagulation kernel
-        if (this == root) {
+        if (this == root ) {
              // Get spherical equivalent radius and diameter
             double spherical_radius = pow(3 * m_vol / (4*PI), ONE_THIRD);
             m_diam = 2 * spherical_radius;
@@ -1109,6 +1109,11 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 
     // Update property cache.
     UpdateCache(this);
+	/////////csl37 - update here instead of in updateparents which causes memory issue
+	if (m_parent != NULL) {
+	    m_parent->UpdateCache();
+	}
+	////////////
     return n;
 
 }
@@ -1122,7 +1127,7 @@ void BinTreePrimary::UpdateParents(double dS) {
     if (m_parent != NULL) {
         m_parent->m_children_surf += dS;
         m_parent->m_children_sintering = m_parent->SinteringLevel();
-        m_parent->UpdateCache();
+        //m_parent->UpdateCache();	//csl37 - causing crash if merger occurs
     }
 }
 
@@ -1632,5 +1637,4 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, fvector &primary_dia
 		m_rightchild->PrintPrimary(surface, primary_diameter, k);
 	}
 }
-
 ////////////////////////////////////////////////////////////////////////
