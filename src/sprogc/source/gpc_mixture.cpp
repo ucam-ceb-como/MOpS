@@ -164,9 +164,9 @@ void Mixture::GetConcs(fvector &concs) const
 
     // Loop over all mole fractions and convert to concentrations.
 	//************************************************************//csl37-const-pressure
-    //const double density = m_data[densityIndex()];
+    const double density = m_data[densityIndex()];
 	//************************************************************maintain pressure at constant 1 atm
-	const double density = 101325/ (R * Temperature());
+	//const double density = 101325/ (R * Temperature());
 	//************************************************************
     for (unsigned int i = 0; i != gasSpeciesCount; ++i) {
         concs[i] = m_data[i] * density;
@@ -251,9 +251,9 @@ double Mixture::MolarConc(unsigned int i) const
 {
     if (i < gasSpeciesCount) {
 		//************************************************************//csl37-const-pressure
-        //return m_data[i] * m_data[densityIndex()];
+        return m_data[i] * m_data[densityIndex()];
 		//************************************************************maintain pressure at constant 1 atm
-		return m_data[i] * 101325/ (R * Temperature());
+		//return m_data[i] * 101325/ (R * Temperature());
 		//************************************************************
     } 
 	else {
@@ -593,9 +593,9 @@ void Mixture::Normalise()
 double Mixture::Density() const
 {
 	//************************************************************//csl37-const-pressure
-    //return m_data[densityIndex()];
+    return m_data[densityIndex()];
 	//************************************************************maintain pressure at constant 1 atm
-	return 101325/ (R * Temperature());
+	//return 101325/ (R * Temperature());
 	//************************************************************
 }
 
@@ -610,9 +610,9 @@ double Mixture::MassDensity() const
         rho += m_data[i] * (*m_species)[i]->MolWt();
     }
 	//************************************************************//csl37-const-pressure
-    //rho *= m_data[densityIndex()];
+    rho *= m_data[densityIndex()];
 	//************************************************************maintain pressure at constant 1 atm
-	rho *= 101325/ (R * Temperature());
+	//rho *= 101325/ (R * Temperature());
 	//************************************************************
     return rho;
 }
@@ -621,9 +621,9 @@ double Mixture::MassDensity() const
 void Mixture::SetDensity(double dens)
 {
 	//************************************************************//csl37-const-pressure
-    //m_data[densityIndex()] = dens;
+    m_data[densityIndex()] = dens;
 	//************************************************************maintain pressure at constant 1 atm
-	m_data[densityIndex()] = 101325/ (R * Temperature());
+	//m_data[densityIndex()] = 101325/ (R * Temperature());
 	//************************************************************
 }
 
