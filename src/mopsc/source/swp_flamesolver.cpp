@@ -332,8 +332,16 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     double t  = r.Time();
     dtg     = tstop - t;
 
+	///////////////////////////////csl37-flamepp-fix 
+	double old_density = r.Mixture()->GasPhase().MassDensity();
+	///////////////////////////////
+
     // Set the chemical conditions.
     linInterpGas(t, r.Mixture()->GasPhase());
+
+	///////////////////////////////csl37-flamepp-fix -- Must adjust sample volume after setting chemical conditions
+	r.Mixture()->AdjustSampleVolume(old_density / r.Mixture()->GasPhase().MassDensity());
+	///////////////////////////////
 
     // Loop over time until we reach the stop time.
     while (t < tstop)

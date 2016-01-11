@@ -856,7 +856,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         m_vol           = m_leftchild->m_vol + m_rightchild->m_vol;
         m_mass          = m_leftchild->m_mass + m_rightchild->m_mass;
 
-		////////////////////// added this to correctly update m_children_radius used for sintering //////////csl37-surface
+		//////////////////////correctly updates m_children_radius used for sintering //////////csl37-surface
 		if ((m_leftparticle!=NULL) && (m_rightparticle!=NULL)){
 			m_children_radius = pow((3.0/(4.0*PI))*(m_leftparticle->Volume() + m_rightparticle->Volume()),(ONE_THIRD));	
 		}
@@ -1109,7 +1109,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 
     // Update property cache.
     UpdateCache(this);
-	/////////csl37 - update here instead of in updateparents which causes memory issue
+	/////////csl37-memory-fix -- update cache here instead of in UpdateParents which causes memory issue
 	if (m_parent != NULL) {
 	    m_parent->UpdateCache();
 	}
@@ -1127,7 +1127,7 @@ void BinTreePrimary::UpdateParents(double dS) {
     if (m_parent != NULL) {
         m_parent->m_children_surf += dS;
         m_parent->m_children_sintering = m_parent->SinteringLevel();
-        //m_parent->UpdateCache();	//csl37 - causing crash if merger occurs
+        //m_parent->UpdateCache();	//csl37-memory-fix -- causing memory error if merger event occurs (parent cache updated elsewhere)
     }
 }
 

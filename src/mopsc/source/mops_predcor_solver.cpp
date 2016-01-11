@@ -393,8 +393,13 @@ void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
         double ts2 = ts1+dt;
 
         // Scale M0 according to gas-phase expansion.
-        r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()
-                / r.Mixture()->GasPhase().MassDensity());
+       r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()		
+                / r.Mixture()->GasPhase().MassDensity());									
+
+		//////////////////////////////////////////////////////////////////////////////csl37 -- scale by molar density instead of mass density
+		// r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().Density()
+        //        / r.Mixture()->GasPhase().Density());
+		//////////////////////////////////////////////////////////////////////////////
 
         // Run Sweep for this time step.
         Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng);

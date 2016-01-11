@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mops version="2">
+<runs>1</runs>
+<iter>20</iter>
+<atol>1.0e-17</atol>
+<rtol>1.0e-4</rtol>
+<pcount>512</pcount>
+<maxm0>1.0e+10</maxm0>
+<relax>0.8</relax>
+
+<reactor type="batch" constt="true" constv="false" id="Test_System" units="mol/mol">
+<temperature units="K">300</temperature>
+<pressure units="atm">1.0</pressure>
+<component id="TICL4">0.001667</component>
+<component id="O2">0.008333</component>
+<component id="AR">0.990000</component>
+</reactor>
+
+<timeintervals>
+<start>0.0</start>
+<time steps="10" splits="10">1.0</time>
+<time steps="10" splits="10">1.1</time>
+<time steps="10" splits="10">1.2</time>
+<time steps="10" splits="10">1.3</time>
+<time steps="10" splits="10">1.4</time>
+<time steps="10" splits="10">1.5</time>
+<time steps="10" splits="10">1.6</time>
+<time steps="10" splits="10">1.7</time>
+<time steps="10" splits="10">1.8</time>
+<time steps="10" splits="10">1.9</time>
+<time steps="10" splits="10">2.0</time>
+<time steps="10" splits="10">2.1</time>
+<time steps="10" splits="10">2.2</time>
+<time steps="10" splits="10">2.3</time>
+<time steps="10" splits="10">2.4</time>
+<time steps="10" splits="10">2.5</time>
+<time steps="10" splits="10">2.6</time>
+<time steps="10" splits="10">2.7</time>
+<time steps="10" splits="10">2.8</time>
+<time steps="10" splits="10">2.9</time>
+<time steps="10" splits="10">3.0</time>
+<time steps="10" splits="10">3.1</time>
+<time steps="10" splits="10">3.2</time>
+<time steps="10" splits="10">3.3</time>
+<time steps="10" splits="10">3.4</time>
+<time steps="10" splits="10">3.5</time>
+<time steps="10" splits="10">3.6</time>
+<time steps="10" splits="10">3.7</time>
+<time steps="10" splits="10">3.8</time>
+<time steps="10" splits="10">3.9</time>
+<time steps="10" splits="10">4.0</time>
+<time steps="10" splits="10">4.1</time>
+<time steps="10" splits="10">4.2</time>
+<time steps="10" splits="10">4.3</time>
+<time steps="10" splits="10">4.4</time>
+<time steps="10" splits="10">4.5</time>
+<time steps="10" splits="10">4.6</time>
+<time steps="10" splits="10">4.7</time>
+<time steps="10" splits="10">4.8</time>
+<time steps="10" splits="10">4.9</time>
+<time steps="10" splits="10">5.0</time>
+<time steps="10" splits="10">5.1</time>
+<time steps="10" splits="10">5.2</time>
+<time steps="10" splits="10">5.3</time>
+<time steps="10" splits="10">5.4</time>
+<time steps="10" splits="10">5.5</time>
+<time steps="10" splits="10">5.6</time>
+<time steps="10" splits="10">5.7</time>
+<time steps="10" splits="10">5.8</time>
+<time steps="10" splits="10">5.9</time>
+<time steps="10" splits="10">6.0</time>
+</timeintervals>
+
+<output>
+<filename>Z1</filename>
+<statsbound property="dcol">
+<lower>0</lower>
+<upper>1.0e30</upper>
+</statsbound>
+<console interval="1" msgs="true">
+<tabular>
+<column fmt="sci">time</column>
+<column fmt="float">#sp</column>
+<column fmt="sci">TICL4</column>
+<column fmt="sci">O2</column>
+<column fmt="sci">M0</column>
+<column fmt="sci">T</column>
+</tabular>
+</console>
+<ptrack enable="false" ptcount="1"/>
+</output>
+</mops>

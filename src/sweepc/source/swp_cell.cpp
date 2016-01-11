@@ -225,9 +225,6 @@ double Cell::SampleVolume() const
  */
 void Cell::AdjustSampleVolume(double scale_factor)
 {
-	///////////////////////////////////////////////////////////// csl37-scale
-	//scale_factor = 1.0; //hard code this to be constant for flamepp runs
-	/////////////////////////////////////////////////////////////
     assert(scale_factor > 0);
     assert(scale_factor <= std::numeric_limits<double>::max());
     m_smpvol = SampleVolume() * scale_factor;
