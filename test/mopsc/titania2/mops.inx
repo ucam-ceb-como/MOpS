@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mops version="2">
+<runs>1</runs>
+<iter>20</iter>
+<atol>1.0e-17</atol>
+<rtol>1.0e-4</rtol>
+<pcount>512</pcount>
+<maxm0>1.000000e+10</maxm0>
+<relax>0.8</relax>
+
+<reactor type="batch" constt="true" constv="false" id="Test_System" units="mol/mol">
+<temperature units="K">300</temperature>
+<pressure units="atm">1.0</pressure>
+<component id="TICL4">0.001667</component>
+<component id="O2">0.008333</component>
+<component id="AR">0.990000</component>
+<dTdt endt="0.1" startt="0.0">0</dTdt>
+<dTdt endt="0.2" startt="0.1">0</dTdt>
+<dTdt endt="0.3" startt="0.2">0</dTdt>
+<dTdt endt="0.4" startt="0.3">0</dTdt>
+<dTdt endt="0.5" startt="0.4">0</dTdt>
+<dTdt endt="0.6" startt="0.5">0</dTdt>
+<dTdt endt="0.7" startt="0.6">0</dTdt>
+<dTdt endt="0.8" startt="0.7">0</dTdt>
+<dTdt endt="0.9" startt="0.8">240.037188</dTdt>
+<dTdt endt="1.0" startt="0.9">1475.379711</dTdt>
+<dTdt endt="1.1" startt="1.0">2020.073045</dTdt>
+<dTdt endt="1.2" startt="1.1">2347.400470</dTdt>
+<dTdt endt="1.3" startt="1.2">1602.278526</dTdt>
+<dTdt endt="1.4" startt="1.3">64.831060</dTdt>
+<dTdt endt="1.5" startt="1.4">0</dTdt>
+<dTdt endt="1.6" startt="1.5">0</dTdt>
+<dTdt endt="1.7" startt="1.6">0</dTdt>
+<dTdt endt="1.8" startt="1.7">0</dTdt>
+<dTdt endt="1.9" startt="1.8">-1149.478956</dTdt>
+<dTdt endt="2.0" startt="1.9">-3232.830653</dTdt>
+<dTdt endt="2.1" startt="2.0">-2813.752893</dTdt>
+<dTdt endt="2.2" startt="2.1">-553.937498</dTdt>
+<dTdt endt="2.3" startt="2.2">0</dTdt>
+<dTdt endt="2.4" startt="2.3">0</dTdt>
+<dTdt endt="2.5" startt="2.4">0</dTdt>
+<dTdt endt="2.6" startt="2.5">0</dTdt>
+<dTdt endt="2.7" startt="2.6">0</dTdt>
+<dTdt endt="2.8" startt="2.7">0</dTdt>
+<dTdt endt="2.9" startt="2.8">0</dTdt>
+<dTdt endt="3.0" startt="2.9">0</dTdt>
+<dTdt endt="3.1" startt="3.0">0</dTdt>
+<dTdt endt="3.2" startt="3.1">0</dTdt>
+<dTdt endt="3.3" startt="3.2">0</dTdt>
+<dTdt endt="3.4" startt="3.3">0</dTdt>
+<dTdt endt="3.5" startt="3.4">0</dTdt>
+<dTdt endt="3.6" startt="3.5">0</dTdt>
+<dTdt endt="3.7" startt="3.6">0</dTdt>
+<dTdt endt="3.8" startt="3.7">0</dTdt>
+<dTdt endt="3.9" startt="3.8">0</dTdt>
+<dTdt endt="4.0" startt="3.9">0</dTdt>
+<dTdt endt="4.1" startt="4.0">0</dTdt>
+<dTdt endt="4.2" startt="4.1">0</dTdt>
+<dTdt endt="4.3" startt="4.2">0</dTdt>
+<dTdt endt="4.4" startt="4.3">0</dTdt>
+<dTdt endt="4.5" startt="4.4">0</dTdt>
+<dTdt endt="4.6" startt="4.5">0</dTdt>
+<dTdt endt="4.7" startt="4.6">0</dTdt>
+<dTdt endt="4.8" startt="4.7">0</dTdt>
+<dTdt endt="4.9" startt="4.8">0</dTdt>
+<dTdt endt="5.0" startt="4.9">0</dTdt>
+<dTdt endt="5.1" startt="5.0">0</dTdt>
+<dTdt endt="5.2" startt="5.1">0</dTdt>
+<dTdt endt="5.3" startt="5.2">0</dTdt>
+<dTdt endt="5.4" startt="5.3">0</dTdt>
+<dTdt endt="5.5" startt="5.4">0</dTdt>
+<dTdt endt="5.6" startt="5.5">0</dTdt>
+<dTdt endt="5.7" startt="5.6">0</dTdt>
+<dTdt endt="5.8" startt="5.7">0</dTdt>
+<dTdt endt="5.9" startt="5.8">0</dTdt>
+<dTdt endt="6" startt="5.9">0</dTdt>
+</reactor>
+
+<timeintervals>
+<start>0.0</start>
+<time steps="10" splits="10">0.1</time>
+<time steps="10" splits="10">0.2</time>
+<time steps="10" splits="10">0.3</time>
+<time steps="10" splits="10">0.4</time>
+<time steps="10" splits="10">0.5</time>
+<time steps="10" splits="10">0.6</time>
+<time steps="10" splits="10">0.7</time>
+<time steps="10" splits="10">0.8</time>
+<time steps="10" splits="10">0.9</time>
+<time steps="10" splits="10">1.0</time>
+<time steps="10" splits="10">1.1</time>
+<time steps="10" splits="10">1.2</time>
+<time steps="10" splits="10">1.3</time>
+<time steps="10" splits="10">1.4</time>
+<time steps="10" splits="10">1.5</time>
+<time steps="10" splits="10">1.6</time>
+<time steps="10" splits="10">1.7</time>
+<time steps="10" splits="10">1.8</time>
+<time steps="10" splits="10">1.9</time>
+<time steps="10" splits="10">2.0</time>
+<time steps="10" splits="10">2.1</time>
+<time steps="10" splits="10">2.2</time>
+<time steps="10" splits="10">2.3</time>
+<time steps="10" splits="10">2.4</time>
+<time steps="10" splits="10">2.5</time>
+<time steps="10" splits="10">2.6</time>
+<time steps="10" splits="10">2.7</time>
+<time steps="10" splits="10">2.8</time>
+<time steps="10" splits="10">2.9</time>
+<time steps="10" splits="10">3.0</time>
+<time steps="10" splits="10">3.1</time>
+<time steps="10" splits="10">3.2</time>
+<time steps="10" splits="10">3.3</time>
+<time steps="10" splits="10">3.4</time>
+<time steps="10" splits="10">3.5</time>
+<time steps="10" splits="10">3.6</time>
+<time steps="10" splits="10">3.7</time>
+<time steps="10" splits="10">3.8</time>
+<time steps="10" splits="10">3.9</time>
+<time steps="10" splits="10">4.0</time>
+<time steps="10" splits="10">4.1</time>
+<time steps="10" splits="10">4.2</time>
+<time steps="10" splits="10">4.3</time>
+<time steps="10" splits="10">4.4</time>
+<time steps="10" splits="10">4.5</time>
+<time steps="10" splits="10">4.6</time>
+<time steps="10" splits="10">4.7</time>
+<time steps="10" splits="10">4.8</time>
+<time steps="10" splits="10">4.9</time>
+<time steps="10" splits="10">5.0</time>
+<time steps="10" splits="10">5.1</time>
+<time steps="10" splits="10">5.2</time>
+<time steps="10" splits="10">5.3</time>
+<time steps="10" splits="10">5.4</time>
+<time steps="10" splits="10">5.5</time>
+<time steps="10" splits="10">5.6</time>
+<time steps="10" splits="10">5.7</time>
+<time steps="10" splits="10">5.8</time>
+<time steps="10" splits="10">5.9</time>
+<time steps="10" splits="10">6.0</time>
+</timeintervals>
+
+<output>
+<filename>Z1</filename>
+<statsbound property="dcol">
+<lower>0</lower>
+<upper>1.0e30</upper>
+</statsbound>
+<console interval="1" msgs="true">
+<tabular>
+<column fmt="sci">time</column>
+<column fmt="float">#sp</column>
+<column fmt="sci">TICL4</column>
+<column fmt="sci">O2</column>
+<column fmt="sci">M0</column>
+<column fmt="sci">T</column>
+</tabular>
+</console>
+<ptrack enable="false" ptcount="1"/>
+</output>
+</mops>
