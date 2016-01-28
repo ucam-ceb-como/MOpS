@@ -121,14 +121,14 @@ namespace Sweep{
             void saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID);
             //! Save the structure DOT file after every X simulation sec interval
             void saveDOTperXsec(const double& X, const int& seed, const double& time, const double &time_max, KMCMechanism& copyMod, int& intervalcount);
-            //! Update structure of PAH after time dt
-            void updatePAH(PAHStructure* pah, // structure of pah
-                           const double tstart, // start time
-                           const double dt,     // growth time
-                           const int waitingSteps,  // waiting step used to calculate maximum time interval, currently use 1. 
-                           rng_type &rng,
-                           double r_factor,     // growth factor g, one important parameter used in this model.
-                           int PAH_ID);       // ID of this pah, used for debugging.
+            //! Update structure of PAH after time dt.
+            void updatePAH(PAHStructure* pah,         //! structure of pah.
+                           const double tstart,       //! start time.
+                           const double dt,           //! growth time.
+                           const int waitingSteps,    //! waiting step used to calculate maximum time interval, currently use 1.
+                           rng_type &rng,             //! random number generator.
+                           double r_factor,           //! growth factor g, one important parameter used in this model.
+                           int PAH_ID);               //! ID of this pah, used for debugging.
             //! Outputs rates into a csv file (assuming all site counts as 1)
             void TestRates(const double tstart, const double tstop, const int intervals);
             //! Obtains rates of PAH reactions with the current structure

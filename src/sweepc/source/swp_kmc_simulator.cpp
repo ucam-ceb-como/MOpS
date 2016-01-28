@@ -127,13 +127,13 @@ void KMCSimulator::targetPAH(PAHStructure& pah) {
 }
 
 /*!
- * @param[in,out]   pah          PAH structure KMC-ARS jump process will be performed on
- * @param[in]       tsart        The latest time the PAH was updated
- * @param[in]       dt           The time over which the PAH is to be updated
- * @param[in]       waitingSteps Adjusts the size of dt. The larger it is the smaller dt is. Results were found to be insensitive to waitingSteps therefore it was hardcoded as 1 (tests by Dongping, dc516@cam.ac.uk).
- * @param[in]       rng          Random number generator
- * @param[in]       r_factor     Growth factor, a multiplier that is applied to the growth rate of PAHs within primary particles when the number of PAHs exceeds a critical number of PAHs
- * @param[in]       PAH_ID       "Unique" identification number attached to this PAH
+ * @param[in,out]    pah             PAH structure KMC-ARS jump process will be performed on.
+ * @param[in]        tsart           The latest time the PAH was updated.
+ * @param[in]        dt              The time over which the PAH is to be updated.
+ * @param[in]        waitingSteps    Adjusts the size of dt. The larger it is the smaller dt is. Results were found to be insensitive to waitingSteps therefore it was hardcoded as 1 (tests by Dongping, dc516@cam.ac.uk).
+ * @param[in]        rng             Random number generator.
+ * @param[in]        r_factor        Model parameter: Growth factor, a multiplier that is applied to the growth rate of PAHs within primary particles when the number of PAHs exceeds a critical number of PAHs.
+ * @param[in]        PAH_ID          "Unique" identification number attached to this PAH.
  */
 void KMCSimulator::updatePAH(PAHStructure* pah, 
                             const double tstart, 
@@ -199,14 +199,6 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             //dotname << "KMC_DEBUG/p_" << (t_next*1e8) << ".dot";
             //m_simPAHp.saveDOT(dotname.str());
             // Update data structure
-
-            // Allow for the removal of benzene (A1) when a 6-member ring desorption on a free-edge site (Jump process ID 5), or a 6-member ring oxidation by OH or O2 on a free-edge site is chosen (Jump process ID 6 and 7, respectively)
-            // Made invalid by setting the number of carbons to 5
-            // Break loop before jump process may be performed 
-			if (pah->numofC() == 6 && (jp_perf.first->getID() == 5 || jp_perf.first->getID() == 6 || jp_perf.first->getID() == 7)){
-				m_simPAH->setnumofC(5);
-                break;
-			}
 
             m_simPAHp.performProcess(*jp_perf.first, rng);
 

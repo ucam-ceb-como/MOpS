@@ -94,6 +94,9 @@ public:
 
     double MinPAH() const;
 
+    //! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in a PAH below a certain threshold it is removed. Return this threshold in terms of the total number of 6-member rings.
+    double ThresholdOxidation() const;
+
     // Sets the density (g/cm3).
     void SetDensity(double dens);
 
@@ -102,6 +105,9 @@ public:
     void SetGrowthFact(double gf);
 
     void SetMinPAH(int mp);
+
+    //! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in a PAH below a certain threshold it is removed. Sets this threshold in terms of the total number of 6-member rings.
+    void SetThresholdOxidation(int to);
 
     // Returns component symbol or name.
     const std::string &Name() const;
@@ -147,6 +153,9 @@ private:
 
     //! minimum number of PAHs withinin the primary that are needed to apply m_growthfact
     int m_minPAH;
+
+    //! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in the PAH (in a particle) below this threshold it is removed.
+    double m_thresholdOxidation;
 };
 
 // Typedef of a vector of pointers to Component objects.
