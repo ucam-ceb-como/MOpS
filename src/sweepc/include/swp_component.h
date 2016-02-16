@@ -97,6 +97,9 @@ public:
     //! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in a PAH below a certain threshold it is removed. Return this threshold in terms of the total number of 6-member rings.
     double ThresholdOxidation() const;
 
+    //! Allow PAHs in soot particles to point to the same memory location after a doubling event.
+    double SharedPointers() const;
+
     // Sets the density (g/cm3).
     void SetDensity(double dens);
 
@@ -108,6 +111,9 @@ public:
 
     //! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in a PAH below a certain threshold it is removed. Sets this threshold in terms of the total number of 6-member rings.
     void SetThresholdOxidation(int to);
+
+    //! Allow PAHs in soot particles to point to the same memory location after a doubling event.
+    void SetSharedPointers(int sp);
 
     // Returns component symbol or name.
     const std::string &Name() const;
@@ -156,6 +162,9 @@ private:
 
     //! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in the PAH (in a particle) below this threshold it is removed.
     double m_thresholdOxidation;
+    
+    //! Allow PAHs in soot particles to point to the same memory location after a doubling event.
+    double m_sharedPointers;
 };
 
 // Typedef of a vector of pointers to Component objects.

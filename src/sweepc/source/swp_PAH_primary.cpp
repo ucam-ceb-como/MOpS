@@ -368,7 +368,7 @@ PAHPrimary::PAHPrimary(std::istream &in, const Sweep::ParticleModel &model, PahD
  *
  * @param[in] source Pointer to the primary to be copied
  */
-void PAHPrimary::CopyParts( const PAHPrimary *source)
+void PAHPrimary::CopyParts(const PAHPrimary *source)
 {
     SetCollDiameter(source->CollDiameter());
     SetMobDiameter(source->MobDiameter());
@@ -411,30 +411,33 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
     m_sint_time=source->m_sint_time;
 
     //! Replace the PAHs with those from the source.
-    if (m_clone==true){
-		    m_PAH.resize(source->m_PAH.size());
-            m_PAH.clear();
-    for (size_t i=0; i!=source->m_PAH.size();++i){
-		
-        //! Create a copy of the shared pointers for PAHs in particles.
-		if (source->m_PAH.size() > 1) {
-            boost::shared_ptr<PAH> new_m_PAH = source->m_PAH[i];
-            new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
-            m_PAH.push_back(new_m_PAH);
-        }
-        //! Always create new shared pointers for single PAHs.
-        else {
-            boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
-            new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
-            m_PAH.push_back(new_m_PAH);
-        }
-		
-        //! Create new shared pointers for single PAHs or PAHs in particles.
-        //boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
-        ////m_PAH[i]=source->m_PAH[i]->Clone();
-        //new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
-        //m_PAH.push_back(new_m_PAH);
-//    //plus 100000 to tell which pah is cloned and also according to Id, we could easily calculate how many times this pah duplicate
+    if (m_clone==true) {
+	    m_PAH.resize(source->m_PAH.size());
+        m_PAH.clear();
+        const int sharedPointers = m_pmodel->Components(0)->SharedPointers();
+        for (size_t i=0; i!=source->m_PAH.size();++i) {
+		    //! Each time a PAH is cloned 100000 is added to its ID so that we can easily calculate how many times this pah has been cloned.
+            if(sharedPointers) {
+                //! Create a copy of the shared pointers for PAHs in particles.
+		        if (source->m_PAH.size() > 1) {
+                    boost::shared_ptr<PAH> new_m_PAH = source->m_PAH[i];
+                    new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+                    m_PAH.push_back(new_m_PAH);
+                }
+                //! Always create new shared pointers for single PAHs.
+                else {
+                    boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
+                    new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+                    m_PAH.push_back(new_m_PAH);
+                }
+            }
+            else {
+                //! Create new shared pointers for single PAHs or PAHs in particles.
+                boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
+                //m_PAH[i]=source->m_PAH[i]->Clone();
+                new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+                m_PAH.push_back(new_m_PAH);
+            }
         }
     }
     else m_PAH.assign(source->m_PAH.begin(),source->m_PAH.end());
