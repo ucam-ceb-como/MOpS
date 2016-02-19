@@ -118,10 +118,10 @@ ChosenProcess KMCMechanism::chooseReaction(rng_type &rng) const {
 }
 typedef Sweep::KMC_ARS::KMCGasPoint sp;
 
-//! Returns a vector of jump processes implemented in model
+//! Returns a vector of jump processes implemented in model.
 std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     std::vector<JumpProcess*> temp;
-    // Initialise all jump processes
+    //! Initialise all jump processes.
     JumpProcess* j_G6R_AC = new G6R_AC; j_G6R_AC->initialise();
     JumpProcess* j_G6R_FE = new G6R_FE; j_G6R_FE->initialise();
     JumpProcess* j_L6_BY6 = new L6_BY6; j_L6_BY6->initialise();
@@ -142,34 +142,31 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //JumpProcess* j_L5R_BY5 = new L5R_BY5; j_L5R_BY5->initialise();
     JumpProcess* j_M6R_BY5_FE3 = new M6R_BY5_FE3; j_M6R_BY5_FE3->initialise();
     //JumpProcess* j_O6R_FE2_OH = new O6R_FE2_OH; j_O6R_FE2_OH->initialise();
-	//JumpProcess* j_O6R_FE2_O2 = new O6R_FE2_O2; j_O6R_FE2_O2->initialise();
+    //JumpProcess* j_O6R_FE2_O2 = new O6R_FE2_O2; j_O6R_FE2_O2->initialise();
        
-	// Jump Processes included in the model
-    // (Comment out any process to be omitted):
-    //--------------------------------------
-    temp.push_back(j_G6R_AC); //        1- R6 Growth on AC [AR1]
-    temp.push_back(j_G6R_FE); //        2- R6 Growth on FE [AR2]
-    temp.push_back(j_L6_BY6); //        3- BY6 closure [AR14]
-    temp.push_back(j_PH_benz); //       4- phenyl addition [AR15]
-    temp.push_back(j_D6R_FE3); //       5- R6 Desorption at FE [AR8]
-    temp.push_back(j_O6R_FE3_O2); //    6- R6 Oxidation at FE by O2 [AR10]
-    temp.push_back(j_O6R_FE3_OH); //    7- R6 Oxidation at FE by OH [AR11]
-    temp.push_back(j_O6R_FE_HACA_O2); // 8- R6 Oxidation at AC by O2 [AR12]
-    temp.push_back(j_O6R_FE_HACA_OH); // 9- R6 Oxidation at AC by OH [AR13]
-    temp.push_back(j_G5R_ZZ); //        10- R5 growth at ZZ [AR3]
-    temp.push_back(j_D5R_R5); //        11- R5 desorption [AR7]
-    temp.push_back(j_C6R_AC_FE3); //    12- R6 conversion to R5 [AR9]
-    temp.push_back(j_C5R_RFE); //       13- R5 conversion to R6 on FE [AR5]
-    temp.push_back(j_C5R_RAC); //       14- R5 conversion to R6 on AC [AR4]
-    temp.push_back(j_M5R_RZZ); //       15- R5 migration to neighbouring ZZ [AR6]
-    temp.push_back(j_C6R_BY5_FE3); //   16- R6 migration & conversion to R5 at BY5 [AR22]
-    temp.push_back(j_C6R_BY5_FE3violi); //17- R6 migration & conversion to R5 at BY5 (violi) [AR24]
-    //temp.push_back(j_L5R_BY5); //     18- BY5 closure [AR16]
-    temp.push_back(j_M6R_BY5_FE3); //    19- R6 desorption at bay -> pyrene [AR21]
-    //temp.push_back(j_O6R_FE2_OH); //    20- R6 Oxidation at ZZ by OH
-	//temp.push_back(j_O6R_FE2_O2); //    21- R6 Oxidation at ZZ by O2
-        
-	//--------------------------------------
+	//! Jump processes included in the model (Comment out any process to be omitted).
+    temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
+    temp.push_back(j_G6R_FE);            //!  2- R6 Growth on FE [AR2].
+    temp.push_back(j_L6_BY6);            //!  3- BY6 closure [AR14].
+    temp.push_back(j_PH_benz);           //!  4- phenyl addition [AR15].
+    temp.push_back(j_D6R_FE3);           //!  5- R6 Desorption at FE [AR8].
+    temp.push_back(j_O6R_FE3_O2);        //!  6- R6 Oxidation at FE by O2 [AR10].
+    temp.push_back(j_O6R_FE3_OH);        //!  7- R6 Oxidation at FE by OH [AR11].
+    temp.push_back(j_O6R_FE_HACA_O2);    //!  8- R6 Oxidation at AC by O2 [AR12].
+    temp.push_back(j_O6R_FE_HACA_OH);    //!  9- R6 Oxidation at AC by OH [AR13].
+    temp.push_back(j_G5R_ZZ);            //! 10- R5 growth at ZZ [AR3].
+    temp.push_back(j_D5R_R5);            //! 11- R5 desorption [AR7].
+    temp.push_back(j_C6R_AC_FE3);        //! 12- R6 conversion to R5 [AR9].
+    temp.push_back(j_C5R_RFE);           //! 13- R5 conversion to R6 on FE [AR5].
+    temp.push_back(j_C5R_RAC);           //! 14- R5 conversion to R6 on AC [AR4].
+    temp.push_back(j_M5R_RZZ);           //! 15- R5 migration to neighbouring ZZ [AR6].
+    temp.push_back(j_C6R_BY5_FE3);       //! 16- R6 migration & conversion to R5 at BY5 [AR22].
+    temp.push_back(j_C6R_BY5_FE3violi);  //! 17- R6 migration & conversion to R5 at BY5 (violi) [AR24].
+    //temp.push_back(j_L5R_BY5);         //! 18- BY5 closure [AR16].
+    temp.push_back(j_M6R_BY5_FE3);       //! 19- R6 desorption at bay -> pyrene [AR21].
+    //temp.push_back(j_O6R_FE2_OH);        //! 20- R6 Oxidation at ZZ by OH.
+	//temp.push_back(j_O6R_FE2_O2);        //! 21- R6 Oxidation at ZZ by O2.
+
     return temp;
 }
 

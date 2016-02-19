@@ -614,6 +614,48 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             comp->SetMinPAH(0);
         }
 
+        //! Model parameter. 
+		/*!
+         * The number of 6-member rings in a PAH in a particle below which it is removed.
+         */
+        el = (*i)->GetFirstChild("thresholdOxidation");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                comp->SetThresholdOxidation(int(cdble(str)));
+            } else {
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " thresholdOxidation contains no data (Sweep, MechParser::readComponents).";
+
+                delete comp;
+                throw runtime_error(msg);
+            }
+        } else {
+            comp->SetThresholdOxidation(0);
+        }
+
+        //! Numerical parameter
+		/*!
+         * Allow PAHs in soot particles to point to the same memory location after a doubling event.
+         */
+        el = (*i)->GetFirstChild("sharedPointers");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                comp->SetSharedPointers(int(cdble(str)));
+            } else {
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " sharedPointers contains no data (Sweep, MechParser::readComponents).";
+
+                delete comp;
+                throw runtime_error(msg);
+            }
+        } else {
+            comp->SetSharedPointers(0);
+        }
+
         // Get component mol. wt.
         el = (*i)->GetFirstChild("molwt");
         if (el!=NULL) {

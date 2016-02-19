@@ -69,6 +69,8 @@
 
 #include "string_functions.h"
 
+int uniquePAHCounter = 0;
+
 using namespace Sweep;
 using namespace Sweep::AggModels;
 using namespace Sweep::KMC_ARS;
@@ -366,7 +368,7 @@ PAHPrimary::PAHPrimary(std::istream &in, const Sweep::ParticleModel &model, PahD
  *
  * @param[in] source Pointer to the primary to be copied
  */
-void PAHPrimary::CopyParts( const PAHPrimary *source)
+void PAHPrimary::CopyParts(const PAHPrimary *source)
 {
     SetCollDiameter(source->CollDiameter());
     SetMobDiameter(source->MobDiameter());
@@ -408,31 +410,34 @@ void PAHPrimary::CopyParts( const PAHPrimary *source)
     m_comp=source->m_comp;
     m_sint_time=source->m_sint_time;
 
-    // Replace the PAHs with those from the source
-    if (m_clone==true){
-		    m_PAH.resize(source->m_PAH.size());
-            m_PAH.clear();
-    for (size_t i=0; i!=source->m_PAH.size();++i){
-		
-        //Create a copy of the shared pointers for PAHs in particles
-		//if (source->m_PAH.size() > 1) {
-  //          boost::shared_ptr<PAH> new_m_PAH = source->m_PAH[i];
-  //          new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
-  //          m_PAH.push_back(new_m_PAH);
-  //      }
-  //      //Always create new shared pointers for single PAHs
-  //      else {
-  //          boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
-  //          new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
-  //          m_PAH.push_back(new_m_PAH);
-  //      }
-		
-        //Create new shared pointers for single PAHs or PAHs in particles
-        boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
-        //m_PAH[i]=source->m_PAH[i]->Clone();
-        new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
-        m_PAH.push_back(new_m_PAH);
-//    //plus 100000 to tell which pah is cloned and also according to Id, we could easily calculate how many times this pah duplicate
+    //! Replace the PAHs with those from the source.
+    if (m_clone==true) {
+	    m_PAH.resize(source->m_PAH.size());
+        m_PAH.clear();
+        const int sharedPointers = m_pmodel->Components(0)->SharedPointers();
+        for (size_t i=0; i!=source->m_PAH.size();++i) {
+		    //! Each time a PAH is cloned 100000 is added to its ID so that we can easily calculate how many times this pah has been cloned.
+            if(sharedPointers) {
+                //! Create a copy of the shared pointers for PAHs in particles.
+		        if (source->m_PAH.size() > 1) {
+                    boost::shared_ptr<PAH> new_m_PAH = source->m_PAH[i];
+                    new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+                    m_PAH.push_back(new_m_PAH);
+                }
+                //! Always create new shared pointers for single PAHs.
+                else {
+                    boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
+                    new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+                    m_PAH.push_back(new_m_PAH);
+                }
+            }
+            else {
+                //! Create new shared pointers for single PAHs or PAHs in particles.
+                boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
+                //m_PAH[i]=source->m_PAH[i]->Clone();
+                new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+                m_PAH.push_back(new_m_PAH);
+            }
         }
     }
     else m_PAH.assign(source->m_PAH.begin(),source->m_PAH.end());
@@ -990,13 +995,14 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
 }   
 
 /*!
- *@param[in]        t       Time upto which to update
- *@param[in]        model   Particle model defining interpretation of particle data
- *@param[in]        sys     Cell containing particle and providing gas phase
- *@param[in,out]    rng     Random number generator
- *
  * The actual interval over which the update is carried out on a PAH is from
  * lastupdated to t.
+ *
+ * @param[in]        t        Time up to which to update.
+ * @param[in]        model    Particle model defining interpretation of particle data.
+ * @param[in]        sys      Cell containing particle and providing gas phase.
+ * @param[in,out]    rng      Random number generator.
+ *
  */
 void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Cell &sys, rng_type &rng)
 {
@@ -1019,52 +1025,91 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
         // check whether this updated primary particle is a inceptedPAH, used later to track the num of InceptedPAH in the ensemble
         const int m_InceptedPAH = InceptedPAH();
 
-        // Loop over each PAH in this primary
+        //! Loop over each PAH in this primary.
         const std::vector<boost::shared_ptr<PAH> >::iterator itEnd = m_PAH.end();
         for (std::vector<boost::shared_ptr<PAH> >::iterator it = m_PAH.begin(); it != itEnd; ++it) {
+            
+			bool m_PAHchanged = false;
 
-            // This is a model parameter that defines when primary particles
-            // contain too many PAHs for them all to have full access to the
-            // surrounding gas phase.  Once a primary contains more than minPAH
-            // PAHs the growth rate of each PAH is reduced according to the
-            // growth factor
-            bool m_PAHchanged = false;
-            const double minPAH = model.Components(0)->MinPAH();
+            //! Model parameter.
+			/*!
+			 * If a jump process reduces the total number of 6-member rings
+			 * (excludes 5-member rings) in a PAH (in a particle) below this
+			 * threshold it is removed.
+             */
+			const int thresholdOxidation = model.Components(0)->ThresholdOxidation();
 
-            double growthfact = 1.0;
-            if (m_numPAH>=minPAH)
-            {
-                // concentration of gasphase species is reduced by this factor to 
-                // reflect the slower growth of molecules that are closely surrounded
-                // by many other PAHs.
-                growthfact = model.Components(0)->GrowthFact();
-            }
-
-            // Time for one particular PAH to grow
-            const double growtime = t - (*it)->lastupdated;
-            assert(growtime >= 0.0);
-
-            const int oldNumCarbon = (*it)->m_pahstruct->numofC(); 
-            const int oldNumH = (*it)->m_pahstruct->numofH();
-
-            // Here updatePAH function in KMC_ARS model is called.
-            // waitingSteps is set to be 1 by dc516, details seeing KMCSimulator::updatePAH()
-            sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1,
-                                                   rng, growthfact, (*it)->PAH_ID);
-
-            (*it)->lastupdated=t;
-
-            // See if anything changed, as this will required a call to UpdatePrimary() below
-            if(oldNumCarbon != (*it)->m_pahstruct->numofC() || oldNumH != (*it)->m_pahstruct->numofH())
-            {
+            //! PAH removal.
+			/*!
+			 * Allow for the removal of PAHs in particles (2 or more PAHs) when
+			 * the total number of 6-member rings (excludes 5-member rings) in
+			 * the PAH has fallen below, for example, the minimum number of
+			 * rings in a PAH for inception. Particularly relevant when
+			 * oxidation is strong.
+             */
+            if((*it)->m_pahstruct->numofC() == 5){
                 m_PAHclusterchanged = true; 
-                m_PAHchanged = true;
-            }
-			// the second condition ensures that the m_InvalidPAH is modified in the correct way
-			// consider 2 PAH, the first is invalid, the other is valid. If not using the 
-			// second condition, the m_InvalidPAH will be false enventually, but it should be true.
-            if (m_PAHchanged && !m_InvalidPAH)
+				m_PAHchanged = true;
                 m_InvalidPAH = CheckInvalidPAHs(*it);
+                continue;
+			}			
+
+            //! Model parameter.
+			/*!
+             * Defines when primary particles contain too many PAHs for them all 
+			 * to have full access to the surrounding gas phase.  Once a primary
+			 * contains more than minPAH PAHs the growth rate of each PAH is
+			 * reduced according to the growth factor.
+             */
+			const double minPAH = model.Components(0)->MinPAH();
+			double growthfact = 1.0;
+
+			if (m_numPAH>=minPAH)
+			{
+				growthfact = model.Components(0)->GrowthFact();
+			}
+
+			//! Time for one particular PAH to grow.
+			const double growtime = t - (*it)->lastupdated;
+			assert(growtime >= 0.0);
+
+			const int oldNumCarbon = (*it)->m_pahstruct->numofC(); 
+			const int oldNumH = (*it)->m_pahstruct->numofH();
+
+			/*!
+             * Here updatePAH function in KMC_ARS model is called.
+             * waitingSteps is set to be 1 by dc516, details seeing KMCSimulator::updatePAH().
+			 */
+			sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1,
+													rng, growthfact, (*it)->PAH_ID);
+
+			(*it)->lastupdated=t;
+
+            //! Invalidate PAH.
+            /*!
+             * A PAH is made invalid by setting the number of carbons to 5. The
+			 * reason for only applying this to particles is that we would not
+			 * want to remove single PAHs in the gas-phase which fall below the
+			 * minimum number of rings for inception but are still growing.
+             */
+            if((*it)->m_pahstruct->numofRings() < thresholdOxidation && m_numPAH>=minPAH){
+                (*it)->m_pahstruct->setnumofC(5);
+			}		
+
+			//! See if anything changed, as this will required a call to UpdatePrimary() below.
+			if(oldNumCarbon != (*it)->m_pahstruct->numofC() || oldNumH != (*it)->m_pahstruct->numofH())
+			{
+				m_PAHclusterchanged = true; 
+				m_PAHchanged = true;
+			}
+
+			/*!
+             * The second condition ensures that the m_InvalidPAH is modified in the correct way
+			 * consider 2 PAH, the first is invalid, the other is valid. If not using the
+             * second condition, the m_InvalidPAH will be false enventually, but it should be true.
+			 */ 
+			if (m_PAHchanged && !m_InvalidPAH)
+				m_InvalidPAH = CheckInvalidPAHs(*it);
         }
         if (m_InvalidPAH)
         {
@@ -1073,8 +1118,10 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
 
         //sys.Particles().Add();
         //this->ParticleModel()->Mode();
-        // Calculate derived quantities such as collision diameter and surface
-        // area by iterating through all the PAHs.  This call is rather expensive.
+        /*!
+         * Calculate derived quantities such as collision diameter and surface
+         * area by iterating through all the PAHs.  This call is rather expensive.
+         */
         if(m_PAHclusterchanged) {
             UpdatePrimary();
             // if (m_InceptedPAH!=0) {
@@ -1086,7 +1133,7 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
             //        //sys.Particles().NumOfInceptedPAH();
             //}
         }
-        // otherwise there is no need to update
+        //! otherwise there is no need to update.
     }
 }
 
@@ -1344,71 +1391,137 @@ void PAHPrimary::Fragtest(std::vector<double> &out, const int k, std::string mod
 
 }
 
-// use to output detailed info about particular PAH
-void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int index, const double density) const
+/*!
+ * @brief Create contents pertaining to PAH specific information to be written to a csv file. 
+ *
+ * @param[in,out]    out                   Vector (different PAHs) of vectors (different pieces of information about the PAH).
+ * @param[in]        index                 Index assigned to particle.
+ * @param[in]        density               Density of soot.
+ * @param[in,out]    pahUniqueAddresses    Keep a record of which PAHs have been stored in "out" to avoid storing the same memory location twice.
+ * @param[in,out]    Mapping               Map of PAH memory locations to PAH in "out".
+ * @param[in]        timeStep              Index assigned to time step.
+ */ 
+void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int index, const double density, std::set<void*> &pahUniqueAddresses, std::vector<std::string> &Mapping, const double timeStep) const
 {
     if (m_leftchild!=NULL)
-        m_leftchild->OutputPAHPSL(out, index, density);
-    if (m_rightchild!=NULL) m_rightchild->OutputPAHPSL(out, index, density);
+        m_leftchild->OutputPAHPSL(out, index, density, pahUniqueAddresses, Mapping, timeStep);
+    if (m_rightchild!=NULL) m_rightchild->OutputPAHPSL(out, index, density, pahUniqueAddresses, Mapping, timeStep);
 
+	std::stringstream memoryLocation;
 
     std::vector<double> temp;
 
     for (size_t i = 0; i != m_PAH.size(); ++i)
     {
-        int num_C=0;
-        int num_H=0;
-        double val=0.0;
-        double m_mass=0.0;
-        double PAHCollDiameter=0.0;
-        double diameter=0.0;
-        temp.push_back(index);
+        //! Reduce the number of redundant entries.
+        /*!
+		 * First retrieve the memory location of this PAH. If the memory
+		 * location is not in the list of unique memory locations, store the
+		 * information for this PAH in "out". Otherwise, we can simply
+		 * increment the frequency of the PAH in "out" which shares the same
+		 * memory location as this PAH.
+		 */
+        void *ptr = m_PAH[i].get();
+        if(pahUniqueAddresses.find(m_PAH[i].get()) == pahUniqueAddresses.end()) {
+            
+            //! Initialization of variables.
+			int num_C=0;
+			int num_H=0;
+			double val=0.0;
+			double m_mass=0.0;
+			double PAHCollDiameter=0.0;
+			double diameter=0.0;
 
-        num_C=m_PAH[i]->m_pahstruct->numofC();
-        temp.push_back(num_C);
-        num_H=m_PAH[i]->m_pahstruct->numofH();
-        temp.push_back(num_H);
-        temp.push_back(m_PAH[i]->m_pahstruct->numofRings());
-        temp.push_back(m_PAH[i]->m_pahstruct->numofRings5());
-        temp.push_back(m_PAH[i]->m_pahstruct->numofEdgeC());
+            //! If this particle is a single primary with a single PAH it is assigned an index of -1 to distinguish it from PAHs in particles.
+			if (this->NumPAH() == 1 && this->Numprimary() == 1) {
+				temp.push_back(-1);
+			}
+			else {
+				temp.push_back(index);
+			}
+				
+            //! Number of carbon atoms.
+			num_C=m_PAH[i]->m_pahstruct->numofC();
+			temp.push_back(num_C);
 
-        // PAH mass (u)
-        val = 12*num_C + num_H;
-        temp.push_back(val);
-        // PAH mass (kg)
-        m_mass = num_C*1.9945e-26 + num_H*1.6621e-27;
-        temp.push_back(m_mass);
+            //! Number of hydrogen atoms.
+			num_H=m_PAH[i]->m_pahstruct->numofH();
+			temp.push_back(num_H);
 
-        // PAHCollDiameter (Angstrom)
-        PAHCollDiameter = sqrt(num_C*2.0/3.);
-        PAHCollDiameter *= 2.4162*1e-10;         //convert from Angstrom to m
-        temp.push_back(PAHCollDiameter);
+            //! Number of 6-member rings.
+			temp.push_back(m_PAH[i]->m_pahstruct->numofRings());
+            
+            //! Number of 5-member rings.
+			temp.push_back(m_PAH[i]->m_pahstruct->numofRings5());
+			
+            //! Number of carbon atoms on the edge of the PAH.
+            temp.push_back(m_PAH[i]->m_pahstruct->numofEdgeC());
 
-        // PAH denbsity (kg/m3)
-        temp.push_back(density);
+			//! PAH mass (u).
+			val = 12*num_C + num_H;
+			temp.push_back(val);
 
-        // PAH volume (m3)
-        val = m_mass / density;
-        temp.push_back(val);
+			//! PAH mass (kg).
+			m_mass = num_C*1.9945e-26 + num_H*1.6621e-27;
+			temp.push_back(m_mass);
 
-        // diameter (m)
-        diameter = pow(6.0 * val / PI, ONE_THIRD);
-        temp.push_back(diameter);
+			//! PAH collision diameter (m).
+			PAHCollDiameter = sqrt(num_C*2.0/3.);
+			PAHCollDiameter *= 2.4162*1e-10;    //! convert from Angstrom to m.
+			temp.push_back(PAHCollDiameter);
 
-        // collision diameter (m)
-        val = max(diameter, PAHCollDiameter);
-        temp.push_back(val);
+			//! PAH density (kg/m3).
+			temp.push_back(density);
 
-        // time created (s)
-        val = m_PAH[i]->time_created;
-        temp.push_back(val);
+			//! PAH volume (m3).
+			val = m_mass / density;
+			temp.push_back(val);
 
-        // index of PAH
-        val = m_PAH[i]->PAH_ID;
-        temp.push_back(val);
+			//! Spherical diameter (m).
+			diameter = pow(6.0 * val / PI, ONE_THIRD);
+			temp.push_back(diameter);
 
-        out.push_back(temp);
-        temp.clear();
+			//! Larger of the spherical or collison diameter (m).
+			val = max(diameter, PAHCollDiameter);
+			temp.push_back(val);
+
+			//! Time created (s).
+			val = m_PAH[i]->time_created;
+			temp.push_back(val);
+
+			//! Index of PAH.
+			val = m_PAH[i]->PAH_ID;
+			temp.push_back(val);
+
+            //! Uncomment the call to saveDOTperLoop to print out the structure of each PAH.
+			//m_PAH[i]->saveDOTperLoop(timeStep,uniquePAHCounter);
+
+			uniquePAHCounter = uniquePAHCounter + 1;
+
+			//! Number of PAHs pointing to the same memory location.
+			temp.push_back(1);
+
+			out.push_back(temp);
+
+			temp.clear();
+
+			pahUniqueAddresses.insert(m_PAH[i].get());
+
+			memoryLocation << m_PAH[i].get() << std::endl;
+
+			Mapping.push_back(memoryLocation.str());
+
+			memoryLocation.str("");
+        }
+        else {
+			memoryLocation << m_PAH[i].get() << std::endl;
+
+			int pos = find(Mapping.begin(), Mapping.end(), memoryLocation.str()) - Mapping.begin();
+
+			memoryLocation.str("");
+
+			out[pos].back() = out[pos].back() + 1;
+        }
     }
 }
 

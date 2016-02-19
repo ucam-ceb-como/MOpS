@@ -68,6 +68,12 @@ inline double Sweep::Component::MinPAH() const {return m_minPAH;};
 //! Returns component density (kg/m3).
 inline double Sweep::Component::Density() const {return m_density;};
 
+//! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in a PAH below a certain threshold it is removed. Return this threshold in terms of the total number of 6-member rings.
+inline double Sweep::Component::ThresholdOxidation() const {return m_thresholdOxidation;};
+
+//! Allow PAHs in soot particles to point to the same memory location after a doubling event.
+inline double Sweep::Component::SharedPointers() const {return m_sharedPointers;};
+
 //! Sets the density (g/cm3).
 inline void Sweep::Component::SetDensity(const double dens) {m_density = dens;};
 
@@ -79,6 +85,12 @@ inline void Sweep::Component::SetGrowthFact(const double gf) {m_growthfact = gf;
 
 //! Sets the minimum number of PAHs
 inline void Sweep::Component::SetMinPAH(const int mp) {m_minPAH = mp;};
+
+//! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in a PAH below a certain threshold it is removed. Sets this threshold in terms of the total number of 6-member rings.
+inline void Sweep::Component::SetThresholdOxidation(const int to) {m_thresholdOxidation = to;};
+
+//! Allow PAHs in soot particles to point to the same memory location after a doubling event.
+inline void Sweep::Component::SetSharedPointers(const int sp) {m_sharedPointers = sp;};
 
 // COMPONENT NAME.
 

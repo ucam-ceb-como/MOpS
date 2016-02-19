@@ -368,10 +368,15 @@ Sweep::Particle *const ParticleModel::CreateParticle(const double time, const do
     return part;
 }
 
-//Collision Efficiency
+/*!
+ * @brief Calculate collision efficiency based on the two selected particles.
+ *
+ * @param[in]    p1    Particle 1.
+ * @param[in]    p2    Particle 2.
+ */ 
 double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 {
-		double ceffi;
+	double ceffi;
 	if (Mode() == "NONE" || Mode() == "") {
 		double A = ColliParaA();
 		double B = ColliParaB();
@@ -397,30 +402,50 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 		return ceffi;
 	}
 	else {
-		double target_C = Threshold();
-		int ncarbon1,ncarbon2;
+        //! Threshold is based upon the total number of 6-member rings (excludes 5-member rings) in the PAH.
+		double target_Rings_Inception = Threshold();
+		int target_Rings_Condensation = ThresholdCondensation();
+		int nRings1,nRings2;
 		const AggModels::PAHPrimary *pah1 = NULL;
 		const AggModels::PAHPrimary *pah2 = NULL;
 		pah1 = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
 		pah2 = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
-		if (1==pah1->NumPAH() && 1==pah2->NumPAH()) // monomer vs. monomer only 
+		
+        //! Inception: PAH + PAH = Particle.
+		if (1==pah1->NumPAH() && 1==pah2->NumPAH())
         {
-			ncarbon2=(int)(1.0*pah2->NumCarbon());
-			ncarbon1=(int)(1.0*pah1->NumCarbon());
+			nRings2=(int)(1.0*pah2->NumRings());
+			nRings1=(int)(1.0*pah1->NumRings());
 			double redmass;
 			if (Mode() == "MAX")
-			    redmass = max(ncarbon1,ncarbon2);
+			    redmass = max(nRings1,nRings2);
             else if (Mode() == "MIN")
-			    redmass = min(ncarbon1,ncarbon2);
+			    redmass = min(nRings1,nRings2);
             else if (Mode() == "COMBINED")
-			    redmass = ncarbon1 + ncarbon2;
+			    redmass = nRings1 + nRings2;
             else if (Mode() == "REDUCED")
-			    redmass = ncarbon1*ncarbon2/(ncarbon1 + ncarbon2);
+			    redmass = nRings1*nRings2/(nRings1 + nRings2);
             else throw std::runtime_error("mode of collision efficiency is modified by unknown process, please check,Sweep::ParticleModel::CollisionEff()");
-			if (redmass >= target_C) ceffi = 1;
+			if (redmass >= target_Rings_Inception) ceffi = 1;
 			else ceffi = 0;
 		}
-        else ceffi=1; //other conditions
+
+		//! Condensation: PAH + Particle (2 >= PAHs) = Particle.
+		else if(pah1->NumPAH() > 1 && pah2->NumPAH() == 1){
+			nRings2=(int)(1.0*pah2->NumRings());
+			if (nRings2 >= target_Rings_Condensation) ceffi = 1;
+			else ceffi = 0;
+		}
+		else if(pah1->NumPAH() == 1 && pah2->NumPAH() > 1){
+			nRings1=(int)(1.0*pah1->NumRings());
+			if (nRings1 >= target_Rings_Condensation) ceffi = 1;
+			else ceffi = 0;
+		}
+		
+        //! Coagulation event: Particle + Particle = Particle. All particles are able to coagulate.
+		else {
+			ceffi = 1;
+		}
 		return ceffi;
 	}
 }
@@ -739,13 +764,19 @@ double ParticleModel::ColliParaA() const {return colliParaA;}
 double ParticleModel::ColliParaB() const {return colliParaB;}
 double ParticleModel::ColliParaC() const {return colliParaC;}
 
-//! set threshold for collision efficiency model
+//! Set the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to incept.
 void ParticleModel::SetThreshold(const int target) {m_threshold = target;}
 
-//! return threshold of collision efficency model
+//! Set the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to condense onto a particle (2 or more PAHs).
+void ParticleModel::SetThresholdCondensation(const int target) {m_thresholdCondensation = target;}
+
+//! Return the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to incept.
 double ParticleModel::Threshold() const {return m_threshold;}
 
-//! set mode for collision efficiency model, currently 4 modes are supported, min, max, combined and reduced
+//! Return the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to condense onto a particle (2 or more PAHs).
+int ParticleModel::ThresholdCondensation() const {return m_thresholdCondensation;}
+
+//! set mode for collision efficiency model, currently 4 modes are supported, min, max, combined and reduced.
 void ParticleModel::SetMode(const std::string &mode) {m_mode = mode;}
 
 //! specify the incepting pah, currently only pyrene and benzene is supported for PAH-PP model, details see the kmc
