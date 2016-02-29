@@ -60,9 +60,9 @@ dos2unix therm.dat
 dos2unix pahtest2.pl
 
 "$program" -p --flamepp --ppah > /dev/null
-R CMD BATCH --no-save --no-restore stats.r Routput.txt &
-R2pid=$!
-wait $R2pid
+#R CMD BATCH --no-save --no-restore stats.r Routput.txt &
+#R2pid=$!
+#wait $R2pid
 perl ./pahtest2.pl 
 
 #Capture the exit value
@@ -73,8 +73,8 @@ if((testresult!=0))
 fi
 
 rm pahtest2-bintree-serializer*
-rm stats.csv
-rm Routput.txt
+#rm stats.csv
+#rm Routput.txt
 # All tests passed
 echo "All tests passed"
 exit 0
