@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mechanism name="soot model" units="CGS">
+
+    <coagulation>
+		<kernel>transition</kernel>
+		<A>1</A>
+    </coagulation>	
+	
+	<component id="soot" type="bulk">
+		<description>soot</description>
+		<mode>MIN</mode> <!-- MIN, MAX, COMBINED, NONE. -->
+		<threshold>16</threshold>
+		<thresholdCondensation>16</thresholdCondensation>
+		<thresholdOxidation>16</thresholdOxidation>
+		<sharedPointers>1</sharedPointers>			
+		<InceptedPAH>A1</InceptedPAH>
+		<density units="g/cm3">1.88</density>
+		<molwt units="g/mol">0.0</molwt>
+		<coalthresh>1.69</coalthresh>
+		<growthfact>0.0263</growthfact>
+		<minPAH>2</minPAH>
+    </component> 
+    
+	<particle id="[soot]" model="PAH_KMC" subtree="false">
+		<sintering enable="true" model="viscous_flow">
+			<A units="s/m">1.1e-14</A>
+			<E units="K">96102.95886456579</E>
+			<Dpmin units="m">1.58e-09</Dpmin>
+		</sintering>
+	</particle>
+    <pahinception/>
+</mechanism>
+
