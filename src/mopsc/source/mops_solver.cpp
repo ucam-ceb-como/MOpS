@@ -230,6 +230,35 @@ void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 }
 
 
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+// Runs the solver for the given reactor, advancing it
+// to the given stop time.  The numerical parameters given
+// are the number of internal steps to take, and the number
+// of internal iterations.  Default values of <=0 will use
+// an adaptive method (NOT YET IMPLEMENTED).  Internal solver
+// output is provided after each step/iteration by passing
+// a function pointer.
+// with diags
+void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
+	Sweep::rng_type &rng, OutFnPtr out, void *data, bool writediags)
+{
+	// Mark the current time.
+	m_cpu_mark = clock();
+	// Solve reactor.
+	m_ode.Solve(r, tstop);
+	r.SetTime(tstop);
+	// Calculate CPU time.
+	double dt = calcDeltaCT(m_cpu_mark);
+	m_tottime += dt;
+	m_chemtime += dt;
+	// Perform output.
+	if (out) out(nsteps, niter, r, *this, data);
+}
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+
 /*!
 Retrieves the solution vector if the basic gpc ode solver is called
 @param[in] n_sensi         Number of sensitivities computed

@@ -77,6 +77,9 @@ Simulator::Simulator(void)
   m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
   m_output_step(0), m_output_iter(0), m_write_jumps(false),
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+  m_write_diags(false), 
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
   m_write_ensemble_file(false),
   m_write_PAH(false), m_mass_spectra(true), m_mass_spectra_ensemble(true), 
   m_mass_spectra_xmer(1), m_mass_spectra_frag(false), 
@@ -112,6 +115,9 @@ Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
         m_output_step = rhs.m_output_step;
         m_output_iter = rhs.m_output_iter;
         m_write_jumps = rhs.m_write_jumps;
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+		m_write_diags = rhs.m_write_diags;
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
         m_write_ensemble_file = rhs.m_write_ensemble_file;
         m_write_PAH = rhs.m_write_PAH;
         m_mass_spectra = rhs.m_mass_spectra;
@@ -258,6 +264,15 @@ void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
+
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+//! Set simulator to write the diagnosticss CSV file.
+void Simulator::SetWriteDiagsFile(bool writediags) {m_write_diags = writediags;}
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteEnsembleFile(bool writeensemble) {m_write_ensemble_file=writeensemble;}
@@ -416,6 +431,46 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
         // Initialise some LOI stuff
         if (s.GetLOIStatus() == true) setupLOI(r, s);
+		
+		
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+		if (m_write_diags) {
+			/* Create diagnostics csv file with Pre/post split SV, [TiCl4], #SPs, #events in split 
+			step including additions in LPDA */
+			ofstream splitFile;
+			int process_iter;
+			std::vector<std::string> tmpPNames;
+
+			r.Mech()->ParticleMech().GetProcessNames(tmpPNames, 0);
+
+			// Add headers to split diagnostics file
+			splitFile.open("Split-diagnostics.csv");
+			splitFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , "
+				<< "SV in (-)" << " , " << "SV out (-)" << " , "
+				<< "TiCl4 in (mol/cm3)" << " , " << "TiCl4 out (mol/cm3)" << " , "
+				<< "SP in (-)" << " , " << "SP out (-)" << " , ";
+			for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
+				splitFile << tmpPNames[process_iter] << " , ";
+			}
+			splitFile << " TransitionRegimeCoagulation SF1-p1" << " , "    // Label individual coagulation terms
+				<< " TransitionRegimeCoagulation SF2-p1" << " , "
+				<< " TransitionRegimeCoagulation SF3-p1" << " , "
+				<< " TransitionRegimeCoagulation SF4-p1" << " , "
+				<< " TransitionRegimeCoagulation FM1-p1" << " , "
+				<< " TransitionRegimeCoagulation FM2-p1" << " , "
+				<< " TransitionRegimeCoagulation SF1-p2" << " , "
+				<< " TransitionRegimeCoagulation SF2-p2" << " , "
+				<< " TransitionRegimeCoagulation SF3-p2" << " , "
+				<< " TransitionRegimeCoagulation SF4-p2" << " , "
+				<< " TransitionRegimeCoagulation FM1-p2" << " , "
+				<< " TransitionRegimeCoagulation FM2-p2" << " , "
+				<< "\n";
+			splitFile.close();
+		}
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
 
         // Loop over the time intervals.
         unsigned int global_step = 0;
@@ -432,8 +487,20 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             for (istep=0; istep<iint->StepCount(); ++istep, ++global_step) {
                 // Run the solver for this step (timed).
                 m_cpu_mark = clock();
-                s.Solve(r, t2+=dt, iint->SplittingStepCount(), m_niter,
-                        rng, &fileOutput, (void*)this);
+                
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+				if (m_write_diags) {
+					s.Solve(r, t2 += dt, iint->SplittingStepCount(), m_niter,
+						rng, &fileOutput, (void*)this, m_write_diags);
+				} else {
+					s.Solve(r, t2 += dt, iint->SplittingStepCount(), m_niter,
+						rng, &fileOutput, (void*)this);
+				}
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+				
 
                 //Set up and solve Jacobian here
                 if (s.GetLOIStatus() == true)

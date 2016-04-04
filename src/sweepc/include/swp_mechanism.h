@@ -254,6 +254,33 @@ public:
         rng_type &rng
         ) const;
 
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	//! LPDA for all particles with count tracking
+	void LPDA(
+		double t,   // Time up to which to integrate.
+		Cell &sys,// System to update.
+		rng_type &rng,
+		unsigned int *addcount
+		) const;
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	//! LPDA for one particle with count tracking
+	void UpdateParticle(
+		Particle &sp, // Particle to update.
+		Cell &sys,    // System to which the particle belongs.
+		double t,       // Time up to which to integrate.
+		rng_type &rng,
+		unsigned int *addcount
+		) const;
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+
     // READ/WRITE/COPY.
 
     // Creates a copy of the mechanism.

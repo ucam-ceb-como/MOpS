@@ -164,6 +164,15 @@ public:
     //! Set simulator to write the jumps CSV file.
     void SetWriteJumpFile(bool writejumps);
 
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	//! Set simulator to write the diagnostics CSV file.
+	void SetWriteDiagsFile(bool writediags);
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+
     //! Set the simulator to write the particle binary file
     void SetWriteEnsembleFile(bool writeparticles);
 
@@ -314,6 +323,16 @@ private:
     // Flag controlling whether the number of jump events should
     // be written to CSV output. Default false.
     bool m_write_jumps;
+
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	// Flag controlling whether the split event diagnostics should
+	// be written to CSV output. Default false.
+	bool m_write_diags;
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
 
     //! Should the ensemble be written to a reusable binary file?
     bool m_write_ensemble_file;

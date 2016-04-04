@@ -46,6 +46,17 @@
 #include "csv_io.h"
 #include <stdexcept>
 
+
+
+////////////////// aab64 - Debugging purposes only //////////////////
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <boost/lexical_cast.hpp>
+/////////////////////////////////////////////////////////////////////
+
+
+
 using namespace Mops;
 using namespace std;
 using namespace Strings;
@@ -76,10 +87,97 @@ StrangSolver::~StrangSolver(void)
 // Solves the coupled reactor using a Strang splitting algorithm
 // up to the stop time.  calls the output routine once at the
 // end of the function.  niter is ignored.
+void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
+	Sweep::rng_type &rng,
+	OutFnPtr out, void *data)
+{
+
+	// Mark the time at the start of the step, in order to
+	// calculate total computation time.
+	clock_t totmark = clock();
+
+	// Time counters.
+	double t2 = r.Time();
+	double dt = (tstop - t2) / (double)nsteps; // Step size.
+	double h = dt * 0.5; // Half step size.
+
+	// Sweep time counters.
+	double ts1 = r.Time();
+	double ts2 = ts1;
+
+	// Variables required to ensure particle number density is correctly
+	// scaled with gas-phase expansion.
+	double rho = 0.0;
+
+	m_cpu_mark = clock();
+	// Solve first half-step of gas-phase chemistry.
+	rho = r.Mixture()->GasPhase().MassDensity();
+	m_ode.Solve(r, t2 += h);
+	r.SetTime(t2);
+	m_chemtime += calcDeltaCT(m_cpu_mark);
+
+	m_cpu_mark = clock();
+
+	// Solve one whole step of population balance (Sweep).
+	r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+	Run(ts1, ts2 += dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+
+	m_swp_ctime += calcDeltaCT(m_cpu_mark);
+
+	for (int i = 1; i<nsteps; ++i) {
+
+		m_cpu_mark = clock();
+		// Solve whole step of gas-phase chemistry.
+		rho = r.Mixture()->GasPhase().MassDensity();
+		m_ode.ResetSolver();
+		m_ode.Solve(r, t2 += dt);
+		r.SetTime(t2);
+		m_chemtime += calcDeltaCT(m_cpu_mark);
+
+		m_cpu_mark = clock();
+		// Solve whole step of population balance (Sweep).
+		r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+		Run(ts1, ts2 += dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+		m_swp_ctime += calcDeltaCT(m_cpu_mark);
+	}
+
+	m_cpu_mark = clock();
+	// Solve last half-step of gas-phase chemistry.    
+	m_ode.ResetSolver();
+	m_ode.Solve(r, t2 += h);
+	r.SetTime(t2);
+	m_chemtime += calcDeltaCT(m_cpu_mark);
+
+	// Calculate total computation time.
+	m_tottime += calcDeltaCT(totmark);
+
+	// Call the output function.
+	if (out) out(nsteps, niter, r, *this, data);
+}
+
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+// SOLVING REACTORS.
+
+// Solves the coupled reactor using a Strang splitting algorithm
+// up to the stop time.  calls the output routine once at the
+// end of the function.  niter is ignored.
+// with diagnostics
 void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter, 
                          Sweep::rng_type &rng,
-                         OutFnPtr out, void *data)
+                         OutFnPtr out, void *data, bool writediags)
 {
+	//Diagnostics file
+    ofstream splitFile;
+	
+	// Diagnostic variables
+	double tmpSVin, tmpSVout;
+	unsigned int tmpSPin, tmpSPout, addcount = 0;
+	int process_iter;
+	std::vector<unsigned int> tmpPCin, tmpPCout, tmpPCoutit;
+	Sprog::fvector tmpGPin, tmpGPout;
+
     // Mark the time at the start of the step, in order to
     // calculate total computation time.
     clock_t totmark = clock();
@@ -98,41 +196,111 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     double rho = 0.0;
 
     m_cpu_mark = clock();
-        // Solve first half-step of gas-phase chemistry.
-        rho = r.Mixture()->GasPhase().MassDensity();
-        m_ode.Solve(r, t2+=h);
-        r.SetTime(t2);
+    // Solve first half-step of gas-phase chemistry.
+    rho = r.Mixture()->GasPhase().MassDensity();
+    m_ode.Solve(r, t2+=h);
+    r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
     m_cpu_mark = clock();
 
-    // Solve one whole step of population balance (Sweep).
-        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+	if (writediags) {
+		// Diagnostics variables at start of split step
+		tmpSVin = r.Mixture()->SampleVolume();
+		tmpSPin = r.Mixture()->ParticleCount();
+		tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
+		r.Mixture()->GasPhase().GetConcs(tmpGPin);
+	}
 
-        m_swp_ctime += calcDeltaCT(m_cpu_mark);
-    
-    for (int i=1; i<nsteps; ++i) {
-        m_cpu_mark = clock();
-            // Solve whole step of gas-phase chemistry.
-            rho = r.Mixture()->GasPhase().MassDensity();
-            m_ode.ResetSolver();
-            m_ode.Solve(r, t2+=dt);
-            r.SetTime(t2);
+    // Solve one whole step of population balance (Sweep).
+    r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+    Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng, &addcount);
+
+    m_swp_ctime += calcDeltaCT(m_cpu_mark);
+
+	if (writediags) {
+		// Diagnostic variables at end of split step
+		tmpSVout = r.Mixture()->SampleVolume();
+		tmpSPout = r.Mixture()->ParticleCount();
+		tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
+		r.Mixture()->GasPhase().GetConcs(tmpGPout);
+
+		// Output diagnostics to file
+		splitFile.open("Split-diagnostics.csv", ios::app);
+		splitFile << ts2 << " , " << tstop << " , " << 0 << " , "
+			<< tmpSVin << " , " << tmpSVout << " , "
+			<< tmpGPin[0] << " , " << tmpGPout[0] << " , "
+			<< tmpSPin << " , " << tmpSPout << " , ";
+		for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
+			process_iter++) {
+			splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+		}
+		splitFile << addcount << " , ";
+		for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
+			process_iter < tmpPCin.size(); process_iter++) {
+			splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+		}
+		splitFile << "\n";
+		splitFile.close();
+	}
+
+	for (int i=1; i<nsteps; ++i) {
+
+		// Diagnostics variables at start of split step
+		addcount = 0;
+		if (writediags) {
+			tmpSVin = r.Mixture()->SampleVolume();
+			tmpSPin = r.Mixture()->ParticleCount();
+			tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
+			r.Mixture()->GasPhase().GetConcs(tmpGPin);
+		}
+
+		m_cpu_mark = clock();
+        // Solve whole step of gas-phase chemistry.
+        rho = r.Mixture()->GasPhase().MassDensity();
+        m_ode.ResetSolver();
+        m_ode.Solve(r, t2+=dt);
+        r.SetTime(t2);
         m_chemtime += calcDeltaCT(m_cpu_mark);
 
         m_cpu_mark = clock();
-            // Solve whole step of population balance (Sweep).
-            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
-        m_swp_ctime += calcDeltaCT(m_cpu_mark);        
+        // Solve whole step of population balance (Sweep).
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng, &addcount);
+        m_swp_ctime += calcDeltaCT(m_cpu_mark);  
+
+		if (writediags) {
+			// Diagnostic variables at end of split step
+			tmpSVout = r.Mixture()->SampleVolume();
+			tmpSPout = r.Mixture()->ParticleCount();
+			tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
+			r.Mixture()->GasPhase().GetConcs(tmpGPout);
+
+			// Output diagnostics to file
+			splitFile.open("Split-diagnostics.csv", ios::app);
+			splitFile << ts2 << " , " << tstop << " , " << i << " , "
+				<< tmpSVin << " , " << tmpSVout << " , "
+				<< tmpGPin[0] << " , " << tmpGPout[0] << " , "
+				<< tmpSPin << " , " << tmpSPout << " , ";
+			for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
+				process_iter++) {
+				splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+			}
+			splitFile << addcount << " , ";
+			for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
+				process_iter < tmpPCin.size(); process_iter++) {
+				splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+			}
+			splitFile << "\n";
+			splitFile.close();
+		}
     }
 
     m_cpu_mark = clock();
-        // Solve last half-step of gas-phase chemistry.    
-        m_ode.ResetSolver();
-        m_ode.Solve(r, t2+=h);
-        r.SetTime(t2);
+    // Solve last half-step of gas-phase chemistry.    
+    m_ode.ResetSolver();
+    m_ode.Solve(r, t2+=h);
+    r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
     // Calculate total computation time.
@@ -141,6 +309,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     // Call the output function.
     if (out) out(nsteps, niter, r, *this, data);
 }
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
 
 
 // SOLUTION ROUTINES.
@@ -161,41 +331,40 @@ void StrangSolver::multiStrangStep(double dt, unsigned int n, Mops::Reactor &r,
     double rho = 0.0;
 
     m_cpu_mark = clock();
-        // Solve first half-step of gas-phase chemistry.
-        rho = r.Mixture()->GasPhase().MassDensity();
-        m_ode.Solve(r, t2+=h);
-        r.SetTime(t2);
+    // Solve first half-step of gas-phase chemistry.
+    rho = r.Mixture()->GasPhase().MassDensity();
+    m_ode.Solve(r, t2+=h);
+    r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
     m_cpu_mark = clock();
 
     // Solve one whole step of population balance (Sweep).
-        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+    r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+    Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
-        m_swp_ctime += calcDeltaCT(m_cpu_mark);
+    m_swp_ctime += calcDeltaCT(m_cpu_mark);
     
     for (unsigned int i=1; i!=n; ++i) {
         m_cpu_mark = clock();
-            // Solve whole step of gas-phase chemistry.
-            rho = r.Mixture()->GasPhase().MassDensity();
-            m_ode.ResetSolver();
-            m_ode.Solve(r, t2+=dt);
-            r.SetTime(t2);
+        // Solve whole step of gas-phase chemistry.
+        rho = r.Mixture()->GasPhase().MassDensity();
+        m_ode.ResetSolver();
+        m_ode.Solve(r, t2+=dt);
+        r.SetTime(t2);
         m_chemtime += calcDeltaCT(m_cpu_mark);
 
         m_cpu_mark = clock();
-            // Solve whole step of population balance (Sweep).
-            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+        // Solve whole step of population balance (Sweep).
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
         m_swp_ctime += calcDeltaCT(m_cpu_mark);
-        
     }
 
     m_cpu_mark = clock();
-        // Solve last half-step of gas-phase chemistry.    
-        m_ode.ResetSolver();
-        m_ode.Solve(r, t2+=h);
-        r.SetTime(t2);
+    // Solve last half-step of gas-phase chemistry.    
+    m_ode.ResetSolver();
+    m_ode.Solve(r, t2+=h);
+    r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 }

@@ -100,6 +100,27 @@ public:
             void *data    // Custom data object which will be passed as argument to out().
         );
 
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	// Solves the coupled reactor using the predictor-corrector splitting
+	// algorithm up to the stop time.  Calls the output function after
+	// each iteration of the last internal step.
+	// Includes split diagnostics variable
+	virtual void Solve(
+		Reactor &r,   // The reactor to solve.
+		double tstop,   // The end time for the step.
+		int nsteps,   // Number of internal steps to take.
+		int niter,    // Number of internal iterations to take.
+		Sweep::rng_type &rng,  // Random number generator
+		OutFnPtr out, // Output function pointer.
+		void *data,    // Custom data object which will be passed as argument to out().
+		bool writediags // writes split diagnostics
+		);
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+
     /*
     // Run the solver for the given reactor and the 
     // given time intervals.
@@ -177,6 +198,21 @@ private:
         Sweep::rng_type &rng  // Random number generator
         );
 
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	// Performs a step-wise iteration on the reactor to recalculate
+	// the source terms for the gas-phase effect on the particle model.
+	void iteration(
+		Reactor &r, // Reactor to solve.
+		double dt,    // Time step size.
+		Sweep::rng_type &rng,  // Random number generator
+		unsigned int *addcount // Counts number of LPDA additions
+		);
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+	
     // Terminates an iteration step.
     void endIteration();
 

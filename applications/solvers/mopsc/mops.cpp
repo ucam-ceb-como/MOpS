@@ -72,6 +72,14 @@ int main(int argc, char* argv[])
     bool fensembles(false); // Should an *.ens file be written?
     bool fnew(false);       // Should the new network interface be used?
 
+
+
+	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	bool fdiags(false);     // Should diagnostics from the split steps be output?
+	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+
     try {
 
         // Generic options for the program
@@ -121,6 +129,12 @@ int main(int argc, char* argv[])
         ("ensemble", "write full ensembles to binary files")
         ("ppah", "write full PAHPP data")
         ("jumps", "write stochastic jumps data")
+
+
+
+		//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+		("diags", "write split diagnostics data")
+		//////////////////////////////////////////// aab64 ////////////////////////////////////////////
         ;
 
         // Combine sets of program options
@@ -187,6 +201,12 @@ int main(int argc, char* argv[])
         if (vm.count("ppah")) fpah = true;
         if (vm.count("jumps")) fjumps = true;
         if (vm.count("ensemble")) fensembles = true;
+
+
+
+		//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+		if (vm.count("diags")) fdiags = true;
+		//////////////////////////////////////////// aab64 ////////////////////////////////////////////
     }
 
     // Display any error messages from incorrect command-line flags
@@ -224,6 +244,14 @@ int main(int argc, char* argv[])
     sim.SetWriteEnsembleFile(fensembles);
     sim.SetWritePAH(fpah);
 
+
+	
+	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	sim.SetWriteDiagsFile(fdiags);
+	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+	
     // Create the solver
     solver = Mops::SolverFactory::Create(soltype);
 
@@ -260,7 +288,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    // Set the sepcies in the particle mechanism
+    // Set the species in the particle mechanism
     // (needed even if only gas-phase solver called)
     mech.ParticleMech().SetSpecies(mech.GasMech().Species());
 

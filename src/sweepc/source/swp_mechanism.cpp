@@ -57,7 +57,6 @@
 #include "swp_particle.h"
 #include "swp_PAH_primary.h"
 
-
 using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
@@ -981,6 +980,156 @@ void Mechanism::Mass_pah(Ensemble &m_ensemble) const
      }
 }
 
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+// LINEAR PROCESS DEFERMENT ALGORITHM with tracking of events per split
+
+/*!
+* Performs linear process updates on all particles in a system.
+*
+*@param[in,out]    sys         System containing particles to update
+*@param[in]        t           Time upto which particles to be updated
+*@param[in,out]    rng         Random number generator
+*@param[in,out]    addcount    Counts the number of LPDA additions per split step
+*/
+void Mechanism::LPDA(double t, Cell &sys, rng_type &rng, unsigned int *addcount) const
+{
+	// Check that there are particles to update and that there are
+	// deferred processes to perform.
+	if ((sys.ParticleCount() > 0) &&
+		(m_anydeferred ||
+		(AggModel() == AggModels::PAH_KMC_ID) ||
+		(AggModel() == AggModels::BinTree_ID) ||
+		(AggModel() == AggModels::BinTreeSilica_ID) ||
+		(AggModel() == AggModels::SurfVolSilica_ID) ||
+		(AggModel() == AggModels::SurfVol_ID))) {
+		// Stop ensemble from doubling while updating particles.
+		sys.Particles().FreezeDoubling();
+
+		// Perform deferred processes on all particles individually.
+		Ensemble::iterator i;
+		for (i = sys.Particles().begin(); i != sys.Particles().end(); ++i) {
+			UpdateParticle(*(*i), sys, t, rng, addcount);
+		}
+
+		// Now remove any invalid particles and update the ensemble.
+		sys.Particles().RemoveInvalids();
+
+		// Start particle doubling again.  This will also double the ensemble
+		// if too many particles have been removed.
+		sys.Particles().UnfreezeDoubling();
+	}
+}
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+/*!
+* Performs linear process updates on a particle in the given system and tracks updates.
+*
+*@param[in,out]    sp          Particle to update
+*@param[in,out]    sys         System containing particle to update
+*@param[in]        t           Time upto which particle to be updated
+*@param[in,out]    rng         Random number generator
+*/
+void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng, unsigned int *addcount) const
+{
+	// Deal with the growth of the PAHs
+	if (AggModel() == AggModels::PAH_KMC_ID)
+	{
+		// Calculate delta-t and update particle time.
+		double dt;
+		dt = t - sp.LastUpdateTime();
+		sp.SetTime(t);
+
+		// If the agg model is PAH_KMC_ID then all the primary
+		// particles must be PAHPrimary.
+		AggModels::PAHPrimary *pah =
+			dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
+
+		// Update individual PAHs within this particle by using KMC code
+		// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
+		pah->UpdatePAHs(t, *this, sys, rng);
+
+		pah->UpdateCache();
+		pah->CheckRounding();
+		if (sp.IsValid()) {
+			sp.UpdateCache();
+
+			// Sinter the particles for the soot model (as no deferred process)
+			if (m_sint_model.IsEnabled()) {
+				pah->Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+			}
+			sp.UpdateCache();
+		}
+	}
+
+	// Sinter the particles if no deferred processes
+	if (m_sint_model.IsEnabled() && !m_anydeferred
+		&& AggModel() != AggModels::PAH_KMC_ID) {
+
+		// Calculate delta-t and update particle time.
+		double dt;
+		dt = t - sp.LastUpdateTime();
+		sp.SetTime(t);
+
+		sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+
+		// Check particle is valid and recalculate cache.
+		if (sp.IsValid()) {
+			sp.UpdateCache();
+		}
+	}
+
+	// If there are no deferred processes then stop right now.
+	if (m_anydeferred) {
+		PartProcPtrVector::const_iterator i;
+		double rate, dt;
+
+		while ((sp.LastUpdateTime() < t) && sp.IsValid()) {
+			// Calculate delta-t and update particle time.
+			dt = t - sp.LastUpdateTime();
+			sp.SetTime(t);
+
+			// Loop through all processes, performing those
+			// which are deferred.
+			for (i = m_processes.begin(); i != m_processes.end(); ++i) {
+				if ((*i)->IsDeferred()) {
+					// Get the process rate x the time interval.
+					rate = (*i)->Rate(t, sys, sp) * dt;
+
+					// Use a Poission deviate to calculate number of
+					// times to perform the process.  If the rate is
+					// 0 then the count is guaranteed to be 0
+					if (rate > 0) {
+						boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
+						unsigned num = repeatDistrib(rng);
+						if (num > 0) {
+							// Do the process to the particle.
+							(*i)->Perform(t, sys, sp, rng, num);
+							*addcount = *addcount + num;
+						}
+					}
+				}
+			}
+
+			// Perform sintering update.
+			if (m_sint_model.IsEnabled()) {
+				sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+			}
+		}
+		// Check that the particle is still valid, only calculate
+		// cache if it is.
+		if (sp.IsValid())
+			sp.UpdateCache();
+	}
+}
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+
 // READ/WRITE/COPY.
 
 // Creates a copy of the mechanism.
@@ -1167,3 +1316,5 @@ void Mechanism::releaseMem(void)
     m_proccount.clear();
     m_fictcount.clear();
 }
+
+
