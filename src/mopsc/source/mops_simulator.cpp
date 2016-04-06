@@ -453,7 +453,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 				partProcFile << tmpPNames[process_iter] << " , ";
 			}
 			partProcFile << "TransitionRegimeCoagulationTerms (kernel specific)";
-			for (process_iter = tmpPNames.size()+1; process_iter < r.Mech()->ParticleMech().GetTermCount(); 
+			for (process_iter = tmpPNames.size(); process_iter < r.Mech()->ParticleMech().GetTermCount()+1; 
 				process_iter++) {
 				partProcFile << " , ";
 			}
