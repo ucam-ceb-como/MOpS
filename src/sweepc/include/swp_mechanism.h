@@ -254,33 +254,7 @@ public:
         rng_type &rng
         ) const;
 
-
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	//! LPDA for all particles with count tracking
-	void LPDA(
-		double t,   // Time up to which to integrate.
-		Cell &sys,// System to update.
-		rng_type &rng,
-		unsigned int *addcount
-		) const;
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	//! LPDA for one particle with count tracking
-	void UpdateParticle(
-		Particle &sp, // Particle to update.
-		Cell &sys,    // System to which the particle belongs.
-		double t,       // Time up to which to integrate.
-		rng_type &rng,
-		unsigned int *addcount
-		) const;
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-
-
+		
     // READ/WRITE/COPY.
 
     // Creates a copy of the mechanism.
@@ -295,6 +269,21 @@ public:
     //! Get the number of times each process has been performed
     std::vector<unsigned int> GetProcessUsageCounts() const {return m_proccount;}
 	
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	// Get the number of times each fictitious process has been performed 
+	std::vector<unsigned int> GetFictitiousProcessCounts() const { return m_fictcount; }
+
+	// Get the term count
+	unsigned int GetTermCount() const { return m_termcount; };
+	
+	// Get the addition count
+	unsigned int GetDeferredAddCount() const { return m_addcount; };
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	
+
+
 	//! return a vector contain the information of particular primary particle with X molecules
 	void Mass_pah(Ensemble &m_ensemble) const;
 
@@ -324,6 +313,14 @@ private:
 
     // Process counters.
     mutable std::vector<unsigned int> m_proccount, m_fictcount; 
+
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	mutable unsigned int m_addcount; // The addition count for deferred additions
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
 
     // Clears the mechanism from memory.
     void releaseMem(void);

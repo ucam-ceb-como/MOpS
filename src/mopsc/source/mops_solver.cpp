@@ -232,6 +232,9 @@ void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
+// Should really replace the previous function so that duplicates do not exist
+// Placeholder variable for writing diagnostics - used in other MOPS solvers
+
 // Runs the solver for the given reactor, advancing it
 // to the given stop time.  The numerical parameters given
 // are the number of internal steps to take, and the number
@@ -239,7 +242,6 @@ void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 // an adaptive method (NOT YET IMPLEMENTED).  Internal solver
 // output is provided after each step/iteration by passing
 // a function pointer.
-// with diags
 void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	Sweep::rng_type &rng, OutFnPtr out, void *data, bool writediags)
 {

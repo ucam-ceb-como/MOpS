@@ -55,7 +55,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <boost/lexical_cast.hpp>
 /////////////////////////////////////////////////////////////////////
 
 
@@ -203,10 +202,12 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
+// Should really replace the previous function so that duplicates do not exist
+// Writes split diagnostics for process events
+
 // Solves the coupled reactor using the predictor-corrector splitting
 // algorithm up to the stop time.  Calls the output function after
 // each iteration of the last internal step.
-// with diagnostics
 void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	Sweep::rng_type &rng, OutFnPtr out, void *data, bool writediags)
 {
@@ -216,25 +217,25 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	double dt = (tstop - r.Time()) / (double)nsteps;
 
 	//Diagnostics file
-	ofstream splitFile;
+	ofstream partProcFile, gasConcFile;
 
 	// Diagnostic variables
 	double tmpSVin, tmpSVout;
-	unsigned int tmpSPin, tmpSPout, addcount, tmpAddcount;
+	unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout;
 	int process_iter;
-	std::vector<unsigned int> tmpPCin, tmpPCout;
+	std::vector<unsigned int> tmpPCin, tmpPCout, tmpFCin, tmpFCout;
 	Sprog::fvector tmpGPin, tmpGPout;
 
 	// Internal splits without file output.
 	for (step = 0; step<nsteps - 1; ++step) {
-
-		addcount = 0;
 
 		if (writediags) {
 			// Diagnostics variables at start of split step
 			tmpSVin = r.Mixture()->SampleVolume();
 			tmpSPin = r.Mixture()->ParticleCount();
 			tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
+			tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+			tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
 			r.Mixture()->GasPhase().GetConcs(tmpGPin);
 		}
 
@@ -244,7 +245,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		// Iterate this step for the required number of runs.
 		for (iter = 0; iter<niter; ++iter) {
 			if (m_ncalls == 0) m_ode.ResetSolver(*m_reac_copy);
-			iteration(r, dt, rng, &addcount);
+			iteration(r, dt, rng);
 		}
 
 		// Wind up the iteration algorithm.
@@ -255,35 +256,54 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpSVout = r.Mixture()->SampleVolume();
 			tmpSPout = r.Mixture()->ParticleCount();
 			tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
+			tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+			tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
 
-			// Output diagnostics to file
-			splitFile.open("Split-diagnostics.csv", ios::app);
-			splitFile << r.Time() << " , " << tstop << " , " << step << " , "
+			// Output particle diagnostics to file
+			partProcFile.open("Part-split-diagnostics.csv", ios::app);
+			partProcFile << r.Time() << " , " << tstop << " , " << step << " , "
 				<< tmpSVin << " , " << tmpSVout << " , "
-				<< tmpGPin[0] << " , " << tmpGPout[0] << " , "
 				<< tmpSPin << " , " << tmpSPout << " , ";
 			for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 				process_iter++) {
-				splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
 			}
-			splitFile << addcount << " , ";
+			if (r.Mech()->ParticleMech().AnyDeferred()) {
+			    partProcFile << tmpAddout - tmpAddin << " , ";
+		    }
+		    else {
+			    partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+		    }
 			for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
 				process_iter < tmpPCin.size(); process_iter++) {
-				splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
 			}
-			splitFile << "\n";
-			splitFile.close();
+			for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
+			    process_iter < tmpPCin.size(); process_iter++) {
+			    partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
+		    }
+			partProcFile << "\n";
+			partProcFile.close();
+			
+		    // Output gasphase diagnostics to file
+		    gasConcFile.open("Chem-split-diagnostics.csv", ios::app);
+		    gasConcFile << r.Time() << " , " << tstop << " , " << step << " , ";
+		    for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
+			    gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
+		    }
+		    gasConcFile << "\n";
+		    gasConcFile.close();
 		}
 	}
-
-	addcount = 0;
 
 	if (writediags) {
 		// Diagnostics variables at start of split step
 		tmpSVin = r.Mixture()->SampleVolume();
 		tmpSPin = r.Mixture()->ParticleCount();
 		tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
+		tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+		tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
 		r.Mixture()->GasPhase().GetConcs(tmpGPin);
 	}
 
@@ -291,36 +311,55 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	beginIteration(r, step, dt);
 	for (iter = 0; iter != niter; ++iter) {
 		if (m_ncalls == 0) m_ode.ResetSolver(*m_reac_copy);
-		iteration(r, dt, rng, &addcount);
+		iteration(r, dt, rng);
 		out(step + 1, iter + 1, r, *this, data);
 	}
+	endIteration();
 
 	if (writediags) {
 		// Diagnostic variables at end of split step
 		tmpSVout = r.Mixture()->SampleVolume();
 		tmpSPout = r.Mixture()->ParticleCount();
 		tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
+		tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+		tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
 
-		// Output diagnostics to file
-		splitFile.open("Split-diagnostics.csv", ios::app);
-		splitFile << r.Time() << " , " << tstop << " , " << step+1 << " , "
+		// Output particle diagnostics to file
+		partProcFile.open("Part-split-diagnostics.csv", ios::app);
+		partProcFile << r.Time() << " , " << tstop << " , " << step + 1 << " , "
 			<< tmpSVin << " , " << tmpSVout << " , "
-			<< tmpGPin[0] << " , " << tmpGPout[0] << " , "
 			<< tmpSPin << " , " << tmpSPout << " , ";
 		for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 			process_iter++) {
-			splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+			partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
 		}
-		splitFile << addcount << " , ";
+		if (r.Mech()->ParticleMech().AnyDeferred()) {
+			partProcFile << tmpAddout - tmpAddin << " , ";
+		}
+		else {
+			partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+		}
 		for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
 			process_iter < tmpPCin.size(); process_iter++) {
-			splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+			partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
 		}
-		splitFile << "\n";
-		splitFile.close();
+		for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
+			process_iter < tmpPCin.size(); process_iter++) {
+			partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
+		}
+		partProcFile << "\n";
+		partProcFile.close();
+		
+		// Output gasphase diagnostics to file
+		gasConcFile.open("Chem-split-diagnostics.csv", ios::app);
+		gasConcFile << r.Time() << " , " << tstop << " , " << step << " , ";
+		for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
+			gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
+		}
+		gasConcFile << "\n";
+		gasConcFile.close();
 	}
-	endIteration();
 
 	// Increment the total call count (number of times
 	// the solver has been called).
@@ -549,58 +588,6 @@ void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
     // Apply under-relaxation to source terms.
     relaxSrcTerms(m_srcterms_copy[1], m_srcterms[1], m_rlx_coeff);
 }
-
-
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-// Performs a step-wise iteration on the reactor to recalculate
-// the source terms for the gas-phase effect on the particle model.
-// Passes add count variable to solver
-void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng, unsigned int *addcount)
-{
-	// Reset reactor and solver for another iteration.
-	r = *m_reac_copy;
-
-	// Note the start time.
-	double ts1 = r.Time();
-
-	// Refresh from the copy of the ODE solver.
-	m_ode = m_ode_copy;
-	//m_ode.ResetSolver();
-
-	// Set source terms in ODE solver object.
-	//m_srcterms[0] = m_srcterms_copy[0];
-	m_srcterms[1] = m_srcterms_copy[1];
-	m_ode.SetExtSrcTerms(m_srcterms);
-
-	// Generate chemistry profile over the step using the current
-	// source terms.
-	m_cpu_mark = clock();
-	generateChemProfile(r, dt);
-	m_chemtime += calcDeltaCT(m_cpu_mark);
-
-	// Solve step using Sweep in order to update the
-	// source terms.
-	m_cpu_mark = clock();
-	// Set the stop time.    
-	double ts2 = ts1 + dt;
-
-	// Scale M0 according to gas-phase expansion.
-	r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()
-		/ r.Mixture()->GasPhase().MassDensity());
-
-	// Run Sweep for this time step.
-	Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng, addcount);
-	m_swp_ctime += calcDeltaCT(m_cpu_mark);
-
-	// Now update the source terms at the end of the step.
-	calcSrcTerms(m_srcterms_copy[1], r);
-
-	// Apply under-relaxation to source terms.
-	relaxSrcTerms(m_srcterms_copy[1], m_srcterms[1], m_rlx_coeff);
-}
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
 
 
 // Terminates an iteration step.

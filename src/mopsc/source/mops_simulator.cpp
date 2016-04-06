@@ -436,37 +436,39 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 		if (m_write_diags) {
-			/* Create diagnostics csv file with Pre/post split SV, [TiCl4], #SPs, #events in split 
-			step including additions in LPDA */
-			ofstream splitFile;
+			/* Create partProc diagnostics csv file with pre/post split SV, #SPs, #events in split
+			step including additions in LPDA, create gasConcFile with pre/post split concs */
+			ofstream partProcFile, gasConcFile;
 			int process_iter;
 			std::vector<std::string> tmpPNames;
 
 			r.Mech()->ParticleMech().GetProcessNames(tmpPNames, 0);
 
-			// Add headers to split diagnostics file
-			splitFile.open("Split-diagnostics.csv");
-			splitFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , "
+			// Add headers to partProc diagnostics file
+			partProcFile.open("Part-split-diagnostics.csv");
+			partProcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , "
 				<< "SV in (-)" << " , " << "SV out (-)" << " , "
-				<< "TiCl4 in (mol/cm3)" << " , " << "TiCl4 out (mol/cm3)" << " , "
 				<< "SP in (-)" << " , " << "SP out (-)" << " , ";
 			for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
-				splitFile << tmpPNames[process_iter] << " , ";
+				partProcFile << tmpPNames[process_iter] << " , ";
 			}
-			splitFile << " TransitionRegimeCoagulation SF1-p1" << " , "    // Label individual coagulation terms
-				<< " TransitionRegimeCoagulation SF2-p1" << " , "
-				<< " TransitionRegimeCoagulation SF3-p1" << " , "
-				<< " TransitionRegimeCoagulation SF4-p1" << " , "
-				<< " TransitionRegimeCoagulation FM1-p1" << " , "
-				<< " TransitionRegimeCoagulation FM2-p1" << " , "
-				<< " TransitionRegimeCoagulation SF1-p2" << " , "
-				<< " TransitionRegimeCoagulation SF2-p2" << " , "
-				<< " TransitionRegimeCoagulation SF3-p2" << " , "
-				<< " TransitionRegimeCoagulation SF4-p2" << " , "
-				<< " TransitionRegimeCoagulation FM1-p2" << " , "
-				<< " TransitionRegimeCoagulation FM2-p2" << " , "
-				<< "\n";
-			splitFile.close();
+			partProcFile << "TransitionRegimeCoagulationTerms (kernel specific)";
+			for (process_iter = tmpPNames.size()+1; process_iter < r.Mech()->ParticleMech().GetTermCount(); 
+				process_iter++) {
+				partProcFile << " , ";
+			}
+			partProcFile << "FictitiousCoagulationTerms (kernel specific)" << "\n";
+			partProcFile.close();
+
+			// Add headers to gasConc diagnostics file
+			gasConcFile.open("Chem-split-diagnostics.csv");
+			gasConcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , ";
+			for (process_iter = 0; process_iter < r.Mech()->GasMech().Species().size() - 1; process_iter++) {
+				gasConcFile << r.Mech()->GasMech().Species(process_iter)->Name() << " pre-split (mol/m3)" << " , "
+					<< r.Mech()->GasMech().Species(process_iter)->Name() << " post-split (mol/m3)" << " , ";
+			}
+			gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << "\n";
+			gasConcFile.close();
 		}
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
@@ -491,6 +493,8 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
+/* If the solve function with diagnostics capacity replaces the original solve function, this 
+   if statement is no longer necessary */
 				if (m_write_diags) {
 					s.Solve(r, t2 += dt, iint->SplittingStepCount(), m_niter,
 						rng, &fileOutput, (void*)this, m_write_diags);

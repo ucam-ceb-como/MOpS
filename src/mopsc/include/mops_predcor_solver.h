@@ -198,20 +198,6 @@ private:
         Sweep::rng_type &rng  // Random number generator
         );
 
-
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	// Performs a step-wise iteration on the reactor to recalculate
-	// the source terms for the gas-phase effect on the particle model.
-	void iteration(
-		Reactor &r, // Reactor to solve.
-		double dt,    // Time step size.
-		Sweep::rng_type &rng,  // Random number generator
-		unsigned int *addcount // Counts number of LPDA additions
-		);
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-
 	
     // Terminates an iteration step.
     void endIteration();

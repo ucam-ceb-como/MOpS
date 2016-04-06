@@ -52,7 +52,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <boost/lexical_cast.hpp>
 /////////////////////////////////////////////////////////////////////
 
 
@@ -158,24 +157,24 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-// SOLVING REACTORS.
+// Should really replace the previous function so that duplicates do not exist
+// Writes diagnostics for process events per split
 
 // Solves the coupled reactor using a Strang splitting algorithm
 // up to the stop time.  calls the output routine once at the
 // end of the function.  niter is ignored.
-// with diagnostics
 void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter, 
                          Sweep::rng_type &rng,
                          OutFnPtr out, void *data, bool writediags)
 {
 	//Diagnostics file
-    ofstream splitFile;
+    ofstream partProcFile, gasConcFile;
 	
 	// Diagnostic variables
 	double tmpSVin, tmpSVout;
-	unsigned int tmpSPin, tmpSPout, addcount = 0;
+	unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout;
 	int process_iter;
-	std::vector<unsigned int> tmpPCin, tmpPCout, tmpPCoutit;
+	std::vector<unsigned int> tmpPCin, tmpPCout, tmpFCin, tmpFCout;
 	Sprog::fvector tmpGPin, tmpGPout;
 
     // Mark the time at the start of the step, in order to
@@ -209,12 +208,14 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpSVin = r.Mixture()->SampleVolume();
 		tmpSPin = r.Mixture()->ParticleCount();
 		tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
+		tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+		tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
 		r.Mixture()->GasPhase().GetConcs(tmpGPin);
 	}
 
     // Solve one whole step of population balance (Sweep).
     r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-    Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng, &addcount);
+    Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
     m_swp_ctime += calcDeltaCT(m_cpu_mark);
 
@@ -223,35 +224,55 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpSVout = r.Mixture()->SampleVolume();
 		tmpSPout = r.Mixture()->ParticleCount();
 		tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
+		tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+		tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
 
-		// Output diagnostics to file
-		splitFile.open("Split-diagnostics.csv", ios::app);
-		splitFile << ts2 << " , " << tstop << " , " << 0 << " , "
+		// Output particle diagnostics to file
+		partProcFile.open("Part-split-diagnostics.csv", ios::app);
+		partProcFile << ts2 << " , " << tstop << " , " << 0 << " , "
 			<< tmpSVin << " , " << tmpSVout << " , "
-			<< tmpGPin[0] << " , " << tmpGPout[0] << " , "
 			<< tmpSPin << " , " << tmpSPout << " , ";
 		for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 			process_iter++) {
-			splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+			partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
 		}
-		splitFile << addcount << " , ";
+		if (r.Mech()->ParticleMech().AnyDeferred()) {
+			    partProcFile << tmpAddout - tmpAddin << " , ";
+		}
+		else {
+		    partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+		}
 		for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
 			process_iter < tmpPCin.size(); process_iter++) {
-			splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+			partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
 		}
-		splitFile << "\n";
-		splitFile.close();
+		for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
+			process_iter < tmpPCin.size(); process_iter++) {
+			partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
+		}
+		partProcFile << "\n";
+		partProcFile.close();
+		
+		// Output gasphase diagnostics to file
+		gasConcFile.open("Chem-split-diagnostics.csv", ios::app);
+		gasConcFile << ts2 << " , " << tstop << " , " << 0 << " , ";
+		for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
+			gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
+		}
+		gasConcFile << "\n";
+		gasConcFile.close();
 	}
 
 	for (int i=1; i<nsteps; ++i) {
 
 		// Diagnostics variables at start of split step
-		addcount = 0;
 		if (writediags) {
 			tmpSVin = r.Mixture()->SampleVolume();
 			tmpSPin = r.Mixture()->ParticleCount();
 			tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
+			tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+			tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
 			r.Mixture()->GasPhase().GetConcs(tmpGPin);
 		}
 
@@ -266,7 +287,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
         m_cpu_mark = clock();
         // Solve whole step of population balance (Sweep).
         r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng, &addcount);
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
         m_swp_ctime += calcDeltaCT(m_cpu_mark);  
 
 		if (writediags) {
@@ -274,25 +295,44 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpSVout = r.Mixture()->SampleVolume();
 			tmpSPout = r.Mixture()->ParticleCount();
 			tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
+			tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+			tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
 
-			// Output diagnostics to file
-			splitFile.open("Split-diagnostics.csv", ios::app);
-			splitFile << ts2 << " , " << tstop << " , " << i << " , "
+			// Output particle diagnostics to file
+			partProcFile.open("Part-split-diagnostics.csv", ios::app);
+			partProcFile << ts2 << " , " << tstop << " , " << i << " , "
 				<< tmpSVin << " , " << tmpSVout << " , "
-				<< tmpGPin[0] << " , " << tmpGPout[0] << " , "
 				<< tmpSPin << " , " << tmpSPout << " , ";
 			for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 				process_iter++) {
-				splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
 			}
-			splitFile << addcount << " , ";
+			if (r.Mech()->ParticleMech().AnyDeferred()) {
+			    partProcFile << tmpAddout - tmpAddin << " , ";
+		    }
+		    else {
+			    partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+		    }
 			for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
 				process_iter < tmpPCin.size(); process_iter++) {
-				splitFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
 			}
-			splitFile << "\n";
-			splitFile.close();
+			for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
+			    process_iter < tmpPCin.size(); process_iter++) {
+			    partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
+		    }
+			partProcFile << "\n";
+			partProcFile.close();
+			
+		    // Output gasphase diagnostics to file
+		    gasConcFile.open("Chem-split-diagnostics.csv", ios::app);
+		    gasConcFile << ts2 << " , " << tstop << " , " << i << " , ";
+		    for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
+				gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
+		    }
+		    gasConcFile << "\n";
+		    gasConcFile.close();
 		}
     }
 
