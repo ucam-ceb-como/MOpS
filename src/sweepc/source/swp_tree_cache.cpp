@@ -55,13 +55,14 @@ Sweep::TreeCache::TreeCache()
 , m_surf(0.0)
 , m_vol(0.0)
 , m_mass(0.0)
+, m_numcarbon(0)
+, m_frag(1)
 , m_dcolsqr(0.0)
 , m_inv_dcol(0.0)
 , m_inv_dcolsqr(0.0)
 , m_inv_sqrtmass(0.0)
 , m_d2_m_1_2(0.0)
 , m_freesurface(0.0)
-, m_numcarbon(0)
 {}
 
 /*!
@@ -86,6 +87,9 @@ Sweep::TreeCache::TreeCache(const Sweep::Particle &part)
     m_mass      = part.Mass();
     m_numcarbon = part.NumCarbon();
 
+    //! Fragmentation flag.
+    m_frag = part.Frag();
+
     // The particle does not currently provide this data (although it stores it)
     m_freesurface = 0.0;
 
@@ -107,23 +111,21 @@ Sweep::TreeCache::TreeCache(const Sweep::Particle &part)
 //
 Sweep::TreeCache &Sweep::TreeCache::operator+=(const TreeCache &rhs)
 {
-    // Sum cache variables.
-    m_sphdiam += rhs.m_sphdiam;
-    m_dcol += rhs.m_dcol;
-    m_dmob += rhs.m_dmob;
-    m_surf += rhs.m_surf;
-    m_vol  += rhs.m_vol;
-    m_mass += rhs.m_mass;
+    //! Sum cache variables.
+    m_sphdiam      += rhs.m_sphdiam;
+    m_dcol         += rhs.m_dcol;
+    m_dmob         += rhs.m_dmob;
+    m_surf         += rhs.m_surf;
+    m_vol          += rhs.m_vol;
+    m_mass         += rhs.m_mass;
+    m_numcarbon    += rhs.m_numcarbon;
+    m_frag         += rhs.m_frag;
     m_dcolsqr      += rhs.m_dcolsqr;
     m_inv_dcol     += rhs.m_inv_dcol;
     m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
     m_inv_sqrtmass += rhs.m_inv_sqrtmass;
     m_d2_m_1_2     += rhs.m_d2_m_1_2;
-
-    m_freesurface += rhs.m_freesurface;
-
-    m_numcarbon += rhs.m_numcarbon;
-
+    m_freesurface  += rhs.m_freesurface;
     return *this;
 }
 
@@ -135,24 +137,24 @@ const Sweep::TreeCache Sweep::TreeCache::operator+(const TreeCache &rhs) const {
 
 // CLEAR THE PARTICLE CACHE.
 
-// Resets the particle cache to its "empty" condition.
+//! Resets the particle cache to its "empty" condition.
 void Sweep::TreeCache::Clear(void)
 {
-    // Clear derived properties.
-    m_sphdiam = 0.0;
-    m_dcol = 0.0;
-    m_dmob = 0.0;
-    m_surf = 0.0;
-    m_vol  = 0.0;
-    m_mass = 0.0;
+    //! Clear derived properties.
+    m_sphdiam      = 0.0;
+    m_dcol         = 0.0;
+    m_dmob         = 0.0;
+    m_surf         = 0.0;
+    m_vol          = 0.0;
+    m_mass         = 0.0;
+    m_numcarbon    = 0;
+    m_frag         = 1;
     m_dcolsqr      = 0.0;
     m_inv_dcol     = 0.0;
     m_inv_dcolsqr  = 0.0;
     m_inv_sqrtmass = 0.0;
     m_d2_m_1_2     = 0.0;
-
-    m_freesurface = 0.0;
-    m_numcarbon = 0;
+    m_freesurface  = 0.0;
 }
 
 
@@ -184,8 +186,11 @@ double Sweep::TreeCache::Volume(void) const {return m_vol;}
 // Returns the mass.
 double Sweep::TreeCache::Mass(void) const {return m_mass;}
 
-//! Return the number of carbon atoms.
+//! Returns the number of carbon atoms.
 int Sweep::TreeCache::NumCarbon(void) const {return m_numcarbon;}
+
+//! Returns fragmentation flag.
+int Sweep::TreeCache::Frag(void) const {return m_frag;}
 
 //! Returns the property with the given ID.
 double Sweep::TreeCache::Property(PropID id) const
@@ -207,6 +212,10 @@ double Sweep::TreeCache::Property(PropID id) const
         //! Number of carbon atoms.
 		case iNumCarbon:
 		    return m_numcarbon;
+
+        //! Fragmentation flag.
+		case iFrag:
+		    return m_frag;
 
         // Collision rate properties:
         case iD2:

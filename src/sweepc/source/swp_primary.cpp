@@ -56,7 +56,7 @@ using namespace std;
 //! Default constructor (protected).
 AggModels::Primary::Primary(void)
 : m_pmodel(NULL), m_createt(0.0), m_time(0.0), m_diam(0.0), m_dcol(0.0), 
-  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0)
+  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0), m_frag(1)
 {
 }
 
@@ -130,6 +130,7 @@ AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
         m_vol  = rhs.m_vol;
         m_mass = rhs.m_mass;
         m_numcarbon = rhs.m_numcarbon;
+        m_frag = rhs.m_frag;
     }
     return *this;
 }
@@ -255,6 +256,16 @@ void AggModels::Primary::UpdateCache(void)
         m_numcarbon = 0;
     }
 
+    /**
+     * Indicate that a particle with one carbon atom cannot fragment.
+     * m_frag is used in the uniform selection of particle for fragmentation.
+     * By default, a particle is able to fragment.
+     */
+    m_frag = 1;
+    if(m_numcarbon < 2) {
+        m_frag = 0;
+    }
+
     // Calculate other properties (of sphere).
     m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
     m_dcol = m_diam;
@@ -287,8 +298,11 @@ double AggModels::Primary::Volume(void) const {return m_vol;}
 // Returns the mass.
 double AggModels::Primary::Mass(void) const {return m_mass;}
 
-//! Return the number of carbon atoms.
+//! Returns the number of carbon atoms.
 int AggModels::Primary::NumCarbon(void) const {return m_numcarbon;}
+
+//! Returns fragmentation flag.
+int AggModels::Primary::Frag(void) const {return m_frag;}
 
 //! Returns the property with the given ID.
 double AggModels::Primary::Property(const Sweep::PropID id) const
@@ -312,6 +326,11 @@ double AggModels::Primary::Property(const Sweep::PropID id) const
         //! Number of carbon atoms.
         case iNumCarbon:
             return m_numcarbon;
+
+        //! Fragmentation flag.
+        case iFrag:
+            return m_frag;
+
         default:
             return 0.0;
     }
@@ -340,6 +359,9 @@ void AggModels::Primary::SetMass(double m) {m_mass = m;}
 
 //! Sets the number of carbon atoms.
 void AggModels::Primary::SetNumCarbon(int numcarbon) {m_numcarbon = numcarbon;}
+
+//! Sets fragmentation flag.
+void AggModels::Primary::SetFrag(int frag) {m_frag = frag;}
 
 /*!
  * Check that this primary is a physically valid particle.  This currently
@@ -576,6 +598,11 @@ void AggModels::Primary::Serialize(std::ostream &out) const
         //! Write number of carbon atoms.
         val = (int)m_numcarbon;
         out.write((char*)&val, sizeof(val));
+
+        //! Write fragmentation flag.
+        val = (int)m_frag;
+        out.write((char*)&val, sizeof(val));
+
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, AggModels::Primary::Serialize).");
@@ -653,6 +680,10 @@ void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleMode
                 //! Read number of carbon atoms.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numcarbon = (int)val;
+
+                //! Read fragmentation flag.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_frag = (int)val;
     
                 break;
             default:
@@ -691,5 +722,8 @@ void AggModels::Primary::init(void)
     //! Number of carbon atoms.
     m_numcarbon = 0;
     
+    //! Fragmentation flag.
+    m_frag = 1;
+
     releaseMem();
 }

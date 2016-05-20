@@ -361,6 +361,12 @@ int Particle::NumCarbon(void) const
     return m_primary->NumCarbon();
 }
 
+//! Pass through to primary particle.
+int Particle::Frag(void) const
+{
+    return m_primary->Frag();
+}
+
 /*!
  * Pass through to primary particle
  */
@@ -430,6 +436,10 @@ double Particle::Property(PropID id) const
         //! Number of carbon atoms.
         case iNumCarbon:
             return NumCarbon();
+
+        //! Fragmentation flag.
+        case iFrag:
+            return Frag();
 
         // Collision rate properties:
         case iD2:

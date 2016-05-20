@@ -67,6 +67,7 @@ Sweep::TreeWeightedCache::TreeWeightedCache()
 , m_vol(0.0)
 , m_mass(0.0)
 , m_numcarbon(0)
+, m_frag(1)
 , m_dcolsqr(0.0)
 , m_inv_dcol(0.0)
 , m_inv_dcolsqr(0.0)
@@ -99,6 +100,9 @@ Sweep::TreeWeightedCache::TreeWeightedCache(const Sweep::Particle &part)
     m_vol       = part.Volume();
     m_mass      = part.Mass();
     m_numcarbon = part.NumCarbon();
+
+    //! Fragmentation flag.
+    m_frag =  part.Frag();
 
     // Derived quantites that are needed to the typical transition
     // regime coagulation kernel.
@@ -133,6 +137,7 @@ Sweep::TreeWeightedCache &Sweep::TreeWeightedCache::operator+=(const TreeWeighte
     m_vol          += rhs.m_vol;
     m_mass         += rhs.m_mass;
     m_numcarbon    += rhs.m_numcarbon;
+    m_frag         += rhs.m_frag;
     m_dcolsqr      += rhs.m_dcolsqr;
     m_inv_dcol     += rhs.m_inv_dcol;
     m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
@@ -165,6 +170,7 @@ void Sweep::TreeWeightedCache::Clear(void)
     m_vol          = 0.0;
     m_mass         = 0.0;
     m_numcarbon    = 0;
+    m_frag         = 1;
     m_dcolsqr      = 0.0;
     m_inv_dcol     = 0.0;
     m_inv_dcolsqr  = 0.0;
@@ -198,6 +204,10 @@ double Sweep::TreeWeightedCache::Property(PropID id) const
         //! Number of carbon atoms.
 		case iNumCarbon:
         	return m_numcarbon;
+
+        //! Fragmentation flag.
+		case iFrag:
+        	return m_frag;
 
         // Collision rate properties:
         case iD2:

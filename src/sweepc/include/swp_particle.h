@@ -138,8 +138,11 @@ public:
     //! Returns the mass.
     double Mass(void) const;
 
-    //! Returns the number of carbon atoms
+    //! Pass through to primary particle.
     int NumCarbon(void) const;
+
+    //! Pass through to primary particle.
+    int Frag(void) const;
 
     //! Returns the number of surface reaction sites.
     double GetSites(void) const;

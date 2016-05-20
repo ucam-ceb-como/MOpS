@@ -196,6 +196,9 @@ public:
     //! Returns the number of carbon atoms.
     int NumCarbon(void) const;
 
+    //! Returns fragmentation flag.
+    int Frag(void) const;
+
     //! Returns the property with the given ID.
     double Property(const Sweep::PropID id) const;
 
@@ -222,6 +225,9 @@ public:
 
     //! Sets the number of carbon atoms.
     void SetNumCarbon(int numcarbon);
+
+    //! Sets fragmentation flag.
+    void SetFrag(int frag);
 
     //! Check particle still meets physical conditions for being a particle.
     bool IsValid() const;
@@ -302,6 +308,7 @@ protected:
     double m_vol;  // Volume.
     double m_mass; // Mass.
     int m_numcarbon; /**< Number of carbon atoms. */
+    int m_frag;     /**< Fragmentation flag. */
 
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.

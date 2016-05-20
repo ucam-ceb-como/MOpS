@@ -395,6 +395,7 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
     SetVolume(source->Volume());
     SetMass(source->Mass());
     SetNumCarbon(source->NumCarbon());
+    SetFrag(source->Frag());
 
     // Set BinTreePrimary model characteristics
     m_numprimary        = source->m_numprimary;
