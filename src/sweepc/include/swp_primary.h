@@ -193,6 +193,9 @@ public:
     // Returns the mass.
     double Mass(void) const;
 
+    //! Returns the number of carbon atoms.
+    int NumCarbon(void) const;
+
     //! Returns the property with the given ID.
     double Property(const Sweep::PropID id) const;
 
@@ -216,6 +219,9 @@ public:
 
     // Sets the mass.
     void SetMass(double m);
+
+    //! Sets the number of carbon atoms.
+    void SetNumCarbon(int numcarbon);
 
     //! Check particle still meets physical conditions for being a particle.
     bool IsValid() const;
@@ -288,13 +294,14 @@ protected:
     double m_createt;   // Time at which primary was created.
     double m_time;      // Last time primary was updated.  Required for LPDA.
 
-    // Basic derived properties (calculated from above properties).
+    //! Basic derived properties (calculated from above properties).
     double m_diam; // Equivalent spherical diameter.
     double m_dcol; // Collision diameter.
     double m_dmob; // Mobility diameter.
     double m_surf; // Surface area.
     double m_vol;  // Volume.
     double m_mass; // Mass.
+    int m_numcarbon; /**< Number of carbon atoms. */
 
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.

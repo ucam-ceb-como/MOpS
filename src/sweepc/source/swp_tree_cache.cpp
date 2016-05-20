@@ -73,20 +73,21 @@ Sweep::TreeCache::TreeCache()
  */
 Sweep::TreeCache::TreeCache(const Sweep::Particle &part)
 {
-    // Quantities that must be provided by the particle
-    // Effectively this code defines an interface that the Particle
-    // class must provide.
-    m_sphdiam = part.SphDiameter();
-    m_dcol    = part.CollDiameter();
-    m_dmob    = part.MobDiameter();
-    m_surf    = part.SurfaceArea();
-    m_vol     = part.Volume();
-    m_mass    = part.Mass();
+    /**
+     * Quantities that must be provided by the particle.
+     * Effectively this code defines an interface that the Particle class must
+     * provide.
+     */
+    m_sphdiam   = part.SphDiameter();
+    m_dcol      = part.CollDiameter();
+    m_dmob      = part.MobDiameter();
+    m_surf      = part.SurfaceArea();
+    m_vol       = part.Volume();
+    m_mass      = part.Mass();
+    m_numcarbon = part.NumCarbon();
 
     // The particle does not currently provide this data (although it stores it)
     m_freesurface = 0.0;
-    m_numcarbon = 0;
-
 
     // Derived quantites that are needed to the typical transition
     // regime coagulation kernel.
@@ -183,8 +184,10 @@ double Sweep::TreeCache::Volume(void) const {return m_vol;}
 // Returns the mass.
 double Sweep::TreeCache::Mass(void) const {return m_mass;}
 
+//! Return the number of carbon atoms.
+int Sweep::TreeCache::NumCarbon(void) const {return m_numcarbon;}
 
-// Returns the property with the given ID.
+//! Returns the property with the given ID.
 double Sweep::TreeCache::Property(PropID id) const
 {
     switch (id) {
@@ -200,6 +203,11 @@ double Sweep::TreeCache::Property(PropID id) const
             return m_vol;
         case iM:      // Mass.
             return m_mass;
+
+        //! Number of carbon atoms.
+		case iNumCarbon:
+		    return m_numcarbon;
+
         // Collision rate properties:
         case iD2:
             return m_dcolsqr;
@@ -213,8 +221,6 @@ double Sweep::TreeCache::Property(PropID id) const
             return m_d2_m_1_2;
 		case iFS:
 			return m_freesurface;
-		case iNumCarbon:
-		    return m_numcarbon;
         case -1:
             // Special case property, used to select particles
             // uniformly.

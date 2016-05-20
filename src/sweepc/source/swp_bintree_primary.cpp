@@ -384,7 +384,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
  */
 void BinTreePrimary::CopyParts(const BinTreePrimary *source)
 {
-    // Set primary characteristics
+    //! Set primary characteristics.
     SetComposition(source->Composition());
     SetValues(source->Values());
     SetTime(source->LastUpdateTime());
@@ -394,6 +394,7 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
     SetSurfaceArea(source->SurfaceArea());
     SetVolume(source->Volume());
     SetMass(source->Mass());
+    SetNumCarbon(source->NumCarbon());
 
     // Set BinTreePrimary model characteristics
     m_numprimary        = source->m_numprimary;

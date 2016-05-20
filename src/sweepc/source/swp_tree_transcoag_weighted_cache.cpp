@@ -69,6 +69,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache()
 , m_surf(0.0)
 , m_vol(0.0)
 , m_mass(0.0)
+, m_numcarbon(0)
 , m_dcolsqr(0.0)
 , m_inv_dcol(0.0)
 , m_inv_dcolsqr(0.0)
@@ -98,15 +99,18 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache()
  */
 Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Particle &part)
 {
-    // Quantities that must be provided by the particle
-    // Effectively this code defines an interface that the Particle
-    // class must provide.
+    /**
+     * Quantities that must be provided by the particle.
+     * Effectively this code defines an interface that the Particle class must
+     * provide.
+     */
     m_sphdiam = part.SphDiameter();
     m_dcol    = part.CollDiameter();
     m_dmob    = part.MobDiameter();
     m_surf    = part.SurfaceArea();
     m_vol     = part.Volume();
     m_mass    = part.Mass();
+    m_numcarbon = part.NumCarbon();
 
     // Derived quantites that are needed to the typical transition
     // regime coagulation kernel.
@@ -143,13 +147,14 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
  */
 Sweep::TreeTransCoagWeightedCache &Sweep::TreeTransCoagWeightedCache::operator+=(const TreeTransCoagWeightedCache &rhs)
 {
-    // Sum cache variables.
-    m_sphdiam += rhs.m_sphdiam;
-    m_dcol += rhs.m_dcol;
-    m_dmob += rhs.m_dmob;
-    m_surf += rhs.m_surf;
-    m_vol  += rhs.m_vol;
-    m_mass += rhs.m_mass;
+    //! Sum cache variables.
+    m_sphdiam      += rhs.m_sphdiam;
+    m_dcol         += rhs.m_dcol;
+    m_dmob         += rhs.m_dmob;
+    m_surf         += rhs.m_surf;
+    m_vol          += rhs.m_vol;
+    m_mass         += rhs.m_mass;
+    m_numcarbon    += rhs.m_numcarbon;
     m_dcolsqr      += rhs.m_dcolsqr;
     m_inv_dcol     += rhs.m_inv_dcol;
     m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
@@ -181,13 +186,14 @@ const Sweep::TreeTransCoagWeightedCache Sweep::TreeTransCoagWeightedCache::opera
 //! Resets the particle cache to its "empty" condition.
 void Sweep::TreeTransCoagWeightedCache::Clear(void)
 {
-    // Clear derived properties.
-    m_sphdiam = 0.0;
-    m_dcol = 0.0;
-    m_dmob = 0.0;
-    m_surf = 0.0;
-    m_vol  = 0.0;
-    m_mass = 0.0;
+    //! Clear derived properties.
+    m_sphdiam      = 0.0;
+    m_dcol         = 0.0;
+    m_dmob         = 0.0;
+    m_surf         = 0.0;
+    m_vol          = 0.0;
+    m_mass         = 0.0;
+    m_numcarbon    = 0;
     m_dcolsqr      = 0.0;
     m_inv_dcol     = 0.0;
     m_inv_dcolsqr  = 0.0;
@@ -201,9 +207,9 @@ void Sweep::TreeTransCoagWeightedCache::Clear(void)
     m_d_2_w        = 0.0;
     m_m_1_2_w      = 0.0;
     m_d2m_1_2_w    = 0.0;
-    m_sites   = 0.0,
-    m_sinterrate = 0.0;
-    m_coverage   = 0.0;
+    m_sites        = 0.0,
+    m_sinterrate   = 0.0;
+    m_coverage     = 0.0;
 }
 
 /**
@@ -227,6 +233,11 @@ double Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
             return m_vol;
         case iM:      // Mass.
             return m_mass;
+
+        //! Number of carbon atoms.
+        case iNumCarbon:
+            return m_numcarbon;
+
         // Collision rate properties:
         case iD2:
             return m_dcolsqr;
@@ -262,9 +273,6 @@ double Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
             return m_coverage;
         case iFS:
             throw std::logic_error("Free surface no longer cached (TreeWeightedCache::Property)");
-            return 0.0;
-        case iNumCarbon:
-            throw std::logic_error("Number of carbons no longer cached (TreeWeightedCache::Property)");
             return 0.0;
         case -1:
             // Special case property, used to select particles

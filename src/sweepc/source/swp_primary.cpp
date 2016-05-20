@@ -53,10 +53,10 @@ using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor (protected).
+//! Default constructor (protected).
 AggModels::Primary::Primary(void)
 : m_pmodel(NULL), m_createt(0.0), m_time(0.0), m_diam(0.0), m_dcol(0.0), 
-  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0)
+  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0)
 {
 }
 
@@ -98,7 +98,7 @@ AggModels::Primary::~Primary()
 
 // OPERATOR OVERLOADS.
 
-// Assignment operator.
+//! Assignment operator.
 AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
 {
     if (this != &rhs) {
@@ -122,13 +122,14 @@ AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
         m_createt = rhs.m_createt;
         m_time    = rhs.m_time;
 
-        // Copy the derived properties.
+        //! Copy derived and basic properties.
         m_diam = rhs.m_diam;
         m_dcol = rhs.m_dcol;
         m_dmob = rhs.m_dmob;
         m_surf = rhs.m_surf;
         m_vol  = rhs.m_vol;
         m_mass = rhs.m_mass;
+        m_numcarbon = rhs.m_numcarbon;
     }
     return *this;
 }
@@ -222,7 +223,7 @@ AggModels::AggModelType AggModels::Primary::AggID(void) const {return AggModels:
 
 // BASIC DERIVED PARTICLE PROPERTIES.
 
-// Calculates the derived properties from the unique properties.
+//! Calculates the derived properties from the unique properties.
 void AggModels::Primary::UpdateCache(void)
 {
     double m = 0.0;
@@ -235,7 +236,25 @@ void AggModels::Primary::UpdateCache(void)
         if (m_pmodel->Components(i)->Density() > 0.0)
             m_vol  += m / m_pmodel->Components(i)->Density();
     }
-    
+
+    /**
+     * Get the number of carbon atoms.
+     * It is assumed that the 0th index of m_comp contains the number of carbon
+     * atoms.
+     */
+    m_numcarbon = 0;
+    m_numcarbon = m_comp[0];
+
+    /**
+     * For particles with one carbon atom, set the number of carbon atoms to 0.
+     * m_numcarbon is used to calculate the rate of fragmentation. Particles
+     * with an m_numcarbon of 1 cannot further fragment; therefore, to exclude
+     * these particles from the rate calculation m_numcarbon is set to 0.  
+     */
+    if(m_numcarbon < 2) {
+        m_numcarbon = 0;
+    }
+
     // Calculate other properties (of sphere).
     m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
     m_dcol = m_diam;
@@ -268,7 +287,10 @@ double AggModels::Primary::Volume(void) const {return m_vol;}
 // Returns the mass.
 double AggModels::Primary::Mass(void) const {return m_mass;}
 
-// Returns the property with the given ID.
+//! Return the number of carbon atoms.
+int AggModels::Primary::NumCarbon(void) const {return m_numcarbon;}
+
+//! Returns the property with the given ID.
 double AggModels::Primary::Property(const Sweep::PropID id) const
 {
     switch (id) {
@@ -286,6 +308,10 @@ double AggModels::Primary::Property(const Sweep::PropID id) const
             return m_vol;
         case iM:      // Mass.
             return m_mass;
+
+        //! Number of carbon atoms.
+        case iNumCarbon:
+            return m_numcarbon;
         default:
             return 0.0;
     }
@@ -311,6 +337,9 @@ void AggModels::Primary::SetVolume(double vol) {m_vol = vol;}
 
 // Sets the mass.
 void AggModels::Primary::SetMass(double m) {m_mass = m;}
+
+//! Sets the number of carbon atoms.
+void AggModels::Primary::SetNumCarbon(int numcarbon) {m_numcarbon = numcarbon;}
 
 /*!
  * Check that this primary is a physically valid particle.  This currently
@@ -483,7 +512,7 @@ AggModels::Primary *const AggModels::Primary::Clone(void) const
     return new Primary(*this);
 }
 
-// Writes the object to a binary stream.
+//! Writes the object to a binary stream.
 void AggModels::Primary::Serialize(std::ostream &out) const
 {
     if (out.good()) {
@@ -543,13 +572,17 @@ void AggModels::Primary::Serialize(std::ostream &out) const
         // Write mass.
         val = (double)m_mass;
         out.write((char*)&val, sizeof(val));
+
+        //! Write number of carbon atoms.
+        val = (int)m_numcarbon;
+        out.write((char*)&val, sizeof(val));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, AggModels::Primary::Serialize).");
     }
 }
 
-// Reads the object from a binary stream.
+//! Reads the object from a binary stream.
 void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
     releaseMem();
@@ -616,6 +649,10 @@ void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleMode
                 // Read mass.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_mass = (double)val;
+
+                //! Read number of carbon atoms.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_numcarbon = (int)val;
     
                 break;
             default:
@@ -638,7 +675,7 @@ void AggModels::Primary::releaseMem(void)
     m_values.clear();
 }
 
-// Initialisation routine.
+//! Initialisation routine.
 void AggModels::Primary::init(void)
 {
     m_pmodel = NULL;
@@ -650,5 +687,9 @@ void AggModels::Primary::init(void)
     m_surf = 0.0; // Surface area.
     m_vol = 0.0;  // Volume.
     m_mass = 0.0; // Mass.
+
+    //! Number of carbon atoms.
+    m_numcarbon = 0;
+    
     releaseMem();
 }

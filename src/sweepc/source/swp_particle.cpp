@@ -355,6 +355,12 @@ double Particle::Mass(void) const
     return m_primary->Mass();
 }
 
+//! Pass through to primary particle.
+int Particle::NumCarbon(void) const
+{
+    return m_primary->NumCarbon();
+}
+
 /*!
  * Pass through to primary particle
  */
@@ -420,6 +426,11 @@ double Particle::Property(PropID id) const
             return Volume();
         case iM:      // Mass.
             return Mass();
+        
+        //! Number of carbon atoms.
+        case iNumCarbon:
+            return NumCarbon();
+
         // Collision rate properties:
         case iD2:
             return CollDiameter() * CollDiameter();
@@ -439,9 +450,6 @@ double Particle::Property(PropID id) const
             return GetCoverageFraction();
         case iFS:
             throw std::logic_error("Free surface no longer supported (Particle::Property)");
-            return 0.0;
-        case iNumCarbon:
-            throw std::logic_error("Number of Carbon no longer supported (Particle::Property)");
             return 0.0;
         case -1:
             // Special case property, used to select particles

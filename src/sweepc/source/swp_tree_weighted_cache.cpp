@@ -66,6 +66,7 @@ Sweep::TreeWeightedCache::TreeWeightedCache()
 , m_surf(0.0)
 , m_vol(0.0)
 , m_mass(0.0)
+, m_numcarbon(0)
 , m_dcolsqr(0.0)
 , m_inv_dcol(0.0)
 , m_inv_dcolsqr(0.0)
@@ -86,15 +87,18 @@ Sweep::TreeWeightedCache::TreeWeightedCache()
  */
 Sweep::TreeWeightedCache::TreeWeightedCache(const Sweep::Particle &part)
 {
-    // Quantities that must be provided by the particle
-    // Effectively this code defines an interface that the Particle
-    // class must provide.
-    m_sphdiam = part.SphDiameter();
-    m_dcol    = part.CollDiameter();
-    m_dmob    = part.MobDiameter();
-    m_surf    = part.SurfaceArea();
-    m_vol     = part.Volume();
-    m_mass    = part.Mass();
+    /**
+     * Quantities that must be provided by the particle.
+     * Effectively this code defines an interface that the Particle class must
+     * provide.
+     */
+    m_sphdiam   = part.SphDiameter();
+    m_dcol      = part.CollDiameter();
+    m_dmob      = part.MobDiameter();
+    m_surf      = part.SurfaceArea();
+    m_vol       = part.Volume();
+    m_mass      = part.Mass();
+    m_numcarbon = part.NumCarbon();
 
     // Derived quantites that are needed to the typical transition
     // regime coagulation kernel.
@@ -114,19 +118,21 @@ Sweep::TreeWeightedCache::TreeWeightedCache(const Sweep::Particle &part)
 // OPERATOR OVERLOADS.
 
 
-// Addition-assignment operator (TreeWeightedCache RHS).
-//   This function is not used to coagulate particles, rather
-//   it is used to sum up particle properties in the ensemble binary tree.
-//
+/**
+ * Addition-assignment operator (TreeWeightedCache RHS).
+ * This function is not used to coagulate particles, rather it is used to sum
+ * up particle properties in the ensemble binary tree.
+ */
 Sweep::TreeWeightedCache &Sweep::TreeWeightedCache::operator+=(const TreeWeightedCache &rhs)
 {
-    // Sum cache variables.
-    m_sphdiam += rhs.m_sphdiam;
-    m_dcol += rhs.m_dcol;
-    m_dmob += rhs.m_dmob;
-    m_surf += rhs.m_surf;
-    m_vol  += rhs.m_vol;
-    m_mass += rhs.m_mass;
+    //! Sum cache variables.
+    m_sphdiam      += rhs.m_sphdiam;
+    m_dcol         += rhs.m_dcol;
+    m_dmob         += rhs.m_dmob;
+    m_surf         += rhs.m_surf;
+    m_vol          += rhs.m_vol;
+    m_mass         += rhs.m_mass;
+    m_numcarbon    += rhs.m_numcarbon;
     m_dcolsqr      += rhs.m_dcolsqr;
     m_inv_dcol     += rhs.m_inv_dcol;
     m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
@@ -148,16 +154,17 @@ const Sweep::TreeWeightedCache Sweep::TreeWeightedCache::operator+(const TreeWei
 
 // CLEAR THE PARTICLE CACHE.
 
-// Resets the particle cache to its "empty" condition.
+//! Resets the particle cache to its "empty" condition.
 void Sweep::TreeWeightedCache::Clear(void)
 {
-    // Clear derived properties.
-    m_sphdiam = 0.0;
-    m_dcol = 0.0;
-    m_dmob = 0.0;
-    m_surf = 0.0;
-    m_vol  = 0.0;
-    m_mass = 0.0;
+    //! Clear derived properties.
+    m_sphdiam      = 0.0;
+    m_dcol         = 0.0;
+    m_dmob         = 0.0;
+    m_surf         = 0.0;
+    m_vol          = 0.0;
+    m_mass         = 0.0;
+    m_numcarbon    = 0;
     m_dcolsqr      = 0.0;
     m_inv_dcol     = 0.0;
     m_inv_dcolsqr  = 0.0;
@@ -165,8 +172,8 @@ void Sweep::TreeWeightedCache::Clear(void)
     m_d2_m_1_2     = 0.0;
     m_weight       = 0.0;
     m_weight_mass  = 0.0;
-    m_sites   = 0;
-    m_sinterrate = 0.0;
+    m_sites        = 0;
+    m_sinterrate   = 0.0;
 }
 
 /*!
@@ -187,6 +194,11 @@ double Sweep::TreeWeightedCache::Property(PropID id) const
             return m_vol;
         case iM:      // Mass.
             return m_mass;
+
+        //! Number of carbon atoms.
+		case iNumCarbon:
+        	return m_numcarbon;
+
         // Collision rate properties:
         case iD2:
             return m_dcolsqr;
@@ -208,9 +220,6 @@ double Sweep::TreeWeightedCache::Property(PropID id) const
         	return m_sinterrate;
 		case iFS:
 			throw std::logic_error("Free surface no longer cached (TreeWeightedCache::Property)");
-			return 0.0;
-		case iNumCarbon:
-			throw std::logic_error("Number of carbons no longer cached (TreeWeightedCache::Property)");
 			return 0.0;
         case -1:
             // Special case property, used to select particles
