@@ -56,7 +56,7 @@ Sweep::TreeCache::TreeCache()
 , m_vol(0.0)
 , m_mass(0.0)
 , m_numcarbon(0)
-, m_frag(1)
+, m_frag(0)
 , m_dcolsqr(0.0)
 , m_inv_dcol(0.0)
 , m_inv_dcolsqr(0.0)
@@ -148,7 +148,7 @@ void Sweep::TreeCache::Clear(void)
     m_vol          = 0.0;
     m_mass         = 0.0;
     m_numcarbon    = 0;
-    m_frag         = 1;
+    m_frag         = 0;
     m_dcolsqr      = 0.0;
     m_inv_dcol     = 0.0;
     m_inv_dcolsqr  = 0.0;

@@ -56,7 +56,7 @@ using namespace std;
 //! Default constructor (protected).
 AggModels::Primary::Primary(void)
 : m_pmodel(NULL), m_createt(0.0), m_time(0.0), m_diam(0.0), m_dcol(0.0), 
-  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0), m_frag(1)
+  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0), m_frag(0)
 {
 }
 
@@ -261,9 +261,9 @@ void AggModels::Primary::UpdateCache(void)
      * m_frag is used in the uniform selection of particle for fragmentation.
      * By default, a particle is able to fragment.
      */
-    m_frag = 1;
-    if(m_numcarbon < 2) {
-        m_frag = 0;
+    m_frag = 0;
+    if(m_numcarbon >= 2) {
+        m_frag = 1;
     }
 
     // Calculate other properties (of sphere).
@@ -489,6 +489,48 @@ AggModels::Primary &AggModels::Primary::Coagulate(const Primary &rhs, rng_type &
         // Different particle models!
         *this = rhs;
         std::cerr << "Sweep::AggModels::Primary::Coagulate called for particles with models " << m_pmodel
+                  << " and " << rhs.m_pmodel << std::endl;
+    }
+    AggModels::Primary::UpdateCache();
+    return *this;
+}
+
+/*!
+ *  Combines this primary with another.
+ *
+ *  Note the very strange behaviour when the primaries do not
+ *  have equal particle model pointers.  Users should also
+ *  be very careful about not mixing different types that inherit
+ *  from PrimaryParticle.
+ *
+ * \param[in]       rhs         Primary particle to add to current instance
+ * \param[in,out]   rng         Random number generator
+ *
+ * \return      Reference to the current instance after rhs has been added
+ */
+AggModels::Primary &AggModels::Primary::Fragment(const Primary &rhs, rng_type &rng)
+{
+    // Check if the RHS uses the same particle model.  If not, then
+    // just use the assignment operator because you can't add apples 
+    // and bananas!
+    if (rhs.m_pmodel == m_pmodel) {
+        // Add the components.
+        for (unsigned int i=0; i!=min(m_comp.size(),rhs.m_comp.size()); ++i) {
+            m_comp[i] += rhs.m_comp[i];
+        }
+
+        // Add the tracker values.
+        for (unsigned int i=0; i!=min(m_values.size(),rhs.m_values.size()); ++i) {
+            m_values[i] += rhs.m_values[i];
+        }
+
+        // Create time is the earliest time.
+        m_createt = min(m_createt, rhs.m_createt);
+        m_time    = min(m_time, rhs.m_time);
+    } else {
+        // Different particle models!
+        *this = rhs;
+        std::cerr << "Sweep::AggModels::Primary::Fragment called for particles with models " << m_pmodel
                   << " and " << rhs.m_pmodel << std::endl;
     }
     AggModels::Primary::UpdateCache();
@@ -723,7 +765,7 @@ void AggModels::Primary::init(void)
     m_numcarbon = 0;
     
     //! Fragmentation flag.
-    m_frag = 1;
+    m_frag = 0;
 
     releaseMem();
 }

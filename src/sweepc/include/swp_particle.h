@@ -219,6 +219,16 @@ public:
     //! Reset count of coagulation events
     void resetCoagCount() {m_CoagCount=0;}
 
+    // COAG COUNT
+    //! Number of coagulations since count was reset
+    unsigned int getFragCount() const;
+
+    //! Increment count of coagulation events
+    void incrementFragCount() {++m_FragCount;}
+
+    //! Reset count of coagulation events
+    void resetFragCount() {m_FragCount=0;}
+
     // PARTICLE OPERATIONS.
 
     //! Adjust particle composition as a result of surface reactions and other processes
@@ -239,6 +249,9 @@ public:
 
     //! Combines this particle with another.
     Particle &Coagulate(const Particle &sp, rng_type &rng);
+
+    //! Combines this particle with another.
+    Particle &Fragment(const Particle &sp, rng_type &rng);
 
     //! Sinter over a given time step
     void Sinter(
@@ -285,6 +298,9 @@ private:
 
     //! Number of coagulations experienced by this particle
     unsigned int m_CoagCount;
+
+    //! Number of coagulations experienced by this particle
+    unsigned int m_FragCount;
 
     //! Time at which particle was created (earliest part).
     double m_createt;

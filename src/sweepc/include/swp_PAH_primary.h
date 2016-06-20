@@ -116,9 +116,11 @@ public:
     //! Returns a copy of the primary.
     virtual PAHPrimary *const Clone(void) const;
 	
-
     //! coagulates this particle with rhs
     PAHPrimary &Coagulate(const Primary &rhs, rng_type &rng);
+
+    //! coagulates this particle with rhs
+    PAHPrimary &Fragment(const Primary &rhs, rng_type &rng);
 
     //! investigate the sintering of PAH cluster
     void Sinter(double dt, Cell &sys,

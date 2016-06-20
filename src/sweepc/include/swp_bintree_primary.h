@@ -96,6 +96,9 @@ public:
     //! Coagulates this particle with rhs
     BinTreePrimary &Coagulate(const Primary &rhs, rng_type &rng);
 
+    //! Coagulates this particle with rhs
+    BinTreePrimary &Fragment(const Primary &rhs, rng_type &rng);
+
     //! Updates the particle cache using the particle details
     void UpdateCache();
 

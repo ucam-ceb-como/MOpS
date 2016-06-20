@@ -52,10 +52,15 @@
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
 #include "swp_constcoag.h"
+#include "swp_erosionfrag.h"
+#include "swp_symmetricfrag.h"
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
 #include "swp_weighted_transcoag.h"
+#include "swp_weighted_erosionfrag.h"
+#include "swp_weighted_symmetricfrag.h"
 #include "swp_coag_weight_rules.h"
+#include "swp_frag_weight_rules.h"
 #include "swp_silica_interparticle.h"
 #include "swp_sprog_idealgas_wrapper.h"
 
@@ -482,6 +487,9 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 
     // Read which coagulation kernel to use
     readCoagulation(xml, mech);
+
+    // Read which coagulation kernel to use
+    readFragmentation(xml, mech);
 }
 
 // Reads components from a sweep mechanism XML file.
@@ -1784,6 +1792,159 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                 // Get rid of the auto_ptr without deleting the coagulation object
                 coag.release();
             }
+        }
+    }
+}
+
+//COAGULATION
+
+/**
+ * @param[in]       xml     XML document containing zero or more top level \<coagulation\> nodes
+ * @param[in,out]   mech    Mechanism to which to add coagulation processes
+ *
+ * @exception   runtime_error   Kernel no specified
+ * @exception   runtime_error   Unrecongised/unsupported kernel
+ * @exception   runtime_error   Unrecongised/unsupported weight rule
+ *
+ * By default a transition regime coagulation process is created and added to the mechanism,
+ * this will happen if no coagulation nodes are found immediately below the root node of the
+ * XML tree.
+ */
+void MechParser::readFragmentation(CamXML::Document &xml, Sweep::Mechanism &mech)
+{
+    vector<CamXML::Element*> items;
+
+    // Get list of inceptions from XML data.
+    xml.Root()->GetChildren("fragmentation", items);
+
+    for(vector<CamXML::Element*>::const_iterator it = items.begin();
+        it != items.end(); ++it) {
+
+        // Read the user choice of kernel.  If no kernel is specified
+        // a default will be used
+        const CamXML::Element* const kernel = (*it)->GetFirstChild("kernel");
+        if(kernel ==  NULL)
+        {
+            throw std::runtime_error("No kernel given for fragmentation \
+                                        (Sweep, MechParser::readFragmentation)");
+        }
+        else
+        {
+            // Work out which kernel to use and create it
+            const string kernelName = kernel->Data();
+
+            // See if there is a weight rule, which would indicate the use
+            // of individual statistical weights for the particles
+            CamXML::Element *weightXML = (*it)->GetFirstChild("weightrule");
+
+            // Create a process of the appropriate type, but wrap it with an auto_ptr so
+            // that it gets deleted if an exception is thrown when reading in the value
+            // of A.
+            std::auto_ptr<Processes::Fragmentation> frag;
+
+
+            if(weightXML == NULL) {
+                // Unweighted case
+                if(kernelName == "erosion")
+                    frag.reset(new Processes::ErosionFragmentation(mech));
+                else if(kernelName == "symmetric")
+                    frag.reset(new Processes::SymmetricFragmentation(mech));
+                else
+                    // Unrecognised option
+                    throw std::runtime_error("Fragmentation kernel " + kernelName + " not yet available in DSA \
+                                            (Sweep, MechParser::readFragmentation)");
+
+                // Choice of position of newly coagulated particle
+                const CamXML::Element *positionChoiceXML = (*it)->GetFirstChild("positionchoice");
+
+                // This is an optional input
+                if (positionChoiceXML != NULL) {
+                    const std::string choice = positionChoiceXML->Data();
+                    if(choice == "none")
+                        frag->SetPositionChoiceRule(Processes::Fragmentation::NoPositionChoice);
+                    else if (choice == "uniform")
+                        frag->SetPositionChoiceRule(Processes::Fragmentation::UniformPositionChoice);
+                    else if (choice == "mass")
+                        frag->SetPositionChoiceRule(Processes::Fragmentation::MassPositionChoice);
+                    else if (choice == "largestmass")
+                        frag->SetPositionChoiceRule(Processes::Fragmentation::LargestMassPositionChoice);
+                    else if (choice == "midpoint")
+                        frag->SetPositionChoiceRule(Processes::Fragmentation::MidpointPositionChoice);
+                    else if (choice == "centreofmass")
+                        frag->SetPositionChoiceRule(Processes::Fragmentation::CentreOfMassPositionChoice);
+                    else
+                        // Unrecognised option
+                        throw std::runtime_error("Position choice rule " + choice + " not yet available \
+                                                    (Sweep, MechParser::readFragmentation)");
+                }
+            }
+            else {
+                // weightXML != NULL so must have a weighted kernel
+                // need to find out what weight rule to use
+                const std::string weightRuleName = weightXML->Data();
+                Processes::FragWeightRule weightRule;
+
+                if(weightRuleName == "w1" || weightRuleName == "harmonic") {
+                    weightRule = Processes::FragWeightHarmonic;
+                    std::cerr << "Found harmonic weight rule" << std::endl;
+                }
+                else if(weightRuleName == "w2" || weightRuleName == "half")
+                    weightRule = Processes::FragWeightHalf;
+                else if(weightRuleName == "w3" || weightRuleName == "mass") {
+                    weightRule = Processes::FragWeightMass;
+                    std::cerr << "Found mass weight rule" << std::endl;
+                }
+                else if(weightRuleName == "w4")
+                    weightRule = Processes::FragWeightRule4;
+                else
+                    throw std::runtime_error("Fragmentation weight rule " + weightRuleName + " not supported \
+                                                (Sweep, MechParser::readFragmentation)");
+
+                if(NULL != (*it)->GetFirstChild("positionchoice"))
+                    throw std::runtime_error("Position choice rule does not apply with weighted fragmentation \
+                                                (Sweep, MechParser::readFragmentation)");
+
+                // Now create the process
+                if(kernelName == "weightederosion")
+                        frag.reset(new Processes::WeightedErosionFragmentation(mech, weightRule));
+                else if(kernelName == "weightedsymmetric")
+                        frag.reset(new Processes::WeightedSymmetricFragmentation(mech, weightRule));
+                else
+                    // Unrecognised option
+                    throw std::runtime_error("Fragmentation kernel " + kernelName + " not yet available with weights \
+                                            (Sweep, MechParser::readFragmentation)");
+            }
+
+            // Rate scaling now that a process has been created
+            double A = 0.0;
+            CamXML::Element *el = (*it)->GetFirstChild("A");
+            if (el != NULL) {
+                A = cdble(el->Data());
+            } else {
+                A = 1.0;
+            }
+            frag->SetA(A);
+
+            el = (*it)->GetFirstChild("particleterm");
+            if (el!=NULL) {
+                string str = el->GetAttributeValue("id");
+                if (str.compare("size")==0) {
+                    frag->SetPropertyID(Sweep::iNumCarbon);
+                } else if (str.compare("uniform")==0) {
+                    frag->SetPropertyID(Sweep::iFrag);
+                } else {
+                    throw std::runtime_error("Surface process defined with unrecognised ""particleterm"" "
+                                            "(Sweep, MechParser::readFragmentation).");
+                }
+            } else {
+                throw runtime_error("Surface process defined without ""particleterm"" "
+                            "element (Sweep, MechParser::readFragmentation).");
+            }
+
+            mech.AddFragmentation(*frag);
+
+            // Get rid of the auto_ptr without deleting the coagulation object
+            frag.release();
         }
     }
 }

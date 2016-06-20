@@ -258,6 +258,11 @@ public:
     virtual Primary &Coagulate(const Primary &rhs,
                                rng_type &rng);
 
+    // Combines this primary with another.  This is also the
+    // implementation of the + and += operators.
+    virtual Primary &Fragment(const Primary &rhs,
+                               rng_type &rng);
+
     // This routine sinters the Primary for the given length of
     // time using the provided sintering model.
     virtual void Sinter(

@@ -374,6 +374,84 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 }
 
 /*!
+ * @brief       Coagulates *this* and rhs particle
+ *
+ * Called by coagulate, this function joins sp1 (this) and sp2 (rhs).
+ * Basic properties are first calculated, followed by derived.
+ *
+ * @param[in] rhs   Pointer to the particle to be coagulated with this
+ * @param[in] rng   Random number generator
+*/
+BinTreePrimary &BinTreePrimary::Fragment(const Primary &rhs, rng_type &rng)
+{
+    const BinTreePrimary *rhsparticle = NULL;
+    rhsparticle = dynamic_cast<const AggModels::BinTreePrimary*>(&rhs);
+
+    // Don't sum-up components now. Wait for UpdateCache so as to not
+    // double-count the values.
+
+    // Create the new particles
+    BinTreePrimary *newleft = new BinTreePrimary(m_time, *m_pmodel);
+    BinTreePrimary *newright = new BinTreePrimary(m_time, *m_pmodel);
+    BinTreePrimary copy_rhs(*rhsparticle);
+
+
+    //Randomly select where to add the second particle
+    boost::bernoulli_distribution<> bernoulliDistrib;
+    if (bernoulliDistrib(rng)) {
+        newleft->CopyParts(this);
+        newright->CopyParts(&copy_rhs);
+    }
+    else {
+        newright->CopyParts(this);
+        newleft->CopyParts(&copy_rhs);
+    }
+
+    // Set the pointers
+    m_leftchild     = newleft;
+    m_rightchild    = newright;
+    newright->m_parent = this;
+    newleft->m_parent  = this;
+
+    // Set the pointers to the parent node
+    if (newleft->m_leftchild!=NULL) {
+    newleft->m_leftchild->m_parent      = newleft;
+    newleft->m_rightchild->m_parent     = newleft;
+    }
+    if (newright->m_leftchild!=NULL) {
+    newright->m_leftchild->m_parent     = newright;
+    newright->m_rightchild->m_parent    = newright;
+    }
+    m_children_sintering=0.0;
+    UpdateCache();
+
+    // Select the primaries that are touching
+    m_leftparticle      = m_leftchild->SelectRandomSubparticle(rng);
+    m_rightparticle     = m_rightchild->SelectRandomSubparticle(rng);
+
+    // Set the sintering times
+    SetSinteringTime(std::max(m_sint_time, rhsparticle->m_sint_time));
+    m_createt = max(m_createt, rhsparticle->m_createt);
+
+    // Initialise the variables used to calculate the sintering level
+    m_children_vol      = m_leftparticle->m_vol + m_rightparticle->m_vol;
+    m_children_surf     = m_leftparticle->m_surf + m_rightparticle->m_surf;
+    m_children_radius   = pow(3.0/(4.0*PI)*(m_children_vol),(ONE_THIRD));
+    m_children_sintering= SinteringLevel();
+    CheckSintering();
+
+    // Must set all the pointer to NULL otherwise the delete function
+    // will also delete the children
+    copy_rhs.m_leftchild    = NULL;
+    copy_rhs.m_rightchild   = NULL;
+    copy_rhs.m_parent       = NULL;
+    copy_rhs.m_leftparticle = NULL;
+    copy_rhs.m_rightparticle= NULL;
+
+    return *this;
+}
+
+/*!
  * @brief       Copy state-space and derived properties from source
  *
  * This function is like a limited assignment operator, except that the

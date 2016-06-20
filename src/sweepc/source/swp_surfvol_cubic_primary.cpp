@@ -242,6 +242,36 @@ SurfVolCubicPrimary &SurfVolCubicPrimary::Coagulate(const Primary &rhs, rng_type
     return *this;
 }
 
+/*!
+ * Combines this primary with another.
+ *
+ * \param[in]       rhs         Particle to add to current instance
+ * \param[in,out]   rng         Random number generator
+ *
+ * \return      Reference to the current instance after rhs has been added
+ */
+SurfVolCubicPrimary &SurfVolCubicPrimary::Fragment(const Primary &rhs, rng_type &rng)
+
+{
+    // Store the resultant surface area.
+    double s = m_surf + rhs.SurfaceArea();
+
+    // Perform the coagulation.
+    Primary::Fragment(rhs, rng);
+
+    // One sixth of the surface area is assumed to be lost as a result of two faces, one
+    // from each incoming particle covering each other.  More sophisticated formulae
+    // could be implemented here.
+    m_surf = s * 0.8333333333333333333;
+
+    // This has a knock-on affect of changing the collision diameter.
+    // Note, we can avoid recalling UpdateCache() here, because only
+    // a couple of cached values will have changed.
+    m_dcol = (m_diam + sqrt(m_surf / PI)) * 0.5;
+    m_dmob = m_dcol;
+
+    return *this;
+}
 
 // READ/WRITE/COPY.
 
