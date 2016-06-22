@@ -110,7 +110,7 @@ private:
     // calculated and how the particles are chosen.
     static const unsigned int TYPE_COUNT = 1;
     enum TermType {
-        FirstUniformlySecondByWeight = 0,
+        First = 0,
     };
 
     //! Calculate kernel between two particles

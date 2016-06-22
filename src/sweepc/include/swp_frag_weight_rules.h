@@ -49,17 +49,14 @@ namespace Processes
 {
     //! Symbolic names for the different ways of choosing the weight of the new particle in weight coagulation events.
     enum FragWeightRule {
-        //! \f$ \left(\frac{1}{u} + \frac{1}{v} \right)^{-1}\f$
-        FragWeightHarmonic,
+        //! Number conserving
+        FragWeightSymmetric,
 
-        //! Divide by 2
-        FragWeightHalf,
+        //! Number conserving
+        FragWeightNumber,
 
         //! Mass conserving
         FragWeightMass,
-
-        //! \f$ u \frac{f(x,u)}{f(x,u) + f(y,v)}\f$ where \f$ f(x,u) = m(x) / \sqrt{u} \f$
-        FragWeightRule4,
     };
 }
 }

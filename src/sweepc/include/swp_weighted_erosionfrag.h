@@ -111,10 +111,9 @@ public:
 private:
     // Coagulation rate types.  These define how the rate is 
     // calculated and how the particles are chosen.
-    static const unsigned int TYPE_COUNT = 2;
+    static const unsigned int TYPE_COUNT = 1;
     enum TermType {
-        FirstByMassSecondByWeight = 0,
-        FirstUniformlySecondByMassTimesWeight = 1
+        First = 0,
     };
 
     //! Calculate kernel between two particles

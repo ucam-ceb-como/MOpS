@@ -1830,89 +1830,72 @@ void MechParser::readFragmentation(CamXML::Document &xml, Sweep::Mechanism &mech
         }
         else
         {
+            Processes::FragWeightRule weightRule;
+
             // Work out which kernel to use and create it
             const string kernelName = kernel->Data();
-
-            // See if there is a weight rule, which would indicate the use
-            // of individual statistical weights for the particles
-            CamXML::Element *weightXML = (*it)->GetFirstChild("weightrule");
 
             // Create a process of the appropriate type, but wrap it with an auto_ptr so
             // that it gets deleted if an exception is thrown when reading in the value
             // of A.
             std::auto_ptr<Processes::Fragmentation> frag;
 
-
-            if(weightXML == NULL) {
-                // Unweighted case
-                if(kernelName == "erosion")
-                    frag.reset(new Processes::ErosionFragmentation(mech));
-                else if(kernelName == "symmetric")
-                    frag.reset(new Processes::SymmetricFragmentation(mech));
-                else
-                    // Unrecognised option
-                    throw std::runtime_error("Fragmentation kernel " + kernelName + " not yet available in DSA \
-                                            (Sweep, MechParser::readFragmentation)");
-
-                // Choice of position of newly coagulated particle
-                const CamXML::Element *positionChoiceXML = (*it)->GetFirstChild("positionchoice");
-
-                // This is an optional input
-                if (positionChoiceXML != NULL) {
-                    const std::string choice = positionChoiceXML->Data();
-                    if(choice == "none")
-                        frag->SetPositionChoiceRule(Processes::Fragmentation::NoPositionChoice);
-                    else if (choice == "uniform")
-                        frag->SetPositionChoiceRule(Processes::Fragmentation::UniformPositionChoice);
-                    else if (choice == "mass")
-                        frag->SetPositionChoiceRule(Processes::Fragmentation::MassPositionChoice);
-                    else if (choice == "largestmass")
-                        frag->SetPositionChoiceRule(Processes::Fragmentation::LargestMassPositionChoice);
-                    else if (choice == "midpoint")
-                        frag->SetPositionChoiceRule(Processes::Fragmentation::MidpointPositionChoice);
-                    else if (choice == "centreofmass")
-                        frag->SetPositionChoiceRule(Processes::Fragmentation::CentreOfMassPositionChoice);
+            // Unweighted case
+            if(kernelName == "erosion") {
+                frag.reset(new Processes::ErosionFragmentation(mech));
+            } else if(kernelName == "symmetric") {
+                frag.reset(new Processes::SymmetricFragmentation(mech));
+            } else if(kernelName == "weightederosion") {
+                CamXML::Element *weightXML = (*it)->GetFirstChild("weightrule");
+                if(weightXML == NULL) {
+                    throw std::runtime_error("Fragulation weight rule must be specified for erosion \
+                                                (Sweep, MechParser::readFragulation)");
+                } else {
+                    const std::string weightRuleName = weightXML->Data();
+                    if(weightRuleName == "w1" || weightRuleName == "number") {
+                        weightRule = Processes::FragWeightNumber;
+                        std::cerr << "Found number weight rule" << std::endl;
+                    }
+                    else if(weightRuleName == "w2" || weightRuleName == "mass") {
+                        weightRule = Processes::FragWeightMass;
+                        std::cerr << "Found mass weight rule" << std::endl;
+                    }
                     else
-                        // Unrecognised option
-                        throw std::runtime_error("Position choice rule " + choice + " not yet available \
+                        throw std::runtime_error("Fragmentation weight rule " + weightRuleName + " not supported \
                                                     (Sweep, MechParser::readFragmentation)");
+                    frag.reset(new Processes::WeightedErosionFragmentation(mech, weightRule));
                 }
+            } else if(kernelName == "weightedsymmetric") {
+                weightRule = Processes::FragWeightSymmetric;
+                frag.reset(new Processes::WeightedSymmetricFragmentation(mech, weightRule));
+            } else {
+                // Unrecognised option
+                throw std::runtime_error("Fragmentation kernel " + kernelName + " not yet available with weights \
+                                        (Sweep, MechParser::readFragmentation)");
             }
-            else {
-                // weightXML != NULL so must have a weighted kernel
-                // need to find out what weight rule to use
-                const std::string weightRuleName = weightXML->Data();
-                Processes::FragWeightRule weightRule;
 
-                if(weightRuleName == "w1" || weightRuleName == "harmonic") {
-                    weightRule = Processes::FragWeightHarmonic;
-                    std::cerr << "Found harmonic weight rule" << std::endl;
-                }
-                else if(weightRuleName == "w2" || weightRuleName == "half")
-                    weightRule = Processes::FragWeightHalf;
-                else if(weightRuleName == "w3" || weightRuleName == "mass") {
-                    weightRule = Processes::FragWeightMass;
-                    std::cerr << "Found mass weight rule" << std::endl;
-                }
-                else if(weightRuleName == "w4")
-                    weightRule = Processes::FragWeightRule4;
-                else
-                    throw std::runtime_error("Fragmentation weight rule " + weightRuleName + " not supported \
-                                                (Sweep, MechParser::readFragmentation)");
+            // Choice of position of newly coagulated particle
+            const CamXML::Element *positionChoiceXML = (*it)->GetFirstChild("positionchoice");
 
-                if(NULL != (*it)->GetFirstChild("positionchoice"))
-                    throw std::runtime_error("Position choice rule does not apply with weighted fragmentation \
-                                                (Sweep, MechParser::readFragmentation)");
-
-                // Now create the process
-                if(kernelName == "weightederosion")
-                        frag.reset(new Processes::WeightedErosionFragmentation(mech, weightRule));
-                else if(kernelName == "weightedsymmetric")
-                        frag.reset(new Processes::WeightedSymmetricFragmentation(mech, weightRule));
+            // This is an optional input
+            if (positionChoiceXML != NULL) {
+                const std::string choice = positionChoiceXML->Data();
+                if(choice == "none")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::NoPositionChoice);
+                else if (choice == "uniform")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::UniformPositionChoice);
+                else if (choice == "mass")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::MassPositionChoice);
+                else if (choice == "largestmass")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::LargestMassPositionChoice);
+                else if (choice == "midpoint")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::MidpointPositionChoice);
+                else if (choice == "centreofmass")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::CentreOfMassPositionChoice);
                 else
                     // Unrecognised option
-                    throw std::runtime_error("Fragmentation kernel " + kernelName + " not yet available with weights \
-                                            (Sweep, MechParser::readFragmentation)");
+                    throw std::runtime_error("Position choice rule " + choice + " not yet available \
+                                                (Sweep, MechParser::readFragmentation)");
             }
 
             // Rate scaling now that a process has been created

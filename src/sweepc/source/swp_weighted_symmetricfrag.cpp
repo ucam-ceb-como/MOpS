@@ -47,7 +47,7 @@
 #include "swp_property_indices.h"
 
 
-const double Sweep::Processes::WeightedSymmetricFragmentation::s_MajorantFactor = 1.5;
+const double Sweep::Processes::WeightedSymmetricFragmentation::s_MajorantFactor = 2.0;
 
 /**
  * Main way of building a new coagulation object
@@ -125,18 +125,16 @@ double Sweep::Processes::WeightedSymmetricFragmentation::RateTerms(double t, con
                             const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
-    const unsigned int n = sys.ParticleCount();
+    // Get system properties required to calculate coagulation rate.
+    double rate = sys.Particles().GetSum(m_pid);
 
-    if(n > 1) {
-        const double r1 = (n - 1) * sys.Particles().GetSum(Sweep::iW)
-                        * s_MajorantFactor * A() / sys.SampleVolume();
-        *iterm++ = r1;
-        return r1;
+    rate *= A();
+
+    if (m_mech->AnyDeferred()) {
+        rate *= s_MajorantFactor;
     }
-    else {
-        *iterm++ = 0.0;
-        return 0.0;
-    }
+    *iterm++ = rate;
+    return rate;
 }
 
 /*!
@@ -158,30 +156,18 @@ int Sweep::Processes::WeightedSymmetricFragmentation::Perform(
         unsigned int iterm,
         rng_type &rng) const
 {
-    assert(iterm < TYPE_COUNT);
-
-    // Select properties by which to choose particles.
-    // Note we need to choose 2 particles.  One particle must be chosen
-    // uniformly and one with probability proportional
-    // to particle mass.
-
-    if (sys.ParticleCount() < 1) {
-        return 1;
-    }
-
     // Properties to which the probabilities of particle selection will be proportional
-    Sweep::PropID prop1, prop2;
+    Sweep::PropID prop;
     switch(static_cast<TermType>(iterm)) {
-        case FirstUniformlySecondByWeight:
-            prop1 = iUniform;
-            prop2 = iW;
+        case First:
+            prop = m_pid;
             break;
         default:
             // This could be removed for performance reasons
             throw std::logic_error("Unrecognised term, (Sweep, WeightedSymmetricFragmentation::Perform)");
     }
 
-    return WeightedPerform(t, prop1, prop2, m_FragWeightRule, sys, rng, Default);
+    return WeightedPerform(t, prop, m_FragWeightRule, sys, rng, Default);
 }
 
 /**

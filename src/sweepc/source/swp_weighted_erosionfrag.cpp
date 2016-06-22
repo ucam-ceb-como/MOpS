@@ -47,7 +47,7 @@
 #include "swp_property_indices.h"
 
 
-const double Sweep::Processes::WeightedErosionFragmentation::s_MajorantFactor = 1.5;
+const double Sweep::Processes::WeightedErosionFragmentation::s_MajorantFactor = 2.0;
 
 /**
  * Main way of building a new coagulation object
@@ -126,29 +126,16 @@ double Sweep::Processes::WeightedErosionFragmentation::RateTerms(double t, const
                             const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
-    const unsigned int n = sys.ParticleCount();
+    // Get system properties required to calculate coagulation rate.
+    double rate = sys.Particles().GetSum(m_pid);
 
-    if(n > 1) {
-        // this value is used twice below
-        const double sum_iWM = sys.Particles().GetSums().Property(iWM);
-        // Calculate the two contributions to the rate
-        const double r1 = A() * s_MajorantFactor
-                       * (sys.Particles().GetSums().Property(Sweep::iM)
-                          * sys.Particles().GetSums().Property(Sweep::iW)
-                          - sum_iWM) / sys.SampleVolume();
-        const double r2 = A() * (n - 1) * s_MajorantFactor
-                            * sum_iWM / sys.SampleVolume();
+    rate *= A();
 
-        // Now deal with the output
-        *iterm++ = r1;
-        *iterm++ = r2;
-        return r1 + r2;
+    if (m_mech->AnyDeferred()) {
+        rate *= s_MajorantFactor;
     }
-    else {
-        *iterm++ = 0.0;
-        *iterm++ = 0.0;
-        return 0.0;
-    }
+    *iterm++ = rate;
+    return rate;
 }
 
 /*!
@@ -170,34 +157,18 @@ int Sweep::Processes::WeightedErosionFragmentation::Perform(
         unsigned int iterm,
         rng_type &rng) const
 {
-    assert(iterm < TYPE_COUNT);
-
-    // Select properties by which to choose particles.
-    // Note we need to choose 2 particles.  One particle must be chosen
-    // uniformly and one with probability proportional
-    // to particle mass.
-
-    if (sys.ParticleCount() < 1) {
-        return 1;
-    }
-
     // Properties to which the probabilities of particle selection will be proportional
-    Sweep::PropID prop1, prop2;
+    Sweep::PropID prop;
     switch(static_cast<TermType>(iterm)) {
-        case FirstByMassSecondByWeight:
-            prop1 = Sweep::iM;
-            prop2 = Sweep::iW;
-            break;
-        case FirstUniformlySecondByMassTimesWeight:
-            prop1 = iUniform;
-            prop2 = iWM;
+        case First:
+            prop = m_pid;
             break;
         default:
             // This could be removed for performance reasons
             throw std::logic_error("Unrecognised term, (Sweep, WeightedErosionFragmentation::Perform)");
     }
 
-    return WeightedPerform(t, prop1, prop2, m_FragWeightRule, sys, rng, Default);
+    return WeightedPerform(t, prop, m_FragWeightRule, sys, rng, Default);
 }
 
 /**
@@ -212,7 +183,7 @@ int Sweep::Processes::WeightedErosionFragmentation::Perform(
  */
 double Sweep::Processes::WeightedErosionFragmentation::FragKernel(const Particle &sp, const Cell& sys) const
 {
-    return sp.Mass()  * A() * sp.getStatisticalWeight();
+    return sp.Property(m_pid) * A();
 }
 
 /**

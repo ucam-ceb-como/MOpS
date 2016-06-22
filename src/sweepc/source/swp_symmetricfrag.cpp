@@ -161,7 +161,6 @@ int SymmetricFragmentation::Perform(double t, Sweep::Cell &sys,
             sp->UpdateCache();
             sys.Particles().Add(*sp, rng);
         }
-
     } else {
         return -1;
     }

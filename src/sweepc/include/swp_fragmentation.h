@@ -151,8 +151,7 @@ protected:
                       Cell &sys, rng_type &rng) const;
 
     //! Select two particles and stick them together in a weighted particle event
-    int WeightedPerform(const double t, const Sweep::PropID prop1,
-                        const Sweep::PropID prop2,
+    int WeightedPerform(const double t, const Sweep::PropID prop,
                         const Sweep::Processes::FragWeightRule weight_rule,
                         Cell &sys, rng_type &rng,
                         Sweep::Processes::Fragmentation::MajorantType maj) const;
