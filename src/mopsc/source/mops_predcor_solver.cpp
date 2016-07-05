@@ -259,9 +259,13 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 			tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
+		    std::string rname(r.GetName());
+		    std::string partfname, chemfname;
+		    partfname = "Part-split-diagnostics(" + rname + ").csv";
+		    chemfname = "Chem-split-diagnostics(" + rname + ").csv";
 
 			// Output particle diagnostics to file
-			partProcFile.open("Part-split-diagnostics.csv", ios::app);
+			partProcFile.open(partfname.c_str(), ios::app);
 			partProcFile << r.Time() << " , " << tstop << " , " << step << " , "
 				<< tmpSVin << " , " << tmpSVout << " , "
 				<< tmpSPin << " , " << tmpSPout << " , ";
@@ -287,7 +291,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			partProcFile.close();
 			
 		    // Output gasphase diagnostics to file
-		    gasConcFile.open("Chem-split-diagnostics.csv", ios::app);
+		    gasConcFile.open(chemfname.c_str(), ios::app);
 		    gasConcFile << r.Time() << " , " << tstop << " , " << step << " , ";
 		    for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
 			    gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
@@ -324,9 +328,13 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 		tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
+		std::string rname(r.GetName());
+		std::string partfname, chemfname;
+		partfname = "Part-split-diagnostics(" + rname + ").csv";
+		chemfname = "Chem-split-diagnostics(" + rname + ").csv";
 
 		// Output particle diagnostics to file
-		partProcFile.open("Part-split-diagnostics.csv", ios::app);
+		partProcFile.open(partfname.c_str(), ios::app);
 		partProcFile << r.Time() << " , " << tstop << " , " << step + 1 << " , "
 			<< tmpSVin << " , " << tmpSVout << " , "
 			<< tmpSPin << " , " << tmpSPout << " , ";
@@ -352,7 +360,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		partProcFile.close();
 		
 		// Output gasphase diagnostics to file
-		gasConcFile.open("Chem-split-diagnostics.csv", ios::app);
+		gasConcFile.open(chemfname.c_str(), ios::app);
 		gasConcFile << r.Time() << " , " << tstop << " , " << step << " , ";
 		for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
 			gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";

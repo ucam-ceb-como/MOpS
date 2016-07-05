@@ -270,6 +270,8 @@ void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 //! Set simulator to write the diagnosticss CSV file.
 void Simulator::SetWriteDiagsFile(bool writediags) {m_write_diags = writediags;}
+//! Get diags status
+bool Simulator::GetWriteDiagsStatus() { return m_write_diags;};
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -437,15 +439,21 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 		if (m_write_diags) {
 			/* Create partProc diagnostics csv file with pre/post split SV, #SPs, #events in split
-			step including additions in LPDA, create gasConcFile with pre/post split concs */
+			step including additions in LPDA, create gasConcFile with pre/post split concs 
+			Note that this is defintely not an elegant implentation and is only really intended 
+			to verify expected process behaviour in the TiO2 case */
 			ofstream partProcFile, gasConcFile;
 			int process_iter;
 			std::vector<std::string> tmpPNames;
+			std::string rname(r.GetName());
+			std::string partfname, chemfname;
+			partfname = "Part-split-diagnostics(" + rname + ").csv";
+			chemfname = "Chem-split-diagnostics(" + rname + ").csv";
 
 			r.Mech()->ParticleMech().GetProcessNames(tmpPNames, 0);
 
 			// Add headers to partProc diagnostics file
-			partProcFile.open("Part-split-diagnostics.csv");
+			partProcFile.open(partfname.c_str());
 			partProcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , "
 				<< "SV in (-)" << " , " << "SV out (-)" << " , "
 				<< "SP in (-)" << " , " << "SP out (-)" << " , ";
@@ -461,7 +469,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 			partProcFile.close();
 
 			// Add headers to gasConc diagnostics file
-			gasConcFile.open("Chem-split-diagnostics.csv");
+			gasConcFile.open(chemfname.c_str());
 			gasConcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , ";
 			for (process_iter = 0; process_iter < r.Mech()->GasMech().Species().size() - 1; process_iter++) {
 				gasConcFile << r.Mech()->GasMech().Species(process_iter)->Name() << " pre-split (mol/m3)" << " , "

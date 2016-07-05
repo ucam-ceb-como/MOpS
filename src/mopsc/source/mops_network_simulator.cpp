@@ -39,6 +39,15 @@
 #include <boost/functional/hash.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
+
+
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+#include <iostream>
+#include <string>
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+
 namespace Mops {
 
 /*!
@@ -143,6 +152,51 @@ void NetworkSimulator::Run(
             if (it->sol->GetLOIStatus()) {
                 it->sim->setupLOI(*(it->reac), *(it->sol));
             }
+
+
+
+			//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+			if (it->sim->GetWriteDiagsStatus()) {
+				/* Create partProc diagnostics csv file with pre/post split SV, #SPs, #events in split
+				step including additions in LPDA, create gasConcFile with pre/post split concs 
+			    Note that this is defintely not an elegant implentation and is only really intended 
+			    to verify expected process behaviour in the TiO2 case */
+				ofstream partProcFile, gasConcFile;
+				int process_iter;
+				std::vector<std::string> tmpPNames;
+				it->reac->Mech()->ParticleMech().GetProcessNames(tmpPNames, 0);
+				std::string rname (it->reac->GetName());
+				std::string partfname, chemfname;
+				partfname = "Part-split-diagnostics(" + rname + ").csv";
+				chemfname = "Chem-split-diagnostics(" + rname + ").csv";
+
+				// Add headers to partProc diagnostics file
+				partProcFile.open(partfname.c_str());
+				partProcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , "
+					<< "SV in (-)" << " , " << "SV out (-)" << " , "
+					<< "SP in (-)" << " , " << "SP out (-)" << " , ";
+				for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
+					partProcFile << tmpPNames[process_iter] << " , ";
+				}
+				partProcFile << "TransitionRegimeCoagulationTerms (kernel specific)";
+				for (process_iter = tmpPNames.size(); process_iter < it->reac->Mech()->ParticleMech().GetTermCount() + 1;
+					process_iter++) {
+					partProcFile << " , ";
+				}
+				partProcFile << "FictitiousCoagulationTerms (kernel specific)" << "\n";
+				partProcFile.close();
+
+				// Add headers to gasConc diagnostics file
+				gasConcFile.open(chemfname.c_str());
+				gasConcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , ";
+				for (process_iter = 0; process_iter < it->reac->Mech()->GasMech().Species().size() - 1; process_iter++) {
+					gasConcFile << it->reac->Mech()->GasMech().Species(process_iter)->Name() << " pre-split (mol/m3)" << " , "
+						<< it->reac->Mech()->GasMech().Species(process_iter)->Name() << " post-split (mol/m3)" << " , ";
+				}
+				gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << "\n";
+				gasConcFile.close();
+			}
+			//////////////////////////////////////////// aab64 ////////////////////////////////////////////
         }
 
         // Loop over time intervals
@@ -168,9 +222,27 @@ void NetworkSimulator::Run(
                 for (it=this->Begin(); it!=this->End(); ++it) {
 
                     it->sim->m_cpu_mark = std::clock();
-                    it->sol->Solve(*(it->reac), t2, iint->SplittingStepCount(),
-                            it->sim->m_niter, rng, &Mops::Simulator::fileOutput,
-                            (void*)(it->sim));
+                    
+
+
+
+					//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+					/* If the solve function with diagnostics capacity replaces the original solve function, this
+					if statement is no longer necessary */
+					if (it->sim->GetWriteDiagsStatus()) {
+						it->sol->Solve(*(it->reac), t2, iint->SplittingStepCount(),
+							it->sim->m_niter, rng, &Mops::Simulator::fileOutput,
+							(void*)(it->sim), it->sim->GetWriteDiagsStatus());
+					}
+					else {
+						it->sol->Solve(*(it->reac), t2, iint->SplittingStepCount(),
+							it->sim->m_niter, rng, &Mops::Simulator::fileOutput,
+							(void*)(it->sim));
+					}
+					//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
+
 
                     std::cout << it->reac->GetName() << " done. " << std::endl;
 
