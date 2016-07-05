@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#  Copyright (C) 2012 Dongping Chen.
+#  Copyright (C) 2009 Robert I A Patterson.
 #
 #
 # Licence:
 #    This file is part of "mops".
 #
-#    mops is free software; you can redistribute it and/or
+#    brush is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU General Public License
 #    as published by the Free Software Foundation; either version 2
 #    of the License, or (at your option) any later version.
@@ -51,19 +51,14 @@ if test -n "$2"
     echo "changed directory to $2"
 fi
 
-cd pahtest2
-dos2unix chem.inp
-dos2unix sweep.xml
-dos2unix mops.inx
-dos2unix gasphase.inp
-dos2unix therm.dat
-dos2unix pahtest2.pl
+dos2unix ./pahtest4/chem.inp
+dos2unix ./pahtest4/sweep.xml
+dos2unix ./pahtest4/mops.inx
+dos2unix ./pahtest4/gasphase.inp
+dos2unix ./pahtest4/therm.dat
+dos2unix ./pahtest4/pahtest4.pl
 
-"$program" -p --flamepp --ppah > /dev/null
-#R CMD BATCH --no-save --no-restore stats.r Routput.txt &
-#R2pid=$!
-#wait $R2pid
-perl ./pahtest2.pl 
+./pahtest4/pahtest4.pl "$program"
 
 #Capture the exit value
 testresult=$?
@@ -72,9 +67,6 @@ if((testresult!=0))
     exit $testresult
 fi
 
-rm pahtest2-bintree-serializer*
-#rm stats.csv
-#rm Routput.txt
 # All tests passed
 echo "All tests passed"
 exit 0

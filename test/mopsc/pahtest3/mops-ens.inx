@@ -16,7 +16,7 @@
     <pressure units="bar">1</pressure>
     <population>
            <file>pahtest3-restart-capacity(0)-SP(50).ens</file>
-           <m0>1.2e19</m0>
+           <m0>1.0e18</m0>
     </population>
     <!-- Temperature derivative as function of time. -->
   </reactor>

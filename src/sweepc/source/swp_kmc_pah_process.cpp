@@ -101,7 +101,13 @@ PAHStructure* PAHProcess::clonePAH() const {
 intpair PAHProcess::getCHCount() const {
     return m_pah->m_counts;
 }
-//! Get Site Count
+/*!
+ * @brief Get site count.
+ *
+ * @param[in]    st    Site type.
+ *
+ * @return The number of the specified site type.
+ */ 
 unsigned int PAHProcess::getSiteCount(const kmcSiteType& st) const {
     if(m_rates_save) {
         if(st==benz) return 5;
@@ -114,10 +120,10 @@ unsigned int PAHProcess::getSiteCount(const kmcSiteType& st) const {
         }
         return sum;
     }
-    //if(st==FE3) {
-    //    if(getCHCount().first == 6) return 0;
-    //    return (unsigned int) (m_pah->m_siteMap[st].size());
-    //}
+    if(st==FE3) {
+        if(getCHCount().first == 6) return 0;
+        return (unsigned int) (m_pah->m_siteMap[st].size());
+    }
     return (unsigned int) m_pah->m_siteMap[st].size();
 }
 //! Get Ring Counts

@@ -109,12 +109,30 @@ void readColliPara(std::vector<CamXML::Element*>::iterator i, Sweep::Mechanism &
 
 			throw std::runtime_error(msg);
 			}
+
+            //! Model parameter.
+		    /*!
+             * The minimum of number of 6-member rings in a PAH for it to condense on a particle.
+             */
+			el1 = (*i)->GetFirstChild("thresholdCondensation");
+			if (el1!=NULL) {
+			str = el1->Data();
+				if (str != "") {
+					mech.SetThresholdCondensation(Strings::cdble(str));
+				} else {
+					std::string msg("thresholdCondensation contains no data (Sweep::readColliPara). ");
+
+					throw std::runtime_error(msg);
+				}
+			} else {
+			std::string msg("thresholdCondensation is required for collision efficiency model (Sweep::readColliPara). ");
+			throw std::runtime_error(msg);
+			}
 		}
 		else {
 			std::string msg(" This type of collision efficiency model is not supported ");
 			msg += str;
 			msg += " at this moment (Sweep::readColliPara).";
-
 			throw std::runtime_error(msg);
 		}
 	}

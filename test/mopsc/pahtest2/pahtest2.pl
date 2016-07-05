@@ -86,27 +86,33 @@ if(abs($m1 - 2.57e-8) > 5.56e-10) {
   exit 2;
 }
 
-my $statsFile;
-open($statsFile, "<stats.csv") or die "ERR: failed to open stats file: $statsFile";
+my $postprocessPAHFile;
+open($postprocessPAHFile, "<pahtest2-bintree-serializer-postprocess-PAH(0.006s).csv") or die "ERR: failed to open stats file: $postprocessPAHFile";
 
-my $mea = 0;
-while(<$statsFile>) {
-  my @fields = split /,/;
+my $sum = 0;
+my $counter = 1;
+my $average = 0;
 
-  # Look for a line that begin with a number and has the first entry (the time)
-  # equal (upto a small tolerance) to 0.006
-  if($fields[0] =~ /^\d+/) {
-      $mea = $fields[0];
-      print "$mea\n";
-      last;
+# Ignore lines which contain non-numeric values: the header (line 1) and the three lines containing the words 1runs, 2runs and 3runs (lines 2, 747 and 1489)
+while (my $line = <$postprocessPAHFile>) {
+  if (($counter == 1) || ($counter == 2) || ($counter == 747) || ($counter == 1489)) {
+  } else {
+      chomp $line;
+
+      my @fields = split "," , $line;
+      $sum += $fields[6];
   }
+  $counter += 1;
 }
 
-# Precalculated value: 314.18
-# 20 repetitions, stats=318.1
+# ($counter - 5) corresponds to the total number of PAHs
+$average = $sum / ($counter - 5);
 
-if(abs($mea -  318) > 10) {
-  print "Stats was $mea, when 314 expected\n";
+# Precalculated average over 3 runs = 455.6522316
+# 20 runs: mean = 455.2484913; 99% confidence level = 4.826335734
+
+if(abs($average -  455) > 5) {
+  print "Average PAH mass (u) was $average, when 455 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

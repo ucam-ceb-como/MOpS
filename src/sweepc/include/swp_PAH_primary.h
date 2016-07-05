@@ -187,7 +187,7 @@ public:
     int NumPAH() const;
     //! returns the number of hydrogen atoms in the particle
     int NumEdgeC() const;
-    //! returns the number of hydrogen atoms in the particle
+    //! returns the number of 6-member rings in the particle.
     int NumRings() const;
     //! returns sqrt(L*W)
     double sqrtLW() const;
@@ -204,7 +204,7 @@ public:
     //! store the mass of individual PAH within this soot aggregate
     void mass_PAH(std::vector<double> &out) const;
     //! output PAH information in a vector of vector and then index the info
-    void OutputPAHPSL(std::vector<std::vector<double> > &out, const int index, const double density) const;
+    void OutputPAHPSL(std::vector<std::vector<double> > &out, const int index, const double density, std::set<void*> &pah_duplicates, std::vector<std::string> &Mapping, const double timeStep) const;
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
     //! find soot particle with only one Incepted molecule (A1,A2 or A4)
@@ -278,7 +278,7 @@ private:
 
     //! total num of edge C in this soot particle
     int m_numOfEdgeC;
-    //! total num of rings (inculding 5, 6- menber rings) in this soot particle
+    //! Total number of 6-member rings in this soot particle
     int m_numOfRings;
     //! Number of PAHs below this node
     int m_numPAH;

@@ -919,11 +919,17 @@ void Simulator::postProcessSimulation(
     // Now post-process the PSLs.
     postProcessPSLs(mech, times);
 
-    // Now post-process the ensemble to find interested information, in this case, PAH mass distribution of the largest soot aggregate in the ensemnble
+    //! Post-process the ensemble.
     if (m_write_PAH && pmech.WriteBinaryTrees()) {
-        // more potential functionality can be added in the below function
-        postProcessPAHinfo(mech, times);
-        // then output details about the whole particle ensemble
+        //! Uncomment to ouput PAH mass distribution of the largest soot aggregate in the ensemble.
+        /*!
+         * Useful for reproduction of Stein and Fahr's stabilomer grid.
+         * Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
+         * J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
+         */
+        // postProcessPAHinfo(mech, times);
+
+        //! Output PAH details for the whole particle ensemble
         postProcessPAHPSLs(mech, times);
     }
 }
@@ -2350,7 +2356,12 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
     }
 }
 
-// Processes the PAH-PSLs at each save point into single files.
+/*
+ * @brief Processes the PAH-PSLs at each save point into single files.
+ *
+ * @param[in]    mech     Partcle mechanism.
+ * @param[in]    times    Times at which to save output.
+ */
 void Simulator::postProcessPAHPSLs(const Mechanism &mech,
                                 const timevector &times) const
 {
@@ -2369,21 +2380,22 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         vector<string> separator;
 
         // add the name for the columns
-        header.push_back("Index");
-        header.push_back("#C");   // #C represent the num of Carbon
-        header.push_back("#H");
-        header.push_back("#Rings6");
-        header.push_back("#Rings5");
-        header.push_back("#EdgeC");
-        header.push_back("Mass(u)");
-        header.push_back("Mass(kg)");
-        header.push_back("PAHCollDiameter (m)");
-        header.push_back("PAH denbsity (kg/m3)");
-        header.push_back("PAH volume (m3)");
-        header.push_back("diameter (m)");
-        header.push_back("collision diameter (m)");
-        header.push_back("time created (s)");
-        header.push_back("PAH_ID");
+        header.push_back("Index");                     //! Particle index (-1 for gas-phase PAHs).
+        header.push_back("#C");                        //! Number of carbon atoms.
+        header.push_back("#H");                        //! Number of hydrogen atoms.
+        header.push_back("#Rings6");                   //! Number of 6-member rings.
+        header.push_back("#Rings5");                   //! Number of 5-member rings.
+        header.push_back("#EdgeC");                    //! Number of carbon atoms on the edge of the PAH.
+        header.push_back("Mass(u)");                   //! PAH mass (u).
+        header.push_back("Mass(kg)");                  //! PAH mass (kg).
+        header.push_back("PAHCollDiameter (m)");       //! PAH collision diameter (m).
+        header.push_back("PAH density (kg/m3)");       //! PAH density (kg/m3).
+        header.push_back("PAH volume (m3)");           //! PAH volume (m3).
+        header.push_back("diameter (m)");              //! Spherical diameter (m).
+        header.push_back("collision diameter (m)");    //! Larger of the spherical or collison diameter (m).
+        header.push_back("time created (s)");          //! Time created (s).
+        header.push_back("PAH_ID");                    //! Index of PAH.
+		header.push_back("Frequency");                 //! Number of PAHs pointing to the same memory location.
 
 
         // Open output files for all PSL save points.  Remember to
@@ -2415,34 +2427,36 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
                     double scale = (double)m_nruns;
                     if (m_output_every_iter) scale *= (double)m_niter;
 
-                    // Get PSL for all particles.
+                    //! Provide a way to detect multiple instances of PAHs.
+					std::set<void*> duplicates;
+                    
+                    // Provide a way to map a PAH to its memory location.
+					std::vector<std::string> Mapping;
+					
+                    //! Loop over all particles and PAHs within the particles and write PAH information to csv file.
                     for (unsigned int j=0; j!=r->Mixture()->ParticleCount(); ++j) {
-
                         Sweep::Particle* sp=r->Mixture()->Particles().At(j);
                         Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
-                        // store the mass of individual PAH within the selected particle in the vector temp_PAH
-                        pah->OutputPAHPSL(temp_PAH, j, den);
-                        // check whether it is a gasphase PAH, yes set index to -1
-                        if (pah->Numprimary()==1 && pah->NumPAH()==1)
-                            temp_PAH[0][0]=-1;
+                        pah->OutputPAHPSL(temp_PAH, j, den, duplicates, Mapping, i);
+						if (j == r->Mixture()->ParticleCount() - 1){
+							for (size_t ii = 0; ii!=temp_PAH.size(); ++ii) 
+								out[i]->Write(temp_PAH[ii]);
 
-                        // Output particle PSL to CSV file.
-                        for (size_t ii = 0; ii!=temp_PAH.size(); ++ii) 
-                            out[i]->Write(temp_PAH[ii]);
-                        // temp_PAH must be cleared before next output
-                        temp_PAH.clear();
+							    //! temp_PAH must be cleared before next output.
+							    temp_PAH.clear();
+						}
                     }
 
                     delete r;
                 } else {
-                    // Throw error if the reactor was not read.
+                    //! Throw error if the reactor was not read.
                     throw runtime_error("Unable to read reactor from save point "
                                         "(Mops, ParticleSolver::postProcessPSLs).");
                 }
             }
         }
 
-        // Close output CSV files.
+        //! Close output CSV files.
         for (unsigned int i=0; i!=times.size(); ++i) {
             out[i]->Close();
             delete out[i];
