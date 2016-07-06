@@ -68,7 +68,7 @@ Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
     else
         m_gas = new Sweep::SprogIdealGasWrapper(*model.Species());
-
+	assert(isValid());
 }
 
 // Copy constructor.
@@ -76,6 +76,7 @@ Cell::Cell(const Cell &copy)
 : m_gas(copy.m_gas->Clone())
 {
     *this = copy;
+	assert(isValid());
 }
 
 // Stream-reading constructor.
@@ -83,11 +84,13 @@ Cell::Cell(std::istream &in, const Sweep::ParticleModel &model)
 : m_gas(new Sweep::SprogIdealGasWrapper(*model.Species()))
 {
     Deserialize(in, model);
+	assert(isValid());
 }
 
 // Default destructor.
 Cell::~Cell(void)
 {
+	assert(isValid());
     delete m_gas;
 }
 
@@ -98,6 +101,7 @@ Cell::~Cell(void)
 Cell &Cell::operator=(const Sweep::Cell &rhs)
 {
     if (this != &rhs) {
+		//assert(rhs.isValid());
         delete m_gas;
         m_gas        = rhs.m_gas->Clone();
         m_ensemble   = rhs.m_ensemble;
@@ -107,6 +111,7 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_inflow     = rhs.m_inflow;
         m_outflow    = rhs.m_outflow;
     }
+	assert(isValid());
     return *this;
 }
 
@@ -126,6 +131,7 @@ std::ostream& operator<<(
           " P=" << c.GasPhase().Pressure() <<
           " SP0=" << c.GasPhase().SpeciesConcentration(0) <<
           " \n";
+  assert(c.isValid());
   return os;
 }
 
@@ -139,6 +145,7 @@ const Ensemble &Cell::Particles(void) const {return m_ensemble;}
 // Returns the particle count.
 unsigned int Cell::ParticleCount(void) const
 {
+	assert(isValid());
     return m_ensemble.Count();
 }
 
@@ -165,6 +172,7 @@ void Cell::SetParticles(
     m_ensemble.SetParticles(particle_list_begin, particle_list_end, rng);
 
     m_smpvol = 1.0 / statistical_weight;
+	assert(isValid());
 }
 
 /**
@@ -198,6 +206,7 @@ void Cell::SetParticles(
     assert(rngCopy == rng);
 
     m_smpvol = 1.0 / statistical_weight;
+	assert(isValid());
 }
 
 // Returns particle statistics.
@@ -232,6 +241,7 @@ void Cell::AdjustSampleVolume(double scale_factor)
     // The effects of ensemble rescalings are now incorporated in this sample
     // volume.
     m_ensemble.ResetScaling();
+	assert(isValid());
 }
 
 unsigned int Cell::NumOfStartingSpecies(const int index) const 
@@ -261,7 +271,7 @@ void Cell::Reset(const double m0)
         // The ensemble has not yet been initialised
         m_smpvol = 1.0;
     }
-
+	assert(isValid());
 }
 
 
@@ -347,6 +357,7 @@ void Cell::AddOutflow(double rate, const Sweep::Mechanism &mech)
  */
 void Cell::Serialize(std::ostream &out) const
 {
+	assert(isValid());
     if (out.good()) {
         // Output the gas mixture
         // First check how the mixture is stored
@@ -433,6 +444,11 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
         throw invalid_argument("Input stream not ready "
                                "(Sweep, Cell::Deserialize).");
     }
+}
+
+// aab64 check cell consistency, implemented to ensure gas phase mixture pointers are never NULL 
+bool Cell::isValid() const {
+	return m_gas != NULL; 
 }
 
 } // Sweep namespace

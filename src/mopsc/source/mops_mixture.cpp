@@ -57,12 +57,14 @@ using namespace Mops;
 Mixture::Mixture(const Sweep::ParticleModel &model)
 : Sweep::Cell(model)
 {
+	assert(isValid()); // aab64 additional asserts to check mixture pointers are never null
 }
 
 // Stream-reading constructor.
 Mixture::Mixture(std::istream &in, const Sweep::ParticleModel &model)
 : Sweep::Cell(in, model)
 {
+	assert(isValid());
 }
 
 // Default destructor.
@@ -75,10 +77,12 @@ Mixture::~Mixture(void)
 // Assignment operator.
 Mixture &Mixture::operator =(const Mixture &rhs)
 {
+	assert(rhs.isValid());
     if (this != &rhs) {
         // Invoke operator of base class.
         Sweep::Cell::operator=(rhs);
     }
+	assert(isValid());
     return *this;
 }
 
@@ -88,6 +92,7 @@ Mixture &Mixture::operator =(const Mixture &rhs)
 // Creates a clone of the mixture.
 Mixture *const Mixture::Clone() const
 {
+	assert(isValid());
     return new Mixture(*this);
 }
 
@@ -105,7 +110,8 @@ const Sprog::Thermo::IdealGas& Mixture::GasPhase(void) const {
     const Sweep::SprogIdealGasWrapper *gasWrapper = dynamic_cast<const Sweep::SprogIdealGasWrapper*>(&Sweep::Cell::GasPhase());
 
     if(gasWrapper == NULL)
-        throw std::runtime_error("Coult not cast gas phase to Sweep::SprogIdealGasWrapper in Mops::Mixture::GasPhase");
+		//assert(isValid());
+        throw std::runtime_error("Could not cast gas phase to Sweep::SprogIdealGasWrapper in Mops::Mixture::GasPhase");
 
     // Since the exception was not thrown we have the proper kind of gas phase for using with mops
     return *(gasWrapper->Implementation());
@@ -124,7 +130,8 @@ Sprog::Thermo::IdealGas& Mixture::GasPhase(void) {
     Sweep::SprogIdealGasWrapper *gasWrapper = dynamic_cast<Sweep::SprogIdealGasWrapper*>(&Sweep::Cell::GasPhase());
 
     if(gasWrapper == NULL)
-        throw std::runtime_error("Coult not cast gas phase to Sweep::SprogIdealGasWrapper in Mops::Mixture::GasPhase");
+		//assert(isValid());
+        throw std::runtime_error("Could not cast gas phase to Sweep::SprogIdealGasWrapper in Mops::Mixture::GasPhase");
 
     // Since the exception was not thrown we have the proper kind of gas phase for using with mops
     return *(gasWrapper->Implementation());

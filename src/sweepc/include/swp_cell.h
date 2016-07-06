@@ -202,6 +202,9 @@ protected:
     // sense to define a mixture without knowledge of the
     // defining species.  This trait is brought over from Sprog.
     Cell();
+	
+	// Check internal consistency 
+	bool isValid() const;
 
 private:
     //! Gas mixture

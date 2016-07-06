@@ -41,6 +41,7 @@
 
 #include "mops_predcor_solver.h"
 #include "mops_reactor_factory.h"
+#include "mops_psr.h"
 
 #include "sweep.h"
 #include "string_functions.h"
@@ -55,6 +56,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+//#define CHECK_PTR
 /////////////////////////////////////////////////////////////////////
 
 
@@ -156,6 +158,20 @@ void PredCorSolver::Reset(Reactor &r)
 
 
 // SOLVING REACTORS.
+
+
+/* aab64 - warning on using predcor with mops network simulator:
+ The predcor solver appears to be incompatible with the network simulator 
+ This is due to the way that the reactor class and PSR derived class are 
+ set up. Essentially, because the PSR class has inflow and outflow pointers
+ but the setup in the solver is for a generic reactor object, the information
+ about the mixtures pointed to is lost when the reactor is copied for the 
+ predcor iterations e.g. in the assignment r=*m_reac_copy. This has not currently
+ been fixed. One option would be to restructure things so that the reactor, r, is 
+ passed by reference to the iteration() function etc. The clone function r.Clone() 
+ works correctly and could be used for the assignment. 
+ To investigate enable the ifdef CHECK_PTR checks */
+
 
 // Solves the coupled reactor using the predictor-corrector splitting
 // algorithm up to the stop time.  Calls the output function after
@@ -555,8 +571,55 @@ void PredCorSolver::beginIteration(Reactor &r, unsigned int step, double dt)
 // the source terms for the gas-phase effect on the particle model.
 void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
 {
+	
+	// aab64: check what happens to flow pointers during assignment
+#ifdef CHECK_PTR
+	cout << "in iteration check 1\n";
+	// Cast the reactor to a PSR reactor and check outflow pointers
+	Mops::PSR *psr = dynamic_cast<Mops::PSR*>(&r);
+	if (psr != NULL)
+	{
+		Mops::FlowPtrVector::const_iterator itbeg = psr->Mops::PSR::Outflows().begin();
+		Mops::FlowPtrVector::const_iterator itend = psr->Mops::PSR::Outflows().end();
+		while (itbeg != itend) {
+			assert(&(*itbeg)->Mixture()->GasPhase());
+			++itbeg;
+		}
+	}
+    
+	cout << "in iteration check 2\n";
+	// Cast the reactor copy to a PSR reactor and check outflow pointers
+	Mops::PSR *psr_copy = dynamic_cast<Mops::PSR*>(&(*m_reac_copy));
+	if (psr_copy != NULL)
+	{
+		Mops::FlowPtrVector::const_iterator itbeg = psr_copy->Mops::PSR::Outflows().begin();
+		Mops::FlowPtrVector::const_iterator itend = psr_copy->Mops::PSR::Outflows().end();
+		while (itbeg != itend) {
+			assert(&(*itbeg)->Mixture()->GasPhase());
+			++itbeg;
+		}
+	}
+#endif
+	
     // Reset reactor and solver for another iteration.
     r = *m_reac_copy;
+	
+	// aab64: check what happens to flow pointers during assignment
+#ifdef CHECK_PTR
+	cout << "in iteration check 3, post assignment\n";
+	// Cast the reactor to a PSR reactor and check outflow pointers
+	//Mops::PSR *psr = dynamic_cast<Mops::PSR*>(&r);
+	if (psr != NULL)
+	{
+		Mops::FlowPtrVector::const_iterator itbeg = psr->Mops::PSR::Outflows().begin();
+		Mops::FlowPtrVector::const_iterator itend = psr->Mops::PSR::Outflows().end();
+		while (itbeg != itend) {
+			assert(&(*itbeg)->Mixture()->GasPhase());
+			++itbeg;
+		}
+	}
+	cout << "in iteration checks complete\n";
+#endif
 
     // Note the start time.
     double ts1=r.Time();

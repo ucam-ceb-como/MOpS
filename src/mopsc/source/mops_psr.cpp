@@ -175,7 +175,10 @@ Mops::FlowStream *const PSR::Inflow(unsigned int i) const {
 }
 
 // Returns the inflow stream pointers
-Mops::FlowPtrVector PSR::Inflows() const {
+// aab64: changed definition from 
+// Mops::FlowPtrVector PSR::Inflows() const {
+// to the following
+const Mops::FlowPtrVector & PSR::Inflows() const {
     return m_inflow_ptrs;
 }
 
@@ -186,7 +189,10 @@ Mops::FlowStream *const PSR::Outflow(unsigned int i) const {
 }
 
 // Returns the Outflow stream pointers
-Mops::FlowPtrVector PSR::Outflows() const {
+// aab64: changed definition from 
+//Mops::FlowPtrVector PSR::Outflows() const {
+// to the following
+const Mops::FlowPtrVector & PSR::Outflows() const {
     return m_outflow_ptrs;
 }
 
@@ -437,6 +443,13 @@ Serial_ReactorType PSR::SerialType() const
  * @param ydot  First derivative of the solution.
  */
 void PSR::RHS_Complete(double t, const double *const y, double *ydot) const {
+	
+	// aab64: Debug loop for inflow pointers checking the pointer to the 
+	// inflow mixture doesn't go NULL
+	for (Mops::FlowPtrVector::const_iterator it = m_inflow_ptrs.begin();
+		it != m_inflow_ptrs.end(); ++it) {
+		assert(&(*it)->Mixture()->GasPhase());
+	}
 
     if (m_sarea > 0.0)
         throw std::runtime_error("PSR untested for surface chemistry.");
@@ -506,6 +519,9 @@ void PSR::RHS_Complete(double t, const double *const y, double *ydot) const {
     double dn_dt(0.0);
     for (Mops::FlowPtrVector::const_iterator it=m_inflow_ptrs.begin();
             it!=m_inflow_ptrs.end(); ++it) {
+		// Debug check for inflow pointer
+		assert(&(*it)->Mixture()->GasPhase());
+		
         dn_dt += (*it)->GetFlowFraction() * (*it)->Mixture()->GasPhase().Density();
     }
     dn_dt = (dn_dt * m_iscaling - y[m_iDens]) * m_invrt + wtot;
