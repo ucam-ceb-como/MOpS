@@ -508,7 +508,7 @@ void Reactor::RHS_ConstT(double t, const double *const y,  double *ydot) const
         //////////////////////////csl37 - const P
 		//ydot[m_iDens] = 0.0;
 		//////////////////////////
-		ydot[m_iDens] = -101325*ydot[m_iT]/(8.314472*y[m_iT]*y[m_iT]);
+		ydot[m_iDens] = - (y[m_iDens] * ydot[m_iT] / y[m_iT]);
 		//////////////////////////
     }
 }

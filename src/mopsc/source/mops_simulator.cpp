@@ -2285,7 +2285,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	//////////////////////////////////////////// csl37-pp
 	surfout_header.push_back("Particle Index");
 	surfout_header.push_back("Number of primaries below node");
-	surfout_header.push_back("Common surface area (m-3)");
+	surfout_header.push_back("Common surface area (m2)");
 	surfout_header.push_back("Sintering level");
 	surfout_header.push_back("Left diameter (m)");
 	surfout_header.push_back("Right diameter (m)");

@@ -754,6 +754,7 @@ BinTreePrimary &BinTreePrimary::Merge()
 */
 void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *target)
 {
+
     if(m_rightparticle == source) {
         m_rightparticle = target;
         double sphericalsurface =
@@ -761,6 +762,11 @@ void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *targe
                     m_rightparticle->Volume()) /(4 * PI), TWO_THIRDS);
         m_children_surf = sphericalsurface / (m_children_sintering *
                 (1.0 - TWO_ONE_THIRD) + TWO_ONE_THIRD);
+		///////////////////////////////////////////// csl37 - keep common surf below the upper bound
+		if((m_leftparticle->m_surf + m_rightparticle->m_surf) < m_children_surf){
+				m_children_surf = m_leftparticle->m_surf + m_rightparticle->m_surf;
+		}
+		////////////////////////////////////////////
     }
     if(m_leftparticle == source){
         m_leftparticle = target;
@@ -769,8 +775,12 @@ void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *targe
                     m_rightparticle->Volume()) /(4 * PI), TWO_THIRDS);
         m_children_surf = sphericalsurface / (m_children_sintering *
                 (1.0 - TWO_ONE_THIRD) + TWO_ONE_THIRD);
+		///////////////////////////////////////////// csl37 - keep common surf below the upper bound
+		if((m_leftparticle->m_surf + m_rightparticle->m_surf) < m_children_surf){
+				m_children_surf = m_leftparticle->m_surf + m_rightparticle->m_surf;
+		}
+		////////////////////////////////////////////
     }
-
     // Update the tree above this sub-particle.
     if (m_parent != NULL) {
         m_parent->ChangePointer(source, target);
