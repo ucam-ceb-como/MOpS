@@ -69,6 +69,7 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_children_radius(0.0),
     m_children_vol(0.0),
     m_children_surf(0.0),
+    m_distance_centreToCentre(0.0),
     m_children_sintering(0.0),
     m_avg_sinter(0.0),
     m_sint_rate(0.0),
@@ -98,6 +99,7 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_children_radius(0.0),
     m_children_vol(0.0),
     m_children_surf(0.0),
+    m_distance_centreToCentre(0.0),
     m_children_sintering(0.0),
     m_avg_sinter(0.0),
     m_sint_rate(0.0),
@@ -128,6 +130,7 @@ m_primarydiam(0.0),
 m_children_radius(0.0),
 m_children_vol(0.0),
 m_children_surf(0.0),
+m_distance_centreToCentre(0.0),
 m_children_sintering(0.0),
 m_avg_sinter(0.0),
 m_sint_rate(0.0),
@@ -374,17 +377,17 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 }
 
 /*!
- * @brief       Copy state-space and derived properties from source
+ *  @brief Copy state-space and derived properties from source.
  *
- * This function is like a limited assignment operator, except that the
- * children are not copied and the pointers to the particles may need
- * adjusting after this method has finished.
+ *  This function is like a limited assignment operator, except that the
+ *  children are not copied and the pointers to the particles may need
+ *  adjusting after this method has finished.
  *
- * @param[in] source Pointer to the primary to be copied
+ *  @param[in] source Pointer to the primary to be copied.
  */
 void BinTreePrimary::CopyParts(const BinTreePrimary *source)
 {
-    // Set primary characteristics
+    //! Set primary characteristics.
     SetComposition(source->Composition());
     SetValues(source->Values());
     SetTime(source->LastUpdateTime());
@@ -395,23 +398,24 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
     SetVolume(source->Volume());
     SetMass(source->Mass());
 
-    // Set BinTreePrimary model characteristics
-    m_numprimary        = source->m_numprimary;
-    m_primarydiam       = source->m_primarydiam;
-    m_children_radius   = source->m_children_radius;
-    m_children_vol      = source->m_children_vol;
-    m_children_surf     = source->m_children_surf;
-    m_children_sintering= source->m_children_sintering;
-    m_avg_sinter        = source->m_avg_sinter;
-    m_sint_rate         = source->m_sint_rate;
-    m_sint_time         = source->m_sint_time;
+    //! Set BinTreePrimary model characteristics.
+    m_numprimary              = source->m_numprimary;
+    m_primarydiam             = source->m_primarydiam;
+    m_children_radius         = source->m_children_radius;
+    m_children_vol            = source->m_children_vol;
+    m_children_surf           = source->m_children_surf;
+    m_distance_centreToCentre = source->m_distance_centreToCentre;
+    m_children_sintering      = source->m_children_sintering;
+    m_avg_sinter              = source->m_avg_sinter;
+    m_sint_rate               = source->m_sint_rate;
+    m_sint_time               = source->m_sint_time;
 
-    // Set particles
-    m_leftchild         = source->m_leftchild;
-    m_rightchild        = source->m_rightchild;
-    m_parent            = source->m_parent;
-    m_leftparticle      = source->m_leftparticle;
-    m_rightparticle     = source->m_rightparticle;
+    //! Set particles.
+    m_leftchild     = source->m_leftchild;
+    m_rightchild    = source->m_rightchild;
+    m_parent        = source->m_parent;
+    m_leftparticle  = source->m_leftparticle;
+    m_rightparticle = source->m_rightparticle;
 }
 
 /*!
@@ -1441,12 +1445,12 @@ void BinTreePrimary::Serialize(std::ostream &out) const
 }
 
 /*!
- * @brief Writes an individual primary to a binary stream
+ *  @brief Writes an individual primary to a binary stream.
  *
- * @param[in,out]    out                 Output binary stream
- * @param            void                It is a pointer, but the type that it points to is not known
+ *  @param[in,out] out  Output binary stream.
+ *  @param         void It is a pointer, but the type that it points to is not known.
  *
- * @exception        invalid_argument    Stream not ready
+ *  @exception invalid_argument Stream not ready.
  */
 void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
 {
@@ -1468,6 +1472,9 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
         out.write((char*)&val, sizeof(val));
 
         val = m_children_surf;
+        out.write((char*)&val, sizeof(val));
+
+        val = m_distance_centreToCentre;
         out.write((char*)&val, sizeof(val));
 
         val = m_children_sintering;
@@ -1532,13 +1539,13 @@ void BinTreePrimary::Deserialize(std::istream &in, const Sweep::ParticleModel &m
 }
 
 /*!
- * @brief Deserialise attributes of a single particle node
+ *  @brief Deserialise attributes of a single particle node.
  *
- * @param[in,out]    in                  Input binary stream
- * @param[in]        model               Particle model defining interpretation of particle data
- * @param            void                It is a pointer, but the type that it points to is not known.
+ *  @param[in,out] in    Input binary stream.
+ *  @param[in]     model Particle model defining interpretation of particle data.
+ *  @param         void  It is a pointer, but the type that it points to is not known.
  *
- * @exception        invalid_argument    Stream not ready
+ *  @exception invalid_argument Stream not ready.
  */
 void BinTreePrimary::DeserializePrimary(std::istream &in,
         const Sweep::ParticleModel &model,
@@ -1563,6 +1570,9 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_children_surf = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_distance_centreToCentre = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_children_sintering = val;

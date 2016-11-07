@@ -157,9 +157,30 @@ public:
     // The binary tree serialiser needs full access to private attributes.
     friend class BinTreeSerializer<class BinTreePrimary>;
 
-    // The image writer needs full access to private attributes
+    ///////////////////////////////////////////////////////////////////////////
+    /// The following ParticleImage functions have to be declared as friends to
+    /// be able to access the private members of the BinTreePrimary class.
+    ///////////////////////////////////////////////////////////////////////////
     template <class ParticleClass>
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
+
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimarySeparation);
+
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::CopyTree(ImgNode &node, const ParticleClass *source);
+
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::CopyParts(ImgNode &node, const ParticleClass *source);
+
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::UpdateAllPointers(ImgNode &node, const ParticleClass *original);
+
+    template <class ParticleClass>
+    friend std::stack<bool> Sweep::Imaging::ParticleImage::recordPath(const ParticleClass* bottom, const ParticleClass* const top);
+
+    template <class ParticleClass>
+    friend ParticleClass* Sweep::Imaging::ParticleImage::descendPath(ParticleClass *here, std::stack<bool> &takeLeftBranch);
 
     //! Serialise a BinTreePrimary particle
     void Serialize(std::ostream &out) const;
@@ -223,6 +244,9 @@ protected:
 
     //! Common surface area between two connected children
     double m_children_surf;
+
+    //! Distance between the centres of primary particles.
+    double m_distance_centreToCentre;
 
     //! Sintering level of children connected by this node
     double m_children_sintering;

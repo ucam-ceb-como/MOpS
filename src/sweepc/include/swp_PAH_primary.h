@@ -79,9 +79,30 @@ public:
     // The binary tree serialiser needs full access to private attributes.
     friend class BinTreeSerializer<class PAHPrimary>;
 
-    // The image writer needs full access to private attributes
+    ///////////////////////////////////////////////////////////////////////////
+    /// The following ParticleImage functions have to be declared as friends to
+    /// be able to access the private members of the PAHPrimary class.
+    ///////////////////////////////////////////////////////////////////////////
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimarySeparation);
+
     template <class ParticleClass>
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
+
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::CopyTree(ImgNode &node, const ParticleClass *source);
+
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::CopyParts(ImgNode &node, const ParticleClass *source);
+
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::UpdateAllPointers(ImgNode &node, const ParticleClass *original);
+
+    template <class ParticleClass>
+    friend std::stack<bool> Sweep::Imaging::ParticleImage::recordPath(const ParticleClass* bottom, const ParticleClass* const top);
+
+    template <class ParticleClass>
+    friend ParticleClass* Sweep::Imaging::ParticleImage::descendPath(ParticleClass *here, std::stack<bool> &takeLeftBranch);
 
     //! For use while avoiding repeated deserialisation of a single PAH
     typedef std::map<void*, boost::shared_ptr<PAH> > PahDeserialisationMap;
@@ -140,6 +161,10 @@ public:
 
     //! returns the rounding level due to mass addition
     double CoalescenceLevel();
+
+    //! Returns the distance between the centres of primary particles.
+    double Distance() const;
+
     //! returns the Rounding Level according the Eq 6.3 on the markus sander's thesis
     double RoundingLevel();
     //! returns the left child
@@ -308,6 +333,9 @@ private:
     double m_children_surf;
     // store the RoundingLevel
     double m_children_roundingLevel;
+    
+    //! Distance between the centres of primary particles.
+    double m_distance_centreToCentre;
 
     // radius of gyration and fractal dimension
     // the values are only update in CalcFractaldimension()

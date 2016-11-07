@@ -340,6 +340,12 @@ public:
     //! Index for thermal conductivity of mixture in gas phase interface
     void setThermalConductIndex(const EnvironmentInterface::PropertyIndex index) {m_ThermalConductivityIndex = index;}
 
+    //! Activates tracking of the distance between the centres of primary particles.
+    void setTrackPrimarySeparation(bool flag) {m_trackPrimarySeparation = flag;}
+
+    //! Return the flag used to indicate whether to track the distance between the centres of primary particles.
+    const bool getTrackPrimarySeparation() const {return m_trackPrimarySeparation;}
+
 protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;
@@ -461,6 +467,9 @@ private:
 
     //! Free molecular enhancement factor (coag., cond. & incep.)
     double m_efm;
+
+    //! Flag to indicate whether to track the distance between the centres of neighbouring primary particles.
+    bool m_trackPrimarySeparation;
 
     //! Index for temperature gradient
     EnvironmentInterface::PropertyIndex m_TemperatureGradientIndex;

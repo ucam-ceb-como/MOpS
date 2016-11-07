@@ -350,6 +350,28 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     } else {
         mech.SetAggModel(AggModels::Spherical_ID);
     }
+
+    //! Check whether to track the distance betweeen the centres of primary
+    //! particles but this only applies to binary tree (and maybe surface-
+    //! volume) models.
+    //! By default, in terms of type space, primary particles are assumed to be
+    //! in point contact but the partial rounding/sintering of particles is
+    //! implicitly taken into account where mass addition (surface growth and
+    //! condensation) and sintering events modify the common surface area
+    //! between pairs of neighbouring primaries. By turning on this flag, mass
+    //! addition events lead to an increase in primary diameter at a rate
+    //! dependent on its neighbour while sintering leads to a simultaneous
+    //! decrease in the distance betweeen the centres of neighbouring primaries
+    //! and an increase in their diameters.
+    if (mech.AggModel() == AggModels::PAH_KMC_ID) {
+        str = particleXML->GetAttributeValue("trackPrimarySeparation");
+        if(str == "true") {
+            mech.setTrackPrimarySeparation(true);
+        } else {
+            mech.setTrackPrimarySeparation(false);
+        }
+    }
+
     // See if there are any secondary particle criteria
     const CamXML::Element* secondaryXML = particleXML->GetFirstChild("secondaryparticle");
     if(secondaryXML != NULL) {
