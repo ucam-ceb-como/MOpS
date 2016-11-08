@@ -1686,7 +1686,7 @@ void PAHPrimary::UpdatePrimary(void)
         //! Formation in Combustion-Mechanisms and Models, Springer, Berlin,
         //! 1994, pp. 165-190.
         //! Note that m_i in Eq. (10.19) refers to the number of carbon atoms.
-        m_PAHCollDiameter = 2.4162 * sqrt(maxcarbon * 2.0 / 3.0); //!< Units of Angstroms.
+        m_PAHCollDiameter = 1.395 * sqrt(3.0) * sqrt(maxcarbon * 2.0 / 3.0); //!< Units of Angstroms.
         m_PAHCollDiameter *= 1.0e-10;                             //!< Units of m.
 
         //! At the moment we have only one component: soot.

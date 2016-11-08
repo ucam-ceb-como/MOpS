@@ -82,22 +82,16 @@ while(<$momentFile>) {
   }
 }
 
-# Precalculated value: M0=2.26e18+-1e16, Fv=7.48e-9+-1e-7
+# Precalculated value: M0 = 1.46e+19, Fv = 2.53e-8
 
-# 20 repetitions using git 00706668ed... gives the following
+# 20 repetitions
 # mean values and 99% confidence interval widths
-# boost 1.42.0
-# m0 (2.370+-0.056)e18 m^-3
-# fv (7.519+-0.083)e-9 
-# repeating the calculation with boost 1.47.0 and git 58056fdbc...
-# (which should be the same as git 00706668ed as far as PAH-PP simulation
-# is concerned) gives
-# m0 (2.394+-0.068)e18 m^-3
-# fv (7.490+-0.102)e-9
+# m0 (1.42+-0.03)e+19 m^-3
+# fv (2.57+-0.04)e-8
 
 print "$m0, $m1\n";
-if(abs($m0 -  1.4e19) > 5e17) {
-  print "Simulated mean M0 was $m0, when  1.4e19m^-3 expected\n";
+if(abs($m0 -  1.42e19) > 5e17) {
+  print "Simulated mean M0 was $m0, when  1.42e19m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
