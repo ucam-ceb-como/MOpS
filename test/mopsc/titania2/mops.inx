@@ -1,0 +1,60 @@
+<mops version="2">
+  
+  <!-- Default parameters (can be overidden). --> 
+  <runs>1</runs>
+  <iter>20</iter>
+  <atol>1.0e-17</atol> 
+  <rtol>1.0e-4</rtol>
+  <pcount>256</pcount>
+  <maxm0>1e-9</maxm0>
+  <relax>0.8</relax>
+  
+
+  <!-- Reactor definition (given initial conditions). -->
+  <reactor type="batch" constt="true" constv="false" id="Test_System" units="mol/mol">
+    <temperature units="K">2100</temperature>
+    <pressure units="bar">4.00</pressure>	
+    <component id="TICL4">0.468085</component>
+    <component id="O2">0.531915</component>  
+  </reactor>
+
+  <!-- Output time sequence. -->
+  <timeintervals>
+    <start>0.0</start>
+    <time steps="100" splits="10  ">1e-7</time>
+    <time steps="90 " splits="10  ">1e-6</time>
+    <time steps="90 " splits="10  ">1e-5</time>
+    <time steps="90"  splits="10  ">1e-4</time>
+    <time steps="40"  splits="10  ">1e-3</time>
+    <time steps="40"  splits="10  ">1e-2</time>
+    <time steps="40"  splits="10  ">1e-1</time>
+    <time steps="40 " splits="10  ">1e-0</time>
+  </timeintervals>
+
+  <!-- Simulation output settings. -->
+  <output>
+    <filename>Z1</filename>
+    <statsbound property="dcol">
+      <lower>0</lower>
+      <upper>1.0e30</upper>
+    </statsbound>
+    
+    <console interval="1" msgs="true">
+      <tabular>
+        <column fmt="sci">time</column>
+        <!--column fmt="sci">A4</column-->
+        <column fmt="float">#sp</column>
+        <column fmt="sci">TICL4</column>
+        <column fmt="sci">O2</column>
+        <!--column fmt="sci">TIO2</column-->
+        <column fmt="sci">M0</column>
+        <column fmt="sci">T</column>
+        <!--column fmt="sci">fv</column-->
+        <!--column fmt="sci">ct</column-->
+      </tabular>
+    </console>
+    <ptrack enable="false" ptcount="50"/>
+    
+    <!-- File name for output (excluding extensions). -->
+  </output>
+</mops>

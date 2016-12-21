@@ -41,6 +41,11 @@
  *      Website:     http://como.cheng.cam.ac.uk
 */
 
+//******************************************************csl37
+#define _USE_MATH_DEFINES //!< First define.
+#include <math.h>         //!< Then include so that the pi constant (M_PI) can be used.
+//******************************************************csl37
+
 #include "swp_bintree_primary.h"
 #include "swp_bintree_serializer.h"
 #include <boost/random/poisson_distribution.hpp>
@@ -363,7 +368,8 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
     m_children_surf     = m_leftparticle->m_surf + m_rightparticle->m_surf;
     m_children_radius   = pow(3.0/(4.0*PI)*(m_children_vol),(ONE_THIRD));
     m_children_sintering= SinteringLevel();
-    CheckSintering();
+	m_distance_centreToCentre = m_leftparticle->m_primarydiam/2.0+m_rightparticle->m_primarydiam/2.0;	//csl37: initialise distance to centre
+	CheckSintering();
 
     // Must set all the pointer to NULL otherwise the delete function
     // will also delete the children
@@ -563,14 +569,30 @@ double BinTreePrimary::SinteringLevel()
 bool BinTreePrimary::CheckSintering()
 {
     bool hassintered=false;
-    if (m_children_sintering > 0.95 && m_leftparticle != NULL) {
-         Merge();
-         UpdateCache();
-         hassintered=true;
+	bool Condition;
 
-         // Check again because this node has changed
-         CheckSintering();
-    }
+	if(m_leftparticle != NULL) {
+		//! The condition for whether a particle has coalesced depends on whether
+		//! the distance between the centres of primary particles is tracked. If
+		//! tracked, a particle has coalesced if the distance is 0. If not, the
+		//! condition depends on whether the rounding level exceeds an arbitrarily
+		//! high threshold.
+		if (!m_pmodel->getTrackPrimarySeparation()) {
+			Condition = (m_children_sintering > 0.95);
+		} else {
+			Condition = (min(m_leftparticle->m_primarydiam/2.0,m_rightparticle->m_primarydiam/2.0) + m_distance_centreToCentre <= max(m_leftparticle->m_primarydiam/2.0,m_rightparticle->m_primarydiam/2.0));
+			// Condition = (m_distance_centreToCentre == 0.0);
+		}
+
+		if (Condition) {
+			 Merge();
+			 UpdateCache();
+			 hassintered=true;
+
+			 // Check again because this node has changed
+			 CheckSintering();
+		}
+	}
     if (m_leftchild!=NULL) {
         hassintered = m_leftchild->CheckSintering();
         hassintered = m_rightchild->CheckSintering();
@@ -795,6 +817,7 @@ void BinTreePrimary::ResetChildrenProperties()
     m_children_sintering= 0.0;
     m_avg_sinter        = 0.0;
     m_sint_rate         = 0.0;
+	m_distance_centreToCentre = 0.0;	//csl37
 }
 
 /*!
@@ -806,7 +829,12 @@ void BinTreePrimary::UpdatePrimary(void)
     Primary::UpdateCache();
 
     // Set specific features of this node.
-    m_primarydiam = m_diam;
+	//******************************csl37
+	//if the primary centre-centre separation isn't tracked or this is a single primary m_primarydiam and m_diam are both the spherical equivalent diameter
+	if(!m_pmodel->getTrackPrimarySeparation() || m_parent == NULL){
+		m_primarydiam = m_diam;
+	}
+	//******************************csl37
     m_numprimary  = 1;
 }
 
@@ -1069,27 +1097,82 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
     if (m_leftchild == NULL && m_rightchild == NULL) {
         double dV(0.0);
         double volOld = m_vol;
+		//****************************************************************csl37
+		double m_primary_diam_old = m_primarydiam;	//old primary diameter
+		//****************************************************************
 
         // Call to Primary to adjust the state space
         n = Primary::Adjust(dcomp, dvalues, rng, n);
+
+		//****************************************************************csl37
+		//! Initialisation of variables to adjust the primary diameter if the
+        //! distance between the centres of primary particles is tracked.
+        double d_ij = 0.0;               //!< Distance between the centres of primary particles i and j.
+        double r_i = 0.0;                //!< Radius of primary particle i.
+        double r_j = 0.0;                //!< Radius of primary particle j.
+        double x_i = 0.0;                //!< The distance from the centre of primary particle i to the neck level.
+        double A_n = 0.0;                //!< Cross-sectional neck area.
+        double A_i = 0.0;                //!< Free surface area of primary particle i.
+		//****************************************************************
 
         // Stop doing the adjustment if n is 0.
         if (n > 0) {
             // Update only the primary
             UpdatePrimary();
 
-            dV = m_vol - volOld;
-            double dS(0.0);
+			//****************************************************************csl37
+			//! If the distance between the centres of primary particles is
+			//! tracked, the rate of change in the primary diameter is determined
+			//! by its neighbour. Therefore, the particle should be made up of more
+			//! than one primary.
+			if (m_pmodel->getTrackPrimarySeparation()) {
+				// particle with more than primary
+				if (m_parent != NULL) {	
+					d_ij = m_parent->m_distance_centreToCentre;
+					r_i = m_primary_diam_old / 2.0;
 
-            if (dV > 0.0) {
-                // Surface change due to volume addition
-                dS = dV * 2.0 * m_pmodel->GetBinTreeCoalThresh() / m_diam;
-            }
-            // TODO: Implement surface area reduction?
+					if (m_parent->m_leftparticle == this) {
+						r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
+					} else {
+						r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
+					}
 
-            // Climb back-up the tree and update the surface area and
-            // sintering of a particle
-            UpdateParents(dS);
+					x_i = (pow(d_ij, 2.0) - pow(r_j, 2.0) + pow(r_i, 2.0)) / 2.0 / d_ij; //!< Eq. (3b) of Langmuir 27:6358 (2011).
+					A_n = M_PI * (pow(r_i, 2.0) - pow(x_i, 2.0));                        //!< Eq. (4).
+					A_i = 2.0 * M_PI * (pow(r_i, 2.0) + r_i * x_i);                      //!< Eq. (6).
+
+					//! Differentiating Eq. (3b) with respect to time, and assuming
+					//! that r_j and d_ij do not change, the rate of change in x_i with
+					//! respect to time can be obtained.
+					//! Substituting Eqs. (4) and (6) and the above result into
+					//! Eq. (2), the rate of change in r_i with respect to time can be
+					//! obtained.
+					//! References to equations are to Langmuir 27:6358 (2011).
+					//!
+					//! @todo Remove derivation and replace with reference to preprint
+					//!       or paper if results do get published.
+					m_primarydiam = m_primary_diam_old + 2 * (m_vol - volOld) / (A_i + A_n * r_j / d_ij);
+
+				}else{
+					//single primary
+					m_primarydiam = m_diam;
+				}
+			}
+			//****************************************************************
+			else {
+				dV = m_vol - volOld;
+				double dS(0.0);
+
+				if (dV > 0.0) {
+					// Surface change due to volume addition
+					dS = dV * 2.0 * m_pmodel->GetBinTreeCoalThresh() / m_diam;
+				}
+				// TODO: Implement surface area reduction?
+
+				// Climb back-up the tree and update the surface area and
+				// sintering of a particle
+				UpdateParents(dS);
+			}
         }
     }
 
@@ -1107,6 +1190,11 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 
     // Update property cache.
     UpdateCache(this);
+	//***********************csl37 update parents
+	if(m_parent != NULL){	
+		 m_parent->UpdateCache();
+	}
+	//***********************csl37
     return n;
 
 }
@@ -1185,18 +1273,48 @@ void BinTreePrimary::Sinter(double dt, Cell &sys,
 
         SinterNode(dt, sys, model, rng, wt);
 
-        // Check if the sintering level is above the threshold, and merge
-        if(m_children_sintering > 0.95) CheckSintering();
+   //     // Check if the sintering level is above the threshold, and merge
+   //     if(m_children_sintering > 0.95) CheckSintering();
 
-        // Now sinter any children this node has (if not merged after CheckSintering)
-        if (m_leftparticle!=NULL && m_rightparticle!=NULL) {
-            m_leftchild->Sinter(dt, sys, model,rng,wt);
-            m_rightchild->Sinter(dt, sys, model,rng,wt);
+   //     // Now sinter any children this node has (if not merged after CheckSintering)
+   //     if (m_leftparticle!=NULL && m_rightparticle!=NULL) {
+   //         m_leftchild->Sinter(dt, sys, model,rng,wt);
+   //         m_rightchild->Sinter(dt, sys, model,rng,wt);
+   //     }
+
+   //     UpdateCache();
+
+   //     m_children_sintering = SinteringLevel();
+
+		//*****************************************************************************csl37
+		//! The condition for whether a particle has sintered depends on
+        //! whether the distance between the centres of primary particles is
+        //! tracked. If tracked, a particle has sintered if the distance is 0.
+        //! If not, the condition depends on whether the rounding level exceeds
+        //! an arbitrarily high threshold.
+
+		bool Condition;                          //! Declare variable for condition for complete sintering.
+
+        if (!m_pmodel->getTrackPrimarySeparation()) {
+            Condition = (m_children_sintering > 0.95);
+        } else {
+			Condition = (min(m_leftparticle->m_primarydiam/2.0,m_rightparticle->m_primarydiam/2.0) + m_distance_centreToCentre <= max(m_leftparticle->m_primarydiam/2.0,m_rightparticle->m_primarydiam/2.0));
+            //Condition = (m_distance_centreToCentre == 0.0);
         }
 
-        UpdateCache();
+		if (Condition) {
+            CheckSintering();
+		}
+        
+		if (m_leftchild != NULL && m_rightchild != NULL) {
+            m_leftchild->Sinter(dt, sys, model, rng, wt);
+            m_rightchild->Sinter(dt, sys, model, rng, wt);
+        }
 
-        m_children_sintering = SinteringLevel();
+		UpdateCache();
+
+		m_children_sintering = SinteringLevel();
+		//*****************************************************************************csl37
     }
 
 }
@@ -1231,66 +1349,226 @@ void BinTreePrimary::SinterNode(
         rng_type &rng,
         double wt
         ) {
-    // Calculate the spherical surface
-    const double spherical_surface=4*PI*m_children_radius*m_children_radius;
 
-    // Declare time step variables.
-    double t1=0.0, delt=0.0, tstop=dt;
-    double r=0.0;
+	// Declare time step variables.
+	double t1=0.0, delt=0.0, tstop=dt;
+	double r=0.0;
 
-    // Define the maximum allowed change in surface
-    // area in one internal time step (10% spherical surface).
-    double dAmax = 0.1 * spherical_surface;
+	// The scale parameter discretises the delta-S when using
+	// the Poisson distribution.  This allows a smoother change
+	// (smaller scale = higher precision).
+	double scale = 0.01;
 
-    // The scale parameter discretises the delta-S when using
-    // the Poisson distribution.  This allows a smoother change
-    // (smaller scale = higher precision).
-    double scale = 0.01;
+	//! The sintering model depends on whether the distance between the
+	//! centres of primary particles is tracked. If tracked, sintering
+	//! results in a decrease in the distance between the primaries and an
+	//! increase in their diameters. If not, sintering results in a
+	//! decrease in the common surface between the primaries.
+	if (!m_pmodel->getTrackPrimarySeparation()) {
 
-    // Perform integration loop.
-    while (t1 < tstop)
-    {
-        // Calculate sintering rate.
-        r = model.Rate(m_time+t1, sys, *this);
+		// Calculate the spherical surface
+		const double spherical_surface=4*PI*m_children_radius*m_children_radius;	
 
-        if (r > 0) {
-            // Calculate next time-step end point so that the
-            // surface area changes by no more than dAmax.
-            delt = dAmax / max(r, 1.0e-300);
+		// Define the maximum allowed change in surface
+		// area in one internal time step (10% spherical surface).
+		double dAmax = 0.1 * spherical_surface;
 
-            // Approximate sintering by a poisson process.  Calculate
-            // number of poisson events.
+		// Perform integration loop.
+		while (t1 < tstop)
+		{
+			// Calculate sintering rate.
+			r = model.Rate(m_time+t1, sys, *this);
+
+			if (r > 0) {
+				// Calculate next time-step end point so that the
+				// surface area changes by no more than dAmax.
+				delt = dAmax / max(r, 1.0e-300);
+
+				// Approximate sintering by a poisson process.  Calculate
+				// number of poisson events.
+				double mean;
+
+				if (tstop > (t1+delt)) {
+					// A sub-step, we have changed surface by dAmax, on average
+					mean = 1.0 / scale;
+				} else {
+					// Step until end.  Calculate degree of sintering explicitly.
+					mean = r * (tstop - t1) / (scale*dAmax);
+				}
+				boost::random::poisson_distribution<unsigned, double> repeatDistribution(mean);
+				const unsigned n = repeatDistribution(rng);
+
+				// Adjust the surface area.
+				if (n > 0) {
+					m_children_surf -= (double)n * scale * dAmax;
+
+					// Check that primary is not completely sintered.
+					if (m_children_surf <= spherical_surface) {
+						m_children_surf = spherical_surface;
+						break;
+					}
+				}
+
+				// Set t1 for next time step.
+				t1 += delt;
+			}
+
+		}
+
+	} else {
+		//! Declare characteristic sintering time.
+        double tau = 0.0;
+
+        //! Define the maximum allowed change (1%) in the distance between the
+        //! centres of primary particles in one internal time step. In the case
+        //! of pure sintering it was found that if the allowed change is too
+        //! large (~10%) a significant error is incurred in the final spherical
+        //! volume determined through comparisons with the mass-derived volume.
+        //! Note that the smaller the distance is, the smaller the changes are.
+        double dd_ij_Max = m_distance_centreToCentre / 100.0;
+
+        while (t1 < tstop) {
+            double r_i = this->m_leftparticle->m_primarydiam / 2.0;
+            double r_j = this->m_rightparticle->m_primarydiam / 2.0;
+            double d_ij = min(m_distance_centreToCentre, r_i+r_j );
+			//if one primary completely encloses the other then merge
+			if(min(r_i,r_j)+d_ij <= max(r_i,r_j)){
+				m_distance_centreToCentre = 0.0;
+				break; //need to stop sintering and merge primaries
+			}
+
+			//Conditions for d_ij
+			assert(d_ij <= r_i + r_j);
+			assert(min(r_i,r_j)+d_ij >= max(r_i,r_j));
+
+			//! Definition of variables for conciseness.
+            double d_ij2 = pow(d_ij, 2.0); 
+            double r_i2 = pow(r_i, 2.0);
+            double r_j2 = pow(r_j, 2.0);
+            double r_i4 = pow(r_i, 4.0);
+            double r_j4 = pow(r_j, 4.0);
+			
+			//Due to approximations x_i and x_j sometimes calculated to be larger than respective primary radii resulting in negative neck area, hence min statements
+			double x_i = min((d_ij2 - r_j2 + r_i2) / (2.0 * d_ij),r_i); //!< Eq. (3b).
+            double x_j = min((d_ij2 - r_i2 + r_j2) / (2.0 * d_ij),r_j); //!< Eq. (3b).
+            double A_n = M_PI * (r_i2 - pow(x_i, 2.0));        //!< Eq. (4).
+            double A_i = 2.0 * M_PI * (r_i2 + r_i * x_i);      //!< Eq. (6).
+            double A_j = 2.0 * M_PI * (r_j2 + r_j * x_j);      //!< Eq. (6).
+
+			//******assert x_i <= r_i and x_j <= r_j
+			assert(x_i <= r_i);
+			assert(x_j <= r_j);
+
+			double dd_ij_dt=0.0;
+			double R_n=0.0;
+			double gamma_eta=0.0;
+			
+			//csl37: check sintering model
+			Processes::SinteringModel::SintType sint_model_type = model.Type();
+			switch (sint_model_type){
+				case Processes::SinteringModel::SintType::ViscousFlow:
+					//****************************************************************************************csl37: this part is physics dependent (viscous flow model)
+			
+					//! In Section 3.1.2 of Langmuir 27:6358 (2011), it is argued that
+					//! the smaller particle dominates the sintering process.
+					if (r_i <= r_j) {
+						tau = model.SintTime(sys, *this->m_leftparticle); //!< The left particle is smaller than the right. 
+					} else {
+						tau = model.SintTime(sys, *this->m_rightparticle); //!< The right particle is smaller than the left.
+					}
+
+					//! Gamma is the surface tension and eta is the viscosity, and the
+					//! ratio (gamma/eta) can be related to tau.
+					//! J. Colloid Interface Sci. 140:419 (1990).
+					gamma_eta = min(r_i, r_j) / tau;
+	
+					///////////////////////////////////////////////////////
+					/// References to equations in Langmuir 27:6358 (2011).
+					///////////////////////////////////////////////////////
+
+					//! Eq. (14a).
+					dd_ij_dt = 4.0 * r_i * r_j * d_ij2 * (r_i + r_j) * gamma_eta /
+									((r_i + r_j + d_ij) * (r_i4  + r_j4 - 2.0 * r_i2 * r_j2 + 4.0 * d_ij * r_i * r_j *(r_i + r_j) - d_ij2 * (r_i2 + r_j2)));
+					//****************************************************************************************csl37
+					break;
+
+				case Processes::SinteringModel::SintType::GBD:
+
+					R_n = sqrt(A_n / M_PI);
+					tau = model.SintTime(sys, *this->m_leftparticle); //tau for primary r_i
+
+					//J Aerosol Sci 46:7-19 (2012) Eq. (A6)
+					//dx_i_dt + dx_j_dt, note that the primary radius dependence cancels out 
+					dd_ij_dt = r_i4 * ( 1/(r_i - x_i) + 1/(r_j - x_j) + 2/R_n ) / (A_n * tau);
+
+					break;
+					//****************************************************************************************csl37
+				default:
+					//change this
+					std::cout<<"Sintering model not coded"<<endl;
+					break;
+			}
+
+            //! The expression for B_i in Eq. (8) is wrong. By combining
+            //! Eqs. (5) and (7), we can obtain two equations which are
+            //! functions of r_i and r_j. Subsequently combined these two
+            //! equations and used Wolfram Alpha to rearrange equation in terms
+            //! of r_i (and r_j).
+            //!
+            //! @todo Remove derivation and replace with reference to preprint
+            //!       or paper if results do get published.
+            double B_i = (pow(A_n, 2.0) * r_j * (-2.0 * d_ij + x_j + x_i) / (A_i * d_ij + A_n * r_i) / (d_ij * A_j + A_n * r_j) - A_n * d_ij * A_j * (d_ij - x_i) / (A_i * d_ij + A_n * r_i) / (d_ij * A_j + A_n * r_j)) / 
+                            (1.0 - pow(A_n, 2.0) * r_i * r_j / (A_i * d_ij + A_n * r_i) / (d_ij * A_j + A_n * r_j));
+
+            double B_j = (pow(A_n, 2.0) * r_i * (-2.0 * d_ij + x_i + x_j) / (A_j * d_ij + A_n * r_j) / (d_ij * A_i + A_n * r_i) - A_n * d_ij * A_i * (d_ij - x_j) / (A_j * d_ij + A_n * r_j) / (d_ij * A_i + A_n * r_i)) / 
+                            (1.0 - pow(A_n, 2.0) * r_j * r_i / (A_j * d_ij + A_n * r_j) / (d_ij * A_i + A_n * r_i));
+
+            double V_i = 2.0 / 3.0 * M_PI * pow(r_i, 3.0) + M_PI * r_i2 * x_i - 1.0 / 3.0 * M_PI * pow(x_i, 3.0); //!< Eq. (3a).
+            double V_j = 2.0 / 3.0 * M_PI * pow(r_j, 3.0) + M_PI * r_j2 * x_j - 1.0 / 3.0 * M_PI * pow(x_j, 3.0); //!< Eq. (3a).
+
+            delt = dd_ij_Max / max(dd_ij_dt, 1.0e-300);
             double mean;
 
-            if (tstop > (t1+delt)) {
-                // A sub-step, we have changed surface by dAmax, on average
+            if (tstop > (t1 + delt)) {
                 mean = 1.0 / scale;
             } else {
-                // Step until end.  Calculate degree of sintering explicitly.
-                mean = r * (tstop - t1) / (scale*dAmax);
+                mean = dd_ij_dt * (tstop - t1) / (scale * dd_ij_Max);
             }
-            boost::random::poisson_distribution<unsigned, double> repeatDistribution(mean);
-            const unsigned n = repeatDistribution(rng);
 
-            // Adjust the surface area.
-            if (n > 0) {
-                m_children_surf -= (double)n * scale * dAmax;
+            //! Only perform sintering if the distance between the centres
+            //! of primary particles i and j is positive.
+			//csl37: is this necessary?
+            if (d_ij > 0.0) {
+                boost::random::poisson_distribution<unsigned, double> repeatDistribution(mean);
+                const unsigned n = repeatDistribution(rng);
+                m_distance_centreToCentre -= (double)n * scale * dd_ij_Max; //!< Sintering decreases d_ij hence the negative sign.
 
-                // Check that primary is not completely sintered.
-                if (m_children_surf <= spherical_surface) {
-                    m_children_surf = spherical_surface;
-                    break;
+				//! The factor of 2 is because Eq. (8) is the rate of change
+                //! in radius.
+                this->m_leftparticle->m_primarydiam -= (double)n * scale * 2.0 * B_i * dd_ij_Max;  //!< Eq. (8).
+                this->m_rightparticle->m_primarydiam -= (double)n * scale * 2.0 * B_j * dd_ij_Max; //!< Eq. (8).
+
+				//if one primary is completely enclosed by the other then stop sintering
+                if (min(r_i,r_j)+d_ij <= max(r_i,r_j)) {
+					break; //stop sintering and merge primaries
                 }
-            }
 
-            // Set t1 for next time step.
-            t1 += delt;
+                t1 += delt;
+
+				//return some sintering rate
+				//csl37: change this?
+				r = dd_ij_dt;
+            } else {
+                break; //! d_ij is 0 so do not continue to sinter.
+            }
         }
 
-    }
+	}
 
     m_children_sintering = SinteringLevel();
+
     m_sint_rate = r;
+
 }
 
 
@@ -1407,7 +1685,8 @@ void BinTreePrimary::GetAllPrimaryDiameters(fvector &diams) const
 {
     // Only add diameter to list if it's a primary
     if (m_leftchild == NULL && m_rightchild == NULL)
-        diams.push_back(m_diam);
+        //diams.push_back(m_diam);
+		diams.push_back(m_primarydiam);		//csl37: use m_primarydiam for consistency
 
     if (m_leftchild != NULL && m_rightchild != NULL) {
         m_leftchild->GetAllPrimaryDiameters(diams);

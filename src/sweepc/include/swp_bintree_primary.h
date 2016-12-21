@@ -153,6 +153,9 @@ public:
     //! Sets the value of one of the chemical components
     void SetComponent(std::string name, double val);
 
+	//!Gets the distance between centres of primary particles
+	double GetDistance() const {return m_distance_centreToCentre;}
+
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
     friend class BinTreeSerializer<class BinTreePrimary>;
@@ -234,6 +237,8 @@ protected:
     int m_numprimary;
 
     //! Sum of the diameter of the primaries under this treenode
+	//csl37: This is usually the spherical equivalent diameter (= Primary::m_diam), 
+	// unless centre to centre distance tracking is turned on
     double m_primarydiam;
 
     //! Equivalent spherical radius of sum of childrens' volume
