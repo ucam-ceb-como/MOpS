@@ -5,14 +5,14 @@
   <iter>20</iter>
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>256</pcount>
+  <pcount>128</pcount>
   <maxm0>1e-9</maxm0>
   <relax>0.8</relax>
   
 
   <!-- Reactor definition (given initial conditions). -->
   <reactor type="batch" constt="true" constv="false" id="Test_System" units="mol/mol">
-    <temperature units="K">2100</temperature>
+    <temperature units="K">1500</temperature>
     <pressure units="bar">4.00</pressure>	
     <component id="TICL4">0.468085</component>
     <component id="O2">0.531915</component>  
@@ -27,8 +27,8 @@
     <time steps="90"  splits="10  ">1e-4</time>
     <time steps="40"  splits="10  ">1e-3</time>
     <time steps="40"  splits="10  ">1e-2</time>
-    <time steps="40"  splits="10  ">1e-1</time>
-    <time steps="40 " splits="10  ">1e-0</time>
+    <!-- time steps="40"  splits="10  ">1e-1</time -->
+    <!-- time steps="40 " splits="10  ">1e-0</time -->
   </timeintervals>
 
   <!-- Simulation output settings. -->

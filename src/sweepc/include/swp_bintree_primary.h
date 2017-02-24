@@ -99,6 +99,10 @@ public:
     //! Updates the particle cache using the particle details
     void UpdateCache();
 
+	//csl37
+	//update root cache
+	void BinTreePrimary::UpdateCacheRoot();
+
     //! Updates sintering level
     double SinteringLevel();
 
@@ -220,6 +224,9 @@ protected:
     //! Checks if the sintering level, merges particles if necessary
     bool CheckSintering();
 
+	//csl37: checks the condition for primary merger
+	bool BinTreePrimary::MergeCondition();
+
     //! Set the sintering time of a tree
     void SetSinteringTime(double time);
 
@@ -324,6 +331,9 @@ private:
     //! Updates the pointers after a merge event
     void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
 
+	//csl37
+	// Overload ChangePointer for centre to centre separation tracking model
+	void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *target, double d_ij, BinTreePrimary *small_prim);
 
     // PRINTING TREES
     //! Recursive loop function for print tree
@@ -340,6 +350,16 @@ private:
     //! Deserialise a BinTreePrimary node
     virtual void DeserializePrimary(std::istream &in,
             const Sweep::ParticleModel &model, void*);
+
+	//csl37
+	//function to identify neighbours and sum their contribution to surface growth
+	double BinTreePrimary::SumNeighbours(BinTreePrimary *prim, double sumterm);
+
+	//csl37
+	//function to modify the centre to centre separations
+	void BinTreePrimary::ChangeSeparations(BinTreePrimary *prim, double delta_r);
+
+//	int BinTreePrimary::NeighbourComp(const fvector &dcomp, const fvector &dvalues, rng_type &rng, BinTreePrimary *prim, double d_r_i, int dcomp_tot);
 
 };
 
