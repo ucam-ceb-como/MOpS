@@ -531,23 +531,42 @@ BinTreePrimary *BinTreePrimary::SelectRandomSubparticleLoop(int target)
 double BinTreePrimary::SinteringLevel()
 {
     if (m_leftchild != NULL && m_rightchild != NULL) {
-        // Calculate the spherical surface
-        const double spherical_surface =
-                4 * PI * m_children_radius * m_children_radius;
-        double slevel(0.0);
+		
+		double slevel(0.0);
 
-        if (m_children_surf == 0.0) {
-            slevel = 0.0;
-        } else {
-            slevel= ((spherical_surface/m_children_surf) - TWO_ONE_THIRD)
-                    /(1 - TWO_ONE_THIRD);
-        }
+		//if the centre-centre separation is not tracked the sintering level is calculated as per
+		//Shekar et al. (2012)
+		if (!m_pmodel->getTrackPrimarySeparation()) {
+			// Calculate the spherical surface
+			const double spherical_surface =
+					4 * PI * m_children_radius * m_children_radius;
 
-        if (slevel < 0.0) {
-            return 0.0;
-        } else if (slevel > 1.0) {
-            return 1.0;
-        } else return slevel;
+			if (m_children_surf == 0.0) {
+				slevel = 0.0;
+			} else {
+				slevel= ((spherical_surface/m_children_surf) - TWO_ONE_THIRD)
+						/(1 - TWO_ONE_THIRD);
+			}
+
+		// if centre-centre separation is tracked
+		}else{
+			if (m_leftparticle != NULL && m_rightparticle != NULL) {
+				double r_i = m_leftparticle->m_primarydiam/2.0;
+				double r_j = m_rightparticle->m_primarydiam/2.0;
+				double d_ij =  m_distance_centreToCentre;
+
+				//calculate the merger condition
+				double d_ij_merge = sqrt( pow(max(r_i,r_j),2.0) - pow(min(r_i,r_j),2.0) );
+				slevel = ( d_ij_merge/d_ij - d_ij_merge/(r_i + r_j) ) / ( 1 - d_ij_merge/(r_i + r_j) );
+			}
+		}
+
+		if (slevel < 0.0) {
+				return 0.0;
+			} else if (slevel > 1.0) {
+				return 1.0;
+			} else return slevel;
+
     } else {
         // Particle is a primary
         m_children_surf = 0.0;
@@ -1369,8 +1388,7 @@ double BinTreePrimary::SumNeighbours(BinTreePrimary *prim, double sumterm) {
 }
 
 //csl37
-//function to modify the centre to centre separations
-//
+//function to modify the centre to centre separations after a surface growth event
 void BinTreePrimary::ChangeSeparations(BinTreePrimary *prim, double delta_r){
 	
 	double d_ij = m_parent->m_distance_centreToCentre;
