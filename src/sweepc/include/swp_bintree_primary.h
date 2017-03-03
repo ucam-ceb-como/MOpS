@@ -248,6 +248,10 @@ protected:
 	// unless centre to centre distance tracking is turned on
     double m_primarydiam;
 
+	//csl37
+	// Sum of primary free surface areas under this node
+	double m_free_surf;
+
     //! Equivalent spherical radius of sum of childrens' volume
     double m_children_radius;
 
@@ -353,11 +357,14 @@ private:
 
 	//csl37
 	//function to identify neighbours and sum their contribution to surface growth
-	double BinTreePrimary::SumNeighbours(BinTreePrimary *prim, double sumterm);
+	void BinTreePrimary::SumNeighbours(BinTreePrimary *prim, double &sumterm);
 
 	//csl37
-	//function to modify the centre to centre separations
-	void BinTreePrimary::ChangeSeparations(BinTreePrimary *prim, double delta_r);
+	//function to modify the centre to centre separations and returns free surface area
+	void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
+	//csl37
+	//overload of function ignore update to neighbour
+	void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm, BinTreePrimary *prim_ignore);
 
 //	int BinTreePrimary::NeighbourComp(const fvector &dcomp, const fvector &dvalues, rng_type &rng, BinTreePrimary *prim, double d_r_i, int dcomp_tot);
 
