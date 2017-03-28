@@ -332,8 +332,23 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     double t  = r.Time();
     dtg     = tstop - t;
 
-    // Set the chemical conditions.
+    //! If the initial composition was not specified, linearly interpolate the
+    //! gas-phrase profile to obtain properties at the initial time step which
+    //! may not necessarily be zero.
+    if (!(r.Mixture()->GasPhase().MassDensity() >= 0))
+        linInterpGas(t, r.Mixture()->GasPhase());
+
+    //! Save density from previous time step for sample volume adjustment.
+    double old_dens = r.Mixture()->GasPhase().MassDensity();
+
+    //! Update the chemical conditions.
     linInterpGas(t, r.Mixture()->GasPhase());
+
+    //! Adjust sample volume using the change in the density. Note that the
+    //! code has to go through the loop below twice for the sample volume to be
+    //! adjusted. However, it was found that the loop is only performed once;
+    //! therefore, the sample volume adjustment has to be performed here.
+    r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
 
     // Loop over time until we reach the stop time.
     while (t < tstop)

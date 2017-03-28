@@ -29,7 +29,7 @@ echo "========================"
 # Analytic solution x2 is 2888 1810 1170 704 438
 referenceValues=(-1 1444 905 585 360 235)
 # With doubling activated for initialised particled, need to double reference values.
-doubledReferenceValues=(-1 2925 1780 1156 735 390)
+doubledReferenceValues=(-1 2934 1848 1146 712 427)
 simulatedValues=(-1 -1   -1  -1 -1 -1)
 
 # Grep seems to require the file in unix format, even under cygwin

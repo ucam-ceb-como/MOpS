@@ -86,28 +86,22 @@ while(<$momentFile>) {
 # m0 5.14+-0.06e10 cm^-3
 # fv 5.72+-0.04e-7
 
-# 50 runs using 1024 particles (the test setting) gives an estimate for
-# the standard deviation of population from which each run is drawn of
-# m0 3.9e9 cm^-3
-# fv 2.2e-8
-
 # 50 runs using 1024 particles (the test setting) gives the following values
 # for the means and their 99% confidence intervals
-# using git df5b982e1c5f7c1af8d67b0e2480f55e31ea307d
-# m0 (5.158+-0.181)e16  cm^-3
-# fv (5.736+-0.104)e-7
+# m0 (5.13+-0.12)e16  cm^-3
+# fv (5.74+-0.11)e-7
 
 print "$m0, $m1\n";
-if(abs($m0 - 5.2e16) > 2e15) {
-  print "Simulated mean M0 was $m0, when 5.2e16 m^-3 expected\n";
+if(abs($m0 - 5.14e16) > 3e15) {
+  print "Simulated mean M0 was $m0, when 5.14e16 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m1 - 5.75e-7) > 3e-8) {
-  print "Simulated mean Fv was $m1, when 5.75e-7 expected\n";
+if(abs($m1 - 5.72e-7) > 3e-8) {
+  print "Simulated mean Fv was $m1, when 5.72e-7 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

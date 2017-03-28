@@ -62,15 +62,15 @@ while(<$momentFile>) {
   }
 }
 
-# Precalculated value: M0=2.26e18+-1e16, Fv=7.48e-9+-1e-7
+# Precalculated value: M0=(1.42+-0.08)e19, Fv=(3.14+-0.27)e-8
 
 # 20 repetitions
 # mean values and 99% confidence interval widths
-# m0 (1.41+-0.052)e19 m^-3
-# fv (2.57+-0.0556)e-8 
+# m0 (1.41+-0.05)e19 m^-3
+# fv (2.45+-0.54)e-8 
 
 print "$m0, $m1\n";
-if(abs($m0 -  1.41e19) > 5.2e17) {
+if(abs($m0 -  1.41e19) > 2e17) {
   print "Simulated mean M0 was $m0, when  1.41e19m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -78,8 +78,8 @@ if(abs($m0 -  1.41e19) > 5.2e17) {
   exit 1;
 }
 
-if(abs($m1 - 2.57e-8) > 5.56e-10) {
-  print "Simulated mean Fv was $m1, when 2.57e-8 expected\n";
+if(abs($m1 - 2.45e-8) > 7e-9) {
+  print "Simulated mean Fv was $m1, when 2.45e-8 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
@@ -93,9 +93,9 @@ my $sum = 0;
 my $counter = 1;
 my $average = 0;
 
-# Ignore lines which contain non-numeric values: the header (line 1) and the three lines containing the words 1runs, 2runs and 3runs (lines 2, 747 and 1489)
+# Ignore lines which contain non-numeric values: the header (line 1) and the three lines containing the words 1runs, 2runs and 3runs (lines 2, 991 and 1878)
 while (my $line = <$postprocessPAHFile>) {
-  if (($counter == 1) || ($counter == 2) || ($counter == 747) || ($counter == 1489)) {
+  if (($counter == 1) || ($counter == 2) || ($counter == 991) || ($counter == 1878)) {
   } else {
       chomp $line;
 
@@ -108,11 +108,11 @@ while (my $line = <$postprocessPAHFile>) {
 # ($counter - 5) corresponds to the total number of PAHs
 $average = $sum / ($counter - 5);
 
-# Precalculated average over 3 runs = 455.6522316
-# 20 runs: mean = 455.2484913; 99% confidence level = 4.826335734
+# Precalculated average over 3 runs = 468
+# 20 runs: mean = 454; 99% confidence level = 5
 
-if(abs($average -  455) > 5) {
-  print "Average PAH mass (u) was $average, when 455 expected\n";
+if(abs($average -  454) > 14) {
+  print "Average PAH mass (u) was $average, when 454 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
