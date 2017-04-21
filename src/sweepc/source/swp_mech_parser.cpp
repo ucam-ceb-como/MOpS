@@ -83,59 +83,59 @@ namespace {
 /*!
  * Read and set initial particle composition for an inception
  *
- *@param[in]		xml		XML node with component children
- *@param[in,out]	icn		Inception instance for which to set composition of newly incepted particles
+ *@param[in]        xml     XML node with component children
+ *@param[in,out]    icn     Inception instance for which to set composition of newly incepted particles
  */
 void readInceptedComposition(const CamXML::Element &xml, Sweep::Processes::Inception &icn) {
     // Get the component (= composition) XML
-	vector<CamXML::Element*> subitems;
+    vector<CamXML::Element*> subitems;
     xml.GetChildren("component", subitems);
 
-	for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); ++j) {
-		// Get component ID.
-		std::string str = (*j)->GetAttributeValue("id");
-		int id = icn.Mechanism()->ComponentIndex(str);
+    for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); ++j) {
+        // Get component ID.
+        std::string str = (*j)->GetAttributeValue("id");
+        int id = icn.Mechanism()->ComponentIndex(str);
 
-		if (id >= 0) {
-			// Get component change.
-			str = (*j)->GetAttributeValue("dx");
-			double dx = cdble(str);
-			// Set component change.
-			icn.SetParticleComp(id, dx);
-		} else {
-			// Unknown component in mechanism.
-			throw runtime_error(str + ": Component not found in mechanism (loadInceptedComposition)");
-		}
-	}
+        if (id >= 0) {
+            // Get component change.
+            str = (*j)->GetAttributeValue("dx");
+            double dx = cdble(str);
+            // Set component change.
+            icn.SetParticleComp(id, dx);
+        } else {
+            // Unknown component in mechanism.
+            throw runtime_error(str + ": Component not found in mechanism (loadInceptedComposition)");
+        }
+    }
 }
 
 /*!
  * Read and set initial particle tracker values for an inception
  *
- *@param[in]		xml		XML node with track children
- *@param[in,out]	icn		Inception instance for which to set tracker values of newly incepted particles
+ *@param[in]        xml     XML node with track children
+ *@param[in,out]    icn     Inception instance for which to set tracker values of newly incepted particles
  */
 void readInceptedTrackers(const CamXML::Element &xml, Sweep::Processes::Inception &icn) {
     // Get the component (= composition) XML
-	vector<CamXML::Element*> subitems;
-	xml.GetChildren("track", subitems);
+    vector<CamXML::Element*> subitems;
+    xml.GetChildren("track", subitems);
 
-	for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); j++) {
-		// Get tracker ID.
-		std::string str = (*j)->GetAttributeValue("id");
-		int id = icn.Mechanism()->GetTrackerIndex(str);
+    for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); j++) {
+        // Get tracker ID.
+        std::string str = (*j)->GetAttributeValue("id");
+        int id = icn.Mechanism()->GetTrackerIndex(str);
 
-		if (id >= 0) {
-			// Get tracker change.
-			str = (*j)->GetAttributeValue("dx");
-			double dx = cdble(str);
-			// Set tracker change.
-			icn.SetParticleTracker(id, dx);
-		} else {
-			// Unknown tracker variable in mechanism.
-			throw runtime_error(str + ": Tracker variable not found in mechanism (loadInceptedTrackers)");
-		}
-	}
+        if (id >= 0) {
+            // Get tracker change.
+            str = (*j)->GetAttributeValue("dx");
+            double dx = cdble(str);
+            // Set tracker change.
+            icn.SetParticleTracker(id, dx);
+        } else {
+            // Unknown tracker variable in mechanism.
+            throw runtime_error(str + ": Tracker variable not found in mechanism (loadInceptedTrackers)");
+        }
+    }
 }
 
 } // anonymous namespace
@@ -335,11 +335,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     } else if (str == "surfvolcubic") {
         mech.SetAggModel(AggModels::SurfVolCubic_ID);
     } else if (str == "PAH") {
-	// Reject all old style input files
-		throw std::runtime_error("PAH-PP MODEL are no longer supported (Sweep::MechParser::readV1), you can use NEW PAH_KMC model");
+    // Reject all old style input files
+        throw std::runtime_error("PAH-PP MODEL are no longer supported (Sweep::MechParser::readV1), you can use NEW PAH_KMC model");
     } else if (str == "PAH_KMC") {
         mech.SetAggModel(AggModels::PAH_KMC_ID);
-	} else if (str == "silica") {
+    } else if (str == "silica") {
         throw std::runtime_error("Old silica model is deprecated. Use bintreesilica or surfvolsilica."
                 " in Sweep::MechParser::readV1");
     } else if (str == "bintree") {
@@ -441,8 +441,8 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (str == "viscous_flow") {
             mech.SintModel().SetType(SinteringModel::ViscousFlow);
         } else if (str == "rutile") {
-        	// Special MD fit for GBD sintering of rutile
-        	mech.SintModel().SetType(SinteringModel::Rutile);
+            // Special MD fit for GBD sintering of rutile
+            mech.SintModel().SetType(SinteringModel::Rutile);
         } else if (str == "ssd") {
             // Solid-state diffusion (d^3)
             mech.SintModel().SetType(SinteringModel::SSD);
@@ -637,7 +637,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         }
 
         //! Model parameter. 
-		/*!
+        /*!
          * The number of 6-member rings in a PAH in a particle below which it is removed.
          */
         el = (*i)->GetFirstChild("thresholdOxidation");
@@ -658,7 +658,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         }
 
         //! Numerical parameter
-		/*!
+        /*!
          * Allow PAHs in soot particles to point to the same memory location after a doubling event.
          */
         el = (*i)->GetFirstChild("sharedPointers");
@@ -703,7 +703,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw runtime_error(msg);
         }
 
-		// Get minimum valid value for component
+        // Get minimum valid value for component
         el = (*i)->GetFirstChild("min");
         if (el!=NULL) {
             str = el->Data();
@@ -1346,14 +1346,14 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
             // the constant does not require scaling as its units are s^-1.
             rxn.SetPropertyID(Sweep::iCoverage);
         }
-		else if (str.compare("asn")==0) {
+        else if (str.compare("asn")==0) {
             rxn.SetPropertyID(Sweep::iASN);
 
             // Must scale rate constant from cm3 to m3, surface area
             // is multiplied by the site density so that it is a dimensionless
             // quantity hence A has units cm^3 s^-1.
-			arr.A *= (1.0e-6);
-		}
+            arr.A *= (1.0e-6);
+        }
         else if (str.compare("d")==0) {
             // This reaction depends on some power of the diameter.
             switch (power) {
@@ -1511,7 +1511,7 @@ void MechParser::readInterParticles(CamXML::Document &xml, Mechanism &mech)
             throw std::runtime_error("Could not find species H4O4SI in MechParser::ReadInterParticles");
 
         // Create a new interparticle object.
-    	InterParticle *intpar = new InterParticle(mech, isp);
+        InterParticle *intpar = new InterParticle(mech, isp);
 
         // Set default name.
         intpar->SetName("Inter Particle " + cstr(k));
@@ -1542,9 +1542,9 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
     // Is reaction deferred.
     str = xml.GetAttributeValue("defer");
     if (str=="true") {
-    	intpar.SetDeferred(true);
+        intpar.SetDeferred(true);
     } else {
-    	intpar.SetDeferred(false);
+        intpar.SetDeferred(false);
     }
 
     readReactants(xml, intpar);
@@ -1606,35 +1606,35 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
         else if (str.compare("s")==0) {
             // This reaction depends on surface area.  Ignore power,
             // they must have meant 1.
-        	intpar.SetPropertyID(Sweep::iS);
+            intpar.SetPropertyID(Sweep::iS);
             arr.A *= (1.0e-2);
         }
-		else if (str.compare("asn")==0) {
+        else if (str.compare("asn")==0) {
             intpar.SetPropertyID(Sweep::iASN);
 
             // Must scale rate constant from cm3 to m3, surface area
             // is multiplied by the site density so that it is a dimensionless
             // quantity hence A has units cm^3 s^-1.
             //arr.A *= (1.0e-6);
-			arr.A *= (1.0e-6);
+            arr.A *= (1.0e-6);
         }
         else if (str.compare("d")==0) {
             // This reaction depends on some power of the diameter.
             switch (power) {
                 case 1:
-                	intpar.SetPropertyID(Sweep::iDcol);
+                    intpar.SetPropertyID(Sweep::iDcol);
                     arr.A *= (1.0e-4);
                     break;
                 case 2:
-                	intpar.SetPropertyID(Sweep::iD2);
+                    intpar.SetPropertyID(Sweep::iD2);
                     arr.A *= (1.0e-2);
                     break;
                 case -1:
-					intpar.SetPropertyID(Sweep::iD_1);
+                    intpar.SetPropertyID(Sweep::iD_1);
                     arr.A *= (1.0e2);
                     break;
                 case -2:
-					intpar.SetPropertyID(Sweep::iD_2);
+                    intpar.SetPropertyID(Sweep::iD_2);
                     arr.A *= (1.0e4);
                     break;
                 default:

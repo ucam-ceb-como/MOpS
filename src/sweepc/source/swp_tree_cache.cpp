@@ -85,7 +85,8 @@ Sweep::TreeCache::TreeCache(const Sweep::Particle &part)
 
     // The particle does not currently provide this data (although it stores it)
     m_freesurface = 0.0;
-    m_numcarbon = 0;
+
+    m_numcarbon = part.NumCarbon();
 
 
     // Derived quantites that are needed to the typical transition
@@ -183,6 +184,7 @@ double Sweep::TreeCache::Volume(void) const {return m_vol;}
 // Returns the mass.
 double Sweep::TreeCache::Mass(void) const {return m_mass;}
 
+int Sweep::TreeCache::NumCarbon(void) const {return m_numcarbon;}
 
 // Returns the property with the given ID.
 double Sweep::TreeCache::Property(PropID id) const

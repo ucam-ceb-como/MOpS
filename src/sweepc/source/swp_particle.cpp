@@ -355,6 +355,11 @@ double Particle::Mass(void) const
     return m_primary->Mass();
 }
 
+int Particle::NumCarbon() const
+{
+    return m_primary->NumCarbon();
+}
+
 /*!
  * Pass through to primary particle
  */
@@ -441,8 +446,7 @@ double Particle::Property(PropID id) const
             throw std::logic_error("Free surface no longer supported (Particle::Property)");
             return 0.0;
         case iNumCarbon:
-            throw std::logic_error("Number of Carbon no longer supported (Particle::Property)");
-            return 0.0;
+            return NumCarbon();
         case -1:
             // Special case property, used to select particles
             // uniformly.

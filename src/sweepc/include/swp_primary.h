@@ -193,6 +193,9 @@ public:
     // Returns the mass.
     double Mass(void) const;
 
+    //! Returns the number of carbons.
+    int NumCarbon(void) const;
+
     //! Returns the property with the given ID.
     double Property(const Sweep::PropID id) const;
 
@@ -216,6 +219,9 @@ public:
 
     // Sets the mass.
     void SetMass(double m);
+
+    //! Sets the number of carbons.
+    void SetNumCarbon(int numcarbon);
 
     //! Check particle still meets physical conditions for being a particle.
     bool IsValid() const;
@@ -278,6 +284,10 @@ public:
 
 	virtual double GetCoverageFraction() const;
 
+    //! Check whether the number of carbon atoms in the primary is equal to
+    //! that of the inception species.
+    int InceptedPAH() const;
+
 protected:
     // Particle model used to define the Primary.
     const Sweep::ParticleModel *m_pmodel;
@@ -295,6 +305,7 @@ protected:
     double m_surf; // Surface area.
     double m_vol;  // Volume.
     double m_mass; // Mass.
+    int m_numcarbon;
 
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.
