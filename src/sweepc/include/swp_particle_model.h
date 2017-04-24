@@ -257,8 +257,9 @@ public:
 
     };
 
+    //! Gas-phase trasfer species.
     enum PostProcessStartingStr {
-        A1, A2, A4, A5
+        A1, A2, A4, A5, BY5
     };
 
     //! Choose between drag models
@@ -279,8 +280,17 @@ public:
 
     void SetCollisionEffPara(double A, double B, double C);
 
-    void SetThreshold(int target) ;
-    double Threshold() const ;
+    //! Set the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to incept
+    void SetThreshold(int target);
+
+    //! Set the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to condense onto a particle (2 or more PAHs)
+    void SetThresholdCondensation(int target);
+
+    //! Return the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to incept
+    double Threshold() const;
+
+    //! Return the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to condense onto a particle (2 or more PAHs)
+	int ThresholdCondensation() const;
 
     void SetMode(const std::string &mode);
     const std::string &Mode() const;
@@ -431,6 +441,9 @@ private:
 
     //! Threshould for particular mode
     double m_threshold;
+
+    //! Set the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to condense onto a particle (2 or more PAHs)
+    double m_thresholdCondensation;
 
     //! Define three modes, collision efficience depends on the smaller, the bigger, the combined mass or reduced mass
     std::string m_mode;

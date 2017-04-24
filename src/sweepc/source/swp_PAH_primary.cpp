@@ -629,15 +629,16 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
             PAHPrimary *newleft = new PAHPrimary;
 		    PAHPrimary *newright = new PAHPrimary;
             PAHPrimary copy_rhs(*rhsparticle);
-		    //rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
+            //PAHPrimary *notconstpah = NULL;
+		    //notconstpah = dynamic_cast<AggModels::PAHPrimary*>(&copy_rhs);
 
-           // bool print=false;
-           // if (this->m_numprimary>2 && notconstpah->m_numprimary>2)
-           // {
+            //bool print=false;
+            //if (this->m_numprimary>2 && notconstpah->m_numprimary>2)
+            //{
             //    PrintTree("before1");
-           //     notconstpah->PrintTree("before2");
-             //   print=true;
-              //  cout << "printing tree"<<endl;
+            //    notconstpah->PrintTree("before2");
+            //    print=true;
+            //    cout << "printing tree"<<endl;
             //}
 
             //select where to add the second particle
@@ -700,8 +701,8 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
         //        cout << "error" << surfacebeforerhs<<' ' <<surfacebefore << ' '<<m_surf<<endl;
         ////         PrintTree("after");
         //    }
-        // if (print)
-    //     PrintTree("after");
+         //if (print)
+         //PrintTree("after");
 
 	}
     return *this;
@@ -1029,6 +1030,30 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
             // PAHs the growth rate of each PAH is reduced according to the
             // growth factor
             bool m_PAHchanged = false;
+
+            //! Model parameter.
+			/*!
+			 * If a jump process reduces the total number of 6-member rings
+			 * (excludes 5-member rings) in a PAH (in a particle) below this
+			 * threshold it is removed.
+             */
+			const int thresholdOxidation = model.Components(0)->ThresholdOxidation();
+
+            //! PAH removal.
+			/*!
+			 * Allow for the removal of PAHs in particles (2 or more PAHs) when
+			 * the total number of 6-member rings (excludes 5-member rings) in
+			 * the PAH has fallen below, for example, the minimum number of
+			 * rings in a PAH for inception. Particularly relevant when
+			 * oxidation is strong.
+             */
+            if((*it)->m_pahstruct->numofC() == 5){
+                m_PAHclusterchanged = true; 
+				m_PAHchanged = true;
+                m_InvalidPAH = CheckInvalidPAHs(*it);
+                continue;
+			}	
+
             const double minPAH = model.Components(0)->MinPAH();
 
             double growthfact = 1.0;
@@ -1053,6 +1078,17 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
                                                    rng, growthfact, (*it)->PAH_ID);
 
             (*it)->lastupdated=t;
+
+            //! Invalidate PAH.
+            /*!
+             * A PAH is made invalid by setting the number of carbons to 5. The
+			 * reason for only applying this to particles is that we would not
+			 * want to remove single PAHs in the gas-phase which fall below the
+			 * minimum number of rings for inception but are still growing.
+             */
+            if((*it)->m_pahstruct->numofRings() < thresholdOxidation && m_numPAH>=minPAH){
+                (*it)->m_pahstruct->setnumofC(5);
+			}	
 
             // See if anything changed, as this will required a call to UpdatePrimary() below
             if(oldNumCarbon != (*it)->m_pahstruct->numofC() || oldNumH != (*it)->m_pahstruct->numofH())
@@ -1107,6 +1143,9 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
         break;
     case ParticleModel::A5:
         m_control=Sweep::KMC_ARS::BENZOPYRENE_C;
+        break;
+    case ParticleModel::BY5:
+        m_control=Sweep::KMC_ARS::BY5_C;
         break;
     default:
         throw std::runtime_error("no information about the incepted PAH is available (Sweep::PAHPrimary::CheckInvalidPAHs())");
@@ -1209,6 +1248,11 @@ int PAHPrimary::InceptedPAH() const
                 return 1;
             else return 0;
             break;
+        case ParticleModel::BY5:
+            if (NumCarbon() == BY5_C && NumHydrogen() == BY5_H)
+                return 1;
+            else return 0;
+            break;
         default:
             return 0;
         }
@@ -1225,7 +1269,7 @@ int PAHPrimary::InceptedPAH() const
     {
         temp.push_back(m_PAH[i]->m_pahstruct->numofC());
         temp.push_back(m_PAH[i]->m_pahstruct->numofH());
-        m_PAH[i]->saveDOTperLoop((int)ID,(int)i);
+        //m_PAH[i]->saveDOTperLoop((int)ID,(int)i);
         out.push_back(temp);
         temp.clear();
     }
@@ -1369,8 +1413,9 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
         num_H=m_PAH[i]->m_pahstruct->numofH();
         temp.push_back(num_H);
         temp.push_back(m_PAH[i]->m_pahstruct->numofRings());
-        temp.push_back(m_PAH[i]->m_pahstruct->numofRings5());
-        temp.push_back(m_PAH[i]->m_pahstruct->numofEdgeC());
+        temp.push_back(m_PAH[i]->m_pahstruct->numofLoneRings5());
+        temp.push_back(m_PAH[i]->m_pahstruct->numofEmbeddedRings5());
+        //temp.push_back(m_PAH[i]->m_pahstruct->numofEdgeC());
 
         // PAH mass (u)
         val = 12*num_C + num_H;
@@ -1499,7 +1544,7 @@ void PAHPrimary::UpdatePrimary(void)
         for (vector<boost::shared_ptr<PAH> >::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
             m_numcarbon += (*i)->m_pahstruct->numofC();
             m_numH += (*i)->m_pahstruct->numofH();
-            m_numOfEdgeC += (*i)->m_pahstruct->numofEdgeC();
+            //m_numOfEdgeC += (*i)->m_pahstruct->numofEdgeC();
             m_numOfRings += (*i)->m_pahstruct->numofRings();
             maxcarbon=max(maxcarbon, (*i)->m_pahstruct->numofC());    // search for the largest PAH in the PRimary, in Angstrom
         }
@@ -1796,8 +1841,9 @@ void PAHPrimary::Serialize(std::ostream &out, void *duplicates) const
  */
 void PAHPrimary::SerializePrimary(std::ostream &out, void *duplicates) const
 {
+    //std::cout << "TESTING: PAHPrimary::SerializePrimary" << std::endl;
     if (out.good()) {
-
+        //std::cout << "TESTING: PAHPrimary::SerializePrimary" << std::endl;
         int  val_int(0);
         double val(0.0);
         // Serialise state space
@@ -1878,6 +1924,7 @@ void PAHPrimary::SerializePrimary(std::ostream &out, void *duplicates) const
 		PahSerialisationMap *pahDuplicates = reinterpret_cast<PahSerialisationMap*>(duplicates);
         outputPAHs(out, *pahDuplicates);
 
+        
         // Output base class.
         Primary::Serialize(out);
 
@@ -1903,14 +1950,17 @@ void PAHPrimary::outputPAHs(std::ostream &out, PahSerialisationMap &pah_duplicat
         // Keep a record of which PAHs have been serialised to avoid serialising the same
         // memory location twice.
         //PahSerialisationMap pahUniqueAdresses;
-
+        //std::cout << "TESTING: m_PAH.size() " << m_PAH.size() << std::endl;
         while (count != m_PAH.size())
         {
             // Serialise the raw memory locations of the PAHs, so that we
             // can recognise PAHs that are referenced multiple times on
             // deserialisation.
+            
             void *ptr = m_PAH[count].get();
+            //std::cout << "TESTING: before write" << std::endl;
             out.write(reinterpret_cast<char*>(&ptr), sizeof(ptr));
+            //std::cout << "TESTING: after write" << std::endl;
             //if(pahUniqueAdresses.find(m_PAH[count].get()) == pahUniqueAdresses.end()) {
             //    m_PAH[count]->Serialize(out);
             //    pahUniqueAdresses.insert(m_PAH[count].get());
@@ -1918,13 +1968,18 @@ void PAHPrimary::outputPAHs(std::ostream &out, PahSerialisationMap &pah_duplicat
             //else {
             //    std::cout << "PAH at " << m_PAH[count].get() << " has already been serialised\n";
             //}
+            //std::cout << "TESTING: before m_PAH[count]->Serialize(out)" << std::endl;
 			if(pah_duplicates.find(m_PAH[count].get()) == pah_duplicates.end()){
+                //std::cout << "TESTING: before m_PAH[count]->Serialize(out)" << std::endl;
 				m_PAH[count]->Serialize(out);
+                //std::cout << "TESTING: before pah_duplicates.insert(m_PAH[count].get())" << std::endl;
 				pah_duplicates.insert(m_PAH[count].get());
 			}
 			else {
+                //std::cout << "TESTING: else" << std::endl;
                 //std::cout << "PAH at " << m_PAH[count].get() << " has already been serialised\n";
             }
+            //std::cout << "TESTING: before ++count" << std::endl;
             ++count;
         }
     }

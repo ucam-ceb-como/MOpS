@@ -86,8 +86,8 @@ namespace Sweep {
             angletype bondAngle1;
             //! Bond angle at bridge
             angletype bondAngle2;
-            //! Coordinates of atom
-            cpair coords;
+            //! Coordinates of atom. These have been to set to an arbitrary value as they are no longer used.
+            //cpair coords;
         };
 
         //static Ccontainer NULLSET(1, Carbon());

@@ -1450,6 +1450,7 @@ void BinTreePrimary::Serialize(std::ostream &out) const
  */
 void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
 {
+    //std::cout << "TESTING: BinTreePrimary::SerializePrimary" << std::endl;
     if (out.good()) {
 
         int  val_int(0);
@@ -1483,6 +1484,7 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
         out.write((char*)&val, sizeof(val));
 
         // Output base class.
+        //std::cout << "TESTING: before Primary::Serialize from BinTreePrimary::SerializePrimary" << std::endl;
         Primary::Serialize(out);
 
     } else {

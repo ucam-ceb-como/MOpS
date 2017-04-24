@@ -116,11 +116,11 @@ namespace Sweep{
             //! Write column headings for CSV files
             void writeCSVlabels();
             //! Save the structure DOT file after every X loops
-            void saveDOTperXLoops(int X, int& loopcount, int& runcount);
+            //void saveDOTperXLoops(int X, int& loopcount, int& runcount);
             //! Save the structure DOT file for particular PAH (ID)
-            void saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID);
+            //void saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID);
             //! Save the structure DOT file after every X simulation sec interval
-            void saveDOTperXsec(const double& X, const int& seed, const double& time, const double &time_max, KMCMechanism& copyMod, int& intervalcount);
+            //void saveDOTperXsec(const double& X, const int& seed, const double& time, const double &time_max, KMCMechanism& copyMod, int& intervalcount);
             //! Update structure of PAH after time dt
             void updatePAH(PAHStructure* pah, // structure of pah
                            const double tstart, // start time

@@ -365,8 +365,11 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
                 case ParticleModel::A5:
                     index=r.Mech()->GasMech().FindSpecies("A5");
                     break;
+                case ParticleModel::BY5:
+                    index=r.Mech()->GasMech().FindSpecies("BY5");
+                    break;
                 default:
-                    throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4 and A5 are supported now (Sweep::FlameSolver::Solve())");
+                    throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4, A5 and BY5 are supported now (Sweep::FlameSolver::Solve())");
             }
             // calculate the amount of stochastic pyrene particles in the ensemble
             unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);
@@ -376,6 +379,8 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
                 throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
             mech.MassTransfer(Pamount,t,*r.Mixture(),rng);
         }
+
+        //std::cout << "TESTING: before jrate" << std::endl;
 
         // Get the process jump rates (and the total rate).
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
@@ -405,9 +410,10 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     
     // Restore initial chemical conditions to sys.
     r.Mixture()->SetFixedChem(fixedchem);
+    //std::cout << "TESTING: after SetFixedChem" << std::endl;
 
     out(nsteps, niter, r, *this, data);
-
+    
     return;
 }
 

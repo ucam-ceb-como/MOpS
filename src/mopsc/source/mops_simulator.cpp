@@ -843,7 +843,7 @@ void Simulator::postProcessSimulation(
     // Now post-process the ensemble to find interested information, in this case, PAH mass distribution of the largest soot aggregate in the ensemnble
     if (m_write_PAH && pmech.WriteBinaryTrees()) {
         // more potential functionality can be added in the below function
-        postProcessPAHinfo(mech, times);
+        //postProcessPAHinfo(mech, times);
         // then output details about the whole particle ensemble
         postProcessPAHPSLs(mech, times);
     }
@@ -938,7 +938,13 @@ void Simulator::outputPartTrack(const Reactor &r) const
         // Serialize the particles for tracking
 		// Provide a way to detect multiple instances of PAHs
         std::map<void*, boost::shared_ptr<Sweep::AggModels::PAHPrimary> > duplicates;
+        //typedef map<void*, boost::shared_ptr<Sweep::AggModels::PAHPrimary> >::const_iterator MapIterator;
+        //for (MapIterator iter = duplicates.begin(); iter != duplicates.end(); iter++)
+        //{
+        //    cout << "Key: " << iter->first << endl << "Values:" << endl;
+        //}
         for (unsigned int i=0; i!=n; ++i) {
+            //std::cout << "TESTING: Serialize loop" << std::endl;
             r.Mixture()->Particles().At(i)->Serialize(m_file, &duplicates);
         }
     }
@@ -1027,6 +1033,8 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
 
             // Write CPU times to file.
             s.OutputCT(me->m_file);
+
+            //std::cout << "TESTING: before outputPartTrack" << std::endl;
 
             // Do particle tracking output.
             me->outputPartTrack(r);
@@ -2243,16 +2251,20 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 
                 // Draw particle images for tracked particles.
                 unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());
+                unsigned int k = 0;
                 for (unsigned int j=0; j!=n; ++j) {
                     double t = times[i].EndTime();
-                    string fname = m_output_filename + "-tem(" + cstr(t) +
-                                   "s, " + cstr(j) + ").pov";
-                    std::ofstream file;
-                    file.open(fname.c_str());
+                    if ((t == 0.0125891 || t == 0.0170417 || t == 0.0303197 || t == 0.0445345) && (r->Mixture()->Particles().At(j)->getCoagCount() > 0)){
+                        string fname = m_output_filename + "-tem(" + cstr(t) +
+                                       "s, " + cstr(k) + ").pov";
+                        std::ofstream file;
+                        file.open(fname.c_str());
 
-                    r->Mixture()->Particles().At(j)->writeParticlePOVRAY(file);
+                        r->Mixture()->Particles().At(j)->writeParticlePOVRAY(file);
 
-                    file.close();
+                        file.close();
+                        k++;
+                    }
                 }
 
                 delete r;
@@ -2294,8 +2306,9 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         header.push_back("#C");   // #C represent the num of Carbon
         header.push_back("#H");
         header.push_back("#Rings6");
-        header.push_back("#Rings5");
-        header.push_back("#EdgeC");
+        header.push_back("#LoneRings5");
+        header.push_back("#EmbeddedRings5");
+        //header.push_back("#EdgeC");
         header.push_back("Mass(u)");
         header.push_back("Mass(kg)");
         header.push_back("PAHCollDiameter (m)");

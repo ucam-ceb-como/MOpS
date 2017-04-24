@@ -614,6 +614,27 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             comp->SetMinPAH(0);
         }
 
+        //! Model parameter. 
+		/*!
+         * The number of 6-member rings in a PAH in a particle below which it is removed.
+         */
+        el = (*i)->GetFirstChild("thresholdOxidation");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                comp->SetThresholdOxidation(int(cdble(str)));
+            } else {
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " thresholdOxidation contains no data (Sweep, MechParser::readComponents).";
+
+                delete comp;
+                throw runtime_error(msg);
+            }
+        } else {
+            comp->SetThresholdOxidation(0);
+        }
+
         // Get component mol. wt.
         el = (*i)->GetFirstChild("molwt");
         if (el!=NULL) {

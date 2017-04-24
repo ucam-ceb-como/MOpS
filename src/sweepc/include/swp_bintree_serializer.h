@@ -99,6 +99,7 @@ public:
     void SerializeLoop(std::ostream &out, const ParticleClass* root, const ParticleClass* node, void *duplicates) const
     {
         // Serialize the state space first
+        //std::cout << "TESTING: before SerializePrimary" << std::endl;
         node->SerializePrimary(out, duplicates);
 
         // Does this primary have children?

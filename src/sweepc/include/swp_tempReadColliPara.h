@@ -109,6 +109,23 @@ void readColliPara(std::vector<CamXML::Element*>::iterator i, Sweep::Mechanism &
 
 			throw std::runtime_error(msg);
 			}
+
+			el1 = (*i)->GetFirstChild("thresholdCondensation");
+			if (el1!=NULL) {
+			str = el1->Data();
+				if (str != "") {
+					mech.SetThresholdCondensation(Strings::cdble(str)); // num of C
+				} else {
+					// threshold contains no data.
+					std::string msg("thresholdCondensation contains no data (Sweep::readColliPara). ");
+
+					throw std::runtime_error(msg);
+				}
+			} else {
+			std::string msg("thresholdCondensation is required for collision efficiency model (Sweep::readColliPara). ");
+
+			throw std::runtime_error(msg);
+			}
 		}
 		else {
 			std::string msg(" This type of collision efficiency model is not supported ");

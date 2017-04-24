@@ -672,8 +672,9 @@ void Particle::Serialize(std::ostream &out, void *duplicates) const
 	assert(IsValid());
 
     if (out.good()) {
+        //std::cout << "TESTING: before WritePrimary" << std::endl;
         ModelFactory::WritePrimary(*m_primary, out, duplicates);
-
+        //std::cout << "TESTING: after WritePrimary" << std::endl;
         // Output the data members in this class
         out.write((char*)&m_Position, sizeof(m_Position));
         out.write((char*)&m_PositionTime, sizeof(m_PositionTime));
