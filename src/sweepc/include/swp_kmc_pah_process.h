@@ -145,29 +145,38 @@ public:
     //! Growth Processes
     // name structure: proc_processtype_sitetype.
     // refer StructureProc enum in swp_kmc_typedef.h
-    void proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    //void proc_PH_benz(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
-    void proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_O6R_FE3_O2(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_O6R_FE3_OH(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    //void proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    //void proc_O6R_FE_HACA_OH(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
-    void proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
-    void proc_C6R_BY5_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
-    void proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
-    void proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    //void proc_M5R_eZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);
+    void proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID1.
+    void proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID2.
+    void proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID3.
+    //void proc_PH_benz(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);          //!< ID4.
+    void proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID5.
+    void proc_O6R_FE3_O2(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID6.
+    void proc_O6R_FE3_OH(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID7.
+    //void proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2);                  //!< ID8.
+    //void proc_O6R_FE_HACA_OH(Spointer& stt, Cpointer C_1, Cpointer C_2);                  //!< ID9.
+    void proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID10.
+    void proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID11.
+    void proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);         //!< ID12.
+    void proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID13.
+    void proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID14.
+    void proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID15.
+    void proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID16.
+    void proc_C6R_BY5_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);   //!< ID17.
+    void proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID18.
+    void proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID19.
+    void proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID20.
+    //void proc_M5R_eZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                         //!< ID21.
+    void proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID22.
+    void proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID23.
+    void proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID24.
+    void proc_G6R_RFER(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID25.
+    void proc_G6R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID26.
+    void proc_L6_RBY5(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID27.
+    void proc_L6_RACR(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID28.
+    void proc_G5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID29.
+    void proc_C6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID30.
+    void proc_C6R_RAC_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);   //!< ID31.
+    void proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID32.
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts

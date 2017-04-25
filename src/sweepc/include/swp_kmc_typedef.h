@@ -61,12 +61,15 @@ namespace Sweep {
             RFER=10, RZZR=11, RACR=12,
             // Combined Sites: FE3:FE with 2 FEs on both sides, AC_FE3:AC next to FE3
             // FE_HACA:FE with non-FEs on both sides
-            FE3=13, AC_FE3=14, FE_HACA=15, BY5_FE3=16,
+            FE3=13, AC_FE3=14, FE_HACA=15, BY5_FE3=16, 
             // Combined Sites: FE2:FE with FE at one side, but not an FE3
             FE2=17,
             // Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
             ACR5=18,
-            // 
+            //
+            RAC_FE3=19,
+            //
+            //eBY5 = 20,
             // Combined Sites
             None,
             // Error ID
@@ -134,6 +137,8 @@ namespace Sweep {
                 case BY5_FE3: return "BY5_FE3";
                 case FE2: return "FE2";
                 case ACR5: return "ACR5";
+                case RAC_FE3: return "RAC_FE3";
+                //case eBY5: return "eBY5";
                 case None: return "None";
                 case Inv: return "Invalid";
                 case any: return "any";
@@ -159,6 +164,7 @@ namespace Sweep {
             else if(str == "RZZR") return RZZR;
             else if(str == "RACR") return RACR;
             else if(str == "ACR5") return ACR5;
+            //else if(str == "eBY5") return eBY5;
             return Inv;
         }
         //! Get a vector of all site types
@@ -183,6 +189,8 @@ namespace Sweep {
             temp.push_back(BY5_FE3);
             temp.push_back(FE2);
             temp.push_back(ACR5);
+            temp.push_back(RAC_FE3);
+            //temp.push_back(eBY5);
             return temp;
         }
         //! Get a vector of all site types for phenyl addition

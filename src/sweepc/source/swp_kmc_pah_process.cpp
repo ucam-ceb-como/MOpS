@@ -978,17 +978,20 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
     // check if site type change is valid (as long as site still principal site)
     int stype = (int) st->type;
     if(stype < 6) {
-    if((stype + bulkCchange) < 0 || (stype + bulkCchange) > 4) {
-        //printSites(st);//++++
-        cout << "ERROR: updateSites: Bulk C change invalid (Principal)\n";
-        std::ostringstream msg;
-            msg << "ERROR: Bulk C change invalid (Principal). Trying to add "
+        if (!(stype == 5 && bulkCchange == 0)) {
+            if((stype + bulkCchange) < 0 || (stype + bulkCchange) > 4) {
+                //printSites(st);//++++
+                cout << "ERROR: updateSites: Bulk C change invalid (Principal)\n";
+                std::ostringstream msg;
+                msg << "ERROR: Bulk C change invalid (Principal). Trying to add "
                 << bulkCchange << " bulk C to a " << kmcSiteName(st->type)
                 << " (Sweep::KMC_ARS::PAHProcess::updateSites)";
-            throw std::runtime_error(msg.str());
-            assert(false);
-        return;
-    }}
+                throw std::runtime_error(msg.str());
+                assert(false);
+                return;
+            }
+        }
+    }
     if(stype < 13 && stype > 5) {
         if((stype + bulkCchange) < 6 || (stype + bulkCchange) > 12) {
             //printSites(st);//++++
@@ -1004,7 +1007,27 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
     // removes site from m_pah->m_siteMap (principal site)
     delSiteFromMap(st->type, st);
     // change site type
-    st->type = (kmcSiteType)((int)st->type+bulkCchange);
+    if (stype == 18) {
+        assert(bulkCchange == 1);
+        st->type = (kmcSiteType)((int)st->type + bulkCchange - 16);
+    } else if (stype == 19) {
+        st->type = (kmcSiteType)((int)st->type + bulkCchange - 16);
+    } else if (stype == 20) {
+        assert(bulkCchange == -1 || bulkCchange == 1);
+        if (bulkCchange == -1) {
+            st->type = (kmcSiteType)((int)st->type + bulkCchange - 1);
+        } else if (bulkCchange == 1) {
+            st->type = (kmcSiteType)((int)st->type + bulkCchange - 17);
+        }
+    } else if (stype == 5) {
+        assert(bulkCchange == 0);
+        st->type = (kmcSiteType)((int)st->type + bulkCchange - 5);
+    } else if (stype == 6) {
+        assert(bulkCchange == 1);
+        st->type = (kmcSiteType)((int)st->type + bulkCchange + 11);
+    } else {
+        st->type = (kmcSiteType)((int)st->type + bulkCchange);
+    }
     // add site to m_pah->m_siteMap
     m_pah->m_siteMap[st->type].push_back(st);
     // update member C
@@ -1018,32 +1041,32 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
  * We need to update the free edge sites before we can update the rest of the sites; otherwise, we would come up with an incorrect count of AC_FE3 and BY5_FE3
  */
 void PAHProcess::updateCombinedSites() {
-	std::vector<int> indicesOfFE;
-	std::vector<int> indicesOfNonFE;
-	int loopIndex = 0;
-	
-	for(Spointer i=m_pah->m_siteList.begin(); i!= m_pah->m_siteList.end(); i++) {
-		if(i->type == FE) {
-			indicesOfFE.push_back(loopIndex);
-		}
-		else {
-			indicesOfNonFE.push_back(loopIndex);
-		}
-		loopIndex++;
+    std::vector<int> indicesOfFE;
+    std::vector<int> indicesOfNonFE;
+    int loopIndex = 0;
+    
+    for(Spointer i=m_pah->m_siteList.begin(); i!= m_pah->m_siteList.end(); i++) {
+        if(i->type == FE) {
+            indicesOfFE.push_back(loopIndex);
+        }
+        else {
+            indicesOfNonFE.push_back(loopIndex);
+        }
+        loopIndex++;
     }
 
-	Spointer S1;
+    Spointer S1;
     S1 = m_pah->m_siteList.begin();
 
-	for (int i = 0 ; i < indicesOfFE.size(); ++i) {
+    for (int i = 0 ; i < indicesOfFE.size(); ++i) {
         Spointer S2 = moveIt(S1,indicesOfFE[i]);
-		updateCombinedSites(S2);
-	}
+        updateCombinedSites(S2);
+    }
 
-	for (int i = 0 ; i < indicesOfNonFE.size(); ++i) {
-		Spointer S3 = moveIt(S1,indicesOfNonFE[i]);
+    for (int i = 0 ; i < indicesOfNonFE.size(); ++i) {
+        Spointer S3 = moveIt(S1,indicesOfNonFE[i]);
         updateCombinedSites(S3);
-	}
+    }
     //cout << "Combined Sites Updated..\n";
 }
 
@@ -1084,7 +1107,7 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
             if(S2->type == FE && moveIt(S2,1)->type != FE) {
                 st->comb = FE2;
                 m_pah->m_siteMap[FE2].push_back(st);
-		//
+        //
                 // An FE2 site is a combined site where an FE site has an FE site only 
                 // For example, for ZZ - FE - FE - ZZ, both of the FE sites has a combi
                 //
@@ -1127,6 +1150,22 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
         if((moveIt(st,2)->comb==FE3 || moveIt(st,-2)->comb==FE3) && (moveIt(st,3)->comb!=FE3 || moveIt(st,-3)->comb!=FE3) && !st->C1->C2->bridge) {
             st->comb = BY5_FE3;
             m_pah->m_siteMap[BY5_FE3].push_back(st);
+            break;
+        }else st->comb = None;
+        break;
+    //case eBY5:
+    //// Check for eBY5_FE3
+    //    if((moveIt(st,2)->comb==FE3 || moveIt(st,-2)->comb==FE3) && (moveIt(st,3)->comb!=FE3 || moveIt(st,-3)->comb!=FE3) && !st->C1->C2->bridge) {
+    //        st->comb = BY5_FE3;
+    //        m_pah->m_siteMap[BY5_FE3].push_back(st);
+    //        break;
+    //    }else st->comb = None;
+    //    break;
+    case RAC:
+    // Check for RAC_FE3
+        if((moveIt(st,2)->comb==FE3 || moveIt(st,-2)->comb==FE3) && (moveIt(st,3)->comb!=FE3 || moveIt(st,-3)->comb!=FE3) && !st->C1->C2->bridge) {
+            st->comb = RAC_FE3;
+            m_pah->m_siteMap[RAC_FE3].push_back(st);
             break;
         }else st->comb = None;
         break;
@@ -1377,11 +1416,11 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         newC = addC(newC, 120, 0);
         newC = addC(newC, 180, 0);
         newC = addC(newC, 120, 0);
-		newC = addC(newC, 180, 0);
-		newC = addC(newC, 120, 0);
-		newC = addC(newC, 60, 0);
-		newC = addC(newC, 0, 0);
-		newC = addC(newC, -60, 0);
+        newC = addC(newC, 180, 0);
+        newC = addC(newC, 120, 0);
+        newC = addC(newC, 60, 0);
+        newC = addC(newC, 0, 0);
+        newC = addC(newC, -60, 0);
         // adds the last C atom, with bond angle towards m_cfirst
         m_pah->m_clast = addC(newC, 0, 60);
         // closes structure
@@ -1818,9 +1857,17 @@ bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
                 }
                 break;
             case BY5_FE3:
+                //if((i->type != BY5) && (i->type != eBY5)) {
                 if(i->type != BY5) {
                     error = true;
                     error_stype_comb = BY5_FE3;
+                    error_stype = i->type;
+                }
+                break;
+            case RAC_FE3:
+                if(i->type != RAC) {
+                    error = true;
+                    error_stype_comb = RAC_FE3;
                     error_stype = i->type;
                 }
                 break;
@@ -1906,7 +1953,24 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
             proc_B6R_ACR5(site_perf, site_C1, site_C2); break;
         case 23:
             proc_M5R_ACR5_ZZ(site_perf, site_C1->C2, site_C2->C1, rng); break;
-            
+        case 24:
+            proc_G6R_RZZ(site_perf, site_C1, site_C2); break;
+        case 25:
+            proc_G6R_RFER(site_perf, site_C1, site_C2); break;
+        case 26:
+            proc_G6R_R5(site_perf, site_C1, site_C2); break;
+        case 27:
+            proc_L6_RBY5(site_perf, site_C1, site_C2); break;
+        case 28:
+            proc_L6_RACR(site_perf, site_C1, site_C2); break;
+        case 29:
+            proc_G5R_RFE(site_perf, site_C1, site_C2); break;
+        case 30:
+            proc_C6R_BY5_FE3(site_perf, site_C1, site_C2, rng); break;
+        case 31:
+            proc_C6R_BY5_FE3(site_perf, site_C1, site_C2, rng); break;
+        case 32:
+            proc_C6R_RAC_FE3(site_perf, site_C1, site_C2, rng); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -1960,71 +2024,6 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printStruct();//++++
     Cpointer newC1;
     Cpointer newC2;
-
-    /**
-     * Check that there is not a 6-member bay site to the left or right of the armchair site.
-     * C* indicates the carbon atoms that would be hindered.
-     *
-     *   C -- C        C -- C
-     *  /      \      /      \
-     * C        C1   C*       C -- C
-     *  \      /      \      /      \
-     *   C -- C   AC   C*-- C        C
-     *  /      \             \      /
-     * C        C -- C2  BY6  C -- C
-     *  \      /      \      /      \
-     *   C -- C        C -- C        C
-     *         \      /      \      /
-     *          C -- C        C -- C
-     *                \      /
-     *                 C -- C
-     *
-     * Check that there is not an armchair site with an embedded 5-member aromatic ring to the left or right of the armchair site
-     * as this would result an unknown site type. C* indicates the proposed carbon that would result in an unknown site type.
-     *
-     *                  C -- C
-     *                 /      \
-     *           C -- C        C
-     *          /      \      /
-     *         C        C -- C1
-     *          \      /
-     *           C -- C   AC
-     *          /      \
-     *    C -- C        C2-- C*
-     *   /      \      /
-     *  C        C -- C
-     *   \      /     |
-     *    C -- C      |   ACR5
-     *   /      \     |
-     *  C        C -- C
-     *   \      /      \
-     *    C -- C        C
-     *          \      /
-     *           C -- C
-     */
-    if(moveIt(stt, -1)->type == BY6 || moveIt(stt, 1)->type == BY6 ||
-       //
-       moveIt(stt, -1)->type == ACR5 || moveIt(stt, 1)->type == ACR5 ||
-       //
-       moveIt(stt, -1)->type == RBY5 || moveIt(stt, 1)->type == RBY5 ||
-       //
-       moveIt(stt, 1)->type == FE && moveIt(stt, 2)->type == BY6 && moveIt(stt, 3)->type == AC ||
-       moveIt(stt, -1)->type == FE && moveIt(stt, -2)->type == BY6 && moveIt(stt, -3)->type == AC ||
-       //
-       moveIt(stt, 1)->type == ZZ && moveIt(stt, 2)->type == BY6 && moveIt(stt, 3)->type == ZZ ||
-       moveIt(stt, -1)->type == ZZ && moveIt(stt, -2)->type == BY6 && moveIt(stt, -3)->type == ZZ ||
-       //
-       moveIt(stt, 1)->type == AC && moveIt(stt, 2)->type == BY6 ||
-       moveIt(stt, -1)->type == AC && moveIt(stt, -2)->type == BY6 ||
-       //
-       moveIt(stt, 1)->type == FE && moveIt(stt, 2)->type == ZZ && moveIt(stt, 3)->type == BY6 && moveIt(stt, 4)->type == ZZ && moveIt(stt, 4)->type == AC ||
-       moveIt(stt, -1)->type == FE && moveIt(stt, -2)->type == ZZ && moveIt(stt, -3)->type == BY6 && moveIt(stt, -4)->type == ZZ && moveIt(stt, -4)->type == AC ||
-       //
-       moveIt(stt, 1)->type == ZZ && moveIt(stt, 2)->type == BY6 && moveIt(stt, 3)->type == RFE ||
-       moveIt(stt, -1)->type == ZZ && moveIt(stt, -2)->type == BY6 && moveIt(stt, -3)->type == RFE
-       ) {
-        return;
-    }
 
     /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
@@ -2088,165 +2087,6 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 void PAHProcess::proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 //    printSites(stt);
     Cpointer newC1, newC2, newC3, newC4;
-    
-    /**
-     * Check that there is not a 6-member bay site to the left or right of the free edge site.
-     * C* indicates the carbon atoms that would be hindered.
-     *
-     *          C -- C
-     *         /      \
-     *        C*       C -- C
-     *         \      /      \
-     *          C*-- C        C
-     *     FE         \      /
-     *   C1-- C2  BY6  C -- C
-     *  /      \      /      \
-     * C        C -- C        C
-     *  \      /      \      /
-     *   C -- C        C -- C
-     *         \      /
-     *          C -- C
-     *
-     * Check that there is not an armchair site with an embedded 5-member aromatic ring to the left or right of the free edge site
-     * as this would result in an unknown site type. C* indicates the proposed carbon that would result in the unknown site type.
-     *
-     *           C -- C1  FE
-     *          /      \  
-     *    C -- C        C2-- C*
-     *   /      \      /
-     *  C        C -- C
-     *   \      /     |
-     *    C -- C      |   ACR5
-     *   /      \     |
-     *  C        C -- C
-     *   \      /      \
-     *    C -- C        C
-     *          \      /
-     *           C -- C
-     *
-     * Check that there is not an armchair site followed by a 6-member bay site to the left or right of the free edge site.
-     * C* indicates the carbon atoms that would be hindered.
-     *
-     *   C -- C1       C*-- C
-     *  /      \  FE  /      \
-     * C       C2    C*       C -- C
-     *  \      /      \      /      \
-     *   C -- C   AC   C -- C        C
-     *  /      \             \      /
-     * C        C -- C2  BY6  C -- C
-     *  \      /      \      /      \
-     *   C -- C        C -- C        C
-     *         \      /      \      /
-     *          C -- C        C -- C
-     *                \      /
-     *                 C -- C
-     *
-     * Check that two sites away there is not a 6-member bay site followed by an armchair site. This applies both to the left and right of the free edge site.
-     * C* indicates the carbon atoms that would be hindered.
-     *
-     *   C -- C*       C2-- C
-     *  /      \  FE  /      \
-     * C       C*    C1       C -- C
-     *  \      /      \      /      \
-     *   C -- C   AC   C -- C        C
-     *  /      \             \      /
-     * C        C -- C2  BY6  C -- C
-     *  \      /      \      /      \
-     *   C -- C        C -- C        C
-     *         \      /      \      /
-     *          C -- C        C -- C
-     *                \      /
-     *                 C -- C
-     *
-     * Check that there is not two consecutive 5-member bay site to the left or right of the free-edge site.
-     * C* indicates the carbon atoms that would be hindered.
-     *
-     *          C -- C
-     *         /      \
-     *   C -- C        C*  
-     *  /      \      /    
-     * C        C -- C*       C2-- C
-     *  \      /             /      \
-     *   C -- C   BY5       C1       C
-     *  /      \             \      /
-     * C        C -- C   BY5  C -- C
-     *  \      /      \      /      \
-     *   C -- C        C -- C        C
-     *         \      /      \      /
-     *          C -- C        C -- C
-     *                \      /
-     *                 C -- C
-     *
-     */
-    if(moveIt(stt, -1)->type == BY6 || moveIt(stt, 1)->type == BY6 ||
-       //
-       moveIt(stt, -1)->type == ACR5 || moveIt(stt, 1)->type == ACR5 ||
-       //
-       moveIt(stt, -1)->type == AC && moveIt(stt, -2)->type == BY6 ||
-       moveIt(stt, 1)->type == AC && moveIt(stt, 2)->type == BY6 ||
-       //
-       moveIt(stt, -2)->type == BY6 && moveIt(stt, -3)->type == AC ||
-       moveIt(stt, 2)->type == BY6 && moveIt(stt, 3)->type == AC ||
-       //
-       moveIt(stt, -1)->type == BY5 && moveIt(stt, -2)->type == BY5 ||
-       moveIt(stt, 1)->type == BY5 && moveIt(stt, 2)->type == BY5 ||
-       //
-       moveIt(stt, 1)->type == FE && moveIt(stt, 2)->type == ZZ && moveIt(stt, 3)->type == BY6 && moveIt(stt, 4)->type == ZZ && moveIt(stt, 5)->type == AC ||
-       moveIt(stt, -1)->type == FE && moveIt(stt, -2)->type == ZZ && moveIt(stt, -3)->type == BY6 && moveIt(stt, -4)->type == ZZ && moveIt(stt, -5)->type == AC ||
-       //
-       moveIt(stt, 1)->type == FE && moveIt(stt, 2)->type == BY6 && moveIt(stt, 3)->type == RZZ ||
-       moveIt(stt, -1)->type == FE && moveIt(stt, -2)->type == BY6 && moveIt(stt, -3)->type == RZZ ||
-       //
-       moveIt(stt, 1)->type == ZZ && moveIt(stt, 2)->type == BY6 && moveIt(stt, 3)->type == ZZ ||
-       moveIt(stt, -1)->type == ZZ && moveIt(stt, -2)->type == BY6 && moveIt(stt, -3)->type == ZZ ||
-       //
-       moveIt(stt, 1)->type == ZZ && moveIt(stt, 2)->type == BY5 && moveIt(stt, 3)->type == BY5 ||
-       moveIt(stt, -1)->type == ZZ && moveIt(stt, -2)->type == BY5 && moveIt(stt, -3)->type == BY5 ||
-       //
-       moveIt(stt, 1)->type == BY5 && moveIt(stt, 2)->type == AC && moveIt(stt, 3)->type == BY5 ||
-       moveIt(stt, -1)->type == BY5 && moveIt(stt, -2)->type == AC && moveIt(stt, -3)->type == BY5 ||
-       //
-       moveIt(stt, 1)->type == BY5 && moveIt(stt, 2)->type == ZZ && moveIt(stt, 3)->type == BY6 ||
-       moveIt(stt, -1)->type == BY5 && moveIt(stt, -2)->type == ZZ && moveIt(stt, -3)->type == BY6 ||
-       //
-       moveIt(stt, 1)->type == AC && moveIt(stt, 2)->type == BY5 && moveIt(stt, 3)->type == AC ||
-       moveIt(stt, -1)->type == AC && moveIt(stt, -2)->type == BY5 && moveIt(stt, -3)->type == AC ||
-       //
-       moveIt(stt, 1)->type == RBY5 || moveIt(stt, -1)->type == RBY5 ||
-       //
-       moveIt(stt, 1)->type == AC && moveIt(stt, 2)->type == FE && moveIt(stt, 3)->type == BY6 && moveIt(stt, 4)->type == AC && moveIt(stt, 6)->comb == FE3 ||
-       moveIt(stt, -1)->type == AC && moveIt(stt, -2)->type == FE && moveIt(stt, -3)->type == BY6 && moveIt(stt, -4)->type == AC && moveIt(stt, -6)->comb == FE3 ||
-       //
-       moveIt(stt, 1)->type == ZZ && moveIt(stt, 2)->type == AC && moveIt(stt, 3)->type == BY5 && moveIt(stt, 4)->type == FE && moveIt(stt, 5)->type == BY6 ||
-       moveIt(stt, -1)->type == ZZ && moveIt(stt, -2)->type == AC && moveIt(stt, -3)->type == BY5 && moveIt(stt, -4)->type == FE && moveIt(stt, -5)->type == BY6 ||
-       //
-       moveIt(stt, 1)->type == ZZ && moveIt(stt, 2)->type == ZZ && moveIt(stt, 3)->type == BY6 && moveIt(stt, 4)->type == ZZ && moveIt(stt, 5)->type == ZZ ||
-       moveIt(stt, -1)->type == ZZ && moveIt(stt, -2)->type == ZZ && moveIt(stt, -3)->type == BY6 && moveIt(stt, -4)->type == ZZ && moveIt(stt, -5)->type == ZZ ||
-       //
-       moveIt(stt, 1)->type == AC && moveIt(stt, 2)->type == ZZ && moveIt(stt, 3)->type == BY6 && moveIt(stt, 4)->type == ZZ ||
-       moveIt(stt, -1)->type == AC && moveIt(stt, -2)->type == ZZ && moveIt(stt, -3)->type == BY6 && moveIt(stt, -4)->type == ZZ ||
-       //
-       moveIt(stt, 1)->type == FE && moveIt(stt, 2)->type == BY6 && moveIt(stt, 3)->type == ZZ && moveIt(stt, 4)->type == BY5 ||
-       moveIt(stt, -1)->type == FE && moveIt(stt, -2)->type == BY6 && moveIt(stt, -3)->type == ZZ && moveIt(stt, -4)->type == BY5 ||
-       //
-       moveIt(stt, 1)->type == BY5 && moveIt(stt, 2)->type == ZZ && moveIt(stt, 3)->type == BY5 && moveIt(stt, 4)->type == AC ||
-       moveIt(stt, -1)->type == BY5 && moveIt(stt, -2)->type == ZZ && moveIt(stt, -3)->type == BY5 && moveIt(stt, -4)->type == AC ||
-       //
-       moveIt(stt, 1)->type == FE && moveIt(stt, 2)->type == AC && moveIt(stt, 3)->type == BY5 && moveIt(stt, 4)->type == ZZ && moveIt(stt, 5)->type == FE && moveIt(stt, 5)->type == BY6 && moveIt(stt, 6)->type == ZZ ||
-       moveIt(stt, -1)->type == FE && moveIt(stt, -2)->type == AC && moveIt(stt, -3)->type == BY5 && moveIt(stt, -4)->type == ZZ && moveIt(stt, -5)->type == FE && moveIt(stt, -5)->type == BY6 && moveIt(stt, -6)->type == ZZ ||
-       //
-       moveIt(stt, 1)->type == FE && moveIt(stt, 2)->type == AC && moveIt(stt, 3)->type == BY6 && moveIt(stt, 4)->type == FE && moveIt(stt, 5)->type == AC ||
-       moveIt(stt, -1)->type == FE && moveIt(stt, -2)->type == AC && moveIt(stt, -3)->type == BY6 && moveIt(stt, -4)->type == FE && moveIt(stt, -5)->type == AC ||
-       //
-       moveIt(stt, 1)->type == FE && moveIt(stt, 2)->type == ZZ && moveIt(stt, 3)->type == FE && moveIt(stt, 4)->type == BY6 && moveIt(stt, 5)->type == AC && moveIt(stt, 6)->type == ZZ && moveIt(stt, 7)->type == AC ||
-       moveIt(stt, -1)->type == FE && moveIt(stt, -2)->type == ZZ && moveIt(stt, -3)->type == FE && moveIt(stt, -4)->type == BY6 && moveIt(stt, -5)->type == AC && moveIt(stt, -6)->type == ZZ && moveIt(stt, -7)->type == AC ||
-       //
-       //
-       moveIt(stt, 1)->type == ZZ && moveIt(stt, 2)->type == FE && moveIt(stt, 3)->type == BY6 && moveIt(stt, 4)->type == AC && moveIt(stt, 5)->type == ZZ ||
-       moveIt(stt, -1)->type == ZZ && moveIt(stt, -2)->type == FE && moveIt(stt, -3)->type == BY6 && moveIt(stt, -4)->type == AC && moveIt(stt, -5)->type == ZZ
-       ) {
-        return;
-    }
 
     /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
@@ -2296,33 +2136,6 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
     // Remove C
 
-    /**
-     * Check that there is not a armchair site with an embedded 5-member aromatic ring to the left or right of the 6-member bay site
-     * as this would result in an unknown site type.
-     *
-     *                  C -- C
-     *                 /      \
-     *           C -- C        C -- C
-     *          /      \      /      \
-     *         C        C -- C        C
-     *          \      /      \      /
-     *           C -- C   BY6  C -- C
-     *          /      \      /      \
-     *    C -- C        C2   C1       C
-     *   /      \      /      \      /
-     *  C        C -- C        C -- C
-     *   \      /     |
-     *    C -- C      |   ACR5
-     *   /      \     |
-     *  C        C -- C
-     *   \      /      \
-     *    C -- C        C
-     *          \      /
-     *           C -- C
-     */
-    if(moveIt(stt, -1)->type == ACR5 || moveIt(stt, 1)->type == ACR5){
-        return;
-    }
     Cpointer now = C_1->C2;
     do{
         Cpointer next;
@@ -2605,54 +2418,6 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
     
     /**
-     * Check that there is not a 6-member bay site to the left or right of the zig zag site.
-     * C* indicates the carbon atom that would be hindered.
-     *
-     *                 C -- C
-     *                /      \
-     *               C        C -- C
-     *                \      /      \
-     *   C -- C1  ZZ   C*-- C        C
-     *  /      \      /      \      /
-     * C        C -- C2  BY6  C -- C
-     *  \      /      \      /      \
-     *   C -- C        C -- C        C
-     *         \      /      \      /
-     *          C -- C        C -- C
-     *                \      /
-     *                 C -- C
-     *
-     * Check that there is not an armchair site with an embedded 5-member aromatic ring to the left or right of the zig zag site
-     * as this would result in an unknown site type. C* indicates the proposed carbon that would result in the unknown site type.
-     *
-     *           C -- C 
-     *          /      \
-     *         C        C1
-     *          \      /
-     *           C -- C   ZZ
-     *          /      \
-     *    C -- C        C2-- C*
-     *   /      \      /
-     *  C        C -- C
-     *   \      /     |
-     *    C -- C      |   ACR5
-     *   /      \     |
-     *  C        C -- C
-     *   \      /      \
-     *    C -- C        C
-     *          \      /
-     *           C -- C
-     */
-    if(moveIt(stt, -1)->type == BY6 || moveIt(stt, 1)->type == BY6 ||
-       //
-       moveIt(stt, -1)->type == ACR5 || moveIt(stt, 1)->type == ACR5 ||
-       //
-       moveIt(stt, -1)->type == RBY5 || moveIt(stt, 1)->type == RBY5
-       ) {
-        return;
-    }
-
-    /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
      * Therefore, the coordinates of the edge carbon atoms (coords) have been made redundant.
      * The code checks for hindrance by checking whether the proposed carbon atoms to be added would occupy a position which is already present.
@@ -2719,61 +2484,6 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
     //printSites(stt);
     
-    /**
-     * Check that there is not a 6-member bay site to the left or right of the armchair site.
-     * C* indicates the carbon atoms that would be hindered.
-     *
-     *   C -- C        C -- C
-     *  /      \      /      \
-     * C        C1   C*       C -- C
-     *  \      /      \      /      \
-     *   C -- C   AC   C*-- C        C
-     *  /      \             \      /
-     * C        C -- C2  BY6  C -- C
-     *  \      /      \      /      \
-     *   C -- C        C -- C        C
-     *         \      /      \      /
-     *          C -- C        C -- C
-     *                \      /
-     *                 C -- C
-     *
-     * Check that there is not an armchair site with an embedded 5-member aromatic ring to the left or right of the armchair site
-     * as this would result in an unknown site type. C* indicates the proposed carbon that would result in the unknown site type.
-     *
-     *                  C -- C
-     *                 /      \
-     *           C -- C        C
-     *          /      \      /
-     *         C        C -- C1
-     *          \      /
-     *           C -- C   AC
-     *          /      \
-     *    C -- C        C2-- C*
-     *   /      \      /
-     *  C        C -- C
-     *   \      /     |
-     *    C -- C      |   ACR5
-     *   /      \     |
-     *  C        C -- C
-     *   \      /      \
-     *    C -- C        C
-     *          \      /
-     *           C -- C
-     */
-    if(moveIt(stt, -1)->type == BY6 || moveIt(stt, 1)->type == BY6 ||
-       //
-       moveIt(stt, -1)->type == ACR5 || moveIt(stt, 1)->type == ACR5 ||
-       //
-       moveIt(stt, -1)->type == RBY5 || moveIt(stt, 1)->type == RBY5 ||
-       //
-       moveIt(stt,-2)->comb == FE3 && moveIt(stt, 1)->type == AC && moveIt(stt, 2)->type == BY6 ||
-       moveIt(stt, 2)->comb == FE3 && moveIt(stt, -1)->type == AC && moveIt(stt, -2)->type == BY6 ||
-       //
-       moveIt(stt,-2)->comb == FE3 && moveIt(stt, 1)->type == ZZ && moveIt(stt, 2)->type == AC && moveIt(stt, 3)->type == BY6 && moveIt(stt, 4)->type == FE && moveIt(stt, 5)->type == ZZ ||
-       moveIt(stt,2)->comb == FE3 && moveIt(stt, -1)->type == ZZ && moveIt(stt, -2)->type == AC && moveIt(stt, -3)->type == BY6 && moveIt(stt, -4)->type == FE && moveIt(stt, -5)->type == ZZ
-       ){
-        return;
-    }
     //if(checkHindrance(stt)) {
     //    /*cout<<"Site hinderzed, process not performed.\n"*/ return;}
     // check if FE3 is before or after AC
@@ -2857,37 +2567,6 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 // ************************************************************
 void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
-    
-    /**
-     * If the 5-member ring is to left of the free edge site, check that there is not a 6-member bay site to the right of the site; and vice-versa.
-     * C* indicates the carbon atoms that would be hindered.
-     *     
-     *           C -- C
-     *          /      \
-     *         C        C -- C
-     *          \      /     |
-     *           C -- C      |
-     *          /      \     |
-     *    C -- C        C -- C1
-     *   /      \      /
-     *  C        C -- C2  RFE
-     *   \      /    
-     *    C -- C   BY6  C*-- C*
-     *   /      \      /      \
-     *  C        C -- C        C
-     *   \      /      \      /
-     *    C -- C        C -- C
-     *          \      /
-     *           C -- C
-     */
-    if(moveIt(stt,-1)->type == R5 && moveIt(stt,1)->type == BY6 || moveIt(stt,1)->type == R5 && moveIt(stt,-1)->type == BY6 ||
-       //
-       moveIt(stt,-1)->type == ACR5 && moveIt(stt,1)->type == R5 || moveIt(stt,-1)->type == R5 && moveIt(stt,1)->type == ACR5 ||
-       //
-       moveIt(stt,-1)->type == RBY5 && moveIt(stt,1)->type == R5 || moveIt(stt,-1)->type == R5 && moveIt(stt,1)->type == RBY5
-       ){
-        return;
-    }
 
     /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
@@ -2971,33 +2650,6 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
-    /**
-     * Check that there is not a armchair site with an embedded 5-member aromatic ring to the left or right of the armchair site
-     * as this would result in an unknown site type.
-     *
-     *                  C -- C
-     *                 /      \
-     *           C -- C        C -- C
-     *          /      \      /      \
-     *         C        C -- C        C
-     *          \      /      \      /
-     *           C -- C     __ C -- C
-     *          /      \  /   
-     *    C -- C        C  ACR5
-     *   /      \      /    
-     *  C        C -- C1      
-     *   \      /    
-     *    C -- C   RAC  
-     *   /      \   
-     *  C        C -- C2
-     *   \      /     |
-     *    C -- C      |
-     *          \     |
-     *           C -- C
-     */
-    if(moveIt(stt,-1)->type == ACR5 && moveIt(stt,1)->type == R5 || moveIt(stt,-1)->type == R5 && moveIt(stt,1)->type == ACR5){
-        return;
-    }
 
     // check if R5 is before or after RAC
     bool b4 = false;
@@ -3083,62 +2735,6 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
     
     /**
-     * If the 5-member ring is to left of the zig zag site, check that there is not a 6-member bay site to the right of the site; and vice-versa.
-     * C* indicates the carbon atom that would be hindered.
-     *     
-     *    C -- C
-     *   /      \
-     *  C        C -- C
-     *   \      /     |
-     *    C -- C      |
-     *   /      \     |
-     *  C        C -- C1
-     *   \      /  
-     *    C -- C   RZZ  C -- C
-     *   /      \      /      \
-     *  C        C2   C*       C
-     *   \      /      \      /
-     *    C -- C   BY6  C -- C
-     *   /      \      /      \
-     *  C        C -- C        C
-     *   \      /      \      /
-     *    C -- C        C -- C
-     *          \      /
-     *           C -- C
-     *
-     * If the 5-member ring is to left of the zig zag site, check that there is not an armchair site with an embedded 5-member aromatic ring to the right of the site
-     * as this would result an unknown site type; and vice-versa. C* indicates the proposed carbon that would result in the unknown site type.
-     *
-     *           C -- C
-     *          /      \ 
-     *         C        C -- C
-     *          \      /     |
-     *           C -- C      |
-     *          /      \     |
-     *         C        C -- C1
-     *          \      /
-     *           C -- C 
-     *          /      \
-     *    C -- C        C2-- C*
-     *   /      \      /
-     *  C        C -- C
-     *   \      /     |
-     *    C -- C      |   ACR5
-     *   /      \     |
-     *  C        C -- C
-     *   \      /      \
-     *    C -- C        C
-     *          \      /
-     *           C -- C
-     */
-    if(moveIt(stt,-1)->type == R5 && moveIt(stt,1)->type == BY6 || moveIt(stt,1)->type == R5 && moveIt(stt,-1)->type == BY6 ||
-       //
-       moveIt(stt,-1)->type == R5 && moveIt(stt,1)->type == ACR5 || moveIt(stt,1)->type == R5 && moveIt(stt,-1)->type == ACR5 ||
-       //
-       moveIt(stt,-1)->type == RBY5 || moveIt(stt,1)->type == RBY5){
-        return;
-    }
-    /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
      * Therefore, the coordinates of the edge carbon atoms (coords) have been made redundant.
      * The code checks for hindrance by checking whether the proposed carbon atoms to be added would occupy a position which is already present.
@@ -3211,34 +2807,6 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
     //printSites(stt);
-
-    /**
-     * If the FE3 site is to left of the 5-member bay site, check that there is not an armchair site with an embedded 5-member aromatic ring to the right of the site
-     * as this would result an unknown site type; and vice versa. C* indicates the proposed carbon that would result in the unknown site type.
-     *
-     *                  C -- C
-     *                 /      \
-     *           C -- C        C -- C
-     *          /      \      /      \
-     *         C        C -- C        C
-     *          \      /      \      /
-     *           C -- C        C1-- C
-     *          /      \
-     *    C -- C        C2-- C*
-     *   /      \      /
-     *  C        C -- C
-     *   \      /     |
-     *    C -- C      |   ACR5
-     *   /      \     |
-     *  C        C -- C
-     *   \      /      \
-     *    C -- C        C
-     *          \      /
-     *           C -- C
-     */
-    if(moveIt(stt,-2)->comb == FE3 && moveIt(stt,1)->type == ACR5 || moveIt(stt,2)->comb == FE3 && moveIt(stt,-1)->type == ACR5){
-        return;
-    }
 
     // check if there are any bridges in the BY5, cancel process is yes
     Cpointer now=C_1->C2;
@@ -3333,28 +2901,6 @@ void PAHProcess::proc_C6R_BY5_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2
 void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
 
-    /**
-     * Check that there is nothing other than free edge sites as neigbhouring sites.
-     * If the positions indicated by C* are occupied, the 5-member bay closure will result in an unknown site type.
-     *     
-     *           C -- C 
-     *          /      \
-     *    C -- C        C -- C*
-     *   /      \      /
-     *  C        C -- C1
-     *   \      /     
-     *    C -- C   BY5 
-     *   /      \    
-     *  C        C -- C2  
-     *   \      /      \
-     *    C -- C        C -- C*
-     *          \      /
-     *           C -- C
-     */
-    if(moveIt(stt, -1)->type != FE || moveIt(stt, 1)->type != FE){
-        return;
-    }
-
     // Remove C
     Cpointer now = C_1->C2;
     do{
@@ -3395,7 +2941,17 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //delSiteFromMap(stt->comb, stt);
     // Convert the BY6 site into the resulting site after reaction,
     // finding resulting site type:
-    convSiteType(stt, moveIt(stt,-1)->C1, moveIt(stt,1)->C2, (kmcSiteType) 18);
+    if (moveIt(stt,-1)->type == FE && moveIt(stt,1)->type == FE) {
+        convSiteType(stt, moveIt(stt,-1)->C1, moveIt(stt,1)->C2, (kmcSiteType) 18);
+    } else if (moveIt(stt,-1)->type == ZZ && moveIt(stt,1)->type == ZZ ||
+        moveIt(stt,-1)->type == AC && moveIt(stt,1)->type == FE ||
+        moveIt(stt,-1)->type == FE && moveIt(stt,1)->type == AC) {
+        convSiteType(stt, moveIt(stt,-1)->C1, moveIt(stt,1)->C2, (kmcSiteType) 4);
+    } else {
+        assert(moveIt(stt,-1)->type == FE && moveIt(stt,1)->type == ZZ || moveIt(stt,-1)->type == ZZ && moveIt(stt,1)->type == FE);
+        convSiteType(stt, moveIt(stt,-1)->C1, moveIt(stt,1)->C2, (kmcSiteType) 3);
+    }
+
 
     // erase the existence of the neighbouring sites
     Spointer Srem1 = moveIt(stt,-1);
@@ -3416,39 +2972,13 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     m_pah->m_rings5_Lone++;
     //cout<<"WARNING: BY5 closure called. Process not specified yet.\n";
 }
+
 // ************************************************************
 // ID19- R6 desorption at bay -> pyrene (AR21 in Matlab)
 // ************************************************************
 void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
     //printSites(stt);
 
-    /**
-     * If the FE3 site is to left of the 5-member bay site, check that there is not an armchair site with an embedded 5-member aromatic ring to the right of the site
-     * as this would result in an unknown site type; and vice versa. C* indicates the proposed carbon that would result in the unknown site type.
-     *
-     *                  C -- C
-     *                 /      \
-     *           C -- C        C -- C
-     *          /      \      /      \
-     *         C        C -- C        C
-     *          \      /      \      /
-     *           C -- C        C1-- C
-     *          /      \
-     *    C -- C        C2 --C*
-     *   /      \      /
-     *  C        C -- C
-     *   \      /     |
-     *    C -- C      |   ACR5
-     *   /      \     |
-     *  C        C -- C
-     *   \      /      \
-     *    C -- C        C
-     *          \      /
-     *           C -- C
-     */
-    if(moveIt(stt,-2)->comb == FE3 && moveIt(stt,1)->type == ACR5 || moveIt(stt,-1)->type == ACR5 && moveIt(stt,2)->comb == FE3){
-        return;
-    }
     // check if there are any bridges in the BY5, cancel process if yes
     Cpointer now=C_1->C2;
     for(int i=0; i!=3; i++) {
@@ -3604,38 +3134,6 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printStruct();//++++
     Cpointer newC1;
     Cpointer newC2;
-    
-    /**
-     * Check that there is not a 6-member bay site to the left or right of the armchair site with an embedded 5-member aromatic ring
-     * as this jump process is unable to close the neighbouring bay site.
-     *
-     *                  C -- C
-     *                 /      \
-     *           C -- C        C -- C
-     *          /      \      /      \
-     *         C        C -- C        C
-     *          \      /      \      /
-     *           C -- C   BY6  C -- C
-     *          /      \      /      \
-     *    C -- C        C1   C        C
-     *   /      \      /      \      /
-     *  C        C -- C        C -- C
-     *   \      /     |
-     *    C -- C      |   ACR5
-     *   /      \     |
-     *  C        C -- C
-     *   \      /      \
-     *    C -- C        C2
-     *          \      /
-     *           C -- C
-     */
-    if(moveIt(stt, -1)->type == BY6 || moveIt(stt, 1)->type == BY6 || moveIt(stt, -1)->type == ACR5 || moveIt(stt, 1)->type == ACR5 ||
-       //
-       moveIt(stt, 1)->type == ZZ && moveIt(stt, 2)->type == BY6 && moveIt(stt, 3)->type == ZZ ||
-       moveIt(stt, -1)->type == ZZ && moveIt(stt, -2)->type == BY6 && moveIt(stt, -3)->type == ZZ
-       ) {
-        return;
-    }
 
     //if(checkHindrance(stt)) {
     //    /*cout<<"Site hindered, process not performed.\n"*/ return;}
@@ -3776,6 +3274,69 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     }else{
         updateCombinedSites(S2); updateCombinedSites(S4); // neighbours
     }
+}
+
+// ************************************************************
+// ID24 - R6 growth on RZZ 
+// ************************************************************
+void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+    proc_G6R_AC(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID25 - R6 growth on RFER 
+// ************************************************************
+void PAHProcess::proc_G6R_RFER(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+    proc_G6R_AC(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID26 - R6 growth on R5
+// ************************************************************
+void PAHProcess::proc_G6R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+    proc_G6R_FE(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID27 - RBY5 closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_RBY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+    proc_L6_BY6(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID28 - RACR closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_RACR(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+    proc_L6_BY6(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID29 - R5 growth on RFE 
+// ************************************************************
+void PAHProcess::proc_G5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+    proc_G5R_ZZ(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID30 - R6 migration & conversion to R5 at RAC
+// ************************************************************
+void PAHProcess::proc_C6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+    proc_C6R_BY5_FE3(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID31 - R6 migration & conversion to R5 at RAC
+// ************************************************************
+void PAHProcess::proc_C6R_RAC_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+    proc_C6R_BY5_FE3(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID32 - R6 desorption at RAC -> pyrene
+// ************************************************************
+void PAHProcess::proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+    proc_M6R_BY5_FE3(stt, C_1, C_2, rng);
 }
 
 size_t PAHProcess::SiteListSize() const {

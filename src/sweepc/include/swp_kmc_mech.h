@@ -131,6 +131,8 @@ namespace KMC_ARS {
     };
         
     //! Process list:
+
+    //! ID1.
     class G6R_FE : public Sweep::KMC_ARS::JumpProcess { //R6 growth on FE
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -138,6 +140,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID2.
     class G6R_AC : public Sweep::KMC_ARS::JumpProcess { //R6 growth on AC
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -145,6 +149,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID3.
     class L6_BY6 : public Sweep::KMC_ARS::JumpProcess { //BY6 closure
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -152,6 +158,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID4. 
     //class PH_benz : public Sweep::KMC_ARS::JumpProcess { //phenyl addition
     //public:
     //    double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -159,6 +167,8 @@ namespace KMC_ARS {
     //    double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
     //    void initialise();
     //};
+
+    //! ID5.
     class D6R_FE3 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -166,6 +176,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID6.
     class O6R_FE3_O2 : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at FE by O2
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -173,6 +185,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID7.
     class O6R_FE3_OH : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at FE by OH
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -180,6 +194,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID8.
     //class O6R_FE_HACA_O2 : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at AC by O2
     //public:
     //    double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -187,6 +203,8 @@ namespace KMC_ARS {
     //    double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
     //    void initialise();
     //};
+
+    //! ID9.
     //class O6R_FE_HACA_OH : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at AC by OH
     //public:
     //    double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -194,6 +212,8 @@ namespace KMC_ARS {
     //    double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
     //    void initialise();
     //};
+
+    //! ID10.
     class G5R_ZZ : public Sweep::KMC_ARS::JumpProcess { //R5 growth on ZZ
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -201,6 +221,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID11.
     class D5R_R5 : public Sweep::KMC_ARS::JumpProcess { //R5 desorption
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -208,6 +230,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID12.
     class C6R_AC_FE3 : public Sweep::KMC_ARS::JumpProcess { //R6 conversion to R5
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -215,6 +239,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID13.
     class C5R_RFE : public Sweep::KMC_ARS::JumpProcess { //R5 conversion to R6 on FE
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -222,6 +248,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID14.
     class C5R_RAC : public Sweep::KMC_ARS::JumpProcess { //R5 conversion to R6 on AC
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -229,6 +257,7 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+    //! ID15.
     class M5R_RZZ : public Sweep::KMC_ARS::JumpProcess { //R5 migration to neighbouring ZZ
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -236,6 +265,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID16.
     class C6R_BY5_FE3 : public Sweep::KMC_ARS::JumpProcess { //R6 migration & conversion to R5 at BY5 (pathway 1)
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -243,6 +274,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID17.
     class C6R_BY5_FE3violi : public Sweep::KMC_ARS::JumpProcess { //R6 migration & conversion to R5 at BY5 (pathway 2; violi)
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -250,6 +283,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID18.
     class L5R_BY5 : public Sweep::KMC_ARS::JumpProcess { //BY5 closure
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -257,6 +292,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID19.
     class M6R_BY5_FE3 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -264,6 +301,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID20.
     class O6R_FE2_OH : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -271,6 +310,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID21.
     class O6R_FE2_O2 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -278,6 +319,8 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID22.
     class B6R_ACR5 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -285,10 +328,75 @@ namespace KMC_ARS {
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
+
+    //! ID23.
     class M5R_ACR5_ZZ : public Sweep::KMC_ARS::JumpProcess {
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+
+    //! ID24.
+    class G6R_RZZ : public Sweep::KMC_ARS::JumpProcess {
+    public:
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+
+    //! ID25.
+    class G6R_RFER : public Sweep::KMC_ARS::JumpProcess {
+    public:
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+
+    //! ID26.
+    class G6R_R5 : public Sweep::KMC_ARS::JumpProcess {
+    public:
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+
+    //! ID27.
+    class L6_RBY5 : public Sweep::KMC_ARS::JumpProcess {
+    public:
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+
+    //! ID28.
+    class L6_RACR : public Sweep::KMC_ARS::JumpProcess {
+    public:
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+
+    //! ID29.
+    class G5R_RFE : public Sweep::KMC_ARS::JumpProcess {
+    public:
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+
+    //! ID30.
+    class C6R_RAC_FE3 : public Sweep::KMC_ARS::JumpProcess { //R6 migration & conversion to R5 at BY5 (pathway 1)
+    public:
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+
+    //! ID31.
+    class C6R_RAC_FE3violi : public Sweep::KMC_ARS::JumpProcess { //R6 migration & conversion to R5 at BY5 (pathway 2; violi)
+    public:
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
+
+    //! ID32.
+    class M6R_RAC_FE3 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
+    public:
         double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         void initialise();
     };
