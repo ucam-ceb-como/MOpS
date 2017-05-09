@@ -162,6 +162,14 @@ double SurfaceReaction::Rate(double t, const Cell &sys,
 // the system. Process must be linear in particle number.
 double SurfaceReaction::Rate(double t, const Cell &sys, const Particle &sp) const
 {
+    //! For the purpose of checking consistency with the spherical soot model
+    //! solved using the method of moments with interpolative closure which
+    //! assumes that only pyrene (A4) is able to incept and condense.
+    //if(sp.Primary()->InceptedPAH()){
+    //    double rate = 0.0;
+    //    return rate;
+    //}
+
     // Rate constant.
     double rate = m_arr.A;
 

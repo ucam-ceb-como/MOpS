@@ -120,6 +120,9 @@ private:
     //! Mass.
     double m_mass;
 
+    //! Number of carbons.
+    int m_numcarbon;
+
     // Collision rate calculation particle properties.
     double m_dcolsqr;      //!< Collision diameter squared.
     double m_inv_dcol;     //!< Inverse collision diameter.

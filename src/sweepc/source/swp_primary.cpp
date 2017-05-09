@@ -43,11 +43,13 @@
 #include "swp_primary.h"
 #include "swp_model_factory.h"
 #include "swp_cell.h"
+#include "swp_kmc_typedef.h"
 
 #include <stdexcept>
 #include <memory.h>
 
 using namespace Sweep;
+using namespace Sweep::KMC_ARS;
 
 using namespace std;
 
@@ -56,7 +58,7 @@ using namespace std;
 // Default constructor (protected).
 AggModels::Primary::Primary(void)
 : m_pmodel(NULL), m_createt(0.0), m_time(0.0), m_diam(0.0), m_dcol(0.0), 
-  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0)
+  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0)
 {
 }
 
@@ -129,6 +131,7 @@ AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
         m_surf = rhs.m_surf;
         m_vol  = rhs.m_vol;
         m_mass = rhs.m_mass;
+        m_numcarbon = rhs.m_numcarbon;
     }
     return *this;
 }
@@ -226,6 +229,7 @@ AggModels::AggModelType AggModels::Primary::AggID(void) const {return AggModels:
 void AggModels::Primary::UpdateCache(void)
 {
     double m = 0.0;
+    int m_numcarbon_temp = 0;
 
     // Loop over composition and calculate mass and volume.
     m_mass = m_vol = 0.0;
@@ -241,6 +245,11 @@ void AggModels::Primary::UpdateCache(void)
     m_dcol = m_diam;
     m_dmob = m_diam;
     m_surf = PI * m_diam * m_diam;
+    m_numcarbon = 0;
+    for (unsigned int i=0; i!=m_pmodel->ComponentCount(); ++i) {
+        m_numcarbon_temp = m_comp[i];
+        m_numcarbon += m_numcarbon_temp;
+    }
 }
 
 // Returns the particle equivalent sphere diameter.
@@ -268,6 +277,8 @@ double AggModels::Primary::Volume(void) const {return m_vol;}
 // Returns the mass.
 double AggModels::Primary::Mass(void) const {return m_mass;}
 
+int AggModels::Primary::NumCarbon(void) const {return m_numcarbon;}
+
 // Returns the property with the given ID.
 double AggModels::Primary::Property(const Sweep::PropID id) const
 {
@@ -286,6 +297,8 @@ double AggModels::Primary::Property(const Sweep::PropID id) const
             return m_vol;
         case iM:      // Mass.
             return m_mass;
+        case iNumCarbon:
+            return m_numcarbon;
         default:
             return 0.0;
     }
@@ -311,6 +324,8 @@ void AggModels::Primary::SetVolume(double vol) {m_vol = vol;}
 
 // Sets the mass.
 void AggModels::Primary::SetMass(double m) {m_mass = m;}
+
+void AggModels::Primary::SetNumCarbon(int numcarbon) {m_numcarbon = numcarbon;}
 
 /*!
  * Check that this primary is a physically valid particle.  This currently
@@ -543,6 +558,9 @@ void AggModels::Primary::Serialize(std::ostream &out) const
         // Write mass.
         val = (double)m_mass;
         out.write((char*)&val, sizeof(val));
+
+        val = (double)m_numcarbon;
+        out.write((char*)&val, sizeof(val));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, AggModels::Primary::Serialize).");
@@ -616,6 +634,9 @@ void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleMode
                 // Read mass.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_mass = (double)val;
+
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_numcarbon = (double)val;
     
                 break;
             default:
@@ -650,5 +671,38 @@ void AggModels::Primary::init(void)
     m_surf = 0.0; // Surface area.
     m_vol = 0.0;  // Volume.
     m_mass = 0.0; // Mass.
+    m_numcarbon = 0;
     releaseMem();
+}
+
+//! Check whether the number of carbon atoms in the primary is equal to that of
+//! the inception species.
+int AggModels::Primary::InceptedPAH() const
+{
+    ParticleModel::PostProcessStartingStr str = ParticleModel()->InceptedPAH();
+
+    switch (str){
+        case ParticleModel::A1:
+            if (NumCarbon() == BENZENE_C)
+                return 1;
+            else return 0;
+            break;
+        case ParticleModel::A2:
+            if (NumCarbon() == NAPHTHALENE_C)
+                return 1;
+            else return 0;
+            break;
+        case ParticleModel::A4:
+            if (NumCarbon() == PYRENE_C)
+                return 1;
+            else return 0;
+            break;
+        case ParticleModel::A5:
+            if (NumCarbon() == BENZOPYRENE_C)
+                return 1;
+            else return 0;
+            break;
+        default:
+            return 0;
+    }
 }

@@ -138,6 +138,9 @@ public:
     //! Returns the mass.
     double Mass(void) const;
 
+    //! Returns the number of carbons.
+    int NumCarbon(void) const;
+
     //! Returns the number of surface reaction sites.
     double GetSites(void) const;
 

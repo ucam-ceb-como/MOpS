@@ -66,7 +66,7 @@ ParticleModel::ParticleModel(void)
 // Copy constructor.
 ParticleModel::ParticleModel(const ParticleModel &copy)
 {
-	*this = copy;
+    *this = copy;
 }
 
 // Default destructor.
@@ -107,12 +107,13 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_DragA = rhs.m_DragA;
         m_DragB = rhs.m_DragB;
         m_DragE = rhs.m_DragE;
-		
-		// Collision efficiency model
+        
+        //! Collision efficiency model.
         colliParaA = rhs.colliParaA;
         colliParaB = rhs.colliParaB;
         colliParaC = rhs.colliParaC;
-        m_threshold = rhs.m_threshold;
+        m_inceptionThreshold = rhs.m_inceptionThreshold;
+        m_condensationThreshold = rhs.m_condensationThreshold;
         m_mode = rhs.m_mode;
 
         // Choice of transport expressions
@@ -133,6 +134,8 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
          m_MixFracLaplacianIndex = rhs.m_MixFracLaplacianIndex;
          m_AvgMolWtIndex = rhs.m_AvgMolWtIndex;
          m_ThermalConductivityIndex = rhs.m_ThermalConductivityIndex;
+
+         m_postprocessingType = rhs.m_postprocessingType;
     }
     return *this;
 }
@@ -376,111 +379,108 @@ Sweep::Particle *const ParticleModel::CreateParticle(const double time, const do
  */ 
 double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 {
-	double ceffi;
-	if (Mode() == "NONE" || Mode() == "") {
-		double A = ColliParaA();
-		double B = ColliParaB();
-		double C = ColliParaC();
-		double redmass=0;
-		int ncarbon1,ncarbon2;
-		const AggModels::PAHPrimary *pah1 = NULL;
-		const AggModels::PAHPrimary *pah2 = NULL;
-		pah1 = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
-		pah2 = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
-		ncarbon2=(int)(1.0*pah2->NumCarbon());
-		ncarbon1=(int)(1.0*pah1->NumCarbon());
-		double x;
-		double y;
-		x=1e10*pah1->CollDiameter();
-		y=1e10*pah2->CollDiameter();
-		double reddiam;
-		reddiam=min(x,y);
-		redmass=12*min(ncarbon1,ncarbon2);
-		ceffi=1/(1+exp(-A* (reddiam*reddiam*reddiam/(redmass)+pow(redmass/B,6.0)-C)));
-		if (pah1->NumPAH()>1 && pah2->NumPAH()>1)
-			ceffi=1;
-		return ceffi;
-	}
-	else {
-        //! Threshold is based upon the total number of 6-member rings (excludes 5-member rings) in the PAH.
-		double target_Rings_Inception = Threshold();
-		int target_Rings_Condensation = ThresholdCondensation();
-		int nRings1,nRings2;
-		const AggModels::PAHPrimary *pah1 = NULL;
-		const AggModels::PAHPrimary *pah2 = NULL;
-		pah1 = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
-		pah2 = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary());
-		
-        //! Inception: PAH + PAH = Particle.
-		if (1==pah1->NumPAH() && 1==pah2->NumPAH())
-        {
-			nRings2=(int)(1.0*pah2->NumRings());
-			nRings1=(int)(1.0*pah1->NumRings());
-			double redmass;
-			if (Mode() == "MAX")
-			    redmass = max(nRings1,nRings2);
-            else if (Mode() == "MIN")
-			    redmass = min(nRings1,nRings2);
-            else if (Mode() == "COMBINED")
-			    redmass = nRings1 + nRings2;
-            else if (Mode() == "REDUCED")
-			    redmass = nRings1*nRings2/(nRings1 + nRings2);
-            else throw std::runtime_error("mode of collision efficiency is modified by unknown process, please check,Sweep::ParticleModel::CollisionEff()");
-			if (redmass >= target_Rings_Inception) ceffi = 1;
-			else ceffi = 0;
-		}
+    int ncarbon1, ncarbon2;
+    const AggModels::PAHPrimary *pah1 = NULL;
+    const AggModels::PAHPrimary *pah2 = NULL;
+    pah1 = dynamic_cast<AggModels::PAHPrimary*>(p1->Primary());
+    pah2 = dynamic_cast<AggModels::PAHPrimary*>(p2->Primary()); 
+    double ceffi;
 
-		//! Condensation: PAH + Particle (2 >= PAHs) = Particle.
-		else if(pah1->NumPAH() > 1 && pah2->NumPAH() == 1){
-			nRings2=(int)(1.0*pah2->NumRings());
-			if (nRings2 >= target_Rings_Condensation) ceffi = 1;
-			else ceffi = 0;
-		}
-		else if(pah1->NumPAH() == 1 && pah2->NumPAH() > 1){
-			nRings1=(int)(1.0*pah1->NumRings());
-			if (nRings1 >= target_Rings_Condensation) ceffi = 1;
-			else ceffi = 0;
-		}
-		
+    if (Mode() == "NONE" || Mode() == "") {
+        double A = ColliParaA();
+        double B = ColliParaB();
+        double C = ColliParaC();
+        double redmass=0;
+        ncarbon2 = (int)(1.0 * pah2->NumCarbon());
+        ncarbon1 = (int)(1.0 * pah1->NumCarbon());
+        double x;
+        double y;
+        x = 1e10 * pah1->CollDiameter();
+        y = 1e10 * pah2->CollDiameter();
+        double reddiam;
+        reddiam = min(x, y);
+        redmass = 12 * min(ncarbon1, ncarbon2);
+        ceffi = 1 / (1 + exp(-A * (reddiam * reddiam * reddiam / (redmass) + pow(redmass / B, 6.0) - C)));
+        if (pah1->NumPAH() >1 && pah2->NumPAH() > 1)
+            ceffi = 1;
+        return ceffi;
+    } else {
+        //! Thresholds are based upon the total number of 6-member rings (excludes 5-member rings) in the PAH.
+        int target_Rings_Inception = inceptionThreshold();
+        int target_Rings_Condensation = condensationThreshold();
+
+        int nRings1,nRings2;
+
+        //! Inception: PAH + PAH = Particle.
+        if (pah1->NumPAH() == 1 && pah2->NumPAH() == 1) {
+            nRings2 = (int)(1.0 * pah2->NumRings());
+            nRings1 = (int)(1.0 * pah1->NumRings());
+            double redmass;
+            if (Mode() == "MAX")
+                redmass = max(nRings1, nRings2);
+            else if (Mode() == "MIN")
+                redmass = min(nRings1, nRings2);
+            else if (Mode() == "COMBINED")
+                redmass = nRings1 + nRings2;
+            else if (Mode() == "REDUCED")
+                redmass = nRings1 * nRings2 / (nRings1 + nRings2);
+            else throw std::runtime_error("Mode of collision efficiency is modified by unknown process. Please check Sweep::ParticleModel::CollisionEff()."); 
+            if (redmass >= target_Rings_Inception) ceffi = 1;
+            else ceffi = 0;
+        }
+
+        //! Condensation: PAH + Particle (2 >= PAHs) = Particle.
+        else if(pah1->NumPAH() > 1 && pah2->NumPAH() == 1){
+            nRings2 = (int)(1.0*pah2->NumRings());
+            if (nRings2 >= target_Rings_Condensation) ceffi = 1;
+            else ceffi = 0;
+        }
+        else if(pah1->NumPAH() == 1 && pah2->NumPAH() > 1){
+            nRings1 = (int)(1.0*pah1->NumRings());
+            if (nRings1 >= target_Rings_Condensation) ceffi = 1;
+            else ceffi = 0;
+        }
+        
         //! Coagulation event: Particle + Particle = Particle. All particles are able to coagulate.
-		else {
-			ceffi = 1;
-		}
-		return ceffi;
-	}
+        else {
+            ceffi = 1;
+        }
+
+        return ceffi;
+    }
 }
 
 //  Used to read in the collision efficiency from a database instead from a formula
 /*
-	if (redmass<m_reduced_mass.at(0))
-		return m_collision_eff.at(0);
-	double cefflarger;
-	double ceffsmaller;
-	double redmasslarger;
-	double redmasssmaller;
-	int j;
-	for (j=0;j<m_reduced_mass.size();j++)
-	{
-		if (redmass<m_reduced_mass.at(j))
-		{
-			redmasslarger=m_reduced_mass.at(j);
-			cefflarger=m_collision_eff.at(j);
-			break;
-		}
-		else
-		{
-			redmasssmaller=m_reduced_mass.at(j);
-			ceffsmaller=m_collision_eff.at(j);
-		}
-		if (j==m_reduced_mass.size()-1)
-		{
-			redmasslarger=m_reduced_mass.at(j);
-			cefflarger=m_collision_eff.at(j);
-		}
-	}
-	if (cefflarger==ceffsmaller) return cefflarger;
-	double a=(cefflarger-ceffsmaller)/(redmasslarger-redmasssmaller);
-	return ceffsmaller+(redmass-redmasssmaller)*a;
+    if (redmass<m_reduced_mass.at(0))
+        return m_collision_eff.at(0);
+    double cefflarger;
+    double ceffsmaller;
+    double redmasslarger;
+    double redmasssmaller;
+    int j;
+    for (j=0;j<m_reduced_mass.size();j++)
+    {
+        if (redmass<m_reduced_mass.at(j))
+        {
+            redmasslarger=m_reduced_mass.at(j);
+            cefflarger=m_collision_eff.at(j);
+            break;
+        }
+        else
+        {
+            redmasssmaller=m_reduced_mass.at(j);
+            ceffsmaller=m_collision_eff.at(j);
+        }
+        if (j==m_reduced_mass.size()-1)
+        {
+            redmasslarger=m_reduced_mass.at(j);
+            cefflarger=m_collision_eff.at(j);
+        }
+    }
+    if (cefflarger==ceffsmaller) return cefflarger;
+    double a=(cefflarger-ceffsmaller)/(redmasslarger-redmasssmaller);
+    return ceffsmaller+(redmass-redmasssmaller)*a;
 }*/
 
 // READ/WRITE/COPY.
@@ -527,9 +527,13 @@ void ParticleModel::Serialize(std::ostream &out) const
         n = (unsigned int)m_mode.length();
         out.write((char*)&n, sizeof(n));
         out.write(m_mode.c_str(), n);
-        // write the threshold
-        n = (unsigned int)m_threshold;
+
+        //! Write the thresholds.
+        n = (unsigned int)m_inceptionThreshold;
         out.write((char*)&n, sizeof(n));
+        n = (unsigned int)m_condensationThreshold;
+        out.write((char*)&n, sizeof(n));
+
         //write the postprocess species
         n = (unsigned int)m_InceptedPAH;
         out.write((char*)&n, sizeof(n));
@@ -569,6 +573,8 @@ void ParticleModel::Serialize(std::ostream &out) const
         out.write(reinterpret_cast<const char *>(&m_MixFracLaplacianIndex),    sizeof(m_MixFracLaplacianIndex));
         out.write(reinterpret_cast<const char *>(&m_AvgMolWtIndex),            sizeof(m_AvgMolWtIndex));
         out.write(reinterpret_cast<const char *>(&m_ThermalConductivityIndex), sizeof(m_ThermalConductivityIndex));
+
+        out.write(reinterpret_cast<const char *>(&m_postprocessingType), sizeof(m_postprocessingType));
 
     } else {
         throw invalid_argument("Output stream not ready "
@@ -622,7 +628,11 @@ void ParticleModel::Deserialize(std::istream &in)
                 delete [] name;
 
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                m_threshold=(double)n;
+                m_inceptionThreshold = (int)n;
+
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_condensationThreshold = (int)n;
+
                 
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_InceptedPAH = (PostProcessStartingStr)n;
@@ -660,6 +670,8 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&m_MixFracLaplacianIndex),    sizeof(m_MixFracLaplacianIndex));
                 in.read(reinterpret_cast<char*>(&m_AvgMolWtIndex),            sizeof(m_AvgMolWtIndex));
                 in.read(reinterpret_cast<char*>(&m_ThermalConductivityIndex), sizeof(m_ThermalConductivityIndex));
+
+                in.read(reinterpret_cast<char*>(&m_postprocessingType), sizeof(m_postprocessingType));
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -689,12 +701,13 @@ void ParticleModel::init(void)
     m_DragA = 0.0; //1.155;
     m_DragB = 0.0; //0.471;
     m_DragE = 0.0; //0.596;
-	
-	//initial CE model
+    
+    //! Initial CE model.
     colliParaA = 0.0; 
     colliParaB = 0.0;
     colliParaC = 0.0;
-    m_threshold = 0.0;
+    m_inceptionThreshold = 0;
+    m_condensationThreshold = 0;
     m_mode = "";
 
     // Not sure what to put as default for m_DragType etc
@@ -707,6 +720,9 @@ void ParticleModel::init(void)
 
     // Default FM enhancement factor is 2.2
     m_efm = 2.2;
+
+    //! Postprocess based on the inception species concentration.
+    m_postprocessingType = XA4;
 }
 
 // Clears the current ParticleModel from memory.
@@ -765,18 +781,18 @@ double ParticleModel::ColliParaB() const {return colliParaB;}
 double ParticleModel::ColliParaC() const {return colliParaC;}
 
 //! Set the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to incept.
-void ParticleModel::SetThreshold(const int target) {m_threshold = target;}
+void ParticleModel::setInceptionThreshold(const int target) {m_inceptionThreshold = target;}
 
 //! Set the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to condense onto a particle (2 or more PAHs).
-void ParticleModel::SetThresholdCondensation(const int target) {m_thresholdCondensation = target;}
+void ParticleModel::setCondensationThreshold(const int target) {m_condensationThreshold = target;}
 
 //! Return the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to incept.
-double ParticleModel::Threshold() const {return m_threshold;}
+int ParticleModel::inceptionThreshold() const {return m_inceptionThreshold;}
 
 //! Return the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to condense onto a particle (2 or more PAHs).
-int ParticleModel::ThresholdCondensation() const {return m_thresholdCondensation;}
+int ParticleModel::condensationThreshold() const {return m_condensationThreshold;}
 
-//! set mode for collision efficiency model, currently 4 modes are supported, min, max, combined and reduced.
+//! Set mode for collision efficiency model, currently 4 modes are supported, min, max, combined and reduced.
 void ParticleModel::SetMode(const std::string &mode) {m_mode = mode;}
 
 //! specify the incepting pah, currently only pyrene and benzene is supported for PAH-PP model, details see the kmc
