@@ -99,9 +99,9 @@ public:
     //! Updates the particle cache using the particle details
     void UpdateCache();
 
-	//csl37
-	//update root cache
-	void BinTreePrimary::UpdateCacheRoot();
+	//! Updates the particle cache from the root node
+	//  calls UpdateCache()
+	void UpdateCacheRoot();
 
     //! Updates sintering level
     double SinteringLevel();
@@ -224,8 +224,8 @@ protected:
     //! Checks if the sintering level, merges particles if necessary
     bool CheckSintering();
 
-	//csl37: checks the condition for primary merger
-	bool BinTreePrimary::MergeCondition();
+	//! Checks if condition for merger is met
+	bool MergeCondition();
 
     //! Set the sintering time of a tree
     void SetSinteringTime(double time);
@@ -244,12 +244,11 @@ protected:
     int m_numprimary;
 
     //! Sum of the diameter of the primaries under this treenode
-	//csl37: This is usually the spherical equivalent diameter (= Primary::m_diam), 
+	// This is usually the spherical equivalent diameter (= Primary::m_diam) 
 	// unless centre to centre distance tracking is turned on
     double m_primarydiam;
 
-	//csl37
-	// Sum of primary free surface areas under this node
+	//! Sum of primary free surface areas under this node
 	double m_free_surf;
 
     //! Equivalent spherical radius of sum of childrens' volume
@@ -335,9 +334,17 @@ private:
     //! Updates the pointers after a merge event
     void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
 
-	//csl37
-	// Overload ChangePointer for centre to centre separation tracking model
-	void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *target, double d_ij, BinTreePrimary *small_prim);
+	//! Overloaded ChangePointer for centre to centre separation tracking model
+	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, double d_ij, BinTreePrimary *small_prim);
+
+	//! function to identify neighbours and sum their contribution to surface 
+	void SumNeighbours(BinTreePrimary *prim, double &sumterm);
+
+	//function to modify the centre to centre separations and returns free surface area
+	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
+	
+	//overload of function ignore update to neighbour
+	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm, BinTreePrimary *prim_ignore);
 
     // PRINTING TREES
     //! Recursive loop function for print tree
@@ -354,19 +361,6 @@ private:
     //! Deserialise a BinTreePrimary node
     virtual void DeserializePrimary(std::istream &in,
             const Sweep::ParticleModel &model, void*);
-
-	//csl37
-	//function to identify neighbours and sum their contribution to surface growth
-	void BinTreePrimary::SumNeighbours(BinTreePrimary *prim, double &sumterm);
-
-	//csl37
-	//function to modify the centre to centre separations and returns free surface area
-	void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
-	//csl37
-	//overload of function ignore update to neighbour
-	void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm, BinTreePrimary *prim_ignore);
-
-//	int BinTreePrimary::NeighbourComp(const fvector &dcomp, const fvector &dvalues, rng_type &rng, BinTreePrimary *prim, double d_r_i, int dcomp_tot);
 
 };
 

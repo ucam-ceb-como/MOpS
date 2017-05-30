@@ -553,9 +553,9 @@ double BinTreePrimary::SinteringLevel()
 						/(1 - TWO_ONE_THIRD);
 			}
 
-		// if centre-centre separation is tracked
-		// s = ((d_min/d_ij) - (d_min/d_mx))/(1-d_min/d_max)
-		// where: d_min = d_ij at merger, d_mx = r_i + r_j
+		//if centre-centre separation is tracked the sintering level is calculated as
+		//s = ((d_min/d_ij) - (d_min/d_max))/(1-d_min/d_max)
+		//where d_min = d_ij at merger, and d_max = r_i + r_j
 		}else{
 			if (m_leftparticle != NULL && m_rightparticle != NULL) {
 				double r_i = m_leftparticle->m_primarydiam/2.0;
@@ -563,8 +563,9 @@ double BinTreePrimary::SinteringLevel()
 				double d_ij =  m_distance_centreToCentre;
 
 				//calculate the merger condition
-				double d_ij_merge = sqrt( pow(max(r_i,r_j),2.0) - pow(min(r_i,r_j),2.0) );
-				slevel = ( d_ij_merge/d_ij - d_ij_merge/(r_i + r_j) ) / ( 1 - d_ij_merge/(r_i + r_j) );
+				double d_min = sqrt( pow(max(r_i,r_j),2.0) - pow(min(r_i,r_j),2.0) );
+
+				slevel = ( d_min/d_ij - d_min/(r_i + r_j) ) / ( 1 - d_min/(r_i + r_j) );
 			}
 		}
 
@@ -616,9 +617,11 @@ bool BinTreePrimary::CheckSintering()
     return hassintered;
 }
 
-//***********************csl37
-// function to check the condition for merger
-// returns true if the condition is met
+/*!
+ * @brief       Checks if condition for merger is met
+ *
+ * @return      Boolean telling if the merger condition is met
+ */
 bool BinTreePrimary::MergeCondition()
 {
 	bool condition=false;
@@ -631,18 +634,19 @@ bool BinTreePrimary::MergeCondition()
 		if (!m_pmodel->getTrackPrimarySeparation()) {
 			condition = (m_children_sintering > 0.95);
 		} else {
+			//! If tracked, a particle has coalesced when the neck reaches the centre 
+			//! of one of the primaries. Condition: min(x_ij,x_ji) <= 0
+			//  (If the neck were allowed to move beyond this point and reside outside 
+			//  the region between the primary centres any (growth) adjustments would 
+			//  fail.) 
 			double r_i = m_leftparticle->m_primarydiam/2.0;
 			double r_j = m_rightparticle->m_primarydiam/2.0;
 			double d_ij =  m_distance_centreToCentre;
 			
-			//ensures that particles are merged if sintering step overshoots slightly
 			if(d_ij <= 0.0){
+				//ensures that particles are merged if the sintering step overshoots
 				condition = true;
 			}else{
-				// a particle has coalesced if the neck radius reaches the centre of one
-				// primary. The surface growth model fails if the neck resides outside 
-				// the region between the primary centres. 
-				// min(x_ij,x_ji) <= 0;
 				condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) <= 0.0);
 			}
 		}
@@ -867,10 +871,9 @@ BinTreePrimary &BinTreePrimary::Merge()
 
         }
 
-		//csl37***********
-		//increase the diameter of the new primary to account for the volume of the primary being merged into it 
-		//only if it is not a single primary
-		//in the single primary case this is correctly updated in the call to updateprimary
+		//If this is not a single primary, increase the diameter of the new primary 
+		//to account for the volume of the primary being merged into it.
+		//In the single primary case this is correctly updated in the call to updateprimary
 		if(new_prim->m_parent != NULL){
 			double sumterm = 0.0;
 			double r_i = new_prim->m_primarydiam/2.0;
@@ -886,9 +889,8 @@ BinTreePrimary &BinTreePrimary::Merge()
 			//update the free surface area
 			new_prim->m_free_surf = max(M_PI*new_prim->m_primarydiam*new_prim->m_primarydiam - 2*M_PI*free_surface_term,0.0);
 		}
-		//csl37***********
 
-    UpdateCache();
+		UpdateCache();
 
     }
     return *this;
@@ -930,8 +932,17 @@ void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *targe
 
 }
 
-//---------------------------------------------------------------csl37
-//ChangePointer for when centre to centre separation is tracked
+/*!
+ * @brief       Changes pointer from source to target when centre-centre separation is tracked
+ *
+ * If a primary neighbours the smaller of the merging pair the centre to centre separation is  
+ * re-estmated as the smaller of the sum of the separation or the sum of primary radii.
+ *
+ * @param[in] source Pointer to the original particle
+ * @param[in] target Pointer to the new particle
+ * @param[in] centre to centre separation of the merging primaries
+ * @param[in] Pointer to the smaller of merging primaries
+*/
 void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *target, double d_ij, BinTreePrimary *small_prim)
 {
 	if(m_rightparticle == source) {
@@ -991,6 +1002,20 @@ void BinTreePrimary::UpdatePrimary(void)
 		m_free_surf = m_surf;
 	}
     m_numprimary  = 1;
+}
+
+/*!
+ * @brief       Updates the BinTreePrimary cache from the root node
+ *
+ * Works up the tree to the root node and then calls UpdateCache
+ *
+*/
+void BinTreePrimary::UpdateCacheRoot(void){
+	if(m_parent != NULL){
+		m_parent->UpdateCacheRoot();
+	}else{
+		UpdateCache(this);
+	}
 }
 
 //! UpdateCache helper function
@@ -1263,11 +1288,11 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 		//! Initialisation of variables to adjust the primary diameter if the
         //! distance between the centres of primary particles is tracked.
 		double m_primary_diam_old = m_primarydiam;
-        double r_i = 0.0;                //!< Radius of primary particle i.
-		double dr_max = 0.0;			//maximum change in primary radius during internal step
-		double sumterm = 0.0;
-		double delta_r_i = 0.0;
-		double free_surface_term = 0.0;		//sumterm for calculating free surface area
+        double r_i = 0.0;					//!< Radius of primary particle i.
+		double dr_max = 0.0;				//!< Maximum change in primary radius during internal step
+		double sumterm = 0.0;				//!< Contribution from neighbours to the change in radius 
+		double delta_r_i = 0.0;				//!< Change in radius of i
+		double free_surface_term = 0.0;		//!< Contribution from neighbours to free surface area
 
         // Call to Primary to adjust the state space
         n = Primary::Adjust(dcomp, dvalues, rng, n);
@@ -1284,36 +1309,32 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 				
 				// particle with more than primary
 				if (m_parent != NULL) {	
-				
-				//***************************csl37: new surface growth model
 					
 					while (volOld <= m_vol){
 
 						r_i = m_primarydiam / 2.0;
-						dr_max = 0.1*r_i;					
+						dr_max = 0.1*r_i;			//Set maximum change in radius during internal step to 10% of primary radius
 
-						//get contribution from neighbours working up the binary tree
+						//Get contribution from neighbours working up the binary tree
 						SumNeighbours(this, sumterm);
 					
-						//calculate change in volume
-						dV = dr_max * (4*M_PI*r_i*r_i + M_PI*r_i*sumterm) ;
-						assert(dV >= 0.0);	//csl37:debug
-						
+						//Calculate change in volume
+						dV = dr_max * (4*M_PI*r_i*r_i + M_PI*r_i*sumterm) ;						
 
+						//Calculate change in radius
 						if (volOld + dV > m_vol){
 							delta_r_i = (m_vol - volOld)*dr_max / dV;
 						}else{
 							delta_r_i = dr_max;
 						}
 					
-						//update the particle separations and calculate the new free surface of the particle
-						if(true){
-							UpdateConnectivity(this, delta_r_i, free_surface_term);
-						}
+						//Update the particle separations and calculate the new free surface of the particle
+						UpdateConnectivity(this, delta_r_i, free_surface_term);
 
-						//update primary diameter
+						//Update primary diameter
 						m_primarydiam = 2.0* (r_i + delta_r_i);
-						//update the free surface area
+						
+						//Update the free surface area
 						//if the calculated area is negative (too many overlaps) then set m_free_surf = 0.0
 						m_free_surf = max(M_PI*m_primarydiam*m_primarydiam - 2*M_PI*free_surface_term, 0.0);
 
@@ -1326,6 +1347,8 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 					m_primarydiam = m_diam;
 				}
 
+			//! If the distance between the centres of primary particles is not
+			//! tracked, just update the surface area and work up the tree
 			} else {
 
 				dV = m_vol - volOld;
@@ -1347,7 +1370,9 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
     // Else this a non-leaf node (not a primary)
     else
     {
-		
+		//csl37-NOTE: this only picks the left or right particle of the root node 
+		//and ignores the rest of the tree
+
         // Generate random numbers
         boost::bernoulli_distribution<> leftRightChooser;
         // Select particle
@@ -1383,21 +1408,17 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 
 }
 
-//csl37
-//function to update particle cache from root node
-void BinTreePrimary::UpdateCacheRoot(void){
-	if(m_parent != NULL){
-		m_parent->UpdateCacheRoot();
-	}else{
-		UpdateCache(this);
-	}
-}
-
-//csl37
-//function to identify neighbours and sum their contribution to surface growth
-//identifies neighbours of primary being adjusted and compute the summation term
-//prim: neighbour being adjusted
-//sumterm: summation term
+/*!
+ * @brief       Identify neighbours and sum their contribution to the change in radius
+ *
+ * Works up the binary tree identifying the neighbours of the primary being adjusted 
+ * and calculates their contribution to the summation term. 
+ * All neighbours of the primary being adjusted are left/rightparticles of nodes directly 
+ * above it.
+ *
+ * @param[in]   prim		Pointer to the primary being adjusted
+ * @param[in]   sumterm		Sum of contributions from neighbours to the change in radius
+ */
 void BinTreePrimary::SumNeighbours(BinTreePrimary *prim, double &sumterm) {
 	
 	double d_ij = m_parent->m_distance_centreToCentre;
@@ -1431,7 +1452,17 @@ void BinTreePrimary::SumNeighbours(BinTreePrimary *prim, double &sumterm) {
 	}
 }
 
-//csl37
+/*!
+ * @brief       Identify neighbours and update centre to centre separation
+ *
+ * Works up the binary tree identifying the neighbours of the adjusted primary 
+ * and updates the centre to centre separation. Also sums the contribution from
+ * neighbours to the free surface area.
+ *
+ * @param[in]   prim		Pointer to the primary being adjusted
+ * @param[in]   delta_r		Change in radius of prim
+ * @param[in]   sumterm		Sum of contributions from neighbours to the free surface area of prim
+ */
 void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm){
 	
 	double d_ij = m_parent->m_distance_centreToCentre;
@@ -1455,23 +1486,33 @@ void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, do
 
 		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
 		//update centre to centre separation
-		//making sure centre to centre separation remains smaller than some of radii
+		//making sure centre to centre separation remains smaller than the sum of the radii
 		m_parent->m_distance_centreToCentre = min(d_ij + r_i * delta_r / x_ij, r_i+r_j);
 
-		//calculate term for free surface area 
+		//calculate term for the free surface area 
 		d_ij = m_parent->m_distance_centreToCentre;
 		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i+delta_r,2.0) ) / ( 2.0*d_ij );
 		sumterm += (r_i+delta_r)*(r_i+delta_r) - (r_i+delta_r)*x_ij;
 	}
 
-	//work up binary tree
+	//continue working up the binary tree
 	if(m_parent->m_parent != NULL){
 		m_parent->UpdateConnectivity(prim, delta_r, sumterm);
 	}
 }
 
-//csl37
-//overload of function ignore update to neighbour
+/*!
+ * @brief       Identify neighbours and update centre to centre separation ignoring specified neighbour
+ *
+ * Works up the binary tree identifying the neighbours of the adjusted primary 
+ * and updates the centre to centre separation. Also sums the contribution from
+ * neighbours to the free surface area.
+ *
+ * @param[in]   prim			Pointer to the primary being adjusted
+ * @param[in]   delta_r			Change in radius of prim
+ * @param[in]   sumterm			Sum of contributions from neighbours to the free surface area of prim
+ * @param[in]   prim_ignore		Pointer to the primary to be ignored
+ */
 void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm, BinTreePrimary *prim_ignore){
 	
 	double d_ij = m_parent->m_distance_centreToCentre;
@@ -1504,7 +1545,7 @@ void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, do
 		sumterm += (r_i+delta_r)*(r_i+delta_r) - (r_i+delta_r)*x_ij;
 	}
 
-	//work up binary tree
+	//continue working up the binary tree
 	if(m_parent->m_parent != NULL){
 		m_parent->UpdateConnectivity(prim, delta_r, sumterm, prim_ignore);
 	}
@@ -1712,7 +1753,7 @@ void BinTreePrimary::SinterNode(
             double r_j = this->m_rightparticle->m_primarydiam / 2.0;
 			double d_ij = m_distance_centreToCentre;
 		
-			assert(d_ij<= r_i+r_j);	//csl37:debug
+			//assert(d_ij<= r_i+r_j);	//debug
 
 			//! Definition of variables for conciseness.
             double d_ij2 = pow(d_ij, 2.0); 
@@ -1724,10 +1765,9 @@ void BinTreePrimary::SinterNode(
 			//! Continue if primaries have not coalesced
             if (!MergeCondition()) {
 
-				//double x_i = (d_ij2 - r_j2 + r_i2) / (2.0 * d_ij);
-				//double x_j = (d_ij2 - r_i2 + r_j2) / (2.0 * d_ij);
-				//due to rounding, x_i and x_j sometimes calculated to be larger than respective primary radii resulting in negative neck area
-				//therefore we take the smaller of x_i and r_i
+				//! Due to rounding, x_i and x_j are sometimes calculated to be larger 
+				//! than the respective primary radii resulting in a negative neck area.
+				//! Therefore we take the smaller of x_i and r_i.
 				double x_i = min((d_ij2 - r_j2 + r_i2) / (2.0 * d_ij),r_i); //!< Eq. (3b).
 				double x_j = min((d_ij2 - r_i2 + r_j2) / (2.0 * d_ij),r_j); //!< Eq. (3b).
 				double A_n = M_PI * (r_i2 - pow(x_i, 2.0));        //!< Eq. (4).
@@ -1741,11 +1781,9 @@ void BinTreePrimary::SinterNode(
 				double tau = 0.0;
 				double gamma_eta = 0.0;
 
-				//Sintering model dependent part
-				Processes::SinteringModel::SintType sint_model_type = model.Type();
-				switch (sint_model_type){
-					//viscous flow model
-					case Processes::SinteringModel::SintType::ViscousFlow:
+				//! Sintering model dependent part
+				//! Viscous flow model
+				if(model.Type() == Processes::SinteringModel::ViscousFlow){
 						
 						//! In Section 3.1.2 of Langmuir 27:6358 (2011), it is argued that
 						//! the smaller particle dominates the sintering process.
@@ -1767,15 +1805,12 @@ void BinTreePrimary::SinterNode(
 						//! Eq. (14a).
 						dd_ij_dt = 4.0 * r_i * r_j * d_ij2 * (r_i + r_j) * gamma_eta /
 										((r_i + r_j + d_ij) * (r_i4  + r_j4 - 2.0 * r_i2 * r_j2 + 4.0 * d_ij * r_i * r_j *(r_i + r_j) - d_ij2 * (r_i2 + r_j2)));
-						//****************************************************************************************csl37
-						break;
 
-					//grain boundary diffusion model 
-					case Processes::SinteringModel::SintType::GBD:
+				//! Grain boundary diffusion model 
+				}else if(model.Type() == Processes::SinteringModel::GBD){ 
 
-						//if the particles are in point contact set an initial neck radius of 1% of the smaller primary radius
-						//otherwise the dd_ij_dt is undefined
-						//csl37
+						//! If the particles are in point contact set an initial neck radius of 1% 
+						//! of the smaller primary radius, otherwise dd_ij_dt is undefined
 						if(A_n == 0.0){
 							R_n = 0.01*min(r_i,r_j);
 							A_n = M_PI * R_n * R_n;
@@ -1789,35 +1824,30 @@ void BinTreePrimary::SinterNode(
 						// so we can calculate this for only one primary 
 						r4_tau = r_i4 / model.SintTime(sys, *this->m_leftparticle);
 
-						//J Aerosol Sci 46:7-19 (2012) Eq. (A6)
-						//dx_i_dt + dx_j_dt
-						// Note: this is missing a minus sign, which is accounted for below
+						//! J Aerosol Sci 46:7-19 (2012) Eq. (A6)
+						//! dx_i_dt + dx_j_dt
+						//! (this is missing a minus sign, which is accounted for below)
 						dd_ij_dt = r4_tau * ( 1/(r_i - x_i) + 1/(r_j - x_j) - 2/R_n ) / A_n;
 
-						break;
-						//****************************************************************************************csl37
-					default:
+				//Other model are not coded
+				}else{
 						std::cout<<"Sintering model not coded"<<endl;
 						break;
 				}
 
-				//csl37******************
-				//primaries with multiple neighbours
-				if(true){
-					double sumterm_i = 0.0;
-					double sumterm_j = 0.0;
-					//get contribution from neighbours working up the binary tree
-					m_leftparticle->SumNeighbours(this, sumterm_i);
-					m_rightparticle->SumNeighbours(this, sumterm_j);
-					//subtract mutual contribution from sumterm
-					sumterm_i = max( sumterm_i - (x_i - r_i)*(x_i - r_i)/x_i , 0.0 );
-					sumterm_j = max( sumterm_j - (x_j - r_j)*(x_j - r_j)/x_j , 0.0 );
+				//! Account for multiple neighbours
+				double sumterm_i = 0.0;
+				double sumterm_j = 0.0;
+				//get contribution from neighbours working up the binary tree
+				m_leftparticle->SumNeighbours(this, sumterm_i);
+				m_rightparticle->SumNeighbours(this, sumterm_j);
+				//subtract mutual contribution from sumterm
+				sumterm_i = max( sumterm_i - (x_i - r_i)*(x_i - r_i)/x_i , 0.0 );
+				sumterm_j = max( sumterm_j - (x_j - r_j)*(x_j - r_j)/x_j , 0.0 );
 
-					//modified A_i and A_j
-					A_i = M_PI * (2*r_i*r_i + 2*r_i*x_i + r_i*sumterm_i);
-					A_j = M_PI * (2*r_j*r_j + 2*r_j*x_j + r_j*sumterm_j);
-				}
-				//csl37******************
+				//! Modified A_i and A_j
+				A_i = M_PI * (2*r_i*r_i + 2*r_i*x_i + r_i*sumterm_i);
+				A_j = M_PI * (2*r_j*r_j + 2*r_j*x_j + r_j*sumterm_j);
 
 				//! The expression for B_i in Eq. (8) is wrong. By combining
 				//! Eqs. (5) and (7), we can obtain two equations which are
@@ -1847,16 +1877,13 @@ void BinTreePrimary::SinterNode(
                 const unsigned n = repeatDistribution(rng);
                 m_distance_centreToCentre -= (double)n * scale * dd_ij_Max; //!< Sintering decreases d_ij hence the negative sign.
 				
-				//! change in primary radii
-				//! The factor of 2 is because Eq. (8) is the rate of change
-				//! in radius.
+				//! Change in primary radii
 				double delta_r_i = - (double)n * scale * B_i * dd_ij_Max;  //!< Eq. (8).
 				double delta_r_j = - (double)n * scale * B_j * dd_ij_Max; //!< Eq. (8).
 				
 
-				//****************csl37
-				//Adjust separation of neighbours due to increase in radius
-				if(true){
+				//! Adjust separation of neighbours (not currently sintering) and free surface area
+				//! due to the increase in primary radius
 				if (!MergeCondition()) {
 					double free_surf_i=0.0;
 					double free_surf_j=0.0;
@@ -1878,16 +1905,14 @@ void BinTreePrimary::SinterNode(
 					//update the free surface area
 					m_rightparticle->m_free_surf = max(M_PI*m_rightparticle->m_primarydiam*m_rightparticle->m_primarydiam - 2*M_PI*free_surf_j, 0.0);
 				}
-				}
-				//****************csl37
 
-				//!Adjust primary radii
+				//! Adjust primary radii
 				this->m_leftparticle->m_primarydiam += 2.0 * delta_r_i;				
 				this->m_rightparticle->m_primarydiam += 2.0 * delta_r_j;
 
 				t1 += delt;
 
-				//return some sintering rate
+				//! Return some sintering rate
 				r = dd_ij_dt;
             } else {
                 break; //!do not continue to sinter.
