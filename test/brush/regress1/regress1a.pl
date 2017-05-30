@@ -39,7 +39,7 @@ use warnings;
 # Clean up any outputs from previous simulations
 my @outputFiles = glob("regress1a*");
 if($#outputFiles > 0) {
-  system("rm @outputFiles");
+  system("rm -f @outputFiles");
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -128,7 +128,7 @@ if(!(abs($m1 - 1.9117e-7) < 2.4e-9)) {
 
 # Clean outputs, there should always be some files to delete.
 @outputFiles = glob("regress1a*");
-system("rm @outputFiles");
+system("rm -f @outputFiles");
 
 #print "All tests passed\n";
 exit 0;

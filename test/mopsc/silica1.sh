@@ -88,7 +88,7 @@ CheckValues $true $m0 $absErr
 
 # Clean files
 echo "Inception passes."
-rm silica-incep*
+rm -f silica-incep*
 
 ######################################################################
 # 2: INTERPARTICLE ONLY
@@ -121,7 +121,7 @@ CheckValues $trueWater $water $errWater
 
 # Clean files
 echo "Interparticle passes."
-rm silica-intp-sr*
+rm -f silica-intp-sr*
 
 ######################################################################
 # 3: SURFACE REACTION ONLY
@@ -158,6 +158,6 @@ CheckValues $trueWater $water $errWater
 
 # Clean files
 echo "SR passes."
-rm silica-intp-sr*
+rm -f silica-intp-sr*
 
 echo "All tests passed! :D"

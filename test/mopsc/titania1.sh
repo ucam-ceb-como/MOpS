@@ -91,7 +91,7 @@ CheckValues $trueTiCl4 $val $absErrTiCl4
 
 # Clean files
 echo "FIRST ORDER IN OXYGEN passes."
-rm Z1*
+rm -f Z1*
 
 ######################################################################
 # 2: SIMPLE ELEY-RIDEAL MODEL
@@ -118,7 +118,7 @@ CheckValues $trueTiCl4 $val $absErrTiCl4
 
 # Clean files
 echo "SIMPLE ELEY-RIDEAL MODEL passes."
-rm Z1*
+rm -f Z1*
 
 
 ######################################################################
@@ -146,6 +146,6 @@ CheckValues $trueTiCl4 $val $absErrTiCl4
 
 # Clean files
 echo "DETAILED ELEY-RIDEAL MODEL passes."
-rm Z1*
+rm -f Z1*
 
 echo "All tests passed! :D"

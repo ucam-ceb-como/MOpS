@@ -14,7 +14,7 @@ if test -n "$2"
 fi
 
 #Get rid of any results from earlier runs of this test
-rm regression4a*
+rm -f regression4a*
 
 
 echo "Weighted particle simulation of constant coagulation kernel"

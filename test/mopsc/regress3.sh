@@ -21,7 +21,7 @@ fi
 
 
 #Get rid of any results from earlier runs of this test
-rm regression3a*
+rm -f regression3a*
 
 
 # run mops on a very simple problem with weighted particles and additive kernel

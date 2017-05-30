@@ -41,7 +41,7 @@ print "Test 3b: Advection, diffusion and thermophoresis";
 # Clean up any outputs from previous simulations
 my @outputFiles = glob("regress3a*");
 if($#outputFiles > 0) {
-  system("rm @outputFiles");
+  system("rm -f @outputFiles");
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -124,7 +124,7 @@ if(!(abs($m0b - 2.6e2) < 3e1)) {
 
 # Clean outputs, there should always be some files to delete.
 @outputFiles = glob("regress3b*");
-system("rm @outputFiles");
+system("rm -f @outputFiles");
 
 
 #print "All tests passed\n";

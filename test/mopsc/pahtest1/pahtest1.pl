@@ -41,7 +41,7 @@ use warnings;
 my @outputFiles = glob("pahtest1-test-pah-kmc-only*");
 if($#outputFiles > 0) {
   print "Cleaning up old output files\n";
-  system("rm " . '"' . join('" "', @outputFiles) . '"');
+  system("rm -f" . '"' . join('" "', @outputFiles) . '"');
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -107,7 +107,7 @@ if(abs($m1 - 2.47e-8) > 7e-9) {
 }
 
 #print "All tests passed\n";
-system("rm pahtest1-test-pah-kmc-only*");
-system("rm DIMER.csv");
-system("rm MONOMER.csv");
+system("rm -f pahtest1-test-pah-kmc-only*");
+system("rm -f DIMER.csv");
+system("rm -f MONOMER.csv");
 exit 0;

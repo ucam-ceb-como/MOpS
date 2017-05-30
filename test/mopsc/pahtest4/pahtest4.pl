@@ -41,7 +41,7 @@ use warnings;
 my @outputFiles = glob("pahtest4-test-sharedPointers*");
 if($#outputFiles > 0) {
   print "Cleaning up old output files\n";
-  system("rm " . '"' . join('" "', @outputFiles) . '"');
+  system("rm -f" . '"' . join('" "', @outputFiles) . '"');
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -107,5 +107,5 @@ if(abs($m1 - 1.57e-6) > 5e-7) {
 }
 
 #print "All tests passed\n";
-system("rm pahtest4-test-sharedPointers*");
+system("rm -f pahtest4-test-sharedPointers*");
 exit 0;
