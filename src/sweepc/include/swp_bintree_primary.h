@@ -99,6 +99,10 @@ public:
     //! Updates the particle cache using the particle details
     void UpdateCache();
 
+	//! Updates the particle cache from the root node
+	//  calls UpdateCache()
+	void UpdateCacheRoot();
+
     //! Updates sintering level
     double SinteringLevel();
 
@@ -152,6 +156,9 @@ public:
 
     //! Sets the value of one of the chemical components
     void SetComponent(std::string name, double val);
+
+	//!Gets the distance between centres of primary particles
+	double GetDistance() const {return m_distance_centreToCentre;}
 
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
@@ -217,6 +224,9 @@ protected:
     //! Checks if the sintering level, merges particles if necessary
     bool CheckSintering();
 
+	//! Checks if condition for merger is met
+	bool MergeCondition();
+
     //! Set the sintering time of a tree
     void SetSinteringTime(double time);
 
@@ -234,7 +244,12 @@ protected:
     int m_numprimary;
 
     //! Sum of the diameter of the primaries under this treenode
+	// This is usually the spherical equivalent diameter (= Primary::m_diam) 
+	// unless centre to centre distance tracking is turned on
     double m_primarydiam;
+
+	//! Sum of primary free surface areas under this node
+	double m_free_surf;
 
     //! Equivalent spherical radius of sum of childrens' volume
     double m_children_radius;
@@ -319,6 +334,17 @@ private:
     //! Updates the pointers after a merge event
     void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
 
+	//! Overloaded ChangePointer for centre to centre separation tracking model
+	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, double d_ij, BinTreePrimary *small_prim);
+
+	//! function to identify neighbours and sum their contribution to surface 
+	void SumNeighbours(BinTreePrimary *prim, double &sumterm);
+
+	//function to modify the centre to centre separations and returns free surface area
+	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
+	
+	//overload of function ignore update to neighbour
+	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm, BinTreePrimary *prim_ignore);
 
     // PRINTING TREES
     //! Recursive loop function for print tree

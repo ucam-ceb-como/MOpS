@@ -363,13 +363,16 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     //! dependent on its neighbour while sintering leads to a simultaneous
     //! decrease in the distance betweeen the centres of neighbouring primaries
     //! and an increase in their diameters.
-    if (mech.AggModel() == AggModels::PAH_KMC_ID) {
+
+	if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID) {
         str = particleXML->GetAttributeValue("trackPrimarySeparation");
         if(str == "true") {
             mech.setTrackPrimarySeparation(true);
         } else {
             mech.setTrackPrimarySeparation(false);
         }
+	}else{
+		mech.setTrackPrimarySeparation(false);
     }
 
     // See if there are any secondary particle criteria
