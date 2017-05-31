@@ -153,6 +153,9 @@ public:
     //! Geometric average diameter of aggregate sub-units
     double avgeomdiam(double) const;
 
+	//! Phase composition term for phase transformation process
+    double GetPhaseTerm(void) const;
+
 
     //! Returns the property with the given ID.
     double Property(Sweep::PropID id) const;
@@ -233,6 +236,12 @@ public:
         rng_type &rng,                    // Random number for leaf node
         unsigned int n                    // Number of times to perform adjustment.
         );
+
+	//! Adjust particle composition as a result of a phase transformation process
+	unsigned int AdjustPhase(const fvector &dcomp,
+                              const fvector &dvalues,
+                              rng_type &rng,
+                              unsigned int n);
 
     //! Combines this particle with another.
     Particle &Coagulate(const Particle &sp, rng_type &rng);

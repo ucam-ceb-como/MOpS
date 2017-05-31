@@ -397,7 +397,11 @@ double Particle::avgeomdiam(double oneovernumsubpart) const
     return std::pow(m_primary->Property(Sweep::iDsph),oneovernumsubpart);
 }
 
-
+//! Phase composition term for phase transformation process
+double Particle::GetPhaseTerm(void) const
+{
+	return m_primary->GetPhaseTerm();
+}
 
 /*!
  * Provide an interface that allows run time specification of particle properties
@@ -451,6 +455,8 @@ double Particle::Property(PropID id) const
             // Special case property, used to select particles
             // uniformly.
             return 1.0;
+		case iAn_2_3_comp:
+			return GetPhaseTerm();
         default:
             throw std::logic_error("Unrecognised property requested (Particle::Property)");
             return 0.0;
@@ -587,6 +593,33 @@ unsigned int Particle::AdjustIntPar(const fvector &dcomp,
     // primary particle.  The adjustment is applied to
     // the primary.
     m = m_primary->AdjustIntPar(dcomp, dvalues, rng, n);
+
+    // Where-ever the adjustment has been applied this sub-particle must
+    // now update its cache.
+    UpdateCache();
+
+    return m;
+}
+
+/*!
+ * Apply the given composition and values changes n times
+ * for the phase transformation 
+ *
+ *@param[in]        n       Number of times to apply changes
+ *
+ *@return       Number of times changes actually applied
+ */
+unsigned int Particle::AdjustPhase(const fvector &dcomp,
+                              const fvector &dvalues,
+                              rng_type &rng,
+                              unsigned int n)
+{
+    unsigned int m = n;
+
+    // This is a leaf-node sub-particle as it contains a
+    // primary particle.  The adjustment is applied to
+    // the primary.
+    m = m_primary->AdjustPhase(dcomp, dvalues, rng, n);
 
     // Where-ever the adjustment has been applied this sub-particle must
     // now update its cache.

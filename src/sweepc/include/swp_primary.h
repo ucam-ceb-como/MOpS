@@ -119,6 +119,9 @@ public:
 
     // PRIMARY COMPOSITION.
 
+	//Returns named component
+	double GetComponent(std::string name) const;
+
     // Returns the composition vector.
     const fvector &Composition(void) const;
 
@@ -247,6 +250,14 @@ public:
         unsigned int n=1        // Number of times to perform adjustment.
         );
 
+	//Adjusts the particle n times for the phase transformation process
+	virtual unsigned int AdjustPhase(
+		const fvector &dcomp,	// Composition changes.
+        const fvector &dvalues,	// Tracker variable changes.
+        rng_type &rng,			// Random number for leaf node
+        unsigned int n			// Number of times to perform adjustment.
+		);
+
     // Combines this primary with another.  This is also the
     // implementation of the + and += operators.
     virtual Primary &Coagulate(const Primary &rhs,
@@ -288,6 +299,9 @@ public:
     //! that of the inception species.
     int InceptedPAH() const;
 
+	// Term for titania phase transformation
+	virtual double GetPhaseTerm(void) const;
+
 protected:
     // Particle model used to define the Primary.
     const Sweep::ParticleModel *m_pmodel;
@@ -306,6 +320,9 @@ protected:
     double m_vol;  // Volume.
     double m_mass; // Mass.
     int m_numcarbon;
+
+	// Property for titania phase transformation model
+	double m_phaseterm;
 
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.

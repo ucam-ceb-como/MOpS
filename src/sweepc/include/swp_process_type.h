@@ -74,6 +74,9 @@ namespace Processes
 		// Interparticle processes.
         InterParticle_ID=300,  // Silica interparticle reaction
 
+		// Phase transformation
+		TitaniaPhase_ID = 400,	//Titania anatase to rutile phase transformation
+
         // ARSSC model processes. (no longer used)
         ARSSC_Inception_ID=1000,   // ARS-SC inception process.
         ARSSC_Reaction_ID=1001,    // ARS-SC reaction process.

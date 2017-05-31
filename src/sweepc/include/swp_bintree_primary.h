@@ -113,6 +113,10 @@ public:
     unsigned int Adjust(const fvector &dcomp,
             const fvector &dvalues, rng_type &rng, unsigned int n);
 
+	//! Adjusts a particle according to a phase transformation reaction
+	unsigned int AdjustPhase(const fvector &dcomp,
+        const fvector &dvalues, rng_type &rng, unsigned int n);
+
     //! Adjusts a particle according to an interparticle reaction
     unsigned int AdjustIntPar(const fvector &dcomp,
             const fvector &dvalues, rng_type &rng, unsigned int n);

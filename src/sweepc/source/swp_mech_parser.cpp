@@ -47,6 +47,7 @@
 #include "swp_constant_inception.h"
 #include "swp_surface_reaction.h"
 #include "swp_titania_surface_reaction.h"
+#include "swp_titania_phase_transformation.h"
 #include "swp_actsites_reaction.h"
 #include "swp_condensation.h"
 #include "swp_transcoag.h"
@@ -501,6 +502,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         readSurfRxns(xml, mech);
         readInterParticles(xml, mech);
         readCondensations(xml, mech);
+		readPhaseTransformation(xml, mech);	//csl37
     }
     readDiffusionProcs(xml, mech);
     readAdvectionProcs(xml, mech);
@@ -1662,7 +1664,149 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
 
 }
 
+// PHASE TRANSFORMATION REACTION.
 
+/*!
+ *  Read phase transformation reaction processes from a sweep mechanism XML file.
+ *
+ *@exception    std::runtime_error   
+ */
+void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
+{
+    vector<CamXML::Element*> items, subitems;
+    vector<CamXML::Element*>::iterator i, j;
+    string str;
+    unsigned int k = 0;
+
+    // Get all phase transformations
+    xml.Root()->GetChildren("transformation", items);
+
+    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
+
+		str = (*i)->GetAttributeValue("type");
+
+		TitaniaPhaseTransformation *phasetransform = NULL;
+
+		if (str.compare("titania")==0) {
+			//check that the particle model is valid
+			if(mech.AggModel()==AggModels::Spherical_ID || mech.AggModel()==AggModels::BinTree_ID) {
+				// Create a new Titania phase transformation object.
+				phasetransform = new TitaniaPhaseTransformation(mech);
+			} else {
+				throw runtime_error("Only Spherical and BinTree models supported for phase transformation (Sweep, MechParser::readPhaseTransformation).");
+			}
+		} else {
+            // Unrecognised reaction type.
+            throw runtime_error("Unrecognised phase transformation type: " + str +
+                                " (Sweep, MechParser::readPhaseTransformation).");
+        }
+
+        // Set default name.
+        phasetransform->SetName("Phase Transformation " + cstr(k));
+
+        // Read the phase transformation properties.
+        try {
+            readPhaseTransformation(*(*i), *phasetransform);
+        } catch (std::exception &e) {
+            delete phasetransform;
+            throw;
+        }
+
+        // Add phase transformation to mechanism.
+        mech.AddProcess(*phasetransform);
+    }
+}
+
+// Reads a interparticle process from a sweep mechanism XML file.
+void MechParser::readPhaseTransformation(CamXML::Element &xml, Processes::TitaniaPhaseTransformation &phasetransform)
+{
+    string str;
+    CamXML::Element *el = NULL;
+
+    // Read name.
+    str = xml.GetAttributeValue("name");
+    if (str != "") phasetransform.SetName(str);
+
+    // Is reaction deferred.
+    str = xml.GetAttributeValue("defer");
+    if (str=="true") {
+    	phasetransform.SetDeferred(true);
+    } else {
+    	phasetransform.SetDeferred(false);
+    }
+
+	/////////////////////////////////////////////////////////////////
+	//check that components are correct for phase transformation
+	vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
+	bool Ru(false);
+	bool An(false);
+
+	// Get list of component changes from XML.
+    xml.GetChildren("component", items);
+
+    for (i=items.begin(); i!=items.end(); ++i) {
+        // Get component ID.
+        string str = (*i)->GetAttributeValue("id");
+		if(str.compare("Ru") == 0)	Ru = true;
+		if(str.compare("An") == 0)	An = true;
+    }
+	
+	if( Ru != true || An != true) {
+        throw runtime_error(" 'Ru' and 'An' components are required for phase transformation "
+                                "Sweep, MechParser::readPhaseTransformation).");
+    }
+	/////////////////////////////////////////////////////////////////
+
+    // Read particle composition change.
+    readCompChanges(xml, phasetransform);
+
+    // Read tracker variable changes.
+    readTrackChanges(xml, phasetransform);
+
+    //========== Read Arrhenius rate parameters ======================
+    Sprog::Kinetics::ARRHENIUS arr;
+    el = xml.GetFirstChild("A");
+    if (el != NULL) {
+        arr.A = cdble(el->Data());
+    } else {
+        // Reaction must have constant.
+        throw runtime_error("Phase transformation found with no rate constant "
+                            "defined (Sweep, MechParser::readPhaseTransformation).");
+    }
+	el = xml.GetFirstChild("n");
+    if (el!=NULL) {
+        arr.n = cdble(el->Data());
+    } else {
+        // Default temperature power is 0.
+        arr.n = 0.0;
+    }
+    el = xml.GetFirstChild("E");
+    if (el!=NULL) {
+        arr.E = cdble(el->Data()) * R / RCAL;
+    } else {
+        // Default activation energy is zero.
+        arr.E = 0.0;
+    }
+
+	//========= Particle dependency ==================================
+    el = xml.GetFirstChild("particleterm");
+    if (el!=NULL) {
+        // Get property ID.
+        str = el->GetAttributeValue("id");
+
+        if (str.compare("an")==0) {
+            // This reaction depends on surface area.
+            phasetransform.SetPropertyID(Sweep::iAn_2_3_comp);
+		}
+    } else {
+        throw runtime_error("Surface process defined without ""particleterm"" "
+                            "element (Sweep, MechParser::readPhaseTransformation).");
+    }
+
+    phasetransform.SetArrhenius(arr);
+
+}
 
 //COAGULATION
 

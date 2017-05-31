@@ -58,7 +58,7 @@ using namespace std;
 // Default constructor (protected).
 AggModels::Primary::Primary(void)
 : m_pmodel(NULL), m_createt(0.0), m_time(0.0), m_diam(0.0), m_dcol(0.0), 
-  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0)
+  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0), m_phaseterm(0.0)
 {
 }
 
@@ -132,6 +132,7 @@ AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
         m_vol  = rhs.m_vol;
         m_mass = rhs.m_mass;
         m_numcarbon = rhs.m_numcarbon;
+		m_phaseterm = rhs.m_phaseterm;
     }
     return *this;
 }
@@ -146,6 +147,13 @@ const Sweep::ParticleModel *const AggModels::Primary::ParticleModel(void) const
 
 
 // PARTICLE COMPOSITION.
+
+//Returns named component
+double AggModels::Primary::GetComponent(std::string name) const
+{
+	int index = m_pmodel->ComponentIndex(name);
+	return Composition(index);
+}
 
 // Returns the composition vector.
 const fvector &AggModels::Primary::Composition() const
@@ -250,6 +258,11 @@ void AggModels::Primary::UpdateCache(void)
         m_numcarbon_temp = m_comp[i];
         m_numcarbon += m_numcarbon_temp;
     }
+	//csl37: phaseterm calculated here for spherical particle
+	// 0 if components don't exist
+	double An = AggModels::Primary::GetComponent("An");
+	double Ru = AggModels::Primary::GetComponent("Ru");
+	m_phaseterm = pow( An, TWO_THIRDS) * pow((An + Ru), ONE_THIRD);
 }
 
 // Returns the particle equivalent sphere diameter.
@@ -417,6 +430,23 @@ unsigned int AggModels::Primary::AdjustIntPar(const fvector &dcomp, const fvecto
     return n;
 }
 
+//Adjusts the particle n times for the phase transformation process
+unsigned int AggModels::Primary::AdjustPhase(const fvector &dcomp,
+                              const fvector &dvalues,
+                              rng_type &rng,
+                              unsigned int n)
+{
+	n = AggModels::Primary::Adjust(dcomp, dvalues, rng, n);
+	
+    return n;
+}
+
+// Property for titania phase transformation model
+double AggModels::Primary::GetPhaseTerm(void) const
+{
+	return m_phaseterm;	
+}
+
 /*!
  *  Combines this primary with another.
  *
@@ -561,6 +591,10 @@ void AggModels::Primary::Serialize(std::ostream &out) const
 
         val = (double)m_numcarbon;
         out.write((char*)&val, sizeof(val));
+
+		// Write phaseterm.
+        val = (double)m_phaseterm;
+        out.write((char*)&val, sizeof(val));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, AggModels::Primary::Serialize).");
@@ -638,6 +672,10 @@ void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleMode
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_numcarbon = (double)val;
     
+				// Read phaseterm.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_phaseterm = (double)val;
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -672,6 +710,7 @@ void AggModels::Primary::init(void)
     m_vol = 0.0;  // Volume.
     m_mass = 0.0; // Mass.
     m_numcarbon = 0;
+	m_phaseterm = 0.0; // Phase term.
     releaseMem();
 }
 

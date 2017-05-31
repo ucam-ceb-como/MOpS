@@ -56,6 +56,7 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_surfvol_stats.cpp
                   source/swp_surfvolhydrogen_stats.cpp
                   source/swp_surfvol_silica_primary.cpp
+				  source/swp_titania_phase_transformation.cpp
                   source/swp_titania_surface_reaction.cpp
                   source/swp_tracker.cpp
                   source/swp_transcoag.cpp

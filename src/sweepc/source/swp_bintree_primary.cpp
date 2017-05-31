@@ -480,6 +480,11 @@ void BinTreePrimary::SetTime(double t) {
     }
 }
 
+//csl37: I don't think this works correctly:
+//random integer is generated between 0 and m_numprimary-1
+//the probability of choosing the left-most particle is twice that of choosing others
+//no chance of choosing the right-most particle
+
 /*!
  * @brief       Randomly selects a primary in the binary tree
  *
@@ -1068,6 +1073,8 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         m_vol           = m_leftchild->m_vol + m_rightchild->m_vol;
         m_mass          = m_leftchild->m_mass + m_rightchild->m_mass;
 		m_free_surf		= m_leftchild->m_free_surf + m_rightchild->m_free_surf;
+		//titania phase transformation term
+		m_phaseterm		= m_leftchild->m_phaseterm + m_rightchild->m_phaseterm;
 
         // Calculate the sintering level of the two primaries connected by this node
         m_children_sintering = SinteringLevel();
@@ -1406,6 +1413,45 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 
     return n;
 
+}
+
+/*!
+ * @brief       Adjusts the particle after a phase transformation event
+ *
+ * Analogous to the implementation in Primary. The function will
+ * however descend the tree to find a primary adjust. 
+ *
+ * @param[in]   dcomp   Vector storing changes in particle composition
+ * @param[in]   dvalues Vector storing changes in gas-phase comp
+ * @param[in]   rng     Random number generator
+ * @param[in]   n       Number of times for adjustment
+ */
+unsigned int BinTreePrimary::AdjustPhase(const fvector &dcomp,
+        const fvector &dvalues, rng_type &rng, unsigned int n)
+{
+	
+	if (m_leftchild == NULL && m_rightchild == NULL) {
+        		
+        // Call to Primary to adjust the state space
+        n = Primary::Adjust(dcomp, dvalues, rng, n);
+		
+        // Stop doing the adjustment if n is 0.
+        if (n > 0) {
+            // Update only the primary
+            UpdatePrimary();
+        }
+    }
+    // Else this a non-leaf node (not a primary)
+	// Select primary to adjust
+    else
+    {	
+        return SelectRandomSubparticle(rng)->AdjustPhase(dcomp, dvalues, rng, n);
+    }
+
+    // Update property cache.
+    UpdateCache(this);
+
+    return n;
 }
 
 /*!

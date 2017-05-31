@@ -56,6 +56,7 @@
 #include "swp_constant_inception.h"
 #include "swp_silica_interparticle.h"
 #include "swp_titania_surface_reaction.h"
+#include "swp_titania_phase_transformation.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -135,6 +136,8 @@ ParticleProcess *const ProcessFactory::ReadPartProcess(std::istream &in,
                 return new ActSiteReaction(in, mech);
             case TitaniaSR_ID:
                 return new TitaniaSurfaceReaction(in, mech);
+			case TitaniaPhase_ID:
+                return new TitaniaPhaseTransformation(in, mech);
             default:
                 throw runtime_error("Invalid particle process type read from "
                                     "input stream (Sweep, "

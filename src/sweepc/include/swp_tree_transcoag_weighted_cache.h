@@ -151,6 +151,9 @@ private:
     // Silicon model properties
     //! Coverage fraction of active sites (ratio of components)
     double m_coverage;
+
+	//Titania model properties
+	double m_phaseterm;	//Anatase fraction ^ (2/3) * total composition
 };
 }
 
