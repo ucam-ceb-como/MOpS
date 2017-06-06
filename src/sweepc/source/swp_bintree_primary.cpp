@@ -512,7 +512,7 @@ BinTreePrimary *BinTreePrimary::SelectRandomSubparticle(rng_type &rng)
 BinTreePrimary *BinTreePrimary::SelectRandomSubparticleLoop(int target)
 {
     if (m_leftchild==NULL) return this;
-    if (target<=m_leftchild->m_numprimary)
+    if (target < m_leftchild->m_numprimary)
     {
         return m_leftchild->SelectRandomSubparticleLoop(target);
     }
@@ -1370,16 +1370,17 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
     // Else this a non-leaf node (not a primary)
     else
     {
+        SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
 		//csl37-NOTE: this only picks the left or right particle of the root node 
 		//and ignores the rest of the tree
 
         // Generate random numbers
-        boost::bernoulli_distribution<> leftRightChooser;
+      //        boost::bernoulli_distribution<> leftRightChooser;
         // Select particle
-        if(leftRightChooser(rng))
-            return m_leftparticle->Adjust(dcomp, dvalues, rng, n);
-        else
-            return m_rightparticle->Adjust(dcomp, dvalues, rng, n);
+        //if(leftRightChooser(rng))
+      //  return m_leftparticle->Adjust(dcomp, dvalues, rng, n);
+      //else
+      //    return m_rightparticle->Adjust(dcomp, dvalues, rng, n);
 
 		// csl37: new primary selection based on free surface area
 		// work down tree selecting left/right child based on sum of primary free surface areas under node
@@ -1393,7 +1394,6 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 		}
 		*/
 		//csl37
-
     }
 
 	//csl37:
@@ -1581,14 +1581,15 @@ unsigned int BinTreePrimary::AdjustIntPar(const fvector &dcomp,
         // Call to Primary to adjust the state space
         n = Primary::AdjustIntPar(dcomp, dvalues, rng, n);
     } else {
+        SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
         // Generate random numbers
-        boost::bernoulli_distribution<> leftRightChooser;
+        //boost::bernoulli_distribution<> leftRightChooser;
 
         // Select particle
-        if(leftRightChooser(rng))
-            return m_leftparticle->AdjustIntPar(dcomp, dvalues, rng, n);
-        else
-            return m_rightparticle->AdjustIntPar(dcomp, dvalues, rng, n);
+        //if(leftRightChooser(rng))
+      //return m_leftparticle->AdjustIntPar(dcomp, dvalues, rng, n);
+      //else
+      //return m_rightparticle->AdjustIntPar(dcomp, dvalues, rng, n);
     }
     // Update property cache.
     UpdateCache();

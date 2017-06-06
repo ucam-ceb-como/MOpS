@@ -483,7 +483,7 @@ PAHPrimary *PAHPrimary::SelectRandomSubparticle(rng_type &rng)
 PAHPrimary *PAHPrimary::SelectRandomSubparticleLoop(int target)
 {
 	if (m_leftchild==NULL) return this;
-	if (target<=m_leftchild->m_numprimary)
+	if (target < m_leftchild->m_numprimary)
 	{
 		return m_leftchild->SelectRandomSubparticleLoop(target);
 	}
