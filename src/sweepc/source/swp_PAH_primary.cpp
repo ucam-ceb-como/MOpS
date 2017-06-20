@@ -1045,14 +1045,6 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
             
 			bool m_PAHchanged = false;
 
-            //! Model parameter.
-			/*!
-			 * If a jump process reduces the total number of 6-member rings
-			 * (excludes 5-member rings) in a PAH (in a particle) below this
-			 * threshold it is removed.
-             */
-			const int thresholdOxidation = model.Components(0)->ThresholdOxidation();
-
             //! PAH removal.
 			/*!
 			 * Allow for the removal of PAHs in particles (2 or more PAHs) when
@@ -1070,34 +1062,20 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
 
             //! Model parameter.
 			/*!
-             * Defines when primary particles contain too many PAHs for them all 
-			 * to have full access to the surrounding gas phase.  Once a primary
-			 * contains more than minPAH PAHs the growth rate of each PAH is
-			 * reduced according to the growth factor.
-             */
-
-            //! Model parameter.
-			/*!
 			 * If a jump process reduces the total number of 6-member rings
 			 * (excludes 5-member rings) in a PAH (in a particle) below this
 			 * threshold it is removed.
              */
 			const int thresholdOxidation = model.Components(0)->ThresholdOxidation();
 
-            //! PAH removal.
+
+			//! Model parameter.
 			/*!
-			 * Allow for the removal of PAHs in particles (2 or more PAHs) when
-			 * the total number of 6-member rings (excludes 5-member rings) in
-			 * the PAH has fallen below, for example, the minimum number of
-			 * rings in a PAH for inception. Particularly relevant when
-			 * oxidation is strong.
-             */
-            if((*it)->m_pahstruct->numofC() == 5){
-                m_PAHclusterchanged = true; 
-				m_PAHchanged = true;
-                m_InvalidPAH = CheckInvalidPAHs(*it);
-                continue;
-			}	
+			* Defines when primary particles contain too many PAHs for them all
+			* to have full access to the surrounding gas phase.  Once a primary
+			* contains more than minPAH PAHs the growth rate of each PAH is
+			* reduced according to the growth factor.
+			*/
 
 			const double minPAH = model.Components(0)->MinPAH();
 			double growthfact = 1.0;
