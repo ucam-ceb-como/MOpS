@@ -120,8 +120,8 @@ namespace Sweep{
 
         private:
             //! First and last Carbon atom in list
-            Cpointer m_cfirst;
-            Cpointer m_clast;
+            //Cpointer m_cfirst;
+            //Cpointer m_clast;
             //! Stores all principal PAH sites in order from m_cfirst-m_clast.
             std::list<Site> m_siteList;
             //! Stores iterators to the PAH sites according to their site type
@@ -140,7 +140,7 @@ namespace Sweep{
             //! Copy Constructor
             PAHStructure(const PAHStructure& copy);
             //! Set storing carbon objects
-            Ccontainer m_carbonList;
+            //Ccontainer m_carbonList;
 
             //Cpointer NULLC;
         };

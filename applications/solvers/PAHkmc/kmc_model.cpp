@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
                 <<pahp.getRingsCount().second<<std::endl;
             std::cout<<"PAH Atom Counts ~ C:"<<pahp.getCHCount().first<<" -- H:"
                 <<pahp.getCHCount().second<<std::endl;
-            std::cout<<"No of Edge C ~ "<<pahp.CarbonListSize()<<std::endl;
+            //std::cout<<"No of Edge C ~ "<<pahp.CarbonListSize()<<std::endl;
             std::cout<<"No of Bridges ~ "<<pahp.numberOfBridges()<<std::endl;
             std::cout<<"No of Sites ~ "<<pahp.SiteListSize()<<std::endl;
 

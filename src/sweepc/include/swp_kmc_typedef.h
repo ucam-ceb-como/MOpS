@@ -109,9 +109,9 @@ namespace Sweep {
         //! typedefs used in the model
         typedef std::vector<double> rvector;
         typedef std::vector<int> intvector;
-        typedef int angletype;
-        typedef int coordtype;
-        typedef std::pair<coordtype, coordtype> cpair;
+        //typedef int angletype;
+        //typedef int coordtype;
+        //typedef std::pair<coordtype, coordtype> cpair;
         typedef std::pair<int, int> intpair;
         
         

@@ -92,7 +92,7 @@ public:
     //PAHStructure* clonePAH_new() const; // --> new method
 
     size_t SiteListSize() const;
-    size_t CarbonListSize() const;
+    //size_t CarbonListSize() const;
     std::list<Site>& SiteList() const;
 
 
@@ -123,7 +123,7 @@ public:
     //! Print structure in console
     //void printStruct() const;
     //! Print Structure in console, with arrow pointing at current C
-    void printStruct(Cpointer c) const;
+    //void printStruct(Cpointer c) const;
     //! Print sites in console
     void printSites() const;
     //! Print sites & site members in console, with arrow pointing at site stt
@@ -145,38 +145,38 @@ public:
     //! Growth Processes
     // name structure: proc_processtype_sitetype.
     // refer StructureProc enum in swp_kmc_typedef.h
-    void proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID1.
-    void proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID2.
-    void proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID3.
-    //void proc_PH_benz(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);          //!< ID4.
-    void proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID5.
-    void proc_O6R_FE3_O2(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID6.
-    void proc_O6R_FE3_OH(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID7.
-    //void proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2);                  //!< ID8.
-    //void proc_O6R_FE_HACA_OH(Spointer& stt, Cpointer C_1, Cpointer C_2);                  //!< ID9.
-    void proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID10.
-    void proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID11.
-    void proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);         //!< ID12.
-    void proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID13.
-    void proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID14.
-    void proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID15.
-    void proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID16.
-    void proc_C6R_BY5_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);   //!< ID17.
-    void proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID18.
-    void proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID19.
-    void proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID20.
-    //void proc_M5R_eZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                         //!< ID21.
-    void proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID22.
-    void proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID23.
-    void proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID24.
-    void proc_G6R_RFER(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID25.
-    void proc_G6R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID26.
-    void proc_L6_RBY5(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID27.
-    void proc_L6_RACR(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID28.
-    void proc_G5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID29.
-    void proc_C6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID30.
-    void proc_C6R_RAC_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);   //!< ID31.
-    void proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID32.
+    void proc_G6R_FE(Spointer& stt);                            //!< ID1.
+    void proc_G6R_AC(Spointer& stt);                            //!< ID2.
+    void proc_L6_BY6(Spointer& stt);                            //!< ID3.
+    //void proc_PH_benz(Spointer& stt, rng_type &rng);          //!< ID4.
+    void proc_D6R_FE3(Spointer& stt);                           //!< ID5.
+    void proc_O6R_FE3_O2(Spointer& stt);                        //!< ID6.
+    void proc_O6R_FE3_OH(Spointer& stt);                        //!< ID7.
+    //void proc_O6R_FE_HACA_O2(Spointer& stt);                  //!< ID8.
+    //void proc_O6R_FE_HACA_OH(Spointer& stt);                  //!< ID9.
+    void proc_G5R_ZZ(Spointer& stt);                            //!< ID10.
+    void proc_D5R_R5(Spointer& stt);                            //!< ID11.
+    void proc_C6R_AC_FE3(Spointer& stt, rng_type &rng);         //!< ID12.
+    void proc_C5R_RFE(Spointer& stt);                           //!< ID13.
+    void proc_C5R_RAC(Spointer& stt);                           //!< ID14.
+    void proc_M5R_RZZ(Spointer& stt);                           //!< ID15.
+    void proc_C6R_BY5_FE3(Spointer& stt, rng_type &rng);        //!< ID16.
+    void proc_C6R_BY5_FE3violi(Spointer& stt, rng_type &rng);   //!< ID17.
+    void proc_L5R_BY5(Spointer& stt);                           //!< ID18.
+    void proc_M6R_BY5_FE3(Spointer& stt, rng_type &rng);        //!< ID19.
+    void proc_O6R_FE2(Spointer& stt);                           //!< ID20.
+    //void proc_M5R_eZZ(Spointer& stt);                         //!< ID21.
+    void proc_B6R_ACR5(Spointer& stt);                          //!< ID22.
+    void proc_M5R_ACR5_ZZ(Spointer& stt, rng_type &rng);        //!< ID23.
+    void proc_G6R_RZZ(Spointer& stt);                           //!< ID24.
+    void proc_G6R_RFER(Spointer& stt);                          //!< ID25.
+    void proc_G6R_R5(Spointer& stt);                            //!< ID26.
+    void proc_L6_RBY5(Spointer& stt);                           //!< ID27.
+    void proc_L6_RACR(Spointer& stt);                           //!< ID28.
+    void proc_G5R_RFE(Spointer& stt);                           //!< ID29.
+    void proc_C6R_RAC_FE3(Spointer& stt, rng_type &rng);        //!< ID30.
+    void proc_C6R_RAC_FE3violi(Spointer& stt, rng_type &rng);   //!< ID31.
+    void proc_M6R_RAC_FE3(Spointer& stt, rng_type &rng);        //!< ID32.
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts
@@ -184,15 +184,15 @@ public:
 
 private:
     // Read Process
-    //! Get other member of the site a particular C atom is a member of
-    Cpointer getPair(
-        const Cpointer Carb, 
-        // Is position of other member preceeding or after the C atom?
-        // 0:prev, 1:next
-        bool after 
-        ) const;
-    //! Move current and previous Carbon iterator to the next carbon
-    Cpointer moveCPointer(Cpointer &previous, Cpointer &current) const;
+    ////! Get other member of the site a particular C atom is a member of
+    //Cpointer getPair(
+    //    const Cpointer Carb, 
+    //    // Is position of other member preceeding or after the C atom?
+    //    // 0:prev, 1:next
+    //    bool after 
+    //    ) const;
+    ////! Move current and previous Carbon iterator to the next carbon
+    //Cpointer moveCPointer(Cpointer &previous, Cpointer &current) const;
     //! Check if process is allowed
     bool allowed(const Spointer& st, StructureProc proc) const;
     //! Choose a random site of site type st
@@ -200,7 +200,7 @@ private:
     //! Choose a random site of any site types in vtype
     Spointer chooseRandomSite(std::vector<kmcSiteType> vtype, rng_type &rng);
     //! Jump to a position coordinate given starting position and angle towards new position
-    cpair jumpToPos(const cpair& starting, const angletype& direction) const;
+    //cpair jumpToPos(const cpair& starting, const angletype& direction) const;
     //! Search a particular site (si) from svector associated with stype and erases it from sitemap
     void delSiteFromMap(const kmcSiteType& stype, const Spointer& si);
     //! Overload: search and erase from svectors associated with all site types in vector v
@@ -212,13 +212,13 @@ private:
     //! Returns site iterator x steps after i
     Spointer moveIt(Spointer i, int x);
     //! Finds C atom with specific coordinates
-    Cpointer findC(cpair coordinates);
+    //Cpointer findC(cpair coordinates);
 
     // Write Process
     //! Creates a lone carbon atom
-    Cpointer addC();
+    //Cpointer addC();
     //! Creates a new carbon atom attached next to C_1.
-    Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2, bool bulk=false);
+    //Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2, bool bulk=false);
     //! Creates a carbon atom bridging next to C_1. 
     //Cpointer bridgeC(Cpointer C_1);
     /*//! Creates a bulk carbon atom connected to C_1
@@ -226,53 +226,49 @@ private:
     //! Connects an edge carbon atom to another edge or bulk carbon atom
     void connectToC(Cpointer C_1, Cpointer C_2, bool);*/
     //! Connects a carbon atom to a carbon (to close loop)
-    void connectToC(Cpointer C_1, Cpointer C_2);
+    //void connectToC(Cpointer C_1, Cpointer C_2);
     /*! Removes a carbon atom from perimeter taking into account if
       ! the atom becomes bulk carbon within the PAH
     */ 
-    void removeC(Cpointer C_1, bool bulk);
-    //! Adds a site with members C_1 & C_2 before site sIt
-    Spointer addSite(kmcSiteType stype, 
-        Cpointer C_1, Cpointer C_2, Spointer& sIt);
-    //! Adds a site with members C_1 & C_2 at end of SiteList
-    Spointer addSite(kmcSiteType stype, 
-        Cpointer C_1, Cpointer C_2);
+    //void removeC(Cpointer C_1, bool bulk);
+    //! Adds a site before site sIt
+    Spointer addSite(kmcSiteType stype, Spointer& sIt);
+    //! Adds a site at end of SiteList
+    Spointer addSite(kmcSiteType stype);
     //! Removes a site
     //void removeSite(Spointer st);
     //! Changes site type into combined site with R5 (e.g. FE -> RFE)
-    void addR5toSite(Spointer& st, Cpointer Carb1, Cpointer Carb2);
+    void addR5toSite(Spointer& st);
     //! Changes site type into combined site without R5 (e.g. RFE -> FE)
-    void remR5fromSite(Spointer& st, Cpointer Carb1, Cpointer Carb2);
+    void remR5fromSite(Spointer& st);
     //! Changes site type into another site type
-    void convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcSiteType t);
+    void convSiteType(Spointer& st, kmcSiteType t);
     //! Remove site
     void removeSite(Spointer& stt);
     //! Sets the number of counts of C and H
     void setCount(int CCount, int HCount);
     //! Add counts
     void addCount(int C_in, int H_in);
-    //! For createPAH function: drawing type 0 sites
-    Cpointer drawType0Site(Cpointer Cnow, int bulkC, bool lastSite);
-    //! For createPAH function: drawing type 1 sites
-    Cpointer drawType1Site(Cpointer Cnow, int bulkC, bool lastSite);
-    //! For createPAH function: drawing type 2 sites
-    Cpointer drawType2Site(Cpointer Cnow, int bulkC, bool lastSite);
+    ////! For createPAH function: drawing type 0 sites
+    //Cpointer drawType0Site(Cpointer Cnow, int bulkC, bool lastSite);
+    ////! For createPAH function: drawing type 1 sites
+    //Cpointer drawType1Site(Cpointer Cnow, int bulkC, bool lastSite);
+    ////! For createPAH function: drawing type 2 sites
+    //Cpointer drawType2Site(Cpointer Cnow, int bulkC, bool lastSite);
 
     //! Update Sites and its members in structure
     //! All principal sites
-    void updateSites();
+    //void updateSites();
     //! Updates particular site
-    void updateSites(Spointer& st, // site to be updated
-        Cpointer Carb1, Cpointer Carb2, // new C members
-        int bulkCchange); // addition to number of bulk C in site
+	void updateSites(Spointer& st, int bulkCchange);
     //! Combined sites for all sites
     void updateCombinedSites();
     //! Combined site for a particular site
     void updateCombinedSites(Spointer& st);
-    //! Sets third species bonded to C to a species sp if it is a reactive surface carbon
-    void updateA(Cpointer C, char sp);
+    ////! Sets third species bonded to C to a species sp if it is a reactive surface carbon
+    //void updateA(Cpointer C, char sp);
     //! Overload function, updateA for all C from C_1 to C_2 inclusive
-    void updateA(Cpointer C_1, Cpointer C_2, char spc);
+    //void updateA(char spc);
     
     // PAH data structure to perform processes on
    PAHStructure* m_pah;
