@@ -125,6 +125,9 @@ public:
     //! Get the minimum amount that a valid particle may have of this component
     double MinValid() const {return m_minValid;}
 
+    //! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in a PAH below a certain threshold it is removed. Sets this threshold in terms of the total number of 6-member rings.
+    void SetThresholdOxidation(int to);
+
     //! Set the minimum amount that a valid particle must have of this component
     void SetMinValid(const double min) {m_minValid = min;}
 

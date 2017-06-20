@@ -199,8 +199,7 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             //dotname << "KMC_DEBUG/p_" << (t_next*1e8) << ".dot";
             //m_simPAHp.saveDOT(dotname.str());
             // Update data structure
-
-            m_simPAHp.performProcess(*jp_perf.first, rng);
+            m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 
             /*if(m_simPAH->m_parent->ID() % 100000 == 609) {
             if(!m_simPAHp.checkCoordinates()) {
@@ -612,65 +611,65 @@ void KMCSimulator::writeCSVlabels() {
     m_rates_csv.Write(rates_header);
 }
 //! Save the structure DOT file after every X loops
-void KMCSimulator::saveDOTperXLoops(int X, int &loopcount, int& runcount) {
-    int m = loopcount % X;
-    if(m==0) {
-        string filename = "KMC_DEBUG/Run_";
-        filename.append(Strings::cstr(runcount));
-        filename.append("_Loop_");
-        filename.append(Strings::cstr(loopcount));
-        filename.append(".dot");
-        m_simPAHp.saveDOT(filename);
-    }
-}
+//void KMCSimulator::saveDOTperXLoops(int X, int &loopcount, int& runcount) {
+//    int m = loopcount % X;
+//    if(m==0) {
+//        string filename = "KMC_DEBUG/Run_";
+//        filename.append(Strings::cstr(runcount));
+//        filename.append("_Loop_");
+//        filename.append(Strings::cstr(loopcount));
+//        filename.append(".dot");
+//        m_simPAHp.saveDOT(filename);
+//    }
+//}
 
-void KMCSimulator::saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID) {
-        string filename = "KMC_DEBUG/ID_";
-        filename.append(Strings::cstr(PAH_ID));
-        filename.append("_Run_");
-        filename.append(Strings::cstr(LOOPcount));
-        filename.append("_Loop_");
-        filename.append(Strings::cstr(loopcount));
-        filename.append(".dot");
-        m_simPAHp.saveDOT(filename);
-}
+//void KMCSimulator::saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID) {
+//        string filename = "KMC_DEBUG/ID_";
+//        filename.append(Strings::cstr(PAH_ID));
+//        filename.append("_Run_");
+//        filename.append(Strings::cstr(LOOPcount));
+//        filename.append("_Loop_");
+//        filename.append(Strings::cstr(loopcount));
+//        filename.append(".dot");
+//        m_simPAHp.saveDOT(filename);
+//}
 //! Save the structure DOT file after every X simulation sec interval
-void KMCSimulator::saveDOTperXsec(const double& X, const int& seed, const double &time, const double &time_max, KMCMechanism& copyMod, int& intervalcount) {
-    int interval = (int) ceil(time/X);
-    std::string graphTitle;
-    if(intervalcount == -1) {
-        m_gas->Interpolate(0, 0);
-        std::string temp = Strings::cstr((int)ceil((*m_gas)[m_gas->T]))+"K";
-        string filename = "KMC_DEBUG/";
-        //filename.append(Strings::cstr(runcount));
-        filename = filename+Strings::cstr(seed)+"-0.00000_s__"+temp+".dot";
-        //graphTitle = "0.00000s";
-        m_simPAHp.saveDOT(filename);
-        intervalcount = 0;
-    }
-    while(interval > intervalcount || time == time_max) {
-        double timenow = intervalcount * X;
-        int sec = (int) floor(timenow);
-        int dec = (int) (floor((timenow - (double) sec)*100000));
-        std::string dec_str;
-        if(dec<10) dec_str = "0000";
-        else if(dec<100) dec_str = "000";
-        else if(dec<1000) dec_str = "00";
-        else if(dec<10000) dec_str = "0";
-        else dec_str = "";
-        dec_str = dec_str.append(Strings::cstr(dec));
-        string filename = "KMC_DEBUG/";
-        //filename.append(Strings::cstr(runcount));
-        //filename.append("_");
-        m_gas->Interpolate(timenow, 0);
-        std::string temp = Strings::cstr((int)ceil((*m_gas)[m_gas->T]))+"K";
-        filename = filename+Strings::cstr(seed)+"-"+Strings::cstr(sec)+"."+dec_str+"_s__"+temp+".dot";
-        //graphTitle = Strings::cstr(sec)+"."+dec_str+"s";
-        m_simPAHp.saveDOT(filename);
-        intervalcount++;
-        if(time==time_max) break;
-    }
-}
+//void KMCSimulator::saveDOTperXsec(const double& X, const int& seed, const double &time, const double &time_max, KMCMechanism& copyMod, int& intervalcount) {
+//    int interval = (int) ceil(time/X);
+//    std::string graphTitle;
+//    if(intervalcount == -1) {
+//        m_gas->Interpolate(0, 0);
+//        std::string temp = Strings::cstr((int)ceil((*m_gas)[m_gas->T]))+"K";
+//        string filename = "KMC_DEBUG/";
+//        //filename.append(Strings::cstr(runcount));
+//        filename = filename+Strings::cstr(seed)+"-0.00000_s__"+temp+".dot";
+//        //graphTitle = "0.00000s";
+//        m_simPAHp.saveDOT(filename);
+//        intervalcount = 0;
+//    }
+//    while(interval > intervalcount || time == time_max) {
+//        double timenow = intervalcount * X;
+//        int sec = (int) floor(timenow);
+//        int dec = (int) (floor((timenow - (double) sec)*100000));
+//        std::string dec_str;
+//        if(dec<10) dec_str = "0000";
+//        else if(dec<100) dec_str = "000";
+//        else if(dec<1000) dec_str = "00";
+//        else if(dec<10000) dec_str = "0";
+//        else dec_str = "";
+//        dec_str = dec_str.append(Strings::cstr(dec));
+//        string filename = "KMC_DEBUG/";
+//        //filename.append(Strings::cstr(runcount));
+//        //filename.append("_");
+//        m_gas->Interpolate(timenow, 0);
+//        std::string temp = Strings::cstr((int)ceil((*m_gas)[m_gas->T]))+"K";
+//        filename = filename+Strings::cstr(seed)+"-"+Strings::cstr(sec)+"."+dec_str+"_s__"+temp+".dot";
+//        //graphTitle = Strings::cstr(sec)+"."+dec_str+"s";
+//        m_simPAHp.saveDOT(filename);
+//        intervalcount++;
+//        if(time==time_max) break;
+//    }
+//}
 
 // CSV data ----
 CSV_data::CSV_data(KMCSimulator& st):
@@ -741,7 +740,7 @@ void CSV_data::addData(intpair N_CH, double time, int runNo, PAHProcess& pp, boo
                 else dec_str = "";
                 dec_str = dec_str.append(Strings::cstr(dec));
                 filename = filename+Strings::cstr(sec)+"."+dec_str+"s__"+Strings::cstr(Temp)+"K.dot";
-                pp.saveDOT(filename);
+                //pp.saveDOT(filename);
                 }
             }
             // update current data point
@@ -763,7 +762,7 @@ void CSV_data::addData(intpair N_CH, double time, int runNo, PAHProcess& pp, boo
             else dec_str = "";
             dec_str = dec_str.append(Strings::cstr(dec));
             filename = filename+Strings::cstr(sec)+"."+dec_str+"s__"+Strings::cstr(Temp)+"K.dot";
-                pp.saveDOT(filename);
+                //pp.saveDOT(filename);
             }
         }else {
             // update current data point
@@ -784,7 +783,7 @@ void CSV_data::addData(intpair N_CH, double time, int runNo, PAHProcess& pp, boo
             else dec_str = "";
             dec_str = dec_str.append(Strings::cstr(dec));
             filename = filename+Strings::cstr(sec)+"."+dec_str+"s__"+Strings::cstr(Temp)+"K.dot";
-                pp.saveDOT(filename);
+                //pp.saveDOT(filename);
             }
         }
     }else return;

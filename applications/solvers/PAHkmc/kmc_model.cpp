@@ -98,7 +98,8 @@ int main(int argc, char *argv[])
     StartingStructure startStruct = NONE;
     std::string startStruct_str = "";
     int R6_num = 0;
-    int R5_num = 0;
+    int R5_num_Lone = 0;
+    int R5_num_Embedded = 0;
     std::string site_savemode = "END";
 
     KMCSimulator* Simulator;
@@ -134,13 +135,16 @@ int main(int argc, char *argv[])
         else if(node->Data() == "PYRENE") startStruct = PYRENE_C;
 		else if(node->Data() == "BENZOPYRENE") startStruct = BENZOPYRENE_C;
         else if(node->Data() == "CORONENE") startStruct = CORONENE_C;
+        else if(node->Data() == "BY5") startStruct = BY5_C;
         else if(node->Data() == "TEST") startStruct = TEST_STRUCT;
         else {
             startStruct_str = node->Data();
             attr = node->GetAttribute("R6");
             R6_num = (int) Strings::cdble(attr->GetValue());
-            attr = node->GetAttribute("R5");
-            R5_num = (int) Strings::cdble(attr->GetValue());
+            attr = node->GetAttribute("R5_Lone");
+            R5_num_Lone = (int) Strings::cdble(attr->GetValue());
+            attr = node->GetAttribute("R5_Embedded");
+            R5_num_Embedded = (int) Strings::cdble(attr->GetValue());
         }
 
         // get input file names
@@ -234,7 +238,7 @@ int main(int argc, char *argv[])
             if(startStruct != NONE)
                 pahp.initialise(startStruct);
             else
-                pahp.initialise(startStruct_str, R6_num, R5_num);
+                pahp.initialise(startStruct_str, R6_num, R5_num_Lone, R5_num_Embedded);
             //pahp.setPAH(*pah[0]);
             std::cout << "Pointer to PAH:"<<pah[i]<<"\n";
             Sweep::rng_type rng2(1+i);
@@ -265,7 +269,7 @@ int main(int argc, char *argv[])
                 if(save_dots && dot_mode == "STEP") {
                     std::ostringstream dotname;
                     dotname << "DOT files/PAH_" << i <<'_'<< j <<".dot";
-                    pahp.saveDOT(dotname.str());
+                    //pahp.saveDOT(dotname.str());
                 }
                 if(i == 0 && site_savemode == "STEP") {
                     Simulator->writeCHSiteCountCSV();
@@ -278,7 +282,7 @@ int main(int argc, char *argv[])
             if(save_dots) {
                 std::ostringstream dotname;
                 dotname << "DOT files/PAH" << i <<".dot";
-                pahp.saveDOT(dotname.str());
+                //pahp.saveDOT(dotname.str());
             }
             std::cout<<"Done simulation for PAH "<<ID+i<<std::endl<<endl;
             std::cout<<"PAH Structure: "<<pahp.SiteString(',')<<std::endl;

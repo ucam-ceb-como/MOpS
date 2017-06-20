@@ -400,8 +400,11 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
                     index=r.Mech()->GasMech().FindSpecies("A5");
                     numCarbons = 20;
                     break;
+                case ParticleModel::BY5:
+                    index=r.Mech()->GasMech().FindSpecies("BY5");
+                    break;
                 default:
-                    throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4 and A5 are supported now (Sweep::FlameSolver::Solve())");
+                    throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4, A5 and BY5 are supported now (Sweep::FlameSolver::Solve())");
             }
             if (mech.Inceptions(0) != NULL) {
                 if (mech.Inceptions(0)->ParticleComp(0) == numCarbons && mech.AggModel() == AggModels::Spherical_ID || mech.AggModel() == AggModels::PAH_KMC_ID) {
@@ -415,6 +418,8 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
                 }
             }
         }
+
+        //std::cout << "TESTING: before jrate" << std::endl;
 
         // Get the process jump rates (and the total rate).
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
@@ -444,9 +449,10 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     
     // Restore initial chemical conditions to sys.
     r.Mixture()->SetFixedChem(fixedchem);
+    //std::cout << "TESTING: after SetFixedChem" << std::endl;
 
     out(nsteps, niter, r, *this, data);
-
+    
     return;
 }
 

@@ -81,7 +81,7 @@ namespace Sweep{
             bool operator!=(PAHStructure &rhs) const;
 
             //! Stores coordinates of all Carbon atoms (not according to order)
-            std::set<cpair> m_cpositions;
+            //std::set<cpair> m_cpositions;
             //! Initialise pah with pyrene (currently) or benzene
             void initialise(StartingStructure ss);
             PAHStructure* Clone() ;
@@ -90,10 +90,12 @@ namespace Sweep{
             int numofH() const;
             //! return num of 6-membered rings
             int numofRings() const;
-            //! return num of 5-membered rings
-            int numofRings5() const;
+            //! return num of lone 5-membered rings
+            int numofLoneRings5() const;
+            //! return num of embedded 5-membered rings
+            int numofEmbeddedRings5() const;
             //! return num of edge carbon
-            int numofEdgeC() const;
+            //int numofEdgeC() const;
             //! return num of site
             int numofSite() const;
             //! set number of carbon and hydrogen for particular PAH
@@ -102,14 +104,15 @@ namespace Sweep{
 
             //! set number of rings for particular PAH
             void setnumofRings(int val); // 6-membered
-            void setnumofRings5(int val); // 5-membered
+            void setnumofLoneRings5(int val); // 5-membered
+            void setnumofEmbeddedRings5(int val); // 5-membered
 
             //! check PAH have bridge or not
-            bool havebridgeC();
+            //bool havebridgeC();
 
             Sweep::AggModels::PAH* m_parent; // pointer to parent PAH
             
-            void saveDOTperLoop(int PAH_ID, int i);
+            //void saveDOTperLoop(int PAH_ID, int i);
 
             //! serialization (incomplete)
             void Serialize(std::ostream &out) const;
@@ -127,12 +130,13 @@ namespace Sweep{
             intpair m_counts;
             //! Stores number of rings
             int m_rings; // 6-membered rings
-            int m_rings5; // 5-membered rings
+            int m_rings5_Lone; // 5-membered rings
+            int m_rings5_Embedded; // 5-membered rings
         private:
             //! write m_cpositions
-            void WriteCposition(std::ostream &out) const;
+            //void WriteCposition(std::ostream &out) const;
             //! read in m_cpositions
-            void ReadCposition(std::istream &in, const int size);
+            //void ReadCposition(std::istream &in, const int size);
             //! Copy Constructor
             PAHStructure(const PAHStructure& copy);
             //! Set storing carbon objects

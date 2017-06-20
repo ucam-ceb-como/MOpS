@@ -13,8 +13,8 @@ Carbon::Carbon(): C1(NULLC),
     bridge(false),
     A(0),
     bondAngle1(0),
-    bondAngle2(0),
-    coords(0,0)
+    bondAngle2(0)
+    //coords(999,999)
 {
 }
 
