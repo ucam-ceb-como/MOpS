@@ -195,7 +195,7 @@ int PAHInception::AddInceptedPAH(const int i, const double t, Cell &sys,rng_type
             if (Pindex<0)
                 throw runtime_error("There are no InceptedPAH in the ensemble, and all the InceptedPAH molecules are consumed due to unknown reason(Mops, Sweep::PAHInception::Perform).");
             sys.Particles().Remove(Pindex);
-            std::cout<<"j-i is "<<j-i<<std::endl;
+            //std::cout<<"j-i is "<<j-i<<std::endl;
             j--;
         }
     }

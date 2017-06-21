@@ -1349,7 +1349,12 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         m_pah->m_rings5_Embedded = 0;
         // update all sites and combined sites
         //updateSites();
-		//NICK TO DO - Must add in sites into site vectors
+		addSite(FE);
+		addSite(FE);
+		addSite(FE);
+		addSite(FE);
+		addSite(FE);
+		addSite(FE);
         updateCombinedSites();
         //cout << "Benzene Initialised!\n";
         break;
@@ -1379,7 +1384,14 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         m_pah->m_rings5_Embedded = 0;
         // update all sites and combined sites
 		//updateSites();
-		//NICK TO DO - Must add in sites into site vectors
+		addSite(FE);
+		addSite(FE);
+		addSite(FE);
+		addSite(ZZ);
+		addSite(FE);
+		addSite(FE);
+		addSite(FE);
+		addSite(ZZ);
         updateCombinedSites();
         //cout << "Naphthalene Initialised!\n";
         break;
@@ -1413,7 +1425,16 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         m_pah->m_rings5_Embedded = 0;
         // update all sites and combined sites
 		//updateSites();
-		//NICK TO DO - Must add in sites into site vectors
+		addSite(FE);
+		addSite(ZZ);
+		addSite(FE);
+		addSite(FE);
+		addSite(ZZ);
+		addSite(FE);
+		addSite(ZZ);
+		addSite(FE);
+		addSite(FE);
+		addSite(ZZ);
         updateCombinedSites();
         //cout << "Pyrene Initialised!\n";
         break;
@@ -1451,7 +1472,19 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         m_pah->m_rings5_Embedded = 0;
         // update all sites and combined sites
 		//updateSites();
-		//NICK TO DO - Must add in sites into site vectors
+		addSite(FE);
+		addSite(FE);
+		addSite(AC);
+		addSite(FE);
+		addSite(ZZ);
+		addSite(FE);
+		addSite(FE);
+		addSite(ZZ);
+		addSite(FE);
+		addSite(ZZ);
+		addSite(ZZ);
+		addSite(FE);
+
         updateCombinedSites();
         //cout << "Benzopyrene Initialised!\n";
         break;
