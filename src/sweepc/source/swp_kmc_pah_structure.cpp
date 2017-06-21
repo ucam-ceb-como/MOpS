@@ -264,8 +264,14 @@ void PAHStructure::Deserialize(std::istream &in)
     std::string m_SiteName = string(name, val);
     delete [] name;
 
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numC = val;
+
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numH = val;
+
     PAHProcess p(*this);
-    p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5);
+    p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numC, temp_numH);
 }
 
 //void PAHStructure::WriteCposition(std::ostream &out) const

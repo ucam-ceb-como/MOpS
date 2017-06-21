@@ -93,7 +93,7 @@ PAHStructure* PAHProcess::clonePAH() const {
     PAHStructure* temp = new PAHStructure();
     PAHProcess p(*temp);
     std::vector<kmcSiteType> sites = SiteVector();
-    p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded);
+    p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->numofC(), m_pah->numofH());
     return temp;
 }
 // Public Read Processes
@@ -1300,7 +1300,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
             abort();
     }
     // Create Structure
-    return initialise(chosen, rings.first, rings.second, rings_Embedded);
+    return initialise(chosen, rings.first, rings.second, rings_Embedded, CH.first, CH.second);
     //printSites(m_pah->m_siteList.begin());
 }
 
@@ -1567,8 +1567,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
  *
  * @return       Initialized PAH structure
  */
-//NICK TO DO - Number of C and H atoms must be made an input
-PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded){
+PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int numC, int numH){
 	if (m_pah == NULL) {
 		PAHStructure* pah = new PAHStructure();
 		m_pah = pah;
@@ -1593,13 +1592,12 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
         }
         siteList_vec.push_back(temp);
     }
-    createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded);
+    createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, numC, numH);
     return *m_pah;
 }
 
 // Create Structure from vector of site types
-//NICK TO DO - Number of C and H atoms must be made an input
-void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded) {
+void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int numC, int numH) {
     // current C, bondangle and coordinates
     //Cpointer newC=addC();
     //m_pah->m_cfirst = newC;
@@ -1666,7 +1664,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
         addSite(vec[i]);
     }
     // check if PAH closes correctly
-	// NICK TO DO - Figure out new logic for this
+	// NICK TO DO - Figure out new logic to see if PAH closes properly
     //if(m_pah->m_clast == NULLC || newC != m_pah->m_cfirst) {
     //    // PAH did not close properly. invalid structure
     //    cout << "createPAH: PAH did not close properly. Could be problem "
@@ -1686,8 +1684,8 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
     //    i != m_pah->m_carbonList.end(); i++)
     //    updateA(*i, 'H');
     //int totalC_num = 2*m_pah->m_rings + (CarbonListSize()+m_pah->m_rings5_Lone+m_pah->m_rings5_Embedded)/2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
-	int totalC_num = 0; //NICK TO DO - This will be change to an input
-	int totalH_num = 0; //NICK TO DO - This will be change to an input
+	int totalC_num = numC; 
+	int totalH_num = numH; 
     m_pah->setnumofC(totalC_num);
 	m_pah->setnumofH(totalH_num);
     updateCombinedSites();
@@ -2138,6 +2136,7 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
     updateCombinedSites(S3); updateCombinedSites(S4);
     // add ring counts
     m_pah->m_rings++;
+	addCount(2, 0);
     //printSites(stt);
 }
 // 
@@ -2184,7 +2183,7 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
     updateCombinedSites(S1); updateCombinedSites(S2); // original neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours of neighbours
     // Add H count
-    addCount(0, 2);
+    addCount(4, 2);
     // add ring counts
     m_pah->m_rings++;
 }
@@ -2226,13 +2225,13 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 
     //// Remove BY6 site and combine the neighbouring sites. 
     //// First remove all three from site map. Elementary site types first..
-    //delSiteFromMap(moveIt(stt, -1)->type, moveIt(stt, -1));
-    //delSiteFromMap(moveIt(stt, 1)->type, moveIt(stt, 1));
-    //delSiteFromMap(stt->type, stt);
+    delSiteFromMap(moveIt(stt, -1)->type, moveIt(stt, -1));
+    delSiteFromMap(moveIt(stt, 1)->type, moveIt(stt, 1));
+    delSiteFromMap(stt->type, stt);
     //// then for combined site types..
-    //delSiteFromMap(moveIt(stt, -1)->comb, moveIt(stt, -1));
-    //delSiteFromMap(moveIt(stt, 1)->comb, moveIt(stt, 1));
-    //delSiteFromMap(stt->comb, stt);
+    delSiteFromMap(moveIt(stt, -1)->comb, moveIt(stt, -1));
+    delSiteFromMap(moveIt(stt, 1)->comb, moveIt(stt, 1));
+    delSiteFromMap(stt->comb, stt);
     // Convert the BY6 site into the resulting site after reaction,
     // finding resulting site type:
     int ntype1 = (int) moveIt(stt, -1)->type;
@@ -2412,7 +2411,7 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
     //// add H atoms
     //updateA(C1_new->C1, C2_new->C2, 'H');
     // update H count
-    addCount(0,-2);
+    addCount(-4,-2);
     // add ring counts
     m_pah->m_rings--;
 }
@@ -2512,6 +2511,7 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt) {
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // add ring counts
     m_pah->m_rings5_Lone++;
+	addCount(2, 0);
 }
 // ************************************************************
 // ID11- R5 desorption (AR7 in Matlab)
@@ -2540,6 +2540,7 @@ void PAHProcess::proc_D5R_R5(Spointer& stt) {
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // add ring counts
     m_pah->m_rings5_Lone--;
+	addCount(-2, 0);
 }
 // ************************************************************
 // ID12- R6 conversion to R5 (AR9 in Matlab)
@@ -2620,7 +2621,7 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, rng_type &rng) {
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // update H count
-    addCount(0, -2);
+    addCount(-2, -2);
     // add ring counts
     m_pah->m_rings--;
     m_pah->m_rings5_Lone++;
@@ -2703,7 +2704,7 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt) {
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
     // update H count
-    addCount(0, 2);
+    addCount(2, 2);
     // add ring counts
     m_pah->m_rings++;
     m_pah->m_rings5_Lone--;
@@ -2997,13 +2998,13 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt) {
 
     //// Remove BY6 site and combine the neighbouring sites. 
     //// First remove all three from site map. Elementary site types first..
-    //delSiteFromMap(moveIt(stt, -1)->type, moveIt(stt, -1));
-    //delSiteFromMap(moveIt(stt, 1)->type, moveIt(stt, 1));
-    //delSiteFromMap(stt->type, stt);
+    delSiteFromMap(moveIt(stt, -1)->type, moveIt(stt, -1));
+    delSiteFromMap(moveIt(stt, 1)->type, moveIt(stt, 1));
+    delSiteFromMap(stt->type, stt);
     //// then for combined site types..
-    //delSiteFromMap(moveIt(stt, -1)->comb, moveIt(stt, -1));
-    //delSiteFromMap(moveIt(stt, 1)->comb, moveIt(stt, 1));
-    //delSiteFromMap(stt->comb, stt);
+    delSiteFromMap(moveIt(stt, -1)->comb, moveIt(stt, -1));
+    delSiteFromMap(moveIt(stt, 1)->comb, moveIt(stt, 1));
+    delSiteFromMap(stt->comb, stt);
     // Convert the BY6 site into the resulting site after reaction,
     // finding resulting site type:
     if (moveIt(stt,-1)->type == FE && moveIt(stt,1)->type == FE) {
@@ -3113,7 +3114,7 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, rng_type &rng) {
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
 
-    addCount(0, -2);
+    addCount(-2, -2);
     //printSites(stt);
    // cout<<sp.None;
 }
@@ -3186,7 +3187,7 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
     updateCombinedSites(stt);
     updateCombinedSites(S1); updateCombinedSites(S2);
     updateCombinedSites(S3); updateCombinedSites(S4);
-    addCount(0,-1);
+    addCount(-2,-1);
     m_pah->m_rings--;
     //saveDOT(dotname2.str());
 }
@@ -3247,6 +3248,7 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt) {
     m_pah->m_rings++;
     m_pah->m_rings5_Lone--;
     m_pah->m_rings5_Embedded++;
+	addCount(2, 0);
     //printSites(stt);
 }
 

@@ -100,6 +100,8 @@ int main(int argc, char *argv[])
     int R6_num = 0;
     int R5_num_Lone = 0;
     int R5_num_Embedded = 0;
+	int numC = 0;
+	int numH = 0;
     std::string site_savemode = "END";
 
     KMCSimulator* Simulator;
@@ -145,6 +147,10 @@ int main(int argc, char *argv[])
             R5_num_Lone = (int) Strings::cdble(attr->GetValue());
             attr = node->GetAttribute("R5_Embedded");
             R5_num_Embedded = (int) Strings::cdble(attr->GetValue());
+			attr = node->GetAttribute("numC");
+			numC = (int)Strings::cdble(attr->GetValue());
+			attr = node->GetAttribute("numH");
+			numH = (int)Strings::cdble(attr->GetValue());
         }
 
         // get input file names
@@ -238,7 +244,7 @@ int main(int argc, char *argv[])
             if(startStruct != NONE)
                 pahp.initialise(startStruct);
             else
-                pahp.initialise(startStruct_str, R6_num, R5_num_Lone, R5_num_Embedded);
+                pahp.initialise(startStruct_str, R6_num, R5_num_Lone, R5_num_Embedded, numC, numH);
             //pahp.setPAH(*pah[0]);
             std::cout << "Pointer to PAH:"<<pah[i]<<"\n";
             Sweep::rng_type rng2(1+i);
