@@ -1370,7 +1370,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
     // Else this a non-leaf node (not a primary)
     else
     {
-        SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
+        return SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
 		//csl37-NOTE: this only picks the left or right particle of the root node 
 		//and ignores the rest of the tree
 
@@ -1581,7 +1581,7 @@ unsigned int BinTreePrimary::AdjustIntPar(const fvector &dcomp,
         // Call to Primary to adjust the state space
         n = Primary::AdjustIntPar(dcomp, dvalues, rng, n);
     } else {
-        SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
+        return SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
         // Generate random numbers
         //boost::bernoulli_distribution<> leftRightChooser;
 
