@@ -195,6 +195,10 @@ public:
     //! Deserialise a BinTreePrimary particle
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
 
+	/////////////////////////////////////////////////////////// csl37-pp
+	void PrintPrimary(std::vector<fvector> &surface, fvector &primary_diameter, int k) const;
+	///////////////////////////////////////////////////////////
+
 protected:
     //! Empty primary not meaningful
     BinTreePrimary();

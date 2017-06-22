@@ -2202,6 +2202,14 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
     fvector psl;
     vector<fvector> ppsl;
 
+	////////////////////////////////////////// csl37-pp
+	vector<fvector> surface;
+	vector<string> surfout_header;
+	fvector primary_diameter;
+	CSV_IO surfout(m_output_filename + "-primary-surface.csv", true);
+	CSV_IO diamout(m_output_filename + "-primary-diameter.csv", true);
+	///////////////////////////////////////////
+
     // Get reference to the particle mechanism.
     const Sweep::Mechanism &pmech = mech.ParticleMech();
 
@@ -2261,6 +2269,16 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                     file.close();
                 }
 
+				////////////////////////////////////////// csl37-pp
+				// loop over particles at last save point
+				if (i== times.size()-1 ){
+					for (unsigned int k=0; k!=r->Mixture()->ParticleCount(); k++)
+					{
+						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), surface, primary_diameter, k);
+					}
+				}
+				/////////////////////////////////////////
+
                 delete r;
             } else {
                 // Throw error if the reactor was not read.
@@ -2269,6 +2287,26 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
             }
         }
     }
+
+	//////////////////////////////////////////// csl37-pp
+	surfout_header.push_back("Particle Index");
+	surfout_header.push_back("Number of primaries below node");
+	surfout_header.push_back("Common surface area (m2)");
+	surfout_header.push_back("Sintering level");
+	surfout_header.push_back("Left diameter (m)");
+	surfout_header.push_back("Right diameter (m)");
+	surfout_header.push_back("Left Index");
+	surfout_header.push_back("Right Index");
+
+	surfout.Write(surfout_header);
+	for (unsigned int k=0; k<surface.size(); k++)
+	{
+		surfout.Write(surface[k]);			
+	}
+	diamout.Write(primary_diameter);
+	surfout.Close();
+	diamout.Close();
+	///////////////////////////////////////////
 
     // Close output CSV files.
     for (unsigned int i=0; i!=times.size(); ++i) {

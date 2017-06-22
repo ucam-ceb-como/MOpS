@@ -319,3 +319,12 @@ void EnsembleStats::releaseMem(void)
     delete m_aggstats;
     m_aggstats = NULL;
 }
+
+/////////////////////////////////////////// csl37-pp
+void EnsembleStats::PrintPrimary(const Sweep::Particle &sp, const Sweep::ParticleModel& model, vector<fvector> &surface, fvector &primary_diameter, int k) const
+{
+	if(m_aggstats!=NULL){
+	m_aggstats->PrintPrimary(sp, surface, primary_diameter, k);
+	}
+}
+//////////////////////////////////////////////////////
