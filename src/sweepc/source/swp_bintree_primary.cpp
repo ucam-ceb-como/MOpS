@@ -1821,9 +1821,12 @@ void BinTreePrimary::SinterNode(
 							R_n = sqrt(A_n / M_PI);
 						}
 
-						// Note: the primary radius in the numerator cancel with the radius dependence of tau
-						// so we can calculate this for only one primary 
-						r4_tau = r_i4 / model.SintTime(sys, *this->m_leftparticle);
+						// The primary radius in the numerator cancels with the diameter dependence of tau
+						// so we can calculate this for only one of the primaries.
+						// In the SintTime the diameter is calculated as 6.0 * m_vol / m_surf
+						// so r = 3.0 * m_vol / m_surf
+						double r4 = pow(3.0 * m_leftparticle->m_vol / m_leftparticle->m_surf, 4.0);
+						r4_tau = r4 / model.SintTime(sys, *this->m_leftparticle);
 
 						//! J Aerosol Sci 46:7-19 (2012) Eq. (A6)
 						//! dx_i_dt + dx_j_dt

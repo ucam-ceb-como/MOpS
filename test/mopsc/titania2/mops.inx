@@ -1,34 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <mops version="2">
   
   <!-- Default parameters (can be overidden). --> 
-  <runs>1</runs>
+  <runs>2</runs>
   <iter>20</iter>
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>128</pcount>
-  <maxm0>1e-9</maxm0>
-  <relax>0.8</relax>
+  <pcount>1024</pcount>
+  <maxm0>1.50e13</maxm0>
   
 
   <!-- Reactor definition (given initial conditions). -->
   <reactor type="batch" constt="true" constv="false" id="Test_System" units="mol/mol">
-    <temperature units="K">1500</temperature>
-    <pressure units="bar">4.00</pressure>	
-    <component id="TICL4">0.468085</component>
-    <component id="O2">0.531915</component>  
+    <temperature units="K">1400</temperature>
+    <pressure units="bar">4.00</pressure>
+    <component id="TICL4">0.01</component>
+    <component id="O2">0.99</component>  
   </reactor>
 
   <!-- Output time sequence. -->
   <timeintervals>
     <start>0.0</start>
-    <time steps="100" splits="10  ">1e-7</time>
-    <time steps="90 " splits="10  ">1e-6</time>
-    <time steps="90 " splits="10  ">1e-5</time>
-    <time steps="90"  splits="10  ">1e-4</time>
-    <time steps="40"  splits="10  ">1e-3</time>
-    <time steps="40"  splits="10  ">1e-2</time>
-    <!-- time steps="40"  splits="10  ">1e-1</time -->
-    <!-- time steps="40 " splits="10  ">1e-0</time -->
+	<time steps="25" splits="4">0.00001</time>
+	<time steps="45" splits="4">0.0001</time>
+    <time steps="18" splits="4">0.001</time>
   </timeintervals>
 
   <!-- Simulation output settings. -->
