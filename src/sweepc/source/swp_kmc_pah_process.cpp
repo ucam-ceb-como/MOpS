@@ -1018,23 +1018,44 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
     if (stype == 18) {
         assert(bulkCchange == 1);
         st->type = (kmcSiteType)((int)st->type + bulkCchange - 16);
+		if (st->type == R5){
+			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
+		}
     } else if (stype == 19) {
         st->type = (kmcSiteType)((int)st->type + bulkCchange - 16);
+		if (st->type == R5){
+			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
+		}
     } else if (stype == 20) {
         assert(bulkCchange == -1 || bulkCchange == 1);
         if (bulkCchange == -1) {
             st->type = (kmcSiteType)((int)st->type + bulkCchange - 1);
+			if (st->type == R5){
+				cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
+			}
         } else if (bulkCchange == 1) {
             st->type = (kmcSiteType)((int)st->type + bulkCchange - 17);
+			if (st->type == R5){
+				cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
+			}
         }
     } else if (stype == 5) {
         assert(bulkCchange == 0);
         st->type = (kmcSiteType)((int)st->type + bulkCchange - 5);
+		if (st->type == R5){
+			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
+		}
     } else if (stype == 6) {
         assert(bulkCchange == 1);
         st->type = (kmcSiteType)((int)st->type + bulkCchange + 11);
+		if (st->type == R5){
+			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
+		}
     } else {
         st->type = (kmcSiteType)((int)st->type + bulkCchange);
+		if (st->type == R5){
+			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
+		}
     }
     // add site to m_pah->m_siteMap
 	  //NICK TO DO - Figure out logic for updating site type. This may already work correctly
@@ -2083,6 +2104,23 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
     //Cpointer newC1;
     //Cpointer newC2;
 
+	int S1t = (int)moveIt(stt, -1)->type;
+	int S2t = (int)moveIt(stt, 1)->type;
+	int S3t = (int)moveIt(stt, -2)->type;
+	int S4t = (int)moveIt(stt, 2)->type;
+	int S5t = (int)moveIt(stt, -3)->type;
+	int S6t = (int)moveIt(stt, 3)->type;
+	int St = (int)stt->type;
+	cout << "AC Begin" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
+
+	if (S1t == BY6 || S2t == BY6){
+		return; //This should not happen
+	}
+
+	if ((S1t == AC && S3t == BY6) || (S2t == AC && S4t == BY6)){
+		return; //This should not happen
+	}
+
     /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
      * Therefore, the coordinates of the edge carbon atoms (coords) have been made redundant.
@@ -2138,6 +2176,15 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
     m_pah->m_rings++;
 	addCount(2, 0);
     //printSites(stt);
+
+	S1t = (int)moveIt(stt, -1)->type;
+	S2t = (int)moveIt(stt, 1)->type;
+	S3t = (int)moveIt(stt, -2)->type;
+	S4t = (int)moveIt(stt, 2)->type;
+	S5t = (int)moveIt(stt, -3)->type;
+	S6t = (int)moveIt(stt, 3)->type;
+	St = (int)stt->type;
+	cout << "AC End" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
 }
 // 
 // ************************************************************
@@ -2146,6 +2193,39 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 void PAHProcess::proc_G6R_FE(Spointer& stt) {
 //    printSites(stt);
     //Cpointer newC1, newC2, newC3, newC4;
+
+	int S1t = (int) moveIt(stt, -1)->type;
+	int S2t = (int) moveIt(stt, 1)->type;
+	int S3t = (int) moveIt(stt, -2)->type;
+	int S4t = (int) moveIt(stt, 2)->type;
+	int S5t = (int) moveIt(stt, -3)->type;
+	int S6t = (int) moveIt(stt, 3)->type;
+	int St = (int) stt->type;
+	cout << "FE Begin" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
+
+	if (S1t == BY6 || S2t == BY6){
+		return; //This should not happen
+	}
+
+	if (S1t == AC && S3t == BY6){
+		return; //This should not happen
+	}
+
+	if (S2t == AC && S4t == BY6){
+		return; //This should not happen
+	}
+
+	if ((S1t == FE && S3t == BY6 && S5t == AC) || (S2t == FE && S4t == BY6 && S6t == AC)){
+		return; //This should not happen
+	}
+
+	if ((S1t == BY5 && S3t == BY5) || (S2t == BY5 && S4t == BY5)){
+		return; //This should not happen
+	}
+
+	if ((S1t == ZZ && S3t == BY5 && S5t == BY5) || (S2t == ZZ && S4t == BY5 && S6t == BY5)){
+		return; //This should not happen
+	}
 
     /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
@@ -2186,6 +2266,15 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
     addCount(4, 2);
     // add ring counts
     m_pah->m_rings++;
+
+	S1t = (int)moveIt(stt, -1)->type;
+	S2t = (int)moveIt(stt, 1)->type;
+	S3t = (int)moveIt(stt, -2)->type;
+	S4t = (int)moveIt(stt, 2)->type;
+	S5t = (int)moveIt(stt, -3)->type;
+	S6t = (int)moveIt(stt, 3)->type;
+	St = (int)stt->type;
+	cout << "FE End" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
 }
 // 
 // ************************************************************
@@ -2194,6 +2283,14 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
 void PAHProcess::proc_L6_BY6(Spointer& stt) {
     //printSites(stt);
     // Remove C
+
+	int S1t = (int) moveIt(stt, -1)->type;
+	int S2t = (int) moveIt(stt, 1)->type;
+	int S3t = (int) moveIt(stt, -2)->type;
+	int S4t = (int) moveIt(stt, 2)->type;
+	int S5t = (int) moveIt(stt, -3)->type;
+	int S6t = (int) moveIt(stt, 3)->type;
+	int St = (int) stt->type;
 
     //Cpointer now = C_1->C2;
     //do{
@@ -2996,34 +3093,67 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt) {
     //// Add and remove H
     //updateA(C_1->C1, C_2->C2, 'H');
 
-    //// Remove BY6 site and combine the neighbouring sites. 
-    //// First remove all three from site map. Elementary site types first..
-    delSiteFromMap(moveIt(stt, -1)->type, moveIt(stt, -1));
-    delSiteFromMap(moveIt(stt, 1)->type, moveIt(stt, 1));
-    delSiteFromMap(stt->type, stt);
-    //// then for combined site types..
-    delSiteFromMap(moveIt(stt, -1)->comb, moveIt(stt, -1));
-    delSiteFromMap(moveIt(stt, 1)->comb, moveIt(stt, 1));
-    delSiteFromMap(stt->comb, stt);
-    // Convert the BY6 site into the resulting site after reaction,
+
+    // Convert the BY5 site into the resulting site after reaction,
     // finding resulting site type:
+	bool dest1 = true;
+	bool dest2 = true;
     if (moveIt(stt,-1)->type == FE && moveIt(stt,1)->type == FE) {
         convSiteType(stt, (kmcSiteType) 18);
     } else if (moveIt(stt,-1)->type == ZZ && moveIt(stt,1)->type == ZZ ||
         moveIt(stt,-1)->type == AC && moveIt(stt,1)->type == FE ||
-        moveIt(stt,-1)->type == FE && moveIt(stt,1)->type == AC) {
+		moveIt(stt, -1)->type == FE && moveIt(stt, 1)->type == AC ||
+		moveIt(stt, -1)->type == ACR5 && moveIt(stt, 1)->type == FE ||
+		moveIt(stt, -1)->type == FE && moveIt(stt, 1)->type == ACR5){
         convSiteType(stt, (kmcSiteType) 4);
-    } else {
+	} else if (moveIt(stt, -1)->type == FE && moveIt(stt, 1)->type == BY5 ||
+		moveIt(stt, -1)->type == BY5 && moveIt(stt, 1)->type == FE){
+		convSiteType(stt, (kmcSiteType)4);
+		if (moveIt(stt, -1)->type == BY5){
+			dest2 = false;
+
+		} else{
+			dest1 = false;
+		}
+	}
+	else if (moveIt(stt, -1)->type == AC && moveIt(stt, 1)->type == ZZ ||
+		moveIt(stt, -1)->type == ZZ && moveIt(stt, 1)->type == AC || 
+		moveIt(stt, -1)->type == ACR5 && moveIt(stt, 1)->type == ZZ ||
+		moveIt(stt, -1)->type == ZZ && moveIt(stt, 1)->type == ACR5){
+		convSiteType(stt, (kmcSiteType)3);
+		if (moveIt(stt, -1)->type == ZZ){
+			dest2 = false;
+
+		}
+		else{
+			dest1 = false;
+		}
+	}
+	else if (moveIt(stt, -1)->type == AC && moveIt(stt, 1)->type == AC ||
+		moveIt(stt, -1)->type == ACR5 && moveIt(stt, 1)->type == ACR5){
+		convSiteType(stt, (kmcSiteType)3);
+		dest1 = false;
+	}
+	else {
         assert(moveIt(stt,-1)->type == FE && moveIt(stt,1)->type == ZZ || moveIt(stt,-1)->type == ZZ && moveIt(stt,1)->type == FE);
         convSiteType(stt, (kmcSiteType) 3);
     }
 
+	//// Remove BY6 site and combine the neighbouring sites. 
+	//// First remove all three from site map. Elementary site types first..
+	if(dest1) delSiteFromMap(moveIt(stt, -1)->type, moveIt(stt, -1));
+	if(dest2) delSiteFromMap(moveIt(stt, 1)->type, moveIt(stt, 1));
+	delSiteFromMap(stt->type, stt);
+	//// then for combined site types..
+	if (dest1) delSiteFromMap(moveIt(stt, -1)->comb, moveIt(stt, -1));
+	if (dest2) delSiteFromMap(moveIt(stt, 1)->comb, moveIt(stt, 1));
+	delSiteFromMap(stt->comb, stt);
 
     // erase the existence of the neighbouring sites
     Spointer Srem1 = moveIt(stt,-1);
     Spointer Srem2 = moveIt(stt, 1);
-    removeSite(Srem1);
-    removeSite(Srem2);
+	if (dest1) removeSite(Srem1);
+	if (dest2) removeSite(Srem2);
     // update combined sites and neighbours
     Spointer S1 = moveIt(stt,-1); Spointer S2 = moveIt(stt,1);
     //Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
