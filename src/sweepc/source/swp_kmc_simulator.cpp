@@ -171,6 +171,8 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
     double t_step_max = dt/waitingSteps;
     //double oldtnext;
     int loopcount=0;
+	Spointer Sp1;
+	int test;
     while (m_t < t_max) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
         //m_simGas.interpolateProfiles(m_t, true, r_factor);
@@ -188,6 +190,14 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
         t_next = m_t+t_step;
         if(t_next < t_max && t_step < t_step_max) {
 
+			if (PAH_ID == 100897 || PAH_ID == 897){
+				std::list<Site> tester = pah->GetSiteVector();
+				cout << "Check start " << PAH_ID << endl << t_next << endl;
+				for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+					cout << (int)(Sp1->type) << endl;
+				}
+			}
+
             //if (pah->numofC()>5000&&pah->numofC()<6000)//||pah->havebridgeC()    //if (PAH_ID==224835)
             //if we want to check a PAH with specified ID or number of Carbon, 
             //its structure can be drawed by this function, used for tracking suspicious PAH.
@@ -200,6 +210,14 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             //m_simPAHp.saveDOT(dotname.str());
             // Update data structure
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
+
+			if (PAH_ID == 100897 || PAH_ID == 897){
+				std::list<Site> tester = pah->GetSiteVector();
+				cout << "Check end " << PAH_ID << endl << t_next << endl;
+				for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+					cout << (int)(Sp1->type) << endl;
+				}
+			}
 
             /*if(m_simPAH->m_parent->ID() % 100000 == 609) {
             if(!m_simPAHp.checkCoordinates()) {

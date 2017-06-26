@@ -159,6 +159,10 @@ int PAHStructure::numofEmbeddedRings5() const{
     return m_rings5_Embedded;
 }
 
+std::list<Site> PAHStructure::GetSiteVector() const{
+	return m_siteList;
+}
+
 //int PAHStructure::numofEdgeC() const{
 //    // the m_cpositions stores the coordinates of PAH, which means the num of edge C equals the size of m_cpositions
 //    return m_cpositions.size();

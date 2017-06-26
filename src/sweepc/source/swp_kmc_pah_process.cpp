@@ -2110,14 +2110,32 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 	int S4t = (int)moveIt(stt, 2)->type;
 	int S5t = (int)moveIt(stt, -3)->type;
 	int S6t = (int)moveIt(stt, 3)->type;
+	int S7t = (int)moveIt(stt, -4)->type;
+	int S8t = (int)moveIt(stt, 4)->type;
 	int St = (int)stt->type;
-	cout << "AC Begin" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
+	//cout << "AC Begin" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
 
 	if (S1t == BY6 || S2t == BY6){
 		return; //This should not happen
 	}
 
 	if ((S1t == AC && S3t == BY6) || (S2t == AC && S4t == BY6)){
+		return; //This should not happen
+	}
+
+	if ((S1t == FE && S3t == BY6 && S5t == AC) || (S2t == FE && S4t == BY6 && S6t == AC)){
+		return; //This should not happen
+	}
+
+	if ((S1t == FE && S3t == BY6 && S5t == FE && S7t == BY6) || (S2t == FE && S4t == BY6 && S6t == FE && S8t == BY6)){
+		return; //This should not happen
+	}
+
+	if ((S1t == FE && S3t == BY5) || (S2t == FE && S4t == BY5)){
+		return; //This should not happen
+	}
+
+	if ((S1t == AC && S3t == BY5) || (S2t == AC && S4t == BY5)){
 		return; //This should not happen
 	}
 
@@ -2177,14 +2195,14 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 	addCount(2, 0);
     //printSites(stt);
 
-	S1t = (int)moveIt(stt, -1)->type;
-	S2t = (int)moveIt(stt, 1)->type;
-	S3t = (int)moveIt(stt, -2)->type;
-	S4t = (int)moveIt(stt, 2)->type;
-	S5t = (int)moveIt(stt, -3)->type;
-	S6t = (int)moveIt(stt, 3)->type;
-	St = (int)stt->type;
-	cout << "AC End" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
+	//S1t = (int)moveIt(stt, -1)->type;
+	//S2t = (int)moveIt(stt, 1)->type;
+	//S3t = (int)moveIt(stt, -2)->type;
+	//S4t = (int)moveIt(stt, 2)->type;
+	//S5t = (int)moveIt(stt, -3)->type;
+	//S6t = (int)moveIt(stt, 3)->type;
+	//St = (int)stt->type;
+	//cout << "AC End" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
 }
 // 
 // ************************************************************
@@ -2200,24 +2218,39 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
 	int S4t = (int) moveIt(stt, 2)->type;
 	int S5t = (int) moveIt(stt, -3)->type;
 	int S6t = (int) moveIt(stt, 3)->type;
+	int S7t = (int)moveIt(stt, -4)->type;
+	int S8t = (int)moveIt(stt, 4)->type;
 	int St = (int) stt->type;
-	cout << "FE Begin" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
+	//cout << "FE Begin" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
 
 	if (S1t == BY6 || S2t == BY6){
 		return; //This should not happen
 	}
 
-	if (S1t == AC && S3t == BY6){
+	if (S3t == BY6 || S4t == BY6){
 		return; //This should not happen
 	}
 
-	if (S2t == AC && S4t == BY6){
+	if (S5t == BY6 || S6t == BY6){
 		return; //This should not happen
 	}
 
-	if ((S1t == FE && S3t == BY6 && S5t == AC) || (S2t == FE && S4t == BY6 && S6t == AC)){
+	if (S3t == BY5 || S4t == BY5 || S5t == BY5 || S6t == BY5 ){
 		return; //This should not happen
 	}
+
+
+	//if (S1t == AC && S3t == BY6){
+	//	return; //This should not happen
+	//}
+
+	//if (S2t == AC && S4t == BY6){
+	//	return; //This should not happen
+	//}
+
+	//if ((S1t == FE && S3t == BY6 && S5t == AC) || (S2t == FE && S4t == BY6 && S6t == AC)){
+	//	return; //This should not happen
+	//}
 
 	if ((S1t == BY5 && S3t == BY5) || (S2t == BY5 && S4t == BY5)){
 		return; //This should not happen
@@ -2226,6 +2259,23 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
 	if ((S1t == ZZ && S3t == BY5 && S5t == BY5) || (S2t == ZZ && S4t == BY5 && S6t == BY5)){
 		return; //This should not happen
 	}
+
+	if ((S1t == AC && S3t == BY5) || (S2t == AC && S4t == BY5)){
+		return; //This should not happen
+	}
+
+	if ((S1t == AC && S3t == AC && S5t == BY6) || (S2t == AC && S4t == AC && S6t == BY6)){
+		return; //This should not happen
+	}
+
+	if ((S1t == BY5 && S3t == ZZ && S5t == AC && S7t == BY6) || (S2t == BY5 && S4t == ZZ && S6t == AC && S8t == BY6)){
+		return; //This should not happen
+	}
+
+	if ((S1t == BY5 && S3t == AC && S5t == ZZ && S7t == BY6) || (S2t == BY5 && S4t == AC && S6t == ZZ && S8t == BY6)){
+		return; //This should not happen
+	}
+
 
     /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
@@ -2267,14 +2317,14 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
     // add ring counts
     m_pah->m_rings++;
 
-	S1t = (int)moveIt(stt, -1)->type;
-	S2t = (int)moveIt(stt, 1)->type;
-	S3t = (int)moveIt(stt, -2)->type;
-	S4t = (int)moveIt(stt, 2)->type;
-	S5t = (int)moveIt(stt, -3)->type;
-	S6t = (int)moveIt(stt, 3)->type;
-	St = (int)stt->type;
-	cout << "FE End" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
+	//S1t = (int)moveIt(stt, -1)->type;
+	//S2t = (int)moveIt(stt, 1)->type;
+	//S3t = (int)moveIt(stt, -2)->type;
+	//S4t = (int)moveIt(stt, 2)->type;
+	//S5t = (int)moveIt(stt, -3)->type;
+	//S6t = (int)moveIt(stt, 3)->type;
+	//St = (int)stt->type;
+	//cout << "FE End" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
 }
 // 
 // ************************************************************
@@ -2354,6 +2404,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
             else newType = 6;
         }
         newType += ntype1+ntype2+2;
+		if (newType = 20) newType = 4;
         convSiteType(stt, (kmcSiteType) newType);
     }    
     // erase the existence of the neighbouring sites
@@ -3064,6 +3115,13 @@ void PAHProcess::proc_C6R_BY5_FE3violi(Spointer& stt, rng_type &rng) {
 void PAHProcess::proc_L5R_BY5(Spointer& stt) {
     //printSites(stt);
 
+	if (moveIt(stt, -1)->type == AC && moveIt(stt, 1)->type == ZZ ||
+		moveIt(stt, -1)->type == ZZ && moveIt(stt, 1)->type == AC ||
+		moveIt(stt, -1)->type == ACR5 && moveIt(stt, 1)->type == ZZ ||
+		moveIt(stt, -1)->type == ZZ && moveIt(stt, 1)->type == ACR5){
+		return; //this cannot happen
+	}
+
     // Remove C
     //Cpointer now = C_1->C2;
     //do{
@@ -3093,67 +3151,130 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt) {
     //// Add and remove H
     //updateA(C_1->C1, C_2->C2, 'H');
 
+	//// Remove BY6 site and combine the neighbouring sites. 
+	//// First remove all three from site map. Elementary site types first..
+	delSiteFromMap(stt->type, stt);
+	delSiteFromMap(moveIt(stt, -1)->type, moveIt(stt, -1));
+	delSiteFromMap(moveIt(stt, 1)->type, moveIt(stt, 1));
+
+	//// then for combined site types..
+	delSiteFromMap(stt->comb, stt);
+	delSiteFromMap(moveIt(stt, -1)->comb, moveIt(stt, -1));
+	delSiteFromMap(moveIt(stt, 1)->comb, moveIt(stt, 1));
 
     // Convert the BY5 site into the resulting site after reaction,
     // finding resulting site type:
-	bool dest1 = true;
-	bool dest2 = true;
+	bool keep1 = false;
+	bool keep2 = false;
+	int flag = -1;
     if (moveIt(stt,-1)->type == FE && moveIt(stt,1)->type == FE) {
         convSiteType(stt, (kmcSiteType) 18);
-    } else if (moveIt(stt,-1)->type == ZZ && moveIt(stt,1)->type == ZZ ||
-        moveIt(stt,-1)->type == AC && moveIt(stt,1)->type == FE ||
+	}
+	else if (moveIt(stt, -1)->type == ZZ && moveIt(stt, 1)->type == ZZ ||
+		moveIt(stt, -1)->type == AC && moveIt(stt, 1)->type == FE ||
 		moveIt(stt, -1)->type == FE && moveIt(stt, 1)->type == AC ||
 		moveIt(stt, -1)->type == ACR5 && moveIt(stt, 1)->type == FE ||
 		moveIt(stt, -1)->type == FE && moveIt(stt, 1)->type == ACR5){
-        convSiteType(stt, (kmcSiteType) 4);
-	} else if (moveIt(stt, -1)->type == FE && moveIt(stt, 1)->type == BY5 ||
-		moveIt(stt, -1)->type == BY5 && moveIt(stt, 1)->type == FE){
 		convSiteType(stt, (kmcSiteType)4);
-		if (moveIt(stt, -1)->type == BY5){
-			dest2 = false;
+		//} else if (moveIt(stt, -1)->type == FE && moveIt(stt, 1)->type == BY5 || //Should not be allowed
+		//	moveIt(stt, -1)->type == BY5 && moveIt(stt, 1)->type == FE){
+		//	convSiteType(stt, (kmcSiteType)4);
+		//	flag = 0;
+		//	if (moveIt(stt, -1)->type == BY5){
+		//		keep2 = true;
 
-		} else{
-			dest1 = false;
-		}
-	}
-	else if (moveIt(stt, -1)->type == AC && moveIt(stt, 1)->type == ZZ ||
-		moveIt(stt, -1)->type == ZZ && moveIt(stt, 1)->type == AC || 
-		moveIt(stt, -1)->type == ACR5 && moveIt(stt, 1)->type == ZZ ||
-		moveIt(stt, -1)->type == ZZ && moveIt(stt, 1)->type == ACR5){
-		convSiteType(stt, (kmcSiteType)3);
-		if (moveIt(stt, -1)->type == ZZ){
-			dest2 = false;
+		//	} else{
+		//		keep1 = true;
+		//	}
+		//}
+		//else if (moveIt(stt, -1)->type == ZZ && moveIt(stt, 1)->type == BY5 || //Should not be allowed
+		//	moveIt(stt, -1)->type == BY5 && moveIt(stt, 1)->type == ZZ){
+		//	convSiteType(stt, (kmcSiteType)3);
+		//	flag = 1;
+		//	if (moveIt(stt, -1)->type == BY5){
+		//		keep2 = true;
 
-		}
-		else{
-			dest1 = false;
-		}
-	}
-	else if (moveIt(stt, -1)->type == AC && moveIt(stt, 1)->type == AC ||
-		moveIt(stt, -1)->type == ACR5 && moveIt(stt, 1)->type == ACR5){
-		convSiteType(stt, (kmcSiteType)3);
-		dest1 = false;
+		//	}
+		//	else{
+		//		keep1 = true;
+		//	}
+		//}
+		//else if (moveIt(stt, -1)->type == AC && moveIt(stt, 1)->type == AC){  //Should not be allowed
+		//	convSiteType(stt, (kmcSiteType)3);
+		//	flag = 2;
+		//	if (moveIt(stt, -1)->type == AC){
+		//		keep2 = true;
+
+		//	}
+		//	else{
+		//		keep1 = true;
+		//	}
+		//}
+		//else if (moveIt(stt, -1)->type == AC && moveIt(stt, 1)->type == ACR5 ||   //Should not be allowed
+		//	moveIt(stt, -1)->type == ACR5 && moveIt(stt, 1)->type == AC ||
+		//	moveIt(stt, -1)->type == ACR5 && moveIt(stt, 1)->type == ACR5){
+		//	convSiteType(stt, (kmcSiteType)3);
+		//	flag = 18;
+		//	if (moveIt(stt, -1)->type == AC){
+		//		keep2 = true;
+
+		//	}
+		//	else{
+		//		keep1 = true;
+		//	}
+		//}
 	}
 	else {
         assert(moveIt(stt,-1)->type == FE && moveIt(stt,1)->type == ZZ || moveIt(stt,-1)->type == ZZ && moveIt(stt,1)->type == FE);
         convSiteType(stt, (kmcSiteType) 3);
     }
 
-	//// Remove BY6 site and combine the neighbouring sites. 
-	//// First remove all three from site map. Elementary site types first..
-	if(dest1) delSiteFromMap(moveIt(stt, -1)->type, moveIt(stt, -1));
-	if(dest2) delSiteFromMap(moveIt(stt, 1)->type, moveIt(stt, 1));
-	delSiteFromMap(stt->type, stt);
-	//// then for combined site types..
-	if (dest1) delSiteFromMap(moveIt(stt, -1)->comb, moveIt(stt, -1));
-	if (dest2) delSiteFromMap(moveIt(stt, 1)->comb, moveIt(stt, 1));
-	delSiteFromMap(stt->comb, stt);
-
     // erase the existence of the neighbouring sites
     Spointer Srem1 = moveIt(stt,-1);
     Spointer Srem2 = moveIt(stt, 1);
-	if (dest1) removeSite(Srem1);
-	if (dest2) removeSite(Srem2);
+	removeSite(Srem1);
+	removeSite(Srem2);
+	if (flag == 0){
+		if (keep1){
+			addSite(FE, stt);
+		}
+		else {
+			addSite(FE, moveIt(stt, 1));
+		}
+			
+	}
+
+	if (flag == 1){
+		if (keep1){
+			addSite(ZZ, stt);
+		}
+		else {
+			addSite(ZZ, moveIt(stt, 1));
+		}
+
+	}
+
+
+	if (flag == 2){
+		if (keep1){
+			addSite(AC, stt);
+		}
+		else {
+			addSite(AC, moveIt(stt, 1));
+		}
+
+	}
+
+	if (flag == 2){
+		if (keep1){
+			addSite(ACR5, stt);
+		}
+		else {
+			addSite(ACR5, moveIt(stt, 1));
+		}
+
+	}
+
     // update combined sites and neighbours
     Spointer S1 = moveIt(stt,-1); Spointer S2 = moveIt(stt,1);
     //Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
