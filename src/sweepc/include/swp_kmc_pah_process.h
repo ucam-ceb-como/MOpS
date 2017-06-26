@@ -167,7 +167,7 @@ public:
     void proc_O6R_FE2(Spointer& stt);                           //!< ID20.
     //void proc_M5R_eZZ(Spointer& stt);                         //!< ID21.
     void proc_B6R_ACR5(Spointer& stt);                          //!< ID22.
-    void proc_M5R_ACR5_ZZ(Spointer& stt, rng_type &rng);        //!< ID23.
+	void proc_M5R_eR5_FE3_ZZ(Spointer& stt, rng_type &rng);     //!< ID23.
     void proc_G6R_RZZ(Spointer& stt);                           //!< ID24.
     void proc_G6R_RFER(Spointer& stt);                          //!< ID25.
     void proc_G6R_R5(Spointer& stt);                            //!< ID26.

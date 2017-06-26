@@ -144,7 +144,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_O6R_FE2_OH = new O6R_FE2_OH; j_O6R_FE2_OH->initialise();                     //*< ID20.
     JumpProcess* j_O6R_FE2_O2 = new O6R_FE2_O2; j_O6R_FE2_O2->initialise();                     //*< ID21.
     JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();                           //*< ID22.
-    JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //*< ID23.
+	JumpProcess* j_M5R_eR5_FE3_ZZ = new M5R_eR5_FE3_ZZ; j_M5R_eR5_FE3_ZZ->initialise();           //*< ID23.
     JumpProcess* j_G6R_RZZ = new G6R_RZZ; j_G6R_RZZ->initialise();                              //*< ID24.
     JumpProcess* j_G6R_RFER = new G6R_RFER; j_G6R_RFER->initialise();                           //*< ID25.
     JumpProcess* j_G6R_R5 = new G6R_R5; j_G6R_R5->initialise();                                 //*< ID26.
@@ -1912,7 +1912,7 @@ double B6R_ACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
 // ID23 - Embedded 5-member ring migration to ZZ
 // ************************************************************
 
-void M5R_ACR5_ZZ::initialise() {
+void M5R_eR5_FE3_ZZ::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
@@ -1936,7 +1936,7 @@ void M5R_ACR5_ZZ::initialise() {
     m_ID = 23;
 }
 // Jump rate calculation
-double M5R_ACR5_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+double M5R_eR5_FE3_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
@@ -1949,10 +1949,10 @@ double M5R_ACR5_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, c
     else r_f=0;
     return m_rate = m_r[5]*r_f*site_count; // Rate Equation
 }
-double M5R_ACR5_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+double M5R_eR5_FE3_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
-double M5R_ACR5_ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+double M5R_eR5_FE3_ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
 }
 

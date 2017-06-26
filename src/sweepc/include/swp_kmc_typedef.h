@@ -68,9 +68,13 @@ namespace Sweep {
             ACR5=18,
             //
             RAC_FE3=19,
-            //
-            //eBY5 = 20,
-            // Combined Sites
+			// Principal site involving embedded 5-member rings
+            eR5 = 20,
+			// Principal sites with embedded 5-member ring at one side
+			eRFE = 21, eRZZ = 22, eRAC = 23,
+            // Combined Sites wtih embedded 5-member ring
+			eR5_FE3 = 24, 
+			//none
             None,
             // Error ID
             Inv=-1,

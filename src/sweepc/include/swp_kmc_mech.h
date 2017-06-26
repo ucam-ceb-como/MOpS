@@ -330,7 +330,7 @@ namespace KMC_ARS {
     };
 
     //! ID23.
-    class M5R_ACR5_ZZ : public Sweep::KMC_ARS::JumpProcess {
+	class M5R_eR5_FE3_ZZ : public Sweep::KMC_ARS::JumpProcess {
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
