@@ -1969,10 +1969,10 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     kmcSiteType stp = jp.getSiteType();
     int id = jp.getID();
 
-	if (PAH_ID == 100260 || PAH_ID == 260){
+	if (PAH_ID == 100302 || PAH_ID == 302){
 		cout << "ID is: " << id << endl;
 	}
-    
+
     // choose random site of type stp to perform process
     Spointer site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
     // stores pointers to site Carbon members
@@ -2144,6 +2144,10 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 		return; //This should not happen
 	}
 
+	if ((S1t == FE && S3t == eRZZ) || (S2t == FE && S4t == eRZZ)){
+		return; //This should not happen
+	}
+
     /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
      * Therefore, the coordinates of the edge carbon atoms (coords) have been made redundant.
@@ -2187,10 +2191,112 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
     Spointer S2 = moveIt(stt, 1);
     // Update Site and neighbours
     updateSites(stt, -2);
-    updateSites(S1, 1); // neighbours
-    updateSites(S2, 1);
+
+	if ((S1t == eRZZ && S3t == eR5 && S5t == eRFE) || (S2t == eRZZ && S4t == eR5 && S6t == eRFE)){
+		//// Convert to a BY6 site
+		bool b4 = true;
+		Spointer Srem1, Srem2, Srem3;
+		if (S1t == eRZZ){
+			Srem1 = moveIt(stt, -1);
+			Srem2 = moveIt(stt, -2);
+			Srem3 = moveIt(stt, -3);
+		}
+		else{
+			Srem1 = moveIt(stt, 1);
+			Srem2 = moveIt(stt, 2);
+			Srem3 = moveIt(stt, 3);
+			b4 = false;
+		}
+		//// Remove sites and combine the neighbouring sites into BY6. 
+		//// First remove all three from site map. Elementary site types first..
+		delSiteFromMap(Srem1->type, Srem1);
+		delSiteFromMap(Srem2->type, Srem2);
+		delSiteFromMap(Srem3->type, Srem3);
+		//// then for combined site types..
+		delSiteFromMap(Srem1->comb, Srem1);
+		delSiteFromMap(Srem2->comb, Srem2);
+		delSiteFromMap(Srem3->comb, Srem3);
+		//// remove the sites
+		removeSite(Srem1);
+		removeSite(Srem2);
+		removeSite(Srem3);
+
+		////add in BY6 site
+		if (b4){
+			addSite(BY6, stt);
+			updateSites(S2, 1);
+		}
+		else{
+			addSite(BY6, moveIt(stt, 1));
+			updateSites(S1, 1);
+		}
+
+	}
+	else if ((S1t == eRFE && S3t == eR5 && S5t == eRZZ) || (S2t == eRFE && S4t == eR5 && S6t == eRZZ)){
+		//// Convert to a BY6 site
+		bool b4 = true;
+		Spointer Srem1, Srem2, Srem3;
+		if (S1t == eRFE){
+			Srem1 = moveIt(stt, -1);
+			Srem2 = moveIt(stt, -2);
+			Srem3 = moveIt(stt, -3);
+		}
+		else{
+			Srem1 = moveIt(stt, 1);
+			Srem2 = moveIt(stt, 2);
+			Srem3 = moveIt(stt, 3);
+			b4 = false;
+		}
+
+		//// Remove sites and combine the neighbouring sites into BY6. 
+		//// First remove all three from site map. Elementary site types first..
+		delSiteFromMap(Srem1->type, Srem1);
+		delSiteFromMap(Srem2->type, Srem2);
+		delSiteFromMap(Srem3->type, Srem3);
+		//// then for combined site types..
+		delSiteFromMap(Srem1->comb, Srem1);
+		delSiteFromMap(Srem2->comb, Srem2);
+		delSiteFromMap(Srem3->comb, Srem3);
+		//// remove the sites
+		removeSite(Srem1);
+		removeSite(Srem2);
+		removeSite(Srem3);
+
+		////add in BY6 site
+		if (b4){
+			addSite(BY6, stt);
+			updateSites(S2, 1);
+		}
+		else{
+			addSite(BY6, moveIt(stt, 1));
+			updateSites(S1, 1);
+		}
+
+	}
+	else {
+		if (S1->type == ACR5){
+			convSiteType(S1, eRZZ);
+			addSite(eRFE, S1);
+			addSite(eR5, S1);
+		}
+		else {
+			updateSites(S1, 1);
+		}
+
+		if (S2->type == ACR5){
+			Spointer S3 = moveIt(S2, 1);
+			convSiteType(S2, eRZZ);
+			addSite(eR5, S3);
+			addSite(eRFE, S3);
+
+		}
+		else {
+			updateSites(S2, 1);
+		}
+	}
     // Update combined site for Site and neighbours
     Spointer S3, S4;
+	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
     updateCombinedSites(stt);
     updateCombinedSites(S1); updateCombinedSites(S2);
@@ -2276,6 +2382,10 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
 		return; //This should not happen
 	}
 
+	if (stt->comb == FE3 && (S3t == ZZ || S3t == eRZZ) && (S4t == ZZ || S4t == eRZZ)){
+		return; //This should not happen
+	}
+
 
     /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
@@ -2299,28 +2409,111 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
     Spointer S1 = moveIt(stt, -1); 
     Spointer S2 = moveIt(stt, 1);
     updateSites(stt, 0);
-	if (S1->type == ACR5){
-		convSiteType(S1, eRZZ);
-		addSite(eRFE, S1);
-		addSite(eR5, S1);
+	if ((S1t == eRZZ && S3t == eR5 && S5t == eRFE) || (S2t == eRZZ && S4t == eR5 && S6t == eRFE)){
+		//// Convert to a BY6 site
+		bool b4 = true;
+		Spointer Srem1, Srem2, Srem3;
+		if (S1t == eRZZ){
+			Srem1 = moveIt(stt, -1);
+			Srem2 = moveIt(stt, -2);
+			Srem3 = moveIt(stt, -3);
+		}
+		else{
+			Srem1 = moveIt(stt, 1);
+			Srem2 = moveIt(stt, 2);
+			Srem3 = moveIt(stt, 3);
+			b4 = false;
+		}
+		//// Remove sites and combine the neighbouring sites into BY6. 
+		//// First remove all three from site map. Elementary site types first..
+		delSiteFromMap(Srem1->type, Srem1);
+		delSiteFromMap(Srem2->type, Srem2);
+		delSiteFromMap(Srem3->type, Srem3);
+		//// then for combined site types..
+		delSiteFromMap(Srem1->comb, Srem1);
+		delSiteFromMap(Srem2->comb, Srem2);
+		delSiteFromMap(Srem3->comb, Srem3);
+		//// remove the sites
+		removeSite(Srem1);
+		removeSite(Srem2);
+		removeSite(Srem3);
+
+		////add in BY6 site
+		if (b4){
+			addSite(BY6, stt);
+			updateSites(S2, 1);
+		}
+		else{
+			addSite(BY6, moveIt(stt,1));
+			updateSites(S1, 1);
+		}
+
+	}
+	else if((S1t == eRFE && S3t == eR5 && S5t == eRZZ) || (S2t == eRFE && S4t == eR5 && S6t == eRZZ)){
+		//// Convert to a BY6 site
+		bool b4 = true;
+		Spointer Srem1, Srem2, Srem3;
+		if (S1t == eRFE){
+			Srem1 = moveIt(stt, -1);
+			Srem2 = moveIt(stt, -2);
+			Srem3 = moveIt(stt, -3);
+		}
+		else{
+			Srem1 = moveIt(stt, 1);
+			Srem2 = moveIt(stt, 2);
+			Srem3 = moveIt(stt, 3);
+			b4 = false;
+		}
+
+		//// Remove sites and combine the neighbouring sites into BY6. 
+		//// First remove all three from site map. Elementary site types first..
+		delSiteFromMap(Srem1->type, Srem1);
+		delSiteFromMap(Srem2->type, Srem2);
+		delSiteFromMap(Srem3->type, Srem3);
+		//// then for combined site types..
+		delSiteFromMap(Srem1->comb, Srem1);
+		delSiteFromMap(Srem2->comb, Srem2);
+		delSiteFromMap(Srem3->comb, Srem3);
+		//// remove the sites
+		removeSite(Srem1);
+		removeSite(Srem2);
+		removeSite(Srem3);
+
+		////add in BY6 site
+		if (b4){
+			addSite(BY6, stt);
+			updateSites(S2, 1);
+		}
+		else{
+			addSite(BY6, moveIt(stt, 1));
+			updateSites(S1, 1);
+		}
+	
 	}
 	else {
-		updateSites(S1, 1);
-	}
+		if (S1->type == ACR5){
+			convSiteType(S1, eRZZ);
+			addSite(eRFE, S1);
+			addSite(eR5, S1);
+		}
+		else {
+			updateSites(S1, 1);
+		}
 
-	if (S2->type == ACR5){
-		Spointer S3 = moveIt(S2, 1);
-		convSiteType(S2, eRZZ);
-		addSite(eR5, S3);
-		addSite(eRFE, S3);
+		if (S2->type == ACR5){
+			Spointer S3 = moveIt(S2, 1);
+			convSiteType(S2, eRZZ);
+			addSite(eR5, S3);
+			addSite(eRFE, S3);
 
-	}
-	else {
-		updateSites(S2, 1);
+		}
+		else {
+			updateSites(S2, 1);
+		}
 	}
     // Add new Sites
     Spointer newS1 = addSite(FE, stt);
-    Spointer newS2 = addSite(FE, S2);
+	Spointer newS2 = addSite(FE, moveIt(stt, 1));
     // Update combined sites for all new sites and original neighbours
     Spointer S3, S4, S5, S6;
 	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
