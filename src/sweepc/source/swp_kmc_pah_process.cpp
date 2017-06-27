@@ -1969,7 +1969,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     kmcSiteType stp = jp.getSiteType();
     int id = jp.getID();
 
-	if (PAH_ID == 100302 || PAH_ID == 302){
+	if (PAH_ID == 200305 || PAH_ID == 305 || PAH_ID == 100305 || PAH_ID == 300305){
 		cout << "ID is: " << id << endl;
 	}
 
@@ -2382,7 +2382,7 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
 		return; //This should not happen
 	}
 
-	if (stt->comb == FE3 && (S3t == ZZ || S3t == eRZZ) && (S4t == ZZ || S4t == eRZZ)){
+	if (stt->comb == FE3 && (S3t == ZZ || S3t == eRZZ || S3t == AC || S3t == eRAC) && (S4t == ZZ || S4t == eRZZ || S4t == AC || S4t == eRAC)){
 		return; //This should not happen
 	}
 
@@ -2616,7 +2616,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
             else newType = 6;
         }
         newType += ntype1+ntype2+2;
-		if (newType = 20) newType = 4;
+		if (newType == 20) newType = 4;
         convSiteType(stt, (kmcSiteType) newType);
     }    
     // erase the existence of the neighbouring sites
@@ -3332,6 +3332,7 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt) {
 		moveIt(stt, -1)->type == ACR5 && moveIt(stt, 1)->type == ZZ ||
 		moveIt(stt, -1)->type == ZZ && moveIt(stt, 1)->type == ACR5){
 		return; //this cannot happen
+		//NICK TO DO - Reconsider allowing this. It is similar to other cases. Just need to
 	}
 
     // Remove C
@@ -3501,6 +3502,22 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt) {
 		updateCombinedSites(stt);
 		updateCombinedSites(S1); updateCombinedSites(S2);
 		
+	}
+	else if (((int) moveIt(stt, -1)->type < 3 || (int) moveIt(stt, -1)->type > 20) &&
+		((int)moveIt(stt, 1)->type < 3 || (int)moveIt(stt, 1)->type > 20)) {
+		convSiteType(stt, eR5);
+		Spointer S1 = moveIt(stt, -1); Spointer S2 = moveIt(stt, 1);
+		if ((int) S1->type < 3){
+			convSiteType(S1, kmcSiteType((int)S1->type+ 21));
+			delSiteFromMap(S1->comb, S1);
+		}
+		if ((int)S2->type < 3){
+			convSiteType(S2, kmcSiteType((int)S2->type + 21));
+			delSiteFromMap(S2->comb, S2);
+		}
+		// update combined sites and neighbours
+		updateCombinedSites(stt);
+		updateCombinedSites(S1); updateCombinedSites(S2);
 	}
 	else {
 		cout << "Error with BY5 closure. Illegal neighbor site types" << endl;

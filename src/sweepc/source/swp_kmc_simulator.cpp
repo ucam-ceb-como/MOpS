@@ -190,7 +190,7 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
         t_next = m_t+t_step;
         if(t_next < t_max && t_step < t_step_max) {
 
-			if (PAH_ID == 100302 || PAH_ID == 302){
+			if (PAH_ID == 200305 || PAH_ID == 305 || PAH_ID == 100305 || PAH_ID == 300305){
 				std::list<Site> tester = pah->GetSiteVector();
 				cout << "Check start " << PAH_ID << endl << t_next << endl;
 				for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
@@ -211,7 +211,7 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             // Update data structure
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 
-			if (PAH_ID == 100302 || PAH_ID == 302){
+			if (PAH_ID == 200305 || PAH_ID == 305 || PAH_ID == 100305 || PAH_ID == 300305){
 				std::list<Site> tester = pah->GetSiteVector();
 				cout << "Check end " << PAH_ID << endl << t_next << endl;
 				for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){

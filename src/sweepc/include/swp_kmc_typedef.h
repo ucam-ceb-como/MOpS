@@ -142,7 +142,11 @@ namespace Sweep {
                 case FE2: return "FE2";
                 case ACR5: return "ACR5";
                 case RAC_FE3: return "RAC_FE3";
-                //case eBY5: return "eBY5";
+                case eR5: return "eR5";
+				case eRFE: return "eRFE";
+				case eRZZ: return "eRZZ";
+				case eRAC: return "eRAC";
+				case eR5_FE3: return "eR5_FE3";
                 case None: return "None";
                 case Inv: return "Invalid";
                 case any: return "any";
@@ -168,7 +172,10 @@ namespace Sweep {
             else if(str == "RZZR") return RZZR;
             else if(str == "RACR") return RACR;
             else if(str == "ACR5") return ACR5;
-            //else if(str == "eBY5") return eBY5;
+            else if(str == "eR5") return eR5;
+			else if (str == "eRFE") return eRFE;
+			else if (str == "eRZZ") return eRZZ;
+			else if (str == "eRAC") return eRAC;
             return Inv;
         }
         //! Get a vector of all site types
@@ -194,7 +201,11 @@ namespace Sweep {
             temp.push_back(FE2);
             temp.push_back(ACR5);
             temp.push_back(RAC_FE3);
-            //temp.push_back(eBY5);
+            temp.push_back(eR5);
+			temp.push_back(eRFE);
+			temp.push_back(eRZZ);
+			temp.push_back(eRAC);
+			temp.push_back(eR5_FE3);
             return temp;
         }
         //! Get a vector of all site types for phenyl addition
