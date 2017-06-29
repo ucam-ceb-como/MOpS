@@ -53,35 +53,43 @@ namespace Sweep {
     namespace KMC_ARS {
         //! Enumeration of site types.
         enum kmcSiteType {
-            // Principal Sites, uncombined basic types
-            FE=0,ZZ=1,AC=2,BY5=3,BY6=4,R5=5,
-            // Principal sites with R5 at one side
-            RFE=6, RZZ=7, RAC=8, RBY5=9,
-            // Principal sites with R5 at both sides
-            RFER=10, RZZR=11, RACR=12,
-            // Combined Sites: FE3:FE with 2 FEs on both sides, AC_FE3:AC next to FE3
-            // FE_HACA:FE with non-FEs on both sides
-            FE3=13, AC_FE3=14, FE_HACA=15, BY5_FE3=16, 
-            // Combined Sites: FE2:FE with FE at one side, but not an FE3
-            FE2=17,
-            // Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
-            ACR5=18,
-            //
-            RAC_FE3=19,
-			// Principal site involving embedded 5-member rings
-            eR5 = 20,
-			// Principal sites with embedded 5-member ring at one side
-			eRFE = 21, eRZZ = 22, eRAC = 23,
-            // Combined Sites wtih embedded 5-member ring
-			eR5_FE3 = 24, 
+			//Reserve negatives for non-reactive sites
+			//Preserve the number conventions between Principle and Combine site types
+            // Principal Sites involving 6-member rings
+            FE=1,ZZ=2,AC=3,BY5=4,BY6=5,
+			// Principal Sites involving 6-member rings that are non-reactive (due to hinderances)
+			NFE = -1, NZZ = -2, NAC = -3, NBY5 = -4, NBY6 = -5,
+			// Principal Sites involving 5-member rings. HER5 = One side embedded R5, ER5 = embedded R5
+			R5 = 11, HER5 =12, ER5 =13,
+            // Principal sites combining R6 and R5 sites
+			// Site with R5 at one side
+            RFE=21, RZZ=22, RAC=23, RBY5=24,
+			// Site with ER5 at one side
+			ERFE = 31, ERZZ = 32, ERAC = 33, ERBY5 = 34,
+            // Sites with R5 at both sides
+			RFER = 41, RZZR = 42, RACR = 43, RBY5R = 44,
+			// Sites with ER5 at both sides
+			ERFEER = 51, ERZZER = 52, ERACER = 53,
+			// Sites with one R5 and one ER5
+			RFEER = 61, RZZER = 62, RACER = 63,
+			//End principal site types
+			//Start combined site types
+			//First, basic combined sites with R6s. FE3:FE with 2 FEs on both sides. FE_HACA: FE with non FE's on each side
+			FE2 =1001, FE3 = 1002, FE_HACA = 1003, 
+			//Combined sites with only R5
+			//None at the moment, reserve 2000's for this
+			//Combined sites with R5 and R6s
+			ACR5 = 3001,
+			//Second, combined sites with other principle and combined sites, AC_FE3:AC next to FE3
+			AC_FE3 = 4001, BY5_FE3 = 4002 , RAC_FE3 = 4003, ER5_FE3 = 4004,
 			//none
-            None,
+            None = 0,
             // Error ID
-            Inv=-1,
+            Inv=-100000,
             // Any Site:
-            any=100,
+            any=100000,
             // Benzene addition sites:
-            benz=101
+            benz=100001
         };
         
         //! Enumeration of processes on data structure available.
@@ -127,26 +135,52 @@ namespace Sweep {
                 case AC: return "AC";
                 case BY5: return "BY5";
                 case BY6: return "BY6";
+
+				case NFE: return "NFE";
+				case NZZ: return "NZZ";
+				case NAC: return "NAC";
+				case NBY5: return "NBY5";
+				case NBY6: return "NBY6";
+
                 case R5: return "R5";
+				case HER5: return "HER5";
+				case ER5: return "ER5";
+
                 case RFE: return "RFE";
                 case RZZ: return "RZZ";
                 case RAC: return "RAC";
                 case RBY5: return "RBY5";
+
+				case ERFE: return "ERFE";
+				case ERZZ: return "ERZZ";
+				case ERAC: return "ERAC";
+				case ERBY5: return "ERBY5";
+
                 case RFER: return "RFER";
                 case RZZR: return "RZZR";
                 case RACR: return "RACR";
+				case RBY5R: return "RBY5R";
+
+				case ERFEER: return "ERFEER";
+				case ERZZER: return "ERZZER";
+				case ERACER: return "ERACER";
+
+				case RFEER: return "RFEER";
+				case RZZER: return "RZZER";
+				case RACER: return "RACER";
+
+				case FE2: return "FE2";
                 case FE3: return "FE3";
+				case FE_HACA: return "FE_HACA";
+
+				case ACR5: return "ACR5";
+
                 case AC_FE3: return "AC_FE3";
-                case FE_HACA: return "FE_HACA";
+
                 case BY5_FE3: return "BY5_FE3";
-                case FE2: return "FE2";
-                case ACR5: return "ACR5";
                 case RAC_FE3: return "RAC_FE3";
-                case eR5: return "eR5";
-				case eRFE: return "eRFE";
-				case eRZZ: return "eRZZ";
-				case eRAC: return "eRAC";
-				case eR5_FE3: return "eR5_FE3";
+				case ER5_FE3: return "ER5_FE3";
+
                 case None: return "None";
                 case Inv: return "Invalid";
                 case any: return "any";
@@ -163,19 +197,40 @@ namespace Sweep {
             else if(str == "AC") return AC;
             else if(str == "BY5") return BY5;
             else if(str == "BY6") return BY6;
+
+			if (str == "NFE") return NFE;
+			else if (str == "NZZ") return NZZ;
+			else if (str == "NAC") return NAC;
+			else if (str == "NBY5") return NBY5;
+			else if (str == "NBY6") return NBY6;
+
             else if(str == "R5") return R5;
+			else if (str == "HER5") return HER5;
+			else if (str == "ER5") return ER5;
+
             else if(str == "RFE") return RFE;
             else if(str == "RZZ") return RZZ;
             else if(str == "RAC") return RAC;
             else if(str == "RBY5") return RBY5;
+
+			else if (str == "ERFE") return ERFE;
+			else if (str == "ERZZ") return ERZZ;
+			else if (str == "ERAC") return ERAC;
+			else if (str == "ERBY5") return ERBY5;
+
             else if(str == "RFER") return RFER;
             else if(str == "RZZR") return RZZR;
             else if(str == "RACR") return RACR;
-            else if(str == "ACR5") return ACR5;
-            else if(str == "eR5") return eR5;
-			else if (str == "eRFE") return eRFE;
-			else if (str == "eRZZ") return eRZZ;
-			else if (str == "eRAC") return eRAC;
+			else if (str == "RBY5R") return RBY5R;
+
+			else if (str == "ERFEER") return ERFEER;
+			else if (str == "ERZZER") return ERZZER;
+			else if (str == "ERACER") return ERACER;
+
+			else if (str == "RFEER") return RFEER;
+			else if (str == "RZZER") return RZZER;
+			else if (str == "RACER") return RACER;
+
             return Inv;
         }
         //! Get a vector of all site types
@@ -186,26 +241,51 @@ namespace Sweep {
             temp.push_back(AC);
             temp.push_back(BY5);
             temp.push_back(BY6);
+
+			temp.push_back(NFE);
+			temp.push_back(NZZ);
+			temp.push_back(NAC);
+			temp.push_back(NBY5);
+			temp.push_back(NBY6);
+
             temp.push_back(R5);
+			temp.push_back(HER5);
+			temp.push_back(ER5);
+
             temp.push_back(RFE);
             temp.push_back(RZZ);
             temp.push_back(RAC);
             temp.push_back(RBY5);
+
+			temp.push_back(ERFE);
+			temp.push_back(ERZZ);
+			temp.push_back(ERAC);
+			temp.push_back(ERBY5);
+
             temp.push_back(RFER);
             temp.push_back(RZZR);
             temp.push_back(RACR);
+			temp.push_back(RBY5R);
+
+			temp.push_back(ERFEER);
+			temp.push_back(ERZZER);
+			temp.push_back(ERACER);
+
+			temp.push_back(RFEER);
+			temp.push_back(RZZER);
+			temp.push_back(RACER);
+
+			temp.push_back(FE2);
             temp.push_back(FE3);
+			temp.push_back(FE_HACA);
+
+			temp.push_back(ACR5);
+
             temp.push_back(AC_FE3);
-            temp.push_back(FE_HACA);
             temp.push_back(BY5_FE3);
-            temp.push_back(FE2);
-            temp.push_back(ACR5);
             temp.push_back(RAC_FE3);
-            temp.push_back(eR5);
-			temp.push_back(eRFE);
-			temp.push_back(eRZZ);
-			temp.push_back(eRAC);
-			temp.push_back(eR5_FE3);
+			temp.push_back(ER5_FE3);
+
             return temp;
         }
         //! Get a vector of all site types for phenyl addition

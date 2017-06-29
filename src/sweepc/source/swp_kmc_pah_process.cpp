@@ -1039,7 +1039,8 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 				cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
 			}
         }
-    } else if (stype == 5) {
+	}
+	else if (stype == (int)(kmcSiteType) R5) {
         assert(bulkCchange == 0);
         st->type = (kmcSiteType)((int)st->type + bulkCchange - 5);
 		if (st->type == R5){
@@ -1052,7 +1053,12 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
 		}
     } else {
-        st->type = (kmcSiteType)((int)st->type + bulkCchange);
+		if (stype > 0){
+			st->type = (kmcSiteType)((int)st->type + bulkCchange);
+		}
+		else{
+			st->type = (kmcSiteType)((int)st->type - bulkCchange);
+		}
 		if (st->type == R5){
 			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
 		}
@@ -1063,6 +1069,193 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 //    // update member C
 //    st->C1 = Carb1;
 //    st->C2 = Carb2;
+}
+
+void PAHProcess::updateHinderedSites() {
+
+	int S1t, S2t, S3t, S4t, S5t, S6t, S7t, S8t, S9t, S10t, S11t, S12t;
+	bool hindered;
+
+	//if ((S1t == BY5 && S3t == ZZ && S5t == AC && S7t == BY6) || (S2t == BY5 && S4t == ZZ && S6t == AC && S8t == BY6)){
+	//	return; //This should not happen
+	//}
+
+	//if ((S1t == BY5 && S3t == AC && S5t == ZZ && S7t == BY6) || (S2t == BY5 && S4t == AC && S6t == ZZ && S8t == BY6)){
+	//	return; //This should not happen
+	//}
+
+	//if ((S1t == AC && S3t == ERZZ) || (S2t == AC && S4t == ERZZ)){
+	//	return; //This should not happen
+	//}
+
+	//if ((S1t == AC && S3t == ERFE && S5t == ER5 && S7t == ERZZ) || (S2t == AC && S4t == ERFE && S6t == ER5 && S8t == ERZZ)){
+	//	return; //This should not happen
+	//}
+
+	//if (st->comb == FE3 && (S3t == ZZ || S3t == ERZZ || S3t == AC || S3t == ERAC) && (S4t == ZZ || S4t == ERZZ || S4t == AC || S4t == ERAC)){
+	//	return; //This should not happen
+	//}
+
+	//if (S1t == ACR5 || S2t == ACR5){
+	//	return; //This should not happen
+	//}
+
+	//if ((S1t == ERFE && S3t == ER5 && S5t == ERZZ && S7t == BY6) || (S2t == ERFE && S4t == ER5 && S6t == ERZZ && S8t == BY6)){
+	//	return; //This should not happen
+	//}
+
+	//if ((S1t == ERZZ && S3t == ER5 && S5t == ERFE && S7t == BY6) || (S2t == ERZZ && S4t == ER5 && S6t == ERFE && S8t == BY6)){
+	//	return; //This should not happen
+	//}
+
+
+	//Now, re-assign hindered site types
+	for (Spointer st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
+		hindered = false;
+		switch (st->type) {
+		case FE:
+		case NFE:
+			S1t = (int)moveIt(st, -1)->type;
+			S2t = (int)moveIt(st, 1)->type;
+			S3t = (int)moveIt(st, -2)->type;
+			S4t = (int)moveIt(st, 2)->type;
+			S5t = (int)moveIt(st, -3)->type;
+			S6t = (int)moveIt(st, 3)->type;
+			S7t = (int)moveIt(st, -4)->type;
+			S8t = (int)moveIt(st, 4)->type;
+			S9t = (int)moveIt(st, -5)->type;
+			S10t = (int)moveIt(st, 5)->type;
+			S11t = (int)moveIt(st, -6)->type;
+			S12t = (int)moveIt(st, 6)->type;
+
+			//List cases where growth at this site would be hindered due to colocation of carbon atoms
+			//Hinderances involving BY6
+			if (S1t == BY6 || S2t == BY6){
+				hindered = true;
+				break;
+			}
+
+			if (((S1t == AC || S1t == NAC) && (S3t == AC || S3t == NAC) && S5t == BY6) ||
+				((S2t == AC || S2t == NAC) && (S4t == AC || S4t == NAC) && S6t == BY6)){
+				hindered = true;
+				break;
+			}
+
+			if (((S1t == FE || S1t == NFE) && S3t == BY6 && (S5t == AC || S5t == NAC)) ||
+				((S2t == FE || S2t == NFE) && S4t == BY6 && (S6t == AC || S6t == NAC) )){
+				hindered = true;
+				break;
+			}
+
+			if (((S1t == AC || S1t == NAC) && S3t == BY6 ) ||
+				((S2t == AC || S2t == NAC) && S4t == BY6 )){
+				hindered = true;
+				break;
+			}
+
+			if (((S1t == FE || S1t == NFE) && (S3t == FE || S3t == NFE) && S5t == BY6 && (S7t == AC || S7t == NAC) && (S9t == AC || S9t == NAC)) ||
+				((S2t == FE || S2t == NFE) && (S4t == FE || S4t == NFE) && S6t == BY6 && (S8t == AC || S8t == NAC) && (S10t == AC || S10t == NAC))){
+				hindered = true;
+				break;
+			}
+
+			if (((S1t == ZZ || S1t == NZZ) && S3t == BY6 && (S5t == ZZ || S5t == NZZ)) ||
+				((S2t == ZZ || S2t == NZZ) && S4t == BY6 && (S6t == ZZ || S6t == NZZ))){
+				hindered = true;
+				break;
+			}
+
+			//Other hinderances 
+			//No acenes longer than anthracene
+			if (st->comb == FE3 && (S3t == ZZ || S3t == NZZ) && (S4t == ZZ || S4t == NZZ)){
+				hindered = true;
+				break;
+			}
+
+
+			//Hinderances involving BY5
+			if ((S1t == BY5 && S3t == BY5) || (S2t == BY5 && S4t == BY5)){
+				hindered = true;
+				break;
+			}
+			if (((S1t == ZZ || S1t == NZZ) && S3t == BY5 && S5t == BY5) || ((S2t == ZZ || S2t == NZZ) && S4t == BY5 && S6t == BY5)){
+				hindered = true;
+				break;
+			}
+			if (((S1t == FE || S1t == NFE) && S3t == BY5 && S5t == BY5 && (S7t == ZZ || S7t == NZZ)) ||
+				((S2t == FE || S2t == NFE) && S4t == BY5 && S6t == BY5 && (S8t == ZZ || S8t == NZZ))){
+				hindered = true;
+				break;
+			}
+
+			if (((S1t == AC || S1t == NAC)  && S3t == BY5 && (S5t == AC || S5t == NAC)) || ((S2t == AC || S2t == NAC) && S4t == BY5 && (S6t == AC || S6t == NAC))){
+				hindered = true;
+				break;
+			}
+
+			if (((S1t == FE || S1t == NFE) && S3t == BY5 && S5t == AC && S7t == BY5) ||
+				((S2t == FE || S2t == NFE) && S4t == BY5 && S6t == AC && S8t == BY5)){
+				hindered = true;
+				break;
+			}
+
+			if ((S1t == BY5 && S3t == AC && S5t == BY5) ||
+				(S2t == BY5 && S4t == AC && S6t == BY5)){
+				hindered = true;
+				break;
+			}
+
+			//Hinderances involving BY5 and BY6
+			if (((S1t == FE || S1t == NFE) && S3t == BY5 && (S5t == FE || S5t == NFE) && S7t == BY6 && (S9t == FE || S9t == NFE) && S11t == BY5) ||
+				((S2t == FE || S2t == NFE) && S4t == BY5 && (S6t == FE || S6t == NFE) && S8t == BY6 && (S10t == FE || S10t == NFE) && S12t == BY5)){
+				hindered = true;
+				break;
+			}
+
+			if ((S1t == BY5 && (S3t == FE || S3t == NFE) && S5t == BY6 && (S7t == FE || S7t == NFE) && (S9t == BY5 || S9t == BY5)) ||
+				(S2t == BY5 && (S4t == FE || S4t == NFE) && S6t == BY6 && (S8t == FE || S8t == NFE) && S10t == BY5)){
+				hindered = true;
+				break;
+			}
+
+			if (((S1t == FE || S1t == NFE) && S3t == BY5 && (S5t == FE || S5t == NFE) && S7t == BY6 && (S9t == FE || S9t == NFE) && S11t == BY5) ||
+				((S2t == FE || S2t == NFE) && S4t == BY5 && (S6t == FE || S6t == NFE) && S8t == BY6 && (S10t == FE || S10t == NFE) && S12t == BY5)){
+				hindered = true;
+				break;
+			}
+
+			if (((S1t == FE || S1t == NFE) && (S3t == ZZ || S3t == NZZ) && S5t == BY6 && (S7t == FE || S7t == NFE) && S9t == BY5 && S11t != FE && S11t != NFE) ||
+				((S2t == FE || S2t == NFE) && (S4t == ZZ || S4t == NZZ) && S6t == BY6 && (S8t == FE || S8t == NFE) && S10t == BY5 && S12t != FE && S12t != NFE)){
+				hindered = true;
+				break;
+			}
+
+			if (((S1t == ZZ || S1t == NZZ) && S3t == BY6 && (S5t == FE || S5t == NFE) && S7t == BY5) ||
+				((S2t == ZZ || S2t == NZZ) && S4t == BY6 && (S6t == FE || S6t == NFE) && S8t == BY5)){
+				hindered = true;
+				break;
+			}
+
+			if ((S1t == BY5 && (S3t == FE || S3t == NFE) && (S5t == AC || S5t == NAC) && S7t == BY6 && (S9t == FE || S9t == NFE) && (S11t == ZZ || S11t == NZZ)) ||
+				(S2t == BY5 && (S4t == FE || S4t == NFE) && (S6t == AC || S6t == NAC) && S8t == BY6 && (S10t == FE || S10t == NFE) && (S12t == ZZ || S12t == NZZ))){
+				hindered = true;
+				break;
+			}
+
+
+		}
+
+		if (hindered){
+			if (st->type > 0){
+				convSiteType(st, (kmcSiteType) (0 - (int)st->type));
+			}
+		}
+		else{
+			if (st->type < 0){
+				convSiteType(st, (kmcSiteType)(0 - (int)st->type));
+			}
+		}
+	}
 }
 
 /*!
@@ -1076,7 +1269,7 @@ void PAHProcess::updateCombinedSites() {
 	int loopIndex = 0;
 	
 	for(Spointer i=m_pah->m_siteList.begin(); i!= m_pah->m_siteList.end(); i++) {
-		if(i->type == FE) {
+		if (i->type == FE || i->type == NFE) {
 			indicesOfFE.push_back(loopIndex);
 		}
 		else {
@@ -1116,9 +1309,9 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
         delSiteFromMap(st->comb, st);
     }
     switch(st->type) {
-    case FE:
+    case FE || NFE:
         // Check for FE3 (if there's FE on each side of the FE)
-        if(moveIt(st,1)->type == FE && moveIt(st,-1)->type == FE) {
+		if ((moveIt(st, 1)->type == FE || moveIt(st, 1)->type == NFE) && (moveIt(st, -1)->type == FE || moveIt(st, -1)->type == NFE)) {
             //if(st->C1->C1->C1->bridge || st->C2->C2->C2->bridge)
             st->comb = FE3;
             m_pah->m_siteMap[FE3].push_back(st);
@@ -1130,11 +1323,11 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
             break;
         }
         //Check for FE2 (if only one FE is beside this FE)
-        else if(moveIt(st,1)->type == FE || moveIt(st,-1)->type == FE){
+		else if ((moveIt(st, 1)->type == FE || moveIt(st, 1)->type == NFE) || (moveIt(st, -1)->type == FE || moveIt(st, -1)->type == NFE)){
             Spointer S1,S2;
             S1 = moveIt(st,-1); S2 = moveIt(st, 1);
             // Check if that FE is not a FE3
-            if(S2->type == FE && moveIt(S2,1)->type != FE) {
+			if ((S2->type == FE || S2->type == NFE) && moveIt(S2, 1)->type != FE && moveIt(S2, 1)->type != NFE) {
                 st->comb = FE2;
                 m_pah->m_siteMap[FE2].push_back(st);
 		//
@@ -1149,7 +1342,8 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
                 if(S2->comb == FE2) delSiteFromMap(S2->comb, st);
                 //
                 if(S2->comb != FE2) updateCombinedSites(S2);
-            } else if(S1->type == FE && moveIt(S1,-1)->type != FE) {
+			}
+			else if ((S1->type == FE || S1->type == NFE) && moveIt(S1, -1)->type != FE && moveIt(S1, -1)->type != NFE) {
                 st->comb = FE2;
                 m_pah->m_siteMap[FE2].push_back(st);
                 if(S1->comb == FE2) delSiteFromMap(S1->comb, st);
@@ -1159,7 +1353,8 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
             break;
         }
         // Check for FE_HACA
-        else if(moveIt(st,1)->type != FE && moveIt(st,-1)->type != FE && moveIt(st,1)->type != RFE && moveIt(st,-1)->type != RFE) {
+        else if(moveIt(st,1)->type != FE && moveIt(st,-1)->type != FE && moveIt(st,1)->type != RFE && moveIt(st,-1)->type != RFE
+			&& moveIt(st, 1)->type != NFE && moveIt(st, -1)->type != NFE) {
             //if(st->C1->C1->bridge || st->C2->C2->bridge)
             st->comb = FE_HACA;
             m_pah->m_siteMap[FE_HACA].push_back(st);
@@ -1185,15 +1380,15 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
             break;
         }else st->comb = None;
         break;
-    case eR5:
-    // Check for eR5_FE3
-		//NICK TO DO - Properly check for bridges. Might not be needed because bridges will be new principal site type
-        if((moveIt(st,2)->comb==FE3 || moveIt(st,-2)->comb==FE3) && (moveIt(st,3)->comb!=FE3 || moveIt(st,-3)->comb!=FE3)) {
-            st->comb = eR5_FE3;
-            m_pah->m_siteMap[BY5_FE3].push_back(st);
-            break;
-        }else st->comb = None;
-        break;
+  //  case eR5:
+  //  // Check for eR5_FE3
+		////NICK TO DO - Properly check for bridges. Might not be needed because bridges will be new principal site type
+		//if ((moveIt(st, -1)->type == eRFE && moveIt(st, -2)->comb == FE2) || (moveIt(st, 1)->type == eRFE && moveIt(st, 2)->comb == FE2)) {
+  //          st->comb = eR5_FE3;
+  //          m_pah->m_siteMap[BY5_FE3].push_back(st);
+  //          break;
+  //      }else st->comb = None;
+  //      break;
     case RAC:
     // Check for RAC_FE3
 		//NICK TO DO - Properly check for bridges. Might not be needed because bridges will be new principal site type
@@ -1907,14 +2102,14 @@ bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
     for(Spointer i=startSite; i!=endSite; i = moveIt(i,1)) {
         switch(i->comb) {
             case FE3:
-                if(i->type != FE) {
+				if (i->type != FE && i->type != NFE) {
                     error = true;
                     error_stype_comb = FE3;
                     error_stype = i->type;
                 }
                 break;
             case FE2:
-                if(i->type != FE) {
+				if (i->type != FE && i->type != NFE) {
                     error = true;
                     error_stype_comb = FE2;
                     error_stype = i->type;
@@ -1928,7 +2123,7 @@ bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
                 }
                 break;
             case FE_HACA:
-                if(i->type != FE) {
+				if (i->type != FE && i->type != NFE) {
                     error = true;
                     error_stype_comb = FE_HACA;
                     error_stype = i->type;
@@ -1969,7 +2164,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     kmcSiteType stp = jp.getSiteType();
     int id = jp.getID();
 
-	if (PAH_ID == 200305 || PAH_ID == 305 || PAH_ID == 100305 || PAH_ID == 300305){
+	if (PAH_ID == 362){
 		cout << "ID is: " << id << endl;
 	}
 
@@ -2062,6 +2257,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     if(m_pah->m_cfirst->A != 'H')
         cout<<"WARNING: A of m_cfirst is not H..\n";
     //cout<<"----PROCESS PERFORMED!-----\n";*/
+	//Redetermine any sites that are non-reactive (due to hinderances)
+	updateHinderedSites();
     Spointer S1,S2,S3,S4;
     S1 = moveIt(site_perf, -1); S2 = moveIt(site_perf, 1);
     S3 = moveIt(site_perf, -2); S4 = moveIt(site_perf, 2);
@@ -2144,9 +2341,18 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 		return; //This should not happen
 	}
 
-	if ((S1t == FE && S3t == eRZZ) || (S2t == FE && S4t == eRZZ)){
+	if ((S1t == FE && S3t == ERZZ) || (S2t == FE && S4t == ERZZ)){
 		return; //This should not happen
 	}
+
+	if ((S1t == ACR5 && S3t != FE) || (S2t == ACR5 && S4t != FE)){
+		return; //This should not happen
+	}
+
+	if ((S1t == ZZ && S3t == BY6 && S5t == ZZ) || (S2t == ZZ && S4t == BY6 && S6t == ZZ)){
+		return; //This should not happen
+	}
+
 
     /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
@@ -2192,108 +2398,110 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
     // Update Site and neighbours
     updateSites(stt, -2);
 
-	if ((S1t == eRZZ && S3t == eR5 && S5t == eRFE) || (S2t == eRZZ && S4t == eR5 && S6t == eRFE)){
-		//// Convert to a BY6 site
-		bool b4 = true;
-		Spointer Srem1, Srem2, Srem3;
-		if (S1t == eRZZ){
-			Srem1 = moveIt(stt, -1);
-			Srem2 = moveIt(stt, -2);
-			Srem3 = moveIt(stt, -3);
-		}
-		else{
-			Srem1 = moveIt(stt, 1);
-			Srem2 = moveIt(stt, 2);
-			Srem3 = moveIt(stt, 3);
-			b4 = false;
-		}
-		//// Remove sites and combine the neighbouring sites into BY6. 
-		//// First remove all three from site map. Elementary site types first..
-		delSiteFromMap(Srem1->type, Srem1);
-		delSiteFromMap(Srem2->type, Srem2);
-		delSiteFromMap(Srem3->type, Srem3);
-		//// then for combined site types..
-		delSiteFromMap(Srem1->comb, Srem1);
-		delSiteFromMap(Srem2->comb, Srem2);
-		delSiteFromMap(Srem3->comb, Srem3);
-		//// remove the sites
-		removeSite(Srem1);
-		removeSite(Srem2);
-		removeSite(Srem3);
+	//if ((S1t == eRZZ && S3t == eR5 && S5t == eRFE) || (S2t == eRZZ && S4t == eR5 && S6t == eRFE)){
+	//	//// Convert to a BY6 site
+	//	bool b4 = true;
+	//	Spointer Srem1, Srem2, Srem3;
+	//	if (S1t == eRZZ){
+	//		Srem1 = moveIt(stt, -1);
+	//		Srem2 = moveIt(stt, -2);
+	//		Srem3 = moveIt(stt, -3);
+	//	}
+	//	else{
+	//		Srem1 = moveIt(stt, 1);
+	//		Srem2 = moveIt(stt, 2);
+	//		Srem3 = moveIt(stt, 3);
+	//		b4 = false;
+	//	}
+	//	//// Remove sites and combine the neighbouring sites into BY6. 
+	//	//// First remove all three from site map. Elementary site types first..
+	//	delSiteFromMap(Srem1->type, Srem1);
+	//	delSiteFromMap(Srem2->type, Srem2);
+	//	delSiteFromMap(Srem3->type, Srem3);
+	//	//// then for combined site types..
+	//	delSiteFromMap(Srem1->comb, Srem1);
+	//	delSiteFromMap(Srem2->comb, Srem2);
+	//	delSiteFromMap(Srem3->comb, Srem3);
+	//	//// remove the sites
+	//	removeSite(Srem1);
+	//	removeSite(Srem2);
+	//	removeSite(Srem3);
 
-		////add in BY6 site
-		if (b4){
-			addSite(BY6, stt);
-			updateSites(S2, 1);
-		}
-		else{
-			addSite(BY6, moveIt(stt, 1));
-			updateSites(S1, 1);
-		}
+	//	////add in BY6 site
+	//	if (b4){
+	//		addSite(BY6, stt);
+	//		updateSites(S2, 1);
+	//	}
+	//	else{
+	//		addSite(BY6, moveIt(stt, 1));
+	//		updateSites(S1, 1);
+	//	}
 
-	}
-	else if ((S1t == eRFE && S3t == eR5 && S5t == eRZZ) || (S2t == eRFE && S4t == eR5 && S6t == eRZZ)){
-		//// Convert to a BY6 site
-		bool b4 = true;
-		Spointer Srem1, Srem2, Srem3;
-		if (S1t == eRFE){
-			Srem1 = moveIt(stt, -1);
-			Srem2 = moveIt(stt, -2);
-			Srem3 = moveIt(stt, -3);
-		}
-		else{
-			Srem1 = moveIt(stt, 1);
-			Srem2 = moveIt(stt, 2);
-			Srem3 = moveIt(stt, 3);
-			b4 = false;
-		}
+	//}
+	//else if ((S1t == eRFE && S3t == eR5 && S5t == eRZZ) || (S2t == eRFE && S4t == eR5 && S6t == eRZZ)){
+	//	//// Convert to a BY6 site
+	//	bool b4 = true;
+	//	Spointer Srem1, Srem2, Srem3;
+	//	if (S1t == eRFE){
+	//		Srem1 = moveIt(stt, -1);
+	//		Srem2 = moveIt(stt, -2);
+	//		Srem3 = moveIt(stt, -3);
+	//	}
+	//	else{
+	//		Srem1 = moveIt(stt, 1);
+	//		Srem2 = moveIt(stt, 2);
+	//		Srem3 = moveIt(stt, 3);
+	//		b4 = false;
+	//	}
 
-		//// Remove sites and combine the neighbouring sites into BY6. 
-		//// First remove all three from site map. Elementary site types first..
-		delSiteFromMap(Srem1->type, Srem1);
-		delSiteFromMap(Srem2->type, Srem2);
-		delSiteFromMap(Srem3->type, Srem3);
-		//// then for combined site types..
-		delSiteFromMap(Srem1->comb, Srem1);
-		delSiteFromMap(Srem2->comb, Srem2);
-		delSiteFromMap(Srem3->comb, Srem3);
-		//// remove the sites
-		removeSite(Srem1);
-		removeSite(Srem2);
-		removeSite(Srem3);
+	//	//// Remove sites and combine the neighbouring sites into BY6. 
+	//	//// First remove all three from site map. Elementary site types first..
+	//	delSiteFromMap(Srem1->type, Srem1);
+	//	delSiteFromMap(Srem2->type, Srem2);
+	//	delSiteFromMap(Srem3->type, Srem3);
+	//	//// then for combined site types..
+	//	delSiteFromMap(Srem1->comb, Srem1);
+	//	delSiteFromMap(Srem2->comb, Srem2);
+	//	delSiteFromMap(Srem3->comb, Srem3);
+	//	//// remove the sites
+	//	removeSite(Srem1);
+	//	removeSite(Srem2);
+	//	removeSite(Srem3);
 
-		////add in BY6 site
-		if (b4){
-			addSite(BY6, stt);
-			updateSites(S2, 1);
-		}
-		else{
-			addSite(BY6, moveIt(stt, 1));
-			updateSites(S1, 1);
-		}
+	//	////add in BY6 site
+	//	if (b4){
+	//		addSite(BY6, stt);
+	//		updateSites(S2, 1);
+	//	}
+	//	else{
+	//		addSite(BY6, moveIt(stt, 1));
+	//		updateSites(S1, 1);
+	//	}
 
-	}
-	else {
-		if (S1->type == ACR5){
-			convSiteType(S1, eRZZ);
-			addSite(eRFE, S1);
-			addSite(eR5, S1);
-		}
-		else {
-			updateSites(S1, 1);
-		}
+	//}
+	//else {
+	//	if (S1->type == ACR5){
+	//		convSiteType(S1, eRZZ);
+	//		addSite(eRFE, S1);
+	//		addSite(eR5, S1);
+	//	}
+	//	else {
+	//		updateSites(S1, 1);
+	//	}
 
-		if (S2->type == ACR5){
-			Spointer S3 = moveIt(S2, 1);
-			convSiteType(S2, eRZZ);
-			addSite(eR5, S3);
-			addSite(eRFE, S3);
+	//	if (S2->type == ACR5){
+	//		Spointer S3 = moveIt(S2, 1);
+	//		convSiteType(S2, eRZZ);
+	//		addSite(eR5, S3);
+	//		addSite(eRFE, S3);
 
-		}
-		else {
-			updateSites(S2, 1);
-		}
-	}
+	//	}
+	//	else {
+	//		updateSites(S2, 1);
+	//	}
+	//}
+	updateSites(S1, 1);
+	updateSites(S2, 1);
     // Update combined site for Site and neighbours
     Spointer S3, S4;
 	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
@@ -2323,70 +2531,6 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
 //    printSites(stt);
     //Cpointer newC1, newC2, newC3, newC4;
 
-	int S1t = (int) moveIt(stt, -1)->type;
-	int S2t = (int) moveIt(stt, 1)->type;
-	int S3t = (int) moveIt(stt, -2)->type;
-	int S4t = (int) moveIt(stt, 2)->type;
-	int S5t = (int) moveIt(stt, -3)->type;
-	int S6t = (int) moveIt(stt, 3)->type;
-	int S7t = (int)moveIt(stt, -4)->type;
-	int S8t = (int)moveIt(stt, 4)->type;
-	int St = (int) stt->type;
-	//cout << "FE Begin" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
-
-	if (S1t == BY6 || S2t == BY6){
-		return; //This should not happen
-	}
-
-	if (S3t == BY6 || S4t == BY6){
-		return; //This should not happen
-	}
-
-	if (S5t == BY6 || S6t == BY6){
-		return; //This should not happen
-	}
-
-	if (S3t == BY5 || S4t == BY5 || S5t == BY5 || S6t == BY5 ){
-		return; //This should not happen
-	}
-
-	if ((S1t == BY5 && S3t == BY5) || (S2t == BY5 && S4t == BY5)){
-		return; //This should not happen
-	}
-
-	if ((S1t == ZZ && S3t == BY5 && S5t == BY5) || (S2t == ZZ && S4t == BY5 && S6t == BY5)){
-		return; //This should not happen
-	}
-
-	if ((S1t == AC && S3t == BY5) || (S2t == AC && S4t == BY5)){
-		return; //This should not happen
-	}
-
-	if ((S1t == AC && S3t == AC && S5t == BY6) || (S2t == AC && S4t == AC && S6t == BY6)){
-		return; //This should not happen
-	}
-
-	if ((S1t == BY5 && S3t == ZZ && S5t == AC && S7t == BY6) || (S2t == BY5 && S4t == ZZ && S6t == AC && S8t == BY6)){
-		return; //This should not happen
-	}
-
-	if ((S1t == BY5 && S3t == AC && S5t == ZZ && S7t == BY6) || (S2t == BY5 && S4t == AC && S6t == ZZ && S8t == BY6)){
-		return; //This should not happen
-	}
-
-	if ((S1t == AC && S3t == eRZZ) || (S2t == AC && S4t == eRZZ)){
-		return; //This should not happen
-	}
-
-	if ((S1t == AC && S3t == eRFE && S5t == eR5 && S7t == eRZZ) || (S2t == AC && S4t == eRFE && S6t == eR5 && S8t == eRZZ)){
-		return; //This should not happen
-	}
-
-	if (stt->comb == FE3 && (S3t == ZZ || S3t == eRZZ || S3t == AC || S3t == eRAC) && (S4t == ZZ || S4t == eRZZ || S4t == AC || S4t == eRAC)){
-		return; //This should not happen
-	}
-
-
     /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
      * Therefore, the coordinates of the edge carbon atoms (coords) have been made redundant.
@@ -2409,108 +2553,110 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
     Spointer S1 = moveIt(stt, -1); 
     Spointer S2 = moveIt(stt, 1);
     updateSites(stt, 0);
-	if ((S1t == eRZZ && S3t == eR5 && S5t == eRFE) || (S2t == eRZZ && S4t == eR5 && S6t == eRFE)){
-		//// Convert to a BY6 site
-		bool b4 = true;
-		Spointer Srem1, Srem2, Srem3;
-		if (S1t == eRZZ){
-			Srem1 = moveIt(stt, -1);
-			Srem2 = moveIt(stt, -2);
-			Srem3 = moveIt(stt, -3);
-		}
-		else{
-			Srem1 = moveIt(stt, 1);
-			Srem2 = moveIt(stt, 2);
-			Srem3 = moveIt(stt, 3);
-			b4 = false;
-		}
-		//// Remove sites and combine the neighbouring sites into BY6. 
-		//// First remove all three from site map. Elementary site types first..
-		delSiteFromMap(Srem1->type, Srem1);
-		delSiteFromMap(Srem2->type, Srem2);
-		delSiteFromMap(Srem3->type, Srem3);
-		//// then for combined site types..
-		delSiteFromMap(Srem1->comb, Srem1);
-		delSiteFromMap(Srem2->comb, Srem2);
-		delSiteFromMap(Srem3->comb, Srem3);
-		//// remove the sites
-		removeSite(Srem1);
-		removeSite(Srem2);
-		removeSite(Srem3);
+	//if ((S1t == eRZZ && S3t == eR5 && S5t == eRFE) || (S2t == eRZZ && S4t == eR5 && S6t == eRFE)){
+	//	//// Convert to a BY6 site
+	//	bool b4 = true;
+	//	Spointer Srem1, Srem2, Srem3;
+	//	if (S1t == eRZZ){
+	//		Srem1 = moveIt(stt, -1);
+	//		Srem2 = moveIt(stt, -2);
+	//		Srem3 = moveIt(stt, -3);
+	//	}
+	//	else{
+	//		Srem1 = moveIt(stt, 1);
+	//		Srem2 = moveIt(stt, 2);
+	//		Srem3 = moveIt(stt, 3);
+	//		b4 = false;
+	//	}
+	//	//// Remove sites and combine the neighbouring sites into BY6. 
+	//	//// First remove all three from site map. Elementary site types first..
+	//	delSiteFromMap(Srem1->type, Srem1);
+	//	delSiteFromMap(Srem2->type, Srem2);
+	//	delSiteFromMap(Srem3->type, Srem3);
+	//	//// then for combined site types..
+	//	delSiteFromMap(Srem1->comb, Srem1);
+	//	delSiteFromMap(Srem2->comb, Srem2);
+	//	delSiteFromMap(Srem3->comb, Srem3);
+	//	//// remove the sites
+	//	removeSite(Srem1);
+	//	removeSite(Srem2);
+	//	removeSite(Srem3);
 
-		////add in BY6 site
-		if (b4){
-			addSite(BY6, stt);
-			updateSites(S2, 1);
-		}
-		else{
-			addSite(BY6, moveIt(stt,1));
-			updateSites(S1, 1);
-		}
+	//	////add in BY6 site
+	//	if (b4){
+	//		addSite(BY6, stt);
+	//		updateSites(S2, 1);
+	//	}
+	//	else{
+	//		addSite(BY6, moveIt(stt,1));
+	//		updateSites(S1, 1);
+	//	}
 
-	}
-	else if((S1t == eRFE && S3t == eR5 && S5t == eRZZ) || (S2t == eRFE && S4t == eR5 && S6t == eRZZ)){
-		//// Convert to a BY6 site
-		bool b4 = true;
-		Spointer Srem1, Srem2, Srem3;
-		if (S1t == eRFE){
-			Srem1 = moveIt(stt, -1);
-			Srem2 = moveIt(stt, -2);
-			Srem3 = moveIt(stt, -3);
-		}
-		else{
-			Srem1 = moveIt(stt, 1);
-			Srem2 = moveIt(stt, 2);
-			Srem3 = moveIt(stt, 3);
-			b4 = false;
-		}
+	//}
+	//else if((S1t == eRFE && S3t == eR5 && S5t == eRZZ) || (S2t == eRFE && S4t == eR5 && S6t == eRZZ)){
+	//	//// Convert to a BY6 site
+	//	bool b4 = true;
+	//	Spointer Srem1, Srem2, Srem3;
+	//	if (S1t == eRFE){
+	//		Srem1 = moveIt(stt, -1);
+	//		Srem2 = moveIt(stt, -2);
+	//		Srem3 = moveIt(stt, -3);
+	//	}
+	//	else{
+	//		Srem1 = moveIt(stt, 1);
+	//		Srem2 = moveIt(stt, 2);
+	//		Srem3 = moveIt(stt, 3);
+	//		b4 = false;
+	//	}
 
-		//// Remove sites and combine the neighbouring sites into BY6. 
-		//// First remove all three from site map. Elementary site types first..
-		delSiteFromMap(Srem1->type, Srem1);
-		delSiteFromMap(Srem2->type, Srem2);
-		delSiteFromMap(Srem3->type, Srem3);
-		//// then for combined site types..
-		delSiteFromMap(Srem1->comb, Srem1);
-		delSiteFromMap(Srem2->comb, Srem2);
-		delSiteFromMap(Srem3->comb, Srem3);
-		//// remove the sites
-		removeSite(Srem1);
-		removeSite(Srem2);
-		removeSite(Srem3);
+	//	//// Remove sites and combine the neighbouring sites into BY6. 
+	//	//// First remove all three from site map. Elementary site types first..
+	//	delSiteFromMap(Srem1->type, Srem1);
+	//	delSiteFromMap(Srem2->type, Srem2);
+	//	delSiteFromMap(Srem3->type, Srem3);
+	//	//// then for combined site types..
+	//	delSiteFromMap(Srem1->comb, Srem1);
+	//	delSiteFromMap(Srem2->comb, Srem2);
+	//	delSiteFromMap(Srem3->comb, Srem3);
+	//	//// remove the sites
+	//	removeSite(Srem1);
+	//	removeSite(Srem2);
+	//	removeSite(Srem3);
 
-		////add in BY6 site
-		if (b4){
-			addSite(BY6, stt);
-			updateSites(S2, 1);
-		}
-		else{
-			addSite(BY6, moveIt(stt, 1));
-			updateSites(S1, 1);
-		}
-	
-	}
-	else {
-		if (S1->type == ACR5){
-			convSiteType(S1, eRZZ);
-			addSite(eRFE, S1);
-			addSite(eR5, S1);
-		}
-		else {
-			updateSites(S1, 1);
-		}
+	//	////add in BY6 site
+	//	if (b4){
+	//		addSite(BY6, stt);
+	//		updateSites(S2, 1);
+	//	}
+	//	else{
+	//		addSite(BY6, moveIt(stt, 1));
+	//		updateSites(S1, 1);
+	//	}
+	//
+	//}
+	//else {
+	//	if (S1->type == ACR5){
+	//		convSiteType(S1, eRZZ);
+	//		addSite(eRFE, S1);
+	//		addSite(eR5, S1);
+	//	}
+	//	else {
+	//		updateSites(S1, 1);
+	//	}
 
-		if (S2->type == ACR5){
-			Spointer S3 = moveIt(S2, 1);
-			convSiteType(S2, eRZZ);
-			addSite(eR5, S3);
-			addSite(eRFE, S3);
+	//	if (S2->type == ACR5){
+	//		Spointer S3 = moveIt(S2, 1);
+	//		convSiteType(S2, eRZZ);
+	//		addSite(eR5, S3);
+	//		addSite(eRFE, S3);
 
-		}
-		else {
-			updateSites(S2, 1);
-		}
-	}
+	//	}
+	//	else {
+	//		updateSites(S2, 1);
+	//	}
+	//}
+	updateSites(S1, 1);
+	updateSites(S2, 1);
     // Add new Sites
     Spointer newS1 = addSite(FE, stt);
 	Spointer newS2 = addSite(FE, moveIt(stt, 1));
@@ -2534,7 +2680,7 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
 	//S3t = (int)moveIt(stt, -2)->type;
 	//S4t = (int)moveIt(stt, 2)->type;
 	//S5t = (int)moveIt(stt, -3)->type;
-	//S6t = (int)moveIt(stt, 3)->type;
+	//S6t = (int)moveIt(stt, 3)->typ;e
 	//St = (int)stt->type;
 	//cout << "FE End" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
 }
@@ -2546,13 +2692,13 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
     //printSites(stt);
     // Remove C
 
-	int S1t = (int) moveIt(stt, -1)->type;
-	int S2t = (int) moveIt(stt, 1)->type;
-	int S3t = (int) moveIt(stt, -2)->type;
-	int S4t = (int) moveIt(stt, 2)->type;
-	int S5t = (int) moveIt(stt, -3)->type;
-	int S6t = (int) moveIt(stt, 3)->type;
-	int St = (int) stt->type;
+	//int S1t = (int) moveIt(stt, -1)->type;
+	//int S2t = (int) moveIt(stt, 1)->type;
+	//int S3t = (int) moveIt(stt, -2)->type;
+	//int S4t = (int) moveIt(stt, 2)->type;
+	//int S5t = (int) moveIt(stt, -3)->type;
+	//int S6t = (int) moveIt(stt, 3)->type;
+	//int St = (int) stt->type;
 
     //Cpointer now = C_1->C2;
     //do{
@@ -2593,16 +2739,18 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
     delSiteFromMap(stt->comb, stt);
     // Convert the BY6 site into the resulting site after reaction,
     // finding resulting site type:
-    int ntype1 = (int) moveIt(stt, -1)->type;
-    int ntype2 = (int) moveIt(stt, 1)->type;
-    if(ntype1 < 5 && ntype2 < 5) {
-        int newType = (ntype1+ntype2+2);
+    int ntype1 = abs( (int) moveIt(stt, -1)->type);
+    int ntype2 = abs((int) moveIt(stt, 1)->type);
+    if(ntype1 < 6 && ntype2 < 6) {
+        int newType = (ntype1+ntype2+1);
         // convert site
-        if(newType>4) {
+        if(newType>5) {
             //saveDOT(std::string("BY6ClosureProblem.dot"));
-            std::cerr<<"ERROR: newType is > 4 (PAHProcess::proc_L6_BY6)\n";
+            std::cerr<<"ERROR: newType is > 5 (PAHProcess::proc_L6_BY6)\n";
+			cout << ntype1 << endl;
+			cout << ntype2 << endl;
         }
-        updateSites(stt,(newType-4));
+        updateSites(stt,(newType-5));
     }
     else {
         int newType = 0; 
@@ -3452,76 +3600,78 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt) {
 		updateCombinedSites(S1); updateCombinedSites(S2);
 		//updateCombinedSites(S3); updateCombinedSites(S4);
 	}
-	else if ((moveIt(stt, 1)->type == FE && moveIt(stt, -1)->type == eRFE && moveIt(stt, -2)->type == eR5 && moveIt(stt, -3)->type == eRFE) ||
-		(moveIt(stt, -1)->type == FE && moveIt(stt, 1)->type == eRFE && moveIt(stt, 2)->type == eR5 && moveIt(stt, 3)->type == eRFE)) {
-		Spointer Srem1;
-		Spointer Srem2;
-		Spointer Srem3;
-		Spointer Srem4;
-		Spointer Srem5;
-		if (moveIt(stt, 1)->type == FE){
-			Srem1 = moveIt(stt, 1);
-			Srem2 = stt;
-			Srem3 = moveIt(stt, -1);
-			Srem4 = moveIt(stt, -2);
-			Srem5 = moveIt(stt, -3);
-		}
-		else{
-			Srem1 = moveIt(stt, -1);
-			Srem2 = stt;
-			Srem3 = moveIt(stt, 1);
-			Srem4 = moveIt(stt, 2);
-			Srem5 = moveIt(stt, 3);
-		}
+	//else if ((moveIt(stt, 1)->type == FE && moveIt(stt, -1)->type == eRFE && moveIt(stt, -2)->type == eR5 && moveIt(stt, -3)->type == eRFE) ||
+	//	(moveIt(stt, -1)->type == FE && moveIt(stt, 1)->type == eRFE && moveIt(stt, 2)->type == eR5 && moveIt(stt, 3)->type == eRFE)) {
+	//	Spointer Srem1;
+	//	Spointer Srem2;
+	//	Spointer Srem3;
+	//	Spointer Srem4;
+	//	Spointer Srem5;
+	//	if (moveIt(stt, 1)->type == FE){
+	//		Srem1 = moveIt(stt, 1);
+	//		Srem2 = stt;
+	//		Srem3 = moveIt(stt, -1);
+	//		Srem4 = moveIt(stt, -2);
+	//		Srem5 = moveIt(stt, -3);
+	//	}
+	//	else{
+	//		Srem1 = moveIt(stt, -1);
+	//		Srem2 = stt;
+	//		Srem3 = moveIt(stt, 1);
+	//		Srem4 = moveIt(stt, 2);
+	//		Srem5 = moveIt(stt, 3);
+	//	}
 
-		//// First remove all sites from site map. Elementary site types first..
-		delSiteFromMap(Srem1->type, Srem1);
-		delSiteFromMap(Srem2->type, Srem2);
-		delSiteFromMap(Srem3->type, Srem3);
-		delSiteFromMap(Srem4->type, Srem4);
-		delSiteFromMap(Srem5->type, Srem5);
+	//	//// First remove all sites from site map. Elementary site types first..
+	//	delSiteFromMap(Srem1->type, Srem1);
+	//	delSiteFromMap(Srem2->type, Srem2);
+	//	delSiteFromMap(Srem3->type, Srem3);
+	//	delSiteFromMap(Srem4->type, Srem4);
+	//	delSiteFromMap(Srem5->type, Srem5);
 
-		//// then for combined site types..
-		delSiteFromMap(Srem1->comb, Srem1);
-		delSiteFromMap(Srem2->comb, Srem2);
-		delSiteFromMap(Srem3->comb, Srem3);
-		delSiteFromMap(Srem4->comb, Srem4);
-		delSiteFromMap(Srem5->comb, Srem5);
+	//	//// then for combined site types..
+	//	delSiteFromMap(Srem1->comb, Srem1);
+	//	delSiteFromMap(Srem2->comb, Srem2);
+	//	delSiteFromMap(Srem3->comb, Srem3);
+	//	delSiteFromMap(Srem4->comb, Srem4);
+	//	delSiteFromMap(Srem5->comb, Srem5);
 
-		convSiteType(stt, (kmcSiteType)4);
+	//	convSiteType(stt, (kmcSiteType)4);
 
-		// erase the existence of the neighbouring sites
-		removeSite(Srem1);
-		removeSite(Srem3);
-		removeSite(Srem4);
-		removeSite(Srem5);
+	//	// erase the existence of the neighbouring sites
+	//	removeSite(Srem1);
+	//	removeSite(Srem3);
+	//	removeSite(Srem4);
+	//	removeSite(Srem5);
 
-		// update combined sites and neighbours
-		Spointer S1 = moveIt(stt, -1); Spointer S2 = moveIt(stt, 1);
-		//Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
-		updateCombinedSites(stt);
-		updateCombinedSites(S1); updateCombinedSites(S2);
-		
-	}
-	else if (((int) moveIt(stt, -1)->type < 3 || (int) moveIt(stt, -1)->type > 20) &&
-		((int)moveIt(stt, 1)->type < 3 || (int)moveIt(stt, 1)->type > 20)) {
-		convSiteType(stt, eR5);
-		Spointer S1 = moveIt(stt, -1); Spointer S2 = moveIt(stt, 1);
-		if ((int) S1->type < 3){
-			convSiteType(S1, kmcSiteType((int)S1->type+ 21));
-			delSiteFromMap(S1->comb, S1);
-		}
-		if ((int)S2->type < 3){
-			convSiteType(S2, kmcSiteType((int)S2->type + 21));
-			delSiteFromMap(S2->comb, S2);
-		}
-		// update combined sites and neighbours
-		updateCombinedSites(stt);
-		updateCombinedSites(S1); updateCombinedSites(S2);
-	}
+	//	// update combined sites and neighbours
+	//	Spointer S1 = moveIt(stt, -1); Spointer S2 = moveIt(stt, 1);
+	//	//Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
+	//	updateCombinedSites(stt);
+	//	updateCombinedSites(S1); updateCombinedSites(S2);
+	//	
+	//}
+	//else if (((int) moveIt(stt, -1)->type < 3 || (int) moveIt(stt, -1)->type > 20) &&
+	//	((int)moveIt(stt, 1)->type < 3 || (int)moveIt(stt, 1)->type > 20)) {
+	//	convSiteType(stt, eR5);
+	//	Spointer S1 = moveIt(stt, -1); Spointer S2 = moveIt(stt, 1);
+	//	if ((int) S1->type < 3){
+	//		convSiteType(S1, kmcSiteType((int)S1->type+ 21));
+	//		delSiteFromMap(S1->comb, S1);
+	//	}
+	//	if ((int)S2->type < 3){
+	//		convSiteType(S2, kmcSiteType((int)S2->type + 21));
+	//		delSiteFromMap(S2->comb, S2);
+	//	}
+	//	// update combined sites and neighbours
+	//	updateCombinedSites(stt);
+	//	updateCombinedSites(S1); updateCombinedSites(S2);
+	//}
 	else {
 		cout << "Error with BY5 closure. Illegal neighbor site types" << endl;
-        assert(false);
+		Spointer S1 = moveIt(stt, -1); Spointer S2 = moveIt(stt, 1);
+		cout << (int)S1->type << endl;
+		cout << (int)S2->type << endl;
     }
 
     //printSites(stt);
@@ -3694,6 +3844,53 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt) {
     //Cpointer newC1;
     //Cpointer newC2;
 
+	int S1t = (int)moveIt(stt, -1)->type;
+	int S2t = (int)moveIt(stt, 1)->type;
+	int S3t = (int)moveIt(stt, -2)->type;
+	int S4t = (int)moveIt(stt, 2)->type;
+	int S5t = (int)moveIt(stt, -3)->type;
+	int S6t = (int)moveIt(stt, 3)->type;
+	int S7t = (int)moveIt(stt, -4)->type;
+	int S8t = (int)moveIt(stt, 4)->type;
+	int St = (int)stt->type;
+	//cout << "AC Begin" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
+
+	if (S1t == BY6 || S2t == BY6){
+		return; //This should not happen
+	}
+
+	if ((S1t == AC && S3t == BY6) || (S2t == AC && S4t == BY6)){
+		return; //This should not happen
+	}
+
+	if ((S1t == FE && S3t == BY6 && S5t == AC) || (S2t == FE && S4t == BY6 && S6t == AC)){
+		return; //This should not happen
+	}
+
+	if ((S1t == FE && S3t == BY6 && S5t == FE && S7t == BY6) || (S2t == FE && S4t == BY6 && S6t == FE && S8t == BY6)){
+		return; //This should not happen
+	}
+
+	if ((S1t == FE && S3t == BY5) || (S2t == FE && S4t == BY5)){
+		return; //This should not happen
+	}
+
+	if ((S1t == AC && S3t == BY5) || (S2t == AC && S4t == BY5)){
+		return; //This should not happen
+	}
+
+	if ((S1t == FE && S3t == ERZZ) || (S2t == FE && S4t == ERZZ)){
+		return; //This should not happen
+	}
+
+	if ((S1t == ACR5 && S3t != FE) || (S2t == ACR5 && S4t != FE)){
+		return; //This should not happen
+	}
+
+	if ((S1t == ZZ && S3t == BY6 && S5t == ZZ) || (S2t == ZZ && S4t == BY6 && S6t == ZZ)){
+		return; //This should not happen
+	}
+
     //if(checkHindrance(stt)) {
     //    /*cout<<"Site hindered, process not performed.\n"*/ return;}
     //if(!(C_1->C2->bridge) || !(C_2->C1->bridge)) { // check if bulk C in AC site is a bridge
@@ -3729,10 +3926,116 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt) {
     Spointer S2 = moveIt(stt, 1);
     // Update Site and neighbours
     convSiteType(stt, (kmcSiteType) 0);
-    updateSites(S1, 1); // neighbours
-    updateSites(S2, 1);
+
+	//if ((S1t == eRZZ && S3t == eR5 && S5t == eRFE) || (S2t == eRZZ && S4t == eR5 && S6t == eRFE)){
+	//	//// Convert to a BY6 site
+	//	bool b4 = true;
+	//	Spointer Srem1, Srem2, Srem3;
+	//	if (S1t == eRZZ){
+	//		Srem1 = moveIt(stt, -1);
+	//		Srem2 = moveIt(stt, -2);
+	//		Srem3 = moveIt(stt, -3);
+	//	}
+	//	else{
+	//		Srem1 = moveIt(stt, 1);
+	//		Srem2 = moveIt(stt, 2);
+	//		Srem3 = moveIt(stt, 3);
+	//		b4 = false;
+	//	}
+	//	//// Remove sites and combine the neighbouring sites into BY6. 
+	//	//// First remove all three from site map. Elementary site types first..
+	//	delSiteFromMap(Srem1->type, Srem1);
+	//	delSiteFromMap(Srem2->type, Srem2);
+	//	delSiteFromMap(Srem3->type, Srem3);
+	//	//// then for combined site types..
+	//	delSiteFromMap(Srem1->comb, Srem1);
+	//	delSiteFromMap(Srem2->comb, Srem2);
+	//	delSiteFromMap(Srem3->comb, Srem3);
+	//	//// remove the sites
+	//	removeSite(Srem1);
+	//	removeSite(Srem2);
+	//	removeSite(Srem3);
+
+	//	////add in BY6 site
+	//	if (b4){
+	//		addSite(BY6, stt);
+	//		updateSites(S2, 1);
+	//	}
+	//	else{
+	//		addSite(BY6, moveIt(stt, 1));
+	//		updateSites(S1, 1);
+	//	}
+
+	//}
+	//else if ((S1t == eRFE && S3t == eR5 && S5t == eRZZ) || (S2t == eRFE && S4t == eR5 && S6t == eRZZ)){
+	//	//// Convert to a BY6 site
+	//	bool b4 = true;
+	//	Spointer Srem1, Srem2, Srem3;
+	//	if (S1t == eRFE){
+	//		Srem1 = moveIt(stt, -1);
+	//		Srem2 = moveIt(stt, -2);
+	//		Srem3 = moveIt(stt, -3);
+	//	}
+	//	else{
+	//		Srem1 = moveIt(stt, 1);
+	//		Srem2 = moveIt(stt, 2);
+	//		Srem3 = moveIt(stt, 3);
+	//		b4 = false;
+	//	}
+
+	//	//// Remove sites and combine the neighbouring sites into BY6. 
+	//	//// First remove all three from site map. Elementary site types first..
+	//	delSiteFromMap(Srem1->type, Srem1);
+	//	delSiteFromMap(Srem2->type, Srem2);
+	//	delSiteFromMap(Srem3->type, Srem3);
+	//	//// then for combined site types..
+	//	delSiteFromMap(Srem1->comb, Srem1);
+	//	delSiteFromMap(Srem2->comb, Srem2);
+	//	delSiteFromMap(Srem3->comb, Srem3);
+	//	//// remove the sites
+	//	removeSite(Srem1);
+	//	removeSite(Srem2);
+	//	removeSite(Srem3);
+
+	//	////add in BY6 site
+	//	if (b4){
+	//		addSite(BY6, stt);
+	//		updateSites(S2, 1);
+	//	}
+	//	else{
+	//		addSite(BY6, moveIt(stt, 1));
+	//		updateSites(S1, 1);
+	//	}
+
+	//}
+	//else {
+	//	if (S1->type == ACR5){
+	//		convSiteType(S1, eRZZ);
+	//		addSite(eRFE, S1);
+	//		addSite(eR5, S1);
+	//	}
+	//	else {
+	//		updateSites(S1, 1);
+	//	}
+
+	//	if (S2->type == ACR5){
+	//		Spointer S3 = moveIt(S2, 1);
+	//		convSiteType(S2, eRZZ);
+	//		addSite(eR5, S3);
+	//		addSite(eRFE, S3);
+
+	//	}
+	//	else {
+	//		updateSites(S2, 1);
+	//	}
+	//}
+
+	updateSites(S1, 1);
+	updateSites(S2, 1);
+
     // Update combined site for Site and neighbours
     Spointer S3, S4;
+	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
     updateCombinedSites(stt);
     updateCombinedSites(S1); updateCombinedSites(S2);

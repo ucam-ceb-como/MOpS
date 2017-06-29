@@ -269,6 +269,7 @@ private:
     //void updateA(Cpointer C, char sp);
     //! Overload function, updateA for all C from C_1 to C_2 inclusive
     //void updateA(char spc);
+	void updateHinderedSites();
     
     // PAH data structure to perform processes on
    PAHStructure* m_pah;
