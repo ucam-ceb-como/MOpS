@@ -270,6 +270,8 @@ private:
     //! Overload function, updateA for all C from C_1 to C_2 inclusive
     //void updateA(char spc);
 	void updateHinderedSites();
+	int SiteSides(Spointer& stt);
+	double SiteAngle(Spointer& stt);
     
     // PAH data structure to perform processes on
    PAHStructure* m_pah;

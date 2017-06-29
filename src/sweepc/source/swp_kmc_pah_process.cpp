@@ -1072,176 +1072,111 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 }
 
 void PAHProcess::updateHinderedSites() {
-
-	int S1t, S2t, S3t, S4t, S5t, S6t, S7t, S8t, S9t, S10t, S11t, S12t;
+	
 	bool hindered;
-
-	//if ((S1t == BY5 && S3t == ZZ && S5t == AC && S7t == BY6) || (S2t == BY5 && S4t == ZZ && S6t == AC && S8t == BY6)){
-	//	return; //This should not happen
-	//}
-
-	//if ((S1t == BY5 && S3t == AC && S5t == ZZ && S7t == BY6) || (S2t == BY5 && S4t == AC && S6t == ZZ && S8t == BY6)){
-	//	return; //This should not happen
-	//}
-
-	//if ((S1t == AC && S3t == ERZZ) || (S2t == AC && S4t == ERZZ)){
-	//	return; //This should not happen
-	//}
-
-	//if ((S1t == AC && S3t == ERFE && S5t == ER5 && S7t == ERZZ) || (S2t == AC && S4t == ERFE && S6t == ER5 && S8t == ERZZ)){
-	//	return; //This should not happen
-	//}
-
-	//if (st->comb == FE3 && (S3t == ZZ || S3t == ERZZ || S3t == AC || S3t == ERAC) && (S4t == ZZ || S4t == ERZZ || S4t == AC || S4t == ERAC)){
-	//	return; //This should not happen
-	//}
-
-	//if (S1t == ACR5 || S2t == ACR5){
-	//	return; //This should not happen
-	//}
-
-	//if ((S1t == ERFE && S3t == ER5 && S5t == ERZZ && S7t == BY6) || (S2t == ERFE && S4t == ER5 && S6t == ERZZ && S8t == BY6)){
-	//	return; //This should not happen
-	//}
-
-	//if ((S1t == ERZZ && S3t == ER5 && S5t == ERFE && S7t == BY6) || (S2t == ERZZ && S4t == ER5 && S6t == ERFE && S8t == BY6)){
-	//	return; //This should not happen
-	//}
-
-
+	int Sides;
+	double Angle, target;
+	Spointer st1;
+	SpointerRev st2;
 	//Now, re-assign hindered site types
 	for (Spointer st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
+		Sides = 0;
+		Angle = 0.0;
 		hindered = false;
 		switch (st->type) {
 		case FE:
 		case NFE:
-			S1t = (int)moveIt(st, -1)->type;
-			S2t = (int)moveIt(st, 1)->type;
-			S3t = (int)moveIt(st, -2)->type;
-			S4t = (int)moveIt(st, 2)->type;
-			S5t = (int)moveIt(st, -3)->type;
-			S6t = (int)moveIt(st, 3)->type;
-			S7t = (int)moveIt(st, -4)->type;
-			S8t = (int)moveIt(st, 4)->type;
-			S9t = (int)moveIt(st, -5)->type;
-			S10t = (int)moveIt(st, 5)->type;
-			S11t = (int)moveIt(st, -6)->type;
-			S12t = (int)moveIt(st, 6)->type;
-
-			//List cases where growth at this site would be hindered due to colocation of carbon atoms
-			//Hinderances involving BY6
-			if (S1t == BY6 || S2t == BY6){
-				hindered = true;
-				break;
+			for (st1 = moveIt(st, 1); st1 != m_pah->m_siteList.end(); st1++) {
+				Sides += SiteSides(st1);
+				Angle += SiteAngle(st1);
+				if (Sides < 5 || (Sides >5 && Sides < 8)){
+					target = 0.0;
+				}
+				else if (Sides == 5){
+					target = 720;
+				}
+				else if ((Sides+1)%2 == 0){
+					target = ((double)Sides - 1.0)*180.0;
+				}
+				else{
+					target = ((double)Sides)*180.0 - 240.0;
+				}
+				if (Angle == target) {
+					hindered = true;
+				}
+				if (hindered) break;
 			}
-
-			if (((S1t == AC || S1t == NAC) && (S3t == AC || S3t == NAC) && S5t == BY6) ||
-				((S2t == AC || S2t == NAC) && (S4t == AC || S4t == NAC) && S6t == BY6)){
-				hindered = true;
-				break;
+			if (hindered) break;
+			for (st1 = m_pah->m_siteList.begin(); st1 != st; st1++) {
+				Sides += SiteSides(st1);
+				Angle += SiteAngle(st1);
+				if (Sides < 5 || (Sides >5 && Sides < 8)){
+					target = 0.0;
+				}
+				else if (Sides == 5){
+					target = 720;
+				}
+				else if ((Sides + 1) % 2 == 0){
+					target = ((double)Sides - 1.0)*180.0;
+				}
+				else{
+					target = ((double)Sides)*180.0 - 240.0;
+				}
+				if (Angle == target) {
+					hindered = true;
+				}
+				if (hindered) break;
 			}
-
-			if (((S1t == FE || S1t == NFE) && S3t == BY6 && (S5t == AC || S5t == NAC)) ||
-				((S2t == FE || S2t == NFE) && S4t == BY6 && (S6t == AC || S6t == NAC) )){
-				hindered = true;
-				break;
+			if (hindered) break;
+			Sides = 0;
+			Angle = 0.0;
+			for (st1 = moveIt(st, -1); st1 == m_pah->m_siteList.begin();) {
+				Sides += SiteSides(st1);
+				Angle += SiteAngle(st1);
+				if (Sides < 5 || (Sides >5 && Sides < 8)){
+					target = 0.0;
+				}
+				else if (Sides==5){
+					target = 720;
+				}
+				else if ((Sides + 1) % 2 == 0){
+					target = ((double)Sides - 1.0)*180.0;
+				}
+				else{
+					target = ((double)Sides)*180.0 - 240.0;
+				}
+				if (Angle == target) {
+					hindered = true;
+					break;
+				}
+				if (hindered) break;
+				Spointer temp;
+				temp = moveIt(st1, -1);
+				st1 = temp;
 			}
-
-			if (((S1t == AC || S1t == NAC) && S3t == BY6 ) ||
-				((S2t == AC || S2t == NAC) && S4t == BY6 )){
-				hindered = true;
-				break;
+			if (hindered) break;
+			for (st1 = moveIt(m_pah->m_siteList.begin(), -1); st1 != st; st1 = moveIt(st1, -1)) {
+				Sides += SiteSides(st1);
+				Angle += SiteAngle(st1);
+				if (Sides < 5 || (Sides >5 && Sides < 8)){
+					target = 0.0;
+				}
+				else if (Sides == 5){
+					target = 720;
+				}
+				else if ((Sides + 1) % 2 == 0){
+					target = ((double)Sides - 1.0)*180.0;
+				}
+				else{
+					target = ((double)Sides)*180.0 - 240.0;
+				}
+				if (Angle == target) {
+					hindered = true;
+					break;
+				}
+				if (hindered) break;
 			}
-
-			if (((S1t == FE || S1t == NFE) && (S3t == FE || S3t == NFE) && S5t == BY6 && (S7t == AC || S7t == NAC) && (S9t == AC || S9t == NAC)) ||
-				((S2t == FE || S2t == NFE) && (S4t == FE || S4t == NFE) && S6t == BY6 && (S8t == AC || S8t == NAC) && (S10t == AC || S10t == NAC))){
-				hindered = true;
-				break;
-			}
-
-			if (((S1t == ZZ || S1t == NZZ) && S3t == BY6 && (S5t == ZZ || S5t == NZZ)) ||
-				((S2t == ZZ || S2t == NZZ) && S4t == BY6 && (S6t == ZZ || S6t == NZZ))){
-				hindered = true;
-				break;
-			}
-
-			//Other hinderances 
-			//No acenes longer than anthracene
-			if (st->comb == FE3 && (S3t == ZZ || S3t == NZZ) && (S4t == ZZ || S4t == NZZ)){
-				hindered = true;
-				break;
-			}
-
-
-			//Hinderances involving BY5
-			if ((S1t == BY5 && S3t == BY5) || (S2t == BY5 && S4t == BY5)){
-				hindered = true;
-				break;
-			}
-			if (((S1t == ZZ || S1t == NZZ) && S3t == BY5 && S5t == BY5) || ((S2t == ZZ || S2t == NZZ) && S4t == BY5 && S6t == BY5)){
-				hindered = true;
-				break;
-			}
-			if (((S1t == FE || S1t == NFE) && S3t == BY5 && S5t == BY5 && (S7t == ZZ || S7t == NZZ)) ||
-				((S2t == FE || S2t == NFE) && S4t == BY5 && S6t == BY5 && (S8t == ZZ || S8t == NZZ))){
-				hindered = true;
-				break;
-			}
-
-			if (((S1t == AC || S1t == NAC)  && S3t == BY5 && (S5t == AC || S5t == NAC)) || ((S2t == AC || S2t == NAC) && S4t == BY5 && (S6t == AC || S6t == NAC))){
-				hindered = true;
-				break;
-			}
-
-			if (((S1t == FE || S1t == NFE) && S3t == BY5 && S5t == AC && S7t == BY5) ||
-				((S2t == FE || S2t == NFE) && S4t == BY5 && S6t == AC && S8t == BY5)){
-				hindered = true;
-				break;
-			}
-
-			if ((S1t == BY5 && S3t == AC && S5t == BY5) ||
-				(S2t == BY5 && S4t == AC && S6t == BY5)){
-				hindered = true;
-				break;
-			}
-
-			//Hinderances involving BY5 and BY6
-			if (((S1t == FE || S1t == NFE) && S3t == BY5 && (S5t == FE || S5t == NFE) && S7t == BY6 && (S9t == FE || S9t == NFE) && S11t == BY5) ||
-				((S2t == FE || S2t == NFE) && S4t == BY5 && (S6t == FE || S6t == NFE) && S8t == BY6 && (S10t == FE || S10t == NFE) && S12t == BY5)){
-				hindered = true;
-				break;
-			}
-
-			if ((S1t == BY5 && (S3t == FE || S3t == NFE) && S5t == BY6 && (S7t == FE || S7t == NFE) && (S9t == BY5 || S9t == BY5)) ||
-				(S2t == BY5 && (S4t == FE || S4t == NFE) && S6t == BY6 && (S8t == FE || S8t == NFE) && S10t == BY5)){
-				hindered = true;
-				break;
-			}
-
-			if (((S1t == FE || S1t == NFE) && S3t == BY5 && (S5t == FE || S5t == NFE) && S7t == BY6 && (S9t == FE || S9t == NFE) && S11t == BY5) ||
-				((S2t == FE || S2t == NFE) && S4t == BY5 && (S6t == FE || S6t == NFE) && S8t == BY6 && (S10t == FE || S10t == NFE) && S12t == BY5)){
-				hindered = true;
-				break;
-			}
-
-			if (((S1t == FE || S1t == NFE) && (S3t == ZZ || S3t == NZZ) && S5t == BY6 && (S7t == FE || S7t == NFE) && S9t == BY5 && S11t != FE && S11t != NFE) ||
-				((S2t == FE || S2t == NFE) && (S4t == ZZ || S4t == NZZ) && S6t == BY6 && (S8t == FE || S8t == NFE) && S10t == BY5 && S12t != FE && S12t != NFE)){
-				hindered = true;
-				break;
-			}
-
-			if (((S1t == ZZ || S1t == NZZ) && S3t == BY6 && (S5t == FE || S5t == NFE) && S7t == BY5) ||
-				((S2t == ZZ || S2t == NZZ) && S4t == BY6 && (S6t == FE || S6t == NFE) && S8t == BY5)){
-				hindered = true;
-				break;
-			}
-
-			if ((S1t == BY5 && (S3t == FE || S3t == NFE) && (S5t == AC || S5t == NAC) && S7t == BY6 && (S9t == FE || S9t == NFE) && (S11t == ZZ || S11t == NZZ)) ||
-				(S2t == BY5 && (S4t == FE || S4t == NFE) && (S6t == AC || S6t == NAC) && S8t == BY6 && (S10t == FE || S10t == NFE) && (S12t == ZZ || S12t == NZZ))){
-				hindered = true;
-				break;
-			}
-
+			if (hindered) break;
 
 		}
 
@@ -1255,6 +1190,42 @@ void PAHProcess::updateHinderedSites() {
 				convSiteType(st, (kmcSiteType)(0 - (int)st->type));
 			}
 		}
+	}
+}
+
+int PAHProcess::SiteSides(Spointer& stt) {
+	switch (stt->type){
+	case FE:
+	case NFE:
+		return 1;
+	case ZZ:
+	case NZZ:
+		return 2;
+	case AC:
+	case NAC:
+		return 3;
+	case BY5:
+		return 4;
+	case BY6:
+		return 5;
+	}
+}
+
+double PAHProcess::SiteAngle(Spointer& stt) {
+	switch (stt->type){
+	case FE:
+	case NFE:
+		return 240.0;
+	case ZZ:
+	case NZZ:
+		return 360.0;
+	case AC:
+	case NAC:
+		return 480.0;
+	case BY5:
+		return 600.0;
+	case BY6:
+		return 720.0;
 	}
 }
 
@@ -2164,7 +2135,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     kmcSiteType stp = jp.getSiteType();
     int id = jp.getID();
 
-	if (PAH_ID == 362){
+	if (PAH_ID == 262){
 		cout << "ID is: " << id << endl;
 	}
 
@@ -2258,7 +2229,14 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         cout<<"WARNING: A of m_cfirst is not H..\n";
     //cout<<"----PROCESS PERFORMED!-----\n";*/
 	//Redetermine any sites that are non-reactive (due to hinderances)
-	updateHinderedSites();
+
+	if (PAH_ID == 262 && m_pah->m_siteList.size() > 0){
+		updateHinderedSites();
+	}
+	else{
+		updateHinderedSites();
+	}
+
     Spointer S1,S2,S3,S4;
     S1 = moveIt(site_perf, -1); S2 = moveIt(site_perf, 1);
     S3 = moveIt(site_perf, -2); S4 = moveIt(site_perf, 2);
@@ -2305,54 +2283,6 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
     //printStruct();//++++
     //Cpointer newC1;
     //Cpointer newC2;
-
-	int S1t = (int)moveIt(stt, -1)->type;
-	int S2t = (int)moveIt(stt, 1)->type;
-	int S3t = (int)moveIt(stt, -2)->type;
-	int S4t = (int)moveIt(stt, 2)->type;
-	int S5t = (int)moveIt(stt, -3)->type;
-	int S6t = (int)moveIt(stt, 3)->type;
-	int S7t = (int)moveIt(stt, -4)->type;
-	int S8t = (int)moveIt(stt, 4)->type;
-	int St = (int)stt->type;
-	//cout << "AC Begin" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
-
-	if (S1t == BY6 || S2t == BY6){
-		return; //This should not happen
-	}
-
-	if ((S1t == AC && S3t == BY6) || (S2t == AC && S4t == BY6)){
-		return; //This should not happen
-	}
-
-	if ((S1t == FE && S3t == BY6 && S5t == AC) || (S2t == FE && S4t == BY6 && S6t == AC)){
-		return; //This should not happen
-	}
-
-	if ((S1t == FE && S3t == BY6 && S5t == FE && S7t == BY6) || (S2t == FE && S4t == BY6 && S6t == FE && S8t == BY6)){
-		return; //This should not happen
-	}
-
-	if ((S1t == FE && S3t == BY5) || (S2t == FE && S4t == BY5)){
-		return; //This should not happen
-	}
-
-	if ((S1t == AC && S3t == BY5) || (S2t == AC && S4t == BY5)){
-		return; //This should not happen
-	}
-
-	if ((S1t == FE && S3t == ERZZ) || (S2t == FE && S4t == ERZZ)){
-		return; //This should not happen
-	}
-
-	if ((S1t == ACR5 && S3t != FE) || (S2t == ACR5 && S4t != FE)){
-		return; //This should not happen
-	}
-
-	if ((S1t == ZZ && S3t == BY6 && S5t == ZZ) || (S2t == ZZ && S4t == BY6 && S6t == ZZ)){
-		return; //This should not happen
-	}
-
 
     /**
      * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.

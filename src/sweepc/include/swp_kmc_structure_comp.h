@@ -62,6 +62,7 @@ namespace Sweep {
         //typedef std::set< Carbon* > Ccontainer;
         //typedef Carbon* Cpointer;
         typedef std::list< Site >::iterator Spointer;
+		typedef std::list< Site >::reverse_iterator SpointerRev;
         
 
         //! Carbon atom on PAH edges
