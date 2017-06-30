@@ -158,7 +158,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     // Jump Processes included in the model
     // (Comment out any process to be omitted):
     //--------------------------------------
-    //temp.push_back(j_G6R_AC);           //*< 1 - R6 Growth on AC [AR1].
+    temp.push_back(j_G6R_AC);           //*< 1 - R6 Growth on AC [AR1].
     temp.push_back(j_G6R_FE);           //*< 2 - R6 Growth on FE [AR2].
     temp.push_back(j_L6_BY6);           //*< 3 - BY6 closure [AR14].
     //temp.push_back(j_PH_benz);        //*< 4 - phenyl addition [AR15].
@@ -175,7 +175,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //temp.push_back(j_M5R_RZZ);          //*< 15 - R5 migration to neighbouring ZZ [AR6].
     //temp.push_back(j_C6R_BY5_FE3);      //*< 16 - R6 migration & conversion to R5 at BY5 [AR22].
     //temp.push_back(j_C6R_BY5_FE3violi); //*< 17 - R6 migration & conversion to R5 at BY5 (violi) [AR24].
-    //temp.push_back(j_L5R_BY5);          //*< 18 - BY5 closure [AR16].
+    temp.push_back(j_L5R_BY5);          //*< 18 - BY5 closure [AR16].
     //temp.push_back(j_M6R_BY5_FE3);      //*< 19 - R6 desorption at bay -> pyrene [AR21].
     //temp.push_back(j_O6R_FE2_OH);       //*< 20 - R6 Oxidation at ZZ by OH.
     //temp.push_back(j_O6R_FE2_O2);       //*< 21 - R6 Oxidation at ZZ by O2.
