@@ -182,6 +182,8 @@ public:
     // false: doesn't save rates, returns actual site counts
     bool m_rates_save;
 
+	void MergeSites(PAHProcess& rhs, rng_type &rng);
+
 private:
     // Read Process
     ////! Get other member of the site a particular C atom is a member of

@@ -1138,7 +1138,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 		while (m_t < dt && m_PAH.size() > 1)
 		{
 			typedef boost::exponential_distribution<double> exponential_distrib;
-			exponential_distrib waitingTimeDistrib(1e10*m_PAH.size());
+			exponential_distrib waitingTimeDistrib(1e4*m_PAH.size());
 			boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
 			double t_step = waitingTimeGenerator();
 
@@ -1163,15 +1163,20 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					int numR6 = m_PAH[ip1]->m_pahstruct->numofRings() + m_PAH[ip2]->m_pahstruct->numofRings();
 					int numLoneR5 = m_PAH[ip1]->m_pahstruct->numofLoneRings5() + m_PAH[ip2]->m_pahstruct->numofLoneRings5();
 					int numEmbeddedR5 = m_PAH[ip1]->m_pahstruct->numofEmbeddedRings5() + m_PAH[ip2]->m_pahstruct->numofEmbeddedRings5();
+					int numC = m_PAH[ip1]->m_pahstruct->numofC() + m_PAH[ip2]->m_pahstruct->numofC();
+					int numH = m_PAH[ip1]->m_pahstruct->numofH() + m_PAH[ip2]->m_pahstruct->numofH();
 					m_PAH[ip1]->m_pahstruct->setnumofRings(numR6);
 					m_PAH[ip1]->m_pahstruct->setnumofLoneRings5(numLoneR5);
 					m_PAH[ip1]->m_pahstruct->setnumofEmbeddedRings5(numEmbeddedR5);
+					m_PAH[ip1]->m_pahstruct->setnumofC(numC);
+					m_PAH[ip1]->m_pahstruct->setnumofH(numH);
 					m_PAH[ip1]->time_created = min(m_PAH[ip1]->time_created, m_PAH[ip2]->time_created);
 					m_PAH[ip1]->lastupdated = min(m_PAH[ip1]->lastupdated, m_PAH[ip2]->lastupdated);
 
 					m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
 
 					RemoveInvalidPAHs();
+					m_PAHclusterchanged = true;
 				}
 			}
 		}

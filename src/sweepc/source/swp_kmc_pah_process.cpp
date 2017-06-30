@@ -1028,7 +1028,53 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 //    st->C1 = Carb1;
 //    st->C2 = Carb2;
 }
+void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
+	Spointer Sp1, Sp2;
+	bool fail = false;
+/*	if (m_pah->m_siteMap[FE3].size() < -100){
+		Sp1 = chooseRandomSite(FE3, rng);
+	}
+	else */if (m_pah->m_siteMap[FE2].size() > 0){
+		Sp1 = chooseRandomSite(FE2, rng);
+		if (moveIt(Sp1, 1)->comb == FE2){
+			Spointer Sp3 = moveIt(Sp1, 1);
+			Sp1 = Sp3;
+		}
+	}
+	else{
+		fail = true;
+	}
+	if (!fail){
+		/*if (rhs.m_pah->m_siteMap[FE3].size() < -100){
+			Sp2 = rhs.chooseRandomSite(FE3, rng);
+		}
+		else*/ if (rhs.m_pah->m_siteMap[FE2].size() > 0){
+			Sp2 = rhs.chooseRandomSite(FE2, rng);
+			if (rhs.moveIt(Sp2, 1)->comb == FE2){
+				Sp2 = rhs.moveIt(Sp2, 1);
+			}
+		}
+		else{
+			fail = true;
+		}
+	}
 
+	if (!fail){
+		convSiteType(moveIt(Sp1,-1), ACBL);
+		Spointer st3;
+		for (st3 = rhs.moveIt(Sp2,1); st3 != rhs.m_pah->m_siteList.end(); st3++){
+			addSite(st3->type, Sp1);
+		}
+		for (st3 = rhs.m_pah->m_siteList.begin(); st3 != rhs.moveIt(Sp2,-1); st3++){
+			addSite(st3->type, Sp1);
+		}
+		convSiteType(Sp1, ACBR);
+		Sp1 = m_pah->m_siteList.begin();
+		updateCombinedSites();
+		updateHinderedSites();
+	}
+
+}
 void PAHProcess::updateHinderedSites() {
 	
 	bool hindered;
