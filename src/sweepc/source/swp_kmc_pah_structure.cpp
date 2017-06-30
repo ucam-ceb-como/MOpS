@@ -56,6 +56,8 @@
 #include <list>
 #include <cmath>
 #include <map>
+#include <boost/random/uniform_smallint.hpp>
+#include <boost/random/variate_generator.hpp>
 
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
@@ -277,6 +279,97 @@ void PAHStructure::Deserialize(std::istream &in)
     PAHProcess p(*this);
     p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numC, temp_numH);
 }
+
+void PAHStructure::MergeSiteLists(PAHStructure* rhs, rng_type &rng) {
+	Spointer Sp1, Sp2;
+	bool fail = false;
+
+	//Choose an FE3 site on each PAH. If finding an FE3 fails, look for an FE2
+	//Change this to call something in PAH process. The subroutines are there and will make this easier.
+
+	int sz = ((int)this->m_siteMap[FE3].size()) - 1; // size - 1
+	if (sz > -1){
+		if (sz > 0) {
+			// Set up an object to generate an uniform integer on [0, sz] now that we
+			// know that sz > 0 (and can safely be cast to an unsigned type.
+			typedef boost::uniform_smallint<unsigned int> site_index_distrib;
+			site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(sz));
+			boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
+
+			const unsigned r = siteIndexGenerator();
+			//cout<<"~~Chose "<<r<<"th site..\n";
+			Sp1 = this->m_siteMap[FE3][r];
+		}
+		Sp1 = this->m_siteMap[FE3][0]; // if vector has only one element
+	}
+	else{
+		sz = ((int)this->m_siteMap[FE2].size()) - 1; // size - 1
+		if (sz > -1){
+			if (sz > 0) {
+				// Set up an object to generate an uniform integer on [0, sz] now that we
+				// know that sz > 0 (and can safely be cast to an unsigned type.
+				typedef boost::uniform_smallint<unsigned int> site_index_distrib;
+				site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(sz));
+				boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
+
+				const unsigned r = siteIndexGenerator();
+				//cout<<"~~Chose "<<r<<"th site..\n";
+				Sp1 = this->m_siteMap[FE3][r];
+			}
+			Sp1 = this->m_siteMap[FE3][0]; // if vector has only one element
+		}
+		else{
+			cout << "No FE3 or FE2s available for merging in PAH 1. Abort merge" << endl;
+			fail = true;
+		}
+
+	}
+	if (!fail){
+		int sz = ((int)rhs->m_siteMap[FE3].size()) - 1; // size - 1
+		if (sz > -1){
+			if (sz > 0) {
+				// Set up an object to generate an uniform integer on [0, sz] now that we
+				// know that sz > 0 (and can safely be cast to an unsigned type.
+				typedef boost::uniform_smallint<unsigned int> site_index_distrib;
+				site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(sz));
+				boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
+
+				const unsigned r = siteIndexGenerator();
+				//cout<<"~~Chose "<<r<<"th site..\n";
+				Sp2 = rhs->m_siteMap[FE3][r];
+			}
+			Sp2 = rhs->m_siteMap[FE3][0]; // if vector has only one element
+		}
+		else{
+			sz = ((int)rhs->m_siteMap[FE2].size()) - 1; // size - 1
+			if (sz > -1){
+				if (sz > 0) {
+					// Set up an object to generate an uniform integer on [0, sz] now that we
+					// know that sz > 0 (and can safely be cast to an unsigned type.
+					typedef boost::uniform_smallint<unsigned int> site_index_distrib;
+					site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(sz));
+					boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
+
+					const unsigned r = siteIndexGenerator();
+					//cout<<"~~Chose "<<r<<"th site..\n";
+					Sp2 = rhs->m_siteMap[FE3][r];
+				}
+				Sp2 = rhs->m_siteMap[FE3][0]; // if vector has only one element
+			}
+			else{
+				cout << "No FE3 or FE2s available for merging in PAH2. Abort merge" << endl;
+				fail = true;
+			}
+
+		}
+	}
+
+	//Now merge the site lists and site maps
+	if (!fail){
+		//do stuff
+	}
+}
+
 
 //void PAHStructure::WriteCposition(std::ostream &out) const
 //{

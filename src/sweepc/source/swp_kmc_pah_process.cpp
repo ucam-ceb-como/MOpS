@@ -1014,55 +1014,13 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 //    }
 //    // removes site from m_pah->m_siteMap (principal site)
     delSiteFromMap(st->type, st);
-    // change site type
-    if (stype == 18) {
-        assert(bulkCchange == 1);
-        st->type = (kmcSiteType)((int)st->type + bulkCchange - 16);
-		if (st->type == R5){
-			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
-		}
-    } else if (stype == 19) {
-        st->type = (kmcSiteType)((int)st->type + bulkCchange - 16);
-		if (st->type == R5){
-			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
-		}
-    } else if (stype == (int) (kmcSiteType) None ) {
-        assert(bulkCchange == -1 || bulkCchange == 1);
-        if (bulkCchange == -1) {
-            st->type = (kmcSiteType)((int)st->type + bulkCchange - 1);
-			if (st->type == R5){
-				cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
-			}
-        } else if (bulkCchange == 1) {
-            st->type = (kmcSiteType)((int)st->type + bulkCchange - 17);
-			if (st->type == R5){
-				cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
-			}
-        }
+	if (stype > 0){
+		st->type = (kmcSiteType)((int)st->type + bulkCchange);
 	}
-	else if (stype == (int)(kmcSiteType) R5) {
-        assert(bulkCchange == 0);
-        st->type = (kmcSiteType)((int)st->type + bulkCchange - 5);
-		if (st->type == R5){
-			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
-		}
-    } else if (stype == 6) {
-        assert(bulkCchange == 1);
-        st->type = (kmcSiteType)((int)st->type + bulkCchange + 11);
-		if (st->type == R5){
-			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
-		}
-    } else {
-		if (stype > 0){
-			st->type = (kmcSiteType)((int)st->type + bulkCchange);
-		}
-		else{
-			st->type = (kmcSiteType)((int)st->type - bulkCchange);
-		}
-		if (st->type == R5){
-			cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
-		}
-    }
+	else{
+		st->type = (kmcSiteType)((int)st->type - bulkCchange);
+	}
+
     // add site to m_pah->m_siteMap
 	  //NICK TO DO - Figure out logic for updating site type. This may already work correctly
     m_pah->m_siteMap[st->type].push_back(st);
@@ -1200,6 +1158,8 @@ int PAHProcess::SiteSides(Spointer& stt) {
 	case NAC:
 	case ERAC:
 	case ERACER:
+	case ACBL:
+	case ACBR:
 		return 3;
 	case BY5:
 	case ERBY5:
@@ -1226,6 +1186,8 @@ double PAHProcess::SiteAngle(Spointer& stt) {
 	case NAC:
 	case ERAC:
 	case ERACER:
+	case ACBL:
+	case ACBR:
 		return 240.0;
 	case BY5:
 	case ERBY5:

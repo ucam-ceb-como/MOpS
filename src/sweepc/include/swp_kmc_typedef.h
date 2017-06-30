@@ -56,7 +56,7 @@ namespace Sweep {
 			//Reserve negatives for non-reactive sites
 			//Preserve the number conventions between Principle and Combine site types
             // Principal Sites involving 6-member rings
-            FE=1,ZZ=2,AC=3,BY5=4,BY6=5,
+			FE = 1, ZZ = 2, AC = 3, BY5 = 4, BY6 = 5, ACBL = 6, ACBR = 7,
 			// Principal Sites involving 6-member rings that are non-reactive (due to hinderances)
 			NFE = -1, NZZ = -2, NAC = -3, NBY5 = -4, NBY6 = -5,
 			// Principal Sites involving 5-member rings. HER5 = One side embedded R5, ER5 = embedded R5
@@ -79,7 +79,7 @@ namespace Sweep {
 			//Combined sites with only R5
 			//None at the moment, reserve 2000's for this
 			//Combined sites with R5 and R6s
-			ACR5 = 3001,
+			ACR5 = 3001, CAC = 3002, CBY5 = 3003, CBY6 = 3004,
 			//Second, combined sites with other principle and combined sites, AC_FE3:AC next to FE3
 			AC_FE3 = 4001, BY5_FE3 = 4002 , RAC_FE3 = 4003, ER5_FE3 = 4004,
 			//none
@@ -135,6 +135,8 @@ namespace Sweep {
                 case AC: return "AC";
                 case BY5: return "BY5";
                 case BY6: return "BY6";
+				case ACBL: return "ACBL";
+				case ACBR: return "ACBR";
 
 				case NFE: return "NFE";
 				case NZZ: return "NZZ";
@@ -174,6 +176,9 @@ namespace Sweep {
 				case FE_HACA: return "FE_HACA";
 
 				case ACR5: return "ACR5";
+				case CAC: return "CAC";
+				case CBY5: return "CBY5";
+				case CBY6: return "CBY6";
 
                 case AC_FE3: return "AC_FE3";
 
@@ -197,6 +202,8 @@ namespace Sweep {
             else if(str == "AC") return AC;
             else if(str == "BY5") return BY5;
             else if(str == "BY6") return BY6;
+			else if (str == "ACBL") return ACBL;
+			else if (str == "ACBR") return ACBR;
 
 			if (str == "NFE") return NFE;
 			else if (str == "NZZ") return NZZ;
@@ -241,6 +248,8 @@ namespace Sweep {
             temp.push_back(AC);
             temp.push_back(BY5);
             temp.push_back(BY6);
+			temp.push_back(ACBL);
+			temp.push_back(ACBR);
 
 			temp.push_back(NFE);
 			temp.push_back(NZZ);
@@ -280,6 +289,9 @@ namespace Sweep {
 			temp.push_back(FE_HACA);
 
 			temp.push_back(ACR5);
+			temp.push_back(CAC);
+			temp.push_back(CBY5);
+			temp.push_back(CBY6);
 
             temp.push_back(AC_FE3);
             temp.push_back(BY5_FE3);

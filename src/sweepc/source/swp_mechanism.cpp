@@ -907,7 +907,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
 
         // Update individual PAHs within this particle by using KMC code
         // sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
-        pah->UpdatePAHs(t, *this, sys, rng);
+        pah->UpdatePAHs(t, dt, *this, sys, rng);
 
         pah->UpdateCache();
         pah->CheckRounding();

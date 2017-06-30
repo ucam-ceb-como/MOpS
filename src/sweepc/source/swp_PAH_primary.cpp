@@ -69,6 +69,7 @@
 #include <boost/random/variate_generator.hpp>
 #include <boost/bind.hpp>
 #include <boost/bind/placeholders.hpp>
+#include <boost/random/exponential_distribution.hpp>
 
 #include "string_functions.h"
 
@@ -1018,15 +1019,15 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
  * @param[in,out]    rng      Random number generator.
  *
  */
-void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Cell &sys, rng_type &rng)
+void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::ParticleModel &model, Cell &sys, rng_type &rng)
 {
     // Either the primary has two children or it is a leaf of the
     // tree
     if (m_leftchild!=NULL)
     {
         // Recurse down to the leaves
-        m_leftchild->UpdatePAHs(t, model,sys, rng);
-        m_rightchild->UpdatePAHs(t, model,sys, rng);
+        m_leftchild->UpdatePAHs(t, dt, model,sys, rng);
+        m_rightchild->UpdatePAHs(t, dt, model,sys, rng);
     }
     else
     {
@@ -1131,6 +1132,49 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
         {
             RemoveInvalidPAHs();
         }
+
+		//
+		double m_t = 0;
+		while (m_t < dt && m_PAH.size() > 1)
+		{
+			typedef boost::exponential_distribution<double> exponential_distrib;
+			exponential_distrib waitingTimeDistrib(1e10*m_PAH.size());
+			boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
+			double t_step = waitingTimeGenerator();
+
+			m_t = m_t + t_step;
+
+			if (m_t < dt)
+			{
+				
+				boost::uniform_smallint<int> indexDistrib(0, m_PAH.size() - 1);
+				boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
+				int ip1 = indexGenerator();
+				int ip2 = ip1;
+				unsigned int guard = 0;
+
+				while ((ip2 == ip1) && (++guard < 1000))
+				{
+					ip2 = indexGenerator();
+				}
+
+				if (ip1 != ip2)
+				{
+					int numR6 = m_PAH[ip1]->m_pahstruct->numofRings() + m_PAH[ip2]->m_pahstruct->numofRings();
+					int numLoneR5 = m_PAH[ip1]->m_pahstruct->numofLoneRings5() + m_PAH[ip2]->m_pahstruct->numofLoneRings5();
+					int numEmbeddedR5 = m_PAH[ip1]->m_pahstruct->numofEmbeddedRings5() + m_PAH[ip2]->m_pahstruct->numofEmbeddedRings5();
+					m_PAH[ip1]->m_pahstruct->setnumofRings(numR6);
+					m_PAH[ip1]->m_pahstruct->setnumofLoneRings5(numLoneR5);
+					m_PAH[ip1]->m_pahstruct->setnumofEmbeddedRings5(numEmbeddedR5);
+					m_PAH[ip1]->time_created = min(m_PAH[ip1]->time_created, m_PAH[ip2]->time_created);
+					m_PAH[ip1]->lastupdated = min(m_PAH[ip1]->lastupdated, m_PAH[ip2]->lastupdated);
+
+					m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
+
+					RemoveInvalidPAHs();
+				}
+			}
+		}
 
         //sys.Particles().Add();
         //this->ParticleModel()->Mode();
