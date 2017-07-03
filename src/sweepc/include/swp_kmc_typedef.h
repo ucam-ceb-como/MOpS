@@ -58,7 +58,7 @@ namespace Sweep {
             // Principal Sites involving 6-member rings
 			FE = 1, ZZ = 2, AC = 3, BY5 = 4, BY6 = 5, ACBL = 6, ACBR = 7,
 			// Principal Sites involving 6-member rings that are non-reactive (due to hinderances)
-			NFE = -1, NZZ = -2, NAC = -3, NBY5 = -4, NBY6 = -5,
+			NFE = -1, NZZ = -2, NAC = -3, NBY5 = -4, NBY6 = -5, NACBL = -6, NACBR = -7,
 			// Principal Sites involving 5-member rings. HER5 = One side embedded R5, ER5 = embedded R5
 			R5 = 11, HER5 =12, ER5 =13,
             // Principal sites combining R6 and R5 sites

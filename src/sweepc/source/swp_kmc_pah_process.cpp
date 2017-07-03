@@ -1031,36 +1031,53 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	Spointer Sp1, Sp2;
 	bool fail = false;
-/*	if (m_pah->m_siteMap[FE3].size() < -100){
-		Sp1 = chooseRandomSite(FE3, rng);
-	}
-	else */if (m_pah->m_siteMap[FE2].size() > 0){
-		Sp1 = chooseRandomSite(FE2, rng);
-		if (moveIt(Sp1, 1)->comb == FE2){
-			Spointer Sp3 = moveIt(Sp1, 1);
-			Sp1 = Sp3;
+	int guard = 0;
+	bool sel1 = false, sel2 = false;
+
+	if (m_pah->m_siteMap[FE2].size() > 0){
+		while (guard < 10 && !sel1){
+			guard++;
+			Sp1 = chooseRandomSite(FE2, rng);
+			if (moveIt(Sp1, 1)->comb == FE2){
+				Spointer Sp3 = moveIt(Sp1, 1);
+				Sp1 = Sp3;
+			}
+			//if (Sp1->type != NFE && moveIt(Sp1, -1)->type != NFE){
+				sel1 = true;
+			//}
 		}
+
 	}
 	else{
 		fail = true;
 	}
+	if (!sel1){
+		fail = true;
+	}
 	if (!fail){
-		/*if (rhs.m_pah->m_siteMap[FE3].size() < -100){
-			Sp2 = rhs.chooseRandomSite(FE3, rng);
-		}
-		else*/ if (rhs.m_pah->m_siteMap[FE2].size() > 0){
-			Sp2 = rhs.chooseRandomSite(FE2, rng);
-			if (rhs.moveIt(Sp2, 1)->comb == FE2){
-				Sp2 = rhs.moveIt(Sp2, 1);
+		guard = 0;
+		if (rhs.m_pah->m_siteMap[FE2].size() > 0){
+			while (guard < 10 && !sel2){
+				Sp2 = rhs.chooseRandomSite(FE2, rng);
+				if (rhs.moveIt(Sp2, 1)->comb == FE2){
+					Sp2 = rhs.moveIt(Sp2, 1);
+				}
+				//if (Sp2->type != NFE && rhs.moveIt(Sp2, -1)->type != NFE){
+					sel2 = true;
+				//}
 			}
 		}
 		else{
 			fail = true;
 		}
+		if (!sel2){
+			fail = true;
+		}
 	}
 
 	if (!fail){
-		convSiteType(moveIt(Sp1,-1), ACBL);
+		//convSiteType(moveIt(Sp1,-1), ACBR);
+		convSiteType(moveIt(Sp1, -1), AC);
 		Spointer st3;
 		for (st3 = rhs.moveIt(Sp2,1); st3 != rhs.m_pah->m_siteList.end(); st3++){
 			addSite(st3->type, Sp1);
@@ -1068,7 +1085,8 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 		for (st3 = rhs.m_pah->m_siteList.begin(); st3 != rhs.moveIt(Sp2,-1); st3++){
 			addSite(st3->type, Sp1);
 		}
-		convSiteType(Sp1, ACBR);
+		//convSiteType(Sp1, ACBL);
+		convSiteType(Sp1, AC);
 		Sp1 = m_pah->m_siteList.begin();
 		updateCombinedSites();
 		updateHinderedSites();
@@ -1094,6 +1112,8 @@ void PAHProcess::updateHinderedSites() {
 		case NFE:
 		case AC:
 		case NAC:
+		case NACBL:
+		case NACBR:
 			for (st1 = moveIt(st, 1); st1 != m_pah->m_siteList.end(); st1++) {
 				count++;
 				Sides += SiteSides(st1);
@@ -1206,6 +1226,8 @@ int PAHProcess::SiteSides(Spointer& stt) {
 	case ERACER:
 	case ACBL:
 	case ACBR:
+	case NACBL:
+	case NACBR:
 		return 3;
 	case BY5:
 	case ERBY5:
@@ -1234,6 +1256,8 @@ double PAHProcess::SiteAngle(Spointer& stt) {
 	case ERACER:
 	case ACBL:
 	case ACBR:
+	case NACBL:
+	case NACBR:
 		return 240.0;
 	case BY5:
 	case ERBY5:
@@ -2235,6 +2259,10 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
             proc_C6R_BY5_FE3(site_perf, rng); break;
         case 32:
             proc_C6R_RAC_FE3(site_perf, rng); break;
+		case 33:
+			proc_G6R_ACBR(site_perf); break;
+		case 34:
+			proc_G6R_ACBL(site_perf); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -2338,11 +2366,35 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
     //printStruct();
     // Add and remove H
     //updateA(C_1->C1, C_2->C2, 'H');
+
+	//Check if this is growth on a bridge. If so, change other side of bridge to regular AC
+	//if (stt->type == ACBR){
+	//	int count = 1;
+	//	Spointer Sptt = stt;
+	//	while (count > 0){
+	//		Sptt = moveIt(Sptt, 1);
+	//		if (Sptt->type == ACBL) count--;
+	//		if (Sptt->type == ACBR) count++;
+	//	}
+	//	convSiteType(Sptt, AC);
+	//}
+
+	//if (stt->type == ACBL){
+	//	int count = 1;
+	//	Spointer Sptt = stt;
+	//	while (count > 0){
+	//		Sptt = moveIt(Sptt, 1);
+	//		if (Sptt->type == ACBR) count--;
+	//		if (Sptt->type == ACBL) count++;
+	//	}
+	//	convSiteType(Sptt, AC);
+	//}
+
     // neighbouring sites:
     Spointer S1 = moveIt(stt, -1); 
     Spointer S2 = moveIt(stt, 1);
     // Update Site and neighbours
-    updateSites(stt, -2);
+	convSiteType(stt, FE);
 
 	//if ((S1t == eRZZ && S3t == eR5 && S5t == eRFE) || (S2t == eRZZ && S4t == eR5 && S6t == eRFE)){
 	//	//// Convert to a BY6 site
@@ -4004,6 +4056,20 @@ void PAHProcess::proc_C6R_RAC_FE3violi(Spointer& stt, rng_type &rng) {
 // ************************************************************
 void PAHProcess::proc_M6R_RAC_FE3(Spointer& stt, rng_type &rng) {
     proc_M6R_BY5_FE3(stt, rng);
+}
+
+// ************************************************************
+// ID33 - R6 growth on AC
+// ************************************************************
+void PAHProcess::proc_G6R_ACBR(Spointer& stt) {
+	proc_G6R_AC(stt);
+}
+
+// ************************************************************
+// ID34 - R6 growth on AC
+// ************************************************************
+void PAHProcess::proc_G6R_ACBL(Spointer& stt) {
+	proc_G6R_AC(stt);
 }
 
 size_t PAHProcess::SiteListSize() const {

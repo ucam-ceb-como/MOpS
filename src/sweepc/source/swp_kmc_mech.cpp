@@ -154,6 +154,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //*< ID30.
     JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //*< ID31.
     JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //*< ID32.
+	JumpProcess* j_G6R_ACBL = new G6R_ACBL; j_G6R_ACBL->initialise();                           //*< ID33.
+	JumpProcess* j_G6R_ACBR = new G6R_ACBR; j_G6R_ACBR->initialise();                           //*< ID34.
        
     // Jump Processes included in the model
     // (Comment out any process to be omitted):
@@ -190,6 +192,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //temp.push_back(j_C6R_RAC_FE3);      //*< 30 - R6 migration & conversion to R5 at RAC.
     //temp.push_back(j_C6R_RAC_FE3violi); //*< 31 - R6 migration & conversion to R5 at RAC.
     //temp.push_back(j_M6R_RAC_FE3);      //*< 32 - R6 desorption at RAC -> pyrene.
+	temp.push_back(j_G6R_ACBR);           //*< 33 - R6 Growth on ACBR [AR1].
+	temp.push_back(j_G6R_ACBL);           //*< 34 - R6 Growth on ACBL [AR1].
         
     //--------------------------------------
     return temp;
@@ -2250,4 +2254,146 @@ double M6R_RAC_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+}
+
+// ************************************************************
+// ID33- R6 growth on ACBR
+// ************************************************************
+
+// Elementary rate constants, site type, process type and name
+void G6R_ACBR::initialise() {
+	// Adding elementary reactions
+	// 0.0267 atm
+	rxnvector& rxnV = m_rxnvector0p0267;
+	addReaction(rxnV, Reaction(2.50e14, 0, 16.00, sp::H));      //0 - r1f
+	addReaction(rxnV, Reaction(3.40e9, 0.88, 7.870, sp::H2));   //1 - r1b
+	addReaction(rxnV, Reaction(2.10e13, 0, 4.56937799, sp::OH));  //2 - r2f
+	addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+	addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp::H));  //4 - r3f
+	addReaction(rxnV, Reaction(1.87e7, 1.787, 3.262, sp::C2H2));   //5 - r4f
+	//addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
+	// 0.12 atm
+	rxnvector& rxnV2 = m_rxnvector0p12;
+	addReaction(rxnV2, Reaction(2.50e14, 0, 16.00, sp::H));      //0 - r1f
+	addReaction(rxnV2, Reaction(3.40e9, 0.88, 7.870, sp::H2));   //1 - r1b
+	addReaction(rxnV2, Reaction(2.10e13, 0, 4.56937799, sp::OH));  //2 - r2f
+	addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+	addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+	addReaction(rxnV2, Reaction(1.87e7, 1.787, 3.262, sp::C2H2));   //5 - r4f
+	//addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+	// 1 atm
+	rxnvector& rxnV3 = m_rxnvector1;
+	addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
+	addReaction(rxnV3, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
+	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
+	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
+	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
+	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f
+
+	m_sType = ACBR; // sitetype
+	m_name = "G6R at ACBR"; // name of process
+	m_ID = 33;
+}
+// Jump rate calculation
+double G6R_ACBR::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+		r_f = r_f / (r_f + 1.0);
+	}
+	else r_f = 0;
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+}
+double G6R_ACBR::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate0p0267(gp, pah_st);
+}
+double G6R_ACBR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+		r_f = r_f / (r_f + 1.0);
+	}
+	else r_f = 0;
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+}
+
+// ************************************************************
+// ID33- R6 growth on ACBL
+// ************************************************************
+
+// Elementary rate constants, site type, process type and name
+void G6R_ACBL::initialise() {
+	// Adding elementary reactions
+	// 0.0267 atm
+	rxnvector& rxnV = m_rxnvector0p0267;
+	addReaction(rxnV, Reaction(2.50e14, 0, 16.00, sp::H));      //0 - r1f
+	addReaction(rxnV, Reaction(3.40e9, 0.88, 7.870, sp::H2));   //1 - r1b
+	addReaction(rxnV, Reaction(2.10e13, 0, 4.56937799, sp::OH));  //2 - r2f
+	addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+	addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp::H));  //4 - r3f
+	addReaction(rxnV, Reaction(1.87e7, 1.787, 3.262, sp::C2H2));   //5 - r4f
+	//addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
+	// 0.12 atm
+	rxnvector& rxnV2 = m_rxnvector0p12;
+	addReaction(rxnV2, Reaction(2.50e14, 0, 16.00, sp::H));      //0 - r1f
+	addReaction(rxnV2, Reaction(3.40e9, 0.88, 7.870, sp::H2));   //1 - r1b
+	addReaction(rxnV2, Reaction(2.10e13, 0, 4.56937799, sp::OH));  //2 - r2f
+	addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+	addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+	addReaction(rxnV2, Reaction(1.87e7, 1.787, 3.262, sp::C2H2));   //5 - r4f
+	//addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+	// 1 atm
+	rxnvector& rxnV3 = m_rxnvector1;
+	addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
+	addReaction(rxnV3, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
+	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
+	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
+	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
+	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f
+
+	m_sType = ACBL; // sitetype
+	m_name = "G6R at ACBL"; // name of process
+	m_ID = 33;
+}
+// Jump rate calculation
+double G6R_ACBL::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+		r_f = r_f / (r_f + 1.0);
+	}
+	else r_f = 0;
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+}
+double G6R_ACBL::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate0p0267(gp, pah_st);
+}
+double G6R_ACBL::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+		r_f = r_f / (r_f + 1.0);
+	}
+	else r_f = 0;
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
 }
