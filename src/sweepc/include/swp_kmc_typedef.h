@@ -61,12 +61,12 @@ namespace Sweep {
 			NFE = -1, NZZ = -2, NAC = -3, NBY5 = -4, NBY6 = -5, NACBL = -6, NACBR = -7,
 			// Principal Sites involving 5-member rings. HER5 = One side embedded R5, ER5 = embedded R5
 			R5 = 11, HER5 =12, ER5 =13,
-            // Principal sites combining R6 and R5 sites
+			// Principal sites combining R6 and R5 sites
 			// Site with R5 at one side
             RFE=21, RZZ=22, RAC=23, RBY5=24,
 			// Site with ER5 at one side
 			ERFE = 31, ERZZ = 32, ERAC = 33, ERBY5 = 34,
-            // Sites with R5 at both sides
+			// Sites with R5 at both sides
 			RFER = 41, RZZR = 42, RACR = 43, RBY5R = 44,
 			// Sites with ER5 at both sides
 			ERFEER = 51, ERZZER = 52, ERACER = 53,
@@ -75,7 +75,9 @@ namespace Sweep {
 			//End principal site types
 			//Start combined site types
 			//First, basic combined sites with R6s. FE3:FE with 2 FEs on both sides. FE_HACA: FE with non FE's on each side
-			FE2 =1001, FE3 = 1002, FE_HACA = 1003, 
+			FE2 = 1001, FE3 = 1002, FE_HACA = 1003,
+			//Basic combined sites that are hindered
+			NFE2 = -1001,
 			//Combined sites with only R5
 			//None at the moment, reserve 2000's for this
 			//Combined sites with R5 and R6s

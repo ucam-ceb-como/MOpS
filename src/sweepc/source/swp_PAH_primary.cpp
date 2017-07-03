@@ -70,6 +70,8 @@
 #include <boost/bind.hpp>
 #include <boost/bind/placeholders.hpp>
 #include <boost/random/exponential_distribution.hpp>
+#include <boost/random/uniform_01.hpp>
+#include "choose_index.hpp"
 
 #include "string_functions.h"
 
@@ -1137,47 +1139,59 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 		double m_t = 0;
 		while (m_t < dt && m_PAH.size() > 1)
 		{
-			typedef boost::exponential_distribution<double> exponential_distrib;
-			exponential_distrib waitingTimeDistrib(1e4*m_PAH.size());
-			boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
-			double t_step = waitingTimeGenerator();
+			double totalsites = 0;
+			//const std::vector<boost::shared_ptr<PAH> >::iterator itEnd = m_PAH.end();
+			std::vector<double> mergesites(m_PAH.size());
+			for (int it = 0; it != m_PAH.size(); it++) {
+				mergesites[it] = m_PAH[it]->m_pahstruct->numMergeSites();
+				totalsites += mergesites[it];
+			}
+			//totalsites = 0.0;
+			if (totalsites > 2){
+				typedef boost::exponential_distribution<double> exponential_distrib;
+				exponential_distrib waitingTimeDistrib(1.0*(totalsites)*(totalsites - 1.0));
+				boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
+				double t_step = waitingTimeGenerator();
 
-			m_t = m_t + t_step;
+				m_t = m_t + t_step;
 
-			if (m_t < dt)
-			{
-				
-				boost::uniform_smallint<int> indexDistrib(0, m_PAH.size() - 1);
-				boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
-				int ip1 = indexGenerator();
-				int ip2 = ip1;
-				unsigned int guard = 0;
-
-				while ((ip2 == ip1) && (++guard < 1000))
+				if (m_t < dt)
 				{
-					ip2 = indexGenerator();
+
+					boost::uniform_01<rng_type &, double> uniformGenerator(rng);
+					size_t ip1 = chooseIndex<double>(mergesites, uniformGenerator);
+					size_t ip2 = ip1;
+					unsigned int guard = 0;
+
+					while ((ip2 == ip1) && (++guard < 1000))
+					{
+						ip2 = chooseIndex<double>(mergesites, uniformGenerator);
+					}
+
+					if (ip1 != ip2)
+					{
+						int numR6 = m_PAH[ip1]->m_pahstruct->numofRings() + m_PAH[ip2]->m_pahstruct->numofRings();
+						int numLoneR5 = m_PAH[ip1]->m_pahstruct->numofLoneRings5() + m_PAH[ip2]->m_pahstruct->numofLoneRings5();
+						int numEmbeddedR5 = m_PAH[ip1]->m_pahstruct->numofEmbeddedRings5() + m_PAH[ip2]->m_pahstruct->numofEmbeddedRings5();
+						int numC = m_PAH[ip1]->m_pahstruct->numofC() + m_PAH[ip2]->m_pahstruct->numofC();
+						int numH = m_PAH[ip1]->m_pahstruct->numofH() + m_PAH[ip2]->m_pahstruct->numofH();
+						m_PAH[ip1]->m_pahstruct->setnumofRings(numR6);
+						m_PAH[ip1]->m_pahstruct->setnumofLoneRings5(numLoneR5);
+						m_PAH[ip1]->m_pahstruct->setnumofEmbeddedRings5(numEmbeddedR5);
+						m_PAH[ip1]->m_pahstruct->setnumofC(numC);
+						m_PAH[ip1]->m_pahstruct->setnumofH(numH);
+						m_PAH[ip1]->time_created = min(m_PAH[ip1]->time_created, m_PAH[ip2]->time_created);
+						m_PAH[ip1]->lastupdated = min(m_PAH[ip1]->lastupdated, m_PAH[ip2]->lastupdated);
+
+						m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
+
+						RemoveInvalidPAHs();
+						m_PAHclusterchanged = true;
+					}
 				}
-
-				if (ip1 != ip2)
-				{
-					int numR6 = m_PAH[ip1]->m_pahstruct->numofRings() + m_PAH[ip2]->m_pahstruct->numofRings();
-					int numLoneR5 = m_PAH[ip1]->m_pahstruct->numofLoneRings5() + m_PAH[ip2]->m_pahstruct->numofLoneRings5();
-					int numEmbeddedR5 = m_PAH[ip1]->m_pahstruct->numofEmbeddedRings5() + m_PAH[ip2]->m_pahstruct->numofEmbeddedRings5();
-					int numC = m_PAH[ip1]->m_pahstruct->numofC() + m_PAH[ip2]->m_pahstruct->numofC();
-					int numH = m_PAH[ip1]->m_pahstruct->numofH() + m_PAH[ip2]->m_pahstruct->numofH();
-					m_PAH[ip1]->m_pahstruct->setnumofRings(numR6);
-					m_PAH[ip1]->m_pahstruct->setnumofLoneRings5(numLoneR5);
-					m_PAH[ip1]->m_pahstruct->setnumofEmbeddedRings5(numEmbeddedR5);
-					m_PAH[ip1]->m_pahstruct->setnumofC(numC);
-					m_PAH[ip1]->m_pahstruct->setnumofH(numH);
-					m_PAH[ip1]->time_created = min(m_PAH[ip1]->time_created, m_PAH[ip2]->time_created);
-					m_PAH[ip1]->lastupdated = min(m_PAH[ip1]->lastupdated, m_PAH[ip2]->lastupdated);
-
-					m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
-
-					RemoveInvalidPAHs();
-					m_PAHclusterchanged = true;
-				}
+			}
+			else{
+				break;
 			}
 		}
 

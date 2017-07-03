@@ -98,6 +98,8 @@ namespace Sweep{
             //int numofEdgeC() const;
             //! return num of site
             int numofSite() const;
+			//! return num of sites where merging can occur
+			int numMergeSites();
             //! set number of carbon and hydrogen for particular PAH
             void setnumofC(int val);
             void setnumofH(int val);
@@ -117,8 +119,6 @@ namespace Sweep{
             //! serialization (incomplete)
             void Serialize(std::ostream &out) const;
             void Deserialize(std::istream &in);
-
-			std::list<Site> PAHStructure::GetSiteVector() const;
 
 			void MergeSiteLists(PAHStructure* rhs, rng_type &rng);
 

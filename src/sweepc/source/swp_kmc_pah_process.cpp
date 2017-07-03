@@ -1031,46 +1031,26 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	Spointer Sp1, Sp2;
 	bool fail = false;
-	int guard = 0;
-	bool sel1 = false, sel2 = false;
 
 	if (m_pah->m_siteMap[FE2].size() > 0){
-		while (guard < 10 && !sel1){
-			guard++;
-			Sp1 = chooseRandomSite(FE2, rng);
-			if (moveIt(Sp1, 1)->comb == FE2){
-				Spointer Sp3 = moveIt(Sp1, 1);
-				Sp1 = Sp3;
-			}
-			//if (Sp1->type != NFE && moveIt(Sp1, -1)->type != NFE){
-				sel1 = true;
-			//}
+		Sp1 = chooseRandomSite(FE2, rng);
+		if (moveIt(Sp1, 1)->comb == FE2){
+			Spointer Sp3 = moveIt(Sp1, 1);
+			Sp1 = Sp3;
 		}
-
 	}
+
 	else{
 		fail = true;
 	}
-	if (!sel1){
-		fail = true;
-	}
 	if (!fail){
-		guard = 0;
 		if (rhs.m_pah->m_siteMap[FE2].size() > 0){
-			while (guard < 10 && !sel2){
-				Sp2 = rhs.chooseRandomSite(FE2, rng);
-				if (rhs.moveIt(Sp2, 1)->comb == FE2){
-					Sp2 = rhs.moveIt(Sp2, 1);
-				}
-				//if (Sp2->type != NFE && rhs.moveIt(Sp2, -1)->type != NFE){
-					sel2 = true;
-				//}
+			Sp2 = rhs.chooseRandomSite(FE2, rng);
+			if (rhs.moveIt(Sp2, 1)->comb == FE2){
+				Sp2 = rhs.moveIt(Sp2, 1);
 			}
 		}
 		else{
-			fail = true;
-		}
-		if (!sel2){
 			fail = true;
 		}
 	}
@@ -1339,26 +1319,52 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
             S1 = moveIt(st,-1); S2 = moveIt(st, 1);
             // Check if that FE is not a FE3
 			if ((S2->type == FE || S2->type == NFE) && moveIt(S2, 1)->type != FE && moveIt(S2, 1)->type != NFE) {
-                st->comb = FE2;
-                m_pah->m_siteMap[FE2].push_back(st);
-		//
-                // An FE2 site is a combined site where an FE site has an FE site only 
-                // For example, for ZZ - FE - FE - ZZ, both of the FE sites has a combi
-                //
-                // Zig-zag oxidation reactions are based on the number of side-by-side 
-                // If these reactions were based on the number of FE2 sites, we would o
-                // So we can either calculate the rate based on the number of FE2 sites
-                // or - as has been done here - remove half of the FE2 sites.
-                //
-                if(S2->comb == FE2) delSiteFromMap(S2->comb, st);
-                //
-                if(S2->comb != FE2) updateCombinedSites(S2);
+				if (st->type != NFE && S2->type != NFE){
+					st->comb = FE2;
+					m_pah->m_siteMap[FE2].push_back(st);
+					//
+					// An FE2 site is a combined site where an FE site has an FE site only 
+					// For example, for ZZ - FE - FE - ZZ, both of the FE sites has a combi
+					//
+					// Zig-zag oxidation reactions are based on the number of side-by-side 
+					// If these reactions were based on the number of FE2 sites, we would o
+					// So we can either calculate the rate based on the number of FE2 sites
+					// or - as has been done here - remove half of the FE2 sites.
+					//
+					if (S2->comb == FE2) delSiteFromMap(S2->comb, st);
+					//
+					if (S2->comb != FE2) updateCombinedSites(S2);
+				}
+				else{
+					st->comb = NFE2;
+					m_pah->m_siteMap[NFE2].push_back(st);
+					//
+					// An FE2 site is a combined site where an FE site has an FE site only 
+					// For example, for ZZ - FE - FE - ZZ, both of the FE sites has a combi
+					//
+					// Zig-zag oxidation reactions are based on the number of side-by-side 
+					// If these reactions were based on the number of FE2 sites, we would o
+					// So we can either calculate the rate based on the number of FE2 sites
+					// or - as has been done here - remove half of the FE2 sites.
+					//
+					if (S2->comb == NFE2) delSiteFromMap(S2->comb, st);
+					//
+					if (S2->comb != NFE2) updateCombinedSites(S2);
+				}
 			}
 			else if ((S1->type == FE || S1->type == NFE) && moveIt(S1, -1)->type != FE && moveIt(S1, -1)->type != NFE) {
-                st->comb = FE2;
-                m_pah->m_siteMap[FE2].push_back(st);
-                if(S1->comb == FE2) delSiteFromMap(S1->comb, st);
-                if(S1->comb != FE2) updateCombinedSites(S1);
+				if (st->type != NFE && S1->type != NFE){
+					st->comb = FE2;
+					m_pah->m_siteMap[FE2].push_back(st);
+					if (S1->comb == FE2) delSiteFromMap(S1->comb, st);
+					if (S1->comb != FE2) updateCombinedSites(S1);
+				}
+				else{
+					st->comb = NFE2;
+					m_pah->m_siteMap[NFE2].push_back(st);
+					if (S1->comb == NFE2) delSiteFromMap(S1->comb, st);
+					if (S1->comb != NFE2) updateCombinedSites(S1);
+				}
             } else
                 st->comb = None;
             break;
@@ -2273,13 +2279,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         cout<<"WARNING: A of m_cfirst is not H..\n";
     //cout<<"----PROCESS PERFORMED!-----\n";*/
 	//Redetermine any sites that are non-reactive (due to hinderances)
-
-	if (PAH_ID == 262 && m_pah->m_siteList.size() > 0){
-		updateHinderedSites();
-	}
-	else{
-		updateHinderedSites();
-	}
+	updateHinderedSites();
 
     Spointer S1,S2,S3,S4;
     S1 = moveIt(site_perf, -1); S2 = moveIt(site_perf, 1);
