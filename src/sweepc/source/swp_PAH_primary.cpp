@@ -1140,14 +1140,16 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 		while (m_t < dt && m_PAH.size() > 1)
 		{
 			double totalsites = 0;
+			int numdiffPAHs = 0;
 			//const std::vector<boost::shared_ptr<PAH> >::iterator itEnd = m_PAH.end();
 			std::vector<double> mergesites(m_PAH.size());
 			for (int it = 0; it != m_PAH.size(); it++) {
 				mergesites[it] = m_PAH[it]->m_pahstruct->numMergeSites();
 				totalsites += mergesites[it];
+				if (mergesites[it] > 0) numdiffPAHs++;
 			}
 			//totalsites = 0.0;
-			if (totalsites > 2){
+			if (totalsites > 2 && numdiffPAHs > 1){
 				typedef boost::exponential_distribution<double> exponential_distrib;
 				exponential_distrib waitingTimeDistrib(1.0*(totalsites)*(totalsites - 1.0));
 				boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
