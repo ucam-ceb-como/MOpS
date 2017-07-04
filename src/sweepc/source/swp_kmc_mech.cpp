@@ -156,6 +156,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //*< ID32.
 	JumpProcess* j_G6R_ACBL = new G6R_ACBL; j_G6R_ACBL->initialise();                           //*< ID33.
 	JumpProcess* j_G6R_ACBR = new G6R_ACBR; j_G6R_ACBR->initialise();                           //*< ID34.
+	JumpProcess* j_PAH_Merge = new PAH_Merge; j_PAH_Merge->initialise();                        //*< ID35.
        
     // Jump Processes included in the model
     // (Comment out any process to be omitted):
@@ -194,6 +195,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //temp.push_back(j_M6R_RAC_FE3);      //*< 32 - R6 desorption at RAC -> pyrene.
 	temp.push_back(j_G6R_ACBR);           //*< 33 - R6 Growth on ACBR [AR1].
 	temp.push_back(j_G6R_ACBL);           //*< 34 - R6 Growth on ACBL [AR1].
+	temp.push_back(j_PAH_Merge);          //*< 35 - PAH merging. Should not be included in calculation of Jump Processes for
+	                                      //updating PAHs
         
     //--------------------------------------
     return temp;
@@ -208,21 +211,36 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
     // Choose suitable mechanism according to P
     if(pressure > 0.5 && pressure <= 5) { // mechanism at 1 atm 
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-            (m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
-            m_rates[i] = (m_jplist[i])->setRate1(gp, st/*, t*/);
-            temp += m_rates[i];
+			if ((m_jplist[i])->getName() != "PAH Merging"){
+				(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
+				m_rates[i] = (m_jplist[i])->setRate1(gp, st/*, t*/);
+				temp += m_rates[i];
+			}
+			else{
+				m_rates[i] = 0.0;
+			}
         }
     }else if(pressure > 0.01 && pressure <= 0.07) { // mechanism at 0.0267atm
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-            (m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p0267(), gp);
-            m_rates[i] = (m_jplist[i])->setRate0p0267(gp, st/*, t*/);
-            temp += m_rates[i];
+			if ((m_jplist[i])->getName() != "PAH Merging"){
+				(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p0267(), gp);
+				m_rates[i] = (m_jplist[i])->setRate0p0267(gp, st/*, t*/);
+				temp += m_rates[i];
+			}
+			else{
+				m_rates[i] = 0.0;
+			}
         }
     }else if(pressure > 0.07 && pressure <= 0.5) { // mechanism at 0.12atm
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-            (m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p12(), gp);
-            m_rates[i] = (m_jplist[i])->setRate0p12(gp, st/*, t*/);
-            temp += m_rates[i];
+			if ((m_jplist[i])->getName() != "PAH Merging"){
+				(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p12(), gp);
+				m_rates[i] = (m_jplist[i])->setRate0p12(gp, st/*, t*/);
+				temp += m_rates[i];
+			}
+			else{
+				m_rates[i] = 0.0;
+			}
         }
     }else std::cout<<"ERROR: No reaction mechanism for this pressure condition.\n";
      //update total rates
@@ -232,6 +250,23 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
     if (temp < 1e-20) temp = 1e-20;
 
     m_totalrate = temp;
+}
+
+//! Calculates PAH merging prefactor
+double KMCMechanism::calculateMergePreFactor(const KMCGasPoint& gp,
+	const double& t) {
+	double KMerge = 0;
+	bool found = false;
+	PAHProcess st;
+	for (int i = 0; i != (int)m_jplist.size(); i++) {
+		if ((m_jplist[i])->getName() == "PAH Merging"){
+			(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
+			KMerge = (m_jplist[i])->setRate1(gp, st/*, t*/);
+			return KMerge;
+		}
+	}
+	cout << "ERROR: PAH Merging not in jump process list. Returning 0 for merge rate prefactor ";
+	return 0.0;
 }
 
 //! Returns vector of jump processes
@@ -2328,7 +2363,7 @@ double G6R_ACBR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
 }
 
 // ************************************************************
-// ID33- R6 growth on ACBL
+// ID34- R6 growth on ACBL
 // ************************************************************
 
 // Elementary rate constants, site type, process type and name
@@ -2363,7 +2398,7 @@ void G6R_ACBL::initialise() {
 
 	m_sType = ACBL; // sitetype
 	m_name = "G6R at ACBL"; // name of process
-	m_ID = 33;
+	m_ID = 34;
 }
 // Jump rate calculation
 double G6R_ACBL::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
@@ -2396,4 +2431,61 @@ double G6R_ACBL::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
 	}
 	else r_f = 0;
 	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+}
+//
+// ************************************************************
+// ID35- PAH Merging
+// ************************************************************
+
+// Elementary rate constants, site type, process type and name
+void PAH_Merge::initialise() {
+    // Adding elementary reactions
+    // 0.0267 atm
+    rxnvector& rxnV = m_rxnvector0p0267;
+    addReaction(rxnV, Reaction(2.5e14, 0, 16.00, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(2.08e30, -4.98, 5.290, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(2e76, -18.4456, 46.93, sp::None));   //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
+    // 0.12 atm
+    rxnvector& rxnV2 = m_rxnvector0p12;
+    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+	addReaction(rxnV2, Reaction(2.2e36, -8.21, 9.92, sp::None));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, .734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+	addReaction(rxnV3, Reaction(1.9e76, -18.4043, 47.87, sp::None));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+
+    m_sType = None; // sitetype
+    m_name = "PAH Merging"; // name of process
+    m_ID = 35;
+}
+// Jump rate calculation
+double PAH_Merge::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = m_r[5]*r_f; // Rate Equation
+}
+double PAH_Merge::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate0p0267(gp, pah_st);
+}
+double PAH_Merge::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate0p0267(gp, pah_st);
 }

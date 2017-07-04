@@ -1150,8 +1150,10 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			}
 			//totalsites = 0.0;
 			if (totalsites > 2 && numdiffPAHs > 1){
+				double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t);
+				kMerge = kMerge / NA * sys.SampleVolume();
 				typedef boost::exponential_distribution<double> exponential_distrib;
-				exponential_distrib waitingTimeDistrib(1.0*(totalsites)*(totalsites - 1.0));
+				exponential_distrib waitingTimeDistrib(kMerge*(totalsites)*(totalsites - 1.0));
 				boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
 				double t_step = waitingTimeGenerator();
 

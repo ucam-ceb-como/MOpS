@@ -269,6 +269,14 @@ rvector KMCSimulator::CurrentRates(PAHStructure* pah, double t) {
     rates = m_kmcmech.Rates();
     return rates;
 }
+
+//! Obtains the PAH merging reaction rate prefactor
+double KMCSimulator::MergePreFactor(double t) {
+	double KMerge=0;
+	m_gas->Interpolate(t);
+	KMerge = m_kmcmech.calculateMergePreFactor(*m_gas, t);
+	return KMerge;
+}
 //! Outputs gas concentrations into a csv file
 void KMCSimulator::TestConc(const double& t_start, const double& t_stop, const int intervals, const std::string& filename) {
     CSV_IO csvio(filename, true);
