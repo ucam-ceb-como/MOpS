@@ -154,7 +154,7 @@ public:
     void UpdateCache(void);
 
     //! updates the evolution of the PAHs using the database and the current time
-	void UpdatePAHs(double t, double dt, const Sweep::ParticleModel &model, Cell &sys, rng_type &rng);
+	void UpdatePAHs(double t, double dt, const Sweep::ParticleModel &model, Cell &sys, int statweight, int ind, rng_type &rng);
 
     //! adds a PAH to a particle
     void AddPAH(double time, const Sweep::ParticleModel &model);
