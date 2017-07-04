@@ -289,6 +289,9 @@ void PAHStructure::MergeSiteLists(PAHStructure* rhs, rng_type &rng) {
 	rhs->setnumofC(1);
 }
 
+std::list<Site> PAHStructure::GetSiteList() const {
+	return m_siteList;
+}
 
 //void PAHStructure::WriteCposition(std::ostream &out) const
 //{

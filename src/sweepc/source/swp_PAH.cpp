@@ -150,3 +150,7 @@ void PAH::Deserialize(std::istream &in)
     PAH_ID = (int)val;
     }
 }
+
+Sweep::KMC_ARS::PAHStructure* PAH::GetPAHStruct(){
+	return m_pahstruct;
+}

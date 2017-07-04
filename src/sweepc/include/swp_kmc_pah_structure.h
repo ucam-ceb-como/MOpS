@@ -122,6 +122,8 @@ namespace Sweep{
 
 			void MergeSiteLists(PAHStructure* rhs, rng_type &rng);
 
+			std::list<Site> GetSiteList() const;
+
         private:
             //! First and last Carbon atom in list
             //Cpointer m_cfirst;

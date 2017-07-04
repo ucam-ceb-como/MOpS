@@ -311,6 +311,12 @@ PAHPrimary::~PAHPrimary()
     m_clone=false;
 }
 
+// Copy constructor.
+std::vector<boost::shared_ptr<PAH>> PAHPrimary::GetPAHVector() const
+{
+	return m_PAH;
+}
+
 /*!
  * Recursively copy the tree for non-leaf nodes.
  *
@@ -1087,6 +1093,8 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			if (m_numPAH>=minPAH)
 			{
 				growthfact = model.Components(0)->GrowthFact();
+				growthfact *= growthfact*statweight;  //Multiply all reaction rates by the statistical weight
+				                                      //of the particle.
 			}
 
 			//! Time for one particular PAH to grow.
@@ -1125,13 +1133,35 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					m_PAHclusterchanged = true;
 					m_PAHchanged = true;
 					//Reduce statistical weight of the particle being updated
-					double oldweight = (*sys.Particles().At(ind)).getStatisticalWeight();
-					(*sys.Particles().At(ind)).setStatisticalWeight(oldweight - 1);
-					Particle *sp = NULL;
-					sp = model.CreateParticle(t);
-					//sp->Primary()->m_paj
-					sp->UpdateCache();
-					sys.Particles().Add(*sp, rng);
+					(*sys.Particles().At(ind)).setStatisticalWeight(statweight - 1.0);
+					//Check if there is another particle that is a single PAH that matches the newly created PAH
+					int indpart;
+					indpart = sys.Particles().CheckforPAH((*new_m_PAH->m_pahstruct));
+					if (indpart == 0){
+						if (new_m_PAH->m_pahstruct->numofC() > 5 &&
+							sys.ParticleCount() < sys.Particles().Capacity()){ 
+							//If this PAH was not oxidised below the threshold and there is room in the ensemble
+							//Create a new particle containing this PAH
+							Particle *sp = NULL;
+							sp = model.CreateParticle(t);
+							AggModels::PAHPrimary *pri =
+								dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
+							pri->m_PAH.clear();
+							pri->m_PAH;
+							pri->m_PAH.push_back(new_m_PAH);
+							pri->m_PAH;
+							pri->UpdatePrimary();
+							sp->UpdateCache();
+							sys.Particles().Add(*sp, rng);
+						}
+						else{
+							cout << "Ensemble is full. Cannot allocate new PAH" << endl;
+						}
+					}
+					else{
+						int oldweight = (*sys.Particles().At(indpart)).getStatisticalWeight();
+						(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight + 1.0);
+					}
 				}
 			}
 			else{

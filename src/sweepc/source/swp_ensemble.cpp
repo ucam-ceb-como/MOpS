@@ -44,6 +44,8 @@
 #include "swp_particle_model.h"
 #include "swp_kmc_simulator.h"
 #include "swp_PAH_primary.h"
+#include "swp_kmc_PAH_structure.h"
+#include "swp_kmc_structure_comp.h"
 
 #include <cmath>
 #include <vector>
@@ -416,6 +418,28 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
     return i;
 }
 
+int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH)
+{
+	iterator it1;
+	int count = 0;
+	for (it1 = begin(); it1 != end(); it1++){
+		AggModels::PAHPrimary *pah =
+			dynamic_cast<AggModels::PAHPrimary*>((*it1)->Primary());
+		//Check if this particle contains a single primary with a single PAH with the same 
+		//amount of hydrogens and carbons
+		if (pah->Numprimary() == 1 && pah->NumPAH() == 1 && pah->NumCarbon() == m_PAH.numofC() 
+			&& pah->NumHydrogen() == m_PAH.numofH()){
+			//Check if this single PAH matches the target PAH structure
+			std::list<KMC_ARS::Site> sitelistInput = m_PAH.GetSiteList();
+			std::list<KMC_ARS::Site> sitelistComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteList();
+			if (sitelistInput.size() == sitelistComp.size()){
+				return count;
+			}
+		}
+		count++;
+	}
+	return 0;
+}
 
 /*!
  * @param[in]   i       Index of particle to remove
