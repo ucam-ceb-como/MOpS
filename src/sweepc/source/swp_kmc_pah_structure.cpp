@@ -293,6 +293,10 @@ std::list<Site> PAHStructure::GetSiteList() const {
 	return m_siteList;
 }
 
+std::map<kmcSiteType, svector> PAHStructure::GetSiteMap() const {
+	return m_siteMap;
+}
+
 //void PAHStructure::WriteCposition(std::ostream &out) const
 //{
 //    double val=0.0;

@@ -1103,16 +1103,24 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			const int oldNumH = (*it)->m_pahstruct->numofH();
 
 			double updatetime;
+			bool calcrates = true;
+			int numloops = 1;
+			double ratefactor = 1;
+			double statweightold = statweight;
 
 			if (m_PAH.size() == 1 && statweight > 1.0){ //if this is a particle with a single PAH, it may be weighted. 
 				                                        //If so, we do not want to update the PAH, but rather update a clone of 
 				                                        //that PAH and create a new particle
-				while (growtime > 0){
+				while (growtime > 0 && statweight > 1.0){
 
 					boost::shared_ptr<PAH> new_m_PAH((*it)->Clone());
 
+					if (numloops > 1){
+						calcrates = false;
+					}
+
 					updatetime = sys.Particles().Simulator()->updatePAH(new_m_PAH->m_pahstruct, (*it)->lastupdated, growtime, 1, 1,
-						rng, growthfact*statweight, (*it)->PAH_ID);
+						calcrates, ratefactor, rng, growthfact*statweight, (*it)->PAH_ID);
 
 					new_m_PAH->lastupdated = updatetime;
 					(*it)->lastupdated = updatetime;
@@ -1169,11 +1177,15 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					}
 
 					growtime = t - (*it)->lastupdated;
+					numloops++;
+					ratefactor = statweight / statweightold;
+					statweightold = statweight;
+					if (statweight == 0) sys.Particles().Remove(ind);
 				}
 			}
 			else{
 				updatetime = sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, 0,
-					rng, growthfact, (*it)->PAH_ID);
+					calcrates, ratefactor, rng, growthfact, (*it)->PAH_ID);
 
 				(*it)->lastupdated = t;
 

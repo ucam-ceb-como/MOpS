@@ -124,6 +124,8 @@ namespace Sweep{
 
 			std::list<Site> GetSiteList() const;
 
+			std::map<kmcSiteType, svector> GetSiteMap() const;
+
         private:
             //! First and last Carbon atom in list
             //Cpointer m_cfirst;

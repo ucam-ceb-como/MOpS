@@ -267,6 +267,8 @@ int main(int argc, char *argv[])
                     t_now, step_size,
                     1,//no_of_steps,
 					1,
+					true,
+					1,
                     rng,
                     1,
                     ID+i);

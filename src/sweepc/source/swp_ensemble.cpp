@@ -46,6 +46,8 @@
 #include "swp_PAH_primary.h"
 #include "swp_kmc_PAH_structure.h"
 #include "swp_kmc_structure_comp.h"
+#include "swp_kmc_typedef.h"
+#include "swp_kmc_pah_process.h"
 
 #include <cmath>
 #include <vector>
@@ -430,23 +432,32 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH)
 		if (pah->Numprimary() == 1 && pah->NumPAH() == 1 && pah->NumCarbon() == m_PAH.numofC() 
 			&& pah->NumHydrogen() == m_PAH.numofH()){
 			//Check if this single PAH matches the target PAH structure
-			std::list<KMC_ARS::Site> sitelistInput = m_PAH.GetSiteList();
+			/*std::list<KMC_ARS::Site> sitelistInput = m_PAH.GetSiteList();
 			std::list<KMC_ARS::Site> sitelistComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteList();
-			if (sitelistInput.size() == sitelistComp.size()){
-				std::list<KMC_ARS::Site>::iterator it1 = sitelistInput.begin();
-				std::list<KMC_ARS::Site>::iterator it2 = sitelistComp.begin();
-				int ii;
-				int counter = 0;
-				for (ii = 0; ii != sitelistInput.size(); ii++){
-					if (it1->type != it2->type) break;
-					it1++;
-					it2++;
-					counter++;
-				}
-				if (counter == sitelistInput.size()){
-					return count;
-				}
+			if (sitelistInput.size() == sitelistComp.size()){*/
+				//std::list<KMC_ARS::Site>::iterator it1 = sitelistInput.begin();
+				//std::list<KMC_ARS::Site>::iterator it2 = sitelistComp.begin();
+				//int ii;
+				//int counter = 0;
+				//for (ii = 0; ii != sitelistInput.size(); ii++){
+				//	if (it1->type != it2->type) break;
+				//	it1++;
+				//	it2++;
+				//	counter++;
+				//}
+				//if (counter == sitelistInput.size()){
+				//	return count;
+				//}
+			std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapInput = m_PAH.GetSiteMap();
+			std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteMap();
+			if (sitemapInput[KMC_ARS::FE].size() == sitemapComp[KMC_ARS::FE].size() &&
+				sitemapInput[KMC_ARS::ZZ].size() == sitemapComp[KMC_ARS::ZZ].size() &&
+				sitemapInput[KMC_ARS::AC].size() == sitemapComp[KMC_ARS::AC].size() &&
+				sitemapInput[KMC_ARS::BY6].size() == sitemapComp[KMC_ARS::BY6].size() &&
+				sitemapInput[KMC_ARS::BY5].size() == sitemapComp[KMC_ARS::BY5].size()){
+				return count;
 			}
+			//}
 		}
 		count++;
 	}

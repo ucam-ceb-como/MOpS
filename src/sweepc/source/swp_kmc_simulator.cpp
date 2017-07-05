@@ -140,6 +140,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                             const double dt,  
                             const int waitingSteps,  
 							const int maxloops,
+							const bool calcrates,
+							const double ratefactor,
                             rng_type &rng,
                             double r_factor,
                             int PAH_ID) {
@@ -178,15 +180,17 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
     while (m_t < t_max && proceed) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
         //m_simGas.interpolateProfiles(m_t, true, r_factor);
-        m_gas->Interpolate(m_t, r_factor);
         loopcount++;
 
         // Calculate rates of each jump process
-        m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
+		if (calcrates){
+			m_gas->Interpolate(m_t, r_factor);
+			m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
+		}
 
         // Calculate time step, update time
         typedef boost::exponential_distribution<double> exponential_distrib;
-        exponential_distrib waitingTimeDistrib(m_kmcmech.TotalRate());
+        exponential_distrib waitingTimeDistrib(m_kmcmech.TotalRate()*ratefactor);
         boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
         double t_step = waitingTimeGenerator();
         t_next = m_t+t_step;
