@@ -436,12 +436,16 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH)
 				std::list<KMC_ARS::Site>::iterator it1 = sitelistInput.begin();
 				std::list<KMC_ARS::Site>::iterator it2 = sitelistComp.begin();
 				int ii;
+				int counter = 0;
 				for (ii = 0; ii != sitelistInput.size(); ii++){
 					if (it1->type != it2->type) break;
 					it1++;
 					it2++;
+					counter++;
 				}
-				if (ii == sitelistInput.size()-1) return count;
+				if (counter == sitelistInput.size()){
+					return count;
+				}
 			}
 		}
 		count++;

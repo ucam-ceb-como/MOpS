@@ -122,10 +122,11 @@ namespace Sweep{
             //! Save the structure DOT file after every X simulation sec interval
             //void saveDOTperXsec(const double& X, const int& seed, const double& time, const double &time_max, KMCMechanism& copyMod, int& intervalcount);
             //! Update structure of PAH after time dt.
-            void updatePAH(PAHStructure* pah,         //! structure of pah.
+            double updatePAH(PAHStructure* pah,         //! structure of pah.
                            const double tstart,       //! start time.
                            const double dt,           //! growth time.
                            const int waitingSteps,    //! waiting step used to calculate maximum time interval, currently use 1.
+						   const int maxloops,        //! maximum number of loops to take. 0 means no limit
                            rng_type &rng,             //! random number generator.
                            double r_factor,           //! growth factor g, one important parameter used in this model.
                            int PAH_ID);               //! ID of this pah, used for debugging.

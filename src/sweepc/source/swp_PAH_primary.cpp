@@ -1093,79 +1093,86 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			if (m_numPAH>=minPAH)
 			{
 				growthfact = model.Components(0)->GrowthFact();
-				growthfact *= growthfact*statweight;  //Multiply all reaction rates by the statistical weight
-				                                      //of the particle.
 			}
 
 			//! Time for one particular PAH to grow.
-			const double growtime = t - (*it)->lastupdated;
+			double growtime = t - (*it)->lastupdated;
 			assert(growtime >= 0.0);
 
 			const int oldNumCarbon = (*it)->m_pahstruct->numofC(); 
 			const int oldNumH = (*it)->m_pahstruct->numofH();
 
+			double updatetime;
+
 			if (m_PAH.size() == 1 && statweight > 1.0){ //if this is a particle with a single PAH, it may be weighted. 
 				                                        //If so, we do not want to update the PAH, but rather update a clone of 
 				                                        //that PAH and create a new particle
-				boost::shared_ptr<PAH> new_m_PAH((*it)->Clone());
+				while (growtime > 0){
 
-				sys.Particles().Simulator()->updatePAH(new_m_PAH->m_pahstruct, (*it)->lastupdated, growtime, 1,
-					rng, growthfact, (*it)->PAH_ID);
+					boost::shared_ptr<PAH> new_m_PAH((*it)->Clone());
 
-				new_m_PAH->lastupdated = t;
-				(*it)->lastupdated = t;
+					updatetime = sys.Particles().Simulator()->updatePAH(new_m_PAH->m_pahstruct, (*it)->lastupdated, growtime, 1, 1,
+						rng, growthfact*statweight, (*it)->PAH_ID);
 
-				//! Invalidate PAH.
-				/*!
-				* A PAH is made invalid by setting the number of carbons to 5. The
-				* reason for only applying this to particles is that we would not
-				* want to remove single PAHs in the gas-phase which fall below the
-				* minimum number of rings for inception but are still growing.
-				*/
-				if (new_m_PAH->m_pahstruct->numofRings() < thresholdOxidation && m_numPAH >= minPAH){
-					new_m_PAH->m_pahstruct->setnumofC(5);
-				}
+					new_m_PAH->lastupdated = updatetime;
+					(*it)->lastupdated = updatetime;
 
-				//! See if anything changed, as this will required a call to UpdatePrimary() below.
-				//This will also dictate if the new PAH is used to create a new particle, or if it is just destroyed
-				if (oldNumCarbon != new_m_PAH->m_pahstruct->numofC() || oldNumH != new_m_PAH->m_pahstruct->numofH())
-				{
-					m_PAHclusterchanged = true;
-					m_PAHchanged = true;
-					//Reduce statistical weight of the particle being updated
-					(*sys.Particles().At(ind)).setStatisticalWeight(statweight - 1.0);
-					//Check if there is another particle that is a single PAH that matches the newly created PAH
-					int indpart;
-					indpart = sys.Particles().CheckforPAH((*new_m_PAH->m_pahstruct));
-					if (indpart == 0){
-						if (new_m_PAH->m_pahstruct->numofC() > 5 &&
+					//! Invalidate PAH.
+					/*!
+					* A PAH is made invalid by setting the number of carbons to 5. The
+					* reason for only applying this to particles is that we would not
+					* want to remove single PAHs in the gas-phase which fall below the
+					* minimum number of rings for inception but are still growing.
+					*/
+					if (new_m_PAH->m_pahstruct->numofRings() < thresholdOxidation && m_numPAH >= minPAH){
+						new_m_PAH->m_pahstruct->setnumofC(5);
+					}
+
+					//! See if anything changed, as this will required a call to UpdatePrimary() below.
+					//This will also dictate if the new PAH is used to create a new particle, or if it is just destroyed
+					if (oldNumCarbon != new_m_PAH->m_pahstruct->numofC() || oldNumH != new_m_PAH->m_pahstruct->numofH())
+					{
+						m_PAHclusterchanged = true;
+						m_PAHchanged = true;
+						//Reduce statistical weight of the particle being updated
+						statweight--;
+						(*sys.Particles().At(ind)).setStatisticalWeight(statweight);
+						//Check if there is another particle that is a single PAH that matches the newly created PAH
+						int indpart;
+						indpart = sys.Particles().CheckforPAH((*new_m_PAH->m_pahstruct));
+						if (indpart == 0){
+							if (new_m_PAH->m_pahstruct->numofC() > 5 &&
 							sys.ParticleCount() < sys.Particles().Capacity()){ 
-							//If this PAH was not oxidised below the threshold and there is room in the ensemble
-							//Create a new particle containing this PAH
-							Particle *sp = NULL;
-							sp = model.CreateParticle(t);
-							AggModels::PAHPrimary *pri =
-								dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
-							pri->m_PAH.clear();
-							pri->m_PAH;
-							pri->m_PAH.push_back(new_m_PAH);
-							pri->m_PAH;
-							pri->UpdatePrimary();
-							sp->UpdateCache();
-							sys.Particles().Add(*sp, rng);
+								//If this PAH was not oxidised below the threshold and there is room in the ensemble
+								//Create a new particle containing this PAH
+								Particle *sp = NULL;
+								sp = model.CreateParticle(t);
+								AggModels::PAHPrimary *pri =
+									dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
+								pri->m_PAH.clear();
+								pri->m_PAH;
+								pri->m_PAH.push_back(new_m_PAH);
+								pri->m_PAH;
+								pri->UpdatePrimary();
+								sp->UpdateCache();
+								sp->SetTime(updatetime);
+								sys.Particles().Add(*sp, rng);
+							}
+							else{
+								cout << "Ensemble is full. Cannot allocate new PAH" << endl;
+							}
 						}
 						else{
-							cout << "Ensemble is full. Cannot allocate new PAH" << endl;
+							int oldweight = (*sys.Particles().At(indpart)).getStatisticalWeight();
+							(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight + 1.0);
 						}
 					}
-					else{
-						int oldweight = (*sys.Particles().At(indpart)).getStatisticalWeight();
-						(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight + 1.0);
-					}
+
+					growtime = t - (*it)->lastupdated;
 				}
 			}
 			else{
-				sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1,
+				updatetime = sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, 0,
 					rng, growthfact, (*it)->PAH_ID);
 
 				(*it)->lastupdated = t;

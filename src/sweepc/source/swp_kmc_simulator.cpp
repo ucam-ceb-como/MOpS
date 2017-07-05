@@ -135,10 +135,11 @@ void KMCSimulator::targetPAH(PAHStructure& pah) {
  * @param[in]        r_factor        Model parameter: Growth factor, a multiplier that is applied to the growth rate of PAHs within primary particles when the number of PAHs exceeds a critical number of PAHs.
  * @param[in]        PAH_ID          "Unique" identification number attached to this PAH.
  */
-void KMCSimulator::updatePAH(PAHStructure* pah, 
+double KMCSimulator::updatePAH(PAHStructure* pah, 
                             const double tstart, 
                             const double dt,  
                             const int waitingSteps,  
+							const int maxloops,
                             rng_type &rng,
                             double r_factor,
                             int PAH_ID) {
@@ -171,9 +172,10 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
     double t_step_max = dt/waitingSteps;
     //double oldtnext;
     int loopcount=0;
+	bool proceed = true;
 	Spointer Sp1;
 	int test;
-    while (m_t < t_max) {
+    while (m_t < t_max && proceed) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
         //m_simGas.interpolateProfiles(m_t, true, r_factor);
         m_gas->Interpolate(m_t, r_factor);
@@ -234,8 +236,10 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             //oldtnext = t_next;
             t_next = m_t+t_step_max;
         }
+		if (loopcount == maxloops) proceed = false; //If maxloops is set to 0, this condition will never be true
         m_t = t_next;
     }
+	return m_t;
 }
 
 //! Outputs rates into a csv file (assuming all site counts as 1)
