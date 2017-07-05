@@ -433,7 +433,15 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH)
 			std::list<KMC_ARS::Site> sitelistInput = m_PAH.GetSiteList();
 			std::list<KMC_ARS::Site> sitelistComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteList();
 			if (sitelistInput.size() == sitelistComp.size()){
-				return count;
+				std::list<KMC_ARS::Site>::iterator it1 = sitelistInput.begin();
+				std::list<KMC_ARS::Site>::iterator it2 = sitelistComp.begin();
+				int ii;
+				for (ii = 0; ii != sitelistInput.size(); ii++){
+					if (it1->type != it2->type) break;
+					it1++;
+					it2++;
+				}
+				if (ii == sitelistInput.size()-1) return count;
 			}
 		}
 		count++;
