@@ -1148,7 +1148,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						//Check if there is another particle that is a single PAH that matches the newly created PAH
 						int indpart;
 						indpart = sys.Particles().CheckforPAH((*new_m_PAH->m_pahstruct));
-						if (indpart == 0){
+						if (indpart == -1){
 							if (new_m_PAH->m_pahstruct->numofC() > 5 &&
 							sys.ParticleCount() < sys.Particles().Capacity()){ 
 								//If this PAH was not oxidised below the threshold and there is room in the ensemble
@@ -1160,7 +1160,6 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 								pri->m_PAH.clear();
 								pri->m_PAH;
 								pri->m_PAH.push_back(new_m_PAH);
-								pri->m_PAH;
 								pri->UpdatePrimary();
 								sp->UpdateCache();
 								sp->SetTime(updatetime);
@@ -1174,6 +1173,9 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 							int oldweight = (*sys.Particles().At(indpart)).getStatisticalWeight();
 							(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight + 1.0);
 						}
+					}
+					else{
+						new_m_PAH.reset();
 					}
 
 					growtime = t - (*it)->lastupdated;

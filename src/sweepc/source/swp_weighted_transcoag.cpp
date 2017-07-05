@@ -304,13 +304,20 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
     assert(iterm < TYPE_COUNT);
 
     // Select properties by which to choose particles.
-    // Note we need to choose 2 particles.  One particle must be chosen
+    // Note we need to choose 2 particles (or choose the same particle with
+	// statistical weight >=2 if using weightrule 5). One particle must be chosen
     // uniformly and one with probability proportional
     // to particle mass.
-
-    if (sys.ParticleCount() < 2) {
-        return 1;
-    }
+	if (Sweep::Processes::CoagWeightRule5){ //If using weightrule5, make sure the summation of statistical weights is >=2
+		if (sys.Particles().GetSum(Sweep::iW) < 2){
+			return 1;
+		}
+	}
+	else{
+		if (sys.ParticleCount() < 2) {
+			return 1;
+		}
+	}
 
     MajorantType maj;
     Sweep::PropID prop1, prop2;

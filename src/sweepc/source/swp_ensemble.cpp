@@ -451,17 +451,21 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH)
 			std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapInput = m_PAH.GetSiteMap();
 			std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteMap();
 			if (sitemapInput[KMC_ARS::FE].size() == sitemapComp[KMC_ARS::FE].size() &&
+				sitemapInput[KMC_ARS::NFE].size() == sitemapComp[KMC_ARS::NFE].size() &&
 				sitemapInput[KMC_ARS::ZZ].size() == sitemapComp[KMC_ARS::ZZ].size() &&
 				sitemapInput[KMC_ARS::AC].size() == sitemapComp[KMC_ARS::AC].size() &&
+				sitemapInput[KMC_ARS::NAC].size() == sitemapComp[KMC_ARS::NAC].size() &&
 				sitemapInput[KMC_ARS::BY6].size() == sitemapComp[KMC_ARS::BY6].size() &&
-				sitemapInput[KMC_ARS::BY5].size() == sitemapComp[KMC_ARS::BY5].size()){
+				sitemapInput[KMC_ARS::BY5].size() == sitemapComp[KMC_ARS::BY5].size() &&
+				sitemapInput[KMC_ARS::FE3].size() == sitemapComp[KMC_ARS::FE3].size() &&
+				sitemapInput[KMC_ARS::FE2].size() == sitemapComp[KMC_ARS::FE2].size() &&
+				sitemapInput[KMC_ARS::FE_HACA].size() == sitemapComp[KMC_ARS::FE_HACA].size()){
 				return count;
 			}
-			//}
 		}
 		count++;
 	}
-	return 0;
+	return -1;
 }
 
 /*!
