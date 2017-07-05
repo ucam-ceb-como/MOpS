@@ -258,17 +258,17 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 
 	//If we are using weight rule 5 and either particles statistical weight is > 1, make new copies of them with weight = 1
 	//and point sp1/sp2 to those new particles
-	Particle* part1 = new Particle(*sp1);
-	Particle* part2 = new Particle(*sp2);
+	Particle part1 = Particle(*sp1);
+	Particle part2 = Particle(*sp2);
 	if (Sweep::Processes::CoagWeightRule5){
 		if (sp1->getStatisticalWeight() > 1){
-			part1->setStatisticalWeight(1);
-			sp1 = part1;
+			part1.setStatisticalWeight(1);
+			sp1 = &part1;
 			new1 = true;
 		}
 		if (sp2->getStatisticalWeight() > 1){
-			part2->setStatisticalWeight(1);
-			sp2 = part2;
+			part2.setStatisticalWeight(1);
+			sp2 = &part2;
 			new2 = true;
 		}
 	}
@@ -286,8 +286,6 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 
         // Invalidating the index tells this routine not to perform coagulation.
         ip1 = -1;
-
-		delete part1, part2;
         return 0;
     }
 
@@ -305,8 +303,6 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 
         // Invalidating the index tells this routine not to perform coagulation.
         ip2 = -1;
-
-		delete part1, part2;
 
         return 0;
     }
@@ -368,11 +364,11 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 						sp1->Coagulate(*sp2, rng);
 						sp1->SetTime(t);
 						sp1->incrementCoagCount();
-						int ipnew1 = sys.Particles().Add(*sp1, rng);
+						Particle* adder = new Particle(*sp1);
+						int ipnew1 = sys.Particles().Add(*adder, rng);
 
 						//Update the particles
 						sys.Particles().Update(ipnew1);
-						delete part2;
 					}
 					else { //Coagulation between two different weighted monomers
 						//First, reduce the weight of the original particles or remove them
@@ -401,11 +397,11 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 						sp1->Coagulate(*sp2, rng);
 						sp1->SetTime(t);
 						sp1->incrementCoagCount();
-						int ipnew1 = sys.Particles().Add(*sp1, rng);
+						Particle* adder = new Particle(*sp1);
+						int ipnew1 = sys.Particles().Add(*adder, rng);
 
 						//Update the particle
 						sys.Particles().Update(ipnew1);
-						delete part2;
 					}
 				}
 				else if (new1 || new2){ //if one of the particles was a weighted monomer PAH
@@ -434,20 +430,16 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 						sp2->SetTime(t);
 						sp2->incrementCoagCount();
 						sys.Particles().Update(ip2);
-						delete part1;
 					}
 					else{ //else, add particle 2 to particle 1
 						sp1->Coagulate(*sp2, rng);
 						sp1->SetTime(t);
 						sp1->incrementCoagCount();
 						sys.Particles().Update(ip1);
-						delete part2;
 					}
 				}
 				else{ //neither particle was a weight monomer. perform coagulation as normal with a non-weighted algorithm
 					JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
-					delete part2;
-					delete part1;
 				}
 				break;
 			}
@@ -478,7 +470,6 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
         } else {
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);
-			delete part1, part2;
             return 1; // Ficticious event.
         }
     } else {
@@ -493,7 +484,6 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
             sys.Particles().Update(ip2);
     }
 
-	delete part1, part2;
     return 0;
 }
 

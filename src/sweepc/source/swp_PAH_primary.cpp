@@ -1145,33 +1145,38 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						//Reduce statistical weight of the particle being updated
 						statweight--;
 						(*sys.Particles().At(ind)).setStatisticalWeight(statweight);
-						//Check if there is another particle that is a single PAH that matches the newly created PAH
-						int indpart;
-						indpart = sys.Particles().CheckforPAH((*new_m_PAH->m_pahstruct));
-						if (indpart == -1){
-							if (new_m_PAH->m_pahstruct->numofC() > 5 &&
-							sys.ParticleCount() < sys.Particles().Capacity()){ 
-								//If this PAH was not oxidised below the threshold and there is room in the ensemble
-								//Create a new particle containing this PAH
-								Particle *sp = NULL;
-								sp = model.CreateParticle(t);
-								AggModels::PAHPrimary *pri =
-									dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
-								pri->m_PAH.clear();
-								pri->m_PAH;
-								pri->m_PAH.push_back(new_m_PAH);
-								pri->UpdatePrimary();
-								sp->UpdateCache();
-								sp->SetTime(updatetime);
-								sys.Particles().Add(*sp, rng);
+						if (new_m_PAH->m_pahstruct->numofC() > 5){ //If the new PAH is still valid
+							//Check if there is another particle that is a single PAH that matches the newly created PAH
+							int indpart;
+							indpart = sys.Particles().CheckforPAH((*new_m_PAH->m_pahstruct));
+							if (indpart == -1){
+								if (new_m_PAH->m_pahstruct->numofC() > 5 &&
+									sys.ParticleCount() < sys.Particles().Capacity()){
+									//If this PAH was not oxidised below the threshold and there is room in the ensemble
+									//Create a new particle containing this PAH
+									Particle *sp = NULL;
+									sp = model.CreateParticle(t);
+									AggModels::PAHPrimary *pri =
+										dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
+									pri->m_PAH.clear();
+									pri->m_PAH.push_back(new_m_PAH);
+									pri->UpdatePrimary();
+									sp->UpdateCache();
+									sp->SetTime(updatetime);
+									sys.Particles().Add(*sp, rng);
+								}
+								else{
+									cout << sys.ParticleCount() << endl;
+									cout << "Ensemble is full. Cannot allocate new PAH" << endl;
+								}
 							}
 							else{
-								cout << "Ensemble is full. Cannot allocate new PAH" << endl;
+								int oldweight = (*sys.Particles().At(indpart)).getStatisticalWeight();
+								(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight + 1.0);
 							}
 						}
 						else{
-							int oldweight = (*sys.Particles().At(indpart)).getStatisticalWeight();
-							(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight + 1.0);
+							new_m_PAH.reset();
 						}
 					}
 					else{
