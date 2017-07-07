@@ -829,9 +829,12 @@ void Sweep::Ensemble::dble()
             if(m_count == 0) {
                 throw std::runtime_error("Attempt to double particle ensemble with 0 particles");
             }
+			std::cout << "Doubling!" <<std::endl;
+			std::cout << m_count << std::endl;
 
             // Copy particles.
             const size_t prevCount = m_count;
+			int ii = 0;
             for (size_t i = 0; i != prevCount; ++i) {
 
             //if (m_particles[i]->Primary()->AggID() ==AggModels::PAH_KMC_ID)
@@ -842,13 +845,22 @@ void Sweep::Ensemble::dble()
             //    if (rhsparticle->Pyrene()!=0)
             //        m_numofInceptedPAH++;
             //}
-                //SetNumOfInceptedPAH(1, m_particles[i]->Primary());
-                size_t iCopy = prevCount + i;
-                // Create a copy of a particle and add it to the ensemble.
-                m_particles[iCopy] = m_particles[i]->Clone();
+				const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+				rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+				if (rhsparticle->NumPAH() > 1){ //If this particle is not just a single PAH
+					
+					size_t iCopy = prevCount + ii;
+					// Create a copy of a particle and add it to the ensemble.
+					m_particles[iCopy] = m_particles[i]->Clone();
 
-                // Keep count of the added particles
-                ++m_count;
+					// Keep count of the added particles
+					++m_count;
+					++ii;
+				}
+				else{ //If this particle is a single PAH, double its statistical weight
+					double oldweight = m_particles[i]->getStatisticalWeight();
+					m_particles[i]->setStatisticalWeight(2.0*oldweight);
+				}
             }
 
             // Update scaling.
