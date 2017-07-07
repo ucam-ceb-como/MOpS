@@ -1846,6 +1846,7 @@ void PAHPrimary::UpdatePrimary(void)
             m_numOfRings += (*i)->m_pahstruct->numofRings();
             maxcarbon = max(maxcarbon, (*i)->m_pahstruct->numofC()); //!< Search for the largest PAH-in terms of the number of carbon atoms-in the primary.
         }
+		m_numOf6Rings = m_numOfRings;
 
         m_PAHmass = m_numcarbon * 1.9945e-23 + m_numH * 1.6621e-24;  //!< Units of g.
         m_PAHmass *= 1.0e-3;                                         //!< Units of kg.

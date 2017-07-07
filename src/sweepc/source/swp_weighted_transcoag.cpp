@@ -331,7 +331,7 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
     // Properties to which the probabilities of particle selection will be proportional
     switch(static_cast<TermType>(iterm)) {
         case FreeMol1:
-            prop1 = iUniform;
+            prop1 = iUniform1;
             prop2 = iD2_M_1_2W;
             maj = FreeMol;
             break;
@@ -351,7 +351,7 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
             maj = FreeMol;
             break;
         case SlipFlow1:
-            prop1 = iUniform;
+            prop1 = iUniform1;
             prop2 = iW;
             maj = SlipFlow;
             break;
@@ -366,7 +366,7 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
             maj = SlipFlow;
             break;
         case SlipFlow4:
-            prop1 = iUniform;
+            prop1 = iUniform1;
             prop2 = iD_1W;
             maj = SlipFlow;
             break;

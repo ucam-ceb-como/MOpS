@@ -141,6 +141,9 @@ public:
     //! Returns the number of carbons.
     int NumCarbon(void) const;
 
+	//! Returns the number of rings.
+	int NumRings(void) const;
+
     //! Returns the number of surface reaction sites.
     double GetSites(void) const;
 

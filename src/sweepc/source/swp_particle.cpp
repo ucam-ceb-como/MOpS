@@ -360,6 +360,11 @@ int Particle::NumCarbon() const
     return m_primary->NumCarbon();
 }
 
+int Particle::NumRings() const
+{
+	return m_primary->NumRings();
+}
+
 /*!
  * Pass through to primary particle
  */

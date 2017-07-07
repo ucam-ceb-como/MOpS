@@ -196,6 +196,9 @@ public:
     //! Returns the number of carbons.
     int NumCarbon(void) const;
 
+	//! Returns the number of rings.
+	int NumRings(void) const;
+
     //! Returns the property with the given ID.
     double Property(const Sweep::PropID id) const;
 
@@ -306,6 +309,7 @@ protected:
     double m_vol;  // Volume.
     double m_mass; // Mass.
     int m_numcarbon;
+	int m_numOf6Rings;
 
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.

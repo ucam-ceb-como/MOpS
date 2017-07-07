@@ -86,6 +86,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache()
 , m_sites(0.0)
 , m_sinterrate(0.0)
 , m_coverage(0.0)
+, m_select(0.0)
 {}
 
 /*!
@@ -103,7 +104,12 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
     // Effectively this code defines an interface that the Particle
     // class must provide.
     m_sphdiam = part.SphDiameter();
-    m_dcol    = part.CollDiameter();
+	if (part.NumRings() <16){
+		m_dcol = 0.0;
+	}
+	else{
+		m_dcol = part.CollDiameter();
+	}
     m_dmob    = part.MobDiameter();
     m_surf    = part.SurfaceArea();
     m_vol     = part.Volume();
@@ -113,13 +119,25 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
     // Derived quantites that are needed to the typical transition
     // regime coagulation kernel.
     m_dcolsqr      = m_dcol * m_dcol;
-    m_inv_dcol     = 1.0 / m_dcol;
-    m_inv_dcolsqr  = 1.0 / m_dcolsqr;
-    m_inv_sqrtmass = 1.0 / std::sqrt(m_mass);
-    m_d2_m_1_2     = m_dcolsqr * m_inv_sqrtmass;
+	if (m_dcol != 0){
+		m_inv_dcol = 1.0 / m_dcol;
+		m_inv_dcolsqr = 1.0 / m_dcolsqr;
+		m_inv_sqrtmass = 1.0 / std::sqrt(m_mass);
+		m_d2_m_1_2 = m_dcolsqr * m_inv_sqrtmass;
+	}
+	else{
+		m_inv_dcol = 0.0;
+		m_inv_dcolsqr = 0.0;
+		m_inv_sqrtmass = 0.0;
+		m_d2_m_1_2 = 0.0;
+	}
 
     // Quantities associated with statistical weighting
-    m_weight = part.getStatisticalWeight();
+	if (part.NumRings() <16){
+		m_weight = 0.0;
+	} else{
+		m_weight = part.getStatisticalWeight();
+	}
     m_weight_mass = m_weight * m_mass;
     m_d_w         = m_dcol * m_weight;
     m_d2_w        = m_dcolsqr * m_weight;
@@ -134,6 +152,13 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
 
     // Silicon parameters
     m_coverage = part.GetCoverageFraction();
+
+	if (part.NumRings() <16){
+		m_select = 0;
+	}
+	else{
+		m_select = 1;
+	}
 }
 
 // OPERATOR OVERLOADS.
@@ -169,6 +194,7 @@ Sweep::TreeTransCoagWeightedCache &Sweep::TreeTransCoagWeightedCache::operator+=
     m_sites        += rhs.m_sites;
     m_sinterrate   += rhs.m_sinterrate;
     m_coverage     += rhs.m_coverage;
+	m_select += rhs.m_select;
 
     return *this;
 }
@@ -208,6 +234,7 @@ void Sweep::TreeTransCoagWeightedCache::Clear(void)
     m_sites   = 0.0,
     m_sinterrate = 0.0;
     m_coverage   = 0.0;
+	m_select = 0.0;
 }
 
 /**
@@ -269,6 +296,8 @@ double Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
             return 0.0;
         case iNumCarbon:
             return m_numcarbon;
+		case iUniform1:
+			return m_select;
         case -1:
             // Special case property, used to select particles
             // uniformly.

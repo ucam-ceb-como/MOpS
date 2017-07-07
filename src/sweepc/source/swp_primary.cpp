@@ -58,7 +58,7 @@ using namespace std;
 // Default constructor (protected).
 AggModels::Primary::Primary(void)
 : m_pmodel(NULL), m_createt(0.0), m_time(0.0), m_diam(0.0), m_dcol(0.0), 
-  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0)
+m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0), m_numOf6Rings(0)
 {
 }
 
@@ -132,6 +132,7 @@ AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
         m_vol  = rhs.m_vol;
         m_mass = rhs.m_mass;
         m_numcarbon = rhs.m_numcarbon;
+		m_numOf6Rings = rhs.m_numOf6Rings;
     }
     return *this;
 }
@@ -278,6 +279,8 @@ double AggModels::Primary::Volume(void) const {return m_vol;}
 double AggModels::Primary::Mass(void) const {return m_mass;}
 
 int AggModels::Primary::NumCarbon(void) const {return m_numcarbon;}
+
+int AggModels::Primary::NumRings(void) const { return m_numOf6Rings; }
 
 // Returns the property with the given ID.
 double AggModels::Primary::Property(const Sweep::PropID id) const
@@ -672,6 +675,7 @@ void AggModels::Primary::init(void)
     m_vol = 0.0;  // Volume.
     m_mass = 0.0; // Mass.
     m_numcarbon = 0;
+	m_numOf6Rings = 0;
     releaseMem();
 }
 
