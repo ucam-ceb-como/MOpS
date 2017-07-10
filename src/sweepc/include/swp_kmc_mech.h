@@ -200,22 +200,22 @@ namespace KMC_ARS {
     };
 
     //! ID8.
-    //class O6R_FE_HACA_O2 : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at AC by O2
-    //public:
-    //    double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-    //    double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-    //    double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-    //    void initialise();
-    //};
+    class O6R_FE_HACA_O2 : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at AC by O2
+    public:
+        double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
 
     //! ID9.
-    //class O6R_FE_HACA_OH : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at AC by OH
-    //public:
-    //    double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-    //    double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-    //    double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-    //    void initialise();
-    //};
+    class O6R_FE_HACA_OH : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at AC by OH
+    public:
+        double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
 
     //! ID10.
     class G5R_ZZ : public Sweep::KMC_ARS::JumpProcess { //R5 growth on ZZ

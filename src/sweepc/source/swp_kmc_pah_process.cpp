@@ -2216,9 +2216,9 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         case 7:
             proc_O6R_FE3_OH(site_perf); break;
         case 8:
-            //proc_O6R_FE_HACA_O2(site_perf); break;
+            proc_O6R_FE_HACA_O2(site_perf); break;
         case 9:
-            //proc_O6R_FE_HACA_OH(site_perf); break;
+            proc_O6R_FE_HACA_OH(site_perf); break;
         case 10:
             proc_G5R_ZZ(site_perf); break;
         case 11:
@@ -2929,48 +2929,48 @@ void PAHProcess::proc_O6R_FE3_OH(Spointer& stt) {
 // ID8- R6 oxidation at AC by O2 (AR12 in Matlab)
 // ************************************************************
 //NICK TO DO - Figure this one out
-//void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-//    //printSites(stt);
-//    // member C atoms of resulting AC site
-//    Cpointer C1_res, C2_res;
-//    C1_res = C_1->C1;
-//    C2_res = C_2->C2;
-//    // check if process will result in a bridge
-//    bool bridge = false;
-//    cpair pos = jumpToPos(C1_res->coords, normAngle(C1_res->bondAngle1-120));
-//    if(m_pah->m_cpositions.count(pos)) return;//bridge = true;
-//    // check if site is next to a bridge
-//    bridge = (C1_res->bridge || C2_res->bridge);
-//    if(bridge) return;
-//    // remove C
-//    removeC(C_1, false);
-//    removeC(C_2, false);
-//    //if(!bridge) {
-//        addC(C1_res, normAngle(C1_res->bondAngle1-120), 0, true);
-//        addC(C1_res->C2, normAngle(C1_res->bondAngle1+60), normAngle(C1_res->bondAngle1+120), true);
-//    //}
-//    // update H
-//    updateA(C1_res, C2_res, 'H');
-//    // update sites and neighbours
-//    Spointer S1, S2, S3, S4;
-//    S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
-//    updateSites(stt, C1_res, C2_res, 2);
-//    updateSites(S1, S1->C1, C1_res, -1);
-//    updateSites(S2, C2_res, S2->C2, -1);
-//    // update combined sites
-//    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
-//    updateCombinedSites(stt); // update resulting site
-//    updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
-//    updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
-//    // add ring counts
-//    m_pah->m_rings--;
-//}
+void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
+    //printSites(stt);
+    // member C atoms of resulting AC site
+    //Cpointer C1_res, C2_res;
+    //C1_res = C_1->C1;
+    //C2_res = C_2->C2;
+    //// check if process will result in a bridge
+    //bool bridge = false;
+    //cpair pos = jumpToPos(C1_res->coords, normAngle(C1_res->bondAngle1-120));
+    //if(m_pah->m_cpositions.count(pos)) return;//bridge = true;
+    //// check if site is next to a bridge
+    //bridge = (C1_res->bridge || C2_res->bridge);
+    //if(bridge) return;
+    //// remove C
+    //removeC(C_1, false);
+    //removeC(C_2, false);
+    ////if(!bridge) {
+    //    addC(C1_res, normAngle(C1_res->bondAngle1-120), 0, true);
+    //    addC(C1_res->C2, normAngle(C1_res->bondAngle1+60), normAngle(C1_res->bondAngle1+120), true);
+    ////}
+    //// update H
+    //updateA(C1_res, C2_res, 'H');
+    // update sites and neighbours
+    Spointer S1, S2, S3, S4;
+    S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
+    updateSites(stt, 2);
+    updateSites(S1, -1);
+    updateSites(S2, -1);
+    // update combined sites
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    updateCombinedSites(stt); // update resulting site
+    updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
+    updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
+    // add ring counts
+    m_pah->m_rings--;
+}
 // ************************************************************
 // ID9- R6 oxidation at AC by OH (AR13 in Matlab)
 // ************************************************************
-//void PAHProcess::proc_O6R_FE_HACA_OH(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-//    proc_O6R_FE_HACA_O2(stt, C_1, C_2);
-//}
+void PAHProcess::proc_O6R_FE_HACA_OH(Spointer& stt) {
+    proc_O6R_FE_HACA_O2(stt);
+}
 // ************************************************************
 // ID10- R5 growth on ZZ (AR3 in Matlab)
 // ************************************************************

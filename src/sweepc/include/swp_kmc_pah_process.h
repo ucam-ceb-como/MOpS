@@ -152,8 +152,8 @@ public:
     void proc_D6R_FE3(Spointer& stt);                           //!< ID5.
     void proc_O6R_FE3_O2(Spointer& stt);                        //!< ID6.
     void proc_O6R_FE3_OH(Spointer& stt);                        //!< ID7.
-    //void proc_O6R_FE_HACA_O2(Spointer& stt);                  //!< ID8.
-    //void proc_O6R_FE_HACA_OH(Spointer& stt);                  //!< ID9.
+    void proc_O6R_FE_HACA_O2(Spointer& stt);                  //!< ID8.
+    void proc_O6R_FE_HACA_OH(Spointer& stt);                  //!< ID9.
     void proc_G5R_ZZ(Spointer& stt);                            //!< ID10.
     void proc_D5R_R5(Spointer& stt);                            //!< ID11.
     void proc_C6R_AC_FE3(Spointer& stt, rng_type &rng);         //!< ID12.
