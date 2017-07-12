@@ -56,9 +56,9 @@ namespace Sweep {
 			//Reserve negatives for non-reactive sites
 			//Preserve the number conventions between Principle and Combine site types
             // Principal Sites involving 6-member rings
-			FE = 1, ZZ = 2, AC = 3, BY5 = 4, BY6 = 5, ACBL = 6, ACBR = 7,
+			FE = 1, ZZ = 2, AC = 3, BY5 = 4, BY6 = 5,
 			// Principal Sites involving 6-member rings that are non-reactive (due to hinderances)
-			NFE = -1, NZZ = -2, NAC = -3, NBY5 = -4, NBY6 = -5, NACBL = -6, NACBR = -7,
+			NFE = -1, NZZ = -2, NAC = -3, NBY5 = -4, NBY6 = -5,
 			// Principal Sites involving 5-member rings. HER5 = One side embedded R5, ER5 = embedded R5
 			R5 = 11, HER5 =12, ER5 =13,
 			// Principal sites combining R6 and R5 sites
@@ -72,10 +72,14 @@ namespace Sweep {
 			ERFEER = 51, ERZZER = 52, ERACER = 53,
 			// Sites with one R5 and one ER5
 			RFEER = 61, RZZER = 62, RACER = 63,
+			//Sites that include bridges
+			ACBL = 71, BY5BL = 72, BY6BL = 73, ACBR = 74, BY5BR = 75, BY6BR = 76,
+			// Sites besides bridges that are non reactive due to steric hindrances
+			NACBL = -71, NBY5BL = -72, NBY6BL = -73, NACBR = -74, NBY5BR = -75, NBY6BR = -76,
 			//End principal site types
 			//Start combined site types
 			//First, basic combined sites with R6s. FE3:FE with 2 FEs on both sides. FE_HACA: FE with non FE's on each side
-			FE2 = 1001, FE3 = 1002, FE_HACA = 1003,
+			FE2 = 1001, FE3 = 1002, FE_HACA = 1003, OFE2 = 1004, BFE2 = 1005,
 			//Basic combined sites that are hindered
 			NFE2 = -1001,
 			//Combined sites with only R5
@@ -90,8 +94,9 @@ namespace Sweep {
             Inv=-100000,
             // Any Site:
             any=100000,
+			//For processes that can act on multiple sites
             // Benzene addition sites:
-            benz=100001
+			benz = 100001, merge = 100002, ZZox = 100003
         };
         
         //! Enumeration of processes on data structure available.
@@ -176,6 +181,9 @@ namespace Sweep {
 				case FE2: return "FE2";
                 case FE3: return "FE3";
 				case FE_HACA: return "FE_HACA";
+				case OFE2: return "OFE2";
+				case BFE2: return "BFE2";
+				case NFE2: return "NFE2";
 
 				case ACR5: return "ACR5";
 				case CAC: return "CAC";
@@ -192,6 +200,8 @@ namespace Sweep {
                 case Inv: return "Invalid";
                 case any: return "any";
                 case benz: return "benz";
+				case merge: return "merge";
+				case ZZox: return "ZZox";
             }
             return "ERROR";
         }
@@ -289,6 +299,9 @@ namespace Sweep {
 			temp.push_back(FE2);
             temp.push_back(FE3);
 			temp.push_back(FE_HACA);
+			temp.push_back(OFE2);
+			temp.push_back(BFE2);
+			temp.push_back(NFE2);
 
 			temp.push_back(ACR5);
 			temp.push_back(CAC);
@@ -312,6 +325,22 @@ namespace Sweep {
             temp.push_back(RZZ);
             return temp;
         }
+
+		//! Get a vector of all site types for ZZ oxidation
+		std::vector<kmcSiteType> inline vectZZOxsites() {
+			std::vector<kmcSiteType> temp;
+			temp.push_back(FE2);
+			temp.push_back(OFE2);
+			return temp;
+		}
+
+		//! Get a vector of all site types for merging sites
+		std::vector<kmcSiteType> inline vectMergesites() {
+			std::vector<kmcSiteType> temp;
+			temp.push_back(FE2);
+			temp.push_back(BFE2);
+			return temp;
+		}
     };
 };
 #endif

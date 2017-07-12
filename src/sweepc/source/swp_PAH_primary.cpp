@@ -1115,12 +1115,14 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 					boost::shared_ptr<PAH> new_m_PAH((*it)->Clone());
 
+					new_m_PAH->PAH_ID = (*it)->PAH_ID + 10000000;
+
 					if (numloops > 1){
 						calcrates = false;
 					}
 
 					updatetime = sys.Particles().Simulator()->updatePAH(new_m_PAH->m_pahstruct, (*it)->lastupdated, growtime, 1, 1,
-						calcrates, ratefactor, rng, growthfact*statweight, (*it)->PAH_ID);
+						calcrates, ratefactor, rng, growthfact*statweight, new_m_PAH->PAH_ID);
 
 					new_m_PAH->lastupdated = updatetime;
 					(*it)->lastupdated = updatetime;
@@ -1141,17 +1143,15 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					if (oldNumCarbon != new_m_PAH->m_pahstruct->numofC() || oldNumH != new_m_PAH->m_pahstruct->numofH())
 					{
 						m_PAHclusterchanged = true;
-						m_PAHchanged = true;
 						//Reduce statistical weight of the particle being updated
 						statweight--;
 						(*sys.Particles().At(ind)).setStatisticalWeight(statweight);
-						if (new_m_PAH->m_pahstruct->numofC() > 5){ //If the new PAH is still valid
+						if (new_m_PAH->m_pahstruct->numofRings() >= 5){ //If the new PAH is still valid
 							//Check if there is another particle that is a single PAH that matches the newly created PAH
 							int indpart;
 							indpart = sys.Particles().CheckforPAH((*new_m_PAH->m_pahstruct));
 							if (indpart == -1){
-								if (new_m_PAH->m_pahstruct->numofC() > 5 &&
-									sys.ParticleCount() < sys.Particles().Capacity()){
+								if (sys.ParticleCount() < sys.Particles().Capacity()){
 									//If this PAH was not oxidised below the threshold and there is room in the ensemble
 									//Create a new particle containing this PAH
 									Particle *sp = NULL;

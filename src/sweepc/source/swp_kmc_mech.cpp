@@ -168,8 +168,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_D6R_FE3);          //*< 5 - R6 Desorption at FE [AR8].
     temp.push_back(j_O6R_FE3_O2);       //*< 6 - R6 Oxidation at FE by O2 [AR10].
     temp.push_back(j_O6R_FE3_OH);       //*< 7 - R6 Oxidation at FE by OH [AR11].
-    //temp.push_back(j_O6R_FE_HACA_O2); //*< 8 - R6 Oxidation at AC by O2 [AR12].
-    //temp.push_back(j_O6R_FE_HACA_OH); //*< 9 - R6 Oxidation at AC by OH [AR13].
+    temp.push_back(j_O6R_FE_HACA_O2); //*< 8 - R6 Oxidation at AC by O2 [AR12].
+    temp.push_back(j_O6R_FE_HACA_OH); //*< 9 - R6 Oxidation at AC by OH [AR13].
     //temp.push_back(j_G5R_ZZ);           //*< 10 - R5 growth at ZZ [AR3].
     //temp.push_back(j_D5R_R5);           //*< 11 - R5 desorption [AR7].
     //temp.push_back(j_C6R_AC_FE3);       //*< 12 - R6 conversion to R5 [AR9].
@@ -180,8 +180,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //temp.push_back(j_C6R_BY5_FE3violi); //*< 17 - R6 migration & conversion to R5 at BY5 (violi) [AR24].
     //temp.push_back(j_L5R_BY5);          //*< 18 - BY5 closure [AR16].
     //temp.push_back(j_M6R_BY5_FE3);      //*< 19 - R6 desorption at bay -> pyrene [AR21].
-    //temp.push_back(j_O6R_FE2_OH);       //*< 20 - R6 Oxidation at ZZ by OH.
-    //temp.push_back(j_O6R_FE2_O2);       //*< 21 - R6 Oxidation at ZZ by O2.
+    temp.push_back(j_O6R_FE2_OH);       //*< 20 - R6 Oxidation at ZZ by OH.
+    temp.push_back(j_O6R_FE2_O2);       //*< 21 - R6 Oxidation at ZZ by O2.
     //temp.push_back(j_B6R_ACR5);         //*< 22 - Bay-capping.
     //temp.push_back(j_M5R_eR5_FE3_ZZ);    //*< 23 - Embedded 5-member ring migration to ZZ.
     //temp.push_back(j_G6R_RZZ);          //*< 24 - R6 growth on RZZ.
@@ -636,6 +636,7 @@ double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -716,6 +717,7 @@ double O6R_FE3_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -787,7 +789,7 @@ double O6R_FE3_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
     // check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
     if(site_count==0) return m_rate=0;
-    return m_rate = m_r[0]*site_count; // Rate Equation
+	return m_rate = m_r[0] * site_count; // Rate Equation
 }
 // ************************************************************
 // ID8- R6 oxidation at AC by O2 (AR12 in Matlab)
@@ -1010,6 +1012,7 @@ double G5R_ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -1100,6 +1103,7 @@ double D5R_R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -1170,6 +1174,7 @@ double C6R_AC_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -1254,6 +1259,7 @@ double C5R_RFE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
         r_f = (m_r[0]+m_r[2])/r_denom; 
         double f_R5H = m_r[6]/(m_r[7] + r_f * m_r[5]); 
         r_f = r_f*f_R5H;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -1334,6 +1340,7 @@ double C5R_RAC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = r3f*r_f* site_count; // Rate Equation
@@ -1415,6 +1422,7 @@ double M5R_RZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = r3f*r_f* site_count; // Rate Equation
@@ -1480,6 +1488,7 @@ double C6R_BY5_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -1544,6 +1553,7 @@ double C6R_BY5_FE3violi::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, c
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -1621,7 +1631,7 @@ double L5R_BY5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
             r_f = (m_r[0]+m_r[2])/r_denom; 
         else
             r_f = (m_r[0]+m_r[2])/(r_denom+((m_r[6]/m_r[7])*(m_r[1]+m_r[4]))); 
-        r_f = r_f/(r_f+1.0);
+			r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
     return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
@@ -1706,6 +1716,7 @@ double M6R_BY5_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -1740,7 +1751,7 @@ void O6R_FE2_OH::initialise() {
     rxnvector& rxnV3 = m_rxnvector1;
     addReaction(rxnV3, Reaction(1.30e13, 0, 10.60, sp::OH));
 
-    m_sType = FE2; // sitetype
+    m_sType = ZZox; // sitetype
     m_name = "R6 (FE2) Oxidation by OH"; // name of process
     m_ID = 20;
 }
@@ -1813,7 +1824,7 @@ void O6R_FE2_O2::initialise() {
     addReaction(rxnV3, Reaction(2.00e13,     0,     0, sp::H));     // 4 - r3f
     addReaction(rxnV3, Reaction(2.10e12,     0, 7.470, sp::O2));    // 5 - r4f
 
-    m_sType = FE2; // sitetype
+	m_sType = ZZox; // sitetype
     m_name = "R6 (FE2) Oxidation by O2"; // name of process
     m_ID = 21;
 }
@@ -1855,6 +1866,7 @@ double O6R_FE2_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -1926,6 +1938,7 @@ double B6R_ACR5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = m_r[0]/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[3]*r_f*site_count; // Rate Equation
@@ -1942,6 +1955,7 @@ double B6R_ACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = 2*m_r[5]*r_f*site_count; // Rate Equation
@@ -1984,6 +1998,7 @@ double M5R_eR5_FE3_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f*site_count; // Rate Equation
@@ -2023,6 +2038,7 @@ double G6R_RZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
@@ -2056,6 +2072,7 @@ double G6R_RFER::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
@@ -2089,6 +2106,7 @@ double G6R_R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -2122,6 +2140,7 @@ double L6_RBY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
@@ -2154,6 +2173,7 @@ double L6_RACR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
@@ -2186,6 +2206,7 @@ double G5R_RFE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -2219,6 +2240,7 @@ double C6R_RAC_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -2252,6 +2274,7 @@ double C6R_RAC_FE3violi::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, c
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation
@@ -2285,7 +2308,8 @@ double M6R_RAC_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
     double r_f; // radical fraction 
     if(r_denom>0) {
-        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = (m_r[0]+m_r[2])/r_denom;
+		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
     return m_rate = m_r[5]*r_f* site_count; // Rate Equation

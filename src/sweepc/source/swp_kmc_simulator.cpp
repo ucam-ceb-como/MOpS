@@ -196,13 +196,16 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
         t_next = m_t+t_step;
         if(t_next < t_max && t_step < t_step_max) {
 
-			//if (PAH_ID == 100320){
-			//	std::list<Site> tester = pah->GetSiteVector();
+			//if (PAH_ID == 184 || PAH_ID == 20000184 || PAH_ID == 30000184 || PAH_ID == 10000184){
+			//	std::list<Site> tester = pah->GetSiteList();
 			//	cout << "Check start " << PAH_ID << endl << t_next << endl;
+			//	cout << "Rings = "<< pah->numofRings() << endl;;
 			//	for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
 			//		cout << (int)(Sp1->type) << endl;
 			//	}
 			//}
+
+			//cout << "Check start " << PAH_ID << endl << t_next << endl;
 
             //if (pah->numofC()>5000&&pah->numofC()<6000)//||pah->havebridgeC()    //if (PAH_ID==224835)
             //if we want to check a PAH with specified ID or number of Carbon, 
@@ -217,13 +220,23 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             // Update data structure
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 
-			//if (PAH_ID == 100320){
-			//	std::list<Site> tester = pah->GetSiteVector();
+			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
+			//Set t_next to t_max so the updatePAH routine will be exited
+			if (pah->numofRings() < 1){
+				pah->setnumofC(1);
+				t_next = t_max;
+			}
+
+			//if (PAH_ID == 184 || PAH_ID == 20000184 || PAH_ID == 30000184 || PAH_ID == 10000184){
+			//	std::list<Site> tester = pah->GetSiteList();
 			//	cout << "Check end " << PAH_ID << endl << t_next << endl;
+			//	cout << "Rings = " << pah->numofRings() << endl;;
 			//	for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
 			//		cout << (int)(Sp1->type) << endl;
 			//	}
 			//}
+
+			//cout << "Check end " << PAH_ID << endl << t_next << endl;
 
             /*if(m_simPAH->m_parent->ID() % 100000 == 609) {
             if(!m_simPAHp.checkCoordinates()) {
