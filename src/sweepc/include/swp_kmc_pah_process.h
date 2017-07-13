@@ -276,6 +276,10 @@ private:
 	void updateHinderedSites();
 	int SiteSides(Spointer& stt);
 	double SiteAngle(Spointer& stt);
+
+	std::pair<Spointer, bool> CheckBridge(Spointer& stt);
+	int SiteSidesBridge(kmcSiteType stt, kmcSiteType type);
+	double AngleBridge(kmcSiteType stt, kmcSiteType type);
     
     // PAH data structure to perform processes on
    PAHStructure* m_pah;

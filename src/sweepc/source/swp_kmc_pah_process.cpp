@@ -1091,7 +1091,6 @@ void PAHProcess::updateHinderedSites() {
 	int count;
 	double Angle, target;
 	Spointer st1;
-	SpointerRev st2;
 	//Now, re-assign hindered site types
 	for (Spointer st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
 		Sides = 0;
@@ -1266,6 +1265,427 @@ double PAHProcess::SiteAngle(Spointer& stt) {
 	case BY6BL:
 	case BY6BR:
 		return 480.0;
+	}
+}
+
+std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
+{
+	//Determine if FE_HACA oxidation at site stt will cause the formation of a bridge
+	Spointer Sb = st;
+	bool left = true;
+
+	//If there are no armchairs, BY5, or BY6s, no bridge can be formed
+	if (m_pah->m_siteMap[AC].size() == 0 && m_pah->m_siteMap[BY5].size() == 0 && m_pah->m_siteMap[BY6].size() == 0 &&
+		m_pah->m_siteMap[NAC].size() == 0 && m_pah->m_siteMap[NBY5].size() == 0 && m_pah->m_siteMap[NBY6].size() == 0){
+		return std::make_pair(Sb, left);
+	}
+
+	Spointer st1;
+	int count = 0;
+	int numFE = 1;
+	int FEtarget = 3;
+	int dist = 0;
+	int adddist;
+	int Sides = 0;
+	double Angle = 0.0, target = 0.0;
+	double addangle;
+	int addsides;
+	double Ang = 0.0;
+	kmcSiteType prevtype;
+	kmcSiteType currtype;
+	for (st1 = moveIt(st, 1); st1 != m_pah->m_siteList.end(); st1++) {
+		if (st1->type == AC || st1->type == NAC){
+			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
+			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
+			adddist = 0;
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+		}
+		else if (st1->type == BY5){
+			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
+			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
+			adddist = 0;
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+			addangle = AngleBridge(FE, ZZ) + AngleBridge(ZZ, prevtype);
+			addsides = SiteSidesBridge(FE, ZZ) + SiteSidesBridge(ZZ, prevtype);
+			adddist = -1;
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+
+		}
+		else if (st1->type == BY6){
+			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
+			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
+			adddist = 0;
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+			addangle = AngleBridge(FE, ZZ) + AngleBridge(ZZ, prevtype);
+			addsides = SiteSidesBridge(FE, ZZ) + SiteSidesBridge(ZZ, prevtype);
+			adddist = 0;
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+			addangle = AngleBridge(FE, AC) + AngleBridge(AC, prevtype);
+			addsides = SiteSidesBridge(FE, AC) + SiteSidesBridge(AC, prevtype);
+			adddist = 0;
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+	
+		}
+		if (count == 0){
+			currtype = (kmcSiteType)((int)st1->type - 1);
+			Sides += SiteSidesBridge(currtype, FE);
+			Ang = AngleBridge(currtype, FE);
+			Angle += Ang;
+		}
+		else{
+			currtype = st1->type;
+			Sides += SiteSidesBridge(currtype, prevtype);
+			Ang = AngleBridge(currtype, prevtype);
+			Angle += Ang;
+		}
+		if (currtype == FE || currtype == NFE){
+			numFE++;
+		}
+		if (currtype == BY5 ){
+			FEtarget++;
+		}
+		if (currtype == BY6){
+			FEtarget++;
+			FEtarget++;
+		}
+		prevtype = currtype;
+		count++;
+	}
+
+	left = false;
+	for (st1 = m_pah->m_siteList.begin(); st1 != st; st1++) {
+		if (st1->type == AC || st1->type == NAC){
+			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
+			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+		}
+		else if (st1->type == BY5){
+			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
+			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+			addangle = AngleBridge(FE, ZZ) + AngleBridge(ZZ, prevtype);
+			addsides = SiteSidesBridge(FE, ZZ) + SiteSidesBridge(ZZ, prevtype);
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+
+		}
+		else if (st1->type == BY6){
+			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
+			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+			addangle = AngleBridge(FE, ZZ) + AngleBridge(ZZ, prevtype);
+			addsides = SiteSidesBridge(FE, ZZ) + SiteSidesBridge(ZZ, prevtype);
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+			addangle = AngleBridge(FE, AC) + AngleBridge(AC, prevtype);
+			addsides = SiteSidesBridge(FE, AC) + SiteSidesBridge(AC, prevtype);
+			target = ((double)Sides - 2.0 + addsides)*180.0;
+			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+				Sb = st1;
+				return std::make_pair(Sb, left);
+			}
+
+		}
+		if (count == 0){
+			currtype = (kmcSiteType)((int)st1->type - 1);
+			Sides += SiteSidesBridge(currtype, FE);
+			Angle += AngleBridge(currtype, FE);
+		}
+		else{
+			currtype = st1->type;
+			Sides += SiteSidesBridge(currtype, prevtype);
+			Angle += AngleBridge(currtype, prevtype);
+		}
+		if (currtype == FE || currtype == NFE){
+			numFE++;
+		}
+		if (currtype == AC || currtype == NAC){
+			FEtarget++;
+		}
+		if (currtype == BY5){
+			FEtarget++;
+		}
+		if (currtype == BY6){
+			FEtarget++;
+		}
+		prevtype = currtype;
+		count++;
+	}
+	return std::make_pair(st, left);
+}
+
+int PAHProcess::SiteSidesBridge(kmcSiteType stt, kmcSiteType type) {
+	switch (stt){
+	case FE:
+	case NFE:
+	case ERFE:
+	case ERFEER:
+		switch (type){
+		case AC:
+		case NAC:
+		case ERAC:
+		case ERACER:
+		case ACBL:
+		case ACBR:
+		case NACBL:
+		case NACBR:
+			return 0;
+		default:
+			return 1;
+		}
+	case ZZ:
+	case NZZ:
+	case ERZZ:
+	case ERZZER:
+		switch (type){
+		case ZZ:
+		case NZZ:
+		case ERZZ:
+		case ERZZER:
+			return 0;
+		default:
+			return 1;
+		}
+		return 2;
+	case AC:
+	case NAC:
+	case ERAC:
+	case ERACER:
+	case ACBL:
+	case ACBR:
+	case NACBL:
+	case NACBR:
+		switch (type){
+		case FE:
+		case NFE:
+		case ERFE:
+		case ERFEER:
+			return 0;
+		default:
+			return 1;
+		}
+	case BY5:
+	case ERBY5:
+	case ER5:
+	case BY5BL:
+	case BY5BR:
+		return 1;
+	case BY6:
+	case BY6BL:
+	case BY6BR:
+		return 1;
+	}
+}
+
+double PAHProcess::AngleBridge(kmcSiteType stt, kmcSiteType type) {
+	switch (stt){
+	case FE:
+	case NFE:
+	case ERFE:
+	case ERFEER:
+		switch (type){
+		case FE:
+		case NFE:
+		case ERFE:
+		case ERFEER:
+			return 120.0;
+		case ZZ:
+		case NZZ:
+		case ERZZ:
+		case ERZZER:
+			return 150.0;
+		case AC:
+		case NAC:
+		case ERAC:
+		case ERACER:
+		case ACBL:
+		case ACBR:
+		case NACBL:
+		case NACBR:
+			return 0;
+		case BY5:
+		case ERBY5:
+		case ER5:
+		case BY5BL:
+		case BY5BR:
+			return 210.0;
+		case BY6:
+		case BY6BL:
+		case BY6BR:
+			return 240.0;
+		}
+	case ZZ:
+	case NZZ:
+	case ERZZ:
+	case ERZZER:
+		switch (type){
+		case FE:
+		case NFE:
+		case ERFE:
+		case ERFEER:
+			return 150.0;
+		case ZZ:
+		case NZZ:
+		case ERZZ:
+		case ERZZER:
+			return 0.0;
+		case AC:
+		case NAC:
+		case ERAC:
+		case ERACER:
+		case ACBL:
+		case ACBR:
+		case NACBL:
+		case NACBR:
+			return 210;
+		case BY5:
+		case ERBY5:
+		case ER5:
+		case BY5BL:
+		case BY5BR:
+			return 240.0;
+		case BY6:
+		case BY6BL:
+		case BY6BR:
+			return 270.0;
+		}
+	case AC:
+	case NAC:
+	case ERAC:
+	case ERACER:
+	case ACBL:
+	case ACBR:
+	case NACBL:
+	case NACBR:
+		switch (type){
+		case FE:
+		case NFE:
+		case ERFE:
+		case ERFEER:
+			return 0.0;
+		case ZZ:
+		case NZZ:
+		case ERZZ:
+		case ERZZER:
+			return 210.0;
+		case AC:
+		case NAC:
+		case ERAC:
+		case ERACER:
+		case ACBL:
+		case ACBR:
+		case NACBL:
+		case NACBR:
+			return 240;
+		case BY5:
+		case ERBY5:
+		case ER5:
+		case BY5BL:
+		case BY5BR:
+			return 270.0;
+		case BY6:
+		case BY6BL:
+		case BY6BR:
+			return 300.0;
+		}
+	case BY5:
+	case ERBY5:
+	case ER5:
+	case BY5BL:
+	case BY5BR:
+		switch (type){
+		case FE:
+		case NFE:
+		case ERFE:
+		case ERFEER:
+			return 210.0;
+		case ZZ:
+		case NZZ:
+		case ERZZ:
+		case ERZZER:
+			return 240.0;
+		case AC:
+		case NAC:
+		case ERAC:
+		case ERACER:
+		case ACBL:
+		case ACBR:
+		case NACBL:
+		case NACBR:
+			return 270;
+		case BY5:
+		case ERBY5:
+		case ER5:
+		case BY5BL:
+		case BY5BR:
+			return 300.0;
+		}
+	case BY6:
+	case BY6BL:
+	case BY6BR:
+		switch (type){
+		case FE:
+		case NFE:
+		case ERFE:
+		case ERFEER:
+			return 240.0;
+		case ZZ:
+		case NZZ:
+		case ERZZ:
+		case ERZZER:
+			return 270.0;
+		case AC:
+		case NAC:
+		case ERAC:
+		case ERACER:
+		case ACBL:
+		case ACBR:
+		case NACBL:
+		case NACBR:
+			return 300;
+		}
 	}
 }
 
@@ -3018,31 +3438,64 @@ void PAHProcess::proc_O6R_FE3_OH(Spointer& stt) {
 // ************************************************************
 //NICK TO DO - Figure this one out
 void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
-    //printSites(stt);
-    // member C atoms of resulting AC site
-    //Cpointer C1_res, C2_res;
-    //C1_res = C_1->C1;
-    //C2_res = C_2->C2;
-    //// check if process will result in a bridge
-    //bool bridge = false;
-    //cpair pos = jumpToPos(C1_res->coords, normAngle(C1_res->bondAngle1-120));
-    //if(m_pah->m_cpositions.count(pos)) return;//bridge = true;
-    //// check if site is next to a bridge
-    //bridge = (C1_res->bridge || C2_res->bridge);
-    //if(bridge) return;
-    //// remove C
-    //removeC(C_1, false);
-    //removeC(C_2, false);
-    ////if(!bridge) {
-    //    addC(C1_res, normAngle(C1_res->bondAngle1-120), 0, true);
-    //    addC(C1_res->C2, normAngle(C1_res->bondAngle1+60), normAngle(C1_res->bondAngle1+120), true);
-    ////}
-    //// update H
-    //updateA(C1_res, C2_res, 'H');
-    // update sites and neighbours
-    Spointer S1, S2, S3, S4;
-    S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
-    updateSites(stt, 2);
+	//printSites(stt);
+	// member C atoms of resulting AC site
+	//Cpointer C1_res, C2_res;
+	//C1_res = C_1->C1;
+	//C2_res = C_2->C2;
+	//// check if process will result in a bridge
+	//bool bridge = false;
+	//cpair pos = jumpToPos(C1_res->coords, normAngle(C1_res->bondAngle1-120));
+	//if(m_pah->m_cpositions.count(pos)) return;//bridge = true;
+	//// check if site is next to a bridge
+	//bridge = (C1_res->bridge || C2_res->bridge);
+	//if(bridge) return;
+	//// remove C
+	//removeC(C_1, false);
+	//removeC(C_2, false);
+	////if(!bridge) {
+	//    addC(C1_res, normAngle(C1_res->bondAngle1-120), 0, true);
+	//    addC(C1_res->C2, normAngle(C1_res->bondAngle1+60), normAngle(C1_res->bondAngle1+120), true);
+	////}
+	//// update H
+	//updateA(C1_res, C2_res, 'H');
+	// update sites and neighbours
+	Spointer S1, S2, S3, S4;
+	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
+
+	//Before updating the site, must check if a bridge has been formed 
+	std::pair<Spointer, bool> result = CheckBridge(stt);
+	bool left = result.second;
+	Spointer Sb = result.first;
+	if (Sb != stt){
+		if (left){
+			convSiteType(stt, ACBL);
+			if (Sb->type == AC || Sb->type == NAC){
+				convSiteType(Sb, ACBR);
+			}
+			else if (Sb->type == BY5){
+				convSiteType(Sb, BY5BR);
+			}
+			else if (Sb->type == BY6){
+				convSiteType(Sb, BY6BR);
+			}
+		}
+		else{
+			convSiteType(stt, ACBR);
+			if (Sb->type == AC || Sb->type == NAC){
+				convSiteType(Sb, ACBL);
+			}
+			else if (Sb->type == BY5){
+				convSiteType(Sb, BY5BL);
+			}
+			else if (Sb->type == BY6){
+				convSiteType(Sb, BY6BL);
+			}
+		}
+	}
+	else{
+		updateSites(stt, 2);
+	}
     updateSites(S1, -1);
     updateSites(S2, -1);
     // update combined sites
@@ -3051,6 +3504,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // add ring counts
+	addCount(-2,0);
     m_pah->m_rings--;
 }
 // ************************************************************
