@@ -280,6 +280,7 @@ private:
 	std::pair<Spointer, bool> CheckBridge(Spointer& stt);
 	int SiteSidesBridge(kmcSiteType stt, kmcSiteType type);
 	double AngleBridge(kmcSiteType stt, kmcSiteType type);
+	double Length(kmcSiteType stt);
     
     // PAH data structure to perform processes on
    PAHStructure* m_pah;

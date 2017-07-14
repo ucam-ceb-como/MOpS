@@ -1281,7 +1281,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						m_PAH[ip1]->time_created = min(m_PAH[ip1]->time_created, m_PAH[ip2]->time_created);
 						m_PAH[ip1]->lastupdated = min(m_PAH[ip1]->lastupdated, m_PAH[ip2]->lastupdated);
 
-						m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
+		//				m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
 
 						RemoveInvalidPAHs();
 						m_PAHclusterchanged = true;

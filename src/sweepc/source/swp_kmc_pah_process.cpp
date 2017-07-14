@@ -1282,96 +1282,107 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 
 	Spointer st1;
 	int count = 0;
-	int numFE = 1;
-	int FEtarget = 3;
-	int dist = 0;
-	int adddist;
-	int Sides = 0;
-	double Angle = 0.0, target = 0.0;
-	double addangle;
-	int addsides;
+	std::pair<double, double> coords;
+	coords.first = 0.0;
+	coords.second = -1.0;
+	std::pair<double, double> coordsadd;
 	double Ang = 0.0;
-	kmcSiteType prevtype;
-	kmcSiteType currtype;
+	double heading = -90;
+	double length = 0.0;
+	double temp1, temp2;
+	kmcSiteType prevtype = None;
+	kmcSiteType currtype = None;
 	for (st1 = moveIt(st, 1); st1 != m_pah->m_siteList.end(); st1++) {
 		if (st1->type == AC || st1->type == NAC){
-			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
-			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
-			adddist = 0;
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+			Ang = AngleBridge(FE, prevtype) - 180;
+			length = Length(FE);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
+			coords.first -= cos((heading + Ang) / 180 * PI)*length;
+			coords.second -= sin((heading + Ang) / 180 * PI)*length;
 		}
 		else if (st1->type == BY5){
-			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
-			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
-			adddist = 0;
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+			Ang = AngleBridge(FE, prevtype) - 180;
+			length = Length(FE);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
-			addangle = AngleBridge(FE, ZZ) + AngleBridge(ZZ, prevtype);
-			addsides = SiteSidesBridge(FE, ZZ) + SiteSidesBridge(ZZ, prevtype);
-			adddist = -1;
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+			coords.first -= cos((heading + Ang) / 180 * PI)*length;
+			coords.second -= sin((heading + Ang) / 180 * PI)*length;
+
+			Ang = AngleBridge(ZZ, prevtype) - 180;
+			length = Length(ZZ);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
+			coords.first -= cos((heading + Ang) / 180 * PI)*length;
+			coords.second -= sin((heading + Ang) / 180 * PI)*length;
 
 		}
 		else if (st1->type == BY6){
-			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
-			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
-			adddist = 0;
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+			Ang = AngleBridge(FE, prevtype) - 180;
+			length = Length(FE);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
-			addangle = AngleBridge(FE, ZZ) + AngleBridge(ZZ, prevtype);
-			addsides = SiteSidesBridge(FE, ZZ) + SiteSidesBridge(ZZ, prevtype);
-			adddist = 0;
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+			coords.first -= cos((heading + Ang) / 180 * PI)*length;
+			coords.second -= sin((heading + Ang) / 180 * PI)*length;
+
+			Ang = AngleBridge(ZZ, prevtype) - 180;
+			length = Length(ZZ);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
-			addangle = AngleBridge(FE, AC) + AngleBridge(AC, prevtype);
-			addsides = SiteSidesBridge(FE, AC) + SiteSidesBridge(AC, prevtype);
-			adddist = 0;
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if ((Angle + addangle == target) && (dist + adddist) <= 0){
+			coords.first -= cos((heading + Ang) / 180 * PI)*length;
+			coords.second -= sin((heading + Ang) / 180 * PI)*length;
+
+			Ang = AngleBridge(AC, prevtype) - 180;
+			length = Length(AC);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
+			coords.first -= cos((heading + Ang) / 180 * PI)*length;
+			coords.second -= sin((heading + Ang) / 180 * PI)*length;
 	
 		}
 		if (count == 0){
 			currtype = (kmcSiteType)((int)st1->type - 1);
-			Sides += SiteSidesBridge(currtype, FE);
-			Ang = AngleBridge(currtype, FE);
-			Angle += Ang;
+			Ang = AngleBridge(currtype, FE) - 180;
+			if (Ang == -180.0){
+				Ang = 0.0;
+			}
 		}
 		else{
 			currtype = st1->type;
-			Sides += SiteSidesBridge(currtype, prevtype);
-			Ang = AngleBridge(currtype, prevtype);
-			Angle += Ang;
+			Ang = AngleBridge(currtype, prevtype) -180;
+			if (Ang == -180.0){
+				Ang = 0.0;
+			}
 		}
-		if (currtype == FE || currtype == NFE){
-			numFE++;
-		}
-		if (currtype == BY5 ){
-			FEtarget++;
-		}
-		if (currtype == BY6){
-			FEtarget++;
-			FEtarget++;
-		}
+		length = Length(currtype);
+		heading += Ang;
+		coords.first += cos(heading/180*PI)*length;
+		coords.second += sin(heading / 180 * PI)*length;
+
 		prevtype = currtype;
 		count++;
 	}
@@ -1379,81 +1390,133 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 	left = false;
 	for (st1 = m_pah->m_siteList.begin(); st1 != st; st1++) {
 		if (st1->type == AC || st1->type == NAC){
-			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
-			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+			Ang = AngleBridge(FE, prevtype) - 180;
+			length = Length(FE);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
+			coords.first -= cos(heading + Ang)*length;
+			coords.second -= sin(heading + Ang)*length;
 		}
 		else if (st1->type == BY5){
-			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
-			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+			Ang = AngleBridge(FE, prevtype) - 180;
+			length = Length(FE);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
-			addangle = AngleBridge(FE, ZZ) + AngleBridge(ZZ, prevtype);
-			addsides = SiteSidesBridge(FE, ZZ) + SiteSidesBridge(ZZ, prevtype);
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+			coords.first -= cos(heading + Ang)*length;
+			coords.second -= sin(heading + Ang)*length;
+
+			Ang = AngleBridge(ZZ, prevtype) - 180;
+			length = Length(ZZ);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
+			coords.first -= cos(heading + Ang)*length;
+			coords.second -= sin(heading + Ang)*length;
 
 		}
 		else if (st1->type == BY6){
-			addangle = AngleBridge(FE, FE) + AngleBridge(FE, prevtype);
-			addsides = SiteSidesBridge(FE, FE) + SiteSidesBridge(FE, prevtype);
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+			Ang = AngleBridge(FE, prevtype) - 180;
+			length = Length(FE);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
-			addangle = AngleBridge(FE, ZZ) + AngleBridge(ZZ, prevtype);
-			addsides = SiteSidesBridge(FE, ZZ) + SiteSidesBridge(ZZ, prevtype);
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+			coords.first -= cos(heading + Ang)*length;
+			coords.second -= sin(heading + Ang)*length;
+
+			Ang = AngleBridge(ZZ, prevtype) - 180;
+			length = Length(ZZ);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
-			addangle = AngleBridge(FE, AC) + AngleBridge(AC, prevtype);
-			addsides = SiteSidesBridge(FE, AC) + SiteSidesBridge(AC, prevtype);
-			target = ((double)Sides - 2.0 + addsides)*180.0;
-			if (Angle + addangle == target && (numFE + addFE) == FEtarget){
+			coords.first -= cos(heading + Ang)*length;
+			coords.second -= sin(heading + Ang)*length;
+
+			Ang = AngleBridge(AC, prevtype) - 180;
+			length = Length(AC);
+			coords.first += cos((heading + Ang) / 180 * PI)*length;
+			coords.second += sin((heading + Ang) / 180 * PI)*length;
+			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
 				Sb = st1;
 				return std::make_pair(Sb, left);
 			}
+			coords.first -= cos(heading + Ang)*length;
+			coords.second -= sin(heading + Ang)*length;
 
 		}
 		if (count == 0){
 			currtype = (kmcSiteType)((int)st1->type - 1);
-			Sides += SiteSidesBridge(currtype, FE);
-			Angle += AngleBridge(currtype, FE);
+			Ang = AngleBridge(currtype, FE) - 180;
+			if (Ang == -180.0){
+				Ang = 0.0;
+			}
 		}
 		else{
 			currtype = st1->type;
-			Sides += SiteSidesBridge(currtype, prevtype);
-			Angle += AngleBridge(currtype, prevtype);
+			Ang = AngleBridge(currtype, prevtype) - 180;
+			if (Ang == -180.0){
+				Ang = 0.0;
+			}
 		}
-		if (currtype == FE || currtype == NFE){
-			numFE++;
-		}
-		if (currtype == AC || currtype == NAC){
-			FEtarget++;
-		}
-		if (currtype == BY5){
-			FEtarget++;
-		}
-		if (currtype == BY6){
-			FEtarget++;
-		}
+		length = Length(currtype);
+		heading += Ang;
+		coords.first += cos(heading / 180 * PI)*length;
+		coords.second += sin(heading / 180 * PI)*length;
+
 		prevtype = currtype;
 		count++;
 	}
 	return std::make_pair(st, left);
+}
+
+double PAHProcess::Length(kmcSiteType stt) {
+	switch (stt){
+	case FE:
+	case NFE:
+	case ERFE:
+	case ERFEER:
+		return 1.0;
+	case ZZ:
+	case NZZ:
+	case ERZZ:
+	case ERZZER:
+		return sqrt(3);
+	case AC:
+	case NAC:
+	case ERAC:
+	case ERACER:
+	case ACBL:
+	case ACBR:
+	case NACBL:
+	case NACBR:
+		return 2.0;
+	case BY5:
+	case ERBY5:
+	case ER5:
+	case BY5BL:
+	case BY5BR:
+		return sqrt(3);
+	case BY6:
+	case BY6BL:
+	case BY6BR:
+		return 1.0;
+	}
 }
 
 int PAHProcess::SiteSidesBridge(kmcSiteType stt, kmcSiteType type) {
@@ -2653,7 +2716,7 @@ bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
                 break;
             case BY5_FE3:
                 //if((i->type != BY5) && (i->type != eBY5)) {
-                if(i->type != BY5) {
+				if (i->type != BY5 && i->type != BY5BL && i->type != BY5BR) {
                     error = true;
                     error_stype_comb = BY5_FE3;
                     error_stype = i->type;
@@ -2686,9 +2749,9 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     kmcSiteType stp = jp.getSiteType();
     int id = jp.getID();
 
-	//cout << "Doing process " << id << " on " <<PAH_ID << endl;
+	cout << "Doing process " << id << " on " <<PAH_ID << endl;
 
-	//if (PAH_ID == 184 || PAH_ID == 20000184 || PAH_ID == 30000184 || PAH_ID == 10000184){
+	//if (PAH_ID == 10000000){
 	//	cout << "ID is: " << id << endl;
 	//}
 
@@ -2797,6 +2860,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         std::cout<<"Structure produced invalid combined site type after performing process "
             << "ID"<<id<<" on PAH ID: "<<m_pah->m_parent->ID()<<"...\n"
             <<"*************\nAfter performing process --\n";
+		cout << "ID is: " << PAH_ID << endl;
         printSites(site_perf);
         std::ostringstream msg;
         msg << "ERROR: Structure produced invalid combined site type after performing process "
@@ -3503,6 +3567,13 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
     updateCombinedSites(stt); // update resulting site
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
+	//If a bridge was formed, update combined site types where the bridge was formed and its neighbours
+	if (Sb != stt){
+		updateCombinedSites(Sb);
+		S1 = moveIt(Sb, -1), S2 = moveIt(Sb, 1), S3 = moveIt(Sb, -2), S4 = moveIt(Sb, 2);
+		updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
+		updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
+	}
     // add ring counts
 	addCount(-2,0);
     m_pah->m_rings--;
