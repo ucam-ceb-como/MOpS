@@ -73,9 +73,11 @@ namespace Sweep {
 			// Sites with one R5 and one ER5
 			RFEER = 61, RZZER = 62, RACER = 63,
 			//Sites that include bridges
-			ACBL = 71, BY5BL = 72, BY6BL = 73, ACBR = 74, BY5BR = 75, BY6BR = 76,
+			ACBL = 71, BY5BL = 72, BY6BL = 73, BY6BL2 = 74, ACBR = 75, BY5BR = 76, BY6BR = 77, 
+			BY6BR2 = 78, BY6BLR = 79, BY6BRL = 80,
 			// Sites besides bridges that are non reactive due to steric hindrances
-			NACBL = -71, NBY5BL = -72, NBY6BL = -73, NACBR = -74, NBY5BR = -75, NBY6BR = -76,
+			NACBL = -71, NBY5BL = -72, NBY6BL = -73, NBY6BL2 = -74, NACBR = -75, NBY5BR = -76, 
+			NBY6BR = -77, NBY6BR2 = -78, NBY6BLR = -79, NBY6BRL = -80,
 			//End principal site types
 			//Start combined site types
 			//First, basic combined sites with R6s. FE3:FE with 2 FEs on both sides. FE_HACA: FE with non FE's on each side
@@ -142,8 +144,6 @@ namespace Sweep {
                 case AC: return "AC";
                 case BY5: return "BY5";
                 case BY6: return "BY6";
-				case ACBL: return "ACBL";
-				case ACBR: return "ACBR";
 
 				case NFE: return "NFE";
 				case NZZ: return "NZZ";
@@ -177,6 +177,28 @@ namespace Sweep {
 				case RFEER: return "RFEER";
 				case RZZER: return "RZZER";
 				case RACER: return "RACER";
+
+				case ACBL: return "ACBL";
+				case ACBR: return "ACBR";
+				case BY5BL: return "BY5BL";
+				case BY5BR: return "BY5BR";
+				case BY6BL: return "BY6BL";
+				case BY6BR: return "BY6BR";
+				case BY6BL2: return "BY6BL2";
+				case BY6BR2: return "BY6BR2";
+				case BY6BLR: return "BY6BLR";
+				case BY6BRL: return "BY6BRL";
+
+				case NACBL: return "NACBL";
+				case NACBR: return "NACBR";
+				case NBY5BL: return "NBY5BL";
+				case NBY5BR: return "NBY5BR";
+				case NBY6BL: return "NBY6BL";
+				case NBY6BR: return "NBY6BR";
+				case NBY6BL2: return "NBY6BL2";
+				case NBY6BR2: return "NBY6BR2";
+				case NBY6BLR: return "NBY6BLR";
+				case NBY6BRL: return "NBY6BRL";
 
 				case FE2: return "FE2";
                 case FE3: return "FE3";
@@ -214,8 +236,6 @@ namespace Sweep {
             else if(str == "AC") return AC;
             else if(str == "BY5") return BY5;
             else if(str == "BY6") return BY6;
-			else if (str == "ACBL") return ACBL;
-			else if (str == "ACBR") return ACBR;
 
 			if (str == "NFE") return NFE;
 			else if (str == "NZZ") return NZZ;
@@ -250,6 +270,28 @@ namespace Sweep {
 			else if (str == "RZZER") return RZZER;
 			else if (str == "RACER") return RACER;
 
+			else if (str == "ACBL") return ACBL;
+			else if (str == "ACBR") return ACBR;
+			else if (str == "BY5BL") return BY5BL;
+			else if (str == "BY5BR") return BY5BR;
+			else if (str == "BY6BL") return BY6BL;
+			else if (str == "BY6BR") return BY6BR;
+			else if (str == "BY6BL2") return BY6BL2;
+			else if (str == "BY6BR2") return BY6BR2;
+			else if (str == "BY6BLR") return BY6BLR;
+			else if (str == "BY6BRL") return BY6BRL;
+
+			else if (str == "NACBL") return NACBL;
+			else if (str == "NACBR") return NACBR;
+			else if (str == "NBY5BL") return NBY5BL;
+			else if (str == "NBY5BR") return NBY5BR;
+			else if (str == "NBY6BL") return NBY6BL;
+			else if (str == "NBY6BR") return NBY6BR;
+			else if (str == "NBY6BL2") return NBY6BL2;
+			else if (str == "NBY6BR2") return NBY6BR2;
+			else if (str == "NBY6BLR") return NBY6BLR;
+			else if (str == "NBY6BRL") return NBY6BRL;
+
             return Inv;
         }
         //! Get a vector of all site types
@@ -260,8 +302,6 @@ namespace Sweep {
             temp.push_back(AC);
             temp.push_back(BY5);
             temp.push_back(BY6);
-			temp.push_back(ACBL);
-			temp.push_back(ACBR);
 
 			temp.push_back(NFE);
 			temp.push_back(NZZ);
@@ -295,6 +335,28 @@ namespace Sweep {
 			temp.push_back(RFEER);
 			temp.push_back(RZZER);
 			temp.push_back(RACER);
+
+			temp.push_back(ACBL);
+			temp.push_back(ACBR);
+			temp.push_back(BY5BL);
+			temp.push_back(BY5BR);
+			temp.push_back(BY6BL);
+			temp.push_back(BY6BR);
+			temp.push_back(BY6BL2);
+			temp.push_back(BY6BR2);
+			temp.push_back(BY6BLR);
+			temp.push_back(BY6BRL);
+
+			temp.push_back(NACBL);
+			temp.push_back(NACBR);
+			temp.push_back(NBY5BL);
+			temp.push_back(NBY5BR);
+			temp.push_back(NBY6BL);
+			temp.push_back(NBY6BR);
+			temp.push_back(NBY6BL2);
+			temp.push_back(NBY6BR2);
+			temp.push_back(NBY6BLR);
+			temp.push_back(NBY6BRL);
 
 			temp.push_back(FE2);
             temp.push_back(FE3);

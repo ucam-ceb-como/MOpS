@@ -62,6 +62,9 @@ static std::vector<kmcSiteType> PHsites = vectPHsites();
 static std::vector<kmcSiteType> ZZOxsites = vectZZOxsites();
 static std::vector<kmcSiteType> Mergesites = vectMergesites();
 
+int PAHID = 0;
+int JOBID = 0;
+
 // Constructors and Destructor
 //! Default Constructor
 PAHProcess::PAHProcess() {
@@ -1032,6 +1035,15 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		st->type = (kmcSiteType)((int)st->type - bulkCchange);
 	}
 
+	if (kmcSiteName(st->type) == "ERROR" || kmcSiteName(st->type) == "None"){
+		cout << "Invalid site type assigned" << endl;
+		cout << (int)st->type << " " << bulkCchange << endl;
+		cout << PAHID << endl;
+		cout << JOBID << endl;
+		assert(false);
+		abort();
+	}
+
     // add site to m_pah->m_siteMap
 	  //NICK TO DO - Figure out logic for updating site type. This may already work correctly
     m_pah->m_siteMap[st->type].push_back(st);
@@ -1043,45 +1055,31 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	Spointer Sp1, Sp2;
 	bool fail = false;
 
-	if (m_pah->m_siteMap[FE2].size() > 0){
-		Sp1 = chooseRandomSite(FE2, rng);
-		if (moveIt(Sp1, 1)->comb == FE2){
-			Spointer Sp3 = moveIt(Sp1, 1);
-			Sp1 = Sp3;
-		}
+	Sp1 = chooseRandomSite(Mergesites, rng);
+	if (moveIt(Sp1, 1)->comb == FE2 || moveIt(Sp1, 1)->comb == BFE2){
+		Spointer Sp3 = moveIt(Sp1, 1);
+		Sp1 = Sp3;
 	}
 
-	else{
-		fail = true;
-	}
-	if (!fail){
-		if (rhs.m_pah->m_siteMap[FE2].size() > 0){
-			Sp2 = rhs.chooseRandomSite(FE2, rng);
-			if (rhs.moveIt(Sp2, 1)->comb == FE2){
-				Sp2 = rhs.moveIt(Sp2, 1);
-			}
-		}
-		else{
-			fail = true;
-		}
+	Sp2 = rhs.chooseRandomSite(Mergesites, rng);
+	if (rhs.moveIt(Sp2, 1)->comb == FE2 || rhs.moveIt(Sp2, 1)->comb == BFE2){
+		Sp2 = rhs.moveIt(Sp2, 1);
 	}
 
-	if (!fail){
-		convSiteType(moveIt(Sp1,-1), ACBR);
-		//convSiteType(moveIt(Sp1, -1), AC);
-		Spointer st3;
-		for (st3 = rhs.moveIt(Sp2,1); st3 != rhs.m_pah->m_siteList.end(); st3++){
-			addSite(st3->type, Sp1);
-		}
-		for (st3 = rhs.m_pah->m_siteList.begin(); st3 != rhs.moveIt(Sp2,-1); st3++){
-			addSite(st3->type, Sp1);
-		}
-		convSiteType(Sp1, ACBL);
-		//convSiteType(Sp1, AC);
-		Sp1 = m_pah->m_siteList.begin();
-		updateCombinedSites();
-		updateHinderedSites();
+	convSiteType(moveIt(Sp1,-1), ACBR);
+	//convSiteType(moveIt(Sp1, -1), AC);
+	Spointer st3;
+	for (st3 = rhs.moveIt(Sp2,1); st3 != rhs.m_pah->m_siteList.end(); st3++){
+		addSite(st3->type, Sp1);
 	}
+	for (st3 = rhs.m_pah->m_siteList.begin(); st3 != rhs.moveIt(Sp2,-1); st3++){
+		addSite(st3->type, Sp1);
+	}
+	convSiteType(Sp1, ACBL);
+	//convSiteType(Sp1, AC);
+	Sp1 = m_pah->m_siteList.begin();
+	updateCombinedSites();
+	updateHinderedSites();
 
 }
 void PAHProcess::updateHinderedSites() {
@@ -1226,11 +1224,23 @@ int PAHProcess::SiteSides(Spointer& stt) {
 	case ER5:
 	case BY5BL:
 	case BY5BR:
+	case NBY5:
+	case NBY5BR:
+	case NBY5BL:
 		return 4;
 	case BY6:
 	case BY6BL:
 	case BY6BR:
+	case BY6BL2:
+	case BY6BR2:
+	case BY6BLR:
+	case BY6BRL:
 		return 5;
+	default:
+		cout << "Unassigned site type" << endl;
+		cout << stt->type << endl;
+		assert(false);
+		abort();
 	}
 }
 
@@ -1260,11 +1270,23 @@ double PAHProcess::SiteAngle(Spointer& stt) {
 	case ER5:
 	case BY5BL:
 	case BY5BR:
+	case NBY5:
+	case NBY5BR:
+	case NBY5BL:
 		return 360.0;
 	case BY6:
 	case BY6BL:
 	case BY6BR:
+	case BY6BL2:
+	case BY6BR2:
+	case BY6BLR:
+	case BY6BRL:
 		return 480.0;
+	default:
+		cout << "Unassigned site type" << endl;
+		cout << stt->type << endl;
+		assert(false);
+		abort();
 	}
 }
 
@@ -1276,7 +1298,9 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 
 	//If there are no armchairs, BY5, or BY6s, no bridge can be formed
 	if (m_pah->m_siteMap[AC].size() == 0 && m_pah->m_siteMap[BY5].size() == 0 && m_pah->m_siteMap[BY6].size() == 0 &&
-		m_pah->m_siteMap[NAC].size() == 0 && m_pah->m_siteMap[NBY5].size() == 0 && m_pah->m_siteMap[NBY6].size() == 0){
+		m_pah->m_siteMap[NAC].size() == 0 && m_pah->m_siteMap[NBY5].size() == 0 && m_pah->m_siteMap[NBY6].size() == 0 &&
+		m_pah->m_siteMap[BY6BL].size() == 0 && m_pah->m_siteMap[BY6BR].size() == 0 &&
+		m_pah->m_siteMap[NBY6BL].size() == 0 && m_pah->m_siteMap[NBY6BR].size() == 0 ){
 		return std::make_pair(Sb, left);
 	}
 
@@ -1293,79 +1317,99 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 	kmcSiteType prevtype = None;
 	kmcSiteType currtype = None;
 	for (st1 = moveIt(st, 1); st1 != m_pah->m_siteList.end(); st1++) {
-		if (st1->type == AC || st1->type == NAC){
-			Ang = AngleBridge(FE, prevtype) - 180;
-			length = Length(FE);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
+		if (count != 0){
+			if (st1->type == AC || st1->type == NAC){
+				Ang = AngleBridge(FE, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(FE);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
 			}
-			coords.first -= cos((heading + Ang) / 180 * PI)*length;
-			coords.second -= sin((heading + Ang) / 180 * PI)*length;
-		}
-		else if (st1->type == BY5){
-			Ang = AngleBridge(FE, prevtype) - 180;
-			length = Length(FE);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
-			}
-			coords.first -= cos((heading + Ang) / 180 * PI)*length;
-			coords.second -= sin((heading + Ang) / 180 * PI)*length;
+			else if (st1->type == BY5){
+				Ang = AngleBridge(FE, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(FE);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
 
-			Ang = AngleBridge(ZZ, prevtype) - 180;
-			length = Length(ZZ);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
-			}
-			coords.first -= cos((heading + Ang) / 180 * PI)*length;
-			coords.second -= sin((heading + Ang) / 180 * PI)*length;
+				Ang = AngleBridge(ZZ, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(ZZ);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
 
-		}
-		else if (st1->type == BY6){
-			Ang = AngleBridge(FE, prevtype) - 180;
-			length = Length(FE);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
 			}
-			coords.first -= cos((heading + Ang) / 180 * PI)*length;
-			coords.second -= sin((heading + Ang) / 180 * PI)*length;
+			else if (st1->type == BY6 || st1->type == BY6BL || st1->type == BY6BR){
+				Ang = AngleBridge(FE, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(FE);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
 
-			Ang = AngleBridge(ZZ, prevtype) - 180;
-			length = Length(ZZ);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
-			}
-			coords.first -= cos((heading + Ang) / 180 * PI)*length;
-			coords.second -= sin((heading + Ang) / 180 * PI)*length;
+				Ang = AngleBridge(ZZ, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(ZZ);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
 
-			Ang = AngleBridge(AC, prevtype) - 180;
-			length = Length(AC);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
+				Ang = AngleBridge(AC, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(AC);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
+
 			}
-			coords.first -= cos((heading + Ang) / 180 * PI)*length;
-			coords.second -= sin((heading + Ang) / 180 * PI)*length;
-	
 		}
 		if (count == 0){
-			currtype = (kmcSiteType)((int)st1->type - 1);
+			currtype = (kmcSiteType)(abs((int)st1->type) - 1);
 			Ang = AngleBridge(currtype, FE) - 180;
 			if (Ang == -180.0){
 				Ang = 0.0;
@@ -1383,85 +1427,111 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 		coords.first += cos(heading/180*PI)*length;
 		coords.second += sin(heading / 180 * PI)*length;
 
+		//if (PAHID == 10107 && m_pah->numofRings() == 18 && JOBID == 9){
+		//	cout << (kmcSiteType) currtype << endl;
+		//	cout << coords.first << endl;
+		//	cout << coords.second << endl;
+		//}
+
 		prevtype = currtype;
 		count++;
 	}
 
 	left = false;
 	for (st1 = m_pah->m_siteList.begin(); st1 != st; st1++) {
-		if (st1->type == AC || st1->type == NAC){
-			Ang = AngleBridge(FE, prevtype) - 180;
-			length = Length(FE);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
+		if (count != 0){
+			if (st1->type == AC || st1->type == NAC){
+				Ang = AngleBridge(FE, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(FE);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
 			}
-			coords.first -= cos(heading + Ang)*length;
-			coords.second -= sin(heading + Ang)*length;
-		}
-		else if (st1->type == BY5){
-			Ang = AngleBridge(FE, prevtype) - 180;
-			length = Length(FE);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
-			}
-			coords.first -= cos(heading + Ang)*length;
-			coords.second -= sin(heading + Ang)*length;
+			else if (st1->type == BY5){
+				Ang = AngleBridge(FE, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(FE);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
 
-			Ang = AngleBridge(ZZ, prevtype) - 180;
-			length = Length(ZZ);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
-			}
-			coords.first -= cos(heading + Ang)*length;
-			coords.second -= sin(heading + Ang)*length;
+				Ang = AngleBridge(ZZ, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(ZZ);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
 
-		}
-		else if (st1->type == BY6){
-			Ang = AngleBridge(FE, prevtype) - 180;
-			length = Length(FE);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
 			}
-			coords.first -= cos(heading + Ang)*length;
-			coords.second -= sin(heading + Ang)*length;
+			else if (st1->type == BY6 || st1->type == BY6BL || st1->type == BY6BR){
+				Ang = AngleBridge(FE, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(FE);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
 
-			Ang = AngleBridge(ZZ, prevtype) - 180;
-			length = Length(ZZ);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
+				Ang = AngleBridge(ZZ, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(ZZ);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
+
+				Ang = AngleBridge(AC, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(AC);
+				coords.first += cos((heading + Ang) / 180 * PI)*length;
+				coords.second += sin((heading + Ang) / 180 * PI)*length;
+				if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
+					Sb = st1;
+					return std::make_pair(Sb, left);
+				}
+				coords.first -= cos((heading + Ang) / 180 * PI)*length;
+				coords.second -= sin((heading + Ang) / 180 * PI)*length;
+
 			}
-			coords.first -= cos(heading + Ang)*length;
-			coords.second -= sin(heading + Ang)*length;
-
-			Ang = AngleBridge(AC, prevtype) - 180;
-			length = Length(AC);
-			coords.first += cos((heading + Ang) / 180 * PI)*length;
-			coords.second += sin((heading + Ang) / 180 * PI)*length;
-			if (abs(coords.first) <= 1e-5 && abs(coords.second) <= 1e-5){
-				Sb = st1;
-				return std::make_pair(Sb, left);
-			}
-			coords.first -= cos(heading + Ang)*length;
-			coords.second -= sin(heading + Ang)*length;
-
 		}
 		if (count == 0){
-			currtype = (kmcSiteType)((int)st1->type - 1);
+			currtype = (kmcSiteType)(abs((int)st1->type) - 1);
 			Ang = AngleBridge(currtype, FE) - 180;
 			if (Ang == -180.0){
 				Ang = 0.0;
@@ -1481,6 +1551,12 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 
 		prevtype = currtype;
 		count++;
+
+		//if (PAHID == 10107 && m_pah->numofRings() == 18 && JOBID == 9){
+		//	cout << (kmcSiteType) currtype << endl;
+		//	cout << coords.first << endl;
+		//	cout << coords.second << endl;
+		//}
 	}
 	return std::make_pair(st, left);
 }
@@ -1511,11 +1587,23 @@ double PAHProcess::Length(kmcSiteType stt) {
 	case ER5:
 	case BY5BL:
 	case BY5BR:
+	case NBY5:
+	case NBY5BR:
+	case NBY5BL:
 		return sqrt(3);
 	case BY6:
 	case BY6BL:
 	case BY6BR:
+	case BY6BRL:
+	case BY6BLR:
+	case BY6BL2:
+	case BY6BR2:
 		return 1.0;
+	default:
+		cout << "Unassigned site type" << endl;
+		cout << stt << endl;
+		assert(false);
+		abort();
 	}
 }
 
@@ -1574,11 +1662,23 @@ int PAHProcess::SiteSidesBridge(kmcSiteType stt, kmcSiteType type) {
 	case ER5:
 	case BY5BL:
 	case BY5BR:
+	case NBY5:
+	case NBY5BR:
+	case NBY5BL:
 		return 1;
 	case BY6:
 	case BY6BL:
 	case BY6BR:
+	case BY6BLR:
+	case BY6BRL:
+	case BY6BL2:
+	case BY6BR2:
 		return 1;
+	default:
+		cout << "Unassigned site type" << endl;
+		cout << stt << endl;
+		assert(false);
+		abort();
 	}
 }
 
@@ -1613,11 +1713,24 @@ double PAHProcess::AngleBridge(kmcSiteType stt, kmcSiteType type) {
 		case ER5:
 		case BY5BL:
 		case BY5BR:
+		case NBY5:
+		case NBY5BR:
+		case NBY5BL:
 			return 210.0;
 		case BY6:
 		case BY6BL:
 		case BY6BR:
+		case BY6BLR:
+		case BY6BRL:
+		case BY6BL2:
+		case BY6BR2:
 			return 240.0;
+		default:
+			cout << "Unassigned sub-site type" << endl;
+			cout << type << endl;
+			cout << stt << endl;
+			assert(false);
+			abort();
 		}
 	case ZZ:
 	case NZZ:
@@ -1648,11 +1761,24 @@ double PAHProcess::AngleBridge(kmcSiteType stt, kmcSiteType type) {
 		case ER5:
 		case BY5BL:
 		case BY5BR:
+		case NBY5:
+		case NBY5BR:
+		case NBY5BL:
 			return 240.0;
 		case BY6:
 		case BY6BL:
 		case BY6BR:
+		case BY6BLR:
+		case BY6BRL:
+		case BY6BL2:
+		case BY6BR2:
 			return 270.0;
+		default:
+			cout << "Unassigned sub-site type" << endl;
+			cout << type << endl;
+			cout << stt << endl;
+			assert(false);
+			abort();
 		}
 	case AC:
 	case NAC:
@@ -1687,17 +1813,33 @@ double PAHProcess::AngleBridge(kmcSiteType stt, kmcSiteType type) {
 		case ER5:
 		case BY5BL:
 		case BY5BR:
+		case NBY5:
+		case NBY5BR:
+		case NBY5BL:
 			return 270.0;
 		case BY6:
 		case BY6BL:
 		case BY6BR:
+		case BY6BLR:
+		case BY6BRL:
+		case BY6BL2:
+		case BY6BR2:
 			return 300.0;
+		default:
+			cout << "Unassigned sub-site type" << endl;
+			cout << type << endl;
+			cout << stt << endl;
+			assert(false);
+			abort();
 		}
 	case BY5:
 	case ERBY5:
 	case ER5:
 	case BY5BL:
 	case BY5BR:
+	case NBY5:
+	case NBY5BR:
+	case NBY5BL:
 		switch (type){
 		case FE:
 		case NFE:
@@ -1723,11 +1865,24 @@ double PAHProcess::AngleBridge(kmcSiteType stt, kmcSiteType type) {
 		case ER5:
 		case BY5BL:
 		case BY5BR:
+		case NBY5:
+		case NBY5BR:
+		case NBY5BL:
 			return 300.0;
+		default:
+			cout << "Unassigned sub-site type" << endl;
+			cout << type << endl;
+			cout << stt << endl;
+			assert(false);
+			abort();
 		}
 	case BY6:
 	case BY6BL:
 	case BY6BR:
+	case BY6BLR:
+	case BY6BRL:
+	case BY6BL2:
+	case BY6BR2:
 		switch (type){
 		case FE:
 		case NFE:
@@ -1748,7 +1903,18 @@ double PAHProcess::AngleBridge(kmcSiteType stt, kmcSiteType type) {
 		case NACBL:
 		case NACBR:
 			return 300;
+		default:
+			cout << "Unassigned sub-site type" << endl;
+			cout << type << endl;
+			cout << stt << endl;
+			assert(false);
+			abort();
 		}
+	default:
+		cout << "Unassigned site type" << endl;
+		cout << stt << endl;
+		assert(false);
+		abort();
 	}
 }
 
@@ -1806,26 +1972,35 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 	case FE: 
 	case NFE:
         // Check for FE3 (if there's FE on each side of the FE)
-		if ((moveIt(st, 1)->type == FE || moveIt(st, 1)->type == NFE) && (moveIt(st, -1)->type == FE || moveIt(st, -1)->type == NFE)) {
-            //if(st->C1->C1->C1->bridge || st->C2->C2->C2->bridge)
-            st->comb = FE3;
-            m_pah->m_siteMap[FE3].push_back(st);
-            Spointer n1, n2;
-            n1 = moveIt(st, -1);
-            n2 = moveIt(st, 1);
-            if(n1->comb != FE3) updateCombinedSites(n1);
-            if(n2->comb != FE3) updateCombinedSites(n2);
-            break;
+		if ((moveIt(st, 1)->type == FE || moveIt(st, 1)->type == NFE) && (moveIt(st, -1)->type == FE 
+			|| moveIt(st, -1)->type == NFE)) {
+			//Make sure there is no bridge nearby. If an FE is nearby, its an FE4. Otherwise its a benzene with two bridges
+			if (moveIt(st, 2)->type != FE && moveIt(st, 2)->type != NFE && moveIt(st, -2)->type != FE 
+				&& moveIt(st, -2)->type != NFE
+				&& (abs((int)moveIt(st, 2)->type) < 71 || abs((int)moveIt(st, 2)->type) > 80) 
+				&& (abs((int)moveIt(st, -2)->type) < 71 || abs((int)moveIt(st, -2)->type) > 80)){
+				st->comb = FE3;
+				m_pah->m_siteMap[FE3].push_back(st);
+				Spointer n1, n2;
+				n1 = moveIt(st, -1);
+				n2 = moveIt(st, 1);
+				if (n1->comb != FE3) updateCombinedSites(n1);
+				if (n2->comb != FE3) updateCombinedSites(n2);
+				break;
+			}
         }
         //Check for FE2 (if only one FE is beside this FE)
-		else if ((moveIt(st, 1)->type == FE || moveIt(st, 1)->type == NFE) || (moveIt(st, -1)->type == FE || moveIt(st, -1)->type == NFE)){
+		else if ((moveIt(st, 1)->type == FE || moveIt(st, 1)->type == NFE) || (moveIt(st, -1)->type == FE 
+			      || moveIt(st, -1)->type == NFE)){
             Spointer S1,S2;
             S1 = moveIt(st,-1); S2 = moveIt(st, 1);
 			// Check if that FE is not a FE3
 			if ((S2->type == FE || S2->type == NFE) && moveIt(S2, 1)->type != FE && moveIt(S2, 1)->type != NFE) {
 				//Check if this is near a bridge site or an NFE is part of this FE2
 				if (((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
-					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && (S2->type != NFE && st->type != NFE)){ 
+					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && (S2->type != NFE && st->type != NFE)
+					&& (S1->type == ZZ || S1->type == AC)
+					&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC)){
 					st->comb = FE2;
 					m_pah->m_siteMap[FE2].push_back(st);
 					//
@@ -1844,7 +2019,9 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				//If this site is near a bridge or NFE, this FE2 needs to be flagged differently
 				//First check if this is an oxidation only FE2
 				else if(((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
-					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && !(S2->type != NFE && st->type != NFE)){
+					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && !(S2->type != NFE && st->type != NFE
+					&& (S1->type == ZZ || S1->type == AC)
+					&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC))){
 					st->comb = OFE2;
 					m_pah->m_siteMap[OFE2].push_back(st);
 					//
@@ -1862,7 +2039,9 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				}
 				//Now check if this is a bridge only FE2
 				else if (!((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
-					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && (S2->type != NFE && st->type != NFE)){
+					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && (S2->type != NFE && st->type != NFE)
+					&& (S1->type == ZZ || S1->type == AC)
+					&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC)){
 					st->comb = BFE2;
 					m_pah->m_siteMap[BFE2].push_back(st);
 					//
@@ -1899,7 +2078,9 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 			else if ((S1->type == FE || S1->type == NFE) && moveIt(S1, -1)->type != FE && moveIt(S1, -1)->type != NFE) {
 				//Check if this is near a bridge site or an NFE is part of this FE2
 				if ((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
-					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80) && (S1->type != NFE && st->type != NFE)){  
+					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80) && (S1->type != NFE && st->type != NFE)
+					&& (S2->type == ZZ || S2->type == AC)
+					&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC)){
 					st->comb = FE2;
 					m_pah->m_siteMap[FE2].push_back(st);
 					if (S1->comb == FE2) delSiteFromMap(S1->comb, st);
@@ -1908,14 +2089,18 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				//If this site is near a bridge or NFE, this FE2 needs to be flagged differently
 				//First check if this is an oxidation only FE2
 				else if (((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
-					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && !(S1->type != NFE && st->type != NFE)){ 
+					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && !(S1->type != NFE && st->type != NFE
+					&& (S2->type == ZZ || S2->type == AC)
+					&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC))){
 					st->comb = OFE2;
 					m_pah->m_siteMap[OFE2].push_back(st);
 					if (S1->comb == OFE2) delSiteFromMap(S1->comb, st);
 					if (S1->comb != OFE2) updateCombinedSites(S1);
 				} //Now check if this is a bridge only FE2
 				else if (!((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
-					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && (S1->type != NFE && st->type != NFE)){
+					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && (S1->type != NFE && st->type != NFE)
+					&& (S2->type == ZZ || S2->type == AC)
+					&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC)){
 					st->comb = BFE2;
 					m_pah->m_siteMap[BFE2].push_back(st);
 					if (S1->comb == BFE2) delSiteFromMap(S1->comb, st);
@@ -1935,8 +2120,9 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
         }
         // Check for FE_HACA
 		//Must check that neighbors are not FE or NFE and also not a bridge
-        else if(moveIt(st,1)->type != FE && moveIt(st,-1)->type != FE && moveIt(st,1)->type != RFE && moveIt(st,-1)->type != RFE
-			&& moveIt(st, 1)->type != NFE && moveIt(st, -1)->type != NFE && ((abs((int)moveIt(st, -1)->type) < 71 || abs((int)moveIt(st, -1)->type) > 80) &&
+        else if(moveIt(st,1)->type != FE && moveIt(st,-1)->type != FE && moveIt(st,1)->type != RFE && 
+			moveIt(st,-1)->type != RFE && moveIt(st, 1)->type != NFE && moveIt(st, -1)->type != NFE && 
+			((abs((int)moveIt(st, -1)->type) < 71 || abs((int)moveIt(st, -1)->type) > 80) &&
 			(abs((int)moveIt(st, 1)->type) < 71 || abs((int)moveIt(st, 1)->type) > 80))) {
             //if(st->C1->C1->bridge || st->C2->C2->bridge)
             st->comb = FE_HACA;
@@ -2749,9 +2935,11 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     kmcSiteType stp = jp.getSiteType();
     int id = jp.getID();
 
-	cout << "Doing process " << id << " on " <<PAH_ID << endl;
+	PAHID = PAH_ID;
+	JOBID = id;
+	//cout << "Doing process " << id << " on " <<PAH_ID << endl;
 
-	//if (PAH_ID == 10000000){
+	//if (PAH_ID == 53175){
 	//	cout << "ID is: " << id << endl;
 	//}
 
@@ -3543,6 +3731,18 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 			else if (Sb->type == BY6){
 				convSiteType(Sb, BY6BR);
 			}
+			else if (Sb->type == BY6BR){
+				convSiteType(Sb, BY6BR2);
+			}
+			else if (Sb->type == BY6BL){
+				convSiteType(Sb, BY6BLR);
+			}
+			else{
+				cout << "Site type not accounted for" << endl;
+				cout << Sb->type << endl;
+				assert(false);
+				abort();
+			}
 		}
 		else{
 			convSiteType(stt, ACBR);
@@ -3554,6 +3754,18 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 			}
 			else if (Sb->type == BY6){
 				convSiteType(Sb, BY6BL);
+			}
+			else if (Sb->type == BY6BL){
+				convSiteType(Sb, BY6BL2);
+			}
+			else if (Sb->type == BY6BR){
+				convSiteType(Sb, BY6BRL);
+			}
+			else{
+				cout << "Site type not accounted for" << endl;
+				cout << Sb->type << endl;
+				assert(false);
+				abort();
 			}
 		}
 	}

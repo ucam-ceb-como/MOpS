@@ -87,6 +87,8 @@ using namespace Strings;
 //used for debugging, testing clone function for PAHStructure.
 static unsigned int ID=0; 
 static bool m_clone=false;
+//static unsigned int Merges = 0;
+//static unsigned int Merges_Old = 0;
 /*
 double PAHPrimary::pow(double a, double b) {
     int tmp = (*(1 + (int *)&a));
@@ -1115,7 +1117,8 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 					boost::shared_ptr<PAH> new_m_PAH((*it)->Clone());
 
-					new_m_PAH->PAH_ID = (*it)->PAH_ID + 10000000;
+					new_m_PAH->PAH_ID = ID;
+					ID++;
 
 					if (numloops > 1){
 						calcrates = false;
@@ -1166,28 +1169,30 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 									sys.Particles().Add(*sp, rng);
 								}
 								else{
-									cout << sys.ParticleCount() << endl;
-									cout << "Ensemble is full. Cannot allocate new PAH" << endl;
+									//cout << sys.ParticleCount() << endl;
+									//cout << "Ensemble is full. Cannot allocate new PAH" << endl;
+									ID--;
 								}
 							}
 							else{
 								int oldweight = (*sys.Particles().At(indpart)).getStatisticalWeight();
 								(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight + 1.0);
+								ID--;
 							}
 						}
 						else{
 							new_m_PAH.reset();
+							ID--;
 						}
 					}
 					else{
 						new_m_PAH.reset();
+						ID--;
 					}
 
 					growtime = t - (*it)->lastupdated;
 					numloops++;
 					ratefactor = statweight / statweightold;
-					statweightold = statweight;
-					if (statweight == 0) sys.Particles().Remove(ind);
 				}
 			}
 			else{
@@ -1281,7 +1286,9 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						m_PAH[ip1]->time_created = min(m_PAH[ip1]->time_created, m_PAH[ip2]->time_created);
 						m_PAH[ip1]->lastupdated = min(m_PAH[ip1]->lastupdated, m_PAH[ip2]->lastupdated);
 
-		//				m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
+						m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
+
+						//Merges++;
 
 						RemoveInvalidPAHs();
 						m_PAHclusterchanged = true;
@@ -1292,6 +1299,12 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				break;
 			}
 		}
+
+		//if (Merges > 0 && Merges > Merges_Old)
+		//{
+		//	cout << Merges << endl;
+		//	Merges_Old = Merges;
+		//}
 
         //sys.Particles().Add();
         //this->ParticleModel()->Mode();
