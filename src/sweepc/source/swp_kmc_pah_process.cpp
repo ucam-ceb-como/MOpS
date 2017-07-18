@@ -1038,6 +1038,8 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	if (kmcSiteName(st->type) == "ERROR" || kmcSiteName(st->type) == "None"){
 		cout << "Invalid site type assigned" << endl;
 		cout << (int)st->type << " " << bulkCchange << endl;
+		cout << st->comb << endl;
+		cout << m_pah->numofRings() << endl;
 		cout << PAHID << endl;
 		cout << JOBID << endl;
 		assert(false);
@@ -1986,8 +1988,17 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				n2 = moveIt(st, 1);
 				if (n1->comb != FE3) updateCombinedSites(n1);
 				if (n2->comb != FE3) updateCombinedSites(n2);
-				break;
 			}
+			else{
+				st->comb = NFE3;
+				m_pah->m_siteMap[NFE3].push_back(st);
+				Spointer n1, n2;
+				n1 = moveIt(st, -1);
+				n2 = moveIt(st, 1);
+				if (n1->comb != NFE3) updateCombinedSites(n1);
+				if (n2->comb != NFE3) updateCombinedSites(n2);
+			}
+			break;
         }
         //Check for FE2 (if only one FE is beside this FE)
 		else if ((moveIt(st, 1)->type == FE || moveIt(st, 1)->type == NFE) || (moveIt(st, -1)->type == FE 
@@ -2939,7 +2950,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	JOBID = id;
 	//cout << "Doing process " << id << " on " <<PAH_ID << endl;
 
-	//if (PAH_ID == 53175){
+	//if (PAH_ID == 205801){
 	//	cout << "ID is: " << id << endl;
 	//}
 

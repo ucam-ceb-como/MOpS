@@ -83,7 +83,7 @@ namespace Sweep {
 			//First, basic combined sites with R6s. FE3:FE with 2 FEs on both sides. FE_HACA: FE with non FE's on each side
 			FE2 = 1001, FE3 = 1002, FE_HACA = 1003, OFE2 = 1004, BFE2 = 1005,
 			//Basic combined sites that are hindered
-			NFE2 = -1001,
+			NFE2 = -1001, NFE3 = -1002,
 			//Combined sites with only R5
 			//None at the moment, reserve 2000's for this
 			//Combined sites with R5 and R6s

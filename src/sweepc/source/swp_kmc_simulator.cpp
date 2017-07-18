@@ -196,7 +196,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
         t_next = m_t+t_step;
         if(t_next < t_max && t_step < t_step_max) {
 
-			//if (PAH_ID == 53175){
+			//if (PAH_ID == 205801){
 			//	std::list<Site> tester = pah->GetSiteList();
 			//	cout << "Check start " << PAH_ID << endl << t_next << endl;
 			//	cout << "Rings = "<< pah->numofRings() << endl;;
@@ -227,7 +227,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				t_next = t_max;
 			}
 
-			//if (PAH_ID == 53175){
+			//if (PAH_ID == 205801){
 			//	std::list<Site> tester = pah->GetSiteList();
 			//	cout << "Check end " << PAH_ID << endl << t_next << endl;
 			//	cout << "Rings = " << pah->numofRings() << endl;;
