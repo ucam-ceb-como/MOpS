@@ -314,8 +314,10 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 
         double truek = CoagKernel(*sp1, *sp2, sys);
         double ceff=0;
-        if (majk<truek)
-            std::cout << "maj< true"<< std::endl;
+		if (majk < truek){
+			std::cout << "maj< true" << std::endl;
+			std::cout << majk <<" " << truek << std::endl;
+		}
 
 		//added by ms785 to include the collision efficiency in the calculation of the rate
 		if (sys.ParticleModel()->AggModel()==AggModels::PAH_KMC_ID)
