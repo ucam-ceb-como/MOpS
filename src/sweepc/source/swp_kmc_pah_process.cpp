@@ -60,6 +60,7 @@ using namespace std;
 
 static std::vector<kmcSiteType> PHsites = vectPHsites();
 static std::vector<kmcSiteType> ZZOxsites = vectZZOxsites();
+static std::vector<kmcSiteType> ACgrowsites = vectACgrowsites();
 static std::vector<kmcSiteType> Mergesites = vectMergesites();
 
 int PAHID = 0;
@@ -129,6 +130,12 @@ unsigned int PAHProcess::getSiteCount(const kmcSiteType& st) const {
 		unsigned int sum = 0;
 		for (int i = 0; i != (int)ZZOxsites.size(); i++) {
 			sum += (unsigned int)m_pah->m_siteMap[ZZOxsites[i]].size();
+		}
+		return sum;
+	}if (st == ACgrow) {
+		unsigned int sum = 0;
+		for (int i = 0; i != (int)ACgrowsites.size(); i++) {
+			sum += (unsigned int)m_pah->m_siteMap[ACgrowsites[i]].size();
 		}
 		return sum;
 	}
@@ -553,8 +560,11 @@ Spointer PAHProcess::chooseRandomSite(kmcSiteType st, rng_type &rng) {
         return moveIt(m_pah->m_siteList.begin(), siteIndexGenerator());
     } else if(st == benz) { //to choose sites for phenyl addition
         return chooseRandomSite(PHsites, rng);
-	}else if (st == ZZox) { //to choose sites for phenyl addition
+	}else if (st == ZZox) { //to choose sites for ZZ oxidation
 		return chooseRandomSite(ZZOxsites, rng);
+	}
+	else if (st == ACgrow) { //to choose sites for AC growth
+		return chooseRandomSite(ACgrowsites, rng);
     } else {
         //cout << "~~Choosing from " << m_pah->m_siteMap[st].size() << " sites...\n";
         // choose site index from site vector associated with site type st
@@ -2950,7 +2960,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	JOBID = id;
 	//cout << "Doing process " << id << " on " <<PAH_ID << endl;
 
-	//if (PAH_ID == 205801){
+	//if (PAH_ID == 677){
 	//	cout << "ID is: " << id << endl;
 	//}
 
@@ -3034,10 +3044,6 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
             proc_C6R_BY5_FE3(site_perf, rng); break;
         case 32:
             proc_C6R_RAC_FE3(site_perf, rng); break;
-		case 33:
-			proc_G6R_ACBR(site_perf); break;
-		case 34:
-			proc_G6R_ACBL(site_perf); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -3165,110 +3171,256 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
     Spointer S1 = moveIt(stt, -1); 
     Spointer S2 = moveIt(stt, 1);
     // Update Site and neighbours
+	Spointer st1;
+	//If this growth happened at an ACBL or ACBR, update the corresponding opposite side of the bridge
+	kmcSiteType type = stt->type;
+	if (type == ACBL || type == ACBR){
+		bool found = false;
+		int count = 1;
+		kmcSiteType st1type;
+		for (st1 = moveIt(stt, 1); st1 != m_pah->m_siteList.end(); st1++){
+			st1type = st1->type;
+			if (type == ACBL){
+				switch (st1type){
+				case ACBL:
+				case BY5BL:
+				case BY6BL:
+					count++;
+					break;
+				case BY6BL2:
+					count+=2;
+					break;
+				case BY6BLR:
+					//Special case, must deal with it
+					break;
+				case ACBR:
+				case BY5BR:
+				case BY6BR:
+					count--;
+					break;
+				case BY6BR2:
+					count -= 2;
+					break;
+				case BY6BRL:
+					//Special case, must deal with it
+					break;
+				case NACBL:
+				case NBY5BL:
+				case NBY6BL:
+					count++;
+					break;
+				case NBY6BL2:
+					count += 2;
+					break;
+				case NBY6BLR:
+					//Special case, must deal with it
+					break;
+				case NACBR:
+				case NBY5BR:
+				case NBY6BR:
+					count--;
+					break;
+				case NBY6BR2:
+					count -= 2;
+					break;
+				case NBY6BRL:
+					//Special case, must deal with it
+					break;
+				}
+			}
+			else{
+				switch (st1type){
+				case ACBL:
+				case BY5BL:
+				case BY6BL:
+					count--;
+					break;
+				case BY6BL2:
+					count -= 2;
+					break;
+				case BY6BLR:
+					//Special case, must deal with it
+					break;
+				case ACBR:
+				case BY5BR:
+				case BY6BR:
+					count++;
+					break;
+				case BY6BR2:
+					count += 2;
+					break;
+				case BY6BRL:
+					//Special case, must deal with it
+					break;
+				case NACBL:
+				case NBY5BL:
+				case NBY6BL:
+					count--;
+					break;
+				case NBY6BL2:
+					count -= 2;
+					break;
+				case NBY6BLR:
+					//Special case, must deal with it
+					break;
+				case NACBR:
+				case NBY5BR:
+				case NBY6BR:
+					count++;
+					break;
+				case NBY6BR2:
+					count += 2;
+					break;
+				case NBY6BRL:
+					//Special case, must deal with it
+					break;
+				}
+			}
+			//Found the matching bridge site
+			if (count == 0){
+				int inttype = (int)st1type;
+				kmcSiteType newtype;
+				if (inttype > 70 && inttype < 74){
+					newtype = (kmcSiteType) (abs((int)st1type) - 68); //NICK TO DO Consider changing 68 to something general
+				}
+				else if (inttype > 74 && inttype < 78){
+					newtype = (kmcSiteType) (abs((int)st1type) - 72);
+				}
+				convSiteType(st1, newtype);
+				found = true;
+				break;
+			}
+		}
+		if (!found){
+			for (st1 = m_pah->m_siteList.begin(); st1 != stt; st1++){
+				st1type = st1->type;
+				if (type == ACBL){
+					switch (st1type){
+					case ACBL:
+					case BY5BL:
+					case BY6BL:
+						count++;
+						break;
+					case BY6BL2:
+						count += 2;
+						break;
+					case BY6BLR:
+						//Special case, must deal with it
+						break;
+					case ACBR:
+					case BY5BR:
+					case BY6BR:
+						count--;
+						break;
+					case BY6BR2:
+						count -= 2;
+						break;
+					case BY6BRL:
+						//Special case, must deal with it
+						break;
+					case NACBL:
+					case NBY5BL:
+					case NBY6BL:
+						count++;
+						break;
+					case NBY6BL2:
+						count += 2;
+						break;
+					case NBY6BLR:
+						//Special case, must deal with it
+						break;
+					case NACBR:
+					case NBY5BR:
+					case NBY6BR:
+						count--;
+						break;
+					case NBY6BR2:
+						count -= 2;
+						break;
+					case NBY6BRL:
+						//Special case, must deal with it
+						break;
+					}
+				}
+				else{
+					switch (st1type){
+					case ACBL:
+					case BY5BL:
+					case BY6BL:
+						count--;
+						break;
+					case BY6BL2:
+						count -= 2;
+						break;
+					case BY6BLR:
+						//Special case, must deal with it
+						break;
+					case ACBR:
+					case BY5BR:
+					case BY6BR:
+						count++;
+						break;
+					case BY6BR2:
+						count += 2;
+						break;
+					case BY6BRL:
+						//Special case, must deal with it
+						break;
+					case NACBL:
+					case NBY5BL:
+					case NBY6BL:
+						count--;
+						break;
+					case NBY6BL2:
+						count -= 2;
+						break;
+					case NBY6BLR:
+						//Special case, must deal with it
+						break;
+					case NACBR:
+					case NBY5BR:
+					case NBY6BR:
+						count++;
+						break;
+					case NBY6BR2:
+						count += 2;
+						break;
+					case NBY6BRL:
+						//Special case, must deal with it
+						break;
+					}
+				}
+				//Found the matching bridge site
+				if (count == 0){
+					int inttype = abs((int)st1type);
+					kmcSiteType newtype;
+					if (inttype > 70 && inttype < 74){
+						newtype = (kmcSiteType) (((int)st1type) - 68); //NICK TO DO Consider changing 68 to something general
+					}
+					else if (inttype > 74 && inttype < 78){
+						newtype = (kmcSiteType) (((int)st1type) - 72);
+					}
+					else{
+						cout << "Site type not in bridge conversion list" << endl;
+						cout << inttype;
+						assert(false);
+						abort();
+					}
+					convSiteType(st1, newtype);
+					found = true;
+					break;
+				}
+			}
+		}
+		if (!found){
+			cout << "ERROR - Matching site not found" << endl;
+			cout << PAHID;
+			assert(false);
+			abort();
+		}
+	}
 	convSiteType(stt, FE);
 
-	//if ((S1t == eRZZ && S3t == eR5 && S5t == eRFE) || (S2t == eRZZ && S4t == eR5 && S6t == eRFE)){
-	//	//// Convert to a BY6 site
-	//	bool b4 = true;
-	//	Spointer Srem1, Srem2, Srem3;
-	//	if (S1t == eRZZ){
-	//		Srem1 = moveIt(stt, -1);
-	//		Srem2 = moveIt(stt, -2);
-	//		Srem3 = moveIt(stt, -3);
-	//	}
-	//	else{
-	//		Srem1 = moveIt(stt, 1);
-	//		Srem2 = moveIt(stt, 2);
-	//		Srem3 = moveIt(stt, 3);
-	//		b4 = false;
-	//	}
-	//	//// Remove sites and combine the neighbouring sites into BY6. 
-	//	//// First remove all three from site map. Elementary site types first..
-	//	delSiteFromMap(Srem1->type, Srem1);
-	//	delSiteFromMap(Srem2->type, Srem2);
-	//	delSiteFromMap(Srem3->type, Srem3);
-	//	//// then for combined site types..
-	//	delSiteFromMap(Srem1->comb, Srem1);
-	//	delSiteFromMap(Srem2->comb, Srem2);
-	//	delSiteFromMap(Srem3->comb, Srem3);
-	//	//// remove the sites
-	//	removeSite(Srem1);
-	//	removeSite(Srem2);
-	//	removeSite(Srem3);
-
-	//	////add in BY6 site
-	//	if (b4){
-	//		addSite(BY6, stt);
-	//		updateSites(S2, 1);
-	//	}
-	//	else{
-	//		addSite(BY6, moveIt(stt, 1));
-	//		updateSites(S1, 1);
-	//	}
-
-	//}
-	//else if ((S1t == eRFE && S3t == eR5 && S5t == eRZZ) || (S2t == eRFE && S4t == eR5 && S6t == eRZZ)){
-	//	//// Convert to a BY6 site
-	//	bool b4 = true;
-	//	Spointer Srem1, Srem2, Srem3;
-	//	if (S1t == eRFE){
-	//		Srem1 = moveIt(stt, -1);
-	//		Srem2 = moveIt(stt, -2);
-	//		Srem3 = moveIt(stt, -3);
-	//	}
-	//	else{
-	//		Srem1 = moveIt(stt, 1);
-	//		Srem2 = moveIt(stt, 2);
-	//		Srem3 = moveIt(stt, 3);
-	//		b4 = false;
-	//	}
-
-	//	//// Remove sites and combine the neighbouring sites into BY6. 
-	//	//// First remove all three from site map. Elementary site types first..
-	//	delSiteFromMap(Srem1->type, Srem1);
-	//	delSiteFromMap(Srem2->type, Srem2);
-	//	delSiteFromMap(Srem3->type, Srem3);
-	//	//// then for combined site types..
-	//	delSiteFromMap(Srem1->comb, Srem1);
-	//	delSiteFromMap(Srem2->comb, Srem2);
-	//	delSiteFromMap(Srem3->comb, Srem3);
-	//	//// remove the sites
-	//	removeSite(Srem1);
-	//	removeSite(Srem2);
-	//	removeSite(Srem3);
-
-	//	////add in BY6 site
-	//	if (b4){
-	//		addSite(BY6, stt);
-	//		updateSites(S2, 1);
-	//	}
-	//	else{
-	//		addSite(BY6, moveIt(stt, 1));
-	//		updateSites(S1, 1);
-	//	}
-
-	//}
-	//else {
-	//	if (S1->type == ACR5){
-	//		convSiteType(S1, eRZZ);
-	//		addSite(eRFE, S1);
-	//		addSite(eR5, S1);
-	//	}
-	//	else {
-	//		updateSites(S1, 1);
-	//	}
-
-	//	if (S2->type == ACR5){
-	//		Spointer S3 = moveIt(S2, 1);
-	//		convSiteType(S2, eRZZ);
-	//		addSite(eR5, S3);
-	//		addSite(eRFE, S3);
-
-	//	}
-	//	else {
-	//		updateSites(S2, 1);
-	//	}
-	//}
 	updateSites(S1, 1);
 	updateSites(S2, 1);
     // Update combined site for Site and neighbours
@@ -4892,20 +5044,6 @@ void PAHProcess::proc_C6R_RAC_FE3violi(Spointer& stt, rng_type &rng) {
 // ************************************************************
 void PAHProcess::proc_M6R_RAC_FE3(Spointer& stt, rng_type &rng) {
     proc_M6R_BY5_FE3(stt, rng);
-}
-
-// ************************************************************
-// ID33 - R6 growth on AC
-// ************************************************************
-void PAHProcess::proc_G6R_ACBR(Spointer& stt) {
-	proc_G6R_AC(stt);
-}
-
-// ************************************************************
-// ID34 - R6 growth on AC
-// ************************************************************
-void PAHProcess::proc_G6R_ACBL(Spointer& stt) {
-	proc_G6R_AC(stt);
 }
 
 size_t PAHProcess::SiteListSize() const {

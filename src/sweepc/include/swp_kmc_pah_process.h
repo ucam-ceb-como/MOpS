@@ -177,8 +177,6 @@ public:
     void proc_C6R_RAC_FE3(Spointer& stt, rng_type &rng);        //!< ID30.
     void proc_C6R_RAC_FE3violi(Spointer& stt, rng_type &rng);   //!< ID31.
     void proc_M6R_RAC_FE3(Spointer& stt, rng_type &rng);        //!< ID32.
-	void proc_G6R_ACBR(Spointer& stt);                          //!< ID33.
-	void proc_G6R_ACBL(Spointer& stt);                          //!< ID34.
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts

@@ -98,7 +98,7 @@ namespace Sweep {
             any=100000,
 			//For processes that can act on multiple sites
             // Benzene addition sites:
-			benz = 100001, merge = 100002, ZZox = 100003
+			benz = 100001, merge = 100002, ZZox = 100003, ACgrow = 100004
         };
         
         //! Enumeration of processes on data structure available.
@@ -224,6 +224,7 @@ namespace Sweep {
                 case benz: return "benz";
 				case merge: return "merge";
 				case ZZox: return "ZZox";
+				case ACgrow: return "ACgrow";
             }
             return "ERROR";
         }
@@ -393,6 +394,15 @@ namespace Sweep {
 			std::vector<kmcSiteType> temp;
 			temp.push_back(FE2);
 			temp.push_back(OFE2);
+			return temp;
+		}
+
+		//! Get a vector of all site types for AC growth
+		std::vector<kmcSiteType> inline vectACgrowsites() {
+			std::vector<kmcSiteType> temp;
+			temp.push_back(AC);
+			temp.push_back(ACBL);
+			temp.push_back(ACBR);
 			return temp;
 		}
 
