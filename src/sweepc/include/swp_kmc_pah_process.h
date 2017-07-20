@@ -280,6 +280,11 @@ private:
 	double AngleBridge(kmcSiteType stt, kmcSiteType type);
 	double Length(kmcSiteType stt);
     
+	//! Finds the partner to a bridge site and converts it to a non-bridge site
+	Spointer convBridgePartner(Spointer& stt);
+
+	int addtoBridgeCount(kmcSiteType type, double mult);
+
     // PAH data structure to perform processes on
    PAHStructure* m_pah;
 

@@ -223,7 +223,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0);
 
 	m_dbleslack = (unsigned int)pow(2.0, (int)((m_levels - 5)>0 ? m_levels - 5 : 0));
-	m_dbleslack = 800;
+	m_dbleslack = 192;
 	m_dblelimit = m_halfcap - m_dbleslack;
 }
 

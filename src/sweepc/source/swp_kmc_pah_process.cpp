@@ -870,6 +870,212 @@ void PAHProcess::convSiteType(Spointer& st, kmcSiteType t) {
     //st->C1 = Carb1;
     //st->C2 = Carb2;
 }
+//! Finds the partner bridge site and converts it to a non-bridge site
+Spointer PAHProcess::convBridgePartner(Spointer& stt) {
+	Spointer st1;
+	kmcSiteType type = stt->type;
+	bool found = false;
+	int count;
+	double mult;
+	switch (type){
+	case BY6BLR:
+	case NBY6BLR:
+		count = 0;
+		mult = 1.0;
+		break;
+	case BY6BRL:
+	case NBY6BRL:
+		count = 0;
+		mult = -1.0;
+		break;
+	case BY6BL2:
+	case NBY6BL2:
+		count = 2;
+		mult = 1.0;
+		break;
+	case BY6BR2:
+	case NBY6BR2:
+		count = 2;
+		mult = -1.0;
+		break;
+	case ACBL:
+	case BY5BL:
+	case BY6BL:
+	case NACBL:
+	case NBY5BL:
+	case NBY6BL:
+		count = 1;
+		mult = 1.0;
+		break;
+	case ACBR:
+	case BY5BR:
+	case BY6BR:
+	case NACBR:
+	case NBY5BR:
+	case NBY6BR:
+		count = 1;
+		mult = -1.0;
+		break;
+	default:
+		cout << "Unrecognized bridge type for stt in convBridgePartner" << endl;
+		cout << (int)type;
+		assert(false);
+		abort();
+	}
+	kmcSiteType st1type;
+	for (st1 = moveIt(stt, 1); st1 != m_pah->m_siteList.end(); st1++){
+		st1type = st1->type;
+		count += addtoBridgeCount(st1type, mult);
+
+		//Found the matching bridge site
+		if (count == 0){
+			int inttype = abs((int)st1type);
+			kmcSiteType newtype;
+			if (inttype > 70 && inttype < 74){
+				newtype = (kmcSiteType)(inttype - 68); //NICK TO DO Consider changing 68 to something general
+			}
+			else if (inttype > 74 && inttype < 78){
+				newtype = (kmcSiteType)(inttype - 72);
+			}
+			else if (inttype == 74 || inttype == 78){
+				newtype = (kmcSiteType)(inttype - 1);
+			}
+			else{
+				cout << "Site type not in bridge conversion list" << endl;
+				cout << inttype;
+				assert(false);
+				abort();
+			}
+			convSiteType(st1, newtype);
+			found = true;
+			break;
+		}
+		else if (count == -1){
+			if (type == ACBL && (st1type == BY6BR2 || st1type == NBY6BR2)){
+				convSiteType(st1, BY6BR);
+			}
+			else if (type == ACBR && (st1type == BY6BL2 || st1type == NBY6BL2)){
+				convSiteType(st1, BY6BL);
+			}
+			else{
+				cout << "Count is negative 1, but corresponding site type does not match" << endl;
+				cout << (int)st1type;
+				assert(false);
+				abort();
+			}
+			found = true;
+			break;
+		}
+		else if (count == 1 && type == ACBL && (st1type == BY6BRL || st1type == NBY6BRL)){
+			convSiteType(st1, BY6BL);
+			found = true;
+			break;
+		}
+		else if (count == 1 && type == ACBR && (st1type == BY6BLR || st1type == NBY6BLR)){
+			convSiteType(st1, BY6BR);
+			found = true;
+			break;
+		}
+	}
+	if (!found){
+		for (st1 = m_pah->m_siteList.begin(); st1 != stt; st1++){
+			st1type = st1->type;
+			count += addtoBridgeCount(st1type, mult);
+			
+			//Found the matching bridge site
+			if (count == 0){
+				int inttype = abs((int)st1type);
+				kmcSiteType newtype;
+				if (inttype > 70 && inttype < 74){
+					newtype = (kmcSiteType)(inttype - 68); //NICK TO DO Consider changing 68 to something general
+				}
+				else if (inttype > 74 && inttype < 78){
+					newtype = (kmcSiteType)(inttype - 72);
+				}
+				else if (inttype == 74 || inttype == 78){
+					newtype = (kmcSiteType)(inttype - 1);
+				}
+				else{
+					cout << "Site type not in bridge conversion list" << endl;
+					cout << inttype;
+					assert(false);
+					abort();
+				}
+				convSiteType(st1, newtype);
+				found = true;
+				break;
+			}
+			else if (count == -1){
+				if (type == ACBL && (st1type == BY6BR2 || st1type == NBY6BR2)){
+					convSiteType(st1, BY6BR);
+				}
+				else if (type == ACBR && (st1type == BY6BL2 || st1type == NBY6BL2)){
+					convSiteType(st1, BY6BL);
+				}
+				else{
+					cout << "Count is negative 1, but corresponding site type does not match" << endl;
+					cout << (int)st1type;
+					assert(false);
+					abort();
+				}
+				found = true;
+				break;
+			}
+			else if (count == 1 && type == ACBL && (st1type == BY6BRL || st1type == NBY6BRL)){
+				convSiteType(st1, BY6BL);
+				found = true;
+				break;
+			}
+			else if (count == 1 && type == ACBR && (st1type == BY6BLR || st1type == NBY6BLR)){
+				convSiteType(st1, BY6BR);
+				found = true;
+				break;
+			}
+		}
+	}
+	if (!found){
+		cout << "ERROR - Matching site not found" << endl;
+		cout << PAHID;
+		assert(false);
+		abort();
+	}
+}
+
+int PAHProcess::addtoBridgeCount(kmcSiteType type, double mult){
+	switch (type){
+	case ACBL:
+	case BY5BL:
+	case BY6BL:
+	case NACBL:
+	case NBY5BL:
+	case NBY6BL:
+		return 1 * mult;
+	case BY6BL2:
+	case NBY6BL2:
+		return 2 * mult;
+	case BY6BLR:
+	case NBY6BLR:
+		//Special case, must deal with it
+		return 0;
+	case ACBR:
+	case BY5BR:
+	case BY6BR:
+	case NACBR:
+	case NBY5BR:
+	case NBY6BR:
+		return -1 * mult;
+	case BY6BR2:
+	case NBY6BR2:
+		return -2 * mult;
+	case BY6BRL:
+	case NBY6BRL:
+		//Special case, must deal with it
+		return 0;
+	default:
+		return 0;
+	}
+
+}
 //! Remove site
 void PAHProcess::removeSite(Spointer& stt) {
     //remove site from siteMap for both elementary and combined site types
@@ -3176,320 +3382,7 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 	Spointer st1;
 	bool found = false;
 	if (type == ACBL || type == ACBR){
-		int count = 1;
-		kmcSiteType st1type;
-		for (st1 = moveIt(stt, 1); st1 != m_pah->m_siteList.end(); st1++){
-			st1type = st1->type;
-			if (type == ACBL){
-				switch (st1type){
-				case ACBL:
-				case BY5BL:
-				case BY6BL:
-					count++;
-					break;
-				case BY6BL2:
-					count+=2;
-					break;
-				case BY6BLR:
-					//Special case, must deal with it
-					break;
-				case ACBR:
-				case BY5BR:
-				case BY6BR:
-					count--;
-					break;
-				case BY6BR2:
-					count -= 2;
-					break;
-				case BY6BRL:
-					//Special case, must deal with it
-					break;
-				case NACBL:
-				case NBY5BL:
-				case NBY6BL:
-					count++;
-					break;
-				case NBY6BL2:
-					count += 2;
-					break;
-				case NBY6BLR:
-					//Special case, must deal with it
-					break;
-				case NACBR:
-				case NBY5BR:
-				case NBY6BR:
-					count--;
-					break;
-				case NBY6BR2:
-					count -= 2;
-					break;
-				case NBY6BRL:
-					//Special case, must deal with it
-					break;
-				default:
-					break;
-				}
-			}
-			else{
-				switch (st1type){
-				case ACBL:
-				case BY5BL:
-				case BY6BL:
-					count--;
-					break;
-				case BY6BL2:
-					count -= 2;
-					break;
-				case BY6BLR:
-					//Special case, must deal with it
-					break;
-				case ACBR:
-				case BY5BR:
-				case BY6BR:
-					count++;
-					break;
-				case BY6BR2:
-					count += 2;
-					break;
-				case BY6BRL:
-					//Special case, must deal with it
-					break;
-				case NACBL:
-				case NBY5BL:
-				case NBY6BL:
-					count--;
-					break;
-				case NBY6BL2:
-					count -= 2;
-					break;
-				case NBY6BLR:
-					//Special case, must deal with it
-					break;
-				case NACBR:
-				case NBY5BR:
-				case NBY6BR:
-					count++;
-					break;
-				case NBY6BR2:
-					count += 2;
-					break;
-				case NBY6BRL:
-					//Special case, must deal with it
-					break;
-				default:
-					break;
-				}
-			}
-			//Found the matching bridge site
-			if (count == 0){
-				int inttype = abs((int)st1type);
-				kmcSiteType newtype;
-				if (inttype > 70 && inttype < 74){
-					newtype = (kmcSiteType) (inttype - 68); //NICK TO DO Consider changing 68 to something general
-				}
-				else if (inttype > 74 && inttype < 78){
-					newtype = (kmcSiteType)(inttype - 72);
-				}
-				else if (inttype == 74 || inttype == 78){
-					newtype = (kmcSiteType)(inttype - 1);
-				}
-				else{
-					cout << "Site type not in bridge conversion list" << endl;
-					cout << inttype;
-					assert(false);
-					abort();
-				}
-				convSiteType(st1, newtype);
-				found = true;
-				break;
-			}
-			else if (count == -1){
-				if (type == ACBL && (st1type == BY6BR2 || st1type == NBY6BR2)){
-					convSiteType(st1, BY6BR);
-				}
-				else if (type == ACBR && (st1type == BY6BL2 || st1type == NBY6BL2)){
-					convSiteType(st1, BY6BL);
-				}
-				else{
-					cout << "Count is negative 1, but corresponding site type does not match" << endl;
-					cout << (int)st1type;
-					assert(false);
-					abort();
-				}
-				found = true;
-				break;
-			}
-			else if (count == 1 && type == ACBL && (st1type == BY6BRL || st1type == NBY6BRL)){
-				convSiteType(st1, BY6BL);
-				found = true;
-				break;
-			}
-			else if (count == 1 && type == ACBR && (st1type == BY6BLR || st1type == NBY6BLR)){
-				convSiteType(st1, BY6BR);
-				found = true;
-				break;
-			}
-		}
-		if (!found){
-			for (st1 = m_pah->m_siteList.begin(); st1 != stt; st1++){
-				st1type = st1->type;
-				if (type == ACBL){
-					switch (st1type){
-					case ACBL:
-					case BY5BL:
-					case BY6BL:
-						count++;
-						break;
-					case BY6BL2:
-						count += 2;
-						break;
-					case BY6BLR:
-						//Special case, must deal with it
-						break;
-					case ACBR:
-					case BY5BR:
-					case BY6BR:
-						count--;
-						break;
-					case BY6BR2:
-						count -= 2;
-						break;
-					case BY6BRL:
-						//Special case, must deal with it
-						break;
-					case NACBL:
-					case NBY5BL:
-					case NBY6BL:
-						count++;
-						break;
-					case NBY6BL2:
-						count += 2;
-						break;
-					case NBY6BLR:
-						//Special case, must deal with it
-						break;
-					case NACBR:
-					case NBY5BR:
-					case NBY6BR:
-						count--;
-						break;
-					case NBY6BR2:
-						count -= 2;
-						break;
-					case NBY6BRL:
-						//Special case, must deal with it
-						break;
-					default:
-						break;
-					}
-				}
-				else{
-					switch (st1type){
-					case ACBL:
-					case BY5BL:
-					case BY6BL:
-						count--;
-						break;
-					case BY6BL2:
-						count -= 2;
-						break;
-					case BY6BLR:
-						//Special case, must deal with it
-						break;
-					case ACBR:
-					case BY5BR:
-					case BY6BR:
-						count++;
-						break;
-					case BY6BR2:
-						count += 2;
-						break;
-					case BY6BRL:
-						//Special case, must deal with it
-						break;
-					case NACBL:
-					case NBY5BL:
-					case NBY6BL:
-						count--;
-						break;
-					case NBY6BL2:
-						count -= 2;
-						break;
-					case NBY6BLR:
-						//Special case, must deal with it
-						break;
-					case NACBR:
-					case NBY5BR:
-					case NBY6BR:
-						count++;
-						break;
-					case NBY6BR2:
-						count += 2;
-						break;
-					case NBY6BRL:
-						//Special case, must deal with it
-						break;
-					default:
-						break;
-					}
-				}
-				//Found the matching bridge site
-				if (count == 0){
-					int inttype = abs((int)st1type);
-					kmcSiteType newtype;
-					if (inttype > 70 && inttype < 74){
-						newtype = (kmcSiteType)(inttype - 68); //NICK TO DO Consider changing 68 to something general
-					}
-					else if (inttype > 74 && inttype < 78){
-						newtype = (kmcSiteType)(inttype - 72);
-					}
-					else if (inttype == 74 || inttype == 78){
-						newtype = (kmcSiteType)(inttype - 1);
-					}
-					else{
-						cout << "Site type not in bridge conversion list" << endl;
-						cout << inttype;
-						assert(false);
-						abort();
-					}
-					convSiteType(st1, newtype);
-					found = true;
-					break;
-				}
-				else if (count == -1){
-					if (type == ACBL && (st1type == BY6BR2 || st1type == NBY6BR2)){
-						convSiteType(st1, BY6BR);
-					}
-					else if (type == ACBR && (st1type == BY6BL2 || st1type == NBY6BL2)){
-						convSiteType(st1, BY6BL);
-					}
-					else{
-						cout << "Count is negative 1, but corresponding site type does not match" << endl;
-						cout << (int)st1type;
-						assert(false);
-						abort();
-					}
-					found = true;
-					break;
-				}
-				else if (count == 1 && type == ACBL && (st1type == BY6BRL || st1type == NBY6BRL)){
-					convSiteType(st1, BY6BL);
-					found = true;
-					break;
-				}
-				else if (count == 1 && type == ACBR && (st1type == BY6BLR || st1type == NBY6BLR)){
-					convSiteType(st1, BY6BR);
-					found = true;
-					break;
-				}
-			}
-		}
-		if (!found){
-			cout << "ERROR - Matching site not found" << endl;
-			cout << PAHID;
-			assert(false);
-			abort();
-		}
+		st1 = convBridgePartner(stt);
 	}
 	convSiteType(stt, FE);
 
