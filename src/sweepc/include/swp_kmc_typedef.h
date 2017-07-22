@@ -98,7 +98,7 @@ namespace Sweep {
             any=100000,
 			//For processes that can act on multiple sites
             // Benzene addition sites:
-			benz = 100001, merge = 100002, ZZox = 100003, ACgrow = 100004
+			benz = 100001, merge = 100002, ZZox = 100003, ACgrow = 100004, BY6close = 100005
         };
         
         //! Enumeration of processes on data structure available.
@@ -225,6 +225,7 @@ namespace Sweep {
 				case merge: return "merge";
 				case ZZox: return "ZZox";
 				case ACgrow: return "ACgrow";
+				case BY6close: return "BY6close";
             }
             return "ERROR";
         }
@@ -403,6 +404,19 @@ namespace Sweep {
 			temp.push_back(AC);
 			temp.push_back(ACBL);
 			temp.push_back(ACBR);
+			return temp;
+		}
+
+		//! Get a vector of all site types for BY6 closure
+		std::vector<kmcSiteType> inline vectBY6closesites() {
+			std::vector<kmcSiteType> temp;
+			temp.push_back(BY6);
+			//temp.push_back(BY6BL);
+			//temp.push_back(BY6BR);
+			//temp.push_back(BY6BL2);
+			//temp.push_back(BY6BR2);
+			//temp.push_back(BY6BLR);
+			//temp.push_back(BY6BRL);
 			return temp;
 		}
 

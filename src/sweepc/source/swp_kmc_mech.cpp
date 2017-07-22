@@ -466,7 +466,7 @@ void L6_BY6::initialise() {
     addReaction(rxnV3, Reaction(2.00e13,     0,     0, sp::H));     // 4 - r3f
     addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
 
-    m_sType = BY6; // sitetype
+    m_sType = BY6close; // sitetype
     m_name = "BY6 closure"; // name of process
     m_ID = 3;
 }
