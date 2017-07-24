@@ -1842,8 +1842,8 @@ void BinTreePrimary::SinterNode(
 				double sumterm_i = 0.0;
 				double sumterm_j = 0.0;
 				//get contribution from neighbours working up the binary tree
-				m_leftparticle->SumNeighbours(this, sumterm_i);
-				m_rightparticle->SumNeighbours(this, sumterm_j);
+				m_leftparticle->SumNeighbours(m_leftparticle, sumterm_i);
+				m_rightparticle->SumNeighbours(m_rightparticle, sumterm_j);
 				//subtract mutual contribution from sumterm
 				sumterm_i = max( sumterm_i - (x_i - r_i)*(x_i - r_i)/x_i , 0.0 );
 				sumterm_j = max( sumterm_j - (x_j - r_j)*(x_j - r_j)/x_j , 0.0 );
