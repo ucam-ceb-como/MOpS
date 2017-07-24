@@ -1285,15 +1285,6 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
         double volOld = m_vol;
 		double m_diam_old = m_diam;
 
-		//! Initialisation of variables to adjust the primary diameter if the
-        //! distance between the centres of primary particles is tracked.
-		double m_primary_diam_old = m_primarydiam;
-        double r_i = 0.0;					//!< Radius of primary particle i.
-		double dr_max = 0.0;				//!< Maximum change in primary radius during internal step
-		double sumterm = 0.0;				//!< Contribution from neighbours to the change in radius 
-		double delta_r_i = 0.0;				//!< Change in radius of i
-		double free_surface_term = 0.0;		//!< Contribution from neighbours to free surface area
-
         // Call to Primary to adjust the state space
         n = Primary::Adjust(dcomp, dvalues, rng, n);
 
@@ -1312,8 +1303,13 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 					
 					while (volOld <= m_vol){
 
-						r_i = m_primarydiam / 2.0;
-						dr_max = 0.1*r_i;			//Set maximum change in radius during internal step to 10% of primary radius
+						//! Initialisation of variables to adjust the primary diameter if the
+						//! distance between the centres of primary particles is tracked.
+						double r_i = m_primarydiam / 2.0;	//!< Radius of primary particle i.
+						double dr_max = 0.1*r_i;			//!< Maximum change in primary radius during internal step (10% of primary radius)
+						double sumterm = 0.0;				//!< Contribution from neighbours to the change in radius 
+						double delta_r_i = 0.0;				//!< Change in radius of i
+						double free_surface_term = 0.0;		//!< Contribution from neighbours to free surface area
 
 						//Get contribution from neighbours working up the binary tree
 						SumNeighbours(this, sumterm);
@@ -1370,18 +1366,21 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
     // Else this a non-leaf node (not a primary)
     else
     {
-        SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
-		//csl37-NOTE: this only picks the left or right particle of the root node 
+        return SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
+		
+		//Note (csl37): this only picks the left or right particle of the root node 
 		//and ignores the rest of the tree
-
+		/*
         // Generate random numbers
-      //        boost::bernoulli_distribution<> leftRightChooser;
+        boost::bernoulli_distribution<> leftRightChooser;
         // Select particle
-        //if(leftRightChooser(rng))
-      //  return m_leftparticle->Adjust(dcomp, dvalues, rng, n);
-      //else
-      //    return m_rightparticle->Adjust(dcomp, dvalues, rng, n);
+        if(leftRightChooser(rng))
+			return m_leftparticle->Adjust(dcomp, dvalues, rng, n);
+        else
+			return m_rightparticle->Adjust(dcomp, dvalues, rng, n);
+		*/
 
+		///////////////////////////////////////////////////////////
 		// csl37: new primary selection based on free surface area
 		// work down tree selecting left/right child based on sum of primary free surface areas under node
 		// generate random number, use bernoulli with p=free_surf(leftchild)/free_surf(this)
@@ -1393,7 +1392,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 			return m_rightchild->Adjust(dcomp, dvalues, rng, n);
 		}
 		*/
-		//csl37
+		///////////////////////////////////////////////////////////
     }
 
 	//csl37:
