@@ -1486,7 +1486,7 @@ void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, do
 		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
 		//update centre to centre separation
 		//making sure centre to centre separation remains smaller than the sum of the radii
-		m_parent->m_distance_centreToCentre = min(d_ij + r_i * delta_r / x_ij, r_i+r_j);
+		m_parent->m_distance_centreToCentre = min(d_ij + r_i * delta_r / x_ij, r_i+r_j+delta_r);
 
 		//calculate term for the free surface area 
 		d_ij = m_parent->m_distance_centreToCentre;
@@ -1536,7 +1536,7 @@ void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, do
 		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
 		//update centre to centre separation
 		//making sure centre to centre separation remains smaller than some of radii
-		m_parent->m_distance_centreToCentre = min(d_ij + r_i * delta_r / x_ij, r_i+r_j);
+		m_parent->m_distance_centreToCentre = min(d_ij + r_i * delta_r / x_ij, r_i+r_j+delta_r);
 
 		//calculate term for free surface area 
 		d_ij = m_parent->m_distance_centreToCentre;
