@@ -21,7 +21,7 @@ fi
 
 
 #Get rid of any results from earlier runs of this test
-rm regression3a*
+rm -f regression3a*
 
 
 # run mops on a very simple problem with weighted particles and additive kernel
@@ -34,8 +34,8 @@ echo "========================"
 # Put a negative values at the start so that the number of particles of size 1 comes at index 1
 # These numbers are for a seed of 123 in the Mersenne Twister random number generator
 # Analytic solution is 1427 888 622 459 349
-referenceValues=(-1 1443 876 622 446 345)
-simulatedValues=(-1 -1   -1  -1  -1  -1)
+referenceValues=(-1 1461 883 625 447 348)
+simulatedValues=(-1 -1 -1 -1 -1 -1)
 
 # Grep seems to require the file in unix format, even under cygwin
 if((windows==1))

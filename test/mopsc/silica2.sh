@@ -104,7 +104,7 @@ done
 
 # Clean files
 echo "Free-molecular passes."
-rm silica-fm*
+rm -f silica-fm*
 
 ######################################################################
 # 2: SLIP-FLOW (CONTINUUM) KERNEL
@@ -146,7 +146,7 @@ done
 
 # Clean files
 echo "Free-molecular passes."
-rm silica-sf*
+rm -f silica-sf*
 
 ######################################################################
 # FINISH UP

@@ -90,7 +90,7 @@ eval "sed '22s/.*/        <file>$ifile<\/file>/' $temp1" > $temp2
 eval "sed '35s/.*/    $timesteps/' $temp2" > $temp1
 eval "sed '62s/.*/    <filename>$filenames<\/filename>/' $temp1" > $temp2
 eval "sed '23,27d' $temp2" > "$temp1"
-rm $temp2
+rm -f $temp2
 
 # Run the calculation
 echo "Running second calculation..."
@@ -169,8 +169,8 @@ fi
 echo "All tests passed. :D"
 # Remove temporary files
 echo "Cleaning files.."
-rm 1-silica* 2-silica*
-rm $temp1
+rm -f 1-silica* 2-silica*
+rm -f $temp1
 
 cd ..
 

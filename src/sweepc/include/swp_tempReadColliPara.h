@@ -60,83 +60,82 @@ namespace Sweep
 void readColliPara(std::vector<CamXML::Element*>::iterator i, Sweep::Mechanism &mech)
 {
     CamXML::Element *el;
-	CamXML::Element *el0;
+    CamXML::Element *el0;
     CamXML::Element *el1;
-	CamXML::Element *el2;
+    CamXML::Element *el2;
 
-	el = (*i)->GetFirstChild("mode");
-	if (el!=NULL) {
-		std::string str = el->Data();
-		if (str == "NONE") {
-				// Get component's parameter for collision efficiency model
-			el0 = (*i)->GetFirstChild("ColliParaA");
-			el1 = (*i)->GetFirstChild("ColliParaB");
-			el2 = (*i)->GetFirstChild("ColliParaC");
-			if (el0!=NULL && el1!=NULL && el2!=NULL) {
-				std::string str0 = el0->Data();
-				std::string str1 = el1->Data();
-				std::string str2 = el2->Data();
-				if (str0 != "" && str1 != "" && str2 != "") { 
-					mech.SetCollisionEffPara(Strings::cdble(str0), Strings::cdble(str1), Strings::cdble(str2));
-				} else {
-					// collision parameter contains no data.
-					std::string msg("one of collision parameter is left to be empty (Sweep::readColliPara). ");
+    el = (*i)->GetFirstChild("mode");
+    if (el!=NULL) {
+        std::string str = el->Data();
+        if (str == "NONE") {
+                //! Get component's parameter for collision efficiency model.
+            el0 = (*i)->GetFirstChild("ColliParaA");
+            el1 = (*i)->GetFirstChild("ColliParaB");
+            el2 = (*i)->GetFirstChild("ColliParaC");
+            if (el0!=NULL && el1!=NULL && el2!=NULL) {
+                std::string str0 = el0->Data();
+                std::string str1 = el1->Data();
+                std::string str2 = el2->Data();
+                if (str0 != "" && str1 != "" && str2 != "") { 
+                    mech.SetCollisionEffPara(Strings::cdble(str0), Strings::cdble(str1), Strings::cdble(str2));
+                } else {
+                    //! Collision parameter contains no data.
+                    std::string msg("one of collision parameter is left to be empty (Sweep::readColliPara).");
 
-					throw std::runtime_error(msg);
-				}
-			} else  {
-				std::string msg("one of collision parameter (ColliParaA, ColliParaB,ColliParaC) is missing (Sweep::readColliPara). ");
+                    throw std::runtime_error(msg);
+                }
+            } else  {
+                std::string msg("one of collision parameter (ColliParaA, ColliParaB,ColliParaC) is missing (Sweep::readColliPara).");
 
-				throw std::runtime_error(msg);
-			}
-		}
+                throw std::runtime_error(msg);
+            }
+        }
 
-		else if (str == "MAX" || str == "MIN" || str == "COMBINED" || str == "REDUCED") {
-			mech.SetMode(str);
-			el0 = (*i)->GetFirstChild("threshold");
-			if (el0!=NULL) {
-			str = el0->Data();
-				if (str != "") {
-					mech.SetThreshold(Strings::cdble(str)); // num of C
-				} else {
-					// threshold contains no data.
-					std::string msg("threshold contains no data (Sweep::readColliPara). ");
+        else if (str == "MAX" || str == "MIN" || str == "COMBINED" || str == "REDUCED") {
+            mech.SetMode(str);
+            el0 = (*i)->GetFirstChild("inceptionThreshold");
+            if (el0!=NULL) {
+            str = el0->Data();
+                if (str != "") {
+                    mech.setInceptionThreshold(Strings::cdble(str)); //!< Number of 6-member rings.
+                } else {
+                    //! inceptionThreshold contains no data.
+                    std::string msg("threshold contains no data (Sweep::readColliPara).");
 
-					throw std::runtime_error(msg);
-				}
-			} else {
-			std::string msg("threshold is requried for collision efficiency model (Sweep::readColliPara). ");
+                    throw std::runtime_error(msg);
+                }
+            } else {
+            std::string msg("inceptionThreshold is required for collision efficiency model (Sweep::readColliPara).");
 
-			throw std::runtime_error(msg);
-			}
+            throw std::runtime_error(msg);
+            }
 
-            //! Model parameter.
-		    /*!
-             * The minimum of number of 6-member rings in a PAH for it to condense on a particle.
-             */
-			el1 = (*i)->GetFirstChild("thresholdCondensation");
-			if (el1!=NULL) {
-			str = el1->Data();
-				if (str != "") {
-					mech.SetThresholdCondensation(Strings::cdble(str));
-				} else {
-					std::string msg("thresholdCondensation contains no data (Sweep::readColliPara). ");
+            el0 = (*i)->GetFirstChild("condensationThreshold");
+            if (el0!=NULL) {
+            str = el0->Data();
+                if (str != "") {
+                    mech.setCondensationThreshold(Strings::cdble(str)); //!< Number of 6-member rings.
+                } else {
+                    //! condensationThreshold contains no data.
+                    std::string msg("condensationThreshold contains no data (Sweep::readColliPara).");
 
-					throw std::runtime_error(msg);
-				}
-			} else {
-			std::string msg("thresholdCondensation is required for collision efficiency model (Sweep::readColliPara). ");
-			throw std::runtime_error(msg);
-			}
-		}
-		else {
-			std::string msg(" This type of collision efficiency model is not supported ");
-			msg += str;
-			msg += " at this moment (Sweep::readColliPara).";
-			throw std::runtime_error(msg);
-		}
-	}
-	else  mech.SetCollisionEffPara(2, 1100, 5); // set to the default one abhjeet's choice, this is use to pass the regression tests 
+                    throw std::runtime_error(msg);
+                }
+            } else {
+            std::string msg("condensationThreshold is required for collision efficiency model (Sweep::readColliPara).");
+
+            throw std::runtime_error(msg);
+            }
+        }
+        else {
+            std::string msg(" This type of collision efficiency model is not supported ");
+            msg += str;
+            msg += " at this moment (Sweep::readColliPara).";
+
+            throw std::runtime_error(msg);
+        }
+    }
+    else  mech.SetCollisionEffPara(2, 1100, 5); //!< Set to the default one abhjeet's choice, this is use to pass the regression tests. 
 }
 };
 

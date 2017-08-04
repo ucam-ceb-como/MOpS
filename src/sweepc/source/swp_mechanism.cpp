@@ -74,7 +74,7 @@ Mechanism::Mechanism(void)
 // Copy constructor.
 Mechanism::Mechanism(const Mechanism &copy)
 {
-	*this = copy;
+    *this = copy;
 }
 
 // Default destructor.
@@ -834,14 +834,34 @@ void Mechanism::DoParticleFlow(
  * @param[in,out]   rng         Random number generator
  *
  */
-void Mechanism::MassTransfer(int i, double t, Cell &sys, rng_type &rng) const
+void Mechanism::MassTransfer(int i, double t, Cell &sys, rng_type &rng, const Geometry::LocalGeometry1d& local_geom) const
 {
+    if (AggModel() == AggModels::Spherical_ID) {
+        int j = sys.Particles().NumOfInceptedPAH(AggModel());
+
+        if (i > j) {
+            while (i > j) {
+                m_inceptions[0]->Perform(t, sys, local_geom, 0, rng);
+                j++;
+            }
+        } else if (i < j) {
+            while (i < j) {
+                int Pindex = sys.Particles().IndexOfInceptedPAH(AggModel());
+                if (Pindex<0)
+                    throw runtime_error("There are no InceptedPAH in the ensemble, and all the InceptedPAH molecules are consumed due to unknown reason (Mops, Sweep::Mechanism::MassTransfer).");
+                sys.Particles().Remove(Pindex);
+                std::cout << "j-i is " << j-i <<std::endl;
+                j--;
+            }
+        }
+    } else {
         // Test for now
         assert(sys.ParticleModel() != NULL);
         // This is an inception process.
         const Sweep::Processes::PAHInception *m_pahinception = NULL;
         m_pahinception = dynamic_cast<const Sweep::Processes::PAHInception*>(m_inceptions[0]);
         m_pahinception->AddInceptedPAH(i, t, sys, rng);
+    }
 }
 
 // LINEAR PROCESS DEFERMENT ALGORITHM.
@@ -980,7 +1000,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
 
             // Perform sintering update.
             if (m_sint_model.IsEnabled()) {
-			    sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+                sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
             }
         }
 

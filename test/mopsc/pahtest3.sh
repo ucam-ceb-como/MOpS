@@ -76,9 +76,9 @@ if((testresult!=0))
     exit $testresult
 fi
 
-rm pahtest3-restart-capacity*
-rm stats.csv
-rm Routput.txt
+rm -f pahtest3-restart-capacity*
+rm -f stats.csv
+rm -f Routput.txt
 # All tests passed
 echo "All tests passed"
 exit 0

@@ -72,7 +72,7 @@ class Particle;
 class ParticleModel
 {
 public:
-	// Constructors.
+    // Constructors.
     ParticleModel(void);                      // Default Constructor.
     ParticleModel(const ParticleModel &copy); // Copy-Constructor.
     ParticleModel(std::istream &in);          // Stream-reading constructor.
@@ -83,7 +83,7 @@ public:
     // Operators.
     ParticleModel &operator=(const ParticleModel &rhs);
 
-	// CHEMICAL SPECIES.
+    // CHEMICAL SPECIES.
 
     // Returns the chemical species vector.
     const Sprog::SpeciesPtrVector *const Species(void) const;
@@ -92,7 +92,7 @@ public:
     void SetSpecies(const Sprog::SpeciesPtrVector &sp);
 
 
-	// COMPONENT DEFINITIONS.
+    // COMPONENT DEFINITIONS.
 
     // Returns the number of components in the mechanism.
     unsigned int ComponentCount(void) const;
@@ -104,8 +104,8 @@ public:
     const Component *const Components(unsigned int i) const;
 
     // Returns the index of the component with the
-	// given name in the mechanism if found, otherwise
-	// return negative.
+    // given name in the mechanism if found, otherwise
+    // return negative.
     int ComponentIndex(const std::string &name) const;
 
     // Adds a component to the mechanism and returns the index
@@ -123,7 +123,7 @@ public:
     void SetComponents(const CompPtrVector &comps);
 
 
-	// TRACKER VARIABLES.
+    // TRACKER VARIABLES.
 
     // Returns the number of tracker variables.
     unsigned int TrackerCount(void) const;
@@ -135,7 +135,7 @@ public:
     const Tracker *const Trackers(unsigned int i) const;
 
     // Returns the index of the tracker variable with the given name
-	// on success, otherwise returns negative.
+    // on success, otherwise returns negative.
     int GetTrackerIndex(const std::string &name) const;
 
     // Adds a tracker variable to the mechanism.
@@ -261,6 +261,14 @@ public:
         A1, A2, A4, A5
     };
 
+    //! Postprocess based on the inception species concentration (XA4) or based
+    //! on the molar rate of production by chemical reaction of the inception
+    //! species per unit volume (wdotA4).
+    enum postprocessingType {
+        XA4,
+        wdotA4,
+    };
+
     //! Choose between drag models
     void SetDragType(const DragType& drag) {m_DragType = drag;}
 
@@ -273,23 +281,29 @@ public:
     //! Choose the thermophoresis model
     void setThermophoresisType(const ThermophoresisType& therm) {m_ThermophoresisType = therm;}
 
-	double ColliParaA() const;
+    double ColliParaA() const;
     double ColliParaB() const;
     double ColliParaC() const;
 
     void SetCollisionEffPara(double A, double B, double C);
 
-    //! Set the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to incept.
-    void SetThreshold(int target);
+    //! Set the minimum number of 6-member rings (excludes 5-member rings) a
+    //! PAH has to have to be able to incept.
+    void setInceptionThreshold(int target);
 
-    //! Set the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to condense onto a particle (2 or more PAHs).
-    void SetThresholdCondensation(int target);
+    //! Set the minimum number of 6-member rings (excludes 5-member rings) a
+    //! PAH has to have to be able to condense onto a particle (2 or more
+    //! PAHs).
+    void setCondensationThreshold(int target);
 
-    //! Return the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to incept.
-    double Threshold() const;
+    //! Return the minimum number of 6-member rings (excludes 5-member rings) a
+    //! PAH has to have to be able to incept.
+    int inceptionThreshold() const;
 
-    //! Return the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to condense onto a particle (2 or more PAHs).
-	int ThresholdCondensation() const;
+    //! Return the minimum number of 6-member rings (excludes 5-member rings) a
+    //! PAH has to have to be able to condense onto a particle (2 or more
+    //! PAHs).
+    int condensationThreshold() const;
 
     void SetMode(const std::string &mode);
     const std::string &Mode() const;
@@ -321,6 +335,16 @@ public:
 
     //! Returns the value of the free-molecular enhancement factor.
     const double GetEnhancementFM() const {return m_efm;}
+
+    //! Activates tracking of the distance between the centres of primary particles.
+    void setTrackPrimarySeparation(bool flag) {m_trackPrimarySeparation = flag;}
+
+    //! Return the flag used to indicate whether to track the distance between the centres of primary particles.
+    const bool getTrackPrimarySeparation() const {return m_trackPrimarySeparation;}
+
+    void setPostprocessingType(postprocessingType Type) {m_postprocessingType = Type;};
+
+    postprocessingType Postprocessing(void) const {return m_postprocessingType;};
 
     //! Index for temperature gradient in gas phase interface
     void setTGradIndex(const EnvironmentInterface::PropertyIndex index) {m_TemperatureGradientIndex = index;}
@@ -434,15 +458,18 @@ private:
 
     //! Thermphoresis expression to use
     ThermophoresisType m_ThermophoresisType;
-	
-	//! Three parameter for Abhjeet's collision efficiency model
+    
+    //! Three parameter for Abhjeet's collision efficiency model.
     double colliParaA, colliParaB, colliParaC;
 
-    //! Threshould for particular mode
-    double m_threshold;
+    //! The minimum number of 6-member rings (excludes 5-member rings) a PAH
+    //! has to have to be able to incept which depends on the particular mode
+    //! of inception.
+    int m_inceptionThreshold;
 
-    //! Set the minimum number of 6-member rings (excludes 5-member rings) a PAH has to have to be able to condense onto a particle (2 or more PAHs).
-    double m_thresholdCondensation;
+    //! The minimum number of 6-member rings (excludes 5-member rings) a PAH
+    //! has to have to be able to condense onto a particle (2 or more PAHs).
+    int m_condensationThreshold;
 
     //! Define three modes, collision efficience depends on the smaller, the bigger, the combined mass or reduced mass
     std::string m_mode;
@@ -462,6 +489,11 @@ private:
     //! Free molecular enhancement factor (coag., cond. & incep.)
     double m_efm;
 
+    //! Flag to indicate whether to track the distance between the centres of neighbouring primary particles.
+    bool m_trackPrimarySeparation;
+
+    postprocessingType m_postprocessingType;
+
     //! Index for temperature gradient
     EnvironmentInterface::PropertyIndex m_TemperatureGradientIndex;
 
@@ -479,7 +511,6 @@ private:
 
     //! Index for thermal conductivity of mixture
     EnvironmentInterface::PropertyIndex m_ThermalConductivityIndex;
-
 
 };
 } //namespace Sweep

@@ -41,7 +41,7 @@ use warnings;
 my @outputFiles = glob("pahtest1-test-pah-kmc-only*");
 if($#outputFiles > 0) {
   print "Cleaning up old output files\n";
-  system("rm " . '"' . join('" "', @outputFiles) . '"');
+  system("rm -f" . '"' . join('" "', @outputFiles) . '"');
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -82,30 +82,24 @@ while(<$momentFile>) {
   }
 }
 
-# Precalculated value: M0=2.26e18+-1e16, Fv=7.48e-9+-1e-7
+# Precalculated value: M0 = 1.35e+19, Fv = 2.09e-8
 
-# 20 repetitions using git 00706668ed... gives the following
+# 20 repetitions
 # mean values and 99% confidence interval widths
-# boost 1.42.0
-# m0 (2.370+-0.056)e18 m^-3
-# fv (7.519+-0.083)e-9 
-# repeating the calculation with boost 1.47.0 and git 58056fdbc...
-# (which should be the same as git 00706668ed as far as PAH-PP simulation
-# is concerned) gives
-# m0 (2.394+-0.068)e18 m^-3
-# fv (7.490+-0.102)e-9
+# m0 (1.41+-0.02)e+19 m^-3
+# fv (2.67+-0.36)e-8
 
 print "$m0, $m1\n";
-if(abs($m0 -  1.4e19) > 5e17) {
-  print "Simulated mean M0 was $m0, when  1.4e19m^-3 expected\n";
+if(abs($m0 -  1.41e19) > 7e17) {
+  print "Simulated mean M0 was $m0, when  1.41e19m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m1 - 2.57e-8) > 5e-10) {
-  print "Simulated mean Fv was $m1, when 2.57e-8 expected\n";
+if(abs($m1 - 2.67e-8) > 6e-9) {
+  print "Simulated mean Fv was $m1, when 2.67e-8 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
@@ -113,7 +107,7 @@ if(abs($m1 - 2.57e-8) > 5e-10) {
 }
 
 #print "All tests passed\n";
-system("rm pahtest1-test-pah-kmc-only*");
-system("rm DIMER.csv");
-system("rm MONOMER.csv");
+system("rm -f pahtest1-test-pah-kmc-only*");
+system("rm -f DIMER.csv");
+system("rm -f MONOMER.csv");
 exit 0;

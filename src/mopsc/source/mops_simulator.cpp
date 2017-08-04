@@ -2763,7 +2763,7 @@ void Simulator::postProcessXmer(const Mechanism &mech,
                                     //if (MassSpectraFrag())
                                     //pah->FindXmer(psl_xmer,k+1);
                                     if (MassSpectraFrag()&& k<=1 && temp[11]>3 && 1 == temp[15])
-                                        pah->Fragtest(psl_xmer, k, pmech.Mode(),pmech.Threshold());
+                                        pah->Fragtest(psl_xmer, k, pmech.Mode(),pmech.inceptionThreshold());
                                 }
                             }
                         }

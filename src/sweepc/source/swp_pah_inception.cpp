@@ -173,7 +173,7 @@ int PAHInception::AddInceptedPAH(const int i, const double t, Cell &sys,rng_type
     Particle *sp = NULL;
 
     // return current number of pyrene in the emsemble
-    int j = sys.Particles().NumOfInceptedPAH();
+    int j = sys.Particles().NumOfInceptedPAH(m_mech->AggModel());
 
     if (i>j)
     {
@@ -191,7 +191,7 @@ int PAHInception::AddInceptedPAH(const int i, const double t, Cell &sys,rng_type
     else if (i<j){
         while (i<j)
         {
-            int Pindex = sys.Particles().IndexOfInceptedPAH();
+            int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel());
             if (Pindex<0)
                 throw runtime_error("There are no InceptedPAH in the ensemble, and all the InceptedPAH molecules are consumed due to unknown reason(Mops, Sweep::PAHInception::Perform).");
             sys.Particles().Remove(Pindex);

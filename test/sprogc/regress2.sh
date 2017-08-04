@@ -146,7 +146,7 @@ for f in $chemFiles; do
 done
 
 # If we get here then all tests have passed.
-rm silicon*
+rm -f silicon*
 cd "$cwd"
 echo "All tests passed; your falloff reactions are working well! :D"
 exit 0
