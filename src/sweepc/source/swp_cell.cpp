@@ -110,6 +110,11 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_fixed_chem = rhs.m_fixed_chem;
         m_inflow     = rhs.m_inflow;
         m_outflow    = rhs.m_outflow;
+
+	// aab64 particle temperature
+	m_bulk_particle_temp = rhs.m_bulk_particle_temp;
+	// aab64 current process time step
+	m_proc_tau = rhs.m_proc_tau;
     }
 	assert(isValid());
     return *this;

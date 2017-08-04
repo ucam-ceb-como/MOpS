@@ -118,6 +118,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	m_cpu_mark = clock();
 
 	// Solve one whole step of population balance (Sweep).
+	r.Mixture()->SetCurrentProcessTau(h);
 	r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
 	Run(ts1, ts2 += dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
@@ -135,6 +136,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
 		m_cpu_mark = clock();
 		// Solve whole step of population balance (Sweep).
+		r.Mixture()->SetCurrentProcessTau(dt);
 		r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
 		Run(ts1, ts2 += dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 		m_swp_ctime += calcDeltaCT(m_cpu_mark);
@@ -170,12 +172,12 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	//Diagnostics file
     ofstream partProcFile, gasConcFile;
 	
-	// Diagnostic variables
-	double tmpSVin, tmpSVout;
-	unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout;
-	int process_iter;
-	std::vector<unsigned int> tmpPCin, tmpPCout, tmpFCin, tmpFCout;
-	Sprog::fvector tmpGPin, tmpGPout;
+    // Diagnostic variables
+    double tmpSVin, tmpSVout;
+    unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout, tmpInfin, tmpInfout, tmpOutfin, tmpOutfout;
+    int process_iter;
+    std::vector<unsigned int> tmpPCin, tmpPCout, tmpFCin, tmpFCout;
+    Sprog::fvector tmpGPin, tmpGPout;
 
     // Mark the time at the start of the step, in order to
     // calculate total computation time.
@@ -185,6 +187,11 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     double t2 = r.Time();
     double dt = (tstop - t2) / (double)nsteps; // Step size.
     double h  = dt * 0.5; // Half step size.
+
+    // aab64 Set initial particle temp to equal gas temp
+    if (t2 == 0.0) {
+	r.Mixture()->SetBulkParticleTemperature(r.Mixture()->GasPhase().Temperature());
+    }
 
     // Sweep time counters.
     double ts1 = r.Time();
@@ -210,11 +217,15 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
 		tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 		tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
+		tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
+		tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
 		r.Mixture()->GasPhase().GetConcs(tmpGPin);
 	}
 
     // Solve one whole step of population balance (Sweep).
-    r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+    r.Mixture()->SetCurrentProcessTau(h);
+    if (!r.IsConstV()) r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+    //r.Mixture()->AdjustSampleVolume(r.Mixture()->GasPhase().Density() * r.Mixture()->GasPhase().Temperature() / (rho * temp)); // aab64
     Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
     m_swp_ctime += calcDeltaCT(m_cpu_mark);
@@ -226,6 +237,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
 		tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 		tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
+		tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
+		tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
 		std::string rname(r.GetName());
 		std::string partfname, chemfname;
@@ -255,7 +268,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			process_iter < tmpPCin.size(); process_iter++) {
 			partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
 		}
-		partProcFile << "\n";
+		partProcFile << tmpInfout - tmpInfin << " , " << tmpOutfout - tmpOutfin << "\n";
 		partProcFile.close();
 		
 		// Output gasphase diagnostics to file
@@ -270,29 +283,33 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
 	for (int i=1; i<nsteps; ++i) {
 
-		// Diagnostics variables at start of split step
-		if (writediags) {
-			tmpSVin = r.Mixture()->SampleVolume();
-			tmpSPin = r.Mixture()->ParticleCount();
-			tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
-			tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
-			tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
-			r.Mixture()->GasPhase().GetConcs(tmpGPin);
-		}
+	    // Diagnostics variables at start of split step
+	    if (writediags) {
+		tmpSVin = r.Mixture()->SampleVolume();
+		tmpSPin = r.Mixture()->ParticleCount();
+		tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
+		tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+		tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
+		tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
+		tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
+		r.Mixture()->GasPhase().GetConcs(tmpGPin);
+	    }
 
-		m_cpu_mark = clock();
-        // Solve whole step of gas-phase chemistry.
-        rho = r.Mixture()->GasPhase().MassDensity();
-        m_ode.ResetSolver();
-        m_ode.Solve(r, t2+=dt);
-        r.SetTime(t2);
-        m_chemtime += calcDeltaCT(m_cpu_mark);
+	    m_cpu_mark = clock();
+            // Solve whole step of gas-phase chemistry.
+            rho = r.Mixture()->GasPhase().MassDensity();
+            m_ode.ResetSolver();
+            m_ode.Solve(r, t2+=dt);
+            r.SetTime(t2);
+            m_chemtime += calcDeltaCT(m_cpu_mark);
 
-        m_cpu_mark = clock();
-        // Solve whole step of population balance (Sweep).
-        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
-        m_swp_ctime += calcDeltaCT(m_cpu_mark);  
+            m_cpu_mark = clock();
+            // Solve whole step of population balance (Sweep).
+	    r.Mixture()->SetCurrentProcessTau(dt);
+	    if (!r.IsConstV()) r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+	    //r.Mixture()->AdjustSampleVolume(r.Mixture()->GasPhase().Density() * r.Mixture()->GasPhase().Temperature() / (rho*temp)); // aab64
+	    Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+            m_swp_ctime += calcDeltaCT(m_cpu_mark);  
 
 		if (writediags) {
 			// Diagnostic variables at end of split step
@@ -301,6 +318,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
 			tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 			tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
+			tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
+			tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
 			std::string rname(r.GetName());
 			std::string partfname, chemfname;
@@ -329,8 +348,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
 			    process_iter < tmpPCin.size(); process_iter++) {
 			    partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
-		    }
-			partProcFile << "\n";
+			}
+			partProcFile << tmpInfout - tmpInfin << " , " << tmpOutfout - tmpOutfin << "\n";
 			partProcFile.close();
 			
 		    // Output gasphase diagnostics to file

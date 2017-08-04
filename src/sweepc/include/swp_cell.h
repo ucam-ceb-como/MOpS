@@ -197,6 +197,20 @@ public:
         const Sweep::ParticleModel &model // Model used to define particles.
         );
 
+    // aab64 set particle temperature
+    void SetBulkParticleTemperature(double ptemp) { 
+        m_bulk_particle_temp = ptemp; 
+    }
+
+    // aab64 get particle temperature
+    double GetBulkParticleTemperature() const { return m_bulk_particle_temp; }
+
+    // aab64 Set the process time interval
+    void SetCurrentProcessTau(double tau) { m_proc_tau = tau; }
+
+    // aab64 Get the process time interval 
+    double GetCurrentProcessTau() const { return m_proc_tau; }
+
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
@@ -233,6 +247,12 @@ private:
     // mechanism, but are used by the Mechanism class when
     // calculating rates.
     Processes::DeathPtrVector m_outflow;
+
+    // aab64 new particle temp
+    double m_bulk_particle_temp;
+
+    // aab64 The process time interval
+    double m_proc_tau; 
 };
 
 } //namespace Sweep

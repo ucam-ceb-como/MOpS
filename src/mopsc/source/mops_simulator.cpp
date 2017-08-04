@@ -465,7 +465,12 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 				process_iter++) {
 				partProcFile << " , ";
 			}
-			partProcFile << "FictitiousCoagulationTerms (kernel specific)" << "\n";
+			partProcFile << "FictitiousCoagulationTerms (kernel specific)";
+			for (process_iter = tmpPNames.size(); process_iter < r.Mech()->ParticleMech().GetTermCount() + 1;
+				process_iter++) {
+				partProcFile << " , ";
+			}
+			partProcFile << "Inflow events" << " , " << "Outflow events" << "\n";
 			partProcFile.close();
 
 			// Add headers to gasConc diagnostics file
@@ -704,6 +709,9 @@ void Simulator::postProcessSimulation(
     // Runs -> time steps -> particles -> coordinate.
     vector<vector<vector<fvector> > > ptrack(m_nruns);
 
+    // aab64 Declare particle temperature outputs (averages and errors).
+    vector<vector<double> > aTp(npoints), eTp(npoints);
+
     // OPEN SIMULATION OUTPUT FILES.
 
     // Build the simulation input file name.
@@ -748,6 +756,8 @@ void Simulator::postProcessSimulation(
         ptrack[irun][0].assign(ptrack[0][0].begin(), ptrack[0][0].end());
     }
 
+    readParticleTemperatureDataPoint(fin, mech, aTp[0], eTp[0], true); // aab64
+
     // The initial conditions need to be multiplied by the number
     // of runs and iterations in order for the calcAvgConf to give
     // the correct result.
@@ -758,7 +768,7 @@ void Simulator::postProcessSimulation(
         multVals(agpfwdrates[0], m_nruns*m_niter);
         multVals(agprevrates[0], m_nruns*m_niter);
         multVals(agpwdot[0], m_nruns*m_niter);
-    multVals(agpsdot[0], m_nruns*m_niter); // added by mm864
+        multVals(agpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(apprates[0], m_nruns*m_niter);
         multVals(appjumps[0], m_nruns*m_niter);
         multVals(appwdot[0], m_nruns*m_niter);
@@ -769,11 +779,12 @@ void Simulator::postProcessSimulation(
         multVals(egpfwdrates[0], m_nruns*m_niter);
         multVals(egprevrates[0], m_nruns*m_niter);
         multVals(egpwdot[0], m_nruns*m_niter);
-    multVals(egpsdot[0], m_nruns*m_niter); // added by mm864
+        multVals(egpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(epprates[0], m_nruns*m_niter);
         multVals(eppjumps[0], m_nruns*m_niter);
         multVals(eppwdot[0], m_nruns*m_niter);
-        multVals(ecpu[0], m_nruns*m_niter);
+	multVals(ecpu[0], m_nruns*m_niter);
+	multVals(eTp[0], m_nruns*m_niter); // aab64
     } else {
         multVals(achem[0], m_nruns);
         multVals(astat[0], m_nruns);
@@ -781,22 +792,24 @@ void Simulator::postProcessSimulation(
         multVals(agpfwdrates[0], m_nruns);
         multVals(agprevrates[0], m_nruns);
         multVals(agpwdot[0], m_nruns);
-    multVals(agpsdot[0], m_nruns); // added by mm864
+        multVals(agpsdot[0], m_nruns); // added by mm864
         multVals(apprates[0], m_nruns);
         multVals(appjumps[0], m_nruns);
         multVals(appwdot[0], m_nruns);
         multVals(acpu[0], m_nruns);
+	multVals(aTp[0], m_nruns); // aab64
         multVals(echem[0], m_nruns); 
         multVals(estat[0], m_nruns);
         multVals(egprates[0], m_nruns);
         multVals(egpfwdrates[0], m_nruns);
         multVals(egprevrates[0], m_nruns);
         multVals(egpwdot[0], m_nruns);
-    multVals(egpsdot[0], m_nruns); // added by mm864
+        multVals(egpsdot[0], m_nruns); // added by mm864
         multVals(epprates[0], m_nruns);
         multVals(eppjumps[0], m_nruns);
         multVals(eppwdot[0], m_nruns);
-        multVals(ecpu[0], m_nruns);
+	multVals(ecpu[0], m_nruns);
+	multVals(eTp[0], m_nruns); // aab64
     }
 
     // READ ALL OUTPUT POINTS.
@@ -827,7 +840,8 @@ void Simulator::postProcessSimulation(
 
                         readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                         readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
-                        readPartTrackPoint(fin, pmech, ptrack[irun][step]);
+					    readPartTrackPoint(fin, pmech, ptrack[irun][step]);
+					    readParticleTemperatureDataPoint(fin, mech, aTp[step], eTp[step], true); // aab64
                     }
                 }
                 else  {
@@ -844,7 +858,8 @@ void Simulator::postProcessSimulation(
 
                     readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                     readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
-                    readPartTrackPoint(fin, pmech, ptrack[irun][step]);
+		    readPartTrackPoint(fin, pmech, ptrack[irun][step]);
+	            readParticleTemperatureDataPoint(fin, mech, aTp[step], eTp[step], true); // aab64
                 }
             }
         }
@@ -866,7 +881,8 @@ void Simulator::postProcessSimulation(
         calcAvgConf(apprates, epprates, m_nruns*m_niter);
         calcAvgConf(appjumps, eppjumps, m_nruns*m_niter);
         calcAvgConf(appwdot, eppwdot, m_nruns*m_niter);
-        calcAvgConf(acpu, ecpu, m_nruns*m_niter);
+	calcAvgConf(acpu, ecpu, m_nruns*m_niter);
+	calcAvgConf(aTp, eTp, m_nruns*m_niter); // aab64
     } else {
         calcAvgConf(achem, echem, m_nruns);
         calcAvgConf(astat, estat, m_nruns);
@@ -878,7 +894,8 @@ void Simulator::postProcessSimulation(
         calcAvgConf(apprates, epprates, m_nruns);
         calcAvgConf(appjumps, eppjumps, m_nruns);
         calcAvgConf(appwdot, eppwdot, m_nruns);
-        calcAvgConf(acpu, ecpu, m_nruns);
+	calcAvgConf(acpu, ecpu, m_nruns);
+	calcAvgConf(aTp, eTp, m_nruns); // aab64
     }
 
     // POST-PROCESS ELEMENT FLUX
@@ -904,6 +921,7 @@ void Simulator::postProcessSimulation(
         writePartTrackCSV(m_output_filename+"("+cstr(irun)+")-track", mech,
                           times, ptrack[irun]);
     }
+    writeParticleTemperatureCSV(m_output_filename + "-part-temp.csv", mech, times, aTp, eTp); // aab64
 
     // Only write jump file if the flag has been set.
     if (m_write_jumps) {
@@ -925,7 +943,7 @@ void Simulator::postProcessSimulation(
         /*!
          * Useful for reproduction of Stein and Fahr's stabilomer grid.
          * Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
-         * J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
+         * J. Phys. Chem. 89, 3714 \ 963725. doi:10.1021/j100263a027.
          */
         // postProcessPAHinfo(mech, times);
 
@@ -992,6 +1010,14 @@ void Simulator::outputGasPhase(const Reactor &r) const
     m_file.write((char*)&D, sizeof(D));
     double P = r.Mixture()->GasPhase().Pressure();
     m_file.write((char*)&P, sizeof(P));
+}
+
+// aab64 Writes the particle temperature of the given reactor to
+// the binary output file. (No need modification, modification when read) 
+void Simulator::outputParticleTemperature(const Reactor &r) const
+{
+	double Tp = r.Mixture()->GetBulkParticleTemperature();
+	m_file.write((char*)&Tp, sizeof(Tp));
 }
 
 // Writes the particle stats to the binary output file.
@@ -1117,7 +1143,10 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             me->outputPartTrack(r);
 
             // Write sensitivityto file.
-            s.OutputSensitivity(me->m_senfile, r, me);
+	    s.OutputSensitivity(me->m_senfile, r, me);
+
+	    // aab64 Write the particle conditions to the output file.
+	    me->outputParticleTemperature(r);
         }
     }
 }
@@ -1399,6 +1428,34 @@ void Simulator::readGasPhaseDataPoint(std::istream &in, const Mops::Mechanism &m
             sumsqr[N+2] += (P*P);
         }
     }
+}
+
+// aab64 Reads a particle temperature data point from the binary file.
+// To allow the averages and confidence intervals to be calculated
+// the data point is added to a vector of sums, and the squares are
+// added to the vector sumsqr if necessary.
+void Simulator::readParticleTemperatureDataPoint(std::istream &in, const Mops::Mechanism &mech,
+	fvector &sum, fvector &sumsqr, bool calcsqrs)
+{
+	// Check for valid stream.
+	if (in.good()) {
+		double Tp = 0.0;
+
+		in.read(reinterpret_cast<char*>(&Tp), sizeof(Tp));
+
+		// Resize vectors.
+		sum.resize(1, 0.0);
+		sumsqr.resize(1, 0.0);
+
+		// Calculate sums and sums of square (for average and
+		// error calculation).
+
+		// Calculates sums and sums of squares of temperature
+		sum[0] += Tp;
+		if (calcsqrs) {
+			sumsqr[0] += (Tp*Tp);
+		}
+	}
 }
 
 // Reads a CPU timing data from the binary file.
@@ -1753,6 +1810,48 @@ void Simulator::writeGasPhaseCSV(const std::string &filename,
     // Close the CSV files.
     csv.Close();
 }
+
+// aab64 Writes particle temperature profile to a CSV file.
+void Simulator::writeParticleTemperatureCSV(const std::string &filename,
+	const Mechanism &mech,
+	const timevector &times,
+	std::vector<fvector> &avg,
+	const std::vector<fvector> &err)
+{
+	// Open file for the CSV results.
+	CSV_IO csv(filename, true);
+
+	// Write the header row to the gas-phase chemistry CSV file.
+	vector<string> head;
+	head.push_back("Step");
+	head.push_back("Time (s)");
+	head.push_back("T (K)");
+
+	for (unsigned int i = head.size(); i != 2; --i) {
+		head.insert(head.begin() + i, "Err");
+	}
+	csv.Write(head);
+
+	// Output initial conditions.
+	buildOutputVector(0, times[0].StartTime(), avg[0], err[0]);
+	csv.Write(avg[0]);
+
+	// Loop over all points, performing output.
+	unsigned int step = 1;
+	for (timevector::const_iterator iint = times.begin(); iint != times.end(); ++iint) {
+		// Loop over all time steps in this interval.
+		double t = iint->StartTime();
+		for (unsigned int istep = 0; istep<(*iint).StepCount(); ++istep, ++step) {
+			t += iint->StepSize();
+			buildOutputVector(step, t, avg[step], err[step]);
+			csv.Write(avg[step]);
+		}
+	}
+
+	// Close the CSV files.
+	csv.Close();
+}
+
 
 // Writes computation times profile to a CSV file.
 void Simulator::writeCT_CSV(const std::string &filename,

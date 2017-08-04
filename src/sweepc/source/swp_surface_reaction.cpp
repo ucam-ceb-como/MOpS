@@ -233,6 +233,9 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
     int i = sys.Particles().Select(static_cast<Sweep::PropID>(m_pid), rng);
     unsigned int times;
 
+    // aab64 (temporary switch)
+    bool adjustTtemp = true;
+
     if (i >= 0) {
         Particle *sp = sys.Particles().At(i);
 
@@ -253,7 +256,10 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
                     sys.Particles().Update(i);
 
                     // Apply changes to gas-phase chemistry.
-                    if (times > 0) adjustGas(sys, sp->getStatisticalWeight());
+		    if (times > 0) {
+			adjustGas(sys, sp->getStatisticalWeight());
+			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, adjustTtemp, m_dcomp[0], 2); // aab64
+		    }
                 }
             } else {
                 // If not valid then remove the particle.
@@ -274,7 +280,10 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
             }
 
             // Apply changes to gas-phase chemistry.
-            if (times > 0) adjustGas(sys, sp->getStatisticalWeight());
+	    if (times > 0) {
+		adjustGas(sys, sp->getStatisticalWeight());
+		adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, adjustTtemp, m_dcomp[0], 2); // aab64
+	    }
         }
     } else {
         // Failed to select a particle.
@@ -289,8 +298,12 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
 int SurfaceReaction::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
                              unsigned int n) const
 {
+    bool adjustTtemp = true;
     unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
-    if (m > 0) adjustGas(sys, sp.getStatisticalWeight(), m);
+    if (m > 0) {
+	adjustGas(sys, sp.getStatisticalWeight(), m);
+	adjustParticleTemperature(sys, sp.getStatisticalWeight(), m, adjustTtemp, m_dcomp[0], 2); // aab64
+    }
     return m;
 }
 

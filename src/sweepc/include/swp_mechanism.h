@@ -206,6 +206,17 @@ public:
         fvector &rates   // Return vector for rates-of-change.
         ) const;
 
+    //aab64 Add version to return concentration and fraction rates
+    // Calculates the rates-of-change of the chemical species fractions, 
+    // gas-phase temperature and density due to particle processes.
+    void CalcGasChangeRates(
+	double t,          // Time at which to get rates.
+	const Cell &sys, // System cell for which to get rates.
+	const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
+	fvector &xrates,   // Return vector for rates-of-change.
+	fvector &crates   // Return vector for rates-of-change.
+	) const;
+
 
 	// PERFORMING THE PROCESSES.
 
@@ -255,6 +266,27 @@ public:
         rng_type &rng
         ) const;
 
+
+    /* aab64 these two functions could replace the UpdateParticle 
+    function when it is called in LPDA, to allow OpenMP to be used
+    in the sintering part of the update - this needs to be checked */ 
+    //! non-sintering part of LPDA for one particle
+    void UpdateParticleNS(
+	Particle &sp, // Particle to update.
+	Cell &sys,    // System to which the particle belongs.
+	double t,       // Time up to which to integrate.
+	rng_type &rng, 
+	double &dtvec
+	) const;
+
+    //! sintering part of LPDA for one particle
+    void UpdateParticleS(
+	Particle &sp, // Particle to update.
+	Cell &sys,    // System to which the particle belongs.
+	double t,       // Time up to which to integrate.
+	rng_type &rng,
+	double dtvec
+	) const;
 		
     // READ/WRITE/COPY.
 
@@ -273,27 +305,33 @@ public:
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	// Get the number of times each fictitious process has been performed 
-	std::vector<unsigned int> GetFictitiousProcessCounts() const { return m_fictcount; }
+    // Get the number of times each fictitious process has been performed 
+    std::vector<unsigned int> GetFictitiousProcessCounts() const { return m_fictcount; }
 
-	// Get the term count
-	unsigned int GetTermCount() const { return m_termcount; };
+    // Get the term count
+    unsigned int GetTermCount() const { return m_termcount; };
 	
-	// Get the addition count
-	unsigned int GetDeferredAddCount() const { return m_addcount; };
+    // Get the addition count
+    unsigned int GetDeferredAddCount() const { return m_addcount; };
+	
+    // Get the inflow count
+    unsigned int GetInflowCount() const { return m_inflowcount; };
+
+    // Get the outflow count
+    unsigned int GetOutflowCount() const { return m_outflowcount; };
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 	
 
 
-	//! return a vector contain the information of particular primary particle with X molecules
-	void Mass_pah(Ensemble &m_ensemble) const;
+    //! return a vector contain the information of particular primary particle with X molecules
+    void Mass_pah(Ensemble &m_ensemble) const;
 
-	//! write data in colunm for dimer and mononer
-	//void writeMononer(fvector &out) const;
-	//void writeDimer(fvector &out) const;
+    //! write data in colunm for dimer and mononer
+    //void writeMononer(fvector &out) const;
+    //void writeDimer(fvector &out) const;
 	
-	//! write data in colum for particlar primary particle
-	//void writeParimary(std::vector<fvector > &out) const;
+    //! write data in colum for particlar primary particle
+    //void writeParimary(std::vector<fvector > &out) const;
 
 private:
     // True if the mechanism contains deferred (LPDA)
@@ -318,7 +356,9 @@ private:
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	mutable unsigned int m_addcount; // The addition count for deferred additions
+    mutable unsigned int m_addcount;     // The addition count for deferred additions
+    mutable unsigned int m_inflowcount;  // The inflow count for stochastic inflow
+    mutable unsigned int m_outflowcount; // The outflow count for stochastic inflow
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 

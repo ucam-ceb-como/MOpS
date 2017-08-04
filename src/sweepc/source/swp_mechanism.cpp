@@ -57,6 +57,11 @@
 #include "swp_particle.h"
 #include "swp_PAH_primary.h"
 
+
+// aab64 temporary for tracking OMP threads
+#include <omp.h>
+
+
 using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
@@ -105,7 +110,9 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-		m_addcount = rhs.m_addcount;
+	m_addcount = rhs.m_addcount;
+	m_inflowcount = rhs.m_inflowcount;
+	m_outflowcount = rhs.m_outflowcount;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -216,8 +223,11 @@ void Mechanism::AddProcess(ParticleProcess &p)
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	// Initialise the addition count
-	m_addcount = 0;
+    // Initialise the addition count
+    m_addcount = 0;
+    // Initialise the inflow and outflow counts
+    m_inflowcount = 0;
+    m_outflowcount = 0;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -435,8 +445,12 @@ void Mechanism::ResetJumpCount() const {
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	// Do for deferred addition count
-	m_addcount = 0;
+    // Do for deferred addition count
+    m_addcount = 0;
+    // Do for inflow count
+    m_inflowcount = 0;
+    // Do for outflow count
+    m_outflowcount = 0;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 }
 
@@ -678,6 +692,95 @@ void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
     }
 }
 
+//aab64 Add version to return concentration and fraction rates
+/*!
+* Calculates the rates-of-change of the chemical species fractions,
+* gas-phase temperature and density due to particle processes.
+*
+*@param[in]    t      Time at which rates are to be calculated
+*@param[in]    sys    System for which rates are to be calculated
+*@param[in]    local_geom  Position information
+*@param[out]   rates  Vector of time rates of change of mole fractions, temperature and (?number) density
+*
+*@post  rates.size() == m_species.size() + 2
+* There is no precondition on rates.size().
+*/
+void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
+	const Geometry::LocalGeometry1d &local_geom,
+	fvector &xrates, fvector &crates) const
+{
+	// Resize vector to hold all species and set all rates to zero.
+	crates.resize(m_species->size() + 2, 0.0);
+	fill(crates.begin(), crates.end(), 0.0);
+
+	xrates.resize(m_species->size() + 2, 0.0);
+	fill(xrates.begin(), xrates.end(), 0.0);
+
+	// Rate of change of total concentration
+	double idrho(0.0);
+
+	// Precalculate parameters.
+	double invVolNA = 1.0 / (sys.SampleVolume() * NA);
+
+	// Inceptions and surface processes can affect the gas-phase chemistry
+	// at the moment.
+
+	// Loop over the contributions of all inception processes.
+	for (IcnPtrVector::const_iterator i = m_inceptions.begin();
+		i != m_inceptions.end(); ++i) {
+
+		// Calculate the inception rate.
+		double rate = (*i)->Rate(t, sys, local_geom);
+
+		// Loop over all reactants, subtracting their contributions.
+		for (Sprog::StoichMap::const_iterator j = (*i)->Reactants().begin();
+			j != (*i)->Reactants().end(); ++j) {
+			double dc = rate * (double)j->second * invVolNA;
+			crates[j->first] -= dc;
+			idrho -= dc;
+		}
+
+		// Loop over all products, adding their contributions.
+		for (Sprog::StoichMap::const_iterator j = (*i)->Products().begin();
+			j != (*i)->Products().end(); ++j) {
+			double dc = rate * (double)j->second * invVolNA;
+			crates[j->first] += dc;
+			idrho += dc;
+		}
+	}
+
+	// Loop over the contributions of all other processes (except coagulation and transport).
+	for (PartProcPtrVector::const_iterator i = m_processes.begin();
+		i != m_processes.end(); ++i) {
+
+		// Calculate the process rate.
+		double rate = (*i)->Rate(t, sys, local_geom);
+
+		// Loop over all reactants, subtracting their contributions.
+		for (Sprog::StoichMap::const_iterator j = (*i)->Reactants().begin();
+			j != (*i)->Reactants().end(); ++j) {
+			double dc = rate * (double)j->second * invVolNA;
+			crates[j->first] -= dc;
+			idrho -= dc;
+		}
+
+		// Loop over all products, adding their contributions.
+		for (Sprog::StoichMap::const_iterator j = (*i)->Products().begin();
+			j != (*i)->Products().end(); ++j) {
+			double dc = rate * (double)j->second * invVolNA;
+			crates[j->first] += dc;
+			idrho += dc;
+		}
+	}
+
+	// Now convert to changes in mole fractions.
+	double invrho = 1.0 / sys.GasPhase().MolarDensity();
+	for (unsigned int k = 0; k != m_species->size(); ++k) {
+		// Quotient rule for dXk/dt = d(Ck/CT)/dt
+		xrates[k] = (invrho * crates[k]) - (invrho * invrho * sys.GasPhase().SpeciesConcentration(k) * idrho);
+	}
+}
+
 
 // PERFORMING THE PROCESSES.
 
@@ -701,65 +804,91 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
     // Test for now
     assert(sys.ParticleModel() != NULL);
 
-    // Work out to which process this term belongs.
-    int j = i - m_inceptions.size();
-
-    if (j < 0) {
-        // This is an inception process.
-        m_inceptions[i]->Perform(t, sys, local_geom, 0, rng);
-        m_proccount[i] += 1;
-    } else {
-        // This is another process.
-        for(PartProcPtrVector::const_iterator ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
-            if (j < (int)(*ip)->TermCount()) {
-                // Do the process.
-                if ((*ip)->Perform(t, sys, local_geom, j, rng) == 0) {
-                    m_proccount[i] += 1;
-                } else {
-                    m_fictcount[i] += 1;
-                }
-                return;
-            } else {
-                j -= (*ip)->TermCount();
-            }
+    // aab64 Do special inception with no particle - just do heat transfer
+    // Note this is a very messy route of accessing adjustParticleTemperature function
+    // It would be better to do this differently, possibly split that function to each
+    // member or else define a new one with better accessibility
+    if (i == 1000000) {
+	    if (sys.ParticleCount() != 0){
+	        m_inceptions[m_inceptions.size() - 1]->Perform(t, sys, local_geom, 0, rng);
+	        m_proccount[m_inceptions.size() - 1] += 1;
         }
+    }
+    else{
+	    // aab64 if there are no particles, set the particle phase temperature 
+	    // equal to the gas phase temperature
+	    if (sys.ParticleCount() == 0){
+	        sys.SetBulkParticleTemperature(sys.GasPhase().Temperature());
+	    };
 
-        // We are here because the process was neither an inception
-        // nor a single particle process.  It is therefore either a
-        // coagulation or a birth/death process.
-        for(CoagPtrVector::const_iterator it = m_coags.begin(); it != m_coags.end(); ++it) {
-            // Check if coagulation process.
-            if (j < static_cast<int>((*it)->TermCount())) {
-                // This is the coagulation process.
-                if ((*it)->Perform(t, sys, local_geom, j, rng) == 0) {
-                    m_proccount[i] += 1;
+        // Work out to which process this term belongs.
+        int j = i - m_inceptions.size();
+
+        if (j < 0) {
+            // This is an inception process.
+            m_inceptions[i]->Perform(t, sys, local_geom, 0, rng);
+            m_proccount[i] += 1;
+        }
+        else {
+            // This is another process.
+            for (PartProcPtrVector::const_iterator ip = m_processes.begin(); ip != m_processes.end(); ++ip) {
+                if (j < (int)(*ip)->TermCount()) {
+                    // Do the process.
+                    if ((*ip)->Perform(t, sys, local_geom, j, rng) == 0) {
+                        m_proccount[i] += 1;
+                    } else {
+                        m_fictcount[i] += 1;
+                    }
+                    return;
                 } else {
-                    m_fictcount[i] += 1;
+                    j -= (*ip)->TermCount();
                 }
-                return;
+            }
+
+            // We are here because the process was neither an inception
+            // nor a single particle process.  It is therefore either a
+            // coagulation or a birth/death process.
+            for (CoagPtrVector::const_iterator it = m_coags.begin(); it != m_coags.end(); ++it) {
+                // Check if coagulation process.
+                if (j < static_cast<int>((*it)->TermCount())) {
+                    // This is the coagulation process.
+                    if ((*it)->Perform(t, sys, local_geom, j, rng) == 0) {
+                        m_proccount[i] += 1;
+                    } else {
+                        m_fictcount[i] += 1;
+                    }
+                    return;
             } else {
                 // This must be the birth/death process.
                 j -= (*it)->TermCount();
             }
         }
 
-        if ((j < (int)sys.InflowCount()) && (j>=0)) {
+        if ((j < (int)sys.InflowCount()) && (j >= 0)) {
             // An inflow process.
             sys.Inflows(j)->Perform(t, sys, local_geom, 0, rng);
+            //////////////////////////////////////////// aab64 ////////////////////////////////////////////
+            // Increment the inflow jump counter (note a single type of event but not a single particle)
+            m_inflowcount++;
+            //////////////////////////////////////////// aab64 ////////////////////////////////////////////
             return;
         } else {
             // Hopefully a death process then!
-            j -= sys.InflowCount();;
+            j -= sys.InflowCount();
         }
 
-        if ((j < (int)sys.OutflowCount()) && (j>=0)) {
+        if ((j < (int)sys.OutflowCount()) && (j >= 0)) {
             // An outflow process.
             sys.Outflows(j)->Perform(t, sys, local_geom, 0, rng);
+            //////////////////////////////////////////// aab64 ////////////////////////////////////////////
+            // Increment the outflow jump counter
+            m_outflowcount++;
+            //////////////////////////////////////////// aab64 ////////////////////////////////////////////
         } else {
             throw std::runtime_error("Unknown index of process, couldn't Perform."
                     " (Sweep, Mechanism::DoProcess)");
+	    }
         }
-
     }
 }
 
@@ -888,11 +1017,53 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
         sys.Particles().FreezeDoubling();
 
         // Perform deferred processes on all particles individually.
-        Ensemble::iterator i;
+        /*Ensemble::iterator i;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
             UpdateParticle(*(*i), sys, t, rng);
-        }
+        }*/
 
+	// aab64 candidate for omp?? But index variable i would need to be a signed integral type 
+	// Perform deferred processes on all particles individually using OpenMP.
+	// Need to rework from the above
+	// Need to check the iterator is pointing to a sensible thing - is this looping through all particles?
+
+	// Option 2 Perform deferred processes on all particles individually.
+	/*signed int nparticles = sys.Particles().Count();			
+	std::vector<double> dtvector;
+	signed int part_i;
+	dtvector.resize(nparticles, 0.0);
+	for (part_i = 0; part_i < nparticles; ++part_i) {
+		//cout << (int)((sys.Particles().At(part_i))) << "\n";
+		UpdateParticleNS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
+	}
+#pragma omp parallel for private(part_i) firstprivate(nparticles) schedule(static)
+	for (part_i = 0; part_i < nparticles; ++part_i) {
+		UpdateParticleS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
+	}*/
+
+	// Option 3 Perform deferred processes on all particles individually.			
+	signed int nparticles = sys.Particles().Count();
+	if (nparticles < 100) 
+	{
+		Ensemble::iterator i;
+		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
+		    //cout << (int)(*i) << "\n";
+		    UpdateParticle(*(*i), sys, t, rng);
+		}
+	} else {
+		std::vector<double> dtvector;
+		signed int part_i;
+		dtvector.resize(nparticles, 0.0);
+		for (part_i = 0; part_i < nparticles; ++part_i) {
+		    //cout << (int)((sys.Particles().At(part_i))) << "\n";
+		    UpdateParticleNS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
+		}
+#pragma omp parallel for private(part_i) firstprivate(nparticles) schedule(dynamic) ordered
+		for (part_i = 0; part_i < nparticles; ++part_i) {
+		    UpdateParticleS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
+		}
+	}
+		
         // Now remove any invalid particles and update the ensemble.
         sys.Particles().RemoveInvalids();
 
@@ -990,8 +1161,8 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-							 // Increment the deferred jump counter
-							 m_addcount += num;
+			     // Increment the deferred jump counter
+			     m_addcount += num;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
                          }
                     }
@@ -1008,8 +1179,146 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
         // cache if it is.
         if (sp.IsValid())
             sp.UpdateCache();
-    }
+	}
 }
+
+// aab64 Split updates to two functions and try omp
+
+/*!
+* Performs linear process updates on a particle in the given system.
+*
+*@param[in,out]    sp          Particle to update
+*@param[in,out]    sys         System containing particle to update
+*@param[in]        t           Time upto which particle to be updated
+*@param[in,out]    rng         Random number generator
+*/
+void Mechanism::UpdateParticleNS(Particle &sp, Cell &sys, double t, rng_type &rng, double &dtvec) const
+{
+	//cout << "2: in particle update NS\n";
+	// Deal with the growth of the PAHs
+	/*if (AggModel() == AggModels::PAH_KMC_ID)
+	{
+		// Calculate delta-t and update particle time.
+		double dt;
+		dt = t - sp.LastUpdateTime();
+		sp.SetTime(t);
+
+		// If the agg model is PAH_KMC_ID then all the primary
+		// particles must be PAHPrimary.
+		AggModels::PAHPrimary *pah =
+			dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
+
+		// Update individual PAHs within this particle by using KMC code
+		// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
+		pah->UpdatePAHs(t, *this, sys, rng);
+
+		pah->UpdateCache();
+		pah->CheckRounding();
+		if (sp.IsValid()) {
+			sp.UpdateCache();
+
+			// Sinter the particles for the soot model (as no deferred process)
+			if (m_sint_model.IsEnabled()) {
+				pah->Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+			}
+			sp.UpdateCache();
+		}
+	}*/
+
+	// If there are no deferred processes then stop right now.
+	if (m_anydeferred) {
+		PartProcPtrVector::const_iterator i;
+		double rate, dt;
+		//double fakeLPDAtime = sp.LastUpdateTime();
+
+		//while ((fakeLPDAtime < t) && sp.IsValid()) {
+		while (sp.LastUpdateTime() < t && sp.IsValid()) {
+			// Calculate delta-t and update particle time.
+			//dt = t - fakeLPDAtime;
+			//fakeLPDAtime = t;
+			dt = t - sp.LastUpdateTime();
+			dtvec = dt;
+			sp.SetTime(t);
+			//cout << "dt=" << dtvec << "\n";
+
+			// Loop through all processes, performing those
+			// which are deferred.
+			for (i = m_processes.begin(); i != m_processes.end(); ++i) {
+				if ((*i)->IsDeferred()) {
+					// Get the process rate x the time interval.
+					rate = (*i)->Rate(t, sys, sp) * dt;
+
+					// Use a Poission deviate to calculate number of
+					// times to perform the process.  If the rate is
+					// 0 then the count is guaranteed to be 0
+					if (rate > 0) {
+						boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
+						//if (rate <= 0.663 && rate >= 0.662) {
+							//cout << "Stopping point\n";
+						//}
+						//cout << "calling RN gen\n";
+						unsigned num = repeatDistrib(rng);
+						//std::cout << "out\nRN gen.: " << rate << " , " << num << "\n"; //std::setprecision(50) <<
+						if (num > 0) {
+							// Do the process to the particle.
+							(*i)->Perform(t, sys, sp, rng, num);
+							//cout << "2 , sg done NS\n";
+
+							//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+							// Increment the deferred jump counter
+							m_addcount += num;
+							//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+						}
+					}
+				}
+			}
+		}
+	}
+	//cout << "2: leaving particle update NS\n";
+}
+
+/*!
+* Performs linear process updates on a particle in the given system.
+*
+*@param[in,out]    sp          Particle to update
+*@param[in,out]    sys         System containing particle to update
+*@param[in]        t           Time upto which particle to be updated
+*@param[in,out]    rng         Random number generator
+*/
+void Mechanism::UpdateParticleS(Particle &sp, Cell &sys, double t, rng_type &rng, double dtvec) const
+{
+	// If there are no deferred processes then stop right now.
+	if ((m_anydeferred) || (m_sint_model.IsEnabled() && !m_anydeferred
+		&& AggModel() != AggModels::PAH_KMC_ID)) {
+		double dt;
+
+		if (m_anydeferred) {
+			// Calculate delta-t and update particle time.
+			dt = dtvec;
+			//cout << "dt=" << dtvec << "\n";
+		}
+		if ((m_sint_model.IsEnabled() && !m_anydeferred
+			&& AggModel() != AggModels::PAH_KMC_ID)) {
+			// Calculate delta-t and update particle time.
+			t - sp.LastUpdateTime();
+			sp.SetTime(t);
+		}
+
+		// Perform sintering update.
+		if (m_sint_model.IsEnabled()) {
+			sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+			//cout << "2 , sin done\n";
+		}
+
+		// Check that the particle is still valid, only calculate
+		// cache if it is.
+		if (sp.IsValid())
+			sp.UpdateCache();
+	}
+}
+
+
+
 
 void Mechanism::Mass_pah(Ensemble &m_ensemble) const
 {
@@ -1220,6 +1529,8 @@ void Mechanism::releaseMem(void)
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 	m_addcount = 0;
+	m_inflowcount = 0;
+	m_outflowcount = 0;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 }
 

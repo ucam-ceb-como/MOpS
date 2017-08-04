@@ -183,7 +183,12 @@ void NetworkSimulator::Run(
 					process_iter++) {
 					partProcFile << " , ";
 				}
-				partProcFile << "FictitiousCoagulationTerms (kernel specific)" << "\n";
+				partProcFile << "FictitiousCoagulationTerms (kernel specific)";
+				for (process_iter = tmpPNames.size(); process_iter < it->reac->Mech()->ParticleMech().GetTermCount() + 1;
+					process_iter++) {
+					partProcFile << " , ";
+				}
+				partProcFile << "Inflow events" << " , " << "Outflow events" << "\n";
 				partProcFile.close();
 
 				// Add headers to gasConc diagnostics file

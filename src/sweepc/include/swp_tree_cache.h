@@ -120,7 +120,7 @@ public:
     // Returns the property with the given ID.
     double Property(PropID id) const;
 
-	//double Sintered();
+    //double Sintered();
 
     // BASIC DERIVED PROPERTY OVERWRITES.
 

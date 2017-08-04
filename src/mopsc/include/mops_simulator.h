@@ -410,6 +410,10 @@ private:
     // the binary output file.
     void outputGasPhase(const Reactor &r) const;
 
+    // aab64 Writes the particle temperature of the given 
+    // reactor to the binary output file. 
+    void outputParticleTemperature(const Reactor &r) const;
+
     // Writes the particle stats to the binary output file.
     void outputParticleStats(const Reactor &r) const;
 
@@ -472,6 +476,18 @@ private:
         fvector &sumsqr,             // Sums of the squares.
         bool calcsqrs = false        // Set =true to also calculate sums of squares.
         );
+
+    // aab64 Reads a particle temperature data point from the binary file.
+    // To allow the averages and confidence intervals to be calculated -
+    // the data point is added to a vector of sums, and the squares are
+    // added to the vector sumsqr if necessary.
+    static void readParticleTemperatureDataPoint(
+	std::istream &in,            // Input stream.
+	const Mops::Mechanism &mech, // Chemical mechanism.
+	fvector &sum,                // Sums of chemistry data.
+	fvector &sumsqr,             // Sums of the squares.
+	bool calcsqrs = false        // Set =true to also calculate sums of squares.
+	);
 
     // Reads a CPU timing data from the binary file.
     // To allow the averages and confidence intervals to be calculated
@@ -584,6 +600,15 @@ private:
         std::vector<fvector> &avg,       // Vector of gas-phase time points.
         const std::vector<fvector> &err  // Vector of confidence intervals.
         );
+
+    // aab64 Writes particle temperature profile to a CSV file.
+    static void writeParticleTemperatureCSV(
+	const std::string &filename,     // Output file name (incl. extension).
+	const Mechanism &mech,           // Mechanism defining chemical species.
+	const timevector &times,         // Output time profile.
+	std::vector<fvector> &avg,       // Vector of gas-phase time points.
+	const std::vector<fvector> &err  // Vector of confidence intervals.
+	);
 
     // Writes computation times profile to a CSV file.
     void writeCT_CSV(

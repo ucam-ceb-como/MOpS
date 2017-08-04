@@ -364,6 +364,12 @@ public:
     //! Index for thermal conductivity of mixture in gas phase interface
     void setThermalConductIndex(const EnvironmentInterface::PropertyIndex index) {m_ThermalConductivityIndex = index;}
 
+    // aab64 set particle temperature
+    //void SetBulkParticleTemperature(double ptemp) {m_bulk_particle_temp = ptemp;}
+
+    // aab64 get particle temperature
+    //double GetBulkParticleTemperature() const {return m_bulk_particle_temp;}
+
 protected:
     // The species used to define the processes and the particles.
     const Sprog::SpeciesPtrVector *m_species;

@@ -98,6 +98,8 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
     fvector rates(mech.TermCount(), 0.0);
     // Global maximum time step.
     dtg     = tstop - t;
+	
+    double tin = t; //store start time 
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
@@ -128,9 +130,17 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
             tflow = t;
         }
 
+        sys.SetCurrentProcessTau(t - tin); // time passed in current loop
+
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
-		mech.LPDA(t, sys, rng);
+	mech.LPDA(t, sys, rng);
+
+	if (sys.ParticleCount() > 0)
+	    mech.DoProcess(1000000, dtg, sys, Geometry::LocalGeometry1d(), rng); // aab64 Call DoProcess with special tag to just do heat transfer
+
+	// aab64 experimental
+	sys.SetCurrentProcessTau(t); // record end time to use for gas-phase step heat transfer
     }
 
     return err;
@@ -206,6 +216,8 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
         boost::uniform_01<rng_type &> uniformGenerator(rng);
         const int i = chooseIndex(rates, uniformGenerator);
         //std::cout << ' ' << i;
+	// aab64 record the current step size
+	sys.SetCurrentProcessTau(dt);
         mech.DoProcess(i, t+dt, sys, geom, rng);
         t += dt;
     } else {

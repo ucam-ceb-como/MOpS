@@ -132,17 +132,14 @@ int main(int argc, char* argv[])
         ("ensemble", "write full ensembles to binary files")
         ("ppah", "write full PAHPP data")
         ("jumps", "write stochastic jumps data")
-<<<<<<< HEAD
 
 
 
-		//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-		("diags", "write split diagnostics data")
-		//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-=======
-        ("wdotA4", "postprocess based on the molar rate of production by chemical reaction of the inception species")
->>>>>>> 52f137d9852f1c09445ab76650dea0a088374a7c
-        ;
+	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	("diags", "write split diagnostics data")
+	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+        ("wdotA4", "postprocess based on the molar rate of production by chemical reaction of the inception species") 
+		;
 
         // Combine sets of program options
         po::options_description cmdline_options;
@@ -208,16 +205,15 @@ int main(int argc, char* argv[])
         if (vm.count("ppah")) fpah = true;
         if (vm.count("jumps")) fjumps = true;
         if (vm.count("ensemble")) fensembles = true;
-<<<<<<< HEAD
 
 
 
-		//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-		if (vm.count("diags")) fdiags = true;
-		//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-=======
+	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	if (vm.count("diags")) fdiags = true;
+	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+
         if (vm.count("wdotA4")) fwdotA4 = true;
->>>>>>> 52f137d9852f1c09445ab76650dea0a088374a7c
     }
 
     // Display any error messages from incorrect command-line flags

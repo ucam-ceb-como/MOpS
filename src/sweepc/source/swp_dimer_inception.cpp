@@ -124,35 +124,43 @@ int DimerInception::Perform(const double t, Cell &sys,
 
     // This routine performs the inception on the given chemical system.
 
-    // Create a new particle of the type specified
-    // by the system ensemble.
-    Particle *sp = m_mech->CreateParticle(t);
+    // aab64 Don't incept if magical last inception
+    bool adjustTtemp = true;
+    if (ParticleComp()[0] != 0) {
+        // Create a new particle of the type specified
+        // by the system ensemble.
+        Particle *sp = m_mech->CreateParticle(t);
 
-    // Get the cell vertices
-    fvector vertices = local_geom.cellVertices();
+        // Get the cell vertices
+        fvector vertices = local_geom.cellVertices();
 
-    // Sample a uniformly distributed position, note that this method
-    // works whether the vertices come in increasing or decreasing order,
-    // but 1d is assumed for now.
-    double posn = vertices.front();
+        // Sample a uniformly distributed position, note that this method
+        // works whether the vertices come in increasing or decreasing order,
+        // but 1d is assumed for now.
+        double posn = vertices.front();
 
-    const double width = vertices.back() - posn;
-    boost::uniform_01<rng_type&, double> uniformGenerator(rng);
-    posn += width * uniformGenerator();
+        const double width = vertices.back() - posn;
+        boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+        posn += width * uniformGenerator();
 
-    sp->setPositionAndTime(posn, t);
+        sp->setPositionAndTime(posn, t);
 
 
-    // Initialise the new particle.
-    sp->Primary()->SetComposition(ParticleComp());
-    sp->Primary()->SetValues(ParticleTrackers());
-    sp->UpdateCache();
+        // Initialise the new particle.
+        sp->Primary()->SetComposition(ParticleComp());
+        sp->Primary()->SetValues(ParticleTrackers());
+        sp->UpdateCache();
 
-    // Add particle to system's ensemble.
-    sys.Particles().Add(*sp, rng);
+        // Add particle to system's ensemble.
+        sys.Particles().Add(*sp, rng);
 
-    // Update gas-phase chemistry of system.
-    adjustGas(sys, sp->getStatisticalWeight());
+	// Update gas-phase chemistry of system.
+	adjustGas(sys, sp->getStatisticalWeight(), 1);
+	adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, adjustTtemp, ParticleComp()[0], 1);
+    }
+    else {
+	adjustParticleTemperature(sys, 0, 1, adjustTtemp, 0, 0);
+    }
 
     return 0;
 }
@@ -242,7 +250,7 @@ double DimerInception::Rate(double t, const Cell &sys, const Geometry::LocalGeom
 double DimerInception::Rate(const EnvironmentInterface &gas, double sqrtT,
                      double MFP, double vol) const
 {
-    double rate = A() * vol * chemRatePart(gas);
+    double rate = A() * vol * chemRatePart(gas) / 1.0; // aab64 - check what happens if inception weight is not 1.0 (should this be scaled by sp wt? 
 
     const double fm   = sqrtT * m_kfm;
     if((m_ksf1 > 0) || (m_ksf2 > 0))  {
