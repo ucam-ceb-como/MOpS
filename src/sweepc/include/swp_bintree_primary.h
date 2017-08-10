@@ -57,6 +57,7 @@
 #include "swp_particle_model.h"
 #include "swp_bintree_serializer.h"
 #include "swp_particle_image.h"
+#include "swp_coords.h"
 
 namespace Sweep {
 
@@ -159,6 +160,12 @@ public:
 
 	//!Gets the distance between centres of primary particles
 	double GetDistance() const {return m_distance_centreToCentre;}
+
+    //! Calculates the radius of gyration.
+    double GetRadiusOfGyration() const;
+    
+    //! Returns a vector of primary coordinates and radius (4D).
+    void GetPriCoords(std::vector<fvector> &coords) const;
 
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
@@ -263,6 +270,10 @@ protected:
     //! Distance between the centres of primary particles.
     double m_distance_centreToCentre;
 
+    //! For tracking the coordinates of primary particles.
+    Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
+    Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
+
     //! Sintering level of children connected by this node
     double m_children_sintering;
 
@@ -274,6 +285,11 @@ protected:
 
     //! Absolute amount of time for which particles are sintered
     double m_sint_time;
+
+    //! Radius of bounding sphere raised to powers of 1, 2 and 3.
+    double m_r;  //!< Bounding sphere radius of aggregate/primary.
+    double m_r2; //!< r squared (useful for efficient collision detection computation).
+    double m_r3; //!< r cubed (useful for calculating centre-of-mass).
 
     // TREE STRUCTURE PROPERTIES
     // The children are the next nodes in the binary tree and are used to
@@ -297,6 +313,69 @@ protected:
 
     //! Right particle node (always a leaf)
     BinTreePrimary *m_rightparticle;
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// Functions for manipulating coordinates of primary particles in an
+    /// aggregate.
+    ///////////////////////////////////////////////////////////////////////////
+
+    //! Returns the bounding-sphere centre.
+    const Coords::Vector &boundSphCentre(void) const;
+
+    //! Calculates the bounding sphere position and radius using the left and
+    //! right child node values.
+    void calcBoundSph(void);
+
+    //! Calculates the centre-of-mass using the left and right child node
+    //! values.
+    void calcCOM(void);
+
+    //! Put the bounding-sphere at the origin.
+    void centreBoundSph(void);
+
+    //! Put the centre-of-mass at the origin.
+    void centreCOM(void);
+
+    //! Returns true if this node is a leaf (has no children).
+    bool isLeaf(void) const;
+
+    //! Returns the bounding sphere radius.
+    double Radius(void) const;
+
+    //! Rotates the aggregate node and child structure about its centre-of-mass
+    //! by the given angles (spherical coordinates).
+    void rotateCOM(double theta, fvector V);
+
+    //! Translates (moves) the aggregate node and child structure by the given
+    //! amounts along the cartesian axes.
+    void Translate(double dx, double dy, double dz);
+
+    //! Write the coordinates of the primaries belonging to the node pointed to
+    //! by the this pointer.
+    void writePrimaryCoordinatesRadius(void);
+
+    //! Check for the overlap of primary particles.
+    bool checkForOverlap(
+        BinTreePrimary &target, //!< Target node.
+        BinTreePrimary &bullet, //!< Bullet node.
+        int &numberOfOverlaps,  //!< Number of overlaps.
+        double &Separation      //!< Separation between the centres of the primary particles for use with the Newton bisection method.   
+        );
+    
+    //! Determine whether the particles overlap.
+    static bool particlesOverlap(
+        const Coords::Vector &p1, //!< Positional vector of sphere 1.
+        double r1,                //!< Radius of sphere 1.
+        const Coords::Vector &p2, //!< Positional vector of sphere 2.
+        double r2,                //!< Radius of sphere 2.
+        double &Separation        //!< Separation between the centres of the primary particles for use with the Newton bisection method.   
+        );
+
+    //! Sets the radius of the bounding sphere.
+    void setRadius(double r);
+
+    //! Transforms the node coordinates using the given transformation matrix.
+    void transform(const Coords::Matrix &mat);
 
 private:
     // GENERAL PARTICLE MODEL PROPERTIES
@@ -340,8 +419,8 @@ private:
 	//! function to identify neighbours and sum their contribution to surface 
 	void SumNeighbours(BinTreePrimary *prim, double &sumterm);
 
-	//function to modify the centre to centre separations and returns free surface area
-	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
+	//! Function to modify the centre to centre separations and returns free surface area.
+	void UpdateConnectivity(BinTreePrimary *prim, std::set<void*> &primaryUniqueAddresses, double delta_r, double &sumterm);
 	
 	//overload of function ignore update to neighbour
 	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm, BinTreePrimary *prim_ignore);

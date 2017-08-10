@@ -1066,7 +1066,7 @@ int Sweep::Ensemble::NumOfInceptedPAH(int ID) const
 {
     int numOfInceptedPAHs = 0;
 
-    if (ID == AggModels::Spherical_ID) {
+    if (ID == AggModels::Spherical_ID || ID == AggModels::BinTree_ID) {
         for (int i = 0; i < m_count; i++){
             if (m_particles[i]->Primary()->InceptedPAH()) {
                 numOfInceptedPAHs += 1;

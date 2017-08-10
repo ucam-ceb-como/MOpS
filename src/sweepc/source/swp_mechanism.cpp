@@ -815,7 +815,7 @@ void Mechanism::DoParticleFlow(
  */
 void Mechanism::MassTransfer(int i, double t, Cell &sys, rng_type &rng, const Geometry::LocalGeometry1d& local_geom) const
 {
-    if (AggModel() == AggModels::Spherical_ID) {
+    if (AggModel() == AggModels::Spherical_ID || AggModel() == AggModels::BinTree_ID) {
         int j = sys.Particles().NumOfInceptedPAH(AggModel());
 
         if (i > j) {

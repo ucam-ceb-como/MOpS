@@ -352,8 +352,9 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     }
 
     //! Check whether to track the distance betweeen the centres of primary
-    //! particles but this only applies to binary tree (and maybe surface-
-    //! volume) models.
+    //! particles or the coordinates of the primary particles, but this only
+    //! applies to the binary tree and PAH-KMC (and maybe surface-volume)
+    //! models.
     //! By default, in terms of type space, primary particles are assumed to be
     //! in point contact but the partial rounding/sintering of particles is
     //! implicitly taken into account where mass addition (surface growth and
@@ -362,17 +363,21 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     //! addition events lead to an increase in primary diameter at a rate
     //! dependent on its neighbour while sintering leads to a simultaneous
     //! decrease in the distance betweeen the centres of neighbouring primaries
-    //! and an increase in their diameters.
-
-	if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID) {
-        str = particleXML->GetAttributeValue("trackPrimarySeparation");
-        if(str == "true") {
+    //! and an increase in their diameters. Note that if the coordinates of the
+    //! primary particles are tracked their separation is known.
+    if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID) {
+        str = particleXML->GetAttributeValue("track");
+        if (str == "primarySeparation") {
             mech.setTrackPrimarySeparation(true);
+        } else if (str == "primaryCoordinates") {
+            mech.setTrackPrimaryCoordinates(true);
         } else {
             mech.setTrackPrimarySeparation(false);
+            mech.setTrackPrimaryCoordinates(false);
         }
-	}else{
-		mech.setTrackPrimarySeparation(false);
+    } else {
+        mech.setTrackPrimarySeparation(false);
+        mech.setTrackPrimaryCoordinates(false);
     }
 
     // See if there are any secondary particle criteria
