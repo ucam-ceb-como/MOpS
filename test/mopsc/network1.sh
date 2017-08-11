@@ -113,7 +113,7 @@ if [ $(contains "$cases" "a") -eq 1 ]; then
 
     CheckTest
     
-    rm casea*
+    rm -f casea*
 fi
 
 ###################################################################
@@ -136,7 +136,7 @@ if [ $(contains "$cases" "b") -eq 1 ]; then
 
     CheckTest
     
-    rm caseb*
+    rm -f caseb*
 fi
 
 ###################################################################
@@ -159,7 +159,7 @@ if [ $(contains "$cases" "c") -eq 1 ]; then
 
     CheckTest
     
-    rm casec*
+    rm -f casec*
 fi
 
 ###################################################################
@@ -186,7 +186,7 @@ if [ $(contains "$cases" "d") -eq 1 ]; then
 
     CheckTest
     
-    rm cased*
+    rm -f cased*
 fi
 
 # If we've made it here, everything has been going well!

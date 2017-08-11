@@ -215,21 +215,22 @@ namespace Coords
             A[1][2] = - (A[2][1] = sin(theta));
         }
 
-        // Sets the matrix to be a transform matrix for rotations
-        // about the x-axis and the z-axis.
+        //! Sets the matrix to be a transform matrix for rotations about the
+        //! x-axis and the z-axis.
         inline void Rotate(
-            double theta, // X-axis rotation (radians).
-            double phi    // Z-axis rotation (radians).
+            double theta, //!< X-axis rotation (radians).
+            double phi    //!< Z-axis rotation (radians).
             )
         {
             // M = Z x X.
 
-            // Precalculate trig terms.
+            //! Precalculate trig terms.
             double sinp = sin(phi);
             double cosp = cos(phi);
             double sint = sin(theta);
             double cost = cos(theta);
-            // Set matrix.
+
+            //! Set matrix.
             A[0][0] =   cosp;
             A[0][1] = - sinp * cost;
             A[0][2] =   sinp * sint;
@@ -239,6 +240,60 @@ namespace Coords
             A[2][0] =   0.0;
             A[2][1] =   sint;
             A[2][2] =   cost;
+        }
+
+        //! Arvo's random rotation matrix.
+        inline void rotateArvo(
+            double theta, //!< Rotation about the pole. 
+            fvector V     //!< Vector for performing the reflection.
+            )
+        {
+            //! Household matrix.
+            double minusH[3][3];
+
+            //! Initial rotation matrix.
+            double R[3][3];
+
+            minusH[0][0] = 2 * V[0] * V[0] - 1;
+            minusH[0][1] = 2 * V[0] * V[1];
+            minusH[0][2] = 2 * V[0] * V[2];
+            minusH[1][0] = 2 * V[1] * V[0];
+            minusH[1][1] = 2 * V[1] * V[1] - 1;
+            minusH[1][2] = 2 * V[1] * V[2];
+            minusH[2][0] = 2 * V[2] * V[0];
+            minusH[2][1] = 2 * V[2] * V[1];
+            minusH[2][2] = 2 * V[2] * V[2] - 1;
+
+            //! The rotation matrix is premultiplied by a rotation of pi around
+            //! the world z axis as the algorithm leads to incorrect results
+            //! when used to sample a perturbation. This flips the signs of the
+            //! first two columns of the rotation matrix however this should
+            //! not matter for the present simulations:
+            //! http://demonstrations.wolfram.com/SamplingAUniformlyRandomRotation/
+            R[0][0] = -cos(theta);
+            R[0][1] = -sin(theta);
+            R[0][2] = 0;
+            R[1][0] = sin(theta);
+            R[1][1] = -cos(theta);
+            R[1][2] = 0;
+            R[2][0] = 0;
+            R[2][1] = 0;
+            R[2][2] = 1;
+
+            //! Construct the final rotation matrix by combining two simple
+            //! rotations: first rotate about the the Z axis, then rotate the
+            //! Z axis to a random orientation.
+            A[0][0] = minusH[0][0] * R[0][0] + minusH[0][1] * R[1][0] + minusH[0][2]* R[2][0];
+            A[0][1] = minusH[0][0] * R[0][1] + minusH[0][1] * R[1][1] + minusH[0][2]* R[2][1];
+            A[0][2] = minusH[0][0] * R[0][2] + minusH[0][1] * R[1][2] + minusH[0][2]* R[2][2];
+
+            A[1][0] = minusH[1][0] * R[0][0] + minusH[1][1] * R[1][0] + minusH[1][2]* R[2][0];
+            A[1][1] = minusH[1][0] * R[0][1] + minusH[1][1] * R[1][1] + minusH[1][2]* R[2][1];
+            A[1][2] = minusH[1][0] * R[0][2] + minusH[1][1] * R[1][2] + minusH[1][2]* R[2][2];
+
+            A[2][0] = minusH[2][0] * R[0][0] + minusH[2][1] * R[1][0] + minusH[2][2]* R[2][0];
+            A[2][1] = minusH[2][0] * R[0][1] + minusH[2][1] * R[1][1] + minusH[2][2]* R[2][1];
+            A[2][2] = minusH[2][0] * R[0][2] + minusH[2][1] * R[1][2] + minusH[2][2]* R[2][2];
         }
     };
 };

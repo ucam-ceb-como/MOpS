@@ -40,7 +40,7 @@ use warnings;
 # Clean up any outputs from previous simulations
 my @outputFiles = glob("regress4a*");
 if($#outputFiles > 0) {
-  system("rm @outputFiles");
+  system("rm -f @outputFiles");
 }
 
 print "Additive kernel test problem\n";
@@ -123,7 +123,7 @@ if(!(abs($var - 1.110e-43) < 0.5e-43)) {
 
 # Clean outputs, there should always be some files to delete.
 @outputFiles = glob("regress4a*");
-system("rm @outputFiles");
+system("rm -f @outputFiles");
 
 #print "All tests passed\n";
 exit 0;

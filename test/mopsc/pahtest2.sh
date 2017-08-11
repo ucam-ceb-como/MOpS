@@ -72,9 +72,9 @@ if((testresult!=0))
     exit $testresult
 fi
 
-rm pahtest2-bintree-serializer*
-#rm stats.csv
-#rm Routput.txt
+rm -f pahtest2-bintree-serializer*
+#rm -f stats.csv
+#rm -f Routput.txt
 # All tests passed
 echo "All tests passed"
 exit 0

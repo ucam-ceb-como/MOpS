@@ -58,6 +58,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <stack> //!< Used by descendPath and recordPath.
 
 namespace Sweep
 {
@@ -107,8 +108,12 @@ public:
         }
     };
 
-private:
+protected:
+    //! Sets the pointers to the primary particles correct after a copy event.
+    template <class ParticleClass>
+    void UpdateAllPointers(ImgNode &node, const ParticleClass *original);
 
+private:
     // The image aggregate structure root node.
     ImgNode m_root;
 
@@ -117,31 +122,58 @@ private:
 
     // AGGREGATE SPHERE-TREE CONSTRUCTORS (FREE-MOLECULAR).
 
-    //! Generate the free-molecular structure of a particle
-    static void calc_FM(ImgNode &node, Sweep::rng_type &rng);
+    //! Generate the free-molecular structure of a particle.
+    static void calc_FM(ImgNode &node, Sweep::rng_type &rng, const bool trackPrimarySeparation);
 
     /*!
-     * @brief      Constructs a binary tree image
+     *  @brief Constructs a binary tree image.
      *
-     * Used for generating images of particles with a binary tree
-     * structure, e.g. PAHPrimary or SilicaPrimary
+     *  Used for generating images of particles with a binary tree
+     *  structure, e.g. PAHPrimary or SilicaPrimary.
      *
-     * @param p    Pointer to particle for which to construct tree
-     * @param rng  Random number generator
+     *  @param[in] p                      Pointer to particle for which to construct tree.
+     *  @param[in] rng                    Random number generator.
+     *  @param[in] trackPrimarySeparation Flag used to indicate whether to track primary separation.
      */
     template <class ParticleClass>
-    void ConstructTree(const ParticleClass *p, Sweep::rng_type &rng) {
-
+    void ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimarySeparation) {
         m_root.Clear();
 
-        // Call the helper function to generate structure
-        ConstructTreeLoop(p);
+        if (!trackPrimarySeparation) {
+            //! Disregards the connectivity of the original particle.
+            //! Call the helper function to generate structure.
+            ConstructTreeLoop(p);
+        } else {
+            //! Maintains the connectivity of the original particle.
+            //! Copy properties of the original particle to the root node.
+            CopyParts(m_root, p);
 
-        // Use the free-molecular regime to calculate the
-        // aggregate structure.
-        calc_FM(m_root, rng);
+            //! If true, particle is made up of more than one primary.
+            //! Copy the rest of the tree.
+            if (p->m_leftchild != NULL)
+                CopyTree(m_root, p);
+        }
+        //! Use the free-molecular regime to calculate the
+        //! aggregate structure.
+        calc_FM(m_root, rng, trackPrimarySeparation);
         m_root.CentreCOM();
     };
+    
+    //! Copies the node without the children.
+    template <class ParticleClass>
+    void CopyParts(ImgNode &node, const ParticleClass *source);
+
+    //! Copies the subtree of a node.
+    template <class ParticleClass>
+    void CopyTree(ImgNode &node, const ParticleClass *source);
+
+    //! Find the path through the tree from node top to node bottom.
+    template <class ParticleClass>
+    static std::stack<bool> recordPath(const ParticleClass* bottom, const ParticleClass* const top);
+
+    //! Follow a path down the tree.
+    template <class ParticleClass>
+    static ParticleClass* descendPath(ParticleClass *here, std::stack<bool> &takeLeftBranch);
 
     //void LengthWidth(double &L, double &W);
 
@@ -151,23 +183,24 @@ private:
     //! Generates a projection on the zx plane (set all y to 0)
     void Project();
 
-
-    //! Calculates the z-displacement of a sphere
+    //! Calculates the z-displacement of a sphere.
     static bool calcCollZ(
-        const Coords::Vector &p1, // Positional vector of sphere 1.
-        double r1,                  // Radius of sphere 1.
-        const Coords::Vector &p2, // Positional vector of sphere 2.
-        double r2,                  // Radius of sphere 2.
-        double dx, double dy,         // Sphere 2 x and y displacements.
-        double &dz                  // The output z-axis displacement of the bullet (+ve).
+        const Coords::Vector &p1,         //!< Positional vector of sphere 1.
+        double r1,                        //!< Radius of sphere 1.
+        const Coords::Vector &p2,         //!< Positional vector of sphere 2.
+        double r2,                        //!< Radius of sphere 2.
+        double dx, double dy,             //!< Sphere 2 x and y displacements.
+        double &dz,                       //!< The output z-axis displacement of the bullet (+ve).
+        double distanceCentreToCentre,    //!< Distance between the centres of primary particles.
+        const bool trackPrimarySeparation //!< Flag used to indicate whether to track primary separation.
         );
 
-    //! Calculates the minimum collision distance
+    //! Calculates the minimum collision distance.
     static bool minCollZ(
-        const ImgNode &target, // Target node.
-        const ImgNode &bullet, // Bullet node.
-        double dx, double dy,      // Bullet x-y displacements.
-        double &dz               // Return minimum distance.
+        const ImgNode &target, //!< Target node.
+        const ImgNode &bullet, //!< Bullet node.
+        double dx, double dy,  //!< Bullet x-y displacements.
+        double &dz             //!< Return minimum distance.
         );
 
     // OUTPUT FUNCTIONS.

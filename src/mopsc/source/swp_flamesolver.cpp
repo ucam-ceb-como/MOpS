@@ -263,10 +263,21 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetTemperature(T);
             gpoint.Gas.SetPressure(P*1.0e5);//also set the molar density of gas mixture
             gpoint.Gas.Normalise();
-            //gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(cm3*s) to mol/(m3*s)
-            // PAHRate*1E6 record the Inception rate of pyrene, but currently we use the method that transfer the mass from gasphase to kmc phase according to their concentrations not the rates
-            // so the PAHFormation rate is set to be 0, and PAHRate is not useful at all
-            gpoint.Gas.SetPAHFormationRate(PAHRate*0);
+
+            //! If postprocessing based on the molar rate of production by
+            //! chemical reaction of the inception species per unit volume
+            //! wdotA4 (mol/cm3/s), PAHRate determines the rate at which the
+            //! inception species is inserted into the ensemble. Otherwise it
+            //! is not required; the number of stochastic particles made up of
+            //! a single primary corresponding to the inception species is
+            //! adjusted to match the inception species concentration in
+            //! FlameSolver::Solve.
+            if (mech.ParticleMech().Postprocessing() == ParticleModel::wdotA4) {
+                gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);    //!< Convert from mol/(cm3*s) to mol/(m3*s).
+            } else {
+                gpoint.Gas.SetPAHFormationRate(PAHRate*0);      //!< Explicitly set to 0 in case the wdotA4 column in the gasphase.inp file is non-zero.
+            }
+
             gpoint.Gas.SetAlpha(alpha);
 
             // Add the profile point.
@@ -332,8 +343,23 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     double t  = r.Time();
     dtg     = tstop - t;
 
-    // Set the chemical conditions.
+    //! If the initial composition was not specified, linearly interpolate the
+    //! gas-phrase profile to obtain properties at the initial time step which
+    //! may not necessarily be zero.
+    if (!(r.Mixture()->GasPhase().MassDensity() >= 0))
+        linInterpGas(t, r.Mixture()->GasPhase());
+
+    //! Save density from previous time step for sample volume adjustment.
+    double old_dens = r.Mixture()->GasPhase().MassDensity();
+
+    //! Update the chemical conditions.
     linInterpGas(t, r.Mixture()->GasPhase());
+
+    //! Adjust sample volume using the change in the density. Note that the
+    //! code has to go through the loop below twice for the sample volume to be
+    //! adjusted. However, it was found that the loop is only performed once;
+    //! therefore, the sample volume adjustment has to be performed here.
+    r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
@@ -349,32 +375,46 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
         r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
 
-        if (mech.AggModel()== AggModels::PAH_KMC_ID)
-        {
+        //! Tried and tested only for the PAH-PP/KMC-ARS model, binary tree and
+        //! the spherical particle model. Only relevant if postprocessing based
+        //! on the inception species concentration.
+        if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID && 
+            r.Mixture()->ParticleModel()->Postprocessing() == ParticleModel::XA4) {
             int index;
+            double numCarbons;
+
             switch (mech.InceptedPAH()){
                 case ParticleModel::A1:
                     index=r.Mech()->GasMech().FindSpecies("A1");
+                    numCarbons = 6;
                     break;
                 case ParticleModel::A2:
                     index=r.Mech()->GasMech().FindSpecies("A2");
+                    numCarbons = 10;
                     break;
                 case ParticleModel::A4:
                     index=r.Mech()->GasMech().FindSpecies("A4");
+                    numCarbons = 16;
                     break;
                 case ParticleModel::A5:
                     index=r.Mech()->GasMech().FindSpecies("A5");
+                    numCarbons = 20;
                     break;
                 default:
                     throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4 and A5 are supported now (Sweep::FlameSolver::Solve())");
             }
-            // calculate the amount of stochastic pyrene particles in the ensemble
-            unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);
-            // if Pmount exceeds the capacity of the ensemble at the begining of the simulation,
-            // the process should be terminated since further running is meaningless.
-            if (t < 1.0e-20 && Pamount >= r.Mixture()->Particles().Capacity())
-                throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
-            mech.MassTransfer(Pamount,t,*r.Mixture(),rng);
+            if (mech.Inceptions(0) != NULL) {
+                if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID &&
+                    mech.Inceptions(0)->ParticleComp(0) == numCarbons) {
+                    // calculate the amount of stochastic pyrene particles in the ensemble
+                    unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);
+                    // if Pmount exceeds the capacity of the ensemble at the begining of the simulation,
+                    // the process should be terminated since further running is meaningless.
+                    if (t < 1.0e-20 && Pamount >= r.Mixture()->Particles().Capacity())
+                        throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
+                    mech.MassTransfer(Pamount, t, *r.Mixture(), rng, Geometry::LocalGeometry1d());
+                }
+            }
         }
 
         // Get the process jump rates (and the total rate).

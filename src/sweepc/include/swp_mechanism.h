@@ -234,12 +234,13 @@ public:
             const Geometry::LocalGeometry1d& local_geom,
             rng_type &rng) const;
 
-    // transfer mass from gas-phase to particle ensemble used for PAH-PP model
+    //! Transfer mass from gas phase to particle ensemble used for PAH-PP model.
     void MassTransfer(
-        int i,          // the number of pyrene supposed in the emsemble
-        double t,         // Current time (s).
-        Cell &sys,      // System to update (includes ensemble).
-        rng_type &rng   // Random number generator
+        int i,                                         //!< The number of pyrene supposed in the ensemble.
+        double t,                                      //!< Current time (s).
+        Cell &sys,                                     //!< System to update (includes ensemble).
+        rng_type &rng,                                 //!< Random number generator.
+        const Geometry::LocalGeometry1d& local_geom    //!< Information regarding surrounding cells.
         ) const;
 
 

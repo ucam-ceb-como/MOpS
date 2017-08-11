@@ -125,7 +125,6 @@ private:
 
     //! Fragmentation flag.
     int m_frag;
-
     // Collision rate calculation particle properties.
     double m_dcolsqr;      //!< Collision diameter squared.
     double m_inv_dcol;     //!< Inverse collision diameter.

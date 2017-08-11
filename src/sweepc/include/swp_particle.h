@@ -138,10 +138,10 @@ public:
     //! Returns the mass.
     double Mass(void) const;
 
-    //! Pass through to primary particle.
+    //! Returns the number of carbons.
     int NumCarbon(void) const;
 
-    //! Pass through to primary particle.
+    //! Returns fragmentation flag.
     int Frag(void) const;
 
     //! Returns the number of surface reaction sites.
@@ -156,10 +156,8 @@ public:
     //! Geometric average diameter of aggregate sub-units
     double avgeomdiam(double) const;
 
-
     //! Returns the property with the given ID.
     double Property(Sweep::PropID id) const;
-
 
 
     // COMPOSITION.

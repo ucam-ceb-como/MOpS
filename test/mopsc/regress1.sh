@@ -36,8 +36,8 @@ fi
 # Array of particle numbers - these should be the count of particles of sizes 1,2 and 3 in the psl file
 # Put a negative values at the start so that the number of particles of size 1 comes at index 1
 # Analytic solution is 1053 91 12 2
-referenceValues=(-1 1064 84 9  4  1)
-simulatedValues=(-1 -1   -1 -1 -1 -1)
+referenceValues=(-1 1066 83 9 4 1)
+simulatedValues=(-1 -1 -1 -1 -1 -1)
 
 # Grep seems to require the file in unix format, even under cygwin
 if((windows==1))

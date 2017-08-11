@@ -86,9 +86,7 @@ Sweep::TreeCache::TreeCache(const Sweep::Particle &part)
     m_vol       = part.Volume();
     m_mass      = part.Mass();
     m_numcarbon = part.NumCarbon();
-
-    //! Fragmentation flag.
-    m_frag = part.Frag();
+    m_frag      = part.Frag();      //!< Fragmentation flag.
 
     // The particle does not currently provide this data (although it stores it)
     m_freesurface = 0.0;

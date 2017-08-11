@@ -274,8 +274,8 @@ public:
         const Sweep::ParticleModel &mech // Model used to define particles.
         );
 
-    int NumOfInceptedPAH() const;// return the number of pyrene in current state.
-    int IndexOfInceptedPAH() const; //move backwards.
+    int NumOfInceptedPAH(int ID) const;// return the number of pyrene in current state.
+    int IndexOfInceptedPAH(int ID) const; //move backwards.
     Sweep::KMC_ARS::KMCSimulator* Simulator();
     void SetSimulator(Sweep::GasProfile& gp);
 

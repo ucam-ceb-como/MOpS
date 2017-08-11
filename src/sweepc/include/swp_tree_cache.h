@@ -119,7 +119,6 @@ public:
 
     //! Returns fragmentation flag.
     int Frag(void) const;
-
     // Returns the property with the given ID.
     double Property(PropID id) const;
 

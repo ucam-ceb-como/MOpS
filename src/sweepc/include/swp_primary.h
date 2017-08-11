@@ -198,7 +198,6 @@ public:
 
     //! Returns fragmentation flag.
     int Frag(void) const;
-
     //! Returns the property with the given ID.
     double Property(const Sweep::PropID id) const;
 
@@ -228,7 +227,6 @@ public:
 
     //! Sets fragmentation flag.
     void SetFrag(int frag);
-
     //! Check particle still meets physical conditions for being a particle.
     bool IsValid() const;
 
@@ -295,6 +293,10 @@ public:
 
 	virtual double GetCoverageFraction() const;
 
+    //! Check whether the number of carbon atoms in the primary is equal to
+    //! that of the inception species.
+    int InceptedPAH() const;
+
 protected:
     // Particle model used to define the Primary.
     const Sweep::ParticleModel *m_pmodel;
@@ -312,8 +314,8 @@ protected:
     double m_surf; // Surface area.
     double m_vol;  // Volume.
     double m_mass; // Mass.
-    int m_numcarbon; /**< Number of carbon atoms. */
-    int m_frag;     /**< Fragmentation flag. */
+    int m_numcarbon; //!< Number of carbon atoms.
+    int m_frag;      //!< Fragmentation flag.
 
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.

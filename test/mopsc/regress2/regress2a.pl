@@ -82,16 +82,16 @@ while(<$momentFile>) {
 
 # 20 runs using 2048 computational particles gives the following estimates and
 # 99% confidence intervals for the estimates
-# m0 2.93+-0.05e10 cm^-3
-# fv 1.26+-0.004e-11
+# m0 2.94+-0.06e10 cm^-3
+# fv 1.26+-0.003e-11
 
 # With git 0d294425... 200 repetitions with other settings unchanged gives
 # m0 (2.936+-0.037)e17 m^-3
 # fv (1.260+-0.007)e-8
 
 print "$m0, $m1\n";
-if(abs($m0 - 2.93e17) > 1.5e16) {
-  print "Simulated mean M0 was $m0, when 2.93e17 m^-3 expected\n";
+if(abs($m0 - 2.94e17) > 1.5e16) {
+  print "Simulated mean M0 was $m0, when 2.94e17 m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

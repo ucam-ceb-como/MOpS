@@ -1062,26 +1062,44 @@ void Sweep::Ensemble::init(void)
  *
  * An incepted PAH is a stochastic particle made up of a single primary and a single PAH matching the gas transfer species (PAH that bridges gas-phase profile and MOPS)
  */
-int Sweep::Ensemble::NumOfInceptedPAH() const
+int Sweep::Ensemble::NumOfInceptedPAH(int ID) const
 {
     int numOfInceptedPAHs = 0;
-    for (int i = 0; i < m_count; i++){
-        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-        rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
 
-        numOfInceptedPAHs += rhsparticle->InceptedPAH();
+    if (ID == AggModels::Spherical_ID || ID == AggModels::BinTree_ID) {
+        for (int i = 0; i < m_count; i++){
+            if (m_particles[i]->Primary()->InceptedPAH()) {
+                numOfInceptedPAHs += 1;
+            }
         }
+    } else {
+        for (int i = 0; i < m_count; i++){
+            const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+            rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+
+            numOfInceptedPAHs += rhsparticle->InceptedPAH();
+        }
+    }
+
     return numOfInceptedPAHs;
 }
 
-int Sweep::Ensemble::IndexOfInceptedPAH() const
+int Sweep::Ensemble::IndexOfInceptedPAH(int ID) const
 {
-    for (int i =m_count-1;i>=0;--i){
-        const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-        rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
-        if (rhsparticle->InceptedPAH() == 1)
-            return i;
+    if (ID == AggModels::Spherical_ID) {
+        for (int i =m_count-1;i>=0;--i){
+            if (m_particles[i]->Primary()->InceptedPAH())
+                return i;
+	    }
+    } else {
+        for (int i =m_count-1;i>=0;--i){
+            const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+            rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+            if (rhsparticle->InceptedPAH() == 1)
+                return i;
         }
+    }
+
     return -1;
 }
 

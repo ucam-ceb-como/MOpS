@@ -53,16 +53,16 @@ using namespace std;
 
 // Default constructor.
 ImgNode::ImgNode(void)
-: m_r(0.0), m_r2(0.0), m_r3(0.0), m_mindepth(0), m_parent(NULL), 
-  m_left(NULL), m_right(NULL)
+: m_distance_centreToCentre(0.0), m_r(0.0), m_r2(0.0), m_r3(0.0), m_mindepth(0), m_parent(NULL), 
+  m_leftchild(NULL), m_rightchild(NULL), m_leftparticle(NULL), m_rightparticle(NULL)
 {
 }
 
 // Destructor.
 ImgNode::~ImgNode(void)
 {
-    delete m_left;
-    delete m_right;
+    delete m_leftchild;
+    delete m_rightchild;
 }
 
 
@@ -73,6 +73,7 @@ ImgNode::~ImgNode(void)
 void ImgNode::Clear(void)
 {
     // Set size to zero.
+    m_distance_centreToCentre = 0.0;
     m_r  = 0.0;
     m_r2 = 0.0;
     m_r3 = 0.0;
@@ -86,13 +87,13 @@ void ImgNode::Clear(void)
     m_cen_mass[2] = 0.0;
 
     // Clear children.
-    if (m_left != NULL) {
-        m_left->Clear();
-        delete m_left; m_left = NULL;
+    if (m_leftchild != NULL) {
+        m_leftchild->Clear();
+        delete m_leftchild; m_leftchild = NULL;
     }
-    if (m_right != NULL) {
-        m_right->Clear();
-        delete m_right; m_right = NULL;
+    if (m_rightchild != NULL) {
+        m_rightchild->Clear();
+        delete m_rightchild; m_rightchild = NULL;
     }
 }
 
@@ -103,14 +104,13 @@ void ImgNode::CopySPT(const Particle *sp)
     setRadius( (sp->Primary()->Property(Sweep::iDsph))*0.5e9);       //convert to nm
 }
 
-
 // Adds a primary into the tree.  Algorithm maintains
 // well-balanced binary tree structure by observing
 // the minimum branch depth below node.
 void ImgNode::Insert(double radius)
 {
     // Check for an empty tree.
-    if ((m_left == NULL) && (m_right == NULL)) {
+    if ((m_leftchild == NULL) && (m_rightchild == NULL)) {
         if (m_r == 0.0) {
             // This node is empty, just set its radius.
             setRadius(radius);
@@ -121,14 +121,14 @@ void ImgNode::Insert(double radius)
 
             // Set left child to have the properties
             // of this node.
-            m_left = new ImgNode();
-            m_left->setRadius(m_r);
-            m_left->m_parent = this;
+            m_leftchild = new ImgNode();
+            m_leftchild->setRadius(m_r);
+            m_leftchild->m_parent = this;
 
             // Add a new right node for the new primary.
-            m_right = new ImgNode();
-            m_right->setRadius(radius);
-            m_right->m_parent = this;
+            m_rightchild = new ImgNode();
+            m_rightchild->setRadius(radius);
+            m_rightchild->m_parent = this;
 
             // Mark this node as not calculated.
            setRadius(0.0);
@@ -138,24 +138,24 @@ void ImgNode::Insert(double radius)
         }
     } else {
         // This node has children.
-        if (m_left->m_mindepth <= m_right->m_mindepth) {
+        if (m_leftchild->m_mindepth <= m_rightchild->m_mindepth) {
             // Add primary to the left branch if branch
             // depths are equal, or left branch is shallower.
-            m_left->Insert(radius);
+            m_leftchild->Insert(radius);
         } else {
             // Add primary to the right branch if it is
             // shallower.
-            m_right->Insert(radius);
+            m_rightchild->Insert(radius);
         }
         // Recalulate the minimum tree depth of this node.
-        m_mindepth = min(m_left->m_mindepth, m_right->m_mindepth)+1;
+        m_mindepth = min(m_leftchild->m_mindepth, m_rightchild->m_mindepth)+1;
     }
 }
 
 // Returns true if this node is a leaf (has no children).
 bool ImgNode::IsLeaf(void) const
 {
-    return (m_left==NULL) && (m_right==NULL);
+    return (m_leftchild==NULL) && (m_rightchild==NULL);
 }
 
 // Returns a vector of primary coordinates (4D).  The first
@@ -171,8 +171,8 @@ void ImgNode::GetPriCoords(std::vector<fvector> &coords) const
         c[3] = m_r;
         coords.push_back(c);
     } else {
-        m_left->GetPriCoords(coords);
-        m_right->GetPriCoords(coords);
+        m_leftchild->GetPriCoords(coords);
+        m_rightchild->GetPriCoords(coords);
     }
 }
 
@@ -184,8 +184,8 @@ void ImgNode::Project()
 {
     m_cen_mass[1]=0;
     if (!IsLeaf()) { 
-        m_left->Project();
-        m_right->Project();
+        m_leftchild->Project();
+        m_rightchild->Project();
     }
 }
 
@@ -194,8 +194,8 @@ void ImgNode::Project()
 void ImgNode::Translate(double dx, double dy, double dz)
 {
     // Translate child branches.
-    if (m_left != NULL) m_left->Translate(dx, dy, dz);
-    if (m_right != NULL) m_right->Translate(dx, dy, dz);
+    if (m_leftchild != NULL) m_leftchild->Translate(dx, dy, dz);
+    if (m_rightchild != NULL) m_rightchild->Translate(dx, dy, dz);
     // Translate bounding sphere and centre-of-mass centres.
     m_cen_bsph.Translate(dx, dy, dz);
     m_cen_mass.Translate(dx, dy, dz);
@@ -229,8 +229,8 @@ void ImgNode::RotateCOM(double dtheta, double dphi)
     M.Rotate(dtheta, dphi);
 
     // Rotate child nodes.
-    if (m_left != NULL) m_left->transform(M);
-    if (m_right != NULL) m_right->transform(M);
+    if (m_leftchild != NULL) m_leftchild->transform(M);
+    if (m_rightchild != NULL) m_rightchild->transform(M);
 
     // Rotate bounding-sphere coordinates.
     m_cen_bsph = M.Mult(m_cen_bsph);
@@ -255,8 +255,8 @@ void ImgNode::RotateBoundSph(double dtheta, double dphi)
     M.Rotate(dtheta, dphi);
 
     // Rotate child nodes.
-    if (m_left != NULL) m_left->transform(M);
-    if (m_right != NULL) m_right->transform(M);
+    if (m_leftchild != NULL) m_leftchild->transform(M);
+    if (m_rightchild != NULL) m_rightchild->transform(M);
 
     // Rotate centre-of-mass coordinates.
     m_cen_mass = M.Mult(m_cen_mass);
@@ -282,10 +282,10 @@ void ImgNode::RotateOrigin(double dtheta, double dphi)
 void ImgNode::transform(const Coords::Matrix &mat)
 {
     // Rotate child nodes.
-    if (m_left != NULL) 
-        m_left->transform(mat);
-    if (m_right != NULL) 
-        m_right->transform(mat);
+    if (m_leftchild != NULL) 
+        m_leftchild->transform(mat);
+    if (m_rightchild != NULL) 
+        m_rightchild->transform(mat);
     // Rotate centre-of-mass and bounding sphere coords.
     m_cen_mass = mat.Mult(m_cen_mass);
     m_cen_bsph = mat.Mult(m_cen_bsph);
@@ -314,24 +314,30 @@ void ImgNode::setRadius(double r)
     m_r3 = m_r2 * m_r;
 }
 
+//! Set the distance between the centres of primary particles.
+void ImgNode::setDistance(double distance)
+{
+    m_distance_centreToCentre = distance;
+}
+
 // Calculates the bounding sphere position and radius using
 // the left and right child node values.
 void ImgNode::CalcBoundSph(void)
 {
-    if ((m_left != NULL) && (m_right != NULL)) {
+    if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
         // Calculate bounding spheres of children.
-        m_left->CalcBoundSph();
-        m_right->CalcBoundSph();
+        m_leftchild->CalcBoundSph();
+        m_rightchild->CalcBoundSph();
 
         // Calculate translation between left and right spheres.
-        double dx = m_right->m_cen_bsph[0] - m_left->m_cen_bsph[0];
-        double dy = m_right->m_cen_bsph[1] - m_left->m_cen_bsph[1];
-        double dz = m_right->m_cen_bsph[2] - m_left->m_cen_bsph[2];
+        double dx = m_rightchild->m_cen_bsph[0] - m_leftchild->m_cen_bsph[0];
+        double dy = m_rightchild->m_cen_bsph[1] - m_leftchild->m_cen_bsph[1];
+        double dz = m_rightchild->m_cen_bsph[2] - m_leftchild->m_cen_bsph[2];
 
         // Calculate bounding sphere centre.
-        m_cen_bsph[0] = m_left->m_cen_bsph[0] + (0.5 * dx);
-        m_cen_bsph[1] = m_left->m_cen_bsph[1] + (0.5 * dy);
-        m_cen_bsph[2] = m_left->m_cen_bsph[2] + (0.5 * dz);
+        m_cen_bsph[0] = m_leftchild->m_cen_bsph[0] + (0.5 * dx);
+        m_cen_bsph[1] = m_leftchild->m_cen_bsph[1] + (0.5 * dy);
+        m_cen_bsph[2] = m_leftchild->m_cen_bsph[2] + (0.5 * dz);
 
         // Calculate bounding sphere radius.
         setRadius(sqrt((dx*dx)+(dy*dy)+(dz*dz)));
@@ -351,23 +357,23 @@ const Coords::Vector &ImgNode::CentreOfMass(void) const
 // node values.
 void ImgNode::CalcCOM(void)
 {
-    if ((m_left != NULL) && (m_right != NULL)) {
+    if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
         // Calculate centres-of-mass of left and
         // right children.
-        m_left->CalcCOM();
-        m_right->CalcCOM();
+        m_leftchild->CalcCOM();
+        m_rightchild->CalcCOM();
 
         // Mass is proportional to r^3.  Calculated total
         // mass (inverse) of left and right children.
     //    double invtotmass = 1.0 / (m_left->m_r3 + m_right->m_r3);
-        m_mass=m_left->m_mass + m_right->m_mass;
+        m_mass=m_leftchild->m_mass + m_rightchild->m_mass;
         double invtotmass = 1.0 / m_mass;
         // Now calculate centre of mass.
         for (unsigned int i=0; i!=3; ++i) {
             //m_cen_mass[i]  = m_left->m_cen_mass[i] * m_left->m_r3;
           //  m_cen_mass[i] += m_right->m_cen_mass[i] * m_right->m_r3;
-            m_cen_mass[i]  = m_left->m_cen_mass[i] * m_left->m_mass;
-            m_cen_mass[i] += m_right->m_cen_mass[i] * m_right->m_mass;
+            m_cen_mass[i]  = m_leftchild->m_cen_mass[i] * m_leftchild->m_mass;
+            m_cen_mass[i] += m_rightchild->m_cen_mass[i] * m_rightchild->m_mass;
             m_cen_mass[i] *= invtotmass;
         }
     } else {

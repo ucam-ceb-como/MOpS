@@ -406,19 +406,31 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         // majorant rate and the current (after updates) true rate.
 
         double truek = CoagKernel(*sp1, *sp2, sys);
-		double ceff=0;
-		if (majk<truek)
-		    std::cout << "maj< true"<< std::endl;
+        double ceff=0;
+        if (majk<truek)
+            std::cout << "maj< true"<< std::endl;
 
-		//added by ms785 to include the collision efficiency in the calculation of the rate
-		if (sys.ParticleModel()->AggModel()==AggModels::PAH_KMC_ID)
-		{
-			 ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
-			 truek*=ceff;
-		}
+        //added by ms785 to include the collision efficiency in the calculation of the rate
+        if (sys.ParticleModel()->AggModel() == AggModels::PAH_KMC_ID)
+        {
+            ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
+            truek*=ceff;
+        }
 
-
-
+        //! For the purpose of checking consistency with the spherical soot
+        //! model solved using the method of moments with interpolative closure
+        //! which assumes that only pyrene (A4) is able to incept and condense.
+        else if (sys.ParticleModel()->AggModel() == AggModels::BinTree_ID || sys.ParticleModel()->AggModel() == AggModels::Spherical_ID) {
+            if (sp1->Primary()->InceptedPAH() && sp2->Primary()->InceptedPAH()) {
+                ceff = 1;
+            } else if (sp1->Primary()->InceptedPAH() && sp2->NumCarbon() > 16 || sp1->NumCarbon() > 16 && sp2->Primary()->InceptedPAH()) {
+                ceff = 1;
+            } else {
+                ceff = 1;
+            }
+            truek*=ceff;
+        }
+        
         if (!Fictitious(majk, truek, rng)) {
             JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
         } else {

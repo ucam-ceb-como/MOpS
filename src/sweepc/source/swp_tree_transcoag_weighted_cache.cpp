@@ -70,8 +70,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache()
 , m_vol(0.0)
 , m_mass(0.0)
 , m_numcarbon(0)
-, m_frag(0)
-, m_dcolsqr(0.0)
+, m_frag(0), m_dcolsqr(0.0)
 , m_inv_dcol(0.0)
 , m_inv_dcolsqr(0.0)
 , m_inv_sqrtmass(0.0)
@@ -105,16 +104,14 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
      * Effectively this code defines an interface that the Particle class must
      * provide.
      */
-    m_sphdiam = part.SphDiameter();
-    m_dcol    = part.CollDiameter();
-    m_dmob    = part.MobDiameter();
-    m_surf    = part.SurfaceArea();
-    m_vol     = part.Volume();
-    m_mass    = part.Mass();
+    m_sphdiam   = part.SphDiameter();
+    m_dcol      = part.CollDiameter();
+    m_dmob      = part.MobDiameter();
+    m_surf      = part.SurfaceArea();
+    m_vol       = part.Volume();
+    m_mass      = part.Mass();
     m_numcarbon = part.NumCarbon();
-
-    //! Fragmentation flag.
-    m_frag = part.Frag();
+    m_frag      = part.Frag();      //!< Fragmentation flag.
 
     // Derived quantites that are needed to the typical transition
     // regime coagulation kernel.
@@ -160,6 +157,7 @@ Sweep::TreeTransCoagWeightedCache &Sweep::TreeTransCoagWeightedCache::operator+=
     m_mass         += rhs.m_mass;
     m_numcarbon    += rhs.m_numcarbon;
     m_frag         += rhs.m_frag;
+    m_numcarbon += rhs.m_numcarbon;
     m_dcolsqr      += rhs.m_dcolsqr;
     m_inv_dcol     += rhs.m_inv_dcol;
     m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
@@ -200,6 +198,7 @@ void Sweep::TreeTransCoagWeightedCache::Clear(void)
     m_mass         = 0.0;
     m_numcarbon    = 0;
     m_frag         = 0;
+    m_numcarbon = 0;
     m_dcolsqr      = 0.0;
     m_inv_dcol     = 0.0;
     m_inv_dcolsqr  = 0.0;
@@ -284,7 +283,8 @@ double Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
         case iFS:
             throw std::logic_error("Free surface no longer cached (TreeWeightedCache::Property)");
             return 0.0;
-        case -1:
+        case iNumCarbon:
+            return m_numcarbon;        case -1:
             // Special case property, used to select particles
             // uniformly.
             return 1.0;

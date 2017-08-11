@@ -84,7 +84,8 @@ const std::string BinTreeStats::m_const_pslnames[BinTreeStats::PSL_COUNT] = {
     std::string("Total Sintering Time (s)"),
     std::string("Arithmetic Stdev of Primary Diameter (nm)"),
     std::string("Geometric Mean of Primary Diameter (nm)"),
-    std::string("Geometric Stdev of Primary Diameter (-)")
+    std::string("Geometric Stdev of Primary Diameter (-)"),
+    std::string("Radius of Gyration (nm)")
 };
 
 //! Default constructor.
@@ -160,16 +161,17 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
         double sz = (*ip)->Property(m_statbound.PID);
         double wt = (*ip)->getStatisticalWeight() * invTotalWeight;
 
-        // Check if the value of the property is within the stats bound
+        //! Check if the value of the property is within the stats bound.
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-            m_stats[iNPrim]     += prim->GetNumPrimary()  * wt;
-            m_stats[iPrimDiam]  += prim->GetPrimaryDiam() * wt
-                    / (double) prim->GetNumPrimary();
-            m_stats[iSintLevel] += prim->GetAvgSinterLevel() * wt;
-            m_stats[iSintRate]  += prim->GetSintRate() * wt;
-            m_stats[iSintTime]  += prim->GetSintTime() * wt;
-            m_stats[iGStdevMean]+= prim->GetPrimaryGStdDev() * wt;
+            m_stats[iNPrim]      += prim->GetNumPrimary()  * wt;
+            m_stats[iPrimDiam]   += prim->GetPrimaryDiam() * wt
+                                  / (double) prim->GetNumPrimary();
+            m_stats[iSintLevel]  += prim->GetAvgSinterLevel() * wt;
+            m_stats[iSintRate]   += prim->GetSintRate() * wt;
+            m_stats[iSintTime]   += prim->GetSintTime() * wt;
+            m_stats[iGStdevMean] += prim->GetPrimaryGStdDev() * wt;
+            m_stats[iRg]         += prim->GetRadiusOfGyration() * wt;
 
             // Collect the collision and primary diameters
             d.push_back(prim->CollDiameter());
@@ -370,6 +372,7 @@ void BinTreeStats::PSL(const Sweep::Particle &sp, double time,
         *(++j) = 1.0e9 * prim->GetPrimaryAStdDev();
         *(++j) = 1.0e9 * prim->GetPrimaryGMean();
         *(++j) = prim->GetPrimaryGStdDev();
+        *(++j) = prim->GetRadiusOfGyration() * 1.0e9;
 
     } else {
         fill (j+1, j+2, 0.0);

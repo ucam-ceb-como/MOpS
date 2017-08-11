@@ -121,7 +121,7 @@ CheckTest
 echo "All tests passed. :D"
 # Remove temporary files
 echo "Cleaning files.."
-rm adiabatic*
+rm -f adiabatic*
 
 cd ..
 

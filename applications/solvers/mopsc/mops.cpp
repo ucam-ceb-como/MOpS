@@ -71,6 +71,9 @@ int main(int argc, char* argv[])
     bool fpah(false);       // Should full PAHPP data be postprocessed?
     bool fensembles(false); // Should an *.ens file be written?
     bool fnew(false);       // Should the new network interface be used?
+    bool fwdotA4(false);    //!< Should postprocess based on the molar rate of
+                            //!< production by chemical reaction of the
+                            //!< inception species?
 
     try {
 
@@ -121,6 +124,7 @@ int main(int argc, char* argv[])
         ("ensemble", "write full ensembles to binary files")
         ("ppah", "write full PAHPP data")
         ("jumps", "write stochastic jumps data")
+        ("wdotA4", "postprocess based on the molar rate of production by chemical reaction of the inception species")
         ;
 
         // Combine sets of program options
@@ -187,6 +191,7 @@ int main(int argc, char* argv[])
         if (vm.count("ppah")) fpah = true;
         if (vm.count("jumps")) fjumps = true;
         if (vm.count("ensemble")) fensembles = true;
+        if (vm.count("wdotA4")) fwdotA4 = true;
     }
 
     // Display any error messages from incorrect command-line flags
@@ -263,6 +268,10 @@ int main(int argc, char* argv[])
     // Set the sepcies in the particle mechanism
     // (needed even if only gas-phase solver called)
     mech.ParticleMech().SetSpecies(mech.GasMech().Species());
+
+    if (fwdotA4) {
+        mech.ParticleMech().setPostprocessingType(Sweep::ParticleModel::wdotA4);
+    }
 
     try {
         // Load the gas profile for flamepp calculations

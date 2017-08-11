@@ -43,11 +43,13 @@
 #include "swp_primary.h"
 #include "swp_model_factory.h"
 #include "swp_cell.h"
+#include "swp_kmc_typedef.h"
 
 #include <stdexcept>
 #include <memory.h>
 
 using namespace Sweep;
+using namespace Sweep::KMC_ARS;
 
 using namespace std;
 
@@ -56,8 +58,7 @@ using namespace std;
 //! Default constructor (protected).
 AggModels::Primary::Primary(void)
 : m_pmodel(NULL), m_createt(0.0), m_time(0.0), m_diam(0.0), m_dcol(0.0), 
-  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0), m_frag(0)
-{
+  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0), m_frag(0){
 }
 
 // Initialising constructor.
@@ -130,8 +131,7 @@ AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
         m_vol  = rhs.m_vol;
         m_mass = rhs.m_mass;
         m_numcarbon = rhs.m_numcarbon;
-        m_frag = rhs.m_frag;
-    }
+        m_frag = rhs.m_frag;    }
     return *this;
 }
 
@@ -228,6 +228,7 @@ AggModels::AggModelType AggModels::Primary::AggID(void) const {return AggModels:
 void AggModels::Primary::UpdateCache(void)
 {
     double m = 0.0;
+    int m_numcarbon_temp = 0;
 
     // Loop over composition and calculate mass and volume.
     m_mass = m_vol = 0.0;
@@ -271,6 +272,11 @@ void AggModels::Primary::UpdateCache(void)
     m_dcol = m_diam;
     m_dmob = m_diam;
     m_surf = PI * m_diam * m_diam;
+    m_numcarbon = 0;
+    for (unsigned int i=0; i!=m_pmodel->ComponentCount(); ++i) {
+        m_numcarbon_temp = m_comp[i];
+        m_numcarbon += m_numcarbon_temp;
+    }
 }
 
 // Returns the particle equivalent sphere diameter.
@@ -304,8 +310,7 @@ int AggModels::Primary::NumCarbon(void) const {return m_numcarbon;}
 //! Returns fragmentation flag.
 int AggModels::Primary::Frag(void) const {return m_frag;}
 
-//! Returns the property with the given ID.
-double AggModels::Primary::Property(const Sweep::PropID id) const
+//! Returns the property with the given ID.double AggModels::Primary::Property(const Sweep::PropID id) const
 {
     switch (id) {
         case iDsph:      // Equivalent sphere diameter.
@@ -322,15 +327,10 @@ double AggModels::Primary::Property(const Sweep::PropID id) const
             return m_vol;
         case iM:      // Mass.
             return m_mass;
-
-        //! Number of carbon atoms.
-        case iNumCarbon:
+        case iNumCarbon:        //! Number of carbon atoms.
             return m_numcarbon;
-
-        //! Fragmentation flag.
-        case iFrag:
+        case iFrag:             //! Fragmentation flag.
             return m_frag;
-
         default:
             return 0.0;
     }
@@ -362,7 +362,6 @@ void AggModels::Primary::SetNumCarbon(int numcarbon) {m_numcarbon = numcarbon;}
 
 //! Sets fragmentation flag.
 void AggModels::Primary::SetFrag(int frag) {m_frag = frag;}
-
 /*!
  * Check that this primary is a physically valid particle.  This currently
  * means checking that the amount of each component is within a range specifed
@@ -643,9 +642,7 @@ void AggModels::Primary::Serialize(std::ostream &out) const
 
         //! Write fragmentation flag.
         val = (int)m_frag;
-        out.write((char*)&val, sizeof(val));
-
-    } else {
+        out.write((char*)&val, sizeof(val));    } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, AggModels::Primary::Serialize).");
     }
@@ -726,7 +723,7 @@ void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleMode
                 //! Read fragmentation flag.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_frag = (int)val;
-    
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -760,12 +757,40 @@ void AggModels::Primary::init(void)
     m_surf = 0.0; // Surface area.
     m_vol = 0.0;  // Volume.
     m_mass = 0.0; // Mass.
-
-    //! Number of carbon atoms.
-    m_numcarbon = 0;
     
-    //! Fragmentation flag.
-    m_frag = 0;
-
+    m_numcarbon = 0; //!< Number of carbon atoms.
+    m_frag = 0;      //!< Fragmentation flag.
     releaseMem();
+}
+
+//! Check whether the number of carbon atoms in the primary is equal to that of
+//! the inception species.
+int AggModels::Primary::InceptedPAH() const
+{
+    ParticleModel::PostProcessStartingStr str = ParticleModel()->InceptedPAH();
+
+    switch (str){
+        case ParticleModel::A1:
+            if (NumCarbon() == BENZENE_C)
+                return 1;
+            else return 0;
+            break;
+        case ParticleModel::A2:
+            if (NumCarbon() == NAPHTHALENE_C)
+                return 1;
+            else return 0;
+            break;
+        case ParticleModel::A4:
+            if (NumCarbon() == PYRENE_C)
+                return 1;
+            else return 0;
+            break;
+        case ParticleModel::A5:
+            if (NumCarbon() == BENZOPYRENE_C)
+                return 1;
+            else return 0;
+            break;
+        default:
+            return 0;
+    }
 }

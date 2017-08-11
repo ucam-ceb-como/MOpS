@@ -41,7 +41,7 @@ use warnings;
 my @outputFiles = glob("pahtest4-test-sharedPointers*");
 if($#outputFiles > 0) {
   print "Cleaning up old output files\n";
-  system("rm " . '"' . join('" "', @outputFiles) . '"');
+  system("rm -f" . '"' . join('" "', @outputFiles) . '"');
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -82,24 +82,24 @@ while(<$momentFile>) {
   }
 }
 
-# Precalculated value: M0=2.19e+20, Fv=1.51e-6
+# Precalculated value: M0=4.38e+20, Fv=1.17e-6
 
 # 20 repetitions
 # mean values and 99% confidence interval widths
-# m0 (4.23+-1.82)e+20 m^-3
-# fv (1.59+-0.12)e-6
+# m0 (4.58+-1.63)e+20 m^-3
+# fv (1.57+-0.15)e-6
 
 print "$m0, $m1\n";
-if(abs($m0 - 4.23e+20) > 2.05e+20) {
-  print "Simulated mean M0 was $m0, when  4.23e+20m^-3 expected\n";
+if(abs($m0 - 4.58e+20) > 3e+19) {
+  print "Simulated mean M0 was $m0, when  4.58e+20m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m1 - 1.59e-6) > 0.34e-6) {
-  print "Simulated mean Fv was $m1, when 1.59e-6 expected\n";
+if(abs($m1 - 1.57e-6) > 5e-7) {
+  print "Simulated mean Fv was $m1, when 1.57e-6 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
@@ -107,5 +107,5 @@ if(abs($m1 - 1.59e-6) > 0.34e-6) {
 }
 
 #print "All tests passed\n";
-system("rm pahtest4-test-sharedPointers*");
+system("rm -f pahtest4-test-sharedPointers*");
 exit 0;
