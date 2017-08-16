@@ -2255,19 +2255,19 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                     out[i]->Write(psl);
                 }
 
-                // Draw particle images for tracked particles.
-                unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());
-                for (unsigned int j=0; j!=n; ++j) {
-                    double t = times[i].EndTime();
-                    string fname = m_output_filename + "-tem(" + cstr(t) +
-                                   "s, " + cstr(j) + ").pov";
-                    std::ofstream file;
-                    file.open(fname.c_str());
+				// Draw particle images for tracked particles.
+				unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());
+				for (unsigned int j=0; j!=n; ++j) {
+					double t = times[i].EndTime();
+					string fname = m_output_filename + "-tem(" + cstr(t) +
+									"s, " + cstr(j) + ").pov";
+					std::ofstream file;
+					file.open(fname.c_str());
 
-                    r->Mixture()->Particles().At(j)->writeParticlePOVRAY(file);
+					r->Mixture()->Particles().At(j)->writeParticlePOVRAY(file);
 
-                    file.close();
-                }
+					file.close();
+				}
 
 				////////////////////////////////////////// csl37-pp
 				// loop over particles at last save point

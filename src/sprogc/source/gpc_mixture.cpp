@@ -147,6 +147,18 @@ void Mixture::SetTemperature(double T)
 }
 
 
+//set particle mass density
+void Mixture::SetParticleMass(double mass)
+{
+    m_data[MassIndex()] = mass;
+}
+
+//get particle mass density
+double Mixture::GetParticleMass() const
+{
+    return m_data[MassIndex()];
+}
+
 // CONCENTRATIONS/FRACTIONS.
 
 // Returns the vector of mixture species mole fractions. (NO NEED CHANGING)
