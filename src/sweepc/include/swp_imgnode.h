@@ -160,6 +160,12 @@ private:
     ImgNode *m_leftchild, *m_rightchild;       //!< The left and right child nodes.
     ImgNode *m_leftparticle, *m_rightparticle; //!< The left and right particle nodes.
 
+    //! Set the bounding sphere.
+    void setBoundSph(Coords::Vector bsphp);
+
+    //! Set the centre-of-mass.
+    void setCOM(Coords::Vector mass);
+
     //! Set the distance between the centres of primary particles.
     void setDistance(double distance);
 

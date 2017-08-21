@@ -341,10 +341,10 @@ public:
     void setThermalConductIndex(const EnvironmentInterface::PropertyIndex index) {m_ThermalConductivityIndex = index;}
 
     //! Activates tracking of the distance between the centres of primary particles.
-    void setTrackPrimarySeparation(bool flag) {m_trackPrimarySeparation = flag;}
+    void setTrackPrimaryCoordinates(bool flag) {m_trackPrimaryCoordinates = flag;}
 
     //! Return the flag used to indicate whether to track the distance between the centres of primary particles.
-    const bool getTrackPrimarySeparation() const {return m_trackPrimarySeparation;}
+    const bool getTrackPrimaryCoordinates() const {return m_trackPrimaryCoordinates;}
 
 protected:
     // The species used to define the processes and the particles.
@@ -469,7 +469,7 @@ private:
     double m_efm;
 
     //! Flag to indicate whether to track the distance between the centres of neighbouring primary particles.
-    bool m_trackPrimarySeparation;
+    bool m_trackPrimaryCoordinates;
 
     //! Index for temperature gradient
     EnvironmentInterface::PropertyIndex m_TemperatureGradientIndex;

@@ -887,16 +887,50 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
 
         // Update individual PAHs within this particle by using KMC code
         // sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
-        pah->UpdatePAHs(t, *this, sys, rng);
+        
+        bool particleChanged = false;
+
+        pah->UpdatePAHs(t, *this, sys, rng, particleChanged);
+        
+        pah->calcBoundSph();
+        pah->calcCOM();
+        pah->centreCOM();
 
         pah->UpdateCache();
         pah->CheckRounding();
+
         if (sp.IsValid()) {
             sp.UpdateCache();
 
+    //        if (pah->PAHTracerCheck() && particleChanged) {
+    //            std::ofstream outfile;
+    //            outfile.open("sphere.pov", std::ios_base::app);
+				//pah->incrementCounter();
+				//outfile << "\t#range(" << pah->getCounter() << "," << pah->getCounter() + 1 << ")\n"
+				//		<< "\t\t#declare clock" << pah->getCounter() << " = clock - " << pah->getCounter() << ";\n";   
+    //            pah->writePrimaryCoordinatesRadius();
+				//outfile << "\t\t#break\n";
+				//outfile.close();
+    //        }
+
             // Sinter the particles for the soot model (as no deferred process)
             if (m_sint_model.IsEnabled()) {
-                pah->Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+                bool PAHTracerMatch = false;
+                bool particleChanged = false;
+                pah->Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight(), PAHTracerMatch, particleChanged);
+
+                pah->calcBoundSph();
+                pah->calcCOM();
+                pah->centreCOM();
+
+                //if (PAHTracerMatch && particleChanged) {
+                //    string fname = cstr(Particle::getCounter()) + ".pov";
+                //    std::ofstream file;
+                //    file.open(fname.c_str());
+                //    sp.writeParticlePOVRAY(file);
+                //    file.close();
+                //    Particle::incrementCounter();
+                //}
             }
             sp.UpdateCache();
         }

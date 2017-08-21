@@ -8,17 +8,24 @@
     <!-- Define particle components. -->
     
     <component id="soot" type="bulk">
+	  <mode>MIN</mode>
+	  <threshold>4</threshold>
+	  <thresholdCondensation>4</thresholdCondensation>
       <description>soot</description>
       <density units="g/cm3">1.47</density>
       <molwt units="g/mol">0.0</molwt>
       <coalthresh>0.98</coalthresh>
-      <growthfact>0.05</growthfact>
-      <minPAH>2</minPAH>
+      <growthfact>0</growthfact>
+      <minPAH>1</minPAH>
     </component> 
     
 
-    <particle id="[soot]" model="PAH_KMC" subtree="false">
-      <description />
+    <particle id="[soot]" model="PAH_KMC" subtree="false" trackPrimaryCoordinates="true">
+		<sintering enable="true" model="viscous_flow">
+			<A units="s/m">1.1e-14</A>
+			<E units="K">96102.95886456579</E>
+			<Dpmin units="m">1.58e-09</Dpmin>
+		</sintering>
     </particle>
 
     <pahinception />

@@ -79,7 +79,15 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_parent(NULL),
     m_leftparticle(NULL),
     m_rightparticle(NULL)
-{}
+{
+    m_cen_bsph[0] = 0.0;
+    m_cen_bsph[1] = 0.0;
+    m_cen_bsph[2] = 0.0;
+
+    m_cen_mass[0] = 0.0;
+    m_cen_mass[1] = 0.0;
+    m_cen_mass[2] = 0.0;
+}
 
 /*!
  * @brief       Initialising constructor using time and model
@@ -109,8 +117,15 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_parent(NULL),
     m_leftparticle(NULL),
     m_rightparticle(NULL)
+{
+    m_cen_bsph[0] = 0.0;
+    m_cen_bsph[1] = 0.0;
+    m_cen_bsph[2] = 0.0;
 
-{}
+    m_cen_mass[0] = 0.0;
+    m_cen_mass[1] = 0.0;
+    m_cen_mass[2] = 0.0;
+}
 
 //! Copy constructor.
 BinTreePrimary::BinTreePrimary(const BinTreePrimary &copy)
@@ -141,6 +156,14 @@ m_parent(NULL),
 m_leftparticle(NULL),
 m_rightparticle(NULL)
 {
+    m_cen_bsph[0] = 0.0;
+    m_cen_bsph[1] = 0.0;
+    m_cen_bsph[2] = 0.0;
+
+    m_cen_mass[0] = 0.0;
+    m_cen_mass[1] = 0.0;
+    m_cen_mass[2] = 0.0;
+
     Deserialize(in, model);
 }
 
@@ -404,11 +427,13 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
     m_children_radius         = source->m_children_radius;
     m_children_vol            = source->m_children_vol;
     m_children_surf           = source->m_children_surf;
-    m_distance_centreToCentre = source->m_distance_centreToCentre;
     m_children_sintering      = source->m_children_sintering;
     m_avg_sinter              = source->m_avg_sinter;
     m_sint_rate               = source->m_sint_rate;
     m_sint_time               = source->m_sint_time;
+    m_cen_bsph                = source->m_cen_bsph;
+    m_cen_mass                = source->m_cen_mass;
+    m_distance_centreToCentre = source->m_distance_centreToCentre;
 
     //! Set particles.
     m_leftchild     = source->m_leftchild;
@@ -1293,7 +1318,6 @@ void BinTreePrimary::SinterNode(
     m_sint_rate = r;
 }
 
-
 /*!
  * Get the number of units of a component
  *
@@ -1474,9 +1498,6 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
         val = m_children_surf;
         out.write((char*)&val, sizeof(val));
 
-        val = m_distance_centreToCentre;
-        out.write((char*)&val, sizeof(val));
-
         val = m_children_sintering;
         out.write((char*)&val, sizeof(val));
 
@@ -1487,6 +1508,27 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
         out.write((char*)&val, sizeof(val));
 
         val = m_sint_time;
+        out.write((char*)&val, sizeof(val));
+
+        val = m_cen_bsph[0];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_cen_bsph[1];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_cen_bsph[2];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_cen_mass[0];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_cen_mass[1];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_cen_mass[2];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_distance_centreToCentre;
         out.write((char*)&val, sizeof(val));
 
         // Output base class.
@@ -1572,9 +1614,6 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
         m_children_surf = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_distance_centreToCentre = val;
-
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_children_sintering = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
@@ -1585,6 +1624,27 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_sint_time = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_bsph[0] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_bsph[1] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_bsph[2] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_mass[0] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_mass[1] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_mass[2] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_distance_centreToCentre = val;
 
         // Input base class.
         Primary::Deserialize(in, model);

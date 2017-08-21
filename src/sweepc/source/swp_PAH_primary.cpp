@@ -47,8 +47,8 @@
 */
 
 #define _USE_MATH_DEFINES //!< First define.
-#include <math.h>         //!< Then include so that the pi constant (M_PI) can be used.
-
+#include <math.h>         //!< Then include so that arc cosine or inverse
+                          //!< operation of cosine (acos) can be used.
 #include "swp_primary.h"
 #include "swp_PAH_primary.h"
 #include "swp_aggmodel_type.h"
@@ -70,9 +70,18 @@
 #include <boost/bind.hpp>
 #include <boost/bind/placeholders.hpp>
 
+//! Generate uniformly distributed random number.
+//! To randomly rotate particle and determine point of contact between two
+//! particles which collide in the Coagulate function.
+#include <boost/random/uniform_01.hpp>
+
 #include "string_functions.h"
 
 int uniquePAHCounter = 0;
+
+//! Stores memory address of pointer to a PAH to trace.
+//! For the purpose of creating a video showing the evolution of a particle.
+void *PAHTracer = NULL;
 
 using namespace Sweep;
 using namespace Sweep::AggModels;
@@ -80,6 +89,8 @@ using namespace Sweep::KMC_ARS;
 
 using namespace std;
 using namespace Strings;
+
+unsigned int PAHPrimary::Counter = 0;
 
 //used for debugging, testing clone function for PAHStructure.
 static unsigned int ID=0; 
@@ -126,6 +137,13 @@ PAHPrimary::PAHPrimary() : Primary(),
     m_leftparticle(NULL),
     m_rightparticle(NULL)
 {
+    m_cen_bsph[0] = 0.0;
+    m_cen_bsph[1] = 0.0;
+    m_cen_bsph[2] = 0.0;
+
+    m_cen_mass[0] = 0.0;
+    m_cen_mass[1] = 0.0;
+    m_cen_mass[2] = 0.0;
 }
 
 /*!
@@ -167,6 +185,14 @@ PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model)
 {
     // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
+
+    m_cen_bsph[0] = 0.0;
+    m_cen_bsph[1] = 0.0;
+    m_cen_bsph[2] = 0.0;
+
+    m_cen_mass[0] = 0.0;
+    m_cen_mass[1] = 0.0;
+    m_cen_mass[2] = 0.0;
 
     AddPAH(time, model);
 
@@ -216,6 +242,14 @@ PAHPrimary::PAHPrimary(const double time, const double position,
     // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
    
+    m_cen_bsph[0] = 0.0;
+    m_cen_bsph[1] = 0.0;
+    m_cen_bsph[2] = 0.0;
+
+    m_cen_mass[0] = 0.0;
+    m_cen_mass[1] = 0.0;
+    m_cen_mass[2] = 0.0;
+
 	AddPAH(time, model);
 
     //Update the other properties
@@ -257,6 +291,14 @@ PAHPrimary::PAHPrimary(double time, const Sweep::ParticleModel &model, bool noPA
     m_rightparticle(NULL)
 {
     m_comp[0]=1;
+
+    m_cen_bsph[0] = 0.0;
+    m_cen_bsph[1] = 0.0;
+    m_cen_bsph[2] = 0.0;
+
+    m_cen_mass[0] = 0.0;
+    m_cen_mass[1] = 0.0;
+    m_cen_mass[2] = 0.0;
 }
 
 
@@ -278,6 +320,16 @@ void PAHPrimary::AddPAH(double time,const Sweep::ParticleModel &model)
     boost::shared_ptr<PAH> new_PAH (new PAH(time, model.InceptedPAH()));
     new_PAH->PAH_ID=ID;
     m_PAH.push_back(new_PAH);
+
+    //! Flag to determine whether the pointer PAHTracer has been initialised.
+    static bool initialised;
+
+    //! Store the memory address of the first PAH which is added.
+    if (!initialised) {
+        PAHTracer = new_PAH.get();
+        initialised = true;
+    }
+    
     ID++;
     // Set the particle mass, diameter etc
     UpdatePrimary();
@@ -380,43 +432,49 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
     SetCollDiameter(source->CollDiameter());
     SetMobDiameter(source->MobDiameter());
     SetSphDiameter(source->SphDiameter());
-    m_PAHCollDiameter=source->m_PAHCollDiameter;
     SetSurfaceArea(source->SurfaceArea());
-    m_time=source->m_time;
-    m_PAHmass=source->m_PAHmass;
-    m_leftchild=source->m_leftchild;
-    m_rightchild=source->m_rightchild;
-    m_leftparticle=source->m_leftparticle;
-    m_rightparticle=source->m_rightparticle;
-    m_parent=source->m_parent;
     SetMass(source->Mass());
-    m_numPAH=source->m_numPAH;
-    m_numprimary=source->m_numprimary;
-    m_primarydiam=source->m_primarydiam;
-    m_sqrtLW=source->m_sqrtLW;
-    m_LdivW=source->m_LdivW;
-    m_pmodel=source->m_pmodel;
-    m_surf=source->m_surf;
-    m_vol=source->m_vol;
-    m_children_surf=source->m_children_surf;
+
+    m_PAHCollDiameter         = source->m_PAHCollDiameter;
+    m_time                    = source->m_time;
+    m_PAHmass                 = source->m_PAHmass;
+    m_leftchild               = source->m_leftchild;
+    m_rightchild              = source->m_rightchild;
+    m_leftparticle            = source->m_leftparticle;
+    m_rightparticle           = source->m_rightparticle;
+    m_parent                  = source->m_parent;
+    m_numPAH                  = source->m_numPAH;
+    m_numprimary              = source->m_numprimary;
+    m_primarydiam             = source->m_primarydiam;
+    m_sqrtLW                  = source->m_sqrtLW;
+    m_LdivW                   = source->m_LdivW;
+    m_pmodel                  = source->m_pmodel;
+    m_surf                    = source->m_surf;
+    m_vol                     = source->m_vol;
+    m_children_surf           = source->m_children_surf;
+    m_children_vol            = source->m_children_vol;
+    m_children_radius         = source->m_children_radius;
+    m_children_roundingLevel  = source->m_children_roundingLevel;
+    m_rightparticle_numPAH    = source->m_rightparticle_numPAH;
+    m_leftparticle_numPAH     = source->m_leftparticle_numPAH;
+    m_leftparticle_vol_old    = source->m_leftparticle_vol_old;
+    m_rightparticle_vol_old   = source->m_rightparticle_vol_old;
+    m_fdim                    = source->m_fdim;
+    m_Rg                      = source->m_Rg;
+    m_avg_coalesc             = source->m_avg_coalesc;
+    m_numcarbon               = source->m_numcarbon;
+    m_numH                    = source->m_numH;
+    m_numOfEdgeC              = source->m_numOfEdgeC;
+    m_numOfRings              = source->m_numOfRings;
+    m_values                  = source->m_values;
+    m_comp                    = source->m_comp;
+    m_sint_time               = source->m_sint_time;
+    m_cen_bsph                = source->m_cen_bsph;
+    m_cen_mass                = source->m_cen_mass;
     m_distance_centreToCentre = source->m_distance_centreToCentre;
-    m_children_vol=source->m_children_vol;
-    m_children_radius=source->m_children_radius;
-    m_children_roundingLevel=source->m_children_roundingLevel;
-    m_rightparticle_numPAH=source->m_rightparticle_numPAH;
-    m_leftparticle_numPAH=source->m_leftparticle_numPAH;
-    m_leftparticle_vol_old=source->m_leftparticle_vol_old;
-    m_rightparticle_vol_old=source->m_rightparticle_vol_old;
-    m_fdim=source->m_fdim;
-    m_Rg=source->m_Rg;
-    m_avg_coalesc=source->m_avg_coalesc;
-    m_numcarbon = source->m_numcarbon;
-    m_numH = source->m_numH;
-    m_numOfEdgeC = source->m_numOfEdgeC;
-    m_numOfRings = source->m_numOfRings;
-    m_values=source->m_values;
-    m_comp=source->m_comp;
-    m_sint_time=source->m_sint_time;
+    m_r                       = source->m_r;
+    m_r2                      = source->m_r2;
+    m_r3                      = source->m_r3;
 
     //! Replace the PAHs with those from the source.
     if (m_clone==true) {
@@ -450,7 +508,6 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
     }
     else m_PAH.assign(source->m_PAH.begin(),source->m_PAH.end());
 }
-	
 
 /*!
  * Select a primary uniformly at random from this particle
@@ -492,7 +549,6 @@ PAHPrimary *PAHPrimary::SelectRandomSubparticleLoop(int target)
 		return m_rightchild->SelectRandomSubparticleLoop(target-(m_leftchild->m_numprimary));
 	}
 }
-
 
 /*!
  * Each node contains two pointers (m_leftparticle and m_rightparticle)
@@ -636,90 +692,345 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 		UpdateCache();
         //Check the coalescence ratio
         CheckRounding();
+	} else {       
+        //! Coagulation process.
+        PAHPrimary *newleft = new PAHPrimary;
+		PAHPrimary *newright = new PAHPrimary;
+        PAHPrimary copy_rhs(*rhsparticle);
+		//rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
 
-	}
+        //bool print=false;
+        //if (this->m_numprimary > 2 && notconstpah->m_numprimary > 2)
+        //{
+        //    PrintTree("before1");
+        //    notconstpah->PrintTree("before2");
+        //    print = true;
+        //    cout << "printing tree" << endl;
+        //}
 
-    else
-    {
-            //coagulation process
-            PAHPrimary *newleft = new PAHPrimary;
-		    PAHPrimary *newright = new PAHPrimary;
-            PAHPrimary copy_rhs(*rhsparticle);
-		    //rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
+        //! Select where to add the second particle.
+        boost::bernoulli_distribution<> bernoulliDistrib;
+        boost::variate_generator<rng_type &, boost::bernoulli_distribution<> > leftRightChooser(rng, bernoulliDistrib);
+		if (leftRightChooser()) {
+			newleft->CopyParts(this);
+			newright->CopyParts(&copy_rhs);
+		} else {
+			newright->CopyParts(this);
+			newleft->CopyParts(&copy_rhs);
+		}
 
-           // bool print=false;
-           // if (this->m_numprimary>2 && notconstpah->m_numprimary>2)
-           // {
-            //    PrintTree("before1");
-           //     notconstpah->PrintTree("before2");
-             //   print=true;
-              //  cout << "printing tree"<<endl;
-            //}
+        //! Set the pointers.
+		m_leftchild = newleft;
+		m_rightchild = newright;
+		newright->m_parent = this;
+		newleft->m_parent =this;
 
-            //select where to add the second particle
-            boost::bernoulli_distribution<> bernoulliDistrib;
-            boost::variate_generator<rng_type &, boost::bernoulli_distribution<> > leftRightChooser(rng, bernoulliDistrib);
-		    if (leftRightChooser())
-		    {
-			    newleft->CopyParts(this);
-			    newright->CopyParts(&copy_rhs);
-		    }
-		    else
-		    {
-			    newright->CopyParts(this);
-			    newleft->CopyParts(&copy_rhs);
-		    }
-            //set the pointers
-		    m_leftchild=newleft;
-		    m_rightchild=newright;
-		    newright->m_parent=this;
-		    newleft->m_parent=this;
-            //set the pointers to the parent node
-		    if (newleft->m_leftchild!=NULL)
-		    {
-			    newleft->m_leftchild->m_parent=newleft;
-			    newleft->m_rightchild->m_parent=newleft;
-		    }
-		    if (newright->m_leftchild!=NULL)
-		    {
-			    newright->m_leftchild->m_parent=newright;
-			    newright->m_rightchild->m_parent=newright;
-		    }
-            m_children_roundingLevel=0;
-		    UpdateCache();
-            //select the primaries that are touching
-		    this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rng);
-		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rng);
+        //! Set the pointers to the parent node.
+		if (newleft->m_leftchild != NULL) {
+			newleft->m_leftchild->m_parent = newleft;
+			newleft->m_rightchild->m_parent = newleft;
+		}
 
-            //set the sintertime for the new created primary particle
-            SetSinteringTime(std::max(this->m_sint_time, rhsparticle->m_sint_time));
-            //initialise the variables used to calculate the coalesence ratio
-            m_children_vol=m_leftparticle->m_vol+m_rightparticle->m_vol;
-            m_children_surf=(m_leftparticle->m_surf+m_rightparticle->m_surf);
-            m_leftparticle_vol_old=m_leftparticle->m_vol;
-            m_rightparticle_vol_old=m_rightparticle->m_vol;
-            m_leftparticle_numPAH=m_leftparticle->m_numPAH;
-            m_rightparticle_numPAH=m_rightparticle->m_numPAH;
-            m_children_radius=pow(3.0/(4.0*PI)*(m_children_vol),(ONE_THIRD));
-            m_children_roundingLevel=CoalescenceLevel();
-            m_distance_centreToCentre = m_leftparticle->m_primarydiam / 2.0 + m_rightparticle->m_primarydiam / 2.0;
-            CheckRounding();
-            //must set all the pointer to NULL otherwise the delete function
-            //will also delete the children
-	        copy_rhs.m_leftchild=NULL;
-	        copy_rhs.m_rightchild=NULL;
-	        copy_rhs.m_parent=NULL;
-            copy_rhs.m_leftparticle=NULL;
-            copy_rhs.m_rightparticle=NULL;
-		//	rhsparticle->Clear();
-        //    if (fabs(surfacebeforerhs+surfacebefore-m_surf)/m_surf > 1e-6)
-        //    {
-        //        cout << "error" << surfacebeforerhs<<' ' <<surfacebefore << ' '<<m_surf<<endl;
-        ////         PrintTree("after");
-        //    }
-        // if (print)
-    //     PrintTree("after");
+		if (newright->m_leftchild != NULL) {
+			newright->m_leftchild->m_parent = newright;
+			newright->m_rightchild->m_parent = newright;
+		}
 
+        m_children_roundingLevel = 0;
+		UpdateCache();
+
+        std::ofstream outfile;
+
+        //! It is assumed that primary pi from particle Pq and primary pj from
+        //! particle Pq are in point contact and by default pi and pj are
+        //! uniformly selected. If we track the coordinates of the primaries in
+        //! a particle, we can do a smarter selection where pi and pj are
+        //! determined by ballistic cluster-cluster aggregation.
+        if (m_pmodel->getTrackPrimaryCoordinates()) {
+            boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+
+            //! Sphere point picking.
+            //! It is incorrect to select spherical coordinates theta (polar
+            //! angle) and phi (azimuthal angle) from uniform distributions
+            //! theta E [0, 2 * pi) and phi E [0, pi] as was done previously as
+            //! points picked in this way will be 'bunched' near the poles.
+            //! http://mathworld.wolfram.com/SpherePointPicking.html
+            //double phi1 = acos(2 * uniformGenerator() - 1);
+            //double theta1 = 2.0 * PI * uniformGenerator();
+
+            double phi1   = uniformGenerator() * 2.0 * PI;
+            double theta1 = ((2.0*uniformGenerator())-1.0) * PI;
+
+            //! Write POV-Ray commands only if (1) the left child contains the
+            //! PAH to be traced and (2) it is made up of two or more primaries
+            //! because rotation of a single primary is not interesting.
+			if (false && m_leftchild->m_numprimary > 1) {               
+                //! Increment counter to signal the next sequence of events.
+				incrementCounter();				
+
+                outfile.open("sphere.pov", std::ios_base::app);
+
+                //! range: the range of values between which the global clock
+                //!        variable lies.
+                //! clock+counter: will always fall within (0, 1].
+                //! theta, phi: declared for use in the POV-Ray transformation
+                //!             matrix written in rotateCOM.
+                outfile << "\t#range(" << getCounter() << "," << getCounter() + 1 << ")\n"
+						<< "\t\t#declare clock" << getCounter() << " = clock - " << getCounter() << ";\n";
+						//<< "\t\t#declare theta = " << theta1 << ";\n"
+						//<< "\t\t#declare phi = " << phi1 << ";\n";
+				outfile.close();
+
+                //! Rotate centre-of-mass and write the correponding POV-Ray
+                //! transformation matrix.
+                m_leftchild->rotateCOM(theta1, phi1, false);
+
+                //! Terminate range directive.
+				outfile.open("sphere.pov", std::ios_base::app);
+				outfile << "\t\t#break\n";
+				outfile.close();
+			} else {
+                //! Rotate centre-of-mass but do not write POV-Ray
+                //! transformation matrix.
+                m_leftchild->rotateCOM(theta1, phi1, false);
+            }
+
+
+
+            //! Sphere point picking.
+            //! It is incorrect to select spherical coordinates theta (polar
+            //! angle) and phi (azimuthal angle) from uniform distributions
+            //! theta E [0, 2 * pi) and phi E [0, pi] as was done previously as
+            //! points picked in this way will be 'bunched' near the poles.
+            //! http://mathworld.wolfram.com/SpherePointPicking.html
+            //double phi2 = acos(2 * uniformGenerator() - 1);
+            //double theta2 = 2.0 * PI * uniformGenerator();
+
+            double phi2   = uniformGenerator() * 2.0 * PI;
+            double theta2 = ((2.0*uniformGenerator())-1.0) * PI;
+
+            //! Write POV-Ray commands only if (1) the right child contains the
+            //! PAH to be traced and (2) it is made up of two or more primaries
+            //! because rotation of a single primary is not interesting.
+			if (false && m_rightchild->m_numprimary > 1) {
+                //! Increment counter to signal the next sequence of events.
+				incrementCounter();
+
+				outfile.open("sphere.pov", std::ios_base::app);
+				
+                //! range: the range of values between which the global clock
+                //!        variable lies.
+                //! clock+counter: will always fall within (0, 1].
+                //! theta, phi: declared for use in the POV-Ray transformation
+                //!             matrix written in rotateCOM.
+                outfile << "\t#range(" << getCounter() << "," << getCounter() + 1 << ")\n"
+						<< "\t\t#declare clock" << getCounter() << " = clock - " << getCounter() << ";\n"
+						<< "\t\t#declare theta = " << theta2 << ";\n"
+						<< "\t\t#declare phi = " << phi2 << ";\n";
+				outfile.close();
+
+                //! Rotate centre-of-mass and write the correponding POV-Ray
+                //! transformation matrix.
+                m_rightchild->rotateCOM(theta2, phi2, true);
+
+                //! Terminate range directive.
+				outfile.open("sphere.pov", std::ios_base::app);
+				outfile << "\t\t#break\n";
+				outfile.close();
+			} else {
+                //! Rotate centre-of-mass but do not write POV-Ray
+                //! transformation matrix.
+                m_rightchild->rotateCOM(theta2, phi2, false);
+                
+            }
+
+            //! Do not bother to write POV-Ray translation of nodes as the
+            //! movement is likely to be small.
+            m_leftchild->centreBoundSph(false);
+            m_rightchild->centreBoundSph(false);
+
+            Coords::Vector D;
+            double sumr = 0.0;
+            bool hit = false;
+            while (!hit) {
+                //! Primary pi from particle Pq and primary pj from particle Pq
+                //! are in point contact.
+                sumr = m_leftchild->Radius() + m_rightchild->Radius();
+                
+                D[0] = ((2.0 * uniformGenerator()) - 1.0) * sumr;
+                D[1] = ((2.0 * uniformGenerator()) - 1.0) * sumr;
+
+                //! It is here that the primaries pi and pj are determined
+                //! through the ballistic cluster-cluster aggregation.
+                hit = this->minCollZ(*m_leftchild, *m_rightchild, D[0], D[1], D[2]);
+            }
+
+            //! First check whether the primaries belonging to the node pointed
+            //! to by the this pointer contains the PAH to be traced.
+            if (PAHTracerCheck()) {
+				
+                
+                //! If Counter is 0 then there is some preliminary information
+                //! to be written.
+				if (getCounter() == 0) {
+                    outfile.open("sphere.pov", std::ios_base::app);
+                    outfile << "#include \"colors.inc\"\n\n"
+                            
+                            << "#declare tem_finish=texture{pigment{color Gray90 transmit 0.6} finish{ambient 0.4 diffuse 0.7 phong 0.1}}\n"
+					        << "#declare W=500;\n"
+                            << "#declare H=500;\n"
+                            << "#declare dLight=10*max(W,H);\n"
+                            << "#declare Y=1.5*W*tan(45.0/2.0);\n\n"
+
+                            << "light_source {<0,-dLight,0> White}\n"
+                            << "background {color Gray50}\n"
+                            << "camera{look_at<0,0,0> location<0,Y,0>}\n\n"
+
+                            << "#switch(clock)\n"
+							<< "\t#range(0,1)\n"
+							<< "\t\t#declare clock0 = clock;\n";
+                    outfile.close();
+                    this->m_leftchild->writePrimaryCoordinatesRadius();
+                    outfile.open("sphere.pov", std::ios_base::app);
+				    outfile << "\t\t#break\n";
+				    outfile.close();
+                            
+                }
+    //            else {
+    //                //! Increment counter to signal the next sequence of events.
+				//	incrementCounter();
+
+				//	outfile << "\t#range(" << getCounter() << "," << getCounter() + 1 << ")\n"
+				//			<< "\t\t#declare clock" << getCounter() << " = clock - " << getCounter() << ";\n";
+			 //   }
+				
+			}
+
+			if (false) {
+                //! Left child contains PAH to be traced. Since it is already
+                //! at the origin just write the coordinates of the primaries
+                //! in the left child.
+				this->m_leftchild->writePrimaryCoordinatesRadius();
+
+                //! Write POV-Ray translation of the right child.
+				this->m_rightchild->Translate(D[0], D[1], D[2], true, true, false);
+			} else if (false) {
+                //! Right child contains PAH to be traced. Again write the
+                //! coordinates of the right child. But this time reverse the
+                //! signs on elements of the vector D so that the particle with
+                //! the PAH to be traced always remain at the centre.
+				this->m_rightchild->writePrimaryCoordinatesRadius();
+				this->m_leftchild->Translate(-D[0], -D[1], -D[2], true, true, false);
+			} else {
+                //! Particle does not contain PAH to be traced, so there is no
+                //! need to write POV-Ray translation of the right child.
+				//this->m_rightchild->Translate(D[0], D[1], D[2], false, true, false);
+			}
+
+            if (this->m_leftchild->PAHTracerCheck()) {
+                this->m_rightchild->Translate(D[0], D[1], D[2], false, true, false);
+            } else {
+                this->m_leftchild->Translate(-D[0], -D[1], -D[2], false, true, false);
+            }
+
+            //! If particle contains PAH to be traced terminate range directive.
+			if (false) {
+				outfile.open("sphere.pov", std::ios_base::app);
+				outfile << "\t\t#break\n";
+				outfile.close();
+			}
+
+            if (this->m_leftchild->PAHTracerCheck()) {
+                this->inverseRotateCOM(theta1, phi1, false);
+            } else if (this->m_rightchild->PAHTracerCheck()) {
+                this->inverseRotateCOM(theta2, phi2, false);
+            }
+
+            //! Calculate properties of this particle.
+            this->calcBoundSph();
+            this->calcCOM();
+
+			if (false) {
+                //! Increment counter to signal the next sequence of events.
+				incrementCounter();
+
+				outfile.open("sphere.pov", std::ios_base::app);
+
+                //! range: the range of values between which the global clock
+                //!        variable lies.
+                //! clock+counter: will always fall within (0, 1].				
+                outfile << "\t#range(" << getCounter() << "," << getCounter() + 1 << ")\n"
+						<< "\t\t#declare clock" << getCounter() << " = clock - " << getCounter() << ";\n";
+				outfile.close();
+			}
+
+            //! If particle contains PAH to be traced write POV-Ray translation
+            //! of particle
+            this->centreBoundSph(false);
+
+            //! If particle contains PAH to be traced terminate range directive.
+			if (false) {
+				outfile.open("sphere.pov", std::ios_base::app);
+				outfile << "\t\t#break\n";
+				outfile.close();
+			}
+
+            //! Particle is centred about its bounding sphere for the purpose
+            //! generating its structure. Now that it is complete centre it
+            //! about its centre-of-mass.
+            centreCOM();
+
+            //outfile.open("sphere.pov", std::ios_base::app);
+            //outfile << "#end\n";
+            //outfile.close();
+        } else {
+            //! Randomly select the primaries that are touching.
+		    this->m_leftparticle = m_leftchild->SelectRandomSubparticle(rng);
+		    this->m_rightparticle = m_rightchild->SelectRandomSubparticle(rng);
+        }
+
+        if (PAHTracerCheck()) {
+            incrementCounter();
+            outfile.open("sphere.pov", std::ios_base::app);			
+            outfile << "\t#range(" << getCounter() << "," << getCounter() + 1 << ")\n"
+				    << "\t\t#declare clock" << getCounter() << " = clock - " << getCounter() << ";\n";
+            outfile.close();
+            this->writePrimaryCoordinatesRadius();
+            outfile.open("sphere.pov", std::ios_base::app);
+			outfile << "\t#break\n";
+			outfile.close();
+        }
+
+        //! Set the sintertime for the new created primary particle.
+        SetSinteringTime(std::max(this->m_sint_time, rhsparticle->m_sint_time));
+
+        //! Initialise the variables used to calculate the coalesence ratio.
+        m_children_vol=m_leftparticle->m_vol+m_rightparticle->m_vol;
+        m_children_surf=(m_leftparticle->m_surf+m_rightparticle->m_surf);
+        m_leftparticle_vol_old=m_leftparticle->m_vol;
+        m_rightparticle_vol_old=m_rightparticle->m_vol;
+        m_leftparticle_numPAH=m_leftparticle->m_numPAH;
+        m_rightparticle_numPAH=m_rightparticle->m_numPAH;
+        m_children_radius=pow(3.0/(4.0*PI)*(m_children_vol),(ONE_THIRD));
+        m_children_roundingLevel=CoalescenceLevel();
+        m_distance_centreToCentre = m_leftparticle->m_primarydiam / 2.0 + m_rightparticle->m_primarydiam / 2.0;
+        CheckRounding();
+
+        //! Must set all the pointer to NULL otherwise the delete function.
+        //! will also delete the children.
+	    copy_rhs.m_leftchild=NULL;
+	    copy_rhs.m_rightchild=NULL;
+	    copy_rhs.m_parent=NULL;
+        copy_rhs.m_leftparticle=NULL;
+        copy_rhs.m_rightparticle=NULL;
+
+        //rhsparticle->Clear();
+        //if (fabs(surfacebeforerhs + surfacebefore - m_surf) /m_surf > 1e-6) {
+        //    cout << "error" << surfacebeforerhs<<' ' <<surfacebefore << ' '<<m_surf<<endl;
+        //    //PrintTree("after");
+        //}
+        //if (print)
+        //    PrintTree("after");
 	}
     return *this;
 }
@@ -980,6 +1291,7 @@ void PAHPrimary::ReleaseMem()
 { 
     m_PAH.clear();
 }
+
 /*!//add explanation
  * @param[in] source Pointer to the original particle
  * @param[in,out] target Pointer to the new particle
@@ -1017,15 +1329,15 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
  * @param[in,out]    rng      Random number generator.
  *
  */
-void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Cell &sys, rng_type &rng)
+void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Cell &sys, rng_type &rng, bool &particleChanged)
 {
-    // Either the primary has two children or it is a leaf of the
+    // Either the primary has two children or it is a leaf of thef
     // tree
     if (m_leftchild!=NULL)
     {
         // Recurse down to the leaves
-        m_leftchild->UpdatePAHs(t, model,sys, rng);
-        m_rightchild->UpdatePAHs(t, model,sys, rng);
+        m_leftchild->UpdatePAHs(t, model,sys, rng, particleChanged);
+        m_rightchild->UpdatePAHs(t, model,sys, rng, particleChanged);
     }
     else
     {
@@ -1114,6 +1426,7 @@ void PAHPrimary::UpdatePAHs(const double t, const Sweep::ParticleModel &model,Ce
 			{
 				m_PAHclusterchanged = true; 
 				m_PAHchanged = true;
+                particleChanged = true;
 			}
 
 			/*!
@@ -1293,6 +1606,7 @@ int PAHPrimary::InceptedPAH() const
     out.push_back(divider);
     ID++;
 }
+
  // only for num of Primary == 1, carbon only
 double PAHPrimary::ReducedMass() const
 {
@@ -1553,6 +1867,126 @@ void PAHPrimary::mass_PAH(std::vector<double> &out) const
         out.push_back(temp_mass);
     }
 }
+
+//! Returns true if this node is a leaf (has no children).
+bool PAHPrimary::isLeaf(void) const
+{
+    return (m_leftchild == NULL) && (m_rightchild == NULL);
+}
+
+/*!
+ *  @brief Calculates the minimum collision distance.
+ *
+ *  Calculates the minimum collision distance between a target and a bullet
+ *  node by moving down the binary tree. If the nodes collide then returns
+ *  true, otherwise returns false.
+ *
+ *  @param[in]  target Target node.
+ *  @param[in]  bullet Bullet node.
+ *  @param[in]  dx     Distance to translate in the x-axis.
+ *  @param[in]  dy     Distance to translate in the y-axis.
+ *  @param[out] dz     Distance to translate in the z-axis.
+ *  
+ *  @return            Have the nodes collided?
+ */
+bool PAHPrimary::minCollZ(PAHPrimary &target, PAHPrimary &bullet, double dx, double dy, double &dz)
+{
+    bool hit = false, hit1 = false;
+    double dz2 = 0.0, dz3 = 0.0, dz4 = 0.0;
+
+    if (target.isLeaf()) {
+        //! Target is a leaf.
+        if (bullet.isLeaf()) {
+            //! Bullet is a leaf (both leaves).
+
+            this->m_leftparticle = &target;
+            this->m_rightparticle = &bullet;
+
+            return calcCollZ(target.boundSphCentre(), target.Radius(),
+                             bullet.boundSphCentre(), bullet.Radius(),
+                             dx, dy, dz, 0.0, false);
+        } else {
+            //! Bullet is not a leaf, call sub-nodes.
+            //! Calculate minimum dz for the target and the bullet left subnode.
+            hit1 = calcCollZ(target.boundSphCentre(), target.Radius(),
+                             bullet.m_leftchild->boundSphCentre(), bullet.m_leftchild->Radius(),
+                             dx, dy, dz, 0.0, false);
+
+            if (hit1) hit = minCollZ(target, *bullet.m_leftchild, dx, dy, dz);
+            
+            //! Calculate minimum dz for the target and the bullet right subnode.
+            hit1 = calcCollZ(target.boundSphCentre(), target.Radius(),
+                             bullet.m_rightchild->boundSphCentre(), bullet.m_rightchild->Radius(),
+                             dx, dy, dz2, 0.0, false);
+            
+            if (hit1) hit = minCollZ(target, *bullet.m_rightchild, dx, dy, dz2) || hit;
+            
+            //! Return minimum dz.
+            dz = min(dz, dz2);
+
+            return hit;
+        }
+    } else {
+        //! Target is not a leaf.
+        if (bullet.isLeaf()) {
+            //! Bullet is a leaf, call target sub-nodes.
+            //! Calculate minimum dz for the target left subnode and the bullet.
+            hit1 = calcCollZ(target.m_leftchild->boundSphCentre(), target.m_leftchild->Radius(),
+                             bullet.boundSphCentre(), bullet.Radius(),
+                             dx, dy, dz, 0.0, false);
+
+            if (hit1) hit = minCollZ(*target.m_leftchild, bullet, dx, dy, dz);
+
+            //! Calculate minimum dz for the target right subnode and the bullet.
+            hit1 = calcCollZ(target.m_rightchild->boundSphCentre(), target.m_rightchild->Radius(),
+                             bullet.boundSphCentre(), bullet.Radius(),
+                             dx, dy, dz2, 0.0, false);
+
+            if (hit1) hit = minCollZ(*target.m_rightchild, bullet, dx, dy, dz2) || hit;
+            
+            //! Return minimum dz.
+            dz = min(dz, dz2);
+
+            return hit;
+        } else {
+            //! Bullet is not a leaf (neither is a leaf), check all left/right
+            //! collision combinations.
+            //! Target left and bullet left.
+            hit1 = calcCollZ(target.m_leftchild->boundSphCentre(), target.m_leftchild->Radius(),
+                             bullet.m_leftchild->boundSphCentre(), bullet.m_leftchild->Radius(),
+                             dx, dy, dz, 0.0, false);
+
+            if (hit1) hit = minCollZ(*target.m_leftchild, *bullet.m_leftchild, dx, dy, dz);
+
+            //! Target left and bullet right.
+            hit1 = calcCollZ(target.m_leftchild->boundSphCentre(), target.m_leftchild->Radius(),
+                             bullet.m_rightchild->boundSphCentre(), bullet.m_rightchild->Radius(),
+                             dx, dy, dz2, 0.0, false);
+
+            if (hit1) hit = minCollZ(*target.m_leftchild, *bullet.m_rightchild, dx, dy, dz2) || hit;
+            
+            //! Target right and bullet left.
+            hit1 = calcCollZ(target.m_rightchild->boundSphCentre(), target.m_rightchild->Radius(),
+                             bullet.m_leftchild->boundSphCentre(), bullet.m_leftchild->Radius(),
+                             dx, dy, dz3, 0.0, false);
+            
+            if (hit1) hit = minCollZ(*target.m_rightchild, *bullet.m_leftchild, dx, dy, dz3) || hit;
+
+            //! Target right and bullet right.
+            hit1 = calcCollZ(target.m_rightchild->boundSphCentre(), target.m_rightchild->Radius(),
+                             bullet.m_rightchild->boundSphCentre(), bullet.m_rightchild->Radius(),
+                             dx, dy, dz4, 0.0, false);
+
+            if (hit1) hit = minCollZ(*target.m_rightchild, *bullet.m_rightchild, dx, dy, dz4) || hit;
+
+            //! Returns minimum dz.
+            dz = min(min(dz, dz2), min(dz3, dz4));
+
+            return hit;
+        }
+    }
+}
+
 void PAHPrimary::UpdateCache(void)
 {
     UpdateCache(this);
@@ -1582,7 +2016,7 @@ bool PAHPrimary::CheckRounding()
     //! tracked, a particle has coalesced if the distance is 0. If not, the
     //! condition depends on whether the rounding level exceeds an arbitrarily
     //! high threshold.
-    if (!m_pmodel->getTrackPrimarySeparation()) {
+    if (!m_pmodel->getTrackPrimaryCoordinates()) {
         Condition = (m_children_roundingLevel > 0.95);
     } else {
         Condition = (m_distance_centreToCentre == 0.0);
@@ -1651,7 +2085,7 @@ void PAHPrimary::UpdatePrimary(void)
 
         //! Initialisation of variables but this is only relevant to particles
         //! with more than one primary.
-        if (m_pmodel->getTrackPrimarySeparation() && Numprimary() > 1) {
+        if (m_pmodel->getTrackPrimaryCoordinates() && Numprimary() > 1 && m_leftchild != NULL) {
             d_ij = m_parent->m_distance_centreToCentre;
             r_i = m_primarydiam / 2.0;
 
@@ -1662,8 +2096,8 @@ void PAHPrimary::UpdatePrimary(void)
             }
 
             x_i = (pow(d_ij, 2.0) - pow(r_j, 2.0) + pow(r_i, 2.0)) / 2.0 / d_ij; //!< Eq. (3b) of Langmuir 27:6358 (2011).
-            A_n = M_PI * (pow(r_i, 2.0) - pow(x_i, 2.0));                        //!< Eq. (4).
-            A_i = 2.0 * M_PI * (pow(r_i, 2.0) + r_i * x_i);                      //!< Eq. (6).
+            A_n = PI * (pow(r_i, 2.0) - pow(x_i, 2.0));                        //!< Eq. (4).
+            A_i = 2.0 * PI * (pow(r_i, 2.0) + r_i * x_i);                      //!< Eq. (6).
             m_primary_diam_old = m_primarydiam;
             m_vol_old = m_vol;
         }
@@ -1705,8 +2139,9 @@ void PAHPrimary::UpdatePrimary(void)
         //! tracked, the rate of change in the primary diameter is determined
         //! by its neighbour. Therefore, the particle should be made up of more
         //! than one primary.
-        if (!m_pmodel->getTrackPrimarySeparation() || (m_pmodel->getTrackPrimarySeparation() && m_numprimary == 1)) {
+        if (!m_pmodel->getTrackPrimaryCoordinates() || (m_pmodel->getTrackPrimaryCoordinates() && m_numprimary < 2)) {
             m_primarydiam = m_diam;
+            setRadius(m_diam / 2.0);
         } else {
             //! Differentiating Eq. (3b) with respect to time, and assuming
             //! that r_j and d_ij do not change, the rate of change in x_i with
@@ -2061,6 +2496,24 @@ void PAHPrimary::SerializePrimary(std::ostream &out, void *duplicates) const
         val = m_distance_centreToCentre;
         out.write((char*)&val, sizeof(val));
 
+        val = m_cen_bsph[0];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_cen_bsph[1];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_cen_bsph[2];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_cen_mass[0];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_cen_mass[1];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_cen_mass[2];
+        out.write((char*)&val, sizeof(val));
+
         /*Imaging properties
         val = (double)m_Rg;
         out.write((char*)&val, sizeof(val));
@@ -2242,6 +2695,24 @@ void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_distance_centreToCentre = val;
 
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_bsph[0] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_bsph[1] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_bsph[2] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_mass[0] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_mass[1] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_cen_mass[2] = val;
+
         /* imaging properies
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_Rg = val;
@@ -2398,7 +2869,7 @@ PAHPrimary* PAHPrimary::descendPath(PAHPrimary *here,
  *  @param[in] rng   Random number generator.
  *  @param[in] wt    Statistical weight.
  */
-void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &model, rng_type &rng, double wt)
+void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &model, rng_type &rng, double wt, bool &PAHTracerMatch, bool &particleChanged)
 {
     //! Only update the time on the root node.
     if (m_parent == NULL) {
@@ -2422,7 +2893,7 @@ void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &m
         //! results in a decrease in the distance between the primaries and an
         //! increase in their diameters. If not, sintering results in a
         //! decrease in the common surface between the primaries.
-        if (!m_pmodel->getTrackPrimarySeparation()) {
+        if (!m_pmodel->getTrackPrimaryCoordinates()) {
             //! Store the old surface area of particles.
             // double surf_old = m_children_surf;
 
@@ -2523,9 +2994,9 @@ void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &m
 
                 double x_i = (d_ij2 - r_j2 + r_i2) / (2.0 * d_ij); //!< Eq. (3b).
                 double x_j = (d_ij2 - r_i2 + r_j2) / (2.0 * d_ij); //!< Eq. (3b).
-                double A_n = M_PI * (r_i2 - pow(x_i, 2.0));        //!< Eq. (4).
-                double A_i = 2.0 * M_PI * (r_i2 + r_i * x_i);      //!< Eq. (6).
-                double A_j = 2.0 * M_PI * (r_j2 + r_j * x_j);      //!< Eq. (6).
+                double A_n = PI * (r_i2 - pow(x_i, 2.0));        //!< Eq. (4).
+                double A_i = 2.0 * PI * (r_i2 + r_i * x_i);      //!< Eq. (6).
+                double A_j = 2.0 * PI * (r_j2 + r_j * x_j);      //!< Eq. (6).
 
                 //! The expression for B_i in Eq. (8) is wrong. By combining
                 //! Eqs. (5) and (7), we can obtain two equations which are
@@ -2541,41 +3012,79 @@ void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &m
                 double B_j = (pow(A_n, 2.0) * r_i * (-2.0 * d_ij + x_i + x_j) / (A_j * d_ij + A_n * r_j) / (d_ij * A_i + A_n * r_i) - A_n * d_ij * A_i * (d_ij - x_j) / (A_j * d_ij + A_n * r_j) / (d_ij * A_i + A_n * r_i)) / 
                              (1.0 - pow(A_n, 2.0) * r_j * r_i / (A_j * d_ij + A_n * r_j) / (d_ij * A_i + A_n * r_i));
 
-                double V_i = 2.0 / 3.0 * M_PI * pow(r_i, 3.0) + M_PI * r_i2 * x_i - 1.0 / 3.0 * M_PI * pow(x_i, 3.0); //!< Eq. (3a).
-                double V_j = 2.0 / 3.0 * M_PI * pow(r_j, 3.0) + M_PI * r_j2 * x_j - 1.0 / 3.0 * M_PI * pow(x_j, 3.0); //!< Eq. (3a).
+                double V_i = 2.0 / 3.0 * PI * pow(r_i, 3.0) + PI * r_i2 * x_i - 1.0 / 3.0 * PI * pow(x_i, 3.0); //!< Eq. (3a).
+                double V_j = 2.0 / 3.0 * PI * pow(r_j, 3.0) + PI * r_j2 * x_j - 1.0 / 3.0 * PI * pow(x_j, 3.0); //!< Eq. (3a).
 
-                delt = dd_ij_Max / max(dd_ij_dt, 1.0e-300);
-                double mean;
+                if (dd_ij_dt > 0.0) {
+                    delt = dd_ij_Max / max(dd_ij_dt, 1.0e-300);
 
-                if (tstop > (t1 + delt)) {
-                    mean = 1.0 / scale;
-                } else {
-                    mean = dd_ij_dt * (tstop - t1) / (scale * dd_ij_Max);
-                }
+                    double mean;
 
-                //! Only perform sintering if the distance between the centres
-                //! of primary particles i and j is positive.
-                if (d_ij > 0.0) {
-                    boost::random::poisson_distribution<unsigned, double> repeatDistribution(mean);
-                    const unsigned n = repeatDistribution(rng);
-                    m_distance_centreToCentre -= (double)n * scale * dd_ij_Max; //!< Sintering decreases d_ij hence the negative sign.
-
-                    //! If m_distance_centreToCentre (or d_ij) is some very small
-                    //! value, it was found that B_i and B_j will be 1.#INF (or
-                    //! infinite) and will result in an error when adjusting the
-                    //! particle diameters below.
-                    if (m_distance_centreToCentre < 1.0e-12) {
-                        m_distance_centreToCentre = 0.0;
+                    if (tstop > (t1 + delt)) {
+                        mean = 1.0 / scale;
+                    } else {
+                        mean = dd_ij_dt * (tstop - t1) / (scale * dd_ij_Max);
                     }
 
-                    //! The factor of 2 is because Eq. (8) is the rate of change
-                    //! in radius.
-                    this->m_leftparticle->m_primarydiam -= (double)n * scale * 2.0 * B_i * dd_ij_Max;  //!< Eq. (8).
-                    this->m_rightparticle->m_primarydiam -= (double)n * scale * 2.0 * B_j * dd_ij_Max; //!< Eq. (8).
+                    boost::random::poisson_distribution<unsigned, double> repeatDistribution(mean);
+                    const unsigned n = repeatDistribution(rng);
 
+                    if (n > 0) {
+                        m_distance_centreToCentre -= (double)n * scale * dd_ij_Max; //!< Sintering decreases d_ij hence the negative sign.
+
+                        //! The factor of 2 is because Eq. (8) is the rate of change
+                        //! in radius.
+                        this->m_leftparticle->m_primarydiam -= (double)n * scale * 2.0 * B_i * dd_ij_Max;  //!< Eq. (8).
+                        this->m_rightparticle->m_primarydiam -= (double)n * scale * 2.0 * B_j * dd_ij_Max; //!< Eq. (8).
+
+                        particleChanged = true;
+
+                        //! If m_distance_centreToCentre (or d_ij) is some very small
+                        //! value, it was found that B_i and B_j will be 1.#INF (or
+                        //! infinite) and will result in an error when adjusting the
+                        //! particle diameters below.
+                        if (m_distance_centreToCentre < 1.0e-12) {
+                            m_distance_centreToCentre = 0.0;
+                        }
+
+                        //! Only perform sintering if the distance between the centres
+                        //! of primary particles i and j is positive.
+                        if (m_distance_centreToCentre > 0.0) {
+             //               boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+             //               Coords::Vector D;
+             //               bool hit = false;
+             //               while (!hit) {
+             //                   D[0] = ((2.0 * uniformGenerator()) - 1.0) * m_distance_centreToCentre;
+             //                   D[1] = ((2.0 * uniformGenerator()) - 1.0) * m_distance_centreToCentre;
+             //                   hit = calcCollZ(this->m_leftparticle->boundSphCentre(), this->m_leftparticle->PrimaryDiam() / 2.0,
+             //                                   this->m_rightparticle->boundSphCentre(), this->m_rightparticle->PrimaryDiam() / 2.0,
+             //                                   D[0], D[1], D[2], m_distance_centreToCentre, true);
+             //               }
+					        //bool PAHTracerMatch = false;
+
+                            Coords::Vector p1 = this->m_leftparticle->boundSphCentre();
+                            Coords::Vector p2 = this->m_rightparticle->boundSphCentre();
+
+                            double xdev = p2[0] - p1[0];
+                            double ydev = p2[1] - p1[1];
+                            double zdev = p2[2] - p1[2];
+
+                            double dxsqr = xdev * xdev;
+                            double dysqr = ydev * ydev;
+                            double dzsqr = zdev * zdev;
+
+                            double d = sqrt(dxsqr + dysqr + dzsqr);
+
+                            double x = p1[0] + m_distance_centreToCentre * xdev / d;
+                            double y = p1[1] + m_distance_centreToCentre * ydev / d;
+                            double z = p1[2] + m_distance_centreToCentre * zdev / d;
+
+                            this->m_rightchild->Translate(p2[0] - x, p2[1] - y, p2[2] - z, PAHTracerMatch, false, true);
+                        }
+                    }
                     t1 += delt;
                 } else {
-                    break; //! d_ij is 0 so do not continue to sinter.
+                    break;
                 }
             }
         }
@@ -2590,7 +3099,7 @@ void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &m
         //! tracked. If tracked, a particle has sintered if the distance is 0.
         //! If not, the condition depends on whether the rounding level exceeds
         //! an arbitrarily high threshold.
-        if (!m_pmodel->getTrackPrimarySeparation()) {
+        if (!m_pmodel->getTrackPrimaryCoordinates()) {
             Condition = (m_children_roundingLevel > 0.95);
         } else {
             Condition = (m_distance_centreToCentre == 0.0);
@@ -2603,12 +3112,12 @@ void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &m
             UpdateCache();
 
             if (m_leftchild != NULL && m_rightchild != NULL) {
-                m_leftchild->Sinter(dt, sys, model, rng, wt);
-                m_rightchild->Sinter(dt, sys, model, rng, wt);
+                m_leftchild->Sinter(dt, sys, model, rng, wt, PAHTracerMatch, particleChanged);
+                m_rightchild->Sinter(dt, sys, model, rng, wt, PAHTracerMatch, particleChanged);
             }
         } else {
-            m_leftchild->Sinter(dt, sys, model, rng, wt);
-            m_rightchild->Sinter(dt, sys, model, rng, wt);
+            m_leftchild->Sinter(dt, sys, model, rng, wt, PAHTracerMatch, particleChanged);
+            m_rightchild->Sinter(dt, sys, model, rng, wt, PAHTracerMatch, particleChanged);
         }
 
         UpdateCache();
@@ -2674,4 +3183,429 @@ double PAHPrimary::RoundingLevel()
         m_children_vol = 0.0;
         return 0.0;
     }
+}
+
+//! Returns the bounding-sphere centre.
+const Coords::Vector &PAHPrimary::boundSphCentre(void) const
+{
+    return m_cen_bsph;
+}
+
+// Calculates the bounding sphere position and radius using
+// the left and right child node values.
+void PAHPrimary::calcBoundSph(void)
+{
+    if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
+        // Calculate bounding spheres of children.
+        m_leftchild->calcBoundSph();
+        m_rightchild->calcBoundSph();
+
+        // Calculate translation between left and right spheres.
+        double dx = m_rightchild->m_cen_bsph[0] - m_leftchild->m_cen_bsph[0];
+        double dy = m_rightchild->m_cen_bsph[1] - m_leftchild->m_cen_bsph[1];
+        double dz = m_rightchild->m_cen_bsph[2] - m_leftchild->m_cen_bsph[2];
+
+        // Calculate bounding sphere centre.
+        m_cen_bsph[0] = m_leftchild->m_cen_bsph[0] + (0.5 * dx);
+        m_cen_bsph[1] = m_leftchild->m_cen_bsph[1] + (0.5 * dy);
+        m_cen_bsph[2] = m_leftchild->m_cen_bsph[2] + (0.5 * dz);
+
+        // Calculate bounding sphere radius.
+        setRadius(sqrt((dx*dx)+(dy*dy)+(dz*dz)));
+    }
+}
+
+//! Calculates the centre-of-mass using the left and right child node values.
+void PAHPrimary::calcCOM(void)
+{
+    if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
+        //! Calculate centres-of-mass of left and right children.
+        m_leftchild->calcCOM();
+        m_rightchild->calcCOM();
+
+        //! Calculate inverse total mass of left and right children.
+        m_mass = m_leftchild->m_mass + m_rightchild->m_mass;
+        double invtotmass = 1.0 / m_mass;
+
+        //! Now calculate centre-of-mass.
+        for (unsigned int i=0; i!=3; ++i) {
+            m_cen_mass[i]  = m_leftchild->m_cen_mass[i] * m_leftchild->m_mass;
+            m_cen_mass[i] += m_rightchild->m_cen_mass[i] * m_rightchild->m_mass;
+            m_cen_mass[i] *= invtotmass;
+        }
+    } else {
+        //! If there are no children, then the centre-of-mass and bounding-
+        //! sphere centre are the same.
+        m_cen_mass[0] = m_cen_bsph[0];
+        m_cen_mass[1] = m_cen_bsph[1];
+        m_cen_mass[2] = m_cen_bsph[2];
+    }
+}
+
+/*!
+ *  @brief Calculates the z-displacement of a sphere.
+ *
+ *  Calculates the z-displacement of a bullet sphere for a +ve
+ *  collision with a target sphere. Returns true if the
+ *  spheres collide, otherwise false.
+ *
+ *  @param[in]  p1                      Coordinates of sphere 1.
+ *  @param[in]  r1                      Radius of sphere 1.
+ *  @param[in]  p2                      Coordinates of sphere 2.
+ *  @param[in]  r2                      Radius of sphere 2
+ *  @param[in]  dx                      Bullet x displacement.
+ *  @param[in]  dy                      Bullet y displacement.
+ *  @param[out] dz                      Bullet z displacement.
+ *  @param[in]  distanceCentreToCentre  Distance between the centres of neighbouring primary particles.
+ *  @param[in]  trackPrimaryCoordinates Flag used to indicate whether the primary coordinates are tracked.
+ *
+ *  @return Have the nodes collided?
+ */
+bool PAHPrimary::calcCollZ(const Coords::Vector &p1, double r1,
+                           const Coords::Vector &p2, double r2,
+                           double dx, double dy, double &dz,
+                           double distanceCentreToCentre, const bool trackPrimaryCoordinates)
+{
+    double sumrsqr;
+
+    if (!trackPrimaryCoordinates) {
+        sumrsqr = r1 + r2;
+    } else {
+        sumrsqr = distanceCentreToCentre;
+    }
+
+    //! Calculate the square of the sum of the radii, or the distance between
+    //! the centres of neighbouring primary particles if tracking primary
+    //! separation.
+    sumrsqr *= sumrsqr;
+
+    //! Calculate dx, dy and dz. Remember to include
+    //! argument contributions.
+    double xdev = p2[0] - p1[0] + dx;
+    double ydev = p2[1] - p1[1] + dy;
+    double zdev = p2[2] - p1[2];
+
+    //! Calculate dx, dy and dz squared.
+    double dxsqr = xdev * xdev;
+    double dysqr = ydev * ydev;
+    double dzsqr = zdev * zdev;
+
+    // Calculate quadratic terms.
+    double b = 2.0 * zdev;
+    double c = dxsqr + dysqr + dzsqr - sumrsqr;
+
+    //! Calculate discriminant.
+    double dis = (b*b) - (4.0*c);
+
+    if (dis >= 0.0) {
+        //! Spheres intersect.
+        dz = - 0.5 * (b + sqrt(dis));
+        return true;
+    } else {
+        //! Spheres do not intersect.
+        dz = 1.0e10; //!< A large number.
+        return false;
+    }
+}
+
+/*!
+ *  Put the bounding-sphere at the origin.
+ *
+ *  @param[in] PAHTracerMatch Flag used to indicate whether node contains PAH
+ *                            to be traced.
+ */
+void PAHPrimary::centreBoundSph(bool PAHTracerMatch)
+{
+    Translate(-m_cen_bsph[0], -m_cen_bsph[1], -m_cen_bsph[2], PAHTracerMatch, false, true);
+}
+
+//! Put the centre-of-mass at the origin.
+void PAHPrimary::centreCOM(void)
+{
+    Translate(-m_cen_mass[0], -m_cen_mass[1], -m_cen_mass[2], false, false, false);
+}
+
+//! Check whether the particle pointed to by the this pointer contains the PAH
+//! to be traced.
+bool PAHPrimary::PAHTracerCheck(void)
+{
+	bool PAHTracerMatch = false;
+
+    if (m_leftchild != NULL)
+		PAHTracerMatch = m_leftchild->PAHTracerCheck();
+
+	if (PAHTracerMatch)
+		return PAHTracerMatch;
+
+    if (m_rightchild != NULL)
+        PAHTracerMatch = m_rightchild->PAHTracerCheck();
+
+	if (PAHTracerMatch)
+		return PAHTracerMatch;
+
+    for (size_t i = 0; i != m_PAH.size(); ++i) {
+        void *ptr = m_PAH[i].get();
+        if(ptr == PAHTracer) {
+			PAHTracerMatch = true;
+			break;
+        }
+    }
+	return PAHTracerMatch;
+}
+
+/*!
+ *  Rotates the aggregate node and child structure about its centre
+ *  of mass by the given angles (spherical coordinates).
+ *
+ *  @param[in] dtheta         Change in polar angle.
+ *  @param[in] dphi           Change in azimuthal angle.
+ *  @param[in] PAHTracerMatch Flag used to indicate whether particle contains
+ *                            PAH to be traced. 
+ */
+void PAHPrimary::rotateCOM(double dtheta, double dphi, bool PAHTracerMatch)
+{
+    //! Move the aggregate so that its centre-of-mass is at the origin. Store
+    //! the coordinates, so that they can be restored afterwards.
+    //! Do not bother to write POV-Ray translation of nodes.
+    Coords::Vector D(m_cen_mass);
+    Translate(-D.X(), -D.Y(), -D.Z(), false, false, false);
+
+    //! Create transformation matrix.
+    Coords::Matrix M;
+    M.SetIdentity();
+    M.Rotate(dtheta, dphi);
+
+    //! Rotate child nodes.
+    if (m_leftchild != NULL) m_leftchild->transform(M, PAHTracerMatch);
+    if (m_rightchild != NULL) m_rightchild->transform(M, PAHTracerMatch);
+
+    //! Rotate bounding-sphere coordinates.
+    m_cen_bsph = M.Mult(m_cen_bsph);
+
+    //! Restore centre-of-mass coordinates.
+    //! Do not bother to write POV-Ray translation of nodes.
+    Translate(D.X(), D.Y(), D.Z(), false, false, false);
+}
+
+void PAHPrimary::inverseRotateCOM(double dtheta, double dphi, bool PAHTracerMatch)
+{
+    //! Move the aggregate so that its centre-of-mass is at the origin. Store
+    //! the coordinates, so that they can be restored afterwards.
+    //! Do not bother to write POV-Ray translation of nodes.
+    Coords::Vector D(m_cen_mass);
+    Translate(-D.X(), -D.Y(), -D.Z(), false, false, false);
+
+    //! Create transformation matrix.
+    Coords::Matrix M;
+    M.SetIdentity();
+    M.Rotate(dtheta, dphi);
+
+    M.Minors();
+    M.CoFactors();
+    M.Adjugate();
+    M.Inverse();
+
+    //! Rotate child nodes.
+    if (m_leftchild != NULL) m_leftchild->transform(M, PAHTracerMatch);
+    if (m_rightchild != NULL) m_rightchild->transform(M, PAHTracerMatch);
+
+    //! Rotate bounding-sphere coordinates.
+    m_cen_bsph = M.Mult(m_cen_bsph);
+
+    //! Restore centre-of-mass coordinates.
+    //! Do not bother to write POV-Ray translation of nodes.
+    Translate(D.X(), D.Y(), D.Z(), false, false, false);
+}
+
+/*!
+ *  @brief Sets the radius of the bounding sphere.
+ *
+ *  @param[in] r Radius of bounding sphere.
+ */
+void PAHPrimary::setRadius(double r)
+{
+    m_r  = r;
+    m_r2 = r * r;
+    m_r3 = m_r2 * m_r;
+}
+
+//! Returns the bounding sphere radius.
+double PAHPrimary::Radius(void) const
+{
+    return m_r;
+}
+
+/*!
+ *  Transform the primary particle coordinates using the transformation matrix
+ *  so as to rotate it.
+ *
+ *  @param[in] mat            Transformation matrix.
+ *  @param[in] PAHTracerMatch Flag used to indicate whether the particle
+ *                            contains the PAH to be traced.
+ */
+void PAHPrimary::transform(const Coords::Matrix &mat, bool PAHTracerMatch)
+{
+    //! Descend binary tree to the leaf nodes, i.e. single primary particles.
+    if (m_leftchild != NULL) 
+        m_leftchild->transform(mat, PAHTracerMatch);
+    if (m_rightchild != NULL) 
+        m_rightchild->transform(mat, PAHTracerMatch);
+    
+    //! If the particle contains the PAH tracer (PAHTracerMatch true) then
+    //! write to file the following POV-Ray commands. However, only do this for
+    //! leaf nodes, hence, the second and third conditions. As the code ascends
+    //! the binary tree to exit this function, the root node will pass through
+    //! this part of the code.
+	if (PAHTracerMatch && isLeaf()) {
+		std::ofstream outfile;
+
+        //! The clock variable runs progressively from 0.0 to 1.0. The counter
+        //! is used to indicate the stage of the animation.
+		string clock = "*clock" + cstr(getCounter());
+
+        //! Trigonometric functions in the transformation matrix.
+		string sin_phi = "sin(phi" + clock + ")";
+		string cos_phi = "cos(phi" + clock + ")";
+		string sin_theta = "sin(theta" + clock + ")";
+		string cos_theta = "cos(theta" + clock + ")";
+		
+		outfile.open("sphere.pov", std::ios_base::app);
+
+        //! Write the coordinates of the centre-of-mass (units: nm) and radius
+        //! (units: nm) before rotation.
+		outfile << "\t\tsphere{<" << m_cen_mass[0] * 1.0e9 << "," << m_cen_mass[1] * 1.0e9 << "," << m_cen_mass[2] * 1.0e9 << ">," << Radius() * 1.0e9 << " texture{tem_finish}\n"
+		
+        //! Given the following transformation matrix:
+        //! matrix <Val00, Val01, Val02,
+        //!         Val10, Val11, Val12,
+        //!         Val20, Val21, Val22,
+        //!         Val30, Val31, Val32>
+        //!
+        //! the point P <px, py, pz> is transformed into the point Q
+        //! <qx, qy, qz> by:
+        //! qx = Val00 * px + Val10 * py + Val20 * pz + Val30,
+        //! qy = Val01 * px + Val11 * py + Val21 * pz + Val31,
+        //! qz = Val02 * px + Val12 * py + Val22 * pz + Val32.
+        //! 
+        //! Note that the matrix multiplication that is performed below is like
+        //! so:
+        //! qx = cos(phi) * px - sin(phi)cos(theta) * py + sin(phi)sin(theta) * pz,
+        //! qy = sin(phi) * px + cos(phi)cos(theta) * py + cos(phi)sin(theta) * pz,
+        //! qz =                         sin(theta) * py +         cos(theta) * pz.
+        //!
+        //! Therefore the transformation matrix in POV-Ray has to be flipped
+        //! over the diagonal. The last row of the matrix is 0 as we do not
+        //! translate the point P.
+                << "\t\t\tmatrix<" << cos_phi << "," << sin_phi << ",0,\n"
+				<< "\t\t\t-" << sin_phi << "*" << cos_theta << "," << cos_phi << "*" << cos_theta << sin_theta << ",\n"
+				<< "\t\t\t" << sin_phi << "*" << sin_theta << ",-" << cos_phi << "*" << sin_theta << "," << cos_theta << ",\n"
+				<< "\t\t\t0,0,0>}\n"; 
+		outfile.close();
+	}
+
+    //! Rotate centre-of-mass and bounding sphere coordinates.
+	m_cen_mass = mat.Mult(m_cen_mass);
+    m_cen_bsph = mat.Mult(m_cen_bsph);
+}
+
+/*!
+ *  Translates (moves) the aggregate node and child structure by the given
+ *  amounts along the cartesian axes.
+ *
+ *  @param[in] dx             Distance to translate in the x-axis.
+ *  @param[in] dy             Distance to translate in the y-axis.
+ *  @param[in] dz             Distance to translate in the z-axis.
+ *  @param[in] PAHTracerMatch Flag used to indicate whether particle contains
+ *                            PAH to be traced.
+ *  @param[in] Coagulate      Flag used to indicate whether this is the
+ *                            translation of a particle to coagulate with
+ *                            another particle.
+ *  @param[in] Aggregate      Flag used to indicate whether this is the
+ *                            translation of an aggregate.
+ */
+void PAHPrimary::Translate(double dx, double dy, double dz, bool PAHTracerMatch, bool Coagulate, bool Aggregate)
+{
+    //! Translate child branches.
+    if (m_leftchild != NULL) m_leftchild->Translate(dx, dy, dz, PAHTracerMatch, Coagulate, Aggregate);
+    if (m_rightchild != NULL) m_rightchild->Translate(dx, dy, dz, PAHTracerMatch, Coagulate, Aggregate);
+
+    //! Translate bounding sphere centre.
+    m_cen_bsph.Translate(dx, dy, dz);
+
+    std::ofstream outfile;
+
+    //! If the flag 'Aggregate' is true, this is a call from centreBoundSph.
+    //! If the particle contains the PAH tracer (PAHTracerMatch true) then
+    //! write to file the following POV-Ray commands. However, only do this for
+    //! leaf nodes, hence, the second and third conditions. As the code ascends
+    //! the binary tree to exit this function, the root node will pass through
+    //! this part of the code.
+	if (PAHTracerMatch && Aggregate && isLeaf()) {
+        //! The clock variable runs progressively from 0.0 to 1.0. The counter
+        //! is used to indicate the stage of the animation.
+		string clock = "*clock" + cstr(getCounter());
+		
+        //! First write the original centre-of-mass and then let POV-Ray
+        //! translate the particle. Units of nm.
+		outfile.open("sphere.pov", std::ios_base::app);
+		outfile << "\t\tsphere{<" << m_cen_mass[0] * 1.0e9 << "," << m_cen_mass[1] * 1.0e9 << "," << m_cen_mass[2] * 1.0e9 << ">," << Radius() * 1.0e9
+				<< " translate<" << dx * 1.0e9 << clock << "," << dy * 1.0e9 << clock << "," << dz * 1.0e9 << clock << ">"
+				<< " texture{tem_finish}}\n";
+		outfile.close();		
+	}
+
+    //! Translate centre-of-mass.
+    m_cen_mass.Translate(dx, dy, dz);
+
+    //! If the flag 'Coagulate' is true, this is a call from Coagulate.
+    //! If the particle contains the PAH tracer (PAHTracerMatch true) then
+    //! write to file the following POV-Ray commands. However, only do this for
+    //! leaf nodes, hence, the second and third conditions. As the code ascends
+    //! the binary tree to exit this function, the root node will pass through
+    //! this part of the code.
+	if (PAHTracerMatch && Coagulate && isLeaf()) {
+        //! The clock variable runs progressively from 0.0 to 1.0. The counter
+        //! is used to indicate the stage of the animation.
+		string clock = "*clock" + cstr(getCounter());
+		
+		outfile.open("sphere.pov", std::ios_base::app);
+
+        //! We place the particle at an arbitrarily large distance (10 times
+        //! its centre-of-mass) away from its position and allow POV-Ray to
+        //! translate it to its new centre-of-mass so that it appears that the 
+        //! particle moves into the field of vision and collides and sticks
+        //! with a particle.
+        outfile << "\t\tsphere{<" << (m_cen_mass[0] + dx * 10.0) * 1.0e9 << "," << (m_cen_mass[1] + dy * 10.0) * 1.0e9 << "," << (m_cen_mass[2] + dz * 10.0) * 1.0e9 << ">," << Radius() * 1.0e9
+				<< " translate<" << -dx * 1.0e10 << clock << "," << -dy * 1.0e10 << clock << "," << -dz * 1.0e10 << clock << ">"
+				<< " texture{tem_finish}}\n";
+		outfile.close();
+
+		//outfile << "\t\tsphere{<" << m_cen_mass[0] * 1.0e10 << "," << m_cen_mass[1] * 1.0e10 << "," << m_cen_mass[2] * 1.0e10 << ">," << Radius() * 1.0e9
+		//		<< " translate<" << - m_cen_mass[0] * 9.0e9 << clock << "," << - m_cen_mass[1] * 9.0e9 << clock << "," << - m_cen_mass[2] * 9.0e9 << clock << ">"
+		//		<< " texture{tem_finish}}\n";
+		//outfile.close();	
+	}
+}
+
+//! Write the coordinates of the primaries in the particle pointed to by the
+//! this pointer. Units of nm.
+void PAHPrimary::writePrimaryCoordinatesRadius(void)
+{
+    if (m_leftchild!=NULL)
+        m_leftchild->writePrimaryCoordinatesRadius();
+
+    if (m_rightchild!=NULL)
+        m_rightchild->writePrimaryCoordinatesRadius();
+
+    std::ofstream outfile;
+
+    //! There is a need for these two conditions as upon exit of the function
+    //! the aggregate node will pass through this part of the code but are only
+    //! we are only interested in the coordinates of the primaries.
+	if (isLeaf()) {
+		outfile.open("sphere.pov", std::ios_base::app);
+		outfile << "\t\tsphere{<" << m_cen_mass[0] * 1.0e9 << "," << m_cen_mass[1] * 1.0e9 << "," << m_cen_mass[2] * 1.0e9 << ">," << Radius() * 1.0e9
+				<< " texture{tem_finish}}\n";
+		outfile.close();
+	}
 }

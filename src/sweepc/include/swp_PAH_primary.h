@@ -61,6 +61,7 @@
 #include "swp_kmc_simulator.h"
 #include "swp_cell.h"
 #include "swp_bintree_serializer.h"
+#include "swp_coords.h"
 #include <boost/shared_ptr.hpp>
 
 #include <iostream>
@@ -84,7 +85,7 @@ public:
     /// be able to access the private members of the PAHPrimary class.
     ///////////////////////////////////////////////////////////////////////////
     template <class ParticleClass>
-    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimarySeparation);
+    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimaryCoordinates);
 
     template <class ParticleClass>
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
@@ -136,7 +137,6 @@ public:
 
     //! Returns a copy of the primary.
     virtual PAHPrimary *const Clone(void) const;
-	
 
     //! coagulates this particle with rhs
     PAHPrimary &Coagulate(const Primary &rhs, rng_type &rng);
@@ -145,7 +145,9 @@ public:
     void Sinter(double dt, Cell &sys,
                 const Processes::SinteringModel &model,
                 rng_type &rng,
-                double wt);
+                double wt,
+                bool &PAHTracerMatch,
+                bool &particleChanged);
 
     //! prints the tree to a file that can be converted to a graph using graphviz
     void PrintTree(std::string filename);
@@ -154,7 +156,7 @@ public:
     void UpdateCache(void);
 
     //! updates the evolution of the PAHs using the database and the current time
-	void UpdatePAHs(double t, const Sweep::ParticleModel &model, Cell &sys, rng_type &rng);
+    void UpdatePAHs(double t, const Sweep::ParticleModel &model, Cell &sys, rng_type &rng, bool &particleChanged);
 
     //! adds a PAH to a particle
     void AddPAH(double time, const Sweep::ParticleModel &model);
@@ -243,6 +245,60 @@ public:
 
     double ReducedMass()const;
 
+    ///////////////////////////////////////////////////////////////////////////
+    /// Functions for manipulating coordinates of primary particles in an
+    /// aggregate.
+    ///////////////////////////////////////////////////////////////////////////
+
+    //! Returns the bounding-sphere centre.
+    const Coords::Vector &boundSphCentre(void) const;
+
+    //! Calculates the bounding sphere position and radius using the left and
+    //! right child node values.
+    void calcBoundSph(void);
+
+    //! Calculates the centre-of-mass using the left and right child node
+    //! values.
+    void calcCOM(void);
+
+    //! Put the bounding-sphere at the origin.
+    void centreBoundSph(bool PAHTracerMatch);
+
+    //! Put the centre-of-mass at the origin.
+    void centreCOM(void);
+
+    //! Returns true if this node is a leaf (has no children).
+    bool isLeaf(void) const;
+
+    //! Check whether the primaries belonging to the node pointed to by the
+    //! this pointer contains the PAH to be traced.
+    bool PAHTracerCheck(void);
+
+    //! Returns the bounding sphere radius.
+    double Radius(void) const;
+
+    //! Rotates the aggregate node and child structure about its centre-of-mass
+    //! by the given angles (spherical coordinates).
+    void rotateCOM(double dtheta, double dphi, bool PAHTracerMatch);
+
+    void inverseRotateCOM(double dtheta, double dphi, bool PAHTracerMatch);
+
+    //! Translates (moves) the aggregate node and child structure by the given
+    //! amounts along the cartesian axes.
+    void Translate(double dx, double dy, double dz, bool PAHTracerMatch, bool Coagulate, bool Aggregate);
+
+    //! Write the coordinates of the primaries belonging to the node pointed to
+    //! by the this pointer.
+    void writePrimaryCoordinatesRadius(void);
+
+    //! Get count of the number of events which describe the evolution of a
+    //! representative particle.
+    static unsigned int getCounter() {return Counter;}
+
+    //! Increment count of the number of events which describe the evolution of a
+    //! representative particle.
+    void incrementCounter() {++Counter;}
+
 protected:
     //! Empty primary not meaningful
     PAHPrimary();
@@ -278,7 +334,6 @@ protected:
   //  double pow(double a, double b);
 
 private:
-
     //! Find the path through the tree from node top to node bottom
     static std::stack<bool> recordPath(const PAHPrimary* bottom,
                                        const PAHPrimary* const top);
@@ -295,6 +350,32 @@ private:
 
     //! Set the sintering time of a tree
     void SetSinteringTime(double time);
+
+    //! Calculates the z-displacement of a sphere.
+    static bool calcCollZ(
+        const Coords::Vector &p1,          //!< Positional vector of sphere 1.
+        double r1,                         //!< Radius of sphere 1.
+        const Coords::Vector &p2,          //!< Positional vector of sphere 2.
+        double r2,                         //!< Radius of sphere 2.
+        double dx, double dy,              //!< Sphere 2 x and y displacements.
+        double &dz,                        //!< The output z-axis displacement of the bullet (+ve).
+        double distanceCentreToCentre,     //!< Distance between the centres of primary particles.
+        const bool trackPrimaryCoordinates //!< Flag used to indicate whether to track primary coordinates.
+        );
+
+    //! Calculates the minimum collision distance.
+    bool minCollZ(
+        PAHPrimary &target,   //!< Target node.
+        PAHPrimary &bullet,   //!< Bullet node.
+        double dx, double dy, //!< Bullet x-y displacements.
+        double &dz            //!< Return minimum distance.
+        );
+
+    //! Sets the radius of the bounding sphere.
+    void setRadius(double r);
+
+    //! Transforms the node coordinates using the given transformation matrix.
+    void transform(const Coords::Matrix &mat, bool PAHTracerMatch);
 
     //some basic properties
     //derived from the PAHs by UpdataCache()
@@ -333,9 +414,6 @@ private:
     double m_children_surf;
     // store the RoundingLevel
     double m_children_roundingLevel;
-    
-    //! Distance between the centres of primary particles.
-    double m_distance_centreToCentre;
 
     // radius of gyration and fractal dimension
     // the values are only update in CalcFractaldimension()
@@ -358,7 +436,23 @@ private:
     // Vector of std::tr1::shared_ptr<PAH>.
     std::vector<boost::shared_ptr<PAH> > m_PAH;
 
+    //! Bounding-sphere centre.
+    Coords::Vector m_cen_bsph; 
 
+    //! Centre-of-mass coordinates.
+    Coords::Vector m_cen_mass;
+
+    //! Distance between the centres of primary particles.
+    double m_distance_centreToCentre;
+
+    //! Radius of bounding sphere raised to powers of 1, 2 and 3.
+    double m_r;  //!< Bounding sphere radius of aggregate/primary.
+    double m_r2; //!< r squared (useful for efficient collision detection computation).
+    double m_r3; //!< r cubed (useful for calculating centre-of-mass).
+
+    //! For the purpose of creating a video keep a count of the number of
+    //! events which describe the evolution of a representative particle.
+    static unsigned int Counter;
 };
 } //namespace AggModels
 } //namespace Sweep

@@ -125,6 +125,7 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
         m_write_bintree         = rhs.m_write_bintree;
         m_bintree_coalthresh    = rhs.m_bintree_coalthresh;
         m_fract_dim             = rhs.m_fract_dim;
+        m_trackPrimaryCoordinates = rhs.m_trackPrimaryCoordinates;
 
         // Indices for various mixture properties
          m_TemperatureGradientIndex = rhs.m_TemperatureGradientIndex;
@@ -433,12 +434,12 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 		//! Condensation: PAH + Particle (2 >= PAHs) = Particle.
 		else if(pah1->NumPAH() > 1 && pah2->NumPAH() == 1){
 			nRings2=(int)(1.0*pah2->NumRings());
-			if (nRings2 >= target_Rings_Condensation) ceffi = 1;
+			if (nRings2 >= target_Rings_Condensation) ceffi = 0;
 			else ceffi = 0;
 		}
 		else if(pah1->NumPAH() == 1 && pah2->NumPAH() > 1){
 			nRings1=(int)(1.0*pah1->NumRings());
-			if (nRings1 >= target_Rings_Condensation) ceffi = 1;
+			if (nRings1 >= target_Rings_Condensation) ceffi = 0;
 			else ceffi = 0;
 		}
 		
@@ -551,6 +552,11 @@ void ParticleModel::Serialize(std::ostream &out) const
         var = m_efm;
         out.write((char*)&var, sizeof(var));
 
+        //! Write whether coordinates of primary particles in aggregates
+        //! are tracked.
+        flag = m_trackPrimaryCoordinates;
+        out.write((char*)&flag, sizeof(flag));
+
         // Write Knudsen drag parameters
         out.write(reinterpret_cast<const char *>(&m_DragA), sizeof(m_DragA));
         out.write(reinterpret_cast<const char *>(&m_DragB), sizeof(m_DragB));
@@ -642,6 +648,11 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&var), sizeof(var));
                 m_efm             = var;
 
+                //! Read whether coordinates of primary particles in aggregates
+                //! are tracked.
+                in.read(reinterpret_cast<char*>(&flag), sizeof(flag));
+                m_trackPrimaryCoordinates = flag;
+
                 // Read in Knudsen drag parameters
                 in.read(reinterpret_cast<char*>(&m_DragA), sizeof(m_DragA));
                 in.read(reinterpret_cast<char*>(&m_DragB), sizeof(m_DragB));
@@ -702,8 +713,10 @@ void ParticleModel::init(void)
 
     // Default writing of binary trees is false.
     m_write_bintree = false;
+    
     m_bintree_coalthresh    = 1.0;
     m_fract_dim             = 1.8;
+    m_trackPrimaryCoordinates = false;
 
     // Default FM enhancement factor is 2.2
     m_efm = 2.2;

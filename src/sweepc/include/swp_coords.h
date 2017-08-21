@@ -240,6 +240,70 @@ namespace Coords
             A[2][1] =   sint;
             A[2][2] =   cost;
         }
+
+        inline void Minors(void)
+        {
+            double a_00 = A[0][0];
+            double a_01 = A[0][1];
+            double a_02 = A[0][2];
+            double a_10 = A[1][0];
+            double a_11 = A[1][1];
+            double a_12 = A[1][2];
+            double a_20 = A[2][0];
+            double a_21 = A[2][1];
+            double a_22 = A[2][2];
+
+            A[0][0] = a_11 * a_22 - a_12 * a_21;
+            A[0][1] = a_10 * a_22 - a_12 * a_20;
+            A[0][2] = a_10 * a_21 - a_11 * a_20;
+            A[1][0] = a_01 * a_22 - a_02 * a_21;
+            A[1][1] = a_00 * a_22 - a_02 * a_20;
+            A[1][2] = a_00 * a_21 - a_01 * a_20;
+            A[2][0] = a_01 * a_12 - a_02 * a_11;
+            A[2][1] = a_00 * a_12 - a_02 * a_10;
+            A[2][2] = a_00 * a_11 - a_01 * a_10;
+        }
+
+        inline void CoFactors(void)
+        {
+            A[0][1] = - A[0][1];
+            A[1][0] = - A[1][0];
+            A[1][2] = - A[1][2];
+            A[2][1] = - A[2][1];
+        }
+
+        inline void Adjugate(void)
+        {
+            double a_01 = A[0][1];
+            A[0][1] = A[1][0];
+            A[1][0] = a_01;
+
+            double a_02 = A[0][2];
+            A[0][2] = A[2][0];
+            A[2][0] = a_02;
+
+            double a_12 = A[1][2];
+            A[1][2] = A[2][1];
+            A[2][1] = a_12;
+        }
+
+        inline void Inverse(void)
+        {
+            double Determinant = 
+            A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]) -
+            A[0][1] * (A[1][0] * A[2][2] - A[1][2] * A[2][0]) +
+            A[0][2] * (A[1][0] * A[2][1] - A[1][1] * A[2][0]);
+
+            A[0][0] = A[0][0] * 1.0 / Determinant;
+            A[0][1] = A[0][1] * 1.0 / Determinant;
+            A[0][2] = A[0][2] * 1.0 / Determinant;
+            A[1][0] = A[1][0] * 1.0 / Determinant;
+            A[1][1] = A[1][1] * 1.0 / Determinant;
+            A[1][2] = A[1][2] * 1.0 / Determinant;
+            A[2][0] = A[2][0] * 1.0 / Determinant;
+            A[2][1] = A[2][1] * 1.0 / Determinant;
+            A[2][2] = A[2][2] * 1.0 / Determinant;
+        }
     };
 };
 };

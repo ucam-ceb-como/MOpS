@@ -132,7 +132,7 @@ void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
 
         const AggModels::PAHPrimary *p;
         p = dynamic_cast<const AggModels::PAHPrimary*>(sp.Primary());
-        ConstructTree(p, *(&rng), model.getTrackPrimarySeparation());
+        ConstructTree(p, *(&rng), model.getTrackPrimaryCoordinates());
     } else {
         throw std::runtime_error("Unknown particle model. (ParticleImage::Construct)");
     }
@@ -152,8 +152,14 @@ void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
 template <class ParticleClass>
 void ParticleImage::CopyParts(ImgNode &node, const ParticleClass *source)
 {
-    node.setRadius(source->m_primarydiam*0.5e9);
-    node.setDistance(source->m_distance_centreToCentre*1.0e9);
+    //! Since m_cen_bshp and m_cen_mass are vectors do unit conversion in
+    //! function.
+    node.setBoundSph(source->m_cen_bsph);
+    node.setCOM(source->m_cen_mass);
+
+    //! Units of nm.
+    node.setDistance(source->m_distance_centreToCentre * 1.0e9);
+    node.setRadius(source->m_primarydiam * 0.5e9);
 }
 
 /*!
@@ -491,19 +497,19 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
  *  node. Assumes that the tree leaves have been initialised
  *  with the correct radii, and recalculates their positions.
  *
- *  @param[in,out] node                   Pointer to node of ImgNode tree.
- *  @param[in]     rng                    Random number generator.
- *  @param[in]     trackPrimarySeparation Flag used to indicate whether to track primary separation.
+ *  @param[in,out] node                    Pointer to node of ImgNode tree.
+ *  @param[in]     rng                     Random number generator.
+ *  @param[in]     trackPrimaryCoordinates Flag used to indicate whether to track primary coordinates.
  */
-void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng, const bool trackPrimarySeparation)
+void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng, const bool trackPrimaryCoordinates)
 {
     ImgNode *target = node.m_leftchild;
     ImgNode *bullet = node.m_rightchild;
 
     if ((target != NULL) && (bullet != NULL)) {
         //! Pass calculation down binary tree left & right branches.
-        calc_FM(*target, rng, trackPrimarySeparation);
-        calc_FM(*bullet, rng, trackPrimarySeparation);
+        calc_FM(*target, rng, trackPrimaryCoordinates);
+        calc_FM(*bullet, rng, trackPrimaryCoordinates);
 
         //! The first part of the collision algorithm is to
         //! randomly orientate both left and right aggregates.
@@ -541,7 +547,7 @@ void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng, const bool trac
             target = node.m_leftchild;
             bullet = node.m_rightchild;
 
-            if (!trackPrimarySeparation) {
+            if (!trackPrimaryCoordinates) {
                 sumr = target->Radius() + bullet->Radius();
             } else {
                 sumr = node.m_distance_centreToCentre;
@@ -564,7 +570,7 @@ void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng, const bool trac
             // if (!hit) continue; // Should never happen.
             // D[2] = target->m_cen_bsph[2] + dz1;
 
-            if (!trackPrimarySeparation) {
+            if (!trackPrimaryCoordinates) {
                 //! The next code determines the displacement along the z-axis
                 //! required for the target and bullet aggregates to touch.  This
                 //! requires falling down the tree progressively recalculating
@@ -584,7 +590,7 @@ void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng, const bool trac
                 //! calcCollZ function through minCollZ.
                 hit = calcCollZ(node.m_leftparticle->BoundSphCentre(), node.m_leftparticle->Radius(),
                                 node.m_rightparticle->BoundSphCentre(), node.m_rightparticle->Radius(),
-                                D[0], D[1], D[2], sumr, trackPrimarySeparation);
+                                D[0], D[1], D[2], sumr, trackPrimaryCoordinates);
             }
         }
 
@@ -701,26 +707,26 @@ bool ParticleImage::minCollZ(const ImgNode &target,
  *  collision with a target sphere. Returns true if the
  *  spheres collide, otherwise false.
  *
- *  @param[in]  p1                     Coordinates of sphere 1.
- *  @param[in]  r1                     Radius of sphere 1.
- *  @param[in]  p2                     Coordinates of sphere 2.
- *  @param[in]  r2                     Radius of sphere 2
- *  @param[in]  dx                     Bullet x displacement.
- *  @param[in]  dy                     Bullet y displacement.
- *  @param[out] dz                     Bullet z displacement.
- *  @param[in]  distanceCentreToCentre Distance between the centres of neighbouring primary particles.
- *  @param[in]  trackPrimarySeparation Flag used to indicate whether to track primary separation.
+ *  @param[in]  p1                      Coordinates of sphere 1.
+ *  @param[in]  r1                      Radius of sphere 1.
+ *  @param[in]  p2                      Coordinates of sphere 2.
+ *  @param[in]  r2                      Radius of sphere 2
+ *  @param[in]  dx                      Bullet x displacement.
+ *  @param[in]  dy                      Bullet y displacement.
+ *  @param[out] dz                      Bullet z displacement.
+ *  @param[in]  distanceCentreToCentre  Distance between the centres of neighbouring primary particles.
+ *  @param[in]  trackPrimaryCoordinates Flag used to indicate whether to track primary coordinates.
  *
  *  @return Have the nodes collided?
  */
 bool ParticleImage::calcCollZ(const Coords::Vector &p1, double r1,
                               const Coords::Vector &p2, double r2,
                               double dx, double dy, double &dz,
-                              double distanceCentreToCentre, const bool trackPrimarySeparation)
+                              double distanceCentreToCentre, const bool trackPrimaryCoordinates)
 {
     double sumrsqr;
 
-    if (!trackPrimarySeparation) {
+    if (!trackPrimaryCoordinates) {
         sumrsqr = r1 + r2;
     } else {
         sumrsqr = distanceCentreToCentre;

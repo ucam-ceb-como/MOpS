@@ -165,7 +165,7 @@ public:
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
 
     template <class ParticleClass>
-    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimarySeparation);
+    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimaryCoordinates);
 
     template <class ParticleClass>
     friend void Sweep::Imaging::ParticleImage::CopyTree(ImgNode &node, const ParticleClass *source);
@@ -245,9 +245,6 @@ protected:
     //! Common surface area between two connected children
     double m_children_surf;
 
-    //! Distance between the centres of primary particles.
-    double m_distance_centreToCentre;
-
     //! Sintering level of children connected by this node
     double m_children_sintering;
 
@@ -259,6 +256,13 @@ protected:
 
     //! Absolute amount of time for which particles are sintered
     double m_sint_time;
+
+    //! Structure of a particle is now tracked on-the-fly.
+    Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
+    Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
+
+    //! Distance between the centres of primary particles.
+    double m_distance_centreToCentre;
 
     // TREE STRUCTURE PROPERTIES
     // The children are the next nodes in the binary tree and are used to

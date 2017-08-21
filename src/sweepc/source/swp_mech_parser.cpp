@@ -364,11 +364,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     //! decrease in the distance betweeen the centres of neighbouring primaries
     //! and an increase in their diameters.
     if (mech.AggModel() == AggModels::PAH_KMC_ID) {
-        str = particleXML->GetAttributeValue("trackPrimarySeparation");
+        str = particleXML->GetAttributeValue("trackPrimaryCoordinates");
         if(str == "true") {
-            mech.setTrackPrimarySeparation(true);
+            mech.setTrackPrimaryCoordinates(true);
         } else {
-            mech.setTrackPrimarySeparation(false);
+            mech.setTrackPrimaryCoordinates(false);
         }
     }
 
