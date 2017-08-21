@@ -258,6 +258,9 @@ protected:
 	// unless centre to centre distance tracking is turned on
     double m_primarydiam;
 
+	//primary volume -- different to m_vol if centre to centre seapration is tracked
+	double m_primaryvol;
+
 	//! Sum of primary free surface areas under this node
 	double m_free_surf;
 
@@ -417,11 +420,31 @@ private:
     void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
 
 	//! Overloaded ChangePointer for centre to centre separation tracking model
-	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, double d_ij, BinTreePrimary *small_prim);
+	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *small_prim, BinTreePrimary *node);
+	
+	//csl37--merge
+	//function to add new neighbours during a merger event
+	double AddNeighbour(double A_n_k, BinTreePrimary *small_prim);
+	
+	//csl37 -- function to adjust primary properties
+	void AdjustPrimary(double dV, BinTreePrimary *prim_ignore);
 
 	//! function to identify neighbours and sum their contribution to surface 
 	void SumNeighbours(BinTreePrimary *prim, double &sumterm);
 
+	void SumNeighbours(BinTreePrimary *prim, double &sumterm, BinTreePrimary *prim_ignore);
+
+	void UpdateNeighbourVolume(BinTreePrimary *prim,double dr_i,double &volumeterm);
+
+	//! function to identify neighbours and sum their contribution to surface 
+	void SumNeighbourContributions(BinTreePrimary *prim, double &sumterm);
+
+	//! function to identify neighbours and sum their contribution to particle free surface area
+	void GetFreeSurfaceTerm(BinTreePrimary *prim, double &sumterm);
+
+	//function to modify the centre to centre separations and returns free surface area
+	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
+	
 	//! Function to modify the centre to centre separations and returns free surface area.
 	void UpdateConnectivity(BinTreePrimary *prim, std::set<void*> &primaryUniqueAddresses, double delta_r, double &sumterm);
 	
