@@ -232,9 +232,8 @@ double Sweep::TreeWeightedCache::Property(PropID id) const
         	return m_sinterrate;
 		case iFS:
 			throw std::logic_error("Free surface no longer cached (TreeWeightedCache::Property)");
-			return 0.0;
-		case iNumCarbon:
-            return m_numcarbon;        case -1:
+			return 0.0;     
+		case -1:
             // Special case property, used to select particles
             // uniformly.
             return 1.0;

@@ -310,7 +310,8 @@ int AggModels::Primary::NumCarbon(void) const {return m_numcarbon;}
 //! Returns fragmentation flag.
 int AggModels::Primary::Frag(void) const {return m_frag;}
 
-//! Returns the property with the given ID.double AggModels::Primary::Property(const Sweep::PropID id) const
+//! Returns the property with the given ID.
+double AggModels::Primary::Property(const Sweep::PropID id) const
 {
     switch (id) {
         case iDsph:      // Equivalent sphere diameter.

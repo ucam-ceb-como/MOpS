@@ -465,9 +465,8 @@ double Particle::Property(PropID id) const
             return GetCoverageFraction();
         case iFS:
             throw std::logic_error("Free surface no longer supported (Particle::Property)");
-            return 0.0;
-        case iNumCarbon:
-            return NumCarbon();        case -1:
+            return 0.0;       
+		case -1:
             // Special case property, used to select particles
             // uniformly.
             return 1.0;
