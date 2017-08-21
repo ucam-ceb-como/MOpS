@@ -125,7 +125,6 @@ int DimerInception::Perform(const double t, Cell &sys,
     // This routine performs the inception on the given chemical system.
 
     // aab64 Don't incept if magical last inception
-    bool adjustTtemp = true;
     if (ParticleComp()[0] != 0) {
         // Create a new particle of the type specified
         // by the system ensemble.
@@ -154,12 +153,12 @@ int DimerInception::Perform(const double t, Cell &sys,
         // Add particle to system's ensemble.
         sys.Particles().Add(*sp, rng);
 
-	// Update gas-phase chemistry of system.
-	adjustGas(sys, sp->getStatisticalWeight(), 1);
-	adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, adjustTtemp, ParticleComp()[0], 1);
+	    // Update gas-phase chemistry of system.
+	    adjustGas(sys, sp->getStatisticalWeight(), 1);
+	    adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1);
     }
     else {
-	adjustParticleTemperature(sys, 0, 1, adjustTtemp, 0, 0);
+		adjustParticleTemperature(sys, 0, 1, sys.GetIsAdiabaticFlag(), 0, 0);
     }
 
     return 0;

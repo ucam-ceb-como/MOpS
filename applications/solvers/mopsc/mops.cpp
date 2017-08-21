@@ -132,13 +132,8 @@ int main(int argc, char* argv[])
         ("ensemble", "write full ensembles to binary files")
         ("ppah", "write full PAHPP data")
         ("jumps", "write stochastic jumps data")
-
-
-
-	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	("diags", "write split diagnostics data")
-	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
         ("wdotA4", "postprocess based on the molar rate of production by chemical reaction of the inception species") 
+	    ("diags", "write split diagnostics data") //aab64
 		;
 
         // Combine sets of program options
@@ -205,15 +200,11 @@ int main(int argc, char* argv[])
         if (vm.count("ppah")) fpah = true;
         if (vm.count("jumps")) fjumps = true;
         if (vm.count("ensemble")) fensembles = true;
-
-
-
-	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	if (vm.count("diags")) fdiags = true;
-	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-
         if (vm.count("wdotA4")) fwdotA4 = true;
+	    if (vm.count("diags")) fdiags = true; // aab64
+
+
+        
     }
 
     // Display any error messages from incorrect command-line flags

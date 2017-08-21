@@ -451,8 +451,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
     }
 
     // aab64 Update particle temperature (placeholder)
-    //bool adjustTtemp = true;
-    //adjustParticleTemperature(sys, 0, 1, adjustTtemp, 0, 3);
+    //adjustParticleTemperature(sys, 0, 1, sys.GetIsAdiabaticFlag(), 0, 3);
 
     return 0;
 }

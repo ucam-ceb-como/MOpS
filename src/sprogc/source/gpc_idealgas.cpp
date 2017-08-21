@@ -117,7 +117,7 @@ IdealGas &IdealGas::operator=(const IdealGas &gas)
 double IdealGas::Pressure() const
 {
     // P = rho R T.
-	return 300000; // aab64 (temporary) Density() * R * Temperature(); 
+	return Density() * R * Temperature(); 
 }
 
 // Sets the mixture density using the given pressure.

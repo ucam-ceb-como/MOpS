@@ -200,8 +200,7 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
     if (i >= 0) DoParticleDeath(t, i, sys, rng);
 
     // aab64 Update particle temperature after heat transfer period
-    //bool adjustTtemp = true;
-    //adjustParticleTemperature(sys, 0, 1, adjustTtemp, 0, 5);
+    //adjustParticleTemperature(sys, 0, 1, sys.GetIsAdiabaticFlag(), 0, 5);
 
     return 0;
 }

@@ -590,40 +590,13 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 			if (processID == 0) {
 				double dt = tf - t0;
 
-				// Calculate new temperatures using implicit difference method
-				/*newTp = oldTp;
-				newTp += dt * ap * oldTg / (1 + dt * ag);
-				newTp *= 1.0 / (1 + (dt * ap) - ((dt * ap * dt * ag) / (1 + dt * ag)));
-
-				newTg = oldTg;
-				newTg += dt * ag * newTp;
-				newTg *= 1.0 / (1 + dt * ag);*/
-
-				// Calculate new temperatures using implicit difference method and adding nominal radiation from oldTp
-				/*newTp = oldTp;
-				newTp += (dt * ap / (1 + dt * ag)) * (oldTg + (dt * gg * rad));
-				newTp += (dt * gp * rad);
-				newTp *= 1.0 / (1 + (dt * ap) - ((dt * ap * dt * ag) / (1 + dt * ag)));
-
-				newTg = oldTg;
-				newTg += dt * ag * newTp;
-				newTg += dt * gg * rad;
-				newTg *= 1.0 / (1 + dt * ag);*/
-
-				//rad = Sp * kSB * (pow(newTp, 4) - pow(newTg, 4));
-
 				// Heat transfer pseudo-constants
-				/*ag = (h * Sp) / (Cg * rhog);
-				ap = (h * Sp) / (Cp * rhop * Vp);
-				gg = rad / (Cg * rhog);
-				gp = rad / (Cp * rhop * Vp);*/
-
 				ag = (h * Sp) / (Cg);               // Divided by rhog. Technically also h is a function of tg
 				ap = (h * Sp) / (Cp * rhop * Vp);   // Technically also h is a function of tg
 				gg = rad / (Cg);                    // Divided by rhog
 				gp = rad / (Cp * rhop * Vp);
 
-				int newt_its = 1000;
+				int newt_its = 10000;
 				double tol = 1e-2;
 				double c_a, c_b, c_c, c_d, c_e, c_f, c_g, c_h, c_i;
 				double x1 = oldTp, x2 = oldTg, x3 = rhog;
@@ -635,10 +608,6 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 				c_b = radCoeff * dt * gp;
 				c_c = -1.0 * dt * ap;
 				c_d = -1.0 * radCoeff * dt * gp;
-				/*c_e = -1.0 * dt * ag;
-				c_f = -1.0 * radCoeff * dt * gg;
-				c_g = 1.0 + dt * ag;
-				c_h = radCoeff * dt * gg;*/
 
 				for (int i = 0; i < newt_its; i++) {
 
@@ -663,26 +632,13 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 					f1 = (c_a * x1) + ((c_b / radCoeff) * x14) + (c_c * x2) + ((c_d / radCoeff) * x24) - oldTp;
 					f2 = (c_g * x2) + ((c_h / radCoeff) * x24) + (c_e * x1) + ((c_f / radCoeff) * x14) - oldTg;
 					f3 = (2.0 * x3) - (oldTg * (x3 / x2)) - rhog;
-					
-					/* Adding change in density makes this 3x3 (see below)
-					det = ((c_a + (c_b * x13)) * (c_g + (c_h * x23))) - 
-						  ((c_c + (c_d * x23)) * (c_e + (c_f * x13)));
-					det = 1.0 / det;
-					
-					cof11 = c_g + (c_h * x23);
-					cof12 = (-1.0 * c_c) + (-1.0 * c_d * x23);
-					cof21 = (-1.0 * c_e) + (-1.0 * c_f * x13);
-					cof22 = c_a + (c_b * x13);
-
-					dx1 = det * ((cof11 * f1) + (cof12 * f2));
-					dx2 = det * ((cof21 * f1) + (cof22 * f2));*/
 
 					j11 = c_a + (c_b * x13);
 					j12 = c_c + (c_d * x23);
 					j13 = 0.0;
 					j21 = c_e + (c_f * x13);
 					j22 = c_g + (c_h * x23);
-					j23 = (c_e / x3) * (x2 - x1) + (c_i / x3) * (x24 - x14); // Ignoring rhog: 0.0;
+					j23 = (c_e / x3) * (x2 - x1) + (c_i / x3) * (x24 - x14); 
 					j31 = 0.0;
 					j32 = oldTg * (x3 / x22);
 					j33 = 2.0 - (oldTg / x2);
@@ -732,16 +688,6 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 			sys.SetBulkParticleTemperature(newTp);
 			gas->SetTemperature(newTg);
 			gas->SetDensity(newRho);
-
-			// Update density and sample volume using IG relationship
-			//double oldRho = gas->Density();
-			//double oldRhom = gas->MassDensity();
-			//double newRho = oldRho - ((oldRho / oldTg) * (newTg - oldTg)); // constP
-			//double newRho = rhog;
-			//newRho *= 1.0 / (1.0 + (1.0/newTg) * (newTg - oldTg));
-			//gas->SetDensity(newRho);
-			//sys.AdjustSampleVolume(oldRhom / gas->MassDensity());
-			//sys.AdjustSampleVolume(newRho * newTg / (oldRho * oldTg));
 		}
 	}
 }

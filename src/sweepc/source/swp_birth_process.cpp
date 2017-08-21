@@ -212,8 +212,7 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
         rng);
 
 	// aab64 Update particle temperature after heat transfer period
-	bool adjustTtemp = true;
-	adjustParticleTemperature(sys, m_cell->Particles().At(i)->getStatisticalWeight() * F(sys), 1, adjustTtemp, 0, 4);
+	adjustParticleTemperature(sys, m_cell->Particles().At(i)->getStatisticalWeight() * F(sys), 1, sys.GetIsAdiabaticFlag(), 0, 4);
 
     return 0;
 }

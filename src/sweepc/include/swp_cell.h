@@ -211,6 +211,12 @@ public:
     // aab64 Get the process time interval 
     double GetCurrentProcessTau() const { return m_proc_tau; }
 
+	// aab64 Set the process time interval
+	void SetIsAdiabaticFlag(bool flag) { m_adiabatic_flag = flag; }
+
+	// aab64 Get the process time interval 
+	bool GetIsAdiabaticFlag() const { return m_adiabatic_flag; }
+
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
@@ -253,6 +259,9 @@ private:
 
     // aab64 The process time interval
     double m_proc_tau; 
+
+	// aab64 Flag for adiabatic operation
+	bool m_adiabatic_flag;
 };
 
 } //namespace Sweep

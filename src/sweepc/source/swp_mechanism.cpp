@@ -1017,52 +1017,37 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
         sys.Particles().FreezeDoubling();
 
         // Perform deferred processes on all particles individually.
-        /*Ensemble::iterator i;
+        Ensemble::iterator i;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
             UpdateParticle(*(*i), sys, t, rng);
-        }*/
+        }
 
-	// aab64 candidate for omp?? But index variable i would need to be a signed integral type 
-	// Perform deferred processes on all particles individually using OpenMP.
-	// Need to rework from the above
-	// Need to check the iterator is pointing to a sensible thing - is this looping through all particles?
+	    // aab64 is the above a candidate for omp?? 
+		// But index variable i would need to be a signed integral type 
+	    // To perform deferred processes on all particles individually using OpenMP:
+	    // Need to rework from the above
+	    // To do: Need to check the rng is not being overwritten or put inside pragma critical
 
-	// Option 2 Perform deferred processes on all particles individually.
-	/*signed int nparticles = sys.Particles().Count();			
-	std::vector<double> dtvector;
-	signed int part_i;
-	dtvector.resize(nparticles, 0.0);
-	for (part_i = 0; part_i < nparticles; ++part_i) {
-		//cout << (int)((sys.Particles().At(part_i))) << "\n";
-		UpdateParticleNS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
-	}
-#pragma omp parallel for private(part_i) firstprivate(nparticles) schedule(static)
-	for (part_i = 0; part_i < nparticles; ++part_i) {
-		UpdateParticleS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
-	}*/
-
-	// Option 3 Perform deferred processes on all particles individually.			
-	signed int nparticles = sys.Particles().Count();
-	if (nparticles < 100) 
-	{
-		Ensemble::iterator i;
-		for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
-		    //cout << (int)(*i) << "\n";
-		    UpdateParticle(*(*i), sys, t, rng);
-		}
-	} else {
-		std::vector<double> dtvector;
-		signed int part_i;
-		dtvector.resize(nparticles, 0.0);
-		for (part_i = 0; part_i < nparticles; ++part_i) {
-		    //cout << (int)((sys.Particles().At(part_i))) << "\n";
-		    UpdateParticleNS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
-		}
-#pragma omp parallel for private(part_i) firstprivate(nparticles) schedule(dynamic) ordered
-		for (part_i = 0; part_i < nparticles; ++part_i) {
-		    UpdateParticleS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
-		}
-	}
+	    // Option 2: Perform deferred processes on all particles individually.			
+	    /*signed int nparticles = sys.Particles().Count();
+	    if (nparticles < 1000) 
+	    {
+		    Ensemble::iterator i;
+		    for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
+		        UpdateParticle(*(*i), sys, t, rng);
+		    }
+	    } else {
+		    std::vector<double> dtvector;
+		    signed int part_i;
+		    dtvector.resize(nparticles, 0.0);
+		    for (part_i = 0; part_i < nparticles; ++part_i) {
+		        UpdateParticleNS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
+		    }
+#pragma omp parallel for private(part_i) firstprivate(nparticles) //schedule(dynamic) ordered
+		    for (part_i = 0; part_i < nparticles; ++part_i) {
+		        UpdateParticleS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
+		    }
+	    }*/
 		
         // Now remove any invalid particles and update the ensemble.
         sys.Particles().RemoveInvalids();
@@ -1158,12 +1143,8 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
                              // Do the process to the particle.
                              (*i)->Perform(t, sys, sp, rng, num);
 							 
-
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-			     // Increment the deferred jump counter
-			     m_addcount += num;
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+							 // Increment the deferred jump counter
+			                 m_addcount += num; // aab64
                          }
                     }
                 }
@@ -1182,10 +1163,13 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
 	}
 }
 
-// aab64 Split updates to two functions and try omp
+// aab64 Split updates to two functions and try omp for the sintering part 
+// as each particle is treated separately so there should not be memory
+// read/write issues
+// To do: check that this is not affected by access to the rng -- fix it!
 
 /*!
-* Performs linear process updates on a particle in the given system.
+* Performs linear process updates on a particle in the given system excluding SINTERING
 *
 *@param[in,out]    sp          Particle to update
 *@param[in,out]    sys         System containing particle to update
@@ -1194,7 +1178,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
 */
 void Mechanism::UpdateParticleNS(Particle &sp, Cell &sys, double t, rng_type &rng, double &dtvec) const
 {
-	//cout << "2: in particle update NS\n";
+	// aab64 To do: fix this part
 	// Deal with the growth of the PAHs
 	/*if (AggModel() == AggModels::PAH_KMC_ID)
 	{
@@ -1229,17 +1213,12 @@ void Mechanism::UpdateParticleNS(Particle &sp, Cell &sys, double t, rng_type &rn
 	if (m_anydeferred) {
 		PartProcPtrVector::const_iterator i;
 		double rate, dt;
-		//double fakeLPDAtime = sp.LastUpdateTime();
 
-		//while ((fakeLPDAtime < t) && sp.IsValid()) {
 		while (sp.LastUpdateTime() < t && sp.IsValid()) {
 			// Calculate delta-t and update particle time.
-			//dt = t - fakeLPDAtime;
-			//fakeLPDAtime = t;
 			dt = t - sp.LastUpdateTime();
 			dtvec = dt;
 			sp.SetTime(t);
-			//cout << "dt=" << dtvec << "\n";
 
 			// Loop through all processes, performing those
 			// which are deferred.
@@ -1253,32 +1232,23 @@ void Mechanism::UpdateParticleNS(Particle &sp, Cell &sys, double t, rng_type &rn
 					// 0 then the count is guaranteed to be 0
 					if (rate > 0) {
 						boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
-						//if (rate <= 0.663 && rate >= 0.662) {
-							//cout << "Stopping point\n";
-						//}
-						//cout << "calling RN gen\n";
 						unsigned num = repeatDistrib(rng);
-						//std::cout << "out\nRN gen.: " << rate << " , " << num << "\n"; //std::setprecision(50) <<
 						if (num > 0) {
 							// Do the process to the particle.
 							(*i)->Perform(t, sys, sp, rng, num);
-							//cout << "2 , sg done NS\n";
 
-							//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 							// Increment the deferred jump counter
-							m_addcount += num;
-							//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+							m_addcount += num; // aab64
 						}
 					}
 				}
 			}
 		}
 	}
-	//cout << "2: leaving particle update NS\n";
 }
 
 /*!
-* Performs linear process updates on a particle in the given system.
+* Performs SINTERING linear process updates on a particle in the given system.
 *
 *@param[in,out]    sp          Particle to update
 *@param[in,out]    sys         System containing particle to update
@@ -1295,7 +1265,6 @@ void Mechanism::UpdateParticleS(Particle &sp, Cell &sys, double t, rng_type &rng
 		if (m_anydeferred) {
 			// Calculate delta-t and update particle time.
 			dt = dtvec;
-			//cout << "dt=" << dtvec << "\n";
 		}
 		if ((m_sint_model.IsEnabled() && !m_anydeferred
 			&& AggModel() != AggModels::PAH_KMC_ID)) {
@@ -1307,7 +1276,6 @@ void Mechanism::UpdateParticleS(Particle &sp, Cell &sys, double t, rng_type &rng
 		// Perform sintering update.
 		if (m_sint_model.IsEnabled()) {
 			sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
-			//cout << "2 , sin done\n";
 		}
 
 		// Check that the particle is still valid, only calculate

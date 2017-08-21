@@ -304,7 +304,7 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
 
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
-        //m_dbleactive = true; // aab64 switching this off for flow case because otherwise ensemble capacity hit too soon and sample volume falls rapidly due to contractions
+        m_dbleactive = true; // aab64 switching this off for flow case because otherwise ensemble capacity hit too soon and sample volume falls rapidly due to contractions
     } else
         m_dbleactive = false;
 
@@ -369,8 +369,8 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 {
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
-        //m_dbleactive = true;
-        //printf("sweep: Particle doubling activated.\n"); // aab64 switching doubling off, see message above
+        m_dbleactive = true;
+        printf("sweep: Particle doubling activated.\n"); // aab64 switching doubling off, see message above
     }
 
     // Check ensemble for space, if there is not enough space then need
