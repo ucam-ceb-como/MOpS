@@ -182,7 +182,7 @@ public:
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
 
     template <class ParticleClass>
-    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimarySeparation);
+    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimaryCoordinates);
 
     template <class ParticleClass>
     friend void Sweep::Imaging::ParticleImage::CopyTree(ImgNode &node, const ParticleClass *source);
@@ -279,6 +279,8 @@ protected:
     //! For tracking the coordinates of primary particles.
     Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
     Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
+	Coords::Vector m_frame_translate; //!< tracks translation of tracked particle
+	Coords::Vector m_frame_rotate;	  //!< tracks the rotation of the tracked particle
 
     //! Sintering level of children connected by this node
     double m_children_sintering;

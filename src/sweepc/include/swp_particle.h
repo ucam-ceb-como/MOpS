@@ -264,6 +264,9 @@ public:
     // Recalculate derived properties from the primary particle
     void UpdateCache();
 
+	//csl37: get particle coordinates
+	void getParticleCoords(std::vector<fvector> &coords) const;
+
     // READ/WRITE/COPY.
 
     //! Clone the particle.

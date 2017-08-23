@@ -97,6 +97,13 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_cen_mass[0] = 0.0;
     m_cen_mass[1] = 0.0;
     m_cen_mass[2] = 0.0;
+
+	m_frame_translate[0] = 0.0;
+	m_frame_translate[1] = 0.0;
+	m_frame_translate[2] = 0.0;
+	m_frame_rotate[0] = 0.0;
+	m_frame_rotate[1] = 0.0;
+	m_frame_rotate[2] = 1.0;
 }
 
 /*!
@@ -140,6 +147,13 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_cen_mass[0] = 0.0;
     m_cen_mass[1] = 0.0;
     m_cen_mass[2] = 0.0;
+
+	m_track_translate[0] = 0.0;
+	m_track_translate[1] = 0.0;
+	m_track_translate[2] = 0.0;
+	m_track_rotate[0] = 0.0;
+	m_track_rotate[1] = 0.0;
+	m_track_rotate[2] = 1.0;
 }
 
 //! Copy constructor.
@@ -964,6 +978,10 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
     m_avg_sinter              = source->m_avg_sinter;
     m_sint_rate               = source->m_sint_rate;
     m_sint_time               = source->m_sint_time;
+	m_frame_translate		  = source->m_frame_translate;
+	m_frame_rotate			  = source->m_frame_rotate;
+
+
 
     //! Set particles.
     m_leftchild     = source->m_leftchild;

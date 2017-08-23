@@ -270,6 +270,9 @@ public:
         rng_type &rng,  // Random number generator
         double wt     // Statistical weight
         );
+	
+	//csl37: get primary coords
+	virtual void GetPriCoords(std::vector<fvector> &coords) const;
 
     // READ/WRITE/COPY.
 
