@@ -144,6 +144,29 @@ public:
         unsigned int start=0             // Optional vector start index.
         ) const;
 
+	// COAGULATION PROCESS WEIGHTED.
+
+	// aab64 Returns TRUE if coagulation process uses weighted transfer function.
+	bool IsWeightedCoag(void) const;
+
+	// aab64 Sets the coagulation process to be SWA or not. 
+	// Note that this is only for original activation, it is not meant to change the state
+	// during simulation and does not provide a means of doing so. 
+	virtual void SetWeightedCoag(bool weightedCoag);
+
+	// aab64 Returns TRUE if inception process uses variable weights.
+	bool IsVariableWeightedInception(void) const;
+
+	// aab64 Returns variable inception max weight.
+	double GetMaxInceptionWeight(void) const;
+
+	// aab64 Returns variable inception min weight.
+	double GetMinInceptionWeight(void) const;
+
+	// aab64 Sets flag for the inception process to use variable weighting.
+	// Weights fluctuate between wmax and wmin depending on number of 
+	// particles in ensemble relative to ensemble capacity.
+	virtual void SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin);
 
 	// RATE CALCULATION.
 
@@ -356,6 +379,10 @@ private:
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	mutable bool m_weighted_coag;        // Is the coagulation process one of the weighted ones?
+	mutable bool m_var_incept_weight;    // Is variable inception weighting turned on?
+	mutable double m_min_incept_weight;  // Minimum incepting weight, corresponding to 1 SP
+	mutable double m_max_incept_weight;  // Maximum incepting weight, corresponding to Nmax SPs
     mutable unsigned int m_addcount;     // The addition count for deferred additions
     mutable unsigned int m_inflowcount;  // The inflow count for stochastic inflow
     mutable unsigned int m_outflowcount; // The outflow count for stochastic inflow

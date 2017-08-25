@@ -9,7 +9,7 @@
     </component>
 	
     <!-- Define particle types (Detailed) -->
-    <particle id="[Ru]" model="bintree" subtree="false">
+    <!--particle id="[Ru]" model="bintree" subtree="false">
         <description>A rutile particle.</description>
 	    <fractdim>1.8</fractdim>
         <coalthresh>1.0</coalthresh>
@@ -18,7 +18,7 @@
             <E units="K">31032</E>
 		    <Dpmin units="m">0</Dpmin>
         </sintering>
-    </particle>
+    </particle-->
         <!--sintering enable="true" model="Rutile">
 		    <A units="s/m4K">3.7E+16</A>
             <E units="K">31032</E>
@@ -26,18 +26,14 @@
         </sintering-->
 	
 	<!-- Define particle types (Spherical) -->
-    <!--particle id="[Ru]" model="spherical" subtree="false">
+    <particle id="[Ru]" model="spherical" subtree="false">
         <description>A rutile particle.</description>
-    </particle-->
+    </particle>
 	
     <!-- Coagulation -->
     <coagulation>
 	    <A>1.0</A>
-	    <kernel>weightedtransition</kernel>
-		<weightrule>w1</weightrule>
-		<!--inceptionweightchange>on</inceptionweightchange>
-		<maxinceptionweight>500.0</maxinceptionweight>
-		<mininceptionweight>100.0</mininceptionweight-->
+	    <kernel>transition</kernel>
     </coagulation>
 
     <!-- Ti addition reactions

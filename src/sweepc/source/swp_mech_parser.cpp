@@ -1792,6 +1792,36 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                         // Unrecognised option
                         throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available with weights \
                                                 (Sweep, MechParser::readCoagulation)");
+
+					// aab64 Set weighted coagulation flag and 
+					// check if variable inception weights should be used.
+					// The current scheme linearly increases the inception weights in 
+					// proportion to the amount of the ensemble currently being used.
+					mech.SetWeightedCoag(true);
+					bool varIncWeight = false;
+					double maxIncWeight = 100.0;
+					double minIncWeight = 1.0;
+					CamXML::Element *incWeightXML = (*it)->GetFirstChild("inceptionweightchange");
+					CamXML::Element *maxwtel = (*it)->GetFirstChild("maxinceptionweight");
+					CamXML::Element *minwtel = (*it)->GetFirstChild("mininceptionweight");
+					if (incWeightXML != NULL) {
+						const std::string incWeightRuleName = incWeightXML->Data();
+						if (incWeightRuleName == "on") {
+							varIncWeight = true;
+							std::cout << "Applying increasing inception weight scheme" << std::endl;
+							if (minwtel != NULL) {
+								minIncWeight = cdble(minwtel->Data());
+								if (minIncWeight <= 0.0)
+									throw std::runtime_error("Inception weights must be positive");
+							}
+							if (maxwtel != NULL) {
+								maxIncWeight = cdble(maxwtel->Data());
+							}
+							if (maxIncWeight < minIncWeight)
+								throw std::runtime_error("Max inception weight cannot be smaller than min inception weight");
+							mech.SetVariableWeightedInception(varIncWeight, maxIncWeight, minIncWeight);
+						}
+					}
                 }
 
                 // Rate scaling now that a process has been created

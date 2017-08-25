@@ -501,8 +501,8 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 		Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();
 
 		// Get particle-phase volume and area per m3 reactor
-		double Vp = (sys.Particles().GetSum(iV)) / (sys.SampleVolume());
-		double Sp = (sys.Particles().GetSum(iS)) / (sys.SampleVolume());
+		double Vp = (sys.Particles().GetSum(Sweep::iV)) / (sys.SampleVolume());
+		double Sp = (sys.Particles().GetSum(Sweep::iS)) / (sys.SampleVolume());
 
 		// Overall heat transfer coefficient
 		double h = 0.0;

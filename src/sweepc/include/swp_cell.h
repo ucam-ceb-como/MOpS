@@ -217,6 +217,12 @@ public:
 	// aab64 Get the process time interval 
 	bool GetIsAdiabaticFlag() const { return m_adiabatic_flag; }
 
+	// aab64 Set the incepting particle weight
+	void SetInceptingWeight(double wt) { m_incepting_weight = wt; }
+
+	// aab64 Get the incepting particle weight 
+	double GetInceptingWeight() const { return m_incepting_weight; }
+
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
@@ -262,6 +268,9 @@ private:
 
 	// aab64 Flag for adiabatic operation
 	bool m_adiabatic_flag;
+
+	// aab64 Current incepting particle weight in Bintree primary case
+	double m_incepting_weight;
 };
 
 } //namespace Sweep

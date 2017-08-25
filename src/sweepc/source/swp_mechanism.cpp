@@ -72,7 +72,9 @@ using namespace Strings;
 
 // Default constructor.
 Mechanism::Mechanism(void)
-: m_anydeferred(false), m_icoag(-1), m_termcount(0), m_processcount(0)
+: m_anydeferred(false), m_icoag(-1), m_termcount(0), m_processcount(0), 
+m_weighted_coag(false), m_var_incept_weight(false), 
+m_max_incept_weight(1.0), m_min_incept_weight(1.0)
 {
 }
 
@@ -110,9 +112,13 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
+    m_weighted_coag = rhs.m_weighted_coag;
 	m_addcount = rhs.m_addcount;
 	m_inflowcount = rhs.m_inflowcount;
 	m_outflowcount = rhs.m_outflowcount;
+	m_var_incept_weight = rhs.m_var_incept_weight;
+	m_max_incept_weight = rhs.m_max_incept_weight;
+	m_min_incept_weight = rhs.m_min_incept_weight;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -326,6 +332,51 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
     }
 }
 
+
+
+// COAGULATION PROCESS WEIGHTED.
+
+// aab64 Returns TRUE if coagulation process uses weighted transfer function.
+bool Mechanism::IsWeightedCoag(void) const
+{
+	return m_weighted_coag;
+}
+
+// aab64 Sets the coagulation process to be SWA or not. 
+// Note that this is only for original activation, it is not meant to change the state
+// during simulation and does not provide a means of doing so. 
+void Mechanism::SetWeightedCoag(bool weightedCoag)
+{
+	m_weighted_coag = weightedCoag;
+}
+
+// aab64 Returns TRUE if inception process uses variable weights.
+bool Mechanism::IsVariableWeightedInception(void) const
+{
+	return m_var_incept_weight;
+}
+
+// aab64 Returns variable inception max weight.
+double Mechanism::GetMaxInceptionWeight(void) const
+{
+	return m_max_incept_weight;
+}
+
+// aab64 Returns variable inception min weight.
+double Mechanism::GetMinInceptionWeight(void) const
+{
+	return m_min_incept_weight;
+}
+
+// aab64 Sets the inception process to use variable weighting.
+// Weights fluctuate between wmax and wmin depending on number of 
+// particles in ensemble relative to ensemble capacity.
+void Mechanism::SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin)
+{
+	m_var_incept_weight = isVarInceptWeight;
+	m_max_incept_weight = wmax;
+	m_min_incept_weight = wmin;
+}
 
 // RATE CALCULATION.
 
