@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mechanism name="Titanium Dioxide" units="CGS">
+
+	<!-- Define particle components. -->
+	<component id="Rutile">
+		<description>Rutile</description>
+		<density>4.26</density>
+		<molwt>79.87</molwt>
+	</component>
+
+	<!-- Define particle types. -->
+	<particle id="[Ru]" model="bintree" subtree="false" track="primaryCoordinates">
+		<description>A rutile particle.</description>
+		<fractdim>1.8</fractdim>
+		<coalthresh>1.0</coalthresh>
+	</particle>
+
+	<!-- Coagulation -->
+	<coagulation>
+		<A>1.0</A>
+		<kernel>transition</kernel>
+	</coagulation>
+
+</mechanism>
