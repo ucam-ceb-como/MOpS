@@ -279,8 +279,6 @@ protected:
     //! For tracking the coordinates of primary particles.
     Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
     Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
-	Coords::Vector m_frame_translate; //!< tracks translation of tracked particle
-	Coords::Vector m_frame_rotate;	  //!< tracks the rotation of the tracked particle
 
     //! Sintering level of children connected by this node
     double m_children_sintering;
@@ -384,6 +382,23 @@ protected:
 
     //! Transforms the node coordinates using the given transformation matrix.
     void transform(const Coords::Matrix &mat);
+
+	//csl37
+	//function to return the separation unit vector between two coordinates
+	Coords::Vector UnitVector(Coords::Vector x_i, Coords::Vector x_j);
+	
+	//csl37
+	//calculates distance between two points
+	double Separation(Coords::Vector x_i, Coords::Vector x_j);
+	
+	//csl37
+	//translates a primary particle by delta_x along a unit vector
+	void TranslatePrimary(Coords::Vector u, double delta_d);
+	
+	//csl37
+	//function to translate neighbours by delta_d along a unit vector u
+	//but ignoring prim_ignore
+	void TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u, double delta_d, BinTreePrimary *prim_ignore);
 
 private:
     // GENERAL PARTICLE MODEL PROPERTIES
