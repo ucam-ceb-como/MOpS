@@ -72,6 +72,8 @@ namespace Sweep
         iD_2W,		// weight / dcol ^ 2
         iM_1_2W,	// mass ^ -1/2 * weight
         iD2_M_1_2W, // dcol * dcol * mass ^ -1/2 * weight
+		iWS,        // aab64 S * weight 
+		iWV,        // aab64 V * weight
 
         iD2_M_1_2, // D^2 * M^-1/2.
 		iFS,		// the free surface available for other particles to sinter

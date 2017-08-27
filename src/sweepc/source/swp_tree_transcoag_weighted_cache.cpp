@@ -266,6 +266,10 @@ double Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
             return m_m_1_2_w;
         case iD2_M_1_2W:
             return m_d2m_1_2_w;
+		case iWS:
+			return m_S_w; // aab64 weighted surface area
+		case iWV:
+			return m_V_w; // aab64 weighted volume
         case iASN:
             return m_sites;
         case iSintRate:

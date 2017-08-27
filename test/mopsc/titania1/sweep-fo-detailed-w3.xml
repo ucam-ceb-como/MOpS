@@ -34,10 +34,10 @@
     <coagulation>
 	    <A>1.0</A>
 	    <kernel>weightedtransition</kernel>
-		<weightrule>w1</weightrule>
-		<!--inceptionweightchange>on</inceptionweightchange>
+		<weightrule>w3</weightrule>
+		<inceptionweightchange>on</inceptionweightchange>
 		<maxinceptionweight>500.0</maxinceptionweight>
-		<mininceptionweight>100.0</mininceptionweight-->
+		<mininceptionweight>1.0</mininceptionweight>
     </coagulation>
 
     <!-- Ti addition reactions

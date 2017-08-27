@@ -392,7 +392,7 @@ double Mechanism::CalcRates(double t, const Cell &sys, const Geometry::LocalGeom
 
     // Get rates of inception processes.
     sum += Inception::CalcRates(t, sys, local_geom, m_inceptions, rates);
-
+	
     // Query other processes for their rates.
     sum += ParticleProcess::CalcRates(t, sys, local_geom, m_processes, rates, m_inceptions.size());
 

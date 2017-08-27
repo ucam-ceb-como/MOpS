@@ -101,9 +101,29 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 	
     double tin = t; //store start time 
 
+	// aab64 Variables used to shift incepting weight over time
+	double nmax = sys.Particles().Capacity();
+	double nnew = sys.ParticleCount();
+	double wmax = 1.0;
+	double wmin = 1.0;
+	double wnew = 1.0;
+
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
+		// aab64 Shift incepting particle weight over time, as the ensemble fills up
+		// Check if particle weight should be updated if SWA is in play
+		// Possibly only step up weights after ensemble capacity hits a certain point
+		// Possibly find a way to do this incrementally at a few points, rather than 
+		// continuously every time this process occurs. 
+		if (mech.IsWeightedCoag() && mech.IsVariableWeightedInception()) {
+			nnew = sys.ParticleCount();
+			wmax = mech.GetMaxInceptionWeight();
+			wmin = mech.GetMinInceptionWeight();
+			wnew = ((wmax - wmin) / (nmax - 1.0)) * nnew + (wmin - ((wmax - wmin) / (nmax - 1.0)));
+			sys.SetInceptingWeight(wnew);
+		}
+
         if (mech.AnyDeferred() && (sys.ParticleCount() > 0))  {
             // Get the process jump rates (and the total rate).
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
@@ -119,6 +139,8 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
         // Perform stochastic jump processes.
         while (t < tsplit) {
 
+			// aab64 Could also shift incepting weights here for intense inception rate escalation. 
+			
             // Sweep does not do transport
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
             timeStep(t, std::min(t + dtg / 3.0, tsplit), sys, Geometry::LocalGeometry1d(),

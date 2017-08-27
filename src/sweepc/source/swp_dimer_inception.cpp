@@ -123,13 +123,6 @@ int DimerInception::Perform(const double t, Cell &sys,
                             rng_type &rng) const {
 
     // This routine performs the inception on the given chemical system.
-
-	// aab64 Variables used to shift incepting weight over time
-	double nmax = sys.Particles().Capacity();
-	double nnew = sys.ParticleCount();
-	double wmax = 1.0;
-	double wmin = 1.0;
-	double wnew = 1.0;
 	
     // aab64 Don't incept if magical last inception
     if (ParticleComp()[0] != 0) {
@@ -137,18 +130,11 @@ int DimerInception::Perform(const double t, Cell &sys,
         // by the system ensemble.
         Particle *sp = m_mech->CreateParticle(t);
 
-		// aab64 Shift incepting particle weight over time, as the ensemble fills up
-		// Check if particle weight should be updated if SWA is in play
-		// Possibly only step up weights after ensemble capacity hits a certain point
-		// Possibly find a way to do this incrementally at a few points, rather than 
-		// continuously every time this process occurs. 
+		// aab64 Get incepting particle weight for cases where wt != 1.0:
+		// Check if SWA is in play and variable inception weighting is active.
+		// Update newly incepted particle weight if necessary.
 		if (m_mech->IsWeightedCoag() && m_mech->IsVariableWeightedInception()) {
-			nnew = sys.ParticleCount();
-			wmax = m_mech->GetMaxInceptionWeight();
-			wmin = m_mech->GetMinInceptionWeight();
-			wnew = ((wmax - wmin) / (nmax - 1.0)) * nnew + (wmin - ((wmax - wmin) / (nmax - 1.0)));
 			sp->setStatisticalWeight(sys.GetInceptingWeight());
-			sys.SetInceptingWeight(wnew); 
 		}
 
         // Get the cell vertices
@@ -243,10 +229,13 @@ double DimerInception::Rate(double t, const Cell &sys, const Geometry::LocalGeom
     double P = sys.GasPhase().Pressure();
 
 	// aab64 Divide the inception rate by the current particle weight
+	// This really belongs in the rate fn below for consistency. 
+	// To do: ensure that it is always correctly implemented when rates 
+	// are computed. 
 	double scaledRate = Rate(sys.GasPhase(), sqrt(T),
 		MeanFreePathAir(T, P),
 		sys.SampleVolume());
-	scaledRate *= (1.0 / sys.GetInceptingWeight()); // aab64 this really belongs in the rate fn below for consistency
+	scaledRate *= (1.0 / sys.GetInceptingWeight()); 
 
     // Calculate the rate.
     return scaledRate;
@@ -346,9 +335,10 @@ double DimerInception::RateTerms(const double t, const Cell &sys,
 
         *iterm = Rate; 
     } else {
+		// aab64 Divide by current incepting particle weight for cases when wt != 1.0. 
         *iterm = Rate(sys.GasPhase(), sqrt(T),
                       MeanFreePathAir(T,P),
-                      sys.SampleVolume());
+					  sys.SampleVolume()) / sys.GetInceptingWeight(); 
     }
 
     return *(iterm++);
