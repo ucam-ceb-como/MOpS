@@ -104,9 +104,12 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 	// aab64 Variables used to shift incepting weight over time
 	double nmax = sys.Particles().Capacity();
 	double nnew = sys.ParticleCount();
-	double wmax = 1.0;
-	double wmin = 1.0;
-	double wnew = 1.0;
+	double wmax = 1.0; // maximum incepting weight
+	double wmin = 1.0; // minimum incepting weight
+	double wnew = 1.0; // incepting weight for next step
+	double a = 1.0;    // constant in scaling
+	double b = 1.0;    // constant in scaling
+	double c = 1.0;    // constant in scaling
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
@@ -120,7 +123,28 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 			nnew = sys.ParticleCount();
 			wmax = mech.GetMaxInceptionWeight();
 			wmin = mech.GetMinInceptionWeight();
-			wnew = ((wmax - wmin) / (nmax - 1.0)) * nnew + (wmin - ((wmax - wmin) / (nmax - 1.0)));
+			
+			// Compute and set new weighting (must occur before rate is calculated) using exponential scaling
+			// Exponential scaling
+			/*b = log (wmax / wmin);
+			b *= (1.0 / (nmax - 1.0));
+			a = wmin * exp(-1.0 * b);
+			c = 0.0;
+			wnew = (a * exp(b * nnew)) + c;*/
+			
+			// Compute and set new weighting (must occur before rate is calculated) using polynomial scaling
+			// Linear scaling
+			a = 0.0;
+			b = ((wmax - wmin) / (nmax - 1.0));
+			c = (wmin - b);
+			wnew = (b * nnew) + c;
+			
+			// Quadratic scaling
+			/*a = (wmax - wmin) / (nmax * nmax - 2.0 * nmax + 1.0);
+			b = -2.0 * a;
+			c = wmin - a - b;
+			wnew = (a * nnew * nnew) + (b * nnew) + c;*/
+			
 			sys.SetInceptingWeight(wnew);
 		}
 

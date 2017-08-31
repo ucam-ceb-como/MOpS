@@ -7,25 +7,60 @@ set(0,'DefaultLineLineWidth',2.5);
 set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
-pdiags = csvread('Part-split-diagnostics().csv',1);
-cdiags = csvread('Chem-split-diagnostics().csv',1);
+pdiags = csvread('Part-split-diagnostics(stage1).csv',1);
+cdiags = csvread('Chem-split-diagnostics(stage1).csv',1);
+
+%% Update these to plot weights
+wmax=2000;
+wmin=1;
+nmax=2048;
+
+%% Plot output
+% Linear scaling
+al = 0;
+bl = (wmax-wmin)/(nmax-1);
+cl = 1-(wmax-wmin)/(nmax-1);
+
+% Quadratic scaling
+aq = (wmax-wmin)/(nmax^2-2*nmax+1);
+bq = -2*aq;
+cq = wmin-aq-bq;
+
+% Exponential scaling
+be = log(wmax/wmin)/(nmax-1);
+ae = wmin * exp(-be);
+ce = 0;
 
 figure(1)
 set(gcf,'color','white')
-subplot(121)
+subplot(131)
 plot(pdiags(:,1)*1000,pdiags(:,4))
 hold on
 plot(pdiags(:,1)*1000,pdiags(:,5),':')
 legend('Pre','Post','location','North','orientation','horizontal')
 xlabel('Time (ms)')
 ylabel('SV (-)')
-subplot(122)
+subplot(132)
 plot(pdiags(:,1)*1000,pdiags(:,6))
 hold on
 plot(pdiags(:,1)*1000,pdiags(:,7),':')
 legend('Pre','Post','location','North','orientation','horizontal')
 xlabel('Time (ms)')
 ylabel('NSP (-)')
+subplot(133)
+plot(pdiags(:,1)*1000,pdiags(:,6).*pdiags(:,6)*aq+pdiags(:,6)*bq+cq)
+hold on
+plot(pdiags(:,1)*1000,pdiags(:,6).*pdiags(:,6)*aq+pdiags(:,7)*bq+cq,':')
+plot(pdiags(:,1)*1000,pdiags(:,6).*pdiags(:,6)*al+pdiags(:,6)*bl+cl,'--')
+plot(pdiags(:,1)*1000,pdiags(:,6).*pdiags(:,6)*al+pdiags(:,7)*bl+cl,'-.')
+plot(pdiags(:,1)*1000,ae*exp(pdiags(:,6)*be),'-')
+plot(pdiags(:,1)*1000,ae*exp(pdiags(:,6)*be),':')
+plot([pdiags(1,1)*1000 pdiags(end,1)*1000],[wmax wmax],'r--')
+plot([pdiags(1,1)*1000 pdiags(end,1)*1000],[wmin wmin],'g--')
+set(gca,'XLim',[0 pdiags(end,1)*1000])
+legend('Pre, q','Post, q','Pre, l','Post, l','Pre, e','Post, e','Wmax','Wmin','location','North','orientation','vertical')
+xlabel('Time (ms)')
+ylabel('Incepting weight (-)')
 
 figure(2)
 set(gcf,'color','white')

@@ -10,11 +10,11 @@ set(0,'DefaultLineMarkerSize',10)
 fold = '';
 legd = '';
 
-part = csvread([fold 'PP-part.csv'],1);
-rate = csvread([fold 'PP-part-rates.csv'],1);
-pslf = csvread([fold 'PP-psl(0.5s).csv'],1);
-chem = csvread([fold 'PP-chem.csv'],1);
-cput = csvread([fold 'PP-cput.csv'],1);
+part = csvread([fold 'Network(stage1)-part.csv'],1);
+rate = csvread([fold 'Network(stage1)-part-rates.csv'],1);
+pslf = csvread([fold 'Network(stage1)-psl(0.5s).csv'],1);
+chem = csvread([fold 'Network(stage1)-chem.csv'],1);
+cput = csvread([fold 'Network(stage1)-cput.csv'],1);
 
 %% Part
 
@@ -132,6 +132,16 @@ subplot(236)
 plot(x_d,n_d/max(n_d))
 hold on
 xlabel('Particle age (s)')
+ylabel('Count divided by max. count (-)')
+legend(legd)
+
+figure(20)
+set(gcf,'color','white')
+[n_d,x_d] = hist(pslf(:,9));
+% subplot(231)
+plot(x_d,n_d/max(n_d))
+hold on
+xlabel('Weight (-)')
 ylabel('Count divided by max. count (-)')
 legend(legd)
 
