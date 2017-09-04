@@ -104,47 +104,57 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 	// aab64 Variables used to shift incepting weight over time
 	double nmax = sys.Particles().Capacity();
 	double nnew = sys.ParticleCount();
+	double nmin = 1.0; // minimum particles for which to activate scaling
 	double wmax = 1.0; // maximum incepting weight
 	double wmin = 1.0; // minimum incepting weight
 	double wnew = 1.0; // incepting weight for next step
 	double a = 1.0;    // constant in scaling
 	double b = 1.0;    // constant in scaling
 	double c = 1.0;    // constant in scaling
+	char *wtfn = "L";  // inception weight function
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
 		// aab64 Shift incepting particle weight over time, as the ensemble fills up
-		// Check if particle weight should be updated if SWA is in play
-		// Possibly only step up weights after ensemble capacity hits a certain point
-		// Possibly find a way to do this incrementally at a few points, rather than 
-		// continuously every time this process occurs. 
+		/* Check if particle weight should be updated if SWA is in play
+		Only step up weights after ensemble capacity hits a certain point nmin
+		(possibly find a way to do this incrementally at a few points, rather than 
+		continuously every time this process occurs). */
 		if (mech.IsWeightedCoag() && mech.IsVariableWeightedInception()) {
 			nnew = sys.ParticleCount();
 			wmax = mech.GetMaxInceptionWeight();
 			wmin = mech.GetMinInceptionWeight();
-			
-			// Compute and set new weighting (must occur before rate is calculated) using exponential scaling
-			// Exponential scaling
-			/*b = log (wmax / wmin);
-			b *= (1.0 / (nmax - 1.0));
-			a = wmin * exp(-1.0 * b);
-			c = 0.0;
-			wnew = (a * exp(b * nnew)) + c;*/
-			
-			// Compute and set new weighting (must occur before rate is calculated) using polynomial scaling
-			// Linear scaling
-			a = 0.0;
-			b = ((wmax - wmin) / (nmax - 1.0));
-			c = (wmin - b);
-			wnew = (b * nnew) + c;
-			
-			// Quadratic scaling
-			/*a = (wmax - wmin) / (nmax * nmax - 2.0 * nmax + 1.0);
-			b = -2.0 * a;
-			c = wmin - a - b;
-			wnew = (a * nnew * nnew) + (b * nnew) + c;*/
-			
+			nmin = mech.GetMinSPForAIWOnset();
+			mech.GetWeightScalingFn(wtfn);
+			wnew = wmin;
+			// If the number of particles is large enough, update the incepting weight
+			if (nnew > nmin) {
+				// Compute and set new weighting (must occur before rate is calculated) 
+				if (wtfn == "E") {
+					// Exponential scaling
+					b = log(wmax / wmin);
+					b *= (1.0 / (nmax - nmin));
+					a = wmin * exp(-1.0 * b * nmin);
+					c = 0.0;
+					wnew = (a * exp(b * nnew)) + c;
+				}
+				else if (wtfn == "Q") {
+					// Quadratic scaling
+					a = (wmax - wmin) / ((nmax * nmax) - (2.0 * nmax * nmin) + (nmin * nmin));
+					b = -2.0 * a * nmin;
+					c = wmin - (a * nmin * nmin) - (b * nmin);
+					wnew = (a * nnew * nnew) + (b * nnew) + c;
+				}
+				else {
+					// Linear scaling
+					a = 0.0;
+					b = ((wmax - wmin) / (nmax - nmin));
+					c = wmin - (b * nmin);
+					wnew = (b * nnew) + c;
+				}				
+			}
+			// Set new incepting weight
 			sys.SetInceptingWeight(wnew);
 		}
 

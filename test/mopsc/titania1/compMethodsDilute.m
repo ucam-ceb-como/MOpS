@@ -7,56 +7,62 @@ set(0,'DefaultLineLineWidth',2.5);
 set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
-fold = 'vienna/real_1024SPs_2runs/'; 
+nbins=50;
 
-part_dd = csvread([fold 'dsa-d/PP(stage1)-part.csv'],1);
-part_sd = csvread([fold 'swa-d/PP(stage1)-part.csv'],1);
-part_wd1 = csvread([fold 'swa-dn1/PP(stage1)-part.csv'],1);
-part_wd2 = csvread([fold 'swa-dn2/PP(stage1)-part.csv'],1);
+fold = 'local/cstr_2048SPs_2runs/'; 
 
-rate_dd = csvread([fold 'dsa-d/PP(stage1)-part-rates.csv'],1);
-rate_sd = csvread([fold 'swa-d/PP(stage1)-part-rates.csv'],1);
-rate_wd1 = csvread([fold 'swa-dn1/PP(stage1)-part-rates.csv'],1);
-rate_wd2 = csvread([fold 'swa-dn2/PP(stage1)-part-rates.csv'],1);
+part_dd = csvread([fold 'dsa-d/Network(stage1)-part.csv'],1);
+part_sd = csvread([fold 'swa-d/Network(stage1)-part.csv'],1);
+part_wd1 = csvread([fold 'swa-dn1/Network(stage1)-part.csv'],1);
+part_wd2 = csvread([fold 'swa-dn2e2/Network(stage1)-part.csv'],1);
 
-psl_dd = csvread([fold 'dsa-d/PP(stage1)-psl(0.003s).csv'],1);
-psl_sd = csvread([fold 'swa-d/PP(stage1)-psl(0.003s).csv'],1);
-psl_wd1 = csvread([fold 'swa-dn1/PP(stage1)-psl(0.003s).csv'],1);
-psl_wd2 = csvread([fold 'swa-dn2/PP(stage1)-psl(0.003s).csv'],1);
+rate_dd = csvread([fold 'dsa-d/Network(stage1)-part-rates.csv'],1);
+rate_sd = csvread([fold 'swa-d/Network(stage1)-part-rates.csv'],1);
+rate_wd1 = csvread([fold 'swa-dn1/Network(stage1)-part-rates.csv'],1);
+rate_wd2 = csvread([fold 'swa-dn2e2/Network(stage1)-part-rates.csv'],1);
 
-chem_dd = csvread([fold 'dsa-d/PP(stage1)-chem.csv'],1);
-chem_sd = csvread([fold 'swa-d/PP(stage1)-chem.csv'],1);
-chem_wd1 = csvread([fold 'swa-dn1/PP(stage1)-chem.csv'],1);
-chem_wd2 = csvread([fold 'swa-dn2/PP(stage1)-chem.csv'],1);
+psl_dd = csvread([fold 'dsa-d/Network(stage1)-psl(0.5s).csv'],1);
+psl_sd = csvread([fold 'swa-d/Network(stage1)-psl(0.5s).csv'],1);
+psl_wd1 = csvread([fold 'swa-dn1/Network(stage1)-psl(0.5s).csv'],1);
+psl_wd2 = csvread([fold 'swa-dn2e2/Network(stage1)-psl(0.5s).csv'],1);
 
-cput_dd = csvread([fold 'dsa-d/PP(stage1)-cput.csv'],1);
-cput_sd = csvread([fold 'swa-d/PP(stage1)-cput.csv'],1);
-cput_wd1 = csvread([fold 'swa-dn1/PP(stage1)-cput.csv'],1);
-cput_wd2 = csvread([fold 'swa-dn2/PP(stage1)-cput.csv'],1);
+chem_dd = csvread([fold 'dsa-d/Network(stage1)-chem.csv'],1);
+chem_sd = csvread([fold 'swa-d/Network(stage1)-chem.csv'],1);
+chem_wd1 = csvread([fold 'swa-dn1/Network(stage1)-chem.csv'],1);
+chem_wd2 = csvread([fold 'swa-dn2e2/Network(stage1)-chem.csv'],1);
 
-% part_ds = csvread([fold 'dsa-s/PP(stage1)-part.csv'],1);
-% part_ss = csvread([fold 'swa-s/PP(stage1)-part.csv'],1);
+cput_dd = csvread([fold 'dsa-d/Network(stage1)-cput.csv'],1);
+cput_sd = csvread([fold 'swa-d/Network(stage1)-cput.csv'],1);
+cput_wd1 = csvread([fold 'swa-dn1/Network(stage1)-cput.csv'],1);
+cput_wd2 = csvread([fold 'swa-dn2e2/Network(stage1)-cput.csv'],1);
+
+% part_ds = csvread([fold 'dsa-s/Network(stage1)-part.csv'],1);
+% part_ss = csvread([fold 'swa-s/Network(stage1)-part.csv'],1);
 % 
-% rate_ds = csvread([fold 'dsa-s/PP(stage1)-part-rates.csv'],1);
-% rate_ss = csvread([fold 'swa-s/PP(stage1)-part-rates.csv'],1);
+% rate_ds = csvread([fold 'dsa-s/Network(stage1)-part-rates.csv'],1);
+% rate_ss = csvread([fold 'swa-s/Network(stage1)-part-rates.csv'],1);
 % 
-% psl_ds = csvread([fold 'dsa-s/PP(stage1)-psl(0.5s).csv'],1);
-% psl_ss = csvread([fold 'swa-s/PP(stage1)-psl(0.5s).csv'],1);
+% psl_ds = csvread([fold 'dsa-s/Network(stage1)-psl(0.5s).csv'],1);
+% psl_ss = csvread([fold 'swa-s/Network(stage1)-psl(0.5s).csv'],1);
 % 
-% chem_ds = csvread([fold 'dsa-s/PP(stage1)-chem.csv'],1);
-% chem_ss = csvread([fold 'swa-s/PP(stage1)-chem.csv'],1);
+% chem_ds = csvread([fold 'dsa-s/Network(stage1)-chem.csv'],1);
+% chem_ss = csvread([fold 'swa-s/Network(stage1)-chem.csv'],1);
 % 
-% cput_ds = csvread([fold 'dsa-s/PP(stage1)-cput.csv'],1);
-% cput_ss = csvread([fold 'swa-s/PP(stage1)-cput.csv'],1);
+% cput_ds = csvread([fold 'dsa-s/Network(stage1)-cput.csv'],1);
+% cput_ss = csvread([fold 'swa-s/Network(stage1)-cput.csv'],1);
 
 % leg = {'DSA det, orig','SWA det, orig',...
 %        'DSA sph, orig','SWA sph, orig',...
 %        'SWA det, wt const','SWA det, wt var'};      
-
+% 
 leg = {'DSA','CIW SWA, $w_{\textrm{inc}}=1$',...
        'CIW SWA, $w_{\textrm{inc}}=100$',...
        'AIW SWA, $w_{\textrm{inc}}\in\left[1,500\right]$'};
 
+% leg = {'DSA','LAIW SWA, $w_{\textrm{inc}}\in\left[1,500\right]$',...
+%        'QAIW SWA, $w_{\textrm{inc}}\in\left[1,500\right]$',...
+%        'EAIW SWA, $w_{\textrm{inc}}\in\left[1,500\right]$'};
+   
 studyid = '_real_1tau_1024SP';
 savfigs = 0;
 fdir    = 'C:\Users\Astrid\Documents\Projects\Network temperature dependence\IdeasFromHMMeeting\figures\AIWSWA\';
@@ -173,12 +179,12 @@ saveas(['dpri_ave' studyid])
 
 figure(7)
 set(gcf,'color','white')
-[n_d,x_d] = hist(psl_dd(:,3));
-[n_s,x_s] = hist(psl_sd(:,3));
+[n_d,x_d] = histwc(psl_dd(:,3),psl_dd(:,9),nbins);
+[n_s,x_s] = histwc(psl_sd(:,3),psl_sd(:,9),nbins);
 % [n_ds,x_ds] = hist(psl_ds(:,3));
 % [n_ss,x_ss] = hist(psl_ss(:,3));
-[n_d2,x_d2] = hist(psl_wd1(:,3));
-[n_s2,x_s2] = hist(psl_wd2(:,3));
+[n_d2,x_d2] = histwc(psl_wd1(:,3),psl_wd1(:,9),nbins);
+[n_s2,x_s2] = histwc(psl_wd2(:,3),psl_wd2(:,9),nbins);
 % subplot(231)
 plot(x_d,n_d/max(n_d),x_s,n_s/max(n_s),':')
 hold on
@@ -192,10 +198,10 @@ l.Location = 'NorthEast';
 l.Interpreter = 'latex';
 saveas(['dcol' studyid])
 
-[n_d,x_d] = hist(psl_dd(:,5));
-[n_s,x_s] = hist(psl_sd(:,5));
-[n_d2,x_d2] = hist(psl_wd1(:,5));
-[n_s2,x_s2] = hist(psl_wd2(:,5));
+[n_d,x_d] = histwc(psl_dd(:,5),psl_dd(:,9),nbins);
+[n_s,x_s] = histwc(psl_sd(:,5),psl_sd(:,9),nbins);
+[n_d2,x_d2] = histwc(psl_wd1(:,5),psl_wd1(:,9),nbins);
+[n_s2,x_s2] = histwc(psl_wd2(:,5),psl_wd2(:,9),nbins);
 % subplot(232)
 figure(8)
 set(gcf,'color','white')
@@ -210,10 +216,10 @@ l.Location = 'NorthEast';
 l.Interpreter = 'latex';
 saveas(['sa' studyid])
 
-[n_d,x_d] = hist(psl_dd(:,12));
-[n_s,x_s] = hist(psl_sd(:,12));
-[n_d2,x_d2] = hist(psl_wd1(:,12));
-[n_s2,x_s2] = hist(psl_wd2(:,12));
+[n_d,x_d] = histwc(psl_dd(:,12),psl_dd(:,9),nbins);
+[n_s,x_s] = histwc(psl_sd(:,12),psl_sd(:,9),nbins);
+[n_d2,x_d2] = histwc(psl_wd1(:,12),psl_wd1(:,9),nbins);
+[n_s2,x_s2] = histwc(psl_wd2(:,12),psl_wd2(:,9),nbins);
 % subplot(233)
 figure(9)
 set(gcf,'color','white')
@@ -228,10 +234,10 @@ l.Location = 'NorthEast';
 l.Interpreter = 'latex';
 saveas(['npri' studyid])
 
-[n_d,x_d] = hist(psl_dd(:,13));
-[n_s,x_s] = hist(psl_sd(:,13));
-[n_d2,x_d2] = hist(psl_wd1(:,13));
-[n_s2,x_s2] = hist(psl_wd2(:,13));
+[n_d,x_d] = histwc(psl_dd(:,13),psl_dd(:,9),nbins);
+[n_s,x_s] = histwc(psl_sd(:,13),psl_sd(:,9),nbins);
+[n_d2,x_d2] = histwc(psl_wd1(:,13),psl_wd1(:,9),nbins);
+[n_s2,x_s2] = histwc(psl_wd2(:,13),psl_wd2(:,9),nbins);
 % subplot(234)
 figure(10)
 set(gcf,'color','white')
@@ -246,10 +252,10 @@ l.Location = 'NorthWest';
 l.Interpreter = 'latex';
 saveas(['dprim' studyid])
 
-[n_d,x_d] = hist(psl_dd(:,16));
-[n_s,x_s] = hist(psl_sd(:,16));
-[n_d2,x_d2] = hist(psl_wd1(:,16));
-[n_s2,x_s2] = hist(psl_wd2(:,16));
+[n_d,x_d] = histwc(psl_dd(:,16),psl_dd(:,9),nbins);
+[n_s,x_s] = histwc(psl_sd(:,16),psl_sd(:,9),nbins);
+[n_d2,x_d2] = histwc(psl_wd1(:,16),psl_wd1(:,9),nbins);
+[n_s2,x_s2] = histwc(psl_wd2(:,16),psl_wd2(:,9),nbins);
 % subplot(235)
 figure(11)
 set(gcf,'color','white')
@@ -264,10 +270,10 @@ l.Location = 'NorthEast';
 l.Interpreter = 'latex';
 saveas(['std_part_diam' studyid])
 
-[n_d,x_d] = hist(psl_dd(:,8));
-[n_s,x_s] = hist(psl_sd(:,8));
-[n_d2,x_d2] = hist(psl_wd1(:,8));
-[n_s2,x_s2] = hist(psl_wd2(:,8));
+[n_d,x_d] = histwc(psl_dd(:,8),psl_dd(:,9),nbins);
+[n_s,x_s] = histwc(psl_sd(:,8),psl_sd(:,9),nbins);
+[n_d2,x_d2] = histwc(psl_wd1(:,8),psl_wd1(:,9),nbins);
+[n_s2,x_s2] = histwc(psl_wd2(:,8),psl_wd2(:,9),nbins);
 % subplot(236)
 figure(12)
 set(gcf,'color','white')

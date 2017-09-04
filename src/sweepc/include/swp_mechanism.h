@@ -163,10 +163,17 @@ public:
 	// aab64 Returns variable inception min weight.
 	double GetMinInceptionWeight(void) const;
 
+	// aab64 Returns minimum particles threshold to start
+	// adjusting incepting weight
+	double GetMinSPForAIWOnset(void) const;
+
+	// aab64 Returns the type of inception weight scaling function
+    void GetWeightScalingFn(char *weightfn) const;
+
 	// aab64 Sets flag for the inception process to use variable weighting.
 	// Weights fluctuate between wmax and wmin depending on number of 
 	// particles in ensemble relative to ensemble capacity.
-	virtual void SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin);
+	virtual void SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, char *weightfn);
 
 	// RATE CALCULATION.
 
@@ -379,13 +386,15 @@ private:
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	mutable bool m_weighted_coag;        // Is the coagulation process one of the weighted ones?
-	mutable bool m_var_incept_weight;    // Is variable inception weighting turned on?
-	mutable double m_min_incept_weight;  // Minimum incepting weight, corresponding to 1 SP
-	mutable double m_max_incept_weight;  // Maximum incepting weight, corresponding to Nmax SPs
-    mutable unsigned int m_addcount;     // The addition count for deferred additions
-    mutable unsigned int m_inflowcount;  // The inflow count for stochastic inflow
-    mutable unsigned int m_outflowcount; // The outflow count for stochastic inflow
+	mutable bool m_weighted_coag;           // Is the coagulation process one of the weighted ones?
+	mutable bool m_var_incept_weight;       // Is variable inception weighting turned on?
+	mutable double m_minsp_for_aiw;         // Minimum particle threshold for which inception weight should be adapted
+	mutable double m_min_incept_weight;     // Minimum incepting weight, corresponding to nmin
+	mutable double m_max_incept_weight;     // Maximum incepting weight, corresponding to Nmax SPs
+    mutable unsigned int m_addcount;        // The addition count for deferred additions
+    mutable unsigned int m_inflowcount;     // The inflow count for stochastic inflow
+    mutable unsigned int m_outflowcount;    // The outflow count for stochastic inflow
+	mutable char *m_incept_weight_fn;       // The type of inception weight scaling to use. 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 

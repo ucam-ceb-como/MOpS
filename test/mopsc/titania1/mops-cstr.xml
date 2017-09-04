@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mops version="3">
     <!-- Sim parameters -->
-    <runs>2</runs>
+    <runs>5</runs>
     <iter>10</iter>
     <atol>1.0e-17</atol>
     <rtol>1.0e-4</rtol>
-    <maxm0>2.048e10</maxm0>
-    <pcount>2048</pcount>
+    <maxm0>4.096e10</maxm0>
+    <pcount>4096</pcount>
     <relax>0.8</relax>
 	
 	<!-- Initial reactor composition -->
@@ -22,13 +22,13 @@
     <reactor constt="false" constv="true" id="stage1" type="psr" units="mol/mol" order="1">
 	    <initial>reac_mixture</initial>
         <flow dir="in" frac="1.0">reac_mixture</flow>
-        <restime unit="s">0.1</restime>
+        <restime unit="s">0.25</restime>
     </reactor>
 	
 	<!-- Time stepping -->
     <timeintervals>
       	<start>0.0</start>
-        <time splits="5" steps="500">0.5</time>
+        <time splits="5" steps="100">0.1</time>
     </timeintervals>
    
     <!-- Output specifications -->

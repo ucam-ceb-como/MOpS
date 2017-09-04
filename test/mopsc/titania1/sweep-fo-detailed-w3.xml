@@ -36,8 +36,10 @@
 	    <kernel>weightedtransition</kernel>
 		<weightrule>w3</weightrule>
 		<inceptionweightchange>on</inceptionweightchange>
-		<maxinceptionweight>2000.0</maxinceptionweight>
+		<maxinceptionweight>100.0</maxinceptionweight>
 		<mininceptionweight>1.0</mininceptionweight>
+		<onsetsp>512.0</onsetsp>
+		<weightchangefun>exponential</weightchangefun>
     </coagulation>
 
     <!-- Ti addition reactions

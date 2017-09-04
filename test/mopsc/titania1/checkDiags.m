@@ -11,26 +11,33 @@ pdiags = csvread('Part-split-diagnostics(stage1).csv',1);
 cdiags = csvread('Chem-split-diagnostics(stage1).csv',1);
 
 %% Update these to plot weights
-wmax=2000;
+wmax=100;
 wmin=1;
-nmax=2048;
+nmin=512;
+nmax=1024;
+wtfn='E';
+
+if wtfn == 'L'
+    % Linear scaling
+    al = 0;
+    bl = (wmax-wmin)/(nmax-nmin);
+    cl = wmin-(bl*nmin);
+    wnew = @(n)(wmin.*(n<=nmin)+(bl*n+cl).*(n>nmin));
+elseif wtfn == 'Q'
+    % Quadratic scaling
+    aq = (wmax-wmin)/(nmax^2-2*nmax*nmin+nmin^2);
+    bq = -2*aq*nmin;
+    cq = wmin-(aq*nmin^2)-(bq*nmin);
+    wnew = @(n)(wmin.*(n<=nmin)+(aq*n.^2+bq*n+cq).*(n>nmin));
+else
+    % Exponential scaling
+    be = log(wmax/wmin)/(nmax-nmin);
+    ae = wmin * exp(-be*nmin);
+    ce = 0;
+    wnew = @(n)(wmin.*(n<=nmin)+(ae*exp(be*n)).*(n>nmin));
+end
 
 %% Plot output
-% Linear scaling
-al = 0;
-bl = (wmax-wmin)/(nmax-1);
-cl = 1-(wmax-wmin)/(nmax-1);
-
-% Quadratic scaling
-aq = (wmax-wmin)/(nmax^2-2*nmax+1);
-bq = -2*aq;
-cq = wmin-aq-bq;
-
-% Exponential scaling
-be = log(wmax/wmin)/(nmax-1);
-ae = wmin * exp(-be);
-ce = 0;
-
 figure(1)
 set(gcf,'color','white')
 subplot(131)
@@ -48,17 +55,13 @@ legend('Pre','Post','location','North','orientation','horizontal')
 xlabel('Time (ms)')
 ylabel('NSP (-)')
 subplot(133)
-plot(pdiags(:,1)*1000,pdiags(:,6).*pdiags(:,6)*aq+pdiags(:,6)*bq+cq)
+plot(pdiags(:,1)*1000,wnew(pdiags(:,6)))
 hold on
-plot(pdiags(:,1)*1000,pdiags(:,6).*pdiags(:,6)*aq+pdiags(:,7)*bq+cq,':')
-plot(pdiags(:,1)*1000,pdiags(:,6).*pdiags(:,6)*al+pdiags(:,6)*bl+cl,'--')
-plot(pdiags(:,1)*1000,pdiags(:,6).*pdiags(:,6)*al+pdiags(:,7)*bl+cl,'-.')
-plot(pdiags(:,1)*1000,ae*exp(pdiags(:,6)*be),'-')
-plot(pdiags(:,1)*1000,ae*exp(pdiags(:,6)*be),':')
+plot(pdiags(:,1)*1000,wnew(pdiags(:,7)),':')
 plot([pdiags(1,1)*1000 pdiags(end,1)*1000],[wmax wmax],'r--')
 plot([pdiags(1,1)*1000 pdiags(end,1)*1000],[wmin wmin],'g--')
 set(gca,'XLim',[0 pdiags(end,1)*1000])
-legend('Pre, q','Post, q','Pre, l','Post, l','Pre, e','Post, e','Wmax','Wmin','location','North','orientation','vertical')
+legend('Pre','Post','Wmax','Wmin','location','North','orientation','horizontal')
 xlabel('Time (ms)')
 ylabel('Incepting weight (-)')
 

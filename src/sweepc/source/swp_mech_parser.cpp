@@ -1801,25 +1801,56 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
 					bool varIncWeight = false;
 					double maxIncWeight = 100.0;
 					double minIncWeight = 1.0;
+					double minSPonset = 1.0; 
+					char *WeightFn = "L";
 					CamXML::Element *incWeightXML = (*it)->GetFirstChild("inceptionweightchange");
-					CamXML::Element *maxwtel = (*it)->GetFirstChild("maxinceptionweight");
-					CamXML::Element *minwtel = (*it)->GetFirstChild("mininceptionweight");
 					if (incWeightXML != NULL) {
+						CamXML::Element *incWeightFnXML = (*it)->GetFirstChild("weightchangefun");
+						CamXML::Element *maxwtel = (*it)->GetFirstChild("maxinceptionweight");
+						CamXML::Element *minwtel = (*it)->GetFirstChild("mininceptionweight");
+						CamXML::Element *minnspel = (*it)->GetFirstChild("onsetsp");
+
+						// If adaptive inception weighting is on, get and set further parameters
 						const std::string incWeightRuleName = incWeightXML->Data();
 						if (incWeightRuleName == "on") {
 							varIncWeight = true;
-							std::cout << "Applying increasing inception weight scheme" << std::endl;
+							std::cout << "Applying adaptive inception weight scheme..." << std::endl;
+							// Minimum inception weight
 							if (minwtel != NULL) {
 								minIncWeight = cdble(minwtel->Data());
 								if (minIncWeight <= 0.0)
-									throw std::runtime_error("Inception weights must be positive");
+									throw std::runtime_error("Inception weights must be positive.\n");
 							}
+							// Maximum inception weight
 							if (maxwtel != NULL) {
 								maxIncWeight = cdble(maxwtel->Data());
 							}
+							// Minimum adaptive weight threshold
+							if (minnspel != NULL) {
+								minSPonset = cdble(minnspel->Data());
+								if (minSPonset < 1.0)
+									throw std::runtime_error("Minimum onset must be >= 1.0.\n");
+							}
+							// Check max weight is greater than min weight
 							if (maxIncWeight < minIncWeight)
-								throw std::runtime_error("Max inception weight cannot be smaller than min inception weight");
-							mech.SetVariableWeightedInception(varIncWeight, maxIncWeight, minIncWeight);
+								throw std::runtime_error("Max inception weight cannot be smaller than min inception weight.\n");
+							// Get scaling function 
+							if (incWeightFnXML != NULL) {
+								const std::string incWeightFnName = incWeightFnXML->Data();
+								if (incWeightFnName == "linear") {
+									WeightFn = "L";
+								}
+								else if (incWeightFnName == "quadratic") {
+									WeightFn = "Q";
+								}
+								else if (incWeightFnName == "exponential") {
+									WeightFn = "E";
+								}
+								else
+									throw std::runtime_error("Unrecognized adaptive inception weight function. \nPermissable function names: linear, quadratic, exponential.\n");
+								std::cout << "Found " << incWeightFnName << " weight scaling function." << std::endl;
+							}
+							mech.SetVariableWeightedInception(varIncWeight, maxIncWeight, minIncWeight, minSPonset, WeightFn);
 						}
 					}
                 }

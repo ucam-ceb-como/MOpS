@@ -74,7 +74,7 @@ using namespace Strings;
 Mechanism::Mechanism(void)
 : m_anydeferred(false), m_icoag(-1), m_termcount(0), m_processcount(0), 
 m_weighted_coag(false), m_var_incept_weight(false), 
-m_max_incept_weight(1.0), m_min_incept_weight(1.0)
+m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L")
 {
 }
 
@@ -119,6 +119,8 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 	m_var_incept_weight = rhs.m_var_incept_weight;
 	m_max_incept_weight = rhs.m_max_incept_weight;
 	m_min_incept_weight = rhs.m_min_incept_weight;
+	m_minsp_for_aiw = rhs.m_minsp_for_aiw;
+	m_incept_weight_fn = rhs.m_incept_weight_fn;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -368,14 +370,29 @@ double Mechanism::GetMinInceptionWeight(void) const
 	return m_min_incept_weight;
 }
 
+// aab64 Returns minimum particles threshold to start
+// adjusting incepting weight
+double Mechanism::GetMinSPForAIWOnset(void) const
+{
+	return m_minsp_for_aiw;
+}
+
+// aab64 Returns the type of inception weight scaling function
+void Mechanism::GetWeightScalingFn(char *wtfn) const
+{
+	wtfn = m_incept_weight_fn;
+}
+
 // aab64 Sets the inception process to use variable weighting.
 // Weights fluctuate between wmax and wmin depending on number of 
 // particles in ensemble relative to ensemble capacity.
-void Mechanism::SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin)
+void Mechanism::SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, char *weightfn)
 {
 	m_var_incept_weight = isVarInceptWeight;
 	m_max_incept_weight = wmax;
 	m_min_incept_weight = wmin;
+	m_minsp_for_aiw = nmin;
+	m_incept_weight_fn = weightfn;
 }
 
 // RATE CALCULATION.

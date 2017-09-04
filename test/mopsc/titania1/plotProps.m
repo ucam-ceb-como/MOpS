@@ -1,4 +1,4 @@
-clc, clear, close all
+% clc, clear, close all
 
 set(0,'defaulttextinterpreter','latex')
 set(0,'defaultaxesfontname','Times')
@@ -12,7 +12,7 @@ legd = '';
 
 part = csvread([fold 'Network(stage1)-part.csv'],1);
 rate = csvread([fold 'Network(stage1)-part-rates.csv'],1);
-pslf = csvread([fold 'Network(stage1)-psl(0.5s).csv'],1);
+pslf = csvread([fold 'Network(stage1)-psl(0.1s).csv'],1);
 chem = csvread([fold 'Network(stage1)-chem.csv'],1);
 cput = csvread([fold 'Network(stage1)-cput.csv'],1);
 
@@ -74,10 +74,12 @@ legend(legd)
 
 %% PSL
 
+nbins=25;
+
 figure(2)
 % figure()
 set(gcf,'color','white')
-[n_d,x_d] = hist(pslf(:,3));
+[n_d,x_d] = histwc(pslf(:,3),pslf(:,9),nbins);
 subplot(231)
 plot(x_d,n_d/max(n_d))
 hold on
@@ -85,7 +87,7 @@ xlabel('Collision diameter (nm)')
 ylabel('Count divided by max. count (-)')
 legend(legd)
 
-[n_d,x_d] = hist(pslf(:,5));
+[n_d,x_d] = histwc(pslf(:,5),pslf(:,9),nbins);
 subplot(232)
 % figure()
 % set(gcf,'color','white')
@@ -95,7 +97,7 @@ xlabel('Surface area (cm$^{2}$)')
 ylabel('Count divided by max. count (-)')
 legend(legd)
 
-[n_d,x_d] = hist(pslf(:,12));
+[n_d,x_d] = histwc(pslf(:,12),pslf(:,9),nbins);
 subplot(233)
 % figure()
 % set(gcf,'color','white')
@@ -105,7 +107,7 @@ xlabel('Number of primaries (nm)')
 ylabel('Count divided by max. count (-)')
 legend(legd)
 
-[n_d,x_d] = hist(pslf(:,13));
+[n_d,x_d] = histwc(pslf(:,13),pslf(:,9),nbins);
 subplot(234)
 % figure()
 % set(gcf,'color','white')
@@ -115,7 +117,7 @@ xlabel('Primary diameter (nm)')
 ylabel('Count divided by max. count (-)')
 legend(legd)
 
-[n_d,x_d] = hist(pslf(:,16));
+[n_d,x_d] = histwc(pslf(:,16),pslf(:,9),nbins);
 subplot(235)
 % figure()
 % set(gcf,'color','white')
@@ -125,7 +127,7 @@ xlabel('Std of primary diameter (nm)')
 ylabel('Count divided by max. count (-)')
 legend(legd)
 
-[n_d,x_d] = hist(pslf(:,8));
+[n_d,x_d] = histwc(pslf(:,8),pslf(:,9),nbins);
 subplot(236)
 % figure()
 % set(gcf,'color','white')
