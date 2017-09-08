@@ -914,7 +914,7 @@ void Mechanism::MassTransfer(int i, double t, Cell &sys, rng_type &rng, const Ge
                 if (Pindex<0)
                     throw runtime_error("There are no InceptedPAH in the ensemble, and all the InceptedPAH molecules are consumed due to unknown reason (Mops, Sweep::Mechanism::MassTransfer).");
                 sys.Particles().Remove(Pindex);
-                std::cout << "j-i is " << j-i <<std::endl;
+                //std::cout << "j-i is " << j-i <<std::endl;
                 j--;
             }
         }
@@ -953,8 +953,10 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 
         // Perform deferred processes on all particles individually.
         Ensemble::iterator i;
+		int ind = 0;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
-            UpdateParticle(*(*i), sys, t, rng);
+            UpdateParticle(*(*i), sys, t, ind, rng);
+			ind++;
         }
 
         // Now remove any invalid particles and update the ensemble.
@@ -975,7 +977,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
  *@param[in]        t           Time upto which particle to be updated
  *@param[in,out]    rng         Random number generator
  */
-void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng) const
+void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_type &rng) const
 {
     // Deal with the growth of the PAHs
     if (AggModel() == AggModels::PAH_KMC_ID)
@@ -992,7 +994,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
 
         // Update individual PAHs within this particle by using KMC code
         // sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
-        pah->UpdatePAHs(t, *this, sys, rng);
+        pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng);
 
         pah->UpdateCache();
         pah->CheckRounding();

@@ -265,8 +265,13 @@ void PAHStructure::WriteCposition(std::ostream &out) const
         val=(*it).second;
         out.write((char*)&val, sizeof(val));
     }
+std::list<Site> PAHStructure::GetSiteList() const {
+	return m_siteList;
 }
 
+std::map<kmcSiteType, svector> PAHStructure::GetSiteMap() const {
+	return m_siteMap;
+}
 // the size for m_cpositions is required obviously, otherwise, the codes will not know when to stop
 void PAHStructure::ReadCposition(std::istream &in, const int size)
 {

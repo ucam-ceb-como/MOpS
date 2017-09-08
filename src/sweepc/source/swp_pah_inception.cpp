@@ -120,36 +120,47 @@ int PAHInception::Perform(const double t, Cell &sys,
                           const unsigned int iterm,
                           rng_type &rng) const {
 
-    Particle *sp = NULL;
+	Particle *sp = NULL;
+	//Check to see if a particle that matches that of the incepted PAHs already exists in the emsemble
+	int j = sys.Particles().NumOfInceptedPAH(m_mech->AggModel());
+	if (j > 0){  //There is already an inception PAH in the ensemble (should only be 1). Just update it's statistical weight
+		int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel());
+		sp = sys.Particles().At(Pindex);
+		int StatWeight = sp->getStatisticalWeight();
+		sp->setStatisticalWeight(StatWeight + 1);
+	}
+	else{
 
-    // Get the cell vertices
-    fvector vertices = local_geom.cellVertices();
+		// Get the cell vertices
+		fvector vertices = local_geom.cellVertices();
 
-    // Sample a uniformly distributed position, note that this method
-    // works whether the vertices come in increasing or decreasing order,
-    // but 1d is assumed for now.
-    double posn = vertices.front();
+		// Sample a uniformly distributed position, note that this method
+		// works whether the vertices come in increasing or decreasing order,
+		// but 1d is assumed for now.
+		double posn = vertices.front();
 
-    const double width = vertices.back() - posn;
+		const double width = vertices.back() - posn;
 
-    if(width > 0) {
-        boost::uniform_01<rng_type&, double> uniformGenerator(rng);
-        // There is some double spatial detail
-        posn += width * uniformGenerator();
-        sp = m_mech->CreateParticle(t, posn);
-    }
-    else {
-        // Ignore all questions of position
-        sp = m_mech->CreateParticle(t);
-    }
+		if (width > 0) {
+			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+			// There is some double spatial detail
+			posn += width * uniformGenerator();
+			sp = m_mech->CreateParticle(t, posn);
+		}
+		else {
+			// Ignore all questions of position
+			sp = m_mech->CreateParticle(t);
+		}
 
-    sp->UpdateCache();
+		sp->UpdateCache();
 
-    // Add particle to main ensemble.
-    sys.Particles().Add(*sp, rng);
+		// Add particle to main ensemble.
+		sys.Particles().Add(*sp, rng);
 
-    // Update gas-phase chemistry of system.
-    adjustGas(sys, sp->getStatisticalWeight());
+		// Update gas-phase chemistry of system.
+		adjustGas(sys, sp->getStatisticalWeight());
+
+	}
 
     return 0;
 }
@@ -195,7 +206,7 @@ int PAHInception::AddInceptedPAH(const int i, const double t, Cell &sys,rng_type
             if (Pindex<0)
                 throw runtime_error("There are no InceptedPAH in the ensemble, and all the InceptedPAH molecules are consumed due to unknown reason(Mops, Sweep::PAHInception::Perform).");
             sys.Particles().Remove(Pindex);
-            std::cout<<"j-i is "<<j-i<<std::endl;
+            //std::cout<<"j-i is "<<j-i<<std::endl;
             j--;
         }
     }

@@ -732,7 +732,7 @@ BinTreePrimary &BinTreePrimary::Fragment(const Primary &rhs, rng_type &rng)
     m_children_surf     = m_leftparticle->m_surf + m_rightparticle->m_surf;
     m_children_radius   = pow(3.0/(4.0*PI)*(m_children_vol),(ONE_THIRD));
     m_children_sintering= SinteringLevel();
-    CheckSintering();
+	CheckSintering();
 
     // Must set all the pointer to NULL otherwise the delete function
     // will also delete the children
@@ -1426,7 +1426,7 @@ BinTreePrimary &BinTreePrimary::Merge()
             std::set<void*> duplicates;
             new_prim->UpdateConnectivity(new_prim, duplicates, delta_r_i, free_surface_term);
 
-            //update primary diameter
+			//update primary diameter
 			new_prim->m_primarydiam = 2.0*(r_i+delta_r_i);
 			//update the free surface area
 			new_prim->m_free_surf = max(M_PI*new_prim->m_primarydiam*new_prim->m_primarydiam - 2*M_PI*free_surface_term,0.0);
@@ -1834,7 +1834,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 		double dV(0.0);
         double volOld = m_vol;
 		double m_diam_old = m_diam;
-        double m_primary_diam_old = m_primarydiam;
+		double m_primary_diam_old = m_primarydiam;
 
         // Call to Primary to adjust the state space
         n = Primary::Adjust(dcomp, dvalues, rng, n);
@@ -1875,7 +1875,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 						}else{
 							delta_r_i = dr_max;
 						}
-					    
+					
                         //! Store the memory address of this primary so that it is only updated once. 
                         std::set<void*> duplicates;
                         duplicates.insert(this);
@@ -1905,7 +1905,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 				//! Single primary case: the primary diameter equals the
                 //! spherical diameter                
                 else {
-				    m_primarydiam = m_diam;
+					m_primarydiam = m_diam;
 
                     if (m_pmodel->getTrackPrimaryCoordinates()) {
                         setRadius(m_primarydiam / 2.0);
@@ -2098,7 +2098,7 @@ void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, std::set<void*> &p
 
 		//! Calculate term for the free surface area.
 		d_ij = m_parent->m_distance_centreToCentre;
-        x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i+delta_r,2.0) ) / ( 2.0*d_ij );
+		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i+delta_r,2.0) ) / ( 2.0*d_ij );
 		sumterm += (r_i+delta_r)*(r_i+delta_r) - (r_i+delta_r)*x_ij;
 	}
 
@@ -2489,7 +2489,7 @@ void BinTreePrimary::SinterNode(
                 const unsigned n = repeatDistribution(rng);
 
                 if (m_pmodel->getTrackPrimarySeparation()) {
-                    m_distance_centreToCentre -= (double)n * scale * dd_ij_Max; //!< Sintering decreases d_ij hence the negative sign.
+                m_distance_centreToCentre -= (double)n * scale * dd_ij_Max; //!< Sintering decreases d_ij hence the negative sign.
                 }
                 
                 //! Needs to be tested.
