@@ -66,6 +66,7 @@
 #include "swp_tree_transcoag_weighted_cache.h"
 #include "swp_property_indices.h"
 #include "swp_gas_profile.h"
+#include "swp_kmc_PAH_structure.h"
 
 #include "binary_tree.hpp"
 
@@ -175,6 +176,9 @@ public:
     // particle's index in the ensemble.  The ensemble then takes
     // control of destruction of the particle.
     int Add(Particle &sp, rng_type &rng);
+
+	//Find a particle that is a single PAH of a given structure
+	int CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH);
 
     //! Removes the particle at the given index from the ensemble.
     void Remove(
