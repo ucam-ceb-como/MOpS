@@ -1112,8 +1112,11 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 		        UpdateParticleNS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
 		    }
 #pragma omp parallel for private(part_i) firstprivate(nparticles) //schedule(dynamic) ordered
-		    for (part_i = 0; part_i < nparticles; ++part_i) {
-		        UpdateParticleS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
+			for (part_i = 0; part_i < nparticles; ++part_i) {
+				size_t runSeed = omp_get_thread_num();
+				runSeed *= clock(); 
+				boost::mt19937 prng(runSeed);
+		        UpdateParticleS(*(sys.Particles().At(part_i)), sys, t, prng, dtvector[part_i]);
 		    }
 	    }*/
 		

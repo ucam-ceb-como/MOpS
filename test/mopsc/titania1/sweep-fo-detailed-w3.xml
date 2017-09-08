@@ -36,9 +36,9 @@
 	    <kernel>weightedtransition</kernel>
 		<weightrule>w3</weightrule>
 		<inceptionweightchange>on</inceptionweightchange>
-		<maxinceptionweight>100.0</maxinceptionweight>
+		<maxinceptionweight>1000.0</maxinceptionweight>
 		<mininceptionweight>1.0</mininceptionweight>
-		<onsetsp>512.0</onsetsp>
+		<onsetsp>1.0</onsetsp>
 		<weightchangefun>exponential</weightchangefun>
     </coagulation>
 
@@ -1092,6 +1092,7 @@
         <component id="Rutile" dx="+2.0"/>
     </inception>     
 	
+	<!-- extra inception reaction currently used as a terrible wasy to perform heat transfer -->
     <inception name="no molecule inception">
         <formula>"TICL2OCL to [Ru]</formula>
         <reactant id="TICL2OCL" stoich="0" m="2.1819e-022" d="6.5423e-8" />

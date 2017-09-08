@@ -1086,6 +1086,7 @@
         <component id="Rutile" dx="+2.0"/>
     </inception>     
 	
+	<!-- extra inception reaction currently used as a terrible wasy to perform heat transfer -->
     <inception name="no molecule inception">
         <formula>"TICL2OCL to [Ru]</formula>
         <reactant id="TICL2OCL" stoich="0" m="2.1819e-022" d="6.5423e-8" />

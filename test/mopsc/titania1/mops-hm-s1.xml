@@ -5,14 +5,14 @@
   <iter>20</iter>
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>1024</pcount>
-  <maxm0>1.024e14</maxm0> 
+  <pcount>2048</pcount>
+  <maxm0>0.512e10</maxm0> 
   <relax>0.8</relax>
 
   <!-- Mixtures -->
   <mixture id="initial">
 	  <component id="AR">1.0</component>
-	  <temperature units="K">1500</temperature>
+	  <temperature units="K">1000</temperature>
 	  <pressure units="bar">3</pressure>
   </mixture>
 
@@ -40,7 +40,7 @@
   <!-- Output time sequence -->
   <timeintervals>
 	  <start>0.0</start>
-	  <time splits="5" steps="100">0.001</time>
+	  <time splits="10" steps="900">0.009</time>
   </timeintervals>
 
   <!-- Simulation output settings -->
