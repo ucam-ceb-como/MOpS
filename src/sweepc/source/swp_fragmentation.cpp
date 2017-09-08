@@ -227,7 +227,7 @@ int Fragmentation::WeightedPerform(const double t, const Sweep::PropID prop,
         std::vector<double> m_dvals(1);
         m_dvals[0] = 0.0;
         if (m_mech->AnyDeferred()) {
-            m_mech->UpdateParticle(*sp, sys, t, rng);
+            m_mech->UpdateParticle(*sp, sys, t, i, rng);
             if (sp->IsValid()) {
                 double majk = MajorantKernel(*sp, sys, Default);
                 double truek = FragKernel(*sp, sys);

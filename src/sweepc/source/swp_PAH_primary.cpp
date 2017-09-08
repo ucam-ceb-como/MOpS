@@ -308,6 +308,13 @@ PAHPrimary::~PAHPrimary()
     m_clone=false;
 }
 
+
+// Copy constructor.
+std::vector<boost::shared_ptr<PAH>> PAHPrimary::GetPAHVector() const
+{
+	return m_PAH;
+}
+
 /*!
  * Recursively copy the tree for non-leaf nodes.
  *

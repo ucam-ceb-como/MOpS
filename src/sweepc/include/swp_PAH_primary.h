@@ -245,6 +245,8 @@ public:
 
     double ReducedMass()const;
 
+	std::vector<boost::shared_ptr<PAH> > GetPAHVector() const;
+
 protected:
     //! Empty primary not meaningful
     PAHPrimary();

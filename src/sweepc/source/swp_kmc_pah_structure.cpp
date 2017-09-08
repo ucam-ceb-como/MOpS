@@ -255,16 +255,18 @@ void PAHStructure::Deserialize(std::istream &in)
 
 void PAHStructure::WriteCposition(std::ostream &out) const
 {
-    double val=0.0;
+	double val = 0.0;
 
-    std::set<cpair>::iterator itEnd=m_cpositions.end();
-    for (std::set<cpair>::iterator it=m_cpositions.begin();it!=itEnd;++it)
-    {
-        val=(*it).first;
-        out.write((char*)&val, sizeof(val));
-        val=(*it).second;
-        out.write((char*)&val, sizeof(val));
-    }
+	std::set<cpair>::iterator itEnd = m_cpositions.end();
+	for (std::set<cpair>::iterator it = m_cpositions.begin(); it != itEnd; ++it)
+	{
+		val = (*it).first;
+		out.write((char*)&val, sizeof(val));
+		val = (*it).second;
+		out.write((char*)&val, sizeof(val));
+	}
+}
+
 std::list<Site> PAHStructure::GetSiteList() const {
 	return m_siteList;
 }

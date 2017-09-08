@@ -136,7 +136,7 @@ int ErosionFragmentation::Perform(double t, Sweep::Cell &sys,
         std::vector<double> newComposition(1);
         newComposition[0] = 1.0;
         if (m_mech->AnyDeferred()) {
-            m_mech->UpdateParticle(*sp, sys, t, rng);
+            m_mech->UpdateParticle(*sp, sys, t, i, rng);
             if (sp->IsValid()) {
                 double majk = MajorantKernel(*sp, sys, Default);
                 double truek = FragKernel(*sp, sys);

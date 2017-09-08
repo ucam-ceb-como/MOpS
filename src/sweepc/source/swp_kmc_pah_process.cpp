@@ -1681,7 +1681,7 @@ bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
 }
 
 //! Structure processes: returns success or failure
-bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng)
+bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID)
 {
     //printStruct();
     //cout << "Start Performing Process..\n";
