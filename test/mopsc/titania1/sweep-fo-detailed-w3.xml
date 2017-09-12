@@ -35,11 +35,11 @@
 	    <A>1.0</A>
 	    <kernel>weightedtransition</kernel>
 		<weightrule>w3</weightrule>
-		<inceptionweightchange>on</inceptionweightchange>
-		<maxinceptionweight>1000.0</maxinceptionweight>
+		<inceptionweightchange>off</inceptionweightchange>
+		<maxinceptionweight>10000.0</maxinceptionweight>
 		<mininceptionweight>1.0</mininceptionweight>
 		<onsetsp>1.0</onsetsp>
-		<weightchangefun>exponential</weightchangefun>
+		<weightchangefun>linear</weightchangefun>
     </coagulation>
 
     <!-- Ti addition reactions
@@ -53,10 +53,10 @@
         <particlein  id="[Ru]"/>
         <particleout id="[Ru]"/>
         <!--A>1.2044e+028</A-->
-		<!--A>0.0</A-->
+		<A>0.0</A>
         <!--E units="cal">11.9503</E--> 
         <n>0.0</n>
-        <A>8.06948e+028</A>
+        <!--A>8.06948e+028</A-->
         <E units="cal">14.3404</E> 
         <particleterm id="s" power="1.0"/>
         <component id="Rutile" dx="+1.0"/>

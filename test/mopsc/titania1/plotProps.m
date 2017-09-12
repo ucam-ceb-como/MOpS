@@ -11,12 +11,12 @@ set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
 % for finding files
-basedir  = '';
-filedir  = '';
+basedir  = 'local/cstr_inc_factor/';
+filedir  = 'if5_10runs/';
 filebase = 'Network(stage1)';
 
 % for plotting psl data
-psltime  = '0.003';
+psltime  = '0.125';
 npslbins = 10;
 
 % for saving images
@@ -54,6 +54,8 @@ end
 
 %% Part
 
+c1 = [0.65 0.65 0.65];
+
 figure(1)
 set(gcf,'color','white')
 subplot(231)
@@ -69,6 +71,8 @@ subplot(232)
 % set(gcf,'color','white')
 plot(part(:,2)*1000,part(:,5))
 hold on
+% plot(part(:,2)*1000,part(:,5)+part(:,6),'--','Color',c1)
+% plot(part(:,2)*1000,part(:,5)-part(:,6),'--','Color',c1)
 xlabel('Time (ms)')
 ylabel('M0 (m$^{-3}$)')
 addlegend(leg_vals);
@@ -80,7 +84,7 @@ subplot(233)
 plot(part(:,2)*1000,part(:,9)*1e9)
 hold on
 xlabel('Time (ms)')
-ylabel('Collision diamter (nm)')
+ylabel('Collision diameter (nm)')
 addlegend(leg_vals);
 saveas(['dcol_ave' studyid])
 
@@ -89,6 +93,8 @@ subplot(234)
 % set(gcf,'color','white')
 plot(part(:,2)*1000,part(:,21))
 hold on
+% plot(part(:,2)*1000,part(:,21)+part(:,22),'--','Color',c1)
+% plot(part(:,2)*1000,part(:,21)-part(:,22),'--','Color',c1)
 xlabel('Time (ms)')
 ylabel('Mass (kg$\cdot$m$^{-3}$)')
 addlegend(leg_vals);
@@ -110,14 +116,22 @@ subplot(236)
 plot(part(:,2)*1000,part(:,39)*1e9)
 hold on
 xlabel('Time (ms)')
-ylabel('Primary average diamter (nm)')
+ylabel('Primary average diameter (nm)')
 addlegend(leg_vals);
 saveas(['dpri_ave' studyid])
+
+figure(60)
+set(gcf,'color','white')
+semilogy(part(:,2)*1000,part(:,33)*1e6)
+hold on
+xlabel('Time (ms)')
+ylabel('Total rutile (m$^{-3}$)')
+addlegend(leg_vals);
+saveas(['rut_ave' studyid])
 
 %% PSL
 
 figure(2)
-% figure()
 set(gcf,'color','white')
 [n_d,x_d] = histwc(pslf(:,3),pslf(:,9),npslbins);
 subplot(231)
@@ -126,8 +140,8 @@ hold on
 xlabel('Collision diameter (nm)')
 ylabel('Count divided by max. count (-)')
 addlegend(leg_vals);
-ax = gca;
-ax.XLim(1) = 0.49;
+% ax = gca;
+% ax.XLim(1) = 0.49;
 saveas(['dcol_psd' studyid])
 
 [n_d,x_d] = histwc(pslf(:,5),pslf(:,9),npslbins);
@@ -139,8 +153,8 @@ hold on
 xlabel('Surface area (cm$^{2}$)')
 ylabel('Count divided by max. count (-)')
 addlegend(leg_vals);
-ax = gca;
-ax.XLim(1) = 0.0;
+% ax = gca;
+% ax.XLim(1) = 0.0;
 saveas(['sa_psd' studyid])
 
 [n_d,x_d] = histwc(pslf(:,12),pslf(:,9),npslbins);
@@ -165,8 +179,8 @@ hold on
 xlabel('Primary diameter (nm)')
 ylabel('Count divided by max. count (-)')
 addlegend(leg_vals);
-ax = gca;
-ax.XLim(1) = 0.49;
+% ax = gca;
+% ax.XLim(1) = 0.49;
 saveas(['dpri_psd' studyid])
 
 [n_d,x_d] = histwc(pslf(:,16),pslf(:,9),npslbins);
@@ -207,6 +221,18 @@ addlegend(leg_vals);
 ax = gca;
 ax.XLim(1) = 0.0;
 saveas(['weight_psd' studyid])
+
+figure(30)
+set(gcf,'color','white')
+[n_d,x_d] = histwc(pslf(:,11),pslf(:,9),npslbins);
+plot(x_d,n_d/max(n_d))
+hold on
+xlabel('Rutile units (-)')
+ylabel('Count divided by max. count (-)')
+addlegend(leg_vals);
+ax = gca;
+ax.XLim(1) = 0.0;
+saveas(['rutile_psd' studyid])
 
 %% Chem
 

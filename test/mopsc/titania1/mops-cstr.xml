@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mops version="3">
     <!-- Sim parameters -->
-    <runs>1</runs>
+    <runs>10</runs>
     <iter>10</iter>
     <atol>1.0e-17</atol>
     <rtol>1.0e-4</rtol>
-    <maxm0>2.048e10</maxm0>
-    <pcount>4096</pcount>
+    <maxm0>1.024e10</maxm0>
+    <pcount>2048</pcount>
     <relax>0.8</relax>
 	
 	<!-- Initial reactor composition -->
@@ -28,7 +28,7 @@
 	<!-- Time stepping -->
     <timeintervals>
       	<start>0.0</start>
-        <time splits="100" steps="300">0.3</time>
+        <time splits="10" steps="125">0.125</time>
     </timeintervals>
    
     <!-- Output specifications -->

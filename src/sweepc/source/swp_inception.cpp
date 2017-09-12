@@ -57,13 +57,13 @@ using namespace std;
 
 // Default constructor (protected).
 Inception::Inception(void)
-: Process()
+: Process(), m_incFactor(1.0) // aab64 initialize new variable here
 {
 }
 
 // Initialising constructor.
 Inception::Inception(const Sweep::Mechanism &mech)
-: Process(mech)
+: Process(mech), m_incFactor(1.0) // aab64 is this necessary?
 {
 }
 
@@ -94,6 +94,7 @@ Inception &Inception::operator =(const Inception &rhs)
         m_a    = rhs.m_a;
         m_newcomp = rhs.m_newcomp;
         m_newvals = rhs.m_newvals;
+		m_incFactor = rhs.m_incFactor;
     }
     return *this;
 }
@@ -124,7 +125,7 @@ void Inception::SetParticleComp(unsigned int i, double comp)
             m_newcomp.resize(m_mech->ComponentCount(),0.0);
         }
         // Set value.
-        m_newcomp[i] = comp;
+        m_newcomp[i] = comp * m_incFactor;
     }
 }
 
@@ -165,6 +166,19 @@ void Inception::SetParticleTracker(unsigned int i, double track)
     }
 }
 
+
+// aab64 Set the inception factor to change how many units are present
+void Inception::SetInceptionFactor(double incfac)
+{
+	m_incFactor = incfac;
+}
+
+
+// aab64 Get the inception factor that determines how many units are added
+double Inception::GetInceptionFactor() const
+{
+	return m_incFactor;
+}
 
 // TOTAL RATE CALCULATIONS.
 

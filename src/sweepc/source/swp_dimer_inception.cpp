@@ -160,11 +160,11 @@ int DimerInception::Perform(const double t, Cell &sys,
         sys.Particles().Add(*sp, rng);
 
 	    // Update gas-phase chemistry of system.
-	    adjustGas(sys, sp->getStatisticalWeight(), 1);
-	    adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1);
+	    adjustGas(sys, sp->getStatisticalWeight(), 1, GetInceptionFactor());
+		adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, GetInceptionFactor());
     }
     else {
-		adjustParticleTemperature(sys, 0, 1, sys.GetIsAdiabaticFlag(), 0, 0);
+		adjustParticleTemperature(sys, 0, 1, sys.GetIsAdiabaticFlag(), 0, 0, 1.0);
     }
 
     return 0;
@@ -304,6 +304,8 @@ double DimerInception::chemRatePart(const EnvironmentInterface &gas) const
             rate *= (NA * conc);
         }
     }
+
+	rate *= 1.0 / GetInceptionFactor();
 
     return rate;
 }

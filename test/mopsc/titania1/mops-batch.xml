@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <mops version="2">
   <!-- Default parameters (can be overidden) --> 
-  <runs>2</runs>
+  <runs>10</runs>
   <iter>20</iter>
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>16384</pcount>
-  <maxm0>0.256e15</maxm0> 
+  <pcount>2048</pcount>
+  <maxm0>0.256e10</maxm0> 
   <relax>0.8</relax>
 
   <!-- Reactor definition (given initial conditions) -->
@@ -21,7 +21,7 @@
   <!-- Output time sequence -->
   <timeintervals>
     <start>0.0</start>
-	<time steps="100000" splits="100">0.1</time>
+	<time steps="500" splits="3">0.5</time>
   </timeintervals>
 
   <!-- Simulation output settings -->

@@ -12,19 +12,19 @@ set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
 % for finding files
-basedir  = 'vienna/real_1024SPs_2runs/'; 
-filedir1 = 'dsa-d-fewersteps-10runs/';
-filedir2 = 'swa-d-fewersteps-10runs/';
-filedir3 = 'swa-dn1-fewersteps-10runs/';
-filedir4 = 'swa-dn2-fewersteps-10runs/';
-filebase = 'PP(stage1)';
+basedir  = 'vienna/dilute/16384SPs_10runs/'; 
+filedir1 = 'dsa-d/';
+filedir2 = 'swa-d/';
+filedir3 = 'swa-dn1/';
+filedir4 = 'swa-dn2/';
+filebase = 'PP';
 
 % for plotting psl data
-psltime  = '0.003'; 
-npslbins = 50;
+psltime  = '0.5'; 
+npslbins = 25;
 
 % for saving images
-studyid  = '_real_1tau_1024SP';
+studyid  = '_batch_10run_16384SP';
 projpath = 'C:\Users\Astrid\Documents\Projects\';
 projdir  = 'Network temperature dependence\IdeasFromHMMeeting\';
 imagedir = 'figures\AIWSWA\';
@@ -76,7 +76,7 @@ cput_aiw = csvread([basedir filedir4 filebase '-cput.csv'],1);
 if strcmp(legtype,'algorithm_comparison')
     leg = {'DSA','CIW SWA, $w_{\textrm{inc}}=1$',...
            'CIW SWA, $w_{\textrm{inc}}=100$',...
-           'LAIW SWA, $w_{\textrm{inc}}\in\left[1,500\right]$'};
+           'EAIW SWA, $w_{\textrm{inc}}\in\left[1,500\right]$'};
 elseif strcmp(legtype,'weightfun_comparison')
     leg = {'DSA','LAIW SWA, $w_{\textrm{inc}}\in\left[1,500\right]$',...
            'QAIW SWA, $w_{\textrm{inc}}\in\left[1,500\right]$',...

@@ -440,7 +440,7 @@ double Process::chemRatePart(const EnvironmentInterface &gas) const
  *
  * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
  */
-void Process::adjustGas(Cell &sys, double wt, unsigned int n) const
+void Process::adjustGas(Cell &sys, double wt, unsigned int n, double incFac) const
 {
     if(!sys.FixedChem()) {
         // This method requires write access to the gas phase, which is not
@@ -459,7 +459,7 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n) const
 
         // Now adjust the concentrations
         Sprog::StoichMap::const_iterator i;
-        double n_NAvol = wt * (double)n / (NA * sys.SampleVolume());
+        double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume()); // aab64 added incFac to scale change if more units are present in incepted particle
         for (i=m_reac.begin(); i!=m_reac.end(); ++i)
             newConcs[i->first] -= (double)(i->second) * n_NAvol;
         for (i=m_prod.begin(); i!=m_prod.end(); ++i)
@@ -482,7 +482,7 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n) const
 *
 * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
 */
-void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bool adjustT, double dcomp, int processID) const {
+void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bool adjustT, double dcomp, int processID, double incFac) const {
 	if (adjustT) {
 		// Function will update the temperature oldTp, oldTg to temperature newTp, newTg for the particles and gas (K)
 		double newTp, newTg, newRho;
@@ -550,7 +550,7 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 		double rhop = 53337;                // mol.[m3]^-1, molar density of titania (rutile)
 
 		// Concentration change in system due to new particle(s)
-		double n_NAvol = wt * (double)n / (NA * sys.SampleVolume());
+		double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume());
 
 		// Time step parameters
 		double t0 = 0.0;

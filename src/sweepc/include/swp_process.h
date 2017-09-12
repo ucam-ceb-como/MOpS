@@ -266,24 +266,28 @@ protected:
     // Adjusts the gas-phase composition using the reactants and
     // products defined for this process.
     void adjustGas(
-        Cell &sys,     // System to update.
-        double wt,     // Stochastic weight of particle
-        unsigned int n // Number of times to apply process.
-        = 1            //  - Default is one time.
+        Cell &sys,       // System to update.
+        double wt,       // Stochastic weight of particle
+        unsigned int n   // Number of times to apply process.
+        = 1,             //  - Default is one time.
+		double incFac    // Scale of inception process.
+		= 1.0            // Default is one. 
          ) const;
 
     // aab64 Adjusts the particle-phase temperature using change in composition of the particle
     void adjustParticleTemperature(
-	Cell &sys,      // System to update.
-	double wt,      // Stochastic weight of particle
-	unsigned int n  // Number of times to apply process.
-	= 1,            //  - Default is one time.
-	bool adjustT    // Update the temperature if adiabatic (if desired) 
-	= false,        //  - Default is false (aab64 avoid changing existing code, except for titania) 
-	double dcomp    // Change in particle composition
-	= 1.0,          // - Default is 1.0, 
-	int processID   // Contributing process
-	= 0             // - Default - just do heat transfer
+	Cell &sys,       // System to update.
+	double wt,       // Stochastic weight of particle
+	unsigned int n   // Number of times to apply process.
+	= 1,             //  - Default is one time.
+	bool adjustT     // Update the temperature if adiabatic (if desired) 
+	= false,         //  - Default is false (aab64 avoid changing existing code, except for titania) 
+	double dcomp     // Change in particle composition
+	= 1.0,           // - Default is 1.0, 
+	int processID    // Contributing process
+	= 0,             // - Default - just do heat transfer
+	double incFac    // Scale of inception process.
+	= 1.0            // Default is one. 
 	) const;
 
 }; // class Process

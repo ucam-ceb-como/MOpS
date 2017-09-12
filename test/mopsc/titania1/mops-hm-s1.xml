@@ -12,7 +12,7 @@
   <!-- Mixtures -->
   <mixture id="initial">
 	  <component id="AR">1.0</component>
-	  <temperature units="K">1000</temperature>
+	  <temperature units="K">1500</temperature>
 	  <pressure units="bar">3</pressure>
   </mixture>
 
@@ -40,7 +40,9 @@
   <!-- Output time sequence -->
   <timeintervals>
 	  <start>0.0</start>
-	  <time splits="10" steps="900">0.009</time>
+	  <time splits="5" steps="300">0.003</time>
+	  <!--time splits="500" steps="500">0.005</time>
+	  <time splits="1000" steps="800">0.009</time-->
   </timeintervals>
 
   <!-- Simulation output settings -->

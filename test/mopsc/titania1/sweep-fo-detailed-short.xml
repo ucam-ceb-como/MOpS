@@ -32,7 +32,7 @@
 	
     <!-- Coagulation -->
     <coagulation>
-	    <A>0.0</A>
+	    <A>1.0</A>
 	    <kernel>transition</kernel>
     </coagulation>
 
