@@ -174,7 +174,9 @@ void NetworkSimulator::Run(
 				partProcFile.open(partfname.c_str());
 				partProcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , "
 					<< "SV in (-)" << " , " << "SV out (-)" << " , "
-					<< "SP in (-)" << " , " << "SP out (-)" << " , ";
+					<< "SP in (-)" << " , " << "SP out (-)" << " , "
+					<< "Total statistical weight pre-split (-)" << " , " << "Total statistical weight post-split (-)" << " , "
+					<< "Weighted sum of mass pre-split (-)" << " , " << "Weighted sum of mass post-split (-)" << " , ";
 				for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
 					partProcFile << tmpPNames[process_iter] << " , ";
 				}

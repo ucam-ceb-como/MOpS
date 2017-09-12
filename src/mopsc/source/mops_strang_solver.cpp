@@ -186,7 +186,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     ofstream partProcFile, gasConcFile;
 	
     // Diagnostic variables
-    double tmpSVin, tmpSVout;
+	double tmpSVin, tmpSVout, tmpWtVarin, tmpWtVarout, tmpWtMassin, tmpWtMassout;
     unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout, tmpInfin, tmpInfout, tmpOutfin, tmpOutfout;
     int process_iter;
     std::vector<unsigned int> tmpPCin, tmpPCout, tmpFCin, tmpFCout;
@@ -227,6 +227,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
 		tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
 		tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
+		tmpWtVarin = r.Mixture()->Particles().GetSum(Sweep::iW);
+		tmpWtMassin = r.Mixture()->Particles().GetSum(Sweep::iWM);
 		r.Mixture()->GasPhase().GetConcs(tmpGPin);
 	}
 
@@ -245,6 +247,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 		tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
 		tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
+		tmpWtVarout = r.Mixture()->Particles().GetSum(Sweep::iW);
+		tmpWtMassout = r.Mixture()->Particles().GetSum(Sweep::iWM);
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
 		std::string rname(r.GetName());
 		std::string partfname, chemfname;
@@ -255,7 +259,9 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		partProcFile.open(partfname.c_str(), ios::app);
 		partProcFile << ts2 << " , " << tstop << " , " << 0 << " , "
 			<< tmpSVin << " , " << tmpSVout << " , "
-			<< tmpSPin << " , " << tmpSPout << " , ";
+			<< tmpSPin << " , " << tmpSPout << " , "
+			<< tmpWtVarin << " , " << tmpWtVarout << " , "
+			<< tmpWtMassin << " , " << tmpWtMassout << " , ";
 		for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 			process_iter++) {
 			partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
@@ -297,7 +303,9 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		    tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 		    tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
 		    tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
-		    tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
+			tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
+			tmpWtVarin = r.Mixture()->Particles().GetSum(Sweep::iW);
+			tmpWtMassin = r.Mixture()->Particles().GetSum(Sweep::iWM);
 		    r.Mixture()->GasPhase().GetConcs(tmpGPin);
 	    }
 
@@ -324,6 +332,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 			tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
 			tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
+			tmpWtVarout = r.Mixture()->Particles().GetSum(Sweep::iW);
+			tmpWtMassout = r.Mixture()->Particles().GetSum(Sweep::iWM);
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
 			std::string rname(r.GetName());
 			std::string partfname, chemfname;
@@ -334,7 +344,9 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			partProcFile.open(partfname.c_str(), ios::app);
 			partProcFile << ts2 << " , " << tstop << " , " << i << " , "
 				<< tmpSVin << " , " << tmpSVout << " , "
-				<< tmpSPin << " , " << tmpSPout << " , ";
+				<< tmpSPin << " , " << tmpSPout << " , "
+			    << tmpWtVarin << " , " << tmpWtVarout << " , "
+			    << tmpWtMassin << " , " << tmpWtMassout << " , ";
 			for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 				process_iter++) {
 				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
