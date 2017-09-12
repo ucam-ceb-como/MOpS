@@ -40,6 +40,7 @@
  Website:     http://como.cheng.cam.ac.uk
  */
 
+#include <stdexcept>
 #include "gpc_transport_factory.h"
 #include "gpc_idealgas.h"
 #include "gpc_params.h"
