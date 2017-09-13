@@ -118,12 +118,6 @@ public:
     // new particle.
     void SetParticleTracker(unsigned int i, double track);
 
-	// aab64 Set the inception factor to change how many units are present
-	void SetInceptionFactor(double incfac);
-
-	// aab64 Get the inception factor that determines how many units are added
-	double GetInceptionFactor() const;
-
 	// TOTAL RATE CALCULATIONS.
 
     // Calculates the rate of multiple inceptions given a
@@ -173,9 +167,6 @@ private:
 
     //! Initial tracker values for newly incepted particles
     fvector m_newvals;
-
-	//! Scale the inception process to increase primary size more rapidly
-	double m_incFactor;
 };
 } // namespace Processes
 } // namespace Sweep

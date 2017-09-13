@@ -458,7 +458,9 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 				<< "SV in (-)" << " , " << "SV out (-)" << " , "
 				<< "SP in (-)" << " , " << "SP out (-)" << " , "
 				<< "Total statistical weight pre-split (-)" << " , " << "Total statistical weight post-split (-)" << " , "
-				<< "Weighted sum of mass pre-split (-)" << " , " << "Weighted sum of mass post-split (-)" << " , ";
+				<< "Weighted sum of mass pre-split (-)" << " , " << "Weighted sum of mass post-split (-)" << " , "
+				<< "Incepting weight pre-split (-)" << " , " << "Incepting weight post-split (-)" << " , "
+				<< "Incepting factor pre-split (-)" << " , " << "Incepting factor post-split (-)" << " , ";
 			for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
 				partProcFile << tmpPNames[process_iter] << " , ";
 			}

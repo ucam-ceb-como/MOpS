@@ -247,6 +247,12 @@ public:
         unsigned int n=1        // Number of times to perform adjustment.
         );
 
+	// aab64 Adjusts the primary composition by the given scaling to
+    // allow heavier particles to be incepted.  
+	virtual void AdjustForInception(
+		double incFac = 1.0       // Factor by which to modify composition elements.
+		);
+
     // Combines this primary with another.  This is also the
     // implementation of the + and += operators.
     virtual Primary &Coagulate(const Primary &rhs,

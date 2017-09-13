@@ -375,6 +375,18 @@ unsigned int AggModels::Primary::Adjust(const fvector &dcomp, const fvector &dva
     return n;
 }
 
+
+// aab64 Adjusts the primary composition by the given scaling to
+// allow heavier particles to be incepted. 
+void AggModels::Primary::AdjustForInception(double incFac)
+{
+	// Add the components.
+	for (unsigned int i = 0; i != m_comp.size(); ++i) {
+		m_comp[i] *= incFac;
+	}
+}
+
+
 /*!
  * Calculates the maximum number of LPDA adjustments allowed.
  *

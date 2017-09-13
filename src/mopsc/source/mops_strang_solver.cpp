@@ -186,7 +186,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     ofstream partProcFile, gasConcFile;
 	
     // Diagnostic variables
-	double tmpSVin, tmpSVout, tmpWtVarin, tmpWtVarout, tmpWtMassin, tmpWtMassout;
+	double tmpSVin, tmpSVout, tmpWtVarin, tmpWtVarout, tmpWtMassin, tmpWtMassout, tmpIncWeightin, tmpIncWeightout, tmpIncFactorin, tmpIncFactorout;
     unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout, tmpInfin, tmpInfout, tmpOutfin, tmpOutfout;
     int process_iter;
     std::vector<unsigned int> tmpPCin, tmpPCout, tmpFCin, tmpFCout;
@@ -229,6 +229,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
 		tmpWtVarin = r.Mixture()->Particles().GetSum(Sweep::iW);
 		tmpWtMassin = r.Mixture()->Particles().GetSum(Sweep::iWM);
+		tmpIncFactorin = r.Mixture()->GetInceptionFactor();
+		tmpIncWeightin = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPin);
 	}
 
@@ -249,6 +251,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
 		tmpWtVarout = r.Mixture()->Particles().GetSum(Sweep::iW);
 		tmpWtMassout = r.Mixture()->Particles().GetSum(Sweep::iWM);
+		tmpIncFactorout = r.Mixture()->GetInceptionFactor();
+		tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
 		std::string rname(r.GetName());
 		std::string partfname, chemfname;
@@ -261,7 +265,9 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			<< tmpSVin << " , " << tmpSVout << " , "
 			<< tmpSPin << " , " << tmpSPout << " , "
 			<< tmpWtVarin << " , " << tmpWtVarout << " , "
-			<< tmpWtMassin << " , " << tmpWtMassout << " , ";
+			<< tmpWtMassin << " , " << tmpWtMassout << " , "
+			<< tmpIncWeightin << " , " << tmpIncWeightout << " , "
+			<< tmpIncFactorin << " , " << tmpIncFactorout << " , ";
 		for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 			process_iter++) {
 			partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
@@ -306,6 +312,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
 			tmpWtVarin = r.Mixture()->Particles().GetSum(Sweep::iW);
 			tmpWtMassin = r.Mixture()->Particles().GetSum(Sweep::iWM);
+			tmpIncFactorin = r.Mixture()->GetInceptionFactor();
+			tmpIncWeightin = r.Mixture()->GetInceptingWeight();
 		    r.Mixture()->GasPhase().GetConcs(tmpGPin);
 	    }
 
@@ -334,6 +342,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
 			tmpWtVarout = r.Mixture()->Particles().GetSum(Sweep::iW);
 			tmpWtMassout = r.Mixture()->Particles().GetSum(Sweep::iWM);
+			tmpIncFactorout = r.Mixture()->GetInceptionFactor();
+			tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
 			std::string rname(r.GetName());
 			std::string partfname, chemfname;
@@ -346,7 +356,9 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 				<< tmpSVin << " , " << tmpSVout << " , "
 				<< tmpSPin << " , " << tmpSPout << " , "
 			    << tmpWtVarin << " , " << tmpWtVarout << " , "
-			    << tmpWtMassin << " , " << tmpWtMassout << " , ";
+			    << tmpWtMassin << " , " << tmpWtMassout << " , "
+				<< tmpIncWeightin << " , " << tmpIncWeightout << " , "
+				<< tmpIncFactorin << " , " << tmpIncFactorout << " , ";
 			for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 				process_iter++) {
 				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";

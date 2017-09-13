@@ -46,6 +46,7 @@
 #include "swp_primary.h"
 
 #include <boost/random/uniform_01.hpp>
+#include <boost/random/lognormal_distribution.hpp>
 
 using namespace Sweep;
 using namespace Sweep::Processes;
@@ -154,18 +155,36 @@ int DimerInception::Perform(const double t, Cell &sys,
         // Initialise the new particle.
         sp->Primary()->SetComposition(ParticleComp());
         sp->Primary()->SetValues(ParticleTrackers());
-        sp->UpdateCache();
+
+		// aab64 Adjust composition to allow inception of heavier particles
+		// Perform adjustment before updating the cache and computing properties.
+		sp->Primary()->AdjustForInception(sys.GetInceptionFactor());
+
+		sp->UpdateCache();
 
         // Add particle to system's ensemble.
         sys.Particles().Add(*sp, rng);
 
 	    // Update gas-phase chemistry of system.
-	    adjustGas(sys, sp->getStatisticalWeight(), 1, GetInceptionFactor());
-		adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, GetInceptionFactor());
+	    adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
+		adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
     }
     else {
 		adjustParticleTemperature(sys, 0, 1, sys.GetIsAdiabaticFlag(), 0, 0, 1.0);
     }
+
+	// aab64 Adjust inception factor by sampling from lognormal distribution. 
+	double meanIFdist = 0.0;
+	double stdIFdist = 1.0;
+	double newIncFactor = boost::random::lognormal_distribution<double>(meanIFdist, stdIFdist)(rng);
+	// Constrain newIncFactor to [1,100]
+	if (newIncFactor < 1.0)
+		newIncFactor = 1.0;
+	else if (newIncFactor > 100.0)
+		newIncFactor = 100.0;
+	
+	//cout << (int)newIncFactor << "\n";
+	sys.SetInceptionFactor((int) newIncFactor);
 
     return 0;
 }
@@ -229,13 +248,15 @@ double DimerInception::Rate(double t, const Cell &sys, const Geometry::LocalGeom
     double P = sys.GasPhase().Pressure();
 
 	// aab64 Divide the inception rate by the current particle weight
+	// aab64 Divide by current incepting composition scale factor for cases with heavier inception
 	// This really belongs in the rate fn below for consistency. 
 	// To do: ensure that it is always correctly implemented when rates 
 	// are computed. 
+	double scaleFac = sys.GetInceptionFactor() * sys.GetInceptingWeight();
 	double scaledRate = Rate(sys.GasPhase(), sqrt(T),
 		MeanFreePathAir(T, P),
 		sys.SampleVolume());
-	scaledRate *= (1.0 / sys.GetInceptingWeight()); 
+	scaledRate *= (1.0 / scaleFac); 
 
     // Calculate the rate.
     return scaledRate;
@@ -304,9 +325,7 @@ double DimerInception::chemRatePart(const EnvironmentInterface &gas) const
             rate *= (NA * conc);
         }
     }
-
-	rate *= 1.0 / GetInceptionFactor();
-
+	
     return rate;
 }
 
@@ -338,9 +357,11 @@ double DimerInception::RateTerms(const double t, const Cell &sys,
         *iterm = Rate; 
     } else {
 		// aab64 Divide by current incepting particle weight for cases when wt != 1.0. 
+		// aab64 Divide by current incepting composition scale factor for cases with heavier inception
+		double scaleFac = 1.0 / (sys.GetInceptingWeight() * sys.GetInceptionFactor());
         *iterm = Rate(sys.GasPhase(), sqrt(T),
                       MeanFreePathAir(T,P),
-					  sys.SampleVolume()) / sys.GetInceptingWeight(); 
+					  sys.SampleVolume()) * scaleFac; 
     }
 
     return *(iterm++);

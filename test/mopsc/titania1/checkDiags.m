@@ -116,24 +116,40 @@ legend('Pre','Post','location','North','orientation','horizontal')
 xlabel('Time (ms)')
 ylabel('Total particle mass (kg)')
 
+subplot(236)
+plot(pdiags(:,1)*1000,pdiags(:,14))
+hold on
+plot(pdiags(:,1)*1000,pdiags(:,15),':')
+legend('Pre','Post','location','North','orientation','horizontal')
+xlabel('Time (ms)')
+ylabel('Incepting factor (-)')
+
+figure(1000)
+set(gcf,'color','white')
+[vals,bins] = hist(pdiags(:,15));
+plot(bins,vals/max(vals))
+hold on
+xlabel('Incepting factor (-)')
+ylabel('Count divide by max count (-)')
+
 %% Rates
 
 figure(200)
 set(gcf,'color','white')
 subplot(331)
-plot(pdiags(:,1)*1000,sum(pdiags(:,12:12+105),2))
+plot(pdiags(:,1)*1000,sum(pdiags(:,16:16+105),2))
 hold on
 xlabel('Time (ms)')
 ylabel('Inc. events (-)')
 
 subplot(332)
-plot(pdiags(:,1)*1000,pdiags(:,12+106))
+plot(pdiags(:,1)*1000,pdiags(:,16+106))
 hold on
 xlabel('Time (ms)')
 ylabel('Surf. growth events (-)')
 
 subplot(333)
-plot(pdiags(:,1)*1000,sum(pdiags(:,12+107:end-2),2))
+plot(pdiags(:,1)*1000,sum(pdiags(:,16+107:end-2),2))
 hold on
 xlabel('Time (ms)')
 ylabel('Coag. events (-)')
@@ -144,19 +160,19 @@ ylabel('Coag. events (-)')
 figure(300)
 set(gcf,'color','white')
 subplot(131)
-loglog(pdiags(:,1)*1000,cumsum(sum(pdiags(:,12:12+105),2)))
+loglog(pdiags(:,1)*1000,cumsum(sum(pdiags(:,16:16+105),2)))
 hold on
 xlabel('Time (ms)')
 ylabel('Inc. events (-)')
 
 subplot(132)
-loglog(pdiags(:,1)*1000,cumsum(pdiags(:,12+106)))
+loglog(pdiags(:,1)*1000,cumsum(pdiags(:,16+106)))
 hold on
 xlabel('Time (ms)')
 ylabel('Surf. growth events (-)')
 
 subplot(133)
-loglog(pdiags(:,1)*1000,cumsum(sum(pdiags(:,12+107:end-2),2)))
+loglog(pdiags(:,1)*1000,cumsum(sum(pdiags(:,16+107:end-2),2)))
 hold on
 xlabel('Time (ms)')
 ylabel('Coag. events (-)')
@@ -168,10 +184,10 @@ totevs = sum(pdiags(:,8:end-2),2);
 
 figure(400)
 set(gcf,'color','white')
-loglog(pdiags(:,1)*1000,sum(pdiags(:,12:12+105)./totevs,2))
+loglog(pdiags(:,1)*1000,sum(pdiags(:,16:16+105)./totevs,2))
 hold on
-loglog(pdiags(:,1)*1000,pdiags(:,12+106)./totevs,'--')
-loglog(pdiags(:,1)*1000,sum(pdiags(:,12+107:end-2),2)./totevs,':')
+loglog(pdiags(:,1)*1000,pdiags(:,16+106)./totevs,'--')
+loglog(pdiags(:,1)*1000,sum(pdiags(:,16+107:end-2),2)./totevs,':')
 xlabel('Time (ms)')
 ylabel('Fraction of events (-)')
 legend('Inc.','Surf. growth','Coag.','location','southwest')
