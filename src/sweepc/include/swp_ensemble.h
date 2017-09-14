@@ -178,7 +178,7 @@ public:
     int Add(Particle &sp, rng_type &rng);
 
 	//Find a particle that is a single PAH of a given structure
-	int CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH);
+	int CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, int ind);
 
     //! Removes the particle at the given index from the ensemble.
     void Remove(

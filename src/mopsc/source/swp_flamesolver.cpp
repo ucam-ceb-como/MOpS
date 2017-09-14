@@ -378,7 +378,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         //! Tried and tested only for the PAH-PP/KMC-ARS model, binary tree and
         //! the spherical particle model. Only relevant if postprocessing based
         //! on the inception species concentration.
-        if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID && 
+        if ((mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID) && 
             r.Mixture()->ParticleModel()->Postprocessing() == ParticleModel::XA4) {
             int index;
             double numCarbons;

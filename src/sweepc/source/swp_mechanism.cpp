@@ -952,15 +952,48 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
         sys.Particles().FreezeDoubling();
 
         // Perform deferred processes on all particles individually.
-        Ensemble::iterator i;
+		Ensemble::iterator i;
 		int ind = 0;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
             UpdateParticle(*(*i), sys, t, ind, rng);
 			ind++;
         }
 
-        // Now remove any invalid particles and update the ensemble.
-        sys.Particles().RemoveInvalids();
+		// Now remove any invalid particles and update the ensemble.
+		sys.Particles().RemoveInvalids();
+
+		//Check for duplicates
+		// If the agg model is PAH_KMC_ID then all the primary
+		// particles must be PAHPrimary.
+		ind = 0;
+		int count = 0;
+		for (i = sys.Particles().begin(); i != sys.Particles().end(); ++i) {
+			if ((*i) != NULL) {
+				AggModels::PAHPrimary *pah =
+					dynamic_cast<AggModels::PAHPrimary*>((*(*i)).Primary());
+
+				if (pah->NumPAH() == 1){
+					int indpart;
+					indpart = sys.Particles().CheckforPAH(*(pah->GetPAHVector()[0]->GetPAHStruct()), t, ind);
+					if (indpart != -1 && indpart != ind){ //There is a matching particle
+						int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
+						int oldweight2 = (*sys.Particles().At(ind)).getStatisticalWeight();
+						(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + oldweight2);
+						//Invalidate the PAH (and hence the particle) by setting statistical weight to zero
+						//sys.Particles().Remove(ind);
+						(*sys.Particles().At(ind)).setStatisticalWeight(-1.0);
+						count++;
+					}
+				}
+			}
+			ind++;
+		}
+
+		//double pert = double(count) *100.0 / double(sys.Particles().Count());
+		//std:cout << pert;
+
+		// Now remove any invalid particles and update the ensemble.
+		sys.Particles().RemoveInvalids();
 
         // Start particle doubling again.  This will also double the ensemble
         // if too many particles have been removed.
@@ -987,26 +1020,29 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
         dt = t - sp.LastUpdateTime();
         sp.SetTime(t);
 
-        // If the agg model is PAH_KMC_ID then all the primary
-        // particles must be PAHPrimary.
-        AggModels::PAHPrimary *pah =
-                dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
+		if (dt > 0){ //Only do this if dt is greater than 0
 
-        // Update individual PAHs within this particle by using KMC code
-        // sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
-        pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng);
+			// If the agg model is PAH_KMC_ID then all the primary
+			// particles must be PAHPrimary.
+			AggModels::PAHPrimary *pah =
+				dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
 
-        pah->UpdateCache();
-        pah->CheckRounding();
-        if (sp.IsValid()) {
-            sp.UpdateCache();
+			// Update individual PAHs within this particle by using KMC code
+			// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
+			pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng);
 
-            // Sinter the particles for the soot model (as no deferred process)
-            if (m_sint_model.IsEnabled()) {
-                pah->Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
-            }
-            sp.UpdateCache();
-        }
+			pah->UpdateCache();
+			pah->CheckRounding();
+			if (sp.IsValid()) {
+				sp.UpdateCache();
+
+				// Sinter the particles for the soot model (as no deferred process)
+				if (m_sint_model.IsEnabled()) {
+					pah->Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+				}
+				sp.UpdateCache();
+			}
+		}
     }
 
     // Sinter the particles if no deferred processes

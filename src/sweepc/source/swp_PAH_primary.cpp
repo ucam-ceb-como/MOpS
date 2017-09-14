@@ -1166,15 +1166,15 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
  *
  */
 void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::ParticleModel &model, Cell &sys, int statweight, 
-	             int ind, rng_type &rng)
+	int ind, rng_type &rng)
 {
     // Either the primary has two children or it is a leaf of the
     // tree
     if (m_leftchild!=NULL)
     {
         // Recurse down to the leaves
-        m_leftchild->UpdatePAHs(t, dt, model,sys,statweight, ind, rng);
-        m_rightchild->UpdatePAHs(t, dt, model,sys,statweight, ind, rng);
+		m_leftchild->UpdatePAHs(t, dt, model, sys, statweight, ind, rng);
+		m_rightchild->UpdatePAHs(t, dt, model, sys, statweight, ind, rng);
     }
     else
     {
@@ -1279,39 +1279,49 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					//This will also dictate if the new PAH is used to create a new particle, or if it is just destroyed
 					if (oldNumCarbon != new_m_PAH->m_pahstruct->numofC() || oldNumH != new_m_PAH->m_pahstruct->numofH())
 					{
-						m_PAHclusterchanged = true;
 						//Reduce statistical weight of the particle being updated
 						statweight--;
 						(*sys.Particles().At(ind)).setStatisticalWeight(statweight);
-						if (new_m_PAH->m_pahstruct->numofRings() >= 5){ //If the new PAH is still valid
-							//Check if there is another particle that is a single PAH that matches the newly created PAH
-							int indpart;
-							indpart = sys.Particles().CheckforPAH((*new_m_PAH->m_pahstruct));
-							if (indpart == -1){
-								if (sys.ParticleCount() < sys.Particles().Capacity()){
-									//If this PAH was not oxidised below the threshold and there is room in the ensemble
-									//Create a new particle containing this PAH
-									Particle *sp = NULL;
-									sp = model.CreateParticle(t);
-									AggModels::PAHPrimary *pri =
-										dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
-									pri->m_PAH.clear();
-									pri->m_PAH.push_back(new_m_PAH);
-									pri->UpdatePrimary();
-									sp->UpdateCache();
-									sp->SetTime(updatetime);
-									sys.Particles().Add(*sp, rng);
-								}
-								else{
-									//cout << sys.ParticleCount() << endl;
-									//cout << "Ensemble is full. Cannot allocate new PAH" << endl;
+						if (new_m_PAH->m_pahstruct->numofC() > 5){ //If the new PAH is still valid
+							Particle *sp = NULL;
+							sp = model.CreateParticle(t);
+							AggModels::PAHPrimary *pri =
+								dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
+							pri->m_PAH.clear();
+							pri->m_PAH.push_back(new_m_PAH);
+							sp->SetTime(updatetime);
+							//Update the primary and the cache
+							pri->UpdatePrimary();
+							sp->UpdateCache();
+
+							//int index = sys.Particles().Add(*sp, rng); //Add particle to the ensemble
+
+							//This new particle must also be updated to time t
+							pri->UpdatePAHs(t, t - updatetime, model, sys, 1, -1, rng);
+							numloops = 0;
+							calcrates = true;
+							statweightold = statweight;
+							sp->SetTime(t);
+
+							//Update the primary and the cache
+							pri->UpdatePrimary();
+							sp->UpdateCache();
+
+							//Check if there is another particle that is a single PAH that matches the PAH
+							//This also checks that both PAHs are currently updated to the same time
+							if (new_m_PAH->m_pahstruct->numofC() > 5){ //If the new PAH is still valid
+								int indpart;
+								indpart = sys.Particles().CheckforPAH(*new_m_PAH->m_pahstruct, t, -1);
+								if (indpart != -1){ //There is a matching particle
+									int oldweight = (*sys.Particles().At(indpart)).getStatisticalWeight();
+									(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight + 1.0);
+									//Invalidate the PAH (and hence the particle) by setting number of carbons
+									new_m_PAH.reset();
 									ID--;
 								}
-							}
-							else{
-								int oldweight = (*sys.Particles().At(indpart)).getStatisticalWeight();
-								(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight + 1.0);
-								ID--;
+								else{
+									sys.Particles().Add(*sp, rng);
+								}
 							}
 						}
 						else{
@@ -1346,12 +1356,29 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					(*it)->m_pahstruct->setnumofC(5);
 				}
 
+
 				//! See if anything changed, as this will required a call to UpdatePrimary() below.
 				if (oldNumCarbon != (*it)->m_pahstruct->numofC() || oldNumH != (*it)->m_pahstruct->numofH())
 				{
 					m_PAHclusterchanged = true;
 					m_PAHchanged = true;
 				}
+
+				//if this primary constains a single PAH, it is a particle representing a monomer PAH
+				//if (m_PAHclusterchanged && m_numPAH == 1){
+				if (m_PAHclusterchanged && m_numPAH == 1 && ind != -1){
+					//Check if there is another particle that is a single PAH that matches the PAH
+					//This also checks that both PAHs are currently updated to the same time
+					int indpart;
+					indpart = sys.Particles().CheckforPAH(*((*it)->m_pahstruct), t, ind);
+					if (indpart != -1 && indpart != ind){ //There is a matching particle
+						int oldweight = (*sys.Particles().At(indpart)).getStatisticalWeight();
+						(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight + 1.0);
+						//Invalidate the PAH (and hence the particle) by setting number of carbons
+						(*it)->m_pahstruct->setnumofC(5);			
+					}
+				}
+
 			}
 
 			/*!
