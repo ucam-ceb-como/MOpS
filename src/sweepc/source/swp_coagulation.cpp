@@ -222,7 +222,6 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
                                  MajorantType maj) const {
     int ip1 = sys.Particles().Select(prop1, rng);
     int ip2 = sys.Particles().Select(prop2, rng);
-	bool new1 =false, new2 =false;
 
     // Choose and get first particle, then update it.
     Particle *sp1=NULL;
@@ -233,55 +232,29 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
         return -1;
     }
 
-	Particle *sp2 = NULL;
-
     // Choose and get unique second particle, then update it.  Note, we are allowed to do
     // this even if the first particle was invalidated.
-	if (Sweep::Processes::CoagWeightRule5 && ip1 == ip2 && sp1->getStatisticalWeight() > 1){ 
-		//If we chose the same particle, its okay if using weight rule 5 and statistical weight > 1
-		//Set sp2 to point to the same particle as sp1.
-		sp2 = sp1;
-	}
-	else{
-		unsigned int guard = 0;
-		while ((ip2 == ip1) && (++guard < 1000))
-			ip2 = sys.Particles().Select(prop2, rng);
+    unsigned int guard = 0;
+    while ((ip2 == ip1) && (++guard<1000))
+            ip2 = sys.Particles().Select(prop2, rng);
 
-		if ((ip2 >= 0) && (ip2 != ip1)) {
-			sp2 = sys.Particles().At(ip2);
-		}
-		else {
-			// Failed to select a unique particle.
-			return -1;
-		}
-	}
-
-	//If we are using weight rule 5 and either particles statistical weight is > 1, make new copies of them with weight = 1
-	//and point sp1/sp2 to those new particles
-	Particle part1 = Particle(*sp1);
-	Particle part2 = Particle(*sp2);
-	if (Sweep::Processes::CoagWeightRule5){
-		if (sp1->getStatisticalWeight() > 1){
-			part1.setStatisticalWeight(1);
-			sp1 = &part1;
-			new1 = true;
-		}
-		if (sp2->getStatisticalWeight() > 1){
-			part2.setStatisticalWeight(1);
-			sp2 = &part2;
-			new2 = true;
-		}
-	}
+    Particle *sp2=NULL;
+    if ((ip2>=0) && (ip2!=ip1)) {
+        sp2 = sys.Particles().At(ip2);
+    } else {
+        // Failed to select a unique particle.
+        return -1;
+    }
 
     //Calculate the majorant rate before updating the particles
     const double majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
-    m_mech->UpdateParticle(*sp1, sys, t, ip1, rng);
+    //Update the particles
+    m_mech->UpdateParticle(*sp1, sys, t, rng);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
-        // Must remove first particle now (if sp1 was not just a copy of the particle at ip1)
-		if (!new1)
+        // Must remove first particle now.
         sys.Particles().Remove(ip1);
 
         // Invalidating the index tells this routine not to perform coagulation.
@@ -289,16 +262,14 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
         return 0;
     }
 
-    m_mech->UpdateParticle(*sp2, sys, t, ip2, rng);
+    m_mech->UpdateParticle(*sp2, sys, t, rng);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
         // Tell the ensemble to update particle one before we confuse things
-        // by removing particle 2 (if sp1 was not just a copy of the particle at ip1)
-		if (!new1)
+        // by removing particle 2
         sys.Particles().Update(ip1);
 
         // Must remove second particle now.
-		if (!new2)
         sys.Particles().Remove(ip2);
 
         // Invalidating the index tells this routine not to perform coagulation.
@@ -314,10 +285,8 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 
         double truek = CoagKernel(*sp1, *sp2, sys);
         double ceff=0;
-		if (majk < truek){
-			std::cout << "maj< true" << std::endl;
-			std::cout << majk <<" " << truek << std::endl;
-		}
+        if (majk<truek)
+            std::cout << "maj< true"<< std::endl;
 
 		//added by ms785 to include the collision efficiency in the calculation of the rate
 		if (sys.ParticleModel()->AggModel()==AggModels::PAH_KMC_ID)
@@ -348,127 +317,28 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
                                           (x1 + x2));
                 break;
                 }
-			case Sweep::Processes::CoagWeightRule5:{
-				if (new1 && new2){ //This coagulation was between two weighted monomer PAHs
-					if (ip1 == ip2){ //This was a coagulation between the same weight monomer
-						//First, reduce the weight of the original particle or remove it
-						int oldweight = (*sys.Particles().At(ip1)).getStatisticalWeight();
-						int newweight = oldweight - 2;
-						if (newweight > 0){
-							(*sys.Particles().At(ip1)).setStatisticalWeight(newweight);
-							sys.Particles().Update(ip1);
-						}
-						else{
-							sys.Particles().Remove(ip1);
-						}
-
-						//Now coagulate the particles and add sp1 to the ensemble
-						sp1->Coagulate(*sp2, rng);
-						sp1->SetTime(t);
-						sp1->incrementCoagCount();
-						Particle* adder = new Particle(*sp1);
-						int ipnew1 = sys.Particles().Add(*adder, rng);
-
-						//Update the particles
-						sys.Particles().Update(ipnew1);
-					}
-					else { //Coagulation between two different weighted monomers
-						//First, reduce the weight of the original particles or remove them
-						int oldweight = (*sys.Particles().At(ip1)).getStatisticalWeight();
-						int newweight = oldweight - 1;
-						if (newweight > 0){
-							(*sys.Particles().At(ip1)).setStatisticalWeight(newweight);
-							sys.Particles().Update(ip1);
-						}
-						else{
-							sys.Particles().Remove(ip1);
-						}
-
-						oldweight = (*sys.Particles().At(ip2)).getStatisticalWeight();
-						newweight = oldweight - 1;
-						if (newweight > 0){
-							(*sys.Particles().At(ip2)).setStatisticalWeight(newweight);
-							sys.Particles().Update(ip2);
-
-						}
-						else{
-							sys.Particles().Remove(ip2);
-						}
-
-						//Now coagulate the particles and add sp1 to the ensemble
-						sp1->Coagulate(*sp2, rng);
-						sp1->SetTime(t);
-						sp1->incrementCoagCount();
-						Particle* adder = new Particle(*sp1);
-						int ipnew1 = sys.Particles().Add(*adder, rng);
-
-						//Update the particle
-						sys.Particles().Update(ipnew1);
-					}
-				}
-				else if (new1 || new2){ //if one of the particles was a weighted monomer PAH
-					int index;
-					bool first;
-					if (new1){ //First one was the weighted monomer PAH
-						index = ip1;
-						first = true;
-					}
-					else{ //It was the second one
-						index = ip2;
-						first = false;
-					}
-					//reduce the weight of the original particle or remove it
-					int oldweight = (*sys.Particles().At(index)).getStatisticalWeight();
-					int newweight = oldweight - 1;
-					if (newweight > 0){
-						(*sys.Particles().At(index)).setStatisticalWeight(newweight);
-						sys.Particles().Update(index);
-					}
-					else{
-						sys.Particles().Remove(index);
-					}
-					if (first){//if the first was the weighted monomer, add particle 1 to particle 2
-						sp2->Coagulate(*sp1, rng);
-						sp2->SetTime(t);
-						sp2->incrementCoagCount();
-						sys.Particles().Update(ip2);
-					}
-					else{ //else, add particle 2 to particle 1
-						sp1->Coagulate(*sp2, rng);
-						sp1->SetTime(t);
-						sp1->incrementCoagCount();
-						sys.Particles().Update(ip1);
-					}
-				}
-				else{ //neither particle was a weight monomer. perform coagulation as normal with a non-weighted algorithm
-					JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
-				}
-				break;
-			}
             default:
                 throw std::logic_error("Unrecognised weight rule (Coagulation::WeightedPerform)");
             }
 
-			if (weight_rule != Sweep::Processes::CoagWeightRule5){
-				// In the weighted particle method the contents of particle 2
-				// is added to particle 1 while particle 2 is left unchanged.
-				// If particle 1 is a single primary particle made up one PAH:
-				// the incepted PAH, after the coagulate event there is then
-				// one less incepted PAH. This is what the check does. If
-				// particle 1 is a PAH other than the incepted PAH, there is
-				// not a need to made an adjustment to the number of incepted PAHs.
-				//sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
+            // In the weighted particle method the contents of particle 2
+            // is added to particle 1 while particle 2 is left unchanged.
+            // If particle 1 is a single primary particle made up one PAH:
+            // the incepted PAH, after the coagulate event there is then
+            // one less incepted PAH. This is what the check does. If
+            // particle 1 is a PAH other than the incepted PAH, there is
+            // not a need to made an adjustment to the number of incepted PAHs.
+			//sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
 
-				// Add contents of particle 2 onto particle 1
-				sp1->Coagulate(*sp2, rng);
-				sp1->SetTime(t);
-				sp1->incrementCoagCount();
+            // Add contents of particle 2 onto particle 1
+            sp1->Coagulate(*sp2, rng);
+            sp1->SetTime(t);
+            sp1->incrementCoagCount();
 
-				assert(sp1->IsValid());
-				// Tell the ensemble that particles 1 and 2 have changed
-				sys.Particles().Update(ip1);
-				sys.Particles().Update(ip2);
-			}
+            assert(sp1->IsValid());
+            // Tell the ensemble that particles 1 and 2 have changed
+            sys.Particles().Update(ip1);
+            sys.Particles().Update(ip2);
         } else {
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);

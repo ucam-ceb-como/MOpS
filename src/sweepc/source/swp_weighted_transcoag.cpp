@@ -121,7 +121,7 @@ double Sweep::Processes::WeightedTransitionCoagulation::Rate(double t, const Cel
     unsigned int n = sys.ParticleCount();
 
     // Check that there are at least 2 particles before calculating rate.
-    if (n > 0) {
+    if (n > 1) {
         // Get system properties required to calculate coagulation rate.
         double T = sys.GasPhase().Temperature();
         double P = sys.GasPhase().Pressure();
@@ -164,13 +164,7 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(double t, cons
                                                                        fvector::iterator &iterm) const
 {
     // Get the number of particles in the system.
-	int n;
-	if (m_CoagWeightRule == Sweep::Processes::CoagWeightRule5){ //If using weightrule5, make sure the summation of statistical weights is >=2
-		n = sys.Particles().GetSum(Sweep::iW);
-	}
-	else{
-		n = sys.ParticleCount();
-	}
+    unsigned int n = sys.ParticleCount();
 
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
@@ -310,20 +304,13 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
     assert(iterm < TYPE_COUNT);
 
     // Select properties by which to choose particles.
-    // Note we need to choose 2 particles (or choose the same particle with
-	// statistical weight >=2 if using weightrule 5). One particle must be chosen
+    // Note we need to choose 2 particles.  One particle must be chosen
     // uniformly and one with probability proportional
     // to particle mass.
-	if (m_CoagWeightRule == Sweep::Processes::CoagWeightRule5){ //If using weightrule5, make sure the summation of statistical weights is >=2
-		if (sys.Particles().GetSum(Sweep::iW) < 2){
-			return 1;
-		}
-	}
-	else{
-		if (sys.ParticleCount() < 2) {
-			return 1;
-		}
-	}
+
+    if (sys.ParticleCount() < 2) {
+        return 1;
+    }
 
     MajorantType maj;
     Sweep::PropID prop1, prop2;
@@ -331,7 +318,7 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
     // Properties to which the probabilities of particle selection will be proportional
     switch(static_cast<TermType>(iterm)) {
         case FreeMol1:
-            prop1 = iUniform1;
+            prop1 = iUniform;
             prop2 = iD2_M_1_2W;
             maj = FreeMol;
             break;
@@ -351,7 +338,7 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
             maj = FreeMol;
             break;
         case SlipFlow1:
-            prop1 = iUniform1;
+            prop1 = iUniform;
             prop2 = iW;
             maj = SlipFlow;
             break;
@@ -366,7 +353,7 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
             maj = SlipFlow;
             break;
         case SlipFlow4:
-            prop1 = iUniform1;
+            prop1 = iUniform;
             prop2 = iD_1W;
             maj = SlipFlow;
             break;

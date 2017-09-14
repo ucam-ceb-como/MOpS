@@ -153,8 +153,6 @@ private:
     // Silicon model properties
     //! Coverage fraction of active sites (ratio of components)
     double m_coverage;
-
-	int m_select;
 };
 }
 

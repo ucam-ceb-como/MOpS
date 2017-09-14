@@ -1786,8 +1786,6 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                     }
                     else if(weightRuleName == "w4")
                         weightRule = Processes::CoagWeightRule4;
-					else if (weightRuleName == "w5")
-						weightRule = Processes::CoagWeightRule5;
                     else
                         throw std::runtime_error("Coagulation weight rule " + weightRuleName + " not supported \
                                                  (Sweep, MechParser::readCoagulation)");

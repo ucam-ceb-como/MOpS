@@ -99,6 +99,7 @@ Sweep::TreeWeightedCache::TreeWeightedCache(const Sweep::Particle &part)
     m_vol       = part.Volume();
     m_mass      = part.Mass();
     m_numcarbon = part.NumCarbon();
+    m_numcarbon = part.NumCarbon();
 
     //! Fragmentation flag.
     m_frag =  part.Frag();
@@ -137,6 +138,7 @@ Sweep::TreeWeightedCache &Sweep::TreeWeightedCache::operator+=(const TreeWeighte
     m_mass         += rhs.m_mass;
     m_numcarbon    += rhs.m_numcarbon;
     m_frag         += rhs.m_frag;
+    m_numcarbon += rhs.m_numcarbon;
     m_dcolsqr      += rhs.m_dcolsqr;
     m_inv_dcol     += rhs.m_inv_dcol;
     m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
@@ -170,6 +172,7 @@ void Sweep::TreeWeightedCache::Clear(void)
     m_mass         = 0.0;
     m_numcarbon    = 0;
     m_frag         = 0;
+    m_numcarbon = 0;
     m_dcolsqr      = 0.0;
     m_inv_dcol     = 0.0;
     m_inv_dcolsqr  = 0.0;
@@ -230,7 +233,7 @@ double Sweep::TreeWeightedCache::Property(PropID id) const
 		case iFS:
 			throw std::logic_error("Free surface no longer cached (TreeWeightedCache::Property)");
 			return 0.0;     
-        case -1:
+		case -1:
             // Special case property, used to select particles
             // uniformly.
             return 1.0;
