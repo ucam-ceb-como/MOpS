@@ -951,11 +951,13 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
         // Stop ensemble from doubling while updating particles.
         sys.Particles().FreezeDoubling();
 
+		PartPtrVector overflow;
+
         // Perform deferred processes on all particles individually.
 		Ensemble::iterator i;
 		int ind = 0;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
-            UpdateParticle(*(*i), sys, t, ind, rng);
+            UpdateParticle(*(*i), sys, t, ind, rng, overflow);
 			ind++;
         }
 
@@ -963,8 +965,6 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 		sys.Particles().RemoveInvalids();
 
 		//Check for duplicates
-		// If the agg model is PAH_KMC_ID then all the primary
-		// particles must be PAHPrimary.
 		ind = 0;
 		int count = 0;
 		for (i = sys.Particles().begin(); i != sys.Particles().end(); ++i) {
@@ -989,11 +989,34 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 			ind++;
 		}
 
-		//double pert = double(count) *100.0 / double(sys.Particles().Count());
-		//std:cout << pert;
-
 		// Now remove any invalid particles and update the ensemble.
 		sys.Particles().RemoveInvalids();
+
+		PartPtrVector::iterator it1;
+		ind = 0;
+		for (it1 = overflow.begin(); it1 != overflow.end(); ++it1) {
+			if ((*it1) != NULL) {
+				AggModels::PAHPrimary *pah =
+					dynamic_cast<AggModels::PAHPrimary*>((*(*it1)).Primary());
+
+				if (pah->NumPAH() == 1){
+					int indpart;
+					indpart = sys.Particles().CheckforPAH(*(pah->GetPAHVector()[0]->GetPAHStruct()), t, -1);
+					if (indpart != -1){ //There is a matching particle
+						int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
+						(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + 1.0);
+						delete overflow[ind];
+					}
+					else{ //No matching particle, must add to ensemble
+						sys.Particles().Add(*(overflow[ind]), rng);
+					}
+				}
+			}
+			ind++;
+		}
+
+		//double pert = double(count) *100.0 / double(sys.Particles().Count());
+		//std:cout << pert;
 
         // Start particle doubling again.  This will also double the ensemble
         // if too many particles have been removed.
@@ -1010,7 +1033,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
  *@param[in]        t           Time upto which particle to be updated
  *@param[in,out]    rng         Random number generator
  */
-void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_type &rng) const
+void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_type &rng, PartPtrVector &overflow) const
 {
     // Deal with the growth of the PAHs
     if (AggModel() == AggModels::PAH_KMC_ID)
@@ -1029,7 +1052,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
 
 			// Update individual PAHs within this particle by using KMC code
 			// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
-			pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng);
+			pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng, overflow);
 
 			pah->UpdateCache();
 			pah->CheckRounding();

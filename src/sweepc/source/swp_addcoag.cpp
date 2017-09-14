@@ -133,6 +133,8 @@ int AdditiveCoagulation::Perform(double t, Sweep::Cell &sys,
     // uniformly and one with probability proportional
     // to particle mass.
 
+	PartPtrVector dummy;
+
     if (sys.ParticleCount() < 2) {
         return 1;
     }
@@ -169,7 +171,7 @@ int AdditiveCoagulation::Perform(double t, Sweep::Cell &sys,
     const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
 
     //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t, ip1, rng);
+    m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
@@ -181,7 +183,7 @@ int AdditiveCoagulation::Perform(double t, Sweep::Cell &sys,
         return 0;
     }
 
-    m_mech->UpdateParticle(*sp2, sys, t, ip2, rng);
+	m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
         // Tell the ensemble to update particle one before we confuse things

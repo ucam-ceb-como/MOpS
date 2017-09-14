@@ -268,6 +268,8 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
                                    unsigned int iterm,
                                    Sweep::rng_type &rng) const
 {
+	PartPtrVector dummy;
+
 	bool new1 = false, new2 = false;
     // Select properties by which to choose particles (-1 means
     // choose uniformly).  Note we need to choose 2 particles.  There
@@ -390,7 +392,7 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
     double majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
     //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t, -1, rng);
+    m_mech->UpdateParticle(*sp1, sys, t, -1, rng, dummy);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
@@ -402,7 +404,7 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
         return 0;
     }
 
-    m_mech->UpdateParticle(*sp2, sys, t, -1, rng);
+    m_mech->UpdateParticle(*sp2, sys, t, -1, rng, dummy);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
 		// Tell the ensemble to update particle one before we confuse things

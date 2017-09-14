@@ -224,7 +224,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 	//m_dblecutoff = m_capacity+10;
 
 	m_dbleslack = (unsigned int)pow(2.0, (int)((m_levels - 5)>0 ? m_levels - 5 : 0));
-	//m_dbleslack = 1024;
+	m_dbleslack = 204;
 	m_dblelimit = m_halfcap - m_dbleslack;
 }
 
@@ -428,7 +428,7 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 	int count = 0;
 	for (it1 = begin(); it1 != end(); it1++){
 		//First, check if this particle is updated to the correct time
-		if ((*it1)->LastUpdateTime() == t /*&& count > ind*/){
+		if ((*it1)->LastUpdateTime() == t && count > ind){
 			AggModels::PAHPrimary *pah =
 				dynamic_cast<AggModels::PAHPrimary*>((*it1)->Primary());
 			//Check if this particle contains a single primary with a single PAH with the same 
@@ -850,8 +850,8 @@ void Sweep::Ensemble::dble()
             //}
 				const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
 				rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
-				if (rhsparticle->NumPAH() > 1){ //If this particle is not just a single PAH
-				//if (rhsparticle->NumPAH() > 0){ //If this particle is not just a single PAH
+				//if (rhsparticle->NumPAH() > 1){ //If this particle is not just a single PAH
+				if (rhsparticle->NumPAH() > 0){ //If this particle is not just a single PAH
 					
 					size_t iCopy = prevCount + ii;
 					// Create a copy of a particle and add it to the ensemble.

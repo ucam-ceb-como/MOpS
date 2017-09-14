@@ -260,7 +260,8 @@ public:
         Cell &sys,    // System to which the particle belongs.
         double t,       // Time up to which to integrate.
 		int ind,        // Index of particle in the emsemble
-        rng_type &rng
+        rng_type &rng, 
+		PartPtrVector &overflow
         ) const;
 
     // READ/WRITE/COPY.
