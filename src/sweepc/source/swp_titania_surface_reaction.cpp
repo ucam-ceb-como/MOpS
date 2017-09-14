@@ -43,6 +43,7 @@
 #include "swp_titania_surface_reaction.h"
 #include "swp_mechanism.h"
 
+
 // Anonymous namespace just for use in this file
 namespace {
 
@@ -309,7 +310,7 @@ void TitaniaSurfaceReaction::Serialize(std::ostream &out) const
         out.write((char*)&val, sizeof(val));
 
     } else {
-        throw invalid_argument("Output stream not ready "
+        throw std::invalid_argument("Output stream not ready "
                                "in TitaniaSurfaceReaction::Serialize");
     }
 }
@@ -342,7 +343,7 @@ void TitaniaSurfaceReaction::Deserialize(
         m_i_o2 = (unsigned int) val;
 
     } else {
-        throw invalid_argument("Input stream not ready "
+        throw std::invalid_argument("Input stream not ready "
                                "in TitaniaSurfaceReaction::Deserialize");
     }
 }

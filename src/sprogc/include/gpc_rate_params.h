@@ -43,7 +43,7 @@
 #define GPC_RATE_PARAMS_H
 #include "gpc_params.h"
 #include <string>
-using namespace std; 
+//using namespace std; 
 
 namespace Sprog
 {
