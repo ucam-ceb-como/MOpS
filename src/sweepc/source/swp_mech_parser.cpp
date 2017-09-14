@@ -57,6 +57,7 @@
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
 #include "swp_weighted_transcoag.h"
+#include "swp_transcoag_weighted_PAHs.h"
 #include "swp_weighted_erosionfrag.h"
 #include "swp_weighted_symmetricfrag.h"
 #include "swp_coag_weight_rules.h"
@@ -1739,6 +1740,8 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                         coag.reset(new Processes::AdditiveCoagulation(mech));
                     else if(kernelName == "constant")
                         coag.reset(new Processes::ConstantCoagulation(mech));
+					else if (kernelName == "transitionweightedPAHs")
+						coag.reset(new Processes::TransitionCoagulationWeightedPAHs(mech));
                     else
                         // Unrecognised option
                         throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available in DSA \
