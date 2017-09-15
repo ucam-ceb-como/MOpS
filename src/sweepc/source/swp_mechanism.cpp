@@ -964,55 +964,57 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 		// Now remove any invalid particles and update the ensemble.
 		sys.Particles().RemoveInvalids();
 
-		//Check for duplicates
-		ind = 0;
-		int count = 0;
-		for (i = sys.Particles().begin(); i != sys.Particles().end(); ++i) {
-			if ((*i) != NULL) {
-				AggModels::PAHPrimary *pah =
-					dynamic_cast<AggModels::PAHPrimary*>((*(*i)).Primary());
+		if (sys.ParticleModel()->Components(0)->WeightedPAHs()){
+			//Check for duplicates
+			ind = 0;
+			int count = 0;
+			for (i = sys.Particles().begin(); i != sys.Particles().end(); ++i) {
+				if ((*i) != NULL) {
+					AggModels::PAHPrimary *pah =
+						dynamic_cast<AggModels::PAHPrimary*>((*(*i)).Primary());
 
-				if (pah->NumPAH() == 1){
-					int indpart;
-					indpart = sys.Particles().CheckforPAH(*(pah->GetPAHVector()[0]->GetPAHStruct()), t, ind);
-					if (indpart != -1 && indpart != ind){ //There is a matching particle
-						int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
-						int oldweight2 = (*sys.Particles().At(ind)).getStatisticalWeight();
-						(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + oldweight2);
-						//Invalidate the PAH (and hence the particle) by setting statistical weight to zero
-						//sys.Particles().Remove(ind);
-						(*sys.Particles().At(ind)).setStatisticalWeight(-1.0);
-						count++;
+					if (pah->NumPAH() == 1){
+						int indpart;
+						indpart = sys.Particles().CheckforPAH(*(pah->GetPAHVector()[0]->GetPAHStruct()), t, ind);
+						if (indpart != -1 && indpart != ind){ //There is a matching particle
+							int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
+							int oldweight2 = (*sys.Particles().At(ind)).getStatisticalWeight();
+							(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + oldweight2);
+							//Invalidate the PAH (and hence the particle) by setting statistical weight to zero
+							//sys.Particles().Remove(ind);
+							(*sys.Particles().At(ind)).setStatisticalWeight(-1.0);
+							count++;
+						}
 					}
 				}
+				ind++;
 			}
-			ind++;
-		}
 
-		// Now remove any invalid particles and update the ensemble.
-		sys.Particles().RemoveInvalids();
+			// Now remove any invalid particles and update the ensemble.
+			sys.Particles().RemoveInvalids();
 
-		PartPtrVector::iterator it1;
-		ind = 0;
-		for (it1 = overflow.begin(); it1 != overflow.end(); ++it1) {
-			if ((*it1) != NULL) {
-				AggModels::PAHPrimary *pah =
-					dynamic_cast<AggModels::PAHPrimary*>((*(*it1)).Primary());
+			PartPtrVector::iterator it1;
+			ind = 0;
+			for (it1 = overflow.begin(); it1 != overflow.end(); ++it1) {
+				if ((*it1) != NULL) {
+					AggModels::PAHPrimary *pah =
+						dynamic_cast<AggModels::PAHPrimary*>((*(*it1)).Primary());
 
-				if (pah->NumPAH() == 1){
-					int indpart;
-					indpart = sys.Particles().CheckforPAH(*(pah->GetPAHVector()[0]->GetPAHStruct()), t, -1);
-					if (indpart != -1){ //There is a matching particle
-						int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
-						(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + 1.0);
-						delete overflow[ind];
-					}
-					else{ //No matching particle, must add to ensemble
-						sys.Particles().Add(*(overflow[ind]), rng);
+					if (pah->NumPAH() == 1){
+						int indpart;
+						indpart = sys.Particles().CheckforPAH(*(pah->GetPAHVector()[0]->GetPAHStruct()), t, -1);
+						if (indpart != -1){ //There is a matching particle
+							int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
+							(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + 1.0);
+							delete overflow[ind];
+						}
+						else{ //No matching particle, must add to ensemble
+							sys.Particles().Add(*(overflow[ind]), rng);
+						}
 					}
 				}
+				ind++;
 			}
-			ind++;
 		}
 
 		//double pert = double(count) *100.0 / double(sys.Particles().Count());

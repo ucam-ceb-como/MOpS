@@ -694,6 +694,29 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else {
             comp->SetSharedPointers(0);
         }
+		
+		//! Numerical parameter
+		/*!
+		* Allow PAHs in soot particles to point to the same memory location after a doubling event.
+		*/
+		el = (*i)->GetFirstChild("weightedPAHs");
+		if (el != NULL) {
+			str = el->Data();
+			if (str != "") {
+				comp->SetWeightedPAHs(int(cdble(str)));
+			}
+			else {
+				std::string msg("Component ");
+				msg += comp->Name();
+				msg += " weightedPAHs contains no data (Sweep, MechParser::readComponents).";
+
+				delete comp;
+				throw runtime_error(msg);
+			}
+		}
+		else {
+			comp->SetWeightedPAHs(0);
+		}
 
         // Get component mol. wt.
         el = (*i)->GetFirstChild("molwt");

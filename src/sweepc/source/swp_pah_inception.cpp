@@ -123,7 +123,7 @@ int PAHInception::Perform(const double t, Cell &sys,
 	Particle *sp = NULL;
 	//Check to see if a particle that matches that of the incepted PAHs already exists in the emsemble
 	int j = sys.Particles().NumOfInceptedPAH(m_mech->AggModel());
-	if (j > 0){  //There is already an inception PAH in the ensemble (should only be 1). Just update it's statistical weight
+	if (j > 0 && sys.ParticleModel()->Components(0)->WeightedPAHs()){  //There is already an inception PAH in the ensemble (should only be 1). Just update it's statistical weight
 	//if (1 > 2){
 		int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel());
 		sp = sys.Particles().At(Pindex);
