@@ -57,13 +57,13 @@ using namespace std;
 
 // Default constructor (protected).
 Inception::Inception(void)
-: Process()
+: Process(), m_allowHeavy(false) // aab64 default is not allowing heavy inceptions
 {
 }
 
 // Initialising constructor.
 Inception::Inception(const Sweep::Mechanism &mech)
-: Process(mech)
+: Process(mech), m_allowHeavy(false) // aab64 default is not allowing heavy inceptions
 {
 }
 
@@ -94,6 +94,7 @@ Inception &Inception::operator =(const Inception &rhs)
         m_a    = rhs.m_a;
         m_newcomp = rhs.m_newcomp;
         m_newvals = rhs.m_newvals;
+		m_allowHeavy = rhs.m_allowHeavy;
     }
     return *this;
 }
@@ -163,6 +164,19 @@ void Inception::SetParticleTracker(unsigned int i, double track)
         // Set value.
         m_newvals[i] = track;
     }
+}
+
+
+// aab64 Set flag for heavy inceptions
+void Inception::SetIsHeavy(bool heavyflag)
+{
+	m_allowHeavy = heavyflag;
+}
+
+// aab64 Get flag for heavy inceptions
+bool Inception::GetIsHeavy() const
+{
+	return m_allowHeavy;
 }
 
 // TOTAL RATE CALCULATIONS.

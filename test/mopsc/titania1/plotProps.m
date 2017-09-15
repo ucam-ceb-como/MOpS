@@ -11,12 +11,12 @@ set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
 % for finding files
-basedir  = 'local/cstr_inc_factor/';
-filedir  = 'if5_10runs/';
+basedir  = 'local/real_inc_factor/';
+filedir  = 'ifVAR_3runs_3ms_Nhalf/';
 filebase = 'Network(stage1)';
 
 % for plotting psl data
-psltime  = '0.125';
+psltime  = '0.003';
 npslbins = 10;
 
 % for saving images
@@ -28,6 +28,7 @@ savefigs = 0;
 leg_vals = '';
 
 % load all data
+m0dat = csvread([basedir 'if1_3runs_3ms/' filebase '-part.csv'],1);
 part = csvread([basedir filedir filebase '-part.csv'],1);
 rate = csvread([basedir filedir filebase '-part-rates.csv'],1);
 pslf = csvread([basedir filedir filebase '-psl(' psltime 's).csv'],1);
@@ -129,6 +130,39 @@ ylabel('Total rutile (m$^{-3}$)')
 addlegend(leg_vals);
 saveas(['rut_ave' studyid])
 
+figure(90)
+set(gcf,'color','white')
+% subplot(121)
+% plot(part(:,2)*1000,part(:,5))
+% hold on
+% plot(part(:,2)*1000,part(:,5)+part(:,6),'--','Color',c1)
+% plot(part(:,2)*1000,part(:,5)-part(:,6),'--','Color',c1)
+% xlabel('Time (ms)')
+% ylabel('M0 (m$^{-3}$)')
+% addlegend(leg_vals);
+% subplot(122)
+plot(part(:,2)*1000,abs(part(:,5)-m0dat(:,5))./m0dat(:,5))
+hold on
+xlabel('Time (ms)')
+ylabel('Relative difference in m0 (-)')
+saveas(['m0_err' studyid])
+
+figure(91)
+set(gcf,'color','white')
+plot(part(:,2)*1000,abs(part(:,39)-m0dat(:,39))./m0dat(:,39))
+hold on
+xlabel('Time (ms)')
+ylabel('Relative difference in primary diameter (-)')
+saveas(['dpri_err' studyid])
+
+figure(92)
+set(gcf,'color','white')
+plot(part(:,2)*1000,abs(part(:,21)-m0dat(:,21))./m0dat(:,21))
+hold on
+xlabel('Time (ms)')
+ylabel('Relative difference in m1 (-)')
+saveas(['m1_err' studyid])
+
 %% PSL
 
 figure(2)
@@ -224,6 +258,7 @@ saveas(['weight_psd' studyid])
 
 figure(30)
 set(gcf,'color','white')
+% subplot(131)
 [n_d,x_d] = histwc(pslf(:,11),pslf(:,9),npslbins);
 plot(x_d,n_d/max(n_d))
 hold on

@@ -126,7 +126,8 @@ int DimerInception::Perform(const double t, Cell &sys,
     // This routine performs the inception on the given chemical system.
 	
     // aab64 Don't incept if magical last inception
-    if (ParticleComp()[0] != 0) {
+    if (ParticleComp()[0] != 0) 
+	{
         // Create a new particle of the type specified
         // by the system ensemble.
         Particle *sp = m_mech->CreateParticle(t);
@@ -158,7 +159,9 @@ int DimerInception::Perform(const double t, Cell &sys,
 
 		// aab64 Adjust composition to allow inception of heavier particles
 		// Perform adjustment before updating the cache and computing properties.
-		sp->Primary()->AdjustForInception(sys.GetInceptionFactor());
+		bool heavyAllowed = m_mech->GetIsHeavy();
+		if (heavyAllowed)
+			sp->Primary()->AdjustForInception(sys.GetInceptionFactor());
 
 		sp->UpdateCache();
 
@@ -168,23 +171,30 @@ int DimerInception::Perform(const double t, Cell &sys,
 	    // Update gas-phase chemistry of system.
 	    adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
 		adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+
+		// aab64 If the ensemble is more than half full already, 
+		// adjust inception factor by sampling from lognormal distribution
+		// and constrain newIncFactor to [1,100]. 
+		// Note that this should really rather check if a certain minimum size has been reached. 
+		if (heavyAllowed)
+		{
+			double meanIFdist = 0.0;
+			double stdIFdist = 1.0;
+			if (sys.ParticleCount() > ceil(1.0 * sys.Particles().Capacity() / 2.0))
+			{
+				double newIncFactor = boost::random::lognormal_distribution<double>(meanIFdist, stdIFdist)(rng);
+				if (newIncFactor < 1.0)
+					newIncFactor = 1.0;
+				else if (newIncFactor > 100.0)
+					newIncFactor = 100.0;
+				sys.SetInceptionFactor((int)newIncFactor);
+			}
+		}		
     }
-    else {
+    else 
+	{
 		adjustParticleTemperature(sys, 0, 1, sys.GetIsAdiabaticFlag(), 0, 0, 1.0);
     }
-
-	// aab64 Adjust inception factor by sampling from lognormal distribution. 
-	double meanIFdist = 0.0;
-	double stdIFdist = 1.0;
-	double newIncFactor = boost::random::lognormal_distribution<double>(meanIFdist, stdIFdist)(rng);
-	// Constrain newIncFactor to [1,100]
-	if (newIncFactor < 1.0)
-		newIncFactor = 1.0;
-	else if (newIncFactor > 100.0)
-		newIncFactor = 100.0;
-	
-	//cout << (int)newIncFactor << "\n";
-	sys.SetInceptionFactor((int) newIncFactor);
 
     return 0;
 }

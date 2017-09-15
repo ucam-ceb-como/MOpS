@@ -175,6 +175,12 @@ public:
 	// particles in ensemble relative to ensemble capacity.
 	virtual void SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, char *weightfn);
 
+	// aab64 Set flag for heavy inceptions
+	virtual void SetIsHeavy(bool heavyflag);
+
+	// aab64 Get flag for heavy inceptions
+	bool GetIsHeavy(void) const;
+
 	// RATE CALCULATION.
 
     // Get total rates of all processes.  Returns the sum of
@@ -395,6 +401,7 @@ private:
     mutable unsigned int m_inflowcount;     // The inflow count for stochastic inflow
     mutable unsigned int m_outflowcount;    // The outflow count for stochastic inflow
 	mutable char *m_incept_weight_fn;       // The type of inception weight scaling to use. 
+	mutable bool m_heavyallowed;            // Flag to allow heavier inception particles.
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 

@@ -12,7 +12,7 @@ set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
 % for finding files
-basedir  = 'vienna/dilute/16384SPs_10runs/'; 
+basedir  = 'vienna/vart_2048SPs_10runs/16384SPs_10runs/'; 
 filedir1 = 'dsa-d/';
 filedir2 = 'swa-d/';
 filedir3 = 'swa-dn1/';

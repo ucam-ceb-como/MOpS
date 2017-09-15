@@ -118,6 +118,12 @@ public:
     // new particle.
     void SetParticleTracker(unsigned int i, double track);
 
+	// aab64 Set flag for heavy inceptions
+	void SetIsHeavy(bool heavyflag);
+
+	// aab64 Get flag for heavy inceptions
+	bool GetIsHeavy() const;
+
 	// TOTAL RATE CALCULATIONS.
 
     // Calculates the rate of multiple inceptions given a
@@ -167,6 +173,9 @@ private:
 
     //! Initial tracker values for newly incepted particles
     fvector m_newvals;
+
+	//! aab64 Flag for heavy inception activation
+	bool m_allowHeavy;
 };
 } // namespace Processes
 } // namespace Sweep

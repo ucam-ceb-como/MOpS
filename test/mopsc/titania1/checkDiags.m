@@ -12,7 +12,7 @@ set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
 % for finding files
-basedir  = ''; 
+basedir  = 'local/batch_inc_factor/ifVAR_10runs/';
 filedir  = '';
 filebase = '';
 
@@ -24,8 +24,8 @@ imagedir = 'figures\';
 savefigs = 0;
 
 % load data
-pdiags = csvread([basedir filedir 'Part-split-diagnostics(stage1).csv'],1);
-cdiags = csvread([basedir filedir 'Chem-split-diagnostics(stage1).csv'],1);
+pdiags = csvread([basedir filedir 'Part-split-diagnostics().csv'],1);
+cdiags = csvread([basedir filedir 'Chem-split-diagnostics().csv'],1);
 
 % update these to plot correct inception weights
 wmax = 1000;
@@ -70,7 +70,7 @@ end
 
 %% SV, NSP, WT
 
-figure(100)
+figure(1)
 set(gcf,'color','white')
 subplot(231)
 plot(pdiags(:,1)*1000,pdiags(:,4))
@@ -94,8 +94,10 @@ hold on
 plot(pdiags(:,1)*1000,wnew(pdiags(:,7)),':')
 plot([pdiags(1,1)*1000 pdiags(end,1)*1000],[wmax wmax],'r--')
 plot([pdiags(1,1)*1000 pdiags(end,1)*1000],[wmin wmin],'g--')
+plot(pdiags(:,1)*1000,pdiags(:,12),'--')
+plot(pdiags(:,1)*1000,pdiags(:,13),'-.')
 set(gca,'XLim',[0 pdiags(end,1)*1000])
-legend('Pre','Post','Wmax','Wmin','location','North','orientation','horizontal')
+legend('Pre','Post','Wmax','Wmin','Pre sim','Post sim','location','North','orientation','vertical')
 xlabel('Time (ms)')
 ylabel('Incepting weight (-)')
 saveas(['sv_nsp' studyid])
@@ -124,7 +126,7 @@ legend('Pre','Post','location','North','orientation','horizontal')
 xlabel('Time (ms)')
 ylabel('Incepting factor (-)')
 
-figure(1000)
+figure(2)
 set(gcf,'color','white')
 [vals,bins] = hist(pdiags(:,15));
 plot(bins,vals/max(vals))
@@ -134,7 +136,7 @@ ylabel('Count divide by max count (-)')
 
 %% Rates
 
-figure(200)
+figure(3)
 set(gcf,'color','white')
 subplot(331)
 plot(pdiags(:,1)*1000,sum(pdiags(:,16:16+105),2))
@@ -157,7 +159,7 @@ ylabel('Coag. events (-)')
 
 %% Cumulative rates
 
-figure(300)
+figure(4)
 set(gcf,'color','white')
 subplot(131)
 loglog(pdiags(:,1)*1000,cumsum(sum(pdiags(:,16:16+105),2)))
@@ -178,11 +180,63 @@ xlabel('Time (ms)')
 ylabel('Coag. events (-)')
 saveas(['cum_rates' studyid])
 
+%% Total rates
+
+nterms = size(pdiags(:,16+107:end-2),2);
+nterms = nterms/2;
+nreals = nterms/2;
+
+if nreals == 6
+    titl_d = {'SF1: (U,U)',...
+              'SF2: ($d_c$,$\frac{1}{d_c}$)',...
+              'SF3: (U,$\frac{1}{d_c}$)',...
+              'SF4: ($d_c$,$\frac{1}{d_c^{2}}$)',...
+              'FM1: (U,$\frac{d_c^2}{\sqrt{m}}$)',...
+              'FM2: ($d_c^2$,$\frac{1}{\sqrt{m}}$)'};
+    ncols  = 3; 
+else
+    titl_d = {'FM1: (U,$\frac{d_c^2\cdot w}{\sqrt{m}}$)',...
+              'FM2: ($d_c^2$,$\frac{w}{\sqrt{m}}$)',...
+              'FM3: ($\frac{1}{\sqrt{m}}$,$d_c^2\cdot w$)',...
+              'FM4: ($\frac{d_c^2}{\sqrt{m}}$,$w$)',...
+              'SF1: (U,$w$)',...
+              'SF2: ($d_c$,$\frac{w}{d_c}$)',...
+              'SF3: ($\frac{1}{d_c}$,$d_c\cdot w$)',...
+              'SF4: (U,$\frac{w}{d_c}$)',...
+              'SF5: ($d_c$,$\frac{w}{d_c^{2}}$)',...
+              'SF6: ($\frac{1}{d_c^2}$,$w\cdot d_c$)',...
+              'SF7: ($\frac{1}{d_c}$,$w$)'}; 
+    ncols  = 4;
+end
+
+[maxval,ihigh] = max(sum(pdiags(:,16+107:16+107+nreals-1),1));
+[minval,ilow]  = min(sum(pdiags(:,16+107:16+107+nreals-1),1));
+
+figure(5)
+set(gcf,'color','white')
+for i=1:nreals
+    subplot(ceil(nreals/ncols),ncols,i)
+    plot(pdiags(:,1)*1000,pdiags(:,16+107+(i-1)))
+    hold on
+    plot(pdiags(:,1)*1000,pdiags(:,16+107+(i-1)+nterms))
+    xlabel('Time (ms)')
+    ylabel('Number of events (-)')
+    if i==ihigh
+        c = 'r';
+    elseif i==ilow
+        c = 'b';
+    else
+        c = 'k';
+    end
+    title(titl_d{i},'color',c)
+    legend('Real','Fictitious','Location','NorthWest')
+end
+
 %% Rate fractions
 
 totevs = sum(pdiags(:,8:end-2),2);
 
-figure(400)
+figure(6)
 set(gcf,'color','white')
 loglog(pdiags(:,1)*1000,sum(pdiags(:,16:16+105)./totevs,2))
 hold on
@@ -195,7 +249,7 @@ saveas(['frac_rates' studyid])
 
 %% Chem
 
-figure(200)
+figure(3)
 set(gcf,'color','white')
 subplot(334)
 semilogy(cdiags(:,1)*1000,cdiags(:,4)*1e6)

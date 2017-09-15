@@ -74,7 +74,7 @@ using namespace Strings;
 Mechanism::Mechanism(void)
 : m_anydeferred(false), m_icoag(-1), m_termcount(0), m_processcount(0), 
 m_weighted_coag(false), m_var_incept_weight(false), 
-m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L")
+m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L"), m_heavyallowed(false)
 {
 }
 
@@ -121,6 +121,7 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 	m_min_incept_weight = rhs.m_min_incept_weight;
 	m_minsp_for_aiw = rhs.m_minsp_for_aiw;
 	m_incept_weight_fn = rhs.m_incept_weight_fn;
+	m_heavyallowed = rhs.m_heavyallowed;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -393,6 +394,18 @@ void Mechanism::SetVariableWeightedInception(bool isVarInceptWeight, double wmax
 	m_min_incept_weight = wmin;
 	m_minsp_for_aiw = nmin;
 	m_incept_weight_fn = weightfn;
+}
+
+// aab64 Set flag for heavy inceptions
+void Mechanism::SetIsHeavy(bool heavyflag)
+{
+	m_heavyallowed = heavyflag;
+}
+
+// aab64 Get flag for heavy inceptions
+bool Mechanism::GetIsHeavy(void) const
+{
+	return m_heavyallowed;
 }
 
 // RATE CALCULATION.

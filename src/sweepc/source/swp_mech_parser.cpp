@@ -798,6 +798,8 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 
             try {
                 readInception(*(*i), *icn);
+				if (icn->GetIsHeavy())
+					mech.SetIsHeavy(true);
             }
             catch (std::exception &e) {
                 delete icn;
@@ -878,7 +880,20 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
     // Read initial tracker variable values.
     readInceptedTrackers(xml, icn);
 
-
+	// aab64 Get info from artifical inception node about sampling heavy particles
+	if (str == "extra inception")
+	{
+		CamXML::Element *allowHeavyXML = xml.GetFirstChild("allowheavy");
+		if (allowHeavyXML != NULL)
+		{
+			const std::string allowHeavySwitch = allowHeavyXML->Data();
+			if (allowHeavySwitch == "on")
+			{
+				std::cout << "Activating heavy inception\n";
+				icn.SetIsHeavy(true);
+			}			
+		}
+	}
 }
 
 
