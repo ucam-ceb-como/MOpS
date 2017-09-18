@@ -57,13 +57,13 @@ using namespace std;
 
 // Default constructor (protected).
 Inception::Inception(void)
-: Process(), m_allowHeavy(false) // aab64 default is not allowing heavy inceptions
+: Process(), m_allowHeavy(false), m_issurfinc(false), m_dlim_surfinc(1.0e-7) // aab64 default is not allowing heavy inceptions or surface inceptions
 {
 }
 
 // Initialising constructor.
 Inception::Inception(const Sweep::Mechanism &mech)
-: Process(mech), m_allowHeavy(false) // aab64 default is not allowing heavy inceptions
+: Process(mech), m_allowHeavy(false), m_issurfinc(false), m_dlim_surfinc(1.0e-7) // aab64 default is not allowing heavy inceptions or surface inceptions
 {
 }
 
@@ -95,6 +95,8 @@ Inception &Inception::operator =(const Inception &rhs)
         m_newcomp = rhs.m_newcomp;
         m_newvals = rhs.m_newvals;
 		m_allowHeavy = rhs.m_allowHeavy;
+		m_issurfinc = rhs.m_issurfinc;
+		m_dlim_surfinc = rhs.m_dlim_surfinc;
     }
     return *this;
 }
@@ -178,6 +180,28 @@ bool Inception::GetIsHeavy() const
 {
 	return m_allowHeavy;
 }
+
+
+// aab64 Set flag and onset point for surface inception
+void Inception::SetSurfInc(bool surfincflag, double dlimval)
+{
+	m_issurfinc = surfincflag;
+	m_dlim_surfinc = dlimval;
+}
+
+// aab64 Get flag for surface inception
+bool Inception::GetSurfIncFlag() const
+{
+	return m_issurfinc;
+}
+
+// aab64 Get flag for surface inception
+double Inception::GetSurfIncOnset() const
+{
+	return m_dlim_surfinc;
+}
+
+
 
 // TOTAL RATE CALCULATIONS.
 

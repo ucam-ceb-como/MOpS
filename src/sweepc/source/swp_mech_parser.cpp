@@ -798,8 +798,11 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 
             try {
                 readInception(*(*i), *icn);
+				// aab64 set flags for heavy inception or surface inceptions
 				if (icn->GetIsHeavy())
 					mech.SetIsHeavy(true);
+				if (icn->GetSurfIncFlag())
+					mech.SetIsSurfInc(true, icn->GetSurfIncOnset());
             }
             catch (std::exception &e) {
                 delete icn;
@@ -823,6 +826,37 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
     // Read name.
     str = xml.GetAttributeValue("name");
     if (str != "") icn.SetName(str);
+
+	// aab64 Get info from artifical inception node about sampling heavy particles
+	if (str == "extra inception")
+	{
+		CamXML::Element *allowHeavyXML = xml.GetFirstChild("allowheavy");
+		if (allowHeavyXML != NULL)
+		{
+			const std::string allowHeavySwitch = allowHeavyXML->Data();
+			if (allowHeavySwitch == "on")
+			{
+				std::cout << "Activating heavy inception\n";
+				icn.SetIsHeavy(true);
+			}
+		}
+		CamXML::Element *surfincXML = xml.GetFirstChild("surfinc");
+		if (surfincXML != NULL)
+		{
+			const std::string surfincSwitch = surfincXML->Data();
+			if (surfincSwitch == "on")
+			{
+				std::cout << "Activating surface inception\n";
+				const std::string dlimval = surfincXML->GetAttributeValue("dlim"); 
+				double dlim;
+				if (dlimval != "")
+					dlim = cdble(dlimval);
+				if (dlim < 0.0)
+					throw std::runtime_error("Limiting surface inception point must be positive.\n");
+				icn.SetSurfInc(true, dlim);
+			}
+		}
+	}
 
     // Read reactants.
     readReactants(xml, icn);
@@ -879,21 +913,6 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 
     // Read initial tracker variable values.
     readInceptedTrackers(xml, icn);
-
-	// aab64 Get info from artifical inception node about sampling heavy particles
-	if (str == "extra inception")
-	{
-		CamXML::Element *allowHeavyXML = xml.GetFirstChild("allowheavy");
-		if (allowHeavyXML != NULL)
-		{
-			const std::string allowHeavySwitch = allowHeavyXML->Data();
-			if (allowHeavySwitch == "on")
-			{
-				std::cout << "Activating heavy inception\n";
-				icn.SetIsHeavy(true);
-			}			
-		}
-	}
 }
 
 
@@ -1810,8 +1829,8 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
 
 					// aab64 Set weighted coagulation flag and 
 					// check if variable inception weights should be used.
-					// The current scheme linearly increases the inception weights in 
-					// proportion to the amount of the ensemble currently being used.
+					// If so, get minimum and maximum weights, onset point
+					// and scaling function type: linear, quadratic, exponential. 
 					mech.SetWeightedCoag(true);
 					bool varIncWeight = false;
 					double maxIncWeight = 100.0;
@@ -1820,13 +1839,13 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
 					char *WeightFn = "L";
 					CamXML::Element *incWeightXML = (*it)->GetFirstChild("inceptionweightchange");
 					if (incWeightXML != NULL) {
-						CamXML::Element *incWeightFnXML = (*it)->GetFirstChild("weightchangefun");
-						CamXML::Element *maxwtel = (*it)->GetFirstChild("maxinceptionweight");
-						CamXML::Element *minwtel = (*it)->GetFirstChild("mininceptionweight");
-						CamXML::Element *minnspel = (*it)->GetFirstChild("onsetsp");
+						CamXML::Element *incWeightFnXML = incWeightXML->GetFirstChild("weightchangefun");
+						CamXML::Element *maxwtel = incWeightXML->GetFirstChild("maxinceptionweight");
+						CamXML::Element *minwtel = incWeightXML->GetFirstChild("mininceptionweight");
+						CamXML::Element *minnspel = incWeightXML->GetFirstChild("onsetsp");
 
 						// If adaptive inception weighting is on, get and set further parameters
-						const std::string incWeightRuleName = incWeightXML->Data();
+						const std::string incWeightRuleName = incWeightXML->GetAttributeValue("flag");
 						if (incWeightRuleName == "on") {
 							varIncWeight = true;
 							std::cout << "Applying adaptive inception weight scheme..." << std::endl;

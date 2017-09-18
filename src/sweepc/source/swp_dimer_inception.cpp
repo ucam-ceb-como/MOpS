@@ -126,71 +126,108 @@ int DimerInception::Perform(const double t, Cell &sys,
     // This routine performs the inception on the given chemical system.
 	
     // aab64 Don't incept if magical last inception
-    if (ParticleComp()[0] != 0) 
+	if (ParticleComp()[0] != 0)
 	{
-        // Create a new particle of the type specified
-        // by the system ensemble.
-        Particle *sp = m_mech->CreateParticle(t);
-
-		// aab64 Get incepting particle weight for cases where wt != 1.0:
-		// Check if SWA is in play and variable inception weighting is active.
-		// Update newly incepted particle weight if necessary.
-		if (m_mech->IsWeightedCoag() && m_mech->IsVariableWeightedInception()) {
-			sp->setStatisticalWeight(sys.GetInceptingWeight());
-		}
-
-        // Get the cell vertices
-        fvector vertices = local_geom.cellVertices();
-
-        // Sample a uniformly distributed position, note that this method
-        // works whether the vertices come in increasing or decreasing order,
-        // but 1d is assumed for now.
-        double posn = vertices.front();
-
-        const double width = vertices.back() - posn;
-        boost::uniform_01<rng_type&, double> uniformGenerator(rng);
-        posn += width * uniformGenerator();
-
-        sp->setPositionAndTime(posn, t);
-
-        // Initialise the new particle.
-        sp->Primary()->SetComposition(ParticleComp());
-        sp->Primary()->SetValues(ParticleTrackers());
-
-		// aab64 Adjust composition to allow inception of heavier particles
-		// Perform adjustment before updating the cache and computing properties.
-		bool heavyAllowed = m_mech->GetIsHeavy();
-		if (heavyAllowed)
-			sp->Primary()->AdjustForInception(sys.GetInceptionFactor());
-
-		sp->UpdateCache();
-
-        // Add particle to system's ensemble.
-        sys.Particles().Add(*sp, rng);
-
-	    // Update gas-phase chemistry of system.
-	    adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
-		adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-
-		// aab64 If the ensemble is more than half full already, 
-		// adjust inception factor by sampling from lognormal distribution
-		// and constrain newIncFactor to [1,100]. 
-		// Note that this should really rather check if a certain minimum size has been reached. 
-		if (heavyAllowed)
+		// aab64 Preliminary layout for alternative inception idea
+		// Instead of creating new particle, add rutile units directly 
+		// to existing large particle, as if coagulation is immediate.
+		// To do: decide if this is even worth doing. It will help with the 
+		// ensemble capacity issue but may not reduce the numerical rates much
+		// unless there are lots of small particles incepting and then coagulating.
+		
+		// Check if some condition is exceeded e.g. sum(iDcol) > iDcol_limit
+		// To do: Add a probabilistic element to this so that it sometimes does
+		// the proper inception to improve approximation of the PSD
+		bool surfincflag = m_mech->GetIsSurfInc();
+		double dcol_switch = m_mech->GetSurfIncValue();
+		double dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
+		if (dcol_ave > dcol_switch && surfincflag) 
 		{
-			double meanIFdist = 0.0;
-			double stdIFdist = 1.0;
-			if (sys.ParticleCount() > ceil(1.0 * sys.Particles().Capacity() / 2.0))
-			{
-				double newIncFactor = boost::random::lognormal_distribution<double>(meanIFdist, stdIFdist)(rng);
-				if (newIncFactor < 1.0)
-					newIncFactor = 1.0;
-				else if (newIncFactor > 100.0)
-					newIncFactor = 100.0;
-				sys.SetInceptionFactor((int)newIncFactor);
+			// 1. Pick a particle using the FM/SF terms that preferentially find large particles 
+			// e.g. (note that this ignores all the safety checks in swp_transcoag 
+			// and ignore particle weights):
+			int ip = sys.Particles().Select(Sweep::iDcol, rng);
+			Particle *sp = sys.Particles().At(ip);
+
+			// 2. Call perform for surface growth process, and do one surface event.
+			// ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
+			// How does this generalise for other systems?			
+			int m = m_mech->Processes(0)->Perform(t, sys, *sp, rng, ParticleComp()[0]);
+
+			// 3. Update the cached properties (note this could be left off to make 
+			// it more efficient, assuming that the small change is insignificant).
+			sp->UpdateCache(); 
+
+			// Update gas-phase chemistry of system (think about whether using the weight of SP is correct).
+			adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
+			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+		}
+		else
+		{
+			// Create a new particle of the type specified
+			// by the system ensemble.
+			Particle *sp = m_mech->CreateParticle(t);
+
+			// aab64 Get incepting particle weight for cases where wt != 1.0:
+			// Check if SWA is in play and variable inception weighting is active.
+			// Update newly incepted particle weight if necessary.
+			if (m_mech->IsWeightedCoag() && m_mech->IsVariableWeightedInception()) {
+				sp->setStatisticalWeight(sys.GetInceptingWeight());
 			}
-		}		
-    }
+
+			// Get the cell vertices
+			fvector vertices = local_geom.cellVertices();
+
+			// Sample a uniformly distributed position, note that this method
+			// works whether the vertices come in increasing or decreasing order,
+			// but 1d is assumed for now.
+			double posn = vertices.front();
+
+			const double width = vertices.back() - posn;
+			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+			posn += width * uniformGenerator();
+
+			sp->setPositionAndTime(posn, t);
+
+			// Initialise the new particle.
+			sp->Primary()->SetComposition(ParticleComp());
+			sp->Primary()->SetValues(ParticleTrackers());
+
+			// aab64 Adjust composition to allow inception of heavier particles
+			// Perform adjustment before updating the cache and computing properties.
+			bool heavyAllowed = m_mech->GetIsHeavy();
+			if (heavyAllowed)
+				sp->Primary()->AdjustForInception(sys.GetInceptionFactor());
+
+			sp->UpdateCache();
+
+			// Add particle to system's ensemble.
+			sys.Particles().Add(*sp, rng);
+
+			// Update gas-phase chemistry of system.
+			adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
+			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+
+			// aab64 If the ensemble is more than half full already, 
+			// adjust inception factor by sampling from lognormal distribution
+			// and constrain newIncFactor to [1,100]. 
+			// Note that this should really rather check if a certain minimum size has been reached. 
+			if (heavyAllowed)
+			{
+				double meanIFdist = 0.0;
+				double stdIFdist = 1.0;
+				if (sys.ParticleCount() > ceil(1.0 * sys.Particles().Capacity() / 2.0))
+				{
+					double newIncFactor = boost::random::lognormal_distribution<double>(meanIFdist, stdIFdist)(rng);
+					if (newIncFactor < 1.0)
+						newIncFactor = 1.0;
+					else if (newIncFactor > 100.0)
+						newIncFactor = 100.0;
+					sys.SetInceptionFactor((int)newIncFactor);
+				}
+			}
+		}
+	}
     else 
 	{
 		adjustParticleTemperature(sys, 0, 1, sys.GetIsAdiabaticFlag(), 0, 0, 1.0);

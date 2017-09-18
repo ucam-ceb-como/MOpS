@@ -124,6 +124,15 @@ public:
 	// aab64 Get flag for heavy inceptions
 	bool GetIsHeavy() const;
 
+	// aab64 Set flag and onset point for surface inception
+	void SetSurfInc(bool surfincflag, double dlimval);
+
+	// aab64 Get flag for surface inception
+	bool GetSurfIncFlag() const;
+
+	// aab64 Get flag for surface inception
+	double GetSurfIncOnset() const;
+
 	// TOTAL RATE CALCULATIONS.
 
     // Calculates the rate of multiple inceptions given a
@@ -176,6 +185,12 @@ private:
 
 	//! aab64 Flag for heavy inception activation
 	bool m_allowHeavy;
+
+	//! aab64 Flag for surface inception 
+	bool m_issurfinc;
+
+	//! aab64 Onset point for surface inception
+	double m_dlim_surfinc;
 };
 } // namespace Processes
 } // namespace Sweep

@@ -74,7 +74,8 @@ using namespace Strings;
 Mechanism::Mechanism(void)
 : m_anydeferred(false), m_icoag(-1), m_termcount(0), m_processcount(0), 
 m_weighted_coag(false), m_var_incept_weight(false), 
-m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L"), m_heavyallowed(false)
+m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L"), m_heavyallowed(false),
+m_dval_surfinc(1.0e-7), m_surfincflag(false)
 {
 }
 
@@ -122,6 +123,8 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 	m_minsp_for_aiw = rhs.m_minsp_for_aiw;
 	m_incept_weight_fn = rhs.m_incept_weight_fn;
 	m_heavyallowed = rhs.m_heavyallowed;
+	m_surfincflag = rhs.m_surfincflag;
+	m_dval_surfinc = rhs.m_dval_surfinc;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -406,6 +409,25 @@ void Mechanism::SetIsHeavy(bool heavyflag)
 bool Mechanism::GetIsHeavy(void) const
 {
 	return m_heavyallowed;
+}
+
+// aab64 Set flag and onset value for surface inceptions
+void Mechanism::SetIsSurfInc(bool surfincflag, double dlimval)
+{
+	m_surfincflag = surfincflag;
+	m_dval_surfinc = dlimval;
+}
+
+// aab64 Get flag for surface inceptions
+bool Mechanism::GetIsSurfInc(void) const
+{
+	return m_surfincflag;
+}
+
+// aab64 Get onset value for surface inceptions
+double Mechanism::GetSurfIncValue(void) const
+{
+	return m_dval_surfinc;
 }
 
 // RATE CALCULATION.

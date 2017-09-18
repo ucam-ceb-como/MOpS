@@ -181,6 +181,16 @@ public:
 	// aab64 Get flag for heavy inceptions
 	bool GetIsHeavy(void) const;
 
+	// aab64 Set flag and onset value for surface inceptions
+	virtual void SetIsSurfInc(bool surfincflag, double dlimval);
+
+	// aab64 Get flag for surface inceptions
+	bool GetIsSurfInc(void) const;
+
+	// aab64 Get onset value for surface inceptions
+	double GetSurfIncValue(void) const;
+
+
 	// RATE CALCULATION.
 
     // Get total rates of all processes.  Returns the sum of
@@ -402,6 +412,8 @@ private:
     mutable unsigned int m_outflowcount;    // The outflow count for stochastic inflow
 	mutable char *m_incept_weight_fn;       // The type of inception weight scaling to use. 
 	mutable bool m_heavyallowed;            // Flag to allow heavier inception particles.
+	mutable bool m_surfincflag;             // Flag to allow surface inceptions.
+	mutable double m_dval_surfinc;          // Onset for surface inception.
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
