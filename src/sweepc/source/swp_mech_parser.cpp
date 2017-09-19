@@ -800,7 +800,7 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
                 readInception(*(*i), *icn);
 				// aab64 set flags for heavy inception or surface inceptions
 				if (icn->GetIsHeavy())
-					mech.SetIsHeavy(true);
+					mech.SetIsHeavy(true, icn->GetHeavyOnset());
 				if (icn->GetSurfIncFlag())
 					mech.SetIsSurfInc(true, icn->GetSurfIncOnset());
             }
@@ -837,7 +837,13 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 			if (allowHeavySwitch == "on")
 			{
 				std::cout << "Activating heavy inception\n";
-				icn.SetIsHeavy(true);
+				const std::string dlimval = allowHeavyXML->GetAttributeValue("dlim");
+				double dlim;
+				if (dlimval != "")
+					dlim = cdble(dlimval);
+				if (dlim < 0.0)
+					throw std::runtime_error("Limiting heavy inception point must be positive.\n");
+				icn.SetIsHeavy(true, dlim);
 			}
 		}
 		CamXML::Element *surfincXML = xml.GetFirstChild("surfinc");

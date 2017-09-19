@@ -207,25 +207,6 @@ int DimerInception::Perform(const double t, Cell &sys,
 			// Update gas-phase chemistry of system.
 			adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
 			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-
-			// aab64 If the ensemble is more than half full already, 
-			// adjust inception factor by sampling from lognormal distribution
-			// and constrain newIncFactor to [1,100]. 
-			// Note that this should really rather check if a certain minimum size has been reached. 
-			if (heavyAllowed)
-			{
-				double meanIFdist = 0.0;
-				double stdIFdist = 1.0;
-				if (sys.ParticleCount() > ceil(1.0 * sys.Particles().Capacity() / 2.0))
-				{
-					double newIncFactor = boost::random::lognormal_distribution<double>(meanIFdist, stdIFdist)(rng);
-					if (newIncFactor < 1.0)
-						newIncFactor = 1.0;
-					else if (newIncFactor > 100.0)
-						newIncFactor = 100.0;
-					sys.SetInceptionFactor((int)newIncFactor);
-				}
-			}
 		}
 	}
     else 

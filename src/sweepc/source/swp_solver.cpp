@@ -53,6 +53,7 @@
 #include <limits>
 #include <boost/random/exponential_distribution.hpp>
 #include <boost/random/uniform_01.hpp>
+#include <boost/random/lognormal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 
 using namespace Sweep;
@@ -156,6 +157,29 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 			}
 			// Set new incepting weight
 			sys.SetInceptingWeight(wnew);
+		}
+		
+		// aab64 If the ensemble is more than half full already / has passed a minimum average size, 
+		// adjust inception factor by sampling from lognormal distribution
+		// and constrain newIncFactor to [1,100]. 
+		// Note that this should really rather check if a certain minimum size has been reached. 
+		bool heavyAllowed = mech.GetIsHeavy();
+		double dcol_lim = mech.GetHeavyValue();
+		double dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
+		if (heavyAllowed)
+		{
+			double meanIFdist = 0.0;
+			double stdIFdist = 1.0;
+			//if (sys.ParticleCount() > ceil(1.0 * sys.Particles().Capacity() / 2.0))
+			if (dcol_ave > dcol_lim)
+			{
+				double newIncFactor = boost::random::lognormal_distribution<double>(meanIFdist, stdIFdist)(rng);
+				if (newIncFactor < 1.0)
+					newIncFactor = 1.0;
+				else if (newIncFactor > 100.0)
+					newIncFactor = 100.0;
+				sys.SetInceptionFactor((int)newIncFactor);
+			}
 		}
 
         if (mech.AnyDeferred() && (sys.ParticleCount() > 0))  {

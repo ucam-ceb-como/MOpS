@@ -176,10 +176,13 @@ public:
 	virtual void SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, char *weightfn);
 
 	// aab64 Set flag for heavy inceptions
-	virtual void SetIsHeavy(bool heavyflag);
+	virtual void SetIsHeavy(bool heavyflag, double dlimval);
 
 	// aab64 Get flag for heavy inceptions
 	bool GetIsHeavy(void) const;
+
+	// aab64 Get onset value for heavy inceptions
+	double GetHeavyValue(void) const;
 
 	// aab64 Set flag and onset value for surface inceptions
 	virtual void SetIsSurfInc(bool surfincflag, double dlimval);
@@ -402,18 +405,21 @@ private:
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
+	mutable unsigned int m_addcount;        // The addition count for deferred additions
+	mutable unsigned int m_inflowcount;     // The inflow count for stochastic inflow
+	mutable unsigned int m_outflowcount;    // The outflow count for stochastic inflow
+
 	mutable bool m_weighted_coag;           // Is the coagulation process one of the weighted ones?
 	mutable bool m_var_incept_weight;       // Is variable inception weighting turned on?
 	mutable double m_minsp_for_aiw;         // Minimum particle threshold for which inception weight should be adapted
 	mutable double m_min_incept_weight;     // Minimum incepting weight, corresponding to nmin
 	mutable double m_max_incept_weight;     // Maximum incepting weight, corresponding to Nmax SPs
-    mutable unsigned int m_addcount;        // The addition count for deferred additions
-    mutable unsigned int m_inflowcount;     // The inflow count for stochastic inflow
-    mutable unsigned int m_outflowcount;    // The outflow count for stochastic inflow
-	mutable char *m_incept_weight_fn;       // The type of inception weight scaling to use. 
-	mutable bool m_heavyallowed;            // Flag to allow heavier inception particles.
-	mutable bool m_surfincflag;             // Flag to allow surface inceptions.
-	mutable double m_dval_surfinc;          // Onset for surface inception.
+	mutable char *m_incept_weight_fn;       // The type of inception weight scaling to use
+
+	mutable bool m_heavyallowed;            // Flag to allow heavier inception particles
+	mutable double m_dval_heavy;            // Onset for heavier inceptions
+	mutable bool m_surfincflag;             // Flag to allow surface inceptions
+	mutable double m_dval_surfinc;          // Onset for surface inception
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 

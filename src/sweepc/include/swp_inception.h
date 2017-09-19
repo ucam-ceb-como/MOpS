@@ -119,10 +119,13 @@ public:
     void SetParticleTracker(unsigned int i, double track);
 
 	// aab64 Set flag for heavy inceptions
-	void SetIsHeavy(bool heavyflag);
+	void SetIsHeavy(bool heavyflag, double dlimval);
 
 	// aab64 Get flag for heavy inceptions
 	bool GetIsHeavy() const;
+
+	// aab64 Get flag for heavy inception
+	double GetHeavyOnset() const;
 
 	// aab64 Set flag and onset point for surface inception
 	void SetSurfInc(bool surfincflag, double dlimval);
@@ -185,6 +188,9 @@ private:
 
 	//! aab64 Flag for heavy inception activation
 	bool m_allowHeavy;
+
+	//! aab64 Onset point for heavy inception
+	double m_dlim_heavy;
 
 	//! aab64 Flag for surface inception 
 	bool m_issurfinc;

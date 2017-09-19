@@ -57,13 +57,13 @@ using namespace std;
 
 // Default constructor (protected).
 Inception::Inception(void)
-: Process(), m_allowHeavy(false), m_issurfinc(false), m_dlim_surfinc(1.0e-7) // aab64 default is not allowing heavy inceptions or surface inceptions
+: Process(), m_allowHeavy(false), m_dlim_heavy(1.0e-7), m_issurfinc(false), m_dlim_surfinc(1.0e-7) // aab64 default is not allowing heavy inceptions or surface inceptions
 {
 }
 
 // Initialising constructor.
 Inception::Inception(const Sweep::Mechanism &mech)
-: Process(mech), m_allowHeavy(false), m_issurfinc(false), m_dlim_surfinc(1.0e-7) // aab64 default is not allowing heavy inceptions or surface inceptions
+: Process(mech), m_allowHeavy(false), m_dlim_heavy(1.0e-7), m_issurfinc(false), m_dlim_surfinc(1.0e-7) // aab64 default is not allowing heavy inceptions or surface inceptions
 {
 }
 
@@ -95,6 +95,7 @@ Inception &Inception::operator =(const Inception &rhs)
         m_newcomp = rhs.m_newcomp;
         m_newvals = rhs.m_newvals;
 		m_allowHeavy = rhs.m_allowHeavy;
+		m_dlim_heavy = rhs.m_dlim_heavy;
 		m_issurfinc = rhs.m_issurfinc;
 		m_dlim_surfinc = rhs.m_dlim_surfinc;
     }
@@ -170,9 +171,10 @@ void Inception::SetParticleTracker(unsigned int i, double track)
 
 
 // aab64 Set flag for heavy inceptions
-void Inception::SetIsHeavy(bool heavyflag)
+void Inception::SetIsHeavy(bool heavyflag, double dlimval)
 {
 	m_allowHeavy = heavyflag;
+	m_dlim_heavy = dlimval;
 }
 
 // aab64 Get flag for heavy inceptions
@@ -181,6 +183,11 @@ bool Inception::GetIsHeavy() const
 	return m_allowHeavy;
 }
 
+// aab64 Get flag for heavy inception
+double Inception::GetHeavyOnset() const
+{
+	return m_dlim_heavy;
+}
 
 // aab64 Set flag and onset point for surface inception
 void Inception::SetSurfInc(bool surfincflag, double dlimval)

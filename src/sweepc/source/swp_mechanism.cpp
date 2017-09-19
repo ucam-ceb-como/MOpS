@@ -74,8 +74,9 @@ using namespace Strings;
 Mechanism::Mechanism(void)
 : m_anydeferred(false), m_icoag(-1), m_termcount(0), m_processcount(0), 
 m_weighted_coag(false), m_var_incept_weight(false), 
-m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L"), m_heavyallowed(false),
-m_dval_surfinc(1.0e-7), m_surfincflag(false)
+m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L"), 
+m_heavyallowed(false), m_dval_heavy(1.0e-7),
+m_surfincflag(false), m_dval_surfinc(1.0e-7)
 {
 }
 
@@ -113,16 +114,19 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-    m_weighted_coag = rhs.m_weighted_coag;
 	m_addcount = rhs.m_addcount;
 	m_inflowcount = rhs.m_inflowcount;
 	m_outflowcount = rhs.m_outflowcount;
+
+    m_weighted_coag = rhs.m_weighted_coag;
 	m_var_incept_weight = rhs.m_var_incept_weight;
 	m_max_incept_weight = rhs.m_max_incept_weight;
 	m_min_incept_weight = rhs.m_min_incept_weight;
 	m_minsp_for_aiw = rhs.m_minsp_for_aiw;
 	m_incept_weight_fn = rhs.m_incept_weight_fn;
+
 	m_heavyallowed = rhs.m_heavyallowed;
+	m_dval_heavy = rhs.m_dval_heavy;
 	m_surfincflag = rhs.m_surfincflag;
 	m_dval_surfinc = rhs.m_dval_surfinc;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
@@ -235,9 +239,8 @@ void Mechanism::AddProcess(ParticleProcess &p)
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-    // Initialise the addition count
+    // Initialise the counts
     m_addcount = 0;
-    // Initialise the inflow and outflow counts
     m_inflowcount = 0;
     m_outflowcount = 0;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
@@ -400,15 +403,22 @@ void Mechanism::SetVariableWeightedInception(bool isVarInceptWeight, double wmax
 }
 
 // aab64 Set flag for heavy inceptions
-void Mechanism::SetIsHeavy(bool heavyflag)
+void Mechanism::SetIsHeavy(bool heavyflag, double dlimval)
 {
 	m_heavyallowed = heavyflag;
+	m_dval_heavy = dlimval;
 }
 
 // aab64 Get flag for heavy inceptions
 bool Mechanism::GetIsHeavy(void) const
 {
 	return m_heavyallowed;
+}
+
+// aab64 Get onset value for heavy inceptions
+double Mechanism::GetHeavyValue(void) const
+{
+	return m_dval_heavy;
 }
 
 // aab64 Set flag and onset value for surface inceptions
