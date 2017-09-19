@@ -233,6 +233,8 @@ public:
     void mass_PAH(std::vector<double> &out) const;
     //! output PAH information in a vector of vector and then index the info
     void OutputPAHPSL(std::vector<std::vector<double> > &out, const int index, const double density, std::set<void*> &pah_duplicates, std::vector<std::string> &Mapping, const double timeStep) const;
+	//! output primary particle information in a vector of vector and then index the info
+	void OutputPPPSL(std::vector<std::vector<double> > &out, const int index, const double density,const double timeStep) const;
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
     //! find soot particle with only one Incepted molecule (A1,A2 or A4)

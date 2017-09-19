@@ -1809,6 +1809,70 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
     }
 }
 
+/*!
+* @brief Create contents pertaining to primary particle specific information to be written to a csv file.
+*
+* @param[in,out]    out                   Vector (different PAHs) of vectors (different pieces of information about the PAH).
+* @param[in]        index                 Index assigned to particle.
+* @param[in]        density               Density of soot.
+* @param[in,out]    pahUniqueAddresses    Keep a record of which PAHs have been stored in "out" to avoid storing the same memory location twice.
+* @param[in,out]    Mapping               Map of PAH memory locations to PAH in "out".
+* @param[in]        timeStep              Index assigned to time step.
+*/
+void PAHPrimary::OutputPPPSL(std::vector<std::vector<double> > &out, const int index, const double density, const double timeStep) const
+{
+	if (m_leftchild != NULL)
+		m_leftchild->OutputPPPSL(out, index, density, timeStep);
+	if (m_rightchild != NULL) m_rightchild->OutputPPPSL(out, index, density, timeStep);
+
+	std::vector<double> temp;
+
+	//! Initialization of variables.
+	double val;
+	double m_mass = 0.0;
+	double PPCollDiameter = 0.0;
+	double diameter = 0.0;
+
+	//! If this particle is a single primary with a single PAH it is assigned an index of -1 to distinguish it from PAHs in particles.
+	if (this->NumPAH() == 1 && this->Numprimary() == 1) {
+		temp.push_back(-1);
+	}
+	else {
+		temp.push_back(index);
+	}
+
+	//! Number of carbon atoms.
+	temp.push_back(m_numcarbon);
+
+	//! Number of hydrogen atoms.
+	temp.push_back(m_numH);
+
+	//! Number of 6-member rings.
+	temp.push_back(m_numOfRings);
+
+	//! Number of 5-member rings. //NICK - TO DO
+	temp.push_back(0);
+
+	//! Number of PAHs
+	temp.push_back(m_numPAH);
+
+	//! PP mass (kg).
+	m_mass = m_numcarbon*1.9945e-26 + m_numH*1.6621e-27;
+	temp.push_back(m_mass);
+
+	//! PP volume (m3).
+	val = m_mass / density;
+	temp.push_back(m_mass / density);
+
+	//! Spherical diameter (nm).
+	diameter = pow(6.0 * val / PI, ONE_THIRD);
+	temp.push_back(diameter*1.0e9);
+
+	out.push_back(temp);
+
+	temp.clear();
+}
+
 // this function is only used to create a vector containing all the mass of individual PAH within this soot particle
 void PAHPrimary::mass_PAH(std::vector<double> &out) const
 {
