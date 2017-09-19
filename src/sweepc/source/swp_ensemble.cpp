@@ -224,7 +224,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 	//m_dblecutoff = m_capacity+10;
 
 	m_dbleslack = (unsigned int)pow(2.0, (int)((m_levels - 5)>0 ? m_levels - 5 : 0));
-	m_dbleslack = (int) (double(m_capacity)/4.0);
+	m_dbleslack = (int) m_capacity*0.075;
 	m_dblelimit = m_halfcap - m_dbleslack;
 }
 
@@ -459,8 +459,17 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 					sitemapInput[KMC_ARS::AC].size() == sitemapComp[KMC_ARS::AC].size() &&
 					sitemapInput[KMC_ARS::BY6].size() == sitemapComp[KMC_ARS::BY6].size() &&
 					sitemapInput[KMC_ARS::BY5].size() == sitemapComp[KMC_ARS::BY5].size() &&
+					sitemapInput[KMC_ARS::RFE].size() == sitemapComp[KMC_ARS::RFE].size() &&
+					sitemapInput[KMC_ARS::RZZ].size() == sitemapComp[KMC_ARS::RZZ].size() &&
+					sitemapInput[KMC_ARS::RAC].size() == sitemapComp[KMC_ARS::RAC].size() &&
+					sitemapInput[KMC_ARS::RBY5].size() == sitemapComp[KMC_ARS::RBY5].size() &&
+					sitemapInput[KMC_ARS::RFER].size() == sitemapComp[KMC_ARS::RFER].size() &&
+					sitemapInput[KMC_ARS::RZZR].size() == sitemapComp[KMC_ARS::RZZR].size() &&
+					sitemapInput[KMC_ARS::RACR].size() == sitemapComp[KMC_ARS::RACR].size() &&
 					sitemapInput[KMC_ARS::FE3].size() == sitemapComp[KMC_ARS::FE3].size() &&
 					sitemapInput[KMC_ARS::FE2].size() == sitemapComp[KMC_ARS::FE2].size() &&
+					sitemapInput[KMC_ARS::AC_FE3].size() == sitemapComp[KMC_ARS::AC_FE3].size() &&
+					sitemapInput[KMC_ARS::BY5_FE3].size() == sitemapComp[KMC_ARS::BY5_FE3].size() &&
 					sitemapInput[KMC_ARS::FE_HACA].size() == sitemapComp[KMC_ARS::FE_HACA].size()){
 					return count;
 				}
@@ -519,7 +528,7 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
 
     // Particle removal might reduce the particle count
     // sufficiently to require particle doubling.
-    dble();
+    //dble();
     assert(m_tree.size() == m_count);
 }
 
@@ -556,9 +565,9 @@ void Sweep::Ensemble::RemoveInvalids(void)
     // Stop doubling because the number of particles has dropped from above
     // m_dblelimit during this function, which means a rapid loss of particles
     // so doubling will make the sample volume needlessly large.
-    if(m_count < m_capacity - m_dblecutoff) {
-        m_dbleactive = false;
-    }
+    //if(m_count < m_capacity - m_dblecutoff) {
+    //    m_dbleactive = false;
+    //}
 
     // If we removed too many invalid particles then we'll have to double.
     dble();
@@ -824,7 +833,7 @@ void Sweep::Ensemble::dble()
     // ensemble is back above half full, the routine updates the binary tree.
 
     // Check that doubling is on and the activation condition has been met.
-    if (m_dbleon && m_dbleactive) {
+    if (m_dbleon && m_dbleactive && m_count > 0) {
         const unsigned originalCount = m_count;
 
         // Continue while there are too few particles in the ensemble.

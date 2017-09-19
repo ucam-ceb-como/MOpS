@@ -1006,7 +1006,6 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 						if (indpart != -1){ //There is a matching particle
 							int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
 							(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + 1.0);
-							delete overflow[ind];
 						}
 						else{ //No matching particle, must add to ensemble
 							sys.Particles().Add(*(overflow[ind]), rng);

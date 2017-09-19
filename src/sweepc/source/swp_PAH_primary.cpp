@@ -1241,7 +1241,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			double updatetime;
 			bool calcrates = true;
 			int numloops = 1;
-			double ratefactor = 1;
+			double ratefactor = 1.0;
 			double statweightold = statweight;
 
 			if (m_PAH.size() == 1 && statweight > 1.0){ //if this is a particle with a single PAH, it may be weighted. 
@@ -1284,7 +1284,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						(*sys.Particles().At(ind)).setStatisticalWeight(statweight);
 						if (new_m_PAH->m_pahstruct->numofC() > 5){ //If the new PAH is still valid
 							Particle *sp = NULL;
-							sp = model.CreateParticle(t);
+							sp = model.CreateParticle(updatetime);
 							AggModels::PAHPrimary *pri =
 								dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
 							pri->m_PAH.clear();
