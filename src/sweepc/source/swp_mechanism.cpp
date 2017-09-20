@@ -385,7 +385,7 @@ double Mechanism::GetMinSPForAIWOnset(void) const
 }
 
 // aab64 Returns the type of inception weight scaling function
-void Mechanism::GetWeightScalingFn(char *wtfn) const
+void Mechanism::GetWeightScalingFn(std::string &wtfn) const
 {
 	wtfn = m_incept_weight_fn;
 }
@@ -393,7 +393,7 @@ void Mechanism::GetWeightScalingFn(char *wtfn) const
 // aab64 Sets the inception process to use variable weighting.
 // Weights fluctuate between wmax and wmin depending on number of 
 // particles in ensemble relative to ensemble capacity.
-void Mechanism::SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, char *weightfn)
+void Mechanism::SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, std::string &weightfn)
 {
 	m_var_incept_weight = isVarInceptWeight;
 	m_max_incept_weight = wmax;

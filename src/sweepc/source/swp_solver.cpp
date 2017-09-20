@@ -112,7 +112,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 	double a = 1.0;    // constant in scaling
 	double b = 1.0;    // constant in scaling
 	double c = 1.0;    // constant in scaling
-	char *wtfn = "L";  // inception weight function
+	std::string wtfn = "L";  // inception weight function
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
@@ -127,7 +127,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 			wmax = mech.GetMaxInceptionWeight();
 			wmin = mech.GetMinInceptionWeight();
 			nmin = mech.GetMinSPForAIWOnset();
-			mech.GetWeightScalingFn(wtfn);
+			mech.GetWeightScalingFn(wtfn); 
 			wnew = wmin;
 			// If the number of particles is large enough, update the incepting weight
 			if (nnew > nmin) {

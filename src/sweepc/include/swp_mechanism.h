@@ -168,12 +168,12 @@ public:
 	double GetMinSPForAIWOnset(void) const;
 
 	// aab64 Returns the type of inception weight scaling function
-    void GetWeightScalingFn(char *weightfn) const;
+	void GetWeightScalingFn(std::string &weightfn) const;
 
 	// aab64 Sets flag for the inception process to use variable weighting.
 	// Weights fluctuate between wmax and wmin depending on number of 
 	// particles in ensemble relative to ensemble capacity.
-	virtual void SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, char *weightfn);
+	virtual void SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, std::string &weightfn);
 
 	// aab64 Set flag for heavy inceptions
 	virtual void SetIsHeavy(bool heavyflag, double dlimval);
@@ -414,7 +414,7 @@ private:
 	mutable double m_minsp_for_aiw;         // Minimum particle threshold for which inception weight should be adapted
 	mutable double m_min_incept_weight;     // Minimum incepting weight, corresponding to nmin
 	mutable double m_max_incept_weight;     // Maximum incepting weight, corresponding to Nmax SPs
-	mutable char *m_incept_weight_fn;       // The type of inception weight scaling to use
+	mutable std::string m_incept_weight_fn; // The type of inception weight scaling to use
 
 	mutable bool m_heavyallowed;            // Flag to allow heavier inception particles
 	mutable double m_dval_heavy;            // Onset for heavier inceptions

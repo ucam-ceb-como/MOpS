@@ -162,7 +162,7 @@ void NetworkSimulator::Run(
 			    Note that this is defintely not an elegant implentation and is only really intended 
 			    to verify expected process behaviour in the TiO2 case */
 				ofstream partProcFile, gasConcFile;
-				int process_iter;
+				unsigned int process_iter;
 				std::vector<std::string> tmpPNames;
 				it->reac->Mech()->ParticleMech().GetProcessNames(tmpPNames, 0);
 				std::string rname (it->reac->GetName());

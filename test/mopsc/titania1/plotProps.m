@@ -11,8 +11,9 @@ set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
 % for finding files
-basedir  = 'local/real_inc_factor/';
-filedir  = 'ifVAR_3runs_3ms_Nhalf/';
+basedir  = 'local/real_inc_factor/3ms_3runs/';
+filedir  = 'it2_3runs_3ms_49em9/';
+filecmp  = 'if1_3runs_3ms/';
 filebase = 'Network(stage1)';
 
 % for plotting psl data
@@ -28,7 +29,7 @@ savefigs = 0;
 leg_vals = '';
 
 % load all data
-m0dat = csvread([basedir 'if1_3runs_3ms/' filebase '-part.csv'],1);
+m0dat = csvread([basedir filecmp filebase '-part.csv'],1);
 part = csvread([basedir filedir filebase '-part.csv'],1);
 rate = csvread([basedir filedir filebase '-part-rates.csv'],1);
 pslf = csvread([basedir filedir filebase '-psl(' psltime 's).csv'],1);

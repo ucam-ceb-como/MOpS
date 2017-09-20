@@ -141,7 +141,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 		bool surfincflag = m_mech->GetIsSurfInc();
 		double dcol_switch = m_mech->GetSurfIncValue();
 		double dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
-		if (dcol_ave > dcol_switch && surfincflag) 
+		if ((dcol_ave > dcol_switch) && surfincflag) 
 		{
 			// 1. Pick a particle using the FM/SF terms that preferentially find large particles 
 			// e.g. (note that this ignores all the safety checks in swp_transcoag 

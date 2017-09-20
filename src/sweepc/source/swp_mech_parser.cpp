@@ -1842,7 +1842,7 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
 					double maxIncWeight = 100.0;
 					double minIncWeight = 1.0;
 					double minSPonset = 1.0; 
-					char *WeightFn = "L";
+					std::string WeightFn = "L";
 					CamXML::Element *incWeightXML = (*it)->GetFirstChild("inceptionweightchange");
 					if (incWeightXML != NULL) {
 						CamXML::Element *incWeightFnXML = incWeightXML->GetFirstChild("weightchangefun");

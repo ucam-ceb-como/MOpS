@@ -188,7 +188,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     // Diagnostic variables
 	double tmpSVin, tmpSVout, tmpWtVarin, tmpWtVarout, tmpWtMassin, tmpWtMassout, tmpIncWeightin, tmpIncWeightout, tmpIncFactorin, tmpIncFactorout;
     unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout, tmpInfin, tmpInfout, tmpOutfin, tmpOutfout;
-    int process_iter;
+    unsigned int process_iter;
     std::vector<unsigned int> tmpPCin, tmpPCout, tmpFCin, tmpFCout;
     Sprog::fvector tmpGPin, tmpGPout;
 
