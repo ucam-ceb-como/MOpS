@@ -107,11 +107,17 @@ public:
     //! Set bulk gas velocity (species must be defined already)
     void SetVelocity(const double v) {m_data[velocityIndex()] = v;}
 
-	//set particle mass density
-	void SetParticleMass(double mass);
+	//set convective velocity
+	void SetConvectiveVelocity(double u);
 
-	//get particle mass density
-	double GetParticleMass(void) const;
+	//get convective velocity
+	double GetConvectiveVelocity(void) const;
+
+	//set thermophoretic velocity
+	void SetThermophoreticVelocity(double v);
+
+	//get thermophoretic velocity
+	double GetThermophoreticVelocity(void) const;
 
     //PARTICLE RELATED DATA (NO NEED CHANGING)
 
@@ -310,11 +316,14 @@ public:
     //!  Index of alpha (used in ABF model to scale certain reaction rates)
     size_t AlphaIndex() const {return m_species->size() + 8;}
 
-	//!  Index of mass density
-    size_t MassIndex() const {return m_species->size() + 9;}
+	//!  Index of convective velocity
+    size_t ConvectiveVelocityIndex() const {return m_species->size() + 9;}
+
+	//!  Index of thermophoretic velocity
+    size_t ThermophoreticVelocityIndex() const {return m_species->size() + 10;}
 
     //! Number of items of data that are not species concentrations that are stored at the end of m_data
-    static const size_t sNumNonSpeciesData = 10;
+    static const size_t sNumNonSpeciesData = 11;
 
     // Writes the mixture to a binary data stream.
     virtual void Serialize(std::ostream &out) const;

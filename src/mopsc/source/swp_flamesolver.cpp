@@ -114,7 +114,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         split(line, subs, delim);
 
         // Get important column indices (time, temperature and pressure).
-        int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1, Rcol=-1, Mcol=-1;
+        int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1, Rcol=-1, ucol=-1,vcol=-1;
         tcol = findinlist(string("Time"), subs);
         if(tcol < 0)
             tcol = findinlist(string("Time[s]"),subs);
@@ -127,8 +127,10 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         Acol = findinlist(string("Alpha"), subs);
         Rcol = findinlist(string("wdotA4"), subs);
 
-		//Particle mass density
-		Mcol = findinlist(string("Mass"), subs);
+		//convective velocity
+		ucol = findinlist(string("ConvectiveVelocity[m/s]"), subs);
+		//thermophoretic velocity
+		vcol = findinlist(string("ThermophoreticVelocity[m/s]"), subs);
 
         // Columns to ignore, but which are useful to have in files for brush compatibility
         int Xcol = findinlist(string("X[cm]"), subs);
@@ -168,7 +170,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         map<unsigned int,int> spcols;
         for (int i=0; (unsigned)i!=subs.size(); ++i) {
             if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol) && (i!=Rcol) &&
-                (i!=Xcol) && (i!=Dcol) && (i!=Vcol) && (i!=Gcol) && (i!=Mcol)) {
+                (i!=Xcol) && (i!=Dcol) && (i!=Vcol) && (i!=Gcol) &&
+				(i!=ucol) && (i!=vcol)) {
                 // Try to find this species in the mechanism
                 const int speciesMechIndex = mech.GasMech().FindSpecies(subs[i]);
 
@@ -215,8 +218,9 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             double P = 0.0;
             double alpha = 0.0;
             double PAHRate = 0.0;
-			double mass = 0.0;
-            GasPoint gpoint(mech.GasMech().Species());
+			double u_conv = 0.0;
+			double v_thermo = 0.0;
+			GasPoint gpoint(mech.GasMech().Species());
 
             // Split the line by columns.
             split(line, subs, delim);
@@ -241,9 +245,11 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                     alpha = cdble(subs[i]);
                 } else if (i==Rcol) {
                     PAHRate = cdble(subs[i]);
-				} else if (i==Mcol) {
-					//this is the particle mass density column
-                    mass = cdble(subs[i]);
+				} else if (i==ucol) {
+					//this is the convective velocity column
+					u_conv = cdble(subs[i]);
+				} else if (i==vcol) {
+					v_thermo = cdble(subs[i]);
                 } else {
                     // This is a gas-phase species column.
                     map<unsigned int,int>::iterator isp = spcols.find(i);
@@ -271,7 +277,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetPressure(P*1.0e5);//also set the molar density of gas mixture
             gpoint.Gas.Normalise();
 
-			gpoint.Gas.SetParticleMass(mass); 
+			gpoint.Gas.SetConvectiveVelocity(u_conv);
+			gpoint.Gas.SetThermophoreticVelocity(v_thermo);
 
             //! If postprocessing based on the molar rate of production by
             //! chemical reaction of the inception species per unit volume
@@ -361,19 +368,26 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     //! Save density from previous time step for sample volume adjustment.
     double old_dens = r.Mixture()->GasPhase().MassDensity();
 
+	//save old convective, thermophoretic velocities and density
+	double u_old = r.Mixture()->GasPhase().GetConvectiveVelocity();
+	double v_old = r.Mixture()->GasPhase().GetThermophoreticVelocity();
+	double rho_old = r.Mixture()->GasPhase().MassDensity();
+
     //! Update the chemical conditions.
     linInterpGas(t, r.Mixture()->GasPhase());
+
+	//csl37 -- apply thermophoretic correction factor to sample volume (using the alternative method)
+	double correction = 1.0;
+	if (u_old + v_old > 0.0)
+		correction = 1.0 + (r.Mixture()->GasPhase().GetThermophoreticVelocity()-v_old + v_old*(r.Mixture()->GasPhase().MassDensity() - rho_old)/rho_old )/(u_old + v_old);
+	//r.Mixture()->AdjustSampleVolume(correction);
 
     //! Adjust sample volume using the change in the density. Note that the
     //! code has to go through the loop below twice for the sample volume to be
     //! adjusted. However, it was found that the loop is only performed once;
     //! therefore, the sample volume adjustment has to be performed here.
-    r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
+    r.Mixture()->AdjustSampleVolume(old_dens * correction / r.Mixture()->GasPhase().MassDensity());
 
-	//csl37--adjust sample volume to track mass density
-	if( r.Mixture()->Particles().GetSum(iM) > 0.0 )
-		r.Mixture()->AdjustSampleVolume(r.Mixture()->Particles().GetSum(iM) / r.Mixture()->GasPhase().GetParticleMass() / r.Mixture()->SampleVolume() );
-	 
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
@@ -381,17 +395,21 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         //save the old gas phase mass density
         old_dens = r.Mixture()->GasPhase().MassDensity();
 
+		//save old convective, thermophoretic velocities and density
+		u_old = r.Mixture()->GasPhase().GetConvectiveVelocity();
+		v_old = r.Mixture()->GasPhase().GetThermophoreticVelocity();
+		rho_old = r.Mixture()->GasPhase().MassDensity();
+
         // Update the chemical conditions.
         const double gasTimeStep = linInterpGas(t, r.Mixture()->GasPhase());
 
+		double correction = 1.0 + (r.Mixture()->GasPhase().GetThermophoreticVelocity()-v_old + v_old*(r.Mixture()->GasPhase().MassDensity() - rho_old)/rho_old )/(u_old + v_old);
+
+
         // Scale particle M0 according to gas-phase expansion.
         // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
-        r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
-
-		//csl37--adjust sample volume to track mass density
-		if( r.Mixture()->Particles().GetSum(iM) > 0.0 )
-			r.Mixture()->AdjustSampleVolume(r.Mixture()->Particles().GetSum(iM)/r.Mixture()->GasPhase().GetParticleMass()/r.Mixture()->SampleVolume() );	
-
+        r.Mixture()->AdjustSampleVolume(old_dens * correction / r.Mixture()->GasPhase().MassDensity() );
+		
         //! Tried and tested only for the PAH-PP/KMC-ARS model and the
         //! spherical particl model. Only relevant if postprocessing based on
         //! the inception species concentration.
@@ -518,10 +536,11 @@ double FlameSolver::linInterpGas(double t,
         double dT = (j->Gas.Temperature() - i->Gas.Temperature()) * dt / dt_pro;
         gas.SetTemperature(gas.Temperature()+dT);
 
-		//interpolate particle mass density
-		double dM = (j->Gas.GetParticleMass() - i->Gas.GetParticleMass()) * dt / dt_pro;
-		gas.SetParticleMass(gas.GetParticleMass() + dM);
-
+		//interpolate the convective and thermophoretic velocities
+		double du =  (j->Gas.GetConvectiveVelocity() - i->Gas.GetConvectiveVelocity()) * dt / dt_pro;
+		gas.SetConvectiveVelocity(gas.GetConvectiveVelocity() + du);
+		double dv =  (j->Gas.GetThermophoreticVelocity() - i->Gas.GetThermophoreticVelocity()) * dt / dt_pro;
+		gas.SetThermophoreticVelocity(gas.GetThermophoreticVelocity() + dv);
         // Now set the gas density, calculated using the values above.
         gas.SetDensity(dens);
     }
