@@ -141,7 +141,18 @@ int DimerInception::Perform(const double t, Cell &sys,
 		bool surfincflag = m_mech->GetIsSurfInc();
 		double dcol_switch = m_mech->GetSurfIncValue();
 		double dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
-		if ((dcol_ave > dcol_switch) && surfincflag) 
+		bool sizeflag = (dcol_ave > dcol_switch);
+
+		// 20.09.2017
+		boost::uniform_01<rng_type&, double> uniformGenerator(rng); // with this here, it is probably not necessary to generate again below
+		double urv = uniformGenerator();
+		bool probflag = (urv >= 0.3); // To do: replace this with a probability based on some relevant property
+
+		// If surface inception is active, AND
+		// average particle size is large enough, AND
+		// a given probability is obtained, THEN
+		// do surface inception on a random particle.
+		if (surfincflag && sizeflag && probflag) 
 		{
 			// 1. Pick a particle using the FM/SF terms that preferentially find large particles 
 			// e.g. (note that this ignores all the safety checks in swp_transcoag 

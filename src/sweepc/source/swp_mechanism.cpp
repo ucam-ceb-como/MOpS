@@ -1615,6 +1615,18 @@ void Mechanism::releaseMem(void)
 	m_addcount = 0;
 	m_inflowcount = 0;
 	m_outflowcount = 0;
+
+	m_weighted_coag = false; 
+	m_var_incept_weight = false; 
+	m_minsp_for_aiw = 0;
+	m_min_incept_weight = 0; 
+	m_max_incept_weight = 0;
+	m_incept_weight_fn = ""; 
+
+	m_heavyallowed = false;
+	m_dval_heavy = 0;
+	m_surfincflag = false; 
+	m_dval_surfinc = 0; // 2017.09.20 to do: look at this
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 }
 
