@@ -2231,29 +2231,12 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 			}
         }
     }
-
     // Else this a non-leaf node (not a primary)
     else
     {
 		
-		if (!m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) {
+		if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) {
 			
-			return SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
-		
-		//Note (csl37): this only picks the left or right particle of the root node 
-		//and ignores the rest of the tree
-		/*
-        // Generate random numbers
-        boost::bernoulli_distribution<> leftRightChooser;
-        // Select particle
-        if(leftRightChooser(rng))
-			return m_leftparticle->Adjust(dcomp, dvalues, rng, n);
-        else
-			return m_rightparticle->Adjust(dcomp, dvalues, rng, n);
-		*/
-
-		///////////////////////////////////////////////////////////
-		}else{
 			// csl37: new primary selection based on free surface area
 			// work down tree selecting left/right child based on sum of primary free surface areas under node
 			// generate random number, use bernoulli with p=free_surf(leftchild)/free_surf(this)
@@ -2263,8 +2246,24 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 			}else{
 				return m_rightchild->Adjust(dcomp, dvalues, rng, n);
 			}
+			
+		}else{
+
+			return SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
+		
+			//Note (csl37): this only picks the left or right particle of the root node 
+			//and ignores the rest of the tree
+			/*
+			// Generate random numbers
+			boost::bernoulli_distribution<> leftRightChooser;
+			// Select particle
+			if(leftRightChooser(rng))
+				return m_leftparticle->Adjust(dcomp, dvalues, rng, n);
+			else
+				return m_rightparticle->Adjust(dcomp, dvalues, rng, n);
+			*/
+
 		}
-		///////////////////////////////////////////////////////////
     }
 
 	//csl37:
