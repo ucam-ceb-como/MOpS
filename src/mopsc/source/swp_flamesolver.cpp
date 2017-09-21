@@ -359,6 +359,8 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     double t  = r.Time();
     dtg     = tstop - t;
 
+	//csl37 - old sample volume correction
+	/*
     //! If the initial composition was not specified, linearly interpolate the
     //! gas-phrase profile to obtain properties at the initial time step which
     //! may not necessarily be zero.
@@ -368,48 +370,52 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     //! Save density from previous time step for sample volume adjustment.
     double old_dens = r.Mixture()->GasPhase().MassDensity();
 
-	//save old convective, thermophoretic velocities and density
-	double u_old = r.Mixture()->GasPhase().GetConvectiveVelocity();
-	double v_old = r.Mixture()->GasPhase().GetThermophoreticVelocity();
-	double rho_old = r.Mixture()->GasPhase().MassDensity();
-
     //! Update the chemical conditions.
     linInterpGas(t, r.Mixture()->GasPhase());
-
-	//csl37 -- apply thermophoretic correction factor to sample volume (using the alternative method)
-	double correction = 1.0;
-	if (u_old + v_old > 0.0)
-		correction = 1.0 + (r.Mixture()->GasPhase().GetThermophoreticVelocity()-v_old + v_old*(r.Mixture()->GasPhase().MassDensity() - rho_old)/rho_old )/(u_old + v_old);
-	//r.Mixture()->AdjustSampleVolume(correction);
 
     //! Adjust sample volume using the change in the density. Note that the
     //! code has to go through the loop below twice for the sample volume to be
     //! adjusted. However, it was found that the loop is only performed once;
     //! therefore, the sample volume adjustment has to be performed here.
-    r.Mixture()->AdjustSampleVolume(old_dens * correction / r.Mixture()->GasPhase().MassDensity());
+     r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
+	 */
+
+	//csl37
+	//thermophoretic correction
+	//apply half step change in sample volume		
+	//interpolate gas phase profile to t
+	linInterpGas(t, r.Mixture()->GasPhase());
+	//save old convective, thermophoretic velocities and density
+	double u_old = r.Mixture()->GasPhase().GetConvectiveVelocity();
+	double v_old = r.Mixture()->GasPhase().GetThermophoreticVelocity();
+	double rho_old = r.Mixture()->GasPhase().MassDensity();
+	//interpolate gas-phase conditions to (tstop-t)/2
+	const double gasTimeStep = linInterpGas(t+(tstop-t)/2.0, r.Mixture()->GasPhase());
+	double u_new = r.Mixture()->GasPhase().GetConvectiveVelocity();
+	double v_new = r.Mixture()->GasPhase().GetThermophoreticVelocity();
+	double rho_new = r.Mixture()->GasPhase().MassDensity();
+	//calculate correction
+	double scale_factor = 1.0;
+	scale_factor = 1.0 + (v_new-v_old - u_old*(rho_new-rho_old)/rho_old)/(u_old+v_old);
+	//adjust sample volume
+	r.Mixture()->AdjustSampleVolume(scale_factor);
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
-
+		//csl37 - old sample volume correction
+		/*
         //save the old gas phase mass density
         old_dens = r.Mixture()->GasPhase().MassDensity();
 
-		//save old convective, thermophoretic velocities and density
-		u_old = r.Mixture()->GasPhase().GetConvectiveVelocity();
-		v_old = r.Mixture()->GasPhase().GetThermophoreticVelocity();
-		rho_old = r.Mixture()->GasPhase().MassDensity();
-
         // Update the chemical conditions.
         const double gasTimeStep = linInterpGas(t, r.Mixture()->GasPhase());
-
-		double correction = 1.0 + (r.Mixture()->GasPhase().GetThermophoreticVelocity()-v_old + v_old*(r.Mixture()->GasPhase().MassDensity() - rho_old)/rho_old )/(u_old + v_old);
-
-
+		
         // Scale particle M0 according to gas-phase expansion.
         // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
-        r.Mixture()->AdjustSampleVolume(old_dens * correction / r.Mixture()->GasPhase().MassDensity() );
-		
+        r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
+		*/
+
         //! Tried and tested only for the PAH-PP/KMC-ARS model and the
         //! spherical particl model. Only relevant if postprocessing based on
         //! the inception species concentration.
@@ -476,6 +482,23 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 
         r.SetTime(t);
     }
+
+	//csl37
+	//thermophoretic correction
+	//apply second half step change in sample volume
+	//save old convective, thermophoretic velocities and density
+	u_old = r.Mixture()->GasPhase().GetConvectiveVelocity();
+	v_old = r.Mixture()->GasPhase().GetThermophoreticVelocity();
+	rho_old = r.Mixture()->GasPhase().MassDensity();
+	//interpolate gas-phase conditions to
+	linInterpGas(t, r.Mixture()->GasPhase());
+	u_new = r.Mixture()->GasPhase().GetConvectiveVelocity();
+	v_new = r.Mixture()->GasPhase().GetThermophoreticVelocity();
+	rho_new = r.Mixture()->GasPhase().MassDensity();
+	//calculate correction
+	scale_factor = 1.0 + (v_new-v_old - u_old*(rho_new-rho_old)/rho_old)/(u_old+v_old);
+	//adjust sample volume
+	r.Mixture()->AdjustSampleVolume(scale_factor);
 
     // Restore initial chemical conditions to sys.
     r.Mixture()->SetFixedChem(fixedchem);
