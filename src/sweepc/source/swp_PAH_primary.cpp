@@ -2810,7 +2810,10 @@ void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &m
 
                     //! Set t1 for next time step.
                     t1 += delt;
-                }
+				}
+				else{
+					t1 = tstop;
+				}
             }           
         } else {
             //! Declare characteristic sintering time.
