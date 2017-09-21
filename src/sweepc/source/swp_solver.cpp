@@ -63,7 +63,7 @@ using namespace Strings;
 
 // Default constructor.
 Solver::Solver(void)
-: m_splitratio(1.0e9)
+: m_splitratio(1.0e5)
 {
 //  srnd(time(0));			//added by ms785
 //    srnd(getpid());

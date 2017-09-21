@@ -237,6 +237,14 @@ void Sweep::Ensemble::SetDoubling(const bool val) {
     m_dbleon = val;
 }
 
+unsigned int Sweep::Ensemble::DoubleLimit() {
+	return m_dblelimit;
+}
+
+bool Sweep::Ensemble::IsDoublingOn() {
+	return m_dbleactive;
+}
+
 /**
  * Initialise the ensemble to hold particles of the type specified
  * by the model and containing the particular particles contained

@@ -434,9 +434,10 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 			timeStep(t, std::min(t + dtg / 3.0, tsplit), *r.Mixture(), Geometry::LocalGeometry1d(),
 				mech, rates, jrate, rng); 
 
-			if (r.Mixture()->ParticleCount() < 870 && t > 0.029){
-				break;
-			}
+			//if (r.Mixture()->ParticleCount() < r.Mixture()->Particles().DoubleLimit() 
+			//	&& r.Mixture()->Particles().IsDoublingOn()){
+			//	break;
+			//}
 
         }
         // Perform Linear Process Deferment Algorithm to

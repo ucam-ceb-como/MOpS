@@ -166,6 +166,10 @@ public:
 
     void SetDoubling(const bool val);
 
+	unsigned int DoubleLimit();
+
+	bool IsDoublingOn();
+
     // PARTICLE ADDITION AND REMOVAL.
 
     // Returns a pointer to the particle at index i.
