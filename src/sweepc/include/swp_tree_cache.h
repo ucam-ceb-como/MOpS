@@ -114,9 +114,11 @@ public:
     //! Returns the cached mass.
     double Mass(void) const;
 
-    //! Returns the number of carbons.
+    //! Returns the number of carbon atoms.
     int NumCarbon(void) const;
 
+    //! Returns fragmentation flag.
+    int Frag(void) const;
     // Returns the property with the given ID.
     double Property(PropID id) const;
 
@@ -194,6 +196,12 @@ private:
     //! Mass.
     double m_mass;
 
+	//! Number of Carbon atoms
+	unsigned int m_numcarbon;
+
+    //! Fragmentation flag.
+	unsigned int m_frag;
+
     // Collision rate calculation particle properties.
     double m_dcolsqr;      // Collision diameter squared.
     double m_inv_dcol;     // Inverse collision diameter.
@@ -201,14 +209,8 @@ private:
     double m_inv_sqrtmass; // Inverse of the square-root of the mass.
     double m_d2_m_1_2;     // D^2 * M^-1/2.
 
-
-
 	// The free surface available for other particles to sinter
 	double m_freesurface;
-
-	//! Number of Carbon atoms
-	unsigned int m_numcarbon;
-
 };
 }
 

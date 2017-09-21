@@ -724,6 +724,147 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
     return *this;
 }
 
+/*!
+ * Combines this primary with another.
+ *
+ * \param[in]       rhs         Particle to add to current instance
+ * \param[in,out]   rng         Random number generator
+ *
+ * \return      Reference to the current instance after rhs has been added
+ */
+PAHPrimary &PAHPrimary::Fragment(const Primary &rhs, rng_type &rng)
+{
+    vector<PAH>::const_iterator j;
+    const PAHPrimary *rhsparticle = NULL;
+    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
+
+    //only one PAH in rhs or this particle -> condensation or inception process.
+    if ( (rhsparticle->m_numPAH==1) || (m_numPAH==1 ))
+    {
+        if (rhsparticle->Numprimary()>1)
+        {
+            // rhsparticle is a soot particle but this paricle repesents a PAH
+            // this paricle will condense on this rhsparticle
+            // Get a copy of the rhs ready to add to the current particle
+            PAHPrimary copy_rhs(*rhsparticle);
+            PAHPrimary *target = copy_rhs.SelectRandomSubparticle(rng);
+
+            target->m_PAH.insert(target->m_PAH.end(),m_PAH.begin(),m_PAH.end());
+			target->UpdatePrimary();
+            CopyParts(&copy_rhs);
+            CopyTree(&copy_rhs);
+        }
+        else
+        {
+            // this paricle is a soot particle but rhsparticle repesents a PAH
+            // rhsparticle will condense on this particle
+            // particle has more then one primary select the primary where
+            // the PAH condenses to and add it to the list
+            if (m_leftchild!=NULL)
+            {
+                PAHPrimary *target = SelectRandomSubparticle(rng);
+
+                target->m_PAH.insert(target->m_PAH.end(),rhsparticle->m_PAH.begin(),rhsparticle->m_PAH.end());
+                target->UpdatePrimary();
+
+            }
+            else
+            {
+                //this particle and rhsparticle are both PAHs, this process should be inception
+                m_PAH.insert(m_PAH.end(),rhsparticle->m_PAH.begin(),rhsparticle->m_PAH.end());
+                UpdatePrimary();
+            }
+        }
+		UpdateCache();
+        //Check the coalescence ratio
+        CheckRounding();
+
+	}
+
+    else
+    {
+            //coagulation process
+            PAHPrimary *newleft = new PAHPrimary;
+		    PAHPrimary *newright = new PAHPrimary;
+            PAHPrimary copy_rhs(*rhsparticle);
+		    //rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
+
+           // bool print=false;
+           // if (this->m_numprimary>2 && notconstpah->m_numprimary>2)
+           // {
+            //    PrintTree("before1");
+           //     notconstpah->PrintTree("before2");
+             //   print=true;
+              //  cout << "printing tree"<<endl;
+            //}
+
+            //select where to add the second particle
+            boost::bernoulli_distribution<> bernoulliDistrib;
+            boost::variate_generator<rng_type &, boost::bernoulli_distribution<> > leftRightChooser(rng, bernoulliDistrib);
+		    if (leftRightChooser())
+		    {
+			    newleft->CopyParts(this);
+			    newright->CopyParts(&copy_rhs);
+		    }
+		    else
+		    {
+			    newright->CopyParts(this);
+			    newleft->CopyParts(&copy_rhs);
+		    }
+            //set the pointers
+		    m_leftchild=newleft;
+		    m_rightchild=newright;
+		    newright->m_parent=this;
+		    newleft->m_parent=this;
+            //set the pointers to the parent node
+		    if (newleft->m_leftchild!=NULL)
+		    {
+			    newleft->m_leftchild->m_parent=newleft;
+			    newleft->m_rightchild->m_parent=newleft;
+		    }
+		    if (newright->m_leftchild!=NULL)
+		    {
+			    newright->m_leftchild->m_parent=newright;
+			    newright->m_rightchild->m_parent=newright;
+		    }
+            m_children_roundingLevel=0;
+		    UpdateCache();
+            //select the primaries that are touching
+		    this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rng);
+		    this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rng);
+
+            //set the sintertime for the new created primary particle
+            SetSinteringTime(std::max(this->m_sint_time, rhsparticle->m_sint_time));
+            //initialise the variables used to calculate the coalesence ratio
+            m_children_vol=m_leftparticle->m_vol+m_rightparticle->m_vol;
+            m_children_surf=(m_leftparticle->m_surf+m_rightparticle->m_surf);
+            m_leftparticle_vol_old=m_leftparticle->m_vol;
+            m_rightparticle_vol_old=m_rightparticle->m_vol;
+            m_leftparticle_numPAH=m_leftparticle->m_numPAH;
+            m_rightparticle_numPAH=m_rightparticle->m_numPAH;
+            m_children_radius=pow(3.0/(4.0*PI)*(m_children_vol),(ONE_THIRD));
+            m_children_roundingLevel=CoalescenceLevel();
+            CheckRounding();
+            //must set all the pointer to NULL otherwise the delete function
+            //will also delete the children
+	        copy_rhs.m_leftchild=NULL;
+	        copy_rhs.m_rightchild=NULL;
+	        copy_rhs.m_parent=NULL;
+            copy_rhs.m_leftparticle=NULL;
+            copy_rhs.m_rightparticle=NULL;
+		//	rhsparticle->Clear();
+        //    if (fabs(surfacebeforerhs+surfacebefore-m_surf)/m_surf > 1e-6)
+        //    {
+        //        cout << "error" << surfacebeforerhs<<' ' <<surfacebefore << ' '<<m_surf<<endl;
+        ////         PrintTree("after");
+        //    }
+        // if (print)
+    //     PrintTree("after");
+
+	}
+    return *this;
+}
+
 //returns the CoalescenceLevel of the two primaries that are connected by this node
 double PAHPrimary::CoalescenceLevel()
 {

@@ -416,10 +416,10 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
 		*/
 
-        //! Tried and tested only for the PAH-PP/KMC-ARS model and the
-        //! spherical particl model. Only relevant if postprocessing based on
-        //! the inception species concentration.
-        if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::Spherical_ID && 
+        //! Tried and tested only for the PAH-PP/KMC-ARS model, binary tree and
+        //! the spherical particle model. Only relevant if postprocessing based
+        //! on the inception species concentration.
+        if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID && 
             r.Mixture()->ParticleModel()->Postprocessing() == ParticleModel::XA4) {
             int index;
             double numCarbons;
@@ -445,7 +445,8 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
                     throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4 and A5 are supported now (Sweep::FlameSolver::Solve())");
             }
             if (mech.Inceptions(0) != NULL) {
-                if (mech.Inceptions(0)->ParticleComp(0) == numCarbons && mech.AggModel() == AggModels::Spherical_ID || mech.AggModel() == AggModels::PAH_KMC_ID) {
+                if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID &&
+                    mech.Inceptions(0)->ParticleComp(0) == numCarbons) {
                     // calculate the amount of stochastic pyrene particles in the ensemble
                     unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);
                     // if Pmount exceeds the capacity of the ensemble at the begining of the simulation,

@@ -41,7 +41,7 @@
 */
 
 #include "swp_PAH_primary.h"
-#include "swp_coagulation.h"
+#include "swp_fragmentation.h"
 #include "swp_mechanism.h"
 #include <stdexcept>
 #include <iostream>
@@ -59,7 +59,7 @@ using namespace std;
  *
  * Default rate scaling to 1 for backwards compatibility
  */
- Coagulation::Coagulation(const Sweep::Mechanism &mech)
+ Fragmentation::Fragmentation(const Sweep::Mechanism &mech)
  : Process(mech)
  , mPositionChoice(NoPositionChoice)
  {}
@@ -74,21 +74,21 @@ using namespace std;
  *
  * @return      Total rate of all the coagulation processes
  */
-double Coagulation::CalcRates(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
-                            const CoagPtrVector &coags, fvector &rates, unsigned int start)
+double Fragmentation::CalcRates(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
+                            const FragPtrVector &frags, fvector &rates, unsigned int start)
 {
     // Iterators for the coagulation processes
-    CoagPtrVector::const_iterator itCoag = coags.begin();
-    const CoagPtrVector::const_iterator itCoagEnd = coags.end();
+    FragPtrVector::const_iterator itFrag = frags.begin();
+    const FragPtrVector::const_iterator itFragEnd = frags.end();
 
     // Iterator for the rate vector
     fvector::iterator it = (rates.begin()+start);
 
     // Use this variable to accumulate the overall sum of the rates
     double sum = 0.0;
-    while(itCoag != itCoagEnd) {
+    while(itFrag != itFragEnd) {
         // Store the rate and move on to the next coagulation process
-        *it = (*itCoag++)->Rate(t, sys, local_geom);
+        *it = (*itFrag++)->Rate(t, sys, local_geom);
 
         // Add the rate to the sum and move the rates vector iterator onto the next position
         sum += *it++;
@@ -105,21 +105,21 @@ double Coagulation::CalcRates(double t, const Cell &sys, const Geometry::LocalGe
  *
  * @return      Total rate of all the coagulation processes
  */
-double Coagulation::CalcRateTerms(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
-                                const CoagPtrVector &coags, fvector::iterator &iterm) {
+double Fragmentation::CalcRateTerms(double t, const Cell &sys, const Geometry::LocalGeometry1d &local_geom,
+                                const FragPtrVector &frags, fvector::iterator &iterm) {
     // Iterators for the coagulation processes
-    CoagPtrVector::const_iterator itCoag = coags.begin();
-    const CoagPtrVector::const_iterator itCoagEnd = coags.end();
+    FragPtrVector::const_iterator itFrag = frags.begin();
+    const FragPtrVector::const_iterator itFragEnd = frags.end();
 
     // Use this variable to accumulate the overall sum of the rates
     double sum = 0.0;
-    while(itCoag != itCoagEnd) {
+    while(itFrag != itFragEnd) {
         // The next line does three things, effectively in the following order
         // i) Calls RateTerms on *itCoag
         // ii) Advances itCoag
         // iii) Adds the return value of RateTerms to sum
         // Note that the order of 2 and 3 could be reversed without having any effect
-        sum += (*itCoag++)->RateTerms(t, sys, local_geom, iterm);
+        sum += (*itFrag++)->RateTerms(t, sys, local_geom, iterm);
     }
     return sum;
  }
@@ -135,7 +135,7 @@ double Coagulation::CalcRateTerms(double t, const Cell &sys, const Geometry::Loc
  *
  *@return       Index of new, larger particle
  */
-int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
+int Fragmentation::JoinParticles(const double t, const int ip1, Particle *sp1,
                                const int ip2, Particle *sp2,
                                Cell &sys, rng_type &rng) const {
 
@@ -189,15 +189,10 @@ int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
     //sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
 
     // Add contents of particle 2 onto particle 1
-    sp1->Coagulate(*sp2, rng);
+    sp1->Fragment(*sp2, rng);
     sp1->setPositionAndTime(newPos, newPosTime);
     sp1->SetTime(t);
-    sp1->incrementCoagCount();
-
-	//csl37
-	//if one of the coagulating particles is tracked then we wish to keep tracking it 
-	//once we're tracking multiple particles we'll want to check if both are tracked and update according (or could also keep two copies)
-	sys.Particles().UpdateTracking(ip2,ip1);
+    sp1->incrementFragCount();
 
     // Tell the ensemble that particle 1 has changed
     sys.Particles().Update(ip1);
@@ -220,152 +215,77 @@ int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
  * Weighted coagulation is not symmetric, nothing happens to the second particle,
  * it simply defined a size increment for the first particle.
  */
-int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
-                                 const Sweep::PropID prop2,
-                                 const Sweep::Processes::CoagWeightRule weight_rule,
+int Fragmentation::WeightedPerform(const double t, const Sweep::PropID prop,
+                                 const Sweep::Processes::FragWeightRule weight_rule,
                                  Cell &sys, rng_type &rng,
                                  MajorantType maj) const {
-    int ip1 = sys.Particles().Select(prop1, rng);
-    int ip2 = sys.Particles().Select(prop2, rng);
-
-    // Choose and get first particle, then update it.
-    Particle *sp1=NULL;
-    if (ip1 >= 0) {
-        sp1 = sys.Particles().At(ip1);
-    } else {
-        // Failed to choose a particle.
-        return -1;
-    }
-
-    // Choose and get unique second particle, then update it.  Note, we are allowed to do
-    // this even if the first particle was invalidated.
-    unsigned int guard = 0;
-    while ((ip2 == ip1) && (++guard<1000))
-            ip2 = sys.Particles().Select(prop2, rng);
-
-    Particle *sp2=NULL;
-    if ((ip2>=0) && (ip2!=ip1)) {
-        sp2 = sys.Particles().At(ip2);
-    } else {
-        // Failed to select a unique particle.
-        return -1;
-    }
-
-    //Calculate the majorant rate before updating the particles
-    const double majk = MajorantKernel(*sp1, *sp2, sys, maj);
-
-    //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t, rng);
-    // Check that particle is still valid.  If not,
-    // remove it and cease coagulating.
-    if (!sp1->IsValid()) {
-        // Must remove first particle now.
-        sys.Particles().Remove(ip1);
-
-        // Invalidating the index tells this routine not to perform coagulation.
-        ip1 = -1;
-        return 0;
-    }
-
-    m_mech->UpdateParticle(*sp2, sys, t, rng);
-    // Check validity of particles after update.
-    if (!sp2->IsValid()) {
-        // Tell the ensemble to update particle one before we confuse things
-        // by removing particle 2
-        sys.Particles().Update(ip1);
-
-        // Must remove second particle now.
-        sys.Particles().Remove(ip2);
-
-        // Invalidating the index tells this routine not to perform coagulation.
-        ip2 = -1;
-
-        return 0;
-    }
-
-    // Check that both the particles are still valid.
-    if ((ip1>=0) && (ip2>=0)) {
-        // Must check for ficticious event now by comparing the original
-        // majorant rate and the current (after updates) true rate.
-
-        double truek = CoagKernel(*sp1, *sp2, sys);
-        double ceff=0;
-        if (majk<truek)
-            std::cout << "maj< true"<< std::endl;
-
-		//added by ms785 to include the collision efficiency in the calculation of the rate
-		if (sys.ParticleModel()->AggModel()==AggModels::PAH_KMC_ID)
-		{
-			 ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
-			 truek*=ceff;
-		}
-
-        if (!Fictitious(majk, truek, rng)) {
-            //Adjust the statistical weight
-            switch(weight_rule) {
-            case Sweep::Processes::CoagWeightHarmonic :
-                sp1->setStatisticalWeight(1.0 / (1.0 / sp1->getStatisticalWeight() +
-                                                 1.0 / sp2->getStatisticalWeight()));
-                break;
-            case Sweep::Processes::CoagWeightHalf :
-                sp1->setStatisticalWeight(0.5 * sp1->getStatisticalWeight());
-                break;
-            case Sweep::Processes::CoagWeightMass :
-                sp1->setStatisticalWeight(sp1->getStatisticalWeight() * sp1->Mass() /
-                                          (sp1->Mass() + sp2->Mass()));
-                break;
-            case Sweep::Processes::CoagWeightRule4 : {
-                // This is an arbitrary weighting for illustrative purposes
-                const double x1 = sp1->Mass() / std::sqrt(sp1->getStatisticalWeight());
-                const double x2 = sp1->Mass() / std::sqrt(sp2->getStatisticalWeight());
-                sp1->setStatisticalWeight(sp1->getStatisticalWeight() * x1 /
-                                          (x1 + x2));
-                break;
+    int i = -1;
+    i = sys.Particles().Select(m_pid, rng);
+    if (i >= 0) {
+        Particle *sp = sys.Particles().At(i);
+        std::vector<double> m_dcomp(1);
+        std::vector<double> m_dvals(1);
+        m_dvals[0] = 0.0;
+        if (m_mech->AnyDeferred()) {
+            m_mech->UpdateParticle(*sp, sys, t, rng);
+            if (sp->IsValid()) {
+                double majk = MajorantKernel(*sp, sys, Default);
+                double truek = FragKernel(*sp, sys);
+                if (!Fictitious(majk, truek, rng)) {
+                    switch(weight_rule) {
+                        case Sweep::Processes::FragWeightSymmetric :
+                            sp->setStatisticalWeight(2 * sp->getStatisticalWeight());
+                            m_dcomp[0] = - sp->NumCarbon() / 2;
+                            break;
+                        case Sweep::Processes::FragWeightNumber:
+                            sp->setStatisticalWeight(sp->getStatisticalWeight() + 1);
+                            m_dcomp[0] = - 1.0;
+                            break;
+                        case Sweep::Processes::FragWeightMass:
+                            sp->setStatisticalWeight(sp->getStatisticalWeight() * sp->NumCarbon() / ( sp->NumCarbon() - 1));
+                            m_dcomp[0] = - 1.0;
+                            break;
+                        default:
+                            throw std::logic_error("Unrecognised weight rule (Fragmentation::WeightedPerform)");
+                    }
+                    sp->Adjust(m_dcomp, m_dvals, rng, 1);
+                    sys.Particles().Update(i);
+                    sp->SetTime(t);
+                    sp->incrementFragCount();
                 }
-            default:
-                throw std::logic_error("Unrecognised weight rule (Coagulation::WeightedPerform)");
+            } else {
+                sys.Particles().Remove(i);
             }
-
-            // In the weighted particle method the contents of particle 2
-            // is added to particle 1 while particle 2 is left unchanged.
-            // If particle 1 is a single primary particle made up one PAH:
-            // the incepted PAH, after the coagulate event there is then
-            // one less incepted PAH. This is what the check does. If
-            // particle 1 is a PAH other than the incepted PAH, there is
-            // not a need to made an adjustment to the number of incepted PAHs.
-			//sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
-
-            // Add contents of particle 2 onto particle 1
-            sp1->Coagulate(*sp2, rng);
-            sp1->SetTime(t);
-            sp1->incrementCoagCount();
-
-            assert(sp1->IsValid());
-            // Tell the ensemble that particles 1 and 2 have changed
-            sys.Particles().Update(ip1);
-            sys.Particles().Update(ip2);
         } else {
-            sys.Particles().Update(ip1);
-            sys.Particles().Update(ip2);
-            return 1; // Ficticious event.
+            switch(weight_rule) {
+                case Sweep::Processes::FragWeightSymmetric :
+                    sp->setStatisticalWeight(2 * sp->getStatisticalWeight());
+                    m_dcomp[0] = - sp->NumCarbon() / 2;
+                    break;
+                case Sweep::Processes::FragWeightNumber:
+                    sp->setStatisticalWeight(sp->getStatisticalWeight() + 1);
+                    m_dcomp[0] = - 1.0;
+                    break;
+                case Sweep::Processes::FragWeightMass:
+                    sp->setStatisticalWeight(sp->getStatisticalWeight() * sp->NumCarbon() / ( sp->NumCarbon() - 1));
+                    m_dcomp[0] = - 1.0;
+                    break;
+                default:
+                    throw std::logic_error("Unrecognised weight rule (Fragmentation::WeightedPerform)");
+            }
+            sp->Adjust(m_dcomp, m_dvals, rng, 1);
+            sys.Particles().Update(i);
+            sp->SetTime(t);
+            sp->incrementFragCount();
         }
     } else {
-        // One or both particles were invalidated on update,
-        // but that's not a problem.  Information on the update
-        // of valid particles must be propagated into the binary
-        // tree
-        if(ip1 >= 0)
-            sys.Particles().Update(ip1);
-
-        if(ip2 >= 0)
-            sys.Particles().Update(ip2);
+        return -1;
     }
-
     return 0;
 }
 
 // Writes the object to a binary stream.
-void Coagulation::Serialize(std::ostream &out) const
+void Fragmentation::Serialize(std::ostream &out) const
 {
     if (out.good()) {
         // Output the version ID (=0 at the moment).
@@ -380,12 +300,12 @@ void Coagulation::Serialize(std::ostream &out) const
 
     } else {
         throw invalid_argument("Output stream not ready "
-                               "(Sweep, Coagulation::Serialize).");
+                               "(Sweep, Fragmentation::Serialize).");
     }
 }
 
 // Reads the object from a binary stream.
-void Coagulation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
+void Fragmentation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
 {
     if (in.good()) {
         // Read the output version.  Currently there is only one
@@ -404,11 +324,11 @@ void Coagulation::Deserialize(std::istream &in, const Sweep::Mechanism &mech)
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
-                                    "(Sweep, Coagulation::Deserialize).");
+                                    "(Sweep, Fragmentation::Deserialize).");
         }
     } else {
         throw invalid_argument("Input stream not ready "
-                               "(Sweep, Coagulation::Deserialize).");
+                               "(Sweep, Fragmentation::Deserialize).");
     }
 }
 

@@ -190,6 +190,13 @@ private:
         Mechanism &mech        // Mechanism to construct from XML.
         );
 
+    // COAGULATION
+    //! Allow user to choose coagulation kernel via a sweep mechanism XML file.
+    static void readFragmentation(
+        CamXML::Document &xml, // CamXML document pre-constructed from file.
+        Mechanism &mech        // Mechanism to construct from XML.
+        );
+
     // TRANSPORT
     //! Read any diffusion processes from the XML document
     static void readDiffusionProcs(

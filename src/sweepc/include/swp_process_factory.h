@@ -51,6 +51,7 @@
 #include "swp_inception.h"
 #include "swp_particle_process.h"
 #include "swp_coagulation.h"
+#include "swp_fragmentation.h"
 #include "swp_death_process.h"
 #include <iostream>
 
@@ -85,6 +86,13 @@ public:
         const Sweep::Mechanism &mech // Parent mechanism.
         );
 
+    // Reads an coagulation from a binary stream.  The first item read
+    // is the coagulation ID which tells the ModelFactory what type
+    // of coagulation to read.
+    static Fragmentation *const ReadFrag(
+        std::istream &in,            // Input stream.
+        const Sweep::Mechanism &mech // Parent mechanism.
+        );
 
     // STREAM OUTPUT.
 
