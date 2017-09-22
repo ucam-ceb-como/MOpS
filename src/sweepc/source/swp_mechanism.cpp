@@ -980,8 +980,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 							int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
 							int oldweight2 = (*sys.Particles().At(ind)).getStatisticalWeight();
 							(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + oldweight2);
-							//Invalidate the PAH (and hence the particle) by setting statistical weight to zero
-							//sys.Particles().Remove(ind);
+							//Invalidate the PAH (and hence the particle) by setting statistical weight to negative 1
 							(*sys.Particles().At(ind)).setStatisticalWeight(-1.0);
 							count++;
 						}

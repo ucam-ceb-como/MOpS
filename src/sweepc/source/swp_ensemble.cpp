@@ -578,7 +578,7 @@ void Sweep::Ensemble::RemoveInvalids(void)
     //}
 
     // If we removed too many invalid particles then we'll have to double.
-    dble();
+    //dble();
     assert(m_tree.size() == m_count);
 }
 
@@ -845,7 +845,8 @@ void Sweep::Ensemble::dble()
         const unsigned originalCount = m_count;
 
         // Continue while there are too few particles in the ensemble.
-        while (m_count < m_dblelimit) {
+        //while (m_count < m_dblelimit) {
+		if (m_count < m_dblelimit) {
             if(m_count == 0) {
                 throw std::runtime_error("Attempt to double particle ensemble with 0 particles");
             }

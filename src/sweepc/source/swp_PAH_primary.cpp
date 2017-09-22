@@ -1443,7 +1443,7 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
         throw std::runtime_error("no information about the incepted PAH is available (Sweep::PAHPrimary::CheckInvalidPAHs())");
     }
     // if the PAH in the cluster is as the same size as the incepted PAH, it will be released but the current implementation is directly removed which causes mass loss, for a fully coupled model this part should be redesigned.
-    return (it->m_pahstruct->numofC() < m_control||(it->m_pahstruct->numofC() <= m_control && NumPAH()!=1));
+    return (it->m_pahstruct->numofC() < 6||(it->m_pahstruct->numofC() < 6 && NumPAH()!=1));
 }
 
 //struct compare_class
