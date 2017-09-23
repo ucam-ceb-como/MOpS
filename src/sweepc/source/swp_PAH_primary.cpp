@@ -1229,6 +1229,18 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			if (m_numPAH>=minPAH)
 			{
 				growthfact = model.Components(0)->GrowthFact();
+				double density = model.Components(0)->Density();
+				//! PP mass (kg).
+				double m_mass = m_numcarbon*1.9945e-26 + m_numH*1.6621e-27;
+
+				//! Spherical diameter (nm).
+				double diameter = pow(6.0 * m_mass / density / PI, ONE_THIRD);
+				diameter = diameter * 1.0e9;
+				growthfact = 1.950 / diameter ;
+				if (growthfact > 1.0)
+				{
+					growthfact = 1.0;
+				}
 			}
 
 			//! Time for one particular PAH to grow.
@@ -1443,7 +1455,7 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
         throw std::runtime_error("no information about the incepted PAH is available (Sweep::PAHPrimary::CheckInvalidPAHs())");
     }
     // if the PAH in the cluster is as the same size as the incepted PAH, it will be released but the current implementation is directly removed which causes mass loss, for a fully coupled model this part should be redesigned.
-    return (it->m_pahstruct->numofC() < 6||(it->m_pahstruct->numofC() < 6 && NumPAH()!=1));
+    return (it->m_pahstruct->numofC() < 16||(it->m_pahstruct->numofC() < 16 && NumPAH()!=1));
 }
 
 //struct compare_class
