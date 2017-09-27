@@ -223,8 +223,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
 			//Set t_next to t_max so the updatePAH routine will be exited
 			if (pah->numofRings() < 4){
-				pah->setnumofC(5);
-				t_next = t_max;
+				proceed = false;
+				//t_next = t_max;
 			}
 
 			//if (PAH_ID == 677){
