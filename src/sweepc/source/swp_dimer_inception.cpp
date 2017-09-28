@@ -283,7 +283,7 @@ double DimerInception::Rate(const EnvironmentInterface &gas, double sqrtT,
 double DimerInception::SingleStepRate(const EnvironmentInterface &gas, double T, double A_smpl, double V_smpl) const
 {
 	double gamma = 1.0;
-	double alpha = 0.1;
+	double alpha = 1.0;
 
 	double rate = 0.0;
 	double A = A_smpl / V_smpl;

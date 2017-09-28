@@ -211,7 +211,7 @@ double TitaniaSurfaceReaction::Rate(
 	} else if (GetRateForm() == iTTIP) {
 
 		double gamma = 1.0;
-		double alpha = 0.1;
+		double alpha = 1.0;
 
 		double T = sys.GasPhase().Temperature();
 		double V_smpl = sys.SampleVolume();
@@ -295,7 +295,7 @@ double TitaniaSurfaceReaction::Rate(
 	} else if (GetRateForm() == iTTIP) {
 
 		double gamma = 1.0;
-		double alpha = 0.1;
+		double alpha = 1.0;
 
 		double T = sys.GasPhase().Temperature();
 		double V_smpl = sys.SampleVolume();
