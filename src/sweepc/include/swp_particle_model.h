@@ -267,6 +267,7 @@ public:
     enum postprocessingType {
         XA4,
         wdotA4,
+		normal,
     };
 
     //! Choose between drag models
