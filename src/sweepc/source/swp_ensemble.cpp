@@ -231,7 +231,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 
 	//csl37: for testing purposes 
 	//in future initialise such that the number of tracked particles can be modified
-	m_tracked_number = 1;
+	m_tracked_number = 0;	//csl37-ttip no tracking
 	m_tracked_particles.resize(m_tracked_number, NULL);
 }
 
@@ -464,7 +464,7 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
     
 	//csl37: for only one particle, set to NULL
 	//expand to multiple
-	if(m_tracked_particles[0] == m_particles[i] && i<m_count) m_tracked_particles[0] = NULL;
+//	if(m_tracked_particles[0] == m_particles[i] && i<m_count) m_tracked_particles[0] = NULL; //csl37-ttip
 
 	// Check that particle index is valid.
     if (i<m_count-1) {
@@ -523,7 +523,7 @@ void Sweep::Ensemble::RemoveInvalids(void)
 
 		//csl37: for only one particle, set to NULL
 		//expand to multiple
-		if(m_tracked_particles[0] == *validEnd) m_tracked_particles[0] = NULL;
+//		if(m_tracked_particles[0] == *validEnd) m_tracked_particles[0] = NULL;	//csl37-ttip
 
         delete *validEnd;
         *validEnd = NULL;
@@ -576,7 +576,7 @@ void Sweep::Ensemble::Replace(unsigned int i, Particle &sp)
     if (i<m_count) {
 		//csl37: for only one particle, set to NULL
 		//expand to multiple
-		if(m_tracked_particles[0] == m_particles[i]) m_tracked_particles[0] = NULL;
+//		if(m_tracked_particles[0] == m_particles[i]) m_tracked_particles[0] = NULL;		//csl37-ttip
 
         // First delete current particle, then
         // set pointer to new particle.
@@ -1232,7 +1232,7 @@ Particle *const Sweep::Ensemble::TrackedAt(unsigned int i)
 
 void Sweep::Ensemble::InitialiseTracking(){
 	//csl37: add tracked particles
-	m_tracked_number = 1;	//only done for one particle
+	m_tracked_number = 0;	//only done for one particle	//csl37-TTIP
 	int i = 0;
 	while(i < m_tracked_number && i<m_count){
 		m_tracked_particles[i] = m_particles[i];
