@@ -1202,7 +1202,8 @@ bool BinTreePrimary::MergeCondition()
 				//ensures that particles are merged if the sintering step overshoots
 				condition = true;
 			}else{
-				condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) <= 0.0);
+			//	condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) <= 0.0); //csl37:old condition
+				condition = ( d_ij <= max(r_i,r_j) );	//csl37: new "simpler" condition 
 			}
 		}
 	}
