@@ -1246,15 +1246,11 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			//! Time for one particular PAH to grow.
 			double growtime = t - (*it)->lastupdated;
 			assert(growtime >= 0.0);
-
+			double statweightold = statweight;
 			const int oldNumCarbon = (*it)->m_pahstruct->numofC(); 
 			const int oldNumH = (*it)->m_pahstruct->numofH();
 
 			double updatetime;
-			bool calcrates = true;
-			int numloops = 1;
-			double ratefactor = 1.0;
-			double statweightold = statweight;
 
 			if (m_PAH.size() == 1 && statweight > 1.0){ //if this is a particle with a single PAH, it may be weighted. 
 				                                        //If so, we do not want to update the PAH, but rather update a clone of 
@@ -1266,12 +1262,8 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					new_m_PAH->PAH_ID = ID;
 					ID++;
 
-					if (numloops > 1){
-						calcrates = false;
-					}
-
 					updatetime = sys.Particles().Simulator()->updatePAH(new_m_PAH->m_pahstruct, (*it)->lastupdated, growtime, 1, 1,
-						calcrates, ratefactor, rng, growthfact*statweight, new_m_PAH->PAH_ID);
+						 rng, growthfact*statweightold, new_m_PAH->PAH_ID);
 
 					new_m_PAH->lastupdated = updatetime;
 					(*it)->lastupdated = updatetime;
@@ -1313,9 +1305,6 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 							//This new particle must also be updated to time t
 							pri->UpdatePAHs(t, t - updatetime, model, sys, 1, -1, rng, overflow);
-							numloops = 0;
-							calcrates = true;
-							statweightold = statweight;
 							sp->SetTime(t);
 							new_m_PAH->lastupdated = t;
 
@@ -1325,7 +1314,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 							//Check if the PAH is still valid after being updated
 							if (new_m_PAH->m_pahstruct->numofRings() >= thresholdOxidation){
-										overflow.push_back(sp);
+								overflow.push_back(sp);
 							}
 							else{
 								delete sp;
@@ -1342,14 +1331,11 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					}
 
 					growtime = t - (*it)->lastupdated;
-					numloops++;
-					ratefactor = statweight / statweightold;
 				}
 				//Final update after statistical weight reaches 1
 				if (growtime > 0.0){
-					calcrates = true;
 					updatetime = sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, 0,
-						calcrates, ratefactor, rng, growthfact, (*it)->PAH_ID);
+						 rng, growthfact, (*it)->PAH_ID);
 
 					(*it)->lastupdated = t;
 
@@ -1376,7 +1362,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			}
 			else{
 				updatetime = sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, 0,
-					calcrates, ratefactor, rng, growthfact, (*it)->PAH_ID);
+					rng, growthfact, (*it)->PAH_ID);
 
 				(*it)->lastupdated = t;
 
@@ -1398,21 +1384,6 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					m_PAHclusterchanged = true;
 					m_PAHchanged = true;
 				}
-
-				//if this primary constains a single PAH, it is a particle representing a monomer PAH
-				//if (m_PAHclusterchanged && m_numPAH == 1){
-				//if (m_PAHclusterchanged && m_numPAH == 1 && ind != -1){
-				//	//Check if there is another particle that is a single PAH that matches the PAH
-				//	//This also checks that both PAHs are currently updated to the same time
-				//	int indpart;
-				//	indpart = sys.Particles().CheckforPAH(*((*it)->m_pahstruct), t, ind);
-				//	if (indpart != -1 && indpart != ind){ //There is a matching particle
-				//		int oldweight = (*sys.Particles().At(indpart)).getStatisticalWeight();
-				//		(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight + 1.0);
-				//		//Invalidate the PAH (and hence the particle) by setting number of carbons
-				//		(*it)->m_pahstruct->setnumofC(5);			
-				//	}
-				//}
 
 			}
 

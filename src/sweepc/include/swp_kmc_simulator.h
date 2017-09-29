@@ -127,8 +127,6 @@ namespace Sweep{
                            const double dt,           //! growth time.
                            const int waitingSteps,    //! waiting step used to calculate maximum time interval, currently use 1.
 						   const int maxloops,        //! maximum number of loops to take. 0 means no limit
-						   const bool calcrates,      //flag if rates should be re-calculated
-						   const double ratefactor,      //Factor that multiplies the total rate
                            rng_type &rng,             //! random number generator.
                            double r_factor,           //! growth factor g, one important parameter used in this model.
                            int PAH_ID);               //! ID of this pah, used for debugging.

@@ -256,9 +256,7 @@ int main(int argc, char *argv[])
 				Simulator->updatePAH(pah[i],
 					t_now, step_size,
 					1,//no_of_steps,
-					1,
-					true,
-					1,
+					0,
 					rng,
 					1,
 					ID + i);
