@@ -868,7 +868,8 @@ void Sweep::Ensemble::dble()
             //}
 				const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
 				rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
-				if (rhsparticle->NumPAH() > 1){ //If this particle is not just a single PAH
+				if (rhsparticle->NumPAH() > 1 ||
+					!rhsparticle->ParticleModel()->Components(0)->WeightedPAHs()){ //If this particle is not just a single PAH
 				//if (rhsparticle->NumPAH() > 0){ //If this particle is not just a single PAH
 					
 					size_t iCopy = prevCount + ii;

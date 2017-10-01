@@ -1335,7 +1335,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				//Final update after statistical weight reaches 1
 				if (growtime > 0.0){
 					updatetime = sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, 0,
-						 rng, growthfact, (*it)->PAH_ID);
+						rng, growthfact*statweightold, (*it)->PAH_ID);
 
 					(*it)->lastupdated = t;
 
