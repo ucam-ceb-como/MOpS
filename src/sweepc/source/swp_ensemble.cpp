@@ -442,7 +442,8 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 			//Check if this particle contains a single primary with a single PAH with the same 
 			//amount of hydrogens and carbons
 			if (pah->Numprimary() == 1 && pah->NumPAH() == 1 && pah->NumCarbon() == m_PAH.numofC()
-				&& pah->NumHydrogen() == m_PAH.numofH()){
+				&& pah->NumHydrogen() == m_PAH.numofH() && pah->NumRings() == m_PAH.numofRings()
+				&& pah->NumRings5() == m_PAH.numofRings5()){
 				//Check if this single PAH matches the target PAH structure
 				/*std::list<KMC_ARS::Site> sitelistInput = m_PAH.GetSiteList();
 				std::list<KMC_ARS::Site> sitelistComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteList();
@@ -467,6 +468,7 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 					sitemapInput[KMC_ARS::AC].size() == sitemapComp[KMC_ARS::AC].size() &&
 					sitemapInput[KMC_ARS::BY6].size() == sitemapComp[KMC_ARS::BY6].size() &&
 					sitemapInput[KMC_ARS::BY5].size() == sitemapComp[KMC_ARS::BY5].size() &&
+					sitemapInput[KMC_ARS::R5].size() == sitemapComp[KMC_ARS::R5].size() &&
 					sitemapInput[KMC_ARS::RFE].size() == sitemapComp[KMC_ARS::RFE].size() &&
 					sitemapInput[KMC_ARS::RZZ].size() == sitemapComp[KMC_ARS::RZZ].size() &&
 					sitemapInput[KMC_ARS::RAC].size() == sitemapComp[KMC_ARS::RAC].size() &&

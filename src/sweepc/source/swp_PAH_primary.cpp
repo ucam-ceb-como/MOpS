@@ -100,6 +100,7 @@ PAHPrimary::PAHPrimary() : Primary(),
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
+	m_numOfRings5(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -139,6 +140,7 @@ PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model)
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
+	m_numOfRings5(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -187,6 +189,7 @@ PAHPrimary::PAHPrimary(const double time, const double position,
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
+	m_numOfRings5(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -230,6 +233,7 @@ PAHPrimary::PAHPrimary(double time, const Sweep::ParticleModel &model, bool noPA
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
+	m_numOfRings5(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -421,6 +425,7 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
     m_numH = source->m_numH;
     m_numOfEdgeC = source->m_numOfEdgeC;
     m_numOfRings = source->m_numOfRings;
+	m_numOfRings5 = source->m_numOfRings5;
     m_values=source->m_values;
     m_comp=source->m_comp;
     m_sint_time=source->m_sint_time;
@@ -1263,10 +1268,12 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					ID++;
 
 					updatetime = sys.Particles().Simulator()->updatePAH(new_m_PAH->m_pahstruct, (*it)->lastupdated, growtime, 1, 1,
-						 rng, growthfact*statweightold, new_m_PAH->PAH_ID);
+						 rng, growthfact*statweight, new_m_PAH->PAH_ID);
 
 					new_m_PAH->lastupdated = updatetime;
 					(*it)->lastupdated = updatetime;
+
+					growtime = t - (*it)->lastupdated;
 
 					//! Invalidate PAH.
 					/*!
@@ -1275,7 +1282,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					* want to remove single PAHs in the gas-phase which fall below the
 					* minimum number of rings for nception but are still growing.
 					*/
-					if (new_m_PAH->m_pahstruct->numofRings() < thresholdOxidation && m_numPAH >= minPAH){
+					if (new_m_PAH->m_pahstruct->numofRings() < thresholdOxidation ){
 						statweight--;
 						(*sys.Particles().At(ind)).setStatisticalWeight(statweight);
 						new_m_PAH.reset();
@@ -1284,43 +1291,41 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 					//! See if anything changed, as this will required a call to UpdatePrimary() below.
 					//This will also dictate if the new PAH is used to create a new particle, or if it is just destroyed
-					else if (oldNumCarbon != new_m_PAH->m_pahstruct->numofC() || oldNumH != new_m_PAH->m_pahstruct->numofH())
+					//else if (oldNumCarbon != new_m_PAH->m_pahstruct->numofC() || oldNumH != new_m_PAH->m_pahstruct->numofH())
+					else if (growtime > 0.0)
 					{
 						//Reduce statistical weight of the particle being updated
 						statweight--;
 						(*sys.Particles().At(ind)).setStatisticalWeight(statweight);
-						if (new_m_PAH->m_pahstruct->numofC() > 5){ //If the new PAH is still valid
-							Particle *sp = NULL;
-							sp = model.CreateParticle(updatetime);
-							AggModels::PAHPrimary *pri =
-								dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
-							pri->m_PAH.clear();
-							pri->m_PAH.push_back(new_m_PAH);
-							sp->SetTime(updatetime);
-							//Update the primary and the cache
-							pri->UpdatePrimary();
-							sp->UpdateCache();
 
-							//int index = sys.Particles().Add(*sp, rng); //Add particle to the ensemble
+						Particle *sp = NULL;
+						sp = model.CreateParticle(updatetime);
+						AggModels::PAHPrimary *pri =
+							dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
+						pri->m_PAH.clear();
+						pri->m_PAH.push_back(new_m_PAH);
+						sp->SetTime(updatetime);
+						//Update the primary and the cache
+						pri->UpdatePrimary();
+						sp->UpdateCache();
 
-							//This new particle must also be updated to time t
-							pri->UpdatePAHs(t, t - updatetime, model, sys, 1, -1, rng, overflow);
-							sp->SetTime(t);
-							new_m_PAH->lastupdated = t;
+						//int index = sys.Particles().Add(*sp, rng); //Add particle to the ensemble
 
-							//Update the primary and the cache
-							pri->UpdatePrimary();
-							sp->UpdateCache();
+						//This new particle must also be updated to time t
+						pri->UpdatePAHs(t, t - updatetime, model, sys, 1, -1, rng, overflow);
+						sp->SetTime(t);
+						new_m_PAH->lastupdated = t;
 
-							//Check if the PAH is still valid after being updated
-							if (new_m_PAH->m_pahstruct->numofRings() >= thresholdOxidation){
-								overflow.push_back(sp);
-							}
-							else{
-								delete sp;
-							}
+						//Update the primary and the cache
+						pri->UpdatePrimary();
+						sp->UpdateCache();
+
+						//Check if the PAH is still valid after being updated
+						if (new_m_PAH->m_pahstruct->numofRings() >= thresholdOxidation){
+							overflow.push_back(sp);
 						}
 						else{
+							delete sp;
 							new_m_PAH.reset();
 							ID--;
 						}
@@ -1329,13 +1334,11 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						new_m_PAH.reset();
 						ID--;
 					}
-
-					growtime = t - (*it)->lastupdated;
 				}
 				//Final update after statistical weight reaches 1
 				if (growtime > 0.0){
 					updatetime = sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, 0,
-						rng, growthfact*statweightold, (*it)->PAH_ID);
+						rng, growthfact, (*it)->PAH_ID);
 
 					(*it)->lastupdated = t;
 
@@ -1346,7 +1349,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					* want to remove single PAHs in the gas-phase which fall below the
 					* minimum number of rings for inception but are still growing.
 					*/
-					if ((*it)->m_pahstruct->numofRings() < thresholdOxidation && m_numPAH >= minPAH){
+					if ((*it)->m_pahstruct->numofRings() < thresholdOxidation){
 						(*it)->m_pahstruct->setnumofC(5);
 					}
 
@@ -1392,7 +1395,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			 * consider 2 PAH, the first is invalid, the other is valid. If not using the
              * second condition, the m_InvalidPAH will be false enventually, but it should be true.
 			 */ 
-			if (m_PAHchanged && !m_InvalidPAH)
+			if (m_PAHchanged && !m_InvalidPAH && ind != -1)
 				m_InvalidPAH = CheckInvalidPAHs(*it);
         }
         if (m_InvalidPAH)
@@ -1959,6 +1962,7 @@ void PAHPrimary::UpdatePrimary(void)
         m_numH            = 0;
         m_numOfEdgeC      = 0;
         m_numOfRings      = 0;
+		m_numOfRings5      = 0;
         m_numPAH          = m_PAH.size();
         m_PAHmass         = 0.0;
         m_PAHCollDiameter = 0.0;
@@ -1969,6 +1973,7 @@ void PAHPrimary::UpdatePrimary(void)
         m_numH            = 0;
         m_numOfEdgeC      = 0;
         m_numOfRings      = 0;
+		m_numOfRings5     = 0;
         m_numPAH          = m_PAH.size();
         m_PAHmass         = 0.0;
         m_PAHCollDiameter = 0.0;
@@ -2010,6 +2015,7 @@ void PAHPrimary::UpdatePrimary(void)
             m_numH += (*i)->m_pahstruct->numofH();
             m_numOfEdgeC += (*i)->m_pahstruct->numofEdgeC();
             m_numOfRings += (*i)->m_pahstruct->numofRings();
+			m_numOfRings5 += (*i)->m_pahstruct->numofRings5();
             maxcarbon = max(maxcarbon, (*i)->m_pahstruct->numofC()); //!< Search for the largest PAH-in terms of the number of carbon atoms-in the primary.
         }
 		m_numOf6Rings = m_numOfRings;
@@ -2116,6 +2122,7 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
 
         m_numOfEdgeC=m_leftchild->m_numOfEdgeC + m_rightchild->m_numOfEdgeC;
         m_numOfRings=m_leftchild->m_numOfRings + m_rightchild->m_numOfRings;
+		m_numOfRings5 = m_leftchild->m_numOfRings5 + m_rightchild->m_numOfRings5;
         // calculate the coalescence level of the two primaries connected by this node
         m_children_roundingLevel=CoalescenceLevel();
         //sum up the avg coal level
@@ -2255,6 +2262,11 @@ int PAHPrimary::NumEdgeC() const
 int PAHPrimary::NumRings() const
 {
     return m_numOfRings;
+}
+
+int PAHPrimary::NumRings5() const
+{
+	return m_numOfRings5;
 }
 
 int PAHPrimary::NumPAH() const
