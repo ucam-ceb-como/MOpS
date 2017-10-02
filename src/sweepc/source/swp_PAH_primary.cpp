@@ -1336,15 +1336,8 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				//Now update the PAH one last time
 				if (growtime > 0.0){
 
-					if (numloops > 0){
-						calcrates = false;
-					}
-					else{
-						calcrates = true;
-					}
-
 					updatetime = sys.Particles().Simulator()->updatePAH((*it)->m_pahstruct, (*it)->lastupdated, growtime, 1, 0,
-						rng, growthfact, (*it)->PAH_ID, calcrates, ratefactor);
+						rng, growthfact, (*it)->PAH_ID, true, 1.0);
 
 					(*it)->lastupdated = t;
 
@@ -1374,7 +1367,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					AggModels::PAHPrimary *pri =
 						dynamic_cast<AggModels::PAHPrimary*>((*(*it1)).Primary());
 					//This new particle must also be updated to time t
-					pri->UpdatePAHs(t, t - updatetime, model, sys, 1, -1, rng, overflow);
+					pri->UpdatePAHs(t, t - (*it1)->LastUpdateTime(), model, sys, 1, -1, rng, overflow);
 					(*it1)->SetTime(t);
 
 					//Update the primary and the cache
