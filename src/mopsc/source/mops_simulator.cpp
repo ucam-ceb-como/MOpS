@@ -430,7 +430,8 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 		PartCoordsName = "Part-Coords(" + rname + ").csv";
 
 		PartCoordsFile.open(PartCoordsName.c_str());
-		PartCoordsFile << "Time (s)" << " , " << "x (m)" << " , " << "y (m)" << " , " << "z (m)" << " , " << "r (m)" << " \n ";
+		PartCoordsFile << "Time (s)" << " , " << "x (m)" << " , " << "y (m)" << " , " << "z (m)" << " , " << "r (m)" <<
+			" , " << "k1" << " , " << "k2" << " , " << "k3" << " , " << "i1" << " , " << "i2" << " , " << "i3" << " \n ";
 		PartCoordsFile.close();
 		//////////////////////////////////////////// csl37 ////////////////////////////////////////////
 

@@ -854,6 +854,16 @@ void Sweep::Ensemble::dble()
         // Reset the contents of the binary tree to match the new population, if it has been changed
         if(originalCount < m_count)
             rebuildTree();
+
+		//csl37-tracking
+		//unflag primaries in untracked particles that have been copies from tracked particles 
+		for(int j = 0; j != m_count; j++) {
+			//if particle is not tracked unflag primaries
+			//currently assumes that only one particle is tracked
+			if(m_particles[j] != m_tracked_particles[0]) {
+				m_particles[j]->removeTracking();
+			}
+		}
     }
 }
 
@@ -1213,7 +1223,7 @@ double Ensemble::WeightExtractor::operator()(const particle_cache_type& cache) c
 void Sweep::Ensemble::UpdateTracking(int p_old, int p_merged){
 
 	//csl37
-	//works for one particle at the moments
+	//works for one particle at the moment
 	if(m_tracked_particles[0] == m_particles[p_old])
 		m_tracked_particles[0] = m_particles[p_merged];
 
@@ -1236,6 +1246,8 @@ void Sweep::Ensemble::InitialiseTracking(){
 	int i = 0;
 	while(i < m_tracked_number && i<m_count){
 		m_tracked_particles[i] = m_particles[i];
+		//initialise tracking of primary
+		m_tracked_particles[i]->setTracking();
 		i++;
 	}
 }
