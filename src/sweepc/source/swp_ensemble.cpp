@@ -142,6 +142,14 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
                 m_particles[i] = rhs.m_particles[i]->Clone();
             }
 
+			//csl37
+			//copy tracked particles
+			m_tracked_number = rhs.m_tracked_number;
+			m_tracked_particles.resize(rhs.m_tracked_number, NULL);
+			for (unsigned int i=0; i!=rhs.m_tracked_number; ++i) {
+                m_tracked_particles[i] = rhs.m_tracked_particles[i]->Clone();
+            }
+
             m_tree.resize(m_capacity);
             rebuildTree();
         }
@@ -220,6 +228,11 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 
     m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
+
+	//csl37: for testing purposes 
+	//in future initialise such that the number of tracked particles can be modified
+	m_tracked_number = 1;
+	m_tracked_particles.resize(m_tracked_number, NULL);
 }
 
 /*!
@@ -307,6 +320,13 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
         m_dbleactive = true;
     } else
         m_dbleactive = false;
+
+	//csl37: add tracked particles -- we can remove this now that we a function to initialise tracking
+	int i = 0;
+	while(i < m_tracked_number && i<m_count){
+		m_tracked_particles[i] = m_particles[i];
+		i++;
+	}
 
     // Build the tree with the weights for the new particles.
     rebuildTree();
@@ -399,10 +419,15 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         m_particles[i] = &sp;
         m_tree.push_back(tree_type::value_type(sp, m_particles.begin() + i));
         //m_numofInceptedPAH++;
+
+		//csl37:ToDo check if need to add to tracked particle here
+
     } else if ((unsigned)i < m_capacity) {
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
         Replace(i, sp);
+
+		//csl37:ToDo replace function will remove tracked particle
     } else {
         // The new particle is to be removed immediately
         assert(static_cast<unsigned int>(i) == m_capacity);
@@ -436,7 +461,12 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
     //        }
     //    }
     //SetNumOfInceptedPAH(-1,m_particles[i]->Primary());
-    // Check that particle index is valid.
+    
+	//csl37: for only one particle, set to NULL
+	//expand to multiple
+	if(m_tracked_particles[0] == m_particles[i] && i<m_count) m_tracked_particles[0] = NULL;
+
+	// Check that particle index is valid.
     if (i<m_count-1) {
         // First delete particle from memory, then
         // overwrite it with the last particle, which
@@ -490,6 +520,11 @@ void Sweep::Ensemble::RemoveInvalids(void)
 
     // Now delete the invalid particles and nullify the corresponding pointers
     while(validEnd != m_particles.end()) {
+
+		//csl37: for only one particle, set to NULL
+		//expand to multiple
+		if(m_tracked_particles[0] == *validEnd) m_tracked_particles[0] = NULL;
+
         delete *validEnd;
         *validEnd = NULL;
         ++validEnd;
@@ -539,6 +574,10 @@ void Sweep::Ensemble::Replace(unsigned int i, Particle &sp)
     //SetNumOfInceptedPAH(1);
     // Check index is within range.
     if (i<m_count) {
+		//csl37: for only one particle, set to NULL
+		//expand to multiple
+		if(m_tracked_particles[0] == m_particles[i]) m_tracked_particles[0] = NULL;
+
         // First delete current particle, then
         // set pointer to new particle.
         delete m_particles[i];
@@ -580,6 +619,12 @@ void Sweep::Ensemble::ClearMain()
     m_maxcount   = 0;
     m_ndble      = 0;
     m_dbleactive = false;
+
+	//csl37: set tracked particle pointers to NULL
+    for (PartPtrVector::size_type i = 0; i != m_tracked_particles.size(); ++i) {
+        m_tracked_particles[i] = NULL;
+    }
+
 }
 
 // SELECTING PARTICLES.
@@ -900,6 +945,15 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
+		//csl37
+		// Output the tracked particles.
+		n = (unsigned int)m_tracked_number;
+        out.write((char*)&n, sizeof(n));
+        for (unsigned int i=0; i!=m_tracked_number; ++i) {
+            m_tracked_particles[i]->Serialize(out, &uniquePAHAdresses);
+        }
+		
+
     } else {
         throw std::invalid_argument("Output stream not ready "
                                "(Sweep, Ensemble::Serialize).");
@@ -985,6 +1039,15 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                     m_contwarn = false;
                 }
 
+				//csl37
+				// Read the particles.
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_tracked_number = n;
+                for (unsigned int i=0; i!=m_tracked_number; ++i) {
+                    Particle *p = new Particle(in, model, &duplicates);
+                    m_tracked_particles[i] = p;
+                }
+				
                 // Calculate binary tree.
                 rebuildTree();
 
@@ -1012,6 +1075,13 @@ void Sweep::Ensemble::releaseMem(void)
     }
     m_particles.clear();
 
+	//csl37
+	// Delete particles from memory and delete vectors.
+    for (int i=0; i!=(int)m_tracked_particles.size(); ++i) {
+        delete m_tracked_particles[i];
+        m_tracked_particles[i] = NULL;
+    }
+    m_tracked_particles.clear();
 }
 
 // Sets the ensemble to its initial condition.  Used in constructors.
@@ -1040,6 +1110,9 @@ void Sweep::Ensemble::init(void)
     m_dbleslack  = 0;
     m_dbleon     = true;
 
+	//csl37
+	m_tracked_number = 0;
+
 }
 
 //int Sweep::Ensemble::NumOfInceptedPAH() const
@@ -1066,7 +1139,7 @@ int Sweep::Ensemble::NumOfInceptedPAH(int ID) const
 {
     int numOfInceptedPAHs = 0;
 
-    if (ID == AggModels::Spherical_ID) {
+    if (ID == AggModels::Spherical_ID || ID == AggModels::BinTree_ID) {
         for (int i = 0; i < m_count; i++){
             if (m_particles[i]->Primary()->InceptedPAH()) {
                 numOfInceptedPAHs += 1;
@@ -1135,4 +1208,34 @@ Ensemble::WeightExtractor::WeightExtractor(const Sweep::PropID id)
  */
 double Ensemble::WeightExtractor::operator()(const particle_cache_type& cache) const {
     return cache.Property(mId);
+}
+
+void Sweep::Ensemble::UpdateTracking(int p_old, int p_merged){
+
+	//csl37
+	//works for one particle at the moments
+	if(m_tracked_particles[0] == m_particles[p_old])
+		m_tracked_particles[0] = m_particles[p_merged];
+
+}
+
+// Returns a pointer to the given tracked.
+Particle *const Sweep::Ensemble::TrackedAt(unsigned int i)
+{
+    // Check that the index in within range, then return the particle.
+    if (i < m_tracked_number) {
+        return m_tracked_particles[i];
+    } else {
+        return NULL;
+    }
+}
+
+void Sweep::Ensemble::InitialiseTracking(){
+	//csl37: add tracked particles
+	m_tracked_number = 1;	//only done for one particle
+	int i = 0;
+	while(i < m_tracked_number && i<m_count){
+		m_tracked_particles[i] = m_particles[i];
+		i++;
+	}
 }

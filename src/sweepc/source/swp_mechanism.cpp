@@ -130,6 +130,14 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
             m_coags.back()->SetMechanism(*this);
         }
 
+        // Copy coagulation processes.
+        for (FragPtrVector::const_iterator i=rhs.m_frags.begin();
+            i!=rhs.m_frags.end(); ++i) {
+            m_frags.push_back((*i)->Clone());
+
+            // Need to update the parent mechanism
+            m_frags.back()->SetMechanism(*this);
+        }
 
         // Copy process counters.
         m_proccount.assign(rhs.m_proccount.begin(), rhs.m_proccount.end());
@@ -240,6 +248,35 @@ const CoagPtrVector &Mechanism::Coagulations(void) const
     return m_coags;
 }
 
+// COAGULATIONS.
+
+/*!
+ * @param[in,out]   coag    New coagulation process
+ *
+ * Ownership of the process will be taken by the mechanism.  The
+ * process must be heap allocated so that delete can be called on
+ * it.
+ */
+void Mechanism::AddFragmentation(Fragmentation& frag)
+{
+
+    m_frags.push_back(&frag);
+    m_termcount += frag.TermCount();
+    ++m_processcount;
+
+    m_termcount += frag.TermCount();
+    m_proccount.resize(m_termcount, 0);
+    m_fictcount.resize(m_termcount, 0);
+
+    // Set the coagulation to belong to this mechanism.
+    frag.SetMechanism(*this);
+}
+
+const FragPtrVector &Mechanism::Fragmentations(void) const
+{
+    return m_frags;
+}
+
 // PROCESS INFORMATION.
 
 // Returns the number of processes (including
@@ -300,6 +337,12 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
          it != m_coags.end(); ++it) {
         *i++ = (*it)->Name();
     }
+
+    // Add coagulation name.
+    for (FragPtrVector::const_iterator it = m_frags.begin();
+         it != m_frags.end(); ++it) {
+        *i++ = (*it)->Name();
+    }
 }
 
 
@@ -324,8 +367,11 @@ double Mechanism::CalcRates(double t, const Cell &sys, const Geometry::LocalGeom
     // Get coagulation rate.
     sum += Coagulation::CalcRates(t, sys, local_geom, m_coags, rates, m_inceptions.size() + m_processes.size());
 
+    // Get coagulation rate.
+    sum += Fragmentation::CalcRates(t, sys, local_geom, m_frags, rates, m_inceptions.size() + m_processes.size() + m_frags.size());
+
     // Get birth rates from the Cell.
-    fvector::iterator i = rates.begin() + m_inceptions.size() + m_processes.size() + m_coags.size();
+    fvector::iterator i = rates.begin() + m_inceptions.size() + m_processes.size() + m_coags.size() + m_frags.size();
     const BirthPtrVector &inf = sys.Inflows();
     for (BirthPtrVector::const_iterator j=inf.begin(); j!=inf.end(); ++j) {
         *i = (*j)->Rate(t, sys, local_geom);
@@ -403,6 +449,20 @@ double Mechanism::CalcJumps(double t, const Cell &sys, const Geometry::LocalGeom
         coagterms += m_coags[j]->TermCount();
     }
 
+    // Get number of coagulation jumps.
+    unsigned int fragterms(0);       // Number of terms already used
+    for (unsigned int j=0; j!=m_frags.size(); ++j) {
+        unsigned int fragsum(0);     // Sum of double and fictitious jumps
+        // Sum up all terms of this process
+        for (unsigned int k=0; k!=m_frags[j]->TermCount(); ++k) {
+            fragsum += m_proccount[k+m_inceptions.size()+m_processes.size()+coagterms+fragterms];
+            fragsum += m_fictcount[k+m_inceptions.size()+m_processes.size()+coagterms+fragterms];
+        }
+        (*iterm++) = fragsum;
+        sum += fragsum;
+        fragterms += m_frags[j]->TermCount();
+    }
+
     return sum;
 }
 
@@ -455,6 +515,9 @@ double Mechanism::CalcRateTerms(double t, const Cell &sys, const Geometry::Local
 
     // Coagulation
     sum += Coagulation::CalcRateTerms(t, sys, local_geom, m_coags, iterm);
+
+    // Coagulation
+    sum += Fragmentation::CalcRateTerms(t, sys, local_geom, m_frags, iterm);
 
     // Birth processes
     const BirthPtrVector &inf = sys.Inflows();
@@ -514,6 +577,9 @@ double Mechanism::CalcJumpRateTerms(double t, const Cell &sys, const Geometry::L
 
     // Get coagulation rate.
     sum += Coagulation::CalcRateTerms(t, sys, local_geom, m_coags, iterm);
+
+    // Get coagulation rate.
+    sum += Fragmentation::CalcRateTerms(t, sys, local_geom, m_frags, iterm);
 
     // Get birth rates from the Cell.
     const BirthPtrVector &inf = sys.Inflows();
@@ -722,6 +788,25 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
             }
         }
 
+        // We are here because the process was neither an inception
+        // nor a single particle process.  It is therefore either a
+        // coagulation or a birth/death process.
+        for(FragPtrVector::const_iterator it = m_frags.begin(); it != m_frags.end(); ++it) {
+            // Check if coagulation process.
+            if (j < static_cast<int>((*it)->TermCount())) {
+                // This is the coagulation process.
+                if ((*it)->Perform(t, sys, local_geom, j, rng) == 0) {
+                    m_proccount[i] += 1;
+                } else {
+                    m_fictcount[i] += 1;
+                }
+                return;
+            } else {
+                // This must be the birth/death process.
+                j -= (*it)->TermCount();
+            }
+        }
+
         if ((j < (int)sys.InflowCount()) && (j>=0)) {
             // An inflow process.
             sys.Inflows(j)->Perform(t, sys, local_geom, 0, rng);
@@ -815,7 +900,7 @@ void Mechanism::DoParticleFlow(
  */
 void Mechanism::MassTransfer(int i, double t, Cell &sys, rng_type &rng, const Geometry::LocalGeometry1d& local_geom) const
 {
-    if (AggModel() == AggModels::Spherical_ID) {
+    if (AggModel() == AggModels::Spherical_ID || AggModel() == AggModels::BinTree_ID) {
         int j = sys.Particles().NumOfInceptedPAH(AggModel());
 
         if (i > j) {
@@ -1058,6 +1143,14 @@ void Mechanism::Serialize(std::ostream &out) const
             ProcessFactory::Write(*(*i), out);
         }
 
+        // Coagulation
+        n = m_frags.size();
+        out.write(reinterpret_cast<const char*>(&n), sizeof(n));
+        for (FragPtrVector::const_iterator i = m_frags.begin();
+             i != m_frags.end(); ++i) {
+            ProcessFactory::Write(*(*i), out);
+        }
+
         // Write index of first coag process.
         int m = (int)m_icoag;
         out.write((char*)&m, sizeof(m));
@@ -1125,6 +1218,14 @@ void Mechanism::Deserialize(std::istream &in)
                     Coagulation *pCoag = ProcessFactory::ReadCoag(in, *this);
                     pCoag->SetMechanism(*this);
                     m_coags.push_back(pCoag);
+                }
+
+                // Read coagulation process.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                for(unsigned int i = 0; i != n; ++i) {
+                    Fragmentation *pFrag = ProcessFactory::ReadFrag(in, *this);
+                    pFrag->SetMechanism(*this);
+                    m_frags.push_back(pFrag);
                 }
 
                 // Read index of first coag process.

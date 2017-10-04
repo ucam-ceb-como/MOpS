@@ -2,20 +2,27 @@
 <mops version="2">
   
   <!-- Default parameters (can be overidden). --> 
-  <runs>2</runs>
+  <runs>1</runs>
   <iter>20</iter>
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>1024</pcount>
-  <maxm0>1.50e13</maxm0>
+  <pcount>32</pcount>
+  <maxm0>1.0e20</maxm0>
   
 
   <!-- Reactor definition (given initial conditions). -->
   <reactor type="batch" constt="true" constv="false" id="Test_System" units="mol/mol">
-    <temperature units="K">1400</temperature>
+    <temperature units="K">2000</temperature>
     <pressure units="bar">4.00</pressure>
-    <component id="TICL4">0.01</component>
-    <component id="O2">0.99</component>  
+    <component id="TICL4">0.50</component>
+    <component id="O2">0.50</component>  
+	<population>
+        <m0>1.0e19</m0>
+        <particle count="32">
+            <weight>1.0</weight>
+            <component id="Rutile" dx="10000"/>
+        </particle>
+    </population>
   </reactor>
 
   <!-- Output time sequence. -->
@@ -23,7 +30,7 @@
     <start>0.0</start>
 	<time steps="25" splits="4">0.00001</time>
 	<time steps="45" splits="4">0.0001</time>
-    <time steps="18" splits="4">0.001</time>
+	<time steps="45" splits="4">0.001</time>
   </timeintervals>
 
   <!-- Simulation output settings. -->
@@ -48,7 +55,7 @@
         <!--column fmt="sci">ct</column-->
       </tabular>
     </console>
-    <ptrack enable="false" ptcount="50"/>
+    <ptrack enable="true" ptcount="1"/>
     
     <!-- File name for output (excluding extensions). -->
   </output>

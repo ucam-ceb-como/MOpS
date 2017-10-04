@@ -133,13 +133,13 @@ private:
             fvector &gstdevs
             ) const;
 
-    //! Number of statistics entries
-    static const unsigned int STAT_COUNT = 10;
+    //! Number of statistics entries.
+    static const unsigned int STAT_COUNT = 11;
 
-    //! Indices for stats headers
+    //! Indices for stats headers.
     enum StatIndices {iNPrim=0, iPrimDiam=1, iSintLevel=2, iSintRate=3,
         iSintTime=4, iCollGStdev=5, iPrimGStdev=6, iGStdevMean=7, iCollGMean=8,
-        iPrimGMean=9};
+        iPrimGMean=9, iRg=10};
 
     //! The stats
     fvector m_stats;
@@ -151,8 +151,8 @@ private:
     //! The stat mask.
     static const IModelStats::StatType m_mask[STAT_COUNT];
 
-    //! PSL count
-    static const unsigned int PSL_COUNT  = 7;
+    //! PSL count.
+    static const unsigned int PSL_COUNT = 8;
 
     // The PSL names.
     static const std::string m_const_pslnames[PSL_COUNT];

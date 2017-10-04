@@ -61,6 +61,7 @@
 #include "swp_kmc_simulator.h"
 #include "swp_cell.h"
 #include "swp_bintree_serializer.h"
+#include "swp_coords.h"
 #include <boost/shared_ptr.hpp>
 
 #include <iostream>
@@ -84,7 +85,7 @@ public:
     /// be able to access the private members of the PAHPrimary class.
     ///////////////////////////////////////////////////////////////////////////
     template <class ParticleClass>
-    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimarySeparation);
+    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimaryCoordinates);
 
     template <class ParticleClass>
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
@@ -137,9 +138,11 @@ public:
     //! Returns a copy of the primary.
     virtual PAHPrimary *const Clone(void) const;
 	
-
     //! coagulates this particle with rhs
     PAHPrimary &Coagulate(const Primary &rhs, rng_type &rng);
+
+    //! coagulates this particle with rhs
+    PAHPrimary &Fragment(const Primary &rhs, rng_type &rng);
 
     //! investigate the sintering of PAH cluster
     void Sinter(double dt, Cell &sys,
@@ -358,7 +361,20 @@ private:
     // Vector of std::tr1::shared_ptr<PAH>.
     std::vector<boost::shared_ptr<PAH> > m_PAH;
 
+	//! Bounding-sphere centre.
+    Coords::Vector m_cen_bsph; 
 
+    //! Centre-of-mass coordinates.
+    Coords::Vector m_cen_mass;
+
+    //! Radius of bounding sphere raised to powers of 1, 2 and 3.
+    double m_r;  //!< Bounding sphere radius of aggregate/primary.
+    double m_r2; //!< r squared (useful for efficient collision detection computation).
+    double m_r3; //!< r cubed (useful for calculating centre-of-mass).
+
+    //! For the purpose of creating a video keep a count of the number of
+    //! events which describe the evolution of a representative particle.
+    static unsigned int Counter;
 };
 } //namespace AggModels
 } //namespace Sweep

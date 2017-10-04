@@ -342,6 +342,13 @@ public:
     //! Return the flag used to indicate whether to track the distance between the centres of primary particles.
     const bool getTrackPrimarySeparation() const {return m_trackPrimarySeparation;}
 
+    //! Activates tracking of the coordinates of primary particles.
+    void setTrackPrimaryCoordinates(bool flag) {m_trackPrimaryCoordinates = flag;}
+
+    //! Return the flag used to indicate whether to track the coordinates of
+    //! primary particles.
+    const bool getTrackPrimaryCoordinates() const {return m_trackPrimaryCoordinates;}
+
     void setPostprocessingType(postprocessingType Type) {m_postprocessingType = Type;};
 
     postprocessingType Postprocessing(void) const {return m_postprocessingType;};
@@ -491,6 +498,9 @@ private:
 
     //! Flag to indicate whether to track the distance between the centres of neighbouring primary particles.
     bool m_trackPrimarySeparation;
+
+    //! Flag to indicate whether to track the coordinates of primary particles.
+    bool m_trackPrimaryCoordinates;
 
     postprocessingType m_postprocessingType;
 

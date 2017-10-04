@@ -45,15 +45,18 @@
 
 namespace Sweep
 {
-    //! Symbolic indices for particle properties
+    //! Symbolic indices for particle properties.
     enum PropID {
-        iUniform=-1, // Special Case:  Always returns 1.0.  Used to select particles uniformly.
-        iDsph,   // Equivalent sphere diameter.
-        iDcol,   // Collision diameter.
-        iDmob,   // Mobility diameter.
-        iS,      // Surface area.
-        iV,      // Volume.
-        iM,      // Mass.
+        iUniform=-1, /**< Special Case:  Always returns 1.0.  Used to select particles uniformly. */
+        iDsph,       /**< Equivalent sphere diameter. */
+        iDcol,       /**< Collision diameter. */
+        iDmob,       /**< Mobility diameter. */
+        iS,          /**< Surface area. */
+        iV,          /**< Volume. */
+        iM,          /**< Mass. */
+		iNumCarbon,  /**< Number of carbon atoms. */
+        iFrag,       /**< Fragmentation flag. */
+
         // The next properties are provided for calculation of
         // collision rates.
         iD2,      // Collision diameter squared.
@@ -75,8 +78,6 @@ namespace Sweep
 
         iD2_M_1_2, // D^2 * M^-1/2.
 		iFS,		// the free surface available for other particles to sinter
-
-		iNumCarbon, // Number of Carbon atoms
 
 		// Silica model properties
 		iASN, // Number of active (OH) sites available

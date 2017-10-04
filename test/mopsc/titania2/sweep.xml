@@ -14,10 +14,9 @@
 		<fractdim>1.8</fractdim>
 		<coalthresh>1.0</coalthresh>
 		<sintering enable="true" model="GBD">
-			<!-- GBD model params -->
-			<A units="s/m4K">7.44E+16</A>
-			<!-- Kobata et al. -->
-			<E units="K">31032</E>
+			<!-- GBD model params based on Eggersdorfer et al. (2012)-->
+			<A units="s/m4K">9.112e+17</A>
+			<E units="K">31030</E>
 			<Dpmin units="m">0</Dpmin>
 		</sintering>
 	</particle>

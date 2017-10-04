@@ -114,6 +114,10 @@ public:
     virtual SurfVolCubicPrimary &Coagulate(const Primary &rhs,
                                       rng_type &rng);
 
+    // Combines this primary with another.
+    virtual SurfVolCubicPrimary &Fragment(const Primary &rhs,
+                                      rng_type &rng);
+
     // READ/WRITE/COPY.
 
     //! Returns a copy of the primary.
