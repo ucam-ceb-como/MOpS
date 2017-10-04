@@ -36,7 +36,7 @@
 		<product id="CL2" stoich="+2.0" />
 		<particlein  id="[Ru]"/>
 		<particleout id="[Ru]"/>
-		<A>8.06948e+28</A> <!-- cm/s * Avogadros number -->
+		<A>8.06948e+27</A> <!-- cm/s * Avogadros number -->
 		<n>0.0</n>
 		<E units="cal">14.3404</E> <!-- kcal/mol -->
 		<particleterm id="s" power="1.0"/>

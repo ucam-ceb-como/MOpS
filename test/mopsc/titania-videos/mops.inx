@@ -28,9 +28,7 @@
   <!-- Output time sequence. -->
   <timeintervals>
     <start>0.0</start>
-	<time steps="25" splits="4">0.00001</time>
-	<time steps="45" splits="4">0.0001</time>
-	<time steps="45" splits="4">0.001</time>
+	<time steps="1000" splits="4">0.01</time>
   </timeintervals>
 
   <!-- Simulation output settings. -->
