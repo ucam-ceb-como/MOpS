@@ -1,6 +1,8 @@
 
 function mov = video()
 
+    close all;
+    
     %% location of data
     mops_path = '.\';           %%root folder
     coords_file = strcat(mops_path,'\Part-Coords().csv');
@@ -14,11 +16,16 @@ function mov = video()
     mov(:) = struct('cdata',[],'colormap',[]);
     set(gca,'nextplot','replacechildren');
     
+    v = VideoWriter('movie.avi');
+    v.FrameRate = 15;
+    open(v);
+
     nframe = 1;
-    box_size =  [-150e-9 150e-9];
-    for k = 1:n
+    box_size =  [-120e-9 120e-9];
+    k=200; %test
+    %for k = 60:n
         %if (or(k==1, isequal(coords(:,:,k),coords(:,:,k-1))==0))
-        if (mod(n,5)==0)
+     %   if (mod(k,2)==0)
             %%draw particle
             fig = draw_particle(coords,k);
             xlim(box_size)
@@ -28,13 +35,12 @@ function mov = video()
             light('Position',[-1,-1,1]);
             %%get movie frame
             mov(nframe) = getframe(fig);
+            writeVideo(v,getframe(gca))
             nframe = nframe + 1;
-        end
-    end
-    
-    %%produce movie
- 
-    movie2avi(mov, '3moviename.avi', 'compression', 'None');
+      %  end
+    %end
+        
+    close(v)
 end
 
 %%draws a particle
@@ -49,14 +55,14 @@ function [fig] = draw_particle(coords,k)
         s = draw_primary(coords(i,:,k));
         set(s,'FaceColor',[0.7 0.7 0.7],'FaceAlpha',1,'EdgeColor' ,'none');
     end
-    
+    colormap gray
     fig = gcf;
 end
 
 %%draws a primary particle
 function [s] = draw_primary(coords)
 
-[x0,y0,z0] = sphere(30); %coordinates of 20x20 face unit sphere at (0,0,0) %sphere(N) specifies N faces
+[x0,y0,z0] = sphere(25); %coordinates of 20x20 face unit sphere at (0,0,0) %sphere(N) specifies N faces
 
 %rescale and recentre sphere 
 x1 = x0*coords(4) + coords(1);
