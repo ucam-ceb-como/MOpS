@@ -252,7 +252,7 @@ void CamSoot::sums(int hMoment, double massAdded, double coeff,
 
 }
 
-//------ OLD SOOT FUNCTIONS CULLED FROM HERE ----
+//------ OLD SOOT FUNCTIONS CALLED FROM HERE ----
 
 
 double CamSoot::gridFunction(const int k, const int n, const int m)
