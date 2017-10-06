@@ -1621,7 +1621,7 @@ void Mechanism::releaseMem(void)
 	m_minsp_for_aiw = 0;
 	m_min_incept_weight = 0; 
 	m_max_incept_weight = 0;
-	m_incept_weight_fn = ""; 
+	m_incept_weight_fn.clear(); 
 
 	m_heavyallowed = false;
 	m_dval_heavy = 0;

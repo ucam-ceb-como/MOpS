@@ -11,13 +11,13 @@ set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
 % for finding files
-basedir  = 'local/real_inc_factor/3ms_3runs/';
-filedir  = 'it2_3runs_3ms_49em9/';
-filecmp  = 'if1_3runs_3ms/';
+basedir  = 'vienna/real/real_inc_factor/justforfun/';
+filedir  = 'swa/';
+filecmp  = 'swa/';
 filebase = 'Network(stage1)';
 
 % for plotting psl data
-psltime  = '0.003';
+psltime  = '0.021';
 npslbins = 10;
 
 % for saving images
@@ -334,9 +334,10 @@ saveas(['temp' studyid])
 
 %% CPUT
 
+cadj = [0;(cput(2:end,3)-cput(2,3))/3600];
 figure(4)
 set(gcf,'color','white')
-plot(cput(:,2)*1000,cput(:,3)/60)
+plot(cput(:,2)*1000,cadj)
 hold on
 xlabel('Time (ms)')
 ylabel('Solver time (min)')

@@ -128,37 +128,69 @@ int DimerInception::Perform(const double t, Cell &sys,
     // aab64 Don't incept if magical last inception
 	if (ParticleComp()[0] != 0)
 	{
-		// aab64 Preliminary layout for alternative inception idea
-		// Instead of creating new particle, add rutile units directly 
-		// to existing large particle, as if coagulation is immediate.
-		// To do: decide if this is even worth doing. It will help with the 
-		// ensemble capacity issue but may not reduce the numerical rates much
-		// unless there are lots of small particles incepting and then coagulating.
-		
-		// Check if some condition is exceeded e.g. sum(iDcol) > iDcol_limit
-		// To do: Add a probabilistic element to this so that it sometimes does
-		// the proper inception to improve approximation of the PSD
+		// aab64 06.10.2017 
+		// Preliminary layout for alternative inception ideas 
+		// (1) PSI - particle surface inception: do surface growth on existing large particle
+		// (2) HCI - heavy cluster inception: incept larger primary particle
+		// To do: decide if either option is worth doing. 
+		// It will help with the ensemble capacity issue, 
+		// but may introduce large errors in the primary size distribution.
+		unsigned int nsp = sys.ParticleCount();
 		bool surfincflag = m_mech->GetIsSurfInc();
 		double dcol_switch = m_mech->GetSurfIncValue();
-		double dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
-		bool sizeflag = (dcol_ave > dcol_switch);
+		double dcol_ave;
+		bool sizeflag = false;
+		bool probflag = true; // will probably be a legacy variable that can be removed if 20.09.2017 stuff is replaced
 
-		// 20.09.2017
-		boost::uniform_01<rng_type&, double> uniformGenerator(rng); // with this here, it is probably not necessary to generate again below
-		double urv = uniformGenerator();
-		bool probflag = (urv >= 0.3); // To do: replace this with a probability based on some relevant property
+		if (nsp > 1) {
+			// Get average particle collision diameter
+			dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
+
+			// Select a particle at random
+			Sweep::PropID proprng = iUniform;
+			int iprng = sys.Particles().Select(proprng, rng);
+			Particle *sprng = NULL;
+			if (iprng >= 0) {
+				sprng = sys.Particles().At(iprng);
+			}
+			else {
+			    // Failed to choose a particle.
+				return -1;
+			}
+
+			// Toggle size flag if selected particle has collision diameter > 
+			// switch collision diameter
+			sizeflag = (sprng->CollDiameter() > dcol_switch);
+
+			// aab64 20.09.2017 
+			// Preliminary probabilistic implementation
+			// Toggle a probability flag with p=0.3
+			// To do: replace this with a probability based on some relevant property
+			// boost::uniform_01<rng_type&, double> uniformGenerator(rng); // with this here, it is probably not necessary to generate again below
+			// double urv = uniformGenerator();
+			// probflag = (urv < 0.3); 
+			// Toggle size flag if selected particle has collision diameter > 
+			// switch collision diameter
+		    // sizeflag = (dcol_ave > dcol_switch);
+		}
 
 		// If surface inception is active, AND
 		// average particle size is large enough, AND
-		// a given probability is obtained, THEN
+		// a given probability is obtained (based on average particle size), THEN
 		// do surface inception on a random particle.
 		if (surfincflag && sizeflag && probflag) 
 		{
 			// 1. Pick a particle using the FM/SF terms that preferentially find large particles 
-			// e.g. (note that this ignores all the safety checks in swp_transcoag 
-			// and ignore particle weights):
+			// e.g.:
 			int ip = sys.Particles().Select(Sweep::iDcol, rng);
-			Particle *sp = sys.Particles().At(ip);
+			Particle *sp = NULL;
+			if (ip >= 0) {
+				sp = sys.Particles().At(ip);
+			}
+			else {
+				// Failed to choose a particle.
+				return -1;
+			}
 
 			// 2. Call perform for surface growth process, and do one surface event.
 			// ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
