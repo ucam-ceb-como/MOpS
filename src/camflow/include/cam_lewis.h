@@ -14,8 +14,6 @@ class LewisNumber
     const Sprog::Mechanism *const mech_;
     Array2D Le;
     int lewisType_;
-    int sootFlameletType_;
-
 
     void loadSettings(const std::string& inputFileName);
     void readFromFile(const std::string& fixedLewisFile);
@@ -31,15 +29,6 @@ public:
         CALCULATED
     };
 
-    enum
-    {
-       MAUSS06,
-       PITSCH00DD,
-       CARBONELL09,
-       EXTENDEDLAGRANGIAN
-    };
-
-    double sootFlameTimeThreshold;
 
     LewisNumber
     (
@@ -52,7 +41,6 @@ public:
     ~LewisNumber(){}
 
     inline const int& type() const {return lewisType_;}
-    inline const int& sootFlameletType() const {return sootFlameletType_;}
 
     double operator()(const int& Z, const int& species) const;
     double& calcLewis(const int& Z, const int& species);

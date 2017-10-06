@@ -81,6 +81,8 @@ class CamSoot {
     static const double cMass;
     static const double ohMass;
 
+    int sootFlameletType_;
+    
     public:
 
         /*!
@@ -88,6 +90,20 @@ class CamSoot {
          */
         enum regime {FM, CT, TR};
 
+                //! ht314
+		//! Choose momentEquation to be used
+		enum
+		{
+		PITSCH00,
+		PITSCH00DD,
+		CARBONELL09,
+		EXTENDEDLAGRANGIAN
+		};
+		
+		//! ht314
+		//! Time to stop soot calculations
+		double sootFlameTimeThreshold;
+		
         /*!
          * Constructor.
          */
@@ -102,6 +118,11 @@ class CamSoot {
          * Read in all the constants and settings.
          */
         void readSoot(CamConverter& convert, const CamXML::Element& node);
+
+        //! ht314
+		//! Function to return type of momentEquation
+		inline const int& sootFlameletType() const {return sootFlameletType_;}
+		
 
         //! Get the Regime (Free Molecular / Continuum / Transition).
         int getRegime() const;

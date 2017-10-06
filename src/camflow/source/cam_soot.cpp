@@ -42,6 +42,7 @@
 #include "cam_soot.h"
 #include "cam_reporter.h"
 #include "cam_setup.h"
+#include <boost/algorithm/string.hpp> //in ht314 version
 
 using namespace Camflow;
 using namespace Sprog;
@@ -147,6 +148,53 @@ void CamSoot::readSoot
 
         }
 
+        subnode = soot->GetFirstChild("momentEquation");
+        if (subnode != NULL){
+          
+		  
+			std::string sootFlameletOption = subnode->Data();
+			boost::to_upper(sootFlameletOption);
+			if (sootFlameletOption == "PITSCH00") sootFlameletType_ = PITSCH00;
+			else if (sootFlameletOption == "PITSCH00DD") sootFlameletType_ = PITSCH00DD;
+			else if (sootFlameletOption == "CARBONELL09") sootFlameletType_ = CARBONELL09;
+			else if (sootFlameletOption == "EXTENDEDLAGRANGIAN") sootFlameletType_ = EXTENDEDLAGRANGIAN;
+			else
+                {
+                    throw std::runtime_error
+                    (
+                    	sootFlameletOption+" does not exist."
+                        " Specify PITSCH00 / PITSCH00DD / CARBONELL09 / EXTENDEDLAGRANGIAN"
+                    );
+                }
+		}
+		else
+		{
+            throw std::runtime_error
+			(
+            "No moment model specified. Specify either\n"
+            " <momentEquation>PITSCH00</momentEquation> or "
+            " <momentEquation>PITSCH00DD</momentEquation> or "
+            " <momentEquation>EXTENDEDLAGRANGIAN</momentEquation> or "
+            " <momentEquation>CARBONELL09</momentEquation> in <op_condition>."
+			);
+        }
+
+		
+		subnode = soot->GetFirstChild("sootFlameTimeCutoff");
+		if (subnode != NULL)
+		{
+			sootFlameTimeThreshold = Strings::cdble(subnode->Data());
+		}
+		else
+		{
+        throw std::runtime_error
+        (
+            "Soot flametime cutoff not specified"
+            "e.g. <sootFlameTimeCutoff>1e-3</sootFlameTimeCutoff>"
+        	"Place in <op_condition>"
+        );
+		}
+		
         std::string atrVal = soot->GetAttributeValue("regime");
 
         if (!convertToCaps(trim(atrVal)).compare("FREEMOL"))
@@ -518,7 +566,7 @@ CamSoot::realVector CamSoot::rateAll
 
     realVector rates;  // Total rate of change of moments
     //realVector nucRates, coagRates, cdRates, sRates;	// Rate of change of moments
-    realVector prodRates; 	// Rate of change of has phase species due to surface chem
+    realVector prodRates; 	// Rate of change of gas phase species due to surface chem
     double prodRatePAHCond; 	// Rate of change of PAH due to condensation
 
     rates.resize(moments.size(),0.0);
@@ -532,11 +580,11 @@ CamSoot::realVector CamSoot::rateAll
     surfProdRate.clear();
     surfProdRate.resize(conc.size(),0.0);
 
-    // Calculate nucleation rate
-    // nucRates is rate of change of moments due to nucleation
+    //! Calculate nucleation rate
+    //! nucRates is rate of change of moments due to nucleation
     nucRates = rateNucleation(conc[iInception],T);
 
-    // Remove two PAH.
+    //! Remove two PAH.
     surfProdRate[iInception]= -2.0 * nucRates[0] / NA;
 
 	// Check the nucleation rates
@@ -631,6 +679,9 @@ CamSoot::realVector CamSoot::rateAll
     }
 
     }
+    //! ht314
+	//! Update surface production of all species involved in the soot calculations
+
 	// Check the surface rates
     //std::cout << "sRates[0]  " << sRates[0] << std::endl;
     //std::cout << "sRates[1]  " << sRates[1] << std::endl;
@@ -663,11 +714,16 @@ CamSoot::realVector CamSoot::rateAll
     rates.resize(nMoments,0.0);
     for (int m=0; m<nMoments; ++m)
     {
+            	//! ht314
+		//! Add moment source terms for nucleation, coagulation, condensation and surface growth. 
+		//! Source term for surface growth represents complexity. 
     	//rates[m] = (nucRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
-    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
-    	//rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]);
+    	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
+        //rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]);
+        rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]+sRates[m]);
+        
     }
 
     // Note: This only returns the rate of change of moments.
@@ -676,6 +732,9 @@ CamSoot::realVector CamSoot::rateAll
 }
 
 
+//! ht314
+//! This function calculates rate of change of moments due to nucleation, based on Fortran code of Kenneth L. Revzan and Frenklach. 
+//! For equation refer to Darian thesis, equation (3.21) and (3.22)
 
 CamSoot::realVector CamSoot::rateNucleation
 (
@@ -929,7 +988,10 @@ void CamSoot::rateSurface(const realVector& conc,
 	// its easier to to just convert the inputs (moments and concentrations)
 	// and outputs (rates of moments and rates of species).
 
-	// Divide all concentration by 1e6 below. (SI --> cgs)
+    // Divide all concentration by 1e6 below. (SI --> cgs)
+    //! ht314
+	//! Corresponds to surface growth reactions given by Appel et al. (2000)
+	//! Table 2.2 Darian thesis
     double RT = 1.987e-3*T;
     double fr1 = 4.2e13*exp(-13.0/RT)*conc[iH]/1e6;		 // ank25: was 4.2e12.  Appel has 4.2e13 !!
     double rr1 = 3.9e12*exp(-11.0/RT)*conc[iH2]/1e6;
@@ -940,13 +1002,23 @@ void CamSoot::rateSurface(const realVector& conc,
     double fr5 = 2.2e12*exp(-7.5/RT)*conc[iO2]/1e6;
     double fr6 = 0.13*conc[iOH]/1e6;
 
+    //! ht314
+	//! par_a and par_b fitted parameters, introducing temperature dependence. 
+	//! Refer to equations (2.39) and (2.40) in Darian thesis.
     // ank25: No unit change here
     double par_a = 12.65 - 5.63e-03*T;
     double par_b = -1.38 + 6.80e-04*T;
 
     // reducedMoments(6) is first reduced whole moment.
+    //! ht314
+    //! Fraction of surface sites available for a reaction. 
+	//! alpha based on equation from Appel et al. (2000), introducing temperature dependence
+	//! Equation (2.38) Darian thesis. 
     double alpha = tanh(par_a/log10(reducedMoments(6)) + par_b );
 
+    //! ht314
+	//! This corresponds to the denominator in the number density of surface radicals equation. 
+	//! Refer ro equation (3.37) in Darian thesis. 
     double denom = rr1+rr2+fr3+fr4+fr5;
     realVector rateC2H2, rateO2, rateOH;		// In cgs units.
     double coef;
@@ -957,6 +1029,7 @@ void CamSoot::rateSurface(const realVector& conc,
     // prodRates is a vector describing the rate of change to gas phase species.
 
     if(denom != 0){
+        //! Equation (3.37) Darian thesis. 
         double ssRatio = (fr1+fr2)/denom;
         double cArea = alpha*Beta_surf_CGS*mom[0]/1e6;
         // Moment unit conv.  And beta_surf in units of CGS
@@ -1002,10 +1075,14 @@ void CamSoot::rateSurface(const realVector& conc,
 
     // And finally calculate the contribution of each surface reaction
     // to the moments (and convert from cgs to SI)
+       
+	//! ht314
+	//! Calcualte rate of change of moments due to mass addition by C2H2 and oxidation by O2 and OH. 
+	//! Equation (3.38) Darian thesis. 
     sRates.resize(nMoments,0.0);
     for(int r=0; r<nMoments; r++){
         sRates[r] = (rateC2H2[r]+rateO2[r]+rateOH[r]) * 1e6;
-        //sRates[r] = (rateC2H2[r]+rateOH[r])*1e6;  //+rateO2[r]) * 1e6;
+        //sRates[r] = (rateC2H2[r]+rateOH[r])*1e6;  //+rateO2[r]) * 1e6; old
     }
 }
 
@@ -1144,7 +1221,7 @@ CamSoot::realVector CamSoot::showGasPhaseRates(int nSpecies)
 	return rates;
 }
 
-
+//! ht314 for each cell store nucRates, coagRates, cdRates, sRates for M0, M1 and M2 to be used in flamelet.cpp for output
 CamSoot::realVector CamSoot::showSootComponentRates(int nMoments)
 {
     // set rates to zero
@@ -1169,7 +1246,6 @@ double CamSoot::avgSootDiam()
 double CamSoot::dispersion()
 {
 	double disp = reducedMoments(12) * reducedMoments(6) * reducedMoments(6);
-	// double disp = moments(2) * moments(2) * moment(1);
 	return disp;
 }
 

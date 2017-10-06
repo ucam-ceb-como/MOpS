@@ -459,6 +459,13 @@ void FlameLet::csolve
         {
             reportToFile("profile.dat",control_.getMaxTime(), solvect);
             //writeXMLFile(scalarDissipationRate_.getStoichSDR(), solvect);
+            //! ht314
+			//! Report moment rates for nucleation, coagulation, condensation and coagulation to file. 
+			if (sootMom_.active())
+            {
+                string filenameSoot = "momentRates.dat";
+				reportSootRatesToFile(filenameSoot,control_.getMaxTime(), sootComponentRatesAllCells);
+            }
         }
 
     }
@@ -523,8 +530,13 @@ void FlameLet::restart(double flameTime)
     //steadyStateAtFlameBase = false;
 
 
+    cout << "flameTime is: "<< flameTime << endl;
+    
+	//! ht314
+	//! The purpose of this section is to stop soot calculations above a certain axial location, the Lagrangian time
+	//! will correspond to a height above burner. This Lagrangian time is specified in the <sootFlameTimeThreshold> tag in camflow.xml
     // Stop calculating soot above a user specified flamelet time.
-    if (flameTime < Lewis.sootFlameTimeThreshold)
+    if (flameTime < sootMom_.sootFlameTimeThreshold)
     {
         // Still below the time at which we stop calculating soot residual
         sootResidualZeroed = false;
@@ -570,10 +582,12 @@ void FlameLet::restart(double flameTime)
         //if(!interface)
         //{
             string filename = "interfaceProfiles/profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
+            cout << "soot file name is "<< filename << endl;
             reportToFile(filename,control_.getMaxTime(), solvect);
             if (sootMom_.active())
             {
                 string filenameSoot = "interfaceSootRates/sootRatesProfile"+boost::lexical_cast<std::string>(restartTime)+".dat";
+                cout << "sootComponentRatesAllCells = "<< sootComponentRatesAllCells << endl;
                 reportSootRatesToFile(filenameSoot,control_.getMaxTime(), sootComponentRatesAllCells);
             }
         //}
@@ -1058,6 +1072,9 @@ void FlameLet::speciesResidual
 * This is written for the fully simplied soot flamelet equations
 * See Mauss 2006
 */
+
+//! ht314
+//! Moment transport equation
 void FlameLet::sootMomentResidual
 (
     const double& t,
@@ -1086,8 +1103,14 @@ void FlameLet::sootMomentResidual
         zPW = 0.5*(dz[i]+dz[i-1]);
         sdr = scalarDissipationRate_(reacGeom_.getAxpos()[i],t);
 
-        if (Lewis.sootFlameletType() == LewisNumber::MAUSS06)
+        if (sootMom_.sootFlameletType() == CamSoot::PITSCH00)
         {
+            //! ht314
+			//! Corresponds to equation (2.47) in H.Darian thesis, from Pitsch et al. (2000) 
+        	//! Neglecting differential diffusion and thermophoresis.
+        	//! The independent variable is M/rho.
+
+            // ank comment:
             // Use the form of the soot flamelet equation given in Mauss et al 2006
         	// Or see Knobel thesis
         	// The independent variable is Mr/rho not Mr.
@@ -1104,7 +1127,7 @@ void FlameLet::sootMomentResidual
             }
 
         }
-        else if (Lewis.sootFlameletType() == LewisNumber::PITSCH00DD)
+        else if (sootMom_.sootFlameletType() == CamSoot::PITSCH00DD)
         {
             // Use the form of the soot flamelet equation given in Pitsch et al 2000.
             // And assume differential diffusion. (i.e., neglect M_(r-d) terms per paper.
@@ -1117,7 +1140,7 @@ void FlameLet::sootMomentResidual
             /// NOT IMPLEMENTED YET  !!!!!!!!!!!!!
 
         }
-        else if (Lewis.sootFlameletType() == LewisNumber::CARBONELL09)
+        else if (sootMom_.sootFlameletType() == CamSoot::CARBONELL09)
         {
             // Use the form of the soot flamelet equation given in Carbonel et al 2009.
 
@@ -1147,8 +1170,13 @@ void FlameLet::sootMomentResidual
                 //f[i*nMoments+l] = source;
             }
          }
-        else if (Lewis.sootFlameletType() == LewisNumber::EXTENDEDLAGRANGIAN)
+        else if (sootMom_.sootFlameletType() == CamSoot::EXTENDEDLAGRANGIAN)
         {
+                        //! ::EXTENDEDLAGRANGIAN written by ank25
+			//! This will set all interior mixture fraction values to 0.
+			//! note. This does not set the moments to 0, but sets the gradient of the moments to 0.
+			//! effectively, the initial condition for moments is preserved. 
+			
             for (int l=0; l<nMoments; ++l)
             {
             	// ank25: Set all moment residuals to zero when solving ELFM
