@@ -116,14 +116,17 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
-    {
-		// aab64 Shift incepting particle weight over time, as the ensemble fills up
-		/* Check if particle weight should be updated if SWA is in play
+	{
+		nnew = sys.ParticleCount();
+
+		// aab64 AIW - Adaptive inception weighting:
+		/* Shift incepting particle weight over time, as the ensemble fills up
+		Check if particle weight should be updated if SWA is in play
 		Only step up weights after ensemble capacity hits a certain point nmin
 		(possibly find a way to do this incrementally at a few points, rather than 
 		continuously every time this process occurs). */
-		if (mech.IsWeightedCoag() && mech.IsVariableWeightedInception()) {
-			nnew = sys.ParticleCount();
+		if (mech.IsWeightedCoag() && mech.IsVariableWeightedInception()) 
+		{
 			wmax = mech.GetMaxInceptionWeight();
 			wmin = mech.GetMinInceptionWeight();
 			nmin = mech.GetMinSPForAIWOnset();
@@ -159,26 +162,71 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 			sys.SetInceptingWeight(wnew);
 		}
 		
-		// aab64 If the ensemble is more than half full already / has passed a minimum average size, 
-		// adjust inception factor by sampling from lognormal distribution
-		// and constrain newIncFactor to [1,100]. 
-		// Note that this should really rather check if a certain minimum size has been reached. 
+		// aab64 06.10.2017 
+		// HCI - heavy cluster inception: 
+		// Incept larger primary particles with some probability
+		// To do: decide if this option is worth doing. 
+		// It will help with the ensemble capacity issue, 
+		// but may introduce large errors in the primary size distribution.
+		double dcol_ave;
+		bool sizeflag = false;
+		bool probflag = true; // will probably be a legacy variable that can be removed if 20.09.2017 stuff is replaced
 		bool heavyAllowed = mech.GetIsHeavy();
 		double dcol_lim = mech.GetHeavyValue();
-		double dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
-		if (heavyAllowed)
+
+		if (nnew > 1) 
 		{
+			// Get average particle collision diameter
+			dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
+
+			// Select a particle at random
+			Sweep::PropID proprng = iUniform;
+			int iprng = sys.Particles().Select(proprng, rng);
+			Particle *sprng = NULL;
+			if (iprng >= 0) {
+				sprng = sys.Particles().At(iprng);
+			}
+			else {
+				// Failed to choose a particle.
+				return -1;
+			}
+
+			// Toggle size flag if selected particle has collision diameter > 
+			// switch collision diameter
+			sizeflag = (sprng->CollDiameter() > dcol_lim);
+
+			// aab64 20.09.2017 
+			// Preliminary probabilistic implementation
+			// Toggle a probability flag with p=0.3
+			// To do: replace this with a probability based on some relevant property
+			// boost::uniform_01<rng_type&, double> uniformGenerator(rng); // with this here, it is probably not necessary to generate again below
+			// double urv = uniformGenerator();
+			// probflag = (urv < 0.3); 
+			// Toggle size flag if selected particle has collision diameter > 
+			// switch collision diameter
+			// sizeflag = (dcol_ave > dcol_lim);
+
+			// If HCI is active, AND
+			// ensemble has passed a minimum size criterion, AND
+			// probability flag is active, THEN
+			// adjust inception factor by sampling from lognormal distribution.
+			double newIncFactor = 1.0;
 			double meanIFdist = 0.0;
 			double stdIFdist = 1.0;
-			//if (sys.ParticleCount() > ceil(1.0 * sys.Particles().Capacity() / 2.0))
-			if (dcol_ave > dcol_lim)
+			if (heavyAllowed && sizeflag && probflag)
 			{
-				double newIncFactor = boost::random::lognormal_distribution<double>(meanIFdist, stdIFdist)(rng);
+				newIncFactor = boost::random::lognormal_distribution<double>(meanIFdist, stdIFdist)(rng);
+				// Constrain newIncFactor to [1,100]. 
 				if (newIncFactor < 1.0)
 					newIncFactor = 1.0;
 				else if (newIncFactor > 100.0)
 					newIncFactor = 100.0;
+				// Set new value
 				sys.SetInceptionFactor((int)newIncFactor);
+			}
+			else
+			{
+				sys.SetInceptionFactor(newIncFactor);
 			}
 		}
 
