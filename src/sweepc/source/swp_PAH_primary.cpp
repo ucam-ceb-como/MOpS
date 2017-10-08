@@ -1304,7 +1304,6 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 					//! See if anything changed, as this will required a call to UpdatePrimary() below.
 					//This will also dictate if the new PAH is used to create a new particle, or if it is just destroyed
-					//else if (oldNumCarbon != new_m_PAH->m_pahstruct->numofC() || oldNumH != new_m_PAH->m_pahstruct->numofH())
 					else if (growtime > 0.0)
 					{
 						//Reduce statistical weight of the particle being updated
@@ -1377,6 +1376,10 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					//Check if the PAH is still valid after being updated
 					if (pri->m_PAH[0]->m_pahstruct->numofRings() >= thresholdOxidation){
 						overflow.push_back(*it1);
+					}
+					else
+					{
+						delete *it1;
 					}
 				}
 

@@ -128,7 +128,7 @@ int PAHInception::Perform(const double t, Cell &sys,
 		int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel());
 		sp = sys.Particles().At(Pindex);
 		int StatWeight = sp->getStatisticalWeight();
-		sp->setStatisticalWeight(StatWeight + 1);
+		sp->setStatisticalWeight(StatWeight + 1.0);
 	}
 	else{
 
