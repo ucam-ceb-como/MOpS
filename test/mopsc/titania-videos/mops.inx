@@ -7,20 +7,19 @@
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
   <pcount>32</pcount>
-  <maxm0>1.0e20</maxm0>
-  
+  <maxm0>1.5e19</maxm0>
 
   <!-- Reactor definition (given initial conditions). -->
   <reactor type="batch" constt="true" constv="false" id="Test_System" units="mol/mol">
-    <temperature units="K">2000</temperature>
+    <temperature units="K">1500</temperature>
     <pressure units="bar">4.00</pressure>
-    <component id="TICL4">0.50</component>
-    <component id="O2">0.50</component>  
+    <component id="TICL4">0.5</component>
+    <component id="O2">0.5</component>  
 	<population>
-        <m0>1.0e19</m0>
+        <m0>1.5e19</m0>
         <particle count="32">
             <weight>1.0</weight>
-            <component id="Rutile" dx="10000"/>
+            <component id="Rutile" dx="2"/>
         </particle>
     </population>
   </reactor>
@@ -28,7 +27,8 @@
   <!-- Output time sequence. -->
   <timeintervals>
     <start>0.0</start>
-	<time steps="1000" splits="4">0.01</time>
+	<time steps="1000" splits="4">0.001</time>
+	<time steps="999" splits="4">1.0</time>
   </timeintervals>
 
   <!-- Simulation output settings. -->

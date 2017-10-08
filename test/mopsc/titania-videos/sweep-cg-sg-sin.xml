@@ -16,7 +16,7 @@
 		<coalthresh>1.0</coalthresh>
 		<sintering enable="true" model="GBD">
 			<!-- GBD model params based on Eggersdorfer et al. (2012)-->
-			<A units="s/m4K">9.112e+17</A>
+			<A units="s/m4K">9.112e+18</A>
 			<E units="K">31030</E>
 			<Dpmin units="m">0</Dpmin>
 		</sintering>
@@ -36,7 +36,7 @@
 		<product id="CL2" stoich="+2.0" />
 		<particlein  id="[Ru]"/>
 		<particleout id="[Ru]"/>
-		<A>8.06948e+27</A> <!-- cm/s * Avogadros number -->
+		<A>8.06948e+28</A> <!-- cm/s * Avogadros number -->
 		<n>0.0</n>
 		<E units="cal">14.3404</E> <!-- kcal/mol -->
 		<particleterm id="s" power="1.0"/>
