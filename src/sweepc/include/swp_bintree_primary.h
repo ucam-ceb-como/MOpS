@@ -170,6 +170,10 @@ public:
     //! Returns a vector of primary coordinates and radius (4D).
     void GetPriCoords(std::vector<fvector> &coords) const;
 
+	//csl37
+	//return primary coords and frame orientation
+    void GetPrimaryCoords(std::vector<fvector> &coords) const;
+
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
     friend class BinTreeSerializer<class BinTreePrimary>;
@@ -204,6 +208,14 @@ public:
 
     //! Deserialise a BinTreePrimary particle
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
+
+	//csl37
+	//flag to indicate particle is tracked 
+	bool m_tracked;
+	//set tracking flag
+	void setTracking() {m_tracked = true;};
+	//csl37: remove primary tracking
+	void removeTracking();
 
 	/////////////////////////////////////////////////////////// csl37-pp
 	void PrintPrimary(std::vector<fvector> &surface, fvector &primary_diameter, int k) const;
@@ -283,6 +295,12 @@ protected:
     //! For tracking the coordinates of primary particles.
     Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
     Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
+
+	//csl37
+	//! For tracking the particle frame orientation
+	Coords::Vector m_frame_orient;
+	//! For tracking the particle frame position
+	Coords::Vector m_frame_x;
 
     //! Sintering level of children connected by this node
     double m_children_sintering;
@@ -403,6 +421,10 @@ protected:
 	//function to translate neighbours by delta_d along a unit vector u
 	//but ignoring prim_ignore
 	void TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u, double delta_d, BinTreePrimary *prim_ignore);
+
+	//csl37-debug
+	//csl37: checks that only one priamry is tracked
+	void checkTracking(int &count);
 
 private:
     // GENERAL PARTICLE MODEL PROPERTIES

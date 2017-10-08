@@ -16,7 +16,7 @@
 		<coalthresh>1.0</coalthresh>
 		<sintering enable="true" model="GBD">
 			<!-- GBD model params based on Eggersdorfer et al. (2012)-->
-			<A units="s/m4K">9.112e+17</A>
+			<A units="s/m4K">9.112e+18</A>
 			<E units="K">31030</E>
 			<Dpmin units="m">0</Dpmin>
 		</sintering>

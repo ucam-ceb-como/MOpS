@@ -88,7 +88,8 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_rightparticle(NULL),
     m_r(0.0),
     m_r2(0.0),
-    m_r3(0.0)
+    m_r3(0.0),
+	m_tracked(false)
 {
     m_cen_bsph[0] = 0.0;
     m_cen_bsph[1] = 0.0;
@@ -97,6 +98,14 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_cen_mass[0] = 0.0;
     m_cen_mass[1] = 0.0;
     m_cen_mass[2] = 0.0;
+
+	m_frame_orient[0] = 0.0;
+	m_frame_orient[1] = 0.0;
+	m_frame_orient[2] = 1.0e-9;
+
+	m_frame_x[0] = 1.0e-9;
+	m_frame_x[1] = 0.0;
+	m_frame_x[2] = 0.0;
 }
 
 /*!
@@ -131,7 +140,8 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_rightparticle(NULL),
     m_r(0.0),
     m_r2(0.0),
-    m_r3(0.0)
+    m_r3(0.0),
+	m_tracked(false)
 {
     m_cen_bsph[0] = 0.0;
     m_cen_bsph[1] = 0.0;
@@ -140,6 +150,14 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_cen_mass[0] = 0.0;
     m_cen_mass[1] = 0.0;
     m_cen_mass[2] = 0.0;
+
+	m_frame_orient[0] = 0.0;
+	m_frame_orient[1] = 0.0;
+	m_frame_orient[2] = 1.0e-9;
+
+	m_frame_x[0] = 1.0e-9;
+	m_frame_x[1] = 0.0;
+	m_frame_x[2] = 0.0;
 }
 
 //! Copy constructor.
@@ -171,7 +189,8 @@ m_leftchild(NULL),
 m_rightchild(NULL),
 m_parent(NULL),
 m_leftparticle(NULL),
-m_rightparticle(NULL)
+m_rightparticle(NULL),
+m_tracked(false)
 {
     Deserialize(in, model);
 }
@@ -372,14 +391,20 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
     // Set the pointers to the parent node
     if (newleft->m_leftchild!=NULL) {
-    newleft->m_leftchild->m_parent      = newleft;
-    newleft->m_rightchild->m_parent     = newleft;
+		newleft->m_leftchild->m_parent      = newleft;
+		newleft->m_rightchild->m_parent     = newleft;
     }
     if (newright->m_leftchild!=NULL) {
-    newright->m_leftchild->m_parent     = newright;
-    newright->m_rightchild->m_parent    = newright;
+		newright->m_leftchild->m_parent     = newright;
+		newright->m_rightchild->m_parent    = newright;
     }
     m_children_sintering=0.0;
+
+	//csl37
+	//this becomes a node so turn off tracking flag
+	//flag should have been copied to newleft/right already
+	m_tracked = false;
+
     UpdateCache();
 
     //! It is assumed that primary pi from particle Pq and primary pj from
@@ -933,6 +958,36 @@ void BinTreePrimary::GetPriCoords(std::vector<fvector> &coords) const
     }
 }
 
+void BinTreePrimary::GetPrimaryCoords(std::vector<fvector> &coords) const
+{
+    if (isLeaf()) {
+        fvector c(10);
+        c[0] = m_cen_mass[0];
+        c[1] = m_cen_mass[1];
+        c[2] = m_cen_mass[2];
+        c[3] = m_r;
+		if (m_tracked == true){
+			c[4] = m_frame_orient[0];
+			c[5] = m_frame_orient[1];
+			c[6] = m_frame_orient[2];
+			c[7] = m_frame_x[0];
+			c[8] = m_frame_x[1];
+			c[9] = m_frame_x[2];
+		}else{
+			c[4] = 0.0;
+			c[5] = 0.0;
+			c[6] = 0.0;
+			c[7] = 0.0;
+			c[8] = 0.0;
+			c[9] = 0.0;
+		}
+        coords.push_back(c);
+    } else {
+        m_leftchild->GetPrimaryCoords(coords);
+        m_rightchild->GetPrimaryCoords(coords);
+    }
+}
+
 /*!
  *  @brief Copy state-space and derived properties from source.
  *
@@ -975,7 +1030,10 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
     m_avg_sinter              = source->m_avg_sinter;
     m_sint_rate               = source->m_sint_rate;
     m_sint_time               = source->m_sint_time;
-	
+	m_frame_orient			  = source->m_frame_orient;
+	m_frame_x				  = source->m_frame_x;
+	m_tracked				  = source->m_tracked;
+
     //! Set particles.
     m_leftchild     = source->m_leftchild;
     m_rightchild    = source->m_rightchild;
@@ -1096,7 +1154,7 @@ double BinTreePrimary::SinteringLevel()
 
 		//if the centre-centre separation is not tracked the sintering level is calculated as per
 		//Shekar et al. (2012)
-		if (!m_pmodel->getTrackPrimarySeparation()) {
+		if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 			// Calculate the spherical surface
 			const double spherical_surface =
 					4 * PI * m_children_radius * m_children_radius;
@@ -1187,7 +1245,7 @@ bool BinTreePrimary::MergeCondition()
 		//! the distance between the centres of primary particles is tracked. 
 		//! If not, the condition depends on whether the rounding 
 		//! level exceeds an arbitrarily high threshold.
-		if (!m_pmodel->getTrackPrimarySeparation()) {
+		if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 			condition = (m_children_sintering > 0.95);
 		} else {
 			//! If tracked, a particle has coalesced when the neck reaches the centre 
@@ -1203,10 +1261,9 @@ bool BinTreePrimary::MergeCondition()
 				//ensures that particles are merged if the sintering step overshoots
 				condition = true;
 			}else{
-			//	condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) <= 0.0); //csl37:old condition
 				double s = 0.05;
-				condition = ( d_ij <= sqrt( pow(max(r_i,r_j),2.0) - pow(min(r_i,r_j),2.0) ) + s*min(r_i,r_j));//modified old condition
-			//	condition = ( d_ij <= max(r_i,r_j) );	//csl37: new "simpler" condition 
+				condition =  d_ij <= sqrt( pow(max(r_i,r_j),2.0) - pow(min(r_i,r_j),2.0) ) + s*min(r_i,r_j) ;//modified condition
+				//condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) ) <= 0.0;
 			}
 		}
 	}
@@ -1239,6 +1296,26 @@ BinTreePrimary &BinTreePrimary::Merge()
 	double sumterm = 0.0;
 	double free_surface_term = 0.0;
 	
+	//if merging primary is tracked save frame coordinates
+	Coords::Vector frame_x;
+	Coords::Vector frame_z;
+	bool update_tracking = false;
+	if(m_rightparticle->m_tracked == true){
+		update_tracking = true;
+		m_rightparticle->m_tracked = false;
+		frame_x = m_rightparticle->m_frame_x;
+		frame_z = m_rightparticle->m_frame_orient;
+	}else if(m_leftparticle->m_tracked == true){
+		update_tracking = true;
+		m_leftparticle->m_tracked = false;
+		frame_x = m_leftparticle->m_frame_x;
+		frame_z = m_leftparticle->m_frame_orient;
+	}
+
+	//csl37-todo
+	//turn off m_track on primaries
+	//turn on m_track on merged primary and assign frame coordinates
+
     // Make sure this primary has children to merge
     if( m_leftchild!=NULL) {
 
@@ -1302,7 +1379,7 @@ BinTreePrimary &BinTreePrimary::Merge()
 			}
 
             // Update the pointers that pointed to the two former children
-			if (!m_pmodel->getTrackPrimarySeparation() || !m_pmodel->getTrackPrimaryCoordinates()) {
+			if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 		        ChangePointer(m_leftchild,this);
 			    ChangePointer(m_rightchild,this);
 			}else{
@@ -1334,11 +1411,8 @@ BinTreePrimary &BinTreePrimary::Merge()
                     m_parent->UpdateCache();
                 }
             }
-        }
+        }else{
 
-
-        else
-        {
             if (m_leftchild->m_numprimary<m_rightchild->m_numprimary)
             {
                 // Append to left subtree because there are fewer primaries
@@ -1373,7 +1447,7 @@ BinTreePrimary &BinTreePrimary::Merge()
 
                 // Set the pointers from the leftprimary to the rightprimary
                 // (this will be the new bigger primary)
-				if (!m_pmodel->getTrackPrimarySeparation() || !m_pmodel->getTrackPrimaryCoordinates()) {
+				if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 				    oldleftparticle->ChangePointer(oldleftparticle,m_rightparticle);
 					m_rightparticle->ChangePointer(m_rightparticle,m_rightparticle);
 				}else{
@@ -1414,10 +1488,7 @@ BinTreePrimary &BinTreePrimary::Merge()
 
                 delete oldleftparticle;
 
-            }
-
-            else
-            {
+            }else{
                 // Append to right subtree
                 BinTreePrimary *oldrightparticle = m_rightparticle;
                 for (size_t i=0; i != m_comp.size(); i++) {
@@ -1448,7 +1519,7 @@ BinTreePrimary &BinTreePrimary::Merge()
                 m_leftparticle->UpdatePrimary();
 
                 // All pointers to m_leftparticle now point to oldright particle
-				if (!m_pmodel->getTrackPrimarySeparation() || !m_pmodel->getTrackPrimaryCoordinates()) {
+				if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 				    oldrightparticle->ChangePointer(oldrightparticle,m_leftparticle);
 					m_leftparticle->ChangePointer(m_leftparticle,m_leftparticle);
 				}else{
@@ -1496,6 +1567,13 @@ BinTreePrimary &BinTreePrimary::Merge()
 		//if coordinates are tracked then update the update the tracked radii
 		if(m_pmodel->getTrackPrimaryCoordinates()){
 			new_prim->setRadius(new_prim->m_primarydiam / 2.0);
+		}
+
+		//update tracking
+		if(update_tracking == true){
+			new_prim->m_tracked = true;
+			new_prim->m_frame_x = frame_x;
+			new_prim->m_frame_orient = frame_z;
 		}
 
 		UpdateCache();
@@ -1555,64 +1633,68 @@ void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *targe
 {
 	if(m_rightparticle == source) {
         //if the neighbour is the smaller of the merging primaries then update the centre to centre distance
-		if(source == small_prim && this != node){
-			double r_j = m_rightparticle->m_primarydiam;
-			double r_k = m_leftparticle->m_primarydiam;
-			double d_kj = m_distance_centreToCentre;
-			double x_kj = (d_kj*d_kj - r_j*r_j +r_k*r_k)/2.0/d_kj;
-			double A_n_k = M_PI*(r_k*r_k - x_kj*x_kj);
-			if (A_n_k > 0.0 ){
-				//this adjusts the new merged primary adn all its neighbours
-				double x_ik = target->AddNeighbour(A_n_k, small_prim);
-				m_distance_centreToCentre = min(x_ik + x_kj, m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0); 
-			}else{
-				m_distance_centreToCentre = m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0;
+		if (this != node){
+			if(source == small_prim){
+				double r_j = m_rightparticle->m_primarydiam;
+				double r_k = m_leftparticle->m_primarydiam;
+				double d_kj = m_distance_centreToCentre;
+				double x_kj = (d_kj*d_kj - r_j*r_j +r_k*r_k)/2.0/d_kj;
+				double A_n_k = M_PI*(r_k*r_k - x_kj*x_kj);
+				if (A_n_k > 0.0 ){
+					//this adjusts the new merged primary adn all its neighbours
+					double x_ik = target->AddNeighbour(A_n_k, small_prim);
+					m_distance_centreToCentre = min(x_ik + x_kj, m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0); 
+				}else{
+					m_distance_centreToCentre = m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0;
+				}
+				//adjust coordinates of new neighbour and all its neighbour
+				//translate branch along old separation vector d_ik
+				if(m_pmodel->getTrackPrimaryCoordinates()){
+					//old separation unit vector
+					Coords::Vector vector_d_ik = UnitVector(m_leftparticle->boundSphCentre(), target->boundSphCentre());
+					//old separation distance 
+					double d_ik = Separation(m_leftparticle->boundSphCentre(), target->boundSphCentre());
+					//translate 
+					//Translate the neighbour 
+					m_leftparticle->TranslatePrimary(vector_d_ik, d_ik - m_distance_centreToCentre);
+					//Translate all neighbours of the neighbour except the old small_prim
+					m_leftparticle->TranslateNeighbours(m_leftparticle, vector_d_ik, d_ik - m_distance_centreToCentre, small_prim);
+				}
 			}
-			//adjust coordinates of new neighbour and all its neighbour
-			//translate branch along old separation vector d_ik
-			if(m_pmodel->getTrackPrimaryCoordinates()){
-				//old separation unit vector
-				Coords::Vector vector_d_ik = UnitVector(m_leftparticle->boundSphCentre(), target->boundSphCentre());
-				//old separation distance 
-				double d_ik = Separation(m_leftparticle->boundSphCentre(), target->boundSphCentre());
-				//translate 
-				//Translate the neighbour 
-				m_leftparticle->TranslatePrimary(vector_d_ik, d_ik - m_distance_centreToCentre);
-				//Translate all neighbours of the neighbour except the old small_prim
-				m_leftparticle->TranslateNeighbours(m_leftparticle, vector_d_ik, d_ik - m_distance_centreToCentre, small_prim);
-			}
+			m_rightparticle = target;
 		}
-		m_rightparticle = target;
     }
     if(m_leftparticle == source){
 		//if the neighbour is the smaller of the merging primaries then update the centre to centre distance
-		if(source == small_prim && this != node){
-			double r_j = m_leftparticle->m_primarydiam;
-			double r_k = m_rightparticle->m_primarydiam;
-			double d_kj = m_distance_centreToCentre;
-			double x_kj = (d_kj*d_kj - r_j*r_j +r_k*r_k)/2.0/d_kj;
-			double A_n_k = M_PI*(r_k*r_k - x_kj*x_kj);
-			if (A_n_k > 0.0 ){
-				double x_ik = target->AddNeighbour(A_n_k, small_prim);
-				m_distance_centreToCentre = min(x_ik + x_kj, m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0); 
-			}else{
-				m_distance_centreToCentre = m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0;
+		if (this != node){
+			if(source == small_prim ){
+				double r_j = m_leftparticle->m_primarydiam;
+				double r_k = m_rightparticle->m_primarydiam;
+				double d_kj = m_distance_centreToCentre;
+				double x_kj = (d_kj*d_kj - r_j*r_j +r_k*r_k)/2.0/d_kj;
+				double A_n_k = M_PI*(r_k*r_k - x_kj*x_kj);
+				if (A_n_k > 0.0 ){
+					double x_ik = target->AddNeighbour(A_n_k, small_prim);
+					m_distance_centreToCentre = min(x_ik + x_kj, m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0); 
+				}else{
+					m_distance_centreToCentre = m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0;
+				}
+				//adjust coordinates of new neighbour and all its neighbour
+				//translate branch along old separation vector d_ik
+				if(m_pmodel->getTrackPrimaryCoordinates()){
+					//old separation unit vector
+					Coords::Vector vector_d_ik = UnitVector(m_rightparticle->boundSphCentre(), target->boundSphCentre());
+					//old separation distance 
+					double d_ik = Separation(m_rightparticle->boundSphCentre(), target->boundSphCentre());
+					//translate 
+					//Translate the neighbour 
+					m_rightparticle->TranslatePrimary(vector_d_ik, d_ik - m_distance_centreToCentre);
+					//Translate all neighbours of the neighbour except the old small_prim
+					m_rightparticle->TranslateNeighbours(m_rightparticle, vector_d_ik, d_ik - m_distance_centreToCentre, small_prim);
+				}
 			}
-			//adjust coordinates of new neighbour and all its neighbour
-			//translate branch along old separation vector d_ik
-			if(m_pmodel->getTrackPrimaryCoordinates()){
-				//old separation unit vector
-				Coords::Vector vector_d_ik = UnitVector(m_rightparticle->boundSphCentre(), target->boundSphCentre());
-				//old separation distance 
-				double d_ik = Separation(m_rightparticle->boundSphCentre(), target->boundSphCentre());
-				//translate 
-				//Translate the neighbour 
-				m_rightparticle->TranslatePrimary(vector_d_ik, d_ik - m_distance_centreToCentre);
-				//Translate all neighbours of the neighbour except the old small_prim
-				m_rightparticle->TranslateNeighbours(m_rightparticle, vector_d_ik, d_ik - m_distance_centreToCentre, small_prim);
-			}
+			m_leftparticle = target;
 		}
-        m_leftparticle = target;
     }
 
     // Update the tree above this sub-particle.
@@ -1843,6 +1925,11 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         else m_avg_sinter = 0.0;
         m_numprimary    = 1;
         UpdatePrimary();
+
+		//csl37-debug
+		//check bounding sphere is calculated
+		assert(m_cen_bsph[0] > -1e20 && m_cen_bsph[0] < 1e20);
+		//csl37-debug
     }
 
     // This is not a primary, sum up the properties
@@ -1863,6 +1950,10 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         m_mass          = m_leftchild->m_mass + m_rightchild->m_mass;
 		m_free_surf		= m_leftchild->m_free_surf + m_rightchild->m_free_surf;
 		m_primaryvol	= m_leftchild->m_primaryvol + m_rightchild->m_primaryvol;
+
+		//csl37
+		//calculate bounding sphere
+		calcBoundSph();
 
         // Calculate the sintering level of the two primaries connected by this node
         m_children_sintering = SinteringLevel();
@@ -1914,6 +2005,18 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
             m_diam=0;
             m_dmob=0;
         }
+
+		//csl37-debug
+		//check that only one primary is tracked
+		int count = 0;
+		checkTracking(count);
+		if(count > 1){
+			//this is a problem
+			assert(count > 1);
+		}
+		//csl37-debug
+		
+
     }
 }
 
@@ -2235,7 +2338,6 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 			}
         }
     }
-
     // Else this a non-leaf node (not a primary)
     else
     {
@@ -2490,7 +2592,7 @@ void BinTreePrimary::UpdateNeighbourVolume(BinTreePrimary *prim,double dr_i,doub
 	}
 
 	//csl37--debug
-	assert(!MergeCondition());
+//	assert(!MergeCondition());
 	//csl37--debug
 
 	//continue working up the binary tree
@@ -3118,12 +3220,6 @@ void BinTreePrimary::SinterNode(
 		if (m_pmodel->getTrackPrimaryCoordinates()) {
 			m_leftparticle->setRadius(m_leftparticle->m_primarydiam / 2.0);
 			m_rightparticle->setRadius(m_rightparticle->m_primarydiam / 2.0);
-
-			//csl37-debug
-			double fin_sep = Separation(m_leftparticle->m_cen_bsph, m_rightparticle->m_cen_bsph);
-			double delta_test = max(m_distance_centreToCentre-Separation(m_leftparticle->m_cen_bsph, m_rightparticle->m_cen_bsph),-m_distance_centreToCentre+Separation(m_leftparticle->m_cen_bsph, m_rightparticle->m_cen_bsph));
-			assert(delta_test<1e-9);
-			//csl37-debug
         }
 	}
 
@@ -3297,6 +3393,9 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
 {
     if (out.good()) {
 
+		const unsigned int trueval  = 1;
+		const unsigned int falseval = 0;
+
         int  val_int(0);
         double val(0.0);
 
@@ -3362,6 +3461,31 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
 
         val = m_sint_time;
         out.write((char*)&val, sizeof(val));
+
+		val = m_frame_orient[0];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_frame_orient[1];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_frame_orient[2];
+        out.write((char*)&val, sizeof(val));
+
+		val = m_frame_x[0];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_frame_x[1];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_frame_x[2];
+        out.write((char*)&val, sizeof(val));
+
+		// Output if primary is tracked
+        if (m_tracked) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
 
         // Output base class.
         Primary::Serialize(out);
@@ -3429,6 +3553,7 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
 
         int  val_int(0);
         double val(0.0);
+		unsigned int val_unsigned(0);
 
         in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
         m_numprimary = val_int;
@@ -3492,6 +3617,32 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_sint_time = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_orient[0] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_orient[1] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_orient[2] = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_x[0] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_x[1] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_x[2] = val;
+
+		 // Read if primary is tracked.
+        in.read(reinterpret_cast<char*>(&val_unsigned), sizeof(val_unsigned));
+        if (val_int==1) {
+            m_tracked = true;
+        } else {
+            m_tracked = false;
+        }
 
         // Input base class.
         Primary::Deserialize(in, model);
@@ -3641,9 +3792,36 @@ void BinTreePrimary::transform(const Coords::Matrix &mat)
     if (m_rightchild != NULL) 
         m_rightchild->transform(mat);
 
+	Coords::Vector A_x;
+	Coords::Vector A_z;
+	//csl37-orientation
+	//if primary is tracked then rotate the orientation vector
+	if(m_tracked == true) {
+		//construct vector from CoM to end of orientation vector
+	    A_z[0] = m_cen_mass[0] + m_frame_orient[0];
+		A_z[1] = m_cen_mass[1] + m_frame_orient[1];
+		A_z[2] = m_cen_mass[2] + m_frame_orient[2];
+		A_x[0] = m_cen_mass[0] + m_frame_x[0];
+		A_x[1] = m_cen_mass[1] + m_frame_x[1];
+		A_x[2] = m_cen_mass[2] + m_frame_x[2];
+		//rotate A
+		A_z = mat.Mult(A_z);
+		A_x = mat.Mult(A_x);
+	}
+
     //! Rotate centre-of-mass and bounding sphere coordinates.
     m_cen_mass = mat.Mult(m_cen_mass);
     m_cen_bsph = mat.Mult(m_cen_bsph);
+
+	if(m_tracked == true){
+		//calculate new orientation vector
+		m_frame_orient[0] = A_z[0] - m_cen_mass[0];
+		m_frame_orient[1] = A_z[1] - m_cen_mass[1];
+		m_frame_orient[2] = A_z[2] - m_cen_mass[2];
+		m_frame_x[0] = A_x[0] - m_cen_mass[0];
+		m_frame_x[1] = A_x[1] - m_cen_mass[1];
+		m_frame_x[2] = A_x[2] - m_cen_mass[2];
+	}
 }
 
 /*!
@@ -3777,6 +3955,29 @@ void BinTreePrimary::TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u,
 	if(m_parent->m_parent != NULL){
 		m_parent->TranslateNeighbours(prim, u, delta_d, prim_ignore);
 	}
+}
+
+//csl37: remove primary tracking
+void BinTreePrimary::removeTracking()
+{
+	//set tracking flag to false
+	m_tracked = false;
+
+	//work down bintree structure
+	if (m_leftchild != NULL) m_leftchild->removeTracking();
+	if (m_rightchild != NULL) m_rightchild->removeTracking();
+}
+
+//csl37: checks that only one priamry is tracked
+void BinTreePrimary::checkTracking(int &count)
+{
+	//set tracking flag to false
+	if(m_tracked == true) count++;
+
+	//work down bintree structure
+	if (m_leftchild != NULL) m_leftchild->checkTracking(count);
+	if (m_rightchild != NULL) m_rightchild->checkTracking(count);
+}
 }
 /////////////////////////////////////////////////////////////////////// csl37-pp
 /*!
