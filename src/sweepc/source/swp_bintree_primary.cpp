@@ -1118,8 +1118,8 @@ double BinTreePrimary::SinteringLevel()
 				double d_ij =  m_distance_centreToCentre;
 
 				//calculate the merger condition
-				// double d_min = sqrt( pow(max(r_i,r_j),2.0) - pow(min(r_i,r_j),2.0) );
-				double d_min = max(r_i,r_j); //csl37-alternative merger condition
+				double d_min = sqrt( pow(max(r_i,r_j),2.0) - pow(min(r_i,r_j),2.0) );
+				//double d_min = max(r_i,r_j); //csl37-alternative merger condition
 
 				slevel = ( d_min/d_ij - d_min/(r_i + r_j) ) / ( 1 - d_min/(r_i + r_j) );
 			}
@@ -1204,7 +1204,9 @@ bool BinTreePrimary::MergeCondition()
 				condition = true;
 			}else{
 			//	condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) <= 0.0); //csl37:old condition
-				condition = ( d_ij <= max(r_i,r_j) );	//csl37: new "simpler" condition 
+				double s = 0.05;
+				condition = ( d_ij <= sqrt( pow(max(r_i,r_j),2.0) - pow(min(r_i,r_j),2.0) ) + s*min(r_i,r_j));//modified old condition
+			//	condition = ( d_ij <= max(r_i,r_j) );	//csl37: new "simpler" condition 
 			}
 		}
 	}
@@ -2776,8 +2778,8 @@ void BinTreePrimary::Sinter(double dt, Cell &sys,
     // Do only if there is a particle to sinter
     if (m_leftparticle!=NULL && m_rightparticle!=NULL) {
 
-        SinterNode(dt, sys, model, rng, wt);
-		
+		SinterNode(dt, sys, model, rng, wt);
+
 		// Check if the sintering level is above the threshold, and merge
 		if (MergeCondition()) {
             CheckSintering();
