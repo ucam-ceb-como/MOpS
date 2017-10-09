@@ -443,7 +443,8 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 			//amount of hydrogens and carbons
 			if (pah->Numprimary() == 1 && pah->NumPAH() == 1 && pah->NumCarbon() == m_PAH.numofC()
 				&& pah->NumHydrogen() == m_PAH.numofH() && pah->NumRings() == m_PAH.numofRings()
-				&& pah->NumRings5() == m_PAH.numofRings5()){
+				&& pah->NumRings5Lone() == m_PAH.numofLoneRings5()
+				&& pah->NumRings5Embedded() == m_PAH.numofEmbeddedRings5()){
 				//Check if this single PAH matches the target PAH structure
 				/*std::list<KMC_ARS::Site> sitelistInput = m_PAH.GetSiteList();
 				std::list<KMC_ARS::Site> sitelistComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteList();

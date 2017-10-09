@@ -105,7 +105,8 @@ PAHPrimary::PAHPrimary() : Primary(),
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
-	m_numOfRings5(0),
+	m_numOfRings5Lone(0),
+	m_numOfRings5Embedded(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -145,7 +146,8 @@ PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model)
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
-	m_numOfRings5(0),
+	m_numOfRings5Lone(0),
+	m_numOfRings5Embedded(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -194,7 +196,8 @@ PAHPrimary::PAHPrimary(const double time, const double position,
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
-	m_numOfRings5(0),
+	m_numOfRings5Lone(0),
+	m_numOfRings5Embedded(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -238,7 +241,8 @@ PAHPrimary::PAHPrimary(double time, const Sweep::ParticleModel &model, bool noPA
     m_numH(0),
     m_numOfEdgeC(0),
     m_numOfRings(0),
-	m_numOfRings5(0),
+	m_numOfRings5Lone(0),
+	m_numOfRings5Embedded(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -430,7 +434,8 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
     m_numH = source->m_numH;
     m_numOfEdgeC = source->m_numOfEdgeC;
     m_numOfRings = source->m_numOfRings;
-	m_numOfRings5 = source->m_numOfRings5;
+	m_numOfRings5Lone = source->m_numOfRings5Lone;
+	m_numOfRings5Embedded = source->m_numOfRings5Embedded;
     m_values=source->m_values;
     m_comp=source->m_comp;
     m_sint_time=source->m_sint_time;
@@ -1418,8 +1423,6 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				}
 			}
 
-			}
-
 			/*!
              * The second condition ensures that the m_InvalidPAH is modified in the correct way
 			 * consider 2 PAH, the first is invalid, the other is valid. If not using the
@@ -2070,7 +2073,8 @@ void PAHPrimary::UpdatePrimary(void)
         m_numH            = 0;
         m_numOfEdgeC      = 0;
         m_numOfRings      = 0;
-		m_numOfRings5      = 0;
+		m_numOfRings5Lone = 0;
+		m_numOfRings5Embedded = 0;
         m_numPAH          = m_PAH.size();
         m_PAHmass         = 0.0;
         m_PAHCollDiameter = 0.0;
@@ -2081,7 +2085,8 @@ void PAHPrimary::UpdatePrimary(void)
         m_numH            = 0;
         m_numOfEdgeC      = 0;
         m_numOfRings      = 0;
-		m_numOfRings5     = 0;
+		m_numOfRings5Lone = 0;
+		m_numOfRings5Embedded = 0;
         m_numPAH          = m_PAH.size();
         m_PAHmass         = 0.0;
         m_PAHCollDiameter = 0.0;
@@ -2123,7 +2128,8 @@ void PAHPrimary::UpdatePrimary(void)
             m_numH += (*i)->m_pahstruct->numofH();
             //m_numOfEdgeC += (*i)->m_pahstruct->numofEdgeC();
             m_numOfRings += (*i)->m_pahstruct->numofRings();
-			m_numOfRings5 += (*i)->m_pahstruct->numofRings5();
+			m_numOfRings5Lone += (*i)->m_pahstruct->numofLoneRings5();
+			m_numOfRings5Embedded += (*i)->m_pahstruct->numofEmbeddedRings5();
             maxcarbon = max(maxcarbon, (*i)->m_pahstruct->numofC()); //!< Search for the largest PAH-in terms of the number of carbon atoms-in the primary.
         }
 		m_numOf6Rings = m_numOfRings;
@@ -2230,7 +2236,8 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
 
         m_numOfEdgeC=m_leftchild->m_numOfEdgeC + m_rightchild->m_numOfEdgeC;
         m_numOfRings=m_leftchild->m_numOfRings + m_rightchild->m_numOfRings;
-		m_numOfRings5 = m_leftchild->m_numOfRings5 + m_rightchild->m_numOfRings5;
+		m_numOfRings5Lone = m_leftchild->m_numOfRings5Lone + m_rightchild->m_numOfRings5Lone;
+		m_numOfRings5Embedded = m_leftchild->m_numOfRings5Embedded + m_rightchild->m_numOfRings5Embedded;
         // calculate the coalescence level of the two primaries connected by this node
         m_children_roundingLevel=CoalescenceLevel();
         //sum up the avg coal level
@@ -2372,9 +2379,14 @@ int PAHPrimary::NumRings() const
     return m_numOfRings;
 }
 
-int PAHPrimary::NumRings5() const
+int PAHPrimary::NumRings5Lone() const
 {
-	return m_numOfRings5;
+	return m_numOfRings5Lone;
+}
+
+int PAHPrimary::NumRings5Embedded() const
+{
+	return m_numOfRings5Embedded;
 }
 
 int PAHPrimary::NumPAH() const

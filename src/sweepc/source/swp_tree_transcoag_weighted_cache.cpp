@@ -317,8 +317,6 @@ double Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
             return 0.0;   
 		case iUniform1:
 			return m_select;
-		case iUniform1:
-			return m_select;
 		case -1:
             // Special case property, used to select particles
             // uniformly.

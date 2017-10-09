@@ -320,7 +320,6 @@ protected:
     int m_numcarbon; //!< Number of carbon atoms.
     int m_frag;      //!< Fragmentation flag.
 	int m_numOf6Rings;
-	int m_numOf6Rings;
 
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.
