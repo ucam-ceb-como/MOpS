@@ -56,6 +56,8 @@
 #include <list>
 #include <cmath>
 #include <map>
+#include <boost/random/uniform_smallint.hpp>
+#include <boost/random/variate_generator.hpp>
 
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
@@ -67,10 +69,9 @@ using namespace Strings;
 //! Default Constructor
 PAHStructure::PAHStructure() {
     //NULLC = m_carbonList.insert(Carbon()).first;
-    m_cfirst = NULLC;
-    m_clast = NULLC;
     m_rings = 0;
-    m_rings5 = 0;
+    m_rings5_Lone = 0;
+    m_rings5_Embedded = 0;
     m_counts = intpair(0, 0);
     m_parent = NULL;
 }
@@ -108,19 +109,20 @@ PAHStructure::~PAHStructure() {
 
 //! Remove all data and release any memory
 void PAHStructure::clear() {
-    for(set<Cpointer>::iterator i=m_carbonList.begin(); i!=m_carbonList.end(); i++)
-        delete *i;
+    //for(set<Cpointer>::iterator i=m_carbonList.begin(); i!=m_carbonList.end(); i++)
+    //    delete *i;
     // clear all data
-    m_carbonList.clear();
+    //m_carbonList.clear();
     m_siteMap.clear();
     m_siteList.clear();
-    m_cfirst = NULL;
-    m_clast = NULL;
+    //m_cfirst = NULL;
+    //m_clast = NULL;
     m_counts.first = 0;
     m_counts.second = 0;
-    m_cpositions.clear();
+    //m_cpositions.clear();
     m_rings = 0;
-    m_rings5 = 0;
+    m_rings5_Lone = 0;
+    m_rings5_Embedded = 0;
 }
 
 void PAHStructure::setParent(Sweep::AggModels::PAH* parent) {
@@ -131,8 +133,8 @@ void PAHStructure::setParent(Sweep::AggModels::PAH* parent) {
 //! Overloaded Operators
 
 bool PAHStructure::operator==(PAHStructure &rhs) const
-{   return this->m_cpositions==rhs.m_cpositions&&
-           this->m_counts==rhs.m_counts;
+{   return this->m_counts==rhs.m_counts;
+           
 }
 
 bool PAHStructure::operator!=(PAHStructure &rhs) const{
@@ -151,19 +153,29 @@ int PAHStructure::numofRings() const{
     return m_rings;
 }
 
-int PAHStructure::numofRings5() const{
-    return m_rings5;
+int PAHStructure::numofLoneRings5() const{
+    return m_rings5_Lone;
 }
 
-int PAHStructure::numofEdgeC() const{
-    // the m_cpositions stores the coordinates of PAH, which means the num of edge C equals the size of m_cpositions
-    return m_cpositions.size();
+int PAHStructure::numofEmbeddedRings5() const{
+    return m_rings5_Embedded;
 }
+
+//int PAHStructure::numofEdgeC() const{
+//    // the m_cpositions stores the coordinates of PAH, which means the num of edge C equals the size of m_cpositions
+//    return m_cpositions.size();
+//}
 
 int PAHStructure::numofSite() const
 {
     return m_siteList.size();
 }
+
+int PAHStructure::numMergeSites()
+{
+	return m_siteMap[FE2].size() + m_siteMap[BFE2].size();
+}
+
 void PAHStructure::setnumofC(int val)
 {
     m_counts.first=val;
@@ -179,9 +191,14 @@ void PAHStructure::setnumofRings(int val)
     m_rings=val;
 }
 
-void PAHStructure::setnumofRings5(int val)
+void PAHStructure::setnumofLoneRings5(int val)
 {
-    m_rings5=val;
+    m_rings5_Lone=val;
+}
+
+void PAHStructure::setnumofEmbeddedRings5(int val)
+{
+    m_rings5_Embedded=val;
 }
 
 void PAHStructure::initialise(StartingStructure ss) {
@@ -193,21 +210,21 @@ PAHStructure*  PAHStructure::Clone() {
     return p.clonePAH();
 }
 
-bool PAHStructure::havebridgeC(){
-    PAHProcess p(*this);
-    return p.havebridgeC();
-}
+//bool PAHStructure::havebridgeC(){
+//    PAHProcess p(*this);
+//    return p.havebridgeC();
+//}
 
-void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
-{
-    PAHProcess p(*this);
-    string filename = "KMC_DEBUG/ID_";
-    filename.append(Strings::cstr(PAH_ID));
-    filename.append("_");
-    filename.append(Strings::cstr(i));
-    filename.append(".dot");
-    p.saveDOT(filename);
-}
+//void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
+//{
+//    PAHProcess p(*this);
+//    string filename = "KMC_DEBUG/ID_";
+//    filename.append(Strings::cstr(PAH_ID));
+//    filename.append("_");
+//    filename.append(Strings::cstr(i));
+//    filename.append(".dot");
+//    p.saveDOT(filename);
+//}
 
 
 // currently the serialization is incomplete, and some info is lost during this process
@@ -220,7 +237,10 @@ void PAHStructure::Serialize(std::ostream &out) const
     val=numofRings();
     out.write((char*)&(val), sizeof(val));
 
-    val=numofRings5();
+    val=numofLoneRings5();
+    out.write((char*)&(val), sizeof(val));
+
+    val=numofEmbeddedRings5();
     out.write((char*)&(val), sizeof(val));
 
     PAHStructure m_copy (*this);
@@ -241,7 +261,10 @@ void PAHStructure::Deserialize(std::istream &in)
     int temp_numofRings = val;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    int temp_numofRings5 = val;
+    int temp_numofLoneRings5 = val;
+
+    in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    int temp_numofEmbeddedRings5 = val;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     name = new char[val];
@@ -249,22 +272,21 @@ void PAHStructure::Deserialize(std::istream &in)
     std::string m_SiteName = string(name, val);
     delete [] name;
 
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numC = val;
+
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numH = val;
+
     PAHProcess p(*this);
-    p.initialise(m_SiteName, temp_numofRings, temp_numofRings5);
+    p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numC, temp_numH);
 }
 
-void PAHStructure::WriteCposition(std::ostream &out) const
-{
-	double val = 0.0;
-
-	std::set<cpair>::iterator itEnd = m_cpositions.end();
-	for (std::set<cpair>::iterator it = m_cpositions.begin(); it != itEnd; ++it)
-	{
-		val = (*it).first;
-		out.write((char*)&val, sizeof(val));
-		val = (*it).second;
-		out.write((char*)&val, sizeof(val));
-	}
+void PAHStructure::MergeSiteLists(PAHStructure* rhs, rng_type &rng) {
+	PAHProcess p1(*this);
+	PAHProcess p2(*rhs);
+	p1.MergeSites(p2, rng);
+	rhs->setnumofC(1);
 }
 
 std::list<Site> PAHStructure::GetSiteList() const {
@@ -274,25 +296,40 @@ std::list<Site> PAHStructure::GetSiteList() const {
 std::map<kmcSiteType, svector> PAHStructure::GetSiteMap() const {
 	return m_siteMap;
 }
+
+//void PAHStructure::WriteCposition(std::ostream &out) const
+//{
+//    double val=0.0;
+//
+//    std::set<cpair>::iterator itEnd=m_cpositions.end();
+//    for (std::set<cpair>::iterator it=m_cpositions.begin();it!=itEnd;++it)
+//    {
+//        val=(*it).first;
+//        out.write((char*)&val, sizeof(val));
+//        val=(*it).second;
+//        out.write((char*)&val, sizeof(val));
+//    }
+//}
+
 // the size for m_cpositions is required obviously, otherwise, the codes will not know when to stop
-void PAHStructure::ReadCposition(std::istream &in, const int size)
-{
-    double val=0.0;
-    m_cpositions.clear();
-    int m_first=0;
-    int m_second=0;
-
-    cpair position;
-    for (int i=0; i!=size;++i)
-    {
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_first = (int)val;
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_second = (int)val;
-
-        position = make_pair(m_first, m_second);
-        m_cpositions.insert(m_cpositions.end(), position);
-    }
-}
+//void PAHStructure::ReadCposition(std::istream &in, const int size)
+//{
+//    double val=0.0;
+//    m_cpositions.clear();
+//    int m_first=0;
+//    int m_second=0;
+//
+//    cpair position;
+//    for (int i=0; i!=size;++i)
+//    {
+//        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+//        m_first = (int)val;
+//        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+//        m_second = (int)val;
+//
+//        position = make_pair(m_first, m_second);
+//        m_cpositions.insert(m_cpositions.end(), position);
+//    }
+//}
 
 

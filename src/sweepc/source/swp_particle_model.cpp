@@ -375,11 +375,11 @@ Sweep::Particle *const ParticleModel::CreateParticle(const double time, const do
     return part;
 }
 
-/*!
- * @brief Calculate collision efficiency based on the two selected particles.
+/*
+ * @brief Calculate collision efficiency based on the two selected particles
  *
- * @param[in]    p1    Particle 1.
- * @param[in]    p2    Particle 2.
+ * @param[in]    p1    Particle 1  
+ * @param[in]    p2    Particle 2
  */ 
 double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 {
@@ -823,7 +823,7 @@ int ParticleModel::condensationThreshold() const {return m_condensationThreshold
 //! Set mode for collision efficiency model, currently 4 modes are supported, min, max, combined and reduced.
 void ParticleModel::SetMode(const std::string &mode) {m_mode = mode;}
 
-//! specify the incepting pah, currently only pyrene and benzene is supported for PAH-PP model, details see the kmc
+//! Set the gas-phase trasfer species. Currently, only benzene (A1), naphthalene (A2), pyrene (A4), benzo[a]pyrene (A5) and a 5-member ring bay site are supported.
 void ParticleModel::SetInceptedPAH(const std::string &name) 
 {
     if (!name.compare("A1"))
@@ -831,12 +831,14 @@ void ParticleModel::SetInceptedPAH(const std::string &name)
     else if (!name.compare("A2"))
         m_InceptedPAH = A2;
     else if (!name.compare("A3"))
-        throw std::runtime_error("A3 is not supported as InceptedPAH currently and please use A1, A2, or A4 (Sweep::ParticleModel::SetInceptedPAH())");
+        throw std::runtime_error("A3 is not supported as InceptedPAH currently and please use A1, A2, A4, A5 or BY5 (Sweep::ParticleModel::SetInceptedPAH())");
     else if (!name.compare("A4"))
             m_InceptedPAH = A4;
     else if (!name.compare("A5"))
             m_InceptedPAH = A5;
-    else throw std::runtime_error("no information about the incepted PAH is available, only A1 A2 and A4 are supported now (Sweep::ParticleModel::SetInceptedPAH())");
+    else if (!name.compare("BY5"))
+            m_InceptedPAH = BY5;
+    else throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4, A5 and BY5 are supported now (Sweep::ParticleModel::SetInceptedPAH())");
 }
 
 //! return mode of collision efficency model

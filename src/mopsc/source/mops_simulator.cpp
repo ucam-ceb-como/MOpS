@@ -961,7 +961,13 @@ void Simulator::outputPartTrack(const Reactor &r) const
         // Serialize the particles for tracking
 		// Provide a way to detect multiple instances of PAHs
         std::map<void*, boost::shared_ptr<Sweep::AggModels::PAHPrimary> > duplicates;
+        //typedef map<void*, boost::shared_ptr<Sweep::AggModels::PAHPrimary> >::const_iterator MapIterator;
+        //for (MapIterator iter = duplicates.begin(); iter != duplicates.end(); iter++)
+        //{
+        //    cout << "Key: " << iter->first << endl << "Values:" << endl;
+        //}
         for (unsigned int i=0; i!=n; ++i) {
+            //std::cout << "TESTING: Serialize loop" << std::endl;
             r.Mixture()->Particles().At(i)->Serialize(m_file, &duplicates);
         }
     }
@@ -1050,6 +1056,8 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
 
             // Write CPU times to file.
             s.OutputCT(me->m_file);
+
+            //std::cout << "TESTING: before outputPartTrack" << std::endl;
 
             // Do particle tracking output.
             me->outputPartTrack(r);
@@ -2266,16 +2274,20 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 
                 // Draw particle images for tracked particles.
                 unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());
+                unsigned int k = 0;
                 for (unsigned int j=0; j!=n; ++j) {
                     double t = times[i].EndTime();
+                    if ((t == 0.0125891 || t == 0.0170417 || t == 0.0303197 || t == 0.0445345) && (r->Mixture()->Particles().At(j)->getCoagCount() > 0)){
                     string fname = m_output_filename + "-tem(" + cstr(t) +
-                                   "s, " + cstr(j) + ").pov";
+                                       "s, " + cstr(k) + ").pov";
                     std::ofstream file;
                     file.open(fname.c_str());
 
                     r->Mixture()->Particles().At(j)->writeParticlePOVRAY(file);
 
                     file.close();
+                        k++;
+                }
                 }
 
                 delete r;
@@ -2318,22 +2330,22 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         vector<string> separator;
 
         // add the name for the columns
-        header.push_back("Index");                     //! Particle index (-1 for gas-phase PAHs).
-        header.push_back("#C");                        //! Number of carbon atoms.
-        header.push_back("#H");                        //! Number of hydrogen atoms.
-        header.push_back("#Rings6");                   //! Number of 6-member rings.
-        header.push_back("#Rings5");                   //! Number of 5-member rings.
-        header.push_back("#EdgeC");                    //! Number of carbon atoms on the edge of the PAH.
-        header.push_back("Mass(u)");                   //! PAH mass (u).
-        header.push_back("Mass(kg)");                  //! PAH mass (kg).
-        header.push_back("PAHCollDiameter (m)");       //! PAH collision diameter (m).
-        header.push_back("PAH density (kg/m3)");       //! PAH density (kg/m3).
-        header.push_back("PAH volume (m3)");           //! PAH volume (m3).
-        header.push_back("diameter (m)");              //! Spherical diameter (m).
-        header.push_back("collision diameter (m)");    //! Larger of the spherical or collison diameter (m).
-        header.push_back("time created (s)");          //! Time created (s).
-        header.push_back("PAH_ID");                    //! Index of PAH.
-		header.push_back("Frequency");                 //! Number of PAHs pointing to the same memory location.
+        header.push_back("Index");
+        header.push_back("#C");   // #C represent the num of Carbon
+        header.push_back("#H");
+        header.push_back("#Rings6");
+        header.push_back("#LoneRings5");
+        header.push_back("#EmbeddedRings5");
+        //header.push_back("#EdgeC");
+        header.push_back("Mass(u)");
+        header.push_back("Mass(kg)");
+        header.push_back("PAHCollDiameter (m)");
+        header.push_back("PAH denbsity (kg/m3)");
+        header.push_back("PAH volume (m3)");
+        header.push_back("diameter (m)");
+        header.push_back("collision diameter (m)");
+        header.push_back("time created (s)");
+        header.push_back("PAH_ID");
 
 
         // Open output files for all PSL save points.  Remember to

@@ -72,6 +72,9 @@ m_pahstruct(new PAHStructure())
     case ParticleModel::A5:
         m_pahstruct->initialise(BENZOPYRENE_C);
         break;
+    case ParticleModel::BY5:
+        m_pahstruct->initialise(BY5_C);
+        break;
     }
 }
 
@@ -102,9 +105,9 @@ int PAH::ID() const {
 	return PAH_ID;
 }
 
-void PAH::saveDOTperLoop(int ID, int i) const{
-	m_pahstruct->saveDOTperLoop(ID,i);
-}
+//void PAH::saveDOTperLoop(int ID, int i) const{
+//	m_pahstruct->saveDOTperLoop(ID,i);
+//}
 
 Sweep::KMC_ARS::PAHStructure* PAH::Structure()
 {

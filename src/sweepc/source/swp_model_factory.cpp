@@ -214,6 +214,7 @@ void ModelFactory::WritePrimary(const AggModels::Primary &pri, std::ostream &out
         // Serialize the model object.
         const AggModels::PAHPrimary * pahPrimary = dynamic_cast<const AggModels::PAHPrimary*>(&pri);
         if(pahPrimary) {
+            //std::cout << "TESTING: before Serialize" << std::endl;
             pahPrimary->Serialize(out, duplicates);
         }
         else
