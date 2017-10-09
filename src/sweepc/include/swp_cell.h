@@ -229,6 +229,14 @@ public:
 	// aab64 Get the inception factor that determines how many units are added
 	double GetInceptionFactor() const { return m_incFactor; }
 
+	// aab64 Set PSI flag used to tell surface reaction not to update gas-phase and 
+	// temperature because this is handled using inception stoichiometry
+	void SetNotPSIFlag(bool psiflag) { m_notpsiflag = psiflag; }
+
+	// aab64 Get PSI flag used to tell surface reaction not to update gas-phase and 
+	// temperature because this is handled using inception stoichiometry
+	bool GetNotPSIFlag() const { return m_notpsiflag; }
+
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
@@ -278,8 +286,12 @@ private:
 	// aab64 Current incepting particle weight in Bintree primary case
 	double m_incepting_weight;
 
-	// Scale the inception process to increase primary size more rapidly
+	// aab64 Scale the inception process to increase primary size more rapidly
 	double m_incFactor;
+
+	// aab64 PSI flag used to tell surface reaction not to update gas-phase and 
+	// temperature because this is handled using inception stoichiometry
+	bool m_notpsiflag;
 };
 
 } //namespace Sweep

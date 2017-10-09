@@ -296,9 +296,10 @@ int SurfaceReaction::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
                              unsigned int n) const
 {
     unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
-    if (m > 0) {
-	adjustGas(sys, sp.getStatisticalWeight(), m);
-	adjustParticleTemperature(sys, sp.getStatisticalWeight(), m, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
+    if (m > 0 && sys.GetNotPSIFlag()) 
+	{
+	    adjustGas(sys, sp.getStatisticalWeight(), m);
+	    adjustParticleTemperature(sys, sp.getStatisticalWeight(), m, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
     }
     return m;
 }

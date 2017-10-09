@@ -147,7 +147,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 			dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
 
 			// Select a particle at random
-			Sweep::PropID proprng = iUniform;
+			Sweep::PropID proprng = iDcol;
 			int iprng = sys.Particles().Select(proprng, rng);
 			Particle *sprng = NULL;
 			if (iprng >= 0) {
@@ -192,18 +192,38 @@ int DimerInception::Perform(const double t, Cell &sys,
 				return -1;
 			}
 
+			// Use inception composition to determine number of units to add to particle
+			// To do: check that this makes sense!!
+			unsigned int weightRatio = (unsigned int)(sys.GetInceptingWeight() / sp->getStatisticalWeight());
+			unsigned int nInceptingParticle = (unsigned int)ParticleComp()[0];
+			unsigned int nChosenParticle = weightRatio * nInceptingParticle;
+
+			// 09.10.2017 How to avoid doing extra update of gas-phase and temperature 
+			// in surface growth Perform(.) below? 
+			// For now, store a flag in the sys object that can be checked inside Perform(.)
+			sys.SetNotPSIFlag(false);
+
 			// 2. Call perform for surface growth process, and do one surface event.
 			// ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
-			// How does this generalise for other systems?			
-			int m = m_mech->Processes(0)->Perform(t, sys, *sp, rng, ParticleComp()[0]);
+			// How does this generalise for other systems with different # processes and comp?
+			int m = m_mech->Processes(0)->Perform(t, sys, *sp, rng, nChosenParticle);
+
+			// 09.10.2017 How to avoid doing extra update of gas-phase and temperature 
+			// in surface growth Perform(.) below? 
+			// For now, store a flag in the sys object that can be checked inside Perform(.)
+			sys.SetNotPSIFlag(true);
 
 			// 3. Update the cached properties (note this could be left off to make 
 			// it more efficient, assuming that the small change is insignificant).
 			sp->UpdateCache(); 
 
-			// Update gas-phase chemistry of system (think about whether using the weight of SP is correct).
-			adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
-			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+			// Update gas-phase chemistry of system 
+			// To do: think about whether this should use the weight of the incepting particle
+			// or the weight of the particle chosen for PSI.
+			double particleWt = sys.GetInceptingWeight();
+			//double particleWt = sp->getStatisticalWeight();
+			adjustGas(sys, particleWt, nInceptingParticle, sys.GetInceptionFactor());
+			adjustParticleTemperature(sys, particleWt, nInceptingParticle, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 		}
 		else
 		{

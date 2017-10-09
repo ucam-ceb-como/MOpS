@@ -63,7 +63,8 @@ namespace Sweep {
 Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
 : m_ensemble(), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false), 
-  m_incepting_weight(1.0), m_incFactor(1.0)
+  m_incepting_weight(1.0), m_incFactor(1.0), 
+  m_notpsiflag(true)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
@@ -122,6 +123,8 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 		m_incepting_weight = rhs.m_incepting_weight;
 		// aab64 incepting composition adjustment factor
 		m_incFactor = rhs.m_incFactor;
+		// aab64 PSI flag
+		m_notpsiflag = rhs.m_notpsiflag;
     }
 	assert(isValid());
     return *this;

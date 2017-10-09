@@ -180,7 +180,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 			dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
 
 			// Select a particle at random
-			Sweep::PropID proprng = iUniform;
+			Sweep::PropID proprng = iDcol;
 			int iprng = sys.Particles().Select(proprng, rng);
 			Particle *sprng = NULL;
 			if (iprng >= 0) {
