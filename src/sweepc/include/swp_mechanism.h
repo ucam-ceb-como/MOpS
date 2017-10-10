@@ -185,13 +185,16 @@ public:
 	double GetHeavyValue(void) const;
 
 	// aab64 Set flag and onset value for surface inceptions
-	virtual void SetIsSurfInc(bool surfincflag, double dlimval);
+	virtual void SetIsSurfInc(bool surfincflag, double dlimval, std::string &psitype);
 
 	// aab64 Get flag for surface inceptions
 	bool GetIsSurfInc(void) const;
 
 	// aab64 Get onset value for surface inceptions
 	double GetSurfIncValue(void) const;
+
+	// aab64 Get psi type
+	void GetPSItype(std::string &psitype) const;
 
 
 	// RATE CALCULATION.
@@ -420,6 +423,7 @@ private:
 	mutable double m_dval_heavy;            // Onset for heavier inceptions
 	mutable bool m_surfincflag;             // Flag to allow surface inceptions
 	mutable double m_dval_surfinc;          // Onset for surface inception
+	mutable std::string m_psi_type;         // Type of particle surface inception to do
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 

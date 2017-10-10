@@ -38,11 +38,11 @@
 		<!-- Additional specs to do adaptive weighted inception 
 		     Scaling function can be linear, quadratic, exponential
 			 Onset SP can be anything < Nmax given in mops.inx -->
-		<inceptionweightchange flag="off">
-		    <maxinceptionweight>10000.0</maxinceptionweight>
+		<inceptionweightchange flag="on">
+		    <maxinceptionweight>1.0</maxinceptionweight>
 		    <mininceptionweight>1.0</mininceptionweight>
 		    <onsetsp>1.0</onsetsp>
-		    <weightchangefun>linear</weightchangefun>
+		    <weightchangefun>exponential</weightchangefun>
 		</inceptionweightchange>
     </coagulation>
 
@@ -1102,7 +1102,12 @@
         <reactant id="TICL2OCL" stoich="0" m="2.1819e-022" d="6.5423e-8" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+0.0"/>
-		<allowheavy>off</allowheavy>
-		<surfinc dlim="4.9e-9">off</surfinc>
+		<hci flag="off">
+		    <dlim>4.9e-8</dlim>
+		</hci>
+		<psi flag="on">
+			<dlim>4.9e-8</dlim>
+			<type>both</type> <!-- options: weight, event, both for SWA -->
+		</psi>
     </inception> 
 </mechanism>

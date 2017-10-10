@@ -76,7 +76,8 @@ Mechanism::Mechanism(void)
 m_weighted_coag(false), m_var_incept_weight(false), 
 m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L"), 
 m_heavyallowed(false), m_dval_heavy(1.0e-7),
-m_surfincflag(false), m_dval_surfinc(1.0e-7)
+m_surfincflag(false), m_dval_surfinc(1.0e-7),
+m_psi_type("E")
 {
 }
 
@@ -129,6 +130,7 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 	m_dval_heavy = rhs.m_dval_heavy;
 	m_surfincflag = rhs.m_surfincflag;
 	m_dval_surfinc = rhs.m_dval_surfinc;
+	m_psi_type = rhs.m_psi_type;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -422,10 +424,11 @@ double Mechanism::GetHeavyValue(void) const
 }
 
 // aab64 Set flag and onset value for surface inceptions
-void Mechanism::SetIsSurfInc(bool surfincflag, double dlimval)
+void Mechanism::SetIsSurfInc(bool surfincflag, double dlimval, std::string &psitype)
 {
 	m_surfincflag = surfincflag;
 	m_dval_surfinc = dlimval;
+	m_psi_type = psitype;
 }
 
 // aab64 Get flag for surface inceptions
@@ -439,6 +442,16 @@ double Mechanism::GetSurfIncValue(void) const
 {
 	return m_dval_surfinc;
 }
+
+// aab64 Get psi type
+void Mechanism::GetPSItype(std::string &psitype) const
+{
+	if (m_weighted_coag)
+		psitype = m_psi_type;
+	else
+		psitype = "E";
+}
+
 
 // RATE CALCULATION.
 
@@ -1627,6 +1640,7 @@ void Mechanism::releaseMem(void)
 	m_dval_heavy = 0;
 	m_surfincflag = false; 
 	m_dval_surfinc = 0; // 2017.09.20 to do: look at this
+	m_psi_type.clear();
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 }
 

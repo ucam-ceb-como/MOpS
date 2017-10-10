@@ -141,6 +141,8 @@ int DimerInception::Perform(const double t, Cell &sys,
 		double dcol_ave;
 		bool sizeflag = false;
 		bool probflag = true; // will probably be a legacy variable that can be removed if 20.09.2017 stuff is replaced
+		std::string PSItype;
+		m_mech->GetPSItype(PSItype); // event, both, weight
 
 		if (nsp > 1) {
 			// Get average particle collision diameter
@@ -180,8 +182,10 @@ int DimerInception::Perform(const double t, Cell &sys,
 		// do surface inception on a random particle.
 		if (surfincflag && sizeflag && probflag) 
 		{
-			// 1. Pick a particle using the FM/SF terms that preferentially find large particles 
-			// e.g.:
+			// As it stands, there is no reason to do this twice - we already selected a particle 
+			// based on iDcol above. Leaving it for flexibility to do uniform selection here, 
+			// Dcol^2 selection above etc...
+			// 1. Pick a particle using the FM/SF terms that preferentially find large particles e.g.:
 			int ip = sys.Particles().Select(Sweep::iDcol, rng);
 			Particle *sp = NULL;
 			if (ip >= 0) {
@@ -192,38 +196,68 @@ int DimerInception::Perform(const double t, Cell &sys,
 				return -1;
 			}
 
-			// Use inception composition to determine number of units to add to particle
-			// To do: check that this makes sense!!
-			unsigned int weightRatio = (unsigned int)(sys.GetInceptingWeight() / sp->getStatisticalWeight());
-			unsigned int nInceptingParticle = (unsigned int)ParticleComp()[0];
-			unsigned int nChosenParticle = weightRatio * nInceptingParticle;
+			// Inception stoichiometry determines particle composition
+			unsigned int nInceptingParticle_ui = (unsigned int)ParticleComp()[0];
+			double nInceptingParticle_d = ParticleComp()[0];
 
-			// 09.10.2017 How to avoid doing extra update of gas-phase and temperature 
-			// in surface growth Perform(.) below? 
-			// For now, store a flag in the sys object that can be checked inside Perform(.)
-			sys.SetNotPSIFlag(false);
+			// PSItype = event: Update the number of rutiles in the particle, leave the weight
+			if (PSItype == "E")
+			{
+				// Use inception composition and weight ratio to determine number of units to add to particle
+				unsigned int weightRatio = (unsigned int)(sys.GetInceptingWeight() / sp->getStatisticalWeight());
+				unsigned int nChosenParticle = weightRatio * nInceptingParticle_ui;
 
-			// 2. Call perform for surface growth process, and do one surface event.
-			// ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
-			// How does this generalise for other systems with different # processes and comp?
-			int m = m_mech->Processes(0)->Perform(t, sys, *sp, rng, nChosenParticle);
+				// Avoid doing extra update of gas-phase and temperature during surface growth
+				// Store a flag in the sys object that can be checked inside Perform(.)
+				sys.SetNotPSIFlag(false);
 
-			// 09.10.2017 How to avoid doing extra update of gas-phase and temperature 
-			// in surface growth Perform(.) below? 
-			// For now, store a flag in the sys object that can be checked inside Perform(.)
-			sys.SetNotPSIFlag(true);
+				// 2. Call perform for surface growth process, and do one surface event.
+				// ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
+				// How does this generalise for other systems with different # processes and comp?
+				int m = m_mech->Processes(0)->Perform(t, sys, *sp, rng, nChosenParticle);
 
-			// 3. Update the cached properties (note this could be left off to make 
-			// it more efficient, assuming that the small change is insignificant).
+				// Reset flag in the sys object for outside this function
+				sys.SetNotPSIFlag(true);
+			}
+			// PSItype = weight: Update the particle weight and leave the number of rutiles unchanged
+			else if (PSItype == "W")
+			{
+				double nChosenParticle = sp->Composition()[0];
+				double newWeight = (nChosenParticle * sp->getStatisticalWeight()) + (nInceptingParticle_d * sys.GetInceptingWeight());
+				newWeight *= (1.0 / (nChosenParticle));
+				sp->setStatisticalWeight(newWeight);
+			}
+			// PSItype = both: Update both the weight and the number of rutiles of the particle
+			else
+			{
+				// Avoid doing extra update of gas-phase and temperature during surface growth
+				// Store a flag in the sys object that can be checked inside Perform(.)
+				sys.SetNotPSIFlag(false);
+
+				// 2. Call perform for surface growth process, and do one surface event.
+				// ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
+				// How does this generalise for other systems with different # processes and comp?
+				int m = m_mech->Processes(0)->Perform(t, sys, *sp, rng, nInceptingParticle_d);
+
+				// Reset flag in the sys object for outside this function
+				sys.SetNotPSIFlag(true);
+
+				// Update the weight 
+				double nChosenParticle = sp->Composition()[0];
+				double newWeight = (nChosenParticle * sp->getStatisticalWeight());
+				newWeight += (nInceptingParticle_d * sys.GetInceptingWeight());
+				newWeight *= (1.0 / (nChosenParticle + nInceptingParticle_d));
+				sp->setStatisticalWeight(newWeight);
+			}
+
+			// 3. Update the cached properties (note could this be left off to make 
+			// it more efficient, assuming that the small change is insignificant?).
 			sp->UpdateCache(); 
 
 			// Update gas-phase chemistry of system 
-			// To do: think about whether this should use the weight of the incepting particle
-			// or the weight of the particle chosen for PSI.
 			double particleWt = sys.GetInceptingWeight();
-			//double particleWt = sp->getStatisticalWeight();
-			adjustGas(sys, particleWt, nInceptingParticle, sys.GetInceptionFactor());
-			adjustParticleTemperature(sys, particleWt, nInceptingParticle, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+			adjustGas(sys, particleWt, 1, sys.GetInceptionFactor()); // nInceptingParticle_ui
+			adjustParticleTemperature(sys, particleWt, 1, sys.GetIsAdiabaticFlag(), nInceptingParticle_d, 1, sys.GetInceptionFactor()); // nInceptingParticle_ui
 		}
 		else
 		{

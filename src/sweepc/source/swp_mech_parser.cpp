@@ -802,7 +802,7 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 				if (icn->GetIsHeavy())
 					mech.SetIsHeavy(true, icn->GetHeavyOnset());
 				if (icn->GetSurfIncFlag())
-					mech.SetIsSurfInc(true, icn->GetSurfIncOnset());
+					mech.SetIsSurfInc(true, icn->GetSurfIncOnset(), icn->GetPSItype());
             }
             catch (std::exception &e) {
                 delete icn;
@@ -830,38 +830,59 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 	// aab64 Get info from artifical inception node about sampling heavy particles
 	if (str == "extra inception")
 	{
-		CamXML::Element *allowHeavyXML = xml.GetFirstChild("allowheavy");
+		bool hciflag = false;
+		bool psiflag = false;
+		CamXML::Element *allowHeavyXML = xml.GetFirstChild("hci");
 		if (allowHeavyXML != NULL)
 		{
-			const std::string allowHeavySwitch = allowHeavyXML->Data();
+			const std::string allowHeavySwitch = allowHeavyXML->GetAttributeValue("flag");
 			if (allowHeavySwitch == "on")
 			{
+				hciflag = true;
 				std::cout << "Activating heavy inception\n";
-				const std::string dlimval = allowHeavyXML->GetAttributeValue("dlim");
+				CamXML::Element *dlimval = allowHeavyXML->GetFirstChild("dlim");
 				double dlim;
-				if (dlimval != "")
-					dlim = cdble(dlimval);
+				if (dlimval != NULL)
+					dlim = cdble(dlimval->Data());
 				if (dlim < 0.0)
 					throw std::runtime_error("Limiting heavy inception point must be positive.\n");
 				icn.SetIsHeavy(true, dlim);
 			}
 		}
-		CamXML::Element *surfincXML = xml.GetFirstChild("surfinc");
+		CamXML::Element *surfincXML = xml.GetFirstChild("psi");
 		if (surfincXML != NULL)
 		{
-			const std::string surfincSwitch = surfincXML->Data();
+			const std::string surfincSwitch = surfincXML->GetAttributeValue("flag");
 			if (surfincSwitch == "on")
 			{
+				psiflag = true;
 				std::cout << "Activating surface inception\n";
-				const std::string dlimval = surfincXML->GetAttributeValue("dlim"); 
+				CamXML::Element *dlimval = surfincXML->GetFirstChild("dlim");
 				double dlim;
-				if (dlimval != "")
-					dlim = cdble(dlimval);
+				if (dlimval != NULL)
+					dlim = cdble(dlimval->Data());
 				if (dlim < 0.0)
 					throw std::runtime_error("Limiting surface inception point must be positive.\n");
-				icn.SetSurfInc(true, dlim);
+				CamXML::Element *psitypedata = surfincXML->GetFirstChild("type");
+				std::string psitype = "E";
+				if (psitypedata != NULL)
+				{
+					const std::string psitypename = psitypedata->Data();
+					if (psitypename == "both")
+						psitype = "B";
+					else if (psitypename == "weight")
+						psitype = "W";
+					else if (psitypename == "event")
+						psitype = "E";
+					else
+						throw std::runtime_error("Unrecognized PSItype. \nPermissable types: event, weight (SWA only), both (SWA only).\n");
+					std::cout << "Using " << psitypename << " update for PSI." << std::endl;
+				}
+				icn.SetSurfInc(true, dlim, psitype);
 			}
 		}
+		if (psiflag && hciflag)
+			throw std::runtime_error("Can't do both PSI and HCI - please choose one.\n");
 	}
 
     // Read reactants.

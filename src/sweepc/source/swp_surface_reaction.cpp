@@ -295,7 +295,7 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
 int SurfaceReaction::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
                              unsigned int n) const
 {
-    unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
+	unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
     if (m > 0 && sys.GetNotPSIFlag()) 
 	{
 	    adjustGas(sys, sp.getStatisticalWeight(), m);

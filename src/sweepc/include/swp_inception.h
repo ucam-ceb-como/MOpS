@@ -124,17 +124,20 @@ public:
 	// aab64 Get flag for heavy inceptions
 	bool GetIsHeavy() const;
 
-	// aab64 Get flag for heavy inception
+	// aab64 Get heavy inception point
 	double GetHeavyOnset() const;
 
 	// aab64 Set flag and onset point for surface inception
-	void SetSurfInc(bool surfincflag, double dlimval);
+	void SetSurfInc(bool surfincflag, double dlimval, std::string &psitype);
 
 	// aab64 Get flag for surface inception
 	bool GetSurfIncFlag() const;
 
-	// aab64 Get flag for surface inception
+	// aab64 Get surface inception onset point
 	double GetSurfIncOnset() const;
+
+	// aab64 Get surface inception type
+	std::string GetPSItype() const;
 
 	// TOTAL RATE CALCULATIONS.
 
@@ -197,6 +200,9 @@ private:
 
 	//! aab64 Onset point for surface inception
 	double m_dlim_surfinc;
+
+	//! aab64 PSI type for surface inception
+	std::string m_psitype;
 };
 } // namespace Processes
 } // namespace Sweep
