@@ -3483,7 +3483,6 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 
     // neighbouring sites:
 	Spointer S1, S2, S3, S4;
-	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
     // Update Site and neighbours
 	//If this growth happened at an ACBL or ACBR, update the corresponding opposite side of the bridge
 	kmcSiteType type = stt->type;
@@ -3500,12 +3499,12 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 		updateCombinedSites(S3); updateCombinedSites(S4);
 	}
 	convSiteType(stt, FE);
+	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
+	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
 
 	updateSites(S1, 1);
 	updateSites(S2, 1);
     // Update combined site for Site and neighbours
-	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
-    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
     updateCombinedSites(stt);
     updateCombinedSites(S1); updateCombinedSites(S2);
     updateCombinedSites(S3); updateCombinedSites(S4);
