@@ -477,11 +477,59 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 					sitemapInput[KMC_ARS::RFER].size() == sitemapComp[KMC_ARS::RFER].size() &&
 					sitemapInput[KMC_ARS::RZZR].size() == sitemapComp[KMC_ARS::RZZR].size() &&
 					sitemapInput[KMC_ARS::RACR].size() == sitemapComp[KMC_ARS::RACR].size() &&
+					sitemapInput[KMC_ARS::RBY5R].size() == sitemapComp[KMC_ARS::RBY5R].size() &&
 					sitemapInput[KMC_ARS::FE3].size() == sitemapComp[KMC_ARS::FE3].size() &&
 					sitemapInput[KMC_ARS::FE2].size() == sitemapComp[KMC_ARS::FE2].size() &&
+					sitemapInput[KMC_ARS::OFE2].size() == sitemapComp[KMC_ARS::OFE2].size() &&
+					sitemapInput[KMC_ARS::BFE2].size() == sitemapComp[KMC_ARS::BFE2].size() &&
+					sitemapInput[KMC_ARS::NFE2].size() == sitemapComp[KMC_ARS::NFE2].size() &&
 					sitemapInput[KMC_ARS::AC_FE3].size() == sitemapComp[KMC_ARS::AC_FE3].size() &&
+					sitemapInput[KMC_ARS::RAC_FE3].size() == sitemapComp[KMC_ARS::RAC_FE3].size() &&
 					sitemapInput[KMC_ARS::BY5_FE3].size() == sitemapComp[KMC_ARS::BY5_FE3].size() &&
-					sitemapInput[KMC_ARS::FE_HACA].size() == sitemapComp[KMC_ARS::FE_HACA].size()){
+					sitemapInput[KMC_ARS::ER5_FE3].size() == sitemapComp[KMC_ARS::ER5_FE3].size() &&
+					sitemapInput[KMC_ARS::FE_HACA].size() == sitemapComp[KMC_ARS::FE_HACA].size() && 
+					sitemapInput[KMC_ARS::NFE].size() == sitemapComp[KMC_ARS::NFE].size() &&
+					sitemapInput[KMC_ARS::NZZ].size() == sitemapComp[KMC_ARS::NZZ].size() &&
+					sitemapInput[KMC_ARS::NAC].size() == sitemapComp[KMC_ARS::NAC].size() &&
+					sitemapInput[KMC_ARS::NBY6].size() == sitemapComp[KMC_ARS::NBY6].size() &&
+					sitemapInput[KMC_ARS::NBY5].size() == sitemapComp[KMC_ARS::NBY5].size() &&
+					sitemapInput[KMC_ARS::HER5].size() == sitemapComp[KMC_ARS::HER5].size() &&
+					sitemapInput[KMC_ARS::ER5].size() == sitemapComp[KMC_ARS::ER5].size() &&
+					sitemapInput[KMC_ARS::ERFE].size() == sitemapComp[KMC_ARS::ERFE].size() &&
+					sitemapInput[KMC_ARS::ERZZ].size() == sitemapComp[KMC_ARS::ERZZ].size() &&
+					sitemapInput[KMC_ARS::ERAC].size() == sitemapComp[KMC_ARS::ERAC].size() &&
+					sitemapInput[KMC_ARS::ERBY5].size() == sitemapComp[KMC_ARS::ERBY5].size() &&
+					sitemapInput[KMC_ARS::ERFEER].size() == sitemapComp[KMC_ARS::ERFEER].size() &&
+					sitemapInput[KMC_ARS::ERZZER].size() == sitemapComp[KMC_ARS::ERZZER].size() &&
+					sitemapInput[KMC_ARS::ERACER].size() == sitemapComp[KMC_ARS::ERACER].size() &&
+					sitemapInput[KMC_ARS::RFEER].size() == sitemapComp[KMC_ARS::RFEER].size() &&
+					sitemapInput[KMC_ARS::RZZER].size() == sitemapComp[KMC_ARS::RZZER].size() &&
+					sitemapInput[KMC_ARS::RACER].size() == sitemapComp[KMC_ARS::RACER].size() &&
+					sitemapInput[KMC_ARS::ACBL].size() == sitemapComp[KMC_ARS::ACBL].size() &&
+					sitemapInput[KMC_ARS::ACBR].size() == sitemapComp[KMC_ARS::ACBR].size() &&
+					sitemapInput[KMC_ARS::BY5BR].size() == sitemapComp[KMC_ARS::BY5BR].size() &&
+					sitemapInput[KMC_ARS::BY5BL].size() == sitemapComp[KMC_ARS::BY5BL].size() &&
+					sitemapInput[KMC_ARS::BY6BR].size() == sitemapComp[KMC_ARS::BY6BR].size() &&
+					sitemapInput[KMC_ARS::BY6BL].size() == sitemapComp[KMC_ARS::BY6BL].size() &&
+					sitemapInput[KMC_ARS::BY6BR2].size() == sitemapComp[KMC_ARS::BY6BR2].size() &&
+					sitemapInput[KMC_ARS::BY6BL2].size() == sitemapComp[KMC_ARS::BY6BL2].size() &&
+					sitemapInput[KMC_ARS::BY6BLR].size() == sitemapComp[KMC_ARS::BY6BLR].size() &&
+					sitemapInput[KMC_ARS::BY6BRL].size() == sitemapComp[KMC_ARS::BY6BRL].size() &&
+					sitemapInput[KMC_ARS::NACBL].size() == sitemapComp[KMC_ARS::NACBL].size() &&
+					sitemapInput[KMC_ARS::NACBR].size() == sitemapComp[KMC_ARS::NACBR].size() &&
+					sitemapInput[KMC_ARS::NBY5BR].size() == sitemapComp[KMC_ARS::NBY5BR].size() &&
+					sitemapInput[KMC_ARS::NBY5BL].size() == sitemapComp[KMC_ARS::NBY5BL].size() &&
+					sitemapInput[KMC_ARS::NBY6BR].size() == sitemapComp[KMC_ARS::NBY6BR].size() &&
+					sitemapInput[KMC_ARS::NBY6BL].size() == sitemapComp[KMC_ARS::NBY6BL].size() &&
+					sitemapInput[KMC_ARS::NBY6BR2].size() == sitemapComp[KMC_ARS::NBY6BR2].size() &&
+					sitemapInput[KMC_ARS::NBY6BL2].size() == sitemapComp[KMC_ARS::NBY6BL2].size() &&
+					sitemapInput[KMC_ARS::NBY6BLR].size() == sitemapComp[KMC_ARS::NBY6BLR].size() &&
+					sitemapInput[KMC_ARS::NBY6BRL].size() == sitemapComp[KMC_ARS::NBY6BRL].size() &&
+					sitemapInput[KMC_ARS::ACR5].size() == sitemapComp[KMC_ARS::ACR5].size() &&
+					sitemapInput[KMC_ARS::CAC].size() == sitemapComp[KMC_ARS::CAC].size() &&
+					sitemapInput[KMC_ARS::CBY5].size() == sitemapComp[KMC_ARS::CBY5].size() &&
+					sitemapInput[KMC_ARS::CBY6].size() == sitemapComp[KMC_ARS::CBY6].size()
+					){
 					return count;
 				}
 			}
@@ -490,6 +538,7 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 	}
 	return -1;
 }
+
 
 /*!
  * @param[in]   i       Index of particle to remove
