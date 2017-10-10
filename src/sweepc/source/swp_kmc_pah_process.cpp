@@ -949,12 +949,13 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 				newtype = (kmcSiteType)(inttype - 72);
 			}
 			else if (inttype == 74 || inttype == 78){
-				if (!(type == ACBL || type == ACBR)){
-					cout << "Count is zero, st1type is BY6L2 or BY6R2, but type is not ACBL or ACBR" << endl;
-					cout << (int)type;
-					assert(false);
-					abort();
-				}
+				//if (!(type == ACBL || type == ACBR)){
+				//	cout << "Count is zero, st1type is BY6L2 or BY6R2, but type is not ACBL or ACBR" << endl;
+				//	cout << "Type is " <<type <<endl;
+				//	cout << "Inttype is " << inttype << endl;
+				//	assert(false);
+				//	abort();
+				//}
 				newtype = (kmcSiteType)(inttype - 1);
 			}
 			else{
@@ -1051,12 +1052,13 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 					newtype = (kmcSiteType)(inttype - 72);
 				}
 				else if (inttype == 74 || inttype == 78){
-					if (!(type == ACBL || type == ACBR)){
-						cout << "Count is zero, st1type is BY6L2 or BY6R2, but type is not ACBL or ACBR" << endl;
-						cout << (int)type;
-						assert(false);
-						abort();
-					}
+					//if (!(type == ACBL || type == ACBR)){
+					//	cout << "Count is zero, st1type is BY6L2 or BY6R2, but type is not ACBL or ACBR" << endl;
+					//	cout << "Type is " << type << endl;
+					//	cout << "Inttype is " << inttype << endl;
+					//	assert(false);
+					//	abort();
+					//}
 					newtype = (kmcSiteType)(inttype - 1);
 				}
 				else{
@@ -3274,7 +3276,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	JOBID = id;
 	//cout << "Doing process " << id << " on " <<PAH_ID << endl;
 
-	//if (PAH_ID == 677){
+	//if (PAH_ID == 149){
 	//	cout << "ID is: " << id << endl;
 	//}
 
@@ -3623,7 +3625,12 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 	Spointer st1;
 	bool found = false;
 	if (type == BY6BL || type == BY6BR || type == BY6BL2 || type == BY6BR2 || type == BY6BLR || type == BY6BRL){
+		if (type == BY6BLR || type == BY6BRL){
+			cout << "Cannot close this type" <<endl;
+			return;
+		}
 		st1 = convBridgePartner(stt);
+		//cout << "Did it on site type " << type <<endl;
 	}
 
     // Remove BY6 site and combine the neighbouring sites. 

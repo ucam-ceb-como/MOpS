@@ -164,15 +164,13 @@ namespace KMC_ARS {
     };
 
     //! ID4. 
-    //class PH_benz : public Sweep::KMC_ARS::JumpProcess { //phenyl addition
-    //public:
-    //    double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-    //    double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-    //    double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-    //    void initialise();
-    //};
-
-    //! ID5.
+    class PH_benz : public Sweep::KMC_ARS::JumpProcess { //phenyl addition
+    public:
+        double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+        void initialise();
+    };
 
     //! ID5.
     class D6R_FE3 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption

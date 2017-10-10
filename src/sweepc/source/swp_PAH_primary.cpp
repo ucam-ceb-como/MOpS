@@ -1452,8 +1452,13 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			//totalsites = 0.0;
 			if (totalsites > 2 && numdiffPAHs > 1){
 				double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t);
-				double volume = sys.SampleVolume(); //get volume in m3
-				kMerge = kMerge / NA / volume; //convert KMerge from m3/mol/s to 1/s.
+				double density = model.Components(0)->Density();
+				//! PP mass (kg).
+				double m_mass = m_numcarbon*1.9945e-26 + m_numH*1.6621e-27;
+
+				//double volume = sys.SampleVolume(); //get volume in m3
+				double volume = m_mass / density;
+				kMerge = kMerge / NA / volume; //convert KMerge from m3/mol/s to 1/#/s.
 				typedef boost::exponential_distribution<double> exponential_distrib;
 				exponential_distrib waitingTimeDistrib(kMerge*(totalsites)*(totalsites - 1.0));
 				boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
@@ -1492,6 +1497,8 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
 
 						//Merges++;
+
+						//cout << "Merged!!!!" << endl;
 
 						RemoveInvalidPAHs();
 						m_PAHclusterchanged = true;

@@ -125,7 +125,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_G6R_AC = new G6R_AC; j_G6R_AC->initialise();                                 //*< ID1.
     JumpProcess* j_G6R_FE = new G6R_FE; j_G6R_FE->initialise();                                 //*< ID2.
     JumpProcess* j_L6_BY6 = new L6_BY6; j_L6_BY6->initialise();                                 //*< ID3.
-    //JumpProcess* j_PH_benz = new PH_benz; j_PH_benz->initialise();                            //*< ID4.
+    JumpProcess* j_PH_benz = new PH_benz; j_PH_benz->initialise();                            //*< ID4.
     JumpProcess* j_D6R_FE3 = new D6R_FE3; j_D6R_FE3->initialise();                              //*< ID5.
     JumpProcess* j_O6R_FE3_O2 = new O6R_FE3_O2; j_O6R_FE3_O2->initialise();                     //*< ID6.
     JumpProcess* j_O6R_FE3_OH = new O6R_FE3_OH; j_O6R_FE3_OH->initialise();                     //*< ID7.
@@ -509,63 +509,63 @@ double L6_BY6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 // ************************************************************
 
 // Elementary rate constants, site type, process type and name
-//void PH_benz::initialise() {
-//    // Adding elementary reactions
-//    // 0.0267 atm
-//    rxnvector& rxnV = m_rxnvector0p0267;
-//    addReaction(rxnV, Reaction(2.5e14, 0, 16.00, sp::H));      //0 - r1f
-//    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
-//    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-//    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-//    addReaction(rxnV, Reaction(2.08e30, -4.98, 5.290, sp::H));  //4 - r3f
-//    addReaction(rxnV, Reaction(2e76, -18.4456, 46.93, sp::C6H6));   //5 - r4f
-//    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
-//    // 0.12 atm
-//    rxnvector& rxnV2 = m_rxnvector0p12;
-//    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
-//    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
-//    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-//    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-//    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
-//    addReaction(rxnV2, Reaction(2.2e36, -8.21, 9.92, sp::C6H6));   //5 - r4f
-//    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
-//    // 1 atm
-//    rxnvector& rxnV3 = m_rxnvector1;
-//    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
-//    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
-//    addReaction(rxnV3, Reaction(1.0e10, .734, 1.43, sp::OH));  //2 - r2f
-//    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-//    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
-//    addReaction(rxnV3, Reaction(1.9e76, -18.4043, 47.87, sp::C6H6));   //5 - r4f
-//    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
-//
-//    m_sType = benz; // sitetype
-//    m_name = "Phenyl addition"; // name of process
-//    m_ID = 4;
-//}
-//// Jump rate calculation
-//double PH_benz::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-//    // check if site count is zero
-//    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
-//    if(site_count==0) return m_rate=0;
-//    
-//    
-//    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-//    double r_f; // radical fraction 
-//    if(r_denom>0) {
-//        r_f = (m_r[0]+m_r[2])/r_denom; 
-//        r_f = r_f/(r_f+1.0);
-//    }
-//    else r_f=0;
-//    if((double)pah_st.getSiteCount(R5)!=0) site_count++;
-//    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
-//}
-//double PH_benz::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-//    return setRate0p0267(gp, pah_st);
-//}
-//double PH_benz::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-//    return setRate0p0267(gp, pah_st);
-//}
+void PH_benz::initialise() {
+    // Adding elementary reactions
+    // 0.0267 atm
+    rxnvector& rxnV = m_rxnvector0p0267;
+    addReaction(rxnV, Reaction(2.5e14, 0, 16.00, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(2.08e30, -4.98, 5.290, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(2e76, -18.4456, 46.93, sp::C6H6));   //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
+    // 0.12 atm
+    rxnvector& rxnV2 = m_rxnvector0p12;
+    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(2.2e36, -8.21, 9.92, sp::C6H6));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(1.0e10, .734, 1.43, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.9e76, -18.4043, 47.87, sp::C6H6));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+
+    m_sType = benz; // sitetype
+    m_name = "Phenyl addition"; // name of process
+    m_ID = 4;
+}
+// Jump rate calculation
+double PH_benz::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    // check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    if(site_count==0) return m_rate=0;
+    
+    
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    if((double)pah_st.getSiteCount(R5)!=0) site_count++;
+    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+}
+double PH_benz::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate0p0267(gp, pah_st);
+}
+double PH_benz::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate0p0267(gp, pah_st);
+}
 // 
 // ************************************************************
 // ID5- R6 desorption at FE (AR8 in Matlab)
