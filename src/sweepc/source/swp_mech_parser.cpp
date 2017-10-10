@@ -801,8 +801,10 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 				// aab64 set flags for heavy inception or surface inceptions
 				if (icn->GetIsHeavy())
 					mech.SetIsHeavy(true, icn->GetHeavyOnset());
-				if (icn->GetSurfIncFlag())
-					mech.SetIsSurfInc(true, icn->GetSurfIncOnset(), icn->GetPSItype());
+				if (icn->GetSurfIncFlag()) {
+					std::string psitype = icn->GetPSItype();
+					mech.SetIsSurfInc(true, icn->GetSurfIncOnset(), psitype);
+				}
             }
             catch (std::exception &e) {
                 delete icn;
