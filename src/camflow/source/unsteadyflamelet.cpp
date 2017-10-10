@@ -1,4 +1,4 @@
-#include "flamelet.h"
+#include "unsteadyflamelet.h"
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -9,7 +9,7 @@ using namespace Camflow;
 using namespace std;
 using namespace Gadgets;
 
-FlameLet::FlameLet
+UnsteadyFlameLet::UnsteadyFlameLet
 (
     CamAdmin& ca,
     CamConfiguration& config,
@@ -32,12 +32,12 @@ sootResidualZeroed(false),
 Lewis(admin_.getInputFile(),camMech_,mCord,nSpc)
 {}
 
-FlameLet::~FlameLet()
+UnsteadyFlameLet::~UnsteadyFlameLet()
 {
     if (radiation != NULL) delete radiation;
 }
 
-void FlameLet::checkSetup()
+void UnsteadyFlameLet::checkSetup()
 {
 
     if (reacGeom_.getAxpos()[mCord-1] != 1)
@@ -54,32 +54,38 @@ void FlameLet::checkSetup()
 *this is called by the model object. The boolean interface decides
 *if the call originates from the interface or from camflow kernel
 */
-void FlameLet::setRestartTime(double t){
+void UnsteadyFlameLet::setRestartTime(double t){
     restartTime = t;
 }
 
-void FlameLet::solve()
+void UnsteadyFlameLet::solve()
 {
-    solve(false);
+    std::cout << "I am in the UnsteadyFLameLet::solve() function" << std::endl;
+     
+    std::cout << "SOLVING STEADY STATE FLAME, NO SOOT" << std::endl;
+    solve(false, true);
+    std::cout << "SOLVING UNSTEADY FLAMELET TO 0.0005s" << std::endl;
+    std::cout << "Nucleation and Coagulation On " << std::endl;
+    restart(0.0005);
 }
 
 /*
 * Use this call method when calling from openFoam.
-* if sootResidualZeroed is TRUE then, flamelet will
+* if sootResidualZeroed is TRUE then, UnsteadyFlameLet will
 * be solved to steady state and with soot residual set to zero.
 * (i.e. no soot present at base of flame)
 *
 * When calling the Lagrangian Flamelet (i.e. dynamic)
 * do this via restart() and set steadyStateAtFlameBase to FALSE
 */
-void FlameLet::solve(bool interface, bool steadyStateNoSoot)
+void UnsteadyFlameLet::solve(bool interface, bool steadyStateNoSoot)
 {
     sootResidualZeroed = steadyStateNoSoot;
     solve(interface);
 }
 
 
-void FlameLet::solve
+void UnsteadyFlameLet::solve
 (
     bool interface
 )
@@ -137,7 +143,7 @@ void FlameLet::solve
 *continuation call from an external code that
 *solves for population balance
 */
-void FlameLet::solve
+void UnsteadyFlameLet::solve
 (
     vector<Thermo::Mixture>& cstrs,
     const vector<vector<double> >& iniSource,
@@ -149,7 +155,7 @@ void FlameLet::solve
     CamProfile& cp
 )
 {
-
+    std::cout << "Inside UnsteadyFlameLet::solve(...)" <<std::endl;
     reacGeom_.addZeroWidthCells();
 
     /*
@@ -210,7 +216,7 @@ void FlameLet::solve
 }
 
 
-void FlameLet::initSolutionVector()
+void UnsteadyFlameLet::initSolutionVector()
 {
 
     // Initialise the radiation class if necessary.
@@ -411,12 +417,12 @@ void FlameLet::initSolutionVector()
 /*
 *coupled solver
 */
-void FlameLet::csolve
+void UnsteadyFlameLet::csolve
 (
     bool interface
 )
 {
-
+    std::cout << "Inside UnsteadyFlamelet::csolve" << std::endl;
     if (solverID == control_.CVODE)
     {
         CVodeWrapper cvw;
@@ -434,7 +440,9 @@ void FlameLet::csolve
 
         //cvw.initVectorTol(nEqn,solvect,atolVector,control_.getSpeciesRelTol(),
         //		control_.getMaxTime(),band,*this);
-
+        
+        // eb656
+        // solve while the residual is > ResTol or break if greater than max time. 
         cvw.solve(CV_ONE_STEP,control_.getResTol());
 
         // Calculate the mixture viscosity.
@@ -517,14 +525,14 @@ void FlameLet::csolve
 /*
 *mass matrix evaluation
 */
-void FlameLet::massMatrix(double** M)
+void UnsteadyFlameLet::massMatrix(double** M)
 {}
 
 /*
 *restart the solution. This is normally called from the interface routine
 *The solver is reinitialized each time with the previous solution.
 */
-void FlameLet::restart(double flameTime)
+void UnsteadyFlameLet::restart(double flameTime)
 {
     // Assumption is that a restart is always a Lagrangian flamelet (i.e. not steady state)
     //steadyStateAtFlameBase = false;
@@ -601,7 +609,7 @@ void FlameLet::restart(double flameTime)
 /*
 *segregated solver
 */
-void FlameLet::ssolve
+void UnsteadyFlameLet::ssolve
 (
     bool interface
 )
@@ -698,7 +706,7 @@ void FlameLet::ssolve
 /*
 *splitting solver
 */
-void FlameLet::splitSolve
+void UnsteadyFlameLet::splitSolve
 (
     bool interface
 )
@@ -841,7 +849,7 @@ void FlameLet::splitSolve
 /*
 *residual definitions
 */
-void FlameLet::residual
+void UnsteadyFlameLet::residual
 (
     const double& t,
     double* y,
@@ -944,7 +952,7 @@ void FlameLet::residual
 
 }
 
-double FlameLet::getResidual()
+double UnsteadyFlameLet::getResidual()
 const
 {
 
@@ -973,7 +981,7 @@ const
 /*
 *species residual definitions
 */
-void FlameLet::speciesResidual
+void UnsteadyFlameLet::speciesResidual
 (
     const double& t,
     double* y,
@@ -1075,7 +1083,7 @@ void FlameLet::speciesResidual
 
 //! ht314
 //! Moment transport equation
-void FlameLet::sootMomentResidual
+void UnsteadyFlameLet::sootMomentResidual
 (
     const double& t,
     double* y,
@@ -1204,7 +1212,7 @@ void FlameLet::sootMomentResidual
 * i.e. we solve a steady state flamelet with no soot present.
 */
 
-void FlameLet::sootMomentResidualZeroedOut
+void UnsteadyFlameLet::sootMomentResidualZeroedOut
 (
     const double& t,
     double* y,
@@ -1224,7 +1232,7 @@ void FlameLet::sootMomentResidualZeroedOut
 *energy residual
 *
 */
-void FlameLet::energyResidual
+void UnsteadyFlameLet::energyResidual
 (
     const double& t,
     double* y,
@@ -1312,7 +1320,7 @@ void FlameLet::energyResidual
 *save the mixture property
 * \todo This should be trivially parallelisable. A lot of time is spent here.
 */
-void FlameLet::saveMixtureProp(double* y)
+void UnsteadyFlameLet::saveMixtureProp(double* y)
 {
 
     vector<double> mf;
@@ -1452,7 +1460,7 @@ void FlameLet::saveMixtureProp(double* y)
     }
 }
 
-double FlameLet::stoichiometricMixtureFraction()
+double UnsteadyFlameLet::stoichiometricMixtureFraction()
 {
     /*
     *check for C and H atoms
@@ -1539,17 +1547,17 @@ double FlameLet::stoichiometricMixtureFraction()
 
 }
 
-void FlameLet::setExternalStrainRate(const double strainRate)
+void UnsteadyFlameLet::setExternalStrainRate(const double strainRate)
 {
     scalarDissipationRate_.setStrainRate(strainRate);
 }
 
-void FlameLet::setExternalSDR(const double sdr)
+void UnsteadyFlameLet::setExternalSDR(const double sdr)
 {
     scalarDissipationRate_.setSDRRate(sdr);
 }
 
-void FlameLet::setExternalTimeSDR
+void UnsteadyFlameLet::setExternalTimeSDR
 (
     const std::vector<double>& time,
     const std::vector<double>& sdr
@@ -1561,7 +1569,7 @@ void FlameLet::setExternalTimeSDR
 /*
 *solver call for residual evaluation
 */
-int FlameLet::eval
+int UnsteadyFlameLet::eval
 (
     double x,
     double* y,
@@ -1580,7 +1588,7 @@ int FlameLet::eval
 /*
 *consol output function
 */
-void FlameLet::report(double x, double* solution, double& res)
+void UnsteadyFlameLet::report(double x, double* solution, double& res)
 {
 
     static int nStep=0;
@@ -1596,7 +1604,7 @@ void FlameLet::report(double x, double* solution, double& res)
 /*
 *output function for file output
 */
-void FlameLet::reportToFile(std::string fileName, double t, std::vector<double>& soln)
+void UnsteadyFlameLet::reportToFile(std::string fileName, double t, std::vector<double>& soln)
 {
 
     double sum;
@@ -1698,7 +1706,7 @@ void FlameLet::reportToFile(std::string fileName, double t, std::vector<double>&
 /*
 *output file header
 */
-std::vector<std::string> FlameLet::header()
+std::vector<std::string> UnsteadyFlameLet::header()
 {
 
     std::vector<std::string> headerData;
@@ -1738,7 +1746,7 @@ std::vector<std::string> FlameLet::header()
 *@param[in]    soot_fv     Vector of soot volume fractions, one for each grid cell
 */
 void
-FlameLet::setExternalSootVolumeFraction(const std::vector<double>& soot_fv)
+UnsteadyFlameLet::setExternalSootVolumeFraction(const std::vector<double>& soot_fv)
 {
     m_SootFv = soot_fv;
 
@@ -1755,7 +1763,7 @@ FlameLet::setExternalSootVolumeFraction(const std::vector<double>& soot_fv)
 *  Note:  This is not used to pass wdotA4 to interface.
 */
 void
-FlameLet::getWdotA4(std::vector<double>& wdotA4)
+UnsteadyFlameLet::getWdotA4(std::vector<double>& wdotA4)
 const
 {
 
@@ -1778,7 +1786,7 @@ const
 /*
 *output function for file output
 */
-void FlameLet::reportSootRatesToFile(std::string fileName, double t, Array2D& rates)
+void UnsteadyFlameLet::reportSootRatesToFile(std::string fileName, double t, Array2D& rates)
 {
 
     double sum;
@@ -1815,7 +1823,7 @@ void FlameLet::reportSootRatesToFile(std::string fileName, double t, Array2D& ra
 /*
 *output file header
 */
-std::vector<std::string> FlameLet::sootRatesHeader()
+std::vector<std::string> UnsteadyFlameLet::sootRatesHeader()
 {
     std::vector<std::string> headerData;
 

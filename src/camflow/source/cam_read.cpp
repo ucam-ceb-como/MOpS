@@ -90,6 +90,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
             if(!convertToCaps(attrValue).compare("STAGFLOW"))config.setConfiguration(config.STAGFLOW);
             if(!convertToCaps(attrValue).compare("BATCH_CV"))config.setConfiguration(config.BATCH_CV);
             if(!convertToCaps(attrValue).compare("FLAMELET"))config.setConfiguration(config.FLAMELET);
+            if(!convertToCaps(attrValue).compare("UNSTEADYFLAMELET"))config.setConfiguration(config.UNSTEADYFLAMELET);
         }else{
             throw CamError("Model remains undefined\n");
         }
@@ -148,6 +149,7 @@ void CamRead::readGeometry(CamGeometry& cg,CamConfiguration& config,
         if
         (
             config.getConfiguration() == config.FLAMELET
+         || config.getConfiguration() == config.UNSTEADYFLAMELET
          || config.getConfiguration() == config.STAGFLOW
          || config.getConfiguration() == config.COUNTERFLOW
         )

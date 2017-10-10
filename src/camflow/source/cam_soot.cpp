@@ -69,13 +69,16 @@ CamSoot::CamSoot()
     CamConverter convert;
     std::string fileName("camflow.xml");
 
+    //eb656: Why is it not reading input? 
+    std::cout << "Constructing CamSoot()\n";
+        
     CamXML::Document doc;
     const CamXML::Element* root;
     if(doc.Load(fileName) == 0){
         root = doc.Root();
         readSoot(convert,*root);
     }
-
+    std::cout << "Soot is active, T/F:  "<< CamSoot::active() << std::endl;
 }
 
 void CamSoot::readSoot
@@ -183,7 +186,9 @@ void CamSoot::readSoot
 		subnode = soot->GetFirstChild("sootFlameTimeCutoff");
 		if (subnode != NULL)
 		{
-			sootFlameTimeThreshold = Strings::cdble(subnode->Data());
+            // does not fail if Data() is non-numerical
+            sootFlameTimeThreshold = Strings::cdble(subnode->Data());
+            std::cout << "sootFlameTimeCutoff is " << sootFlameTimeThreshold << ", is this what you expected?" << std::endl;
 		}
 		else
 		{
@@ -565,6 +570,7 @@ CamSoot::realVector CamSoot::rateAll
 {
 
     realVector rates;  // Total rate of change of moments
+    //Moved to private class members:
     //realVector nucRates, coagRates, cdRates, sRates;	// Rate of change of moments
     realVector prodRates; 	// Rate of change of gas phase species due to surface chem
     double prodRatePAHCond; 	// Rate of change of PAH due to condensation
@@ -585,7 +591,7 @@ CamSoot::realVector CamSoot::rateAll
     nucRates = rateNucleation(conc[iInception],T);
 
     //! Remove two PAH.
-    surfProdRate[iInception]= -2.0 * nucRates[0] / NA;
+    surfProdRate[iInception]= -2.0 * nucRates[0] / NA; 
 
 	// Check the nucleation rates
     //std::cout << "nucRates[0]  " << nucRates[0] << std::endl;
@@ -718,11 +724,11 @@ CamSoot::realVector CamSoot::rateAll
 		//! Add moment source terms for nucleation, coagulation, condensation and surface growth. 
 		//! Source term for surface growth represents complexity. 
     	//rates[m] = (nucRates[m]);
-    	//rates[m] = (nucRates[m]+coagRates[m]);
+    	rates[m] = (nucRates[m]+coagRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
         //rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]);
-        rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]+sRates[m]);
+        // EJB test: Turn Everything OFF! Try CoagRates
         
     }
 

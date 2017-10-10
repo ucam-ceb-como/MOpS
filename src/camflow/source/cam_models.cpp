@@ -90,11 +90,22 @@ void CamModels::solve
     {
         rModel_ = new FlameLet(ca, config, cc, cg, cp, cs, mech);
     }
+    else if (configID == config.UNSTEADYFLAMELET)
+    {
+        std::cout << "Creating UnsteadyFlameLet class" << std::endl;
+        rModel_ = new UnsteadyFlameLet(ca, config, cc, cg, cp, cs, mech);
+    }
     else
     {
+        std::cout << "Reactor enumeration = " << configID << std::endl;
+        std::cout << "Valid options are = " << config.PREMIX << ", " 
+                                            << config.STAGFLOW << ", "
+                                            << config.UNSTEADYFLAMELET << ", " 
+                                            << config.FLAMELET << ", " << std::endl;
         throw CamError("Unknown reactor model\n");
     }
 
+    std::cout << "Trying rModel_->solve() function" <<std::endl;
     try
     {
         rModel_->solve();

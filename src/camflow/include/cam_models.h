@@ -55,6 +55,7 @@
 #include "cam_soot.h"
 #include "cam_residual.h"
 #include "flamelet.h"
+#include "unsteadyflamelet.h"
 //#include "cam_plug.h"
 #include "batch.h"
 #include "cam_premix.h"

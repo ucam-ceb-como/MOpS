@@ -58,6 +58,9 @@ target_link_libraries(camflowGridGenerator ${Boost_LIBRARIES})
 add_test(camflow.hydrogenBatchReactor ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/camflow/batchReactorRegress.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/camflow-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenBatchReactor)
 add_test(camflow.hydrogenFlamelet ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/camflow-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/camflow/hydrogenFlamelet)
 
+######### The unsteadyFlamelet application ##########################
+add_executable(unsteady-flamelet ${MOPSSUITE_SOURCE_DIR}/applications/solvers/unsteadyFlamelet/unsteady_cam_kernel.cpp)
+target_link_libraries(unsteady-flamelet camflow ${Boost_LIBRARIES})
 
 ######### The Mops application ##########################
 add_executable(mops-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/mopsc/mops.cpp)

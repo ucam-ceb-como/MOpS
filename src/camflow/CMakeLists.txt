@@ -30,6 +30,7 @@ add_library(camflow source/cam_read.cpp
                     source/radau_wrapper.cpp
                     source/cam_sdr.cpp
                     source/flamelet.cpp
+                    source/unsteadyflamelet.cpp
                     source/batch.cpp
                     source/stagflow.cpp
                     source/cam_premix.cpp
