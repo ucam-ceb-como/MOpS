@@ -1446,7 +1446,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 		//
 		double m_t = 0;
-		while (m_t < dt && m_PAH.size() > 1)
+		while (m_t < dt && m_PAH.size() > 1 && 1==2)
 		{
 			double totalsites = 0;
 			int numdiffPAHs = 0;

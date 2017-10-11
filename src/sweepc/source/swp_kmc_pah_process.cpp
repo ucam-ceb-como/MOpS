@@ -891,8 +891,8 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 	double mult;
 	switch (type){
 	case BY6BRL:
-		count = 0;
-		mult = -1.0;
+		count = 1;
+		mult = 1.0;
 		break;
 	case BY6BL2:
 		count = 2;
@@ -921,12 +921,13 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 		abort();
 	}
 	kmcSiteType st1type;
-	for (st1 = moveIt(stt, 1); st1 != m_pah->m_siteList.end(); st1++){
+	for (int loop = 1; loop <= m_pah->m_siteList.size(); loop++){
+		st1 = moveIt(stt, (int)(mult*loop));
 		st1type = st1->type;
 		count += addtoBridgeCount(st1type, mult);
 
 		//Found the matching bridge site
-		if (count == 0 && ( type != BY6BRL|| found1) ){
+		if (count == 0){
 			int inttype = abs((int)st1type);
 			kmcSiteType newtype;
 			if (inttype > 70 && inttype < 74){
@@ -936,13 +937,6 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 				newtype = (kmcSiteType)(inttype - 72);
 			}
 			else if (inttype == 74 || inttype == 78){
-				//if (!(type == ACBL || type == ACBR)){
-				//	cout << "Count is zero, st1type is BY6L2 or BY6R2, but type is not ACBL or ACBR" << endl;
-				//	cout << "Type is " <<type <<endl;
-				//	cout << "Inttype is " << inttype << endl;
-				//	assert(false);
-				//	abort();
-				//}
 				newtype = (kmcSiteType)(inttype - 1);
 			}
 			else{
@@ -955,7 +949,7 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 			found = true;
 			break;
 		}
-		else if (count == -1 && type != BY6BRL){
+		else if (count == -1){
 			if (mult == 1.0 && (st1type == BY6BR2 || st1type == NBY6BR2)){
 				convSiteType(st1, BY6BR);
 			}
@@ -971,12 +965,12 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 			found = true;
 			break;
 		}
-		else if (count == 1 && (type == ACBL || type == BY6BL) && (st1type == BY6BRL || st1type == NBY6BRL)){
+		else if (count == 1 && (type == ACBL || type == BY6BL || type == BY6BRL) && (st1type == BY6BRL || st1type == NBY6BRL)){
 			convSiteType(st1, BY6BL);
 			found = true;
 			break;
 		}
-		else if (count == 1 && (type == BY6BL2 || type == BY6BR2 || type == BY6BRL) && !found1){
+		else if (count == 1 && (type == BY6BL2 || type == BY6BR2) && !found1){
 			int inttype = abs((int)st1type);
 			kmcSiteType newtype;
 			if (inttype > 70 && inttype < 74){
@@ -1007,22 +1001,19 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 				break;
 			}
 		}
-		else if (count == 2 && type == BY6BRL && st1type == BY6BR2 && !found1){
-			convSiteType(st1, BY6BR);
-			found1 = true;
-		}
-		else if (count == -1 && found1 && type == BY6BRL && st1type == BY6BL2){
-			convSiteType(st1, BY6BL);
-			found = true;
-		}
 	}
-	if (!found){
-		for (st1 = m_pah->m_siteList.begin(); st1 != stt; st1++){
+	if (type == BY6BRL){
+		found = false;
+		count = 1;
+		mult = -1.0;
+
+		for (int loop = 1; loop <= m_pah->m_siteList.size(); loop++){
+			st1 = moveIt(stt, (int)(mult*loop));
 			st1type = st1->type;
 			count += addtoBridgeCount(st1type, mult);
 
 			//Found the matching bridge site
-			if (count == 0 && (type != BY6BRL || found1)){
+			if (count == 0){
 				int inttype = abs((int)st1type);
 				kmcSiteType newtype;
 				if (inttype > 70 && inttype < 74){
@@ -1032,13 +1023,6 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 					newtype = (kmcSiteType)(inttype - 72);
 				}
 				else if (inttype == 74 || inttype == 78){
-					//if (!(type == ACBL || type == ACBR)){
-					//	cout << "Count is zero, st1type is BY6L2 or BY6R2, but type is not ACBL or ACBR" << endl;
-					//	cout << "Type is " << type << endl;
-					//	cout << "Inttype is " << inttype << endl;
-					//	assert(false);
-					//	abort();
-					//}
 					newtype = (kmcSiteType)(inttype - 1);
 				}
 				else{
@@ -1051,11 +1035,8 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 				found = true;
 				break;
 			}
-			else if (count == -1  && type != BY6BRL){
-				if (mult == 1.0 && (st1type == BY6BR2 || st1type == NBY6BR2)){
-					convSiteType(st1, BY6BR);
-				}
-				else if (mult == -1.0 && (st1type == BY6BL2 || st1type == NBY6BL2)){
+			else if (count == -1){
+				if (st1type == BY6BL2 || st1type == NBY6BL2){
 					convSiteType(st1, BY6BL);
 				}
 				else{
@@ -1067,57 +1048,15 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 				found = true;
 				break;
 			}
-			else if (count == 1 && (type == ACBL || type == BY6BL) && (st1type == BY6BRL || st1type == NBY6BRL)){
-				convSiteType(st1, BY6BL);
-				found = true;
-				break;
-			}
-			else if (count == 1 && (type == BY6BL2 || type == BY6BR2 || type == BY6BRL) && !found1){
-				int inttype = abs((int)st1type);
-				kmcSiteType newtype;
-				if (inttype > 70 && inttype < 74){
-					newtype = (kmcSiteType)(inttype - 68); //NICK TO DO Consider changing 68 to something general
-				}
-				else if (inttype > 74 && inttype < 78){
-					newtype = (kmcSiteType)(inttype - 72);
-				}
-				//else if (inttype == 74 || inttype == 78){ //NICK TO DO - This (probably) is not physical. Investigate
-				//	newtype = (kmcSiteType)(inttype - 1);
-				//}
-				else{
-					cout << "Site type not in bridge conversion list for BY6BL2 at count of 1" << endl;
-					cout << inttype;
-					assert(false);
-					abort();
-				}
-				convSiteType(st1, newtype);
-				found1 = true;
-			}
-			else if ((count == 2 || count == 1) && type == BY6BL2 && (st1type == BY6BRL || st1type == NBY6BRL)){
-				convSiteType(st1, BY6BL);
-				if (count == 2){
-					found1 = true;
-				}
-				else{
-					found = true;
-					break;
-				}
-			}
-			else if (count == 2 && type == BY6BRL && st1type == BY6BR2 && !found1){
-				convSiteType(st1, BY6BR);
-				found1 = true;
-			}
-			else if (count == -1 && found1 && type == BY6BRL && st1type == BY6BL2){
-				convSiteType(st1, BY6BL);
-				found = true;
-			}
 		}
+
 	}
 	if (!found){
 		cout << "ERROR - Matching bridge site(s) not found" << endl;
 		cout << PAHID <<endl;
 		cout << (int) type << endl;
 		cout << found1 << endl;
+		printSites(stt);
 		assert(false);
 		abort();
 	}
@@ -3247,9 +3186,9 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
 
-	if (PAH_ID == 178452){
-		cout << "ID is: " << id << endl;
-	}
+	//if (PAH_ID == 178452){
+	//	cout << "ID is: " << id << endl;
+	//}
 
     std::ostringstream dotname, dotname2;
     switch(id) {
