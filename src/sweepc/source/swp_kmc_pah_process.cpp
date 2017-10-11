@@ -890,21 +890,9 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 	int count;
 	double mult;
 	switch (type){
-	case BY6BLR:
-		count = 0;
-		mult = 1.0;
-		//cout << "Have not determined logic for BY6LR closure" << endl;
-		//cout << (int)type;
-		//assert(false);
-		//abort();
-		break;
 	case BY6BRL:
 		count = 0;
 		mult = -1.0;
-		//cout << "Have not determined logic for BY6RL closure" << endl;
-		//cout << (int)type;
-		//assert(false);
-		//abort();
 		break;
 	case BY6BL2:
 		count = 2;
@@ -938,7 +926,7 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 		count += addtoBridgeCount(st1type, mult);
 
 		//Found the matching bridge site
-		if (count == 0 && ((type != BY6BLR && type != BY6BRL)|| found1) ){
+		if (count == 0 && ( type != BY6BRL|| found1) ){
 			int inttype = abs((int)st1type);
 			kmcSiteType newtype;
 			if (inttype > 70 && inttype < 74){
@@ -967,7 +955,7 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 			found = true;
 			break;
 		}
-		else if (count == -1 && type != BY6BLR && type != BY6BRL){
+		else if (count == -1 && type != BY6BRL){
 			if (mult == 1.0 && (st1type == BY6BR2 || st1type == NBY6BR2)){
 				convSiteType(st1, BY6BR);
 			}
@@ -988,12 +976,7 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 			found = true;
 			break;
 		}
-		else if (count == 1 && (type == ACBR || type == BY6BR) && (st1type == BY6BLR || st1type == NBY6BLR)){
-			convSiteType(st1, BY6BR);
-			found = true;
-			break;
-		}
-		else if (count == 1 && (type == BY6BL2 || type == BY6BR2 || type == BY6BLR || type == BY6BRL) && !found1){
+		else if (count == 1 && (type == BY6BL2 || type == BY6BR2 || type == BY6BRL) && !found1){
 			int inttype = abs((int)st1type);
 			kmcSiteType newtype;
 			if (inttype > 70 && inttype < 74){
@@ -1024,35 +1007,9 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 				break;
 			}
 		}
-		else if ((count == 2 || count == 1) && type == BY6BR2 && (st1type == BY6BLR || st1type == NBY6BLR)){
-			convSiteType(st1, BY6BR);
-			if (count == 2){
-				found1 = true;
-			}
-			else{
-				found = true;
-				break;
-			}
-		}
-		else if (count == 2 && type == BY6BLR && st1type == BY6BL2 ){
-			convSiteType(st1, BY6BL);
-			found1 = true;
-		}
-		else if (count == 2 && type == BY6BRL && st1type == BY6BR2){
+		else if (count == 2 && type == BY6BRL && st1type == BY6BR2 && !found1){
 			convSiteType(st1, BY6BR);
 			found1 = true;
-		}
-		else if (count == 1 && found1 && type == BY6BLR && st1type == BY6BRL){
-			convSiteType(st1, BY6BL);
-			found = true;
-		}
-		else if (count == 1 && found1 && type == BY6BRL && st1type == BY6BLR){
-			convSiteType(st1, BY6BR);
-			found = true;
-		}
-		else if (count == -1 && found1 && type == BY6BLR && st1type == BY6BR2){
-			convSiteType(st1, BY6BR);
-			found = true;
 		}
 		else if (count == -1 && found1 && type == BY6BRL && st1type == BY6BL2){
 			convSiteType(st1, BY6BL);
@@ -1065,7 +1022,7 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 			count += addtoBridgeCount(st1type, mult);
 
 			//Found the matching bridge site
-			if (count == 0 && ((type != BY6BLR && type != BY6BRL) || found1)){
+			if (count == 0 && (type != BY6BRL || found1)){
 				int inttype = abs((int)st1type);
 				kmcSiteType newtype;
 				if (inttype > 70 && inttype < 74){
@@ -1094,7 +1051,7 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 				found = true;
 				break;
 			}
-			else if (count == -1 && type != BY6BLR && type != BY6BRL){
+			else if (count == -1  && type != BY6BRL){
 				if (mult == 1.0 && (st1type == BY6BR2 || st1type == NBY6BR2)){
 					convSiteType(st1, BY6BR);
 				}
@@ -1115,12 +1072,7 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 				found = true;
 				break;
 			}
-			else if (count == 1 && (type == ACBR || type == BY6BR) && (st1type == BY6BLR || st1type == NBY6BLR)){
-				convSiteType(st1, BY6BR);
-				found = true;
-				break;
-			}
-			else if (count == 1 && (type == BY6BL2 || type == BY6BR2 || type == BY6BLR || type == BY6BRL) && !found1){
+			else if (count == 1 && (type == BY6BL2 || type == BY6BR2 || type == BY6BRL) && !found1){
 				int inttype = abs((int)st1type);
 				kmcSiteType newtype;
 				if (inttype > 70 && inttype < 74){
@@ -1151,35 +1103,9 @@ Spointer PAHProcess::convBridgePartner(Spointer& stt) {
 					break;
 				}
 			}
-			else if ((count == 2 || count == 1) && type == BY6BR2 && (st1type == BY6BLR || st1type == NBY6BLR)){
-				convSiteType(st1, BY6BR);
-				if (count == 2){
-					found1 = true;
-				}
-				else{
-					found = true;
-					break;
-				}
-			}
-			else if (count == 2 && type == BY6BLR && st1type == BY6BL2){
-				convSiteType(st1, BY6BL);
-				found1 = true;
-			}
-			else if (count == 2 && type == BY6BRL && st1type == BY6BR2){
+			else if (count == 2 && type == BY6BRL && st1type == BY6BR2 && !found1){
 				convSiteType(st1, BY6BR);
 				found1 = true;
-			}
-			else if (count == 1 && found1 && type == BY6BLR && st1type == BY6BRL){
-				convSiteType(st1, BY6BL);
-				found = true;
-			}
-			else if (count == 1 && found1 && type == BY6BRL && st1type == BY6BLR){
-				convSiteType(st1, BY6BR);
-				found = true;
-			}
-			else if (count == -1 && found1 && type == BY6BLR && st1type == BY6BR2){
-				convSiteType(st1, BY6BR);
-				found = true;
 			}
 			else if (count == -1 && found1 && type == BY6BRL && st1type == BY6BL2){
 				convSiteType(st1, BY6BL);
@@ -1210,10 +1136,6 @@ int PAHProcess::addtoBridgeCount(kmcSiteType type, double mult){
 	case BY6BL2:
 	case NBY6BL2:
 		return 2 * mult;
-	case BY6BLR:
-	case NBY6BLR:
-		//Special case, must deal with it
-		return 0;
 	case ACBR:
 	case BY5BR:
 	case BY6BR:
@@ -1608,7 +1530,6 @@ int PAHProcess::SiteSides(Spointer& stt) {
 	case BY6BR:
 	case BY6BL2:
 	case BY6BR2:
-	case BY6BLR:
 	case BY6BRL:
 		return 5;
 	default:
@@ -1654,7 +1575,6 @@ double PAHProcess::SiteAngle(Spointer& stt) {
 	case BY6BR:
 	case BY6BL2:
 	case BY6BR2:
-	case BY6BLR:
 	case BY6BRL:
 		return 480.0;
 	default:
@@ -1970,7 +1890,6 @@ double PAHProcess::Length(kmcSiteType stt) {
 	case BY6BL:
 	case BY6BR:
 	case BY6BRL:
-	case BY6BLR:
 	case BY6BL2:
 	case BY6BR2:
 		return 1.0;
@@ -2044,7 +1963,6 @@ int PAHProcess::SiteSidesBridge(kmcSiteType stt, kmcSiteType type) {
 	case BY6:
 	case BY6BL:
 	case BY6BR:
-	case BY6BLR:
 	case BY6BRL:
 	case BY6BL2:
 	case BY6BR2:
@@ -2095,7 +2013,6 @@ double PAHProcess::AngleBridge(kmcSiteType stt, kmcSiteType type) {
 		case BY6:
 		case BY6BL:
 		case BY6BR:
-		case BY6BLR:
 		case BY6BRL:
 		case BY6BL2:
 		case BY6BR2:
@@ -2143,7 +2060,6 @@ double PAHProcess::AngleBridge(kmcSiteType stt, kmcSiteType type) {
 		case BY6:
 		case BY6BL:
 		case BY6BR:
-		case BY6BLR:
 		case BY6BRL:
 		case BY6BL2:
 		case BY6BR2:
@@ -2195,7 +2111,6 @@ double PAHProcess::AngleBridge(kmcSiteType stt, kmcSiteType type) {
 		case BY6:
 		case BY6BL:
 		case BY6BR:
-		case BY6BLR:
 		case BY6BRL:
 		case BY6BL2:
 		case BY6BR2:
@@ -2254,7 +2169,6 @@ double PAHProcess::AngleBridge(kmcSiteType stt, kmcSiteType type) {
 	case BY6:
 	case BY6BL:
 	case BY6BR:
-	case BY6BLR:
 	case BY6BRL:
 	case BY6BL2:
 	case BY6BR2:
@@ -3323,7 +3237,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	JOBID = id;
 	//cout << "Doing process " << id << " on " <<PAH_ID << endl;
 
-	//if (PAH_ID == 149){
+	//if (PAH_ID == 215873){
 	//	cout << "ID is: " << id << endl;
 	//}
 
@@ -3671,12 +3585,8 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 	kmcSiteType type = stt->type;
 	Spointer st1;
 	bool found = false;
-	if (type == BY6BL || type == BY6BR || type == BY6BL2 || type == BY6BR2 || type == BY6BLR || type == BY6BRL){
-		if (type == BY6BLR || type == BY6BRL){
-			cout << "Trying!!" <<endl;
-		}
+	if (type == BY6BL || type == BY6BR || type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
 		st1 = convBridgePartner(stt);
-		//cout << "Did it on site type " << type <<endl;
 	}
 
     // Remove BY6 site and combine the neighbouring sites. 
@@ -3716,7 +3626,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 		updateCombinedSites(S1); updateCombinedSites(S2);
 		updateCombinedSites(S3); updateCombinedSites(S4);
 	}
-	else if(type == BY6BL2 || type == BY6BR2 || type == BY6BLR || type == BY6BRL){
+	else if(type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
 		updateCombinedSites();
 	}
 
@@ -3926,7 +3836,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 				convSiteType(Sb, BY6BR2);
 			}
 			else if (Sb->type == BY6BL){
-				convSiteType(Sb, BY6BLR);
+				convSiteType(Sb, BY6BRL);
 			}
 			else{
 				cout << "Site type not accounted for" << endl;

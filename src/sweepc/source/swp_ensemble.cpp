@@ -513,7 +513,6 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 					sitemapInput[KMC_ARS::BY6BL].size() == sitemapComp[KMC_ARS::BY6BL].size() &&
 					sitemapInput[KMC_ARS::BY6BR2].size() == sitemapComp[KMC_ARS::BY6BR2].size() &&
 					sitemapInput[KMC_ARS::BY6BL2].size() == sitemapComp[KMC_ARS::BY6BL2].size() &&
-					sitemapInput[KMC_ARS::BY6BLR].size() == sitemapComp[KMC_ARS::BY6BLR].size() &&
 					sitemapInput[KMC_ARS::BY6BRL].size() == sitemapComp[KMC_ARS::BY6BRL].size() &&
 					sitemapInput[KMC_ARS::NACBL].size() == sitemapComp[KMC_ARS::NACBL].size() &&
 					sitemapInput[KMC_ARS::NACBR].size() == sitemapComp[KMC_ARS::NACBR].size() &&
@@ -523,7 +522,6 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 					sitemapInput[KMC_ARS::NBY6BL].size() == sitemapComp[KMC_ARS::NBY6BL].size() &&
 					sitemapInput[KMC_ARS::NBY6BR2].size() == sitemapComp[KMC_ARS::NBY6BR2].size() &&
 					sitemapInput[KMC_ARS::NBY6BL2].size() == sitemapComp[KMC_ARS::NBY6BL2].size() &&
-					sitemapInput[KMC_ARS::NBY6BLR].size() == sitemapComp[KMC_ARS::NBY6BLR].size() &&
 					sitemapInput[KMC_ARS::NBY6BRL].size() == sitemapComp[KMC_ARS::NBY6BRL].size() &&
 					sitemapInput[KMC_ARS::ACR5].size() == sitemapComp[KMC_ARS::ACR5].size() &&
 					sitemapInput[KMC_ARS::CAC].size() == sitemapComp[KMC_ARS::CAC].size() &&

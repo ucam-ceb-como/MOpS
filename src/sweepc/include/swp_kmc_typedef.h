@@ -74,10 +74,10 @@ namespace Sweep {
 			RFEER = 61, RZZER = 62, RACER = 63,
 			//Sites that include bridges
 			ACBL = 71, BY5BL = 72, BY6BL = 73, BY6BL2 = 74, ACBR = 75, BY5BR = 76, BY6BR = 77, 
-			BY6BR2 = 78, BY6BLR = 79, BY6BRL = 80,
+			BY6BR2 = 78, BY6BRL = 79,
 			// Sites besides bridges that are non reactive due to steric hindrances
 			NACBL = -71, NBY5BL = -72, NBY6BL = -73, NBY6BL2 = -74, NACBR = -75, NBY5BR = -76, 
-			NBY6BR = -77, NBY6BR2 = -78, NBY6BLR = -79, NBY6BRL = -80,
+			NBY6BR = -77, NBY6BR2 = -78, NBY6BRL = -79,
 			//End principal site types
 			//Start combined site types
 			//First, basic combined sites with R6s. FE3:FE with 2 FEs on both sides. FE_HACA: FE with non FE's on each side
@@ -186,7 +186,6 @@ namespace Sweep {
 				case BY6BR: return "BY6BR";
 				case BY6BL2: return "BY6BL2";
 				case BY6BR2: return "BY6BR2";
-				case BY6BLR: return "BY6BLR";
 				case BY6BRL: return "BY6BRL";
 
 				case NACBL: return "NACBL";
@@ -197,7 +196,6 @@ namespace Sweep {
 				case NBY6BR: return "NBY6BR";
 				case NBY6BL2: return "NBY6BL2";
 				case NBY6BR2: return "NBY6BR2";
-				case NBY6BLR: return "NBY6BLR";
 				case NBY6BRL: return "NBY6BRL";
 
 				case FE2: return "FE2";
@@ -280,7 +278,6 @@ namespace Sweep {
 			else if (str == "BY6BR") return BY6BR;
 			else if (str == "BY6BL2") return BY6BL2;
 			else if (str == "BY6BR2") return BY6BR2;
-			else if (str == "BY6BLR") return BY6BLR;
 			else if (str == "BY6BRL") return BY6BRL;
 
 			else if (str == "NACBL") return NACBL;
@@ -291,7 +288,6 @@ namespace Sweep {
 			else if (str == "NBY6BR") return NBY6BR;
 			else if (str == "NBY6BL2") return NBY6BL2;
 			else if (str == "NBY6BR2") return NBY6BR2;
-			else if (str == "NBY6BLR") return NBY6BLR;
 			else if (str == "NBY6BRL") return NBY6BRL;
 
             return Inv;
@@ -346,7 +342,6 @@ namespace Sweep {
 			temp.push_back(BY6BR);
 			temp.push_back(BY6BL2);
 			temp.push_back(BY6BR2);
-			temp.push_back(BY6BLR);
 			temp.push_back(BY6BRL);
 
 			temp.push_back(NACBL);
@@ -357,7 +352,6 @@ namespace Sweep {
 			temp.push_back(NBY6BR);
 			temp.push_back(NBY6BL2);
 			temp.push_back(NBY6BR2);
-			temp.push_back(NBY6BLR);
 			temp.push_back(NBY6BRL);
 
 			temp.push_back(FE2);
@@ -415,7 +409,6 @@ namespace Sweep {
 			temp.push_back(BY6BR);
 			temp.push_back(BY6BL2);
 			temp.push_back(BY6BR2);
-			temp.push_back(BY6BLR);
 			temp.push_back(BY6BRL);
 			return temp;
 		}
