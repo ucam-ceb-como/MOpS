@@ -72,6 +72,7 @@ PAHStructure::PAHStructure() {
     m_rings = 0;
     m_rings5_Lone = 0;
     m_rings5_Embedded = 0;
+	m_bridges = 0;
     m_counts = intpair(0, 0);
     m_parent = NULL;
 }
@@ -123,6 +124,7 @@ void PAHStructure::clear() {
     m_rings = 0;
     m_rings5_Lone = 0;
     m_rings5_Embedded = 0;
+	m_bridges = 0;
 }
 
 void PAHStructure::setParent(Sweep::AggModels::PAH* parent) {
@@ -159,6 +161,10 @@ int PAHStructure::numofLoneRings5() const{
 
 int PAHStructure::numofEmbeddedRings5() const{
     return m_rings5_Embedded;
+}
+
+int PAHStructure::numofBridges() const{
+	return m_bridges;
 }
 
 //int PAHStructure::numofEdgeC() const{
@@ -199,6 +205,11 @@ void PAHStructure::setnumofLoneRings5(int val)
 void PAHStructure::setnumofEmbeddedRings5(int val)
 {
     m_rings5_Embedded=val;
+}
+
+void PAHStructure::setnumofBridges(int val)
+{
+	m_bridges = val;
 }
 
 void PAHStructure::initialise(StartingStructure ss) {

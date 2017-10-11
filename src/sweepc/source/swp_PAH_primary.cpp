@@ -107,6 +107,7 @@ PAHPrimary::PAHPrimary() : Primary(),
     m_numOfRings(0),
 	m_numOfRings5Lone(0),
 	m_numOfRings5Embedded(0),
+	m_numOfBridges(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -148,6 +149,7 @@ PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model)
     m_numOfRings(0),
 	m_numOfRings5Lone(0),
 	m_numOfRings5Embedded(0),
+	m_numOfBridges(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -198,6 +200,7 @@ PAHPrimary::PAHPrimary(const double time, const double position,
     m_numOfRings(0),
 	m_numOfRings5Lone(0),
 	m_numOfRings5Embedded(0),
+	m_numOfBridges(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -243,6 +246,7 @@ PAHPrimary::PAHPrimary(double time, const Sweep::ParticleModel &model, bool noPA
     m_numOfRings(0),
 	m_numOfRings5Lone(0),
 	m_numOfRings5Embedded(0),
+	m_numOfBridges(0),
     m_numPAH(0),
     m_numprimary(0),
     m_PAHmass(0),
@@ -436,6 +440,7 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
     m_numOfRings = source->m_numOfRings;
 	m_numOfRings5Lone = source->m_numOfRings5Lone;
 	m_numOfRings5Embedded = source->m_numOfRings5Embedded;
+	m_numOfBridges = source->m_numOfBridges;
     m_values=source->m_values;
     m_comp=source->m_comp;
     m_sint_time=source->m_sint_time;
@@ -465,7 +470,10 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
                 //! Create new shared pointers for single PAHs or PAHs in particles.
                 boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
                 //m_PAH[i]=source->m_PAH[i]->Clone();
-                new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+                //new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+				//new_m_PAH->PAH_ID = source->m_PAH[i]->PAH_ID;
+				new_m_PAH->PAH_ID = ID;
+				ID++;
                 m_PAH.push_back(new_m_PAH);
             }
         }
@@ -1312,7 +1320,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						statweight--;
 						(*sys.Particles().At(ind)).setStatisticalWeight(statweight);
 						new_m_PAH.reset();
-						ID--;
+						//ID--;
 					}
 
 					//! See if anything changed, as this will required a call to UpdatePrimary() below.
@@ -1339,7 +1347,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					}
 					else{
 						new_m_PAH.reset();
-						ID--;
+						//ID--;
 					}
 
 					ratefactor = statweight / statweightold;
@@ -1449,7 +1457,6 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				totalsites += mergesites[it];
 				if (mergesites[it] > 0) numdiffPAHs++;
 			}
-			//totalsites = 0.0;
 			if (totalsites > 2 && numdiffPAHs > 1){
 				double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t);
 				double density = model.Components(0)->Density();
@@ -1458,7 +1465,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 				//double volume = sys.SampleVolume(); //get volume in m3
 				double volume = m_mass / density;
-				kMerge = kMerge / NA / volume; //convert KMerge from m3/mol/s to 1/#/s.
+				kMerge = 0.00001*kMerge / NA / volume; //convert KMerge from m3/mol/s to 1/#/s.
 				typedef boost::exponential_distribution<double> exponential_distrib;
 				exponential_distrib waitingTimeDistrib(kMerge*(totalsites)*(totalsites - 1.0));
 				boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
@@ -1486,11 +1493,13 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						int numEmbeddedR5 = m_PAH[ip1]->m_pahstruct->numofEmbeddedRings5() + m_PAH[ip2]->m_pahstruct->numofEmbeddedRings5();
 						int numC = m_PAH[ip1]->m_pahstruct->numofC() + m_PAH[ip2]->m_pahstruct->numofC();
 						int numH = m_PAH[ip1]->m_pahstruct->numofH() + m_PAH[ip2]->m_pahstruct->numofH();
+						int numBridges = m_PAH[ip1]->m_pahstruct->numofBridges() + m_PAH[ip2]->m_pahstruct->numofBridges() + 1;
 						m_PAH[ip1]->m_pahstruct->setnumofRings(numR6);
 						m_PAH[ip1]->m_pahstruct->setnumofLoneRings5(numLoneR5);
 						m_PAH[ip1]->m_pahstruct->setnumofEmbeddedRings5(numEmbeddedR5);
 						m_PAH[ip1]->m_pahstruct->setnumofC(numC);
 						m_PAH[ip1]->m_pahstruct->setnumofH(numH);
+						m_PAH[ip1]->m_pahstruct->setnumofBridges(numBridges);
 						m_PAH[ip1]->time_created = min(m_PAH[ip1]->time_created, m_PAH[ip2]->time_created);
 						m_PAH[ip1]->lastupdated = min(m_PAH[ip1]->lastupdated, m_PAH[ip2]->lastupdated);
 
@@ -1858,9 +1867,9 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
 
             //! Number of 6-member rings.
 			temp.push_back(m_PAH[i]->m_pahstruct->numofRings());
-        temp.push_back(m_PAH[i]->m_pahstruct->numofLoneRings5());
-        temp.push_back(m_PAH[i]->m_pahstruct->numofEmbeddedRings5());
-        //temp.push_back(m_PAH[i]->m_pahstruct->numofEdgeC());
+			temp.push_back(m_PAH[i]->m_pahstruct->numofLoneRings5());
+			temp.push_back(m_PAH[i]->m_pahstruct->numofEmbeddedRings5());
+			temp.push_back(m_PAH[i]->m_pahstruct->numofBridges());
             
 			//! PAH mass (u).
 			val = 12*num_C + num_H;
@@ -1972,7 +1981,10 @@ void PAHPrimary::OutputPPPSL(std::vector<std::vector<double> > &out, const int i
 	temp.push_back(m_numOfRings);
 
 	//! Number of 5-member rings. //NICK - TO DO
-	temp.push_back(0);
+	temp.push_back(m_numOfRings5Embedded + m_numOfRings5Lone);
+
+	//! Number of PAHs
+	temp.push_back(m_numOfBridges);
 
 	//! Number of PAHs
 	temp.push_back(m_numPAH);
@@ -2082,6 +2094,7 @@ void PAHPrimary::UpdatePrimary(void)
         m_numOfRings      = 0;
 		m_numOfRings5Lone = 0;
 		m_numOfRings5Embedded = 0;
+		m_numOfBridges    = 0;
         m_numPAH          = m_PAH.size();
         m_PAHmass         = 0.0;
         m_PAHCollDiameter = 0.0;
@@ -2094,6 +2107,7 @@ void PAHPrimary::UpdatePrimary(void)
         m_numOfRings      = 0;
 		m_numOfRings5Lone = 0;
 		m_numOfRings5Embedded = 0;
+		m_numOfBridges    = 0;
         m_numPAH          = m_PAH.size();
         m_PAHmass         = 0.0;
         m_PAHCollDiameter = 0.0;
@@ -2137,6 +2151,7 @@ void PAHPrimary::UpdatePrimary(void)
             m_numOfRings += (*i)->m_pahstruct->numofRings();
 			m_numOfRings5Lone += (*i)->m_pahstruct->numofLoneRings5();
 			m_numOfRings5Embedded += (*i)->m_pahstruct->numofEmbeddedRings5();
+			m_numOfBridges += (*i)->m_pahstruct->numofBridges();
             maxcarbon = max(maxcarbon, (*i)->m_pahstruct->numofC()); //!< Search for the largest PAH-in terms of the number of carbon atoms-in the primary.
         }
 		m_numOf6Rings = m_numOfRings;
@@ -2193,6 +2208,9 @@ void PAHPrimary::Reset()
     m_numH=0;
     m_numOfEdgeC=0;
     m_numOfRings=0;
+	m_numOfRings5Embedded = 0;
+	m_numOfRings5Lone = 0;
+	m_numOfBridges = 0;
     m_primarydiam=0.0;
     m_surf=0;
     m_vol=0;
@@ -2245,6 +2263,7 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
         m_numOfRings=m_leftchild->m_numOfRings + m_rightchild->m_numOfRings;
 		m_numOfRings5Lone = m_leftchild->m_numOfRings5Lone + m_rightchild->m_numOfRings5Lone;
 		m_numOfRings5Embedded = m_leftchild->m_numOfRings5Embedded + m_rightchild->m_numOfRings5Embedded;
+		m_numOfBridges = m_leftchild->m_numOfBridges + m_rightchild->m_numOfBridges;
         // calculate the coalescence level of the two primaries connected by this node
         m_children_roundingLevel=CoalescenceLevel();
         //sum up the avg coal level
@@ -2394,6 +2413,11 @@ int PAHPrimary::NumRings5Lone() const
 int PAHPrimary::NumRings5Embedded() const
 {
 	return m_numOfRings5Embedded;
+}
+
+int PAHPrimary::NumBridges() const
+{
+	return m_numOfBridges;
 }
 
 int PAHPrimary::NumPAH() const

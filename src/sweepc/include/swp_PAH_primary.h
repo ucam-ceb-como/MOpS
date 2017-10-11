@@ -221,6 +221,8 @@ public:
 	int NumRings5Lone() const;
 	//! returns the number of embedded 5-member rings in the particle.
 	int NumRings5Embedded() const;
+	//! returns the number of bridges
+	int NumBridges() const;
     //! returns sqrt(L*W)
     double sqrtLW() const;
     double AvgCoalesc() const;
@@ -320,6 +322,8 @@ private:
 	int m_numOfRings5Lone;
 	//! Total number of embedded 5-member rings in this soot particle
 	int m_numOfRings5Embedded;
+	//! Total number of bridges
+	int m_numOfBridges;
     //! Number of PAHs below this node
     int m_numPAH;
     //! Number of primaries below this node

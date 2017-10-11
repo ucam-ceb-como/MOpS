@@ -347,7 +347,7 @@ void PAHStats::PSL(const Sweep::Particle &sp, double time,
 		*(++j) = (double) (pah->NumCarbon());
 		*(++j) = (double) (pah->NumHydrogen());
 		*(++j) = (double) (pah->Numprimary());
-        *(++j) = (double) (pah->NumEdgeC());
+        *(++j) = (double) (pah->NumBridges());
         *(++j) = (double) (pah->NumRings());
         *(++j) = (double) (pah->sqrtLW());
 		*(++j) = (double) (pah->LdivW());

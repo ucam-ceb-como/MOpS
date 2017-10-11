@@ -3237,10 +3237,6 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	JOBID = id;
 	//cout << "Doing process " << id << " on " <<PAH_ID << endl;
 
-	//if (PAH_ID == 215873){
-	//	cout << "ID is: " << id << endl;
-	//}
-
     // choose random site of type stp to perform process
     Spointer site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
     // stores pointers to site Carbon members
@@ -3250,6 +3246,11 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     //printSites(site_perf);
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
+
+	if (PAH_ID == 178452){
+		cout << "ID is: " << id << endl;
+	}
+
     std::ostringstream dotname, dotname2;
     switch(id) {
         case 1:
@@ -3454,6 +3455,8 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 	if (type == ACBL || type == ACBR){
 		st1 = convBridgePartner(stt);
 
+		m_pah->m_bridges--;
+
 		//Update combined site types
 		S1 = moveIt(st1, -1); S2 = moveIt(st1, 1);
 		S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
@@ -3587,6 +3590,10 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 	bool found = false;
 	if (type == BY6BL || type == BY6BR || type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
 		st1 = convBridgePartner(stt);
+		m_pah->m_bridges--;
+		if (type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
+			m_pah->m_bridges--;
+		}
 	}
 
     // Remove BY6 site and combine the neighbouring sites. 
@@ -3869,6 +3876,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 				abort();
 			}
 		}
+		m_pah->m_bridges++;
 	}
 	else{
 		updateSites(stt, 2);

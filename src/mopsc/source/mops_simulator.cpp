@@ -2336,7 +2336,7 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         header.push_back("#Rings6");
         header.push_back("#LoneRings5");
         header.push_back("#EmbeddedRings5");
-        //header.push_back("#EdgeC");
+        header.push_back("#Bridges");
         header.push_back("Mass(u)");
         header.push_back("Mass(kg)");
         header.push_back("PAHCollDiameter (m)");
@@ -2441,6 +2441,7 @@ void Simulator::postProcessPPPSLs(const Mechanism &mech,
 		header.push_back("Index");                     //! Particle index (-1 for gas-phase PAHs).
 		header.push_back("#C");                        //! Number of carbon atoms.
 		header.push_back("#H");                        //! Number of hydrogen atoms.
+		header.push_back("#Bridges");                   //! Number of bridges in this primary
 		header.push_back("#Rings6");                   //! Number of 6-member rings.
 		header.push_back("#Rings5");                   //! Number of 5-member rings.
 		header.push_back("#PAHs");                   //! Number of PAHs

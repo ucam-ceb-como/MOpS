@@ -94,6 +94,8 @@ namespace Sweep{
             int numofLoneRings5() const;
             //! return num of embedded 5-membered rings
             int numofEmbeddedRings5() const;
+			//! return num of bridges
+			int numofBridges() const;
             //! return num of edge carbon
             //int numofEdgeC() const;
             //! return num of site
@@ -108,6 +110,7 @@ namespace Sweep{
             void setnumofRings(int val); // 6-membered
             void setnumofLoneRings5(int val); // 5-membered
             void setnumofEmbeddedRings5(int val); // 5-membered
+			void setnumofBridges(int val); // 5-membered
 
             //! check PAH have bridge or not
             //bool havebridgeC();
@@ -140,6 +143,7 @@ namespace Sweep{
             int m_rings; // 6-membered rings
             int m_rings5_Lone; // 5-membered rings
             int m_rings5_Embedded; // 5-membered rings
+			int m_bridges; // number of bridges
         private:
             //! write m_cpositions
             //void WriteCposition(std::ostream &out) const;
