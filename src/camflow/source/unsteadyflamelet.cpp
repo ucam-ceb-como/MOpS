@@ -65,6 +65,7 @@ void UnsteadyFlameLet::solve()
     std::cout << "SOLVING STEADY STATE FLAME, NO SOOT" << std::endl;
     solve(false, true);
     std::cout << "SOLVING UNSTEADY FLAMELET TO 0.0005s" << std::endl;
+    control_.setMaxTime(0.0005);
     std::cout << "Nucleation and Coagulation On " << std::endl;
     restart(0.0005);
 }
@@ -539,6 +540,7 @@ void UnsteadyFlameLet::restart(double flameTime)
 
 
     cout << "flameTime is: "<< flameTime << endl;
+    cout << "Restart Time is: " <<restartTime << std::endl;
     
 	//! ht314
 	//! The purpose of this section is to stop soot calculations above a certain axial location, the Lagrangian time

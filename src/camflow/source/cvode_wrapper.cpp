@@ -104,7 +104,7 @@ void CVodeWrapper::setMaxStep(double maxStep){
 }
 
 double& CVodeWrapper::solve(int stopMode){
-
+    std::cout << "Max time = " << maxTime <<std::endl;
     int flag;
     do{
         flag = CVode(cvode_mem,maxTime,y,&currentTime,stopMode);
