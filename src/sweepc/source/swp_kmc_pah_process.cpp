@@ -1289,7 +1289,8 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 }
 void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	Spointer Sp1, Sp2;
-	bool fail = false;
+	bool FH1 = false;
+	bool FH2 = false;
 
 	Sp1 = chooseRandomSite(Mergesites, rng);
 	if (moveIt(Sp1, 1)->comb == FE2 || moveIt(Sp1, 1)->comb == BFE2){
@@ -1298,24 +1299,62 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	}
 
 	Sp2 = rhs.chooseRandomSite(Mergesites, rng);
-	if (rhs.moveIt(Sp2, 1)->comb == FE2 || rhs.moveIt(Sp2, 1)->comb == BFE2){
-		Sp2 = rhs.moveIt(Sp2, 1);
+	if (Sp1->comb == FE_HACA && Sp2->comb == FE_HACA){
+		int guard = 0;
+		while (Sp2->comb == FE_HACA && guard < 1000){
+			Sp2 = rhs.chooseRandomSite(Mergesites, rng);
+			guard++;
+		}
+		if (Sp1->comb == FE_HACA && Sp2->comb == FE_HACA){
+			guard = 0;
+			while (Sp1->comb == FE_HACA && guard < 1000){
+				Sp1 = chooseRandomSite(Mergesites, rng);
+				guard++;
+			}
+		}
 	}
 
-	convSiteType(moveIt(Sp1,-1), ACBR);
-	//convSiteType(moveIt(Sp1, -1), AC);
-	Spointer st3;
-	for (st3 = rhs.moveIt(Sp2,1); st3 != rhs.m_pah->m_siteList.end(); st3++){
-		addSite(st3->type, Sp1);
+	if (!(Sp1->comb == FE_HACA && Sp2->comb == FE_HACA)){
+		if (Sp1->comb == FE_HACA){
+			FH1 = true;
+		}
+		if (Sp2->comb == FE_HACA){
+			FH2 = true;
+		}
+
+		if (rhs.moveIt(Sp2, 1)->comb == FE2 || rhs.moveIt(Sp2, 1)->comb == BFE2){
+			Sp2 = rhs.moveIt(Sp2, 1);
+		}
+
+		if (FH1 || FH2){
+			if (FH1){
+				if (moveIt(Sp1, -1)->type == ZZ){
+					convSiteType(moveIt(Sp1, -1), BY5BR);
+				}
+				else{
+					convSiteType(moveIt(Sp1, -1), BY6BR);
+				}
+			}
+		}
+		else{
+			convSiteType(moveIt(Sp1, -1), ACBR);
+		}
+		Spointer st3;
+		for (st3 = rhs.moveIt(Sp2, 1); st3 != rhs.m_pah->m_siteList.end(); st3++){
+			addSite(st3->type, Sp1);
+		}
+		for (st3 = rhs.m_pah->m_siteList.begin(); st3 != rhs.moveIt(Sp2, -1); st3++){
+			addSite(st3->type, Sp1);
+		}
+		convSiteType(Sp1, ACBL);
+		Sp1 = m_pah->m_siteList.begin();
+		updateCombinedSites();
+		updateHinderedSites();
 	}
-	for (st3 = rhs.m_pah->m_siteList.begin(); st3 != rhs.moveIt(Sp2,-1); st3++){
-		addSite(st3->type, Sp1);
+	else{
+		cout << "Could only find two FE_HACA sites";
+		assert(false);
 	}
-	convSiteType(Sp1, ACBL);
-	//convSiteType(Sp1, AC);
-	Sp1 = m_pah->m_siteList.begin();
-	updateCombinedSites();
-	updateHinderedSites();
 
 }
 void PAHProcess::updateHinderedSites() {
@@ -2255,10 +2294,8 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				}
 				//If this site is near a bridge or NFE, this FE2 needs to be flagged differently
 				//First check if this is an oxidation only FE2
-				else if(((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
-					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && !(S2->type != NFE && st->type != NFE
-					&& (S1->type == ZZ || S1->type == AC)
-					&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC))){
+				else if (((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
+					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && !(S2->type != NFE && st->type != NFE)){
 					st->comb = OFE2;
 					m_pah->m_siteMap[OFE2].push_back(st);
 					//
@@ -2275,8 +2312,8 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 					if (S2->comb != OFE2) updateCombinedSites(S2);
 				}
 				//Now check if this is a bridge only FE2
-				else if (!((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
-					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && (S2->type != NFE && st->type != NFE)
+				else if ((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
+					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80) && (S2->type != NFE && st->type != NFE)
 					&& (S1->type == ZZ || S1->type == AC)
 					&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC)){
 					st->comb = BFE2;
@@ -2326,16 +2363,14 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				//If this site is near a bridge or NFE, this FE2 needs to be flagged differently
 				//First check if this is an oxidation only FE2
 				else if (((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
-					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && !(S1->type != NFE && st->type != NFE
-					&& (S2->type == ZZ || S2->type == AC)
-					&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC))){
+					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && !(S1->type != NFE && st->type != NFE)){
 					st->comb = OFE2;
 					m_pah->m_siteMap[OFE2].push_back(st);
 					if (S1->comb == OFE2) delSiteFromMap(S1->comb, st);
 					if (S1->comb != OFE2) updateCombinedSites(S1);
 				} //Now check if this is a bridge only FE2
-				else if (!((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
-					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && (S1->type != NFE && st->type != NFE)
+				else if ((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
+					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80) && (S1->type != NFE && st->type != NFE)
 					&& (S2->type == ZZ || S2->type == AC)
 					&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC)){
 					st->comb = BFE2;
