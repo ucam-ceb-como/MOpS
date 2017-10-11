@@ -44,7 +44,7 @@ void IO::ThermoParser::parse(vector<Species>& species) {
   //getGlobalTemperature has been moved! 
 
     cout << "Parsing NASA thermo file: " << thermo_file_ << endl;
-    cout << "Parsing NASA thermo file: " << thermoSurf_file_ << endl;
+    cout << "Parsing NASA thermo surface file: " << thermoSurf_file_ << endl;
     parseAllThermoData();
 
     ensureSpeciesNamesAreValid();

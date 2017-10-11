@@ -589,6 +589,20 @@ void UnsteadyFlameLet::restart(double flameTime)
         *write the output to file only if the call is not
         *from the interface
         */
+
+        /* 
+         * boost::lexical_cast<std::string>(restartTime) is not giving clean doubles when outputing files:
+         * e.g. soot file name is interfaceProfiles/profile5.4073404920955443e-317.dat
+         * Try printing it out here:
+         */
+        double testDouble = 1.0;
+        string testStr = boost::lexical_cast<std::string>(testDouble);
+        string testConcat = "TESTCONCAT" + testStr;
+        std::cout << "Test Double is: " << testDouble << std::endl;
+        std::cout << "Test Str is   : " << testStr << std::endl;
+        std::cout << "Test Concat is: " << testConcat << std::endl;
+
+
         //if(!interface)
         //{
             string filename = "interfaceProfiles/profile"+boost::lexical_cast<std::string>(restartTime)+".dat";

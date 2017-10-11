@@ -116,9 +116,15 @@ void MechanismParser::ReadChemkin
 {
     // member function added by vniod to enable the reading of transport data.
     // This function utilizes the ReadChemkin function which was provided earlier.
-
+    
+    // Create ChemkinReader object 
+    // Checks Chem File upon creation 
     ::IO::ChemkinReader chemkinReader(filename,thermofile,transFile);
+    // read() files
     chemkinReader.read();
+
+
+
     if (verbose >= 1) chemkinReader.check();
 
     ReadChemkin(chemkinReader, mech);

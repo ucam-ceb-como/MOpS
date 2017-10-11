@@ -80,7 +80,8 @@ namespace Camflow{
                        CamAdmin& ca,
                        CamBoundary& cb,
                        CamProfile& cp,
-                       CamConfiguration& config, CamSoot &cSoot);
+                       CamConfiguration& config, 
+                       CamSoot &cSoot);
         //read the geometry information
         void readGeometry(CamGeometry &cg,
                           CamConfiguration& config,
