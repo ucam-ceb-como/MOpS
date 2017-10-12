@@ -595,7 +595,7 @@ void UnsteadyFlameLet::restart(double flameTime)
          * e.g. soot file name is interfaceProfiles/profile5.4073404920955443e-317.dat
          * Try printing it out here:
          */
-        double testDouble = 1.0;
+        double testDouble = restartTime;
         string testStr = boost::lexical_cast<std::string>(testDouble);
         string testConcat = "TESTCONCAT" + testStr;
         std::cout << "Test Double is: " << testDouble << std::endl;
