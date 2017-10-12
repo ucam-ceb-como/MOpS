@@ -2,19 +2,21 @@
 """
 Created on Wed Aug 30 13:56:53 2017
 
-Convert profile.dat camflow output files to CSV
+SPROGC needs Ea in CAL/MOL for chem.inp
+Very Rough brute force to change K --> Cal/Mole
 
-takes two command line arguments
-datFileName csvFileName
+reads in a chem.inp file:
+    filename='chem.inp'
+it will write a new chem.inp file:
+    fout='chemCalPerMol.inp'
 
-it will write csvFileName to cwd. 
 
+run with following commands
 
-run with following command
-
-python kelvinsToCal-Mol.py datFileName csvFileName
-e.g.
-python kelvinsToCal-Mol.py profile.dat profile.csv
+#use default file names:
+python kelvinsToCal-Mol.py
+#specify file name 
+python kelvinsToCal-Mol.py chem_kelvin.inp chem_calmol.inp
 
 @author: eb656
 """
@@ -59,7 +61,7 @@ with open(File,'r') as f:
         # break up line into words
         wordList=line.split()
         
-        print(wordList)
+        #print(wordList)
         if len(wordList)==0:
             #print("EmptyLine")
             continue
@@ -75,7 +77,7 @@ with open(File,'r') as f:
             or wordList[0] == "REACTIONS"):
             section +=1
             F.write("REACTION") #Uses assumed units of MOLES and CAL/MOLE
-            F.write('\r\n')
+            F.write('\n')
             continue # go to next line
     
         # Edit wordList to edit Ea 
@@ -102,6 +104,15 @@ with open(File,'r') as f:
             if section == 0:
                 continue
             #Write Elements and species as is
+            elif section ==1 or section == 2:
+                # Write regular line 
+                #   write first word
+                if i==1:
+                    F.write(str(word))
+                    i=2
+                #   write trailing words
+                else:
+                    F.write('    '+str(word))
             else:       
                 # Write regular line 
                 #   write first word
@@ -112,24 +123,5 @@ with open(File,'r') as f:
                 else:
                     F.write('\t'+str(word))
         # write end of line
-        F.write('\r\n') 
+        F.write('\n') 
 F.close()
-
-
-#NumPy Implemenataion: Not working on Vienna due to old NumPy version
-#Generate header String
-#header = np.genfromtxt(File,dtype=str,max_rows=1)
-#headerstr=''
-#for head in header:
-#    if head==header[0]:
-#        headerstr=head
-#    else:
-#        headerstr=headerstr+','+head
-#
-#    
-#data = np.genfromtxt(File,dtype=float,skip_header=1)
-#
-##write CSV file
-##fname, X, fmt='%.18e', delimiter=' ', +
-##newline='\n', header='', footer='', comments='# '
-#np.savetxt(Fout,data,delimiter=',',header=headerstr,comments='',fmt='%.5E')
