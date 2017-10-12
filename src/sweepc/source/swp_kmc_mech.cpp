@@ -257,7 +257,7 @@ double KMCMechanism::calculateMergePreFactor(const KMCGasPoint& gp,
 	for (int i = 0; i != (int)m_jplist.size(); i++) {
 		if ((m_jplist[i])->getName() == "PAH Merging"){
 			(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
-			KMerge = (m_jplist[i])->setRate1(gp, st/*, t*/);
+			KMerge = (m_jplist[i])->setRate0p0267(gp, st/*, t*/);
 			return KMerge;
 		}
 	}
@@ -2352,18 +2352,32 @@ void PAH_Merge::initialise() {
 }
 // Jump rate calculation
 double PAH_Merge::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    double r_f; // radical fraction 
-    if(r_denom>0) {
-        r_f = (m_r[0]+m_r[2])/r_denom; 
-        r_f = r_f/(r_f+1.0);
-    }
-    else r_f=0;
-    return m_rate = m_r[5]*r_f; // Rate Equation
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction 
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+		r_f = r_f / (r_f + 1.0);
+	}
+	else r_f = 0;
+	return m_rate = m_r[5] * r_f; // Rate Equation
 }
 double PAH_Merge::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction 
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+		r_f = r_f / (r_f + 1.0);
+	}
+	else r_f = 0;
+	return m_rate = m_r[5] * r_f; // Rate Equation
 }
 double PAH_Merge::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction 
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+		r_f = r_f / (r_f + 1.0);
+	}
+	else r_f = 0;
+	return m_rate = m_r[5] * r_f; // Rate Equation
 }

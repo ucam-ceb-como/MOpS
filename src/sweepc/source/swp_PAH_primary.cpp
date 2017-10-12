@@ -1446,6 +1446,15 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 		//
 		double m_t = 0;
+		double volume;
+		double ratio;
+		double density = model.Components(0)->Density();
+		//! PP mass (kg).
+		double m_mass = m_numcarbon*1.9945e-26 + m_numH*1.6621e-27;
+		//volume = m_mass / density;
+		volume = sys.SampleVolume(); //get volume in m3
+		//ratio = m_mass / density / sys.SampleVolume();
+		//cout << ratio << " " << sys.SampleVolume() << " " << m_mass / density << endl;
 		while (m_t < dt && m_PAH.size() > 1)
 		{
 			double totalsites = 0;
@@ -1459,13 +1468,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			}
 			if (totalsites > 2 && numdiffPAHs > 1){
 				double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t);
-				//double density = model.Components(0)->Density();
-				//! PP mass (kg).
-				//double m_mass = m_numcarbon*1.9945e-26 + m_numH*1.6621e-27;
-
-				double volume = sys.SampleVolume(); //get volume in m3
-				//double volume = m_mass / density;
-				kMerge = 100.0*kMerge / NA / volume; //convert KMerge from m3/mol/s to 1/#/s.
+				kMerge = kMerge / NA / volume; //convert KMerge from m3/mol/s to 1/#/s.
 				typedef boost::exponential_distribution<double> exponential_distrib;
 				exponential_distrib waitingTimeDistrib(kMerge*(totalsites)*(totalsites - 1.0));
 				boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
