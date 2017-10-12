@@ -1326,14 +1326,20 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 			Sp2 = rhs.moveIt(Sp2, 1);
 		}
 
-		if (FH1 || FH2){
-			if (FH1){
-				if (moveIt(Sp1, -1)->type == ZZ){
-					convSiteType(moveIt(Sp1, -1), BY5BR);
-				}
-				else{
-					convSiteType(moveIt(Sp1, -1), BY6BR);
-				}
+		if (FH1){
+			if (moveIt(Sp1, -1)->type == ZZ){
+				convSiteType(moveIt(Sp1, -1), BY5BR);
+			}
+			else{
+				convSiteType(moveIt(Sp1, -1), BY6BR);
+			}
+		}
+		else if (FH2){
+			if (moveIt(Sp2, -1)->type == ZZ){
+				convSiteType(moveIt(Sp1, -1), BY5BR);
+			}
+			else{
+				convSiteType(moveIt(Sp1, -1), BY6BR);
 			}
 		}
 		else{
