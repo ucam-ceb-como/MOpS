@@ -11,14 +11,19 @@
     <!-- Define particle types (Detailed) -->
     <particle id="[Ru]" model="bintree" subtree="false">
         <description>A rutile particle.</description>
-	<fractdim>1.8</fractdim>
+	    <fractdim>1.8</fractdim>
         <coalthresh>1.0</coalthresh>
         <sintering enable="true" model="GBD">
-	    <A units="s/m4K">7.44E+16</A>
+		    <A units="s/m4K">7.44E+16</A>
             <E units="K">31032</E>
-	    <Dpmin units="m">0</Dpmin>
+		    <Dpmin units="m">0</Dpmin>
         </sintering>
     </particle>
+        <!--sintering enable="true" model="Rutile">
+		    <A units="s/m4K">3.7E+16</A>
+            <E units="K">31032</E>
+		    <Dpmin units="nm">3.4</Dpmin>
+        </sintering-->
 	
 	<!-- Define particle types (Spherical) -->
     <!--particle id="[Ru]" model="spherical" subtree="false">
@@ -27,9 +32,18 @@
 	
     <!-- Coagulation -->
     <coagulation>
-	<A>1.0</A>
-	<kernel>weightedtransition</kernel>
-	<weightrule>w3</weightrule>
+	    <A>1.0</A>
+	    <kernel>weightedtransition</kernel>
+		<weightrule>w3</weightrule>
+		<!-- Additional specs to do adaptive weighted inception 
+		     Scaling function can be linear, quadratic, exponential
+			 Onset SP can be anything < Nmax given in mops.inx -->
+		<inceptionweightchange flag="on">
+		    <maxinceptionweight>1.0</maxinceptionweight>
+		    <mininceptionweight>1.0</mininceptionweight>
+		    <onsetsp>1.0</onsetsp>
+		    <weightchangefun>exponential</weightchangefun>
+		</inceptionweightchange>
     </coagulation>
 
     <!-- Ti addition reactions
@@ -42,10 +56,11 @@
         <product id="CL2" stoich="+2.0" />
         <particlein  id="[Ru]"/>
         <particleout id="[Ru]"/>
-        <A>8.06948e+028</A>
-        <!--A>1.2044e+025</A-->
-	<!--A>0.0</A-->
+        <!--A>1.2044e+028</A-->
+		<!--A>0.0</A-->
+        <!--E units="cal">11.9503</E--> 
         <n>0.0</n>
+        <A>8.06948e+028</A>
         <E units="cal">14.3404</E> 
         <particleterm id="s" power="1.0"/>
         <component id="Rutile" dx="+1.0"/>
@@ -1081,10 +1096,18 @@
         <component id="Rutile" dx="+2.0"/>
     </inception>     
 	
-    <inception name="no molecule inception">
+	<!-- extra inception reaction currently used as a terrible way to perform heat transfer -->
+    <inception name="extra inception">
         <formula>"TICL2OCL to [Ru]</formula>
         <reactant id="TICL2OCL" stoich="0" m="2.1819e-022" d="6.5423e-8" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+0.0"/>
+		<hci flag="off">
+		    <dlim>4.9e-8</dlim>
+		</hci>
+		<psi flag="on">
+			<dlim>4.9e-8</dlim>
+			<type>both</type> <!-- options: weight, event, both for SWA -->
+		</psi>
     </inception> 
 </mechanism>
