@@ -1322,9 +1322,9 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 			FH2 = true;
 		}
 
-		if (rhs.moveIt(Sp2, 1)->comb == FE2 || rhs.moveIt(Sp2, 1)->comb == BFE2){
-			Sp2 = rhs.moveIt(Sp2, 1);
-		}
+	if (rhs.moveIt(Sp2, 1)->comb == FE2 || rhs.moveIt(Sp2, 1)->comb == BFE2){
+		Sp2 = rhs.moveIt(Sp2, 1);
+	}
 
 		if (FH1){
 			if (moveIt(Sp1, -1)->type == ZZ){
@@ -1345,18 +1345,19 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 		else{
 			convSiteType(moveIt(Sp1, -1), ACBR);
 		}
-		Spointer st3;
-		for (st3 = rhs.moveIt(Sp2, 1); st3 != rhs.m_pah->m_siteList.end(); st3++){
-			addSite(st3->type, Sp1);
-		}
-		for (st3 = rhs.m_pah->m_siteList.begin(); st3 != rhs.moveIt(Sp2, -1); st3++){
-			addSite(st3->type, Sp1);
-		}
-		convSiteType(Sp1, ACBL);
-		Sp1 = m_pah->m_siteList.begin();
-		updateCombinedSites();
-		updateHinderedSites();
+	Spointer st3;
+	for (st3 = rhs.moveIt(Sp2,1); st3 != rhs.m_pah->m_siteList.end(); st3++){
+		addSite(st3->type, Sp1);
 	}
+	for (st3 = rhs.m_pah->m_siteList.begin(); st3 != rhs.moveIt(Sp2,-1); st3++){
+		addSite(st3->type, Sp1);
+	}
+	convSiteType(Sp1, ACBL);
+	//convSiteType(Sp1, AC);
+	Sp1 = m_pah->m_siteList.begin();
+	updateCombinedSites();
+	updateHinderedSites();
+}
 	else{
 		cout << "Could only find two FE_HACA sites";
 		assert(false);
@@ -1364,19 +1365,28 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 
 }
 void PAHProcess::updateHinderedSites() {
-	
-	bool hindered;
-	int Sides;
-	int count;
-	double Angle, target;
+	//Determine sites that have steric hinderances
+
 	Spointer st1;
+	std::pair<double, double> coords1;
+	std::pair<double, double> coords2;
+	std::pair<double, double> coordstar1;
+	std::pair<double, double> coordstar2;
+	std::pair<double, double> coordsadd;
+	double Ang;
+	double heading;
+	double length;
+	double dist1, dist2;
+	kmcSiteType prevtype = None;
+	kmcSiteType currtype = None;
+	bool hindered;
+	int count = 0;
+
 	//Now, re-assign hindered site types
 	for (Spointer st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
-		Sides = 0;
-		Angle = 0.0;
-		count = 0;
 		hindered = false;
-		switch (st->type) {
+		kmcSiteType type = st->type;
+		switch (type) {
 		case FE:
 		case NFE:
 		case AC:
@@ -1385,90 +1395,124 @@ void PAHProcess::updateHinderedSites() {
 		case ACBR:
 		case NACBL:
 		case NACBR:
-			for (st1 = moveIt(st, 1); st1 != m_pah->m_siteList.end(); st1++) {
-				count++;
-				Sides += SiteSides(st1);
-				Angle += SiteAngle(st1);
-				if (Sides < 5 || (Sides >5 && Sides < 8)){
-					target = -100.0;
-				}
-				else if ((Sides+1)%2 == 0){
-					target = ((double)Sides - 1.0)*180.0 -240.0 - ((double) count - 1.0)*240;
-				}
-				else{
-					target = ((double)Sides)*180.0 - 480.0 - ((double)count - 1.0) * 240;
-				}
-				if (Angle == target) {
-					hindered = true;
-				}
-				if (hindered) break;
+			coords1.first = 0.0;
+			coords1.second = 0.0;
+			coords2.first = 0.0;
+			coords2.second = 0.0;
+			coordstar1.first = 0.0;
+			coordstar1.second = 0.0;
+			heading = 0.0;
+			Ang = AngleBridge(type, type) - 180;
+			if (Ang == -180.0){
+				Ang = 0.0;
 			}
-			if (hindered) break;
-			for (st1 = m_pah->m_siteList.begin(); st1 != st; st1++) {
-				count++;
-				Sides += SiteSides(st1);
-				Angle += SiteAngle(st1);
-				if (Sides < 5 || (Sides >5 && Sides < 8)){
-					target = -100.0;
-				}
-				else if ((Sides + 1) % 2 == 0){
-					target = ((double)Sides - 1.0)*180.0 - 240.0 - ((double)count - 1.0) * 240;
-				}
-				else{
-					target = ((double)Sides)*180.0 - 480.0 - ((double)count - 1.0) * 240;
-				}
-				if (Angle == target) {
-					hindered = true;
-				}
-				if (hindered) break;
-			}
-			if (hindered) break;
-			for (st1 = moveIt(st, 1); st1 != m_pah->m_siteList.end(); st1++) {
-				count--;
-				Sides -= SiteSides(st1);
-				Angle -= SiteAngle(st1);
-				if (Sides < 5 || (Sides >5 && Sides < 8)){
-					target = -100.0;
-				}
-				else if ((Sides + 1) % 2 == 0){
-					target = ((double)Sides - 1.0)*180.0 - 240.0 - ((double)count - 1.0) * 240;
-				}
-				else{
-					target = ((double)Sides)*180.0 - 480.0 - ((double)count - 1.0) * 240;
-				}
-				if (Angle == target) {
-					hindered = true;
-					break;
-				}
-				if (hindered) break;
-			}
-			if (hindered) break;
-			for (st1 = m_pah->m_siteList.begin(); st1 != st; st1++) {
-				count--;
-				Sides -= SiteSides(st1);
-				Angle -= SiteAngle(st1);
-				if (Sides < 5 || (Sides >5 && Sides < 8)){
-					target = -100.0;
-				}
-				else if ((Sides + 1) % 2 == 0){
-					target = ((double)Sides - 1.0)*180.0 - 240.0 - ((double)count - 1.0) * 240;
-				}
-				else{
-					target = ((double)Sides)*180.0 - 480.0 - ((double)count - 1.0) * 240;
-				}
-				if (Angle == target) {
-					hindered = true;
-					break;
-				}
-				if (hindered) break;
-			}
-			if (hindered) break;
+			length = Length(type);
+			heading += Ang;
+			coordstar2.first = cos(heading / 180 * PI)*length;
+			coordstar2.second = sin(heading / 180 * PI)*length;
 
+			coords1 = coordstar2;
+
+			prevtype = st->type;
+
+			for (st1 = moveIt(st,1); st1 != m_pah->m_siteList.end(); st1++) {
+				currtype = st1->type;
+				Ang = AngleBridge(currtype, prevtype) - 180;
+				if (Ang == -180.0){
+					Ang = 0.0;
+				}
+				length = Length(currtype);
+				heading += Ang;
+				coords2.first = coords1.first +  cos(heading / 180 * PI)*length;
+				coords2.second = coords1.second + sin(heading / 180 * PI)*length;
+
+				dist1 = pow(coords1.first - coordstar2.first, 2);
+				dist1 += pow(coords1.second - coordstar2.second, 2);
+				dist1 = sqrt(dist1);
+
+				dist2 = pow(coords2.first - coordstar1.first, 2);
+				dist2 += pow(coords2.second - coordstar1.second, 2);
+				dist2 = sqrt(dist2);
+
+				if (type == FE || type == NFE){
+					if ((abs(dist1 - 1.0) < 1.0e-5 && ((abs(dist2 - 2.0) < 1.0e-5) || abs(dist2 - sqrt(3)) < 1.0e-5)) ||
+						(abs(dist2 - 1.0) < 1.0e-5 && ((abs(dist1 - 2.0) < 1.0e-5) || abs(dist1 - sqrt(3)) < 1.0e-5))
+						|| ((abs(dist1 - sqrt(3)) < 1.0e-5 && abs(dist2 - sqrt(3)) < 1.0e-5))
+						|| ((abs(dist1 - 1) < 1.0e-5 && abs(dist2 -1) < 1.0e-5))){
+						if ((moveIt(st, 1) != moveIt(st1, -1) || moveIt(st1, -1)->comb !=FE3) 
+							&& (moveIt(st, -1) != moveIt(st1, 1) || moveIt(st1, 1)->comb != FE3) ){
+							hindered = true;
+							break;
+						}
+					}
+				}
+				else{
+					if ((abs(dist1 - 1.0) < 1.0e-5 && abs(dist2 - 1.0) < 1.0e-5)){
+						hindered = true;
+						break;
+					}
+				}
+
+				prevtype = currtype;
+
+				coords1.first = coords2.first;
+				coords1.second = coords2.second;
+
+				count++;
+			}
+
+			if (!hindered){
+				for (st1 = m_pah->m_siteList.begin(); st1 != st; st1++) {
+					currtype = st1->type;
+					Ang = AngleBridge(currtype, prevtype) - 180;
+					if (Ang == -180.0){
+						Ang = 0.0;
+					}
+					length = Length(currtype);
+					heading += Ang;
+					coords2.first = coords1.first + cos(heading / 180 * PI)*length;
+					coords2.second = coords1.second + sin(heading / 180 * PI)*length;
+
+					dist1 = pow(coords1.first - coordstar2.first, 2);
+					dist1 += pow(coords1.second - coordstar2.second, 2);
+					dist1 = sqrt(dist1);
+
+					dist2 = pow(coords2.first - coordstar1.first, 2);
+					dist2 += pow(coords2.second - coordstar1.second, 2);
+					dist2 = sqrt(dist2);
+
+					if (type == FE || type == NFE){
+						if ((abs(dist1 - 1.0) < 1.0e-5 && ((abs(dist2 - 2.0) < 1.0e-5) || abs(dist2 - sqrt(3)) < 1.0e-5)) ||
+							(abs(dist2 - 1.0) < 1.0e-5 && ((abs(dist1 - 2.0) < 1.0e-5) || abs(dist1 - sqrt(3)) < 1.0e-5))
+							|| ((abs(dist1 - sqrt(3)) < 1.0e-5 && abs(dist2 - sqrt(3)) < 1.0e-5))
+							|| ((abs(dist1 - 1) < 1.0e-5 && abs(dist2 - 1) < 1.0e-5))){
+							if ((moveIt(st, 1) != moveIt(st1, -1) || moveIt(st1, -1)->comb != FE3)
+								&& (moveIt(st, -1) != moveIt(st1, 1) || moveIt(st1, 1)->comb != FE3)){
+								hindered = true;
+								break;
+							}
+						}
+					}
+					else{
+						if ((abs(dist1 - 1.0) < 1.0e-5 && abs(dist2 - 1.0) < 1.0e-5)){
+							hindered = true;
+							break;
+						}
+					}
+
+					prevtype = currtype;
+					coords1.first = coords2.first;
+					coords1.second = coords2.second;
+
+					count++;
+
+				}
+			}
 		}
 
 		if (hindered){
 			if (st->type > 0){
-				convSiteType(st, (kmcSiteType) (0 - (int)st->type));
+				convSiteType(st, (kmcSiteType)(0 - (int)st->type));
 			}
 		}
 		else{
@@ -1476,96 +1520,6 @@ void PAHProcess::updateHinderedSites() {
 				convSiteType(st, (kmcSiteType)(0 - (int)st->type));
 			}
 		}
-	}
-}
-
-int PAHProcess::SiteSides(Spointer& stt) {
-	switch (stt->type){
-	case FE:
-	case NFE:
-	case ERFE:
-	case ERFEER:
-		return 1;
-	case ZZ:
-	case NZZ:
-	case ERZZ:
-	case ERZZER:
-		return 2;
-	case AC:
-	case NAC:
-	case ERAC:
-	case ERACER:
-	case ACBL:
-	case ACBR:
-	case NACBL:
-	case NACBR:
-		return 3;
-	case BY5:
-	case ERBY5:
-	case ER5:
-	case BY5BL:
-	case BY5BR:
-	case NBY5:
-	case NBY5BR:
-	case NBY5BL:
-		return 4;
-	case BY6:
-	case BY6BL:
-	case BY6BR:
-	case BY6BL2:
-	case BY6BR2:
-	case BY6BRL:
-		return 5;
-	default:
-		cout << "Unassigned site type" << endl;
-		cout << stt->type << endl;
-		assert(false);
-		abort();
-	}
-}
-
-double PAHProcess::SiteAngle(Spointer& stt) {
-	switch (stt->type){
-	case FE:
-	case NFE:
-	case ERFE:
-	case ERFEER:
-		return 0.0;
-	case ZZ:
-	case NZZ:
-	case ERZZ:
-	case ERZZER:
-		return 120.0;
-	case AC:
-	case NAC:
-	case ERAC:
-	case ERACER:
-	case ACBL:
-	case ACBR:
-	case NACBL:
-	case NACBR:
-		return 240.0;
-	case BY5:
-	case ERBY5:
-	case ER5:
-	case BY5BL:
-	case BY5BR:
-	case NBY5:
-	case NBY5BR:
-	case NBY5BL:
-		return 360.0;
-	case BY6:
-	case BY6BL:
-	case BY6BR:
-	case BY6BL2:
-	case BY6BR2:
-	case BY6BRL:
-		return 480.0;
-	default:
-		cout << "Unassigned site type" << endl;
-		cout << stt->type << endl;
-		assert(false);
-		abort();
 	}
 }
 
@@ -2300,8 +2254,10 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				}
 				//If this site is near a bridge or NFE, this FE2 needs to be flagged differently
 				//First check if this is an oxidation only FE2
-				else if (((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
-					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && !(S2->type != NFE && st->type != NFE)){
+				else if(((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
+					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && !(S2->type != NFE && st->type != NFE
+					&& (S1->type == ZZ || S1->type == AC)
+					&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC))){
 					st->comb = OFE2;
 					m_pah->m_siteMap[OFE2].push_back(st);
 					//
@@ -2318,8 +2274,8 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 					if (S2->comb != OFE2) updateCombinedSites(S2);
 				}
 				//Now check if this is a bridge only FE2
-				else if ((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
-					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80) && (S2->type != NFE && st->type != NFE)
+				else if (!((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
+					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && (S2->type != NFE && st->type != NFE)
 					&& (S1->type == ZZ || S1->type == AC)
 					&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC)){
 					st->comb = BFE2;
@@ -2369,14 +2325,16 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				//If this site is near a bridge or NFE, this FE2 needs to be flagged differently
 				//First check if this is an oxidation only FE2
 				else if (((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
-					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && !(S1->type != NFE && st->type != NFE)){
+					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && !(S1->type != NFE && st->type != NFE
+					&& (S2->type == ZZ || S2->type == AC)
+					&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC))){
 					st->comb = OFE2;
 					m_pah->m_siteMap[OFE2].push_back(st);
 					if (S1->comb == OFE2) delSiteFromMap(S1->comb, st);
 					if (S1->comb != OFE2) updateCombinedSites(S1);
 				} //Now check if this is a bridge only FE2
-				else if ((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
-					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80) && (S1->type != NFE && st->type != NFE)
+				else if (!((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
+					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && (S1->type != NFE && st->type != NFE)
 					&& (S2->type == ZZ || S2->type == AC)
 					&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC)){
 					st->comb = BFE2;
@@ -3227,7 +3185,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
 
-	//if (PAH_ID == 178452){
+	//if (PAH_ID == 662825){
 	//	cout << "ID is: " << id << endl;
 	//}
 
