@@ -595,7 +595,7 @@ void UnsteadyFlameLet::restart(double flameTime)
          * e.g. soot file name is interfaceProfiles/profile5.4073404920955443e-317.dat
          * Try printing it out here:
          */
-        double testDouble = restartTime;
+        double testDouble = flameTime;
         string testStr = boost::lexical_cast<std::string>(testDouble);
         string testConcat = "TESTCONCAT" + testStr;
         std::cout << "Test Double is: " << testDouble << std::endl;
@@ -605,14 +605,15 @@ void UnsteadyFlameLet::restart(double flameTime)
 
         //if(!interface)
         //{
-            string filename = "interfaceProfiles/profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
+            string filename = "interfaceProfiles/profile"+boost::lexical_cast<std::string>(flameTime)+".dat";
             cout << "soot file name is "<< filename << endl;
             reportToFile(filename,control_.getMaxTime(), solvect);
             if (sootMom_.active())
             {
-                string filenameSoot = "interfaceSootRates/sootRatesProfile"+boost::lexical_cast<std::string>(restartTime)+".dat";
+                string filenameSoot = "interfaceSootRates/sootRatesProfile"+boost::lexical_cast<std::string>(flameTime)+".dat";
                 cout << "sootComponentRatesAllCells = "<< sootComponentRatesAllCells << endl;
                 reportSootRatesToFile(filenameSoot,control_.getMaxTime(), sootComponentRatesAllCells);
+                std::cout << "Wrote interfaceProfile and interfaceSootRates to file";
             }
         //}
     }
