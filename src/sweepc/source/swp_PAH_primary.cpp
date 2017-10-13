@@ -103,7 +103,6 @@ double PAHPrimary::pow(double a, double b) {
 PAHPrimary::PAHPrimary() : Primary(),
     m_numcarbon(0),
     m_numH(0),
-    m_numOfEdgeC(0),
     m_numOfRings(0),
 	m_numOfRings5Lone(0),
 	m_numOfRings5Embedded(0),
@@ -145,7 +144,6 @@ PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model)
 : Primary(time, model),
     m_numcarbon(0),
     m_numH(0),
-    m_numOfEdgeC(0),
     m_numOfRings(0),
 	m_numOfRings5Lone(0),
 	m_numOfRings5Embedded(0),
@@ -196,7 +194,6 @@ PAHPrimary::PAHPrimary(const double time, const double position,
 : Primary(time, model),
     m_numcarbon(0),
     m_numH(0),
-    m_numOfEdgeC(0),
     m_numOfRings(0),
 	m_numOfRings5Lone(0),
 	m_numOfRings5Embedded(0),
@@ -242,7 +239,6 @@ PAHPrimary::PAHPrimary(double time, const Sweep::ParticleModel &model, bool noPA
 : Primary(time, model),
     m_numcarbon(0),
     m_numH(0),
-    m_numOfEdgeC(0),
     m_numOfRings(0),
 	m_numOfRings5Lone(0),
 	m_numOfRings5Embedded(0),
@@ -436,7 +432,6 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
     m_avg_coalesc=source->m_avg_coalesc;
     m_numcarbon = source->m_numcarbon;
     m_numH = source->m_numH;
-    m_numOfEdgeC = source->m_numOfEdgeC;
     m_numOfRings = source->m_numOfRings;
 	m_numOfRings5Lone = source->m_numOfRings5Lone;
 	m_numOfRings5Embedded = source->m_numOfRings5Embedded;
@@ -2111,7 +2106,6 @@ void PAHPrimary::UpdatePrimary(void)
         m_mass            = 0.0;
         m_numcarbon       = 0;
         m_numH            = 0;
-        m_numOfEdgeC      = 0;
         m_numOfRings      = 0;
 		m_numOfRings5Lone = 0;
 		m_numOfRings5Embedded = 0;
@@ -2124,7 +2118,6 @@ void PAHPrimary::UpdatePrimary(void)
     {
         m_numcarbon       = 0;
         m_numH            = 0;
-        m_numOfEdgeC      = 0;
         m_numOfRings      = 0;
 		m_numOfRings5Lone = 0;
 		m_numOfRings5Embedded = 0;
@@ -2168,7 +2161,6 @@ void PAHPrimary::UpdatePrimary(void)
         for (vector<boost::shared_ptr<PAH> >::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
             m_numcarbon += (*i)->m_pahstruct->numofC();
             m_numH += (*i)->m_pahstruct->numofH();
-            //m_numOfEdgeC += (*i)->m_pahstruct->numofEdgeC();
             m_numOfRings += (*i)->m_pahstruct->numofRings();
 			m_numOfRings5Lone += (*i)->m_pahstruct->numofLoneRings5();
 			m_numOfRings5Embedded += (*i)->m_pahstruct->numofEmbeddedRings5();
@@ -2227,7 +2219,6 @@ void PAHPrimary::Reset()
 {
     m_numcarbon=0;
     m_numH=0;
-    m_numOfEdgeC=0;
     m_numOfRings=0;
 	m_numOfRings5Embedded = 0;
 	m_numOfRings5Lone = 0;
@@ -2280,7 +2271,6 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
         m_numcarbon=m_leftchild->m_numcarbon + m_rightchild->m_numcarbon;
         m_numH=m_leftchild->m_numH + m_rightchild->m_numH;
 
-        m_numOfEdgeC=m_leftchild->m_numOfEdgeC + m_rightchild->m_numOfEdgeC;
         m_numOfRings=m_leftchild->m_numOfRings + m_rightchild->m_numOfRings;
 		m_numOfRings5Lone = m_leftchild->m_numOfRings5Lone + m_rightchild->m_numOfRings5Lone;
 		m_numOfRings5Embedded = m_leftchild->m_numOfRings5Embedded + m_rightchild->m_numOfRings5Embedded;
@@ -2416,11 +2406,6 @@ int PAHPrimary::NumHydrogen() const
     return m_numH;
 }
 
-int PAHPrimary::NumEdgeC() const
-{
-    return m_numOfEdgeC;
-}
-
 int PAHPrimary::NumRings() const
 {
     return m_numOfRings;
@@ -2534,11 +2519,17 @@ void PAHPrimary::SerializePrimary(std::ostream &out, void *duplicates) const
         val_int = m_numH;
         out.write((char*)&val_int, sizeof(val_int));
 
-        val_int = m_numOfEdgeC;
-        out.write((char*)&val_int, sizeof(val_int));
-
         val_int = m_numOfRings;
         out.write((char*)&val_int, sizeof(val_int));
+
+		val_int = m_numOfRings5Lone;
+		out.write((char*)&val_int, sizeof(val_int));
+
+		val_int = m_numOfRings5Embedded;
+		out.write((char*)&val_int, sizeof(val_int));
+
+		val_int = m_numOfBridges;
+		out.write((char*)&val_int, sizeof(val_int));
 
         val_int =  m_numPAH;
         out.write((char*)&val_int, sizeof(val_int));
@@ -2725,10 +2716,16 @@ void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel
         m_numH = val_int;
 
         in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
-        m_numOfEdgeC = val_int;
-
-        in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
         m_numOfRings = val_int;
+
+		in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+		m_numOfRings5Lone = val_int;
+
+		in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+		m_numOfRings5Embedded = val_int;
+
+		in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
+		m_numOfBridges = val_int;
 
         in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
         m_numPAH = val_int;

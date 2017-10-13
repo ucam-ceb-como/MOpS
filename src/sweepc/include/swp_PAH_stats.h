@@ -158,7 +158,7 @@ private:
         iPAHD=5,      // m_PAHCollDiameter
         iNCARB=6,     // m_numcarbon
         iNHYDROGEN=7, // m_numH
-        iNEDGEC=8,    // m_numOfEdgeC
+        iNBRIDGES=8,    // m_numOfBridges
         iNRINGS=9,    // m_numOfRings
         iCOAL=10,     // m_avg_coalesc
         iNPRIM=11,    // m_numprimary

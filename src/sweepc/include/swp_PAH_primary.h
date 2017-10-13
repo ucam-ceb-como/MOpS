@@ -314,8 +314,6 @@ private:
     int m_numcarbon;
     int m_numH;
 
-    //! total num of edge C in this soot particle
-    int m_numOfEdgeC;
     //! Total number of 6-member rings in this soot particle
     int m_numOfRings;
 	//! Total number of lone 5-member rings in this soot particle

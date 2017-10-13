@@ -254,6 +254,9 @@ void PAHStructure::Serialize(std::ostream &out) const
     val=numofEmbeddedRings5();
     out.write((char*)&(val), sizeof(val));
 
+	val = numofBridges();
+	out.write((char*)&(val), sizeof(val));
+
     PAHStructure m_copy (*this);
     PAHProcess p(m_copy);
     std::string m_SiteName = p.SiteString(',');
@@ -261,6 +264,12 @@ void PAHStructure::Serialize(std::ostream &out) const
     val = (unsigned int)m_SiteName.length();
     out.write((char*)&val, sizeof(val));
     out.write(m_SiteName.c_str(), val);
+
+	val = numofC();
+	out.write((char*)&(val), sizeof(val));
+
+	val = numofH();
+	out.write((char*)&(val), sizeof(val));
 }
 
 void PAHStructure::Deserialize(std::istream &in)
@@ -276,6 +285,9 @@ void PAHStructure::Deserialize(std::istream &in)
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     int temp_numofEmbeddedRings5 = val;
+
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofBridges = val;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     name = new char[val];

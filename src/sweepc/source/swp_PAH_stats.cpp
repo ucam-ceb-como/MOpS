@@ -61,7 +61,7 @@ const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
     std::string("Avg. PAH Collision Diameter"),
 	std::string("Avg. Number of Carbon Atoms"),
 	std::string("Avg. Number of Hydrogen Atoms"),
-	std::string("Avg. Number of Edge Carbon Atoms"),
+	std::string("Avg. Number of Bridges"),
 	std::string("Avg. Number of Rings"),
     std::string("Avg. Coalesc Threshold"),
     std::string("Num Primaries double Part"),
@@ -76,7 +76,7 @@ const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
     IModelStats::Avg,  // Avg. PAH Collision Diameter
 	IModelStats::Avg,  // Avg. Number of Carbon atoms
 	IModelStats::Avg,  // Avg. Number of Hydrogen atoms
-	IModelStats::Avg,  // Avg. Number of Edge Carbon Atoms
+	IModelStats::Avg,  // Avg. Number of Bridges
 	IModelStats::Avg,  // Avg. Number of Rings
     IModelStats::Avg,  // Avg. Coalesc Threshold
     IModelStats::Avg,  // Num Primaries double Part
@@ -88,7 +88,7 @@ const std::string PAHStats::m_const_pslnames[PAHStats::PSL_COUNT] = {
 	std::string("Number of Carbon atoms"),
     std::string("Number of Hydrogen atoms"),
 	std::string("Number primaries"),
-	std::string("Number of Edge Carbon Atoms"),
+	std::string("Number of Bridges"),
 	std::string("Number of Rings"),
 	std::string("sqrt(LW)"),
 	std::string("LdivW"),
@@ -181,7 +181,7 @@ void PAHStats::Calculate(const Ensemble &e, double scale)
 			m_stats[iPAHD]    		+= pah->PAHCollDiameter()*1e9 * wt;
 			m_stats[iNCARB]	  		+= pah->NumCarbon() * wt;
 			m_stats[iNHYDROGEN]	  	+= pah->NumHydrogen() * wt;
-            m_stats[iNEDGEC]	  	+= pah->NumEdgeC() * wt;
+            m_stats[iNBRIDGES]	  	+= pah->NumBridges() * wt;
             m_stats[iNRINGS]	  	+= pah->NumRings() * wt;
             m_stats[iNPAH+1]    	+= pah->NumPAH() * wt; //used to calculate sum of Number of PAHs.
             m_stats[iCOAL]    		+= pah->AvgCoalesc() * wt;
