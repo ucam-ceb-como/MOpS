@@ -148,8 +148,8 @@ int DimerInception::Perform(const double t, Cell &sys,
 			// Get average particle collision diameter
 			dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
 
-			// Select a particle at random
-			Sweep::PropID proprng = iDcol;
+			// Select a particle at random, weighted by collision diameter sqrd
+			Sweep::PropID proprng = iD2;
 			int iprng = sys.Particles().Select(proprng, rng);
 			Particle *sprng = NULL;
 			if (iprng >= 0) {
@@ -160,9 +160,21 @@ int DimerInception::Perform(const double t, Cell &sys,
 				return -1;
 			}
 
+			// Select a second particle at random, weighted by inverse collision diameter sqrd
+			proprng = iD_2;
+			int iprng2 = sys.Particles().Select(proprng, rng);
+			Particle *sprng2 = NULL;
+			if (iprng2 >= 0) {
+				sprng2 = sys.Particles().At(iprng2);
+			}
+			else {
+				// Failed to choose a particle.
+				return -1;
+			}
+
 			// Toggle size flag if selected particle has collision diameter > 
 			// switch collision diameter
-			sizeflag = (sprng->CollDiameter() > dcol_switch);
+			sizeflag = (sprng->CollDiameter() > dcol_switch) && (sprng2->CollDiameter() <= dcol_switch);
 
 			// aab64 20.09.2017 
 			// Preliminary probabilistic implementation
