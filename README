@@ -136,3 +136,83 @@ Robert.Patterson@wias-berlin.de
 Laurence McGlashan 25 February 2011
 lrm29@cam.ac.uk
 ###############################################################################
+
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+# Compiling on Darwin
+
+eb656
+
+in Markdown formatting:
+-------------------------------------------------------------------------------
+
+MOPS is pretty flexible (to my knowledge) on GCC and Boost Versions, so long that
+Boost and MOPS are compiled with the same GCC version. 
+
+Using the native CMAKE 3.9.4, it would find boost but fail to link it. HPC helped
+find the solutions listed below. This is not exactly clear from the make error. 
+
+>Linking CXX executable bin/PAHkmc-app
+>lib/libchemkinReader.a(chemkinReader.cpp.o): In function `ZN5boost12regex_searchIN9gnu_cxx17normal_iteratorIPKcNSt7cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEESaINS_9sub_matchISB_EEEcNS_12regex_traitsIcNS_16cpp_regex_traitsIcEEEEEEbT_SJ_RNS_13match_resultsISJ_T0_EERKNS_11basic_regexIT1_T2_EENS_15regex_constants12_match_flagsESJ.constprop.294':chemkinReader.cpp.text+0xa10): undefined reference to `boost::re_detail_106501::perl_matcher<_gnu_cxx::normal_iterator<char const*, std::cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::allocator<boost::sub_match<gnu_cxx::normal_iterator<char const*, std::cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > >, boost::regex_traits<char, boost::cpp_regex_traits<char> > >::construct_init(boost::basic_regex<char, boost::regex_traits<char, boost::cpp_regex_traits<char> > > const&, boost::regex_constants::_match_flags)'
+
+
+
+## Installing MOPS on DARWIN
+
+Steps:
+
++ load gcc module you want to use
++ load boost module that corresponds with that gcc compiler
++ export CC and CXX env vars
++ Address Linking boost problems:
+  + Explicitly add paths to LD_LIBRARY_PATH, INCLUDE, and LIBRARY_PATH
+
+or
+ 
+  + Force CMAKE to use absolute paths.  
+
+
+### Example Method 1
+
+1. git clone as listed above. 
+2. make release directory
+
+New Commands:
+
+3. module load gcc/5.2.0
+4. module load boost/1.62-python2.7.10-gcc5.2.0
+5. module display gcc 5.2.0 #Find executable path
+6. module display boost/1.62-python2.7.10-gcc5.2.0 #Find boost Lib path 
+7. export CC=/usr/local/Cluster-Apps/gcc/5.2.0/bin/gcc
+8. export CXX=/usr/local/Cluster-Apps/gcc/5.2.0/bin/g++
+9. export LD_LIBRARY_PATH=/usr/local/Cluster-Apps/boost/1.62/python2.7.10-gcc5.2.0/stage/lib:$LD_LIBRARY_PATH
+10. export INCLUDE=/usr/local/Cluster-Apps/boost/1.62/python2.7.10-gcc5.2.0:$INCLUDE
+11. export LIBRARY_PATH=/usr/local/Cluster-Apps/boost/1.62/python2.7.10-gcc5.2.0/stage/lib:$LIBRARY_PATH
+
+Same as before: 
+
+12. cmake -D CMAKE_BUILD_TYPE=Release ..
+13. make -j 4   #for 4 threads of compilation (more if you can!)
+14. ctest -j 4  #for 4 threads of testing
+
+### Example Method 2 Untested, suggested by HPC
+
+1. git clone as listed above. 
+2. make release directory
+
+New Commands:
+
+3. module load gcc/5.2.0
+4. module load boost/1.62-python2.7.10-gcc5.2.0
+5. module display gcc 5.2.0 #Find executable path
+6. module display boost/1.62-python2.7.10-gcc5.2.0 #Find boost Lib path 
+7. export CC=/usr/local/Cluster-Apps/gcc/5.2.0/bin/gcc
+8. export CXX=/usr/local/Cluster-Apps/gcc/5.2.0/bin/g++
+9. Edit CMakeLists.txt and force it to use absolute paths by changing policy
+Same as before: 
+
+10. cmake -D CMAKE_BUILD_TYPE=Release ..
+11. make -j 4   #for 4 threads of compilation (more if you can!)
+12. ctest -j 4  #for 4 threads of testing
+--------------------------------------------------------------------------

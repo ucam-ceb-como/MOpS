@@ -2,8 +2,9 @@
 """
 Created on Wed Aug 30 13:56:53 2017
 
-SPROGC needs Ea in CAL/MOL for chem.inp
-Very Rough brute force to change K --> Cal/Mole
+Chemkin Parser does not like tabs in specie list
+Script to output a new chem.inp file without tabs in specie list
+Reaction remains unchanged 
 
 reads in a chem.inp file:
     filename='chem.inp'
@@ -14,9 +15,9 @@ it will write a new chem.inp file:
 run with following commands
 
 #use default file names:
-python kelvinsToCal-Mol.py
+python removeTabs.py
 #specify file name 
-python kelvinsToCal-Mol.py chem_kelvin.inp chem_calmol.inp
+python removeTabs.py chem_kelvin.inp chem_calmol.inp
 
 @author: eb656
 """
@@ -81,7 +82,9 @@ with open(File,'r') as f:
             F.write("REACTION") #Uses assumed units of MOLES and CAL/MOLE
             F.write('\n')
             continue # go to next line
-        if section == 1 or section == 3:
+    
+        #Add OR logic here to leave other sections unchanged
+        if section == 3: #Leave Reaction Section unchanged
             F.write(line)
     
         # Edit wordList to edit Ea 
@@ -102,7 +105,7 @@ with open(File,'r') as f:
             #     tmp = math.ceil(tmp*1000)/1000
             #     wordList[-1]=str(tmp)
                 
-        
+        #This will affect ELEMENTS and SPECIES sections
         else:
             for word in wordList:
                 # Write regular line 

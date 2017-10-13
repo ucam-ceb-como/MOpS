@@ -4,6 +4,12 @@
 cmake_minimum_required (VERSION 2.6)
 project (MOPSSUITE)
 
+#eb656 Darwin Compiling Errors
+#Uncomment to make CMAKE use absolute paths for linking
+#untesed, but was suggested by HPC staff to fix linking error 
+#Also set CC and CXX to the compiler you want to use on DARWIN
+#cmake_policy(SET CMP0060 NEW)
+
 IF(WIN32)
   SET(Boost_ADDITIONAL_VERSIONS "1.47" "1.47.0" "1.49" "1.49.0" "1.51" "1.51.0" "1.57.0")
   SET(BOOST_ROOT "C:/Program Files/boost")
