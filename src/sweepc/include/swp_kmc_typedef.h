@@ -418,7 +418,7 @@ namespace Sweep {
 			std::vector<kmcSiteType> temp;
 			temp.push_back(FE2);
 			temp.push_back(BFE2);
-			temp.push_back(FE_HACA);
+			//temp.push_back(FE_HACA);
 			return temp;
 		}
     };

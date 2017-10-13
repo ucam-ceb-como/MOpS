@@ -2233,10 +2233,14 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 			// Check if that FE is not a FE3
 			if ((S2->type == FE || S2->type == NFE) && moveIt(S2, 1)->type != FE && moveIt(S2, 1)->type != NFE) {
 				//Check if this is near a bridge site or an NFE is part of this FE2
+				//if (((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
+				//	(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && (S2->type != NFE && st->type != NFE)
+				//	&& (S1->type == ZZ || S1->type == AC)
+				//	&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC)){
 				if (((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
-					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && (S2->type != NFE && st->type != NFE)
-					&& (S1->type == ZZ || S1->type == AC)
-					&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC)){
+						(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && (S2->type != NFE && st->type != NFE)
+						&& (S1->type == ZZ)
+						&& (moveIt(S2, 1)->type == ZZ)){
 					st->comb = FE2;
 					m_pah->m_siteMap[FE2].push_back(st);
 					//
@@ -2254,10 +2258,14 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				}
 				//If this site is near a bridge or NFE, this FE2 needs to be flagged differently
 				//First check if this is an oxidation only FE2
-				else if(((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
+				//else if(((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
+				//	(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && !(S2->type != NFE && st->type != NFE
+				//	&& (S1->type == ZZ || S1->type == AC)
+				//	&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC))){
+				else if (((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
 					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && !(S2->type != NFE && st->type != NFE
-					&& (S1->type == ZZ || S1->type == AC)
-					&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC))){
+					&& (S1->type == ZZ)
+					&& (moveIt(S2, 1)->type == ZZ))){
 					st->comb = OFE2;
 					m_pah->m_siteMap[OFE2].push_back(st);
 					//
@@ -2274,10 +2282,14 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 					if (S2->comb != OFE2) updateCombinedSites(S2);
 				}
 				//Now check if this is a bridge only FE2
+				//else if (!((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
+				//	(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && (S2->type != NFE && st->type != NFE)
+				//	&& (S1->type == ZZ || S1->type == AC)
+				//	&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC)){
 				else if (!((abs((int)moveIt(S2, 1)->type) < 71 || abs((int)moveIt(S2, 1)->type) > 80) &&
 					(abs((int)S1->type) < 71 || abs((int)S1->type) > 80)) && (S2->type != NFE && st->type != NFE)
-					&& (S1->type == ZZ || S1->type == AC)
-					&& (moveIt(S2, 1)->type == ZZ || moveIt(S2, 1)->type == AC)){
+					&& (S1->type == ZZ)
+					&& (moveIt(S2, 1)->type == ZZ)){
 					st->comb = BFE2;
 					m_pah->m_siteMap[BFE2].push_back(st);
 					//
@@ -2313,10 +2325,14 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 			}
 			else if ((S1->type == FE || S1->type == NFE) && moveIt(S1, -1)->type != FE && moveIt(S1, -1)->type != NFE) {
 				//Check if this is near a bridge site or an NFE is part of this FE2
+				//if ((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
+				//	(abs((int)S2->type) < 71 || abs((int)S2->type) > 80) && (S1->type != NFE && st->type != NFE)
+				//	&& (S2->type == ZZ || S2->type == AC)
+				//	&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC)){
 				if ((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
 					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80) && (S1->type != NFE && st->type != NFE)
-					&& (S2->type == ZZ || S2->type == AC)
-					&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC)){
+					&& (S2->type == ZZ)
+					&& (moveIt(S1, -1)->type == ZZ)){
 					st->comb = FE2;
 					m_pah->m_siteMap[FE2].push_back(st);
 					if (S1->comb == FE2) delSiteFromMap(S1->comb, st);
@@ -2324,19 +2340,27 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				}
 				//If this site is near a bridge or NFE, this FE2 needs to be flagged differently
 				//First check if this is an oxidation only FE2
+				//else if (((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
+				//	(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && !(S1->type != NFE && st->type != NFE
+				//	&& (S2->type == ZZ || S2->type == AC)
+				//	&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC))){
 				else if (((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
 					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && !(S1->type != NFE && st->type != NFE
-					&& (S2->type == ZZ || S2->type == AC)
-					&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC))){
+					&& (S2->type == ZZ)
+					&& (moveIt(S1, -1)->type == ZZ))){
 					st->comb = OFE2;
 					m_pah->m_siteMap[OFE2].push_back(st);
 					if (S1->comb == OFE2) delSiteFromMap(S1->comb, st);
 					if (S1->comb != OFE2) updateCombinedSites(S1);
 				} //Now check if this is a bridge only FE2
+				//else if (!((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
+				//	(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && (S1->type != NFE && st->type != NFE)
+				//	&& (S2->type == ZZ || S2->type == AC)
+				//	&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC)){
 				else if (!((abs((int)moveIt(S1, -1)->type) < 71 || abs((int)moveIt(S1, -1)->type) > 80) &&
 					(abs((int)S2->type) < 71 || abs((int)S2->type) > 80)) && (S1->type != NFE && st->type != NFE)
-					&& (S2->type == ZZ || S2->type == AC)
-					&& (moveIt(S1, -1)->type == ZZ || moveIt(S1, -1)->type == AC)){
+					&& (S2->type == ZZ )
+					&& (moveIt(S1, -1)->type == ZZ)){
 					st->comb = BFE2;
 					m_pah->m_siteMap[BFE2].push_back(st);
 					if (S1->comb == BFE2) delSiteFromMap(S1->comb, st);
