@@ -173,6 +173,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 		bool probflag = true; // will probably be a legacy variable that can be removed if 20.09.2017 stuff is replaced
 		bool heavyAllowed = mech.GetIsHeavy();
 		double dcol_lim = mech.GetHeavyValue();
+		double dcol_lim_min = mech.GetHeavyCutoffValue();
 
 		if (nnew > 1) 
 		{
@@ -205,7 +206,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 
 			// Toggle size flag if selected particle has collision diameter > 
 			// switch collision diameter
-			sizeflag = (sprng->CollDiameter() > dcol_lim) && (sprng->CollDiameter() > dcol_lim);
+			sizeflag = (sprng->CollDiameter() > dcol_lim) && (sprng->CollDiameter() > dcol_lim_min);
 
 			// aab64 20.09.2017 
 			// Preliminary probabilistic implementation

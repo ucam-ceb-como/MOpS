@@ -800,10 +800,10 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
                 readInception(*(*i), *icn);
 				// aab64 set flags for heavy inception or surface inceptions
 				if (icn->GetIsHeavy())
-					mech.SetIsHeavy(true, icn->GetHeavyOnset());
+					mech.SetIsHeavy(true, icn->GetHeavyOnset(), icn->GetHeavyCutoff());
 				if (icn->GetSurfIncFlag()) {
 					std::string psitype = icn->GetPSItype();
-					mech.SetIsSurfInc(true, icn->GetSurfIncOnset(), psitype);
+					mech.SetIsSurfInc(true, icn->GetSurfIncOnset(), icn->GetSurfIncCutoff(), psitype);
 				}
             }
             catch (std::exception &e) {
@@ -842,13 +842,20 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 			{
 				hciflag = true;
 				std::cout << "Activating heavy inception\n";
-				CamXML::Element *dlimval = allowHeavyXML->GetFirstChild("dlim");
-				double dlim;
-				if (dlimval != NULL)
-					dlim = cdble(dlimval->Data());
-				if (dlim < 0.0)
+				CamXML::Element *dlimvalu = allowHeavyXML->GetFirstChild("upperdlim");
+				CamXML::Element *dlimvall = allowHeavyXML->GetFirstChild("lowerdlim");
+				double upperdlim, lowerdlim;
+				if (dlimvalu != NULL)
+					upperdlim = cdble(dlimvalu->Data());
+				if (upperdlim < 0.0)
 					throw std::runtime_error("Limiting heavy inception point must be positive.\n");
-				icn.SetIsHeavy(true, dlim);
+				if (dlimvall != NULL)
+					lowerdlim = cdble(dlimvall->Data());
+				if (lowerdlim < 0.0)
+					throw std::runtime_error("Limiting heavy inception point must be positive.\n");
+				if (upperdlim < lowerdlim)
+					throw std::runtime_error("Upper limiting heavy inception point cannot be smaller than lower limit.\n");
+				icn.SetIsHeavy(true, upperdlim, lowerdlim);
 			}
 		}
 		CamXML::Element *surfincXML = xml.GetFirstChild("psi");
@@ -859,12 +866,19 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 			{
 				psiflag = true;
 				std::cout << "Activating surface inception\n";
-				CamXML::Element *dlimval = surfincXML->GetFirstChild("dlim");
-				double dlim;
-				if (dlimval != NULL)
-					dlim = cdble(dlimval->Data());
-				if (dlim < 0.0)
+				CamXML::Element *dlimvalu = surfincXML->GetFirstChild("upperdlim");
+				CamXML::Element *dlimvall = surfincXML->GetFirstChild("lowerdlim");
+				double upperdlim, lowerdlim;
+				if (dlimvalu != NULL)
+					upperdlim = cdble(dlimvalu->Data());
+				if (upperdlim < 0.0)
 					throw std::runtime_error("Limiting surface inception point must be positive.\n");
+				if (dlimvall != NULL)
+					lowerdlim = cdble(dlimvall->Data());
+				if (lowerdlim < 0.0)
+					throw std::runtime_error("Limiting surface inception point must be positive.\n");
+				if (upperdlim < lowerdlim)
+					throw std::runtime_error("Upper limiting surface inception point cannot be smaller than lower limit.\n");
 				CamXML::Element *psitypedata = surfincXML->GetFirstChild("type");
 				std::string psitype = "E";
 				if (psitypedata != NULL)
@@ -880,7 +894,7 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 						throw std::runtime_error("Unrecognized PSItype. \nPermissable types: event, weight (SWA only), both (SWA only).\n");
 					std::cout << "Using " << psitypename << " update for PSI." << std::endl;
 				}
-				icn.SetSurfInc(true, dlim, psitype);
+				icn.SetSurfInc(true, upperdlim, lowerdlim, psitype);
 			}
 		}
 		if (psiflag && hciflag)
