@@ -2406,11 +2406,12 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
                                         "(Mops, ParticleSolver::postProcessPSLs).");
                 }
             }
+
 			out[i]->Close();
 			delete out[i];
         }
 
-        ////! Close output CSV files.
+        //! Close output CSV files.
         //for (unsigned int i=0; i!=times.size(); ++i) {
         //    out[i]->Close();
         //    delete out[i];
