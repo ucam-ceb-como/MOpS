@@ -196,12 +196,12 @@ double Sweep::Processes::TransitionCoagulationWeightedPAHs::RateTerms(const Ense
     double c   = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    const double d       = data.Property(Sweep::iDcol);
-    const double d2      = data.Property(Sweep::iD2);
-    const double d_1     = data.Property(Sweep::iD_1);
-    const double d_2     = data.Property(Sweep::iD_2);
-    const double m_1_2   = data.Property(Sweep::iM_1_2);
-    const double d2m_1_2 = data.Property(Sweep::iD2_M_1_2);
+	const double d = data.Property(Sweep::iDW);
+	const double d2 = data.Property(Sweep::iD2W);
+	const double d_1 = data.Property(Sweep::iD_1W);
+	const double d_2 = data.Property(Sweep::iD_2W);
+	const double m_1_2 = data.Property(Sweep::iM_1_2W);
+	const double d2m_1_2 = data.Property(Sweep::iD2_M_1_2W);
 
     fvector::iterator isf = iterm;
     fvector::iterator ifm = iterm+4;
@@ -286,7 +286,7 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
     // Select the first particle and note the majorant type.
     switch (term) {
         case SlipFlow1:
-            ip1 = sys.Particles().Select(rng);
+			ip1 = sys.Particles().Select(Sweep::iUniform1, rng);
             maj = SlipFlow;
             break;
         case SlipFlow2:
@@ -294,7 +294,7 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
             maj = SlipFlow;
             break;
         case SlipFlow3:
-            ip1 = sys.Particles().Select(rng);
+			ip1 = sys.Particles().Select(Sweep::iUniform1, rng);
             maj = SlipFlow;
             break;
         case SlipFlow4:
@@ -302,7 +302,7 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
             maj = SlipFlow;
             break;
         case FreeMol1:
-            ip1 = sys.Particles().Select(rng);
+			ip1 = sys.Particles().Select(Sweep::iUniform1, rng);
             maj = FreeMol;
             break;
         case FreeMol2:
@@ -328,13 +328,13 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
     // this even if the first particle was invalidated.
     ip2 = ip1;
 	unsigned int max;
-	if (sys.Particles().At(ip1)->getStatisticalWeight() > 1){
+	if (sys.Particles().At(ip1)->getStatisticalWeight() > 1.0){
 		max = 1;
 	}
 	else{
 		max = 1000;
 	}
-    unsigned int guard = 0;
+    unsigned int guard = -1;
     switch (term) {
         case SlipFlow1:
             while ((ip2 == ip1) && (++guard<max))
@@ -469,14 +469,16 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
 					}
 
 					//Now coagulate the particles and add sp1 to the ensemble
-					sp1->Coagulate(*sp2, rng);
-					sp1->SetTime(t);
-					sp1->incrementCoagCount();
 					Particle* adder = new Particle(*sp1);
 					int ipnew1 = sys.Particles().Add(*adder, rng);
-
-					//Update the particles
 					sys.Particles().Update(ipnew1);
+
+
+					adder->Coagulate(*sp2, rng);
+					adder->SetTime(t);
+					adder->incrementCoagCount();
+					sys.Particles().Update(ipnew1);
+
 				}
 				else { //Coagulation between two different weighted monomers
 					//First, reduce the weight of the original particles or remove them
@@ -502,13 +504,13 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
 					}
 
 					//Now coagulate the particles and add sp1 to the ensemble
-					sp1->Coagulate(*sp2, rng);
-					sp1->SetTime(t);
-					sp1->incrementCoagCount();
 					Particle* adder = new Particle(*sp1);
 					int ipnew1 = sys.Particles().Add(*adder, rng);
+					sys.Particles().Update(ipnew1);
 
-					//Update the particle
+					adder->Coagulate(*sp2, rng);
+					adder->SetTime(t);
+					adder->incrementCoagCount();
 					sys.Particles().Update(ipnew1);
 				}
 			}
