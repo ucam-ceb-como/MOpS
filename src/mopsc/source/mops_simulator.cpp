@@ -2223,7 +2223,8 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	////////////////////////////////////////// csl37-pp
 	vector<fvector> surface;
 	vector<string> surfout_header;
-	fvector primary_diameter;
+	vector<fvector> primary_diameter;
+	vector<string> primary_header;
 	CSV_IO surfout(m_output_filename + "-primary-surface.csv", true);
 	CSV_IO diamout(m_output_filename + "-primary-diameter.csv", true);
 	///////////////////////////////////////////
@@ -2311,8 +2312,10 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	surfout_header.push_back("Number of primaries below node");
 	surfout_header.push_back("Common surface area (m2)");
 	surfout_header.push_back("Sintering level");
-	surfout_header.push_back("Left diameter (m)");
-	surfout_header.push_back("Right diameter (m)");
+	surfout_header.push_back("Separation (m)");
+	surfout_header.push_back("Neck radius (m)");
+	surfout_header.push_back("Left radius (m)");
+	surfout_header.push_back("Right radius (m)");
 	surfout_header.push_back("Left Index");
 	surfout_header.push_back("Right Index");
 
@@ -2321,8 +2324,24 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	{
 		surfout.Write(surface[k]);			
 	}
-	diamout.Write(primary_diameter);
 	surfout.Close();
+
+	primary_header.push_back("Particle Index");
+	primary_header.push_back("Primary diameter (m)");
+	primary_header.push_back("Sph. equiv. diameter (m)");
+	primary_header.push_back("True primary volume (m3)");
+	primary_header.push_back("Primary volume (m3)");
+	primary_header.push_back("Primary surface (m2)");
+	primary_header.push_back("Position x");
+	primary_header.push_back("Position y");
+	primary_header.push_back("Position z");
+	primary_header.push_back("Radius (m)");
+
+	diamout.Write(primary_header);
+	for (unsigned int k=0; k<primary_diameter.size(); k++)
+	{
+		diamout.Write(primary_diameter[k]);
+	}
 	diamout.Close();
 	///////////////////////////////////////////
 

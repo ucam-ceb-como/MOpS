@@ -857,6 +857,7 @@ void Sweep::Ensemble::dble()
 
 		//csl37-tracking
 		//unflag primaries in untracked particles that have been copies from tracked particles 
+		/*
 		for(int j = 0; j != m_count; j++) {
 			//if particle is not tracked unflag primaries
 			//currently assumes that only one particle is tracked
@@ -864,6 +865,7 @@ void Sweep::Ensemble::dble()
 				m_particles[j]->removeTracking();
 			}
 		}
+		*/
     }
 }
 

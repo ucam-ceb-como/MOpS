@@ -476,7 +476,7 @@ void PAHStats::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 }
 
 /////////////////////////////////////////////////csl37-pp
-void PAHStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, fvector &primary_diameter, int k) const
+void PAHStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const
 {
 }
 //////////////////////////////////////////////////

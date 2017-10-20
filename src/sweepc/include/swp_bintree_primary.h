@@ -218,7 +218,7 @@ public:
 	void removeTracking();
 
 	/////////////////////////////////////////////////////////// csl37-pp
-	void PrintPrimary(std::vector<fvector> &surface, fvector &primary_diameter, int k) const;
+	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
 	///////////////////////////////////////////////////////////
 
 protected:

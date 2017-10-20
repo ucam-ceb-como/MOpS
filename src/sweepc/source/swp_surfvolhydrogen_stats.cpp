@@ -428,7 +428,7 @@ void SurfVolHydrogenStats::Deserialize(std::istream &in, const Sweep::ParticleMo
 }
 
 /////////////////////////////////////////////////csl37-pp
-void SurfVolHydrogenStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, fvector &primary_diameter, int k) const
+void SurfVolHydrogenStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const
 {
 }
 //////////////////////////////////////////////////

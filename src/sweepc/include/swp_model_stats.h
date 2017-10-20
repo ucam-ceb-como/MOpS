@@ -117,7 +117,7 @@ public:
         ) const = 0;
 
 	////////////////////////////////////// csl37-pp
-	virtual void PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, fvector &primary_diameter, int k) const = 0;
+	virtual void PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const = 0;
 	//////////////////////////////////////
 
     // READ/WRITE/COPY.

@@ -485,7 +485,7 @@ void BinTreeStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mod
 }
 
 /////////////////////////////////////////////////// csl37-pp
-void BinTreeStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, fvector &primary_diameter, int k) const
+void BinTreeStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const
 {
     const AggModels::BinTreePrimary* const prim =
         dynamic_cast<const AggModels::BinTreePrimary *>(sp.Primary());
