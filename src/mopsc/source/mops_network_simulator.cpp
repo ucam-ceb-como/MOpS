@@ -154,6 +154,35 @@ void NetworkSimulator::Run(
             }
 
 
+			// aab64 temporary 
+			// Add headers to coagulation diagnostics file
+			ofstream coagFile1, coagFile2, coagFile3, coagFile4, coagFile5;
+			std::string coagfname;
+			/*coagfname = "Coag-event-diagnostics-1micros.csv";
+			coagFile1.open(coagfname.c_str());
+			coagFile1 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , " 
+				<< "dc1" << " , " << "dc2" << " , " << "w1" << " , " << "w2" << "\n";
+			coagFile1.close();
+			coagfname = "Coag-event-diagnostics-2micros.csv";
+			coagFile2.open(coagfname.c_str());
+			coagFile2 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
+				<< "dc1" << " , " << "dc2" << " , " << "w1" << " , " << "w2" << "\n";
+			coagFile2.close();
+			coagfname = "Coag-event-diagnostics-3micros.csv";
+			coagFile3.open(coagfname.c_str());
+			coagFile3 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
+				<< "dc1" << " , " << "dc2" << " , " << "w1" << " , " << "w2" << "\n";
+			coagFile3.close();
+			coagfname = "Coag-event-diagnostics-4micros.csv";
+			coagFile4.open(coagfname.c_str());
+			coagFile4 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
+				<< "dc1" << " , " << "dc2" << " , " << "w1" << " , " << "w2" << "\n";
+			coagFile4.close();*/
+			coagfname = "Coag-event-diagnostics-1-1ms.csv";
+			coagFile5.open(coagfname.c_str());
+			coagFile5 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
+				<< "dc1" << " , " << "dc2" << " , " << "w1" << " , " << "w2" << "\n";
+			coagFile5.close();
 
 			//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 			if (it->sim->GetWriteDiagsStatus()) {

@@ -295,7 +295,99 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 			 truek*=ceff;
 		}
 
-        if (!Fictitious(majk, truek, rng)) {
+		if (!Fictitious(majk, truek, rng)) {
+
+			/*if (t < 0.0001) {
+				// aab64 temporary 
+				// Add headers to coagulation diagnostics file
+				ofstream coagFile;
+				std::string coagfname;
+				double dc1 = sp1->CollDiameter();
+				double dc2 = sp2->CollDiameter();
+				double sw1 = sp1->getStatisticalWeight();
+				double sw2 = sp2->getStatisticalWeight();
+				coagfname = "Coag-event-diagnostics-1micros.csv";
+				coagFile.open(coagfname.c_str(), ios::app);
+				coagFile << t << " , " << truek << " , " << majk << " , "
+					<< dc1 * (dc1 >= dc2) + dc2 * (dc1 < dc2) << " , "
+					<< dc2 * (dc1 >= dc2) + dc1 * (dc1 < dc2) << " , "
+					<< sw1 * (dc1 >= dc2) + sw2 * (dc1 < dc2) << " , "
+					<< sw2 * (dc1 >= dc2) + sw1 * (dc1 < dc2) << "\n";
+				coagFile.close();
+			}
+			else if (t < 0.0002) {
+				// aab64 temporary 
+				// Add headers to coagulation diagnostics file
+				ofstream coagFile;
+				std::string coagfname;
+				double dc1 = sp1->CollDiameter();
+				double dc2 = sp2->CollDiameter();
+				double sw1 = sp1->getStatisticalWeight();
+				double sw2 = sp2->getStatisticalWeight();
+				coagfname = "Coag-event-diagnostics-2micros.csv";
+				coagFile.open(coagfname.c_str(), ios::app);
+				coagFile << t << " , " << truek << " , " << majk << " , "
+					<< dc1 * (dc1 >= dc2) + dc2 * (dc1 < dc2) << " , "
+					<< dc2 * (dc1 >= dc2) + dc1 * (dc1 < dc2) << " , "
+					<< sw1 * (dc1 >= dc2) + sw2 * (dc1 < dc2) << " , "
+					<< sw2 * (dc1 >= dc2) + sw1 * (dc1 < dc2) << "\n";
+				coagFile.close();
+			}
+			else if (t < 0.0003) {
+				// aab64 temporary 
+				// Add headers to coagulation diagnostics file
+				ofstream coagFile;
+				std::string coagfname;
+				double dc1 = sp1->CollDiameter();
+				double dc2 = sp2->CollDiameter();
+				double sw1 = sp1->getStatisticalWeight();
+				double sw2 = sp2->getStatisticalWeight();
+				coagfname = "Coag-event-diagnostics-3micros.csv";
+				coagFile.open(coagfname.c_str(), ios::app);
+				coagFile << t << " , " << truek << " , " << majk << " , "
+					<< dc1 * (dc1 >= dc2) + dc2 * (dc1 < dc2) << " , "
+					<< dc2 * (dc1 >= dc2) + dc1 * (dc1 < dc2) << " , "
+					<< sw1 * (dc1 >= dc2) + sw2 * (dc1 < dc2) << " , "
+					<< sw2 * (dc1 >= dc2) + sw1 * (dc1 < dc2) << "\n";
+				coagFile.close();
+			}
+			else if (t < 0.0004) {
+				// aab64 temporary 
+				// Add headers to coagulation diagnostics file
+				ofstream coagFile;
+				std::string coagfname;
+				double dc1 = sp1->CollDiameter();
+				double dc2 = sp2->CollDiameter();
+				double sw1 = sp1->getStatisticalWeight();
+				double sw2 = sp2->getStatisticalWeight();
+				coagfname = "Coag-event-diagnostics-4micros.csv";
+				coagFile.open(coagfname.c_str(), ios::app);
+				coagFile << t << " , " << truek << " , " << majk << " , "
+					<< dc1 * (dc1 >= dc2) + dc2 * (dc1 < dc2) << " , "
+					<< dc2 * (dc1 >= dc2) + dc1 * (dc1 < dc2) << " , "
+					<< sw1 * (dc1 >= dc2) + sw2 * (dc1 < dc2) << " , "
+					<< sw2 * (dc1 >= dc2) + sw1 * (dc1 < dc2) << "\n";
+				coagFile.close();
+			}*/
+			if (t>0.001 && t<=0.0011) {
+				// aab64 temporary 
+				// Add headers to coagulation diagnostics file
+				ofstream coagFile;
+				std::string coagfname;
+				double dc1 = sp1->CollDiameter();
+				double dc2 = sp2->CollDiameter();
+				double sw1 = sp1->getStatisticalWeight();
+				double sw2 = sp2->getStatisticalWeight();
+				coagfname = "Coag-event-diagnostics-1-1ms.csv";
+				coagFile.open(coagfname.c_str(), ios::app);
+				coagFile << t << " , " << truek << " , " << majk << " , "
+					<< dc1 * (dc1 >= dc2) + dc2 * (dc1 < dc2) << " , "
+					<< dc2 * (dc1 >= dc2) + dc1 * (dc1 < dc2) << " , "
+					<< sw1 * (dc1 >= dc2) + sw2 * (dc1 < dc2) << " , "
+					<< sw2 * (dc1 >= dc2) + sw1 * (dc1 < dc2) << "\n";
+				coagFile.close();
+			}
+
             //Adjust the statistical weight
             switch(weight_rule) {
             case Sweep::Processes::CoagWeightHarmonic :
@@ -343,7 +435,7 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);
             return 1; // Ficticious event.
-        }
+		}
     } else {
         // One or both particles were invalidated on update,
         // but that's not a problem.  Information on the update
@@ -355,7 +447,7 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
         if(ip2 >= 0)
             sys.Particles().Update(ip2);
     }
-
+	
     return 0;
 }
 
