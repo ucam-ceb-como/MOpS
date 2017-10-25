@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mechanism name="Titanium Dioxide" units="CGS">
+
+	<!-- Define particle components. -->
+	<component id="Rutile">
+		<description>Rutile</description>
+		<density>4.26</density>
+		<molwt>79.87</molwt>
+	</component>
+
+	<!-- Define particle types. -->
+	<particle id="[Ru]" model="bintree" subtree="false" track="primaryCoordinates">
+	<!-- particle id="[Ru]" model="bintree" subtree="false" trackPrimarySeparation="true" -->
+		<description>A rutile particle.</description>
+		<fractdim>1.8</fractdim>
+		<coalthresh>1.0</coalthresh>
+		<sintering enable="true" model="GBD">
+			<!-- GBD model params based on Eggersdorfer et al. (2012)-->
+			<A units="s/m4K">9.112e+18</A>
+			<E units="K">31030</E>
+			<Dpmin units="m">0</Dpmin>
+		</sintering>
+	</particle>
+
+	<!-- Coagulation -->
+	<coagulation>
+		<A>1.0</A>
+		<kernel>transition</kernel>
+	</coagulation>
+	
+	<!-- Ti addition reactions. -->
+	<reaction type="titania" name="TiCl4 addition" form="firstorder" defer="true">
+		<formula>[Rutile_n] + TICL4 + 1.0 O2 to Rutile_n+1 + 2.0 CL2</formula>
+		<reactant id="TICL4" stoich="+1.0" />
+		<reactant id="O2"  stoich="+1.0" />
+		<product id="CL2" stoich="+2.0" />
+		<particlein  id="[Ru]"/>
+		<particleout id="[Ru]"/>
+		<A>8.06948e+28</A> <!-- cm/s * Avogadros number -->
+		<n>0.0</n>
+		<E units="cal">14.3404</E> <!-- kcal/mol -->
+		<particleterm id="s" power="1.0"/>
+		<component id="Rutile" dx="+1.0"/>
+	</reaction>
+	
+</mechanism>

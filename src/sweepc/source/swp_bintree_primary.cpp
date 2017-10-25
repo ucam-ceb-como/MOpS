@@ -1276,7 +1276,7 @@ bool BinTreePrimary::MergeCondition()
 				//ensures that particles are merged if the sintering step overshoots
 				condition = true;
 			}else{
-				//	condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) ) <= 0.0; //csl37-original condition 
+			//	condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) ) <= 0.0; //csl37-original condition 
 
 				//csl37-new coalescence condition
 				//!primaries are merged when the neck radius is 95% of the smaller primary radius
@@ -1285,6 +1285,7 @@ bool BinTreePrimary::MergeCondition()
 				double x_ij = (d_ij*d_ij - r_j*r_j + r_i*r_i)/(2.0*d_ij);
 				double R_ij = sqrt(r_i*r_i - x_ij*x_ij);	//!neck radius
 				condition = R_ij/min(r_i,r_j) >= 0.95 || ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) ) <= 0.0;
+
 			}
 		}
 	}
@@ -1946,6 +1947,11 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         else m_avg_sinter = 0.0;
         m_numprimary    = 1;
         UpdatePrimary();
+
+		//csl37-debug
+		//check bounding sphere is calculated
+		assert(m_cen_bsph[0] > -1e20 && m_cen_bsph[0] < 1e20);
+		//csl37-debug
     }
 
     // This is not a primary, sum up the properties
@@ -1968,6 +1974,10 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 		m_primaryvol	= m_leftchild->m_primaryvol + m_rightchild->m_primaryvol;
 		//titania phase transformation term
 		m_phaseterm		= m_leftchild->m_phaseterm + m_rightchild->m_phaseterm;
+
+		//csl37
+		//calculate bounding sphere
+		calcBoundSph();
 
         // Calculate the sintering level of the two primaries connected by this node
         m_children_sintering = SinteringLevel();
@@ -1996,7 +2006,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
             if (m_numprimary > 1)
                 m_avg_sinter = m_avg_sinter / (m_numprimary - 1);
 
-			if (!m_pmodel->getTrackPrimarySeparation()) {
+			if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 				// Approxmiate the surface of the particle
 				// (same as in ChangePointer)
 				const double numprim_1_3 = pow(m_numprimary,-1.0 * ONE_THIRD);
@@ -2029,6 +2039,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 			assert(count > 1);
 		}
 		//csl37-debug
+		
 
     }
 }
@@ -2888,7 +2899,7 @@ unsigned int BinTreePrimary::AdjustIntPar(const fvector &dcomp,
         // Call to Primary to adjust the state space
         n = Primary::AdjustIntPar(dcomp, dvalues, rng, n);
     } else {
-        SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
+        return SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
         // Generate random numbers
         //boost::bernoulli_distribution<> leftRightChooser;
 
@@ -2932,8 +2943,8 @@ void BinTreePrimary::Sinter(double dt, Cell &sys,
     // Do only if there is a particle to sinter
     if (m_leftparticle!=NULL && m_rightparticle!=NULL) {
 
-        SinterNode(dt, sys, model, rng, wt);
-		
+		SinterNode(dt, sys, model, rng, wt);
+
 		// Check if the sintering level is above the threshold, and merge
 		if (MergeCondition()) {
             CheckSintering();
@@ -4030,3 +4041,71 @@ void BinTreePrimary::checkTracking(int &count)
 	if (m_leftchild != NULL) m_leftchild->checkTracking(count);
 	if (m_rightchild != NULL) m_rightchild->checkTracking(count);
 }
+
+/////////////////////////////////////////////////////////////////////// csl37-pp
+/*!
+ * Works down the binary tree and outputs surface area
+ * common to both children unless it is a leaf node (a primary).
+ */
+void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &primary_diameter, int k) const
+{
+	fvector node(10);	
+	fvector primary(10);
+
+	if ((m_leftchild==NULL) && (m_rightchild==NULL)){
+		//if leaf then print diameter
+		primary[0] = k+1;
+		primary[1] = m_primarydiam;
+		primary[2] = m_diam;
+		primary[3] = m_primaryvol;
+		primary[4] = m_vol;
+		primary[5] = m_free_surf;
+		vector<fvector> coords;
+		this->GetPriCoords(coords);
+		primary[6] = coords[0][0];
+		primary[7] = coords[0][1];
+		primary[8] = coords[0][2];
+		primary[9] = coords[0][3];
+
+		primary_diameter.push_back(primary);
+		
+		if (m_parent == NULL){	//single particle case
+			node[0] = k+1;
+			node[1] = m_numprimary;
+			node[2] = 0.0;
+			node[3] = 1.0;
+			node[4] = m_primarydiam;
+			node[5] = 0.0;	
+			node[6] = reinterpret_cast<uintptr_t>(this);
+			node[7] = 0.0;
+
+			surface.push_back(node);
+		}
+	} else {
+		
+		double r_i = m_leftparticle->m_primarydiam/2.0;
+		double r_j = m_rightparticle->m_primarydiam/2.0;	
+		double d_ij = m_distance_centreToCentre;
+
+		double x_ij = (d_ij*d_ij - r_j*r_j + r_i*r_i)/(2.0*d_ij);
+		double R_ij = sqrt(r_i*r_i - x_ij*x_ij);	//!neck radius
+
+		//if non-leaf node then print node and continue down the tree
+		node[0] = k+1;
+		node[1] = m_numprimary;
+		node[2] = m_children_surf;
+		node[3] = m_children_sintering;
+		node[4] = d_ij;
+		node[5] = R_ij;
+		node[6] = r_i;
+		node[7] = r_j;
+		node[8] = reinterpret_cast<uintptr_t>(m_leftparticle);
+		node[9] = reinterpret_cast<uintptr_t>(m_rightparticle);
+		
+		surface.push_back(node);
+		
+		m_leftchild->PrintPrimary(surface, primary_diameter, k);
+		m_rightchild->PrintPrimary(surface, primary_diameter, k);
+	}
+}
+////////////////////////////////////////////////////////////////////////

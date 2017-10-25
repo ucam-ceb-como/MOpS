@@ -465,6 +465,7 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
 	//csl37: for only one particle, set to NULL
 	//expand to multiple
 //	if(m_tracked_particles[0] == m_particles[i] && i<m_count) m_tracked_particles[0] = NULL;	//csl37-no tracking
+//	if(m_tracked_particles[0] == m_particles[i] && i<m_count) m_tracked_particles[0] = NULL; //csl37-ttip
 
 	// Check that particle index is valid.
     if (i<m_count-1) {
@@ -524,6 +525,7 @@ void Sweep::Ensemble::RemoveInvalids(void)
 		//csl37: for only one particle, set to NULL
 		//expand to multiple
 		//if(m_tracked_particles[0] == *validEnd) m_tracked_particles[0] = NULL;	//csl37- no tracking
+//		if(m_tracked_particles[0] == *validEnd) m_tracked_particles[0] = NULL;	//csl37-ttip
 
         delete *validEnd;
         *validEnd = NULL;
@@ -577,6 +579,7 @@ void Sweep::Ensemble::Replace(unsigned int i, Particle &sp)
 		//csl37: for only one particle, set to NULL
 		//expand to multiple
 	//	if(m_tracked_particles[0] == m_particles[i]) m_tracked_particles[0] = NULL; //csl37- no tracking
+//		if(m_tracked_particles[0] == m_particles[i]) m_tracked_particles[0] = NULL;		//csl37-ttip
 
         // First delete current particle, then
         // set pointer to new particle.
@@ -858,6 +861,7 @@ void Sweep::Ensemble::dble()
 		//csl37-tracking
 		//unflag primaries in untracked particles that have been copies from tracked particles 
 		/*	//csl37-no tracking
+		/*
 		for(int j = 0; j != m_count; j++) {
 			//if particle is not tracked unflag primaries
 			//currently assumes that only one particle is tracked
@@ -1245,6 +1249,7 @@ Particle *const Sweep::Ensemble::TrackedAt(unsigned int i)
 void Sweep::Ensemble::InitialiseTracking(){
 	//csl37: add tracked particles
 	m_tracked_number = 0;	//only done for one particle	//csl37-no tracking
+	m_tracked_number = 0;	//only done for one particle	//csl37-TTIP
 	int i = 0;
 	while(i < m_tracked_number && i<m_count){
 		m_tracked_particles[i] = m_particles[i];

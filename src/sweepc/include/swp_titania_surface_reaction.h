@@ -83,7 +83,7 @@ public:
     enum TitaniaSRForm
         {iFirstOrder, iGhoshtagore,
          iEleyRidealAdsorption, iEleyRidealDesorption,
-         iMultivariate};
+         iMultivariate, iTTIP};
 
     //! Mechanism constructor
     TitaniaSurfaceReaction(const Sweep::Mechanism &mech, TitaniaSRForm form);

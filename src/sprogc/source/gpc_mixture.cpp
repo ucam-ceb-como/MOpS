@@ -146,7 +146,29 @@ void Mixture::SetTemperature(double T)
     m_data[temperatureIndex()] = T;
 }
 
+//set convective velocity
+void Mixture::SetConvectiveVelocity(double u)
+{
+    m_data[ConvectiveVelocityIndex()] = u;
+}
 
+//get convective velocity
+double Mixture::GetConvectiveVelocity() const
+{
+    return m_data[ConvectiveVelocityIndex()];
+}
+
+//set thermophoretic velocity
+void Mixture::SetThermophoreticVelocity(double v)
+{
+    m_data[ThermophoreticVelocityIndex()] = v;
+}
+
+//get thermophoretic velocity
+double Mixture::GetThermophoreticVelocity() const
+{
+    return m_data[ThermophoreticVelocityIndex()];
+}
 // CONCENTRATIONS/FRACTIONS.
 
 // Returns the vector of mixture species mole fractions. (NO NEED CHANGING)
