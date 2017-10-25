@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <mops version="3">
   <!-- Default parameters (can be overidden) --> 
-  <runs>3</runs>
+  <runs>1</runs>
   <iter>20</iter>
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
   <pcount>2048</pcount>
-  <maxm0>0.512e10</maxm0> 
+  <maxm0>1.024e15</maxm0> 
   <relax>0.8</relax>
 
   <!-- Mixtures -->
@@ -30,7 +30,7 @@
   </mixture>
 
   <!-- Reactor definition (given initial conditions) -->
-  <reactor type="psr" constt="false" constv="true" id="stage1" units="mol/mol" order="1">
+  <reactor type="psr" constt="false" constv="true" id="stage1" units="mol/mol" order="1" dtype="cdelete">
 	  <initial>initial</initial>
 	  <flow dir="in" frac="0.24">O2_plasma</flow>
 	  <flow dir="in" frac="0.76">TiCl4_injection</flow>
@@ -40,7 +40,7 @@
   <!-- Output time sequence -->
   <timeintervals>
 	  <start>0.0</start>
-	  <time splits="5" steps="300">0.003</time>
+	  <time splits="10" steps="110">0.0011</time>
 	  <!--time splits="500" steps="500">0.005</time>
 	  <time splits="1000" steps="800">0.009</time-->
   </timeintervals>

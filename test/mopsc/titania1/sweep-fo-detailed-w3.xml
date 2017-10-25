@@ -38,9 +38,9 @@
 		<!-- Additional specs to do adaptive weighted inception 
 		     Scaling function can be linear, quadratic, exponential
 			 Onset SP can be anything < Nmax given in mops.inx -->
-		<inceptionweightchange flag="on">
-		    <maxinceptionweight>1.0</maxinceptionweight>
-		    <mininceptionweight>1.0</mininceptionweight>
+		<inceptionweightchange flag="off">
+		    <maxinceptionweight>500.0</maxinceptionweight>
+		    <mininceptionweight>10.0</mininceptionweight>
 		    <onsetsp>1.0</onsetsp>
 		    <weightchangefun>exponential</weightchangefun>
 		</inceptionweightchange>
@@ -1103,11 +1103,13 @@
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+0.0"/>
 		<hci flag="off">
-		    <dlim>4.9e-8</dlim>
+			<upperdlim>100e-9</upperdlim> <!-- must find a particle larger than this -->
+			<lowerdlim>49e-9</lowerdlim> <!-- must find a particle smaller than this -->
 		</hci>
-		<psi flag="on">
-			<dlim>4.9e-8</dlim>
-			<type>both</type> <!-- options: weight, event, both for SWA -->
+		<psi flag="off">
+			<upperdlim>100e-9</upperdlim> <!-- must find a particle larger than this -->
+			<lowerdlim>49e-9</lowerdlim> <!-- must find a particle smaller than this -->
+			<type>weight</type> <!-- options: weight, event, both for SWA -->
 		</psi>
     </inception> 
 </mechanism>

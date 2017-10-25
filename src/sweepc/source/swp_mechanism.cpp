@@ -75,9 +75,9 @@ Mechanism::Mechanism(void)
 : m_anydeferred(false), m_icoag(-1), m_termcount(0), m_processcount(0), 
 m_weighted_coag(false), m_var_incept_weight(false), 
 m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L"), 
-m_heavyallowed(false), m_dval_heavy(1.0e-7),
-m_surfincflag(false), m_dval_surfinc(1.0e-7),
-m_psi_type("E")
+m_heavyallowed(false), m_upp_dval_heavy(1.0e-7), m_low_dval_heavy(1.0e-9),
+m_surfincflag(false), m_upp_dval_surfinc(1.0e-7),
+m_low_dval_surfinc(1.0e-9), m_psi_type("E")
 {
 }
 
@@ -127,9 +127,11 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 	m_incept_weight_fn = rhs.m_incept_weight_fn;
 
 	m_heavyallowed = rhs.m_heavyallowed;
-	m_dval_heavy = rhs.m_dval_heavy;
+	m_upp_dval_heavy = rhs.m_upp_dval_heavy;
+	m_low_dval_heavy = rhs.m_low_dval_heavy;
 	m_surfincflag = rhs.m_surfincflag;
-	m_dval_surfinc = rhs.m_dval_surfinc;
+	m_upp_dval_surfinc = rhs.m_upp_dval_surfinc;
+	m_low_dval_surfinc = rhs.m_low_dval_surfinc;
 	m_psi_type = rhs.m_psi_type;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
@@ -405,10 +407,11 @@ void Mechanism::SetVariableWeightedInception(bool isVarInceptWeight, double wmax
 }
 
 // aab64 Set flag for heavy inceptions
-void Mechanism::SetIsHeavy(bool heavyflag, double dlimval)
+void Mechanism::SetIsHeavy(bool heavyflag, double upperdlimval, double lowerdlimval)
 {
 	m_heavyallowed = heavyflag;
-	m_dval_heavy = dlimval;
+	m_upp_dval_heavy = upperdlimval;
+	m_low_dval_heavy = lowerdlimval;
 }
 
 // aab64 Get flag for heavy inceptions
@@ -420,14 +423,21 @@ bool Mechanism::GetIsHeavy(void) const
 // aab64 Get onset value for heavy inceptions
 double Mechanism::GetHeavyValue(void) const
 {
-	return m_dval_heavy;
+	return m_upp_dval_heavy;
+}
+
+// aab64 Get cutoff value for heavy inceptions
+double Mechanism::GetHeavyCutoffValue(void) const
+{
+	return m_low_dval_heavy;
 }
 
 // aab64 Set flag and onset value for surface inceptions
-void Mechanism::SetIsSurfInc(bool surfincflag, double dlimval, std::string &psitype)
+void Mechanism::SetIsSurfInc(bool surfincflag, double upperdlimval, double lowerdlimval, std::string &psitype)
 {
 	m_surfincflag = surfincflag;
-	m_dval_surfinc = dlimval;
+	m_upp_dval_surfinc = upperdlimval;
+	m_low_dval_surfinc = lowerdlimval;
 	m_psi_type = psitype;
 }
 
@@ -440,7 +450,13 @@ bool Mechanism::GetIsSurfInc(void) const
 // aab64 Get onset value for surface inceptions
 double Mechanism::GetSurfIncValue(void) const
 {
-	return m_dval_surfinc;
+	return m_upp_dval_surfinc;
+}
+
+// aab64 Get cutoff value for surface inceptions
+double Mechanism::GetSurfIncCutoffValue(void) const
+{
+	return m_low_dval_surfinc;
 }
 
 // aab64 Get psi type
@@ -1637,9 +1653,11 @@ void Mechanism::releaseMem(void)
 	m_incept_weight_fn.clear(); 
 
 	m_heavyallowed = false;
-	m_dval_heavy = 0;
+	m_upp_dval_heavy = 0;
+	m_low_dval_heavy = 0;
 	m_surfincflag = false; 
-	m_dval_surfinc = 0; // 2017.09.20 to do: look at this
+	m_upp_dval_surfinc = 0; // 2017.09.20 to do: look at this
+	m_low_dval_surfinc = 0;
 	m_psi_type.clear();
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 }

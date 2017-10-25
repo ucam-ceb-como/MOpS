@@ -176,7 +176,7 @@ public:
 	virtual void SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, std::string &weightfn);
 
 	// aab64 Set flag for heavy inceptions
-	virtual void SetIsHeavy(bool heavyflag, double dlimval);
+	virtual void SetIsHeavy(bool heavyflag, double upperdlimval, double lowerdlimval);
 
 	// aab64 Get flag for heavy inceptions
 	bool GetIsHeavy(void) const;
@@ -184,14 +184,20 @@ public:
 	// aab64 Get onset value for heavy inceptions
 	double GetHeavyValue(void) const;
 
+	// aab64 Get cutoff value for heavy inceptions
+	double GetHeavyCutoffValue(void) const;
+
 	// aab64 Set flag and onset value for surface inceptions
-	virtual void SetIsSurfInc(bool surfincflag, double dlimval, std::string &psitype);
+	virtual void SetIsSurfInc(bool surfincflag, double upperdlimval, double lowerdlimval, std::string &psitype);
 
 	// aab64 Get flag for surface inceptions
 	bool GetIsSurfInc(void) const;
 
 	// aab64 Get onset value for surface inceptions
 	double GetSurfIncValue(void) const;
+
+	// aab64 Get cutoff value for surface inceptions
+	double GetSurfIncCutoffValue(void) const;
 
 	// aab64 Get psi type
 	void GetPSItype(std::string &psitype) const;
@@ -420,9 +426,11 @@ private:
 	mutable std::string m_incept_weight_fn; // The type of inception weight scaling to use
 
 	mutable bool m_heavyallowed;            // Flag to allow heavier inception particles
-	mutable double m_dval_heavy;            // Onset for heavier inceptions
+	mutable double m_upp_dval_heavy;        // Onset for heavier inceptions
+	mutable double m_low_dval_heavy;        // Cutoff for heavier inceptions
 	mutable bool m_surfincflag;             // Flag to allow surface inceptions
-	mutable double m_dval_surfinc;          // Onset for surface inception
+	mutable double m_upp_dval_surfinc;      // Onset for surface inception
+	mutable double m_low_dval_surfinc;      // Cutoff for surface inception
 	mutable std::string m_psi_type;         // Type of particle surface inception to do
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
