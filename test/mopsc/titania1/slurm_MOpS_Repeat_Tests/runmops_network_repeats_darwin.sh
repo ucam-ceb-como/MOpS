@@ -16,10 +16,12 @@ function usage {
 BinFolder='./bin'
 
 # Default node number.
-NumNodes=3
+NumNodes=2
 
 # Default MOpS executable.
 MOpSExe='mops-app-p2'
+MOpSNet='runmopsnet.sh'
+MOpSBuild='build-mopsxml.sh'
 
 # Parse command line arguments.
 while [[ $# > 0 ]]
@@ -54,10 +56,8 @@ echo "Bin folder:      $BinFolder"
 echo "Number of nodes: $NumNodes"
 echo
 
-echo 'Submitting jobs to Slurm...'
-sbatch --mail-user=$usremailadr --nodes=$NumNodes --job-name=MOpS_psr --time 1-12:00:00 --partition=sandybridge ./auxslurm_darwin.sh $BinFolder $(pwd)/$MOpSExe
-
-
+echo 'Submitting job to Slurm...'
+sbatch --mail-user=$usremailadr --job-name='MOpS_rep' --time 1-12:00:00 --partition=sandybridge --nodes=$NumNodes ./auxslurm_network_repeats_darwin.sh $BinFolder $(pwd)/$MOpSExe $(pwd)/$MOpSNet $(pwd)/$MOpSBuild
 echo 'Type squeue to watch it.'
 echo
 echo 'Done.'

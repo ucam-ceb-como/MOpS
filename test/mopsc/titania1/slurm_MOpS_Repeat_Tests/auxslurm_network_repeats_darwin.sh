@@ -21,27 +21,26 @@ echo "Changing to folder: $(hostname)$TheFolder/$1"
 cd $TheFolder/$1
 echo
 
+nreac=1
+
+#Uncomment to do OpenMP run
+#export OMP_NUM_THREADS=20
+
 echo "Launching MOpS ($2)..."
 echo
-for t in '1' '2' '3' '4' '5' '6' '7' '8' '9' '10' '11' '12'
+for t in {1..16} #Number of repeats to do
 do
-	dirname=swa$t
+	RANDOM=$t
+	rv=$RANDOM
+	echo "Seed "$t " is " $rv
+	dirname=$t
         mkdir $dirname
         cd $dirname
-	srun --exclusive --mem=4000 --ntasks=1 $2 --diags -p -w --strang --ensemble -t ../therm.dat -r ../mops-hm-s1.xml -c ../chem.inp -s ../sweep-fo-detailed-w3-$t.xml &
-        cd ..
-done
-for t in '1' '2' '3' '4' '5'
-do
-	dirname=dsa$t
-        mkdir $dirname
-        cd $dirname
-	srun --exclusive --mem=4000 --ntasks=1 $2 --diags -p -w --strang --ensemble -t ../therm.dat -r ../mops-hm-s1.xml -c ../chem.inp -s ../sweep-fo-detailed-$t.xml &
+	srun --exclusive --mem=4000 --ntasks=1 $3 $2 $4 $rv $nreac & 
         cd ..
 done
 wait
 cd ../../
-
 
 echo
 echo 'Slurm job diagnostics:'
