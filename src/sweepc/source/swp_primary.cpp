@@ -420,7 +420,9 @@ unsigned int AggModels::Primary::Adjust(const fvector &dcomp, const fvector &dva
 	}
 
     // Update property cache.
-    AggModels::Primary::UpdateCache();
+	if (n > 0) {
+		AggModels::Primary::UpdateCache();
+	}
 
     return n;
 }
@@ -841,7 +843,7 @@ int AggModels::Primary::InceptedPAH() const
 void AggModels::Primary::GetPrimaryCoords(std::vector<fvector> &coords) const
 {
 	//spherical model coords are (0,0,0,0)
-	fvector c(10);
+	fvector c(12);
 	c[0] = 0.0;
     c[1] = 0.0;
     c[2] = 0.0;
@@ -852,6 +854,8 @@ void AggModels::Primary::GetPrimaryCoords(std::vector<fvector> &coords) const
 	c[7] = 0.0;
     c[8] = 0.0;
     c[9] = 0.0;
+	c[10] = 0.0;
+	c[11] = 0.0;
     coords.push_back(c);
 }
 

@@ -640,12 +640,19 @@ unsigned int Particle::AdjustPhase(const fvector &dcomp,
                               rng_type &rng,
                               unsigned int n)
 {
-    unsigned int m = n;
+    
+	unsigned int m = n;
 
     // This is a leaf-node sub-particle as it contains a
     // primary particle.  The adjustment is applied to
     // the primary.
-    m = m_primary->AdjustPhase(dcomp, dvalues, rng, n);
+    n = m_primary->AdjustPhase(dcomp, dvalues, rng, n);
+
+	int loops = 0; //csl37 - max number of loops set to 10
+	while (n<m && loops < 20){  //csl37 - max number of loops set to 10
+		n += m_primary->AdjustPhase(dcomp, dvalues, rng, m-n);
+		loops ++;
+	}
 
     // Where-ever the adjustment has been applied this sub-particle must
     // now update its cache.

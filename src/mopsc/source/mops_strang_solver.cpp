@@ -127,33 +127,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
             Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
         m_swp_ctime += calcDeltaCT(m_cpu_mark);      
 
-		
-		//////////////////////////////////////////// csl37 ////////////////////////////////////////////
-		//print primary coordinates
-			ofstream PartCoordsFile;
-			std::string rname(r.GetName());
-			std::string PartCoordsName;
-	
-			PartCoordsName = "Part-Coords(" + rname + ").csv";
-			PartCoordsFile.open(PartCoordsName.c_str(), ios::app);
-
-			// get primary coordinates
-			vector<fvector> coords;	
-		
-			//csl37: note that this currently only works for 1 tracked particle - need to change this for multiple particles
-			r.Mixture()->Particles().TrackedAt(0)->getParticleCoords(coords);  
-
-			//iterate through vector printing primary coordinates
-			vector<fvector>::iterator it;
-			for (it = coords.begin(); it != coords.end(); it++){
-				//print time, x, y, z, r, and orientation 3 vector
-				PartCoordsFile << ts2 << " , " << (*it)[0] << " , " << (*it)[1] << " , " << (*it)[2] << " , " << (*it)[3] << " , " <<
-					(*it)[4] << " , " << (*it)[5] << " , " << (*it)[6] << " , " << (*it)[7] << " , " << (*it)[8] << " , " << (*it)[9] << "\n" ;
-			}
-
-			PartCoordsFile.close();
-		//////////////////////////////////////////// csl37 ////////////////////////////////////////////
-    }
+    }	
 
     m_cpu_mark = clock();
         // Solve last half-step of gas-phase chemistry.    
@@ -164,6 +138,35 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     // Calculate total computation time.
     m_tottime += calcDeltaCT(totmark);
+
+
+	//////////////////////////////////////////// csl37 ////////////////////////////////////////////
+	//print primary coordinates
+	ofstream PartCoordsFile;
+	std::string rname(r.GetName());
+	std::string PartCoordsName;
+	
+	PartCoordsName = "Part-Coords(" + rname + ").csv";
+	PartCoordsFile.open(PartCoordsName.c_str(), ios::app);
+
+	// get primary coordinates
+	vector<fvector> coords;	
+		
+	//csl37: note that this currently only works for 1 tracked particle - need to change this for multiple particles
+	r.Mixture()->Particles().TrackedAt(0)->getParticleCoords(coords);  
+
+	//iterate through vector printing primary coordinates
+	vector<fvector>::iterator it;
+	for (it = coords.begin(); it != coords.end(); it++){
+		//print time, x, y, z, r, and orientation 3 vector, Anatase and Rutile composition
+		PartCoordsFile << ts2 << " , " << (*it)[0] << " , " << (*it)[1] << " , " << (*it)[2] << " , " << (*it)[3] << " , " <<
+			(*it)[4] << " , " << (*it)[5] << " , " << (*it)[6] << " , " << (*it)[7] << " , " << (*it)[8] << " , " << (*it)[9] <<
+			" , " << (*it)[10] << " , " << (*it)[11] << "\n" ;
+	}
+
+	PartCoordsFile.close();
+	//////////////////////////////////////////// csl37 ////////////////////////////////////////////
+
 
     // Call the output function.
     if (out) out(nsteps, niter, r, *this, data);
