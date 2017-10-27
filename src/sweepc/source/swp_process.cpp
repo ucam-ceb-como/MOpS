@@ -482,7 +482,7 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n, double incFac) con
 *
 * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
 */
-void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bool adjustT, double dcomp, int processID, double incFac) const {
+/*void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bool adjustT, double dcomp, int processID, double incFac) const {
 	if (adjustT) {
 		// Function will update the temperature oldTp, oldTg to temperature newTp, newTg for the particles and gas (K)
 		double newTp, newTg, newRho;
@@ -691,5 +691,93 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 			gas->SetDensity(newRho);
 		}
 	}
-}
+}*/
 
+// aab64 adjusts the gas-phase temperature using change in composition of the particle
+// Simplified version of the above without particle temperatures and heat transfer.
+/*
+* Same warning as in adjustGas above applies
+* @param[in, out]   sys      System in which the gas phase is changing
+* @param[in]        wt       Statistical weight of reaction
+* @param[in]        n        Repeat count of reaction
+* @param[in]        adjustT  Update temperature for adiabatic case
+*
+* @pre      The gas phase in sys must be of type SprogIdealGasWrapper
+*
+* @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
+*/
+void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bool adjustT, double dcomp, int processID, double incFac) const 
+{
+	if (adjustT)
+	{
+		if (processID == 1 || processID == 2 || processID == 4) 
+		{
+			// Function will update the temperature oldTg to temperature newTg
+			double newTg, newRho;
+			double oldTg = sys.GasPhase().Temperature();
+
+			// This method requires write access to the gas phase, which is not
+			// standard in sweep.  This means it cannot use the generic gas
+			// phase interface
+			SprogIdealGasWrapper *gasWrapper = dynamic_cast<SprogIdealGasWrapper*>(&sys.GasPhase());
+
+			if (gasWrapper == NULL)
+				throw std::runtime_error("Could not cast gas phase to SprogIdealGasWrapper in Process::adjustGas");
+
+			// If excecution reaches here, the cast must have been successful
+			Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();
+			
+			// Set enthalpy, heat capacity and density for both phases
+			fvector Hs = gas->getMolarEnthalpy(oldTg);
+			fvector Cs;
+			gas->CalcCps(oldTg, Cs);
+			double Cg = gas->BulkCp();          // bulk gp heat capacity at oldTg
+			double Hp = Hs[28];                 // enthalpy of titania crystals at oldTg
+			double rhog = gas->Density();       // molar density of gp at oldTg
+
+			// Concentration change in system due to new particle(s)
+			double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume());
+
+			// Time step parameters
+			double t0 = 0.0;
+			double tf = sys.GetCurrentProcessTau();
+
+			// Integration parameter a for gas (g) phase
+			double ag = 0.0;
+
+			if (tf != 0.0) 
+			{
+				if (processID == 1 || processID == 2) { // inception or surface growth
+					// Contributions of gp species
+					Sprog::StoichMap::const_iterator i;
+					for (i = m_reac.begin(); i != m_reac.end(); ++i) {
+						ag -= (double)(i->second) * n_NAvol * Hs[i->first];
+					}
+					for (i = m_prod.begin(); i != m_prod.end(); ++i) {
+						ag += (double)(i->second) * n_NAvol * Hs[i->first];
+					}
+					// Contribution of particle formation
+					ag += (dcomp * n_NAvol * Hp);
+				}
+				else { // inflow (4)
+					ag += (-1.0 * n_NAvol * (Hp - Hp) / (tf - t0)); // (temporary) Enthalpy at Tin - how to get Tin?
+				}
+
+				// Add denominator
+				ag *= (-1.0 / Cg);
+
+				// Solve for new particle and gp temperatures
+				double gc = R / sys.GasPhase().Pressure();
+				newTg = oldTg * exp((ag * gc)); // * (tf - t0) not required because it is also in the denominator of ag
+
+				//Solve for new gas density
+				newRho = 1.0 / (gc * newTg);
+
+				// Update particle temperature and gas density
+				sys.SetBulkParticleTemperature(newTg);
+				gas->SetTemperature(newTg);
+				gas->SetDensity(newRho);
+			}
+		}
+	}
+}

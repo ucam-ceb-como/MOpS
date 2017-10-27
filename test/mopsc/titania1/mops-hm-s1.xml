@@ -5,28 +5,28 @@
   <iter>20</iter>
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>2048</pcount>
-  <maxm0>1.024e15</maxm0> 
+  <pcount>8192</pcount>
+  <maxm0>1.024e12</maxm0> 
   <relax>0.8</relax>
 
   <!-- Mixtures -->
   <mixture id="initial">
 	  <component id="AR">1.0</component>
 	  <temperature units="K">1500</temperature>
-	  <pressure units="bar">3</pressure>
+	  <pressure units="bar">4.5</pressure>
   </mixture>
 
   <mixture id="O2_plasma">
 	  <component id="O2">1.0</component>
 	  <temperature units="K">3000</temperature>
-	  <pressure units="bar">3</pressure>
+	  <pressure units="bar">4.5</pressure>
   </mixture>
 
   <mixture id="TiCl4_injection">
 	  <component id="O2">0.74</component>
 	  <component id="TICL4">0.26</component>
 	  <temperature units="K">600</temperature>
-	  <pressure units="bar">3</pressure>
+	  <pressure units="bar">4.5</pressure>
   </mixture>
 
   <!-- Reactor definition (given initial conditions) -->
@@ -40,7 +40,9 @@
   <!-- Output time sequence -->
   <timeintervals>
 	  <start>0.0</start>
-	  <time splits="10" steps="110">0.0011</time>
+	  <time splits="10" steps="3000">0.03</time>
+	  <!--time splits="10" steps="100">0.01</time>
+	  <time splits="1000" steps="5000">0.06</time-->
 	  <!--time splits="500" steps="500">0.005</time>
 	  <time splits="1000" steps="800">0.009</time-->
   </timeintervals>

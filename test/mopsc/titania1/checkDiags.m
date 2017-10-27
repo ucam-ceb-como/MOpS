@@ -23,14 +23,14 @@ studyid  = '';
 projpath = 'C:\Users\Astrid\Documents\Projects\';
 projdir  = 'Network temperature dependence\Recent_work\';
 imagedir = 'figures\AIWSWA\real_comp\3ms_c\';
-savefigs = 1;
+savefigs = 0;
 
 % update these to plot correct inception weights
-wmax = 500;
-wmin = 10;
+wmax = 1;
+wmin = 1;
 nmin = 1;
-nmax = 4096;
-wtfn = 'E';
+nmax = 1;
+wtfn = 'off';
 
 % set weight function according to wtfn
 if strcmp(wtfn,'L')
@@ -368,4 +368,13 @@ else
     xlabel('Time (ms)')
     ylabel('O conc. (mol$\cdot$m$^{-3}$)')
     saveas(['chem' studyid])
+    
+    figure(7)
+    semilogy(cdiags(:,1)*1000,cdiags(:,end-1))
+    hold on
+    semilogy(cdiags(:,1)*1000,cdiags(:,end),':')
+    legend('Pre','Post','location','North','orientation','horizontal')
+    xlabel('Time (ms)')
+    ylabel('Temp. (K)')
+    saveas(['temp' studyid])
 end
