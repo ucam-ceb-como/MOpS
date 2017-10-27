@@ -236,7 +236,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	ofstream partProcFile, gasConcFile;
 
 	// Diagnostic variables
-	double tmpSVin, tmpSVout;
+	double tmpSVin, tmpSVout, tmpTin, tmpTout;
 	unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout;
 	int process_iter;
 	std::vector<unsigned int> tmpPCin, tmpPCout, tmpFCin, tmpFCout;
@@ -253,6 +253,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 			tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
 			r.Mixture()->GasPhase().GetConcs(tmpGPin);
+			tmpTin = r.Mixture()->GasPhase().Temperature();
 		}
 
 		// Start the iteration procedure.
@@ -275,6 +276,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 			tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
+			tmpTout = r.Mixture()->GasPhase().Temperature();
 		    std::string rname(r.GetName());
 		    std::string partfname, chemfname;
 		    partfname = "Part-split-diagnostics(" + rname + ").csv";
@@ -311,7 +313,8 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		    gasConcFile << r.Time() << " , " << tstop << " , " << step << " , ";
 		    for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
 			    gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
-		    }
+			}
+			gasConcFile << tmpTin << " , " << tmpTout << " , ";
 		    gasConcFile << "\n";
 		    gasConcFile.close();
 		}
@@ -325,6 +328,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 		tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
 		r.Mixture()->GasPhase().GetConcs(tmpGPin);
+		tmpTin = r.Mixture()->GasPhase().Temperature();
 	}
 
 	// Internal split with file output.
@@ -344,6 +348,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 		tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
+		tmpTout = r.Mixture()->GasPhase().Temperature();
 		std::string rname(r.GetName());
 		std::string partfname, chemfname;
 		partfname = "Part-split-diagnostics(" + rname + ").csv";
@@ -381,6 +386,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
 			gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
 		}
+		gasConcFile << tmpTin << " , " << tmpTout << " , ";
 		gasConcFile << "\n";
 		gasConcFile.close();
 	}

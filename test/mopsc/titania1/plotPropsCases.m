@@ -11,29 +11,29 @@ set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
 % for finding files
-basedir  = 'vienna/real/real_inc_factor/justforfun/swa/setting_comparison/';
-filedir  = 'swa-N-V-10splits-1run/';
-filecmp  = 'swa-N-V-10splits-1run/';
+basedir  = 'vienna/real/comparisons/3ms/csvs_i/';
+filedir  = '';
+filecmp  = '';
 filebase = 'Network(stage1)';
 
 % for plotting psl data
-psltime  = '0.001';
+psltime  = '0.003';
 npslbins = 10;
 
 % for saving images
 studyid  = '';
 projpath = 'C:\Users\Astrid\Documents\Projects\';
 projdir  = 'Network temperature dependence\Recent_work\';
-imagedir = 'figures\AIWSWA\batch_comp\'; %3ms_e\
+imagedir = 'figures\AIWSWA\real_comp\3ms_h\';
 savefigs = 0;
 leg_vals = '';
 
 % order = [1 3 5 2 4 10 12 17 13 6 11 16 7 8 9 14 15]; % reverse way
 % order = [1 4 2 5 3 10 13 14 15 6 11 7 9 16 17 12 8]; % this way
 
-% leg = {'D1','D2','D3','D4','D5',...
-%        'S1','S2','S3','S4','S5','S6',...
-%        'S7','S8','S9','S10','S11','S12'};
+leg = {'D1','D2','D3','D4','D5',...
+       'S1','S2','S3','S4','S5','S6',...
+       'S7','S8','S9','S10','S11','S12'};
 tickval = {'D1','D2','D3','D4','D5',...
            'S1','S2','S3','S4','S5','S6',...
            'S7','S8','S9','S10','S11','S12'};
@@ -43,23 +43,16 @@ texts = {'DSA','PSI$_1$','PSI$_2$','HCI$_1$','HCI$_2$',...
          'EAIW$_1+$WPSI$_2$','EAIW$_1+$BPSI$_2$','EAIW$_1+$HCI$_1$',...
          'EAIW$_1+$HCI$_2$'};
 
-leg = {'N-V-10splits-1run','2N-V-10splits-1run','2N-2V-10splits-1run',...
-       'N-V-10splits-2runs','N-V-100splits-1run','N-V-1000splits-1run',...
-       'N-V-5splits-1run','N-V-3splits-1run-1000steps',...
-       'N-V-10splits-1run-crsc','N-V-10splits-1run-nocoag',...
-       'basic-N-V-10splits-1run'};
-
 j=0;       
-for i = [1,11]
-    filedir = ['swa-' leg{i} '/'];
+for i = [1:5,7:8,11:15]
 j=i;
-% if i < 6
-%     filedir = ['dsa' num2str(i) '/']; 
-%     filecmp = 'dsa1/';   
-% else
-%     filedir = ['swa' num2str(i-5) '/']; 
-%     filecmp = 'dsa1/';
-% end
+if i < 6
+    filedir = ['dsa' num2str(i) '/']; 
+    filecmp = 'dsa1/';   
+else
+    filedir = ['swa' num2str(i-5) '/']; 
+    filecmp = 'dsa1/';
+end
 
 % load all data
 m0dat = csvread([basedir filecmp filebase '-part.csv'],1);
@@ -70,7 +63,7 @@ chem = csvread([basedir filedir filebase '-chem.csv'],1);
 cput = csvread([basedir filedir filebase '-cput.csv'],1);
 
 % initialise saveas function if saving figures, otherwise do nothing here
-if savefigs
+if (savefigs && (j==17))
     disp('Saving figures - continuing may overwrite existing!')
     pause 
     disp('Continuing...')
@@ -90,19 +83,19 @@ end
 %% Part
 
 c1 = [0.65 0.65 0.65];
+% 
+% col1 = lines(7);
+% col2 = [0 0 1;1 1 0;1 0 1;0 1 0;0 1 1;1 0 0];
+% col3 = abs(ones(7,3)-col1-0.75*ones(7,3));
+% cols = [col1;col2;col3];
 
 col1 = lines(7);
 col2 = [0 0 1;1 1 0;1 0 1;0 1 0;0 1 1;1 0 0];
 col3 = abs(ones(7,3)-col1-0.75*ones(7,3));
-cols = [col1;col2;col3];
-
-% col1 = lines(7);
-% col2 = [0 0 1;1 1 0;1 0 1;0 1 0;0 1 1;1 0 0];
-% col3 = abs(ones(7,3)-col1-0.75*ones(7,3));
-% cols = [col1(1,:);col1(2,:);col1(2,:);col1(3,:);col1(3,:);
-%         col1(4,:);col1(5,:);col1(5,:);col1(5,:);
-%         col1(6,:);col1(7,:);col1(7,:);col2(1,:);col2(1,:);
-%         col2(1,:);col2(2,:);col2(2,:)];
+cols = [col1(1,:);col1(2,:);col1(2,:);col1(3,:);col1(3,:);
+        col1(4,:);col1(5,:);col1(5,:);col1(5,:);
+        col1(6,:);col1(7,:);col1(7,:);col2(1,:);col2(1,:);
+        col2(1,:);col2(2,:);col2(2,:)];
 lins = {'-','--','-.',':','-','--','-.',':','-','--','-.',':','-',...
         '--','-.',':','-'};
     
@@ -208,180 +201,184 @@ xlabel('Time (ms)')
 ylabel('Total rutile (m$^{-3}$)')
 addlegend(leg_vals);
 saveas(['rut_ave' studyid])
-% 
-% figure(90)
-% set(gcf,'color','white')
-% % subplot(121)
-% % plot(part(:,2)*1000,part(:,5))
-% % hold on
-% % plot(part(:,2)*1000,part(:,5)+part(:,6),'--','Color',c1)
-% % plot(part(:,2)*1000,part(:,5)-part(:,6),'--','Color',c1)
-% % xlabel('Time (ms)')
-% % ylabel('M0 (m$^{-3}$)')
-% % addlegend(leg_vals);
-% % subplot(122)
-% plot(part(:,2)*1000,abs(part(:,5)-m0dat(:,5))./m0dat(:,5),'color',cols(j,:),'LineStyle',lins{j})
+
+figure(90)
+set(gcf,'color','white')
+% subplot(121)
+% plot(part(:,2)*1000,part(:,5))
 % hold on
+% plot(part(:,2)*1000,part(:,5)+part(:,6),'--','Color',c1)
+% plot(part(:,2)*1000,part(:,5)-part(:,6),'--','Color',c1)
 % xlabel('Time (ms)')
-% ylabel('Relative difference in m0 (-)')
-% saveas(['m0_err' studyid])
-% 
-% figure(91)
-% set(gcf,'color','white')
-% plot(part(:,2)*1000,abs(part(:,39)-m0dat(:,39))./m0dat(:,39),'color',cols(j,:),'LineStyle',lins{j})
-% hold on
-% xlabel('Time (ms)')
-% ylabel('Relative difference in primary diameter (-)')
-% saveas(['dpri_err' studyid])
-% 
-% figure(92)
-% set(gcf,'color','white')
-% plot(part(:,2)*1000,abs(part(:,21)-m0dat(:,21))./m0dat(:,21),'color',cols(j,:),'LineStyle',lins{j})
-% hold on
-% xlabel('Time (ms)')
-% ylabel('Relative difference in m1 (-)')
-% saveas(['m1_err' studyid])
-% 
-% figure(900)
-% set(gcf,'color','white')
-% ybar = mean(abs(part(end-50:end,5)-m0dat(end-50:end,5))./m0dat(end-50:end,5));
-% bar(j,ybar,'FaceColor',cols(j,:))
-% hold on
-% % text(j,ybar,texts{j},'color',cols(j,:),'rotation',90,'Fontsize',14)
-% if j==17
-%     xlabel('Time (ms)')
-%     ylabel('Final relative difference in m0 (-)')
-%     set(gca,'XTick',1:17,'XTickLabel',tickval,'XTickLabelRotation',90)
-%     cg = [0.45 0.45 0.45];
-%     ax=gca;
-%     line([5.5 5.5],ax.YLim,'color',cg,'LineStyle',':')
-%     text(2.5,0.92*ax.YLim(2),'DSA','Fontsize',14,'color',cg)
-%     text(11,0.92*ax.YLim(2),'SWA','Fontsize',14,'color',cg)
-%     saveas(['m0_errf' studyid])
-% end
-% 
-% figure(910)
-% set(gcf,'color','white')
-% bar(j,mean(abs(part(end-50:end,39)-m0dat(end-50:end,39))./m0dat(end-50:end,39)),'FaceColor',cols(j,:))
-% hold on
-% if j==17
-%     xlabel('Time (ms)')
-%     ylabel('Final relative difference in ${d}_{\textrm{p}}$ (-)')
-%     set(gca,'XTick',1:17,'XTickLabel',tickval,'XTickLabelRotation',90)
-%     cg = [0.45 0.45 0.45];
-%     ax=gca;
-%     line([5.5 5.5],ax.YLim,'color',cg,'LineStyle',':')
-%     text(2.5,0.92*ax.YLim(2),'DSA','Fontsize',14,'color',cg)
-%     text(11,0.92*ax.YLim(2),'SWA','Fontsize',14,'color',cg)
-%     saveas(['dpri_errf' studyid])
-% end
-% 
-% figure(920)
-% set(gcf,'color','white')
-% bar(j,mean(abs(part(end-50:end,21)-m0dat(end-50:end,21))./m0dat(end-50:end,21)),'FaceColor',cols(j,:))
-% hold on
-% if j==17
-%     xlabel('Time (ms)')
-%     ylabel('Final relative difference in m1 (-)')
-%     set(gca,'XTick',1:17,'XTickLabel',tickval,'XTickLabelRotation',90)
-%     cg = [0.45 0.45 0.45];
-%     ax=gca;
-%     line([5.5 5.5],ax.YLim,'color',cg,'LineStyle',':')
-%     text(2.5,0.92*ax.YLim(2),'DSA','Fontsize',14,'color',cg)
-%     text(11,0.92*ax.YLim(2),'SWA','Fontsize',14,'color',cg)
-%     saveas(['m1_errf' studyid])
-% end
-% 
-% figure(930)
-% set(gcf,'color','white')
-% bar(j,mean(abs(part(end-50:end,9)-m0dat(end-50:end,9))./m0dat(end-50:end,9)),'FaceColor',cols(j,:))
-% hold on
-% if j==17
-%     xlabel('Time (ms)')
-%     ylabel('Final relative difference in ${d}_{\textrm{c}}$ (-)')
-%     set(gca,'XTick',1:17,'XTickLabel',tickval,'XTickLabelRotation',90)
-%     cg = [0.45 0.45 0.45];
-%     ax=gca;
-%     line([5.5 5.5],ax.YLim,'color',cg,'LineStyle',':')
-%     text(2.5,0.92*ax.YLim(2),'DSA','Fontsize',14,'color',cg)
-%     text(11,0.92*ax.YLim(2),'SWA','Fontsize',14,'color',cg)
-%     saveas(['dcol_errf' studyid])
-% end
+% ylabel('M0 (m$^{-3}$)')
+% addlegend(leg_vals);
+% subplot(122)
+plot(part(:,2)*1000,abs(part(:,5)-m0dat(:,5))./m0dat(:,5),'color',cols(j,:),'LineStyle',lins{j})
+hold on
+xlabel('Time (ms)')
+ylabel('Relative difference in m0 (-)')
+saveas(['m0_err' studyid])
+
+figure(91)
+set(gcf,'color','white')
+plot(part(:,2)*1000,abs(part(:,39)-m0dat(:,39))./m0dat(:,39),'color',cols(j,:),'LineStyle',lins{j})
+hold on
+xlabel('Time (ms)')
+ylabel('Relative difference in primary diameter (-)')
+saveas(['dpri_err' studyid])
+
+figure(92)
+set(gcf,'color','white')
+plot(part(:,2)*1000,abs(part(:,21)-m0dat(:,21))./m0dat(:,21),'color',cols(j,:),'LineStyle',lins{j})
+hold on
+xlabel('Time (ms)')
+ylabel('Relative difference in m1 (-)')
+saveas(['m1_err' studyid])
+
+figure(900)
+set(gcf,'color','white')
+ybar = mean(abs(part(end-50:end,5)-m0dat(end-50:end,5))./m0dat(end-50:end,5));
+bar(j,ybar,'FaceColor',cols(j,:))
+hold on
+% text(j,ybar,texts{j},'color',cols(j,:),'rotation',90,'Fontsize',14)
+if j==17
+    xlabel('Time (ms)')
+    ylabel('Final relative difference in m0 (-)')
+    set(gca,'XTick',1:17,'XTickLabel',tickval,'XTickLabelRotation',90)
+    cg = [0.45 0.45 0.45];
+    ax=gca;
+    text(2.5,0.92*ax.YLim(2),'DSA','Fontsize',14,'color',cg)
+    text(11,0.92*ax.YLim(2),'SWA','Fontsize',14,'color',cg)
+    ax=gca;
+    line([5.5 5.5],ax.YLim,'color',cg,'LineStyle',':')
+    saveas(['m0_errf' studyid])
+end
+
+figure(910)
+set(gcf,'color','white')
+bar(j,mean(abs(part(end-50:end,39)-m0dat(end-50:end,39))./m0dat(end-50:end,39)),'FaceColor',cols(j,:))
+hold on
+if j==17
+    xlabel('Time (ms)')
+    ylabel('Final relative difference in ${d}_{\textrm{p}}$ (-)')
+    set(gca,'XTick',1:17,'XTickLabel',tickval,'XTickLabelRotation',90)
+    cg = [0.45 0.45 0.45];
+    ax=gca;
+    text(2.5,0.92*ax.YLim(2),'DSA','Fontsize',14,'color',cg)
+    text(11,0.92*ax.YLim(2),'SWA','Fontsize',14,'color',cg)
+    ax=gca;
+    line([5.5 5.5],ax.YLim,'color',cg,'LineStyle',':')
+    saveas(['dpri_errf' studyid])
+end
+
+figure(920)
+set(gcf,'color','white')
+bar(j,mean(abs(part(end-50:end,21)-m0dat(end-50:end,21))./m0dat(end-50:end,21)),'FaceColor',cols(j,:))
+hold on
+if j==17
+    xlabel('Time (ms)')
+    ylabel('Final relative difference in m1 (-)')
+    set(gca,'XTick',1:17,'XTickLabel',tickval,'XTickLabelRotation',90)
+    cg = [0.45 0.45 0.45];
+    ax=gca;
+    text(2.5,0.92*ax.YLim(2),'DSA','Fontsize',14,'color',cg)
+    text(11,0.92*ax.YLim(2),'SWA','Fontsize',14,'color',cg)
+    ax=gca;
+    line([5.5 5.5],ax.YLim,'color',cg,'LineStyle',':')
+    saveas(['m1_errf' studyid])
+end
+
+figure(930)
+set(gcf,'color','white')
+bar(j,mean(abs(part(end-50:end,9)-m0dat(end-50:end,9))./m0dat(end-50:end,9)),'FaceColor',cols(j,:))
+hold on
+if j==17
+    xlabel('Time (ms)')
+    ylabel('Final relative difference in ${d}_{\textrm{c}}$ (-)')
+    set(gca,'XTick',1:17,'XTickLabel',tickval,'XTickLabelRotation',90)
+    cg = [0.45 0.45 0.45];
+    ax=gca;
+    text(2.5,0.92*ax.YLim(2),'DSA','Fontsize',14,'color',cg)
+    text(11,0.92*ax.YLim(2),'SWA','Fontsize',14,'color',cg)
+    ax=gca;
+    line([5.5 5.5],ax.YLim,'color',cg,'LineStyle',':')
+    saveas(['dcol_errf' studyid])
+end
 
 %% PSL
 
-% if j<6
-%     figure(2001)
-%     set(gcf,'color','white')
-%     [n_d,x_d] = histwc(pslf(:,13),pslf(:,9),npslbins);
-%     plot(x_d,n_d/max(n_d),'color',cols(j,:),'LineStyle',lins{j})
-%     hold on
-% end
-% if j==17
-%     figure(2001)
-%     xlabel('Primary diameter (nm)')
-%     ylabel('Count divided by max. count (-)')
-%     % addlegend(leg_vals);
-%     l = legend(leg{1},leg{2},leg{3},leg{4},leg{5});
-%     l.Location ='EastOutside';
-%     ax = gca;
-%     ax.XLim(1) = 0.0;
-%     saveas(['dpri_psd_large1' studyid])
-% end
-% if j==1 || j==6 || j==7 || j==8 || j==9 || j==10
-%     figure(2002)
-%     set(gcf,'color','white')
-%     [n_d,x_d] = histwc(pslf(:,13),pslf(:,9),npslbins);
-%     plot(x_d,n_d/max(n_d),'color',cols(j,:),'LineStyle',lins{j})
-%     hold on
-% end
-% if j==17
-%     figure(2002)
-%     xlabel('Primary diameter (nm)')
-%     ylabel('Count divided by max. count (-)')
-%     % addlegend(leg_vals);
-%     l = legend(leg{1},leg{6},leg{7},leg{8},leg{9},leg{10});
-%     l.Location ='EastOutside';
-%     ax = gca;
-%     ax.XLim(1) = 0.0;
-%     saveas(['dpri_psd_large2' studyid])
-% end
-% if j==1 || j==6 || j==11 || j==12 || j==16 || j==17
-%     figure(2003)
-%     set(gcf,'color','white')
-%     [n_d,x_d] = histwc(pslf(:,13),pslf(:,9),npslbins);
-%     plot(x_d,n_d/max(n_d),'color',cols(j,:),'LineStyle',lins{j})
-%     hold on
-% end
-% if j==17
-%     figure(2003)
-%     xlabel('Primary diameter (nm)')
-%     ylabel('Count divided by max. count (-)')
-%     % addlegend(leg_vals);
-%     l = legend(leg{1},leg{6},leg{11},leg{12},leg{16},leg{17});
-%     l.Location ='EastOutside';
-%     ax = gca;
-%     ax.XLim(1) = 0.0;
-%     saveas(['dpri_psd_large3' studyid])
-% end
-% if j==1 || j==6 || j==13 || j==14 || j==15
-%     figure(2004)
-%     set(gcf,'color','white')
-%     [n_d,x_d] = histwc(pslf(:,13),pslf(:,9),npslbins);
-%     plot(x_d,n_d/max(n_d),'color',cols(j,:),'LineStyle',lins{j})
-%     hold on
-% end
-% if j==17
-%     figure(2004)
-%     xlabel('Primary diameter (nm)')
-%     ylabel('Count divided by max. count (-)')
-%     % addlegend(leg_vals);
-%     l = legend(leg{1},leg{6},leg{13},leg{14},leg{15});
-%     l.Location ='EastOutside';
-%     ax = gca;
-%     ax.XLim(1) = 0.0;
-%     saveas(['dpri_psd_large4' studyid])
-% end
+if j<6
+    figure(2001)
+    set(gcf,'color','white')
+    [n_d,x_d] = histwc(pslf(:,13),pslf(:,9),npslbins);
+    plot(x_d,n_d/max(n_d),'color',cols(j,:),'LineStyle',lins{j})
+    hold on
+end
+if j==17
+    figure(2001)
+    xlabel('Primary diameter (nm)')
+    ylabel('Count divided by max. count (-)')
+    % addlegend(leg_vals);
+    l = legend(leg{1},leg{2},leg{3},leg{4},leg{5});
+    l.Location ='EastOutside';
+    ax = gca;
+    ax.XLim(1) = 0.0;
+    saveas(['dpri_psd_large1' studyid])
+end
+if j==1 || j==6 || j==7 || j==8 || j==9 || j==10
+    figure(2002)
+    set(gcf,'color','white')
+    [n_d,x_d] = histwc(pslf(:,13),pslf(:,9),npslbins);
+    plot(x_d,n_d/max(n_d),'color',cols(j,:),'LineStyle',lins{j})
+    hold on
+end
+if j==17
+    figure(2002)
+    xlabel('Primary diameter (nm)')
+    ylabel('Count divided by max. count (-)')
+    % addlegend(leg_vals);
+    l = legend(leg{1},leg{6},leg{7},leg{8},leg{9},leg{10});
+    l.Location ='EastOutside';
+    ax = gca;
+    ax.XLim(1) = 0.0;
+    saveas(['dpri_psd_large2' studyid])
+end
+if j==1 || j==6 || j==11 || j==12 || j==16 || j==17
+    figure(2003)
+    set(gcf,'color','white')
+    [n_d,x_d] = histwc(pslf(:,13),pslf(:,9),npslbins);
+    plot(x_d,n_d/max(n_d),'color',cols(j,:),'LineStyle',lins{j})
+    hold on
+end
+if j==17
+    figure(2003)
+    xlabel('Primary diameter (nm)')
+    ylabel('Count divided by max. count (-)')
+    % addlegend(leg_vals);
+    l = legend(leg{1},leg{6},leg{11},leg{12},leg{16},leg{17});
+    l.Location ='EastOutside';
+    ax = gca;
+    ax.XLim(1) = 0.0;
+    saveas(['dpri_psd_large3' studyid])
+end
+if j==1 || j==6 || j==13 || j==14 || j==15
+    figure(2004)
+    set(gcf,'color','white')
+    [n_d,x_d] = histwc(pslf(:,13),pslf(:,9),npslbins);
+    plot(x_d,n_d/max(n_d),'color',cols(j,:),'LineStyle',lins{j})
+    hold on
+end
+if j==17
+    figure(2004)
+    xlabel('Primary diameter (nm)')
+    ylabel('Count divided by max. count (-)')
+    % addlegend(leg_vals);
+    l = legend(leg{1},leg{6},leg{13},leg{14},leg{15});
+    l.Location ='EastOutside';
+    ax = gca;
+    ax.XLim(1) = 0.0;
+    saveas(['dpri_psd_large4' studyid])
+end
 
 % set(gcf,'color','white')
 % [n_d,x_d] = histwc(pslf(:,13),pslf(:,9),npslbins);

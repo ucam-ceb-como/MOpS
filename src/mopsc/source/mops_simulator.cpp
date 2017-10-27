@@ -484,7 +484,8 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 				gasConcFile << r.Mech()->GasMech().Species(process_iter)->Name() << " pre-split (mol/m3)" << " , "
 					<< r.Mech()->GasMech().Species(process_iter)->Name() << " post-split (mol/m3)" << " , ";
 			}
-			gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << "\n";
+			gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << " , "
+				<< "Temperature (K)" << "\n";
 			gasConcFile.close();
 		}
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////

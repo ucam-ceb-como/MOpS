@@ -187,6 +187,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	
     // Diagnostic variables
 	double tmpSVin, tmpSVout, tmpWtVarin, tmpWtVarout, tmpWtMassin, tmpWtMassout, tmpIncWeightin, tmpIncWeightout, tmpIncFactorin, tmpIncFactorout;
+	double tmpTin, tmpTout;
     unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout, tmpInfin, tmpInfout, tmpOutfin, tmpOutfout;
     unsigned int process_iter;
     std::vector<unsigned int> tmpPCin, tmpPCout, tmpFCin, tmpFCout;
@@ -232,6 +233,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpIncFactorin = r.Mixture()->GetInceptionFactor();
 		tmpIncWeightin = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPin);
+		tmpTin = r.Mixture()->GasPhase().Temperature();
 	}
 
     // Solve one whole step of population balance (Sweep).
@@ -254,6 +256,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpIncFactorout = r.Mixture()->GetInceptionFactor();
 		tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
+		tmpTout = r.Mixture()->GasPhase().Temperature();
 		std::string rname(r.GetName());
 		std::string partfname, chemfname;
 		partfname = "Part-split-diagnostics(" + rname + ").csv";
@@ -295,6 +298,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
 			gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
 		}
+		gasConcFile << tmpTin << " , " << tmpTout << " , ";
 		gasConcFile << "\n";
 		gasConcFile.close();
 	}
@@ -314,7 +318,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpWtMassin = r.Mixture()->Particles().GetSum(Sweep::iWM);
 			tmpIncFactorin = r.Mixture()->GetInceptionFactor();
 			tmpIncWeightin = r.Mixture()->GetInceptingWeight();
-		    r.Mixture()->GasPhase().GetConcs(tmpGPin);
+			r.Mixture()->GasPhase().GetConcs(tmpGPin);
+			tmpTin = r.Mixture()->GasPhase().Temperature();
 	    }
 
 	    m_cpu_mark = clock();
@@ -345,6 +350,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpIncFactorout = r.Mixture()->GetInceptionFactor();
 			tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
+			tmpTout = r.Mixture()->GasPhase().Temperature();
 			std::string rname(r.GetName());
 			std::string partfname, chemfname;
 			partfname = "Part-split-diagnostics(" + rname + ").csv";
@@ -385,7 +391,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		    gasConcFile << ts2 << " , " << tstop << " , " << i << " , ";
 		    for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
 				gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
-		    }
+			}
+			gasConcFile << tmpTin << " , " << tmpTout << " , ";
 		    gasConcFile << "\n";
 		    gasConcFile.close();
 		}

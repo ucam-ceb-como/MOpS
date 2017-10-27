@@ -156,33 +156,35 @@ void NetworkSimulator::Run(
 
 			// aab64 temporary 
 			// Add headers to coagulation diagnostics file
-			ofstream coagFile1, coagFile2, coagFile3, coagFile4, coagFile5;
+			ofstream coagFile1, coagFile2;
 			std::string coagfname;
-			/*coagfname = "Coag-event-diagnostics-1micros.csv";
+			/*coagfname = "Coag-event-diagnostics-3micros.csv";
 			coagFile1.open(coagfname.c_str());
 			coagFile1 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , " 
-				<< "dc1" << " , " << "dc2" << " , " << "w1" << " , " << "w2" << "\n";
-			coagFile1.close();
-			coagfname = "Coag-event-diagnostics-2micros.csv";
+				<< "dc1_0" << " , " << "dc2_0" << " , " << "w1_0" << " , " << "w2_0" << " , "
+				<< "dc1_1" << " , " << "dc2_1" << " , " << "w1_1" << " , " << "w2_1" << " , "
+				<< "dca_0" << " , " << "dca_1" << "\n";
+			coagFile1.close();*/
+			coagfname = "Coag-event-diagnostics-3ms.csv";
 			coagFile2.open(coagfname.c_str());
 			coagFile2 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
-				<< "dc1" << " , " << "dc2" << " , " << "w1" << " , " << "w2" << "\n";
+				<< "dc1_0" << " , " << "dc2_0" << " , " << "w1_0" << " , " << "w2_0" << " , "
+				<< "dc1_1" << " , " << "dc2_1" << " , " << "w1_1" << " , " << "w2_1" << " , "
+				<< "dca_0" << " , " << "dca_1" << "\n";
 			coagFile2.close();
-			coagfname = "Coag-event-diagnostics-3micros.csv";
-			coagFile3.open(coagfname.c_str());
-			coagFile3 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
-				<< "dc1" << " , " << "dc2" << " , " << "w1" << " , " << "w2" << "\n";
-			coagFile3.close();
-			coagfname = "Coag-event-diagnostics-4micros.csv";
-			coagFile4.open(coagfname.c_str());
-			coagFile4 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
-				<< "dc1" << " , " << "dc2" << " , " << "w1" << " , " << "w2" << "\n";
-			coagFile4.close();*/
-			coagfname = "Coag-event-diagnostics-1-1ms.csv";
-			coagFile5.open(coagfname.c_str());
-			coagFile5 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
-				<< "dc1" << " , " << "dc2" << " , " << "w1" << " , " << "w2" << "\n";
-			coagFile5.close();
+
+			// aab64 temporary 
+			// Add headers to psc diagnostics file
+			ofstream pscFile1, pscFile2;
+			std::string pscfname;
+			/*pscfname = "PSC-event-diagnostics-3micros.csv";
+			pscFile1.open(pscfname.c_str());
+			pscFile1 << "Time (s)" << " , " << "dc_0" << " , " << "dc_1" << " , " << "w_0" << " , " << "w_1" << "\n";
+			pscFile1.close();*/
+			pscfname = "PSC-event-diagnostics-3ms.csv";
+			pscFile2.open(pscfname.c_str());
+			pscFile2 << "Time (s)" << " , " << "dc_0" << " , " << "dc_1" << " , " << "w_0" << " , " << "w_1" << "\n";
+			pscFile2.close();
 
 			//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 			if (it->sim->GetWriteDiagsStatus()) {
@@ -231,7 +233,8 @@ void NetworkSimulator::Run(
 					gasConcFile << it->reac->Mech()->GasMech().Species(process_iter)->Name() << " pre-split (mol/m3)" << " , "
 						<< it->reac->Mech()->GasMech().Species(process_iter)->Name() << " post-split (mol/m3)" << " , ";
 				}
-				gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << "\n";
+				gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << " , "
+					<< "Temperature (K)" << "\n";
 				gasConcFile.close();
 			}
 			//////////////////////////////////////////// aab64 ////////////////////////////////////////////

@@ -135,24 +135,28 @@ int DimerInception::Perform(const double t, Cell &sys,
 		// To do: decide if either option is worth doing. 
 		// It will help with the ensemble capacity issue, 
 		// but may introduce large errors in the primary size distribution.
+		int iprng = -1;
+		int iprng2 = -1;
 		unsigned int nsp = sys.ParticleCount();
 		bool surfincflag = m_mech->GetIsSurfInc();
 		double dcol_switch = m_mech->GetSurfIncValue();
 		double dcol_switch_min = m_mech->GetSurfIncCutoffValue();
-		double dcol_ave;
+		double dcol_ave, dcol_1, dcol_2, sw_0, sw_1;
 		bool sizeflag = false;
 		bool probflag = true; // will probably be a legacy variable that can be removed if 20.09.2017 stuff is replaced
 		std::string PSItype;
 		m_mech->GetPSItype(PSItype); // event, both, weight
+		Particle *sprng = NULL;
+		Particle *sprng2 = NULL;
 
-		if (nsp > 1) {
+		if (nsp > 1) 
+		{
 			// Get average particle collision diameter
 			dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
 
 			// Select a particle at random, weighted by collision diameter sqrd
 			Sweep::PropID proprng = iD2;
-			int iprng = sys.Particles().Select(proprng, rng);
-			Particle *sprng = NULL;
+			iprng = sys.Particles().Select(proprng, rng);
 			if (iprng >= 0) {
 				sprng = sys.Particles().At(iprng);
 			}
@@ -161,10 +165,9 @@ int DimerInception::Perform(const double t, Cell &sys,
 				return -1;
 			}
 
-			// Select a second particle at random, weighted by inverse collision diameter sqrd
-			proprng = iD_2;
-			int iprng2 = sys.Particles().Select(proprng, rng);
-			Particle *sprng2 = NULL;
+			// Select a second particle at random, weighted by inverse sqrt mass times weight
+			Sweep::PropID proprng2 = iM_1_2W;
+			iprng2 = sys.Particles().Select(proprng2, rng);
 			if (iprng2 >= 0) {
 				sprng2 = sys.Particles().At(iprng2);
 			}
@@ -175,7 +178,10 @@ int DimerInception::Perform(const double t, Cell &sys,
 
 			// Toggle size flag if selected particle has collision diameter > 
 			// switch collision diameter
-			sizeflag = (sprng->CollDiameter() > dcol_switch) && (sprng2->CollDiameter() <= dcol_switch_min);
+			dcol_1 = sprng->CollDiameter();
+			dcol_2 = sprng2->CollDiameter();
+			sw_0 = sprng->getStatisticalWeight();
+			sizeflag = (dcol_1 > dcol_switch) && (dcol_2 <= dcol_switch_min);
 
 			// aab64 20.09.2017 
 			// Preliminary probabilistic implementation
@@ -199,7 +205,8 @@ int DimerInception::Perform(const double t, Cell &sys,
 			// based on iDcol above. Leaving it for flexibility to do uniform selection here, 
 			// Dcol^2 selection above etc...
 			// 1. Pick a particle using the FM/SF terms that preferentially find large particles e.g.:
-			int ip = sys.Particles().Select(Sweep::iDcol, rng);
+			//int ip = sys.Particles().Select(Sweep::iDcol, rng);
+			/*int ip = iprng;
 			Particle *sp = NULL;
 			if (ip >= 0) {
 				sp = sys.Particles().At(ip);
@@ -207,7 +214,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 			else {
 				// Failed to choose a particle.
 				return -1;
-			}
+			}*/
 
 			// Inception stoichiometry determines particle composition
 			unsigned int nInceptingParticle_ui = (unsigned int)ParticleComp()[0];
@@ -217,7 +224,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 			if (PSItype == "E")
 			{
 				// Use inception composition and weight ratio to determine number of units to add to particle
-				unsigned int weightRatio = (unsigned int)(sys.GetInceptingWeight() / sp->getStatisticalWeight());
+				unsigned int weightRatio = (unsigned int)(sys.GetInceptingWeight() / sprng->getStatisticalWeight());
 				unsigned int nChosenParticle = weightRatio * nInceptingParticle_ui;
 
 				// Avoid doing extra update of gas-phase and temperature during surface growth
@@ -227,18 +234,22 @@ int DimerInception::Perform(const double t, Cell &sys,
 				// 2. Call perform for surface growth process, and do one surface event.
 				// ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
 				// How does this generalise for other systems with different # processes and comp?
-				int m = m_mech->Processes(0)->Perform(t, sys, *sp, rng, nChosenParticle);
+				int m = m_mech->Processes(0)->Perform(t, sys, *sprng, rng, nChosenParticle);
 
 				// Reset flag in the sys object for outside this function
 				sys.SetNotPSIFlag(true);
+
+				// 3. Update the cached properties (note could this be left off to make 
+				// it more efficient, assuming that the small change is insignificant?).
+				sprng->UpdateCache();
 			}
 			// PSItype = weight: Update the particle weight and leave the number of rutiles unchanged
 			else if (PSItype == "W")
 			{
-				double nChosenParticle = sp->Composition()[0];
-				double newWeight = (nChosenParticle * sp->getStatisticalWeight()) + (nInceptingParticle_d * sys.GetInceptingWeight());
+				double nChosenParticle = sprng->Composition()[0];
+				double newWeight = (nChosenParticle * sprng->getStatisticalWeight()) + (nInceptingParticle_d * sys.GetInceptingWeight());
 				newWeight *= (1.0 / (nChosenParticle));
-				sp->setStatisticalWeight(newWeight);
+				sprng->setStatisticalWeight(newWeight);
 			}
 			// PSItype = both: Update both the weight and the number of rutiles of the particle
 			else
@@ -250,27 +261,50 @@ int DimerInception::Perform(const double t, Cell &sys,
 				// 2. Call perform for surface growth process, and do one surface event.
 				// ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
 				// How does this generalise for other systems with different # processes and comp?
-				int m = m_mech->Processes(0)->Perform(t, sys, *sp, rng, nInceptingParticle_d);
+				int m = m_mech->Processes(0)->Perform(t, sys, *sprng, rng, nInceptingParticle_d);
 
 				// Reset flag in the sys object for outside this function
 				sys.SetNotPSIFlag(true);
 
 				// Update the weight 
-				double nChosenParticle = sp->Composition()[0];
-				double newWeight = (nChosenParticle * sp->getStatisticalWeight());
+				double nChosenParticle = sprng->Composition()[0];
+				double newWeight = (nChosenParticle * sprng->getStatisticalWeight());
 				newWeight += (nInceptingParticle_d * sys.GetInceptingWeight());
 				newWeight *= (1.0 / (nChosenParticle + nInceptingParticle_d));
-				sp->setStatisticalWeight(newWeight);
-			}
+				sprng->setStatisticalWeight(newWeight);
 
-			// 3. Update the cached properties (note could this be left off to make 
-			// it more efficient, assuming that the small change is insignificant?).
-			sp->UpdateCache(); 
+				// 3. Update the cached properties (note could this be left off to make 
+				// it more efficient, assuming that the small change is insignificant?).
+				sprng->UpdateCache();
+			}
 
 			// Update gas-phase chemistry of system 
 			double particleWt = sys.GetInceptingWeight();
 			adjustGas(sys, particleWt, 1, sys.GetInceptionFactor()); // nInceptingParticle_ui
 			adjustParticleTemperature(sys, particleWt, 1, sys.GetIsAdiabaticFlag(), nInceptingParticle_d, 1, sys.GetInceptionFactor()); // nInceptingParticle_ui
+
+			// aab64 temporary 
+		    // Add psc diagnostics file
+			sw_1 = sprng->getStatisticalWeight();
+			dcol_2 = sprng->CollDiameter();
+			/*if (t>0.0003 && t <= 0.0004)
+			{
+				ofstream pscFile;
+				std::string pscfname;
+				pscfname = "PSC-event-diagnostics-3micros.csv";
+				pscFile.open(pscfname.c_str(), ios::app);
+				pscFile << t << " , " << dcol_1 << " , " << dcol_2 << " , " << sw_0 << " , " << sw_1 << "\n";
+				pscFile.close();
+			}*/
+			/*if (t>0.003 && t <= 0.0031)
+			{
+				ofstream pscFile;
+				std::string pscfname;
+				pscfname = "PSC-event-diagnostics-3ms.csv";
+				pscFile.open(pscfname.c_str(), ios::app);
+				pscFile << t << " , " << dcol_1 << " , " << dcol_2 << " , " << sw_0 << " , " << sw_1 << "\n";
+				pscFile.close();
+			}*/
 		}
 		else
 		{

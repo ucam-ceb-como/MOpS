@@ -295,99 +295,19 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 			 truek*=ceff;
 		}
 
-		if (!Fictitious(majk, truek, rng)) {
+		if (!Fictitious(majk, truek, rng)) 
+		{
 
-			/*if (t < 0.0001) {
-				// aab64 temporary 
-				// Add headers to coagulation diagnostics file
-				ofstream coagFile;
-				std::string coagfname;
-				double dc1 = sp1->CollDiameter();
-				double dc2 = sp2->CollDiameter();
-				double sw1 = sp1->getStatisticalWeight();
-				double sw2 = sp2->getStatisticalWeight();
-				coagfname = "Coag-event-diagnostics-1micros.csv";
-				coagFile.open(coagfname.c_str(), ios::app);
-				coagFile << t << " , " << truek << " , " << majk << " , "
-					<< dc1 * (dc1 >= dc2) + dc2 * (dc1 < dc2) << " , "
-					<< dc2 * (dc1 >= dc2) + dc1 * (dc1 < dc2) << " , "
-					<< sw1 * (dc1 >= dc2) + sw2 * (dc1 < dc2) << " , "
-					<< sw2 * (dc1 >= dc2) + sw1 * (dc1 < dc2) << "\n";
-				coagFile.close();
-			}
-			else if (t < 0.0002) {
-				// aab64 temporary 
-				// Add headers to coagulation diagnostics file
-				ofstream coagFile;
-				std::string coagfname;
-				double dc1 = sp1->CollDiameter();
-				double dc2 = sp2->CollDiameter();
-				double sw1 = sp1->getStatisticalWeight();
-				double sw2 = sp2->getStatisticalWeight();
-				coagfname = "Coag-event-diagnostics-2micros.csv";
-				coagFile.open(coagfname.c_str(), ios::app);
-				coagFile << t << " , " << truek << " , " << majk << " , "
-					<< dc1 * (dc1 >= dc2) + dc2 * (dc1 < dc2) << " , "
-					<< dc2 * (dc1 >= dc2) + dc1 * (dc1 < dc2) << " , "
-					<< sw1 * (dc1 >= dc2) + sw2 * (dc1 < dc2) << " , "
-					<< sw2 * (dc1 >= dc2) + sw1 * (dc1 < dc2) << "\n";
-				coagFile.close();
-			}
-			else if (t < 0.0003) {
-				// aab64 temporary 
-				// Add headers to coagulation diagnostics file
-				ofstream coagFile;
-				std::string coagfname;
-				double dc1 = sp1->CollDiameter();
-				double dc2 = sp2->CollDiameter();
-				double sw1 = sp1->getStatisticalWeight();
-				double sw2 = sp2->getStatisticalWeight();
-				coagfname = "Coag-event-diagnostics-3micros.csv";
-				coagFile.open(coagfname.c_str(), ios::app);
-				coagFile << t << " , " << truek << " , " << majk << " , "
-					<< dc1 * (dc1 >= dc2) + dc2 * (dc1 < dc2) << " , "
-					<< dc2 * (dc1 >= dc2) + dc1 * (dc1 < dc2) << " , "
-					<< sw1 * (dc1 >= dc2) + sw2 * (dc1 < dc2) << " , "
-					<< sw2 * (dc1 >= dc2) + sw1 * (dc1 < dc2) << "\n";
-				coagFile.close();
-			}
-			else if (t < 0.0004) {
-				// aab64 temporary 
-				// Add headers to coagulation diagnostics file
-				ofstream coagFile;
-				std::string coagfname;
-				double dc1 = sp1->CollDiameter();
-				double dc2 = sp2->CollDiameter();
-				double sw1 = sp1->getStatisticalWeight();
-				double sw2 = sp2->getStatisticalWeight();
-				coagfname = "Coag-event-diagnostics-4micros.csv";
-				coagFile.open(coagfname.c_str(), ios::app);
-				coagFile << t << " , " << truek << " , " << majk << " , "
-					<< dc1 * (dc1 >= dc2) + dc2 * (dc1 < dc2) << " , "
-					<< dc2 * (dc1 >= dc2) + dc1 * (dc1 < dc2) << " , "
-					<< sw1 * (dc1 >= dc2) + sw2 * (dc1 < dc2) << " , "
-					<< sw2 * (dc1 >= dc2) + sw1 * (dc1 < dc2) << "\n";
-				coagFile.close();
-			}*/
-			if (t>0.001 && t<=0.0011) {
-				// aab64 temporary 
-				// Add headers to coagulation diagnostics file
-				ofstream coagFile;
-				std::string coagfname;
-				double dc1 = sp1->CollDiameter();
-				double dc2 = sp2->CollDiameter();
-				double sw1 = sp1->getStatisticalWeight();
-				double sw2 = sp2->getStatisticalWeight();
-				coagfname = "Coag-event-diagnostics-1-1ms.csv";
-				coagFile.open(coagfname.c_str(), ios::app);
-				coagFile << t << " , " << truek << " , " << majk << " , "
-					<< dc1 * (dc1 >= dc2) + dc2 * (dc1 < dc2) << " , "
-					<< dc2 * (dc1 >= dc2) + dc1 * (dc1 < dc2) << " , "
-					<< sw1 * (dc1 >= dc2) + sw2 * (dc1 < dc2) << " , "
-					<< sw2 * (dc1 >= dc2) + sw1 * (dc1 < dc2) << "\n";
-				coagFile.close();
-			}
-
+			// aab64 temporary 
+			// Add coagulation diagnostics file
+			ofstream coagFile;
+			std::string coagfname;
+			double dc1_0 = sp1->CollDiameter();
+			double dc2_0 = sp2->CollDiameter();
+			double sw1_0 = sp1->getStatisticalWeight();
+			double sw2_0 = sp2->getStatisticalWeight();
+			double dca_0 = sys.Particles().GetSum(iDW)/sys.SampleVolume();
+			
             //Adjust the statistical weight
             switch(weight_rule) {
             case Sweep::Processes::CoagWeightHarmonic :
@@ -431,6 +351,48 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
             // Tell the ensemble that particles 1 and 2 have changed
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);
+
+
+			// aab64 temporary 
+			// Add coagulation diagnostics file
+			double dc1_1 = sp1->CollDiameter();
+			double dc2_1 = sp2->CollDiameter();
+			double sw1_1 = sp1->getStatisticalWeight();
+			double sw2_1 = sp2->getStatisticalWeight();
+			double dca_1 = sys.Particles().GetSum(iDW) / sys.SampleVolume();
+			/*if (t>0.0003 && t <= 0.0004)
+			{
+				coagfname = "Coag-event-diagnostics-3micros.csv";
+				coagFile.open(coagfname.c_str(), ios::app);
+				coagFile << t << " , " << truek << " , " << majk << " , "
+					<< dc1_0 * (dc1_0 >= dc2_0) + dc2_0 * (dc1_0 < dc2_0) << " , "
+					<< dc2_0 * (dc1_0 >= dc2_0) + dc1_0 * (dc1_0 < dc2_0) << " , "
+					<< sw1_0 * (dc1_0 >= dc2_0) + sw2_0 * (dc1_0 < dc2_0) << " , "
+					<< sw2_0 * (dc1_0 >= dc2_0) + sw1_0 * (dc1_0 < dc2_0) << " , "
+					<< dc1_1 * (dc1_0 >= dc2_0) + dc2_1 * (dc1_0 < dc2_0) << " , "
+					<< dc2_1 * (dc1_0 >= dc2_0) + dc1_1 * (dc1_0 < dc2_0) << " , "
+					<< sw1_1 * (dc1_0 >= dc2_0) + sw2_1 * (dc1_0 < dc2_0) << " , "
+					<< sw2_1 * (dc1_0 >= dc2_0) + sw1_1 * (dc1_0 < dc2_0) << " , "
+					<< dca_0 << " , " << dca_1 << "\n";
+				coagFile.close();
+			}*/
+			/*if (t>0.003 && t <= 0.0031)
+			{
+				coagfname = "Coag-event-diagnostics-3ms.csv";
+				coagFile.open(coagfname.c_str(), ios::app);
+				coagFile << t << " , " << truek << " , " << majk << " , "
+					<< dc1_0 * (dc1_0 >= dc2_0) + dc2_0 * (dc1_0 < dc2_0) << " , "
+					<< dc2_0 * (dc1_0 >= dc2_0) + dc1_0 * (dc1_0 < dc2_0) << " , "
+					<< sw1_0 * (dc1_0 >= dc2_0) + sw2_0 * (dc1_0 < dc2_0) << " , "
+					<< sw2_0 * (dc1_0 >= dc2_0) + sw1_0 * (dc1_0 < dc2_0) << " , "
+					<< dc1_1 * (dc1_0 >= dc2_0) + dc2_1 * (dc1_0 < dc2_0) << " , "
+					<< dc2_1 * (dc1_0 >= dc2_0) + dc1_1 * (dc1_0 < dc2_0) << " , "
+					<< sw1_1 * (dc1_0 >= dc2_0) + sw2_1 * (dc1_0 < dc2_0) << " , "
+					<< sw2_1 * (dc1_0 >= dc2_0) + sw1_1 * (dc1_0 < dc2_0) << " , "
+					<< dca_0 << " , " << dca_1 << "\n";
+				coagFile.close();
+			}*/
+
         } else {
             sys.Particles().Update(ip1);
             sys.Particles().Update(ip2);
