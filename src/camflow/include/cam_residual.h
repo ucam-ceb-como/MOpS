@@ -336,7 +336,7 @@ namespace Camflow
 
             const SpeciesPtrVector* spv_;
 
-            double opPre;                        //operating pressure
+            double opPre;  //operating pressure
 
             const int mCord;   // this is the mixture fraction coordinates
             const int iMesh_s, cellBegin;//first cell

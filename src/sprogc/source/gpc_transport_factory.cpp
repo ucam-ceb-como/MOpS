@@ -628,6 +628,76 @@ double MixtureTransport::binaryDiffusionCoeff
 
 }
 
+double MixtureTransport::binaryDiffusionCoeff
+(
+    const int j,
+    const int k,
+    const double T,
+    const double p,
+    const Sprog::Thermo::IdealGas &mix
+) const
+{
+
+    const SpeciesPtrVector *spv = mix.Species();
+    IO::Transport& td_j = (*spv)[j]->getTransportData();
+    IO::Transport& td_k = (*spv)[k]->getTransportData();
+
+    double Chi = 1.0;
+
+    double m_j = (*spv)[j]->MolWt();
+    double m_k = (*spv)[k]->MolWt();
+    double onebym_jk = (m_j + m_k) / (m_j * m_k);
+
+    // polar polar interaction
+    double mu_j = td_j.getDipoleMoment();
+    double mu_k = td_k.getDipoleMoment();
+
+    double mu_jk = 0.0;
+
+    double sigma_j = td_j.getCollisionDiameter();
+    double sigma_k = td_k.getCollisionDiameter();
+
+    double epsilon_j = td_j.getPotentialWellDepth();
+    double epsilon_k = td_k.getPotentialWellDepth();
+
+    if (mu_j > 1.0e-50)
+    { // j is polar
+        if (mu_k > 1.0e-50)
+        {
+            mu_jk = sqrt(mu_j * mu_k);
+        }
+        else
+        { // k is non -polar
+            Chi = getChi(j, k, mix);
+        }
+    }
+    else
+    { // j is non polar
+        if (mu_k > 1.0e-50)
+        { // k is polar
+            Chi = getChi(k, j, mix);
+        }
+        else
+        {
+            mu_jk = sqrt(mu_j * mu_k);
+        }
+    }
+
+    double epsilon_jk = Chi * Chi * sqrt(epsilon_j * epsilon_k);
+
+    double sigma_jk = 0.5 * (sigma_j + sigma_k);
+    if (Chi != 1.0) sigma_jk *= pow(Chi, -(1.0 / 6.0));
+
+    double rT = kB * T / epsilon_jk;
+    double deltaStar = deltaStarCoeff * mu_j * mu_k
+                     / ( epsilon_jk * fastMath::pow3(sigma_jk) );
+    double omega11 = getOmega11(rT, deltaStar);
+
+    return binaryDiffCoeff * (sqrt(fastMath::pow3(T) * onebym_jk)
+                    / (p * fastMath::pow2(sigma_jk) * omega11));
+
+}
+
 std::vector<double> MixtureTransport::getMixtureDiffusionCoeff
 (
     const double T,

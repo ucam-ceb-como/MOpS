@@ -47,6 +47,7 @@
 #include "gpc_mixture.h"
 #include "gpc_params.h"
 #include "fast_math_functions.hpp"
+#include "gpc_idealgas.h"
 
 namespace Sprog
 {
@@ -137,6 +138,16 @@ public:
         const double T,
         const double p,
         const Sprog::Thermo::Mixture &mix
+    ) const;
+
+    //returns the diffusion coefficeint in m^2/s
+    double binaryDiffusionCoeff
+    (
+        const int j,
+        const int k,
+        const double T,
+        const double p,
+        const Sprog::Thermo::IdealGas &mix
     ) const;
 
     //returns the diffusion coefficeint in m^2/s

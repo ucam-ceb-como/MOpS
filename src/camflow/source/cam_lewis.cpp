@@ -19,7 +19,7 @@ LewisNumber::LewisNumber
 {
     loadSettings(inputFileName);
     if (lewisType_ == FIXEDFROMFILE) readFromFile("LewisNumbersInput.xml");
-    //if (lewisType_ == CALCULATED) calculateLe();
+    if (lewisType_ == CONSTANTCALCULATED) calculateConstantLe();
 }
 
 
@@ -38,13 +38,14 @@ void LewisNumber::loadSettings(const std::string& inputFileName)
         boost::to_upper(lewisOption);
         if (lewisOption == "UNITY") lewisType_ = UNITY;
         else if (lewisOption == "FIXEDFROMFILE") lewisType_ = FIXEDFROMFILE;
+        else if (lewisOption == "CONSTANTCALCULATED") lewisType_ = CONSTANTCALCULATED;
         else if (lewisOption == "CALCULATED") lewisType_ = CALCULATED;
         else
         {
             throw std::runtime_error
             (
                 lewisOption+" does not exist."
-                " Specify unity / fixedFromFile / calculated."
+                " Specify unity / fixedFromFile / calculated / constantcalculated (vs N2 at 1800K)."
             );
         }
     }
@@ -65,6 +66,18 @@ void LewisNumber::loadSettings(const std::string& inputFileName)
 
 void LewisNumber::readFromFile(const std::string& fixedLewisFile)
 {
+    // EJB Test to figure out iterator structure: 
+    int numSpecies = mech_->SpeciesCount();
+
+    std::cout << "Printing "<< numSpecies << " valid Species List to assign Lewis Numbers to" << std::endl;
+    
+    int i=0;
+    for (i=0; i<numSpecies; ++i)
+    {
+        std::string speciesName = mech_->GetSpecies(i)->Name();
+        std::cout << i+1 << ". " << speciesName << std::endl;
+    }
+
     CamXML::Document doc;
     doc.Load(fixedLewisFile);
     const CamXML::Element* root = doc.Root();
@@ -98,6 +111,110 @@ void LewisNumber::readFromFile(const std::string& fixedLewisFile)
         }
     }
 
+}
+
+void LewisNumber::calculateConstantLe()
+{
+    // <Lewis>CONSTANTCALCULATED</Lewis>
+
+    int numSpecies = mech_->SpeciesCount();
+
+    // Create mixture of hot nitrogen to get Lewis number for species
+    Sprog::Thermo::IdealGas* tmpMixture = new Sprog::Thermo::IdealGas(mech_->Species());
+
+    // Set mixture properties: NB Set T before P
+    tmpMixture->SetTemperature(1800.0); // K
+    tmpMixture->SetPressure(101325.0); // Pa (Actually sets Density using ideal gas law)
+    
+    // set composition of Pure N2
+    const int iN2 = mech_->FindSpecies("N2");
+    std::vector<double> tmpMixComposition; 
+    int j=0;
+    for (j=0; j<numSpecies; ++j)
+    {
+        if (j==iN2)
+        {
+            tmpMixComposition.push_back(1.0);
+        }
+        else   
+        {
+            tmpMixComposition.push_back(0.0);
+        }
+    }
+    tmpMixture -> SetMassFracs(tmpMixComposition);
+    tmpMixture -> SetFracs(tmpMixComposition);
+    std::cout << "Calculating Lewis Numbers in a N2 mixture at 101325 Pa and 1800K..."<< std::endl;
+    std::cout << "Pressure    :" << tmpMixture->Pressure() << std::endl;
+    std::cout << "Temperature :" << tmpMixture->Temperature() << std::endl;
+    std::cout << "Denisty     : " << tmpMixture -> Density() << "  mol / m3" <<std::endl;
+    std::cout << "k           : " << tmpMixture -> getThermalConductivity(tmpMixture->Pressure()) << std::endl;
+    std::cout << "Cp          : " << tmpMixture -> getSpecificHeatCapacity() << std::endl; 
+    //Matches expected NIST data after unit conversion.
+
+
+
+
+    // EJB Test to figure out iterator structure: 
+    
+    
+    std::cout << "Printing "<< numSpecies << " valid Species List to assign Lewis Numbers to" << std::endl;
+        
+        int i=0;
+        for (i=0; i<numSpecies; ++i)
+        {
+            std::string speciesName = mech_->GetSpecies(i)->Name();
+            std::cout << i+1 << ". " << speciesName << std::endl;
+        }
+
+    Sprog::Mechanism::const_sp_iterator spIt = mech_->SpBegin();
+    const Sprog::Mechanism::const_sp_iterator spItEnd = mech_->SpEnd();
+    
+    //N2 gas constants 
+    double k=tmpMixture->getThermalConductivity(tmpMixture->Pressure()); // Pa
+    double rho=tmpMixture -> Density(); //mol/m3
+    double cp=tmpMixture->getSpecificHeatCapacity() // J/kg/K
+        * tmpMixture->getAvgMolWt(tmpMixComposition); // kg/mol
+    double k_rho_cp=k/rho/cp;
+    
+
+    std::cout << "Calculating and generating LewisNumbersInput.xml text to be used with\n" << "<Lewis>fixedFromFile</Lewis>" <<std::endl;
+    std::cout << "<Camflow>\n    <Lewis>" <<std::endl;
+    while(spIt != spItEnd) {
+        // Dereference unincremented value
+        std::string speciesName = (*spIt)->Name();
+        const int speciesIndex = mech_->FindSpecies(speciesName);
+        
+        //std::cout << "SpeciesIndex = " << speciesIndex << std::endl;
+       
+        // declare Lewis Number 
+        double LeNum=0.0;
+          
+        //Binary Diffusion Coefficient into Hot N2 Gas
+        if(speciesIndex == iN2)
+        {
+            LeNum=1;
+        }
+        else
+        {  
+            Sprog::Transport::MixtureTransport* mt;
+            double Dab= mt->binaryDiffusionCoeff(
+                speciesIndex,
+                iN2,
+                tmpMixture->Temperature(),
+                tmpMixture->Pressure(),
+                (*tmpMixture) //dereferenced
+            );
+            //Calculate Lewis Number
+            LeNum = (k_rho_cp)/(Dab);
+        }
+        for (size_t i=0; i<mCord_; ++i) Le(i,speciesIndex) = LeNum;
+        std::cout << "        <species name=\""<<speciesName <<"\">" << LeNum << "</species> " <<std::endl;
+
+        *spIt++;
+    }
+    std::cout << "    </Lewis>\n</Camflow>" <<std::endl;
+    //~tmpMixture();
+    std::cout << "Finished loading Lewis Number" <<std::endl;
 }
 
 //!Not used yet

@@ -3,6 +3,7 @@
 
 #include "array.h"
 #include "comostrings.h"
+#include "gpc_transport_factory.h"
 
 namespace Camflow
 {
@@ -17,6 +18,7 @@ class LewisNumber
 
     void loadSettings(const std::string& inputFileName);
     void readFromFile(const std::string& fixedLewisFile);
+    void calculateConstantLe();
     void calculateLe();
 
 public:
@@ -26,7 +28,8 @@ public:
     {
         UNITY,
         FIXEDFROMFILE,
-        CALCULATED
+        CALCULATED,
+        CONSTANTCALCULATED
     };
 
 
@@ -43,6 +46,7 @@ public:
     inline const int& type() const {return lewisType_;}
 
     double operator()(const int& Z, const int& species) const;
+    // Gets Lewis Number
     double& calcLewis(const int& Z, const int& species);
 
 };
