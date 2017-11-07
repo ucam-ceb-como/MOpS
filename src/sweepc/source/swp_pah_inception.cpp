@@ -129,6 +129,7 @@ int PAHInception::Perform(const double t, Cell &sys,
 		sp = sys.Particles().At(Pindex);
 		int StatWeight = sp->getStatisticalWeight();
 		sp->setStatisticalWeight(StatWeight + 1.0);
+		sys.Particles().Update(Pindex);
 	}
 	else{
 

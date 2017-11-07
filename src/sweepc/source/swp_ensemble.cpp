@@ -885,6 +885,7 @@ void Sweep::Ensemble::dble()
 				else{ //If this particle is a single PAH, double its statistical weight
 					double oldweight = m_particles[i]->getStatisticalWeight();
 					m_particles[i]->setStatisticalWeight(2.0*oldweight);
+					Update(i);
 				}
             }
 

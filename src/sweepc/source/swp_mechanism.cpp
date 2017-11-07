@@ -954,10 +954,15 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 		PartPtrVector overflow;
 
         // Perform deferred processes on all particles individually.
+		int oldweight;
 		Ensemble::iterator i;
 		int ind = 0;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
+			oldweight = (*(*i)).getStatisticalWeight();
             UpdateParticle(*(*i), sys, t, ind, rng, overflow);
+			if (oldweight != (*(*i)).getStatisticalWeight()){
+				sys.Particles().Update(ind);
+			}
 			ind++;
         }
 
@@ -980,6 +985,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 							int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
 							int oldweight2 = (*sys.Particles().At(ind)).getStatisticalWeight();
 							(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + oldweight2);
+							sys.Particles().Update(indpart);
 							//Invalidate the PAH (and hence the particle) by setting statistical weight to negative 1
 							(*sys.Particles().At(ind)).setStatisticalWeight(-1.0);
 							count++;
@@ -1006,6 +1012,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 							int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
 							(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + 1.0);
 							delete overflow[ind];
+							sys.Particles().Update(indpart);
 						}
 						else{ //No matching particle, must add to ensemble
 							sys.Particles().Add(*(overflow[ind]), rng);
@@ -1064,8 +1071,8 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
 				// Sinter the particles for the soot model (as no deferred process)
 				if (m_sint_model.IsEnabled()) {
 					pah->Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+					sp.UpdateCache();
 				}
-				sp.UpdateCache();
 			}
 		}
     }
