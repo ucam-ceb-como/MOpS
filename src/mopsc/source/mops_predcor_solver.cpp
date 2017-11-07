@@ -236,8 +236,10 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	ofstream partProcFile, gasConcFile;
 
 	// Diagnostic variables
-	double tmpSVin, tmpSVout, tmpTin, tmpTout;
-	unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout;
+	double tmpSVin, tmpSVout, tmpWtVarin, tmpWtVarout, tmpDcin, tmpDcout;
+	double tmpIncWeightin, tmpIncWeightout, tmpIncFactorin, tmpIncFactorout;
+	double tmpTin, tmpTout;
+	unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout, tmpInfin, tmpInfout, tmpOutfin, tmpOutfout;
 	int process_iter;
 	std::vector<unsigned int> tmpPCin, tmpPCout, tmpFCin, tmpFCout;
 	Sprog::fvector tmpGPin, tmpGPout;
@@ -252,6 +254,12 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
 			tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 			tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
+			tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
+			tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
+			tmpWtVarin = r.Mixture()->Particles().GetSum(Sweep::iW);
+			tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+			tmpIncFactorin = r.Mixture()->GetInceptionFactor();
+			tmpIncWeightin = r.Mixture()->GetInceptingWeight();
 			r.Mixture()->GasPhase().GetConcs(tmpGPin);
 			tmpTin = r.Mixture()->GasPhase().Temperature();
 		}
@@ -275,6 +283,12 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
 			tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 			tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
+			tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
+			tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
+			tmpWtVarout = r.Mixture()->Particles().GetSum(Sweep::iW);
+			tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+			tmpIncFactorout = r.Mixture()->GetInceptionFactor();
+			tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
 			tmpTout = r.Mixture()->GasPhase().Temperature();
 		    std::string rname(r.GetName());
@@ -284,39 +298,43 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
 			// Output particle diagnostics to file
 			partProcFile.open(partfname.c_str(), ios::app);
-			partProcFile << r.Time() << " , " << tstop << " , " << step << " , "
+			partProcFile << r.Time() << " , " << tstop << " , " << step + 1 << " , "
 				<< tmpSVin << " , " << tmpSVout << " , "
-				<< tmpSPin << " , " << tmpSPout << " , ";
+				<< tmpSPin << " , " << tmpSPout << " , "
+				<< tmpWtVarin << " , " << tmpWtVarout << " , "
+				<< tmpDcin << " , " << tmpDcout << " , "
+				<< tmpIncWeightin << " , " << tmpIncWeightout << " , "
+				<< tmpIncFactorin << " , " << tmpIncFactorout << " , ";
 			for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 				process_iter++) {
 				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
 			}
 			if (r.Mech()->ParticleMech().AnyDeferred()) {
-			    partProcFile << tmpAddout - tmpAddin << " , ";
-		    }
-		    else {
-			    partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
-		    }
+				partProcFile << tmpAddout - tmpAddin << " , ";
+			}
+			else {
+				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+			}
 			for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
 				process_iter < tmpPCin.size(); process_iter++) {
 				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
 			}
 			for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
-			    process_iter < tmpPCin.size(); process_iter++) {
-			    partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
-		    }
-			partProcFile << "\n";
+				process_iter < tmpPCin.size(); process_iter++) {
+				partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
+			}
+			partProcFile << tmpInfout - tmpInfin << " , " << tmpOutfout - tmpOutfin << "\n";
 			partProcFile.close();
-			
-		    // Output gasphase diagnostics to file
-		    gasConcFile.open(chemfname.c_str(), ios::app);
-		    gasConcFile << r.Time() << " , " << tstop << " , " << step << " , ";
-		    for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
-			    gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
+
+			// Output gasphase diagnostics to file
+			gasConcFile.open(chemfname.c_str(), ios::app);
+			gasConcFile << r.Time() << " , " << tstop << " , " << step << " , ";
+			for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
+				gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
 			}
 			gasConcFile << tmpTin << " , " << tmpTout << " , ";
-		    gasConcFile << "\n";
-		    gasConcFile.close();
+			gasConcFile << "\n";
+			gasConcFile.close();
 		}
 	}
 
@@ -327,6 +345,12 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
 		tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 		tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
+		tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
+		tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
+		tmpWtVarin = r.Mixture()->Particles().GetSum(Sweep::iW);
+		tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+		tmpIncFactorin = r.Mixture()->GetInceptionFactor();
+		tmpIncWeightin = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPin);
 		tmpTin = r.Mixture()->GasPhase().Temperature();
 	}
@@ -347,6 +371,12 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
 		tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
 		tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
+		tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
+		tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
+		tmpWtVarout = r.Mixture()->Particles().GetSum(Sweep::iW);
+		tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+		tmpIncFactorout = r.Mixture()->GetInceptionFactor();
+		tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
 		tmpTout = r.Mixture()->GasPhase().Temperature();
 		std::string rname(r.GetName());
@@ -358,7 +388,11 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		partProcFile.open(partfname.c_str(), ios::app);
 		partProcFile << r.Time() << " , " << tstop << " , " << step + 1 << " , "
 			<< tmpSVin << " , " << tmpSVout << " , "
-			<< tmpSPin << " , " << tmpSPout << " , ";
+			<< tmpSPin << " , " << tmpSPout << " , "
+			<< tmpWtVarin << " , " << tmpWtVarout << " , "
+			<< tmpDcin << " , " << tmpDcout << " , "
+			<< tmpIncWeightin << " , " << tmpIncWeightout << " , "
+			<< tmpIncFactorin << " , " << tmpIncFactorout << " , ";
 		for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 			process_iter++) {
 			partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
@@ -377,9 +411,9 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			process_iter < tmpPCin.size(); process_iter++) {
 			partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
 		}
-		partProcFile << "\n";
+		partProcFile << tmpInfout - tmpInfin << " , " << tmpOutfout - tmpOutfin << "\n";
 		partProcFile.close();
-		
+
 		// Output gasphase diagnostics to file
 		gasConcFile.open(chemfname.c_str(), ios::app);
 		gasConcFile << r.Time() << " , " << tstop << " , " << step << " , ";

@@ -156,35 +156,44 @@ void NetworkSimulator::Run(
 
 			// aab64 temporary 
 			// Add headers to coagulation diagnostics file
-			ofstream coagFile1, coagFile2;
+			/*ofstream coagFile1, coagFile2;
 			std::string coagfname;
-			/*coagfname = "Coag-event-diagnostics-3micros.csv";
+			coagfname = "Coag-event-diagnostics-3micros.csv";
 			coagFile1.open(coagfname.c_str());
 			coagFile1 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , " 
 				<< "dc1_0" << " , " << "dc2_0" << " , " << "w1_0" << " , " << "w2_0" << " , "
 				<< "dc1_1" << " , " << "dc2_1" << " , " << "w1_1" << " , " << "w2_1" << " , "
 				<< "dca_0" << " , " << "dca_1" << "\n";
-			coagFile1.close();*/
+			coagFile1.close();
 			coagfname = "Coag-event-diagnostics-3ms.csv";
 			coagFile2.open(coagfname.c_str());
 			coagFile2 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
 				<< "dc1_0" << " , " << "dc2_0" << " , " << "w1_0" << " , " << "w2_0" << " , "
 				<< "dc1_1" << " , " << "dc2_1" << " , " << "w1_1" << " , " << "w2_1" << " , "
 				<< "dca_0" << " , " << "dca_1" << "\n";
-			coagFile2.close();
+			coagFile2.close();*/
 
 			// aab64 temporary 
 			// Add headers to psc diagnostics file
-			ofstream pscFile1, pscFile2;
+			/*ofstream pscFile1, pscFile2;
 			std::string pscfname;
-			/*pscfname = "PSC-event-diagnostics-3micros.csv";
+			pscfname = "PSC-event-diagnostics-3micros.csv";
 			pscFile1.open(pscfname.c_str());
 			pscFile1 << "Time (s)" << " , " << "dc_0" << " , " << "dc_1" << " , " << "w_0" << " , " << "w_1" << "\n";
-			pscFile1.close();*/
+			pscFile1.close();
 			pscfname = "PSC-event-diagnostics-3ms.csv";
 			pscFile2.open(pscfname.c_str());
 			pscFile2 << "Time (s)" << " , " << "dc_0" << " , " << "dc_1" << " , " << "w_0" << " , " << "w_1" << "\n";
-			pscFile2.close();
+			pscFile2.close();*/
+
+			// aab64 temporary 
+			// Add headers to outflow diagnostics file
+			ofstream deathFile1;
+			std::string deathfname;
+			deathfname = "Outflow-event-diagnostics.csv";
+			deathFile1.open(deathfname.c_str());
+			deathFile1 << "Time (s)" << " , " << "wt" << " , " << "dc" << " , " << "mass" << "\n";
+			deathFile1.close();
 
 			//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 			if (it->sim->GetWriteDiagsStatus()) {
@@ -207,7 +216,7 @@ void NetworkSimulator::Run(
 					<< "SV in (-)" << " , " << "SV out (-)" << " , "
 					<< "SP in (-)" << " , " << "SP out (-)" << " , "
 					<< "Total statistical weight pre-split (-)" << " , " << "Total statistical weight post-split (-)" << " , "
-					<< "Weighted sum of mass pre-split (-)" << " , " << "Weighted sum of mass post-split (-)" << " , "
+					<< "Average collision diameter pre-split (-)" << " , " << "Average collision diameter post-split (-)" << " , "
 					<< "Incepting weight pre-split (-)" << " , " << "Incepting weight post-split (-)" << " , "
 					<< "Incepting factor pre-split (-)" << " , " << "Incepting factor post-split (-)" << " , ";
 				for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
