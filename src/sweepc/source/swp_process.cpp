@@ -768,7 +768,7 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 
 				// Solve for new particle and gp temperatures
 				double gc = R / sys.GasPhase().Pressure();
-				newTg = oldTg * exp((ag * gc)); // * (tf - t0) not required because it is also in the denominator of ag
+				newTg = oldTg / (1 - (ag * gc)); // discrete update, (tf - t0) not included because update is a single step change at time t
 
 				//Solve for new gas density
 				newRho = 1.0 / (gc * newTg);

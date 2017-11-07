@@ -1096,7 +1096,7 @@
 			<upperdlim>100e-9</upperdlim> <!-- must find a particle larger than this -->
 			<lowerdlim>49e-9</lowerdlim> <!-- must find a particle smaller than this -->
 		</hci>
-		<psi flag="on">
+		<psi flag="off">
 			<upperdlim>100e-9</upperdlim> <!-- must find a particle larger than this -->
 			<lowerdlim>49e-9</lowerdlim> <!-- must find a particle smaller than this -->
 			<type>event</type><!-- options: event only for DSA -->
