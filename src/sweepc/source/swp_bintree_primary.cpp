@@ -703,8 +703,6 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
     copy_rhs.m_leftparticle = NULL;
     copy_rhs.m_rightparticle= NULL;
 
-	this->CheckVolume();
-
     return *this;
 }
 
@@ -1274,15 +1272,15 @@ bool BinTreePrimary::MergeCondition()
 				//ensures that particles are merged if the sintering step overshoots
 				condition = true;
 			}else{
-				condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) ) <= 0.0; //csl37-original condition 
+				//condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) ) <= 0.0; //csl37-original condition 
 
 				//csl37-new coalescence condition
 				//!primaries are merged when the neck radius is 95% of the smaller primary radius
 				//!second condition ensures that primaries are merged even if sintering overshoots
 				//!i.e. the neck crosses the centre of smaller primary
-//				double x_ij = (d_ij*d_ij - r_j*r_j + r_i*r_i)/(2.0*d_ij);
-//				double R_ij = sqrt(r_i*r_i - x_ij*x_ij);	//!neck radius
-//				condition = R_ij/min(r_i,r_j) >= 0.95 || ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) ) <= 0.0;
+				double x_ij = (d_ij*d_ij - r_j*r_j + r_i*r_i)/(2.0*d_ij);
+				double R_ij = sqrt(r_i*r_i - x_ij*x_ij);	//!neck radius
+				condition = R_ij/min(r_i,r_j) >= 0.95 || ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) ) <= 0.0;
 
 			}
 		}

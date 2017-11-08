@@ -479,11 +479,6 @@ private:
 
 	void UpdateNeighbourVolume(BinTreePrimary *prim,double dr_i,double &volumeterm);
 
-	//csl37-debug
-	void SumCaps(BinTreePrimary *prim, double &sumterm);
-	void CheckVolume();
-	//csl37-debug
-
 	//! function to identify neighbours and sum their contribution to surface 
 	void SumNeighbourContributions(BinTreePrimary *prim, double &sumterm);
 
