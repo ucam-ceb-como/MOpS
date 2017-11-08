@@ -1694,10 +1694,6 @@ BinTreePrimary &BinTreePrimary::Merge()
 			new_prim->m_frame_orient = frame_z;
 		}
 
-		//csl37-debug
-		new_prim->CheckVolume();
-		//csl37-debug
-
 		UpdateCache();
 
     }
@@ -1754,9 +1750,6 @@ void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *targe
 */
 void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *small_prim, BinTreePrimary *node)
 {
-	//csl37-debug
-	double separation = 0.0;
-	//csl37-debug
 
 	if(m_rightparticle == source) {
         //if the neighbour is the smaller of the merging primaries then update the centre to centre distance
@@ -1792,11 +1785,6 @@ void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *targe
 			m_rightparticle = target;
 			
 			if(m_distance_centreToCentre < 0.0) m_distance_centreToCentre = -m_distance_centreToCentre; //this is a length 
-			//csl37-debug
-			separation = Separation(m_rightparticle->boundSphCentre(), m_leftparticle->boundSphCentre());
-			assert(m_distance_centreToCentre <= 1.01 * separation);
-			assert(m_distance_centreToCentre >= 0.99 * separation);
-			//csl37-debug
 
 		}
     }
@@ -1833,11 +1821,6 @@ void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *targe
 			m_leftparticle = target;
 
 			if(m_distance_centreToCentre < 0.0) m_distance_centreToCentre = -m_distance_centreToCentre; //this is a length 
-			//csl37-debug
-			separation = Separation(m_rightparticle->boundSphCentre(), m_leftparticle->boundSphCentre());
-			assert(m_distance_centreToCentre <= 1.01 * separation);
-			assert(m_distance_centreToCentre >= 0.99 * separation);
-			//csl37-debug
 
 		}
     }
@@ -2115,10 +2098,6 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
             m_avg_sinter = m_children_sintering;
         }
 
-		//csl37-debug
-		assert(m_avg_sinter >= 0.0);
-		//csl37-debug
-
         // Calculate the different diameters only for the root node because
         // this is the only part of the tree seen by the other code, for
         // example, the coagulation kernel
@@ -2154,18 +2133,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         else {
             m_diam=0;
             m_dmob=0;
-        }
-
-		//csl37-debug
-		//check that only one primary is tracked
-		int count = 0;
-		checkTracking(count);
-		if(count > 1){
-			//this is a problem
-			assert(count > 1);
-		}
-		//csl37-debug
-		
+        }	
 
     }
 }
@@ -2618,58 +2586,6 @@ void BinTreePrimary::SumNeighbours(BinTreePrimary *prim, double &sumterm, BinTre
 	}
 }
 
-//*********************************************************************************csl37-debug
-//sum neighbours but ignores prim_ignore
-void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &sumterm) {
-	
-	double d_ij = m_parent->m_distance_centreToCentre;
-	double r_i = prim->m_primarydiam / 2.0;
-	double r_j = 0.0;
-	double x_ij = 0.0;
-
-	//check if a neighbour of prim
-	if (m_parent->m_leftparticle == prim  ) {
-		//right particle is a neighbour
-		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
-	} else if(m_parent->m_rightparticle == prim  ) {
-		//left particle is a neighbour
-		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
-	} else {
-		//not a neighbour
-		r_j = 0.0;
-	}
-	
-	//if the node connects a neighbour then calculate the summation term
-	if(r_j > 0.0){ 
-		//the volumes and radii of neighbours remain unchanged
-		//the centre to centre separations increase to allow growth of the primary
-		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
-
-		sumterm += M_PI*(2.0*r_i*r_i*r_i+x_ij*x_ij*x_ij-3.0*r_i*r_i*x_ij)/3.0;
-			
-	}
-
-	//continue working up the binary tree
-	if(m_parent->m_parent != NULL){
-		m_parent->SumCaps(prim, sumterm);
-	}
-}
-
-void BinTreePrimary::CheckVolume() {
-	if (m_leftchild!=NULL) {
-        m_leftchild->CheckVolume();
-        m_rightchild->CheckVolume();
-    }else{
-		//this is a primary
-		double sumterm = 0.0;
-		if (m_parent != NULL) SumCaps(this,sumterm);
-		double volume = M_PI * m_primarydiam * m_primarydiam * m_primarydiam/6.0 - sumterm;
-		assert(volume <= 1.1*m_primaryvol); //assert within 10% of primary volume
-//		assert(volume >= 0.9*m_primaryvol);
-	}
-}
-//*********************************************************************************csl37-debug
-
 /*!
  * @brief       Identify neighbours and sum their contribution to the change in radius
  *
@@ -2792,10 +2708,6 @@ void BinTreePrimary::UpdateNeighbourVolume(BinTreePrimary *prim,double dr_i,doub
 		assert(neighbour->m_primaryvol >=0.0);
 		//csl37--debug
 	}
-
-	//csl37--debug
-//	assert(!MergeCondition());
-	//csl37--debug
 
 	//continue working up the binary tree
 	if(m_parent->m_parent != NULL){
@@ -3207,17 +3119,11 @@ void BinTreePrimary::SinterNode(
         //! Note that the smaller the distance is, the smaller the changes are.
         double dd_ij_Max = m_distance_centreToCentre / 100.0;
 
-		//csl37: debug
-		double init_sep = Separation(m_leftparticle->m_cen_bsph, m_rightparticle->m_cen_bsph);
-		//csl37: debug
-
         while (t1 < tstop) {
             double r_i = this->m_leftparticle->m_primarydiam / 2.0;
             double r_j = this->m_rightparticle->m_primarydiam / 2.0;
 			double d_ij = m_distance_centreToCentre;
 		
-			//assert(d_ij<= r_i+r_j);	//debug
-
 			//! Definition of variables for conciseness.
             double d_ij2 = pow(d_ij, 2.0); 
             double r_i2 = pow(r_i, 2.0);
