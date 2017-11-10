@@ -65,7 +65,7 @@ array1=($line2)
 i=0
 j=0
 
-inp="../mops-hm-temp.xml"
+inp="mops-hm-temp-dz.xml"
 temp1="mops-hm-s"$curr".xml"
 temp2="tmops-hm-temp.xml"
 
@@ -117,7 +117,7 @@ do
     j=`expr $j + 1`
 done
 
-eval "sed $rloc's/.*/    <reactor constt=\"false\" constv=\"true\" id=\"stage$curr\" type=\"psr\" units=\"mol\/mol\" order=\"1\" >/' $temp1" > $temp2 #dtype=\"sdelete\"
+eval "sed $rloc's/.*/    <reactor constt=\"false\" constv=\"true\"id=\"stage$curr\" type=\"psr\" units=\"mol\/mol\" order=\"1\" >/' $temp1" > $temp2 #dtype=\"sdelete\"
 eval "sed ' ' $temp2" > "$temp1"
 rloc=`expr $rloc + 2`
 
@@ -126,22 +126,22 @@ fs2=5
 fs3=8
 
 if [ $curr -eq  $fs1 ]; then 
-    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.5\">stage1<\/flow>/' $temp1" > $temp2
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.4\">stage1<\/flow>/' $temp1" > $temp2
     eval "sed ' ' $temp2" > "$temp1"
     rloc=`expr $rloc + 1`
-    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.5\">Mixed_injection<\/flow>/' $temp1" > $temp2
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.6\">Mixed_injection<\/flow>/' $temp1" > $temp2
     eval "sed ' ' $temp2" > "$temp1"
 elif [ $curr -eq $fs2 ]; then
-    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.7\">stage1<\/flow>/' $temp1" > $temp2
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.4\">stage1<\/flow>/' $temp1" > $temp2
     eval "sed ' ' $temp2" > "$temp1"
     rloc=`expr $rloc + 1`
-    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.3\">Mixed_injection<\/flow>/' $temp1" > $temp2
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.6\">Mixed_injection<\/flow>/' $temp1" > $temp2
     eval "sed ' ' $temp2" > "$temp1"
 elif [ $curr -eq $fs3 ]; then
-    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.6\">stage1<\/flow>/' $temp1" > $temp2
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.4\">stage1<\/flow>/' $temp1" > $temp2
     eval "sed ' ' $temp2" > "$temp1"
     rloc=`expr $rloc + 1`
-    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.4\">Mixed_injection<\/flow>/' $temp1" > $temp2
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.6\">Mixed_injection<\/flow>/' $temp1" > $temp2
     eval "sed ' ' $temp2" > "$temp1"
 else
     eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"1.0\">stage1<\/flow>/' $temp1" > $temp2

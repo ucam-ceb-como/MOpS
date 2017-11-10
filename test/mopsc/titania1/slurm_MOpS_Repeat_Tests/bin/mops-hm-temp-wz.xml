@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mops version="2">
-    <runs>1</runs>
-    <iter>5</iter>
-    <atol>1.0e-17</atol>
+    <runs>3</runs>
+    <iter>20</iter>
+    <atol>1.0e-17</atol> 
     <rtol>1.0e-4</rtol>
-    <pcount>1024</pcount>
-    <maxm0>2.56e14</maxm0>
+    <pcount>2048</pcount>
+    <maxm0>5.12e14</maxm0>
     <relax>0.8</relax>
-	
+
     <reactor constt="false" constv="true" id="stage11" type="batch" units="mol/mol">
 	    <component id="TICL4"></component>
 	    <component id="TICL3"></component>

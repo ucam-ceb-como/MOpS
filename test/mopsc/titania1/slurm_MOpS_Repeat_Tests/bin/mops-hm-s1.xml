@@ -1,48 +1,46 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <mops version="3">
   <!-- Default parameters (can be overidden) --> 
-  <runs>2</runs>
+  <runs>3</runs>
   <iter>20</iter>
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>4096</pcount>
-  <maxm0>0.512e10</maxm0> 
+  <pcount>2048</pcount>
+  <maxm0>5.12e14</maxm0> 
   <relax>0.8</relax>
 
   <!-- Mixtures -->
   <mixture id="initial">
 	  <component id="AR">1.0</component>
 	  <temperature units="K">1500</temperature>
-	  <pressure units="bar">3</pressure>
+	  <pressure units="bar">4.5</pressure>
   </mixture>
 
   <mixture id="O2_plasma">
 	  <component id="O2">1.0</component>
 	  <temperature units="K">3000</temperature>
-	  <pressure units="bar">3</pressure>
+	  <pressure units="bar">4.5</pressure>
   </mixture>
 
   <mixture id="TiCl4_injection">
-	  <component id="O2">0.74</component>
-	  <component id="TICL4">0.26</component>
-	  <temperature units="K">600</temperature>
-	  <pressure units="bar">3</pressure>
+	  <component id="O2">0.7</component>
+	  <component id="TICL4">0.3</component>
+	  <temperature units="K">570</temperature>
+	  <pressure units="bar">4.5</pressure>
   </mixture>
 
   <!-- Reactor definition (given initial conditions) -->
   <reactor type="psr" constt="false" constv="true" id="stage1" units="mol/mol" order="1">
 	  <initial>initial</initial>
-	  <flow dir="in" frac="0.24">O2_plasma</flow>
-	  <flow dir="in" frac="0.76">TiCl4_injection</flow>
-	  <restime units="s">0.002</restime>
+	  <flow dir="in" frac="0.2">O2_plasma</flow>
+	  <flow dir="in" frac="0.8">TiCl4_injection</flow>
+	  <restime units="s">0.003</restime>
   </reactor>
 
   <!-- Output time sequence -->
   <timeintervals>
 	  <start>0.0</start>
-	  <time splits="10" steps="300">0.003</time>
-	  <!--time splits="500" steps="500">0.005</time>
-	  <time splits="1000" steps="800">0.009</time-->
+	  <time splits="10" steps="30000">0.03</time>
   </timeintervals>
 
   <!-- Simulation output settings -->
@@ -62,6 +60,6 @@
 			  <column fmt="sci">T</column>
 		  </tabular>
 	  </console>
-	  <ptrack enable="true" ptcount="1"/>
+	  <ptrack enable="true" ptcount="10"/>
   </output>
 </mops>

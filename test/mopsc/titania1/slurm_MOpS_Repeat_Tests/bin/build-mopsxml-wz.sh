@@ -65,8 +65,8 @@ array1=($line2)
 i=0
 j=0
 
-inp="mops-hm-temp-wz.xml"
-temp1="mops-hm-s"$curr".xml"
+inp="../mops-hm-temp-wz.xml"
+temp1="../mops-hm-s"$curr".xml"
 temp2="tmops-hm-temp.xml"
 
 cp $inp $temp1
@@ -82,35 +82,35 @@ do
     # Gas species mole fractions from previous reactor
     if [ $i -lt 29 ]; then
         ci=$l
-	ni=${array1[$k]}
+        ni=${array1[$k]}
         eval "sed $sloc's/.*/	    <component id=\""$ni"\">$ci<\/component>/' $temp1" > $temp2	
-	eval "sed ' ' $temp2" > "$temp1"
+        eval "sed ' ' $temp2" > "$temp1"
     fi
     # Temperature
     if [ $i -eq 29 ]; then
         t=$l
-	eval "sed $tloc's/.*/	    <temperature units=\"K\">$t<\/temperature>/' $temp1" > $temp2
-	eval "sed ' ' $temp2" > "$temp1"	
+        eval "sed $tloc's/.*/	    <temperature units=\"K\">$t<\/temperature>/' $temp1" > $temp2
+        eval "sed ' ' $temp2" > "$temp1"	
     fi
     # Pressure
     if [ $i -eq 31 ]; then
         p=$l 
-	eval "sed $ploc's/.*/	    <pressure units=\"Pa\">$p<\/pressure>/' $temp1" > $temp2
-	eval "sed ' ' $temp2" > "$temp1"
+        eval "sed $ploc's/.*/	    <pressure units=\"Pa\">$p<\/pressure>/' $temp1" > $temp2
+        eval "sed ' ' $temp2" > "$temp1"
     fi
     # Number of timesteps
     if [ $i -eq 32 ]; then
-	ntsteps=$l
+        ntsteps=$l
     fi
     # Number density and ensemble
     if [ $i -eq 33 ]; then 
         m0=$l
-	ifile="$stm(0)-SP($ntsteps).ens"
+        ifile="$stm(0)-SP($ntsteps).ens"
         eval "sed $mloc's/.*/            <file>$ifile<\/file>/' $temp1" > $temp2
         eval "sed ' ' $temp2" > "$temp1"
-	mloc=`expr $mloc + 1`
+        mloc=`expr $mloc + 1`
         eval "sed $mloc's/.*/            <m0>$m0<\/m0>/' $temp1" > $temp2
-	eval "sed ' ' $temp2" > "$temp1"
+        eval "sed ' ' $temp2" > "$temp1"
     fi
     i=`expr $i + 1`
     j=`expr $j + 1`

@@ -65,7 +65,7 @@ array1=($line2)
 i=0
 j=0
 
-inp="../mops-hm-temp-cz.xml"
+inp="../mops-hm-temp-dz.xml"
 temp1="../mops-hm-s"$curr".xml"
 temp2="tmops-hm-temp.xml"
 
@@ -74,10 +74,11 @@ cp $inp $temp1
 for l in $line1
 do
     k=$(echo "2*$i;" | bc)
-    sloc=`expr $j + 12`
-    tloc=41
-    ploc=42
-    mloc=44
+    sloc=`expr $j + 45`
+    tloc=74
+    ploc=75
+    mloc=77
+    rloc=83
 
     # Gas species mole fractions from previous reactor
     if [ $i -lt 29 ]; then
@@ -115,5 +116,39 @@ do
     i=`expr $i + 1`
     j=`expr $j + 1`
 done
-	
+
+eval "sed $rloc's/.*/    <reactor constt=\"false\" constv=\"true\"id=\"stage$curr\" type=\"psr\" units=\"mol\/mol\" order=\"1\" >/' $temp1" > $temp2 #dtype=\"sdelete\"
+eval "sed ' ' $temp2" > "$temp1"
+rloc=`expr $rloc + 2`
+
+fs1=2
+fs2=5
+fs3=8
+
+if [ $curr -eq  $fs1 ]; then 
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.4\">stage1<\/flow>/' $temp1" > $temp2
+    eval "sed ' ' $temp2" > "$temp1"
+    rloc=`expr $rloc + 1`
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.6\">Mixed_injection<\/flow>/' $temp1" > $temp2
+    eval "sed ' ' $temp2" > "$temp1"
+elif [ $curr -eq $fs2 ]; then
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.4\">stage1<\/flow>/' $temp1" > $temp2
+    eval "sed ' ' $temp2" > "$temp1"
+    rloc=`expr $rloc + 1`
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.6\">Mixed_injection<\/flow>/' $temp1" > $temp2
+    eval "sed ' ' $temp2" > "$temp1"
+elif [ $curr -eq $fs3 ]; then
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.4\">stage1<\/flow>/' $temp1" > $temp2
+    eval "sed ' ' $temp2" > "$temp1"
+    rloc=`expr $rloc + 1`
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"0.6\">Mixed_injection<\/flow>/' $temp1" > $temp2
+    eval "sed ' ' $temp2" > "$temp1"
+else
+    eval "sed $rloc's/.*/        <flow dir=\"in\" frac=\"1.0\">stage1<\/flow>/' $temp1" > $temp2
+    eval "sed ' ' $temp2" > "$temp1"
+    rloc=`expr $rloc + 1`
+    eval "sed $rloc's/.*/        <!--flow dir=\"in\" frac=\"0.0\">Mixed_injection<\/flow-->/' $temp1" > $temp2
+    eval "sed ' ' $temp2" > "$temp1"	
+fi 
+
 rm -f $temp2 "mops_heads.txt" "mops_params.txt"
