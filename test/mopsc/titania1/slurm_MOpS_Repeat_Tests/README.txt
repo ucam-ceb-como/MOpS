@@ -11,16 +11,17 @@ test different settings in the sweep input files for a single reactor.
 
 2) The files tagged network_repeats can be used to 
 - run for multiple reactors in a network, constructing the input files 
-for downstream reactors using the buildmops script and the 
-mops-hm-temp.xml input template. 
+for downstream reactors using the buildmops-x.sh scripts and the 
+mops-hm-temp-x.xml input templates where x=dz, wz, or cz for the dosing
+zone (CSTR), working zone (batch) and cooling zone (batch) respectively. 
 - run for multiple random seeds. The python script in the bin can be 
-used to compute errors and variances from these runs (probably with 
-some tweaking).
+used to compute errors and variances from these runs and combine the 
+PSL files.
 
 3) The bin contains the input files for all cases described above. 
 
 4) The scripts with darwin in their names are set up to run the 
-tests in (1) above on the Cambridge Darwin cluster. 
+tests in (1) and (2) above on the Cambridge Darwin cluster. 
 
 
 For building MOpS on Darwin (can add to bashrc)

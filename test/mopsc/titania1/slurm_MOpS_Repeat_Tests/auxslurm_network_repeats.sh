@@ -13,7 +13,7 @@
 #SBATCH --cpus-per-task=20
 
 echo 'Preparing scratch spaces of all nodes involved in the job...'
-srun --ntasks-per-node=1 -l ./scratchprep.sh Job$SLURM_JOBID $(pwd)/$1
+srun --ntasks-per-node=1 -l ./scratchprep.sh Job$SLURM_JOBID $(pwd)/$1 # bin folder (1)
 echo
 
 TheFolder="/scratches/cares005/$(id -u -n)/Job$SLURM_JOBID/$1"
@@ -27,16 +27,16 @@ echo
 
 echo "Launching MOpS ($2)..."
 echo
-for t in {1..1..1} #Number of repeats to do
+for t in `eval echo {1..$5}` # Number of repeats (5) to do
 do
-	RANDOM=$t
-	rv=$RANDOM
-	echo "Seed "$t " is " $rv
-	dirname=$t
-        mkdir $dirname
-        cd $dirname
-	srun -n1 $3 $2 $4 $rv $t & 
-        cd ..
+    RANDOM=$t
+    rv=$RANDOM
+    echo "Seed "$t " is " $rv
+    dirname=$t
+    mkdir $dirname
+    cd $dirname
+    srun -n1 $3 $2 $4 $rv & # run runmopsnet (3) using the mops-app (2) with n=(4) reactors and seed (rv)  
+    cd ..
 done
 wait
 cd ../../

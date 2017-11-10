@@ -1,11 +1,12 @@
 #!/bin/bash
 
 mopsapp=$1
-mopsbuild=$2
+nreac=$2
 rv=$3
-nreac=$4
 file=RunList.txt
 swpfile=sweep-fo-detailed-w3-1.xml
+
+ncstr=10
  
 echo "Seed is: " > $file
 echo $rv >> $file

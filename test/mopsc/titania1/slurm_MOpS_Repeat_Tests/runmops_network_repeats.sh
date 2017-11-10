@@ -21,7 +21,12 @@ NumNodes=1
 # Default MOpS executable.
 MOpSExe='mops-app-p2'
 MOpSNet='runmopsnet.sh'
-MOpSBuild='build-mopsxml.sh'
+
+# Number of reactors to be used
+nreac=1
+
+# Number of repeats to do
+nreps=1
 
 # Parse command line arguments.
 while [[ $# > 0 ]]
@@ -57,7 +62,7 @@ echo "Number of nodes: $NumNodes"
 echo
 
 echo 'Submitting job to Slurm...'
-sbatch --mail-user=$usremailadr --job-name='MOpS_net' --time 1-12:00:00 --nodes=$NumNodes ./auxslurm_network_repeats.sh $BinFolder $(pwd)/$MOpSExe $(pwd)/$MOpSNet $(pwd)/$MOpSBuild
+sbatch --mail-user=$usremailadr --job-name='MOpS_net' --time 1-12:00:00 --nodes=$NumNodes ./auxslurm_network_repeats.sh $BinFolder $(pwd)/$MOpSExe $(pwd)/$MOpSNet $nreac $nreps
 echo 'Type squeue to watch it.'
 echo
 echo 'Done.'
