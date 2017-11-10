@@ -230,7 +230,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
 		tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
 		tmpWtVarin = r.Mixture()->Particles().GetSum(Sweep::iW);
-		tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+		if (tmpWtVarin > 0.0)
+			tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+		else
+			tmpDcin = 0.0;
 		tmpIncFactorin = r.Mixture()->GetInceptionFactor();
 		tmpIncWeightin = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPin);
@@ -253,7 +256,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
 		tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
 		tmpWtVarout = r.Mixture()->Particles().GetSum(Sweep::iW);
-		tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+		if (tmpWtVarout > 0.0)
+			tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+		else
+			tmpDcout = 0.0;
 		tmpIncFactorout = r.Mixture()->GetInceptionFactor();
 		tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
@@ -326,8 +332,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
 			tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
 			tmpWtVarin = r.Mixture()->Particles().GetSum(Sweep::iW);
-			tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
-			tmpIncFactorin = r.Mixture()->GetInceptionFactor();
+			if (tmpWtVarin > 0.0)
+				tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+			else
+				tmpDcin = 0.0;			tmpIncFactorin = r.Mixture()->GetInceptionFactor();
 			tmpIncWeightin = r.Mixture()->GetInceptingWeight();
 			r.Mixture()->GasPhase().GetConcs(tmpGPin);
 			tmpTin = r.Mixture()->GasPhase().Temperature();
@@ -348,7 +356,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
 			tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
 			tmpWtVarout = r.Mixture()->Particles().GetSum(Sweep::iW);
-			tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+			if (tmpWtVarout > 0.0)
+				tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+			else
+				tmpDcout = 0.0;
 			tmpIncFactorout = r.Mixture()->GetInceptionFactor();
 			tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
