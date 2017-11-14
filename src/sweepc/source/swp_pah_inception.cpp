@@ -129,8 +129,10 @@ int PAHInception::Perform(const double t, Cell &sys,
 		sp = sys.Particles().At(Pindex);
 		int StatWeight = sp->getStatisticalWeight();
 		sp->setStatisticalWeight(StatWeight + 1.0);
+		sys.Particles().Update(Pindex);
 	}
 	else{
+		cout << "No inception pah match" << endl;
 
 		// Get the cell vertices
 		fvector vertices = local_geom.cellVertices();
@@ -156,7 +158,13 @@ int PAHInception::Perform(const double t, Cell &sys,
 		sp->UpdateCache();
 
 		// Add particle to main ensemble.
-		sys.Particles().Add(*sp, rng);
+		if (sys.ParticleCount() < sys.Particles().Capacity()){
+			sys.Particles().Add(*sp, rng);
+		}
+		else
+		{
+			std::cout << "No room in ensemble after PAH inception" << std::endl;
+		}
 
 		// Update gas-phase chemistry of system.
 		adjustGas(sys, sp->getStatisticalWeight());

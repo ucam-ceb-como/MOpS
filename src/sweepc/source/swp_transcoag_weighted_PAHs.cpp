@@ -470,7 +470,15 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
 
 					//Now coagulate the particles and add sp1 to the ensemble
 					Particle* adder = new Particle(*sp1);
-					int ipnew1 = sys.Particles().Add(*adder, rng);
+					int ipnew1;
+					if (sys.ParticleCount() < sys.Particles().Capacity()){
+						ipnew1 = sys.Particles().Add(*adder, rng);
+					}
+					else
+					{
+						std::cout << "No room in ensemble after coagulation" << std::endl;
+					}
+					
 					sys.Particles().Update(ipnew1);
 
 
@@ -505,7 +513,14 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
 
 					//Now coagulate the particles and add sp1 to the ensemble
 					Particle* adder = new Particle(*sp1);
-					int ipnew1 = sys.Particles().Add(*adder, rng);
+					int ipnew1;
+					if (sys.ParticleCount() < sys.Particles().Capacity()){
+						ipnew1 = sys.Particles().Add(*adder, rng);
+					}
+					else
+					{
+						std::cout << "No room in ensemble after coagulation" << std::endl;
+					}
 					sys.Particles().Update(ipnew1);
 
 					adder->Coagulate(*sp2, rng);

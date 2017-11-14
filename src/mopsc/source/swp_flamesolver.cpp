@@ -364,6 +364,15 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
+		//if (t == 0.0){
+		//	for (int iii = 0; iii < r.Mixture()->Particles().Capacity(); iii++){
+		//		Particle *sp = NULL;
+		//		sp = mech.CreateParticle(t);
+		//		sp->UpdateCache();
+		//		(r.Mixture()->Particles()).Add(*sp, rng);
+		//	}
+		//	mech.LPDA(t, *r.Mixture(), rng);
+		//}
 
         //save the old gas phase mass density
         double old_dens = r.Mixture()->GasPhase().MassDensity();
@@ -427,6 +436,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 
         // Calculate the splitting end time.
         tsplit = calcSplitTime(t, std::min(t + std::min(dtg, gasTimeStep), tstop), jrate, r.Mixture()->ParticleWeightSum());
+		//tsplit = tstop;
 
         //std::cout << "At time " << t << " split time is " << tsplit << ", spacing of gas data is " << gasTimeStep << '\n';
 
@@ -440,6 +450,11 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 			//	mech, rates, jrate, rng); 
 
 			timeStep(t, tsplit, *r.Mixture(), Geometry::LocalGeometry1d(),mech, rates, jrate, rng);
+
+			if (r.Mixture()->ParticleCount() < r.Mixture()->Particles().DoubleLimit() && 
+				r.Mixture()->Particles().IsDoublingOn()){
+				break;
+			}
 
         }
         // Perform Linear Process Deferment Algorithm to

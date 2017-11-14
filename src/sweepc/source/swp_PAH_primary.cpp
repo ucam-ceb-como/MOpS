@@ -1298,6 +1298,9 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					updatetime = sys.Particles().Simulator()->updatePAH(new_m_PAH->m_pahstruct, (*it)->lastupdated, growtime, 1, 1,
 						 rng, growthfact*statweight, new_m_PAH->PAH_ID, calcrates, ratefactor);
 
+					/*updatetime = sys.Particles().Simulator()->updatePAH(new_m_PAH->m_pahstruct, (*it)->lastupdated, growtime, 1, 1,
+						rng, growthfact*statweight, new_m_PAH->PAH_ID, true, 1.0);*/
+
 					new_m_PAH->lastupdated = updatetime;
 					(*it)->lastupdated = updatetime;
 
@@ -1321,6 +1324,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					//! See if anything changed, as this will required a call to UpdatePrimary() below.
 					//This will also dictate if the new PAH is used to create a new particle, or if it is just destroyed
 					else if (growtime > 0.0)
+					//else
 					{
 						//Reduce statistical weight of the particle being updated
 						statweight--;
@@ -1341,6 +1345,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 					}
 					else{
+						assert(growtime == 0);
 						new_m_PAH.reset();
 						//ID--;
 					}
