@@ -1015,7 +1015,13 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 							sys.Particles().Update(indpart);
 						}
 						else{ //No matching particle, must add to ensemble
-							sys.Particles().Add(*(overflow[ind]), rng);
+							if (sys.ParticleCount() < sys.Particles().Capacity()){
+								sys.Particles().Add(*(overflow[ind]), rng);
+							}
+							else
+							{
+								std::cout << "No room in ensemble after LPDA" << std::endl;
+							}
 						}
 					}
 				}
