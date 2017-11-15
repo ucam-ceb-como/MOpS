@@ -1296,6 +1296,8 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	vector<double> combos;
 	vector<int>::iterator it1;
 	vector<int>::iterator it2;
+	bool left;
+	int index1, index2;
 
 	Sp1 = chooseRandomSite(Mergesites, rng);
 
@@ -1313,59 +1315,161 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	sites2a.resize(2);
 	sites2b.resize(2);
 
-	sites2b[0] = abs((int)moveIt(Sp2, -1)->type);
+	sites2b[0] = abs((int) rhs.moveIt(Sp2, -1)->type);
 	sites2a[0] = 1;
 
 	sites2b[1] = 1;
-	sites2a[1] = abs((int)moveIt(Sp2, 1)->type);
+	sites2a[1] = abs((int) rhs.moveIt(Sp2, 1)->type);
 
-	combos.resize(sites1a.size()*sites2a.size()); 
+	combos.resize(sites1a.size()*sites2a.size()*2); 
 	int before, after;
 	int count1 = 0;
 	int count2 = 0;
 
 	for (it1 = sites1a.begin(); it1 != sites1a.end(); ++it1){
 		for (it2 = sites2a.begin(); it2 != sites2a.end(); ++it2){
-			before = (*it1)*(*it2);
-			after = sites1b[count1] * sites2b[count2];
-			count2++;
+			after = (*it1)*(*it2);
+			before = sites1b[count1] * sites2b[count2];
 			if (before < 5 && after < 5){
 				combos[count2 + count1*(sites2a.size())] = 1.0;
 			}
 			else{
 				combos[count2 + count1*(sites2a.size())] = 0.0;
 			}
+			count2++;
 		}
+		count2 = 0;
+		count1++;
+	}
+
+	count1 = 0;
+	count2 = 0;
+
+	for (it1 = sites1a.begin(); it1 != sites1a.end(); ++it1){
+		for (it2 = sites2b.begin(); it2 != sites2b.end(); ++it2){
+			after = (*it1)*(*it2);
+			before = sites1b[count1] * sites2a[count2];
+			if (before < 5 && after < 5){
+				combos[4 + count2 + count1*(sites2a.size())] = 1.0;
+			}
+			else{
+				combos[4 + count2 + count1*(sites2a.size())] = 0.0;
+			}
+			count2++;
+		}
+		count2 = 0;
 		count1++;
 	}
 
 	boost::uniform_01<rng_type &, double> uniformGenerator(rng);
 	size_t index = chooseIndex<double>(combos, uniformGenerator);
 
-	int index1 = (int)index / sites2a.size();
-	int index2;
-	if (index == 0 || index == 2){
-		index2 = 0;
+	index = 2;
+
+	if (index < 4){
+		left = true;
+		index1 = (int)index / 2;
+		if (index == 0 || index == 2){
+			index2 = 0;
+		}
+		else{
+			index2 = 1;
+		}
 	}
 	else{
-		index2 = 1;
+		left = false;
+		index = index - 4;
+		index1 = (int)index / 2;
+		if (index == 0 || index == 2){
+			index2 = 0;
+		}
+		else{
+			index2 = 1;
+		}
 	}
 
-	int newtype1 = sites1b[index1] + sites2b[index2] + 1;
+	int newtype1;
 
-	int newtype2 = sites1a[index1] + sites2a[index2] + 1;
+	int newtype2;
 
-	convSiteType(moveIt(Sp1, -1), ACBR);
+	if (left){
+		newtype1 = sites1b[index1] + sites2b[index2] + 1 + 72;
+
+		newtype2 = sites1a[index1] + sites2a[index2] + 1 + 68;
+	}
+	else{
+		newtype1 = sites1b[index1] + sites2a[index2] + 1 + 72;
+
+		newtype2 = sites1a[index1] + sites2b[index2] + 1 + 68;
+	}
+
+	Spointer ststart;
+	Spointer stend;
+	Spointer stb;
+	if (left){
+		if (index1 == 0){
+			convSiteType(Sp1, (kmcSiteType)newtype2);
+			convSiteType(moveIt(Sp1, -1), (kmcSiteType)newtype1);
+			stb = Sp1;
+			if (index2 == 0){
+				ststart = rhs.moveIt(Sp2, 1);
+				stend = rhs.moveIt(Sp2, -2);
+			}
+			else{
+				ststart = rhs.moveIt(Sp2, 2);
+				stend = rhs.moveIt(Sp2, -1);
+			}
+		}
+		else{ 
+			convSiteType(moveIt(Sp1, 1), (kmcSiteType)newtype2);
+			convSiteType(Sp1, (kmcSiteType)newtype1);
+			stb = moveIt(Sp1,1);
+			if (index2 == 0){
+				ststart = rhs.moveIt(Sp2, 1);
+				stend = rhs.moveIt(Sp2, -2);
+			}
+			else{
+				ststart = rhs.moveIt(Sp2, 2);
+				stend = rhs.moveIt(Sp2, -1);
+			}
+		}
+	}
+	else{
+		if (index1 == 0){
+			convSiteType(Sp1, (kmcSiteType)newtype2);
+			convSiteType(moveIt(Sp1, -1), (kmcSiteType)newtype1);
+			stb = Sp1;
+			if (index2 == 0){
+				ststart = rhs.moveIt(Sp2, 1);
+				stend = rhs.moveIt(Sp2, -2);
+			}
+			else{
+				ststart = rhs.moveIt(Sp2, 2);
+				stend = rhs.moveIt(Sp2, -1);
+			}
+		}
+		else{
+			convSiteType(moveIt(Sp1, 1), (kmcSiteType)newtype2);
+			convSiteType(Sp1, (kmcSiteType)newtype1);
+			stb = Sp1;
+			if (index2 == 0){
+				ststart = rhs.moveIt(Sp2, 1);
+				stend = rhs.moveIt(Sp2, -2);
+			}
+			else{
+				ststart = rhs.moveIt(Sp2, 2);
+				stend = rhs.moveIt(Sp2, -1);
+			}
+		}
+	}
 
 	Spointer st3;
-	for (st3 = rhs.moveIt(Sp2,1); st3 != rhs.m_pah->m_siteList.end(); st3++){
-		addSite(st3->type, Sp1);
+	for (st3 = ststart; st3 != rhs.m_pah->m_siteList.end(); st3++){
+		addSite(st3->type, stb);
 	}
-	for (st3 = rhs.m_pah->m_siteList.begin(); st3 != rhs.moveIt(Sp2,-1); st3++){
-		addSite(st3->type, Sp1);
+	for (st3 = rhs.m_pah->m_siteList.begin(); st3 != stend; st3++){
+		addSite(st3->type, stb);
 	}
-	convSiteType(Sp1, ACBL);
-	//convSiteType(Sp1, AC);
 	updateCombinedSites();
 	updateHinderedSites();
 
