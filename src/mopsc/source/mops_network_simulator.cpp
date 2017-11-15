@@ -137,6 +137,9 @@ void NetworkSimulator::Run(
         // Initialise reactors and simulators
         t2 = mTimes[0].StartTime();
         for (it=this->Begin(); it!=this->End(); ++it) {
+			// aab64 Initialise OMP RNGs
+			it->reac->Mixture()->Setprng(iseed);
+
             // Set the start times
             it->reac->SetTime(t2);
 

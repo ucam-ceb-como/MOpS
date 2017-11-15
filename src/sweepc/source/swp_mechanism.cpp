@@ -60,6 +60,7 @@
 
 // aab64 temporary for tracking OMP threads
 #include <omp.h>
+typedef boost::mt19937 RandNumGen;
 
 
 using namespace Sweep;
@@ -1185,12 +1186,16 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 		    for (part_i = 0; part_i < nparticles; ++part_i) {
 		        UpdateParticleNS(*(sys.Particles().At(part_i)), sys, t, rng, dtvector[part_i]);
 		    }
-#pragma omp parallel for private(part_i) firstprivate(nparticles) //schedule(dynamic) ordered
+			size_t runSeed = 0;
+			RandNumGen prng;
+#pragma omp parallel for private(part_i) firstprivate(nparticles, t, runSeed, dtvector, prng) //schedule(dynamic) ordered
 			for (part_i = 0; part_i < nparticles; ++part_i) {
-				size_t runSeed = omp_get_thread_num();
-				runSeed *= clock(); 
-				boost::mt19937 prng(runSeed);
-		        UpdateParticleS(*(sys.Particles().At(part_i)), sys, t, prng, dtvector[part_i]);
+				runSeed = omp_get_thread_num();
+#pragma omp critical 
+				{
+					prng = sys.Chooseprng(runSeed); 
+				}
+				UpdateParticleS(*(sys.Particles().At(part_i)), sys, t, prng, dtvector[part_i]);
 		    }
 	    }*/
 		

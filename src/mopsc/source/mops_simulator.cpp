@@ -350,6 +350,9 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     // so that it will be deleted when we leave this scope.
     std::auto_ptr<Mixture> initmix(r.Mixture()->Clone());
 
+	// aab64 Initialise OMP RNGs
+	r.Mixture()->Setprng(seed);
+
     // Initialise the reactor with the start time.
     t2 = m_times[0].StartTime();
     r.SetTime(t2);

@@ -52,6 +52,9 @@
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
+// aab64 OMP threads
+typedef boost::mt19937 RandNumGen;
+#include <omp.h>
 
 using namespace std;
 
@@ -64,7 +67,7 @@ Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
 : m_ensemble(), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false), 
   m_incepting_weight(1.0), m_incFactor(1.0), 
-  m_notpsiflag(true)
+  m_notpsiflag(true), m_rateFactor(1.0)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
@@ -113,19 +116,24 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_inflow     = rhs.m_inflow;
         m_outflow    = rhs.m_outflow;
 
-	    // aab64 particle temperature
+	    // aab64 added variables
+		// particle temperature
 	    m_bulk_particle_temp = rhs.m_bulk_particle_temp;
-	    // aab64 current process time step
+	    // current process time step
 	    m_proc_tau = rhs.m_proc_tau;
-	    // aab64 flag for adiabatic operation
+	    // flag for adiabatic operation
 	    m_adiabatic_flag = rhs.m_adiabatic_flag;
-		// aab64 incepting particle weight for bintree model
+		// incepting particle weight for bintree model
 		m_incepting_weight = rhs.m_incepting_weight;
-		// aab64 incepting composition adjustment factor
+		// incepting composition adjustment factor
 		m_incFactor = rhs.m_incFactor;
-		// aab64 PSI flag
+		// PSI flag
 		m_notpsiflag = rhs.m_notpsiflag;
-    }
+		// openmp rng
+		m_prng = rhs.m_prng;
+		// coagulation scaling for weighted events
+		m_rateFactor = rhs.m_rateFactor;
+	}
 	assert(isValid());
     return *this;
 }
@@ -360,6 +368,23 @@ void Cell::AddOutflow(double rate, const Sweep::Mechanism &mech)
     Processes::DeathProcess *death = new Processes::DeathProcess(mech);
     death->SetA(rate);
     m_outflow.push_back(death);
+}
+
+// aab64 Get thread specific rng
+void Cell::Setprng(size_t seedval)
+{
+	size_t numthreads = omp_get_max_threads();
+	m_prng.resize(numthreads);
+	for (size_t i = 0; i < numthreads; i++)
+	{
+		m_prng[i].seed(i*seedval);
+	}
+}
+
+// aab64 Get thread specific rng
+RandNumGen Cell::Chooseprng(size_t threadid)
+{
+	return m_prng[threadid];
 }
 
 

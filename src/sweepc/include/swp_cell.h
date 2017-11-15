@@ -54,6 +54,8 @@
 #include <string>
 #include <iostream>
 
+typedef boost::mt19937 RandNumGen;
+
 namespace Sweep
 {
 // Forward declare Mechanism class.
@@ -237,6 +239,18 @@ public:
 	// temperature because this is handled using inception stoichiometry
 	bool GetNotPSIFlag() const { return m_notpsiflag; }
 
+	// aab64 Get thread specific rng
+	void Setprng(size_t seedval);
+
+	// aab64 Get thread specific rng
+	RandNumGen Chooseprng(size_t threadid);
+
+	// aab64 coagulation scaling for weighted events
+	void SetRateFactor(double rateFac) { m_rateFactor = rateFac; }
+
+	// aab64 coagulation scaling for weighted events
+	int GetRateFactor() const { return m_rateFactor; }
+
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
@@ -292,6 +306,13 @@ private:
 	// aab64 PSI flag used to tell surface reaction not to update gas-phase and 
 	// temperature because this is handled using inception stoichiometry
 	bool m_notpsiflag;
+
+	// aab64 Parallel random number generators for OMP updates
+	std::vector<RandNumGen> m_prng;
+
+	// aab64 coagulation scaling for weighted events
+	int m_rateFactor;
+
 };
 
 } //namespace Sweep
