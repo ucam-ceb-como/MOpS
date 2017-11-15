@@ -115,5 +115,7 @@ do
     i=`expr $i + 1`
     j=`expr $j + 1`
 done
+
+eval "sed 74's/.*/            <filename>Network\(stage$curr\)<\/filename>/' $temp1" > $temp2
 	
 rm -f $temp2 "mops_heads.txt" "mops_params.txt"
