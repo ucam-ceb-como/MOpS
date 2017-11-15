@@ -171,7 +171,7 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(double t, cons
         // Get system properties required to calculate coagulation rate.
         double T = sys.GasPhase().Temperature();
         double P = sys.GasPhase().Pressure();
-
+		
         double r = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T/sys.GasPhase().Viscosity(),
                 MeanFreePathAir(T,P), sys.SampleVolume(), iterm);
         return r;
@@ -215,7 +215,7 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
     double n_1 = n - 1.0;
     double a   = CSF * T_mu * A();
     double b   = a * MFP * 1.257 * 2.0;
-    double c   = CFMMAJ * m_efm * CFM * sqrtT * A();
+	double c = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
     const double d        = data.Property(Sweep::iDcol);
@@ -237,22 +237,26 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
     fvector::iterator ifm = iterm;
     fvector::iterator isf = iterm+4;
 
+	double rateFactor = 1.0;
+	/*if (n > 1) 
+		rateFactor = floor((n) / (w));*/
+
     // Get individual terms
 
     // Free-molecular.
-    *(iterm) =  n_1 * d2m_1_2w * c / vol;
-    *(++iterm) = (d2 * m_1_2w - d2m_1_2w) * c / vol;
-    *(++iterm) = (d2w * m_1_2 - d2m_1_2w) * c / vol;
-    *(++iterm) = (d2m_1_2 * w - d2m_1_2w) * c / vol;
+    *(iterm) =  n_1 * d2m_1_2w * c / vol / rateFactor;
+	*(++iterm) = (d2 * m_1_2w - d2m_1_2w) * c / vol / rateFactor;
+	*(++iterm) = (d2w * m_1_2 - d2m_1_2w) * c / vol / rateFactor;
+	*(++iterm) = (d2m_1_2 * w - d2m_1_2w) * c / vol / rateFactor;
 
     // Slip-flow.
-    *(++iterm) = 2 * n_1 * w * a / vol;
-    *(++iterm) = (d * d_1w - w) * a / vol;
-    *(++iterm) = (dw * d_1 - w) * a / vol;
-    *(++iterm) = n_1 * d_1w * b / vol;
-    *(++iterm) = (d * d_2w - d_1w) * b / vol;
-    *(++iterm) = (dw * d_2 - d_1w) * b / vol;
-    *(++iterm) = (d_1 * w - d_1w) * b / vol;
+	*(++iterm) = 2 * n_1 * w * a / vol / rateFactor;
+	*(++iterm) = (d * d_1w - w) * a / vol / rateFactor;
+	*(++iterm) = (dw * d_1 - w) * a / vol / rateFactor;
+	*(++iterm) = n_1 * d_1w * b / vol / rateFactor;
+	*(++iterm) = (d * d_2w - d_1w) * b / vol / rateFactor;
+	*(++iterm) = (dw * d_2 - d_1w) * b / vol / rateFactor;
+	*(++iterm) = (d_1 * w - d_1w) * b / vol / rateFactor;
 
     // Return iterator to next term after the coagulation terms.
     ++iterm;

@@ -351,6 +351,12 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
     // Truncate if step is too long or select a process
     // to perform.
     if (t+dt <= t_stop) {
+		// aab64 Store coagulation rate factor
+		/*int rateFactor_1 = 1;
+		if (sys.ParticleCount() > 1) 
+			rateFactor_1 = floor((sys.ParticleCount()) / (sys.Particles().GetSum(iW)));
+		sys.SetRateFactor(rateFactor_1);*/
+
         boost::uniform_01<rng_type &> uniformGenerator(rng);
         const int i = chooseIndex(rates, uniformGenerator);
         mech.DoProcess(i, t+dt, sys, geom, rng);

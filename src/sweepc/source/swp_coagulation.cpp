@@ -220,195 +220,204 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
                                  const Sweep::Processes::CoagWeightRule weight_rule,
                                  Cell &sys, rng_type &rng,
                                  MajorantType maj) const {
-    int ip1 = sys.Particles().Select(prop1, rng);
-    int ip2 = sys.Particles().Select(prop2, rng);
+	// aab64 repeats coagulations to match rate
+	//int rateFactor = sys.GetRateFactor();
+	//for (int i = 1; i < rateFactor + 1; i++) 
+	//{
+		int ip1 = sys.Particles().Select(prop1, rng);
+		int ip2 = sys.Particles().Select(prop2, rng);
 
-    // Choose and get first particle, then update it.
-    Particle *sp1=NULL;
-    if (ip1 >= 0) {
-        sp1 = sys.Particles().At(ip1);
-    } else {
-        // Failed to choose a particle.
-        return -1;
-    }
-
-    // Choose and get unique second particle, then update it.  Note, we are allowed to do
-    // this even if the first particle was invalidated.
-    unsigned int guard = 0;
-    while ((ip2 == ip1) && (++guard<1000))
-            ip2 = sys.Particles().Select(prop2, rng);
-
-    Particle *sp2=NULL;
-    if ((ip2>=0) && (ip2!=ip1)) {
-        sp2 = sys.Particles().At(ip2);
-    } else {
-        // Failed to select a unique particle.
-        return -1;
-    }
-
-    //Calculate the majorant rate before updating the particles
-    const double majk = MajorantKernel(*sp1, *sp2, sys, maj);
-
-    //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t, rng);
-    // Check that particle is still valid.  If not,
-    // remove it and cease coagulating.
-    if (!sp1->IsValid()) {
-        // Must remove first particle now.
-        sys.Particles().Remove(ip1);
-
-        // Invalidating the index tells this routine not to perform coagulation.
-        ip1 = -1;
-        return 0;
-    }
-
-    m_mech->UpdateParticle(*sp2, sys, t, rng);
-    // Check validity of particles after update.
-    if (!sp2->IsValid()) {
-        // Tell the ensemble to update particle one before we confuse things
-        // by removing particle 2
-        sys.Particles().Update(ip1);
-
-        // Must remove second particle now.
-        sys.Particles().Remove(ip2);
-
-        // Invalidating the index tells this routine not to perform coagulation.
-        ip2 = -1;
-
-        return 0;
-    }
-
-    // Check that both the particles are still valid.
-    if ((ip1>=0) && (ip2>=0)) {
-        // Must check for ficticious event now by comparing the original
-        // majorant rate and the current (after updates) true rate.
-
-        double truek = CoagKernel(*sp1, *sp2, sys);
-        double ceff=0;
-        if (majk<truek)
-            std::cout << "maj< true"<< std::endl;
-
-		//added by ms785 to include the collision efficiency in the calculation of the rate
-		if (sys.ParticleModel()->AggModel()==AggModels::PAH_KMC_ID)
-		{
-			 ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
-			 truek*=ceff;
+		// Choose and get first particle, then update it.
+		Particle *sp1 = NULL;
+		if (ip1 >= 0) {
+			sp1 = sys.Particles().At(ip1);
+		}
+		else {
+			// Failed to choose a particle.
+			return -1;
 		}
 
-		if (!Fictitious(majk, truek, rng)) 
-		{
+		// Choose and get unique second particle, then update it.  Note, we are allowed to do
+		// this even if the first particle was invalidated.
+		unsigned int guard = 0;
+		while ((ip2 == ip1) && (++guard < 1000))
+			ip2 = sys.Particles().Select(prop2, rng);
 
-			// aab64 temporary 
-			// Add coagulation diagnostics file
-			ofstream coagFile;
-			std::string coagfname;
-			double dc1_0 = sp1->CollDiameter();
-			double dc2_0 = sp2->CollDiameter();
-			double sw1_0 = sp1->getStatisticalWeight();
-			double sw2_0 = sp2->getStatisticalWeight();
-			double dca_0 = sys.Particles().GetSum(iDW)/sys.SampleVolume();
-			
-            //Adjust the statistical weight
-            switch(weight_rule) {
-            case Sweep::Processes::CoagWeightHarmonic :
-                sp1->setStatisticalWeight(1.0 / (1.0 / sp1->getStatisticalWeight() +
-                                                 1.0 / sp2->getStatisticalWeight()));
-                break;
-            case Sweep::Processes::CoagWeightHalf :
-                sp1->setStatisticalWeight(0.5 * sp1->getStatisticalWeight());
-                break;
-            case Sweep::Processes::CoagWeightMass :
-                sp1->setStatisticalWeight(sp1->getStatisticalWeight() * sp1->Mass() /
-                                          (sp1->Mass() + sp2->Mass()));
-                break;
-            case Sweep::Processes::CoagWeightRule4 : {
-                // This is an arbitrary weighting for illustrative purposes
-                const double x1 = sp1->Mass() / std::sqrt(sp1->getStatisticalWeight());
-                const double x2 = sp1->Mass() / std::sqrt(sp2->getStatisticalWeight());
-                sp1->setStatisticalWeight(sp1->getStatisticalWeight() * x1 /
-                                          (x1 + x2));
-                break;
-                }
-            default:
-                throw std::logic_error("Unrecognised weight rule (Coagulation::WeightedPerform)");
-            }
+		Particle *sp2 = NULL;
+		if ((ip2 >= 0) && (ip2 != ip1)) {
+			sp2 = sys.Particles().At(ip2);
+		}
+		else {
+			// Failed to select a unique particle.
+			return -1;
+		}
 
-            // In the weighted particle method the contents of particle 2
-            // is added to particle 1 while particle 2 is left unchanged.
-            // If particle 1 is a single primary particle made up one PAH:
-            // the incepted PAH, after the coagulate event there is then
-            // one less incepted PAH. This is what the check does. If
-            // particle 1 is a PAH other than the incepted PAH, there is
-            // not a need to made an adjustment to the number of incepted PAHs.
-			//sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
+		//Calculate the majorant rate before updating the particles
+		const double majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
-            // Add contents of particle 2 onto particle 1
-            sp1->Coagulate(*sp2, rng);
-            sp1->SetTime(t);
-            sp1->incrementCoagCount();
+		//Update the particles
+		m_mech->UpdateParticle(*sp1, sys, t, rng);
+		// Check that particle is still valid.  If not,
+		// remove it and cease coagulating.
+		if (!sp1->IsValid()) {
+			// Must remove first particle now.
+			sys.Particles().Remove(ip1);
 
-            assert(sp1->IsValid());
-            // Tell the ensemble that particles 1 and 2 have changed
-            sys.Particles().Update(ip1);
-            sys.Particles().Update(ip2);
+			// Invalidating the index tells this routine not to perform coagulation.
+			ip1 = -1;
+			return 0;
+		}
 
+		m_mech->UpdateParticle(*sp2, sys, t, rng);
+		// Check validity of particles after update.
+		if (!sp2->IsValid()) {
+			// Tell the ensemble to update particle one before we confuse things
+			// by removing particle 2
+			sys.Particles().Update(ip1);
 
-			// aab64 temporary 
-			// Add coagulation diagnostics file
-			double dc1_1 = sp1->CollDiameter();
-			double dc2_1 = sp2->CollDiameter();
-			double sw1_1 = sp1->getStatisticalWeight();
-			double sw2_1 = sp2->getStatisticalWeight();
-			double dca_1 = sys.Particles().GetSum(iDW) / sys.SampleVolume();
-			/*if (t>0.0003 && t <= 0.0004)
+			// Must remove second particle now.
+			sys.Particles().Remove(ip2);
+
+			// Invalidating the index tells this routine not to perform coagulation.
+			ip2 = -1;
+
+			return 0;
+		}
+
+		// Check that both the particles are still valid.
+		if ((ip1 >= 0) && (ip2 >= 0)) {
+			// Must check for ficticious event now by comparing the original
+			// majorant rate and the current (after updates) true rate.
+
+			double truek = CoagKernel(*sp1, *sp2, sys);
+			double ceff = 0;
+			if (majk < truek)
+				std::cout << "maj< true" << std::endl;
+
+			//added by ms785 to include the collision efficiency in the calculation of the rate
+			if (sys.ParticleModel()->AggModel() == AggModels::PAH_KMC_ID)
 			{
+				ceff = sys.ParticleModel()->CollisionEff(sp1, sp2);
+				truek *= ceff;
+			}
+
+			if (!Fictitious(majk, truek, rng))
+			{
+
+				// aab64 temporary 
+				// Add coagulation diagnostics file
+				ofstream coagFile;
+				std::string coagfname;
+				double dc1_0 = sp1->CollDiameter();
+				double dc2_0 = sp2->CollDiameter();
+				double sw1_0 = sp1->getStatisticalWeight();
+				double sw2_0 = sp2->getStatisticalWeight();
+				double dca_0 = sys.Particles().GetSum(iDW) / sys.SampleVolume();
+
+				//Adjust the statistical weight
+				switch (weight_rule) {
+				case Sweep::Processes::CoagWeightHarmonic:
+					sp1->setStatisticalWeight(1.0 / (1.0 / sp1->getStatisticalWeight() +
+						1.0 / sp2->getStatisticalWeight()));
+					break;
+				case Sweep::Processes::CoagWeightHalf:
+					sp1->setStatisticalWeight(0.5 * sp1->getStatisticalWeight());
+					break;
+				case Sweep::Processes::CoagWeightMass:
+					sp1->setStatisticalWeight(sp1->getStatisticalWeight() * sp1->Mass() /
+						(sp1->Mass() + sp2->Mass()));
+					break;
+				case Sweep::Processes::CoagWeightRule4: {
+															// This is an arbitrary weighting for illustrative purposes
+															const double x1 = sp1->Mass() / std::sqrt(sp1->getStatisticalWeight());
+															const double x2 = sp1->Mass() / std::sqrt(sp2->getStatisticalWeight());
+															sp1->setStatisticalWeight(sp1->getStatisticalWeight() * x1 /
+																(x1 + x2));
+															break;
+				}
+				default:
+					throw std::logic_error("Unrecognised weight rule (Coagulation::WeightedPerform)");
+				}
+
+				// In the weighted particle method the contents of particle 2
+				// is added to particle 1 while particle 2 is left unchanged.
+				// If particle 1 is a single primary particle made up one PAH:
+				// the incepted PAH, after the coagulate event there is then
+				// one less incepted PAH. This is what the check does. If
+				// particle 1 is a PAH other than the incepted PAH, there is
+				// not a need to made an adjustment to the number of incepted PAHs.
+				//sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
+
+				// Add contents of particle 2 onto particle 1
+				sp1->Coagulate(*sp2, rng);
+				sp1->SetTime(t);
+				sp1->incrementCoagCount();
+
+				assert(sp1->IsValid());
+				// Tell the ensemble that particles 1 and 2 have changed
+				sys.Particles().Update(ip1);
+				sys.Particles().Update(ip2);
+
+
+				// aab64 temporary 
+				// Add coagulation diagnostics file
+				double dc1_1 = sp1->CollDiameter();
+				double dc2_1 = sp2->CollDiameter();
+				double sw1_1 = sp1->getStatisticalWeight();
+				double sw2_1 = sp2->getStatisticalWeight();
+				double dca_1 = sys.Particles().GetSum(iDW) / sys.SampleVolume();
+				/*if (t>0.0003 && t <= 0.0004)
+				{
 				coagfname = "Coag-event-diagnostics-3micros.csv";
 				coagFile.open(coagfname.c_str(), ios::app);
 				coagFile << t << " , " << truek << " , " << majk << " , "
-					<< dc1_0 * (dc1_0 >= dc2_0) + dc2_0 * (dc1_0 < dc2_0) << " , "
-					<< dc2_0 * (dc1_0 >= dc2_0) + dc1_0 * (dc1_0 < dc2_0) << " , "
-					<< sw1_0 * (dc1_0 >= dc2_0) + sw2_0 * (dc1_0 < dc2_0) << " , "
-					<< sw2_0 * (dc1_0 >= dc2_0) + sw1_0 * (dc1_0 < dc2_0) << " , "
-					<< dc1_1 * (dc1_0 >= dc2_0) + dc2_1 * (dc1_0 < dc2_0) << " , "
-					<< dc2_1 * (dc1_0 >= dc2_0) + dc1_1 * (dc1_0 < dc2_0) << " , "
-					<< sw1_1 * (dc1_0 >= dc2_0) + sw2_1 * (dc1_0 < dc2_0) << " , "
-					<< sw2_1 * (dc1_0 >= dc2_0) + sw1_1 * (dc1_0 < dc2_0) << " , "
-					<< dca_0 << " , " << dca_1 << "\n";
+				<< dc1_0 * (dc1_0 >= dc2_0) + dc2_0 * (dc1_0 < dc2_0) << " , "
+				<< dc2_0 * (dc1_0 >= dc2_0) + dc1_0 * (dc1_0 < dc2_0) << " , "
+				<< sw1_0 * (dc1_0 >= dc2_0) + sw2_0 * (dc1_0 < dc2_0) << " , "
+				<< sw2_0 * (dc1_0 >= dc2_0) + sw1_0 * (dc1_0 < dc2_0) << " , "
+				<< dc1_1 * (dc1_0 >= dc2_0) + dc2_1 * (dc1_0 < dc2_0) << " , "
+				<< dc2_1 * (dc1_0 >= dc2_0) + dc1_1 * (dc1_0 < dc2_0) << " , "
+				<< sw1_1 * (dc1_0 >= dc2_0) + sw2_1 * (dc1_0 < dc2_0) << " , "
+				<< sw2_1 * (dc1_0 >= dc2_0) + sw1_1 * (dc1_0 < dc2_0) << " , "
+				<< dca_0 << " , " << dca_1 << "\n";
 				coagFile.close();
-			}*/
-			/*if (t>0.003 && t <= 0.0031)
-			{
+				}*/
+				/*if (t>0.003 && t <= 0.0031)
+				{
 				coagfname = "Coag-event-diagnostics-3ms.csv";
 				coagFile.open(coagfname.c_str(), ios::app);
 				coagFile << t << " , " << truek << " , " << majk << " , "
-					<< dc1_0 * (dc1_0 >= dc2_0) + dc2_0 * (dc1_0 < dc2_0) << " , "
-					<< dc2_0 * (dc1_0 >= dc2_0) + dc1_0 * (dc1_0 < dc2_0) << " , "
-					<< sw1_0 * (dc1_0 >= dc2_0) + sw2_0 * (dc1_0 < dc2_0) << " , "
-					<< sw2_0 * (dc1_0 >= dc2_0) + sw1_0 * (dc1_0 < dc2_0) << " , "
-					<< dc1_1 * (dc1_0 >= dc2_0) + dc2_1 * (dc1_0 < dc2_0) << " , "
-					<< dc2_1 * (dc1_0 >= dc2_0) + dc1_1 * (dc1_0 < dc2_0) << " , "
-					<< sw1_1 * (dc1_0 >= dc2_0) + sw2_1 * (dc1_0 < dc2_0) << " , "
-					<< sw2_1 * (dc1_0 >= dc2_0) + sw1_1 * (dc1_0 < dc2_0) << " , "
-					<< dca_0 << " , " << dca_1 << "\n";
+				<< dc1_0 * (dc1_0 >= dc2_0) + dc2_0 * (dc1_0 < dc2_0) << " , "
+				<< dc2_0 * (dc1_0 >= dc2_0) + dc1_0 * (dc1_0 < dc2_0) << " , "
+				<< sw1_0 * (dc1_0 >= dc2_0) + sw2_0 * (dc1_0 < dc2_0) << " , "
+				<< sw2_0 * (dc1_0 >= dc2_0) + sw1_0 * (dc1_0 < dc2_0) << " , "
+				<< dc1_1 * (dc1_0 >= dc2_0) + dc2_1 * (dc1_0 < dc2_0) << " , "
+				<< dc2_1 * (dc1_0 >= dc2_0) + dc1_1 * (dc1_0 < dc2_0) << " , "
+				<< sw1_1 * (dc1_0 >= dc2_0) + sw2_1 * (dc1_0 < dc2_0) << " , "
+				<< sw2_1 * (dc1_0 >= dc2_0) + sw1_1 * (dc1_0 < dc2_0) << " , "
+				<< dca_0 << " , " << dca_1 << "\n";
 				coagFile.close();
-			}*/
+				}*/
 
-        } else {
-            sys.Particles().Update(ip1);
-            sys.Particles().Update(ip2);
-            return 1; // Ficticious event.
+			}
+			else {
+				sys.Particles().Update(ip1);
+				sys.Particles().Update(ip2);
+				return 1; // Ficticious event.
+			}
 		}
-    } else {
-        // One or both particles were invalidated on update,
-        // but that's not a problem.  Information on the update
-        // of valid particles must be propagated into the binary
-        // tree
-        if(ip1 >= 0)
-            sys.Particles().Update(ip1);
+		else {
+			// One or both particles were invalidated on update,
+			// but that's not a problem.  Information on the update
+			// of valid particles must be propagated into the binary
+			// tree
+			if (ip1 >= 0)
+				sys.Particles().Update(ip1);
 
-        if(ip2 >= 0)
-            sys.Particles().Update(ip2);
-    }
+			if (ip2 >= 0)
+				sys.Particles().Update(ip2);
+		}
+	//}
 	
     return 0;
 }
