@@ -419,6 +419,7 @@ namespace Sweep {
 			temp.push_back(FE2);
 			temp.push_back(BFE2);
 			temp.push_back(FE_HACA);
+			temp.push_back(FE3);
 			return temp;
 		}
     };
