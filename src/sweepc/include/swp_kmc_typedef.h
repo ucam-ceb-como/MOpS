@@ -416,10 +416,11 @@ namespace Sweep {
 		//! Get a vector of all site types for merging sites
 		std::vector<kmcSiteType> inline vectMergesites() {
 			std::vector<kmcSiteType> temp;
-			temp.push_back(FE2);
+			/*temp.push_back(FE2);
 			temp.push_back(BFE2);
 			temp.push_back(FE_HACA);
-			temp.push_back(FE3);
+			temp.push_back(FE3);*/
+			temp.push_back(FE);
 			return temp;
 		}
     };

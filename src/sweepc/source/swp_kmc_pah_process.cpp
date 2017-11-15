@@ -53,6 +53,8 @@
 #include <boost/random/uniform_smallint.hpp>
 #include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
+#include <boost/random/uniform_01.hpp>
+#include "choose_index.hpp"
 
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
@@ -1289,47 +1291,72 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 }
 void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	Spointer Sp1, Sp2;
-	bool FH1 = false;
-	bool FH2 = false;
+	vector<int> sites1b, sites2b;
+	vector<int> sites1a, sites2a;
+	vector<double> combos;
+	vector<int>::iterator it1;
+	vector<int>::iterator it2;
 
 	Sp1 = chooseRandomSite(Mergesites, rng);
-	if (moveIt(Sp1, 1)->comb == FE2 || moveIt(Sp1, 1)->comb == BFE2){
-		Spointer Sp3 = moveIt(Sp1, 1);
-		Sp1 = Sp3;
-	}
 
 	Sp2 = rhs.chooseRandomSite(Mergesites, rng);
-	if (rhs.moveIt(Sp2, 1)->comb == FE2 || rhs.moveIt(Sp2, 1)->comb == BFE2){
-		Sp2 = rhs.moveIt(Sp2, 1);
+
+	sites1a.resize(2);
+	sites1b.resize(2);
+
+	sites1b[0] = abs((int)moveIt(Sp1, -1)->type);
+	sites1a[0] = 1;
+
+	sites1b[1] = 1;
+	sites1a[1] = abs((int)moveIt(Sp1, 1)->type);
+
+	sites2a.resize(2);
+	sites2b.resize(2);
+
+	sites2b[0] = abs((int)moveIt(Sp2, -1)->type);
+	sites2a[0] = 1;
+
+	sites2b[1] = 1;
+	sites2a[1] = abs((int)moveIt(Sp2, 1)->type);
+
+	combos.resize(sites1a.size()*sites2a.size()); 
+	int before, after;
+	int count1 = 0;
+	int count2 = 0;
+
+	for (it1 = sites1a.begin(); it1 != sites1a.end(); ++it1){
+		for (it2 = sites2a.begin(); it2 != sites2a.end(); ++it2){
+			before = (*it1)*(*it2);
+			after = sites1b[count1] * sites2b[count2];
+			count2++;
+			if (before < 5 && after < 5){
+				combos[count2 + count1*(sites2a.size())] = 1.0;
+			}
+			else{
+				combos[count2 + count1*(sites2a.size())] = 0.0;
+			}
+		}
+		count1++;
 	}
 
+	boost::uniform_01<rng_type &, double> uniformGenerator(rng);
+	size_t index = chooseIndex<double>(combos, uniformGenerator);
 
-	if (Sp1->comb == FE_HACA){
-		FH1 = true;
-	}
-	if (Sp2->comb == FE_HACA){
-		FH2 = true;
-	}
-
-	if (FH1){
-		if (moveIt(Sp1, -1)->type == ZZ){
-			convSiteType(moveIt(Sp1, -1), BY5BR);
-		}
-		else{
-			convSiteType(moveIt(Sp1, -1), BY6BR);
-		}
-	}
-	else if (FH2){
-		if (moveIt(Sp2, -1)->type == ZZ){
-			convSiteType(moveIt(Sp1, -1), BY5BR);
-		}
-		else{
-			convSiteType(moveIt(Sp1, -1), BY6BR);
-		}
+	int index1 = (int)index / sites2a.size();
+	int index2;
+	if (index == 0 || index == 2){
+		index2 = 0;
 	}
 	else{
-		convSiteType(moveIt(Sp1, -1), ACBR);
+		index2 = 1;
 	}
+
+	int newtype1 = sites1b[index1] + sites2b[index2] + 1;
+
+	int newtype2 = sites1a[index1] + sites2a[index2] + 1;
+
+	convSiteType(moveIt(Sp1, -1), ACBR);
+
 	Spointer st3;
 	for (st3 = rhs.moveIt(Sp2,1); st3 != rhs.m_pah->m_siteList.end(); st3++){
 		addSite(st3->type, Sp1);
@@ -1339,7 +1366,6 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	}
 	convSiteType(Sp1, ACBL);
 	//convSiteType(Sp1, AC);
-	Sp1 = m_pah->m_siteList.begin();
 	updateCombinedSites();
 	updateHinderedSites();
 

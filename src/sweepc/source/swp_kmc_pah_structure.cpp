@@ -179,7 +179,8 @@ int PAHStructure::numofSite() const
 
 int PAHStructure::numMergeSites()
 {
-	return m_siteMap[FE2].size() + m_siteMap[BFE2].size() + m_siteMap[FE_HACA].size() + m_siteMap[FE3].size();
+	//return m_siteMap[FE2].size() + m_siteMap[BFE2].size() + m_siteMap[FE_HACA].size() + m_siteMap[FE3].size();
+	return m_siteMap[FE].size();
 }
 
 void PAHStructure::setnumofC(int val)
