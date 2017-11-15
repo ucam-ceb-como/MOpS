@@ -179,7 +179,7 @@ int PAHStructure::numofSite() const
 
 int PAHStructure::numMergeSites()
 {
-	return m_siteMap[FE2].size() + m_siteMap[BFE2].size();
+	return m_siteMap[FE2].size() + m_siteMap[BFE2].size() + m_siteMap[FE_HACA].size() + m_siteMap[FE3].size();
 }
 
 void PAHStructure::setnumofC(int val)
@@ -287,7 +287,7 @@ void PAHStructure::Deserialize(std::istream &in)
     int temp_numofEmbeddedRings5 = val;
 
 	in.read(reinterpret_cast<char*>(&val), sizeof(val));
-	int temp_numofBridges = val;
+	m_bridges = val;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     name = new char[val];

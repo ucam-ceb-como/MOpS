@@ -1454,8 +1454,8 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 		double density = model.Components(0)->Density();
 		//! PP mass (kg).
 		double m_mass = m_numcarbon*1.9945e-26 + m_numH*1.6621e-27;
-		//volume = m_mass / density;
-		volume = sys.SampleVolume(); //get volume in m3
+		volume = m_mass / density;
+		//volume = sys.SampleVolume(); //get volume in m3
 		//ratio = m_mass / density / sys.SampleVolume();
 		//cout << ratio << " " << sys.SampleVolume() << " " << m_mass / density << endl;
 		while (m_t < dt && m_PAH.size() > 1)
@@ -1527,7 +1527,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 							m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
 
-							cout << "Merged!!!" << endl;
+							//cout << "Merged!!!" << endl;
 
 							RemoveInvalidPAHs();
 							m_PAHclusterchanged = true;

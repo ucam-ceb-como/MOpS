@@ -1299,52 +1299,37 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	}
 
 	Sp2 = rhs.chooseRandomSite(Mergesites, rng);
-	if (Sp1->comb == FE_HACA && Sp2->comb == FE_HACA){
-		int guard = 0;
-		while (Sp2->comb == FE_HACA && guard < 1000){
-			Sp2 = rhs.chooseRandomSite(Mergesites, rng);
-			guard++;
-		}
-		if (Sp1->comb == FE_HACA && Sp2->comb == FE_HACA){
-			guard = 0;
-			while (Sp1->comb == FE_HACA && guard < 1000){
-				Sp1 = chooseRandomSite(Mergesites, rng);
-				guard++;
-			}
-		}
-	}
-
-	if (!(Sp1->comb == FE_HACA && Sp2->comb == FE_HACA)){
-		if (Sp1->comb == FE_HACA){
-			FH1 = true;
-		}
-		if (Sp2->comb == FE_HACA){
-			FH2 = true;
-		}
-
 	if (rhs.moveIt(Sp2, 1)->comb == FE2 || rhs.moveIt(Sp2, 1)->comb == BFE2){
 		Sp2 = rhs.moveIt(Sp2, 1);
 	}
 
-		if (FH1){
-			if (moveIt(Sp1, -1)->type == ZZ){
-				convSiteType(moveIt(Sp1, -1), BY5BR);
-			}
-			else{
-				convSiteType(moveIt(Sp1, -1), BY6BR);
-			}
-		}
-		else if (FH2){
-			if (moveIt(Sp2, -1)->type == ZZ){
-				convSiteType(moveIt(Sp1, -1), BY5BR);
-			}
-			else{
-				convSiteType(moveIt(Sp1, -1), BY6BR);
-			}
+
+	if (Sp1->comb == FE_HACA){
+		FH1 = true;
+	}
+	if (Sp2->comb == FE_HACA){
+		FH2 = true;
+	}
+
+	if (FH1){
+		if (moveIt(Sp1, -1)->type == ZZ){
+			convSiteType(moveIt(Sp1, -1), BY5BR);
 		}
 		else{
-			convSiteType(moveIt(Sp1, -1), ACBR);
+			convSiteType(moveIt(Sp1, -1), BY6BR);
 		}
+	}
+	else if (FH2){
+		if (moveIt(Sp2, -1)->type == ZZ){
+			convSiteType(moveIt(Sp1, -1), BY5BR);
+		}
+		else{
+			convSiteType(moveIt(Sp1, -1), BY6BR);
+		}
+	}
+	else{
+		convSiteType(moveIt(Sp1, -1), ACBR);
+	}
 	Spointer st3;
 	for (st3 = rhs.moveIt(Sp2,1); st3 != rhs.m_pah->m_siteList.end(); st3++){
 		addSite(st3->type, Sp1);
@@ -1357,11 +1342,6 @@ void PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	Sp1 = m_pah->m_siteList.begin();
 	updateCombinedSites();
 	updateHinderedSites();
-}
-	else{
-		cout << "Could only find two FE_HACA sites";
-		assert(false);
-	}
 
 }
 void PAHProcess::updateHinderedSites() {
@@ -3425,6 +3405,7 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 		updateCombinedSites(st1);
 		updateCombinedSites(S1); updateCombinedSites(S2);
 		updateCombinedSites(S3); updateCombinedSites(S4);
+		//cout << "Bridge closed!" << endl;
 	}
 	convSiteType(stt, FE);
 	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
@@ -3555,6 +3536,10 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 		m_pah->m_bridges--;
 		if (type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
 			m_pah->m_bridges--;
+			//cout << "2 Bridge closed!" << endl;
+		}
+		else{
+			//cout << "1 Bridge closed!" << endl;
 		}
 	}
 
