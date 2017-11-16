@@ -1453,9 +1453,9 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 		//double ratio;
 		double density = model.Components(0)->Density();
 		//! PP mass (kg).
-		double m_mass = m_numcarbon*1.9945e-26 + m_numH*1.6621e-27;
-		volume = m_mass / density;
-		//volume = sys.SampleVolume(); //get volume in m3
+		//double m_mass = m_numcarbon*1.9945e-26 + m_numH*1.6621e-27;
+		//volume = m_mass / density;
+		volume = sys.SampleVolume(); //get volume in m3
 		//ratio = m_mass / density / sys.SampleVolume();
 		//cout << ratio << " " << sys.SampleVolume() << " " << m_mass / density << endl;
 		while (m_t < dt && m_PAH.size() > 1)
@@ -1470,15 +1470,15 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				if (mergesites[it] > 0) numdiffPAHs++;
 			}
 			if (totalsites > 2 && numdiffPAHs > 1){
-				fac1 = 1.0;
-				fac2 = 1.0;
 				numper = totalsites / numdiffPAHs;
-				for (int ii = 2; ii <= numdiffPAHs; ii++) fac1 *= ii;
-				for (int ii = 2; ii <= (numdiffPAHs-2.0); ii++) fac2 *= ii;
+				fac1 = numdiffPAHs*(numdiffPAHs-1);
+				fac2 = 1.0;
+				//for (int ii = 2; ii <= numdiffPAHs; ii++) fac1 *= (double) ii;
+				//for (int ii = 2; ii <= (numdiffPAHs - 2.0); ii++) fac2 *= (double) ii;
 				combos = fac1 / fac2 / 2.0;
 				//cout << combos << " " << fac1 << " " << fac2 << " " <<numper << endl;
 				double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t);
-				kMerge = kMerge / NA / volume; //convert KMerge from m3/mol/s to 1/#/s.
+				kMerge = 1.0e6*kMerge / NA / volume; //convert KMerge from m3/mol/s to 1/#/s.
 				typedef boost::exponential_distribution<double> exponential_distrib;
 				exponential_distrib waitingTimeDistrib(kMerge*combos*numper*numper);
 				boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
@@ -1510,27 +1510,35 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						
 						if (!isFictitious){
 
-							int numR6 = m_PAH[ip1]->m_pahstruct->numofRings() + m_PAH[ip2]->m_pahstruct->numofRings();
-							int numLoneR5 = m_PAH[ip1]->m_pahstruct->numofLoneRings5() + m_PAH[ip2]->m_pahstruct->numofLoneRings5();
-							int numEmbeddedR5 = m_PAH[ip1]->m_pahstruct->numofEmbeddedRings5() + m_PAH[ip2]->m_pahstruct->numofEmbeddedRings5();
-							int numC = m_PAH[ip1]->m_pahstruct->numofC() + m_PAH[ip2]->m_pahstruct->numofC();
-							int numH = m_PAH[ip1]->m_pahstruct->numofH() + m_PAH[ip2]->m_pahstruct->numofH();
-							int numBridges = m_PAH[ip1]->m_pahstruct->numofBridges() + m_PAH[ip2]->m_pahstruct->numofBridges() + 1;
-							m_PAH[ip1]->m_pahstruct->setnumofRings(numR6);
-							m_PAH[ip1]->m_pahstruct->setnumofLoneRings5(numLoneR5);
-							m_PAH[ip1]->m_pahstruct->setnumofEmbeddedRings5(numEmbeddedR5);
-							m_PAH[ip1]->m_pahstruct->setnumofC(numC);
-							m_PAH[ip1]->m_pahstruct->setnumofH(numH);
-							m_PAH[ip1]->m_pahstruct->setnumofBridges(numBridges);
-							m_PAH[ip1]->time_created = min(m_PAH[ip1]->time_created, m_PAH[ip2]->time_created);
-							m_PAH[ip1]->lastupdated = min(m_PAH[ip1]->lastupdated, m_PAH[ip2]->lastupdated);
+							bool success = m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
 
-							m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
+							if (success){
 
-							//cout << "Merged!!!" << endl;
+								int numR6 = m_PAH[ip1]->m_pahstruct->numofRings() + m_PAH[ip2]->m_pahstruct->numofRings();
+								int numLoneR5 = m_PAH[ip1]->m_pahstruct->numofLoneRings5() 
+									+ m_PAH[ip2]->m_pahstruct->numofLoneRings5();
+								int numEmbeddedR5 = m_PAH[ip1]->m_pahstruct->numofEmbeddedRings5() 
+									+ m_PAH[ip2]->m_pahstruct->numofEmbeddedRings5();
+								int numC = m_PAH[ip1]->m_pahstruct->numofC() + m_PAH[ip2]->m_pahstruct->numofC();
+								int numH = m_PAH[ip1]->m_pahstruct->numofH() + m_PAH[ip2]->m_pahstruct->numofH();
+								int numBridges = m_PAH[ip1]->m_pahstruct->numofBridges() 
+									+ m_PAH[ip2]->m_pahstruct->numofBridges() + 1;
+								m_PAH[ip1]->m_pahstruct->setnumofRings(numR6);
+								m_PAH[ip1]->m_pahstruct->setnumofLoneRings5(numLoneR5);
+								m_PAH[ip1]->m_pahstruct->setnumofEmbeddedRings5(numEmbeddedR5);
+								m_PAH[ip1]->m_pahstruct->setnumofC(numC);
+								m_PAH[ip1]->m_pahstruct->setnumofH(numH);
+								m_PAH[ip1]->m_pahstruct->setnumofBridges(numBridges);
+								m_PAH[ip1]->time_created = min(m_PAH[ip1]->time_created, m_PAH[ip2]->time_created);
+								m_PAH[ip1]->lastupdated = min(m_PAH[ip1]->lastupdated, m_PAH[ip2]->lastupdated);
 
-							RemoveInvalidPAHs();
-							m_PAHclusterchanged = true;
+								//cout << "Merged!!!" << endl;
+
+								m_PAH[ip2]->m_pahstruct->setnumofC(5);
+
+								RemoveInvalidPAHs();
+								m_PAHclusterchanged = true;
+							}
 						}
 					}
 				}

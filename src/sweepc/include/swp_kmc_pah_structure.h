@@ -123,7 +123,7 @@ namespace Sweep{
             void Serialize(std::ostream &out) const;
             void Deserialize(std::istream &in);
 
-			void MergeSiteLists(PAHStructure* rhs, rng_type &rng);
+			bool MergeSiteLists(PAHStructure* rhs, rng_type &rng);
 
 			std::list<Site> GetSiteList() const;
 

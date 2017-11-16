@@ -84,18 +84,18 @@ PAHStructure::PAHStructure(const PAHStructure& copy){
 
 PAHStructure &PAHStructure::operator=(const PAHStructure &rhs)
 {
-    if (this != &rhs) {
+    //if (this != &rhs) {
         m_siteList = rhs.m_siteList;
         // the below variables are not interested now, and they has been commented out to save computation effort. If user wanna to actitave them, please be careful, particularly m_carbonList, since each element of m_carbonList will be destroied in the deconstructor. If you do wanna to copy the m_carbonList, make sure you locate new space for the objects instead of "simply copy". dc516
         //m_cfirst   = rhs.m_cfirst;
         //m_clast    = rhs.m_clast;
-        //m_siteMap  = rhs.m_siteMap;
+        m_siteMap  = rhs.m_siteMap;
         //m_rings5   = rhs.m_rings5;
         //m_rings    = rhs.m_rings;
         //m_counts   = rhs.m_counts;
         //m_carbonList = rhs.m_carbonList;
         //m_cpositions = rhs.m_cpositions;
-    }
+    //}
     return *this;
 }
 //! Default Destructor
@@ -306,11 +306,11 @@ void PAHStructure::Deserialize(std::istream &in)
     p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numC, temp_numH);
 }
 
-void PAHStructure::MergeSiteLists(PAHStructure* rhs, rng_type &rng) {
+bool PAHStructure::MergeSiteLists(PAHStructure* rhs, rng_type &rng) {
 	PAHProcess p1(*this);
 	PAHProcess p2(*rhs);
-	p1.MergeSites(p2, rng);
-	rhs->setnumofC(1);
+	bool success = p1.MergeSites(p2, rng);
+	return success;
 }
 
 std::list<Site> PAHStructure::GetSiteList() const {

@@ -182,7 +182,9 @@ public:
     // false: doesn't save rates, returns actual site counts
     bool m_rates_save;
 
-	void MergeSites(PAHProcess& rhs, rng_type &rng);
+	bool MergeSites(PAHProcess& rhs, rng_type &rng);
+
+	bool CheckLinking(PAHProcess& rhs, Spointer& Sp1, Spointer& Sp2, int index, int type1, int type2);
 
 private:
     // Read Process
@@ -271,12 +273,11 @@ private:
     //void updateA(Cpointer C, char sp);
     //! Overload function, updateA for all C from C_1 to C_2 inclusive
     //void updateA(char spc);
-	void updateHinderedSites();
+	bool updateHinderedSites();
 	int SiteSides(Spointer& stt);
 	double SiteAngle(Spointer& stt);
 
 	std::pair<Spointer, bool> CheckBridge(Spointer& stt);
-	int SiteSidesBridge(kmcSiteType stt, kmcSiteType type);
 	double AngleBridge(kmcSiteType stt, kmcSiteType type);
 	double Length(kmcSiteType stt);
     
