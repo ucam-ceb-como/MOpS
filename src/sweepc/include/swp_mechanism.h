@@ -202,6 +202,14 @@ public:
 	// aab64 Get psi type
 	void GetPSItype(std::string &psitype) const;
 
+	// aab64 Returns threshold to adjust ensemble weights
+	double GetWeightOnsetRatio(void) const;
+
+	// aab64 Returns the flag for adaptive ensemble weights
+	bool GetWeightScalingFlag(void) const;
+
+	// aab64 Sets flag for the adaptive ensemble weights and the onset ratio
+	virtual void SetWeightScaling(bool isWeightScaling, double ratio);
 
 	// RATE CALCULATION.
 
@@ -432,6 +440,9 @@ private:
 	mutable double m_upp_dval_surfinc;      // Onset for surface inception
 	mutable double m_low_dval_surfinc;      // Cutoff for surface inception
 	mutable std::string m_psi_type;         // Type of particle surface inception to do
+
+	mutable bool m_weightscaling_flag;      // Flag for adaptive ensemble weights
+	mutable double m_weightscaling_onset;   // Onset ratio for adaptive ensemble weights
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 

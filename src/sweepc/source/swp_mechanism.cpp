@@ -78,7 +78,8 @@ m_weighted_coag(false), m_var_incept_weight(false),
 m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L"), 
 m_heavyallowed(false), m_upp_dval_heavy(1.0e-7), m_low_dval_heavy(1.0e-9),
 m_surfincflag(false), m_upp_dval_surfinc(1.0e-7),
-m_low_dval_surfinc(1.0e-9), m_psi_type("E")
+m_low_dval_surfinc(1.0e-9), m_psi_type("E"),
+m_weightscaling_flag(false), m_weightscaling_onset(10.0)
 {
 }
 
@@ -134,6 +135,9 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 	m_upp_dval_surfinc = rhs.m_upp_dval_surfinc;
 	m_low_dval_surfinc = rhs.m_low_dval_surfinc;
 	m_psi_type = rhs.m_psi_type;
+
+	m_weightscaling_flag = rhs.m_weightscaling_flag;
+	m_weightscaling_onset = rhs.m_weightscaling_onset;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -467,6 +471,25 @@ void Mechanism::GetPSItype(std::string &psitype) const
 		psitype = m_psi_type;
 	else
 		psitype = "E";
+}
+
+// aab64 Returns threshold to adjust ensemble weights
+double Mechanism::GetWeightOnsetRatio(void) const
+{
+	return m_weightscaling_onset;
+}
+
+// aab64 Returns the flag for adaptive ensemble weights
+bool Mechanism::GetWeightScalingFlag(void) const
+{
+	return m_weightscaling_flag;
+}
+
+// aab64 Sets flag for the adaptive ensemble weights and the onset ratio
+void Mechanism::SetWeightScaling(bool isWeightScaling, double ratio)
+{
+	m_weightscaling_flag = isWeightScaling;
+	m_weightscaling_onset = ratio;
 }
 
 
@@ -1159,9 +1182,21 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
         // Stop ensemble from doubling while updating particles.
         sys.Particles().FreezeDoubling();
 
-        // Perform deferred processes on all particles individually.
+		// aab64 ensemble weight scaling
+		bool changeWt = false;
+		double scaleFac = sys.ParticleCount() / sys.Particles().GetSum(iW);
+		if (scaleFac > GetWeightOnsetRatio() && GetWeightScalingFlag()) 
+		{
+			changeWt = true;
+			sys.AdjustSampleVolume(scaleFac);
+		}
+
+	    // Perform deferred processes on all particles individually.
         Ensemble::iterator i;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
+			// aab64 update weight if required
+			if (changeWt)
+				(*i)->setStatisticalWeight((*i)->getStatisticalWeight() * scaleFac);
             UpdateParticle(*(*i), sys, t, rng);
         }
 
@@ -1664,6 +1699,9 @@ void Mechanism::releaseMem(void)
 	m_upp_dval_surfinc = 0; // 2017.09.20 to do: look at this
 	m_low_dval_surfinc = 0;
 	m_psi_type.clear();
+
+	m_weightscaling_flag = false;
+	m_weightscaling_onset = 0;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 }
 

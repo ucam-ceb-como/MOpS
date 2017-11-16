@@ -44,6 +44,14 @@
 		    <onsetsp>1.0</onsetsp>
 		    <weightchangefun>exponential</weightchangefun>
 		</inceptionweightchange>
+		<!-- Additional specs to do ensemble weight scaling 
+		      if flag is on, the ensemble weights wi will be 
+			  adjusted by the factor N/sum(wi) whenever 
+			  N/sum(wi) > onsetratio and the sample volume scaled
+			  to match -->
+		<weightscaling flag="off">
+		    <onsetratio>4.0</onsetratio>
+		</weightscaling>
     </coagulation>
 
     <!-- Ti addition reactions

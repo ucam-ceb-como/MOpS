@@ -1930,6 +1930,28 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
 							mech.SetVariableWeightedInception(varIncWeight, maxIncWeight, minIncWeight, minSPonset, WeightFn);
 						}
 					}
+
+					// aab64 Ensemble weight scaling to reduce numerical coagulation rate
+					bool weightScaling = false;
+					double onsetRatio = 10.0;
+					CamXML::Element *weightScaleXML = (*it)->GetFirstChild("weightscaling");
+					if (weightScaleXML != NULL) {
+						CamXML::Element *ratioel = weightScaleXML->GetFirstChild("onsetratio");
+						const std::string weightScaleName = weightScaleXML->GetAttributeValue("flag");
+						if (weightScaleName == "on") 
+						{
+							weightScaling = true;
+							if (ratioel != NULL) {
+								onsetRatio = cdble(ratioel->Data());
+								if (onsetRatio < 1.0)
+									throw std::runtime_error("Ratio must be >= 1.0.\n");
+							}
+							std::cout << "Applying ensemble weight scaling at ratio N/sum(w) = " << onsetRatio << std::endl;
+							mech.SetWeightScaling(weightScaling, onsetRatio);
+						}
+						else
+							std::cout << "No ensemble weight scaling." << std::endl;
+					}
                 }
 
                 // Rate scaling now that a process has been created
