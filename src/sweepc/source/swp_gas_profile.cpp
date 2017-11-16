@@ -170,5 +170,6 @@ GasProfile::const_iterator Sweep::LocateGasPoint(const GasProfile &prof, double 
     for (GasProfile::const_iterator i=prof.begin(); i!=prof.end(); ++i) {
         if (GasPoint::IsAfterTime(*i, t)) return i;
     }
-    return prof.end();
+    // return the last element
+    return prof.end()-1;
 }
