@@ -186,6 +186,8 @@ public:
 
 	bool CheckLinking(PAHProcess& rhs, Spointer& Sp1, Spointer& Sp2, int index, int type1, int type2);
 
+	std::vector < std::pair<double, double> > PAHProcess::BuildCoords();
+
 private:
     // Read Process
     ////! Get other member of the site a particular C atom is a member of

@@ -1067,7 +1067,9 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
 
 			// Update individual PAHs within this particle by using KMC code
 			// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
+			//cout << "Updating PAHs" << endl;
 			pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng, overflow);
+			//cout << "Updating PAHs done" << endl;
 
 			pah->UpdateCache();
 			pah->CheckRounding();

@@ -1469,7 +1469,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				totalsites += mergesites[it];
 				if (mergesites[it] > 0) numdiffPAHs++;
 			}
-			if (totalsites > 2 && numdiffPAHs > 1){
+			if (totalsites > 1 && numdiffPAHs > 1){
 				numper = totalsites / numdiffPAHs;
 				fac1 = numdiffPAHs*(numdiffPAHs-1);
 				fac2 = 1.0;
@@ -1486,6 +1486,8 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 				m_t = m_t + t_step;
 
+				//cout << t_step << endl;
+
 				if (m_t < dt)
 				{
 
@@ -1501,6 +1503,12 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 					if (ip1 != ip2)
 					{
+						if (m_PAH[ip1]->m_pahstruct->numofRings() < m_PAH[ip2]->m_pahstruct->numofRings()){
+							size_t temp1 = ip1;
+							size_t temp2 = ip2;
+							ip1 = temp2;
+							ip2 = temp1;
+						}
 						double truer = mergesites[ip1] * mergesites[ip2];
 						double majr = pow(mergesites[ip1]+mergesites[ip2],2.0)/4.0;
 						typedef boost::bernoulli_distribution<double> bernoulli_distrib;

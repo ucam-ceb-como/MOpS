@@ -1320,11 +1320,13 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	//cout << "Entering! " <<endl;
 	int guard = 0;
 	
-	while (accumulate(combos.begin(), combos.end(), 0) == 0 && guard<1000){
+	while (accumulate(combos.begin(), combos.end(), 0) == 0 && guard<1){
 
 		Sp1 = chooseRandomSite(Mergesites, rng);
 
 		Sp2 = rhs.chooseRandomSite(Mergesites, rng);
+
+		//Sp2 = rhs.moveIt(Sp2, 1);
 
 		sites1b[0] = abs((int)moveIt(Sp1, -1)->type);
 		sites1a[0] = 1;
@@ -1355,7 +1357,6 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 					}
 					else{
 						combos[count2 + count1 * 2] = 0.0;
-						cout << link << endl;
 					}
 				}
 				else{
@@ -1382,7 +1383,6 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 					}
 					else{
 						combos[4 + count2 + count1 * 2] = 0.0;
-						cout << link << endl;
 					}
 				}
 				else{
@@ -1403,7 +1403,6 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	else{
 		success = true;
 	}
-
 
 	//cout << "Found! " <<guard <<endl;
 
@@ -1529,7 +1528,7 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 
 	Spointer Sp1 = testPAH.moveIt(testPAH.m_pah->m_siteList.begin(), ind);
 
-	bool collision = true;
+	bool collision = false;
 
 	int index1, index2;
 	bool left;
@@ -1558,6 +1557,7 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 
 	Spointer ststart;
 	Spointer stb;
+	Spointer collstart, collend;
 	int inc;
 	if (left){
 		inc = 1;
@@ -1610,6 +1610,15 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 		}
 	}
 
+	if (index1 == 0){
+		collstart = testPAH.moveIt(Sp1, -1);
+		collend = Sp1;
+	}
+	else{
+		collstart = Sp1;
+		collend = testPAH.moveIt(Sp1, 1);
+	}
+
 	Spointer st3 = ststart;
 	Spointer st4;
 	int count3 = rhs.m_pah->m_siteList.size() - 3;
@@ -1619,120 +1628,64 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 		st3 = st4;
 	}
 
+	std::vector < std::pair<double, double> > coordinates;
+	coordinates.resize(testPAH.m_pah->m_siteList.size());
+
+	coordinates = testPAH.BuildCoords();
+
+	if (coordinates[1].first == 0 && coordinates[1].second == 0){
+		return false;
+	}
+
 	//Check if collision occurs
-	std::pair<double, double> coords1;
-	std::pair<double, double> coords2;
-	std::pair<double, double> coordstar1;
-	std::pair<double, double> coordstar2;
-	std::pair<double, double> coordsadd;
-	double Ang;
-	double heading;
-	double length;
-	double dist1, dist2;
-	kmcSiteType prevtype = None;
-	kmcSiteType currtype = None;
 	int count = 0;
+	int count1 = 0;
 	Spointer st1;
+	Spointer st;
 
-	for (Spointer st = testPAH.m_pah->m_siteList.begin(); st != testPAH.m_pah->m_siteList.end(); st++) {
-		kmcSiteType type = st->type;
-
-		coords1.first = 0.0;
-		coords1.second = 0.0;
-		coords2.first = 0.0;
-		coords2.second = 0.0;
-		coordstar1.first = 0.0;
-		coordstar1.second = 0.0;
-		heading = 0.0;
-		Ang = 0.0;
-		if (Ang == -180.0){
-			Ang = 0.0;
+	ind = 0;
+	for (Sp111 = testPAH.m_pah->m_siteList.begin(); Sp111 != testPAH.m_pah->m_siteList.end(); ++Sp111){
+		if (Sp111 == collstart){
+			break;
 		}
-		length = Length(type);
-		heading += Ang;
-		coordstar2.first = cos(heading / 180 * PI)*length;
-		coordstar2.second = sin(heading / 180 * PI)*length;
+		ind++;
+	}
 
-		coords1 = coordstar2;
-
-		prevtype = st->type;
-
-		for (st1 = testPAH.moveIt(st, 1); st1 != testPAH.m_pah->m_siteList.end(); st1++) {
-			currtype = st1->type;
-			Ang = AngleBridge(currtype, prevtype) - 180;
-			if (Ang == -181){
-				collision = true;
-				break;
-			}
-			if (Ang == -180.0){
-				Ang = 0.0;
-			}
-			length = Length(currtype);
-			heading += Ang;
-			coords2.first = coords1.first + cos(heading / 180 * PI)*length;
-			coords2.second = coords1.second + sin(heading / 180 * PI)*length;
-
-			dist1 = pow(coords1.first - coordstar2.first, 2);
-			dist1 += pow(coords1.second - coordstar2.second, 2);
-			dist1 = sqrt(dist1);
-
-			dist2 = pow(coords2.first - coordstar1.first, 2);
-			dist2 += pow(coords2.second - coordstar1.second, 2);
-			dist2 = sqrt(dist2);
-
-			if ((abs(dist1) < 1.0e-5 && abs(dist2) < 1.0e-5)){
-				collision = true;
-				break;
-			}
-
-			prevtype = currtype;
-
-			coords1.first = coords2.first;
-			coords1.second = coords2.second;
-
-			count++;
+	int indend = 0;
+	for (Sp111 = testPAH.m_pah->m_siteList.begin(); Sp111 != testPAH.m_pah->m_siteList.end(); ++Sp111){
+		if (Sp111 == collend){
+			break;
 		}
+		indend++;
+	}
 
-		if (!collision){
-			for (st1 = testPAH.m_pah->m_siteList.begin(); st1 != st; st1++) {
-				currtype = st1->type;
-				Ang = AngleBridge(currtype, prevtype) - 180;
-				if (Ang == -181){
-					collision = true;
+	std::pair<double, double> coords1;
+	double dist1, dist2;
+
+	for (count1 = 0; count1 < testPAH.m_pah->m_siteList.size(); count1++) {
+		if (count1 >= ind + 1 && count1 < indend){
+
+			coords1.first = coordinates[count1].first;
+			coords1.second = coordinates[count1].second;
+
+			for (count = 0; count < testPAH.m_pah->m_siteList.size(); count++) {
+				if (count <= ind || count > indend){
+					dist1 = abs(coords1.first - coordinates[count].first);
+					dist2 = abs(coords1.second - coordinates[count].second);
+					if (dist1 < 1e-1 && dist2 < 1e-1){
+						collision = true;
+						break;
+					}
+				}
+				if (collision){
 					break;
 				}
-				if (Ang == -180.0){
-					Ang = 0.0;
-				}
-				length = Length(currtype);
-				heading += Ang;
-				coords2.first = coords1.first + cos(heading / 180 * PI)*length;
-				coords2.second = coords1.second + sin(heading / 180 * PI)*length;
-
-				dist1 = pow(coords1.first - coordstar2.first, 2);
-				dist1 += pow(coords1.second - coordstar2.second, 2);
-				dist1 = sqrt(dist1);
-
-				dist2 = pow(coords2.first - coordstar1.first, 2);
-				dist2 += pow(coords2.second - coordstar1.second, 2);
-				dist2 = sqrt(dist2);
-
-				if ((abs(dist1) < 1.0e-5 && abs(dist2) < 1.0e-5)){
-					collision = true;
-					break;
-				}
-
-				prevtype = currtype;
-				coords1.first = coords2.first;
-				coords1.second = coords2.second;
-
-				count++;
-
+			}
+			if (collision){
+				break;
 			}
 		}
 	}
-
-	collision = false;
 
 	if (collision){
 		return false;
@@ -1759,6 +1712,11 @@ bool PAHProcess::updateHinderedSites() {
 	kmcSiteType currtype = None;
 	bool hindered;
 	int count = 0;
+
+	std::vector < std::pair<double, double> > coordinates;
+	coordinates.resize(m_pah->m_siteList.size());
+
+	coordinates = BuildCoords();
 
 	//Now, re-assign hindered site types
 	for (Spointer st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
@@ -1915,6 +1873,46 @@ bool PAHProcess::updateHinderedSites() {
 		}
 	}
 	return true;
+}
+
+std::vector < std::pair<double, double> > PAHProcess::BuildCoords(){
+	std::vector < std::pair<double, double> > coordinates;
+	coordinates.resize(m_pah->m_siteList.size());
+	coordinates[0].first = 0;
+	coordinates[0].second = 0;
+	double heading = 0;
+	double Ang;
+	double length;
+	double count = 1;
+	kmcSiteType currtype, prevtype;
+	prevtype = m_pah->m_siteList.begin()->type;
+	for (Spointer st = m_pah->m_siteList.begin(); st != moveIt(m_pah->m_siteList.end(),-1); st++) {
+
+		currtype = st->type;
+		if (count == 1){
+			Ang = 0;
+		}
+		else{
+			Ang = AngleBridge(currtype, prevtype) - 180;
+		}
+		if (Ang == -181){
+			//cout << "Problem with angle" << endl;
+			coordinates[1].first = 0.0;
+			coordinates[1].second = 0.0;
+			return coordinates;
+		}
+		if (Ang == -180.0){
+			Ang = 0.0;
+		}
+		length = Length(currtype);
+		heading += Ang;
+		coordinates[count].first = coordinates[count-1].first + cos(heading / 180 * PI)*length;
+		coordinates[count].second = coordinates[count-1].second + sin(heading / 180 * PI)*length;
+
+		prevtype = st->type;
+		count++;
+	}
+	return coordinates;
 }
 
 std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
