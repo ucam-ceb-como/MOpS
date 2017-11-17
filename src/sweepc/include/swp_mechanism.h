@@ -205,11 +205,14 @@ public:
 	// aab64 Returns threshold to adjust ensemble weights
 	double GetWeightOnsetRatio(void) const;
 
+	// aab64 Returns factor to adjust ensemble weights
+	double GetWeightScalingFactor(void) const;
+
 	// aab64 Returns the flag for adaptive ensemble weights
 	bool GetWeightScalingFlag(void) const;
 
 	// aab64 Sets flag for the adaptive ensemble weights and the onset ratio
-	virtual void SetWeightScaling(bool isWeightScaling, double ratio);
+	virtual void SetWeightScaling(bool isWeightScaling, double ratio, double factor);
 
 	// RATE CALCULATION.
 
@@ -443,6 +446,7 @@ private:
 
 	mutable bool m_weightscaling_flag;      // Flag for adaptive ensemble weights
 	mutable double m_weightscaling_onset;   // Onset ratio for adaptive ensemble weights
+	mutable double m_weightscaling_factor;  // Factor multiplying N/sum(w) in weight scaling
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 

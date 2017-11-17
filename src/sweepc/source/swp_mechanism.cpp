@@ -79,7 +79,7 @@ m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_ince
 m_heavyallowed(false), m_upp_dval_heavy(1.0e-7), m_low_dval_heavy(1.0e-9),
 m_surfincflag(false), m_upp_dval_surfinc(1.0e-7),
 m_low_dval_surfinc(1.0e-9), m_psi_type("E"),
-m_weightscaling_flag(false), m_weightscaling_onset(10.0)
+m_weightscaling_flag(false), m_weightscaling_onset(10.0), m_weightscaling_factor(1.0)
 {
 }
 
@@ -138,6 +138,7 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 
 	m_weightscaling_flag = rhs.m_weightscaling_flag;
 	m_weightscaling_onset = rhs.m_weightscaling_onset;
+	m_weightscaling_factor = rhs.m_weightscaling_factor;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -485,11 +486,18 @@ bool Mechanism::GetWeightScalingFlag(void) const
 	return m_weightscaling_flag;
 }
 
+// aab64 Returns the factor to mulitply the weight scaling
+double Mechanism::GetWeightScalingFactor(void) const
+{
+	return m_weightscaling_factor;
+}
+
 // aab64 Sets flag for the adaptive ensemble weights and the onset ratio
-void Mechanism::SetWeightScaling(bool isWeightScaling, double ratio)
+void Mechanism::SetWeightScaling(bool isWeightScaling, double ratio, double factor)
 {
 	m_weightscaling_flag = isWeightScaling;
 	m_weightscaling_onset = ratio;
+	m_weightscaling_factor = factor;
 }
 
 
@@ -1188,6 +1196,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 		if (scaleFac > GetWeightOnsetRatio() && GetWeightScalingFlag()) 
 		{
 			changeWt = true;
+			scaleFac *= GetWeightScalingFactor();
 			sys.AdjustSampleVolume(scaleFac);
 		}
 

@@ -1934,9 +1934,11 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
 					// aab64 Ensemble weight scaling to reduce numerical coagulation rate
 					bool weightScaling = false;
 					double onsetRatio = 10.0;
+					double factor = 1.0;
 					CamXML::Element *weightScaleXML = (*it)->GetFirstChild("weightscaling");
 					if (weightScaleXML != NULL) {
 						CamXML::Element *ratioel = weightScaleXML->GetFirstChild("onsetratio");
+						CamXML::Element *factorel = weightScaleXML->GetFirstChild("factor");
 						const std::string weightScaleName = weightScaleXML->GetAttributeValue("flag");
 						if (weightScaleName == "on") 
 						{
@@ -1946,8 +1948,13 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
 								if (onsetRatio < 1.0)
 									throw std::runtime_error("Ratio must be >= 1.0.\n");
 							}
-							std::cout << "Applying ensemble weight scaling at ratio N/sum(w) = " << onsetRatio << std::endl;
-							mech.SetWeightScaling(weightScaling, onsetRatio);
+								if (factorel != NULL) {
+									factor = cdble(factorel->Data());
+									if (factor < 0.0)
+										throw std::runtime_error("Factor must be positive.\n");
+							}
+							std::cout << "Applying ensemble weight scaling at ratio N/sum(w) = " << onsetRatio << " and multiplier " << factor << std::endl;
+							mech.SetWeightScaling(weightScaling, onsetRatio, factor);
 						}
 						else
 							std::cout << "No ensemble weight scaling." << std::endl;

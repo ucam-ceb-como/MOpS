@@ -49,8 +49,9 @@
 			  adjusted by the factor N/sum(wi) whenever 
 			  N/sum(wi) > onsetratio and the sample volume scaled
 			  to match -->
-		<weightscaling flag="off">
-		    <onsetratio>4.0</onsetratio>
+		<weightscaling flag="on">
+		    <onsetratio>1.0</onsetratio>
+		    <factor>0.1</factor>
 		</weightscaling>
     </coagulation>
 
