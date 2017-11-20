@@ -196,14 +196,15 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
         t_next = m_t+t_step;
         if(t_next < t_max && t_step < t_step_max) {
 
-			//if (PAH_ID == 38179){
-			//	std::list<Site> tester = pah->GetSiteList();
-			//	cout << "Check start " << PAH_ID << endl << t_next << endl;
-			//	cout << "Rings = "<< pah->numofRings() << endl;;
-			//	for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-			//		cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-			//	}
-			//}
+			int target = 50001;
+			if (PAH_ID == target){
+				std::list<Site> tester = pah->GetSiteList();
+				cout << "Check start " << PAH_ID << endl << t_next << endl;
+				cout << "Rings = "<< pah->numofRings() << endl;;
+				for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+					cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+				}
+			}
 
 			//cout << "Check start " << PAH_ID << endl << t_next << endl;
 
@@ -227,14 +228,14 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				//t_next = t_max;
 			}
 
-			//if (PAH_ID == 38179){
-			//	std::list<Site> tester = pah->GetSiteList();
-			//	cout << "Check end " << PAH_ID << endl << t_next << endl;
-			//	cout << "Rings = " << pah->numofRings() << endl;;
-			//	for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-			//		cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-			//	}
-			//}
+			if (PAH_ID == target){
+				std::list<Site> tester = pah->GetSiteList();
+				cout << "Check end " << PAH_ID << endl << t_next << endl;
+				cout << "Rings = " << pah->numofRings() << endl;;
+				for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+					cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+				}
+			}
 
 			//cout << "Check end " << PAH_ID << endl << t_next << endl;
 

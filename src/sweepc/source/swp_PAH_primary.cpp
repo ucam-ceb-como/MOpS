@@ -1529,32 +1529,45 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 							ip2 = temp1;
 						}
 
-						//int loc;
-						//bool found = false;
-						//if (m_PAH[ip1]->PAH_ID == 38179 || m_PAH[ip2]->PAH_ID == 38179){
-						//	if (m_PAH[ip1]->PAH_ID == 38179){
-						//		std::list<Site> tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
-						//		cout << "Merging start " << m_PAH[ip1]->PAH_ID << endl;
-						//		cout << "Rings = " << m_PAH[ip1]->m_pahstruct->numofRings() << endl;
-						//		Spointer Sp1;
-						//		for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-						//			cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-						//		}
-						//		loc = ip1;
-						//		found = true;
-						//	}
-						//	else{
-						//		std::list<Site> tester = m_PAH[ip2]->m_pahstruct->GetSiteList();
-						//		cout << "Merging start " << m_PAH[ip2]->PAH_ID << endl;
-						//		cout << "Rings = " << m_PAH[ip2]->m_pahstruct->numofRings() << endl;
-						//		Spointer Sp1;
-						//		for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-						//			cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-						//		}
-						//		loc = ip2;
-						//		found = true;
-						//	}
-						//}
+						int target = 50001;
+						int loc;
+						bool found = false;
+						if (m_PAH[ip1]->PAH_ID == target || m_PAH[ip2]->PAH_ID == target){
+							if (m_PAH[ip1]->PAH_ID == target){
+								std::list<Site> tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
+								cout << "Merging start " << m_PAH[ip1]->PAH_ID << endl;
+								cout << "Rings = " << m_PAH[ip1]->m_pahstruct->numofRings() << endl;
+								Spointer Sp1;
+								for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+									cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+								}
+								loc = ip1;
+								found = true;
+								tester = m_PAH[ip2]->m_pahstruct->GetSiteList();
+								cout << "Merging start second " << m_PAH[ip2]->PAH_ID << endl;
+								cout << "Rings = " << m_PAH[ip2]->m_pahstruct->numofRings() << endl;
+								for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+									cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+								}
+							}
+							else{
+								std::list<Site> tester = m_PAH[ip2]->m_pahstruct->GetSiteList();
+								cout << "Merging start " << m_PAH[ip2]->PAH_ID << endl;
+								cout << "Rings = " << m_PAH[ip2]->m_pahstruct->numofRings() << endl;
+								Spointer Sp1;
+								for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+									cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+								}
+								loc = ip2;
+								found = true;
+								tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
+								cout << "Merging start second" << m_PAH[ip1]->PAH_ID << endl;
+								cout << "Rings = " << m_PAH[ip1]->m_pahstruct->numofRings() << endl;
+								for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+									cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+								}
+							}
+						}
 
 						bool success = m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
 
@@ -1582,17 +1595,17 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 							m_PAH[ip2]->m_pahstruct->setnumofC(5);
 
-							//if (found){
-							//	if (m_PAH[loc]->PAH_ID == 38179){
-							//		std::list<Site> tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
-							//		cout << "Merging End " << m_PAH[ip1]->PAH_ID << endl;
-							//		cout << "Rings = " << m_PAH[ip1]->m_pahstruct->numofRings() << endl;
-							//		Spointer Sp1;
-							//		for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-							//			cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-							//		}
-							//	}
-							//}
+							if (found){
+								if (m_PAH[loc]->PAH_ID == target){
+									std::list<Site> tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
+									cout << "Merging End " << m_PAH[ip1]->PAH_ID << endl;
+									cout << "Rings = " << m_PAH[ip1]->m_pahstruct->numofRings() << endl;
+									Spointer Sp1;
+									for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+										cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+									}
+								}
+							}
 
 							RemoveInvalidPAHs();
 							m_PAHclusterchanged = true;

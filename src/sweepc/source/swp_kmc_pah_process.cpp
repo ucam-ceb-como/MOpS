@@ -3549,7 +3549,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
 
-	if (PAH_ID == 38179){
+	if (PAH_ID == 50001){
 		cout << "ID is: " << id << endl;
 	}
 
