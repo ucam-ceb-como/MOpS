@@ -521,7 +521,7 @@ double L6_BY6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
-	r_f = 0.5;
+	//r_f = 0.5;
     return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
 }
 // 

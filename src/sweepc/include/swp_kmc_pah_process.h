@@ -184,10 +184,6 @@ public:
 
 	bool MergeSites(PAHProcess& rhs, rng_type &rng);
 
-	bool CheckLinking(PAHProcess& rhs, Spointer& Sp1, Spointer& Sp2, int index, int type1, int type2);
-
-	std::vector < std::pair<double, double> > PAHProcess::BuildCoords();
-
 private:
     // Read Process
     ////! Get other member of the site a particular C atom is a member of
@@ -287,6 +283,14 @@ private:
 	Spointer convBridgePartner(Spointer& stt);
 
 	int addtoBridgeCount(kmcSiteType type, double mult);
+
+	bool CheckLinking(PAHProcess& rhs, Spointer& Sp1, Spointer& Sp2, int index, int type1, int type2);
+
+	std::vector < std::pair<double, double> > PAHProcess::BuildCoords();
+
+	void PAHProcess::BuildCoordsAll(std::vector < std::pair<double, double> >& coordinates, std::vector<int>& carbons);
+
+	void PAHProcess::Angles(kmcSiteType& stt, std::vector<double>& angles);
 
     // PAH data structure to perform processes on
    PAHStructure* m_pah;

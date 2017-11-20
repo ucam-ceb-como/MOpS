@@ -1516,10 +1516,10 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 		}
 		if (swap){
 			if (abs((int)adder) < 75 && abs((int)adder) > 70){
-				adder = (kmcSiteType)((int)adder + 4);
+				adder = (kmcSiteType)(abs((int)adder) + 4);
 			}
 			else if (abs((int)adder) < 79 && abs((int)adder) > 74){
-				adder = (kmcSiteType)((int)adder - 4);
+				adder = (kmcSiteType)(abs((int)adder) - 4);
 			}
 		}
 		addSite(adder, stb);
@@ -1647,11 +1647,12 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 	}
 
 	std::vector < std::pair<double, double> > coordinates;
-	coordinates.resize(testPAH.m_pah->m_siteList.size());
 
-	coordinates = testPAH.BuildCoords();
+	std::vector <int> carbons;
 
-	if (coordinates[1].first == 0 && coordinates[1].second == 0){
+	testPAH.BuildCoordsAll(coordinates, carbons);
+
+	if (coordinates[0].first == -1.0 && coordinates[0].second == -1.0){
 		return false;
 	}
 
@@ -1669,25 +1670,74 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 		ind++;
 	}
 
+	int sum = 0;
+	for (count = 0; count <= ind; count++){
+		sum += carbons[count];
+	}
+	ind = sum;
+
+	int ind2 = 0;
+	for (Sp111 = testPAH.m_pah->m_siteList.begin(); Sp111 != testPAH.m_pah->m_siteList.end(); ++Sp111){
+		if (Sp111 == testPAH.moveIt(collstart,-1)){
+			break;
+		}
+		ind2++;
+	}
+
+	sum = 0;
+	for (count = 0; count <= ind2; count++){
+		sum += carbons[count];
+	}
+	ind2 = sum;
+
 	int indend = 0;
 	for (Sp111 = testPAH.m_pah->m_siteList.begin(); Sp111 != testPAH.m_pah->m_siteList.end(); ++Sp111){
-		if (Sp111 == collend){
+		if (Sp111 == testPAH.moveIt(collend,-1)){
 			break;
 		}
 		indend++;
 	}
 
+	sum = 0;
+	for (count = 0; count <= indend; count++){
+		sum += carbons[count];
+	}
+	indend = sum;
+
+	int indend2 = 0;
+	for (Sp111 = testPAH.m_pah->m_siteList.begin(); Sp111 != testPAH.m_pah->m_siteList.end(); ++Sp111){
+		if (Sp111 == collend){
+			break;
+		}
+		indend2++;
+	}
+
+	sum = 0;
+	for (count = 0; count <= indend2; count++){
+		sum += carbons[count];
+	}
+	indend2 = sum;
+
 	std::pair<double, double> coords1;
 	double dist1, dist2;
 
-	for (count1 = 0; count1 < testPAH.m_pah->m_siteList.size(); count1++) {
-		if (count1 >= ind + 1 && count1 < indend){
+	if (ind > indend){
+		int temp1 = ind;
+		int temp2 = indend;
+		ind = indend2;
+		indend = ind2;
+		indend2 = temp1;
+		ind2 = temp2;
+	}
+
+	for (count1 = 0; count1 < coordinates.size(); count1++) {
+		if (count1 >= ind + 1 && count1 <= indend){
 
 			coords1.first = coordinates[count1].first;
 			coords1.second = coordinates[count1].second;
 
-			for (count = 0; count < testPAH.m_pah->m_siteList.size(); count++) {
-				if (count <= ind || count > indend){
+			for (count = 0; count < coordinates.size(); count++) {
+				if (count <= ind2 || count >= indend2){
 					dist1 = abs(coords1.first - coordinates[count].first);
 					dist2 = abs(coords1.second - coordinates[count].second);
 					if (dist1 < 1e-3 && dist2 < 1e-3){
@@ -1861,6 +1911,98 @@ std::vector < std::pair<double, double> > PAHProcess::BuildCoords(){
 		count++;
 	}
 	return coordinates;
+}
+
+void PAHProcess::BuildCoordsAll(std::vector < std::pair<double, double> >& coordinates, std::vector <int>& carbons){
+	std::pair<double, double> coords;
+	coords.first = 0;
+	coords.second = 0;
+	coordinates.push_back(coords);
+	double heading = 0;
+	double Ang;
+	double length;
+	double count = 1;
+	kmcSiteType currtype;
+	std::vector<double>::iterator st1;
+	std::vector<double> angles;
+
+	for (Spointer st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
+
+		currtype = st->type;
+		Angles(currtype, angles);
+		for (st1 = angles.begin(); st1 != angles.end(); st1++){
+			heading += *st1;
+			coords.first = coordinates[count - 1].first + cos(heading / 180 * PI)*1.0;
+			coords.second = coordinates[count - 1].second + sin(heading / 180 * PI)*1.0;
+
+			coordinates.push_back(coords);
+			count++;
+		}
+
+		carbons.push_back(angles.size());
+	}
+	coordinates.erase(coordinates.end() - 1);
+}
+
+void PAHProcess::Angles(kmcSiteType& stt, std::vector<double>& angles) {
+	angles.clear();
+	switch (stt){
+	case FE:
+	case NFE:
+	case ERFE:
+	case ERFEER:
+		angles.push_back(-60);
+		return;
+	case ZZ:
+	case NZZ:
+	case ERZZ:
+	case ERZZER:
+		angles.push_back(-60);
+		angles.push_back(60);
+		return;
+	case AC:
+	case NAC:
+	case ERAC:
+	case ERACER:
+	case ACBL:
+	case ACBR:
+	case NACBL:
+	case NACBR:
+		angles.push_back(-60);
+		angles.push_back(60);
+		angles.push_back(60);
+		return;
+	case BY5:
+	case ERBY5:
+	case ER5:
+	case BY5BL:
+	case BY5BR:
+	case NBY5:
+	case NBY5BR:
+	case NBY5BL:
+		angles.push_back(-60);
+		angles.push_back(60);
+		angles.push_back(60);
+		angles.push_back(60);
+		return;
+	case BY6:
+	case BY6BL:
+	case BY6BR:
+	case BY6BRL:
+	case BY6BL2:
+	case BY6BR2:
+		angles.push_back(-60);
+		angles.push_back(60);
+		angles.push_back(60);
+		angles.push_back(60);
+		angles.push_back(60);
+		return;
+	default:
+		cout << "Unassigned site type for determining Angles" << endl;
+		cout << stt << endl;
+		assert(false);
+		abort();
+	}
 }
 
 std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
@@ -3549,7 +3691,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
 
-	if (PAH_ID == 50001){
+	if (PAH_ID == -797){
 		cout << "ID is: " << id << endl;
 	}
 
@@ -3922,6 +4064,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 		cout << "Unphysical newType being assigned after BY6 closure, which is " << newType << endl;
 		cout << ntype1 << endl;
 		cout << ntype2 << endl;
+		cout << PAHID << endl;
 		assert(false);
 		abort();
 	}

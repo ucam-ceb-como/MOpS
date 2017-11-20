@@ -1446,16 +1446,16 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 		//
 		double m_t = 0;
-		double volume;
+		double volumeP, volumeS;
 		double numper;
 		double combos;
 		double fac1, fac2;
 		//double ratio;
 		double density = model.Components(0)->Density();
 		//! PP mass (kg).
-		//double m_mass = m_numcarbon*1.9945e-26 + m_numH*1.6621e-27;
-		//volume = m_mass / density;
-		volume = sys.SampleVolume(); //get volume in m3
+		double m_mass = m_numcarbon*1.9945e-26 + m_numH*1.6621e-27;
+		volumeP = m_mass / density;
+		volumeS = sys.SampleVolume(); //get volume in m3
 		//ratio = m_mass / density / sys.SampleVolume();
 		//cout << ratio << " " << sys.SampleVolume() << " " << m_mass / density << endl;
 		while (m_t < dt && m_PAH.size() > 1)
@@ -1475,10 +1475,10 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				if (mergesites[it] > 0) numdiffPAHs++;
 			}
 			if (totalsites > 1 && numdiffPAHs > 1){
-				double factor = 1.0e9;
+				double factor = 1.0;
 				double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t);
-				kMerge = kMerge / NA / volume; //convert KMerge from m3/mol/s to 1/#/s.
-				double kBreak = sys.Particles().Simulator()->BreakPreFactor(t + m_t);
+				kMerge = kMerge / NA / volumeP; //convert KMerge from m3/mol/s to 1/#/s.
+				double kBreak = sys.Particles().Simulator()->BreakPreFactor(t + m_t)*volumeS/volumeP;
 				typedef boost::exponential_distribution<double> exponential_distrib;
 				double TotRate = 0.0;
 				for (int it = 0; it != m_PAH.size(); it++) {
@@ -1529,10 +1529,11 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 							ip2 = temp1;
 						}
 
-						int target = 50001;
+						int target = -797;
+						int target2 = -1106;
 						int loc;
 						bool found = false;
-						if (m_PAH[ip1]->PAH_ID == target || m_PAH[ip2]->PAH_ID == target){
+						if (m_PAH[ip1]->PAH_ID == target && m_PAH[ip2]->PAH_ID == target2){
 							if (m_PAH[ip1]->PAH_ID == target){
 								std::list<Site> tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
 								cout << "Merging start " << m_PAH[ip1]->PAH_ID << endl;
