@@ -130,6 +130,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		
 		//////////////////////////////////////////// csl37 ////////////////////////////////////////////
 		//print primary coordinates
+		/*
 			ofstream PartCoordsFile;
 			std::string rname(r.GetName());
 			std::string PartCoordsName;
@@ -152,6 +153,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			}
 
 			PartCoordsFile.close();
+			*/
 		//////////////////////////////////////////// csl37 ////////////////////////////////////////////
     }
 
