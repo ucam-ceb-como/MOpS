@@ -1503,8 +1503,26 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	Spointer st3 = ststart;
 	Spointer st4;
 	int count3 = rhs.m_pah->m_siteList.size() - 3;
+	bool swap = false;
+	bool first = true;
 	for (int iii = 0; iii <= count3; iii++){
-		addSite(st3->type, stb);
+		kmcSiteType adder = st3->type;
+		if (abs((int)adder) < 79 && abs((int)adder) > 74 && first){
+			swap = true;
+			first = false;
+		}
+		else if (abs((int)adder) < 75 && abs((int)adder) > 70 && first ) {
+			first = false;
+		}
+		if (swap){
+			if (abs((int)adder) < 75 && abs((int)adder) > 70){
+				adder = (kmcSiteType)((int)adder + 4);
+			}
+			else if (abs((int)adder) < 79 && abs((int)adder) > 74){
+				adder = (kmcSiteType)((int)adder - 4);
+			}
+		}
+		addSite(adder, stb);
 		st4 = rhs.moveIt(st3, inc);
 		st3 = st4;
 	}
@@ -1672,7 +1690,7 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 				if (count <= ind || count > indend){
 					dist1 = abs(coords1.first - coordinates[count].first);
 					dist2 = abs(coords1.second - coordinates[count].second);
-					if (dist1 < 1e-1 && dist2 < 1e-1){
+					if (dist1 < 1e-3 && dist2 < 1e-3){
 						collision = true;
 						break;
 					}
@@ -1699,19 +1717,20 @@ bool PAHProcess::updateHinderedSites() {
 	//Determine sites that have steric hinderances
 
 	Spointer st1;
-	std::pair<double, double> coords1;
-	std::pair<double, double> coords2;
 	std::pair<double, double> coordstar1;
 	std::pair<double, double> coordstar2;
-	std::pair<double, double> coordsadd;
+	double dist1, dist2;
+	bool hindered;
+	int count = 0;
+	int count1 = 0;
+
+	std::pair<double, double> coords1;
+	std::pair<double, double> coords2;
 	double Ang;
 	double heading;
 	double length;
-	double dist1, dist2;
 	kmcSiteType prevtype = None;
 	kmcSiteType currtype = None;
-	bool hindered;
-	int count = 0;
 
 	std::vector < std::pair<double, double> > coordinates;
 	coordinates.resize(m_pah->m_siteList.size());
@@ -1731,134 +1750,62 @@ bool PAHProcess::updateHinderedSites() {
 		case ACBR:
 		case NACBL:
 		case NACBR:
-			coords1.first = 0.0;
-			coords1.second = 0.0;
-			coords2.first = 0.0;
-			coords2.second = 0.0;
-			coordstar1.first = 0.0;
-			coordstar1.second = 0.0;
-			heading = 0.0;
-			Ang = AngleBridge(type, type) - 180;
-			if (Ang == -181){
-				cout << "Problem with angle" << endl;
-				assert(false);
-				abort();
+			coordstar1.first = coordinates[count1].first;
+			coordstar1.second = coordinates[count1].second;
+
+			if (count1 < m_pah->m_siteList.size() - 1){
+				coordstar2.first = coordinates[count1 + 1].first;
+				coordstar2.second = coordinates[count1 + 1].second;
 			}
-			if (Ang == -180.0){
-				Ang = 0.0;
-			}
-			length = Length(type);
-			heading += Ang;
-			coordstar2.first = cos(heading / 180 * PI)*length;
-			coordstar2.second = sin(heading / 180 * PI)*length;
-
-			coords1 = coordstar2;
-
-			prevtype = st->type;
-
-			for (st1 = moveIt(st,1); st1 != m_pah->m_siteList.end(); st1++) {
-				currtype = st1->type;
-				Ang = AngleBridge(currtype, prevtype) - 180;
-				if (Ang == -181){
-					cout << "Problem with angle" << endl;
-					assert(false);
-					abort();
-				}
-				if (Ang == -180.0){
-					Ang = 0.0;
-				}
-				length = Length(currtype);
-				heading += Ang;
-				coords2.first = coords1.first +  cos(heading / 180 * PI)*length;
-				coords2.second = coords1.second + sin(heading / 180 * PI)*length;
-
-				dist1 = pow(coords1.first - coordstar2.first, 2);
-				dist1 += pow(coords1.second - coordstar2.second, 2);
-				dist1 = sqrt(dist1);
-
-				dist2 = pow(coords2.first - coordstar1.first, 2);
-				dist2 += pow(coords2.second - coordstar1.second, 2);
-				dist2 = sqrt(dist2);
-
-				if (type == FE || type == NFE){
-					if ((abs(dist1 - 1.0) < 1.0e-5 && ((abs(dist2 - 2.0) < 1.0e-5) || abs(dist2 - sqrt(3)) < 1.0e-5)) ||
-						(abs(dist2 - 1.0) < 1.0e-5 && ((abs(dist1 - 2.0) < 1.0e-5) || abs(dist1 - sqrt(3)) < 1.0e-5))
-						|| ((abs(dist1 - sqrt(3)) < 1.0e-5 && abs(dist2 - sqrt(3)) < 1.0e-5))
-						|| ((abs(dist1 - 1) < 1.0e-5 && abs(dist2 -1) < 1.0e-5))){
-						if ((moveIt(st, 1) != moveIt(st1, -1) || moveIt(st1, -1)->comb !=FE3) 
-							&& (moveIt(st, -1) != moveIt(st1, 1) || moveIt(st1, 1)->comb != FE3) ){
-							hindered = true;
-							break;
-						}
-					}
-				}
-				else{
-					if ((abs(dist1 - 1.0) < 1.0e-5 && abs(dist2 - 1.0) < 1.0e-5)){
-						hindered = true;
-						break;
-					}
-				}
-
-				prevtype = currtype;
-
-				coords1.first = coords2.first;
-				coords1.second = coords2.second;
-
-				count++;
+			else{
+				coordstar2.first = coordinates[0].first;
+				coordstar2.second = coordinates[0].second;
 			}
 
-			if (!hindered){
-				for (st1 = m_pah->m_siteList.begin(); st1 != st; st1++) {
-					currtype = st1->type;
-					Ang = AngleBridge(currtype, prevtype) - 180;
-					if (Ang == -181){
-						cout << "Problem with angle" << endl;
-						assert(false);
-						abort();
-					}
-					if (Ang == -180.0){
-						Ang = 0.0;
-					}
-					length = Length(currtype);
-					heading += Ang;
-					coords2.first = coords1.first + cos(heading / 180 * PI)*length;
-					coords2.second = coords1.second + sin(heading / 180 * PI)*length;
+			st1 = m_pah->m_siteList.begin();
+			for (count = 0; count < coordinates.size(); count++) {
+				int index1 = count;
+				int index2 = count + 1;
+				if (count != count1){
 
-					dist1 = pow(coords1.first - coordstar2.first, 2);
-					dist1 += pow(coords1.second - coordstar2.second, 2);
+					if (index2 > coordinates.size() - 1){
+						index2 = 0;
+					}
+
+					dist1 = pow(coordinates[index1].first - coordstar2.first, 2);
+					dist1 += pow(coordinates[index1].second - coordstar2.second, 2);
 					dist1 = sqrt(dist1);
 
-					dist2 = pow(coords2.first - coordstar1.first, 2);
-					dist2 += pow(coords2.second - coordstar1.second, 2);
+					dist2 = pow(coordinates[index2].first - coordstar1.first, 2);
+					dist2 += pow(coordinates[index2].second - coordstar1.second, 2);
 					dist2 = sqrt(dist2);
 
 					if (type == FE || type == NFE){
-						if ((abs(dist1 - 1.0) < 1.0e-5 && ((abs(dist2 - 2.0) < 1.0e-5) || abs(dist2 - sqrt(3)) < 1.0e-5)) ||
-							(abs(dist2 - 1.0) < 1.0e-5 && ((abs(dist1 - 2.0) < 1.0e-5) || abs(dist1 - sqrt(3)) < 1.0e-5))
-							|| ((abs(dist1 - sqrt(3)) < 1.0e-5 && abs(dist2 - sqrt(3)) < 1.0e-5))
-							|| ((abs(dist1 - 1) < 1.0e-5 && abs(dist2 - 1) < 1.0e-5))){
-							if ((moveIt(st, 1) != moveIt(st1, -1) || moveIt(st1, -1)->comb != FE3)
-								&& (moveIt(st, -1) != moveIt(st1, 1) || moveIt(st1, 1)->comb != FE3)){
+						if ((abs(dist1 - 1.0) < 1.0e-3 && (abs(dist2 - 2.0) < 1.0e-3 || abs(dist2 - sqrt(3)) < 1.0e-3)) ||
+							(abs(dist2 - 1.0) < 1.0e-3 && (abs(dist1 - 2.0 < 1.0e-3) || abs(dist1 - sqrt(3)) < 1.0e-3))
+							|| (abs(dist1 - sqrt(3.0)) < 1.0e-3 && abs(dist2 - sqrt(3.0)) < 1.0e-3)
+							|| (abs(dist1 - 1.0) < 1.0e-3 && abs(dist2 - 1.0) < 1.0e-3)){
+							if ((moveIt(st, 1) != moveIt(st1, -1) || moveIt(st1, -1)->comb !=FE3) 
+								&& (moveIt(st, -1) != moveIt(st1, 1) || moveIt(st1, 1)->comb != FE3) ){
 								hindered = true;
 								break;
 							}
 						}
 					}
 					else{
-						if ((abs(dist1 - 1.0) < 1.0e-5 && abs(dist2 - 1.0) < 1.0e-5)){
+						if (abs(dist1 - 1.0) < 1.0e-3 && abs(dist2 - 1.0) < 1.0e-3){
 							hindered = true;
 							break;
 						}
 					}
-
-					prevtype = currtype;
-					coords1.first = coords2.first;
-					coords1.second = coords2.second;
-
-					count++;
-
 				}
+				if (hindered){
+					break;
+				}
+				Spointer st2 = moveIt(st1, 1);
+				st1 = st2;
 			}
+
 		}
 
 		if (hindered){
@@ -1871,6 +1818,7 @@ bool PAHProcess::updateHinderedSites() {
 				convSiteType(st, (kmcSiteType)(0 - (int)st->type));
 			}
 		}
+		count1++;
 	}
 	return true;
 }
@@ -3601,9 +3549,9 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
 
-	//if (PAH_ID == 662825){
-	//	cout << "ID is: " << id << endl;
-	//}
+	if (PAH_ID == 38179){
+		cout << "ID is: " << id << endl;
+	}
 
     std::ostringstream dotname, dotname2;
     switch(id) {
@@ -3970,6 +3918,13 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
     int ntype2 = abs((int) moveIt(stt, 1)->type);
 
     int newType = (ntype1+ntype2+1);
+	if (kmcSiteName((kmcSiteType)newType) == "ERROR" || kmcSiteName((kmcSiteType)newType) == "None"){
+		cout << "Unphysical newType being assigned after BY6 closure, which is " << newType << endl;
+		cout << ntype1 << endl;
+		cout << ntype2 << endl;
+		assert(false);
+		abort();
+	}
 	convSiteType(stt, (kmcSiteType)newType);
 
     // erase the existence of the neighbouring sites

@@ -154,7 +154,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //*< ID30.
     JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //*< ID31.
     JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //*< ID32.
-	JumpProcess* j_PAH_Merge = new PAH_Merge; j_PAH_Merge->initialise();                        //*< ID35.
+	JumpProcess* j_PAH_Merge = new PAH_Merge; j_PAH_Merge->initialise();                        //*< ID33.
+	JumpProcess* j_PAH_Break = new PAH_Break; j_PAH_Break->initialise();                        //*< ID34.
        
     // Jump Processes included in the model
     // (Comment out any process to be omitted):
@@ -191,8 +192,10 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //temp.push_back(j_C6R_RAC_FE3);      //*< 30 - R6 migration & conversion to R5 at RAC.
     //temp.push_back(j_C6R_RAC_FE3violi); //*< 31 - R6 migration & conversion to R5 at RAC.
     //temp.push_back(j_M6R_RAC_FE3);      //*< 32 - R6 desorption at RAC -> pyrene.
-	temp.push_back(j_PAH_Merge);          //*< 35 - PAH merging. Should not be included in calculation of Jump Processes for
+	temp.push_back(j_PAH_Merge);          //*< 33 - PAH merging. Should not be included in calculation of Jump Processes for
 	                                      //updating PAHs
+	temp.push_back(j_PAH_Break);          //*< 34 - PAH cross-link breaking. Should not be included in calculation of Jump Processes for
+	//updating PAHs
         
     //--------------------------------------
     return temp;
@@ -207,7 +210,7 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
     // Choose suitable mechanism according to P
     if(pressure > 0.5 && pressure <= 5) { // mechanism at 1 atm 
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-			if ((m_jplist[i])->getName() != "PAH Merging"){
+			if ((m_jplist[i])->getName() != "PAH Merging" && (m_jplist[i])->getName() != "PAH Break"){
 				(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
 				m_rates[i] = (m_jplist[i])->setRate1(gp, st/*, t*/);
 				temp += m_rates[i];
@@ -217,8 +220,8 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
 			}
         }
     }else if(pressure > 0.01 && pressure <= 0.07) { // mechanism at 0.0267atm
-        for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-			if ((m_jplist[i])->getName() != "PAH Merging"){
+        for(int i = 0; i!= (int) m_jplist.size() ; i++) { 
+			if ((m_jplist[i])->getName() != "PAH Merging" && (m_jplist[i])->getName() != "PAH Break"){
 				(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p0267(), gp);
 				m_rates[i] = (m_jplist[i])->setRate0p0267(gp, st/*, t*/);
 				temp += m_rates[i];
@@ -229,7 +232,7 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
         }
     }else if(pressure > 0.07 && pressure <= 0.5) { // mechanism at 0.12atm
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-			if ((m_jplist[i])->getName() != "PAH Merging"){
+			if ((m_jplist[i])->getName() != "PAH Merging" && (m_jplist[i])->getName() != "PAH Break"){
 				(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p12(), gp);
 				m_rates[i] = (m_jplist[i])->setRate0p12(gp, st/*, t*/);
 				temp += m_rates[i];
@@ -256,6 +259,23 @@ double KMCMechanism::calculateMergePreFactor(const KMCGasPoint& gp,
 	PAHProcess st;
 	for (int i = 0; i != (int)m_jplist.size(); i++) {
 		if ((m_jplist[i])->getName() == "PAH Merging"){
+			(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
+			KMerge = (m_jplist[i])->setRate0p0267(gp, st/*, t*/);
+			return KMerge;
+		}
+	}
+	cout << "ERROR: PAH Merging not in jump process list. Returning 0 for merge rate prefactor ";
+	return 0.0;
+}
+
+//! Calculates PAH merging prefactor
+double KMCMechanism::calculateBreakPreFactor(const KMCGasPoint& gp,
+	const double& t) {
+	double KMerge = 0;
+	bool found = false;
+	PAHProcess st;
+	for (int i = 0; i != (int)m_jplist.size(); i++) {
+		if ((m_jplist[i])->getName() == "PAH Break"){
 			(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
 			KMerge = (m_jplist[i])->setRate0p0267(gp, st/*, t*/);
 			return KMerge;
@@ -501,6 +521,7 @@ double L6_BY6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
+	r_f = 0.5;
     return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
 }
 // 
@@ -2380,4 +2401,39 @@ double PAH_Merge::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 	}
 	else r_f = 0;
 	return m_rate = m_r[5] * r_f; // Rate Equation
+}
+//
+// ************************************************************
+// ID33- PAH Break
+// ************************************************************
+
+// Elementary rate constants, site type, process type and name
+void PAH_Break::initialise() {
+	// Adding elementary reactions
+	// 0.0267 atm
+	rxnvector& rxnV = m_rxnvector0p0267;
+	addReaction(rxnV, Reaction(1.473e39, -6.6734, 126.825, sp::None));   //5 - r4f
+	//addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
+	// 0.12 atm
+	rxnvector& rxnV2 = m_rxnvector0p12;
+	addReaction(rxnV2, Reaction(1.473e39, -6.6734, 126.825, sp::None));   //5 - r4f
+	//addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+	// 1 atm
+	rxnvector& rxnV3 = m_rxnvector1;
+	addReaction(rxnV3, Reaction(1.473e39, -6.6734, 126.825, sp::None));   //5 - r4f
+	//addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+
+	m_sType = None; // sitetype
+	m_name = "PAH Break"; // name of process
+	m_ID = 34;
+}
+// Jump rate calculation
+double PAH_Break::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return m_rate = m_r[0]; // Rate Equation
+}
+double PAH_Break::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return m_rate = m_r[0]; // Rate Equation
+}
+double PAH_Break::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return m_rate = m_r[0]; // Rate Equation
 }

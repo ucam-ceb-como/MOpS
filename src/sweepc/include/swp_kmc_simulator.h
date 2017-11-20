@@ -168,6 +168,8 @@ namespace Sweep{
              CSV_IO m_timestep_csv;
 			 //Return the prefactor for merging of PAHs
 			 double MergePreFactor(const double t);
+			 //Return the prefactor for breaking of PAHs
+			 double BreakPreFactor(const double t);
         private:
             //! Make default constructor private
             KMCSimulator();

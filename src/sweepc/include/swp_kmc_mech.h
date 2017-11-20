@@ -121,6 +121,10 @@ namespace KMC_ARS {
 		//! Returns PAH merging prefactor
 		double calculateMergePreFactor(const KMCGasPoint& gp,
 			const double& t);
+
+		//! Returns PAH break prefactor
+		double calculateBreakPreFactor(const KMCGasPoint& gp,
+			const double& t);
     private:
         //! Vector of jump processes
         std::vector<JumpProcess*> m_jplist;
@@ -412,6 +416,15 @@ namespace KMC_ARS {
 		double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 	    void initialise();
+	};
+
+	//! ID34. 
+	class PAH_Break : public Sweep::KMC_ARS::JumpProcess { //phenyl addition
+	public:
+		double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
 	};
 }
 
