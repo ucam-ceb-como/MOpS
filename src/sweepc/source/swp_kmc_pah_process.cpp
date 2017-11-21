@@ -1320,7 +1320,7 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	//cout << "Entering! " <<endl;
 	int guard = 0;
 	
-	while (accumulate(combos.begin(), combos.end(), 0) == 0 && guard<1){
+	while (accumulate(combos.begin(), combos.end(), 0) == 0 && guard<100){
 
 		Sp1 = chooseRandomSite(Mergesites, rng);
 

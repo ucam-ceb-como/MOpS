@@ -1447,9 +1447,6 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 		//
 		double m_t = 0;
 		double volumeP, volumeS;
-		double numper;
-		double combos;
-		double fac1, fac2;
 		//double ratio;
 		double density = model.Components(0)->Density();
 		//! PP mass (kg).
@@ -1458,164 +1455,151 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 		volumeS = sys.SampleVolume(); //get volume in m3
 		//ratio = m_mass / density / sys.SampleVolume();
 		//cout << ratio << " " << sys.SampleVolume() << " " << m_mass / density << endl;
-		while (m_t < dt && m_PAH.size() > 1)
+		int attempts = 0;
+		while (m_t < dt && m_PAH.size() > 1 && attempts < 100)
 		{
-			double totalsites = 0;
-			double totalbridges = 0;
-			int numdiffPAHs = 0;
-			//const std::vector<boost::shared_ptr<PAH> >::iterator itEnd = m_PAH.end();
-			std::vector<double> mergesites(m_PAH.size());
-			std::vector<double> bridgesites(m_PAH.size());
 			std::vector<double> Rates(m_PAH.size());
+
+			double factor = 1.0;
+			double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t);
+			kMerge = kMerge / NA / volumeP; //convert KMerge from m3/mol/s to 1/#/s.
+			double kBreak = sys.Particles().Simulator()->BreakPreFactor(t + m_t);
+			double TotRate = 0.0;
 			for (int it = 0; it != m_PAH.size(); it++) {
-				mergesites[it] = m_PAH[it]->m_pahstruct->numMergeSites();
-				bridgesites[it] = m_PAH[it]->m_pahstruct->numofBridges();
-				totalsites += mergesites[it];
-				totalbridges += bridgesites[it];
-				if (mergesites[it] > 0) numdiffPAHs++;
+				Rates[it] = kMerge*(m_PAH.size()-1) -
+					kBreak*m_PAH[it]->m_pahstruct->numofBridges();
+				//Rates[it] = Rates[it];
+				if (Rates[it] < 0.0){
+					Rates[it] = 0.0;
+				}
+				else{
+					Rates[it] *= factor;
+				}
+				TotRate += Rates[it];
 			}
-			if (totalsites > 1 && numdiffPAHs > 1){
-				double factor = 1.0;
-				double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t);
-				kMerge = kMerge / NA / volumeP; //convert KMerge from m3/mol/s to 1/#/s.
-				double kBreak = sys.Particles().Simulator()->BreakPreFactor(t + m_t);
+			if (TotRate > 0.0){
 				typedef boost::exponential_distribution<double> exponential_distrib;
-				double TotRate = 0.0;
-				for (int it = 0; it != m_PAH.size(); it++) {
-					Rates[it] = kMerge*(m_PAH.size()-1) -
-						kBreak*bridgesites[it];
-					//Rates[it] = Rates[it];
-					if (Rates[it] < 0.0){
-						Rates[it] = 0.0;
+				exponential_distrib waitingTimeDistrib(TotRate);
+				boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
+				double t_step = waitingTimeGenerator();
+
+				m_t = m_t + t_step;
+
+			}
+			else{
+				m_t = dt + 1.0;
+			}
+
+			//cout << t_step << endl;
+
+			if (m_t < dt)
+			{
+
+				boost::uniform_01<rng_type &, double> uniformGenerator(rng);
+				size_t ip1 = chooseIndex<double>(Rates, uniformGenerator);
+				size_t ip2 = ip1;
+				unsigned int guard = 0;
+
+				while ((ip2 == ip1) && (++guard < 1000))
+				{
+					ip2 = chooseIndex<double>(Rates, uniformGenerator);
+				}
+
+				if (ip1 != ip2)
+				{
+					if (m_PAH[ip1]->m_pahstruct->numofRings() < m_PAH[ip2]->m_pahstruct->numofRings()){
+						size_t temp1 = ip1;
+						size_t temp2 = ip2;
+						ip1 = temp2;
+						ip2 = temp1;
+					}
+
+					int target = -797;
+					int target2 = -1106;
+					int loc;
+					bool found = false;
+					if (m_PAH[ip1]->PAH_ID == target && m_PAH[ip2]->PAH_ID == target2){
+						if (m_PAH[ip1]->PAH_ID == target){
+							std::list<Site> tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
+							cout << "Merging start " << m_PAH[ip1]->PAH_ID << endl;
+							cout << "Rings = " << m_PAH[ip1]->m_pahstruct->numofRings() << endl;
+							Spointer Sp1;
+							for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+								cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+							}
+							loc = ip1;
+							found = true;
+							tester = m_PAH[ip2]->m_pahstruct->GetSiteList();
+							cout << "Merging start second " << m_PAH[ip2]->PAH_ID << endl;
+							cout << "Rings = " << m_PAH[ip2]->m_pahstruct->numofRings() << endl;
+							for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+								cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+							}
+						}
+						else{
+							std::list<Site> tester = m_PAH[ip2]->m_pahstruct->GetSiteList();
+							cout << "Merging start " << m_PAH[ip2]->PAH_ID << endl;
+							cout << "Rings = " << m_PAH[ip2]->m_pahstruct->numofRings() << endl;
+							Spointer Sp1;
+							for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+								cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+							}
+							loc = ip2;
+							found = true;
+							tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
+							cout << "Merging start second" << m_PAH[ip1]->PAH_ID << endl;
+							cout << "Rings = " << m_PAH[ip1]->m_pahstruct->numofRings() << endl;
+							for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+								cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+							}
+						}
+					}
+
+					bool success = m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
+
+					if (success){
+
+						int numR6 = m_PAH[ip1]->m_pahstruct->numofRings() + m_PAH[ip2]->m_pahstruct->numofRings();
+						int numLoneR5 = m_PAH[ip1]->m_pahstruct->numofLoneRings5() 
+							+ m_PAH[ip2]->m_pahstruct->numofLoneRings5();
+						int numEmbeddedR5 = m_PAH[ip1]->m_pahstruct->numofEmbeddedRings5() 
+							+ m_PAH[ip2]->m_pahstruct->numofEmbeddedRings5();
+						int numC = m_PAH[ip1]->m_pahstruct->numofC() + m_PAH[ip2]->m_pahstruct->numofC();
+						int numH = m_PAH[ip1]->m_pahstruct->numofH() + m_PAH[ip2]->m_pahstruct->numofH();
+						int numBridges = m_PAH[ip1]->m_pahstruct->numofBridges() 
+							+ m_PAH[ip2]->m_pahstruct->numofBridges() + 1;
+						m_PAH[ip1]->m_pahstruct->setnumofRings(numR6);
+						m_PAH[ip1]->m_pahstruct->setnumofLoneRings5(numLoneR5);
+						m_PAH[ip1]->m_pahstruct->setnumofEmbeddedRings5(numEmbeddedR5);
+						m_PAH[ip1]->m_pahstruct->setnumofC(numC);
+						m_PAH[ip1]->m_pahstruct->setnumofH(numH);
+						m_PAH[ip1]->m_pahstruct->setnumofBridges(numBridges);
+						m_PAH[ip1]->time_created = min(m_PAH[ip1]->time_created, m_PAH[ip2]->time_created);
+						m_PAH[ip1]->lastupdated = min(m_PAH[ip1]->lastupdated, m_PAH[ip2]->lastupdated);
+
+						//cout << "Merged!!!" << endl;
+
+						m_PAH[ip2]->m_pahstruct->setnumofC(5);
+
+						if (found){
+							if (m_PAH[loc]->PAH_ID == target){
+								std::list<Site> tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
+								cout << "Merging End " << m_PAH[ip1]->PAH_ID << endl;
+								cout << "Rings = " << m_PAH[ip1]->m_pahstruct->numofRings() << endl;
+								Spointer Sp1;
+								for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+									cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+								}
+							}
+						}
+
+						RemoveInvalidPAHs();
+						m_PAHclusterchanged = true;
+						attempts = 0;
 					}
 					else{
-						Rates[it] *= factor;
+						attempts++;
 					}
-					TotRate += Rates[it];
-				}
-				if (TotRate > 0.0){
-					exponential_distrib waitingTimeDistrib(TotRate);
-					boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
-					double t_step = waitingTimeGenerator();
-
-					m_t = m_t + t_step;
-
-				}
-				else{
-					m_t = dt + 1.0;
-				}
-
-				//cout << t_step << endl;
-
-				if (m_t < dt)
-				{
-
-					boost::uniform_01<rng_type &, double> uniformGenerator(rng);
-					size_t ip1 = chooseIndex<double>(Rates, uniformGenerator);
-					size_t ip2 = ip1;
-					unsigned int guard = 0;
-
-					while ((ip2 == ip1) && (++guard < 1000))
-					{
-						ip2 = chooseIndex<double>(Rates, uniformGenerator);
-					}
-
-					if (ip1 != ip2)
-					{
-						if (m_PAH[ip1]->m_pahstruct->numofRings() < m_PAH[ip2]->m_pahstruct->numofRings()){
-							size_t temp1 = ip1;
-							size_t temp2 = ip2;
-							ip1 = temp2;
-							ip2 = temp1;
-						}
-
-						int target = -797;
-						int target2 = -1106;
-						int loc;
-						bool found = false;
-						if (m_PAH[ip1]->PAH_ID == target && m_PAH[ip2]->PAH_ID == target2){
-							if (m_PAH[ip1]->PAH_ID == target){
-								std::list<Site> tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
-								cout << "Merging start " << m_PAH[ip1]->PAH_ID << endl;
-								cout << "Rings = " << m_PAH[ip1]->m_pahstruct->numofRings() << endl;
-								Spointer Sp1;
-								for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-									cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-								}
-								loc = ip1;
-								found = true;
-								tester = m_PAH[ip2]->m_pahstruct->GetSiteList();
-								cout << "Merging start second " << m_PAH[ip2]->PAH_ID << endl;
-								cout << "Rings = " << m_PAH[ip2]->m_pahstruct->numofRings() << endl;
-								for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-									cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-								}
-							}
-							else{
-								std::list<Site> tester = m_PAH[ip2]->m_pahstruct->GetSiteList();
-								cout << "Merging start " << m_PAH[ip2]->PAH_ID << endl;
-								cout << "Rings = " << m_PAH[ip2]->m_pahstruct->numofRings() << endl;
-								Spointer Sp1;
-								for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-									cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-								}
-								loc = ip2;
-								found = true;
-								tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
-								cout << "Merging start second" << m_PAH[ip1]->PAH_ID << endl;
-								cout << "Rings = " << m_PAH[ip1]->m_pahstruct->numofRings() << endl;
-								for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-									cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-								}
-							}
-						}
-
-						bool success = m_PAH[ip1]->m_pahstruct->MergeSiteLists(m_PAH[ip2]->m_pahstruct, rng);
-
-						if (success){
-
-							int numR6 = m_PAH[ip1]->m_pahstruct->numofRings() + m_PAH[ip2]->m_pahstruct->numofRings();
-							int numLoneR5 = m_PAH[ip1]->m_pahstruct->numofLoneRings5() 
-								+ m_PAH[ip2]->m_pahstruct->numofLoneRings5();
-							int numEmbeddedR5 = m_PAH[ip1]->m_pahstruct->numofEmbeddedRings5() 
-								+ m_PAH[ip2]->m_pahstruct->numofEmbeddedRings5();
-							int numC = m_PAH[ip1]->m_pahstruct->numofC() + m_PAH[ip2]->m_pahstruct->numofC();
-							int numH = m_PAH[ip1]->m_pahstruct->numofH() + m_PAH[ip2]->m_pahstruct->numofH();
-							int numBridges = m_PAH[ip1]->m_pahstruct->numofBridges() 
-								+ m_PAH[ip2]->m_pahstruct->numofBridges() + 1;
-							m_PAH[ip1]->m_pahstruct->setnumofRings(numR6);
-							m_PAH[ip1]->m_pahstruct->setnumofLoneRings5(numLoneR5);
-							m_PAH[ip1]->m_pahstruct->setnumofEmbeddedRings5(numEmbeddedR5);
-							m_PAH[ip1]->m_pahstruct->setnumofC(numC);
-							m_PAH[ip1]->m_pahstruct->setnumofH(numH);
-							m_PAH[ip1]->m_pahstruct->setnumofBridges(numBridges);
-							m_PAH[ip1]->time_created = min(m_PAH[ip1]->time_created, m_PAH[ip2]->time_created);
-							m_PAH[ip1]->lastupdated = min(m_PAH[ip1]->lastupdated, m_PAH[ip2]->lastupdated);
-
-							//cout << "Merged!!!" << endl;
-
-							m_PAH[ip2]->m_pahstruct->setnumofC(5);
-
-							if (found){
-								if (m_PAH[loc]->PAH_ID == target){
-									std::list<Site> tester = m_PAH[ip1]->m_pahstruct->GetSiteList();
-									cout << "Merging End " << m_PAH[ip1]->PAH_ID << endl;
-									cout << "Rings = " << m_PAH[ip1]->m_pahstruct->numofRings() << endl;
-									Spointer Sp1;
-									for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-										cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-									}
-								}
-							}
-
-							RemoveInvalidPAHs();
-							m_PAHclusterchanged = true;
-
-						}
-					}
-				}
-				else{
-					break;
 				}
 			}
 			else{
