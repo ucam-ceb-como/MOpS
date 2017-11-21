@@ -1478,11 +1478,11 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				double factor = 1.0;
 				double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t);
 				kMerge = kMerge / NA / volumeP; //convert KMerge from m3/mol/s to 1/#/s.
-				double kBreak = sys.Particles().Simulator()->BreakPreFactor(t + m_t)*volumeS/volumeP;
+				double kBreak = sys.Particles().Simulator()->BreakPreFactor(t + m_t);
 				typedef boost::exponential_distribution<double> exponential_distrib;
 				double TotRate = 0.0;
 				for (int it = 0; it != m_PAH.size(); it++) {
-					Rates[it] = kMerge*(totalsites - mergesites[it])*mergesites[it] -
+					Rates[it] = kMerge*(m_PAH.size()-1) -
 						kBreak*bridgesites[it];
 					//Rates[it] = Rates[it];
 					if (Rates[it] < 0.0){
