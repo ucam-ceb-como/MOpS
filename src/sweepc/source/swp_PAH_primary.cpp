@@ -1458,15 +1458,23 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 		int attempts = 0;
 		while (m_t < dt && m_PAH.size() > 1 && attempts < 100)
 		{
+			//std::vector<double> mergesites(m_PAH.size());
+			//double totalsites = 0;
+			//for (int it = 0; it != m_PAH.size(); it++) {
+			//	mergesites[it] = m_PAH[it]->m_pahstruct->numMergeSites();
+			//	totalsites += mergesites[it];
+			//}
 			std::vector<double> Rates(m_PAH.size());
-
+			
 			double factor = 1.0;
 			double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t);
 			kMerge = kMerge / NA / volumeP; //convert KMerge from m3/mol/s to 1/#/s.
 			double kBreak = sys.Particles().Simulator()->BreakPreFactor(t + m_t);
 			double TotRate = 0.0;
 			for (int it = 0; it != m_PAH.size(); it++) {
-				Rates[it] = kMerge*(m_PAH.size()-1) -
+				//Rates[it] = kMerge*(totalsites - mergesites[it])*mergesites[it] -
+				//	kBreak*m_PAH[it]->m_pahstruct->numofBridges();
+				Rates[it] = kMerge*(m_PAH.size() - 1.0) -
 					kBreak*m_PAH[it]->m_pahstruct->numofBridges();
 				//Rates[it] = Rates[it];
 				if (Rates[it] < 0.0){

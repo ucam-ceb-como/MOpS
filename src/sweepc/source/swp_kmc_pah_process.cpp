@@ -1302,112 +1302,128 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	bool success = false;
 
 	combos.resize(8);
-	combos[0] = 0;
-	combos[1] = 0;
-	combos[2] = 0;
-	combos[3] = 0;
-	combos[4] = 0;
-	combos[5] = 0;
-	combos[6] = 0;
-	combos[7] = 0;
+	//combos[0] = 0;
+	//combos[1] = 0;
+	//combos[2] = 0;
+	//combos[3] = 0;
+	//combos[4] = 0;
+	//combos[5] = 0;
+	//combos[6] = 0;
+	//combos[7] = 0;
 
-	sites1a.resize(2);
-	sites1b.resize(2);
+	//sites1a.resize(2);
+	//sites1b.resize(2);
 
-	sites2a.resize(2);
-	sites2b.resize(2);
+	//sites2a.resize(2);
+	//sites2b.resize(2);
 
-	//cout << "Entering! " <<endl;
-	int guard = 0;
-	
-	while (accumulate(combos.begin(), combos.end(), 0) == 0 && guard<100){
+	////cout << "Entering! " <<endl;
+	//int guard = 0;
+	//
+	//while (accumulate(combos.begin(), combos.end(), 0) == 0 && guard<100){
 
-		Sp1 = chooseRandomSite(Mergesites, rng);
+	//	Sp1 = chooseRandomSite(Mergesites, rng);
 
-		Sp2 = rhs.chooseRandomSite(Mergesites, rng);
+	//	Sp2 = rhs.chooseRandomSite(Mergesites, rng);
 
-		//Sp2 = rhs.moveIt(Sp2, 1);
+	//	//Sp2 = rhs.moveIt(Sp2, 1);
 
-		sites1b[0] = abs((int)moveIt(Sp1, -1)->type);
-		sites1a[0] = 1;
+	//	sites1b[0] = abs((int)moveIt(Sp1, -1)->type);
+	//	sites1a[0] = 1;
 
-		sites1b[1] = 1;
-		sites1a[1] = abs((int)moveIt(Sp1, 1)->type);
+	//	sites1b[1] = 1;
+	//	sites1a[1] = abs((int)moveIt(Sp1, 1)->type);
 
-		sites2b[0] = abs((int)rhs.moveIt(Sp2, -1)->type);
-		sites2a[0] = 1;
+	//	sites2b[0] = abs((int)rhs.moveIt(Sp2, -1)->type);
+	//	sites2a[0] = 1;
 
-		sites2b[1] = 1;
-		sites2a[1] = abs((int)rhs.moveIt(Sp2, 1)->type);
+	//	sites2b[1] = 1;
+	//	sites2a[1] = abs((int)rhs.moveIt(Sp2, 1)->type);
 
-		int before, after;
-		int count1 = 0;
-		int count2 = 0;
-		bool link;
+	//	boost::uniform_01<rng_type &, double> uniformGenerator(rng);
+	//	size_t index = chooseIndex<double>(combos, uniformGenerator);
 
-		for (it1 = sites1a.begin(); it1 != sites1a.end(); ++it1){
-			for (it2 = sites2b.begin(); it2 != sites2b.end(); ++it2){
-				after = (*it1) + (*it2);
-				before = sites1b[count1] + sites2a[count2];
-				if (before < thres && after < thres){
-					//Some function to determine if the cross-linking results in unphysical structure
-					link = CheckLinking(rhs, Sp1, Sp2, count2 + count1 * 2, before + 1 + 68, after + 1 + 72);
-					if (link){
-						combos[count2 + count1 * 2] = 1.0;
-					}
-					else{
-						combos[count2 + count1 * 2] = 0.0;
-					}
-				}
-				else{
-					combos[count2 + count1*2] = 0.0;
-				}
-				count2++;
-			}
-			count2 = 0;
-			count1++;
-		}
+	//	int before, after;
+	//	int count1 = 0;
+	//	int count2 = 0;
+	//	bool link;
 
-		count1 = 0;
-		count2 = 0;
+	//	for (it1 = sites1a.begin(); it1 != sites1a.end(); ++it1){
+	//		for (it2 = sites2b.begin(); it2 != sites2b.end(); ++it2){
+	//			after = (*it1) + (*it2);
+	//			before = sites1b[count1] + sites2a[count2];
+	//			if (before < thres && after < thres){
+	//				//Some function to determine if the cross-linking results in unphysical structure
+	//				link = CheckLinking(rhs, Sp1, Sp2, count2 + count1 * 2, before + 1 + 68, after + 1 + 72);
+	//				if (link){
+	//					combos[count2 + count1 * 2] = 1.0;
+	//				}
+	//				else{
+	//					combos[count2 + count1 * 2] = 0.0;
+	//				}
+	//			}
+	//			else{
+	//				combos[count2 + count1*2] = 0.0;
+	//			}
+	//			count2++;
+	//		}
+	//		count2 = 0;
+	//		count1++;
+	//	}
 
-		for (it1 = sites1a.begin(); it1 != sites1a.end(); ++it1){
-			for (it2 = sites2a.begin(); it2 != sites2a.end(); ++it2){
-				after = (*it1) + (*it2);
-				before = sites1b[count1] + sites2b[count2];
-				if (before < thres && after < thres){
-					//Some function to determine if the cross-linking results in unphysical structure
-					link = CheckLinking(rhs, Sp1, Sp2, 4 + count2 + count1 * 2, before + 1 + 68, after + 1 + 72);
-					if (link){
-						combos[4 + count2 + count1 * 2] = 1.0;
-					}
-					else{
-						combos[4 + count2 + count1 * 2] = 0.0;
-					}
-				}
-				else{
-					combos[4 + count2 + count1*2] = 0.0;
-				}
-				count2++;
-			}
-			count2 = 0;
-			count1++;
-		}
-		guard++;
-	}
+	//	count1 = 0;
+	//	count2 = 0;
 
-	if (accumulate(combos.begin(), combos.end(), 0) == 0){
-		//cout << "Failed to find suitable geometry for cross-linking " << endl;
-		return success;
-	}
-	else{
-		success = true;
-	}
+	//	for (it1 = sites1a.begin(); it1 != sites1a.end(); ++it1){
+	//		for (it2 = sites2a.begin(); it2 != sites2a.end(); ++it2){
+	//			after = (*it1) + (*it2);
+	//			before = sites1b[count1] + sites2b[count2];
+	//			if (before < thres && after < thres){
+	//				//Some function to determine if the cross-linking results in unphysical structure
+	//				link = CheckLinking(rhs, Sp1, Sp2, 4 + count2 + count1 * 2, before + 1 + 68, after + 1 + 72);
+	//				if (link){
+	//					combos[4 + count2 + count1 * 2] = 1.0;
+	//				}
+	//				else{
+	//					combos[4 + count2 + count1 * 2] = 0.0;
+	//				}
+	//			}
+	//			else{
+	//				combos[4 + count2 + count1*2] = 0.0;
+	//			}
+	//			count2++;
+	//		}
+	//		count2 = 0;
+	//		count1++;
+	//	}
+	//	guard++;
+	//}
 
-	//cout << "Found! " <<guard <<endl;
+	//if (accumulate(combos.begin(), combos.end(), 0) == 0){
+	//	//cout << "Failed to find suitable geometry for cross-linking " << endl;
+	//	return success;
+	//}
+	//else{
+	//	success = true;
+	//}
+
+	combos[0] = 1;
+	combos[1] = 1;
+	combos[2] = 1;
+	combos[3] = 1;
+	combos[4] = 1;
+	combos[5] = 1;
+	combos[6] = 1;
+	combos[7] = 1;
+
+	Sp1 = chooseRandomSite(Mergesites, rng);
+
+	Sp2 = rhs.chooseRandomSite(Mergesites, rng);
 
 	boost::uniform_01<rng_type &, double> uniformGenerator(rng);
 	size_t index = chooseIndex<double>(combos, uniformGenerator);
+
+	int indexorig = index;
 
 	if (index < 4){
 		left = true;
@@ -1431,103 +1447,139 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 		}
 	}
 
+	sites1a.resize(2);
+	sites1b.resize(2);
+
+	sites2a.resize(2);
+	sites2b.resize(2);
+
+	sites1b[0] = abs((int)moveIt(Sp1, -1)->type);
+	sites1a[0] = 1;
+
+	sites1b[1] = 1;
+	sites1a[1] = abs((int)moveIt(Sp1, 1)->type);
+
+	sites2b[0] = abs((int)rhs.moveIt(Sp2, -1)->type);
+	sites2a[0] = 1;
+
+	sites2b[1] = 1;
+	sites2a[1] = abs((int)rhs.moveIt(Sp2, 1)->type);
+
 	int newtype1;
 
 	int newtype2;
 
 	if (left){
-		newtype1 = sites1b[index1] + sites2a[index2] + 1 + 68;
+		newtype1 = sites1b[index1] + sites2a[index2];
 
-		newtype2 = sites1a[index1] + sites2b[index2] + 1 + 72;
+		newtype2 = sites1a[index1] + sites2b[index2];
 	}
 	else{
-		newtype1 = sites1b[index1] + sites2b[index2] + 1 + 68;
+		newtype1 = sites1b[index1] + sites2b[index2];
 
-		newtype2 = sites1a[index1] + sites2a[index2] + 1 + 72;
+		newtype2 = sites1a[index1] + sites2a[index2];
 	}
 
-	Spointer ststart;
-	Spointer stb;
-	int inc;
-	if (left){
-		inc = 1;
-		if (index1 == 0){
-			convSiteType(Sp1, (kmcSiteType)newtype2);
-			convSiteType(moveIt(Sp1, -1), (kmcSiteType)newtype1);
-			stb = Sp1;
-			if (index2 == 0){
-				ststart = rhs.moveIt(Sp2, 1);
-			}
-			else{
-				ststart = rhs.moveIt(Sp2, 2);
-			}
-		}
-		else{ 
-			convSiteType(moveIt(Sp1, 1), (kmcSiteType)newtype2);
-			convSiteType(Sp1, (kmcSiteType)newtype1);
-			stb = moveIt(Sp1,1);
-			if (index2 == 0){
-				ststart = rhs.moveIt(Sp2, 1);
-			}
-			else{
-				ststart = rhs.moveIt(Sp2, 2);
-			}
-		}
+	bool link;
+
+	if (newtype1 < thres && newtype2 < thres){
+		newtype1 += 1 + 68;
+		newtype2 += 1 + 72;
+		link = CheckLinking(rhs, Sp1, Sp2, indexorig, newtype1, newtype2);
 	}
 	else{
-		inc = -1;
-		if (index1 == 0){
-			convSiteType(Sp1, (kmcSiteType)newtype2);
-			convSiteType(moveIt(Sp1, -1), (kmcSiteType)newtype1);
-			stb = Sp1;
-			if (index2 == 0){
-				ststart = rhs.moveIt(Sp2, -2);
+		link = false;
+	}
+
+	if (link){
+
+		Spointer ststart;
+		Spointer stb;
+		int inc;
+		if (left){
+			inc = 1;
+			if (index1 == 0){
+				convSiteType(Sp1, (kmcSiteType)newtype2);
+				convSiteType(moveIt(Sp1, -1), (kmcSiteType)newtype1);
+				stb = Sp1;
+				if (index2 == 0){
+					ststart = rhs.moveIt(Sp2, 1);
+				}
+				else{
+					ststart = rhs.moveIt(Sp2, 2);
+				}
 			}
 			else{
-				ststart = rhs.moveIt(Sp2, -1);
+				convSiteType(moveIt(Sp1, 1), (kmcSiteType)newtype2);
+				convSiteType(Sp1, (kmcSiteType)newtype1);
+				stb = moveIt(Sp1, 1);
+				if (index2 == 0){
+					ststart = rhs.moveIt(Sp2, 1);
+				}
+				else{
+					ststart = rhs.moveIt(Sp2, 2);
+				}
 			}
 		}
 		else{
-			convSiteType(moveIt(Sp1, 1), (kmcSiteType)newtype2);
-			convSiteType(Sp1, (kmcSiteType)newtype1);
-			stb = moveIt(Sp1, 1);
-			if (index2 == 0){
-				ststart = rhs.moveIt(Sp2, -2);
+			inc = -1;
+			if (index1 == 0){
+				convSiteType(Sp1, (kmcSiteType)newtype2);
+				convSiteType(moveIt(Sp1, -1), (kmcSiteType)newtype1);
+				stb = Sp1;
+				if (index2 == 0){
+					ststart = rhs.moveIt(Sp2, -2);
+				}
+				else{
+					ststart = rhs.moveIt(Sp2, -1);
+				}
 			}
 			else{
-				ststart = rhs.moveIt(Sp2, -1);
+				convSiteType(moveIt(Sp1, 1), (kmcSiteType)newtype2);
+				convSiteType(Sp1, (kmcSiteType)newtype1);
+				stb = moveIt(Sp1, 1);
+				if (index2 == 0){
+					ststart = rhs.moveIt(Sp2, -2);
+				}
+				else{
+					ststart = rhs.moveIt(Sp2, -1);
+				}
 			}
 		}
-	}
 
-	Spointer st3 = ststart;
-	Spointer st4;
-	int count3 = rhs.m_pah->m_siteList.size() - 3;
-	bool swap = false;
-	bool first = true;
-	for (int iii = 0; iii <= count3; iii++){
-		kmcSiteType adder = st3->type;
-		if (abs((int)adder) < 79 && abs((int)adder) > 74 && first){
-			swap = true;
-			first = false;
-		}
-		else if (abs((int)adder) < 75 && abs((int)adder) > 70 && first ) {
-			first = false;
-		}
-		if (swap){
-			if (abs((int)adder) < 75 && abs((int)adder) > 70){
-				adder = (kmcSiteType)(abs((int)adder) + 4);
+		Spointer st3 = ststart;
+		Spointer st4;
+		int count3 = rhs.m_pah->m_siteList.size() - 3;
+		bool swap = false;
+		bool first = true;
+		for (int iii = 0; iii <= count3; iii++){
+			kmcSiteType adder = st3->type;
+			if (abs((int)adder) < 79 && abs((int)adder) > 74 && first){
+				swap = true;
+				first = false;
 			}
-			else if (abs((int)adder) < 79 && abs((int)adder) > 74){
-				adder = (kmcSiteType)(abs((int)adder) - 4);
+			else if (abs((int)adder) < 75 && abs((int)adder) > 70 && first) {
+				first = false;
 			}
+			if (swap){
+				if (abs((int)adder) < 75 && abs((int)adder) > 70){
+					adder = (kmcSiteType)(abs((int)adder) + 4);
+				}
+				else if (abs((int)adder) < 79 && abs((int)adder) > 74){
+					adder = (kmcSiteType)(abs((int)adder) - 4);
+				}
+			}
+			addSite(adder, stb);
+			st4 = rhs.moveIt(st3, inc);
+			st3 = st4;
 		}
-		addSite(adder, stb);
-		st4 = rhs.moveIt(st3, inc);
-		st3 = st4;
+		updateCombinedSites();
+		updateHinderedSites();
+		success = true;
 	}
-	updateCombinedSites();
-	updateHinderedSites();
+	else{
+		success = false;
+	}
 
 	return success;
 }
