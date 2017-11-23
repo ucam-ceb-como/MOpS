@@ -104,16 +104,14 @@ PAHStructure::~PAHStructure() {
     //delete m_clast;
     PAHProcess pp(*this);
     clear();
-    m_siteMap.clear();
-    m_siteList.clear();
 }
 
 //! Remove all data and release any memory
 void PAHStructure::clear() {
-    //for(set<Cpointer>::iterator i=m_carbonList.begin(); i!=m_carbonList.end(); i++)
-    //    delete *i;
+    for(Citer i=m_carbons.begin(); i!=m_carbons.end(); i++)
+        delete *i;
     // clear all data
-    //m_carbonList.clear();
+    m_carbons.clear();
     m_siteMap.clear();
     m_siteList.clear();
     //m_cfirst = NULL;

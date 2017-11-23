@@ -260,7 +260,7 @@ double KMCMechanism::calculateMergePreFactor(const KMCGasPoint& gp,
 	for (int i = 0; i != (int)m_jplist.size(); i++) {
 		if ((m_jplist[i])->getName() == "PAH Merging"){
 			(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
-			KMerge = (m_jplist[i])->setRate0p0267(gp, st/*, t*/);
+			KMerge = (m_jplist[i])->setRate1(gp, st/*, t*/);
 			return KMerge;
 		}
 	}
@@ -271,14 +271,14 @@ double KMCMechanism::calculateMergePreFactor(const KMCGasPoint& gp,
 //! Calculates PAH merging prefactor
 double KMCMechanism::calculateBreakPreFactor(const KMCGasPoint& gp,
 	const double& t) {
-	double KMerge = 0;
+	double KBreak = 0;
 	bool found = false;
 	PAHProcess st;
 	for (int i = 0; i != (int)m_jplist.size(); i++) {
 		if ((m_jplist[i])->getName() == "PAH Break"){
 			(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
-			KMerge = (m_jplist[i])->setRate0p0267(gp, st/*, t*/);
-			return KMerge;
+			KBreak = (m_jplist[i])->setRate1(gp, st/*, t*/);
+			return KBreak;
 		}
 	}
 	cout << "ERROR: PAH Merging not in jump process list. Returning 0 for merge rate prefactor ";
@@ -873,7 +873,7 @@ double O6R_FE_HACA_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+	return m_rate = m_r[5] * r_f* site_count; // Rate Equation
 }
 double O6R_FE_HACA_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p12(gp, pah_st);
@@ -2341,20 +2341,20 @@ void PAH_Merge::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(2.5e14, 0, 16.00, sp::H));      //0 - r1f
-    addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(2.08e30, -4.98, 5.290, sp::H));  //4 - r3f
+    //addReaction(rxnV, Reaction(2.5e14, 0, 16.00, sp::H));      //0 - r1f
+    //addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    //addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    //addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    //addReaction(rxnV, Reaction(2.08e30, -4.98, 5.290, sp::H));  //4 - r3f
     addReaction(rxnV, Reaction(2e76, -18.4456, 46.93, sp::None));   //5 - r4f
     //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
-    addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+    //addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    //addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+    //addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    //addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    //addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
 	addReaction(rxnV2, Reaction(2.2e36, -8.21, 9.92, sp::None));   //5 - r4f
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
@@ -2364,7 +2364,7 @@ void PAH_Merge::initialise() {
     addReaction(rxnV3, Reaction(1.0e10, .734, 1.43, sp::OH));  //2 - r2f
     addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
-	addReaction(rxnV3, Reaction(1.9e76, -18.4043, 47.87, sp::None));   //5 - r4f
+	addReaction(rxnV3, Reaction(2.22e83, -20.79, 46.89, sp::None));   //5 - r4f
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
 
     m_sType = None; // sitetype
@@ -2373,24 +2373,26 @@ void PAH_Merge::initialise() {
 }
 // Jump rate calculation
 double PAH_Merge::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
-	double r_f; // radical fraction 
-	if (r_denom>0) {
-		r_f = (m_r[0] + m_r[2]) / r_denom;
-		r_f = r_f / (r_f + 1.0);
-	}
-	else r_f = 0;
-	return m_rate = m_r[5] * r_f; // Rate Equation
+	//double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	//double r_f; // radical fraction 
+	//if (r_denom>0) {
+	//	r_f = (m_r[0] + m_r[2]) / r_denom;
+	//	r_f = r_f / (r_f + 1.0);
+	//}
+	//else r_f = 0;
+	//return m_rate = m_r[5] * r_f; // Rate Equation
+	return m_rate = m_r[0];
 }
 double PAH_Merge::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
-	double r_f; // radical fraction 
-	if (r_denom>0) {
-		r_f = (m_r[0] + m_r[2]) / r_denom;
-		r_f = r_f / (r_f + 1.0);
-	}
-	else r_f = 0;
-	return m_rate = m_r[5] * r_f; // Rate Equation
+	//double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	//double r_f; // radical fraction 
+	//if (r_denom>0) {
+	//	r_f = (m_r[0] + m_r[2]) / r_denom;
+	//	r_f = r_f / (r_f + 1.0);
+	//}
+	//else r_f = 0;
+	//return m_rate = m_r[5] * r_f; // Rate Equation
+	return m_rate = m_r[0];
 }
 double PAH_Merge::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2401,6 +2403,7 @@ double PAH_Merge::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 	}
 	else r_f = 0;
 	return m_rate = m_r[5] * r_f; // Rate Equation
+	//return m_rate = m_r[0];
 }
 //
 // ************************************************************
@@ -2412,15 +2415,15 @@ void PAH_Break::initialise() {
 	// Adding elementary reactions
 	// 0.0267 atm
 	rxnvector& rxnV = m_rxnvector0p0267;
-	addReaction(rxnV, Reaction(1.473e39, -6.6734, 126.825, sp::None));   //5 - r4f
+	addReaction(rxnV, Reaction(1.139e92, -22.90, 53.409, sp::H));   //5 - r4f
 	//addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
 	// 0.12 atm
 	rxnvector& rxnV2 = m_rxnvector0p12;
-	addReaction(rxnV2, Reaction(1.473e39, -6.6734, 126.825, sp::None));   //5 - r4f
+	addReaction(rxnV2, Reaction(1.139e92, -22.90, 53.409, sp::H));   //5 - r4f
 	//addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(1.473e39, -6.6734, 126.825, sp::None));   //5 - r4f
+	addReaction(rxnV3, Reaction(1.139e92, -22.90, 53.409, sp::H));   //5 - r4f
 	//addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
 
 	m_sType = None; // sitetype

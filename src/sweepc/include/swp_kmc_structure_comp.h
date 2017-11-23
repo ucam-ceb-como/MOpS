@@ -56,22 +56,22 @@ namespace Sweep {
     namespace KMC_ARS {
         // Forward Declarations
         struct Site;
-        //class Carbon;
+        class Carbon;
 
         // Pointer to a Carbon atom and a Site.
         //typedef std::set< Carbon* > Ccontainer;
-        //typedef Carbon* Cpointer;
+        typedef Carbon* Cpointer;
         typedef std::list< Site >::iterator Spointer;
-		typedef std::list< Site >::reverse_iterator SpointerRev;
+		typedef std::vector<Cpointer>::iterator Citer;
         
 
         //! Carbon atom on PAH edges
-        //class Carbon {
-        //public:
-        //    Carbon();
+        class Carbon {
+        public:
+            Carbon();
 
         //    //! Default Destructor
-        //    ~Carbon();
+            ~Carbon();
         //    //! Neighbouring carbon atoms
         //    Cpointer C1; // prev
         //    Cpointer C2; // next
@@ -84,12 +84,12 @@ namespace Sweep {
         //    //! Third species bonded to it, 0 if none [radical]
         //    char A;
         //    //! Bond angle made with C2
-        //    angletype bondAngle1;
+              angletype heading;
         //    //! Bond angle at bridge
         //    angletype bondAngle2;
         //    //! Coordinates of atom. These have been to set to an arbitrary value as they are no longer used.
-        //    //cpair coords;
-        //};
+              cpair coords;
+        };
 
         //static Ccontainer NULLSET(1, Carbon());
         //static Cpointer NULLC(new Carbon);//SET.begin();
@@ -101,8 +101,8 @@ namespace Sweep {
             //! Type of combined site
             kmcSiteType comb;
             //! Reactive carbon members
-            //Cpointer C1;
-            //Cpointer C2;
+            int C1;
+            int C2;
         };
         
 

@@ -301,10 +301,10 @@ double KMCSimulator::MergePreFactor(double t) {
 }
 //! Obtains the PAH breaking reaction rate prefactor
 double KMCSimulator::BreakPreFactor(double t) {
-	double KMerge = 0;
+	double KBreak = 0;
 	m_gas->Interpolate(t);
-	KMerge = m_kmcmech.calculateBreakPreFactor(*m_gas, t);
-	return KMerge;
+	KBreak = m_kmcmech.calculateBreakPreFactor(*m_gas, t);
+	return KBreak;
 }
 //! Outputs gas concentrations into a csv file
 void KMCSimulator::TestConc(const double& t_start, const double& t_stop, const int intervals, const std::string& filename) {
