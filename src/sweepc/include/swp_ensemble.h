@@ -297,8 +297,9 @@ private:
     //unsigned int m_numofInceptedPAH;  // Number of starting PAH in the ensemble
 
     // ENSEMBLE SCALING VARIABLES.
-    double m_contfactor;       // Contraction scaling factor, precalculated for speed.
-    unsigned int m_ncont;    // Number of ensemble contractions that have occurred.
+    double m_contfactor;       // Contraction scaling factor, precalculated for speed
+	unsigned int m_ncont;    // Number of ensemble contractions that have occurred..
+    double m_wtdcontfctr;    // Number of ensemble contractions that have occurred.
     bool m_contwarn;         // Has a contraction warning msg been printed?
 
     // DOUBLING ALGORITHM VARIABLES.

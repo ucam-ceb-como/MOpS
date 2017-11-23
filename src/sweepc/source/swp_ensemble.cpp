@@ -128,6 +128,7 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             m_ncont      = rhs.m_ncont;
             m_contfactor = rhs.m_contfactor;
             m_contwarn   = rhs.m_contwarn;
+			m_wtdcontfctr = rhs.m_wtdcontfctr; // aab64
             // Doubling.
             m_maxcount   = rhs.m_maxcount;
             m_ndble      = rhs.m_ndble;
@@ -207,7 +208,8 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_tree.resize(m_capacity);
 
     // Initialise scaling.
-    m_ncont      = 0;
+	m_ncont = 0; 
+	m_wtdcontfctr = 1.0; // aab64 weighted contraction factor
     m_contfactor = (double)(m_capacity) / (double)(m_capacity+1);
     m_contwarn   = false;
 
@@ -277,7 +279,8 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
     if(count > m_capacity) {
         // Some particles were thrown away and we must rescale
         m_count = m_capacity;
-        m_ncont = 0;
+		m_ncont = 0; 
+		m_wtdcontfctr = 1.0; // aab64
 
         iterator it = begin();
         const iterator itEnd = end();
@@ -287,8 +290,9 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
         }
     }
     else {
-        m_count = count;
-        m_ncont = 0;
+		m_count = count;
+		m_ncont = 0; 
+		m_wtdcontfctr = 1.0; // aab64
     }
     m_maxcount = m_count;
 
@@ -402,6 +406,13 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
     } else if ((unsigned)i < m_capacity) {
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
+		
+		// aab64
+		double wi = m_particles[i]->getStatisticalWeight();
+		double wsp = sp.getStatisticalWeight();
+		m_wtdcontfctr *= (m_tree.head().Property(iW) + wsp - wi);
+		m_wtdcontfctr *= 1.0 / (m_tree.head().Property(iW) + wsp);
+
         Replace(i, sp);
     } else {
         // The new particle is to be removed immediately
@@ -573,6 +584,7 @@ void Sweep::Ensemble::ClearMain()
     //m_numofInceptedPAH = 0;
 
     m_ncont = 0; // No contractions any more.
+	m_wtdcontfctr = 1.0; // aab64.
 
     m_tree.clear();
 
@@ -639,13 +651,18 @@ int Sweep::Ensemble::Select(Sweep::PropID id, rng_type &rng) const
 double Sweep::Ensemble::Scaling() const
 {
     // The scaling factor includes the contraction term and the doubling term.
-    return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
+    //return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
+    
+	// aab64 The scaling factor includes the contraction term and the doubling term.
+	// for weighted particles, the contraction factor depends on the weight of the removed particle
+	return m_wtdcontfctr * pow(2.0, (double)m_ndble);
 }
 
 // Resets the ensemble scaling.
 void Sweep::Ensemble::ResetScaling()
 {
-    m_ncont = 0;
+	m_ncont = 0; 
+	m_wtdcontfctr = 1.0; // aab64
     m_ndble = 0;
     m_contwarn = false;
 }
@@ -1028,7 +1045,8 @@ void Sweep::Ensemble::init(void)
 
     // Scaling.
     m_contfactor = 0;
-    m_ncont      = 0;
+	m_ncont = 0; 
+	m_wtdcontfctr = 1.0; // aab64
     m_contwarn   = false;
 
     // Doubling algorithm.
