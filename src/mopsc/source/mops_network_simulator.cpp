@@ -246,7 +246,7 @@ void NetworkSimulator::Run(
 						<< it->reac->Mech()->GasMech().Species(process_iter)->Name() << " post-split (mol/m3)" << " , ";
 				}
 				gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << " , "
-					<< "Temperature (K)" << "\n";
+					<< "Temperature pre-split (K)" << " , " << "Temperature post-split (K)" << "\n";
 				gasConcFile.close();
 			}
 			//////////////////////////////////////////// aab64 ////////////////////////////////////////////

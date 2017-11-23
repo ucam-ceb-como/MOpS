@@ -461,7 +461,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 				<< "SV in (-)" << " , " << "SV out (-)" << " , "
 				<< "SP in (-)" << " , " << "SP out (-)" << " , "
 				<< "Total statistical weight pre-split (-)" << " , " << "Total statistical weight post-split (-)" << " , "
-				<< "Weighted sum of mass pre-split (-)" << " , " << "Weighted sum of mass post-split (-)" << " , "
+				<< "Average collision diameter pre-split (-)" << " , " << "Average collision diameter post-split (-)" << " , "
 				<< "Incepting weight pre-split (-)" << " , " << "Incepting weight post-split (-)" << " , "
 				<< "Incepting factor pre-split (-)" << " , " << "Incepting factor post-split (-)" << " , ";
 			for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
@@ -488,7 +488,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 					<< r.Mech()->GasMech().Species(process_iter)->Name() << " post-split (mol/m3)" << " , ";
 			}
 			gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << " , "
-				<< "Temperature (K)" << "\n";
+				<< "Temperature pre-split (K)" << " , " << "Temperature post-split (K)" << "\n";
 			gasConcFile.close();
 		}
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
