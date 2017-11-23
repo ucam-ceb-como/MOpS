@@ -1584,19 +1584,6 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 	return success;
 }
 bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, int index, int type1, int type2) {
-	PAHStructure *testPAH1 = m_pah->Clone();
-	PAHProcess testPAH(*testPAH1);
-
-	Spointer Sp111;
-	int ind = 0;
-	for (Sp111 = m_pah->m_siteList.begin(); Sp111 != m_pah->m_siteList.end(); ++Sp111){
-		if (Sp111 == Sp11){
-			break;
-		}
-		ind++;
-	}
-
-	Spointer Sp1 = testPAH.moveIt(testPAH.m_pah->m_siteList.begin(), ind);
 
 	bool collision = false;
 
@@ -1632,9 +1619,6 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 	if (left){
 		inc = 1;
 		if (index1 == 0){
-			testPAH.convSiteType(Sp1, (kmcSiteType)type2);
-			testPAH.convSiteType(testPAH.moveIt(Sp1, -1), (kmcSiteType)type1);
-			stb = Sp1;
 			if (index2 == 0){
 				ststart = rhs.moveIt(Sp2, 1);
 			}
@@ -1643,9 +1627,6 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 			}
 		}
 		else{
-			testPAH.convSiteType(testPAH.moveIt(Sp1, 1), (kmcSiteType)type2);
-			testPAH.convSiteType(Sp1, (kmcSiteType)type1);
-			stb = testPAH.moveIt(Sp1, 1);
 			if (index2 == 0){
 				ststart = rhs.moveIt(Sp2, 1);
 			}
@@ -1657,9 +1638,6 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 	else{
 		inc = -1;
 		if (index1 == 0){
-			testPAH.convSiteType(Sp1, (kmcSiteType)type2);
-			testPAH.convSiteType(testPAH.moveIt(Sp1, -1), (kmcSiteType)type1);
-			stb = Sp1;
 			if (index2 == 0){
 				ststart = rhs.moveIt(Sp2, -2);
 			}
@@ -1668,9 +1646,6 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 			}
 		}
 		else{
-			testPAH.convSiteType(testPAH.moveIt(Sp1, 1), (kmcSiteType)type2);
-			testPAH.convSiteType(Sp1, (kmcSiteType)type1);
-			stb = testPAH.moveIt(Sp1, 1);
 			if (index2 == 0){
 				ststart = rhs.moveIt(Sp2, -2);
 			}
@@ -1680,132 +1655,15 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 		}
 	}
 
-	if (index1 == 0){
-		collstart = testPAH.moveIt(Sp1, -1);
-		collend = Sp1;
-	}
-	else{
-		collstart = Sp1;
-		collend = testPAH.moveIt(Sp1, 1);
-	}
-
-	Spointer st3 = ststart;
-	Spointer st4;
-	int count3 = rhs.m_pah->m_siteList.size() - 3;
-	for (int iii = 0; iii <= count3; iii++){
-		testPAH.addSite(st3->type, stb);
-		st4 = rhs.moveIt(st3, inc);
-		st3 = st4;
-	}
-
-	std::vector < std::pair<double, double> > coordinates;
-
-	std::vector <int> carbons;
-
-	testPAH.BuildCoordsAll(coordinates, carbons);
-
-	if (coordinates[0].first == -1.0 && coordinates[0].second == -1.0){
-		return false;
-	}
-
 	//Check if collision occurs
 	int count = 0;
 	int count1 = 0;
 	Spointer st1;
 	Spointer st;
 
-	ind = 0;
-	for (Sp111 = testPAH.m_pah->m_siteList.begin(); Sp111 != testPAH.m_pah->m_siteList.end(); ++Sp111){
-		if (Sp111 == collstart){
-			break;
-		}
-		ind++;
-	}
-
-	int sum = 0;
-	for (count = 0; count <= ind; count++){
-		sum += carbons[count];
-	}
-	ind = sum;
-
-	int ind2 = 0;
-	for (Sp111 = testPAH.m_pah->m_siteList.begin(); Sp111 != testPAH.m_pah->m_siteList.end(); ++Sp111){
-		if (Sp111 == testPAH.moveIt(collstart,-1)){
-			break;
-		}
-		ind2++;
-	}
-
-	sum = 0;
-	for (count = 0; count <= ind2; count++){
-		sum += carbons[count];
-	}
-	ind2 = sum;
-
-	int indend = 0;
-	for (Sp111 = testPAH.m_pah->m_siteList.begin(); Sp111 != testPAH.m_pah->m_siteList.end(); ++Sp111){
-		if (Sp111 == testPAH.moveIt(collend,-1)){
-			break;
-		}
-		indend++;
-	}
-
-	sum = 0;
-	for (count = 0; count <= indend; count++){
-		sum += carbons[count];
-	}
-	indend = sum;
-
-	int indend2 = 0;
-	for (Sp111 = testPAH.m_pah->m_siteList.begin(); Sp111 != testPAH.m_pah->m_siteList.end(); ++Sp111){
-		if (Sp111 == collend){
-			break;
-		}
-		indend2++;
-	}
-
-	sum = 0;
-	for (count = 0; count <= indend2; count++){
-		sum += carbons[count];
-	}
-	indend2 = sum;
 
 	std::pair<double, double> coords1;
 	double dist1, dist2;
-
-	if (ind > indend){
-		int temp1 = ind;
-		int temp2 = indend;
-		ind = indend2;
-		indend = ind2;
-		indend2 = temp1;
-		ind2 = temp2;
-	}
-
-	for (count1 = 0; count1 < coordinates.size(); count1++) {
-		if (count1 >= ind + 1 && count1 <= indend){
-
-			coords1.first = coordinates[count1].first;
-			coords1.second = coordinates[count1].second;
-
-			for (count = 0; count < coordinates.size(); count++) {
-				if (count <= ind2 || count >= indend2){
-					dist1 = abs(coords1.first - coordinates[count].first);
-					dist2 = abs(coords1.second - coordinates[count].second);
-					if (dist1 < 1e-3 && dist2 < 1e-3){
-						collision = true;
-						break;
-					}
-				}
-				if (collision){
-					break;
-				}
-			}
-			if (collision){
-				break;
-			}
-		}
-	}
 
 	if (collision){
 		return false;
@@ -1828,16 +1686,6 @@ bool PAHProcess::updateHinderedSites() {
 
 	std::pair<double, double> coords1;
 	std::pair<double, double> coords2;
-	double Ang;
-	double heading;
-	double length;
-	kmcSiteType prevtype = None;
-	kmcSiteType currtype = None;
-
-	std::vector < std::pair<double, double> > coordinates;
-	coordinates.resize(m_pah->m_siteList.size());
-
-	coordinates = BuildCoords();
 
 	//Now, re-assign hindered site types
 	for (Spointer st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
@@ -1852,34 +1700,22 @@ bool PAHProcess::updateHinderedSites() {
 		case ACBR:
 		case NACBL:
 		case NACBR:
-			coordstar1.first = coordinates[count1].first;
-			coordstar1.second = coordinates[count1].second;
+			coordstar1.first = m_pah->m_carbons[st->C1]->coords.first;
+			coordstar1.second = m_pah->m_carbons[st->C1]->coords.second;
 
-			if (count1 < m_pah->m_siteList.size() - 1){
-				coordstar2.first = coordinates[count1 + 1].first;
-				coordstar2.second = coordinates[count1 + 1].second;
-			}
-			else{
-				coordstar2.first = coordinates[0].first;
-				coordstar2.second = coordinates[0].second;
-			}
+			coordstar2.first = m_pah->m_carbons[st->C2]->coords.first;
+			coordstar2.second = m_pah->m_carbons[st->C2]->coords.second;
 
 			st1 = m_pah->m_siteList.begin();
-			for (count = 0; count < coordinates.size(); count++) {
-				int index1 = count;
-				int index2 = count + 1;
-				if (count != count1){
+			for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++) {
+				if (st != st1){
 
-					if (index2 > coordinates.size() - 1){
-						index2 = 0;
-					}
-
-					dist1 = pow(coordinates[index1].first - coordstar2.first, 2);
-					dist1 += pow(coordinates[index1].second - coordstar2.second, 2);
+					dist1 = pow(m_pah->m_carbons[st1->C1]->coords.first - coordstar2.first, 2);
+					dist1 += pow(m_pah->m_carbons[st1->C1]->coords.second - coordstar2.second, 2);
 					dist1 = sqrt(dist1);
 
-					dist2 = pow(coordinates[index2].first - coordstar1.first, 2);
-					dist2 += pow(coordinates[index2].second - coordstar1.second, 2);
+					dist2 = pow(m_pah->m_carbons[st1->C2]->coords.first - coordstar1.first, 2);
+					dist2 += pow(m_pah->m_carbons[st1->C2]->coords.second - coordstar1.second, 2);
 					dist2 = sqrt(dist2);
 
 					if (type == FE || type == NFE){
@@ -1904,8 +1740,6 @@ bool PAHProcess::updateHinderedSites() {
 				if (hindered){
 					break;
 				}
-				Spointer st2 = moveIt(st1, 1);
-				st1 = st2;
 			}
 
 		}
@@ -1920,83 +1754,23 @@ bool PAHProcess::updateHinderedSites() {
 				convSiteType(st, (kmcSiteType)(0 - (int)st->type));
 			}
 		}
-		count1++;
 	}
 	return true;
 }
 
-std::vector < std::pair<double, double> > PAHProcess::BuildCoords(){
-	std::vector < std::pair<double, double> > coordinates;
-	coordinates.resize(m_pah->m_siteList.size());
-	coordinates[0].first = 0;
-	coordinates[0].second = 0;
-	double heading = 0;
-	double Ang;
-	double length;
-	double count = 1;
-	kmcSiteType currtype, prevtype;
-	prevtype = m_pah->m_siteList.begin()->type;
-	for (Spointer st = m_pah->m_siteList.begin(); st != moveIt(m_pah->m_siteList.end(),-1); st++) {
-
-		currtype = st->type;
-		if (count == 1){
-			Ang = 0;
-		}
-		else{
-			Ang = AngleBridge(currtype, prevtype) - 180;
-		}
-		if (Ang == -181){
-			//cout << "Problem with angle" << endl;
-			coordinates[1].first = 0.0;
-			coordinates[1].second = 0.0;
-			return coordinates;
-		}
-		if (Ang == -180.0){
-			Ang = 0.0;
-		}
-		length = Length(currtype);
-		heading += Ang;
-		coordinates[count].first = coordinates[count-1].first + cos(heading / 180 * PI)*length;
-		coordinates[count].second = coordinates[count-1].second + sin(heading / 180 * PI)*length;
-
-		prevtype = st->type;
-		count++;
-	}
-	return coordinates;
-}
-
-void PAHProcess::BuildCoordsAll(std::vector < std::pair<double, double> >& coordinates, std::vector <int>& carbons){
-	std::pair<double, double> coords;
-	coords.first = 0;
-	coords.second = 0;
-	coordinates.push_back(coords);
-	double heading = 0;
-	double Ang;
-	double length;
-	double count = 1;
-	kmcSiteType currtype;
-	std::vector<double>::iterator st1;
-	std::vector<double> angles;
-
-	for (Spointer st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
-
-		currtype = st->type;
-		Angles(currtype, angles);
-		for (st1 = angles.begin(); st1 != angles.end(); st1++){
-			heading += *st1;
-			coords.first = coordinates[count - 1].first + cos(heading / 180 * PI)*1.0;
-			coords.second = coordinates[count - 1].second + sin(heading / 180 * PI)*1.0;
-
-			coordinates.push_back(coords);
-			count++;
-		}
-
-		carbons.push_back(angles.size());
-	}
-	coordinates.erase(coordinates.end() - 1);
+int PAHProcess::addCarbon(angletype& heading, int& index){
+	int newindex;
+	Cpointer addcarb = new Carbon();
+	cpair coords = m_pah->m_carbons[index]->coords;
+	addcarb->heading = heading;
+	addcarb->coords.first = coords.first + cos(heading / 180.0 * PI)*1.0;
+	addcarb->coords.second = coords.second + sin(heading / 180.0 * PI)*1.0;
+	m_pah->m_carbons.insert(m_pah->m_carbons.begin() + index + 1, addcarb);
+	return newindex = index + 1;
 }
 
 void PAHProcess::BuildCoordsAll(){
+	m_pah->m_carbons.clear();
 	Cpointer newcarbon = new Carbon();
 	m_pah->m_carbons.push_back(newcarbon);
 	double heading = 0;
@@ -2095,7 +1869,8 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 {
 	//Determine if FE_HACA oxidation at site stt will cause the formation of a bridge
 	Spointer Sb = st;
-	bool left = true;
+	bool left;
+	int count;
 
 	//If there are no armchairs, BY5, or BY6s, no bridge can be formed
 	if (m_pah->m_siteMap[AC].size() == 0 && m_pah->m_siteMap[BY5].size() == 0 && m_pah->m_siteMap[BY6].size() == 0 &&
@@ -2105,48 +1880,33 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 		return std::make_pair(Sb, left);
 	}
 
-	std::vector < std::pair<double, double> > coordinates;
-
-	std::vector <int> carbons;
-
-	BuildCoordsAll(coordinates, carbons);
-
 	//Find coordinate pair related to the FE_HACA site
-	int count = 0;
-	int coordinate = 0;
-	for (Spointer st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++) {
-		if (st1 == st){
-			break;
-		}
-		coordinate += carbons[count];
-		count++;
-	}
-
-	std::pair<double, double> coord1 = coordinates[coordinate];
-	std::pair<double, double> coord2 = coordinates[coordinate+1];
+	std::pair<double, double> coord1 = m_pah->m_carbons[st->C1]->coords;
+	std::pair<double, double> coord2 = m_pah->m_carbons[st->C2]->coords;
 
 	double dist1, dist2;
 	int count1 = 0;
 	int coordindex = 0;
 	for (Spointer st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++) {
 		kmcSiteType type = st1->type;
+		int coordindex = st1->C1;
 		if (type == AC || type == BY5 || type == BY6 || type == BY6BL || type == BY6BR){
 			if (type == AC){
-				dist1 = pow(coord1.first - coordinates[coordindex + 2].first, 2.0);
-				dist1 += pow(coord1.second - coordinates[coordindex + 2].second, 2.0);
+				dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 2]->coords.first, 2.0);
+				dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 2]->coords.second, 2.0);
 				dist1 = sqrt(dist1);
 
-				dist2 = pow(coord2.first - coordinates[coordindex+1].first, 2.0);
-				dist2 += pow(coord2.second - coordinates[coordindex+1].second, 2.0);
+				dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 1]->coords.first, 2.0);
+				dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 1]->coords.second, 2.0);
 				dist2 = sqrt(dist2);
 
 				if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
-					dist1 = pow(coord1.first - coordinates[coordindex + 3].first, 2.0);
-					dist1 += pow(coord1.second - coordinates[coordindex + 3].second, 2.0);
+					dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 3]->coords.first, 2.0);
+					dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 3]->coords.second, 2.0);
 					dist1 = sqrt(dist1);
 
-					dist2 = pow(coord2.first - coordinates[coordindex].first, 2.0);
-					dist2 += pow(coord2.second - coordinates[coordindex].second, 2.0);
+					dist2 = pow(coord2.first - m_pah->m_carbons[coordindex]->coords.first, 2.0);
+					dist2 += pow(coord2.second - m_pah->m_carbons[coordindex]->coords.second, 2.0);
 					dist2 = sqrt(dist2);
 					if (dist1 > 1.1 && dist2 > 1.1){
 						Sb = st1;
@@ -2155,25 +1915,26 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 				}
 			}
 			else if (type == BY5){
-				dist1 = pow(coord1.first - coordinates[coordindex + 2].first, 2.0);
-				dist1 += pow(coord1.second - coordinates[coordindex + 2].second, 2.0);
+				dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 2]->coords.first, 2.0);
+				dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 2]->coords.second, 2.0);
 				dist1 = sqrt(dist1);
 
-				dist2 = pow(coord2.first - coordinates[coordindex + 1].first, 2.0);
-				dist2 += pow(coord2.second - coordinates[coordindex + 1].second, 2.0);
+				dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 1]->coords.first, 2.0);
+				dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 1]->coords.second, 2.0);
 				dist2 = sqrt(dist2);
 
 				if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
 					Sb = st1;
+					count = st1->C1;
 					break;
 				}
 				else{
-					dist1 = pow(coord1.first - coordinates[coordindex + 3].first, 2.0);
-					dist1 += pow(coord1.second - coordinates[coordindex + 3].second, 2.0);
+					dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 3]->coords.first, 2.0);
+					dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 3]->coords.second, 2.0);
 					dist1 = sqrt(dist1);
 
-					dist2 = pow(coord2.first - coordinates[coordindex + 2].first, 2.0);
-					dist2 += pow(coord2.second - coordinates[coordindex + 2].second, 2.0);
+					dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 2]->coords.first, 2.0);
+					dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 2]->coords.second, 2.0);
 					dist2 = sqrt(dist2);
 					if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
 						Sb = st1;
@@ -2182,12 +1943,12 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 				}
 			}
 			else {
-				dist1 = pow(coord1.first - coordinates[coordindex + 2].first, 2.0);
-				dist1 += pow(coord1.second - coordinates[coordindex + 2].second, 2.0);
+				dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 2]->coords.first, 2.0);
+				dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 2]->coords.second, 2.0);
 				dist1 = sqrt(dist1);
 
-				dist2 = pow(coord2.first - coordinates[coordindex + 1].first, 2.0);
-				dist2 += pow(coord2.second - coordinates[coordindex + 1].second, 2.0);
+				dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 1]->coords.first, 2.0);
+				dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 1]->coords.second, 2.0);
 				dist2 = sqrt(dist2);
 
 				if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
@@ -2195,24 +1956,24 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 					break;
 				}
 				else{
-					dist1 = pow(coord1.first - coordinates[coordindex + 3].first, 2.0);
-					dist1 += pow(coord1.second - coordinates[coordindex + 3].second, 2.0);
+					dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 3]->coords.first, 2.0);
+					dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 3]->coords.second, 2.0);
 					dist1 = sqrt(dist1);
 
-					dist2 = pow(coord2.first - coordinates[coordindex + 2].first, 2.0);
-					dist2 += pow(coord2.second - coordinates[coordindex + 2].second, 2.0);
+					dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 2]->coords.first, 2.0);
+					dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 2]->coords.second, 2.0);
 					dist2 = sqrt(dist2);
 					if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
 						Sb = st1;
 						break;
 					}
 					else{
-						dist1 = pow(coord1.first - coordinates[coordindex + 4].first, 2.0);
-						dist1 += pow(coord1.second - coordinates[coordindex + 4].second, 2.0);
+						dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 4]->coords.first, 2.0);
+						dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 4]->coords.second, 2.0);
 						dist1 = sqrt(dist1);
 
-						dist2 = pow(coord2.first - coordinates[coordindex + 3].first, 2.0);
-						dist2 += pow(coord2.second - coordinates[coordindex + 3].second, 2.0);
+						dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 3]->coords.first, 2.0);
+						dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 3]->coords.second, 2.0);
 						dist2 = sqrt(dist2);
 						if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
 							Sb = st1;
@@ -2223,285 +1984,16 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 			}
 			
 		}
-		coordindex += carbons[count1];
 		count1++;
 	}
-	if (count1 < count){
+	if (st->C1 < Sb->C1){
+		left = true;
+	}
+	else{
 		left = false;
 	}
 	
 	return std::make_pair(st, left);
-}
-
-double PAHProcess::Length(kmcSiteType stt) {
-	switch (stt){
-	case FE:
-	case NFE:
-	case ERFE:
-	case ERFEER:
-		return 1.0;
-	case ZZ:
-	case NZZ:
-	case ERZZ:
-	case ERZZER:
-		return sqrt(3);
-	case AC:
-	case NAC:
-	case ERAC:
-	case ERACER:
-	case ACBL:
-	case ACBR:
-	case NACBL:
-	case NACBR:
-		return 2.0;
-	case BY5:
-	case ERBY5:
-	case ER5:
-	case BY5BL:
-	case BY5BR:
-	case NBY5:
-	case NBY5BR:
-	case NBY5BL:
-		return sqrt(3);
-	case BY6:
-	case BY6BL:
-	case BY6BR:
-	case BY6BRL:
-	case BY6BL2:
-	case BY6BR2:
-		return 1.0;
-	default:
-		cout << "Unassigned site type" << endl;
-		cout << stt << endl;
-		assert(false);
-		abort();
-	}
-}
-
-double PAHProcess::AngleBridge(kmcSiteType stt, kmcSiteType type) {
-	switch (stt){
-	case FE:
-	case NFE:
-	case ERFE:
-	case ERFEER:
-		switch (type){
-		case FE:
-		case NFE:
-		case ERFE:
-		case ERFEER:
-			return 120.0;
-		case ZZ:
-		case NZZ:
-		case ERZZ:
-		case ERZZER:
-			return 150.0;
-		case AC:
-		case NAC:
-		case ERAC:
-		case ERACER:
-		case ACBL:
-		case ACBR:
-		case NACBL:
-		case NACBR:
-			return 0;
-		case BY5:
-		case ERBY5:
-		case ER5:
-		case BY5BL:
-		case BY5BR:
-		case NBY5:
-		case NBY5BR:
-		case NBY5BL:
-			return 210.0;
-		case BY6:
-		case BY6BL:
-		case BY6BR:
-		case BY6BRL:
-		case BY6BL2:
-		case BY6BR2:
-			return 240.0;
-		default:
-			//cout << "Unassigned sub-site type" << endl;
-			//cout << type << endl;
-			//cout << stt << endl;
-			return -1;
-		}
-	case ZZ:
-	case NZZ:
-	case ERZZ:
-	case ERZZER:
-		switch (type){
-		case FE:
-		case NFE:
-		case ERFE:
-		case ERFEER:
-			return 150.0;
-		case ZZ:
-		case NZZ:
-		case ERZZ:
-		case ERZZER:
-			return 0.0;
-		case AC:
-		case NAC:
-		case ERAC:
-		case ERACER:
-		case ACBL:
-		case ACBR:
-		case NACBL:
-		case NACBR:
-			return 210;
-		case BY5:
-		case ERBY5:
-		case ER5:
-		case BY5BL:
-		case BY5BR:
-		case NBY5:
-		case NBY5BR:
-		case NBY5BL:
-			return 240.0;
-		case BY6:
-		case BY6BL:
-		case BY6BR:
-		case BY6BRL:
-		case BY6BL2:
-		case BY6BR2:
-			return 270.0;
-		default:
-			//cout << "Unassigned sub-site type" << endl;
-			//cout << type << endl;
-			//cout << stt << endl;
-			return -1;
-		}
-	case AC:
-	case NAC:
-	case ERAC:
-	case ERACER:
-	case ACBL:
-	case ACBR:
-	case NACBL:
-	case NACBR:
-		switch (type){
-		case FE:
-		case NFE:
-		case ERFE:
-		case ERFEER:
-			return 0.0;
-		case ZZ:
-		case NZZ:
-		case ERZZ:
-		case ERZZER:
-			return 210.0;
-		case AC:
-		case NAC:
-		case ERAC:
-		case ERACER:
-		case ACBL:
-		case ACBR:
-		case NACBL:
-		case NACBR:
-			return 240;
-		case BY5:
-		case ERBY5:
-		case ER5:
-		case BY5BL:
-		case BY5BR:
-		case NBY5:
-		case NBY5BR:
-		case NBY5BL:
-			return 270.0;
-		case BY6:
-		case BY6BL:
-		case BY6BR:
-		case BY6BRL:
-		case BY6BL2:
-		case BY6BR2:
-			return 300.0;
-		default:
-			//cout << "Unassigned sub-site type" << endl;
-			//cout << type << endl;
-			//cout << stt << endl;
-			return -1;
-		}
-	case BY5:
-	case ERBY5:
-	case ER5:
-	case BY5BL:
-	case BY5BR:
-	case NBY5:
-	case NBY5BR:
-	case NBY5BL:
-		switch (type){
-		case FE:
-		case NFE:
-		case ERFE:
-		case ERFEER:
-			return 210.0;
-		case ZZ:
-		case NZZ:
-		case ERZZ:
-		case ERZZER:
-			return 240.0;
-		case AC:
-		case NAC:
-		case ERAC:
-		case ERACER:
-		case ACBL:
-		case ACBR:
-		case NACBL:
-		case NACBR:
-			return 270;
-		case BY5:
-		case ERBY5:
-		case ER5:
-		case BY5BL:
-		case BY5BR:
-		case NBY5:
-		case NBY5BR:
-		case NBY5BL:
-			return 300.0;
-		default:
-			//cout << "Unassigned sub-site type" << endl;
-			//cout << type << endl;
-			//cout << stt << endl;
-			return -1;
-		}
-	case BY6:
-	case BY6BL:
-	case BY6BR:
-	case BY6BRL:
-	case BY6BL2:
-	case BY6BR2:
-		switch (type){
-		case FE:
-		case NFE:
-		case ERFE:
-		case ERFEER:
-			return 240.0;
-		case ZZ:
-		case NZZ:
-		case ERZZ:
-		case ERZZER:
-			return 270.0;
-		case AC:
-		case NAC:
-		case ERAC:
-		case ERACER:
-		case ACBL:
-		case ACBR:
-		case NACBL:
-		case NACBR:
-			return 300;
-		default:
-			//cout << "Unassigned sub-site type" << endl;
-			//cout << type << endl;
-			//cout << stt << endl;
-			return -1;
-		}
-	default:
-		//cout << "Unassigned site type" << endl;
-		//cout << stt << endl;
-		return -1;
-	}
 }
 
 /*!
@@ -3296,6 +2788,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
     m_pah->setnumofC(totalC_num);
 	m_pah->setnumofH(totalH_num);
     updateCombinedSites();
+	BuildCoordsAll();
 }
 
 /** Draw a basic site type which does not have a 5-member aromatic ring on either side.
@@ -3568,7 +3061,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
 
-	if (PAH_ID == -797){
+	if (PAH_ID == 721){
 		cout << "ID is: " << id << endl;
 	}
 
@@ -3699,72 +3192,6 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 // ************************************************************
 //NICK TO DO - FOR ALL PROCESS, MUST ADD CARBONS THAT ARE GAINED OR LOST BY EACH PROCESS!!!!!!!!!
 void PAHProcess::proc_G6R_AC(Spointer& stt) {
-    //printSitesMemb(stt);
-    //printStruct();//++++
-    //Cpointer newC1;
-    //Cpointer newC2;
-
-    /**
-     * In order to model curved PAHs the code simply tracks the list of site types which makes up the edge of the PAH.
-     * Therefore, the coordinates of the edge carbon atoms (coords) have been made redundant.
-     * The code checks for hindrance by checking whether the proposed carbon atoms to be added would occupy a position which is already present.
-     * This check which depends on the coordinates of the edge carbon atom can no longer be applied.
-     *
-     */
-    //if(checkHindrance(stt)) {
-    //    /*cout<<"Site hindered, process not performed.\n"*/ return;}
-
-/*    if(!(C_1->C2->bridge) || !(C_2->C1->bridge)) {*/ // check if bulk C in AC site is a bridge
-        // Add and remove C
-        //if(C_1->C2->C3 != NULL) C_1->C2->C3->C3 = NULL;
-        //if(C_2->C1->C3 != NULL) C_2->C1->C3->C3 = NULL;
-        //removeC(C_1->C2, true);
-        //removeC(C_2->C1, true);
-        //newC1 = addC(C_1, normAngle(C_1->bondAngle1+120), 0);
-        //newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1-60), normAngle(newC1->C1->bondAngle1-120));
-    //}else {
-        // update bridges info, both are no longer bridges
-        //C_1->C2->C1 = C_1->C2->C3;// update neighbour
-        //C_2->C1->C2 = C_2->C1->C3;
-        //C_1->C2->bridge = false;
-        //C_2->C1->bridge = false;
-        //angletype a = C_2->C1->bondAngle1;
-        //C_2->C1->bondAngle1 = C_2->C1->bondAngle2;
-        //C_2->C1->bondAngle2 = a;
-        //C_1->C2->C3 = NULL;
-        //C_2->C1->C3 = NULL;
-        // connect C_1 and C_2
-    //    connectToC(C_1, C_2);
-    //    // Add C
-    //    newC1 = addC(C_1, normAngle(C_1->bondAngle1+120), 0);
-    //    newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1-60), normAngle(newC1->C1->bondAngle1-120));
-    //}
-    //printStruct();
-    // Add and remove H
-    //updateA(C_1->C1, C_2->C2, 'H');
-
-	//Check if this is growth on a bridge. If so, change other side of bridge to regular AC
-	//if (stt->type == ACBR){
-	//	int count = 1;
-	//	Spointer Sptt = stt;
-	//	while (count > 0){
-	//		Sptt = moveIt(Sptt, 1);
-	//		if (Sptt->type == ACBL) count--;
-	//		if (Sptt->type == ACBR) count++;
-	//	}
-	//	convSiteType(Sptt, AC);
-	//}
-
-	//if (stt->type == ACBL){
-	//	int count = 1;
-	//	Spointer Sptt = stt;
-	//	while (count > 0){
-	//		Sptt = moveIt(Sptt, 1);
-	//		if (Sptt->type == ACBR) count--;
-	//		if (Sptt->type == ACBL) count++;
-	//	}
-	//	convSiteType(Sptt, AC);
-	//}
 
     // neighbouring sites:
 	Spointer S1, S2, S3, S4;
@@ -3802,6 +3229,35 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 
 	updateSites(S1, 1);
 	updateSites(S2, 1);
+
+	//Update carbon atom co-ordinates.
+	//First for the site
+	int index1 = stt->C1;
+	int index2 = stt->C2;
+	if (index1 != 0 && index2 != 0){
+		angletype heading = m_pah->m_carbons[S1->C2]->heading + 60.0;
+		cpair coords = m_pah->m_carbons[S1->C2]->coords;
+
+		m_pah->m_carbons[stt->C1 + 1]->heading = heading;
+		m_pah->m_carbons[stt->C1 + 1]->coords.first = coords.first + cos(heading / 180.0 * PI)*1.0;
+		m_pah->m_carbons[stt->C1 + 1]->coords.second = coords.second + sin(heading / 180.0 * PI)*1.0;
+
+		heading += -60.0;
+		m_pah->m_carbons[stt->C1 + 2]->heading = heading;
+		m_pah->m_carbons[stt->C1 + 2]->coords.first = m_pah->m_carbons[stt->C1 + 1]->coords.first + cos(heading / 180.0 * PI)*1.0;
+		m_pah->m_carbons[stt->C1 + 2]->coords.second = m_pah->m_carbons[stt->C1 + 1]->coords.second + sin(heading / 180.0 * PI)*1.0;
+
+		stt->C1 += 1;
+		stt->C2 -= 1;
+
+		//Now for the neighbors
+		S1->C2 += 1;
+		S2->C1 -= 1;
+	}
+	else{
+		BuildCoordsAll();
+	}
+
     // Update combined site for Site and neighbours
     updateCombinedSites(stt);
     updateCombinedSites(S1); updateCombinedSites(S2);
@@ -3811,14 +3267,6 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 	addCount(2, 0);
     //printSites(stt);
 
-	//S1t = (int)moveIt(stt, -1)->type;
-	//S2t = (int)moveIt(stt, 1)->type;
-	//S3t = (int)moveIt(stt, -2)->type;
-	//S4t = (int)moveIt(stt, 2)->type;
-	//S5t = (int)moveIt(stt, -3)->type;
-	//S6t = (int)moveIt(stt, 3)->type;
-	//St = (int)stt->type;
-	//cout << "AC End" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
 }
 // 
 // ************************************************************
@@ -3863,9 +3311,49 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
     updateSites(stt, 0);
 	updateSites(S1, 1);
 	updateSites(S2, 1);
+
     // Add new Sites
     Spointer newS1 = addSite(FE, stt);
 	Spointer newS2 = addSite(FE, moveIt(stt, 1));
+
+	//Update carbon atom co-ordinates.
+	//Add in new carbons
+	int index1 = stt->C1;
+	int index2 = stt->C2;
+	if (index1 != 0 && index2 !=0){
+		angletype heading = m_pah->m_carbons[S1->C2]->heading + 60.0;
+
+		int index1, index2, index3, index4;
+		index1 = addCarbon(heading, S1->C2);
+		heading -= 60;
+		index2 = addCarbon(heading, index1);
+		heading -= 60;
+		index3 = addCarbon(heading, index2);
+		heading -= 60;
+		index4 = addCarbon(heading, index3);
+
+		//Update site carbon indices
+		S1->C2 = index1;
+		newS1->C1 = index1;
+		newS1->C2 = index2;
+		stt->C1 = index2;
+		stt->C2 = index3;
+		newS2->C1 = index3;
+		newS2->C2 = index4;
+		S2->C1 -= 1;
+
+		Spointer st1;
+		for (st1 = S2; st1 != m_pah->m_siteList.end(); st1++){
+			st1->C1 += 4;
+			st1->C2 += 4;
+		}
+		st1 = moveIt(m_pah->m_siteList.end(), -1);
+		st1->C2 -= 4;
+	}
+	else{
+		BuildCoordsAll();
+	}
+
     // Update combined sites for all new sites and original neighbours
     Spointer S3, S4, S5, S6;
 	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
@@ -3880,15 +3368,6 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
     addCount(4, 2);
     // add ring counts
     m_pah->m_rings++;
-
-	//S1t = (int)moveIt(stt, -1)->type;
-	//S2t = (int)moveIt(stt, 1)->type;
-	//S3t = (int)moveIt(stt, -2)->type;
-	//S4t = (int)moveIt(stt, 2)->type;
-	//S5t = (int)moveIt(stt, -3)->type;
-	//S6t = (int)moveIt(stt, 3)->typ;e
-	//St = (int)stt->type;
-	//cout << "FE End" << endl << St << endl << S1t << endl << S2t << endl << S3t << endl << S4t << endl << S5t << endl << S6t << endl << "Done" << endl;
 }
 // 
 // ************************************************************
@@ -3951,7 +3430,6 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 			//cout << "1 Bridge closed!" << endl;
 		}
 	}
-
     // Remove BY6 site and combine the neighbouring sites. 
     // First remove all three from site map. Elementary site types first..
     delSiteFromMap(moveIt(stt, -1)->type, moveIt(stt, -1));
@@ -3964,13 +3442,31 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
     // Convert the BY6 site into the resulting site after reaction,
 	convSiteType(stt, (kmcSiteType)newType);
 
+	//Pointer to sites to be remvoed
+	Spointer Srem1 = moveIt(stt, -1);
+	Spointer Srem2 = moveIt(stt, 1);
+
+	//Remove the carbon atoms
+	Citer start = m_pah->m_carbons.begin();
+	m_pah->m_carbons.erase(start + stt->C1 + 1, start + stt->C1 + 5);
+	stt->C1 = Srem1->C1;
+	stt->C2 = Srem2->C2 - 4;
+
     // erase the existence of the neighbouring sites
-    Spointer Srem1 = moveIt(stt,-1);
-    Spointer Srem2 = moveIt(stt, 1);
     removeSite(Srem1);
     removeSite(Srem2);
+
     // update combined sites and neighbours
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
+
+	//Update carbon indices
+	for (st1 = S2; st1 != m_pah->m_siteList.end(); st1++){
+		st1->C1 -= 4;
+		st1->C2 -= 4;
+	}
+	st1 = moveIt(m_pah->m_siteList.end(), -1);
+	st1->C2 += 4;
+
     //Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
     updateCombinedSites(stt);
     updateCombinedSites(S1); updateCombinedSites(S2);
@@ -4105,15 +3601,67 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
     // delete neighbouring FE sites from site map. Identify them first:
     Spointer S1 = moveIt(stt,-1);
     Spointer S2 = moveIt(stt,1);
-    // then remove them
-    removeSite(S1);
-    removeSite(S2);
+
+	//Remove the carbon atoms
+	bool first = false;
+	Citer start = m_pah->m_carbons.begin();
+
+	int index = S2->C2;
+	if (index == 0) first = true;
+	m_pah->m_carbons.erase(start + index);
+	index = S2->C1;
+	if (index == 0) first = true;
+	if (index > m_pah->m_carbons.size() -1){
+		index = m_pah->m_carbons.size() - 1;
+	}
+	start = m_pah->m_carbons.begin();
+	m_pah->m_carbons.erase(start + index);
+	index = S1->C2;
+	if (index == 0) first = true;
+	if (index > m_pah->m_carbons.size() - 1){
+		index = m_pah->m_carbons.size() - 1;
+	}
+	start = m_pah->m_carbons.begin();
+	m_pah->m_carbons.erase(start + index);
+	index = S1->C1;
+	if (index == 0) first = true;
+	if (index > m_pah->m_carbons.size() - 1){
+		index = m_pah->m_carbons.size() - 1;
+	}
+	start = m_pah->m_carbons.begin();
+	m_pah->m_carbons.erase(start + index);
+	stt->C1 = S1->C1 - 1;
+	stt->C2 = stt->C1+1;
+
+	// then remove them
+	removeSite(S1);
+	removeSite(S2);
+
     // update site stt and new neighbours
     // new neighbours:
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
     updateSites(stt, 0); // only change C1 and C2, site still FE
     updateSites(S1, -1);
     updateSites(S2, -1);
+
+	//Update coordinates
+	if (!first){
+		//Update carbon indices
+		S1->C2 -= 1;
+		S2->C1 += 1;
+
+		Spointer st1;
+		for (st1 = S2; st1 != m_pah->m_siteList.end(); st1++){
+			st1->C1 -= 4;
+			st1->C2 -= 4;
+		}
+		st1 = moveIt(m_pah->m_siteList.end(), -1);
+		st1->C2 += 4;
+	}
+	else{
+		BuildCoordsAll();
+	}
+
     // update combined sites
     Spointer S3, S4;
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
@@ -4234,6 +3782,32 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 	}
     updateSites(S1, -1);
     updateSites(S2, -1);
+
+	//Update carbon atom co-ordinates.
+	//First for the site
+	int index = S1->C2 - 1;
+	if (index < 0){
+		index = m_pah->m_carbons.size() - 1;
+	}
+	angletype heading = m_pah->m_carbons[index]->heading - 60.0;
+	cpair coords = m_pah->m_carbons[index]->coords;
+
+	m_pah->m_carbons[stt->C1 ]->heading = heading;
+	m_pah->m_carbons[stt->C1 ]->coords.first = coords.first + cos(heading / 180.0 * PI)*1.0;
+	m_pah->m_carbons[stt->C1 ]->coords.second = coords.second + sin(heading / 180.0 * PI)*1.0;
+
+	heading += 60.0;
+	m_pah->m_carbons[stt->C2]->heading = heading;
+	m_pah->m_carbons[stt->C2]->coords.first = m_pah->m_carbons[stt->C1]->coords.first + cos(heading / 180.0 * PI)*1.0;
+	m_pah->m_carbons[stt->C2]->coords.second = m_pah->m_carbons[stt->C1]->coords.second + sin(heading / 180.0 * PI)*1.0;
+
+	stt->C1 -= 1;
+	stt->C2 += 1;
+
+	//Now for the neighbors
+	S1->C2 -= 1;
+	S2->C1 += 1;
+
     // update combined sites
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
     updateCombinedSites(stt); // update resulting site
@@ -4922,43 +4496,38 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
     }
     else {
         other = moveIt(stt, 1);
-        S1 = moveIt(other, 1);
-        S2 = moveIt(stt, -1);
+        S2 = moveIt(other, 1);
+        S1 = moveIt(stt, -1);
     }
-    //// Check if there are any R5 nearby, if yes, don't perform process
-    //// then check for nearby bridges
-    //if(b4) {
-    //    if((int) moveIt(other, -1)->type > 4 || (int) moveIt(stt, 1)->type > 4)
-    //        return;
-    //} else {
-    //    if((int) moveIt(other, 1)->type > 4 || (int) moveIt(stt, -1)->type > 4)
-    //        return;
-    //}
-    //Cpointer C_bulk;
-    //for(C_bulk = S1->C1; C_bulk != S1->C2; C_bulk=C_bulk->C2) {
-    //    if(C_bulk->bridge) return;
-    //}
-    //for(C_bulk = S2->C1; C_bulk != S2->C2; C_bulk=C_bulk->C2) {
-    //    if(C_bulk->bridge) return;
-    //}
-    // Identify C1 & C2 for new ZZ site
-    //Cpointer C_start, C_end;
-    //if(b4) {
-    //    C_start = stt->C1->C1->C1;
-    //    C_end = stt->C2->C2;
-    //} else {
-    //    C_start = stt->C1->C1;
-    //    C_end = stt->C2->C2->C2;
-    //}
-    //// Remove the 3 C atoms after C_start
-    //removeC(C_start->C2, false);
-    //removeC(C_start->C2, false);
-    //removeC(C_start->C2, false);
-    // add a C atom after C_start (bulk in ZZ)
-    //addC(C_start, normAngle(C_start->bondAngle1-120), normAngle(C_start->bondAngle1-60), true);
-    //// update H
-    //updateA(C_start, C_end, 'H');
-    // Remove one of the FE in FE2
+
+	//Remove the carbon atoms
+	bool first = false;
+	Citer start = m_pah->m_carbons.begin();
+
+	int index = S2->C1;
+	if (index == 0) first = true;
+	m_pah->m_carbons.erase(start + index);
+	index--;
+	if (index < 0){
+		index = m_pah->m_carbons.size() - 1;
+	}
+	start = m_pah->m_carbons.begin();
+	m_pah->m_carbons.erase(start + index);
+	index--;
+	if (index == 0) first = true;
+	if (index < 0){
+		index = m_pah->m_carbons.size() - 1;
+	}
+	start = m_pah->m_carbons.begin();
+	m_pah->m_carbons.erase(start + index);
+
+	angletype heading = m_pah->m_carbons[S1->C1 + 1]->heading - 60;
+	index = S1->C1 + 1;
+	addCarbon(heading, index);
+
+	stt->C1 = S1->C1 + 1;
+	stt->C2 = S2->C1 - 1;
+
     removeSite(other);
     // Update Sites and neighbouring sites
     Spointer S3, S4;
@@ -4966,6 +4535,25 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
     updateSites(stt, +1); // FE --> ZZ
     updateSites(S1, -1); // S1 --> reduce 1
     updateSites(S2, -1); // S2 --> reduce 1
+
+	//Update coordinates
+	if (!first){
+		//Update carbon indices
+		S1->C2 -= 1;
+		S2->C1 += 1;
+
+		Spointer st1;
+		for (st1 = S2; st1 != m_pah->m_siteList.end(); st1++){
+			st1->C1 -= 2;
+			st1->C2 -= 2;
+		}
+		st1 = moveIt(m_pah->m_siteList.end(), -1);
+		st1->C2 += 2;
+	}
+	else{
+		BuildCoordsAll();
+	}
+
     // update combined sites for all sites and their neighbours
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
     updateCombinedSites(stt);

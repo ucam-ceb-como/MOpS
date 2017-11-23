@@ -449,7 +449,7 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
-    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+	return m_rate = m_r[5] * r_f* site_count; // Rate Equation
 }
 // 
 // ************************************************************
@@ -522,7 +522,7 @@ double L6_BY6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
     }
     else r_f=0;
 	//r_f = 0.5;
-    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
 }
 // 
 // ************************************************************
@@ -656,7 +656,7 @@ double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
-    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+	return m_rate = m_r[5] * r_f* site_count; // Rate Equation
 }
 // ************************************************************
 // ID6- R6 oxidation at FE by O2 (AR10 in Matlab)
@@ -1886,7 +1886,7 @@ double O6R_FE2_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 		r_f = r_f / (r_f + 1.0);
     }
     else r_f=0;
-    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+	return m_rate = m_r[5] * r_f* site_count; // Rate Equation
 }
 
 // ************************************************************

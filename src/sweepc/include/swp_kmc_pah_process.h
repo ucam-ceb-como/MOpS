@@ -272,12 +272,12 @@ private:
     //! Overload function, updateA for all C from C_1 to C_2 inclusive
     //void updateA(char spc);
 	bool updateHinderedSites();
-	int SiteSides(Spointer& stt);
-	double SiteAngle(Spointer& stt);
+	//int SiteSides(Spointer& stt);
+	//double SiteAngle(Spointer& stt);
 
 	std::pair<Spointer, bool> CheckBridge(Spointer& stt);
-	double AngleBridge(kmcSiteType stt, kmcSiteType type);
-	double Length(kmcSiteType stt);
+	//double AngleBridge(kmcSiteType stt, kmcSiteType type);
+	//double Length(kmcSiteType stt);
     
 	//! Finds the partner to a bridge site and converts it to a non-bridge site
 	Spointer convBridgePartner(Spointer& stt);
@@ -286,13 +286,15 @@ private:
 
 	bool CheckLinking(PAHProcess& rhs, Spointer& Sp1, Spointer& Sp2, int index, int type1, int type2);
 
-	std::vector < std::pair<double, double> > PAHProcess::BuildCoords();
+	//std::vector < std::pair<double, double> > PAHProcess::BuildCoords();
 
-	void PAHProcess::BuildCoordsAll(std::vector < std::pair<double, double> >& coordinates, std::vector<int>& carbons);
+	//void PAHProcess::BuildCoordsAll(std::vector < std::pair<double, double> >& coordinates, std::vector<int>& carbons);
 
 	void PAHProcess::BuildCoordsAll();
 
 	void PAHProcess::Angles(kmcSiteType& stt, std::vector<double>& angles);
+
+	int addCarbon(angletype& heading, int& index);
 
     // PAH data structure to perform processes on
    PAHStructure* m_pah;

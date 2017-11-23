@@ -196,7 +196,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
         t_next = m_t+t_step;
         if(t_next < t_max && t_step < t_step_max) {
 
-			int target = -797;
+			int target = 721;
 			if (PAH_ID == target){
 				std::list<Site> tester = pah->GetSiteList();
 				cout << "Check start " << PAH_ID << endl << t_next << endl;
