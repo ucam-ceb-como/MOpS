@@ -277,8 +277,8 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
         // update all deferred processes.
 	    mech.LPDA(t, sys, rng);
 
-	    if (sys.ParticleCount() > 0 && sys.GetIsAdiabaticFlag())
-	        mech.DoProcess(1000000, dtg, sys, Geometry::LocalGeometry1d(), rng); // aab64 Call DoProcess with special tag to do just heat transfer
+	    //if (sys.ParticleCount() > 0 && sys.GetIsAdiabaticFlag())
+	    //    mech.DoProcess(1000000, dtg, sys, Geometry::LocalGeometry1d(), rng); // aab64 Call DoProcess with special tag to do just heat transfer
     }
 
     return err;

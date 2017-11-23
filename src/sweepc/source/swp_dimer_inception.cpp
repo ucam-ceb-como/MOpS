@@ -126,8 +126,8 @@ int DimerInception::Perform(const double t, Cell &sys,
     // This routine performs the inception on the given chemical system.
 	
     // aab64 Don't incept if magical last inception
-	if (ParticleComp()[0] != 0)
-	{
+	/*if (ParticleComp()[0] != 0)
+	{*/
 		// aab64 06.10.2017 
 		// Preliminary layout for alternative inception ideas 
 		// (1) PSI - particle surface inception: do surface growth on existing large particle
@@ -352,11 +352,11 @@ int DimerInception::Perform(const double t, Cell &sys,
 			adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
 			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 		}
-	}
-    else 
+	//}
+   /* else 
 	{
 		adjustParticleTemperature(sys, 0, 1, sys.GetIsAdiabaticFlag(), 0, 0, 1.0);
-    }
+    }*/
 
     return 0;
 }

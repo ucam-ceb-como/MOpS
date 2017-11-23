@@ -144,7 +144,7 @@ double SurfaceReaction::Rate(double t, const Cell &sys,
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
     // Particle dependence.
-    rate *= sys.Particles().GetSum(m_pid);
+    rate *= sys.Particles().GetSum(m_pid); //iWS
 
     if (m_mech->AnyDeferred()) {
 
