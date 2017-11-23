@@ -1088,10 +1088,6 @@
 	
 	<!-- extra inception reaction currently used as a terrible way to perform heat transfer -->
     <inception name="extra inception">
-        <formula>"TICL2OCL to [Ru]</formula>
-        <reactant id="TICL2OCL" stoich="0" m="2.1819e-022" d="6.5423e-8" />
-        <particleout id="[Ru]"/>
-        <component id="Rutile" dx="+0.0"/>
 		<hci flag="off">
 			<upperdlim>100e-9</upperdlim> <!-- must find a particle larger than this -->
 			<lowerdlim>49e-9</lowerdlim> <!-- must find a particle smaller than this -->

@@ -982,13 +982,13 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
     // Note this is a very messy route of accessing adjustParticleTemperature function
     // It would be better to do this differently, possibly split that function to each
     // member or else define a new one with better accessibility
-    if (i == 1000000) {
+   /* if (i == 1000000) {
 	    if (sys.ParticleCount() != 0){
 	        m_inceptions[m_inceptions.size() - 1]->Perform(t, sys, local_geom, 0, rng);
 	        m_proccount[m_inceptions.size() - 1] += 1;
         }
     }
-    else{
+	else{*/
 	    // aab64 if there are no particles, set the particle phase temperature 
 	    // equal to the gas phase temperature
 	    if (sys.ParticleCount() == 0){
@@ -1063,7 +1063,7 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
                     " (Sweep, Mechanism::DoProcess)");
 	    }
         }
-    }
+    //}
 }
 
 
@@ -1190,22 +1190,9 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
         // Stop ensemble from doubling while updating particles.
         sys.Particles().FreezeDoubling();
 
-		// aab64 ensemble weight scaling
-		bool changeWt = false;
-		double scaleFac = sys.ParticleCount() / sys.Particles().GetSum(iW);
-		if (scaleFac > GetWeightOnsetRatio() && GetWeightScalingFlag()) 
-		{
-			changeWt = true;
-			scaleFac *= GetWeightScalingFactor();
-			sys.AdjustSampleVolume(scaleFac);
-		}
-
 	    // Perform deferred processes on all particles individually.
         Ensemble::iterator i;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
-			// aab64 update weight if required
-			if (changeWt)
-				(*i)->setStatisticalWeight((*i)->getStatisticalWeight() * scaleFac);
             UpdateParticle(*(*i), sys, t, rng);
         }
 
@@ -1248,7 +1235,27 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 
         // Start particle doubling again.  This will also double the ensemble
         // if too many particles have been removed.
-        sys.Particles().UnfreezeDoubling();
+		sys.Particles().UnfreezeDoubling();
+
+		// aab64 If required, scale the ensemble weights to prevent deterioration of the average
+		// (causing jumps e.g. when new, relatively large weight particles are incepted)
+		if ((sys.ParticleCount() > 1) && GetWeightScalingFlag())
+		{
+			double ratio = sys.ParticleCount() / sys.Particles().GetSum(iW);
+			if (ratio > GetWeightOnsetRatio())
+			{
+				double factor = GetWeightScalingFactor();
+				sys.AdjustSampleVolume(factor);
+				signed int part_i;
+				Particle *pi = NULL;
+				for (part_i = 0; part_i < sys.ParticleCount(); ++part_i)
+				{
+					pi = sys.Particles().At(part_i);
+					pi->setStatisticalWeight(pi->getStatisticalWeight() * factor);
+					sys.Particles().Update(part_i); 
+				}
+			}
+		}
     }
 }
 

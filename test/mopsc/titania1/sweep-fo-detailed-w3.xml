@@ -44,14 +44,13 @@
 		    <onsetsp>1.0</onsetsp>
 		    <weightchangefun>exponential</weightchangefun>
 		</inceptionweightchange>
-		<!-- Additional specs to do ensemble weight scaling 
-		      if flag is on, the ensemble weights wi will be 
-			  adjusted by the factor N/sum(wi) whenever 
-			  N/sum(wi) > onsetratio and the sample volume scaled
-			  to match -->
-		<weightscaling flag="on">
-		    <onsetratio>1.0</onsetratio>
-		    <factor>0.1</factor>
+		<!-- Additional specs to do ensemble weight scaling
+		      The ensemble weights wi will be adjusted by the 
+			  factor whenever (N/sum(wi) > onsetratio) and the
+			  sample volume will be scaled to match -->
+		<weightscaling flag="off">
+		    <onsetratio>2.0</onsetratio>
+		    <factor>2.0</factor>
 		</weightscaling>
     </coagulation>
 
@@ -1107,10 +1106,6 @@
 	
 	<!-- extra inception reaction currently used as a terrible way to perform heat transfer -->
     <inception name="extra inception">
-        <formula>"TICL2OCL to [Ru]</formula>
-        <reactant id="TICL2OCL" stoich="0" m="2.1819e-022" d="6.5423e-8" />
-        <particleout id="[Ru]"/>
-        <component id="Rutile" dx="+0.0"/>
 		<hci flag="off">
 			<upperdlim>100e-9</upperdlim> <!-- must find a particle larger than this -->
 			<lowerdlim>49e-9</lowerdlim> <!-- must find a particle smaller than this -->

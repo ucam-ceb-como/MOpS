@@ -900,62 +900,65 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
 		if (psiflag && hciflag)
 			throw std::runtime_error("Can't do both PSI and HCI - please choose one.\n");
 	}
+	else
+	{
 
-    // Read reactants.
-    readReactants(xml, icn);
+		// Read reactants.
+		readReactants(xml, icn);
 
-    // Find the rate calculation method (a coagulation kernel)
-    // Currently the only possibilities are free molecular and transition
-    // regime kernels.  These are handled by a boolean flag.  An enum
-    // will be needed if more cases are introduced (or possibly a pointer
-    // to an appropriate member function of DimerInception.)
-    bool useFreeMolRegime = false;
-    str = xml.GetAttributeValue("rate");
-    if(!str.empty()) {
-        if(str ==  "freemolecular")
-            useFreeMolRegime = true;
-        else if(str == "transition")
-            useFreeMolRegime = false;
-        else
-            throw std::runtime_error("Unrecognised rate type " + str + " in Sweep::MechParser::readInception");
-    }
+		// Find the rate calculation method (a coagulation kernel)
+		// Currently the only possibilities are free molecular and transition
+		// regime kernels.  These are handled by a boolean flag.  An enum
+		// will be needed if more cases are introduced (or possibly a pointer
+		// to an appropriate member function of DimerInception.)
+		bool useFreeMolRegime = false;
+		str = xml.GetAttributeValue("rate");
+		if (!str.empty()) {
+			if (str == "freemolecular")
+				useFreeMolRegime = true;
+			else if (str == "transition")
+				useFreeMolRegime = false;
+			else
+				throw std::runtime_error("Unrecognised rate type " + str + " in Sweep::MechParser::readInception");
+		}
 
-    // Get reactant masses and diameters, and set inception
-    // parameters.
-    fvector mass, diam;
-    readReactantMDs(xml, mass, diam);
-    if (mass.size() == 2) {
-        if(useFreeMolRegime)
-            icn.SetInceptingSpeciesFreeMol(mass[0], mass[1], diam[0], diam[1]);
-        else
-            icn.SetInceptingSpecies(mass[0], mass[1], diam[0], diam[1]);
-    }
-    else if (mass.size() == 1) {
-        if(useFreeMolRegime)
-            icn.SetInceptingSpeciesFreeMol(mass[0], mass[0], diam[0], diam[0]);
-        else
-            icn.SetInceptingSpecies(mass[0], mass[0], diam[0], diam[0]);
-    }
-    else
-        throw std::runtime_error("One or two inception species must be specified in Sweep::MechParser::readInception");
+		// Get reactant masses and diameters, and set inception
+		// parameters.
+		fvector mass, diam;
+		readReactantMDs(xml, mass, diam);
+		if (mass.size() == 2) {
+			if (useFreeMolRegime)
+				icn.SetInceptingSpeciesFreeMol(mass[0], mass[1], diam[0], diam[1]);
+			else
+				icn.SetInceptingSpecies(mass[0], mass[1], diam[0], diam[1]);
+		}
+		else if (mass.size() == 1) {
+			if (useFreeMolRegime)
+				icn.SetInceptingSpeciesFreeMol(mass[0], mass[0], diam[0], diam[0]);
+			else
+				icn.SetInceptingSpecies(mass[0], mass[0], diam[0], diam[0]);
+		}
+		else
+			throw std::runtime_error("One or two inception species must be specified in Sweep::MechParser::readInception");
 
 
-    // Rate scaling now that a process has been created
-    double A = 0.0;
-    const CamXML::Element *el = xml.GetFirstChild("A");
-    if (el != NULL) {
-        A = cdble(el->Data());
-        icn.SetA(A);
-    }
+		// Rate scaling now that a process has been created
+		double A = 0.0;
+		const CamXML::Element *el = xml.GetFirstChild("A");
+		if (el != NULL) {
+			A = cdble(el->Data());
+			icn.SetA(A);
+		}
 
-    // Read products.
-    readProducts(xml, icn);
+		// Read products.
+		readProducts(xml, icn);
 
-    // Read initial particle composition.
-    readInceptedComposition(xml, icn);
+		// Read initial particle composition.
+		readInceptedComposition(xml, icn);
 
-    // Read initial tracker variable values.
-    readInceptedTrackers(xml, icn);
+		// Read initial tracker variable values.
+		readInceptedTrackers(xml, icn);
+	}
 }
 
 
