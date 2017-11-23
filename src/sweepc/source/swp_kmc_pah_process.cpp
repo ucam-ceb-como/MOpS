@@ -1573,6 +1573,7 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 			st4 = rhs.moveIt(st3, inc);
 			st3 = st4;
 		}
+		BuildCoordsAll();
 		updateCombinedSites();
 		updateHinderedSites();
 		//success = true;
@@ -1770,6 +1771,10 @@ int PAHProcess::addCarbon(angletype& heading, int& index){
 }
 
 void PAHProcess::BuildCoordsAll(){
+	if (m_pah->m_carbons.size() > 0){
+		for (Citer i = m_pah->m_carbons.begin(); i != m_pah->m_carbons.end(); i++)
+			delete *i;
+	}
 	m_pah->m_carbons.clear();
 	Cpointer newcarbon = new Carbon();
 	m_pah->m_carbons.push_back(newcarbon);
