@@ -1839,14 +1839,14 @@ int PAHProcess::addCarbon(angletype& heading, int& index){
 	Cpointer addcarb = new Carbon();
 	cpair coords = m_pah->m_carbons[index]->coords;
 	int ind = index + 1;
-	if (ind > m_pah->m_carbons.size()){
+	if (ind > m_pah->m_carbons.size() - 1){
 		ind = 0;
 	}
 	addcarb->heading = heading;
 	addcarb->coords.first = coords.first + cos(heading / 180.0 * PI)*1.0;
 	addcarb->coords.second = coords.second + sin(heading / 180.0 * PI)*1.0;
 	m_pah->m_carbons.insert(m_pah->m_carbons.begin() + ind, addcarb);
-	return newindex = index + 1;
+	return newindex = ind;
 }
 
 void PAHProcess::BuildCoordsAll(){
@@ -3566,13 +3566,11 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 
 	int index = Srem2->C1 - 1;
 	if (index == 0) first = true;
-	m_pah->m_carbons.erase(start + index);
-	index--;
 	if (index < 0){
 		index = m_pah->m_carbons.size() - 1;
 	}
-	start = m_pah->m_carbons.begin();
 	m_pah->m_carbons.erase(start + index);
+
 	index--;
 	if (index == 0) first = true;
 	if (index < 0){
@@ -3580,6 +3578,15 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 	}
 	start = m_pah->m_carbons.begin();
 	m_pah->m_carbons.erase(start + index);
+
+	index--;
+	if (index == 0) first = true;
+	if (index < 0){
+		index = m_pah->m_carbons.size() - 1;
+	}
+	start = m_pah->m_carbons.begin();
+	m_pah->m_carbons.erase(start + index);
+
 	index--;
 	if (index == 0) first = true;
 	if (index < 0){
@@ -3756,6 +3763,7 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
 	int index = S2->C2;
 	if (index == 0) first = true;
 	m_pah->m_carbons.erase(start + index);
+
 	index = S2->C1;
 	if (index == 0) first = true;
 	if (index > m_pah->m_carbons.size() -1){
@@ -3763,6 +3771,7 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
 	}
 	start = m_pah->m_carbons.begin();
 	m_pah->m_carbons.erase(start + index);
+
 	index = S1->C2;
 	if (index == 0) first = true;
 	if (index > m_pah->m_carbons.size() - 1){
@@ -3770,6 +3779,7 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
 	}
 	start = m_pah->m_carbons.begin();
 	m_pah->m_carbons.erase(start + index);
+
 	index = S1->C1;
 	if (index == 0) first = true;
 	if (index > m_pah->m_carbons.size() - 1){
@@ -3777,6 +3787,7 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
 	}
 	start = m_pah->m_carbons.begin();
 	m_pah->m_carbons.erase(start + index);
+
 	stt->C1 = S1->C1 - 1;
 	if (stt->C1 < 0){
 		stt->C1 += m_pah->m_carbons.size();
@@ -3970,7 +3981,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 	}
 	S2->C1 += 1;
 	if (S2->C1 > m_pah->m_carbons.size() - 1){
-		S2->C1 += 0;
+		S2->C1 = 0;
 	}
 
     // update combined sites
@@ -4672,12 +4683,14 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
 	int index = S2->C1;
 	if (index == 0) first = true;
 	m_pah->m_carbons.erase(start + index);
+
 	index--;
 	if (index < 0){
 		index = m_pah->m_carbons.size() - 1;
 	}
 	start = m_pah->m_carbons.begin();
 	m_pah->m_carbons.erase(start + index);
+
 	index--;
 	if (index == 0) first = true;
 	if (index < 0){
@@ -4686,16 +4699,16 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
 	start = m_pah->m_carbons.begin();
 	m_pah->m_carbons.erase(start + index);
 
-	angletype heading = m_pah->m_carbons[S1->C1 + 1]->heading - 60;
-	index = S1->C1 + 1;
-	if (index > m_pah->m_carbons.size() - 1){
-		index = 0;
+	index = S1->C2 - 1;
+	if (index < 0){
+		index = m_pah->m_carbons.size() - 1;
 	}
+	angletype heading = m_pah->m_carbons[index]->heading - 60;
 	addCarbon(heading, index);
 
-	stt->C1 = S1->C1 + 1;
-	if (stt->C1 > m_pah->m_carbons.size() - 1){
-		stt->C1 = 0;
+	stt->C1 = S1->C2 - 1;
+	if (stt->C1 < 0){
+		stt->C1 = m_pah->m_carbons.size() - 1;
 	}
 	stt->C2 = S2->C1 - 1;
 	if (stt->C2 < 0){
@@ -4714,7 +4727,13 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
 	if (!first){
 		//Update carbon indices
 		S1->C2 -= 1;
+		if (S1->C2 < 0){
+			S1->C2 = m_pah->m_carbons.size() - 1;
+		}
 		S2->C1 += 1;
+		if (S2->C2 > m_pah->m_carbons.size() - 1){
+			S2->C1 = 0;
+		}
 
 		Spointer st1;
 		for (st1 = S2; st1 != m_pah->m_siteList.end(); st1++){
