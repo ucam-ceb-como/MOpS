@@ -102,9 +102,9 @@ public:
     //! Initialisation of structure given a starting structure (new method)
     virtual PAHStructure& initialise_new(StartingStructure ss);
     //! Initialisation of structure given a string of site types (separated by ',')
-    virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int numC, int numH);
+    virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int Bridges, int numC, int numH);
     //! Create Structure from vector of site types and number of rings
-    void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int numC, int numH);
+	void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int Bridges, int numC, int numH);
     //! Structure processes: returns success or failure
     bool performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID);
 

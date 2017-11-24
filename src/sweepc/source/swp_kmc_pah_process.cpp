@@ -102,7 +102,8 @@ PAHStructure* PAHProcess::clonePAH() const {
     PAHStructure* temp = new PAHStructure();
     PAHProcess p(*temp);
     std::vector<kmcSiteType> sites = SiteVector();
-    p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->numofC(), m_pah->numofH());
+	p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, 
+		m_pah->m_bridges, m_pah->numofC(), m_pah->numofH());
     return temp;
 }
 // Public Read Processes
@@ -2478,7 +2479,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
             abort();
     }
     // Create Structure
-    return initialise(chosen, rings.first, rings.second, rings_Embedded, CH.first, CH.second);
+    return initialise(chosen, rings.first, rings.second, rings_Embedded,0, CH.first, CH.second);
     //printSites(m_pah->m_siteList.begin());
 }
 
@@ -2745,7 +2746,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
  *
  * @return       Initialized PAH structure
  */
-PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int numC, int numH){
+PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int Bridges, int numC, int numH){
 	if (m_pah == NULL) {
 		PAHStructure* pah = new PAHStructure();
 		m_pah = pah;
@@ -2770,12 +2771,12 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
         }
         siteList_vec.push_back(temp);
     }
-    createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, numC, numH);
+    createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, Bridges, numC, numH);
     return *m_pah;
 }
 
 // Create Structure from vector of site types
-void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int numC, int numH) {
+void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int Bridges, int numC, int numH) {
     // current C, bondangle and coordinates
     //Cpointer newC=addC();
     //m_pah->m_cfirst = newC;
@@ -2858,6 +2859,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
     m_pah->m_rings = R6;
     m_pah->m_rings5_Lone = R5_Lone;
     m_pah->m_rings5_Embedded = R5_Embedded;
+	m_pah->m_bridges = Bridges;
     //for(Ccontainer::iterator i = m_pah->m_carbonList.begin();
     //    i != m_pah->m_carbonList.end(); i++)
     //    updateA(*i, 'H');
@@ -2868,6 +2870,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 	m_pah->setnumofH(totalH_num);
     updateCombinedSites();
 	BuildCoordsAll();
+	updateHinderedSites();
 }
 
 /** Draw a basic site type which does not have a 5-member aromatic ring on either side.
@@ -3142,6 +3145,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 
 	if (PAH_ID == -721){
 		cout << "ID is: " << id << endl;
+		cout << "on PAH ID: " << PAH_ID << endl;
 	}
 
     std::ostringstream dotname, dotname2;
