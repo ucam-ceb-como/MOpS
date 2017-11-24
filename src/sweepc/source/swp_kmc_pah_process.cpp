@@ -1838,10 +1838,14 @@ int PAHProcess::addCarbon(angletype& heading, int& index){
 	int newindex;
 	Cpointer addcarb = new Carbon();
 	cpair coords = m_pah->m_carbons[index]->coords;
+	int ind = index + 1;
+	if (ind > m_pah->m_carbons.size()){
+		ind = 0;
+	}
 	addcarb->heading = heading;
 	addcarb->coords.first = coords.first + cos(heading / 180.0 * PI)*1.0;
 	addcarb->coords.second = coords.second + sin(heading / 180.0 * PI)*1.0;
-	m_pah->m_carbons.insert(m_pah->m_carbons.begin() + index + 1, addcarb);
+	m_pah->m_carbons.insert(m_pah->m_carbons.begin() + ind, addcarb);
 	return newindex = index + 1;
 }
 
