@@ -108,14 +108,16 @@ PAHStructure::~PAHStructure() {
 
 //! Remove all data and release any memory
 void PAHStructure::clear() {
-    for(Citer i=m_carbons.begin(); i!=m_carbons.end(); i++)
-        delete *i;
-    // clear all data
-    m_carbons.clear();
-    m_siteMap.clear();
-    m_siteList.clear();
-    //m_cfirst = NULL;
-    //m_clast = NULL;
+	if (m_carbons.size() != 0){
+		for (Citer i = m_carbons.begin(); i != m_carbons.end(); i++)
+			delete *i;
+		// clear all data
+		m_carbons.clear();
+		m_siteMap.clear();
+		m_siteList.clear();
+		//m_cfirst = NULL;
+		//m_clast = NULL;
+	}
     m_counts.first = 0;
     m_counts.second = 0;
     //m_cpositions.clear();

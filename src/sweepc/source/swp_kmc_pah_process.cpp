@@ -1759,6 +1759,7 @@ bool PAHProcess::updateHinderedSites() {
 	bool hindered;
 	int count = 0;
 	int count1 = 0;
+	int index;
 
 	std::pair<double, double> coords1;
 	std::pair<double, double> coords2;
@@ -1776,8 +1777,17 @@ bool PAHProcess::updateHinderedSites() {
 		case ACBR:
 		case NACBL:
 		case NACBR:
+			//index = st->C1;
+			//if (index < 0 || index > m_pah->m_carbons.size() - 1){
+			//	return false;
+			//}
 			coordstar1.first = m_pah->m_carbons[st->C1]->coords.first;
 			coordstar1.second = m_pah->m_carbons[st->C1]->coords.second;
+
+			//index = st->C2;
+			//if (index < 0 || index > m_pah->m_carbons.size() - 1){
+			//	return false;
+			//}
 
 			coordstar2.first = m_pah->m_carbons[st->C2]->coords.first;
 			coordstar2.second = m_pah->m_carbons[st->C2]->coords.second;
@@ -1786,9 +1796,19 @@ bool PAHProcess::updateHinderedSites() {
 			for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++) {
 				if (st != st1){
 
+					//index = st1->C1;
+					//if (index < 0 || index > m_pah->m_carbons.size() - 1){
+					//	return false;
+					//}
+
 					dist1 = pow(m_pah->m_carbons[st1->C1]->coords.first - coordstar2.first, 2);
 					dist1 += pow(m_pah->m_carbons[st1->C1]->coords.second - coordstar2.second, 2);
 					dist1 = sqrt(dist1);
+
+					//index = st1->C2;
+					//if (index < 0 || index > m_pah->m_carbons.size() - 1){
+					//	return false;
+					//}
 
 					dist2 = pow(m_pah->m_carbons[st1->C2]->coords.first - coordstar1.first, 2);
 					dist2 += pow(m_pah->m_carbons[st1->C2]->coords.second - coordstar1.second, 2);
@@ -1841,6 +1861,9 @@ int PAHProcess::addCarbon(angletype& heading, int& index){
 	int ind = index + 1;
 	if (ind > m_pah->m_carbons.size() - 1){
 		ind = 0;
+	}
+	if (ind < 0 || ind > m_pah->m_carbons.size() - 1){
+		cout << "Crap: Index out of range during addcarbon" << endl;
 	}
 	addcarb->heading = heading;
 	addcarb->coords.first = coords.first + cos(heading / 180.0 * PI)*1.0;
@@ -1971,22 +1994,37 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 	double dist1, dist2;
 	int count1 = 0;
 	int coordindex = 0;
+	int index;
 	for (Spointer st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++) {
 		kmcSiteType type = st1->type;
 		int coordindex = st1->C1;
 		if (type == AC || type == BY5 || type == BY6 || type == BY6BL || type == BY6BR){
 			if (type == AC){
-				dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 2]->coords.first, 2.0);
-				dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 2]->coords.second, 2.0);
+				index = coordindex + 2;
+				if (index > m_pah->m_carbons.size() - 1){
+					index = index - m_pah->m_carbons.size();
+				}
+
+				dist1 = pow(coord1.first - m_pah->m_carbons[index]->coords.first, 2.0);
+				dist1 += pow(coord1.second - m_pah->m_carbons[index]->coords.second, 2.0);
 				dist1 = sqrt(dist1);
 
-				dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 1]->coords.first, 2.0);
-				dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 1]->coords.second, 2.0);
+				index = coordindex + 1;
+				if (index > m_pah->m_carbons.size() - 1){
+					index = index - m_pah->m_carbons.size();
+				}
+
+				dist2 = pow(coord2.first - m_pah->m_carbons[index]->coords.first, 2.0);
+				dist2 += pow(coord2.second - m_pah->m_carbons[index]->coords.second, 2.0);
 				dist2 = sqrt(dist2);
 
 				if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
-					dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 3]->coords.first, 2.0);
-					dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 3]->coords.second, 2.0);
+					index = coordindex + 3;
+					if (index > m_pah->m_carbons.size() - 1){
+						index = index - m_pah->m_carbons.size();
+					}
+					dist1 = pow(coord1.first - m_pah->m_carbons[index]->coords.first, 2.0);
+					dist1 += pow(coord1.second - m_pah->m_carbons[index]->coords.second, 2.0);
 					dist1 = sqrt(dist1);
 
 					dist2 = pow(coord2.first - m_pah->m_carbons[coordindex]->coords.first, 2.0);
@@ -1999,12 +2037,21 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 				}
 			}
 			else if (type == BY5){
-				dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 2]->coords.first, 2.0);
-				dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 2]->coords.second, 2.0);
+				index = coordindex + 2;
+				if (index > m_pah->m_carbons.size() - 1){
+					index = index - m_pah->m_carbons.size();
+				}
+				dist1 = pow(coord1.first - m_pah->m_carbons[index]->coords.first, 2.0);
+				dist1 += pow(coord1.second - m_pah->m_carbons[index]->coords.second, 2.0);
 				dist1 = sqrt(dist1);
 
-				dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 1]->coords.first, 2.0);
-				dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 1]->coords.second, 2.0);
+				index = coordindex + 1;
+				if (index > m_pah->m_carbons.size() - 1){
+					index = index - m_pah->m_carbons.size();
+				}
+
+				dist2 = pow(coord2.first - m_pah->m_carbons[index]->coords.first, 2.0);
+				dist2 += pow(coord2.second - m_pah->m_carbons[index]->coords.second, 2.0);
 				dist2 = sqrt(dist2);
 
 				if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
@@ -2013,12 +2060,21 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 					break;
 				}
 				else{
-					dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 3]->coords.first, 2.0);
-					dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 3]->coords.second, 2.0);
+					index = coordindex + 3;
+					if (index > m_pah->m_carbons.size() - 1){
+						index = index - m_pah->m_carbons.size();
+					}
+					dist1 = pow(coord1.first - m_pah->m_carbons[index]->coords.first, 2.0);
+					dist1 += pow(coord1.second - m_pah->m_carbons[index]->coords.second, 2.0);
 					dist1 = sqrt(dist1);
 
-					dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 2]->coords.first, 2.0);
-					dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 2]->coords.second, 2.0);
+					index = coordindex + 2;
+					if (index > m_pah->m_carbons.size() - 1){
+						index = index - m_pah->m_carbons.size();
+					}
+
+					dist2 = pow(coord2.first - m_pah->m_carbons[index]->coords.first, 2.0);
+					dist2 += pow(coord2.second - m_pah->m_carbons[index]->coords.second, 2.0);
 					dist2 = sqrt(dist2);
 					if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
 						Sb = st1;
@@ -2027,12 +2083,22 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 				}
 			}
 			else {
-				dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 2]->coords.first, 2.0);
-				dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 2]->coords.second, 2.0);
+				index = coordindex + 2;
+				if (index > m_pah->m_carbons.size() - 1){
+					index = index - m_pah->m_carbons.size();
+				}
+
+				dist1 = pow(coord1.first - m_pah->m_carbons[index]->coords.first, 2.0);
+				dist1 += pow(coord1.second - m_pah->m_carbons[index]->coords.second, 2.0);
 				dist1 = sqrt(dist1);
 
-				dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 1]->coords.first, 2.0);
-				dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 1]->coords.second, 2.0);
+				index = coordindex + 1;
+				if (index > m_pah->m_carbons.size() - 1){
+					index = index - m_pah->m_carbons.size();
+				}
+
+				dist2 = pow(coord2.first - m_pah->m_carbons[index]->coords.first, 2.0);
+				dist2 += pow(coord2.second - m_pah->m_carbons[index]->coords.second, 2.0);
 				dist2 = sqrt(dist2);
 
 				if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
@@ -2040,24 +2106,41 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 					break;
 				}
 				else{
-					dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 3]->coords.first, 2.0);
-					dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 3]->coords.second, 2.0);
+					index = coordindex + 3;
+					if (index > m_pah->m_carbons.size() - 1){
+						index = index - m_pah->m_carbons.size();
+					}
+					dist1 = pow(coord1.first - m_pah->m_carbons[index]->coords.first, 2.0);
+					dist1 += pow(coord1.second - m_pah->m_carbons[index]->coords.second, 2.0);
 					dist1 = sqrt(dist1);
 
-					dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 2]->coords.first, 2.0);
-					dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 2]->coords.second, 2.0);
+					index = coordindex + 2;
+					if (index > m_pah->m_carbons.size() - 1){
+						index = index - m_pah->m_carbons.size();
+					}
+
+					dist2 = pow(coord2.first - m_pah->m_carbons[index]->coords.first, 2.0);
+					dist2 += pow(coord2.second - m_pah->m_carbons[index]->coords.second, 2.0);
 					dist2 = sqrt(dist2);
 					if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
 						Sb = st1;
 						break;
 					}
 					else{
-						dist1 = pow(coord1.first - m_pah->m_carbons[coordindex + 4]->coords.first, 2.0);
-						dist1 += pow(coord1.second - m_pah->m_carbons[coordindex + 4]->coords.second, 2.0);
+						index = coordindex + 4;
+						if (index > m_pah->m_carbons.size() - 1){
+							index = index - m_pah->m_carbons.size();
+						}
+						dist1 = pow(coord1.first - m_pah->m_carbons[index]->coords.first, 2.0);
+						dist1 += pow(coord1.second - m_pah->m_carbons[index]->coords.second, 2.0);
 						dist1 = sqrt(dist1);
 
-						dist2 = pow(coord2.first - m_pah->m_carbons[coordindex + 3]->coords.first, 2.0);
-						dist2 += pow(coord2.second - m_pah->m_carbons[coordindex + 3]->coords.second, 2.0);
+						index = coordindex + 3;
+						if (index > m_pah->m_carbons.size() - 1){
+							index = index - m_pah->m_carbons.size();
+						}
+						dist2 = pow(coord2.first - m_pah->m_carbons[index]->coords.first, 2.0);
+						dist2 += pow(coord2.second - m_pah->m_carbons[index]->coords.second, 2.0);
 						dist2 = sqrt(dist2);
 						if (abs(dist1 - sqrt(3)) < 1e-5 && abs(dist2 - sqrt(3)) < 1e-5){
 							Sb = st1;
@@ -3236,8 +3319,17 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	if (m_pah->m_siteList.begin()->C1 != 0 || moveIt(m_pah->m_siteList.end(),-1)->C2 != 0){
 		BuildCoordsAll();
 		cout << "Hit!!" << endl;
+		cout << "ID is: " << id << endl;
+		cout << "on PAH ID: " << PAH_ID << endl;
 	}
-	updateHinderedSites();
+	bool success = updateHinderedSites();
+	if (!success){
+		BuildCoordsAll();
+		updateHinderedSites();
+		cout << "Hit2!!" << endl;
+		cout << "ID is: " << id << endl;
+		cout << "on PAH ID: " << PAH_ID << endl;
+	}
 
     Spointer S1,S2,S3,S4;
     S1 = moveIt(site_perf, -1); S2 = moveIt(site_perf, 1);
@@ -3324,6 +3416,7 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 	//Update carbon atom co-ordinates.
 	//First for the site
 	bool first = false;
+	//first = true;
 	int index1 = S1->C1;
 	int index2 = S2->C2;
 	if (index2 - index1 < 0) first = true;
@@ -3434,17 +3527,26 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
 
 	//Update carbon atom co-ordinates.
 	//Add in new carbons
+	bool first = false;
+	//first = true;
 	int index1 = stt->C1;
 	int index2 = stt->C2;
-	if (index1 != 0 && index2 !=0){
+	if (index1 == 0 || index2 == 0) first = true;
+	index1 = S1->C1;
+	index2 = S2->C2;
+	if (index2 - index1 < 0) first = true;
+	if (!first){ 
 		angletype heading = m_pah->m_carbons[S1->C2]->heading + 60.0;
 
 		int index1, index2, index3, index4;
 		index1 = addCarbon(heading, S1->C2);
+
 		heading -= 60;
 		index2 = addCarbon(heading, index1);
+
 		heading -= 60;
 		index3 = addCarbon(heading, index2);
+
 		heading -= 60;
 		index4 = addCarbon(heading, index3);
 
@@ -3569,6 +3671,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 	//Remove the carbon atoms
 	//bool first = true;
 	bool first = false;
+	//first = true;
 	int index1 = Srem1->C1;
 	int index2 = Srem2->C2;
 	if (index2 - index1 < 0) first = true;
@@ -3769,6 +3872,7 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
 	int index1 = moveIt(S1, -1)->C1;
 	int index2 = moveIt(S2, 1)->C2;
 	bool first = false;
+	//first = true;
 	if (index2 - index1 < 0) first = true;
 	if (!first){
 		Citer start = m_pah->m_carbons.begin();
@@ -3960,6 +4064,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 	//Update carbon atom co-ordinates.
 	//First for the site
 	bool first = false;
+	//first = true;
 	int index1 = S1->C1;
 	int index2 = S2->C2;
 	if (index2 - index1 < 0) first = true;

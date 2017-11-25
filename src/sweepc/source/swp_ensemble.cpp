@@ -925,7 +925,6 @@ void Sweep::Ensemble::dble()
 				if (rhsparticle->NumPAH() > 1 ||
 					!rhsparticle->ParticleModel()->Components(0)->WeightedPAHs()){ //If this particle is not just a single PAH
 				//if (rhsparticle->NumPAH() > 0){ //If this particle is not just a single PAH
-					
 					size_t iCopy = prevCount + ii;
 					// Create a copy of a particle and add it to the ensemble.
 					m_particles[iCopy] = m_particles[i]->Clone();
@@ -933,7 +932,7 @@ void Sweep::Ensemble::dble()
 					// Keep count of the added particles
 					++m_count;
 					++ii;
-					Update(iCopy);
+					//Update(iCopy);
 				}
 				else{ //If this particle is a single PAH, double its statistical weight
 					double oldweight = m_particles[i]->getStatisticalWeight();
