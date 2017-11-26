@@ -281,7 +281,7 @@ double KMCMechanism::calculateBreakPreFactor(const KMCGasPoint& gp,
 			return KBreak;
 		}
 	}
-	cout << "ERROR: PAH Merging not in jump process list. Returning 0 for merge rate prefactor ";
+	cout << "ERROR: PAH Break not in jump process list. Returning 0 for merge rate prefactor ";
 	return 0.0;
 }
 

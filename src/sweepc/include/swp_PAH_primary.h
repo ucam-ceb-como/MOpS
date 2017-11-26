@@ -256,6 +256,8 @@ public:
 
 	std::vector<boost::shared_ptr<PAH> > GetPAHVector() const;
 
+	void SetClone(bool cloning);
+
 protected:
     //! Empty primary not meaningful
     PAHPrimary();
@@ -375,6 +377,7 @@ private:
     // Vector of std::tr1::shared_ptr<PAH>.
     std::vector<boost::shared_ptr<PAH> > m_PAH;
 
+	bool clone;
 
 };
 } //namespace AggModels

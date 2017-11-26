@@ -220,7 +220,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_ndble      = 0;
     m_dbleon     = true;
     m_dbleactive = false;
-    m_dblecutoff = (int)(3.5 * (double)m_capacity / 4.0 / 4.0);
+    m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0 / 4.0);
 	//m_dblecutoff = 28;
 	//m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0 );
 	//m_dblecutoff = m_capacity+10;
@@ -920,11 +920,12 @@ void Sweep::Ensemble::dble()
             //    if (rhsparticle->Pyrene()!=0)
             //        m_numofInceptedPAH++;
             //}
-				const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-				rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+				Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+				rhsparticle = dynamic_cast<AggModels::PAHPrimary*>(m_particles[i]->Primary());
 				if (rhsparticle->NumPAH() > 1 ||
 					!rhsparticle->ParticleModel()->Components(0)->WeightedPAHs()){ //If this particle is not just a single PAH
 				//if (rhsparticle->NumPAH() > 0){ //If this particle is not just a single PAH
+					rhsparticle->SetClone(false);
 					size_t iCopy = prevCount + ii;
 					// Create a copy of a particle and add it to the ensemble.
 					m_particles[iCopy] = m_particles[i]->Clone();
@@ -933,6 +934,7 @@ void Sweep::Ensemble::dble()
 					++m_count;
 					++ii;
 					//Update(iCopy);
+					rhsparticle->SetClone(true);
 				}
 				else{ //If this particle is a single PAH, double its statistical weight
 					double oldweight = m_particles[i]->getStatisticalWeight();

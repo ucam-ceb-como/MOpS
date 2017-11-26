@@ -1353,14 +1353,14 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 				before = sites1b[count1] + sites2a[count2];
 				if (before < thres && after < thres){
 					//Some function to determine if the cross-linking results in unphysical structure
-					//link = CheckLinking(rhs, Sp1, Sp2, count2 + count1 * 2, before + 1 + 68, after + 1 + 72);
-					//if (link){
+					link = CheckLinking(rhs, Sp1, Sp2, count2 + count1 * 2, before + 1 + 68, after + 1 + 72);
+					if (link){
 						combos[count2 + count1 * 2] = 1.0;
 						found = true;
-					//}
-					//else{
-					//	combos[count2 + count1 * 2] = 0.0;
-					//}
+					}
+					else{
+						combos[count2 + count1 * 2] = 0.0;
+					}
 				}
 				else{
 					combos[count2 + count1*2] = 0.0;
@@ -1380,14 +1380,14 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 				before = sites1b[count1] + sites2b[count2];
 				if (before < thres && after < thres){
 					//Some function to determine if the cross-linking results in unphysical structure
-					//link = CheckLinking(rhs, Sp1, Sp2, 4 + count2 + count1 * 2, before + 1 + 68, after + 1 + 72);
-					//if (link){
+					link = CheckLinking(rhs, Sp1, Sp2, 4 + count2 + count1 * 2, before + 1 + 68, after + 1 + 72);
+					if (link){
 						combos[4 + count2 + count1 * 2] = 1.0;
 						found = true;
-					//}
-					//else{
-					//	combos[4 + count2 + count1 * 2] = 0.0;
-					//}
+					}
+					else{
+						combos[4 + count2 + count1 * 2] = 0.0;
+					}
 				}
 				else{
 					combos[4 + count2 + count1*2] = 0.0;
@@ -1481,114 +1481,96 @@ bool PAHProcess::MergeSites(PAHProcess& rhs, rng_type &rng) {
 		newtype2 = sites1a[index1] + sites2a[index2];
 	}
 
-	//bool link;
-
-	//if (newtype1 < thres && newtype2 < thres){
-	//	newtype1 += 1 + 68;
-	//	newtype2 += 1 + 72;
-	//	link = CheckLinking(rhs, Sp1, Sp2, indexorig, newtype1, newtype2);
-	//}
-	//else{
-	//	link = false;
-	//}
-
-	//if (link){
-
-		Spointer ststart;
-		Spointer stb;
-		int inc;
-		if (left){
-			inc = 1;
-			if (index1 == 0){
-				convSiteType(Sp1, (kmcSiteType)newtype2);
-				convSiteType(moveIt(Sp1, -1), (kmcSiteType)newtype1);
-				stb = Sp1;
-				if (index2 == 0){
-					ststart = rhs.moveIt(Sp2, 1);
-				}
-				else{
-					ststart = rhs.moveIt(Sp2, 2);
-				}
+	Spointer ststart;
+	Spointer stb;
+	int inc;
+	if (left){
+		inc = 1;
+		if (index1 == 0){
+			convSiteType(Sp1, (kmcSiteType)newtype2);
+			convSiteType(moveIt(Sp1, -1), (kmcSiteType)newtype1);
+			stb = Sp1;
+			if (index2 == 0){
+				ststart = rhs.moveIt(Sp2, 1);
 			}
 			else{
-				convSiteType(moveIt(Sp1, 1), (kmcSiteType)newtype2);
-				convSiteType(Sp1, (kmcSiteType)newtype1);
-				stb = moveIt(Sp1, 1);
-				if (index2 == 0){
-					ststart = rhs.moveIt(Sp2, 1);
-				}
-				else{
-					ststart = rhs.moveIt(Sp2, 2);
-				}
+				ststart = rhs.moveIt(Sp2, 2);
 			}
 		}
 		else{
-			inc = -1;
-			if (index1 == 0){
-				convSiteType(Sp1, (kmcSiteType)newtype2);
-				convSiteType(moveIt(Sp1, -1), (kmcSiteType)newtype1);
-				stb = Sp1;
-				if (index2 == 0){
-					ststart = rhs.moveIt(Sp2, -2);
-				}
-				else{
-					ststart = rhs.moveIt(Sp2, -1);
-				}
+			convSiteType(moveIt(Sp1, 1), (kmcSiteType)newtype2);
+			convSiteType(Sp1, (kmcSiteType)newtype1);
+			stb = moveIt(Sp1, 1);
+			if (index2 == 0){
+				ststart = rhs.moveIt(Sp2, 1);
 			}
 			else{
-				convSiteType(moveIt(Sp1, 1), (kmcSiteType)newtype2);
-				convSiteType(Sp1, (kmcSiteType)newtype1);
-				stb = moveIt(Sp1, 1);
-				if (index2 == 0){
-					ststart = rhs.moveIt(Sp2, -2);
-				}
-				else{
-					ststart = rhs.moveIt(Sp2, -1);
-				}
+				ststart = rhs.moveIt(Sp2, 2);
 			}
 		}
+	}
+	else{
+		inc = -1;
+		if (index1 == 0){
+			convSiteType(Sp1, (kmcSiteType)newtype2);
+			convSiteType(moveIt(Sp1, -1), (kmcSiteType)newtype1);
+			stb = Sp1;
+			if (index2 == 0){
+				ststart = rhs.moveIt(Sp2, -2);
+			}
+			else{
+				ststart = rhs.moveIt(Sp2, -1);
+			}
+		}
+		else{
+			convSiteType(moveIt(Sp1, 1), (kmcSiteType)newtype2);
+			convSiteType(Sp1, (kmcSiteType)newtype1);
+			stb = moveIt(Sp1, 1);
+			if (index2 == 0){
+				ststart = rhs.moveIt(Sp2, -2);
+			}
+			else{
+				ststart = rhs.moveIt(Sp2, -1);
+			}
+		}
+	}
 
-		Spointer st3 = ststart;
-		Spointer st4;
-		int count3 = rhs.m_pah->m_siteList.size() - 3;
-		bool swap = false;
-		bool first = true;
-		for (int iii = 0; iii <= count3; iii++){
-			kmcSiteType adder = st3->type;
-			if (abs((int)adder) < 79 && abs((int)adder) > 74 && first){
-				swap = true;
-				first = false;
-			}
-			else if (abs((int)adder) < 75 && abs((int)adder) > 70 && first) {
-				first = false;
-			}
-			if (swap){
-				if (abs((int)adder) < 75 && abs((int)adder) > 70){
-					adder = (kmcSiteType)(abs((int)adder) + 4);
-				}
-				else if (abs((int)adder) < 79 && abs((int)adder) > 74){
-					adder = (kmcSiteType)(abs((int)adder) - 4);
-				}
-			}
-			addSite(adder, stb);
-			st4 = rhs.moveIt(st3, inc);
-			st3 = st4;
+	Spointer st3 = ststart;
+	Spointer st4;
+	int count3 = rhs.m_pah->m_siteList.size() - 3;
+	bool swap = false;
+	bool first = true;
+	for (int iii = 0; iii <= count3; iii++){
+		kmcSiteType adder = st3->type;
+		if (abs((int)adder) < 79 && abs((int)adder) > 74 && first){
+			swap = true;
+			first = false;
 		}
-		BuildCoordsAll();
-		updateCombinedSites();
-		updateHinderedSites();
-		//success = true;
-	//}
-	//else{
-	//	success = false;
-	//}
+		else if (abs((int)adder) < 75 && abs((int)adder) > 70 && first) {
+			first = false;
+		}
+		if (swap){
+			if (abs((int)adder) < 75 && abs((int)adder) > 70){
+				adder = (kmcSiteType)(abs((int)adder) + 4);
+			}
+			else if (abs((int)adder) < 79 && abs((int)adder) > 74){
+				adder = (kmcSiteType)(abs((int)adder) - 4);
+			}
+		}
+		addSite(adder, stb);
+		st4 = rhs.moveIt(st3, inc);
+		st3 = st4;
+	}
+	BuildCoordsAll();
+	updateCombinedSites();
+	updateHinderedSites();
 
 	return success;
 }
 bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, int index, int type1, int type2) {
 
-	PAHStructure *testPAH1 = m_pah->Clone();
-	PAHProcess testPAH(*testPAH1);
+	PAHStructure testPAH1(*m_pah);
+	PAHProcess testPAH(testPAH1);
 
 	Spointer Sp111;
 	int ind = 0;
@@ -1741,12 +1723,7 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp11, Spointer& Sp2, in
 		}
 	}
 
-	if (collision){
-		return false;
-	}
-	else{
-		return true;
-	}
+	return !collision;
 }
 
 bool PAHProcess::updateHinderedSites() {
@@ -1872,6 +1849,29 @@ int PAHProcess::addCarbon(angletype& heading, int& index){
 	return newindex = ind;
 }
 
+int PAHProcess::addSiteCarbons(Spointer& st, int& index){
+	int count = index;
+	angletype heading = m_pah->m_carbons[count]->heading;
+	st->C1 = count;
+	kmcSiteType currtype = st->type;
+	std::vector<double>::iterator st1;
+	std::vector<double> angles;
+
+	Angles(currtype, angles);
+	for (st1 = angles.begin(); st1 != angles.end(); st1++){
+		Cpointer newcarbon = new Carbon();
+		heading += *st1;
+		newcarbon->coords.first = m_pah->m_carbons[count]->coords.first + cos(heading / 180 * PI)*1.0;
+		newcarbon->coords.second = m_pah->m_carbons[count]->coords.second + sin(heading / 180 * PI)*1.0;
+		newcarbon->heading = heading;
+
+		m_pah->m_carbons.push_back(newcarbon);
+		count++;
+	}
+	st->C2 = count;
+	return count;
+}
+
 void PAHProcess::BuildCoordsAll(){
 	if (m_pah->m_carbons.size() > 0){
 		for (Citer i = m_pah->m_carbons.begin(); i != m_pah->m_carbons.end(); i++)
@@ -1880,35 +1880,16 @@ void PAHProcess::BuildCoordsAll(){
 	m_pah->m_carbons.clear();
 	Cpointer newcarbon = new Carbon();
 	m_pah->m_carbons.push_back(newcarbon);
-	double heading = 0;
-	double Ang;
-	double length;
-	double count = 1;
-	kmcSiteType currtype;
-	std::vector<double>::iterator st1;
-	std::vector<double> angles;
+	int count = 0;
 	Spointer st = m_pah->m_siteList.begin();
 
 	for (st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
-		st->C1 = count - 1;
-		currtype = st->type;
-		Angles(currtype, angles);
-		for (st1 = angles.begin(); st1 != angles.end(); st1++){
-			Cpointer newcarbon = new Carbon();
-			heading += *st1;
-			newcarbon->coords.first = m_pah->m_carbons[count - 1]->coords.first + cos(heading / 180 * PI)*1.0;
-			newcarbon->coords.second = m_pah->m_carbons[count - 1]->coords.second + sin(heading / 180 * PI)*1.0;
-			newcarbon->heading = heading;
-
-			m_pah->m_carbons.push_back(newcarbon);
-			count++;
-		}
-		st->C2 = count - 1;
+		int index = count;
+		count = addSiteCarbons(st, index);
 	}
 	st = moveIt(m_pah->m_siteList.end(), -1);
 	st->C2 = 0;
 	m_pah->m_carbons.pop_back();
-
 }
 
 void PAHProcess::Angles(kmcSiteType& stt, std::vector<double>& angles) {
@@ -2740,9 +2721,13 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		//updateSites();
 		addSite(FE);
 		addSite(FE);
-		addSite(AC);
+		addSite(BY6);
+		addSite(FE);
+		addSite(FE);
 		addSite(FE);
 		addSite(ZZ);
+		addSite(FE);
+		addSite(AC);
 		addSite(FE);
 		addSite(FE);
 		addSite(ZZ);
@@ -4801,6 +4786,44 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
     }
 
 	//Remove the carbon atoms
+	//bool first = true;
+	int index1 = S1->C1;
+	int index2 = S2->C2;
+	bool first = false;
+	//first = true;
+	if (index2 - index1 < 0 || index1 == 0 || index2 == 0) first = true;
+	if (!first){
+		Citer start = m_pah->m_carbons.begin();
+
+		int index = S2->C1;
+		m_pah->m_carbons.erase(start + index);
+
+		index--;
+		if (index < 0){
+			index = m_pah->m_carbons.size() - 1;
+		}
+		start = m_pah->m_carbons.begin();
+		m_pah->m_carbons.erase(start + index);
+
+		index--;
+		if (index < 0){
+			index = m_pah->m_carbons.size() - 1;
+		}
+		start = m_pah->m_carbons.begin();
+		m_pah->m_carbons.erase(start + index);
+
+		angletype heading = m_pah->m_carbons[S1->C2-1]->heading - 60;
+		index = S1->C2 - 1;
+		addCarbon(heading, index);
+
+		S1->C2 -= 1;
+		S2->C1 -= 1;
+		S2->C2 -= 2;
+		stt->C1 = S1->C2;
+		stt->C2 = stt->C1 + 2;
+	}
+
+	//Remove the carbon atoms
     removeSite(other);
     // Update Sites and neighbouring sites
     Spointer S3, S4;
@@ -4810,7 +4833,19 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
     updateSites(S2, -1); // S2 --> reduce 1
 
 	//Update coordinates
-	BuildCoordsAll();
+	if (!first){
+		//Update carbon indices
+		Spointer st1;
+		for (st1 = moveIt(S2,1); st1 != m_pah->m_siteList.end(); st1++){
+			st1->C1 -= 2;
+			st1->C2 -= 2;
+		}
+		st1 = moveIt(m_pah->m_siteList.end(), -1);
+		st1->C2 += 2;
+	}
+	else{
+		BuildCoordsAll();
+	}
 
     // update combined sites for all sites and their neighbours
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);

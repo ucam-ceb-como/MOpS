@@ -131,7 +131,8 @@ PAHPrimary::PAHPrimary() : Primary(),
     m_rightchild(NULL),
     m_parent(NULL),
     m_leftparticle(NULL),
-    m_rightparticle(NULL)
+    m_rightparticle(NULL),
+	clone(true)
 {
 }
 
@@ -172,7 +173,8 @@ PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model)
     m_rightchild(NULL),
     m_parent(NULL),
     m_leftparticle(NULL),
-    m_rightparticle(NULL)
+    m_rightparticle(NULL),
+	clone(true)
 {
     // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
@@ -222,7 +224,8 @@ PAHPrimary::PAHPrimary(const double time, const double position,
     m_rightchild(NULL),
     m_parent(NULL),
     m_leftparticle(NULL),
-    m_rightparticle(NULL)
+    m_rightparticle(NULL),
+	clone(true)
 {
     // Other parts of the code check for a non-zero composition
     m_comp[0]=1;
@@ -267,7 +270,8 @@ PAHPrimary::PAHPrimary(double time, const Sweep::ParticleModel &model, bool noPA
     m_rightchild(NULL),
     m_parent(NULL),
     m_leftparticle(NULL),
-    m_rightparticle(NULL)
+    m_rightparticle(NULL),
+	clone(true)
 {
     m_comp[0]=1;
 }
@@ -438,7 +442,8 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
 	m_numOfBridges = source->m_numOfBridges;
     m_values=source->m_values;
     m_comp=source->m_comp;
-    m_sint_time=source->m_sint_time;
+	m_sint_time = source->m_sint_time;
+	clone = source->clone;
 
     //! Replace the PAHs with those from the source.
     if (m_clone==true) {
@@ -447,7 +452,7 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
         const int sharedPointers = m_pmodel->Components(0)->SharedPointers();
         for (size_t i=0; i!=source->m_PAH.size();++i) {
 		    //! Each time a PAH is cloned 100000 is added to its ID so that we can easily calculate how many times this pah has been cloned.
-            if(sharedPointers) {
+            if(sharedPointers && clone) {
                 //! Create a copy of the shared pointers for PAHs in particles.
 		        if (source->m_PAH.size() > 1) {
                     boost::shared_ptr<PAH> new_m_PAH = source->m_PAH[i];
@@ -1445,7 +1450,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
         }
 
 		//
-		if (1 == 2){
+		if (1 == 1){
 			double m_t = 0;
 			double volumeP, volumeS;
 			//double ratio;
@@ -1453,7 +1458,6 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			//! PP mass (kg).
 			double m_mass = m_numcarbon*1.9945e-26 + m_numH*1.6621e-27;
 			volumeP = m_mass / density;
-			volumeS = sys.SampleVolume(); //get volume in m3
 			//ratio = m_mass / density / sys.SampleVolume();
 			//cout << ratio << " " << sys.SampleVolume() << " " << m_mass / density << endl;
 			double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t - dt);
@@ -1462,7 +1466,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			kBreak = kBreak / NA / volumeP;
 			int attempts = 0;
 			int numPAH = m_PAH.size();
-			while (m_t < dt && numPAH > 2 && attempts < 100)
+			while (m_t < dt && numPAH > 1 && attempts < 100)
 			{
 				//std::vector<double> mergesites(m_PAH.size());
 				//double totalsites = 0;
@@ -1475,8 +1479,6 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				double TotRate = 0.0;
 				int numdiffPAHs = 0;
 				for (int it = 0; it != numPAH; it++) {
-					//Rates[it] = kMerge*(totalsites - mergesites[it])*mergesites[it] -
-					//	kBreak*m_PAH[it]->m_pahstruct->numofBridges();
 					Rates[it] = kMerge*(m_PAH.size() - 1.0) -
 						kBreak*m_PAH[it]->m_pahstruct->numofBridges();
 					//Rates[it] = Rates[it];
@@ -1701,6 +1703,10 @@ void PAHPrimary::RemoveInvalidPAHs()
     //remove_if(m_PAH.begin(),m_PAH.end(),compare_class());
     std::vector<boost::shared_ptr<PAH> >::iterator NewEnd = remove_if(m_PAH.begin(),m_PAH.end(),boost::bind(&PAHPrimary::CheckInvalidPAHs, this,_1));
     m_PAH.resize(NewEnd-m_PAH.begin());
+}
+
+void PAHPrimary::SetClone(bool setcloning){
+	clone = setcloning;
 }
 
 // Find Xmer (monomer, dimer or trimer) and record its mass which will be used to create mass spectra

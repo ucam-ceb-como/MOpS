@@ -296,8 +296,10 @@ private:
 
 	int addCarbon(angletype& heading, int& index);
 
+	int addSiteCarbons(Spointer& st, int& index);
+
     // PAH data structure to perform processes on
-   PAHStructure* m_pah;
+    PAHStructure* m_pah;
 
     //Cpointer NULLC;
 };
