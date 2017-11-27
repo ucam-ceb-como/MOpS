@@ -2825,13 +2825,9 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		//updateSites();
 		addSite(FE);
 		addSite(FE);
-		addSite(BY6);
-		addSite(FE);
-		addSite(FE);
+		addSite(AC);
 		addSite(FE);
 		addSite(ZZ);
-		addSite(FE);
-		addSite(AC);
 		addSite(FE);
 		addSite(FE);
 		addSite(ZZ);
