@@ -414,7 +414,14 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 		m_wtdcontfctr *= 1.0 / (m_tree.head().Property(iW) + wsp);
 
         Replace(i, sp);
-    } else {
+	}
+	else {
+
+		// aab64
+		double wsp = sp.getStatisticalWeight();
+		m_wtdcontfctr *= (m_tree.head().Property(iW) + wsp - wsp);
+		m_wtdcontfctr *= 1.0 / (m_tree.head().Property(iW) + wsp);
+
         // The new particle is to be removed immediately
         assert(static_cast<unsigned int>(i) == m_capacity);
         delete &sp;
