@@ -109,12 +109,6 @@ int PAH::ID() const {
 //	m_pahstruct->saveDOTperLoop(ID,i);
 //}
 
-Sweep::KMC_ARS::PAHStructure* PAH::Structure()
-{
-   return m_pahstruct;
-}
-
-
 void PAH::Serialize(std::ostream &out) const
 {
     double val=0.0;

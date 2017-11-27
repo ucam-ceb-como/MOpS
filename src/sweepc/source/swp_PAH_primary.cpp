@@ -1463,6 +1463,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			double kMerge = sys.Particles().Simulator()->MergePreFactor(t + m_t - dt);
 			kMerge = kMerge / NA / volumeP; //convert KMerge from m3/mol/s to 1/#/s.
 			double kBreak = sys.Particles().Simulator()->BreakPreFactor(t + m_t - dt);
+			//double kBreak = 0.0;
 			kBreak = kBreak / NA / volumeP;
 			int attempts = 0;
 			int numPAH = m_PAH.size();

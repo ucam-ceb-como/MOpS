@@ -271,7 +271,7 @@ private:
     //void updateA(Cpointer C, char sp);
     //! Overload function, updateA for all C from C_1 to C_2 inclusive
     //void updateA(char spc);
-	bool updateHinderedSites();
+	bool updateHinderedSitesAll();
 	//int SiteSides(Spointer& stt);
 	//double SiteAngle(Spointer& stt);
 
@@ -297,6 +297,8 @@ private:
 	int addCarbon(angletype& heading, int& index);
 
 	int addSiteCarbons(Spointer& st, int& index);
+
+	bool updateHinderedSites(Spointer& Sstart, int num);
 
     // PAH data structure to perform processes on
     PAHStructure* m_pah;

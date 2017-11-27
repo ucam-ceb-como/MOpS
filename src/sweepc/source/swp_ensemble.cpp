@@ -220,7 +220,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_ndble      = 0;
     m_dbleon     = true;
     m_dbleactive = false;
-    m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0 / 4.0);
+    m_dblecutoff = (int)(3.5 * (double)m_capacity / 4.0 / 4.0);
 	//m_dblecutoff = 28;
 	//m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0 );
 	//m_dblecutoff = m_capacity+10;

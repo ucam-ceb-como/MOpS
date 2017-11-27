@@ -67,8 +67,6 @@ public:
     PAH *const Clone() const;
     //returen ID of PAH
     int ID() const;
-    //void saveDOTperLoop(int ID, int i) const;
-    Sweep::KMC_ARS::PAHStructure* Structure();
 
     //! this default conscustor is only used for serialization.
     PAH();
