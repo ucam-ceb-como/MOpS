@@ -1452,7 +1452,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 		//
 		if (1 == 1){
 			double m_t = 0;
-			double volumeP, volumeS;
+			double volumeP;
 			//double ratio;
 			double density = model.Components(0)->Density();
 			//! PP mass (kg).
@@ -1480,7 +1480,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				double TotRate = 0.0;
 				int numdiffPAHs = 0;
 				for (int it = 0; it != numPAH; it++) {
-					Rates[it] = kMerge*(m_PAH.size() - 1.0) -
+					Rates[it] = kMerge*(numPAH - 1.0) -
 						kBreak*m_PAH[it]->m_pahstruct->numofBridges();
 					//Rates[it] = Rates[it];
 					if (Rates[it] < 0.0){
@@ -1574,13 +1574,13 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						if (success){
 
 							int numR6 = m_PAH[ip1]->m_pahstruct->numofRings() + m_PAH[ip2]->m_pahstruct->numofRings();
-						int numLoneR5 = m_PAH[ip1]->m_pahstruct->numofLoneRings5() 
+							int numLoneR5 = m_PAH[ip1]->m_pahstruct->numofLoneRings5() 
 								+ m_PAH[ip2]->m_pahstruct->numofLoneRings5();
-						int numEmbeddedR5 = m_PAH[ip1]->m_pahstruct->numofEmbeddedRings5() 
+							int numEmbeddedR5 = m_PAH[ip1]->m_pahstruct->numofEmbeddedRings5() 
 								+ m_PAH[ip2]->m_pahstruct->numofEmbeddedRings5();
 							int numC = m_PAH[ip1]->m_pahstruct->numofC() + m_PAH[ip2]->m_pahstruct->numofC();
 							int numH = m_PAH[ip1]->m_pahstruct->numofH() + m_PAH[ip2]->m_pahstruct->numofH();
-						int numBridges = m_PAH[ip1]->m_pahstruct->numofBridges() 
+							int numBridges = m_PAH[ip1]->m_pahstruct->numofBridges() 
 								+ m_PAH[ip2]->m_pahstruct->numofBridges() + 1;
 							m_PAH[ip1]->m_pahstruct->setnumofRings(numR6);
 							m_PAH[ip1]->m_pahstruct->setnumofLoneRings5(numLoneR5);
@@ -1608,10 +1608,11 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 							//		}
 							//	}
 							//}
-
-						
+							attempts = 0;
+							m_PAHclusterchanged = true;				
 						}
 						else{
+							if (numPAH == 2) break;
 							attempts++;
 						}
 					}

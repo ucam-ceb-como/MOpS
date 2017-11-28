@@ -290,15 +290,19 @@ private:
 
 	//void PAHProcess::BuildCoordsAll(std::vector < std::pair<double, double> >& coordinates, std::vector<int>& carbons);
 
-	void PAHProcess::BuildCoordsAll();
+	void BuildCoordsAll();
 
-	void PAHProcess::Angles(kmcSiteType& stt, std::vector<double>& angles);
+	void Angles(kmcSiteType& stt, std::vector<double>& angles);
+
+	int Sites(kmcSiteType& stt);
 
 	int addCarbon(angletype& heading, int& index);
 
 	int addSiteCarbons(Spointer& st, int& index);
 
 	bool updateHinderedSites(Spointer& Sstart, int num);
+
+	void UpdateCarbonIndices();
 
     // PAH data structure to perform processes on
     PAHStructure* m_pah;

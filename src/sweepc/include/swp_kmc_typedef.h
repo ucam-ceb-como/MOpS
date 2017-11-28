@@ -396,8 +396,8 @@ namespace Sweep {
 		std::vector<kmcSiteType> inline vectACgrowsites() {
 			std::vector<kmcSiteType> temp;
 			temp.push_back(AC);
-			temp.push_back(ACBL);
-			temp.push_back(ACBR);
+			//temp.push_back(ACBL);
+			//temp.push_back(ACBR);
 			return temp;
 		}
 
@@ -405,11 +405,11 @@ namespace Sweep {
 		std::vector<kmcSiteType> inline vectBY6closesites() {
 			std::vector<kmcSiteType> temp;
 			temp.push_back(BY6);
-			temp.push_back(BY6BL);
-			temp.push_back(BY6BR);
-			temp.push_back(BY6BL2);
-			temp.push_back(BY6BR2);
-			temp.push_back(BY6BRL);
+			//temp.push_back(BY6BL);
+			//temp.push_back(BY6BR);
+			//temp.push_back(BY6BL2);
+			//temp.push_back(BY6BR2);
+			//temp.push_back(BY6BRL);
 			return temp;
 		}
 
