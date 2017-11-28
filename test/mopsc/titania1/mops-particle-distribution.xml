@@ -20,14 +20,14 @@
         <component id="AR">1.0</component>
         <temperature units="K">500</temperature>
         <pressure units="bar">4.5</pressure>	  
-        <!-- Specify primaries and component mean and std here to build 
+        <!-- Specify primaries and component mean and variance here to build 
 		a polydisperse particle ensemble assuming normal distributions --> 		
         <population>
             <m0>1.0e12</m0>
             <particle count="256" usedistribution="true">
                 <weight>1.0</weight>
                 <component id="Rutile" dx="1000" dx_var="10"/>
-                <nprimaries npri="10" npri_std="1"/>
+                <nprimaries npri="10" npri_var="1"/>
             </particle>
         </population>
     </mixture>
