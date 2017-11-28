@@ -108,16 +108,9 @@ PAHStructure::~PAHStructure() {
 
 //! Remove all data and release any memory
 void PAHStructure::clear() {
-	if (m_carbons.size() != 0){
-		for (Citer i = m_carbons.begin(); i != m_carbons.end(); i++)
-			delete *i;
-		// clear all data
-		m_carbons.clear();
-		m_siteMap.clear();
-		m_siteList.clear();
-		//m_cfirst = NULL;
-		//m_clast = NULL;
-	}
+	m_carbons.clear();
+	m_siteMap.clear();
+	m_siteList.clear();
     m_counts.first = 0;
     m_counts.second = 0;
     //m_cpositions.clear();
@@ -222,6 +215,26 @@ PAHStructure*  PAHStructure::Clone() {
     return p.clonePAH();
 }
 
+//! obtains a string containing the PAH site list
+std::string PAHStructure::SiteString(char delimiter) const {
+	std::ostringstream temp;
+	std::vector<kmcSiteType> vec(SiteVector());
+	temp << kmcSiteName(vec[0]);
+	for (size_t i = 1; i<vec.size(); i++) {
+		temp << delimiter;
+		temp << kmcSiteName(vec[i]);
+	}
+	return temp.str();
+}
+
+std::vector<kmcSiteType> PAHStructure::SiteVector() const {
+	std::vector<kmcSiteType> temp;
+	for (std::list< Site >::const_iterator i = m_siteList.begin(); i != m_siteList.end(); ++i) {
+		temp.push_back((*i).type);
+	}
+	return temp;
+}
+
 //bool PAHStructure::havebridgeC(){
 //    PAHProcess p(*this);
 //    return p.havebridgeC();
@@ -258,9 +271,9 @@ void PAHStructure::Serialize(std::ostream &out) const
 	val = numofBridges();
 	out.write((char*)&(val), sizeof(val));
 
-    PAHStructure m_copy (*this);
-    PAHProcess p(m_copy);
-    std::string m_SiteName = p.SiteString(',');
+    //PAHStructure m_copy (*this);
+    //PAHProcess p(m_copy);
+    std::string m_SiteName = SiteString(',');
 
     val = (unsigned int)m_SiteName.length();
     out.write((char*)&val, sizeof(val));

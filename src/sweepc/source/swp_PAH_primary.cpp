@@ -1303,9 +1303,6 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					updatetime = sys.Particles().Simulator()->updatePAH(new_m_PAH->m_pahstruct, (*it)->lastupdated, growtime, 1, 1,
 						 rng, growthfact*statweight, new_m_PAH->PAH_ID, calcrates, ratefactor);
 
-					/*updatetime = sys.Particles().Simulator()->updatePAH(new_m_PAH->m_pahstruct, (*it)->lastupdated, growtime, 1, 1,
-						rng, growthfact*statweight, new_m_PAH->PAH_ID, true, 1.0);*/
-
 					new_m_PAH->lastupdated = updatetime;
 					(*it)->lastupdated = updatetime;
 
@@ -1465,21 +1462,23 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			double kBreak = sys.Particles().Simulator()->BreakPreFactor(t + m_t - dt);
 			//double kBreak = 0.0;
 			kBreak = kBreak / NA / volumeP;
-			int attempts = 0;
 			int numPAH = m_PAH.size();
-			while (m_t < dt && numPAH > 1 && attempts < 100)
+			while (m_t < dt && numPAH > 1)
 			{
-				//std::vector<double> mergesites(m_PAH.size());
-				//double totalsites = 0;
-				//for (int it = 0; it != m_PAH.size(); it++) {
-				//	mergesites[it] = m_PAH[it]->m_pahstruct->numMergeSites();
-				//	totalsites += mergesites[it];
-				//}
+				/*std::vector<double> mergesites(numPAH);
+				double totalsites = 0;
+				for (int it = 0; it != numPAH; it++) {
+					mergesites[it] = m_PAH[it]->m_pahstruct->numMergeSites();
+					totalsites += mergesites[it];
+				}*/
+
 				std::vector<double> Rates(numPAH);
 
 				double TotRate = 0.0;
 				int numdiffPAHs = 0;
 				for (int it = 0; it != numPAH; it++) {
+					/*Rates[it] = kMerge*(totalsites - mergesites[it]) -
+						kBreak*m_PAH[it]->m_pahstruct->numofBridges();*/
 					Rates[it] = kMerge*(numPAH - 1.0) -
 						kBreak*m_PAH[it]->m_pahstruct->numofBridges();
 					//Rates[it] = Rates[it];
@@ -1514,7 +1513,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					size_t ip2 = ip1;
 					unsigned int guard = 0;
 
-					while ((ip2 == ip1) && (++guard < 100))
+					while ((ip2 == ip1) && (++guard < 1000))
 					{
 						ip2 = chooseIndex<double>(Rates, uniformGenerator);
 					}
@@ -1608,12 +1607,11 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 							//		}
 							//	}
 							//}
-							attempts = 0;
+							//attempts = 0;
 							m_PAHclusterchanged = true;				
 						}
 						else{
-							if (numPAH == 2) break;
-							attempts++;
+							cout<< "Failed to merge" << endl;
 						}
 					}
 				}

@@ -129,12 +129,17 @@ namespace Sweep{
 
 			std::map<kmcSiteType, svector> GetSiteMap() const;
 
+			std::string SiteString(char delimiter) const;
+
+			std::vector<kmcSiteType> SiteVector() const;
+
         private:
             //! First and last Carbon atom in list
             //Cpointer m_cfirst;
             //Cpointer m_clast;
 			//! Stores coords and heading angle for each surface carbon atom.
-			std::vector<Cpointer> m_carbons;
+			//std::vector<Cpointer> m_carbons;
+			std::vector<Carbon> m_carbons;
             //! Stores all principal PAH sites in order from m_cfirst-m_clast.
             std::list<Site> m_siteList;
             //! Stores iterators to the PAH sites according to their site type

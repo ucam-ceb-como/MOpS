@@ -294,7 +294,7 @@ int main(int argc, char *argv[])
                 //pahp.saveDOT(dotname.str());
             }
             std::cout<<"Done simulation for PAH "<<ID+i<<std::endl<<endl;
-            std::cout<<"PAH Structure: "<<pahp.SiteString(',')<<std::endl;
+            std::cout<<"PAH Structure: "<<pah[i]->SiteString(',')<<std::endl;
             std::cout<<"PAH Ring Counts ~ R6:"<<pahp.getRingsCount().first<<" -- R5:"
                 <<pahp.getRingsCount().second<<std::endl;
             std::cout<<"PAH Atom Counts ~ C:"<<pahp.getCHCount().first<<" -- H:"
