@@ -342,8 +342,21 @@ void readInitialPopulation(
         fileParticleList = readEnsembleFile(filename, mech.ParticleMech());
     }
 
+	// aab64 Choose which file reader to use depending if particle distributions are required
+	vector<CamXML::Element*> subitems;
+	subnode.GetChildren("particle", subitems); 
+	string dflag;
+	for (vector<CamXML::Element*>::iterator j = subitems.begin(); j != subitems.end(); ++j) {
+		// Get component ID.
+		dflag = (*j)->GetAttributeValue("usedistribution");
+	}
+
     // Now read in the list of particles and sum up their statistical weights
-    inxParticleList = Settings_IO::ReadInitialParticles(subnode, mech.ParticleMech());
+	if (dflag == "true")
+		// Use detailed reader to create particles based on distributions specified in input file
+		inxParticleList = Settings_IO::ReadInitialParticlesDetailed(subnode, mech.ParticleMech()); 
+	else 
+		inxParticleList = Settings_IO::ReadInitialParticles(subnode, mech.ParticleMech());
 
     // Join the particle lists
     allParticleList.splice(allParticleList.end(), fileParticleList);
@@ -1426,6 +1439,105 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
     }
     return particleList;
 }
+
+
+// aab64 Version of the above reader that will construct (bintree) particles given 
+// (mean,std) number of primaries per particle and (mean,std) number of component
+// units per particle (assuming lognormal distributions).
+/**
+* Read a list of initial particles specified in an XML file
+*
+*@param[in]    population_xml      xml node containing initial particles as children
+*@param[in]    particle_mech       Mechanism defining the meaning of the particles
+*
+*@return       Container of the particles that form the initial population
+*
+*@exception    std::runtime_error  If particles are specified they must have strictly positive counts
+*/
+Sweep::PartPtrList Settings_IO::ReadInitialParticlesDetailed(const CamXML::Element& population_xml,
+	const Sweep::Mechanism & particle_mech)
+{
+	// Generate a random number generator for use inside this once-off function
+	boost::mt19937 rng_temp(0);
+
+	// Accumulate in this container a collection of particles to be inserted into the ensemble
+	Sweep::PartPtrList particleList;
+
+	// Now get the XML defining the particles
+	std::vector<CamXML::Element*> particleXML;
+	population_xml.GetChildren("particle", particleXML);
+
+	// An empty population means nothing to do
+	if (particleXML.empty())
+	{
+		return particleList;
+	}
+
+	// See if there is a spatial position for the particles
+	const CamXML::Attribute *attr = population_xml.GetAttribute("x");
+	double position = 0.0;
+	if (attr) {
+		position = atof(attr->GetValue().c_str());
+	}
+
+	// Now loop through the particles one by one
+	std::vector<CamXML::Element*>::const_iterator it(particleXML.begin());
+	const std::vector<CamXML::Element*>::const_iterator itEnd(particleXML.end());
+	while (it != itEnd)
+	{
+		// Build a particle from the xml and use an auto_ptr so the particle
+		// instance will be deleted if an exception is thrown while processing
+		// the rest of the input.
+		const std::auto_ptr<Sweep::Particle>
+			pParticle(Sweep::Particle::createFromXMLNodeDetailed(**it, particle_mech, rng_temp));
+
+		// Assume particle population applies at time 0.
+		pParticle->setPositionAndTime(position, 0.0);
+
+		// See how many times this particle appears (default is 1)
+		int repeatCount = 1;
+
+		// Will initialise to NULL if no count attribute present and if block
+		// will be skipped.
+		const CamXML::Attribute* const  countAttrib = (*it)->GetAttribute("count");
+		if (countAttrib)
+		{
+			// Read the count specified by the user
+			const std::string countString = countAttrib->GetValue();
+			repeatCount = atoi(countString.c_str());
+
+			// The count must be a strictly positive integer
+			if (repeatCount <= 0)
+			{
+				// Delete any particles already read into the local list
+				// The list itself will be destroyed when the throw std::takes
+				// place so there is no need to nullify the pointers
+				Sweep::PartPtrList::iterator it = particleList.begin();
+				const Sweep::PartPtrList::iterator itEnd = particleList.end();
+				while (it != itEnd)
+				{
+					delete *it++;
+				}
+				throw std::runtime_error("Particle counts must be > 0. Mops Reactor::ReadInitialParticles");
+			}
+		}
+
+		// Add the specified number of copies of the particle to the initial
+		// particle container
+		Sweep::Particle *pParticle2;
+		while (repeatCount--){
+			pParticle2 = Sweep::Particle::createFromXMLNodeDetailed(**it, particle_mech, rng_temp);
+			// Assume particle population applies at time 0.
+			pParticle2->setPositionAndTime(position, 0.0);
+			particleList.push_back(new Sweep::Particle(*pParticle2));
+		}
+
+		// Move on to the next particle in the xml
+		++it;
+	}
+	return particleList;
+}
+
 
 /*!
  * Parse XML and set values specifying the boundaries that defined extreme particles to be excluded

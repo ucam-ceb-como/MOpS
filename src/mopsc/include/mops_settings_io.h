@@ -104,6 +104,11 @@ namespace Settings_IO
     Sweep::PartPtrList ReadInitialParticles(const CamXML::Element &node,
                                             const Sweep::Mechanism & particle_mech);
 
+	// aab64
+	//! Read initial particles from a file into a list
+	Sweep::PartPtrList ReadInitialParticlesDetailed(const CamXML::Element &node,
+		const Sweep::Mechanism & particle_mech);
+
     //! Read limits that define extreme particles to be excluded from particle population statistics
     void ReadStatsBound(const CamXML::Element &node, Sweep::PropID &property_id,
                         double &lower_bound, double &upper_bound);

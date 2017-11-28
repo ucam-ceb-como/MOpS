@@ -104,6 +104,11 @@ public:
     static Particle* createFromXMLNode(const CamXML::Element& xml,
                                        const Sweep::ParticleModel& model);
 
+	// aab64 
+	//! Create a new particle using the model according to the xml data
+	static Particle* createFromXMLNodeDetailed(const CamXML::Element& xml,
+		const Sweep::ParticleModel& model, rng_type &rng);
+
     // Operators.
     Particle &operator=(const Particle &rhs);
 

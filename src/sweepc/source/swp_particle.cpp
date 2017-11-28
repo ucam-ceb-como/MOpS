@@ -48,6 +48,9 @@
 #include "swp_particle_image.h"
 #include "string_functions.h"
 
+#include <boost/random/uniform_01.hpp>
+#include <boost/random/normal_distribution.hpp> //log
+
 #include <cmath>
 #include <stdexcept>
 #include <cassert>
@@ -244,6 +247,250 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
     pNew->UpdateCache();
     
     return pNew;
+}
+
+
+// aab64 Version of the above XML reader that will construct (bintree) particles given 
+// (mean,std) number of primaries per particle and (mean,std) number of component
+// units per particle (assuming normal distributions).
+// To do: add sintering if required, switch to lognormal distribution when suitable parameters are known.
+/*!
+* @param[in]		xml			XML node specifying the particle
+* @param[in]		model		Particle model that defines the interpretation of the particle data
+* @param[in]        rng         Random number generator 
+*
+* @return		Pointer to new particle constructed on the heap (caller must delete).
+*
+* @exception	runtime_error	Unrecognised component
+* @exception	runtime_error	Unrecognised tracker
+* @exception	runtime_error	Non-positive statistical weight
+*/
+Particle* Particle::createFromXMLNodeDetailed(const CamXML::Element& xml, const Sweep::ParticleModel& model, rng_type &rng)
+{
+	// Read initial particle composition.
+	vector<CamXML::Element*> subitems, subitems_pri;
+	xml.GetChildren("component", subitems);
+	xml.GetChildren("nprimaries", subitems_pri);
+	fvector components(model.ComponentCount(), 0);
+	fvector components_var(model.ComponentCount(), 0);
+	fvector temp_components(model.ComponentCount(), 0);
+
+	for (vector<CamXML::Element*>::iterator j = subitems.begin(); j != subitems.end(); ++j) {
+		// Get component ID.
+		string str = (*j)->GetAttributeValue("id");
+		int id = model.ComponentIndex(str);
+
+		if (id >= 0) {
+			// Get component value (XML uses dx to match format for inception).
+			str = (*j)->GetAttributeValue("dx");
+			components[id] = Strings::cdble(str);
+			// Get component std
+			std::string str2;
+			str2 = (*j)->GetAttributeValue("dx_var");
+			if (str2[0] != NULL) 
+			{
+				components_var[id] = Strings::cdble(str2);
+				if (components_var[id] <= 0)
+					throw std::runtime_error("Component variance must be positive. \
+											 	(Sweep, Particle::createFromXMLNode).");
+			}
+			else
+				components_var[id] = 0.0;
+
+			//cout << "\nIn particle fn\n";
+			//cout << "==============\n";
+			//cout << "nrut = " << components[0] << "\n";
+
+			// Choose amount of rutile for this particle
+			double nrut_i = boost::random::normal_distribution<double>(components[0], components_var[0])(rng); //log
+			// Scale any other components, assuming they must exist in stoichiometric amounts
+			double sf_i = nrut_i / components[0];
+			for (size_t iter = 0; iter < components.size(); iter++)
+				components[iter] *= sf_i;
+
+			//cout << "nrut = " << components[0] << "\n";
+		}
+		else {
+			// Unknown component in mechanism.
+			throw std::runtime_error(str + ": Component not found in mechanism \
+										     (Sweep, Particle::createFromXMLNode).");
+		}
+	}
+
+	// Read initial tracker variable values.
+	xml.GetChildren("track", subitems);
+	fvector trackers(model.TrackerCount(), 0);
+
+	for (vector<CamXML::Element*>::iterator j = subitems.begin(); j != subitems.end(); j++) {
+		// Get tracker ID.
+		string str = (*j)->GetAttributeValue("id");
+		int id = model.GetTrackerIndex(str);
+
+		if (id >= 0) {
+			// Get tracker value (XML uses dx to match format for inception).
+			str = (*j)->GetAttributeValue("dx");
+			trackers[id] = Strings::cdble(str);
+		}
+		else {
+			// Unknown tracker variable in mechanism.
+			throw std::runtime_error(str + ": Tracker variable not found in mechanism. \
+										     (Sweep, Particle::createFromXMLNode).");
+		}
+	}
+
+	//TODO wrap in an auto_ptr for exception safety
+	Particle* pNew1 = model.CreateParticle(0.0);
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+	// If bintree primary, read average number of primaries per particle and standard deviation
+	if (model.AggModel() == Sweep::AggModels::BinTree_ID) 
+	{
+		double npri, npri_var;
+		string str1, str2;
+
+		for (vector<CamXML::Element*>::iterator j = subitems_pri.begin(); j != subitems_pri.end(); ++j) 
+		{
+			// Get mean number of primaries per particle
+			str1 = (*j)->GetAttributeValue("npri");
+			if (str1 != "") 
+			{
+				npri = Strings::cdble(str1);
+				if (npri <= 0)
+					throw std::runtime_error("Particle primary count must be positive. \
+											   (Sweep, Particle::createFromXMLNode).");
+			}
+			else
+				npri = 1.0;
+			
+			// Get variance of number of primaries per particle
+			str2 = (*j)->GetAttributeValue("npri_var");
+			if (str2 != "") 
+			{
+				npri_var = Strings::cdble(str2);
+				if (npri_var <= 0)
+					throw std::runtime_error("Particle primary count variance must be positive. \
+											 	(Sweep, Particle::createFromXMLNode).");
+			}
+			else
+				npri_var = 0.0;
+		}
+
+		// Choose number of primaries for this particle
+		// to do - give this an upper bound, same with npri
+		unsigned int npri_i = ceil(boost::random::normal_distribution<double>(npri, npri_var)(rng)); //log
+
+		//cout << "npri = " << npri_i << "\n";
+
+		// Choose division of rutile amongst primaries
+		boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+		fvector fracs(npri_i, 0);
+		double fracs_total = 0.0;
+		for (unsigned int j = 0; j < npri_i; j++)
+		{
+			fracs[j] = uniformGenerator(); 
+			fracs_total += fracs[j];
+		}
+		for (unsigned int j = 0; j < npri_i; j++)
+		{
+			fracs[j] *= (1.0 / fracs_total);
+			//cout << " * " << fracs[j] << "\n";
+		}
+		
+		// Read any statistical weight
+		const CamXML::Element* const pWeightNode = xml.GetFirstChild("weight");
+		if (pWeightNode != NULL) {
+			std::string str = pWeightNode->Data();
+			const double wt = Strings::cdble(str);
+			if (wt <= 0) {
+				throw std::runtime_error("Particle statistical weight must be >0, not " + str +
+					"(Sweep, Particle::createFromXMLNode).");
+			}
+			else {
+				pNew1->setStatisticalWeight(wt);
+
+				// Initialise the first new particle, this will be the base particle.
+				for (size_t iter = 0; iter < temp_components.size(); iter++)
+					temp_components[iter] = ceil(components[iter] * fracs[0]);
+
+				//cout << "nrut_i = " << temp_components[0] << "\n";
+
+				pNew1->Primary()->SetComposition(temp_components);
+				pNew1->Primary()->SetValues(trackers); // what is this?
+				pNew1->UpdateCache();
+
+				//TODO wrap in an auto_ptr for exception safety
+				Particle* pNew2;
+
+				// Initialise all other particles, coagulating with the base particle.
+				for (unsigned int j = 1; j < npri_i; j++)
+				{
+					pNew2 = model.CreateParticle(0.0);
+					pNew2->setStatisticalWeight(wt);
+					for (size_t iter = 0; iter < temp_components.size(); iter++)
+						temp_components[iter] = ceil(components[iter] * fracs[j]);
+					pNew2->Primary()->SetComposition(temp_components);
+					pNew2->Primary()->SetValues(trackers); // what is this?
+					pNew2->UpdateCache();
+
+					//cout << "nrut_i = " << temp_components[0] << "\n";
+
+					// Perform coagulation 
+					// To do: work out if the weight should be modified in the weighted case
+					pNew1->Coagulate(*pNew2, rng);
+					pNew1->UpdateCache();
+				}
+
+				//cout << "Done: dcol(Pi) = " << pNew1->CollDiameter() << "\n";
+			}
+		}
+	}
+	///////////////////////////////////////////////////////////////////////////////////////////
+	else 
+	{
+		//cout << "Not using bintree model\n";
+
+		// Read any statistical weight
+		const CamXML::Element* const pWeightNode = xml.GetFirstChild("weight");
+		if (pWeightNode != NULL) {
+			std::string str = pWeightNode->Data();
+			const double wt = Strings::cdble(str);
+			if (wt <= 0) {
+				throw std::runtime_error("Particle statistical weight must be >0, not " + str +
+					"(Sweep, Particle::createFromXMLNode).");
+			}
+			else
+				pNew1->setStatisticalWeight(wt);
+		}
+
+		// Read SurfVol specific parameters
+		if (model.AggModel() == Sweep::AggModels::SurfVol_ID) {
+			const CamXML::Element* const pSurfNode = xml.GetFirstChild("surf");
+			if (pSurfNode != NULL) {
+				std::string str = pSurfNode->Data();
+				const double surf = Strings::cdble(str);
+				if (surf <= 0) {
+					throw std::runtime_error("Particle surface area must be >0, not " + str +
+						"(Sweep, Particle::createFromXMLNode).");
+				}
+				else
+					pNew1->m_primary->SetSurfaceArea(surf);
+			}
+		}
+
+		for (size_t iter = 0; iter < components.size(); iter++)
+			components[iter] = ceil(components[iter]);
+
+		//cout << "nrut_i = " << components[0] << "\n";
+
+		// Initialise the new particle.
+		pNew1->Primary()->SetComposition(components);
+		pNew1->Primary()->SetValues(trackers);
+		pNew1->UpdateCache();
+
+		//cout << "Done: dcol(Pi) = " << pNew1->CollDiameter() << "\n";
+	}
+
+	return pNew1;
 }
 
 
