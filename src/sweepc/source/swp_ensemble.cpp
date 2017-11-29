@@ -484,9 +484,8 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 					sitemapInput[KMC_ARS::RBY5R].size() == sitemapComp[KMC_ARS::RBY5R].size() &&
 					sitemapInput[KMC_ARS::FE3].size() == sitemapComp[KMC_ARS::FE3].size() &&
 					sitemapInput[KMC_ARS::FE2].size() == sitemapComp[KMC_ARS::FE2].size() &&
-					sitemapInput[KMC_ARS::OFE2].size() == sitemapComp[KMC_ARS::OFE2].size() &&
-					sitemapInput[KMC_ARS::BFE2].size() == sitemapComp[KMC_ARS::BFE2].size() &&
 					sitemapInput[KMC_ARS::NFE2].size() == sitemapComp[KMC_ARS::NFE2].size() &&
+					sitemapInput[KMC_ARS::NFE3].size() == sitemapComp[KMC_ARS::NFE3].size() &&
 					sitemapInput[KMC_ARS::AC_FE3].size() == sitemapComp[KMC_ARS::AC_FE3].size() &&
 					sitemapInput[KMC_ARS::RAC_FE3].size() == sitemapComp[KMC_ARS::RAC_FE3].size() &&
 					sitemapInput[KMC_ARS::BY5_FE3].size() == sitemapComp[KMC_ARS::BY5_FE3].size() &&

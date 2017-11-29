@@ -81,7 +81,7 @@ namespace Sweep {
 			//End principal site types
 			//Start combined site types
 			//First, basic combined sites with R6s. FE3:FE with 2 FEs on both sides. FE_HACA: FE with non FE's on each side
-			FE2 = 1001, FE3 = 1002, FE_HACA = 1003, OFE2 = 1004, BFE2 = 1005,
+			FE2 = 1001, FE3 = 1002, FE_HACA = 1003,
 			//Basic combined sites that are hindered
 			NFE2 = -1001, NFE3 = -1002,
 			//Combined sites with only R5
@@ -201,8 +201,6 @@ namespace Sweep {
 				case FE2: return "FE2";
                 case FE3: return "FE3";
 				case FE_HACA: return "FE_HACA";
-				case OFE2: return "OFE2";
-				case BFE2: return "BFE2";
 				case NFE2: return "NFE2";
 
 				case ACR5: return "ACR5";
@@ -357,8 +355,6 @@ namespace Sweep {
 			temp.push_back(FE2);
             temp.push_back(FE3);
 			temp.push_back(FE_HACA);
-			temp.push_back(OFE2);
-			temp.push_back(BFE2);
 			temp.push_back(NFE2);
 
 			temp.push_back(ACR5);
@@ -384,20 +380,12 @@ namespace Sweep {
             return temp;
         }
 
-		//! Get a vector of all site types for ZZ oxidation
-		std::vector<kmcSiteType> inline vectZZOxsites() {
-			std::vector<kmcSiteType> temp;
-			temp.push_back(FE2);
-			temp.push_back(OFE2);
-			return temp;
-		}
-
 		//! Get a vector of all site types for AC growth
 		std::vector<kmcSiteType> inline vectACgrowsites() {
 			std::vector<kmcSiteType> temp;
 			temp.push_back(AC);
-			//temp.push_back(ACBL);
-			//temp.push_back(ACBR);
+			temp.push_back(ACBL);
+			temp.push_back(ACBR);
 			return temp;
 		}
 
@@ -405,11 +393,11 @@ namespace Sweep {
 		std::vector<kmcSiteType> inline vectBY6closesites() {
 			std::vector<kmcSiteType> temp;
 			temp.push_back(BY6);
-			//temp.push_back(BY6BL);
-			//temp.push_back(BY6BR);
-			//temp.push_back(BY6BL2);
-			//temp.push_back(BY6BR2);
-			//temp.push_back(BY6BRL);
+			temp.push_back(BY6BL);
+			temp.push_back(BY6BR);
+			temp.push_back(BY6BL2);
+			temp.push_back(BY6BR2);
+			temp.push_back(BY6BRL);
 			return temp;
 		}
 

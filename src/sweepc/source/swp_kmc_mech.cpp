@@ -167,8 +167,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_D6R_FE3);          //*< 5 - R6 Desorption at FE [AR8].
     temp.push_back(j_O6R_FE3_O2);       //*< 6 - R6 Oxidation at FE by O2 [AR10].
     temp.push_back(j_O6R_FE3_OH);       //*< 7 - R6 Oxidation at FE by OH [AR11].
-    //temp.push_back(j_O6R_FE_HACA_O2); //*< 8 - R6 Oxidation at AC by O2 [AR12].
-    //temp.push_back(j_O6R_FE_HACA_OH); //*< 9 - R6 Oxidation at AC by OH [AR13].
+    temp.push_back(j_O6R_FE_HACA_O2); //*< 8 - R6 Oxidation at AC by O2 [AR12].
+    temp.push_back(j_O6R_FE_HACA_OH); //*< 9 - R6 Oxidation at AC by OH [AR13].
     //temp.push_back(j_G5R_ZZ);           //*< 10 - R5 growth at ZZ [AR3].
     //temp.push_back(j_D5R_R5);           //*< 11 - R5 desorption [AR7].
     //temp.push_back(j_C6R_AC_FE3);       //*< 12 - R6 conversion to R5 [AR9].
@@ -1768,7 +1768,7 @@ void O6R_FE2_OH::initialise() {
     rxnvector& rxnV3 = m_rxnvector1;
     addReaction(rxnV3, Reaction(1.30e13, 0, 10.60, sp::OH));
 
-    m_sType = ZZox; // sitetype
+    m_sType = FE2; // sitetype
     m_name = "R6 (FE2) Oxidation by OH"; // name of process
     m_ID = 20;
 }

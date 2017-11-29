@@ -271,7 +271,7 @@ private:
     //void updateA(Cpointer C, char sp);
     //! Overload function, updateA for all C from C_1 to C_2 inclusive
     //void updateA(char spc);
-	bool updateHinderedSitesAll();
+	void updateHinderedSitesAll();
 	//int SiteSides(Spointer& stt);
 	//double SiteAngle(Spointer& stt);
 
@@ -284,7 +284,7 @@ private:
 
 	int addtoBridgeCount(kmcSiteType type, double mult);
 
-	bool CheckLinking(PAHProcess& rhs, Spointer& Sp1, Spointer& Sp2, int index, int type1, int type2);
+	bool CheckLinking(PAHProcess& rhs, Spointer& Sp1, Spointer& Sp2, int index);
 
 	//std::vector < std::pair<double, double> > PAHProcess::BuildCoords();
 
@@ -300,7 +300,7 @@ private:
 
 	int addSiteCarbons(Spointer& st, int& index);
 
-	bool updateHinderedSites(Spointer& Sstart, int num);
+	void updateHinderedSites(Spointer& Sstart, int num);
 
 	void UpdateCarbonIndices();
 
