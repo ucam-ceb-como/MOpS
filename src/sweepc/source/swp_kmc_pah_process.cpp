@@ -1919,12 +1919,14 @@ std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 	}
 	
 	std::pair<double, double> coord1 = m_pah->m_carbons[index].coords;
+	kmcSiteType type;
 
 	int sides;
 	for (Spointer st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++) {
 		if (st1 != st && st1 != moveIt(st, 1) && st1 != moveIt(st, -1)){
-			if (st1->type == AC || st1->type == BY5 || st1->type == BY6 || st1->type == BY6BL || st1->type == BY6BR){
-				sides = Sites(st1->type);
+			type = st1->type;
+			if (type == AC || type == BY5 || type == BY6 || type == BY6BL || type == BY6BR){
+				sides = Sites(type);
 				for (int count = 0; count <= sides; count++){
 					index = count + st1->C1;
 					if (index > size){
