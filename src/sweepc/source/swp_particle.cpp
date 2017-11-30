@@ -49,7 +49,7 @@
 #include "string_functions.h"
 
 #include <boost/random/uniform_01.hpp>
-#include <boost/random/normal_distribution.hpp> //log
+#include <boost/random/lognormal_distribution.hpp> 
 
 #include <cmath>
 #include <stdexcept>
@@ -287,7 +287,7 @@ Particle* Particle::createFromXMLNodeDetailed(const CamXML::Element& xml, const 
 			// Get component std
 			std::string str2;
 			str2 = (*j)->GetAttributeValue("dx_var");
-			if (str2[0] != NULL) 
+			if (str2 != "") 
 			{
 				components_var[id] = Strings::cdble(str2);
 				if (components_var[id] <= 0)
@@ -297,18 +297,32 @@ Particle* Particle::createFromXMLNodeDetailed(const CamXML::Element& xml, const 
 			else
 				components_var[id] = 0.0;
 
-			//cout << "\nIn particle fn\n";
-			//cout << "==============\n";
-			//cout << "nrut = " << components[0] << "\n";
+			/*cout << "\nIn particle fn\n";
+			cout << "==============\n";
+			cout << "ncomponent_ave = " << components[0] << "\n";*/
 
-			// Choose amount of rutile for this particle
-			double nrut_i = boost::random::normal_distribution<double>(components[0], components_var[0])(rng); //log
+			// Convert to distribution parameters
+			double ncomp_sqd = components[0] * components[0];
+			double mu_ncomp = std::log(ncomp_sqd / sqrt(components_var[0] + ncomp_sqd));
+			double sigma_sqd_ncomp = std::log(1.0 + (components_var[0] / ncomp_sqd));
+
+			// Choose amount of component for this particle
+			double ncomp_i = boost::random::lognormal_distribution<double>(mu_ncomp, sigma_sqd_ncomp)(rng);
+
+			// Choosing a huge number of components is not memory sustainable, set some maximum
+			double ncomp_max = 100000000000.0;
+			if (ncomp_i > ncomp_max)
+			{
+				std::cout << "ncomp_i > ncomp_max, setting ncomp_i = " << ncomp_max << "\n";
+				ncomp_i = ncomp_max;
+			}
+
 			// Scale any other components, assuming they must exist in stoichiometric amounts
-			double sf_i = nrut_i / components[0];
+			double sf_i = ncomp_i / components[0];
 			for (size_t iter = 0; iter < components.size(); iter++)
 				components[iter] *= sf_i;
 
-			//cout << "nrut = " << components[0] << "\n";
+			//cout << "ncomponent = " << components[0] << "\n";
 		}
 		else {
 			// Unknown component in mechanism.
@@ -355,9 +369,6 @@ Particle* Particle::createFromXMLNodeDetailed(const CamXML::Element& xml, const 
 			if (str1 != "") 
 			{
 				npri = Strings::cdble(str1);
-				if (npri <= 0)
-					throw std::runtime_error("Particle primary count must be positive. \
-											   (Sweep, Particle::createFromXMLNode).");
 			}
 			else
 				npri = 1.0;
@@ -372,12 +383,30 @@ Particle* Particle::createFromXMLNodeDetailed(const CamXML::Element& xml, const 
 											 	(Sweep, Particle::createFromXMLNode).");
 			}
 			else
-				npri_var = 0.0;
+				npri_var = 0.07;
 		}
+
+		// Convert to distribution parameters
+		double npri_sqd = npri * npri;
+		double mu_npri = std::log(npri_sqd / sqrt(npri_var + npri_sqd));
+		double sigma_sqd_npri = std::log(1.0 + (npri_var / npri_sqd));
 
 		// Choose number of primaries for this particle
 		// to do - give this an upper bound, same with npri
-		unsigned int npri_i = ceil(boost::random::normal_distribution<double>(npri, npri_var)(rng)); //log
+		unsigned int npri_i = ceil(boost::random::lognormal_distribution<double>(mu_npri, sigma_sqd_npri)(rng));
+
+		// Choosing a huge number of primaries is not memory sustainable, set some maximum
+		unsigned int npri_max = 1000;
+		if (npri_i > npri_max)
+		{
+			std::cout << "npri_i > npri_max, setting npri_i = " << npri_max << "\n";
+			npri_i = npri_max;
+		}
+		else if (npri_i < 1)
+		{
+			std::cout << "npri_i < 1, setting npri_i = 1" << "\n";
+			npri_i = 1;
+		}
 
 		//cout << "npri = " << npri_i << "\n";
 
@@ -412,7 +441,7 @@ Particle* Particle::createFromXMLNodeDetailed(const CamXML::Element& xml, const 
 				for (size_t iter = 0; iter < temp_components.size(); iter++)
 					temp_components[iter] = ceil(components[iter] * fracs[0]);
 
-				//cout << "nrut_i = " << temp_components[0] << "\n";
+				//cout << "ncomp_i = " << temp_components[0] << "\n";
 
 				pNew1->Primary()->SetComposition(temp_components);
 				pNew1->Primary()->SetValues(trackers); // what is this?
@@ -426,13 +455,19 @@ Particle* Particle::createFromXMLNodeDetailed(const CamXML::Element& xml, const 
 				{
 					pNew2 = model.CreateParticle(0.0);
 					pNew2->setStatisticalWeight(wt);
+					
+					// Ensure there is a minimum number of components in the particle
+					double ncomp_min = 2.0;
+					double adjust = 0.0;
+					if (ceil(components[0] * fracs[j]) < ncomp_min)
+						adjust = ncomp_min;
 					for (size_t iter = 0; iter < temp_components.size(); iter++)
-						temp_components[iter] = ceil(components[iter] * fracs[j]);
+						temp_components[iter] = ceil(components[iter] * fracs[j] + (adjust * components[iter] / components[0]));
 					pNew2->Primary()->SetComposition(temp_components);
 					pNew2->Primary()->SetValues(trackers); // what is this?
 					pNew2->UpdateCache();
 
-					//cout << "nrut_i = " << temp_components[0] << "\n";
+					//cout << "ncomp_i = " << temp_components[0] << "\n";
 
 					// Perform coagulation 
 					// To do: work out if the weight should be modified in the weighted case
@@ -480,7 +515,7 @@ Particle* Particle::createFromXMLNodeDetailed(const CamXML::Element& xml, const 
 		for (size_t iter = 0; iter < components.size(); iter++)
 			components[iter] = ceil(components[iter]);
 
-		//cout << "nrut_i = " << components[0] << "\n";
+		//cout << "ncomp_i = " << components[0] << "\n";
 
 		// Initialise the new particle.
 		pNew1->Primary()->SetComposition(components);

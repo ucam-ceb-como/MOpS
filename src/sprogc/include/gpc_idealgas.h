@@ -386,6 +386,8 @@ private:
         fvector &Xs // Output vector for all species.
         ) const;
 
+	double m_pressure; // aab64 Store the pressure in the constant pressure case
+
 
 };
 };
