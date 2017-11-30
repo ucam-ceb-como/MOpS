@@ -1726,16 +1726,22 @@ void PAHProcess::updateHinderedSitesAll() {
 
 int PAHProcess::addCarbon(angletype& heading, int& index){
 	int newindex;
+	bool end = false;
 	Carbon addcarb;
 	cpair coords = m_pah->m_carbons[index].coords;
 	int ind = index + 1;
 	if (ind > m_pah->m_carbons.size() - 1){
-		ind = 0;
+		end = true;
 	}
 	addcarb.heading = heading;
 	addcarb.coords.first = coords.first + cos(heading / 180.0 * PI)*1.0;
 	addcarb.coords.second = coords.second + sin(heading / 180.0 * PI)*1.0;
-	m_pah->m_carbons.insert(m_pah->m_carbons.begin() + ind, addcarb);
+	if (end){
+		m_pah->m_carbons.push_back(addcarb);
+	}
+	else{
+		m_pah->m_carbons.insert(m_pah->m_carbons.begin() + ind, addcarb);
+	}
 	return newindex = ind;
 }
 
@@ -2919,7 +2925,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
 
-	if (PAH_ID == -18428){
+	if (PAH_ID == -466000008){
 		cout << "ID is: " << id << endl;
 		cout << "on PAH ID: " << PAH_ID << endl;
 	}
@@ -3092,13 +3098,6 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 	updateSites(S2, 1);
 
 	//Update carbon atom co-ordinates.
-	//First for the site
-	bool first = false;
-	//first = true;
-	int index1 = S1->C1;
-	int index2 = S2->C2;
-	if (index2 - index1 < 0) first = true;
-
 	angletype heading = m_pah->m_carbons[S1->C2].heading + 60.0;
 	cpair coords = m_pah->m_carbons[S1->C2].coords;
 
@@ -3121,29 +3120,41 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 	m_pah->m_carbons[ind1].coords.first = m_pah->m_carbons[index].coords.first + cos(heading / 180.0 * PI)*1.0;
 	m_pah->m_carbons[ind1].coords.second = m_pah->m_carbons[index].coords.second + sin(heading / 180.0 * PI)*1.0;
 
-	if (!first){
-
-		stt->C1 += 1;
-		if (stt->C1 > m_pah->m_carbons.size() - 1){
-			stt->C1 = 0;
-		}
-		stt->C2 -= 1;
-		if (stt->C2 < 0){
-			stt->C2 = m_pah->m_carbons.size() - 1;
-		}
-
-		//Now for the neighbors
-		S1->C2 += 1;
-		if (S1->C2 > m_pah->m_carbons.size() - 1){
-			S1->C2 = 0;
-		}
-		S2->C1 -= 1;
-		if (S2->C1 < 0){
-			S2->C1 = m_pah->m_carbons.size() - 1;
-		}
+	stt->C1 += 1;
+	if (stt->C1 > m_pah->m_carbons.size() - 1){
+		stt->C1 = 0;
 	}
-	else{
-		UpdateCarbonIndices();
+	stt->C2 -= 1;
+	if (stt->C2 < 0){
+		stt->C2 = m_pah->m_carbons.size() - 1;
+	}
+
+	//Now for the neighbors
+	S1->C2 += 1;
+	if (S1->C2 > m_pah->m_carbons.size() - 1){
+		S1->C2 = 0;
+	}
+	S2->C1 -= 1;
+	if (S2->C1 < 0){
+		S2->C1 = m_pah->m_carbons.size() - 1;
+	}
+
+	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
+		if (st1->C1 != moveIt(st1, -1)->C2){
+			cout << "Carbon indices do not match after AC growth" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C1 < 0 || st1->C1 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after AC" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C2 < 0 || st1->C2 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after AC" << endl;
+			assert(false);
+			abort();
+		}
 	}
 
 	updateHinderedSitesAll();
@@ -3212,10 +3223,9 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
 	//first = true;
 	int index11 = stt->C1;
 	int index22 = stt->C2;
-	if (index11 == 0 || index22 == 0) first = true;
-	index11 = S1->C1;
-	index22 = S2->C2;
-	if (index22 - index11 < 0) first = true;
+	if (index22 == 0) {
+		first = true;
+	}
 
 	angletype heading = m_pah->m_carbons[S1->C2].heading + 60.0;
 
@@ -3230,31 +3240,52 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
 
 	heading -= 60;
 	index4 = addCarbon(heading, index3);
-	
-	if (!first){
-		//Update site carbon indices
-		S1->C2 = index1;
-		newS1->C1 = index1;
-		newS1->C2 = index2;
-		stt->C1 = index2;
-		stt->C2 = index3;
-		newS2->C1 = index3;
-		newS2->C2 = index4;
-		S2->C1 -= 1;
-		if (S2->C1 < 0){
-			S2->C1 = m_pah->m_carbons.size() - 1;
-		}
 
-		Spointer st1;
-		for (st1 = S2; st1 != m_pah->m_siteList.end(); st1++){
-			st1->C1 += 4;
-			st1->C2 += 4;
-		}
-		st1 = moveIt(m_pah->m_siteList.end(), -1);
-		st1->C2 -= 4;
+	S1->C2 = index1;
+	newS1->C1 = index1;
+	newS1->C2 = index2;
+	stt->C1 = index2;
+	stt->C2 = index3;
+	newS2->C1 = index3;
+	newS2->C2 = index4;
+	S2->C1 -= 1;
+	if (S2->C1 < 0){
+		S2->C1 = m_pah->m_carbons.size() - 1;
 	}
-	else{
-		UpdateCarbonIndices();
+
+	if (!first){
+		S2->C1 += 4;
+		//S2->C2 += 4;
+		Spointer st1;
+		for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
+			if (st1 != stt && st1 != newS1 && st1 != newS2){
+				if (st1->C1 > index1 && st1 != S2){
+					st1->C1 += 4;
+				}
+				if (st1->C2 > index1){
+					st1->C2 += 4;
+				}
+			}
+		}
+	}
+
+	Spointer st1;
+	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
+		if (st1->C1 != moveIt(st1, -1)->C2){
+			cout << "Carbon indices do not match after FE growth" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C1 < 0 || st1->C1 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after FE" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C2 < 0 || st1->C2 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after FE" << endl;
+			assert(false);
+			abort();
+		}
 	}
 
     // Update combined sites for all new sites and original neighbours
@@ -3356,10 +3387,19 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 	//Remove the carbon atoms
 	//bool first = true;
 	bool first = false;
-	//first = true;
-	int index1 = Srem1->C1;
-	int index2 = Srem2->C2;
-	if (index2 - index1 < 0) first = true;
+	int index1 = stt->C1 + 1;
+	if (index1 > m_pah->m_carbons.size() - 1){
+		index1 = 0;
+	}
+	int index2 = stt->C2 - 1;
+	if (index2 < 0){
+		index2 = m_pah->m_carbons.size() - 1;
+	}
+	int red = index2 - index1;
+	if (red < 0){
+		first = true;
+		red = index2;
+	}
 
 	Citer start = m_pah->m_carbons.begin();
 
@@ -3390,13 +3430,8 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 	start = m_pah->m_carbons.begin();
 	m_pah->m_carbons.erase(start + index);
 
-	if (!first){
-		stt->C1 = Srem1->C1;
-		stt->C2 = Srem2->C2 - 4;
-		if (stt->C2 < 0){
-			stt->C2 += m_pah->m_carbons.size();
-		}
-	}
+	stt->C1 = Srem1->C1;
+	stt->C2 = Srem2->C2;
 
     // erase the existence of the neighbouring sites
     removeSite(Srem1);
@@ -3406,16 +3441,35 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
 
 	//Update carbon indices
-	if (!first){
-		for (st1 = S2; st1 != m_pah->m_siteList.end(); st1++){
-			st1->C1 -= 4;
-			st1->C2 -= 4;
-		}
-		st1 = moveIt(m_pah->m_siteList.end(), -1);
-		st1->C2 += 4;
+	if (first){
+		index = 0;
 	}
-	else{
-		UpdateCarbonIndices();
+	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
+		if (st1->C1 > index){
+			st1->C1 -= (red + 1);
+		}
+		if (st1->C2 > index){
+			st1->C2 -= (red + 1);
+		}
+	
+	}
+
+	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
+		if (st1->C1 != moveIt(st1, -1)->C2){
+			cout << "Carbon indices do not match after BY6 growth" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C1 < 0 || st1->C1 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after BY6" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C2 < 0 || st1->C2 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after BY6" << endl;
+			assert(false);
+			abort();
+		}
 	}
 
 	updateHinderedSitesAll();
@@ -3557,48 +3611,44 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
 
 	//Remove the carbon atoms
 	//bool first = true;
-	int index1 = moveIt(S1, -1)->C1;
-	int index2 = moveIt(S2, 1)->C2;
+	int index1 = S1->C1;
+	int index2 = S2->C2;
 	bool first = false;
 	//first = true;
-	if (index2 - index1 < 0) first = true;
+	int red = index2 - index1;
+	if (red < 0){
+		first = true;
+		red = index2;
+	}
 
 	Citer start = m_pah->m_carbons.begin();
 
 	int index = S2->C2;
 	m_pah->m_carbons.erase(start + index);
 
-	index = S2->C1;
-	if (index > m_pah->m_carbons.size() - 1){
+	index--;
+	if (index < 0){
 		index = m_pah->m_carbons.size() - 1;
 	}
 	start = m_pah->m_carbons.begin();
 	m_pah->m_carbons.erase(start + index);
 
-	index = S1->C2;
-	if (index > m_pah->m_carbons.size() - 1){
+	index--;
+	if (index < 0){
 		index = m_pah->m_carbons.size() - 1;
 	}
 	start = m_pah->m_carbons.begin();
 	m_pah->m_carbons.erase(start + index);
 
-	index = S1->C1;
-	if (index > m_pah->m_carbons.size() - 1){
+	index--;
+	if (index < 0){
 		index = m_pah->m_carbons.size() - 1;
 	}
 	start = m_pah->m_carbons.begin();
 	m_pah->m_carbons.erase(start + index);
 
-	if (!first){
-		stt->C1 = S1->C1 - 1;
-		if (stt->C1 < 0){
-			stt->C1 += m_pah->m_carbons.size();
-		}
-		stt->C2 = stt->C1 + 1;
-		if (stt->C2 > m_pah->m_carbons.size() - 1){
-			stt->C2 = 0;
-		}
-	}
+	stt->C1 = S1->C1 - 1;
+	stt->C2 = S2->C2 + 1;
 
 	// then remove them
 	removeSite(S1);
@@ -3607,26 +3657,49 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
     // update site stt and new neighbours
     // new neighbours:
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
-    updateSites(stt, 0); // only change C1 and C2, site still FE
     updateSites(S1, -1);
     updateSites(S2, -1);
 
-	//Update coordinates
-	if (!first){
-		//Update carbon indices
-		S1->C2 -= 1;
-		S2->C1 += 1;
+	S2->C1 += 1;
+	S1->C2 -= 1;
 
-		Spointer st1;
-		for (st1 = S2; st1 != m_pah->m_siteList.end(); st1++){
-			st1->C1 -= 4;
-			st1->C2 -= 4;
-		}
-		st1 = moveIt(m_pah->m_siteList.end(), -1);
-		st1->C2 += 4;
+	//Update carbon indices
+	if (first){
+		index = 0;
 	}
-	else{
-		UpdateCarbonIndices();
+	Spointer st1;
+	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
+		if (st1->C1 > index){
+			st1->C1 -= (red + 1);
+			if (st1->C1 > m_pah->m_carbons.size() - 1){
+				st1->C1 = 0;
+			}
+		}
+		if (st1->C2 > index){
+			st1->C2 -= (red + 1);
+			if (st1->C2 > m_pah->m_carbons.size() - 1){
+				st1->C2 = 0;
+			}
+		}
+
+	}
+
+	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
+		if (st1->C1 != moveIt(st1, -1)->C2){
+			cout << "Carbon indices do not match after FE removal" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C1 < 0 || st1->C1 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after FE removal" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C2 < 0 || st1->C2 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after FE removal" << endl;
+			assert(false);
+			abort();
+		}
 	}
 
     // update combined sites
@@ -3698,11 +3771,6 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 
 	//Update carbon atom co-ordinates.
 	//First for the site
-	bool first = false;
-	//first = true;
-	int index1 = S1->C1;
-	int index2 = S2->C2;
-	if (index2 - index1 < 0) first = true;
 
 	int index = S1->C2 - 1;
 	if (index < 0){
@@ -3720,29 +3788,44 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 	m_pah->m_carbons[stt->C2].coords.first = m_pah->m_carbons[stt->C1].coords.first + cos(heading / 180.0 * PI)*1.0;
 	m_pah->m_carbons[stt->C2].coords.second = m_pah->m_carbons[stt->C1].coords.second + sin(heading / 180.0 * PI)*1.0;
 	
-	if (!first){
-		stt->C1 -= 1;
-		if (stt->C1 < 0){
-			stt->C1 = m_pah->m_carbons.size() - 1;
-		}
-		stt->C2 += 1;
-		if (stt->C2 > m_pah->m_carbons.size() - 1){
-			stt->C2 = 0;
-		}
+	stt->C1 -= 1;
+	if (stt->C1 < 0){
+		stt->C1 = m_pah->m_carbons.size() - 1;
+	}
+	stt->C2 += 1;
+	if (stt->C2 > m_pah->m_carbons.size() - 1){
+		stt->C2 = 0;
+	}
 
-		//Now for the neighbors
-		S1->C2 -= 1;
-		if (S1->C2 < 0){
-			S1->C2 = m_pah->m_carbons.size() - 1;
+	//Now for the neighbors
+	S1->C2 -= 1;
+	if (S1->C2 < 0){
+		S1->C2 = m_pah->m_carbons.size() - 1;
+	}
+	S2->C1 += 1;
+	if (S2->C1 > m_pah->m_carbons.size() - 1){
+		S2->C1 = 0;
+	}
+
+	Spointer st1;
+	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
+		if (st1->C1 != moveIt(st1, -1)->C2){
+			cout << "Carbon indices do not match after FE_HACA Ox" << endl;
+			assert(false);
+			abort();
 		}
-		S2->C1 += 1;
-		if (S2->C1 > m_pah->m_carbons.size() - 1){
-			S2->C1 = 0;
+		if (st1->C1 < 0 || st1->C1 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after FE_HACA Ox" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C2 < 0 || st1->C2 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after FE_HACA Ox" << endl;
+			assert(false);
+			abort();
 		}
 	}
-	else{
-		UpdateCarbonIndices();
-	}
+
 
 	//Must check if a bridge has been formed 
 	std::pair<Spointer, bool> result = CheckBridge(stt);
