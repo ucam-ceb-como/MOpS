@@ -1620,109 +1620,6 @@ bool PAHProcess::CheckLinking(PAHProcess& rhs, Spointer& Sp1, Spointer& Sp2, int
 	return !collision;
 }
 
-void PAHProcess::updateHinderedSites(Spointer& Sstart, int num) {
-	//Determine sites that have steric hinderances
-
-	Spointer st1;
-	std::pair<double, double> coordstar1;
-	std::pair<double, double> coordstar2;
-	double dist1, dist2;
-	bool hindered;
-	int index;
-
-	std::pair<double, double> coords1;
-	std::pair<double, double> coords2;
-
-	//Now, re-assign hindered site types
-	for (Spointer st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
-		hindered = false;
-		kmcSiteType type = st->type;
-		switch (type) {
-		case FE:
-		case NFE:
-		case AC:
-		case NAC:
-		case ACBL:
-		case ACBR:
-		case NACBL:
-		case NACBR:
-			//index = st->C1;
-			//if (index < 0 || index > m_pah->m_carbons.size() - 1){
-			//	return false;
-			//}
-			coordstar1.first = m_pah->m_carbons[st->C1].coords.first;
-			coordstar1.second = m_pah->m_carbons[st->C1].coords.second;
-
-			//index = st->C2;
-			//if (index < 0 || index > m_pah->m_carbons.size() - 1){
-			//	return false;
-			//}
-
-			coordstar2.first = m_pah->m_carbons[st->C2].coords.first;
-			coordstar2.second = m_pah->m_carbons[st->C2].coords.second;
-
-			st1 = Sstart;
-			for (int count = 0; count < num; count++) {
-				st1 = moveIt(st1, count);
-				if (st != st1){
-
-					//index = st1->C1;
-					//if (index < 0 || index > m_pah->m_carbons.size() - 1){
-					//	return false;
-					//}
-
-					dist1 = pow(m_pah->m_carbons[st1->C1].coords.first - coordstar2.first, 2);
-					dist1 += pow(m_pah->m_carbons[st1->C1].coords.second - coordstar2.second, 2);
-					dist1 = sqrt(dist1);
-
-					//index = st1->C2;
-					//if (index < 0 || index > m_pah->m_carbons.size() - 1){
-					//	return false;
-					//}
-
-					dist2 = pow(m_pah->m_carbons[st1->C2].coords.first - coordstar1.first, 2);
-					dist2 += pow(m_pah->m_carbons[st1->C2].coords.second - coordstar1.second, 2);
-					dist2 = sqrt(dist2);
-
-					if (type == FE || type == NFE){
-						if ((abs(dist1 - 1.0) < 1.0e-3 && (abs(dist2 - 2.0) < 1.0e-3 || abs(dist2 - sqrt(3)) < 1.0e-3)) ||
-							(abs(dist2 - 1.0) < 1.0e-3 && (abs(dist1 - 2.0 < 1.0e-3) || abs(dist1 - sqrt(3)) < 1.0e-3))
-							|| (abs(dist1 - sqrt(3.0)) < 1.0e-3 && abs(dist2 - sqrt(3.0)) < 1.0e-3)
-							|| (abs(dist1 - 1.0) < 1.0e-3 && abs(dist2 - 1.0) < 1.0e-3)){
-							if ((moveIt(st, 1) != moveIt(st1, -1) || moveIt(st1, -1)->comb != FE3)
-								&& (moveIt(st, -1) != moveIt(st1, 1) || moveIt(st1, 1)->comb != FE3)){
-								hindered = true;
-								break;
-							}
-						}
-					}
-					else{
-						if (abs(dist1 - 1.0) < 1.0e-3 && abs(dist2 - 1.0) < 1.0e-3){
-							hindered = true;
-							break;
-						}
-					}
-				}
-				if (hindered){
-					break;
-				}
-			}
-
-		}
-
-		if (hindered){
-			if (st->type > 0){
-				convSiteType(st, (kmcSiteType)(0 - (int)st->type));
-			}
-		}
-		else{
-			if (st->type < 0){
-				convSiteType(st, (kmcSiteType)(0 - (int)st->type));
-			}
-		}
-	}
-}
-
 void PAHProcess::updateHinderedSitesAll() {
 	//Determine sites that have steric hinderances
 
@@ -3249,7 +3146,7 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 		UpdateCarbonIndices();
 	}
 
-	updateHinderedSites(S1, 3);
+	updateHinderedSitesAll();
 
     // Update combined site for Site and neighbours
     updateCombinedSites(stt);
@@ -3366,7 +3263,7 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
 	S5 = moveIt(S3, -1); S6 = moveIt(S4, 1);
 
-	updateHinderedSites(S3, 5);
+	updateHinderedSitesAll();
 
     updateCombinedSites(stt);
     updateCombinedSites(newS1); updateCombinedSites(newS2); // new sites
@@ -3521,7 +3418,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 		UpdateCarbonIndices();
 	}
 
-	updateHinderedSites(S1, 3);
+	updateHinderedSitesAll();
 
     //Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
     updateCombinedSites(stt);
@@ -3736,7 +3633,7 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
     Spointer S3, S4;
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
 
-	updateHinderedSites(S1, 3);
+	updateHinderedSitesAll();
 
     updateCombinedSites(stt); // update resulting site
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
@@ -3903,7 +3800,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 		m_pah->m_bridges++;
 	}
 
-	updateHinderedSites(S1, 3);
+	updateHinderedSitesAll();
 
     // update combined sites
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
@@ -4664,7 +4561,7 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
 		UpdateCarbonIndices();
 	}
 
-	updateHinderedSites(S1, 3);
+	updateHinderedSitesAll();
 
     // update combined sites for all sites and their neighbours
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);

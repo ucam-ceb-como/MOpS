@@ -300,8 +300,6 @@ private:
 
 	int addSiteCarbons(Spointer& st, int& index);
 
-	void updateHinderedSites(Spointer& Sstart, int num);
-
 	void UpdateCarbonIndices();
 
     // PAH data structure to perform processes on
