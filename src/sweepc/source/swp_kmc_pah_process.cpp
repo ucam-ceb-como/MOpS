@@ -1907,33 +1907,39 @@ int PAHProcess::Sites(kmcSiteType& stt) {
 
 std::pair<Spointer, bool> PAHProcess::CheckBridge(Spointer& st)
 {
-	//Determine if FE_HACA oxidation at site stt will cause the formation of a bridge
+	//Determine if FE_HACA oxidation at site st will cause the formation of a bridge
 	Spointer Sb = st;
 	bool left;
 
 	//Find coordinate pair related to the FE_HACA site
-	std::pair<double, double> coord1 = m_pah->m_carbons[st->C1].coords;
-
-	int index;
-	int sides;
+	int index = st->C1 + 1;
 	int size = m_pah->m_carbons.size() - 1.0;
+	if (index > size){
+		index = 0;
+	}
+	
+	std::pair<double, double> coord1 = m_pah->m_carbons[index].coords;
+
+	int sides;
 	for (Spointer st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++) {
 		if (st1 != st && st1 != moveIt(st, 1) && st1 != moveIt(st, -1)){
-			sides = Sites(st1->type);
-			for (int count = 0; count <= sides; count++){
-				index = count + st1->C1;
-				if (index > size){
-					index = size;
-				}
-				if (abs(m_pah->m_carbons[index].coords.first - coord1.first) < 1e-3){
-					if (abs(m_pah->m_carbons[index].coords.second - coord1.second) < 1e-3){
-						Sb = st1;
-						break;
+			if (st1->type == AC || st1->type == BY5 || st1->type == BY6 || st1->type == BY6BL || st1->type == BY6BR){
+				sides = Sites(st1->type);
+				for (int count = 0; count <= sides; count++){
+					index = count + st1->C1;
+					if (index > size){
+						index -= (size + 1);
+					}
+					if (abs(m_pah->m_carbons[index].coords.first - coord1.first) < 1e-3){
+						if (abs(m_pah->m_carbons[index].coords.second - coord1.second) < 1e-3){
+							Sb = st1;
+							break;
+						}
 					}
 				}
-			}
-			if (Sb != st){
-				break;
+				if (Sb != st){
+					break;
+				}
 			}
 		}
 	}
