@@ -3147,19 +3147,28 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 		S2->C1 = m_pah->m_carbons.size() - 1;
 	}
 
+	int count = 0;
 	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
 		if (st1->C1 != moveIt(st1, -1)->C2){
-			cout << "Carbon indices do not match after AC growth" << endl;
+			cout << "Carbon indices do not match after AC1" << endl;
 			assert(false);
 			abort();
 		}
 		if (st1->C1 < 0 || st1->C1 > m_pah->m_carbons.size() - 1){
-			cout << "Carbon indices do not match after AC" << endl;
+			cout << "Carbon indices do not match after AC2" << endl;
 			assert(false);
 			abort();
 		}
 		if (st1->C2 < 0 || st1->C2 > m_pah->m_carbons.size() - 1){
-			cout << "Carbon indices do not match after AC" << endl;
+			cout << "Carbon indices do not match after AC3" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C2 - st1->C1 <= 0){
+			count++;
+		}
+		if (count > 1){
+			cout << "Carbon indices do not match after AC4" << endl;
 			assert(false);
 			abort();
 		}
@@ -3277,20 +3286,29 @@ void PAHProcess::proc_G6R_FE(Spointer& stt) {
 		}
 	}
 
+	int count = 0;
 	Spointer st1;
 	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
 		if (st1->C1 != moveIt(st1, -1)->C2){
-			cout << "Carbon indices do not match after FE growth" << endl;
+			cout << "Carbon indices do not match after FE1" << endl;
 			assert(false);
 			abort();
 		}
 		if (st1->C1 < 0 || st1->C1 > m_pah->m_carbons.size() - 1){
-			cout << "Carbon indices do not match after FE" << endl;
+			cout << "Carbon indices do not match after FE2" << endl;
 			assert(false);
 			abort();
 		}
 		if (st1->C2 < 0 || st1->C2 > m_pah->m_carbons.size() - 1){
-			cout << "Carbon indices do not match after FE" << endl;
+			cout << "Carbon indices do not match after FE3" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C2 - st1->C1 <= 0){
+			count++;
+		}
+		if (count > 1){
+			cout << "Carbon indices do not match after FE4" << endl;
 			assert(false);
 			abort();
 		}
@@ -3462,19 +3480,28 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 	
 	}
 
+	int count = 0;
 	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
 		if (st1->C1 != moveIt(st1, -1)->C2){
-			cout << "Carbon indices do not match after BY6 growth" << endl;
+			cout << "Carbon indices do not match after BY61" << endl;
 			assert(false);
 			abort();
 		}
 		if (st1->C1 < 0 || st1->C1 > m_pah->m_carbons.size() - 1){
-			cout << "Carbon indices do not match after BY6" << endl;
+			cout << "Carbon indices do not match after BY62" << endl;
 			assert(false);
 			abort();
 		}
 		if (st1->C2 < 0 || st1->C2 > m_pah->m_carbons.size() - 1){
-			cout << "Carbon indices do not match after BY6" << endl;
+			cout << "Carbon indices do not match after BY63" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C2 - st1->C1 <= 0){
+			count++;
+		}
+		if (count > 1){
+			cout << "Carbon indices do not match after BY64" << endl;
 			assert(false);
 			abort();
 		}
@@ -3629,6 +3656,8 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
 		red = index2;
 	}
 
+	int oldsize = m_pah->m_carbons.size() - 1;
+
 	Citer start = m_pah->m_carbons.begin();
 
 	int index = S2->C2;
@@ -3656,7 +3685,13 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
 	m_pah->m_carbons.erase(start + index);
 
 	stt->C1 = S1->C1 - 1;
+	if (stt->C1 < 0 ){
+		stt->C1 = oldsize;
+	}
 	stt->C2 = S2->C2 + 1;
+	if (stt->C2 > oldsize){
+		stt->C2 = 0;
+	}
 
 	// then remove them
 	removeSite(S1);
@@ -3669,12 +3704,24 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
     updateSites(S2, -1);
 
 	S2->C1 += 1;
+	if (S2->C1 > oldsize){
+		S2->C1 = 0;
+	}
 	S1->C2 -= 1;
+	if (S1->C2 < 0){
+		S1->C2 = oldsize;
+	}
 
 	//Update carbon indices
 	if (first){
-		index = 0;
+		//if (index2 != 0){
+			index = 0;
+		//}
+		//else{
+		//	S2->C1 = 0;
+		//}
 	}
+
 	Spointer st1;
 	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
 		if (st1->C1 > index){
@@ -3692,19 +3739,49 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt) {
 
 	}
 
+	int count = 0;
 	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
 		if (st1->C1 != moveIt(st1, -1)->C2){
-			cout << "Carbon indices do not match after FE removal" << endl;
+			cout << "Carbon indices do not match after FE removal1" << endl;
+			cout << st1->C1 << endl;
+			cout << st1->C2 << endl;
+			cout << moveIt(st1, -1)->C2 << endl;
+			cout << m_pah->m_carbons.size() - 1 << endl;
+			cout << index2 << endl;
+			cout << index1 << endl;
+			cout << index << endl;
+			cout << red << endl;
 			assert(false);
 			abort();
 		}
 		if (st1->C1 < 0 || st1->C1 > m_pah->m_carbons.size() - 1){
-			cout << "Carbon indices do not match after FE removal" << endl;
+			cout << "Carbon indices do not match after FE removal2" << endl;
+			cout << st1->C1 << endl;
+			cout << m_pah->m_carbons.size() - 1 << endl;
+			cout << index2 << endl;
+			cout << index1 << endl;
+			cout << index << endl;
+			cout << red << endl;
 			assert(false);
 			abort();
 		}
 		if (st1->C2 < 0 || st1->C2 > m_pah->m_carbons.size() - 1){
-			cout << "Carbon indices do not match after FE removal" << endl;
+			cout << "Carbon indices do not match after FE removal3" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C2 - st1->C1 <= 0){
+			count++;
+		}
+		if (count > 1){
+			cout << "Carbon indices do not match after FE removal4" << endl;
+			cout << st1->C1 << endl;
+			cout << st1->C2 << endl;
+			cout << m_pah->m_carbons.size() - 1 << endl;
+			cout << index2 << endl;
+			cout << index1 << endl;
+			cout << index << endl;
+			cout << red << endl;
 			assert(false);
 			abort();
 		}
@@ -3815,6 +3892,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 		S2->C1 = 0;
 	}
 
+	int count = 0;
 	Spointer st1;
 	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
 		if (st1->C1 != moveIt(st1, -1)->C2){
@@ -3832,8 +3910,15 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 			assert(false);
 			abort();
 		}
+		if (st1->C2 - st1->C1 < 0){
+			count++;
+		}
+		if (count > 1){
+			cout << "Carbon indices do not match after FE_HACA ox" << endl;
+			assert(false);
+			abort();
+		}
 	}
-
 
 	//Must check if a bridge has been formed 
 	std::pair<Spointer, bool> result = CheckBridge(stt);
@@ -4587,11 +4672,15 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
 
 	//Remove the carbon atoms
 	//bool first = true;
-	int index1 = S1->C1;
-	int index2 = S2->C2;
+	int index1 = S1->C2;
+	int index2 = S2->C1;
 	bool first = false;
 	//first = true;
-	if (index2 - index1 < 0 || index1 == 0 || index2 == 0) first = true;
+	int red = index2 - index1;
+	if (red < 0){
+		first = true;
+		red = index2;
+	} 
 
 	Citer start = m_pah->m_carbons.begin();
 
@@ -4637,19 +4726,43 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
     updateSites(S1, -1); // S1 --> reduce 1
     updateSites(S2, -1); // S2 --> reduce 1
 
-	//Update coordinates
-	if (!first){
-		//Update carbon indices
-		Spointer st1;
-		for (st1 = moveIt(S2,1); st1 != m_pah->m_siteList.end(); st1++){
-			st1->C1 -= 2;
-			st1->C2 -= 2;
-		}
-		st1 = moveIt(m_pah->m_siteList.end(), -1);
-		st1->C2 += 2;
+	//Update carbon indices
+	if (first){
+		index = 0;
 	}
-	else{
-		UpdateCarbonIndices();
+	Spointer st1;
+	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
+		if (st1->C1 > index){
+			st1->C1 -= (red + 1);
+			if (st1->C1 > m_pah->m_carbons.size() - 1){
+				st1->C1 = 0;
+			}
+		}
+		if (st1->C2 > index){
+			st1->C2 -= (red + 1);
+			if (st1->C2 > m_pah->m_carbons.size() - 1){
+				st1->C2 = 0;
+			}
+		}
+
+	}
+
+	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
+		if (st1->C1 != moveIt(st1, -1)->C2){
+			cout << "Carbon indices do not match after FE removal" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C1 < 0 || st1->C1 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after FE removal" << endl;
+			assert(false);
+			abort();
+		}
+		if (st1->C2 < 0 || st1->C2 > m_pah->m_carbons.size() - 1){
+			cout << "Carbon indices do not match after FE removal" << endl;
+			assert(false);
+			abort();
+		}
 	}
 
 	updateHinderedSitesAll();
