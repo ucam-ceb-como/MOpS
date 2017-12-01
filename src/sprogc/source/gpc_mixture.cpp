@@ -113,6 +113,7 @@ Mixture &Mixture::operator=(const Mixture &mix)
         m_species = mix.m_species;
 		gasSpeciesCount = mix.gasSpeciesCount;
 		surfSpeciesCount = mix.surfSpeciesCount; 
+		m_pressure = mix.m_pressure; // aab64
     }
 
     return *this;
@@ -719,6 +720,11 @@ double Mixture::getViscosity() const{
 	return mt.getViscosity(Temperature(),*this);
 }
 
+
+// aab64 This is a temporary function to keep pressure constant
+double Mixture::GetPressure() const{
+	return m_pressure;
+}
 
 /*!
  * This prevents segmentation faults when accessing the Champan Enksog viscosity

@@ -206,6 +206,8 @@ public:
     // Sets the mass density.
     void SetMassDensity(double dens);
 
+	// aab64 This is a temporary function to keep pressure constant
+	void SetPressure(double p) { m_pressure = p; };
 
     // SPECIES WHICH DEFINE THE MIXTURE.
 
@@ -315,6 +317,9 @@ public:
     // Reads the mixture data from a binary data stream.
     virtual void Deserialize(std::istream &in);
 
+	// aab64 This is a temporary function to keep pressure constant
+	double GetPressure() const;
+
     
 
 protected:
@@ -335,6 +340,9 @@ private:
     // The data vector contains, in order, the species mole fractions,
     // the mixture temperature and the mixture density.
     fvector m_data; // vector of double, i.e vector <double>
+
+	// aab64 Temporary variable to keep pressure constant
+	double m_pressure;
 
     // Vector of species for which this mixture is defined.
     const SpeciesPtrVector *m_species;
