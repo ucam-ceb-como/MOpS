@@ -61,6 +61,7 @@ namespace Sweep {
         // Pointer to a Carbon atom and a Site.
         //typedef std::set< Carbon* > Ccontainer;
         typedef Carbon* Cpointer;
+		typedef Site* Spter;
         typedef std::list< Site >::iterator Spointer;
 		typedef std::vector<Carbon>::iterator Citer;
         
@@ -103,6 +104,8 @@ namespace Sweep {
             //! Reactive carbon members
             int C1;
             int C2;
+			Spointer B1;
+			Spointer B2;
         };
         
 

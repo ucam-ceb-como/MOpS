@@ -793,6 +793,8 @@ Spointer PAHProcess::addSite(kmcSiteType stype, Spointer& b4site) {
     st.comb = None;
     // Add to list
     Spointer newSite = m_pah->m_siteList.insert(b4site, st);
+	newSite->B1 = newSite;
+	newSite->B2 = newSite;
     // Set details of carbon members
     //C_1->S2 = newSite;
     //C_2->S1 = newSite;
@@ -812,6 +814,8 @@ Spointer PAHProcess::addSite(kmcSiteType stype) {
     // Add to list
     m_pah->m_siteList.push_back(st);
     Spointer newSite = --(m_pah->m_siteList.end());
+	newSite->B1 = newSite;
+	newSite->B2 = newSite;
     // Set details of carbon members
     //C_1->S2 = newSite;
     //C_2->S1 = newSite;
@@ -874,215 +878,201 @@ void PAHProcess::convSiteType(Spointer& st, kmcSiteType t) {
     //st->C2 = Carb2;
 }
 //! Finds the partner bridge site and converts it to a non-bridge site
-Spointer PAHProcess::convBridgePartner(Spointer& stt) {
-	Spointer st1;
+std::pair<Spointer,Spointer> PAHProcess::convBridgePartner(Spointer& stt) {
+	std::pair<Spointer, Spointer> part;
+	part.first = stt;
+	part.second = stt;
 	kmcSiteType type = stt->type;
-	bool found = false;
-	bool found1 = false;
-	int count;
-	double mult;
-	switch (type){
-	case BY6BRL:
-		count = 1;
-		mult = 1.0;
-		break;
-	case BY6BL2:
-		count = 2;
-		mult = 1.0;
-		break;
-	case BY6BR2:
-		count = 2;
-		mult = -1.0;
-		break;
-	case ACBL:
-	case BY5BL:
-	case BY6BL:
-		count = 1;
-		mult = 1.0;
-		break;
-	case ACBR:
-	case BY5BR:
-	case BY6BR:
-		count = 1;
-		mult = -1.0;
-		break;
-	default:
-		cout << "Unrecognized bridge type for stt in convBridgePartner" << endl;
-		cout << (int)type;
+	kmcSiteType B1type = None;
+	kmcSiteType B2type = None;
+	if (stt->B1 != stt){
+		B1type = (stt->B1)->type;
+	}
+	if (stt->B2 != stt){
+		B2type = (stt->B2)->type;
+	}
+
+	if (B1type == None && B2type == None){
+		cout << "Error finding bridge partner" << endl;
+		cout << type << endl;
 		assert(false);
 		abort();
 	}
-	kmcSiteType st1type;
-	for (int loop = 1; loop <= m_pah->m_siteList.size(); loop++){
-		st1 = moveIt(stt, (int)(mult*loop));
-		st1type = st1->type;
-		count += addtoBridgeCount(st1type, mult);
 
-		//Found the matching bridge site
-		if (count == 0){
-			int inttype = abs((int)st1type);
-			kmcSiteType newtype;
-			if (inttype > 70 && inttype < 74){
-				newtype = (kmcSiteType)(inttype - 68); //NICK TO DO Consider changing 68 to something general
-			}
-			else if (inttype > 74 && inttype < 78){
-				newtype = (kmcSiteType)(inttype - 72);
-			}
-			else if (inttype == 74 || inttype == 78){
-				newtype = (kmcSiteType)(inttype - 1);
-			}
-			else{
-				cout << "Site type not in bridge conversion list" << endl;
-				cout << inttype;
-				assert(false);
-				abort();
-			}
-			convSiteType(st1, newtype);
-			found = true;
-			break;
-		}
-		else if (count == -1){
-			if (mult == 1.0 && (st1type == BY6BR2 || st1type == NBY6BR2)){
-				convSiteType(st1, BY6BR);
-			}
-			else if (mult == -1.0 && (st1type == BY6BL2 || st1type == NBY6BL2)){
-				convSiteType(st1, BY6BL);
-			}
-			else{
-				cout << "Count is negative 1, but corresponding site type does not match" << endl;
-				cout << (int)st1type;
-				assert(false);
-				abort();
-			}
-			found = true;
-			break;
-		}
-		else if (count == 1 && (type == ACBL || type == BY6BL || type == BY6BRL) && (st1type == BY6BRL || st1type == NBY6BRL)){
-			convSiteType(st1, BY6BL);
-			found = true;
-			break;
-		}
-		else if (count == 1 && (type == BY6BL2 || type == BY6BR2) && !found1){
-			int inttype = abs((int)st1type);
-			kmcSiteType newtype;
-			if (inttype > 70 && inttype < 74){
-				newtype = (kmcSiteType)(inttype - 68); //NICK TO DO Consider changing 68 to something general
-			}
-			else if (inttype > 74 && inttype < 78){
-				newtype = (kmcSiteType)(inttype - 72);
-			}
-			//else if (inttype == 74 || inttype == 78){ //NICK TO DO - This (probably) is not physical. Investigate
-			//	newtype = (kmcSiteType)(inttype - 1);
-			//}
-			else{
-				cout << "Site type not in bridge conversion list for BY6BL2 at count of 1" << endl;
-				cout << inttype;
-				assert(false);
-				abort();
-			}
-			convSiteType(st1, newtype);
-			found1 = true;
-		}
-		else if ((count == 2 || count == 1) && type == BY6BL2 && (st1type == BY6BRL || st1type == NBY6BRL)){
-			convSiteType(st1, BY6BL);
-			if (count == 2){
-				found1 = true;
-			}
-			else{
-				found = true;
-				break;
-			}
-		}
-	}
-	if (type == BY6BRL){
-		found = false;
-		count = 1;
-		mult = -1.0;
-
-		for (int loop = 1; loop <= m_pah->m_siteList.size(); loop++){
-			st1 = moveIt(stt, (int)(mult*loop));
-			st1type = st1->type;
-			count += addtoBridgeCount(st1type, mult);
-
-			//Found the matching bridge site
-			if (count == 0){
-				int inttype = abs((int)st1type);
-				kmcSiteType newtype;
-				if (inttype > 70 && inttype < 74){
-					newtype = (kmcSiteType)(inttype - 68); //NICK TO DO Consider changing 68 to something general
-				}
-				else if (inttype > 74 && inttype < 78){
-					newtype = (kmcSiteType)(inttype - 72);
-				}
-				else if (inttype == 74 || inttype == 78){
-					newtype = (kmcSiteType)(inttype - 1);
-				}
-				else{
-					cout << "Site type not in bridge conversion list" << endl;
-					cout << inttype;
-					assert(false);
-					abort();
-				}
-				convSiteType(st1, newtype);
-				found = true;
-				break;
-			}
-			else if (count == -1){
-				if (st1type == BY6BL2 || st1type == NBY6BL2){
-					convSiteType(st1, BY6BL);
-				}
-				else{
-					cout << "Count is negative 1, but corresponding site type does not match" << endl;
-					cout << (int)st1type;
-					assert(false);
-					abort();
-				}
-				found = true;
-				break;
-			}
-		}
-
-	}
-	if (!found){
-		cout << "ERROR - Matching bridge site(s) not found" << endl;
-		cout << PAHID <<endl;
-		cout << (int) type << endl;
-		cout << found1 << endl;
-		printSites(stt);
+	if (type == BY6BL2 || type == BY6BR2 || type == BY6BRL && (B1type == None || B2type == None)){
+		cout << "Error finding both bridge partners" << endl;
+		cout << type << endl;
+		cout << B1type << endl;
+		cout << B2type << endl;
 		assert(false);
 		abort();
 	}
-	return st1;
-}
 
-int PAHProcess::addtoBridgeCount(kmcSiteType type, double mult){
-	switch (type){
-	case ACBL:
-	case BY5BL:
-	case BY6BL:
-	case NACBL:
-	case NBY5BL:
-	case NBY6BL:
-		return 1 * mult;
-	case BY6BL2:
-	case NBY6BL2:
-		return 2 * mult;
-	case ACBR:
-	case BY5BR:
-	case BY6BR:
-	case NACBR:
-	case NBY5BR:
-	case NBY6BR:
-		return -1 * mult;
-	case BY6BR2:
-	case NBY6BR2:
-		return -2 * mult;
-	case BY6BRL:
-	case NBY6BRL:
-		//Special case, must deal with it
-		return 0;
-	default:
-		return 0;
+	if (type == ACBL || type == BY5BL || type == BY6BL || type == BY6BL2){
+		if (B1type == ACBR || B1type == BY5BR || B1type == BY6BR){
+			convSiteType(stt->B1, (kmcSiteType)((int)B1type - 72));
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+			part.first = stt->B1;
+			if (type != BY6BL2) return part;
+		}
+		else if (B1type == BY6BR2){
+			convSiteType(stt->B1, BY6BR);
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+			part.first = stt->B1;
+			if (type != BY6BL2) return part;
+		}
+		else if (B1type == BY6BRL){
+			convSiteType(stt->B1, BY6BL);
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+			part.first = stt->B1;
+			if (type != BY6BL2) return part;
+		}
+
+		if (B2type == ACBR || B2type == BY5BR || B2type == BY6BR){
+			convSiteType(stt->B2, (kmcSiteType)((int)B2type - 72));
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
+		else if (B2type == BY6BR2){
+			convSiteType(stt->B2, BY6BR);
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
+		else if (B2type == BY6BRL){
+			convSiteType(stt->B2, BY6BL);
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
+	}
+	else if (type == ACBR || type == BY5BR || type == BY6BR || type == BY6BR2){
+		if (B1type == ACBL || B1type == BY5BL || B1type == BY6BL){
+			convSiteType(stt->B1, (kmcSiteType)((int)B1type - 68));
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+			part.first = stt->B1;
+			if (type != BY6BR2) return part;
+		}
+		else if (B1type == BY6BL2){
+			convSiteType(stt->B1, BY6BL);
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+			part.first = stt->B1;
+			if (type != BY6BR2) return part;
+		}
+		else if (B1type == BY6BRL){
+			convSiteType(stt->B1, BY6BR);
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+			part.first = stt->B1;
+			if (type != BY6BR2) return part;
+		}
+
+		if (B2type == ACBL || B2type == BY5BL || B2type == BY6BL){
+			convSiteType(stt->B2, (kmcSiteType)((int)B2type - 68));
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
+		else if (B2type == BY6BL2){
+			convSiteType(stt->B2, BY6BL);
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
+		else if (B2type == BY6BRL){
+			convSiteType(stt->B2, BY6BR);
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
+	}
+	else if (type == BY6BRL){
+		if (B1type == ACBR || B1type == BY5BR || B1type == BY6BR){
+			convSiteType(stt->B1, (kmcSiteType)((int)B1type - 72));
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+		}
+		else if (B1type == BY6BR2){
+			convSiteType(stt->B1, BY6BR);
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+		}
+		else if (B1type == BY6BRL){
+			convSiteType(stt->B1, BY6BL);
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+		}
+		else if (B1type == ACBL || B1type == BY5BL || B1type == BY6BL){
+			convSiteType(stt->B1, (kmcSiteType)((int)B1type - 68));
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+		}
+		else if (B1type == BY6BL2){
+			convSiteType(stt->B1, BY6BL);
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+		}
+		else if (B1type == BY6BRL){
+			convSiteType(stt->B1, BY6BR);
+			(stt->B1)->B1 = stt->B1;
+			stt->B1 = stt;
+		}
+		part.first = stt->B1;
+
+		if (B2type == ACBR || B2type == BY5BR || B2type == BY6BR){
+			convSiteType(stt->B2, (kmcSiteType)((int)B2type - 72));
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
+		else if (B2type == BY6BR2){
+			convSiteType(stt->B2, BY6BR);
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
+		else if (B2type == BY6BRL){
+			convSiteType(stt->B2, BY6BL);
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
+		else if (B2type == ACBL || B2type == BY5BL || B2type == BY6BL){
+			convSiteType(stt->B2, (kmcSiteType)((int)B2type - 68));
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
+		else if (B2type == BY6BL2){
+			convSiteType(stt->B2, BY6BL);
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
+		else if (B2type == BY6BRL){
+			convSiteType(stt->B2, BY6BR);
+			(stt->B2)->B2 = stt->B2;
+			stt->B2 = stt;
+			part.second = stt->B2;
+			return part;
+		}
 	}
 
 }
@@ -3083,24 +3073,14 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
     // Update Site and neighbours
 	//If this growth happened at an ACBL or ACBR, update the corresponding opposite side of the bridge
 	kmcSiteType type = stt->type;
-	Spointer st1;
+	std::pair<Spointer, Spointer> part;
 	bool found = false;
 	if (type == ACBL || type == ACBR){
-		st1 = convBridgePartner(stt);
-
+		part = convBridgePartner(stt);
 		m_pah->m_bridges--;
-
-		//Update combined site types
-		S1 = moveIt(st1, -1); S2 = moveIt(st1, 1);
-		S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
-		updateCombinedSites(st1);
-		updateCombinedSites(S1); updateCombinedSites(S2);
-		updateCombinedSites(S3); updateCombinedSites(S4);
-		//cout << "Bridge closed!" << endl;
 	}
 	convSiteType(stt, FE);
 	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
-	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
 
 	updateSites(S1, 1);
 	updateSites(S2, 1);
@@ -3148,7 +3128,7 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 	}
 
 	int count = 0;
-	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
+	for (Spointer st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
 		if (st1->C1 != moveIt(st1, -1)->C2){
 			cout << "Carbon indices do not match after AC1" << endl;
 			assert(false);
@@ -3175,6 +3155,29 @@ void PAHProcess::proc_G6R_AC(Spointer& stt) {
 	}
 
 	updateHinderedSitesAll();
+
+	//Update combined sites for sites near the bridge partner
+	if (type == ACBL || type == ACBR){
+		cout << "updating combined sites for AC bridge growth" << endl;
+		Spointer st1;
+		if (part.first != stt){
+			st1 = part.first;
+		}
+		else {
+			st1 = part.second;
+		}
+
+		//Update combined site types
+		S1 = moveIt(st1, -1); S2 = moveIt(st1, 1);
+		S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+		updateCombinedSites(st1);
+		updateCombinedSites(S1); updateCombinedSites(S2);
+		updateCombinedSites(S3); updateCombinedSites(S4);
+		cout << "Done" << endl;
+	}
+
+	S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
+	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
 
     // Update combined site for Site and neighbours
     updateCombinedSites(stt);
@@ -3380,17 +3383,13 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 	}
 	//If this growth happened at a BY6 containing a bridge, must update other partner bridge sites
 	kmcSiteType type = stt->type;
-	Spointer st1;
+	std::pair<Spointer, Spointer> part;
 	bool found = false;
 	if (type == BY6BL || type == BY6BR || type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
-		st1 = convBridgePartner(stt);
+		part = convBridgePartner(stt);
 		m_pah->m_bridges--;
 		if (type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
 			m_pah->m_bridges--;
-			//cout << "2 Bridge closed!" << endl;
-		}
-		else{
-			//cout << "1 Bridge closed!" << endl;
 		}
 	}
     // Remove BY6 site and combine the neighbouring sites. 
@@ -3470,6 +3469,8 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 	if (first){
 		index = 0;
 	}
+
+	Spointer st1;
 	for (st1 = m_pah->m_siteList.begin(); st1 != m_pah->m_siteList.end(); st1++){
 		if (st1->C1 > index){
 			st1->C1 -= (red + 1);
@@ -3516,14 +3517,38 @@ void PAHProcess::proc_L6_BY6(Spointer& stt) {
 
 	//Update combined site types if this site has a bridge
 	if (type == BY6BL || type == BY6BR){
+		cout << "updating combined sites for BY6BL or BY6BR" << endl;
+		if (part.first != stt){
+			st1 = part.first;
+		}
+		else {
+			st1 = part.second;
+		}
+
+		//Update combined site types
 		S1 = moveIt(st1, -1); S2 = moveIt(st1, 1);
 		S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
 		updateCombinedSites(st1);
 		updateCombinedSites(S1); updateCombinedSites(S2);
 		updateCombinedSites(S3); updateCombinedSites(S4);
+		cout << "Done" << endl;
 	}
 	else if(type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
-		updateCombinedSites();
+		cout << "updating combined sites for BY6BL2, BY6BR2, or BY6BRL" << endl;
+		st1 = part.first;
+		S1 = moveIt(st1, -1); S2 = moveIt(st1, 1);
+		S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+		updateCombinedSites(st1);
+		updateCombinedSites(S1); updateCombinedSites(S2);
+		updateCombinedSites(S3); updateCombinedSites(S4);
+
+		st1 = part.second;
+		S1 = moveIt(st1, -1); S2 = moveIt(st1, 1);
+		S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+		updateCombinedSites(st1);
+		updateCombinedSites(S1); updateCombinedSites(S2);
+		updateCombinedSites(S3); updateCombinedSites(S4);
+		cout << "Done" << endl;
 	}
 
     //printSites(stt);
@@ -3925,6 +3950,18 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 	bool left = result.second;
 	Spointer Sb = result.first;
 	if (Sb != stt){
+		if (stt->B1 == stt){
+			stt->B1 = Sb;
+		}
+		else{
+			stt->B2 = Sb;
+		}
+		if (Sb->B1 == Sb){
+			Sb->B1 = stt;
+		}
+		else{
+			Sb->B2 = stt;
+		}
 		if (left){
 			convSiteType(stt, ACBL);
 			if (Sb->type == AC || Sb->type == NAC){

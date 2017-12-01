@@ -280,7 +280,7 @@ private:
 	//double Length(kmcSiteType stt);
     
 	//! Finds the partner to a bridge site and converts it to a non-bridge site
-	Spointer convBridgePartner(Spointer& stt);
+	std::pair<Spointer, Spointer> convBridgePartner(Spointer& stt);
 
 	int addtoBridgeCount(kmcSiteType type, double mult);
 
