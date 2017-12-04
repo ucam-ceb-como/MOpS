@@ -179,8 +179,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //temp.push_back(j_C6R_BY5_FE3violi); //*< 17 - R6 migration & conversion to R5 at BY5 (violi) [AR24].
     //temp.push_back(j_L5R_BY5);          //*< 18 - BY5 closure [AR16].
     //temp.push_back(j_M6R_BY5_FE3);      //*< 19 - R6 desorption at bay -> pyrene [AR21].
-    //temp.push_back(j_O6R_FE2_OH);       //*< 20 - R6 Oxidation at ZZ by OH.
-    //temp.push_back(j_O6R_FE2_O2);       //*< 21 - R6 Oxidation at ZZ by O2.
+    temp.push_back(j_O6R_FE2_OH);       //*< 20 - R6 Oxidation at ZZ by OH.
+    temp.push_back(j_O6R_FE2_O2);       //*< 21 - R6 Oxidation at ZZ by O2.
     //temp.push_back(j_B6R_ACR5);         //*< 22 - Bay-capping.
     //temp.push_back(j_M5R_eR5_FE3_ZZ);    //*< 23 - Embedded 5-member ring migration to ZZ.
     //temp.push_back(j_G6R_RZZ);          //*< 24 - R6 growth on RZZ.

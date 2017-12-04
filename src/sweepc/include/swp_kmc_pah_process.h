@@ -302,6 +302,8 @@ private:
 
 	void UpdateCarbonIndices();
 
+	void CheckCarbons();
+
     // PAH data structure to perform processes on
     PAHStructure* m_pah;
 
