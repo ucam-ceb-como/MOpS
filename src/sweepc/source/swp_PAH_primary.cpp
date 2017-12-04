@@ -464,9 +464,9 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
                 //! Always create new shared pointers for single PAHs.
                 else {
                     boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
-                    //new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID;
-					new_m_PAH->PAH_ID = ID;
-					ID++;
+                    new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID;
+					//new_m_PAH->PAH_ID = ID;
+					//ID++;
                     m_PAH.push_back(new_m_PAH);
                 }
             }

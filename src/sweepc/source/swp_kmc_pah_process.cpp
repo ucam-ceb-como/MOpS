@@ -281,13 +281,21 @@ void PAHProcess::printSites(Spointer& stt) const{
 		st.append("\t");
 		st.append(kmcSiteName(i->B2->type));
 		st.append("\t");
+		st.append(std::to_string(i->C1));
+		st.append("\t");
 		st.append(std::to_string(m_pah->m_carbons[i->C1].coords.first));
 		st.append("\t");
 		st.append(std::to_string(m_pah->m_carbons[i->C1].coords.second));
 		st.append("\t");
+		st.append(std::to_string(m_pah->m_carbons[i->C1].heading));
+		st.append("\t");
+		st.append(std::to_string(i->C2));
+		st.append("\t");
 		st.append(std::to_string(m_pah->m_carbons[i->C2].coords.first));
 		st.append("\t");
 		st.append(std::to_string(m_pah->m_carbons[i->C2].coords.second));
+		st.append("\t");
+		st.append(std::to_string(m_pah->m_carbons[i->C2].heading));
         // checks if site i equivalent to stt, if yes put an arrow
         if(i == stt) st.append(pointer);
         // displays site type (and arrow)
@@ -907,6 +915,7 @@ std::pair<Spointer,Spointer> PAHProcess::convBridgePartner(Spointer& stt) {
 	if (B1type == None && B2type == None){
 		cout << "Error finding bridge partner" << endl;
 		cout << type << endl;
+		cout << PAHID << endl;
 		assert(false);
 		abort();
 	}
@@ -916,6 +925,7 @@ std::pair<Spointer,Spointer> PAHProcess::convBridgePartner(Spointer& stt) {
 		cout << type << endl;
 		cout << B1type << endl;
 		cout << B2type << endl;
+		cout << PAHID << endl;
 		assert(false);
 		abort();
 	}
@@ -3133,9 +3143,11 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
 
-	if (PAH_ID == 3113 && JOBID == 20){
+	int target = -28151;
+	if (PAH_ID == target){
 		cout << "ID is: " << id << endl;
 		cout << "on PAH ID: " << PAH_ID << endl;
+		printSites(site_perf);
 	}
 
     std::ostringstream dotname, dotname2;
@@ -3222,6 +3234,10 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	//BuildCoordsAll();
 	//updateHinderedSitesAll();
 	//updateCombinedSites();
+	if (PAH_ID == target){
+		cout << "Done process " << id << endl;
+		printSites(site_perf);
+	}
 	CheckCarbons();
 
   //  Spointer S1,S2,S3,S4;
@@ -5048,9 +5064,9 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
 	bool first = false;
 	//first = true;
 	int red = index2 - index1;
-	if (red < 0){
+	if (red < 0 || index1 == 0){
 		first = true;
-		red = index2;
+		red = index2 + 1;
 	} 
 
 	Citer start = m_pah->m_carbons.begin();
@@ -5086,11 +5102,9 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt) {
 	}
 	stt->C1 = S1->C2;
 
-	if (!first){
-		S2->C1 += 1;
-		if (S2->C1 > oldsize){
-			S2->C1 = 0;
-		}
+	S2->C1 += 1;
+	if (S2->C1 > oldsize){
+		S2->C1 = 0;
 	}
 	stt->C2 = S2->C1;
 
