@@ -302,6 +302,10 @@ private:
 
 	void UpdateCarbonIndices();
 
+	void FindBridgePartners();
+
+	std::pair<Spointer, Spointer> FindBridgePartners(Spointer& st);
+
 	void CheckCarbons();
 
     // PAH data structure to perform processes on

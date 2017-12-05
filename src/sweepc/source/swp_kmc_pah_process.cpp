@@ -920,7 +920,7 @@ std::pair<Spointer,Spointer> PAHProcess::convBridgePartner(Spointer& stt) {
 		abort();
 	}
 
-	if (type == BY6BL2 || type == BY6BR2 || type == BY6BRL && (B1type == None || B2type == None)){
+	if ((type == BY6BL2 || type == BY6BR2 || type == BY6BRL) && (B1type == None || B2type == None)){
 		cout << "Error finding both bridge partners" << endl;
 		cout << type << endl;
 		cout << B1type << endl;
@@ -1978,6 +1978,208 @@ int PAHProcess::addSiteCarbons(Spointer& st, int& index){
 	return count;
 }
 
+std::pair<Spointer, Spointer> PAHProcess::FindBridgePartners(Spointer& st){
+	std::pair<Spointer, Spointer> result;
+	result.first = st;
+	result.second = st;
+	Spointer stt;
+	kmcSiteType type;
+	kmcSiteType typein = st->type;
+	int index1, index2;
+	cpair coords1;
+	cpair coords2;
+	double dist;
+	bool found1 = false;
+	bool found2 = false;
+
+	cpair coords;
+
+	index1 = st->C1 + 1;
+	if (index1 > m_pah->m_carbons.size() - 1){
+		index1 = 0;
+	}
+
+	index2 = st->C2 - 1;
+	if (index2 < 0){
+		index2 = m_pah->m_carbons.size() - 1;
+	}
+
+	coords1 = m_pah->m_carbons[index1].coords;
+	coords2 = m_pah->m_carbons[index2].coords;
+
+	for (stt = m_pah->m_siteList.begin(); stt != m_pah->m_siteList.end(); stt++){
+		if (stt != st){
+			bool found = false;
+			type = stt->type;
+			switch (type) {
+			case ACBL:
+			case NACBL:
+			case ACBR:
+			case NACBR:
+			case BY5BL:
+			case BY5BR:
+			case BY6BL:
+			case BY6BR:
+			case BY6BL2:
+			case BY6BR2:
+			case BY6BRL:
+				index1 = stt->C1 + 1;
+				if (index1 > m_pah->m_carbons.size() - 1){
+					index1 = 0;
+				}
+
+				coords = m_pah->m_carbons[index1].coords;
+				dist = coords1.first - coords.first;
+				if (abs(dist) < 1e-3){
+					dist = coords1.second - coords.second;
+					if (abs(dist) < 1e-3){
+						if (!found1){
+							result.first = stt;
+							found1 = true;
+						}
+						else{
+							result.second = stt;
+							found2 = true;
+						}
+						found = true;
+					}
+				}
+
+				if (!found){
+					dist = coords2.first - coords.first;
+					if (abs(dist) < 1e-3){
+						dist = coords2.second - coords.second;
+						if (abs(dist) < 1e-3){
+							if (!found1){
+								result.first = stt;
+								found1 = true;
+							}
+							else{
+								result.second = stt;
+								found2 = true;
+							}
+						}
+					}
+
+					index1 = stt->C2 - 1;
+					if (index1 < 0){
+						index1 = m_pah->m_carbons.size() - 1;
+					}
+
+					coords = m_pah->m_carbons[index1].coords;
+					dist = coords1.first - coords.first;
+					if (abs(dist) < 1e-3){
+						dist = coords1.second - coords.second;
+						if (abs(dist) < 1e-3){
+							if (!found1){
+								result.first = stt;
+								found1 = true;
+							}
+							else{
+								result.second = stt;
+								found2 = true;
+							}
+						}
+					}
+
+					dist = coords2.first - coords.first;
+					if (abs(dist) < 1e-3){
+						dist = coords2.second - coords.second;
+						if (abs(dist) < 1e-3){
+							if (!found1){
+								result.first = stt;
+								found1 = true;
+							}
+							else{
+								result.second = stt;
+								found2 = true;
+							}
+						}
+					}
+				}
+
+			}
+			if (found1 && typein != BY6BL2 && typein != BY6BR2 && typein != BY6BRL){
+				return result;
+			}
+			else if (found1 && found2){
+				return result;
+			}
+		}
+
+	}
+	return result;
+}
+
+void PAHProcess::FindBridgePartners(){
+	Spointer st;
+	kmcSiteType type;
+	std::pair<Spointer, Spointer> result;
+	Spointer Sb1;
+	for (st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
+		type = st->type;
+		switch (type) {
+		case ACBL:
+		case NACBL:
+		case ACBR:
+		case NACBR:
+		case BY5BL:
+		case BY5BR:
+		case BY6BL:
+		case BY6BR:
+		case BY6BL2:
+		case BY6BR2:
+		case BY6BRL:
+			result = FindBridgePartners(st);
+			Sb1 = result.first;
+			if (Sb1 != st){
+				if (st->B1 == st && st->B2 != Sb1){
+					st->B1 = Sb1;
+				}
+				else if (st->B2 != Sb1 && st->B1 != Sb1){
+					st->B2 = Sb1;
+				}
+				if (Sb1->B1 == Sb1 && Sb1->B2 != st){
+					Sb1->B1 = st;
+				}
+				else if (Sb1->B2 != st && Sb1->B1 != st){
+					Sb1->B2 = st;
+				}
+			}
+			else{
+				cout << "Error: Could not find first bridge partner" << endl;
+				cout << (int)type << endl;
+				cout << PAHID << endl;
+				printSites(st);
+				assert(false);
+				abort();
+			}
+			if (type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
+				Sb1 = result.second;
+				if (Sb1 != st){
+					if (st->B1 == st && st->B2 != Sb1){
+						st->B1 = Sb1;
+					}
+					else if (st->B2 != Sb1 && st->B1 != Sb1){
+						st->B2 = Sb1;
+					}
+					if (Sb1->B1 == Sb1 && Sb1->B2 != st){
+						Sb1->B1 = st;
+					}
+					else if (Sb1->B2 != st && Sb1->B1 != st){
+						Sb1->B2 = st;
+					}
+				}
+				else{
+					cout << "Error: Could not find second bridge partner" << endl;
+					cout << (int)type << endl;
+					cout << PAHID << endl;
+					printSites(st);
+				}
+			}	
+		}
+	}
+}
 void PAHProcess::BuildCoordsAll(){
 	m_pah->m_carbons.clear();
 	Carbon newcarbon;
@@ -2869,6 +3071,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
     m_pah->setnumofC(totalC_num);
 	m_pah->setnumofH(totalH_num);
 	BuildCoordsAll();
+	FindBridgePartners();
 	updateHinderedSitesAll();
     updateCombinedSites();
 }
@@ -4279,7 +4482,6 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 			}
 			else if (Sb->type == BY6BL){
 				convSiteType(Sb, BY6BRL);
-				cout << "Made BY6BRL!!" << endl;
 			}
 			else{
 				cout << "Site type not accounted for" << endl;
@@ -4304,7 +4506,6 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt) {
 			}
 			else if (Sb->type == BY6BR){
 				convSiteType(Sb, BY6BRL);
-				cout << "Made BY6BRL!!" << endl;
 			}
 			else{
 				cout << "Site type not accounted for" << endl;
