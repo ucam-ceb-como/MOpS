@@ -97,10 +97,12 @@ PAHStructure* PAHProcess::returnPAH(){
     return this->m_pah;
 }
 //! Returns a copy of PAH structure
-PAHStructure* PAHProcess::clonePAH() const {
+PAHStructure* PAHProcess::clonePAH(int PAH_ID) const {
     PAHStructure* temp = new PAHStructure();
     PAHProcess p(*temp);
     std::vector<kmcSiteType> sites = SiteVector();
+	PAHID = PAH_ID;
+	JOBID = 0;
 	p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, 
 		m_pah->m_bridges, m_pah->numofC(), m_pah->numofH());
     return temp;
@@ -2007,7 +2009,7 @@ std::pair<Spointer, Spointer> PAHProcess::FindBridgePartners(Spointer& st){
 	coords1 = m_pah->m_carbons[index1].coords;
 	coords2 = m_pah->m_carbons[index2].coords;
 
-	for (stt = m_pah->m_siteList.begin(); stt != m_pah->m_siteList.end(); stt++){
+	for (stt = moveIt(st,2); stt != m_pah->m_siteList.end(); stt++){
 		if (stt != st){
 			bool found = false;
 			type = stt->type;
@@ -2116,6 +2118,7 @@ void PAHProcess::FindBridgePartners(){
 	kmcSiteType type;
 	std::pair<Spointer, Spointer> result;
 	Spointer Sb1;
+	bool proceed;
 	for (st = m_pah->m_siteList.begin(); st != m_pah->m_siteList.end(); st++) {
 		type = st->type;
 		switch (type) {
@@ -2130,32 +2133,20 @@ void PAHProcess::FindBridgePartners(){
 		case BY6BL2:
 		case BY6BR2:
 		case BY6BRL:
-			result = FindBridgePartners(st);
-			Sb1 = result.first;
-			if (Sb1 != st){
-				if (st->B1 == st && st->B2 != Sb1){
-					st->B1 = Sb1;
-				}
-				else if (st->B2 != Sb1 && st->B1 != Sb1){
-					st->B2 = Sb1;
-				}
-				if (Sb1->B1 == Sb1 && Sb1->B2 != st){
-					Sb1->B1 = st;
-				}
-				else if (Sb1->B2 != st && Sb1->B1 != st){
-					Sb1->B2 = st;
+			proceed = true;
+			if (type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
+				if (st->B1 != st && st->B2 != st){
+					proceed = false;
 				}
 			}
 			else{
-				cout << "Error: Could not find first bridge partner" << endl;
-				cout << (int)type << endl;
-				cout << PAHID << endl;
-				printSites(st);
-				assert(false);
-				abort();
+				if (st->B1 != st || st->B2 != st){
+					proceed = false;
+				}
 			}
-			if (type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
-				Sb1 = result.second;
+			if (proceed){
+				result = FindBridgePartners(st);
+				Sb1 = result.first;
 				if (Sb1 != st){
 					if (st->B1 == st && st->B2 != Sb1){
 						st->B1 = Sb1;
@@ -2171,12 +2162,39 @@ void PAHProcess::FindBridgePartners(){
 					}
 				}
 				else{
-					cout << "Error: Could not find second bridge partner" << endl;
+					cout << "Error: Could not find first bridge partner" << endl;
 					cout << (int)type << endl;
 					cout << PAHID << endl;
+					cout << JOBID << endl;
 					printSites(st);
+					assert(false);
+					abort();
 				}
-			}	
+				if (type == BY6BL2 || type == BY6BR2 || type == BY6BRL){
+					Sb1 = result.second;
+					if (Sb1 != st){
+						if (st->B1 == st && st->B2 != Sb1){
+							st->B1 = Sb1;
+						}
+						else if (st->B2 != Sb1 && st->B1 != Sb1){
+							st->B2 = Sb1;
+						}
+						if (Sb1->B1 == Sb1 && Sb1->B2 != st){
+							Sb1->B1 = st;
+						}
+						else if (Sb1->B2 != st && Sb1->B1 != st){
+							Sb1->B2 = st;
+						}
+					}
+					else{
+						cout << "Error: Could not find second bridge partner" << endl;
+						cout << (int)type << endl;
+						cout << PAHID << endl;
+						cout << JOBID << endl;
+						printSites(st);
+					}
+				}
+			}
 		}
 	}
 }
@@ -3346,7 +3364,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
 
-	int target = -28151;
+	int target = -1027;
 	if (PAH_ID == target){
 		cout << "ID is: " << id << endl;
 		cout << "on PAH ID: " << PAH_ID << endl;

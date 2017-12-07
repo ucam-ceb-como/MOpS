@@ -91,7 +91,7 @@ PAH &PAH::operator=(const PAH &rhs){
 		time_created=rhs.time_created;
 	    lastupdated=rhs.lastupdated;
 		PAH_ID=rhs.PAH_ID;
-		m_pahstruct=rhs.m_pahstruct->Clone();
+		m_pahstruct=rhs.m_pahstruct->Clone(PAH_ID);
 		m_pahstruct->setParent(this);
 	}
 	return *this;

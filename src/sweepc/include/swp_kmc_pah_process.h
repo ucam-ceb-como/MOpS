@@ -88,7 +88,7 @@ public:
     //! Sets target PAH structure to perform processes on
     void setPAH(PAHStructure& pah);
     //! Returns a copy of PAH structure
-    PAHStructure* clonePAH() const;
+    PAHStructure* clonePAH(int PAH_ID) const;
     //PAHStructure* clonePAH_new() const; // --> new method
 
     size_t SiteListSize() const;

@@ -74,6 +74,11 @@ namespace AggModels {
 class Particle
 {
 public:
+
+	// Can't create a particle without knowledge of the components
+	// and the tracker variables.
+	Particle(void);
+
 	// Constructors.
     Particle(                             // Initialising constructor.
         double time,                        // Create time.
@@ -308,10 +313,6 @@ private:
 
     //! Last time particle was updated.  Required for LPDA.
     double mLPDAtime;
-
-    // Can't create a particle without knowledge of the components
-    // and the tracker variables.
-    Particle(void);
 };
 
 typedef std::vector<Particle*> PartPtrVector;

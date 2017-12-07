@@ -210,9 +210,9 @@ void PAHStructure::initialise(StartingStructure ss) {
     PAHProcess p(*this);
     p.initialise(ss);
 }
-PAHStructure*  PAHStructure::Clone() {
+PAHStructure*  PAHStructure::Clone(int PAH_ID) {
     PAHProcess p(*this);
-    return p.clonePAH();
+    return p.clonePAH(PAH_ID);
 }
 
 //! obtains a string containing the PAH site list

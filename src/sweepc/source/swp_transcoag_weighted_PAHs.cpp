@@ -375,8 +375,24 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
 		return -1;
 	}
 
-	Particle part1 = Particle(*sp1);
-	Particle part2 = Particle(*sp2);
+	Particle part1;
+	Particle part2;
+
+	if (sp1->getStatisticalWeight() > 1){
+		Sweep::AggModels::PAHPrimary *rhsparticle1 = NULL;
+		rhsparticle1 = dynamic_cast<AggModels::PAHPrimary*>(sp1->Primary());
+		rhsparticle1->SetClone(false);
+		part1 = Particle(*sp1);
+		rhsparticle1->SetClone(true);
+	}
+	if (sp2->getStatisticalWeight() > 1){
+		Sweep::AggModels::PAHPrimary *rhsparticle2 = NULL;
+		rhsparticle2 = dynamic_cast<AggModels::PAHPrimary*>(sp2->Primary());
+		rhsparticle2->SetClone(false);
+		part2 = Particle(*sp2);
+		rhsparticle2->SetClone(true);
+	}
+
 	if (sp1->getStatisticalWeight() > 1){
 		part1.setStatisticalWeight(1);
 		sp1 = &part1;

@@ -454,21 +454,23 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
 		    //! Each time a PAH is cloned 100000 is added to its ID so that we can easily calculate how many times this pah has been cloned.
             if(sharedPointers && clone) {
                 //! Create a copy of the shared pointers for PAHs in particles.
-		        if (source->m_PAH.size() > 1) {
+		        //if (source->m_PAH.size() > 1) {
                     boost::shared_ptr<PAH> new_m_PAH = source->m_PAH[i];
                     new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID;
+					//cout << source->m_PAH[i]->PAH_ID << endl;
 					//new_m_PAH->PAH_ID = ID;
 					//ID++;
                     m_PAH.push_back(new_m_PAH);
-                }
-                //! Always create new shared pointers for single PAHs.
-                else {
-                    boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
-                    new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID;
-					//new_m_PAH->PAH_ID = ID;
-					//ID++;
-                    m_PAH.push_back(new_m_PAH);
-                }
+                //}
+     //           //! Always create new shared pointers for single PAHs.
+     //           else {
+     //               boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
+     //               new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID;
+					//cout << source->m_PAH[i]->PAH_ID << endl;
+					////new_m_PAH->PAH_ID = ID;
+					////ID++;
+     //               m_PAH.push_back(new_m_PAH);
+     //           }
             }
             else {
                 //! Create new shared pointers for single PAHs or PAHs in particles.
