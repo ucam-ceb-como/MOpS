@@ -1,5 +1,5 @@
 clc, 
-clear, close all
+% clear, close all
 
 %% Setup
 % set defaults
@@ -11,20 +11,20 @@ set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
 % for finding files
-basedir  = 'vienna/real/real_inc_factor/justforfun/swa/setting_comparison/';
-filedir  = 'swa-N-V-10splits-1run/';
-filecmp  = 'swa-N-V-10splits-1run/';
+basedir  = 'vienna\real\comparisons\6ms\swa9-v2\';
+filedir  = '';
+filecmp  = '';
 filebase = 'Network(stage1)';
 
 % for plotting psl data
-psltime  = '0.001';
+psltime  = '0.006';
 npslbins = 10;
 
 % for saving images
 studyid  = '';
 projpath = 'C:\Users\Astrid\Documents\Projects\';
 projdir  = 'Network temperature dependence\Recent_work\';
-imagedir = 'figures\AIWSWA\batch_comp\'; %3ms_e\
+imagedir = 'figures\AIWSWA\batch_comp\';
 savefigs = 0;
 leg_vals = '';
 
@@ -50,8 +50,8 @@ leg = {'N-V-10splits-1run','2N-V-10splits-1run','2N-2V-10splits-1run',...
        'basic-N-V-10splits-1run'};
 
 j=0;       
-for i = [1,11]
-    filedir = ['swa-' leg{i} '/'];
+for i = 3
+%     filedir = ['swa-' leg{i} '/'];
 j=i;
 % if i < 6
 %     filedir = ['dsa' num2str(i) '/']; 

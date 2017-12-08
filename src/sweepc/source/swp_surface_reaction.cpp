@@ -175,6 +175,7 @@ double SurfaceReaction::Rate(double t, const Cell &sys, const Particle &sp) cons
 
     // Chemical species concentration dependence.
     rate *= chemRatePart(sys.GasPhase());
+	rate *= 1.0 / (1+pow(sys.GasPhase().SpeciesConcentration(21),0.5));
 
     // Temperature dependance.
     double T = sys.GasPhase().Temperature();

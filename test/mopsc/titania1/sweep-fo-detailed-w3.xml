@@ -38,8 +38,8 @@
 		<!-- Additional specs to do adaptive weighted inception 
 		     Scaling function can be linear, quadratic, exponential
 			 Onset SP can be anything < Nmax given in mops.inx -->
-		<inceptionweightchange flag="off">
-		    <maxinceptionweight>1000.0</maxinceptionweight>
+		<inceptionweightchange flag="on">
+		    <maxinceptionweight>200.0</maxinceptionweight>
 		    <mininceptionweight>1.0</mininceptionweight>
 		    <onsetsp>1.0</onsetsp>
 		    <weightchangefun>exponential</weightchangefun>
@@ -48,7 +48,7 @@
 		      The ensemble weights wi will be adjusted by the 
 			  factor whenever (N/sum(wi) > onsetratio) and the
 			  sample volume will be scaled to match -->
-		<weightscaling flag="off">
+		<weightscaling flag="on">
 		    <onsetratio>2.0</onsetratio>
 		    <factor>2.0</factor>
 		</weightscaling>

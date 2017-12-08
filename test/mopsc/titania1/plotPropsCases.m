@@ -11,13 +11,13 @@ set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
 % for finding files
-basedir  = 'vienna/real/comparisons/3ms/csvs_i/';
+basedir  = 'vienna/real/comparisons/15ms/csvs/';
 filedir  = '';
 filecmp  = '';
 filebase = 'Network(stage1)';
 
 % for plotting psl data
-psltime  = '0.003';
+psltime  = '0.015';
 npslbins = 10;
 
 % for saving images
@@ -44,14 +44,14 @@ texts = {'DSA','PSI$_1$','PSI$_2$','HCI$_1$','HCI$_2$',...
          'EAIW$_1+$HCI$_2$'};
 
 j=0;       
-for i = [1:5,7:8,11:15]
+for i = [1:5,6,8:9,11:17]
 j=i;
 if i < 6
     filedir = ['dsa' num2str(i) '/']; 
-    filecmp = 'dsa1/';   
+    filecmp = 'swa1/';   
 else
     filedir = ['swa' num2str(i-5) '/']; 
-    filecmp = 'dsa1/';
+    filecmp = 'swa1/';
 end
 
 % load all data

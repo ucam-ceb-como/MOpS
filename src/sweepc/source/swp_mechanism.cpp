@@ -1190,9 +1190,24 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
         // Stop ensemble from doubling while updating particles.
         sys.Particles().FreezeDoubling();
 
+		/*bool changeWt = false;
+		double scaleFac = 1.0;
+		if ((sys.ParticleCount() > 1) && GetWeightScalingFlag())
+		{
+			scaleFac = sys.ParticleCount() / sys.Particles().GetSum(iW);
+			if (scaleFac > GetWeightOnsetRatio())
+			{
+				changeWt = true;
+				scaleFac *= GetWeightScalingFactor();
+				sys.AdjustSampleVolume(2.0);
+			}
+		}*/
+
 	    // Perform deferred processes on all particles individually.
         Ensemble::iterator i;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
+			/*if (changeWt)
+				(*i)->setStatisticalWeight((*i)->getStatisticalWeight() * 2.0);*/
             UpdateParticle(*(*i), sys, t, rng);
         }
 
@@ -1239,7 +1254,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 
 		// aab64 If required, scale the ensemble weights to prevent deterioration of the average
 		// (causing jumps e.g. when new, relatively large weight particles are incepted)
-		if ((sys.ParticleCount() > 1) && GetWeightScalingFlag())
+		/*if ((sys.ParticleCount() > 1) && GetWeightScalingFlag())
 		{
 			double ratio = sys.ParticleCount() / sys.Particles().GetSum(iW);
 			if (ratio > GetWeightOnsetRatio())
@@ -1255,7 +1270,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 					sys.Particles().Update(part_i); 
 				}
 			}
-		}
+		}*/
     }
 }
 
