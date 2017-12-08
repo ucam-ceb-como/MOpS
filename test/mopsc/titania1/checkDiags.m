@@ -1,5 +1,5 @@
 clc,
-% clear, close all
+clear, close all
 
 %% Setup
 
@@ -14,10 +14,9 @@ set(0,'DefaultLineMarkerSize',10)
 runmulti = 0;
 
 % for finding files
-basedir  = ''; 
+basedir  = ''; %vienna/real/comparisons/3ms/csvs_c/
 filedir  = '';
 filebase = '';
-stid = 'stage1';
 
 % for saving images
 studyid  = '';
@@ -136,8 +135,8 @@ else
     
     % load data
     folder = [basedir filedir];
-    pdiags = csvread([folder 'Part-split-diagnostics(' stid ').csv'],1);
-    cdiags = csvread([folder 'Chem-split-diagnostics(' stid ').csv'],1);
+    pdiags = csvread([folder 'Part-split-diagnostics(stage1).csv'],1);
+    cdiags = csvread([folder 'Chem-split-diagnostics(stage1).csv'],1);
     
     figure(1)
     set(gcf,'color','white')
@@ -158,18 +157,16 @@ else
     ylabel('NSP (-)')
     
     subplot(233)
-%     plot(pdiags(:,1)*1000,wnew(pdiags(:,6)),'-.')
-%     hold on
-%     plot(pdiags(:,1)*1000,wnew(pdiags(:,7)),'-.')
-%     plot([pdiags(1,1)*1000 pdiags(end,1)*1000],[wmax wmax],'r--')
-%     plot([pdiags(1,1)*1000 pdiags(end,1)*1000],[wmin wmin],'g--')
-    plot(pdiags(:,1)*1000,pdiags(:,12))
+    plot(pdiags(:,1)*1000,wnew(pdiags(:,6)))
     hold on
-    plot(pdiags(:,1)*1000,pdiags(:,13),':')
+    plot(pdiags(:,1)*1000,wnew(pdiags(:,7)),':')
+    plot([pdiags(1,1)*1000 pdiags(end,1)*1000],[wmax wmax],'r--')
+    plot([pdiags(1,1)*1000 pdiags(end,1)*1000],[wmin wmin],'g--')
+    plot(pdiags(:,1)*1000,pdiags(:,12),'--')
+    plot(pdiags(:,1)*1000,pdiags(:,13),'-.')
     set(gca,'XLim',[0 pdiags(end,1)*1000])
-    legend('Pre','Post','location','North','orientation','vertical')
-%     ,'Wmax','Wmin','Pre sim','Post sim',...
-%     'location','North','orientation','vertical')
+    legend('Pre','Post','Wmax','Wmin','Pre sim','Post sim',...
+        'location','North','orientation','vertical')
     xlabel('Time (ms)')
     ylabel('Incepting weight (-)')
     saveas(['sv_nsp' studyid])
@@ -188,7 +185,7 @@ else
     plot(pdiags(:,1)*1000,pdiags(:,11),':')
     legend('Pre','Post','location','North','orientation','horizontal')
     xlabel('Time (ms)')
-    ylabel('Average collision diameter (m)')
+    ylabel('Total particle mass (kg)')
     
     subplot(236)
     plot(pdiags(:,1)*1000,pdiags(:,14))
@@ -205,15 +202,6 @@ else
     hold on
     xlabel('Incepting factor (-)')
     ylabel('Count divide by max count (-)')
-    
-    figure(900)
-    set(gcf,'color','white')
-    plot(pdiags(:,1)*1000,pdiags(:,8)./pdiags(:,6))
-    hold on
-    plot(pdiags(:,1)*1000,pdiags(:,9)./pdiags(:,7),':')
-    legend('Pre','Post','location','North','orientation','horizontal')
-    xlabel('Time (ms)')
-    ylabel('Average statistical weight (-)')
     
     %% Rates
     
@@ -243,19 +231,19 @@ else
     figure(4)
     set(gcf,'color','white')
     subplot(131)
-    semilogy(pdiags(:,1)*1000,cumsum(sum(pdiags(:,16:16+105),2)))
+    loglog(pdiags(:,1)*1000,cumsum(sum(pdiags(:,16:16+105),2)))
     hold on
     xlabel('Time (ms)')
     ylabel('Inc. events (-)')
     
     subplot(132)
-    semilogy(pdiags(:,1)*1000,cumsum(pdiags(:,16+106)))
+    loglog(pdiags(:,1)*1000,cumsum(pdiags(:,16+106)))
     hold on
     xlabel('Time (ms)')
     ylabel('Surf. growth events (-)')
     
     subplot(133)
-    semilogy(pdiags(:,1)*1000,cumsum(sum(pdiags(:,16+107:end-2),2)))
+    loglog(pdiags(:,1)*1000,cumsum(sum(pdiags(:,16+107:end-2),2)))
     hold on
     xlabel('Time (ms)')
     ylabel('Coag. events (-)')
@@ -293,7 +281,7 @@ else
     [maxval,ihigh] = max(sum(pdiags(:,16+107:16+107+nreals-1),1));
     [minval,ilow]  = min(sum(pdiags(:,16+107:16+107+nreals-1),1));
     
-    figure(5*nreals)
+    figure(5)
     set(gcf,'color','white')
     for i=1:nreals
         subplot(ceil(nreals/ncols),ncols,i)
@@ -312,7 +300,6 @@ else
         title(titl_d{i},'color',c)
         legend('Real','Fictitious','Location','NorthWest')
     end
-
     
     %% Rate fractions
     
@@ -383,10 +370,9 @@ else
     saveas(['chem' studyid])
     
     figure(7)
-    set(gcf,'color','white')
-    plot(cdiags(:,1)*1000,cdiags(:,end-2))
+    semilogy(cdiags(:,1)*1000,cdiags(:,end-1))
     hold on
-    plot(cdiags(:,1)*1000,cdiags(:,end-1),':')
+    semilogy(cdiags(:,1)*1000,cdiags(:,end),':')
     legend('Pre','Post','location','North','orientation','horizontal')
     xlabel('Time (ms)')
     ylabel('Temp. (K)')

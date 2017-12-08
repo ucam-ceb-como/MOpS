@@ -12,7 +12,7 @@
   <!-- Mixtures -->
   <mixture id="initial">
 	  <component id="AR">1.0</component>
-	  <temperature units="K">500</temperature>
+	  <temperature units="K">1500</temperature>
 	  <pressure units="bar">4.5</pressure>
   </mixture>
 
@@ -25,23 +25,26 @@
   <mixture id="TiCl4_injection">
 	  <component id="O2">0.74</component>
 	  <component id="TICL4">0.26</component>
-	  <temperature units="K">500</temperature>
+	  <temperature units="K">600</temperature>
 	  <pressure units="bar">4.5</pressure>
   </mixture>
 
   <!-- Reactor definition (given initial conditions) -->
-  <reactor type="psr" constt="false" dtype="cdelete" constv="true" id="stage1" units="mol/mol" order="1">
+  <reactor type="psr" constt="false" constv="true" id="stage1" units="mol/mol" order="1" dtype="cdelete">
 	  <initial>initial</initial>
-	  <flow dir="in" frac="0.65">O2_plasma</flow>
-	  <flow dir="in" frac="0.35">TiCl4_injection</flow>
+	  <flow dir="in" frac="0.24">O2_plasma</flow>
+	  <flow dir="in" frac="0.76">TiCl4_injection</flow>
 	  <restime units="s">0.003</restime>
   </reactor>
 
   <!-- Output time sequence -->
   <timeintervals>
 	  <start>0.0</start>
-	  <time splits="10" steps="300">0.003</time>
-	  <time splits="10" steps="30000">0.006</time>
+	  <time splits="10" steps="3000">0.03</time>
+	  <!--time splits="10" steps="100">0.01</time>
+	  <time splits="1000" steps="5000">0.06</time-->
+	  <!--time splits="500" steps="500">0.005</time>
+	  <time splits="1000" steps="800">0.009</time-->
   </timeintervals>
 
   <!-- Simulation output settings -->

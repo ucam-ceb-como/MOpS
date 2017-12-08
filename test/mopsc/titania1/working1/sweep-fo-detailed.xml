@@ -18,12 +18,12 @@
             <E units="K">31032</E>
 		    <Dpmin units="m">0</Dpmin>
         </sintering>
-    </particle>
         <!--sintering enable="true" model="Rutile">
 		    <A units="s/m4K">3.7E+16</A>
             <E units="K">31032</E>
 		    <Dpmin units="nm">3.4</Dpmin>
         </sintering-->
+    </particle>
 	
 	<!-- Define particle types (Spherical) -->
     <!--particle id="[Ru]" model="spherical" subtree="false">
@@ -33,25 +33,8 @@
     <!-- Coagulation -->
     <coagulation>
 	    <A>1.0</A>
-	    <kernel>weightedtransition</kernel>
-		<weightrule>w3</weightrule>
-		<!-- Additional specs to do adaptive weighted inception 
-		     Scaling function can be linear, quadratic, exponential
-			 Onset SP can be anything < Nmax given in mops.inx -->
-		<inceptionweightchange flag="off">
-		    <maxinceptionweight>1000.0</maxinceptionweight>
-		    <mininceptionweight>1.0</mininceptionweight>
-		    <onsetsp>1.0</onsetsp>
-		    <weightchangefun>exponential</weightchangefun>
-		</inceptionweightchange>
-		<!-- Additional specs to do ensemble weight scaling
-		      The ensemble weights wi will be adjusted by the 
-			  factor whenever (N/sum(wi) > onsetratio) and the
-			  sample volume will be scaled to match -->
-		<weightscaling flag="off">
-		    <onsetratio>2.0</onsetratio>
-		    <factor>2.0</factor>
-		</weightscaling>
+	    <kernel>transition</kernel>
+		<!--weightrule>w3</weightrule-->
     </coagulation>
 
     <!-- Ti addition reactions
@@ -1104,16 +1087,10 @@
         <component id="Rutile" dx="+2.0"/>
     </inception>     
 	
-	<!-- extra inception reaction currently used as a terrible way to perform heat transfer -->
-    <inception name="extra inception">
-		<hci flag="off">
-			<upperdlim>100e-9</upperdlim> <!-- must find a particle larger than this -->
-			<lowerdlim>49e-9</lowerdlim> <!-- must find a particle smaller than this -->
-		</hci>
-		<psi flag="off">
-			<upperdlim>100e-9</upperdlim> <!-- must find a particle larger than this -->
-			<lowerdlim>49e-9</lowerdlim> <!-- must find a particle smaller than this -->
-			<type>weight</type> <!-- options: weight, event, both for SWA -->
-		</psi>
+    <inception name="no molecule inception">
+        <formula>"TICL2OCL to [Ru]</formula>
+        <reactant id="TICL2OCL" stoich="0" m="2.1819e-022" d="6.5423e-8" />
+        <particleout id="[Ru]"/>
+        <component id="Rutile" dx="+0.0"/>
     </inception> 
 </mechanism>

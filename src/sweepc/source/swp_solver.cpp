@@ -94,25 +94,6 @@ Solver::~Solver(void)
 int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
                 rng_type &rng)
 {
-
-	/*if ((sys.ParticleCount() > 1) && mech.GetWeightScalingFlag())
-	{
-	double scaleFac = sys.ParticleCount() / sys.Particles().GetSum(iW);
-	if (scaleFac > mech.GetWeightOnsetRatio())
-	{
-	scaleFac *= mech.GetWeightScalingFactor();
-	sys.AdjustSampleVolume(2.0); //scaleFac
-	for (Ensemble::iterator i = sys.Particles().begin(); i != sys.Particles().end(); ++i)
-	//Particle *sp1 = NULL;
-	//for (int i = 0; i != sys.ParticleCount(); ++i)
-	{
-	//sp1 = sys.Particles().At(i);
-	(*i)->setStatisticalWeight((*i)->getStatisticalWeight() * 2.0); //scaleFac
-	//sys.Particles().Update(i);
-	}
-	}
-	}*/
-
     int err = 0;
     double tsplit, dtg, jrate, tflow(t);
     fvector rates(mech.TermCount(), 0.0);
@@ -262,25 +243,6 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 			}
 		}
 
-		// aab64 Could also shift incepting weights here for intense inception rate escalation. 
-		if ((sys.ParticleCount() > 1) && mech.GetWeightScalingFlag())
-		{
-			double ratio = sys.ParticleCount() / sys.Particles().GetSum(iW);
-			if (ratio > mech.GetWeightOnsetRatio())
-			{
-				double factor = mech.GetWeightScalingFactor();
-				sys.AdjustSampleVolume(factor);
-				signed int part_i;
-				Particle *pi = NULL;
-				for (part_i = 0; part_i < sys.ParticleCount(); ++part_i)
-				{
-					pi = sys.Particles().At(part_i);
-					pi->setStatisticalWeight(pi->getStatisticalWeight() * factor);
-					sys.Particles().Update(part_i);
-				}
-			}
-		}
-
         if (mech.AnyDeferred() && (sys.ParticleCount() > 0))  {
             // Get the process jump rates (and the total rate).
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
@@ -295,6 +257,8 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
+
+			// aab64 Could also shift incepting weights here for intense inception rate escalation. 
 			
             // Sweep does not do transport
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);

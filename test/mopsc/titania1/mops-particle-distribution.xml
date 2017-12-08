@@ -26,8 +26,8 @@
             <m0>1.0e12</m0>
             <particle count="256" usedistribution="true">
                 <weight>1.0</weight>
-                <component id="Rutile" dx="1000" dx_var="1e20"/>
-                <nprimaries npri="10" npri_var="10"/>
+                <component id="Rutile" dx="100000000" dx_var="1e19"/>
+                <nprimaries npri="10" npri_var="1000"/>
             </particle>
         </population>
     </mixture>
