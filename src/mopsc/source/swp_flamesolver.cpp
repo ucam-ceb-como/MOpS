@@ -212,7 +212,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             double P = 0.0;
             double alpha = 0.0;
             double PAHRate = 0.0;
-            GasPoint gpoint(mech.GasMech().Species());
+			GasPoint gpoint(mech.GasMech().Species());
 
             // Split the line by columns.
             split(line, subs, delim);
@@ -359,26 +359,25 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     //! code has to go through the loop below twice for the sample volume to be
     //! adjusted. However, it was found that the loop is only performed once;
     //! therefore, the sample volume adjustment has to be performed here.
-    r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
+     r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
-
         //save the old gas phase mass density
-        double old_dens = r.Mixture()->GasPhase().MassDensity();
+        old_dens = r.Mixture()->GasPhase().MassDensity();
 
         // Update the chemical conditions.
         const double gasTimeStep = linInterpGas(t, r.Mixture()->GasPhase());
-
+		
         // Scale particle M0 according to gas-phase expansion.
         // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
-        r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
+        r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
 
         //! Tried and tested only for the PAH-PP/KMC-ARS model, binary tree and
         //! the spherical particle model. Only relevant if postprocessing based
         //! on the inception species concentration.
-        if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID && 
+        if ((mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID) && 
             r.Mixture()->ParticleModel()->Postprocessing() == ParticleModel::XA4) {
             int index;
             double numCarbons;
@@ -442,7 +441,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 
         r.SetTime(t);
     }
-    
+
     // Restore initial chemical conditions to sys.
     r.Mixture()->SetFixedChem(fixedchem);
 

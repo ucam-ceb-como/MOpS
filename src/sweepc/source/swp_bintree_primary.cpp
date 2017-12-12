@@ -97,6 +97,14 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_cen_mass[0] = 0.0;
     m_cen_mass[1] = 0.0;
     m_cen_mass[2] = 0.0;
+
+	m_frame_orient[0] = 0.0;
+	m_frame_orient[1] = 0.0;
+	m_frame_orient[2] = 1.0e-9;
+
+	m_frame_x[0] = 1.0e-9;
+	m_frame_x[1] = 0.0;
+	m_frame_x[2] = 0.0;
 }
 
 /*!
@@ -140,6 +148,14 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_cen_mass[0] = 0.0;
     m_cen_mass[1] = 0.0;
     m_cen_mass[2] = 0.0;
+
+	m_frame_orient[0] = 0.0;
+	m_frame_orient[1] = 0.0;
+	m_frame_orient[2] = 1.0e-9;
+
+	m_frame_x[0] = 1.0e-9;
+	m_frame_x[1] = 0.0;
+	m_frame_x[2] = 0.0;
 }
 
 //! Copy constructor.
@@ -372,14 +388,15 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
     // Set the pointers to the parent node
     if (newleft->m_leftchild!=NULL) {
-    newleft->m_leftchild->m_parent      = newleft;
-    newleft->m_rightchild->m_parent     = newleft;
+		newleft->m_leftchild->m_parent      = newleft;
+		newleft->m_rightchild->m_parent     = newleft;
     }
     if (newright->m_leftchild!=NULL) {
-    newright->m_leftchild->m_parent     = newright;
-    newright->m_rightchild->m_parent    = newright;
+		newright->m_leftchild->m_parent     = newright;
+		newright->m_rightchild->m_parent    = newright;
     }
     m_children_sintering=0.0;
+	
     UpdateCache();
 
     //! It is assumed that primary pi from particle Pq and primary pj from
@@ -404,6 +421,14 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
         V1.push_back(cos(phi1) * sqrt(z1));
         V1.push_back(sin(phi1) * sqrt(z1));
         V1.push_back(sqrt(1 - z1));
+
+		//csl37: calcCOM and centre for both
+		m_leftchild->calcBoundSph();
+        m_leftchild->calcCOM();
+		m_leftchild->centreCOM();
+		m_rightchild->calcBoundSph();
+        m_rightchild->calcCOM();
+		m_rightchild->centreCOM();
 
         //! Rotate centre-of-mass.
         m_leftchild->rotateCOM(theta1, V1);
@@ -621,6 +646,9 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
         //! generating its structure. Now that it is complete centre it
         //! about its centre-of-mass.
         this->centreCOM();
+
+		//csl37: rotate back to one of the particles 
+		this->rotateCOM(-theta1, V1);
 
     } else {
         //! Randomly select the primaries that are touching.
@@ -899,7 +927,14 @@ double BinTreePrimary::GetRadiusOfGyration() const
         Rg = sqrt(sum / totalmass);
     }
 
-    return Rg;
+	//if single primary return the primary radius
+	if(m_numprimary == 1) Rg = sqrt(2.0/5.0) * m_primarydiam / 2.0;
+
+	//csl37-debug
+	//assert(Rg > 0.0);
+	//csl37-debug
+    
+	return Rg;
 }
 
 //! Returns a vector of primary coordinates and radius (4D).
@@ -919,6 +954,21 @@ void BinTreePrimary::GetPriCoords(std::vector<fvector> &coords) const
     } else {
         m_leftchild->GetPriCoords(coords);
         m_rightchild->GetPriCoords(coords);
+    }
+}
+
+void BinTreePrimary::GetPrimaryCoords(std::vector<fvector> &coords) const
+{
+    if (isLeaf()) {
+        fvector c(4);
+        c[0] = m_cen_mass[0];
+        c[1] = m_cen_mass[1];
+        c[2] = m_cen_mass[2];
+        c[3] = m_r;
+        coords.push_back(c);
+    } else {
+        m_leftchild->GetPrimaryCoords(coords);
+        m_rightchild->GetPrimaryCoords(coords);
     }
 }
 
@@ -964,6 +1014,8 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
     m_avg_sinter              = source->m_avg_sinter;
     m_sint_rate               = source->m_sint_rate;
     m_sint_time               = source->m_sint_time;
+	m_frame_orient			  = source->m_frame_orient;
+	m_frame_x				  = source->m_frame_x;
 
     //! Set particles.
     m_leftchild     = source->m_leftchild;
@@ -1085,7 +1137,7 @@ double BinTreePrimary::SinteringLevel()
 
 		//if the centre-centre separation is not tracked the sintering level is calculated as per
 		//Shekar et al. (2012)
-		if (!m_pmodel->getTrackPrimarySeparation()) {
+		if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 			// Calculate the spherical surface
 			const double spherical_surface =
 					4 * PI * m_children_radius * m_children_radius;
@@ -1107,9 +1159,14 @@ double BinTreePrimary::SinteringLevel()
 				double d_ij =  m_distance_centreToCentre;
 
 				//calculate the merger condition
-				double d_min = sqrt( pow(max(r_i,r_j),2.0) - pow(min(r_i,r_j),2.0) );
+				//double d_min = sqrt( pow(max(r_i,r_j),2.0) - pow(min(r_i,r_j),2.0) );
 
-				slevel = ( d_min/d_ij - d_min/(r_i + r_j) ) / ( 1 - d_min/(r_i + r_j) );
+				//slevel = ( d_min/d_ij - d_min/(r_i + r_j) ) / ( 1 - d_min/(r_i + r_j) );
+
+				//csl37- new sintering level
+				double x_ij = (d_ij*d_ij - r_j*r_j + r_i*r_i)/(2.0*d_ij);
+				double R_ij = sqrt(r_i*r_i - x_ij*x_ij);
+				slevel = R_ij / min(r_i,r_j);
 			}
 		}
 
@@ -1175,7 +1232,7 @@ bool BinTreePrimary::MergeCondition()
 		//! the distance between the centres of primary particles is tracked. 
 		//! If not, the condition depends on whether the rounding 
 		//! level exceeds an arbitrarily high threshold.
-		if (!m_pmodel->getTrackPrimarySeparation()) {
+		if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 			condition = (m_children_sintering > 0.95);
 		} else {
 			//! If tracked, a particle has coalesced when the neck reaches the centre 
@@ -1191,7 +1248,16 @@ bool BinTreePrimary::MergeCondition()
 				//ensures that particles are merged if the sintering step overshoots
 				condition = true;
 			}else{
-				condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) <= 0.0);
+				condition = ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) ) <= 0.0; //csl37-original condition 
+
+				//csl37-new coalescence condition
+				//!primaries are merged when the neck radius is 95% of the smaller primary radius
+				//!second condition ensures that primaries are merged even if sintering overshoots
+				//!i.e. the neck crosses the centre of smaller primary
+//				double x_ij = (d_ij*d_ij - r_j*r_j + r_i*r_i)/(2.0*d_ij);
+//				double R_ij = sqrt(r_i*r_i - x_ij*x_ij);	//!neck radius
+//				condition = R_ij/min(r_i,r_j) >= 0.95 || ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) ) <= 0.0;
+
 			}
 		}
 	}
@@ -1216,14 +1282,18 @@ BinTreePrimary &BinTreePrimary::Merge()
 	//initialise pointer to the larger of the merging primaries
 	BinTreePrimary *big_prim;
 	//pointer to the new (merged) primary
-	BinTreePrimary *new_prim;
+	BinTreePrimary *new_prim = NULL;
 
 	//csl37-merge
 	//initialise parameters
 	double r_big,r_small, d_ij, x_ij;
 	double sumterm = 0.0;
 	double free_surface_term = 0.0;
-	
+
+	//csl37-todo
+	//turn off m_track on primaries
+	//turn on m_track on merged primary and assign frame coordinates
+
     // Make sure this primary has children to merge
     if( m_leftchild!=NULL) {
 
@@ -1240,19 +1310,20 @@ BinTreePrimary &BinTreePrimary::Merge()
 		}
 
 		//csl37--merge
-		r_big = big_prim->m_primarydiam; 
-		r_small = m_rightparticle->m_primarydiam;	
+		r_big = big_prim->m_primarydiam/2.0; 
+		r_small = small_prim->m_primarydiam/2.0;	
 		x_ij = (d_ij*d_ij - r_small*r_small + r_big*r_big) / (2.0*d_ij); //distance from neck to centre of larger primary
 		//volume of smaller primary
 		double V_prim = small_prim->m_primaryvol;
-		//Calculate cap volume of larger primary
-		double V_cap = 2.0*M_PI*r_big*r_big*r_big/3.0 + M_PI*x_ij*x_ij*x_ij/3.0 - M_PI*r_big*r_big*x_ij;
+		//if there is a cap, calculate cap volume of larger primary
+		double V_cap = 0.0;
+		if(d_ij+r_small > r_big) V_cap = 2.0*M_PI*r_big*r_big*r_big/3.0 + M_PI*x_ij*x_ij*x_ij/3.0 - M_PI*r_big*r_big*x_ij;
 		//Subtract from merging primary's volume
 		double dV = max(V_prim - V_cap, 0.0);
 
 		//csl37--merge
 		//adjust larger primary to incorporate excess volume
-		if (m_pmodel->getTrackPrimarySeparation()){
+		if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()){
 			if(dV>0.0) big_prim->AdjustPrimary(dV,small_prim);
 		}
 
@@ -1279,8 +1350,15 @@ BinTreePrimary &BinTreePrimary::Merge()
 			m_primaryvol = big_prim->m_primaryvol + V_prim;
 			m_free_surf = big_prim->m_free_surf;
 			
+			//csl37
+			//if priamry coordinates are tracked this new primary takes on the coordinates of the larger primary
+			if(m_pmodel->getTrackPrimaryCoordinates()){
+				new_prim->m_cen_bsph = big_prim->m_cen_bsph;
+				new_prim->m_cen_mass = big_prim->m_cen_mass;
+			}
+
             // Update the pointers that pointed to the two former children
-			if (!m_pmodel->getTrackPrimarySeparation()) {
+			if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 		        ChangePointer(m_leftchild,this);
 			    ChangePointer(m_rightchild,this);
 			}else{
@@ -1312,152 +1390,265 @@ BinTreePrimary &BinTreePrimary::Merge()
                     m_parent->UpdateCache();
                 }
             }
-        }
+        }else{
 
+			if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 
-        else
-        {
-            if (m_leftchild->m_numprimary<m_rightchild->m_numprimary)
-            {
-                // Append to left subtree because there are fewer primaries
-                // (this is only to keep the tree balanced)
-                BinTreePrimary *oldleftparticle = m_leftparticle;
-                for (size_t i=0; i != m_comp.size(); i++) {
-                    m_rightparticle->m_comp[i] =
-                            m_leftparticle->Composition(i) +
-                            m_rightparticle->Composition(i);
-                }
+				if (m_leftchild->m_numprimary<m_rightchild->m_numprimary)
+				{
+					// Append to left subtree because there are fewer primaries
+					// (this is only to keep the tree balanced)
+					BinTreePrimary *oldleftparticle = m_leftparticle;
+					for (size_t i=0; i != m_comp.size(); i++) {
+						m_rightparticle->m_comp[i] =
+								m_leftparticle->Composition(i) +
+								m_rightparticle->Composition(i);
+					}
+
+					//the new (merged) primary
+					new_prim = m_rightparticle;
+
+					//update quantities for separation tracking model
+					//m_primarydiam of the new particle is the larger of the diameters of the merging particles
+					//if the centre to centre separation isn't tracked this will be changed to the spherical equivalent in the call to UpdatePrimary
+					new_prim->m_primarydiam = big_prim->m_primarydiam;
+					//new particle volume is the sum of the two volumes
+					new_prim->m_primaryvol = big_prim->m_primaryvol + V_prim;
+					new_prim->m_free_surf = big_prim->m_free_surf;
+				
+					//csl37
+					//if priamry coordinates are tracked this new primary takes on the coordinates of the larger primary
+					//csl37: check if this methodology works because the chosen primary might not be the larger one so what about it's neighbours?
+					if(m_pmodel->getTrackPrimaryCoordinates()){
+						new_prim->m_cen_bsph = big_prim->m_cen_bsph;
+						new_prim->m_cen_mass = big_prim->m_cen_mass;
+					}
+
+					m_rightparticle->UpdatePrimary();
+
+					// Set the pointers from the leftprimary to the rightprimary
+					// (this will be the new bigger primary)
+					if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
+						oldleftparticle->ChangePointer(oldleftparticle,m_rightparticle);
+						m_rightparticle->ChangePointer(m_rightparticle,m_rightparticle);
+					}else{
+						// If the priamry separation is tracked then re-estimation of new sintering levels also
+						// requires the centre-centre separation and the smaller primary
+						oldleftparticle->ChangePointer(oldleftparticle,m_rightparticle,small_prim,this);
+						m_rightparticle->ChangePointer(m_rightparticle,m_rightparticle,small_prim,this);
+					}
+
+					// Set the pointer to the parent node
+					if (oldleftparticle->m_parent->m_leftchild==oldleftparticle) {
+						oldleftparticle->m_parent->m_leftchild=m_rightchild;
+					}
+					else {
+						oldleftparticle->m_parent->m_rightchild=m_rightchild;
+					}
+					m_rightchild->m_parent=oldleftparticle->m_parent;
+
+					BinTreePrimary *oldleftchild    = m_leftchild;
+					BinTreePrimary *oldparent       = m_parent;
+
+					// Copy the properties of the former leftchild to this node
+					// so that it can be removed from the aggregate tree structure
+					CopyParts(oldleftchild);
+
+					// Now break the links to the tree structure in oldleftchild
+					// in order to free it
+					oldleftchild->m_leftchild   = NULL;
+					oldleftchild->m_rightchild  = NULL;
+					delete oldleftchild;
+
+					m_parent = oldparent;
+
+					if (m_leftchild!=NULL) {
+						m_rightchild->m_parent=this;
+						m_leftchild->m_parent=this;
+					}
+
+					delete oldleftparticle;
+
+				}else{
+					// Append to right subtree
+					BinTreePrimary *oldrightparticle = m_rightparticle;
+					for (size_t i=0; i != m_comp.size(); i++) {
+						m_leftparticle->m_comp[i] =
+								m_leftparticle->Composition(i) +
+								m_rightparticle->Composition(i);
+					}
+
+					//the new (merged) primary
+					new_prim = m_leftparticle;
+
+					//update quantities for separation tracking model
+					//m_primarydiam of the new particle is the larger of the diameters of the merging particles
+					//if the centre to centre separation isn't tracked this will be changed to the spherical equivalent in the call to UpdatePrimary
+					new_prim->m_primarydiam = big_prim->m_primarydiam;
+					//new particle volume is the sum of the two volumes
+					new_prim->m_primaryvol = big_prim->m_primaryvol + V_prim;
+					new_prim->m_free_surf = big_prim->m_free_surf;
+				
+					//csl37
+					//if priamry coordinates are tracked this new primary takes on the coordinates of the larger primary
+					//csl37: check if this methodology works because the chosen primary might not be the larger one so what about it's neighbours?
+					if(m_pmodel->getTrackPrimaryCoordinates()){
+						new_prim->m_cen_bsph = big_prim->m_cen_bsph;
+						new_prim->m_cen_mass = big_prim->m_cen_mass;
+					}
+
+					m_leftparticle->UpdatePrimary();
+
+					// All pointers to m_leftparticle now point to oldright particle
+					if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
+						oldrightparticle->ChangePointer(oldrightparticle,m_leftparticle);
+						m_leftparticle->ChangePointer(m_leftparticle,m_leftparticle);
+					}else{
+						// If the priamry separation is tracked then re-estimation of new sintering levels also
+						// requires the centre-centre separation and the smaller primary
+						oldrightparticle->ChangePointer(oldrightparticle,m_leftparticle,small_prim,this);
+						m_leftparticle->ChangePointer(m_leftparticle,m_leftparticle,small_prim,this);
+					}
+
+					// Set the pointer to the parent node
+					if (oldrightparticle->m_parent->m_leftchild==oldrightparticle) {
+						oldrightparticle->m_parent->m_leftchild=m_leftchild;
+					}
+					else {
+						oldrightparticle->m_parent->m_rightchild=m_leftchild;
+					}
+					m_leftchild->m_parent=oldrightparticle->m_parent;
+
+					BinTreePrimary *oldrightchild=m_rightchild;
+					BinTreePrimary *oldparent=m_parent;
+
+					// Copy the properties of the former leftchild to this node
+					// so that it can be removed from the aggregate tree structure
+					CopyParts(oldrightchild);
+
+					// Now break the links to the tree structure in oldrightchild
+					// in order to free it
+					oldrightchild->m_leftchild = NULL;
+					oldrightchild->m_rightchild = NULL;
+					delete oldrightchild;
+
+					m_parent=oldparent;
+
+					if (m_leftchild!=NULL) {
+						m_rightchild->m_parent=this;
+						m_leftchild->m_parent=this;
+					}
+
+					delete oldrightparticle;
+
+				}
+			}else{
+			//csl37
+			//**************************************************************************************
+			//if the separations are tracked then the larger primary becomes the new primary
 
 				//the new (merged) primary
-				new_prim = m_rightparticle;
+				new_prim = big_prim;
+				//csl37-left right flag
+				bool newleft;
+				if(new_prim == m_leftparticle){
+					newleft = true;
+				}else{
+					newleft = false;
+				}
 
+				BinTreePrimary *oldparticle = small_prim;
+				for (size_t i=0; i != m_comp.size(); i++) {
+					big_prim->m_comp[i] =
+							m_leftparticle->Composition(i) +
+							m_rightparticle->Composition(i);
+				}
+
+				
 				//update quantities for separation tracking model
 				//m_primarydiam of the new particle is the larger of the diameters of the merging particles
 				//if the centre to centre separation isn't tracked this will be changed to the spherical equivalent in the call to UpdatePrimary
-				new_prim->m_primarydiam = big_prim->m_primarydiam;
+//				new_prim->m_primarydiam = big_prim->m_primarydiam;	//csl37-unnecessary
 				//new particle volume is the sum of the two volumes
 				new_prim->m_primaryvol = big_prim->m_primaryvol + V_prim;
-				new_prim->m_free_surf = big_prim->m_free_surf;
+//				new_prim->m_free_surf = big_prim->m_free_surf;		//csl37-unnecessary
 				
-                m_rightparticle->UpdatePrimary();
+				//csl37
+				//if priamry coordinates are tracked this new primary takes on the coordinates of the larger primary
+				//csl37: check if this methodology works because the chosen primary might not be the larger one so what about it's neighbours?
+//				if(m_pmodel->getTrackPrimaryCoordinates()){
+//					new_prim->m_cen_bsph = big_prim->m_cen_bsph;
+//					new_prim->m_cen_mass = big_prim->m_cen_mass;
+//				}
+				//csl37-unnecessary
 
-                // Set the pointers from the leftprimary to the rightprimary
-                // (this will be the new bigger primary)
-				if (!m_pmodel->getTrackPrimarySeparation()) {
-				    oldleftparticle->ChangePointer(oldleftparticle,m_rightparticle);
-					m_rightparticle->ChangePointer(m_rightparticle,m_rightparticle);
+				new_prim->UpdatePrimary();
+
+				// Set the pointers from the leftprimary to the rightprimary
+				// (this will be the new bigger primary)
+				// If the priamry separation is tracked then re-estimation of new sintering levels also
+				// requires the centre-centre separation and the smaller primary
+				oldparticle->ChangePointer(oldparticle,new_prim,small_prim,this);
+				new_prim->ChangePointer(new_prim,new_prim,small_prim,this);
+
+				// Set the pointer to the parent node
+				BinTreePrimary *oldchild = NULL;
+				if(newleft){
+					if (oldparticle->m_parent->m_leftchild==oldparticle) {
+						oldparticle->m_parent->m_leftchild=m_leftchild;
+					}
+					else {
+						oldparticle->m_parent->m_rightchild=m_leftchild;
+					}
+					m_leftchild->m_parent=oldparticle->m_parent;
+				
+					oldchild    = m_rightchild;
 				}else{
-					// If the priamry separation is tracked then re-estimation of new sintering levels also
-					// requires the centre-centre separation and the smaller primary
-					oldleftparticle->ChangePointer(oldleftparticle,m_rightparticle,small_prim,this);
-					m_rightparticle->ChangePointer(m_rightparticle,m_rightparticle,small_prim,this);
+					if (oldparticle->m_parent->m_leftchild==oldparticle) {
+						oldparticle->m_parent->m_leftchild=m_rightchild;
+					}
+					else {
+						oldparticle->m_parent->m_rightchild=m_rightchild;
+					}
+					m_rightchild->m_parent=oldparticle->m_parent;
+
+					oldchild    = m_leftchild;
+				}
+				BinTreePrimary *oldparent = m_parent;
+
+				// Copy the properties of the former leftchild to this node
+				// so that it can be removed from the aggregate tree structure
+				CopyParts(oldchild);
+
+				// Now break the links to the tree structure in oldleftchild
+				// in order to free it
+				oldchild->m_leftchild   = NULL;
+				oldchild->m_rightchild  = NULL;
+				delete oldchild;
+
+				m_parent = oldparent;
+
+				if (m_leftchild!=NULL) {
+					m_rightchild->m_parent=this;
+					m_leftchild->m_parent=this;
 				}
 
-                // Set the pointer to the parent node
-                if (oldleftparticle->m_parent->m_leftchild==oldleftparticle) {
-                    oldleftparticle->m_parent->m_leftchild=m_rightchild;
-                }
-                else {
-                    oldleftparticle->m_parent->m_rightchild=m_rightchild;
-                }
-                m_rightchild->m_parent=oldleftparticle->m_parent;
+				delete oldparticle;
 
-                BinTreePrimary *oldleftchild    = m_leftchild;
-                BinTreePrimary *oldparent       = m_parent;
-
-                // Copy the properties of the former leftchild to this node
-                // so that it can be removed from the aggregate tree structure
-                CopyParts(oldleftchild);
-
-                // Now break the links to the tree structure in oldleftchild
-                // in order to free it
-                oldleftchild->m_leftchild   = NULL;
-                oldleftchild->m_rightchild  = NULL;
-                delete oldleftchild;
-
-                m_parent = oldparent;
-
-                if (m_leftchild!=NULL) {
-                    m_rightchild->m_parent=this;
-                    m_leftchild->m_parent=this;
-                }
-
-                delete oldleftparticle;
-
-            }
-
-            else
-            {
-                // Append to right subtree
-                BinTreePrimary *oldrightparticle = m_rightparticle;
-                for (size_t i=0; i != m_comp.size(); i++) {
-                    m_leftparticle->m_comp[i] =
-                            m_leftparticle->Composition(i) +
-                            m_rightparticle->Composition(i);
-                }
-
-				//the new (merged) primary
-				new_prim = m_leftparticle;
-
-				//update quantities for separation tracking model
-				//m_primarydiam of the new particle is the larger of the diameters of the merging particles
-				//if the centre to centre separation isn't tracked this will be changed to the spherical equivalent in the call to UpdatePrimary
-				new_prim->m_primarydiam = big_prim->m_primarydiam;
-				//new particle volume is the sum of the two volumes
-				new_prim->m_primaryvol = big_prim->m_primaryvol + V_prim;
-				new_prim->m_free_surf = big_prim->m_free_surf;
-				
-                m_leftparticle->UpdatePrimary();
-
-                // All pointers to m_leftparticle now point to oldright particle
-				if (!m_pmodel->getTrackPrimarySeparation()) {
-				    oldrightparticle->ChangePointer(oldrightparticle,m_leftparticle);
-					m_leftparticle->ChangePointer(m_leftparticle,m_leftparticle);
-				}else{
-					// If the priamry separation is tracked then re-estimation of new sintering levels also
-					// requires the centre-centre separation and the smaller primary
-					oldrightparticle->ChangePointer(oldrightparticle,m_leftparticle,small_prim,this);
-					m_leftparticle->ChangePointer(m_leftparticle,m_leftparticle,small_prim,this);
-				}
-
-                // Set the pointer to the parent node
-                if (oldrightparticle->m_parent->m_leftchild==oldrightparticle) {
-                    oldrightparticle->m_parent->m_leftchild=m_leftchild;
-                }
-                else {
-                    oldrightparticle->m_parent->m_rightchild=m_leftchild;
-                }
-                m_leftchild->m_parent=oldrightparticle->m_parent;
-
-                BinTreePrimary *oldrightchild=m_rightchild;
-                BinTreePrimary *oldparent=m_parent;
-
-                // Copy the properties of the former leftchild to this node
-                // so that it can be removed from the aggregate tree structure
-                CopyParts(oldrightchild);
-
-                // Now break the links to the tree structure in oldrightchild
-                // in order to free it
-                oldrightchild->m_leftchild = NULL;
-                oldrightchild->m_rightchild = NULL;
-                delete oldrightchild;
-
-                m_parent=oldparent;
-
-                if (m_leftchild!=NULL) {
-                    m_rightchild->m_parent=this;
-                    m_leftchild->m_parent=this;
-                }
-
-                delete oldrightparticle;
-
-            }
+			//**************************************************************************************
+			}
 
         }
+
+		//if coordinates are tracked then update the update the tracked radii
+		if(m_pmodel->getTrackPrimaryCoordinates()){
+			new_prim->setRadius(new_prim->m_primarydiam / 2.0);
+		}
 
 		UpdateCache();
 
     }
+
     return *this;
 }
 
@@ -1510,40 +1701,82 @@ void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *targe
 */
 void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *small_prim, BinTreePrimary *node)
 {
+
 	if(m_rightparticle == source) {
         //if the neighbour is the smaller of the merging primaries then update the centre to centre distance
-		if(source == small_prim && this != node){
-			double r_j = m_rightparticle->m_primarydiam;
-			double r_k = m_leftparticle->m_primarydiam;
-			double d_kj = m_distance_centreToCentre;
-			double x_kj = (d_kj*d_kj - r_j*r_j +r_k*r_k)/2.0/d_kj;
-			double A_n_k = M_PI*(r_k*r_k - x_kj*x_kj);
-			if (A_n_k > 0.0 ){
-				double x_ik = target->AddNeighbour(A_n_k, small_prim);
-				m_distance_centreToCentre = min(x_ik + x_kj, m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0); 
-			}else{
-				m_distance_centreToCentre = m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0;
+		if (this != node){
+			if(source == small_prim){
+				double r_j = m_rightparticle->m_primarydiam;
+				double r_k = m_leftparticle->m_primarydiam;
+				double d_kj = m_distance_centreToCentre;
+				double x_kj = (d_kj*d_kj - r_j*r_j +r_k*r_k)/2.0/d_kj;
+				double A_n_k = M_PI*(r_k*r_k - x_kj*x_kj);
+				if (A_n_k > 0.0 ){
+					//this adjusts the new merged primary adn all its neighbours
+					double x_ik = target->AddNeighbour(A_n_k, small_prim);
+					m_distance_centreToCentre = min(x_ik + x_kj, m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0); 
+				}else{
+					m_distance_centreToCentre = m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0;
+				}
+				//adjust coordinates of new neighbour and all its neighbour
+				//translate branch along old separation vector d_ik
+				if(m_pmodel->getTrackPrimaryCoordinates()){
+					//old separation unit vector
+					Coords::Vector vector_d_ik = UnitVector(m_leftparticle->boundSphCentre(), target->boundSphCentre());
+					//old separation distance 
+					double d_ik = Separation(m_leftparticle->boundSphCentre(), target->boundSphCentre());
+					//translate 
+					//Translate the neighbour 
+					m_leftparticle->TranslatePrimary(vector_d_ik, d_ik - m_distance_centreToCentre);
+					//Translate all neighbours of the neighbour except the old small_prim
+					m_leftparticle->TranslateNeighbours(m_leftparticle, vector_d_ik, d_ik - m_distance_centreToCentre, small_prim);
+				}
 			}
+
+			m_rightparticle = target;
+			
+			if(m_distance_centreToCentre < 0.0) m_distance_centreToCentre = -m_distance_centreToCentre; //this is a length 
+
 		}
-		m_rightparticle = target;
     }
     if(m_leftparticle == source){
 		//if the neighbour is the smaller of the merging primaries then update the centre to centre distance
-		if(source == small_prim && this != node){
-			double r_j = m_leftparticle->m_primarydiam;
-			double r_k = m_rightparticle->m_primarydiam;
-			double d_kj = m_distance_centreToCentre;
-			double x_kj = (d_kj*d_kj - r_j*r_j +r_k*r_k)/2.0/d_kj;
-			double A_n_k = M_PI*(r_k*r_k - x_kj*x_kj);
-			if (A_n_k > 0.0 ){
-				double x_ik = target->AddNeighbour(A_n_k, small_prim);
-				m_distance_centreToCentre = min(x_ik + x_kj, m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0); 
-			}else{
-				m_distance_centreToCentre = m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0;
+		if (this != node){
+			if(source == small_prim ){
+				double r_j = m_leftparticle->m_primarydiam;
+				double r_k = m_rightparticle->m_primarydiam;
+				double d_kj = m_distance_centreToCentre;
+				double x_kj = (d_kj*d_kj - r_j*r_j +r_k*r_k)/2.0/d_kj;
+				double A_n_k = M_PI*(r_k*r_k - x_kj*x_kj);
+				if (A_n_k > 0.0 ){
+					double x_ik = target->AddNeighbour(A_n_k, small_prim);
+					m_distance_centreToCentre = min(x_ik + x_kj, m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0); 
+				}else{
+					m_distance_centreToCentre = m_rightparticle->m_primarydiam/2.0 + m_leftparticle->m_primarydiam/2.0;
+				}
+				//adjust coordinates of new neighbour and all its neighbour
+				//translate branch along old separation vector d_ik
+				if(m_pmodel->getTrackPrimaryCoordinates()){
+					//old separation unit vector
+					Coords::Vector vector_d_ik = UnitVector(m_rightparticle->boundSphCentre(), target->boundSphCentre());
+					//old separation distance 
+					double d_ik = Separation(m_rightparticle->boundSphCentre(), target->boundSphCentre());
+					//translate 
+					//Translate the neighbour 
+					m_rightparticle->TranslatePrimary(vector_d_ik, d_ik - m_distance_centreToCentre);
+					//Translate all neighbours of the neighbour except the old small_prim
+					m_rightparticle->TranslateNeighbours(m_rightparticle, vector_d_ik, d_ik - m_distance_centreToCentre, small_prim);
+				}
 			}
+
+			m_leftparticle = target;
+
+			if(m_distance_centreToCentre < 0.0) m_distance_centreToCentre = -m_distance_centreToCentre; //this is a length 
+
 		}
-        m_leftparticle = target;
     }
+
+
 
     // Update the tree above this sub-particle.
     if (m_parent != NULL) {
@@ -1575,7 +1808,7 @@ double BinTreePrimary::AddNeighbour(double A_n_k, BinTreePrimary *small_prim)
 	while (A_n_i < A_n_k){
 		r_i = m_primarydiam/2.0;		//radius of new (merged) primary
 				
-		//get contribution from neighbours, ignoring the old merged primary
+		//get contribution from neighbours, ignoring the old smaller merging primary
 		double sumterm = 0.0;
 		if(m_parent != NULL) SumNeighbours(this, sumterm, small_prim);		
 
@@ -1618,7 +1851,7 @@ double BinTreePrimary::AddNeighbour(double A_n_k, BinTreePrimary *small_prim)
 		}
 		
 		double free_surf = 0.0;
-		//update connectivity ignoring small (mergerd) primary
+		//update connectivity ignoring small (merged) primary
 		if(m_parent != NULL) UpdateConnectivity(this, dr_i, free_surf, small_prim);
 		//include new i,k term
 		free_surf += (r_i+dr_i)*(r_i+dr_i) - (r_i+dr_i)*(x_ik+dx_i);
@@ -1672,6 +1905,10 @@ void BinTreePrimary::AdjustPrimary(double V1, BinTreePrimary *prim_ignore)
 					
 		//Update the particle separations and calculate the new free surface of the particle ignoring the smaller primary
 		if (m_parent != NULL) UpdateConnectivity(this, delta_r_i, free_surface_term, prim_ignore);
+
+		//csl37-debug
+		assert(delta_r_i > 0.0);
+		//csl37-debug
 
 		//Update primary diameter
 		m_primarydiam = 2.0* (r_i + delta_r_i);
@@ -1794,6 +2031,10 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 		m_free_surf		= m_leftchild->m_free_surf + m_rightchild->m_free_surf;
 		m_primaryvol	= m_leftchild->m_primaryvol + m_rightchild->m_primaryvol;
 
+		//csl37
+		//calculate bounding sphere
+		calcBoundSph();
+
         // Calculate the sintering level of the two primaries connected by this node
         m_children_sintering = SinteringLevel();
         if (MergeCondition()) CheckSintering();
@@ -1821,7 +2062,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
             if (m_numprimary > 1)
                 m_avg_sinter = m_avg_sinter / (m_numprimary - 1);
 
-			if (!m_pmodel->getTrackPrimarySeparation()) {
+			if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 				// Approxmiate the surface of the particle
 				// (same as in ChangePointer)
 				const double numprim_1_3 = pow(m_numprimary,-1.0 * ONE_THIRD);
@@ -1843,7 +2084,8 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         else {
             m_diam=0;
             m_dmob=0;
-        }
+        }	
+
     }
 }
 
@@ -2029,6 +2271,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 					
 					//**************************************************************************************surface growth model 1
 					// csl37 - NOTE: we want to use model 2 below but this contains coordiante tracking changes
+					/*
 					while (volOld <= m_vol){
 
 						//! Initialisation of variables to adjust the primary diameter if the
@@ -2077,9 +2320,9 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 
 						volOld += dV;
 					}
+					*/
 					//**************************************************************************************
 					//**************************************************************************************surface growth model 2 - rigid structure
-					/*
 					//add volume
 					m_primaryvol += m_vol - volOld;
 					
@@ -2124,7 +2367,13 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 					//if the calculated area is negative (too many overlaps) then set m_free_surf = 0.0
 					m_free_surf = max(M_PI*m_primarydiam*m_primarydiam - 2*M_PI*free_surface_term, 0.0);
 
-					*/
+					//if coordinates are tracked then update coordinate tracking properties
+					if(m_pmodel->getTrackPrimaryCoordinates()){
+						setRadius(m_primarydiam / 2.0);
+						this->calcBoundSph();
+						this->calcCOM();
+					}
+
 					//**************************************************************************************
 				} 
 
@@ -2158,29 +2407,12 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 			}
         }
     }
-
     // Else this a non-leaf node (not a primary)
     else
     {
 		
-		if (!m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) {
+		if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) {
 			
-			return SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
-		
-		//Note (csl37): this only picks the left or right particle of the root node 
-		//and ignores the rest of the tree
-		/*
-        // Generate random numbers
-        boost::bernoulli_distribution<> leftRightChooser;
-        // Select particle
-        if(leftRightChooser(rng))
-			return m_leftparticle->Adjust(dcomp, dvalues, rng, n);
-        else
-			return m_rightparticle->Adjust(dcomp, dvalues, rng, n);
-		*/
-
-		///////////////////////////////////////////////////////////
-		}else{
 			// csl37: new primary selection based on free surface area
 			// work down tree selecting left/right child based on sum of primary free surface areas under node
 			// generate random number, use bernoulli with p=free_surf(leftchild)/free_surf(this)
@@ -2190,8 +2422,24 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 			}else{
 				return m_rightchild->Adjust(dcomp, dvalues, rng, n);
 			}
+			
+		}else{
+
+			return SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
+		
+			//Note (csl37): this only picks the left or right particle of the root node 
+			//and ignores the rest of the tree
+			/*
+			// Generate random numbers
+			boost::bernoulli_distribution<> leftRightChooser;
+			// Select particle
+			if(leftRightChooser(rng))
+				return m_leftparticle->Adjust(dcomp, dvalues, rng, n);
+			else
+				return m_rightparticle->Adjust(dcomp, dvalues, rng, n);
+			*/
+
 		}
-		///////////////////////////////////////////////////////////
     }
 
 	//csl37:
@@ -2412,10 +2660,6 @@ void BinTreePrimary::UpdateNeighbourVolume(BinTreePrimary *prim,double dr_i,doub
 		//csl37--debug
 	}
 
-	//csl37--debug
-	assert(!MergeCondition());
-	//csl37--debug
-
 	//continue working up the binary tree
 	if(m_parent->m_parent != NULL){
 		m_parent->UpdateNeighbourVolume(prim, dr_i, volumeterm);
@@ -2576,14 +2820,17 @@ void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, do
 	double r_i = prim->m_primarydiam / 2.0;
 	double r_j = 0.0;
 	double x_ij = 0.0;
+	BinTreePrimary *neighbour = NULL;
 
 	//check if a neighbour of prim
 	if (m_parent->m_leftparticle == prim && m_parent->m_rightparticle != prim_ignore ) {
 		//right particle is a neighbour
-		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
+		neighbour = m_parent->m_rightparticle;
+		r_j = neighbour->m_primarydiam / 2.0;
 	} else if(m_parent->m_rightparticle == prim &&  m_parent->m_leftparticle != prim_ignore ) {
 		//left particle is a neighbour
-		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
+		neighbour = m_parent->m_leftparticle;
+		r_j = neighbour->m_primarydiam / 2.0;
 	} else {
 		//not a neighbour
 		r_j = 0.0;
@@ -2591,6 +2838,7 @@ void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, do
 
 	if(r_j > 0.0){
 
+		double d_ij_old = d_ij;
 		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
 		//update centre to centre separation
 		//making sure centre to centre separation remains smaller than some of radii
@@ -2600,6 +2848,21 @@ void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, do
 		d_ij = m_parent->m_distance_centreToCentre;
 		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i+delta_r,2.0) ) / ( 2.0*d_ij );
 		sumterm += (r_i+delta_r)*(r_i+delta_r) - (r_i+delta_r)*x_ij; //csl37-TODO -- should x_ij use r_i + dr_i???
+
+		//csl37
+		//for merge: addprimary and adjustprimary, and sintering
+		//check that this also applies to other processes that use this function
+		//if primary coordinates are tracked then we need to update the coordinates of the neighbour 
+		if (m_pmodel->getTrackPrimaryCoordinates()) {
+			//get unit vector change in separation
+			Coords::Vector delta_dij = UnitVector(prim->boundSphCentre(), neighbour->boundSphCentre()); 
+			double delta_d = d_ij-d_ij_old;
+			//Translate the neighbour 
+			neighbour->TranslatePrimary(delta_dij, delta_d);
+			//Translate all neighbours of the neighbour except prim
+			neighbour->TranslateNeighbours(neighbour,delta_dij, delta_d, prim);
+		}
+
 	}
 
 	//continue working up the binary tree
@@ -2638,7 +2901,7 @@ unsigned int BinTreePrimary::AdjustIntPar(const fvector &dcomp,
         // Call to Primary to adjust the state space
         n = Primary::AdjustIntPar(dcomp, dvalues, rng, n);
     } else {
-        SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
+        return SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
         // Generate random numbers
         //boost::bernoulli_distribution<> leftRightChooser;
 
@@ -2682,8 +2945,8 @@ void BinTreePrimary::Sinter(double dt, Cell &sys,
     // Do only if there is a particle to sinter
     if (m_leftparticle!=NULL && m_rightparticle!=NULL) {
 
-        SinterNode(dt, sys, model, rng, wt);
-		
+		SinterNode(dt, sys, model, rng, wt);
+
 		// Check if the sintering level is above the threshold, and merge
 		if (MergeCondition()) {
             CheckSintering();
@@ -2812,8 +3075,6 @@ void BinTreePrimary::SinterNode(
             double r_j = this->m_rightparticle->m_primarydiam / 2.0;
 			double d_ij = m_distance_centreToCentre;
 		
-			//assert(d_ij<= r_i+r_j);	//debug
-
 			//! Definition of variables for conciseness.
             double d_ij2 = pow(d_ij, 2.0); 
             double r_i2 = pow(r_i, 2.0);
@@ -2870,7 +3131,9 @@ void BinTreePrimary::SinterNode(
 
 						//! If the particles are in point contact set an initial neck radius of 1% 
 						//! of the smaller primary radius, otherwise dd_ij_dt is undefined
-						if(A_n == 0.0){
+						//csl37: this should be A_n == 0.0 but for some reason we see a negative radius
+						//if(A_n == 0.0){
+						if(A_n <= 0.0){
 							R_n = 0.01*min(r_i,r_j);
 							A_n = M_PI * R_n * R_n;
 							x_i = sqrt(r_i2 - R_n * R_n);
@@ -2938,11 +3201,25 @@ void BinTreePrimary::SinterNode(
                 boost::random::poisson_distribution<unsigned, double> repeatDistribution(mean);
                 const unsigned n = repeatDistribution(rng);
 
-                if (m_pmodel->getTrackPrimarySeparation()) {
-                    m_distance_centreToCentre -= (double)n * scale * dd_ij_Max; //!< Sintering decreases d_ij hence the negative sign.
-                }
+                //if (m_pmodel->getTrackPrimarySeparation()) {
+                double delta_dij = -(double)n * scale * dd_ij_Max; //!< Sintering decreases d_ij hence the negative sign.
+				m_distance_centreToCentre += delta_dij; 
+                //}
                 
+				//csl37
+				//if coordinates are tracked then we will shift one half of the primary by the change in separation
+				//csl37: could speed this up by doing after the sintering
+				if (m_pmodel->getTrackPrimaryCoordinates()) {
+					//get direction of translation (left particle to right particle)
+					Coords::Vector vector_change = UnitVector(m_leftparticle->boundSphCentre(), m_rightparticle->boundSphCentre());
+					//translate the leftparticle
+					m_leftparticle->TranslatePrimary(vector_change, -delta_dij);		
+					//translate all neighbours of the left particle except the right particle
+					m_leftparticle->TranslateNeighbours(m_leftparticle,vector_change,-delta_dij,m_rightparticle);
+				}
+
                 //! Needs to be tested.
+				/*
                 else if (m_pmodel->getTrackPrimaryCoordinates()) {
                     double dx = this->m_leftparticle->m_cen_bsph[0] - this->m_rightparticle->m_cen_bsph[0];
                     double dy = this->m_leftparticle->m_cen_bsph[1] - this->m_rightparticle->m_cen_bsph[1];
@@ -2954,6 +3231,7 @@ void BinTreePrimary::SinterNode(
 
                     m_distance_centreToCentre = sqrt(dx * dx + dy * dy + dz * dz);
                 }
+				*/
 
 				//! Change in primary radii
 				double delta_r_i = - (double)n * scale * B_i * dd_ij_Max;  //!< Eq. (8).
@@ -2997,6 +3275,11 @@ void BinTreePrimary::SinterNode(
             }
         }
 
+		//csl37 update tracking radius if coordinates are tracked
+		if (m_pmodel->getTrackPrimaryCoordinates()) {
+			m_leftparticle->setRadius(m_leftparticle->m_primarydiam / 2.0);
+			m_rightparticle->setRadius(m_rightparticle->m_primarydiam / 2.0);
+        }
 	}
 
     m_children_sintering = SinteringLevel();
@@ -3169,6 +3452,9 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
 {
     if (out.good()) {
 
+		const unsigned int trueval  = 1;
+		const unsigned int falseval = 0;
+
         int  val_int(0);
         double val(0.0);
 
@@ -3233,6 +3519,24 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
         out.write((char*)&val, sizeof(val));
 
         val = m_sint_time;
+        out.write((char*)&val, sizeof(val));
+
+		val = m_frame_orient[0];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_frame_orient[1];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_frame_orient[2];
+        out.write((char*)&val, sizeof(val));
+
+		val = m_frame_x[0];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_frame_x[1];
+        out.write((char*)&val, sizeof(val));
+
+        val = m_frame_x[2];
         out.write((char*)&val, sizeof(val));
 
         // Output base class.
@@ -3301,6 +3605,7 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
 
         int  val_int(0);
         double val(0.0);
+		unsigned int val_unsigned(0);
 
         in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
         m_numprimary = val_int;
@@ -3364,6 +3669,24 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_sint_time = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_orient[0] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_orient[1] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_orient[2] = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_x[0] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_x[1] = val;
+
+        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_frame_x[2] = val;
 
         // Input base class.
         Primary::Deserialize(in, model);
@@ -3565,3 +3888,156 @@ void BinTreePrimary::writePrimaryCoordinatesRadius(void)
 		outfile.close();
 	}
 }
+
+//csl37
+//function to return the separation unit vector between two coordinates x_j and x_i
+Coords::Vector BinTreePrimary::UnitVector(Coords::Vector x_i, Coords::Vector x_j)
+{
+	Coords::Vector delta_x;
+	double len_delta_x;
+
+	//calculate difference x_j - x_i
+	delta_x[0] = x_j[0] - x_i[0];
+	delta_x[1] = x_j[1] - x_i[1];
+	delta_x[2] = x_j[2] - x_i[2];
+
+	//calculate the length of the vector
+	len_delta_x = sqrt(delta_x[0]*delta_x[0]+delta_x[1]*delta_x[1]+delta_x[2]*delta_x[2]);
+
+	//create unit vector
+	delta_x[0] /=  len_delta_x;
+	delta_x[1] /=  len_delta_x;
+	delta_x[2] /=  len_delta_x;
+
+	return delta_x;
+}
+
+//csl37
+//calculates distance between two points
+double BinTreePrimary::Separation(Coords::Vector x_i, Coords::Vector x_j)
+{
+	Coords::Vector delta_x;
+	double len_delta_x;
+
+	//calculate difference x_j - x_i
+	delta_x[0] = x_j[0] - x_i[0];
+	delta_x[1] = x_j[1] - x_i[1];
+	delta_x[2] = x_j[2] - x_i[2];
+
+	//calculate the length of the vector
+	len_delta_x = sqrt(delta_x[0]*delta_x[0]+delta_x[1]*delta_x[1]+delta_x[2]*delta_x[2]);
+
+	return len_delta_x;
+}
+
+
+//csl37
+//translates a primary particle by delta_d along a unit vector u
+void BinTreePrimary::TranslatePrimary(Coords::Vector u, double delta_d)
+{
+	//bounding sphere coordinates
+	m_cen_bsph[0] += delta_d * u[0];
+	m_cen_bsph[1] += delta_d * u[1];
+	m_cen_bsph[2] += delta_d * u[2];
+	//centre of mass coordinates
+	m_cen_mass[0] += delta_d * u[0];
+	m_cen_mass[1] += delta_d * u[1];
+	m_cen_mass[2] += delta_d * u[2];
+}
+
+//csl37
+//function to translate neighbours by delta_d along a unit vector u
+//but ignoring prim_ignore
+void BinTreePrimary::TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u, double delta_d, BinTreePrimary *prim_ignore)
+{
+	BinTreePrimary *neighbour = NULL;
+	//check if a neighbour of prim but not prim_ignore
+	if (m_parent->m_leftparticle == prim && m_parent->m_rightparticle != prim_ignore ) {
+		//right particle is a neighbour
+		neighbour = m_parent->m_rightparticle;
+		//adjust its coordinates
+		neighbour->TranslatePrimary(u,delta_d);
+		//adjust its neighbours except for prim
+		neighbour->TranslateNeighbours(neighbour, u, delta_d, prim);
+	} else if(m_parent->m_rightparticle == prim &&  m_parent->m_leftparticle != prim_ignore ) {
+		//left particle is a neighbour
+		neighbour = m_parent->m_leftparticle;
+		//adjust its coordinates
+		neighbour->TranslatePrimary(u,delta_d);
+		//adjust its neighbours except for prim
+		neighbour->TranslateNeighbours(neighbour, u, delta_d, prim);
+	}
+
+	//continue working up the binary tree
+	if(m_parent->m_parent != NULL){
+		m_parent->TranslateNeighbours(prim, u, delta_d, prim_ignore);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////// csl37-pp
+/*!
+ * Works down the binary tree and outputs surface area
+ * common to both children unless it is a leaf node (a primary).
+ */
+void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &primary_diameter, int k) const
+{
+	fvector node(10);	
+	fvector primary(10);
+
+	if ((m_leftchild==NULL) && (m_rightchild==NULL)){
+		//if leaf then print diameter
+		primary[0] = k+1;
+		primary[1] = m_primarydiam;
+		primary[2] = m_diam;
+		primary[3] = m_primaryvol;
+		primary[4] = m_vol;
+		primary[5] = m_free_surf;
+		vector<fvector> coords;
+		this->GetPriCoords(coords);
+		primary[6] = coords[0][0];
+		primary[7] = coords[0][1];
+		primary[8] = coords[0][2];
+		primary[9] = coords[0][3];
+
+		primary_diameter.push_back(primary);
+		
+		if (m_parent == NULL){	//single particle case
+			node[0] = k+1;
+			node[1] = m_numprimary;
+			node[2] = 0.0;
+			node[3] = 1.0;
+			node[4] = m_primarydiam;
+			node[5] = 0.0;	
+			node[6] = reinterpret_cast<uintptr_t>(this);
+			node[7] = 0.0;
+
+			surface.push_back(node);
+		}
+	} else {
+		
+		double r_i = m_leftparticle->m_primarydiam/2.0;
+		double r_j = m_rightparticle->m_primarydiam/2.0;	
+		double d_ij = m_distance_centreToCentre;
+
+		double x_ij = (d_ij*d_ij - r_j*r_j + r_i*r_i)/(2.0*d_ij);
+		double R_ij = sqrt(r_i*r_i - x_ij*x_ij);	//!neck radius
+
+		//if non-leaf node then print node and continue down the tree
+		node[0] = k+1;
+		node[1] = m_numprimary;
+		node[2] = m_children_surf;
+		node[3] = m_children_sintering;
+		node[4] = d_ij;
+		node[5] = R_ij;
+		node[6] = r_i;
+		node[7] = r_j;
+		node[8] = reinterpret_cast<uintptr_t>(m_leftparticle);
+		node[9] = reinterpret_cast<uintptr_t>(m_rightparticle);
+		
+		surface.push_back(node);
+		
+		m_leftchild->PrintPrimary(surface, primary_diameter, k);
+		m_rightchild->PrintPrimary(surface, primary_diameter, k);
+	}
+}
+////////////////////////////////////////////////////////////////////////

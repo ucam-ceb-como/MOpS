@@ -733,3 +733,9 @@ void Particle::Serialize(std::ostream &out, void *duplicates) const
                                     (Sweep, Particle::Serialize).");
     }
 }
+
+//csl37: get primary particle coords
+void Particle::getParticleCoords(std::vector<fvector> &coords) const
+{
+	m_primary->GetPrimaryCoords(coords);
+}

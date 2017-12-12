@@ -170,6 +170,10 @@ public:
     //! Returns a vector of primary coordinates and radius (4D).
     void GetPriCoords(std::vector<fvector> &coords) const;
 
+	//csl37
+	//return primary coords and frame orientation
+    void GetPrimaryCoords(std::vector<fvector> &coords) const;
+
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
     friend class BinTreeSerializer<class BinTreePrimary>;
@@ -182,7 +186,7 @@ public:
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
 
     template <class ParticleClass>
-    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimarySeparation);
+    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimaryCoordinates);
 
     template <class ParticleClass>
     friend void Sweep::Imaging::ParticleImage::CopyTree(ImgNode &node, const ParticleClass *source);
@@ -204,6 +208,10 @@ public:
 
     //! Deserialise a BinTreePrimary particle
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
+
+	/////////////////////////////////////////////////////////// csl37-pp
+	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
+	///////////////////////////////////////////////////////////
 
 protected:
     //! Empty primary not meaningful
@@ -279,6 +287,12 @@ protected:
     //! For tracking the coordinates of primary particles.
     Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
     Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
+
+	//csl37
+	//! For tracking the particle frame orientation
+	Coords::Vector m_frame_orient;
+	//! For tracking the particle frame position
+	Coords::Vector m_frame_x;
 
     //! Sintering level of children connected by this node
     double m_children_sintering;
@@ -382,6 +396,23 @@ protected:
 
     //! Transforms the node coordinates using the given transformation matrix.
     void transform(const Coords::Matrix &mat);
+
+	//csl37
+	//function to return the separation unit vector between two coordinates
+	Coords::Vector UnitVector(Coords::Vector x_i, Coords::Vector x_j);
+	
+	//csl37
+	//calculates distance between two points
+	double Separation(Coords::Vector x_i, Coords::Vector x_j);
+	
+	//csl37
+	//translates a primary particle by delta_x along a unit vector
+	void TranslatePrimary(Coords::Vector u, double delta_d);
+	
+	//csl37
+	//function to translate neighbours by delta_d along a unit vector u
+	//but ignoring prim_ignore
+	void TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u, double delta_d, BinTreePrimary *prim_ignore);
 
 private:
     // GENERAL PARTICLE MODEL PROPERTIES
