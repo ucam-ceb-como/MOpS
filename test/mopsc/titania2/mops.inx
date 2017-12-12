@@ -2,7 +2,7 @@
 <mops version="2">
   
   <!-- Default parameters (can be overidden). --> 
-  <runs>2</runs>
+  <runs>1</runs>
   <iter>20</iter>
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
@@ -48,7 +48,7 @@
         <!--column fmt="sci">ct</column-->
       </tabular>
     </console>
-    <ptrack enable="false" ptcount="50"/>
+    <ptrack enable="true" ptcount="1"/>
     
     <!-- File name for output (excluding extensions). -->
   </output>
