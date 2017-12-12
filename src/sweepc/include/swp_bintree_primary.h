@@ -58,6 +58,7 @@
 #include "swp_bintree_serializer.h"
 #include "swp_particle_image.h"
 #include "swp_coords.h"
+#include <set>
 
 namespace Sweep {
 
