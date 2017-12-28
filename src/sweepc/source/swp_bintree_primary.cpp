@@ -4006,10 +4006,12 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 			node[1] = m_numprimary;
 			node[2] = 0.0;
 			node[3] = 1.0;
-			node[4] = m_primarydiam;
-			node[5] = 0.0;	
-			node[6] = reinterpret_cast<uintptr_t>(this);
+			node[4] = 0.0;
+			node[5] = 0.0;
+			node[6] = m_primarydiam/2.0;
 			node[7] = 0.0;
+			node[8] = reinterpret_cast<uintptr_t>(this);
+			node[9] = 0.0;
 
 			surface.push_back(node);
 		}
