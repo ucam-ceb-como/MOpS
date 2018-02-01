@@ -969,7 +969,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 		// Now remove any invalid particles and update the ensemble.
 		sys.Particles().RemoveInvalids();
 
-		if (sys.ParticleModel()->Components(0)->WeightedPAHs()){
+		if (sys.ParticleModel()->Components(0)->WeightedPAHs() && AggModel() == AggModels::PAH_KMC_ID){
 			//Check for duplicates
 			ind = 0;
 			int count = 0;

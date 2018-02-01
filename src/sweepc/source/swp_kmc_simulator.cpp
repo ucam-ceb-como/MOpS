@@ -222,10 +222,10 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
 			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
 			//Set t_next to t_max so the updatePAH routine will be exited
-			if (pah->numofRings() < 4){
-				proceed = false;
-				//t_next = t_max;
-			}
+			//if (pah->numofRings() < 4){
+			//	proceed = false;
+			//	//t_next = t_max;
+			//}
 
 			//if (PAH_ID == 677){
 			//	std::list<Site> tester = pah->GetSiteList();
@@ -251,7 +251,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             }*/
         }else {
             //oldtnext = t_next;
-            t_next = t_max;
+            t_next = m_t+t_step_max;
         }
 		if (loopcount == maxloops) proceed = false; //If maxloops is set to 0, this condition will never be true
         m_t = t_next;

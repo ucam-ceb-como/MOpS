@@ -541,7 +541,16 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
 
     // Particle removal might reduce the particle count
     // sufficiently to require particle doubling.
-    //dble();
+	// But only do so if not using IWDSA as otherwise ensemble is likely to overflow during next LPDA
+	if (m_particles[i]->Primary()->AggID() == AggModels::PAH_KMC_ID){
+		if (!m_particles[i]->Primary()->ParticleModel()->Components(0)->WeightedPAHs()){
+			dble();
+		}
+	}
+	else{
+		dble();
+	}
+
     assert(m_tree.size() == m_count);
 }
 
@@ -578,12 +587,12 @@ void Sweep::Ensemble::RemoveInvalids(void)
     // Stop doubling because the number of particles has dropped from above
     // m_dblelimit during this function, which means a rapid loss of particles
     // so doubling will make the sample volume needlessly large.
-    //if(m_count < m_capacity - m_dblecutoff) {
-    //    m_dbleactive = false;
-    //}
+    if(m_count < m_capacity - m_dblecutoff) {
+        m_dbleactive = false;
+    }
 
     // If we removed too many invalid particles then we'll have to double.
-    //dble();
+    dble();
     assert(m_tree.size() == m_count);
 }
 
@@ -848,10 +857,10 @@ void Sweep::Ensemble::dble()
     // Check that doubling is on and the activation condition has been met.
     if (m_dbleon && m_dbleactive && m_count > 0) {
         const unsigned originalCount = m_count;
+		bool proceed = true;
 
         // Continue while there are too few particles in the ensemble.
-        //while (m_count < m_dblelimit) {
-		if (m_count < m_dblelimit) {
+        while (m_count < m_dblelimit && proceed) {
             if(m_count == 0) {
                 throw std::runtime_error("Attempt to double particle ensemble with 0 particles");
             }
@@ -861,6 +870,13 @@ void Sweep::Ensemble::dble()
             // Copy particles.
             const size_t prevCount = m_count;
 			int ii = 0;
+			bool IWDSA;
+			if (m_particles[0]->Primary()->AggID() == AggModels::PAH_KMC_ID){
+				IWDSA = m_particles[0]->Primary()->ParticleModel()->Components(0)->WeightedPAHs();
+			}
+			else{
+				IWDSA = false;
+			}
             for (size_t i = 0; i != prevCount; ++i) {
 
             //if (m_particles[i]->Primary()->AggID() ==AggModels::PAH_KMC_ID)
@@ -871,11 +887,16 @@ void Sweep::Ensemble::dble()
             //    if (rhsparticle->Pyrene()!=0)
             //        m_numofInceptedPAH++;
             //}
-				const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-				rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
-				if (rhsparticle->NumPAH() > 1 ||
-					!rhsparticle->ParticleModel()->Components(0)->WeightedPAHs()){ //If this particle is not just a single PAH
-				//if (rhsparticle->NumPAH() > 0){ //If this particle is not just a single PAH
+				int numberPAH = 0;
+				if (IWDSA){
+					const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+					if (m_particles[i]->Primary()->AggID() == AggModels::PAH_KMC_ID){
+
+						rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+						numberPAH = rhsparticle->NumPAH();
+					}
+				}
+				if (numberPAH > 1 || !IWDSA){ //If this particle is not just a single PAH
 					
 					size_t iCopy = prevCount + ii;
 					// Create a copy of a particle and add it to the ensemble.
@@ -898,6 +919,7 @@ void Sweep::Ensemble::dble()
 
 			std::cout << "Doubling done" << std::endl;
 			std::cout << m_count << std::endl;
+			if (IWDSA) proceed = false;
         }
 
         m_maxcount = std::max(m_maxcount, m_count);

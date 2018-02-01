@@ -164,6 +164,7 @@ int PAHInception::Perform(const double t, Cell &sys,
 		else
 		{
 			std::cout << "No room in ensemble after PAH inception" << std::endl;
+			sys.Particles().Add(*sp, rng);
 		}
 
 		// Update gas-phase chemistry of system.

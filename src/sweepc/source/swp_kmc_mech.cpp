@@ -554,7 +554,7 @@ void O6R_FE3_O2::initialise() {
     addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
     addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
-	addReaction(rxnV2, Reaction(2.10e12, 0, 7.470, sp::O2));   //5 - r4f
+	addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r5f(1)
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f(2)
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
@@ -695,7 +695,7 @@ void O6R_FE_HACA_O2::initialise() {
     addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
     addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
-	addReaction(rxnV2, Reaction(2.10e12, 0, 7.470, sp::O2));   //5 - r4f
+	addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r5f(1)
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
@@ -1611,7 +1611,7 @@ void O6R_FE2_O2::initialise() {
     addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
     addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
-	addReaction(rxnV2, Reaction(2.10e12, 0, 7.470, sp::O2));   //5 - r4f
+	addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r5f(1)
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;

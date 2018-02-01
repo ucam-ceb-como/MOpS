@@ -106,11 +106,30 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
      * Effectively this code defines an interface that the Particle class must
      * provide.
      */
-	
-	int incepRing = part.Primary()->ParticleModel()->inceptionThreshold();
+	int incepRing;
+	bool cut;
+
+	// If the particle represents a single PAH that has fewer than the number of rings
+	// specified by the inceptionThreshold, do not include this particle's parameters
+	// in the binary tree summation. As the efficiency for the coagulation of this particle
+	// with any other particle is zero. This check increases the efficiency of the majorant kernel
+	if (part.Primary()->AggID() == AggModels::PAH_KMC_ID){
+		incepRing = part.Primary()->ParticleModel()->inceptionThreshold();
+		if (part.NumRings() < incepRing){
+			cut = true;
+		}
+		else{
+			cut = false;
+		}
+	}
+	else{
+		cut = false;
+	}
+
+	incepRing = part.Primary()->ParticleModel()->inceptionThreshold();
 
     m_sphdiam   = part.SphDiameter();
-	if (part.NumRings() < incepRing){
+	if (cut){
 		m_dcol = 0.0;
 	}
 	else{
@@ -140,7 +159,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
 	}
 
     // Quantities associated with statistical weighting
-	if (part.NumRings() <incepRing){
+	if (cut){
 		m_weight = 0.0;
 	}
 	else{
@@ -161,7 +180,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
     // Silicon parameters
     m_coverage = part.GetCoverageFraction();
 
-	if (part.NumRings() <incepRing){
+	if (cut){
 		m_select = 0;
 	}
 	else{
