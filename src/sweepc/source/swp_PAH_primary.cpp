@@ -314,7 +314,7 @@ PAHPrimary::~PAHPrimary()
 
 
 // Copy constructor.
-std::vector<boost::shared_ptr<PAH>> PAHPrimary::GetPAHVector() const
+std::vector<boost::shared_ptr<PAH> > PAHPrimary::GetPAHVector() const
 {
 	return m_PAH;
 }

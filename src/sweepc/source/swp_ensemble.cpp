@@ -44,7 +44,7 @@
 #include "swp_particle_model.h"
 #include "swp_kmc_simulator.h"
 #include "swp_PAH_primary.h"
-#include "swp_kmc_PAH_structure.h"
+#include "swp_kmc_pah_structure.h"
 #include "swp_kmc_structure_comp.h"
 #include "swp_kmc_typedef.h"
 #include "swp_kmc_pah_process.h"

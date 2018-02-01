@@ -66,7 +66,7 @@
 #include "swp_tree_transcoag_weighted_cache.h"
 #include "swp_property_indices.h"
 #include "swp_gas_profile.h"
-#include "swp_kmc_PAH_structure.h"
+#include "swp_kmc_pah_structure.h"
 
 #include "binary_tree.hpp"
 
