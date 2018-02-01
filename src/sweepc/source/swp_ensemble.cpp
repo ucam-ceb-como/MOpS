@@ -512,7 +512,16 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
     //        }
     //    }
     //SetNumOfInceptedPAH(-1,m_particles[i]->Primary());
-    // Check that particle index is valid.
+
+	// See if IWDSA is being used. If so, do not attempt doubling at the end of this routine.
+	bool doubling = true;
+	if (m_particles[i]->Primary()->AggID() == AggModels::PAH_KMC_ID){
+		if (!m_particles[i]->Primary()->ParticleModel()->Components(0)->WeightedPAHs()){
+			doubling = false;
+		}
+	}
+	
+	// Check that particle index is valid.
     if (i<m_count-1) {
         // First delete particle from memory, then
         // overwrite it with the last particle, which
@@ -542,14 +551,7 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
     // Particle removal might reduce the particle count
     // sufficiently to require particle doubling.
 	// But only do so if not using IWDSA as otherwise ensemble is likely to overflow during next LPDA
-	if (m_particles[i]->Primary()->AggID() == AggModels::PAH_KMC_ID){
-		if (!m_particles[i]->Primary()->ParticleModel()->Components(0)->WeightedPAHs()){
-			dble();
-		}
-	}
-	else{
-		dble();
-	}
+	if(doubling) dble();
 
     assert(m_tree.size() == m_count);
 }
@@ -905,7 +907,6 @@ void Sweep::Ensemble::dble()
 					// Keep count of the added particles
 					++m_count;
 					++ii;
-					Update(iCopy);
 				}
 				else{ //If this particle is a single PAH, double its statistical weight
 					double oldweight = m_particles[i]->getStatisticalWeight();
