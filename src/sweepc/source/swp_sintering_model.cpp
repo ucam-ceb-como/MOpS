@@ -231,7 +231,7 @@ double SinteringModel::Rate(double t, const Cell &sys, const Particle &p) const
 // Returns the rate of the process for the given primary.
 double SinteringModel::Rate(double t, const Cell &sys, const AggModels::Primary &p) const
 {
-    double tau = max(1.0e-75, SintTime(sys, p));
+    double tau = max(1.0e-30, SintTime(sys, p));
     return max((p.SurfaceArea() - p.SphSurfaceArea()) / tau, 0.0);
 }
 
