@@ -447,7 +447,8 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 			timeStep(t, tsplit, *r.Mixture(), Geometry::LocalGeometry1d(),mech, rates, jrate, rng);
 
 			if (r.Mixture()->ParticleCount() < r.Mixture()->Particles().DoubleLimit() && 
-				r.Mixture()->Particles().IsDoublingOn()){
+				r.Mixture()->Particles().IsDoublingOn() && 
+				r.Mixture()->ParticleModel()->Components(0)->WeightedPAHs()){
 				break;
 			}
 
