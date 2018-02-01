@@ -1260,9 +1260,10 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 			double updatetime;
 
-			if (m_PAH.size() == 1 && statweight > 1.0){ //if this is a particle with a single PAH, it may be weighted. 
-				                                        //If so, we do not want to update the PAH, but rather update a clone of 
-				                                        //that PAH and create a new particle
+			//if this is a particle with a single PAH, it may be weighted. 
+			//If it is weighted and IWDSA is being used, we do not want to update the PAH, but rather update a clone of 
+			//that PAH and create a new particle
+			if (m_PAH.size() == 1 && statweight > 1.0 && ParticleModel()->Components(0)->WeightedPAHs()){ 
 				PartPtrVector overflowtemp;
 
 				while (growtime > 0.0 && statweight > 1.0){
