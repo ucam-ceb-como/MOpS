@@ -121,18 +121,23 @@ int PAHInception::Perform(const double t, Cell &sys,
                           rng_type &rng) const {
 
 	Particle *sp = NULL;
+
+	//If using weighted PAHs...
+	if (sys.ParticleModel()->Components(0)->WeightedPAHs()){
 	//Check to see if a particle that matches that of the incepted PAHs already exists in the emsemble
-	int j = sys.Particles().NumOfInceptedPAH(m_mech->AggModel());
-	if (j > 0 && sys.ParticleModel()->Components(0)->WeightedPAHs()){  //There is already an inception PAH in the ensemble (should only be 1). Just update it's statistical weight
-	//if (1 > 2){
-		int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel());
-		sp = sys.Particles().At(Pindex);
-		int StatWeight = sp->getStatisticalWeight();
-		sp->setStatisticalWeight(StatWeight + 1.0);
-		sys.Particles().Update(Pindex);
+		int j = sys.Particles().NumOfInceptedPAH(m_mech->AggModel());
+		if (j > 0) {
+			//There is already an inception PAH in the ensemble (should only be 1). 
+			//Just update it's statistical weight
+			int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel());
+			sp = sys.Particles().At(Pindex);
+			int StatWeight = sp->getStatisticalWeight();
+			sp->setStatisticalWeight(StatWeight + 1.0);
+			sys.Particles().Update(Pindex);
+		}
+		cout << "No inception pah match" << endl;
 	}
 	else{
-		cout << "No inception pah match" << endl;
 
 		// Get the cell vertices
 		fvector vertices = local_geom.cellVertices();

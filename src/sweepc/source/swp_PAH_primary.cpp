@@ -460,7 +460,9 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
             }
         }
     }
-    else m_PAH.assign(source->m_PAH.begin(),source->m_PAH.end());
+	else {
+		m_PAH.assign(source->m_PAH.begin(), source->m_PAH.end());
+	}
 }
 	
 
