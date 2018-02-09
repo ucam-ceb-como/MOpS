@@ -70,7 +70,7 @@ while(<$momentFile>) {
 
   # Look for a line that begina with a number and has the first entry (the time)
   # equal (upto a small tolerance) to 0.030816
-  if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.030816) < 1e-6 )) {
+  if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.025317) < 1e-6 )) {
       # Third field should be the zeroth moment
       $m0 = $fields[4];
       #print "4: $fields[4], ";
@@ -91,7 +91,7 @@ while(<$momentFile>) {
 
 print "$m0, $m1\n";
 if(abs($m0 - 3.41e+20) > 3.33e+19) {
-  print "Simulated mean M0 was $m0, when  2.73e+20m^-3 expected\n";
+  print "Simulated mean M0 was $m0, when  3.41e+20m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
@@ -99,7 +99,7 @@ if(abs($m0 - 3.41e+20) > 3.33e+19) {
 }
 
 if(abs($m1 - 1.43e-7) > 8.26e-9) {
-  print "Simulated mean Fv was $m1, when 1.58e-7 expected\n";
+  print "Simulated mean Fv was $m1, when 1.43e-7 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
