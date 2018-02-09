@@ -1405,13 +1405,13 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				* want to remove single PAHs in the gas-phase which fall below the
 				* minimum number of rings for inception but are still growing.
 				*/
-				if ((*it)->m_pahstruct->numofRings() < thresholdOxidation && m_numPAH >= minPAH){
+				if ((*it)->m_pahstruct->numofRings() < thresholdOxidation && m_numPAH >= minPAH && ind != -1){
 					(*it)->m_pahstruct->setnumofC(5);
 				}
 
 
 				//! See if anything changed, as this will required a call to UpdatePrimary() below.
-				if (oldNumCarbon != (*it)->m_pahstruct->numofC() || oldNumH != (*it)->m_pahstruct->numofH())
+				if (oldNumCarbon != (*it)->m_pahstruct->numofC() || oldNumH != (*it)->m_pahstruct->numofH() && ind != -1)
 				{
 					m_PAHclusterchanged = true;
 					m_PAHchanged = true;
@@ -1475,7 +1475,7 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
         throw std::runtime_error("no information about the incepted PAH is available (Sweep::PAHPrimary::CheckInvalidPAHs())");
     }
     // if the PAH in the cluster is as the same size as the incepted PAH, it will be released but the current implementation is directly removed which causes mass loss, for a fully coupled model this part should be redesigned.
-    return (it->m_pahstruct->numofC() < m_control ||(it->m_pahstruct->numofC() < m_control && NumPAH()!=1));
+	return (it->m_pahstruct->numofC() < m_control || (it->m_pahstruct->numofC() <= m_control && NumPAH() != 1));
 }
 
 //struct compare_class

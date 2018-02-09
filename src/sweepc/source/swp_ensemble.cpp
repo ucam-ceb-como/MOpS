@@ -516,7 +516,7 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
 	// See if IWDSA is being used. If so, do not attempt doubling at the end of this routine.
 	bool doubling = true;
 	if (m_particles[i]->Primary()->AggID() == AggModels::PAH_KMC_ID){
-		if (!m_particles[i]->Primary()->ParticleModel()->Components(0)->WeightedPAHs()){
+		if (m_particles[i]->Primary()->ParticleModel()->Components(0)->WeightedPAHs()){
 			doubling = false;
 		}
 	}

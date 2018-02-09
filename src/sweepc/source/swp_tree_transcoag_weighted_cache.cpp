@@ -125,6 +125,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
 	else{
 		cut = false;
 	}
+	cut = false;
 
 	incepRing = part.Primary()->ParticleModel()->inceptionThreshold();
 
