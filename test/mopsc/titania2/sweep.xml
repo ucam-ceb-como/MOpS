@@ -9,7 +9,7 @@
 	</component>
 
 	<!-- Define particle types. -->
-	<particle id="[Ru]" model="bintree" subtree="false" trackPrimarySeparation="true">
+	<particle id="[Ru]" model="bintree" subtree="false" track="primaryCoordinates">
 		<description>A rutile particle.</description>
 		<fractdim>1.8</fractdim>
 		<coalthresh>1.0</coalthresh>
