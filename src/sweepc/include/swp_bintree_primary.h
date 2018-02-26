@@ -452,15 +452,16 @@ private:
 	//Function to adjust primary properties
 	void AdjustPrimary(double dV, BinTreePrimary *prim_ignore);
 
-	//! function to identify neighbours and sum their contribution to surface 
-	void SumNeighbours(BinTreePrimary *prim, double &sumterm);
-
+	//! function to identify neighbours and sum their contribution
 	void SumNeighbours(BinTreePrimary *prim, double &sumterm, BinTreePrimary *prim_ignore);
 
 	void UpdateNeighbourVolume(BinTreePrimary *prim,double dr_i,double &volumeterm);
 
 	//! function to identify neighbours and sum their contribution to surface 
 	void SumNeighbourContributions(BinTreePrimary *prim, double &sumterm);
+
+	//! Update primary free surface area
+	void UpdateFreeSurface();
 
 	//! function to identify neighbours and sum their contribution to particle free surface area
 	void GetFreeSurfaceTerm(BinTreePrimary *prim, double &sumterm);
@@ -469,7 +470,7 @@ private:
 	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
 		
 	//overload of function ignore update to neighbour
-	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm, BinTreePrimary *prim_ignore);
+	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, BinTreePrimary *prim_ignore);
 
     // PRINTING TREES
     //! Recursive loop function for print tree
@@ -486,6 +487,11 @@ private:
     //! Deserialise a BinTreePrimary node
     virtual void DeserializePrimary(std::istream &in,
             const Sweep::ParticleModel &model, void*);
+
+	//csl37-test
+	double PrimaryVolume();
+	void SumCaps(BinTreePrimary *prim, double &capVolume);
+	//csl37-test
 
 };
 
