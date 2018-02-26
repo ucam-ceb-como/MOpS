@@ -2178,9 +2178,6 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 				//! Particle with more than one primary.
 				if (m_parent != NULL) {	
 					
-					//add volume
-					m_primaryvol += m_vol - volOld;
-					
 					while (volOld <= m_vol){
 
 						//! Initialisation of variables to adjust the primary diameter if the
@@ -2199,11 +2196,6 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 							dr = dr_max;
 						}
 
-						//TO DO (csl37): update primary volumes and adjust compositions
-//						double volumeterm = 0.0;
-//						UpdateNeighbourVolume(this,dr,volumeterm);
-//						m_primaryvol += volumeterm;
-
 						//Update primary diameter
 						m_primarydiam = 2.0* (r_i + dr);
 
@@ -2219,8 +2211,10 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 						this->calcBoundSph();
 						this->calcCOM();
 					}
-				} 
 
+					//TO DO (csl37): update primary volumes and adjust compositions
+
+				} 
 				//! Single primary case: the primary diameter equals the
                 //! spherical diameter                
                 else {
@@ -2343,50 +2337,6 @@ void BinTreePrimary::SumNeighbours(BinTreePrimary *prim, double &sumterm, BinTre
 	}
 }
 
-/*!
- * @brief       Identify neighbours and sum their contribution to the change in radius
- *
- * Works up the binary tree identifying the neighbours of the primary being adjusted 
- * and calculates their contribution to the summation term. 
- * All neighbours of the primary being adjusted are left/rightparticles of nodes directly 
- * above it.
- *
- * @param[in]   prim		Pointer to the primary being adjusted
- * @param[in]   sumterm		Sum of contributions from neighbours to the change in radius
- */
-void BinTreePrimary::SumNeighbourContributions(BinTreePrimary *prim, double &sumterm) {
-	
-	double d_ij = m_parent->m_distance_centreToCentre;
-	double r_i = prim->m_primarydiam / 2.0;
-	double r_j = 0.0;
-	double x_ij = 0.0;
-
-	//check if a neighbour of prim
-	if (m_parent->m_leftparticle == prim) {
-		//right particle is a neighbour
-		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
-	} else if(m_parent->m_rightparticle == prim) {
-		//left particle is a neighbour
-		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
-	} else {
-		//not a neighbour
-		r_j = 0.0;
-	}
-	
-	//if the node connects a neighbourt then calculate the summation term
-	if(r_j > 0.0){
-		//the volumes and radii of neighbours remain unchanged
-		//the centre to centre separations increase to allow growth of the primary
-		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
-		sumterm += max((r_i - x_ij),0.0); 
-	}
-
-	//continue working up the binary tree
-	if(m_parent->m_parent != NULL){
-		m_parent->SumNeighbourContributions(prim, sumterm);
-	}
-}
-
 /*! Updates primary free surface area and volume
 *
 * @param[in]   this		Primary to update
@@ -2412,6 +2362,8 @@ void BinTreePrimary::UpdateOverlappingPrimary(){
  *
  * Works up the binary tree identifying the neighbours of the adjusted primary 
  * and sums the contribution from neighbours to the free surface area.
+ * All neighbours of the primary being adjusted are left/rightparticles of nodes directly 
+ * above it.
  * 
  * @param[in]   prim		Pointer to the primary being adjusted
  * @param[in]   CapAreas	Sum of cap areas

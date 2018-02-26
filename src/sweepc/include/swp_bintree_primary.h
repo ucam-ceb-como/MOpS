@@ -457,9 +457,6 @@ private:
 
 	void UpdateNeighbourVolume(BinTreePrimary *prim,double dr_i,double &volumeterm);
 
-	//! function to identify neighbours and sum their contribution to surface 
-	void SumNeighbourContributions(BinTreePrimary *prim, double &sumterm);
-
 	//! Update primary free surface area and volume
 	void UpdateOverlappingPrimary();
 
