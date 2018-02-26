@@ -1766,7 +1766,7 @@ double BinTreePrimary::AddNeighbour(double A_n_k, BinTreePrimary *small_prim)
 		x_ik += dx_i;
 		
 		//! update free surface area
-		this->UpdateFreeSurface();
+		this->UpdateOverlappingPrimary();
 
 		if(x_ik <=0.0) break; //break if neck reaches maximum
 
@@ -1813,7 +1813,7 @@ void BinTreePrimary::AdjustPrimary(double V1, BinTreePrimary *prim_ignore)
 		m_primarydiam = 2.0* (r_i + delta_r_i);
 						
 		//Update the free surface area
-		this->UpdateFreeSurface();
+		this->UpdateOverlappingPrimary();
 
 		V0 += dV;
 	}
@@ -1855,8 +1855,7 @@ void BinTreePrimary::UpdatePrimary(void)
 		m_primaryvol = m_vol;
 	}else{
 		//! Update free surface area
-		UpdateFreeSurface();
-		//TO DO (csl37): update primary volumes
+		UpdateOverlappingPrimary();
 	}
 
     m_numprimary  = 1;
@@ -2209,7 +2208,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 						m_primarydiam = 2.0* (r_i + dr);
 
 						//! Update free surface area
-						this->UpdateFreeSurface();
+						this->UpdateOverlappingPrimary();
 						
 						volOld += dV;
 					}
@@ -2388,53 +2387,72 @@ void BinTreePrimary::SumNeighbourContributions(BinTreePrimary *prim, double &sum
 	}
 }
 
-/*! Updates primary free surface area
+/*! Updates primary free surface area and volume
 *
 * @param[in]   this		Primary to update
 */
-void BinTreePrimary::UpdateFreeSurface(){
+void BinTreePrimary::UpdateOverlappingPrimary(){
 
-	//get free surface term
-	double free_surface_term = 0.0;		//!< Contribution from neighbours to free surface area
-	GetFreeSurfaceTerm(this, free_surface_term);
+	//! Get sum of cap areas and volumes
+	double CapAreas = 0.0;			//!< Contribution from neighbours to free surface area
+	double CapVolumes = 0.0;		//!< Contribution from neighbours to volume
+	SumCaps(this, CapAreas, CapVolumes);
 	
-	//update free surface area
+	//! Update free surface area
 	//if the calculated area is negative (too many overlaps) then set m_free_surf = 0.0
-	m_free_surf = max(M_PI*m_primarydiam*m_primarydiam - 2*M_PI*free_surface_term, 0.0);
+	m_free_surf = max(M_PI*m_primarydiam*m_primarydiam - CapAreas, 0.0);
+
+	//! Update primary volume
+	//if calculated volume is negative (too many overlaps) then set m_primaryvol = 0.0
+	m_primaryvol = max( M_PI*m_primarydiam/6.0 - CapVolumes , 0.0);
 }
 
 /*!
- * @brief       Identify neighbours and sum their contribution to the free surface area
+ * @brief       Identify neighbours and sum their cap areas and volumes
  *
  * Works up the binary tree identifying the neighbours of the adjusted primary 
  * and sums the contribution from neighbours to the free surface area.
  * 
  * @param[in]   prim		Pointer to the primary being adjusted
- * @param[in]   sumterm		Sum of contributions from neighbours to the free surface area of prim
+ * @param[in]   CapAreas	Sum of cap areas
+ * @param[in]   CapVolumes	Sum of cap volumes
  */
-void BinTreePrimary::GetFreeSurfaceTerm(BinTreePrimary *prim, double &sumterm){
+void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &CapAreas, double &CapVolumes){
 	
 	double d_ij = m_parent->m_distance_centreToCentre;
 	double r_i = prim->m_primarydiam / 2.0;
 	double r_j = 0.0;
 	double x_ij = 0.0;
 
-	//check if a neighbour of prim
+	//! Check if a neighbour of prim
 	if (m_parent->m_leftparticle == prim) {
-		//right particle is a neighbour
+		
+		//! Right primary is a neighbour
 		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
 		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
-		sumterm += (r_i*r_i - r_i*x_ij);
+
+		//! Calculate cap area and add to sum
+		CapAreas += 2*M_PI*(r_i*r_i - r_i*x_ij);
+
+		//! Calculate cap volume and add to sum
+		CapVolumes += M_PI * (2*pow(r_i,3.0) + pow(x_ij,3.0) - 3.0*pow(r_i,2.0)*x_ij ) /3.0;
+
 	} else if(m_parent->m_rightparticle == prim) {
-		//left particle is a neighbour
+		
+		//! Left primary is a neighbour
 		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
 		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
-		sumterm += (r_i*r_i - r_i*x_ij);
+
+		//! Calculate cap area and add to sum
+		CapAreas += 2*M_PI*(r_i*r_i - r_i*x_ij);
+
+		//! Calculate cap volume and add to sum
+		CapVolumes += M_PI * (2*pow(r_i,3.0) + pow(x_ij,3.0) - 3.0*pow(r_i,2.0)*x_ij ) /3.0;
 	}
 
-	//continue working up the binary tree
+	//! Continue working up the binary tree
 	if(m_parent->m_parent != NULL){
-		m_parent->GetFreeSurfaceTerm(prim, sumterm);
+		m_parent->SumCaps(prim, CapAreas, CapVolumes);
 	}
 }
 
@@ -2960,8 +2978,8 @@ void BinTreePrimary::SinterNode(
 
 				//csl37-rewrite 
 				//! update free surface areas
-				m_leftparticle->UpdateFreeSurface();
-				m_rightparticle->UpdateFreeSurface();
+				m_leftparticle->UpdateOverlappingPrimary();
+				m_rightparticle->UpdateOverlappingPrimary();
 
 				t1 += delt;
 
@@ -3762,55 +3780,3 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 		m_rightchild->PrintPrimary(surface, primary_diameter, k);
 	}
 }
-////////////////////////////////////////////////////////////////////////
-
-//csl37-test
-//calculates primary volume by subtracting the total cap volume from the volume
-//of a sphere of size primary_diameter
-double BinTreePrimary::PrimaryVolume()
-{
-	double r_i = m_primarydiam / 2.0;
-
-	//sum caps
-	double capVolumes = 0.0;
-	if(m_parent != NULL) SumCaps(this, capVolumes);	
-
-	//return volume
-	return 4.0*M_PI*r_i*r_i*r_i/3.0 - capVolumes;
-}
-
-void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &capVolume)
-{
-
-	double d_ij = m_parent->m_distance_centreToCentre;
-	double r_i = prim->m_primarydiam / 2.0;
-	double r_j = 0.0;
-	double x_ij = 0.0;
-	double V_cap = 0.0;
-
-	//check if a neighbour of prim
-	if (m_parent->m_leftparticle == prim ) {
-		//right particle is a neighbour
-		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
-	} else if(m_parent->m_rightparticle == prim) {
-		//left particle is a neighbour
-		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
-	} else {
-		//not a neighbour
-		r_j = 0.0;
-	}
-
-	if(r_j > 0){
-
-		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
-		V_cap = M_PI * (2*r_i*r_i*r_i + x_ij*x_ij*x_ij - 3.0*r_i*r_i*x_ij)/3.0;
-		capVolume += V_cap;
-	}
-
-	//continue working up the binary tree
-	if(m_parent->m_parent != NULL){
-		m_parent->SumCaps(prim, capVolume);
-	}
-}
-
-//csl37-test

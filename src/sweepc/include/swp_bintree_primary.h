@@ -460,11 +460,11 @@ private:
 	//! function to identify neighbours and sum their contribution to surface 
 	void SumNeighbourContributions(BinTreePrimary *prim, double &sumterm);
 
-	//! Update primary free surface area
-	void UpdateFreeSurface();
+	//! Update primary free surface area and volume
+	void UpdateOverlappingPrimary();
 
-	//! function to identify neighbours and sum their contribution to particle free surface area
-	void GetFreeSurfaceTerm(BinTreePrimary *prim, double &sumterm);
+	//! function to identify neighbours and sum their cap areas and volumes
+	void SumCaps(BinTreePrimary *prim, double &CapAreas, double &CapVolumes);
 
 	//function to modify the centre to centre separations and returns free surface area
 	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
@@ -487,12 +487,6 @@ private:
     //! Deserialise a BinTreePrimary node
     virtual void DeserializePrimary(std::istream &in,
             const Sweep::ParticleModel &model, void*);
-
-	//csl37-test
-	double PrimaryVolume();
-	void SumCaps(BinTreePrimary *prim, double &capVolume);
-	//csl37-test
-
 };
 
 }
