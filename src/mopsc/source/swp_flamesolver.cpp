@@ -454,7 +454,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
         // Perhaps better to use t - 0.5 * dtg not just t
-        //mech.LPDA(t, *r.Mixture(), rng); comment by hdy to close surface growth
+        mech.LPDA(t, *r.Mixture(), rng);
 
         r.SetTime(t);
     }
