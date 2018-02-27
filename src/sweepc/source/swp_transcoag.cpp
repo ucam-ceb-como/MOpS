@@ -373,7 +373,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
     double majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
     //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
+    //m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy); comment by hdy to test coag only
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
@@ -385,7 +385,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         return 0;
     }
 
-    m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
+    //m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy); comment by hdy to test coag only
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
         // Tell the ensemble to update particle one before we confuse things
@@ -408,14 +408,15 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         // majorant rate and the current (after updates) true rate.
 
         double truek = CoagKernel(*sp1, *sp2, sys);
-        double ceff=0;
+        double ceff=1; //modified by hdy to test, delete later
         if (majk<truek)
             std::cout << "maj< true"<< std::endl;
 
         //added by ms785 to include the collision efficiency in the calculation of the rate
         if (sys.ParticleModel()->AggModel() == AggModels::PAH_KMC_ID)
         {
-            ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
+            //ceff=sys.ParticleModel()->CollisionEff(sp1,sp2); comment by hdy
+			ceff = 1; //add by hdy to test, delete later
             truek*=ceff;
         }
 
