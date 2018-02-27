@@ -1726,11 +1726,19 @@ double BinTreePrimary::AddNeighbour(double A_n_k, BinTreePrimary *small_prim)
 	while (A_n_i < A_n_k){
 		r_i = m_primarydiam/2.0;		//radius of new (merged) primary
 				
+		//csl37-rewrite
+		/*
 		//get contribution from neighbours, ignoring the old smaller merging primary
 		double sumterm = 0.0;
 		if(m_parent != NULL) SumNeighbours(this, sumterm, small_prim);		
 
 		double B_ik = 2.0*M_PI*r_i*r_i + 2.0*M_PI*r_i*x_ik + M_PI*r_i*sumterm;
+		*/
+		//csl37-rewrite
+		//get contribution from neighbours, ignoring the old smaller merging primary
+		double sumterm = 0.0;
+		if(m_parent != NULL) SumNeighboursNew(this, sumterm, small_prim);		
+		double B_ik = m_free_surf + sumterm;
 		
 		//calculate dr
 		dr_i = - A_n_i * dx_max / B_ik;
@@ -2337,6 +2345,59 @@ void BinTreePrimary::SumNeighbours(BinTreePrimary *prim, double &sumterm, BinTre
 	}
 }
 
+//csl37-rewrite
+/*!
+ * @brief       Identify neighbours and sum their contribution to the change in radius
+ *
+ * Works up the binary tree identifying the neighbours of the primary being adjusted 
+ * and calculates their contribution to the summation term. 
+ * All neighbours of the primary being adjusted are left/rightparticles of nodes directly 
+ * above it.
+ *
+ * @param[in]   prim			Pointer to the primary being adjusted
+ * @param[in]   sumterm			Sum of contributions from neighbours to the change in radius
+ * @param[in]   prim_ignore		Neighbour to not sum over
+ */
+void BinTreePrimary::SumNeighboursNew(BinTreePrimary *prim, double &sumterm, BinTreePrimary *prim_ignore) {
+	
+	double d_ij = m_parent->m_distance_centreToCentre;
+	double r_i = prim->m_primarydiam / 2.0;
+	double r_j = 0.0;
+	double x_ij = 0.0;
+	double A_n_ij = 0.0;
+
+	//! Check if a neighbour of prim
+	if (m_parent->m_leftparticle == prim  && m_parent->m_rightparticle != prim_ignore) {
+		
+		//! Right particle is a neighbour
+		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
+		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );	//!< Distance to neck
+		A_n_ij = M_PI*( pow(r_i,2.0) - (x_ij,2.0) );	//!< Neck area
+		
+		//! Calculate summation term
+		sumterm += A_n_ij * r_i / x_ij;
+
+	} else if(m_parent->m_rightparticle == prim  && m_parent->m_leftparticle != prim_ignore) {
+		
+		//! Left particle is a neighbour
+		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
+		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij ); //!< Distance to neck
+		A_n_ij = M_PI*( pow(r_i,2.0) - (x_ij,2.0) );	//!< Neck area
+
+		//! Calculate summation term
+		sumterm += A_n_ij * r_i / x_ij;
+
+	} else {
+		//not a neighbour
+		r_j = 0.0;
+	}
+	
+	//! Continue working up the binary tree
+	if(m_parent->m_parent != NULL){
+		m_parent->SumNeighboursNew(prim, sumterm, prim_ignore);
+	}
+}
+
 /*! Updates primary free surface area and volume
 *
 * @param[in]   this		Primary to update
@@ -2790,8 +2851,8 @@ void BinTreePrimary::SinterNode(
 				double x_i = min((d_ij2 - r_j2 + r_i2) / (2.0 * d_ij),r_i); //!< Eq. (3b).
 				double x_j = min((d_ij2 - r_i2 + r_j2) / (2.0 * d_ij),r_j); //!< Eq. (3b).
 				double A_n = M_PI * (r_i2 - pow(x_i, 2.0));        //!< Eq. (4).
-				double A_i = 0.0;
-				double A_j = 0.0;
+				double A_i = m_leftparticle->m_free_surf;
+				double A_j = m_rightparticle->m_free_surf;
 
 				//declare variables
 				double dd_ij_dt=0.0;
@@ -2859,6 +2920,8 @@ void BinTreePrimary::SinterNode(
 						break;
 				}
 
+				//csl37-rewrite
+				/*
 				//! Account for multiple neighbours
 				double sumterm_i = 0.0;
 				double sumterm_j = 0.0;
@@ -2869,6 +2932,18 @@ void BinTreePrimary::SinterNode(
 				//! Modified A_i and A_j
 				A_i = M_PI * (2*r_i*r_i + 2*r_i*x_i + r_i*sumterm_i);
 				A_j = M_PI * (2*r_j*r_j + 2*r_j*x_j + r_j*sumterm_j);
+				*/
+
+				//csl37-rewrite
+				double sumterm_i = 0.0;
+				double sumterm_j = 0.0;
+				//! Get contribution from neighbours working up the binary tree (excluding mutual contribution)
+				m_leftparticle->SumNeighboursNew(m_leftparticle, sumterm_i, m_rightparticle);
+				m_rightparticle->SumNeighboursNew(m_rightparticle, sumterm_j, m_rightparticle);
+				//
+				A_i = A_i + sumterm_i;
+				A_j = A_j + sumterm_j;
+
 
 				//! The expression for B_i in Eq. (8) is wrong. By combining
 				//! Eqs. (5) and (7), we can obtain two equations which are

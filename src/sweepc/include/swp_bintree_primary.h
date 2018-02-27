@@ -455,6 +455,9 @@ private:
 	//! function to identify neighbours and sum their contribution
 	void SumNeighbours(BinTreePrimary *prim, double &sumterm, BinTreePrimary *prim_ignore);
 
+	//csl37-rewrite
+	void SumNeighboursNew(BinTreePrimary *prim, double &sumterm, BinTreePrimary *prim_ignore);
+
 	void UpdateNeighbourVolume(BinTreePrimary *prim,double dr_i,double &volumeterm);
 
 	//! Update primary free surface area and volume
