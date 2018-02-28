@@ -119,6 +119,12 @@ public:
 	//get thermophoretic velocity
 	double GetThermophoreticVelocity(void) const;
 
+	//set diffusion term
+	void SetDiffusionTerm(double D);
+
+	//get diffusion term
+	double GetDiffusionTerm(void) const;
+
     //PARTICLE RELATED DATA (NO NEED CHANGING)
 
     //! Return mixture fraction diffusion coefficient
@@ -322,8 +328,11 @@ public:
 	//!  Index of thermophoretic velocity
     size_t ThermophoreticVelocityIndex() const {return m_species->size() + 10;}
 
+	//!  Index of diffusion term
+    size_t DiffusionTermIndex() const {return m_species->size() + 11;}
+
     //! Number of items of data that are not species concentrations that are stored at the end of m_data
-    static const size_t sNumNonSpeciesData = 11;
+    static const size_t sNumNonSpeciesData = 12;
 
     // Writes the mixture to a binary data stream.
     virtual void Serialize(std::ostream &out) const;
