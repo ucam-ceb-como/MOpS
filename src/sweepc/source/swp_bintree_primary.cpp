@@ -939,7 +939,7 @@ double BinTreePrimary::GetRadiusOfGyration() const
 	if(m_numprimary == 1) Rg = sqrt(2.0/5.0) * m_primarydiam / 2.0;
 
 	//csl37-debug
-	assert(Rg > 0.0);
+	//assert(Rg > 0.0);
 	//csl37-debug
     
 	return Rg;
@@ -1281,7 +1281,6 @@ bool BinTreePrimary::MergeCondition()
 				double x_ij = (d_ij*d_ij - r_j*r_j + r_i*r_i)/(2.0*d_ij);
 				double R_ij = sqrt(r_i*r_i - x_ij*x_ij);	//!neck radius
 				condition = R_ij/min(r_i,r_j) >= 0.95 || ( (pow(d_ij,2.0) - pow(max(r_i,r_j),2.0) + pow(min(r_i,r_j),2.0) )/(2.0*d_ij) ) <= 0.0;
-
 			}
 		}
 	}
@@ -1998,9 +1997,9 @@ void BinTreePrimary::UpdatePrimary(void)
     //! both the spherical equivalent diameter and the free surface area is the
     //! sperhical surface area.
     if(!(m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) || m_parent == NULL){
-		m_primarydiam = m_diam;
-		m_free_surf = m_surf;
-		m_primaryvol = m_vol;
+		m_primarydiam = m_diam; //csl37
+		m_free_surf = m_surf; //csl37
+		m_primaryvol = m_vol; //csl37
 	}
 
     m_numprimary  = 1;
@@ -2134,6 +2133,16 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         }	
 
     }
+
+	if (m_leftchild==NULL) {
+		//csl37-test
+		//volume check, test primary volume vs diameter calculated volume
+		double V_prim = PrimaryVolume();
+//		if (m_primaryvol > 0){
+//			assert(abs(V_prim - m_primaryvol)/m_primaryvol < 5.0e-2); 
+//		}
+		//csl37-test
+	}
 }
 
 /*!
@@ -4085,10 +4094,13 @@ void BinTreePrimary::checkTracking(int &count)
 	if (m_rightchild != NULL) m_rightchild->checkTracking(count);
 }
 
-/////////////////////////////////////////////////////////////////////// csl37-pp
+////////////////////////////////////////////////////////////////////////csl37-pp
 /*!
- * Works down the binary tree and outputs surface area
- * common to both children unless it is a leaf node (a primary).
+ *  Print primary particle details and connectivity
+ *
+ *  @param[in]    surface			Primary connectivity
+ *  @param[in]    primary_diameter	Primary details
+ *  @param[in]    k					Particle counter
  */
 void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &primary_diameter, int k) const
 {
@@ -4117,10 +4129,12 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 			node[1] = m_numprimary;
 			node[2] = 0.0;
 			node[3] = 1.0;
-			node[4] = m_primarydiam;
-			node[5] = 0.0;	
-			node[6] = reinterpret_cast<uintptr_t>(this);
+			node[4] = 0.0;
+			node[5] = 0.0;
+			node[6] = m_primarydiam/2.0;
 			node[7] = 0.0;
+			node[8] = reinterpret_cast<uintptr_t>(this);	//print pointer
+			node[9] = 0.0;
 
 			surface.push_back(node);
 		}
@@ -4142,8 +4156,8 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 		node[5] = R_ij;
 		node[6] = r_i;
 		node[7] = r_j;
-		node[8] = reinterpret_cast<uintptr_t>(m_leftparticle);
-		node[9] = reinterpret_cast<uintptr_t>(m_rightparticle);
+		node[8] = reinterpret_cast<uintptr_t>(m_leftparticle);	//print pointer
+		node[9] = reinterpret_cast<uintptr_t>(m_rightparticle);	//print pointer
 		
 		surface.push_back(node);
 		
@@ -4152,3 +4166,55 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 	}
 }
 ////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+//csl37-test
+//calculates primary volume by subtracting the total cap volume from the volume
+//of a sphere of size primary_diameter
+double BinTreePrimary::PrimaryVolume()
+{
+	double r_i = m_primarydiam / 2.0;
+
+	//sum caps
+	double capVolumes = 0.0;
+	if(m_parent != NULL) SumCaps(this, capVolumes);	
+
+	//return volume
+	return 4.0*M_PI*r_i*r_i*r_i/3.0 - capVolumes;
+}
+
+void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &capVolume)
+{
+
+	double d_ij = m_parent->m_distance_centreToCentre;
+	double r_i = prim->m_primarydiam / 2.0;
+	double r_j = 0.0;
+	double x_ij = 0.0;
+	double V_cap = 0.0;
+
+	//check if a neighbour of prim
+	if (m_parent->m_leftparticle == prim ) {
+		//right particle is a neighbour
+		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
+	} else if(m_parent->m_rightparticle == prim) {
+		//left particle is a neighbour
+		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
+	} else {
+		//not a neighbour
+		r_j = 0.0;
+	}
+
+	if(r_j > 0){
+
+		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
+		V_cap = M_PI * (2*r_i*r_i*r_i + x_ij*x_ij*x_ij - 3.0*r_i*r_i*x_ij)/3.0;
+		capVolume += V_cap;
+	}
+
+	//continue working up the binary tree
+	if(m_parent->m_parent != NULL){
+		m_parent->SumCaps(prim, capVolume);
+	}
+}
+
+//csl37-test

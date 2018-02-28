@@ -510,6 +510,11 @@ private:
     virtual void DeserializePrimary(std::istream &in,
             const Sweep::ParticleModel &model, void*);
 
+	//csl37-test
+	double PrimaryVolume();
+	void SumCaps(BinTreePrimary *prim, double &capVolume);
+	//csl37-test
+
 };
 
 }
