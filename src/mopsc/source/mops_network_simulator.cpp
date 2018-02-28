@@ -191,12 +191,12 @@ void NetworkSimulator::Run(
 
 			// aab64 temporary 
 			// Add headers to outflow diagnostics file
-			ofstream deathFile1;
+			/*ofstream deathFile1;
 			std::string deathfname;
 			deathfname = "Outflow-event-diagnostics.csv";
 			deathFile1.open(deathfname.c_str());
-			deathFile1 << "Time (s)" << " , " << "wt" << " , " << "dc" << " , " << "mass" << "\n";
-			deathFile1.close();
+			deathFile1 << "Time (s)" << " , " << "Num" << " , " << "RTD" << " , " << "wt" << " , " << "age" << " , " << "mass" << "\n";
+			deathFile1.close();*/
 
 			//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 			if (it->sim->GetWriteDiagsStatus()) {

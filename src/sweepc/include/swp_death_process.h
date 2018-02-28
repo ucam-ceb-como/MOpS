@@ -113,6 +113,17 @@ public:
         rng_type &rng
         ) const;
 
+	//! aab64 
+	//! Adjusted Perform() to account for non-equal particle weights 
+	virtual int Perform_wtd(
+		double t,
+		Cell &sys,
+		const Geometry::LocalGeometry1d& local_geom,
+		unsigned int iterm,
+		rng_type &rng, 
+		double &num
+		) const;
+
     //! Perform the process over time dt
     void PerformDT (
             const double t,
@@ -137,6 +148,7 @@ public:
         iContMove,         // Moves a particle downstream
         iContRescale,      // Rescale the sample volume of the cell
         iContAdaptive,     // Changes the nature of the death process
+		iWtdDelete,        // aab64 Weighted treatment 
         // 'Stochastic' processes
         iStochDelete,
         iStochMove

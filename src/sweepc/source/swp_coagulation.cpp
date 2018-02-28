@@ -220,10 +220,6 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
                                  const Sweep::Processes::CoagWeightRule weight_rule,
                                  Cell &sys, rng_type &rng,
                                  MajorantType maj) const {
-	// aab64 repeats coagulations to match rate
-	//int rateFactor = sys.GetRateFactor();
-	//for (int i = 1; i < rateFactor + 1; i++) 
-	//{
 		int ip1 = sys.Particles().Select(prop1, rng);
 		int ip2 = sys.Particles().Select(prop2, rng);
 
@@ -303,17 +299,6 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 
 			if (!Fictitious(majk, truek, rng))
 			{
-
-				// aab64 temporary 
-				// Add coagulation diagnostics file
-				ofstream coagFile;
-				std::string coagfname;
-				double dc1_0 = sp1->CollDiameter();
-				double dc2_0 = sp2->CollDiameter();
-				double sw1_0 = sp1->getStatisticalWeight();
-				double sw2_0 = sp2->getStatisticalWeight();
-				double dca_0 = sys.Particles().GetSum(iDW) / sys.SampleVolume();
-
 				//Adjust the statistical weight
 				switch (weight_rule) {
 				case Sweep::Processes::CoagWeightHarmonic:
@@ -357,48 +342,6 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 				// Tell the ensemble that particles 1 and 2 have changed
 				sys.Particles().Update(ip1);
 				sys.Particles().Update(ip2);
-
-
-				// aab64 temporary 
-				// Add coagulation diagnostics file
-				double dc1_1 = sp1->CollDiameter();
-				double dc2_1 = sp2->CollDiameter();
-				double sw1_1 = sp1->getStatisticalWeight();
-				double sw2_1 = sp2->getStatisticalWeight();
-				double dca_1 = sys.Particles().GetSum(iDW) / sys.SampleVolume();
-				/*if (t>0.0003 && t <= 0.0004)
-				{
-				coagfname = "Coag-event-diagnostics-3micros.csv";
-				coagFile.open(coagfname.c_str(), ios::app);
-				coagFile << t << " , " << truek << " , " << majk << " , "
-				<< dc1_0 * (dc1_0 >= dc2_0) + dc2_0 * (dc1_0 < dc2_0) << " , "
-				<< dc2_0 * (dc1_0 >= dc2_0) + dc1_0 * (dc1_0 < dc2_0) << " , "
-				<< sw1_0 * (dc1_0 >= dc2_0) + sw2_0 * (dc1_0 < dc2_0) << " , "
-				<< sw2_0 * (dc1_0 >= dc2_0) + sw1_0 * (dc1_0 < dc2_0) << " , "
-				<< dc1_1 * (dc1_0 >= dc2_0) + dc2_1 * (dc1_0 < dc2_0) << " , "
-				<< dc2_1 * (dc1_0 >= dc2_0) + dc1_1 * (dc1_0 < dc2_0) << " , "
-				<< sw1_1 * (dc1_0 >= dc2_0) + sw2_1 * (dc1_0 < dc2_0) << " , "
-				<< sw2_1 * (dc1_0 >= dc2_0) + sw1_1 * (dc1_0 < dc2_0) << " , "
-				<< dca_0 << " , " << dca_1 << "\n";
-				coagFile.close();
-				}*/
-				/*if (t>0.003 && t <= 0.0031)
-				{
-				coagfname = "Coag-event-diagnostics-3ms.csv";
-				coagFile.open(coagfname.c_str(), ios::app);
-				coagFile << t << " , " << truek << " , " << majk << " , "
-				<< dc1_0 * (dc1_0 >= dc2_0) + dc2_0 * (dc1_0 < dc2_0) << " , "
-				<< dc2_0 * (dc1_0 >= dc2_0) + dc1_0 * (dc1_0 < dc2_0) << " , "
-				<< sw1_0 * (dc1_0 >= dc2_0) + sw2_0 * (dc1_0 < dc2_0) << " , "
-				<< sw2_0 * (dc1_0 >= dc2_0) + sw1_0 * (dc1_0 < dc2_0) << " , "
-				<< dc1_1 * (dc1_0 >= dc2_0) + dc2_1 * (dc1_0 < dc2_0) << " , "
-				<< dc2_1 * (dc1_0 >= dc2_0) + dc1_1 * (dc1_0 < dc2_0) << " , "
-				<< sw1_1 * (dc1_0 >= dc2_0) + sw2_1 * (dc1_0 < dc2_0) << " , "
-				<< sw2_1 * (dc1_0 >= dc2_0) + sw1_1 * (dc1_0 < dc2_0) << " , "
-				<< dca_0 << " , " << dca_1 << "\n";
-				coagFile.close();
-				}*/
-
 			}
 			else {
 				sys.Particles().Update(ip1);
@@ -417,7 +360,6 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 			if (ip2 >= 0)
 				sys.Particles().Update(ip2);
 		}
-	//}
 	
     return 0;
 }

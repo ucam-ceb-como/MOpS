@@ -594,6 +594,8 @@ Mops::PSR *const readPSR(
         str = attr->GetValue();
         if (str.compare("cdelete") == 0)
             reac->SetOutflowType(Sweep::Processes::DeathProcess::iContDelete);
+        else if (str.compare("wdelete") == 0)
+            reac->SetOutflowType(Sweep::Processes::DeathProcess::iWtdDelete);
         else if (str.compare("cmove") == 0)
             reac->SetOutflowType(Sweep::Processes::DeathProcess::iContMove);
         else if (str.compare("rescale") == 0)

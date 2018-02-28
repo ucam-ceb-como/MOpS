@@ -154,7 +154,11 @@ double DeathProcess::InternalRate(
         double t,
         const Cell &sys,
         const Geometry::LocalGeometry1d &local_geom) const {
-    return m_a * sys.Particles().Count();
+	// aab64 if weighted particles, use sum of weights in place of N
+	if (m_dtype == DeathProcess::iWtdDelete)
+		return m_a * sys.Particles().GetSum(iW);
+	else
+		return m_a * sys.Particles().Count();
 }
 
 // RATE TERM CALCULATIONS.
@@ -202,6 +206,54 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
     return 0;
 }
 
+// aab64 Weighted perform
+// If weighted particles, use weights to randomly choose particles and
+// scale/remove particle depending on delta w required for the interval. 
+// Use when inception rate is high to free ensemble space for new particles.
+/*!
+* \param[in]       t           Time
+* \param[in,out]   sys         System to update
+* \param[in]       local_geom  Details of local physical layout
+* \param[in]       iterm       Process term responsible for this event
+* \param[in,out]   rng         Random number generator
+* \param[in,out]   num         Amount of weight change still required
+*
+* \return      0 on success, otherwise negative.
+*/
+int DeathProcess::Perform_wtd(double t, Sweep::Cell &sys,
+	const Geometry::LocalGeometry1d& local_geom,
+	unsigned int iterm,
+	rng_type &rng, 
+	double &num) const
+{
+	// Get particle index
+	int i = sys.Particles().Select(iW, rng);
+
+	if (i >= 0)
+	{
+		Sweep::Particle *sp = sys.Particles().At(i);
+		double sp_wt = sp->getStatisticalWeight();
+		if (sp_wt <= num)
+		{
+			if (sp_wt > 1.0)                      // we can keep this particle and just reduce its weight
+			{
+				sp->setStatisticalWeight(sp_wt - 1.0);
+				num = num - 1.0;
+			}
+			else                                  // remove the particle to free up ensemble space for new particles
+			{
+				DoParticleDeath(t, i, sys, rng);
+				num = num - sp_wt;
+			}
+		}
+		else                                     // particle weight is larger than required change, just rescale
+		{		sp->setStatisticalWeight(sp_wt - num);
+				num = 0;
+		}
+	}
+	return 0;
+}
+
 /*!
  * Remove particles over time dt.
  *
@@ -219,29 +271,44 @@ void DeathProcess::PerformDT (
         rng_type &rng) const {
 
     // Only do if set to 'continuous' mode.
-    if (!IsStochastic()) {
+    if (!IsStochastic()) 
+	{
         Process::PerformDT(t, dt, sys, local_geom, rng);
 
         if (m_dtype == DeathProcess::iContRescale
-                || (m_dtype == DeathProcess::iContAdaptive && !m_toggled)) {
+                || (m_dtype == DeathProcess::iContAdaptive && !m_toggled)) 
+		{
             // Don't delete anything, just rescale the sample volume
             sys.AdjustSampleVolume(1.0/(1.0 - (dt) * A()));
-        } else {
-
+        } 
+		else 
+		{
             // Get the rate of the process
             double rate = InternalRate(t, sys, local_geom) * dt;
             if (rate > 0.0) {
-                boost::random::poisson_distribution<unsigned, double> rpt(rate);
-                unsigned num = rpt(rng);
-                while (num > 0) {
-                    // Do the process to the particle.
-                    Perform(t, sys, local_geom, 0, rng);
-                    num--;
-                }
+				boost::random::poisson_distribution<unsigned, double> rpt(rate);
+				
+				if (m_dtype == DeathProcess::iWtdDelete)
+				{
+                    // aab64 replacement for cdelete for weighted particles 
+				    // should be adjusted to allow multiple outflows
+				    double num = sys.Particles().GetSum(iW) * A() * dt;
+				    while (num > 0 && sys.ParticleCount() > 0) 
+					    Perform_wtd(t, sys, local_geom, 0, rng, num);
+				}
+				else
+				{
+				    unsigned num = rpt(rng);
+				    while (num > 0) 
+					{
+					    // Do the process to the particle.
+					    Perform(t, sys, local_geom, 0, rng);
+					    num--;
+				    }
+				}
             }
         }
     }
-
 }
 
 /*!
@@ -260,7 +327,8 @@ void DeathProcess::DoParticleDeath(
     Sweep::Particle *sp = sys.Particles().At(isp);
 
     if (m_dtype == DeathProcess::iContDelete
-            || m_dtype == DeathProcess::iStochDelete) {
+            || m_dtype == DeathProcess::iStochDelete
+			|| m_dtype == DeathProcess::iWtdDelete) {
         // Just delete the particle
         sys.Particles().Remove(isp, true);
 
