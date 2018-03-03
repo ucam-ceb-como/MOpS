@@ -73,6 +73,7 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_children_vol(0.0),
     m_children_surf(0.0),
 	m_free_surf(0.0),
+	m_sum_necks(0.0),
 	m_primaryvol(0.0),
     m_distance_centreToCentre(0.0),
     m_children_sintering(0.0),
@@ -124,6 +125,7 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_children_vol(0.0),
     m_children_surf(0.0),
 	m_free_surf(0.0),
+	m_sum_necks(0.0),
 	m_primaryvol(0.0),
     m_distance_centreToCentre(0.0),
     m_children_sintering(0.0),
@@ -175,6 +177,7 @@ m_children_radius(0.0),
 m_children_vol(0.0),
 m_children_surf(0.0),
 m_free_surf(0.0),
+m_sum_necks(0.0),
 m_primaryvol(0.0),
 m_distance_centreToCentre(0.0),
 m_children_sintering(0.0),
@@ -997,6 +1000,7 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
     m_children_vol            = source->m_children_vol;
     m_children_surf           = source->m_children_surf;
 	m_free_surf				  = source->m_free_surf;
+	m_sum_necks				  = source->m_sum_necks;
 	m_primaryvol			  = source->m_primaryvol;
     m_distance_centreToCentre = source->m_distance_centreToCentre;
     m_cen_bsph                = source->m_cen_bsph;
@@ -1861,6 +1865,7 @@ void BinTreePrimary::UpdatePrimary(void)
 		m_primarydiam = m_diam;
 		m_free_surf = m_surf;
 		m_primaryvol = m_vol;
+		m_sum_necks = 0.0;
 	}else{
 		//! Update free surface area
 		UpdateOverlappingPrimary();
@@ -2407,7 +2412,8 @@ void BinTreePrimary::UpdateOverlappingPrimary(){
 	//! Get sum of cap areas and volumes
 	double CapAreas = 0.0;			//!< Contribution from neighbours to free surface area
 	double CapVolumes = 0.0;		//!< Contribution from neighbours to volume
-	SumCaps(this, CapAreas, CapVolumes);
+	double SumNecks = 0.0;			//!< Sum of necks * r_i / x_ij
+	SumCaps(this, CapAreas, CapVolumes, SumNecks);
 	
 	//! Update free surface area
 	//if the calculated area is negative (too many overlaps) then set m_free_surf = 0.0
@@ -2416,6 +2422,9 @@ void BinTreePrimary::UpdateOverlappingPrimary(){
 	//! Update primary volume
 	//if calculated volume is negative (too many overlaps) then set m_primaryvol = 0.0
 	m_primaryvol = max( M_PI*m_primarydiam/6.0 - CapVolumes , 0.0);
+
+	//! Update sum of necks 
+	m_sum_necks = SumNecks;
 }
 
 /*!
@@ -2430,7 +2439,7 @@ void BinTreePrimary::UpdateOverlappingPrimary(){
  * @param[in]   CapAreas	Sum of cap areas
  * @param[in]   CapVolumes	Sum of cap volumes
  */
-void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &CapAreas, double &CapVolumes){
+void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &CapAreas, double &CapVolumes, double &SumNecks){
 	
 	double d_ij = m_parent->m_distance_centreToCentre;
 	double r_i = prim->m_primarydiam / 2.0;
@@ -2450,6 +2459,9 @@ void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &CapAreas, double &Cap
 		//! Calculate cap volume and add to sum
 		CapVolumes += M_PI * (2*pow(r_i,3.0) + pow(x_ij,3.0) - 3.0*pow(r_i,2.0)*x_ij ) /3.0;
 
+		//! Neck area * r_i / x_ij
+		SumNecks +=  M_PI*(r_i*r_i - x_ij*x_ij) * r_i / x_ij;
+
 	} else if(m_parent->m_rightparticle == prim) {
 		
 		//! Left primary is a neighbour
@@ -2461,11 +2473,14 @@ void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &CapAreas, double &Cap
 
 		//! Calculate cap volume and add to sum
 		CapVolumes += M_PI * (2*pow(r_i,3.0) + pow(x_ij,3.0) - 3.0*pow(r_i,2.0)*x_ij ) /3.0;
+		
+		//! Neck area * r_i / x_ij
+		SumNecks += M_PI*(r_i*r_i - x_ij*x_ij) * r_i / x_ij;
 	}
 
 	//! Continue working up the binary tree
 	if(m_parent->m_parent != NULL){
-		m_parent->SumCaps(prim, CapAreas, CapVolumes);
+		m_parent->SumCaps(prim, CapAreas, CapVolumes, SumNecks);
 	}
 }
 
@@ -3219,6 +3234,9 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
 		val = m_free_surf;
         out.write((char*)&val, sizeof(val));
 
+		val = m_sum_necks;
+        out.write((char*)&val, sizeof(val));
+
 		val = m_primaryvol;
         out.write((char*)&val, sizeof(val));
 		
@@ -3368,6 +3386,9 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_free_surf = val;
 		
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+        m_sum_necks = val;
+
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_primaryvol = val;
 

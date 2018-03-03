@@ -271,6 +271,11 @@ protected:
 	//! Sum of primary free surface areas under this node
 	double m_free_surf;
 
+	//csl37-rewrite sum of neck radii * ri/xij
+	//necessary for sintering process
+	//cached
+	double m_sum_necks;
+
     //! Equivalent spherical radius of sum of childrens' volume
     double m_children_radius;
 
@@ -464,7 +469,7 @@ private:
 	void UpdateOverlappingPrimary();
 
 	//! function to identify neighbours and sum their cap areas and volumes
-	void SumCaps(BinTreePrimary *prim, double &CapAreas, double &CapVolumes);
+	void SumCaps(BinTreePrimary *prim, double &CapAreas, double &CapVolumes, double &SumNecks);
 
 	//function to modify the centre to centre separations and returns free surface area
 	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
