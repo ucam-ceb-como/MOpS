@@ -2866,9 +2866,7 @@ void BinTreePrimary::SinterNode(
 				double x_i = min((d_ij2 - r_j2 + r_i2) / (2.0 * d_ij),r_i); //!< Eq. (3b).
 				double x_j = min((d_ij2 - r_i2 + r_j2) / (2.0 * d_ij),r_j); //!< Eq. (3b).
 				double A_n = M_PI * (r_i2 - pow(x_i, 2.0));        //!< Eq. (4).
-				double A_i = m_leftparticle->m_free_surf;
-				double A_j = m_rightparticle->m_free_surf;
-
+			
 				//declare variables
 				double dd_ij_dt=0.0;
 				double R_n = 0.0;
@@ -2936,30 +2934,10 @@ void BinTreePrimary::SinterNode(
 				}
 
 				//csl37-rewrite
-				/*
-				//! Account for multiple neighbours
-				double sumterm_i = 0.0;
-				double sumterm_j = 0.0;
-				//get contribution from neighbours working up the binary tree (excluding mutual contribution)
-				m_leftparticle->SumNeighbours(m_leftparticle, sumterm_i, m_rightparticle);
-				m_rightparticle->SumNeighbours(m_rightparticle, sumterm_j, m_rightparticle);
+				//! Get surface area subtract mutual contribution
+				double A_i = m_leftparticle->m_free_surf + m_leftparticle->m_sum_necks - M_PI*(r_i*r_i - x_i*x_i)*r_i/x_i;
+				double A_j = m_rightparticle->m_free_surf + m_rightparticle->m_sum_necks - M_PI*(r_j*r_j - x_j*x_j)*r_j/x_j;
 				
-				//! Modified A_i and A_j
-				A_i = M_PI * (2*r_i*r_i + 2*r_i*x_i + r_i*sumterm_i);
-				A_j = M_PI * (2*r_j*r_j + 2*r_j*x_j + r_j*sumterm_j);
-				*/
-
-				//csl37-rewrite
-				double sumterm_i = 0.0;
-				double sumterm_j = 0.0;
-				//! Get contribution from neighbours working up the binary tree (excluding mutual contribution)
-				m_leftparticle->SumNeighboursNew(m_leftparticle, sumterm_i, m_rightparticle);
-				m_rightparticle->SumNeighboursNew(m_rightparticle, sumterm_j, m_rightparticle);
-				//
-				A_i = A_i + sumterm_i;
-				A_j = A_j + sumterm_j;
-
-
 				//! The expression for B_i in Eq. (8) is wrong. By combining
 				//! Eqs. (5) and (7), we can obtain two equations which are
 				//! functions of r_i and r_j. Subsequently combined these two
@@ -2984,12 +2962,11 @@ void BinTreePrimary::SinterNode(
                 boost::random::poisson_distribution<unsigned, double> repeatDistribution(mean);
                 const unsigned n = repeatDistribution(rng);
 
-                //if (m_pmodel->getTrackPrimarySeparation()) {
                 double delta_dij = -(double)n * scale * dd_ij_Max; //!< Sintering decreases d_ij hence the negative sign.
 				m_distance_centreToCentre += delta_dij; 
-                //}
                 
-				//if coordinates are tracked then we will shift one half of the primary by the change in separation
+				//if coordinates are tracked then we will shift one side of the particle by the change in separation
+				//this is faster than translating both sides by half the change
 				if (m_pmodel->getTrackPrimaryCoordinates()) {
 					//get direction of translation (left particle to right particle)
 					Coords::Vector vector_change = UnitVector(m_leftparticle->boundSphCentre(), m_rightparticle->boundSphCentre());
@@ -2999,27 +2976,23 @@ void BinTreePrimary::SinterNode(
 					m_leftparticle->TranslateNeighbours(m_leftparticle,vector_change,-delta_dij,m_rightparticle);
 				}
 				
-
 				//! Change in primary radii
 				double delta_r_i = - (double)n * scale * B_i * dd_ij_Max;  //!< Eq. (8).
 				double delta_r_j = - (double)n * scale * B_j * dd_ij_Max; //!< Eq. (8).
 
 				//! Adjust separation of neighbours (not currently sintering) 
-//				if (!MergeCondition()) {		//csl37-rewrite -- is this check necessary
-
-					//adjust separation with neighbours (ignoring p_j)
-					m_leftparticle->UpdateConnectivity(m_leftparticle, delta_r_i, m_rightparticle);
+				//adjust separation with neighbours (ignoring p_j)
+				m_leftparticle->UpdateConnectivity(m_leftparticle, delta_r_i, m_rightparticle);
 					
-					//adjust separation with neighbours (ignoring p_i)
-					m_rightparticle->UpdateConnectivity(m_rightparticle, delta_r_j, m_leftparticle);					
-//				}
+				//adjust separation with neighbours (ignoring p_i)
+				m_rightparticle->UpdateConnectivity(m_rightparticle, delta_r_j, m_leftparticle);					
 
 				//! Adjust primary radii
 				this->m_leftparticle->m_primarydiam += 2.0 * delta_r_i;				
 				this->m_rightparticle->m_primarydiam += 2.0 * delta_r_j;
 
 				//csl37-rewrite 
-				//! update free surface areas
+				//! update primaries
 				m_leftparticle->UpdateOverlappingPrimary();
 				m_rightparticle->UpdateOverlappingPrimary();
 
