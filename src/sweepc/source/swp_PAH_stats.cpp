@@ -352,7 +352,8 @@ void PAHStats::PSL(const Sweep::Particle &sp, double time,
         *(++j) = (double) (pah->sqrtLW());
 		*(++j) = (double) (pah->LdivW());
 		*(++j) = (double) (pah->PrimaryDiam())*1e9/(double)(pah->Numprimary());//convert to nm
-        *(++j) = (double) (pah->Rg())*1e9;
+        //*(++j) = (double) (pah->Rg())*1e9; //comment by hdy
+		*(++j) = (double)(pah->GetRadiusOfGyration())*1e9;
         *(++j) = (double) (pah->Fdim());
 
     } else {

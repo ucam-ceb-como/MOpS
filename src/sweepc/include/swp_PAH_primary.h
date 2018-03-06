@@ -260,10 +260,6 @@ public:
 
 	std::vector<boost::shared_ptr<PAH> > GetPAHVector() const;
 
-	//! Adjusts a particle according to a surface reaction
-	unsigned int Adjust(const fvector &dcomp, //hdy
-		const fvector &dvalues, rng_type &rng, unsigned int n); //hdy
-
 	//! Update the tree structure's surface area by increment dS //hdy
 	void UpdateParents(double dS); //hdy
 
@@ -412,6 +408,9 @@ protected:
 	//! Checks if the sintering level, merges particles if necessary
 	bool CheckSintering(); //hdy
 
+	//primary volume -- different to m_vol if centre to centre seapration is tracked
+	double m_primaryvol; //hdy
+
   //  double pow(double a, double b);
 
 private:
@@ -503,7 +502,12 @@ private:
     // Vector of std::tr1::shared_ptr<PAH>.
     std::vector<boost::shared_ptr<PAH> > m_PAH;
 
+	//! Update primary free surface area and volume
+	void UpdateOverlappingPrimary();
 
+	//! function to identify neighbours and sum their cap areas and volumes
+	void SumCaps(PAHPrimary *prim, double &CapAreas, double &CapVolumes);
+	
 };
 } //namespace AggModels
 } //namespace Sweep

@@ -126,6 +126,7 @@ PAHPrimary::PAHPrimary() : Primary(),
     m_parent(NULL),
     m_leftparticle(NULL),
     m_rightparticle(NULL),
+	m_free_surf(0.0), //hdy
 	m_sint_rate(0.0), //hdy
 	m_r(0.0), //hdy
 	m_r2(0.0), //hdy
@@ -177,6 +178,7 @@ PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model)
     m_parent(NULL),
     m_leftparticle(NULL),
     m_rightparticle(NULL),
+	m_free_surf(0.0), //hdy
 	m_r(0.0), //hdy
 	m_r2(0.0), //hdy
 	m_r3(0.0) //hdy
@@ -237,6 +239,7 @@ PAHPrimary::PAHPrimary(const double time, const double position,
     m_parent(NULL),
     m_leftparticle(NULL),
     m_rightparticle(NULL),
+	m_free_surf(0.0), //hdy
 	m_r(0.0), //hdy
 	m_r2(0.0), //hdy
 	m_r3(0.0) //hdy
@@ -291,6 +294,7 @@ PAHPrimary::PAHPrimary(double time, const Sweep::ParticleModel &model, bool noPA
     m_parent(NULL),
     m_leftparticle(NULL),
     m_rightparticle(NULL),
+	m_free_surf(0.0), //hdy
 	m_r(0.0), //hdy
 	m_r2(0.0), //hdy
 	m_r3(0.0) //hdy
@@ -454,6 +458,7 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
     m_vol=source->m_vol;
     m_children_surf=source->m_children_surf;
     m_distance_centreToCentre = source->m_distance_centreToCentre;
+	m_free_surf = source->m_free_surf; //hdy
 	m_cen_bsph = source->m_cen_bsph; //hdy
 	m_cen_mass = source->m_cen_mass; //hdy
 	m_r = source->m_r; //hdy
@@ -651,407 +656,406 @@ void PAHPrimary::UpdateAllPointers( const PAHPrimary *original)
  */
 PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 {
-    vector<PAH>::const_iterator j;
-    const PAHPrimary *rhsparticle = NULL;
-    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
+	vector<PAH>::const_iterator j;
+	const PAHPrimary *rhsparticle = NULL;
+	rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
 
-    //only one PAH in rhs or this particle -> condensation or inception process.
-    if ( (rhsparticle->m_numPAH==1) || (m_numPAH==1 ))
-    {
-        if (rhsparticle->Numprimary()>1)
-        {
-            // rhsparticle is a soot particle but this paricle repesents a PAH
-            // this paricle will condense on this rhsparticle
-            // Get a copy of the rhs ready to add to the current particle
-            PAHPrimary copy_rhs(*rhsparticle);
-            PAHPrimary *target = copy_rhs.SelectRandomSubparticle(rng);
+	//only one PAH in rhs or this particle -> condensation or inception process.
+	if ((rhsparticle->m_numPAH == 1) || (m_numPAH == 1))
+	{
+		if (rhsparticle->Numprimary() > 1)
+		{
+			// rhsparticle is a soot particle but this paricle repesents a PAH
+			// this paricle will condense on this rhsparticle
+			// Get a copy of the rhs ready to add to the current particle
+			PAHPrimary copy_rhs(*rhsparticle);
+			PAHPrimary *target = copy_rhs.SelectRandomSubparticle(rng);
 
-            target->m_PAH.insert(target->m_PAH.end(),m_PAH.begin(),m_PAH.end());
+			target->m_PAH.insert(target->m_PAH.end(), m_PAH.begin(), m_PAH.end());
 			target->UpdatePrimary();
-            CopyParts(&copy_rhs);
-            CopyTree(&copy_rhs);
-        }
-        else
-        {
-            // this paricle is a soot particle but rhsparticle repesents a PAH
-            // rhsparticle will condense on this particle
-            // particle has more then one primary select the primary where
-            // the PAH condenses to and add it to the list
-            if (m_leftchild!=NULL)
-            {
-                PAHPrimary *target = SelectRandomSubparticle(rng);
+			CopyParts(&copy_rhs);
+			CopyTree(&copy_rhs);
+		}
+		else
+		{
+			// this paricle is a soot particle but rhsparticle repesents a PAH
+			// rhsparticle will condense on this particle
+			// particle has more then one primary select the primary where
+			// the PAH condenses to and add it to the list
+			if (m_leftchild != NULL)
+			{
+				PAHPrimary *target = SelectRandomSubparticle(rng);
 
-                target->m_PAH.insert(target->m_PAH.end(),rhsparticle->m_PAH.begin(),rhsparticle->m_PAH.end());
-                target->UpdatePrimary();
+				target->m_PAH.insert(target->m_PAH.end(), rhsparticle->m_PAH.begin(), rhsparticle->m_PAH.end());
+				target->UpdatePrimary();
 
-            }
-            else
-            {
-                //! rhsparticle is a gas-phase PAH but the this pointer may be
-                //! pointing to a gas-phase PAH in which case this would be an
-                //! inception event, or a single primary particle in which case
-                //! it would be a condensation event.
-                m_PAH.insert(m_PAH.end(),rhsparticle->m_PAH.begin(),rhsparticle->m_PAH.end());
-                UpdatePrimary();
-            }
-        }
+			}
+			else
+			{
+				//! rhsparticle is a gas-phase PAH but the this pointer may be
+				//! pointing to a gas-phase PAH in which case this would be an
+				//! inception event, or a single primary particle in which case
+				//! it would be a condensation event.
+				m_PAH.insert(m_PAH.end(), rhsparticle->m_PAH.begin(), rhsparticle->m_PAH.end());
+				UpdatePrimary();
+			}
+		}
 		UpdateCache();
-        //Check the coalescence ratio
-        CheckRounding();
+		//Check the coalescence ratio
+		CheckRounding();
 
 	}
 
-    else
-    {
-            //coagulation process
-            PAHPrimary *newleft = new PAHPrimary;
-		    PAHPrimary *newright = new PAHPrimary;
-            PAHPrimary copy_rhs(*rhsparticle);
-		    //rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
+	else
+	{
+		//coagulation process
+		PAHPrimary *newleft = new PAHPrimary(m_time, *m_pmodel);
+		PAHPrimary *newright = new PAHPrimary(m_time, *m_pmodel);
+		PAHPrimary copy_rhs(*rhsparticle);
+		//rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
 
-           // bool print=false;
-           // if (this->m_numprimary>2 && notconstpah->m_numprimary>2)
-           // {
-            //    PrintTree("before1");
-           //     notconstpah->PrintTree("before2");
-             //   print=true;
-              //  cout << "printing tree"<<endl;
-            //}
+		// bool print=false;
+		// if (this->m_numprimary>2 && notconstpah->m_numprimary>2)
+		// {
+		//    PrintTree("before1");
+		//     notconstpah->PrintTree("before2");
+		//   print=true;
+		//  cout << "printing tree"<<endl;
+		//}
 
-            //select where to add the second particle
-            boost::bernoulli_distribution<> bernoulliDistrib;
-            boost::variate_generator<rng_type &, boost::bernoulli_distribution<> > leftRightChooser(rng, bernoulliDistrib);
-		    if (leftRightChooser())
-		    {
-			    newleft->CopyParts(this);
-			    newright->CopyParts(&copy_rhs);
-		    }
-		    else
-		    {
-			    newright->CopyParts(this);
-			    newleft->CopyParts(&copy_rhs);
-		    }
-            //set the pointers
-		    m_leftchild=newleft;
-		    m_rightchild=newright;
-		    newright->m_parent=this;
-		    newleft->m_parent=this;
-            //set the pointers to the parent node
-		    if (newleft->m_leftchild!=NULL)
-		    {
-			    newleft->m_leftchild->m_parent=newleft;
-			    newleft->m_rightchild->m_parent=newleft;
-		    }
-		    if (newright->m_leftchild!=NULL)
-		    {
-			    newright->m_leftchild->m_parent=newright;
-			    newright->m_rightchild->m_parent=newright;
-		    }
-            m_children_roundingLevel=0;
-		    UpdateCache();
+		//select where to add the second particle
+		boost::bernoulli_distribution<> bernoulliDistrib;
+		boost::variate_generator<rng_type &, boost::bernoulli_distribution<> > leftRightChooser(rng, bernoulliDistrib);
+		if (leftRightChooser())
+		{
+			newleft->CopyParts(this);
+			newright->CopyParts(&copy_rhs);
+		}
+		else
+		{
+			newright->CopyParts(this);
+			newleft->CopyParts(&copy_rhs);
+		}
+		//set the pointers
+		m_leftchild = newleft;
+		m_rightchild = newright;
+		newright->m_parent = this;
+		newleft->m_parent = this;
+		//set the pointers to the parent node
+		if (newleft->m_leftchild != NULL)
+		{
+			newleft->m_leftchild->m_parent = newleft;
+			newleft->m_rightchild->m_parent = newleft;
+		}
+		if (newright->m_leftchild != NULL)
+		{
+			newright->m_leftchild->m_parent = newright;
+			newright->m_rightchild->m_parent = newright;
+		}
+		m_children_roundingLevel = 0;
+		UpdateCache();
 
-			//! It is assumed that primary pi from particle Pq and primary pj from
-			//! particle Pq are in point contact and by default pi and pj are
-			//! uniformly selected. If we track the coordinates of the primaries in
-			//! a particle, we can do a smarter selection where pi and pj are
-			//! determined by ballistic cluster-cluster aggregation (BCCA):
-			//! R. Jullien, Transparency effects in cluster-cluster aggregation with
-			//! linear trajectories, J. Phys. A 17 (1984) L771-L776.
-			if (m_pmodel->getTrackPrimaryCoordinates()) {
-				boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+		//! It is assumed that primary pi from particle Pq and primary pj from
+		//! particle Pq are in point contact and by default pi and pj are
+		//! uniformly selected. If we track the coordinates of the primaries in
+		//! a particle, we can do a smarter selection where pi and pj are
+		//! determined by ballistic cluster-cluster aggregation (BCCA):
+		//! R. Jullien, Transparency effects in cluster-cluster aggregation with
+		//! linear trajectories, J. Phys. A 17 (1984) L771-L776.
+		if (m_pmodel->getTrackPrimaryCoordinates()) {
+			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
 
-				//! Implementation of Arvo's algorithm, Fast Random Rotation Matrices,
-				//! Chapter III.4 in Graphic Gems III edited by David Kirk to generate
-				//! a transformation matrix for randomly rotating a particle.
-				double theta1 = 2 * PI * uniformGenerator(); //!< Pick a rotation about the pole.
-				double phi1 = 2 * PI * uniformGenerator();   //!< Pick a direction to deflect the pole.
-				double z1 = uniformGenerator();              //!< Pick the amount of pole deflection.
+			//! Implementation of Arvo's algorithm, Fast Random Rotation Matrices,
+			//! Chapter III.4 in Graphic Gems III edited by David Kirk to generate
+			//! a transformation matrix for randomly rotating a particle.
+			double theta1 = 2 * PI * uniformGenerator(); //!< Pick a rotation about the pole.
+			double phi1 = 2 * PI * uniformGenerator();   //!< Pick a direction to deflect the pole.
+			double z1 = uniformGenerator();              //!< Pick the amount of pole deflection.
 
-				//! Construct a vector for performing the reflection.
-				fvector V1;
-				V1.push_back(cos(phi1) * sqrt(z1));
-				V1.push_back(sin(phi1) * sqrt(z1));
-				V1.push_back(sqrt(1 - z1));
+			//! Construct a vector for performing the reflection.
+			fvector V1;
+			V1.push_back(cos(phi1) * sqrt(z1));
+			V1.push_back(sin(phi1) * sqrt(z1));
+			V1.push_back(sqrt(1 - z1));
 
-				//! Rotate centre-of-mass.
-				m_leftchild->rotateCOM(theta1, V1);
+			//! Rotate centre-of-mass.
+			m_leftchild->rotateCOM(theta1, V1);
 
-				//! Implementation of Arvo's algorithm, Fast Random Rotation Matrices,
-				//! Chapter III.4 in Graphic Gems III edited by David Kirk to generate
-				//! a transformation matrix for randomly rotating a particle.
-				double theta2 = 2 * PI * uniformGenerator(); //!< Pick a rotation about the pole.
-				double phi2 = 2 * PI * uniformGenerator();   //!< Pick a direction to deflect the pole.
-				double z2 = uniformGenerator();              //!< Pick the amount of pole deflection.
+			//! Implementation of Arvo's algorithm, Fast Random Rotation Matrices,
+			//! Chapter III.4 in Graphic Gems III edited by David Kirk to generate
+			//! a transformation matrix for randomly rotating a particle.
+			double theta2 = 2 * PI * uniformGenerator(); //!< Pick a rotation about the pole.
+			double phi2 = 2 * PI * uniformGenerator();   //!< Pick a direction to deflect the pole.
+			double z2 = uniformGenerator();              //!< Pick the amount of pole deflection.
 
-				//! Construct a vector for performing the reflection.
-				fvector V2;
-				V2.push_back(cos(phi2) * sqrt(z2));
-				V2.push_back(sin(phi2) * sqrt(z2));
-				V2.push_back(sqrt(1 - z2));
+			//! Construct a vector for performing the reflection.
+			fvector V2;
+			V2.push_back(cos(phi2) * sqrt(z2));
+			V2.push_back(sin(phi2) * sqrt(z2));
+			V2.push_back(sqrt(1 - z2));
 
-				//! Rotate centre-of-mass.
-				m_rightchild->rotateCOM(theta2, V2);
+			//! Rotate centre-of-mass.
+			m_rightchild->rotateCOM(theta2, V2);
 
-				m_leftchild->centreBoundSph();
-				m_rightchild->centreBoundSph();
+			m_leftchild->centreBoundSph();
+			m_rightchild->centreBoundSph();
 
-				bool Overlap = false;
+			bool Overlap = false;
 
-				//! Incremental translation.
-				while (!Overlap) {
-					//! Sphere point picking. This is the random direction step of
-					//! Jullien's BCCA algorithm. It is incorrect to select spherical
-					//! coordinates theta (polar angle) and phi (azimuthal angle) from
-					//! uniform distributions theta E [0, 2 * pi) and phi E [0, pi] as
-					//! points picked in this way will be 'bunched' near the poles:
-					//! http://mathworld.wolfram.com/SpherePointPicking.html
-					double theta = 2.0 * PI * uniformGenerator();
-					double phi = acos(2.0 * uniformGenerator() - 1.0);
+			//! Incremental translation.
+			while (!Overlap) {
+				//! Sphere point picking. This is the random direction step of
+				//! Jullien's BCCA algorithm. It is incorrect to select spherical
+				//! coordinates theta (polar angle) and phi (azimuthal angle) from
+				//! uniform distributions theta E [0, 2 * pi) and phi E [0, pi] as
+				//! points picked in this way will be 'bunched' near the poles:
+				//! http://mathworld.wolfram.com/SpherePointPicking.html
+				double theta = 2.0 * PI * uniformGenerator();
+				double phi = acos(2.0 * uniformGenerator() - 1.0);
 
-					//! In terms of Cartesian coordinates.
-					double x = cos(theta) * sin(phi);
-					double y = sin(theta) * sin(phi);
-					double z = cos(phi);
+				//! In terms of Cartesian coordinates.
+				double x = cos(theta) * sin(phi);
+				double y = sin(theta) * sin(phi);
+				double z = cos(phi);
 
-					//! We want to find the rotation matrix which rotates an
-					//! arbitrarily chosen unit vector to the randomly chosen unit
-					//! vector selected above. Not sure where the formula is from but I
-					//! have checked that it works:
-					//! https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
-					double bx = 0.0;
-					double by = 0.0;
-					double bz = -1.0;
+				//! We want to find the rotation matrix which rotates an
+				//! arbitrarily chosen unit vector to the randomly chosen unit
+				//! vector selected above. Not sure where the formula is from but I
+				//! have checked that it works:
+				//! https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
+				double bx = 0.0;
+				double by = 0.0;
+				double bz = -1.0;
 
-					//! Cross product of the two vectors.
-					double vx = by * z - bz * y;
-					double vy = bz * x - bx * z;
-					double vz = bx * y - by * x;
+				//! Cross product of the two vectors.
+				double vx = by * z - bz * y;
+				double vy = bz * x - bx * z;
+				double vz = bx * y - by * x;
 
-					//! Skew-symmetric cross-product matrix of vector v.
-					double v[3][3] = { 0 };
+				//! Skew-symmetric cross-product matrix of vector v.
+				double v[3][3] = { 0 };
 
-					v[0][0] = 0.0;
-					v[0][1] = -vz;
-					v[0][2] = vy;
-					v[1][0] = vz;
-					v[1][1] = 0.0;
-					v[1][2] = -vx;
-					v[2][0] = -vy;
-					v[2][1] = vx;
-					v[2][2] = 0.0;
+				v[0][0] = 0.0;
+				v[0][1] = -vz;
+				v[0][2] = vy;
+				v[1][0] = vz;
+				v[1][1] = 0.0;
+				v[1][2] = -vx;
+				v[2][0] = -vy;
+				v[2][1] = vx;
+				v[2][2] = 0.0;
 
-					//! Identity.
-					double I[3][3] = { 0 };
+				//! Identity.
+				double I[3][3] = { 0 };
 
-					I[0][0] = 1.0;
-					I[0][1] = 0.0;
-					I[0][2] = 0.0;
-					I[1][0] = 0.0;
-					I[1][1] = 1.0;
-					I[1][2] = 0.0;
-					I[2][0] = 0.0;
-					I[2][1] = 0.0;
-					I[2][2] = 1.0;
+				I[0][0] = 1.0;
+				I[0][1] = 0.0;
+				I[0][2] = 0.0;
+				I[1][0] = 0.0;
+				I[1][1] = 1.0;
+				I[1][2] = 0.0;
+				I[2][0] = 0.0;
+				I[2][1] = 0.0;
+				I[2][2] = 1.0;
 
-					//! Rotation matrix.
-					double R[3][3] = { 0 };
-					double Mult = 1.0 / (1.0 + bx * x + by * y + bz * z); //!< Dot product of the two unit vectors.
+				//! Rotation matrix.
+				double R[3][3] = { 0 };
+				double Mult = 1.0 / (1.0 + bx * x + by * y + bz * z); //!< Dot product of the two unit vectors.
 
-					//! Square of the matrix v.
-					R[0][0] = Mult * (-vy * vy - vz * vz);
-					R[0][1] = Mult * (vx * vy);
-					R[0][2] = Mult * (vx * vz);
-					R[1][0] = Mult * (vx * vy);
-					R[1][1] = Mult * (-vx * vx - vz * vz);
-					R[2][2] = Mult * (vy * vz);
-					R[2][0] = Mult * (vx * vz);
-					R[2][1] = Mult * (-vy * vz);
-					R[2][2] = Mult * (-vx * vx - vy * vy);
+				//! Square of the matrix v.
+				R[0][0] = Mult * (-vy * vy - vz * vz);
+				R[0][1] = Mult * (vx * vy);
+				R[0][2] = Mult * (vx * vz);
+				R[1][0] = Mult * (vx * vy);
+				R[1][1] = Mult * (-vx * vx - vz * vz);
+				R[2][2] = Mult * (vy * vz);
+				R[2][0] = Mult * (vx * vz);
+				R[2][1] = Mult * (-vy * vz);
+				R[2][2] = Mult * (-vx * vx - vy * vy);
 
-					R[0][0] = 1.0 + R[0][0];
-					R[0][1] = -vz + R[0][1];
-					R[0][2] = vy + R[0][2];
-					R[1][0] = vz + R[1][0];
-					R[1][1] = 1.0 + R[1][1];
-					R[1][2] = -vx + R[1][2];
-					R[2][0] = -vy + R[2][0];
-					R[2][1] = vx + R[2][1];
-					R[2][2] = 1.0 + R[2][2];
+				R[0][0] = 1.0 + R[0][0];
+				R[0][1] = -vz + R[0][1];
+				R[0][2] = vy + R[0][2];
+				R[1][0] = vz + R[1][0];
+				R[1][1] = 1.0 + R[1][1];
+				R[1][2] = -vx + R[1][2];
+				R[2][0] = -vy + R[2][0];
+				R[2][1] = vx + R[2][1];
+				R[2][2] = 1.0 + R[2][2];
 
-					//! Disk point picking. This is the random impact step of Jullien's
-					//! BCCA algorithm. We first randomly select a point in the x-y
-					//! plane over a disk of diameter and at a distance equal to the
-					//! sum of the primary particle radii as this is the maximum
-					//! distance they can be apart. Then we apply the rotation matrix
-					//! obtained above to the point:
+				//! Disk point picking. This is the random impact step of Jullien's
+				//! BCCA algorithm. We first randomly select a point in the x-y
+				//! plane over a disk of diameter and at a distance equal to the
+				//! sum of the primary particle radii as this is the maximum
+				//! distance they can be apart. Then we apply the rotation matrix
+				//! obtained above to the point:
 				//http://mathworld.wolfram.com/DiskPointPicking.html
-					double r = uniformGenerator();
-					theta = 2.0 * PI * uniformGenerator();
+				double r = uniformGenerator();
+				theta = 2.0 * PI * uniformGenerator();
 
-					double sumr = m_leftchild->Radius() + m_rightchild->Radius();
+				double sumr = m_leftchild->Radius() + m_rightchild->Radius();
 
-					double x3 = (sumr / 2.0) * sqrt(r) * cos(theta);
-					double y3 = (sumr / 2.0) * sqrt(r) * sin(theta);
-					double z3 = -sumr;
+				double x3 = (sumr / 2.0) * sqrt(r) * cos(theta);
+				double y3 = (sumr / 2.0) * sqrt(r) * sin(theta);
+				double z3 = -sumr;
 
-					double x4 = R[0][0] * x3 + R[0][1] * y3 + R[0][2] * z3;
-					double y4 = R[1][0] * x3 + R[1][1] * y3 + R[1][2] * z3;
-					double z4 = R[2][0] * x3 + R[2][1] * y3 + R[2][2] * z3;
+				double x4 = R[0][0] * x3 + R[0][1] * y3 + R[0][2] * z3;
+				double y4 = R[1][0] * x3 + R[1][1] * y3 + R[1][2] * z3;
+				double z4 = R[2][0] * x3 + R[2][1] * y3 + R[2][2] * z3;
 
-					this->m_leftchild->Translate(x4, y4, z4);
+				this->m_leftchild->Translate(x4, y4, z4);
 
-					//! The two particles are initially at the origin. Keep doubling
-					//! the distance between them so that they do not overlap. This is
-					//! more efficient than picking an arbitrarily large distance.
-					int numberOfOverlaps = 0;
-					int factorApart = 1;
-					double Separation = 0.0;
+				//! The two particles are initially at the origin. Keep doubling
+				//! the distance between them so that they do not overlap. This is
+				//! more efficient than picking an arbitrarily large distance.
+				int numberOfOverlaps = 0;
+				int factorApart = 1;
+				double Separation = 0.0;
 
-					while (this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation)) {
-						this->m_leftchild->Translate(-factorApart * R[0][2] * sumr, -factorApart * R[1][2] * sumr, -factorApart * R[2][2] * sumr);
-						factorApart *= 2;
+				while (this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation)) {
+					this->m_leftchild->Translate(-factorApart * R[0][2] * sumr, -factorApart * R[1][2] * sumr, -factorApart * R[2][2] * sumr);
+					factorApart *= 2;
+				}
+
+				numberOfOverlaps = 0;
+
+				while (!Overlap) {
+					double dx = this->m_leftchild->m_cen_bsph[0];
+					double dy = this->m_leftchild->m_cen_bsph[1];
+					double dz = this->m_leftchild->m_cen_bsph[2];
+
+					double oldDistance = dx * dx + dy * dy + dz * dz;
+
+					//! Translate particle in 1% increments.
+					this->m_leftchild->Translate(-0.01 * x * sumr, -0.01 * y * sumr, -0.01 * z * sumr);
+
+					Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
+
+					dx = this->m_leftchild->m_cen_bsph[0];
+					dy = this->m_leftchild->m_cen_bsph[1];
+					dz = this->m_leftchild->m_cen_bsph[2];
+
+					double newDistance = dx * dx + dy * dy + dz * dz;
+
+					//! If the left particle has failed to collide with the
+					//! particle at the origin (first condition) or if there are
+					//! multiple points of overlap (second condition), the trial is
+					//! abandoned and another trajectory is chosen.
+					if ((newDistance > oldDistance && newDistance > sumr * sumr) || (numberOfOverlaps > 1)) {
+						this->m_leftchild->centreBoundSph();
+						this->m_leftchild->centreCOM();
+						numberOfOverlaps = 0;
+						Overlap = false;
+						break;
 					}
-
-					numberOfOverlaps = 0;
-
-					while (!Overlap) {
-						double dx = this->m_leftchild->m_cen_bsph[0];
-						double dy = this->m_leftchild->m_cen_bsph[1];
-						double dz = this->m_leftchild->m_cen_bsph[2];
-
-						double oldDistance = dx * dx + dy * dy + dz * dz;
-
-						//! Translate particle in 1% increments.
-						this->m_leftchild->Translate(-0.01 * x * sumr, -0.01 * y * sumr, -0.01 * z * sumr);
-
-						Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
-
-						dx = this->m_leftchild->m_cen_bsph[0];
-						dy = this->m_leftchild->m_cen_bsph[1];
-						dz = this->m_leftchild->m_cen_bsph[2];
-
-						double newDistance = dx * dx + dy * dy + dz * dz;
-
-						//! If the left particle has failed to collide with the
-						//! particle at the origin (first condition) or if there are
-						//! multiple points of overlap (second condition), the trial is
-						//! abandoned and another trajectory is chosen.
-						if ((newDistance > oldDistance && newDistance > sumr * sumr) || (numberOfOverlaps > 1)) {
-							this->m_leftchild->centreBoundSph();
-							this->m_leftchild->centreCOM();
-							numberOfOverlaps = 0;
-							Overlap = false;
-							break;
-						}
-					}
-
-					//! Newton bisection method to speed up translation.
-					//! Needs to be tested.
-					//double a = 0.0;
-					//double b = 0.0;
-					//double c = 0.0;
-
-					//b = this->m_leftchild->m_cen_bsph[2];
-					//double Translation = - (b - (a + b) / 2.0);
-
-					//numberOfOverlaps = 0;
-
-					//while (!(abs(Separation - 1) < 0.01 && numberOfOverlaps == 1)) {
-					//    this->m_leftchild->Translate(0, 0, Translation);
-
-					//    numberOfOverlaps = 0;
-
-					//    if (this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation)) {
-					//        a = this->m_leftchild->m_cen_bsph[2];
-					//        Translation = (a + b) / 2.0 - a;
-					//    } else {
-					//        b = this->m_leftchild->m_cen_bsph[2];
-					//        Translation = - (b - (a + b) / 2.0);
-					//    }
-					//}
 				}
 
-				double deltax = m_rightparticle->m_cen_bsph[0] - m_leftparticle->m_cen_bsph[0];
-				double deltay = m_rightparticle->m_cen_bsph[1] - m_leftparticle->m_cen_bsph[1];
-				double deltaz = m_rightparticle->m_cen_bsph[2] - m_leftparticle->m_cen_bsph[2];
+				//! Newton bisection method to speed up translation.
+				//! Needs to be tested.
+				//double a = 0.0;
+				//double b = 0.0;
+				//double c = 0.0;
 
-				m_distance_centreToCentre = sqrt(deltax * deltax + deltay * deltay + deltaz * deltaz);
+				//b = this->m_leftchild->m_cen_bsph[2];
+				//double Translation = - (b - (a + b) / 2.0);
 
-				//! Calculate properties of this particle.
-				this->calcBoundSph();
-				this->calcCOM();
+				//numberOfOverlaps = 0;
 
-				//! If particle contains PAH to be traced write POV-Ray translation
-				//! of particle
-				this->centreBoundSph();
+				//while (!(abs(Separation - 1) < 0.01 && numberOfOverlaps == 1)) {
+				//    this->m_leftchild->Translate(0, 0, Translation);
 
-				//! Particle is centred about its bounding sphere for the purpose
-				//! generating its structure. Now that it is complete centre it
-				//! about its centre-of-mass.
-				this->centreCOM();
+				//    numberOfOverlaps = 0;
 
-			}
-			else {
-				//! Randomly select the primaries that are touching.
-				this->m_leftparticle = m_leftchild->SelectRandomSubparticle(rng);
-				this->m_rightparticle = m_rightchild->SelectRandomSubparticle(rng);
-			}
-
-
-
-				//select the primaries that are touching
-				//this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rng); //comment by hdy
-				//this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rng); //comment by hdy
-
-				//set the sintertime for the new created primary particle
-				SetSinteringTime(std::max(this->m_sint_time, rhsparticle->m_sint_time));
-				//initialise the variables used to calculate the coalesence ratio
-				m_children_vol = m_leftparticle->m_vol + m_rightparticle->m_vol;
-				m_children_surf = (m_leftparticle->m_surf + m_rightparticle->m_surf);
-				m_leftparticle_vol_old = m_leftparticle->m_vol;
-				m_rightparticle_vol_old = m_rightparticle->m_vol;
-				m_leftparticle_numPAH = m_leftparticle->m_numPAH;
-				m_rightparticle_numPAH = m_rightparticle->m_numPAH;
-				m_children_radius = pow(3.0 / (4.0*PI)*(m_children_vol), (ONE_THIRD));
-				m_children_roundingLevel = CoalescenceLevel();
-				m_distance_centreToCentre = m_leftparticle->m_primarydiam / 2.0 + m_rightparticle->m_primarydiam / 2.0;
-
-				//****************************************************hdy****************************************************//
-				if (m_pmodel->getTrackPrimaryCoordinates()) {
-					double x1 = m_leftparticle->m_cen_bsph[0];
-					double y1 = m_leftparticle->m_cen_bsph[1];
-					double z1 = m_leftparticle->m_cen_bsph[2];
-
-					double x2 = m_rightparticle->m_cen_bsph[0];
-					double y2 = m_rightparticle->m_cen_bsph[1];
-					double z2 = m_rightparticle->m_cen_bsph[2];
-
-					m_distance_centreToCentre = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) + (z2 - z1) * (z2 - z1));
-				}
-				else if (m_pmodel->getTrackPrimarySeparation()) {
-					m_distance_centreToCentre = m_leftparticle->m_primarydiam / 2.0 + m_rightparticle->m_primarydiam / 2.0;
-				}
-				//****************************************************hdy****************************************************//
-
-				CheckRounding();
-				//must set all the pointer to NULL otherwise the delete function
-				//will also delete the children
-				copy_rhs.m_leftchild = NULL;
-				copy_rhs.m_rightchild = NULL;
-				copy_rhs.m_parent = NULL;
-				copy_rhs.m_leftparticle = NULL;
-				copy_rhs.m_rightparticle = NULL;
-				//	rhsparticle->Clear();
-				//    if (fabs(surfacebeforerhs+surfacebefore-m_surf)/m_surf > 1e-6)
-				//    {
-				//        cout << "error" << surfacebeforerhs<<' ' <<surfacebefore << ' '<<m_surf<<endl;
-				////         PrintTree("after");
+				//    if (this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation)) {
+				//        a = this->m_leftchild->m_cen_bsph[2];
+				//        Translation = (a + b) / 2.0 - a;
+				//    } else {
+				//        b = this->m_leftchild->m_cen_bsph[2];
+				//        Translation = - (b - (a + b) / 2.0);
 				//    }
-				// if (print)
-				//     PrintTree("after");
-			
+				//}
+			}
+
+			double deltax = m_rightparticle->m_cen_bsph[0] - m_leftparticle->m_cen_bsph[0];
+			double deltay = m_rightparticle->m_cen_bsph[1] - m_leftparticle->m_cen_bsph[1];
+			double deltaz = m_rightparticle->m_cen_bsph[2] - m_leftparticle->m_cen_bsph[2];
+
+			m_distance_centreToCentre = sqrt(deltax * deltax + deltay * deltay + deltaz * deltaz);
+
+			//! Calculate properties of this particle.
+			this->calcBoundSph();
+			this->calcCOM();
+
+			//! If particle contains PAH to be traced write POV-Ray translation
+			//! of particle
+			this->centreBoundSph();
+
+			//! Particle is centred about its bounding sphere for the purpose
+			//! generating its structure. Now that it is complete centre it
+			//! about its centre-of-mass.
+			this->centreCOM();
+
+		}
+		else {
+			//! Randomly select the primaries that are touching.
+			this->m_leftparticle = m_leftchild->SelectRandomSubparticle(rng);
+			this->m_rightparticle = m_rightchild->SelectRandomSubparticle(rng);
+		}
+
+
+		//select the primaries that are touching
+		//this->m_leftparticle=m_leftchild->SelectRandomSubparticle(rng); //comment by hdy
+		//this->m_rightparticle=m_rightchild->SelectRandomSubparticle(rng); //comment by hdy
+
+		//set the sintertime for the new created primary particle
+		SetSinteringTime(std::max(this->m_sint_time, rhsparticle->m_sint_time));
+		//initialise the variables used to calculate the coalesence ratio
+		m_children_vol = m_leftparticle->m_vol + m_rightparticle->m_vol;
+		m_children_surf = (m_leftparticle->m_surf + m_rightparticle->m_surf);
+		m_leftparticle_vol_old = m_leftparticle->m_vol;
+		m_rightparticle_vol_old = m_rightparticle->m_vol;
+		m_leftparticle_numPAH = m_leftparticle->m_numPAH;
+		m_rightparticle_numPAH = m_rightparticle->m_numPAH;
+		m_children_radius = pow(3.0 / (4.0*PI)*(m_children_vol), (ONE_THIRD));
+		m_children_roundingLevel = CoalescenceLevel();
+		m_distance_centreToCentre = m_leftparticle->m_primarydiam / 2.0 + m_rightparticle->m_primarydiam / 2.0;
+
+		//****************************************************hdy****************************************************//
+		if (m_pmodel->getTrackPrimaryCoordinates()) {
+			double x1 = m_leftparticle->m_cen_bsph[0];
+			double y1 = m_leftparticle->m_cen_bsph[1];
+			double z1 = m_leftparticle->m_cen_bsph[2];
+
+			double x2 = m_rightparticle->m_cen_bsph[0];
+			double y2 = m_rightparticle->m_cen_bsph[1];
+			double z2 = m_rightparticle->m_cen_bsph[2];
+
+			m_distance_centreToCentre = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) + (z2 - z1) * (z2 - z1));
+		}
+		else if (m_pmodel->getTrackPrimarySeparation()) {
+			m_distance_centreToCentre = m_leftparticle->m_primarydiam / 2.0 + m_rightparticle->m_primarydiam / 2.0;
+		}
+		//****************************************************hdy****************************************************//
+
+		CheckRounding();
+		//must set all the pointer to NULL otherwise the delete function
+		//will also delete the children
+		copy_rhs.m_leftchild = NULL;
+		copy_rhs.m_rightchild = NULL;
+		copy_rhs.m_parent = NULL;
+		copy_rhs.m_leftparticle = NULL;
+		copy_rhs.m_rightparticle = NULL;
+		//	rhsparticle->Clear();
+		//    if (fabs(surfacebeforerhs+surfacebefore-m_surf)/m_surf > 1e-6)
+		//    {
+		//        cout << "error" << surfacebeforerhs<<' ' <<surfacebefore << ' '<<m_surf<<endl;
+		////         PrintTree("after");
+		//    }
+		// if (print)
+		//     PrintTree("after");
+
 	}
-    return *this;
+	return *this;
 }
 
 /*!
@@ -1356,6 +1360,9 @@ double PAHPrimary::GetRadiusOfGyration() const
 		Rg = sqrt(sum / totalmass);
 	}
 
+	//if single primary return the primary radius
+	if (m_numprimary == 1) Rg = sqrt(2.0 / 5.0) * m_primarydiam / 2.0;
+
 	return Rg;
 }
 //******************************************************hdy**********************************************************//
@@ -1500,29 +1507,10 @@ void PAHPrimary::Merge()
  //       cout<<"tset";
  //      PrintTree("before.inp");
 
-	////******************************hdy********************************************//
-	////pointer to the new (merged) primary //hdy
-	//PAHPrimary *new_prim; //hdy
-	////initialise pointer to the smaller of the merging primaries //hdy
-	//PAHPrimary *small_prim; //hdy
-	////******************************hdy********************************************//
-
     vector<PAH>::const_iterator j;
       //make sure this primary has children to merge
 	  if(m_leftchild!=NULL)
-           {
-			   
-			   ////****************************************************hdy************************************************************//
-			   ////if the centre to centre distance is tracked we need to know which is the smaller primary of the merging pair
-			   //if (m_leftparticle->m_primarydiam > m_rightparticle->m_primarydiam){
-				  // small_prim = m_rightparticle;
-			   //}
-			   //else{
-				  // small_prim = m_leftparticle;
-			   //}
-			   //
-			   //double dV = small_prim->m_vol; //volume of the merging (smaller) primary 
-			   ////****************************************************hdy************************************************************//
+           {	   
 
 		if ( m_leftchild==m_leftparticle && m_rightchild==m_rightparticle)
 		{
@@ -1531,43 +1519,12 @@ void PAHPrimary::Merge()
             //copy the PAHs of both children to the parent node
 
             //m_PAH is empty, therefore no need to append
-            m_PAH=m_rightparticle->m_PAH; //comment by hdy
+            m_PAH=m_rightparticle->m_PAH; 
 
-            m_PAH.insert(this->m_PAH.end(),m_leftparticle->m_PAH.begin(),m_leftparticle->m_PAH.end()); //comment by hdy
+            m_PAH.insert(this->m_PAH.end(),m_leftparticle->m_PAH.begin(),m_leftparticle->m_PAH.end()); 
             //update the pointers that pointed to the two former children
-			ChangePointer(m_leftchild,this); //comment by hdy
-			ChangePointer(m_rightchild,this); //comment by hdy
-
-			////******************************************************hdy*********************************************************//
-			//// This node has only two primaries in its subtree, it is possible
-			//// that this node is not the root node and belongs to a bigger
-			//// particle.		
-
-			//// Sum up the components first
-			//for (size_t i = 0; i != m_comp.size(); i++) {
-			//	m_comp[i] = m_leftparticle->Composition(i) +
-			//		m_rightparticle->Composition(i);
-			//}
-
-			////m_primarydiam of the new particle is the larger of the diameters of the merging particles
-			////if the centre to centre separation isn't tracked this will be changed to the spherical equivalent in the call to UpdatePrimary
-			//m_primarydiam = max(m_leftparticle->m_primarydiam, m_rightparticle->m_primarydiam);
-
-			////new primary
-			//new_prim = this;
-
-			//// Update the pointers that pointed to the two former children
-			//if (!m_pmodel->getTrackPrimarySeparation()) {
-			//	ChangePointer(m_leftchild, this);
-			//	ChangePointer(m_rightchild, this);
-			//}
-			//else{
-			//	// If the priamry separation is tracked then re-estimation of new sintering levels also
-			//	// requires the centre-centre separation and the smaller primary
-			//	ChangePointer(m_leftchild, this, m_distance_centreToCentre, small_prim);
-			//	ChangePointer(m_rightchild, this, m_distance_centreToCentre, small_prim);
-			//}
-			////******************************************************hdy*********************************************************//
+			ChangePointer(m_leftchild,this); 
+			ChangePointer(m_rightchild,this); 
 
 			//delete the children (destructor is recursive for this class)
             delete m_leftchild;
@@ -1581,18 +1538,6 @@ void PAHPrimary::Merge()
             ResetChildrenProperties();
             UpdatePrimary();
 
-			////******************************************************hdy*********************************************************//
-			//// Only update the cache on m_parent if the sintering level of
-			//// m_parent if the sintering level won't call a merge on the
-			//// parent node. Otherwise, the *this* memory address could be
-			//// removed from the tree and segmentation faults will result!
-			//if (m_parent != NULL) {
-			//	if (!m_parent->MergeCondition()) {
-			//		m_parent->UpdateCache();
-			//	}
-			//}
-			////******************************************************hdy*********************************************************//
-
 		}
 
 
@@ -1604,50 +1549,18 @@ void PAHPrimary::Merge()
                 //this is only to keep the tree balanced
 				PAHPrimary *oldleftparticle=m_leftparticle;
 
-				////******************************************************hdy*********************************************************//
-				//for (size_t i = 0; i != m_comp.size(); i++) {
-				//	m_rightparticle->m_comp[i] =
-				//		m_leftparticle->Composition(i) +
-				//		m_rightparticle->Composition(i);
-				//}
-				////******************************************************hdy*********************************************************//
-
                 //copy the PAHs
 
 				//for (j=oldleftparticle->m_PAH.begin(); j!=oldleftparticle->m_PAH.end(); ++j) {
 				//	m_rightparticle->m_PAH.insert(m_rightparticle->m_PAH.end(),PAH(*j));
 				//}
 
-				////******************************************************hdy*********************************************************//
-				////m_primarydiam of the new particle is the larger of the diameters of the merging particles
-				////if the centre to centre separation isn't tracked this will be changed to the spherical equivalent in the call to UpdatePrimary
-				//m_rightparticle->m_primarydiam = max(m_leftparticle->m_primarydiam, m_rightparticle->m_primarydiam);
-
-				////the new (merged) primary
-				//new_prim = m_rightparticle;
-
-				//m_rightparticle->UpdatePrimary();
-
-				//// Set the pointers from the leftprimary to the rightprimary
-				//// (this will be the new bigger primary)
-				//if (!m_pmodel->getTrackPrimarySeparation()) {
-				//	oldleftparticle->ChangePointer(oldleftparticle, m_rightparticle);
-				//	m_rightparticle->ChangePointer(m_rightparticle, m_rightparticle);
-				//}
-				//else{
-				//	// If the priamry separation is tracked then re-estimation of new sintering levels also
-				//	// requires the centre-centre separation and the smaller primary
-				//	oldleftparticle->ChangePointer(oldleftparticle, m_rightparticle, m_distance_centreToCentre, small_prim);
-				//	m_rightparticle->ChangePointer(m_rightparticle, m_rightparticle, m_distance_centreToCentre, small_prim);
-				//} 
-				////******************************************************hdy*********************************************************//
-
-                m_rightparticle->m_PAH.insert(m_rightparticle->m_PAH.end(),oldleftparticle->m_PAH.begin(),oldleftparticle->m_PAH.end()); //comment by hdy
+                m_rightparticle->m_PAH.insert(m_rightparticle->m_PAH.end(),oldleftparticle->m_PAH.begin(),oldleftparticle->m_PAH.end()); 
                 m_rightparticle->UpdatePrimary(); //comment by hdy
                 //set the pointers from the leftprimary to the rightprimary
                 //this will be the new bigger primary
-				oldleftparticle->ChangePointer(oldleftparticle,m_rightparticle); //comment by hdy
-                m_rightparticle->ChangePointer(m_rightparticle,m_rightparticle); //comment by hdy
+				oldleftparticle->ChangePointer(oldleftparticle,m_rightparticle); 
+                m_rightparticle->ChangePointer(m_rightparticle,m_rightparticle); 
 
                 //set the pointer to the parent node
 				if (oldleftparticle->m_parent->m_leftchild==oldleftparticle)
@@ -1693,40 +1606,11 @@ void PAHPrimary::Merge()
 			//		m_leftparticle->m_PAH.insert(m_leftparticle->m_PAH.end(),PAH(*j));
 			//	}
 
-				////******************************************************hdy*********************************************************//
-				//for (size_t i = 0; i != m_comp.size(); i++) { //hdy
-				//	m_leftparticle->m_comp[i] =
-				//		m_leftparticle->Composition(i) +
-				//		m_rightparticle->Composition(i);
-				//}
-
-				////m_primarydiam of the new particle is the larger of the diameters of the merging particles
-				////if the centre to centre separation isn't tracked this will be changed to the spherical equivalent in the call to UpdatePrimary
-				//m_leftparticle->m_primarydiam = max(m_leftparticle->m_primarydiam, m_rightparticle->m_primarydiam); 
-
-				////the new (merged) primary
-				//new_prim = m_leftparticle; 
-				////******************************************************hdy*********************************************************//
-
-                m_leftparticle->m_PAH.insert(m_leftparticle->m_PAH.end(),oldrightparticle->m_PAH.begin(),oldrightparticle->m_PAH.end()); //comment by hdy
+                m_leftparticle->m_PAH.insert(m_leftparticle->m_PAH.end(),oldrightparticle->m_PAH.begin(),oldrightparticle->m_PAH.end());
                 m_leftparticle->UpdatePrimary();
 
-				////******************************************************hdy*********************************************************//
-				//// All pointers to m_leftparticle now point to oldright particle
-				//if (!m_pmodel->getTrackPrimarySeparation()) {
-				//	oldrightparticle->ChangePointer(oldrightparticle, m_leftparticle);
-				//	m_leftparticle->ChangePointer(m_leftparticle, m_leftparticle);
-				//}
-				//else{
-				//	// If the priamry separation is tracked then re-estimation of new sintering levels also
-				//	// requires the centre-centre separation and the smaller primary
-				//	oldrightparticle->ChangePointer(oldrightparticle, m_leftparticle, m_distance_centreToCentre, small_prim);
-				//	m_leftparticle->ChangePointer(m_leftparticle, m_leftparticle, m_distance_centreToCentre, small_prim);
-				//}
-				////******************************************************hdy*********************************************************//
-
-                oldrightparticle->ChangePointer(oldrightparticle,m_leftparticle); //comment by hdy
-                m_leftparticle->ChangePointer(m_leftparticle,m_leftparticle); //comment by hdy
+                oldrightparticle->ChangePointer(oldrightparticle,m_leftparticle);
+                m_leftparticle->ChangePointer(m_leftparticle,m_leftparticle);
 
 				if (oldrightparticle->m_parent->m_leftchild==oldrightparticle)
 				{
@@ -1760,26 +1644,6 @@ void PAHPrimary::Merge()
                 delete oldrightparticle;
 			}
 		}
-
-		////******************************************************hdy*********************************************************//
-		//if (new_prim->m_parent != NULL){
-		//	double sumterm = 0.0;
-		//	double r_i = new_prim->m_primarydiam / 2.0;
-		//	//get contribution of neighours
-		//	new_prim->SumNeighbours(new_prim, sumterm);
-		//	//change in radius
-		//	double delta_r_i = dV / (4 * M_PI*r_i*r_i + M_PI*r_i*sumterm);
-		//	//update the particle separations and calculate the new free surface of the particle
-		//	double free_surface_term = 0.0;
-		//	std::set<void*> duplicates;
-		//	new_prim->UpdateConnectivity(new_prim, duplicates, delta_r_i, free_surface_term);
-
-		//	//update primary diameter
-		//	new_prim->m_primarydiam = 2.0*(r_i + delta_r_i);
-		//	//update the free surface area
-		//	new_prim->m_free_surf = max(M_PI*new_prim->m_primarydiam*new_prim->m_primarydiam - 2 * M_PI*free_surface_term, 0.0);
-		//}
-		////******************************************************hdy*********************************************************//
 
         UpdateCache();
   //      PrintTree("after.inp");
@@ -2919,6 +2783,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			 */ 
 			if (m_PAHchanged && !m_InvalidPAH && ind != -1)
 				m_InvalidPAH = CheckInvalidPAHs(*it);
+
         }
         if (m_InvalidPAH)
         {
@@ -3474,125 +3339,181 @@ bool PAHPrimary::CheckRounding()
 //! Update primary particle.
 void PAHPrimary::UpdatePrimary(void)
 {
-    //! If the vector of boost shared pointers to PAHs (m_PAH) is empty, the
-    //! primary particle is invalid and the following member variables should
-    //! be set to 0.
-    if (m_PAH.empty())
-    {
-        m_mass            = 0.0;
-        m_numcarbon       = 0;
-        m_numH            = 0;
-        m_numOfEdgeC      = 0;
-        m_numOfRings      = 0;
-		m_numOfRings5      = 0;
-        m_numPAH          = m_PAH.size();
-        m_PAHmass         = 0.0;
-        m_PAHCollDiameter = 0.0;
-    }
-    else 
-    {
-        m_numcarbon       = 0;
-        m_numH            = 0;
-        m_numOfEdgeC      = 0;
-        m_numOfRings      = 0;
-		m_numOfRings5     = 0;
-        m_numPAH          = m_PAH.size();
-        m_PAHmass         = 0.0;
-        m_PAHCollDiameter = 0.0;
+	//! If the vector of boost shared pointers to PAHs (m_PAH) is empty, the
+	//! primary particle is invalid and the following member variables should
+	//! be set to 0.
+	if (m_PAH.empty())
+	{
+		m_mass = 0.0;
+		m_numcarbon = 0;
+		m_numH = 0;
+		m_numOfEdgeC = 0;
+		m_numOfRings = 0;
+		m_numOfRings5 = 0;
+		m_numPAH = m_PAH.size();
+		m_PAHmass = 0.0;
+		m_PAHCollDiameter = 0.0;
+	}
+	else
+	{
+		m_numcarbon = 0;
+		m_numH = 0;
+		m_numOfEdgeC = 0;
+		m_numOfRings = 0;
+		m_numOfRings5 = 0;
+		m_numPAH = m_PAH.size();
+		m_PAHmass = 0.0;
+		m_PAHCollDiameter = 0.0;
 
-        //! Initialisation of variables to adjust the primary diameter if the
-        //! distance between the centres of primary particles is tracked.
-        double d_ij = 0.0;               //!< Distance between the centres of primary particles i and j.
-        double r_i = 0.0;                //!< Radius of primary particle i.
-        double r_j = 0.0;                //!< Radius of primary particle j.
-        double x_i = 0.0;                //!< The distance from the centre of primary particle i to the neck level.
-        double A_n = 0.0;                //!< Cross-sectional neck area.
-        double A_i = 0.0;                //!< Free surface area of primary particle i.
-        double m_primary_diam_old = 0.0; //!< Old primary diameter.
-        double m_vol_old = 0.0;          //!< Old volume.
+		//! Initialisation of variables to adjust the primary diameter if the
+		//! distance between the centres of primary particles is tracked.
+		double d_ij = 0.0;               //!< Distance between the centres of primary particles i and j.
+		double r_i = 0.0;                //!< Radius of primary particle i.
+		double r_j = 0.0;                //!< Radius of primary particle j.
+		double x_i = 0.0;                //!< The distance from the centre of primary particle i to the neck level.
+		double A_n = 0.0;                //!< Cross-sectional neck area.
+		double A_i = 0.0;                //!< Free surface area of primary particle i.
 
-        //! Initialisation of variables but this is only relevant to particles
-        //! with more than one primary.
-        if (m_pmodel->getTrackPrimarySeparation() && Numprimary() > 1) {
-            d_ij = m_parent->m_distance_centreToCentre;
-            r_i = m_primarydiam / 2.0;
+		//double m_primary_diam_old = m_primarydiam; //!< Old primary diameter. set initial value by hdy.
+		double m_vol_old = m_vol;    //!< Old volume. set initial value by hdy.
+		double m_diam_old = m_diam; //add by hdy
+		double dV(0.0); //add by hdy
 
-            if (m_parent->m_leftparticle == this) {
-                r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
-            } else {
-                r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
-            }
+		//! Initialisation of variables but this is only relevant to particles
+		//! with more than one primary.
+		//if ((m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) && Numprimary() > 1) { //modifed by hdy
+		//d_ij = m_parent->m_distance_centreToCentre;
+		//r_i = m_primarydiam / 2.0;
 
-            x_i = (pow(d_ij, 2.0) - pow(r_j, 2.0) + pow(r_i, 2.0)) / 2.0 / d_ij; //!< Eq. (3b) of Langmuir 27:6358 (2011).
-            A_n = M_PI * (pow(r_i, 2.0) - pow(x_i, 2.0));                        //!< Eq. (4).
-            A_i = 2.0 * M_PI * (pow(r_i, 2.0) + r_i * x_i);                      //!< Eq. (6).
-            m_primary_diam_old = m_primarydiam;
-            m_vol_old = m_vol;
-        }
+		//if (m_parent->m_leftparticle == this) {
+		//    r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
+		//} else {
+		//    r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
+		//}
 
-        int maxcarbon=0;
+		//x_i = (pow(d_ij, 2.0) - pow(r_j, 2.0) + pow(r_i, 2.0)) / 2.0 / d_ij; //!< Eq. (3b) of Langmuir 27:6358 (2011).
+		//A_n = M_PI * (pow(r_i, 2.0) - pow(x_i, 2.0));                        //!< Eq. (4).
+		//A_i = 2.0 * M_PI * (pow(r_i, 2.0) + r_i * x_i);                      //!< Eq. (6).
+		//m_primary_diam_old = m_primarydiam;
+		//m_vol_old = m_vol;
+		//} //comment by hdy
 
-        for (vector<boost::shared_ptr<PAH> >::iterator i=m_PAH.begin(); i!=m_PAH.end(); ++i) {
-            m_numcarbon += (*i)->m_pahstruct->numofC();
-            m_numH += (*i)->m_pahstruct->numofH();
-            m_numOfEdgeC += (*i)->m_pahstruct->numofEdgeC();
-            m_numOfRings += (*i)->m_pahstruct->numofRings();
+		int maxcarbon = 0;
+
+		for (vector<boost::shared_ptr<PAH> >::iterator i = m_PAH.begin(); i != m_PAH.end(); ++i) {
+			m_numcarbon += (*i)->m_pahstruct->numofC();
+			m_numH += (*i)->m_pahstruct->numofH();
+			m_numOfEdgeC += (*i)->m_pahstruct->numofEdgeC();
+			m_numOfRings += (*i)->m_pahstruct->numofRings();
 			m_numOfRings5 += (*i)->m_pahstruct->numofRings5();
-            maxcarbon = max(maxcarbon, (*i)->m_pahstruct->numofC()); //!< Search for the largest PAH-in terms of the number of carbon atoms-in the primary.
-        }
+			maxcarbon = max(maxcarbon, (*i)->m_pahstruct->numofC()); //!< Search for the largest PAH-in terms of the number of carbon atoms-in the primary.
+		}
 		m_numOf6Rings = m_numOfRings;
 
-        m_PAHmass = m_numcarbon * 1.9945e-23 + m_numH * 1.6621e-24;  //!< Units of g.
-        m_PAHmass *= 1.0e-3;                                         //!< Units of kg.
-        
-        //! Eq. (10.19) in M. Frenklach, H. Wang, Detailed mechanism and
-        //! modeling of soot particle formation, in: H. Bockhorn (Ed.), Soot
-        //! Formation in Combustion-Mechanisms and Models, Springer, Berlin,
-        //! 1994, pp. 165-190.
-        //! Note that m_i in Eq. (10.19) refers to the number of carbon atoms.
-        m_PAHCollDiameter = 1.395 * sqrt(3.0) * sqrt(maxcarbon * 2.0 / 3.0); //!< Units of Angstroms.
-        m_PAHCollDiameter *= 1.0e-10;                             //!< Units of m.
+		m_PAHmass = m_numcarbon * 1.9945e-23 + m_numH * 1.6621e-24;  //!< Units of g.
+		m_PAHmass *= 1.0e-3;                                         //!< Units of kg.
 
-        //! At the moment we have only one component: soot.
-        if(m_pmodel->ComponentCount() != 1) {
-            throw std::runtime_error("Model contains more then one component. Only soot is supported. (PAHPrimary::UpdatePrimary)");
-        }
+		//! Eq. (10.19) in M. Frenklach, H. Wang, Detailed mechanism and
+		//! modeling of soot particle formation, in: H. Bockhorn (Ed.), Soot
+		//! Formation in Combustion-Mechanisms and Models, Springer, Berlin,
+		//! 1994, pp. 165-190.
+		//! Note that m_i in Eq. (10.19) refers to the number of carbon atoms.
+		m_PAHCollDiameter = 1.395 * sqrt(3.0) * sqrt(maxcarbon * 2.0 / 3.0); //!< Units of Angstroms.
+		m_PAHCollDiameter *= 1.0e-10;                             //!< Units of m.
 
-        m_vol  = m_PAHmass / m_pmodel->Components(0)->Density(); //!< Units of m^3.
-        m_mass = m_PAHmass;
-        m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
-        m_dmob = m_diam;
-        m_dcol = max(m_diam, m_PAHCollDiameter);
-        m_surf = PI * m_diam * m_diam;
-        
-        //! If the distance between the centres of primary particles is
-        //! tracked, the rate of change in the primary diameter is determined
-        //! by its neighbour. Therefore, the particle should be made up of more
-        //! than one primary.
-		if (!(m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) || (m_pmodel->getTrackPrimarySeparation() && m_numprimary == 1)) {//hdy
-            m_primarydiam = m_diam;
-        } else {
-            //! Differentiating Eq. (3b) with respect to time, and assuming
-            //! that r_j and d_ij do not change, the rate of change in x_i with
-            //! respect to time can be obtained.
-            //! Substituting Eqs. (4) and (6) and the above result into
-            //! Eq. (2), the rate of change in r_i with respect to time can be
-            //! obtained.
-            //! References to equations are to Langmuir 27:6358 (2011).
-            //!
-            //! @todo Remove derivation and replace with reference to preprint
-            //!       or paper if results do get published.
-            m_primarydiam = m_primary_diam_old + 2 * (m_vol - m_vol_old) / (A_i + A_n * r_j / d_ij);
-        }
-
-		//***********************************hdy************************************************//
-		if (m_pmodel->getTrackPrimaryCoordinates()) {
-			setRadius(m_primarydiam / 2.0);
+		//! At the moment we have only one component: soot.
+		if (m_pmodel->ComponentCount() != 1) {
+			throw std::runtime_error("Model contains more then one component. Only soot is supported. (PAHPrimary::UpdatePrimary)");
 		}
-		//***********************************hdy************************************************//
 
-        m_avg_coalesc = 0.0;
-    }
+		m_vol = m_PAHmass / m_pmodel->Components(0)->Density(); //!< Units of m^3.
+		m_mass = m_PAHmass;
+		m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
+		m_dmob = m_diam;
+		m_dcol = max(m_diam, m_PAHCollDiameter);
+		m_surf = PI * m_diam * m_diam;
+
+		//! If the distance between the centres of primary particles is
+		//! tracked, the rate of change in the primary diameter is determined
+		//! by its neighbour. Therefore, the particle should be made up of more
+		//! than one primary.
+		//if ((!m_pmodel->getTrackPrimarySeparation()) || (!m_pmodel->getTrackPrimaryCoordinates()) || (m_pmodel->getTrackPrimarySeparation() && m_numprimary == 1) || m_parent == NULL) {//hdy
+		//m_primarydiam = m_diam; //comment by hdy
+		//} //else { //comment by hdy
+		//! Differentiating Eq. (3b) with respect to time, and assuming
+		//! that r_j and d_ij do not change, the rate of change in x_i with
+		//! respect to time can be obtained.
+		//! Substituting Eqs. (4) and (6) and the above result into
+		//! Eq. (2), the rate of change in r_i with respect to time can be
+		//! obtained.
+		//! References to equations are to Langmuir 27:6358 (2011).
+		//!
+		//! @todo Remove derivation and replace with reference to preprint
+		//!       or paper if results do get published.
+		//m_primarydiam = m_primary_diam_old + 2 * (m_vol - m_vol_old) / (A_i + A_n * r_j / d_ij);
+		//} comment by hdy
+
+		//***********************************************hdy*****************************************************//
+		if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) {
+
+			//! Particle with more than one primary.
+			if (m_parent != NULL) {
+
+				while (m_vol_old <= m_vol){
+
+					//! Initialisation of variables to adjust the primary diameter if the
+					//! distance between the centres of primary particles is tracked.
+					double r_i = m_primarydiam / 2.0;	//!< Radius of primary particle i.
+					double dr_max = 0.01*r_i;			//!< Maximum change in primary radius during internal step (1% of primary radius)
+					double dr = 0.0;					//!< Change in radius of i
+
+					//Calculate change in volume
+					dV = dr_max * m_free_surf;
+
+					//Calculate change in radius
+					if (m_vol_old + dV > m_vol){
+						dr = (m_vol - m_vol_old)*dr_max / dV;
+					}
+					else{
+						dr = dr_max;
+					}
+
+					//Update primary diameter
+					m_primarydiam = 2.0* (r_i + dr);
+
+					//! Update free surface area
+					this->UpdateOverlappingPrimary();
+
+					m_vol_old += dV;
+				}
+
+				//if coordinates are tracked then update coordinate tracking properties
+				if (m_pmodel->getTrackPrimaryCoordinates()){
+					setRadius(m_primarydiam / 2.0);
+					this->calcBoundSph();
+					this->calcCOM();
+				}
+			}
+
+			//! Single primary case: the primary diameter equals the
+			//! spherical diameter                
+			else {
+				m_primarydiam = m_diam;
+				m_free_surf = m_surf;
+				m_primaryvol = m_vol;
+
+				if (m_pmodel->getTrackPrimaryCoordinates()) {
+					setRadius(m_primarydiam / 2.0);
+				}
+			}
+		}
+		else {
+			m_primarydiam = m_diam;
+			m_free_surf = m_surf;
+			m_primaryvol = m_vol;
+		}
+		m_avg_coalesc = 0.0;
+	}
 }
 
 //***********************************hdy************************************************//
@@ -3624,161 +3545,6 @@ void PAHPrimary::UpdateCacheRoot(void){
 	else{
 		UpdateCache(this);
 	}
-}
-//********************************************hdy*****************************************//
-
-//********************************************hdy*****************************************//
-unsigned int PAHPrimary::Adjust(const fvector &dcomp,
-	const fvector &dvalues, rng_type &rng, unsigned int n)
-
-{
-	if (m_leftchild == NULL && m_rightchild == NULL) {
-
-		double dV(0.0);
-		double volOld = m_vol;
-		double m_diam_old = m_diam;
-		double m_primary_diam_old = m_primarydiam;
-
-		// Call to Primary to adjust the state space
-		n = Primary::Adjust(dcomp, dvalues, rng, n);
-
-		// Stop doing the adjustment if n is 0.
-		if (n > 0) {
-			// Update only the primary
-			UpdatePrimary();
-
-			//! If the distance between the centres of primary particles or the
-			//! primary coordinates is tracked, the rate of change in the
-			//! primary diameter is affected by its neighbours.
-			if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) {
-
-				//! Particle with more than one primary.
-				if (m_parent != NULL) {
-
-					while (volOld <= m_vol){
-
-						//! Initialisation of variables to adjust the primary diameter if the
-						//! distance between the centres of primary particles is tracked.
-						double r_i = m_primarydiam / 2.0;	//!< Radius of primary particle i.
-						double dr_max = 0.1*r_i;			//!< Maximum change in primary radius during internal step (10% of primary radius)
-						double sumterm = 0.0;				//!< Contribution from neighbours to the change in radius 
-						double delta_r_i = 0.0;				//!< Change in radius of i
-						double free_surface_term = 0.0;		//!< Contribution from neighbours to free surface area
-
-						//! Get contribution from neighbours working up the
-						//! binary tree.
-						SumNeighbours(this, sumterm);
-
-						//! Calculate change in volume.
-						dV = dr_max * (4 * M_PI*r_i*r_i + M_PI*r_i*sumterm);
-
-						//! Calculate change in radius.
-						if (volOld + dV > m_vol){
-							delta_r_i = (m_vol - volOld)*dr_max / dV;
-						}
-						else{
-							delta_r_i = dr_max;
-						}
-
-						//! Store the memory address of this primary so that it is only updated once. 
-						std::set<void*> duplicates;
-						duplicates.insert(this);
-
-						//! Update the particle separations and calculate the
-						//! new free surface of the particle.
-						UpdateConnectivity(this, duplicates, delta_r_i, free_surface_term);
-
-						//! Update primary diameter.
-						m_primarydiam = 2.0* (r_i + delta_r_i);
-
-						m_primary_diam_old = m_primarydiam;
-
-						if (m_pmodel->getTrackPrimaryCoordinates()) {
-							setRadius(m_primarydiam / 2.0);
-						}
-
-						//! Update the free surface area if the calculated area
-						//! is negative (too many overlaps) then set
-						//! m_free_surf = 0.0
-						m_free_surf = max(M_PI*m_primarydiam*m_primarydiam - 2 * M_PI*free_surface_term, 0.0);
-
-						volOld += dV;
-					}
-				}
-
-				//! Single primary case: the primary diameter equals the
-				//! spherical diameter                
-				else {
-					m_primarydiam = m_diam;
-
-					if (m_pmodel->getTrackPrimaryCoordinates()) {
-						setRadius(m_primarydiam / 2.0);
-					}
-				}
-			}
-
-			//! If the distance between the centres of primary particles or the
-			//! primary coordinates is not tracked, just update the surface
-			//! area and work up the tree.
-			else {
-				dV = m_vol - volOld;
-				double dS(0.0);
-
-				if (dV > 0.0) {
-					//! Surface change due to volume addition.
-					dS = dV * 2.0 * m_pmodel->GetBinTreeCoalThresh() / m_diam;
-				}
-				//! TODO: Implement surface area reduction?
-
-				//! Climb back-up the tree and update the surface area and
-				//! sintering of a particle.
-				UpdateParents(dS);
-			}
-		}
-	}
-
-	// Else this a non-leaf node (not a primary)
-	else
-	{
-		return SelectRandomSubparticle(rng)->Adjust(dcomp, dvalues, rng, n);
-
-		//Note (csl37): this only picks the left or right particle of the root node 
-		//and ignores the rest of the tree
-		/*
-		// Generate random numbers
-		boost::bernoulli_distribution<> leftRightChooser;
-		// Select particle
-		if(leftRightChooser(rng))
-		return m_leftparticle->Adjust(dcomp, dvalues, rng, n);
-		else
-		return m_rightparticle->Adjust(dcomp, dvalues, rng, n);
-		*/
-
-		///////////////////////////////////////////////////////////
-		// csl37: new primary selection based on free surface area
-		// work down tree selecting left/right child based on sum of primary free surface areas under node
-		// generate random number, use bernoulli with p=free_surf(leftchild)/free_surf(this)
-		/*
-		boost::bernoulli_distribution<> leftRightChooser(m_leftchild->m_free_surf/m_free_surf);
-		if(leftRightChooser(rng)){
-		return m_leftchild->Adjust(dcomp, dvalues, rng, n);
-		}else{
-		return m_rightchild->Adjust(dcomp, dvalues, rng, n);
-		}
-		*/
-		///////////////////////////////////////////////////////////
-	}
-
-	//csl37:
-	/*
-	// Update property cache.
-	UpdateCache(this);
-	*/
-	//csl37: update the cache from the root node
-	UpdateCacheRoot();
-
-	return n;
-
 }
 //********************************************hdy*****************************************//
 
@@ -3831,87 +3597,118 @@ bool PAHPrimary::CheckSintering()
 
 /*!
  * @param[in] root The root node of this particle
-*/
+ */
 void PAHPrimary::UpdateCache(PAHPrimary *root)
 {
-    //Update the children
-	if (m_leftchild!=NULL)
+	//Update the children
+	if (m_leftchild != NULL)
 	{
 		m_leftchild->UpdateCache(root);
 		m_rightchild->UpdateCache(root);
-		m_numprimary=m_leftchild->m_numprimary+m_rightchild->m_numprimary;
+		m_numprimary = m_leftchild->m_numprimary + m_rightchild->m_numprimary;
 	}
-    //this is a primary and the number of primaries below this node is one (this node and no children)
+	//this is a primary and the number of primaries below this node is one (this node and no children)
 	else
 	{
-            m_numprimary=1;
+		if (m_parent == NULL) {
+			m_avg_coalesc = 1.0;
+		}
+		else {
+			m_avg_coalesc = 0.0;
+		}
+		m_numprimary = 1;
 
-            // Check that the primary is begin kept up to date
-//            const double oldNumCarbons = m_numcarbon;
-//            UpdatePrimary();
-//            if(m_numcarbon != oldNumCarbons)
-//                std::cerr << "UpdatePrimary has changed num carbons inside UpdateCache\n";
+		// Check that the primary is begin kept up to date
+		//            const double oldNumCarbons = m_numcarbon;
+		//            UpdatePrimary();
+		//            if(m_numcarbon != oldNumCarbons)
+		//                std::cerr << "UpdatePrimary has changed num carbons inside UpdateCache\n";
 
-            m_avg_coalesc=0;
 	}
 
-    //this is not a primary, sum up the properties
-	if (m_leftchild!=NULL)
-    {
-        // remove the PAHs from this node to free memory
-        Reset();
-		m_surf = m_leftchild->m_surf+m_rightchild->m_surf;
-		m_primarydiam = (m_leftchild->m_primarydiam+m_rightchild->m_primarydiam);
-        m_vol=m_leftchild->m_vol+m_rightchild->m_vol;
-        m_numPAH = m_leftchild->m_numPAH+m_rightchild->m_numPAH;
-        m_primarydiam = (m_leftchild->m_primarydiam+m_rightchild->m_primarydiam);
-        m_mass=(m_leftchild->m_mass+m_rightchild->m_mass);
-        m_PAHCollDiameter=max(m_leftchild->m_PAHCollDiameter,m_rightchild->m_PAHCollDiameter);
+	//this is not a primary, sum up the properties
+	if (m_leftchild != NULL)
+	{
+		// remove the PAHs from this node to free memory
+		Reset();
+		m_surf = m_leftchild->m_surf + m_rightchild->m_surf;
+		m_free_surf = m_leftchild->m_free_surf + m_rightchild->m_free_surf; //add by hdy
+		m_primarydiam = (m_leftchild->m_primarydiam + m_rightchild->m_primarydiam);
+		m_primaryvol = m_leftchild->m_primaryvol + m_rightchild->m_primaryvol; //add by hdy
+		m_vol = m_leftchild->m_vol + m_rightchild->m_vol;
+		m_numPAH = m_leftchild->m_numPAH + m_rightchild->m_numPAH;
+		m_mass = (m_leftchild->m_mass + m_rightchild->m_mass);
+		m_PAHCollDiameter = max(m_leftchild->m_PAHCollDiameter, m_rightchild->m_PAHCollDiameter);
 
-        m_numcarbon=m_leftchild->m_numcarbon + m_rightchild->m_numcarbon;
-        m_numH=m_leftchild->m_numH + m_rightchild->m_numH;
+		m_numcarbon = m_leftchild->m_numcarbon + m_rightchild->m_numcarbon;
+		m_numH = m_leftchild->m_numH + m_rightchild->m_numH;
 
-        m_numOfEdgeC=m_leftchild->m_numOfEdgeC + m_rightchild->m_numOfEdgeC;
-        m_numOfRings=m_leftchild->m_numOfRings + m_rightchild->m_numOfRings;
+		m_numOfEdgeC = m_leftchild->m_numOfEdgeC + m_rightchild->m_numOfEdgeC;
+		m_numOfRings = m_leftchild->m_numOfRings + m_rightchild->m_numOfRings;
 		m_numOfRings5 = m_leftchild->m_numOfRings5 + m_rightchild->m_numOfRings5;
-        // calculate the coalescence level of the two primaries connected by this node
-        m_children_roundingLevel=CoalescenceLevel();
-        //sum up the avg coal level
-        m_avg_coalesc=m_children_roundingLevel+m_leftchild->m_avg_coalesc+m_rightchild->m_avg_coalesc;
 
-        // calculate the different diameters only for the root node because this goes into the
-        // particle tree and gets used by the coagulation kernel
-        if (this==root)
-        {
-             //spherical eqiv radius
-            double spherical_radius=pow(3*m_vol/(4*PI),ONE_THIRD);
-            m_diam=2*spherical_radius;
-            // there are m_numprimary-1 connections between the primary particles
-            m_avg_coalesc=m_avg_coalesc/(m_numprimary-1);
-            //approxmiate the surface of the particle
-            const double numprim_1_3=pow(m_numprimary,-0.333333);
-            m_surf=4*PI*spherical_radius*spherical_radius/
-                (m_avg_coalesc*(1-numprim_1_3)+numprim_1_3);
+		//calculate bounding sphere
+		calcBoundSph(); //add by hdy
 
-            //calculate the surface equivalent radius
-           // const double radius_surf=sqrt(m_surf/(4*PI));
-            // the average between the surface and voluem equiv diameter
-            //const double meandiam=spherical_radius+radius_surf;            //2*0.5*(radius(vol)+radius(sphere))
-            const double aggcolldiam=(6*m_vol/m_surf)*
-                                     pow(pow(m_surf,3)/(36*PI*m_vol*m_vol),(1.0/1.8));
-            // the maximum of the largest PAH diameter and
-            // the average between the surface and voluem equiv diameter
-            const double cdiam=max(aggcolldiam,m_PAHCollDiameter);
-            m_dmob = aggcolldiam;
-            SetCollDiameter(cdiam);
-        }
-        else
-        {
-            m_diam=0;
-            m_dmob=0;
+		// calculate the coalescence level of the two primaries connected by this node
+		m_children_roundingLevel = CoalescenceLevel();
 
-        }
-    }
+		if (MergeCondition()) CheckRounding();
+
+		// Sum up the avg sintering level (now that sintering is done)
+		if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
+			m_avg_coalesc = m_children_roundingLevel +
+				m_leftchild->m_avg_coalesc + m_rightchild->m_avg_coalesc;
+		}
+		else {
+			// This should only occur if CheckSintering has merged
+			m_avg_coalesc = m_children_roundingLevel;
+		}
+
+		// calculate the different diameters only for the root node because this goes into the
+		// particle tree and gets used by the coagulation kernel
+		if (this == root)
+		{
+			//spherical eqiv radius
+			double spherical_radius = pow(3 * m_vol / (4 * PI), ONE_THIRD);
+			m_diam = 2 * spherical_radius;
+
+			// there are m_numprimary-1 connections between the primary particles
+			if (m_numprimary > 1)
+				m_avg_coalesc = m_avg_coalesc / (m_numprimary - 1);
+			//approxmiate the surface of the particle
+
+			if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
+				// Approxmiate the surface of the particle
+				// (same as in ChangePointer)
+				const double numprim_1_3 = pow(m_numprimary, -1.0 * ONE_THIRD);
+				m_surf = 4 * PI*spherical_radius*spherical_radius /
+					(m_avg_coalesc*(1 - numprim_1_3) + numprim_1_3);
+			}
+			else{
+				// if the centre to centre distance is tracked then this is the free surface area
+				m_surf = m_free_surf;
+			}
+
+			//calculate the surface equivalent radius
+			// const double radius_surf=sqrt(m_surf/(4*PI));
+			// the average between the surface and voluem equiv diameter
+			//const double meandiam=spherical_radius+radius_surf;            //2*0.5*(radius(vol)+radius(sphere))
+			const double aggcolldiam = (6 * m_vol / m_surf)*
+				pow(pow(m_surf, 3) / (36 * PI*m_vol*m_vol), (1.0 / 1.8));
+			// the maximum of the largest PAH diameter and
+			// the average between the surface and voluem equiv diameter
+			const double cdiam = max(aggcolldiam, m_PAHCollDiameter);
+			m_dmob = aggcolldiam;
+			SetCollDiameter(cdiam);
+		}
+		else
+		{
+			m_diam = 0;
+			m_dmob = 0;
+
+		}
+	}
 }
 
 /*!
@@ -4835,3 +4632,64 @@ double PAHPrimary::RoundingLevel()
         return 0.0;
     }
 }
+
+//**********************************add by hdy*****************************************//
+void PAHPrimary::SumCaps(PAHPrimary *prim, double &CapAreas, double &CapVolumes){
+
+	double d_ij = m_parent->m_distance_centreToCentre;
+	double r_i = prim->m_primarydiam / 2.0;
+	double r_j = 0.0;
+	double x_ij = 0.0;
+
+	//! Check if a neighbour of prim
+	if (m_parent->m_leftparticle == prim) {
+
+		//! Right primary is a neighbour
+		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
+		x_ij = (pow(d_ij, 2.0) - pow(r_j, 2.0) + pow(r_i, 2.0)) / (2.0*d_ij);
+
+		//! Calculate cap area and add to sum
+		CapAreas += 2 * M_PI*(r_i*r_i - r_i*x_ij);
+
+		//! Calculate cap volume and add to sum
+		CapVolumes += M_PI * (2 * pow(r_i, 3.0) + pow(x_ij, 3.0) - 3.0*pow(r_i, 2.0)*x_ij) / 3.0;
+
+	}
+	else if (m_parent->m_rightparticle == prim) {
+
+		//! Left primary is a neighbour
+		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
+		x_ij = (pow(d_ij, 2.0) - pow(r_j, 2.0) + pow(r_i, 2.0)) / (2.0*d_ij);
+
+		//! Calculate cap area and add to sum
+		CapAreas += 2 * M_PI*(r_i*r_i - r_i*x_ij);
+
+		//! Calculate cap volume and add to sum
+		CapVolumes += M_PI * (2 * pow(r_i, 3.0) + pow(x_ij, 3.0) - 3.0*pow(r_i, 2.0)*x_ij) / 3.0;
+	}
+
+	//! Continue working up the binary tree
+	if (m_parent->m_parent != NULL){
+		m_parent->SumCaps(prim, CapAreas, CapVolumes);
+	}
+}
+//**********************************add by hdy*****************************************//
+
+//**********************************add by hdy*****************************************//
+void PAHPrimary::UpdateOverlappingPrimary(){
+
+	//! Get sum of cap areas and volumes
+	double CapAreas = 0.0;			//!< Contribution from neighbours to free surface area
+	double CapVolumes = 0.0;		//!< Contribution from neighbours to volume
+	SumCaps(this, CapAreas, CapVolumes);
+
+	//! Update free surface area
+	//if the calculated area is negative (too many overlaps) then set m_free_surf = 0.0
+	m_free_surf = max(M_PI*m_primarydiam*m_primarydiam - CapAreas, 0.0);
+
+	//! Update primary volume
+	//if calculated volume is negative (too many overlaps) then set m_primaryvol = 0.0
+	m_primaryvol = max(M_PI*m_primarydiam / 6.0 - CapVolumes, 0.0);
+}
+//**********************************add by hdy*****************************************//
+
