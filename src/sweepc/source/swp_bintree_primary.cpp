@@ -2639,17 +2639,17 @@ void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, Bi
 	double x_ij = 0.0;
 	BinTreePrimary *neighbour = NULL;
 
-	//check if a neighbour of prim
+	//! check if a neighbour of prim
 	if (m_parent->m_leftparticle == prim && m_parent->m_rightparticle != prim_ignore ) {
-		//right particle is a neighbour
+		//! right particle is a neighbour
 		neighbour = m_parent->m_rightparticle;
 		r_j = neighbour->m_primarydiam / 2.0;
 	} else if(m_parent->m_rightparticle == prim &&  m_parent->m_leftparticle != prim_ignore ) {
-		//left particle is a neighbour
+		//! left particle is a neighbour
 		neighbour = m_parent->m_leftparticle;
 		r_j = neighbour->m_primarydiam / 2.0;
 	} else {
-		//not a neighbour
+		//! not a neighbour
 		r_j = 0.0;
 	}
 
@@ -2657,22 +2657,21 @@ void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, Bi
 
 		double d_ij_old = d_ij;
 		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
-		//update centre to centre separation
+		//! update centre to centre separation
 		//making sure centre to centre separation remains smaller than the sum of the radii
 		d_ij = min(d_ij + r_i * delta_r / x_ij, r_i+r_j+delta_r);
 		m_parent->m_distance_centreToCentre = d_ij;
 
-		//if primary coordinates are tracked then we need to update the coordinates of the neighbour 
+		//! if primary coordinates are tracked then we need to update the coordinates of the neighbour 
 		if (m_pmodel->getTrackPrimaryCoordinates()) {
-			//get unit vector change in separation
-			Coords::Vector delta_dij = UnitVector(prim->boundSphCentre(), neighbour->boundSphCentre()); 
-			double delta_d = d_ij-d_ij_old;
-			//Translate the neighbour 
-			neighbour->TranslatePrimary(delta_dij, delta_d);
-			//Translate all neighbours of the neighbour except prim
-			neighbour->TranslateNeighbours(neighbour,delta_dij, delta_d, prim);
+			//! get (unit) vector separating prim and neighbour
+			Coords::Vector u = UnitVector(prim->boundSphCentre(), neighbour->boundSphCentre()); 
+			double delta_d = d_ij-d_ij_old; //!< change in separation (magnitude)
+			//! translate the neighbour 
+			neighbour->TranslatePrimary(u, delta_d);
+			//! translate all neighbours of the neighbour except prim
+			neighbour->TranslateNeighbours(neighbour,u, delta_d, prim);
 		}
-
 	}
 
 	//continue working up the binary tree
@@ -2879,6 +2878,10 @@ void BinTreePrimary::SinterNode(
         //! volume determined through comparisons with the mass-derived volume.
         //! Note that the smaller the distance is, the smaller the changes are.
 
+		///////////////////////////////////////////////////////
+		/// References to equations in Langmuir 27:6358 (2011).
+		///////////////////////////////////////////////////////
+
 		//make sure particles are up to date
 		m_leftparticle->UpdatePrimary();
 		m_rightparticle->UpdatePrimary();
@@ -2886,11 +2889,11 @@ void BinTreePrimary::SinterNode(
 		double dd_ij_Max = m_distance_centreToCentre / 100.0;
 
         while (t1 < tstop) {
-            double r_i = this->m_leftparticle->m_primarydiam / 2.0;
+			//! Definition of variables
+			double r_i = this->m_leftparticle->m_primarydiam / 2.0;
             double r_j = this->m_rightparticle->m_primarydiam / 2.0;
 			double d_ij = m_distance_centreToCentre;
 		
-			//! Definition of variables for conciseness.
             double d_ij2 = pow(d_ij, 2.0); 
             double r_i2 = pow(r_i, 2.0);
             double r_j2 = pow(r_j, 2.0);
@@ -2907,7 +2910,7 @@ void BinTreePrimary::SinterNode(
 				double x_j = min((d_ij2 - r_i2 + r_j2) / (2.0 * d_ij),r_j); //!< Eq. (3b).
 				double A_n = M_PI * (r_i2 - pow(x_i, 2.0));        //!< Eq. (4).
 			
-				//declare variables
+				//declare more variables
 				double dd_ij_dt=0.0;
 				double R_n = 0.0;
 				double r4_tau = 0.0;
@@ -2930,10 +2933,6 @@ void BinTreePrimary::SinterNode(
 						//! ratio (gamma/eta) can be related to tau.
 						//! J. Colloid Interface Sci. 140:419 (1990).
 						gamma_eta = min(r_i, r_j) / tau;
-	
-						///////////////////////////////////////////////////////
-						/// References to equations in Langmuir 27:6358 (2011).
-						///////////////////////////////////////////////////////
 
 						//! Eq. (14a).
 						dd_ij_dt = 4.0 * r_i * r_j * d_ij2 * (r_i + r_j) * gamma_eta /
@@ -2943,9 +2942,7 @@ void BinTreePrimary::SinterNode(
 				}else if(model.Type() == Processes::SinteringModel::GBD){ 
 
 						//! If the particles are in point contact set an initial neck radius of 1% 
-						//! of the smaller primary radius, otherwise dd_ij_dt is undefined
-						//this should be A_n == 0.0 but for some reason we see a negative radius	//csl37-check this
-						//if(A_n == 0.0){
+						//! of the smaller primary radius, otherwise dd_ij_dt would be undefined
 						if(A_n <= 0.0){
 							R_n = 0.01*min(r_i,r_j);
 							A_n = M_PI * R_n * R_n;
@@ -2955,8 +2952,8 @@ void BinTreePrimary::SinterNode(
 							R_n = sqrt(A_n / M_PI);
 						}
 
-						// The primary radius in the numerator cancels with the diameter dependence of tau
-						// so we can calculate this for only one of the primaries.
+						//! The primary radius in the numerator cancels with the diameter dependence of tau
+						//! so we can calculate this for only one of the primaries.
 						// In the SintTime the diameter is calculated as 6.0 * m_vol / m_surf
 						// so r = 3.0 * m_vol / m_surf
 						double r4 = pow(3.0 * m_leftparticle->m_vol / m_leftparticle->m_surf, 4.0);
@@ -2973,8 +2970,7 @@ void BinTreePrimary::SinterNode(
 						break;
 				}
 
-				//csl37-rewrite
-				//! Get surface area subtract mutual contribution
+				//! Get surface area and subtract mutual contribution
 				double A_i = m_leftparticle->m_free_surf + m_leftparticle->m_sum_necks - M_PI*(r_i*r_i - x_i*x_i)*r_i/x_i;
 				double A_j = m_rightparticle->m_free_surf + m_rightparticle->m_sum_necks - M_PI*(r_j*r_j - x_j*x_j)*r_j/x_j;
 				
@@ -2983,12 +2979,6 @@ void BinTreePrimary::SinterNode(
 				assert(A_j >= 0.0);
 				//csl37-test
 
-				//! The expression for B_i in Eq. (8) is wrong. By combining
-				//! Eqs. (5) and (7), we can obtain two equations which are
-				//! functions of r_i and r_j. Subsequently combined these two
-				//! equations and used Wolfram Alpha to rearrange equation in terms
-				//! of r_i (and r_j).
-				//!
 				//! @todo Remove derivation and replace with reference to preprint
 				//!       or paper if results do get published.
 				double B_i = (-r_j*A_n*A_n - x_j*A_j*A_n)/(A_i*A_j*d_ij + r_i*A_j*A_n + r_j*A_i*A_n);
@@ -3010,33 +3000,29 @@ void BinTreePrimary::SinterNode(
                 double delta_dij = -(double)n * scale * dd_ij_Max; //!< Sintering decreases d_ij hence the negative sign.
 				m_distance_centreToCentre += delta_dij; 
                 
-				//if coordinates are tracked then we will shift one side of the particle by the change in separation
-				//this is faster than translating both sides by half the change
+				//! if coordinates are tracked then we will translate one side of the particle by the change in separation
+				//! this is faster than translating both sides by half the change
 				if (m_pmodel->getTrackPrimaryCoordinates()) {
-					//get direction of translation (left particle to right particle)
+					//! get direction of translation (left particle to right particle)
 					Coords::Vector vector_change = UnitVector(m_leftparticle->boundSphCentre(), m_rightparticle->boundSphCentre());
-					//translate the leftparticle
+					//! translate the leftparticle
 					m_leftparticle->TranslatePrimary(vector_change, -delta_dij);		
-					//translate all neighbours of the left particle except the right particle
+					//! translate all neighbours of the left particle except the right particle
 					m_leftparticle->TranslateNeighbours(m_leftparticle,vector_change,-delta_dij,m_rightparticle);
 				}
 				
 				//! Change in primary radii
 				double delta_r_i = - (double)n * scale * B_i * dd_ij_Max;  //!< Eq. (8).
-				double delta_r_j = - (double)n * scale * B_j * dd_ij_Max; //!< Eq. (8).
+				double delta_r_j = - (double)n * scale * B_j * dd_ij_Max;  //!< Eq. (8).
 
-				//! Adjust separation of neighbours (not currently sintering) 
-				//adjust separation with neighbours (ignoring p_j)
+				//! Adjust separation of neighbours that are not currently sintering
 				m_leftparticle->UpdateConnectivity(m_leftparticle, delta_r_i, m_rightparticle);
-					
-				//adjust separation with neighbours (ignoring p_i)
 				m_rightparticle->UpdateConnectivity(m_rightparticle, delta_r_j, m_leftparticle);					
 
 				//! Adjust primary radii
 				this->m_leftparticle->m_primarydiam += 2.0 * delta_r_i;				
 				this->m_rightparticle->m_primarydiam += 2.0 * delta_r_j;
 
-				//csl37-rewrite 
 				//! update primaries
 				m_leftparticle->UpdateOverlappingPrimary();
 				m_rightparticle->UpdateOverlappingPrimary();
@@ -3050,8 +3036,7 @@ void BinTreePrimary::SinterNode(
             }
         }
 
-		//! If coordinates are tracked
-		//! Update tracking radius 
+		//! If coordinates are tracked update tracking radius 
 		if (m_pmodel->getTrackPrimaryCoordinates()) {		
 			m_leftparticle->setRadius(m_leftparticle->m_primarydiam / 2.0);
 			m_rightparticle->setRadius(m_rightparticle->m_primarydiam / 2.0);
@@ -3752,24 +3737,24 @@ void BinTreePrimary::TranslatePrimary(Coords::Vector u, double delta_d)
 void BinTreePrimary::TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u, double delta_d, BinTreePrimary *prim_ignore)
 {
 	BinTreePrimary *neighbour = NULL;
-	// Check if a neighbour of prim but not prim_ignore
+	//! Check if a neighbour of prim but not prim_ignore
 	if (m_parent->m_leftparticle == prim && m_parent->m_rightparticle != prim_ignore ) {
-		//right particle is a neighbour
+		//! right particle is a neighbour
 		neighbour = m_parent->m_rightparticle;
-		//adjust its coordinates
+		//! adjust its coordinates
 		neighbour->TranslatePrimary(u,delta_d);
-		//adjust its neighbours except for prim
+		//! adjust its neighbours except for prim
 		neighbour->TranslateNeighbours(neighbour, u, delta_d, prim);
 	} else if(m_parent->m_rightparticle == prim &&  m_parent->m_leftparticle != prim_ignore ) {
-		//left particle is a neighbour
+		//! left particle is a neighbour
 		neighbour = m_parent->m_leftparticle;
-		//adjust its coordinates
+		//! adjust its coordinates
 		neighbour->TranslatePrimary(u,delta_d);
-		//adjust its neighbours except for prim
+		//! adjust its neighbours except for prim
 		neighbour->TranslateNeighbours(neighbour, u, delta_d, prim);
 	}
 
-	//continue working up the binary tree
+	//! continue working up the binary tree
 	if(m_parent->m_parent != NULL){
 		m_parent->TranslateNeighbours(prim, u, delta_d, prim_ignore);
 	}

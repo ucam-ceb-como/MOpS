@@ -474,7 +474,7 @@ private:
 	//function to modify the centre to centre separations and returns free surface area
 	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
 		
-	//overload of function ignore update to neighbour
+	//! function to modify the centre to centre separations and coordinates and neighbours
 	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, BinTreePrimary *prim_ignore);
 
     // PRINTING TREES
