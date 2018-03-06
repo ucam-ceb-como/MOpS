@@ -580,8 +580,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
                 double oldDistance = dx * dx + dy * dy + dz * dz;
 
                 //! Translate particle in 1% increments.
-				//csl37-test : translate in 0.1% increments
-                this->m_leftchild->Translate(-0.001 * x * sumr, -0.001 * y * sumr, -0.001 * z * sumr);
+                this->m_leftchild->Translate(-0.01 * x * sumr, -0.01 * y * sumr, -0.01 * z * sumr);
 
                 Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
                 
@@ -1197,7 +1196,7 @@ bool BinTreePrimary::CheckSintering()
 		// check whether condition for merger is met
 		if (MergeCondition()) {
 			 Merge();
-			 UpdateCache();
+		//	 UpdateCache();	//this is already done at the end of merge
 			 hassintered=true;
 
 			 // Check again because this node has changed
@@ -1284,6 +1283,10 @@ BinTreePrimary &BinTreePrimary::Merge()
 
 		d_ij = m_distance_centreToCentre;
 		
+		// update primaries
+		m_leftparticle->UpdatePrimary();
+		m_rightparticle->UpdatePrimary();
+
 		// If the centre to centre distance is tracked we need to know which is the smaller primary of the merging pair
 		if(m_leftparticle->m_primarydiam > m_rightparticle->m_primarydiam){
 			small_prim = m_rightparticle;
@@ -1561,6 +1564,10 @@ BinTreePrimary &BinTreePrimary::Merge()
 		if(m_pmodel->getTrackPrimaryCoordinates()){
 			new_prim->setRadius(new_prim->m_primarydiam / 2.0);
 		}
+
+		//csl37-test
+		assert(new_prim->m_primarydiam < 1e-3);
+		//csl37-test-
 
 		UpdateCache();
 
@@ -1872,6 +1879,10 @@ void BinTreePrimary::UpdatePrimary(void)
 	}
 
     m_numprimary  = 1;
+
+	//csl37-test
+	assert(m_primarydiam > 0.0);
+	//csl37-test
 
     //! Initialisation of the radius of bounding sphere which is only relevant
     //! if the primary coordinates are tracked.
@@ -2421,10 +2432,16 @@ void BinTreePrimary::UpdateOverlappingPrimary(){
 
 	//! Update primary volume
 	//if calculated volume is negative (too many overlaps) then set m_primaryvol = 0.0
-	m_primaryvol = max( M_PI*m_primarydiam/6.0 - CapVolumes , 0.0);
+	m_primaryvol = max( M_PI*pow(m_primarydiam,3.0)/6.0 - CapVolumes , 0.0);
 
 	//! Update sum of necks 
-	m_sum_necks = SumNecks;
+	m_sum_necks = max(SumNecks,0.0);
+
+	//csl37-test
+	assert(CapVolumes >= -1e-30);
+	assert(SumNecks >= 0.0);
+	assert(m_primarydiam < 1e-3);
+	//csl37-test
 }
 
 /*!
@@ -2451,7 +2468,8 @@ void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &CapAreas, double &Cap
 		
 		//! Right primary is a neighbour
 		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
-		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
+		x_ij = min( ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij ), r_i); //ensure -r_i <= x_ij <= r_i
+		x_ij = max( x_ij, -r_i );
 
 		//! Calculate cap area and add to sum
 		CapAreas += 2*M_PI*(r_i*r_i - r_i*x_ij);
@@ -2459,14 +2477,19 @@ void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &CapAreas, double &Cap
 		//! Calculate cap volume and add to sum
 		CapVolumes += M_PI * (2*pow(r_i,3.0) + pow(x_ij,3.0) - 3.0*pow(r_i,2.0)*x_ij ) /3.0;
 
+		//csl37-test
+		assert(CapVolumes >= -1e-30);
+		//csl37-test
+
 		//! Neck area * r_i / x_ij
-		SumNecks +=  M_PI*(r_i*r_i - x_ij*x_ij) * r_i / x_ij;
+		SumNecks +=  max(M_PI*(r_i*r_i - x_ij*x_ij) * r_i / x_ij,0.0);
 
 	} else if(m_parent->m_rightparticle == prim) {
 		
 		//! Left primary is a neighbour
 		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
-		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
+		x_ij = min( ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij ), r_i);	//ensure -r_i <= x_ij <= r_i
+		x_ij = max( x_ij, -r_i );
 
 		//! Calculate cap area and add to sum
 		CapAreas += 2*M_PI*(r_i*r_i - r_i*x_ij);
@@ -2474,9 +2497,21 @@ void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &CapAreas, double &Cap
 		//! Calculate cap volume and add to sum
 		CapVolumes += M_PI * (2*pow(r_i,3.0) + pow(x_ij,3.0) - 3.0*pow(r_i,2.0)*x_ij ) /3.0;
 		
+		//csl37-test
+		assert(CapVolumes >= -1e-30);
+		//csl37-test
+
 		//! Neck area * r_i / x_ij
-		SumNecks += M_PI*(r_i*r_i - x_ij*x_ij) * r_i / x_ij;
+		SumNecks += max(M_PI*(r_i*r_i - x_ij*x_ij) * r_i / x_ij,0.0);
 	}
+
+	//csl37-test
+	assert(SumNecks >= 0.0);
+	assert(2*M_PI*(r_i*r_i - r_i*x_ij) >= 0.0); //cap area
+	//assert(M_PI * (2*pow(r_i,3.0) + pow(x_ij,3.0) - 3.0*pow(r_i,2.0)*x_ij ) /3.0 >= 0.0);
+	assert(r_i >= 0.0);
+	assert(r_j >= 0.0);
+	//csl37-test
 
 	//! Continue working up the binary tree
 	if(m_parent->m_parent != NULL){
@@ -2843,7 +2878,12 @@ void BinTreePrimary::SinterNode(
         //! large (~10%) a significant error is incurred in the final spherical
         //! volume determined through comparisons with the mass-derived volume.
         //! Note that the smaller the distance is, the smaller the changes are.
-        double dd_ij_Max = m_distance_centreToCentre / 100.0;
+
+		//make sure particles are up to date
+		m_leftparticle->UpdatePrimary();
+		m_rightparticle->UpdatePrimary();
+		
+		double dd_ij_Max = m_distance_centreToCentre / 100.0;
 
         while (t1 < tstop) {
             double r_i = this->m_leftparticle->m_primarydiam / 2.0;
@@ -2938,6 +2978,11 @@ void BinTreePrimary::SinterNode(
 				double A_i = m_leftparticle->m_free_surf + m_leftparticle->m_sum_necks - M_PI*(r_i*r_i - x_i*x_i)*r_i/x_i;
 				double A_j = m_rightparticle->m_free_surf + m_rightparticle->m_sum_necks - M_PI*(r_j*r_j - x_j*x_j)*r_j/x_j;
 				
+				//csl37-test
+				assert(A_i >= 0.0);
+				assert(A_j >= 0.0);
+				//csl37-test
+
 				//! The expression for B_i in Eq. (8) is wrong. By combining
 				//! Eqs. (5) and (7), we can obtain two equations which are
 				//! functions of r_i and r_j. Subsequently combined these two

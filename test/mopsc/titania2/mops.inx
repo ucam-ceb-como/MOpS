@@ -2,12 +2,12 @@
 <mops version="2">
   
   <!-- Default parameters (can be overidden). --> 
-  <runs>1</runs>
+  <runs>4</runs>
   <iter>20</iter>
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
   <pcount>1024</pcount>
-  <maxm0>1.50e13</maxm0>
+  <maxm0>1.5e13</maxm0>
   
 
   <!-- Reactor definition (given initial conditions). -->
