@@ -452,10 +452,10 @@ private:
 	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *small_prim, BinTreePrimary *node);
 	
 	//! Add new neighbours during a merger event
-	double AddNeighbour(double A_n_k, BinTreePrimary *small_prim);
+	double AddNeighbour(double A_n_k, BinTreePrimary *small_prim, BinTreePrimary *node);
 	
 	//Function to adjust primary properties
-	void AdjustPrimary(double dV, BinTreePrimary *prim_ignore);
+	void AdjustPrimary(double dV, double d_ij, BinTreePrimary *prim_ignore);
 
 	//! function to identify neighbours and sum their contribution
 	void SumNeighbours(BinTreePrimary *prim, double &sumterm, BinTreePrimary *prim_ignore);
