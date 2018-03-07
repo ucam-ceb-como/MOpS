@@ -271,9 +271,7 @@ protected:
 	//! Sum of primary free surface areas under this node
 	double m_free_surf;
 
-	//csl37-rewrite sum of neck radii * ri/xij
-	//necessary for sintering process
-	//cached
+	//! Sum of neck radii * ri/xij
 	double m_sum_necks;
 
     //! Equivalent spherical radius of sum of childrens' volume
@@ -448,7 +446,7 @@ private:
     //! Updates the pointers after a merge event
     void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
 
-	//! Overloaded ChangePointer for centre to centre separation tracking model
+	//! Overloaded ChangePointer for centre to centre separation and coordinate tracking models
 	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *small_prim, BinTreePrimary *node);
 	
 	//! Add new neighbours during a merger event
@@ -457,22 +455,11 @@ private:
 	//Function to adjust primary properties
 	void AdjustPrimary(double dV, double d_ij, BinTreePrimary *prim_ignore);
 
-	//! function to identify neighbours and sum their contribution
-	void SumNeighbours(BinTreePrimary *prim, double &sumterm, BinTreePrimary *prim_ignore);
-
-	//csl37-rewrite
-	void SumNeighboursNew(BinTreePrimary *prim, double &sumterm, BinTreePrimary *prim_ignore);
-
-	void UpdateNeighbourVolume(BinTreePrimary *prim,double dr_i,double &volumeterm);
-
 	//! Update primary free surface area and volume
 	void UpdateOverlappingPrimary();
 
 	//! function to identify neighbours and sum their cap areas and volumes
 	void SumCaps(BinTreePrimary *prim, double &CapAreas, double &CapVolumes, double &SumNecks);
-
-	//function to modify the centre to centre separations and returns free surface area
-	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
 		
 	//! function to modify the centre to centre separations and coordinates and neighbours
 	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, BinTreePrimary *prim_ignore);

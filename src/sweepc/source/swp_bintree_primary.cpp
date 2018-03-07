@@ -2340,105 +2340,6 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 
 }
 
-/*!
- * @brief       Identify neighbours and sum their contribution to the change in radius
- *
- * Works up the binary tree identifying the neighbours of the primary being adjusted 
- * and calculates their contribution to the summation term. 
- * All neighbours of the primary being adjusted are left/rightparticles of nodes directly 
- * above it.
- *
- * @param[in]   prim			Pointer to the primary being adjusted
- * @param[in]   sumterm			Sum of contributions from neighbours to the change in radius
- * @param[in]   prim_ignore		Neighbour to not sum over
- */
-void BinTreePrimary::SumNeighbours(BinTreePrimary *prim, double &sumterm, BinTreePrimary *prim_ignore) {
-	
-	double d_ij = m_parent->m_distance_centreToCentre;
-	double r_i = prim->m_primarydiam / 2.0;
-	double r_j = 0.0;
-	double x_ij = 0.0;
-
-	//check if a neighbour of prim
-	if (m_parent->m_leftparticle == prim  && m_parent->m_rightparticle != prim_ignore) {
-		//right particle is a neighbour
-		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
-	} else if(m_parent->m_rightparticle == prim  && m_parent->m_leftparticle != prim_ignore) {
-		//left particle is a neighbour
-		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
-	} else {
-		//not a neighbour
-		r_j = 0.0;
-	}
-	
-	//if the node connects a neighbour then calculate the summation term
-	if(r_j > 0.0){ 
-		//the volumes and radii of neighbours remain unchanged
-		//the centre to centre separations increase to allow growth of the primary
-		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
-
-		sumterm += max(x_ij - 2.0*r_i + pow(r_i,2.0) / x_ij, 0.0);
-	}
-
-	//continue working up the binary tree
-	if(m_parent->m_parent != NULL){
-		m_parent->SumNeighbours(prim, sumterm, prim_ignore);
-	}
-}
-
-//csl37-rewrite
-/*!
- * @brief       Identify neighbours and sum their contribution to the change in radius
- *
- * Works up the binary tree identifying the neighbours of the primary being adjusted 
- * and calculates their contribution to the summation term. 
- * All neighbours of the primary being adjusted are left/rightparticles of nodes directly 
- * above it.
- *
- * @param[in]   prim			Pointer to the primary being adjusted
- * @param[in]   sumterm			Sum of contributions from neighbours to the change in radius
- * @param[in]   prim_ignore		Neighbour to not sum over
- */
-void BinTreePrimary::SumNeighboursNew(BinTreePrimary *prim, double &sumterm, BinTreePrimary *prim_ignore) {
-	
-	double d_ij = m_parent->m_distance_centreToCentre;
-	double r_i = prim->m_primarydiam / 2.0;
-	double r_j = 0.0;
-	double x_ij = 0.0;
-	double A_n_ij = 0.0;
-
-	//! Check if a neighbour of prim
-	if (m_parent->m_leftparticle == prim  && m_parent->m_rightparticle != prim_ignore) {
-		
-		//! Right particle is a neighbour
-		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
-		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );	//!< Distance to neck
-		A_n_ij = M_PI*( pow(r_i,2.0) - (x_ij,2.0) );	//!< Neck area
-		
-		//! Calculate summation term
-		sumterm += A_n_ij * r_i / x_ij;
-
-	} else if(m_parent->m_rightparticle == prim  && m_parent->m_leftparticle != prim_ignore) {
-		
-		//! Left particle is a neighbour
-		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
-		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij ); //!< Distance to neck
-		A_n_ij = M_PI*( pow(r_i,2.0) - (x_ij,2.0) );	//!< Neck area
-
-		//! Calculate summation term
-		sumterm += A_n_ij * r_i / x_ij;
-
-	} else {
-		//not a neighbour
-		r_j = 0.0;
-	}
-	
-	//! Continue working up the binary tree
-	if(m_parent->m_parent != NULL){
-		m_parent->SumNeighboursNew(prim, sumterm, prim_ignore);
-	}
-}
-
 /*! Updates primary free surface area and volume
 *
 * @param[in]   this		Primary to update
@@ -2537,107 +2438,8 @@ void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &CapAreas, double &Cap
 }
 
 /*!
- * @brief       Update volume of neigbouring primaries
- *
- * Works up the binary tree identifying the neighbours of the adjusted primary 
- * and sums the contribution from neighbours to the free surface area.
- * 
- * @param[in]   prim		Pointer to the primary
- * @param[in]   dr_i		Change in radius
- * @param[in]   volumeterm	Sum of volume changes
- */
-void BinTreePrimary::UpdateNeighbourVolume(BinTreePrimary *prim,double dr_i,double &volumeterm)
-{
-	double d_ij = m_parent->m_distance_centreToCentre;
-	double r_i = prim->m_primarydiam / 2.0;
-	double r_j = 0.0;
-	double x_ji = 0.0;
-	double dV_j = 0.0;
-
-	BinTreePrimary *neighbour = NULL;
-
-	//check if a neighbour of prim
-	if (m_parent->m_leftparticle == prim) {
-		//right particle is a neighbour
-		neighbour = m_parent->m_rightparticle;
-		r_j = neighbour->m_primarydiam / 2.0;
-		
-	} else if(m_parent->m_rightparticle == prim) {
-		//left particle is a neighbour
-		neighbour = m_parent->m_leftparticle;
-		r_j = neighbour->m_primarydiam / 2.0;
-	} else {
-		//not a neighbour
-		r_j = 0.0;
-	}
-	
-	//if the node connects a neighbourt then calculate the summation term
-	if(r_j > 0.0){
-		
-		//update the volume of the neighbour
-		x_ji = ( pow(d_ij,2.0) - pow(r_i,2.0) + pow(r_j,2.0) ) / ( 2.0*d_ij );
-		dV_j = M_PI*(r_j*r_j - x_ji*x_ji) * r_i * dr_i / d_ij;
-		neighbour->m_primaryvol = max(neighbour->m_primaryvol - dV_j, 0.0);
-		volumeterm += dV_j; 
-	}
-
-	//continue working up the binary tree
-	if(m_parent->m_parent != NULL){
-		m_parent->UpdateNeighbourVolume(prim, dr_i, volumeterm);
-	}
-}
-
-/*!
- * @brief       Identify neighbours and update centre to centre separation
- *
- * Works up the binary tree identifying the neighbours of the adjusted primary 
- * and updates the centre to centre separation. Also sums the contribution from
- * neighbours to the free surface area.
- *
- * @param[in]   prim		Pointer to the primary being adjusted
- * @param[in]   delta_r		Change in radius of prim
- * @param[in]   sumterm		Sum of contributions from neighbours to the free surface area of prim
- */
-void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm){
-	
-	double d_ij = m_parent->m_distance_centreToCentre;
-	double r_i = prim->m_primarydiam / 2.0;
-	double r_j = 0.0;
-	double x_ij = 0.0;
-
-	//check if a neighbour of prim
-	if (m_parent->m_leftparticle == prim) {
-		//right particle is a neighbour
-		r_j = m_parent->m_rightparticle->m_primarydiam / 2.0;
-	} else if(m_parent->m_rightparticle == prim) {
-		//left particle is a neighbour
-		r_j = m_parent->m_leftparticle->m_primarydiam / 2.0;
-	} else {
-		//not a neighbour
-		r_j = 0.0;
-	}
-
-	if(r_j > 0.0){
-
-		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i,2.0) ) / ( 2.0*d_ij );
-		//update centre to centre separation
-		//making sure centre to centre separation remains smaller than the sum of the radii
-		m_parent->m_distance_centreToCentre = min(d_ij + r_i * delta_r / x_ij, r_i+r_j+delta_r);
-
-		//calculate term for the free surface area 
-		d_ij = m_parent->m_distance_centreToCentre;
-		x_ij = ( pow(d_ij,2.0) - pow(r_j,2.0) + pow(r_i+delta_r,2.0) ) / ( 2.0*d_ij );
-		sumterm += (r_i+delta_r)*(r_i+delta_r) - (r_i+delta_r)*x_ij;
-	}
-
-	//continue working up the binary tree
-	if(m_parent->m_parent != NULL){
-		m_parent->UpdateConnectivity(prim, delta_r, sumterm);
-	}
-}
-
-/*!
- * @brief       Identify neighbours and update centre to centre separation ignoring specified neighbour
+ * @brief       Identify neighbours and update centre to centre separation and 
+ *				coordinates except for specified neighbour.
  *
  * Works up the binary tree identifying the neighbours of the adjusted primary 
  * and updates the centre to centre separation. Also sums the contribution from
@@ -2645,7 +2447,6 @@ void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, do
  *
  * @param[in]   prim			Pointer to the primary being adjusted
  * @param[in]   delta_r			Change in radius of prim
- * @param[in]   sumterm			Sum of contributions from neighbours to the free surface area of prim
  * @param[in]   prim_ignore		Pointer to the primary to be ignored
  */
 void BinTreePrimary::UpdateConnectivity(BinTreePrimary *prim, double delta_r, BinTreePrimary *prim_ignore){
