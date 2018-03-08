@@ -160,7 +160,7 @@ private:
         iNHYDROGEN=7, // m_numH
         iNEDGEC=8,    // m_numOfEdgeC
         iNRINGS=9,    // m_numOfRings
-        iCOAL=10,     // m_avg_coalesc
+        iSINT=10,     // m_avg_coalesc
         iNPRIM=11,    // m_numprimary
         iSQRTLW=12,   // sqrt(LW)
         iLDIVW=13,    // LdivW

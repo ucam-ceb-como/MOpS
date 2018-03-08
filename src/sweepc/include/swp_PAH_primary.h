@@ -177,14 +177,17 @@ public:
 	void GetPriCoords(std::vector<fvector> &coords) const; //hdy
 
     //! returns the Rounding Level according the Eq 6.3 on the markus sander's thesis
-    double RoundingLevel();
+    //double RoundingLevel();
     //! returns the left child
     const PAHPrimary *LeftChild() const;
     //! returns the right child
     const PAHPrimary *RightChild() const;
 
     //! Checks if the Rounding level is higher then the treshold (0.95) and merges the primaries if necessary
-    bool CheckRounding();
+    //bool CheckRounding();
+
+	//! Checks if the sintering level, merges particles if necessary
+	bool CheckSintering(); //hdy
 
     //! Updates the fractal dimension
     void CalcFractalDimension();
@@ -229,7 +232,8 @@ public:
 	int NumRings5() const;
     //! returns sqrt(L*W)
     double sqrtLW() const;
-    double AvgCoalesc() const;
+    //double AvgCoalesc() const;
+	double AvgSinter() const; //hdy
 
     //! Find Xmer, and store their information in a vector
     void FindXmer(std::vector<double> &out, int m_xmer) const;
@@ -306,7 +310,6 @@ protected:
     PAHPrimary *SelectRandomSubparticle(rng_type &rng);
     void ReleaseMem();
 
-	//hdy****************************************************//
 	//! Distance between the centres of primary particles.
 	double m_distance_centreToCentre;
 
@@ -385,9 +388,8 @@ protected:
 
 	//! Transforms the node coordinates using the given transformation matrix.
 	void transform(const Coords::Matrix &mat);
-	//hdy****************************************************//
 
-	//! Sum of primary free surface areas under this node //hdy
+	//! Sum of primary free surface areas under this node
 	double m_free_surf; //hdy
 
 	//! Sinter a node for time dt
@@ -405,11 +407,22 @@ protected:
 
 	double m_avg_sinter;//hdy
 
-	//! Checks if the sintering level, merges particles if necessary
-	bool CheckSintering(); //hdy
-
 	//primary volume -- different to m_vol if centre to centre seapration is tracked
 	double m_primaryvol; //hdy
+
+	//csl37-rewrite sum of neck radii * ri/xij
+	//necessary for sintering process
+	//cached
+	double m_sum_necks;//hdy
+
+	//! Function to return the separation unit vector between two coordinates
+	Coords::Vector UnitVector(Coords::Vector x_i, Coords::Vector x_j); //hdy
+
+	//! Translates a primary particle
+	void TranslatePrimary(Coords::Vector u, double delta_d); //hdy
+
+	//! Function to translate neighbours of a primary except prim_ignore
+	void TranslateNeighbours(PAHPrimary *prim, Coords::Vector u, double delta_d, PAHPrimary *prim_ignore); //hdy
 
   //  double pow(double a, double b);
 
@@ -479,7 +492,7 @@ private:
 
     double m_children_surf;
     // store the RoundingLevel
-    double m_children_roundingLevel;
+    //double m_children_roundingLevel;
 
     // radius of gyration and fractal dimension
     // the values are only update in CalcFractaldimension()
@@ -487,7 +500,7 @@ private:
     double m_fdim;
     double m_sqrtLW;
     double m_LdivW;
-    double m_avg_coalesc;
+    //double m_avg_coalesc;
 
     //! Absolute amount of time for which particles are sintered
     double m_sint_time;
@@ -506,7 +519,13 @@ private:
 	void UpdateOverlappingPrimary();
 
 	//! function to identify neighbours and sum their cap areas and volumes
-	void SumCaps(PAHPrimary *prim, double &CapAreas, double &CapVolumes);
+	void SumCaps(PAHPrimary *prim, double &CapAreas, double &CapVolumes, double &SumNecks);
+
+	//function to modify the centre to centre separations and returns free surface area
+	void UpdateConnectivity(PAHPrimary *prim, double delta_r, double &sumterm); //hdy
+
+	//! function to modify the centre to centre separations and coordinates and neighbours
+	void UpdateConnectivity(PAHPrimary *prim, double delta_r, PAHPrimary *prim_ignore); //hdy
 	
 };
 } //namespace AggModels

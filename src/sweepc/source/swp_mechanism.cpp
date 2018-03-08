@@ -1070,7 +1070,8 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
 			pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng, overflow);
 
 			pah->UpdateCache();
-			pah->CheckRounding();
+			//pah->CheckRounding();
+			pah->CheckSintering();
 			if (sp.IsValid()) {
 				sp.UpdateCache();
 

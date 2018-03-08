@@ -63,7 +63,8 @@ const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
 	std::string("Avg. Number of Hydrogen Atoms"),
 	std::string("Avg. Number of Edge Carbon Atoms"),
 	std::string("Avg. Number of Rings"),
-    std::string("Avg. Coalesc Threshold"),
+    //std::string("Avg. Coalesc Threshold"),
+	std::string("Avg. Sint Level"),
     std::string("Num Primaries double Part"),
 };
 
@@ -78,7 +79,8 @@ const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
 	IModelStats::Avg,  // Avg. Number of Hydrogen atoms
 	IModelStats::Avg,  // Avg. Number of Edge Carbon Atoms
 	IModelStats::Avg,  // Avg. Number of Rings
-    IModelStats::Avg,  // Avg. Coalesc Threshold
+    //IModelStats::Avg,  // Avg. Coalesc Threshold
+	IModelStats::Avg,  // Avg. Sintering Level
     IModelStats::Avg,  // Num Primaries double Part
 };
 
@@ -184,7 +186,7 @@ void PAHStats::Calculate(const Ensemble &e, double scale)
             m_stats[iNEDGEC]	  	+= pah->NumEdgeC() * wt;
             m_stats[iNRINGS]	  	+= pah->NumRings() * wt;
             m_stats[iNPAH+1]    	+= pah->NumPAH() * wt; //used to calculate sum of Number of PAHs.
-            m_stats[iCOAL]    		+= pah->AvgCoalesc() * wt;
+            m_stats[iSINT]    		+= pah->AvgSinter() * wt;
             if (pah->NumPAH() > 1)
             {
                 wtreal += wt;
