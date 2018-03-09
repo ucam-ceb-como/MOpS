@@ -58,6 +58,7 @@
 #include "swp_bintree_serializer.h"
 #include "swp_particle_image.h"
 #include "swp_coords.h"
+#include <set>
 
 namespace Sweep {
 
@@ -170,8 +171,7 @@ public:
     //! Returns a vector of primary coordinates and radius (4D).
     void GetPriCoords(std::vector<fvector> &coords) const;
 
-	//csl37
-	//return primary coords and frame orientation
+	//! Returns primary coords and frame orientation
     void GetPrimaryCoords(std::vector<fvector> &coords) const;
 
     // SERIALISATION/DESERIALISATION
@@ -212,14 +212,14 @@ public:
 	//csl37
 	//flag to indicate particle is tracked 
 	bool m_tracked;
-	//set tracking flag
 	void setTracking() {m_tracked = true;};
 	//csl37: remove primary tracking
 	void removeTracking();
+	//csl37: check primary tracking
+	void checkTracking(int &count);
 
-	/////////////////////////////////////////////////////////// csl37-pp
+	//! Return primary particle details and connectivity
 	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
-	///////////////////////////////////////////////////////////
 
 protected:
     //! Empty primary not meaningful
@@ -280,6 +280,9 @@ protected:
 	//! Sum of primary free surface areas under this node
 	double m_free_surf;
 
+	//! Sum of neck radii * ri/xij
+	double m_sum_necks;
+
     //! Equivalent spherical radius of sum of childrens' volume
     double m_children_radius;
 
@@ -296,7 +299,6 @@ protected:
     Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
     Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
 
-	//csl37
 	//! For tracking the particle frame orientation
 	Coords::Vector m_frame_orient;
 	//! For tracking the particle frame position
@@ -405,26 +407,17 @@ protected:
     //! Transforms the node coordinates using the given transformation matrix.
     void transform(const Coords::Matrix &mat);
 
-	//csl37
-	//function to return the separation unit vector between two coordinates
+	//! Function to return the separation unit vector between two coordinates
 	Coords::Vector UnitVector(Coords::Vector x_i, Coords::Vector x_j);
 	
-	//csl37
-	//calculates distance between two points
+	//! Calculates distance between two points
 	double Separation(Coords::Vector x_i, Coords::Vector x_j);
 	
-	//csl37
-	//translates a primary particle by delta_x along a unit vector
+	//! Translates a primary particle
 	void TranslatePrimary(Coords::Vector u, double delta_d);
 	
-	//csl37
-	//function to translate neighbours by delta_d along a unit vector u
-	//but ignoring prim_ignore
+	//! Function to translate neighbours of a primary except prim_ignore
 	void TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u, double delta_d, BinTreePrimary *prim_ignore);
-
-	//csl37-debug
-	//csl37: checks that only one priamry is tracked
-	void checkTracking(int &count);
 
 private:
     // GENERAL PARTICLE MODEL PROPERTIES
@@ -462,37 +455,23 @@ private:
     //! Updates the pointers after a merge event
     void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
 
-	//! Overloaded ChangePointer for centre to centre separation tracking model
+	//! Overloaded ChangePointer for centre to centre separation and coordinate tracking models
 	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *small_prim, BinTreePrimary *node);
 	
-	//csl37--merge
-	//function to add new neighbours during a merger event
-	double AddNeighbour(double A_n_k, BinTreePrimary *small_prim);
+	//! Add new neighbours during a merger event
+	double AddNeighbour(double A_n_k, BinTreePrimary *small_prim, BinTreePrimary *node);
 	
-	//csl37 -- function to adjust primary properties
-	void AdjustPrimary(double dV, BinTreePrimary *prim_ignore);
+	//Function to adjust primary properties
+	void AdjustPrimary(double dV, double d_ij, BinTreePrimary *prim_ignore);
 
-	//! function to identify neighbours and sum their contribution to surface 
-	void SumNeighbours(BinTreePrimary *prim, double &sumterm);
+	//! Update primary free surface area and volume
+	void UpdateOverlappingPrimary();
 
-	void SumNeighbours(BinTreePrimary *prim, double &sumterm, BinTreePrimary *prim_ignore);
-
-	void UpdateNeighbourVolume(BinTreePrimary *prim,double dr_i,double &volumeterm);
-
-	//! function to identify neighbours and sum their contribution to surface 
-	void SumNeighbourContributions(BinTreePrimary *prim, double &sumterm);
-
-	//! function to identify neighbours and sum their contribution to particle free surface area
-	void GetFreeSurfaceTerm(BinTreePrimary *prim, double &sumterm);
-
-	//function to modify the centre to centre separations and returns free surface area
-	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm);
-	
-	//! Function to modify the centre to centre separations and returns free surface area.
-	void UpdateConnectivity(BinTreePrimary *prim, std::set<void*> &primaryUniqueAddresses, double delta_r, double &sumterm);
-	
-	//overload of function ignore update to neighbour
-	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm, BinTreePrimary *prim_ignore);
+	//! function to identify neighbours and sum their cap areas and volumes
+	void SumCaps(BinTreePrimary *prim, double &CapAreas, double &CapVolumes, double &SumNecks);
+		
+	//! function to modify the centre to centre separations and coordinates and neighbours
+	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, BinTreePrimary *prim_ignore);
 
     // PRINTING TREES
     //! Recursive loop function for print tree
@@ -509,12 +488,6 @@ private:
     //! Deserialise a BinTreePrimary node
     virtual void DeserializePrimary(std::istream &in,
             const Sweep::ParticleModel &model, void*);
-
-	//csl37-test
-	double PrimaryVolume();
-	void SumCaps(BinTreePrimary *prim, double &capVolume);
-	//csl37-test
-
 };
 
 }
