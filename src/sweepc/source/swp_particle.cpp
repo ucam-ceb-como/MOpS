@@ -317,10 +317,12 @@ Particle* Particle::createFromXMLNodeDetailed(const CamXML::Element& xml, const 
 				ncomp_i = ncomp_max;
 			}
 
+			components[id] = ncomp_i;
+
 			// Scale any other components, assuming they must exist in stoichiometric amounts
-			double sf_i = ncomp_i / components[0];
-			for (size_t iter = 0; iter < components.size(); iter++)
-				components[iter] *= sf_i;
+			//double sf_i = ncomp_i / components[0];
+			//for (size_t iter = 0; iter < components.size(); iter++)
+			//	components[iter] *= sf_i;
 
 			//cout << "ncomponent = " << components[0] << "\n";
 		}
