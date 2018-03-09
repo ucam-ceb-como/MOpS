@@ -67,7 +67,8 @@ Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
 : m_ensemble(), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false), 
   m_incepting_weight(1.0), m_incFactor(1.0), 
-  m_notpsiflag(true), m_rateFactor(1.0)
+  m_notpsiflag(true), m_rateFactor(1.0), 
+  m_cprop1(iUniform), m_cprop2(iUniform)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
@@ -133,6 +134,9 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 		m_prng = rhs.m_prng;
 		// coagulation scaling for weighted events
 		m_rateFactor = rhs.m_rateFactor;
+		// coagulation properties for PSI
+		m_cprop1 = rhs.m_cprop1;
+		m_cprop2 = rhs.m_cprop2;
 	}
 	assert(isValid());
     return *this;

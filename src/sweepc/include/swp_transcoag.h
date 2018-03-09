@@ -112,6 +112,11 @@ public:
         unsigned int iterm,
         rng_type &rng) const;
 
+	// aab64 temp
+	virtual void ChooseProps(
+		Sweep::Cell &sys,
+		unsigned int iterm) const;
+
 protected:
     //! Transition coagulation kernel between two particles
     virtual double CoagKernel(

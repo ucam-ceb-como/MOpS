@@ -131,6 +131,12 @@ public:
         SlipFlow // Slip-flow majorant.
     };
 
+
+	// aab64 temp
+	virtual void ChooseProps(
+		Sweep::Cell &sys,
+		unsigned int iterm) const;
+
 protected:
 
     /*!

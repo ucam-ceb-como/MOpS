@@ -142,6 +142,11 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 					a = wmin * exp(-1.0 * b * nmin);
 					c = 0.0;
 					wnew = (a * exp(b * nnew)) + c;
+
+					// new scaling
+					/*double h = -1.0 * log((wmax - wmin) / (exp(nmax) - exp(nmin)));
+					double k = wmin - ((wmax - wmin) / (exp(nmax - nmin) - 1));
+					wnew = exp(nnew - h) + k;*/
 				}
 				else if (wtfn == "Q") {
 					// Quadratic scaling
@@ -350,15 +355,34 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
 
     // Truncate if step is too long or select a process
     // to perform.
-    if (t+dt <= t_stop) {
+	if (t + dt <= t_stop) {
 		// aab64 Store coagulation rate factor
 		/*int rateFactor_1 = 1;
-		if (sys.ParticleCount() > 1) 
-			rateFactor_1 = floor((sys.ParticleCount()) / (sys.Particles().GetSum(iW)));
+		if (sys.ParticleCount() > 1)
+		rateFactor_1 = floor((sys.ParticleCount()) / (sys.Particles().GetSum(iW)));
 		sys.SetRateFactor(rateFactor_1);*/
 
-        boost::uniform_01<rng_type &> uniformGenerator(rng);
-        const int i = chooseIndex(rates, uniformGenerator);
+		boost::uniform_01<rng_type &> uniformGenerator(rng);
+		const int i = chooseIndex(rates, uniformGenerator);
+
+		if (mech.GetIsSurfInc()) 
+		{
+			// aab64 Use coagulation rates to choose process term
+			// to be used for next PSI event
+			// (note this assumes only one coagulation process)
+			int coag_start = mech.Inceptions().size() + mech.Processes().size();
+			int coag_end = coag_start + mech.Coagulations()[0]->TermCount();
+			fvector coag_rates(mech.Coagulations()[0]->TermCount(), 0.0);
+			int j = 0;
+			for (int itr = coag_start; itr < coag_end; ++itr)
+			{
+				coag_rates[j] = rates[itr];
+				++j;
+			}
+			const int coag_event = chooseIndex(coag_rates, uniformGenerator);
+			mech.Coagulations()[0]->ChooseProps(sys, coag_event);
+		}
+
         mech.DoProcess(i, t+dt, sys, geom, rng);
         t += dt;
     } else {

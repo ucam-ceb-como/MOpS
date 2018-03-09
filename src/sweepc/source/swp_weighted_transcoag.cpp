@@ -383,6 +383,63 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
     return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, maj);
 }
 
+void WeightedTransitionCoagulation::ChooseProps(Sweep::Cell &sys, unsigned int iterm) const
+{
+	Sweep::PropID prop1, prop2;
+
+	// Properties to which the probabilities of particle selection will be proportional
+	switch (static_cast<TermType>(iterm)) {
+	case FreeMol1:
+		prop1 = iUniform;
+		prop2 = iD2_M_1_2W;
+		break;
+	case FreeMol2:
+		prop1 = iD2;
+		prop2 = iM_1_2W;
+		break;
+	case FreeMol3:
+		prop1 = iM_1_2;
+		prop2 = iD2W;
+		break;
+	case FreeMol4:
+		prop1 = iD2_M_1_2;
+		prop2 = iW;
+		break;
+	case SlipFlow1:
+		prop1 = iUniform;
+		prop2 = iW;
+		break;
+	case SlipFlow2:
+		prop1 = iDcol;
+		prop2 = iD_1W;
+		break;
+	case SlipFlow3:
+		prop1 = iD_1;
+		prop2 = iDW;
+		break;
+	case SlipFlow4:
+		prop1 = iUniform;
+		prop2 = iD_1W;
+		break;
+	case SlipFlow5:
+		prop1 = iDcol;
+		prop2 = iD_2W;
+		break;
+	case SlipFlow6:
+		prop1 = iD_2;
+		prop2 = iDW;
+		break;
+	case SlipFlow7:
+		prop1 = iD_1;
+		prop2 = iW;
+		break;
+	default:
+		throw std::logic_error("Unrecognised term, (Sweep, WeightedTransitionCoagulation::Perform)");
+	}
+
+	sys.SetCoagProps(prop1, prop2);
+
+}
 
 // COAGULATION KERNELS.
 

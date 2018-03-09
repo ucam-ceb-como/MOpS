@@ -239,6 +239,11 @@ public:
 	// temperature because this is handled using inception stoichiometry
 	bool GetNotPSIFlag() const { return m_notpsiflag; }
 
+	// aab64 Store and access coagulation properties used to select particles for PSI
+	void SetCoagProps(PropID prop1, PropID prop2) { m_cprop1 = prop1; m_cprop2 = prop2; };
+	PropID getCoagProp1() const { return m_cprop1; };
+	PropID getCoagProp2() const { return m_cprop2; };
+
 	// aab64 Get thread specific rng
 	void Setprng(size_t seedval);
 
@@ -313,6 +318,9 @@ private:
 	// aab64 coagulation scaling for weighted events
 	int m_rateFactor;
 
+	// aab64 temp
+	PropID m_cprop1;
+	PropID m_cprop2;
 };
 
 } //namespace Sweep

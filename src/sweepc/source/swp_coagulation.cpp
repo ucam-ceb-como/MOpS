@@ -364,6 +364,16 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
     return 0;
 }
 
+
+// aab64 temp
+void Coagulation::ChooseProps(
+	Sweep::Cell &sys,
+	unsigned int iterm) const
+{
+	sys.SetCoagProps(iUniform, iUniform);
+}
+
+
 // Writes the object to a binary stream.
 void Coagulation::Serialize(std::ostream &out) const
 {

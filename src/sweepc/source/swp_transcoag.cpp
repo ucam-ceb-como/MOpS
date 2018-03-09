@@ -456,6 +456,43 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
     return 0;
 }
 
+void TransitionCoagulation::ChooseProps(Sweep::Cell &sys, unsigned int iterm) const
+{
+	Sweep::PropID prop1, prop2;
+
+	// Properties to which the probabilities of particle selection will be proportional
+	switch (static_cast<TermType>(iterm)) {
+	case FreeMol1:
+		prop1 = iUniform;
+		prop2 = iD2_M_1_2;
+		break;
+	case FreeMol2:
+		prop1 = iD2;
+		prop2 = iM_1_2;
+		break;
+	case SlipFlow1:
+		prop1 = iUniform;
+		prop2 = iUniform;
+		break;
+	case SlipFlow2:
+		prop1 = iDcol;
+		prop2 = iD_1;
+		break;
+	case SlipFlow3:
+		prop1 = iUniform;
+		prop2 = iD_1;
+		break;
+	case SlipFlow4:
+		prop1 = iDcol;
+		prop2 = iD_2;
+		break;
+	default:
+		throw std::logic_error("Unrecognised term, (Sweep, TransitionCoagulation::Perform)");
+	}
+
+	sys.SetCoagProps(prop1, prop2);
+}
+
 
 // COAGULATION KERNELS.
 

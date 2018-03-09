@@ -112,6 +112,11 @@ public:
         unsigned int iterm,
         rng_type &rng) const;
 
+	// aab64 temp
+	virtual void ChooseProps(
+		Sweep::Cell &sys,
+		unsigned int iterm) const;
+
     //! Write the object to a binary stream.
     virtual void Serialize(std::ostream &out) const;
 
