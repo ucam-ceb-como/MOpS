@@ -177,14 +177,14 @@ public:
 	void GetPriCoords(std::vector<fvector> &coords) const; //hdy
 
     //! returns the Rounding Level according the Eq 6.3 on the markus sander's thesis
-    //double RoundingLevel();
+    double RoundingLevel();
     //! returns the left child
     const PAHPrimary *LeftChild() const;
     //! returns the right child
     const PAHPrimary *RightChild() const;
 
     //! Checks if the Rounding level is higher then the treshold (0.95) and merges the primaries if necessary
-    //bool CheckRounding();
+    bool CheckRounding();
 
 	//! Checks if the sintering level, merges particles if necessary
 	bool CheckSintering(); //hdy
@@ -295,12 +295,9 @@ protected:
     //! return ture if it is a false rounding, false rounding is used to merge primary particle containing only one or no PAH after the InvalidPAHs are removed.
     bool FakeRounding();
     //! merges the two children primaries together
-    void Merge();
+    //void Merge(); comment by hdy
     //! updates the pointers after a merge event
     void ChangePointer(PAHPrimary *source, PAHPrimary *target);
-
-	//! Overloaded ChangePointer for centre to centre separation tracking model
-	void ChangePointer(PAHPrimary *source, PAHPrimary *target, double d_ij, PAHPrimary *small_prim);//hdy
 
     //! copies the node withoud the children
     void CopyParts( const PAHPrimary *source);
@@ -424,6 +421,9 @@ protected:
 	//! Function to translate neighbours of a primary except prim_ignore
 	void TranslateNeighbours(PAHPrimary *prim, Coords::Vector u, double delta_d, PAHPrimary *prim_ignore); //hdy
 
+	//! Calculates distance between two points
+	double Separation(Coords::Vector x_i, Coords::Vector x_j); //hdy
+
   //  double pow(double a, double b);
 
 private:
@@ -492,7 +492,7 @@ private:
 
     double m_children_surf;
     // store the RoundingLevel
-    //double m_children_roundingLevel;
+    double m_children_roundingLevel;
 
     // radius of gyration and fractal dimension
     // the values are only update in CalcFractaldimension()
@@ -500,7 +500,7 @@ private:
     double m_fdim;
     double m_sqrtLW;
     double m_LdivW;
-    //double m_avg_coalesc;
+    double m_avg_coalesc;
 
     //! Absolute amount of time for which particles are sintered
     double m_sint_time;
@@ -526,6 +526,18 @@ private:
 
 	//! function to modify the centre to centre separations and coordinates and neighbours
 	void UpdateConnectivity(PAHPrimary *prim, double delta_r, PAHPrimary *prim_ignore); //hdy
+
+	//Function to adjust primary properties
+	void AdjustPrimary(double dV, double d_ij, PAHPrimary *prim_ignore); //hdy
+
+	//! Overloaded ChangePointer for centre to centre separation and coordinate tracking models
+	void ChangePointer(PAHPrimary *source, PAHPrimary *target, PAHPrimary *small_prim, PAHPrimary *node); //hdy
+
+	//! Add new neighbours during a merger event
+	double AddNeighbour(double A_n_k, PAHPrimary *small_prim, PAHPrimary *node); //hdy
+
+	//! Merges the two children primaries together
+	PAHPrimary &Merge(); //hdy
 	
 };
 } //namespace AggModels

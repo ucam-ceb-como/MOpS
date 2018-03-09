@@ -171,6 +171,9 @@ public:
     //! Returns a vector of primary coordinates and radius (4D).
     void GetPriCoords(std::vector<fvector> &coords) const;
 
+	//! Returns primary coords and frame orientation
+    void GetPrimaryCoords(std::vector<fvector> &coords) const;
+
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
     friend class BinTreeSerializer<class BinTreePrimary>;
@@ -183,7 +186,7 @@ public:
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
 
     template <class ParticleClass>
-    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimarySeparation);
+    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimaryCoordinates);
 
     template <class ParticleClass>
     friend void Sweep::Imaging::ParticleImage::CopyTree(ImgNode &node, const ParticleClass *source);
@@ -206,6 +209,9 @@ public:
     //! Deserialise a BinTreePrimary particle
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
 
+	//! Return primary particle details and connectivity
+	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
+	
 protected:
     //! Empty primary not meaningful
     BinTreePrimary();
@@ -259,8 +265,14 @@ protected:
 	// unless centre to centre distance tracking is turned on
     double m_primarydiam;
 
+	//primary volume -- different to m_vol if centre to centre seapration is tracked
+	double m_primaryvol;
+
 	//! Sum of primary free surface areas under this node
 	double m_free_surf;
+
+	//! Sum of neck radii * ri/xij
+	double m_sum_necks;
 
     //! Equivalent spherical radius of sum of childrens' volume
     double m_children_radius;
@@ -277,6 +289,11 @@ protected:
     //! For tracking the coordinates of primary particles.
     Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
     Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
+
+	//! For tracking the particle frame orientation
+	Coords::Vector m_frame_orient;
+	//! For tracking the particle frame position
+	Coords::Vector m_frame_x;
 
     //! Sintering level of children connected by this node
     double m_children_sintering;
@@ -381,6 +398,18 @@ protected:
     //! Transforms the node coordinates using the given transformation matrix.
     void transform(const Coords::Matrix &mat);
 
+	//! Function to return the separation unit vector between two coordinates
+	Coords::Vector UnitVector(Coords::Vector x_i, Coords::Vector x_j);
+	
+	//! Calculates distance between two points
+	double Separation(Coords::Vector x_i, Coords::Vector x_j);
+	
+	//! Translates a primary particle
+	void TranslatePrimary(Coords::Vector u, double delta_d);
+	
+	//! Function to translate neighbours of a primary except prim_ignore
+	void TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u, double delta_d, BinTreePrimary *prim_ignore);
+
 private:
     // GENERAL PARTICLE MODEL PROPERTIES
     //! Helper function to update the particle
@@ -417,17 +446,23 @@ private:
     //! Updates the pointers after a merge event
     void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
 
-	//! Overloaded ChangePointer for centre to centre separation tracking model
-	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, double d_ij, BinTreePrimary *small_prim);
-
-	//! function to identify neighbours and sum their contribution to surface 
-	void SumNeighbours(BinTreePrimary *prim, double &sumterm);
-
-	//! Function to modify the centre to centre separations and returns free surface area.
-	void UpdateConnectivity(BinTreePrimary *prim, std::set<void*> &primaryUniqueAddresses, double delta_r, double &sumterm);
+	//! Overloaded ChangePointer for centre to centre separation and coordinate tracking models
+	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *small_prim, BinTreePrimary *node);
 	
-	//overload of function ignore update to neighbour
-	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, double &sumterm, BinTreePrimary *prim_ignore);
+	//! Add new neighbours during a merger event
+	double AddNeighbour(double A_n_k, BinTreePrimary *small_prim, BinTreePrimary *node);
+	
+	//Function to adjust primary properties
+	void AdjustPrimary(double dV, double d_ij, BinTreePrimary *prim_ignore);
+
+	//! Update primary free surface area and volume
+	void UpdateOverlappingPrimary();
+
+	//! function to identify neighbours and sum their cap areas and volumes
+	void SumCaps(BinTreePrimary *prim, double &CapAreas, double &CapVolumes, double &SumNecks);
+		
+	//! function to modify the centre to centre separations and coordinates and neighbours
+	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, BinTreePrimary *prim_ignore);
 
     // PRINTING TREES
     //! Recursive loop function for print tree
@@ -444,7 +479,6 @@ private:
     //! Deserialise a BinTreePrimary node
     virtual void DeserializePrimary(std::istream &in,
             const Sweep::ParticleModel &model, void*);
-
 };
 
 }

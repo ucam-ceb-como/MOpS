@@ -114,14 +114,14 @@ PAHPrimary::PAHPrimary() : Primary(),
     m_rightparticle_vol_old(0),
     m_rightparticle_numPAH(0),
     m_leftparticle_numPAH(0),
-    //m_children_roundingLevel(0),
+    m_children_roundingLevel(0),
 	m_children_sintering(0.0),
     m_distance_centreToCentre(0.0),
     m_Rg(0),
     m_fdim(0),
     m_sqrtLW(0),
     m_LdivW(0),
-    //m_avg_coalesc(0),
+    m_avg_coalesc(0),
 	m_avg_sinter(0.0), //hdy
     m_sint_time(0.0),
 	m_sint_rate(0.0), //hdy
@@ -170,14 +170,14 @@ PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model)
 	m_rightparticle_vol_old(0),
 	m_rightparticle_numPAH(0),
 	m_leftparticle_numPAH(0),
-	//m_children_roundingLevel(0),
+	m_children_roundingLevel(0),
 	m_children_sintering(0.0),
 	m_distance_centreToCentre(0.0),
 	m_Rg(0),
 	m_fdim(0),
 	m_sqrtLW(0),
 	m_LdivW(0),
-	//m_avg_coalesc(0),
+	m_avg_coalesc(0),
 	m_avg_sinter(0.0), //hdy
 	m_sint_time(0.0),
 	m_sint_rate(0.0), //hdy
@@ -236,14 +236,14 @@ PAHPrimary::PAHPrimary(const double time, const double position,
 	m_rightparticle_vol_old(0),
 	m_rightparticle_numPAH(0),
 	m_leftparticle_numPAH(0),
-	//m_children_roundingLevel(0),
+	m_children_roundingLevel(0),
 	m_children_sintering(0.0),
 	m_distance_centreToCentre(0.0),
 	m_Rg(0),
 	m_fdim(0),
 	m_sqrtLW(0),
 	m_LdivW(0),
-	//m_avg_coalesc(0),
+	m_avg_coalesc(0),
 	m_avg_sinter(0.0), //hdy
 	m_sint_time(0.0),
 	m_sint_rate(0.0), //hdy
@@ -296,14 +296,14 @@ PAHPrimary::PAHPrimary(double time, const Sweep::ParticleModel &model, bool noPA
 	m_rightparticle_vol_old(0),
 	m_rightparticle_numPAH(0),
 	m_leftparticle_numPAH(0),
-	//m_children_roundingLevel(0),
+	m_children_roundingLevel(0),
 	m_children_sintering(0.0),
 	m_distance_centreToCentre(0.0),
 	m_Rg(0),
 	m_fdim(0),
 	m_sqrtLW(0),
 	m_LdivW(0),
-	//m_avg_coalesc(0),
+	m_avg_coalesc(0),
 	m_avg_sinter(0.0), //hdy
 	m_sint_time(0.0),
 	m_sint_rate(0.0), //hdy
@@ -727,7 +727,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 	}
 
 	else
-	{
+	{ //comment inception and condensation to test PAH_KMC model and bintree model
 		//coagulation process
 		PAHPrimary *newleft = new PAHPrimary(m_time, *m_pmodel);
 		PAHPrimary *newright = new PAHPrimary(m_time, *m_pmodel);
@@ -1473,7 +1473,7 @@ double PAHPrimary::CoalescenceLevel()
        //     return 0;
        // else
        //     return clevel;
-       return SinteringLevel();
+		return RoundingLevel();
     }
     else
         return 0;
@@ -1522,153 +1522,314 @@ void PAHPrimary::ResetChildrenProperties()
 }
 
 //merges the left and the right primary particle to one primary particle
-void PAHPrimary::Merge()
+PAHPrimary &PAHPrimary::Merge()
 {
-//    if(this->m_numprimary>5)
- //       cout<<"tset";
- //      PrintTree("before.inp");
+	//    if(this->m_numprimary>5)
+	//       cout<<"tset";
+	//      PrintTree("before.inp");
+	//! Declare pointers for coordinate/separation tracking model
 
-    vector<PAH>::const_iterator j;
-      //make sure this primary has children to merge
-	  if(m_leftchild!=NULL)
-           {	   
+	PAHPrimary *small_prim; //!< smaller of the merging primaries
+	PAHPrimary *big_prim;	//!< larger of the merging primaries
+	PAHPrimary *new_prim;	//!< new (merged) primary
 
-		if ( m_leftchild==m_leftparticle && m_rightchild==m_rightparticle)
+	//initialise parameters
+	double r_big, r_small, d_ij, x_ij;
+
+	vector<PAH>::const_iterator j;
+
+	//make sure this primary has children to merge
+	if (m_leftchild != NULL)
+	{
+		d_ij = m_distance_centreToCentre;
+
+		//! Update primaries
+		m_leftparticle->UpdatePrimary();
+		m_rightparticle->UpdatePrimary();
+
+		//! If the centre to centre distance is tracked we need to know which is the smaller primary of the merging pair
+		if (m_leftparticle->m_primarydiam > m_rightparticle->m_primarydiam){
+			small_prim = m_rightparticle;
+			big_prim = m_leftparticle;
+		}
+		else{
+			small_prim = m_leftparticle;
+			big_prim = m_rightparticle;
+		}
+
+		r_big = big_prim->m_primarydiam / 2.0;
+		r_small = small_prim->m_primarydiam / 2.0;
+		x_ij = min((d_ij*d_ij - r_small*r_small + r_big*r_big) / (2.0*d_ij), r_big); //!<distance from neck to centre of larger primary (x_ij < r_i)
+
+		double V_prim = small_prim->m_vol;	//!< Volume of smaller primary
+
+		double V_cap = 0.0;
+		if (d_ij + r_small > r_big) V_cap = 2.0*M_PI*r_big*r_big*r_big / 3.0 + M_PI*x_ij*x_ij*x_ij / 3.0 - M_PI*r_big*r_big*x_ij;
+		//! Subtract cap volume from the merging primary's volume
+		double dV = max(V_prim - V_cap, 0.0);
+		//! Adjust larger primary to incorporate excess volume
+		if ((m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) && dV > 0.0){
+			big_prim->AdjustPrimary(dV, d_ij, small_prim);
+		}
+
+		if (m_leftchild == m_leftparticle && m_rightchild == m_rightparticle)
 		{
-            //this node has only two primaries in its subtree
-            //it is possible that this node is not the root node and belongs to a bigger particle
-            //copy the PAHs of both children to the parent node
+			//this node has only two primaries in its subtree
+			//it is possible that this node is not the root node and belongs to a bigger particle
+			//copy the PAHs of both children to the parent node
 
-            //m_PAH is empty, therefore no need to append
-            m_PAH=m_rightparticle->m_PAH; 
+			new_prim = this; //!< new primary
 
-            m_PAH.insert(this->m_PAH.end(),m_leftparticle->m_PAH.begin(),m_leftparticle->m_PAH.end()); 
-            //update the pointers that pointed to the two former children
-			ChangePointer(m_leftchild,this); 
-			ChangePointer(m_rightchild,this); 
+			new_prim->m_primarydiam = big_prim->m_primarydiam;
+
+			//m_PAH is empty, therefore no need to append
+			m_PAH = m_rightparticle->m_PAH;
+
+			m_PAH.insert(this->m_PAH.end(), m_leftparticle->m_PAH.begin(), m_leftparticle->m_PAH.end());
+
+			if (m_pmodel->getTrackPrimaryCoordinates()){
+				new_prim->m_cen_bsph = big_prim->m_cen_bsph;
+				new_prim->m_cen_mass = big_prim->m_cen_mass;
+			}
+
+			//! Update the pointers that pointed to the two former children
+			if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
+				ChangePointer(m_leftchild, this);
+				ChangePointer(m_rightchild, this);
+			}
+			else{
+				//! If coordinates/separation are tracked the pointer to the larger primary is changed first
+				//! so that primary properties are correctly calculated when adding neighbours
+				ChangePointer(big_prim, this, small_prim, this);
+				ChangePointer(small_prim, this, small_prim, this);
+			}
 
 			//delete the children (destructor is recursive for this class)
-            delete m_leftchild;
-            delete m_rightchild;
-			m_leftchild=NULL;
-			m_rightchild=NULL;
-			m_leftparticle=NULL;
-			m_rightparticle=NULL;
+			delete m_leftchild;
+			delete m_rightchild;
+			m_leftchild = NULL;
+			m_rightchild = NULL;
+			m_leftparticle = NULL;
+			m_rightparticle = NULL;
 
-            //set the children properties to zero, this node has no more children
-            ResetChildrenProperties();
-            UpdatePrimary();
+			//set the children properties to zero, this node has no more children
+			ResetChildrenProperties();
+			UpdatePrimary();
+
+			// Only update the cache on m_parent if the sintering level of
+			// m_parent if the sintering level won't call a merge on the
+			// parent node. Otherwise, the *this* memory address could be
+			// removed from the tree and segmentation faults will result!
+			if (m_parent != NULL) {
+				if (!m_parent->MergeCondition()) {
+					m_parent->UpdateCache();
+				}
+			}
 
 		}
 
-
-		else
+		else //******m_leftchild != m_leftparticle or m_rightchild != m_rightparticle******//
 		{
-			if (m_leftchild->m_numprimary<m_rightchild->m_numprimary)
-			{
-				//append to left subtree because there are fewer primaries
-                //this is only to keep the tree balanced
-				PAHPrimary *oldleftparticle=m_leftparticle;
+			//! If primary coordinates or primary separations are not tracked then 
+			//! select subtree to keep the tree balanced
+			if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 
-                //copy the PAHs
-
-				//for (j=oldleftparticle->m_PAH.begin(); j!=oldleftparticle->m_PAH.end(); ++j) {
-				//	m_rightparticle->m_PAH.insert(m_rightparticle->m_PAH.end(),PAH(*j));
-				//}
-
-                m_rightparticle->m_PAH.insert(m_rightparticle->m_PAH.end(),oldleftparticle->m_PAH.begin(),oldleftparticle->m_PAH.end()); 
-                m_rightparticle->UpdatePrimary(); //comment by hdy
-                //set the pointers from the leftprimary to the rightprimary
-                //this will be the new bigger primary
-				oldleftparticle->ChangePointer(oldleftparticle,m_rightparticle); 
-                m_rightparticle->ChangePointer(m_rightparticle,m_rightparticle); 
-
-                //set the pointer to the parent node
-				if (oldleftparticle->m_parent->m_leftchild==oldleftparticle)
+				if (m_leftchild->m_numprimary < m_rightchild->m_numprimary)
 				{
-					oldleftparticle->m_parent->m_leftchild=m_rightchild;
+					//append to left subtree because there are fewer primaries
+					//this is only to keep the tree balanced
+					PAHPrimary *oldleftparticle = m_leftparticle;
+
+					//copy the PAHs
+
+					//for (j=oldleftparticle->m_PAH.begin(); j!=oldleftparticle->m_PAH.end(); ++j) {
+					//	m_rightparticle->m_PAH.insert(m_rightparticle->m_PAH.end(),PAH(*j));
+					//}
+
+					m_rightparticle->m_PAH.insert(m_rightparticle->m_PAH.end(), oldleftparticle->m_PAH.begin(), oldleftparticle->m_PAH.end());
+					m_rightparticle->UpdatePrimary();
+					//set the pointers from the leftprimary to the rightprimary
+					//this will be the new bigger primary
+					oldleftparticle->ChangePointer(oldleftparticle, m_rightparticle);
+					m_rightparticle->ChangePointer(m_rightparticle, m_rightparticle);
+
+					//set the pointer to the parent node
+					if (oldleftparticle->m_parent->m_leftchild == oldleftparticle)
+					{
+						oldleftparticle->m_parent->m_leftchild = m_rightchild;
+					}
+					else
+					{
+						oldleftparticle->m_parent->m_rightchild = m_rightchild;
+					}
+					m_rightchild->m_parent = oldleftparticle->m_parent;
+
+
+					PAHPrimary *oldleftchild = m_leftchild;
+					PAHPrimary *oldparent = m_parent;
+
+					//copy the properties of the former leftchild to this node
+					// so that it can be removed from the aggregate tree structure
+					CopyParts(oldleftchild);
+
+					// Now break the links to the tree structure in oldleftchild and free it
+					oldleftchild->m_leftchild = NULL;
+					oldleftchild->m_rightchild = NULL;
+					delete oldleftchild;
+
+					m_parent = oldparent;
+					if (m_leftchild != NULL)
+					{
+						m_rightchild->m_parent = this;
+						m_leftchild->m_parent = this;
+					}
+
+					delete oldleftparticle;
+
 				}
-				else
+
+				else //******m_leftchild->m_numprimary > m_rightchild->m_numprimary******//
 				{
-					oldleftparticle->m_parent->m_rightchild=m_rightchild;
+					//append to right subtree
+					PAHPrimary *oldrightparticle = m_rightparticle;
+
+					//	for (j=oldrightparticle->m_PAH.begin(); j!=oldrightparticle->m_PAH.end(); ++j) {
+					//		m_leftparticle->m_PAH.insert(m_leftparticle->m_PAH.end(),PAH(*j));
+					//	}
+
+					m_leftparticle->m_PAH.insert(m_leftparticle->m_PAH.end(), oldrightparticle->m_PAH.begin(), oldrightparticle->m_PAH.end());
+					m_leftparticle->UpdatePrimary();
+
+					oldrightparticle->ChangePointer(oldrightparticle, m_leftparticle);
+					m_leftparticle->ChangePointer(m_leftparticle, m_leftparticle);
+
+					if (oldrightparticle->m_parent->m_leftchild == oldrightparticle)
+					{
+						oldrightparticle->m_parent->m_leftchild = m_leftchild;
+					}
+					else
+					{
+						oldrightparticle->m_parent->m_rightchild = m_leftchild;
+					}
+					m_leftchild->m_parent = oldrightparticle->m_parent;
+
+					//ReleaseMem(oldrightparticle);
+					PAHPrimary *oldrightchild = m_rightchild;
+					PAHPrimary *oldparent = m_parent;
+
+					//copy the properties of the former leftchild to this node
+					// so that it can be removed from the aggregate tree structure
+					CopyParts(oldrightchild);
+
+					// Now break the links to the tree structure in oldrightchild and free it
+					oldrightchild->m_leftchild = NULL;
+					oldrightchild->m_rightchild = NULL;
+					delete oldrightchild;
+
+					m_parent = oldparent;
+					if (m_leftchild != NULL)
+					{
+						m_rightchild->m_parent = this;
+						m_leftchild->m_parent = this;
+					}
+					delete oldrightparticle;
 				}
-				m_rightchild->m_parent=oldleftparticle->m_parent;
-
-
-				PAHPrimary *oldleftchild=m_leftchild;
-				PAHPrimary *oldparent=m_parent;
-
-				//copy the properties of the former leftchild to this node
-				// so that it can be removed from the aggregate tree structure
-				CopyParts(oldleftchild);
-
-				// Now break the links to the tree structure in oldleftchild and free it
-				oldleftchild->m_leftchild = NULL;
-				oldleftchild->m_rightchild = NULL;
-				delete oldleftchild;
-
-				m_parent=oldparent;
-                if (m_leftchild!=NULL)
-                {
-				    m_rightchild->m_parent=this;
-				    m_leftchild->m_parent=this;
-                }
-
-                delete oldleftparticle;
-
 			}
+			else{
+				//! If the coordinates/separations are tracked then the larger primary becomes the new primary
 
-			else
-			{
-				//append to right subtree
-				PAHPrimary *oldrightparticle=m_rightparticle;
+				//! the new (merged) primary
+				new_prim = big_prim;
 
-			//	for (j=oldrightparticle->m_PAH.begin(); j!=oldrightparticle->m_PAH.end(); ++j) {
-			//		m_leftparticle->m_PAH.insert(m_leftparticle->m_PAH.end(),PAH(*j));
-			//	}
+				//! left/right flag
+				bool newleft;
+				if (new_prim == m_leftparticle){
+					newleft = true;
+				}
+				else{
+					newleft = false;
+				}
 
-                m_leftparticle->m_PAH.insert(m_leftparticle->m_PAH.end(),oldrightparticle->m_PAH.begin(),oldrightparticle->m_PAH.end());
-                m_leftparticle->UpdatePrimary();
-
-                oldrightparticle->ChangePointer(oldrightparticle,m_leftparticle);
-                m_leftparticle->ChangePointer(m_leftparticle,m_leftparticle);
-
-				if (oldrightparticle->m_parent->m_leftchild==oldrightparticle)
+				//! update composition
+				if (newleft)
 				{
-					oldrightparticle->m_parent->m_leftchild=m_leftchild;
+					new_prim->m_PAH = m_leftparticle->m_PAH;
+					new_prim->m_PAH.insert(m_leftparticle->m_PAH.end(), m_rightparticle->m_PAH.begin(), m_rightparticle->m_PAH.end());
+					new_prim->UpdatePrimary();
 				}
 				else
 				{
-					oldrightparticle->m_parent->m_rightchild=m_leftchild;
+					new_prim->m_PAH = m_rightparticle->m_PAH;
+					new_prim->m_PAH.insert(m_rightparticle->m_PAH.end(), m_leftparticle->m_PAH.begin(), m_leftparticle->m_PAH.end());
+					new_prim->UpdatePrimary();
 				}
-				m_leftchild->m_parent=oldrightparticle->m_parent;
 
-				//ReleaseMem(oldrightparticle);
-				PAHPrimary *oldrightchild=m_rightchild;
-				PAHPrimary *oldparent=m_parent;
+				PAHPrimary *oldparticle = small_prim;
 
-                //copy the properties of the former leftchild to this node
-                // so that it can be removed from the aggregate tree structure
-				CopyParts(oldrightchild);
+				//! update pointers to neighbours
+				new_prim->ChangePointer(new_prim, new_prim, small_prim, this);
+				oldparticle->ChangePointer(oldparticle, new_prim, small_prim, this);
 
-                // Now break the links to the tree structure in oldrightchild and free it
-                oldrightchild->m_leftchild = NULL;
-                oldrightchild->m_rightchild = NULL;
-                delete oldrightchild;
+				// Set the pointer to the parent node
+				PAHPrimary *oldchild = NULL;
 
-				m_parent=oldparent;
-                if (m_leftchild!=NULL)
-                {
-				    m_rightchild->m_parent=this;
-				    m_leftchild->m_parent=this;
-                }
-                delete oldrightparticle;
+				if (newleft){
+					if (oldparticle->m_parent->m_leftchild == oldparticle) {
+						oldparticle->m_parent->m_leftchild = m_leftchild;
+					}
+					else {
+						oldparticle->m_parent->m_rightchild = m_leftchild;
+					}
+					m_leftchild->m_parent = oldparticle->m_parent;
+
+					oldchild = m_rightchild;
+				}
+				else{
+					if (oldparticle->m_parent->m_leftchild == oldparticle) {
+						oldparticle->m_parent->m_leftchild = m_rightchild;
+					}
+					else {
+						oldparticle->m_parent->m_rightchild = m_rightchild;
+					}
+					m_rightchild->m_parent = oldparticle->m_parent;
+
+					oldchild = m_leftchild;
+				}
+
+				PAHPrimary *oldparent = m_parent;
+
+				// Copy the properties of the former leftchild to this node
+				// so that it can be removed from the aggregate tree structure
+				CopyParts(oldchild);
+
+				// Now break the links to the tree structure in oldleftchild
+				// in order to free it
+				oldchild->m_leftchild = NULL;
+				oldchild->m_rightchild = NULL;
+				delete oldchild;
+
+				m_parent = oldparent;
+
+				if (m_leftchild != NULL) {
+					m_rightchild->m_parent = this;
+					m_leftchild->m_parent = this;
+				}
+
+				delete oldparticle;
+
 			}
 		}
 
-        UpdateCache();
-  //      PrintTree("after.inp");
-        }
+		//if coordinates are tracked then update the tracked radii
+		if (m_pmodel->getTrackPrimaryCoordinates()){
+			new_prim->setRadius(new_prim->m_primarydiam / 2.0);
+		}
+
+		UpdateCache();
+		//      PrintTree("after.inp");
+	}
+
+	return *this;
 }
 
 //***************************************************hdy********************************************//
@@ -2070,45 +2231,6 @@ void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target)
     }
 
 }
-
-//******************************************hdy************************************************************//
-/*!
-* @brief       Changes pointer from source to target when centre-centre separation is tracked
-*
-* If a primary neighbours the smaller of the merging pair the centre to centre separation is
-* re-estmated as the smaller of the sum of the separation or the sum of primary radii.
-*
-* @param[in] source Pointer to the original particle
-* @param[in] target Pointer to the new particle
-* @param[in] centre to centre separation of the merging primaries
-* @param[in] Pointer to the smaller of merging primaries
-*/
-void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target, double d_ij, PAHPrimary *small_prim)
-{
-	if (m_rightparticle == source) {
-		m_rightparticle = target;
-		//if the neighbour is the smaller of the merging primaries then update the centre to centre distance
-		if (source == small_prim){
-			//estimate new separation as the smaller of the sum of the two separartions or the sum of primary radii
-			m_distance_centreToCentre = min(m_distance_centreToCentre + d_ij, m_rightparticle->m_primarydiam / 2.0 + m_leftparticle->m_primarydiam / 2.0);
-		}
-	}
-	if (m_leftparticle == source){
-		m_leftparticle = target;
-		//if the neighbour is the smaller of the merging primaries then update the centre to centre distance
-		if (source == small_prim){
-			//estimate new separation as the smaller of the sum of the two separartions or the sum of primary radii
-			m_distance_centreToCentre = min(m_distance_centreToCentre + d_ij, m_rightparticle->m_primarydiam / 2.0 + m_leftparticle->m_primarydiam / 2.0);
-		}
-	}
-
-	// Update the tree above this sub-particle.
-	if (m_parent != NULL) {
-		m_parent->ChangePointer(source, target, d_ij, small_prim);
-	}
-
-}
-//******************************************hdy************************************************************//
 
 /*!
  * The actual interval over which the update is carried out on a PAH is from
@@ -2888,43 +3010,43 @@ bool PAHPrimary::FakeRounding()
     else return false;
 }
 
-//bool PAHPrimary::CheckRounding()
-//{
-//    bool hascoalesced = false;
-//    bool Condition;
-//    
-//    //! The condition for whether a particle has coalesced depends on whether
-//    //! the distance between the centres of primary particles is tracked. If
-//    //! tracked, a particle has coalesced if the distance is 0. If not, the
-//    //! condition depends on whether the rounding level exceeds an arbitrarily
-//    //! high threshold.
-//    if (!m_pmodel->getTrackPrimarySeparation()) {
-//        Condition = (m_children_roundingLevel > 0.95);
-//    } else {
-//        Condition = (m_distance_centreToCentre == 0.0);
-//    }
-//
-//    if ((Condition && m_leftparticle != NULL) || FakeRounding()) {
-//        // PrintTree("before.inp");
-//        // cout <<"merging"<<m_children_roundingLevel<<endl;
-//        Merge();
-//        // PrintTree("after.inp");
-//
-//        hascoalesced = true;
-//
-//        //! Check again because this node has changed.
-//        CheckRounding();
-//    }
-//
-//    if (m_leftchild != NULL) {
-//        hascoalesced = m_leftchild->CheckRounding();
-//        hascoalesced = m_rightchild->CheckRounding();
-//    }
-//
-//    UpdateCache();
-//
-//    return hascoalesced;
-//}
+bool PAHPrimary::CheckRounding()
+{
+    bool hascoalesced = false;
+    bool Condition;
+    
+    //! The condition for whether a particle has coalesced depends on whether
+    //! the distance between the centres of primary particles is tracked. If
+    //! tracked, a particle has coalesced if the distance is 0. If not, the
+    //! condition depends on whether the rounding level exceeds an arbitrarily
+    //! high threshold.
+    if (!m_pmodel->getTrackPrimarySeparation()) {
+        Condition = (m_children_roundingLevel > 0.95);
+    } else {
+        Condition = (m_distance_centreToCentre == 0.0);
+    }
+
+    if ((Condition && m_leftparticle != NULL) || FakeRounding()) {
+        // PrintTree("before.inp");
+        // cout <<"merging"<<m_children_roundingLevel<<endl;
+        Merge();
+        // PrintTree("after.inp");
+
+        hascoalesced = true;
+
+        //! Check again because this node has changed.
+        CheckRounding();
+    }
+
+    if (m_leftchild != NULL) {
+        hascoalesced = m_leftchild->CheckRounding();
+        hascoalesced = m_rightchild->CheckRounding();
+    }
+
+    UpdateCache();
+
+    return hascoalesced;
+}
 
 
 //! Update primary particle.
@@ -3021,7 +3143,8 @@ void PAHPrimary::UpdatePrimary(void)
 		m_mass = m_PAHmass;
 		m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
 		m_dmob = m_diam;
-		m_dcol = max(m_diam, m_PAHCollDiameter);
+		m_dcol = max(m_diam, m_PAHCollDiameter); //comment by hdy to test bintree model and PAH_KMC model
+		//m_dcol = m_diam;
 		m_surf = PI * m_diam * m_diam;
 
 		//! If the distance between the centres of primary particles is
@@ -3105,7 +3228,7 @@ void PAHPrimary::UpdatePrimary(void)
 			m_primaryvol = m_vol;
 			m_sum_necks = 0.0;
 		}
-		//m_avg_coalesc = 0.0;
+		m_avg_coalesc = 0.0;
 		m_avg_sinter = 0.0;
 	}
 }
@@ -3172,7 +3295,8 @@ bool PAHPrimary::CheckSintering()
 	if (m_leftparticle != NULL) {
 
 		// check whether condition for merger is met
-		if (MergeCondition() || FakeRounding()) { //modified by hdy
+		if (MergeCondition() || FakeRounding()) { //modified by hdy, comment to test PAH_KMC model and bintree model
+		//if (MergeCondition()) { //modified by hdy
 			Merge();
 			UpdateCache();
 			hassintered = true;
@@ -3206,11 +3330,11 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
 	else
 	{
 		if (m_parent == NULL) {
-			//m_avg_coalesc = 1.0;
+			m_avg_coalesc = 1.0;
 			m_avg_sinter = 1.0;
 		}
 		else {
-			//m_avg_coalesc = 0.0;
+			m_avg_coalesc = 0.0;
 			m_avg_sinter = 0.0;
 		}
 		m_numprimary = 1;
@@ -3295,7 +3419,8 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
 				pow(pow(m_surf, 3) / (36 * PI*m_vol*m_vol), (1.0 / 1.8));
 			// the maximum of the largest PAH diameter and
 			// the average between the surface and voluem equiv diameter
-			const double cdiam = max(aggcolldiam, m_PAHCollDiameter);
+			const double cdiam = max(aggcolldiam, m_PAHCollDiameter); //comment to test PAH_KMC and bintree model, by hdy
+			//const double cdiam = aggcolldiam;
 			m_dmob = aggcolldiam;
 			SetCollDiameter(cdiam);
 		}
@@ -4080,7 +4205,8 @@ void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &m
 				double r_j4 = pow(r_j, 4.0);
 
 				//! Continue if primaries have not coalesced
-				if (!MergeCondition() && !FakeRounding()) { // add FakeRounding() by hdy
+				if (!MergeCondition() && !FakeRounding()) { // add FakeRounding() by hdy,comment by hdy to test bintrtee model and PAH_KMC model
+				//if (!MergeCondition()) {
 
 					//! Due to rounding, x_i and x_j are sometimes calculated to be larger 
 					//! than the respective primary radii resulting in a negative neck area.
@@ -4319,42 +4445,42 @@ void PAHPrimary::SetSinteringTime(double time)
     }
 }
 
-////returns the CoalescenceLevel of the two primaries that are connected by this node
-//double PAHPrimary::RoundingLevel()
-//{
-//    if (m_leftparticle!=NULL) {
-//        // Calculate the spherical surface
-//        const double spherical_surface=4*PI*m_children_radius*m_children_radius;
-//        const double two_1_3=0.79370052231642452;
-//        double slevel;
-//
-//        if (m_children_surf <= spherical_surface) {
-//            m_children_surf = spherical_surface;
-//            return 1.0;
-//        }
-//
-//        if (m_children_surf == 0.0) {
-//            slevel = 0.0;
-//        } else {
-//            slevel= ((spherical_surface/m_children_surf)-two_1_3)/(1-two_1_3);
-//        }
-//
-//        if (slevel < 0.0) {
-//            return 0.0;
-//        } else if (slevel > 1.0) {
-//            cout << "sweep: PAHPrimary::CoalescenceLevel() > 1.0";
-//            return 1.0;
-//        } else {
-//            return slevel;
-//        }
-//    } else {
-//        // Particle is a primary, should have 0 as default properties
-//        m_children_surf = 0.0;
-//        m_children_radius = 0.0;
-//        m_children_vol = 0.0;
-//        return 0.0;
-//    }
-//}
+//returns the CoalescenceLevel of the two primaries that are connected by this node
+double PAHPrimary::RoundingLevel()
+{
+    if (m_leftparticle!=NULL) {
+        // Calculate the spherical surface
+        const double spherical_surface=4*PI*m_children_radius*m_children_radius;
+        const double two_1_3=0.79370052231642452;
+        double slevel;
+
+        if (m_children_surf <= spherical_surface) {
+            m_children_surf = spherical_surface;
+            return 1.0;
+        }
+
+        if (m_children_surf == 0.0) {
+            slevel = 0.0;
+        } else {
+            slevel= ((spherical_surface/m_children_surf)-two_1_3)/(1-two_1_3);
+        }
+
+        if (slevel < 0.0) {
+            return 0.0;
+        } else if (slevel > 1.0) {
+            cout << "sweep: PAHPrimary::CoalescenceLevel() > 1.0";
+            return 1.0;
+        } else {
+            return slevel;
+        }
+    } else {
+        // Particle is a primary, should have 0 as default properties
+        m_children_surf = 0.0;
+        m_children_radius = 0.0;
+        m_children_vol = 0.0;
+        return 0.0;
+    }
+}
 
 //**********************************add by hdy*****************************************//
 /*!
@@ -4649,5 +4775,311 @@ double PAHPrimary::SinteringLevel()
 		if (m_parent == NULL) return 1.0;        // Single primary case
 		else return 0.0;                         // Part of a tree
 	}
+}
+//**********************************add by hdy*****************************************//
+
+//**********************************add by hdy*****************************************//
+/*!
+* @brief       Adjust primary radius after volume addition due to merger.
+*				Adjustment is performed in a similar manner to sintering,
+*				assuming that the neck radii are unchanged; hence,
+*				the neighbours are translated outwwards.
+*
+* @param[in] V1			Volume to be added
+* @param[in] d_ij			Separation of merging primaries
+* @param[in] prim_ignore	Primary to be ignored in adjustments
+*/
+void PAHPrimary::AdjustPrimary(double V1, double d_ij, PAHPrimary *prim_ignore)
+{
+	double V0 = 0.0;								//!< Variable to track added volume
+	double r_i = m_primarydiam / 2.0;				//!< Radius of primary particle i
+	double r_j = prim_ignore->m_primarydiam / 2.0;	//!< Radius of primary particle j
+	double x_i = (d_ij*d_ij - r_j*r_j + r_i*r_i) / (2.0*d_ij);	//!< Distance to merging neck
+	double dr_max = 0.01*r_i;						//!< Maximum change in primary radius during internal step (1% of primary radius)
+	double dr_i = 0.0;								//!< Change in radius of i
+
+	while (V0 <= V1){
+
+		r_i = m_primarydiam / 2.0;
+
+		//! change in volume (exclude contribution from merging neck)
+		double dV = dr_max * (m_free_surf + 2.0*M_PI*(r_i*r_i - r_i*x_i) + max(m_sum_necks - M_PI*(r_i*r_i - x_i*x_i)*r_i / x_i, 0.0));
+
+		//csl37-test
+		assert(dV > 0.0);
+		//csl37-test
+
+		//! change in radius
+		if (V0 + dV > V1){
+			dr_i = (V1 - V0)*dr_max / dV;
+		}
+		else{
+			dr_i = dr_max;
+		}
+
+		//csl37-test
+		assert(dr_i > 0.0);
+		assert(dr_i <= 1.1*dr_max);
+		//csl37-test
+
+		//! Update the particle separations ignoring the smaller primary
+		if (m_parent != NULL) UpdateConnectivity(this, dr_i, prim_ignore);
+
+		//! Update primary diameter
+		m_primarydiam = 2.0* (r_i + dr_i);
+
+		//! Update primary properties
+		this->UpdateOverlappingPrimary();
+
+		V0 += dV;
+	}
+}
+//**********************************add by hdy*****************************************//
+
+//**********************************add by hdy*****************************************//
+/*!
+* @brief       Changes pointer from source to target when centre-centre separation is tracked
+*
+* If a primary neighbours the smaller of the merging pair the centre to centre separation is
+* re-estmated as the smaller of the sum of the separation or the sum of primary radii.
+*
+* @param[in] source		Pointer to the original particle
+* @param[in] target		Pointer to the new particle
+* @param[in] small_prim	Smaller of merging primaries
+* @param[in] node			Pointer to merging neck (non-leaf node)
+*/
+void PAHPrimary::ChangePointer(PAHPrimary *source, PAHPrimary *target, PAHPrimary *small_prim, PAHPrimary *node)
+{
+
+	if (m_rightparticle == source) {
+		//! if the neighbour is the smaller of the merging primaries then add new neighbour
+		if (this != node){
+			if (source == small_prim){
+
+				double r_j = m_rightparticle->m_primarydiam / 2.0;	//!< radius of smaller merging primary
+				double r_k = m_leftparticle->m_primarydiam / 2.0;	//!< radius of neighbour of merging primary
+				double d_kj = m_distance_centreToCentre;			//!< primary separation
+				double x_kj = (d_kj*d_kj - r_j*r_j + r_k*r_k) / 2.0 / d_kj;	//!< distance form centre of neighbour to neck with smaller merging primary
+				double A_n_k = M_PI*(r_k*r_k - x_kj*x_kj);				//!< neck radius
+
+				if (A_n_k > 0.0){
+					//! add the neighbouring primary of smaller merging primary as a neighbour of the new merged primary
+					double x_ik = target->AddNeighbour(A_n_k, small_prim, node);
+					m_distance_centreToCentre = min(x_ik + x_kj, m_rightparticle->m_primarydiam / 2.0 + m_leftparticle->m_primarydiam / 2.0);
+				}
+				else{
+					//! primaries in point contact
+					m_distance_centreToCentre = m_rightparticle->m_primarydiam / 2.0 + m_leftparticle->m_primarydiam / 2.0;
+				}
+
+				//! adjust coordinates of new neighbour and all its neighbour
+				//! this translates the branch along old separation vector d_ik to appropriate separation
+				if (m_pmodel->getTrackPrimaryCoordinates()){
+
+					Coords::Vector u_ik = UnitVector(m_leftparticle->boundSphCentre(), target->boundSphCentre());	//!< old separation unit vector
+					double d_ik = Separation(m_leftparticle->boundSphCentre(), target->boundSphCentre());			//!< old separation distance 
+					//! Translate the neighbour 
+					m_leftparticle->TranslatePrimary(u_ik, d_ik - m_distance_centreToCentre);
+					//! Translate all neighbours of the neighbour except the old small_prim
+					m_leftparticle->TranslateNeighbours(m_leftparticle, u_ik, d_ik - m_distance_centreToCentre, small_prim);
+				}
+			}
+
+			m_rightparticle = target;
+
+			if (m_distance_centreToCentre < 0.0) m_distance_centreToCentre = -m_distance_centreToCentre; //! this is a length 
+
+		}
+		else{
+			m_rightparticle = NULL;
+		}
+
+	}
+
+	if (m_leftparticle == source){
+		//! if the neighbour is the smaller of the merging primaries then add new neighbour
+		if (this != node){
+			if (source == small_prim){
+
+				double r_j = m_leftparticle->m_primarydiam / 2.0;	//!< radius of smaller merging primary
+				double r_k = m_rightparticle->m_primarydiam / 2.0;	//!< radius of neighbour of merging primary
+				double d_kj = m_distance_centreToCentre;			//!< primary separation
+				double x_kj = (d_kj*d_kj - r_j*r_j + r_k*r_k) / 2.0 / d_kj;	//!< distance form centre of neighbour to neck with smaller merging primary
+				double A_n_k = M_PI*(r_k*r_k - x_kj*x_kj);				//!< neck radius
+
+				if (A_n_k > 0.0){
+					//! add the neighbouring primary of smaller merging primary as a neighbour of the new merged primary
+					double x_ik = target->AddNeighbour(A_n_k, small_prim, node);
+					m_distance_centreToCentre = min(x_ik + x_kj, m_rightparticle->m_primarydiam / 2.0 + m_leftparticle->m_primarydiam / 2.0);
+				}
+				else{
+					//! primaries in point contact
+					m_distance_centreToCentre = m_rightparticle->m_primarydiam / 2.0 + m_leftparticle->m_primarydiam / 2.0;
+				}
+
+				//! adjust coordinates of new neighbour and all its neighbour
+				//! this translates the branch along old separation vector d_ik to appropriate separation
+				if (m_pmodel->getTrackPrimaryCoordinates()){
+
+					Coords::Vector vector_d_ik = UnitVector(m_rightparticle->boundSphCentre(), target->boundSphCentre());	//!< old separation unit vector
+					double d_ik = Separation(m_rightparticle->boundSphCentre(), target->boundSphCentre());					//!< old separation distance 
+					//! Translate the neighbour 
+					m_rightparticle->TranslatePrimary(vector_d_ik, d_ik - m_distance_centreToCentre);
+					//! Translate all neighbours of the neighbour except the old small_prim
+					m_rightparticle->TranslateNeighbours(m_rightparticle, vector_d_ik, d_ik - m_distance_centreToCentre, small_prim);
+				}
+			}
+
+			m_leftparticle = target;
+
+			if (m_distance_centreToCentre < 0.0) m_distance_centreToCentre = -m_distance_centreToCentre; //! this is a length 
+
+		}
+		else{
+			m_leftparticle = NULL;
+		}
+	}
+
+	// Update the tree above this sub-particle.
+	if (m_parent != NULL) {
+		m_parent->ChangePointer(source, target, small_prim, node);
+	}
+
+}
+//**********************************add by hdy*****************************************//
+
+//**********************************add by hdy*****************************************//
+/*!
+* @brief       Create neck for new neighbours added during merger event
+*
+* Neighbours of merging primary are added to the new merged primary
+* (the larger of the merging pair). The new merged primary is 'sintered'
+* to preserve the neck size of the neighbour being added
+*
+* @param[in]	A_n_k		Neck area of neighbour being added
+* @param[in]	small_prim	Small merging primary
+* @param[in]	this		New merged primary
+* @param[out] centre to neck distance of new merged primary
+*/
+double PAHPrimary::AddNeighbour(double A_n_k, PAHPrimary *small_prim, PAHPrimary *node)
+{
+
+	double dr_i = 0.0;					//!< Change in radius
+	double r_i = m_primarydiam / 2.0;		//!< Radius of new (merged) primary
+	double dx_max = -0.1*r_i;			//!< Maximum step change in x_ik
+	double dx_i = 0.0;					//!< Change in primary centre to neck distance
+	double x_ik = 0.999*r_i;			//!< Initialise primary centre to neck distance as 0.999*r_i
+	double A_n_i = M_PI*(r_i*r_i - x_ik*x_ik);		//!< initial neck radius
+
+	//! "Sinter" new primary until the neck is the same size as the 
+	//! neck on the old neighbour of the old particle.
+	//! Loop while the merged primary neck area is less than the desired area A_n_k
+	while (A_n_i < A_n_k){
+
+		//! variables for updating surface areas
+		double NodeCapAreas = 0.0;
+		double NodeCapVolumes = 0.0;
+		double NodeSumNecks = 0.0;
+		double SmallCapAreas = 0.0;
+		double SmallCapVolumes = 0.0;
+		double SmallSumNecks = 0.0;
+		double CapAreas = 0.0;
+		double CapVolumes = 0.0;
+		double SumNecks = 0.0;
+
+		//!Update surface areas
+		//UpdateOverlappingPrimary ascends from the primary and misses some neighbours
+		//becasue they are not on this path during the change pointer update.
+		//(The tree is only rearranged after the update.)
+		//To include the missed necks we sum the contribution ascending from the 
+		//small primary and from the large primary and subtract the contribution 
+		//ascending from node to avoid double counting.
+		this->SumCaps(this, CapAreas, CapVolumes, SumNecks);
+		small_prim->SumCaps(this, SmallCapAreas, SmallCapVolumes, SmallSumNecks);
+		if (node->m_parent != NULL) node->SumCaps(this, NodeCapAreas, NodeCapVolumes, NodeSumNecks);
+
+		//! Update free surface area
+		//if the calculated area is negative (too many overlaps) then set m_free_surf = 0.0
+		m_free_surf = max(M_PI*m_primarydiam*m_primarydiam - CapAreas - SmallCapAreas + NodeCapAreas, 0.0);
+
+		//! Update sum of necks 
+		m_sum_necks = max(SumNecks + SmallSumNecks - NodeSumNecks, 0.0);
+
+		r_i = m_primarydiam / 2.0;		//!< Radius of new (merged) primary
+
+		//Add reference to preprint/paper here.
+		//Surface areas exclude the contribution from the new neck being added 
+		//we must add the contribution to the free surface area,
+		//this is to be excluded from the sum over necks anyway.
+		double B_ik = -A_n_i / (m_free_surf + m_sum_necks - 2 * M_PI*(r_i*r_i - r_i*x_ik));
+
+		//! Change in radius
+		dr_i = B_ik * dx_max;
+		//! Save old neck size
+		double A_n_i_old = A_n_i;
+		//! New neck size
+		A_n_i = M_PI*((r_i + dr_i)*(r_i + dr_i) - (x_ik + dx_max)*(x_ik + dx_max));
+
+		//! If desired neck size is exceeded then solve the quadratic for dx
+		//! A_n_i = M_PI*((r_i+dr_i)*(r_i+dr_i) - (x_ik+dx)*(x_ik+dx));
+		if (A_n_i > A_n_k) {
+			//coefficients
+			double a = B_ik*B_ik - 1;
+			double b = 2.0*r_i*B_ik - 2.0*x_ik;
+			double c = r_i*r_i - x_ik*x_ik - A_n_k / M_PI;
+
+			//! dx should be negative
+			dx_i = min((-b - sqrt(b*b - 4 * a*c)) / 2.0 / a, (-b + sqrt(b*b - 4 * a*c)) / 2.0 / a);
+
+			//! re-calculate change in radis
+			dr_i = B_ik * dx_i;
+
+			//csl37-test
+			assert(dx_i <= 0.0);
+			assert(dr_i >= 0.0);
+			//csl37-test
+		}
+		else{
+			dx_i = dx_max;
+		}
+
+		//! update connectivity ignoring small (merged) primary
+		if (m_parent != NULL) UpdateConnectivity(this, dr_i, small_prim);
+
+		//! update radius and x_ik
+		r_i += dr_i;
+		m_primarydiam += 2.0*dr_i;
+		x_ik += dx_i;
+
+		// if(x_ik <=0.0) break; //break if neck reaches maximum //csl37- necesssary?
+
+	}
+
+	return x_ik;
+}
+//**********************************add by hdy*****************************************//
+
+//**********************************add by hdy*****************************************//
+/*!
+*  Calculates distance between two points
+*
+*  @param[in]    x_i	Coordinates
+*  @param[in]    x_j	Coordinates
+*  @param[out]   Separation
+*/
+double PAHPrimary::Separation(Coords::Vector x_i, Coords::Vector x_j)
+{
+	Coords::Vector delta_x;
+	double len_delta_x;
+
+	//calculate difference x_j - x_i
+	delta_x[0] = x_j[0] - x_i[0];
+	delta_x[1] = x_j[1] - x_i[1];
+	delta_x[2] = x_j[2] - x_i[2];
+
+	//calculate the length of the vector
+	len_delta_x = sqrt(delta_x[0] * delta_x[0] + delta_x[1] * delta_x[1] + delta_x[2] * delta_x[2]);
+
+	return len_delta_x;
 }
 //**********************************add by hdy*****************************************//
