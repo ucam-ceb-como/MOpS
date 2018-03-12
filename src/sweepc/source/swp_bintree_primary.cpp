@@ -581,6 +581,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
                 //! Translate particle in 1% increments.
                 this->m_leftchild->Translate(-0.01 * x * sumr, -0.01 * y * sumr, -0.01 * z * sumr);
+				//this->m_leftchild->Translate(-0.001 * x * sumr, -0.001 * y * sumr, -0.001 * z * sumr); //verify the cause for reduction of surface area in bintree model, hdy
 
                 Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
                 

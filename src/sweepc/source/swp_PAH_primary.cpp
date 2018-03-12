@@ -457,27 +457,32 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
     SetCollDiameter(source->CollDiameter());
     SetMobDiameter(source->MobDiameter());
     SetSphDiameter(source->SphDiameter());
+	SetSurfaceArea(source->SurfaceArea());
+	SetMass(source->Mass());
+
+	m_values = source->m_values;
+	m_comp = source->m_comp;
+	m_time = source->m_time;
+
+	m_sint_time = source->m_sint_time;
+	m_sint_rate = source->m_sint_rate;
+	m_numcarbon = source->m_numcarbon;
+	m_numH = source->m_numH;
+	m_numOfEdgeC = source->m_numOfEdgeC;
+	m_numOfRings = source->m_numOfRings;
+	m_numOfRings5 = source->m_numOfRings5;
+	m_numPAH = source->m_numPAH;
+	m_numprimary = source->m_numprimary;
+	m_primarydiam = source->m_primarydiam;
+	m_primaryvol = source->m_primaryvol;
     m_PAHCollDiameter=source->m_PAHCollDiameter;
-    SetSurfaceArea(source->SurfaceArea());
-    m_time=source->m_time;
     m_PAHmass=source->m_PAHmass;
-    m_leftchild=source->m_leftchild;
-    m_rightchild=source->m_rightchild;
-    m_leftparticle=source->m_leftparticle;
-    m_rightparticle=source->m_rightparticle;
-    m_parent=source->m_parent;
-    SetMass(source->Mass());
-    m_numPAH=source->m_numPAH;
-    m_numprimary=source->m_numprimary;
-    m_primarydiam=source->m_primarydiam;
-    m_sqrtLW=source->m_sqrtLW;
-    m_LdivW=source->m_LdivW;
-    m_pmodel=source->m_pmodel;
+    
     m_surf=source->m_surf;
     m_vol=source->m_vol;
-    m_children_surf=source->m_children_surf;
-    m_distance_centreToCentre = source->m_distance_centreToCentre;
 	m_free_surf = source->m_free_surf; //hdy
+    m_distance_centreToCentre = source->m_distance_centreToCentre;
+	
 	m_cen_bsph = source->m_cen_bsph; //hdy
 	m_cen_mass = source->m_cen_mass; //hdy
 	m_r = source->m_r; //hdy
@@ -485,23 +490,29 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
 	m_r3 = source->m_r3; //hdy
     m_children_vol=source->m_children_vol;
     m_children_radius=source->m_children_radius;
-    //m_children_roundingLevel=source->m_children_roundingLevel;
+	m_children_surf = source->m_children_surf;
+	m_children_sintering = source->m_children_sintering; //hdy
+	m_sum_necks = source->m_sum_necks; //hdy
+
     m_rightparticle_numPAH=source->m_rightparticle_numPAH;
     m_leftparticle_numPAH=source->m_leftparticle_numPAH;
     m_leftparticle_vol_old=source->m_leftparticle_vol_old;
     m_rightparticle_vol_old=source->m_rightparticle_vol_old;
+
     m_fdim=source->m_fdim;
     m_Rg=source->m_Rg;
+	m_sqrtLW = source->m_sqrtLW;
+	m_LdivW = source->m_LdivW;
+	m_pmodel = source->m_pmodel;
     //m_avg_coalesc=source->m_avg_coalesc;
 	m_avg_sinter = source->m_avg_sinter;
-    m_numcarbon = source->m_numcarbon;
-    m_numH = source->m_numH;
-    m_numOfEdgeC = source->m_numOfEdgeC;
-    m_numOfRings = source->m_numOfRings;
-	m_numOfRings5 = source->m_numOfRings5;
-    m_values=source->m_values;
-    m_comp=source->m_comp;
-    m_sint_time=source->m_sint_time;
+
+	//! Set particles.
+	m_parent = source->m_parent;
+	m_leftchild = source->m_leftchild;
+	m_rightchild = source->m_rightchild;
+	m_leftparticle = source->m_leftparticle;
+	m_rightparticle = source->m_rightparticle;
 
     //! Replace the PAHs with those from the source.
     if (m_clone==true) {
@@ -681,53 +692,53 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 	rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
 
 	//only one PAH in rhs or this particle -> condensation or inception process.
-	if ((rhsparticle->m_numPAH == 1) || (m_numPAH == 1))
-	{
-		if (rhsparticle->Numprimary() > 1)
-		{
-			// rhsparticle is a soot particle but this paricle repesents a PAH
-			// this paricle will condense on this rhsparticle
-			// Get a copy of the rhs ready to add to the current particle
-			PAHPrimary copy_rhs(*rhsparticle);
-			PAHPrimary *target = copy_rhs.SelectRandomSubparticle(rng);
+	//if ((rhsparticle->m_numPAH == 1) || (m_numPAH == 1))
+	//{
+	//	if (rhsparticle->Numprimary() > 1)
+	//	{
+	//		 rhsparticle is a soot particle but this paricle repesents a PAH
+	//		 this paricle will condense on this rhsparticle
+	//		 Get a copy of the rhs ready to add to the current particle
+	//		PAHPrimary copy_rhs(*rhsparticle);
+	//		PAHPrimary *target = copy_rhs.SelectRandomSubparticle(rng);
 
-			target->m_PAH.insert(target->m_PAH.end(), m_PAH.begin(), m_PAH.end());
-			target->UpdatePrimary();
-			CopyParts(&copy_rhs);
-			CopyTree(&copy_rhs);
-		}
-		else
-		{
-			// this paricle is a soot particle but rhsparticle repesents a PAH
-			// rhsparticle will condense on this particle
-			// particle has more then one primary select the primary where
-			// the PAH condenses to and add it to the list
-			if (m_leftchild != NULL)
-			{
-				PAHPrimary *target = SelectRandomSubparticle(rng);
+	//		target->m_PAH.insert(target->m_PAH.end(), m_PAH.begin(), m_PAH.end());
+	//		target->UpdatePrimary();
+	//		CopyParts(&copy_rhs);
+	//		CopyTree(&copy_rhs);
+	//	}
+	//	else
+	//	{
+	//		 this paricle is a soot particle but rhsparticle repesents a PAH
+	//		 rhsparticle will condense on this particle
+	//		 particle has more then one primary select the primary where
+	//		 the PAH condenses to and add it to the list
+	//		if (m_leftchild != NULL)
+	//		{
+	//			PAHPrimary *target = SelectRandomSubparticle(rng);
 
-				target->m_PAH.insert(target->m_PAH.end(), rhsparticle->m_PAH.begin(), rhsparticle->m_PAH.end());
-				target->UpdatePrimary();
+	//			target->m_PAH.insert(target->m_PAH.end(), rhsparticle->m_PAH.begin(), rhsparticle->m_PAH.end());
+	//			target->UpdatePrimary();
 
-			}
-			else
-			{
-				//! rhsparticle is a gas-phase PAH but the this pointer may be
-				//! pointing to a gas-phase PAH in which case this would be an
-				//! inception event, or a single primary particle in which case
-				//! it would be a condensation event.
-				m_PAH.insert(m_PAH.end(), rhsparticle->m_PAH.begin(), rhsparticle->m_PAH.end());
-				UpdatePrimary();
-			}
-		}
-		UpdateCache();
-		//Check the coalescence ratio
-		CheckSintering();
+	//		}
+	//		else
+	//		{
+	//			! rhsparticle is a gas-phase PAH but the this pointer may be
+	//			! pointing to a gas-phase PAH in which case this would be an
+	//			! inception event, or a single primary particle in which case
+	//			! it would be a condensation event.
+	//			m_PAH.insert(m_PAH.end(), rhsparticle->m_PAH.begin(), rhsparticle->m_PAH.end());
+	//			UpdatePrimary();
+	//		}
+	//	}
+	//	UpdateCache();
+	//	Check the coalescence ratio
+	//	CheckSintering();
 
-	}
+	//}
 
-	else
-	{ //comment inception and condensation to test PAH_KMC model and bintree model
+	//else
+	//{ //comment inception and condensation to test PAH_KMC model and bintree model
 		//coagulation process
 		PAHPrimary *newleft = new PAHPrimary(m_time, *m_pmodel);
 		PAHPrimary *newright = new PAHPrimary(m_time, *m_pmodel);
@@ -1029,6 +1040,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
 		//set the sintertime for the new created primary particle
 		SetSinteringTime(std::max(this->m_sint_time, rhsparticle->m_sint_time));
+		m_createt = max(m_createt, rhsparticle->m_createt);
 		//initialise the variables used to calculate the coalesence ratio
 		m_children_vol = m_leftparticle->m_vol + m_rightparticle->m_vol;
 		m_children_surf = (m_leftparticle->m_surf + m_rightparticle->m_surf);
@@ -1037,6 +1049,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 		m_leftparticle_numPAH = m_leftparticle->m_numPAH;
 		m_rightparticle_numPAH = m_rightparticle->m_numPAH;
 		m_children_radius = pow(3.0 / (4.0*PI)*(m_children_vol), (ONE_THIRD));
+		m_children_sintering = SinteringLevel();
 		//m_children_roundingLevel = CoalescenceLevel();
 		m_distance_centreToCentre = m_leftparticle->m_primarydiam / 2.0 + m_rightparticle->m_primarydiam / 2.0;
 
@@ -1074,7 +1087,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 		// if (print)
 		//     PrintTree("after");
 
-	}
+	//}
 	return *this;
 }
 
@@ -1510,8 +1523,10 @@ double PAHPrimary::CoalescenceLevel()
 void PAHPrimary::ResetChildrenProperties()
 {
             //m_children_roundingLevel=0.0;
+	        m_children_sintering=0.0; //hdy
             m_children_surf=0.0;
             m_children_vol=0.0;
+			m_children_radius = 0.0; //hdy
             m_distance_centreToCentre=0.0;
             m_rightparticle_vol_old=0.0;
             m_leftparticle_vol_old=0.0;
@@ -1519,6 +1534,7 @@ void PAHPrimary::ResetChildrenProperties()
             m_rightparticle_numPAH=0;
             //m_avg_coalesc=0;
 			m_avg_sinter = 0;
+			m_sint_rate = 0.0; //hdy
 }
 
 //merges the left and the right primary particle to one primary particle
@@ -1750,21 +1766,20 @@ PAHPrimary &PAHPrimary::Merge()
 					newleft = false;
 				}
 
+				PAHPrimary *oldparticle = small_prim;
 				//! update composition
 				if (newleft)
 				{
 					new_prim->m_PAH = m_leftparticle->m_PAH;
 					new_prim->m_PAH.insert(m_leftparticle->m_PAH.end(), m_rightparticle->m_PAH.begin(), m_rightparticle->m_PAH.end());
-					new_prim->UpdatePrimary();
+					//new_prim->UpdatePrimary();
 				}
 				else
 				{
 					new_prim->m_PAH = m_rightparticle->m_PAH;
 					new_prim->m_PAH.insert(m_rightparticle->m_PAH.end(), m_leftparticle->m_PAH.begin(), m_leftparticle->m_PAH.end());
-					new_prim->UpdatePrimary();
+					//new_prim->UpdatePrimary();
 				}
-
-				PAHPrimary *oldparticle = small_prim;
 
 				//! update pointers to neighbours
 				new_prim->ChangePointer(new_prim, new_prim, small_prim, this);
@@ -3143,8 +3158,8 @@ void PAHPrimary::UpdatePrimary(void)
 		m_mass = m_PAHmass;
 		m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
 		m_dmob = m_diam;
-		m_dcol = max(m_diam, m_PAHCollDiameter); //comment by hdy to test bintree model and PAH_KMC model
-		//m_dcol = m_diam;
+		//m_dcol = max(m_diam, m_PAHCollDiameter); //comment by hdy to test bintree model and PAH_KMC model
+		m_dcol = m_diam;
 		m_surf = PI * m_diam * m_diam;
 
 		//! If the distance between the centres of primary particles is
@@ -3168,68 +3183,127 @@ void PAHPrimary::UpdatePrimary(void)
 		//} comment by hdy
 
 		//***********************************************hdy*****************************************************//
-		if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) {
+		//if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) {
 
-			//! Particle with more than one primary.
-			if (m_parent != NULL) {
+		//	//! Particle with more than one primary.
+		//	if (m_parent != NULL) {
 
-				while (m_vol_old <= m_vol){
+		//		while (m_vol_old <= m_vol){
 
-					//! Initialisation of variables to adjust the primary diameter if the
-					//! distance between the centres of primary particles is tracked.
-					double r_i = m_primarydiam / 2.0;	//!< Radius of primary particle i.
-					double dr_max = 0.01*r_i;			//!< Maximum change in primary radius during internal step (1% of primary radius)
-					double dr = 0.0;					//!< Change in radius of i
+		//			//! Initialisation of variables to adjust the primary diameter if the
+		//			//! distance between the centres of primary particles is tracked.
+		//			double r_i = m_primarydiam / 2.0;	//!< Radius of primary particle i.
+		//			double dr_max = 0.01*r_i;			//!< Maximum change in primary radius during internal step (1% of primary radius)
+		//			double dr = 0.0;					//!< Change in radius of i
 
-					//Calculate change in volume
-					dV = dr_max * m_free_surf;
+		//			//Calculate change in volume
+		//			dV = dr_max * m_free_surf;
 
-					//Calculate change in radius
-					if (m_vol_old + dV > m_vol){
-						dr = (m_vol - m_vol_old)*dr_max / dV;
-					}
-					else{
-						dr = dr_max;
-					}
+		//			//Calculate change in radius
+		//			if (m_vol_old + dV > m_vol){
+		//				dr = (m_vol - m_vol_old)*dr_max / dV;
+		//			}
+		//			else{
+		//				dr = dr_max;
+		//			}
 
-					//Update primary diameter
-					m_primarydiam = 2.0* (r_i + dr);
+		//			//Update primary diameter
+		//			m_primarydiam = 2.0* (r_i + dr);
 
-					//! Update free surface area
-					this->UpdateOverlappingPrimary();
+		//			//! Update free surface area
+		//			this->UpdateOverlappingPrimary();
 
-					m_vol_old += dV;
-				}
+		//			m_vol_old += dV;
+		//		}
 
-				//if coordinates are tracked then update coordinate tracking properties
-				if (m_pmodel->getTrackPrimaryCoordinates()){
-					setRadius(m_primarydiam / 2.0);
-					this->calcBoundSph();
-					this->calcCOM();
-				}
-			}
+		//		this->UpdateOverlappingPrimary(); //add by hdy
 
-			//! Single primary case: the primary diameter equals the
-			//! spherical diameter                
-			else {
-				m_primarydiam = m_diam;
-				m_free_surf = m_surf;
-				m_primaryvol = m_vol;
-				m_sum_necks = 0.0;
+		//		//if coordinates are tracked then update coordinate tracking properties
+		//		if (m_pmodel->getTrackPrimaryCoordinates()){
+		//			setRadius(m_primarydiam / 2.0);
+		//			this->calcBoundSph();
+		//			this->calcCOM();
+		//		}
+		//	}
 
-				if (m_pmodel->getTrackPrimaryCoordinates()) {
-					setRadius(m_primarydiam / 2.0);
-				}
-			}
-		}
-		else {
+		//	//! Single primary case: the primary diameter equals the
+		//	//! spherical diameter                
+		//	else {
+		//		m_primarydiam = m_diam;
+		//		m_free_surf = m_surf;
+		//		m_primaryvol = m_vol;
+		//		m_sum_necks = 0.0;
+
+		//		if (m_pmodel->getTrackPrimaryCoordinates()) {
+		//			setRadius(m_primarydiam / 2.0);
+		//		}
+		//	}
+		//}
+		//else {
+
+		//	//dV = m_vol - m_vol_old;
+		//	//double dS(0.0);
+
+		//	//if (dV > 0.0) {
+		//	//	//! Surface change due to volume addition.
+		//	//	dS = dV * 2.0 * m_pmodel->GetBinTreeCoalThresh() / m_diam;
+		//	//}
+		//	////! TODO: Implement surface area reduction?
+
+		//	////! Climb back-up the tree and update the surface area and
+		//	////! sintering of a particle.
+		//	//UpdateParents(dS);
+
+		//	m_primarydiam = m_diam;
+		//	m_free_surf = m_surf;
+		//	m_primaryvol = m_vol;
+		//	m_sum_necks = 0.0;
+		//}
+		//m_avg_coalesc = 0.0;
+		//m_avg_sinter = 0.0;
+		if (!(m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) || m_parent == NULL){
 			m_primarydiam = m_diam;
 			m_free_surf = m_surf;
 			m_primaryvol = m_vol;
 			m_sum_necks = 0.0;
 		}
-		m_avg_coalesc = 0.0;
-		m_avg_sinter = 0.0;
+		else{
+			//! Update overlapping primary model
+			UpdateOverlappingPrimary();
+
+			while (m_vol_old < m_vol){
+
+				//! Initialisation of variables to adjust the primary diameter if the
+				//! distance between the centres of primary particles is tracked.
+				double r_i = m_primarydiam / 2.0;	//!< Radius of primary particle i.
+				double dr_max = 0.01*r_i;			//!< Maximum change in primary radius during internal step (1% of primary radius)
+				double dr = 0.0;					//!< Change in radius of i
+
+				//Calculate change in volume
+				dV = dr_max * m_free_surf;
+
+				//Calculate change in radius
+				if (m_vol_old + dV > m_vol){
+					dr = (m_vol - m_vol_old)*dr_max / dV;
+				}
+				else{
+					dr = dr_max;
+				}
+
+				//Update primary diameter
+				m_primarydiam = 2.0* (r_i + dr);
+
+				//! Update free surface area
+				this->UpdateOverlappingPrimary();
+
+				m_vol_old += dV;
+			}
+		}
+		m_numprimary = 1;
+
+		if (m_pmodel->getTrackPrimaryCoordinates()) {
+			setRadius(m_primarydiam / 2.0);
+		}
 	}
 }
 
@@ -3295,8 +3369,8 @@ bool PAHPrimary::CheckSintering()
 	if (m_leftparticle != NULL) {
 
 		// check whether condition for merger is met
-		if (MergeCondition() || FakeRounding()) { //modified by hdy, comment to test PAH_KMC model and bintree model
-		//if (MergeCondition()) { //modified by hdy
+		//if (MergeCondition() || FakeRounding()) { //modified by hdy, comment to test PAH_KMC model and bintree model
+		if (MergeCondition()) { //modified by hdy
 			Merge();
 			UpdateCache();
 			hassintered = true;
@@ -3324,7 +3398,7 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
 	{
 		m_leftchild->UpdateCache(root);
 		m_rightchild->UpdateCache(root);
-		m_numprimary = m_leftchild->m_numprimary + m_rightchild->m_numprimary;
+		//m_numprimary = m_leftchild->m_numprimary + m_rightchild->m_numprimary;
 	}
 	//this is a primary and the number of primaries below this node is one (this node and no children)
 	else
@@ -3338,7 +3412,7 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
 			m_avg_sinter = 0.0;
 		}
 		m_numprimary = 1;
-
+		UpdatePrimary(); //add by hdy
 		// Check that the primary is begin kept up to date
 		//            const double oldNumCarbons = m_numcarbon;
 		//            UpdatePrimary();
@@ -3352,6 +3426,7 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
 	{
 		// remove the PAHs from this node to free memory
 		Reset();
+		m_numprimary = m_leftchild->m_numprimary + m_rightchild->m_numprimary;
 		m_surf = m_leftchild->m_surf + m_rightchild->m_surf;
 		m_free_surf = m_leftchild->m_free_surf + m_rightchild->m_free_surf; //add by hdy
 		m_primarydiam = (m_leftchild->m_primarydiam + m_rightchild->m_primarydiam);
@@ -3419,8 +3494,8 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
 				pow(pow(m_surf, 3) / (36 * PI*m_vol*m_vol), (1.0 / 1.8));
 			// the maximum of the largest PAH diameter and
 			// the average between the surface and voluem equiv diameter
-			const double cdiam = max(aggcolldiam, m_PAHCollDiameter); //comment to test PAH_KMC and bintree model, by hdy
-			//const double cdiam = aggcolldiam;
+			//const double cdiam = max(aggcolldiam, m_PAHCollDiameter); //comment to test PAH_KMC and bintree model, by hdy
+			const double cdiam = aggcolldiam;
 			m_dmob = aggcolldiam;
 			SetCollDiameter(cdiam);
 		}
@@ -3660,8 +3735,20 @@ void PAHPrimary::SerializePrimary(std::ostream &out, void *duplicates) const
         val = m_children_radius;
         out.write((char*)&val, sizeof(val));
 
+		val = m_children_surf;
+		out.write((char*)&val, sizeof(val));
+
         val = m_children_vol;
         out.write((char*)&val, sizeof(val));
+
+		val = m_sum_necks;
+		out.write((char*)&val, sizeof(val));
+
+		val = m_free_surf;
+		out.write((char*)&val, sizeof(val));
+
+		val = m_primaryvol;
+		out.write((char*)&val, sizeof(val));
 
         val = m_leftparticle_vol_old;
         out.write((char*)&val, sizeof(val));
@@ -3675,16 +3762,9 @@ void PAHPrimary::SerializePrimary(std::ostream &out, void *duplicates) const
         val_int =  m_leftparticle_numPAH;
         out.write((char*)&val_int, sizeof(val_int));
 
-        val = m_children_surf;
-        out.write((char*)&val, sizeof(val));
-
-        val = m_children_sintering;
-        out.write((char*)&val, sizeof(val));
-
         val = m_distance_centreToCentre;
         out.write((char*)&val, sizeof(val));
 
-		//*************hdy***************//
 		val = m_cen_bsph[0];
 		out.write((char*)&val, sizeof(val));
 
@@ -3711,7 +3791,6 @@ void PAHPrimary::SerializePrimary(std::ostream &out, void *duplicates) const
 
 		val = m_r3;
 		out.write((char*)&val, sizeof(val));
-		//*************hdy***************//
 
         /*Imaging properties
         val = (double)m_Rg;
@@ -3729,11 +3808,17 @@ void PAHPrimary::SerializePrimary(std::ostream &out, void *duplicates) const
         //val = m_avg_coalesc;
         //out.write((char*)&val, sizeof(val));
 
+		val = m_children_sintering;
+		out.write((char*)&val, sizeof(val));
+
 		val = m_avg_sinter;
 		out.write((char*)&val, sizeof(val));
 
         val = m_sint_time;
         out.write((char*)&val, sizeof(val));
+
+		val = m_sint_rate;
+		out.write((char*)&val, sizeof(val));
 
         val_int = (int) m_PAH.size();
         out.write((char*)&val_int, sizeof(val_int));
@@ -3873,8 +3958,20 @@ void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_children_radius = val;
 
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		m_children_surf = val;
+
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_children_vol = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		m_free_surf = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		m_sum_necks = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		m_primaryvol = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_leftparticle_vol_old = val;
@@ -3888,16 +3985,9 @@ void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel
         in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
         m_leftparticle_numPAH = val_int;
 
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_children_surf = val;
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		m_distance_centreToCentre = val;
 
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_children_sintering = val;
-
-        in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_distance_centreToCentre = val;
-
-		//********************hdy*******************//
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
 		m_cen_bsph[0] = val;
 
@@ -3940,10 +4030,16 @@ void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel
         //m_avg_coalesc = val;
 
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		m_children_sintering = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
 		m_avg_sinter = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_sint_time = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		m_sint_rate = val;
 
         in.read(reinterpret_cast<char*>(&val_int), sizeof(val_int));
         // the size of m_PAH
@@ -4085,7 +4181,7 @@ PAHPrimary* PAHPrimary::descendPath(PAHPrimary *here,
  *  @param[in] rng   Random number generator.
  *  @param[in] wt    Statistical weight.
  */
-void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &model, rng_type &rng, double wt)
+void PAHPrimary::SinterNode(double dt, Cell &sys, const Processes::SinteringModel &model, rng_type &rng, double wt)
 {
 	//! Declare sintering rate.
 	double r = 0.0;
@@ -4097,11 +4193,11 @@ void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &m
 	// (smaller scale = higher precision).
 	double scale = 0.01;
 
-	//! Only update the time on the root node.
-	if (m_parent == NULL) {
-		m_sint_time += dt;
-		SetSinteringTime(m_sint_time);
-	}
+	////! Only update the time on the root node.
+	//if (m_parent == NULL) {
+	//	m_sint_time += dt;
+	//	SetSinteringTime(m_sint_time);
+	//}
 
 	//! Do only if there is a particle to sinter.
 	if (m_leftparticle != NULL)
@@ -4205,8 +4301,8 @@ void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &m
 				double r_j4 = pow(r_j, 4.0);
 
 				//! Continue if primaries have not coalesced
-				if (!MergeCondition() && !FakeRounding()) { // add FakeRounding() by hdy,comment by hdy to test bintrtee model and PAH_KMC model
-				//if (!MergeCondition()) {
+				//if (!MergeCondition() && !FakeRounding()) { // add FakeRounding() by hdy,comment by hdy to test bintrtee model and PAH_KMC model
+				if (!MergeCondition()) {
 
 					//! Due to rounding, x_i and x_j are sometimes calculated to be larger 
 					//! than the respective primary radii resulting in a negative neck area.
@@ -4306,19 +4402,18 @@ void PAHPrimary::Sinter(double dt, Cell &sys, const Processes::SinteringModel &m
 				else {
 					break; //!do not continue to sinter.
 				}
-
-				//! If coordinates are tracked update tracking radius 
-				if (m_pmodel->getTrackPrimaryCoordinates()) {
-					m_leftparticle->setRadius(m_leftparticle->m_primarydiam / 2.0);
-					m_rightparticle->setRadius(m_rightparticle->m_primarydiam / 2.0);
-				}
-
-				m_children_sintering = SinteringLevel();
-
-				m_sint_rate = r;
-
 			}
+			//! If coordinates are tracked update tracking radius 
+			if (m_pmodel->getTrackPrimaryCoordinates()) {
+				m_leftparticle->setRadius(m_leftparticle->m_primarydiam / 2.0);
+				m_rightparticle->setRadius(m_rightparticle->m_primarydiam / 2.0);
+			}
+
 		}
+
+		m_children_sintering = SinteringLevel();
+		m_sint_rate = r;
+
 	}
 }
 
@@ -4616,7 +4711,7 @@ bool PAHPrimary::MergeCondition()
 			}
 		}
 	}
-
+	//condition = false; //add by hdy to test bintree model and PAH_KMC model
 	return condition;
 }
 //**********************************add by hdy*****************************************//
@@ -5081,5 +5176,54 @@ double PAHPrimary::Separation(Coords::Vector x_i, Coords::Vector x_j)
 	len_delta_x = sqrt(delta_x[0] * delta_x[0] + delta_x[1] * delta_x[1] + delta_x[2] * delta_x[2]);
 
 	return len_delta_x;
+}
+//**********************************add by hdy*****************************************//
+
+//**********************************add by hdy*****************************************//
+/*!
+* @brief       Sinters particles for time dt
+*
+* This function only operates on non-leaf nodes. It begins at the root
+* node, which sinters for time dt. It then descends the tree to sinter
+* nodes below the root. If the sintering level rises above 95%, Merge
+* is called and the particles are combined.
+*
+* @param[in]   dt      Time for which to sinter
+* @param[in]   sys     Environment for particles
+* @param[in]   model   Sintering model to apply
+* @param[in]   rng     Random number generator
+* @param[in]   wt      Statistical weight
+*/
+void PAHPrimary::Sinter(double dt, Cell &sys,
+	const Processes::SinteringModel &model,
+	rng_type &rng,
+	double wt)
+{
+	// Only update the time on the root node
+	if (m_parent == NULL) {
+		m_sint_time += dt;
+		SetSinteringTime(m_sint_time);
+	}
+
+	// Do only if there is a particle to sinter
+	if (m_leftparticle != NULL && m_rightparticle != NULL) {
+
+		SinterNode(dt, sys, model, rng, wt);
+
+		// Check if the sintering level is above the threshold, and merge
+		if (MergeCondition()) {
+			CheckSintering();
+		}
+
+		if (m_leftchild != NULL && m_rightchild != NULL) {
+			m_leftchild->Sinter(dt, sys, model, rng, wt);
+			m_rightchild->Sinter(dt, sys, model, rng, wt);
+		}
+
+		UpdateCache();
+
+		m_children_sintering = SinteringLevel();
+	}
+
 }
 //**********************************add by hdy*****************************************//
