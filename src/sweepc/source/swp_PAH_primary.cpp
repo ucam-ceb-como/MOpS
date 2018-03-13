@@ -2279,6 +2279,8 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
         // check whether this updated primary particle is a inceptedPAH, used later to track the num of InceptedPAH in the ensemble
         const int m_InceptedPAH = InceptedPAH();
 
+		double m_vol_old = m_vol;
+
         //! Loop over each PAH in this primary.
         const std::vector<boost::shared_ptr<PAH> >::iterator itEnd = m_PAH.end();
         for (std::vector<boost::shared_ptr<PAH> >::iterator it = m_PAH.begin(); it != itEnd; ++it) {
@@ -2512,7 +2514,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 			if (m_PAHchanged && !m_InvalidPAH && ind != -1)
 				m_InvalidPAH = CheckInvalidPAHs(*it);
 
-        }
+        } //end of loop for PAHs in a primary
         if (m_InvalidPAH)
         {
             RemoveInvalidPAHs();
@@ -2526,6 +2528,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
          */
         if(m_PAHclusterchanged) {
             UpdatePrimary();
+			Adjust(m_vol_old);
             // if (m_InceptedPAH!=0) {
             //        sys.Particles().SetNumOfInceptedPAH(-1);
             //        //sys.Particles().NumOfInceptedPAH();
@@ -3103,9 +3106,9 @@ void PAHPrimary::UpdatePrimary(void)
 		double A_i = 0.0;                //!< Free surface area of primary particle i.
 
 		//double m_primary_diam_old = m_primarydiam; //!< Old primary diameter. set initial value by hdy.
-		double m_vol_old = m_vol;    //!< Old volume. set initial value by hdy.
-		double m_diam_old = m_diam; //add by hdy
-		double dV(0.0); //add by hdy
+		//double m_vol_old = m_vol;    //!< Old volume. set initial value by hdy.
+		//double m_diam_old = m_diam; //add by hdy
+		//double dV(0.0); //add by hdy
 
 		//! Initialisation of variables but this is only relevant to particles
 		//! with more than one primary.
@@ -3183,84 +3186,6 @@ void PAHPrimary::UpdatePrimary(void)
 		//} comment by hdy
 
 		//***********************************************hdy*****************************************************//
-		//if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) {
-
-		//	//! Particle with more than one primary.
-		//	if (m_parent != NULL) {
-
-		//		while (m_vol_old <= m_vol){
-
-		//			//! Initialisation of variables to adjust the primary diameter if the
-		//			//! distance between the centres of primary particles is tracked.
-		//			double r_i = m_primarydiam / 2.0;	//!< Radius of primary particle i.
-		//			double dr_max = 0.01*r_i;			//!< Maximum change in primary radius during internal step (1% of primary radius)
-		//			double dr = 0.0;					//!< Change in radius of i
-
-		//			//Calculate change in volume
-		//			dV = dr_max * m_free_surf;
-
-		//			//Calculate change in radius
-		//			if (m_vol_old + dV > m_vol){
-		//				dr = (m_vol - m_vol_old)*dr_max / dV;
-		//			}
-		//			else{
-		//				dr = dr_max;
-		//			}
-
-		//			//Update primary diameter
-		//			m_primarydiam = 2.0* (r_i + dr);
-
-		//			//! Update free surface area
-		//			this->UpdateOverlappingPrimary();
-
-		//			m_vol_old += dV;
-		//		}
-
-		//		this->UpdateOverlappingPrimary(); //add by hdy
-
-		//		//if coordinates are tracked then update coordinate tracking properties
-		//		if (m_pmodel->getTrackPrimaryCoordinates()){
-		//			setRadius(m_primarydiam / 2.0);
-		//			this->calcBoundSph();
-		//			this->calcCOM();
-		//		}
-		//	}
-
-		//	//! Single primary case: the primary diameter equals the
-		//	//! spherical diameter                
-		//	else {
-		//		m_primarydiam = m_diam;
-		//		m_free_surf = m_surf;
-		//		m_primaryvol = m_vol;
-		//		m_sum_necks = 0.0;
-
-		//		if (m_pmodel->getTrackPrimaryCoordinates()) {
-		//			setRadius(m_primarydiam / 2.0);
-		//		}
-		//	}
-		//}
-		//else {
-
-		//	//dV = m_vol - m_vol_old;
-		//	//double dS(0.0);
-
-		//	//if (dV > 0.0) {
-		//	//	//! Surface change due to volume addition.
-		//	//	dS = dV * 2.0 * m_pmodel->GetBinTreeCoalThresh() / m_diam;
-		//	//}
-		//	////! TODO: Implement surface area reduction?
-
-		//	////! Climb back-up the tree and update the surface area and
-		//	////! sintering of a particle.
-		//	//UpdateParents(dS);
-
-		//	m_primarydiam = m_diam;
-		//	m_free_surf = m_surf;
-		//	m_primaryvol = m_vol;
-		//	m_sum_necks = 0.0;
-		//}
-		//m_avg_coalesc = 0.0;
-		//m_avg_sinter = 0.0;
 		if (!(m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) || m_parent == NULL){
 			m_primarydiam = m_diam;
 			m_free_surf = m_surf;
@@ -3271,33 +3196,33 @@ void PAHPrimary::UpdatePrimary(void)
 			//! Update overlapping primary model
 			UpdateOverlappingPrimary();
 
-			while (m_vol_old < m_vol){
+			//while (m_vol_old < m_vol){
 
-				//! Initialisation of variables to adjust the primary diameter if the
-				//! distance between the centres of primary particles is tracked.
-				double r_i = m_primarydiam / 2.0;	//!< Radius of primary particle i.
-				double dr_max = 0.01*r_i;			//!< Maximum change in primary radius during internal step (1% of primary radius)
-				double dr = 0.0;					//!< Change in radius of i
+			//	//! Initialisation of variables to adjust the primary diameter if the
+			//	//! distance between the centres of primary particles is tracked.
+			//	double r_i = m_primarydiam / 2.0;	//!< Radius of primary particle i.
+			//	double dr_max = 0.01*r_i;			//!< Maximum change in primary radius during internal step (1% of primary radius)
+			//	double dr = 0.0;					//!< Change in radius of i
 
-				//Calculate change in volume
-				dV = dr_max * m_free_surf;
+			//	//Calculate change in volume
+			//	dV = dr_max * m_free_surf;
 
-				//Calculate change in radius
-				if (m_vol_old + dV > m_vol){
-					dr = (m_vol - m_vol_old)*dr_max / dV;
-				}
-				else{
-					dr = dr_max;
-				}
+			//	//Calculate change in radius
+			//	if (m_vol_old + dV > m_vol){
+			//		dr = (m_vol - m_vol_old)*dr_max / dV;
+			//	}
+			//	else{
+			//		dr = dr_max;
+			//	}
 
-				//Update primary diameter
-				m_primarydiam = 2.0* (r_i + dr);
+			//	//Update primary diameter
+			//	m_primarydiam = 2.0* (r_i + dr);
 
-				//! Update free surface area
-				this->UpdateOverlappingPrimary();
+			//	//! Update free surface area
+			//	this->UpdateOverlappingPrimary();
 
-				m_vol_old += dV;
-			}
+			//	m_vol_old += dV;
+			//}
 		}
 		m_numprimary = 1;
 
@@ -5227,3 +5152,68 @@ void PAHPrimary::Sinter(double dt, Cell &sys,
 
 }
 //**********************************add by hdy*****************************************//
+
+//**********************************add by hdy*****************************************//
+void PAHPrimary::Adjust(const double old_vol)
+{
+	double dV(0.0);
+	double m_vol_old = old_vol;
+
+	//! If the distance between the centres of primary particles or the
+	//! primary coordinates is tracked, the rate of change in the
+	//! primary diameter is affected by its neighbours.
+	if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) {
+
+		//! Particle with more than one primary.
+		if (m_parent != NULL) {
+
+			while (m_vol_old <= m_vol){
+
+				//! Initialisation of variables to adjust the primary diameter if the
+				//! distance between the centres of primary particles is tracked.
+				double r_i = m_primarydiam / 2.0;	//!< Radius of primary particle i.
+				double dr_max = 0.01*r_i;			//!< Maximum change in primary radius during internal step (1% of primary radius)
+				double dr = 0.0;					//!< Change in radius of i
+
+				//Calculate change in volume
+				dV = dr_max * m_free_surf;
+
+				//Calculate change in radius
+				if (m_vol_old + dV > m_vol){
+					dr = (m_vol - m_vol_old)*dr_max / dV;
+				}
+				else{
+					dr = dr_max;
+				}
+
+				//Update primary diameter
+				m_primarydiam = 2.0* (r_i + dr);
+
+				//! Update free surface area
+				this->UpdateOverlappingPrimary();
+
+				m_vol_old += dV;
+			}
+
+			//if coordinates are tracked then update coordinate tracking properties
+			if (m_pmodel->getTrackPrimaryCoordinates()){
+				setRadius(m_primarydiam / 2.0);
+				this->calcBoundSph();
+				this->calcCOM();
+			}
+
+			//TO DO (csl37): update primary volumes and adjust compositions
+
+		}
+		//! Single primary case: the primary diameter equals the
+		//! spherical diameter                
+		else {
+			m_primarydiam = m_diam;
+
+			if (m_pmodel->getTrackPrimaryCoordinates()) {
+				setRadius(m_primarydiam / 2.0);
+			}
+		}
+	}
+	
+}
