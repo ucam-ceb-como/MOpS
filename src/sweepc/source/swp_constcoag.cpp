@@ -79,7 +79,7 @@ double Sweep::Processes::ConstantCoagulation::Rate(double t, const Cell &sys,
 	bool hybrid_flag = true;    
 	unsigned int n = sys.ParticleCount();
 	if (hybrid_flag)
-		n = n + ((unsigned int)sys.GetIncepted());
+		n = n + sys.GetIncepted();
 
     return A() * n * (n - 1) * s_MajorantFactor / sys.SampleVolume() / 2;
 }
@@ -132,7 +132,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 
 	// aab64 temp
 	bool hybrid_flag = true;
-	double incept_particles = 0;
+	unsigned int incept_particles = 0;
 	bool ip1_flag = false;
 	bool ip2_flag = false;
 

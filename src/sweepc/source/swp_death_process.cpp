@@ -158,7 +158,12 @@ double DeathProcess::InternalRate(
 	if (m_dtype == DeathProcess::iWtdDelete)
 		return m_a * sys.Particles().GetSum(iW);
 	else
-		return m_a * sys.Particles().Count();
+	{
+		// aab64 temporary
+		unsigned int N = sys.ParticleCount() + sys.GetIncepted();
+		return m_a * N;
+	}
+		//return m_a * sys.Particles().Count();
 }
 
 // RATE TERM CALCULATIONS.
@@ -199,7 +204,9 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
                           rng_type &rng) const
 {
     // Get particle index
-    int i = sys.Particles().Select(rng);
+    //int i = sys.Particles().Select(rng);    
+	int i = sys.Particles().Select(iW, rng); // aab64 temporary
+
 
     if (i >= 0) DoParticleDeath(t, i, sys, rng);
 

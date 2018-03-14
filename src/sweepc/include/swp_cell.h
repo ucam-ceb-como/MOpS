@@ -257,7 +257,7 @@ public:
 	int GetRateFactor() const { return m_rateFactor; }
 
 	// aab64 tracker for incepted particles
-	double GetIncepted() const { return m_incepted; }
+	unsigned int GetIncepted() const { return m_incepted; }
 	void AdjustIncepted(double adjustment) { m_incepted += adjustment; };
 
 protected:
@@ -327,7 +327,7 @@ private:
 	PropID m_cprop2;
 
 	// aab64 tracker for incepted particles in place of physical inceptions
-	double m_incepted;
+	unsigned int m_incepted;
 };
 
 } //namespace Sweep
