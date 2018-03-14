@@ -197,7 +197,10 @@ int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
     // Tell the ensemble that particle 1 has changed
     sys.Particles().Update(ip1);
     // Particle 2 is now part of particle 1
-    sys.Particles().Remove(ip2, true);
+	// aab64 temp
+	bool hybrid_flag = true;
+	if (!(hybrid_flag && ip2==0)) // if this particle was introduced from the bin, it does not exist in the ensemble
+		sys.Particles().Remove(ip2, true);
     return ip1;
 }
 

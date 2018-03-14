@@ -330,7 +330,15 @@ void DeathProcess::DoParticleDeath(
             || m_dtype == DeathProcess::iStochDelete
 			|| m_dtype == DeathProcess::iWtdDelete) {
         // Just delete the particle
-        sys.Particles().Remove(isp, true);
+		// aab64 temporary
+		bool hybrid_flag = true;
+		if (hybrid_flag && isp == 0 && sys.GetIncepted() >= 1)
+		{
+			sys.AdjustIncepted(-1);
+			sys.Particles().At(isp)->setStatisticalWeight(sys.GetIncepted());
+		}
+		else
+			sys.Particles().Remove(isp, true);
 
     } else if (m_dtype == DeathProcess::iContMove
             || m_dtype == DeathProcess::iStochMove

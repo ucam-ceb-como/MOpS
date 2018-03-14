@@ -239,6 +239,20 @@ void Process::PerformDT (
     assert(dt > 0.0);
 }
 
+//! Perform a coagulation with particles chosen according to the additive kernel
+Sweep::Particle* Process::Perform_incepted(
+	double t,
+	Cell &sys,
+	const Geometry::LocalGeometry1d& local_geom,
+	unsigned int iterm,
+	rng_type &rng
+	) const
+{
+	std::cout << "only defined for constant inception" << std::endl;
+	return NULL;
+}
+
+
 // FICTICIOUS EVENTS.
 
 /*!

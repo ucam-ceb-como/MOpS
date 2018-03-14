@@ -256,6 +256,10 @@ public:
 	// aab64 coagulation scaling for weighted events
 	int GetRateFactor() const { return m_rateFactor; }
 
+	// aab64 tracker for incepted particles
+	double GetIncepted() const { return m_incepted; }
+	void AdjustIncepted(double adjustment) { m_incepted += adjustment; };
+
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
@@ -321,6 +325,9 @@ private:
 	// aab64 temp
 	PropID m_cprop1;
 	PropID m_cprop2;
+
+	// aab64 tracker for incepted particles in place of physical inceptions
+	double m_incepted;
 };
 
 } //namespace Sweep

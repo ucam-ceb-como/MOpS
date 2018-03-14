@@ -387,7 +387,15 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         // We must contract the ensemble to accommodate a new particle.
         boost::uniform_smallint<int> indexDistrib(0, m_capacity);
         boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
-        i = indexGenerator();
+		// aab64 temporary
+		bool hybrid_flag = true;
+		if (hybrid_flag)
+		{
+			while (i < 1 || i == m_capacity)
+				i = indexGenerator();
+		}
+		else
+			i = indexGenerator();
 
         ++m_ncont;
         if (!m_contwarn && ((double)(m_ncont)/(double)m_capacity > 0.01)) {

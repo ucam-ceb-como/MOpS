@@ -101,6 +101,15 @@ public:
         rng_type &rng
         ) const;
 
+	//! Perform a coagulation with particles chosen according to the additive kernel
+	Sweep::Particle* Perform_incepted(
+		double t,
+		Cell &sys,
+		const Geometry::LocalGeometry1d& local_geom,
+		unsigned int iterm,
+		rng_type &rng
+		) const;
+
 	// TOTAL RATE CALCULATIONS.
 
     //! Rate of the process for the given system.

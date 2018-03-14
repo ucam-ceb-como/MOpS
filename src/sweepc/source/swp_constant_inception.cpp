@@ -146,59 +146,144 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
                           const unsigned int iterm,
                           rng_type &rng) const {
 
-    // Create a new particle of the type specified
-    // by the system ensemble.
-    Particle * const sp = m_mech->CreateParticle(t);
+	// aab64 temp
+	bool hybrid_flag = true;
+	if (!hybrid_flag || sys.ParticleCount() == 0)
+	{
+		// Create a new particle of the type specified
+		// by the system ensemble.
+		Particle * const sp = m_mech->CreateParticle(t);
 
-    // Position of newly incepted particle
-    double posn;
+		// Position of newly incepted particle
+		double posn;
 
-    if(mUseFixedPosition) {
-        // If there is a fixed position the rate should only be positive for the cell containing the fixed position
-        if(local_geom.isInCell(mFixedPosition))
-            posn = mFixedPosition;
-        else
-            return 0;
-    }
-    else {
-        // Get the cell vertices
-        fvector vertices = local_geom.cellVertices();
+		if (mUseFixedPosition) {
+			// If there is a fixed position the rate should only be positive for the cell containing the fixed position
+			if (local_geom.isInCell(mFixedPosition))
+				posn = mFixedPosition;
+			else
+				return 0;
+		}
+		else {
+			// Get the cell vertices
+			fvector vertices = local_geom.cellVertices();
 
-        // Sample a uniformly distributed position, note that this method
-        // works whether the vertices come in increasing or decreasing order,
-        // but 1d is assumed for now.
-        posn = vertices.front();
+			// Sample a uniformly distributed position, note that this method
+			// works whether the vertices come in increasing or decreasing order,
+			// but 1d is assumed for now.
+			posn = vertices.front();
 
-        const double width = vertices.back() - posn;
-        boost::uniform_01<rng_type&, double> unifDistrib(rng);
-        posn += width * unifDistrib();
-    }
+			const double width = vertices.back() - posn;
+			boost::uniform_01<rng_type&, double> unifDistrib(rng);
+			posn += width * unifDistrib();
+		}
 
-    sp->setPositionAndTime(posn, t);
+		sp->setPositionAndTime(posn, t);
 
 
-    // Initialise the new particle.
-    std::vector<double> newComposition(mComponentDistributions.size());
-    for(unsigned i = 0; i < mComponentDistributions.size(); ++i) {
-        // Construct the distribution on the fly.  If this becomes a performance
-        // bottleneck some optimisations might be possible, but caching the distribution
-        // object in the mechanism is a bad idea, because the mechanism is potentially
-        // shared between threads, which is very dangerous for cached data!
-        newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
-                                                                  mComponentDistributions[i].second)(rng);
-    }
-    sp->Primary()->SetComposition(newComposition);
+		// Initialise the new particle.
+		std::vector<double> newComposition(mComponentDistributions.size());
+		for (unsigned i = 0; i < mComponentDistributions.size(); ++i) {
+			// Construct the distribution on the fly.  If this becomes a performance
+			// bottleneck some optimisations might be possible, but caching the distribution
+			// object in the mechanism is a bad idea, because the mechanism is potentially
+			// shared between threads, which is very dangerous for cached data!
+			newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
+				mComponentDistributions[i].second)(rng);
+		}
+		sp->Primary()->SetComposition(newComposition);
 
-    sp->Primary()->SetValues(ParticleTrackers());
-    sp->UpdateCache();
+		sp->Primary()->SetValues(ParticleTrackers());
+		sp->UpdateCache();
 
-    // Add particle to system's ensemble.
-    sys.Particles().Add(*sp, rng);
+		// Add particle to system's ensemble.
+		sys.Particles().Add(*sp, rng);
 
-    // Update gas-phase chemistry of system.
-    adjustGas(sys, sp->getStatisticalWeight());
+		// Update gas-phase chemistry of system.
+		adjustGas(sys, sp->getStatisticalWeight());
+	}
+	else
+	{
+		sys.AdjustIncepted(sys.GetInceptingWeight());
+		//std::cout << sys.Particles().At(0)->getStatisticalWeight() + 1 << " | " << sys.GetIncepted() << std::endl;
+		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
+		adjustGas(sys, sys.GetInceptingWeight());
+		//std::cout << sys.GetIncepted() << std::endl;
+	}
+
 
     return 0;
+}
+
+/*!
+* Create a new particle and add it to the ensemble with position uniformly
+* distributed over the grid cell, if it is of positive size.
+*
+* The iterm parameter is included because it will be needed for many process
+* types and this function is meant to have a general signature.
+*
+* \param[in]       t           Time
+* \param[in,out]   sys         System to update
+* \param[in]       local_geom  Details of local phsyical layout
+* \param[in]       iterm       Process term responsible for this event
+* \param[in,out]   rng         Random number generator
+*
+* \return      0 on success, otherwise negative.
+*/
+Sweep::Particle *Sweep::Processes::ConstantInception::Perform_incepted(const double t, Cell &sys,
+	const Geometry::LocalGeometry1d &local_geom,
+	const unsigned int iterm,
+	rng_type &rng) const {
+
+	//std::cout << "perform incepted - constant case" << std::endl;
+
+	// Create a new particle of the type specified
+	// by the system ensemble.
+	Particle * const sp = m_mech->CreateParticle(t);
+
+	// Position of newly incepted particle
+	double posn;
+
+	if (mUseFixedPosition) {
+		// If there is a fixed position the rate should only be positive for the cell containing the fixed position
+		if (local_geom.isInCell(mFixedPosition))
+			posn = mFixedPosition;
+		else
+			return 0;
+	}
+	else {
+		// Get the cell vertices
+		fvector vertices = local_geom.cellVertices();
+
+		// Sample a uniformly distributed position, note that this method
+		// works whether the vertices come in increasing or decreasing order,
+		// but 1d is assumed for now.
+		posn = vertices.front();
+
+		const double width = vertices.back() - posn;
+		boost::uniform_01<rng_type&, double> unifDistrib(rng);
+		posn += width * unifDistrib();
+	}
+
+	sp->setPositionAndTime(posn, t);
+
+
+	// Initialise the new particle.
+	std::vector<double> newComposition(mComponentDistributions.size());
+	for (unsigned i = 0; i < mComponentDistributions.size(); ++i) {
+		// Construct the distribution on the fly.  If this becomes a performance
+		// bottleneck some optimisations might be possible, but caching the distribution
+		// object in the mechanism is a bad idea, because the mechanism is potentially
+		// shared between threads, which is very dangerous for cached data!
+		newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
+			mComponentDistributions[i].second)(rng);
+	}
+	sp->Primary()->SetComposition(newComposition);
+
+	sp->Primary()->SetValues(ParticleTrackers());
+	sp->UpdateCache();
+	
+	return sp;
 }
 
 // TOTAL RATE CALCULATIONS.

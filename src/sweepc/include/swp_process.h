@@ -172,6 +172,17 @@ public:
         const Geometry::LocalGeometry1d& local_geom
         ) const = 0;
 
+
+	//! Perform a coagulation with particles chosen according to the additive kernel
+	virtual Sweep::Particle* Perform_incepted(
+		double t,
+		Cell &sys,
+		const Geometry::LocalGeometry1d& local_geom,
+		unsigned int iterm,
+		rng_type &rng
+		) const;
+
+
 	// RATE TERM CALCULATIONS.
     //   These routines return the individual rate terms for a 
     //   process, which may have multiple terms (e.g. condensation).
