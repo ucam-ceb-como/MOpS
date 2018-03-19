@@ -209,8 +209,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 	{
 		sys.AdjustIncepted(sys.GetInceptingWeight());
 		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
-		sys.Particles().At(0)->UpdateCache();
-		m_mech->UpdateParticle(*(sys.Particles().At(0)), sys, t, rng);
+		sys.Particles().Update(0);
 		adjustGas(sys, sys.GetInceptingWeight());
 	}
 

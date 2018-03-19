@@ -208,26 +208,7 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
     // Get particle index
     //int i = sys.Particles().Select(rng);    
 
-	int i = 0;
-	boost::uniform_01<rng_type&, double> unifDistrib(rng);
-	unsigned int n_others = 0;
-	unsigned int n_total = sys.GetIncepted();
-	if (sys.ParticleCount() > 1)
-	{
-		n_others += sys.ParticleCount() - 1;
-		n_total += n_others;
-	}
-	double frac = 0;
-	if (n_total > 0)
-		frac = (double(n_others)) / (double(n_total));
-	if (frac > unifDistrib())
-	{
-		while (i == 0)
-			i = sys.Particles().Select(rng); // aab64 temporary
-	}
-
-	//int i = sys.Particles().Select(iW, rng); // aab64 temporary
-
+    int i = sys.Particles().Select(iW, rng); // aab64 temporary
 
     if (i >= 0) DoParticleDeath(t, i, sys, rng);
 
@@ -367,7 +348,7 @@ void DeathProcess::DoParticleDeath(
 				sys.AdjustIncepted(-1);
 				sys.Particles().At(isp)->setStatisticalWeight(sys.GetIncepted());
 				sys.Particles().At(isp)->UpdateCache();
-				m_mech->UpdateParticle(*(sys.Particles().At(0)), sys, t, rng);
+				sys.Particles().Update(isp);
 			}
 		}
 		else

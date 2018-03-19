@@ -139,7 +139,6 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	bool hybrid_flag = true;
 	bool ip1_flag = false;
 	bool ip2_flag = false;
-	boost::uniform_01<rng_type&, double> unifDistrib(rng);
 	unsigned int n_others = 0;
 	unsigned int n_total  = sys.GetIncepted();
 	if (sys.ParticleCount() > 1)
@@ -147,9 +146,6 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 		n_others += sys.ParticleCount() - 1;
 		n_total  += n_others;
 	}
-	double frac = 0;
-	if (n_total > 0)
-		frac = (double(n_others)) / (double(n_total));
 
 	int ip1 = -1, ip2 = -1;
 
@@ -165,22 +161,8 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     }
 	else 
 	{
-		ip1 = 0;
-		if (frac > unifDistrib())
-		{
-			while (ip1 == 0)
-				ip1 = sys.Particles().Select(rng); // aab64 temporary
-		}
-
-		ip2 = 0;
-		if (frac > unifDistrib())
-		{
-			while (ip2 == 0)
-				ip2 = sys.Particles().Select(rng); // aab64 temporary
-		}
-
-		//ip1 = sys.Particles().Select(iW, rng);
-		//ip2 = sys.Particles().Select(iW, rng);
+		ip1 = sys.Particles().Select(iW, rng);
+		ip2 = sys.Particles().Select(iW, rng);
 	}
 
 	// Choose and get first particle, then update it.
@@ -194,7 +176,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 		ip1 = sys.Particles().Add(*sp1, rng); // must add here to avoid contraction removing chosen sp2
 		sys.AdjustIncepted(-1);
 		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
-		m_mech->UpdateParticle(*(sys.Particles().At(0)), sys, t, rng);
+		sys.Particles().Update(0);
 		ip1_flag = true;
 	}
 	else
@@ -212,17 +194,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     // this even if the first particle was invalidated.
     unsigned int guard = 0;
 	while ((ip2 == ip1) && (++guard < 1000))
-	{
-		//if (!(hybrid_flag && ip1 == 0))
-		//ip2 = sys.Particles().Select(iW, rng);
-		ip2 = 0;
-		if (frac > unifDistrib())
-		{
-			while (ip2 == 0)
-				ip2 = sys.Particles().Select(rng); // aab64 temporary
-		}
-
-	}
+		ip2 = sys.Particles().Select(iW, rng);
 
     Particle *sp2 = NULL;
 
@@ -301,8 +273,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			{
 				sys.AdjustIncepted(-1);
 				sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
-				sys.Particles().At(0)->UpdateCache();
-				m_mech->UpdateParticle(*(sys.Particles().At(0)), sys, t, rng);
+				sys.Particles().Update(0);
 			}
             JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
 
