@@ -121,7 +121,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
     m_d2_m_1_2     = m_dcolsqr * m_inv_sqrtmass;
 
     // Quantities associated with statistical weighting
-    m_weight = part.getStatisticalWeight();
+	m_weight = part.getStatisticalWeight();
     m_weight_mass = m_weight * m_mass;
     m_d_w         = m_dcol * m_weight;
     m_d2_w        = m_dcolsqr * m_weight;
@@ -162,7 +162,7 @@ Sweep::TreeTransCoagWeightedCache &Sweep::TreeTransCoagWeightedCache::operator+=
     m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
     m_inv_sqrtmass += rhs.m_inv_sqrtmass;
     m_d2_m_1_2     += rhs.m_d2_m_1_2;
-    m_weight       += rhs.m_weight;
+	m_weight       += rhs.m_weight;
     m_weight_mass  += rhs.m_weight_mass;
     m_d_w          += rhs.m_d_w;
     m_d2_w         += rhs.m_d2_w;

@@ -216,7 +216,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     // Initialise doubling.
     m_maxcount   = 0;
     m_ndble      = 0;
-    m_dbleon     = true;
+	m_dbleon = false; // true;
     m_dbleactive = false;
     m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0);
 
@@ -230,7 +230,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
  * @param val   Switch for doubling.
  */
 void Sweep::Ensemble::SetDoubling(const bool val) {
-    m_dbleon = val;
+	m_dbleon = false;// val;
 }
 
 /**
@@ -304,11 +304,11 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
 
     // Initialise doubling.
     m_ndble      = 0;
-    m_dbleon     = true;
+	m_dbleon = false; // true;
 
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
-        m_dbleactive = true; // aab64 switching this off for flow case because otherwise ensemble capacity hit too soon and sample volume falls rapidly due to contractions
+		m_dbleactive = false; // true; // aab64 switching this off for flow case because otherwise ensemble capacity hit too soon and sample volume falls rapidly due to contractions
     } else
         m_dbleactive = false;
 
@@ -373,8 +373,8 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 {
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
-        m_dbleactive = true;
-        printf("sweep: Particle doubling activated.\n"); // aab64 switching doubling off, see message above
+		m_dbleactive = false; // true;
+        //printf("sweep: Particle doubling activated.\n"); // aab64 switching doubling off, see message above
     }
 
     // Check ensemble for space, if there is not enough space then need
@@ -670,7 +670,7 @@ double Sweep::Ensemble::Scaling() const
     
 	// aab64 The scaling factor includes the contraction term and the doubling term.
 	// for weighted particles, the contraction factor depends on the weight of the removed particle
-	return m_wtdcontfctr * pow(2.0, (double)m_ndble);
+	return m_wtdcontfctr;// *pow(2.0, (double)m_ndble);
 }
 
 // Resets the ensemble scaling.
@@ -812,8 +812,13 @@ void Sweep::Ensemble::dble()
             }
 
             // Copy particles.
+			// aab64 temporary
+			size_t starter = 0;
+			bool hybrid_flag = true;
+			if (hybrid_flag)
+				starter = 1;
             const size_t prevCount = m_count;
-            for (size_t i = 0; i != prevCount; ++i) {
+            for (size_t i = starter; i != prevCount; ++i) {
 
             //if (m_particles[i]->Primary()->AggID() ==AggModels::PAH_KMC_ID)
             //{
@@ -996,7 +1001,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Read if doubling is active.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n==1) {
-                    m_dbleactive = true;
+					m_dbleactive = false; // true;
                 } else {
                     m_dbleactive = false;
                 }
@@ -1071,7 +1076,7 @@ void Sweep::Ensemble::init(void)
     m_dblecutoff = 0;
     m_dblelimit  = 0;
     m_dbleslack  = 0;
-    m_dbleon     = true;
+	m_dbleon = false; // true;
 
 }
 

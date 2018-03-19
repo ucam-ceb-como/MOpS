@@ -44,6 +44,7 @@
 #include "swp_params.h"
 #include "swp_cell.h"
 #include "swp_mechanism.h"
+#include <boost/random/uniform_01.hpp>
 
 using namespace Sweep::Processes;
 
@@ -78,10 +79,14 @@ double Sweep::Processes::ConstantCoagulation::Rate(double t, const Cell &sys,
 	// aab64 temp
 	bool hybrid_flag = true;    
 	unsigned int n = sys.ParticleCount();
+	unsigned int n2 = n;
 	if (hybrid_flag)
-		n = n + sys.GetIncepted();
+		n2 = n2 + sys.GetIncepted();
+	if (n > 1)
+		n2 -= 1;
 
-    return A() * n * (n - 1) * s_MajorantFactor / sys.SampleVolume() / 2;
+	//return A() * (n2 * n2 - n) * s_MajorantFactor / sys.SampleVolume() / 2;
+    return A() * n2 * (n2 - 1) * s_MajorantFactor / sys.SampleVolume() / 2;
 }
 
 /**
@@ -132,9 +137,19 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 
 	// aab64 temp
 	bool hybrid_flag = true;
-	unsigned int incept_particles = 0;
 	bool ip1_flag = false;
 	bool ip2_flag = false;
+	boost::uniform_01<rng_type&, double> unifDistrib(rng);
+	unsigned int n_others = 0;
+	unsigned int n_total  = sys.GetIncepted();
+	if (sys.ParticleCount() > 1)
+	{
+		n_others += sys.ParticleCount() - 1;
+		n_total  += n_others;
+	}
+	double frac = 0;
+	if (n_total > 0)
+		frac = (double(n_others)) / (double(n_total));
 
 	int ip1 = -1, ip2 = -1;
 
@@ -145,13 +160,27 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 		else
 		{
 			ip1 = 0;
-			ip2 = 0;
+			ip2 = 0; // should not be required
 		}
     }
 	else 
 	{
-		ip1 = sys.Particles().Select(iW, rng);
-		ip2 = sys.Particles().Select(iW, rng);
+		ip1 = 0;
+		if (frac > unifDistrib())
+		{
+			while (ip1 == 0)
+				ip1 = sys.Particles().Select(rng); // aab64 temporary
+		}
+
+		ip2 = 0;
+		if (frac > unifDistrib())
+		{
+			while (ip2 == 0)
+				ip2 = sys.Particles().Select(rng); // aab64 temporary
+		}
+
+		//ip1 = sys.Particles().Select(iW, rng);
+		//ip2 = sys.Particles().Select(iW, rng);
 	}
 
 	// Choose and get first particle, then update it.
@@ -160,12 +189,13 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	if (hybrid_flag && ip1 == 0)
 	{
 		// incept particle
-		ip1 = sys.ParticleCount();
+		//ip1 = sys.ParticleCount();
 		sp1 = m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng);
-		incept_particles++;
 		ip1 = sys.Particles().Add(*sp1, rng); // must add here to avoid contraction removing chosen sp2
+		sys.AdjustIncepted(-1);
+		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
+		m_mech->UpdateParticle(*(sys.Particles().At(0)), sys, t, rng);
 		ip1_flag = true;
-		bool rv = (!sp1->IsValid());
 	}
 	else
 	{
@@ -183,8 +213,15 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     unsigned int guard = 0;
 	while ((ip2 == ip1) && (++guard < 1000))
 	{
-		if (!(hybrid_flag && ip1 == 0))
-			ip2 = sys.Particles().Select(iW, rng);
+		//if (!(hybrid_flag && ip1 == 0))
+		//ip2 = sys.Particles().Select(iW, rng);
+		ip2 = 0;
+		if (frac > unifDistrib())
+		{
+			while (ip2 == 0)
+				ip2 = sys.Particles().Select(rng); // aab64 temporary
+		}
+
 	}
 
     Particle *sp2 = NULL;
@@ -193,7 +230,6 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	{
 		// incept particle
 		sp2 = m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng);
-		incept_particles++;
 		ip2_flag = true;
 	}
 	else
@@ -206,7 +242,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			return -1;
 		}
 	}
-	bool rv = (!sp1->IsValid());
+
     //Calculate the majorant rate before updating the particles
     const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
 	
@@ -217,17 +253,16 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
         // Must remove first particle now.
-		if (!ip1_flag)
-			sys.Particles().Remove(ip1);
-
+		sys.Particles().Remove(ip1);
+		
         // Invalidating the index tells this routine not to perform coagulation.
         ip1 = -1;
         return 0;
     }
 
 	m_mech->UpdateParticle(*sp2, sys, t, rng);
-	//std::cout << "updated 2" << std::endl;
-    // Check validity of particles after update.
+	
+	// Check validity of particles after update.
     if (!sp2->IsValid()) {
         // Tell the ensemble to update particle one before we confuse things
         // by removing particle 2
@@ -236,6 +271,11 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 		if (!ip2_flag)
 			// Must remove second particle now.
 			sys.Particles().Remove(ip2);
+		else
+		{
+			delete sp2;
+			sp2 = NULL;
+		}
 
         // Invalidating the index tells this routine not to perform coagulation.
         ip2 = -1;
@@ -256,12 +296,18 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			//{
 			//	ip1 = sys.Particles().Add(*sp1, rng);
 			//}
+
+			if (ip2_flag)
+			{
+				sys.AdjustIncepted(-1);
+				sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
+				sys.Particles().At(0)->UpdateCache();
+				m_mech->UpdateParticle(*(sys.Particles().At(0)), sys, t, rng);
+			}
             JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
-			sys.AdjustIncepted(-incept_particles);
-			sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
+
         } else {
-			if (!ip1_flag)
-				sys.Particles().Update(ip1);
+			sys.Particles().Update(ip1);
 			if (!ip2_flag)
 				sys.Particles().Update(ip2);
             return 1; // Ficticious event.
@@ -271,13 +317,18 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
         // but that's not a problem.  Information on the update
         // of valid particles must be propagated into the binary
         // tree
-        if(ip1 >= 0 && !ip1_flag)
+        if(ip1 >= 0)
             sys.Particles().Update(ip1);
 
         if(ip2 >= 0 && !ip2_flag)
             sys.Particles().Update(ip2);
     }
 
+	if (ip2_flag)
+	{
+		delete sp2;
+		sp2 = NULL;
+	}
 
     return 0;
 }

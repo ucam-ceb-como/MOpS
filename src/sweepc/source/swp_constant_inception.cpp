@@ -188,8 +188,8 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 			// bottleneck some optimisations might be possible, but caching the distribution
 			// object in the mechanism is a bad idea, because the mechanism is potentially
 			// shared between threads, which is very dangerous for cached data!
-			newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
-				mComponentDistributions[i].second)(rng);
+			newComposition[i] = 2;/* boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
+				mComponentDistributions[i].second)(rng);*/
 		}
 		sp->Primary()->SetComposition(newComposition);
 
@@ -199,6 +199,9 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 		// Add particle to system's ensemble.
 		sys.Particles().Add(*sp, rng);
 
+		if (hybrid_flag)
+			sys.AdjustIncepted(sys.GetInceptingWeight());
+
 		// Update gas-phase chemistry of system.
 		adjustGas(sys, sp->getStatisticalWeight());
 	}
@@ -206,6 +209,8 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 	{
 		sys.AdjustIncepted(sys.GetInceptingWeight());
 		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
+		sys.Particles().At(0)->UpdateCache();
+		m_mech->UpdateParticle(*(sys.Particles().At(0)), sys, t, rng);
 		adjustGas(sys, sys.GetInceptingWeight());
 	}
 
@@ -233,8 +238,7 @@ Sweep::Particle *Sweep::Processes::ConstantInception::Perform_incepted(const dou
 	const unsigned int iterm,
 	rng_type &rng) const {
 
-	//std::cout << "perform incepted - constant case" << std::endl;
-
+	
 	// Create a new particle of the type specified
 	// by the system ensemble.
 	Particle * const sp = m_mech->CreateParticle(t);
