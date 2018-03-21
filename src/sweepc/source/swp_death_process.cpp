@@ -159,13 +159,18 @@ double DeathProcess::InternalRate(
 		return m_a * sys.Particles().GetSum(iW);
 	else
 	{
-		// aab64 temporary
-		unsigned int n_total = sys.GetIncepted();
-		if (sys.ParticleCount() > 1)
-			n_total += sys.ParticleCount() - 1;
+		unsigned int n_total = sys.Particles().Count();
+
+		// aab64 for hybrid particle model
+		bool hybrid_flag = true;
+		if (hybrid_flag)
+		{
+			n_total = sys.GetIncepted(); // Account for particles in the incepting class
+			if (sys.ParticleCount() > 1)
+				n_total += (sys.ParticleCount() - 1);
+		}
 		return m_a * n_total;
 	}
-		//return m_a * sys.Particles().Count();
 }
 
 // RATE TERM CALCULATIONS.
@@ -206,9 +211,13 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
                           rng_type &rng) const
 {
     // Get particle index
-    //int i = sys.Particles().Select(rng);    
-
-    int i = sys.Particles().Select(iW, rng); // aab64 temporary
+	int i = 0;
+	// aab64 for hybrid particle model
+	bool hybrid_flag = true;
+	if (!hybrid_flag)
+	    i = sys.Particles().Select(rng);
+	else
+        i = sys.Particles().Select(iW, rng); // account for the number of particles in incepting class
 
     if (i >= 0) DoParticleDeath(t, i, sys, rng);
 
@@ -238,6 +247,9 @@ int DeathProcess::Perform_wtd(double t, Sweep::Cell &sys,
 	// Get particle index
 	int i = sys.Particles().Select(iW, rng);
 
+	// aab64 for hybrid particle model
+	bool hybrid_flag = true;
+
 	if (i >= 0)
 	{
 		Sweep::Particle *sp = sys.Particles().At(i);
@@ -248,16 +260,18 @@ int DeathProcess::Perform_wtd(double t, Sweep::Cell &sys,
 			{
 				sp->setStatisticalWeight(sp_wt - 1.0);
 				num = num - 1.0;
+				sys.Particles().Update(i);
 			}
 			else                                  // remove the particle to free up ensemble space for new particles
 			{
-				DoParticleDeath(t, i, sys, rng);
-				num = num - sp_wt;
+					DoParticleDeath(t, i, sys, rng);
+					num = num - sp_wt;
 			}
 		}
 		else                                     // particle weight is larger than required change, just rescale
 		{		sp->setStatisticalWeight(sp_wt - num);
-				num = 0;
+		        num = 0;
+		        sys.Particles().Update(i);
 		}
 	}
 	return 0;
@@ -338,21 +352,29 @@ void DeathProcess::DoParticleDeath(
     if (m_dtype == DeathProcess::iContDelete
             || m_dtype == DeathProcess::iStochDelete
 			|| m_dtype == DeathProcess::iWtdDelete) {
-        // Just delete the particle
-		// aab64 temporary
+		// aab64 for hybrid particle model
 		bool hybrid_flag = true;
-		if (hybrid_flag && isp == 0)
+		if (hybrid_flag && isp == 0) // if this is the incepting class particle
 		{
-			if (sys.GetIncepted() >= 1)
-			{
+			if (sys.GetIncepted() >= 1) // and losing one particle would at most reduce its weight to zero
+			{                           // note that this particle should never have weight \in (0,1)
 				sys.AdjustIncepted(-1);
-				sys.Particles().At(isp)->setStatisticalWeight(sys.GetIncepted());
-				sys.Particles().At(isp)->UpdateCache();
-				sys.Particles().Update(isp);
+				sys.Particles().At(isp)->setStatisticalWeight(sys.GetIncepted()); // Adjust the weight by 1
+				if (sys.GetIncepted() <= 0 && sys.ParticleCount() < 2)
+				{
+					if (sys.GetIncepted() < 0)
+					{
+						std::cout << "Suspicious negative incepting class weight\n";
+						sys.AdjustIncepted(-1 * sys.GetIncepted());
+					}
+					sys.Particles().Remove(isp, true); // if it's the only particle, remove from the system.
+				}
+				else
+				    sys.Particles().Update(isp); // Inform the ensemble that the weight of SP[0] has changed
 			}
 		}
 		else
-			sys.Particles().Remove(isp, true);
+			sys.Particles().Remove(isp, true); // Just delete the particle
 
     } else if (m_dtype == DeathProcess::iContMove
             || m_dtype == DeathProcess::iStochMove

@@ -239,7 +239,9 @@ void Process::PerformDT (
     assert(dt > 0.0);
 }
 
-//! Perform a coagulation with particles chosen according to the additive kernel
+// aab64 for hybrid particle model
+// Perform a coagulation with particles chosen according to the additive kernel
+// Not defined except for the constant inception case
 Sweep::Particle* Process::Perform_incepted(
 	double t,
 	Cell &sys,
@@ -248,7 +250,7 @@ Sweep::Particle* Process::Perform_incepted(
 	rng_type &rng
 	) const
 {
-	std::cout << "only defined for constant inception" << std::endl;
+	std::cout << "Only defined for constant inception" << std::endl;
 	return NULL;
 }
 

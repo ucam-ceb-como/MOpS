@@ -166,21 +166,11 @@ public:
 	// TOTAL RATE CALCULATIONS (ALL PARTICLES IN A SYSTEM).
 
     //! Rate of the process for the given system.
-    virtual double Rate(
-        double t,          // Time.
-        const Cell &sys, // System for which to calculate rate.
-        const Geometry::LocalGeometry1d& local_geom
-        ) const = 0;
-
-
-	//! Perform a coagulation with particles chosen according to the additive kernel
-	virtual Sweep::Particle* Perform_incepted(
-		double t,
-		Cell &sys,
-		const Geometry::LocalGeometry1d& local_geom,
-		unsigned int iterm,
-		rng_type &rng
-		) const;
+	virtual double Rate(
+		double t,          // Time.
+		const Cell &sys, // System for which to calculate rate.
+		const Geometry::LocalGeometry1d& local_geom
+		) const = 0;
 
 
 	// RATE TERM CALCULATIONS.
@@ -219,7 +209,18 @@ public:
         const Geometry::LocalGeometry1d& local_geom,
         unsigned int iterm,
         rng_type &rng
-        ) const = 0;
+		) const = 0;
+	
+	// aab64 for hybrid particle model
+	// Perform a coagulation with particles chosen according to the additive kernel
+	// Return a pointer to the particle
+	virtual Sweep::Particle* Perform_incepted(
+		double t,
+		Cell &sys,
+		const Geometry::LocalGeometry1d& local_geom,
+		unsigned int iterm,
+		rng_type &rng
+		) const;
 
     //! Performs the process over time dt on the given system.
     virtual void PerformDT (

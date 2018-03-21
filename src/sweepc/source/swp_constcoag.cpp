@@ -79,11 +79,9 @@ double Sweep::Processes::ConstantCoagulation::Rate(double t, const Cell &sys,
 	// aab64 temp
 	bool hybrid_flag = true;    
 	unsigned int n = sys.ParticleCount();
-	unsigned int n2 = n;
-	if (hybrid_flag)
-		n2 = n2 + sys.GetIncepted();
-	if (n > 1)
-		n2 -= 1;
+	unsigned int n2 = sys.GetIncepted();
+	if (hybrid_flag && n > 1)
+		n2 += (n - 1);
 
 	//return A() * (n2 * n2 - n) * s_MajorantFactor / sys.SampleVolume() / 2;
     return A() * n2 * (n2 - 1) * s_MajorantFactor / sys.SampleVolume() / 2;
@@ -134,29 +132,23 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     // Note we need to choose 2 particles.  One particle must be chosen
     // uniformly and one with probability proportional
     // to particle mass.
+	int ip1 = -1, ip2 = -1;
 
-	// aab64 temp
+	// aab64 hybrid particle model flags
 	bool hybrid_flag = true;
 	bool ip1_flag = false;
 	bool ip2_flag = false;
-	unsigned int n_others = 0;
-	unsigned int n_total  = sys.GetIncepted();
-	if (sys.ParticleCount() > 1)
-	{
-		n_others += sys.ParticleCount() - 1;
-		n_total  += n_others;
-	}
-
-	int ip1 = -1, ip2 = -1;
 
     if (sys.ParticleCount() < 2) 
 	{
-		if (!hybrid_flag || sys.GetIncepted() < 2)
+		// if there is only 1 SP but it is an incepting class SP with weight >= 2, we can still act
+		if (!hybrid_flag || sys.GetIncepted() < 2) 
             return 1;
 		else
 		{
+			// ip1 = ip2 = -1 -> set to zero
 			ip1 = 0;
-			ip2 = 0; // should not be required
+			ip2 = 0;
 		}
     }
 	else 
@@ -165,19 +157,40 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 		ip2 = sys.Particles().Select(iW, rng);
 	}
 
+	// Can't use SP[0] if it has zero weight (this should not happen anyway because selection is weight-based)
+	if (ip1 == 0 && sys.GetIncepted() == 0)
+	{
+		while (ip1 == 0) // Must select a different particle!
+			ip1 = sys.Particles().Select(iW, rng);
+	}
+
+	// Can't use SP[0] if it has zero weight (this should not happen anyway because selection is weight-based)
+	if (ip2 == 0 && sys.GetIncepted() == 0)
+	{
+		while (ip2 == 0) // Must select a different particle!
+			ip2 = sys.Particles().Select(iW, rng);
+	}
+
 	// Choose and get first particle, then update it.
 	Particle *sp1 = NULL;
 
+	// Is this an incepting class particle?
 	if (hybrid_flag && ip1 == 0)
 	{
-		// incept particle
-		//ip1 = sys.ParticleCount();
-		sp1 = m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng);
-		ip1 = sys.Particles().Add(*sp1, rng); // must add here to avoid contraction removing chosen sp2
-		sys.AdjustIncepted(-1);
-		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
-		sys.Particles().Update(0);
-		ip1_flag = true;
+		sp1 = m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng); // Incept a new particle from SP[0]
+		sys.AdjustIncepted(-1);                                                      // Reduce the incepting class count
+		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());              // Reduce the weight of SP[0]
+		sys.Particles().Update(0);                                                   // Update weight of SP[0] in the tree 
+		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
+
+		// If incepting class is now empty, pick another particle before adding sp1 to the ensemble
+		if (ip2 == 0 && sys.GetIncepted() == 0)
+		{
+			while (ip2 == 0) // Must select a different particle!
+				ip2 = sys.Particles().Select(iW, rng);
+		}
+
+		ip1 = sys.Particles().Add(*sp1, rng);                                        // Add the particle to the ensemble
 	}
 	else
 	{
@@ -196,13 +209,15 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	while ((ip2 == ip1) && (++guard < 1000))
 		ip2 = sys.Particles().Select(iW, rng);
 
+	// Choose and get second particle, then update it.
     Particle *sp2 = NULL;
 
+	// Is this an incepting class particle?
 	if (hybrid_flag && ip2 == 0)
 	{
-		// incept particle
-		sp2 = m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng);
-		ip2_flag = true;
+		sp2 = m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng); // Incept a new particle from SP[0]
+		                                                                             // Note we do not need to add it to the ensemble
+		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle 
 	}
 	else
 	{
@@ -245,6 +260,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			sys.Particles().Remove(ip2);
 		else
 		{
+			// Particle sp2 is not in the ensemble, must manually delete it
 			delete sp2;
 			sp2 = NULL;
 		}
@@ -263,17 +279,12 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
         double truek = CoagKernel(*sp1, *sp2, sys);
 		
         if (!Fictitious(majk, truek, rng)) {
-			// Add particle to system's ensemble.
-			//if (ip1_flag)
-			//{
-			//	ip1 = sys.Particles().Add(*sp1, rng);
-			//}
-
+			// If particle sp2 is used, we need to remove formally it from the incepting class
 			if (ip2_flag)
 			{
-				sys.AdjustIncepted(-1);
-				sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
-				sys.Particles().Update(0);
+				sys.AdjustIncepted(-1);                                                      // Reduce the incepting class count
+				sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());              // Reduce the weight of SP[0]
+				sys.Particles().Update(0);                                                   // Update weight of SP[0] in the tree 
 			}
             JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
 
@@ -297,6 +308,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 
 	if (ip2_flag)
 	{
+		// Particle sp2 is not in the ensemble, must manually delete it
 		delete sp2;
 		sp2 = NULL;
 	}

@@ -931,7 +931,7 @@ Particle *const Particle::Clone() const
  * @return	true iff internal structures pass tests
  */
 bool Particle::IsValid() const {
-	return (m_primary != NULL) && (m_primary->IsValid()) && (m_StatWeight > 0);
+	return (m_primary != NULL) && (m_primary->IsValid()) && (m_StatWeight >= 0); // aab64 let stat weight be equal to zero for hybrid model trial
 }
 
 void Particle::writeParticlePOVRAY(std::ofstream &out) const

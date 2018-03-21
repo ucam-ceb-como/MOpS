@@ -101,7 +101,9 @@ public:
         rng_type &rng
         ) const;
 
-	//! Perform a coagulation with particles chosen according to the additive kernel
+	// aab64 for hybrid particle model
+	// Perform a coagulation with particles chosen according to the additive kernel
+	// Do not add the particle to the ensemble but return a pointer to the particle
 	Sweep::Particle* Perform_incepted(
 		double t,
 		Cell &sys,

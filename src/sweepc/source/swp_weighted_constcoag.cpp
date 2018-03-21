@@ -125,11 +125,20 @@ double Sweep::Processes::WeightedConstantCoagulation::RateTerms(double t, const 
                             const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
-    const unsigned int n = sys.ParticleCount();
-
-    if(n > 1) {
-        const double r1 = (n - 1) * sys.Particles().GetSum(Sweep::iW)
-                        * s_MajorantFactor * A() / sys.SampleVolume();
+	unsigned int n = sys.ParticleCount(); // aab64 Removed const type to be compatible with the below. 
+	
+	// aab64 for hybrid particle model
+	bool hybrid_flag = true;
+	if (hybrid_flag)
+	{
+		unsigned int n2 = sys.GetIncepted();
+		if (hybrid_flag && n > 1)
+			n2 += (n - 1);
+		n = n2;
+	}
+	if (n > 1) {
+		const double r1 = (n - 1) * sys.Particles().GetSum(Sweep::iW)
+			* s_MajorantFactor * A() / sys.SampleVolume();
         *iterm++ = r1;
         return r1;
     }
@@ -165,8 +174,14 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
     // uniformly and one with probability proportional
     // to particle mass.
 
-    if (sys.ParticleCount() < 1) {
-        return 1;
+	// aab64 for hybrid particle model
+	bool hybrid_flag = true;
+	unsigned int number = sys.ParticleCount();
+	if (hybrid_flag && number < 2)
+		number = sys.GetIncepted();
+
+    if (number < 2) {
+	    return 1;
     }
 
     // Properties to which the probabilities of particle selection will be proportional
@@ -181,7 +196,11 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
             throw std::logic_error("Unrecognised term, (Sweep, WeightedConstantCoagulation::Perform)");
     }
 
-    return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
+	if (!hybrid_flag)
+        return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
+	else
+		return WeightedPerform_hybrid(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default, local_geom);
+
 }
 
 /**

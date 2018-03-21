@@ -65,6 +65,7 @@ title('Mass density: inception')
 
 I0      = 1e16;
 K0      = 0.01;
+tf      = 0.002;
 
 m0f     = @(t,m0)(I0-(1/tau)*m0-(K0/2)*m0^2);
 m1f     = @(t,m1)(I0*m1inc-(1/tau)*m1);
@@ -72,7 +73,7 @@ m1f     = @(t,m1)(I0*m1inc-(1/tau)*m1);
 [t1,m0] = ode23s(m0f,[t0 tf],0,OPTIONS);
 [t2,m1] = ode23s(m1f,[t0 tf],0,OPTIONS);
 
-data2   = csvread('coag_newer/Network(stage1)-part.csv',1);
+data2   = csvread('Network(stage1)-part.csv',1);
 
 figure(2)
 set(gcf,'color','white')
@@ -112,10 +113,16 @@ xlabel('Time (s)')
 ylabel('$N$ (-)')
 title('Number of sim particles: incep and coag')
 
+[~,m0] = ode23s(m0f,linspace(t0,tf,1000),0,OPTIONS);
+[t1,m1] = ode23s(m1f,linspace(t0,tf,1000),0,OPTIONS);
+
 figure(6)
 set(gcf,'color','white')
 plot(data2(:,2),data2(:,5)./data2(:,21),'--')
-legend('Sim','Location','SouthEast')
+hold on
+plot(t1,m0./m1,'k')
+legend('Sim','Numerical','Location','SouthEast')
 xlabel('Time (s)')
-ylabel('$N$ (-)')
-title('Number of sim particles: incep and coag')
+ylabel('$M_0/M_1$ (kg$^{-1}$)')
+title('Ratio $M_0/M_1$: incep and coag')
+set(gca,'YScale','log')

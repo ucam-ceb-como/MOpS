@@ -146,7 +146,11 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
                           const unsigned int iterm,
                           rng_type &rng) const {
 
-	// aab64 temp
+	// aab64 hybrid particle model
+	// hybrid_flag should be added to the sys object and set as an option input
+	// If hybrid_flag is active, only incept first particle
+	// Then this particle will be used to track the number of incepting particles
+	// using the particle weight
 	bool hybrid_flag = true;
 	if (!hybrid_flag || sys.ParticleCount() == 0)
 	{
@@ -200,13 +204,15 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 		sys.Particles().Add(*sp, rng);
 
 		if (hybrid_flag)
-			sys.AdjustIncepted(sys.GetInceptingWeight());
+			sys.AdjustIncepted(sys.GetInceptingWeight()); // Track the number of particles that have been added
 
 		// Update gas-phase chemistry of system.
 		adjustGas(sys, sp->getStatisticalWeight());
 	}
 	else
 	{
+		// We are here because the hybrid_flag is active and there is already an inception class particle at SP[0]
+		// Increment the count of incepted particles and update SP[0] to inform the tree its weight has changed
 		sys.AdjustIncepted(sys.GetInceptingWeight());
 		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
 		sys.Particles().Update(0);
@@ -217,9 +223,9 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
     return 0;
 }
 
+// aab64 for hybrid particle model
 /*!
-* Create a new particle and add it to the ensemble with position uniformly
-* distributed over the grid cell, if it is of positive size.
+* Create a new particle but do not add it to the ensemble.
 *
 * The iterm parameter is included because it will be needed for many process
 * types and this function is meant to have a general signature.
@@ -230,7 +236,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 * \param[in]       iterm       Process term responsible for this event
 * \param[in,out]   rng         Random number generator
 *
-* \return      0 on success, otherwise negative.
+* \return      a pointer to the new particle 
 */
 Sweep::Particle *Sweep::Processes::ConstantInception::Perform_incepted(const double t, Cell &sys,
 	const Geometry::LocalGeometry1d &local_geom,
