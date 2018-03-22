@@ -255,6 +255,9 @@ public:
     // Recalculate derived properties from the primary particle
     void UpdateCache();
 
+	void SetHybrid(bool hybrid_flag) { m_hybrid = hybrid_flag; }
+	bool IsHybrid() const { return m_hybrid; }
+
     // READ/WRITE/COPY.
 
     //! Clone the particle.
@@ -293,6 +296,9 @@ private:
 
     //! Last time particle was updated.  Required for LPDA.
     double mLPDAtime;
+
+	// aab64 tracker for hybrid particle model
+	bool m_hybrid;
 
     // Can't create a particle without knowledge of the components
     // and the tracker variables.

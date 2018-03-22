@@ -74,17 +74,18 @@ double Sweep::Processes::ConstantCoagulation::Rate(double t, const Cell &sys,
                                                         const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
-    //const unsigned int n = sys.ParticleCount();
+    unsigned int n = sys.ParticleCount(); // aab64 Removed const type to be compatible with the below. 
 
-	// aab64 temp
-	bool hybrid_flag = true;    
-	unsigned int n = sys.ParticleCount();
-	unsigned int n2 = sys.GetIncepted();
-	if (hybrid_flag && n > 1)
-		n2 += (n - 1);
+	// aab64 for hybrid particle model
+	if (m_mech->IsHybrid())
+	{
+		unsigned int n2 = sys.GetIncepted();
+		if (n > 1)
+			n2 += (n - 1);
+		n = n2;
+	}
 
-	//return A() * (n2 * n2 - n) * s_MajorantFactor / sys.SampleVolume() / 2;
-    return A() * n2 * (n2 - 1) * s_MajorantFactor / sys.SampleVolume() / 2;
+    return A() * n * (n - 1) * s_MajorantFactor / sys.SampleVolume() / 2;
 }
 
 /**
@@ -135,7 +136,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	int ip1 = -1, ip2 = -1;
 
 	// aab64 hybrid particle model flags
-	bool hybrid_flag = true;
+	bool hybrid_flag = m_mech->IsHybrid();
 	bool ip1_flag = false;
 	bool ip2_flag = false;
 

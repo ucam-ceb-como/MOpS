@@ -200,8 +200,7 @@ int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
     // Particle 2 is now part of particle 1
 
 	// aab64 for hybrid particle model
-	bool hybrid_flag = true;
-	if (!(hybrid_flag && ip2==0)) // if this particle was introduced from the bin, it does not exist in the ensemble
+	if (!(m_mech->IsHybrid() && ip2 == 0)) // if this particle was introduced from the bin, it does not exist in the ensemble
 		sys.Particles().Remove(ip2, true);
     return ip1;
 }
@@ -389,10 +388,12 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
                                  const Sweep::Processes::CoagWeightRule weight_rule,
                                  Cell &sys, rng_type &rng,
                                  MajorantType maj, const Geometry::LocalGeometry1d& local_geom) const {
-		//int ip1 = sys.Particles().Select(prop1, rng);
-		//int ip2 = sys.Particles().Select(prop2, rng);
+	if (prop1 != iUniform)
+		std::cout << "Hybrid weighted perform only implemented for uniform choice of sp1\n";
+	if (prop2 != iW)
+		std::cout << "Hybrid weighted perform only implemented for weighted choice of sp2\n";
 
-	int ip1 = 0; // Should be uniform but must account for multiple particles in first particle
+	int ip1 = 0; // Should be uniform (prop1) but must account for multiple particles in first particle
 	int ip2 = sys.Particles().Select(prop2, rng); 
 
 	// aab64 hybrid particle model flags
@@ -402,12 +403,12 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	// Compute the number of particles in the incepting class SP[0]
 	// and the number of other particles n_other=SP[1]+SP[2]+...+SP[N]
 	unsigned int n_others = 0;
-	unsigned int n_total = sys.GetIncepted();
-	unsigned int n_incep = sys.GetIncepted();
+	unsigned int n_incep  = sys.GetIncepted();
+	unsigned int n_total  = n_incep;
 	if (sys.ParticleCount() > 1)
 	{
 		n_others += (sys.ParticleCount() - 1);
-		n_total += n_others;
+		n_total  += n_others;
 	}
 
 	// Particle 1 is picked uniformly. Here, SP[0] is the
@@ -418,21 +419,21 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	if (n_total > 0)
 		frac = (double(n_others)) / (double(n_total));
 	else if (n_incep <= 0 && sys.ParticleCount() > 1)
-		frac = 1; // if SP[0] has w=0, must pick a different particle
+		frac = 1;                                                                    // if SP[0] has w=0, pick a different particle
 	else
 		return -1;
 	boost::uniform_01<rng_type&, double> unifDistrib(rng);
 	if (frac > unifDistrib())
 	{
-		while (ip1 == 0) // Must select a different particle!
-			ip1 = sys.Particles().Select(prop1, rng);
+		while (ip1 == 0)
+			ip1 = sys.Particles().Select(prop1, rng);                                // Add the particle to the ensemble 
 	}
 
 	// Can't use SP[0] if it has zero weight
 	if (ip2 == 0 && sys.GetIncepted() == 0)
 	{
-		while (ip2 == 0) // Must select a different particle!
-			ip2 = sys.Particles().Select(prop2, rng);
+		while (ip2 == 0)
+			ip2 = sys.Particles().Select(prop2, rng);                                // Add the particle to the ensemble 
 	}
 
 	// Choose and get first particle, then update it.
@@ -442,16 +443,17 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	if (ip1 == 0)
 	{
 		sp1 = m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng); // Incept a new particle from SP[0]
-		sys.AdjustIncepted(-1);                                                      // Reduce the incepting class count
+		sys.AdjustIncepted(-(sp1->getStatisticalWeight()));                          // Reduce the incepting class count
 		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());              // Reduce the weight of SP[0]
 		sys.Particles().Update(0);                                                   // Update weight of SP[0] in the tree 
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 
-		// If incepting class is now empty, pick another particle before adding sp1 to the ensemble
+		// If incepting class is now empty, pick another 
+		// particle before adding sp1 to the ensemble
 		if (ip2 == 0 && sys.GetIncepted() == 0)
 		{
-			while (ip2 == 0) // Must select a different particle!
-				ip2 = sys.Particles().Select(prop2, rng);
+			while (ip2 == 0) 
+				ip2 = sys.Particles().Select(prop2, rng);                            // Must select a different particle!
 		}
 
 		ip1 = sys.Particles().Add(*sp1, rng);                                        // Add the particle to the ensemble 
@@ -467,8 +469,9 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 		}
 	}
 
-	// Choose and get unique second particle, then update it.  Note, we are allowed to do
-	// this even if the first particle was invalidated.
+	// Choose and get unique second particle, then update it.  
+	// Note, we are allowed to do this even if the first 
+	// particle was invalidated.
 	unsigned int guard = 0;
 	while ((ip2 == ip1) && (++guard < 1000))
 		ip2 = sys.Particles().Select(prop2, rng);

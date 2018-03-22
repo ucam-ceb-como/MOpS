@@ -1024,7 +1024,10 @@ void Simulator::outputGasPhase(const Reactor &r) const
 // the binary output file. (No need modification, modification when read) 
 void Simulator::outputParticleTemperature(const Reactor &r) const
 {
-	double Tp = r.Mixture()->GetBulkParticleTemperature();
+	//double Tp = r.Mixture()->GetBulkParticleTemperature();
+	double Tp = 0;
+	if (r.Mixture()->ParticleCount() > 0)
+		Tp = r.Mixture()->Particles().At(0)->getStatisticalWeight();
 	m_file.write((char*)&Tp, sizeof(Tp));
 }
 

@@ -79,7 +79,8 @@ m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_ince
 m_heavyallowed(false), m_upp_dval_heavy(1.0e-7), m_low_dval_heavy(1.0e-9),
 m_surfincflag(false), m_upp_dval_surfinc(1.0e-7),
 m_low_dval_surfinc(1.0e-9), m_psi_type("E"),
-m_weightscaling_flag(false), m_weightscaling_onset(10.0), m_weightscaling_factor(1.0)
+m_weightscaling_flag(false), m_weightscaling_onset(10.0), m_weightscaling_factor(1.0),
+m_hybrid(false)
 {
 }
 
@@ -139,6 +140,8 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 	m_weightscaling_flag = rhs.m_weightscaling_flag;
 	m_weightscaling_onset = rhs.m_weightscaling_onset;
 	m_weightscaling_factor = rhs.m_weightscaling_factor;
+
+	m_hybrid = rhs.m_hybrid;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -1718,6 +1721,7 @@ void Mechanism::releaseMem(void)
 
 	m_weightscaling_flag = false;
 	m_weightscaling_onset = 0;
+	m_hybrid = false;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 }
 

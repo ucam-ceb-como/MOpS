@@ -351,6 +351,10 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::Spherical_ID);
     }
 
+	string strh = particleXML->GetAttributeValue("hybrid");
+	if (strh == "true")
+		mech.SetHybrid(true);
+
     //! Check whether to track the distance betweeen the centres of primary
     //! particles but this only applies to binary tree (and maybe surface-
     //! volume) models.

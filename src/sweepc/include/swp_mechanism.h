@@ -378,16 +378,20 @@ public:
     std::vector<unsigned int> GetFictitiousProcessCounts() const { return m_fictcount; }
 
     // Get the term count
-    unsigned int GetTermCount() const { return m_termcount; };
+    unsigned int GetTermCount() const { return m_termcount; }
 	
     // Get the addition count
-    unsigned int GetDeferredAddCount() const { return m_addcount; };
+    unsigned int GetDeferredAddCount() const { return m_addcount; }
 	
     // Get the inflow count
-    unsigned int GetInflowCount() const { return m_inflowcount; };
+    unsigned int GetInflowCount() const { return m_inflowcount; }
 
     // Get the outflow count
-    unsigned int GetOutflowCount() const { return m_outflowcount; };
+    unsigned int GetOutflowCount() const { return m_outflowcount; }
+
+	void SetHybrid(bool hybrid_flag) const { m_hybrid = hybrid_flag; }
+
+	bool IsHybrid() const { return m_hybrid; }
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 	
 
@@ -447,6 +451,8 @@ private:
 	mutable bool m_weightscaling_flag;      // Flag for adaptive ensemble weights
 	mutable double m_weightscaling_onset;   // Onset ratio for adaptive ensemble weights
 	mutable double m_weightscaling_factor;  // Factor multiplying N/sum(w) in weight scaling
+
+	mutable bool m_hybrid;                  // identify hybrid particle model
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 

@@ -151,7 +151,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 	// If hybrid_flag is active, only incept first particle
 	// Then this particle will be used to track the number of incepting particles
 	// using the particle weight
-	bool hybrid_flag = true;
+	bool hybrid_flag = m_mech->IsHybrid();
 	if (!hybrid_flag || sys.ParticleCount() == 0)
 	{
 		// Create a new particle of the type specified
@@ -204,7 +204,10 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 		sys.Particles().Add(*sp, rng);
 
 		if (hybrid_flag)
+		{
 			sys.AdjustIncepted(sys.GetInceptingWeight()); // Track the number of particles that have been added
+			sp->SetHybrid(true);
+		}
 
 		// Update gas-phase chemistry of system.
 		adjustGas(sys, sp->getStatisticalWeight());
@@ -288,6 +291,12 @@ Sweep::Particle *Sweep::Processes::ConstantInception::Perform_incepted(const dou
 	sp->Primary()->SetComposition(newComposition);
 
 	sp->Primary()->SetValues(ParticleTrackers());
+
+	double sp_wt = sys.GetInceptingWeight();
+	if (sys.GetIncepted() < sp_wt)
+		sp_wt = sys.GetIncepted(); 
+	sp->setStatisticalWeight(sp_wt);
+
 	sp->UpdateCache();
 	
 	return sp;

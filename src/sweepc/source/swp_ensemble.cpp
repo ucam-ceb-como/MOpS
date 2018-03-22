@@ -208,15 +208,15 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_tree.resize(m_capacity);
 
     // Initialise scaling.
-	m_ncont = 0; 
+	m_ncont       = 0; 
 	m_wtdcontfctr = 1.0; // aab64 weighted contraction factor
-    m_contfactor = (double)(m_capacity) / (double)(m_capacity+1);
-    m_contwarn   = false;
+    m_contfactor  = (double)(m_capacity) / (double)(m_capacity+1);
+    m_contwarn    = false;
 
     // Initialise doubling.
     m_maxcount   = 0;
     m_ndble      = 0;
-	m_dbleon = false; // true;
+	m_dbleon     = false; // true;
     m_dbleactive = false;
     m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0);
 
@@ -387,12 +387,12 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         // We must contract the ensemble to accommodate a new particle.
         boost::uniform_smallint<int> indexDistrib(0, m_capacity);
         boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
-		// aab64 temporary
-		bool hybrid_flag = true;
-		if (hybrid_flag)
+		
+		// aab64 for hybrid particle model
+		if (m_particles[0]->IsHybrid())
 		{
-			while (i < 1 || i == m_capacity)
-				i = indexGenerator();
+			while (i < 1 || i == m_capacity) // Cannot remove the 0th particle as it is the incepting class
+				i = indexGenerator();        // Cannot remove the Nth particle as it may be the particle incepted in coagulation
 		}
 		else
 			i = indexGenerator();
@@ -814,8 +814,7 @@ void Sweep::Ensemble::dble()
             // Copy particles.
 			// aab64 temporary
 			size_t starter = 0;
-			bool hybrid_flag = true;
-			if (hybrid_flag)
+			if (m_particles[0]->IsHybrid())
 				starter = 1;
             const size_t prevCount = m_count;
             for (size_t i = starter; i != prevCount; ++i) {

@@ -128,11 +128,10 @@ double Sweep::Processes::WeightedConstantCoagulation::RateTerms(double t, const 
 	unsigned int n = sys.ParticleCount(); // aab64 Removed const type to be compatible with the below. 
 	
 	// aab64 for hybrid particle model
-	bool hybrid_flag = true;
-	if (hybrid_flag)
+	if (m_mech->IsHybrid())
 	{
 		unsigned int n2 = sys.GetIncepted();
-		if (hybrid_flag && n > 1)
+		if (n > 1)
 			n2 += (n - 1);
 		n = n2;
 	}
@@ -174,11 +173,11 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
     // uniformly and one with probability proportional
     // to particle mass.
 
-	// aab64 for hybrid particle model
-	bool hybrid_flag = true;
 	unsigned int number = sys.ParticleCount();
-	if (hybrid_flag && number < 2)
-		number = sys.GetIncepted();
+
+	// aab64 for hybrid particle model
+	if (m_mech->IsHybrid() && number < 2)   // Can still do coagulation if there are
+		number = sys.GetIncepted();  // at least 2 particles in the incepting class
 
     if (number < 2) {
 	    return 1;
@@ -196,7 +195,7 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
             throw std::logic_error("Unrecognised term, (Sweep, WeightedConstantCoagulation::Perform)");
     }
 
-	if (!hybrid_flag)
+	if (!(m_mech->IsHybrid()))
         return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
 	else
 		return WeightedPerform_hybrid(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default, local_geom);
