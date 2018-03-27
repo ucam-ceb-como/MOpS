@@ -603,11 +603,24 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 			sys.Particles().Update(ip1);
 			if (!ip2_flag)
 				sys.Particles().Update(ip2);
+			else if (sp2 != NULL)
+			{
+				// Particle sp2 is not in the ensemble, must manually delete it
+				delete sp2;
+				sp2 = NULL;
+			}
 		}
 		else {
 			sys.Particles().Update(ip1);
 			if (!ip2_flag)
 				sys.Particles().Update(ip2);
+			else if (sp2 != NULL)
+			{
+				// Particle sp2 is not in the ensemble, must manually delete it
+				delete sp2;
+				sp2 = NULL;
+			}
+
 			return 1; // Ficticious event.
 		}
 	}
@@ -621,9 +634,16 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 
 		if (ip2 >= 0 && !ip2_flag)
 			sys.Particles().Update(ip2);
+
+		if (ip2_flag && sp2 != NULL)
+		{
+			// Particle sp2 is not in the ensemble, must manually delete it
+			delete sp2;
+			sp2 = NULL;
+		}
 	}
 
-	if (ip2_flag)
+	if (ip2_flag && sp2 != NULL)
 	{
 	    // Particle sp2 is not in the ensemble, must manually delete it
 		delete sp2;
