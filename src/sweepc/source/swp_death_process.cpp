@@ -374,8 +374,26 @@ void DeathProcess::DoParticleDeath(
 			|| m_dtype == DeathProcess::iWtdDelete) {
 		// aab64 for hybrid particle model
 		if (m_mech->IsHybrid() && isp == 0)                      // If this is the incepting class particle,
-			sys.AdjustIncepted(-1 * sys.GetIncepted());          // set it's state to empty
-		sys.Particles().Remove(isp, true);                       // Just delete the particle
+		{
+			if (m_dtype == DeathProcess::iWtdDelete)
+			{
+				sys.AdjustIncepted(-1 * sys.GetIncepted());      // set it's state to empty and remove it
+				sys.Particles().Remove(isp, true);
+			}
+			else if (sp->getStatisticalWeight() >= 1)            // reduce the class by 1
+			{
+				sys.AdjustIncepted(-1);
+				sp->setStatisticalWeight(sys.GetIncepted());
+				sys.Particles().Update(isp);
+			}
+			else if (sys.ParticleCount() == 1)
+			{
+				sys.AdjustIncepted(-1 * sys.GetIncepted());      // set it's state to empty and remove it
+				sys.Particles().Remove(isp, true);
+			}
+		}
+		else 
+			sys.Particles().Remove(isp, true);                   // Just delete the particle
     } else if (m_dtype == DeathProcess::iContMove
             || m_dtype == DeathProcess::iStochMove
             || (m_dtype == DeathProcess::iContAdaptive && m_toggled)) {

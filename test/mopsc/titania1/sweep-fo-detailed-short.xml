@@ -32,9 +32,8 @@
 	
     <!-- Coagulation -->
     <coagulation>
-	    <A>0.01</A>
-	    <kernel>weightedconstant</kernel>
-		<weightrule>w3</weightrule>
+	    <A>0.00001</A>
+	    <kernel>constant</kernel>
     </coagulation>
 
     <!-- Ti addition reactions
@@ -59,27 +58,8 @@
 
     <!-- [Ru] particle Inceptions
         m, d are in g, cm -->       
-    
-    <!--inception name="(TiO2Cl3 + TiO2Cl3) molecule inception">
-        <formula>"TIO2CL3 + TIO2CL3 to [Ru2]</formula>
-        <reactant id="TIO2CL3" stoich="2" m="3.0952e-022" d="6.5423e-8" />
-        <product id="CL2" stoich="+3.0" />
-        <particleout id="[Ru]"/>
-        <component id="Rutile" dx="+2.0"/>
-    </inception-->
-	
    <constantinception name="INCEP1">
         <component dx="+2" id="Rutile"/>
-        <A>1e10</A>
+        <A>1e12</A>
    </constantinception>
-     
-	<!-- extra inception reaction currently used as a terrible way to perform heat transfer -->
-    <!--inception name="extra inception">
-        <formula>"TICL2OCL to [Ru]</formula>
-        <reactant id="TICL2OCL" stoich="0" m="2.1819e-022" d="6.5423e-8" />
-        <particleout id="[Ru]"/>
-        <component id="Rutile" dx="+0.0"/>
-		<allowheavy>off</allowheavy>
-		<surfinc dlim="4.9e-9">off</surfinc>
-    </inception-->
  </mechanism>

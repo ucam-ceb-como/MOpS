@@ -442,7 +442,8 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	// Is this an incepting class particle?
 	if (ip1 == 0)
 	{
-		sp1 = m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng); // Incept a new particle from SP[0]
+		sp1 = m_mech->CreateParticle(t);
+		m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng, *sp1); // Incept a new particle from SP[0]
 		sys.AdjustIncepted(-(sp1->getStatisticalWeight()));                          // Reduce the incepting class count
 		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());              // Reduce the weight of SP[0]
 		sys.Particles().Update(0);                                                   // Update weight of SP[0] in the tree 
@@ -482,7 +483,8 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	// Is this an incepting class particle?
 	if (ip2 == 0)
 	{
-		sp2 = m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng); // Incept a new particle from SP[0]
+		sp2 = m_mech->CreateParticle(t);
+		m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng, *sp2); // Incept a new particle from SP[0]
 		                                                                             // Note we do not need to add it to the ensemble
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle 
 	}

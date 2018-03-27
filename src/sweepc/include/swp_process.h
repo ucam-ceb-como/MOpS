@@ -214,12 +214,13 @@ public:
 	// aab64 for hybrid particle model
 	// Perform a coagulation with particles chosen according to the additive kernel
 	// Return a pointer to the particle
-	virtual Sweep::Particle* Perform_incepted(
+	virtual int Perform_incepted(
 		double t,
 		Cell &sys,
 		const Geometry::LocalGeometry1d& local_geom,
 		unsigned int iterm,
-		rng_type &rng
+		rng_type &rng, 
+		Sweep::Particle &sp_new
 		) const;
 
     //! Performs the process over time dt on the given system.

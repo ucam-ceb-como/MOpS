@@ -241,15 +241,15 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 *
 * \return      a pointer to the new particle 
 */
-Sweep::Particle *Sweep::Processes::ConstantInception::Perform_incepted(const double t, Cell &sys,
+int Sweep::Processes::ConstantInception::Perform_incepted(const double t, Cell &sys,
 	const Geometry::LocalGeometry1d &local_geom,
 	const unsigned int iterm,
-	rng_type &rng) const {
+	rng_type &rng, Sweep::Particle &sp) const {
 
 	
 	// Create a new particle of the type specified
 	// by the system ensemble.
-	Particle * const sp = m_mech->CreateParticle(t);
+	//sp = *(m_mech->CreateParticle(t));
 
 	// Position of newly incepted particle
 	double posn;
@@ -275,7 +275,7 @@ Sweep::Particle *Sweep::Processes::ConstantInception::Perform_incepted(const dou
 		posn += width * unifDistrib();
 	}
 
-	sp->setPositionAndTime(posn, t);
+	sp.setPositionAndTime(posn, t);
 
 
 	// Initialise the new particle.
@@ -285,21 +285,23 @@ Sweep::Particle *Sweep::Processes::ConstantInception::Perform_incepted(const dou
 		// bottleneck some optimisations might be possible, but caching the distribution
 		// object in the mechanism is a bad idea, because the mechanism is potentially
 		// shared between threads, which is very dangerous for cached data!
-		newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
-			mComponentDistributions[i].second)(rng);
+		newComposition[i] = 2;// boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
+			//mComponentDistributions[i].second)(rng);
 	}
-	sp->Primary()->SetComposition(newComposition);
+	sp.Primary()->SetComposition(newComposition);
 
-	sp->Primary()->SetValues(ParticleTrackers());
+	sp.Primary()->SetValues(ParticleTrackers());
 
 	double sp_wt = sys.GetInceptingWeight();
 	if (sys.GetIncepted() < sp_wt)
 		sp_wt = sys.GetIncepted(); 
-	sp->setStatisticalWeight(sp_wt);
+	sp.setStatisticalWeight(sp_wt);
 
-	sp->UpdateCache();
+	sp.UpdateCache();
+
+	//sp_new = sp;
 	
-	return sp;
+	return 0;
 }
 
 // TOTAL RATE CALCULATIONS.

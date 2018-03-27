@@ -242,16 +242,17 @@ void Process::PerformDT (
 // aab64 for hybrid particle model
 // Perform a coagulation with particles chosen according to the additive kernel
 // Not defined except for the constant inception case
-Sweep::Particle* Process::Perform_incepted(
+int Process::Perform_incepted(
 	double t,
 	Cell &sys,
 	const Geometry::LocalGeometry1d& local_geom,
 	unsigned int iterm,
-	rng_type &rng
+	rng_type &rng,
+	Sweep::Particle & sp_new
 	) const
 {
 	std::cout << "Only defined for constant inception" << std::endl;
-	return NULL;
+	return 1;
 }
 
 
