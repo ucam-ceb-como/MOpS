@@ -196,6 +196,9 @@ public:
 
     //! Deserialize object from input binary stream
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model, PahDeserialisationMap &pah_duplicates);
+
+	//! Return primary particle details and connectivity
+	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
     
     //! Serialize object to output binary stream
     void Serialize(std::ostream &out, void *duplicates) const;
@@ -234,7 +237,8 @@ public:
 	int NumRings5() const;
     //! returns sqrt(L*W)
     double sqrtLW() const;
-    //double AvgCoalesc() const;
+
+    double AvgCoalesc() const;
 	double AvgSinter() const; //hdy
 
     //! Find Xmer, and store their information in a vector
@@ -266,15 +270,11 @@ public:
 
 	std::vector<boost::shared_ptr<PAH> > GetPAHVector() const;
 
-	//! Update the tree structure's surface area by increment dS //hdy
-	void UpdateParents(double dS); //hdy
-
 	//! Updates sintering level //hdy
 	double SinteringLevel(); //hdy
 
-	//! Updates the particle cache from the root node //hdy
-	//  calls UpdateCache() //hdy
-	void UpdateCacheRoot(); //hdy
+	double PAHPrimary::CalcChildrenSumCap(); //hdy
+
 
 protected:
     //! Empty primary not meaningful
@@ -495,6 +495,10 @@ private:
     double m_children_surf;
     // store the RoundingLevel
     double m_children_roundingLevel;
+
+	double m_children_sumCap; //hdy
+	double m_sum_cap; //hdy
+	double m_sph_prim_vol; //hdy
 
     // radius of gyration and fractal dimension
     // the values are only update in CalcFractaldimension()

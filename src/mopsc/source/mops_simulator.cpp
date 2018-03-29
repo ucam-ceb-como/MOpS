@@ -2212,88 +2212,148 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
 
 // Processes the PSLs at each save point into single files.
 void Simulator::postProcessPSLs(const Mechanism &mech,
-                                const timevector &times) const
+	const timevector &times) const
 {
-    Reactor *r = NULL;
-    unsigned int step = 0;
-    fvector psl;
-    vector<fvector> ppsl;
+	Reactor *r = NULL;
+	unsigned int step = 0;
+	fvector psl;
+	vector<fvector> ppsl;
 
-    // Get reference to the particle mechanism.
-    const Sweep::Mechanism &pmech = mech.ParticleMech();
+	////////////////////////////////////////// csl37-pp
+	vector<fvector> surface;
+	vector<string> surfout_header;
+	vector<fvector> primary_diameter;
+	vector<string> primary_header;
+	CSV_IO surfout(m_output_filename + "-primary-surface.csv", true);
+	CSV_IO diamout(m_output_filename + "-primary-diameter.csv", true);
+	///////////////////////////////////////////
 
-    // Create an ensemble stats object.
-    Sweep::Stats::EnsembleStats stats(pmech);
+	// Get reference to the particle mechanism.
+	const Sweep::Mechanism &pmech = mech.ParticleMech();
 
-    // Build header row for PSL CSV output files.
-    vector<string> header;
-    stats.PSL_Names(header);
+	// Create an ensemble stats object.
+	Sweep::Stats::EnsembleStats stats(pmech);
 
-    // Open output files for all PSL save points.  Remember to
-    // write the header row as well.
-    vector<CSV_IO*> out(times.size(), NULL);
-    for (unsigned int i=0; i!=times.size(); ++i) {
-        double t = times[i].EndTime();
-        out[i] = new CSV_IO();
-        out[i]->Open(m_output_filename + "-psl(" +
-                    cstr(t) + "s).csv", true);
-        out[i]->Write(header);
-    }
+	// Build header row for PSL CSV output files.
+	vector<string> header;
+	stats.PSL_Names(header);
 
-    // Loop over all time intervals.
-    for (unsigned int i=0; i!=times.size(); ++i) {
-        // Calculate the total step count after this interval.
-        step += times[i].StepCount();
+	// Open output files for all PSL save points.  Remember to
+	// write the header row as well.
+	vector<CSV_IO*> out(times.size(), NULL);
+	for (unsigned int i = 0; i != times.size(); ++i) {
+		double t = times[i].EndTime();
+		out[i] = new CSV_IO();
+		out[i]->Open(m_output_filename + "-psl(" +
+			cstr(t) + "s).csv", true);
+		out[i]->Write(header);
+	}
 
-        // Loop over all runs.
-        for (unsigned int irun=0; irun!=m_nruns; ++irun) {
-            // Read the save point for this step and run.
-            r = readSavePoint(step, irun, mech);
+	// Loop over all time intervals.
+	for (unsigned int i = 0; i != times.size(); ++i) {
+		// Calculate the total step count after this interval.
+		step += times[i].StepCount();
 
-            if (r != NULL) {
-                double scale = (double)m_nruns;
-                if (m_output_every_iter) scale *= (double)m_niter;
+		// Loop over all runs.
+		for (unsigned int irun = 0; irun != m_nruns; ++irun) {
+			// Read the save point for this step and run.
+			r = readSavePoint(step, irun, mech);
 
-                // Get PSL for all particles.
-                for (unsigned int j=0; j!=r->Mixture()->ParticleCount(); ++j) {
-                    // Get PSL.
-                    stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
-                              times[i].EndTime(), psl,
-                              1.0/(r->Mixture()->SampleVolume()*scale));
-                    // Output particle PSL to CSV file.
-                    out[i]->Write(psl);
-                }
+			if (r != NULL) {
+				double scale = (double)m_nruns;
+				if (m_output_every_iter) scale *= (double)m_niter;
 
-                // Draw particle images for tracked particles.
-                unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());
-                for (unsigned int j=0; j!=n; ++j) {
-                    double t = times[i].EndTime();
-                    string fname = m_output_filename + "-tem(" + cstr(t) +
-                                   "s, " + cstr(j) + ").pov";
-                    std::ofstream file;
-                    file.open(fname.c_str());
+				// Get PSL for all particles.
+				for (unsigned int j = 0; j != r->Mixture()->ParticleCount(); ++j) {
+					// Get PSL.
+					stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
+						times[i].EndTime(), psl,
+						1.0 / (r->Mixture()->SampleVolume()*scale));
+					// Output particle PSL to CSV file.
+					out[i]->Write(psl);
+				}
 
-                    r->Mixture()->Particles().At(j)->writeParticlePOVRAY(file);
+				// Draw particle images for tracked particles.
+				unsigned int n = min(m_ptrack_count, r->Mixture()->ParticleCount());
+				for (unsigned int j = 0; j != n; ++j) {
+					double t = times[i].EndTime();
+					string fname = m_output_filename + "-tem(" + cstr(t) +
+						"s, " + cstr(j) + ").pov";
+					std::ofstream file;
+					file.open(fname.c_str());
 
-                    file.close();
-                }
+					r->Mixture()->Particles().At(j)->writeParticlePOVRAY(file);
 
-                delete r;
-            } else {
-                // Throw error if the reactor was not read.
-                throw runtime_error("Unable to read reactor from save point "
-                                    "(Mops, ParticleSolver::postProcessPSLs).");
-            }
-        }
+					file.close();
+				}
+
+				////////////////////////////////////////// csl37-pp
+				// loop over particles at last save point
+				if (i == times.size() - 1){
+					for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
+					{
+						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), surface, primary_diameter, k);
+					}
+				}
+				/////////////////////////////////////////
+
+				delete r;
+			}
+			else {
+				// Throw error if the reactor was not read.
+				throw runtime_error("Unable to read reactor from save point "
+					"(Mops, ParticleSolver::postProcessPSLs).");
+			}
+
+			
+		}
+		
+		//out[i]->Close(); //comment by hdy
+		//delete out[i]; //comment by hdy
+	}
+	//////////////////////////////////////////// csl37-pp
+	surfout_header.push_back("Particle Index");
+	surfout_header.push_back("Number of primaries below node");
+	surfout_header.push_back("Common surface area (m2)");
+	surfout_header.push_back("Sintering level");
+	surfout_header.push_back("Separation (m)");
+	surfout_header.push_back("Neck radius (m)");
+	surfout_header.push_back("Left radius (m)");
+	surfout_header.push_back("Right radius (m)");
+	surfout_header.push_back("Left Index");
+	surfout_header.push_back("Right Index");
+
+	surfout.Write(surfout_header);
+	for (unsigned int k = 0; k < surface.size(); k++)
+	{
+		surfout.Write(surface[k]);
+	}
+	surfout.Close();
+
+	primary_header.push_back("Particle Index");
+	primary_header.push_back("Primary diameter (m)");
+	primary_header.push_back("Sph. equiv. diameter (m)");
+	primary_header.push_back("True primary volume (m3)");
+	primary_header.push_back("Primary volume (m3)");
+	primary_header.push_back("Primary surface (m2)");
+	primary_header.push_back("Position x");
+	primary_header.push_back("Position y");
+	primary_header.push_back("Position z");
+	primary_header.push_back("Radius (m)");
+
+	diamout.Write(primary_header);
+	for (unsigned int k = 0; k < primary_diameter.size(); k++)
+	{
+		diamout.Write(primary_diameter[k]);
+	}
+	diamout.Close();
+
+	///////////////////////////////////////////
+	//// Close output CSV files.
+	for (unsigned int i = 0; i != times.size(); ++i) {
 		out[i]->Close();
 		delete out[i];
-    }
-
-    // Close output CSV files.
-    //for (unsigned int i=0; i!=times.size(); ++i) {
-    //    out[i]->Close();
-    //    delete out[i];
-    //}
+	}
 }
 
 /*
@@ -2395,8 +2455,8 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
                 }
             }
 
-			out[i]->Close();
-			delete out[i];
+			out[i]->Close(); //comment by hdy
+			delete out[i]; //comment by hdy
         }
 
         //! Close output CSV files.
@@ -2493,11 +2553,11 @@ void Simulator::postProcessPPPSLs(const Mechanism &mech,
 				}
 			}
 
-			out[i]->Close();
-			delete out[i];
+			out[i]->Close(); //comment by hdy
+			delete out[i]; //comment by hdy
 		}
 
-		//! Close output CSV files.
+		// Close output CSV files.
 		//for (unsigned int i = 0; i != times.size(); ++i) {
 		//	out[i]->Close();
 		//	delete out[i];
