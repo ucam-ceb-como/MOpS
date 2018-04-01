@@ -461,7 +461,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         }
 
         // Get the process jump rates (and the total rate).
-        jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
+        jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates); 
 
         // Calculate the splitting end time.
         tsplit = calcSplitTime(t, std::min(t + std::min(dtg, gasTimeStep), tstop), jrate, r.Mixture()->ParticleCount());
@@ -566,6 +566,10 @@ double FlameSolver::linInterpGas(double t,
 		gas.SetConvectiveVelocity(gas.GetConvectiveVelocity() + du);
 		double dv =  (j->Gas.GetThermophoreticVelocity() - i->Gas.GetThermophoreticVelocity()) * dt / dt_pro;
 		gas.SetThermophoreticVelocity(gas.GetThermophoreticVelocity() + dv);
+
+		//! Interpolate A4 rate of production
+		double dwdotA4 = (j->Gas.PAHFormationRate() - i->Gas.PAHFormationRate()) * dt / dt_pro;
+		gas.SetPAHFormationRate(gas.PAHFormationRate() + dwdotA4);
 
         // Now set the gas density, calculated using the values above.
         gas.SetDensity(dens);
