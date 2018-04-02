@@ -161,7 +161,7 @@ public:
 	void UpdatePAHs(double t, double dt, const Sweep::ParticleModel &model, Cell &sys, int statweight, int ind, rng_type &rng,
 		PartPtrVector &overflow);
 
-	void PAHPrimary::Adjust(const double old_vol); //hdy, for surface growth in PAH_KMC model
+	void Adjust(const double old_vol); //hdy, for surface growth in PAH_KMC model
 
     //! adds a PAH to a particle
     void AddPAH(double time, const Sweep::ParticleModel &model);
@@ -273,7 +273,7 @@ public:
 	//! Updates sintering level //hdy
 	double SinteringLevel(); //hdy
 
-	double PAHPrimary::CalcChildrenSumCap(); //hdy
+	double CalcChildrenSumCap(); //hdy
 
 
 protected:
