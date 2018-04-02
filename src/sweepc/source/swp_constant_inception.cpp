@@ -151,8 +151,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 	// If hybrid_flag is active, only incept first particle
 	// Then this particle will be used to track the number of incepting particles
 	// using the particle weight
-	bool hybrid_flag = m_mech->IsHybrid();
-	if (!hybrid_flag || sys.ParticleCount() == 0)
+	if (!m_mech->IsHybrid() || !sys.Particles().IsFirstSP())
 	{
 		// Create a new particle of the type specified
 		// by the system ensemble.
@@ -201,12 +200,12 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 		sp->UpdateCache();
 
 		// Add particle to system's ensemble.
-		sys.Particles().Add(*sp, rng);
-
-		if (hybrid_flag)
+		if (!m_mech->IsHybrid())
+			sys.Particles().Add(*sp, rng);
+		else
 		{
-			sys.AdjustIncepted(sys.GetInceptingWeight()); // Track the number of particles that have been added
-			sp->SetHybrid(true);
+			sys.Particles().SetInceptedSP(*sp);
+			sys.AdjustIncepted(sys.GetInceptingWeight());
 		}
 
 		// Update gas-phase chemistry of system.
@@ -214,14 +213,12 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 	}
 	else
 	{
-		// We are here because the hybrid_flag is active and there is already an inception class particle at SP[0]
-		// Increment the count of incepted particles and update SP[0] to inform the tree its weight has changed
-		sys.AdjustIncepted(sys.GetInceptingWeight());
-		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
-		sys.Particles().Update(0);
-		adjustGas(sys, sys.GetInceptingWeight());
+		// We are here because the hybrid_flag is active
+		// Increment the count of incepted particles
+		double wt_new = sys.GetInceptingWeight();
+		sys.AdjustIncepted(wt_new);
+		adjustGas(sys, wt_new);
 	}
-
 
     return 0;
 }
@@ -245,11 +242,6 @@ int Sweep::Processes::ConstantInception::Perform_incepted(const double t, Cell &
 	const Geometry::LocalGeometry1d &local_geom,
 	const unsigned int iterm,
 	rng_type &rng, Sweep::Particle &sp) const {
-
-	
-	// Create a new particle of the type specified
-	// by the system ensemble.
-	//sp = *(m_mech->CreateParticle(t));
 
 	// Position of newly incepted particle
 	double posn;
@@ -298,9 +290,7 @@ int Sweep::Processes::ConstantInception::Perform_incepted(const double t, Cell &
 	sp.setStatisticalWeight(sp_wt);
 
 	sp.UpdateCache();
-
-	//sp_new = sp;
-	
+		
 	return 0;
 }
 

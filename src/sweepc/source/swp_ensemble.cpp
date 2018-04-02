@@ -138,6 +138,11 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             m_dbleslack  = rhs.m_dbleslack;
             m_dbleon     = rhs.m_dbleon;
 
+			// aab64 for hybrid particle model
+			m_inceptingWeight = rhs.m_inceptingWeight; 
+			m_inceptedFirstSP = rhs.m_inceptedFirstSP;
+			//m_inceptingSP = rhs.m_inceptingSP->Clone();
+
             // Copy particle vector.
             for (unsigned int i=0; i!=rhs.Count(); ++i) {
                 m_particles[i] = rhs.m_particles[i]->Clone();
@@ -222,6 +227,11 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 
     m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
+
+	// aab64 for hybrid particle model
+	m_inceptingWeight = 0;
+	m_inceptedFirstSP = false;
+	//m_inceptingSP = NULL;
 }
 
 /*!
@@ -391,11 +401,11 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 		// aab64 for hybrid particle model
 		if (m_particles[0]->IsHybrid())
 		{
-			while (i < 1 || i == m_capacity) // Cannot remove the 0th particle as it is the incepting class
-				i = indexGenerator();        // Cannot remove the Nth particle as it may be the particle incepted in coagulation
+			while (i == m_capacity)   // Cannot remove the Nth particle as it may be the particle incepted in coagulation
+				i = indexGenerator();
 		}
 		else
-			i = indexGenerator();
+		    i = indexGenerator();
 
         ++m_ncont;
         if (!m_contwarn && ((double)(m_ncont)/(double)m_capacity > 0.01)) {
@@ -607,6 +617,11 @@ void Sweep::Ensemble::ClearMain()
     m_maxcount   = 0;
     m_ndble      = 0;
     m_dbleactive = false;
+
+	// aab64 for hybrid particle model
+	m_inceptingWeight = 0;
+	m_inceptingSP = NULL;
+	m_inceptedFirstSP = false;
 }
 
 // SELECTING PARTICLES.
@@ -747,6 +762,25 @@ double Sweep::Ensemble::Alpha(double T) const {
     return alpha;
 }
 
+
+// aab64 for hybrid particle model
+void Sweep::Ensemble::SetInceptedSP(Sweep::Particle sp)
+{
+	m_inceptedFirstSP = true;
+	m_inceptingSP = sp.Clone();
+}
+
+void Sweep::Ensemble::AdjustIncepted(double adjustment)
+{
+	m_inceptingWeight += adjustment;
+	m_inceptingSP->setStatisticalWeight(m_inceptingWeight);
+}
+
+Particle Sweep::Ensemble::GetInceptedSP() const
+{
+	return *m_inceptingSP;
+}
+
 // UPDATE ENSEMBLE.
 
 /*!
@@ -812,10 +846,7 @@ void Sweep::Ensemble::dble()
             }
 
             // Copy particles.
-			// aab64 temporary
 			size_t starter = 0;
-			if (m_particles[0]->IsHybrid())
-				starter = 1;
             const size_t prevCount = m_count;
             for (size_t i = starter; i != prevCount; ++i) {
 
@@ -1047,7 +1078,6 @@ void Sweep::Ensemble::releaseMem(void)
         m_particles[i] = NULL;
     }
     m_particles.clear();
-
 }
 
 // Sets the ensemble to its initial condition.  Used in constructors.
@@ -1076,6 +1106,10 @@ void Sweep::Ensemble::init(void)
     m_dblelimit  = 0;
     m_dbleslack  = 0;
 	m_dbleon = false; // true;
+
+	// aab64 for hybrid particle model
+	m_inceptingWeight = 0;
+	m_inceptedFirstSP = false;
 
 }
 

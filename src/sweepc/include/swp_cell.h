@@ -258,7 +258,7 @@ public:
 
 	// aab64 tracker for incepted particles
 	double GetIncepted() const { return m_incepted; }
-	void AdjustIncepted(double adjustment) { m_incepted += adjustment; };
+	void AdjustIncepted(double adjustment);
 
 protected:
     // Default constructor is protected as it makes no

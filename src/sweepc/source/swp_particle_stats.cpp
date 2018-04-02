@@ -238,6 +238,45 @@ void ParticleStats::Calculate(const Ensemble &e, double scale)
         }
     }
 
+	// aab64 for hybrid particle model
+	bool hybrid_flag = true;
+	if (hybrid_flag && e.GetIncepted() != 0)
+	{
+		const Particle spInc = e.GetInceptedSP();
+		const double wt = spInc.getStatisticalWeight();
+		const double m = spInc.Mass();
+
+		double sz = spInc.Property(m_statbound.PID);
+		// Check if the value of the property is within the stats bound
+		if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {
+
+			m_stats[iM0] += wt;
+			m_stats[iD] += spInc.SphDiameter() * wt;
+			m_stats[iDcol] += spInc.CollDiameter() * wt;
+			m_stats[iDmob] += spInc.MobDiameter() * wt;
+			m_stats[iS] += spInc.SurfaceArea() * wt;
+			m_stats[iS + 1] += spInc.SurfaceArea() * wt;
+			m_stats[iV] += spInc.Volume() * wt;
+			m_stats[iV + 1] += spInc.Volume() * wt;
+			m_stats[iM] += m * wt;
+			m_stats[iM + 1] += m * wt;
+			m_stats[iM2] += m * m * wt;
+			m_stats[iM3] += m * m * m * wt;
+
+			// Sum component and tracker values.
+			fvector::iterator i = m_stats.begin() + STAT_COUNT;
+			for (unsigned int j = 0; j != m_ncomp; ++j, ++i) {
+				*i += spInc.Composition(j) * wt;
+				*(++i) += spInc.Composition(j) * wt;
+			}
+			for (unsigned int j = 0; j != m_ntrack; ++j, ++i) {
+				*i += spInc.Values(j) * wt;
+				*(++i) += spInc.Values(j) * wt;
+			}
+		}
+	}
+
+
     // Get the particle count.
     m_stats[iNP] = (double)e.Count();
 
@@ -248,7 +287,7 @@ void ParticleStats::Calculate(const Ensemble &e, double scale)
     // Note that m_stats[iM0] at this point does not in fact contain an M0 value,
     // since it has not yet been scaled by sample volume.  This is intentional
     // since here one should divide by the total statistical weight of all particles.
-    const double invWeight = (e.Count()>0) ? 1.0 / m_stats[iM0] : 0.0;
+    const double invWeight = ((e.Count()+e.GetIncepted())>0) ? 1.0 / m_stats[iM0] : 0.0;
 
     // Scale the summed stats and calculate the averages,
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {

@@ -263,6 +263,13 @@ public:
     //! Get alpha for the ensemble (ABF model)
     double Alpha(double T) const;
 
+	// aab64 for hybrid particle model
+	double GetIncepted(void) const { return m_inceptingWeight; }
+	void AdjustIncepted(double adjustment);
+	void SetInceptedSP(Sweep::Particle sp);
+	Particle GetInceptedSP() const;
+	bool IsFirstSP(void) { return m_inceptedFirstSP; }
+
     // READ/WRITE/COPY.
 
     //! Writes the object to a binary stream.
@@ -310,6 +317,11 @@ private:
     unsigned int m_dblelimit;  // Particle count below which ensemble is doubled (if active).
     unsigned int m_dbleslack;  // Slack space at end of ensemble after doubling operation.
     bool m_dbleon;             // Allows user to manually switch off/on doubling.  Does not affect activation criterion.
+
+	// aab64 Hybrid particle model
+	double m_inceptingWeight;
+	Particle *m_inceptingSP;
+	bool m_inceptedFirstSP;
 
     //! Reset the contents of the binary tree
     void rebuildTree();

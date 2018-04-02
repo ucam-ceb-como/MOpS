@@ -200,7 +200,7 @@ int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
     // Particle 2 is now part of particle 1
 
 	// aab64 for hybrid particle model
-	if (!(m_mech->IsHybrid() && ip2 == 0)) // if this particle was introduced from the bin, it does not exist in the ensemble
+	if (!(m_mech->IsHybrid() && ip2 == -2)) // if this particle was introduced from the bin, it does not exist in the ensemble
 		sys.Particles().Remove(ip2, true);
     return ip1;
 }

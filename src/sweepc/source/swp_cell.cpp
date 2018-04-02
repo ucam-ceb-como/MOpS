@@ -394,6 +394,12 @@ RandNumGen Cell::Chooseprng(size_t threadid)
 	return m_prng[threadid];
 }
 
+// aab64 Particle hybrid model
+void Cell::AdjustIncepted(double adjustment) 
+{ 
+	m_incepted += adjustment; 
+	m_ensemble.AdjustIncepted(adjustment);
+}
 
 // READ/WRITE/COPY.
 
