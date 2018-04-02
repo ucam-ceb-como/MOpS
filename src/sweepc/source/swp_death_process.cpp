@@ -164,9 +164,9 @@ double DeathProcess::InternalRate(
 		// aab64 for hybrid particle model
 		if (m_mech->IsHybrid())
 		{
-			n_total = sys.GetIncepted(); // Account for particles in the incepting class
-			if (sys.ParticleCount() > 1)
-				n_total += (sys.ParticleCount() - 1);
+			n_total = sys.GetIncepted();               // Account for particles in the incepting class
+			if (sys.ParticleCount() > 1)               // (n_total should always be an int for DSA)
+				n_total += (sys.ParticleCount() - 1); 
 		}
 		return m_a * n_total;
 	}
@@ -375,7 +375,7 @@ void DeathProcess::DoParticleDeath(
 		// aab64 for hybrid particle model
 		if (m_mech->IsHybrid() && isp == 0)                      // If this is the incepting class particle,
 		{
-			if (m_dtype == DeathProcess::iWtdDelete)
+			if (m_dtype == DeathProcess::iWtdDelete || sys.ParticleCount() == 1)
 			{
 				sys.AdjustIncepted(-1 * sys.GetIncepted());      // set it's state to empty and remove it
 				sys.Particles().Remove(isp, true);
@@ -385,11 +385,6 @@ void DeathProcess::DoParticleDeath(
 				sys.AdjustIncepted(-1);
 				sp->setStatisticalWeight(sys.GetIncepted());
 				sys.Particles().Update(isp);
-			}
-			else if (sys.ParticleCount() == 1)
-			{
-				sys.AdjustIncepted(-1 * sys.GetIncepted());      // set it's state to empty and remove it
-				sys.Particles().Remove(isp, true);
 			}
 		}
 		else 

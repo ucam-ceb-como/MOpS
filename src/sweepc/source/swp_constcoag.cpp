@@ -154,26 +154,34 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     }
 	else 
 	{
-		ip1 = sys.Particles().Select(iW, rng);
-		ip2 = sys.Particles().Select(iW, rng);
+		if (hybrid_flag)
+		{
+			ip1 = sys.Particles().Select(iW, rng);
+			ip2 = sys.Particles().Select(iW, rng);
+		}
+		else
+		{
+			ip1 = sys.Particles().Select(rng);
+			ip2 = sys.Particles().Select(rng);
+		}
 	}
 
 	// Can't use SP[0] if it has zero weight (this should not happen anyway because selection is weight-based)
-	if (ip1 == 0 && sys.GetIncepted() == 0)
+	if (hybrid_flag && ip1 == 0 && sys.GetIncepted() == 0)
 	{
 		while (ip1 == 0) // Must select a different particle!
 			ip1 = sys.Particles().Select(iW, rng);
 	}
 
 	// Can't use SP[0] if it has zero weight (this should not happen anyway because selection is weight-based)
-	if (ip2 == 0 && sys.GetIncepted() == 0)
+	if (hybrid_flag && ip2 == 0 && sys.GetIncepted() == 0)
 	{
 		while (ip2 == 0) // Must select a different particle!
 			ip2 = sys.Particles().Select(iW, rng);
 	}
 
 	// Choose and get first particle, then update it.
-	Particle * sp1 = NULL;
+	Particle *sp1 = NULL;
 
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip1 == 0)
@@ -208,8 +216,16 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     // Choose and get unique second particle, then update it.  Note, we are allowed to do
     // this even if the first particle was invalidated.
     unsigned int guard = 0;
-	while ((ip2 == ip1) && (++guard < 1000))
-		ip2 = sys.Particles().Select(iW, rng);
+	if (hybrid_flag)
+	{
+		while ((ip2 == ip1) && (++guard < 1000))
+			ip2 = sys.Particles().Select(iW, rng);
+	}
+	else
+	{
+		while ((ip2 == ip1) && (++guard < 1000))
+			ip2 = sys.Particles().Select(rng);
+	}
 
 	// Choose and get second particle, then update it.
     Particle *sp2 = NULL;

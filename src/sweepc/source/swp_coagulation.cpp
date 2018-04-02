@@ -402,14 +402,13 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 
 	// Compute the number of particles in the incepting class SP[0]
 	// and the number of other particles n_other=SP[1]+SP[2]+...+SP[N]
-	unsigned int n_others = 0;
-	unsigned int n_incep  = sys.GetIncepted();
-	unsigned int n_total  = n_incep;
+    double n_incep  = sys.GetIncepted();
+	double n_others = 0;
 	if (sys.ParticleCount() > 1)
 	{
 		n_others += (sys.ParticleCount() - 1);
-		n_total  += n_others;
 	}
+	double n_total = n_incep + n_others;
 
 	// Particle 1 is picked uniformly. Here, SP[0] is the
 	// incepting class with multiple weight 1 particles
@@ -417,13 +416,11 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	// switching with probability n_other/n_total
 	double frac = 0;
 	if (n_total > 0)
-		frac = (double(n_others)) / (double(n_total));
-	else if (n_incep <= 0 && sys.ParticleCount() > 1)
-		frac = 1;                                                                    // if SP[0] has w=0, pick a different particle
+		frac = n_others / n_total;
 	else
 		return -1;
 	boost::uniform_01<rng_type&, double> unifDistrib(rng);
-	if (frac > unifDistrib())
+	if (frac >= unifDistrib())
 	{
 		while (ip1 == 0)
 			ip1 = sys.Particles().Select(prop1, rng);                                // Add the particle to the ensemble 
