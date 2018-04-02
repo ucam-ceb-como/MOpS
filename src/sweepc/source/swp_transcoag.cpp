@@ -77,6 +77,15 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
     // Get the number of particles in the system.
     unsigned int n = sys.ParticleCount();
 
+	// aab64 for hybrid particle model
+	if (m_mech->IsHybrid())
+	{
+		unsigned int n2 = sys.GetIncepted();
+		if (n > 1)
+			n2 += (n - 1);
+		n = n2;
+	}
+
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
@@ -104,13 +113,33 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
     double b = a * MFP * 1.257 * A();
     double c = CFMMAJ * m_efm * CFM * sqrtT * A();
 
+	Sweep::PropID p1, p2, p3, p4, p5, p6;
+	if (m_mech->IsHybrid())
+	{
+		p1 = iDW;
+		p2 = iD2W;
+		p3 = iD_1W;
+		p4 = iD_2W;
+		p5 = iM_1_2W;
+		p6 = iD2_M_1_2W;
+	}
+	else
+	{
+		p1 = iDcol;
+		p2 = iD2;
+		p3 = iD_1;
+		p4 = iD_2;
+		p5 = iM_1_2;
+		p6 = iD2_M_1_2;
+	}
+
     // Summed particle properties required for coagulation rate.
-    const double d       = data.Property(Sweep::iDcol);
-    const double d2      = data.Property(Sweep::iD2);
-    const double d_1     = data.Property(Sweep::iD_1);
-    const double d_2     = data.Property(Sweep::iD_2);
-    const double m_1_2   = data.Property(Sweep::iM_1_2);
-    const double d2m_1_2 = data.Property(Sweep::iD2_M_1_2);
+    const double d       = data.Property(p1);
+    const double d2      = data.Property(p2);
+    const double d_1     = data.Property(p3);
+    const double d_2     = data.Property(p4);
+    const double m_1_2   = data.Property(p5);
+    const double d2m_1_2 = data.Property(p6);
 
     // Get individual terms.
     double terms[TYPE_COUNT];
@@ -166,6 +195,15 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
     // Get the number of particles in the system.
     unsigned int n = sys.ParticleCount();
 
+	// aab64 for hybrid particle model
+	if (m_mech->IsHybrid())
+	{
+		unsigned int n2 = sys.GetIncepted();
+		if (n > 1)
+			n2 += (n - 1);
+		n = n2;
+	}
+
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
@@ -195,13 +233,33 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::partic
     double b   = a * MFP * 1.257 * 2.0;
     double c   = CFMMAJ * m_efm * CFM * sqrtT * A();
 
+	Sweep::PropID p1, p2, p3, p4, p5, p6;
+	if (m_mech->IsHybrid())
+	{
+		p1 = iDW;
+		p2 = iD2W;
+		p3 = iD_1W;
+		p4 = iD_2W;
+		p5 = iM_1_2W;
+		p6 = iD2_M_1_2W;
+	}
+	else
+	{
+		p1 = iDcol;
+		p2 = iD2;
+		p3 = iD_1;
+		p4 = iD_2;
+		p5 = iM_1_2;
+		p6 = iD2_M_1_2;
+	}
+
     // Summed particle properties required for coagulation rate.
-    const double d       = data.Property(Sweep::iDcol);
-    const double d2      = data.Property(Sweep::iD2);
-    const double d_1     = data.Property(Sweep::iD_1);
-    const double d_2     = data.Property(Sweep::iD_2);
-    const double m_1_2   = data.Property(Sweep::iM_1_2);
-    const double d2m_1_2 = data.Property(Sweep::iD2_M_1_2);
+    const double d       = data.Property(p1);
+    const double d2      = data.Property(p2);
+    const double d_1     = data.Property(p3);
+    const double d_2     = data.Property(p4);
+    const double m_1_2   = data.Property(p5);
+    const double d2m_1_2 = data.Property(p6);
 
     fvector::iterator isf = iterm;
     fvector::iterator ifm = iterm+4;
@@ -268,104 +326,176 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                                    unsigned int iterm,
                                    Sweep::rng_type &rng) const
 {
+	// aab64 hybrid particle model flags
+	bool hybrid_flag = m_mech->IsHybrid();
+	bool ip1_flag = false;
+	bool ip2_flag = false;
+	int ip1 = -1, ip2 = -1;
+
     // Select properties by which to choose particles (-1 means
     // choose uniformly).  Note we need to choose 2 particles.  There
     // are six possible rate terms to choose from; 4 slip-flow and 2
     // free molecular.
-    if (sys.ParticleCount() < 2) {
-        return 1;
+	if (sys.ParticleCount() < 2) 
+	{
+		// if there is only 1 SP but it is an incepting class SP with weight >= 2, we can still act
+		if (!hybrid_flag || sys.GetIncepted() < 2)
+			return 1;
     }
 
-    int ip1=-1, ip2=-1;
+	Sweep::PropID p0, p1, p2, p3, p4, p5, p6, pr;
+	pr = iUniform;
+	if (hybrid_flag)
+	{
+		p0 = iW;
+		p1 = iDW;
+		p2 = iD2W;
+		p3 = iD_1W;
+		p4 = iD_2W;
+		p5 = iM_1_2W;
+		p6 = iD2_M_1_2W;
+	}
+	else
+	{
+		p0 = iUniform;
+		p1 = iDcol;
+		p2 = iD2;
+		p3 = iD_1;
+		p4 = iD_2;
+		p5 = iM_1_2;
+		p6 = iD2_M_1_2;
+	}
+
     MajorantType maj;
     TermType term = (TermType)iterm;
 
     // Select the first particle and note the majorant type.
     switch (term) {
         case SlipFlow1:
-            ip1 = sys.Particles().Select(rng);
+            ip1 = sys.Particles().Select(p0, rng);
             maj = SlipFlow;
             break;
         case SlipFlow2:
-            ip1 = sys.Particles().Select(Sweep::iDcol, rng);
+            ip1 = sys.Particles().Select(p1, rng);
             maj = SlipFlow;
             break;
         case SlipFlow3:
-            ip1 = sys.Particles().Select(rng);
+            ip1 = sys.Particles().Select(p0, rng);
             maj = SlipFlow;
             break;
         case SlipFlow4:
-            ip1 = sys.Particles().Select(Sweep::iDcol, rng);
+            ip1 = sys.Particles().Select(p1, rng);
             maj = SlipFlow;
             break;
         case FreeMol1:
-            ip1 = sys.Particles().Select(rng);
+            ip1 = sys.Particles().Select(p0, rng);
             maj = FreeMol;
             break;
         case FreeMol2:
-            ip1 = sys.Particles().Select(Sweep::iD2, rng);
+            ip1 = sys.Particles().Select(p2, rng);
             maj = FreeMol;
             break;
         default :
-            ip1 = sys.Particles().Select(rng);
+            ip1 = sys.Particles().Select(p0, rng);
             maj = SlipFlow;
             break;
-    }
+	}
+
+	// Choose and get unique second particle.  Note, we are allowed to do
+	// this even if the first particle was invalidated.
+	ip2 = ip1;
+	unsigned int guard = 0;
+	switch (term) {
+	case SlipFlow1:
+		while ((ip2 == ip1) && (++guard<1000))
+			ip2 = sys.Particles().Select(p0, rng);
+		pr = p0;
+		break;
+	case SlipFlow2:
+		while ((ip2 == ip1) && (++guard<1000))
+			ip2 = sys.Particles().Select(p3, rng);
+		pr = p3;
+		break;
+	case SlipFlow3:
+		while ((ip2 == ip1) && (++guard<1000))
+			ip2 = sys.Particles().Select(p3, rng);
+		pr = p3;
+		break;
+	case SlipFlow4:
+		while ((ip2 == ip1) && (++guard<1000))
+			ip2 = sys.Particles().Select(p4, rng);
+		pr = p4;
+		break;
+	case FreeMol1:
+		while ((ip2 == ip1) && (++guard<1000))
+			ip2 = sys.Particles().Select(p6, rng);
+		pr = p6;
+		break;
+	case FreeMol2:
+		while ((ip2 == ip1) && (++guard<1000))
+			ip2 = sys.Particles().Select(p5, rng);
+		pr = p5;
+		break;
+	default:
+		while ((ip2 == ip1) && (++guard<1000))
+			ip2 = sys.Particles().Select(p0, rng);
+		pr = p0;
+		break;
+	}
 
     // Choose and get first particle.
-    Particle *sp1=NULL;
-    if (ip1 >= 0) {
-        sp1 = sys.Particles().At(ip1);
-    } else {
-        // Failed to choose a particle.
-        return -1;
-    }
+    Particle *sp1 = NULL;
 
+	// Is this an incepting class particle?
+	if (hybrid_flag && ip1 == 0)
+	{
+		sp1 = m_mech->CreateParticle(t);
+		m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng, *sp1); // Incept a new particle from SP[0]
+		sys.AdjustIncepted(-(sp1->getStatisticalWeight()));                          // Reduce the incepting class count
+		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());              // Reduce the weight of SP[0]
+		sys.Particles().Update(0);                                                   // Update weight of SP[0] in the tree 
+		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 
+		// If incepting class is now empty, pick another particle before adding sp1 to the ensemble
+		if (ip2 == 0 && sys.GetIncepted() == 0)
+		{
+			while (ip2 == 0) // Must select a different particle!
+				ip2 = sys.Particles().Select(pr, rng);
+		}
 
-    // Choose and get unique second particle.  Note, we are allowed to do
-    // this even if the first particle was invalidated.
-    ip2 = ip1;
-    unsigned int guard = 0;
-    switch (term) {
-        case SlipFlow1:
-            while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(rng);
-            break;
-        case SlipFlow2:
-            while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::iD_1, rng);
-            break;
-        case SlipFlow3:
-            while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::iD_1, rng);
-            break;
-        case SlipFlow4:
-            while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::iD_2, rng);
-            break;
-        case FreeMol1:
-            while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::iD2_M_1_2, rng);
-            break;
-        case FreeMol2:
-            while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(Sweep::iM_1_2, rng);
-            break;
-        default :
-            while ((ip2 == ip1) && (++guard<1000))
-                ip2 = sys.Particles().Select(rng);
-            break;
-    }
+		ip1 = sys.Particles().Add(*sp1, rng);                                        // Add the particle to the ensemble
+	}
+	else
+	{
+		if (ip1 >= 0) {
+			sp1 = sys.Particles().At(ip1);
+		}
+		else {
+			// Failed to choose a particle.
+			return -1;
+		}
+	}
 
+    Particle *sp2 = NULL;
 
-    Particle *sp2=NULL;
-    if ((ip2>=0) && (ip2!=ip1)) {
-        sp2 = sys.Particles().At(ip2);
-    } else {
-        // Failed to select a unique particle.
-        return -1;
-    }
+	// Is this an incepting class particle?
+	if (hybrid_flag && ip2 == 0)
+	{
+		sp2 = m_mech->CreateParticle(t);
+		m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng, *sp2); // Incept a new particle from SP[0]
+		// Note we do not need to add it to the ensemble
+		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle 
+	}
+	else
+	{
+		if ((ip2 >= 0) && (ip2 != ip1)) {
+			sp2 = sys.Particles().At(ip2);
+		}
+		else {
+			// Failed to select a unique particle.
+			return -1;
+		}
+	}
 
     //Calculate the majorant rate before updating the particles
     double majk = MajorantKernel(*sp1, *sp2, sys, maj);
@@ -390,8 +520,15 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         // by removing particle 2
         sys.Particles().Update(ip1);
 
-        // Must remove second particle now.
-        sys.Particles().Remove(ip2);
+		if (!ip2_flag)
+			// Must remove second particle now.
+			sys.Particles().Remove(ip2);
+		else
+		{
+			// Particle sp2 is not in the ensemble, must manually delete it
+			delete sp2;
+			sp2 = NULL;
+		}
 
         // Invalidating the index tells this routine not to perform coagulation.
         ip2 = -1;
@@ -431,11 +568,31 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
             truek*=ceff;
         }
         
-        if (!Fictitious(majk, truek, rng)) {
-            JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
+		if (!Fictitious(majk, truek, rng)) {
+			// If particle sp2 is used, we need to remove formally it from the incepting class
+			if (ip2_flag)
+			{
+				sys.AdjustIncepted(-(sp1->getStatisticalWeight()));                          // Reduce the incepting class count
+				sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());              // Reduce the weight of SP[0]
+				sys.Particles().Update(0);                                                   // Update weight of SP[0] in the tree 
+			}
+			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
+			if (ip2_flag && sp2 != NULL)
+			{
+				// Particle sp2 is not in the ensemble, must manually delete it
+				delete sp2;
+				sp2 = NULL;
+			}
         } else {
-            sys.Particles().Update(ip1);
-            sys.Particles().Update(ip2);
+			sys.Particles().Update(ip1);
+			if (!ip2_flag)
+				sys.Particles().Update(ip2);
+			else if (sp2 != NULL)
+			{
+				// Particle sp2 is not in the ensemble, must manually delete it
+				delete sp2;
+				sp2 = NULL;
+			}
             return 1; // Ficticious event.
         }
     } else {
@@ -446,12 +603,23 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         if(ip1 >= 0)
             sys.Particles().Update(ip1);
 
-        if(ip2 >= 0)
-            sys.Particles().Update(ip2);
+		if (ip2 >= 0 && !ip2_flag)
+			sys.Particles().Update(ip2);
+
+		if (ip2_flag && sp2 != NULL)
+		{
+			// Particle sp2 is not in the ensemble, must manually delete it
+			delete sp2;
+			sp2 = NULL;
+		}
     }
 
-    // aab64 Update particle temperature (placeholder)
-    //adjustParticleTemperature(sys, 0, 1, sys.GetIsAdiabaticFlag(), 0, 3);
+	if (ip2_flag && sp2 != NULL)
+	{
+		// Particle sp2 is not in the ensemble, must manually delete it
+		delete sp2;
+		sp2 = NULL;
+	}
 
     return 0;
 }
