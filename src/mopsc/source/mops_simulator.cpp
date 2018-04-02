@@ -2288,6 +2288,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 				}
 
 				////////////////////////////////////////// csl37-pp
+				// print primary data and connection data
 				// loop over particles at last save point
 				if (i == times.size() - 1){
 					for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
@@ -2308,8 +2309,8 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 			
 		}
 		
-		//out[i]->Close(); //comment by hdy
-		//delete out[i]; //comment by hdy
+		//out[i]->Close(); 
+		//delete out[i];
 	}
 	//////////////////////////////////////////// csl37-pp
 	surfout_header.push_back("Particle Index");
@@ -2455,8 +2456,8 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
                 }
             }
 
-			out[i]->Close(); //comment by hdy
-			delete out[i]; //comment by hdy
+			out[i]->Close(); 
+			delete out[i]; 
         }
 
         //! Close output CSV files.
@@ -2553,8 +2554,8 @@ void Simulator::postProcessPPPSLs(const Mechanism &mech,
 				}
 			}
 
-			out[i]->Close(); //comment by hdy
-			delete out[i]; //comment by hdy
+			out[i]->Close();
+			delete out[i];
 		}
 
 		// Close output CSV files.

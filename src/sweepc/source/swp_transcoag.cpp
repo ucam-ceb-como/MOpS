@@ -409,7 +409,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 
         double truek = CoagKernel(*sp1, *sp2, sys);
         double ceff=0;
-		//double ceff = 1; //used to test PAH_KMC model and bintree model
+
         if (majk<truek)
             std::cout << "maj< true"<< std::endl;
 
@@ -417,7 +417,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         if (sys.ParticleModel()->AggModel() == AggModels::PAH_KMC_ID)
         {
             ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
-			//ceff = 1; //hdy, modified to test bintree model and PAH_KMC model
             truek*=ceff;
         }
 

@@ -581,7 +581,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
                 //! Translate particle in 1% increments.
                 this->m_leftchild->Translate(-0.01 * x * sumr, -0.01 * y * sumr, -0.01 * z * sumr);
-				//this->m_leftchild->Translate(-0.001 * x * sumr, -0.001 * y * sumr, -0.001 * z * sumr); //verify the cause for reduction of surface area in bintree model, hdy
+				//this->m_leftchild->Translate(-0.001 * x * sumr, -0.001 * y * sumr, -0.001 * z * sumr); //verify the cause for reduction of surface area in bintree model
 
                 Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
                 
@@ -686,7 +686,6 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
         m_distance_centreToCentre = m_leftparticle->m_primarydiam / 2.0 + m_rightparticle->m_primarydiam / 2.0;
     }
 
-	//UpdateCache(); //add by hdy
 	CheckSintering();
 
     // Must set all the pointer to NULL otherwise the delete function
@@ -1258,7 +1257,6 @@ bool BinTreePrimary::MergeCondition()
 			}
 		}
 	}
-	//condition = false; //add by hdy to test
 	return condition;
 }
 

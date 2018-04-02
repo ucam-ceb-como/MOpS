@@ -63,7 +63,7 @@ const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
 	std::string("Avg. Number of Hydrogen Atoms"),
 	std::string("Avg. Number of Edge Carbon Atoms"),
 	std::string("Avg. Number of Rings"),
-    //std::string("Avg. Coalesc Threshold"),
+    std::string("Avg. Coalesc Threshold"),
 	std::string("Avg. Sint Level"),
     std::string("Num Primaries double Part"),
 };
@@ -79,8 +79,8 @@ const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
 	IModelStats::Avg,  // Avg. Number of Hydrogen atoms
 	IModelStats::Avg,  // Avg. Number of Edge Carbon Atoms
 	IModelStats::Avg,  // Avg. Number of Rings
-    //IModelStats::Avg,  // Avg. Coalesc Threshold
-	IModelStats::Avg,  // Avg. Sintering Level
+    IModelStats::Avg,  // Avg. Coalesc Threshold, if primary coordinates are not tracked
+	IModelStats::Avg,  // Avg. Sintering Level, if primary coordinates are tracked
     IModelStats::Avg,  // Num Primaries double Part
 };
 
@@ -186,7 +186,8 @@ void PAHStats::Calculate(const Ensemble &e, double scale)
             m_stats[iNEDGEC]	  	+= pah->NumEdgeC() * wt;
             m_stats[iNRINGS]	  	+= pah->NumRings() * wt;
             m_stats[iNPAH+1]    	+= pah->NumPAH() * wt; //used to calculate sum of Number of PAHs.
-            m_stats[iSINT]    		+= pah->AvgSinter() * wt;
+			m_stats[iCOAL]          += pah->AvgCoalesc() * wt; //primary coordinates are not tracked.
+            m_stats[iSINT]    		+= pah->AvgSinter() * wt; //if primary coordinates are tracked.
             if (pah->NumPAH() > 1)
             {
                 wtreal += wt;
@@ -354,7 +355,7 @@ void PAHStats::PSL(const Sweep::Particle &sp, double time,
         *(++j) = (double) (pah->sqrtLW());
 		*(++j) = (double) (pah->LdivW());
 		*(++j) = (double) (pah->PrimaryDiam())*1e9/(double)(pah->Numprimary());//convert to nm
-        //*(++j) = (double) (pah->Rg())*1e9; //comment by hdy
+        //*(++j) = (double) (pah->Rg())*1e9; //use function GetRadiusOfGyration() to calculate
 		*(++j) = (double)(pah->GetRadiusOfGyration())*1e9;
         *(++j) = (double) (pah->Fdim());
 
@@ -362,10 +363,6 @@ void PAHStats::PSL(const Sweep::Particle &sp, double time,
         fill (j+1, j+2, 0.0);
     }
 }
-
-
-
-
 
 // READ/WRITE/COPY.
 

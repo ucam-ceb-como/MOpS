@@ -1065,9 +1065,17 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
 			AggModels::PAHPrimary *pah =
 				dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
 
-			// Update individual PAHs within this particle by using KMC code
-			// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
-			pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng, overflow);
+			if (!sys.ParticleModel()->getTrackPrimarySeparation() && !sys.ParticleModel()->getTrackPrimaryCoordinates())
+			{
+				// Update individual PAHs within this particle by using KMC code
+				// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
+				pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng, overflow);
+			}
+			else{
+				double free_surf = pah->GetFreeSurfArea();
+				pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng, overflow, free_surf);
+			}
+
 			pah->UpdateCache();
 
 			if (!sys.ParticleModel()->getTrackPrimarySeparation() && !sys.ParticleModel()->getTrackPrimaryCoordinates())
