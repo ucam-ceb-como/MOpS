@@ -147,9 +147,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
                           rng_type &rng) const {
 
 	// aab64 hybrid particle model
-	// hybrid_flag should be added to the sys object and set as an option input
-	// If hybrid_flag is active, only incept first particle
-	// Then this particle will be used to track the number of incepting particles
+	// If hybrid_flag is active, track the number of incepting particles
 	// using the particle weight
 	if (!m_mech->IsHybrid() || !sys.Particles().IsFirstSP())
 	{

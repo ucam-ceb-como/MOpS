@@ -131,11 +131,10 @@ int DimerInception::Perform(const double t, Cell &sys,
 	// Caution - may introduce large errors in the primary size distribution.
 
 	// aab64 hybrid particle model
-	// hybrid_flag should be added to the sys object and set as an option input
-	// If hybrid_flag is active, only incept first particle
-	// Then this particle will be used to track the number of incepting particles
+	// If hybrid_flag is active, track the number of incepting particles
 	// using the particle weight
-	bool hybrid_flag = m_mech->IsHybrid();
+	if (!m_mech->IsHybrid() || !sys.Particles().IsFirstSP())
+	{
 
 	int iprng = -1;
 	int iprng2 = -1;
@@ -186,8 +185,6 @@ int DimerInception::Perform(const double t, Cell &sys,
 		// aab64 temp change (dcol_1 > dcol_switch) && (dcol_2 <= dcol_switch_min);
 	}
 
-	if (!hybrid_flag || sys.ParticleCount() == 0)
-	{
 		// If surface inception is active AND average particle size is large enough
 		// THEN do surface inception on a random particle.
 		if (surfincflag && sizeflag)
@@ -322,12 +319,12 @@ int DimerInception::Perform(const double t, Cell &sys,
 			sp->UpdateCache();
 
 			// Add particle to system's ensemble.
-			sys.Particles().Add(*sp, rng);
-
-			if (hybrid_flag)
+			if (!m_mech->IsHybrid())
+				sys.Particles().Add(*sp, rng);
+			else
 			{
-				sys.AdjustIncepted(sys.GetInceptingWeight()); // Track the number of particles that have been added
-				sp->SetHybrid(true);
+				sys.Particles().SetInceptedSP(*sp);
+				sys.AdjustIncepted(sys.GetInceptingWeight());
 			}
 
 			// Update gas-phase chemistry of system.
@@ -337,11 +334,11 @@ int DimerInception::Perform(const double t, Cell &sys,
 	}
 	else
 	{
-		// We are here because the hybrid_flag is active and there is already an inception class particle at SP[0]
-		// Increment the count of incepted particles and update SP[0] to inform the tree its weight has changed
-		sys.AdjustIncepted(sys.GetInceptingWeight());
-		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());
-		sys.Particles().Update(0);
+		// We are here because the hybrid_flag is active
+		// Increment the count of incepted particles
+		double wt_new = sys.GetInceptingWeight();
+		sys.AdjustIncepted(wt_new);
+		adjustGas(sys, wt_new);
 		adjustGas(sys, sys.GetInceptingWeight());
 		adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 	}
@@ -368,11 +365,7 @@ int DimerInception::Perform_incepted(const double t, Cell &sys,
 	const Geometry::LocalGeometry1d &local_geom,
 	const unsigned int iterm,
 	rng_type &rng, Sweep::Particle &sp) const {
-
-    // Create a new particle of the type specified
-	// by the system ensemble.
-	// Particle *sp = m_mech->CreateParticle(t);
-
+	
 	// Get the cell vertices
 	fvector vertices = local_geom.cellVertices();
 

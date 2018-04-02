@@ -397,15 +397,14 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         // We must contract the ensemble to accommodate a new particle.
         boost::uniform_smallint<int> indexDistrib(0, m_capacity);
         boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
-		
+
+		i = indexGenerator();
 		// aab64 for hybrid particle model
-		if (m_particles[0]->IsHybrid())
+		if (m_inceptedFirstSP)
 		{
 			while (i == m_capacity)   // Cannot remove the Nth particle as it may be the particle incepted in coagulation
 				i = indexGenerator();
 		}
-		else
-		    i = indexGenerator();
 
         ++m_ncont;
         if (!m_contwarn && ((double)(m_ncont)/(double)m_capacity > 0.01)) {
