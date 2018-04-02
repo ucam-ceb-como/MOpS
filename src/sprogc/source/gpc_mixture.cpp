@@ -169,6 +169,18 @@ double Mixture::GetThermophoreticVelocity() const
 {
     return m_data[ThermophoreticVelocityIndex()];
 }
+
+// Set diffusion term
+void Mixture::SetDiffusionTerm(double D)
+{
+    m_data[DiffusionTermIndex()] = D;
+}
+
+// Get diffusion term
+double Mixture::GetDiffusionTerm() const
+{
+    return m_data[DiffusionTermIndex()];
+}
 // CONCENTRATIONS/FRACTIONS.
 
 // Returns the vector of mixture species mole fractions. (NO NEED CHANGING)
