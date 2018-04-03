@@ -168,7 +168,7 @@ public:
 		PartPtrVector &overflow, double fs);
 
 	//! adjust the primary after surface growth in PAH_KMC model.
-	void PAHPrimary::Adjust(const double old_vol);
+	void Adjust(const double old_vol);
 
     //! adds a PAH to a particle
     void AddPAH(double time, const Sweep::ParticleModel &model);
@@ -287,7 +287,7 @@ public:
 	double SinteringLevel();
 
 	//! Returns the cap volume of two connected primary particles
-	double PAHPrimary::CalcChildrenSumCap();
+	double CalcChildrenSumCap();
 
 
 protected:
