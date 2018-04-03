@@ -2435,6 +2435,15 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                     // Output particle PSL to CSV file.
                     out[i]->Write(psl);
                 }
+				// aab64 for hybrid particle model
+				if (r->Mixture()->Particles().IsFirstSP())
+				{
+					stats.PSL((r->Mixture()->Particles().GetInceptedSP()), mech.ParticleMech(),
+						times[i].EndTime(), psl,
+						1.0 / (r->Mixture()->SampleVolume()*scale));
+					// Output particle PSL to CSV file.
+					out[i]->Write(psl);
+				}
 
                 // Draw particle images for tracked particles.
                 unsigned int n = min(m_ptrack_count,r->Mixture()->ParticleCount());

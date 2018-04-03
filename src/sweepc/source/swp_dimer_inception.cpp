@@ -339,8 +339,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 		double wt_new = sys.GetInceptingWeight();
 		sys.AdjustIncepted(wt_new);
 		adjustGas(sys, wt_new);
-		adjustGas(sys, sys.GetInceptingWeight());
-		adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+		adjustParticleTemperature(sys, wt_new, 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 	}
 
     return 0;

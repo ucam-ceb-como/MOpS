@@ -427,8 +427,10 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 		// aab64
 		double wi = m_particles[i]->getStatisticalWeight();
 		double wsp = sp.getStatisticalWeight();
-		m_wtdcontfctr *= (m_tree.head().Property(iW) + wsp - wi);
-		m_wtdcontfctr *= 1.0 / (m_tree.head().Property(iW) + wsp);
+		double wincep = m_inceptingWeight;
+		double wtot = m_tree.head().Property(iW) + wincep;
+		m_wtdcontfctr *= (wtot + wsp - wi);
+		m_wtdcontfctr *= 1.0 / (wtot + wsp);
 
         Replace(i, sp);
 	}
@@ -436,8 +438,10 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 
 		// aab64
 		double wsp = sp.getStatisticalWeight();
-		m_wtdcontfctr *= (m_tree.head().Property(iW) + wsp - wsp);
-		m_wtdcontfctr *= 1.0 / (m_tree.head().Property(iW) + wsp);
+		double wincep = m_inceptingWeight;
+		double wtot = m_tree.head().Property(iW) + wincep;
+		m_wtdcontfctr *= (wtot + wsp - wsp);
+		m_wtdcontfctr *= 1.0 / (wtot + wsp);
 
         // The new particle is to be removed immediately
         assert(static_cast<unsigned int>(i) == m_capacity);
@@ -966,6 +970,17 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
+		// aab64 for hybrid particle model
+		if (m_inceptedFirstSP) {
+			out.write((char*)&trueval, sizeof(trueval));
+			std::set<void*> uniquePAHAdresses2;
+			m_inceptingSP->Serialize(out, &uniquePAHAdresses2);
+		}
+		else {
+			out.write((char*)&falseval, sizeof(falseval));
+		}
+
+
     } else {
         throw std::invalid_argument("Output stream not ready "
                                "(Sweep, Ensemble::Serialize).");
@@ -1053,6 +1068,19 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
 
                 // Calculate binary tree.
                 rebuildTree();
+
+				// Read the particles.
+				// aab64 for hybrid particle model
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+				if (n == 1) {
+					m_inceptedFirstSP = true;
+					std::map<void*, boost::shared_ptr<AggModels::PAHPrimary> > duplicates2;
+					Particle *p = new Particle(in, model, &duplicates2);
+					m_inceptingSP = p;
+				}
+				else {
+					m_inceptedFirstSP = false;
+				}
 
                 break;
 			}
