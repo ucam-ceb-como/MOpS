@@ -1299,14 +1299,16 @@ BinTreePrimary &BinTreePrimary::Merge()
 		
 		//double V_prim = small_prim->m_primaryvol;		//csl37- should we use m_primaryvol or m_vol here?
 		double V_prim = small_prim->m_vol;	//!< Volume of smaller primary
-		//! If there is a cap, calculate cap volume of larger primary
-		double V_cap = 0.0;
-		if(d_ij+r_small > r_big) V_cap = 2.0*M_PI*r_big*r_big*r_big/3.0 + M_PI*x_ij*x_ij*x_ij/3.0 - M_PI*r_big*r_big*x_ij;
-		//! Subtract cap volume from the merging primary's volume
-		double dV = max(V_prim - V_cap, 0.0);
-		//! Adjust larger primary to incorporate excess volume
-		if ((m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) && dV>0.0){
-			big_prim->AdjustPrimary(dV,d_ij,small_prim);
+		//! If there is a cap (i.e. the smaller primary isn't completely enclosed)
+		if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()){
+			if(d_ij+r_small > r_big) {
+				//! calculate cap volume of larger primary
+				double V_cap = 2.0*M_PI*r_big*r_big*r_big/3.0 + M_PI*x_ij*x_ij*x_ij/3.0 - M_PI*r_big*r_big*x_ij;
+				//! Subtract cap volume from the merging primary's volume
+				double dV = max(V_prim - V_cap, 0.0);
+				//! Adjust larger primary to incorporate excess volume		
+				if(dV > 0.0) big_prim->AdjustPrimary(dV,d_ij,small_prim);
+			}
 		}
 
         if (m_leftchild==m_leftparticle && m_rightchild==m_rightparticle)
@@ -1762,6 +1764,10 @@ double BinTreePrimary::AddNeighbour(double A_n_k, BinTreePrimary *small_prim, Bi
 		//this is to be excluded from the sum over necks anyway.
 		double B_ik = - A_n_i / ( m_free_surf + m_sum_necks - 2*M_PI*(r_i*r_i - r_i*x_ik) );
 		
+		//csl37-test
+		assert(B_ik < 0);
+		//csl37-test
+
 		//! Change in radius
 		dr_i = B_ik * dx_max;
 		//! Save old neck size
@@ -1830,7 +1836,7 @@ void BinTreePrimary::AdjustPrimary(double V1, double d_ij, BinTreePrimary *prim_
 		r_i = m_primarydiam / 2.0;
 
 		//! change in volume (exclude contribution from merging neck)
-		double dV = dr_max * (m_free_surf + 2.0*M_PI*(r_i*r_i - r_i*x_i) + max(m_sum_necks - M_PI*(r_i*r_i - x_i*x_i)*r_i/x_i ,0.0)) ;
+		double dV = dr_max * (m_free_surf + 2.0*M_PI*(r_i*r_i - r_i*x_i) + max(m_sum_necks - abs(M_PI*(r_i*r_i - x_i*x_i)*r_i/x_i) ,0.0));
 
 		//csl37-test
 		assert(dV > 0.0);
@@ -2404,7 +2410,7 @@ void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &CapAreas, double &Cap
 		CapVolumes += M_PI * (2*pow(r_i,3.0) + pow(x_ij,3.0) - 3.0*pow(r_i,2.0)*x_ij ) /3.0;
 
 		//! Neck area * r_i / x_ij
-		SumNecks +=  max(M_PI*(r_i*r_i - x_ij*x_ij) * r_i / x_ij,0.0);
+		SumNecks +=  abs(M_PI*(r_i*r_i - x_ij*x_ij) * r_i / x_ij);
 
 	} else if(m_parent->m_rightparticle == prim) {
 		
@@ -2420,7 +2426,7 @@ void BinTreePrimary::SumCaps(BinTreePrimary *prim, double &CapAreas, double &Cap
 		CapVolumes += M_PI * (2*pow(r_i,3.0) + pow(x_ij,3.0) - 3.0*pow(r_i,2.0)*x_ij ) /3.0;
 	
 		//! Neck area * r_i / x_ij
-		SumNecks += max(M_PI*(r_i*r_i - x_ij*x_ij) * r_i / x_ij,0.0);
+		SumNecks += abs(M_PI*(r_i*r_i - x_ij*x_ij) * r_i / x_ij);
 	}
 
 	//csl37-test
