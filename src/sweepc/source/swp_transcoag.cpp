@@ -330,6 +330,9 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	double inceptingcoagulationchange = (exist_t > 0) ? (sys.GetInceptionCoagulationChange() / exist_t) : 0;
 	double sp_age = 0;
 
+	if (!hybrid_flag)
+		inceptingcoagulationchange = 1;
+
 	boost::exponential_distribution<double> waitDistrib(inceptingcoagulationchange);
 	boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<double> > waitGenerator(rng, waitDistrib);
 
@@ -620,17 +623,21 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 
 	TermType term = (TermType)iterm;
 	
-	double wt_incep = sys.Particles().GetInceptedSP().getStatisticalWeight();
-	double dc_incep = sys.Particles().GetInceptedSP().CollDiameter();
-	double sqrt_m_incep = std::sqrt(sys.Particles().GetInceptedSP().Mass());
-	
+	double wt_incep = 0, dc_incep = 0, sqrt_m_incep = 0;
+
+	if (hybrid_flag)
+	{
+		ip1 = -2;
+		wt_incep = sys.Particles().GetInceptedSP().getStatisticalWeight();
+		dc_incep = sys.Particles().GetInceptedSP().CollDiameter();
+		sqrt_m_incep = std::sqrt(sys.Particles().GetInceptedSP().Mass());
+	}
 	double test = unifDistrib();
 
 	switch (term) {
 	case SlipFlow1:
 		if (hybrid_flag)
 		{
-			ip1 = -2;
 			double wt_other = sys.Particles().Count();
 			wt_frac = wt_other / (wt_other + wt_incep);
 		}
@@ -641,7 +648,6 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 	case SlipFlow2:
 		if (hybrid_flag)
 		{
-			ip1 = -2;
 			double d_incep = wt_incep * dc_incep;
 			double d_other = sys.Particles().GetSum(iDcol);
 			d_frac = d_other / (d_other + d_incep);
@@ -653,7 +659,6 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 	case SlipFlow3:
 		if (hybrid_flag)
 		{
-			ip1 = -2;
 			double wt_other = sys.Particles().Count();
 			wt_frac = wt_other / (wt_other + wt_incep);
 		}
@@ -664,7 +669,6 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 	case SlipFlow4:
 		if (hybrid_flag)
 		{
-			ip1 = -2;
 			double d_incep = wt_incep * dc_incep;
 			double d_other = sys.Particles().GetSum(iDcol);
 			d_frac = d_other / (d_other + d_incep);
@@ -676,7 +680,6 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 	case FreeMol1:
 		if (hybrid_flag)
 		{
-			ip1 = -2;
 			double wt_other = sys.Particles().Count();
 			wt_frac = wt_other / (wt_other + wt_incep);
 		}
@@ -687,7 +690,6 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 	case FreeMol2:
 		if (hybrid_flag)
 		{
-			ip1 = -2;
 			double d2_incep = wt_incep * dc_incep * dc_incep;
 			double d2_other = sys.Particles().GetSum(iD2);
 			d2_frac = d2_other / (d2_other + d2_incep);
@@ -699,7 +701,6 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 	default:
 		if (hybrid_flag)
 		{
-			ip1 = -2;
 			double wt_other = sys.Particles().Count();
 			wt_frac = wt_other / (wt_other + wt_incep);
 		}
