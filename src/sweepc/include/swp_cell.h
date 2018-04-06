@@ -260,6 +260,11 @@ public:
 	double GetIncepted() const { return m_incepted; }
 	void AdjustIncepted(double adjustment);
 
+	void AdjustInceptions() { ++m_inceptions; }
+	void AdjustInceptions(double adjustment) { m_inceptions += adjustment; }
+	void AdjustInceptingCoagulations() { ++m_inceptingcoagulations; }
+	double GetInceptionCoagulationChange() const { return (m_inceptions - m_inceptingcoagulations); }
+
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
@@ -328,6 +333,8 @@ private:
 
 	// aab64 tracker for incepted particles in place of physical inceptions
 	double m_incepted;
+	double m_inceptions;
+	double m_inceptingcoagulations;
 };
 
 } //namespace Sweep

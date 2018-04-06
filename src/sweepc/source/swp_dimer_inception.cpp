@@ -325,6 +325,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 			{
 				sys.Particles().SetInceptedSP(*sp);
 				sys.AdjustIncepted(sys.GetInceptingWeight());
+				sys.AdjustInceptions();
 			}
 
 			// Update gas-phase chemistry of system.
@@ -340,6 +341,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 		sys.AdjustIncepted(wt_new);
 		adjustGas(sys, wt_new);
 		adjustParticleTemperature(sys, wt_new, 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+		sys.AdjustInceptions();
 	}
 
     return 0;
