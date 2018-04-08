@@ -198,6 +198,14 @@ void NetworkSimulator::Run(
 			deathFile1 << "Time (s)" << " , " << "Num" << " , " << "RTD" << " , " << "wt" << " , " << "age" << " , " << "mass" << "\n";
 			deathFile1.close();*/
 
+			/*ofstream pscFile1;
+			std::string pscfname;
+			pscfname = "sp_update_times.csv";
+			pscFile1.open(pscfname.c_str());
+			// t maj ip1 ip1flag ip2 ip2flag sp1_wt sp2_wt sp1_d sp2_d sp1_age sp2_age sp1_lut sp2_lut coag successful
+			pscFile1 << "Time (s) , maj, N, Ninc, ip1_flag , ip1 , ip2_flag , ip2 , sp1_wt , sp2_wt , sp1_dp , sp2_dp , sp1_age , sp2_age , sp1_lut , sp2_lut , coag successful? \n";
+			pscFile1.close();*/
+
 			//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 			if (it->sim->GetWriteDiagsStatus()) {
 				/* Create partProc diagnostics csv file with pre/post split SV, #SPs, #events in split

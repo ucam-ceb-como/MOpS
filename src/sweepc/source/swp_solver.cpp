@@ -180,7 +180,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 		double dcol_lim = mech.GetHeavyValue();
 		double dcol_lim_min = mech.GetHeavyCutoffValue();
 
-		if (nnew > 1) 
+		if (nnew > 1 && heavyAllowed)
 		{
 			// Get average particle collision diameter
 			dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);

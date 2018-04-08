@@ -133,13 +133,13 @@ int DimerInception::Perform(const double t, Cell &sys,
 	// aab64 hybrid particle model
 	// If hybrid_flag is active, track the number of incepting particles
 	// using the particle weight
-	if (!m_mech->IsHybrid() || !sys.Particles().IsFirstSP())
+	if (!m_mech->IsHybrid() || !sys.Particles().IsFirstSP()) //  || (sys.GetIncepted()==1 && sys.ParticleCount() < 1000)
 	{
 
 	int iprng = -1;
 	int iprng2 = -1;
 	unsigned int nsp = sys.ParticleCount();
-	double dcol_ave, dcol_1, dcol_2, sw_0, sw_1;
+	double dcol_1, dcol_2, sw_0, sw_1;
 	Particle *sprng = NULL;
 	Particle *sprng2 = NULL;
 	
@@ -153,7 +153,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 	Sweep::PropID prop1 = sys.getCoagProp1();
 	Sweep::PropID prop2 = sys.getCoagProp2();
 
-	if (nsp > 1) 
+	if (nsp > 1 && surfincflag) 
 	{
 		// Get average particle collision diameter
 		//dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
@@ -319,7 +319,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 			sp->UpdateCache();
 
 			// Add particle to system's ensemble.
-			if (!m_mech->IsHybrid())
+			if (!m_mech->IsHybrid()) //|| sys.GetIncepted() == 1
 				sys.Particles().Add(*sp, rng);
 			else
 			{
@@ -335,11 +335,13 @@ int DimerInception::Perform(const double t, Cell &sys,
 	}
 	else
 	{
+		boost::uniform_01<rng_type&, double> uniformGenerator(rng); // temporary
+		double posn = uniformGenerator(); // temporary
 		// We are here because the hybrid_flag is active
 		// Increment the count of incepted particles
 		double wt_new = sys.GetInceptingWeight();
 		sys.AdjustIncepted(wt_new);
-		adjustGas(sys, wt_new);
+		adjustGas(sys, wt_new, 1, sys.GetInceptionFactor());
 		adjustParticleTemperature(sys, wt_new, 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 		sys.AdjustInceptions();
 	}

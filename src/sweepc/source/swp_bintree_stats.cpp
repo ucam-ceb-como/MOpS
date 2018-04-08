@@ -139,8 +139,8 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
     // Calculate total weight
-    double TotalWeight = e.Count()>0 ? e.GetSum(iW) : 0.0;
-    double invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+	double TotalWeight = (e.Count() + e.GetIncepted())>0 ? (e.GetSum(iW) + e.GetIncepted()) : 0.0;
+	double invTotalWeight = (e.Count() + e.GetIncepted())>0 ? 1.0 / (e.GetSum(iW) + e.GetIncepted()) : 0.0;
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
@@ -181,6 +181,37 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
             ++n;
         }
     }
+
+	if (e.GetIncepted() != 0)
+	{
+		Sweep::Particle * sp_temp = e.GetInceptedSP().Clone();
+		const AggModels::BinTreePrimary * const prim =
+			dynamic_cast<const AggModels::BinTreePrimary*>(sp_temp->Primary());
+
+		double sz = e.GetInceptedSP().Property(m_statbound.PID);
+		double wt = e.GetInceptedSP().getStatisticalWeight() * invTotalWeight;
+
+		// Check if the value of the property is within the stats bound
+		if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {
+			// Sum stats from this particle.
+			m_stats[iNPrim] += prim->GetNumPrimary()  * wt;
+			m_stats[iPrimDiam] += prim->GetPrimaryDiam() * wt
+				/ (double)prim->GetNumPrimary();
+			m_stats[iSintLevel] += prim->GetAvgSinterLevel() * wt;
+			m_stats[iSintRate] += prim->GetSintRate() * wt;
+			m_stats[iSintTime] += prim->GetSintTime() * wt;
+			m_stats[iGStdevMean] += prim->GetPrimaryGStdDev() * wt;
+
+			// Collect the collision and primary diameters
+			d.push_back(prim->CollDiameter());
+			d.push_back(prim->GetPrimaryDiam() / (double)prim->GetNumPrimary());
+			diams.push_back(d);
+			weights.push_back(wt);
+			d.clear();
+
+			++n;
+		}
+	}
 
     // Now get the geometric standard devs, using [0] for dcol, [1] for dpri
     // Default to 1.0 GSTDEV (Can't have GSTDEV=0)

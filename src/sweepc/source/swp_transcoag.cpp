@@ -92,13 +92,21 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 
         // Calculate the rate.
 		if (m_mech->IsHybrid())
-			return Rate(sys.Particles().GetSums(), (double)n, sqrt(T),
-                    T/sys.GasPhase().Viscosity(), MeanFreePathAir(T,P),
-					sys.SampleVolume(), &sys.Particles().GetInceptedSP());
+		{
+			double rate = Rate(sys.Particles().GetSums(), (double)n, sqrt(T),
+				T / sys.GasPhase().Viscosity(), MeanFreePathAir(T, P),
+				sys.SampleVolume(), &sys.Particles().GetInceptedSP());
+			//std::cout << "Coag: " << t << " , " << rate << std::endl;
+			return rate;
+		}
 		else
-			return Rate(sys.Particles().GetSums(), (double)n, sqrt(T),
-			T / sys.GasPhase().Viscosity(), MeanFreePathAir(T, P),
-			sys.SampleVolume(), nullptr);
+		{
+			double rate = Rate(sys.Particles().GetSums(), (double)n, sqrt(T),
+				T / sys.GasPhase().Viscosity(), MeanFreePathAir(T, P),
+				sys.SampleVolume(), nullptr);
+			//std::cout << "Coag: " << t << " , " << rate << std::endl;
+			return rate;
+		}
     } else {
         return 0.0;
     }
@@ -197,19 +205,25 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 			n += sys.GetIncepted();
 
     // Check that there are at least 2 particles before calculating rate.
-    if (n > 1) {
-        // Get system properties required to calculate coagulation rate.
-        double T = sys.GasPhase().Temperature();
-        double P = sys.GasPhase().Pressure();
+	if (n > 1) {
+		// Get system properties required to calculate coagulation rate.
+		double T = sys.GasPhase().Temperature();
+		double P = sys.GasPhase().Pressure();
 
-        // Calculate the rate terms.
+		// Calculate the rate terms.
 		if (m_mech->IsHybrid())
-			return RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T/sys.GasPhase().Viscosity(),
-                         MeanFreePathAir(T,P), sys.SampleVolume(), iterm, &sys.Particles().GetInceptedSP());
+		{
+			double rate = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T / sys.GasPhase().Viscosity(),
+			MeanFreePathAir(T, P), sys.SampleVolume(), iterm, &sys.Particles().GetInceptedSP());
+			//std::cout << "Coag: " << t << " , " << rate << std::endl;
+		    return rate;
+	    }
 		else
 		{
-			return RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T / sys.GasPhase().Viscosity(),
+			double rate = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T / sys.GasPhase().Viscosity(),
 				MeanFreePathAir(T, P), sys.SampleVolume(), iterm, nullptr);
+			//std::cout << "Coag: " << t << " , " << rate << std::endl;
+			return rate;
 		}
     } else {
         // No coagulation as there are too few particles.
@@ -370,7 +384,9 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	else
 	{
 		if (ip1 >= 0) {
-			sp1 = sys.Particles().At(ip1);
+			sp1 = sys.Particles().At(ip1); 
+			double just = waitGenerator(); // temporary
+			double just2 = waitGenerator(); // temporary
 		}
 		else {
 			// Failed to choose a particle.
@@ -397,6 +413,8 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	{
 		if ((ip2 >= 0) && (ip2 != ip1)) {
 			sp2 = sys.Particles().At(ip2);
+			double just = waitGenerator(); // temporary
+			double just2 = waitGenerator(); // temporary
 		}
 		else {
 			// Failed to select a unique particle.
@@ -408,7 +426,13 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	std::string pscfname;
 	pscfname = "sp_update_times.csv";
 	pscFile.open(pscfname.c_str(), std::ios::app);
-	pscFile << t << " , " << ip1_flag << " , " << sp1->LastUpdateTime() << " , " << ip2_flag << " , " << sp2->LastUpdateTime() << "\n";
+	// t maj ip1 ip1flag ip2 ip2flag sp1_wt sp2_wt sp1_d sp2_d sp1_age sp2_age sp1_lut sp2_lut coag successful
+	pscFile << t << " , " << term << " , " << sys.ParticleCount() << " , " << sys.GetIncepted() << " , "
+		<< ip1_flag << " , " << ip1 << " , " << ip2_flag << " , " << ip2 << " , " 
+		<< sp1->getStatisticalWeight() << " , " << sp2->getStatisticalWeight() << " , "
+		<< sp1->Primary()->CollDiameter() << " , " << sp2->Primary()->CollDiameter() << " , " 
+		<< sp1->CreateTime() << " , " << sp2->CreateTime() << " , "
+		<< sp1->LastUpdateTime() << " , " << sp2->LastUpdateTime() << " , ";
 	pscFile.close();*/
 
     //Calculate the majorant rate before updating the particles
@@ -502,6 +526,9 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				delete sp2;
 				sp2 = NULL;
 			}
+			/*pscFile.open(pscfname.c_str(), std::ios::app);
+			pscFile << 1 << "\n";
+			pscFile.close();*/
         } 
 		else 
 		{
@@ -519,7 +546,10 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				sp2 = NULL;
 				sys.SetNotPSIFlag(true);
 			}
-            return 1; // Ficticious event.
+			/*pscFile.open(pscfname.c_str(), std::ios::app);
+			pscFile << 0 << "\n";
+			pscFile.close();
+            return 1; // Ficticious event.*/
         }
     } 
 	else 
@@ -550,6 +580,8 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			delete sp2;
 			sp2 = NULL;
 		}
+		/*pscFile << -1 << "\n";
+		pscFile.close();*/
     }
 
 	if (ip2_flag && sp2 != NULL)
@@ -643,6 +675,8 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 		}
 		if (!hybrid_flag || test <= wt_frac)
 			ip1 = sys.Particles().Select(rng);
+		else
+			test = unifDistrib(); // temporary
 		maj = SlipFlow;
 		break;
 	case SlipFlow2:
@@ -654,6 +688,8 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 		}
 		if (!hybrid_flag || test <= d_frac)
 			ip1 = sys.Particles().Select(iDcol, rng);
+		else
+			test = unifDistrib(); // temporary
 		maj = SlipFlow;
 		break;
 	case SlipFlow3:
@@ -664,6 +700,8 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 		}
 		if (!hybrid_flag || test <= wt_frac)
 			ip1 = sys.Particles().Select(rng);
+		else
+			test = unifDistrib(); // temporary
 		maj = SlipFlow;
 		break;
 	case SlipFlow4:
@@ -675,6 +713,8 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 		}
 		if (!hybrid_flag || test <= d_frac)
 			ip1 = sys.Particles().Select(iDcol, rng);
+		else
+			test = unifDistrib(); // temporary
 		maj = SlipFlow;
 		break;
 	case FreeMol1:
@@ -685,6 +725,8 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 		}
 		if (!hybrid_flag || test <= wt_frac)
 			ip1 = sys.Particles().Select(rng);
+		else
+			test = unifDistrib(); // temporary
 		maj = FreeMol;
 		break;
 	case FreeMol2:
@@ -696,6 +738,8 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 		}
 		if (!hybrid_flag || test <= d2_frac)
 			ip1 = sys.Particles().Select(iD2, rng);
+		else
+			test = unifDistrib(); // temporary
 		maj = FreeMol;
 		break;
 	default:
@@ -706,9 +750,12 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 		}
 		if (!hybrid_flag || test <= wt_frac)
 			ip1 = sys.Particles().Select(rng);
+		else
+			test = unifDistrib(); // temporary
 		maj = SlipFlow;
 		break;
 	}
+	++test; // temporary
 
 	// Choose and get unique second particle.  Note, we are allowed to do
 	// this even if the first particle was invalidated.
@@ -729,7 +776,10 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 				ip2 = sys.Particles().Select(rng);
 		}
 		else
+		{
 			ip2 = -2;
+			test = unifDistrib(); // temporary
+		}
 		break;
 	case SlipFlow2:
 		if (hybrid_flag)
@@ -744,7 +794,10 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 				ip2 = sys.Particles().Select(iD_1, rng);
 		}
 		else
+		{
 			ip2 = -2;
+			test = unifDistrib(); // temporary
+		}
 		break;
 	case SlipFlow3:
 		if (hybrid_flag)
@@ -759,7 +812,10 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 				ip2 = sys.Particles().Select(iD_1, rng);
 		}
 		else
+		{
 			ip2 = -2;
+			test = unifDistrib(); // temporary
+		}
 		break;
 	case SlipFlow4:
 		if (hybrid_flag)
@@ -774,7 +830,10 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 				ip2 = sys.Particles().Select(iD_2, rng);
 		}
 		else
+		{
 			ip2 = -2;
+			test = unifDistrib(); // temporary
+		}
 		break;
 	case FreeMol1:
 		if (hybrid_flag)
@@ -789,7 +848,10 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 				ip2 = sys.Particles().Select(iD2_M_1_2, rng);
 		}
 		else
+		{
 			ip2 = -2;
+			test = unifDistrib(); // temporary
+		}
 		break;
 	case FreeMol2:
 		if (hybrid_flag)
@@ -804,7 +866,10 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 				ip2 = sys.Particles().Select(iM_1_2, rng);
 		}
 		else
+		{
 			ip2 = -2;
+			test = unifDistrib(); // temporary
+		}
 		break;
 	default:
 		if (hybrid_flag)
@@ -818,9 +883,13 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 				ip2 = sys.Particles().Select(rng);
 		}
 		else
+		{
 			ip2 = -2;
+			test = unifDistrib(); // temporary
+		}
 		break;
 	}
+	++test; // temporary
 }
 
 // COAGULATION KERNELS.
