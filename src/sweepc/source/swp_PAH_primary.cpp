@@ -1624,8 +1624,7 @@ PAHPrimary &PAHPrimary::Merge()
 			r_small = small_prim->m_primarydiam / 2.0;
 			x_ij = min((d_ij*d_ij - r_small*r_small + r_big*r_big) / (2.0*d_ij), r_big); //!<distance from neck to centre of larger primary (x_ij < r_i)
 
-			double V_prim = small_prim->m_vol;	//!< Volume of smaller primary
-			//double V_prim = small_prim->m_primaryvol;		//csl37- should we use m_primaryvol or m_vol here?
+			double V_prim = small_prim->m_primaryvol; //!< Volume of smaller primary
 			
 			//! If there is a cap (i.e. the smaller primary isn't completely enclosed)
 			if (d_ij + r_small > r_big){
