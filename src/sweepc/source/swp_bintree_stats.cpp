@@ -61,7 +61,8 @@ const std::string BinTreeStats::m_statnames[BinTreeStats::STAT_COUNT] = {
     std::string("GStdev of Avg. Primary Diameter (-)"),
     std::string("Mean GStdev of Primary Diameter (-)"),
     std::string("GMean of Collision Diameter (m)"),
-    std::string("GMean of Avg. Primary Diameter (m)")
+    std::string("GMean of Avg. Primary Diameter (m)"),
+	std::string("Avg. Radius of Gyration (m)")
 };
 
 const IModelStats::StatType BinTreeStats::m_mask[BinTreeStats::STAT_COUNT] = {
@@ -74,7 +75,8 @@ const IModelStats::StatType BinTreeStats::m_mask[BinTreeStats::STAT_COUNT] = {
     IModelStats::Avg,  // Gstdev of mean dpri
     IModelStats::Avg,  // Mean gstdev of dpri
     IModelStats::Avg,  // Gmean of dcol
-    IModelStats::Avg   // Gmean of avg dpri
+    IModelStats::Avg,  // Gmean of avg dpri
+	IModelStats::Avg   // Radius of gyration
 };
 
 const std::string BinTreeStats::m_const_pslnames[BinTreeStats::PSL_COUNT] = {
