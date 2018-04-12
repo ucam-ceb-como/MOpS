@@ -99,6 +99,9 @@ protected:
     //* The gas-phase chemistry profile.
     GasProfile m_gas_prof;
 
+	//! Stagnation flame correction flag
+	bool m_stagnation;
+
     // HELPER FUNCTIONS.
 
     // Uses linear interpolation to return the chemical conditions
