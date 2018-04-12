@@ -1397,45 +1397,49 @@ double PAHPrimary::GetRadiusOfGyration() const
 	double rix, riy, riz, rjx, rjy, rjz, drx, dry, drz;
 	vector<fvector> coords;
 
-	this->GetPriCoords(coords);
+	if (m_numprimary == 1) {
+		//if single primary return the primary radius	
+		Rg = m_primarydiam / 2.0;
 
-	if (m_pmodel->getTrackPrimaryCoordinates()) {
-		//! Calculation is based on Eq. (1) in R. Jullien, Transparency effects
-		//! in cluster-cluster aggregation with linear trajectories, J. Phys. A
-		//! 17 (1984) L771-L776. 
-		for (int i = 0; i != coords.size(); ++i) {
-			for (int j = 0; j != coords.size(); ++j) {
-				rix = coords[i][0];
-				riy = coords[i][1];
-				riz = coords[i][2];
+	}else{
 
-				rjx = coords[j][0];
-				rjy = coords[j][1];
-				rjz = coords[j][2];
+		this->GetPriCoords(coords);
 
-				//! Expansion of (r_i - r_j)^2 term. Dot product of r vectors.
-				sum += rix * rix + riy * riy + riz * riz +
-					rjx * rjx + rjy * rjy + rjz * rjz -
-					2 * (rix * rjx + riy * rjy + riz * rjz);
+		if (m_pmodel->getTrackPrimaryCoordinates()) {
+			//! Calculation is based on Eq. (1) in R. Jullien, Transparency effects
+			//! in cluster-cluster aggregation with linear trajectories, J. Phys. A
+			//! 17 (1984) L771-L776. 
+			for (int i = 0; i != coords.size(); ++i) {
+				for (int j = 0; j != coords.size(); ++j) {
+					rix = coords[i][0];
+					riy = coords[i][1];
+					riz = coords[i][2];
+
+					rjx = coords[j][0];
+					rjy = coords[j][1];
+					rjz = coords[j][2];
+
+					//! Expansion of (r_i - r_j)^2 term. Dot product of r vectors.
+					sum += rix * rix + riy * riy + riz * riz +
+						rjx * rjx + rjy * rjy + rjz * rjz -
+						2 * (rix * rjx + riy * rjy + riz * rjz);
+				}
 			}
+
+			Rg = sqrt(sum / 2 / coords.size() / coords.size());
 		}
+		else {
+			for (unsigned int i = 0; i != coords.size(); ++i) {
+				//! Mass is proportional to the cube of the radius.
+				mass = coords[i][3] * coords[i][3] * coords[i][3];
+				r2 = coords[i][0] * coords[i][0] + coords[i][1] * coords[i][1] + coords[i][2] * coords[i][2];
+				sum += mass * r2;
+				totalmass += mass;
+			}
 
-		Rg = sqrt(sum / 2 / coords.size() / coords.size());
+			Rg = sqrt(sum / totalmass);
+		}	
 	}
-	else {
-		for (unsigned int i = 0; i != coords.size(); ++i) {
-			//! Mass is proportional to the cube of the radius.
-			mass = coords[i][3] * coords[i][3] * coords[i][3];
-			r2 = coords[i][0] * coords[i][0] + coords[i][1] * coords[i][1] + coords[i][2] * coords[i][2];
-			sum += mass * r2;
-			totalmass += mass;
-		}
-
-		Rg = sqrt(sum / totalmass);
-	}
-
-	//if single primary return the primary radius
-	if (m_numprimary == 1) Rg = sqrt(2.0 / 5.0) * m_primarydiam / 2.0;
 
 	return Rg;
 }
