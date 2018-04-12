@@ -3866,7 +3866,10 @@ double PAHPrimary::AvgCoalesc() const
 
 double PAHPrimary::AvgSinter() const
 {
-    return m_avg_sinter;
+	if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates())
+		return m_avg_sinter;
+	else
+		return m_avg_coalesc;
 }
 
 //! Return distance between the centres of primary particles.

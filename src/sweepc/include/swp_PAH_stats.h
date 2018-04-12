@@ -152,7 +152,7 @@ public:
 
 private:
     // Stats count and indices.
-    static const unsigned int STAT_COUNT = 13; //modified by hdy, used to be 12
+    static const unsigned int STAT_COUNT = 12; //modified by hdy, used to be 12
     enum StatIndices {
         iNPAH=0,      // m_numPAH
         iPARTSURF=2,  // m_surf, the surface area for primary partilcle
@@ -170,7 +170,7 @@ private:
         iavgdim=14,   // m_primarydiam/m_numprimary, Avg. primary diameter
         irgyr=15,     // m_Rg, Radius of gyration
         ifdim=16,     // m_fdim
-		iCOAL=17      // m_avg_coalesc, if primary coordinates are not tracked
+		//iCOAL=17      // m_avg_coalesc, if primary coordinates are not tracked
     };
 
     // PSL count and indices.
