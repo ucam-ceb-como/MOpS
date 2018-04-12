@@ -409,6 +409,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 
         double truek = CoagKernel(*sp1, *sp2, sys);
         double ceff=0;
+
         if (majk<truek)
             std::cout << "maj< true"<< std::endl;
 

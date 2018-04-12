@@ -959,7 +959,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 		int ind = 0;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
 			oldweight = (*(*i)).getStatisticalWeight();
-            UpdateParticle(*(*i), sys, t, ind, rng, overflow);
+            UpdateParticle(*(*i), sys, t, ind, rng, overflow); 
 			if (oldweight != (*(*i)).getStatisticalWeight()){
 				sys.Particles().Update(ind);
 			}
@@ -1065,12 +1065,24 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
 			AggModels::PAHPrimary *pah =
 				dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
 
-			// Update individual PAHs within this particle by using KMC code
-			// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
-			pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng, overflow);
+			if (!sys.ParticleModel()->getTrackPrimarySeparation() && !sys.ParticleModel()->getTrackPrimaryCoordinates())
+			{
+				// Update individual PAHs within this particle by using KMC code
+				// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
+				pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng, overflow);
+			}
+			else{
+				double free_surf = pah->GetFreeSurfArea();
+				pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng, overflow, free_surf);
+			}
 
 			pah->UpdateCache();
-			pah->CheckRounding();
+
+			if (!sys.ParticleModel()->getTrackPrimarySeparation() && !sys.ParticleModel()->getTrackPrimaryCoordinates())
+				pah->CheckRounding();
+			else
+				pah->CheckSintering();
+
 			if (sp.IsValid()) {
 				sp.UpdateCache();
 

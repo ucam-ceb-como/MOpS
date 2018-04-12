@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="BCCA coagulation test case" units="CGS">
+    
+	<!-- Define particle components. -->
+	<component id="soot">
+		<description>soot</description>
+		<density>1.4</density>
+		<molwt>0.0</molwt>
+	</component>
+	
+	<!-- Define particle types. -->
+	<particle id="[soot]" model="PAH_KMC" subtree="false" track="primaryCoordinates">
+		<description>A soot particle.</description>
+		<fractdim>1.8</fractdim>
+		<coalthresh>1.0</coalthresh>
+		<sintering enable="true" model="viscous_flow">
+			<A units="s/m">1.1e-14</A>
+			<E units="K">96102.95886456579</E>
+			<Dpmin units="m">5e-10</Dpmin>
+		</sintering>
+	</particle>
+ 
+    <!-- Coagulation -->
+	<coagulation>
+		<A>1.0</A>
+		<kernel>transition</kernel>
+	</coagulation>
+
+</mechanism>
