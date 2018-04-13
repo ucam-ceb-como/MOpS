@@ -265,6 +265,35 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
         while (t < tsplit) {
 
 			// aab64 Could also shift incepting weights here for intense inception rate escalation. 
+
+			if (mech.IsHybrid() && sys.Particles().IsFirstSP())
+			{
+				// Compute and store new incepting class properties
+				double create_t = sys.Particles().GetInceptedSP().CreateTime();
+				double exist_t = t - create_t;
+				/*std::ofstream pscFile;
+				std::string pscfname;
+				pscfname = "inceptingcoagulationchange.csv";*/
+				if (exist_t > 0)
+				{
+					double inceptingcoagulationchange = sys.GetInceptionCoagulationChange() / exist_t;
+					double sp_age = 0;
+					//boost::exponential_distribution<double> waitDistrib(inceptingcoagulationchange);
+					//boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<double> > waitGenerator(rng, waitDistrib);
+					sp_age = (1 / inceptingcoagulationchange);// waitGenerator();                                                    // Choose an LPDA last update time from the class residence time distribution
+					if (sp_age > t - create_t)                                                   // t \in [tcreate,t], age \in [0,t-tcreate]
+						sp_age = t - create_t;
+					Particle * sp1 = sys.Particles().GetInceptedSP().Clone();
+					sp1->SetTime(t - sp_age);
+					sys.SetNotPSIFlag(false);
+					mech.UpdateParticle(*sp1, sys, t, rng);
+					sys.SetNotPSIFlag(true);
+					sys.Particles().SetInceptedSP_tmp(*sp1);
+					/*pscFile.open(pscfname.c_str(), std::ios::app);
+					pscFile << t << "," << sp_age << "," << "\n";
+					pscFile.close();*/
+				}
+			}
 			
             // Sweep does not do transport
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);

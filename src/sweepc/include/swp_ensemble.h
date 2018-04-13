@@ -267,7 +267,9 @@ public:
 	double GetIncepted(void) const { return m_inceptingWeight; }
 	void AdjustIncepted(double adjustment);
 	void SetInceptedSP(Sweep::Particle sp);
+	void SetInceptedSP_tmp(Sweep::Particle sp);
 	Particle GetInceptedSP() const;
+	Particle GetInceptedSP_tmp() const;
 	bool IsFirstSP(void) { return m_inceptedFirstSP; }
 
     // READ/WRITE/COPY.
@@ -321,6 +323,7 @@ private:
 	// aab64 Hybrid particle model
 	double m_inceptingWeight;
 	Particle *m_inceptingSP;
+	Particle *m_inceptingSP_tmp;
 	bool m_inceptedFirstSP;
 
     //! Reset the contents of the binary tree

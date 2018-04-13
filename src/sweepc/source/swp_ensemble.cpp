@@ -624,6 +624,7 @@ void Sweep::Ensemble::ClearMain()
 	// aab64 for hybrid particle model
 	m_inceptingWeight = 0;
 	m_inceptingSP = NULL;
+	m_inceptingSP_tmp = NULL;
 	m_inceptedFirstSP = false;
 }
 
@@ -773,15 +774,26 @@ void Sweep::Ensemble::SetInceptedSP(Sweep::Particle sp)
 	m_inceptingSP = sp.Clone();
 }
 
+void Sweep::Ensemble::SetInceptedSP_tmp(Sweep::Particle sp)
+{
+	m_inceptingSP_tmp = sp.Clone();
+}
+
 void Sweep::Ensemble::AdjustIncepted(double adjustment)
 {
 	m_inceptingWeight += adjustment;
 	m_inceptingSP->setStatisticalWeight(m_inceptingWeight);
+	m_inceptingSP_tmp->setStatisticalWeight(m_inceptingWeight);
 }
 
 Particle Sweep::Ensemble::GetInceptedSP() const
 {
 	return *m_inceptingSP;
+}
+
+Particle Sweep::Ensemble::GetInceptedSP_tmp() const
+{
+	return *m_inceptingSP_tmp;
 }
 
 // UPDATE ENSEMBLE.
