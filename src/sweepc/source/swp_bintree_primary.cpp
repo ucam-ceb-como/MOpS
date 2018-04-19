@@ -891,45 +891,49 @@ double BinTreePrimary::GetRadiusOfGyration() const
     double rix, riy, riz, rjx, rjy, rjz, drx, dry, drz;
     vector<fvector> coords;
 
-    this->GetPriCoords(coords);
+	//! If single primary then return the primary radius
+//	if(m_numprimary == 1) {
+//		Rg = m_primarydiam / 2.0;
+
+//	}else{
+
+		this->GetPriCoords(coords);
     
-    if (m_pmodel->getTrackPrimaryCoordinates()) {
-        //! Calculation is based on Eq. (1) in R. Jullien, Transparency effects
-        //! in cluster-cluster aggregation with linear trajectories, J. Phys. A
-        //! 17 (1984) L771-L776. 
-        for (int i = 0; i!=coords.size(); ++i) {
-            for (int j = 0; j!=coords.size(); ++j) {
-                rix = coords[i][0];
-                riy = coords[i][1];
-                riz = coords[i][2];
+		if (m_pmodel->getTrackPrimaryCoordinates()) {
+			//! Calculation is based on Eq. (1) in R. Jullien, Transparency effects
+			//! in cluster-cluster aggregation with linear trajectories, J. Phys. A
+			//! 17 (1984) L771-L776. 
+			for (int i = 0; i!=coords.size(); ++i) {
+				for (int j = 0; j!=coords.size(); ++j) {
+					rix = coords[i][0];
+					riy = coords[i][1];
+					riz = coords[i][2];
 
-                rjx = coords[j][0];
-                rjy = coords[j][1];
-                rjz = coords[j][2];
+					rjx = coords[j][0];
+					rjy = coords[j][1];
+					rjz = coords[j][2];
 
-                //! Expansion of (r_i - r_j)^2 term. Dot product of r vectors.
-                sum += rix * rix + riy * riy + riz * riz +
-                       rjx * rjx + rjy * rjy + rjz * rjz -
-                       2 * (rix * rjx + riy * rjy + riz * rjz);
-            }
-        }
+					//! Expansion of (r_i - r_j)^2 term. Dot product of r vectors.
+					sum += rix * rix + riy * riy + riz * riz +
+						   rjx * rjx + rjy * rjy + rjz * rjz -
+						   2 * (rix * rjx + riy * rjy + riz * rjz);
+				}
+			}
 
-        Rg = sqrt(sum / 2 / coords.size() / coords.size());
-    } else {
-        for (unsigned int i=0; i!=coords.size(); ++i) {
-            //! Mass is proportional to the cube of the radius.
-            mass = coords[i][3] * coords[i][3] * coords[i][3];
-            r2 = coords[i][0] * coords[i][0] + coords[i][1] * coords[i][1] + coords[i][2] * coords[i][2];
-            sum += mass * r2;
-            totalmass += mass;
-        }
+			Rg = sqrt(sum / 2 / coords.size() / coords.size());
+		} else {
+			for (unsigned int i=0; i!=coords.size(); ++i) {
+				//! Mass is proportional to the cube of the radius.
+				mass = coords[i][3] * coords[i][3] * coords[i][3];
+				r2 = coords[i][0] * coords[i][0] + coords[i][1] * coords[i][1] + coords[i][2] * coords[i][2];
+				sum += mass * r2;
+				totalmass += mass;
+			}
 
-        Rg = sqrt(sum / totalmass);
-    }
-
-	//if single primary return the primary radius
-	if(m_numprimary == 1) Rg = sqrt(2.0/5.0) * m_primarydiam / 2.0;
-    
+			Rg = sqrt(sum / totalmass);
+		}
+//	}
+	    
 	return Rg;
 }
 
@@ -2017,24 +2021,32 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
             if (m_numprimary > 1)
                 m_avg_sinter = m_avg_sinter / (m_numprimary - 1);
 
-			if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
+//			if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 				// Approxmiate the surface of the particle
 				// (same as in ChangePointer)
 				const double numprim_1_3 = pow(m_numprimary,-1.0 * ONE_THIRD);
 				m_surf = 4 * PI * spherical_radius * spherical_radius /
 						(m_avg_sinter * (1 - numprim_1_3) + numprim_1_3);
-			}else{
+//			}else{
 				// if the centre to centre distance is tracked then this is the free surface area
-				m_surf = m_free_surf;
-			}
+//				m_surf = m_free_surf;
+//			}
 
-            // Calculate dcol based-on formula given in Lavvas et al. (2011)
+			// Calculate dcol based-on formula given in Lavvas et al. (2011)
             const double aggcolldiam = (6* m_vol / m_surf) *
                     pow(pow(m_surf, 3) / (36 * PI * m_vol * m_vol),
                             (1.0/m_pmodel->GetFractDim()));
             m_dmob = MobDiameter();
-            m_dcol = aggcolldiam;
-
+            
+			//! If coordinates are tracked dcol is based on the radius of gyration
+			//! otherwise dcol is given by Lavvas et al. (2011)
+//			if(m_pmodel->getTrackPrimaryCoordinates()){
+//				m_dcol = CollisionDiameter();
+//			}else{
+				m_dcol = aggcolldiam;
+//			}
+		
+			m_dmob = CollisionDiameter(); //csl37-testing
         }
         else {
             m_diam=0;
@@ -2096,6 +2108,50 @@ double BinTreePrimary::MobDiameter() const
     return dmob;
 }
 
+
+//! Calculates the collision diameter based on the radius of gyration
+//! if primary coordinates are tracked
+//csl37 - TO DO: add reference to pre-print / paper
+double BinTreePrimary::CollisionDiameter() const
+{
+    double sum=0;
+    double dcol=0.0;
+    double rix, riy, riz, rjx, rjy, rjz, drx, dry, drz;
+    vector<fvector> coords;
+		
+	this->GetPriCoords(coords);
+
+	for (int i = 0; i!=coords.size(); ++i) {
+		//! Calculate Rg for point masses
+		//! Calculation is based on Eq. (1) in R. Jullien, Transparency effects
+		//! in cluster-cluster aggregation with linear trajectories, J. Phys. A
+		//! 17 (1984) L771-L776. 
+		for (int j = 0; j!=coords.size(); ++j) {
+			rix = coords[i][0];
+			riy = coords[i][1];
+			riz = coords[i][2];
+
+			rjx = coords[j][0];
+			rjy = coords[j][1];
+			rjz = coords[j][2];
+
+			//! Expansion of (r_i - r_j)^2 term. Dot product of r vectors.
+			sum += (rix * rix + riy * riy + riz * riz +
+					rjx * rjx + rjy * rjy + rjz * rjz -
+					2 * (rix * rjx + riy * rjy + riz * rjz) ) / 2 / coords.size() / coords.size();
+		}
+		
+		//! Add correction for non-point mass primaries 
+		//! Caluculation is based on Eq. (4) in Filippov et al., Fractal-like 
+		//! aggregates: Relation between morphology and physical properties. 
+		//! Journal of Colloid Interface Science, 229:261-273, 2000.
+		sum += coords[i][3] * coords[i][3] / coords.size();
+	}
+
+	dcol = 2*sqrt(sum);
+
+	return dcol;
+}
 
 /*!
  * @brief       Prints a graphical output of the binary tree structure

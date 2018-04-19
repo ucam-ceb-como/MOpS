@@ -132,6 +132,9 @@ public:
     //! Overload of the Mobility Diameter
     double MobDiameter() const;
 
+	//! Get the collision diameter
+	double CollisionDiameter() const;
+
     //! Get the number of primaries in the particle
     int  GetNumPrimary() const {return m_numprimary;}
 
