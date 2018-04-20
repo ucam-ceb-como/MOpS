@@ -375,14 +375,16 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
 		return -1;
 	}
 
-	Particle part1 = Particle(*sp1);
-	Particle part2 = Particle(*sp2);
+	Particle part1 = Particle(t, (*sys.ParticleModel()));
+	Particle part2 = Particle(t, (*sys.ParticleModel()));
 	if (sp1->getStatisticalWeight() > 1){
+		part1 = *sp1;
 		part1.setStatisticalWeight(1);
 		sp1 = &part1;
 		new1 = true;
 	}
 	if (sp2->getStatisticalWeight() > 1){
+		part2 = *sp2;
 		part2.setStatisticalWeight(1);
 		sp2 = &part2;
 		new2 = true;

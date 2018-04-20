@@ -415,13 +415,23 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     while (t < tstop)
     {
 		//if (t == 0.0){
-		//	for (int iii = 0; iii < r.Mixture()->Particles().Capacity(); iii++){
+		//	if (r.Mixture()->ParticleModel()->Components(0)->WeightedPAHs()){
 		//		Particle *sp = NULL;
 		//		sp = mech.CreateParticle(t);
+		//		sp->setStatisticalWeight(r.Mixture()->Particles().Capacity() / 4.0);
 		//		sp->UpdateCache();
 		//		(r.Mixture()->Particles()).Add(*sp, rng);
 		//	}
-		//	mech.LPDA(t, *r.Mixture(), rng);
+		//	else{
+		//		for (int iii = 0; iii < r.Mixture()->Particles().Capacity()/4.0; iii++){
+		//			Particle *sp = NULL;
+		//			sp = mech.CreateParticle(t);
+		//			//sp->setStatisticalWeight(1.0);
+		//			sp->UpdateCache();
+		//			(r.Mixture()->Particles()).Add(*sp, rng);
+		//		}
+		//	}
+
 		//}
 
         //save the old gas phase mass density
@@ -529,7 +539,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 			double scale_factor = 1.0;
 			if( t > 0.0) {
 				scale_factor = 1.0 + (v_new-v_old - u_old*(rho_new-rho_old)/rho_old)/(u_old+v_old) + diffusion_term * (t-t_old);
-    }
+			}
 			//adjust sample volume
 			r.Mixture()->AdjustSampleVolume(scale_factor);
 		}

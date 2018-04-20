@@ -2457,20 +2457,27 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 					AggModels::PAHPrimary *pri =
 						dynamic_cast<AggModels::PAHPrimary*>((*(*it1)).Primary());
 					//This new particle must also be updated to time t
+					const int oldNumCarbon1 = pri->m_PAH[0]->m_pahstruct->numofC();
+					const int oldNumH1 = pri->m_PAH[0]->m_pahstruct->numofH();
 					pri->UpdatePAHs(t, t - (*it1)->LastUpdateTime(), model, sys, 1, -1, rng, overflow);
 					(*it1)->SetTime(t);
 
-					//Update the primary and the cache
-					pri->UpdatePrimary();
-					(*it1)->UpdateCache();
-
-					//Check if the PAH is still valid after being updated
-					if (pri->m_PAH[0]->m_pahstruct->numofRings() >= thresholdOxidation){
-						overflow.push_back(*it1);
+					//Update the primary and the cache if the PAH structure has changed.
+					//Place the particle (which is a single PAH) in the overflow vector if it is still a valid PAH
+					if (pri->GetPAHVector()[0]->m_pahstruct->numofC() != oldNumCarbon1 &&
+						pri->GetPAHVector()[0]->m_pahstruct->numofH() != oldNumH1){
+						
+						if (pri->m_PAH[0]->m_pahstruct->numofRings() >= thresholdOxidation){
+							pri->UpdatePrimary();
+							(*it1)->UpdateCache();
+							overflow.push_back(*it1);
+						}
+						else{
+							delete *it1;
+						}
 					}
-					else
-					{
-						delete *it1;
+					else{ //If nothing changed, but it is still a valid PAH, place it in overflow vector
+						overflow.push_back(*it1);
 					}
 				}
 

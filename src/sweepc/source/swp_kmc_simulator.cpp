@@ -251,7 +251,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             }*/
         }else {
             //oldtnext = t_next;
-            t_next = m_t+t_step_max;
+            t_next = t_max;
         }
 		if (loopcount == maxloops) proceed = false; //If maxloops is set to 0, this condition will never be true
         m_t = t_next;
