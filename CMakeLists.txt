@@ -8,17 +8,19 @@ project (MOPSSUITE)
 #Uncomment to make CMAKE use absolute paths for linking
 #untesed, but was suggested by HPC staff to fix linking error 
 #Also set CC and CXX to the compiler you want to use on DARWIN
-#cmake_policy(SET CMP0060 NEW)
+cmake_policy(SET CMP0060 NEW)
+cmake_policy(SET CMP0054 NEW)
+cmake_policy(SET CMP0012 NEW)
 
 IF(WIN32)
   SET(Boost_ADDITIONAL_VERSIONS "1.47" "1.47.0" "1.49" "1.49.0" "1.51" "1.51.0" "1.57.0")
   SET(BOOST_ROOT "C:/Program Files/boost")
-  SET(Boost_USE_STATIC_LIBS TRUE)
+#  SET(Boost_USE_STATIC_LIBS true)
   SET(MSVC_BUILD_DIR "/\${CTEST_CONFIGURATION_TYPE}")
   SET(SHELL_INTERPRETER "bash")
 ELSE(WIN32)
-  SET(CMAKE_MODULE_PATH $ENV{HOME})
-  SET(BOOST_ROOT $ENV{HOME}/boost)
+#  SET(CMAKE_MODULE_PATH $ENV{HOME})
+  SET(BOOST_ROOT $ENV{BOOST_HOME})
   SET(Boost_USE_MULTITHREADED OFF)
 ENDIF(WIN32)
 find_package(Boost 1.47.0 REQUIRED COMPONENTS regex serialization filesystem system program_options)
