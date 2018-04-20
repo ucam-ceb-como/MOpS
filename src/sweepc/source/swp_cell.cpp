@@ -69,7 +69,8 @@ Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
   m_incepting_weight(1.0), m_incFactor(1.0), 
   m_notpsiflag(true), m_rateFactor(1.0), 
   m_cprop1(iUniform), m_cprop2(iUniform), 
-  m_incepted(0.0), m_inceptions(0), m_inceptingcoagulations(0)
+  m_incepted(0.0), m_inceptions(0), m_inceptingcoagulations(0), 
+  m_surface_rutiles(0), m_last_update_time(0), m_inceptions_tmp(0)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
@@ -142,6 +143,9 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 		m_incepted = rhs.m_incepted;
 		m_inceptions = rhs.m_inceptions;
 		m_inceptingcoagulations = rhs.m_inceptingcoagulations;
+		m_last_update_time = rhs.m_last_update_time;
+		m_surface_rutiles = rhs.m_surface_rutiles;
+		m_inceptions_tmp = rhs.m_inceptions_tmp;
 	}
 	assert(isValid());
     return *this;

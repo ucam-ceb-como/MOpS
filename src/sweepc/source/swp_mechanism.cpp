@@ -1199,6 +1199,19 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
             UpdateParticle(*(*i), sys, t, rng);
         }
 
+		/*if (sys.GetIncepted() > 0)
+		{
+			// Compute and store new incepting class properties
+			Particle * sp1 = sys.Particles().GetInceptedSP().Clone(); 
+			double Rut0 = sp1->Composition()[0];
+			sp1->setStatisticalWeight(sp1->getStatisticalWeight() + (sys.GetRutiles()) / Rut0);
+			if (sys.GetLastRutileTime() != 0)
+				sp1->SetTime(sys.GetLastRutileTime());
+			UpdateParticle(*sp1, sys, t, rng);
+			sys.AdjustRutiles(sp1->Composition()[0] - Rut0);
+			sys.SetLastRutileTime(t);
+		}*/
+
 	    // aab64 is the above a candidate for omp?? 
 		// But index variable i would need to be a signed integral type 
 	    // To perform deferred processes on all particles individually using OpenMP:

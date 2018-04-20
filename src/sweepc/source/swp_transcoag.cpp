@@ -91,7 +91,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 		double P = sys.GasPhase().Pressure();
 
 		// Calculate the rate.
-		if (m_mech->IsHybrid())
+		if (m_mech->IsHybrid() && sys.GetIncepted() > 0)
 		{
 			double rate = Rate(sys.Particles().GetSums(), (double)n, sqrt(T),
 				T / sys.GasPhase().Viscosity(), MeanFreePathAir(T, P),
@@ -133,7 +133,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
 	double m_1_2 = data.Property(iM_1_2);
 	double d2m_1_2 = data.Property(iD2_M_1_2);
 
-	if (m_mech->IsHybrid())
+	if (m_mech->IsHybrid() && spInc != nullptr)
 	{
 		double wt = spInc->getStatisticalWeight();
 		double dc = spInc->CollDiameter();
@@ -213,7 +213,7 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 		double P = sys.GasPhase().Pressure();
 
 		// Calculate the rate terms.
-		if (m_mech->IsHybrid())
+		if (m_mech->IsHybrid() && sys.GetIncepted() > 0)
 		{
 			double rate = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T / sys.GasPhase().Viscosity(),
 				MeanFreePathAir(T, P), sys.SampleVolume(), iterm, &sys.Particles().GetInceptedSP_tmp());
@@ -256,7 +256,7 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::partic
 	double m_1_2 = data.Property(iM_1_2);
 	double d2m_1_2 = data.Property(iD2_M_1_2);
 
-	if (m_mech->IsHybrid())
+	if (m_mech->IsHybrid() && spInc != nullptr)
 	{
 
 		double wt = spInc->getStatisticalWeight();
@@ -688,7 +688,7 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 {
 	boost::uniform_01<rng_type&, double> unifDistrib(rng); // Select the first particle and note the majorant type.
 
-	bool hybrid_flag = m_mech->IsHybrid();
+	bool hybrid_flag = m_mech->IsHybrid() && sys.GetIncepted() > 0 ;
 
 	double wt_frac = 0, d_frac = 0, d2_frac = 0, d_1_frac = 0, d_2_frac = 0, m_1_2_frac = 0, d2m_1_2_frac = 0;
 

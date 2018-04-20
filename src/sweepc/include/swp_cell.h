@@ -264,6 +264,15 @@ public:
 	void AdjustInceptions(double adjustment) { m_inceptions += adjustment; }
 	void AdjustInceptingCoagulations() { ++m_inceptingcoagulations; }
 	double GetInceptionCoagulationChange() const { return (m_inceptions - m_inceptingcoagulations); }
+	double GetInceptions() const { return m_inceptions; }
+	double GetInceptions_tmp() const { return m_inceptions_tmp; }
+	void ResetInceptions_tmp() { m_inceptions_tmp = 0; }
+	void AdjustInceptions_tmp() { ++m_inceptions_tmp; }
+	
+	void AdjustRutiles(unsigned int adjustment) { m_surface_rutiles += adjustment; }
+	unsigned int GetRutiles() const { return m_surface_rutiles; }
+	double GetLastRutileTime() const { return m_last_update_time; }
+	void SetLastRutileTime(double lasttime) { m_last_update_time = lasttime; }
 
 protected:
     // Default constructor is protected as it makes no
@@ -334,7 +343,10 @@ private:
 	// aab64 tracker for incepted particles in place of physical inceptions
 	double m_incepted;
 	double m_inceptions;
+	double m_inceptions_tmp;
 	double m_inceptingcoagulations;
+	unsigned int m_surface_rutiles;
+	double m_last_update_time;
 };
 
 } //namespace Sweep

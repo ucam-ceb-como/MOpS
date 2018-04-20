@@ -266,7 +266,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 
 			// aab64 Could also shift incepting weights here for intense inception rate escalation. 
 
-			if (mech.IsHybrid() && sys.Particles().IsFirstSP())
+			if (mech.IsHybrid() && sys.GetIncepted() > 0)
 			{
 				// Compute and store new incepting class properties
 				double create_t = sys.Particles().GetInceptedSP().CreateTime();
@@ -278,16 +278,40 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 				{
 					double inceptingcoagulationchange = sys.GetInceptionCoagulationChange() / exist_t;
 					double sp_age = 0;
-					//boost::exponential_distribution<double> waitDistrib(inceptingcoagulationchange);
-					//boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<double> > waitGenerator(rng, waitDistrib);
-					sp_age = (1 / inceptingcoagulationchange);// waitGenerator();                                                    // Choose an LPDA last update time from the class residence time distribution
+					boost::exponential_distribution<double> waitDistrib(inceptingcoagulationchange);
+					boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<double> > waitGenerator(rng, waitDistrib);
+					double mult = 1;//2.5000e+09 * t * t * t
+					sp_age = mult * waitGenerator();// (1 / inceptingcoagulationchange);                                                 // Choose an LPDA last update time from the class residence time distribution
 					if (sp_age > t - create_t)                                                   // t \in [tcreate,t], age \in [0,t-tcreate]
 						sp_age = t - create_t;
+					
 					Particle * sp1 = sys.Particles().GetInceptedSP().Clone();
-					sp1->SetTime(t - sp_age);
-					sys.SetNotPSIFlag(false);
-					mech.UpdateParticle(*sp1, sys, t, rng);
-					sys.SetNotPSIFlag(true);
+
+					boost::uniform_01<rng_type &> uniformGenerator(rng);
+					/*if (uniformGenerator() > (sys.GetInceptions() / sys.GetIncepted())) 
+					{
+						unsigned int maxRuts = sys.GetRutiles();
+						unsigned int extraRuts = uniformGenerator() * maxRuts * (1 / sys.GetIncepted());
+						sp1->Adjust(sp1->Composition(), sp1->Values(), rng, extraRuts);
+						sys.AdjustRutiles(-extraRuts);
+						if (sys.GetLastRutileTime() > 0)
+							sp1->SetTime(sys.GetLastRutileTime());
+					}
+					else
+						sp1->SetTime(t);
+					sys.AdjustInceptions(-sys.GetInceptions());*/
+
+					if (uniformGenerator() > (sys.GetInceptions_tmp() / sys.GetIncepted()))
+					{
+						sp1->SetTime(t - sp_age);
+						sys.SetNotPSIFlag(false);
+						mech.UpdateParticle(*sp1, sys, t, rng);
+						sys.SetNotPSIFlag(true);
+					}
+					else
+						sp1->SetTime(t);
+					sys.ResetInceptions_tmp();
+
 					sys.Particles().SetInceptedSP_tmp(*sp1);
 					/*pscFile.open(pscfname.c_str(), std::ios::app);
 					pscFile << t << "," << sp_age << "," << "\n";
