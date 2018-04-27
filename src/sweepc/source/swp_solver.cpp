@@ -271,23 +271,54 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 				// Compute and store new incepting class properties
 				double create_t = sys.Particles().GetInceptedSP().CreateTime();
 				double exist_t = t - create_t;
+				
 				/*std::ofstream pscFile;
 				std::string pscfname;
 				pscfname = "inceptingcoagulationchange.csv";*/
+
 				if (exist_t > 0)
 				{
 					double inceptingcoagulationchange = sys.GetInceptionCoagulationChange() / exist_t;
-					double sp_age = 0;
-					boost::exponential_distribution<double> waitDistrib(inceptingcoagulationchange);
-					boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<double> > waitGenerator(rng, waitDistrib);
-					double mult = 1;//2.5000e+09 * t * t * t
-					sp_age = mult * waitGenerator();// (1 / inceptingcoagulationchange);                                                 // Choose an LPDA last update time from the class residence time distribution
-					if (sp_age > t - create_t)                                                   // t \in [tcreate,t], age \in [0,t-tcreate]
-						sp_age = t - create_t;
+					//double sp_age = 0;
+					//boost::exponential_distribution<double> waitDistrib(inceptingcoagulationchange);
+					//boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<double> > waitGenerator(rng, waitDistrib);
+					double mu = 1, sigma = 0;
+					if (t <= 0.0013)
+					{
+						mu = -10.8944;
+						sigma = 1.57235;
+					}
+					else if (t <= 0.0026)
+					{
+						mu = -10.8891;
+						sigma = 1.8953;
+					}
+					else if(t <= 0.0039)
+					{
+						mu = -10.4252;
+						sigma = 1.86087;
+					}
+					else if(t <= 0.0052)
+					{
+						mu = -10.7503;
+						sigma = 1.88096;
+					}
+					else
+					{
+						mu = -10.5756;
+						sigma = 1.89512;
+					}
+
+					double sp_age = 0.2 * boost::random::lognormal_distribution<double>(mu, sigma)(rng);
+					//double mult = 7.5000e+9 * t * t * t;
+					//sp_age = mult * waitGenerator();// (1 / inceptingcoagulationchange);                                                 // Choose an LPDA last update time from the class residence time distribution
+					//if (sp_age > t - create_t)                                                   // t \in [tcreate,t], age \in [0,t-tcreate]
+					//	sp_age = t - create_t;
 					
 					Particle * sp1 = sys.Particles().GetInceptedSP().Clone();
 
-					boost::uniform_01<rng_type &> uniformGenerator(rng);
+					//boost::uniform_01<rng_type &> uniformGenerator(rng);
+
 					/*if (uniformGenerator() > (sys.GetInceptions() / sys.GetIncepted())) 
 					{
 						unsigned int maxRuts = sys.GetRutiles();
@@ -301,18 +332,22 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 						sp1->SetTime(t);
 					sys.AdjustInceptions(-sys.GetInceptions());*/
 
-					if (uniformGenerator() > (sys.GetInceptions_tmp() / sys.GetIncepted()))
-					{
+					//if (uniformGenerator() > (sys.GetInceptions_tmp() / sys.GetIncepted()))
+					//{
 						sp1->SetTime(t - sp_age);
 						sys.SetNotPSIFlag(false);
 						mech.UpdateParticle(*sp1, sys, t, rng);
 						sys.SetNotPSIFlag(true);
-					}
-					else
-						sp1->SetTime(t);
-					sys.ResetInceptions_tmp();
+					//}
+					//else
+					//	sp1->SetTime(t);
+					//sys.ResetInceptions_tmp();
 
-					sys.Particles().SetInceptedSP_tmp(*sp1);
+					sys.Particles().SetInceptedSP_tmp(*sp1); 
+						
+					delete sp1;
+					sp1 = NULL;
+					
 					/*pscFile.open(pscfname.c_str(), std::ios::app);
 					pscFile << t << "," << sp_age << "," << "\n";
 					pscFile.close();*/
@@ -328,7 +363,8 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
             if (sys.OutflowCount() > 0 || sys.InflowCount() > 0)
                 mech.DoParticleFlow(t, t - tflow, sys, Geometry::LocalGeometry1d(), rng);
             tflow = t;
-        }
+		}
+		sys.ResetInceptions_tmp();
 
         sys.SetCurrentProcessTau(t - tin); // aab64 store time passed in current loop for heat transfer
 

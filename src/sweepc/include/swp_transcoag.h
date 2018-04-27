@@ -159,7 +159,8 @@ private:
         double T_mu,  // T / viscosity
         double MFP,   // Gas mean-free path.
         double vol,    // System sample volume.
-		Particle * spInc
+		Particle * spInc_tmp1, 
+		Particle * spInc_inc
         ) const;
 
     // More efficient rate routine for coagulation only.  
@@ -173,7 +174,8 @@ private:
         double MFP,   // Gas mean-free path.
         double vol,   // System sample volume.
         fvector::iterator &iterm, // Iterator to first coagulation term.
-		Particle * spInc
+		Particle * spInc_tmp1,
+		Particle * spInc_inc
         ) const;
 
         // COAGULATION KERNEL ROUTINES.

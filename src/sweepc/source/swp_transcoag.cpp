@@ -93,17 +93,32 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 		// Calculate the rate.
 		if (m_mech->IsHybrid() && sys.GetIncepted() > 0)
 		{
+			Particle * spInc_tmp1 = sys.Particles().GetInceptedSP_tmp().Clone();
+			Particle * spInc_inc = sys.Particles().GetInceptedSP().Clone();
+
+			spInc_inc->setStatisticalWeight(sys.GetInceptions_tmp());
+			spInc_inc->SetTime(t);
+			double tmp_age = sys.GetIncepted() - sys.GetInceptions_tmp();
+			tmp_age = (tmp_age > 0) ? tmp_age : 0.0;
+			spInc_tmp1->setStatisticalWeight(tmp_age);
+
 			double rate = Rate(sys.Particles().GetSums(), (double)n, sqrt(T),
 				T / sys.GasPhase().Viscosity(), MeanFreePathAir(T, P),
-				sys.SampleVolume(), &sys.Particles().GetInceptedSP_tmp());
+				sys.SampleVolume(), spInc_tmp1, spInc_inc); //sys.Particles().GetInceptedSP_tmp()
 			//std::cout << "Coag: " << t << " , " << rate << std::endl;
+
+			delete spInc_inc;
+			spInc_inc = NULL;
+			delete spInc_tmp1;
+			spInc_tmp1 = NULL;
+
 			return rate;
 		}
 		else
 		{
 			double rate = Rate(sys.Particles().GetSums(), (double)n, sqrt(T),
 				T / sys.GasPhase().Viscosity(), MeanFreePathAir(T, P),
-				sys.SampleVolume(), nullptr);
+				sys.SampleVolume(), nullptr, nullptr);
 			//std::cout << "Coag: " << t << " , " << rate << std::endl;
 			return rate;
 		}
@@ -117,7 +132,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 // All parameters required to calculate rate passed
 // as arguments.
 double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_cache_type &data, double n, double sqrtT,
-	double T_mu, double MFP, double vol, Particle * spInc) const
+	double T_mu, double MFP, double vol, Particle * spInc_tmp1, Particle * spInc_inc) const
 {
 	// Some prerequisites.
 	double n_1 = n - 1.0;
@@ -133,18 +148,34 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
 	double m_1_2 = data.Property(iM_1_2);
 	double d2m_1_2 = data.Property(iD2_M_1_2);
 
-	if (m_mech->IsHybrid() && spInc != nullptr)
+	if (m_mech->IsHybrid())
 	{
-		double wt = spInc->getStatisticalWeight();
-		double dc = spInc->CollDiameter();
-		double inv_sqrt_m = 1.0 / std::sqrt(spInc->Mass());
-		double dc_sqrd = dc * dc;
-		d += (wt * dc);
-		d2 += (wt * dc_sqrd);
-		d_1 += (wt / dc);
-		d_2 += (wt / dc_sqrd);
-		m_1_2 += (wt * inv_sqrt_m);
-		d2m_1_2 += (wt * dc_sqrd * inv_sqrt_m);
+		if (spInc_tmp1 != nullptr)
+		{
+			double wt = spInc_tmp1->getStatisticalWeight();
+			double dc = spInc_tmp1->CollDiameter();
+			double inv_sqrt_m = 1.0 / std::sqrt(spInc_tmp1->Mass());
+			double dc_sqrd = dc * dc;
+			d += (wt * dc);
+			d2 += (wt * dc_sqrd);
+			d_1 += (wt / dc);
+			d_2 += (wt / dc_sqrd);
+			m_1_2 += (wt * inv_sqrt_m);
+			d2m_1_2 += (wt * dc_sqrd * inv_sqrt_m);
+		}
+		if (m_mech->IsHybrid() && spInc_inc != nullptr)
+		{
+			double wt = spInc_inc->getStatisticalWeight();
+			double dc = spInc_inc->CollDiameter();
+			double inv_sqrt_m = 1.0 / std::sqrt(spInc_inc->Mass());
+			double dc_sqrd = dc * dc;
+			d += (wt * dc);
+			d2 += (wt * dc_sqrd);
+			d_1 += (wt / dc);
+			d_2 += (wt / dc_sqrd);
+			m_1_2 += (wt * inv_sqrt_m);
+			d2m_1_2 += (wt * dc_sqrd * inv_sqrt_m);
+		}
 	}
 
 	// Get individual terms.
@@ -215,15 +246,29 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 		// Calculate the rate terms.
 		if (m_mech->IsHybrid() && sys.GetIncepted() > 0)
 		{
+			Particle * spInc_tmp1 = sys.Particles().GetInceptedSP_tmp().Clone();
+			Particle * spInc_inc = sys.Particles().GetInceptedSP().Clone();
+
+			spInc_inc->setStatisticalWeight(sys.GetInceptions_tmp());
+			spInc_inc->SetTime(t);
+			double tmp_age = sys.GetIncepted() - sys.GetInceptions_tmp();
+			tmp_age = (tmp_age > 0) ? tmp_age : 0.0;
+			spInc_tmp1->setStatisticalWeight(tmp_age);
+
 			double rate = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T / sys.GasPhase().Viscosity(),
-				MeanFreePathAir(T, P), sys.SampleVolume(), iterm, &sys.Particles().GetInceptedSP_tmp());
-			//std::cout << "Coag: " << t << " , " << rate << std::endl;
+				MeanFreePathAir(T, P), sys.SampleVolume(), iterm, spInc_tmp1, spInc_inc); //&sys.Particles().GetInceptedSP_tmp()
+
+			delete spInc_inc;
+			spInc_inc = NULL;
+			delete spInc_tmp1;
+			spInc_tmp1 = NULL;
+
 			return rate;
 		}
 		else
 		{
 			double rate = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T / sys.GasPhase().Viscosity(),
-				MeanFreePathAir(T, P), sys.SampleVolume(), iterm, nullptr);
+				MeanFreePathAir(T, P), sys.SampleVolume(), iterm, nullptr, nullptr);
 			//std::cout << "Coag: " << t << " , " << rate << std::endl;
 			return rate;
 		}
@@ -240,7 +285,7 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 // passed as arguments.
 double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::particle_cache_type &data, double n, double sqrtT,
 	double T_mu, double MFP, double vol,
-	fvector::iterator &iterm, Particle * spInc) const
+	fvector::iterator &iterm, Particle * spInc_tmp1, Particle * spInc_inc) const
 {
 	// Some prerequisites.
 	double n_1 = n - 1.0;
@@ -256,21 +301,38 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::partic
 	double m_1_2 = data.Property(iM_1_2);
 	double d2m_1_2 = data.Property(iD2_M_1_2);
 
-	if (m_mech->IsHybrid() && spInc != nullptr)
+	if (m_mech->IsHybrid())
 	{
+		if (spInc_tmp1 != nullptr)
+		{
+			double wt = spInc_tmp1->getStatisticalWeight();
 
-		double wt = spInc->getStatisticalWeight();
+			double dc = spInc_tmp1->CollDiameter();
+			double inv_sqrt_m = 1.0 / std::sqrt(spInc_tmp1->Mass());
 
-		double dc = spInc->CollDiameter();
-		double inv_sqrt_m = 1.0 / std::sqrt(spInc->Mass());
+			double dc_sqrd = dc * dc;
+			d += (wt * dc);
+			d2 += (wt * dc_sqrd);
+			d_1 += (wt / dc);
+			d_2 += (wt / dc_sqrd);
+			m_1_2 += (wt * inv_sqrt_m);
+			d2m_1_2 += (wt * dc_sqrd * inv_sqrt_m);
+		}
+		if (spInc_inc != nullptr)
+		{
+			double wt = spInc_inc->getStatisticalWeight();
 
-		double dc_sqrd = dc * dc;
-		d += (wt * dc);
-		d2 += (wt * dc_sqrd);
-		d_1 += (wt / dc);
-		d_2 += (wt / dc_sqrd);
-		m_1_2 += (wt * inv_sqrt_m);
-		d2m_1_2 += (wt * dc_sqrd * inv_sqrt_m);
+			double dc = spInc_inc->CollDiameter();
+			double inv_sqrt_m = 1.0 / std::sqrt(spInc_inc->Mass());
+
+			double dc_sqrd = dc * dc;
+			d += (wt * dc);
+			d2 += (wt * dc_sqrd);
+			d_1 += (wt / dc);
+			d_2 += (wt / dc_sqrd);
+			m_1_2 += (wt * inv_sqrt_m);
+			d2m_1_2 += (wt * dc_sqrd * inv_sqrt_m);
+		}
 	}
 
 	fvector::iterator isf = iterm;
@@ -373,9 +435,9 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	Particle *sp1 = NULL;
 
 	// Is this an incepting class particle?
-	if (hybrid_flag && ip1 == -2)
+	if (hybrid_flag && ip1 <= -2)
 	{
-		sp1 = sys.Particles().GetInceptedSP_tmp().Clone();//m_mech->CreateParticle(t);
+		sp1 = (ip1 == -2) ? sys.Particles().GetInceptedSP().Clone() : sys.Particles().GetInceptedSP_tmp().Clone();//m_mech->CreateParticle(t);
 		sp1->setStatisticalWeight(1);
 		//m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng, *sp1); // Incept a new particle from SP[0]
 		sys.AdjustIncepted(-(sp1->getStatisticalWeight()));                          // Reduce the incepting class count
@@ -412,9 +474,9 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	Particle *sp2 = NULL;
 
 	// Is this an incepting class particle?
-	if (hybrid_flag && ip2 == -2)
+	if (hybrid_flag && ip2 <= -2)
 	{
-		sp2 = sys.Particles().GetInceptedSP_tmp().Clone();// m_mech->CreateParticle(t);
+		sp2 = (ip2 == -2) ? sys.Particles().GetInceptedSP().Clone() : sys.Particles().GetInceptedSP_tmp().Clone();// m_mech->CreateParticle(t);
 		sp2->setStatisticalWeight(1);
 		//m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng, *sp2); // Incept a new particle from SP[0]
 		// Note we do not need to add it to the ensemble
@@ -424,6 +486,8 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		//if (sp_age > t - create_t)                                                   // t \in [tcreate,t], age \in [0,t-tcreate]
 		//	sp_age = t - create_t;
 		//sp2->SetTime(t - sp_age);
+
+		ip2 = -2;
 	}
 	else
 	{
@@ -690,18 +754,27 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 
 	bool hybrid_flag = m_mech->IsHybrid() && sys.GetIncepted() > 0 ;
 
-	double wt_frac = 0, d_frac = 0, d2_frac = 0, d_1_frac = 0, d_2_frac = 0, m_1_2_frac = 0, d2m_1_2_frac = 0;
+	double wt_incfrac = 0, d_incfrac = 0, d2_incfrac = 0, d_1_incfrac = 0, d_2_incfrac = 0, m_1_2_incfrac = 0, d2m_1_2_incfrac = 0;
+	double wt_tmp1frac = 0, d_tmp1frac = 0, d2_tmp1frac = 0, d_1_tmp1frac = 0, d_2_tmp1frac = 0, m_1_2_tmp1frac = 0, d2m_1_2_tmp1frac = 0;
 
 	TermType term = (TermType)iterm;
 
 	double wt_incep = 0, dc_incep = 0, sqrt_m_incep = 0;
+	double wt_tmp1 = 0, dc_tmp1 = 0, sqrt_m_tmp1 = 0;//
 
 	if (hybrid_flag)
 	{
 		ip1 = -2;
-		wt_incep = sys.Particles().GetInceptedSP_tmp().getStatisticalWeight();
-		dc_incep = sys.Particles().GetInceptedSP_tmp().CollDiameter();
-		sqrt_m_incep = std::sqrt(sys.Particles().GetInceptedSP_tmp().Mass());
+		//wt_incep = sys.Particles().GetInceptedSP_tmp().getStatisticalWeight();
+		//dc_incep = sys.Particles().GetInceptedSP_tmp().CollDiameter();
+		//sqrt_m_incep = std::sqrt(sys.Particles().GetInceptedSP_tmp().Mass());
+		wt_incep = sys.GetInceptions_tmp();
+		dc_incep = sys.Particles().GetInceptedSP().CollDiameter();
+		sqrt_m_incep = std::sqrt(sys.Particles().GetInceptedSP().Mass());
+		wt_tmp1 = sys.GetIncepted() - wt_incep;
+		wt_tmp1 = (wt_tmp1 > 0) ? wt_tmp1 : 0.0;
+		dc_tmp1 = sys.Particles().GetInceptedSP_tmp().CollDiameter();
+		sqrt_m_tmp1 = std::sqrt(sys.Particles().GetInceptedSP_tmp().Mass());
 	}
 	double test = unifDistrib();
 
@@ -710,225 +783,309 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 		if (hybrid_flag)
 		{
 			double wt_other = sys.Particles().Count();
-			wt_frac = wt_other / (wt_other + wt_incep);
+			wt_incfrac = wt_incep / (wt_other + wt_incep + wt_tmp1);
+			wt_tmp1frac = wt_tmp1 / (wt_other + wt_tmp1);
 		}
-		if (!hybrid_flag || test <= wt_frac)
-			ip1 = sys.Particles().Select(rng);
-		else
-			test = unifDistrib(); // temporary
+		if (test > wt_incfrac) //!hybrid_flag || 
+		{
+			test = unifDistrib();
+			if (test > wt_tmp1)
+				ip1 = sys.Particles().Select(rng);
+			else
+				ip1 = -3;
+		}
 		maj = SlipFlow;
 		break;
 	case SlipFlow2:
 		if (hybrid_flag)
 		{
 			double d_incep = wt_incep * dc_incep;
+			double d_tmp1 = wt_tmp1 * dc_tmp1;
 			double d_other = sys.Particles().GetSum(iDcol);
-			d_frac = d_other / (d_other + d_incep);
+			d_incfrac = d_incep / (d_other + d_incep + d_tmp1);
+			d_tmp1frac = d_tmp1 / (d_other + d_tmp1);
 		}
-		if (!hybrid_flag || test <= d_frac)
-			ip1 = sys.Particles().Select(iDcol, rng);
-		else
-			test = unifDistrib(); // temporary
+		if (test > d_incfrac)
+		{
+			test = unifDistrib();
+			if (test > d_tmp1frac)
+				ip1 = sys.Particles().Select(iDcol, rng);
+			else
+				ip1 = -3;
+		}
 		maj = SlipFlow;
 		break;
 	case SlipFlow3:
 		if (hybrid_flag)
 		{
 			double wt_other = sys.Particles().Count();
-			wt_frac = wt_other / (wt_other + wt_incep);
+			wt_incfrac = wt_incep / (wt_other + wt_incep + wt_tmp1);
+			wt_tmp1frac = wt_tmp1 / (wt_other + wt_tmp1);
 		}
-		if (!hybrid_flag || test <= wt_frac)
-			ip1 = sys.Particles().Select(rng);
-		else
-			test = unifDistrib(); // temporary
+		if (test > wt_incfrac)
+		{
+			test = unifDistrib();
+			if (test > wt_tmp1frac)
+				ip1 = sys.Particles().Select(rng);
+			else
+				ip1 = -3;
+		}
 		maj = SlipFlow;
 		break;
 	case SlipFlow4:
 		if (hybrid_flag)
 		{
 			double d_incep = wt_incep * dc_incep;
+			double d_tmp1 = wt_tmp1 * dc_tmp1;
 			double d_other = sys.Particles().GetSum(iDcol);
-			d_frac = d_other / (d_other + d_incep);
+			d_incfrac = d_incep / (d_other + d_incep + d_tmp1);
+			d_tmp1frac = d_tmp1 / (d_other + d_tmp1);
 		}
-		if (!hybrid_flag || test <= d_frac)
-			ip1 = sys.Particles().Select(iDcol, rng);
-		else
-			test = unifDistrib(); // temporary
+		if (test > d_incfrac)
+		{
+			test = unifDistrib();
+			if (test > d_tmp1frac)
+				ip1 = sys.Particles().Select(iDcol, rng);
+			else
+				ip1 = -3;
+		}
 		maj = SlipFlow;
 		break;
 	case FreeMol1:
 		if (hybrid_flag)
 		{
 			double wt_other = sys.Particles().Count();
-			wt_frac = wt_other / (wt_other + wt_incep);
+			wt_incfrac = wt_incep / (wt_other + wt_incep + wt_tmp1);
+			wt_tmp1frac = wt_tmp1 / (wt_other + wt_tmp1);
 		}
-		if (!hybrid_flag || test <= wt_frac)
-			ip1 = sys.Particles().Select(rng);
-		else
-			test = unifDistrib(); // temporary
+		if (test > wt_incfrac)
+		{
+			test = unifDistrib();
+			if (test > wt_tmp1frac)
+				ip1 = sys.Particles().Select(rng);
+			else
+				ip1 = -3;
+		}
 		maj = FreeMol;
 		break;
 	case FreeMol2:
 		if (hybrid_flag)
 		{
 			double d2_incep = wt_incep * dc_incep * dc_incep;
+			double d2_tmp1 = wt_tmp1 * dc_tmp1 * dc_tmp1;
 			double d2_other = sys.Particles().GetSum(iD2);
-			d2_frac = d2_other / (d2_other + d2_incep);
+			d2_incfrac = d2_incep / (d2_other + d2_incep + d2_tmp1);
+			d2_tmp1frac = d2_tmp1 / (d2_other + d2_tmp1);
 		}
-		if (!hybrid_flag || test <= d2_frac)
-			ip1 = sys.Particles().Select(iD2, rng);
-		else
-			test = unifDistrib(); // temporary
+		if (test > d2_incfrac)
+		{
+			test = unifDistrib();
+			if (test > d2_tmp1frac)
+				ip1 = sys.Particles().Select(iD2, rng);
+			else
+				ip1 = -3;
+		}
 		maj = FreeMol;
 		break;
 	default:
 		if (hybrid_flag)
 		{
 			double wt_other = sys.Particles().Count();
-			wt_frac = wt_other / (wt_other + wt_incep);
+			wt_incfrac = wt_incep / (wt_other + wt_incep + wt_tmp1);
+			wt_tmp1frac = wt_tmp1 / (wt_other + wt_tmp1);
 		}
-		if (!hybrid_flag || test <= wt_frac)
-			ip1 = sys.Particles().Select(rng);
-		else
-			test = unifDistrib(); // temporary
+		if (test > wt_incfrac)
+		{
+			test = unifDistrib();
+			if (test > wt_tmp1frac)
+				ip1 = sys.Particles().Select(rng);
+			else
+				ip1 = -3;
+		}
 		maj = SlipFlow;
 		break;
 	}
-	++test; // temporary
 
 	// Choose and get unique second particle.  Note, we are allowed to do
 	// this even if the first particle was invalidated.
 	ip2 = ip1;
 	unsigned int guard = 0;
 	test = unifDistrib();
+	bool mustSwitch = (ip1 < -1) && (sys.GetIncepted() <= 1);
 
 	switch (term) {
 	case SlipFlow1:
 		if (hybrid_flag)
 		{
 			double wt_other = sys.Particles().Count();
-			wt_frac = wt_other / (wt_other + wt_incep);
+			wt_incfrac = wt_incep / (wt_other + wt_incep + wt_tmp1);
+			wt_tmp1frac = wt_tmp1 / (wt_other + wt_tmp1);
 		}
-		if (!hybrid_flag || test <= wt_frac || (ip1 == -2 && sys.GetIncepted() <= 1))
+		if (test > wt_incfrac || mustSwitch)
 		{
-			while ((ip2 == ip1) && (++guard < 1000))
-				ip2 = sys.Particles().Select(rng);
+			test = unifDistrib();
+			if (test > wt_tmp1frac || mustSwitch)
+			{
+				while ((ip2 == ip1) && (++guard < 1000))
+					ip2 = sys.Particles().Select(rng);
+			}
+			else
+				ip2 = -3;
 		}
 		else
 		{
 			ip2 = -2;
-			test = unifDistrib(); // temporary
 		}
 		break;
 	case SlipFlow2:
 		if (hybrid_flag)
 		{
 			double d_1_incep = wt_incep / dc_incep;
+			double d_1_tmp1 = wt_tmp1 / dc_tmp1;
 			double d_1_other = sys.Particles().GetSum(iD_1);
-			d_1_frac = d_1_other / (d_1_other + d_1_incep);
+			d_1_incfrac = d_1_incep / (d_1_other + d_1_incep + d_1_tmp1);
+			d_1_tmp1frac = d_1_tmp1 / (d_1_other + d_1_tmp1);
 		}
-		if (!hybrid_flag || test <= d_1_frac || (ip1 == -2 && sys.GetIncepted() <= 1))
+		if (test > d_1_incfrac || mustSwitch)
 		{
-			while ((ip2 == ip1) && (++guard < 1000))
-				ip2 = sys.Particles().Select(iD_1, rng);
+			test = unifDistrib();
+			if (test > d_1_tmp1frac || mustSwitch)
+			{
+				while ((ip2 == ip1) && (++guard < 1000))
+					ip2 = sys.Particles().Select(iD_1, rng);
+			}
+			else
+				ip2 = -3;
 		}
 		else
 		{
 			ip2 = -2;
-			test = unifDistrib(); // temporary
 		}
 		break;
 	case SlipFlow3:
 		if (hybrid_flag)
 		{
 			double d_1_incep = wt_incep / dc_incep;
+			double d_1_tmp1 = wt_tmp1 / dc_tmp1;
 			double d_1_other = sys.Particles().GetSum(iD_1);
-			d_1_frac = d_1_other / (d_1_other + d_1_incep);
+			d_1_incfrac = d_1_incep / (d_1_other + d_1_incep + d_1_tmp1);
+			d_1_tmp1frac = d_1_tmp1 / (d_1_other + d_1_tmp1);
 		}
-		if (!hybrid_flag || test <= d_1_frac || (ip1 == -2 && sys.GetIncepted() <= 1))
+		if (test > d_1_incfrac || mustSwitch)
 		{
-			while ((ip2 == ip1) && (++guard < 1000))
-				ip2 = sys.Particles().Select(iD_1, rng);
+			test = unifDistrib();
+			if (test > d_1_tmp1frac || mustSwitch)
+			{
+				while ((ip2 == ip1) && (++guard < 1000))
+					ip2 = sys.Particles().Select(iD_1, rng);
+			}
+			else
+				ip2 = -3;
 		}
 		else
 		{
 			ip2 = -2;
-			test = unifDistrib(); // temporary
 		}
 		break;
 	case SlipFlow4:
 		if (hybrid_flag)
 		{
 			double d_2_incep = wt_incep / (dc_incep * dc_incep);
+			double d_2_tmp1 = wt_tmp1 / (dc_tmp1 * dc_tmp1);
 			double d_2_other = sys.Particles().GetSum(iD_2);
-			d_2_frac = d_2_other / (d_2_other + d_2_incep);
+			d_2_incfrac = d_2_incep / (d_2_other + d_2_incep + d_2_tmp1);
+			d_2_tmp1frac = d_2_tmp1 / (d_2_other + d_2_tmp1);
 		}
-		if (!hybrid_flag || test <= d_2_frac || (ip1 == -2 && sys.GetIncepted() <= 1))
+		if (test > d_2_incfrac || mustSwitch)
 		{
-			while ((ip2 == ip1) && (++guard < 1000))
-				ip2 = sys.Particles().Select(iD_2, rng);
+			test = unifDistrib();
+			if (test > d_2_tmp1frac || mustSwitch)
+			{
+				while ((ip2 == ip1) && (++guard < 1000))
+					ip2 = sys.Particles().Select(iD_2, rng);
+			}
+			else
+				ip2 = -3;
 		}
 		else
 		{
 			ip2 = -2;
-			test = unifDistrib(); // temporary
 		}
 		break;
 	case FreeMol1:
 		if (hybrid_flag)
 		{
 			double d2m_1_2_incep = wt_incep * dc_incep * dc_incep / sqrt_m_incep;
+			double d2m_1_2_tmp1 = wt_tmp1 * dc_tmp1 * dc_tmp1 / sqrt_m_tmp1;
 			double d2m_1_2_other = sys.Particles().GetSum(iD2_M_1_2);
-			d2m_1_2_frac = d2m_1_2_other / (d2m_1_2_other + d2m_1_2_incep);
+			d2m_1_2_incfrac = d2m_1_2_incep / (d2m_1_2_other + d2m_1_2_incep + d2m_1_2_tmp1);
+			d2m_1_2_tmp1frac = d2m_1_2_tmp1 / (d2m_1_2_other + d2m_1_2_tmp1);
 		}
-		if (!hybrid_flag || test <= d2m_1_2_frac || (ip1 == -2 && sys.GetIncepted() <= 1))
+		if (test > d2m_1_2_incfrac || mustSwitch)
 		{
-			while ((ip2 == ip1) && (++guard < 1000))
-				ip2 = sys.Particles().Select(iD2_M_1_2, rng);
+			test = unifDistrib();
+			if (test > d2m_1_2_tmp1frac || mustSwitch)
+			{
+				while ((ip2 == ip1) && (++guard < 1000))
+					ip2 = sys.Particles().Select(iD2_M_1_2, rng);
+			}
+			else
+				ip2 = -3;
 		}
 		else
 		{
 			ip2 = -2;
-			test = unifDistrib(); // temporary
 		}
 		break;
 	case FreeMol2:
 		if (hybrid_flag)
 		{
 			double m_1_2_incep = wt_incep / sqrt_m_incep;
+			double m_1_2_tmp1 = wt_tmp1 / sqrt_m_tmp1;
 			double m_1_2_other = sys.Particles().GetSum(iM_1_2);
-			m_1_2_frac = m_1_2_other / (m_1_2_other + m_1_2_incep);
+			m_1_2_incfrac = m_1_2_incep / (m_1_2_other + m_1_2_incep + m_1_2_tmp1);
+			m_1_2_tmp1frac = m_1_2_tmp1 / (m_1_2_other + m_1_2_tmp1);
 		}
-		if (!hybrid_flag || test <= m_1_2_frac || (ip1 == -2 && sys.GetIncepted() <= 1))
+		if (test > m_1_2_incfrac || mustSwitch)
 		{
-			while ((ip2 == ip1) && (++guard < 1000))
-				ip2 = sys.Particles().Select(iM_1_2, rng);
+			test = unifDistrib();
+			if (test > m_1_2_tmp1frac || mustSwitch)
+			{
+				while ((ip2 == ip1) && (++guard < 1000))
+					ip2 = sys.Particles().Select(iM_1_2, rng);
+			}
+			else
+				ip2 = -3;
 		}
 		else
 		{
 			ip2 = -2;
-			test = unifDistrib(); // temporary
 		}
 		break;
 	default:
 		if (hybrid_flag)
 		{
 			double wt_other = sys.Particles().Count();
-			wt_frac = wt_other / (wt_other + wt_incep);
+			wt_incfrac = wt_incep / (wt_other + wt_incep + wt_tmp1);
+			wt_tmp1frac = wt_tmp1 / (wt_other + wt_tmp1);
 		}
-		if (!hybrid_flag || test <= wt_frac || (ip1 == -2 && sys.GetIncepted() <= 1))
+		if (test > wt_incfrac || mustSwitch)
 		{
-			while ((ip2 == ip1) && (++guard < 1000))
-				ip2 = sys.Particles().Select(rng);
+			test = unifDistrib();
+			if (test > wt_tmp1frac || mustSwitch)
+			{
+				while ((ip2 == ip1) && (++guard < 1000))
+					ip2 = sys.Particles().Select(rng);
+			}
+			else
+				ip2 = -3;
 		}
 		else
 		{
 			ip2 = -2;
-			test = unifDistrib(); // temporary
 		}
 		break;
 	}
-	++test; // temporary
 }
 
 // COAGULATION KERNELS.
