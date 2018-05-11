@@ -150,6 +150,21 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
 
 	if (m_mech->IsHybrid())
 	{
+		/*double d_inc = 2.6766e-08;
+		double d2_inc = 2.6827e-15;
+		double d_1_inc = 5.0186e+08;
+		double d_2_inc = 6.8816e+17;
+		double m_1_2_inc = 3.7800e+11;
+		double d2m_1_2_inc = 1.0808e-23;
+		double wt = (spInc_tmp1 != nullptr) ? spInc_tmp1->getStatisticalWeight() : 0.0;
+		if (spInc_inc != nullptr)
+			wt += spInc_inc->getStatisticalWeight();
+		d += (wt * d_inc);
+		d2 += (wt * d2_inc);
+		d_1 += (wt * d_1_inc);
+		d_2 += (wt * d_2_inc);
+		m_1_2 += (wt * m_1_2_inc);
+		d2m_1_2 += (wt * d2m_1_2_inc);*/
 		if (spInc_tmp1 != nullptr)
 		{
 			double wt = spInc_tmp1->getStatisticalWeight();
@@ -300,9 +315,31 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::partic
 	double d_2 = data.Property(iD_2);
 	double m_1_2 = data.Property(iM_1_2);
 	double d2m_1_2 = data.Property(iD2_M_1_2);
-
+	
 	if (m_mech->IsHybrid())
 	{
+		/*double d_inc = 2.7081e-08;
+		double d2_inc = 2.7183e-15;
+		double d_1_inc = 4.9635e+08;
+		double d_2_inc = 6.8089e+17;
+		double m_1_2_inc = 3.7392e+11;
+		double d2m_1_2_inc = 2.6527e-06;*/
+		/*double d_inc = 7.4509e-08;
+		double d2_inc = 4.2153e-13;// 4.0256e - 14;
+		double d_1_inc = 1.0191e+09;
+		double d_2_inc = 7.8855e+19;// 1.4092e + 19;
+		double m_1_2_inc = 3.4935e+12;// 1.4064e + 12;
+		double d2m_1_2_inc = 3.3639e-06;// 2.7389e - 06;
+		double wt = (spInc_tmp1 != nullptr) ? spInc_tmp1->getStatisticalWeight() : 0.0;
+		if (spInc_inc != nullptr)
+			wt += spInc_inc->getStatisticalWeight();
+		d += (wt * d_inc);
+		d2 += (wt * d2_inc);
+		d_1 += (wt * d_1_inc);
+		d_2 += (wt * d_2_inc);
+		m_1_2 += (wt * m_1_2_inc);
+		d2m_1_2 += (wt * d2m_1_2_inc);*/
+
 		if (spInc_tmp1 != nullptr)
 		{
 			double wt = spInc_tmp1->getStatisticalWeight();
@@ -456,6 +493,9 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			adjustParticleTemperature(sys, sp1->getStatisticalWeight(), m, sys.GetIsAdiabaticFlag(), 1, 2);
 		}
 
+		if (ip1 == -2)
+			sp1->SetTime(t);
+
 		ip1 = sys.Particles().Add(*sp1, rng);                                        // Add the particle to the ensemble
 	}
 	else
@@ -487,6 +527,9 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		//	sp_age = t - create_t;
 		//sp2->SetTime(t - sp_age);
 
+		if (ip2 == -2)
+			sp2->SetTime(t);
+
 		ip2 = -2;
 	}
 	else
@@ -506,7 +549,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	/*std::ofstream pscFile;
 	std::string pscfname;
 	pscfname = "sp_update_times.csv";
-	if (t > 0.0039 && t < 0.0052)
+	if (t > 0.0015 && t <= 0.001505)
 	{
 		unsigned int counter = 0;
 		for (unsigned int i = 0; i < sys.ParticleCount(); ++i)
@@ -620,7 +663,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				delete sp2;
 				sp2 = NULL;
 			}
-			/*if (t > 0.0039 && t < 0.0052)
+			/*if (t > 0.0015 && t <= 0.001505)
 			{
 				pscFile.open(pscfname.c_str(), std::ios::app);
 				pscFile << 1 << "\n";
@@ -643,7 +686,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				sp2 = NULL;
 				//sys.SetNotPSIFlag(true);
 			}
-			/*if (t > 0.0039 && t < 0.0052)
+			/*if (t > 0.0015 && t <= 0.001505)
 			{
 				pscFile.open(pscfname.c_str(), std::ios::app);
 				pscFile << 0 << "\n";

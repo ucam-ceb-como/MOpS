@@ -282,39 +282,59 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 					//double sp_age = 0;
 					//boost::exponential_distribution<double> waitDistrib(inceptingcoagulationchange);
 					//boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<double> > waitGenerator(rng, waitDistrib);
-					double mu = 1, sigma = 0;
+					double mu = 1, sigma = 0, age = 0;
 					if (t <= 0.0013)
 					{
 						mu = -10.8944;
 						sigma = 1.57235;
+						age = 5.494671665649481e-05;
 					}
 					else if (t <= 0.0026)
 					{
 						mu = -10.8891;
 						sigma = 1.8953;
+						age = 7.083652539468709e-05;
 					}
-					else if(t <= 0.0039)
+					/*else if(t <= 0.0039)
 					{
 						mu = -10.4252;
 						sigma = 1.86087;
-					}
+					}*/
 					else if(t <= 0.0052)
 					{
 						mu = -10.7503;
 						sigma = 1.88096;
+						age = 7.666343071377722e-05;
 					}
 					else
 					{
 						mu = -10.5756;
 						sigma = 1.89512;
+						age = 8.672460365238535e-05;
 					}
 
-					double sp_age = 0.2 * boost::random::lognormal_distribution<double>(mu, sigma)(rng);
+					double xmax = exist_t;
+					double xmod = 0.5e-5; // tsplit - t;
+					double alph = 5.7;
+					age = 1e-5;
+
+					//sigma = 1.3;
+					//double sqrtexp = 2 * alph * alph - 4 * (log(xmod) - log(xmax));
+					//sigma = 0.5 * (-alph * std::sqrt(2) + std::sqrt(sqrtexp));
+					double sqrtexp = alph * alph - log(xmax) + log(age);
+					sigma = std::sqrt(2) * (alph + std::sqrt(sqrtexp));
+					
+					mu = log(xmax) - alph * sqrt(2) * sigma;
+					
+					double sp_age = boost::random::lognormal_distribution<double>(mu, sigma)(rng);
 					//double mult = 7.5000e+9 * t * t * t;
 					//sp_age = mult * waitGenerator();// (1 / inceptingcoagulationchange);                                                 // Choose an LPDA last update time from the class residence time distribution
-					//if (sp_age > t - create_t)                                                   // t \in [tcreate,t], age \in [0,t-tcreate]
-					//	sp_age = t - create_t;
-					
+					int guard = 0;
+					while (sp_age > t - create_t && (++guard < 1000))                                                   // t \in [tcreate,t], age \in [0,t-tcreate]
+						sp_age = boost::random::lognormal_distribution<double>(mu, sigma)(rng); //t - create_t;
+					if (sp_age > t - create_t)
+						sp_age = t - create_t;
+
 					Particle * sp1 = sys.Particles().GetInceptedSP().Clone();
 
 					//boost::uniform_01<rng_type &> uniformGenerator(rng);
