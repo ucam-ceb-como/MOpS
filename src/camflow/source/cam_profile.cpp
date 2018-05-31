@@ -54,9 +54,9 @@ CamProfile::CamProfile(CamGeometry& cg)
 mWidth(0.0),
 mCenter(0.0),
 fracType(0),
-geom(cg),
 flag_loadFracs(false),
-flag_loadTemp(false)
+flag_loadTemp(false),
+geom(cg)
 {}
 
 CamProfile::~CamProfile()
@@ -332,11 +332,13 @@ double CamProfile::getUserDefTemp(const double& pos)
         {
             return u_temp[i];
         }
-        else if( (pos > u_pos[i]) && (pos < u_pos[i+1]) )
+        else if( (pos > u_pos[i]) && (pos < u_pos[i+1]) ) 
         {
             return mTempInterpolator.interpolate(pos);
         }
     }
+    
+    return(-1);
 
 }
 
@@ -375,6 +377,9 @@ double CamProfile::getUserDefFracs(const double& pos, const std::string species)
             return mFracInterpolator.interpolate(pos);
         }
     }
+
+    return(-1);
+
 
 }
 std::vector<double>& CamProfile::getPosition(){

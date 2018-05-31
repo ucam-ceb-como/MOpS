@@ -96,7 +96,7 @@ void LewisNumber::readFromFile(const std::string& fixedLewisFile)
             {
                 double LeNumber = boost::lexical_cast<double>((*p)->Data());
                 std::cout << "    " << speciesName << " " << LeNumber << std::endl;
-                for (size_t i=0; i<mCord_; ++i) Le(i,speciesIndex) = LeNumber;
+                for (int i=0; i<mCord_; ++i) Le(i,speciesIndex) = LeNumber;
             }
         }
     }
@@ -183,7 +183,7 @@ void LewisNumber::calculateConstantLe()
             //Calculate Lewis Number
             LeNum = (k_rho_cp)/(Dab);
         }
-        for (size_t i=0; i<mCord_; ++i) Le(i,speciesIndex) = LeNum;
+        for (int i=0; i<mCord_; ++i) Le(i,speciesIndex) = LeNum;
         std::cout << "        <species name=\""<<speciesName <<"\">" << LeNum << "</species> " <<std::endl;
 
         *spIt++;

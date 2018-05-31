@@ -551,7 +551,7 @@ void CamPremix::solve
     /*
      *interior cells
      */
-    int len = cstrs.size();
+    //int len = cstrs.size();
     for (int i=iMesh_s; i<iMesh_e; i++)
     {
         vector<double> massFrac;

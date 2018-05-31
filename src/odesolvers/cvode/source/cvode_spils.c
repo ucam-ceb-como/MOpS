@@ -20,7 +20,7 @@
 #include "cvode_impl.h"
 #include "cvode_spils_impl.h"
 
-#define _CRT_SECURE_NO_WARNINGS
+//#define _CRT_SECURE_NO_WARNINGS
 
 /* Private constants */
 

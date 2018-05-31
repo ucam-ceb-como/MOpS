@@ -21,7 +21,7 @@ ScalarDissipationRate::ScalarDissipationRate
 {
 
     scalarDissipationRate_.resize(n_TimePoints);
-    for (size_t t=0; t<n_TimePoints; ++t)
+    for (int t=0; t<n_TimePoints; ++t)
     {
         scalarDissipationRate_[t].resize(mixFracCoords.size());
     }

@@ -25,7 +25,8 @@ IntegratorT::IntegratorT(const int nin, double yin[], double xin, const double x
 {
     using namespace std;
 	// n, the dimension of the system
-	if (n == UINT_MAX) {
+        size_t nL = n;
+	if (nL == UINT_MAX) {
 		cout << "System too big, max. n = " << UINT_MAX - 1 << endl;
 		throw -1;
 	}

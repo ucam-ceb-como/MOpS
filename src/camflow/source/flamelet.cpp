@@ -22,14 +22,14 @@ FlameLet::FlameLet
 :
 CamSetup(ca, config, cc, cg, cp, cs, mech),
 stoichZ(stoichiometricMixtureFraction()),
+sootResidualZeroed(false),
 timeHistory(false),
 sdrProfile(false),
 sdrAnalytic(false),
 radiation(NULL),
 scalarDissipationRate_(admin_.getInputFile(), stoichZ, reacGeom_.getAxpos(), 1),
-CpSpec(mCord,nSpc),
-sootResidualZeroed(false),
-Lewis(admin_.getInputFile(),camMech_,mCord,nSpc)
+Lewis(admin_.getInputFile(),camMech_,mCord,nSpc),
+CpSpec(mCord,nSpc)
 {}
 
 FlameLet::~FlameLet()
@@ -291,9 +291,9 @@ void FlameLet::initSolutionVector()
     if(profile_.flagLoadFracs())
     {
         // Loop over all points, EXCLUDING boundaries
-        for (size_t i=cellBegin+1; i<cellEnd-1; ++i)
+        for (int i=cellBegin+1; i<cellEnd-1; ++i)
         {
-            for (size_t l=0; l<nSpc; ++l)
+            for (int l=0; l<nSpc; ++l)
             {
                 vSpec[i*nSpc+l] = profile_.getUserDefFracs(position[i],(*spv_)[l]->Name());
             }
@@ -327,7 +327,7 @@ void FlameLet::initSolutionVector()
 
             vMom_rho[i*nMoments] = sootMom_.getFirstMoment();
             //cout << "vMom[i*nMoments]  " << i*nMoments <<"  "  << vMom[i*nMoments] << endl;
-            for (size_t l=1; l<nMoments; ++l)
+            for (int l=1; l<nMoments; ++l)
             {
                 // ank25: Do we need to multiply by 1e6 here?
                 //vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(double(sootMom_.getAtomsPerDiamer()));
@@ -371,8 +371,8 @@ void FlameLet::initSolutionVector()
                 // generated with soot moments switched off.  In that case
                 // load species and temperature from binary file, but don't
                 // load up moments.
-
-                if 	(solvect_temp.size() == nVar*cellEnd)
+                size_t noMomSolVect = nVar*cellEnd;
+                if 	(solvect_temp.size() == noMomSolVect)
                 {
                     std::cout << "Loading species, temperature and moments from bin file"
                                         << std::endl;
@@ -1231,7 +1231,7 @@ void FlameLet::energyResidual
     double zPE=0, zPW=0;
     double source=0;
     double deltax=0;
-    double sdr, sdrPE, sdrPW;
+    double sdr;//, sdrPE, sdrPW;
 
     /*
     *starting with mixture fraction zero: i.e oxidizer
@@ -1593,7 +1593,6 @@ void FlameLet::report(double x, double* solution, double& res)
 */
 void FlameLet::reportToFile(std::string fileName, double t, std::vector<double>& soln)
 {
-
     double sum;
     reporter_->openFile(fileName,false);
 
@@ -1775,8 +1774,6 @@ const
 */
 void FlameLet::reportSootRatesToFile(std::string fileName, double t, Array2D& rates)
 {
-
-    double sum;
 
     std::cout << "Reporting Component Soot Rates to File" << std::endl;
 

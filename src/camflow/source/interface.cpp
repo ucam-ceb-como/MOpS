@@ -57,10 +57,10 @@ using namespace Camflow;
  */
 Interface::Interface()
 :
+cp(cg),
 model(NULL),
 speciesPointerVector(NULL),
-flmlt(NULL),
-cp(cg)
+flmlt(NULL)
 {
 
     std::string fChem("chem.inp");
@@ -107,10 +107,10 @@ Interface::Interface(Mechanism& mech_in,
         void* rModel, const double sdr
 )
 :
+cp(cg),
 model(NULL),
 speciesPointerVector(NULL),
-flmlt(NULL),
-cp(cg)
+flmlt(NULL)
 {
 
     std::string fCamFlow("camflow.xml");
@@ -173,8 +173,10 @@ void Interface::resetMixtures(std::vector<Thermo::Mixture>& cstrs){
     model->getTemperatureVector(temp);
 
     int nCells = cg.getnCells();
+    
     if(cstrs.size() >0){
-        if(cstrs.size() != nCells-2)
+        size_t neededSize = nCells-2;
+        if(cstrs.size() != neededSize)
             throw("size of mixtures is not consistant with the grid\n");
         int nSp = mech.SpeciesCount();
         for(int i=0; i<nCells-2;i++){

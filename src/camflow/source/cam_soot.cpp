@@ -59,10 +59,10 @@ CamSoot::CamSoot()
     rhoSoot(1.8e+03),        //kg/m^3
     lambda(2.3e15),          //cm^-2 (Keep this in cgs units. We do all surface chem calcs in cgs)
     atomsPerDimer(32),    	 // Override this later as 2 x numCAtomInception
+    lowFrac(-4),
+    momentON(false),
     D1_PAH(2.42e-10),        //m  (This is the size of a benzene ring, not the PAH diameter)
 							 // 2.42 = 1.395*sqrt(3), 1.395 A is the C-C in aromatics
-    momentON(false),
-    lowFrac(-4),
     CD1(pow((6*(cMass/NA)/(PI*rhoSoot)),1.0/3.0))
 {
 

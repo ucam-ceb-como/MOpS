@@ -93,11 +93,11 @@ int main(int argc, char *argv[])
     //////////// Generate grid here ///////////
 
     // Construct uniform grid.
-    for (size_t i=1; i<numberOfCellsLower; ++i)
+    for (int i=1; i<numberOfCellsLower; ++i)
     {
             grid.push_back(2.0*i*stMixFrac/numberOfCells);
     }
-    for (size_t i=1; i<numberOfCellsUpper; ++i)
+    for (int i=1; i<numberOfCellsUpper; ++i)
     {
             grid.push_back(stMixFrac + 2.0*i*(1.0-stMixFrac)/numberOfCells);
     }
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     {
         triangular s(0.0,stMixFrac,1.0);
         double max = pdf(s,stMixFrac);
-        for (size_t i=1; i<=numberOfCells; ++i)
+        for (int i=1; i<=numberOfCells; ++i)
         {
             grid[i] = stMixFrac + (grid[i]-stMixFrac)*(1.0-pdf(s,grid[i])/max);
         }
@@ -120,14 +120,14 @@ int main(int argc, char *argv[])
         normal s(stMixFrac,0.5);
         vector<double> spacingFactor, pdfSaved;
         
-        for (size_t i=0; i<=numberOfCells; ++i) 
+        for (int i=0; i<=numberOfCells; ++i) 
             pdfSaved.push_back(pdf(s,grid[i]));
             
-        for (size_t i=0; i<numberOfCells; ++i)
+        for (int i=0; i<numberOfCells; ++i)
             spacingFactor.push_back(abs(pdfSaved[i+1] - pdfSaved[i]));
 
         double normalise = accumulate(spacingFactor.begin(),spacingFactor.end(),0.0);
-        for (size_t i=1; i<numberOfCells; ++i)
+        for (int i=1; i<numberOfCells; ++i)
             grid[i] = grid[i-1] + abs(pdfSaved[i]-pdfSaved[i-1])/normalise;
     }
 

@@ -36,12 +36,15 @@ CamResidual::CamResidual
   nEqn(nVar*mCord),
   solverID(cc.getSolver()),
   resSp(nSpc*mCord,0.0),
-  resMom(nMoments*mCord,0.0),   // ank25: moments residual
   resT(mCord,0.0),
+  resMom(nMoments*mCord,0.0),   // ank25: moments residual
   s_mf(mCord,nSpc),
   s_Wdot(mCord,nSpc),
+  sootComponentRatesAllCells(mCord,nMoments*4),  // ank25: used to output soot rates
   s_H(mCord,nSpc),
   s_Diff(mCord,nSpc),
+  moments(mCord,nMoments),      // ank25: moments analogous to s_mf
+  moments_dot(mCord,nMoments),       // ank25: moments rate analogous to s_wdot
   m_T(mCord,0.0),
   m_rho(mCord,0.0),
   m_cp(mCord,0.0),
@@ -51,9 +54,6 @@ CamResidual::CamResidual
   m_G(mCord,0.0),
   dz(cg.getGeometry()),
   avgMolWt(mCord,0.0),
-  moments(mCord,nMoments),      // ank25: moments analogous to s_mf
-  moments_dot(mCord,nMoments),       // ank25: moments rate analogous to s_wdot
-  sootComponentRatesAllCells(mCord,nMoments*4),  // ank25: used to output soot rates
   avgSootDiamMaster(mCord,0.0),    // soot properties derived from moments.
   dispersionMaster(mCord,0.0),
   sootSurfaceAreaMaster(mCord,0.0),

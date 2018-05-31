@@ -294,6 +294,8 @@ void Batch::energyResidual(const double& x, double* y, double* f)
         double cp = camMixture_->getSpecificHeatCapacity();
         //heat release due to chemical reactions
         double heat = cm.sumVector(eth,wdot);
+
+        //unused:
         double extSource = 0.0;
 
         /*
@@ -302,7 +304,7 @@ void Batch::energyResidual(const double& x, double* y, double* f)
          * on Nusselt number correlation based on Graets number
          * This is only an approximation. For exact results the user
          * need to specify the overall heat transfer coefficient
-         */
+         
         if(engModel == admin_.NONISOTHERMAL)
         {
             double lambda = camMixture_->getThermalConductivity(opPre);
@@ -310,7 +312,7 @@ void Batch::energyResidual(const double& x, double* y, double* f)
             double dia = reacGeom_.getDia();
             double ht = admin_.getHeatTransferCoeff(x,vel,dia,rho,eta,lambda,cp);
             extSource = ht*reacGeom_.getSurfAres_l()*(admin_.getWallTemp() - y[ptrT]);
-        }
+        }*/
 
         //f[ptrT] = (-heat*Ac + extSource)/(y[ptrF]*cp*Ac);
         f[ptrT] = -heat/(camMixture_->MassDensity()*cp);
