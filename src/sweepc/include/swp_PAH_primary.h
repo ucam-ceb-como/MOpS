@@ -63,6 +63,8 @@
 #include "swp_bintree_serializer.h"
 #include <boost/shared_ptr.hpp>
 
+#include "swp_coords.h"
+
 #include <iostream>
 #include <stack>
 #include <map>
@@ -156,7 +158,17 @@ public:
     void UpdateCache(void);
 
     //! updates the evolution of the PAHs using the database and the current time
-	void UpdatePAHs(double t, const Sweep::ParticleModel &model, Cell &sys, rng_type &rng);
+	void UpdatePAHs(double t, double dt, const Sweep::ParticleModel &model, Cell &sys, int statweight, int ind, rng_type &rng,
+		PartPtrVector &overflow);
+	
+	//! overload function
+	//! updates the evolution of the PAHs using the database and the current time
+	//! if coordinates of primary are tracked, the free surface area of the particle can be related to surface growth
+	void UpdatePAHs(double t, double dt, const Sweep::ParticleModel &model, Cell &sys, int statweight, int ind, rng_type &rng,
+		PartPtrVector &overflow, double fs);
+
+	//! adjust the primary after surface growth in PAH_KMC model.
+	void Adjust(const double old_vol);
 
     //! adds a PAH to a particle
     void AddPAH(double time, const Sweep::ParticleModel &model);
@@ -167,6 +179,15 @@ public:
     //! Returns the distance between the centres of primary particles.
     double Distance() const;
 
+	//! Calculates the radius of gyration.
+	double GetRadiusOfGyration() const;
+
+	//! Returns a vector of primary coordinates and radius (4D).
+	void GetPriCoords(std::vector<fvector> &coords) const;
+
+	//! Returns the free surface area of a particle.
+	double GetFreeSurfArea() const;
+
     //! returns the Rounding Level according the Eq 6.3 on the markus sander's thesis
     double RoundingLevel();
     //! returns the left child
@@ -175,13 +196,21 @@ public:
     const PAHPrimary *RightChild() const;
 
     //! Checks if the Rounding level is higher then the treshold (0.95) and merges the primaries if necessary
+	//! Used if primary coordinates are not tracked.
     bool CheckRounding();
+
+	//! Checks if the sintering level, merges particles if necessary
+	//! Used if primary coordinates are tracked.
+	bool CheckSintering();
 
     //! Updates the fractal dimension
     void CalcFractalDimension();
 
     //! Deserialize object from input binary stream
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model, PahDeserialisationMap &pah_duplicates);
+
+	//! Return primary particle details and connectivity
+	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
     
     //! Serialize object to output binary stream
     void Serialize(std::ostream &out, void *duplicates) const;
@@ -216,9 +245,13 @@ public:
     int NumEdgeC() const;
     //! returns the number of 6-member rings in the particle.
     int NumRings() const;
+	//! returns the number of 5-member rings in the particle.
+	int NumRings5() const;
     //! returns sqrt(L*W)
     double sqrtLW() const;
+
     double AvgCoalesc() const;
+	double AvgSinter() const;
 
     //! Find Xmer, and store their information in a vector
     void FindXmer(std::vector<double> &out, int m_xmer) const;
@@ -232,6 +265,8 @@ public:
     void mass_PAH(std::vector<double> &out) const;
     //! output PAH information in a vector of vector and then index the info
     void OutputPAHPSL(std::vector<std::vector<double> > &out, const int index, const double density, std::set<void*> &pah_duplicates, std::vector<std::string> &Mapping, const double timeStep) const;
+	//! output primary particle information in a vector of vector and then index the info
+	void OutputPPPSL(std::vector<std::vector<double> > &out, const int index, const double density,const double timeStep) const;
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
     //! find soot particle with only one Incepted molecule (A1,A2 or A4)
@@ -244,6 +279,16 @@ public:
     void Fragtest(std::vector<double> &out, const int k, std::string mode, double threshold) const;
 
     double ReducedMass()const;
+
+	std::vector<boost::shared_ptr<PAH> > GetPAHVector() const;
+
+	//! Updates sintering level
+	//! used if primary coordinates are tracked
+	double SinteringLevel();
+
+	//! Returns the cap volume of two connected primary particles
+	double CalcChildrenSumCap();
+
 
 protected:
     //! Empty primary not meaningful
@@ -265,10 +310,12 @@ protected:
     void Reset();
     //! return ture if it is a false rounding, false rounding is used to merge primary particle containing only one or no PAH after the InvalidPAHs are removed.
     bool FakeRounding();
-    //! merges the two children primaries together
-    void Merge();
+    
+	//! merges the two children primaries together
+	//void Merge();
     //! updates the pointers after a merge event
     void ChangePointer(PAHPrimary *source, PAHPrimary *target);
+
     //! copies the node withoud the children
     void CopyParts( const PAHPrimary *source);
     //! copies the subtree of a node
@@ -276,6 +323,130 @@ protected:
     //! returns a uniformly chosen primary particle
     PAHPrimary *SelectRandomSubparticle(rng_type &rng);
     void ReleaseMem();
+
+	//! Distance between the centres of primary particles.
+	double m_distance_centreToCentre;
+
+	//! For tracking the coordinates of primary particles.
+	Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
+	Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
+
+	//! Radius of bounding sphere raised to powers of 1, 2 and 3.
+	double m_r;  //!< Bounding sphere radius of aggregate/primary.
+	double m_r2; //!< r squared (useful for efficient collision detection computation).
+	double m_r3; //!< r cubed (useful for calculating centre-of-mass).
+
+	//! if primary coordinates are tracked
+	//! Sintering level of children connected by this node
+	double m_children_sintering;
+
+	///////////////////////////////////////////////////////////////////////////
+	/// Functions for manipulating coordinates of primary particles in an
+	/// aggregate.
+	///////////////////////////////////////////////////////////////////////////
+
+	//! Returns the bounding-sphere centre.
+	const Coords::Vector &boundSphCentre(void) const;
+
+	//! Calculates the bounding sphere position and radius using the left and
+	//! right child node values.
+	void calcBoundSph(void);
+
+	//! Calculates the centre-of-mass using the left and right child node
+	//! values.
+	void calcCOM(void);
+
+	//! Put the bounding-sphere at the origin.
+	void centreBoundSph(void);
+
+	//! Put the centre-of-mass at the origin.
+	void centreCOM(void);
+
+	//! Returns true if this node is a leaf (has no children).
+	bool isLeaf(void) const;
+
+	//! Returns the bounding sphere radius.
+	double Radius(void) const;
+
+	//! Rotates the aggregate node and child structure about its centre-of-mass
+	//! by the given angles (spherical coordinates).
+	void rotateCOM(double theta, fvector V);
+
+	//! Translates (moves) the aggregate node and child structure by the given
+	//! amounts along the cartesian axes.
+	void Translate(double dx, double dy, double dz);
+
+	//! Write the coordinates of the primaries belonging to the node pointed to
+	//! by the this pointer.
+	void writePrimaryCoordinatesRadius(void);
+
+	//! From bintree model.
+	//! Check for the overlap of primary particles.
+	bool checkForOverlap(
+		PAHPrimary &target, //!< Target node.
+		PAHPrimary &bullet, //!< Bullet node.
+		int &numberOfOverlaps,  //!< Number of overlaps.
+		double &Separation      //!< Separation between the centres of the primary particles for use with the Newton bisection method.   
+		);
+
+	//! Determine whether the particles overlap.
+	static bool particlesOverlap(
+		const Coords::Vector &p1, //!< Positional vector of sphere 1.
+		double r1,                //!< Radius of sphere 1.
+		const Coords::Vector &p2, //!< Positional vector of sphere 2.
+		double r2,                //!< Radius of sphere 2.
+		double &Separation        //!< Separation between the centres of the primary particles for use with the Newton bisection method.   
+		);
+
+	//! Sets the radius of the bounding sphere.
+	void setRadius(double r);
+
+	//! Transforms the node coordinates using the given transformation matrix.
+	void transform(const Coords::Matrix &mat);
+
+	//! Sum of primary free surface areas under this node
+	double m_free_surf;
+
+	//! From bintree model.
+	//! Sinter a node for time dt
+	void SinterNode(double dt,
+		Cell &sys,
+		const Processes::SinteringModel &model,
+		rng_type &rng,
+		double wt);
+
+	//! Analogous to bintree model.
+	//! Checks if condition for merger is met
+	bool MergeCondition();
+
+	//! Sintering rate of particle
+	double m_sint_rate;
+
+	double m_avg_sinter;
+
+	//primary volume -- different to m_vol if centre to centre seapration is tracked
+	double m_primaryvol;
+
+	//csl37-rewrite sum of neck radii * ri/xij
+	//necessary for sintering process
+	//cached
+	double m_sum_necks;
+
+	//! From bintree model
+	//! Function to return the separation unit vector between two coordinates
+	Coords::Vector UnitVector(Coords::Vector x_i, Coords::Vector x_j); 
+
+	//! From bintree model
+	//! Translates a primary particle
+	void TranslatePrimary(Coords::Vector u, double delta_d);
+
+	//! From bintree model
+	//! Function to translate neighbours of a primary except prim_ignore
+	void TranslateNeighbours(PAHPrimary *prim, Coords::Vector u, double delta_d, PAHPrimary *prim_ignore);
+
+	//! From bintree model
+	//! Calculates distance between two points
+	double Separation(Coords::Vector x_i, Coords::Vector x_j);
 
   //  double pow(double a, double b);
 
@@ -298,6 +469,10 @@ private:
     //! Set the sintering time of a tree
     void SetSinteringTime(double time);
 
+	////! From bintree model.
+	////! function to identify neighbours and sum their contribution to surface
+	//void SumNeighbours(PAHPrimary *prim, double &sumterm);
+
     //some basic properties
     //derived from the PAHs by UpdataCache()
     int m_numcarbon;
@@ -307,6 +482,8 @@ private:
     int m_numOfEdgeC;
     //! Total number of 6-member rings in this soot particle
     int m_numOfRings;
+	//! Total number of 6-member rings in this soot particle
+	int m_numOfRings5;
     //! Number of PAHs below this node
     int m_numPAH;
     //! Number of primaries below this node
@@ -333,11 +510,14 @@ private:
     int m_leftparticle_numPAH;
 
     double m_children_surf;
-    // store the RoundingLevel
-    double m_children_roundingLevel;
     
-    //! Distance between the centres of primary particles.
-    double m_distance_centreToCentre;
+	// store the RoundingLevel
+    double m_children_roundingLevel;
+
+	//used to calculate geometric volume of a particle
+	double m_children_sumCap;
+	double m_sum_cap;
+	double m_sph_prim_vol;
 
     // radius of gyration and fractal dimension
     // the values are only update in CalcFractaldimension()
@@ -360,7 +540,34 @@ private:
     // Vector of std::tr1::shared_ptr<PAH>.
     std::vector<boost::shared_ptr<PAH> > m_PAH;
 
+	//! From bintree model
+	//! Update primary free surface area and volume
+	void UpdateOverlappingPrimary();
 
+	//! From bintree model
+	//! function to identify neighbours and sum their cap areas and volumes
+	void SumCaps(PAHPrimary *prim, double &CapAreas, double &CapVolumes, double &SumNecks);
+
+	//! From bintree model
+	//! function to modify the centre to centre separations and coordinates and neighbours
+	void UpdateConnectivity(PAHPrimary *prim, double delta_r, PAHPrimary *prim_ignore);
+
+	//! From bintree model
+	//Function to adjust primary properties
+	void AdjustPrimary(double dV, double d_ij, PAHPrimary *prim_ignore);
+
+	//! From bintree model
+	//! Overloaded ChangePointer for centre to centre separation and coordinate tracking models
+	void ChangePointer(PAHPrimary *source, PAHPrimary *target, PAHPrimary *small_prim, PAHPrimary *node);
+
+	//! From bintree model
+	//! Add new neighbours during a merger event
+	double AddNeighbour(double A_n_k, PAHPrimary *small_prim, PAHPrimary *node);
+
+	//! analogous to bintree model
+	//! Merges the two children primaries together
+	PAHPrimary &Merge();
+	
 };
 } //namespace AggModels
 } //namespace Sweep

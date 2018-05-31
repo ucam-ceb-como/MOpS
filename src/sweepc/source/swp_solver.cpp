@@ -206,7 +206,7 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
     if (t+dt <= t_stop) {
         boost::uniform_01<rng_type &> uniformGenerator(rng);
         const int i = chooseIndex(rates, uniformGenerator);
-        //std::cout << ' ' << i;
+        //std::cout << ' ' << i <<endl;
         mech.DoProcess(i, t+dt, sys, geom, rng);
         t += dt;
     } else {

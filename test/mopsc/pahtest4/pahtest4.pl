@@ -70,7 +70,7 @@ while(<$momentFile>) {
 
   # Look for a line that begina with a number and has the first entry (the time)
   # equal (upto a small tolerance) to 0.030816
-  if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.030816) < 1e-6 )) {
+  if(($fields[0] =~ /^\d+/) && (abs($fields[1] - 0.025317) < 1e-6 )) {
       # Third field should be the zeroth moment
       $m0 = $fields[4];
       #print "4: $fields[4], ";
@@ -82,24 +82,24 @@ while(<$momentFile>) {
   }
 }
 
-# Precalculated value: M0=4.38e+20, Fv=1.17e-6
+# Precalculated value: M0=3.41e+20, Fv=1.43e-7
 
 # 20 repetitions
 # mean values and 99% confidence interval widths
-# m0 (4.58+-1.63)e+20 m^-3
-# fv (1.57+-0.15)e-6
+# m0 (2.73+-0.333)e+20 m^-3
+# fv (1.58+-0.0826)e-7
 
 print "$m0, $m1\n";
-if(abs($m0 - 4.58e+20) > 3e+19) {
-  print "Simulated mean M0 was $m0, when  4.58e+20m^-3 expected\n";
+if(abs($m0 - 3.41e+20) > 3.33e+19) {
+  print "Simulated mean M0 was $m0, when  3.41e+20m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";
   exit 1;
 }
 
-if(abs($m1 - 1.57e-6) > 5e-7) {
-  print "Simulated mean Fv was $m1, when 1.57e-6 expected\n";
+if(abs($m1 - 1.43e-7) > 8.26e-9) {
+  print "Simulated mean Fv was $m1, when 1.43e-7 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

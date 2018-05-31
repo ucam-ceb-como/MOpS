@@ -44,6 +44,10 @@
 #include "swp_particle_model.h"
 #include "swp_kmc_simulator.h"
 #include "swp_PAH_primary.h"
+#include "swp_kmc_pah_structure.h"
+#include "swp_kmc_structure_comp.h"
+#include "swp_kmc_typedef.h"
+#include "swp_kmc_pah_process.h"
 
 #include <cmath>
 #include <vector>
@@ -216,10 +220,15 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_ndble      = 0;
     m_dbleon     = true;
     m_dbleactive = false;
-    m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0);
+    //m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0 / 4.0);
+	m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0 );
+	//m_dblecutoff = m_capacity+10;
 
-    m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
-    m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
+	m_dbleslack = (unsigned int)pow(2.0, (int)((m_levels - 5)>0 ? m_levels - 5 : 0));
+	//m_dbleslack = (int) m_capacity*0.075;
+	//m_dbleslack = m_dbleslack / 4.0;
+	//m_dblelimit = m_halfcap/4.0 - m_dbleslack;
+	m_dblelimit = m_halfcap - m_dbleslack;
 }
 
 /*!
@@ -229,6 +238,14 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
  */
 void Sweep::Ensemble::SetDoubling(const bool val) {
     m_dbleon = val;
+}
+
+unsigned int Sweep::Ensemble::DoubleLimit() {
+	return m_dblelimit;
+}
+
+bool Sweep::Ensemble::IsDoublingOn() {
+	return m_dbleactive;
 }
 
 /**
@@ -416,6 +433,65 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
     return i;
 }
 
+int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, int ind)
+{
+	iterator it1;
+	int count = 0;
+	for (it1 = begin(); it1 != end(); it1++){
+		//First, check if this particle is updated to the correct time
+		if ((*it1)->LastUpdateTime() == t && count > ind){
+			AggModels::PAHPrimary *pah =
+				dynamic_cast<AggModels::PAHPrimary*>((*it1)->Primary());
+			//Check if this particle contains a single primary with a single PAH with the same 
+			//amount of hydrogens and carbons
+			if (pah->Numprimary() == 1 && pah->NumPAH() == 1 && pah->NumCarbon() == m_PAH.numofC()
+				&& pah->NumHydrogen() == m_PAH.numofH() && pah->NumRings() == m_PAH.numofRings()
+				&& pah->NumRings5() == m_PAH.numofRings5()){
+				//Check if this single PAH matches the target PAH structure
+				/*std::list<KMC_ARS::Site> sitelistInput = m_PAH.GetSiteList();
+				std::list<KMC_ARS::Site> sitelistComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteList();
+				if (sitelistInput.size() == sitelistComp.size()){*/
+				//std::list<KMC_ARS::Site>::iterator it1 = sitelistInput.begin();
+				//std::list<KMC_ARS::Site>::iterator it2 = sitelistComp.begin();
+				//int ii;
+				//int counter = 0;
+				//for (ii = 0; ii != sitelistInput.size(); ii++){
+				//	if (it1->type != it2->type) break;
+				//	it1++;
+				//	it2++;
+				//	counter++;
+				//}
+				//if (counter == sitelistInput.size()){
+				//	return count;
+				//}
+				std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapInput = m_PAH.GetSiteMap();
+				std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteMap();
+				if (sitemapInput[KMC_ARS::FE].size() == sitemapComp[KMC_ARS::FE].size() &&
+					sitemapInput[KMC_ARS::ZZ].size() == sitemapComp[KMC_ARS::ZZ].size() &&
+					sitemapInput[KMC_ARS::AC].size() == sitemapComp[KMC_ARS::AC].size() &&
+					sitemapInput[KMC_ARS::BY6].size() == sitemapComp[KMC_ARS::BY6].size() &&
+					sitemapInput[KMC_ARS::BY5].size() == sitemapComp[KMC_ARS::BY5].size() &&
+					sitemapInput[KMC_ARS::R5].size() == sitemapComp[KMC_ARS::R5].size() &&
+					sitemapInput[KMC_ARS::RFE].size() == sitemapComp[KMC_ARS::RFE].size() &&
+					sitemapInput[KMC_ARS::RZZ].size() == sitemapComp[KMC_ARS::RZZ].size() &&
+					sitemapInput[KMC_ARS::RAC].size() == sitemapComp[KMC_ARS::RAC].size() &&
+					sitemapInput[KMC_ARS::RBY5].size() == sitemapComp[KMC_ARS::RBY5].size() &&
+					sitemapInput[KMC_ARS::RFER].size() == sitemapComp[KMC_ARS::RFER].size() &&
+					sitemapInput[KMC_ARS::RZZR].size() == sitemapComp[KMC_ARS::RZZR].size() &&
+					sitemapInput[KMC_ARS::RACR].size() == sitemapComp[KMC_ARS::RACR].size() &&
+					sitemapInput[KMC_ARS::FE3].size() == sitemapComp[KMC_ARS::FE3].size() &&
+					sitemapInput[KMC_ARS::FE2].size() == sitemapComp[KMC_ARS::FE2].size() &&
+					sitemapInput[KMC_ARS::AC_FE3].size() == sitemapComp[KMC_ARS::AC_FE3].size() &&
+					sitemapInput[KMC_ARS::BY5_FE3].size() == sitemapComp[KMC_ARS::BY5_FE3].size() &&
+					sitemapInput[KMC_ARS::FE_HACA].size() == sitemapComp[KMC_ARS::FE_HACA].size()){
+					return count;
+				}
+			}
+		}
+		count++;
+	}
+	return -1;
+}
 
 /*!
  * @param[in]   i       Index of particle to remove
@@ -436,7 +512,16 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
     //        }
     //    }
     //SetNumOfInceptedPAH(-1,m_particles[i]->Primary());
-    // Check that particle index is valid.
+
+	// See if IWDSA is being used. If so, do not attempt doubling at the end of this routine.
+	bool doubling = true;
+	if (m_particles[i]->Primary()->AggID() == AggModels::PAH_KMC_ID){
+		if (m_particles[i]->Primary()->ParticleModel()->Components(0)->WeightedPAHs()){
+			doubling = false;
+		}
+	}
+	
+	// Check that particle index is valid.
     if (i<m_count-1) {
         // First delete particle from memory, then
         // overwrite it with the last particle, which
@@ -465,7 +550,9 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
 
     // Particle removal might reduce the particle count
     // sufficiently to require particle doubling.
-    dble();
+	// But only do so if not using IWDSA as otherwise ensemble is likely to overflow during next LPDA
+	if(doubling) dble();
+
     assert(m_tree.size() == m_count);
 }
 
@@ -770,17 +857,28 @@ void Sweep::Ensemble::dble()
     // ensemble is back above half full, the routine updates the binary tree.
 
     // Check that doubling is on and the activation condition has been met.
-    if (m_dbleon && m_dbleactive) {
+    if (m_dbleon && m_dbleactive && m_count > 0) {
         const unsigned originalCount = m_count;
+		bool proceed = true;
 
         // Continue while there are too few particles in the ensemble.
-        while (m_count < m_dblelimit) {
+        while (m_count < m_dblelimit && proceed) {
             if(m_count == 0) {
                 throw std::runtime_error("Attempt to double particle ensemble with 0 particles");
             }
+			std::cout << "Doubling!" <<std::endl;
+			std::cout << m_count << std::endl;
 
             // Copy particles.
             const size_t prevCount = m_count;
+			int ii = 0;
+			bool IWDSA;
+			if (m_particles[0]->Primary()->AggID() == AggModels::PAH_KMC_ID){
+				IWDSA = m_particles[0]->Primary()->ParticleModel()->Components(0)->WeightedPAHs();
+			}
+			else{
+				IWDSA = false;
+			}
             for (size_t i = 0; i != prevCount; ++i) {
 
             //if (m_particles[i]->Primary()->AggID() ==AggModels::PAH_KMC_ID)
@@ -791,17 +889,38 @@ void Sweep::Ensemble::dble()
             //    if (rhsparticle->Pyrene()!=0)
             //        m_numofInceptedPAH++;
             //}
-                //SetNumOfInceptedPAH(1, m_particles[i]->Primary());
-                size_t iCopy = prevCount + i;
-                // Create a copy of a particle and add it to the ensemble.
-                m_particles[iCopy] = m_particles[i]->Clone();
+				int numberPAH = 0;
+				if (IWDSA){
+					const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+					if (m_particles[i]->Primary()->AggID() == AggModels::PAH_KMC_ID){
 
-                // Keep count of the added particles
-                ++m_count;
+						rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+						numberPAH = rhsparticle->NumPAH();
+					}
+				}
+				if (numberPAH > 1 || !IWDSA){ //If this particle is not just a single PAH
+					
+					size_t iCopy = prevCount + ii;
+					// Create a copy of a particle and add it to the ensemble.
+					m_particles[iCopy] = m_particles[i]->Clone();
+
+					// Keep count of the added particles
+					++m_count;
+					++ii;
+				}
+				else{ //If this particle is a single PAH, double its statistical weight
+					double oldweight = m_particles[i]->getStatisticalWeight();
+					m_particles[i]->setStatisticalWeight(2.0*oldweight);
+					Update(i);
+				}
             }
 
             // Update scaling.
             ++m_ndble;
+
+			std::cout << "Doubling done" << std::endl;
+			std::cout << m_count << std::endl;
+			if (IWDSA) proceed = false;
         }
 
         m_maxcount = std::max(m_maxcount, m_count);

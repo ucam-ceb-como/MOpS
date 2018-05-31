@@ -106,7 +106,7 @@ public:
     //! Create Structure from vector of site types and number of rings
     void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5);
     //! Structure processes: returns success or failure
-    bool performProcess(const JumpProcess& jp, rng_type &rng);
+    bool performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID);
 
     // Read Processes
     //! Get Counts

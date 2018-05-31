@@ -62,6 +62,7 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_titania_surface_reaction.cpp
                   source/swp_tracker.cpp
                   source/swp_transcoag.cpp
+				  source/swp_transcoag_weighted_PAHs.cpp
                   source/swp_tree_add_weighted_cache.cpp
                   source/swp_tree_cache.cpp
                   source/swp_tree_transcoag_weighted_cache.cpp

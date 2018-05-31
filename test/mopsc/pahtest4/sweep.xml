@@ -9,9 +9,9 @@
 	<component id="soot" type="bulk">
 		<description>soot</description>
 		<mode>MIN</mode> <!-- MIN, MAX, COMBINED, NONE. -->
-		<inceptionThreshold>16</inceptionThreshold>
-		<condensationThreshold>16</condensationThreshold>
-		<thresholdOxidation>16</thresholdOxidation>
+		<inceptionThreshold>2</inceptionThreshold>
+		<condensationThreshold>2</condensationThreshold>
+		<thresholdOxidation>2</thresholdOxidation>
 		<sharedPointers>1</sharedPointers>			
 		<InceptedPAH>A1</InceptedPAH>
 		<density units="g/cm3">1.88</density>

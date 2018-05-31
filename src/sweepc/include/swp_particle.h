@@ -141,6 +141,9 @@ public:
     //! Returns the number of carbons.
     int NumCarbon(void) const;
 
+	//! Returns the number of rings.
+	int NumRings(void) const;
+
     //! Returns fragmentation flag.
     int Frag(void) const;
 
