@@ -49,7 +49,7 @@
   	  </tols>
   </solver>
   <initialize>
-     <restart file="restartBinary">binary</restart>
+     <!--restart file="restartBinary">binary</restart-->
 	 <mCenter unit="cm">10</mCenter>
 	 <mWidth unit="cm">10</mWidth>
 	 <massfrac>

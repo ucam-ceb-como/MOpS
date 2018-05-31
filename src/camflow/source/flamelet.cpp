@@ -93,7 +93,7 @@ void FlameLet::solve
     */
 
     initSolutionVector();
-
+    
     reporter_->header("Flamelet");
 
     if(!interface)
@@ -405,7 +405,6 @@ void FlameLet::initSolutionVector()
     {
         throw std::runtime_error("Text restart files not used yet.");
     }
-
 }
 
 /*
@@ -455,8 +454,8 @@ void FlameLet::csolve
         *write the output to file only if the call is not
         *from the interface
         */
-        //if(!interface)
-        //{
+        if(!interface)
+        {
             reportToFile("profile.dat",control_.getMaxTime(), solvect);
             //writeXMLFile(scalarDissipationRate_.getStoichSDR(), solvect);
             //! ht314
@@ -466,7 +465,7 @@ void FlameLet::csolve
                 string filenameSoot = "momentRates.dat";
 				reportSootRatesToFile(filenameSoot,control_.getMaxTime(), sootComponentRatesAllCells);
             }
-        //}
+        }
 
     }
     else if (solverID == control_.NEWTON)
@@ -529,8 +528,6 @@ void FlameLet::restart(double flameTime)
     // Assumption is that a restart is always a Lagrangian flamelet (i.e. not steady state)
     //steadyStateAtFlameBase = false;
 
-
-    cout << "flameTime is: "<< flameTime << endl;
     
 	//! ht314
 	//! The purpose of this section is to stop soot calculations above a certain axial location, the Lagrangian time
@@ -582,12 +579,10 @@ void FlameLet::restart(double flameTime)
         //if(!interface)
         //{
             string filename = "interfaceProfiles/profile"+boost::lexical_cast<std::string>(restartTime)+".dat";
-            cout << "soot file name is "<< filename << endl;
             reportToFile(filename,control_.getMaxTime(), solvect);
             if (sootMom_.active())
             {
                 string filenameSoot = "interfaceSootRates/sootRatesProfile"+boost::lexical_cast<std::string>(restartTime)+".dat";
-                cout << "sootComponentRatesAllCells = "<< sootComponentRatesAllCells << endl;
                 reportSootRatesToFile(filenameSoot,control_.getMaxTime(), sootComponentRatesAllCells);
             }
         //}

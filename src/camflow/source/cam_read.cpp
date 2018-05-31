@@ -367,6 +367,8 @@ void CamRead::readFrac(std::string& member, std::map<std::string,double>& fracs,
             }else{
                 sumfrac += cdble(frac);
                 fracs.insert(make_pair(atrVal,cdble(frac)));
+                //Check to see that it's reading input file values correctly -- prints expected values. 
+                //std::cout << "Species fraction:  " << frac  << std::endl;
             }
         }
     }

@@ -19,6 +19,7 @@ LewisNumber::LewisNumber
 {
     loadSettings(inputFileName);
     if (lewisType_ == FIXEDFROMFILE) readFromFile("LewisNumbersInput.xml");
+    //if (lewisType_ == CALCULATED) calculateLe();
     if (lewisType_ == CONSTANTCALCULATED) calculateConstantLe();
 }
 
@@ -66,18 +67,7 @@ void LewisNumber::loadSettings(const std::string& inputFileName)
 
 void LewisNumber::readFromFile(const std::string& fixedLewisFile)
 {
-    // EJB Test to figure out iterator structure: 
-    int numSpecies = mech_->SpeciesCount();
-
-    std::cout << "Printing "<< numSpecies << " valid Species List to assign Lewis Numbers to" << std::endl;
     
-    int i=0;
-    for (i=0; i<numSpecies; ++i)
-    {
-        std::string speciesName = mech_->GetSpecies(i)->Name();
-        std::cout << i+1 << ". " << speciesName << std::endl;
-    }
-
     CamXML::Document doc;
     doc.Load(fixedLewisFile);
     const CamXML::Element* root = doc.Root();
@@ -151,20 +141,6 @@ void LewisNumber::calculateConstantLe()
     std::cout << "Cp          : " << tmpMixture -> getSpecificHeatCapacity() << std::endl; 
     //Matches expected NIST data after unit conversion.
 
-
-
-
-    // EJB Test to figure out iterator structure: 
-    
-    
-    std::cout << "Printing "<< numSpecies << " valid Species List to assign Lewis Numbers to" << std::endl;
-        
-        int i=0;
-        for (i=0; i<numSpecies; ++i)
-        {
-            std::string speciesName = mech_->GetSpecies(i)->Name();
-            std::cout << i+1 << ". " << speciesName << std::endl;
-        }
 
     Sprog::Mechanism::const_sp_iterator spIt = mech_->SpBegin();
     const Sprog::Mechanism::const_sp_iterator spItEnd = mech_->SpEnd();

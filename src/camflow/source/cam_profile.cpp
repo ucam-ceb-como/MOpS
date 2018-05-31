@@ -81,6 +81,7 @@ void CamProfile::setIntermediateSpecies(std::map<std::string,double> spec){
  */
 void CamProfile::populateProducts(Mechanism& mech){
     if(list_prdt.size()>0)
+        //populates m_prdt from list_prdt
         getmassFracs(list_prdt,mech,m_prdt);
 }
 void CamProfile::populateIntermdts(Mechanism& mech){
@@ -109,22 +110,50 @@ void CamProfile::setMixingWidth(double len){
 /*
  *set start profile given 2 inletes
  */
-void CamProfile::setStartprofile(CamBoundary& left, CamBoundary& right,
-                                                            Mechanism& mech){
+void CamProfile::setStartprofile(CamBoundary& left,  // Ox Inlet
+                                 CamBoundary& right, // Fuel Inlet
+                                 Mechanism& mech){   // Mechanism
     /*
      *assign the oxidizer inlet species map to
      *product map
      */
-    list_prdt = right.getInletSpecies();
-    setStartProfile(left,mech);
+    // Error here... returning mole fractions, expecting mass fractions
+    // Check for molefractions and update map list_prdt manually
+    if(right.getFracType() == right.MOLE){
+        std::vector<double> tmpMassFractions = right.getInletMassfracs();
+        std::map<std::string, double>::iterator p;
+        std::map<std::string,double> spec = right.getInletSpecies();
+        p = spec.begin();
+        std::cout << "Setting mass fractions to list_prdt" << std::endl;
+        while(p!= spec.end()){
+            std::cout << "Assigning value for " << p->first << std::endl;
+            int index = mech.FindSpecies(p->first);
+            p->second = tmpMassFractions[index];
+            p++;
+        }
+        list_prdt = spec;
+
+    }
+    else{
+        list_prdt = right.getInletSpecies(); // Fuel Inlet species map
+    }
+    
+    setStartProfile(left,mech); // Oxidizer
 
 }
 /*
  *set the start profile
  */
 void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
-
+    std::cout<< "Inside setStartProfile(cb,mech)" << std::endl;
     std::vector<double> m_in = cb.getInletMassfracs();
+    
+    // WHAT IS HAPPENING!?
+    std::cout << "M_in" << std::endl;
+    int len2=m_in.size();
+    for(int j=0; j<len2; j++) std::cout << m_in[j]<< std::endl;
+    // no fuel data... because its just reading oxidizer
+
     std::vector<double> position = geom.getAxpos();
     int len = position.size();
 
@@ -135,8 +164,8 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
     setGaussian(mech);
 
     if(mWidth != 0 && mCenter != 0 && m_prdt.size() != 0 && m_intmd.size() != 0){
-
-        for(int i=0; i<len; i++){
+        std::cout << "If-passed" << std::endl;
+        for(int i=0; i<len; i++){ //Loop over all species
             /*
              *sum the intermediates
              */
@@ -163,15 +192,22 @@ void CamProfile::setStartProfile(CamBoundary& cb, Mechanism& mech){
             std::map<std::string, double>::iterator p;
             std::map<std::string,double> spec = cb.getInletSpecies();
             p = spec.begin();
+            std::cout << "While Loop 1" << std::endl;
             while(p!= spec.end()){
+                std::cout << "Assigning value for " << p->first << std::endl;
                 int index = mech.FindSpecies(p->first);
                 start(i,index) = factor*(f_prdt*m_prdt[index]+f_reac*m_in[index]);
                 p++;
             }
+            std::cout << "While Loop 2" << std::endl;
             p=list_prdt.begin();
             while(p!=list_prdt.end()){
+                std::cout << "Assigning value for " << p->first << std::endl;
                 int index = mech.FindSpecies(p->first);
                 if(m_in[index]==0){
+                    std::cout << "Value : " << factor*(f_prdt*m_prdt[index] + f_reac*m_in[index]) << std::endl;
+                    std::cout << "Value2: " << f_prdt*m_prdt[index] << std::endl;
+                    std::cout << "Value3: " << f_prdt << std::endl;
                     start(i,index) = factor*(f_prdt*m_prdt[index] + f_reac*m_in[index]);
                 }
                 p++;
@@ -258,8 +294,10 @@ void CamProfile::getmassFracs(std::map<std::string,double>& spec, Mechanism& mec
     }
 
     if(getFracType() == MASS){
+        std::cout << "getMassFracs() found mass fractions" << std::endl;
         frac = temp;
     }else{
+        std::cout << "getMassFracs() found mole fractions... converting!" << std::endl;
         CamConverter cc;
         cc.mole2mass(temp,frac,mech);
     }

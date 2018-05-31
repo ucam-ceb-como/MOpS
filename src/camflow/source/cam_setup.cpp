@@ -31,9 +31,11 @@ std::vector<double> CamSetup::getInletMassFrac(CamBoundary& cb){
     CamConverter converter;
     std::vector<double> initialFracs = cb.setInletfracs(*camMech_);
     if(cb.getFracType() == cb.MOLE){
+        std::cout << "Reading in Inlet Mole Fractions..." << std::endl;
         converter.mole2mass(initialFracs,fracs,*camMech_);
         cb.setInletMassfracs(fracs);
     }else{
+        std::cout << "Reading in Inlet Mass Fractions..." << std::endl;
         fracs = initialFracs;
         cb.setInletMassfracs(fracs);
     }

@@ -251,7 +251,7 @@ void IO::ChemkinReader::check()
 
     if (globalUnits_ != "NO GLOBAL UNITS" && globalUnits_ != "CAL/MOLE")
     {
-        throw std::logic_error(globalUnits_ +" are not supported yet.");
+        throw std::logic_error(globalUnits_+" are not supported yet.");
     }
     cout << "Global Units are " << globalUnits_ << endl;
 	
@@ -274,7 +274,7 @@ void IO::ChemkinReader::read() // added by mm864
     if (chemSurfFile_ != "NOT READ"){
 	readPhase();
     }
-    readElements(); //updates elements_ vector
+    readElements();
     readSpecies();
     
 	
@@ -282,7 +282,6 @@ void IO::ChemkinReader::read() // added by mm864
     {
         TransportParser transportParser(transfile_);
         transportParser.parse(species_);
-        std::cout << "Parsed by transportParser" << std::endl;
     }
     
      // Moved by mm864 to check only gas species, seems that the transport data for surface species is absent 
@@ -565,13 +564,11 @@ void IO::ChemkinReader::readGlobalUnits()
     string::const_iterator start = chemfilestring_.begin();
     string::const_iterator end = chemfilestring_.end();
 
-    //std::cout << "inside readGlobalUnits()\nPrinting chemfilestring_\n"<< chemfilestring_<< std::endl;
-
     while (regex_search(start, end, units, unitsRegex))
     {
         if (globalUnits_ != "NO GLOBAL UNITS")
             throw std::logic_error("Units are already specified as " + globalUnits_);
-        std::cout<< units<< std::endl;
+
         globalUnits_ = units[1];
         start = units[0].second;
     }

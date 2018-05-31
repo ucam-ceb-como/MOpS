@@ -105,7 +105,6 @@ void CamModels::solve
         throw CamError("Unknown reactor model\n");
     }
 
-    std::cout << "Trying rModel_->solve() function" <<std::endl;
     try
     {
         rModel_->solve();

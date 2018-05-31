@@ -70,7 +70,7 @@ CamSoot::CamSoot()
     std::string fileName("camflow.xml");
 
     //eb656: Why is it not reading input? 
-    std::cout << "Constructing CamSoot()\n";
+    //std::cout << "Constructing CamSoot()\n";
         
     CamXML::Document doc;
     const CamXML::Element* root;
@@ -593,15 +593,16 @@ CamSoot::realVector CamSoot::rateAll
     //! Remove two PAH.
     surfProdRate[iInception]= -2.0 * nucRates[0] / NA; 
 
-	// Check the nucleation rates
-    //std::cout << "nucRates[0]  " << nucRates[0] << std::endl;
-    //std::cout << "nucRates[1]  " << nucRates[1] << std::endl;
-    //std::cout << "nucRates[2]  " << nucRates[2] << std::endl;
-    //std::cout << "nucRates[3]  " << nucRates[3] << std::endl;
-    //std::cout << "nucRates[4]  " << nucRates[4] << std::endl;
-    //std::cout << "nucRates[5]  " << nucRates[5] << std::endl;
-    //std::cout << "surfProdRate[iInception]  " << surfProdRate[iInception] << std::endl;
-
+    // Check the nucleation rates
+/*    std::cout << "Nucleation rates:"
+    std::cout << "nucRates[0]  " << nucRates[0] << std::endl;
+    std::cout << "nucRates[1]  " << nucRates[1] << std::endl;
+    std::cout << "nucRates[2]  " << nucRates[2] << std::endl;
+    std::cout << "nucRates[3]  " << nucRates[3] << std::endl;
+    std::cout << "nucRates[4]  " << nucRates[4] << std::endl;
+    std::cout << "nucRates[5]  " << nucRates[5] << std::endl;
+    std::cout << "surfProdRate[iInception]  " << surfProdRate[iInception] << std::endl;
+*/
 
     // Calculate the interpolated reduced moments
     realVector wholeOrderRedMom;
@@ -618,12 +619,13 @@ CamSoot::realVector CamSoot::rateAll
     	coagRates = rateCoagulation(moments,T);
 
 	// Check the coagulation rates
-    //std::cout << "coagRates[0]  " << coagRates[0] << std::endl;
-    //std::cout << "coagRates[1]  " << coagRates[1] << std::endl;
-    //std::cout << "coagRates[2]  " << coagRates[2] << std::endl;
-    //std::cout << "coagRates[3]  " << coagRates[3] << std::endl;
-    //std::cout << "coagRates[4]  " << coagRates[4] << std::endl;
-    //std::cout << "coagRates[5]  " << coagRates[5] << std::endl;
+/*    std::cout << "coagRates[0]  " << coagRates[0] << std::endl;
+    std::cout << "coagRates[1]  " << coagRates[1] << std::endl;
+    std::cout << "coagRates[2]  " << coagRates[2] << std::endl;
+    std::cout << "coagRates[3]  " << coagRates[3] << std::endl;
+    std::cout << "coagRates[4]  " << coagRates[4] << std::endl;
+    std::cout << "coagRates[5]  " << coagRates[5] << std::endl;
+*/
 
     // Condensation rates
     // Call this after coagulation. Reduced moments are calculated in Coag
@@ -724,11 +726,10 @@ CamSoot::realVector CamSoot::rateAll
 		//! Add moment source terms for nucleation, coagulation, condensation and surface growth. 
 		//! Source term for surface growth represents complexity. 
     	//rates[m] = (nucRates[m]);
-    	rates[m] = (nucRates[m]+coagRates[m]);
+    	//rates[m] = (nucRates[m]+coagRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
-    	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
+    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
         //rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]);
-        // EJB test: Turn Everything OFF! Try CoagRates
         
     }
 
