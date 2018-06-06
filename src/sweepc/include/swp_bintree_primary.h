@@ -467,6 +467,23 @@ private:
 	//! function to modify the centre to centre separations and coordinates and neighbours
 	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, BinTreePrimary *prim_ignore);
 
+	//////////////// csl37 - new merge functions
+	void GetNecks(BinTreePrimary *prim, BinTreePrimary *node, fvector &necks);
+
+	//struct functor
+	struct merge_radius_functor{
+		merge_radius_functor(double const& vol, fvector const& necks) : a_vol(vol), a_necks(necks) {} //constructor
+
+		std::pair<double, double> operator()(double const& r);	//calculate function and first derivative
+
+	private:
+		double a_vol;
+		fvector a_necks;
+	};
+
+	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *node, BinTreePrimary *small_prim, double const r_new, double const r_old);
+	////////////////
+
     // PRINTING TREES
     //! Recursive loop function for print tree
     void PrintTreeLoop(std::ostream &out) const;
