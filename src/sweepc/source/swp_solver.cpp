@@ -263,116 +263,6 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
-
-			// aab64 Could also shift incepting weights here for intense inception rate escalation. 
-
-			if (mech.IsHybrid() && sys.GetIncepted() > 0)
-			{
-				// Compute and store new incepting class properties
-				double create_t = sys.Particles().GetInceptedSP().CreateTime();
-				double exist_t = t - create_t;
-				
-				/*std::ofstream pscFile;
-				std::string pscfname;
-				pscfname = "inceptingcoagulationchange.csv";*/
-
-				if (exist_t > 0)
-				{
-					double inceptingcoagulationchange = sys.GetInceptionCoagulationChange() / exist_t;
-					//double sp_age = 0;
-					//boost::exponential_distribution<double> waitDistrib(inceptingcoagulationchange);
-					//boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<double> > waitGenerator(rng, waitDistrib);
-					double mu = 1, sigma = 0, age = 0;
-					if (t <= 0.0013)
-					{
-						mu = -10.8944;
-						sigma = 1.57235;
-						age = 5.494671665649481e-05;
-					}
-					else if (t <= 0.0026)
-					{
-						mu = -10.8891;
-						sigma = 1.8953;
-						age = 7.083652539468709e-05;
-					}
-					/*else if(t <= 0.0039)
-					{
-						mu = -10.4252;
-						sigma = 1.86087;
-					}*/
-					else if(t <= 0.0052)
-					{
-						mu = -10.7503;
-						sigma = 1.88096;
-						age = 7.666343071377722e-05;
-					}
-					else
-					{
-						mu = -10.5756;
-						sigma = 1.89512;
-						age = 8.672460365238535e-05;
-					}
-
-					double xmax = exist_t;
-					double xmod = 0.5e-5; // tsplit - t;
-					double alph = 5.7;
-					age = 1e-5;
-
-					//sigma = 1.3;
-					//double sqrtexp = 2 * alph * alph - 4 * (log(xmod) - log(xmax));
-					//sigma = 0.5 * (-alph * std::sqrt(2) + std::sqrt(sqrtexp));
-					double sqrtexp = alph * alph - log(xmax) + log(age);
-					sigma = std::sqrt(2) * (alph + std::sqrt(sqrtexp));
-					
-					mu = log(xmax) - alph * sqrt(2) * sigma;
-					
-					double sp_age = boost::random::lognormal_distribution<double>(mu, sigma)(rng);
-					//double mult = 7.5000e+9 * t * t * t;
-					//sp_age = mult * waitGenerator();// (1 / inceptingcoagulationchange);                                                 // Choose an LPDA last update time from the class residence time distribution
-					int guard = 0;
-					while (sp_age > t - create_t && (++guard < 1000))                                                   // t \in [tcreate,t], age \in [0,t-tcreate]
-						sp_age = boost::random::lognormal_distribution<double>(mu, sigma)(rng); //t - create_t;
-					if (sp_age > t - create_t)
-						sp_age = t - create_t;
-
-					Particle * sp1 = sys.Particles().GetInceptedSP().Clone();
-
-					//boost::uniform_01<rng_type &> uniformGenerator(rng);
-
-					/*if (uniformGenerator() > (sys.GetInceptions() / sys.GetIncepted())) 
-					{
-						unsigned int maxRuts = sys.GetRutiles();
-						unsigned int extraRuts = uniformGenerator() * maxRuts * (1 / sys.GetIncepted());
-						sp1->Adjust(sp1->Composition(), sp1->Values(), rng, extraRuts);
-						sys.AdjustRutiles(-extraRuts);
-						if (sys.GetLastRutileTime() > 0)
-							sp1->SetTime(sys.GetLastRutileTime());
-					}
-					else
-						sp1->SetTime(t);
-					sys.AdjustInceptions(-sys.GetInceptions());*/
-
-					//if (uniformGenerator() > (sys.GetInceptions_tmp() / sys.GetIncepted()))
-					//{
-						sp1->SetTime(t - sp_age);
-						sys.SetNotPSIFlag(false);
-						mech.UpdateParticle(*sp1, sys, t, rng);
-						sys.SetNotPSIFlag(true);
-					//}
-					//else
-					//	sp1->SetTime(t);
-					//sys.ResetInceptions_tmp();
-
-					sys.Particles().SetInceptedSP_tmp(*sp1); 
-						
-					delete sp1;
-					sp1 = NULL;
-					
-					/*pscFile.open(pscfname.c_str(), std::ios::app);
-					pscFile << t << "," << sp_age << "," << "\n";
-					pscFile.close();*/
-				}
-			}
 			
             // Sweep does not do transport
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
@@ -383,17 +273,14 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
             if (sys.OutflowCount() > 0 || sys.InflowCount() > 0)
                 mech.DoParticleFlow(t, t - tflow, sys, Geometry::LocalGeometry1d(), rng);
             tflow = t;
+
 		}
-		sys.ResetInceptions_tmp();
 
         sys.SetCurrentProcessTau(t - tin); // aab64 store time passed in current loop for heat transfer
 
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
 	    mech.LPDA(t, sys, rng);
-
-	    //if (sys.ParticleCount() > 0 && sys.GetIsAdiabaticFlag())
-	    //    mech.DoProcess(1000000, dtg, sys, Geometry::LocalGeometry1d(), rng); // aab64 Call DoProcess with special tag to do just heat transfer
     }
 
     return err;
@@ -450,14 +337,11 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
     // selecting a process and performing that process.
     double dt;
 
-    //std::cout << "Solver::timeStep in cell " << &sys << " from " << t << " with rate " << jrate;
-
     // Calculate exponentially distributed time step size.
     if (jrate > 0.0) {
         boost::exponential_distribution<double> waitDistrib(jrate);
         boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<double> > waitGenerator(rng, waitDistrib);
         dt = waitGenerator();
-        //std::cout << ' ' << dt;
     } else {
         // Avoid divide by zero.
         dt = std::numeric_limits<double>::max();
@@ -466,11 +350,6 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
     // Truncate if step is too long or select a process
     // to perform.
 	if (t + dt <= t_stop) {
-		// aab64 Store coagulation rate factor
-		/*int rateFactor_1 = 1;
-		if (sys.ParticleCount() > 1)
-		rateFactor_1 = floor((sys.ParticleCount()) / (sys.Particles().GetSum(iW)));
-		sys.SetRateFactor(rateFactor_1);*/
 
 		boost::uniform_01<rng_type &> uniformGenerator(rng);
 		const int i = chooseIndex(rates, uniformGenerator);
@@ -494,12 +373,19 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
 		}
 
         mech.DoProcess(i, t+dt, sys, geom, rng);
-        t += dt;
+
+		// aab64 Update the diameter moments of the incepting class
+		// and store average properties to use in coagulation events
+		if (mech.IsHybrid() && sys.Particles().IsFirstSP() > 0)
+		{
+			mech.MomentUpdate(t, dt, sys, rng);
+		}
+		
+		
+		t += dt;
     } else {
         t = t_stop;
-        //std:cout << " step truncated to end at " << t_stop;
     }
-    //std::cout << std::endl;
 }
 
 // Selects a process using a DIV algorithm and the process rates

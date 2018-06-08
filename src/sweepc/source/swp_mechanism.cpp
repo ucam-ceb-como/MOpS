@@ -1199,19 +1199,6 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
             UpdateParticle(*(*i), sys, t, rng);
         }
 
-		/*if (sys.GetIncepted() > 0)
-		{
-			// Compute and store new incepting class properties
-			Particle * sp1 = sys.Particles().GetInceptedSP().Clone(); 
-			double Rut0 = sp1->Composition()[0];
-			sp1->setStatisticalWeight(sp1->getStatisticalWeight() + (sys.GetRutiles()) / Rut0);
-			if (sys.GetLastRutileTime() != 0)
-				sp1->SetTime(sys.GetLastRutileTime());
-			UpdateParticle(*sp1, sys, t, rng);
-			sys.AdjustRutiles(sp1->Composition()[0] - Rut0);
-			sys.SetLastRutileTime(t);
-		}*/
-
 	    // aab64 is the above a candidate for omp?? 
 		// But index variable i would need to be a signed integral type 
 	    // To perform deferred processes on all particles individually using OpenMP:
@@ -1274,6 +1261,243 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 		}
     }
 }
+
+// LINEAR PROCESS DEFERMENT ALGORITHM #2
+// aab64 Moment method for incepting sized particles
+/*!
+* Performs linear process updates on all particles in a system.
+*
+*@param[in,out]    sys         System containing particles to update
+*@param[in]        t           Time upto which particles to be updated
+*@param[in,out]    rng         Random number generator
+*/
+void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) const
+{
+	// Make a particle with the correct expected diameter and matching mass etc.
+	// Update the gas phase to account for the surface growth that occurs in the moment eqns
+
+	// The moments at time t_k
+	double m0 = sys.GetMomentsk_0(); 
+	double m1 = sys.GetMomentsk_1();
+	double m2 = sys.GetMomentsk_2();
+	double m3 = sys.GetMomentsk_3();
+	
+	// Needed parameters for the surface growth rate
+	double rho_titania = sys.ParticleModel()->Components()[0]->Density();                     // Needs to be generalised (kg/m3)!
+	double MW_titania = sys.ParticleModel()->Components()[0]->MolWt();                        // Needs to be generalised (kg/mol)!
+
+	// The surface growth rate without area, i.e. beta = k(T) * ChemRatePart(gas) 
+	// (currently a weird implementation in Perform(.))
+	double beta = sys.GetSGk() / NA;
+
+	// Modify surface growth rate to change in diameter with time
+	//beta *= (sys.SampleVolume());
+	beta *= (2.0 * MW_titania / rho_titania);                                                 // Needs to be generalised (kg/mol)!
+
+	// Composition change in terms of number of units added
+	double num_added_total = NA * PI * dt * beta * m2 * (rho_titania / MW_titania) * 0.5;
+	
+	// The change in total diameter (squared) due to inception and coagulation
+	double diamChange = sys.GetIncDiam() - sys.GetCoagDiam();
+	double diamChange_sqrd = sys.GetIncDiam2() - sys.GetCoagDiam2();
+
+	if ((sys.GetInceptions_tmp() - sys.GetInceptingCoagulations_tmp()) < -0.5 * m0)
+		std::cout << "Warning: coagulation change is > half the bin, watch moments" << std::endl;
+
+	// Update the moments
+	m0 += (sys.GetInceptions_tmp() - sys.GetInceptingCoagulations_tmp());
+	m1 += diamChange;
+	m1 += dt * m0 * beta;
+	m2 += diamChange_sqrd;
+	m2 += dt * m1 * beta * 2.0;
+
+	bool reset_flag = false;
+	/*	if (m0 < 0 || m1 < 0 || m2 < 0)
+		{
+			reset_flag = true;
+		}*/
+	if (m0 > 0.0 && m1 > 0.0 && m2 > 0.0)
+	{
+		// Update mu and sigma and M3 from the closed form moment solution, i.e.
+		// E[X^n] = exp(n*mu + n^2 * sigma^2 / 2)
+		// Use reduced moments M_j/M_0
+		double sigma = log(m2 / m0) - (2.0 * log(m1 / m0));
+		// Sigma can't be zero
+		if (sigma <= 0.0)
+		{
+			std::cout << "Sigma is less than or equal to zero. Setting sigma to 0.001\n";
+			sigma = 1.0e-5;
+		}
+		else
+		{
+			sigma = sqrt(sigma);
+		}
+		double mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));
+		sys.SetDistParams(mu, sigma);
+
+		// Storing particle based on diameter (use to update the gas phase)
+
+		// We need to store a particle with this average diameter for coagulation
+		// The change in composition must be an integer so this is approximate!
+		Particle * sp = sys.Particles().GetInceptedSP().Clone();
+		sp->setStatisticalWeight(1.0);
+		double d_bar = exp(mu + sigma * sigma * 0.5);                                             // E[d] = exp(mu + sigma^2 / 2)
+		double n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;                            // Mass equivalent to the average diameter 
+		n_add *= NA / MW_titania;                                                                 // Number of particles
+		n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
+		if (n_add < 0.0)
+			n_add = 0.0;
+
+		// We also need a way to store the total surface growth to do so it can be used to update the gas phase 
+		sys.SetSGadjustment(num_added_total);
+
+		// Not the ideal way of calling this update but should more or less work
+		for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+		{
+			if ((*i)->IsDeferred())
+			{
+				(*i)->Perform(t, sys, *sp, rng, (unsigned int)n_add);
+				sp->SetTime(t);
+				sp->UpdateCache();
+			}
+		}
+
+		// Now that the gas-phase has been updated, reset the weight of this SP to 1 and store it
+		sys.Particles().SetInceptedSP_tmp(*sp);
+
+		// Storing particle based on diameter squared
+		sp = sys.Particles().GetInceptedSP().Clone();
+		sp->setStatisticalWeight(1.0);
+		d_bar = sqrt(exp(2.0 * mu + 2.0 * sigma * sigma));
+		n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;
+		n_add *= NA / MW_titania;
+		n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
+		if (n_add < 0.0)
+			n_add = 0.0;
+		for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+		{
+			if ((*i)->IsDeferred())
+			{
+				sys.SetNotPSIFlag(false);
+				(*i)->Perform(t, sys, *sp, rng, (unsigned int)n_add);
+				sp->SetTime(t);
+				sp->UpdateCache();
+			}
+		}
+		sys.Particles().SetInceptedSP_tmp_d2(*sp);
+
+		// Storing particle based on inverse diameter
+		sp = sys.Particles().GetInceptedSP().Clone();
+		sp->setStatisticalWeight(1.0);
+		d_bar = 1 / (exp(-1.0 * mu + sigma * sigma * 0.5));
+		n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;
+		n_add *= NA / MW_titania;
+		n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
+		if (n_add < 0)
+			n_add = 0;
+		for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+		{
+			if ((*i)->IsDeferred())
+			{
+				(*i)->Perform(t, sys, *sp, rng, (unsigned int)n_add);
+				sp->SetTime(t);
+				sp->UpdateCache();
+			}
+		}
+		sys.Particles().SetInceptedSP_tmp_d_1(*sp);
+
+		// Storing particle based on inverse diameter squared
+		sp = sys.Particles().GetInceptedSP().Clone();
+		sp->setStatisticalWeight(1.0);
+		d_bar = sqrt(1.0 / exp(-2.0 * mu + 2.0 * sigma * sigma));
+		n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;
+		n_add *= NA / MW_titania;
+		n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
+		if (n_add < 0.0)
+			n_add = 0.0;
+		for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+		{
+			if ((*i)->IsDeferred())
+			{
+				(*i)->Perform(t, sys, *sp, rng, (unsigned int)n_add);
+				sp->SetTime(t);
+				sp->UpdateCache();
+			}
+		}
+		sys.Particles().SetInceptedSP_tmp_d_2(*sp);
+
+		// Storing particle based on inverse squareroot of mass
+		sp = sys.Particles().GetInceptedSP().Clone();
+		sp->setStatisticalWeight(1.0);
+		d_bar = exp((-1.5) * mu + 1.125 * sigma * sigma);
+		double expon = -2.0 / 3.0;
+		d_bar = pow(d_bar, expon);
+		n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;
+		n_add *= NA / MW_titania;
+		n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
+		if (n_add < 0.0)
+			n_add = 0.0;
+		for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+		{
+			if ((*i)->IsDeferred())
+			{
+				(*i)->Perform(t, sys, *sp, rng, (unsigned int)n_add);
+				sp->SetTime(t);
+				sp->UpdateCache();
+			}
+		}
+		sys.Particles().SetInceptedSP_tmp_m_1_2(*sp);
+
+		// Storing particle based on diameter squared times inverse squareroot of mass
+		sp = sys.Particles().GetInceptedSP().Clone();
+		sp->setStatisticalWeight(1.0);
+		d_bar = exp(0.5 * mu + 0.125 * sigma * sigma);
+		d_bar *= d_bar;
+		n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;
+		n_add *= NA / MW_titania;
+		n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
+		if (n_add < 0.0)
+			n_add = 0.0;
+		for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+		{
+			if ((*i)->IsDeferred())
+			{
+				(*i)->Perform(t, sys, *sp, rng, (unsigned int)n_add);
+				sys.SetNotPSIFlag(true);
+				sp->SetTime(t);
+				sp->UpdateCache();
+			}
+		}
+		sys.Particles().SetInceptedSP_tmp_d2_m_1_2(*sp);
+
+		// Store moments and reset counters
+		sys.SetMomentsk(m0, m1, m2, m3);
+		sys.ResetCoagulationSums();
+		sys.ResetInceptionSums();
+		sys.ResetInceptions_tmp();
+		sys.ResetInceptingCoagulations_tmp();
+	}
+	else
+	{
+		std::cout << "Moments not positive!\n";
+		/*if (reset_flag)
+		{
+			sys.SetDistParams(0, 0);
+			sys.SetMomentsk(0, 0, 0, 0);
+			sys.ResetCoagulationSums();
+			sys.ResetInceptionSums();
+			sys.ResetInceptions_tmp();
+			sys.ResetInceptingCoagulations_tmp();
+			Particle * sp = sys.Particles().GetInceptedSP().Clone();
+			sp->setStatisticalWeight(1);
+			sp->SetTime(t);
+			sys.Particles().SetInceptedSP_tmp(*sp);
+			delete sp;
+			sp = NULL;
+		}*/
+	}
+}
+
 
 
 /*!
@@ -1356,6 +1580,8 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
                     if(rate > 0) {
                          boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
                          unsigned num = repeatDistrib(rng);
+						 if (!sys.GetNotPSIFlag())
+							 num = ceil(rate);
                          if (num > 0) {
                              // Do the process to the particle.
                              (*i)->Perform(t, sys, sp, rng, num);

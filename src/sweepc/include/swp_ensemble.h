@@ -268,9 +268,19 @@ public:
 	void AdjustIncepted(double adjustment);
 	void SetInceptedSP(Sweep::Particle sp);
 	void SetInceptedSP_tmp(Sweep::Particle sp);
+	void SetInceptedSP_tmp_d2(Sweep::Particle sp);
+	void SetInceptedSP_tmp_d_1(Sweep::Particle sp);
+	void SetInceptedSP_tmp_d_2(Sweep::Particle sp);
+	void SetInceptedSP_tmp_m_1_2(Sweep::Particle sp);
+	void SetInceptedSP_tmp_d2_m_1_2(Sweep::Particle sp);
 	Particle GetInceptedSP() const;
 	Particle GetInceptedSP_tmp() const;
-	bool IsFirstSP(void) { return m_inceptedFirstSP; }
+	Particle GetInceptedSP_tmp_d2() const;
+	Particle GetInceptedSP_tmp_d_1() const;
+	Particle GetInceptedSP_tmp_d_2() const;
+	Particle GetInceptedSP_tmp_m_1_2() const;
+	Particle GetInceptedSP_tmp_d2_m_1_2() const;
+	bool IsFirstSP(void) const { return m_inceptedFirstSP; }
 
     // READ/WRITE/COPY.
 
@@ -324,6 +334,11 @@ private:
 	double m_inceptingWeight;
 	Particle *m_inceptingSP;
 	Particle *m_inceptingSP_tmp;
+	Particle *m_inceptingSP_tmp_d2;
+	Particle *m_inceptingSP_tmp_d_1;
+	Particle *m_inceptingSP_tmp_d_2;
+	Particle *m_inceptingSP_tmp_m_1_2;
+	Particle *m_inceptingSP_tmp_d2_m_1_2;
 	bool m_inceptedFirstSP;
 
     //! Reset the contents of the binary tree

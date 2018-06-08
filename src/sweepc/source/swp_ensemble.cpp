@@ -625,6 +625,11 @@ void Sweep::Ensemble::ClearMain()
 	m_inceptingWeight = 0;
 	m_inceptingSP = NULL;
 	m_inceptingSP_tmp = NULL;
+	m_inceptingSP_tmp_d2 = NULL;
+	m_inceptingSP_tmp_d_1 = NULL;
+	m_inceptingSP_tmp_d_2 = NULL;
+	m_inceptingSP_tmp_m_1_2 = NULL;
+	m_inceptingSP_tmp_d2_m_1_2 = NULL;
 	m_inceptedFirstSP = false;
 }
 
@@ -774,9 +779,30 @@ void Sweep::Ensemble::SetInceptedSP(Sweep::Particle sp)
 	m_inceptingSP = sp.Clone();
 }
 
+// aab64 Store particles with average properties for coagulation options
 void Sweep::Ensemble::SetInceptedSP_tmp(Sweep::Particle sp)
 {
 	m_inceptingSP_tmp = sp.Clone();
+}
+void Sweep::Ensemble::SetInceptedSP_tmp_d2(Sweep::Particle sp)
+{
+	m_inceptingSP_tmp_d2 = sp.Clone();
+}
+void Sweep::Ensemble::SetInceptedSP_tmp_d_1(Sweep::Particle sp)
+{
+	m_inceptingSP_tmp_d_1 = sp.Clone();
+}
+void Sweep::Ensemble::SetInceptedSP_tmp_d_2(Sweep::Particle sp)
+{
+	m_inceptingSP_tmp_d_2 = sp.Clone();
+}
+void Sweep::Ensemble::SetInceptedSP_tmp_m_1_2(Sweep::Particle sp)
+{
+	m_inceptingSP_tmp_m_1_2 = sp.Clone();
+}
+void Sweep::Ensemble::SetInceptedSP_tmp_d2_m_1_2(Sweep::Particle sp)
+{
+	m_inceptingSP_tmp_d2_m_1_2 = sp.Clone();
 }
 
 void Sweep::Ensemble::AdjustIncepted(double adjustment)
@@ -794,6 +820,26 @@ Particle Sweep::Ensemble::GetInceptedSP() const
 Particle Sweep::Ensemble::GetInceptedSP_tmp() const
 {
 	return *m_inceptingSP_tmp;
+}
+Particle Sweep::Ensemble::GetInceptedSP_tmp_d2() const
+{
+	return *m_inceptingSP_tmp_d2;
+}
+Particle Sweep::Ensemble::GetInceptedSP_tmp_d_1() const
+{
+	return *m_inceptingSP_tmp_d_1;
+}
+Particle Sweep::Ensemble::GetInceptedSP_tmp_d_2() const
+{
+	return *m_inceptingSP_tmp_d_2;
+}
+Particle Sweep::Ensemble::GetInceptedSP_tmp_m_1_2() const
+{
+	return *m_inceptingSP_tmp_m_1_2;
+}
+Particle Sweep::Ensemble::GetInceptedSP_tmp_d2_m_1_2() const
+{
+	return *m_inceptingSP_tmp_d2_m_1_2;
 }
 
 // UPDATE ENSEMBLE.

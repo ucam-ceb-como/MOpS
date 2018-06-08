@@ -70,7 +70,10 @@ Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
   m_notpsiflag(true), m_rateFactor(1.0), 
   m_cprop1(iUniform), m_cprop2(iUniform), 
   m_incepted(0.0), m_inceptions(0), m_inceptingcoagulations(0), 
-  m_surface_rutiles(0), m_last_update_time(0), m_inceptions_tmp(0)
+  m_surface_rutiles(0), m_last_update_time(0), m_inceptions_tmp(0), m_inceptingcoagulations_tmp(0),
+  m_diam_tmp(0), m_diam2_tmp(0), m_diam_1_tmp(0), m_diam_2_tmp(0), m_mass_1_2_tmp(0), m_diam2_mass_1_2_tmp(0),
+  m_d0sum(0), m_disum(0), m_d0sum_sqrd(0), m_disum_sqrd(0),
+  m_m0k(0), m_m1k(0), m_m2k(0), m_m3k(0), m_SGk(0), m_SGadjustment(0)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
@@ -146,6 +149,26 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 		m_last_update_time = rhs.m_last_update_time;
 		m_surface_rutiles = rhs.m_surface_rutiles;
 		m_inceptions_tmp = rhs.m_inceptions_tmp;
+		m_inceptingcoagulations_tmp = rhs.m_inceptingcoagulations_tmp;
+		// incepting class averages
+		m_diam_tmp = rhs.m_diam_tmp;
+		m_diam2_tmp = rhs.m_diam2_tmp;
+		m_diam_1_tmp = rhs.m_diam_1_tmp;
+		m_diam_2_tmp = rhs.m_diam_2_tmp;
+		m_mass_1_2_tmp = rhs.m_mass_1_2_tmp;
+		m_diam2_mass_1_2_tmp = m_diam2_mass_1_2_tmp;
+		// incepting class moments and contributing terms
+		m_d0sum = rhs.m_d0sum;
+		m_disum = rhs.m_disum;
+		m_d0sum_sqrd = rhs.m_d0sum_sqrd;
+		m_disum_sqrd = rhs.m_disum_sqrd;
+		m_m0k = rhs.m_m0k;
+		m_m1k = rhs.m_m1k;
+		m_m2k = rhs.m_m2k;
+		m_m3k = rhs.m_m3k;
+		m_SGk = rhs.m_SGk;
+		m_SGadjustment = rhs.m_SGadjustment;
+		
 	}
 	assert(isValid());
     return *this;
@@ -405,6 +428,58 @@ void Cell::AdjustIncepted(double adjustment)
 { 
 	m_incepted += adjustment; 
 	m_ensemble.AdjustIncepted(adjustment);
+}
+
+// aab64 Set incepting class average properties using closed form moments for the diameter distribution
+void Cell::SetDistParams(double mu, double sigma)
+{
+	double rhop = 4260.0; // titania
+	double c1 = sigma * sigma * 0.5;
+	double c2 = std::sqrt(6.0 / (rhop * PI));
+
+	m_diam_tmp = exp(c1 + mu);
+	m_diam2_tmp = exp(c1 * 4.0 + 2.0 * mu);
+	m_diam_1_tmp = exp(c1 - mu);
+	m_diam_2_tmp = exp(c1 * 4.0 - 2.0 * mu);
+	m_mass_1_2_tmp = exp(c1 * 2.25 - 1.5 * mu) * c2;
+	m_diam2_mass_1_2_tmp = exp(c1 * 0.25 + 0.5 * mu) * c2;
+}
+
+// aab64 Set the first moments of the diameter distribution
+void Cell::SetMomentsk(double m0k, double m1k, double m2k, double m3k)
+{
+	m_m0k = m0k;
+	m_m1k = m1k;
+	m_m2k = m2k;
+	m_m3k = m3k;
+}
+
+// aab64 Track increase in total diameter and total diameter squared
+// due to inception events for moment calculation
+void Cell::SetInceptionSums(double d0)
+{
+	m_d0sum += d0;
+	m_d0sum_sqrd += (d0 * d0);
+}
+
+// aab64 Track increase in total diameter and total diameter squared
+// due to coagulation events for moment calculation
+void Cell::SetCoagulationSums(double di)
+{
+	m_disum += di;
+	m_disum_sqrd += (di * di);
+}
+
+// aab64 Reset diameter counters
+void Cell::ResetInceptionSums()
+{
+	m_d0sum = 0;
+	m_d0sum_sqrd = 0;
+}
+void Cell::ResetCoagulationSums()
+{
+	m_disum = 0;
+	m_disum_sqrd = 0;
 }
 
 // READ/WRITE/COPY.

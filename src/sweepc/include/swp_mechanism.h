@@ -326,6 +326,16 @@ public:
         rng_type &rng
         ) const;
 
+	//! Moment update for the incepting class - use a hybrid 
+    //! methid to track surface growth, assuming a lognormal 
+    //! diameter distribution for the single primaries 
+	void MomentUpdate(
+		double t,   // Time up to which to integrate.
+		double dt,
+		Cell &sys,// System to update.
+		rng_type &rng
+		) const;
+
 
     //! LPDA for one particle
     void UpdateParticle(

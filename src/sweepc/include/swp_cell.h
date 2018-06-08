@@ -71,147 +71,147 @@ class Mechanism;
 class Cell
 {
 public:
-    // Constructors.
-    Cell(const Sweep::ParticleModel &model, const bool const_gas = false); // Default constructor.
-    Cell(const Cell &copy);                  // Copy constructor.
-    Cell(                                 // Stream-reading constructor.
-        std::istream &in,                 //   - Stream from which to read.
-        const Sweep::ParticleModel &model //   - Model used to define particles.
-        );
+	// Constructors.
+	Cell(const Sweep::ParticleModel &model, const bool const_gas = false); // Default constructor.
+	Cell(const Cell &copy);                  // Copy constructor.
+	Cell(                                 // Stream-reading constructor.
+		std::istream &in,                 //   - Stream from which to read.
+		const Sweep::ParticleModel &model //   - Model used to define particles.
+		);
 
-    // Destructor.
-    virtual ~Cell(void);
+	// Destructor.
+	virtual ~Cell(void);
 
-    //! Overwrite contents
-    Cell &operator=(const Cell &rhs);
+	//! Overwrite contents
+	Cell &operator=(const Cell &rhs);
 
-    //! Overload of the << operator
-    friend std::ostream& operator<<(
-            std::ostream &os,
-            const Sweep::Cell &c);
+	//! Overload of the << operator
+	friend std::ostream& operator<<(
+		std::ostream &os,
+		const Sweep::Cell &c);
 
-    // THE GAS-PHASE INTERFACE.
+	// THE GAS-PHASE INTERFACE.
 
-    //!Returns the description of the gas-phase mixture.
-    const EnvironmentInterface &GasPhase(void) const {return *m_gas;};
-    //!Returns the description of the gas-phase mixture.
-    EnvironmentInterface &GasPhase(void) {return *m_gas;};
+	//!Returns the description of the gas-phase mixture.
+	const EnvironmentInterface &GasPhase(void) const { return *m_gas; };
+	//!Returns the description of the gas-phase mixture.
+	EnvironmentInterface &GasPhase(void) { return *m_gas; };
 
-    // THE PARTICLE ENSEMBLE.
+	// THE PARTICLE ENSEMBLE.
 
-    // Returns the particle ensemble.
-    Sweep::Ensemble &Particles(void);
-    const Sweep::Ensemble &Particles(void) const;
+	// Returns the particle ensemble.
+	Sweep::Ensemble &Particles(void);
+	const Sweep::Ensemble &Particles(void) const;
 
-    // Returns the number of particles in the ensemble.
-    unsigned int ParticleCount(void) const;
+	// Returns the number of particles in the ensemble.
+	unsigned int ParticleCount(void) const;
 
-    // Returns particle statistics.
-    void GetVitalStats(Stats::EnsembleStats &stats) const;
+	// Returns particle statistics.
+	void GetVitalStats(Stats::EnsembleStats &stats) const;
 
-    //! Initialise with some particles, downsampling as required
-    void SetParticles(
-            std::list<Particle*>::iterator particle_list_begin,
-            std::list<Particle*>::iterator particle_list_end,
-            double statistical_weight, rng_type &rng);
+	//! Initialise with some particles, downsampling as required
+	void SetParticles(
+		std::list<Particle*>::iterator particle_list_begin,
+		std::list<Particle*>::iterator particle_list_end,
+		double statistical_weight, rng_type &rng);
 
-    //! Initialise with some particles, which must not exceed the ensemble capacity
-    void SetParticles(
-            std::list<Particle*>::iterator particle_list_begin,
-            std::list<Particle*>::iterator particle_list_end,
-            double statistical_weight);
+	//! Initialise with some particles, which must not exceed the ensemble capacity
+	void SetParticles(
+		std::list<Particle*>::iterator particle_list_begin,
+		std::list<Particle*>::iterator particle_list_end,
+		double statistical_weight);
 
-    // THE PARTICLE MODEL.
+	// THE PARTICLE MODEL.
 
-    // Returns the particle model used to define particles in this
-    // cell.
-    const Sweep::ParticleModel *const ParticleModel(void) const {return m_model;}
-
-
-    // SCALING ROUTINES INCL. SAMPLE VOLUME.
-
-    //! Returns the double system to stochastic system scaling factor.
-    double SampleVolume() const;
-
-    //! Multiply the sample volume by a scaling factor
-    void AdjustSampleVolume(double scale_factor);
-
-    //! Empty the cell and set the sample volume so a full particle ensemble would have the specified m0
-    void Reset(double m0);
-
-    // FIXED/VARIABLE CHEMISTRY.
-
-    // Returns whether or not the chemical conditions are fixed.
-    bool FixedChem() const;
-
-    // Sets whether or not the chemical conditions are fixed.
-    void SetFixedChem(bool fixed = true);
-
-    // Set the chemical conditions to be variable.
-    void SetVariableChem(bool vari = true);
+	// Returns the particle model used to define particles in this
+	// cell.
+	const Sweep::ParticleModel *const ParticleModel(void) const { return m_model; }
 
 
-    // PARTICLE INFLOW PROCESSES.
+	// SCALING ROUTINES INCL. SAMPLE VOLUME.
 
-    //! Returns the number of inflow processes defined for this Cell.
-    unsigned int InflowCount(void) const;
+	//! Returns the double system to stochastic system scaling factor.
+	double SampleVolume() const;
 
-    //! Returns the vector of particle inflow processes.
-    const Processes::BirthPtrVector &Inflows(void) const;
+	//! Multiply the sample volume by a scaling factor
+	void AdjustSampleVolume(double scale_factor);
 
-    //! Returns the ith particle inflow process.
-    Processes::BirthProcess *const Inflows(unsigned int i) const;
+	//! Empty the cell and set the sample volume so a full particle ensemble would have the specified m0
+	void Reset(double m0);
 
-    //! Add an inflow process to the Cell. The process is copied.
-    void AddInflow(Processes::BirthProcess &inf);
+	// FIXED/VARIABLE CHEMISTRY.
 
-    // PARTICLE OUTFLOW PROCESSES.
+	// Returns whether or not the chemical conditions are fixed.
+	bool FixedChem() const;
 
-    //! Returns the number of outflow processes defined for this Cell
-    unsigned int OutflowCount(void) const;
+	// Sets whether or not the chemical conditions are fixed.
+	void SetFixedChem(bool fixed = true);
 
-    //! Returns the vector of particle outflow processes.
-    const Processes::DeathPtrVector &Outflows(void) const;
+	// Set the chemical conditions to be variable.
+	void SetVariableChem(bool vari = true);
 
-    //! Returns the ith particle outflow process.
-    Processes::DeathProcess *const Outflows(unsigned int i) const;
 
-    //! Add an outflow process to the Cell. The process is copied.
-    void AddOutflow(Processes::DeathProcess &out);
+	// PARTICLE INFLOW PROCESSES.
 
-    // Add an outflow process with the given rate to the Cell.
-    void AddOutflow(
-        double rate, // Rate constant for outflow.
-        const Sweep::Mechanism &mech // Mechanism which defines LPDA for outflow.
-        );
+	//! Returns the number of inflow processes defined for this Cell.
+	unsigned int InflowCount(void) const;
 
-        // figure out how many starting species is supposed to be in the particle ensemble
-    unsigned int NumOfStartingSpecies(const int index) const;
+	//! Returns the vector of particle inflow processes.
+	const Processes::BirthPtrVector &Inflows(void) const;
 
-    // READ/WRITE/COPY.
+	//! Returns the ith particle inflow process.
+	Processes::BirthProcess *const Inflows(unsigned int i) const;
 
-    // Writes the object to a binary stream.
-    virtual void Serialize(std::ostream &out) const;
+	//! Add an inflow process to the Cell. The process is copied.
+	void AddInflow(Processes::BirthProcess &inf);
 
-    // Reads the object from a binary stream.
-    virtual void Deserialize(
-        std::istream &in,                 // Input stream.
-        const Sweep::ParticleModel &model // Model used to define particles.
-        );
+	// PARTICLE OUTFLOW PROCESSES.
 
-    // aab64 set particle temperature
-    void SetBulkParticleTemperature(double ptemp) { 
-        m_bulk_particle_temp = ptemp; 
-    }
+	//! Returns the number of outflow processes defined for this Cell
+	unsigned int OutflowCount(void) const;
 
-    // aab64 get particle temperature
-    double GetBulkParticleTemperature() const { return m_bulk_particle_temp; }
+	//! Returns the vector of particle outflow processes.
+	const Processes::DeathPtrVector &Outflows(void) const;
 
-    // aab64 Set the process time interval
-    void SetCurrentProcessTau(double tau) { m_proc_tau = tau; }
+	//! Returns the ith particle outflow process.
+	Processes::DeathProcess *const Outflows(unsigned int i) const;
 
-    // aab64 Get the process time interval 
-    double GetCurrentProcessTau() const { return m_proc_tau; }
+	//! Add an outflow process to the Cell. The process is copied.
+	void AddOutflow(Processes::DeathProcess &out);
+
+	// Add an outflow process with the given rate to the Cell.
+	void AddOutflow(
+		double rate, // Rate constant for outflow.
+		const Sweep::Mechanism &mech // Mechanism which defines LPDA for outflow.
+		);
+
+	// figure out how many starting species is supposed to be in the particle ensemble
+	unsigned int NumOfStartingSpecies(const int index) const;
+
+	// READ/WRITE/COPY.
+
+	// Writes the object to a binary stream.
+	virtual void Serialize(std::ostream &out) const;
+
+	// Reads the object from a binary stream.
+	virtual void Deserialize(
+		std::istream &in,                 // Input stream.
+		const Sweep::ParticleModel &model // Model used to define particles.
+		);
+
+	// aab64 set particle temperature
+	void SetBulkParticleTemperature(double ptemp) {
+		m_bulk_particle_temp = ptemp;
+	}
+
+	// aab64 get particle temperature
+	double GetBulkParticleTemperature() const { return m_bulk_particle_temp; }
+
+	// aab64 Set the process time interval
+	void SetCurrentProcessTau(double tau) { m_proc_tau = tau; }
+
+	// aab64 Get the process time interval 
+	double GetCurrentProcessTau() const { return m_proc_tau; }
 
 	// aab64 Set the process time interval
 	void SetIsAdiabaticFlag(bool flag) { m_adiabatic_flag = flag; }
@@ -259,7 +259,6 @@ public:
 	// aab64 tracker for incepted particles
 	double GetIncepted() const { return m_incepted; }
 	void AdjustIncepted(double adjustment);
-
 	void AdjustInceptions() { ++m_inceptions; }
 	void AdjustInceptions(double adjustment) { m_inceptions += adjustment; }
 	void AdjustInceptingCoagulations() { ++m_inceptingcoagulations; }
@@ -268,11 +267,42 @@ public:
 	double GetInceptions_tmp() const { return m_inceptions_tmp; }
 	void ResetInceptions_tmp() { m_inceptions_tmp = 0; }
 	void AdjustInceptions_tmp() { ++m_inceptions_tmp; }
-	
+	double GetInceptingCoagulations_tmp() const { return m_inceptingcoagulations_tmp; }
+	void ResetInceptingCoagulations_tmp() { m_inceptingcoagulations_tmp = 0; }
+	void AdjustInceptingCoagulations_tmp() { ++m_inceptingcoagulations_tmp; }
 	void AdjustRutiles(unsigned int adjustment) { m_surface_rutiles += adjustment; }
 	unsigned int GetRutiles() const { return m_surface_rutiles; }
 	double GetLastRutileTime() const { return m_last_update_time; }
 	void SetLastRutileTime(double lasttime) { m_last_update_time = lasttime; }
+
+	// aab64 Averages of the incepting class
+	void SetDistParams(double mu, double sigma);
+	double GetDistParams_diam() const { return m_diam_tmp; }
+	double GetDistParams_diam2() const { return m_diam2_tmp; }
+	double GetDistParams_diam_1() const { return m_diam_1_tmp; }
+	double GetDistParams_diam_2() const { return m_diam_2_tmp; }
+	double GetDistParams_mass_1_2() const { return m_mass_1_2_tmp; }
+	double GetDistParams_diam2_mass_1_2() const { return m_diam2_mass_1_2_tmp; }
+
+	// aab64 Moments and contributing terms trackers
+	void SetMomentsk(double m0k, double m1k, double m2k, double m3k);
+	void SetInceptionSums(double d0);
+	void SetCoagulationSums(double di);
+	void ResetInceptionSums();
+	void ResetCoagulationSums();
+	void SetSGk(double betak) { m_SGk = betak; }
+	double GetMomentsk_0() const { return m_m0k; }
+	double GetMomentsk_1() const { return m_m1k; }
+	double GetMomentsk_2() const { return m_m2k; }
+	double GetMomentsk_3() const { return m_m3k; }
+	double GetSGk() const { return m_SGk; }
+	double GetIncDiam() const { return m_d0sum; }
+	double GetIncDiam2() const { return m_d0sum_sqrd; }
+	double GetCoagDiam() const { return m_disum; }
+	double GetCoagDiam2() const { return m_disum_sqrd; }
+	void SetSGadjustment(double adjust) { m_SGadjustment = adjust; }
+	double GetSGadjustment() const { return m_SGadjustment; }
+
 
 protected:
     // Default constructor is protected as it makes no
@@ -340,13 +370,23 @@ private:
 	PropID m_cprop1;
 	PropID m_cprop2;
 
-	// aab64 tracker for incepted particles in place of physical inceptions
+	// aab64 trackers for incepted particles in place of physical inceptions
 	double m_incepted;
 	double m_inceptions;
-	double m_inceptions_tmp;
+	double m_inceptions_tmp, m_inceptingcoagulations_tmp;
 	double m_inceptingcoagulations;
 	unsigned int m_surface_rutiles;
 	double m_last_update_time;
+
+	// aab64 average properties for the incepting class used to compute coagulation rates
+	double m_diam_tmp, m_diam2_tmp, m_diam_1_tmp, m_diam_2_tmp, m_mass_1_2_tmp, m_diam2_mass_1_2_tmp; 
+
+	// aab64 trackers for the moments and contributing terms 
+	double m_d0sum, m_disum, m_d0sum_sqrd, m_disum_sqrd;
+	double m_m0k, m_m1k, m_m2k, m_m3k;
+	double m_SGk;
+	double m_SGadjustment;
+
 };
 
 } //namespace Sweep

@@ -133,7 +133,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 	// aab64 hybrid particle model
 	// If hybrid_flag is active, track the number of incepting particles
 	// using the particle weight
-	if (!m_mech->IsHybrid() || (!sys.Particles().IsFirstSP())) //    && sys.ParticleCount() <= 1500
+	if (!m_mech->IsHybrid() || (!sys.Particles().IsFirstSP())) // && sys.ParticleCount() <= 1500
 	{
 
 	int iprng = -1;
@@ -254,30 +254,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 			// Update gas-phase chemistry of system 
 			double particleWt = sys.GetInceptingWeight();
 			adjustGas(sys, particleWt, 1, sys.GetInceptionFactor()); // nInceptingParticle_ui
-			adjustParticleTemperature(sys, particleWt, 1, sys.GetIsAdiabaticFlag(), nInceptingParticle_d, 1, sys.GetInceptionFactor()); // nInceptingParticle_ui
-
-			// aab64 temporary 
-			// Add psc diagnostics file
-			//sw_1 = sprng->getStatisticalWeight();
-			//dcol_2 = sprng->CollDiameter();
-			/*if (t>0.0003 && t <= 0.0004)
-			{
-			ofstream pscFile;
-			std::string pscfname;
-			pscfname = "PSC-event-diagnostics-3micros.csv";
-			pscFile.open(pscfname.c_str(), ios::app);
-			pscFile << t << " , " << dcol_1 << " , " << dcol_2 << " , " << sw_0 << " , " << sw_1 << "\n";
-			pscFile.close();
-			}*/
-			/*if (t>0.003 && t <= 0.0031)
-			{
-			ofstream pscFile;
-			std::string pscfname;
-			pscfname = "PSC-event-diagnostics-3ms.csv";
-			pscFile.open(pscfname.c_str(), ios::app);
-			pscFile << t << " , " << dcol_1 << " , " << dcol_2 << " , " << sw_0 << " , " << sw_1 << "\n";
-			pscFile.close();
-			}*/
+			adjustParticleTemperature(sys, particleWt, 1, sys.GetIsAdiabaticFlag(), nInceptingParticle_d, 1, sys.GetInceptionFactor());
 		}
 		else
 		{
@@ -319,15 +296,29 @@ int DimerInception::Perform(const double t, Cell &sys,
 			sp->UpdateCache();
 
 			// Add particle to system's ensemble.
-			if (!m_mech->IsHybrid() ) // || sys.ParticleCount() < 1500 || sys.GetIncepted() == 1
+			if (!m_mech->IsHybrid()) // || sys.ParticleCount() < 1500 || sys.GetIncepted() == 1
 				sys.Particles().Add(*sp, rng);
 			else
 			{
+				// Store the incepting particle and create templates for later update
 				sys.Particles().SetInceptedSP(*sp);
 				sys.Particles().SetInceptedSP_tmp(*sp);
+				sys.Particles().SetInceptedSP_tmp_d2(*sp);
+				sys.Particles().SetInceptedSP_tmp_d_1(*sp);
+				sys.Particles().SetInceptedSP_tmp_d_2(*sp);
+				sys.Particles().SetInceptedSP_tmp_m_1_2(*sp);
+				sys.Particles().SetInceptedSP_tmp_d2_m_1_2(*sp);
+
+				// Increment the count if incepted particles
 				sys.AdjustIncepted(sys.GetInceptingWeight());
 				sys.AdjustInceptions();
 				sys.AdjustInceptions_tmp();
+
+				// Add the particle diameter to the total incepting class diameter
+				sys.SetInceptionSums(sp->CollDiameter());
+
+				// Note the time of this event (may not be used anymore)
+				sys.SetLastRutileTime(t);
 			}
 
 			// Update gas-phase chemistry of system.
@@ -337,16 +328,22 @@ int DimerInception::Perform(const double t, Cell &sys,
 	}
 	else
 	{
-		boost::uniform_01<rng_type&, double> uniformGenerator(rng); // temporary
-		double posn = uniformGenerator(); // temporary
 		// We are here because the hybrid_flag is active
 		// Increment the count of incepted particles
 		double wt_new = sys.GetInceptingWeight();
 		sys.AdjustIncepted(wt_new);
-		adjustGas(sys, wt_new, 1, sys.GetInceptionFactor());
-		adjustParticleTemperature(sys, wt_new, 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 		sys.AdjustInceptions();
 		sys.AdjustInceptions_tmp();
+		
+		// Add the particle diameter to the total incepting class diameter
+		sys.SetInceptionSums(sys.Particles().GetInceptedSP().CollDiameter());
+		
+		// Note the time of this event (may not be used anymore)
+		sys.SetLastRutileTime(t);
+
+		// Adjust the gas-phase by corresponding amount
+		adjustGas(sys, wt_new, 1, sys.GetInceptionFactor());
+		adjustParticleTemperature(sys, wt_new, 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 	}
 
     return 0;
