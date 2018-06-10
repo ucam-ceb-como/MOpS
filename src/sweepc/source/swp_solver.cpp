@@ -376,7 +376,7 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
 
 		// aab64 Update the diameter moments of the incepting class
 		// and store average properties to use in coagulation events
-		if (mech.IsHybrid() && sys.Particles().IsFirstSP() > 0)
+		if (mech.IsHybrid() && sys.GetIncepted() > 0.0) // sys.Particles().IsFirstSP()
 		{
 			mech.MomentUpdate(t, dt, sys, rng);
 		}

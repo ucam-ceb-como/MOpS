@@ -473,13 +473,13 @@ void Cell::SetCoagulationSums(double di)
 // aab64 Reset diameter counters
 void Cell::ResetInceptionSums()
 {
-	m_d0sum = 0;
-	m_d0sum_sqrd = 0;
+	m_d0sum = 0.0;
+	m_d0sum_sqrd = 0.0;
 }
 void Cell::ResetCoagulationSums()
 {
-	m_disum = 0;
-	m_disum_sqrd = 0;
+	m_disum = 0.0;
+	m_disum_sqrd = 0.0;
 }
 
 // READ/WRITE/COPY.

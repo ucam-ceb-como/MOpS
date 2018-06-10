@@ -93,8 +93,6 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 		// Calculate the rate.
 		if (m_mech->IsHybrid() && sys.Particles().IsFirstSP())
 		{
-			//Particle * spInc_tmp1 = sys.Particles().GetInceptedSP_tmp().Clone();
-			//Particle * spInc_inc = sys.Particles().GetInceptedSP().Clone();
 			double wt = sys.Particles().GetInceptedSP().getStatisticalWeight();
 
 			fvector props(6, wt);
@@ -103,9 +101,9 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 			{ // use inception properties
 				props[0] *= sys.Particles().GetInceptedSP().CollDiameter();
 				props[1] *= props[0] * props[0];
-				props[2] *= 1 / props[0];
+				props[2] *= 1.0 / props[0];
 				props[3] *= props[2] * props[2];
-				props[4] *= 1 / sqrt(sys.Particles().GetInceptedSP().Mass());
+				props[4] *= 1.0 / sqrt(sys.Particles().GetInceptedSP().Mass());
 				props[5] *= props[1] * props[4];
 			}
 			else
@@ -122,10 +120,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 				T / sys.GasPhase().Viscosity(), MeanFreePathAir(T, P),
 				sys.SampleVolume(), props);
 
-			//delete spInc_inc;
-			//spInc_inc = NULL;
-			//delete spInc_tmp1;
-			//spInc_tmp1 = NULL;
+			props.clear();
 
 			return rate;
 		}
@@ -135,6 +130,9 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 			double rate = Rate(sys.Particles().GetSums(), (double)n, sqrt(T),
 				T / sys.GasPhase().Viscosity(), MeanFreePathAir(T, P),
 				sys.SampleVolume(), props);
+
+			props.clear();
+
 			return rate;
 		}
 	}
@@ -246,16 +244,16 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 			fvector props(6, wt);
 
 			if (sys.GetDistParams_diam() == 0)
-			{
+			{ // use inception properties
 				props[0] *= sys.Particles().GetInceptedSP().CollDiameter();
 				props[1] *= props[0] * props[0];
-				props[2] *= 1 / props[0];
+				props[2] *= 1.0 / props[0];
 				props[3] *= props[2] * props[2];
-				props[4] *= 1 / sqrt(sys.Particles().GetInceptedSP().Mass());
+				props[4] *= 1.0 / sqrt(sys.Particles().GetInceptedSP().Mass());
 				props[5] *= props[1] * props[4];
 			}
 			else
-			{
+			{ // use diameter distribution to specify expected values
 				props[0] *= sys.GetDistParams_diam();
 				props[1] *= sys.GetDistParams_diam2();
 				props[2] *= sys.GetDistParams_diam_1();
@@ -267,6 +265,8 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 			double rate = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T / sys.GasPhase().Viscosity(),
 				MeanFreePathAir(T, P), sys.SampleVolume(), iterm, props);
 
+			props.clear();
+
 			return rate;
 		}
 		else
@@ -276,6 +276,9 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 
 			double rate = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T / sys.GasPhase().Viscosity(),
 				MeanFreePathAir(T, P), sys.SampleVolume(), iterm, props);
+
+			props.clear();
+
 			return rate;
 		}
 	}
@@ -415,10 +418,10 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			sp1 = sys.Particles().GetInceptedSP_tmp().Clone();
 		else if (ip1 == -3)
 			sp1 = sys.Particles().GetInceptedSP_tmp_d2().Clone();
-		sp1->setStatisticalWeight(1);                                                // Ensure weight equals one
+		sp1->setStatisticalWeight(1.0);                                              // Ensure weight equals one
 		sp1->SetTime(t);                                                             // Set last update time to avoid additional surface growth
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
-		sys.AdjustIncepted(-1);                                                      // Reduce the incepting class count
+		sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
 		sys.AdjustInceptingCoagulations();                                           // Increment number of times particles have left the incepting class
 		sys.AdjustInceptingCoagulations_tmp();
 		sys.SetCoagulationSums(sp1->CollDiameter());                                 // Store the change in total diameter due to losing this particle from the class
@@ -454,7 +457,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		else if (ip2 == -7)
 			sp2 = sys.Particles().GetInceptedSP_tmp_m_1_2().Clone();
 
-		sp2->setStatisticalWeight(1);                                                // Ensure weight equals one
+		sp2->setStatisticalWeight(1.0);                                              // Ensure weight equals one
 		sp2->SetTime(t);                                                             // Set last update time to avoid additional surface growth
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
 		ip2 = -2;                                                                    // Set ip2 for simplicity in checks below
@@ -541,7 +544,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			// If particle sp2 is used, we now need to remove it from the incepting class
 			if (ip2_flag)
 			{
-				sys.AdjustIncepted(-1);                                                      // Reduce the incepting class count
+				sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
 				sys.AdjustInceptingCoagulations();                                           // Increment number of times particles have left the incepting class
 				sys.AdjustInceptingCoagulations_tmp();
 				sys.SetCoagulationSums(sp2->CollDiameter());                                 // Store the change in total diameter due to losing this particle from the class
