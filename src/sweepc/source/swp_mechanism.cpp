@@ -1418,26 +1418,28 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 
 			// Now that the gas-phase has been updated, reset the weight of this SP to 1 and store it
 			sys.Particles().SetInceptedSP_tmp(*sp);
+			delete sp;
+			sp = NULL;
 
 			// Storing particle based on diameter squared
-			/*sp = sys.Particles().GetInceptedSP().Clone();
+			sp = sys.Particles().GetInceptedSP().Clone();
 			sp->setStatisticalWeight(1.0);
-			d_bar = sqrt(exp(2.0 * mu + 2.0 * sigma * sigma));
+			/*d_bar = sqrt(exp(2.0 * mu + 2.0 * sigma * sigma));
 			n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;
 			n_add *= NA / MW_titania;
 			n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
 			if (n_add < 0.0)
-			n_add = 0.0;
+			n_add = 0.0;*/
 			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 			{
-			if ((*i)->IsDeferred())
-			{
-			sys.SetNotPSIFlag(false);
-			(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-			sp->SetTime(t);
-			sp->UpdateCache();
+			    if ((*i)->IsDeferred())
+			    {
+			        sys.SetNotPSIFlag(false);
+			        (*i)->Perform(t, sys, *sp, rng, floor(n_add));
+			        sp->SetTime(t);
+			        sp->UpdateCache();
+			    }
 			}
-			}*/
 			sys.Particles().SetInceptedSP_tmp_d2(*sp);
 			delete sp;
 			sp = NULL;

@@ -99,11 +99,11 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 
 			if (sys.GetDistParams_diam() == 0) 
 			{ // use inception properties
-				props[0] *= sys.Particles().GetInceptedSP().CollDiameter();
+				props[0] *= sys.Particles().GetInceptedSP_tmp().CollDiameter();
 				props[1] *= props[0] * props[0];
 				props[2] *= 1.0 / props[0];
 				props[3] *= props[2] * props[2];
-				props[4] *= 1.0 / sqrt(sys.Particles().GetInceptedSP().Mass());
+				props[4] *= 1.0 / sqrt(sys.Particles().GetInceptedSP_tmp().Mass());
 				props[5] *= props[1] * props[4];
 			}
 			else
@@ -121,6 +121,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 				sys.SampleVolume(), props);
 
 			props.clear();
+			fvector().swap(props);
 
 			return rate;
 		}
@@ -132,6 +133,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 				sys.SampleVolume(), props);
 
 			props.clear();
+			fvector().swap(props);
 
 			return rate;
 		}
@@ -245,11 +247,11 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 
 			if (sys.GetDistParams_diam() == 0)
 			{ // use inception properties
-				props[0] *= sys.Particles().GetInceptedSP().CollDiameter();
+				props[0] *= sys.Particles().GetInceptedSP_tmp().CollDiameter();
 				props[1] *= props[0] * props[0];
 				props[2] *= 1.0 / props[0];
 				props[3] *= props[2] * props[2];
-				props[4] *= 1.0 / sqrt(sys.Particles().GetInceptedSP().Mass());
+				props[4] *= 1.0 / sqrt(sys.Particles().GetInceptedSP_tmp().Mass());
 				props[5] *= props[1] * props[4];
 			}
 			else
@@ -266,6 +268,7 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 				MeanFreePathAir(T, P), sys.SampleVolume(), iterm, props);
 
 			props.clear();
+			fvector().swap(props);
 
 			return rate;
 		}
@@ -278,6 +281,7 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 				MeanFreePathAir(T, P), sys.SampleVolume(), iterm, props);
 
 			props.clear();
+			fvector().swap(props);
 
 			return rate;
 		}

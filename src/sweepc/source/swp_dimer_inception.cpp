@@ -319,11 +319,19 @@ int DimerInception::Perform(const double t, Cell &sys,
 
 				// Note the time of this event (may not be used anymore)
 				sys.SetLastRutileTime(t);
+
 			}
 
 			// Update gas-phase chemistry of system.
 			adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
 			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+
+			if (m_mech->IsHybrid())
+			{
+
+				delete sp;
+				sp = NULL;
+			}
 		}
 	}
 	else
