@@ -242,8 +242,10 @@ void ParticleStats::Calculate(const Ensemble &e, double scale)
 	bool hybrid_flag = true;
 	if (hybrid_flag && e.GetIncepted() != 0)
 	{
-		const Particle spInc = e.GetInceptedSP();
-		const double wt = spInc.getStatisticalWeight();
+		//const Particle spInc = e.GetInceptedSP();
+		//const double wt = spInc.getStatisticalWeight();
+		const Particle spInc = e.GetInceptedSP_tmp(); // Only average diameter
+		const double wt = e.GetInceptedSP().getStatisticalWeight();
 		const double m = spInc.Mass();
 
 		double sz = spInc.Property(m_statbound.PID);

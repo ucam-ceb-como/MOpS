@@ -629,6 +629,7 @@ void Sweep::Ensemble::ClearMain()
 	m_inceptingSP_tmp_d_2 = NULL;
 	m_inceptingSP_tmp_m_1_2 = NULL;
 	m_inceptingSP_tmp_d2_m_1_2 = NULL;
+	m_inceptingSP_tmp_rand = NULL;
 	m_inceptedFirstSP = false;
 }
 
@@ -817,7 +818,12 @@ void Sweep::Ensemble::SetInceptedSP_tmp_d2_m_1_2(Sweep::Particle sp)
 	m_inceptingSP_tmp_d2_m_1_2 = NULL;
 	m_inceptingSP_tmp_d2_m_1_2 = sp.Clone();
 }
-
+void Sweep::Ensemble::SetInceptedSP_tmp_rand(Sweep::Particle sp)
+{
+	delete m_inceptingSP_tmp_rand;
+	m_inceptingSP_tmp_rand = NULL;
+	m_inceptingSP_tmp_rand = sp.Clone();
+}
 void Sweep::Ensemble::AdjustIncepted(double adjustment)
 {
 	m_inceptingWeight += adjustment;
@@ -853,6 +859,10 @@ Particle Sweep::Ensemble::GetInceptedSP_tmp_m_1_2() const
 Particle Sweep::Ensemble::GetInceptedSP_tmp_d2_m_1_2() const
 {
 	return *m_inceptingSP_tmp_d2_m_1_2;
+}
+Particle Sweep::Ensemble::GetInceptedSP_tmp_rand() const
+{
+	return *m_inceptingSP_tmp_rand;
 }
 
 // UPDATE ENSEMBLE.
@@ -1046,6 +1056,13 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
 			out.write((char*)&trueval, sizeof(trueval));
 			std::set<void*> uniquePAHAdresses2;
 			m_inceptingSP->Serialize(out, &uniquePAHAdresses2);
+			m_inceptingSP_tmp->Serialize(out, &uniquePAHAdresses2);
+			m_inceptingSP_tmp_d2->Serialize(out, &uniquePAHAdresses2);
+			m_inceptingSP_tmp_d_1->Serialize(out, &uniquePAHAdresses2);
+			m_inceptingSP_tmp_d_2->Serialize(out, &uniquePAHAdresses2);
+			m_inceptingSP_tmp_m_1_2->Serialize(out, &uniquePAHAdresses2);
+			m_inceptingSP_tmp_d2_m_1_2->Serialize(out, &uniquePAHAdresses2);
+			m_inceptingSP_tmp_rand->Serialize(out, &uniquePAHAdresses2);
 		}
 		else {
 			out.write((char*)&falseval, sizeof(falseval));
@@ -1148,6 +1165,20 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
 					std::map<void*, boost::shared_ptr<AggModels::PAHPrimary> > duplicates2;
 					Particle *p = new Particle(in, model, &duplicates2);
 					m_inceptingSP = p;
+					p = new Particle(in, model, &duplicates2);
+					m_inceptingSP_tmp = p;
+					p = new Particle(in, model, &duplicates2);
+					m_inceptingSP_tmp_d2 = p;
+					p = new Particle(in, model, &duplicates2);
+					m_inceptingSP_tmp_d_1 = p;
+					p = new Particle(in, model, &duplicates2);
+					m_inceptingSP_tmp_d_2 = p;
+					p = new Particle(in, model, &duplicates2);
+					m_inceptingSP_tmp_m_1_2 = p;
+					p = new Particle(in, model, &duplicates2);
+					m_inceptingSP_tmp_d2_m_1_2 = p;
+					p = new Particle(in, model, &duplicates2);
+					m_inceptingSP_tmp_rand = p;
 				}
 				else {
 					m_inceptedFirstSP = false;

@@ -302,7 +302,8 @@ public:
 	double GetCoagDiam2() const { return m_disum_sqrd; }
 	void SetSGadjustment(double adjust) { m_SGadjustment = adjust; }
 	double GetSGadjustment() const { return m_SGadjustment; }
-
+	double GetSigmaLN() const { return m_sigmaLN; }
+	double GetMuLN() const { return m_muLN; }
 
 protected:
     // Default constructor is protected as it makes no
@@ -386,6 +387,7 @@ private:
 	double m_m0k, m_m1k, m_m2k, m_m3k;
 	double m_SGk;
 	double m_SGadjustment;
+	double m_sigmaLN, m_muLN;
 
 };
 

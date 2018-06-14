@@ -184,7 +184,8 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
 
 	if (e.GetIncepted() != 0)
 	{
-		Sweep::Particle * sp_temp = e.GetInceptedSP().Clone();
+		//Sweep::Particle * sp_temp = e.GetInceptedSP().Clone();
+		Sweep::Particle * sp_temp = e.GetInceptedSP_tmp().Clone();
 		const AggModels::BinTreePrimary * const prim =
 			dynamic_cast<const AggModels::BinTreePrimary*>(sp_temp->Primary());
 

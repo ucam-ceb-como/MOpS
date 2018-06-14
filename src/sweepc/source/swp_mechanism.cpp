@@ -52,6 +52,8 @@
 #include <cassert>
 #include <boost/random/poisson_distribution.hpp>
 #include <boost/random/discrete_distribution.hpp>
+#include <boost/math/special_functions/erf.hpp>
+#include <boost/random/uniform_01.hpp>
 
 #include "string_functions.h"
 #include "swp_particle.h"
@@ -1283,16 +1285,20 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	double m3 = sys.GetMomentsk_3();
 	
 	// Needed parameters for the surface growth rate
-	double rho_titania = sys.ParticleModel()->Components()[0]->Density();                     // Needs to be generalised (kg/m3)!
-	double MW_titania = sys.ParticleModel()->Components()[0]->MolWt();                        // Needs to be generalised (kg/mol)!
+	// These need to be generalised!!
+	double rho_titania = sys.ParticleModel()->Components()[0]->Density();                     // (kg/m3)
+	double MW_titania = sys.ParticleModel()->Components()[0]->MolWt();                        // (kg/mol)
+	double n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
+	double mass_const = rho_titania * PI / 6.0;
+	double part_convr = NA / MW_titania;
+	double log_dmin = log(4.9175785734906e-10);
 
 	// The surface growth rate without area, i.e. beta = k(T) * ChemRatePart(gas) 
 	// (currently a weird implementation in Perform(.))
 	double beta = sys.GetSGk() / NA;
 
 	// Modify surface growth rate to change in diameter with time
-	//beta *= (sys.SampleVolume());
-	beta *= (2.0 * MW_titania / rho_titania);                                                 // Needs to be generalised (kg/mol)!
+	beta *= (2.0 * MW_titania / rho_titania);
 
 	// Composition change in terms of number of units added
 	double num_added_total = NA * PI * dt * beta * m2 * (rho_titania / MW_titania) * 0.5;
@@ -1301,9 +1307,9 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	double diamChange = sys.GetIncDiam() - sys.GetCoagDiam();
 	double diamChange_sqrd = sys.GetIncDiam2() - sys.GetCoagDiam2();
 
+	// Some warning messages to check the moments are positive
 	if ((sys.GetInceptions_tmp() - sys.GetInceptingCoagulations_tmp()) < -0.5 * m0)
 		std::cout << "Warning: coagulation change is > half the bin, watch moments" << std::endl;
-
 	if (m0 + sys.GetInceptions_tmp() - sys.GetInceptingCoagulations_tmp() < 0.0)
 	{
 		std::cout << "Zeroth moment is going to be negative" << std::endl;
@@ -1313,7 +1319,6 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 		std::cout << "incepted: " << sys.GetIncepted() << ", inceptions: " << sys.GetInceptions_tmp() << ", coagulations: " << sys.GetInceptingCoagulations_tmp() << std::endl;
 		std::cin >> wait_var;
 	}
-
 	if (m1 + diamChange + dt*m0*beta < 0.0)
 	{
 		std::cout << "First moment is going to be negative" << std::endl;
@@ -1321,9 +1326,9 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 		std::cout << "m0: " << m0 << ", m1: " << m1 << ", m2: " << m2 << std::endl;
 		std::cout << "diam change: " << diamChange << ", diam change sqrd: " << diamChange_sqrd << std::endl;
 		std::cout << "incepted: " << sys.GetIncepted() << ", inceptions: " << sys.GetInceptions_tmp() << ", coagulations: " << sys.GetInceptingCoagulations_tmp() << std::endl;
+		std::cout << "mu old: " << sys.GetMuLN() << ", sigma old: " << sys.GetSigmaLN() << std::endl;
 		std::cin >> wait_var;
 	}
-
 	if (m2 + diamChange_sqrd + dt*m1*beta*2.0 < 0.0)
 	{
 		std::cout << "Second moment is going to be negative" << std::endl;
@@ -1334,6 +1339,8 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 		std::cin >> wait_var;
 	}
 
+	// If there are no incepting particles, the moments should be reset since they have no meaning
+	// The particles should be reset because new incepted particles will be smaller
 	if (sys.GetIncepted() == 0.0)
 	{
 		sys.SetDistParams(0.0, 0.0);
@@ -1355,6 +1362,10 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	}
 	else
 	{
+		//double cdf = 1.0;
+		//if (sys.GetSigmaLN() > 0)
+		//	cdf = 0.5 - 0.5 * erf((log(4.9175785734906e-10) - sys.GetMuLN()) / sqrt(2.0) * sys.GetSigmaLN());
+
 		// Update the moments
 		m0 += (sys.GetInceptions_tmp() - sys.GetInceptingCoagulations_tmp());
 		m1 += diamChange;
@@ -1362,25 +1373,92 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 		m2 += diamChange_sqrd;
 		m2 += dt * m1 * beta * 2.0;
 
-		bool reset_flag = false;
-		/*	if (m0 < 0 || m1 < 0 || m2 < 0)
-			{
-			reset_flag = true;
-			}*/
 		if (m0 > 0.0 && m1 > 0.0)
 		{
+			// Prevent the second moment from going negative
 			if (m2 <= 0.0)
 				m2 = 2.42064e-19;
 
-			// Update mu and sigma and M3 from the closed form moment solution, i.e.
-			// E[X^n] = exp(n*mu + n^2 * sigma^2 / 2)
+			// Newton method solver
+			//////////////////////////////////////////////////////////////////////////////////////////////////////
+			// Update mu and sigma from the adjusted closed form moment solution 
+			// (this should be divided by CDF!), i.e.
+			// Ep[X^n] = E[X^n] * 0.5 * (1.0 - erf((log_dmin - mu - n * sigma * sigma) / (sqrt(2.0) * sigma))) 
 			// Use reduced moments M_j/M_0
-			double sigma = log(m2 / m0) - (2.0 * log(m1 / m0));
-			// Sigma can't be zero
+			
+			/*double f1, f2, f1_term, f2_term, df1_sigma, df1_mu, df2_sigma, df2_mu, sigma_tmp, mu_tmp;
+			double a = 2.0 * m1 / m0;
+			double b = 2.0 * m2 / m0;
+			double c = log(4.9e-10);
+			double mu = sys.GetMuLN();
+			double sigma = sys.GetSigmaLN();
 			if (sigma <= 0.0)
 			{
-				std::cout << "Sigma is less than or equal to zero. Setting sigma to 0.001\n";
 				sigma = 1.0e-5;
+				mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));
+			}
+
+			int guard = 0;
+			double tol_mu = 100.0;
+			double tol_sigma = 100.0;
+			double tol_combined = 1.0e-10;
+			double n_iters = 100;
+
+			while (tol_mu + tol_sigma > tol_combined)
+			{
+				sigma_tmp = sigma;
+				mu_tmp = mu;
+				
+				f1_term = exp(mu + 0.5 * sigma * sigma) * 
+					(1.0 - erf((c - mu - sigma * sigma) / (sqrt(2) * sigma)));
+				f2_term = exp(2.0 * mu + 2.0 * sigma * sigma) * 
+					(1.0 - erf((c - mu - 2.0 * sigma * sigma) / (sqrt(2) * sigma)));
+
+				f1 = f1_term - a;
+				f2 = f2_term - b;
+				df1_mu = f1_term +
+					exp(mu + 0.5 * sigma * sigma) *
+					(2.0 / (sqrt(2.0 * PI) * sigma)) *
+					exp(-1.0 * (((c - mu - sigma * sigma) / (sqrt(2) * sigma)) * 
+					((c - mu - sigma * sigma) / (sqrt(2) * sigma))));
+				df1_sigma = f1_term * sigma +
+					exp(mu + 0.5 * sigma * sigma) *
+					(2.0 / (sqrt(2.0 * PI) * sigma * sigma)) * (c - mu + sigma * sigma) *
+					exp(-1.0 * (((c - mu - sigma * sigma) / (sqrt(2) * sigma)) * 
+					((c - mu - sigma * sigma) / (sqrt(2) * sigma))));
+				df2_mu = f2_term * 2.0 +
+					exp(2.0 * mu + 2.0 * sigma * sigma) *
+					(2.0 / (sqrt(2.0 * PI) * sigma)) *
+					exp(-1.0 * (((c - mu - 2.0 * sigma * sigma) / (sqrt(2) * sigma)) * 
+					((c - mu - 2.0 * sigma * sigma) / (sqrt(2) * sigma))));
+				df2_sigma = f2_term * 4.0 * sigma +
+					exp(2.0 * mu + 2.0 * sigma * sigma) *
+					(2.0 / (sqrt(2.0 * PI) * sigma * sigma)) * (c - mu + 2.0 * sigma * sigma) *
+					exp(-1.0 * (((c - mu - 2.0 * sigma * sigma) / (sqrt(2) * sigma)) * 
+					((c - mu - 2.0 * sigma * sigma) / (sqrt(2) * sigma))));
+				sigma = sigma + (df2_mu * f1 / df1_mu - f2) / 
+					(df2_sigma - df2_mu * df1_sigma / df1_mu);
+				mu = mu - (f1 + df1_sigma * (sigma - sigma_tmp)) / df1_mu;
+
+				tol_mu = (mu - mu_tmp) / mu;
+				tol_sigma = (sigma - sigma_tmp) / sigma;
+				if (guard > n_iters)
+					break;
+				else
+					++guard;
+			}
+			if (tol_mu + tol_sigma > tol_combined)
+				std::cout << "Tolerances too high at exit" << std::endl;*/
+			//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			// Update mu and sigma from the closed form moment solution, i.e.
+			// E[X^n] = exp(n*mu + n^2 * sigma^2 / 2)
+			// Use reduced moments M_j/M_0
+			double sigma = log(m2 / m0) - (2.0 * log(m1 / m0)); 
+			if (sigma <= 0.0)                                                                         // Sigma can't be zero
+			{
+				std::cout << "Sigma is less than or equal to zero. Setting sigma to 1e-8\n";
+				sigma = 1.0e-8;
 			}
 			else
 			{
@@ -1389,16 +1467,19 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 			double mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));
 			sys.SetDistParams(mu, sigma);
 
-			// Storing particle based on diameter (use to update the gas phase)
+			//cdf = 0.5 - 0.5 * erf((log(4.9175785734906e-10) - mu) / sqrt(2.0) * sigma);
+			double sigma_sqrd = sigma * sigma;
 
+			// Storing particle based on diameter (use to update the gas phase)
 			// We need to store a particle with this average diameter for coagulation
 			// The change in composition must be an integer so this is approximate!
 			Particle * sp = sys.Particles().GetInceptedSP().Clone();
 			sp->setStatisticalWeight(1.0);
-			double d_bar = exp(mu + sigma * sigma * 0.5);                                             // E[d] = exp(mu + sigma^2 / 2)
-			double n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;                            // Mass equivalent to the average diameter 
-			n_add *= NA / MW_titania;                                                                 // Number of particles
-			n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
+			double d_bar = exp(mu + sigma_sqrd * 0.5);
+			//double d_bar = exp(mu + sigma_sqrd * 0.5) * 0.5 * (1.0 - erf((log_dmin - mu - sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf;
+			double n_add = mass_const * d_bar * d_bar * d_bar;                                        // Mass equivalent to the average diameter 
+			n_add *= part_convr;                                                                      // Number of particles
+			n_add -= n_titania0;
 			if (n_add < 0.0)
 				n_add = 0.0;
 
@@ -1424,12 +1505,16 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 			// Storing particle based on diameter squared
 			sp = sys.Particles().GetInceptedSP().Clone();
 			sp->setStatisticalWeight(1.0);
-			/*d_bar = sqrt(exp(2.0 * mu + 2.0 * sigma * sigma));
-			n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;
-			n_add *= NA / MW_titania;
-			n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
-			if (n_add < 0.0)
-			n_add = 0.0;*/
+			if (t < 0.001)
+			{
+				d_bar = sqrt(exp(2.0 * mu + 2.0 * sigma_sqrd));
+				//d_bar = sqrt(exp(2.0 * mu + 2.0 * sigma_sqrd) * 0.5 * (1.0 - erf((log_dmin - mu - 2.0 * sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf);
+				n_add = mass_const * d_bar * d_bar * d_bar;
+				n_add *= part_convr;
+				n_add -= n_titania0;
+				if (n_add < 0.0)
+					n_add = 0.0;
+			}
 			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 			{
 			    if ((*i)->IsDeferred())
@@ -1447,10 +1532,11 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 			// Storing particle based on inverse diameter
 			sp = sys.Particles().GetInceptedSP().Clone();
 			sp->setStatisticalWeight(1.0);
-			d_bar = 1 / (exp(-1.0 * mu + sigma * sigma * 0.5));
-			n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;
-			n_add *= NA / MW_titania;
-			n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
+			d_bar = 1 / (exp(-1.0 * mu + sigma_sqrd * 0.5));
+			//d_bar = 1 / (exp(-1.0 * mu + sigma_sqrd * 0.5) * 0.5 * (1.0 - erf((log_dmin - mu + sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf);
+			n_add = mass_const * d_bar * d_bar * d_bar;
+			n_add *= part_convr;
+			n_add -= n_titania0;
 			if (n_add < 0)
 				n_add = 0;
 			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
@@ -1469,10 +1555,11 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 			// Storing particle based on inverse diameter squared
 			sp = sys.Particles().GetInceptedSP().Clone();
 			sp->setStatisticalWeight(1.0);
-			d_bar = sqrt(1.0 / exp(-2.0 * mu + 2.0 * sigma * sigma));
-			n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;
-			n_add *= NA / MW_titania;
-			n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
+			d_bar = sqrt(1.0 / (exp(-2.0 * mu + 2.0 * sigma_sqrd)));
+			//d_bar = sqrt(1.0 / (exp(-2.0 * mu + 2.0 * sigma_sqrd) * 0.5 * (1.0 - erf((log_dmin - mu + 2.0 * sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf));
+			n_add = mass_const * d_bar * d_bar * d_bar;
+			n_add *= part_convr;
+			n_add -= n_titania0;
 			if (n_add < 0.0)
 				n_add = 0.0;
 			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
@@ -1491,12 +1578,13 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 			// Storing particle based on inverse squareroot of mass
 			sp = sys.Particles().GetInceptedSP().Clone();
 			sp->setStatisticalWeight(1.0);
-			d_bar = exp((-1.5) * mu + 1.125 * sigma * sigma);
+			d_bar = exp((-1.5) * mu + 1.125 * sigma_sqrd);
+			//d_bar = exp((-1.5) * mu + 1.125 * sigma_sqrd) * 0.5 * (1.0 - erf((log_dmin - mu + 1.5 * sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf;
 			double expon = -2.0 / 3.0;
 			d_bar = pow(d_bar, expon);
-			n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;
-			n_add *= NA / MW_titania;
-			n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
+			n_add = mass_const * d_bar * d_bar * d_bar;
+			n_add *= part_convr;
+			n_add -= n_titania0;
 			if (n_add < 0.0)
 				n_add = 0.0;
 			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
@@ -1515,11 +1603,12 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 			// Storing particle based on diameter squared times inverse squareroot of mass
 			sp = sys.Particles().GetInceptedSP().Clone();
 			sp->setStatisticalWeight(1.0);
-			d_bar = exp(0.5 * mu + 0.125 * sigma * sigma);
+			d_bar = exp(0.5 * mu + 0.125 * sigma_sqrd);
+			//d_bar = exp(0.5 * mu + 0.125 * sigma_sqrd) * 0.5 * (1.0 - erf((log_dmin - mu - 0.5 * sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf;
 			d_bar *= d_bar;
-			n_add = rho_titania * PI / 6.0 * d_bar * d_bar * d_bar;
-			n_add *= NA / MW_titania;
-			n_add -= sp->Composition()[0];                                                            // Needs to be generalised (titania incepting composition)!
+			n_add = mass_const * d_bar * d_bar * d_bar;
+			n_add *= part_convr;
+			n_add -= n_titania0;
 			if (n_add < 0.0)
 				n_add = 0.0;
 			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
@@ -1536,6 +1625,54 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 			delete sp;
 			sp = NULL;
 
+			// Storing particle based on random diameter
+			sp = sys.Particles().GetInceptedSP().Clone(); //sys.Particles().GetInceptedSP_tmp().Clone();
+			sp->setStatisticalWeight(1.0);
+			boost::uniform_01<rng_type&, double> unifDistrib(rng);
+			//double adjusted_cdf_frac = 2.0 * unifDistrib() - 2.0 - erf((log_dmin - mu) / (sqrt(2.0) * sigma));
+			//double oldest = (((t - sp->CreateTime()) * sys.GetSGk() * PI * sp->CollDiameter() * sp->CollDiameter()) + n_titania0) * MW_titania / (NA * rho_titania);
+			//expon = 1.0 / 3.0;
+			//oldest = pow(oldest * (6.0 / (rho_titania * PI)), expon);
+			//cout << oldest << "\n";
+			//if (oldest <= sys.Particles().GetInceptedSP().CollDiameter())
+			//	oldest = 5.0e-10;
+			double oldest = 5.0e-8;
+			double adjusted_cdf_frac = unifDistrib();
+			double cdf_min = (0.5 + 0.5 * erf((log_dmin - mu) / (sqrt(2.0) * sigma)));
+			double cdf_max = (0.5 + 0.5 * erf((log(oldest) - mu) / (sqrt(2.0) * sigma)));
+			//adjusted_cdf_frac = 2.0 * (-0.5 + adjusted_cdf_frac + (1.0 - adjusted_cdf_frac) * cdf_min);
+			adjusted_cdf_frac = 2.0 * unifDistrib() * (cdf_max - cdf_min) + 2.0 * cdf_min - 1.0;
+			d_bar = exp(sqrt(2.0) * sigma * boost::math::erf_inv(adjusted_cdf_frac) + mu);
+			//d_bar = exp(sqrt(2.0) * sigma * boost::math::erf_inv(adjusted_cdf_frac) + mu);
+			if (d_bar < 4.9175785734906e-10)
+			{
+				std::cout << "Randomly chosen d is too small, setting d to dmin\n";
+				d_bar = 4.9175785734906e-10;
+			}
+			else if (d_bar > oldest)
+			{
+				std::cout << "Randomly chosen d is too large, setting d to 1 micron" << d_bar << "\n";
+				d_bar = oldest;
+			}
+			n_add = mass_const * d_bar * d_bar * d_bar;
+			n_add *= part_convr;
+			n_add -= n_titania0;
+			if (n_add < 0.0)
+				n_add = 0.0;
+			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+			{
+				if ((*i)->IsDeferred())
+				{
+					(*i)->Perform(t, sys, *sp, rng, floor(n_add));
+					sys.SetNotPSIFlag(true);
+					sp->SetTime(t);
+					sp->UpdateCache();
+				}
+			}
+			sys.Particles().SetInceptedSP_tmp_rand(*sp);
+			delete sp;
+			sp = NULL;
+
 			// Store moments and reset counters
 			sys.SetMomentsk(m0, m1, m2, m3);
 			sys.ResetCoagulationSums();
@@ -1549,22 +1686,6 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 			sys.ResetInceptionSums();
 			sys.ResetInceptions_tmp();
 			sys.ResetInceptingCoagulations_tmp();
-			//std::cout << "Moments not positive!\n";
-			/*if (reset_flag)
-			{
-			sys.SetDistParams(0, 0);
-			sys.SetMomentsk(0, 0, 0, 0);
-			sys.ResetCoagulationSums();
-			sys.ResetInceptionSums();
-			sys.ResetInceptions_tmp();
-			sys.ResetInceptingCoagulations_tmp();
-			Particle * sp = sys.Particles().GetInceptedSP().Clone();
-			sp->setStatisticalWeight(1);
-			sp->SetTime(t);
-			sys.Particles().SetInceptedSP_tmp(*sp);
-			delete sp;
-			sp = NULL;
-			}*/
 		}
 	}
 }

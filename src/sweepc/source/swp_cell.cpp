@@ -63,17 +63,17 @@ namespace Sweep {
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (public).
-Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
-: m_ensemble(), m_model(&model),
-  m_smpvol(1.0), m_fixed_chem(false), 
-  m_incepting_weight(1.0), m_incFactor(1.0), 
-  m_notpsiflag(true), m_rateFactor(1.0), 
-  m_cprop1(iUniform), m_cprop2(iUniform), 
-  m_incepted(0.0), m_inceptions(0), m_inceptingcoagulations(0), 
-  m_surface_rutiles(0), m_last_update_time(0), m_inceptions_tmp(0), m_inceptingcoagulations_tmp(0),
-  m_diam_tmp(0), m_diam2_tmp(0), m_diam_1_tmp(0), m_diam_2_tmp(0), m_mass_1_2_tmp(0), m_diam2_mass_1_2_tmp(0),
-  m_d0sum(0), m_disum(0), m_d0sum_sqrd(0), m_disum_sqrd(0),
-  m_m0k(0), m_m1k(0), m_m2k(0), m_m3k(0), m_SGk(0), m_SGadjustment(0)
+	Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
+		: m_ensemble(), m_model(&model),
+		m_smpvol(1.0), m_fixed_chem(false),
+		m_incepting_weight(1.0), m_incFactor(1.0),
+		m_notpsiflag(true), m_rateFactor(1.0),
+		m_cprop1(iUniform), m_cprop2(iUniform),
+		m_incepted(0.0), m_inceptions(0.0), m_inceptingcoagulations(0.0),
+		m_surface_rutiles(0), m_last_update_time(0.0), m_inceptions_tmp(0.0), m_inceptingcoagulations_tmp(0.0),
+		m_diam_tmp(0.0), m_diam2_tmp(0.0), m_diam_1_tmp(0.0), m_diam_2_tmp(0.0), m_mass_1_2_tmp(0.0), m_diam2_mass_1_2_tmp(0.0),
+		m_d0sum(0.0), m_disum(0.0), m_d0sum_sqrd(0.0), m_disum_sqrd(0.0),
+		m_m0k(0.0), m_m1k(0.0), m_m2k(0.0), m_m3k(0.0), m_SGk(0.0), m_SGadjustment(0.0), m_sigmaLN(0.0), m_muLN(0.0)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
@@ -168,6 +168,8 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 		m_m3k = rhs.m_m3k;
 		m_SGk = rhs.m_SGk;
 		m_SGadjustment = rhs.m_SGadjustment;
+		m_muLN = rhs.m_muLN;
+		m_sigmaLN = rhs.m_sigmaLN;
 		
 	}
 	assert(isValid());
@@ -433,16 +435,23 @@ void Cell::AdjustIncepted(double adjustment)
 // aab64 Set incepting class average properties using closed form moments for the diameter distribution
 void Cell::SetDistParams(double mu, double sigma)
 {
-	double rhop = 4260.0; // titania
-	double c1 = sigma * sigma * 0.5;
-	double c2 = std::sqrt(6.0 / (rhop * PI));
+	m_muLN = mu;
+	m_sigmaLN = sigma;
 
-	m_diam_tmp = exp(c1 + mu);
-	m_diam2_tmp = exp(c1 * 4.0 + 2.0 * mu);
-	m_diam_1_tmp = exp(c1 - mu);
-	m_diam_2_tmp = exp(c1 * 4.0 - 2.0 * mu);
-	m_mass_1_2_tmp = exp(c1 * 2.25 - 1.5 * mu) * c2;
-	m_diam2_mass_1_2_tmp = exp(c1 * 0.25 + 0.5 * mu) * c2;
+	double rhop = 4260.0; // titania
+	double sigma_sqrd = sigma * sigma;
+	double c1 = sigma_sqrd * 0.5;
+	double c2 = std::sqrt(6.0 / (rhop * PI));
+	double log_dmin = log(4.9175785734906e-10);
+	double sqrt2_sigma = sqrt(2.0) * sigma;
+	double cdf = 0.5 - 0.5 * erf((log_dmin - mu) / sqrt2_sigma);
+
+	m_diam_tmp = exp(c1 + mu) * 0.5 * (1.0 - erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)) / cdf;
+	m_diam2_tmp = exp(c1 * 4.0 + 2.0 * mu) * 0.5 * (1.0 - erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
+	m_diam_1_tmp = exp(c1 - mu) * 0.5 * (1.0 - erf((log_dmin - mu + sigma_sqrd) / sqrt2_sigma)) / cdf;
+	m_diam_2_tmp = exp(c1 * 4.0 - 2.0 * mu) * 0.5 * (1.0 - erf((log_dmin - mu + 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
+	m_mass_1_2_tmp = exp(c1 * 2.25 - 1.5 * mu) * c2 * 0.5 * (1.0 - erf((log_dmin - mu + 1.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
+	m_diam2_mass_1_2_tmp = exp(c1 * 0.25 + 0.5 * mu) * c2 * 0.5 * (1.0 - erf((log_dmin - mu - 0.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
 }
 
 // aab64 Set the first moments of the diameter distribution

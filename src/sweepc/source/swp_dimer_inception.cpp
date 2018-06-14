@@ -133,7 +133,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 	// aab64 hybrid particle model
 	// If hybrid_flag is active, track the number of incepting particles
 	// using the particle weight
-	if (!m_mech->IsHybrid() || (!sys.Particles().IsFirstSP())) // && sys.ParticleCount() <= 1500
+	if (!m_mech->IsHybrid() || (!sys.Particles().IsFirstSP())) //&& sys.ParticleCount() <= 1500 
 	{
 
 	int iprng = -1;
@@ -326,7 +326,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 			adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
 			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 
-			if (m_mech->IsHybrid())
+			if (m_mech->IsHybrid() && sys.Particles().IsFirstSP())
 			{
 
 				delete sp;
