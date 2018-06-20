@@ -82,15 +82,15 @@ while(<$momentFile>) {
   }
 }
 
-# Precalculated value: M0=3.41e+20, Fv=1.43e-7
+# Precalculated value: M0=2.6959e+20, Fv=1.55e-7
 
-# 20 repetitions
+# 10 repetitions
 # mean values and 99% confidence interval widths
-# m0 (2.73+-0.333)e+20 m^-3
-# fv (1.58+-0.0826)e-7
+# m0 (2.69+-0.333)e+20 m^-3
+# fv (1.51+-0.0826)e-7
 
 print "$m0, $m1\n";
-if(abs($m0 - 3.41e+20) > 3.33e+19) {
+if(abs($m0 - 2.69e+20) > 3.33e+19) {
   print "Simulated mean M0 was $m0, when  3.41e+20m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -98,7 +98,7 @@ if(abs($m0 - 3.41e+20) > 3.33e+19) {
   exit 1;
 }
 
-if(abs($m1 - 1.43e-7) > 8.26e-9) {
+if(abs($m1 - 1.55e-7) > 8.26e-9) {
   print "Simulated mean Fv was $m1, when 1.43e-7 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
