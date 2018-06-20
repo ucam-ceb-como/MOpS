@@ -399,7 +399,20 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
         // Must remove first particle now.
-        sys.Particles().Remove(ip1);
+		if (!new1){
+			sys.Particles().Remove(ip1);
+		}
+		else{
+			int oldweight = sys.Particles().At(ip1)->getStatisticalWeight();
+			int newweight = oldweight - 1;
+			if (newweight > 0){
+				sys.Particles().At(ip1)->setStatisticalWeight(newweight);
+				sys.Particles().Update(ip1);
+			}
+			else{
+				sys.Particles().Remove(ip1);
+			}
+		}
 
         // Invalidating the index tells this routine not to perform coagulation.
         ip1 = -1;
@@ -411,12 +424,38 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
     if (!sp2->IsValid()) {
 		// Tell the ensemble to update particle one before we confuse things
 		// by removing particle 2 (if sp1 was not just a copy of the particle at ip1)
-		if (!new1)
+		if (!new1){
 			sys.Particles().Update(ip1);
+		}
 
 		// Must remove second particle now.
-		if (!new2)
+		if (!new2){
 			sys.Particles().Remove(ip2);
+		}
+		else{
+			int oldweight = sys.Particles().At(ip2)->getStatisticalWeight();
+			int newweight = oldweight - 1;
+			if (newweight > 0){
+				sys.Particles().At(ip2)->setStatisticalWeight(newweight);
+				sys.Particles().Update(ip2);
+			}
+			else{
+				sys.Particles().Remove(ip2);
+			}
+		}
+
+		if (new1){
+			Particle* adder = new Particle(*sp1);
+			int newip1;
+			if (sys.ParticleCount() < sys.Particles().Capacity()){
+				newip1 = sys.Particles().Add(*adder, rng);
+				sys.Particles().Update(newip1);
+			}
+			else
+			{
+				std::cout << "No room in ensemble after coagulation" << std::endl;
+			}
+		}
 
         // Invalidating the index tells this routine not to perform coagulation.
         ip2 = -1;
@@ -475,14 +514,12 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
 					int ipnew1;
 					if (sys.ParticleCount() < sys.Particles().Capacity()){
 						ipnew1 = sys.Particles().Add(*adder, rng);
+						sys.Particles().Update(ipnew1);
 					}
 					else
 					{
 						std::cout << "No room in ensemble after coagulation" << std::endl;
 					}
-					
-					sys.Particles().Update(ipnew1);
-
 
 					adder->Coagulate(*sp2, rng);
 					adder->SetTime(t);
@@ -498,19 +535,29 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
 						(*sys.Particles().At(ip1)).setStatisticalWeight(newweight);
 						sys.Particles().Update(ip1);
 					}
-					else{
-						sys.Particles().Remove(ip1);
-					}
 
 					oldweight = (*sys.Particles().At(ip2)).getStatisticalWeight();
-					newweight = oldweight - 1;
-					if (newweight > 0){
-						(*sys.Particles().At(ip2)).setStatisticalWeight(newweight);
+					int newweight2 = oldweight - 1;
+					if (newweight2 > 0){
+						(*sys.Particles().At(ip2)).setStatisticalWeight(newweight2);
 						sys.Particles().Update(ip2);
-
 					}
 					else{
 						sys.Particles().Remove(ip2);
+					}
+
+					if(newweight <= 0){
+						if (ip2 > ip1){
+							sys.Particles().Remove(ip1);
+						}
+						else{
+							if (newweight2 > 0){
+								sys.Particles().Remove(ip1);
+							}
+							else{
+								sys.Particles().Remove(ip1 - 1);
+							}
+						}
 					}
 
 					//Now coagulate the particles and add sp1 to the ensemble
@@ -518,12 +565,12 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
 					int ipnew1;
 					if (sys.ParticleCount() < sys.Particles().Capacity()){
 						ipnew1 = sys.Particles().Add(*adder, rng);
+						sys.Particles().Update(ipnew1);
 					}
 					else
 					{
 						std::cout << "No room in ensemble after coagulation" << std::endl;
 					}
-					sys.Particles().Update(ipnew1);
 
 					adder->Coagulate(*sp2, rng);
 					adder->SetTime(t);
@@ -549,9 +596,6 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
 					(*sys.Particles().At(index)).setStatisticalWeight(newweight);
 					sys.Particles().Update(index);
 				}
-				else{
-					sys.Particles().Remove(index);
-				}
 				if (first){//if the first was the weighted monomer, add particle 1 to particle 2
 					sp2->Coagulate(*sp1, rng);
 					sp2->SetTime(t);
@@ -564,13 +608,17 @@ int TransitionCoagulationWeightedPAHs::Perform(double t, Sweep::Cell &sys,
 					sp1->incrementCoagCount();
 					sys.Particles().Update(ip1);
 				}
+
+				if (newweight <= 0){
+					sys.Particles().Remove(index);
+				}
 			}
 			else{ //neither particle was a weight monomer. perform coagulation as normal with a non-weighted algorithm
 				JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
 			}
         } else {
-            sys.Particles().Update(ip1);
-            sys.Particles().Update(ip2);
+			sys.Particles().Update(ip1);
+			sys.Particles().Update(ip2);
             return 1; // Ficticious event.
         }
     } else {

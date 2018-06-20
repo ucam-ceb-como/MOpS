@@ -444,47 +444,33 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 				dynamic_cast<AggModels::PAHPrimary*>((*it1)->Primary());
 			//Check if this particle contains a single primary with a single PAH with the same 
 			//amount of hydrogens and carbons
-			if (pah->Numprimary() == 1 && pah->NumPAH() == 1 && pah->NumCarbon() == m_PAH.numofC()
-				&& pah->NumHydrogen() == m_PAH.numofH() && pah->NumRings() == m_PAH.numofRings()
-				&& pah->NumRings5() == m_PAH.numofRings5()){
-				//Check if this single PAH matches the target PAH structure
-				/*std::list<KMC_ARS::Site> sitelistInput = m_PAH.GetSiteList();
-				std::list<KMC_ARS::Site> sitelistComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteList();
-				if (sitelistInput.size() == sitelistComp.size()){*/
-				//std::list<KMC_ARS::Site>::iterator it1 = sitelistInput.begin();
-				//std::list<KMC_ARS::Site>::iterator it2 = sitelistComp.begin();
-				//int ii;
-				//int counter = 0;
-				//for (ii = 0; ii != sitelistInput.size(); ii++){
-				//	if (it1->type != it2->type) break;
-				//	it1++;
-				//	it2++;
-				//	counter++;
-				//}
-				//if (counter == sitelistInput.size()){
-				//	return count;
-				//}
-				std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapInput = m_PAH.GetSiteMap();
-				std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteMap();
-				if (sitemapInput[KMC_ARS::FE].size() == sitemapComp[KMC_ARS::FE].size() &&
-					sitemapInput[KMC_ARS::ZZ].size() == sitemapComp[KMC_ARS::ZZ].size() &&
-					sitemapInput[KMC_ARS::AC].size() == sitemapComp[KMC_ARS::AC].size() &&
-					sitemapInput[KMC_ARS::BY6].size() == sitemapComp[KMC_ARS::BY6].size() &&
-					sitemapInput[KMC_ARS::BY5].size() == sitemapComp[KMC_ARS::BY5].size() &&
-					sitemapInput[KMC_ARS::R5].size() == sitemapComp[KMC_ARS::R5].size() &&
-					sitemapInput[KMC_ARS::RFE].size() == sitemapComp[KMC_ARS::RFE].size() &&
-					sitemapInput[KMC_ARS::RZZ].size() == sitemapComp[KMC_ARS::RZZ].size() &&
-					sitemapInput[KMC_ARS::RAC].size() == sitemapComp[KMC_ARS::RAC].size() &&
-					sitemapInput[KMC_ARS::RBY5].size() == sitemapComp[KMC_ARS::RBY5].size() &&
-					sitemapInput[KMC_ARS::RFER].size() == sitemapComp[KMC_ARS::RFER].size() &&
-					sitemapInput[KMC_ARS::RZZR].size() == sitemapComp[KMC_ARS::RZZR].size() &&
-					sitemapInput[KMC_ARS::RACR].size() == sitemapComp[KMC_ARS::RACR].size() &&
-					sitemapInput[KMC_ARS::FE3].size() == sitemapComp[KMC_ARS::FE3].size() &&
-					sitemapInput[KMC_ARS::FE2].size() == sitemapComp[KMC_ARS::FE2].size() &&
-					sitemapInput[KMC_ARS::AC_FE3].size() == sitemapComp[KMC_ARS::AC_FE3].size() &&
-					sitemapInput[KMC_ARS::BY5_FE3].size() == sitemapComp[KMC_ARS::BY5_FE3].size() &&
-					sitemapInput[KMC_ARS::FE_HACA].size() == sitemapComp[KMC_ARS::FE_HACA].size()){
-					return count;
+			if (pah->NumPAH() == 1){
+				if (pah->NumCarbon() == m_PAH.numofC() && pah->NumHydrogen() == m_PAH.numofH() 
+					&& pah->NumRings() == m_PAH.numofRings()
+					&& pah->NumRings5() == m_PAH.numofRings5()){
+
+					std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapInput = m_PAH.GetSiteMap();
+					std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteMap();
+					if (sitemapInput[KMC_ARS::FE].size() == sitemapComp[KMC_ARS::FE].size() &&
+						sitemapInput[KMC_ARS::ZZ].size() == sitemapComp[KMC_ARS::ZZ].size() &&
+						sitemapInput[KMC_ARS::AC].size() == sitemapComp[KMC_ARS::AC].size() &&
+						sitemapInput[KMC_ARS::BY6].size() == sitemapComp[KMC_ARS::BY6].size() &&
+						sitemapInput[KMC_ARS::BY5].size() == sitemapComp[KMC_ARS::BY5].size() &&
+						sitemapInput[KMC_ARS::R5].size() == sitemapComp[KMC_ARS::R5].size() &&
+						sitemapInput[KMC_ARS::RFE].size() == sitemapComp[KMC_ARS::RFE].size() &&
+						sitemapInput[KMC_ARS::RZZ].size() == sitemapComp[KMC_ARS::RZZ].size() &&
+						sitemapInput[KMC_ARS::RAC].size() == sitemapComp[KMC_ARS::RAC].size() &&
+						sitemapInput[KMC_ARS::RBY5].size() == sitemapComp[KMC_ARS::RBY5].size() &&
+						sitemapInput[KMC_ARS::RFER].size() == sitemapComp[KMC_ARS::RFER].size() &&
+						sitemapInput[KMC_ARS::RZZR].size() == sitemapComp[KMC_ARS::RZZR].size() &&
+						sitemapInput[KMC_ARS::RACR].size() == sitemapComp[KMC_ARS::RACR].size() &&
+						sitemapInput[KMC_ARS::FE3].size() == sitemapComp[KMC_ARS::FE3].size() &&
+						sitemapInput[KMC_ARS::FE2].size() == sitemapComp[KMC_ARS::FE2].size() &&
+						sitemapInput[KMC_ARS::AC_FE3].size() == sitemapComp[KMC_ARS::AC_FE3].size() &&
+						sitemapInput[KMC_ARS::BY5_FE3].size() == sitemapComp[KMC_ARS::BY5_FE3].size() &&
+						sitemapInput[KMC_ARS::FE_HACA].size() == sitemapComp[KMC_ARS::FE_HACA].size()){
+						return count;
+					}
 				}
 			}
 		}

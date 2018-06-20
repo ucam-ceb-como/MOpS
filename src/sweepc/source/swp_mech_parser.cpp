@@ -1758,7 +1758,12 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                 if(weightXML == NULL) {
                     // Unweighted case
                     if(kernelName == "transition")
-                        coag.reset(new Processes::TransitionCoagulation(mech));
+						if (mech.Components()[0]->WeightedPAHs()){
+							coag.reset(new Processes::TransitionCoagulationWeightedPAHs(mech));
+						}
+						else{
+							coag.reset(new Processes::TransitionCoagulation(mech));
+						}
                     else if(kernelName == "additive")
                         coag.reset(new Processes::AdditiveCoagulation(mech));
                     else if(kernelName == "constant")

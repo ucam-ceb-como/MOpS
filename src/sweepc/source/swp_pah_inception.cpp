@@ -136,7 +136,6 @@ int PAHInception::Perform(const double t, Cell &sys,
 			sys.Particles().Update(Pindex);
 			return 0;
 		}
-		cout << "No inception pah match" << endl;
 	}
 
 	// Get the cell vertices
