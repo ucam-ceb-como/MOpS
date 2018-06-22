@@ -1201,6 +1201,30 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
             UpdateParticle(*(*i), sys, t, rng);
         }
 
+		if (IsHybrid() && sys.GetIncepted() > 0.0)
+		{
+			Particle * sp = sys.Particles().GetInceptedSP().Clone();
+			sp->setStatisticalWeight(1.0);
+			double delta_t = t - sys.Particles().GetInceptedSP_tmp_m().LastUpdateTime();
+			double num_added_total = PI * delta_t * sys.GetSGk() * sys.GetMomentsk_2();
+			sys.SetSGadjustment(num_added_total);
+			// Not the ideal way of calling this update but should more or less work
+			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+			{
+				sys.SetNotPSIFlag(false);
+				(*i)->Perform(t, sys, *sp, rng, 0);
+				sys.SetNotPSIFlag(true);
+			}
+			delete sp;
+			sp = NULL; 
+			sp = sys.Particles().GetInceptedSP_tmp_m().Clone();
+			sp->SetTime(t);
+			sys.Particles().SetInceptedSP_tmp_m(*sp);
+			delete sp;
+			sp = NULL;
+		}
+		
+
 	    // aab64 is the above a candidate for omp?? 
 		// But index variable i would need to be a signed integral type 
 	    // To perform deferred processes on all particles individually using OpenMP:
@@ -1286,12 +1310,13 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	
 	// Needed parameters for the surface growth rate
 	// These need to be generalised!!
+	double dmin_titania = 4.9175785734906e-10;                                                // (m)
 	double rho_titania = sys.ParticleModel()->Components()[0]->Density();                     // (kg/m3)
 	double MW_titania = sys.ParticleModel()->Components()[0]->MolWt();                        // (kg/mol)
 	double n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
 	double mass_const = rho_titania * PI / 6.0;
 	double part_convr = NA / MW_titania;
-	double log_dmin = log(4.9175785734906e-10);
+	double log_dmin = log(dmin_titania);
 
 	// The surface growth rate without area, i.e. beta = k(T) * ChemRatePart(gas) 
 	// (currently a weird implementation in Perform(.))
@@ -1300,8 +1325,11 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	// Modify surface growth rate to change in diameter with time
 	beta *= (2.0 * MW_titania / rho_titania);
 
-	// Composition change in terms of number of units added
-	double num_added_total = NA * PI * dt * beta * m2 * (rho_titania / MW_titania) * 0.5;
+	// Check oldest possible particle age 
+	double timeChange = ((t - sys.Particles().GetInceptedSP().CreateTime()));// > 0.00013) ? 0.00013 : (t - sys.Particles().GetInceptedSP().CreateTime());
+	double oldest = (sys.Particles().GetInceptedSP().CollDiameter() + timeChange * beta);
+	oldest = 1e-7;
+	double log_dmax = log(oldest);
 	
 	// The change in total diameter (squared) due to inception and coagulation
 	double diamChange = sys.GetIncDiam() - sys.GetCoagDiam();
@@ -1343,7 +1371,8 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	// The particles should be reset because new incepted particles will be smaller
 	if (sys.GetIncepted() == 0.0)
 	{
-		sys.SetDistParams(0.0, 0.0);
+		cout << "Resetting the bin moment parameters because it's empty\n";
+		sys.SetDistParams(0.0, 0.0, dmin_titania);
 		sys.SetMomentsk(0.0, 0.0, 0.0, 0.0);
 		Particle * sp = sys.Particles().GetInceptedSP().Clone();
 		sp->setStatisticalWeight(1.0);
@@ -1353,6 +1382,9 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 		sys.Particles().SetInceptedSP_tmp_d_2(*sp);
 		sys.Particles().SetInceptedSP_tmp_m_1_2(*sp);
 		sys.Particles().SetInceptedSP_tmp_d2_m_1_2(*sp);
+		double LUT = sys.Particles().GetInceptedSP_tmp_m().LastUpdateTime();
+		sp->SetTime(LUT);
+		sys.Particles().SetInceptedSP_tmp_m(*sp);
 		sys.ResetCoagulationSums();
 		sys.ResetInceptionSums();
 		sys.ResetInceptions_tmp();
@@ -1362,16 +1394,12 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	}
 	else
 	{
-		//double cdf = 1.0;
-		//if (sys.GetSigmaLN() > 0)
-		//	cdf = 0.5 - 0.5 * erf((log(4.9175785734906e-10) - sys.GetMuLN()) / sqrt(2.0) * sys.GetSigmaLN());
-
-		// Update the moments
+		// Update the moments (this does not account for dtype=crescale volume expansive outflow)
 		m0 += (sys.GetInceptions_tmp() - sys.GetInceptingCoagulations_tmp());
 		m1 += diamChange;
-		m1 += dt * m0 * beta;
+		m1 += dt * sys.GetMomentsk_0() * beta;
 		m2 += diamChange_sqrd;
-		m2 += dt * m1 * beta * 2.0;
+		m2 += dt * sys.GetMomentsk_1() * beta * 2.0;
 
 		if (m0 > 0.0 && m1 > 0.0)
 		{
@@ -1384,309 +1412,567 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 			// Update mu and sigma from the adjusted closed form moment solution 
 			// (this should be divided by CDF!), i.e.
 			// Ep[X^n] = E[X^n] * 0.5 * (1.0 - erf((log_dmin - mu - n * sigma * sigma) / (sqrt(2.0) * sigma))) 
-			// Use reduced moments M_j/M_0
-			
-			/*double f1, f2, f1_term, f2_term, df1_sigma, df1_mu, df2_sigma, df2_mu, sigma_tmp, mu_tmp;
-			double a = 2.0 * m1 / m0;
-			double b = 2.0 * m2 / m0;
-			double c = log(4.9e-10);
+			// Use reduced moments M_j/M_0			
+			double f1, f2, f1_term, f2_term, df1_sigma, df1_mu, df2_sigma, df2_mu, sigma_tmp, mu_tmp, cdf_tmp;
+			double a = m1 / m0;
+			double b = m2 / m0;
 			double mu = sys.GetMuLN();
 			double sigma = sys.GetSigmaLN();
 			if (sigma <= 0.0)
 			{
-				sigma = 1.0e-5;
+				sigma = log(m2 / m0) - (2.0 * log(m1 / m0));
+				if (sigma <= 0.0)                                                                         // Sigma can't be zero
+				{
+					std::cout << "Sigma is less than or equal to zero. Setting sigma to 1e-8\n";
+					sigma = 1.0e-8;
+				}
+				else
+					sigma = sqrt(sigma);
 				mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));
 			}
-
+			double sigma_sqrd = sigma * sigma;
+			double sqrt2_sigma = sqrt(2.0) * sigma;
+			
+			// Newton method solver parameters
 			int guard = 0;
 			double tol_mu = 100.0;
 			double tol_sigma = 100.0;
-			double tol_combined = 1.0e-10;
-			double n_iters = 100;
+			double tol_combined = 1.0e-6;
+			double n_iters = 1000;
 
-			while (tol_mu + tol_sigma > tol_combined)
+			if (oldest > dmin_titania)
 			{
-				sigma_tmp = sigma;
-				mu_tmp = mu;
-				
-				f1_term = exp(mu + 0.5 * sigma * sigma) * 
-					(1.0 - erf((c - mu - sigma * sigma) / (sqrt(2) * sigma)));
-				f2_term = exp(2.0 * mu + 2.0 * sigma * sigma) * 
-					(1.0 - erf((c - mu - 2.0 * sigma * sigma) / (sqrt(2) * sigma)));
+				while (tol_mu + tol_sigma > tol_combined)
+				{
+					sigma_tmp = sigma;
+					mu_tmp = mu;
+					sigma_sqrd = sigma * sigma;
+					sqrt2_sigma = sqrt(2.0) * sigma;
 
-				f1 = f1_term - a;
-				f2 = f2_term - b;
-				df1_mu = f1_term +
-					exp(mu + 0.5 * sigma * sigma) *
-					(2.0 / (sqrt(2.0 * PI) * sigma)) *
-					exp(-1.0 * (((c - mu - sigma * sigma) / (sqrt(2) * sigma)) * 
-					((c - mu - sigma * sigma) / (sqrt(2) * sigma))));
-				df1_sigma = f1_term * sigma +
-					exp(mu + 0.5 * sigma * sigma) *
-					(2.0 / (sqrt(2.0 * PI) * sigma * sigma)) * (c - mu + sigma * sigma) *
-					exp(-1.0 * (((c - mu - sigma * sigma) / (sqrt(2) * sigma)) * 
-					((c - mu - sigma * sigma) / (sqrt(2) * sigma))));
-				df2_mu = f2_term * 2.0 +
-					exp(2.0 * mu + 2.0 * sigma * sigma) *
-					(2.0 / (sqrt(2.0 * PI) * sigma)) *
-					exp(-1.0 * (((c - mu - 2.0 * sigma * sigma) / (sqrt(2) * sigma)) * 
-					((c - mu - 2.0 * sigma * sigma) / (sqrt(2) * sigma))));
-				df2_sigma = f2_term * 4.0 * sigma +
-					exp(2.0 * mu + 2.0 * sigma * sigma) *
-					(2.0 / (sqrt(2.0 * PI) * sigma * sigma)) * (c - mu + 2.0 * sigma * sigma) *
-					exp(-1.0 * (((c - mu - 2.0 * sigma * sigma) / (sqrt(2) * sigma)) * 
-					((c - mu - 2.0 * sigma * sigma) / (sqrt(2) * sigma))));
-				sigma = sigma + (df2_mu * f1 / df1_mu - f2) / 
-					(df2_sigma - df2_mu * df1_sigma / df1_mu);
-				mu = mu - (f1 + df1_sigma * (sigma - sigma_tmp)) / df1_mu;
+					//f1_term = exp(mu + 0.5 * sigma_sqrd) *
+					//	(1.0 - erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma));
+					//	f2_term = exp(2.0 * mu + 2.0 * sigma_sqrd) *
+					//	(1.0 - erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma));
+					//	f1 = f1_term - 2.0 * a;
+					//	f2 = f2_term - 2.0 * b;
+					//	df1_mu = f1_term +
+					//	exp(mu + 0.5 * sigma_sqrd) *
+					//	(2.0 / (sqrt(PI) * sqrt2_sigma)) *
+					//	exp(-1.0 * (((log_dmin - mu - sigma_sqrd) / sqrt2_sigma) *
+					//	((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)));
+					//	df1_sigma = f1_term * sigma +
+					//	exp(mu + 0.5 * sigma_sqrd) *
+					//	(2.0 / (sqrt(2.0 * PI) * sigma_sqrd)) * (log_dmin - mu + sigma_sqrd) *
+					//	exp(-1.0 * (((log_dmin - mu - sigma_sqrd) / sqrt2_sigma) *
+					//	((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)));
+					//	df2_mu = f2_term * 2.0 +
+					//	exp(2.0 * mu + 2.0 * sigma_sqrd) *
+					//	(2.0 / (sqrt(PI) * sqrt2_sigma)) *
+					//	exp(-1.0 * (((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma) *
+					//	((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)));
+					//	df2_sigma = f2_term * 4.0 * sigma +
+					//	exp(2.0 * mu + 2.0 * sigma_sqrd) *
+					//	(2.0 / (sqrt(2.0 * PI) * sigma_sqrd)) * (log_dmin - mu + 2.0 * sigma_sqrd) *
+					//	exp(-1.0 * (((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma) *
+					//	((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)));
 
-				tol_mu = (mu - mu_tmp) / mu;
-				tol_sigma = (sigma - sigma_tmp) / sigma;
-				if (guard > n_iters)
-					break;
+					cdf_tmp = (erf((log_dmax - mu) / sqrt2_sigma) - erf((log_dmin - mu) / sqrt2_sigma));
+
+					f1_term = exp(mu + 0.5 * sigma_sqrd) *
+						(erf((log_dmax - mu - sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)) / cdf_tmp;
+
+					f2_term = exp(2.0 * mu + 2.0 * sigma_sqrd) *
+						(erf((log_dmax - mu - 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf_tmp;
+
+					f1 = f1_term - a;
+					f2 = f2_term - b;
+
+					df1_mu = exp(mu + 0.5 * sigma_sqrd) * (
+						(
+						sqrt(2.0 / PI) * (1.0 / sigma) *
+						(
+						exp(-(log_dmin - mu - sigma_sqrd) * (log_dmin - mu - sigma_sqrd) / (2.0 * sigma_sqrd))
+						-
+						exp(-(log_dmax - mu - sigma_sqrd) * (log_dmax - mu - sigma_sqrd) / (2.0 * sigma_sqrd))
+						)
+						+
+						(
+						erf((log_dmax - mu - sigma_sqrd) / sqrt2_sigma)
+						-
+						erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)
+						)
+						)
+						-
+						(
+						sqrt(2.0 / PI) * (1.0 / sigma) *
+						(
+						exp(-(log_dmin - mu) * (log_dmin - mu) / (2.0 * sigma_sqrd))
+						-
+						exp(-(log_dmax - mu) * (log_dmax - mu) / (2.0 * sigma_sqrd))
+						)
+						*
+						(
+						erf((log_dmax - mu - sigma_sqrd) / sqrt2_sigma)
+						-
+						erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)
+						)
+						) / cdf_tmp
+						) / cdf_tmp;
+
+					df1_sigma = exp(mu + 0.5 * sigma_sqrd) * (
+						(
+						2.0 / sqrt(PI) *
+						(
+						exp(-(log_dmax - mu - sigma_sqrd) * (log_dmax - mu - sigma_sqrd) / (2.0 * sigma_sqrd)) *
+						(-(log_dmax - mu - sigma_sqrd) / (sqrt2_sigma * sigma) - sqrt(2.0))
+
+						-
+						exp(-(log_dmin - mu - sigma_sqrd) * (log_dmin - mu - sigma_sqrd) / (2.0 * sigma_sqrd)) *
+						(-(log_dmin - mu - sigma_sqrd) / (sqrt2_sigma * sigma) - sqrt(2.0))
+						)
+						+
+						sigma *
+						(
+						erf((log_dmax - mu - sigma_sqrd) / sqrt2_sigma)
+						-
+						erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)
+						)
+						)
+						-
+						(
+						sqrt(2.0 / PI) * (1.0 / sigma_sqrd) *
+						(
+						exp(-(log_dmin - mu) * (log_dmin - mu) / (2.0 * sigma_sqrd)) * (log_dmin - mu)
+						-
+						exp(-(log_dmax - mu) * (log_dmax - mu) / (2.0 * sigma_sqrd)) * (log_dmax - mu)
+						)
+						*
+						(
+						erf((log_dmax - mu - sigma_sqrd) / sqrt2_sigma)
+						-
+						erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)
+						)
+						) / cdf_tmp
+						) / cdf_tmp;
+
+					df2_mu = exp(2.0 * mu + 2.0 * sigma_sqrd) * (
+						(
+						sqrt(2.0 / PI) * (1.0 / sigma) *
+						(
+						exp(-(log_dmin - mu - 2.0 * sigma_sqrd) * (log_dmin - mu - 2.0 * sigma_sqrd) / (2.0 * sigma_sqrd))
+						-
+						exp(-(log_dmax - mu - 2.0 * sigma_sqrd) * (log_dmax - mu - 2.0 * sigma_sqrd) / (2.0 * sigma_sqrd))
+						)
+						+
+						2.0 *
+						(
+						erf((log_dmax - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
+						-
+						erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
+						)
+						)
+						-
+						(
+						sqrt(2.0 / PI) * (1.0 / sigma) *
+						(
+						exp(-(log_dmin - mu) * (log_dmin - mu) / (2.0 * sigma_sqrd))
+						-
+						exp(-(log_dmax - mu) * (log_dmax - mu) / (2.0 * sigma_sqrd))
+						)
+						*
+						(
+						erf((log_dmax - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
+						-
+						erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
+						)
+						) / cdf_tmp
+						) / cdf_tmp;
+
+					df2_sigma = exp(2.0 * mu + 2.0 * sigma_sqrd) * (
+						(
+						2.0 / sqrt(PI) *
+						(
+						exp(-(log_dmax - mu - 2.0 * sigma_sqrd) * (log_dmax - mu - 2.0 * sigma_sqrd) / (2.0 * sigma_sqrd)) *
+						(-(log_dmax - mu - 2.0 * sigma_sqrd) / (sqrt2_sigma * sigma) - 2.0 * sqrt(2.0))
+
+						-
+						exp(-(log_dmin - mu - 2.0 * sigma_sqrd) * (log_dmin - mu - 2.0 * sigma_sqrd) / (2.0 * sigma_sqrd)) *
+						(-(log_dmin - mu - 2.0 * sigma_sqrd) / (sqrt2_sigma * sigma) - 2.0 * sqrt(2.0))
+						)
+						+
+						4.0 * sigma *
+						(
+						erf((log_dmax - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
+						-
+						erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
+						)
+						)
+						-
+						(
+						sqrt(2.0 / PI) * (1.0 / sigma_sqrd) *
+						(
+						exp(-(log_dmin - mu) * (log_dmin - mu) / (2.0 * sigma_sqrd)) * (log_dmin - mu)
+						-
+						exp(-(log_dmax - mu) * (log_dmax - mu) / (2.0 * sigma_sqrd)) * (log_dmax - mu)
+						)
+						*
+						(
+						erf((log_dmax - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
+						-
+						erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
+						)
+						) / cdf_tmp
+						) / cdf_tmp;
+
+					sigma = sigma + (df2_mu * f1 / df1_mu - f2) / (df2_sigma - df2_mu * df1_sigma / df1_mu);
+					mu = mu - (f1 + df1_sigma * (sigma - sigma_tmp)) / df1_mu;
+
+					tol_mu = sqrt((mu - mu_tmp) * (mu - mu_tmp) / (mu * mu));
+					tol_sigma = sqrt((sigma - sigma_tmp) * (sigma - sigma_tmp) / (sigma * sigma));
+
+					if (guard > n_iters)
+						break;
+					else
+						++guard;
+				}
+				if (tol_mu + tol_sigma > tol_combined)
+					std::cout << "Tolerances too high at exit! mu = " << mu << " and sigma = " << sigma << std::endl;
+				//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+				// Update mu and sigma from the closed form moment solution, i.e.
+				// E[X^n] = exp(n*mu + n^2 * sigma^2 / 2)
+				// Use reduced moments M_j/M_0
+				/*double sigma = log(m2 / m0) - (2.0 * log(m1 / m0));
+				if (sigma <= 0.0)                                                                         // Sigma can't be zero
+				{
+					std::cout << "Sigma is less than or equal to zero. Setting sigma to 1e-8\n";
+					sigma = 1.0e-8;
+				}
 				else
-					++guard;
-			}
-			if (tol_mu + tol_sigma > tol_combined)
-				std::cout << "Tolerances too high at exit" << std::endl;*/
-			//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-			// Update mu and sigma from the closed form moment solution, i.e.
-			// E[X^n] = exp(n*mu + n^2 * sigma^2 / 2)
-			// Use reduced moments M_j/M_0
-			double sigma = log(m2 / m0) - (2.0 * log(m1 / m0)); 
-			if (sigma <= 0.0)                                                                         // Sigma can't be zero
-			{
-				std::cout << "Sigma is less than or equal to zero. Setting sigma to 1e-8\n";
-				sigma = 1.0e-8;
-			}
-			else
-			{
-				sigma = sqrt(sigma);
-			}
-			double mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));
-			sys.SetDistParams(mu, sigma);
-
-			//cdf = 0.5 - 0.5 * erf((log(4.9175785734906e-10) - mu) / sqrt(2.0) * sigma);
-			double sigma_sqrd = sigma * sigma;
-
-			// Storing particle based on diameter (use to update the gas phase)
-			// We need to store a particle with this average diameter for coagulation
-			// The change in composition must be an integer so this is approximate!
-			Particle * sp = sys.Particles().GetInceptedSP().Clone();
-			sp->setStatisticalWeight(1.0);
-			double d_bar = exp(mu + sigma_sqrd * 0.5);
-			//double d_bar = exp(mu + sigma_sqrd * 0.5) * 0.5 * (1.0 - erf((log_dmin - mu - sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf;
-			double n_add = mass_const * d_bar * d_bar * d_bar;                                        // Mass equivalent to the average diameter 
-			n_add *= part_convr;                                                                      // Number of particles
-			n_add -= n_titania0;
-			if (n_add < 0.0)
-				n_add = 0.0;
-
-			// We also need a way to store the total surface growth to do so it can be used to update the gas phase 
-			sys.SetSGadjustment(num_added_total);
-
-			// Not the ideal way of calling this update but should more or less work
-			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-			{
-				if ((*i)->IsDeferred())
 				{
-					(*i)->Perform(t, sys, *sp, rng, (unsigned int)n_add);
-					sp->SetTime(t);
-					sp->UpdateCache();
+					sigma = sqrt(sigma);
+				}
+				double mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));*/
+
+				if (!isnan(sigma))
+				{
+					//cout << t << " | " << mu << " | " << sigma << " | " << m0 << " | " << m1 << " | " << m2 << endl;
+					sys.SetDistParams(mu, sigma, oldest);
+
+					// Storing particle based on diameter (use to update the gas phase)
+					// We need to store a particle with this average diameter for coagulation
+					// The change in composition must be an integer so this is approximate!
+					sigma_sqrd = sigma * sigma;
+					sqrt2_sigma = sqrt(2.0) * sigma;
+					double cdf_min = (0.5 + 0.5 * erf((log_dmin - mu) / sqrt2_sigma));
+					double cdf_max = (0.5 + 0.5 * erf((log_dmax - mu) / sqrt2_sigma));
+					double cdf = cdf_max - cdf_min;// 1 - cdf_min; // depends if upper limit is included: cdf = 1 - cdf_min - (1-cdf_max)
+
+					boost::uniform_01<rng_type&, double> unifDistrib(rng);
+
+
+					Particle * sp = sys.Particles().GetInceptedSP().Clone();
+					sp->setStatisticalWeight(1.0);
+					double n_dist = 1.0;
+					double d_bar = exp(mu + sigma_sqrd * 0.5);
+					//d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+					//	- erf((log_dmin - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) / cdf; 
+
+					double d_rnd = exp(mu + sqrt2_sigma * boost::math::erf_inv(2.0 * ((1-unifDistrib()) * cdf + cdf_min) - 1.0));
+					d_bar = exp(mu + sigma_sqrd * 0.5);
+					d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+						- erf((log(d_rnd) - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) / 
+						(cdf_max - (0.5 + 0.5 * erf((log(d_rnd) - mu) / sqrt2_sigma)));
+					
+					double n_add = mass_const * d_bar * d_bar * d_bar;                                        // Mass equivalent to the average diameter 
+					n_add *= part_convr;                                                                      // Number of particles
+					n_add -= n_titania0;
+					if (n_add < 0.0)
+						n_add = 0.0;
+					// Not the ideal way of calling this update but should more or less work
+					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					{
+						if ((*i)->IsDeferred())
+						{
+							sys.SetNotPSIFlag(false);
+							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
+							sp->SetTime(t);
+							sp->UpdateCache();
+						}
+					}
+					// Now that the gas-phase has been updated, reset the weight of this SP to 1 and store it
+					sys.Particles().SetInceptedSP_tmp(*sp);
+					delete sp;
+					sp = NULL;
+					//cout << t << " | d1 = " << d_bar << "\n";
+
+					// Storing particle based on diameter squared
+					sp = sys.Particles().GetInceptedSP().Clone();
+					sp->setStatisticalWeight(1.0);
+					//d_bar = exp(2.0 * mu + 2.0 * sigma_sqrd);
+					n_dist = 2.0;
+					//d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+					//	- erf((log_dmin - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) / cdf;
+					//d_bar = sqrt(d_bar);
+					
+					d_rnd = exp(mu + sqrt2_sigma * boost::math::erf_inv(2.0 * ((1 - unifDistrib()) * cdf + cdf_min) - 1.0));
+					d_bar = exp(n_dist * mu + n_dist * sigma_sqrd * 0.5);
+					d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+						- erf((log(d_rnd) - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) /
+						(cdf_max - (0.5 + 0.5 * erf((log(d_rnd) - mu) / sqrt2_sigma)));
+					d_bar = sqrt(d_bar);
+					
+					n_add = mass_const * d_bar * d_bar * d_bar;
+					n_add *= part_convr;
+					n_add -= n_titania0;
+					if (n_add < 0.0)
+						n_add = 0.0;
+					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					{
+						if ((*i)->IsDeferred())
+						{
+							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
+							sp->SetTime(t);
+							sp->UpdateCache();
+						}
+					}
+					sys.Particles().SetInceptedSP_tmp_d2(*sp);
+					delete sp;
+					sp = NULL;
+					//cout << t << " | d2 = " << d_bar << "\n";
+
+					// Storing particle based on inverse diameter
+					sp = sys.Particles().GetInceptedSP().Clone();
+					sp->setStatisticalWeight(1.0);
+					//d_bar = exp(-1.0 * mu + sigma_sqrd * 0.5);
+					n_dist = -1.0;
+					//d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+					//	- erf((log_dmin - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) / cdf;
+					//d_bar = 1.0 / d_bar;
+
+					d_rnd = exp(mu + sqrt2_sigma * boost::math::erf_inv(2.0 * ((1 - unifDistrib()) * cdf + cdf_min) - 1.0));
+					d_bar = exp(n_dist * mu + n_dist * sigma_sqrd * 0.5);
+					d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+						- erf((log(d_rnd) - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) /
+						(cdf_max - (0.5 + 0.5 * erf((log(d_rnd) - mu) / sqrt2_sigma)));
+					d_bar = 1.0 / d_bar;
+
+					n_add = mass_const * d_bar * d_bar * d_bar;
+					n_add *= part_convr;
+					n_add -= n_titania0;
+					if (n_add < 0)
+						n_add = 0;
+					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					{
+						if ((*i)->IsDeferred())
+						{
+							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
+							sp->SetTime(t);
+							sp->UpdateCache();
+						}
+					}
+					sys.Particles().SetInceptedSP_tmp_d_1(*sp);
+					delete sp;
+					sp = NULL;
+					//cout << t << " | d_1 = " << d_bar << "\n";
+
+					// Storing particle based on inverse diameter squared
+					sp = sys.Particles().GetInceptedSP().Clone();
+					sp->setStatisticalWeight(1.0);
+					n_dist = -2.0;
+					//d_bar = exp(-2.0 * mu + sigma_sqrd * 2.0);
+					//d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+					//	- erf((log_dmin - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) / cdf;
+					//d_bar = 1.0 / sqrt(d_bar);
+
+					d_rnd = exp(mu + sqrt2_sigma * boost::math::erf_inv(2.0 * ((1 - unifDistrib()) * cdf + cdf_min) - 1.0));
+					d_bar = exp(n_dist * mu + n_dist * sigma_sqrd * 0.5);
+					d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+						- erf((log(d_rnd) - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) /
+						(cdf_max - (0.5 + 0.5 * erf((log(d_rnd) - mu) / sqrt2_sigma)));
+					d_bar = 1.0 / sqrt(d_bar);
+
+					n_add = mass_const * d_bar * d_bar * d_bar;
+					n_add *= part_convr;
+					n_add -= n_titania0;
+					if (n_add < 0.0)
+						n_add = 0.0;
+					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					{
+						if ((*i)->IsDeferred())
+						{
+							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
+							sp->SetTime(t);
+							sp->UpdateCache();
+						}
+					}
+					sys.Particles().SetInceptedSP_tmp_d_2(*sp);
+					delete sp;
+					sp = NULL;
+					//cout << t << " | d_2 = " << d_bar << "\n";
+
+					// Storing particle based on inverse squareroot of mass
+					sp = sys.Particles().GetInceptedSP().Clone();
+					sp->setStatisticalWeight(1.0);
+					//d_bar = exp((-1.5) * mu + 1.125 * sigma_sqrd);
+					n_dist = -1.5;
+					//d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+					//	- erf((log_dmin - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) / cdf;
+					double expon = -2.0 / 3.0;
+					//d_bar = pow(d_bar, expon);
+					
+					d_rnd = exp(mu + sqrt2_sigma * boost::math::erf_inv(2.0 * ((1 - unifDistrib()) * cdf + cdf_min) - 1.0));
+					d_bar = exp(n_dist * mu + n_dist * sigma_sqrd * 0.5);
+					d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+						- erf((log(d_rnd) - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) /
+						(cdf_max - (0.5 + 0.5 * erf((log(d_rnd) - mu) / sqrt2_sigma)));
+					d_bar = pow(d_bar, expon);
+
+					n_add = mass_const * d_bar * d_bar * d_bar;
+					n_add *= part_convr;
+					n_add -= n_titania0;
+					if (n_add < 0.0)
+						n_add = 0.0;
+					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					{
+						if ((*i)->IsDeferred())
+						{
+							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
+							sp->SetTime(t);
+							sp->UpdateCache();
+						}
+					}
+					sys.Particles().SetInceptedSP_tmp_m_1_2(*sp);
+					delete sp;
+					sp = NULL;
+					//cout << t << " | m_1_2 = " << d_bar << "\n";
+
+					// Storing particle based on diameter squared times inverse squareroot of mass
+					sp = sys.Particles().GetInceptedSP().Clone();
+					sp->setStatisticalWeight(1.0);
+					//d_bar = exp(0.5 * mu + 0.125 * sigma_sqrd);
+					n_dist = 0.5;
+					//d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+					//	- erf((log_dmin - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) / cdf;
+
+					d_rnd = exp(mu + sqrt2_sigma * boost::math::erf_inv(2.0 * ((1 - unifDistrib()) * cdf + cdf_min) - 1.0));
+					d_bar = exp(n_dist * mu + n_dist * sigma_sqrd * 0.5);
+					d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+						- erf((log(d_rnd) - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) /
+						(cdf_max - (0.5 + 0.5 * erf((log(d_rnd) - mu) / sqrt2_sigma)));
+					d_bar *= d_bar;
+
+					n_add = mass_const * d_bar * d_bar * d_bar;
+					n_add *= part_convr;
+					n_add -= n_titania0;
+					if (n_add < 0.0)
+						n_add = 0.0;
+					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					{
+						if ((*i)->IsDeferred())
+						{
+							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
+							sp->SetTime(t);
+							sp->UpdateCache();
+						}
+					}
+					sys.Particles().SetInceptedSP_tmp_d2_m_1_2(*sp);
+					delete sp;
+					sp = NULL;
+					//cout << t << " | d2_m_1_2 = " << d_bar << "\n";
+
+					// Storing particle based on mass
+					double LUT = sys.Particles().GetInceptedSP_tmp_m().LastUpdateTime();
+					sp = sys.Particles().GetInceptedSP().Clone();
+					sp->setStatisticalWeight(1.0);
+					d_bar = exp(3.0 * mu + 4.5 * sigma_sqrd);
+					n_dist = 3.0;
+					d_bar *= 0.5 * (erf((log_dmax - mu - n_dist * sigma_sqrd) / sqrt2_sigma)
+						- erf((log_dmin - mu - n_dist * sigma_sqrd) / sqrt2_sigma)) / cdf;
+					expon = 1.0 / 3.0;
+					d_bar = pow(d_bar, expon);
+					n_add = mass_const * d_bar * d_bar * d_bar;
+					n_add *= part_convr;
+					n_add -= n_titania0;
+					if (n_add < 0.0)
+						n_add = 0.0;
+					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					{
+						if ((*i)->IsDeferred())
+						{
+							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
+							sp->SetTime(LUT);
+							sp->UpdateCache();
+						}
+					}
+					sys.Particles().SetInceptedSP_tmp_m(*sp);
+					delete sp;
+					sp = NULL;
+					//cout << t << " | m = " << d_bar << "\n";
+											
+					// Storing particle based on random diameter
+					sp = sys.Particles().GetInceptedSP().Clone();
+					sp->setStatisticalWeight(1.0);
+					double adjusted_cdf_frac = unifDistrib();
+					adjusted_cdf_frac = 2.0 * unifDistrib() * (cdf_max - cdf_min) + 2.0 * cdf_min - 1.0;
+					d_bar = exp(sqrt2_sigma * boost::math::erf_inv(adjusted_cdf_frac) + mu);
+					if (d_bar < dmin_titania)
+					{
+						std::cout << "Randomly chosen d is too small, setting d to dmin\n";
+						d_bar = dmin_titania;
+					}
+					else if (d_bar > oldest)
+					{
+						std::cout << "Randomly chosen d is too large, setting d to 1 micron" << d_bar << "\n";
+						d_bar = oldest;
+					}
+					n_add = mass_const * d_bar * d_bar * d_bar;
+					n_add *= part_convr;
+					n_add -= n_titania0;
+					if (n_add < 0.0)
+						n_add = 0.0;
+					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					{
+						if ((*i)->IsDeferred())
+						{
+							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
+							sys.SetNotPSIFlag(true);
+							sp->SetTime(t);
+							sp->UpdateCache();
+						}
+					}
+					sys.Particles().SetInceptedSP_tmp_rand(*sp);
+					delete sp;
+					sp = NULL;
+					//cout << t << " | d_rand = " << d_bar << endl << endl;
+				}
+				else
+				{
+					Particle * sp = sys.Particles().GetInceptedSP().Clone();
+					sys.Particles().SetInceptedSP_tmp(*sp);
+					sp->setStatisticalWeight(1.0);
+					sys.Particles().SetInceptedSP_tmp_d2(*sp);
+					sys.Particles().SetInceptedSP_tmp_d_1(*sp);
+					sys.Particles().SetInceptedSP_tmp_d_2(*sp);
+					sys.Particles().SetInceptedSP_tmp_m_1_2(*sp);
+					sys.Particles().SetInceptedSP_tmp_d2_m_1_2(*sp);
+					sys.Particles().SetInceptedSP_tmp_rand(*sp);
+					double LUT = sys.Particles().GetInceptedSP_tmp_m().LastUpdateTime();
+					sp->SetTime(LUT);
+					sys.Particles().SetInceptedSP_tmp_m(*sp);
+					sys.SetDistParams(0.0, 0.0, dmin_titania);
+					delete sp;
+					sp = NULL;
 				}
 			}
-
-			// Now that the gas-phase has been updated, reset the weight of this SP to 1 and store it
-			sys.Particles().SetInceptedSP_tmp(*sp);
-			delete sp;
-			sp = NULL;
-
-			// Storing particle based on diameter squared
-			sp = sys.Particles().GetInceptedSP().Clone();
-			sp->setStatisticalWeight(1.0);
-			if (t < 0.001)
-			{
-				d_bar = sqrt(exp(2.0 * mu + 2.0 * sigma_sqrd));
-				//d_bar = sqrt(exp(2.0 * mu + 2.0 * sigma_sqrd) * 0.5 * (1.0 - erf((log_dmin - mu - 2.0 * sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf);
-				n_add = mass_const * d_bar * d_bar * d_bar;
-				n_add *= part_convr;
-				n_add -= n_titania0;
-				if (n_add < 0.0)
-					n_add = 0.0;
-			}
-			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-			{
-			    if ((*i)->IsDeferred())
-			    {
-			        sys.SetNotPSIFlag(false);
-			        (*i)->Perform(t, sys, *sp, rng, floor(n_add));
-			        sp->SetTime(t);
-			        sp->UpdateCache();
-			    }
-			}
-			sys.Particles().SetInceptedSP_tmp_d2(*sp);
-			delete sp;
-			sp = NULL;
-
-			// Storing particle based on inverse diameter
-			sp = sys.Particles().GetInceptedSP().Clone();
-			sp->setStatisticalWeight(1.0);
-			d_bar = 1 / (exp(-1.0 * mu + sigma_sqrd * 0.5));
-			//d_bar = 1 / (exp(-1.0 * mu + sigma_sqrd * 0.5) * 0.5 * (1.0 - erf((log_dmin - mu + sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf);
-			n_add = mass_const * d_bar * d_bar * d_bar;
-			n_add *= part_convr;
-			n_add -= n_titania0;
-			if (n_add < 0)
-				n_add = 0;
-			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-			{
-				if ((*i)->IsDeferred())
-				{
-					(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-					sp->SetTime(t);
-					sp->UpdateCache();
-				}
-			}
-			sys.Particles().SetInceptedSP_tmp_d_1(*sp);
-			delete sp;
-			sp = NULL;
-
-			// Storing particle based on inverse diameter squared
-			sp = sys.Particles().GetInceptedSP().Clone();
-			sp->setStatisticalWeight(1.0);
-			d_bar = sqrt(1.0 / (exp(-2.0 * mu + 2.0 * sigma_sqrd)));
-			//d_bar = sqrt(1.0 / (exp(-2.0 * mu + 2.0 * sigma_sqrd) * 0.5 * (1.0 - erf((log_dmin - mu + 2.0 * sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf));
-			n_add = mass_const * d_bar * d_bar * d_bar;
-			n_add *= part_convr;
-			n_add -= n_titania0;
-			if (n_add < 0.0)
-				n_add = 0.0;
-			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-			{
-				if ((*i)->IsDeferred())
-				{
-					(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-					sp->SetTime(t);
-					sp->UpdateCache();
-				}
-			}
-			sys.Particles().SetInceptedSP_tmp_d_2(*sp);
-			delete sp;
-			sp = NULL;
-
-			// Storing particle based on inverse squareroot of mass
-			sp = sys.Particles().GetInceptedSP().Clone();
-			sp->setStatisticalWeight(1.0);
-			d_bar = exp((-1.5) * mu + 1.125 * sigma_sqrd);
-			//d_bar = exp((-1.5) * mu + 1.125 * sigma_sqrd) * 0.5 * (1.0 - erf((log_dmin - mu + 1.5 * sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf;
-			double expon = -2.0 / 3.0;
-			d_bar = pow(d_bar, expon);
-			n_add = mass_const * d_bar * d_bar * d_bar;
-			n_add *= part_convr;
-			n_add -= n_titania0;
-			if (n_add < 0.0)
-				n_add = 0.0;
-			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-			{
-				if ((*i)->IsDeferred())
-				{
-					(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-					sp->SetTime(t);
-					sp->UpdateCache();
-				}
-			}
-			sys.Particles().SetInceptedSP_tmp_m_1_2(*sp);
-			delete sp;
-			sp = NULL;
-
-			// Storing particle based on diameter squared times inverse squareroot of mass
-			sp = sys.Particles().GetInceptedSP().Clone();
-			sp->setStatisticalWeight(1.0);
-			d_bar = exp(0.5 * mu + 0.125 * sigma_sqrd);
-			//d_bar = exp(0.5 * mu + 0.125 * sigma_sqrd) * 0.5 * (1.0 - erf((log_dmin - mu - 0.5 * sigma_sqrd) / (sqrt(2.0) * sigma))) / cdf;
-			d_bar *= d_bar;
-			n_add = mass_const * d_bar * d_bar * d_bar;
-			n_add *= part_convr;
-			n_add -= n_titania0;
-			if (n_add < 0.0)
-				n_add = 0.0;
-			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-			{
-				if ((*i)->IsDeferred())
-				{
-					(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-					sys.SetNotPSIFlag(true);
-					sp->SetTime(t);
-					sp->UpdateCache();
-				}
-			}
-			sys.Particles().SetInceptedSP_tmp_d2_m_1_2(*sp);
-			delete sp;
-			sp = NULL;
-
-			// Storing particle based on random diameter
-			sp = sys.Particles().GetInceptedSP().Clone(); //sys.Particles().GetInceptedSP_tmp().Clone();
-			sp->setStatisticalWeight(1.0);
-			boost::uniform_01<rng_type&, double> unifDistrib(rng);
-			//double adjusted_cdf_frac = 2.0 * unifDistrib() - 2.0 - erf((log_dmin - mu) / (sqrt(2.0) * sigma));
-			//double oldest = (((t - sp->CreateTime()) * sys.GetSGk() * PI * sp->CollDiameter() * sp->CollDiameter()) + n_titania0) * MW_titania / (NA * rho_titania);
-			//expon = 1.0 / 3.0;
-			//oldest = pow(oldest * (6.0 / (rho_titania * PI)), expon);
-			//cout << oldest << "\n";
-			//if (oldest <= sys.Particles().GetInceptedSP().CollDiameter())
-			//	oldest = 5.0e-10;
-			double oldest = 5.0e-8;
-			double adjusted_cdf_frac = unifDistrib();
-			double cdf_min = (0.5 + 0.5 * erf((log_dmin - mu) / (sqrt(2.0) * sigma)));
-			double cdf_max = (0.5 + 0.5 * erf((log(oldest) - mu) / (sqrt(2.0) * sigma)));
-			//adjusted_cdf_frac = 2.0 * (-0.5 + adjusted_cdf_frac + (1.0 - adjusted_cdf_frac) * cdf_min);
-			adjusted_cdf_frac = 2.0 * unifDistrib() * (cdf_max - cdf_min) + 2.0 * cdf_min - 1.0;
-			d_bar = exp(sqrt(2.0) * sigma * boost::math::erf_inv(adjusted_cdf_frac) + mu);
-			//d_bar = exp(sqrt(2.0) * sigma * boost::math::erf_inv(adjusted_cdf_frac) + mu);
-			if (d_bar < 4.9175785734906e-10)
-			{
-				std::cout << "Randomly chosen d is too small, setting d to dmin\n";
-				d_bar = 4.9175785734906e-10;
-			}
-			else if (d_bar > oldest)
-			{
-				std::cout << "Randomly chosen d is too large, setting d to 1 micron" << d_bar << "\n";
-				d_bar = oldest;
-			}
-			n_add = mass_const * d_bar * d_bar * d_bar;
-			n_add *= part_convr;
-			n_add -= n_titania0;
-			if (n_add < 0.0)
-				n_add = 0.0;
-			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-			{
-				if ((*i)->IsDeferred())
-				{
-					(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-					sys.SetNotPSIFlag(true);
-					sp->SetTime(t);
-					sp->UpdateCache();
-				}
-			}
-			sys.Particles().SetInceptedSP_tmp_rand(*sp);
-			delete sp;
-			sp = NULL;
 
 			// Store moments and reset counters
-			sys.SetMomentsk(m0, m1, m2, m3);
-			sys.ResetCoagulationSums();
-			sys.ResetInceptionSums();
-			sys.ResetInceptions_tmp();
-			sys.ResetInceptingCoagulations_tmp();
+			sys.SetMomentsk(m0, m1, m2, m3);			
 		}
-		else
-		{
-			sys.ResetCoagulationSums();
-			sys.ResetInceptionSums();
-			sys.ResetInceptions_tmp();
-			sys.ResetInceptingCoagulations_tmp();
-		}
+		sys.ResetCoagulationSums();
+		sys.ResetInceptionSums();
+		sys.ResetInceptions_tmp();
+		sys.ResetInceptingCoagulations_tmp();
 	}
 }
 

@@ -133,7 +133,8 @@ int DimerInception::Perform(const double t, Cell &sys,
 	// aab64 hybrid particle model
 	// If hybrid_flag is active, track the number of incepting particles
 	// using the particle weight
-	if (!m_mech->IsHybrid() || (!sys.Particles().IsFirstSP())) //&& sys.ParticleCount() <= 1500 
+	//bool hybrid_active_flag = !sys.Particles().IsFirstSP();
+	if (!m_mech->IsHybrid() || (sys.ParticleCount() <= 100 && !sys.Particles().IsFirstSP())) // 
 	{
 
 	int iprng = -1;
@@ -296,7 +297,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 			sp->UpdateCache();
 
 			// Add particle to system's ensemble.
-			if (!m_mech->IsHybrid()) // || sys.ParticleCount() < 1500 || sys.GetIncepted() == 1
+			if (!m_mech->IsHybrid() || sys.ParticleCount() < 100) //  || sys.GetIncepted() == 1
 				sys.Particles().Add(*sp, rng);
 			else
 			{
@@ -308,6 +309,8 @@ int DimerInception::Perform(const double t, Cell &sys,
 				sys.Particles().SetInceptedSP_tmp_d_2(*sp);
 				sys.Particles().SetInceptedSP_tmp_m_1_2(*sp);
 				sys.Particles().SetInceptedSP_tmp_d2_m_1_2(*sp);
+				sys.Particles().SetInceptedSP_tmp_m(*sp);
+				sys.Particles().SetInceptedSP_tmp_rand(*sp);
 
 				// Increment the count if incepted particles
 				sys.AdjustIncepted(sys.GetInceptingWeight());

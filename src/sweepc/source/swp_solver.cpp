@@ -248,6 +248,8 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 			}
 		}
 
+		sys.SetDistAverages();
+
 		//if (mech.AnyDeferred() && (sys.ParticleCount() > 0))  {
 		if (mech.AnyDeferred() && (sys.ParticleCount()+sys.GetIncepted() > 0))  {
             // Get the process jump rates (and the total rate).
@@ -261,9 +263,11 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
             tsplit = tstop;
         }
 
+		tin = t;
+
         // Perform stochastic jump processes.
         while (t < tsplit) {
-			
+			sys.SetDistAverages();
             // Sweep does not do transport
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
             timeStep(t, std::min(t + dtg / 3.0, tsplit), sys, Geometry::LocalGeometry1d(),
@@ -275,6 +279,11 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
             tflow = t;
 
 		}
+
+		/*if (mech.IsHybrid() && sys.Particles().IsFirstSP()) // sys.Particles().IsFirstSP() or sys.GetIncepted() > 0.0
+		{
+			mech.MomentUpdate(t, t - tin, sys, rng);
+		}*/
 
         sys.SetCurrentProcessTau(t - tin); // aab64 store time passed in current loop for heat transfer
 
@@ -374,15 +383,16 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
 
         mech.DoProcess(i, t+dt, sys, geom, rng);
 
+		t += dt;
+
 		// aab64 Update the diameter moments of the incepting class
 		// and store average properties to use in coagulation events
-		if (mech.IsHybrid() && sys.GetIncepted() > 0.0) // sys.Particles().IsFirstSP()
+		if (mech.IsHybrid() && sys.Particles().IsFirstSP())
 		{
 			mech.MomentUpdate(t, dt, sys, rng);
 		}
 		
 		
-		t += dt;
     } else {
         t = t_stop;
     }

@@ -162,11 +162,9 @@ double DeathProcess::InternalRate(
 		unsigned int n_total = sys.Particles().Count();
 
 		// aab64 for hybrid particle model
-		if (m_mech->IsHybrid())
+		if (m_mech->IsHybrid() && sys.GetIncepted() > 0)
 		{
-			n_total = sys.GetIncepted();               // Account for particles in the incepting class
-			if (sys.ParticleCount() > 1)               // (n_total should always be an int for DSA)
-				n_total += (sys.ParticleCount() - 1); 
+			n_total += (unsigned int)sys.GetIncepted();               // Account for particles in the incepting class
 		}
 		return m_a * n_total;
 	}
@@ -215,7 +213,20 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
 	if (!(m_mech->IsHybrid()))
 	    i = sys.Particles().Select(rng);
 	else
-        i = sys.Particles().Select(iW, rng); // account for the number of particles in incepting class
+	{
+		double incept_frac = sys.GetIncepted() / (sys.GetIncepted() + sys.ParticleCount());
+		boost::uniform_01<rng_type&, double> unifDistrib(rng);
+		if (unifDistrib() < incept_frac)
+		{
+			sys.AdjustIncepted(-1.0);                                                        // Reduce the incepting class count
+			sys.AdjustInceptingCoagulations();                                               // Increment number of times particles have left the incepting class
+			sys.AdjustInceptingCoagulations_tmp();
+			sys.SetCoagulationSums(sys.Particles().GetInceptedSP_tmp_rand().CollDiameter()); // Store the change in total diameter due to losing this particle from the class
+			i = -1;
+		}
+		else
+			i = sys.Particles().Select(rng); 
+	}
 
     if (i >= 0) DoParticleDeath(t, i, sys, rng);
 
@@ -347,6 +358,10 @@ void DeathProcess::PerformDT (
 					    // Do the process to the particle.
 					    Perform(t, sys, local_geom, 0, rng);
 					    num--;
+						if (m_mech->IsHybrid() && sys.Particles().IsFirstSP())
+						{
+							m_mech->MomentUpdate(t, 0, sys, rng);
+						}
 				    }
 				}
             }
@@ -372,23 +387,7 @@ void DeathProcess::DoParticleDeath(
     if (m_dtype == DeathProcess::iContDelete
             || m_dtype == DeathProcess::iStochDelete
 			|| m_dtype == DeathProcess::iWtdDelete) {
-		// aab64 for hybrid particle model
-		if (m_mech->IsHybrid() && isp == 0)                      // If this is the incepting class particle,
-		{
-			if (m_dtype == DeathProcess::iWtdDelete || sys.ParticleCount() == 1)
-			{
-				sys.AdjustIncepted(-1 * sys.GetIncepted());      // set it's state to empty and remove it
-				sys.Particles().Remove(isp, true);
-			}
-			else if (sp->getStatisticalWeight() >= 1)            // reduce the class by 1
-			{
-				sys.AdjustIncepted(-1);
-				sp->setStatisticalWeight(sys.GetIncepted());
-				sys.Particles().Update(isp);
-			}
-		}
-		else 
-			sys.Particles().Remove(isp, true);                   // Just delete the particle
+		sys.Particles().Remove(isp, true);                   // Just delete the particle
     } else if (m_dtype == DeathProcess::iContMove
             || m_dtype == DeathProcess::iStochMove
             || (m_dtype == DeathProcess::iContAdaptive && m_toggled)) {

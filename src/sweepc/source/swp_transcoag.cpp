@@ -486,8 +486,8 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			sp2 = sys.Particles().GetInceptedSP_tmp_d2_m_1_2().Clone();
 		else if (ip2 == -7)
 			sp2 = sys.Particles().GetInceptedSP_tmp_m_1_2().Clone();
-		//else if (ip2 == -8)
-		//	sp2 = sys.Particles().GetInceptedSP_tmp_rand().Clone();
+		else if (ip2 == -8)
+			sp2 = sys.Particles().GetInceptedSP_tmp_rand().Clone();
 
 		sp2->setStatisticalWeight(1.0);                                              // Ensure weight equals one
 		sp2->SetTime(t);                                                             // Set last update time to avoid additional surface growth
@@ -582,6 +582,12 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				sys.SetCoagulationSums(sp2->CollDiameter());                                 // Store the change in total diameter due to losing this particle from the class
 			}
 			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
+
+			/*std::ofstream cFile;
+			cFile.open("Coag-diags.csv", std::ios::app);
+			cFile << t << " , " << sp1->CollDiameter() << " , " << sp2->CollDiameter() << " , " << ip1_flag << " , " << ip2_flag << " , " << maj << " , " << sys.GetMuLN() << " , " << sys.GetSigmaLN() << " , " << sys.GetMomentsk_0() << " , " << sys.GetMomentsk_1() << " , " << sys.GetMomentsk_2() << " , " << sys.GetDistParams_diam() <<  "\n";
+			cFile.close();*/
+
 			if (ip2_flag && sp2 != NULL)
 			{
 				// Particle sp2 is not in the ensemble, must manually delete it
@@ -707,20 +713,7 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 	double test = unifDistrib();
 
 	int ip_rand = -8;
-	/*if (test < (1.0 / 6.0))
-		ip_rand = -2;
-	else if (test < (1.0 / 3.0))
-		ip_rand = -3;
-	else if (test < 0.5)
-		ip_rand = -4;
-	else if (test < (2.0 / 3.0))
-		ip_rand = -5;
-	else if (test < (5.0 / 6.0))
-		ip_rand = -6;
-	else 
-		ip_rand = -7;*/
 
-	test = unifDistrib();
 	// Select the first particle and note the majorant type
 	switch (term) {
 	case SlipFlow1:
@@ -821,21 +814,6 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 	test = unifDistrib();
 	// Incepting class can be selected twice, provided it contains at least two particles
 	bool mustSwitch = (ip1 < -1) && (sys.GetIncepted() <= 1);
-
-	if (test < (1.0 / 6.0))
-		ip_rand = -2;
-	else if (test < (1.0 / 3.0))
-		ip_rand = -3;
-	else if (test < 0.5)
-		ip_rand = -4;
-	else if (test < (2.0 / 3.0))
-		ip_rand = -5;
-	else if (test < (5.0 / 6.0))
-		ip_rand = -6;
-	else
-		ip_rand = -7;
-
-	test = unifDistrib();
 
 	switch (term) {
 	case SlipFlow1:

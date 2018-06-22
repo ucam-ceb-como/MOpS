@@ -274,6 +274,7 @@ public:
 	void SetInceptedSP_tmp_m_1_2(Sweep::Particle sp);
 	void SetInceptedSP_tmp_d2_m_1_2(Sweep::Particle sp);
 	void SetInceptedSP_tmp_rand(Sweep::Particle sp);
+	void SetInceptedSP_tmp_m(Sweep::Particle sp);
 	Particle GetInceptedSP() const;
 	Particle GetInceptedSP_tmp() const;
 	Particle GetInceptedSP_tmp_d2() const;
@@ -282,6 +283,7 @@ public:
 	Particle GetInceptedSP_tmp_m_1_2() const;
 	Particle GetInceptedSP_tmp_d2_m_1_2() const;
 	Particle GetInceptedSP_tmp_rand() const;
+	Particle GetInceptedSP_tmp_m() const;
 	bool IsFirstSP(void) const { return m_inceptedFirstSP; }
 
     // READ/WRITE/COPY.
@@ -342,6 +344,7 @@ private:
 	Particle *m_inceptingSP_tmp_m_1_2;
 	Particle *m_inceptingSP_tmp_d2_m_1_2;
 	Particle *m_inceptingSP_tmp_rand;
+	Particle *m_inceptingSP_tmp_m;
 	bool m_inceptedFirstSP;
 
     //! Reset the contents of the binary tree

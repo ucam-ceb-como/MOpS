@@ -72,7 +72,7 @@ namespace Sweep {
 		m_incepted(0.0), m_inceptions(0.0), m_inceptingcoagulations(0.0),
 		m_surface_rutiles(0), m_last_update_time(0.0), m_inceptions_tmp(0.0), m_inceptingcoagulations_tmp(0.0),
 		m_diam_tmp(0.0), m_diam2_tmp(0.0), m_diam_1_tmp(0.0), m_diam_2_tmp(0.0), m_mass_1_2_tmp(0.0), m_diam2_mass_1_2_tmp(0.0),
-		m_d0sum(0.0), m_disum(0.0), m_d0sum_sqrd(0.0), m_disum_sqrd(0.0),
+		m_d0sum(0.0), m_disum(0.0), m_d0sum_sqrd(0.0), m_disum_sqrd(0.0), m_diam_max(0.0),
 		m_m0k(0.0), m_m1k(0.0), m_m2k(0.0), m_m3k(0.0), m_SGk(0.0), m_SGadjustment(0.0), m_sigmaLN(0.0), m_muLN(0.0)
 {
     if(const_gas)
@@ -156,12 +156,13 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 		m_diam_1_tmp = rhs.m_diam_1_tmp;
 		m_diam_2_tmp = rhs.m_diam_2_tmp;
 		m_mass_1_2_tmp = rhs.m_mass_1_2_tmp;
-		m_diam2_mass_1_2_tmp = m_diam2_mass_1_2_tmp;
+		m_diam2_mass_1_2_tmp = rhs.m_diam2_mass_1_2_tmp;
 		// incepting class moments and contributing terms
 		m_d0sum = rhs.m_d0sum;
 		m_disum = rhs.m_disum;
 		m_d0sum_sqrd = rhs.m_d0sum_sqrd;
 		m_disum_sqrd = rhs.m_disum_sqrd;
+		m_diam_max = rhs.m_diam_max;
 		m_m0k = rhs.m_m0k;
 		m_m1k = rhs.m_m1k;
 		m_m2k = rhs.m_m2k;
@@ -432,26 +433,55 @@ void Cell::AdjustIncepted(double adjustment)
 	m_ensemble.AdjustIncepted(adjustment);
 }
 
-// aab64 Set incepting class average properties using closed form moments for the diameter distribution
-void Cell::SetDistParams(double mu, double sigma)
+// aab64 Set incepting class lognormal distribution parameters
+void Cell::SetDistParams(double mu, double sigma, double dmax)
 {
 	m_muLN = mu;
 	m_sigmaLN = sigma;
+	m_diam_max = dmax;
+}
 
-	double rhop = 4260.0; // titania
-	double sigma_sqrd = sigma * sigma;
+// aab64 Set incepting class average properties using closed form moments for the diameter distribution
+void Cell::SetDistAverages()
+{
+	// titania
+	double dmin = 4.9175785734906e-10;
+	double rhop = 4260.0;
+
+	double sigma_sqrd = m_sigmaLN * m_sigmaLN;
 	double c1 = sigma_sqrd * 0.5;
 	double c2 = std::sqrt(6.0 / (rhop * PI));
-	double log_dmin = log(4.9175785734906e-10);
-	double sqrt2_sigma = sqrt(2.0) * sigma;
-	double cdf = 0.5 - 0.5 * erf((log_dmin - mu) / sqrt2_sigma);
+	double log_dmin = log(dmin);
+	double log_dmax = log(m_diam_max);
+	double sqrt2_sigma = sqrt(2.0) * m_sigmaLN;
+	double cdf = erf((log_dmax - m_muLN) / sqrt2_sigma) - erf((log_dmin - m_muLN) / sqrt2_sigma);
 
-	m_diam_tmp = exp(c1 + mu) * 0.5 * (1.0 - erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)) / cdf;
-	m_diam2_tmp = exp(c1 * 4.0 + 2.0 * mu) * 0.5 * (1.0 - erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
-	m_diam_1_tmp = exp(c1 - mu) * 0.5 * (1.0 - erf((log_dmin - mu + sigma_sqrd) / sqrt2_sigma)) / cdf;
-	m_diam_2_tmp = exp(c1 * 4.0 - 2.0 * mu) * 0.5 * (1.0 - erf((log_dmin - mu + 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
-	m_mass_1_2_tmp = exp(c1 * 2.25 - 1.5 * mu) * c2 * 0.5 * (1.0 - erf((log_dmin - mu + 1.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
-	m_diam2_mass_1_2_tmp = exp(c1 * 0.25 + 0.5 * mu) * c2 * 0.5 * (1.0 - erf((log_dmin - mu - 0.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
+	m_diam_tmp = dmin;
+	m_diam2_tmp = m_diam_tmp * m_diam_tmp;
+	m_diam_1_tmp = 1.0 / m_diam_tmp;
+	m_diam_2_tmp = m_diam_1_tmp * m_diam_1_tmp;
+	m_mass_1_2_tmp = c2 / sqrt(m_diam2_tmp * m_diam_tmp);
+	m_diam2_mass_1_2_tmp = m_diam2_tmp * m_mass_1_2_tmp;
+
+	if (m_sigmaLN != 0.0 && cdf != 0.0)
+	{
+		//if (cdf > 0 && (erf((log_dmax - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma)) > 0)
+		//{
+			m_diam_tmp = exp(c1 + m_muLN) * (erf((log_dmax - m_muLN - sigma_sqrd)) - erf((log_dmin - m_muLN - sigma_sqrd) / sqrt2_sigma)) / cdf;
+			
+			/*m_diam2_tmp = m_diam_tmp * m_diam_tmp;
+			m_diam_1_tmp = 1.0 / m_diam_tmp;
+			m_diam_2_tmp = m_diam_1_tmp * m_diam_1_tmp;
+			m_mass_1_2_tmp = c2 / sqrt(m_diam2_tmp * m_diam_tmp);
+			m_diam2_mass_1_2_tmp = m_diam2_tmp * m_mass_1_2_tmp;*/
+			
+			m_diam2_tmp = exp(c1 * 4.0 + 2.0 * m_muLN) * (erf((log_dmax - m_muLN - 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN - 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
+			m_diam_1_tmp = exp(c1 - m_muLN) * (erf((log_dmax - m_muLN + sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + sigma_sqrd) / sqrt2_sigma)) / cdf;
+			m_diam_2_tmp = exp(c1 * 4.0 - 2.0 * m_muLN) * (erf((log_dmax - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
+			m_mass_1_2_tmp = exp(c1 * 2.25 - 1.5 * m_muLN) * c2 * (erf((log_dmax - m_muLN + 1.5 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + 1.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
+			m_diam2_mass_1_2_tmp = exp(c1 * 0.25 + 0.5 * m_muLN) * c2 * (erf((log_dmax - m_muLN - 0.5 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN - 0.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
+		//}
+	}
 }
 
 // aab64 Set the first moments of the diameter distribution

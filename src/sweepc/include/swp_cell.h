@@ -276,7 +276,8 @@ public:
 	void SetLastRutileTime(double lasttime) { m_last_update_time = lasttime; }
 
 	// aab64 Averages of the incepting class
-	void SetDistParams(double mu, double sigma);
+	void SetDistParams(double mu, double sigma, double dmax);
+	void SetDistAverages();
 	double GetDistParams_diam() const { return m_diam_tmp; }
 	double GetDistParams_diam2() const { return m_diam2_tmp; }
 	double GetDistParams_diam_1() const { return m_diam_1_tmp; }
@@ -383,7 +384,7 @@ private:
 	double m_diam_tmp, m_diam2_tmp, m_diam_1_tmp, m_diam_2_tmp, m_mass_1_2_tmp, m_diam2_mass_1_2_tmp; 
 
 	// aab64 trackers for the moments and contributing terms 
-	double m_d0sum, m_disum, m_d0sum_sqrd, m_disum_sqrd;
+	double m_d0sum, m_disum, m_d0sum_sqrd, m_disum_sqrd, m_diam_max;
 	double m_m0k, m_m1k, m_m2k, m_m3k;
 	double m_SGk;
 	double m_SGadjustment;
