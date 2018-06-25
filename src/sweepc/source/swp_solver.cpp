@@ -280,11 +280,6 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 
 		}
 
-		/*if (mech.IsHybrid() && sys.Particles().IsFirstSP()) // sys.Particles().IsFirstSP() or sys.GetIncepted() > 0.0
-		{
-			mech.MomentUpdate(t, t - tin, sys, rng);
-		}*/
-
         sys.SetCurrentProcessTau(t - tin); // aab64 store time passed in current loop for heat transfer
 
         // Perform Linear Process Deferment Algorithm to

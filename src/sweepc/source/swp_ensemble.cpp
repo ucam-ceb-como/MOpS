@@ -630,7 +630,9 @@ void Sweep::Ensemble::ClearMain()
 	m_inceptingSP_tmp_m_1_2 = NULL;
 	m_inceptingSP_tmp_d2_m_1_2 = NULL;
 	m_inceptingSP_tmp_rand = NULL;
-	m_inceptingSP_tmp_m = NULL;
+	m_inceptingSP_ave_m = NULL;
+	m_inceptingSP_ave_d = NULL;
+	m_inceptingSP_oldest = NULL;
 	m_inceptedFirstSP = false;
 }
 
@@ -825,11 +827,23 @@ void Sweep::Ensemble::SetInceptedSP_tmp_rand(Sweep::Particle sp)
 	m_inceptingSP_tmp_rand = NULL;
 	m_inceptingSP_tmp_rand = sp.Clone();
 }
-void Sweep::Ensemble::SetInceptedSP_tmp_m(Sweep::Particle sp)
+void Sweep::Ensemble::SetInceptedSP_ave_m(Sweep::Particle sp)
 {
-	delete m_inceptingSP_tmp_m;
-	m_inceptingSP_tmp_m = NULL;
-	m_inceptingSP_tmp_m = sp.Clone();
+	delete m_inceptingSP_ave_m;
+	m_inceptingSP_ave_m = NULL;
+	m_inceptingSP_ave_m = sp.Clone();
+}
+void Sweep::Ensemble::SetInceptedSP_ave_d(Sweep::Particle sp)
+{
+	delete m_inceptingSP_ave_d;
+	m_inceptingSP_ave_d = NULL;
+	m_inceptingSP_ave_d = sp.Clone();
+}
+void Sweep::Ensemble::SetInceptedSP_oldest(Sweep::Particle sp)
+{
+	delete m_inceptingSP_oldest;
+	m_inceptingSP_oldest = NULL;
+	m_inceptingSP_oldest = sp.Clone();
 }
 void Sweep::Ensemble::AdjustIncepted(double adjustment)
 {
@@ -871,9 +885,17 @@ Particle Sweep::Ensemble::GetInceptedSP_tmp_rand() const
 {
 	return *m_inceptingSP_tmp_rand;
 }
-Particle Sweep::Ensemble::GetInceptedSP_tmp_m() const
+Particle Sweep::Ensemble::GetInceptedSP_ave_m() const
 {
-	return *m_inceptingSP_tmp_m;
+	return *m_inceptingSP_ave_m;
+}
+Particle Sweep::Ensemble::GetInceptedSP_ave_d() const
+{
+	return *m_inceptingSP_ave_d;
+}
+Particle Sweep::Ensemble::GetInceptedSP_oldest() const
+{
+	return *m_inceptingSP_oldest;
 }
 
 // UPDATE ENSEMBLE.
@@ -1074,7 +1096,9 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
 			m_inceptingSP_tmp_m_1_2->Serialize(out, &uniquePAHAdresses2);
 			m_inceptingSP_tmp_d2_m_1_2->Serialize(out, &uniquePAHAdresses2);
 			m_inceptingSP_tmp_rand->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_tmp_m->Serialize(out, &uniquePAHAdresses2);
+			m_inceptingSP_ave_m->Serialize(out, &uniquePAHAdresses2);
+			m_inceptingSP_ave_d->Serialize(out, &uniquePAHAdresses2);
+			m_inceptingSP_oldest->Serialize(out, &uniquePAHAdresses2);
 		}
 		else {
 			out.write((char*)&falseval, sizeof(falseval));
@@ -1192,7 +1216,11 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
 					p = new Particle(in, model, &duplicates2);
 					m_inceptingSP_tmp_rand = p;
 					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_tmp_m = p;
+					m_inceptingSP_ave_m = p;
+					p = new Particle(in, model, &duplicates2);
+					m_inceptingSP_ave_d = p;
+					p = new Particle(in, model, &duplicates2);
+					m_inceptingSP_oldest = p;
 				}
 				else {
 					m_inceptedFirstSP = false;

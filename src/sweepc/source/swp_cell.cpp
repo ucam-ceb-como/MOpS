@@ -465,22 +465,12 @@ void Cell::SetDistAverages()
 
 	if (m_sigmaLN != 0.0 && cdf != 0.0)
 	{
-		//if (cdf > 0 && (erf((log_dmax - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma)) > 0)
-		//{
-			m_diam_tmp = exp(c1 + m_muLN) * (erf((log_dmax - m_muLN - sigma_sqrd)) - erf((log_dmin - m_muLN - sigma_sqrd) / sqrt2_sigma)) / cdf;
-			
-			/*m_diam2_tmp = m_diam_tmp * m_diam_tmp;
-			m_diam_1_tmp = 1.0 / m_diam_tmp;
-			m_diam_2_tmp = m_diam_1_tmp * m_diam_1_tmp;
-			m_mass_1_2_tmp = c2 / sqrt(m_diam2_tmp * m_diam_tmp);
-			m_diam2_mass_1_2_tmp = m_diam2_tmp * m_mass_1_2_tmp;*/
-			
-			m_diam2_tmp = exp(c1 * 4.0 + 2.0 * m_muLN) * (erf((log_dmax - m_muLN - 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN - 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
-			m_diam_1_tmp = exp(c1 - m_muLN) * (erf((log_dmax - m_muLN + sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + sigma_sqrd) / sqrt2_sigma)) / cdf;
-			m_diam_2_tmp = exp(c1 * 4.0 - 2.0 * m_muLN) * (erf((log_dmax - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
-			m_mass_1_2_tmp = exp(c1 * 2.25 - 1.5 * m_muLN) * c2 * (erf((log_dmax - m_muLN + 1.5 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + 1.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
-			m_diam2_mass_1_2_tmp = exp(c1 * 0.25 + 0.5 * m_muLN) * c2 * (erf((log_dmax - m_muLN - 0.5 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN - 0.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
-		//}
+		m_diam_tmp = exp(c1 + m_muLN) * (erf((log_dmax - m_muLN - sigma_sqrd)) - erf((log_dmin - m_muLN - sigma_sqrd) / sqrt2_sigma)) / cdf;	
+		m_diam2_tmp = exp(c1 * 4.0 + 2.0 * m_muLN) * (erf((log_dmax - m_muLN - 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN - 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
+		m_diam_1_tmp = exp(c1 - m_muLN) * (erf((log_dmax - m_muLN + sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + sigma_sqrd) / sqrt2_sigma)) / cdf;
+		m_diam_2_tmp = exp(c1 * 4.0 - 2.0 * m_muLN) * (erf((log_dmax - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
+		m_mass_1_2_tmp = exp(c1 * 2.25 - 1.5 * m_muLN) * c2 * (erf((log_dmax - m_muLN + 1.5 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + 1.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
+		m_diam2_mass_1_2_tmp = exp(c1 * 0.25 + 0.5 * m_muLN) * c2 * (erf((log_dmax - m_muLN - 0.5 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN - 0.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
 	}
 }
 

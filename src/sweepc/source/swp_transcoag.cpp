@@ -82,7 +82,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 
 	// aab64 for hybrid particle model
 	if (m_mech->IsHybrid())
-		n += sys.GetIncepted();
+		n += (unsigned int)sys.GetIncepted();
 
 	// Check that there are at least 2 particles before calculating rate.
 	if (n > 1) {
@@ -91,21 +91,21 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 		double P = sys.GasPhase().Pressure();
 
 		/*std::ofstream file;
-		file.open("rate_terms.csv", std::ios::app);
-		file << t << ",";
+		file.open("coag_rate_diags.csv", std::ios::app);
+		file << t << "," << sys.ParticleCount() << "," << sys.GetIncepted() << ",";
 		file.close();*/
 
 		// Calculate the rate.
-		if (m_mech->IsHybrid() && sys.Particles().IsFirstSP())
+		if (m_mech->IsHybrid() && sys.GetIncepted() > 0.0)
 		{
-			double wt = sys.Particles().GetInceptedSP().getStatisticalWeight();
+			double wt = sys.Particles().GetIncepted();
 
 			fvector props(6, wt);
 
-			if (sys.GetDistParams_diam() == 0) 
+			if (sys.GetDistParams_diam() == 0 || isnan(sys.GetDistParams_diam_2()))
 			{ // use inception properties
-				double dc = sys.Particles().GetInceptedSP_tmp().CollDiameter();
-				double m = sys.Particles().GetInceptedSP_tmp().Mass();
+				double dc = sys.Particles().GetInceptedSP().CollDiameter();
+				double m = sys.Particles().GetInceptedSP().Mass();
 				props[0] *= (dc);
 				props[1] *= (dc * dc);
 				props[2] *= (1.0 / dc);
@@ -170,6 +170,11 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
 	double m_1_2 = data.Property(iM_1_2);
 	double d2m_1_2 = data.Property(iD2_M_1_2);
 
+	/*std::ofstream file;
+	file.open("coag_rate_diags.csv", std::ios::app);
+	file << d << "," << d2 << "," << d_1 << "," << d_2 << "," << m_1_2 << "," << d2m_1_2 << ",";
+	file.close();*/
+
 	if (m_mech->IsHybrid())
 	{
 		d += props[0];
@@ -179,6 +184,10 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
 		m_1_2 += props[4];
 		d2m_1_2 += props[5];
 	}
+
+	/*file.open("coag_rate_diags.csv", std::ios::app);
+	file << props[0] << "," << props[1] << "," << props[2] << "," << props[3] << "," << props[4] << "," << props[5] << "\n";
+	file.close();*/
 
 	// Get individual terms.
 	double terms[TYPE_COUNT];
@@ -190,12 +199,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
 	// Free-molecular.
 	terms[4] = n_1 * d2m_1_2  * c / vol;
 	terms[5] = (m_1_2 * d2 - d2m_1_2) * c / vol;
-
-	/*std::ofstream file;
-	file.open("rate_terms.csv", std::ios::app);
-	file << terms[0] << "," << terms[1] << "," << terms[2] << "," << terms[3] << "," << terms[4] << "," << terms[5] << "\n";
-	file.close();*/
-
+	
 	// Sum up total coagulation rates for different regimes.
 	double sf = terms[0] + terms[1] + terms[2] + terms[3];
 	double fm = terms[4] + terms[5];
@@ -242,7 +246,7 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 
 	// aab64 for hybrid particle model
 	if (m_mech->IsHybrid())
-		n += sys.GetIncepted();
+		n += (unsigned int)sys.GetIncepted();
 
 	// Check that there are at least 2 particles before calculating rate.
 	if (n > 1) {
@@ -250,17 +254,22 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 		double T = sys.GasPhase().Temperature();
 		double P = sys.GasPhase().Pressure();
 
+		/*std::ofstream file;
+		file.open("coag_rate_diags.csv", std::ios::app);
+		file << t << "," << sys.ParticleCount() << "," << sys.GetIncepted() << ",";
+		file.close();*/
+
 		// Calculate the rate terms.
-		if (m_mech->IsHybrid() && sys.Particles().IsFirstSP())
+		if (m_mech->IsHybrid() && sys.GetIncepted() > 0.0)
 		{
-			double wt = sys.Particles().GetInceptedSP().getStatisticalWeight();
+			double wt = sys.GetIncepted();
 
 			fvector props(6, wt);
 
-			if (sys.GetDistParams_diam() == 0)
+			if (sys.GetDistParams_diam() == 0 || isnan(sys.GetDistParams_diam_2()))
 			{ // use inception properties
-				double dc = sys.Particles().GetInceptedSP_tmp().CollDiameter();
-				double m = sys.Particles().GetInceptedSP_tmp().Mass();
+				double dc = sys.Particles().GetInceptedSP().CollDiameter();
+				double m = sys.Particles().GetInceptedSP().Mass();
 				props[0] *= (dc);
 				props[1] *= (dc * dc);
 				props[2] *= (1.0 / dc);
@@ -327,6 +336,11 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::partic
 	double d_2 = data.Property(iD_2);
 	double m_1_2 = data.Property(iM_1_2);
 	double d2m_1_2 = data.Property(iD2_M_1_2);
+
+	/*std::ofstream file;
+	file.open("coag_rate_diags.csv", std::ios::app);
+	file << d << "," << d2 << "," << d_1 << "," << d_2 << "," << m_1_2 << "," << d2m_1_2 << ",";
+	file.close();*/
 	
 	if (m_mech->IsHybrid())
 	{
@@ -337,6 +351,10 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::partic
 		m_1_2 += props[4];
 		d2m_1_2 += props[5];
 	}
+
+	/*file.open("coag_rate_diags.csv", std::ios::app);
+	file << props[0] << "," << props[1] << "," << props[2] << "," << props[3] << "," << props[4] << "," << props[5] << "\n";
+	file.close();*/
 
 	fvector::iterator isf = iterm;
 	fvector::iterator ifm = iterm + 4;
@@ -488,7 +506,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			sp2 = sys.Particles().GetInceptedSP_tmp_m_1_2().Clone();
 		else if (ip2 == -8)
 			sp2 = sys.Particles().GetInceptedSP_tmp_rand().Clone();
-
 		sp2->setStatisticalWeight(1.0);                                              // Ensure weight equals one
 		sp2->SetTime(t);                                                             // Set last update time to avoid additional surface growth
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
@@ -584,7 +601,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
 
 			/*std::ofstream cFile;
-			cFile.open("Coag-diags.csv", std::ios::app);
+			cFile.open("coag-event-diags.csv", std::ios::app);
 			cFile << t << " , " << sp1->CollDiameter() << " , " << sp2->CollDiameter() << " , " << ip1_flag << " , " << ip2_flag << " , " << maj << " , " << sys.GetMuLN() << " , " << sys.GetSigmaLN() << " , " << sys.GetMomentsk_0() << " , " << sys.GetMomentsk_1() << " , " << sys.GetMomentsk_2() << " , " << sys.GetDistParams_diam() <<  "\n";
 			cFile.close();*/
 
@@ -695,20 +712,32 @@ void Sweep::Processes::TransitionCoagulation::Select_ip12(double t,
 
 	TermType term = (TermType)iterm;
 
-	bool hybrid_flag = m_mech->IsHybrid() && sys.GetIncepted() > 0;
-	double wt_incfrac = 0, d_incfrac = 0, d2_incfrac = 0, d_1_incfrac = 0, d_2_incfrac = 0, m_1_2_incfrac = 0, d2m_1_2_incfrac = 0;
-	double wt_incep = 0, dc_incep = 0, dc2_incep = 0, dc_1_incep = 0, dc_2_incep = 0, m_1_2_incep = 0, dc2_m_1_2_incep = 0;
+	double wt_incep = sys.GetIncepted();
+	bool hybrid_flag = m_mech->IsHybrid() && wt_incep > 0.0;
+	double wt_incfrac = 0.0, d_incfrac = 0.0, d2_incfrac = 0.0, d_1_incfrac = 0.0, d_2_incfrac = 0.0, m_1_2_incfrac = 0.0, d2m_1_2_incfrac = 0.0;
+	double dc_incep = 0.0, dc2_incep = 0.0, dc_1_incep = 0.0, dc_2_incep = 0.0, m_1_2_incep = 0.0, dc2_m_1_2_incep = 0.0;
 
 	if (hybrid_flag)
 	{
 		ip1 = -2;
-		wt_incep = sys.GetIncepted();
-		dc_incep = wt_incep * sys.GetDistParams_diam();
-		dc2_incep = wt_incep * sys.GetDistParams_diam2();
-		dc_1_incep = wt_incep * sys.GetDistParams_diam_1();
-		dc_2_incep = wt_incep * sys.GetDistParams_diam_2();
-		m_1_2_incep = wt_incep * sys.GetDistParams_mass_1_2();
-		dc2_m_1_2_incep = wt_incep * sys.GetDistParams_diam2_mass_1_2();
+		if (!isnan(sys.GetDistParams_diam_2()) && sys.GetDistParams_diam() > 0.0)
+		{
+			dc_incep = wt_incep * sys.GetDistParams_diam();
+			dc2_incep = wt_incep * sys.GetDistParams_diam2();
+			dc_1_incep = wt_incep * sys.GetDistParams_diam_1();
+			dc_2_incep = wt_incep * sys.GetDistParams_diam_2();
+			m_1_2_incep = wt_incep * sys.GetDistParams_mass_1_2();
+			dc2_m_1_2_incep = wt_incep * sys.GetDistParams_diam2_mass_1_2();
+		}
+		else
+		{
+			dc_incep = wt_incep * sys.Particles().GetInceptedSP().CollDiameter();
+			dc2_incep = dc_incep * sys.Particles().GetInceptedSP().CollDiameter();
+			dc_1_incep = wt_incep / sys.Particles().GetInceptedSP().CollDiameter();
+			dc_2_incep = dc_1_incep / (sys.Particles().GetInceptedSP().CollDiameter());
+			m_1_2_incep = wt_incep / sqrt(sys.Particles().GetInceptedSP().Mass());
+			dc2_m_1_2_incep = (m_1_2_incep * dc2_incep) / wt_incep;
+		}
 	}
 	double test = unifDistrib();
 

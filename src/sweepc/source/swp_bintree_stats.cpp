@@ -184,12 +184,11 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
 
 	if (e.GetIncepted() != 0)
 	{
-		//Sweep::Particle * sp_temp = e.GetInceptedSP().Clone();
-		Sweep::Particle * sp_temp = e.GetInceptedSP_tmp().Clone();
+		Sweep::Particle * sp_temp = e.GetInceptedSP_ave_d().Clone();
 		const AggModels::BinTreePrimary * const prim =
 			dynamic_cast<const AggModels::BinTreePrimary*>(sp_temp->Primary());
 
-		double sz = e.GetInceptedSP().Property(m_statbound.PID);
+		double sz = e.GetInceptedSP_ave_d().Property(m_statbound.PID);
 		double wt = e.GetInceptedSP().getStatisticalWeight() * invTotalWeight;
 
 		// Check if the value of the property is within the stats bound
