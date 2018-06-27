@@ -94,7 +94,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 		file.open("coag_rate_diags.csv", std::ios::app);
 		file << t << "," << sys.ParticleCount() << "," << sys.GetIncepted() << ",";
 		file.close();*/
-
+		
 		// Calculate the rate.
 		if (m_mech->IsHybrid() && sys.GetIncepted() > 0.0)
 		{
@@ -184,8 +184,8 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
 		m_1_2 += props[4];
 		d2m_1_2 += props[5];
 	}
-
-	/*file.open("coag_rate_diags.csv", std::ios::app);
+	/*
+	file.open("coag_rate_diags.csv", std::ios::app);
 	file << props[0] << "," << props[1] << "," << props[2] << "," << props[3] << "," << props[4] << "," << props[5] << "\n";
 	file.close();*/
 
@@ -465,7 +465,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		else if (ip1 == -8)
 			sp1 = sys.Particles().GetInceptedSP_tmp_rand().Clone();
 		sp1->setStatisticalWeight(1.0);                                              // Ensure weight equals one
-		sp1->SetTime(t);                                                             // Set last update time to avoid additional surface growth
+		//sp1->SetTime(t);                                                             // Set last update time to avoid additional surface growth
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 		sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
 		sys.AdjustInceptingCoagulations();                                           // Increment number of times particles have left the incepting class
@@ -485,7 +485,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	}
 
 	Particle *sp2 = NULL;
-
+	double dsp2 = 0.0;
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip2 <= -2)
 	{
@@ -507,9 +507,10 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		else if (ip2 == -8)
 			sp2 = sys.Particles().GetInceptedSP_tmp_rand().Clone();
 		sp2->setStatisticalWeight(1.0);                                              // Ensure weight equals one
-		sp2->SetTime(t);                                                             // Set last update time to avoid additional surface growth
+		//sp2->SetTime(t);                                                             // Set last update time to avoid additional surface growth
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
 		ip2 = -2;                                                                    // Set ip2 for simplicity in checks below
+		dsp2 = sp2->CollDiameter();
 	}
 	else
 	{
@@ -596,7 +597,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
 				sys.AdjustInceptingCoagulations();                                           // Increment number of times particles have left the incepting class
 				sys.AdjustInceptingCoagulations_tmp();
-				sys.SetCoagulationSums(sp2->CollDiameter());                                 // Store the change in total diameter due to losing this particle from the class
+				sys.SetCoagulationSums(dsp2);                                                // Store the change in total diameter due to losing this particle from the class
 			}
 			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
 

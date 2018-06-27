@@ -327,7 +327,7 @@ public:
         ) const;
 
 	//! Moment update for the incepting class - use a hybrid 
-    //! methid to track surface growth, assuming a lognormal 
+    //! method to track surface growth, assuming a lognormal 
     //! diameter distribution for the single primaries 
 	void MomentUpdate(
 		double t,   // Time up to which to integrate.
@@ -336,6 +336,16 @@ public:
 		rng_type &rng
 		) const;
 
+    //! Compute nth diameter moment, adjusted because distribution is truncated
+    //! to maximum/minimum physical particle size thresholds (conditional expectation)
+	double NthMomentExpectation(
+		bool isRandomSample,
+		double mu,
+		double sigma,
+		double dmin,
+		double dmax,
+		double n,
+		rng_type &rng) const;
 
     //! LPDA for one particle
     void UpdateParticle(
