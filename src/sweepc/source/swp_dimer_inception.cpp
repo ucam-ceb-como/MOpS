@@ -312,6 +312,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 				sys.Particles().SetInceptedSP_ave_d(*sp);
 				sys.Particles().SetInceptedSP_tmp_rand(*sp);
 				sys.Particles().SetInceptedSP_oldest(*sp);
+				sys.Particles().SetInceptedSP_youngest(*sp);
 
 				// Increment the count if incepted particles
 				sys.AdjustIncepted(sys.GetInceptingWeight());
@@ -346,6 +347,12 @@ int DimerInception::Perform(const double t, Cell &sys,
 		sys.AdjustIncepted(wt_new);
 		sys.AdjustInceptions();
 		sys.AdjustInceptions_tmp();
+		Particle * sp = sys.Particles().GetInceptedSP().Clone();
+		sp->SetTime(t);
+		sp->setStatisticalWeight(1.0);
+		sys.Particles().SetInceptedSP_youngest(*sp);
+		delete sp;
+		sp = NULL;
 		
 		// Add the particle diameter to the total incepting class diameter
 		sys.SetInceptionSums(sys.Particles().GetInceptedSP().CollDiameter());

@@ -1214,6 +1214,13 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 			sys.Particles().SetInceptedSP_oldest(*sp);
 			delete sp;
 			sp = NULL;
+
+			// Grow youngest particle
+			sp = sys.Particles().GetInceptedSP_youngest().Clone();
+			UpdateParticle(*sp, sys, t, rng);
+			sys.Particles().SetInceptedSP_youngest(*sp);
+			delete sp;
+			sp = NULL;
 			sys.SetNotPSIFlag(true);
 
 			// Update gas-phase only
@@ -1221,6 +1228,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 			sp->setStatisticalWeight(1.0);
 			double delta_t = t - sys.Particles().GetInceptedSP_ave_m().LastUpdateTime();
 			double num_added_total = PI * delta_t * sys.GetSGk() * sys.GetMomentsk_2();
+			//double num_added_total = 4620 * PI * delta_t * sys.GetSGk() * sys.GetMomentsk_2() * 0.5 / sys.ParticleModel()->Components()[0]->MolWt();
 			sys.SetSGadjustment(num_added_total);
 			// Not the ideal way of calling this update but should more or less work
 			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
@@ -1326,7 +1334,7 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	
 	// Needed parameters for the surface growth rate
 	// These need to be generalised!!
-	double dmin_titania = 4.9175785734906e-10;                                                // (m)
+	double dmin_titania = sys.Particles().GetInceptedSP_youngest().CollDiameter();// 4.9175785734906e-10;                                                // (m)
 	double rho_titania = sys.ParticleModel()->Components()[0]->Density();                     // (kg/m3)
 	double MW_titania = sys.ParticleModel()->Components()[0]->MolWt();                        // (kg/mol)
 	double n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
@@ -1342,13 +1350,23 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	beta *= (2.0 * MW_titania / rho_titania);
 
 	// Check oldest possible particle age 
-	/*sys.SetNotPSIFlag(false);
+	sys.SetNotPSIFlag(false);
 	Particle * sp = sys.Particles().GetInceptedSP_oldest().Clone();
 	UpdateParticle(*sp, sys, t, rng);
 	sys.Particles().SetInceptedSP_oldest(*sp);
 	delete sp;
 	sp = NULL;
-	sys.SetNotPSIFlag(true);*/
+	sys.SetNotPSIFlag(true);
+
+
+	sys.SetNotPSIFlag(false);
+	sp = sys.Particles().GetInceptedSP_youngest().Clone();
+	UpdateParticle(*sp, sys, t, rng);
+	sys.Particles().SetInceptedSP_youngest(*sp);
+	delete sp;
+	sp = NULL;
+	sys.SetNotPSIFlag(true);
+
 	double oldest = sys.Particles().GetInceptedSP_oldest().CollDiameter();
 	double log_dmax = log(oldest);
 	
@@ -1393,7 +1411,7 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	if (sys.GetIncepted() == 0.0)
 	{
 		cout << "Resetting the bin moment parameters because it's empty\n";
-		sys.SetDistParams(0.0, 0.0, dmin_titania);
+		sys.SetDistParams(0.0, 0.0, dmin_titania, dmin_titania);
 		sys.SetMomentsk(0.0, 0.0, 0.0, 0.0);
 		Particle * sp = sys.Particles().GetInceptedSP().Clone();
 		sp->SetTime(t);
@@ -1407,6 +1425,7 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 		sys.Particles().SetInceptedSP_tmp_d2_m_1_2(*sp);
 		sys.Particles().SetInceptedSP_ave_d(*sp);
 		sys.Particles().SetInceptedSP_oldest(*sp);
+		sys.Particles().SetInceptedSP_youngest(*sp);
 		double LUT = sys.Particles().GetInceptedSP_ave_m().LastUpdateTime();
 		sp->SetTime(LUT);
 		sys.Particles().SetInceptedSP_ave_m(*sp);
@@ -1448,7 +1467,7 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 				sigma = log(m2 / m0) - (2.0 * log(m1 / m0));
 				if (sigma <= 0.0)                                                                         // Sigma can't be zero
 				{
-					sigma = 0.2;
+					sigma = 0.25;
 					mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));
 					std::cout << "Sigma is less than or equal to zero. Setting sigma to 0.1 and mu to " << mu << "\n";
 				}
@@ -1672,7 +1691,7 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 				if (!isnan(sigma) && sigma > 0.0)// && (tol_mu + tol_sigma <= tol_combined)
 				{
 					//cout << mu << "," << sigma << "," << m0 << "," << m1 << "," << m2 << "," << oldest << endl;
-					sys.SetDistParams(mu, sigma, oldest);
+					sys.SetDistParams(mu, sigma, oldest, dmin_titania);
 
 					// Storing particle based on diameter (use to update the gas phase)
 					// We need to store a particle with this average diameter for coagulation
@@ -1684,7 +1703,7 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 					//sigma_sqrd = sigma * sigma;
 					//sqrt2_sigma = sqrt(2.0) * sigma;
 					
-					Particle * sp = sys.Particles().GetInceptedSP().Clone();
+					sp = sys.Particles().GetInceptedSP().Clone();
 					sp->setStatisticalWeight(1.0);
 					double d_bar = NthMomentExpectation(true, mu, sigma, dmin_titania, oldest, 1.0, rng);
 					double n_add = mass_const * d_bar * d_bar * d_bar;                                        // Mass equivalent to the average diameter 
@@ -1909,6 +1928,7 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 				}
 				else
 				{
+					cout << "Here\n";
 					Particle * sp = sys.Particles().GetInceptedSP().Clone();
 					sp->setStatisticalWeight(1.0);
 					sys.Particles().SetInceptedSP_tmp(*sp);
@@ -1922,7 +1942,7 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 					double LUT = sys.Particles().GetInceptedSP_ave_m().LastUpdateTime();
 					sp->SetTime(LUT);
 					sys.Particles().SetInceptedSP_ave_m(*sp);
-					sys.SetDistParams(0.0, 0.0, dmin_titania);
+					sys.SetDistParams(0.0, 0.0, dmin_titania, dmin_titania);
 					delete sp;
 					sp = NULL;
 				}

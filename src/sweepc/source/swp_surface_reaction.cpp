@@ -320,11 +320,11 @@ int SurfaceReaction::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
 	    adjustParticleTemperature(sys, sp.getStatisticalWeight(), m, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
     }
 	// Do update for the moment advancement of the incepting class 
-	if (sys.GetSGadjustment() != 0)
+	if (sys.GetSGadjustment() > 0.0)
 	{
 		adjustGas(sys, sys.GetSGadjustment(), 1);
 		adjustParticleTemperature(sys, sys.GetSGadjustment(), 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
-		sys.SetSGadjustment(0);
+		sys.SetSGadjustment(0.0);
 	}
     return m;
 }

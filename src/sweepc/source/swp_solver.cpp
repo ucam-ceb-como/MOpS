@@ -248,10 +248,13 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 			}
 		}
 
-		sys.SetDistAverages();
 
 		//if (mech.AnyDeferred() && (sys.ParticleCount() > 0))  {
 		if (mech.AnyDeferred() && (sys.ParticleCount()+sys.GetIncepted() > 0))  {
+		    // Update averages for hybrid method
+		    if (mech.IsHybrid())
+			    sys.SetDistAverages();
+
             // Get the process jump rates (and the total rate).
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
 
@@ -267,8 +270,11 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
-			sys.SetDistAverages();
-            // Sweep does not do transport
+			// Update averages for hybrid method
+			if (mech.IsHybrid())
+			    sys.SetDistAverages();
+            
+			// Sweep does not do transport
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
             timeStep(t, std::min(t + dtg / 3.0, tsplit), sys, Geometry::LocalGeometry1d(),
                      mech, rates, jrate, rng);
@@ -277,7 +283,6 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
             if (sys.OutflowCount() > 0 || sys.InflowCount() > 0)
                 mech.DoParticleFlow(t, t - tflow, sys, Geometry::LocalGeometry1d(), rng);
             tflow = t;
-
 		}
 
         sys.SetCurrentProcessTau(t - tin); // aab64 store time passed in current loop for heat transfer
@@ -378,8 +383,6 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
 
         mech.DoProcess(i, t+dt, sys, geom, rng);
 
-		t += dt;
-
 		// aab64 Update the diameter moments of the incepting class
 		// and store average properties to use in coagulation events
 		if (mech.IsHybrid() && sys.Particles().IsFirstSP())
@@ -387,6 +390,7 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
 			mech.MomentUpdate(t, dt, sys, rng);
 		}
 		
+		t += dt;
 		
     } else {
         t = t_stop;

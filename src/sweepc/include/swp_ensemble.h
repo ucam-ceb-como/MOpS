@@ -277,6 +277,7 @@ public:
 	void SetInceptedSP_ave_m(Sweep::Particle sp);
 	void SetInceptedSP_ave_d(Sweep::Particle sp);
 	void SetInceptedSP_oldest(Sweep::Particle sp);
+	void SetInceptedSP_youngest(Sweep::Particle sp);
 	Particle GetInceptedSP() const;
 	Particle GetInceptedSP_tmp() const;
 	Particle GetInceptedSP_tmp_d2() const;
@@ -288,6 +289,7 @@ public:
 	Particle GetInceptedSP_ave_m() const;
 	Particle GetInceptedSP_ave_d() const;
 	Particle GetInceptedSP_oldest() const;
+	Particle GetInceptedSP_youngest() const;
 	bool IsFirstSP(void) const { return m_inceptedFirstSP; }
 
     // READ/WRITE/COPY.
@@ -351,6 +353,7 @@ private:
 	Particle *m_inceptingSP_ave_m;
 	Particle *m_inceptingSP_ave_d;
 	Particle *m_inceptingSP_oldest;
+	Particle *m_inceptingSP_youngest;
 	bool m_inceptedFirstSP;
 
     //! Reset the contents of the binary tree
