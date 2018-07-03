@@ -446,29 +446,32 @@ void Cell::SetDistParams(double mu, double sigma, double dmax, double dmin)
 // aab64 Set incepting class average properties using closed form moments for the diameter distribution
 void Cell::SetDistAverages()
 {
-	// titania
-	double dmin = m_diam_min;// 4.9175785734906e-10;
-	double rhop = 4260.0;
+	// These need to be generalised!!
+	double rhop = 4260.0; //kg/m3
 
-
+	// Parameters related to distribution
 	double sigma_sqrd = m_sigmaLN * m_sigmaLN;
 	double c1 = sigma_sqrd * 0.5;
 	double c2 = std::sqrt(6.0 / (rhop * PI));
-	double log_dmin = log(dmin);
+	double log_dmin = log(m_diam_min);
 	double log_dmax = log(m_diam_max);
 	double sqrt2_sigma = sqrt(2.0) * m_sigmaLN;
 	double cdf = erf((log_dmax - m_muLN) / sqrt2_sigma) - erf((log_dmin - m_muLN) / sqrt2_sigma);
 
-	m_diam_tmp = dmin;
-	m_diam2_tmp = m_diam_tmp * m_diam_tmp;
-	m_diam_1_tmp = 1.0 / m_diam_tmp;
-	m_diam_2_tmp = m_diam_1_tmp * m_diam_1_tmp;
-	m_mass_1_2_tmp = c2 / sqrt(m_diam2_tmp * m_diam_tmp);
-	m_diam2_mass_1_2_tmp = m_diam2_tmp * m_mass_1_2_tmp;
+	if (m_diam_min > 0.0)
+	{
+		m_diam_tmp = m_diam_min;
+		m_diam2_tmp = m_diam_tmp * m_diam_tmp;
+		m_diam_1_tmp = 1.0 / m_diam_tmp;
+		m_diam_2_tmp = m_diam_1_tmp * m_diam_1_tmp;
+		m_mass_1_2_tmp = c2 / sqrt(m_diam2_tmp * m_diam_tmp);
+		m_diam2_mass_1_2_tmp = m_diam2_tmp * m_mass_1_2_tmp;
+	}
 
+	// Use conditional expectation of lognormal distributions
 	if (m_sigmaLN != 0.0 && cdf > 0.0)
 	{
-		m_diam_tmp = exp(c1 + m_muLN) * (erf((log_dmax - m_muLN - sigma_sqrd)) - erf((log_dmin - m_muLN - sigma_sqrd) / sqrt2_sigma)) / cdf;	
+		m_diam_tmp = exp(c1 + m_muLN) * (erf((log_dmax - m_muLN - sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN - sigma_sqrd) / sqrt2_sigma)) / cdf;
 		m_diam2_tmp = exp(c1 * 4.0 + 2.0 * m_muLN) * (erf((log_dmax - m_muLN - 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN - 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
 		m_diam_1_tmp = exp(c1 - m_muLN) * (erf((log_dmax - m_muLN + sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + sigma_sqrd) / sqrt2_sigma)) / cdf;
 		m_diam_2_tmp = exp(c1 * 4.0 - 2.0 * m_muLN) * (erf((log_dmax - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;

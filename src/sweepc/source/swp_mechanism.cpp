@@ -1332,23 +1332,6 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	double m2 = sys.GetMomentsk_2();
 	double m3 = sys.GetMomentsk_3();
 	
-	// Needed parameters for the surface growth rate
-	// These need to be generalised!!
-	double dmin_titania = sys.Particles().GetInceptedSP_youngest().CollDiameter();// 4.9175785734906e-10;                                                // (m)
-	double rho_titania = sys.ParticleModel()->Components()[0]->Density();                     // (kg/m3)
-	double MW_titania = sys.ParticleModel()->Components()[0]->MolWt();                        // (kg/mol)
-	double n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
-	double mass_const = rho_titania * PI / 6.0;
-	double part_convr = NA / MW_titania;
-	double log_dmin = log(dmin_titania);
-
-	// The surface growth rate without area, i.e. beta = k(T) * ChemRatePart(gas) 
-	// (currently a weird implementation in Perform(.))
-	double beta = sys.GetSGk() / NA;
-
-	// Modify surface growth rate to change in diameter with time
-	beta *= (2.0 * MW_titania / rho_titania);
-
 	// Check oldest possible particle age 
 	sys.SetNotPSIFlag(false);
 	Particle * sp = sys.Particles().GetInceptedSP_oldest().Clone();
@@ -1358,7 +1341,6 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	sp = NULL;
 	sys.SetNotPSIFlag(true);
 
-
 	sys.SetNotPSIFlag(false);
 	sp = sys.Particles().GetInceptedSP_youngest().Clone();
 	UpdateParticle(*sp, sys, t, rng);
@@ -1367,8 +1349,24 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 	sp = NULL;
 	sys.SetNotPSIFlag(true);
 
+	// Needed parameters for the surface growth rate
+	// These need to be generalised!!
+	double dmin_titania = sys.Particles().GetInceptedSP_youngest().CollDiameter();            // (m) 4.9175785734906e-10; 
+	double rho_titania = sys.ParticleModel()->Components()[0]->Density();                     // (kg/m3)
+	double MW_titania = sys.ParticleModel()->Components()[0]->MolWt();                        // (kg/mol)
+	double n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
+	double mass_const = rho_titania * PI / 6.0;
+	double part_convr = NA / MW_titania;
+	double log_dmin = log(dmin_titania);
 	double oldest = sys.Particles().GetInceptedSP_oldest().CollDiameter();
 	double log_dmax = log(oldest);
+
+	// The surface growth rate without area, i.e. beta = k(T) * ChemRatePart(gas) 
+	// (currently a weird implementation in Perform(.))
+	double beta = sys.GetSGk() / NA;
+
+	// Modify surface growth rate to change in diameter with time
+	beta *= (2.0 * MW_titania / rho_titania);
 	
 	// The change in total diameter (squared) due to inception and coagulation
 	double diamChange = sys.GetIncDiam() - sys.GetCoagDiam();
@@ -1457,7 +1455,7 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 			// (this should be divided by CDF!), i.e.
 			// Ep[X^n] = E[X^n] * 0.5 * (1.0 - erf((log_dmin - mu - n * sigma * sigma) / (sqrt(2.0) * sigma))) 
 			// Use reduced moments M_j/M_0			
-			double f1, f2, f1_term, f2_term, df1_sigma, df1_mu, df2_sigma, df2_mu, sigma_tmp, mu_tmp, cdf_tmp;
+			/*double f1, f2, f1_term, f2_term, df1_sigma, df1_mu, df2_sigma, df2_mu, sigma_tmp, mu_tmp, cdf_tmp;
 			double a = m1 / m0;
 			double b = m2 / m0;
 			double mu = sys.GetMuLN();
@@ -1481,7 +1479,7 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 			double sqrt2_sigma = sqrt(2.0) * sigma;
 			
 			// Newton method solver parameters
-			/*int guard = 0;
+			int guard = 0;
 			double tol_mu = 100.0;
 			double tol_sigma = 100.0;
 			double tol_combined = 1.0e-6;
@@ -1665,198 +1663,39 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 					if (isnan(sigma))
 						std::cout << "Sigma is NAN\n";
 				//cout << mu << "," << sigma << "," << m0 << "," << m1 << "," << m2 << "," << oldest << endl;
-				}
+				}*/
 				//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 				// Update mu and sigma from the closed form moment solution, i.e.
 				// E[X^n] = exp(n*mu + n^2 * sigma^2 / 2)
 				// Use reduced moments M_j/M_0
-				//double 
-				else
-				{*/
-					sigma = log(m2 / m0) - (2.0 * log(m1 / m0));
-					/*if (sigma <= 0.0)                                                                         // Sigma can't be zero
-					{
-					std::cout << "Sigma is less than or equal to zero. Setting sigma to 0.005\n";
-					sigma = 0.05;
-					}
-					else
-					{*/
-					sigma = sqrt(sigma);
-					//}
-					//double 
-					mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));
-			//	}
 
-				if (!isnan(sigma) && sigma > 0.0)// && (tol_mu + tol_sigma <= tol_combined)
+				// Parameters related to distribution
+				double sigma = sqrt(log(m2 / m0) - (2.0 * log(m1 / m0)));
+				double mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));
+				double sigma_sqrd = sigma * sigma;
+				double sqrt2_sigma = sqrt(2.0) * sigma;
+				double cdf_min = (0.5 + 0.5 * erf((log_dmin - mu) / sqrt2_sigma));
+				double cdf_max = (0.5 + 0.5 * erf((log_dmax - mu) / sqrt2_sigma));
+				double cdf = cdf_max - cdf_min;
+
+				if (!isnan(sigma) && sigma > 0.0 && cdf > 0.0)
 				{
-					//cout << mu << "," << sigma << "," << m0 << "," << m1 << "," << m2 << "," << oldest << endl;
 					sys.SetDistParams(mu, sigma, oldest, dmin_titania);
 
-					// Storing particle based on diameter (use to update the gas phase)
-					// We need to store a particle with this average diameter for coagulation
+					// Storing particle based on different properties (mass, diameter etc.)
 					// The change in composition must be an integer so this is approximate!
-					//double 
-					sigma_sqrd = sigma * sigma;
-					//double 
-					sqrt2_sigma = sqrt(2.0) * sigma;
-					//sigma_sqrd = sigma * sigma;
-					//sqrt2_sigma = sqrt(2.0) * sigma;
 					
-					sp = sys.Particles().GetInceptedSP().Clone();
-					sp->setStatisticalWeight(1.0);
-					double d_bar = NthMomentExpectation(true, mu, sigma, dmin_titania, oldest, 1.0, rng);
-					double n_add = mass_const * d_bar * d_bar * d_bar;                                        // Mass equivalent to the average diameter 
-					n_add *= part_convr;                                                                      // Number of particles
-					n_add -= n_titania0;
-					if (n_add < 0.0)
-						n_add = 0.0;
-					// Not the ideal way of calling this update but should more or less work
-					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-					{
-						if ((*i)->IsDeferred())
-						{
-							sys.SetNotPSIFlag(false);
-							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-							sp->SetTime(t);
-							sp->UpdateCache();
-						}
-					}
-					// Now that the gas-phase has been updated, reset the weight of this SP to 1 and store it
-					sys.Particles().SetInceptedSP_tmp(*sp);
-					delete sp;
-					sp = NULL;
-					//cout << t << " | d1 = " << d_bar << " | mu = " << mu << " | sigma = " << sigma << " | oldest = " << oldest << "\n";
-
-					// Storing particle based on diameter squared
-					sp = sys.Particles().GetInceptedSP().Clone();
-					sp->setStatisticalWeight(1.0);
-					d_bar = NthMomentExpectation(true, mu, sigma, dmin_titania, oldest, 2.0, rng);
-					d_bar = sqrt(d_bar);					
-					n_add = mass_const * d_bar * d_bar * d_bar;
-					n_add *= part_convr;
-					n_add -= n_titania0;
-					if (n_add < 0.0)
-						n_add = 0.0;
-					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-					{
-						if ((*i)->IsDeferred())
-						{
-							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-							sp->SetTime(t);
-							sp->UpdateCache();
-						}
-					}
-					sys.Particles().SetInceptedSP_tmp_d2(*sp);
-					delete sp;
-					sp = NULL;
-					//cout << t << " | d2 = " << d_bar << "\n";
-
-					// Storing particle based on inverse diameter
-					sp = sys.Particles().GetInceptedSP().Clone();
-					sp->setStatisticalWeight(1.0);
-					d_bar = NthMomentExpectation(true, mu, sigma, dmin_titania, oldest, -1.0, rng);
-					d_bar = 1.0 / d_bar;
-					n_add = mass_const * d_bar * d_bar * d_bar;
-					n_add *= part_convr;
-					n_add -= n_titania0;
-					if (n_add < 0)
-						n_add = 0;
-					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-					{
-						if ((*i)->IsDeferred())
-						{
-							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-							sp->SetTime(t);
-							sp->UpdateCache();
-						}
-					}
-					sys.Particles().SetInceptedSP_tmp_d_1(*sp);
-					delete sp;
-					sp = NULL;
-					//cout << t << " | d_1 = " << d_bar << "\n";
-
-					// Storing particle based on inverse diameter squared
-					sp = sys.Particles().GetInceptedSP().Clone();
-					sp->setStatisticalWeight(1.0);
-					d_bar = NthMomentExpectation(true, mu, sigma, dmin_titania, oldest, -2.0, rng);
-					d_bar = 1.0 / sqrt(d_bar);
-					n_add = mass_const * d_bar * d_bar * d_bar;
-					n_add *= part_convr;
-					n_add -= n_titania0;
-					if (n_add < 0.0)
-						n_add = 0.0;
-					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-					{
-						if ((*i)->IsDeferred())
-						{
-							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-							sp->SetTime(t);
-							sp->UpdateCache();
-						}
-					}
-					sys.Particles().SetInceptedSP_tmp_d_2(*sp);
-					delete sp;
-					sp = NULL;
-					//cout << t << " | d_2 = " << d_bar << "\n";
-
-					// Storing particle based on inverse squareroot of mass
-					sp = sys.Particles().GetInceptedSP().Clone();
-					sp->setStatisticalWeight(1.0);
-					d_bar = NthMomentExpectation(true, mu, sigma, dmin_titania, oldest, -1.5, rng);
-					double expon = -2.0 / 3.0;	
-					d_bar = pow(d_bar, expon);
-					n_add = mass_const * d_bar * d_bar * d_bar;
-					n_add *= part_convr;
-					n_add -= n_titania0;
-					if (n_add < 0.0)
-						n_add = 0.0;
-					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-					{
-						if ((*i)->IsDeferred())
-						{
-							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-							sp->SetTime(t);
-							sp->UpdateCache();
-						}
-					}
-					sys.Particles().SetInceptedSP_tmp_m_1_2(*sp);
-					delete sp;
-					sp = NULL;
-					//cout << t << " | m_1_2 = " << d_bar << "\n";
-
-					// Storing particle based on diameter squared times inverse squareroot of mass
-					sp = sys.Particles().GetInceptedSP().Clone();
-					sp->setStatisticalWeight(1.0);
-					d_bar = NthMomentExpectation(true, mu, sigma, dmin_titania, oldest, 0.5, rng);
-					d_bar *= d_bar;
-					n_add = mass_const * d_bar * d_bar * d_bar;
-					n_add *= part_convr;
-					n_add -= n_titania0;
-					if (n_add < 0.0)
-						n_add = 0.0;
-					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-					{
-						if ((*i)->IsDeferred())
-						{
-							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-							sp->SetTime(t);
-							sp->UpdateCache();
-						}
-					}
-					sys.Particles().SetInceptedSP_tmp_d2_m_1_2(*sp);
-					delete sp;
-					sp = NULL;
-					//cout << t << " | d2_m_1_2 = " << d_bar << "\n";
-
+					// To do: move this to recording properties based on mu and sigma instead 
+					// of storing particles!
+					
 					// Storing particle based on mass
 					double LUT = sys.Particles().GetInceptedSP_ave_m().LastUpdateTime();
 					sp = sys.Particles().GetInceptedSP().Clone();
 					sp->setStatisticalWeight(1.0);
-					d_bar = NthMomentExpectation(false, mu, sigma, dmin_titania, oldest, 3.0, rng);
-					expon = 1.0 / 3.0;
-					d_bar = pow(d_bar, expon);
-					n_add = mass_const * d_bar * d_bar * d_bar;
+					double d_bar = NthMomentExpectation(false, mu, sigma, dmin_titania, oldest, 3.0, rng);
+
+					double n_add = mass_const * d_bar * d_bar * d_bar;
 					n_add *= part_convr;
 					n_add -= n_titania0;
 					if (n_add < 0.0)
@@ -1873,12 +1712,12 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 					sys.Particles().SetInceptedSP_ave_m(*sp);
 					delete sp;
 					sp = NULL;
-					//cout << t << " | m = " << d_bar << "\n";
 
 					// Storing particle based on diameter
 					sp = sys.Particles().GetInceptedSP().Clone();
 					sp->setStatisticalWeight(1.0);
-					d_bar = NthMomentExpectation(false, mu, sigma, dmin_titania, oldest, 1.0, rng);					
+					d_bar = NthMomentExpectation(false, mu, sigma, dmin_titania, oldest, 1.0, rng);	
+
 					n_add = mass_const * d_bar * d_bar * d_bar;
 					n_add *= part_convr;
 					n_add -= n_titania0;
@@ -1896,39 +1735,9 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 					sys.Particles().SetInceptedSP_ave_d(*sp);
 					delete sp;
 					sp = NULL;
-					//cout << t << " | d = " << d_bar << "\n";
-
-					// Storing particle based on random diameter
-					sp = sys.Particles().GetInceptedSP().Clone();
-					sp->setStatisticalWeight(1.0);
-					boost::random::lognormal_distribution<double> d_bar_dist(mu, sigma);
-					boost::variate_generator<Sweep::rng_type&, boost::random::lognormal_distribution<double>> d_bar_smp(rng, d_bar_dist);
-					d_bar = d_bar_smp();
-					while (d_bar < dmin_titania || d_bar > oldest)
-						d_bar = d_bar_smp();
-					n_add = mass_const * d_bar * d_bar * d_bar;
-					n_add *= part_convr;
-					n_add -= n_titania0;
-					if (n_add < 0.0)
-						n_add = 0.0;
-					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-					{
-						if ((*i)->IsDeferred())
-						{
-							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-							sys.SetNotPSIFlag(true);
-							sp->SetTime(t);
-							sp->UpdateCache();
-						}
-					}
-					sys.Particles().SetInceptedSP_tmp_rand(*sp);
-					delete sp;
-					sp = NULL;
-					//cout << t << " | d_rand = " << d_bar << endl << endl;
 				}
 				else
 				{
-					cout << "Here\n";
 					Particle * sp = sys.Particles().GetInceptedSP().Clone();
 					sp->setStatisticalWeight(1.0);
 					sys.Particles().SetInceptedSP_tmp(*sp);
@@ -1962,26 +1771,102 @@ void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) cons
 //! to maximum/minimum physical particle size thresholds (conditional expectation)
 double Mechanism::NthMomentExpectation(bool isRandomSample, double mu, double sigma, double dmin, double dmax, double n, rng_type &rng) const
 {
+	// Parameters related to distribution
 	double sigma_sqrd = sigma * sigma;
 	double sqrt2_sigma = sqrt(2.0) * sigma;
-	double cdf_min = (0.5 + 0.5 * erf((log(dmin) - mu) / sqrt2_sigma));
-	double cdf_max = (0.5 + 0.5 * erf((log(dmax) - mu) / sqrt2_sigma));
+	double cdf_min = erf((log(dmin) - mu) / sqrt2_sigma);
+	double cdf_max = erf((log(dmax) - mu) / sqrt2_sigma);
 	double cdf = cdf_max - cdf_min;
 	double d_rnd = dmin;
+	double expon = (1.0 / n);
 
 	if (isRandomSample)
 	{
 		boost::uniform_01<rng_type&, double> unifDistrib(rng);
-		d_rnd = exp(mu + sqrt2_sigma * boost::math::erf_inv(2.0 * (unifDistrib() * cdf + cdf_min) - 1.0));
+		d_rnd = exp(mu + sqrt2_sigma * boost::math::erf_inv(unifDistrib() * cdf + cdf_min));
 	}
 	
 	double d_bar = exp((n * mu) + (n * n * sigma_sqrd * 0.5));
-	d_bar *= 0.5 * (erf((log(dmax) - mu - (n * sigma_sqrd)) / sqrt2_sigma) -  erf((log(d_rnd) - mu - (n * sigma_sqrd)) / sqrt2_sigma)) /
-		(cdf_max - (0.5 + 0.5 * erf((log(d_rnd) - mu) / sqrt2_sigma)));
+	d_bar *= (erf((log(dmax) - mu - (n * sigma_sqrd)) / sqrt2_sigma) -  erf((log(d_rnd) - mu - (n * sigma_sqrd)) / sqrt2_sigma)) /
+		(cdf_max - erf((log(d_rnd) - mu) / sqrt2_sigma));
+	d_bar = pow(d_bar, expon);
 
 	return d_bar;
 }
 
+//! Compute nth diameter moment, adjusted because distribution is truncated
+//! to maximum/minimum physical particle size thresholds (conditional expectation)
+void Mechanism::SetRandomParticle(bool isSP1, Cell &sys, double t, double random_number, bool isRandomSample, 
+	double mu, double sigma, double dmin, double dmax, double n, rng_type &rng) const
+{	
+	Particle * sp = sys.Particles().GetInceptedSP().Clone();
+	sp->setStatisticalWeight(1.0);
+
+	if (sigma > 0.0 && (dmax - dmin) > 0.0)
+	{
+		// Parameters related to distribution
+		double sigma_sqrd = sigma * sigma;
+		double sqrt2_sigma = sqrt(2.0) * sigma;
+		double cdf_min = erf((log(dmin) - mu) / sqrt2_sigma);
+		double cdf_max = erf((log(dmax) - mu) / sqrt2_sigma);
+		double cdf = cdf_max - cdf_min;
+		double d_bar = dmin;
+		double expon = (1.0 / n);
+		
+		// Needed parameters for the surface growth rate
+		// These need to be generalised!!
+		double rho_titania = sys.ParticleModel()->Components()[0]->Density();                     // (kg/m3)
+		double MW_titania = sys.ParticleModel()->Components()[0]->MolWt();                        // (kg/mol)
+		double n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
+		double mass_const = rho_titania * PI / 6.0;
+		double part_convr = NA / MW_titania;
+		
+		boost::uniform_01<rng_type&, double> unifDistrib(rng);
+
+		// Now to select a particle with an element of randomness
+		// but such that the selection property is reflected
+		if (n == 0.0)                                                                             // Uniform selection, just use CDF
+		{
+			d_bar = exp(mu + sqrt2_sigma * boost::math::erf_inv(unifDistrib() * cdf + cdf_min));			
+		}
+		else                                                                                      // Selection based on a property, sample its distribution 
+		{
+			boost::random::lognormal_distribution<double> d_bar_dist(n * mu, sqrt(n * n * sigma_sqrd));
+			boost::variate_generator<Sweep::rng_type&, boost::random::lognormal_distribution<double>> d_bar_smp(rng, d_bar_dist);
+			d_bar = pow(d_bar_smp(), expon);
+			double guard = 0;
+			while ((d_bar < dmin || d_bar > dmax) && ++guard < 1000)
+			{
+				d_bar = pow(d_bar_smp(), expon);                                                  // Check particle size is within feasible range 
+			}
+		}
+		
+		// Now create a particle of this size and store it
+		double n_add = mass_const * d_bar * d_bar * d_bar;                                        // Mass equivalent to the average diameter 
+		n_add *= part_convr;                                                                      // Number of particles
+		n_add -= n_titania0;
+		if (n_add < 0.0)
+			n_add = 0.0;
+		// Not the ideal way of calling this update but should more or less work
+		for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+		{
+			if ((*i)->IsDeferred())
+			{
+				sys.SetNotPSIFlag(false);
+				(*i)->Perform(t, sys, *sp, rng, floor(n_add));
+				sp->SetTime(t);
+				sp->UpdateCache();
+				sys.SetNotPSIFlag(true);
+			}
+		}
+	}
+	if (isSP1)
+		sys.Particles().SetInceptedSP_tmp_d_1(*sp);
+	else
+		sys.Particles().SetInceptedSP_tmp_d_2(*sp);
+	delete sp;
+	sp = NULL;
+}
 
 
 /*!

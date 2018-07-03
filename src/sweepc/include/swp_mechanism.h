@@ -347,6 +347,21 @@ public:
 		double n,
 		rng_type &rng) const;
 
+    //! Set properties of particle picked for coagulation/outflow using 
+    //! distribution parameters
+	void SetRandomParticle(
+		bool isSP1,
+		Cell &sys, 
+		double t,
+		double random_number, 
+		bool isRandomSample, 
+		double mu, 
+		double sigma, 
+		double dmin, 
+		double dmax, 
+		double n, 
+		rng_type &rng) const;
+
     //! LPDA for one particle
     void UpdateParticle(
         Particle &sp, // Particle to update.

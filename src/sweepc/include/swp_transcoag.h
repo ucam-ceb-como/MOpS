@@ -201,20 +201,6 @@ private:
         const bool maj       // true=majorant kernel, false=true kernel.
         ) const;
 
-	// aab64 Select properties by which to choose particles (-1 means
-	// choose uniformly).  Note we need to choose 2 particles.  There
-	// are six possible rate terms to choose from; 4 slip-flow and 2
-	// free molecular.
-	void Select_ip12(
-		double t,
-		Sweep::Cell &sys,
-		unsigned int iterm,
-		Sweep::rng_type &rng,
-		mutable Sweep::Processes::TransitionCoagulation::MajorantType &maj,
-		mutable int &ip1,
-		mutable int &ip2
-		) const;
-
 }; //class TransitionCoagulation
 
 } // namespace Processes

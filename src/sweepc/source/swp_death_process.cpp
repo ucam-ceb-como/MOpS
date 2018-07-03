@@ -214,18 +214,23 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
 	    i = sys.Particles().Select(rng);
 	else
 	{
-		double incept_frac = sys.GetIncepted() / (sys.GetIncepted() + sys.ParticleCount());
+		// Check if should remove from ensemble or bin
 		boost::uniform_01<rng_type&, double> unifDistrib(rng);
-		if (unifDistrib() < incept_frac)
+		double test = unifDistrib();
+		if (test * (sys.ParticleCount() + sys.GetIncepted()) <= sys.GetIncepted())
 		{
+			m_mech->SetRandomParticle(true, sys, t, (test / (1.0 - test)) * sys.ParticleCount(), true, sys.GetMuLN(), sys.GetSigmaLN(),
+				sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 0.0, rng);
 			sys.AdjustIncepted(-1.0);                                                        // Reduce the incepting class count
 			sys.AdjustInceptingCoagulations();                                               // Increment number of times particles have left the incepting class
 			sys.AdjustInceptingCoagulations_tmp();
-			sys.SetCoagulationSums(sys.Particles().GetInceptedSP_tmp_rand().CollDiameter()); // Store the change in total diameter due to losing this particle from the class
+			sys.SetCoagulationSums(sys.Particles().GetInceptedSP_tmp_d_1().CollDiameter());  // Store the change in total diameter due to losing this particle from the class
 			i = -1;
 		}
 		else
-			i = sys.Particles().Select(rng); 
+		{
+			i = sys.Particles().Select_usingGivenRand(iUniform, test * (sys.ParticleCount() + sys.GetIncepted()) - sys.GetIncepted(), rng);
+		}
 	}
 
     if (i >= 0) DoParticleDeath(t, i, sys, rng);

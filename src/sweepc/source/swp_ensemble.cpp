@@ -688,6 +688,37 @@ int Sweep::Ensemble::Select(Sweep::PropID id, rng_type &rng) const
     return (it2 - m_tree.begin());
 }
 
+// aab64 For hybrid particle method:
+// use previously selected random number multiplied by
+// overall sum, less the bin sum, instead of newly generated one
+/*!
+* @param[in]       id     Property by which to weight particle selection
+* @param[in,out]   rng    Random number generator
+*
+* @return      Index of selected particle
+*
+* id must refer to a basic property from the ParticleData class
+*/
+int Sweep::Ensemble::Select_usingGivenRand(Sweep::PropID id, double rng_number, rng_type &rng) const
+{
+	assert(m_tree.size() == m_count);
+
+	// This routine uses the binary tree to select a particle weighted
+	// by a given particle property (by index).
+
+	// Do not try to use the tree for uniform selection
+	if (id == Sweep::iUniform)
+		return Select(rng);
+
+	double r = rng_number;
+
+	WeightExtractor we(id);
+	assert(abs((m_tree.head().Property(id) - we(m_tree.head())) / m_tree.head().Property(id)) < 1e-9);
+	tree_type::const_iterator it2 = m_tree.select(r, we);
+
+	return (it2 - m_tree.begin());
+}
+
 // SCALING AND PARTICLE DOUBLING.
 
 // Returns the scaling factor due to internal ensemble processes.

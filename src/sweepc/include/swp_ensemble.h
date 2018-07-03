@@ -220,7 +220,9 @@ public:
     // property index.  The particle properties are those stored in
     // the ParticleData type. Returns particle index on success, otherwise
     // negative.
-    int Select(Sweep::PropID id, rng_type &rng) const;
+	int Select(Sweep::PropID id, rng_type &rng) const;
+
+	int Select_usingGivenRand(Sweep::PropID id, double rng_number, rng_type &rng) const;
 
     // ENSEMBLE CAPACITY AND PARTICLE COUNT.
 

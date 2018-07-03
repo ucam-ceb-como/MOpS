@@ -250,7 +250,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 
 
 		//if (mech.AnyDeferred() && (sys.ParticleCount() > 0))  {
-		if (mech.AnyDeferred() && (sys.ParticleCount()+sys.GetIncepted() > 0))  {
+		if (mech.AnyDeferred() && (sys.ParticleCount() + sys.GetIncepted() > 0.0))  {
 		    // Update averages for hybrid method
 		    if (mech.IsHybrid())
 			    sys.SetDistAverages();
