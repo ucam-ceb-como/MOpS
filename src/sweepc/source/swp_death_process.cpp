@@ -222,9 +222,14 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
 			m_mech->SetRandomParticle(true, sys, t, (test / (1.0 - test)) * sys.ParticleCount(), true, sys.GetMuLN(), sys.GetSigmaLN(),
 				sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 0.0, rng);
 			sys.AdjustIncepted(-1.0);                                                        // Reduce the incepting class count
-			sys.AdjustInceptingCoagulations();                                               // Increment number of times particles have left the incepting class
-			sys.AdjustInceptingCoagulations_tmp();
-			sys.SetCoagulationSums(sys.Particles().GetInceptedSP_tmp_d_1().CollDiameter());  // Store the change in total diameter due to losing this particle from the class
+			//sys.AdjustInceptingCoagulations();                                               // Increment number of times particles have left the incepting class
+			//sys.AdjustInceptingCoagulations_tmp();
+			//sys.SetCoagulationSums(sys.Particles().GetInceptedSP_tmp_d_1().CollDiameter());  // Store the change in total diameter due to losing this particle from the class
+			double dsp1 = sys.Particles().GetInceptedSP_tmp_d_1().CollDiameter();            // Update moments
+			sys.SetMomentsk(sys.GetMomentsk_0() - 1.0,
+				sys.GetMomentsk_1() - dsp1,
+				sys.GetMomentsk_2() - dsp1 * dsp1,
+				sys.GetMomentsk_3() - dsp1 * dsp1 * dsp1);
 			i = -1;
 		}
 		else

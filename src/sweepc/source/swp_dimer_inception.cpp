@@ -296,35 +296,26 @@ int DimerInception::Perform(const double t, Cell &sys,
 			sp->UpdateCache();
 
 			// Add particle to system's ensemble.
-			if (!m_mech->IsHybrid() || t < 0.001) // sys.ParticleCount() < 100 || sys.GetIncepted() == 1
+			if (!m_mech->IsHybrid() || t < 0.0001) 
 				sys.Particles().Add(*sp, rng);
 			else
 			{
 				// Store the incepting particle and create templates for later update
 				sys.Particles().SetInceptedSP(*sp);
-				sys.Particles().SetInceptedSP_tmp(*sp);
-				sys.Particles().SetInceptedSP_tmp_d2(*sp);
 				sys.Particles().SetInceptedSP_tmp_d_1(*sp);
 				sys.Particles().SetInceptedSP_tmp_d_2(*sp);
-				sys.Particles().SetInceptedSP_tmp_m_1_2(*sp);
-				sys.Particles().SetInceptedSP_tmp_d2_m_1_2(*sp);
 				sys.Particles().SetInceptedSP_ave_m(*sp);
 				sys.Particles().SetInceptedSP_ave_d(*sp);
-				sys.Particles().SetInceptedSP_tmp_rand(*sp);
 				sys.Particles().SetInceptedSP_oldest(*sp);
 				sys.Particles().SetInceptedSP_youngest(*sp);
 
 				// Increment the count if incepted particles
 				sys.AdjustIncepted(sys.GetInceptingWeight());
-				sys.AdjustInceptions();
-				sys.AdjustInceptions_tmp();
-
-				// Add the particle diameter to the total incepting class diameter
-				sys.SetInceptionSums(sp->CollDiameter());
-
-				// Note the time of this event (may not be used anymore)
-				sys.SetLastRutileTime(t);
-
+				double dinc = sp->CollDiameter();                                   // Update moments for addition of a particle from the space
+				sys.SetMomentsk(sys.GetMomentsk_0() + 1.0,
+					sys.GetMomentsk_1() + dinc,
+					sys.GetMomentsk_2() + dinc * dinc,
+					sys.GetMomentsk_3() + dinc * dinc * dinc);
 			}
 
 			// Update gas-phase chemistry of system.
@@ -345,20 +336,19 @@ int DimerInception::Perform(const double t, Cell &sys,
 		// Increment the count of incepted particles
 		double wt_new = sys.GetInceptingWeight();
 		sys.AdjustIncepted(wt_new);
-		sys.AdjustInceptions();
-		sys.AdjustInceptions_tmp();
 		Particle * sp = sys.Particles().GetInceptedSP().Clone();
 		sp->SetTime(t);
 		sp->setStatisticalWeight(1.0);
 		sys.Particles().SetInceptedSP_youngest(*sp);
+
+		double dinc = sp->CollDiameter();                                           // Update moments for addition of a particle from the space
+		sys.SetMomentsk(sys.GetMomentsk_0() + 1.0,
+			sys.GetMomentsk_1() + dinc,
+			sys.GetMomentsk_2() + dinc * dinc,
+			sys.GetMomentsk_3() + dinc * dinc * dinc);
+
 		delete sp;
 		sp = NULL;
-		
-		// Add the particle diameter to the total incepting class diameter
-		sys.SetInceptionSums(sys.Particles().GetInceptedSP().CollDiameter());
-		
-		// Note the time of this event (may not be used anymore)
-		sys.SetLastRutileTime(t);
 
 		// Adjust the gas-phase by corresponding amount
 		adjustGas(sys, wt_new, 1, sys.GetInceptionFactor());
@@ -367,56 +357,6 @@ int DimerInception::Perform(const double t, Cell &sys,
 
     return 0;
 }
-
-// aab64 for hybrid particle model
-/*!
-* Create a new particle and but do not add it to the ensemble.
-*
-* The iterm parameter is included because it will be needed for many process
-* types and this function is meant to have a general signature.
-*
-* \param[in]       t               Time
-* \param[in]       local_geom      Details of geometry around current location
-* \param[in,out]   sys             System to update
-* \param[in]       iterm           Process term responsible for this event
-* \param[in,out]   rng             Random number generator
-*
-* \return      0 on success, otherwise negative.
-*/
-int DimerInception::Perform_incepted(const double t, Cell &sys,
-	const Geometry::LocalGeometry1d &local_geom,
-	const unsigned int iterm,
-	rng_type &rng, Sweep::Particle &sp) const {
-	
-	// Get the cell vertices
-	fvector vertices = local_geom.cellVertices();
-
-	// Sample a uniformly distributed position, note that this method
-	// works whether the vertices come in increasing or decreasing order,
-	// but 1d is assumed for now.
-	double posn = vertices.front();
-
-	const double width = vertices.back() - posn;
-	boost::uniform_01<rng_type&, double> uniformGenerator(rng);
-	posn += width * uniformGenerator();
-
-	sp.setPositionAndTime(posn, t);
-
-	// Initialise the new particle.
-	sp.Primary()->SetComposition(ParticleComp());
-	sp.Primary()->SetValues(ParticleTrackers());
-
-	double sp_wt = sys.GetInceptingWeight();
-	if (sys.GetIncepted() < sp_wt)
-		sp_wt = sys.GetIncepted();
-	sp.setStatisticalWeight(sp_wt);
-
-	sp.UpdateCache();
-
-	return 0;
-}
-
-
 
 // PERFORMING THE PROCESS.
 

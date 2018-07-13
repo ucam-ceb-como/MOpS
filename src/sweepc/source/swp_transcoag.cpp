@@ -690,9 +690,11 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		sp1 = sys.Particles().GetInceptedSP_tmp_d_1().Clone();
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 		sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
-		sys.AdjustInceptingCoagulations();                                           // Increment number of times particles have left the incepting class
-		sys.AdjustInceptingCoagulations_tmp();
-		sys.SetCoagulationSums(sp1->CollDiameter());                                 // Store the change in total diameter due to losing this particle from the class
+		double dsp1 = sp1->CollDiameter();                                           // Update moments for removal of a particle from the space
+		sys.SetMomentsk(sys.GetMomentsk_0() - 1.0,
+			sys.GetMomentsk_1() - dsp1,
+			sys.GetMomentsk_2() - dsp1 * dsp1,
+			sys.GetMomentsk_3() - dsp1 * dsp1 * dsp1);		
 		ip1 = sys.Particles().Add(*sp1, rng);                                        // Add the particle to the ensemble
 	}
 	else
@@ -798,10 +800,11 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			// If particle sp2 is used, we now need to remove it from the incepting class
 			if (ip2_flag)
 			{
-				sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
-				sys.AdjustInceptingCoagulations();                                           // Increment number of times particles have left the incepting class
-				sys.AdjustInceptingCoagulations_tmp();
-				sys.SetCoagulationSums(dsp2);                                                // Store the change in total diameter due to losing this particle from the class
+				sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count    
+				sys.SetMomentsk(sys.GetMomentsk_0() - 1.0,                                   // Update moments for removal of a particle from the space
+					sys.GetMomentsk_1() - dsp2,
+					sys.GetMomentsk_2() - dsp2 * dsp2,
+					sys.GetMomentsk_3() - dsp2 * dsp2 * dsp2);
 			}
 			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
 

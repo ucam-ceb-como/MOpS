@@ -398,12 +398,6 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
 
 		i = indexGenerator();
-		// aab64 for hybrid particle model
-		if (m_inceptedFirstSP)
-		{
-			while (i == m_capacity)   // Cannot remove the Nth particle as it may be the particle incepted in coagulation
-				i = indexGenerator();
-		}
 
         ++m_ncont;
         if (!m_contwarn && ((double)(m_ncont)/(double)m_capacity > 0.01)) {
@@ -623,13 +617,8 @@ void Sweep::Ensemble::ClearMain()
 	// aab64 for hybrid particle model
 	m_inceptingWeight = 0;
 	m_inceptingSP = NULL;
-	m_inceptingSP_tmp = NULL;
-	m_inceptingSP_tmp_d2 = NULL;
 	m_inceptingSP_tmp_d_1 = NULL;
 	m_inceptingSP_tmp_d_2 = NULL;
-	m_inceptingSP_tmp_m_1_2 = NULL;
-	m_inceptingSP_tmp_d2_m_1_2 = NULL;
-	m_inceptingSP_tmp_rand = NULL;
 	m_inceptingSP_ave_m = NULL;
 	m_inceptingSP_ave_d = NULL;
 	m_inceptingSP_oldest = NULL;
@@ -817,18 +806,6 @@ void Sweep::Ensemble::SetInceptedSP(Sweep::Particle sp)
 }
 
 // aab64 Store particles with average properties for coagulation options
-void Sweep::Ensemble::SetInceptedSP_tmp(Sweep::Particle sp)
-{
-	delete m_inceptingSP_tmp;
-	m_inceptingSP_tmp = NULL;
-	m_inceptingSP_tmp = sp.Clone();
-}
-void Sweep::Ensemble::SetInceptedSP_tmp_d2(Sweep::Particle sp)
-{
-	delete m_inceptingSP_tmp_d2;
-	m_inceptingSP_tmp_d2 = NULL;
-	m_inceptingSP_tmp_d2 = sp.Clone();
-}
 void Sweep::Ensemble::SetInceptedSP_tmp_d_1(Sweep::Particle sp)
 {
 	delete m_inceptingSP_tmp_d_1;
@@ -840,24 +817,6 @@ void Sweep::Ensemble::SetInceptedSP_tmp_d_2(Sweep::Particle sp)
 	delete m_inceptingSP_tmp_d_2;
 	m_inceptingSP_tmp_d_2 = NULL;
 	m_inceptingSP_tmp_d_2 = sp.Clone();
-}
-void Sweep::Ensemble::SetInceptedSP_tmp_m_1_2(Sweep::Particle sp)
-{
-	delete m_inceptingSP_tmp_m_1_2;
-	m_inceptingSP_tmp_m_1_2 = NULL;
-	m_inceptingSP_tmp_m_1_2 = sp.Clone();
-}
-void Sweep::Ensemble::SetInceptedSP_tmp_d2_m_1_2(Sweep::Particle sp)
-{
-	delete m_inceptingSP_tmp_d2_m_1_2;
-	m_inceptingSP_tmp_d2_m_1_2 = NULL;
-	m_inceptingSP_tmp_d2_m_1_2 = sp.Clone();
-}
-void Sweep::Ensemble::SetInceptedSP_tmp_rand(Sweep::Particle sp)
-{
-	delete m_inceptingSP_tmp_rand;
-	m_inceptingSP_tmp_rand = NULL;
-	m_inceptingSP_tmp_rand = sp.Clone();
 }
 void Sweep::Ensemble::SetInceptedSP_ave_m(Sweep::Particle sp)
 {
@@ -887,7 +846,6 @@ void Sweep::Ensemble::AdjustIncepted(double adjustment)
 {
 	m_inceptingWeight += adjustment;
 	m_inceptingSP->setStatisticalWeight(m_inceptingWeight);
-	m_inceptingSP_tmp->setStatisticalWeight(m_inceptingWeight);
 }
 
 Particle Sweep::Ensemble::GetInceptedSP() const
@@ -895,14 +853,6 @@ Particle Sweep::Ensemble::GetInceptedSP() const
 	return *m_inceptingSP;
 }
 
-Particle Sweep::Ensemble::GetInceptedSP_tmp() const
-{
-	return *m_inceptingSP_tmp;
-}
-Particle Sweep::Ensemble::GetInceptedSP_tmp_d2() const
-{
-	return *m_inceptingSP_tmp_d2;
-}
 Particle Sweep::Ensemble::GetInceptedSP_tmp_d_1() const
 {
 	return *m_inceptingSP_tmp_d_1;
@@ -910,18 +860,6 @@ Particle Sweep::Ensemble::GetInceptedSP_tmp_d_1() const
 Particle Sweep::Ensemble::GetInceptedSP_tmp_d_2() const
 {
 	return *m_inceptingSP_tmp_d_2;
-}
-Particle Sweep::Ensemble::GetInceptedSP_tmp_m_1_2() const
-{
-	return *m_inceptingSP_tmp_m_1_2;
-}
-Particle Sweep::Ensemble::GetInceptedSP_tmp_d2_m_1_2() const
-{
-	return *m_inceptingSP_tmp_d2_m_1_2;
-}
-Particle Sweep::Ensemble::GetInceptedSP_tmp_rand() const
-{
-	return *m_inceptingSP_tmp_rand;
 }
 Particle Sweep::Ensemble::GetInceptedSP_ave_m() const
 {
@@ -1131,13 +1069,6 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
 			out.write((char*)&trueval, sizeof(trueval));
 			std::set<void*> uniquePAHAdresses2;
 			m_inceptingSP->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_tmp->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_tmp_d2->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_tmp_d_1->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_tmp_d_2->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_tmp_m_1_2->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_tmp_d2_m_1_2->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_tmp_rand->Serialize(out, &uniquePAHAdresses2);
 			m_inceptingSP_ave_m->Serialize(out, &uniquePAHAdresses2);
 			m_inceptingSP_ave_d->Serialize(out, &uniquePAHAdresses2);
 			m_inceptingSP_oldest->Serialize(out, &uniquePAHAdresses2);
@@ -1244,20 +1175,6 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
 					std::map<void*, boost::shared_ptr<AggModels::PAHPrimary> > duplicates2;
 					Particle *p = new Particle(in, model, &duplicates2);
 					m_inceptingSP = p;
-					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_tmp = p;
-					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_tmp_d2 = p;
-					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_tmp_d_1 = p;
-					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_tmp_d_2 = p;
-					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_tmp_m_1_2 = p;
-					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_tmp_d2_m_1_2 = p;
-					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_tmp_rand = p;
 					p = new Particle(in, model, &duplicates2);
 					m_inceptingSP_ave_m = p;
 					p = new Particle(in, model, &duplicates2);

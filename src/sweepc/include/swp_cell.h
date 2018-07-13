@@ -259,21 +259,6 @@ public:
 	// aab64 tracker for incepted particles
 	double GetIncepted() const { return m_incepted; }
 	void AdjustIncepted(double adjustment);
-	void AdjustInceptions() { ++m_inceptions; }
-	void AdjustInceptions(double adjustment) { m_inceptions += adjustment; }
-	void AdjustInceptingCoagulations() { ++m_inceptingcoagulations; }
-	double GetInceptionCoagulationChange() const { return (m_inceptions - m_inceptingcoagulations); }
-	double GetInceptions() const { return m_inceptions; }
-	double GetInceptions_tmp() const { return m_inceptions_tmp; }
-	void ResetInceptions_tmp() { m_inceptions_tmp = 0; }
-	void AdjustInceptions_tmp() { ++m_inceptions_tmp; }
-	double GetInceptingCoagulations_tmp() const { return m_inceptingcoagulations_tmp; }
-	void ResetInceptingCoagulations_tmp() { m_inceptingcoagulations_tmp = 0; }
-	void AdjustInceptingCoagulations_tmp() { ++m_inceptingcoagulations_tmp; }
-	void AdjustRutiles(unsigned int adjustment) { m_surface_rutiles += adjustment; }
-	unsigned int GetRutiles() const { return m_surface_rutiles; }
-	double GetLastRutileTime() const { return m_last_update_time; }
-	void SetLastRutileTime(double lasttime) { m_last_update_time = lasttime; }
 
 	// aab64 Averages of the incepting class
 	void SetDistParams(double mu, double sigma, double dmax, double dmin);
@@ -287,20 +272,12 @@ public:
 
 	// aab64 Moments and contributing terms trackers
 	void SetMomentsk(double m0k, double m1k, double m2k, double m3k);
-	void SetInceptionSums(double d0);
-	void SetCoagulationSums(double di);
-	void ResetInceptionSums();
-	void ResetCoagulationSums();
 	void SetSGk(double betak) { m_SGk = betak; }
 	double GetMomentsk_0() const { return m_m0k; }
 	double GetMomentsk_1() const { return m_m1k; }
 	double GetMomentsk_2() const { return m_m2k; }
 	double GetMomentsk_3() const { return m_m3k; }
 	double GetSGk() const { return m_SGk; }
-	double GetIncDiam() const { return m_d0sum; }
-	double GetIncDiam2() const { return m_d0sum_sqrd; }
-	double GetCoagDiam() const { return m_disum; }
-	double GetCoagDiam2() const { return m_disum_sqrd; }
 	void SetSGadjustment(double adjust) { m_SGadjustment = adjust; }
 	double GetSGadjustment() const { return m_SGadjustment; }
 	double GetSigmaLN() const { return m_sigmaLN; }
@@ -374,17 +351,12 @@ private:
 
 	// aab64 trackers for incepted particles in place of physical inceptions
 	double m_incepted;
-	double m_inceptions;
-	double m_inceptions_tmp, m_inceptingcoagulations_tmp;
-	double m_inceptingcoagulations;
-	unsigned int m_surface_rutiles;
-	double m_last_update_time;
 
 	// aab64 average properties for the incepting class used to compute coagulation rates
 	double m_diam_tmp, m_diam2_tmp, m_diam_1_tmp, m_diam_2_tmp, m_mass_1_2_tmp, m_diam2_mass_1_2_tmp; 
 
 	// aab64 trackers for the moments and contributing terms 
-	double m_d0sum, m_disum, m_d0sum_sqrd, m_disum_sqrd, m_diam_max, m_diam_min;
+	double m_diam_max, m_diam_min;
 	double m_m0k, m_m1k, m_m2k, m_m3k;
 	double m_SGk;
 	double m_SGadjustment;

@@ -78,7 +78,7 @@ double Sweep::Processes::ConstantCoagulation::Rate(double t, const Cell &sys,
 
 	// aab64 for hybrid particle model
 	if (m_mech->IsHybrid())
-		n += sys.GetIncepted();
+		n += (unsigned int)sys.GetIncepted();
 
     return A() * n * (n - 1) * s_MajorantFactor / sys.SampleVolume() / 2;
 }
@@ -180,10 +180,17 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip1 == -2)
 	{
-		sp1 = m_mech->CreateParticle(t);
-		m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng, *sp1); // Incept a new particle
-		sys.AdjustIncepted(-(sp1->getStatisticalWeight()));                          // Reduce the incepting class count
+		m_mech->SetRandomParticle(true, sys, t, unifDistrib(), true, sys.GetMuLN(), sys.GetSigmaLN(),
+			sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 1.0, rng);
+		
+		sp1 = sys.Particles().GetInceptedSP_tmp_d_1().Clone();
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
+		sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
+		double dinc = sp1->CollDiameter();                                           // Update moments for removal of a particle from the space
+		sys.SetMomentsk(sys.GetMomentsk_0() + 1.0,
+			sys.GetMomentsk_1() + dinc,
+			sys.GetMomentsk_2() + dinc * dinc,
+			sys.GetMomentsk_3() + dinc * dinc * dinc);
 
 		// If incepting class is now empty, pick another particle before adding sp1 to the ensemble
 		if (ip2 == -2 && sys.GetIncepted() == 0)
@@ -226,14 +233,17 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 
 	// Choose and get second particle, then update it.
     Particle *sp2 = NULL;
+	double dsp2 = 0.0;
 
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip2 == -2)
 	{
-		sp2 = m_mech->CreateParticle(t);
-		m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng, *sp2); // Incept a new particle
-		                                                                             // Note we do not need to add it to the ensemble
-		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle 
+		m_mech->SetRandomParticle(false, sys, t, unifDistrib(), true, sys.GetMuLN(), sys.GetSigmaLN(),
+			sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 1.0, rng);
+		// Note don't need to add it to the ensemble unless coagulation is successful
+		sp2 = sys.Particles().GetInceptedSP_tmp_d_2().Clone();
+		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
+		dsp2 = sp2->CollDiameter();
 	}
 	else
 	{
@@ -295,9 +305,15 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
         double truek = CoagKernel(*sp1, *sp2, sys);
 		
         if (!Fictitious(majk, truek, rng)) {
-			// If particle sp2 is used, we need to remove formally it from the incepting class
+			// If particle sp2 is used, we now need to remove it from the incepting class
 			if (ip2_flag)
-				sys.AdjustIncepted(-(sp2->getStatisticalWeight()));                          // Reduce the incepting class count
+			{
+				sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
+				sys.SetMomentsk(sys.GetMomentsk_0() + 1.0,                                   // Update moments for removal of a particle from the space
+					sys.GetMomentsk_1() + dsp2,
+					sys.GetMomentsk_2() + dsp2 * dsp2,
+					sys.GetMomentsk_3() + dsp2 * dsp2 * dsp2);
+			}
 			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
 			if (ip2_flag && sp2 != NULL)
 			{

@@ -69,10 +69,9 @@ namespace Sweep {
 		m_incepting_weight(1.0), m_incFactor(1.0),
 		m_notpsiflag(true), m_rateFactor(1.0),
 		m_cprop1(iUniform), m_cprop2(iUniform),
-		m_incepted(0.0), m_inceptions(0.0), m_inceptingcoagulations(0.0),
-		m_surface_rutiles(0), m_last_update_time(0.0), m_inceptions_tmp(0.0), m_inceptingcoagulations_tmp(0.0),
+		m_incepted(0.0),
 		m_diam_tmp(0.0), m_diam2_tmp(0.0), m_diam_1_tmp(0.0), m_diam_2_tmp(0.0), m_mass_1_2_tmp(0.0), m_diam2_mass_1_2_tmp(0.0),
-		m_d0sum(0.0), m_disum(0.0), m_d0sum_sqrd(0.0), m_disum_sqrd(0.0), m_diam_max(0.0), m_diam_min(0.0),
+		m_diam_max(0.0), m_diam_min(0.0),
 		m_m0k(0.0), m_m1k(0.0), m_m2k(0.0), m_m3k(0.0), m_SGk(0.0), m_SGadjustment(0.0), m_sigmaLN(0.0), m_muLN(0.0)
 {
     if(const_gas)
@@ -144,12 +143,6 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 		m_cprop2 = rhs.m_cprop2;
 		// incepted tracker
 		m_incepted = rhs.m_incepted;
-		m_inceptions = rhs.m_inceptions;
-		m_inceptingcoagulations = rhs.m_inceptingcoagulations;
-		m_last_update_time = rhs.m_last_update_time;
-		m_surface_rutiles = rhs.m_surface_rutiles;
-		m_inceptions_tmp = rhs.m_inceptions_tmp;
-		m_inceptingcoagulations_tmp = rhs.m_inceptingcoagulations_tmp;
 		// incepting class averages
 		m_diam_tmp = rhs.m_diam_tmp;
 		m_diam2_tmp = rhs.m_diam2_tmp;
@@ -158,10 +151,6 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 		m_mass_1_2_tmp = rhs.m_mass_1_2_tmp;
 		m_diam2_mass_1_2_tmp = rhs.m_diam2_mass_1_2_tmp;
 		// incepting class moments and contributing terms
-		m_d0sum = rhs.m_d0sum;
-		m_disum = rhs.m_disum;
-		m_d0sum_sqrd = rhs.m_d0sum_sqrd;
-		m_disum_sqrd = rhs.m_disum_sqrd;
 		m_diam_max = rhs.m_diam_max;
 		m_diam_min = rhs.m_diam_min;
 		m_m0k = rhs.m_m0k;
@@ -487,34 +476,9 @@ void Cell::SetMomentsk(double m0k, double m1k, double m2k, double m3k)
 	m_m1k = m1k;
 	m_m2k = m2k;
 	m_m3k = m3k;
-}
 
-// aab64 Track increase in total diameter and total diameter squared
-// due to inception events for moment calculation
-void Cell::SetInceptionSums(double d0)
-{
-	m_d0sum += d0;
-	m_d0sum_sqrd += (d0 * d0);
-}
-
-// aab64 Track increase in total diameter and total diameter squared
-// due to coagulation events for moment calculation
-void Cell::SetCoagulationSums(double di)
-{
-	m_disum += di;
-	m_disum_sqrd += (di * di);
-}
-
-// aab64 Reset diameter counters
-void Cell::ResetInceptionSums()
-{
-	m_d0sum = 0.0;
-	m_d0sum_sqrd = 0.0;
-}
-void Cell::ResetCoagulationSums()
-{
-	m_disum = 0.0;
-	m_disum_sqrd = 0.0;
+	if (m_m0k < 0.0 || m_m1k < 0.0 || m_m2k < 0.0)
+		std::cout << "Moments are negative!\n";
 }
 
 // READ/WRITE/COPY.
