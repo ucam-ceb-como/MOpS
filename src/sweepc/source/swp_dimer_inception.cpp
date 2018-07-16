@@ -132,9 +132,8 @@ int DimerInception::Perform(const double t, Cell &sys,
 
 	// aab64 hybrid particle model
 	// If hybrid_flag is active, track the number of incepting particles
-	// using the particle weight
-	if (!m_mech->IsHybrid() || (!sys.Particles().IsFirstSP())) // sys.ParticleCount() <= 100 &&
-	{
+	//if (!m_mech->IsHybrid()) 
+	//{
 
 	int iprng = -1;
 	int iprng2 = -1;
@@ -296,64 +295,30 @@ int DimerInception::Perform(const double t, Cell &sys,
 			sp->UpdateCache();
 
 			// Add particle to system's ensemble.
-			if (!m_mech->IsHybrid() || t < 0.0001) 
+			if (!m_mech->IsHybrid() )
 				sys.Particles().Add(*sp, rng);
 			else
 			{
-				// Store the incepting particle and create templates for later update
-				sys.Particles().SetInceptedSP(*sp);
-				sys.Particles().SetInceptedSP_tmp_d_1(*sp);
-				sys.Particles().SetInceptedSP_tmp_d_2(*sp);
-				sys.Particles().SetInceptedSP_ave_m(*sp);
-				sys.Particles().SetInceptedSP_ave_d(*sp);
-				sys.Particles().SetInceptedSP_oldest(*sp);
-				sys.Particles().SetInceptedSP_youngest(*sp);
+				if (!sys.Particles().IsFirstSP())
+				{
+					sys.Particles().SetInceptedSP(*sp);
+					sys.Particles().SetInceptedSP_tmp_d_1(*sp);
+					sys.Particles().SetInceptedSP_tmp_d_2(*sp);
+				}
 
-				// Increment the count if incepted particles
-				sys.AdjustIncepted(sys.GetInceptingWeight());
-				double dinc = sp->CollDiameter();                                   // Update moments for addition of a particle from the space
-				sys.SetMomentsk(sys.GetMomentsk_0() + 1.0,
-					sys.GetMomentsk_1() + dinc,
-					sys.GetMomentsk_2() + dinc * dinc,
-					sys.GetMomentsk_3() + dinc * dinc * dinc);
+				sys.Particles().UpdateNumberAtIndex(sp->Composition()[0], 1);
+				sys.Particles().UpdateTotalParticleNumber(1);
+
+				delete sp;
+				sp = NULL;
 			}
 
 			// Update gas-phase chemistry of system.
 			adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
 			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-
-			if (m_mech->IsHybrid() && sys.Particles().IsFirstSP())
-			{
-
-				delete sp;
-				sp = NULL;
-			}
 		}
-	}
-	else
-	{
-		// We are here because the hybrid_flag is active
-		// Increment the count of incepted particles
-		double wt_new = sys.GetInceptingWeight();
-		sys.AdjustIncepted(wt_new);
-		Particle * sp = sys.Particles().GetInceptedSP().Clone();
-		sp->SetTime(t);
-		sp->setStatisticalWeight(1.0);
-		sys.Particles().SetInceptedSP_youngest(*sp);
 
-		double dinc = sp->CollDiameter();                                           // Update moments for addition of a particle from the space
-		sys.SetMomentsk(sys.GetMomentsk_0() + 1.0,
-			sys.GetMomentsk_1() + dinc,
-			sys.GetMomentsk_2() + dinc * dinc,
-			sys.GetMomentsk_3() + dinc * dinc * dinc);
-
-		delete sp;
-		sp = NULL;
-
-		// Adjust the gas-phase by corresponding amount
-		adjustGas(sys, wt_new, 1, sys.GetInceptionFactor());
-		adjustParticleTemperature(sys, wt_new, 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-	}
+		cout << sys.Particles().GetTotalParticleNumber() << " , " << sys.Particles().GetCritialNumber() << endl;
 
     return 0;
 }

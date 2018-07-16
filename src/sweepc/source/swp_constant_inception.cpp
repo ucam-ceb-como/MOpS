@@ -148,113 +148,80 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 
 	// aab64 hybrid particle model
 	// If hybrid_flag is active, track the number of incepting particles
-	// using the particle weight
-	if (!m_mech->IsHybrid() || !sys.Particles().IsFirstSP())
-	{
-		// Create a new particle of the type specified
-		// by the system ensemble.
-		Particle * sp = m_mech->CreateParticle(t);
 
-		// Position of newly incepted particle
-		double posn;
+	// Create a new particle of the type specified
+	// by the system ensemble.
+	Particle * sp = m_mech->CreateParticle(t);
 
-		if (mUseFixedPosition) {
-			// If there is a fixed position the rate should only be positive for the cell containing the fixed position
-			if (local_geom.isInCell(mFixedPosition))
-				posn = mFixedPosition;
-			else
-				return 0;
-		}
-		else {
-			// Get the cell vertices
-			fvector vertices = local_geom.cellVertices();
+	// Position of newly incepted particle
+	double posn;
 
-			// Sample a uniformly distributed position, note that this method
-			// works whether the vertices come in increasing or decreasing order,
-			// but 1d is assumed for now.
-			posn = vertices.front();
-
-			const double width = vertices.back() - posn;
-			boost::uniform_01<rng_type&, double> unifDistrib(rng);
-			posn += width * unifDistrib();
-		}
-
-		sp->setPositionAndTime(posn, t);
-
-
-		// Initialise the new particle.
-		std::vector<double> newComposition(mComponentDistributions.size());
-		for (unsigned i = 0; i < mComponentDistributions.size(); ++i) {
-			// Construct the distribution on the fly.  If this becomes a performance
-			// bottleneck some optimisations might be possible, but caching the distribution
-			// object in the mechanism is a bad idea, because the mechanism is potentially
-			// shared between threads, which is very dangerous for cached data!
-			newComposition[i] = 2;/* boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
-				mComponentDistributions[i].second)(rng);*/
-		}
-		sp->Primary()->SetComposition(newComposition);
-
-		sp->Primary()->SetValues(ParticleTrackers());
-		sp->UpdateCache();
-
-		// Add particle to system's ensemble.
-		if (!m_mech->IsHybrid()) //|| t < 0.00001
-			sys.Particles().Add(*sp, rng);
+	if (mUseFixedPosition) {
+		// If there is a fixed position the rate should only be positive for the cell containing the fixed position
+		if (local_geom.isInCell(mFixedPosition))
+			posn = mFixedPosition;
 		else
+			return 0;
+	}
+	else {
+		// Get the cell vertices
+		fvector vertices = local_geom.cellVertices();
+
+		// Sample a uniformly distributed position, note that this method
+		// works whether the vertices come in increasing or decreasing order,
+		// but 1d is assumed for now.
+		posn = vertices.front();
+
+		const double width = vertices.back() - posn;
+		boost::uniform_01<rng_type&, double> unifDistrib(rng);
+		posn += width * unifDistrib();
+	}
+
+	sp->setPositionAndTime(posn, t);
+
+
+	// Initialise the new particle.
+	std::vector<double> newComposition(mComponentDistributions.size());
+	for (unsigned i = 0; i < mComponentDistributions.size(); ++i) {
+		// Construct the distribution on the fly.  If this becomes a performance
+		// bottleneck some optimisations might be possible, but caching the distribution
+		// object in the mechanism is a bad idea, because the mechanism is potentially
+		// shared between threads, which is very dangerous for cached data!
+		newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
+			mComponentDistributions[i].second)(rng);
+	}
+	sp->Primary()->SetComposition(newComposition);
+
+	sp->Primary()->SetValues(ParticleTrackers());
+	sp->UpdateCache();
+
+	// Add particle to system's ensemble.
+	if (!m_mech->IsHybrid()) 
+		sys.Particles().Add(*sp, rng);
+	else
+	{
+		if (!sys.Particles().IsFirstSP())
 		{
 			sys.Particles().SetInceptedSP(*sp);
 			sys.Particles().SetInceptedSP_tmp_d_1(*sp);
 			sys.Particles().SetInceptedSP_tmp_d_2(*sp);
-			sys.Particles().SetInceptedSP_ave_m(*sp);
-			sys.Particles().SetInceptedSP_ave_d(*sp);
-			sys.Particles().SetInceptedSP_oldest(*sp);
-			sys.Particles().SetInceptedSP_youngest(*sp);
-
-			// Increment the count if incepted particles
-			sys.AdjustIncepted(sys.GetInceptingWeight());
-
-			double dinc = sp->CollDiameter();                                   // Update moments for addition of a particle from the space
-			sys.SetMomentsk(sys.GetMomentsk_0() + 1.0,
-				sys.GetMomentsk_1() + dinc,
-				sys.GetMomentsk_2() + dinc * dinc,
-				sys.GetMomentsk_3() + dinc * dinc * dinc);
 		}
 
-		// Update gas-phase chemistry of system.
-		adjustGas(sys, sp->getStatisticalWeight());
-		adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-
-
-		if (m_mech->IsHybrid() && sys.Particles().IsFirstSP())
-		{
-			delete sp;
-			sp = NULL;
-		}
+		sys.Particles().UpdateNumberAtIndex(sp->Composition()[0], 1);
+		sys.Particles().UpdateTotalParticleNumber(1);
 	}
-	else
+
+	// Update gas-phase chemistry of system.
+	adjustGas(sys, sp->getStatisticalWeight());
+	adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+
+	//std::cout << "Incep: " << sys.Particles().GetTotalParticleNumber() << " , " << sys.Particles().GetCritialNumber() << " , " << sp->Composition()[0] << std::endl;
+	if (m_mech->IsHybrid())
 	{
-		// We are here because the hybrid_flag is active
-		// Increment the count of incepted particles
-		double wt_new = sys.GetInceptingWeight();
-		sys.AdjustIncepted(wt_new);
-		Particle * sp = sys.Particles().GetInceptedSP().Clone();
-		sp->SetTime(t);
-		sp->setStatisticalWeight(1.0);
-		sys.Particles().SetInceptedSP_youngest(*sp);
-
-		double dinc = sp->CollDiameter();                                   // Update moments for addition of a particle from the space
-		sys.SetMomentsk(sys.GetMomentsk_0() + 1.0,
-			sys.GetMomentsk_1() + dinc,
-			sys.GetMomentsk_2() + dinc * dinc,
-			sys.GetMomentsk_3() + dinc * dinc * dinc);
-
 		delete sp;
 		sp = NULL;
-
-		// Adjust the gas-phase by corresponding amount
-		adjustGas(sys, wt_new, 1, sys.GetInceptionFactor());
-		adjustParticleTemperature(sys, wt_new, 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 	}
+
 
     return 0;
 }

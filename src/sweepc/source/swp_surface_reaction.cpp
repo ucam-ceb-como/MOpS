@@ -137,11 +137,11 @@ double SurfaceReaction::Rate(double t, const Cell &sys,
     double rate = m_arr.A;
 
     // Chemical species concentration dependence.
-    rate *= chemRatePart(sys.GasPhase());
+    /*rate *= chemRatePart(sys.GasPhase());
 
     // Temperature dependance.
     double T = sys.GasPhase().Temperature();
-    rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
+    rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));*/
 
     // Particle dependence.
     rate *= sys.Particles().GetSum(m_pid); //iWS
@@ -174,11 +174,11 @@ double SurfaceReaction::Rate(double t, const Cell &sys, const Particle &sp) cons
     double rate = m_arr.A;
 
     // Chemical species concentration dependence.
-    rate *= chemRatePart(sys.GasPhase());
+    /*rate *= chemRatePart(sys.GasPhase());
 
     // Temperature dependance.
     double T = sys.GasPhase().Temperature();
-    rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
+    rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));*/
 
     // Paticle dependence.
     rate *= sp.Property(m_pid);
@@ -233,9 +233,9 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
 	// aab64 Store current chemical rate part and temperature contribution 
 	// to the SG for the hybrid model
 	double rate = m_arr.A;
-	rate *= chemRatePart(sys.GasPhase());
+	/*rate *= chemRatePart(sys.GasPhase());
 	double T = sys.GasPhase().Temperature();
-	rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
+	rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));*/
 	sys.SetSGk(rate);
 
     int i = sys.Particles().Select(static_cast<Sweep::PropID>(m_pid), rng);
@@ -306,9 +306,9 @@ int SurfaceReaction::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
 	// aab64 Store current chemical rate part and temperature contribution
 	// to the SG for the hybrid model
 	double rate = m_arr.A;
-	rate *= chemRatePart(sys.GasPhase());
+	/*rate *= chemRatePart(sys.GasPhase());
 	double T = sys.GasPhase().Temperature();
-	rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
+	rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));*/
 	sys.SetSGk(rate);
 
 	unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);

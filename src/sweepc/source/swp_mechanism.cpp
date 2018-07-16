@@ -1202,52 +1202,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
             UpdateParticle(*(*i), sys, t, rng);
         }
-
-		// Adjust gas-phase for surface growth due to hybrid bin particles
-		// and update holdest particle
-		if (IsHybrid() && sys.GetIncepted() > 0.0)
-		{
-			// Grow oldest particle
-			sys.SetNotPSIFlag(false);
-			Particle * sp = sys.Particles().GetInceptedSP_oldest().Clone();
-			UpdateParticle(*sp, sys, t, rng);
-			sys.Particles().SetInceptedSP_oldest(*sp);
-			delete sp;
-			sp = NULL;
-
-			// Grow youngest particle
-			sp = sys.Particles().GetInceptedSP_youngest().Clone();
-			UpdateParticle(*sp, sys, t, rng);
-			sys.Particles().SetInceptedSP_youngest(*sp);
-			delete sp;
-			sp = NULL;
-			sys.SetNotPSIFlag(true);
-
-			// Update gas-phase only
-			sp = sys.Particles().GetInceptedSP().Clone();
-			sp->setStatisticalWeight(1.0);
-			double delta_t = t - sys.Particles().GetInceptedSP_ave_m().LastUpdateTime();
-			double num_added_total = PI * delta_t * sys.GetSGk() * sys.GetMomentsk_2();
-			sys.SetSGadjustment(num_added_total);
-			// Not the ideal way of calling this update but should more or less work
-			for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-			{
-				sys.SetNotPSIFlag(false);
-				(*i)->Perform(t, sys, *sp, rng, 0);
-				sys.SetNotPSIFlag(true);
-			}
-			delete sp;
-			sp = NULL; 
-
-			// Store last update time
-			sp = sys.Particles().GetInceptedSP_ave_m().Clone();
-			sp->SetTime(t);
-			sys.Particles().SetInceptedSP_ave_m(*sp);
-			delete sp;
-			sp = NULL;
-		}
 		
-
 	    // aab64 is the above a candidate for omp?? 
 		// But index variable i would need to be a signed integral type 
 	    // To perform deferred processes on all particles individually using OpenMP:
@@ -1320,544 +1275,169 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 *@param[in]        t           Time upto which particles to be updated
 *@param[in,out]    rng         Random number generator
 */
-void Mechanism::MomentUpdate(double t, double dt, Cell &sys, rng_type &rng) const
+void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
 {
-	// Make a particle with the correct expected diameter and matching mass etc.
-	// Update the gas phase to account for the surface growth that occurs in the moment eqns
-
-	// The moments at time t_k
-	double m0 = sys.GetMomentsk_0(); 
-	double m1 = sys.GetMomentsk_1();
-	double m2 = sys.GetMomentsk_2();
-	double m3 = sys.GetMomentsk_3();
 	
-	// Check oldest possible particle age 
+	// Update sections for surface growth
+	double area_total = 0.0;
+	unsigned int n_index = 0;
+	unsigned int index = 0;
+	double expon = 2.0 / 3.0;
+	double d2_constant = PI * pow((6.0 * 0.07987 / (PI * NA * 4260.0)), expon);
+	double rate_constant = sys.GetSGk() * d2_constant / 3.0;
+	unsigned int n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
 	sys.SetNotPSIFlag(false);
-	Particle * sp = sys.Particles().GetInceptedSP_oldest().Clone();
-	UpdateParticle(*sp, sys, t, rng);
-	sys.Particles().SetInceptedSP_oldest(*sp);
-	delete sp;
-	sp = NULL;
-	sys.SetNotPSIFlag(true);
-
-	sys.SetNotPSIFlag(false);
-	sp = sys.Particles().GetInceptedSP_youngest().Clone();
-	UpdateParticle(*sp, sys, t, rng);
-	sys.Particles().SetInceptedSP_youngest(*sp);
-	delete sp;
-	sp = NULL;
-	sys.SetNotPSIFlag(true);
-
-	// Needed parameters for the surface growth rate
-	// These need to be generalised!!
-	double dmin_titania = sys.Particles().GetInceptedSP_youngest().CollDiameter();            // (m) 4.9175785734906e-10; 
-	double rho_titania = sys.ParticleModel()->Components()[0]->Density();                     // (kg/m3)
-	double MW_titania = sys.ParticleModel()->Components()[0]->MolWt();                        // (kg/mol)
-	double n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
-	double mass_const = rho_titania * PI / 6.0;
-	double part_convr = NA / MW_titania;
-	double log_dmin = log(dmin_titania);
-	double oldest = sys.Particles().GetInceptedSP_oldest().CollDiameter();
-	double log_dmax = log(oldest);
-
-	// The surface growth rate without area, i.e. beta = k(T) * ChemRatePart(gas) 
-	// (currently a weird implementation in Perform(.))
-	double beta = sys.GetSGk() / NA;
-
-	// Modify surface growth rate to change in diameter with time
-	beta *= (2.0 * MW_titania / rho_titania);
-
-	// If there are no incepting particles, the moments should be reset since they have no meaning
-	// The particles should be reset because new incepted particles will be smaller
-	if (sys.GetIncepted() == 0.0)
+	// New surface update goes here
+	for (unsigned int i = sys.Particles().GetCritialNumber() - 1; i != -1; --i)
 	{
-		cout << "Resetting the bin moment parameters because it's empty\n";
-		sys.SetDistParams(0.0, 0.0, dmin_titania, dmin_titania);
-		sys.SetMomentsk(0.0, 0.0, 0.0, 0.0);
 		Particle * sp = sys.Particles().GetInceptedSP().Clone();
-		sp->SetTime(t);
-		sys.Particles().SetInceptedSP(*sp);
-		sp->setStatisticalWeight(1.0);
-		sys.Particles().SetInceptedSP_tmp_d_1(*sp);
-		sys.Particles().SetInceptedSP_tmp_d_2(*sp);
-		sys.Particles().SetInceptedSP_ave_d(*sp);
-		sys.Particles().SetInceptedSP_oldest(*sp);
-		sys.Particles().SetInceptedSP_youngest(*sp);
-		double LUT = sys.Particles().GetInceptedSP_ave_m().LastUpdateTime();
-		sp->SetTime(LUT);
-		sys.Particles().SetInceptedSP_ave_m(*sp);
+		index = i;
+		n_index = sys.Particles().NumberAtIndex(i);
+		//area_total += (n_index * pow(index, expon));
+
+		//cout << index << " , " << n_index << " , ";
+
+		if (n_index > 0)
+		{
+			double rate = d2_constant * pow(index, expon);
+			if (rate > 0) {
+				boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
+				unsigned num = repeatDistrib(rng);
+				index += num;
+			}
+			//index = pow((rate_constant * dt) + pow(index, 1.0 / 3.0), 3.0);
+			if (index < sys.Particles().GetCritialNumber())
+			{
+				if (index > i)
+				{
+					cout << index << " , ";
+					area_total += n_index * (index - i);
+					sys.Particles().ResetNumberAtIndex(i);
+					sys.Particles().UpdateNumberAtIndex(index, n_index);
+					cout << sys.Particles().NumberAtIndex(index) << endl;
+				}
+			}
+			else
+			{
+				double n_add = index - n_titania0;
+				//cout << "index>critical " << n_add << " , ";
+				if (n_add < 0.0)
+				{
+					n_add = 0.0;
+					cout << "Warning: Selected particle is smaller than stored minimum size\n";
+				}
+				// Not the ideal way of calling this update but should more or less work
+				for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+				{
+					if ((*i)->IsDeferred())
+					{
+						(*i)->Perform(t, sys, *sp, rng, n_add);
+						sp->SetTime(t);
+						sp->UpdateCache();
+					}
+				}
+				for (unsigned int j = 0; j < n_index; j++)
+				{
+					Particle * sp2 = sp->Clone();
+					sys.Particles().Add(*sp2, rng);
+				}
+			}
+		}
+		//cout << endl;
 		delete sp;
 		sp = NULL;
 	}
-	else
+	area_total *= (rate_constant * 3.0);
+	//cout << area_total << endl;
+
+	sys.SetSGadjustment(area_total);
+	Particle * sp = sys.Particles().GetInceptedSP().Clone();
+	for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 	{
-		// Update the moments (this does not account for dtype=crescale volume expansive outflow)
-		m1 += dt * sys.GetMomentsk_0() * beta;
-		m2 += dt * sys.GetMomentsk_1() * beta * 2.0;
-		m3 += dt * sys.GetMomentsk_2() * beta * 3.0;
-
-		if (m0 > 0.0 && m1 > 0.0)
+		if ((*i)->IsDeferred())
 		{
-			// Prevent the second moment from going negative
-			if (m2 <= 0.0)
-				m2 = 2.42064e-19;
-
-			// Newton method solver
-			//////////////////////////////////////////////////////////////////////////////////////////////////////
-			// Update mu and sigma from the adjusted closed form moment solution 
-			// (this should be divided by CDF!), i.e.
-			// Ep[X^n] = E[X^n] * 0.5 * (1.0 - erf((log_dmin - mu - n * sigma * sigma) / (sqrt(2.0) * sigma))) 
-			// Use reduced moments M_j/M_0			
-			/*double f1, f2, f1_term, f2_term, df1_sigma, df1_mu, df2_sigma, df2_mu, sigma_tmp, mu_tmp, cdf_tmp;
-			double a = m1 / m0;
-			double b = m2 / m0;
-			double mu = sys.GetMuLN();
-			double sigma = sys.GetSigmaLN();
-			if (sigma <= 0.0)
-			{
-				sigma = log(m2 / m0) - (2.0 * log(m1 / m0));
-				if (sigma <= 0.0)                                                                         // Sigma can't be zero
-				{
-					sigma = 0.25;
-					mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));
-					std::cout << "Sigma is less than or equal to zero. Setting sigma to 0.1 and mu to " << mu << "\n";
-				}
-				else
-				{
-					sigma = sqrt(sigma);
-					mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));
-				}
-			}
-			double sigma_sqrd = sigma * sigma;
-			double sqrt2_sigma = sqrt(2.0) * sigma;
-			
-			// Newton method solver parameters
-			int guard = 0;
-			double tol_mu = 100.0;
-			double tol_sigma = 100.0;
-			double tol_combined = 1.0e-6;
-			double n_iters = 10000;*/
-			
-			if (oldest > dmin_titania)
-			{
-				/*if (oldest > 20.0 * dmin_titania)
-				{
-					//cout << "here\n";
-					while (tol_mu + tol_sigma > tol_combined)
-					{
-						sigma_tmp = sigma;
-						mu_tmp = mu;
-						sigma_sqrd = sigma * sigma;
-						sqrt2_sigma = sqrt(2.0) * sigma;
-
-						cdf_tmp = (erf((log_dmax - mu) / sqrt2_sigma) - erf((log_dmin - mu) / sqrt2_sigma));
-
-						f1_term = exp(mu + 0.5 * sigma_sqrd) *
-							(erf((log_dmax - mu - sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)) / cdf_tmp;
-
-						f2_term = exp(2.0 * mu + 2.0 * sigma_sqrd) *
-							(erf((log_dmax - mu - 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf_tmp;
-
-						f1 = f1_term - a;
-						f2 = f2_term - b;
-
-						df1_mu = exp(mu + 0.5 * sigma_sqrd) * (
-							(
-							sqrt(2.0 / PI) * (1.0 / sigma) *
-							(
-							exp(-(log_dmin - mu - sigma_sqrd) * (log_dmin - mu - sigma_sqrd) / (2.0 * sigma_sqrd))
-							-
-							exp(-(log_dmax - mu - sigma_sqrd) * (log_dmax - mu - sigma_sqrd) / (2.0 * sigma_sqrd))
-							)
-							+
-							(
-							erf((log_dmax - mu - sigma_sqrd) / sqrt2_sigma)
-							-
-							erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)
-							)
-							)
-							-
-							(
-							sqrt(2.0 / PI) * (1.0 / sigma) *
-							(
-							exp(-(log_dmin - mu) * (log_dmin - mu) / (2.0 * sigma_sqrd))
-							-
-							exp(-(log_dmax - mu) * (log_dmax - mu) / (2.0 * sigma_sqrd))
-							)
-							*
-							(
-							erf((log_dmax - mu - sigma_sqrd) / sqrt2_sigma)
-							-
-							erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)
-							)
-							) / cdf_tmp
-							) / cdf_tmp;
-
-						df1_sigma = exp(mu + 0.5 * sigma_sqrd) * (
-							(
-							2.0 / sqrt(PI) *
-							(
-							exp(-(log_dmax - mu - sigma_sqrd) * (log_dmax - mu - sigma_sqrd) / (2.0 * sigma_sqrd)) *
-							(-(log_dmax - mu - sigma_sqrd) / (sqrt2_sigma * sigma) - sqrt(2.0))
-
-							-
-							exp(-(log_dmin - mu - sigma_sqrd) * (log_dmin - mu - sigma_sqrd) / (2.0 * sigma_sqrd)) *
-							(-(log_dmin - mu - sigma_sqrd) / (sqrt2_sigma * sigma) - sqrt(2.0))
-							)
-							+
-							sigma *
-							(
-							erf((log_dmax - mu - sigma_sqrd) / sqrt2_sigma)
-							-
-							erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)
-							)
-							)
-							-
-							(
-							sqrt(2.0 / PI) * (1.0 / sigma_sqrd) *
-							(
-							exp(-(log_dmin - mu) * (log_dmin - mu) / (2.0 * sigma_sqrd)) * (log_dmin - mu)
-							-
-							exp(-(log_dmax - mu) * (log_dmax - mu) / (2.0 * sigma_sqrd)) * (log_dmax - mu)
-							)
-							*
-							(
-							erf((log_dmax - mu - sigma_sqrd) / sqrt2_sigma)
-							-
-							erf((log_dmin - mu - sigma_sqrd) / sqrt2_sigma)
-							)
-							) / cdf_tmp
-							) / cdf_tmp;
-
-						df2_mu = exp(2.0 * mu + 2.0 * sigma_sqrd) * (
-							(
-							sqrt(2.0 / PI) * (1.0 / sigma) *
-							(
-							exp(-(log_dmin - mu - 2.0 * sigma_sqrd) * (log_dmin - mu - 2.0 * sigma_sqrd) / (2.0 * sigma_sqrd))
-							-
-							exp(-(log_dmax - mu - 2.0 * sigma_sqrd) * (log_dmax - mu - 2.0 * sigma_sqrd) / (2.0 * sigma_sqrd))
-							)
-							+
-							2.0 *
-							(
-							erf((log_dmax - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
-							-
-							erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
-							)
-							)
-							-
-							(
-							sqrt(2.0 / PI) * (1.0 / sigma) *
-							(
-							exp(-(log_dmin - mu) * (log_dmin - mu) / (2.0 * sigma_sqrd))
-							-
-							exp(-(log_dmax - mu) * (log_dmax - mu) / (2.0 * sigma_sqrd))
-							)
-							*
-							(
-							erf((log_dmax - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
-							-
-							erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
-							)
-							) / cdf_tmp
-							) / cdf_tmp;
-
-						df2_sigma = exp(2.0 * mu + 2.0 * sigma_sqrd) * (
-							(
-							2.0 / sqrt(PI) *
-							(
-							exp(-(log_dmax - mu - 2.0 * sigma_sqrd) * (log_dmax - mu - 2.0 * sigma_sqrd) / (2.0 * sigma_sqrd)) *
-							(-(log_dmax - mu - 2.0 * sigma_sqrd) / (sqrt2_sigma * sigma) - 2.0 * sqrt(2.0))
-
-							-
-							exp(-(log_dmin - mu - 2.0 * sigma_sqrd) * (log_dmin - mu - 2.0 * sigma_sqrd) / (2.0 * sigma_sqrd)) *
-							(-(log_dmin - mu - 2.0 * sigma_sqrd) / (sqrt2_sigma * sigma) - 2.0 * sqrt(2.0))
-							)
-							+
-							4.0 * sigma *
-							(
-							erf((log_dmax - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
-							-
-							erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
-							)
-							)
-							-
-							(
-							sqrt(2.0 / PI) * (1.0 / sigma_sqrd) *
-							(
-							exp(-(log_dmin - mu) * (log_dmin - mu) / (2.0 * sigma_sqrd)) * (log_dmin - mu)
-							-
-							exp(-(log_dmax - mu) * (log_dmax - mu) / (2.0 * sigma_sqrd)) * (log_dmax - mu)
-							)
-							*
-							(
-							erf((log_dmax - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
-							-
-							erf((log_dmin - mu - 2.0 * sigma_sqrd) / sqrt2_sigma)
-							)
-							) / cdf_tmp
-							) / cdf_tmp;
-
-						sigma = sigma + (df2_mu * f1 / df1_mu - f2) / (df2_sigma - df2_mu * df1_sigma / df1_mu);
-						mu = mu - (f1 + df1_sigma * (sigma - sigma_tmp)) / df1_mu;
-
-						//cout << cdf_tmp << ", " << f1_term << ", " << f2_term << ", " << df1_mu << ", " << df1_sigma << ", " << df2_mu << ", " << df2_sigma << ", " << mu << ", " << sigma << endl;
-
-						tol_mu = sqrt((mu - mu_tmp) * (mu - mu_tmp) / (mu * mu));
-						tol_sigma = sqrt((sigma - sigma_tmp) * (sigma - sigma_tmp) / (sigma * sigma));
-
-						if (guard > n_iters)
-							break;
-						else
-							++guard;
-					}
-					if (tol_mu + tol_sigma > tol_combined)
-						std::cout << "Tolerances too high at exit! mu = " << mu << " and sigma = " << sigma << std::endl;
-					if (isnan(sigma))
-						std::cout << "Sigma is NAN\n";
-				//cout << mu << "," << sigma << "," << m0 << "," << m1 << "," << m2 << "," << oldest << endl;
-				}*/
-				//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-				// Update mu and sigma from the closed form moment solution, i.e.
-				// E[X^n] = exp(n*mu + n^2 * sigma^2 / 2)
-				// Use reduced moments M_j/M_0
-
-				// Parameters related to distribution
-				double sigma = sqrt(log(m2 / m0) - (2.0 * log(m1 / m0)));
-				double mu = (2.0 * log(m1 / m0)) - (0.5 * log(m2 / m0));
-
-				if (!isnan(sigma) && sigma > 0.0)
-				{
-					sys.SetDistParams(mu, sigma, oldest, dmin_titania);
-
-					// Storing particle based on different properties (mass, diameter etc.)
-					// The change in composition must be an integer so this is approximate!					
-					// Storing particle based on mass
-					double LUT = sys.Particles().GetInceptedSP_ave_m().LastUpdateTime();
-					sp = sys.Particles().GetInceptedSP().Clone();
-					sp->setStatisticalWeight(1.0);
-					double d_bar = NthMomentExpectation(false, mu, sigma, dmin_titania, oldest, 3.0, rng);
-
-					double n_add = mass_const * d_bar * d_bar * d_bar;
-					n_add *= part_convr;
-					n_add -= n_titania0;
-					if (n_add < 0.0)
-						n_add = 0.0;
-					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-					{
-						if ((*i)->IsDeferred())
-						{
-							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-							sp->SetTime(LUT);
-							sp->UpdateCache();
-						}
-					}
-					sys.Particles().SetInceptedSP_ave_m(*sp);
-					delete sp;
-					sp = NULL;
-
-					// Storing particle based on diameter
-					sp = sys.Particles().GetInceptedSP().Clone();
-					sp->setStatisticalWeight(1.0);
-					d_bar = NthMomentExpectation(false, mu, sigma, dmin_titania, oldest, 1.0, rng);	
-
-					n_add = mass_const * d_bar * d_bar * d_bar;
-					n_add *= part_convr;
-					n_add -= n_titania0;
-					if (n_add < 0.0)
-						n_add = 0.0;
-					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-					{
-						if ((*i)->IsDeferred())
-						{
-							(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-							sp->SetTime(t);
-							sp->UpdateCache();
-						}
-					}
-					sys.Particles().SetInceptedSP_ave_d(*sp);
-					delete sp;
-					sp = NULL;
-				}
-				else
-				{
-					Particle * sp = sys.Particles().GetInceptedSP().Clone();
-					sp->setStatisticalWeight(1.0);
-					sys.Particles().SetInceptedSP_tmp_d_1(*sp);
-					sys.Particles().SetInceptedSP_tmp_d_2(*sp);
-					sys.Particles().SetInceptedSP_ave_d(*sp);
-					double LUT = sys.Particles().GetInceptedSP_ave_m().LastUpdateTime();
-					sp->SetTime(LUT);
-					sys.Particles().SetInceptedSP_ave_m(*sp);
-					sys.SetDistParams(0.0, 0.0, dmin_titania, dmin_titania);
-					delete sp;
-					sp = NULL;
-				}
-			}
-			// Store moments and reset counters
-			sys.SetMomentsk(m0, m1, m2, m3);			
+			(*i)->Perform(t, sys, *sp, rng, 0);
 		}
 	}
+	delete sp;
+	sp = NULL;
+	sys.SetNotPSIFlag(true);
+
 }
+
 
 //! Compute nth diameter moment, adjusted because distribution is truncated
 //! to maximum/minimum physical particle size thresholds (conditional expectation)
-double Mechanism::NthMomentExpectation(bool isRandomSample, double mu, double sigma, double dmin, double dmax, double n, rng_type &rng) const
-{
-	// Parameters related to distribution
-	double sigma_sqrd = sigma * sigma;
-	double sqrt2_sigma = sqrt(2.0) * sigma;
-	double cdf_min = erf((log(dmin) - mu) / sqrt2_sigma);
-	double cdf_max = erf((log(dmax) - mu) / sqrt2_sigma);
-	double cdf = cdf_max - cdf_min;
-	double d_rnd = dmin;
-	double d_bar = dmin;
-	double expon = (1.0 / n);
-
-	if (cdf > 0.0)
-	{
-		if (isRandomSample)
-		{
-			boost::uniform_01<rng_type&, double> unifDistrib(rng);
-			d_rnd = exp(mu + sqrt2_sigma * boost::math::erf_inv(unifDistrib() * cdf + cdf_min));
-			d_bar = d_rnd;
-		}
-
-		d_bar = exp((n * mu) + (n * n * sigma_sqrd * 0.5));
-		d_bar *= (erf((log(dmax) - mu - (n * sigma_sqrd)) / sqrt2_sigma) - erf((log(d_rnd) - mu - (n * sigma_sqrd)) / sqrt2_sigma)) /
-			(cdf_max - erf((log(d_rnd) - mu) / sqrt2_sigma));
-		d_bar = pow(d_bar, expon);
-	}
-
-	return d_bar;
-}
-
-//! Compute nth diameter moment, adjusted because distribution is truncated
-//! to maximum/minimum physical particle size thresholds (conditional expectation)
-void Mechanism::SetRandomParticle(bool isSP1, Cell &sys, double t, double random_number, bool isRandomSample, 
-	double mu, double sigma, double dmin, double dmax, double n, rng_type &rng) const
+unsigned int Mechanism::SetRandomParticle(bool isSP1, Cell &sys, double t, double random_number, bool isRandomSample, 
+	double n, rng_type &rng) const
 {	
 	Particle * sp = sys.Particles().GetInceptedSP().Clone();
-	sp->setStatisticalWeight(1.0);
 
-	if (sigma > 0.0 && (dmax - dmin) > 0.0)
+	// This needs to be generalised for incepting SP not smallest size!!
+	unsigned int n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
+		
+	boost::uniform_01<rng_type&, double> unifDistrib(rng);
+
+	// Now to select a particle with an element of randomness
+	// but such that the selection property is reflected
+	//if (isRandomSample)                                                                       // Uniform selection, just use CDF
+	//{
+	unsigned int critical_index = sys.Particles().GetCritialNumber();
+	unsigned int n_total = sys.Particles().GetTotalParticleNumber();
+	unsigned int index = critical_index + 1;
+	double alpha = unifDistrib();
+	alpha *= n_total;
+	index = 0;
+	bool canstop = false;
+	unsigned int n_index = 0;
+	while (index < critical_index && !canstop)
 	{
-		// Parameters related to distribution
-		double sigma_sqrd = sigma * sigma;
-		double sqrt2_sigma = sqrt(2.0) * sigma;
-		double cdf_min = erf((log(dmin) - mu) / sqrt2_sigma);
-		double cdf_max = erf((log(dmax) - mu) / sqrt2_sigma);
-		double cdf = cdf_max - cdf_min;
-		double d_bar = dmin;
-		double expon = (1.0 / n);
-		
-		// Needed parameters for the surface growth rate
-		// These need to be generalised!!
-		double rho_titania = sys.ParticleModel()->Components()[0]->Density();                     // (kg/m3)
-		double MW_titania = sys.ParticleModel()->Components()[0]->MolWt();                        // (kg/mol)
-		double n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
-		double mass_const = rho_titania * PI / 6.0;
-		double part_convr = NA / MW_titania;
-		
-		boost::uniform_01<rng_type&, double> unifDistrib(rng);
-
-		// Now to select a particle with an element of randomness
-		// but such that the selection property is reflected
-		if (isRandomSample)                                                                             // Uniform selection, just use CDF
+		n_index = sys.Particles().NumberAtIndex(index);
+		if (n_index >= alpha)
+			canstop = true;
+		else
 		{
-			d_bar = exp(mu + sqrt2_sigma * boost::math::erf_inv(unifDistrib() * cdf + cdf_min));			
-		}
-		else                                                                                      // Selection based on a property, sample its distribution
-		{
-			boost::random::lognormal_distribution<double> d_bar_dist(n * mu, sqrt(n * n * sigma_sqrd));
-			boost::variate_generator<Sweep::rng_type&, boost::random::lognormal_distribution<double>> d_bar_smp(rng, d_bar_dist);
-			d_bar = pow(d_bar_smp(), expon);
-			int guard = 0;
-			while ((d_bar <= dmin || d_bar >= dmax) && ++guard < 1000)
-			{
-				d_bar = pow(d_bar_smp(), expon);                                                  // Check particle size is within feasible range 
-			}
-			
-			/*if (n < 0.0)
-				d_bar = 0.9 * dmin + 0.1 * dmax;
-			else
-				d_bar = 0.5 * dmin + 0.5 * dmax;*/
-
-			double alpha = unifDistrib();
-			double c1 = cdf / (erf((log(dmax) - mu - n * sigma_sqrd) / sqrt2_sigma) - erf((log(dmin) - mu - n * sigma_sqrd) / sqrt2_sigma));
-			double c2 = erf((log(dmin) - mu - n * sigma_sqrd) / sqrt2_sigma);
-			double f = 100.0, df, d_tmp, maxstep;
-			
-			// Newton method solver parameters
-			guard = 0;
-			double tol_delta = 100.0;
-			double tol_object = 1.0e-10;
-			double tol_final = 1.0e-5;
-			double n_iters = 10000;
-						
-			while ((tol_delta > tol_final || (sqrt(f * f) > tol_object)) && (++guard < n_iters))
-			{
-				d_tmp = d_bar;
-
-				f = alpha * erf((log(d_bar) - mu) / sqrt2_sigma)
-					- alpha * cdf_min
-					- c1 * erf((log(d_bar) - mu - n * sigma_sqrd) / sqrt2_sigma)
-					+ c1 * c2;
-				df = (alpha * exp(-1.0 * ((log(d_bar) - mu) / sqrt2_sigma) * ((log(d_bar) - mu) / sqrt2_sigma))
-					- c1 * exp(-1.0 * ((log(d_bar) - mu - n * sigma_sqrd) / sqrt2_sigma) * ((log(d_bar) - mu - n * sigma_sqrd) / sqrt2_sigma)))
-					* (2.0 / (sqrt2_sigma * sqrt(PI) * d_bar));
-
-				//cout << d_bar << " | " << dmin << " | " << dmax << " | " << f << " | " << df << endl;
-
-				maxstep = -1.0 * (f / df);
-
-				if (d_bar + maxstep < dmin)
-				{
-					maxstep = (dmin - d_bar);
-				}
-				else if (d_bar + maxstep > dmax)
-				{
-					maxstep = (dmax - d_bar);
-				}
-				d_bar += maxstep;
-				
-				f = alpha * erf((log(d_bar) - mu) / sqrt2_sigma)
-					- alpha * cdf_min
-					- c1 * erf((log(d_bar) - mu - n * sigma_sqrd) / sqrt2_sigma)
-					+ c1 * c2;
-
-				tol_delta = sqrt((maxstep)* (maxstep) / (d_tmp * d_tmp));
-			}
-			if (tol_delta > tol_final)
-				cout << "Tolerance is still too large. d=" << d_bar << " and f=" << f << " and tol=" << tol_delta << endl;
-		}
-		
-		// Now create a particle of this size and store it
-		double n_add = mass_const * d_bar * d_bar * d_bar;                                        // Mass equivalent to the average diameter 
-		n_add *= part_convr;                                                                      // Number of particles
-		n_add -= n_titania0;
-		if (n_add < 0.0)
-			n_add = 0.0;
-		// Not the ideal way of calling this update but should more or less work
-		for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-		{
-			if ((*i)->IsDeferred())
-			{
-				sys.SetNotPSIFlag(false);
-				(*i)->Perform(t, sys, *sp, rng, floor(n_add));
-				sp->SetTime(t);
-				sp->UpdateCache();
-				sys.SetNotPSIFlag(true);
-			}
+			index++;
+			alpha -= n_index;
 		}
 	}
+	
+
+	//}
+	//else                                                                                      // Selection based on a property, sample its distribution
+	//{
+	//}
+		
+	//cout << index << endl;
+
+	// Now create a particle of this size and store it
+	double n_add = index - n_titania0;
+	if (n_add < 0.0)
+	{
+		n_add = 0.0;
+		cout << "Warning: Selected particle is smaller than stored minimum size\n";
+	}
+	// Not the ideal way of calling this update but should more or less work
+	for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+	{
+		if ((*i)->IsDeferred())
+		{
+			sys.SetNotPSIFlag(false);
+			(*i)->Perform(t, sys, *sp, rng, n_add);
+			sp->SetTime(t);
+			sp->UpdateCache();
+			sys.SetNotPSIFlag(true);
+		}
+	}
+
 	if (isSP1)
 		sys.Particles().SetInceptedSP_tmp_d_1(*sp);
 	else
 		sys.Particles().SetInceptedSP_tmp_d_2(*sp);
 	delete sp;
 	sp = NULL;
+
+	return index;
 }
 
 

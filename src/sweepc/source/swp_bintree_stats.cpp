@@ -139,8 +139,8 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
     // Calculate total weight
-	double TotalWeight = (e.Count() + e.GetIncepted())>0 ? (e.GetSum(iW) + e.GetIncepted()) : 0.0;
-	double invTotalWeight = (e.Count() + e.GetIncepted())>0 ? 1.0 / (e.GetSum(iW) + e.GetIncepted()) : 0.0;
+	double TotalWeight = (e.Count() + e.GetTotalParticleNumber())>0 ? (e.GetSum(iW) + e.GetTotalParticleNumber()) : 0.0;
+	double invTotalWeight = (e.Count() + e.GetTotalParticleNumber())>0 ? 1.0 / (e.GetSum(iW) + e.GetTotalParticleNumber()) : 0.0;
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
@@ -182,14 +182,14 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
         }
     }
 
-	if (e.GetIncepted() != 0)
+	if (e.GetTotalParticleNumber() != 0)
 	{
-		Sweep::Particle * sp_temp = e.GetInceptedSP_ave_d().Clone();
+		Sweep::Particle * sp_temp = e.GetInceptedSP().Clone();
 		const AggModels::BinTreePrimary * const prim =
 			dynamic_cast<const AggModels::BinTreePrimary*>(sp_temp->Primary());
 
-		double sz = e.GetInceptedSP_ave_d().Property(m_statbound.PID);
-		double wt = e.GetInceptedSP().getStatisticalWeight() * invTotalWeight;
+		double sz = e.GetInceptedSP().Property(m_statbound.PID);
+		double wt = e.GetTotalParticleNumber() * invTotalWeight;
 
 		// Check if the value of the property is within the stats bound
 		if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {

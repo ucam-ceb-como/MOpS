@@ -416,13 +416,6 @@ RandNumGen Cell::Chooseprng(size_t threadid)
 	return m_prng[threadid];
 }
 
-// aab64 Particle hybrid model
-void Cell::AdjustIncepted(double adjustment) 
-{ 
-	m_incepted += adjustment; 
-	m_ensemble.AdjustIncepted(adjustment);
-}
-
 // aab64 Set incepting class lognormal distribution parameters
 void Cell::SetDistParams(double mu, double sigma, double dmax, double dmin)
 {

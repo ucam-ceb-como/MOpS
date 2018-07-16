@@ -147,6 +147,17 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
                 m_particles[i] = rhs.m_particles[i]->Clone();
             }
 
+			if (rhs.m_critical_size > 0)
+			{
+				m_particle_numbers.resize(rhs.m_critical_size, 0);
+				m_critical_size = rhs.m_critical_size;
+				// Copy particle vector.
+				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+					m_particle_numbers[i] = rhs.m_particle_numbers[i];//->Clone()
+				}
+				m_total_number = rhs.m_total_number;
+			}
+
             m_tree.resize(m_capacity);
             rebuildTree();
         }
@@ -231,6 +242,9 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 	m_inceptingWeight = 0.0;
 	m_inceptedFirstSP = false;
 	//m_inceptingSP = NULL;
+	m_critical_size = 1000;
+	m_total_number = 0;
+	m_particle_numbers.resize(m_critical_size, 0);
 }
 
 /*!
@@ -619,11 +633,14 @@ void Sweep::Ensemble::ClearMain()
 	m_inceptingSP = NULL;
 	m_inceptingSP_tmp_d_1 = NULL;
 	m_inceptingSP_tmp_d_2 = NULL;
-	m_inceptingSP_ave_m = NULL;
-	m_inceptingSP_ave_d = NULL;
-	m_inceptingSP_oldest = NULL;
-	m_inceptingSP_youngest = NULL;
 	m_inceptedFirstSP = false;
+
+	m_total_number = 0;
+	m_critical_size = 1000;
+	/*for (unsigned int i = 0; i < m_critical_size; ++i) {
+		m_particle_numbers[i] = 0;
+	}*/
+
 }
 
 // SELECTING PARTICLES.
@@ -818,36 +835,6 @@ void Sweep::Ensemble::SetInceptedSP_tmp_d_2(Sweep::Particle sp)
 	m_inceptingSP_tmp_d_2 = NULL;
 	m_inceptingSP_tmp_d_2 = sp.Clone();
 }
-void Sweep::Ensemble::SetInceptedSP_ave_m(Sweep::Particle sp)
-{
-	delete m_inceptingSP_ave_m;
-	m_inceptingSP_ave_m = NULL;
-	m_inceptingSP_ave_m = sp.Clone();
-}
-void Sweep::Ensemble::SetInceptedSP_ave_d(Sweep::Particle sp)
-{
-	delete m_inceptingSP_ave_d;
-	m_inceptingSP_ave_d = NULL;
-	m_inceptingSP_ave_d = sp.Clone();
-}
-void Sweep::Ensemble::SetInceptedSP_oldest(Sweep::Particle sp)
-{
-	delete m_inceptingSP_oldest;
-	m_inceptingSP_oldest = NULL;
-	m_inceptingSP_oldest = sp.Clone();
-}
-void Sweep::Ensemble::SetInceptedSP_youngest(Sweep::Particle sp)
-{
-	delete m_inceptingSP_youngest;
-	m_inceptingSP_youngest = NULL;
-	m_inceptingSP_youngest = sp.Clone();
-}
-void Sweep::Ensemble::AdjustIncepted(double adjustment)
-{
-	m_inceptingWeight += adjustment;
-	m_inceptingSP->setStatisticalWeight(m_inceptingWeight);
-}
-
 Particle Sweep::Ensemble::GetInceptedSP() const
 {
 	return *m_inceptingSP;
@@ -861,21 +848,20 @@ Particle Sweep::Ensemble::GetInceptedSP_tmp_d_2() const
 {
 	return *m_inceptingSP_tmp_d_2;
 }
-Particle Sweep::Ensemble::GetInceptedSP_ave_m() const
+void Sweep::Ensemble::UpdateNumberAtIndex(unsigned int index, unsigned int update)
 {
-	return *m_inceptingSP_ave_m;
+	m_particle_numbers[index] += update;
 }
-Particle Sweep::Ensemble::GetInceptedSP_ave_d() const
+void Sweep::Ensemble::ResetNumberAtIndex(unsigned int index)
 {
-	return *m_inceptingSP_ave_d;
+	m_particle_numbers[index] = 0;
 }
-Particle Sweep::Ensemble::GetInceptedSP_oldest() const
-{
-	return *m_inceptingSP_oldest;
-}
-Particle Sweep::Ensemble::GetInceptedSP_youngest() const
-{
-	return *m_inceptingSP_youngest;
+unsigned int Sweep::Ensemble::SetTotalParticleNumber() {
+	m_total_number = 0;
+	for (unsigned int i = 0; i < m_critical_size; ++i){
+		m_total_number += m_particle_numbers[i];
+	}
+	return m_total_number;
 }
 
 // UPDATE ENSEMBLE.
@@ -1065,18 +1051,6 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
         }
 
 		// aab64 for hybrid particle model
-		if (m_inceptedFirstSP) {
-			out.write((char*)&trueval, sizeof(trueval));
-			std::set<void*> uniquePAHAdresses2;
-			m_inceptingSP->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_ave_m->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_ave_d->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_oldest->Serialize(out, &uniquePAHAdresses2);
-			m_inceptingSP_youngest->Serialize(out, &uniquePAHAdresses2);
-		}
-		else {
-			out.write((char*)&falseval, sizeof(falseval));
-		}
 
 
     } else {
@@ -1169,25 +1143,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
 
 				// Read the particles.
 				// aab64 for hybrid particle model
-				in.read(reinterpret_cast<char*>(&n), sizeof(n));
-				if (n == 1) {
-					m_inceptedFirstSP = true;
-					std::map<void*, boost::shared_ptr<AggModels::PAHPrimary> > duplicates2;
-					Particle *p = new Particle(in, model, &duplicates2);
-					m_inceptingSP = p;
-					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_ave_m = p;
-					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_ave_d = p;
-					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_oldest = p;
-					p = new Particle(in, model, &duplicates2);
-					m_inceptingSP_youngest = p;
-				}
-				else {
-					m_inceptedFirstSP = false;
-				}
-
+				
                 break;
 			}
             default:
@@ -1243,6 +1199,9 @@ void Sweep::Ensemble::init(void)
 	// aab64 for hybrid particle model
 	m_inceptingWeight = 0;
 	m_inceptedFirstSP = false;
+
+	m_critical_size = 1000;
+	m_total_number = 0;
 
 }
 

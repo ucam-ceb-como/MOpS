@@ -130,7 +130,7 @@ double Sweep::Processes::WeightedConstantCoagulation::RateTerms(double t, const 
 	// aab64 for hybrid particle model
 	if (m_mech->IsHybrid())
 	{
-		unsigned int n2 = sys.GetIncepted();
+		unsigned int n2 = sys.Particles().GetTotalParticleNumber();
 		if (n > 1)
 			n2 += (n - 1);
 		n = n2;
@@ -177,7 +177,7 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
 
 	// aab64 for hybrid particle model
 	if (m_mech->IsHybrid() && number < 2)   // Can still do coagulation if there are
-		number = sys.GetIncepted();  // at least 2 particles in the incepting class
+		number = sys.Particles().GetTotalParticleNumber();  // at least 2 particles in the incepting class
 
     if (number < 2) {
 	    return 1;

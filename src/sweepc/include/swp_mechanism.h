@@ -329,36 +329,21 @@ public:
 	//! Moment update for the incepting class - use a hybrid 
     //! method to track surface growth, assuming a lognormal 
     //! diameter distribution for the single primaries 
-	void MomentUpdate(
+	void UpdateSections(
 		double t,   // Time up to which to integrate.
 		double dt,
 		Cell &sys,// System to update.
 		rng_type &rng
 		) const;
 
-    //! Compute nth diameter moment, adjusted because distribution is truncated
-    //! to maximum/minimum physical particle size thresholds (conditional expectation)
-	double NthMomentExpectation(
-		bool isRandomSample,
-		double mu,
-		double sigma,
-		double dmin,
-		double dmax,
-		double n,
-		rng_type &rng) const;
-
     //! Set properties of particle picked for coagulation/outflow using 
     //! distribution parameters
-	void SetRandomParticle(
+	unsigned int SetRandomParticle(
 		bool isSP1,
 		Cell &sys, 
 		double t,
 		double random_number, 
 		bool isRandomSample, 
-		double mu, 
-		double sigma, 
-		double dmin, 
-		double dmax, 
 		double n, 
 		rng_type &rng) const;
 

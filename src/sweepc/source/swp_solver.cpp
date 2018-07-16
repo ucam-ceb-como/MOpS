@@ -250,7 +250,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 
 
 		//if (mech.AnyDeferred() && (sys.ParticleCount() > 0))  {
-		if (mech.AnyDeferred() && (sys.ParticleCount() + sys.GetIncepted() > 0.0))  {
+		if (mech.AnyDeferred() && (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber()  > 0.0))  {
 		    // Update averages for hybrid method
 		    if (mech.IsHybrid())
 			    sys.SetDistAverages();
@@ -290,6 +290,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
 	    mech.LPDA(t, sys, rng);
+		mech.UpdateSections(t, t - tin, sys, rng);
     }
 
     return err;
@@ -382,14 +383,7 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
 		}
 
         mech.DoProcess(i, t+dt, sys, geom, rng);
-
-		// aab64 Update the diameter moments of the incepting class
-		// and store average properties to use in coagulation events
-		if (mech.IsHybrid() && sys.Particles().IsFirstSP())
-		{
-			mech.MomentUpdate(t, dt, sys, rng);
-		}
-		
+				
 		t += dt;
 		
     } else {

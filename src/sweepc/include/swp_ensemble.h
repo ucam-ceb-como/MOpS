@@ -266,33 +266,22 @@ public:
     double Alpha(double T) const;
 
 	// aab64 for hybrid particle model
-	double GetIncepted(void) const { return m_inceptingWeight; }
-	void AdjustIncepted(double adjustment);
+	bool IsFirstSP(void) const { return m_inceptedFirstSP; }
+	
 	void SetInceptedSP(Sweep::Particle sp);
-	//void SetInceptedSP_tmp(Sweep::Particle sp);
-	//void SetInceptedSP_tmp_d2(Sweep::Particle sp);
 	void SetInceptedSP_tmp_d_1(Sweep::Particle sp);
 	void SetInceptedSP_tmp_d_2(Sweep::Particle sp);
-	//void SetInceptedSP_tmp_m_1_2(Sweep::Particle sp);
-	//void SetInceptedSP_tmp_d2_m_1_2(Sweep::Particle sp);
-	//void SetInceptedSP_tmp_rand(Sweep::Particle sp);
-	void SetInceptedSP_ave_m(Sweep::Particle sp);
-	void SetInceptedSP_ave_d(Sweep::Particle sp);
-	void SetInceptedSP_oldest(Sweep::Particle sp);
-	void SetInceptedSP_youngest(Sweep::Particle sp);
 	Particle GetInceptedSP() const;
-	//Particle GetInceptedSP_tmp() const;
-	//Particle GetInceptedSP_tmp_d2() const;
 	Particle GetInceptedSP_tmp_d_1() const;
 	Particle GetInceptedSP_tmp_d_2() const;
-	//Particle GetInceptedSP_tmp_m_1_2() const;
-	//Particle GetInceptedSP_tmp_d2_m_1_2() const;
-	//Particle GetInceptedSP_tmp_rand() const;
-	Particle GetInceptedSP_ave_m() const;
-	Particle GetInceptedSP_ave_d() const;
-	Particle GetInceptedSP_oldest() const;
-	Particle GetInceptedSP_youngest() const;
-	bool IsFirstSP(void) const { return m_inceptedFirstSP; }
+
+	void UpdateNumberAtIndex(unsigned int index, unsigned int update);
+	void ResetNumberAtIndex(unsigned int index);
+	unsigned int NumberAtIndex(unsigned int index) const { return m_particle_numbers[index]; }
+	unsigned int SetTotalParticleNumber();
+	unsigned int GetCritialNumber() const { return m_critical_size; }
+	void UpdateTotalParticleNumber(unsigned int update) { m_total_number += update; }
+	unsigned int GetTotalParticleNumber() const { return m_total_number; }
 
     // READ/WRITE/COPY.
 
@@ -345,18 +334,14 @@ private:
 	// aab64 Hybrid particle model
 	double m_inceptingWeight;
 	Particle *m_inceptingSP;
-	//Particle *m_inceptingSP_tmp;
-	//Particle *m_inceptingSP_tmp_d2;
 	Particle *m_inceptingSP_tmp_d_1;
 	Particle *m_inceptingSP_tmp_d_2;
-	//Particle *m_inceptingSP_tmp_m_1_2;
-	//Particle *m_inceptingSP_tmp_d2_m_1_2;
-	//Particle *m_inceptingSP_tmp_rand;
-	Particle *m_inceptingSP_ave_m;
-	Particle *m_inceptingSP_ave_d;
-	Particle *m_inceptingSP_oldest;
-	Particle *m_inceptingSP_youngest;
 	bool m_inceptedFirstSP;
+
+	// aab64 sectional
+	std::vector<unsigned int> m_particle_numbers;
+	unsigned int m_critical_size; 
+	unsigned int m_total_number;
 
     //! Reset the contents of the binary tree
     void rebuildTree();

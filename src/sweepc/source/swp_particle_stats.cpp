@@ -240,11 +240,11 @@ void ParticleStats::Calculate(const Ensemble &e, double scale)
 
 	// aab64 for hybrid particle model
 	bool hybrid_flag = true;
-	if (hybrid_flag && e.GetIncepted() != 0)
+	if (hybrid_flag && e.GetTotalParticleNumber() != 0)
 	{
-		const Particle spInc = e.GetInceptedSP_ave_d(); // Only average diameter
-		const double wt = e.GetInceptedSP().getStatisticalWeight();
-		const double m = e.GetInceptedSP_ave_m().Mass();
+		const Particle spInc = e.GetInceptedSP(); // Only average diameter
+		const double wt = e.GetTotalParticleNumber();
+		const double m = e.GetInceptedSP().Mass();
 
 		double sz = spInc.Property(m_statbound.PID);
 		// Check if the value of the property is within the stats bound
@@ -287,7 +287,7 @@ void ParticleStats::Calculate(const Ensemble &e, double scale)
     // Note that m_stats[iM0] at this point does not in fact contain an M0 value,
     // since it has not yet been scaled by sample volume.  This is intentional
     // since here one should divide by the total statistical weight of all particles.
-    const double invWeight = ((e.Count()+e.GetIncepted())>0) ? 1.0 / m_stats[iM0] : 0.0;
+	const double invWeight = ((e.Count() + e.GetTotalParticleNumber())>0) ? 1.0 / m_stats[iM0] : 0.0;
 
     // Scale the summed stats and calculate the averages,
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {

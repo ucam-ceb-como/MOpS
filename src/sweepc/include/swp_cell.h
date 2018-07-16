@@ -256,10 +256,6 @@ public:
 	// aab64 coagulation scaling for weighted events
 	int GetRateFactor() const { return m_rateFactor; }
 
-	// aab64 tracker for incepted particles
-	double GetIncepted() const { return m_incepted; }
-	void AdjustIncepted(double adjustment);
-
 	// aab64 Averages of the incepting class
 	void SetDistParams(double mu, double sigma, double dmax, double dmin);
 	void SetDistAverages();

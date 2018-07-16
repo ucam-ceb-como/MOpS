@@ -402,7 +402,7 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 
 	// Compute the number of particles in the incepting class SP[0]
 	// and the number of other particles n_other=SP[1]+SP[2]+...+SP[N]
-    double n_incep  = sys.GetIncepted();
+	double n_incep = sys.Particles().GetTotalParticleNumber();
 	double n_others = 0;
 	if (sys.ParticleCount() > 1)
 	{
@@ -427,7 +427,7 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	}
 
 	// Can't use SP[0] if it has zero weight
-	if (ip2 == 0 && sys.GetIncepted() == 0)
+	if (ip2 == 0 && sys.Particles().GetTotalParticleNumber() == 0)
 	{
 		while (ip2 == 0)
 			ip2 = sys.Particles().Select(prop2, rng);                                // Add the particle to the ensemble 
@@ -441,14 +441,13 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	{
 		sp1 = m_mech->CreateParticle(t);
 		m_mech->Inceptions()[0]->Perform_incepted(t, sys, local_geom, 0, rng, *sp1); // Incept a new particle from SP[0]
-		sys.AdjustIncepted(-(sp1->getStatisticalWeight()));                          // Reduce the incepting class count
-		sys.Particles().At(0)->setStatisticalWeight(sys.GetIncepted());              // Reduce the weight of SP[0]
+		sys.Particles().At(0)->setStatisticalWeight(sys.Particles().GetTotalParticleNumber());              // Reduce the weight of SP[0]
 		sys.Particles().Update(0);                                                   // Update weight of SP[0] in the tree 
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 
 		// If incepting class is now empty, pick another 
 		// particle before adding sp1 to the ensemble
-		if (ip2 == 0 && sys.GetIncepted() == 0)
+		if (ip2 == 0 && sys.Particles().GetTotalParticleNumber() == 0)
 		{
 			while (ip2 == 0) 
 				ip2 = sys.Particles().Select(prop2, rng);                            // Must select a different particle!

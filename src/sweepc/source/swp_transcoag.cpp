@@ -82,7 +82,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 
 	// aab64 for hybrid particle model
 	if (m_mech->IsHybrid())
-		n += (unsigned int)sys.GetIncepted();
+		n += sys.Particles().GetTotalParticleNumber();
 
 	// Check that there are at least 2 particles before calculating rate.
 	if (n > 1) {
@@ -96,9 +96,9 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 		file.close();*/
 		
 		// Calculate the rate.
-		if (m_mech->IsHybrid() && sys.GetIncepted() > 0.0)
+		if (m_mech->IsHybrid() && sys.Particles().GetTotalParticleNumber() > 0.0)
 		{
-			double wt = sys.Particles().GetIncepted();
+			double wt = sys.Particles().GetTotalParticleNumber();
 
 			fvector props(6, wt);
 
@@ -246,7 +246,7 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 
 	// aab64 for hybrid particle model
 	if (m_mech->IsHybrid())
-		n += (unsigned int)sys.GetIncepted();
+		n += sys.Particles().GetTotalParticleNumber();
 
 	// Check that there are at least 2 particles before calculating rate.
 	if (n > 1) {
@@ -260,9 +260,9 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 		file.close();*/
 
 		// Calculate the rate terms.
-		if (m_mech->IsHybrid() && sys.GetIncepted() > 0.0)
+		if (m_mech->IsHybrid() && sys.Particles().GetTotalParticleNumber() > 0.0)
 		{
-			double wt = sys.GetIncepted();
+			double wt = sys.Particles().GetTotalParticleNumber();
 
 			fvector props(6, wt);
 
@@ -438,7 +438,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	// are six possible rate terms to choose from; 4 slip-flow and 2
 	// free molecular.
 	// Hybrid model: if < 2 SPs but incepting class >= 2, we can still act
-	if ((sys.GetIncepted() + sys.ParticleCount()) < 2)  
+	if ((sys.Particles().GetTotalParticleNumber() + sys.ParticleCount()) < 2)
 		return 1;
 	else
 	{
@@ -447,7 +447,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 
 		TermType term = (TermType)iterm;
 
-		double wt_incep = sys.GetIncepted();
+		double wt_incep = sys.Particles().GetTotalParticleNumber();
 		bool hybrid_flag = m_mech->IsHybrid() && wt_incep > 0.0;
 		double dc_incep = 0.0, dc2_incep = 0.0, dc_1_incep = 0.0, dc_2_incep = 0.0, m_1_2_incep = 0.0, dc2_m_1_2_incep = 0.0;
 		double wt_other = sys.Particles().Count();
@@ -486,94 +486,94 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		// Select the first particle and note the majorant type
 		switch (term) {
 		case SlipFlow1:
-			if (test * (wt_other + wt_incep) <= wt_incep)
+			/*if (test * (wt_other + wt_incep) <= wt_incep)
 			{
 				m_mech->SetRandomParticle(true, sys, t, (test / (1.0 - test)) * wt_other, true, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 0.0, rng);
 				ip1 = -2;
 			}
 			else
-			{
+			{*/
 				ip1 = sys.Particles().Select_usingGivenRand(iUniform, test * (wt_other + wt_incep) - wt_incep, rng);
-			}
+			/*}*/
 			maj = SlipFlow;
 			break;
 		case SlipFlow2:
-			if (test * (dc_incep + dc_other) <= dc_incep)
+			/*if (test * (dc_incep + dc_other) <= dc_incep)
 			{
 				m_mech->SetRandomParticle(true, sys, t, (test / (1.0 - test)) * dc_other, false, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 1.0, rng);
 				ip1 = -2;
 			}
 			else
-			{
+			{*/
 				ip1 = sys.Particles().Select_usingGivenRand(iDcol, test * (dc_other + dc_incep) - dc_incep, rng);
-			}
+			/*}*/
 			maj = SlipFlow;
 			break;
 		case SlipFlow3:
-			if (test * (wt_other + wt_incep) <= wt_incep)
+			/*if (test * (wt_other + wt_incep) <= wt_incep)
 			{
 				m_mech->SetRandomParticle(true, sys, t, (test / (1.0 - test)) * wt_other, true, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 0.0, rng);
 				ip1 = -2;
 			}
 			else
-			{
+			{*/
 				ip1 = sys.Particles().Select_usingGivenRand(iUniform, test * (wt_other + wt_incep) - wt_incep, rng);
-			}
+			/*}*/
 			maj = SlipFlow;
 			break;
 		case SlipFlow4:
-			if (test * (dc_incep + dc_other) <= dc_incep)
+			/*if (test * (dc_incep + dc_other) <= dc_incep)
 			{
 				m_mech->SetRandomParticle(true, sys, t, (test / (1.0 - test)) * dc_other, false, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 1.0, rng);
 				ip1 = -2;
 			}
 			else
-			{
+			{*/
 				ip1 = sys.Particles().Select_usingGivenRand(iDcol, test * (dc_other + dc_incep) - dc_incep, rng);
-			}
+			/*}*/
 			maj = SlipFlow;
 			break;
 		case FreeMol1:
-			if (test * (wt_other + wt_incep) <= wt_incep)
+			/*if (test * (wt_other + wt_incep) <= wt_incep)
 			{
 				m_mech->SetRandomParticle(true, sys, t, (test / (1.0 - test)) * wt_other, true, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 0.0, rng);
 				ip1 = -2;
 			}
 			else
-			{
+			{*/
 				ip1 = sys.Particles().Select_usingGivenRand(iUniform, test * (wt_other + wt_incep) - wt_incep, rng);
-			}
+			/*}*/
 			maj = FreeMol;
 			break;
 		case FreeMol2:
-			if (test * (dc2_incep + dc2_other) <= dc2_incep)
+			/*if (test * (dc2_incep + dc2_other) <= dc2_incep)
 			{
 				m_mech->SetRandomParticle(true, sys, t, (test / (1.0 - test)) * dc2_other, false, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 2.0, rng);
 				ip1 = -2;
 			}
 			else
-			{
+			{*/
 				ip1 = sys.Particles().Select_usingGivenRand(iD2, test * (dc2_other + dc2_incep) - dc2_incep, rng);
-			}
+			/*}*/
 			maj = FreeMol;
 			break;
 		default:
-			if (test * (wt_other + wt_incep) <= wt_incep)
+			/*if (test * (wt_other + wt_incep) <= wt_incep)
 			{
 				m_mech->SetRandomParticle(true, sys, t, (test / (1.0 - test)) * wt_other, true, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 0.0, rng);
 				ip1 = -2;
 			}
 			else
-			{
+			{*/
 				ip1 = sys.Particles().Select_usingGivenRand(iUniform, test * (wt_other + wt_incep) - wt_incep, rng);
-			}
+			/*}*/
 			maj = SlipFlow;
 			break;
 		}
@@ -583,100 +583,100 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		// Incepting class can be selected twice, provided it contains at least two particles
 		ip2 = ip1;
 		unsigned int guard = 0;
-		bool mustSwitch = (ip1 < -1) && (sys.GetIncepted() <= 1);
+		bool mustSwitch = (ip1 < -1) && (sys.Particles().GetTotalParticleNumber() <= 1);
 		test = unifDistrib();		
 
 		switch (term) {
 		case SlipFlow1:
-			if (test * (wt_other + wt_incep) <= wt_incep && !mustSwitch)
+			/*if (test * (wt_other + wt_incep) <= wt_incep && !mustSwitch)
 			{
 				m_mech->SetRandomParticle(false, sys, t, (test / (1.0 - test)) * wt_other, true, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 0.0, rng);
 				ip2 = -2;
 			}
 			else
-			{
+			{*/
 				while ((ip2 == ip1) && (++guard < 1000))
 					ip2 = sys.Particles().Select_usingGivenRand(iUniform, test * (wt_other + wt_incep) - wt_incep, rng);
-			}
+			/*}*/
 			break;
 		case SlipFlow2:
-			if (test * (dc_1_incep + dc_1_other) <= dc_1_incep && !mustSwitch)
+			/*if (test * (dc_1_incep + dc_1_other) <= dc_1_incep && !mustSwitch)
 			{
 				m_mech->SetRandomParticle(false, sys, t, (test / (1.0 - test)) * dc_1_other, false, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), -1.0, rng);
 				ip2 = -2;
 			}
 			else
-			{
+			{*/
 				while ((ip2 == ip1) && (++guard < 1000))
 					ip2 = sys.Particles().Select_usingGivenRand(iD_1, test * (dc_1_other + dc_1_incep) - dc_1_incep, rng);
-			}
+			/*}*/
 			break;
 		case SlipFlow3:
-			if (test * (dc_1_incep + dc_1_other) <= dc_1_incep && !mustSwitch)
+			/*if (test * (dc_1_incep + dc_1_other) <= dc_1_incep && !mustSwitch)
 			{
 				m_mech->SetRandomParticle(false, sys, t, (test / (1.0 - test)) * dc_1_other, false, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), -1.0, rng);
 				ip2 = -2;
 			}
 			else
-			{
+			{*/
 				while ((ip2 == ip1) && (++guard < 1000))
 					ip2 = sys.Particles().Select_usingGivenRand(iD_1, test * (dc_1_other + dc_1_incep) - dc_1_incep, rng);
-			}
+			/*}*/
 			break;
 		case SlipFlow4:
-			if (test * (dc_2_incep + dc_2_other) <= dc_2_incep && !mustSwitch)
+			/*if (test * (dc_2_incep + dc_2_other) <= dc_2_incep && !mustSwitch)
 			{
 				m_mech->SetRandomParticle(false, sys, t, (test / (1.0 - test)) * dc_2_other, false, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), -2.0, rng);
 				ip2 = -2;
 			}
 			else
-			{
+			{*/
 				while ((ip2 == ip1) && (++guard < 1000))
 					ip2 = sys.Particles().Select_usingGivenRand(iD_2, test * (dc_2_other + dc_2_incep) - dc_2_incep, rng);
-			}
+			/*}*/
 			break;
 		case FreeMol1:
-			if (test * (dc2_m_1_2_incep + dc2_m_1_2_other) <= dc2_m_1_2_incep && !mustSwitch)
+			/*if (test * (dc2_m_1_2_incep + dc2_m_1_2_other) <= dc2_m_1_2_incep && !mustSwitch)
 			{
 				m_mech->SetRandomParticle(false, sys, t, (test / (1.0 - test)) * dc2_m_1_2_other, false, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 0.5, rng);
 				ip2 = -2;
 			}
 			else
-			{
+			{*/
 				while ((ip2 == ip1) && (++guard < 1000))
 					ip2 = sys.Particles().Select_usingGivenRand(iD2_M_1_2, test * (dc2_m_1_2_other + dc2_m_1_2_incep) - dc2_m_1_2_incep, rng);
-			}
+			/*}*/
 			break;
 		case FreeMol2:
-			if (test * (m_1_2_incep + m_1_2_other) <= m_1_2_incep && !mustSwitch)
+			/*if (test * (m_1_2_incep + m_1_2_other) <= m_1_2_incep && !mustSwitch)
 			{
 				m_mech->SetRandomParticle(false, sys, t, (test / (1.0 - test)) * m_1_2_other, false, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), -1.5, rng);
 				ip2 = -2;
 			}
 			else
-			{
+			{*/
 				while ((ip2 == ip1) && (++guard < 1000))
 					ip2 = sys.Particles().Select_usingGivenRand(iM_1_2, test * (m_1_2_other + m_1_2_incep) - m_1_2_incep, rng);
-			}
+			/*}*/
 			break;
 		default:
-			if (test * (wt_other + wt_incep) <= wt_incep && !mustSwitch)
+			/*if (test * (wt_other + wt_incep) <= wt_incep && !mustSwitch)
 			{
 				m_mech->SetRandomParticle(false, sys, t, (test / (1.0 - test)) * wt_other, true, sys.GetMuLN(), sys.GetSigmaLN(),
 					sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 0.0, rng);
 				ip2 = -2;
 			}
 			else
-			{
+			{*/
 				while ((ip2 == ip1) && (++guard < 1000))
 					ip2 = sys.Particles().Select_usingGivenRand(iUniform, test * (wt_other + wt_incep) - wt_incep, rng);
-			}
+			/*}*/
 			break;
 		}
 	}
@@ -689,7 +689,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	{
 		sp1 = sys.Particles().GetInceptedSP_tmp_d_1().Clone();
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
-		sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
+		//sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
 		double dsp1 = sp1->CollDiameter();                                           // Update moments for removal of a particle from the space
 		sys.SetMomentsk(sys.GetMomentsk_0() - 1.0,
 			sys.GetMomentsk_1() - dsp1,
@@ -800,7 +800,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			// If particle sp2 is used, we now need to remove it from the incepting class
 			if (ip2_flag)
 			{
-				sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count    
+				//sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count    
 				sys.SetMomentsk(sys.GetMomentsk_0() - 1.0,                                   // Update moments for removal of a particle from the space
 					sys.GetMomentsk_1() - dsp2,
 					sys.GetMomentsk_2() - dsp2 * dsp2,

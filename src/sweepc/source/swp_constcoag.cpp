@@ -78,7 +78,7 @@ double Sweep::Processes::ConstantCoagulation::Rate(double t, const Cell &sys,
 
 	// aab64 for hybrid particle model
 	if (m_mech->IsHybrid())
-		n += (unsigned int)sys.GetIncepted();
+		n += sys.Particles().GetTotalParticleNumber();
 
     return A() * n * (n - 1) * s_MajorantFactor / sys.SampleVolume() / 2;
 }
@@ -135,7 +135,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	bool ip1_flag = false;
 	bool ip2_flag = false;
 
-	double n_incep = sys.GetIncepted();
+	double n_incep = sys.Particles().GetTotalParticleNumber();
 	double n_other = sys.ParticleCount();
 	double n_total = n_incep + n_other;
 
@@ -176,27 +176,25 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 
 	// Choose and get first particle, then update it.
 	Particle *sp1 = NULL;
+	double dsp1 = 0.0;
 
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip1 == -2)
 	{
-		m_mech->SetRandomParticle(true, sys, t, unifDistrib(), true, sys.GetMuLN(), sys.GetSigmaLN(),
-			sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 1.0, rng);
+		unsigned int index1 = m_mech->SetRandomParticle(true, sys, t, unifDistrib(), true, 1.0, rng);
 		
 		sp1 = sys.Particles().GetInceptedSP_tmp_d_1().Clone();
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
-		sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
+		sys.Particles().UpdateNumberAtIndex(index1, -1);
+		sys.Particles().UpdateTotalParticleNumber(-1);
 		double dinc = sp1->CollDiameter();                                           // Update moments for removal of a particle from the space
-		sys.SetMomentsk(sys.GetMomentsk_0() + 1.0,
-			sys.GetMomentsk_1() + dinc,
-			sys.GetMomentsk_2() + dinc * dinc,
-			sys.GetMomentsk_3() + dinc * dinc * dinc);
 
 		// If incepting class is now empty, pick another particle before adding sp1 to the ensemble
-		if (ip2 == -2 && sys.GetIncepted() == 0)
+		if (ip2 == -2 && sys.Particles().GetTotalParticleNumber() == 0)
 			ip2 = sys.Particles().Select(rng);
 
 		ip1 = sys.Particles().Add(*sp1, rng);                                        // Add the particle to the ensemble
+		//std::cout << "Coag1: " << sys.Particles().GetTotalParticleNumber() << " , " << sys.Particles().GetCritialNumber() << " , " << sp1->Composition()[0] << std::endl;
 	}
 	else
 	{
@@ -234,16 +232,17 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	// Choose and get second particle, then update it.
     Particle *sp2 = NULL;
 	double dsp2 = 0.0;
+	unsigned int index2 = 0;
 
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip2 == -2)
 	{
-		m_mech->SetRandomParticle(false, sys, t, unifDistrib(), true, sys.GetMuLN(), sys.GetSigmaLN(),
-			sys.Particles().GetInceptedSP_youngest().CollDiameter(), sys.Particles().GetInceptedSP_oldest().CollDiameter(), 1.0, rng);
+		index2 = m_mech->SetRandomParticle(false, sys, t, unifDistrib(), true, 1.0, rng);
 		// Note don't need to add it to the ensemble unless coagulation is successful
 		sp2 = sys.Particles().GetInceptedSP_tmp_d_2().Clone();
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
 		dsp2 = sp2->CollDiameter();
+		//std::cout << "Coag2: " << sys.Particles().GetTotalParticleNumber() << " , " << sys.Particles().GetCritialNumber() << " , " << sp2->Composition()[0] << std::endl;
 	}
 	else
 	{
@@ -308,11 +307,8 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			// If particle sp2 is used, we now need to remove it from the incepting class
 			if (ip2_flag)
 			{
-				sys.AdjustIncepted(-1.0);                                                    // Reduce the incepting class count
-				sys.SetMomentsk(sys.GetMomentsk_0() + 1.0,                                   // Update moments for removal of a particle from the space
-					sys.GetMomentsk_1() + dsp2,
-					sys.GetMomentsk_2() + dsp2 * dsp2,
-					sys.GetMomentsk_3() + dsp2 * dsp2 * dsp2);
+				sys.Particles().UpdateNumberAtIndex(index2, -1);
+				sys.Particles().UpdateTotalParticleNumber(-1);
 			}
 			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
 			if (ip2_flag && sp2 != NULL)

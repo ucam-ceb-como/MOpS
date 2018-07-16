@@ -1025,9 +1025,7 @@ void Simulator::outputGasPhase(const Reactor &r) const
 void Simulator::outputParticleTemperature(const Reactor &r) const
 {
 	//double Tp = r.Mixture()->GetBulkParticleTemperature();
-	double Tp = 0;
-	if (r.Mixture()->Particles().GetIncepted() > 0)
-		Tp = r.Mixture()->Particles().GetInceptedSP().getStatisticalWeight();
+	double Tp = r.Mixture()->Particles().GetTotalParticleNumber();
 	m_file.write((char*)&Tp, sizeof(Tp));
 }
 
