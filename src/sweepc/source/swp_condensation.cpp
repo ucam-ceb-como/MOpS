@@ -121,10 +121,8 @@ void Condensation::SetCondensingSpecies(const double m, const double d)
     // Calculate the free-mol terms for condensation.  This must be done
     // before the condensation process is used.
     m_kfm3 = m_efm * CFM / sqrt(m);
-    //m_kfm2 = d * m_kfm3 * 2.0;
-    //m_kfm1 = d * m_kfm2 / 2.0;
-	m_kfm2 = 0.0;
-	m_kfm1 = 0.0;
+    m_kfm2 = d * m_kfm3 * 2.0;
+    m_kfm1 = d * m_kfm2 / 2.0;
 }
 
 
