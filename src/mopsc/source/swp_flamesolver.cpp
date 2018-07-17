@@ -115,7 +115,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         split(line, subs, delim);
 
         // Get important column indices (time, temperature and pressure).
-        int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1, Rcol=-1, ucol=-1,vcol=-1,Diffcol= -1;
+        int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1, Rcol=-1;
         tcol = findinlist(string("Time"), subs);
         if(tcol < 0)
             tcol = findinlist(string("Time[s]"),subs);
@@ -392,25 +392,24 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 	double old_dens(0.0);
 	//! sample volume adjustment
 	if(m_stagnation == false){
-    //! If the initial composition was not specified, linearly interpolate the
-    //! gas-phrase profile to obtain properties at the initial time step which
-    //! may not necessarily be zero.
-    if (!(r.Mixture()->GasPhase().MassDensity() >= 0))
-        linInterpGas(t, r.Mixture()->GasPhase());
+		//! If the initial composition was not specified, linearly interpolate the
+		//! gas-phrase profile to obtain properties at the initial time step which
+		//! may not necessarily be zero.
+		if (!(r.Mixture()->GasPhase().MassDensity() >= 0))
+			linInterpGas(t, r.Mixture()->GasPhase());
 
-    //! Save density from previous time step for sample volume adjustment.
+		//! Save density from previous time step for sample volume adjustment.
 		old_dens = r.Mixture()->GasPhase().MassDensity();
 
-    //! Update the chemical conditions.
-    linInterpGas(t, r.Mixture()->GasPhase());
+		//! Update the chemical conditions.
+		linInterpGas(t, r.Mixture()->GasPhase());
 
-    //! Adjust sample volume using the change in the density. Note that the
-    //! code has to go through the loop below twice for the sample volume to be
-    //! adjusted. However, it was found that the loop is only performed once;
-    //! therefore, the sample volume adjustment has to be performed here.
+		//! Adjust sample volume using the change in the density. Note that the
+		//! code has to go through the loop below twice for the sample volume to be
+		//! adjusted. However, it was found that the loop is only performed once;
+		//! therefore, the sample volume adjustment has to be performed here.
 		 r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
 	}
-	*/
 
 	// Loop over time until we reach the stop time.
     while (t < tstop)
@@ -454,7 +453,6 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
 			r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
 		}
-		*/
 
         //! Tried and tested only for the PAH-PP/KMC-ARS model, binary tree and
         //! the spherical particle model. Only relevant if postprocessing based
