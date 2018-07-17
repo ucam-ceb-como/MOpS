@@ -115,7 +115,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         split(line, subs, delim);
 
         // Get important column indices (time, temperature and pressure).
-        int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1, Rcol=-1;
+        int tcol=-1, Tcol=-1, Pcol=-1, Acol = -1, Rcol=-1, ucol=-1,vcol=-1,Diffcol= -1;
         tcol = findinlist(string("Time"), subs);
         if(tcol < 0)
             tcol = findinlist(string("Time[s]"),subs);
@@ -410,8 +410,9 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     //! therefore, the sample volume adjustment has to be performed here.
 		 r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
 	}
+	*/
 
-    // Loop over time until we reach the stop time.
+	// Loop over time until we reach the stop time.
     while (t < tstop)
     {
 		//if (t == 0.0){
@@ -453,6 +454,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
 			r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
 		}
+		*/
 
         //! Tried and tested only for the PAH-PP/KMC-ARS model, binary tree and
         //! the spherical particle model. Only relevant if postprocessing based

@@ -1134,6 +1134,7 @@ void readOutput(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
             // Also need to ensure full binary trees are written for certain
             // particle models.
             mech.ParticleMech().SetWriteBinaryTrees(true);
+
         } else if (str_enable.compare("false") == 0) {
             sim.SetParticleTrackCount(0);
         } else {

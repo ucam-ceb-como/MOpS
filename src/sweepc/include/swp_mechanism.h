@@ -151,7 +151,6 @@ public:
         unsigned int start=0             // Optional vector start index.
         ) const;
 
-
 	// RATE CALCULATION.
 
     // Get total rates of all processes.  Returns the sum of

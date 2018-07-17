@@ -563,6 +563,7 @@ void Sweep::Ensemble::RemoveInvalids(void)
 
     // Now delete the invalid particles and nullify the corresponding pointers
     while(validEnd != m_particles.end()) {
+
         delete *validEnd;
         *validEnd = NULL;
         ++validEnd;
@@ -612,6 +613,7 @@ void Sweep::Ensemble::Replace(unsigned int i, Particle &sp)
     //SetNumOfInceptedPAH(1);
     // Check index is within range.
     if (i<m_count) {
+
         // First delete current particle, then
         // set pointer to new particle.
         delete m_particles[i];
@@ -1089,7 +1091,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 } else {
                     m_contwarn = false;
                 }
-
+			
                 // Calculate binary tree.
                 rebuildTree();
 

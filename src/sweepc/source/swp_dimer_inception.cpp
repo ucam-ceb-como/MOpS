@@ -214,9 +214,9 @@ double DimerInception::Rate(double t, const Cell &sys, const Geometry::LocalGeom
     // Get the current chemical conditions.
     double T = sys.GasPhase().Temperature();
     double P = sys.GasPhase().Pressure();
-
-    // Calculate the rate.
-    return Rate(sys.GasPhase(), sqrt(T),
+	
+	// Calculate the rate.
+	return Rate(sys.GasPhase(), sqrt(T),
                 MeanFreePathAir(T,P),
                 sys.SampleVolume());
 }
@@ -314,7 +314,7 @@ double DimerInception::RateTerms(const double t, const Cell &sys,
             Rate = 0.0;
 
         *iterm = Rate; 
-    } else {
+	}else{
         *iterm = Rate(sys.GasPhase(), sqrt(T),
                       MeanFreePathAir(T,P),
                       sys.SampleVolume());

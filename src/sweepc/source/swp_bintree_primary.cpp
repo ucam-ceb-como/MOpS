@@ -398,7 +398,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 		newright->m_rightchild->m_parent    = newright;
     }
     m_children_sintering=0.0;
-	
+
     UpdateCache();
 
     //! It is assumed that primary pi from particle Pq and primary pj from
@@ -4006,6 +4006,7 @@ void BinTreePrimary::transform(const Coords::Matrix &mat)
     //! Rotate centre-of-mass and bounding sphere coordinates.
     m_cen_mass = mat.Mult(m_cen_mass);
     m_cen_bsph = mat.Mult(m_cen_bsph);
+
 }
 
 /*!
