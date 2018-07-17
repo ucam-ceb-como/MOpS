@@ -219,6 +219,8 @@ int Fragmentation::WeightedPerform(const double t, const Sweep::PropID prop,
                                  const Sweep::Processes::FragWeightRule weight_rule,
                                  Cell &sys, rng_type &rng,
                                  MajorantType maj) const {
+	PartPtrVector dummy;
+
     int i = -1;
     i = sys.Particles().Select(m_pid, rng);
     if (i >= 0) {
@@ -227,7 +229,7 @@ int Fragmentation::WeightedPerform(const double t, const Sweep::PropID prop,
         std::vector<double> m_dvals(1);
         m_dvals[0] = 0.0;
         if (m_mech->AnyDeferred()) {
-            m_mech->UpdateParticle(*sp, sys, t, rng);
+            m_mech->UpdateParticle(*sp, sys, t, i, rng, dummy);
             if (sp->IsValid()) {
                 double majk = MajorantKernel(*sp, sys, Default);
                 double truek = FragKernel(*sp, sys);

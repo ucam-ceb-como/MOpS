@@ -257,6 +257,7 @@ public:
 
     };
 
+    //! Gas-phase trasfer species.
     enum PostProcessStartingStr {
         A1, A2, A4, A5
     };

@@ -125,6 +125,8 @@ int SymmetricFragmentation::Perform(double t, Sweep::Cell &sys,
                              unsigned int iterm,
                              Sweep::rng_type &rng) const
 {
+	PartPtrVector dummy;
+
     int i = -1;
     i = sys.Particles().Select(m_pid, rng);
     if (i >= 0) {
@@ -136,7 +138,7 @@ int SymmetricFragmentation::Perform(double t, Sweep::Cell &sys,
         std::vector<double> newComposition(1);
         newComposition[0] = - m_dcomp[0];
         if (m_mech->AnyDeferred()) {
-            m_mech->UpdateParticle(*sp, sys, t, rng);
+            m_mech->UpdateParticle(*sp, sys, t, i, rng, dummy);
             if (sp->IsValid()) {
                 double majk = MajorantKernel(*sp, sys, Default);
                 double truek = FragKernel(*sp, sys);

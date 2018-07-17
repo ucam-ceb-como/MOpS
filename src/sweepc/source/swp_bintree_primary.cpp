@@ -1134,8 +1134,8 @@ BinTreePrimary *BinTreePrimary::SelectRandomSubparticleLoop(int target)
  */
 double BinTreePrimary::SinteringLevel()
 {
-    if (m_leftchild != NULL && m_rightchild != NULL) {
-		
+	if (m_leftchild != NULL && m_rightchild != NULL) {
+
 		double slevel(0.0);
 
 		//! If the centre-centre separation is not tracked the sintering level is calculated 
@@ -1143,13 +1143,14 @@ double BinTreePrimary::SinteringLevel()
 		if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
 			// Calculate the spherical surface
 			const double spherical_surface =
-					4 * PI * m_children_radius * m_children_radius;
+				4 * PI * m_children_radius * m_children_radius;
 
 			if (m_children_surf == 0.0) {
 				slevel = 0.0;
-			} else {
-				slevel= ((spherical_surface/m_children_surf) - TWO_ONE_THIRD)
-						/(1 - TWO_ONE_THIRD);
+			}
+			else {
+				slevel = ((spherical_surface / m_children_surf) - TWO_ONE_THIRD)
+					/ (1 - TWO_ONE_THIRD);
 			}
 
 		//! if centre-centre separation is tracked the sintering level is calculated as
@@ -1178,19 +1179,22 @@ double BinTreePrimary::SinteringLevel()
 		}
 
 		if (slevel < 0.0) {
-				return 0.0;
-			} else if (slevel > 1.0) {
-				return 1.0;
-			} else return slevel;
+			return 0.0;
+		}
+		else if (slevel > 1.0) {
+			return 1.0;
+		}
+		else return slevel;
 
-    } else {
-        // Particle is a primary
-        m_children_surf = 0.0;
-        m_children_radius = 0.0;
-        m_children_vol = 0.0;
-        if (m_parent == NULL) return 1.0;        // Single primary case
-        else return 0.0;                         // Part of a tree
-    }
+	}
+	else {
+		// Particle is a primary
+		m_children_surf = 0.0;
+		m_children_radius = 0.0;
+		m_children_vol = 0.0;
+		if (m_parent == NULL) return 1.0;        // Single primary case
+		else return 0.0;                         // Part of a tree
+	}
 }
 
 /*!
@@ -1204,6 +1208,7 @@ double BinTreePrimary::SinteringLevel()
 bool BinTreePrimary::CheckSintering()
 {
     bool hassintered=false;
+
 
 	if(m_leftparticle != NULL) {
 
@@ -1267,7 +1272,6 @@ bool BinTreePrimary::MergeCondition()
 			}
 		}
 	}
-
 	return condition;
 }
 

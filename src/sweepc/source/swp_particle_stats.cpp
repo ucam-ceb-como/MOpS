@@ -570,6 +570,6 @@ void ParticleStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
 
 /////////////////////////////////////////////////csl37-pp
 void ParticleStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const
-{ 
+{
 }
 //////////////////////////////////////////////////

@@ -230,6 +230,8 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
                              unsigned int iterm,
                              rng_type &rng) const
 {
+	PartPtrVector dummy;
+
     int i = sys.Particles().Select(static_cast<Sweep::PropID>(m_pid), rng);
     unsigned int times;
 
@@ -241,7 +243,7 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
         if (m_mech->AnyDeferred()) {
             // Calculate majorant rate then update the particle.
             double majr = MajorantRate(t, sys, *sp);
-            m_mech->UpdateParticle(*sp, sys, t, rng);
+            m_mech->UpdateParticle(*sp, sys, t, i, rng, dummy);
 
             // Check that the particle is still valid.
             if (sp->IsValid()) {
