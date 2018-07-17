@@ -184,33 +184,44 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
 
 	if (e.GetTotalParticleNumber() != 0)
 	{
-		Sweep::Particle * sp_temp = e.GetInceptedSP().Clone();
-		const AggModels::BinTreePrimary * const prim =
-			dynamic_cast<const AggModels::BinTreePrimary*>(sp_temp->Primary());
-
-		double sz = e.GetInceptedSP().Property(m_statbound.PID);
-		double wt = e.GetTotalParticleNumber() * invTotalWeight;
-
+		//Sweep::Particle * sp_temp = e.GetInceptedSP().Clone();
+		//const AggModels::BinTreePrimary * const prim =
+		//	dynamic_cast<const AggModels::BinTreePrimary*>(sp_temp->Primary());
+		//double sz = e.GetInceptedSP().Property(m_statbound.PID);
 		// Check if the value of the property is within the stats bound
-		if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {
-			// Sum stats from this particle.
-			m_stats[iNPrim] += prim->GetNumPrimary()  * wt;
-			m_stats[iPrimDiam] += prim->GetPrimaryDiam() * wt
-				/ (double)prim->GetNumPrimary();
-			m_stats[iSintLevel] += prim->GetAvgSinterLevel() * wt;
-			m_stats[iSintRate] += prim->GetSintRate() * wt;
-			m_stats[iSintTime] += prim->GetSintTime() * wt;
-			m_stats[iGStdevMean] += prim->GetPrimaryGStdDev() * wt;
+		//if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {
+
+		double wt = e.GetTotalParticleNumber() * invTotalWeight;
+		double dpri = 0;
+		double d_index = 0;
+		double n_index = 0;
+		for (unsigned int i = 0; i < e.GetCritialNumber(); ++i)
+		{
+			n_index = e.NumberAtIndex(i);
+			d_index = e.PropertyAtIndex(iDcol, i);
+			dpri += (n_index * d_index);
 
 			// Collect the collision and primary diameters
-			d.push_back(prim->CollDiameter());
-			d.push_back(prim->GetPrimaryDiam() / (double)prim->GetNumPrimary());
-			diams.push_back(d);
-			weights.push_back(wt);
-			d.clear();
-
+			for (unsigned int j = 0; j < n_index; ++j)
+			{
+				d.push_back(d_index);
+				d.push_back(d_index);
+				diams.push_back(d);
+				weights.push_back(1);
+				d.clear();
+			}
 			++n;
 		}
+
+		std::cout << dpri << " | " << e.GetTotalDiameter() << endl;
+		
+		m_stats[iNPrim] += wt;
+		m_stats[iPrimDiam] += dpri;
+		m_stats[iSintLevel] += wt; // prim->GetAvgSinterLevel() * 
+		m_stats[iSintRate] += 0;   // prim->GetSintRate() * wt
+		m_stats[iSintTime] += 0;   // prim->GetSintTime() * wt
+		m_stats[iGStdevMean] += 0; // prim->GetPrimaryGStdDev() * wt
+		//}
 	}
 
     // Now get the geometric standard devs, using [0] for dcol, [1] for dpri

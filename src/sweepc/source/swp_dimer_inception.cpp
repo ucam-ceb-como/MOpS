@@ -308,6 +308,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 
 				sys.Particles().UpdateNumberAtIndex(sp->Composition()[0], 1);
 				sys.Particles().UpdateTotalParticleNumber(1);
+				sys.Particles().UpdateTotalsWithIndex(sp->Composition()[0], 1.0);
 
 				delete sp;
 				sp = NULL;

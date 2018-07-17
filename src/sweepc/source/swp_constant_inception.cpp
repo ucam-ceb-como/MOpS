@@ -205,10 +205,12 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 			sys.Particles().SetInceptedSP(*sp);
 			sys.Particles().SetInceptedSP_tmp_d_1(*sp);
 			sys.Particles().SetInceptedSP_tmp_d_2(*sp);
+			sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(), sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
 		}
 
 		sys.Particles().UpdateNumberAtIndex(sp->Composition()[0], 1);
 		sys.Particles().UpdateTotalParticleNumber(1);
+		sys.Particles().UpdateTotalsWithIndex(sp->Composition()[0], 1.0);
 	}
 
 	// Update gas-phase chemistry of system.

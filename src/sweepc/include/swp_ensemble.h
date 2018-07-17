@@ -277,11 +277,29 @@ public:
 
 	void UpdateNumberAtIndex(unsigned int index, unsigned int update);
 	void ResetNumberAtIndex(unsigned int index);
+	void InitialiseDiameters(double molecularWeight, double density);
 	unsigned int NumberAtIndex(unsigned int index) const { return m_particle_numbers[index]; }
 	unsigned int SetTotalParticleNumber();
 	unsigned int GetCritialNumber() const { return m_critical_size; }
 	void UpdateTotalParticleNumber(unsigned int update) { m_total_number += update; }
+	void UpdateTotalsWithIndex(unsigned int index, double change);
+	void UpdateTotalsWithIndices(unsigned int i1, unsigned int i2);
 	unsigned int GetTotalParticleNumber() const { return m_total_number; }
+	double PropertyAtIndex(Sweep::PropID prop, unsigned int index) const;
+	double GetPropertyTotal (Sweep::PropID prop) const;
+	double Diameter2AtIndex(unsigned int index) const { return m_pn_diameters2[index]; }
+	// This could be a single function with a case statement but it would be slower and some propIDs don't exist
+	double GetTotalDiameter() const { return m_total_diameter; }
+	double GetTotalDiameter2() const { return m_total_diameter2; }
+	double GetTotalDiameter_1() const { return m_total_diameter_1; }
+	double GetTotalDiameter_2() const { return m_total_diameter_2; }
+	double GetTotalDiameter3() const { return m_total_diameter3; }
+	double GetTotalDiameter2_mass_1_2() const { return m_total_diameter2_mass_1_2; }
+	double GetTotalMass_1_2() const { return m_total_mass_1_2; }
+	double GetTotalMass() const { return m_total_mass; }
+	double GetTotalMass2() const { return m_total_mass2; }
+	double GetTotalMass3() const { return m_total_mass3; }
+	unsigned int GetTotalComponent() const { return m_total_component; }
 
     // READ/WRITE/COPY.
 
@@ -339,9 +357,31 @@ private:
 	bool m_inceptedFirstSP;
 
 	// aab64 sectional
-	std::vector<unsigned int> m_particle_numbers;
 	unsigned int m_critical_size; 
 	unsigned int m_total_number;
+	unsigned int m_total_component;
+	double m_total_diameter;
+	double m_total_diameter2;
+	double m_total_diameter_1;
+	double m_total_diameter_2;
+	double m_total_diameter2_mass_1_2;
+	double m_total_mass_1_2;
+	double m_total_mass;
+	double m_total_mass2;
+	double m_total_mass3;
+	double m_total_diameter3;
+
+	std::vector<unsigned int> m_particle_numbers;
+	std::vector<double> m_pn_diameters;
+	std::vector<double> m_pn_diameters2;
+	std::vector<double> m_pn_diameters_1;
+	std::vector<double> m_pn_diameters_2;
+	std::vector<double> m_pn_diameters2_mass_1_2;
+	std::vector<double> m_pn_mass_1_2;
+	std::vector<double> m_pn_mass;
+	std::vector<double> m_pn_mass2;
+	std::vector<double> m_pn_mass3;
+	std::vector<double> m_pn_diameters3;
 
     //! Reset the contents of the binary tree
     void rebuildTree();

@@ -242,38 +242,39 @@ void ParticleStats::Calculate(const Ensemble &e, double scale)
 	bool hybrid_flag = true;
 	if (hybrid_flag && e.GetTotalParticleNumber() != 0)
 	{
-		const Particle spInc = e.GetInceptedSP(); // Only average diameter
-		const double wt = e.GetTotalParticleNumber();
-		const double m = e.GetInceptedSP().Mass();
-
-		double sz = spInc.Property(m_statbound.PID);
+		//const Particle spInc = e.GetInceptedSP(); // Only average diameter
+		//double sz = spInc.Property(m_statbound.PID);
 		// Check if the value of the property is within the stats bound
-		if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {
+		//if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {
 
-			m_stats[iM0] += wt;
-			m_stats[iD] += spInc.SphDiameter() * wt;
-			m_stats[iDcol] += spInc.CollDiameter() * wt;
-			m_stats[iDmob] += spInc.MobDiameter() * wt;
-			m_stats[iS] += spInc.SurfaceArea() * wt;
-			m_stats[iS + 1] += spInc.SurfaceArea() * wt;
-			m_stats[iV] += spInc.Volume() * wt;
-			m_stats[iV + 1] += spInc.Volume() * wt;
-			m_stats[iM] += m * wt;
-			m_stats[iM + 1] += m * wt;
-			m_stats[iM2] += m * m * wt;
-			m_stats[iM3] += m * m * m * wt;
+		double wt = e.GetTotalParticleNumber();
+		double dpri = e.GetTotalDiameter();
+		double surf = PI * e.GetTotalDiameter2();
+		double vol = (PI / 6.0) * e.GetTotalDiameter3();
+		double mass = e.GetTotalMass();
+		double mass2 = e.GetTotalMass2();
+		double mass3 = e.GetTotalMass3();
+		double comp = e.GetTotalComponent();
 
-			// Sum component and tracker values.
-			fvector::iterator i = m_stats.begin() + STAT_COUNT;
-			for (unsigned int j = 0; j != m_ncomp; ++j, ++i) {
-				*i += spInc.Composition(j) * wt;
-				*(++i) += spInc.Composition(j) * wt;
-			}
-			for (unsigned int j = 0; j != m_ntrack; ++j, ++i) {
-				*i += spInc.Values(j) * wt;
-				*(++i) += spInc.Values(j) * wt;
-			}
+		// Sum component and tracker values.
+		fvector::iterator i = m_stats.begin() + STAT_COUNT;
+		for (unsigned int j = 0; j != m_ncomp; ++j, ++i) {
+			*i += comp;
+			*(++i) += comp;
 		}
+
+		m_stats[iM0] += wt;
+		m_stats[iD] += dpri;
+		m_stats[iDcol] += dpri;
+		m_stats[iDmob] += dpri;
+		m_stats[iS] += surf;
+		m_stats[iS + 1] += surf;
+		m_stats[iV] += vol;
+		m_stats[iV + 1] += vol;
+		m_stats[iM] += mass;
+		m_stats[iM + 1] += mass;
+		m_stats[iM2] += mass2;
+		m_stats[iM3] += mass3;
 	}
 
 

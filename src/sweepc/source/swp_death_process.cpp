@@ -218,17 +218,18 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
 		unsigned int ntotal_pn = sys.Particles().GetTotalParticleNumber();
 		unsigned int ntotal_ens = sys.ParticleCount();
 		boost::uniform_01<rng_type&, double> unifDistrib(rng);
-		double test = unifDistrib();
-		if (test * (ntotal_ens + ntotal_pn) <= ntotal_pn)
+		double test = unifDistrib() * (ntotal_pn + ntotal_ens);
+		if (ntotal_pn > test)
 		{
-			unsigned int index = m_mech->SetRandomParticle(true, sys, t, (test / (1.0 - test)) * ntotal_ens, true, 0.0, rng);
+			unsigned int index = m_mech->SetRandomParticle(true, sys, t, test - ntotal_ens, iUniform, rng);
+			sys.Particles().UpdateTotalsWithIndex(index, -1.0);
 			sys.Particles().UpdateNumberAtIndex(index, -1);
-			sys.Particles().UpdateTotalParticleNumber(-1);			
+			sys.Particles().UpdateTotalParticleNumber(-1);
 			i = -1;
 		}
 		else
 		{
-			i = sys.Particles().Select_usingGivenRand(iUniform, test * (ntotal_ens + ntotal_pn) - ntotal_pn, rng);
+			i = sys.Particles().Select_usingGivenRand(iUniform, test - ntotal_pn, rng);
 		}
 	}
 

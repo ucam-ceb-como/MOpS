@@ -140,10 +140,10 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	double n_total = n_incep + n_other;
 
 	boost::uniform_01<rng_type&, double> unifDistrib(rng);
-	double frac = 0;
-	if (n_total > 0)
-		frac = n_other / n_total;
-	else
+	double alpha1 = unifDistrib() * n_total;
+	double alpha2 = unifDistrib() * n_total;
+
+	if (n_total <= 0)
 		return -1;
 
     if (n_total < 2)  // if there are < 2 SPs but incepting class has weight >= 2, we can still act
@@ -158,13 +158,13 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			// switching with probability n_other/n_total
 			ip1 = -2;
 			ip2 = -2;
-			if (frac >= unifDistrib() && frac != 0)
+			if (n_other > alpha1)
 			{
-				ip1 = sys.Particles().Select(rng);
+				ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1 - n_incep, rng);
 			}
-			if (frac >= unifDistrib() && frac != 0)
+			if (n_other > alpha2)
 			{
-				ip2 = sys.Particles().Select(rng);
+				ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
 			}
 		}
 		else
@@ -181,13 +181,14 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip1 == -2)
 	{
-		unsigned int index1 = m_mech->SetRandomParticle(true, sys, t, unifDistrib(), true, 1.0, rng);
+		unsigned int index1 = m_mech->SetRandomParticle(true, sys, t, alpha1 - n_other, iUniform, rng);
 		
 		sp1 = sys.Particles().GetInceptedSP_tmp_d_1().Clone();
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
+		sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
 		sys.Particles().UpdateNumberAtIndex(index1, -1);
 		sys.Particles().UpdateTotalParticleNumber(-1);
-		double dinc = sp1->CollDiameter();                                           // Update moments for removal of a particle from the space
+		dsp1 = sp1->CollDiameter();                                           // Update moments for removal of a particle from the space
 
 		// If incepting class is now empty, pick another particle before adding sp1 to the ensemble
 		if (ip2 == -2 && sys.Particles().GetTotalParticleNumber() == 0)
@@ -218,11 +219,10 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (ip1_flag)
 			{
 				++n_other;
-				frac = n_other / n_total;
 			}
-			if (frac >= unifDistrib() && frac != 0)
+			if (n_other > alpha2)
 			{
-				ip2 = sys.Particles().Select(rng);
+				ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
 			}
 		}
 		else
@@ -237,7 +237,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip2 == -2)
 	{
-		index2 = m_mech->SetRandomParticle(false, sys, t, unifDistrib(), true, 1.0, rng);
+		index2 = m_mech->SetRandomParticle(false, sys, t, alpha2 - n_other, iUniform, rng);
 		// Note don't need to add it to the ensemble unless coagulation is successful
 		sp2 = sys.Particles().GetInceptedSP_tmp_d_2().Clone();
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
@@ -307,6 +307,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			// If particle sp2 is used, we now need to remove it from the incepting class
 			if (ip2_flag)
 			{
+				sys.Particles().UpdateTotalsWithIndex(index2, -1.0);
 				sys.Particles().UpdateNumberAtIndex(index2, -1);
 				sys.Particles().UpdateTotalParticleNumber(-1);
 			}

@@ -343,8 +343,7 @@ public:
 		Cell &sys, 
 		double t,
 		double random_number, 
-		bool isRandomSample, 
-		double n, 
+		Sweep::PropID prop,
 		rng_type &rng) const;
 
     //! LPDA for one particle

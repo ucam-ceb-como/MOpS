@@ -1279,27 +1279,21 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 {
 	
 	// Update sections for surface growth
-	double area_total = 0.0;
+	double added_total = 0.0;
 	unsigned int n_index = 0;
 	unsigned int index = 0;
-	double expon = 2.0 / 3.0;
-	double d2_constant = PI * pow((6.0 * 0.07987 / (PI * NA * 4260.0)), expon);
-	double rate_constant = sys.GetSGk() * d2_constant / 3.0;
 	unsigned int n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
 	sys.SetNotPSIFlag(false);
 	// New surface update goes here
-	for (unsigned int i = sys.Particles().GetCritialNumber() - 1; i != -1; --i)
+	for (unsigned int i = sys.Particles().GetCritialNumber() - 1; i != 0; --i)
 	{
 		Particle * sp = sys.Particles().GetInceptedSP().Clone();
 		index = i;
 		n_index = sys.Particles().NumberAtIndex(i);
-		//area_total += (n_index * pow(index, expon));
-
-		//cout << index << " , " << n_index << " , ";
 
 		if (n_index > 0)
 		{
-			double rate = d2_constant * pow(index, expon);
+			double rate = dt * sys.GetSGk() * PI * sys.Particles().Diameter2AtIndex(index);
 			if (rate > 0) {
 				boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
 				unsigned num = repeatDistrib(rng);
@@ -1310,47 +1304,49 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 			{
 				if (index > i)
 				{
-					cout << index << " , ";
-					area_total += n_index * (index - i);
-					sys.Particles().ResetNumberAtIndex(i);
+					added_total += n_index * (index - i);
+					sys.Particles().UpdateTotalsWithIndices(i, index);
 					sys.Particles().UpdateNumberAtIndex(index, n_index);
-					cout << sys.Particles().NumberAtIndex(index) << endl;
+					sys.Particles().ResetNumberAtIndex(i);
 				}
 			}
 			else
 			{
-				double n_add = index - n_titania0;
-				//cout << "index>critical " << n_add << " , ";
-				if (n_add < 0.0)
+				if (index > i)
 				{
-					n_add = 0.0;
-					cout << "Warning: Selected particle is smaller than stored minimum size\n";
-				}
-				// Not the ideal way of calling this update but should more or less work
-				for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-				{
-					if ((*i)->IsDeferred())
+					added_total += n_index * (index - i);
+					sys.Particles().UpdateTotalsWithIndex(i, -1.0 * (double)n_index);
+					sys.Particles().ResetNumberAtIndex(i);
+
+					double n_add = index - n_titania0;
+					if (n_add < 0.0)
 					{
-						(*i)->Perform(t, sys, *sp, rng, n_add);
-						sp->SetTime(t);
-						sp->UpdateCache();
+						n_add = 0.0;
+						cout << "Warning: Selected particle is smaller than stored minimum size\n";
+					}
+					// Not the ideal way of calling this update but should more or less work
+					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					{
+						if ((*i)->IsDeferred())
+						{
+							(*i)->Perform(t, sys, *sp, rng, n_add);
+							sp->SetTime(t);
+							sp->UpdateCache();
+						}
+					}
+					for (unsigned int j = 0; j < n_index; j++)
+					{
+						Particle * sp2 = sp->Clone();
+						sys.Particles().Add(*sp2, rng);
 					}
 				}
-				for (unsigned int j = 0; j < n_index; j++)
-				{
-					Particle * sp2 = sp->Clone();
-					sys.Particles().Add(*sp2, rng);
-				}
 			}
+			delete sp;
+			sp = NULL;
 		}
-		//cout << endl;
-		delete sp;
-		sp = NULL;
 	}
-	area_total *= (rate_constant * 3.0);
-	//cout << area_total << endl;
 
-	sys.SetSGadjustment(area_total);
+	sys.SetSGadjustment(added_total);
 	Particle * sp = sys.Particles().GetInceptedSP().Clone();
 	for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 	{
@@ -1368,47 +1364,57 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 
 //! Compute nth diameter moment, adjusted because distribution is truncated
 //! to maximum/minimum physical particle size thresholds (conditional expectation)
-unsigned int Mechanism::SetRandomParticle(bool isSP1, Cell &sys, double t, double random_number, bool isRandomSample, 
-	double n, rng_type &rng) const
+unsigned int Mechanism::SetRandomParticle(bool isSP1, Cell &sys, double t, double random_number,
+	Sweep::PropID prop, rng_type &rng) const
 {	
 	Particle * sp = sys.Particles().GetInceptedSP().Clone();
 
 	// This needs to be generalised for incepting SP not smallest size!!
 	unsigned int n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
-		
-	boost::uniform_01<rng_type&, double> unifDistrib(rng);
+	
+	// Generate a random number
+	//boost::uniform_01<rng_type&, double> unifDistrib(rng);
+	double alpha = random_number;// unifDistrib();
+
+	unsigned int critical_index = sys.Particles().GetCritialNumber();
+	unsigned int index = 0;
+	unsigned int n_index = 0;
+	bool canstop = false;
 
 	// Now to select a particle with an element of randomness
 	// but such that the selection property is reflected
-	//if (isRandomSample)                                                                       // Uniform selection, just use CDF
-	//{
-	unsigned int critical_index = sys.Particles().GetCritialNumber();
-	unsigned int n_total = sys.Particles().GetTotalParticleNumber();
-	unsigned int index = critical_index + 1;
-	double alpha = unifDistrib();
-	alpha *= n_total;
-	index = 0;
-	bool canstop = false;
-	unsigned int n_index = 0;
-	while (index < critical_index && !canstop)
+	if (prop == iUniform)                                                                     // Uniform selection, just use CDF
 	{
-		n_index = sys.Particles().NumberAtIndex(index);
-		if (n_index >= alpha)
-			canstop = true;
-		else
+		//unsigned int n_total = sys.Particles().GetTotalParticleNumber();
+		//alpha *= n_total;
+		while (index < critical_index && !canstop)
 		{
-			index++;
-			alpha -= n_index;
+			n_index = sys.Particles().NumberAtIndex(index);
+			if (n_index >= alpha)
+				canstop = true;
+			else
+			{
+				index++;
+				alpha -= n_index;
+			}
 		}
 	}
-	
-
-	//}
-	//else                                                                                      // Selection based on a property, sample its distribution
-	//{
-	//}
-		
-	//cout << index << endl;
+	else                                                                                      // Selection based on a property, sample its distribution
+	{
+		//unsigned int n_total = sys.Particles().GetPropertyTotal(prop);
+		//alpha *= n_total;
+		while (index < critical_index && !canstop)
+		{
+			n_index = sys.Particles().NumberAtIndex(index) * sys.Particles().PropertyAtIndex(prop, index);
+			if (n_index >= alpha)
+				canstop = true;
+			else
+			{
+				index++;
+				alpha -= n_index;
+			}
+		}
+	}
 
 	// Now create a particle of this size and store it
 	double n_add = index - n_titania0;
