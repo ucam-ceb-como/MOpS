@@ -850,12 +850,6 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
             useFreeMolRegime = true;
         else if(str == "transition")
             useFreeMolRegime = false;
-		//**************************************************************************csl37:TTIP
-		else if(str == "TTIP")	{//single step TTIP reaction
-			useFreeMolRegime = false;
-			icn.SetSingleStep(true);
-		}
-		//**************************************************************************csl37:TTIP
         else
             throw std::runtime_error("Unrecognised rate type " + str + " in Sweep::MechParser::readInception");
     }
@@ -1221,10 +1215,6 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
                 rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iEleyRidealDesorption);
             } else if (str2.compare("multivariate")==0) {
                 rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iMultivariate);
-			//**************************************************************************csl37:TTIP
-			} else if (str2.compare("TTIP")==0) {
-                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iTTIP);
-			//**************************************************************************csl37:TTIP
             } else {
                 throw runtime_error("Unrecognised titania reaction form" + str2 +
                         "in MechParser::readSurfRxns");

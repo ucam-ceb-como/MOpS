@@ -140,10 +140,6 @@ public:
         std::istream &in,            // Input stream.
         const Sweep::Mechanism &mech // Parent mechanism.
         );
-
-	//**************************************************************************csl37:TTIP
-	void SetSingleStep(bool single_step);
-	//**************************************************************************csl37:TTIP
 	
 protected:
     // Default constructor is protected to prevent an inception being
@@ -157,10 +153,6 @@ protected:
         double MFP,             // Gas mean free path.
         double vol              // Particle ensemble sample volume.
         ) const;
-
-	//**************************************************************************csl37:TTIP
-	double SingleStepRate(const EnvironmentInterface &gas, double T, double A_smpl, double V_smpl) const;
-	//**************************************************************************csl37:TTIP
 
     // Calculates the gas-phase chemistry contribution to the rate
     // expression.  This is overloaded as Avogadro's number must be
@@ -177,10 +169,6 @@ private:
     // Free-molecular enhancement factor.
     const double m_efm;
 
-	//**************************************************************************csl37:TTIP
-	//TTIP single step flag
-	bool m_single_step;
-	//**************************************************************************csl37:TTIP
 };
 }
 }
