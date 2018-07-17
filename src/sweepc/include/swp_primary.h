@@ -274,12 +274,6 @@ public:
 	//csl37: get primary coords
 	virtual void GetPrimaryCoords(std::vector<fvector> &coords) const;
 
-	//csl37: set primary tracking
-	virtual void setTracking();
-
-	//csl37: remove primary tracking
-	virtual void removeTracking();
-
     // READ/WRITE/COPY.
 
     // Returns a copy of the primary.

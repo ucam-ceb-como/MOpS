@@ -209,15 +209,6 @@ public:
     //! Deserialise a BinTreePrimary particle
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
 
-	//csl37
-	//flag to indicate particle is tracked 
-	bool m_tracked;
-	void setTracking() {m_tracked = true;};
-	//csl37: remove primary tracking
-	void removeTracking();
-	//csl37: check primary tracking
-	void checkTracking(int &count);
-
 	//! Return primary particle details and connectivity
 	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
 

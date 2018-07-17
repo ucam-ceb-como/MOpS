@@ -800,26 +800,10 @@ int AggModels::Primary::InceptedPAH() const
 void AggModels::Primary::GetPrimaryCoords(std::vector<fvector> &coords) const
 {
 	//spherical model coords are (0,0,0,0)
-	fvector c(10);
+	fvector c(4);
 	c[0] = 0.0;
     c[1] = 0.0;
     c[2] = 0.0;
     c[3] = 0.0;
-	c[4] = 0.0;
-    c[5] = 0.0;
-    c[6] = 0.0;
-	c[7] = 0.0;
-    c[8] = 0.0;
-    c[9] = 0.0;
     coords.push_back(c);
-}
-
-void AggModels::Primary::setTracking()
-{
-	//spherical particles don't have primaries
-}
-
-void AggModels::Primary::removeTracking()
-{
-	//spherical particles don't have primaries
 }
