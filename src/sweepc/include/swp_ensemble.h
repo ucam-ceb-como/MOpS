@@ -300,6 +300,7 @@ public:
 	double GetTotalMass2() const { return m_total_mass2; }
 	double GetTotalMass3() const { return m_total_mass3; }
 	unsigned int GetTotalComponent() const { return m_total_component; }
+	void DoubleTotals();
 
     // READ/WRITE/COPY.
 

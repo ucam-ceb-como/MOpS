@@ -290,7 +290,8 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
 	    mech.LPDA(t, sys, rng);
-		mech.UpdateSections(t, t - tin, sys, rng);
+		if (mech.IsHybrid() && sys.Particles().IsFirstSP())
+			mech.UpdateSections(t, t - tin, sys, rng);
     }
 
     return err;

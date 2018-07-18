@@ -1364,27 +1364,23 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 
 //! Compute nth diameter moment, adjusted because distribution is truncated
 //! to maximum/minimum physical particle size thresholds (conditional expectation)
-unsigned int Mechanism::SetRandomParticle(bool isSP1, Cell &sys, double t, double random_number,
+unsigned int Mechanism::SetRandomParticle(bool isSP1, bool isSP2, Cell &sys, double t, double random_number,
 	Sweep::PropID prop, rng_type &rng) const
-{	
-	Particle * sp = sys.Particles().GetInceptedSP().Clone();
-
-	// This needs to be generalised for incepting SP not smallest size!!
-	unsigned int n_titania0 = (sys.Particles().IsFirstSP()) ? sys.Particles().GetInceptedSP().Composition()[0] : 0.0;
-	
+{		
 	// Generate a random number
 	//boost::uniform_01<rng_type&, double> unifDistrib(rng);
 	double alpha = random_number;// unifDistrib();
 
 	unsigned int critical_index = sys.Particles().GetCritialNumber();
 	unsigned int index = 0;
-	unsigned int n_index = 0;
 	bool canstop = false;
 
 	// Now to select a particle with an element of randomness
 	// but such that the selection property is reflected
-	if (prop == iUniform)                                                                     // Uniform selection, just use CDF
+	if (prop == iUniform)                                                                     // Uniform selection
 	{
+		unsigned int n_index = 0;
+
 		//unsigned int n_total = sys.Particles().GetTotalParticleNumber();
 		//alpha *= n_total;
 		while (index < critical_index && !canstop)
@@ -1399,13 +1395,15 @@ unsigned int Mechanism::SetRandomParticle(bool isSP1, Cell &sys, double t, doubl
 			}
 		}
 	}
-	else                                                                                      // Selection based on a property, sample its distribution
+	else                                                                                      // Selection based on a property
 	{
 		//unsigned int n_total = sys.Particles().GetPropertyTotal(prop);
 		//alpha *= n_total;
+		double n_index = 0.0;
+
 		while (index < critical_index && !canstop)
 		{
-			n_index = sys.Particles().NumberAtIndex(index) * sys.Particles().PropertyAtIndex(prop, index);
+			n_index = (double)(sys.Particles().NumberAtIndex(index)) * sys.Particles().PropertyAtIndex(prop, index);
 			if (n_index >= alpha)
 				canstop = true;
 			else
@@ -1416,32 +1414,46 @@ unsigned int Mechanism::SetRandomParticle(bool isSP1, Cell &sys, double t, doubl
 		}
 	}
 
-	// Now create a particle of this size and store it
-	double n_add = index - n_titania0;
-	if (n_add < 0.0)
+	if (isSP1 || isSP2)
 	{
-		n_add = 0.0;
-		cout << "Warning: Selected particle is smaller than stored minimum size\n";
-	}
-	// Not the ideal way of calling this update but should more or less work
-	for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-	{
-		if ((*i)->IsDeferred())
-		{
-			sys.SetNotPSIFlag(false);
-			(*i)->Perform(t, sys, *sp, rng, n_add);
-			sp->SetTime(t);
-			sp->UpdateCache();
-			sys.SetNotPSIFlag(true);
-		}
-	}
+		Particle * sp = sys.Particles().GetInceptedSP().Clone();
 
-	if (isSP1)
-		sys.Particles().SetInceptedSP_tmp_d_1(*sp);
-	else
-		sys.Particles().SetInceptedSP_tmp_d_2(*sp);
-	delete sp;
-	sp = NULL;
+		// This needs to be generalised for incepting SP not smallest size!!
+		unsigned int n_titania0 = sp->Composition()[0];
+
+		// Now create a particle of this size and store it
+		double n_add = index - n_titania0;
+		if (n_add < 0.0)
+		{
+			n_add = 0.0;
+			cout << "Warning: Selected particle is smaller than stored minimum size\n";
+		}
+		// Not the ideal way of calling this update but should more or less work
+		for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+		{
+			if ((*i)->IsDeferred())
+			{
+				sys.SetNotPSIFlag(false);
+				(*i)->Perform(t, sys, *sp, rng, n_add);
+				sp->SetTime(t);
+				sp->UpdateCache();
+				sys.SetNotPSIFlag(true);
+			}
+		}
+
+		/*std::vector<double> newComposition(1);
+		newComposition[0] = index;
+		sp->Primary()->SetComposition(newComposition);
+		sp->SetTime(t);
+		sp->UpdateCache();*/
+
+		if (isSP1)
+			sys.Particles().SetInceptedSP_tmp_d_1(*sp);
+		else if (isSP2)
+			sys.Particles().SetInceptedSP_tmp_d_2(*sp);
+		delete sp;
+		sp = NULL;
+	}
 
 	return index;
 }

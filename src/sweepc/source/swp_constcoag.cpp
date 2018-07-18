@@ -181,7 +181,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip1 == -2)
 	{
-		unsigned int index1 = m_mech->SetRandomParticle(true, sys, t, alpha1 - n_other, iUniform, rng);
+		unsigned int index1 = m_mech->SetRandomParticle(true, false, sys, t, alpha1 - n_other, iUniform, rng);
 		
 		sp1 = sys.Particles().GetInceptedSP_tmp_d_1().Clone();
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
@@ -195,7 +195,6 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			ip2 = sys.Particles().Select(rng);
 
 		ip1 = sys.Particles().Add(*sp1, rng);                                        // Add the particle to the ensemble
-		//std::cout << "Coag1: " << sys.Particles().GetTotalParticleNumber() << " , " << sys.Particles().GetCritialNumber() << " , " << sp1->Composition()[0] << std::endl;
 	}
 	else
 	{
@@ -213,17 +212,18 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     unsigned int guard = 0;
 	while ((ip2 == ip1) && (++guard < 1000))
 	{
-		if (hybrid_flag)
+		if (hybrid_flag && ip2 != -2)
 		{
-			ip2 = -2;
 			if (ip1_flag)
 			{
 				++n_other;
+				--n_incep;
 			}
-			if (n_other > alpha2)
-			{
+			//ip2 = -2;
+			//if (n_other > alpha2)
+			//{
 				ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
-			}
+			//}
 		}
 		else
 			ip2 = sys.Particles().Select(rng);
@@ -237,12 +237,12 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip2 == -2)
 	{
-		index2 = m_mech->SetRandomParticle(false, sys, t, alpha2 - n_other, iUniform, rng);
+		int ip1_adjustment = 0;
+		index2 = m_mech->SetRandomParticle(false, true, sys, t, alpha2 - n_other, iUniform, rng);
 		// Note don't need to add it to the ensemble unless coagulation is successful
 		sp2 = sys.Particles().GetInceptedSP_tmp_d_2().Clone();
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
 		dsp2 = sp2->CollDiameter();
-		//std::cout << "Coag2: " << sys.Particles().GetTotalParticleNumber() << " , " << sys.Particles().GetCritialNumber() << " , " << sp2->Composition()[0] << std::endl;
 	}
 	else
 	{

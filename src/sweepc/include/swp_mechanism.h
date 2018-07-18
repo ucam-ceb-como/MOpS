@@ -340,6 +340,7 @@ public:
     //! distribution parameters
 	unsigned int SetRandomParticle(
 		bool isSP1,
+		bool isSP2,
 		Cell &sys, 
 		double t,
 		double random_number, 

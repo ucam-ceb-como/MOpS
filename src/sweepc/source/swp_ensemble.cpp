@@ -282,7 +282,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     // Initialise doubling.
     m_maxcount   = 0;
     m_ndble      = 0;
-	m_dbleon     = false; // true;
+	m_dbleon     = true;
     m_dbleactive = false;
     m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0);
 
@@ -292,7 +292,6 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 	// aab64 for hybrid particle model
 	m_inceptingWeight = 0.0;
 	m_inceptedFirstSP = false;
-	//m_inceptingSP = NULL;
 	m_critical_size = 100;
 	m_total_number = 0;
 	m_total_diameter = 0.0;
@@ -325,7 +324,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
  * @param val   Switch for doubling.
  */
 void Sweep::Ensemble::SetDoubling(const bool val) {
-	m_dbleon = false;// val;
+	m_dbleon = val;
 }
 
 /**
@@ -399,11 +398,11 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
 
     // Initialise doubling.
     m_ndble      = 0;
-	m_dbleon = false; // true;
+	m_dbleon     = true;
 
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
-		m_dbleactive = false; // true; // aab64 switching this off for flow case because otherwise ensemble capacity hit too soon and sample volume falls rapidly due to contractions
+		m_dbleactive = true; 
     } else
         m_dbleactive = false;
 
@@ -468,8 +467,8 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 {
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
-		m_dbleactive = false; // true;
-        //printf("sweep: Particle doubling activated.\n"); // aab64 switching doubling off, see message above
+		m_dbleactive = true;
+        printf("sweep: Particle doubling activated.\n");
     }
 
     // Check ensemble for space, if there is not enough space then need
@@ -484,6 +483,8 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
 
 		i = indexGenerator();
+		while (i == m_capacity) // aab64 can't remove last particle in case this is a coagulating inception (hybrid)
+			i = indexGenerator();
 
         ++m_ncont;
         if (!m_contwarn && ((double)(m_ncont)/(double)m_capacity > 0.01)) {
@@ -814,7 +815,7 @@ double Sweep::Ensemble::Scaling() const
     
 	// aab64 The scaling factor includes the contraction term and the doubling term.
 	// for weighted particles, the contraction factor depends on the weight of the removed particle
-	return m_wtdcontfctr;// *pow(2.0, (double)m_ndble);
+	return m_wtdcontfctr *pow(2.0, (double)m_ndble);
 }
 
 // Resets the ensemble scaling.
@@ -959,6 +960,22 @@ void Sweep::Ensemble::UpdateTotalsWithIndices(unsigned int i1, unsigned int i2)
 	m_total_diameter3 += m_particle_numbers[i1] * (m_pn_diameters3[i2] - m_pn_diameters3[i1]);
 	m_total_component += m_particle_numbers[i1] * (i2 - i1);
 }
+void Sweep::Ensemble::DoubleTotals()
+{
+	m_total_diameter *= 2.0;
+	m_total_diameter2 *= 2.0;
+	m_total_diameter_1 *= 2.0;
+	m_total_diameter_2 *= 2.0;
+	m_total_diameter2_mass_1_2 *= 2.0;
+	m_total_mass_1_2 *= 2.0;
+	m_total_mass *= 2.0;
+	m_total_mass2 *= 2.0;
+	m_total_mass3 *= 2.0;
+	m_total_diameter3 *= 2.0;
+	m_total_component *= 2;
+	m_total_number *= 2;
+}
+
 
 void Sweep::Ensemble::ResetNumberAtIndex(unsigned int index)
 {
@@ -1131,6 +1148,15 @@ void Sweep::Ensemble::dble()
                 // Keep count of the added particles
                 ++m_count;
             }
+
+			if (m_total_number > 0)
+			{
+				for (unsigned int i = 0; i < m_critical_size; ++i)
+				{
+					m_particle_numbers[i] *= 2.0;
+				}
+				DoubleTotals();
+			}
 
             // Update scaling.
             ++m_ndble;
@@ -1376,7 +1402,7 @@ void Sweep::Ensemble::init(void)
     m_dblecutoff = 0;
     m_dblelimit  = 0;
     m_dbleslack  = 0;
-	m_dbleon = false; // true;
+	m_dbleon =  true;
 
 	// aab64 for hybrid particle model
 	m_inceptingWeight = 0;
