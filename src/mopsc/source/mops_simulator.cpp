@@ -2334,8 +2334,8 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	primary_header.push_back("Particle Index");
 	primary_header.push_back("Primary diameter (m)");
 	primary_header.push_back("Sph. equiv. diameter (m)");
-	primary_header.push_back("True primary volume (m3)");
-	primary_header.push_back("Primary volume (m3)");
+	primary_header.push_back("(Geom.) Primary volume (m3)");
+	primary_header.push_back("(Comp.) Primary volume (m3)");
 	primary_header.push_back("Primary surface (m2)");
 	primary_header.push_back("Position x");
 	primary_header.push_back("Position y");
