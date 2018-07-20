@@ -202,12 +202,23 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 	{
 		if (!sys.Particles().IsFirstSP())
 		{
-			sys.Particles().SetInceptedSP(*sp);
-			sys.Particles().SetInceptedSP_tmp_d_1(*sp);
-			sys.Particles().SetInceptedSP_tmp_d_2(*sp);
-			sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(), sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
+			sys.Particles().SetInceptedSP();
+			//Particle * sp_pn = NULL;
+			// Initialise lookup of particles below critical size
+			for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
+			{
+				Particle * sp_pn = m_mech->CreateParticle(t);
+				sp_pn->setPositionAndTime(posn, t);
+				std::vector<double> newComposition(1);
+				newComposition[0] = i;
+				sp_pn->Primary()->SetComposition(newComposition);
+				sp_pn->Primary()->SetValues(ParticleTrackers());
+				sp_pn->UpdateCache();
+				sys.Particles().SetPNParticle(*sp_pn, rng, i);
+			}
+			sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(), 
+				sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
 		}
-
 		sys.Particles().UpdateNumberAtIndex(sp->Composition()[0], 1);
 		sys.Particles().UpdateTotalParticleNumber(1);
 		sys.Particles().UpdateTotalsWithIndex(sp->Composition()[0], 1.0);
@@ -217,13 +228,11 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 	adjustGas(sys, sp->getStatisticalWeight());
 	adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 
-	//std::cout << "Incep: " << sys.Particles().GetTotalParticleNumber() << " , " << sys.Particles().GetCritialNumber() << " , " << sp->Composition()[0] << std::endl;
 	if (m_mech->IsHybrid())
 	{
 		delete sp;
 		sp = NULL;
 	}
-
 
     return 0;
 }

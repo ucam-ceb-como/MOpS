@@ -182,8 +182,12 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	if (hybrid_flag && ip1 == -2)
 	{
 		unsigned int index1 = m_mech->SetRandomParticle(true, false, sys, t, alpha1 - n_other, iUniform, rng);
-		
-		sp1 = sys.Particles().GetInceptedSP_tmp_d_1().Clone();
+		if (index1 >= sys.Particles().GetCritialNumber())
+			std::cout << "Index1 is too large\n";
+
+		sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
+		sp1->SetTime(t);
+			//sys.Particles().GetInceptedSP_tmp_d_1().Clone();
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 		sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
 		sys.Particles().UpdateNumberAtIndex(index1, -1);
@@ -206,7 +210,11 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			return -1;
 		}
 	}
-
+	if (ip1_flag)
+	{
+		++n_other;
+		--n_incep;
+	}
     // Choose and get unique second particle, then update it.  Note, we are allowed to do
     // this even if the first particle was invalidated.
     unsigned int guard = 0;
@@ -214,16 +222,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	{
 		if (hybrid_flag && ip2 != -2)
 		{
-			if (ip1_flag)
-			{
-				++n_other;
-				--n_incep;
-			}
-			//ip2 = -2;
-			//if (n_other > alpha2)
-			//{
-				ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
-			//}
+			ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
 		}
 		else
 			ip2 = sys.Particles().Select(rng);
@@ -239,8 +238,12 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	{
 		int ip1_adjustment = 0;
 		index2 = m_mech->SetRandomParticle(false, true, sys, t, alpha2 - n_other, iUniform, rng);
+		if (index2 >= sys.Particles().GetCritialNumber())
+			std::cout << "Index2 is too large\n";
 		// Note don't need to add it to the ensemble unless coagulation is successful
-		sp2 = sys.Particles().GetInceptedSP_tmp_d_2().Clone();
+		sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
+		sp2->SetTime(t);
+			//sys.Particles().GetInceptedSP_tmp_d_2().Clone();
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
 		dsp2 = sp2->CollDiameter();
 	}
@@ -259,7 +262,8 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
 	
     //Update the particles
-	m_mech->UpdateParticle(*sp1, sys, t, rng);
+	if (t > sp1->LastUpdateTime())
+		m_mech->UpdateParticle(*sp1, sys, t, rng);
 
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
@@ -272,7 +276,8 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
         return 0;
     }
 
-	m_mech->UpdateParticle(*sp2, sys, t, rng);
+	if (t > sp2->LastUpdateTime())
+		m_mech->UpdateParticle(*sp2, sys, t, rng);
 	
 	// Check validity of particles after update.
     if (!sp2->IsValid()) {

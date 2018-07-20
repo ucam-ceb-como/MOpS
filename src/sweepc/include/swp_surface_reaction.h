@@ -105,6 +105,15 @@ public:
         const Geometry::LocalGeometry1d &local_geom // cell location information
         ) const;
 
+	// aab64 Return rate constant and chemistry part for hybrid method
+	virtual double Rate(double t, const Cell &sys) const;
+
+	// aab64 Do surface growth gas-phase adjustment for hybrid method
+	virtual int Perform(double t,        // Current time (s).
+		Cell &sys,                       // System to which the particle belongs.
+		rng_type &rng,
+		unsigned int n) const;           // Number of times to perform the process.)
+
 
 	// SINGLE PARTICLE RATE CALCULATIONS.
 

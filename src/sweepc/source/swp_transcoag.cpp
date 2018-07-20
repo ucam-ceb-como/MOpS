@@ -92,7 +92,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 
 		/*std::ofstream file;
 		file.open("coag_rate_diags.csv", std::ios::app);
-		file << t << "," << sys.ParticleCount() << "," << sys.GetIncepted() << ",";
+		file << t << "," << sys.ParticleCount() << "," << sys.Particles().GetTotalParticleNumber() << ",";
 		file.close();*/
 
 		fvector props(6, 0);
@@ -222,9 +222,9 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 		double T = sys.GasPhase().Temperature();
 		double P = sys.GasPhase().Pressure();
 
-		/*std::ofstream file;
+	/*	std::ofstream file;
 		file.open("coag_rate_diags.csv", std::ios::app);
-		file << t << "," << sys.ParticleCount() << "," << sys.GetIncepted() << ",";
+		file << t << "," << sys.ParticleCount() << "," << sys.Particles().GetTotalParticleNumber() << ",";
 		file.close();*/
 
 		fvector props(6, 0);
@@ -427,6 +427,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys, t, test * (dc_incep + dc_other) - dc_other, iDcol, rng);
 				ip1 = -2;
+				--n_incep;
 				double delta_index = sys.Particles().PropertyAtIndex(iD_1, index1);
 				dc_1_incep -= delta_index;
 				dc_1_other += delta_index;
@@ -442,6 +443,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys, t, test * n_total - n_other, iUniform, rng);
 				ip1 = -2;
+				--n_incep;
 				double delta_index = sys.Particles().PropertyAtIndex(iD_1, index1);
 				dc_1_incep -= delta_index;
 				dc_1_other += delta_index;
@@ -457,6 +459,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys, t, test * (dc_incep + dc_other) - dc_other, iDcol, rng);
 				ip1 = -2;
+				--n_incep;
 				double delta_index = sys.Particles().PropertyAtIndex(iD_2, index1);
 				dc_2_incep -= delta_index;
 				dc_2_other += delta_index;
@@ -472,6 +475,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys, t, test * n_total - n_other, iUniform, rng);
 				ip1 = -2;
+				--n_incep;
 				double delta_index = sys.Particles().PropertyAtIndex(iD2_M_1_2, index1);
 				dc2_m_1_2_incep -= delta_index;
 				dc2_m_1_2_other += delta_index;
@@ -487,6 +491,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys, t, test * (dc2_incep + dc2_other) - dc2_other, iD2, rng);
 				ip1 = -2;
+				--n_incep;
 				double delta_index = sys.Particles().PropertyAtIndex(iM_1_2, index1);
 				m_1_2_incep -= delta_index;
 				m_1_2_other += delta_index;
@@ -516,8 +521,12 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		// Is this an incepting class particle?
 		if (ip1 == -2)
 		{
+			if (index1 >= sys.Particles().GetCritialNumber())
+				std::cout << "Index1 is too large\n";
 			ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
-			sp1 = sys.Particles().GetInceptedSP_tmp_d_1().Clone();
+			sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
+			sp1->SetTime(t);
+				//sys.Particles().GetInceptedSP_tmp_d_1().Clone();
 			sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
 			sys.Particles().UpdateNumberAtIndex(index1, -1);
 			sys.Particles().UpdateTotalParticleNumber(-1);
@@ -539,7 +548,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		// Incepting class can be selected twice, provided it contains at least two particles
 		ip2 = ip1;
 		unsigned int guard = 0;
-		bool mustSwitch = (ip1 < -1) && (n_incep == 0);
+		bool mustSwitch = (ip1 == -2) && (n_incep == 0);
 		test = unifDistrib();		
 
 		switch (term) {
@@ -633,8 +642,12 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	// Is this an incepting class particle?
 	if (ip2 == -2)
 	{
+		if (index2 >= sys.Particles().GetCritialNumber())
+			std::cout << "Index2 is too large\n";
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
-		sp2 = sys.Particles().GetInceptedSP_tmp_d_2().Clone();                       // Note don't need to add it to the ensemble unless coagulation is successful
+		sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
+		sp2->SetTime(t);
+			//sys.Particles().GetInceptedSP_tmp_d_2().Clone();                       // Note don't need to add it to the ensemble unless coagulation is successful
 	}
 	else
 	{
@@ -651,7 +664,8 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	double majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
 	//Update the particles
-	m_mech->UpdateParticle(*sp1, sys, t, rng);
+	if (t > sp1->LastUpdateTime())
+		m_mech->UpdateParticle(*sp1, sys, t, rng);
 	// Check that particle is still valid.  If not,
 	// remove it and cease coagulating.
 	if (!sp1->IsValid()) {
@@ -662,7 +676,8 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		return 0;
 	}
 
-	m_mech->UpdateParticle(*sp2, sys, t, rng);
+	if (t > sp2->LastUpdateTime())
+		m_mech->UpdateParticle(*sp2, sys, t, rng);
 	// Check validity of particles after update.
 	if (!sp2->IsValid()) {
 		// Tell the ensemble to update particle one before we confuse things

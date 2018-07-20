@@ -138,17 +138,20 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             m_dbleslack  = rhs.m_dbleslack;
             m_dbleon     = rhs.m_dbleon;
 
-			// aab64 for hybrid particle model
-			m_inceptingWeight = rhs.m_inceptingWeight; 
-			m_inceptedFirstSP = rhs.m_inceptedFirstSP;
-
             // Copy particle vector.
             for (unsigned int i=0; i!=rhs.Count(); ++i) {
                 m_particles[i] = rhs.m_particles[i]->Clone();
             }
 
+			// aab64 for hybrid particle number model
+			m_inceptedFirstSP = rhs.m_inceptedFirstSP;
 			if (rhs.m_critical_size > 0)
 			{
+				m_pn_particles.resize(rhs.m_critical_size, NULL);
+				for (unsigned int i = 0; i != rhs.Count(); ++i) {
+					m_pn_particles[i] = rhs.m_pn_particles[i]->Clone();
+				}
+
 				m_particle_numbers.resize(rhs.m_critical_size, 0);
 				m_pn_diameters.resize(rhs.m_critical_size, 0);
 				m_pn_diameters2.resize(rhs.m_critical_size, 0);
@@ -161,7 +164,8 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
 				m_pn_mass3.resize(rhs.m_critical_size, 0);
 				m_pn_diameters3.resize(rhs.m_critical_size, 0);
 				m_critical_size = rhs.m_critical_size;
-				// Copy particle vector.
+				
+				// Copy vectors.
 				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
 					m_particle_numbers[i] = rhs.m_particle_numbers[i];
 				}
@@ -289,8 +293,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_dblelimit  = (m_halfcap - (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0)));
     m_dbleslack  = (unsigned int)pow(2.0, (int)((m_levels-5)>0 ? m_levels-5 : 0));
 
-	// aab64 for hybrid particle model
-	m_inceptingWeight = 0.0;
+	// aab64 for hybrid particle number model
 	m_inceptedFirstSP = false;
 	m_critical_size = 100;
 	m_total_number = 0;
@@ -316,6 +319,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 	m_pn_mass2.resize(m_critical_size, 0);
 	m_pn_mass3.resize(m_critical_size, 0);
 	m_pn_diameters3.resize(m_critical_size, 0);
+	m_pn_particles.resize(m_critical_size, NULL);
 }
 
 /*!
@@ -450,6 +454,17 @@ const Particle *const Sweep::Ensemble::At(unsigned int i) const
     }
 }
 
+Particle *const Sweep::Ensemble::GetPNParticleAt(unsigned int index)
+{
+	// Check that the index in within range, then return the particle.
+	if (index < m_critical_size) {
+		return m_pn_particles[index];
+	}
+	else {
+		return NULL;
+	}
+}
+
 /*!
  * @param[in,out]   sp          Particle to add to the ensemble
  * @param[in,out]   rng         Random number generator
@@ -486,6 +501,13 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 		while (i == m_capacity) // aab64 can't remove last particle in case this is a coagulating inception (hybrid)
 			i = indexGenerator();
 
+		// aab64 Account for particle weights in sample volume contraction
+		double wi = m_particles[i]->getStatisticalWeight();
+		double wsp = sp.getStatisticalWeight();
+		double wtot = m_tree.head().Property(iW) + m_total_number;
+		m_wtdcontfctr *= (wtot + wsp - wi);
+		m_wtdcontfctr *= 1.0 / (wtot + wsp);
+
         ++m_ncont;
         if (!m_contwarn && ((double)(m_ncont)/(double)m_capacity > 0.01)) {
             m_contwarn = true;
@@ -503,26 +525,9 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
     } else if ((unsigned)i < m_capacity) {
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
-		
-		// aab64
-		double wi = m_particles[i]->getStatisticalWeight();
-		double wsp = sp.getStatisticalWeight();
-		double wincep = m_inceptingWeight;
-		double wtot = m_tree.head().Property(iW) + wincep;
-		m_wtdcontfctr *= (wtot + wsp - wi);
-		m_wtdcontfctr *= 1.0 / (wtot + wsp);
-
         Replace(i, sp);
 	}
 	else {
-
-		// aab64
-		double wsp = sp.getStatisticalWeight();
-		double wincep = m_inceptingWeight;
-		double wtot = m_tree.head().Property(iW) + wincep;
-		m_wtdcontfctr *= (wtot + wsp - wsp);
-		m_wtdcontfctr *= 1.0 / (wtot + wsp);
-
         // The new particle is to be removed immediately
         assert(static_cast<unsigned int>(i) == m_capacity);
         delete &sp;
@@ -533,6 +538,17 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
     assert(m_tree.size() == m_count);
 
     return i;
+}
+
+int Sweep::Ensemble::SetPNParticle(Particle &sp, rng_type &rng, unsigned int index)
+{
+	if (index < m_critical_size)
+	{
+		m_pn_particles[index] = &sp;
+		return 0;
+	}
+	else
+		return -1;
 }
 
 
@@ -702,10 +718,6 @@ void Sweep::Ensemble::ClearMain()
     m_dbleactive = false;
 
 	// aab64 for hybrid particle model
-	m_inceptingWeight = 0;
-	m_inceptingSP = NULL;
-	m_inceptingSP_tmp_d_1 = NULL;
-	m_inceptingSP_tmp_d_2 = NULL;
 	m_inceptedFirstSP = false;
 
 	m_total_number = 0;
@@ -721,6 +733,10 @@ void Sweep::Ensemble::ClearMain()
 	m_total_mass3 = 0.0;
 	m_total_diameter3 = 0.0;
 	m_critical_size = 100;
+	for (PartPtrVector::size_type i = 0; i != m_pn_particles.size(); ++i) {
+		delete m_pn_particles[i];
+		m_pn_particles[i] = NULL;
+	}
 }
 
 // SELECTING PARTICLES.
@@ -814,8 +830,8 @@ double Sweep::Ensemble::Scaling() const
     //return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
     
 	// aab64 The scaling factor includes the contraction term and the doubling term.
-	// for weighted particles, the contraction factor depends on the weight of the removed particle
-	return m_wtdcontfctr *pow(2.0, (double)m_ndble);
+	// for weighted particles, the contraction factor depends on the weight of the removed particle 
+	return m_wtdcontfctr * pow(2.0, (double)m_ndble);
 }
 
 // Resets the ensemble scaling.
@@ -893,40 +909,11 @@ double Sweep::Ensemble::Alpha(double T) const {
 }
 
 
-// aab64 for hybrid particle model
-void Sweep::Ensemble::SetInceptedSP(Sweep::Particle sp)
+// aab64 Hybrid particle number model
+// Record first inception
+void Sweep::Ensemble::SetInceptedSP()
 {
 	m_inceptedFirstSP = true;
-	delete m_inceptingSP;
-	m_inceptingSP = NULL;
-	m_inceptingSP = sp.Clone();
-}
-
-// aab64 Store particles with average properties for coagulation options
-void Sweep::Ensemble::SetInceptedSP_tmp_d_1(Sweep::Particle sp)
-{
-	delete m_inceptingSP_tmp_d_1;
-	m_inceptingSP_tmp_d_1 = NULL;
-	m_inceptingSP_tmp_d_1 = sp.Clone();
-}
-void Sweep::Ensemble::SetInceptedSP_tmp_d_2(Sweep::Particle sp)
-{
-	delete m_inceptingSP_tmp_d_2;
-	m_inceptingSP_tmp_d_2 = NULL;
-	m_inceptingSP_tmp_d_2 = sp.Clone();
-}
-Particle Sweep::Ensemble::GetInceptedSP() const
-{
-	return *m_inceptingSP;
-}
-
-Particle Sweep::Ensemble::GetInceptedSP_tmp_d_1() const
-{
-	return *m_inceptingSP_tmp_d_1;
-}
-Particle Sweep::Ensemble::GetInceptedSP_tmp_d_2() const
-{
-	return *m_inceptingSP_tmp_d_2;
 }
 void Sweep::Ensemble::UpdateNumberAtIndex(unsigned int index, unsigned int update)
 {
@@ -1050,12 +1037,12 @@ void Sweep::Ensemble::InitialiseDiameters(double molecularWeight, double density
 {
 	double expon = 1.0 / 3.0;
 	for (unsigned int i = 1; i < m_critical_size; ++i){
-		m_pn_diameters3[i] = (i / NA) * (molecularWeight / density) * (6.0 / PI);
+		m_pn_mass[i] = (i / NA) * (molecularWeight);
+		m_pn_diameters3[i] = m_pn_mass[i] * 6.0 / (PI * density);
 		m_pn_diameters[i] = pow(m_pn_diameters3[i], expon);
 		m_pn_diameters2[i] = m_pn_diameters[i] * m_pn_diameters[i];
 		m_pn_diameters_1[i] = 1.0 / m_pn_diameters[i];
 		m_pn_diameters_2[i] = m_pn_diameters_1[i] * m_pn_diameters_1[i];
-		m_pn_mass[i] = (i / NA) * (molecularWeight);
 		m_pn_mass2[i] = (m_pn_mass[i] * m_pn_mass[i]);
 		m_pn_mass3[i] = (m_pn_mass2[i] * m_pn_mass[i]);
 		m_pn_mass_1_2[i] = 1.0 / sqrt(m_pn_mass[i]);
@@ -1257,9 +1244,7 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
         } else {
             out.write((char*)&falseval, sizeof(falseval));
         }
-
-		// aab64 for hybrid particle model
-
+		
 
     } else {
         throw std::invalid_argument("Output stream not ready "
@@ -1348,9 +1333,6 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
 
                 // Calculate binary tree.
                 rebuildTree();
-
-				// Read the particles.
-				// aab64 for hybrid particle model
 				
                 break;
 			}
@@ -1374,7 +1356,36 @@ void Sweep::Ensemble::releaseMem(void)
         delete m_particles[i];
         m_particles[i] = NULL;
     }
-    m_particles.clear();
+	m_particles.clear();
+
+	// Delete particles from memory and delete vectors.
+	for (int i = 0; i != (int)m_pn_particles.size(); ++i) {
+		delete m_pn_particles[i];
+		m_pn_particles[i] = NULL;
+	}
+	m_pn_particles.clear();
+
+	m_pn_diameters.clear();
+	m_pn_diameters2.clear();
+	m_pn_diameters3.clear();
+	m_pn_diameters_1.clear();
+	m_pn_diameters_2.clear();
+	m_pn_diameters2_mass_1_2.clear();
+	m_pn_mass.clear();
+	m_pn_mass2.clear();
+	m_pn_mass3.clear();
+	m_pn_mass_1_2.clear();
+	m_particle_numbers.clear();
+	fvector().swap(m_pn_diameters);
+	fvector().swap(m_pn_diameters2);
+	fvector().swap(m_pn_diameters3);
+	fvector().swap(m_pn_diameters_1);
+	fvector().swap(m_pn_diameters_2);
+	fvector().swap(m_pn_diameters2_mass_1_2);
+	fvector().swap(m_pn_mass);
+	fvector().swap(m_pn_mass2);
+	fvector().swap(m_pn_mass3);
+	fvector().swap(m_pn_mass_1_2);
 }
 
 // Sets the ensemble to its initial condition.  Used in constructors.
@@ -1404,10 +1415,8 @@ void Sweep::Ensemble::init(void)
     m_dbleslack  = 0;
 	m_dbleon =  true;
 
-	// aab64 for hybrid particle model
-	m_inceptingWeight = 0;
+	// aab64 for hybrid particle number model
 	m_inceptedFirstSP = false;
-
 	m_critical_size = 100;
 	m_total_number = 0;
 	m_total_diameter = 0.0;

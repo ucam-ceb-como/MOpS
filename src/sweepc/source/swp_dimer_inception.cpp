@@ -132,16 +132,12 @@ int DimerInception::Perform(const double t, Cell &sys,
 
 	// aab64 hybrid particle model
 	// If hybrid_flag is active, track the number of incepting particles
-	//if (!m_mech->IsHybrid()) 
-	//{
-
 	int iprng = -1;
 	int iprng2 = -1;
 	unsigned int nsp = sys.ParticleCount();
 	double dcol_1, dcol_2, sw_0, sw_1;
 	Particle *sprng = NULL;
 	Particle *sprng2 = NULL;
-	
 	// Get surface inception settings
 	bool surfincflag = m_mech->GetIsSurfInc();
 	double dcol_switch = m_mech->GetSurfIncValue();
@@ -151,7 +147,6 @@ int DimerInception::Perform(const double t, Cell &sys,
 	m_mech->GetPSItype(PSItype); // event, both, weight
 	Sweep::PropID prop1 = sys.getCoagProp1();
 	Sweep::PropID prop2 = sys.getCoagProp2();
-
 	if (nsp > 1 && surfincflag) 
 	{
 		// Get average particle collision diameter
@@ -301,25 +296,39 @@ int DimerInception::Perform(const double t, Cell &sys,
 			{
 				if (!sys.Particles().IsFirstSP())
 				{
-					sys.Particles().SetInceptedSP(*sp);
-					sys.Particles().SetInceptedSP_tmp_d_1(*sp);
-					sys.Particles().SetInceptedSP_tmp_d_2(*sp);
+					sys.Particles().SetInceptedSP();
+					// Initialise lookup of particles below critical size
+					for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
+					{
+						Particle * sp_pn = m_mech->CreateParticle(t);
+						std::vector<double> newComposition(1);
+						newComposition[0] = i;
+						sp_pn->setPositionAndTime(posn, t);
+						sp_pn->Primary()->SetComposition(newComposition);
+						sp_pn->Primary()->SetValues(ParticleTrackers());
+						sp_pn->UpdateCache();
+						sys.Particles().SetPNParticle(*sp_pn, rng, i);
+						delete sp_pn;
+						sp_pn = NULL;
+					}
+					sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(), 
+						sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
 				}
-
 				sys.Particles().UpdateNumberAtIndex(sp->Composition()[0], 1);
 				sys.Particles().UpdateTotalParticleNumber(1);
 				sys.Particles().UpdateTotalsWithIndex(sp->Composition()[0], 1.0);
-
-				delete sp;
-				sp = NULL;
 			}
 
 			// Update gas-phase chemistry of system.
 			adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
 			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-		}
 
-		cout << sys.Particles().GetTotalParticleNumber() << " , " << sys.Particles().GetCritialNumber() << endl;
+			if (m_mech->IsHybrid())
+			{
+				delete sp;
+				sp = NULL;
+			}
+		}
 
     return 0;
 }

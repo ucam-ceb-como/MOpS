@@ -265,16 +265,9 @@ public:
     //! Get alpha for the ensemble (ABF model)
     double Alpha(double T) const;
 
-	// aab64 for hybrid particle model
+	// aab64 for hybrid particle number model
 	bool IsFirstSP(void) const { return m_inceptedFirstSP; }
-	
-	void SetInceptedSP(Sweep::Particle sp);
-	void SetInceptedSP_tmp_d_1(Sweep::Particle sp);
-	void SetInceptedSP_tmp_d_2(Sweep::Particle sp);
-	Particle GetInceptedSP() const;
-	Particle GetInceptedSP_tmp_d_1() const;
-	Particle GetInceptedSP_tmp_d_2() const;
-
+	void SetInceptedSP();
 	void UpdateNumberAtIndex(unsigned int index, unsigned int update);
 	void ResetNumberAtIndex(unsigned int index);
 	void InitialiseDiameters(double molecularWeight, double density);
@@ -301,6 +294,8 @@ public:
 	double GetTotalMass3() const { return m_total_mass3; }
 	unsigned int GetTotalComponent() const { return m_total_component; }
 	void DoubleTotals();
+	Particle *const GetPNParticleAt(unsigned int index);
+	int SetPNParticle(Particle &sp, rng_type &rng, unsigned int index);
 
     // READ/WRITE/COPY.
 
@@ -350,14 +345,8 @@ private:
     unsigned int m_dbleslack;  // Slack space at end of ensemble after doubling operation.
     bool m_dbleon;             // Allows user to manually switch off/on doubling.  Does not affect activation criterion.
 
-	// aab64 Hybrid particle model
-	double m_inceptingWeight;
-	Particle *m_inceptingSP;
-	Particle *m_inceptingSP_tmp_d_1;
-	Particle *m_inceptingSP_tmp_d_2;
+	// aab64 Hybrid particle number model
 	bool m_inceptedFirstSP;
-
-	// aab64 sectional
 	unsigned int m_critical_size; 
 	unsigned int m_total_number;
 	unsigned int m_total_component;
@@ -383,6 +372,8 @@ private:
 	std::vector<double> m_pn_mass2;
 	std::vector<double> m_pn_mass3;
 	std::vector<double> m_pn_diameters3;
+
+	PartPtrVector m_pn_particles;
 
     //! Reset the contents of the binary tree
     void rebuildTree();

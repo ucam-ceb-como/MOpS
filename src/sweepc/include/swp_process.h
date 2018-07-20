@@ -172,7 +172,6 @@ public:
 		const Geometry::LocalGeometry1d& local_geom
 		) const = 0;
 
-
 	// RATE TERM CALCULATIONS.
     //   These routines return the individual rate terms for a 
     //   process, which may have multiple terms (e.g. condensation).

@@ -284,6 +284,14 @@ double TitaniaSurfaceReaction::Rate(
     return rate;
 }
 
+// aab64 Return rate constant and chemistry part for hybrid method
+double TitaniaSurfaceReaction::Rate(double t, const Cell &sys) const
+{
+	// Rate constant.
+	double rate = SurfaceReaction::Rate(t, sys);
+	return rate;
+}
+
 
 /*!
  * Writes the object to a binary stream.

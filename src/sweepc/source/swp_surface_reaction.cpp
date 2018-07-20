@@ -144,7 +144,7 @@ double SurfaceReaction::Rate(double t, const Cell &sys,
     rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));*/
 
     // Particle dependence.
-    rate *= sys.Particles().GetSum(m_pid); //iWS
+    rate *= (sys.Particles().GetSum(m_pid) + (PI * sys.Particles().GetTotalDiameter2())); //iWS
 
     if (m_mech->AnyDeferred()) {
 
@@ -184,6 +184,22 @@ double SurfaceReaction::Rate(double t, const Cell &sys, const Particle &sp) cons
     rate *= sp.Property(m_pid);
 
     return rate;
+}
+
+// aab64 Return rate constant and chemistry part for hybrid method
+double SurfaceReaction::Rate(double t, const Cell &sys) const
+{
+	// Rate constant.
+	double rate = m_arr.A;
+
+	// Chemical species concentration dependence.
+	/*rate *= chemRatePart(sys.GasPhase());
+
+	// Temperature dependance.
+	double T = sys.GasPhase().Temperature();
+	rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));*/
+	
+	return rate;
 }
 
 // Returns majorant rate of the process for the given system.
@@ -328,6 +344,25 @@ int SurfaceReaction::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
 	}
     return m;
 }
+
+// aab64 Do surface growth gas-phase adjustment for hybrid method
+int SurfaceReaction::Perform(double t, Cell &sys, rng_type &rng, unsigned int n) const
+{
+	// aab64 Store current chemical rate part and temperature contribution
+	// to the SG for the hybrid model
+	double rate = m_arr.A;
+	/*rate *= chemRatePart(sys.GasPhase());
+	double T = sys.GasPhase().Temperature();
+	rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));*/
+	sys.SetSGk(rate);
+	
+	adjustGas(sys, n, 1);
+	adjustParticleTemperature(sys, n, 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); 
+
+	return n;
+}
+
+
 
 // Adjusts a primary particle according to the rules of the reaction.
 unsigned int SurfaceReaction::adjustPri(Sweep::AggModels::Primary &pri, rng_type &rng, unsigned int n) const
