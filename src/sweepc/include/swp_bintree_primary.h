@@ -133,7 +133,7 @@ public:
     double MobDiameter() const;
 
 	//! Get the collision diameter
-	double CollisionDiameter() const;
+	double CollisionDiameter();
 
     //! Get the number of primaries in the particle
     int  GetNumPrimary() const {return m_numprimary;}
@@ -171,7 +171,7 @@ public:
     //! Calculates the radius of gyration.
     double GetRadiusOfGyration() const;
     
-    //! Returns a vector of primary coordinates and radius (4D).
+    //! Returns a vector of primary coordinates, radius, and mass (5D).
     void GetPriCoords(std::vector<fvector> &coords) const;
 
 	//! Returns primary coords and frame orientation

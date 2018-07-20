@@ -902,10 +902,10 @@ double BinTreePrimary::GetRadiusOfGyration() const
     vector<fvector> coords;
 
 	//! If single primary then return the primary radius
-//	if(m_numprimary == 1) {
-//		Rg = m_primarydiam / 2.0;
+	if(m_numprimary == 1) {
+		Rg = m_primarydiam / 2.0;
 
-//	}else{
+	}else{
 
 		this->GetPriCoords(coords);
     
@@ -942,12 +942,12 @@ double BinTreePrimary::GetRadiusOfGyration() const
 
 			Rg = sqrt(sum / totalmass);
 		}
-//	}
+	}
 	    
 	return Rg;
 }
 
-//! Returns a vector of primary coordinates and radius (4D).
+//! Returns a vector of primary coordinates, radius, and mass (5D).
 /*!
  *  @param[in] coords The first three returned values are the cartesian x, y, z
  *                    coordinates, the final value is the radius.
@@ -955,11 +955,12 @@ double BinTreePrimary::GetRadiusOfGyration() const
 void BinTreePrimary::GetPriCoords(std::vector<fvector> &coords) const
 {
     if (isLeaf()) {
-        fvector c(4);
+        fvector c(5);
         c[0] = m_cen_mass[0];
         c[1] = m_cen_mass[1];
         c[2] = m_cen_mass[2];
         c[3] = m_r;
+		c[4] = m_mass;
         coords.push_back(c);
     } else {
         m_leftchild->GetPriCoords(coords);
@@ -2530,7 +2531,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         // Calculate the different diameters only for the root node because
         // this is the only part of the tree seen by the other code, for
         // example, the coagulation kernel
-        if (this == root) {
+		if (this->m_parent == NULL){	//if this does not have a parent this is the root node 
              // Get spherical equivalent radius and diameter
             double spherical_radius = pow(3 * m_vol / (4*PI), ONE_THIRD);
             m_diam = 2 * spherical_radius;
@@ -2540,34 +2541,38 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
             if (m_numprimary > 1)
                 m_avg_sinter = m_avg_sinter / (m_numprimary - 1);
 
-//			if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()) {
-				// Approxmiate the surface of the particle
-				// (same as in ChangePointer)
-				const double numprim_1_3 = pow(m_numprimary,-1.0 * ONE_THIRD);
-				m_surf = 4 * PI * spherical_radius * spherical_radius /
+			//! if the centre to centre distance is tracked then
+			//! the surface area is the particle free surface area
+			//! and the collision diameter is calculated using the
+			//! primary coordinates
+			if (m_pmodel->getTrackPrimaryCoordinates()) {
+				m_surf = m_free_surf;
+				m_dcol = CollisionDiameter();
+			}else{
+				
+				//! If primary separations are tracked then
+				//! the surface area is the particle free surface area
+				if (m_pmodel->getTrackPrimarySeparation()){
+					m_surf = m_free_surf;
+				}else{
+					//! Approxmiate the surface of the particle
+					// (same as in ChangePointer)
+					const double numprim_1_3 = pow(m_numprimary, -1.0 * ONE_THIRD);
+					m_surf = 4 * PI * spherical_radius * spherical_radius /
 						(m_avg_sinter * (1 - numprim_1_3) + numprim_1_3);
-//			}else{
-				// if the centre to centre distance is tracked then this is the free surface area
-//				m_surf = m_free_surf;
-//			}
+				}
 
-			// Calculate dcol based-on formula given in Lavvas et al. (2011)
-            const double aggcolldiam = (6* m_vol / m_surf) *
-                    pow(pow(m_surf, 3) / (36 * PI * m_vol * m_vol),
-                            (1.0/m_pmodel->GetFractDim()));
+				//! Calculate dcol based-on formula given in Lavvas et al. (2011)
+				const double aggcolldiam = (6 * m_vol / m_surf) *
+					pow(pow(m_surf, 3) / (36 * PI * m_vol * m_vol),
+					(1.0 / m_pmodel->GetFractDim()));
+				m_dcol = aggcolldiam;
+
+			}
+
             m_dmob = MobDiameter();
             
-			//! If coordinates are tracked dcol is based on the radius of gyration
-			//! otherwise dcol is given by Lavvas et al. (2011)
-//			if(m_pmodel->getTrackPrimaryCoordinates()){
-//				m_dcol = CollisionDiameter();
-//			}else{
-				m_dcol = aggcolldiam;
-//			}
-		
-			m_dmob = CollisionDiameter(); //csl37-testing
-        }
-        else {
+        } else {
             m_diam=0;
             m_dmob=0;
         }	
@@ -2631,43 +2636,42 @@ double BinTreePrimary::MobDiameter() const
 //! Calculates the collision diameter based on the radius of gyration
 //! if primary coordinates are tracked
 //csl37 - TO DO: add reference to pre-print / paper
-double BinTreePrimary::CollisionDiameter() const
+double BinTreePrimary::CollisionDiameter()
 {
-    double sum=0;
+    double sum=0.0;
     double dcol=0.0;
-    double rix, riy, riz, rjx, rjy, rjz, drx, dry, drz;
     vector<fvector> coords;
 		
+	//! Calculate centre of mass
+	this->calcCOM();
+	//! Save centre of mass coordinates
+	double COM_x = m_cen_mass[0];
+	double COM_y = m_cen_mass[1];
+	double COM_z = m_cen_mass[2];
+	
+	//! Get a list of primary coordinates
 	this->GetPriCoords(coords);
 
+	//! Calculate Rg (mass weighted)
+	//! This is based on Eq. (2) in Lapuerta et al., A method to determine 
+	//! the fractal dimension of diesel soot agglomerates.
+	//! Journal of Colloid Interface Science, 303:149-158. 2006.
+	//! A modification is made to the radius of gyration of a single primary
+	//! replacing r_gp = sqrt(3/5)*r_p with r_gp = r_p, as per Eq. (4) in 
+	//! Filippov et al., Fractal-like aggregates: Relation between morphology
+	//! and physical properties. Journal of Colloid Interface Science, 
+	//! 229:261-273, 2000.
 	for (int i = 0; i!=coords.size(); ++i) {
-		//! Calculate Rg for point masses
-		//! Calculation is based on Eq. (1) in R. Jullien, Transparency effects
-		//! in cluster-cluster aggregation with linear trajectories, J. Phys. A
-		//! 17 (1984) L771-L776. 
-		for (int j = 0; j!=coords.size(); ++j) {
-			rix = coords[i][0];
-			riy = coords[i][1];
-			riz = coords[i][2];
-
-			rjx = coords[j][0];
-			rjy = coords[j][1];
-			rjz = coords[j][2];
-
-			//! Expansion of (r_i - r_j)^2 term. Dot product of r vectors.
-			sum += (rix * rix + riy * riy + riz * riz +
-					rjx * rjx + rjy * rjy + rjz * rjz -
-					2 * (rix * rjx + riy * rjy + riz * rjz) ) / 2 / coords.size() / coords.size();
-		}
 		
-		//! Add correction for non-point mass primaries 
-		//! Caluculation is based on Eq. (4) in Filippov et al., Fractal-like 
-		//! aggregates: Relation between morphology and physical properties. 
-		//! Journal of Colloid Interface Science, 229:261-273, 2000.
-		sum += coords[i][3] * coords[i][3] / coords.size();
+		//! Add square of distance from the CoM weighted by mass
+		sum += coords[i][4] * (pow((coords[i][0] - COM_x),2.0) + pow((coords[i][1] - COM_y),2.0) + pow((coords[i][2] - COM_z),2.0));
+		
+		//! Add square of primary radius weighted by mass
+		sum += coords[i][4] * coords[i][3] * coords[i][3];
+
 	}
 
-	dcol = 2*sqrt(sum);
+	dcol = 2*sqrt(sum/m_mass);
 
 	return dcol;
 }
@@ -3463,8 +3467,8 @@ void BinTreePrimary::SinterNode(
 
 				t1 += delt;
 
-				//! Return some sintering rate
-				r = dd_ij_dt;
+				// Should return some sintering rate (units of m2/s expected)
+				// r = dd_ij_dt;
 
             } else {
                 break; //!do not continue to sinter.
