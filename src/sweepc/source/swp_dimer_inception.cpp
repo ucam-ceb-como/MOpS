@@ -252,16 +252,6 @@ int DimerInception::Perform(const double t, Cell &sys,
 		}
 		else
 		{
-			// Create a new particle of the type specified
-			// by the system ensemble.
-			Particle *sp = m_mech->CreateParticle(t);
-
-			// aab64 Get incepting particle weight for cases where wt != 1.0:
-			// Check if SWA is in play and variable inception weighting is active.
-			// Update newly incepted particle weight if necessary.
-			if (m_mech->IsWeightedCoag() && m_mech->IsVariableWeightedInception()) {
-				sp->setStatisticalWeight(sys.GetInceptingWeight());
-			}
 
 			// Get the cell vertices
 			fvector vertices = local_geom.cellVertices();
@@ -275,28 +265,47 @@ int DimerInception::Perform(const double t, Cell &sys,
 			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
 			posn += width * uniformGenerator();
 
-			sp->setPositionAndTime(posn, t);
-
-			// Initialise the new particle.
-			sp->Primary()->SetComposition(ParticleComp());
-			sp->Primary()->SetValues(ParticleTrackers());
-
-			// aab64 Adjust composition to allow inception of heavier particles
-			// Perform adjustment before updating the cache and computing properties.
-			bool heavyAllowed = m_mech->GetIsHeavy();
-			if (heavyAllowed)
-				sp->Primary()->AdjustForInception(sys.GetInceptionFactor());
-
-			sp->UpdateCache();
-
 			// Add particle to system's ensemble.
-			if (!m_mech->IsHybrid() )
+			if (!m_mech->IsHybrid())
+			{
+				// Create a new particle of the type specified
+				// by the system ensemble.
+				Particle *sp = m_mech->CreateParticle(t);
+
+				// aab64 Get incepting particle weight for cases where wt != 1.0:
+				// Check if SWA is in play and variable inception weighting is active.
+				// Update newly incepted particle weight if necessary.
+				if (m_mech->IsWeightedCoag() && m_mech->IsVariableWeightedInception()) {
+					sp->setStatisticalWeight(sys.GetInceptingWeight());
+				}
+
+				sp->setPositionAndTime(posn, t);
+
+				// Initialise the new particle.
+				sp->Primary()->SetComposition(ParticleComp());
+				sp->Primary()->SetValues(ParticleTrackers());
+
+				// aab64 Adjust composition to allow inception of heavier particles
+				// Perform adjustment before updating the cache and computing properties.
+				bool heavyAllowed = m_mech->GetIsHeavy();
+				if (heavyAllowed)
+					sp->Primary()->AdjustForInception(sys.GetInceptionFactor());
+
+				sp->UpdateCache();
+
 				sys.Particles().Add(*sp, rng);
+
+				// Update gas-phase chemistry of system.
+				adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
+				adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+			}
 			else
 			{
 				if (!sys.Particles().IsFirstSP())
 				{
+					// Flag that register of particle properties is set up
 					sys.Particles().SetInceptedSP();
+
 					// Initialise lookup of particles below critical size
 					for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
 					{
@@ -308,25 +317,19 @@ int DimerInception::Perform(const double t, Cell &sys,
 						sp_pn->Primary()->SetValues(ParticleTrackers());
 						sp_pn->UpdateCache();
 						sys.Particles().SetPNParticle(*sp_pn, rng, i);
-						delete sp_pn;
-						sp_pn = NULL;
 					}
-					sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(), 
+					sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(),
 						sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
 				}
-				sys.Particles().UpdateNumberAtIndex(sp->Composition()[0], 1);
+
+				// Adjust particle number properties
+				sys.Particles().UpdateNumberAtIndex(ParticleComp()[0], 1);
 				sys.Particles().UpdateTotalParticleNumber(1);
-				sys.Particles().UpdateTotalsWithIndex(sp->Composition()[0], 1.0);
-			}
+				sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
 
-			// Update gas-phase chemistry of system.
-			adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
-			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-
-			if (m_mech->IsHybrid())
-			{
-				delete sp;
-				sp = NULL;
+				// Update gas-phase chemistry of system.
+				adjustGas(sys, sys.GetInceptingWeight(), 1, sys.GetInceptionFactor());
+				adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 			}
 		}
 

@@ -256,29 +256,6 @@ public:
 	// aab64 coagulation scaling for weighted events
 	int GetRateFactor() const { return m_rateFactor; }
 
-	// aab64 Averages of the incepting class
-	void SetDistParams(double mu, double sigma, double dmax, double dmin);
-	void SetDistAverages();
-	double GetDistParams_diam() const { return m_diam_tmp; }
-	double GetDistParams_diam2() const { return m_diam2_tmp; }
-	double GetDistParams_diam_1() const { return m_diam_1_tmp; }
-	double GetDistParams_diam_2() const { return m_diam_2_tmp; }
-	double GetDistParams_mass_1_2() const { return m_mass_1_2_tmp; }
-	double GetDistParams_diam2_mass_1_2() const { return m_diam2_mass_1_2_tmp; }
-
-	// aab64 Moments and contributing terms trackers
-	void SetMomentsk(double m0k, double m1k, double m2k, double m3k);
-	void SetSGk(double betak) { m_SGk = betak; }
-	double GetMomentsk_0() const { return m_m0k; }
-	double GetMomentsk_1() const { return m_m1k; }
-	double GetMomentsk_2() const { return m_m2k; }
-	double GetMomentsk_3() const { return m_m3k; }
-	double GetSGk() const { return m_SGk; }
-	void SetSGadjustment(double adjust) { m_SGadjustment = adjust; }
-	double GetSGadjustment() const { return m_SGadjustment; }
-	double GetSigmaLN() const { return m_sigmaLN; }
-	double GetMuLN() const { return m_muLN; }
-
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
@@ -344,19 +321,6 @@ private:
 	// aab64 temp
 	PropID m_cprop1;
 	PropID m_cprop2;
-
-	// aab64 trackers for incepted particles in place of physical inceptions
-	double m_incepted;
-
-	// aab64 average properties for the incepting class used to compute coagulation rates
-	double m_diam_tmp, m_diam2_tmp, m_diam_1_tmp, m_diam_2_tmp, m_mass_1_2_tmp, m_diam2_mass_1_2_tmp; 
-
-	// aab64 trackers for the moments and contributing terms 
-	double m_diam_max, m_diam_min;
-	double m_m0k, m_m1k, m_m2k, m_m3k;
-	double m_SGk;
-	double m_SGadjustment;
-	double m_sigmaLN, m_muLN;
 
 };
 

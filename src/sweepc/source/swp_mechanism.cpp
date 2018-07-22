@@ -1275,10 +1275,10 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 *@param[in]        t           Time upto which particles to be updated
 *@param[in,out]    rng         Random number generator
 */
-void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
+/*void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
 {
 	// Note: this method is faster but can be inaccurate because random choice of
-	// surface growth affects the whole size class in one lump.
+	// surface growth affects the whole size class in one lump. 
 
 	// Update sections for surface growth
 	double added_total = 0.0;
@@ -1331,11 +1331,11 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 				{
 					added_total += n_index * (index - i);
 					sys.Particles().UpdateTotalsWithIndex(i, -1.0 * (double)n_index);
+					sys.Particles().UpdateTotalParticleNumber(-1 * n_index);
 					sys.Particles().ResetNumberAtIndex(i);
 
 					double n_add = index - (critical_size - 1);
 					sp_add = sp_critical_size->Clone();
-					// Not the ideal way of calling this update but should more or less work
 					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 					{
 						if ((*i)->IsDeferred())
@@ -1367,7 +1367,7 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	delete sp_critical_size;
 	sp_critical_size = NULL;
 }
-
+*/
 
 
 // aab64 Moment method for incepting sized particles
@@ -1378,7 +1378,7 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 *@param[in]        t           Time upto which particles to be updated
 *@param[in,out]    rng         Random number generator
 */
-/*void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
+void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
 {
 	// Note: this method is significantly slower but more accurate because random choice of
 	// surface growth affects only one particle in the size class at a time.
@@ -1425,27 +1425,24 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 				{
 					if (index > i)
 					{
-						added_total += 1 * (index - i); // n_index
-						//sys.Particles().UpdateTotalsWithIndices(i, index);
+						added_total += 1 * (index - i); 
 						sys.Particles().UpdateTotalsWithIndex(i, -1.0);
 						sys.Particles().UpdateTotalsWithIndex(index, 1.0);
-						sys.Particles().UpdateNumberAtIndex(index, 1); //n_index
-						sys.Particles().UpdateNumberAtIndex(i, -1); //n_index
-						//sys.Particles().ResetNumberAtIndex(i);
+						sys.Particles().UpdateNumberAtIndex(index, 1); 
+						sys.Particles().UpdateNumberAtIndex(i, -1); 
 					}
 				}
 				else
 				{
 					if (index > i)
 					{
-						added_total += 1 * (index - i); // n_index
-						sys.Particles().UpdateTotalsWithIndex(i, -1.0); //* (double)n_index
-						sys.Particles().UpdateNumberAtIndex(i, -1); //n_index
-						//sys.Particles().ResetNumberAtIndex(i);
+						added_total += 1 * (index - i);
+						sys.Particles().UpdateTotalsWithIndex(i, -1.0); 
+						sys.Particles().UpdateNumberAtIndex(i, -1); 
+						sys.Particles().UpdateTotalParticleNumber(-1);
 
 						double n_add = index - (critical_size - 1);
 						sp_add = sp_critical_size->Clone();
-						// Not the ideal way of calling this update but should more or less work
 						for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 						{
 							if ((*i)->IsDeferred())
@@ -1454,11 +1451,8 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 								sp_add->UpdateCache();
 							}
 						}
-						//	for (unsigned int j = 0; j < n_index; j++)
-						//	{
 						Particle * sp2 = sp_add->Clone();
 						sys.Particles().Add(*sp2, rng);
-						//	}
 						delete sp_add;
 						sp_add = NULL;
 					}
@@ -1477,7 +1471,7 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	}
 	delete sp_critical_size;
 	sp_critical_size = NULL;
-}*/
+}
 
 
 

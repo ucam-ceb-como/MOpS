@@ -295,7 +295,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 
 	// aab64 for hybrid particle number model
 	m_inceptedFirstSP = false;
-	m_critical_size = 100;
+	m_critical_size = 1000;
 	m_total_number = 0;
 	m_total_diameter = 0.0;
 	m_total_diameter2 = 0.0;
@@ -732,7 +732,7 @@ void Sweep::Ensemble::ClearMain()
 	m_total_mass2 = 0.0;
 	m_total_mass3 = 0.0;
 	m_total_diameter3 = 0.0;
-	m_critical_size = 100;
+	m_critical_size = 1000;
 	for (PartPtrVector::size_type i = 0; i != m_pn_particles.size(); ++i) {
 		delete m_pn_particles[i];
 		m_pn_particles[i] = NULL;
@@ -1417,7 +1417,7 @@ void Sweep::Ensemble::init(void)
 
 	// aab64 for hybrid particle number model
 	m_inceptedFirstSP = false;
-	m_critical_size = 100;
+	m_critical_size = 1000;
 	m_total_number = 0;
 	m_total_diameter = 0.0;
 	m_total_diameter2 = 0.0;

@@ -68,11 +68,7 @@ namespace Sweep {
 		m_smpvol(1.0), m_fixed_chem(false),
 		m_incepting_weight(1.0), m_incFactor(1.0),
 		m_notpsiflag(true), m_rateFactor(1.0),
-		m_cprop1(iUniform), m_cprop2(iUniform),
-		m_incepted(0.0),
-		m_diam_tmp(0.0), m_diam2_tmp(0.0), m_diam_1_tmp(0.0), m_diam_2_tmp(0.0), m_mass_1_2_tmp(0.0), m_diam2_mass_1_2_tmp(0.0),
-		m_diam_max(0.0), m_diam_min(0.0),
-		m_m0k(0.0), m_m1k(0.0), m_m2k(0.0), m_m3k(0.0), m_SGk(0.0), m_SGadjustment(0.0), m_sigmaLN(0.0), m_muLN(0.0)
+		m_cprop1(iUniform), m_cprop2(iUniform)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
@@ -140,28 +136,7 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 		m_rateFactor = rhs.m_rateFactor;
 		// coagulation properties for PSI
 		m_cprop1 = rhs.m_cprop1;
-		m_cprop2 = rhs.m_cprop2;
-		// incepted tracker
-		m_incepted = rhs.m_incepted;
-		// incepting class averages
-		m_diam_tmp = rhs.m_diam_tmp;
-		m_diam2_tmp = rhs.m_diam2_tmp;
-		m_diam_1_tmp = rhs.m_diam_1_tmp;
-		m_diam_2_tmp = rhs.m_diam_2_tmp;
-		m_mass_1_2_tmp = rhs.m_mass_1_2_tmp;
-		m_diam2_mass_1_2_tmp = rhs.m_diam2_mass_1_2_tmp;
-		// incepting class moments and contributing terms
-		m_diam_max = rhs.m_diam_max;
-		m_diam_min = rhs.m_diam_min;
-		m_m0k = rhs.m_m0k;
-		m_m1k = rhs.m_m1k;
-		m_m2k = rhs.m_m2k;
-		m_m3k = rhs.m_m3k;
-		m_SGk = rhs.m_SGk;
-		m_SGadjustment = rhs.m_SGadjustment;
-		m_muLN = rhs.m_muLN;
-		m_sigmaLN = rhs.m_sigmaLN;
-		
+		m_cprop2 = rhs.m_cprop2;		
 	}
 	assert(isValid());
     return *this;
@@ -416,63 +391,6 @@ RandNumGen Cell::Chooseprng(size_t threadid)
 	return m_prng[threadid];
 }
 
-// aab64 Set incepting class lognormal distribution parameters
-void Cell::SetDistParams(double mu, double sigma, double dmax, double dmin)
-{
-	m_muLN = mu;
-	m_sigmaLN = sigma;
-	m_diam_max = dmax;
-	m_diam_min = dmin;
-}
-
-// aab64 Set incepting class average properties using closed form moments for the diameter distribution
-void Cell::SetDistAverages()
-{
-	// These need to be generalised!!
-	double rhop = 4260.0; //kg/m3
-
-	// Parameters related to distribution
-	double sigma_sqrd = m_sigmaLN * m_sigmaLN;
-	double c1 = sigma_sqrd * 0.5;
-	double c2 = std::sqrt(6.0 / (rhop * PI));
-	double log_dmin = log(m_diam_min);
-	double log_dmax = log(m_diam_max);
-	double sqrt2_sigma = sqrt(2.0) * m_sigmaLN;
-	double cdf = erf((log_dmax - m_muLN) / sqrt2_sigma) - erf((log_dmin - m_muLN) / sqrt2_sigma);
-
-	if (m_diam_min > 0.0)
-	{
-		m_diam_tmp = m_diam_min;
-		m_diam2_tmp = m_diam_tmp * m_diam_tmp;
-		m_diam_1_tmp = 1.0 / m_diam_tmp;
-		m_diam_2_tmp = m_diam_1_tmp * m_diam_1_tmp;
-		m_mass_1_2_tmp = c2 / sqrt(m_diam2_tmp * m_diam_tmp);
-		m_diam2_mass_1_2_tmp = m_diam2_tmp * m_mass_1_2_tmp;
-	}
-
-	// Use conditional expectation of lognormal distributions
-	if (m_sigmaLN != 0.0 && cdf > 0.0)
-	{
-		m_diam_tmp = exp(c1 + m_muLN) * (erf((log_dmax - m_muLN - sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN - sigma_sqrd) / sqrt2_sigma)) / cdf;
-		m_diam2_tmp = exp(c1 * 4.0 + 2.0 * m_muLN) * (erf((log_dmax - m_muLN - 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN - 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
-		m_diam_1_tmp = exp(c1 - m_muLN) * (erf((log_dmax - m_muLN + sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + sigma_sqrd) / sqrt2_sigma)) / cdf;
-		m_diam_2_tmp = exp(c1 * 4.0 - 2.0 * m_muLN) * (erf((log_dmax - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + 2.0 * sigma_sqrd) / sqrt2_sigma)) / cdf;
-		m_mass_1_2_tmp = exp(c1 * 2.25 - 1.5 * m_muLN) * c2 * (erf((log_dmax - m_muLN + 1.5 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN + 1.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
-		m_diam2_mass_1_2_tmp = exp(c1 * 0.25 + 0.5 * m_muLN) * c2 * (erf((log_dmax - m_muLN - 0.5 * sigma_sqrd) / sqrt2_sigma) - erf((log_dmin - m_muLN - 0.5 * sigma_sqrd) / sqrt2_sigma)) / cdf;
-	}
-}
-
-// aab64 Set the first moments of the diameter distribution
-void Cell::SetMomentsk(double m0k, double m1k, double m2k, double m3k)
-{
-	m_m0k = m0k;
-	m_m1k = m1k;
-	m_m2k = m2k;
-	m_m3k = m3k;
-
-	if (m_m0k < 0.0 || m_m1k < 0.0 || m_m2k < 0.0)
-		std::cout << "Moments are negative!\n";
-}
 
 // READ/WRITE/COPY.
 

@@ -145,14 +145,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
                           const Geometry::LocalGeometry1d &local_geom,
                           const unsigned int iterm,
                           rng_type &rng) const {
-
-	// aab64 hybrid particle model
-	// If hybrid_flag is active, track the number of incepting particles
-
-	// Create a new particle of the type specified
-	// by the system ensemble.
-	Particle * sp = m_mech->CreateParticle(t);
-
+	
 	// Position of newly incepted particle
 	double posn;
 
@@ -175,10 +168,8 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 		const double width = vertices.back() - posn;
 		boost::uniform_01<rng_type&, double> unifDistrib(rng);
 		posn += width * unifDistrib();
+
 	}
-
-	sp->setPositionAndTime(posn, t);
-
 
 	// Initialise the new particle.
 	std::vector<double> newComposition(mComponentDistributions.size());
@@ -190,20 +181,37 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 		newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
 			mComponentDistributions[i].second)(rng);
 	}
-	sp->Primary()->SetComposition(newComposition);
 
-	sp->Primary()->SetValues(ParticleTrackers());
-	sp->UpdateCache();
-
+	// aab64 hybrid particle model
+	// If hybrid_flag is active, track the number of incepting particles
 	// Add particle to system's ensemble.
-	if (!m_mech->IsHybrid()) 
+	if (!m_mech->IsHybrid())
+	{
+		// Create a new particle of the type specified
+		// by the system ensemble.
+		Particle * sp = m_mech->CreateParticle(t);
+
+		sp->setPositionAndTime(posn, t);
+
+		sp->Primary()->SetComposition(newComposition);
+
+		sp->Primary()->SetValues(ParticleTrackers());
+		sp->UpdateCache();
+
 		sys.Particles().Add(*sp, rng);
+
+		// Update gas-phase chemistry of system.
+		adjustGas(sys, sp->getStatisticalWeight());
+		adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+	}
+
 	else
 	{
 		if (!sys.Particles().IsFirstSP())
 		{
+			// Flag that register of particle properties is set up
 			sys.Particles().SetInceptedSP();
-			//Particle * sp_pn = NULL;
+
 			// Initialise lookup of particles below critical size
 			for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
 			{
@@ -219,19 +227,15 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 			sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(), 
 				sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
 		}
-		sys.Particles().UpdateNumberAtIndex(sp->Composition()[0], 1);
+
+		// Adjust particle number properties
+		sys.Particles().UpdateNumberAtIndex(ParticleComp()[0], 1);
 		sys.Particles().UpdateTotalParticleNumber(1);
-		sys.Particles().UpdateTotalsWithIndex(sp->Composition()[0], 1.0);
-	}
+		sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
 
-	// Update gas-phase chemistry of system.
-	adjustGas(sys, sp->getStatisticalWeight());
-	adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-
-	if (m_mech->IsHybrid())
-	{
-		delete sp;
-		sp = NULL;
+		// Update gas-phase chemistry of system.
+		adjustGas(sys, sys.GetInceptingWeight());
+		adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
 	}
 
     return 0;
