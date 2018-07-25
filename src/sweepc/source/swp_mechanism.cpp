@@ -1281,10 +1281,8 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 	// surface growth affects the whole size class in one lump. 
 
 	// Update sections for surface growth
-	double added_total = 0.0;
-	unsigned int n_index = 0;
-	unsigned int index = 0;
-	double rate_constant = 0.0;
+	double added_total = 0.0, rate_constant = 0.0, rate_index = 0.0;
+	unsigned int n_index = 0, index = 0, num = 0, n_add = 0;
 	unsigned int critical_size = sys.Particles().GetCritialNumber();
 	sys.SetNotPSIFlag(false);
 	Particle * sp_add = NULL;
@@ -1300,41 +1298,36 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 	}
 
 	// New surface update goes here
-	for (unsigned int i = sys.Particles().GetCritialNumber() - 1; i != 0; --i)
+	for (unsigned int i = critical_size - 1; i != 0; --i)
 	{
 		index = i;
 		n_index = sys.Particles().NumberAtIndex(i);
-		unsigned int num = 0;
 
 		if (n_index > 0)
 		{
-			double rate = rate_constant * sys.Particles().Diameter2AtIndex(index);
+			rate_index = rate_constant * sys.Particles().Diameter2AtIndex(index);
+			boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate_index);
 
-			if (rate > 0) {
-				boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
+			if (rate_index > 0) {
 				num = repeatDistrib(rng);
 				index += num;
 			}
-			if (index < sys.Particles().GetCritialNumber())
+			if (index > i)
 			{
-				if (index > i)
+				added_total += n_index * (index - i);
+				if (index < critical_size)
 				{
-					added_total += n_index * (index - i);
 					sys.Particles().UpdateTotalsWithIndices(i, index);
 					sys.Particles().UpdateNumberAtIndex(index, n_index);
 					sys.Particles().ResetNumberAtIndex(i);
 				}
-			}
-			else
-			{
-				if (index > i)
+				else
 				{
-					added_total += n_index * (index - i);
 					sys.Particles().UpdateTotalsWithIndex(i, -1.0 * (double)n_index);
 					sys.Particles().UpdateTotalParticleNumber(-1 * n_index);
 					sys.Particles().ResetNumberAtIndex(i);
 
-					double n_add = index - (critical_size - 1);
+					n_add = index - (critical_size - 1);
 					sp_add = sp_critical_size->Clone();
 					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 					{
@@ -1366,8 +1359,8 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 	}
 	delete sp_critical_size;
 	sp_critical_size = NULL;
-}
-*/
+}*/
+
 
 
 // aab64 Moment method for incepting sized particles
@@ -1384,15 +1377,13 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	// surface growth affects only one particle in the size class at a time.
 
 	// Update sections for surface growth
-	double added_total = 0.0;
-	unsigned int n_index = 0;
-	unsigned int index = 0;
-	double rate_constant = 0.0;
+	double added_total = 0.0, rate_constant = 0.0, rate_index = 0.0;
+	unsigned int n_index = 0, index = 0, n_add = 0, num = 0;
 	unsigned int critical_size = sys.Particles().GetCritialNumber();
 	sys.SetNotPSIFlag(false);
+	Particle * sp_add = NULL;
 	Particle * sp_critical_size = sys.Particles().GetPNParticleAt(critical_size - 1)->Clone();
 	sp_critical_size->SetTime(t);
-	Particle * sp_add = NULL;
 
 	for (PartProcPtrVector::const_iterator j = m_processes.begin(); j != m_processes.end(); ++j)
 	{
@@ -1403,45 +1394,38 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	}
 
 	// New surface update goes here
-	for (unsigned int i = sys.Particles().GetCritialNumber() - 1; i != 0; --i)
+	for (unsigned int i = critical_size - 1; i > 0; --i)
 	{
 		index = i;
 		n_index = sys.Particles().NumberAtIndex(i);
-		unsigned int num = 0;
 
 		if (n_index > 0)
 		{
-			double rate = rate_constant * sys.Particles().Diameter2AtIndex(index);
+			rate_index = rate_constant * sys.Particles().Diameter2AtIndex(index);
+			boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate_index);
 
-			for (unsigned int n_el = 1; n_el < n_index + 1; ++n_el)
+			for (unsigned int n_el = 1; n_el < (n_index + 1); ++n_el)
 			{
 				index = i;
-				if (rate > 0) {
-					boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
+				if (rate_index > 0.0) {
 					num = repeatDistrib(rng);
 					index += num;
 				}
-				if (index < sys.Particles().GetCritialNumber())
+				if (index > i)
 				{
-					if (index > i)
+					added_total += (index - i);
+					sys.Particles().UpdateTotalsWithIndex(i, -1.0);
+					sys.Particles().UpdateNumberAtIndex(i, -1);
+					if (index < critical_size)
 					{
-						added_total += 1 * (index - i); 
-						sys.Particles().UpdateTotalsWithIndex(i, -1.0);
 						sys.Particles().UpdateTotalsWithIndex(index, 1.0);
-						sys.Particles().UpdateNumberAtIndex(index, 1); 
-						sys.Particles().UpdateNumberAtIndex(i, -1); 
+						sys.Particles().UpdateNumberAtIndex(index, 1);
 					}
-				}
-				else
-				{
-					if (index > i)
+					else
 					{
-						added_total += 1 * (index - i);
-						sys.Particles().UpdateTotalsWithIndex(i, -1.0); 
-						sys.Particles().UpdateNumberAtIndex(i, -1); 
 						sys.Particles().UpdateTotalParticleNumber(-1);
 
-						double n_add = index - (critical_size - 1);
+						n_add = index - (critical_size - 1);
 						sp_add = sp_critical_size->Clone();
 						for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 						{
@@ -1520,41 +1504,6 @@ unsigned int Mechanism::SetRandomParticle(bool isSP1, bool isSP2, Cell &sys, dou
 			}
 		}
 	}
-
-	/*if (isSP1 || isSP2)
-	{
-		Particle * sp = sys.Particles().GetInceptedSP().Clone();
-
-		// This needs to be generalised for incepting SP not smallest size!!
-		unsigned int n_titania0 = sp->Composition()[0];
-
-		// Now create a particle of this size and store it
-		double n_add = index - n_titania0;
-		if (n_add < 0.0)
-		{
-			n_add = 0.0;
-			cout << "Warning: Selected particle is smaller than stored minimum size\n";
-		}
-		// Not the ideal way of calling this update but should more or less work
-		for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-		{
-			if ((*i)->IsDeferred())
-			{
-				sys.SetNotPSIFlag(false);
-				(*i)->Perform(t, sys, *sp, rng, n_add);
-				sp->SetTime(t);
-				sp->UpdateCache();
-				sys.SetNotPSIFlag(true);
-			}
-		}
-
-		if (isSP1)
-			sys.Particles().SetInceptedSP_tmp_d_1(*sp);
-		else if (isSP2)
-			sys.Particles().SetInceptedSP_tmp_d_2(*sp);
-		delete sp;
-		sp = NULL;
-	}*/
 
 	return index;
 }

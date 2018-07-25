@@ -211,6 +211,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 		{
 			// Flag that register of particle properties is set up
 			sys.Particles().SetInceptedSP();
+			sys.Particles().SetCriticalSize(m_mech->GetCriticalThreshold());
 
 			// Initialise lookup of particles below critical size
 			for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)

@@ -408,10 +408,12 @@ public:
 
     // Get the outflow count
     unsigned int GetOutflowCount() const { return m_outflowcount; }
-
+    
+	// aab64 particle number hybrid parameters
 	void SetHybrid(bool hybrid_flag) const { m_hybrid = hybrid_flag; }
-
 	bool IsHybrid() const { return m_hybrid; }
+	void SetCriticalThreshold(unsigned int threshold) const { m_threshold = threshold; } 
+	unsigned int GetCriticalThreshold() const { return m_threshold; }
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 	
 
@@ -473,6 +475,7 @@ private:
 	mutable double m_weightscaling_factor;  // Factor multiplying N/sum(w) in weight scaling
 
 	mutable bool m_hybrid;                  // identify hybrid particle model
+	mutable unsigned int m_threshold;       // hybrid threshold value
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 

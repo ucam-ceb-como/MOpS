@@ -159,13 +159,7 @@ double DeathProcess::InternalRate(
 		return m_a * sys.Particles().GetSum(iW);
 	else
 	{
-		unsigned int n_total = sys.Particles().Count();
-
-		// aab64 for hybrid particle model
-		if (m_mech->IsHybrid() && sys.Particles().GetTotalParticleNumber() > 0)
-		{
-			n_total += sys.Particles().GetTotalParticleNumber();             // Account for particles in the incepting class
-		}
+		unsigned int n_total = sys.Particles().Count() + sys.Particles().GetTotalParticleNumber();             // Account for particles in the incepting class
 		return m_a * n_total;
 	}
 }

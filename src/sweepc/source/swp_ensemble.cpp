@@ -286,7 +286,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     // Initialise doubling.
     m_maxcount   = 0;
     m_ndble      = 0;
-	m_dbleon     = true;
+	m_dbleon = false;// true;
     m_dbleactive = false;
     m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0);
 
@@ -295,7 +295,6 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 
 	// aab64 for hybrid particle number model
 	m_inceptedFirstSP = false;
-	m_critical_size = 1000;
 	m_total_number = 0;
 	m_total_diameter = 0.0;
 	m_total_diameter2 = 0.0;
@@ -328,7 +327,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
  * @param val   Switch for doubling.
  */
 void Sweep::Ensemble::SetDoubling(const bool val) {
-	m_dbleon = val;
+	m_dbleon = false;// val;
 }
 
 /**
@@ -402,11 +401,11 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
 
     // Initialise doubling.
     m_ndble      = 0;
-	m_dbleon     = true;
+	m_dbleon = false;// true;
 
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
-		m_dbleactive = true; 
+		m_dbleactive = false;// true;
     } else
         m_dbleactive = false;
 
@@ -482,8 +481,8 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 {
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
-		m_dbleactive = true;
-        printf("sweep: Particle doubling activated.\n");
+		m_dbleactive = false;// true;
+        //printf("sweep: Particle doubling activated.\n");
     }
 
     // Check ensemble for space, if there is not enough space then need
@@ -600,7 +599,7 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
 
     // Particle removal might reduce the particle count
     // sufficiently to require particle doubling.
-    dble();
+   // dble();
     assert(m_tree.size() == m_count);
 }
 
@@ -642,7 +641,7 @@ void Sweep::Ensemble::RemoveInvalids(void)
     }
 
     // If we removed too many invalid particles then we'll have to double.
-    dble();
+   // dble();
     assert(m_tree.size() == m_count);
 }
 
@@ -732,7 +731,6 @@ void Sweep::Ensemble::ClearMain()
 	m_total_mass2 = 0.0;
 	m_total_mass3 = 0.0;
 	m_total_diameter3 = 0.0;
-	m_critical_size = 1000;
 	for (PartPtrVector::size_type i = 0; i != m_pn_particles.size(); ++i) {
 		delete m_pn_particles[i];
 		m_pn_particles[i] = NULL;
@@ -831,7 +829,7 @@ double Sweep::Ensemble::Scaling() const
     
 	// aab64 The scaling factor includes the contraction term and the doubling term.
 	// for weighted particles, the contraction factor depends on the weight of the removed particle 
-	return m_wtdcontfctr * pow(2.0, (double)m_ndble);
+	return m_wtdcontfctr;// *pow(2.0, (double)m_ndble);
 }
 
 // Resets the ensemble scaling.
@@ -910,11 +908,6 @@ double Sweep::Ensemble::Alpha(double T) const {
 
 
 // aab64 Hybrid particle number model
-// Record first inception
-void Sweep::Ensemble::SetInceptedSP()
-{
-	m_inceptedFirstSP = true;
-}
 void Sweep::Ensemble::UpdateNumberAtIndex(unsigned int index, unsigned int update)
 {
 	m_particle_numbers[index] += update;
@@ -1318,7 +1311,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Read if doubling is turned on.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n==1) {
-                    m_dbleon = true;
+					m_dbleon = false;// true;
                 } else {
                     m_dbleon = false;
                 }
@@ -1413,11 +1406,11 @@ void Sweep::Ensemble::init(void)
     m_dblecutoff = 0;
     m_dblelimit  = 0;
     m_dbleslack  = 0;
-	m_dbleon =  true;
+	m_dbleon = false;// true;
 
 	// aab64 for hybrid particle number model
 	m_inceptedFirstSP = false;
-	m_critical_size = 1000;
+	m_critical_size = 0;
 	m_total_number = 0;
 	m_total_diameter = 0.0;
 	m_total_diameter2 = 0.0;
@@ -1429,6 +1422,7 @@ void Sweep::Ensemble::init(void)
 	m_total_mass2 = 0.0;
 	m_total_mass3 = 0.0;
 	m_total_diameter3 = 0.0;
+	m_total_component = 0;
 
 }
 

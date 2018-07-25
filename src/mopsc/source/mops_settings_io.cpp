@@ -458,8 +458,10 @@ Mops::Mixture* readMixture(
     }
 
     // Now load some particles
+	mix->Particles().SetCriticalSize(mech.ParticleMech().GetCriticalThreshold());
     mix->Particles().Initialise(pcount);
     mix->Reset(maxm0);
+
     subnode = NULL; subnode = node.GetFirstChild("population");
     if (subnode != NULL) {
         if (mech.ParticleMech().ComponentCount() < 1) {
