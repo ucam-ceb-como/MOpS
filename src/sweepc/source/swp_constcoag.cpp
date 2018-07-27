@@ -158,13 +158,13 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			// switching with probability n_other/n_total
 			ip1 = -2;
 			ip2 = -2;
-			if (n_other > alpha1)
+			if (n_other >= alpha1)
 			{
-				ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1 - n_incep, rng);
+				ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1, rng);
 			}
-			if (n_other > alpha2)
+			if (n_other >= alpha2)
 			{
-				ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
+				ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2, rng);
 			}
 		}
 		else
@@ -187,7 +187,6 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 
 		sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
 		sp1->SetTime(t);
-			//sys.Particles().GetInceptedSP_tmp_d_1().Clone();
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 		sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
 		sys.Particles().UpdateNumberAtIndex(index1, -1);
@@ -222,7 +221,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	{
 		if (hybrid_flag && ip2 != -2)
 		{
-			ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
+			ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2, rng);
 		}
 		else
 			ip2 = sys.Particles().Select(rng);
@@ -243,7 +242,6 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 		// Note don't need to add it to the ensemble unless coagulation is successful
 		sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
 		sp2->SetTime(t);
-			//sys.Particles().GetInceptedSP_tmp_d_2().Clone();
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
 		dsp2 = sp2->CollDiameter();
 	}

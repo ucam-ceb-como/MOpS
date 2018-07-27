@@ -268,14 +268,14 @@ public:
 	// aab64 for hybrid particle number model
 	bool IsFirstSP(void) const { return m_inceptedFirstSP; }
 	void SetInceptedSP() { m_inceptedFirstSP = true; }
-	void UpdateNumberAtIndex(unsigned int index, unsigned int update);
+	void UpdateNumberAtIndex(unsigned int index, int update);
 	void ResetNumberAtIndex(unsigned int index);
 	void InitialiseDiameters(double molecularWeight, double density);
 	unsigned int NumberAtIndex(unsigned int index) const { return m_particle_numbers[index]; }
 	unsigned int SetTotalParticleNumber();
 	void SetCriticalSize(unsigned int threshold) { m_critical_size = threshold; }
 	unsigned int GetCritialNumber() const { return m_critical_size; }
-	void UpdateTotalParticleNumber(unsigned int update) { m_total_number += update; }
+	void UpdateTotalParticleNumber(int update) { m_total_number += update; }
 	void UpdateTotalsWithIndex(unsigned int index, double change);
 	void UpdateTotalsWithIndices(unsigned int i1, unsigned int i2);
 	unsigned int GetTotalParticleNumber() const { return m_total_number; }

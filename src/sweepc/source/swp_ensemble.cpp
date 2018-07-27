@@ -908,7 +908,7 @@ double Sweep::Ensemble::Alpha(double T) const {
 
 
 // aab64 Hybrid particle number model
-void Sweep::Ensemble::UpdateNumberAtIndex(unsigned int index, unsigned int update)
+void Sweep::Ensemble::UpdateNumberAtIndex(unsigned int index, int update)
 {
 	m_particle_numbers[index] += update;
 }

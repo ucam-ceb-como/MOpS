@@ -1480,7 +1480,7 @@ unsigned int Mechanism::SetRandomParticle(bool isSP1, bool isSP2, Cell &sys, dou
 		while (index < critical_index && !canstop)
 		{
 			n_index = sys.Particles().NumberAtIndex(index);
-			if (n_index >= alpha)
+			if (n_index >= alpha && n_index > 0)
 				canstop = true;
 			else
 			{
@@ -1495,7 +1495,7 @@ unsigned int Mechanism::SetRandomParticle(bool isSP1, bool isSP2, Cell &sys, dou
 		while (index < critical_index && !canstop)
 		{
 			n_index = (double)(sys.Particles().NumberAtIndex(index)) * sys.Particles().PropertyAtIndex(prop, index);
-			if (n_index >= alpha)
+			if (n_index >= alpha & n_index > 0.0)
 				canstop = true;
 			else
 			{
@@ -1504,6 +1504,9 @@ unsigned int Mechanism::SetRandomParticle(bool isSP1, bool isSP2, Cell &sys, dou
 			}
 		}
 	}
+
+	if (index < 2)
+		std::cout << "Impossible index\n";
 
 	return index;
 }
