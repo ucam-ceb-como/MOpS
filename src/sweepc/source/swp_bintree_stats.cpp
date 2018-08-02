@@ -192,28 +192,28 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
 		//if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {
 
 		double wt = e.GetTotalParticleNumber() * invTotalWeight;
-		double dpri = 0;
+		double dpri = e.GetTotalDiameter();//0;
 		double d_index = 0;
 		double n_index = 0;
-		for (unsigned int i = 0; i < e.GetCritialNumber(); ++i)
-		{
-			n_index = e.NumberAtIndex(i);
-			d_index = e.PropertyAtIndex(iDcol, i);
-			dpri += (n_index * d_index);
+		//for (unsigned int i = 0; i < e.GetCritialNumber(); ++i)
+		//{
+			//n_index = e.NumberAtIndex(i);
+			//d_index = e.PropertyAtIndex(iDcol, i);
+			//dpri += (n_index * d_index);
 
 			// Collect the collision and primary diameters
-			for (unsigned int j = 0; j < n_index; ++j)
-			{
-				d.push_back(d_index);
-				d.push_back(d_index);
-				diams.push_back(d);
-				weights.push_back(1);
-				d.clear();
-			}
-			++n;
-		}
+			//for (unsigned int j = 0; j < n_index; ++j)
+			//{
+			//	d.push_back(d_index);
+			//	d.push_back(d_index);
+			//	diams.push_back(d);
+			//	weights.push_back(1);
+			//	d.clear();
+			//}
+			//++n;
+		//}
 
-		std::cout << dpri << " | " << e.GetTotalDiameter() << endl;
+		//std::cout << dpri << " | " << e.GetTotalDiameter() << endl;
 		
 		m_stats[iNPrim] += wt;
 		m_stats[iPrimDiam] += dpri;

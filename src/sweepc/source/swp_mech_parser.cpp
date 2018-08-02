@@ -363,6 +363,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
 			throw std::runtime_error("Hybrid threshold must be positive. (Sweep::MechParser::readV1)");
 		mech.SetCriticalThreshold(threshold);
 	}
+	else
+	{
+		mech.SetHybrid(false);
+		mech.SetCriticalThreshold(0);
+	}
 
     //! Check whether to track the distance betweeen the centres of primary
     //! particles but this only applies to binary tree (and maybe surface-
