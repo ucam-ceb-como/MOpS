@@ -899,9 +899,9 @@ double BinTreePrimary::GetRadiusOfGyration() const
     double rix, riy, riz, rjx, rjy, rjz, drx, dry, drz;
     vector<fvector> coords;
 
-	//! If single primary then return the primary radius
+	//! If single primary then return Rg = 0 because primaries are treated as points particles
 	if(m_numprimary == 1) {
-		Rg = m_primarydiam / 2.0;
+		Rg = 0.0;
 
 	}else{
 
