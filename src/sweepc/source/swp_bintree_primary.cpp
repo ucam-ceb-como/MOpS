@@ -458,7 +458,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
         while (!Overlap) {
             //! Sphere point picking. This is the random direction step of
             //! Jullien's BCCA algorithm. It is incorrect to select spherical
-            //! coordinates theta (polar angle) and phi (azimuthal angle) from
+            //! coordinates theta (azimuthal angle) and phi (polar angle) from
             //! uniform distributions theta E [0, 2 * pi) and phi E [0, pi] as
             //! points picked in this way will be 'bunched' near the poles:
             //! http://mathworld.wolfram.com/SpherePointPicking.html
@@ -520,9 +520,9 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
             R[0][2] = Mult * (vx * vz);
             R[1][0] = Mult * (vx * vy);
             R[1][1] = Mult * (-vx * vx - vz * vz);
-            R[2][2] = Mult * (vy * vz);
+            R[1][2] = Mult * (vy * vz);
             R[2][0] = Mult * (vx * vz);
-            R[2][1] = Mult * (-vy * vz);
+            R[2][1] = Mult * (vy * vz);
             R[2][2] = Mult * (-vx * vx - vy * vy);
 
             R[0][0] = 1.0 + R[0][0];
@@ -547,8 +547,8 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
             double sumr = m_leftchild->Radius() + m_rightchild->Radius();
 
-            double x3 = (sumr / 2.0) * sqrt(r) * cos(theta);
-            double y3 = (sumr / 2.0) * sqrt(r) * sin(theta);
+            double x3 = sumr * sqrt(r) * cos(theta);
+            double y3 = sumr * sqrt(r) * sin(theta);
             double z3 = -sumr;
 
             double x4 = R[0][0] * x3 + R[0][1] * y3 + R[0][2] * z3;
