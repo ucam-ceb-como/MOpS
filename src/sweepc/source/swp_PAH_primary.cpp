@@ -945,9 +945,9 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 				R[0][2] = Mult * (vx * vz);
 				R[1][0] = Mult * (vx * vy);
 				R[1][1] = Mult * (-vx * vx - vz * vz);
-				R[2][2] = Mult * (vy * vz);
+				R[1][2] = Mult * (vy * vz);
 				R[2][0] = Mult * (vx * vz);
-				R[2][1] = Mult * (-vy * vz);
+				R[2][1] = Mult * (vy * vz);
 				R[2][2] = Mult * (-vx * vx - vy * vy);
 
 				R[0][0] = 1.0 + R[0][0];
@@ -972,8 +972,8 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
 				double sumr = m_leftchild->Radius() + m_rightchild->Radius();
 
-				double x3 = (sumr / 2.0) * sqrt(r) * cos(theta);
-				double y3 = (sumr / 2.0) * sqrt(r) * sin(theta);
+				double x3 = sumr * sqrt(r) * cos(theta);
+				double y3 = sumr * sqrt(r) * sin(theta);
 				double z3 = -sumr;
 
 				double x4 = R[0][0] * x3 + R[0][1] * y3 + R[0][2] * z3;
