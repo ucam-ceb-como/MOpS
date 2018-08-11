@@ -427,7 +427,7 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
 		//double f2 = 0.5 * tanh(A_star*(d2 - D) + 1);
 		//ceffi = pow((f1*f2), 0.5) * alpha_e_up + (1 - pow((f1*f2), 0.5))*alpha_e_low;
 
-		//ceffi = 1.0; //hdy, to test coagulation in PAH_KMC model
+		ceffi = 1.0; //hdy, to test coagulation in PAH_KMC model
         return ceffi;
     } else {
         //! Thresholds are based upon the total number of 6-member rings (excludes 5-member rings) in the PAH.
