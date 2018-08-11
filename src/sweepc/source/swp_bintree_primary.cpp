@@ -2793,6 +2793,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 		double dV(0.0);
         double volOld = m_vol;
 		double m_diam_old = m_diam;
+		double r_old = m_primarydiam / 2.0;
 
         // Call to Primary to adjust the state space
         n = Primary::Adjust(dcomp, dvalues, rng, n);
@@ -2840,11 +2841,12 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 					//if coordinates are tracked then update coordinate tracking properties
 					if(m_pmodel->getTrackPrimaryCoordinates()){
 						setRadius(m_primarydiam / 2.0);
-						this->calcBoundSph();
+						this->calcBoundSph();			//csl37 - are all these necessary?
 						this->calcCOM();
 					}
 
 					//TO DO (csl37): update primary volumes and adjust compositions
+					this->AdjustNeighbours(this, m_primarydiam / 2.0 - r_old, dcomp, dvalues, rng);
 
 				} 
 				//! Single primary case: the primary diameter equals the
@@ -2922,6 +2924,79 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
     return n;
 
 }
+
+/*! Adjust composition of neighbours 
+*   use composition change vector from adjust to decide which components to transfer 
+*/
+void BinTreePrimary::AdjustNeighbours(BinTreePrimary *prim, const double delta_r, const fvector &dcomp, const fvector &dvalues, rng_type &rng){
+
+	BinTreePrimary *neighbour = NULL;
+
+	//! Check if parent node contains a neighbour of prim
+	if (m_parent->m_leftparticle == prim) {
+		//! right particle is a neighbour
+		neighbour = m_parent->m_rightparticle;
+	} else if (m_parent->m_rightparticle == prim) {
+		//! left particle is a neighbour
+		neighbour = m_parent->m_leftparticle;
+	} 
+
+	//! Adjust neighbours composition
+	if (neighbour != NULL){
+
+		double r_i = prim->m_primarydiam / 2.0;						//!< primary radius
+		double r_j = neighbour->m_primarydiam / 2.0;				//!< neighbouring primary radius
+		double d_ij = m_parent->m_distance_centreToCentre;			//!< centre to centre separation
+		double x_ij = (d_ij*d_ij - r_j*r_j + r_i*r_i) / d_ij / 2.0;	//!< distance neck to centre of primary p_i
+		double A_nij = M_PI*(r_i*r_i - x_ij*x_ij);					//!< neck area
+
+		unsigned int max_n = 0;
+
+		//! unit change in volume
+		double uvol = 0.0; //!< unit change in volume
+		double m = 0.0;
+		for (int i = 0; i != dcomp.size(); ++i) {
+			m = m_pmodel->Components(i)->MolWt() * dcomp[i] / NA;
+			//! max change to composition leaving composition of 1
+			if (i > 0) {
+				max_n = min(max_n, unsigned int((neighbour->Composition(i) - 1.0) / dcomp[i]));
+			}else{
+				max_n = unsigned int((neighbour->Composition(i) - 1.0) / dcomp[i]);	//initial value for max_n
+			}
+			if (m_pmodel->Components(i)->Density() > 0.0)
+				uvol += m / m_pmodel->Components(i)->Density();
+		}
+
+		//! change in volume of prim
+		double dvol = A_nij * (r_i - delta_r) * delta_r / d_ij; //use the old radius r_i - delta_r here
+		//! change in composition
+		unsigned int dn = min(max_n, unsigned int (dvol / uvol));
+
+		//! adjust primary compositions if change is large enough
+		if (dvol > 0.0 && dn > 0){
+			//! composition change vectors for the neighbour
+			fvector dcomp_neighbour(dcomp.size());
+			fvector dvalues_neighbour(dvalues.size());
+			for (int i = 0; i != dcomp.size(); ++i) {
+				dcomp_neighbour[i] = -dcomp[i];
+			}
+			for (int i = 0; i != dvalues.size(); ++i) {
+				dvalues_neighbour[i] = -dvalues[i];
+			}
+			//! Adjust neighbour's composition (decrease)
+			unsigned int n = Primary::Adjust(dcomp_neighbour, dvalues_neighbour, rng, dn);
+			//! Adjust primary's composition (increase)
+			unsigned int m = Primary::Adjust(dcomp, dvalues, rng, n);
+			assert(m == n); //decrease in neighbour's composition must be equal to increase in primary's composition
+		}
+	}
+
+	//! Continue working up the binary tree
+	if (m_parent->m_parent != NULL){
+		m_parent->AdjustNeighbours(prim,delta_r,dcomp,dvalues,rng);
+	}
+}
+
 
 /*! Updates primary free surface area and volume
 *

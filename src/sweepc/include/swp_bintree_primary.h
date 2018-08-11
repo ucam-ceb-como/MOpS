@@ -455,6 +455,9 @@ private:
 	//! Add new neighbours during a merger event
 	double AddNeighbour(double A_n_k, BinTreePrimary *small_prim, BinTreePrimary *node);
 	
+	//! Adjust composition of neighbours following surface growth event
+	void AdjustNeighbours(BinTreePrimary *prim, const double delta_r, const fvector &dcomp, const fvector &dvalues, rng_type &rng);
+
 	//Function to adjust primary properties
 	void AdjustPrimary(double dV, double d_ij, BinTreePrimary *prim_ignore);
 
