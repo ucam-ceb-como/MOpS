@@ -63,6 +63,8 @@
 #include <string>
 #include <iostream>
 
+#include <math.h> 
+
 namespace Sweep
 {
 // Forward declare the Particle class.

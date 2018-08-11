@@ -391,7 +391,8 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
     double ceffi;
 
     if (Mode() == "NONE" || Mode() == "") {
-        double A = ColliParaA();
+		/**comment by hdy**/
+		double A = ColliParaA();
         double B = ColliParaB();
         double C = ColliParaC();
         double redmass=0;
@@ -407,6 +408,26 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
         ceffi = 1 / (1 + exp(-A * (reddiam * reddiam * reddiam / (redmass) + pow(redmass / B, 6.0) - C)));
         if (pah1->NumPAH() >1 && pah2->NumPAH() > 1)
             ceffi = 1;
+		/**comment by hdy**/
+		//double phi_0 = 7.0e-20; //unit: J
+		//double kb = 1.3806e-23; //unit: J/K
+		//double e = 2.71828;
+		//double temp = 1000.0; //gas-phase temperature, K
+		//double theta_temp = 1.0 + 2*phi_0/(3.0*kb*temp); //dimensionless temperature
+		//double A = phi_0 / (kb*temp*theta_temp);
+		//double alpha_e_A4 = 1.0e-3;
+		//double dp_A4 = 0.38; //unit: nm
+		//double D = 5.0;//unit:nm
+		//double A_star = log(alpha_e_A4 / (100.0 - alpha_e_A4)) / (2.0*dp_A4 - 2.0*D);
+		//double d1 = 1.0e9 * pah1->CollDiameter(); //unit:nm
+		//double d2 = 1.0e9 * pah2->CollDiameter(); //unit:nm
+		//double alpha_e_low = 1.0 - (1.0 + A)*pow(e,-A);
+		//double alpha_e_up = 1.0;
+		//double f1 = 0.5 * tanh(A_star*(d1 - D) + 1);
+		//double f2 = 0.5 * tanh(A_star*(d2 - D) + 1);
+		//ceffi = pow((f1*f2), 0.5) * alpha_e_up + (1 - pow((f1*f2), 0.5))*alpha_e_low;
+
+		//ceffi = 1.0; //hdy, to test coagulation in PAH_KMC model
         return ceffi;
     } else {
         //! Thresholds are based upon the total number of 6-member rings (excludes 5-member rings) in the PAH.
@@ -429,25 +450,31 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
             else if (Mode() == "REDUCED")
                 redmass = nRings1 * nRings2 / (nRings1 + nRings2);
             else throw std::runtime_error("Mode of collision efficiency is modified by unknown process. Please check Sweep::ParticleModel::CollisionEff()."); 
-            if (redmass >= target_Rings_Inception) ceffi = 1.0;
+            if (redmass >= target_Rings_Inception) ceffi = 1.0; //comment by hdy
+			//if (redmass >= target_Rings_Inception) ceffi = 0.1;
             else ceffi = 0;
         }
 
         //! Condensation: PAH + Particle (2 >= PAHs) = Particle.
         else if(pah1->NumPAH() > 1 && pah2->NumPAH() == 1){
             nRings2 = (int)(1.0*pah2->NumRings());
-            if (nRings2 >= target_Rings_Condensation) ceffi = 1;
+            if (nRings2 >= target_Rings_Condensation) ceffi = 1.0;
             else ceffi = 0;
         }
         else if(pah1->NumPAH() == 1 && pah2->NumPAH() > 1){
             nRings1 = (int)(1.0*pah1->NumRings());
-            if (nRings1 >= target_Rings_Condensation) ceffi = 1;
+            if (nRings1 >= target_Rings_Condensation) ceffi = 1.0;
             else ceffi = 0;
         }
         
         //! Coagulation event: Particle + Particle = Particle. All particles are able to coagulate.
         else {
-            ceffi = 1;
+			/*if (pah1->CollDiameter() < 3.0e-9 || pah2->CollDiameter() < 3.0e-9)
+				ceffi = 0.1;
+			else if (pah1->CollDiameter() < 6.0e-9 || pah2->CollDiameter() < 6.0e-9)
+				ceffi = 0.5;
+			else*/
+				ceffi = 1;
         }
 
         return ceffi;

@@ -180,7 +180,17 @@ public:
     double Distance() const;
 
 	//! Calculates the radius of gyration.
+	//! Equation from Jullien 1984, J Phys A: Math. Gen. 17 L771
 	double GetRadiusOfGyration() const;
+
+	//! Calculates the radius of gyration based on center of mass.
+	double CalcRadiusOfGyration_COM();
+
+	//! Calculates mobility diameter of the particle.
+	double CalcMobilityDiam();
+
+	//! Calculates the radius of gyration in a new way.
+	double CalcCollDiam();
 
 	//! Returns a vector of primary coordinates and radius (4D).
 	void GetPriCoords(std::vector<fvector> &coords) const;

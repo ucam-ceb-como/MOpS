@@ -708,7 +708,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 	const PAHPrimary *rhsparticle = NULL;
 	rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
 	double vol_old = 0.0;
-	////only one PAH in rhs or this particle -> condensation or inception process.
+	//only one PAH in rhs or this particle -> condensation or inception process.
 	if ((rhsparticle->m_numPAH == 1) || (m_numPAH == 1))
 	{
 		if (rhsparticle->Numprimary() > 1)
@@ -835,6 +835,12 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 		//! linear trajectories, J. Phys. A 17 (1984) L771-L776.
 		if (m_pmodel->getTrackPrimaryCoordinates() || m_pmodel->getTrackPrimarySeparation()) {
 			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+
+			//! Calculate centre of mass and bounding sphere
+			m_leftchild->calcBoundSph();
+			m_leftchild->calcCOM();
+			m_rightchild->calcBoundSph();
+			m_rightchild->calcCOM();
 
 			//! Implementation of Arvo's algorithm, Fast Random Rotation Matrices,
 			//! Chapter III.4 in Graphic Gems III edited by David Kirk to generate
@@ -1399,7 +1405,8 @@ double PAHPrimary::GetRadiusOfGyration() const
 
 	if (m_numprimary == 1) {
 		//if single primary return the primary radius	
-		Rg = m_primarydiam / 2.0;
+		//Rg = m_primarydiam / 2.0;
+		Rg = pow(3.0 / 5.0, 0.5)*m_primarydiam / 2.0;
 
 	}else{
 
@@ -1442,6 +1449,121 @@ double PAHPrimary::GetRadiusOfGyration() const
 	}
 
 	return Rg;
+}
+
+//from Journal of Colloid and Interface Science 229, 261-273 (2000)
+//a more consistent defination of gyration radius, because it yields equality of gyration and spherule radius in the limit N = 1
+double PAHPrimary::CalcCollDiam()
+{
+	double sum = 0;
+	double collDiam;
+	double rix, riy, riz;
+	double ri;
+	vector<fvector> coords;
+
+	if (m_pmodel->getTrackPrimaryCoordinates()) {
+
+		this->calcCOM();
+		this->GetPriCoords(coords);
+		//! Calculation is based on Eq. (1) in R. Jullien, Transparency effects
+		//! in cluster-cluster aggregation with linear trajectories, J. Phys. A
+		//! 17 (1984) L771-L776. 
+		for (int i = 0; i != coords.size(); ++i) {
+
+			rix = coords[i][0];
+			riy = coords[i][1];
+			riz = coords[i][2];
+			ri = coords[i][3];
+
+			sum += pow((rix - m_cen_mass[0]), 2) + pow((riy - m_cen_mass[1]), 2) + pow((riz - m_cen_mass[2]), 2) + pow(ri, 2);
+		}
+
+		collDiam = 2 * sqrt(sum / coords.size());
+
+	}
+	else{
+		collDiam = (6 * m_vol / m_surf)*
+			pow(pow(m_surf, 3) / (36 * PI*m_vol*m_vol), m_pmodel->GetFractDim());
+	}
+
+	return collDiam;
+}
+
+//! Calculates the radius of gyration of a particle based on the distance between primarys and the center of mass of the whole particle
+double PAHPrimary::CalcRadiusOfGyration_COM()
+{
+	double sum = 0;
+	double mass;
+	double totalmass = 0;
+	double r2;
+	double Rg;
+	double rix, riy, riz;
+	double ri;
+	vector<fvector> coords;
+
+	this->calcCOM();
+	this->GetPriCoords(coords);
+
+	if (m_numprimary == 1) {
+		//if single primary return the primary radius	
+		Rg = sqrt(3.0 / 5.0) * m_primarydiam / 2.0;
+
+	}
+	else{
+
+		if (m_pmodel->getTrackPrimaryCoordinates()) {
+			//! Calculation is based on Eq. (1) in R. Jullien, Transparency effects
+			//! in cluster-cluster aggregation with linear trajectories, J. Phys. A
+			//! 17 (1984) L771-L776. 
+			for (int i = 0; i != coords.size(); ++i) {
+
+				rix = coords[i][0];
+				riy = coords[i][1];
+				riz = coords[i][2];
+				ri = coords[i][3];
+
+				sum += (pow((rix - m_cen_mass[0]), 2) + pow((riy - m_cen_mass[1]), 2) + pow((riz - m_cen_mass[2]), 2))*pow(ri,3);
+				totalmass += pow(ri, 3);
+			}
+
+			Rg = sqrt(sum / totalmass);
+
+		}
+		else {
+			for (unsigned int i = 0; i != coords.size(); ++i) {
+				//! Mass is proportional to the cube of the radius.
+				mass = coords[i][3] * coords[i][3] * coords[i][3];
+				r2 = coords[i][0] * coords[i][0] + coords[i][1] * coords[i][1] + coords[i][2] * coords[i][2];
+				sum += mass * r2;
+				totalmass += mass;
+			}
+
+			Rg = sqrt(sum / totalmass);
+		}
+
+	}
+	return Rg;
+}
+
+double PAHPrimary::CalcMobilityDiam()
+{
+	double nva = 0.0;
+	double rva = 0.0;
+	double dg = 0.0;
+	double dm = 0.0;
+
+	rva = 3.0 * m_vol / m_surf;
+	nva = 3.0 * m_vol / (4.0 * M_PI *pow(rva,3.0));
+
+	if (nva > 3.0){
+		dg = 2.0 * (this->CalcRadiusOfGyration_COM());
+		dm = dg * (1.0/pow(nva,0.2) + 0.4);
+	}
+	else{
+		dm = this->CalcCollDiam();
+	}
+	return dm;
+	
 }
 
 //from bintree model//
@@ -2044,6 +2166,156 @@ void PAHPrimary::calcBoundSph(void)
 	}
 }
 
+//! From bintree model
+//! The previous function to calculate bounding sphere radius is wrong
+//! Estimates the bounding sphere position and radius using
+//! Ritter's method. ~5% larger than minimum bounding sphere
+//! Ritter, J. (1990). An efficient bounding sphere, Graphics Gems 
+//! (Andrew S. Glassner ed.), pp. 301-303. Academic Press, Boston
+//void PAHPrimary::calcBoundSph(void)
+//{
+//	if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
+//
+//		//! Get list of primary coordinates
+//		vector<fvector> coords;
+//		this->GetPriCoords(coords);
+//
+//		//! Find 3 pairs of points with the min and max x,y,z values
+//		fvector min_x = coords[1];	//! initialise with first point
+//		fvector max_x = min_x;
+//		fvector min_y = min_x;
+//		fvector max_y = min_x;
+//		fvector min_z = min_x;
+//		fvector max_z = min_x;
+//		for (int i = 1; i != coords.size(); ++i) {
+//			if (coords[i][0] < min_x[0]) min_x = coords[i];
+//			if (coords[i][0] > max_x[0]) max_x = coords[i];
+//			if (coords[i][1] < min_y[1]) min_y = coords[i];
+//			if (coords[i][1] > max_y[1]) max_y = coords[i];
+//			if (coords[i][2] < min_z[2]) min_z = coords[i];
+//			if (coords[i][2] > max_z[2]) max_z = coords[i];
+//		}
+//
+//		//! Calculate separation (squared) between min and max 
+//		double dx = (max_x[0] - min_x[0]);
+//		double dy = (max_x[1] - min_x[1]);
+//		double dz = (max_x[2] - min_x[2]);
+//		double x_sep = dx*dx + dy*dy + dz*dz;
+//		dx = (max_y[0] - min_y[0]);
+//		dy = (max_y[1] - min_y[1]);
+//		dz = (max_y[2] - min_y[2]);
+//		double y_sep = dx*dx + dy*dy + dz*dz;
+//		dx = (max_z[0] - min_z[0]);
+//		dy = (max_z[1] - min_z[1]);
+//		dz = (max_z[2] - min_z[2]);
+//		double z_sep = dx*dx + dy*dy + dz*dz;
+//
+//		//! find maximum separation
+//		//! points p_1 and p_2 are the points with maximum separation
+//		double max_sep = x_sep;
+//		fvector p_1 = min_x;
+//		fvector p_2 = max_x;
+//		if (y_sep > max_sep){
+//			max_sep = y_sep;
+//			p_1 = min_y;
+//			p_2 = max_y;
+//		}
+//		if (z_sep > max_sep){
+//			max_sep = z_sep;
+//			p_1 = min_z;
+//			p_2 = max_z;
+//		}
+//
+//		//! Use p_1 and p_2 for initial guess at bounding sphere
+//		//! bounding sphere centre
+//		m_cen_bsph[0] = (p_1[0] + p_2[0]) / 2.0;
+//		m_cen_bsph[1] = (p_1[1] + p_2[1]) / 2.0;
+//		m_cen_bsph[2] = (p_1[2] + p_2[2]) / 2.0;
+//		//! radius of bounding sphere 
+//		//! including the primary radii
+//		setRadius(sqrt(max_sep)/2.0 + p_1[3] + p_2[3]);
+//
+//		//! Make a second pass through list of primaries updating the sphere
+//		for (int i = 1; i != coords.size(); ++i) {
+//
+//			//! calculate distance from bounding sphere centre and add primary radius
+//			dx = coords[i][0] - m_cen_bsph[0];
+//			dy = coords[i][1] - m_cen_bsph[1];
+//			dz = coords[i][2] - m_cen_bsph[2];
+//			double r_cen = sqrt(dx*dx + dy*dy + dz*dz); //!< Distance to primary centre
+//			double r_out = r_cen + coords[i][3]; //!< Distance to outer edge of primary
+//
+//			//! If distance from the bounding sphere centre exceeds the 
+//			//! bounding sphere radius then update the bounding sphere:
+//			//! move centre by half the difference and increase the radius by half the difference
+//			if (r_out > m_r){
+//
+//				//! half the distance from current bounding sphere centre to outer edge of primary
+//				double delta_r = (r_out - m_r) / 2.0;
+//
+//				//! Update the bounding sphere centre:
+//				//! the centre is translated along the vector joining 
+//				//! the old centre to the primary centre by half the difference
+//				m_cen_bsph[0] += delta_r * dx / r_cen;
+//				m_cen_bsph[1] += delta_r * dy / r_cen;
+//				m_cen_bsph[2] += delta_r * dz / r_cen;
+//
+//				//! Set new radius
+//				setRadius(m_r + delta_r);
+//			}
+//		}
+//	}
+//}
+
+//! hdy //
+//void PAHPrimary::calcBoundSph(void)
+//{
+//	if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
+//
+//		//! Get list of primary coordinates
+//		vector<fvector> coords;
+//		this->GetPriCoords(coords);
+//
+//		//! Find 3 pairs of points with the min and max x,y,z values
+//		double min_x = coords[1][0] - coords[1][3];	//! initialise with first primary particle
+//		double max_x = coords[1][0] + coords[1][3];
+//		double min_y = coords[1][1] - coords[1][3];
+//		double max_y = coords[1][1] + coords[1][3];
+//		double min_z = coords[1][2] - coords[1][3];
+//		double max_z = coords[1][2] + coords[1][3];
+//
+//		for (int i = 2; i != coords.size(); ++i) {
+//			if ((coords[i][0] - coords[i][3]) < min_x)  min_x = coords[i][0] - coords[i][3];
+//			if ((coords[i][0] + coords[i][3]) > max_x)  max_x = coords[i][0] + coords[i][3];
+//			if ((coords[i][1] - coords[i][3]) < min_y)  min_y = coords[i][1] - coords[i][3];
+//			if ((coords[i][1] + coords[i][3]) > max_y)  max_y = coords[i][1] + coords[i][3];
+//			if ((coords[i][2] - coords[i][3]) < min_z)  min_z = coords[i][2] - coords[i][3];
+//			if ((coords[i][2] + coords[i][3]) > max_z)  max_z = coords[i][2] + coords[i][3];
+//		}
+//
+//		//! Calculate separation (squared) between min and max 
+//		double box_x = max_x - min_x;
+//		double box_y = max_y - min_y;
+//		double box_z = max_z - min_z;
+//
+//		m_cen_bsph[0] = min_x + 0.5 * box_x;
+//		m_cen_bsph[1] = min_y + 0.5 * box_y;
+//		m_cen_bsph[2] = min_z + 0.5 * box_z;
+//
+//		double dist = sqrt(pow((coords[1][0] - m_cen_bsph[0]), 2) + pow((coords[1][1] - m_cen_bsph[1]), 2) + pow((coords[1][2] - m_cen_bsph[2]), 2))
+//			+ coords[1][3];
+//
+//		for (int i = 2; i != coords.size(); ++i) {
+//			if (sqrt(pow((coords[i][0] - m_cen_bsph[0]), 2) + pow((coords[i][1] - m_cen_bsph[1]), 2) + pow((coords[i][2] - m_cen_bsph[2]), 2))
+//				+ coords[i][3] > dist)
+//				dist = sqrt(pow((coords[i][0] - m_cen_bsph[0]), 2) + pow((coords[i][1] - m_cen_bsph[1]), 2) + pow((coords[i][2] - m_cen_bsph[2]), 2))
+//				+ coords[i][3];
+//		}
+//
+//		setRadius(dist);
+//	}
+//}
+
 //! From bintree model.
 //! Calculates the centre-of-mass using the left and right child node values.
 void PAHPrimary::calcCOM(void)
@@ -2264,7 +2536,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
     {
         // Recurse down to the leaves
 		m_leftchild->UpdatePAHs(t, dt, model, sys, statweight, ind, rng, overflow);
-		m_rightchild->UpdatePAHs(t, dt, model, sys, statweight, ind, rng, overflow);
+		m_rightchild->UpdatePAHs(t, dt, model, sys, statweight, ind, rng, overflow);         
     }
     else
     {
@@ -2573,8 +2845,17 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 		double m_vol_old = m_vol; //volume before PAH growth; used for adjust primary after surface growth
 
-		double free_surf_factor = m_free_surf / fs; //if the free surface area of a primary particle is too small, there are less chance for PAHs in it to grow
+		//double free_surf_factor = m_free_surf / fs; //if the free surface area of a primary particle is too small, there are less chance for PAHs in it to grow
+		double free_surf_factor = 1.0; //test by hdy
+		if (m_primarydiam > 0)
+			free_surf_factor = m_free_surf / (M_PI * pow(m_primarydiam, 2.0));
+		else
+			free_surf_factor = 0.0;
 
+		if (free_surf_factor < 0.0)
+			free_surf_factor = 0.0;
+		if (free_surf_factor > 1.0)
+			free_surf_factor = 1.0;
 		//assert(free_surf_factor <= 1.0); //test by hdy
 
 		//! Loop over each PAH in this primary.
@@ -3493,7 +3774,7 @@ void PAHPrimary::UpdatePrimary(void)
 			//! Update overlapping primary model
 			UpdateOverlappingPrimary();
 		}
-
+		m_Rg = GetRadiusOfGyration(); //add by hdy
 		m_sph_prim_vol = (1.0 / 6.0) * M_PI * pow(m_primarydiam, 3.0); // used to calculate geometric volume of a particle.
 		//m_numprimary = 1;
 		m_avg_coalesc = 0.0;
@@ -3688,17 +3969,29 @@ void PAHPrimary::UpdateCache(PAHPrimary *root)
 				m_surf = m_free_surf;
 			}
 
+			m_Rg = GetRadiusOfGyration();
 			//calculate the surface equivalent radius
 			// const double radius_surf=sqrt(m_surf/(4*PI));
 			// the average between the surface and voluem equiv diameter
 			//const double meandiam=spherical_radius+radius_surf;            //2*0.5*(radius(vol)+radius(sphere))
-			const double aggcolldiam = (6 * m_vol / m_surf)*
-				pow(pow(m_surf, 3) / (36 * PI*m_vol*m_vol), (1.0 / 1.8));
+			const double aggcolldiam = CalcCollDiam();
+
+			//if (!m_pmodel->getTrackPrimarySeparation() && !m_pmodel->getTrackPrimaryCoordinates()){
+			//	aggcolldiam = (6 * m_vol / m_surf)*
+			//		pow(pow(m_surf, 3) / (36 * PI*m_vol*m_vol), (1.0 / 2.0)); //comment by hdy
+			//}
+			//else{
+			//	aggcolldiam = CalcCollDiam(); //test dg as collision diam, should be lower limit
+			//}
+			
+			//const double aggcolldiam = 2.0 * m_r; //test bounding sphere as collision diam, should be upper
 			// the maximum of the largest PAH diameter and
 			// the average between the surface and voluem equiv diameter
-			const double cdiam = max(aggcolldiam, m_PAHCollDiameter);
+			const double cdiam = max(aggcolldiam, m_PAHCollDiameter); //comment by hdy
 			//const double cdiam = aggcolldiam; //used to test bintree model and PAH-KMC model
-			m_dmob = aggcolldiam;
+			//m_dmob = aggcolldiam;
+			m_dmob = CalcMobilityDiam();
+			//m_dmob = (6 * m_vol / m_surf)*pow(pow(m_surf, 3) / (36 * PI*m_vol*m_vol), (1.0 / 1.8)); 
 			SetCollDiameter(cdiam);
 		}
 		else
@@ -4045,18 +4338,18 @@ void PAHPrimary::SerializePrimary(std::ostream &out, void *duplicates) const
 		val = m_avg_sinter;
 		out.write((char*)&val, sizeof(val));
 
-		/*Imaging properties
+		//Imaging properties
 		val = (double)m_Rg;
 		out.write((char*)&val, sizeof(val));
 
-		val = (double)m_fdim;
-		out.write((char*)&val, sizeof(val));
+		//val = (double)m_fdim;
+		//out.write((char*)&val, sizeof(val));
 
-		val = (double)m_sqrtLW;
-		out.write((char*)&val, sizeof(val));
+		//val = (double)m_sqrtLW;
+		//out.write((char*)&val, sizeof(val));
 
-		val = (double)m_LdivW;
-		out.write((char*)&val, sizeof(val));*/
+		//val = (double)m_LdivW;
+		//out.write((char*)&val, sizeof(val));
 
 		val = m_avg_coalesc;
 		out.write((char*)&val, sizeof(val));
@@ -4269,15 +4562,15 @@ void PAHPrimary::DeserializePrimary(std::istream &in, const Sweep::ParticleModel
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
 		m_avg_sinter = val;
 
-		/* imaging properies
+		//imaging properies
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
 		m_Rg = val;
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-		m_fdim = val;
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-		m_sqrtLW = val;
-		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-		m_LdivW = val;*/
+		//in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		//m_fdim = val;
+		//in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		//m_sqrtLW = val;
+		//in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		//m_LdivW = val;
 
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
 		m_avg_coalesc = val;
@@ -4846,6 +5139,7 @@ bool PAHPrimary::MergeCondition()
 			}
 		}
 	}
+	//condition = true; //try to force all particle spherical
 	return condition;
 }
 
@@ -5458,8 +5752,8 @@ void PAHPrimary::Adjust(const double old_vol)
 */
 void PAHPrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &primary_diameter, int k) const
 {
-	fvector node(10);
-	fvector primary(10);
+	fvector node(11);
+	fvector primary(11);
 
 	if ((m_leftchild == NULL) && (m_rightchild == NULL)){
 		//if leaf then print diameter
@@ -5476,6 +5770,7 @@ void PAHPrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &primary
 		primary[8] = coords[0][2];
 		primary[9] = coords[0][3];
 
+		primary[10] = m_r; //bounding sphere
 		primary_diameter.push_back(primary);
 
 		if (m_parent == NULL){	//single particle case
@@ -5489,6 +5784,8 @@ void PAHPrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &primary
 			node[7] = 0.0;
 			node[8] = reinterpret_cast<uintptr_t>(this);	//print pointer
 			node[9] = 0.0;
+
+			node[10] = m_r; //bounding sphere
 
 			surface.push_back(node);
 		}
@@ -5513,7 +5810,7 @@ void PAHPrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &primary
 		node[7] = r_j;
 		node[8] = reinterpret_cast<uintptr_t>(m_leftparticle);	//print pointer
 		node[9] = reinterpret_cast<uintptr_t>(m_rightparticle);	//print pointer
-
+		node[10] = m_r;
 		surface.push_back(node);
 
 		m_leftchild->PrintPrimary(surface, primary_diameter, k);

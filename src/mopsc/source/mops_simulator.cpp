@@ -2323,6 +2323,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	surfout_header.push_back("Right radius (m)");
 	surfout_header.push_back("Left Index");
 	surfout_header.push_back("Right Index");
+	surfout_header.push_back("Bound sphere radius (m)");
 
 	surfout.Write(surfout_header);
 	for (unsigned int k = 0; k < surface.size(); k++)
@@ -2334,13 +2335,14 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	primary_header.push_back("Particle Index");
 	primary_header.push_back("Primary diameter (m)");
 	primary_header.push_back("Sph. equiv. diameter (m)");
-	primary_header.push_back("True primary volume (m3)");
-	primary_header.push_back("Primary volume (m3)");
+	primary_header.push_back("(Geom) primary volume (m3)");
+	primary_header.push_back("(Comp) Primary volume (m3)"); //based on the mass of C and H atoms and density
 	primary_header.push_back("Primary surface (m2)");
 	primary_header.push_back("Position x");
 	primary_header.push_back("Position y");
 	primary_header.push_back("Position z");
 	primary_header.push_back("Radius (m)");
+	primary_header.push_back("Bound sphere radius (m)");
 
 	diamout.Write(primary_header);
 	for (unsigned int k = 0; k < primary_diameter.size(); k++)
