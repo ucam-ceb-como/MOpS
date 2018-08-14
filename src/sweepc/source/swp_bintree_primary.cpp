@@ -2959,9 +2959,9 @@ void BinTreePrimary::AdjustNeighbours(BinTreePrimary *prim, const double delta_r
 			m = m_pmodel->Components(i)->MolWt() * dcomp[i] / NA;
 			//! max change to composition leaving composition of 1
 			if (i > 0) {
-				max_n = min(max_n, unsigned int((neighbour->Composition(i) - 1.0) / dcomp[i]));
+				max_n = min(max_n, static_cast<unsigned int>((neighbour->Composition(i) - 1.0) / dcomp[i]));
 			}else{
-				max_n = unsigned int((neighbour->Composition(i) - 1.0) / dcomp[i]);	//initial value for max_n
+				max_n = static_cast<unsigned int>((neighbour->Composition(i) - 1.0) / dcomp[i]);	//initial value for max_n
 			}
 			if (m_pmodel->Components(i)->Density() > 0.0)
 				uvol += m / m_pmodel->Components(i)->Density();
@@ -2970,7 +2970,7 @@ void BinTreePrimary::AdjustNeighbours(BinTreePrimary *prim, const double delta_r
 		//! change in volume of prim
 		double dvol = A_nij * (r_i - delta_r) * delta_r / d_ij; //use the old radius r_i - delta_r here
 		//! change in composition
-		unsigned int dn = min(max_n, unsigned int (dvol / uvol));
+		unsigned int dn = min(max_n, static_cast<unsigned int>(dvol / uvol));
 
 		//! adjust primary compositions if change is large enough
 		if (dvol > 0.0 && dn > 0){
