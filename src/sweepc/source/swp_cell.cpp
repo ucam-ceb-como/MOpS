@@ -130,8 +130,6 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 		m_incFactor = rhs.m_incFactor;
 		// PSI flag
 		m_notpsiflag = rhs.m_notpsiflag;
-		// openmp rng
-		m_prng = rhs.m_prng;
 		// coagulation scaling for weighted events
 		m_rateFactor = rhs.m_rateFactor;
 		// coagulation properties for PSI
@@ -174,6 +172,12 @@ unsigned int Cell::ParticleCount(void) const
 {
 	assert(isValid());
     return m_ensemble.Count();
+}
+
+// Returns the particle statistical weight.
+double Cell::ParticleWeightSum(void) const
+{
+	return m_ensemble.GetSum(iW);
 }
 
 /**
@@ -372,23 +376,6 @@ void Cell::AddOutflow(double rate, const Sweep::Mechanism &mech)
     Processes::DeathProcess *death = new Processes::DeathProcess(mech);
     death->SetA(rate);
     m_outflow.push_back(death);
-}
-
-// aab64 Get thread specific rng
-void Cell::Setprng(size_t seedval)
-{
-	size_t numthreads = omp_get_max_threads();
-	m_prng.resize(numthreads);
-	for (size_t i = 0; i < numthreads; i++)
-	{
-		m_prng[i].seed(i*seedval);
-	}
-}
-
-// aab64 Get thread specific rng
-RandNumGen Cell::Chooseprng(size_t threadid)
-{
-	return m_prng[threadid];
 }
 
 

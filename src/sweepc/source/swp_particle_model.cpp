@@ -136,6 +136,10 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
          m_ThermalConductivityIndex = rhs.m_ThermalConductivityIndex;
 
          m_postprocessingType = rhs.m_postprocessingType;
+
+         //! Tracking of primary separation or coordinates.
+         m_trackPrimarySeparation = rhs.m_trackPrimarySeparation;
+         m_trackPrimaryCoordinates = rhs.m_trackPrimaryCoordinates;
     }
     return *this;
 }
@@ -425,7 +429,7 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
             else if (Mode() == "REDUCED")
                 redmass = nRings1 * nRings2 / (nRings1 + nRings2);
             else throw std::runtime_error("Mode of collision efficiency is modified by unknown process. Please check Sweep::ParticleModel::CollisionEff()."); 
-            if (redmass >= target_Rings_Inception) ceffi = 1;
+            if (redmass >= target_Rings_Inception) ceffi = 1.0;
             else ceffi = 0;
         }
 
@@ -576,6 +580,16 @@ void ParticleModel::Serialize(std::ostream &out) const
 
         out.write(reinterpret_cast<const char *>(&m_postprocessingType), sizeof(m_postprocessingType));
 
+        //! Write whether the distance between the centres of primary particles
+        //! is to be tracked.
+        flag = m_trackPrimarySeparation;
+        out.write((char*)&flag, sizeof(flag));
+
+        //! Write whether the coordinates of primary particles are to be
+        //! tracked.
+        flag = m_trackPrimaryCoordinates;
+        out.write((char*)&flag, sizeof(flag));
+
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, ParticleModel::Serialize).");
@@ -672,6 +686,16 @@ void ParticleModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&m_ThermalConductivityIndex), sizeof(m_ThermalConductivityIndex));
 
                 in.read(reinterpret_cast<char*>(&m_postprocessingType), sizeof(m_postprocessingType));
+
+                //! Read whether the distance between the centres of primary
+                //! particles is to be tracked.
+                in.read(reinterpret_cast<char*>(&flag), sizeof(flag));
+                m_trackPrimarySeparation = flag;
+
+                //! Read whether coordinates of primary particles are to be
+                //! tracked.
+                in.read(reinterpret_cast<char*>(&flag), sizeof(flag));
+                m_trackPrimaryCoordinates = flag;
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -722,7 +746,11 @@ void ParticleModel::init(void)
     m_efm = 2.2;
 
     //! Postprocess based on the inception species concentration.
-    m_postprocessingType = XA4;
+    m_postprocessingType = concentration;
+
+    //! Primary particles are assumed to be in contact.
+    m_trackPrimarySeparation = false;
+    m_trackPrimaryCoordinates = false;
 }
 
 // Clears the current ParticleModel from memory.

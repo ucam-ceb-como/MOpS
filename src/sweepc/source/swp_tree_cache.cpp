@@ -55,13 +55,14 @@ Sweep::TreeCache::TreeCache()
 , m_surf(0.0)
 , m_vol(0.0)
 , m_mass(0.0)
+, m_numcarbon(0)
+, m_frag(0)
 , m_dcolsqr(0.0)
 , m_inv_dcol(0.0)
 , m_inv_dcolsqr(0.0)
 , m_inv_sqrtmass(0.0)
 , m_d2_m_1_2(0.0)
 , m_freesurface(0.0)
-, m_numcarbon(0)
 , m_weight(0.0)
 {}
 
@@ -74,21 +75,22 @@ Sweep::TreeCache::TreeCache()
  */
 Sweep::TreeCache::TreeCache(const Sweep::Particle &part)
 {
-    // Quantities that must be provided by the particle
-    // Effectively this code defines an interface that the Particle
-    // class must provide.
-    m_sphdiam = part.SphDiameter();
-    m_dcol    = part.CollDiameter();
-    m_dmob    = part.MobDiameter();
-    m_surf    = part.SurfaceArea();
-    m_vol     = part.Volume();
-    m_mass    = part.Mass();
+    /**
+     * Quantities that must be provided by the particle.
+     * Effectively this code defines an interface that the Particle class must
+     * provide.
+     */
+    m_sphdiam   = part.SphDiameter();
+    m_dcol      = part.CollDiameter();
+    m_dmob      = part.MobDiameter();
+    m_surf      = part.SurfaceArea();
+    m_vol       = part.Volume();
+    m_mass      = part.Mass();
+    m_numcarbon = part.NumCarbon();
+    m_frag      = part.Frag();      //!< Fragmentation flag.
 
     // The particle does not currently provide this data (although it stores it)
     m_freesurface = 0.0;
-
-    m_numcarbon = part.NumCarbon();
-
 
     // Derived quantites that are needed to the typical transition
     // regime coagulation kernel.
@@ -110,13 +112,15 @@ Sweep::TreeCache::TreeCache(const Sweep::Particle &part)
 //
 Sweep::TreeCache &Sweep::TreeCache::operator+=(const TreeCache &rhs)
 {
-    // Sum cache variables.
-    m_sphdiam += rhs.m_sphdiam;
-    m_dcol += rhs.m_dcol;
-    m_dmob += rhs.m_dmob;
-    m_surf += rhs.m_surf;
-    m_vol  += rhs.m_vol;
-    m_mass += rhs.m_mass;
+    //! Sum cache variables.
+    m_sphdiam      += rhs.m_sphdiam;
+    m_dcol         += rhs.m_dcol;
+    m_dmob         += rhs.m_dmob;
+    m_surf         += rhs.m_surf;
+    m_vol          += rhs.m_vol;
+    m_mass         += rhs.m_mass;
+    m_numcarbon    += rhs.m_numcarbon;
+    m_frag         += rhs.m_frag;
     m_dcolsqr      += rhs.m_dcolsqr;
     m_inv_dcol     += rhs.m_inv_dcol;
     m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
@@ -140,16 +144,18 @@ const Sweep::TreeCache Sweep::TreeCache::operator+(const TreeCache &rhs) const {
 
 // CLEAR THE PARTICLE CACHE.
 
-// Resets the particle cache to its "empty" condition.
+//! Resets the particle cache to its "empty" condition.
 void Sweep::TreeCache::Clear(void)
 {
-    // Clear derived properties.
-    m_sphdiam = 0.0;
-    m_dcol = 0.0;
-    m_dmob = 0.0;
-    m_surf = 0.0;
-    m_vol  = 0.0;
-    m_mass = 0.0;
+    //! Clear derived properties.
+    m_sphdiam      = 0.0;
+    m_dcol         = 0.0;
+    m_dmob         = 0.0;
+    m_surf         = 0.0;
+    m_vol          = 0.0;
+    m_mass         = 0.0;
+    m_numcarbon    = 0;
+    m_frag         = 0;
     m_dcolsqr      = 0.0;
     m_inv_dcol     = 0.0;
     m_inv_dcolsqr  = 0.0;
@@ -192,9 +198,13 @@ double Sweep::TreeCache::Volume(void) const {return m_vol;}
 // Returns the mass.
 double Sweep::TreeCache::Mass(void) const {return m_mass;}
 
+//! Returns the number of carbon atoms.
 int Sweep::TreeCache::NumCarbon(void) const {return m_numcarbon;}
 
-// Returns the property with the given ID.
+//! Returns fragmentation flag.
+int Sweep::TreeCache::Frag(void) const {return m_frag;}
+
+//! Returns the property with the given ID.
 double Sweep::TreeCache::Property(PropID id) const
 {
     switch (id) {
@@ -210,6 +220,12 @@ double Sweep::TreeCache::Property(PropID id) const
             return m_vol;
         case iM:      // Mass.
             return m_mass;
+        //! Number of carbon atoms.
+		case iNumCarbon:
+		    return m_numcarbon;
+        //! Fragmentation flag.
+		case iFrag:
+		    return m_frag;
         // Collision rate properties:
         case iD2:
             return m_dcolsqr;
@@ -223,8 +239,6 @@ double Sweep::TreeCache::Property(PropID id) const
             return m_d2_m_1_2;
 		case iFS:
 			return m_freesurface;
-		case iNumCarbon:
-			return m_numcarbon;
 		case iW:
 			return m_weight;
         case -1:

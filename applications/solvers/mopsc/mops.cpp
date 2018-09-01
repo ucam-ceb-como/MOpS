@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
     bool fsolve(true);      // Should the system be solved?
     bool fjumps(false);     // Should a jumps file be written?
     bool fpah(false);       // Should full PAHPP data be postprocessed?
+	bool fpp(false);       // Should full primary particle data be postprocessed?
     bool fensembles(false); // Should an *.ens file be written?
     bool fnew(false);       // Should the new network interface be used?
     bool fwdotA4(false);    //!< Should postprocess based on the molar rate of
@@ -131,6 +132,7 @@ int main(int argc, char* argv[])
         ("diag", po::value(&diag)->default_value(0), "set diagnostics level (0-4)")
         ("ensemble", "write full ensembles to binary files")
         ("ppah", "write full PAHPP data")
+		("ppri", "write full primary particle data")
         ("jumps", "write stochastic jumps data")
         ("wdotA4", "postprocess based on the molar rate of production by chemical reaction of the inception species") 
 	    ("diags", "write split diagnostics data") //aab64
@@ -198,6 +200,7 @@ int main(int argc, char* argv[])
         if (vm.count("only")) {fsolve = false; fpostproc = true;}
         diag = vm["diag"].as< int >();
         if (vm.count("ppah")) fpah = true;
+		if (vm.count("ppri")) fpp = true;
         if (vm.count("jumps")) fjumps = true;
         if (vm.count("ensemble")) fensembles = true;
         if (vm.count("wdotA4")) fwdotA4 = true;
@@ -241,6 +244,7 @@ int main(int argc, char* argv[])
     sim.SetWriteJumpFile(fjumps);
     sim.SetWriteEnsembleFile(fensembles);
     sim.SetWritePAH(fpah);
+	sim.SetWritePP(fpp);
 
 
 	

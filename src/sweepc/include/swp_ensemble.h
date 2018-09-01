@@ -66,6 +66,7 @@
 #include "swp_tree_transcoag_weighted_cache.h"
 #include "swp_property_indices.h"
 #include "swp_gas_profile.h"
+#include "swp_kmc_pah_structure.h"
 
 #include "binary_tree.hpp"
 
@@ -165,7 +166,11 @@ public:
 
 	void SetDoubling(const bool val);
 
-	// PARTICLE ADDITION AND REMOVAL.
+	unsigned int DoubleLimit();
+
+	bool IsDoublingOn();
+
+    // PARTICLE ADDITION AND REMOVAL.
 
 	// Returns a pointer to the particle at index i.
 	Particle *const At(unsigned int i);
@@ -176,11 +181,14 @@ public:
 	// control of destruction of the particle.
 	int Add(Particle &sp, rng_type &rng);
 
-	//! Removes the particle at the given index from the ensemble.
-	void Remove(
-		unsigned int i, // Index of particle to remove.
-		bool fdel = true  // Set true to delete particle from memory as well, otherwise false.
-		);
+	//Find a particle that is a single PAH of a given structure
+	int CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, int ind);
+
+    //! Removes the particle at the given index from the ensemble.
+    void Remove(
+        unsigned int i, // Index of particle to remove.
+        bool fdel=true  // Set true to delete particle from memory as well, otherwise false.
+        );
 
 	//! Removes invalid particles.
 	void RemoveInvalids(void);

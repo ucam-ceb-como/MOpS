@@ -193,8 +193,13 @@ public:
     // Returns the mass.
     double Mass(void) const;
 
-    //! Returns the number of carbons.
+    //! Returns the number of carbon atoms.
     int NumCarbon(void) const;
+
+    //! Returns fragmentation flag.
+    int Frag(void) const;
+	//! Returns the number of rings.
+	int NumRings(void) const;
 
     //! Returns the property with the given ID.
     double Property(const Sweep::PropID id) const;
@@ -220,9 +225,11 @@ public:
     // Sets the mass.
     void SetMass(double m);
 
-    //! Sets the number of carbons.
+    //! Sets the number of carbon atoms.
     void SetNumCarbon(int numcarbon);
 
+    //! Sets fragmentation flag.
+    void SetFrag(int frag);
     //! Check particle still meets physical conditions for being a particle.
     bool IsValid() const;
 
@@ -258,6 +265,11 @@ public:
     virtual Primary &Coagulate(const Primary &rhs,
                                rng_type &rng);
 
+    // Combines this primary with another.  This is also the
+    // implementation of the + and += operators.
+    virtual Primary &Fragment(const Primary &rhs,
+                               rng_type &rng);
+
     // This routine sinters the Primary for the given length of
     // time using the provided sintering model.
     virtual void Sinter(
@@ -267,6 +279,9 @@ public:
         rng_type &rng,  // Random number generator
         double wt     // Statistical weight
         );
+	
+	//csl37: get primary coords
+	virtual void GetPrimaryCoords(std::vector<fvector> &coords) const;
 
     // READ/WRITE/COPY.
 
@@ -304,14 +319,16 @@ protected:
     double m_createt;   // Time at which primary was created.
     double m_time;      // Last time primary was updated.  Required for LPDA.
 
-    // Basic derived properties (calculated from above properties).
+    //! Basic derived properties (calculated from above properties).
     double m_diam; // Equivalent spherical diameter.
     double m_dcol; // Collision diameter.
     double m_dmob; // Mobility diameter.
     double m_surf; // Surface area.
     double m_vol;  // Volume.
     double m_mass; // Mass.
-    int m_numcarbon;
+    int m_numcarbon; //!< Number of carbon atoms.
+    int m_frag;      //!< Fragmentation flag.
+	int m_numOf6Rings;
 
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.

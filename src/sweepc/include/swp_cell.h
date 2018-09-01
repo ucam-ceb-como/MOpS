@@ -54,8 +54,6 @@
 #include <string>
 #include <iostream>
 
-typedef boost::mt19937 RandNumGen;
-
 namespace Sweep
 {
 // Forward declare Mechanism class.
@@ -106,8 +104,11 @@ public:
 	// Returns the number of particles in the ensemble.
 	unsigned int ParticleCount(void) const;
 
-	// Returns particle statistics.
-	void GetVitalStats(Stats::EnsembleStats &stats) const;
+	// Returns the number of particles in the ensemble.
+	double ParticleWeightSum(void) const;
+
+    // Returns particle statistics.
+    void GetVitalStats(Stats::EnsembleStats &stats) const;
 
 	//! Initialise with some particles, downsampling as required
 	void SetParticles(
@@ -244,11 +245,6 @@ public:
 	PropID getCoagProp1() const { return m_cprop1; };
 	PropID getCoagProp2() const { return m_cprop2; };
 
-	// aab64 Get thread specific rng
-	void Setprng(size_t seedval);
-
-	// aab64 Get thread specific rng
-	RandNumGen Chooseprng(size_t threadid);
 
 	// aab64 coagulation scaling for weighted events
 	void SetRateFactor(double rateFac) { m_rateFactor = rateFac; }
@@ -311,9 +307,6 @@ private:
 	// aab64 PSI flag used to tell surface reaction not to update gas-phase and 
 	// temperature because this is handled using inception stoichiometry
 	bool m_notpsiflag;
-
-	// aab64 Parallel random number generators for OMP updates
-	std::vector<RandNumGen> m_prng;
 
 	// aab64 coagulation scaling for weighted events
 	int m_rateFactor;

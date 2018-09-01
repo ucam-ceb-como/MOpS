@@ -180,6 +180,9 @@ public:
         unsigned int start = 0          // Optional start index for the first variable.
         ) const;
 
+	////////////////////////////////////// csl37-pp
+	void PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const;
+	/////////////////////////////////////
 
     // READ/WRITE/COPY.
 

@@ -70,7 +70,7 @@ while(<$momentFile>) {
 # fv (2.45+-0.54)e-8 
 
 print "$m0, $m1\n";
-if(abs($m0 -  1.41e19) > 2e17) {
+if(abs($m0 -  1.39e19) > 2e17) {
   print "Simulated mean M0 was $m0, when  1.41e19m^-3 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
@@ -90,29 +90,26 @@ my $postprocessPAHFile;
 open($postprocessPAHFile, "<pahtest2-bintree-serializer-postprocess-PAH(0.006s).csv") or die "ERR: failed to open stats file: $postprocessPAHFile";
 
 my $sum = 0;
-my $counter = 1;
+my $counter = 0;
 my $average = 0;
 
 # Ignore lines which contain non-numeric values: the header (line 1) and the three lines containing the words 1runs, 2runs and 3runs (lines 2, 991 and 1878)
 while (my $line = <$postprocessPAHFile>) {
-  if (($counter == 1) || ($counter == 2) || ($counter == 991) || ($counter == 1878)) {
-  } else {
-      chomp $line;
+    chomp $line;
 
-      my @fields = split "," , $line;
-      $sum += $fields[6];
-  }
-  $counter += 1;
+    my @fields = split "," , $line;
+    $sum += $fields[6];
+    $counter += 1;
 }
 
 # ($counter - 5) corresponds to the total number of PAHs
-$average = $sum / ($counter - 5);
+$average = $sum / ($counter - 4);
 
-# Precalculated average over 3 runs = 468
-# 20 runs: mean = 454; 99% confidence level = 5
+# Precalculated average over 3 runs = 445
+# 20 runs: mean = 448; 99% confidence level = 5
 
-if(abs($average -  454) > 14) {
-  print "Average PAH mass (u) was $average, when 454 expected\n";
+if(abs($average -  445) > 5) {
+  print "Average PAH mass (u) was $average, when 445 expected\n";
   print "**************************\n";
   print "****** TEST FAILURE ******\n";
   print "**************************\n";

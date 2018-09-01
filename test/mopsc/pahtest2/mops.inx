@@ -5,8 +5,8 @@
   <iter>20</iter>
   <atol>1.0e-22</atol> 
   <rtol>1.0e-4</rtol>
-    <pcount>256</pcount>
-  <maxm0>7e13</maxm0>
+  <pcount>256</pcount>
+  <maxm0>1.25e14</maxm0>
   <relax>0.5</relax>
   
 

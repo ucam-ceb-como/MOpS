@@ -348,6 +348,9 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	unsigned int iterm,
 	Sweep::rng_type &rng) const
 {
+
+	PartPtrVector dummy;
+
 	int ip1 = -1, ip2 = -1;
 
 	MajorantType maj;
@@ -664,7 +667,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 
 	//Update the particles
 	if (t > sp1->LastUpdateTime())
-		m_mech->UpdateParticle(*sp1, sys, t, rng);
+		m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
 	// Check that particle is still valid.  If not,
 	// remove it and cease coagulating.
 	if (!sp1->IsValid()) {
@@ -676,7 +679,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	}
 
 	if (t > sp2->LastUpdateTime())
-		m_mech->UpdateParticle(*sp2, sys, t, rng);
+		m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
 	// Check validity of particles after update.
 	if (!sp2->IsValid()) {
 		// Tell the ensemble to update particle one before we confuse things

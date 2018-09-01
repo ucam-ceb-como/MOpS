@@ -224,6 +224,9 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 	const Sweep::Processes::CoagWeightRule weight_rule,
 	Cell &sys, rng_type &rng,
 	MajorantType maj) const {
+
+	PartPtrVector dummy;
+
 	int ip1 = sys.Particles().Select(prop1, rng);
 	int ip2 = sys.Particles().Select(prop2, rng);
 
@@ -256,7 +259,7 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 	const double majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
 	//Update the particles
-	m_mech->UpdateParticle(*sp1, sys, t, rng);
+	m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
 	// Check that particle is still valid.  If not,
 	// remove it and cease coagulating.
 	if (!sp1->IsValid()) {
@@ -268,12 +271,12 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 		return 0;
 	}
 
-	m_mech->UpdateParticle(*sp2, sys, t, rng);
-	// Check validity of particles after update.
-	if (!sp2->IsValid()) {
-		// Tell the ensemble to update particle one before we confuse things
-		// by removing particle 2
-		sys.Particles().Update(ip1);
+m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
+    // Check validity of particles after update.
+    if (!sp2->IsValid()) {
+        // Tell the ensemble to update particle one before we confuse things
+        // by removing particle 2
+        sys.Particles().Update(ip1);
 
 		// Must remove second particle now.
 		sys.Particles().Remove(ip2);
@@ -388,6 +391,9 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
                                  const Sweep::Processes::CoagWeightRule weight_rule,
                                  Cell &sys, rng_type &rng,
                                  MajorantType maj, const Geometry::LocalGeometry1d& local_geom) const {
+	
+	PartPtrVector dummy;
+	
 	if (prop1 != iUniform)
 		std::cout << "Hybrid weighted perform only implemented for uniform choice of sp1\n";
 	if (prop2 != iW)
@@ -499,7 +505,7 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	const double majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
 	//Update the particles
-	m_mech->UpdateParticle(*sp1, sys, t, rng);
+	m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
 	// Check that particle is still valid.  If not,
 	// remove it and cease coagulating.
 	if (!sp1->IsValid()) {
@@ -511,7 +517,7 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 		return 0;
 	}
 
-	m_mech->UpdateParticle(*sp2, sys, t, rng);
+	m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
 	// Check validity of particles after update.
 	if (!sp2->IsValid()) {
 		// Tell the ensemble to update particle one before we confuse things

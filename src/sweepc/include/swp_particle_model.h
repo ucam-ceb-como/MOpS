@@ -257,16 +257,19 @@ public:
 
     };
 
+    //! Gas-phase trasfer species.
     enum PostProcessStartingStr {
         A1, A2, A4, A5
     };
 
-    //! Postprocess based on the inception species concentration (XA4) or based
-    //! on the molar rate of production by chemical reaction of the inception
+    //! Postprocess based on the inception species concentration 
+	//! (XA4 for soot, concentration otherwise) or based on the 
+    //! molar rate of production by chemical reaction of the inception
     //! species per unit volume (wdotA4).
     enum postprocessingType {
         XA4,
         wdotA4,
+		concentration,
     };
 
     //! Choose between drag models
@@ -341,6 +344,13 @@ public:
 
     //! Return the flag used to indicate whether to track the distance between the centres of primary particles.
     const bool getTrackPrimarySeparation() const {return m_trackPrimarySeparation;}
+
+    //! Activates tracking of the coordinates of primary particles.
+    void setTrackPrimaryCoordinates(bool flag) {m_trackPrimaryCoordinates = flag;}
+
+    //! Return the flag used to indicate whether to track the coordinates of
+    //! primary particles.
+    const bool getTrackPrimaryCoordinates() const {return m_trackPrimaryCoordinates;}
 
     void setPostprocessingType(postprocessingType Type) {m_postprocessingType = Type;};
 
@@ -497,6 +507,9 @@ private:
 
     //! Flag to indicate whether to track the distance between the centres of neighbouring primary particles.
     bool m_trackPrimarySeparation;
+
+    //! Flag to indicate whether to track the coordinates of primary particles.
+    bool m_trackPrimaryCoordinates;
 
     postprocessingType m_postprocessingType;
 

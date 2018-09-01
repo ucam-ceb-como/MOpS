@@ -60,6 +60,7 @@
 #include "swp_inception.h"
 #include "swp_particle_process.h"
 #include "swp_coagulation.h"
+#include "swp_fragmentation.h"
 
 #include <vector>
 #include <string>
@@ -121,6 +122,12 @@ public:
     
     //! Returns the vector of coagulations.
     const Processes::CoagPtrVector &Coagulations(void) const;
+
+    // Adds a coagulation process to the mechanism.
+    void AddFragmentation(Processes::Fragmentation &frag);
+    
+    //! Returns the vector of coagulations.
+    const Processes::FragPtrVector &Fragmentations(void) const;
 
     // PROCESS INFORMATION.
 
@@ -352,7 +359,9 @@ public:
         Particle &sp, // Particle to update.
         Cell &sys,    // System to which the particle belongs.
         double t,       // Time up to which to integrate.
-        rng_type &rng
+		int ind,        // Index of particle in the emsemble
+        rng_type &rng, 
+		PartPtrVector &overflow
         ) const;
 
 
@@ -439,6 +448,9 @@ private:
 
     //! List of coagulation processes
     Processes::CoagPtrVector m_coags;
+
+    //! List of coagulation processes
+    Processes::FragPtrVector m_frags;
 
     // Auxilliary information about the processes.
     int m_icoag;                 // Index of first coagulation process in mechanism.

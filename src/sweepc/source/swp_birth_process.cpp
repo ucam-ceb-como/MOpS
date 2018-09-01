@@ -276,6 +276,7 @@ void BirthProcess::DoParticleBirth(
 
     // Reset some properties
     sp->resetCoagCount();
+    sp->resetFragCount();
     sp->SetTime(t);     // Set LPDA update time.
 
     // Note that we could just adjust the weight of isp and add it (SWAs only),

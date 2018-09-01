@@ -55,10 +55,10 @@ using namespace std;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor (protected).
+//! Default constructor (protected).
 AggModels::Primary::Primary(void)
 : m_pmodel(NULL), m_createt(0.0), m_time(0.0), m_diam(0.0), m_dcol(0.0), 
-  m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0)
+m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0), m_frag(0), m_numOf6Rings(0)
 {
 }
 
@@ -100,7 +100,7 @@ AggModels::Primary::~Primary()
 
 // OPERATOR OVERLOADS.
 
-// Assignment operator.
+//! Assignment operator.
 AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
 {
     if (this != &rhs) {
@@ -124,7 +124,7 @@ AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
         m_createt = rhs.m_createt;
         m_time    = rhs.m_time;
 
-        // Copy the derived properties.
+        //! Copy derived and basic properties.
         m_diam = rhs.m_diam;
         m_dcol = rhs.m_dcol;
         m_dmob = rhs.m_dmob;
@@ -132,7 +132,8 @@ AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
         m_vol  = rhs.m_vol;
         m_mass = rhs.m_mass;
         m_numcarbon = rhs.m_numcarbon;
-    }
+		m_numOf6Rings = rhs.m_numOf6Rings;
+        m_frag = rhs.m_frag;    }
     return *this;
 }
 
@@ -225,7 +226,7 @@ AggModels::AggModelType AggModels::Primary::AggID(void) const {return AggModels:
 
 // BASIC DERIVED PARTICLE PROPERTIES.
 
-// Calculates the derived properties from the unique properties.
+//! Calculates the derived properties from the unique properties.
 void AggModels::Primary::UpdateCache(void)
 {
     double m = 0.0;
@@ -239,7 +240,35 @@ void AggModels::Primary::UpdateCache(void)
         if (m_pmodel->Components(i)->Density() > 0.0)
             m_vol  += m / m_pmodel->Components(i)->Density();
     }
-    
+
+    /**
+     * Get the number of carbon atoms.
+     * It is assumed that the 0th index of m_comp contains the number of carbon
+     * atoms.
+     */
+    m_numcarbon = 0;
+    m_numcarbon = m_comp[0];
+
+    /**
+     * For particles with one carbon atom, set the number of carbon atoms to 0.
+     * m_numcarbon is used to calculate the rate of fragmentation. Particles
+     * with an m_numcarbon of 1 cannot further fragment; therefore, to exclude
+     * these particles from the rate calculation m_numcarbon is set to 0.  
+     */
+    if(m_numcarbon < 2) {
+        m_numcarbon = 0;
+    }
+
+    /**
+     * Indicate that a particle with one carbon atom cannot fragment.
+     * m_frag is used in the uniform selection of particle for fragmentation.
+     * By default, a particle is able to fragment.
+     */
+    m_frag = 0;
+    if(m_numcarbon >= 2) {
+        m_frag = 1;
+    }
+
     // Calculate other properties (of sphere).
     m_diam = pow(6.0 * m_vol / PI, ONE_THIRD);
     m_dcol = m_diam;
@@ -277,9 +306,14 @@ double AggModels::Primary::Volume(void) const {return m_vol;}
 // Returns the mass.
 double AggModels::Primary::Mass(void) const {return m_mass;}
 
+//! Returns the number of carbon atoms.
 int AggModels::Primary::NumCarbon(void) const {return m_numcarbon;}
 
-// Returns the property with the given ID.
+//! Returns fragmentation flag.
+int AggModels::Primary::Frag(void) const {return m_frag;}
+int AggModels::Primary::NumRings(void) const { return m_numOf6Rings; }
+
+//! Returns the property with the given ID.
 double AggModels::Primary::Property(const Sweep::PropID id) const
 {
     switch (id) {
@@ -297,8 +331,10 @@ double AggModels::Primary::Property(const Sweep::PropID id) const
             return m_vol;
         case iM:      // Mass.
             return m_mass;
-        case iNumCarbon:
+        case iNumCarbon:        //! Number of carbon atoms.
             return m_numcarbon;
+        case iFrag:             //! Fragmentation flag.
+            return m_frag;
         default:
             return 0.0;
     }
@@ -325,8 +361,11 @@ void AggModels::Primary::SetVolume(double vol) {m_vol = vol;}
 // Sets the mass.
 void AggModels::Primary::SetMass(double m) {m_mass = m;}
 
+//! Sets the number of carbon atoms.
 void AggModels::Primary::SetNumCarbon(int numcarbon) {m_numcarbon = numcarbon;}
 
+//! Sets fragmentation flag.
+void AggModels::Primary::SetFrag(int frag) {m_frag = frag;}
 /*!
  * Check that this primary is a physically valid particle.  This currently
  * means checking that the amount of each component is within a range specifed
@@ -471,6 +510,48 @@ AggModels::Primary &AggModels::Primary::Coagulate(const Primary &rhs, rng_type &
     return *this;
 }
 
+/*!
+ *  Combines this primary with another.
+ *
+ *  Note the very strange behaviour when the primaries do not
+ *  have equal particle model pointers.  Users should also
+ *  be very careful about not mixing different types that inherit
+ *  from PrimaryParticle.
+ *
+ * \param[in]       rhs         Primary particle to add to current instance
+ * \param[in,out]   rng         Random number generator
+ *
+ * \return      Reference to the current instance after rhs has been added
+ */
+AggModels::Primary &AggModels::Primary::Fragment(const Primary &rhs, rng_type &rng)
+{
+    // Check if the RHS uses the same particle model.  If not, then
+    // just use the assignment operator because you can't add apples 
+    // and bananas!
+    if (rhs.m_pmodel == m_pmodel) {
+        // Add the components.
+        for (unsigned int i=0; i!=min(m_comp.size(),rhs.m_comp.size()); ++i) {
+            m_comp[i] += rhs.m_comp[i];
+        }
+
+        // Add the tracker values.
+        for (unsigned int i=0; i!=min(m_values.size(),rhs.m_values.size()); ++i) {
+            m_values[i] += rhs.m_values[i];
+        }
+
+        // Create time is the earliest time.
+        m_createt = min(m_createt, rhs.m_createt);
+        m_time    = min(m_time, rhs.m_time);
+    } else {
+        // Different particle models!
+        *this = rhs;
+        std::cerr << "Sweep::AggModels::Primary::Fragment called for particles with models " << m_pmodel
+                  << " and " << rhs.m_pmodel << std::endl;
+    }
+    AggModels::Primary::UpdateCache();
+    return *this;
+}
+
 // This routine sinters the Primary for the given length of
 // time using the provided sintering model.
 void AggModels::Primary::Sinter(double dt, Cell &sys,
@@ -510,7 +591,7 @@ AggModels::Primary *const AggModels::Primary::Clone(void) const
     return new Primary(*this);
 }
 
-// Writes the object to a binary stream.
+//! Writes the object to a binary stream.
 void AggModels::Primary::Serialize(std::ostream &out) const
 {
     if (out.good()) {
@@ -571,15 +652,19 @@ void AggModels::Primary::Serialize(std::ostream &out) const
         val = (double)m_mass;
         out.write((char*)&val, sizeof(val));
 
-        val = (double)m_numcarbon;
+        //! Write number of carbon atoms.
+        val = (int)m_numcarbon;
         out.write((char*)&val, sizeof(val));
-    } else {
+
+        //! Write fragmentation flag.
+        val = (int)m_frag;
+        out.write((char*)&val, sizeof(val));    } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, AggModels::Primary::Serialize).");
     }
 }
 
-// Reads the object from a binary stream.
+//! Reads the object from a binary stream.
 void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 {
     releaseMem();
@@ -647,9 +732,14 @@ void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleMode
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_mass = (double)val;
 
+                //! Read number of carbon atoms.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_numcarbon = (double)val;
-    
+                m_numcarbon = (int)val;
+
+                //! Read fragmentation flag.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_frag = (int)val;
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -671,7 +761,7 @@ void AggModels::Primary::releaseMem(void)
     m_values.clear();
 }
 
-// Initialisation routine.
+//! Initialisation routine.
 void AggModels::Primary::init(void)
 {
     m_pmodel = NULL;
@@ -684,6 +774,8 @@ void AggModels::Primary::init(void)
     m_vol = 0.0;  // Volume.
     m_mass = 0.0; // Mass.
     m_numcarbon = 0;
+	m_numOf6Rings = 0;
+    m_frag = 0;      //!< Fragmentation flag.
     releaseMem();
 }
 
@@ -717,4 +809,16 @@ int AggModels::Primary::InceptedPAH() const
         default:
             return 0;
     }
+}
+
+//csl37: get primary coords
+void AggModels::Primary::GetPrimaryCoords(std::vector<fvector> &coords) const
+{
+	//spherical model coords are (0,0,0,0)
+	fvector c(4);
+	c[0] = 0.0;
+    c[1] = 0.0;
+    c[2] = 0.0;
+    c[3] = 0.0;
+    coords.push_back(c);
 }

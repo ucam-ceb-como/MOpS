@@ -251,6 +251,7 @@ int Condensation::Perform(double t, Sweep::Cell &sys,
                           unsigned int iterm,
                           rng_type &rng) const
 {
+	PartPtrVector dummy;
     // Select particle based on which term was called.
     int i  = -1;
     Sweep::PropID id = Sweep::iUniform;
@@ -278,7 +279,7 @@ int Condensation::Perform(double t, Sweep::Cell &sys,
 
         if (m_mech->AnyDeferred()) {
             // Update particle with deferred processes.
-            m_mech->UpdateParticle(*sp, sys, t, rng);
+            m_mech->UpdateParticle(*sp, sys, t, i, rng, dummy);
         }
 
         // Check that the particle is still valid.

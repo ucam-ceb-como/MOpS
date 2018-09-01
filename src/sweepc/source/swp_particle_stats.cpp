@@ -607,3 +607,9 @@ void ParticleStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
                                "(Sweep, ParticleStats::Deserialize).");
     }
 }
+
+/////////////////////////////////////////////////csl37-pp
+void ParticleStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const
+{
+}
+//////////////////////////////////////////////////

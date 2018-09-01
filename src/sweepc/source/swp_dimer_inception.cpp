@@ -503,7 +503,7 @@ double DimerInception::RateTerms(const double t, const Cell &sys,
             Rate = 0.0;
 
         *iterm = Rate; 
-    } else {
+	}else{
 		// aab64 Divide by current incepting particle weight for cases when wt != 1.0. 
 		// aab64 Divide by current incepting composition scale factor for cases with heavier inception
 		double scaleFac = 1.0 / (sys.GetInceptingWeight() * sys.GetInceptionFactor());

@@ -178,8 +178,11 @@ public:
     //! Set the simulator to write the particle binary file
     void SetWriteEnsembleFile(bool writeparticles);
 
-    //! Set simulator to write the jumps CSV file.
+    //! Set simulator to write the PAHs to psl files.
     void SetWritePAH(bool postpocessPAH);
+
+	//! Set simulator to write the PAHs to psl files.
+	void SetWritePP(bool postpocessPP);
 
     // options for Postprocess (only for PAH-PP model)
     //! return the option whehter generate mass spectra
@@ -341,6 +344,9 @@ private:
 
     //! Flag controlling whether post-process the detailed info about every PAH in the particle ensemble. Default false.
     bool m_write_PAH;
+
+	//! Flag controlling whether post-process the detailed info about every primary particle in the particle ensemble. Default false.
+	bool m_write_PP;
 
     //  the method of postprocessing, only for PAH-PP model 
     //!Flag controlling the generation of Mass spectra
@@ -728,6 +734,12 @@ private:
         const Mechanism &mech,  // Mechanism use to solve system.
         const timevector &times // Simulation output time intervals.
         ) const;
+
+	// Processes the PSLs at each save point into single files for Primary Particles.
+	void postProcessPPPSLs(
+		const Mechanism &mech,  // Mechanism use to solve system.
+		const timevector &times // Simulation output time intervals.
+		) const;
 
     // post-process the ensemble to find interested information, in this case, mass of Xmer at the end of simulation
     void postProcessXmer(

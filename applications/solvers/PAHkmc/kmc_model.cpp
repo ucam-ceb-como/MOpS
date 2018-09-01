@@ -253,12 +253,15 @@ int main(int argc, char *argv[])
                     Simulator->writeRatesCSV(t_now,
                         rates);
                 }
-                Simulator->updatePAH(pah[i],
-                    t_now, step_size,
-                    1,//no_of_steps,
-                    rng,
-                    1,
-                    ID+i);
+				Simulator->updatePAH(pah[i],
+					t_now, step_size,
+					1,//no_of_steps,
+					0,
+					rng,
+					1,
+					ID + i,
+					true,
+					1.0);
                 if(save_CH) {
                     CH_counts.push_back(pahp.getCHCount());
                 }
