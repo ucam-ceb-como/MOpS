@@ -1385,7 +1385,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 			{
 				double factor = GetWeightScalingFactor();
 				sys.AdjustSampleVolume(factor);
-				signed int part_i;
+				unsigned int part_i;
 				Particle *pi = NULL;
 				for (part_i = 0; part_i < sys.ParticleCount(); ++part_i)
 				{
@@ -1509,8 +1509,8 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	// surface growth affects only one particle in the size class at a time.
 
 	// Update sections for surface growth
-	double added_total = 0.0, rate_constant = 0.0, rate_index = 0.0;
-	unsigned int n_index = 0, index = 0, n_add = 0, num = 0;
+	double rate_constant = 0.0, rate_index = 0.0;
+	unsigned int n_index = 0, index = 0, n_add = 0, num = 0, added_total = 0;
 	unsigned int critical_size = sys.Particles().GetCritialNumber();
 	sys.SetNotPSIFlag(false);
 	Particle * sp_add = NULL;
@@ -1627,7 +1627,7 @@ unsigned int Mechanism::SetRandomParticle(bool isSP1, bool isSP2, Cell &sys, dou
 		while (index < critical_index && !canstop)
 		{
 			n_index = (double)(sys.Particles().NumberAtIndex(index)) * sys.Particles().PropertyAtIndex(prop, index);
-			if (n_index >= alpha & n_index > 0.0)
+			if ((n_index >= alpha) && (n_index > 0.0))
 				canstop = true;
 			else
 			{
