@@ -213,9 +213,9 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
 		unsigned int ntotal_ens = sys.ParticleCount();
 		boost::uniform_01<rng_type&, double> unifDistrib(rng);
 		double test = unifDistrib() * (ntotal_pn + ntotal_ens);
-		if (ntotal_pn > test)
+		if (ntotal_pn >= test)
 		{
-			unsigned int index = m_mech->SetRandomParticle(false, false, sys, t, test - ntotal_ens, iUniform, rng);
+			unsigned int index = m_mech->SetRandomParticle(false, false, sys, t, test, iUniform, rng);
 			sys.Particles().UpdateTotalsWithIndex(index, -1.0);
 			sys.Particles().UpdateNumberAtIndex(index, -1);
 			sys.Particles().UpdateTotalParticleNumber(-1);

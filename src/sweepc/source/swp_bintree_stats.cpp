@@ -196,9 +196,9 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
 		//if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {
 
 		double wt = e.GetTotalParticleNumber() * invTotalWeight;
-		double dpri = e.GetTotalDiameter();//0;
-		double d_index = 0;
-		double n_index = 0;
+		double dpri = e.GetTotalDiameter() * invTotalWeight;//0;
+		//double d_index = 0;
+		//double n_index = 0;
 		//for (unsigned int i = 0; i < e.GetCritialNumber(); ++i)
 		//{
 			//n_index = e.NumberAtIndex(i);
