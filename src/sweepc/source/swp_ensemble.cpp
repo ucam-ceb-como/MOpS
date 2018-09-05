@@ -1351,7 +1351,7 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
 		{
 			// Output all elements in the data vector.
 			fvector::const_iterator i;
-			std::_Vector_const_iterator<std::_Vector_val<std::_Simple_types<unsigned int>>> j;
+			std::vector<unsigned int>::const_iterator j;
 			for (j = m_particle_numbers.begin(); j != m_particle_numbers.end(); j++) {
 				out.write((char*)&(*j), sizeof(*j));
 			}
