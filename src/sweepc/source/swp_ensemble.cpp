@@ -1344,6 +1344,25 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 		
+		// aab64 For particle number model
+		n = m_critical_size;
+		out.write((char*)&n, sizeof(n));
+		if (m_critical_size > 0)
+		{
+			// Output all elements in the data vector.
+			fvector::const_iterator i;
+			std::_Vector_const_iterator<std::_Vector_val<std::_Simple_types<unsigned int>>> j;
+			for (j = m_particle_numbers.begin(); j != m_particle_numbers.end(); j++) {
+				out.write((char*)&(*j), sizeof(*j));
+			}
+			for (i = m_pn_diameters.begin(); i != m_pn_diameters.end(); i++) {
+				out.write((char*)&(*i), sizeof(*i));
+			}
+			for (i = m_pn_mass.begin(); i != m_pn_mass.end(); i++) {
+				out.write((char*)&(*i), sizeof(*i));
+			}
+		}
+		
 
     } else {
         throw std::invalid_argument("Output stream not ready "
@@ -1429,6 +1448,32 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 } else {
                     m_contwarn = false;
                 }
+
+				// aab64 for particle number model
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+				m_critical_size = n;
+
+				// Fill the data vector.
+				if (m_critical_size > 0)
+				{
+					double val;
+					unsigned int num;
+					m_particle_numbers.reserve(m_critical_size);
+					m_pn_diameters.reserve(m_critical_size);
+					m_pn_mass.reserve(m_critical_size);
+					for (unsigned int i = 0; i < m_critical_size; i++) {
+						in.read(reinterpret_cast<char*>(&num), sizeof(num));
+						m_particle_numbers.push_back(num);
+					}
+					for (unsigned int i = 0; i < m_critical_size; i++) {
+						in.read(reinterpret_cast<char*>(&val), sizeof(val));
+						m_pn_diameters.push_back(val);
+					}
+					for (unsigned int i = 0; i < m_critical_size; i++) {
+						in.read(reinterpret_cast<char*>(&val), sizeof(val));
+						m_pn_mass.push_back(val);
+					}
+				}
 			
                 // Calculate binary tree.
                 rebuildTree();

@@ -63,6 +63,7 @@
 
 #include <boost/functional/hash.hpp>
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace Mops;
 using namespace std;
@@ -2409,7 +2410,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	CSV_IO nodesout(m_output_filename + "-primary-nodes.csv", true);
 	CSV_IO primsout(m_output_filename + "-primary.csv", true);
 	///////////////////////////////////////////
-
+	
 	// Get reference to the particle mechanism.
 	const Sweep::Mechanism &pmech = mech.ParticleMech();
 
@@ -2488,6 +2489,34 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 					}
 				}
 				/////////////////////////////////////////
+				
+				// aab64 for particle number model
+				if (r->Mixture()->Particles().GetCritialNumber() > 0)
+				{
+					vector<string> pn_particles(5);
+					vector<string> pn_particles_header;
+					pn_particles_header.push_back("Particle index");
+					pn_particles_header.push_back("Number at index");
+					pn_particles_header.push_back("Density at index (m-3)");
+					pn_particles_header.push_back("Diameter at index (m)");
+					pn_particles_header.push_back("Mass at index (kg)");
+
+					CSV_IO pn_particles_out(m_output_filename + "-particle-numbers.csv", true);
+					pn_particles_out.Write(pn_particles_header);
+
+					for (unsigned int i = 0; i < r->Mixture()->Particles().GetCritialNumber(); ++i)
+					{
+						pn_particles[0] = boost::lexical_cast<std::string>(i);
+						pn_particles[1] = boost::lexical_cast<std::string>(r->Mixture()->Particles().NumberAtIndex(i));
+						pn_particles[2] = boost::lexical_cast<std::string>(r->Mixture()->Particles().NumberAtIndex(i) / (r->Mixture()->SampleVolume() * scale));
+						pn_particles[3] = boost::lexical_cast<std::string>(r->Mixture()->Particles().DiameterAtIndex(i));
+						pn_particles[4] = boost::lexical_cast<std::string>(r->Mixture()->Particles().MassAtIndex(i));
+						pn_particles_out.Write(pn_particles);
+					}
+					pn_particles_out.Close();
+				}
+
+
 
 				delete r;
 			}
@@ -2546,6 +2575,9 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 		out[i]->Close();
 		delete out[i];
 	}
+	
+
+
 }
 
 /*

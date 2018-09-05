@@ -290,6 +290,8 @@ public:
 	double PropertyAtIndex(Sweep::PropID prop, unsigned int index) const;
 	double GetPropertyTotal (Sweep::PropID prop) const;
 	double Diameter2AtIndex(unsigned int index) const { return m_pn_diameters2[index]; }
+	double DiameterAtIndex(unsigned int index) const { return m_pn_diameters[index]; }
+	double MassAtIndex(unsigned int index) const { return m_pn_mass[index]; }
 	// This could be a single function with a case statement but it would be slower and some propIDs don't exist
 	double GetTotalDiameter() const { return m_total_diameter; }
 	double GetTotalDiameter2() const { return m_total_diameter2; }
