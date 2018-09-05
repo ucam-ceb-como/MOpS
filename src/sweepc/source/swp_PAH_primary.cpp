@@ -1019,6 +1019,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 					//! multiple points of overlap (second condition), the trial is
 					//! abandoned and another trajectory is chosen.
 					if ((newDistance > oldDistance && newDistance > sumr * sumr) || (numberOfOverlaps > 1)) {
+					//if ((newDistance > oldDistance && newDistance > sumr * sumr)) {
 						this->m_leftchild->centreBoundSph();
 						this->m_leftchild->centreCOM();
 						numberOfOverlaps = 0;
@@ -2144,27 +2145,27 @@ const Coords::Vector &PAHPrimary::boundSphCentre(void) const
 //! From bintree model.
 //! Calculates the bounding sphere position and radius using
 //! the left and right child node values.
-void PAHPrimary::calcBoundSph(void)
-{
-	if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
-		// Calculate bounding spheres of children.
-		m_leftchild->calcBoundSph();
-		m_rightchild->calcBoundSph();
-
-		// Calculate translation between left and right spheres.
-		double dx = m_rightchild->m_cen_bsph[0] - m_leftchild->m_cen_bsph[0];
-		double dy = m_rightchild->m_cen_bsph[1] - m_leftchild->m_cen_bsph[1];
-		double dz = m_rightchild->m_cen_bsph[2] - m_leftchild->m_cen_bsph[2];
-
-		// Calculate bounding sphere centre.
-		m_cen_bsph[0] = m_leftchild->m_cen_bsph[0] + (0.5 * dx);
-		m_cen_bsph[1] = m_leftchild->m_cen_bsph[1] + (0.5 * dy);
-		m_cen_bsph[2] = m_leftchild->m_cen_bsph[2] + (0.5 * dz);
-
-		// Calculate bounding sphere radius.
-		setRadius(sqrt((dx*dx) + (dy*dy) + (dz*dz)));
-	}
-}
+//void PAHPrimary::calcBoundSph(void)
+//{
+//	if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
+//		// Calculate bounding spheres of children.
+//		m_leftchild->calcBoundSph();
+//		m_rightchild->calcBoundSph();
+//
+//		// Calculate translation between left and right spheres.
+//		double dx = m_rightchild->m_cen_bsph[0] - m_leftchild->m_cen_bsph[0];
+//		double dy = m_rightchild->m_cen_bsph[1] - m_leftchild->m_cen_bsph[1];
+//		double dz = m_rightchild->m_cen_bsph[2] - m_leftchild->m_cen_bsph[2];
+//
+//		// Calculate bounding sphere centre.
+//		m_cen_bsph[0] = m_leftchild->m_cen_bsph[0] + (0.5 * dx);
+//		m_cen_bsph[1] = m_leftchild->m_cen_bsph[1] + (0.5 * dy);
+//		m_cen_bsph[2] = m_leftchild->m_cen_bsph[2] + (0.5 * dz);
+//
+//		// Calculate bounding sphere radius.
+//		setRadius(sqrt((dx*dx) + (dy*dy) + (dz*dz)));
+//	}
+//}
 
 //! From bintree model
 //! The previous function to calculate bounding sphere radius is wrong
@@ -2172,149 +2173,101 @@ void PAHPrimary::calcBoundSph(void)
 //! Ritter's method. ~5% larger than minimum bounding sphere
 //! Ritter, J. (1990). An efficient bounding sphere, Graphics Gems 
 //! (Andrew S. Glassner ed.), pp. 301-303. Academic Press, Boston
-//void PAHPrimary::calcBoundSph(void)
-//{
-//	if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
-//
-//		//! Get list of primary coordinates
-//		vector<fvector> coords;
-//		this->GetPriCoords(coords);
-//
-//		//! Find 3 pairs of points with the min and max x,y,z values
-//		fvector min_x = coords[1];	//! initialise with first point
-//		fvector max_x = min_x;
-//		fvector min_y = min_x;
-//		fvector max_y = min_x;
-//		fvector min_z = min_x;
-//		fvector max_z = min_x;
-//		for (int i = 1; i != coords.size(); ++i) {
-//			if (coords[i][0] < min_x[0]) min_x = coords[i];
-//			if (coords[i][0] > max_x[0]) max_x = coords[i];
-//			if (coords[i][1] < min_y[1]) min_y = coords[i];
-//			if (coords[i][1] > max_y[1]) max_y = coords[i];
-//			if (coords[i][2] < min_z[2]) min_z = coords[i];
-//			if (coords[i][2] > max_z[2]) max_z = coords[i];
-//		}
-//
-//		//! Calculate separation (squared) between min and max 
-//		double dx = (max_x[0] - min_x[0]);
-//		double dy = (max_x[1] - min_x[1]);
-//		double dz = (max_x[2] - min_x[2]);
-//		double x_sep = dx*dx + dy*dy + dz*dz;
-//		dx = (max_y[0] - min_y[0]);
-//		dy = (max_y[1] - min_y[1]);
-//		dz = (max_y[2] - min_y[2]);
-//		double y_sep = dx*dx + dy*dy + dz*dz;
-//		dx = (max_z[0] - min_z[0]);
-//		dy = (max_z[1] - min_z[1]);
-//		dz = (max_z[2] - min_z[2]);
-//		double z_sep = dx*dx + dy*dy + dz*dz;
-//
-//		//! find maximum separation
-//		//! points p_1 and p_2 are the points with maximum separation
-//		double max_sep = x_sep;
-//		fvector p_1 = min_x;
-//		fvector p_2 = max_x;
-//		if (y_sep > max_sep){
-//			max_sep = y_sep;
-//			p_1 = min_y;
-//			p_2 = max_y;
-//		}
-//		if (z_sep > max_sep){
-//			max_sep = z_sep;
-//			p_1 = min_z;
-//			p_2 = max_z;
-//		}
-//
-//		//! Use p_1 and p_2 for initial guess at bounding sphere
-//		//! bounding sphere centre
-//		m_cen_bsph[0] = (p_1[0] + p_2[0]) / 2.0;
-//		m_cen_bsph[1] = (p_1[1] + p_2[1]) / 2.0;
-//		m_cen_bsph[2] = (p_1[2] + p_2[2]) / 2.0;
-//		//! radius of bounding sphere 
-//		//! including the primary radii
-//		setRadius(sqrt(max_sep)/2.0 + p_1[3] + p_2[3]);
-//
-//		//! Make a second pass through list of primaries updating the sphere
-//		for (int i = 1; i != coords.size(); ++i) {
-//
-//			//! calculate distance from bounding sphere centre and add primary radius
-//			dx = coords[i][0] - m_cen_bsph[0];
-//			dy = coords[i][1] - m_cen_bsph[1];
-//			dz = coords[i][2] - m_cen_bsph[2];
-//			double r_cen = sqrt(dx*dx + dy*dy + dz*dz); //!< Distance to primary centre
-//			double r_out = r_cen + coords[i][3]; //!< Distance to outer edge of primary
-//
-//			//! If distance from the bounding sphere centre exceeds the 
-//			//! bounding sphere radius then update the bounding sphere:
-//			//! move centre by half the difference and increase the radius by half the difference
-//			if (r_out > m_r){
-//
-//				//! half the distance from current bounding sphere centre to outer edge of primary
-//				double delta_r = (r_out - m_r) / 2.0;
-//
-//				//! Update the bounding sphere centre:
-//				//! the centre is translated along the vector joining 
-//				//! the old centre to the primary centre by half the difference
-//				m_cen_bsph[0] += delta_r * dx / r_cen;
-//				m_cen_bsph[1] += delta_r * dy / r_cen;
-//				m_cen_bsph[2] += delta_r * dz / r_cen;
-//
-//				//! Set new radius
-//				setRadius(m_r + delta_r);
-//			}
-//		}
-//	}
-//}
+void PAHPrimary::calcBoundSph(void)
+{
+	if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
 
-//! hdy //
-//void PAHPrimary::calcBoundSph(void)
-//{
-//	if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
-//
-//		//! Get list of primary coordinates
-//		vector<fvector> coords;
-//		this->GetPriCoords(coords);
-//
-//		//! Find 3 pairs of points with the min and max x,y,z values
-//		double min_x = coords[1][0] - coords[1][3];	//! initialise with first primary particle
-//		double max_x = coords[1][0] + coords[1][3];
-//		double min_y = coords[1][1] - coords[1][3];
-//		double max_y = coords[1][1] + coords[1][3];
-//		double min_z = coords[1][2] - coords[1][3];
-//		double max_z = coords[1][2] + coords[1][3];
-//
-//		for (int i = 2; i != coords.size(); ++i) {
-//			if ((coords[i][0] - coords[i][3]) < min_x)  min_x = coords[i][0] - coords[i][3];
-//			if ((coords[i][0] + coords[i][3]) > max_x)  max_x = coords[i][0] + coords[i][3];
-//			if ((coords[i][1] - coords[i][3]) < min_y)  min_y = coords[i][1] - coords[i][3];
-//			if ((coords[i][1] + coords[i][3]) > max_y)  max_y = coords[i][1] + coords[i][3];
-//			if ((coords[i][2] - coords[i][3]) < min_z)  min_z = coords[i][2] - coords[i][3];
-//			if ((coords[i][2] + coords[i][3]) > max_z)  max_z = coords[i][2] + coords[i][3];
-//		}
-//
-//		//! Calculate separation (squared) between min and max 
-//		double box_x = max_x - min_x;
-//		double box_y = max_y - min_y;
-//		double box_z = max_z - min_z;
-//
-//		m_cen_bsph[0] = min_x + 0.5 * box_x;
-//		m_cen_bsph[1] = min_y + 0.5 * box_y;
-//		m_cen_bsph[2] = min_z + 0.5 * box_z;
-//
-//		double dist = sqrt(pow((coords[1][0] - m_cen_bsph[0]), 2) + pow((coords[1][1] - m_cen_bsph[1]), 2) + pow((coords[1][2] - m_cen_bsph[2]), 2))
-//			+ coords[1][3];
-//
-//		for (int i = 2; i != coords.size(); ++i) {
-//			if (sqrt(pow((coords[i][0] - m_cen_bsph[0]), 2) + pow((coords[i][1] - m_cen_bsph[1]), 2) + pow((coords[i][2] - m_cen_bsph[2]), 2))
-//				+ coords[i][3] > dist)
-//				dist = sqrt(pow((coords[i][0] - m_cen_bsph[0]), 2) + pow((coords[i][1] - m_cen_bsph[1]), 2) + pow((coords[i][2] - m_cen_bsph[2]), 2))
-//				+ coords[i][3];
-//		}
-//
-//		setRadius(dist);
-//	}
-//}
+		//! Get list of primary coordinates
+		vector<fvector> coords;
+		this->GetPriCoords(coords);
+
+		//! Find 3 pairs of points with the min and max x,y,z values
+		fvector min_x = coords[1];	//! initialise with first point
+		fvector max_x = min_x;
+		fvector min_y = min_x;
+		fvector max_y = min_x;
+		fvector min_z = min_x;
+		fvector max_z = min_x;
+		for (int i = 1; i != coords.size(); ++i) {
+			if (coords[i][0] < min_x[0]) min_x = coords[i];
+			if (coords[i][0] > max_x[0]) max_x = coords[i];
+			if (coords[i][1] < min_y[1]) min_y = coords[i];
+			if (coords[i][1] > max_y[1]) max_y = coords[i];
+			if (coords[i][2] < min_z[2]) min_z = coords[i];
+			if (coords[i][2] > max_z[2]) max_z = coords[i];
+		}
+
+		//! Calculate separation (squared) between min and max 
+		double dx = (max_x[0] - min_x[0]);
+		double dy = (max_x[1] - min_x[1]);
+		double dz = (max_x[2] - min_x[2]);
+		double x_sep = dx*dx + dy*dy + dz*dz;
+		dx = (max_y[0] - min_y[0]);
+		dy = (max_y[1] - min_y[1]);
+		dz = (max_y[2] - min_y[2]);
+		double y_sep = dx*dx + dy*dy + dz*dz;
+		dx = (max_z[0] - min_z[0]);
+		dy = (max_z[1] - min_z[1]);
+		dz = (max_z[2] - min_z[2]);
+		double z_sep = dx*dx + dy*dy + dz*dz;
+
+		//! find maximum separation
+		//! points p_1 and p_2 are the points with maximum separation
+		double max_sep = x_sep;
+		fvector p_1 = min_x;
+		fvector p_2 = max_x;
+		if (y_sep > max_sep){
+			max_sep = y_sep;
+			p_1 = min_y;
+			p_2 = max_y;
+		}
+		if (z_sep > max_sep){
+			max_sep = z_sep;
+			p_1 = min_z;
+			p_2 = max_z;
+		}
+
+		//! Use p_1 and p_2 for initial guess at bounding sphere
+		//! bounding sphere centre
+		m_cen_bsph[0] = (p_1[0] + p_2[0]) / 2.0;
+		m_cen_bsph[1] = (p_1[1] + p_2[1]) / 2.0;
+		m_cen_bsph[2] = (p_1[2] + p_2[2]) / 2.0;
+		//! radius of bounding sphere 
+		//! including the primary radii
+		setRadius(sqrt(max_sep)/2.0 + p_1[3] + p_2[3]);
+		//setRadius(sqrt(max_sep) / 2.0 + p_1[3]/2.0 + p_2[3]/2.0);//by hdy, a smaller initial guess for bounding sphere radius
+
+		//! Make a second pass through list of primaries updating the sphere
+		for (int i = 1; i != coords.size(); ++i) {
+
+			//! calculate distance from bounding sphere centre and add primary radius
+			dx = coords[i][0] - m_cen_bsph[0];
+			dy = coords[i][1] - m_cen_bsph[1];
+			dz = coords[i][2] - m_cen_bsph[2];
+			double r_cen = sqrt(dx*dx + dy*dy + dz*dz); //!< Distance to primary centre
+			double r_out = r_cen + coords[i][3]; //!< Distance to outer edge of primary
+
+			//! If distance from the bounding sphere centre exceeds the 
+			//! bounding sphere radius then update the bounding sphere:
+			//! move centre by half the difference and increase the radius by half the difference
+			if (r_out > m_r){
+
+				//! half the distance from current bounding sphere centre to outer edge of primary
+				double delta_r = (r_out - m_r) / 2.0;
+
+				//! Update the bounding sphere centre:
+				//! the centre is translated along the vector joining 
+				//! the old centre to the primary centre by half the difference
+				m_cen_bsph[0] += delta_r * dx / r_cen;
+				m_cen_bsph[1] += delta_r * dy / r_cen;
+				m_cen_bsph[2] += delta_r * dz / r_cen;
+
+				//! Set new radius
+				setRadius(m_r + delta_r);
+			}
+		}
+	}
+}
 
 //! From bintree model.
 //! Calculates the centre-of-mass using the left and right child node values.

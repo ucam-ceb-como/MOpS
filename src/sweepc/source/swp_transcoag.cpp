@@ -456,7 +456,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
     return 0;
 }
 
-
 // COAGULATION KERNELS.
 
 /**
