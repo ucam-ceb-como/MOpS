@@ -2267,55 +2267,6 @@ void PAHPrimary::calcBoundSph(void)
 //	}
 //}
 
-//! hdy //
-//void PAHPrimary::calcBoundSph(void)
-//{
-//	if ((m_leftchild != NULL) && (m_rightchild != NULL)) {
-//
-//		//! Get list of primary coordinates
-//		vector<fvector> coords;
-//		this->GetPriCoords(coords);
-//
-//		//! Find 3 pairs of points with the min and max x,y,z values
-//		double min_x = coords[1][0] - coords[1][3];	//! initialise with first primary particle
-//		double max_x = coords[1][0] + coords[1][3];
-//		double min_y = coords[1][1] - coords[1][3];
-//		double max_y = coords[1][1] + coords[1][3];
-//		double min_z = coords[1][2] - coords[1][3];
-//		double max_z = coords[1][2] + coords[1][3];
-//
-//		for (int i = 2; i != coords.size(); ++i) {
-//			if ((coords[i][0] - coords[i][3]) < min_x)  min_x = coords[i][0] - coords[i][3];
-//			if ((coords[i][0] + coords[i][3]) > max_x)  max_x = coords[i][0] + coords[i][3];
-//			if ((coords[i][1] - coords[i][3]) < min_y)  min_y = coords[i][1] - coords[i][3];
-//			if ((coords[i][1] + coords[i][3]) > max_y)  max_y = coords[i][1] + coords[i][3];
-//			if ((coords[i][2] - coords[i][3]) < min_z)  min_z = coords[i][2] - coords[i][3];
-//			if ((coords[i][2] + coords[i][3]) > max_z)  max_z = coords[i][2] + coords[i][3];
-//		}
-//
-//		//! Calculate separation (squared) between min and max 
-//		double box_x = max_x - min_x;
-//		double box_y = max_y - min_y;
-//		double box_z = max_z - min_z;
-//
-//		m_cen_bsph[0] = min_x + 0.5 * box_x;
-//		m_cen_bsph[1] = min_y + 0.5 * box_y;
-//		m_cen_bsph[2] = min_z + 0.5 * box_z;
-//
-//		double dist = sqrt(pow((coords[1][0] - m_cen_bsph[0]), 2) + pow((coords[1][1] - m_cen_bsph[1]), 2) + pow((coords[1][2] - m_cen_bsph[2]), 2))
-//			+ coords[1][3];
-//
-//		for (int i = 2; i != coords.size(); ++i) {
-//			if (sqrt(pow((coords[i][0] - m_cen_bsph[0]), 2) + pow((coords[i][1] - m_cen_bsph[1]), 2) + pow((coords[i][2] - m_cen_bsph[2]), 2))
-//				+ coords[i][3] > dist)
-//				dist = sqrt(pow((coords[i][0] - m_cen_bsph[0]), 2) + pow((coords[i][1] - m_cen_bsph[1]), 2) + pow((coords[i][2] - m_cen_bsph[2]), 2))
-//				+ coords[i][3];
-//		}
-//
-//		setRadius(dist);
-//	}
-//}
-
 //! From bintree model.
 //! Calculates the centre-of-mass using the left and right child node values.
 void PAHPrimary::calcCOM(void)
@@ -5139,7 +5090,7 @@ bool PAHPrimary::MergeCondition()
 			}
 		}
 	}
-	//condition = true; //try to force all particle spherical
+	condition = true; //try to force all particle spherical
 	return condition;
 }
 
