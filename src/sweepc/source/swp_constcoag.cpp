@@ -114,228 +114,228 @@ double Sweep::Processes::ConstantCoagulation::RateTerms(double t, const Cell &sy
  *
  * \return      0 on success, otherwise negative.
  */
-//int ConstantCoagulation::Perform(double t, Sweep::Cell &sys, 
-//                             const Geometry::LocalGeometry1d& local_geom,
-//                             unsigned int iterm,
-//                             Sweep::rng_type &rng) const
-//{
-//	PartPtrVector dummy;
-//    // Select properties by which to choose particles.
-//    // Note we need to choose 2 particles.  One particle must be chosen
-//    // uniformly and one with probability proportional
-//    // to particle mass.
-//
-//    if (sys.ParticleCount() < 2) {
-//        return 1;
-//    }
-//
-//    int ip1=-1, ip2=-1;
-//
-//    ip1 = sys.Particles().Select(rng);
-//    ip2 = sys.Particles().Select(rng);
-//
-//    // Choose and get first particle, then update it.
-//    Particle *sp1=NULL;
-//    if (ip1 >= 0) {
-//        sp1 = sys.Particles().At(ip1);
-//    } else {
-//        // Failed to choose a particle.
-//        return -1;
-//    }
-//
-//    // Choose and get unique second particle, then update it.  Note, we are allowed to do
-//    // this even if the first particle was invalidated.
-//    unsigned int guard = 0;
-//    while ((ip2 == ip1) && (++guard<1000))
-//            ip2 = sys.Particles().Select(rng);
-//
-//    Particle *sp2=NULL;
-//    if ((ip2>=0) && (ip2!=ip1)) {
-//        sp2 = sys.Particles().At(ip2);
-//    } else {
-//        // Failed to select a unique particle.
-//        return -1;
-//    }
-//
-//    //Calculate the majorant rate before updating the particles
-//    const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
-//
-//    //Update the particles
-//    m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
-//    // Check that particle is still valid.  If not,
-//    // remove it and cease coagulating.
-//    if (!sp1->IsValid()) {
-//        // Must remove first particle now.
-//        sys.Particles().Remove(ip1);
-//
-//        // Invalidating the index tells this routine not to perform coagulation.
-//        ip1 = -1;
-//        return 0;
-//    }
-//
-//    m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
-//    // Check validity of particles after update.
-//    if (!sp2->IsValid()) {
-//        // Tell the ensemble to update particle one before we confuse things
-//        // by removing particle 2
-//        sys.Particles().Update(ip1);
-//
-//        // Must remove second particle now.
-//        sys.Particles().Remove(ip2);
-//
-//        // Invalidating the index tells this routine not to perform coagulation.
-//        ip2 = -1;
-//
-//        return 0;
-//    }
-//
-//    // Check that both the particles are still valid.
-//    if ((ip1>=0) && (ip2>=0)) {
-//        // Must check for ficticious event now by comparing the original
-//        // majorant rate and the current (after updates) true rate.
-//
-//        double truek = CoagKernel(*sp1, *sp2, sys);
-//
-//        if (!Fictitious(majk, truek, rng)) {
-//            JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
-//        } else {
-//            sys.Particles().Update(ip1);
-//            sys.Particles().Update(ip2);
-//            return 1; // Ficticious event.
-//        }
-//    } else {
-//        // One or both particles were invalidated on update,
-//        // but that's not a problem.  Information on the update
-//        // of valid particles must be propagated into the binary
-//        // tree
-//        if(ip1 >= 0)
-//            sys.Particles().Update(ip1);
-//
-//        if(ip2 >= 0)
-//            sys.Particles().Update(ip2);
-//    }
-//
-//    return 0;
-//}
+int ConstantCoagulation::Perform(double t, Sweep::Cell &sys, 
+                             const Geometry::LocalGeometry1d& local_geom,
+                             unsigned int iterm,
+                             Sweep::rng_type &rng) const
+{
+	PartPtrVector dummy;
+    // Select properties by which to choose particles.
+    // Note we need to choose 2 particles.  One particle must be chosen
+    // uniformly and one with probability proportional
+    // to particle mass.
+
+    if (sys.ParticleCount() < 2) {
+        return 1;
+    }
+
+    int ip1=-1, ip2=-1;
+
+    ip1 = sys.Particles().Select(rng);
+    ip2 = sys.Particles().Select(rng);
+
+    // Choose and get first particle, then update it.
+    Particle *sp1=NULL;
+    if (ip1 >= 0) {
+        sp1 = sys.Particles().At(ip1);
+    } else {
+        // Failed to choose a particle.
+        return -1;
+    }
+
+    // Choose and get unique second particle, then update it.  Note, we are allowed to do
+    // this even if the first particle was invalidated.
+    unsigned int guard = 0;
+    while ((ip2 == ip1) && (++guard<1000))
+            ip2 = sys.Particles().Select(rng);
+
+    Particle *sp2=NULL;
+    if ((ip2>=0) && (ip2!=ip1)) {
+        sp2 = sys.Particles().At(ip2);
+    } else {
+        // Failed to select a unique particle.
+        return -1;
+    }
+
+    //Calculate the majorant rate before updating the particles
+    const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
+
+    //Update the particles
+    m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
+    // Check that particle is still valid.  If not,
+    // remove it and cease coagulating.
+    if (!sp1->IsValid()) {
+        // Must remove first particle now.
+        sys.Particles().Remove(ip1);
+
+        // Invalidating the index tells this routine not to perform coagulation.
+        ip1 = -1;
+        return 0;
+    }
+
+    m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
+    // Check validity of particles after update.
+    if (!sp2->IsValid()) {
+        // Tell the ensemble to update particle one before we confuse things
+        // by removing particle 2
+        sys.Particles().Update(ip1);
+
+        // Must remove second particle now.
+        sys.Particles().Remove(ip2);
+
+        // Invalidating the index tells this routine not to perform coagulation.
+        ip2 = -1;
+
+        return 0;
+    }
+
+    // Check that both the particles are still valid.
+    if ((ip1>=0) && (ip2>=0)) {
+        // Must check for ficticious event now by comparing the original
+        // majorant rate and the current (after updates) true rate.
+
+        double truek = CoagKernel(*sp1, *sp2, sys);
+
+        if (!Fictitious(majk, truek, rng)) {
+            JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
+        } else {
+            sys.Particles().Update(ip1);
+            sys.Particles().Update(ip2);
+            return 1; // Ficticious event.
+        }
+    } else {
+        // One or both particles were invalidated on update,
+        // but that's not a problem.  Information on the update
+        // of valid particles must be propagated into the binary
+        // tree
+        if(ip1 >= 0)
+            sys.Particles().Update(ip1);
+
+        if(ip2 >= 0)
+            sys.Particles().Update(ip2);
+    }
+
+    return 0;
+}
 
 /**force that only particles with same number of primary particles can coagulate*/
 //try to reproduce the D_f in Jullien's paper (R Jullien 1984 J. Phys. A: Math. Gen. 17 L771)
 //"Transparency effects in cluster - cluster aggregation with linear trajectories"
 //test whether we can get a D_f ~ 1.9, so that can prove the BCCA algorithm in the code is correct
 //we only need to change this function in the constant coagulation kernel
-int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
-	const Geometry::LocalGeometry1d& local_geom,
-	unsigned int iterm,
-	Sweep::rng_type &rng) const
-{
-	PartPtrVector dummy;
-	// Select properties by which to choose particles.
-	// Note we need to choose 2 particles.  One particle must be chosen
-	// uniformly and one with probability proportional
-	// to particle mass.
-
-	if (sys.ParticleCount() < 2) {
-		return 1;
-	}
-
-	int ip1 = -1, ip2 = -1;
-
-	ip1 = sys.Particles().Select(rng);
-	ip2 = sys.Particles().Select(rng);
-
-	// Choose and get first particle, then update it.
-	Particle *sp1 = NULL;
-	if (ip1 >= 0) {
-		sp1 = sys.Particles().At(ip1);
-	}
-	else {
-		// Failed to choose a particle.
-		return -1;
-	}
-
-	// Choose and get unique second particle, then update it.  Note, we are allowed to do
-	// this even if the first particle was invalidated.
-	unsigned int guard = 0;
-	Particle *sp2 = NULL;
-	sp2 = sys.Particles().At(ip2);
-
-	while (((sp1->Volume() != sp2->Volume()) || (ip2 == ip1)) && (++guard<1000))
-	{
-		ip2 = sys.Particles().Select(rng);
-		sp2 = sys.Particles().At(ip2);
-	}
-
-	if ((ip2 >= 0) && (ip2 != ip1) && (sp1->Volume() == sp2->Volume())) { 
-		//the same volume ensures the same number of primary particles
-		//this version of code is only used to test BCCA algorithm
-		sp2 = sys.Particles().At(ip2);
-	}
-	else {
-		// Failed to select a unique particle.
-		return -1;
-	}
-	//Calculate the majorant rate before updating the particles
-	const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
-
-	//Update the particles
-	m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
-	// Check that particle is still valid.  If not,
-	// remove it and cease coagulating.
-	if (!sp1->IsValid()) {
-		// Must remove first particle now.
-		sys.Particles().Remove(ip1);
-
-		// Invalidating the index tells this routine not to perform coagulation.
-		ip1 = -1;
-		return 0;
-	}
-
-	m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
-	// Check validity of particles after update.
-	if (!sp2->IsValid()) {
-		// Tell the ensemble to update particle one before we confuse things
-		// by removing particle 2
-		sys.Particles().Update(ip1);
-
-		// Must remove second particle now.
-		sys.Particles().Remove(ip2);
-
-		// Invalidating the index tells this routine not to perform coagulation.
-		ip2 = -1;
-
-		return 0;
-	}
-
-	// Check that both the particles are still valid.
-	if ((ip1 >= 0) && (ip2 >= 0)) {
-		// Must check for ficticious event now by comparing the original
-		// majorant rate and the current (after updates) true rate.
-
-		double truek = CoagKernel(*sp1, *sp2, sys);
-
-		if (!Fictitious(majk, truek, rng)) {
-			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
-		}
-		else {
-			sys.Particles().Update(ip1);
-			sys.Particles().Update(ip2);
-			return 1; // Ficticious event.
-		}
-	}
-	else {
-		// One or both particles were invalidated on update,
-		// but that's not a problem.  Information on the update
-		// of valid particles must be propagated into the binary
-		// tree
-		if (ip1 >= 0)
-			sys.Particles().Update(ip1);
-
-		if (ip2 >= 0)
-			sys.Particles().Update(ip2);
-	}
-
-	return 0;
-}
+//int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
+//	const Geometry::LocalGeometry1d& local_geom,
+//	unsigned int iterm,
+//	Sweep::rng_type &rng) const
+//{
+//	PartPtrVector dummy;
+//	// Select properties by which to choose particles.
+//	// Note we need to choose 2 particles.  One particle must be chosen
+//	// uniformly and one with probability proportional
+//	// to particle mass.
+//
+//	if (sys.ParticleCount() < 2) {
+//		return 1;
+//	}
+//
+//	int ip1 = -1, ip2 = -1;
+//
+//	ip1 = sys.Particles().Select(rng);
+//	ip2 = sys.Particles().Select(rng);
+//
+//	// Choose and get first particle, then update it.
+//	Particle *sp1 = NULL;
+//	if (ip1 >= 0) {
+//		sp1 = sys.Particles().At(ip1);
+//	}
+//	else {
+//		// Failed to choose a particle.
+//		return -1;
+//	}
+//
+//	// Choose and get unique second particle, then update it.  Note, we are allowed to do
+//	// this even if the first particle was invalidated.
+//	unsigned int guard = 0;
+//	Particle *sp2 = NULL;
+//	sp2 = sys.Particles().At(ip2);
+//
+//	while (((sp1->Volume() != sp2->Volume()) || (ip2 == ip1)) && (++guard<1000))
+//	{
+//		ip2 = sys.Particles().Select(rng);
+//		sp2 = sys.Particles().At(ip2);
+//	}
+//
+//	if ((ip2 >= 0) && (ip2 != ip1) && (sp1->Volume() == sp2->Volume())) { 
+//		//the same volume ensures the same number of primary particles
+//		//this version of code is only used to test BCCA algorithm
+//		sp2 = sys.Particles().At(ip2);
+//	}
+//	else {
+//		// Failed to select a unique particle.
+//		return -1;
+//	}
+//	//Calculate the majorant rate before updating the particles
+//	const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
+//
+//	//Update the particles
+//	m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
+//	// Check that particle is still valid.  If not,
+//	// remove it and cease coagulating.
+//	if (!sp1->IsValid()) {
+//		// Must remove first particle now.
+//		sys.Particles().Remove(ip1);
+//
+//		// Invalidating the index tells this routine not to perform coagulation.
+//		ip1 = -1;
+//		return 0;
+//	}
+//
+//	m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
+//	// Check validity of particles after update.
+//	if (!sp2->IsValid()) {
+//		// Tell the ensemble to update particle one before we confuse things
+//		// by removing particle 2
+//		sys.Particles().Update(ip1);
+//
+//		// Must remove second particle now.
+//		sys.Particles().Remove(ip2);
+//
+//		// Invalidating the index tells this routine not to perform coagulation.
+//		ip2 = -1;
+//
+//		return 0;
+//	}
+//
+//	// Check that both the particles are still valid.
+//	if ((ip1 >= 0) && (ip2 >= 0)) {
+//		// Must check for ficticious event now by comparing the original
+//		// majorant rate and the current (after updates) true rate.
+//
+//		double truek = CoagKernel(*sp1, *sp2, sys);
+//
+//		if (!Fictitious(majk, truek, rng)) {
+//			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
+//		}
+//		else {
+//			sys.Particles().Update(ip1);
+//			sys.Particles().Update(ip2);
+//			return 1; // Ficticious event.
+//		}
+//	}
+//	else {
+//		// One or both particles were invalidated on update,
+//		// but that's not a problem.  Information on the update
+//		// of valid particles must be propagated into the binary
+//		// tree
+//		if (ip1 >= 0)
+//			sys.Particles().Update(ip1);
+//
+//		if (ip2 >= 0)
+//			sys.Particles().Update(ip2);
+//	}
+//
+//	return 0;
+//}
 
 /**
  * Calculate the coagulation kernel between two particles in a given environment.

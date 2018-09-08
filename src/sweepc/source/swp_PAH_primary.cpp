@@ -709,65 +709,65 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 	rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(&rhs);
 	double vol_old = 0.0;
 	//only one PAH in rhs or this particle -> condensation or inception process.
-	//if ((rhsparticle->m_numPAH == 1) || (m_numPAH == 1))
-	//{
-	//	if (rhsparticle->Numprimary() > 1)
-	//	{
-	//		//rhsparticle is a soot particle but this paricle repesents a PAH
-	//		//this paricle will condense on this rhsparticle
-	//		//Get a copy of the rhs ready to add to the current particle
-	//		PAHPrimary copy_rhs(*rhsparticle);
-	//		PAHPrimary *target = copy_rhs.SelectRandomSubparticle(rng);
-	//		vol_old = target->m_vol; //volume before condensation
-	//		target->m_PAH.insert(target->m_PAH.end(), m_PAH.begin(), m_PAH.end());
-	//		target->UpdatePrimary();
-	//		if (m_pmodel->getTrackPrimaryCoordinates() || m_pmodel->getTrackPrimarySeparation())
-	//			target -> Adjust(vol_old); //treat condensation similar to surface growth
+	if ((rhsparticle->m_numPAH == 1) || (m_numPAH == 1))
+	{
+		if (rhsparticle->Numprimary() > 1)
+		{
+			//rhsparticle is a soot particle but this paricle repesents a PAH
+			//this paricle will condense on this rhsparticle
+			//Get a copy of the rhs ready to add to the current particle
+			PAHPrimary copy_rhs(*rhsparticle);
+			PAHPrimary *target = copy_rhs.SelectRandomSubparticle(rng);
+			vol_old = target->m_vol; //volume before condensation
+			target->m_PAH.insert(target->m_PAH.end(), m_PAH.begin(), m_PAH.end());
+			target->UpdatePrimary();
+			if (m_pmodel->getTrackPrimaryCoordinates() || m_pmodel->getTrackPrimarySeparation())
+				target -> Adjust(vol_old); //treat condensation similar to surface growth
 
-	//		CopyParts(&copy_rhs);
-	//		CopyTree(&copy_rhs);
-	//	}
-	//	else
-	//	{
-	//		//this paricle is a soot particle but rhsparticle repesents a PAH
-	//		//rhsparticle will condense on this particle
-	//		//particle has more then one primary select the primary where
-	//		//the PAH condenses to and add it to the list
-	//		if (m_leftchild != NULL)
-	//		{
-	//			PAHPrimary *target = SelectRandomSubparticle(rng);
-	//			vol_old = target->m_vol; //volume before condensation
-	//			target->m_PAH.insert(target->m_PAH.end(), rhsparticle->m_PAH.begin(), rhsparticle->m_PAH.end());
-	//			target->UpdatePrimary();
-	//			if (m_pmodel->getTrackPrimaryCoordinates() || m_pmodel->getTrackPrimarySeparation())
-	//				target->Adjust(vol_old); //treat condensation similar to surface growth
+			CopyParts(&copy_rhs);
+			CopyTree(&copy_rhs);
+		}
+		else
+		{
+			//this paricle is a soot particle but rhsparticle repesents a PAH
+			//rhsparticle will condense on this particle
+			//particle has more then one primary select the primary where
+			//the PAH condenses to and add it to the list
+			if (m_leftchild != NULL)
+			{
+				PAHPrimary *target = SelectRandomSubparticle(rng);
+				vol_old = target->m_vol; //volume before condensation
+				target->m_PAH.insert(target->m_PAH.end(), rhsparticle->m_PAH.begin(), rhsparticle->m_PAH.end());
+				target->UpdatePrimary();
+				if (m_pmodel->getTrackPrimaryCoordinates() || m_pmodel->getTrackPrimarySeparation())
+					target->Adjust(vol_old); //treat condensation similar to surface growth
 
-	//		}
-	//		else
-	//		{
-	//			//! rhsparticle is a gas-phase PAH but the this pointer may be
-	//			//! pointing to a gas-phase PAH in which case this would be an
-	//			//! inception event, or a single primary particle in which case
-	//			//! it would be a condensation event.
-	//			vol_old = m_vol; //volume before condensation
-	//			m_PAH.insert(m_PAH.end(), rhsparticle->m_PAH.begin(), rhsparticle->m_PAH.end());
-	//			UpdatePrimary();
-	//			if (m_pmodel->getTrackPrimaryCoordinates() || m_pmodel->getTrackPrimarySeparation())
-	//				Adjust(vol_old); //treat condensation similar to surface growth
-	//		}
-	//	}
-	//	UpdateCache();
+			}
+			else
+			{
+				//! rhsparticle is a gas-phase PAH but the this pointer may be
+				//! pointing to a gas-phase PAH in which case this would be an
+				//! inception event, or a single primary particle in which case
+				//! it would be a condensation event.
+				vol_old = m_vol; //volume before condensation
+				m_PAH.insert(m_PAH.end(), rhsparticle->m_PAH.begin(), rhsparticle->m_PAH.end());
+				UpdatePrimary();
+				if (m_pmodel->getTrackPrimaryCoordinates() || m_pmodel->getTrackPrimarySeparation())
+					Adjust(vol_old); //treat condensation similar to surface growth
+			}
+		}
+		UpdateCache();
 
-	//	//Check the coalescence ratio
-	//	if (m_pmodel->getTrackPrimaryCoordinates() || m_pmodel->getTrackPrimarySeparation())
-	//		CheckSintering();
-	//	else
-	//		CheckRounding();
+		//Check the coalescence ratio
+		if (m_pmodel->getTrackPrimaryCoordinates() || m_pmodel->getTrackPrimarySeparation())
+			CheckSintering();
+		else
+			CheckRounding();
 
-	//}
+	}
 
-	//else
-	//{ //comment inception and condensation to test PAH_KMC model and bintree model
+	else
+	{ //comment inception and condensation to test PAH_KMC model and bintree model
 		//coagulation process
 		//PAHPrimary *newleft = new PAHPrimary(m_time, *m_pmodel);
 		//PAHPrimary *newright = new PAHPrimary(m_time, *m_pmodel);
@@ -1137,7 +1137,7 @@ PAHPrimary &PAHPrimary::Coagulate(const Primary &rhs, rng_type &rng)
 		// if (print)
 		//     PrintTree("after");
 
-	//}
+	}
 	return *this;
 }
 
@@ -1546,23 +1546,22 @@ double PAHPrimary::CalcRadiusOfGyration_COM()
 	return Rg;
 }
 
+//! Returns the mobility diameter of a particle.
+// d_m is calculated based on Eq.(11) in Morphology and mobility diameter of carbonaceous aerosols during agglomeration and surface growth
+// Georgios A. Kelesidis, Eirini Goudeli, Sotiris E. Pratsinis. Carbon 121 (2017) 527-535
+// rva is calculated based on Eq.(3) in The Structure of Agglomerates Consisting of Polydisperse Particles
+// M. L. Eggersdorfer and S. E. Pratsinis. Aerosol Science and Technology, 46:347–353, 2012
 double PAHPrimary::CalcMobilityDiam()
 {
 	double nva = 0.0;
 	double rva = 0.0;
-	double dg = 0.0;
 	double dm = 0.0;
 
 	rva = 3.0 * m_vol / m_surf;
-	nva = 3.0 * m_vol / (4.0 * M_PI *pow(rva,3.0));
+	nva = 3.0 * m_vol / (4.0 * M_PI *pow(rva, 3.0));
 
-	if (nva > 3.0){
-		dg = 2.0 * (this->CalcRadiusOfGyration_COM());
-		dm = dg * (1.0/pow(nva,0.2) + 0.4);
-	}
-	else{
-		dm = this->CalcCollDiam();
-	}
+	dm = 2.0 * rva * pow(nva, 0.45);
+
 	return dm;
 	
 }
@@ -3770,8 +3769,8 @@ bool PAHPrimary::CheckSintering()
 	if (m_leftparticle != NULL) {
 
 		// check whether condition for merger is met
-		//if (MergeCondition() || FakeRounding()) { //add FakeRounding() by hdy
-		if (MergeCondition()) { //used to test bintree model and PAH-KMC model
+		if (MergeCondition() || FakeRounding()) { //add FakeRounding() by hdy
+		//if (MergeCondition()) { //used to test bintree model and PAH-KMC model
 			Merge();
 			UpdateCache();
 			hassintered = true;
@@ -4785,8 +4784,8 @@ void PAHPrimary::SinterNode(double dt, Cell &sys, const Processes::SinteringMode
 				double r_j4 = pow(r_j, 4.0);
 
 				//! Continue if primaries have not coalesced
-				//if (!MergeCondition() && !FakeRounding()) { // add FakeRounding() by hdy
-				if (!MergeCondition()) { //used to test bintrtee model and PAH_KMC model
+				if (!MergeCondition() && !FakeRounding()) { // add FakeRounding() by hdy
+				//if (!MergeCondition()) { //used to test bintrtee model and PAH_KMC model
 
 					//! Due to rounding, x_i and x_j are sometimes calculated to be larger 
 					//! than the respective primary radii resulting in a negative neck area.
