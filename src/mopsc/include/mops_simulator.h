@@ -530,6 +530,20 @@ private:
         bool calcsqrs = false         // Set =true to also calculate sums of squares.
         );
 
+	// Reads a PAH process rates stats data point from the binary file.
+	// To allow the averages and confidence intervals to be calculated
+	// the data point is added to a vector of sums, and the squares are
+	// added to the vector sumsqr if necessary.
+	static void readPAHRxnDataPoint(
+		std::istream &in,             // Input stream.
+		const Sweep::Mechanism &mech, // Particle mechanism.
+		fvector &rates_sum,           // Sums of process rates.
+		fvector &rates_sumsqr,        // Sums of the squares of process rates.
+		fvector &pah_jumps_sum,           // Sums of the number of pah jumps
+		fvector &pah_jumps_sumsqr,        // Sums of the squares of the number of pah jumps
+		bool calcsqrs = false         // Set =true to also calculate sums of squares.
+		);
+
     // Reads the tracked particles from the binary file.  The particles are
     // processed so that only a vector of vectors is returned, which contains
     // the PSL data for each tracked particle at that point.
