@@ -76,7 +76,7 @@ Simulator::Simulator(void)
   m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_runtime(0.0),
   m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
-  m_output_step(0), m_output_iter(0), m_write_jumps(false),
+  m_output_step(0), m_output_iter(0), m_write_jumps(false), m_write_pahjumps(false),
   m_write_ensemble_file(false),
   m_write_PAH(false), m_write_PP(false), m_mass_spectra(true), m_mass_spectra_ensemble(true),
   m_mass_spectra_xmer(1), m_mass_spectra_frag(false), 
@@ -112,6 +112,7 @@ Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
         m_output_step = rhs.m_output_step;
         m_output_iter = rhs.m_output_iter;
         m_write_jumps = rhs.m_write_jumps;
+		m_write_pahjumps = rhs.m_write_pahjumps;
         m_write_ensemble_file = rhs.m_write_ensemble_file;
         m_write_PAH = rhs.m_write_PAH;
 		m_write_PP = rhs.m_write_PP;
@@ -259,6 +260,9 @@ void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
+
+//! Set simulator to write the PAH jumps CSV file.
+void Simulator::SetWritePAHJumpFile(bool writepahjumps) {m_write_pahjumps = writepahjumps;}
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteEnsembleFile(bool writeensemble) {m_write_ensemble_file=writeensemble;}
@@ -831,8 +835,13 @@ void Simulator::postProcessSimulation(
     }
 
     // Only write jump file if the flag has been set.
-    if (m_write_jumps) {
-        writePartJumpCSV(m_output_filename+"-part-jumps.csv", mech.ParticleMech(), times, appjumps, eppjumps);
+	if (m_write_jumps) {
+		writePartJumpCSV(m_output_filename + "-part-jumps.csv", mech.ParticleMech(), times, appjumps, eppjumps);
+	}
+
+	// Only write pah jump file if the flag has been set.
+    if (m_write_pahjumps) {
+        writePAHJumpCSV(m_output_filename+"-pah-jumps.csv", mech.ParticleMech(), times, appjumps, eppjumps);
     }
 
     // POST-PROCESS PSLs.
@@ -852,7 +861,7 @@ void Simulator::postProcessSimulation(
          * Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
          * J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
          */
-        // postProcessPAHinfo(mech, times);
+        postProcessPAHinfo(mech, times);
 
         //! Output PAH details for the whole particle ensemble
         postProcessPAHPSLs(mech, times);
@@ -865,7 +874,7 @@ void Simulator::postProcessSimulation(
 		* Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
 		* J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
 		*/
-		// postProcessPAHinfo(mech, times);
+		 postProcessPAHinfo(mech, times);
 
 		//! Output PAH details for the whole particle ensemble
 		postProcessPPPSLs(mech, times);
@@ -1024,6 +1033,37 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
     }
 }
 
+// Writes the PAH process rates and the
+// species molar production rates to the binary output file.
+void Simulator::outputPAHRxnRates(const Reactor &r) const
+{
+	if (r.Mech()->ParticleMech().ProcessCount() != 0) {
+		// Calculate the process rates.
+		static fvector rates;
+		r.Mech()->ParticleMech().CalcRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), rates);
+
+		// Calculate the molar production rates (mol/mol).
+		static fvector wdot;
+		r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), wdot);
+
+		// Calculate the number of jumps (-).
+		static fvector jumps;
+		r.Mech()->ParticleMech().CalcJumps(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), jumps);
+
+		// Now convert from mol/mol to mol/m3.
+		fvector::iterator rhodot = wdot.begin() + r.Mech()->GasMech().SpeciesCount() + 1;
+		for (unsigned int k = 0; k != r.Mech()->GasMech().SpeciesCount(); ++k) {
+			wdot[k] = (r.Mixture()->GasPhase().Density() * wdot[k]) +
+				(r.Mixture()->GasPhase().MoleFraction(k) * (*rhodot));
+		}
+
+		// Write rates to the file.
+		m_file.write((char*)&rates[0], sizeof(rates[0]) * r.Mech()->ParticleMech().ProcessCount());
+		m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->GasMech().SpeciesCount());
+		m_file.write((char*)&jumps[0], sizeof(jumps[0]) * r.Mech()->ParticleMech().ProcessCount());
+	}
+}
+
 
 // FILE OUTPUT.
 
@@ -1047,6 +1087,9 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             me->outputGasRxnRates(r);
 
             me->outputPartRxnRates(r);
+
+			//Needs to be modified
+			//me->outputPAHRxnRates(r);
 
             // Write CPU times to file.
             s.OutputCT(me->m_file);
@@ -1819,6 +1862,53 @@ void Simulator::writePartJumpCSV(const std::string &filename,
 
     // Close the CSV files.
     csv.Close();
+}
+
+// Writes number of pah jump events to a CSV file.
+void Simulator::writePAHJumpCSV(const std::string &filename,
+	const Sweep::Mechanism &mech,
+	const timevector &times,
+	std::vector<fvector> &avg,
+	const std::vector<fvector> &err)
+{
+	// Open file for the CSV results.
+	CSV_IO csv(filename, true);
+
+	// Write the header row to the PAH jumps CSV file.
+	vector<string> head;
+	head.push_back("Step");
+	head.push_back("Time (s)");
+	mech.GetProcessNames(head, 2);
+	// Add units.
+	for (unsigned int i = 2; i != head.size(); ++i) {
+		head[i] = head[i] + " (-)";
+	}
+	// Add error columns.
+	for (unsigned int i = head.size(); i != 2; --i) {
+		head.insert(head.begin() + i, "Err");
+	}
+
+
+	csv.Write(head);
+
+	// Output initial conditions.
+	buildOutputVector(0, times[0].StartTime(), avg[0], err[0]);
+	csv.Write(avg[0]);
+
+	// Loop over all points, performing output.
+	unsigned int step = 1;
+	for (timevector::const_iterator iint = times.begin(); iint != times.end(); ++iint) {
+		// Loop over all time steps in this interval.
+		double t = iint->StartTime();
+		for (unsigned int istep = 0; istep<(*iint).StepCount(); ++istep, ++step) {
+			t += iint->StepSize();
+			buildOutputVector(step, t, avg[step], err[step]);
+			csv.Write(avg[step]);
+		}
+	}
+
+	// Close the CSV files.
+	csv.Close();
 }
 
 // Writes gas-phase and surface phase reaction rates profile to a CSV file. (C)
@@ -3095,6 +3185,14 @@ void Simulator::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
+		// Flag controlling pah jump file output.
+		if (m_write_pahjumps) {
+			out.write((char*)&trueval, sizeof(trueval));
+		}
+		else {
+			out.write((char*)&falseval, sizeof(falseval));
+		}
+
         // Number of particles for which to produce tracking output.
         n = (unsigned int)m_ptrack_count;
         out.write((char*)&n, sizeof(n));
@@ -3195,6 +3293,10 @@ void Simulator::Deserialize(std::istream &in)
                 // Flag controlling jump file output.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_write_jumps = (n==trueval);
+
+				// Flag controlling pah jump file output.
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+				m_write_pahjumps = (n == trueval);
 
                 // Number of particles for which to produce tracking output.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

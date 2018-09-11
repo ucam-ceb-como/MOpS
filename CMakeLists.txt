@@ -6,7 +6,7 @@ project (MOPSSUITE)
 
 IF(WIN32)
   SET(Boost_ADDITIONAL_VERSIONS "1.47" "1.47.0" "1.49" "1.49.0" "1.51" "1.51.0" "1.57.0")
-  SET(BOOST_ROOT "C:/Program Files/boost")
+  SET(BOOST_ROOT "C:\Users\gl413\Downloads\boost_1_57_0")
   SET(Boost_USE_STATIC_LIBS TRUE)
   SET(MSVC_BUILD_DIR "/\${CTEST_CONFIGURATION_TYPE}")
   SET(SHELL_INTERPRETER "bash")
@@ -91,8 +91,6 @@ add_test(mops.pahtest1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/p
 add_test(mops.pahtest2 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 add_test(mops.pahtest3 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest3.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
-
-add_test(mops.pahtest4 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/pahtest4.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc)
 
 add_test(mops.silica1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/silica1)
 

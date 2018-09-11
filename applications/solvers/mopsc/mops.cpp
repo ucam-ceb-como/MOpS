@@ -68,6 +68,7 @@ int main(int argc, char* argv[])
     bool fpostproc(false);  // Should the binary files be postprocessed?
     bool fsolve(true);      // Should the system be solved?
     bool fjumps(false);     // Should a jumps file be written?
+	bool fpahjumps(false);	// Should a PAH jumps file be written?
     bool fpah(false);       // Should full PAHPP data be postprocessed?
 	bool fpp(false);       // Should full primary particle data be postprocessed?
     bool fensembles(false); // Should an *.ens file be written?
@@ -126,6 +127,7 @@ int main(int argc, char* argv[])
         ("ppah", "write full PAHPP data")
 		("ppri", "write full primary particle data")
         ("jumps", "write stochastic jumps data")
+		("pahjumps", "write stochastic pah jumps data")
         ("wdotA4", "postprocess based on the molar rate of production by chemical reaction of the inception species")
         ;
 
@@ -193,6 +195,7 @@ int main(int argc, char* argv[])
         if (vm.count("ppah")) fpah = true;
 		if (vm.count("ppri")) fpp = true;
         if (vm.count("jumps")) fjumps = true;
+		if (vm.count("pahjumps")) fpahjumps = true;
         if (vm.count("ensemble")) fensembles = true;
         if (vm.count("wdotA4")) fwdotA4 = true;
     }
@@ -229,6 +232,7 @@ int main(int argc, char* argv[])
 
     // Activate output options
     sim.SetWriteJumpFile(fjumps);
+	sim.SetWritePAHJumpFile(fpahjumps);
     sim.SetWriteEnsembleFile(fensembles);
     sim.SetWritePAH(fpah);
 	sim.SetWritePP(fpp);

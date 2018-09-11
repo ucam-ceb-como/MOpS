@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
     std::string startStruct_str = "";
     int R6_num = 0;
     int R5_num = 0;
-    std::string site_savemode = "END";
+    std::string site_savemode = "STEP";
 
     KMCSimulator* Simulator;
 

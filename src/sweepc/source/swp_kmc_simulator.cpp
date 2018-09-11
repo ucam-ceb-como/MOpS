@@ -177,6 +177,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 	bool proceed = true;
 	Spointer Sp1;
 	int test;
+	rvector rates(m_kmcmech.JPList().size(), 0);
     while (m_t < t_max && proceed) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
         //m_simGas.interpolateProfiles(m_t, true, r_factor);
@@ -186,6 +187,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		if (calcrates){
 			m_gas->Interpolate(m_t, r_factor);
 			m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
+			rates = m_kmcmech.Rates();
+			writeRatesCSV(m_t, rates);
 		}
 
         // Calculate time step, update time
@@ -219,6 +222,23 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //m_simPAHp.saveDOT(dotname.str());
             // Update data structure
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
+			
+			// get counts for all site types
+			/*if (PAH_ID == 1 || PAH_ID == 2){
+				std::cout << "PAH_ID: " << PAH_ID << "\t";
+				std::cout << "R6: " << m_simPAHp.getRingsCount().first << "R5" << m_simPAHp.getRingsCount().second << " ";
+				m_simPAHp.printSites();
+
+				m_simPAHp.printStruct();
+				std::cout << "\n";
+			}*/
+			
+			//for (int i = 0; i<(int)allSiteType.size(); i++) {
+			//	int scount = m_simPAHp.getSiteCount(allSiteType[i]);
+			//	std::cout << scount << "\t";
+			//	temp_2.push_back((float)scount);
+			//}
+			
 
 			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
 			//Set t_next to t_max so the updatePAH routine will be exited
@@ -443,7 +463,7 @@ void KMCSimulator::initCSVIO() {
     m_rxn_csv.Open(m_rxncount_name, true);
     m_pah_csv.Open(m_pahlist_name, true);
     m_rates_csv.Open(m_rates_name, true);
-     m_timestep_csv.Open(m_timestep_name, true);//##
+    m_timestep_csv.Open(m_timestep_name, true);//##
     // Write column headings for CSV files
     writeCSVlabels();
 }

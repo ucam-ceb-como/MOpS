@@ -216,17 +216,18 @@ void PAHProcess::printStruct(Cpointer c) const{
 void PAHProcess::printSites() const{
     Spointer i;
     std::string st;
-    cout << "*******************\n";
-    cout << "Sites List:\n_____\n";
+    //cout << "*******************\n";
+    //cout << "Sites List:\n_____\n";
     // displays total site count
-    cout << "Total Site Count: " << m_pah->m_siteList.size() << '\n';
+    //cout << "Total Site Count: " << m_pah->m_siteList.size() << '\n';
     for(i=m_pah->m_siteList.begin(); i!=m_pah->m_siteList.end(); i++) {
         // convert site type into string
         st = kmcSiteName(i->type);
         // displays site type
-        cout << st << '\n';
+        cout << st << ", ";
     }
-    cout << "********************\n";
+    //cout << "********************\n";
+	cout << "\n";
 }
 //! Print Sites in console, with an arrow pointing at site stt
 void PAHProcess::printSites(Spointer& stt) const{
