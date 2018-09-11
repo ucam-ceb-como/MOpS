@@ -424,7 +424,7 @@ private:
 	// Writes the PAH process rates and the molar production
 	// rates for each species due to particle processes for the
 	// given reactor to the binary output file.
-	void outputPAHRxnRates(const Reactor &r) const;
+	//void outputPAHRxnRates(const Reactor &r) const;
 
 
     // CONSOLE OUTPUT.

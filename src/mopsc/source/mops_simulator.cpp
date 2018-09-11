@@ -1056,37 +1056,37 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
         m_file.write((char*)&jumps[0], sizeof(jumps[0]) * r.Mech()->ParticleMech().ProcessCount());
     }
 }
-
-// Writes the PAH process rates and the
-// species molar production rates to the binary output file.
-void Simulator::outputPAHRxnRates(const Reactor &r) const
-{
-	if (r.Mech()->ParticleMech().ProcessCount() != 0) {
-		// Calculate the process rates.
-		static fvector rates;
-		r.Mech()->ParticleMech().CalcRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), rates);
-
-		// Calculate the molar production rates (mol/mol).
-		static fvector wdot;
-		r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), wdot);
-
-		// Calculate the number of jumps (-).
-		static fvector jumps;
-		r.Mech()->ParticleMech().CalcJumps(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), jumps);
-
-		// Now convert from mol/mol to mol/m3.
-		fvector::iterator rhodot = wdot.begin() + r.Mech()->GasMech().SpeciesCount() + 1;
-		for (unsigned int k = 0; k != r.Mech()->GasMech().SpeciesCount(); ++k) {
-			wdot[k] = (r.Mixture()->GasPhase().Density() * wdot[k]) +
-				(r.Mixture()->GasPhase().MoleFraction(k) * (*rhodot));
-		}
-
-		// Write rates to the file.
-		m_file.write((char*)&rates[0], sizeof(rates[0]) * r.Mech()->ParticleMech().ProcessCount());
-		m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->GasMech().SpeciesCount());
-		m_file.write((char*)&jumps[0], sizeof(jumps[0]) * r.Mech()->ParticleMech().ProcessCount());
-	}
-}
+//
+//// Writes the PAH process rates and the
+//// species molar production rates to the binary output file.
+//void Simulator::outputPAHRxnRates(const Reactor &r) const
+//{
+//	if (r.Mech()->ParticleMech().ProcessCount() != 0) {
+//		// Calculate the process rates.
+//		static fvector rates;
+//		r.Mech()->ParticleMech().CalcRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), rates);
+//
+//		// Calculate the molar production rates (mol/mol).
+//		static fvector wdot;
+//		r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), wdot);
+//
+//		// Calculate the number of jumps (-).
+//		static fvector jumps;
+//		r.Mech()->ParticleMech().UpdateParticle   .CalcJumps(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), jumps);
+//
+//		// Now convert from mol/mol to mol/m3.
+//		fvector::iterator rhodot = wdot.begin() + r.Mech()->GasMech().SpeciesCount() + 1;
+//		for (unsigned int k = 0; k != r.Mech()->GasMech().SpeciesCount(); ++k) {
+//			wdot[k] = (r.Mixture()->GasPhase().Density() * wdot[k]) +
+//				(r.Mixture()->GasPhase().MoleFraction(k) * (*rhodot));
+//		}
+//
+//		// Write rates to the file.
+//		m_file.write((char*)&rates[0], sizeof(rates[0]) * r.Mech()->ParticleMech().ProcessCount());
+//		m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->GasMech().SpeciesCount());
+//		m_file.write((char*)&jumps[0], sizeof(jumps[0]) * r.Mech()->ParticleMech().ProcessCount());
+//	}
+//}
 
 
 // FILE OUTPUT.
@@ -1113,7 +1113,7 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             me->outputPartRxnRates(r);
 
 			//Needs to be modified
-			me->outputPAHRxnRates(r);
+			//me->outputPAHRxnRates(r);
 
             // Write CPU times to file.
             s.OutputCT(me->m_file);
@@ -2629,6 +2629,120 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         //}
     }
 }
+//
+//
+///*
+//* @brief Processes PAH rates and sites information to CSV files.
+//*
+//* @param[in]    mech     Particle mechanism.
+//* @param[in]    times    Times at which to save output.
+//*/
+//void Simulator::postProcessKMCdata(const Mechanism &mech,
+//	const timevector &times) const
+//{
+//	Reactor *r = NULL;
+//	unsigned int step = 0;
+//	std::vector<std::vector<double> > temp_PAH;
+//
+//	// Get reference to the particle mechanism.
+//	const Sweep::Mechanism &pmech = mech.ParticleMech();
+//	double den = pmech.Components(0)->Density();
+//
+//	// postProcessXmer is only designed for PAH-PP model
+//	if (pmech.AggModel() == Sweep::AggModels::PAH_KMC_ID){
+//		// Build header row for CSV output files.
+//		vector<string> header;
+//		vector<string> separator;
+//
+//		// add the name for the columns
+//		header.push_back("Index");                     //! Particle index (-1 for gas-phase PAHs).
+//		header.push_back("#C");                        //! Number of carbon atoms.
+//		header.push_back("#H");                        //! Number of hydrogen atoms.
+//		header.push_back("#Rings6");                   //! Number of 6-member rings.
+//		header.push_back("#Rings5");                   //! Number of 5-member rings.
+//		header.push_back("#EdgeC");                    //! Number of carbon atoms on the edge of the PAH.
+//		header.push_back("Mass(u)");                   //! PAH mass (u).
+//		header.push_back("Mass(kg)");                  //! PAH mass (kg).
+//		header.push_back("PAHCollDiameter (m)");       //! PAH collision diameter (m).
+//		header.push_back("PAH density (kg/m3)");       //! PAH density (kg/m3).
+//		header.push_back("PAH volume (m3)");           //! PAH volume (m3).
+//		header.push_back("diameter (m)");              //! Spherical diameter (m).
+//		header.push_back("collision diameter (m)");    //! Larger of the spherical or collison diameter (m).
+//		header.push_back("time created (s)");          //! Time created (s).
+//		header.push_back("PAH_ID");                    //! Index of PAH.
+//		header.push_back("Frequency");                 //! Number of PAHs pointing to the same memory location.
+//
+//
+//		// Open output files for all PSL save points.  Remember to
+//		// write the header row as well.
+//		vector<CSV_IO*> out(times.size(), NULL);
+//		for (unsigned int i = 0; i != times.size(); ++i) {
+//			double t = times[i].EndTime();
+//			out[i] = new CSV_IO();
+//			out[i]->Open(m_output_filename + "-postprocess-PAH(" +
+//				cstr(t) + "s).csv", true);
+//			out[i]->Write(header);
+//		}
+//
+//		// Loop over all time intervals.
+//		for (unsigned int i = 0; i != times.size(); ++i) {
+//			// Calculate the total step count after this interval.
+//			step += times[i].StepCount();
+//
+//			// Loop over all runs.
+//			for (unsigned int irun = 0; irun != m_nruns; ++irun) {
+//				// Read the save point for this step and run.
+//				r = readSavePoint(step, irun, mech);
+//				//create separator to distinguish the results of independant runs
+//				separator.push_back(cstr(irun + 1) + "runs");
+//				out[i]->Write(separator);
+//				separator.clear();
+//
+//				if (r != NULL) {
+//					double scale = (double)m_nruns;
+//					if (m_output_every_iter) scale *= (double)m_niter;
+//
+//					//! Provide a way to detect multiple instances of PAHs.
+//					std::set<void*> duplicates;
+//
+//					// Provide a way to map a PAH to its memory location.
+//					std::vector<std::string> Mapping;
+//
+//					//! Loop over all particles and PAHs within the particles and write PAH rates to csv file.
+//					for (unsigned int j = 0; j != r->Mixture()->ParticleCount(); ++j) {
+//						Sweep::Particle* sp = r->Mixture()->Particles().At(j);
+//						Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
+//						pah->OutputPAHPSL(temp_PAH, j, den, duplicates, Mapping, i);
+//						if (j == r->Mixture()->ParticleCount() - 1){
+//							for (size_t ii = 0; ii != temp_PAH.size(); ++ii)
+//								out[i]->Write(temp_PAH[ii]);
+//
+//							//! temp_PAH must be cleared before next output.
+//							temp_PAH.clear();
+//						}
+//					}
+//
+//					delete r;
+//				}
+//				else {
+//					//! Throw error if the reactor was not read.
+//					throw runtime_error("Unable to read reactor from save point "
+//						"(Mops, ParticleSolver::postProcessPSLs).");
+//				}
+//			}
+//
+//			out[i]->Close();
+//			delete out[i];
+//		}
+//
+//		//! Close output CSV files.
+//		//for (unsigned int i=0; i!=times.size(); ++i) {
+//		//    out[i]->Close();
+//		//    delete out[i];
+//		//}
+//	}
+//}
+//
 
 /*
 * @brief Processes the Primary Particle-PSLs at each save point into single files.

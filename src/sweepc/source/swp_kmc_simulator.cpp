@@ -70,6 +70,7 @@ using namespace Strings;
 std::string default_timer_csv = "KMC_Model/PAH_loop_timer.csv";
 std::string default_rxncount_csv = "KMC_Model/PAH_reaction_count.csv";
 std::string default_pahlist_csv = "KMC_Model/PAH_CH_site_list.csv";
+std::string default_rates_csv = "KMC_Model/PAH_jump_process_rates.csv";
 
 // Vector of all site types
 static std::vector<kmcSiteType> allSiteType = vectSiteType();
@@ -146,8 +147,13 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 							bool calcrates,
 							double ratefactor) {
 	// wjm34: remove call to initReaction count to save time in updating.
-    //initReactionCount();
-    m_t = tstart;
+	m_t = tstart;
+	if (m_t == 0) {
+		initCSVIO();
+		initReactionCount();
+	};
+	
+    
     double t_max = m_t + dt;
     targetPAH(*pah);
     /*if(m_simPAHp.checkCoordinates())
@@ -178,6 +184,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 	Spointer Sp1;
 	int test;
 	rvector rates(m_kmcmech.JPList().size(), 0);
+	
     while (m_t < t_max && proceed) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
         //m_simGas.interpolateProfiles(m_t, true, r_factor);
@@ -189,6 +196,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
 			rates = m_kmcmech.Rates();
 			writeRatesCSV(m_t, rates);
+			//writetimestep(m_t);
+			writeRxnCountCSV();
 		}
 
         // Calculate time step, update time
@@ -222,6 +231,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //m_simPAHp.saveDOT(dotname.str());
             // Update data structure
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
+			m_rxn_count[jp_perf.second]++;
 			
 			// get counts for all site types
 			/*if (PAH_ID == 1 || PAH_ID == 2){
@@ -458,6 +468,11 @@ void KMCSimulator::initCSVIO() {
         cout<<"WARNING: Output CSV name for CH and site counts is not specified. Defaulting to "<<default_pahlist_csv<<"\n";
         m_pahlist_name = default_pahlist_csv;
     }
+	if (m_rates_name.length() == 0) {
+		cout << "WARNING: Output CSV name for PAH rates is not specified. Defaulting to " << default_rates_csv << "\n";
+		m_rates_name = default_rates_csv;
+	}
+
     // Open csv file
     m_timer_csv.Open(m_timer_name, true);
     m_rxn_csv.Open(m_rxncount_name, true);
