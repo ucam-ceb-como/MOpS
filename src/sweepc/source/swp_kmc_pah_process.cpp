@@ -216,18 +216,17 @@ void PAHProcess::printStruct(Cpointer c) const{
 void PAHProcess::printSites() const{
     Spointer i;
     std::string st;
-    //cout << "*******************\n";
-    //cout << "Sites List:\n_____\n";
+    cout << "*******************\n";
+    cout << "Sites List:\n_____\n";
     // displays total site count
-    //cout << "Total Site Count: " << m_pah->m_siteList.size() << '\n';
+    cout << "Total Site Count: " << m_pah->m_siteList.size() << '\n';
     for(i=m_pah->m_siteList.begin(); i!=m_pah->m_siteList.end(); i++) {
         // convert site type into string
         st = kmcSiteName(i->type);
         // displays site type
-        cout << st << ", ";
+        cout << st << '\n';
     }
-    //cout << "********************\n";
-	cout << "\n";
+    cout << "********************\n";
 }
 //! Print Sites in console, with an arrow pointing at site stt
 void PAHProcess::printSites(Spointer& stt) const{
@@ -1748,6 +1747,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
             break;
         case 21:
             proc_O6R_FE2(site_perf, site_C1, site_C2); break;
+		case 22:
+			proc_D6R_FE_AC(site_perf, site_C1, site_C2); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -2782,6 +2783,13 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     addCount(0,-1);
     m_pah->m_rings--;
     //saveDOT(dotname2.str());
+}
+
+// ************************************************************
+// ID22- R6 desorption from FE to form AC (Added by GLC)
+// ************************************************************
+void PAHProcess::proc_D6R_FE_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	proc_O6R_FE_HACA_O2(stt, C_1, C_2);
 }
 
 size_t PAHProcess::SiteListSize() const {

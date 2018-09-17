@@ -239,17 +239,6 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				std::cout << "R6: " << m_simPAHp.getRingsCount().first << "R5" << m_simPAHp.getRingsCount().second << " ";
 				m_simPAHp.printSites();
 
-				m_simPAHp.printStruct();
-				std::cout << "\n";
-			}*/
-			
-			//for (int i = 0; i<(int)allSiteType.size(); i++) {
-			//	int scount = m_simPAHp.getSiteCount(allSiteType[i]);
-			//	std::cout << scount << "\t";
-			//	temp_2.push_back((float)scount);
-			//}
-			
-
 			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
 			//Set t_next to t_max so the updatePAH routine will be exited
 			//if (pah->numofRings() < 4){
@@ -439,11 +428,11 @@ void KMCSimulator::writeCHSiteCountCSV() {
 }
 //! Writes data for rates count (csv)
 void KMCSimulator::writeRatesCSV(double& time, rvector& v_rates) {
-    int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21};
+    int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22};
     //int convM[] = {1, 2,14,15, 8,10,11,12,13, 3, 7, 9, 5, 4, 6,22,24,16,21};
     int ID;
     //if(runNo==1) {
-    int total_jp = 21;
+    int total_jp = 22;
     std::vector<double> temp(total_jp+1,0);
     temp[0] = time;
     for(int i=0; i!=(int)v_rates.size(); i++) {

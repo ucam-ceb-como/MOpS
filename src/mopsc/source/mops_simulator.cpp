@@ -76,7 +76,7 @@ Simulator::Simulator(void)
   m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_runtime(0.0),
   m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
-  m_output_step(0), m_output_iter(0), m_write_jumps(false), m_write_pahjumps(false),
+  m_output_step(0), m_output_iter(0), m_write_jumps(false),
   m_write_ensemble_file(false),
   m_write_PAH(false), m_write_PP(false), m_mass_spectra(true), m_mass_spectra_ensemble(true),
   m_mass_spectra_xmer(1), m_mass_spectra_frag(false), 
@@ -112,7 +112,6 @@ Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
         m_output_step = rhs.m_output_step;
         m_output_iter = rhs.m_output_iter;
         m_write_jumps = rhs.m_write_jumps;
-		m_write_pahjumps = rhs.m_write_pahjumps;
         m_write_ensemble_file = rhs.m_write_ensemble_file;
         m_write_PAH = rhs.m_write_PAH;
 		m_write_PP = rhs.m_write_PP;
@@ -260,9 +259,6 @@ void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
-
-//! Set simulator to write the PAH jumps CSV file.
-void Simulator::SetWritePAHJumpFile(bool writepahjumps) {m_write_pahjumps = writepahjumps;}
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteEnsembleFile(bool writeensemble) {m_write_ensemble_file=writeensemble;}
@@ -629,12 +625,6 @@ void Simulator::postProcessSimulation(
     vector<fvector> apprates(npoints), epprates(npoints);
     vector<fvector> appwdot(npoints), eppwdot(npoints);
 
-	// Declare pah rate outputs (averages and errors). (At the moment only gas species goes into particle mech)
-	vector<fvector> apahrates(npoints), epahrates(npoints);
-
-	// Declare pah number of jumps output (averages and errors).
-	vector<fvector> apahjumps(npoints), epahjumps(npoints);
-
     // Declare data structure for particle tracking data.
     // Runs -> time steps -> particles -> coordinate.
     vector<vector<vector<fvector> > > ptrack(m_nruns);
@@ -674,10 +664,6 @@ void Simulator::postProcessSimulation(
                          appwdot[0], eppwdot[0],
                          appjumps[0], eppjumps[0],
                          true);
-	readPAHRxnDataPoint(fin, mech.ParticleMech(),
-						 apahrates[0], epahrates[0],
-						 apahjumps[0], epahjumps[0],
-						 true);
     readCTDataPoint(fin, ncput, acpu[0], ecpu[0], true);
     for(unsigned int irun=0; irun!=m_nruns; ++irun) {
         ptrack[irun].resize(npoints); // Resize particle tracking vector.
@@ -700,8 +686,6 @@ void Simulator::postProcessSimulation(
     multVals(agpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(apprates[0], m_nruns*m_niter);
         multVals(appjumps[0], m_nruns*m_niter);
-		multVals(apahrates[0], m_nruns*m_niter);
-		multVals(apahjumps[0], m_nruns*m_niter);
         multVals(appwdot[0], m_nruns*m_niter);
         multVals(acpu[0], m_nruns*m_niter);
         multVals(echem[0], m_nruns*m_niter);
@@ -713,8 +697,6 @@ void Simulator::postProcessSimulation(
     multVals(egpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(epprates[0], m_nruns*m_niter);
         multVals(eppjumps[0], m_nruns*m_niter);
-		multVals(epahrates[0], m_nruns*m_niter);
-		multVals(epahjumps[0], m_nruns*m_niter);
         multVals(eppwdot[0], m_nruns*m_niter);
         multVals(ecpu[0], m_nruns*m_niter);
     } else {
@@ -727,8 +709,6 @@ void Simulator::postProcessSimulation(
     multVals(agpsdot[0], m_nruns); // added by mm864
         multVals(apprates[0], m_nruns);
         multVals(appjumps[0], m_nruns);
-		multVals(apahrates[0], m_nruns);
-		multVals(apahjumps[0], m_nruns);
         multVals(appwdot[0], m_nruns);
         multVals(acpu[0], m_nruns);
         multVals(echem[0], m_nruns); 
@@ -740,8 +720,6 @@ void Simulator::postProcessSimulation(
     multVals(egpsdot[0], m_nruns); // added by mm864
         multVals(epprates[0], m_nruns);
         multVals(eppjumps[0], m_nruns);
-		multVals(epahrates[0], m_nruns);
-		multVals(epahjumps[0], m_nruns);
         multVals(eppwdot[0], m_nruns);
         multVals(ecpu[0], m_nruns);
     }
@@ -773,8 +751,7 @@ void Simulator::postProcessSimulation(
                                             true);
 
                         readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
-						readPAHRxnDataPoint(fin, mech.ParticleMech(), apahrates[step], epahrates[step], apahjumps[step], epahjumps[step], true);
-						readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
+                        readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                         readPartTrackPoint(fin, pmech, ptrack[irun][step]);
                     }
                 }
@@ -791,8 +768,7 @@ void Simulator::postProcessSimulation(
                                         true);
 
                     readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
-					readPAHRxnDataPoint(fin, mech.ParticleMech(), apahrates[step], epahrates[step], apahjumps[step], epahjumps[step], true);
-					readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
+                    readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                     readPartTrackPoint(fin, pmech, ptrack[irun][step]);
                 }
             }
@@ -814,8 +790,6 @@ void Simulator::postProcessSimulation(
     calcAvgConf(agpsdot, egpsdot, m_nruns*m_niter); // added by mm864
         calcAvgConf(apprates, epprates, m_nruns*m_niter);
         calcAvgConf(appjumps, eppjumps, m_nruns*m_niter);
-		calcAvgConf(apahrates, epahrates, m_nruns*m_niter);
-		calcAvgConf(apahjumps, epahjumps, m_nruns*m_niter);
         calcAvgConf(appwdot, eppwdot, m_nruns*m_niter);
         calcAvgConf(acpu, ecpu, m_nruns*m_niter);
     } else {
@@ -828,8 +802,6 @@ void Simulator::postProcessSimulation(
     calcAvgConf(agpsdot, egpsdot, m_nruns); // added by mm864
         calcAvgConf(apprates, epprates, m_nruns);
         calcAvgConf(appjumps, eppjumps, m_nruns);
-		calcAvgConf(apahrates, epahrates, m_nruns);
-		calcAvgConf(apahjumps, epahjumps, m_nruns);
         calcAvgConf(appwdot, eppwdot, m_nruns);
         calcAvgConf(acpu, ecpu, m_nruns);
     }
@@ -859,13 +831,8 @@ void Simulator::postProcessSimulation(
     }
 
     // Only write jump file if the flag has been set.
-	if (m_write_jumps) {
-		writePartJumpCSV(m_output_filename + "-part-jumps.csv", mech.ParticleMech(), times, appjumps, eppjumps);
-	}
-
-	// Only write pah jump file if the flag has been set.
-    if (m_write_pahjumps) {
-        writePAHJumpCSV(m_output_filename+"-pah-jumps.csv", mech.ParticleMech(), times, apahjumps, epahjumps);
+    if (m_write_jumps) {
+        writePartJumpCSV(m_output_filename+"-part-jumps.csv", mech.ParticleMech(), times, appjumps, eppjumps);
     }
 
     // POST-PROCESS PSLs.
@@ -1056,37 +1023,6 @@ void Simulator::outputPartRxnRates(const Reactor &r) const
         m_file.write((char*)&jumps[0], sizeof(jumps[0]) * r.Mech()->ParticleMech().ProcessCount());
     }
 }
-//
-//// Writes the PAH process rates and the
-//// species molar production rates to the binary output file.
-//void Simulator::outputPAHRxnRates(const Reactor &r) const
-//{
-//	if (r.Mech()->ParticleMech().ProcessCount() != 0) {
-//		// Calculate the process rates.
-//		static fvector rates;
-//		r.Mech()->ParticleMech().CalcRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), rates);
-//
-//		// Calculate the molar production rates (mol/mol).
-//		static fvector wdot;
-//		r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), wdot);
-//
-//		// Calculate the number of jumps (-).
-//		static fvector jumps;
-//		r.Mech()->ParticleMech().UpdateParticle   .CalcJumps(r.Time(), *r.Mixture(), Geometry::LocalGeometry1d(), jumps);
-//
-//		// Now convert from mol/mol to mol/m3.
-//		fvector::iterator rhodot = wdot.begin() + r.Mech()->GasMech().SpeciesCount() + 1;
-//		for (unsigned int k = 0; k != r.Mech()->GasMech().SpeciesCount(); ++k) {
-//			wdot[k] = (r.Mixture()->GasPhase().Density() * wdot[k]) +
-//				(r.Mixture()->GasPhase().MoleFraction(k) * (*rhodot));
-//		}
-//
-//		// Write rates to the file.
-//		m_file.write((char*)&rates[0], sizeof(rates[0]) * r.Mech()->ParticleMech().ProcessCount());
-//		m_file.write((char*)&wdot[0], sizeof(wdot[0]) * r.Mech()->GasMech().SpeciesCount());
-//		m_file.write((char*)&jumps[0], sizeof(jumps[0]) * r.Mech()->ParticleMech().ProcessCount());
-//	}
-//}
 
 
 // FILE OUTPUT.
@@ -1111,9 +1047,6 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             me->outputGasRxnRates(r);
 
             me->outputPartRxnRates(r);
-
-			//Needs to be modified
-			//me->outputPAHRxnRates(r);
 
             // Write CPU times to file.
             s.OutputCT(me->m_file);
@@ -1597,54 +1530,6 @@ void Simulator::readPartRxnDataPoint(std::istream &in, const Sweep::Mechanism &m
     }
 }
 
-// Reads a particle process rates stats data point from the binary file.
-// To allow the averages and confidence intervals to be calculated
-// the data point is added to a vector of sums, and the squares are
-// added to the vector sumsqr if necessary.
-void Simulator::readPAHRxnDataPoint(std::istream &in, const Sweep::Mechanism &mech,
-	fvector &rates_sum, fvector &rates_sumsqr,
-	fvector &pah_jumps_sum, fvector &pah_jumps_sumsqr,
-	bool calcsqrs)
-{
-	// Check for valid stream.
-	if (in.good() && (mech.ProcessCount() > 0)) {
-		// Get the process rates vector.
-		fvector rates(mech.ProcessCount());
-		in.read(reinterpret_cast<char*>(&rates[0]),
-			sizeof(rates[0])*mech.ProcessCount());
-
-		// Get the species molar production rates.
-		fvector wdot(mech.Species()->size());
-		in.read(reinterpret_cast<char*>(&wdot[0]),
-			sizeof(wdot[0])*mech.Species()->size());
-
-		// Get the number of jumps vector
-		fvector jumps(mech.ProcessCount());
-		in.read(reinterpret_cast<char*>(&jumps[0]),
-			sizeof(jumps[0])*mech.ProcessCount());
-
-
-		// Resize vectors.
-		rates_sum.resize(rates.size(), 0.0);
-		rates_sumsqr.resize(rates.size(), 0.0);
-		pah_jumps_sum.resize(jumps.size(), 0.0);
-		pah_jumps_sumsqr.resize(jumps.size(), 0.0);
-
-		// Calculate sums and sums of squares (for average and
-		// error calculation).
-		for (unsigned int i = 0; i != rates.size(); ++i) {
-			rates_sum[i] += rates[i];
-			if (calcsqrs) rates_sumsqr[i] += (rates[i] * rates[i]);
-		}
-		for (unsigned int i = 0; i != jumps.size(); ++i) {
-			pah_jumps_sum[i] += jumps[i];
-			if (calcsqrs) pah_jumps_sumsqr[i] += (jumps[i] * jumps[i]);
-		}
-	}
-}
-
-
-
 /*
  * @brief Reads the tracked particles from the binary file
  *
@@ -1934,53 +1819,6 @@ void Simulator::writePartJumpCSV(const std::string &filename,
 
     // Close the CSV files.
     csv.Close();
-}
-
-// Writes number of pah jump events to a CSV file.
-void Simulator::writePAHJumpCSV(const std::string &filename,
-	const Sweep::Mechanism &mech,
-	const timevector &times,
-	std::vector<fvector> &avg,
-	const std::vector<fvector> &err)
-{
-	// Open file for the CSV results.
-	CSV_IO csv(filename, true);
-
-	// Write the header row to the PAH jumps CSV file.
-	vector<string> head;
-	head.push_back("Step");
-	head.push_back("Time (s)");
-	mech.GetProcessNames(head, 2);
-	// Add units.
-	for (unsigned int i = 2; i != head.size(); ++i) {
-		head[i] = head[i] + " (-)";
-	}
-	// Add error columns.
-	for (unsigned int i = head.size(); i != 2; --i) {
-		head.insert(head.begin() + i, "Err");
-	}
-
-
-	csv.Write(head);
-
-	// Output initial conditions.
-	buildOutputVector(0, times[0].StartTime(), avg[0], err[0]);
-	csv.Write(avg[0]);
-
-	// Loop over all points, performing output.
-	unsigned int step = 1;
-	for (timevector::const_iterator iint = times.begin(); iint != times.end(); ++iint) {
-		// Loop over all time steps in this interval.
-		double t = iint->StartTime();
-		for (unsigned int istep = 0; istep<(*iint).StepCount(); ++istep, ++step) {
-			t += iint->StepSize();
-			buildOutputVector(step, t, avg[step], err[step]);
-			csv.Write(avg[step]);
-		}
-	}
-
-	// Close the CSV files.
-	csv.Close();
 }
 
 // Writes gas-phase and surface phase reaction rates profile to a CSV file. (C)
@@ -2629,120 +2467,6 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         //}
     }
 }
-//
-//
-///*
-//* @brief Processes PAH rates and sites information to CSV files.
-//*
-//* @param[in]    mech     Particle mechanism.
-//* @param[in]    times    Times at which to save output.
-//*/
-//void Simulator::postProcessKMCdata(const Mechanism &mech,
-//	const timevector &times) const
-//{
-//	Reactor *r = NULL;
-//	unsigned int step = 0;
-//	std::vector<std::vector<double> > temp_PAH;
-//
-//	// Get reference to the particle mechanism.
-//	const Sweep::Mechanism &pmech = mech.ParticleMech();
-//	double den = pmech.Components(0)->Density();
-//
-//	// postProcessXmer is only designed for PAH-PP model
-//	if (pmech.AggModel() == Sweep::AggModels::PAH_KMC_ID){
-//		// Build header row for CSV output files.
-//		vector<string> header;
-//		vector<string> separator;
-//
-//		// add the name for the columns
-//		header.push_back("Index");                     //! Particle index (-1 for gas-phase PAHs).
-//		header.push_back("#C");                        //! Number of carbon atoms.
-//		header.push_back("#H");                        //! Number of hydrogen atoms.
-//		header.push_back("#Rings6");                   //! Number of 6-member rings.
-//		header.push_back("#Rings5");                   //! Number of 5-member rings.
-//		header.push_back("#EdgeC");                    //! Number of carbon atoms on the edge of the PAH.
-//		header.push_back("Mass(u)");                   //! PAH mass (u).
-//		header.push_back("Mass(kg)");                  //! PAH mass (kg).
-//		header.push_back("PAHCollDiameter (m)");       //! PAH collision diameter (m).
-//		header.push_back("PAH density (kg/m3)");       //! PAH density (kg/m3).
-//		header.push_back("PAH volume (m3)");           //! PAH volume (m3).
-//		header.push_back("diameter (m)");              //! Spherical diameter (m).
-//		header.push_back("collision diameter (m)");    //! Larger of the spherical or collison diameter (m).
-//		header.push_back("time created (s)");          //! Time created (s).
-//		header.push_back("PAH_ID");                    //! Index of PAH.
-//		header.push_back("Frequency");                 //! Number of PAHs pointing to the same memory location.
-//
-//
-//		// Open output files for all PSL save points.  Remember to
-//		// write the header row as well.
-//		vector<CSV_IO*> out(times.size(), NULL);
-//		for (unsigned int i = 0; i != times.size(); ++i) {
-//			double t = times[i].EndTime();
-//			out[i] = new CSV_IO();
-//			out[i]->Open(m_output_filename + "-postprocess-PAH(" +
-//				cstr(t) + "s).csv", true);
-//			out[i]->Write(header);
-//		}
-//
-//		// Loop over all time intervals.
-//		for (unsigned int i = 0; i != times.size(); ++i) {
-//			// Calculate the total step count after this interval.
-//			step += times[i].StepCount();
-//
-//			// Loop over all runs.
-//			for (unsigned int irun = 0; irun != m_nruns; ++irun) {
-//				// Read the save point for this step and run.
-//				r = readSavePoint(step, irun, mech);
-//				//create separator to distinguish the results of independant runs
-//				separator.push_back(cstr(irun + 1) + "runs");
-//				out[i]->Write(separator);
-//				separator.clear();
-//
-//				if (r != NULL) {
-//					double scale = (double)m_nruns;
-//					if (m_output_every_iter) scale *= (double)m_niter;
-//
-//					//! Provide a way to detect multiple instances of PAHs.
-//					std::set<void*> duplicates;
-//
-//					// Provide a way to map a PAH to its memory location.
-//					std::vector<std::string> Mapping;
-//
-//					//! Loop over all particles and PAHs within the particles and write PAH rates to csv file.
-//					for (unsigned int j = 0; j != r->Mixture()->ParticleCount(); ++j) {
-//						Sweep::Particle* sp = r->Mixture()->Particles().At(j);
-//						Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
-//						pah->OutputPAHPSL(temp_PAH, j, den, duplicates, Mapping, i);
-//						if (j == r->Mixture()->ParticleCount() - 1){
-//							for (size_t ii = 0; ii != temp_PAH.size(); ++ii)
-//								out[i]->Write(temp_PAH[ii]);
-//
-//							//! temp_PAH must be cleared before next output.
-//							temp_PAH.clear();
-//						}
-//					}
-//
-//					delete r;
-//				}
-//				else {
-//					//! Throw error if the reactor was not read.
-//					throw runtime_error("Unable to read reactor from save point "
-//						"(Mops, ParticleSolver::postProcessPSLs).");
-//				}
-//			}
-//
-//			out[i]->Close();
-//			delete out[i];
-//		}
-//
-//		//! Close output CSV files.
-//		//for (unsigned int i=0; i!=times.size(); ++i) {
-//		//    out[i]->Close();
-//		//    delete out[i];
-//		//}
-//	}
-//}
-//
 
 /*
 * @brief Processes the Primary Particle-PSLs at each save point into single files.
@@ -3371,14 +3095,6 @@ void Simulator::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
-		// Flag controlling pah jump file output.
-		if (m_write_pahjumps) {
-			out.write((char*)&trueval, sizeof(trueval));
-		}
-		else {
-			out.write((char*)&falseval, sizeof(falseval));
-		}
-
         // Number of particles for which to produce tracking output.
         n = (unsigned int)m_ptrack_count;
         out.write((char*)&n, sizeof(n));
@@ -3479,10 +3195,6 @@ void Simulator::Deserialize(std::istream &in)
                 // Flag controlling jump file output.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_write_jumps = (n==trueval);
-
-				// Flag controlling pah jump file output.
-				in.read(reinterpret_cast<char*>(&n), sizeof(n));
-				m_write_pahjumps = (n == trueval);
 
                 // Number of particles for which to produce tracking output.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

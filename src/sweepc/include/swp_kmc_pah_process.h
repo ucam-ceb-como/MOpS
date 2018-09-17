@@ -166,6 +166,8 @@ public:
     void proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2);
     //void proc_M5R_eZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
     
+	void proc_D6R_FE_AC(Spointer& stt, Cpointer C_1, Cpointer C_2);
+
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts
     bool m_rates_save;

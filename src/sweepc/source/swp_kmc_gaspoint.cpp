@@ -72,7 +72,7 @@ KMCGasPoint::KMCGasPoint(Sweep::GasProfile& gasprof,
     std::vector<std::string> spname;
     for(size_t i=0; i<sptrv.size(); i++)
         spname.push_back(sptrv[i]->Name());
-    for(int i=H2; i<=CO2; i++) {
+    for(int i=H2; i<=C4H4; i++) {
         m_prof_in[i] = Strings::findinlist(m_spnames[i], spname);
     }
 }
@@ -106,6 +106,10 @@ void KMCGasPoint::initData() {
     m_spnames.push_back("CH4");
     m_spnames.push_back("CO");
     m_spnames.push_back("CO2");
+	m_spnames.push_back("C2H4");
+	m_spnames.push_back("C2H3");
+	m_spnames.push_back("C2H");
+	m_spnames.push_back("C4H4");
     m_spnames.push_back("P");
     m_spnames.push_back("None");
     // set all to zero

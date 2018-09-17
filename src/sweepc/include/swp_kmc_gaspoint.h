@@ -88,10 +88,14 @@ namespace KMC_ARS {
             static const int    CH4 = 10;
             static const int    CO = 11;
             static const int    CO2 = 12;
-            static const int    P = 13;
-            static const int    None = 14;
+			static const int    C2H4 = 13;
+			static const int    C2H3 = 14;
+			static const int    C2H = 15;
+			static const int    C4H4 = 16;
+            static const int    P = 17;
+            static const int    None = 18;
 
-            static const int    m_total = 15;
+            static const int    m_total = 19;
             //! Accessing data
             double operator[](const int n) const;
             KMCGasPoint& operator=(const KMCGasPoint& gp);

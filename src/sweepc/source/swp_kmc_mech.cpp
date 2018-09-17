@@ -49,10 +49,16 @@
 #include "string_functions.h"
 
 #include <boost/random/uniform_01.hpp>
+#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/vector_sparse.hpp>
+#include <boost/numeric/ublas/lu.hpp>
+#include <boost/numeric/ublas/io.hpp>
 
 using namespace std;
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
+using namespace boost::numeric::ublas;
 
 typedef std::vector<Sweep::KMC_ARS::Reaction> rxnvector;
 typedef Sweep::KMC_ARS::KMCGasPoint ggg;
@@ -143,6 +149,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_M6R_BY5_FE3 = new M6R_BY5_FE3; j_M6R_BY5_FE3->initialise();
     JumpProcess* j_O6R_FE2_OH = new O6R_FE2_OH; j_O6R_FE2_OH->initialise();
     JumpProcess* j_O6R_FE2_O2 = new O6R_FE2_O2; j_O6R_FE2_O2->initialise();
+	JumpProcess* j_D6R_FE_AC = new D6R_FE_AC; j_D6R_FE_AC->initialise();						  //*< ID34GLC.
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
     temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
@@ -166,6 +173,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_M6R_BY5_FE3);       //! 19- R6 desorption at bay -> pyrene [AR21].
     temp.push_back(j_O6R_FE2_OH);        //! 20- R6 Oxidation at ZZ by OH.
 	temp.push_back(j_O6R_FE2_O2);        //! 21- R6 Oxidation at ZZ by O2.
+	temp.push_back(j_D6R_FE_AC);         //! 22- R6 Desorption from FE to AC site.
 
     return temp;
 }
@@ -250,6 +258,41 @@ void G6R_AC::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
+
+	//------------Reactions for A3-4----------------------------
+	addReaction(rxnV3, Reaction(2.500E+14, 0.000E+00, 1.600E+01, sp::H));            // A3 + H <=> A3-4 + H2                - 0              - Forward
+	addReaction(rxnV3, Reaction(1.955E+10, 9.041E-01, 8.911E+00, sp::H2));           // A3 + H <=> A3-4 + H2                - 1              - Backward
+	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(4.596E+05, 2.070E+00, 1.017E+01, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));            // A3-4 + H (+M) <=> A3 (+M)           - 4              - Forward - High rate
+	addReaction(rxnV3, Reaction(2.100E+139, -3.480E+01, 1.838E+01, sp::None));          // A3-4 + H (+M) <=> A3 (+M)           - 5              - Forward - High rate
+	//Parameters = [  1.00000000e-03   1.71400000e+02   1.71400000e+02   4.99280000e+03]
+	addReaction(rxnV3, Reaction(2.315E+31, -4.589E+00, 1.185E+02, sp::None));                // A3-4 + H (+M) <=> A3 (+M)           - 6              - Backward
+	addReaction(rxnV3, Reaction(8.000E+61, -1.450E+01, 3.480E+01, sp::C2H2));                // A3-4 + C2H2 <=> A3C2H2              - 7              - Forward
+	addReaction(rxnV3, Reaction(4.107E+69, -1.626E+01, 6.773E+01, sp::None));                // A3-4 + C2H2 <=> A3C2H2              - 8              - Backward
+	addReaction(rxnV3, Reaction(1.200E+26, -3.440E+00, 3.020E+01, sp::C2H2));                // A3-4 + C2H2 <=> A3C2H + H           - 9              - Forward
+	addReaction(rxnV3, Reaction(6.319E+33, -5.219E+00, 3.169E+01, sp::H));           // A3-4 + C2H2 <=> A3C2H + H           - 10             - Backward
+	addReaction(rxnV3, Reaction(6.600E+24, -3.360E+00, 1.780E+01, sp::C2H2));                // A3-4 + C2H2 <=> A4 + H              - 11             - Forward
+	addReaction(rxnV3, Reaction(1.815E+34, -4.875E+00, 7.521E+01, sp::H));           // A3-4 + C2H2 <=> A4 + H              - 12             - Backward
+	////------------Reactions for A3C2H----------------------------
+	addReaction(rxnV3, Reaction(5.000E+13, 0.000E+00, 0.000E+00, sp::C2H));          // A3 + C2H <=> A3C2H + H              - 13             - Forward
+	addReaction(rxnV3, Reaction(9.332E+20, -1.526E+00, 2.401E+01, sp::H));           // A3 + C2H <=> A3C2H + H              - 14             - Backward
+	addReaction(rxnV3, Reaction(1.900E+64, -1.512E+01, 2.930E+01, sp::H));           // A3C2H + H <=> A3C2H2                - 15             - Forward
+	addReaction(rxnV3, Reaction(1.852E+64, -1.510E+01, 6.074E+01, sp::None));                // A3C2H + H <=> A3C2H2                - 16             - Backward
+	////------------Reactions for A3C2H2----------------------------
+	addReaction(rxnV3, Reaction(2.000E+63, -1.528E+01, 4.320E+01, sp::None));                // A3C2H2 <=> A4 + H           - 17             - Forward
+	addReaction(rxnV3, Reaction(1.071E+65, -1.504E+01, 6.768E+01, sp::H));           // A3C2H2 <=> A4 + H           - 18             - Backward
+	////------------Reactions for A4----------------------------
+	addReaction(rxnV3, Reaction(9.000E+38, -7.390E+00, 2.070E+01, sp::H));           // A3C2H + H <=> A4 + H                - 19             - Forward
+	addReaction(rxnV3, Reaction(4.700E+40, -7.125E+00, 7.662E+01, sp::H));           // A3C2H + H <=> A4 + H                - 20             - Backward
+	addReaction(rxnV3, Reaction(2.500E+14, 0.000E+00, 1.600E+01, sp::H));            // A4 + H <=> A4- + H2         - 21             - Forward
+	addReaction(rxnV3, Reaction(4.084E+09, 9.960E-01, 8.520E+00, sp::H2));           // A4 + H <=> A4- + H2         - 22             - Backward
+	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A4 + OH <=> A4- + H2O               - 23             - Forward
+	addReaction(rxnV3, Reaction(9.600E+04, 2.162E+00, 9.780E+00, sp::H2O));          // A4 + OH <=> A4- + H2O               - 24             - Backward
+	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::H));            // A4- + H <=> A4              - 25             - Forward
+	addReaction(rxnV3, Reaction(4.635E+18, -7.927E-01, 1.113E+02, sp::None));                // A4- + H <=> A4              - 26             - Backward
+	////------------Reactions for A4-----------------------------	
+	/*
     addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
     addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
     addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
@@ -257,6 +300,7 @@ void G6R_AC::initialise() {
     addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
     addReaction(rxnV3, Reaction(8.0e7, 1.56, 3.8, sp::C2H2));   //5 - r4f
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+	*/
 
     m_sType = AC; // sitetype
     m_name = "G6R at AC"; // name of process
@@ -281,7 +325,108 @@ double G6R_AC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
     return setRate0p0267(gp, pah_st);
 }
 double G6R_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+
+	// Calculating R3b3
+	// Parameters alpha = 0.001, T3 = 117.4, T1 = 171.4, T2 = 4992.8
+	double T = gp[gp.T];
+	double P = gp[gp.P]; //Pressure in Pa
+	double M_eff1 = P / 8.314E+06 / T;
+	double M = M_eff1 + (1 * gp[gp.H2]) + (5 * gp[gp.H2O]) + (1 * gp[gp.CH4]) + (0.5*gp[gp.CO]) + (1 * gp[gp.CO2]) + (2 * gp[gp.C2H6]);
+	double k_o = m_r[5];
+	double k_inf = m_r[4];
+	double F_cent = (1 - 0.001) * exp(-T / 117.4) + 0.001*exp(-T / 171.4) + exp(-4992.8 / T);
+	double logF_cent = log10(F_cent);
+	double r_c = k_inf / (1 + (k_inf / (k_o*M)));
+	double N0 = 0.75 - 1.27*logF_cent;
+	double C0 = -0.4 - 0.67*logF_cent;
+	double logP_r = log10(k_o*M / k_inf);
+	double F = pow(10,(logF_cent / (1 + pow(((logP_r + C0) / (N0 - 0.14*(logP_r + C0))), 2))));
+	r_c *= F;
+	double R3b3 = r_c* gp[gp.H];
+
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	double r_f = 0; // radical fraction
+	double r_f2 = 0;
+	//double r_f3 = 0;
+	//double r_f4 = 0;
+	//double r_f5 = 0;
+
+	if (T < 800) {
+		r_f = 0;
+		r_f2 = 0;
+	}
+	else{
+		double Anrad = (m_r[0] + m_r[2]) / (m_r[1] + m_r[3] + R3b3);
+		double AnC2H = (m_r[13]) / (m_r[14] + m_r[19]);
+		double AnC2H_2 = (Anrad*m_r[7] + AnC2H*m_r[11]) / (m_r[16] + m_r[8] + m_r[17]);
+		r_f = m_r[11] * Anrad + m_r[19] * AnC2H + m_r[17] * AnC2H_2;
+
+		boost::numeric::ublas::matrix<double> arr1(5, 5);
+		boost::numeric::ublas::vector<double> arr2(5);
+		for (unsigned k = 0; k < arr1.size1(); ++k)
+			for (unsigned l = 0; l < arr1.size2(); ++l)
+				arr1(k, l) = 0.0;
+		for (unsigned k = 0; k < arr2.size(); ++k)
+			arr2(k) = 0.0;
+
+		arr1(0, 0) = m_r[1] + m_r[3] + R3b3 + m_r[7] + m_r[9] + m_r[11];
+		arr1(0, 1) = -m_r[10];
+		arr1(0, 2) = -m_r[8];
+		arr1(0, 3) = -m_r[12];
+		arr1(1, 0) = -m_r[9];
+		arr1(1, 1) = m_r[10] + m_r[14] + m_r[15] + m_r[19];
+		arr1(1, 2) = -m_r[16];
+		arr1(1, 3) = -m_r[20];
+		arr1(2, 0) = -m_r[7];
+		arr1(2, 1) = -m_r[15];
+		arr1(2, 2) = m_r[8] + m_r[16] + m_r[17];
+		arr1(2, 3) = -m_r[18];
+		arr1(3, 0) = -m_r[11];
+		arr1(3, 1) = -m_r[19];
+		arr1(3, 2) = -m_r[17];
+		arr1(3, 3) = m_r[12] + m_r[18] + m_r[20] + m_r[21] + m_r[23] + m_r[26];
+		arr1(3, 4) = -(m_r[22] + m_r[24] + m_r[25]);
+		arr1(4, 3) = -(m_r[21] + m_r[23] + m_r[26]);
+		arr1(4, 4) = m_r[22] + m_r[24] + m_r[25];
+
+		arr2(0) = m_r[0] + m_r[2] + m_r[6];
+		arr2(1) = m_r[13];
+
+		//std::cout << arr1 << std::endl;
+		//std::cout << arr2 << std::endl;
+
+		permutation_matrix<size_t> pm(arr1.size1());
+		//std::cout << arr1 << std::endl;
+		//std::cout << arr2 << std::endl;
+		lu_factorize(arr1, pm);
+
+		//std::cout << arr1 << std::endl;
+		//std::cout << arr2 << std::endl;
+
+		lu_substitute(arr1, pm, arr2);
+
+		//std::cout << arr1 << std::endl;
+		//std::cout << arr2 << std::endl;;
+		r_f2 = arr2(0)*m_r[11] + arr2(1)*m_r[19] + arr2(2)*m_r[17]; //Lumped production of A4
+		//r_f3 = arr2(0)*m_r[11] + arr2(1)*m_r[19] + arr2(2)*m_r[17] + arr2(4)*(m_r[22] + m_r[24] + m_r[25]); //Production of A4
+		//r_f4 = arr2(3)*(m_r[12] + m_r[20] + m_r[18]); //Lumped consumption of A4
+		//r_f5 = arr2(3)*(m_r[12] + m_r[20] + m_r[18] + m_r[21] + m_r[23] + m_r[26]); //Consumption of A4
+		double A3rad = arr2(0);
+		double A3C2H = arr2(1);
+		double A3C2H2 = arr2(2);
+		double A4 = arr2(3);
+		double A4rad = arr2(4);
+
+
+
+	}
+
+	return m_rate = r_f2;
+
+    /*return setRate0p0267(gp, pah_st);*/
 }
 // 
 // ************************************************************
@@ -313,6 +458,64 @@ void G6R_FE::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //7 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
+
+	//Reactions for the ABF mechanism
+	//Reactions of A1 -
+	addReaction(rxnV3, Reaction(2.510e+12, 0.000e+00, 6.190e+00, sp::C2H4));			// A1- + C2H4 <=> A1C2H3 + H            - 0             - Forward
+	addReaction(rxnV3, Reaction(1.190e+18, -1.324e+00, 1.005e+01, sp::H));				// A1- + C2H4 <=> A1C2H3 + H            - 1             - Backward
+	addReaction(rxnV3, Reaction(2.500e+14, 0.000e+00, 1.600e+01, sp::H));				// A1 + H <=> A1- + H2					- 2             - Forward
+	addReaction(rxnV3, Reaction(3.714e+09, 9.306e-01, 8.298e+00, sp::H2));				// A1 + H <=> A1- + H2					- 3             - Backward
+	addReaction(rxnV3, Reaction(1.000e+14, 0.000e+00, 0.000e+00, sp::None));            // A1- + H (+M) <=> A1 (+M)				- 4
+	addReaction(rxnV3, Reaction(6.600e+75, -1.630e+01, 7.000e+00, sp::None));           // A1- + H (+M) <=> A1 (+M)				- 5
+	addReaction(rxnV3, Reaction(1.600e+08, 1.420e+00, 1.450e+00, sp::OH));              // A1 + OH <=> A1- + H2O                - 6             - Forward
+	addReaction(rxnV3, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::H2O));             // A1 + OH <=> A1- + H2O                - 7             - Backward
+	addReaction(rxnV3, Reaction(3.300e+33, -5.700e+00, 2.550e+01, sp::C2H2));           // A1- + C2H2 <=> A1C2H + H             - 8             - Forward
+	addReaction(rxnV3, Reaction(5.077e+41, -7.589e+00, 3.365e+01, sp::H));              // A1- + C2H2 <=> A1C2H + H             - 9             - Backward
+	addReaction(rxnV3, Reaction(7.000e+38, -8.020e+00, 1.640e+01, sp::C2H2));           // A1- + C2H2 <=> n-A1C2H2              - 10            - Forward
+	addReaction(rxnV3, Reaction(3.109e+47, -1.016e+01, 5.675e+01, sp::None));           // A1- + C2H2 <=> n-A1C2H2              - 11            - Backward
+	addReaction(rxnV3, Reaction(1.200e+27, -4.220e+00, 7.235e+00, sp::C2H3));           // A1- + C2H3 <=> A1C2H3                - 12            - Forward
+	addReaction(rxnV3, Reaction(1.017e+37, -6.132e+00, 1.231e+02, sp::None));           // A1- + C2H3 <=> A1C2H3                - 13            - Backward
+	//Reactions of n - A1C2H2
+	addReaction(rxnV3, Reaction(3.100e+06, 2.000e+00, 3.430e+00, sp::OH));              // A1C2H3 + OH <=> H2O + n-A1C2H2       - 14            - Forward
+	addReaction(rxnV3, Reaction(5.677e+06, 1.711e+00, 1.208e+01, sp::H2O));             // A1C2H3 + OH <=> H2O + n-A1C2H2       - 15            - Backward
+	addReaction(rxnV3, Reaction(6.650e+06, 2.530e+00, 1.224e+01, sp::H));               // A1C2H3 + H <=> H2 + n-A1C2H2         - 16            - Forward
+	addReaction(rxnV3, Reaction(3.776e+05, 2.486e+00, 5.248e+00, sp::H2));              // A1C2H3 + H <=> H2 + n-A1C2H2         - 17            - Backward
+	addReaction(rxnV3, Reaction(3.000e+43, -9.220e+00, 1.527e+01, sp::H));              // A1C2H + H <=> n-A1C2H2               - 18            - Forward
+	addReaction(rxnV3, Reaction(8.661e+43, -9.470e+00, 4.747e+01, sp::None));           // A1C2H + H <=> n-A1C2H2               - 19            - Backward
+	//Reactions of A1C2H
+	addReaction(rxnV3, Reaction(5.000e+13, 0.000e+00, 0.000e+00, sp::C2H));             // A1C2H + C2H <=> A1C2H)2 + H          - 20            - Forward
+	addReaction(rxnV3, Reaction(1.105e+22, -1.680e+00, 2.918e+01, sp::H));              // A1C2H + C2H <=> A1C2H)2 + H          - 21            - Backward
+	addReaction(rxnV3, Reaction(2.500e+14, 0.000e+00, 1.600e+01, sp::H));               // A1C2H + H <=> A1C2H* + H2            - 22            - Forward
+	addReaction(rxnV3, Reaction(6.583e+10, 7.734e-01, 8.035e+00, sp::H2));              // A1C2H + H <=> A1C2H* + H2            - 23            - Backward
+	addReaction(rxnV3, Reaction(1.600e+08, 1.420e+00, 1.450e+00, sp::OH));              // A1C2H + OH <=> A1C2H* + H2O          - 24            - Forward
+	addReaction(rxnV3, Reaction(1.359e+06, 1.948e+00, 9.131e+00, sp::H2O));             // A1C2H + OH <=> A1C2H* + H2O          - 25            - Backward
+	addReaction(rxnV3, Reaction(1.000e+14, 0.000e+00, 0.000e+00, sp::None));            // A1C2H* + H (+M) <=> A1C2H (+M)		- 26
+	addReaction(rxnV3, Reaction(6.600e+75, -1.630e+01, 7.000e+00, sp::None));           // A1C2H* + H (+M) <=> A1C2H (+M)		- 27
+	addReaction(rxnV3, Reaction(5.000e+13, 0.000e+00, 0.000e+00, sp::C2H));             // A1 + C2H <=> A1C2H + H               - 28            - Forward
+	addReaction(rxnV3, Reaction(3.885e+20, -1.578e+00, 2.991e+01, sp::H));              // A1 + C2H <=> A1C2H + H               - 29            - Backward
+	//Reactions of A1C2H3
+	addReaction(rxnV3, Reaction(1.600e+08, 1.420e+00, 1.450e+00, sp::OH));              // A1C2H3 + OH <=> A1C2H3* + H2O        - 30            - Forward
+	addReaction(rxnV3, Reaction(1.336e+06, 1.973e+00, 1.121e+01, sp::H2O));             // A1C2H3 + OH <=> A1C2H3* + H2O        - 31            - Backward
+	addReaction(rxnV3, Reaction(2.500e+14, 0.000e+00, 1.600e+01, sp::H));               // A1C2H3 + H <=> A1C2H3* + H2          - 32            - Forward
+	addReaction(rxnV3, Reaction(6.471e+10, 7.987e-01, 1.012e+01, sp::H2));              // A1C2H3 + H <=> A1C2H3* + H2          - 33            - Backward
+	addReaction(rxnV3, Reaction(7.900e+11, 0.000e+00, 6.400e+00, sp::C2H3));            // A1 + C2H3 <=> A1C2H3 + H             - 34            - Forward
+	addReaction(rxnV3, Reaction(4.561e+16, -1.046e+00, 1.067e+01, sp::H));              // A1 + C2H3 <=> A1C2H3 + H             - 35            - Backward
+	//Reactions of A1C2H3*
+	addReaction(rxnV3, Reaction(1.000e+14, 0.000e+00, 0.000e+00, sp::None));            // A1C2H3* + H (+M) <=> A1C2H3 (+M)		- 36
+	addReaction(rxnV3, Reaction(6.600e+75, -1.630e+01, 7.000e+00, sp::None));           // A1C2H3* + H (+M) <=> A1C2H3 (+M)		- 37
+	//Reactions of A1C2H*
+	addReaction(rxnV3, Reaction(1.800e+19, -1.670e+00, 1.880e+01, sp::C2H2));           // A1C2H* + C2H2 <=> A1C2H)2 + H        - 38            - Forward
+	addReaction(rxnV3, Reaction(4.444e+27, -3.504e+00, 2.648e+01, sp::H));              // A1C2H* + C2H2 <=> A1C2H)2 + H        - 39            - Backward
+	addReaction(rxnV3, Reaction(2.200e+62, -1.456e+01, 3.310e+01, sp::C2H2));           // A1C2H* + C2H2 <=> A2-1               - 40            - Forward
+	addReaction(rxnV3, Reaction(3.933e+73, -1.646e+01, 1.288e+02, sp::None));           // A1C2H* + C2H2 <=> A2-1               - 41            - Backward
+	//Reactions of A1C2H)2
+	addReaction(rxnV3, Reaction(1.400e+64, -1.457e+01, 2.990e+01, sp::H));              // A1C2H)2 + H <=> A2-1                 - 42            - Forward
+	addReaction(rxnV3, Reaction(1.014e+67, -1.463e+01, 1.179e+02, sp::None));           // A1C2H)2 + H <=> A2-1                 - 43            - Backward
+	//Reactions of A2 production
+	addReaction(rxnV3, Reaction(1.600e+16, -1.330e+00, 6.660e+00, sp::C2H2));           // A1C2H3* + C2H2 <=> A2 + H            - 44            - Forward
+	addReaction(rxnV3, Reaction(1.600e+16, -1.330e+00, 5.4000e+00, sp::C2H2));          // n-A1C2H2 + C2H2 <=> A2 + H           - 45            - Forward
+
+	
     addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
     addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
     addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
@@ -321,6 +524,7 @@ void G6R_FE::initialise() {
     addReaction(rxnV3, Reaction(1.1e7, 1.71, 3.9, sp::C2H2));   //5 - r4f1
     addReaction(rxnV3, Reaction(3.3e33, -5.7, 25.5, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //7 - r5f
+	
     m_sType = FE; // sitetype
     m_name = "G6R at FE"; // name of process
     m_ID = 2;
@@ -345,7 +549,162 @@ double G6R_FE::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
     return setRate0p0267(gp, pah_st);
 }
 double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+
+	// check if site count is zero
+
+	// Calculating 3 body reactions
+	//Parameters alpha = 0.2, T3 = 122.8, T1 = 478.4, T2 = 5411.9
+	//Parameters = [1.00000000e+00   1.00000000e-01   5.84900000e+02   6.11300000e+03]
+	double T = gp[gp.T];
+	double P = gp[gp.P]; //Pressure in Pa
+	double M_eff1 = P / 8.314E+06 / T;
+	double M = M_eff1 + (1 * gp[gp.H2]) + (5 * gp[gp.H2O]) + (1 * gp[gp.CH4]) + (0.5*gp[gp.CO]) + (1 * gp[gp.CO2]) + (2 * gp[gp.C2H6]);
+	double k_o1 = m_r[5];
+	double k_inf1 = m_r[4];
+	double F_cent1 = 0.00 * exp(-T / 0.1) + 1.00*exp(-T / 584.9) + exp(-6113 / T);
+	double logF_cent1 = log10(F_cent1);
+	double r_c1 = k_inf1 / (1 + (k_inf1 / (k_o1*M)));
+	double N01 = 0.75 - 1.27*logF_cent1;
+	double C01 = -0.4 - 0.67*logF_cent1;
+	double logP_r1 = log10(k_o1*M / k_inf1);
+	double F1 = pow(10,(logF_cent1 / (1 + pow(((logP_r1 + C01) / (N01 - 0.14*(logP_r1 + C01))), 2))));
+	r_c1 *= F1;
+	double R3b1 = r_c1* gp[gp.H];
+	//Parameters = [1.00000000e+00   1.00000000e-01   5.84900000e+02   6.11300000e+03]
+	double k_o2 = m_r[27];
+	double k_inf2 = m_r[26];
+	double F_cent2 = 0.00 * exp(-T / 0.1) + 1.00*exp(-T / 584.9) + exp(-6113 / T);
+	double logF_cent2 = log10(F_cent2);
+	double r_c2 = k_inf2 / (1 + (k_inf2 / (k_o2*M)));
+	double N02 = 0.75 - 1.27*logF_cent2;
+	double C02 = -0.4 - 0.67*logF_cent2;
+	double logP_r2 = log10(k_o2*M / k_inf2);
+	double F2 = pow(10,(logF_cent2 / (1 + pow(((logP_r2 + C02) / (N02 - 0.14*(logP_r2 + C02))), 2))));
+	r_c2 *= F2;
+	double R3b2 = r_c2* gp[gp.H];
+	//Parameters = [1.00000000e+00   1.00000000e-01   5.84900000e+02   6.11300000e+03]
+	double k_o3 = m_r[37];
+	double k_inf3 = m_r[36];
+	double F_cent3 = 0.00 * exp(-T / 0.1) + 1.00*exp(-T / 584.9) + exp(-6113 / T);
+	double logF_cent3 = log10(F_cent3);
+	double r_c3 = k_inf3 / (1 + (k_inf3 / (k_o3*M)));
+	double N03 = 0.75 - 1.27*logF_cent3;
+	double C03 = -0.4 - 0.67*logF_cent3;
+	double logP_r3 = log10(k_o3*M / k_inf3);
+	double F3 = pow(10,(logF_cent3 / (1 + pow(((logP_r3 + C03) / (N03 - 0.14*(logP_r3 + C03))), 2))));
+	r_c3 *= F3;
+	double R3b3 = r_c3* gp[gp.H];
+
+
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	//int ring_count = ((int)pah_st.getRingsCount().first); // Ring count
+	//if (ring_count > 2) return m_rate = 0.0;
+	//if (site_count == 0) return m_rate = 0;
+	double r_f; // radical fraction
+	double r_f2; // radical fraction
+	//double A1_conc = gp[gp.C6H6];
+	//double C2H2_conc = gp[gp.C2H2];
+
+	if (T < 800) {
+		r_f = 0;
+	}
+	else{
+		/*double Anrad = (m_r[0] + m_r[2] + m_r[21] + m_r[22] * C2H2_conc / A1_conc) / (m_r[1] + m_r[3] + m_r[20] + m_r[23]);
+		double NC8H7 = (m_r[24] * Anrad / m_r[25]);
+		double AnC2H = (Anrad * m_r[5] + m_r[12] + NC8H7 * m_r[27]) / (m_r[4] + m_r[13] + m_r[26]);
+		double AnC2Hrad = AnC2H*(m_r[6] + m_r[8]) / (m_r[7] + m_r[9]);
+		double Anextrad = ((AnC2H*m_r[34])*(m_r[30] * (m_r[16] + m_r[18] + m_r[35]) + m_r[28] * (m_r[36] + (m_r[16] + m_r[18] + m_r[35]))) + AnC2Hrad*m_r[10] * (m_r[30] * (m_r[33] + (m_r[16] + m_r[18] + m_r[35])) + m_r[28] * (m_r[33] + m_r[36] + (m_r[16] + m_r[18] + m_r[35])))) / (m_r[30] * m_r[33] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29])) + m_r[30] * (m_r[32] + m_r[11])*(m_r[16] + m_r[18] + m_r[35]) + m_r[28] * (m_r[33] * (m_r[11] + (m_r[17] + m_r[19] + m_r[29])) + m_r[11] * (m_r[36] + (m_r[16] + m_r[18] + m_r[35])) + m_r[32] * (m_r[33] + m_r[36] + (m_r[16] + m_r[18] + m_r[35]))));
+		*/
+		//FIRST TRY BY GLC
+		//r_f = (AnC2Hrad * m_r[10] * (m_r[28] * (m_r[17] + m_r[19] + m_r[29]) + m_r[30] * (m_r[31] + (m_r[17] + m_r[19] + m_r[29]))) /*+ m_r[30] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29])))*/ + AnC2H * m_r[34] * (m_r[28] * (m_r[32] + m_r[11] + (m_r[17] + m_r[19] + m_r[29])) + m_r[30] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29])))) / (m_r[30] * m_r[33] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29])) + m_r[30] * (m_r[32] + m_r[11]) * (m_r[16] + m_r[18] + m_r[35]) + m_r[28] * (m_r[33] * (m_r[11] + (m_r[17] + m_r[19] + m_r[29])) + m_r[11] * (m_r[36] + (m_r[16] + m_r[18] + m_r[35])) + m_r[32] * (m_r[33] + m_r[36] + (m_r[16] + m_r[18] + m_r[35])))) ;
+		//REMOVED DENOMINATOR, SIMILAR TO ABF, INCLUDE DENOMINATOR IN REVERSE REACTION.
+		//r_f = (AnC2Hrad * m_r[10] * (m_r[28] * (m_r[17] + m_r[19] + m_r[29]) + m_r[30] * (m_r[31] + (m_r[17] + m_r[19] + m_r[29]))) /*+ m_r[30] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29])))*/ + AnC2H * m_r[34] * (m_r[28] * (m_r[32] + m_r[11] + (m_r[17] + m_r[19] + m_r[29])) + m_r[30] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29]))));
+
+		//(A1C2H_1_solve[i] * R11[i] * (R40[i] * (Rb14[i] + Rb15[i] + R41[i]) + R42[i] *     (Rb40[i] + (Rb14[i] + Rb15[i] + R41[i])))                                                                       + A1C2H_solve[i] * Rb45[i] * (R40[i] * (R43[i] + Rb11[i] + (Rb14[i] + Rb15[i] + R41[i]))     + R42[i] * (R43[i] + Rb11[i] + Rb40[i] + (Rb14[i] + Rb15[i] + R41[i])))) / (R42[i] * R45[i] * (R43[i] + Rb11[i] + Rb40[i] + (Rb14[i] + Rb15[i] + R41[i])) + R42[i] * (R43[i] + Rb11[i]) * (R14[i] + R15[i] + Rb41[i]) + R40[i] * (R45[i] * (Rb11[i] + (Rb14[i] + Rb15[i] + R41[i])) + Rb11[i] * (Rb42[i] + (R14[i] + R15[i] + Rb41[i])) + R43[i] * (R45[i] + Rb42[i] + (R14[i] + R15[i] + Rb41[i]))))
+
+		//FOR ABF TURN THIS ON:
+		/*double Anrad = (m_r[0] + m_r[2]) / (m_r[1] + m_r[3]);
+		double AnC2H = (Anrad*m_r[6] + m_r[20]) / (m_r[7] + m_r[21]); //NEEDS TO BE CHECKED: double AnC2H = (Anrad * m_r[4] + m_r[20]) / (m_r[5] + m_r[21]);
+		double AnC2Hrad = AnC2H*(m_r[24] + m_r[26]) / (m_r[25] + m_r[27]);
+		double AnC2H_2 = (AnC2H*m_r[28] + AnC2Hrad*m_r[36]) / (m_r[37] + m_r[29]);
+		double Anextrad = (AnC2Hrad*m_r[34] + AnC2H_2*m_r[40]) / (m_r[35] + m_r[41]);
+		r_f = Anextrad*(m_r[45] + m_r[47]);
+		*/
+
+
+		matrix<double> arr1(7, 7);
+		boost::numeric::ublas::vector<double> arr2(7);
+		for (unsigned k = 0; k < arr1.size1(); ++k)
+			for (unsigned l = 0; l < arr1.size2(); ++l)
+				arr1(k, l) = 0.0;
+		for (unsigned k = 0; k < arr2.size(); ++k)
+			arr2(k) = 0.0;
+
+		//Speclist = ['A1-', 'n-A1C2H2', 'A1C2H', 'A1C2H3', 'A1C2H3*', 'A1C2H*','A1C2H)2']
+		arr1(0, 0) = m_r[0] + m_r[3] + m_r[7] + m_r[8] + m_r[10] + m_r[12] + R3b1; //A1- consumption
+		arr1(0, 1) = -(m_r[11]);
+		arr1(0, 2) = -(m_r[9]);
+		arr1(0, 3) = -(m_r[1] + m_r[13]);
+		arr1(1, 0) = -(m_r[10]);
+		arr1(1, 1) = m_r[11] + m_r[15] + m_r[17] + m_r[19];
+		arr1(1, 2) = -(m_r[18]);
+		arr1(1, 3) = -(m_r[14] + m_r[16]); 
+		arr1(2, 0) = -(m_r[8]);
+		arr1(2, 1) = -(m_r[19]);
+		arr1(2, 2) = m_r[9] + m_r[18] + m_r[20] + m_r[22] + m_r[24] + m_r[29];
+		arr1(2, 5) = -(m_r[23] + m_r[25] + R3b2);
+		arr1(2, 6) = -(m_r[21]);
+		arr1(3, 0) = -(m_r[0] + m_r[12]);
+		arr1(3, 1) = -(m_r[15]+ m_r[17]);
+		arr1(3, 3) = m_r[1] + m_r[13] + m_r[14] + m_r[16] + m_r[30] + m_r[32] + m_r[35];
+		arr1(3, 4) = -(m_r[31] + m_r[33] + R3b3);
+		arr1(4, 3) = -(m_r[30] + m_r[32]);
+		arr1(4, 4) = m_r[31] + m_r[33] + R3b3;
+		arr1(5, 2) = -(m_r[22] + m_r[24]);
+		arr1(5, 5) = m_r[23] + m_r[25] + m_r[38] + m_r[40] + R3b2;
+		arr1(5, 6) = -(m_r[39]);
+		arr1(6, 2) = -(m_r[20]);
+		arr1(6, 5) = -(m_r[38]);
+		arr1(6, 6) = m_r[21] + m_r[39] + m_r[42];
+
+		arr2(0) = m_r[2] + m_r[6];
+		arr2(2) = m_r[28];
+		arr2(3) = m_r[34];
+
+		//std::cout << arr1 << std::endl;
+		//std::cout << arr2 << std::endl;
+
+		permutation_matrix<size_t> pm(arr1.size1());
+		lu_factorize(arr1, pm);
+		lu_substitute(arr1, pm, arr2);
+
+		double A1rad = arr2(0);
+		double nA1C2H2 = arr2(1);
+		double A1C2H = arr2(2);
+		double A1C2H3 = arr2(3);
+		double A1C2H3rad = arr2(4);
+		double A1C2Hrad = arr2(5);
+		double A1C2H2 = arr2(6);
+
+		r_f2 = arr2(5)*m_r[40] + arr2(6)*m_r[42] + arr2(1)*m_r[45] + arr2(4)*m_r[44]; //Production of the sum of A2* and A2
+		//double r_f3 = arr2(8)*(m_r[44] + m_r[46]);
+		//double A2radtoA1ratio = arr2(9);
+		//double A2toA1ratio = arr2(8);
+
+		//double test = 1.0;
+	}
+
+	double r_denom = (m_r[47]+m_r[49]+m_r[50]+m_r[51]);
+
+	if(r_denom>0) {
+	 r_f = (m_r[46]+m_r[48])/r_denom; 
+	}
+
+	else r_f=0;
+	double m_rate_old = m_r[51]*r_f* site_count; // Rate Equation
+	m_rate = r_f2* site_count / 6.0; // Rate Equation
+	return m_rate ; // Rate Equation
+    //return setRate0p0267(gp, pah_st);
 }
 // 
 // ************************************************************
@@ -499,37 +858,275 @@ void D6R_FE3::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.3e11, 1.08, 70.42, sp::None));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
-    m_sType = FE3; // sitetype
-    m_name = "R6 (FE3) desorption"; // name of process
-    m_ID = 5;
+	//Commented out by GLC
+	//addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
+	//addReaction(rxnV3, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
+	//addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
+	//addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
+	//addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
+	//addReaction(rxnV3, Reaction(1.30e11, 1.080, 70.40, sp::None));  //5 - r4f
+
+
+	//Added by GLC
+	//Reactions for the ABF mechanism
+	//------------Reactions for A1-----------------------------
+	addReaction(rxnV3, Reaction(2.500E+14, 0.000E+00, 1.600E+01, sp::H));            // A1 + H <=> A1- + H2					- 0              - Forward
+	addReaction(rxnV3, Reaction(4.831E+09, 8.895E-01, 8.193E+00, sp::H2));           // A1 + H <=> A1- + H2					- 1              - Backward
+	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A1 + OH <=> A1- + H2O               - 2              - Forward
+	addReaction(rxnV3, Reaction(1.136E+05, 2.055E+00, 9.453E+00, sp::H2O));          // A1 + OH <=> A1- + H2O               - 3              - Backward
+	//       A1- + H (+M) <=> A1 (+M) Reaction ommitted
+	addReaction(rxnV3, Reaction(7.000E+38, -8.020E+00, 1.640E+01, sp::C2H2));        // A1- + C2H2 <=> n-A1C2H2             - 4              - Forward
+	addReaction(rxnV3, Reaction(9.553E+45, -9.718E+00, 5.613E+01, sp::None));        // A1- + C2H2 <=> n-A1C2H2             - 5              - Backward
+	addReaction(rxnV3, Reaction(3.300E+33, -5.700E+00, 2.550E+01, sp::C2H2));        // A1- + C2H2 <=> A1C2H + H            - 6              - Forward
+	addReaction(rxnV3, Reaction(3.933E+41, -7.568E+00, 3.344E+01, sp::H));           // A1- + C2H2 <=> A1C2H + H            - 7              - Backward
+	addReaction(rxnV3, Reaction(8.500E-02, 4.710E+00, 1.842E+01, sp::C2H3));         // A1- + C2H3 <=> H + i-A1C2H2         - 8              - Forward
+	addReaction(rxnV3, Reaction(1.148E+08, 2.721E+00, 3.097E+01, sp::H));            // A1- + C2H3 <=> H + i-A1C2H2         - 9              - Backward
+	addReaction(rxnV3, Reaction(2.510E+12, 0.000E+00, 6.190E+00, sp::C2H4));         // A1- + C2H4 <=> A1C2H3 + H           - 10             - Forward
+	addReaction(rxnV3, Reaction(1.035E+19, -1.601E+00, 1.040E+01, sp::H));           // A1- + C2H4 <=> A1C2H3 + H           - 11             - Backward
+	addReaction(rxnV3, Reaction(3.300E+33, -5.700E+00, 2.550E+01, sp::C4H4));        // A1- + C4H4 <=> A2 + H               - 12             - Forward
+	addReaction(rxnV3, Reaction(4.337E+44, -7.353E+00, 8.577E+01, sp::H));           // A1- + C4H4 <=> A2 + H               - 13             - Backward
+	//------------Reactions for n-A1C2H2----------------------------
+	addReaction(rxnV3, Reaction(3.000E+43, -9.220E+00, 1.527E+01, sp::H));           // A1C2H + H <=> n-A1C2H2              - 14             - Forward
+	addReaction(rxnV3, Reaction(3.435E+42, -9.051E+00, 4.707E+01, sp::None));        // A1C2H + H <=> n-A1C2H2              - 15             - Backward
+	addReaction(rxnV3, Reaction(6.650E+06, 2.530E+00, 1.224E+01, sp::H));            // A1C2H3 + H <=> H2 + n-A1C2H2        - 16             - Forward
+	addReaction(rxnV3, Reaction(4.616E+02, 3.309E+00, 3.511E+00, sp::H2));           // A1C2H3 + H <=> H2 + n-A1C2H2        - 17             - Backward
+	addReaction(rxnV3, Reaction(1.600E+16, -1.330E+00, 5.400E+00, sp::C2H2));        // C2H2 + n-A1C2H2 <=> A2 + H          - 18             - Forward
+	addReaction(rxnV3, Reaction(2.594E+27, -2.986E+00, 6.880E+01, sp::H));           // C2H2 + n-A1C2H2 <=> A2 + H          - 19             - Backward
+	//------------Reactions for A1C2H----------------------------
+	addReaction(rxnV3, Reaction(5.000E+13, 0.000E+00, 0.000E+00, sp::C2H));          // A1 + C2H <=> A1C2H + H              - 20             - Forward
+	addReaction(rxnV3, Reaction(5.220E+20, -1.629E+00, 2.974E+01, sp::H));           // A1 + C2H <=> A1C2H + H              - 21             - Backward
+	addReaction(rxnV3, Reaction(3.000E+43, -9.220E+00, 1.527E+01, sp::H));           // A1C2H + H <=> i-A1C2H2              - 22             - Forward
+	addReaction(rxnV3, Reaction(9.521E+44, -9.486E+00, 5.563E+01, sp::None));        // A1C2H + H <=> i-A1C2H2              - 23             - Backward
+	addReaction(rxnV3, Reaction(2.500E+14, 0.000E+00, 1.600E+01, sp::H));            // A1C2H + H <=> A1C2H* + H2           - 24             - Forward
+	addReaction(rxnV3, Reaction(5.372E+09, 1.079E+00, 7.350E+00, sp::H2));           // A1C2H + H <=> A1C2H* + H2           - 25             - Backward
+	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A1C2H + OH <=> A1C2H* + H2O         - 26             - Forward
+	addReaction(rxnV3, Reaction(1.263E+05, 2.245E+00, 8.610E+00, sp::H2O));          // A1C2H + OH <=> A1C2H* + H2O         - 27             - Backward
+	//       A1C2H* + H (+M) <=> A1C2H (+M) Reaction ommitted
+	addReaction(rxnV3, Reaction(5.000E+13, 0.000E+00, 0.000E+00, sp::C2H));          // A1C2H + C2H <=> A1C2H)2 + H         - 28             - Forward
+	addReaction(rxnV3, Reaction(4.296E+20, -1.286E+00, 2.828E+01, sp::H));           // A1C2H + C2H <=> A1C2H)2 + H         - 29             - Backward
+	//------------Reactions for i-A1C2H2----------------------------
+	addReaction(rxnV3, Reaction(3.330E+05, 2.530E+00, 9.240E+00, sp::H));            // A1C2H3 + H <=> H2 + i-A1C2H2        - 30             - Forward
+	addReaction(rxnV3, Reaction(6.407E+03, 2.874E+00, 9.069E+00, sp::H2));           // A1C2H3 + H <=> H2 + i-A1C2H2        - 31             - Backward
+	addReaction(rxnV3, Reaction(1.550E+06, 2.000E+00, 4.300E-01, sp::OH));           // A1C2H3 + OH <=> H2O + i-A1C2H2      - 32             - Forward
+	addReaction(rxnV3, Reaction(1.095E+06, 2.090E+00, 1.607E+01, sp::H2O));          // A1C2H3 + OH <=> H2O + i-A1C2H2      - 33             - Backward
+	//------------Reactions for A1C2H3----------------------------
+	//------------Reactions for A1C2H*----------------------------
+	//       A1C2H* + H (+M) <=> A1C2H (+M) Reaction ommitted
+	addReaction(rxnV3, Reaction(2.200E+62, -1.456E+01, 3.310E+01, sp::C2H2));        // A1C2H* + C2H2 <=> A2-1              - 34             - Forward
+	addReaction(rxnV3, Reaction(5.164E+72, -1.618E+01, 1.289E+02, sp::None));        // A1C2H* + C2H2 <=> A2-1              - 35             - Backward
+	addReaction(rxnV3, Reaction(1.800E+19, -1.670E+00, 1.880E+01, sp::C2H2));        // A1C2H* + C2H2 <=> A1C2H)2 + H       - 36             - Forward
+	addReaction(rxnV3, Reaction(1.588E+27, -3.384E+00, 2.613E+01, sp::H));           // A1C2H* + C2H2 <=> A1C2H)2 + H       - 37             - Backward
+	addReaction(rxnV3, Reaction(5.700E+64, -1.441E+01, 5.700E+01, sp::C2H2));        // A1C2H* + C2H2 <=> H + naphthyne     - 38             - Forward
+	addReaction(rxnV3, Reaction(6.479E+71, -1.544E+01, 7.452E+01, sp::H));           // A1C2H* + C2H2 <=> H + naphthyne     - 39             - Backward
+	//------------Reactions for A1C2H)2----------------------------
+	addReaction(rxnV3, Reaction(1.400E+64, -1.457E+01, 2.990E+01, sp::H));           // A1C2H)2 + H <=> A2-1                - 40             - Forward
+	addReaction(rxnV3, Reaction(3.725E+66, -1.447E+01, 1.183E+02, sp::None));        // A1C2H)2 + H <=> A2-1                - 41             - Backward
+	addReaction(rxnV3, Reaction(1.900E+73, -1.630E+01, 6.090E+01, sp::H));           // A1C2H)2 + H <=> H + naphthyne       - 42             - Forward
+	addReaction(rxnV3, Reaction(2.448E+72, -1.561E+01, 7.109E+01, sp::H));           // A1C2H)2 + H <=> H + naphthyne       - 43             - Backward
+	//------------Reactions for naphthyne----------------------------
+	//------------Reactions for A2----------------------------
+	addReaction(rxnV3, Reaction(2.500E+14, 0.000E+00, 1.600E+01, sp::H));            // A2 + H <=> A2-1 + H2                - 44             - Forward
+	addReaction(rxnV3, Reaction(6.792E+09, 9.503E-01, 7.923E+00, sp::H2));           // A2 + H <=> A2-1 + H2                - 45             - Backward
+	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A2 + OH <=> A2-1 + H2O              - 46             - Forward
+	addReaction(rxnV3, Reaction(1.597E+05, 2.116E+00, 9.183E+00, sp::H2O));          // A2 + OH <=> A2-1 + H2O              - 47             - Backward
+	//       A2-1 + H (+M) <=> A2 (+M) Reaction ommitted
+	//------------Reactions for A2-1----------------------------
+	//       A2-1 + H (+M) <=> A2 (+M) Reaction ommitted	
+	//I STARTED THE SECOND PART HERE!!!
+	//------------3 body reactions------------------------------
+	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));            // A1- + H (+M) <=> A1 (+M)            - 48              - Forward - High rate
+	addReaction(rxnV3, Reaction(6.600E+72, -1.630E+01, 7.000E+00, sp::None));           // A1- + H (+M) <=> A1 (+M)            - 49              - Forward - High rate
+	addReaction(rxnV3, Reaction(1.392E+34, -5.237E+00, 1.200E+02, sp::None));           // A1- + H (+M) <=> A1 (+M)            - 50              - Backward
+	//Parameters = [1.00000000e+00   1.00000000e-01   5.84900000e+02   6.11300000e+03]
+
+	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));            // A1C2H* + H (+M) <=> A1C2H (+M)      - 51              - Forward - High rate
+	addReaction(rxnV3, Reaction(6.600E+72, -1.630E+01, 7.000E+00, sp::None));           // A1C2H* + H (+M) <=> A1C2H (+M)      - 52              - Forward - High rate
+	addReaction(rxnV3, Reaction(1.252E+34, -5.427E+00, 1.209E+02, sp::None));           // A1C2H* + H (+M) <=> A1C2H (+M)      - 53              - Backward
+	//Parameters = [1.00000000e+00   1.00000000e-01   5.84900000e+02   6.11300000e+03]
+
+	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));            // A2-1 + H (+M) <=> A2 (+M)           - 54              - Forward - High rate
+	addReaction(rxnV3, Reaction(3.800E+124, -3.143E+01, 1.868E+01, sp::None));          // A2-1 + H (+M) <=> A2 (+M)           - 55              - Forward - High rate
+	addReaction(rxnV3, Reaction(2.662E+37, -6.271E+00, 1.225E+02, sp::None));           // A2-1 + H (+M) <=> A2 (+M)           - 56              - Backward
+	//Parameters = [2.00000000e-01   1.22800000e+02   4.78400000e+02   5.41190000e+03]
+
+
+	m_sType = FE3; // sitetype
+	m_name = "R6 (FE3) desorption"; // name of process
+	m_ID = 5;
 }
 // Jump rate calculation
 double D6R_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
-    if(site_count==0) return m_rate=0;
-    
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    double r_f; // radical fraction 
-    if(r_denom>0) {
-        r_f = (m_r[0]+m_r[2])/r_denom; 
-        r_f = r_f/(r_f+1.0);
-    }
-    else r_f=0;
-    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	if (site_count == 0) return m_rate = 0;
+
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction 
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+		r_f = r_f / (r_f + 1.0);
+	}
+	else r_f = 0;
+	return m_rate = m_r[5] * r_f* site_count; // Rate Equation
 }
 double D6R_FE3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+	return setRate0p0267(gp, pah_st);
 }
 double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	int ring_count = ((int)pah_st.getRingsCount().first); // Ring count
+	if (site_count == 0) return m_rate = 0;
+	if (ring_count <= 1) return m_rate = 0;
+
+	// Calculating 3 body reactions
+	//Parameters alpha = 0.2, T3 = 122.8, T1 = 478.4, T2 = 5411.9
+	//Parameters = [1.00000000e+00   1.00000000e-01   5.84900000e+02   6.11300000e+03]
+	double T = gp[gp.T];
+	double P = gp[gp.P]; //Pressure in Pa
+	double M_eff1 = P / 8.314E+06 / T;
+	double M = M_eff1 + (1 * gp[gp.H2]) + (5 * gp[gp.H2O]) + (1 * gp[gp.CH4]) + (0.5*gp[gp.CO]) + (1 * gp[gp.CO2]) + (2 * gp[gp.C2H6]);
+	double k_o1 = m_r[49];
+	double k_inf1 = m_r[48];
+	double F_cent1 = 0.00 * exp(-T / 0.1) + 1.00*exp(-T / 584.9) + exp(-6113 / T);
+	double logF_cent1 = log10(F_cent1);
+	double r_c1 = k_inf1 / (1 + (k_inf1 / (k_o1*M)));
+	double N01 = 0.75 - 1.27*logF_cent1;
+	double C01 = -0.4 - 0.67*logF_cent1;
+	double logP_r1 = log10(k_o1*M / k_inf1);
+	double F1 = exp(logF_cent1 / (1 + pow(((logP_r1 + C01) / (N01 - 0.14*(logP_r1 + C01))), 2)));
+	r_c1 *= F1;
+	double R3b1 = r_c1* gp[gp.H];
+	//Parameters = [1.00000000e+00   1.00000000e-01   5.84900000e+02   6.11300000e+03]
+	double k_o2 = m_r[52];
+	double k_inf2 = m_r[51];
+	double F_cent2 = 0.00 * exp(-T / 0.1) + 1.00*exp(-T / 584.9) + exp(-6113 / T);
+	double logF_cent2 = log10(F_cent2);
+	double r_c2 = k_inf2 / (1 + (k_inf2 / (k_o2*M)));
+	double N02 = 0.75 - 1.27*logF_cent2;
+	double C02 = -0.4 - 0.67*logF_cent2;
+	double logP_r2 = log10(k_o2*M / k_inf2);
+	double F2 = exp(logF_cent2 / (1 + pow(((logP_r2 + C02) / (N02 - 0.14*(logP_r2 + C02))), 2)));
+	r_c2 *= F2;
+	double R3b2 = r_c2* gp[gp.H];
+	//Parameters = [2.00000000e-01   1.22800000e+02   4.78400000e+02   5.41190000e+03]
+	double k_o3 = m_r[55];
+	double k_inf3 = m_r[54];
+	double F_cent3 = 0.20 * exp(-T / 122.8) + 0.80*exp(-T / 478.4) + exp(-5411.9 / T);
+	double logF_cent3 = log10(F_cent3);
+	double r_c3 = k_inf3 / (1 + (k_inf3 / (k_o3*M)));
+	double N03 = 0.75 - 1.27*logF_cent3;
+	double C03 = -0.4 - 0.67*logF_cent3;
+	double logP_r3 = log10(k_o3*M / k_inf3);
+	double F3 = exp(logF_cent3 / (1 + pow(((logP_r3 + C03) / (N03 - 0.14*(logP_r3 + C03))), 2)));
+	r_c3 *= F3;
+	double R3b3 = r_c3* gp[gp.H];
+
+	//double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction 
+	//if (r_denom>0) {
+	//r_f = (m_r[0] + m_r[2]) / r_denom;
+	//}
+	//else r_f = 0;
+
+	matrix<double> arr1(10, 10);
+	boost::numeric::ublas::vector<double> arr2(10);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+
+	//Speclist = ['A2*', 'n-A2C2H2', 'A2C2H', 'i-A2C2H2', 'A2C2H3','A2C2H*','A2C2H)2','naphthyneA2','A3','A3*']
+	arr1(0, 0) = m_r[1] + m_r[3] + m_r[4] + m_r[6] + m_r[8] + m_r[10] + m_r[12] + R3b1; //A1- consumption
+	arr1(0, 1) = -(m_r[5]);
+	arr1(0, 2) = -(m_r[7]);
+	arr1(0, 3) = -(m_r[9]);
+	arr1(0, 4) = -(m_r[11]);
+	arr1(0, 8) = -(m_r[13]);
+	arr1(1, 0) = -(m_r[4]);
+	arr1(1, 1) = m_r[5] + m_r[15] + m_r[17] + m_r[5] + m_r[18];
+	arr1(1, 2) = -(m_r[14]);
+	arr1(1, 4) = -(m_r[16]);
+	arr1(1, 8) = -(m_r[19]);
+	arr1(2, 0) = -(m_r[6]);
+	arr1(2, 1) = -(m_r[15]);
+	arr1(2, 2) = m_r[7] + m_r[14] + m_r[21] + m_r[22] + m_r[24] + m_r[26] + m_r[28] + m_r[53];
+	arr1(2, 3) = -(m_r[23]);
+	arr1(2, 5) = -(m_r[25] + m_r[27] + R3b2);
+	arr1(2, 6) = -(m_r[29]);
+	arr1(3, 0) = -(m_r[8]);
+	arr1(3, 2) = -(m_r[22]);
+	arr1(3, 3) = m_r[9] + m_r[23] + m_r[31] + m_r[33];
+	arr1(3, 4) = -(m_r[30] + m_r[32]);
+	arr1(4, 0) = -(m_r[10]);
+	arr1(4, 1) = -(m_r[17]);
+	arr1(4, 3) = -(m_r[31] + m_r[33]);
+	arr1(4, 4) = m_r[11] + m_r[16] + m_r[30] + m_r[32];
+	arr1(5, 2) = -(m_r[24] + m_r[26] + m_r[53]);
+	arr1(5, 5) = m_r[25] + m_r[27] + m_r[34] + m_r[36] + m_r[38] + R3b2;
+	arr1(5, 6) = -(m_r[37]);
+	arr1(5, 7) = -(m_r[39]);
+	arr1(5, 9) = -(m_r[35]);
+	arr1(6, 2) = -(m_r[28]);
+	arr1(6, 5) = -(m_r[36]);
+	arr1(6, 6) = m_r[29] + m_r[37] + m_r[40] + m_r[42];
+	arr1(6, 7) = -(m_r[39]);
+	arr1(6, 9) = -(m_r[41]);
+	arr1(7, 5) = -(m_r[38]);
+	arr1(7, 6) = -(m_r[42]);
+	arr1(7, 7) = m_r[39] + m_r[43];
+	arr1(8, 0) = -(m_r[12]);
+	arr1(8, 1) = -(m_r[18]);
+	arr1(8, 8) = m_r[13] + m_r[19] + m_r[44] + m_r[46] + m_r[56];
+	arr1(8, 9) = -(m_r[45] + m_r[47] + R3b3);
+	arr1(9, 5) = -(m_r[34]);
+	arr1(9, 6) = -(m_r[40]);
+	arr1(9, 8) = -(m_r[44] + m_r[46] + m_r[56]);
+	arr1(9, 9) = m_r[35] + m_r[41] + m_r[45] + m_r[47] + R3b3;
+
+	arr2(0) = m_r[0] + m_r[2] + m_r[50];
+	arr2(2) = m_r[20];
+
+	std::cout << arr1 << std::endl;
+	std::cout << arr2 << std::endl;
+
+
+
+	permutation_matrix<size_t> pm(arr1.size1());
+
+	//std::cout << arr1 << std::endl;
+	//std::cout << arr2 << std::endl;
+
+	lu_factorize(arr1, pm);
+
+	//std::cout << arr1 << std::endl;
+	//std::cout << arr2 << std::endl;
+
+	lu_substitute(arr1, pm, arr2);
+
+	//std::cout << arr1 << std::endl;
+	//std::cout << arr2 << std::endl;;
+
+
+	//double PA2toA3 = arr2(0)*(m_r[45] + m_r[47] + R3b3);
+	//double PA2toA1 = arr2(9)*(m_r[45] + m_r[47] + R3b3);
+
+	
+	r_f = (m_r[44] + m_r[46] + m_r[56]) / (m_r[45] + m_r[47] + R3b3);
+	double r_f_check = arr2(0);
+	//double tot_A2_cons = m_r[44] + m_r[46];
+	//double PA2toA1 = tot_A2_cons - PA2toA3;
+	//double test = m_r[44] + m_r[46]; //This rate grows well back to A1.
+	//double prod_A2 = (m_r[45] + m_r[47] + R3b3) * r_f;
+	//double test2 = 1.0;
+	m_rate = (m_r[41] + m_r[35]) * r_f* site_count / 2.0; // Rate Equation
+	//m_rate = PA2toA1;
+	return m_rate;
+	
+
+
+    //return setRate0p0267(gp, pah_st);
 }
 // ************************************************************
 // ID6- R6 oxidation at FE by O2 (AR10 in Matlab)
@@ -940,16 +1537,18 @@ double D5R_R5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 
     // Calculating r3f
     double T = gp[gp.T];
-    double M = (2*gp[gp.H2])+(6*gp[gp.H2O])+(2*gp[gp.CH4])+(1.5*gp[gp.CO])+(2*gp[gp.CO2])+(3*gp[gp.C2H6]);
+	double P = gp[gp.P]; //Pressure in Pa
+	double M_eff1 = P / 8.314E+06 / T;
+	double M = M_eff1 + (1 * gp[gp.H2]) + (5 * gp[gp.H2O]) + (1 * gp[gp.CH4]) + (0.5*gp[gp.CO]) + (1 * gp[gp.CO2]) + (2 * gp[gp.C2H6]);
     double k_o = m_r[5];
     double k_inf = m_r[6];
     double F_cent = 0.218 * exp(-T/207.5) + 0.782*exp(-T/2663) + exp(-6095/T);
-    double logF_cent = log(F_cent);
+    double logF_cent = log10(F_cent);
     double r_c = k_inf/(1+ (k_inf/(k_o*M)));
     double N0 = 0.75- 1.27*logF_cent;
     double C0 = -0.4 - 0.67*logF_cent;
-    double logP_r = log(k_o*M/k_inf);
-    double F = exp(logF_cent/(1+ pow(((logP_r+C0)/(N0-0.14*(logP_r+C0))),2)));
+    double logP_r = log10(k_o*M/k_inf);
+    double F = pow(10,(logF_cent/(1+ pow(((logP_r+C0)/(N0-0.14*(logP_r+C0))),2))));
     r_c *= F;
     double r3f = r_c* gp[gp.H];
 
@@ -1657,4 +2256,98 @@ double O6R_FE2_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
 }
 double O6R_FE2_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p12(gp, pah_st);
+}
+
+// Elementary rate constants, site type, process type and name
+void D6R_FE_AC::initialise() {
+	// Adding elementary reactions
+	// 0.0267 atm
+	rxnvector& rxnV = m_rxnvector0p0267;
+	addReaction(rxnV, Reaction(3.23e7, 2.095, 15.84, sp::H));      //0 - r1f
+	addReaction(rxnV, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+	addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+	addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+	addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H));  //4 - r3f
+	addReaction(rxnV, Reaction(1.5e11, 0.2, 42.57, sp::None));   //5 - r4f
+	//addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
+	// 0.12 atm
+	rxnvector& rxnV2 = m_rxnvector0p12;
+	addReaction(rxnV2, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+	addReaction(rxnV2, Reaction(3.4e9, .88, 7.870, sp::H2));   //1 - r1b
+	addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+	addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+	addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
+	addReaction(rxnV2, Reaction(2e11, 0.2, 42.57, sp::None));   //5 - r4f
+	//addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+	// 1 atm
+	rxnvector& rxnV3 = m_rxnvector1;
+	//------------Reactions for A3-4----------------------------
+	addReaction(rxnV3, Reaction(2.500E+14, 0.000E+00, 1.600E+01, sp::H));            // A3 + H <=> A3-4 + H2                - 0              - Forward
+	addReaction(rxnV3, Reaction(1.955E+10, 9.041E-01, 8.911E+00, sp::H2));           // A3 + H <=> A3-4 + H2                - 1              - Backward
+	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(4.596E+05, 2.070E+00, 1.017E+01, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));            // A3-4 + H (+M) <=> A3 (+M)           - 4              - Forward - High rate
+	addReaction(rxnV3, Reaction(2.100E+139, -3.480E+01, 1.838E+01, sp::None));          // A3-4 + H (+M) <=> A3 (+M)           - 5              - Forward - High rate
+	//Parameters = [  1.00000000e-03   1.71400000e+02   1.71400000e+02   4.99280000e+03]
+	addReaction(rxnV3, Reaction(2.315E+31, -4.589E+00, 1.185E+02, sp::None));                // A3-4 + H (+M) <=> A3 (+M)           - 6              - Backward
+	addReaction(rxnV3, Reaction(8.000E+61, -1.450E+01, 3.480E+01, sp::C2H2));                // A3-4 + C2H2 <=> A3C2H2              - 7              - Forward
+	addReaction(rxnV3, Reaction(4.107E+69, -1.626E+01, 6.773E+01, sp::None));                // A3-4 + C2H2 <=> A3C2H2              - 8              - Backward
+	addReaction(rxnV3, Reaction(1.200E+26, -3.440E+00, 3.020E+01, sp::C2H2));                // A3-4 + C2H2 <=> A3C2H + H           - 9              - Forward
+	addReaction(rxnV3, Reaction(6.319E+33, -5.219E+00, 3.169E+01, sp::H));           // A3-4 + C2H2 <=> A3C2H + H           - 10             - Backward
+	addReaction(rxnV3, Reaction(6.600E+24, -3.360E+00, 1.780E+01, sp::C2H2));                // A3-4 + C2H2 <=> A4 + H              - 11             - Forward
+	addReaction(rxnV3, Reaction(1.815E+34, -4.875E+00, 7.521E+01, sp::H));           // A3-4 + C2H2 <=> A4 + H              - 12             - Backward
+	////------------Reactions for A3C2H----------------------------
+	addReaction(rxnV3, Reaction(5.000E+13, 0.000E+00, 0.000E+00, sp::C2H));          // A3 + C2H <=> A3C2H + H              - 13             - Forward
+	addReaction(rxnV3, Reaction(9.332E+20, -1.526E+00, 2.401E+01, sp::H));           // A3 + C2H <=> A3C2H + H              - 14             - Backward
+	addReaction(rxnV3, Reaction(1.900E+64, -1.512E+01, 2.930E+01, sp::H));           // A3C2H + H <=> A3C2H2                - 15             - Forward
+	addReaction(rxnV3, Reaction(1.852E+64, -1.510E+01, 6.074E+01, sp::None));                // A3C2H + H <=> A3C2H2                - 16             - Backward
+	////------------Reactions for A3C2H2----------------------------
+	addReaction(rxnV3, Reaction(2.000E+63, -1.528E+01, 4.320E+01, sp::None));                // A3C2H2 <=> A4 + H           - 17             - Forward
+	addReaction(rxnV3, Reaction(1.071E+65, -1.504E+01, 6.768E+01, sp::H));           // A3C2H2 <=> A4 + H           - 18             - Backward
+	////------------Reactions for A4----------------------------
+	addReaction(rxnV3, Reaction(9.000E+38, -7.390E+00, 2.070E+01, sp::H));           // A3C2H + H <=> A4 + H                - 19             - Forward
+	addReaction(rxnV3, Reaction(4.700E+40, -7.125E+00, 7.662E+01, sp::H));           // A3C2H + H <=> A4 + H                - 20             - Backward
+	addReaction(rxnV3, Reaction(2.500E+14, 0.000E+00, 1.600E+01, sp::H));            // A4 + H <=> A4- + H2         - 21             - Forward
+	addReaction(rxnV3, Reaction(4.084E+09, 9.960E-01, 8.520E+00, sp::H2));           // A4 + H <=> A4- + H2         - 22             - Backward
+	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A4 + OH <=> A4- + H2O               - 23             - Forward
+	addReaction(rxnV3, Reaction(9.600E+04, 2.162E+00, 9.780E+00, sp::H2O));          // A4 + OH <=> A4- + H2O               - 24             - Backward
+	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::H));            // A4- + H <=> A4              - 25             - Forward
+	addReaction(rxnV3, Reaction(4.635E+18, -7.927E-01, 1.113E+02, sp::None));                // A4- + H <=> A4              - 26             - Backward
+	////------------Reactions for A4-----------------------------	
+
+	m_sType = FE_HACA; // sitetype
+	m_name = "R6 (FE-HACA) desorption"; // name of process
+	m_ID = 22;
+}
+// Jump rate calculation
+double D6R_FE_AC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	if (site_count == 0) return m_rate = 0;
+
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction 
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+		r_f = r_f / (r_f + 1.0);
+	}
+	else r_f = 0;
+	return m_rate = m_r[5] * r_f* site_count; // Rate Equation
+}
+double D6R_FE_AC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate0p0267(gp, pah_st);
+}
+double D6R_FE_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	if (site_count == 0) return m_rate = 0;
+	int ring_count = ((int)pah_st.getRingsCount().first); // Ring count
+	//if (ring_count <= 4) return m_rate = 0.0;
+	double T = gp[gp.T];
+	double r_f = 0.0;
+	if (T < 800) {
+		return m_rate = 0.0;
+	}
+	else return m_rate = (m_r[12] + m_r[20] + m_r[18]) * site_count / 2.0; //Lumped consumption of A4
+
 }

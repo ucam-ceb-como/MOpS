@@ -164,9 +164,6 @@ public:
     //! Set simulator to write the jumps CSV file.
     void SetWriteJumpFile(bool writejumps);
 
-	//! Set simulator to write the jumps CSV file.
-	void SetWritePAHJumpFile(bool writepahjumps);
-
     //! Set the simulator to write the particle binary file
     void SetWriteEnsembleFile(bool writeparticles);
 
@@ -321,10 +318,6 @@ private:
     // be written to CSV output. Default false.
     bool m_write_jumps;
 
-	// Flag controlling whether the number of PAH jump events should
-	// be written to CSV output. Default false.
-	bool m_write_pahjumps;
-
     //! Should the ensemble be written to a reusable binary file?
     bool m_write_ensemble_file;
 
@@ -420,11 +413,6 @@ private:
     // rates for each species due to particle processes for the
     // given reactor to the binary output file.
     void outputPartRxnRates(const Reactor &r) const;
-
-	// Writes the PAH process rates and the molar production
-	// rates for each species due to particle processes for the
-	// given reactor to the binary output file.
-	//void outputPAHRxnRates(const Reactor &r) const;
 
 
     // CONSOLE OUTPUT.
@@ -530,20 +518,6 @@ private:
         bool calcsqrs = false         // Set =true to also calculate sums of squares.
         );
 
-	// Reads a PAH process rates stats data point from the binary file.
-	// To allow the averages and confidence intervals to be calculated
-	// the data point is added to a vector of sums, and the squares are
-	// added to the vector sumsqr if necessary.
-	static void readPAHRxnDataPoint(
-		std::istream &in,             // Input stream.
-		const Sweep::Mechanism &mech, // Particle mechanism.
-		fvector &rates_sum,           // Sums of process rates.
-		fvector &rates_sumsqr,        // Sums of the squares of process rates.
-		fvector &pah_jumps_sum,           // Sums of the number of pah jumps
-		fvector &pah_jumps_sumsqr,        // Sums of the squares of the number of pah jumps
-		bool calcsqrs = false         // Set =true to also calculate sums of squares.
-		);
-
     // Reads the tracked particles from the binary file.  The particles are
     // processed so that only a vector of vectors is returned, which contains
     // the PSL data for each tracked particle at that point.
@@ -622,15 +596,6 @@ private:
         std::vector<fvector> &avg,       // Vector of process rate time points.
         const std::vector<fvector> &err  // Vector of confidence intervals.
         );
-
-	// Writes particle pah jump rate profile to a CSV file.
-	static void writePAHJumpCSV(
-		const std::string &filename,     // Output file name (incl. extension).
-		const Sweep::Mechanism &mech,    // Mechanism defining particle processes.
-		const timevector &times,         // Output time profile.
-		std::vector<fvector> &avg,       // Vector of process rate time points.
-		const std::vector<fvector> &err  // Vector of confidence intervals.
-		);
 
     // Writes gas-phase reaction rates profile to a CSV file.
     static void writeGasRxnCSV(
