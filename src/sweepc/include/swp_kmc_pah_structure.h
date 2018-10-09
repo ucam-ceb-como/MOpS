@@ -90,8 +90,14 @@ namespace Sweep{
             int numofH() const;
             //! return num of 6-membered rings
             int numofRings() const;
-            //! return num of 5-membered rings
-            int numofRings5() const;
+			//! return num of lone 5-membered rings
+			int numofLoneRings5() const;
+			//! return num of embedded 5-membered rings
+			int numofEmbeddedRings7() const;
+			//! return num of lone 7-membered rings
+			int numofLoneRings7() const;
+			//! return num of embedded 7-membered rings
+			int numofEmbeddedRings5() const;
             //! return num of edge carbon
             int numofEdgeC() const;
             //! return num of site
@@ -101,8 +107,11 @@ namespace Sweep{
             void setnumofH(int val);
 
             //! set number of rings for particular PAH
-            void setnumofRings(int val); // 6-membered
-            void setnumofRings5(int val); // 5-membered
+			void setnumofRings(int val); // 6-membered
+			void setnumofLoneRings5(int val); // 5-membered
+			void setnumofEmbeddedRings5(int val); // 5-membered
+			void setnumofLoneRings7(int val); // 5-membered
+			void setnumofEmbeddedRings7(int val); // 5-membered
 
             //! check PAH have bridge or not
             bool havebridgeC();
@@ -130,8 +139,11 @@ namespace Sweep{
             //! Stores total counts of carbon and hydrogen
             intpair m_counts;
             //! Stores number of rings
-            int m_rings; // 6-membered rings
-            int m_rings5; // 5-membered rings
+			int m_rings; // 6-membered rings
+			int m_rings5_Lone; // 5-membered rings
+			int m_rings5_Embedded; // 5-membered rings
+			int m_rings7_Lone; // 5-membered rings
+			int m_rings7_Embedded; // 5-membered rings
         private:
             //! write m_cpositions
             void WriteCposition(std::ostream &out) const;

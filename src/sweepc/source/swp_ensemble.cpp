@@ -447,7 +447,8 @@ int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, 
 			if (pah->NumPAH() == 1){
 				if (pah->NumCarbon() == m_PAH.numofC() && pah->NumHydrogen() == m_PAH.numofH() 
 					&& pah->NumRings() == m_PAH.numofRings()
-					&& pah->NumRings5() == m_PAH.numofRings5()){
+					&& pah->NumLoneRings5() == m_PAH.numofLoneRings5()
+					&& pah->NumEmbeddedRings5() == m_PAH.numofEmbeddedRings5()){
 
 					std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapInput = m_PAH.GetSiteMap();
 					std::map<KMC_ARS::kmcSiteType, KMC_ARS::svector> sitemapComp = (*(pah->GetPAHVector())[0]).GetPAHStruct()->GetSiteMap();

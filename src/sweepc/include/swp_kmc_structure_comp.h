@@ -45,6 +45,9 @@
 #ifndef SWP_KMC_STRUCTURE_COMP_H
 #define SWP_KMC_STRUCTURE_COMP_H
 
+#define _USE_MATH_DEFINES //!< First define.
+#include <math.h>         //!< Then include so that the pi constant (M_PI) can be used.
+
 #include "swp_kmc_typedef.h"
 #include "boost/shared_ptr.hpp"
 #include <list>
@@ -108,25 +111,43 @@ namespace Sweep {
         // To calculate increments in x coordinates and y coordinates given angle direction
         coordtype inline x_inc(const angletype &angle) {
             //coordtype scale = 2.0f;
-            if(abs(angle)==0) return (2);
+            /*if(abs(angle)==0) return (2);
             else if(std::abs(angle)==60) return (1); // for 6R
             else if(std::abs(angle)==120) return (-1);
             else if(std::abs(angle)==180) return (-2);
             else if(std::abs(angle)==30) return (3); // for 5R
             else if(std::abs(angle)==90) return (0);
             else if(std::abs(angle)==150) return(-3);
-            return -10;
+            return -10;*/
+
+			if (abs(angle) == 0) return (1);
+			else if (std::abs(angle) == 60) return (0.5); // for 6R
+			else if (std::abs(angle) == 120) return (-0.5);
+			else if (std::abs(angle) == 180) return (-1);
+			else if (std::abs(angle) == 30) return (pow(0.75,0.5)); // for 5R
+			else if (std::abs(angle) == 90) return (0);
+			else if (std::abs(angle) == 150) return(-pow(0.75, 0.5));
+			return cos(angle*M_PI/180);
         }
         coordtype inline y_inc(const angletype &angle) {
             //coordtype scale = 2.0f;
-            if(angle==0 || std::abs(angle)==180) return 0; // for 6R
+            /*if(angle==0 || std::abs(angle)==180) return 0; // for 6R
             else if(angle==60 || angle==120) return (2);
             else if(angle==-60 || angle==-120) return (-2);
             else if(angle==90) return (4); // for 5R
             else if(angle==-90) return (-4);
             else if(angle==30 || angle==150) return (2);
             else if(angle==-30 || angle==-150) return (-2);
-            return -10;
+            return -10;*/
+
+			if (angle == 0 || std::abs(angle) == 180) return 0; // for 6R
+			else if (angle == 60 || angle == 120) return (pow(0.75, 0.5));
+			else if (angle == -60 || angle == -120) return (-pow(0.75, 0.5));
+			else if (angle == 90) return (1); // for 5R
+			else if (angle == -90) return (-1);
+			else if (angle == 30 || angle == 150) return (0.5);
+			else if (angle == -30 || angle == -150) return (-0.5);
+			return sin(angle*M_PI / 180);
         }
         //! Changes reflex angle into +ve and -ve angle format
         angletype inline normAngle(angletype angle) {

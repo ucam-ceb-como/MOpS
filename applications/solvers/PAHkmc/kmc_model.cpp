@@ -98,7 +98,8 @@ int main(int argc, char *argv[])
     StartingStructure startStruct = NONE;
     std::string startStruct_str = "";
     int R6_num = 0;
-    int R5_num = 0;
+    int R5_num_Lone = 0;
+	int R5_num_Embedded = 0;
     std::string site_savemode = "END";
 
     KMCSimulator* Simulator;
@@ -139,8 +140,10 @@ int main(int argc, char *argv[])
             startStruct_str = node->Data();
             attr = node->GetAttribute("R6");
             R6_num = (int) Strings::cdble(attr->GetValue());
-            attr = node->GetAttribute("R5");
-            R5_num = (int) Strings::cdble(attr->GetValue());
+			attr = node->GetAttribute("R5_Lone");
+			R5_num_Lone = (int)Strings::cdble(attr->GetValue());
+			attr = node->GetAttribute("R5_Embedded");
+			R5_num_Embedded = (int)Strings::cdble(attr->GetValue());
         }
 
         // get input file names
@@ -234,7 +237,7 @@ int main(int argc, char *argv[])
             if(startStruct != NONE)
                 pahp.initialise(startStruct);
             else
-                pahp.initialise(startStruct_str, R6_num, R5_num);
+				pahp.initialise(startStruct_str, R6_num, R5_num_Lone, R5_num_Embedded);
             //pahp.setPAH(*pah[0]);
             std::cout << "Pointer to PAH:"<<pah[i]<<"\n";
             Sweep::rng_type rng2(1+i);

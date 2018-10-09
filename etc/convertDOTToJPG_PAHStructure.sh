@@ -7,7 +7,7 @@
 #
 #Written by Edward Yapp ekyy2@cam.ac.uk
 
-sourcedots=DOT\ files
+sourcedots=KMC_DEBUG
 resultjpgs=JPG\ files
 for dotnames in `ls "$sourcedots"`
 do

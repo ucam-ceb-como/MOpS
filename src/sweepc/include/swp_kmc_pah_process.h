@@ -102,9 +102,9 @@ public:
     //! Initialisation of structure given a starting structure (new method)
     virtual PAHStructure& initialise_new(StartingStructure ss);
     //! Initialisation of structure given a string of site types (separated by ',')
-    virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num);
+	virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded);
     //! Create Structure from vector of site types and number of rings
-    void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5);
+	void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded);
     //! Structure processes: returns success or failure
     bool performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID);
 
@@ -114,7 +114,7 @@ public:
     //! Get Site Counts
     unsigned int getSiteCount(const kmcSiteType& st) const;
     //! Get Ring Counts
-    intpair getRingsCount() const;
+    std::tuple <int, int, int> getRingsCount() const;
     //! Get number of bridges
     int numberOfBridges() const;
     //! Print structure in console
@@ -167,6 +167,19 @@ public:
     //void proc_M5R_eZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
     
 	void proc_D6R_FE_AC(Spointer& stt, Cpointer C_1, Cpointer C_2);
+	void proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID22.
+	void proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID23.
+	void proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID24.
+	void proc_G6R_RFER(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID25.
+	void proc_G6R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID26.
+	void proc_L6_RBY5(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID27.
+	void proc_L6_RACR(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID28.
+	void proc_G5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID29.
+	void proc_C6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID30.
+	void proc_C6R_RAC_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);   //!< ID31.
+	void proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID32.
+	void proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);             //!< ID34.
+	void proc_GR7_BY5R5(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);             //!< ID35.
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts
@@ -187,10 +200,12 @@ private:
     bool allowed(const Spointer& st, StructureProc proc) const;
     //! Choose a random site of site type st
     Spointer chooseRandomSite(kmcSiteType st, rng_type &rng);
+	//! Choose a random site for valid RZZ migrations
+	Spointer RZZchooseRandomSite(kmcSiteType st, rng_type &rng);
     //! Choose a random site of any site types in vtype
     Spointer chooseRandomSite(std::vector<kmcSiteType> vtype, rng_type &rng);
     //! Jump to a position coordinate given starting position and angle towards new position
-    cpair jumpToPos(const cpair& starting, const angletype& direction) const;
+	cpair jumpToPos(const cpair& starting, const angletype& direction, const bondlength& distance) const;
     //! Search a particular site (si) from svector associated with stype and erases it from sitemap
     void delSiteFromMap(const kmcSiteType& stype, const Spointer& si);
     //! Overload: search and erase from svectors associated with all site types in vector v
@@ -208,7 +223,9 @@ private:
     //! Creates a lone carbon atom
     Cpointer addC();
     //! Creates a new carbon atom attached next to C_1.
-    Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2, bool bulk=false);
+    Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2, bondlength length, bool bulk=false);
+	//! Moves a carbon position .
+	void moveC(Cpointer C_1, angletype angle1, angletype angle2, bondlength length);
     //! Creates a carbon atom bridging next to C_1. 
     Cpointer bridgeC(Cpointer C_1);
     /*//! Creates a bulk carbon atom connected to C_1

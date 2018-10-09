@@ -127,6 +127,8 @@ void KMCSimulator::targetPAH(PAHStructure& pah) {
     m_simPAHp = PAHProcess(*m_simPAH);
 }
 
+
+int counter_GLC = 0;
 /*!
  * @param[in,out]    pah             PAH structure KMC-ARS jump process will be performed on.
  * @param[in]        tsart           The latest time the PAH was updated.
@@ -196,8 +198,9 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
 			rates = m_kmcmech.Rates();
 			writeRatesCSV(m_t, rates);
+			//writeCHSiteCountCSV();
 			//writetimestep(m_t);
-			writeRxnCountCSV();
+			//writeRxnCountCSV();
 		}
 
         // Calculate time step, update time
@@ -223,6 +226,13 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //if we want to check a PAH with specified ID or number of Carbon, 
             //its structure can be drawed by this function, used for tracking suspicious PAH.
             // saveDOTperLoop(100000*tstart,loopcount,PAH_ID);
+
+			std::string loopcount_str = "KMC_DEBUG/";
+			loopcount_str.append(std::to_string(counter_GLC));
+			loopcount_str.append(".dot");
+			m_simPAHp.saveDOT(loopcount_str);
+			counter_GLC += 1;
+
             // Choose jump according to rates
             ChosenProcess jp_perf = m_kmcmech.chooseReaction(rng);
             //cout<<jp_perf.first->getName()<<'\n';//++++
@@ -232,6 +242,10 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             // Update data structure
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 			m_rxn_count[jp_perf.second]++;
+			writeCHSiteCountCSV();
+			//writetimestep(m_t);
+			writeRxnCountCSV();
+			
 			
 			// get counts for all site types
 			/*if (PAH_ID == 1 || PAH_ID == 2){
@@ -428,11 +442,11 @@ void KMCSimulator::writeCHSiteCountCSV() {
 }
 //! Writes data for rates count (csv)
 void KMCSimulator::writeRatesCSV(double& time, rvector& v_rates) {
-    int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22};
+    int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35, 36};
     //int convM[] = {1, 2,14,15, 8,10,11,12,13, 3, 7, 9, 5, 4, 6,22,24,16,21};
     int ID;
     //if(runNo==1) {
-    int total_jp = 22;
+    int total_jp = 35;
     std::vector<double> temp(total_jp+1,0);
     temp[0] = time;
     for(int i=0; i!=(int)v_rates.size(); i++) {

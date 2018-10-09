@@ -245,8 +245,10 @@ public:
     int NumEdgeC() const;
     //! returns the number of 6-member rings in the particle.
     int NumRings() const;
-	//! returns the number of 5-member rings in the particle.
-	int NumRings5() const;
+	//! returns the number of lone 5-member rings in the particle.
+	int NumLoneRings5() const;
+	//! returns the number of embedded5-member rings in the particle.
+	int NumEmbeddedRings5() const;
     //! returns sqrt(L*W)
     double sqrtLW() const;
 
@@ -483,7 +485,9 @@ private:
     //! Total number of 6-member rings in this soot particle
     int m_numOfRings;
 	//! Total number of 6-member rings in this soot particle
-	int m_numOfRings5;
+	int m_numOfLoneRings5;
+	//! Total number of 6-member rings in this soot particle
+	int m_numOfEmbeddedRings5;
     //! Number of PAHs below this node
     int m_numPAH;
     //! Number of primaries below this node

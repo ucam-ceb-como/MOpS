@@ -93,7 +93,7 @@ PAHStructure* PAHProcess::clonePAH() const {
     PAHStructure* temp = new PAHStructure();
     PAHProcess p(*temp);
     std::vector<kmcSiteType> sites = SiteVector();
-    p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5);
+	p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded);
     return temp;
 }
 // Public Read Processes
@@ -127,8 +127,9 @@ unsigned int PAHProcess::getSiteCount(const kmcSiteType& st) const {
     return (unsigned int) m_pah->m_siteMap[st].size();
 }
 //! Get Ring Counts
-intpair PAHProcess::getRingsCount() const {
-    return intpair(m_pah->m_rings, m_pah->m_rings5);
+std::tuple <int, int, int> PAHProcess::getRingsCount() const {
+	std::tuple <int, int, int> rings_tuple = std::make_tuple(m_pah->m_rings, m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone + m_pah->m_rings7_Embedded);
+	return rings_tuple;
 }
 //! Get number of bridges
 int PAHProcess::numberOfBridges() const {
@@ -417,11 +418,11 @@ bool PAHProcess::allowed(const Spointer& st, StructureProc proc) const {
     return true;
 }
 //! Jump to a position coordinate given starting position and angle towards new position
-cpair PAHProcess::jumpToPos(const cpair& starting, const angletype& direction) const{
+cpair PAHProcess::jumpToPos(const cpair& starting, const angletype& direction, const bondlength& distance) const{
     cpair temp;
     // calculate new coordinates
-    temp.first = starting.first + x_inc(direction);
-    temp.second = starting.second + y_inc(direction);
+    temp.first = starting.first + distance*x_inc(direction);
+	temp.second = starting.second + distance*y_inc(direction);
     return temp;
 }
 //! Search a particular site (si) from svector associated with stype and erases it.
@@ -454,33 +455,53 @@ bool PAHProcess::checkHindrance(const Spointer& st) const {
     // position to check, start at C1 of site
     cpair mpos;
     switch(st->type) {
+	case R5:
     case FE:
         // move position to O1, O2, O3, and O4
-        mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2); // position O1
+        mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, 1); // position O1
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-60)); // position O2
+		mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, pow(3,0.5)); // position O1
+		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-60), 1); // position O2
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-120)); // position O3
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 60), pow(3,0.5)); // position O2
+		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-120), 1); // position O3
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-180)); // position O4
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 120), pow(3,0.5)); // position O3
+		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-180), 1); // position O4
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 180), pow(3, 0.5)); // position O4
+		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
         break;
     case RFE:
     case ZZ:
         // move position to O1, O2 and O3
-        mpos = jumpToPos(st->C1->coords, normAngle(st->C1->bondAngle1+120)); // position O1
+        mpos = jumpToPos(st->C1->coords, normAngle(st->C1->bondAngle1+120), 1); // position O1
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1+60)); // position O2
+		mpos = jumpToPos(st->C1->coords, normAngle(st->C1->bondAngle1 + 120), pow(3, 0.5)); // position O1
+		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1+60), 1); // position O2
+		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1 + 60), pow(3, 0.5)); // position O2
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1)); // position O3
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1), 1); // position O3
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1), pow(3,0.5)); // position O3
+		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
         break;
     case RZZ:
+	case BY5R5:
     case AC:
         // move position to O1 and O2
-        mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2); // position O1
+        mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, 1); // position O1
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-60)); // position O2
+		mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, pow(3,0.5)); // position O1
+		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-60), 1); // position O2
+		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 60), pow(3,0.5)); // position O2
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
         break;
     default:
@@ -499,17 +520,17 @@ bool PAHProcess::checkHindrance(const Spointer& st) const {
 */
 bool PAHProcess::checkHindrancePhenyl(const Cpointer C_1) const {
     // position to check, start at O1
-    cpair mpos = jumpToPos(C_1->coords, C_1->bondAngle2); // position O1
+    cpair mpos = jumpToPos(C_1->coords, C_1->bondAngle2, 1); // position O1
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2+60)); // position O2
+    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2+60), 1); // position O2
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-    mpos = jumpToPos(mpos, C_1->bondAngle2); // position O3
+    mpos = jumpToPos(mpos, C_1->bondAngle2, 1); // position O3
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-60)); //position O4
+    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-60), 1); //position O4
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-120)); // position O5
+    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-120), 1); // position O5
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-180)); // position O6
+    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-180), 1); // position O6
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
     return false;
 }
@@ -547,6 +568,42 @@ Spointer PAHProcess::chooseRandomSite(kmcSiteType st, rng_type &rng) {
         return m_pah->m_siteMap[st][0]; // if vector has only one element
     }
 }
+
+Spointer PAHProcess::RZZchooseRandomSite(kmcSiteType st, rng_type &rng) {
+	// to choose any principal site
+		//cout << "~~Choosing from " << m_pah->m_siteMap[st].size() << " sites...\n";
+	int R5_unavail_sites = (int)m_pah->m_siteMap[R5R6].size() + (int)m_pah->m_siteMap[R5R6_emb].size();
+	if (R5_unavail_sites > 0){
+		Spointer S1, S2;
+		std::vector<int> list;
+		for (int i = 0; i < (int)m_pah->m_siteMap[st].size(); i++) {
+			S1 = moveIt(m_pah->m_siteMap[st][i], -1);
+			S2 = moveIt(m_pah->m_siteMap[st][i], +1);
+			if (S1->type != R5R6 && S2->type != R5R6 && S1->type != R5R6_emb && S2->type != R5R6_emb){
+				//RZZ site available for migrations
+				list.push_back(i);
+			}
+		}
+		int sz = ((int)m_pah->m_siteMap[st].size()) - R5_unavail_sites - 1; // size - 1
+		if (sz >= 0) {
+			typedef boost::uniform_smallint<unsigned int> site_index_distrib;
+			site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(sz));
+			boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
+
+			const unsigned r = siteIndexGenerator();
+			return m_pah->m_siteMap[st][list[r]];
+		}
+		else{
+			Spointer normal_site = chooseRandomSite(st, rng);
+			return normal_site;
+		}
+	}
+	else{
+		Spointer normal_site = chooseRandomSite(st, rng);
+		return normal_site;
+	}
+}
+
 //! Choose a random site of any site types in vtype
 Spointer PAHProcess::chooseRandomSite(std::vector<kmcSiteType> vtype, rng_type &rng) {
     // stores number of sites for each site type
@@ -607,7 +664,7 @@ Cpointer PAHProcess::addC() {
   !      C __ (C1->)C2
   !        angle 2
 */
-Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2, bool bulk) {
+Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2, bondlength length, bool bulk) {
     Cpointer cb;
     // Create new carbon atom
     cb = new Carbon;
@@ -616,7 +673,7 @@ Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2, bool
     cb->C2 = C_1->C2;
     cb->bondAngle1 = normAngle(angle2); // convert angle to +ve/-ve form
     // set new coordinates and store
-    cb->coords = jumpToPos(C_1->coords, angle1);
+    cb->coords = jumpToPos(C_1->coords, angle1, length);
     if(!m_pah->m_carbonList.insert(cb).second)
         std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
     m_pah->m_cpositions.insert(cb->coords);
@@ -631,6 +688,16 @@ Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2, bool
     if(C_1 == m_pah->m_clast) m_pah->m_clast = cb;
     return cb;
 }
+
+void PAHProcess::moveC(Cpointer C_1, angletype angle1, angletype angle2, bondlength distance) {
+	// Remove coordinates of C from m_pah->m_cpositions
+	m_pah->m_cpositions.erase(m_pah->m_cpositions.find(C_1->coords));
+	// Set new positions of Carbon C_1
+	C_1->coords.first = C_1->coords.first + distance*cos(normAngle(angle1)*M_PI / 180);
+	C_1->coords.second = C_1->coords.second + distance*sin(normAngle(angle1)*M_PI / 180);
+	m_pah->m_cpositions.insert(C_1->coords);
+}
+
 /*! Create a carbon atom bridging next to C_1
   !              newC
   !                /  <---- angle (from C1)
@@ -647,7 +714,7 @@ Cpointer PAHProcess::bridgeC(Cpointer C_1) {
     cb->bondAngle2 = normAngle(C_1->bondAngle2 - 180); // opposite direction of C_1->bondAngle2
     cb->bridge = true;
     // set new coordinates and store
-    cb->coords = jumpToPos(C_1->coords, C_1->bondAngle2);
+    cb->coords = jumpToPos(C_1->coords, C_1->bondAngle2, 1);
     if(!m_pah->m_carbonList.insert(cb).second)
         std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
     m_pah->m_cpositions.insert(cb->coords);
@@ -805,6 +872,7 @@ void PAHProcess::remR5fromSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
         stype -= 6;
     else {
         std::cout<<"ERROR: rem5RfromSite: illegal site type to remove 5R from.\n";
+		saveDOT("KMC_DEBUG/Error.dot");
         return;}
     // removes site from m_pah->m_siteMap (principal site)
     delSiteFromMap(st->type, st);
@@ -966,40 +1034,57 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
                                Cpointer Carb1, Cpointer Carb2, // new C members
                                int bulkCchange) { // addition to number of bulk C in site
     // check if site type change is valid (as long as site still principal site)
-    int stype = (int) st->type;
-    if(stype < 6) {
-    if((stype + bulkCchange) < 0 || (stype + bulkCchange) > 4) {
-        //printSites(st);//++++
-        cout << "ERROR: updateSites: Bulk C change invalid (Principal)\n";
-        std::ostringstream msg;
-            msg << "ERROR: Bulk C change invalid (Principal). Trying to add "
-                << bulkCchange << " bulk C to a " << kmcSiteName(st->type)
-                << " (Sweep::KMC_ARS::PAHProcess::updateSites)";
-            throw std::runtime_error(msg.str());
-            assert(false);
-        return;
-    }}
-    if(stype < 13 && stype > 5) {
-        if((stype + bulkCchange) < 6 || (stype + bulkCchange) > 12) {
-            //printSites(st);//++++
-            cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
-            std::ostringstream msg;
-            msg << "ERROR: Bulk C change invalid (with R5)."
-                << " (Sweep::KMC_ARS::PAHProcess::updateSites)";
-            throw std::runtime_error(msg.str());
-            assert(false);
-            return;
-        }
-    }
-    // removes site from m_pah->m_siteMap (principal site)
-    delSiteFromMap(st->type, st);
-    // change site type
-    st->type = (kmcSiteType)((int)st->type+bulkCchange);
-    // add site to m_pah->m_siteMap
-    m_pah->m_siteMap[st->type].push_back(st);
-    // update member C
-    st->C1 = Carb1;
-    st->C2 = Carb2;
+	int stype = (int)st->type;
+	if (abs(bulkCchange) < 5 ){ //Site is now neighbour to a R5
+		if (stype < 6) {
+			if ((stype + bulkCchange) < 0 || (stype + bulkCchange) > 4) {
+				//printSites(st);//++++
+				cout << "ERROR: updateSites: Bulk C change invalid (Principal)\n";
+				std::ostringstream msg;
+				msg << "ERROR: Bulk C change invalid (Principal). Trying to add "
+					<< bulkCchange << " bulk C to a " << kmcSiteName(st->type)
+					<< " (Sweep::KMC_ARS::PAHProcess::updateSites)";
+				throw std::runtime_error(msg.str());
+				assert(false);
+				return;
+			}
+		}
+
+	}
+	/*if(stype < 13 && stype > 5) {
+	if((stype + bulkCchange) < 6 || (stype + bulkCchange) > 12) {
+	//printSites(st);//++++
+	cout << "ERROR: updateSites: Bulk C change invalid (with R5)\n";
+	std::ostringstream msg;
+	msg << "ERROR: Bulk C change invalid (with R5)."
+	<< " (Sweep::KMC_ARS::PAHProcess::updateSites)";
+	throw std::runtime_error(msg.str());
+	assert(false);
+	return;
+	}
+	}*/
+	if (stype == 20){ //The neighbour site is an embedded or partially embedded R5
+		// removes site from m_pah->m_siteMap (principal site)
+		delSiteFromMap(st->type, st);
+		// change site type
+		st->type = (kmcSiteType)((int)st->type + 1);
+		// add site to m_pah->m_siteMap
+		m_pah->m_siteMap[st->type].push_back(st);
+		// update member C
+		st->C1 = Carb1;
+		st->C2 = Carb2;
+	}
+	else{
+		// removes site from m_pah->m_siteMap (principal site)
+		delSiteFromMap(st->type, st);
+		// change site type
+		st->type = (kmcSiteType)((int)st->type + bulkCchange);
+		// add site to m_pah->m_siteMap
+		m_pah->m_siteMap[st->type].push_back(st);
+		// update member C
+		st->C1 = Carb1;
+		st->C2 = Carb2;
+	}
 }
 
 /*!
@@ -1161,63 +1246,76 @@ Spointer PAHProcess::moveIt(Spointer i, int x) {
 PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
     // Pair of ring counts (R6 & R5) & chosen site list string
     std::string chosen;
-    intpair rings;
+    std::tuple <int, int, int> rings;
     intpair CH;
+	int rings_Embedded;
     // Structure for Benzene
-    std::string BENZENE_Sites = "FE,FE,FE,FE,FE,FE";
-    intpair BENZENE_Rings(1,0);
-    intpair BENZENE_CH(6,6);
-    // Structure for Naphthalene
-    std::string NAPHTHALENE_Sites = "FE,FE,FE,ZZ,FE,FE,FE,ZZ";
-    intpair NAPHTHALENE_Rings(2,0);
-    intpair NAPHTHALENE_CH(10,0);
-    // Structure for Pyrene
-    std::string PYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,FE,FE,ZZ,FE";
-    intpair PYRENE_Rings(4,0);
-    intpair PYRENE_CH(16,10);
-    // Structure for BENZOPYRENE
-    std::string BENZOPYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,ZZ,FE,FE,FE,AC,FE";
-    intpair BENZOPYRENE_Rings(5,0);
-    intpair BENZOPYRENE_CH(20,12);
-    // Structure for Coronene
-    std::string CORONENE_Sites = "FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ";
-    intpair CORONENE_Rings(7,0);
-    intpair CORONENE_CH(24,12);
-    // Test Structure
-    std::string TEST_Sites = "FE,AC,FE,ZZ,RFE,R5,RAC,RFE,R5,RFE,FE,AC,FE,FE,FE,FE,BY5,AC,FE,BY5,FE,ZZ,FE,FE";
-    intpair TEST_Rings(8,2);
-    intpair TEST_CH(18,10);
+	std::string BENZENE_Sites = "FE,FE,FE,FE,FE,FE";
+	auto BENZENE_Rings = std::make_tuple (1, 0, 0) ;
+	intpair BENZENE_CH(6, 6);
+	int BENZENE_RINGS_EMBEDDED = 0;
+	// Structure for Naphthalene
+	std::string NAPHTHALENE_Sites = "FE,FE,FE,ZZ,FE,FE,FE,ZZ";
+	auto NAPHTHALENE_Rings = std::make_tuple(2, 0, 0);
+	intpair NAPHTHALENE_CH(10, 0);
+	int NAPHTHALENE_RINGS_EMBEDDED = 0;
+	// Structure for Pyrene
+	std::string PYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,FE,FE,ZZ,FE";
+	auto PYRENE_Rings = std::make_tuple (4, 0, 0);
+	intpair PYRENE_CH(16, 10);
+	int PYRENE_RINGS_EMBEDDED = 0;
+	// Structure for BENZOPYRENE
+	std::string BENZOPYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,ZZ,FE,FE,FE,AC,FE";
+	auto BENZOPYRENE_Rings = std::make_tuple (5, 0, 0);
+	intpair BENZOPYRENE_CH(20, 12);
+	int BENZOPYRENE_RINGS_EMBEDDED = 0;
+	// Structure for Coronene
+	std::string CORONENE_Sites = "FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ";
+	auto CORONENE_Rings = std::make_tuple(7, 0, 0);
+	intpair CORONENE_CH(24, 12);
+	int CORONENE_RINGS_EMBEDDED = 0;
+	// Test Structure
+	std::string TEST_Sites = "FE,AC,FE,ZZ,RFE,R5,RAC,RFE,R5,RFE,FE,AC,FE,FE,FE,FE,BY5,AC,FE,BY5,FE,ZZ,FE,FE";
+	auto TEST_Rings = std::make_tuple(8, 2, 0);
+	intpair TEST_CH(18, 10);
+	int TEST_RINGS_EMBEDDED = 0;
     // Choose structure
     switch(ss) {
     case BENZENE_C:
         chosen = BENZENE_Sites;
         rings = BENZENE_Rings;
         CH = BENZENE_CH;
+		rings_Embedded = BENZENE_RINGS_EMBEDDED;
         break;
     case NAPHTHALENE_C:
         chosen = NAPHTHALENE_Sites;
         rings = NAPHTHALENE_Rings;
         CH = NAPHTHALENE_CH;
+		rings_Embedded = NAPHTHALENE_RINGS_EMBEDDED;
         break;
     case PYRENE_C:
         chosen = PYRENE_Sites;
         rings = PYRENE_Rings;
         CH = PYRENE_CH;
+		rings_Embedded = PYRENE_RINGS_EMBEDDED;
         break;
     case BENZOPYRENE_C:
         chosen = BENZOPYRENE_Sites;
         rings = BENZOPYRENE_Rings;
         CH = BENZOPYRENE_CH;
+		rings_Embedded = BENZOPYRENE_RINGS_EMBEDDED;
         break;
     case CORONENE_C:
         chosen = CORONENE_Sites;
         rings = CORONENE_Rings;
         CH = CORONENE_CH;
+		rings_Embedded = CORONENE_RINGS_EMBEDDED;
         break;
     case TEST_STRUCT:
         chosen = TEST_Sites;
         rings = TEST_Rings;
         CH = TEST_CH;
+		rings_Embedded = TEST_RINGS_EMBEDDED;
         break;
     default: 
             std::cout<<"ERROR: Starting Structure undefined.. (PAHProcess::initialise)\n\n";
@@ -1225,7 +1323,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
             abort();
     }
     // Create Structure
-    return initialise(chosen, rings.first, rings.second);
+	return initialise(chosen, std::get<0>(rings), std::get<1>(rings), rings_Embedded, std::get<2>(rings), rings_Embedded);
     //printSites(m_pah->m_siteList.begin());
 }
 
@@ -1249,16 +1347,16 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         m_pah->m_cfirst = addC();
         //cout << "m_cfirst is " << m_cfirst << '\n';
         // adds next C atoms according to structure
-        newC = addC(m_pah->m_cfirst, 0, 0);
+        newC = addC(m_pah->m_cfirst, 0, 0, 1);
         //cout << "newC is " << newC << '\n';
-        newC = addC(newC, -60, 0);
+        newC = addC(newC, -60, 0, 1);
         //cout << "newC is " << newC << '\n';
-        newC = addC(newC, -120, 0);
+        newC = addC(newC, -120, 0, 1);
         //cout << "newC is " << newC << '\n';
-        newC = addC(newC, -180, 0);
+        newC = addC(newC, -180, 0, 1);
         //cout << "newC is " << newC << '\n';
         // adds the last C atom, with bond angle towards m_cfirst
-        m_pah->m_clast = addC(newC, 120, 60);
+        m_pah->m_clast = addC(newC, 120, 60, 1);
         //cout << "m_clast is " << m_clast << '\n';
         // closes structure
         connectToC(m_pah->m_clast, m_pah->m_cfirst);
@@ -1269,7 +1367,10 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         setCount(BENZENE_C, BENZENE_H);
         // set ring counts
         m_pah->m_rings = 1;
-        m_pah->m_rings5 = 0;
+        m_pah->m_rings5_Lone = 0;
+		m_pah->m_rings5_Embedded = 0;
+		m_pah->m_rings7_Lone = 0;
+		m_pah->m_rings7_Embedded = 0;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -1279,16 +1380,16 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         // add first C atom
         m_pah->m_cfirst = addC();
         // adds next C atoms according to structure
-        newC = addC(m_pah->m_cfirst, 0, 0);
-        newC = addC(newC, 60, 0);
-        newC = addC(newC, 0, 0);
-        newC = addC(newC, -60, 0);
-        newC = addC(newC, -120, 0);
-        newC = addC(newC, -180, 0);
-        newC = addC(newC, -120, 0);
-        newC = addC(newC, -180, 0);
+        newC = addC(m_pah->m_cfirst, 0, 0, 1);
+        newC = addC(newC, 60, 0, 1);
+        newC = addC(newC, 0, 0, 1);
+        newC = addC(newC, -60, 0, 1);
+        newC = addC(newC, -120, 0, 1);
+        newC = addC(newC, -180, 0, 1);
+        newC = addC(newC, -120, 0, 1);
+        newC = addC(newC, -180, 0, 1);
         // adds the last C atom, with bond angle towards m_cfirst
-        m_pah->m_clast = addC(newC, 120, 60);
+        m_pah->m_clast = addC(newC, 120, 60, 1);
         // closes structure
         connectToC(m_pah->m_clast, m_pah->m_cfirst);
         // update H atoms
@@ -1297,7 +1398,10 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         setCount(10, 8);
         // set ring counts
         m_pah->m_rings = 2;
-        m_pah->m_rings5 = 0;
+        m_pah->m_rings5_Lone = 0;
+		m_pah->m_rings5_Embedded = 0;
+		m_pah->m_rings7_Lone = 0;
+		m_pah->m_rings7_Embedded = 0;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -1307,20 +1411,20 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         // add first C atom
         m_pah->m_cfirst = addC();
         // adds next C atoms according to structure
-        newC = addC(m_pah->m_cfirst, 0, 0);
-        newC = addC(newC, -60, 0);
-        newC = addC(newC, 0, 0);
-        newC = addC(newC, -60, 0);
-        newC = addC(newC, -120, 0);
-        newC = addC(newC, -180, 0);
-        newC = addC(newC, -120, 0);
-        newC = addC(newC, -180, 0);
-        newC = addC(newC, 120, 0);
-        newC = addC(newC, 180, 0);
-        newC = addC(newC, 120, 0);
-        newC = addC(newC, 60, 0);
+        newC = addC(m_pah->m_cfirst, 0, 0, 1);
+		newC = addC(newC, -60, 0, 1);
+		newC = addC(newC, 0, 0, 1);
+		newC = addC(newC, -60, 0, 1);
+		newC = addC(newC, -120, 0, 1);
+		newC = addC(newC, -180, 0, 1);
+		newC = addC(newC, -120, 0, 1);
+		newC = addC(newC, -180, 0, 1);
+		newC = addC(newC, 120, 0, 1);
+		newC = addC(newC, 180, 0, 1);
+		newC = addC(newC, 120, 0, 1);
+		newC = addC(newC, 60, 0, 1);
         // adds the last C atom, with bond angle towards m_cfirst
-        m_pah->m_clast = addC(newC, 0, 60);
+		m_pah->m_clast = addC(newC, 0, 60, 1);
         // closes structure
         connectToC(m_pah->m_clast, m_pah->m_cfirst);
         // update H atoms
@@ -1329,7 +1433,10 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         setCount(PYRENE_C, PYRENE_H);
         // set ring counts
         m_pah->m_rings = 4;
-        m_pah->m_rings5 = 0;
+        m_pah->m_rings5_Lone = 0;
+		m_pah->m_rings5_Embedded = 0;
+		m_pah->m_rings7_Lone = 0;
+		m_pah->m_rings7_Embedded = 0;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -1339,24 +1446,24 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         // add first C atom
         m_pah->m_cfirst = addC();
         // adds next C atoms according to structure
-        newC = addC(m_pah->m_cfirst, 0, 0);
-        newC = addC(newC, -60, 0);
-        newC = addC(newC, 0, 0);
-        newC = addC(newC, -60, 0);
-        newC = addC(newC, -120, 0);
-        newC = addC(newC, -180, 0);
-        newC = addC(newC, -120, 0);
-        newC = addC(newC, -180, 0);
-        newC = addC(newC, 120, 0);
-        newC = addC(newC, 180, 0);
-        newC = addC(newC, 120, 0);
-		newC = addC(newC, 180, 0);
-		newC = addC(newC, 120, 0);
-		newC = addC(newC, 60, 0);
-		newC = addC(newC, 0, 0);
-		newC = addC(newC, -60, 0);
+		newC = addC(m_pah->m_cfirst, 0, 0, 1);
+		newC = addC(newC, -60, 0, 1);
+		newC = addC(newC, 0, 0, 1);
+		newC = addC(newC, -60, 0, 1);
+		newC = addC(newC, -120, 0, 1);
+		newC = addC(newC, -180, 0, 1);
+		newC = addC(newC, -120, 0, 1);
+		newC = addC(newC, -180, 0, 1);
+		newC = addC(newC, 120, 0, 1);
+		newC = addC(newC, 180, 0, 1);
+		newC = addC(newC, 120, 0, 1);
+		newC = addC(newC, 180, 0, 1);
+		newC = addC(newC, 120, 0, 1);
+		newC = addC(newC, 60, 0, 1);
+		newC = addC(newC, 0, 0, 1);
+		newC = addC(newC, -60, 0, 1);
         // adds the last C atom, with bond angle towards m_cfirst
-        m_pah->m_clast = addC(newC, 0, 60);
+		m_pah->m_clast = addC(newC, 0, 60, 1);
         // closes structure
         connectToC(m_pah->m_clast, m_pah->m_cfirst);
         // update H atoms
@@ -1365,7 +1472,10 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         setCount(BENZOPYRENE_C, BENZOPYRENE_H);
         // set ring counts
         m_pah->m_rings = 5;
-        m_pah->m_rings5 = 0;
+        m_pah->m_rings5_Lone = 0;
+		m_pah->m_rings5_Embedded = 0;
+		m_pah->m_rings7_Lone = 0;
+		m_pah->m_rings7_Embedded = 0;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -1388,7 +1498,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
  *
  * @return       Initialized PAH structure
  */
-PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num){
+PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
         m_pah = pah;
@@ -1412,12 +1522,12 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
         }
         siteList_vec.push_back(temp);
     }
-    createPAH(siteList_vec, R6_num, R5_num);
+	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded);
     return *m_pah;
 }
 
 // Create Structure from vector of site types
-void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5) {
+void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded) {
     // current C, bondangle and coordinates
     Cpointer newC=addC();
     m_pah->m_cfirst = newC;
@@ -1437,7 +1547,16 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5) {
             bulkC = (int) vec[i] - 5; site_t = 1;
         }else if((int)vec[i] >= 10 && (int)vec[i] <= 12) {
             bulkC = (int) vec[i] - 8; site_t = 2;
-        }else {
+		}
+		/**
+		* If this condition is true, vec[i] is the site tye ACR5.
+		* It is essentially a special type of armchair site (a basic site type and associated with two bulk carbon atoms).
+		*/
+		else if ((int)vec[i] == 18) {
+			bulkC = (int)vec[i] - 16; site_t = 0;
+
+		}
+		else {
             cout << "createPAH: Combined site types in list of sites. Please use only\n"
                 << "principal site types\n";
             std::ostringstream msg;
@@ -1482,12 +1601,16 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5) {
         return;
     }
     m_pah->m_rings = R6;
-    m_pah->m_rings5 = R5;
+    m_pah->m_rings5_Lone = R5;
+	m_pah->m_rings5_Embedded = 0;
+	m_pah->m_rings7_Lone = 0;
+	m_pah->m_rings7_Embedded = 0;
     for(Ccontainer::iterator i = m_pah->m_carbonList.begin();
         i != m_pah->m_carbonList.end(); i++)
         updateA(*i, 'H');
-    int totalC_num = 2*m_pah->m_rings + (CarbonListSize()+m_pah->m_rings5)/2 + numberOfBridges() + m_pah->m_rings5 + 1;
-    m_pah->setnumofC(totalC_num);
+	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
+	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1;
+	m_pah->setnumofC(totalC_num);
     m_pah->setnumofH((int)vec.size());
     updateCombinedSites();
 }
@@ -1498,7 +1621,7 @@ Cpointer PAHProcess::drawType0Site(Cpointer Cnow, int bulkC) {
     angletype angle = normAngle(Cnow->bondAngle1-60);
     for(int c=0; c<=bulkC; ++c) {
         // check if adding on existing C atom (bridge)
-        cpair pos = jumpToPos(Cnow->coords, angle);
+        cpair pos = jumpToPos(Cnow->coords, angle, 1);
         if(m_pah->m_cpositions.count(pos)) {
             // this coordinate is filled
             Cpointer Cpos = findC(pos);
@@ -1520,7 +1643,7 @@ Cpointer PAHProcess::drawType0Site(Cpointer Cnow, int bulkC) {
                 return Cpos;
             }
         }else {
-            Cnow = addC(Cnow, angle, angle, false);
+            Cnow = addC(Cnow, angle, angle, 1, false);
             angle = normAngle(angle+60);
         }
     }
@@ -1533,7 +1656,7 @@ Cpointer PAHProcess::drawType1Site(Cpointer Cnow, int bulkC, kmcSiteType prevTyp
     angletype angle = Cnow->bondAngle1-60;
     if(bulkC == 0) {
         angle = normAngle(angle-30);
-        cpair pos = jumpToPos(Cnow->coords, angle);
+        cpair pos = jumpToPos(Cnow->coords, angle, 1);
         if(m_pah->m_cpositions.count(pos)) { // reached end of PAH
             Cpointer Cpos = findC(pos);
             Cnow->bondAngle1 = angle;
@@ -1541,7 +1664,7 @@ Cpointer PAHProcess::drawType1Site(Cpointer Cnow, int bulkC, kmcSiteType prevTyp
             m_pah->m_clast = Cnow;
             return Cpos; // m_cfirst
         }
-        else Cnow = addC(Cnow, angle, normAngle(angle-30), false);
+        else Cnow = addC(Cnow, angle, normAngle(angle-30), 1, false);
         return Cnow;
     }else { //draw RXX site
             return drawType0Site(Cnow, bulkC);
@@ -1586,14 +1709,14 @@ bool PAHProcess::checkCoordinates() const{
         }
         if(next->bridge) {// if next C is a bridge
             if(now == next->C1) { // check if current C is next->C1
-                corr_coords = jumpToPos(now->coords, now->bondAngle1);
+                corr_coords = jumpToPos(now->coords, now->bondAngle1, 1);
                 next = next->C3; // cross bridge
             }else if(now == next->C3) { // check if current C is from bridge
-                corr_coords = jumpToPos(now->coords, now->bondAngle2);
+                corr_coords = jumpToPos(now->coords, now->bondAngle2, 1);
                 next = next->C2;
             }
         }else { // if next C is not a bridge
-            corr_coords = jumpToPos(now->coords, now->bondAngle1);
+            corr_coords = jumpToPos(now->coords, now->bondAngle1, 1);
             next = next->C2;
         }
         now = oldnext;
@@ -1686,10 +1809,17 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     //printStruct();
     //cout << "Start Performing Process..\n";
     kmcSiteType stp = jp.getSiteType();
+	Spointer site_perf;
     int id = jp.getID();
     
     // choose random site of type stp to perform process
-    Spointer site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
+	if (id == 15){
+		site_perf = RZZchooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
+		//site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
+	}
+	else {
+		site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
+	}
     // stores pointers to site Carbon members
     Cpointer site_C1 = site_perf->C1;
     Cpointer site_C2 = site_perf->C2;
@@ -1749,6 +1879,32 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
             proc_O6R_FE2(site_perf, site_C1, site_C2); break;
 		case 22:
 			proc_D6R_FE_AC(site_perf, site_C1, site_C2); break;
+		case 23:
+			proc_B6R_ACR5(site_perf, site_C1, site_C2); break;
+		case 24:
+			proc_M5R_ACR5_ZZ(site_perf, site_C1, site_C2, rng); break;
+		case 25:
+			proc_G6R_RZZ(site_perf, site_C1, site_C2); break;
+		case 26:
+			proc_G6R_RFER(site_perf, site_C1, site_C2); break;
+		case 27:
+			proc_G6R_R5(site_perf, site_C1, site_C2); break;
+		case 28:
+			proc_L6_RBY5(site_perf, site_C1, site_C2); break;
+		case 29:
+			proc_L6_RACR(site_perf, site_C1, site_C2); break;
+		case 30:
+			proc_G5R_RFE(site_perf, site_C1, site_C2); break;
+		case 31:
+			proc_C6R_BY5_FE3(site_perf, site_C1, site_C2, rng); break;
+		case 32:
+			proc_C6R_BY5_FE3(site_perf, site_C1, site_C2, rng); break;
+		case 33:
+			proc_C6R_RAC_FE3(site_perf, site_C1, site_C2, rng); break;
+		case 34:
+			proc_MR5_R6(site_perf, site_C1, site_C2, rng); break;
+		case 35:
+			proc_GR7_BY5R5(site_perf, site_C1, site_C2, rng); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -1776,8 +1932,9 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         assert(false);
         abort();
     }
-    int calc_total = 2*m_pah->m_rings + (CarbonListSize()+m_pah->m_rings5)/2 + numberOfBridges() + m_pah->m_rings5 + 1;
-    if(calc_total != getCHCount().first) {
+	//int calc_total = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
+	int calc_total = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1;
+	if(calc_total != getCHCount().first) {
         saveDOT("KMC_DEBUG/KMC_C_Counts_ERROR.dot");
         cout<<"Calculated total did not tally with double C counts!\n";
         cout<<"Last performed process: "<<jp.getName()<<", ID"<<jp.getID()<<'\n';
@@ -1810,8 +1967,8 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
         //if(C_2->C1->C3 != NULL) C_2->C1->C3->C3 = NULL;
         removeC(C_1->C2, true);
         removeC(C_2->C1, true);
-        newC1 = addC(C_1, normAngle(C_1->bondAngle1+120), 0);
-        newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1-60), normAngle(newC1->C1->bondAngle1-120));
+        newC1 = addC(C_1, normAngle(C_1->bondAngle1+120), 0, 1);
+        newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1-60), normAngle(newC1->C1->bondAngle1-120), 1);
     }else {
         // update bridges info, both are no longer bridges
         C_1->C2->C1 = C_1->C2->C3;// update neighbour
@@ -1826,8 +1983,8 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
         // connect C_1 and C_2
         connectToC(C_1, C_2);
         // Add C
-        newC1 = addC(C_1, normAngle(C_1->bondAngle1+120), 0);
-        newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1-60), normAngle(newC1->C1->bondAngle1-120));
+        newC1 = addC(C_1, normAngle(C_1->bondAngle1+120), 0, 1);
+        newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1-60), normAngle(newC1->C1->bondAngle1-120), 1);
     }
     //printStruct();
     // Add and remove H
@@ -1835,10 +1992,19 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // neighbouring sites:
     Spointer S1 = moveIt(stt, -1); 
     Spointer S2 = moveIt(stt, 1);
+	Spointer S5 = moveIt(S1, -1);
+	Spointer S6 = moveIt(S2, 1);
     // Update Site and neighbours
     updateSites(stt, newC1, newC2, -2);
     updateSites(S1, S1->C1, newC1, 1); // neighbours
     updateSites(S2, newC2, S2->C2, 1);
+	//Check for R5R6 sites and embed them
+	if ((int)S5->type == 20){
+		convSiteType(S5, S5->C1, S5->C2, (kmcSiteType)21);
+	}
+	if ((int)S6->type == 20){
+		convSiteType(S6, S6->C1, S6->C2, (kmcSiteType)21);
+	}
     // Update combined site for Site and neighbours
     Spointer S3, S4;
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
@@ -1859,10 +2025,10 @@ void PAHProcess::proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     if(checkHindrance(stt)) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
     // Add C
-    newC1 = addC(C_1, normAngle(C_1->bondAngle1+120),0);
-    newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60),0);
-    newC3 = addC(newC2, normAngle(newC2->C1->bondAngle1 - 60),0);
-    newC4 = addC(newC3, normAngle(newC3->C1->bondAngle1 - 60), normAngle(newC3->C1->bondAngle1 - 120));
+	newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
+	newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), 0, 1);
+	newC3 = addC(newC2, normAngle(newC2->C1->bondAngle1 - 60), 0, 1);
+	newC4 = addC(newC3, normAngle(newC3->C1->bondAngle1 - 60), normAngle(newC3->C1->bondAngle1 - 120), 1);
     //C_1->C3 = C_2; C_2->C3 = C_1;
     // Add and remove H
     updateA(C_1->C1, C_2->C2, 'H');
@@ -2023,11 +2189,11 @@ void PAHProcess::proc_PH_benz(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_typ
     // add C atoms
     Cpointer newC;
     newC = bridgeC(chosen);
-    newC = addC(newC, normAngle(chosen->bondAngle2+60), 0);
-    newC = addC(newC, normAngle(newC->C1->bondAngle1-60),0);
-    newC = addC(newC, normAngle(newC->C1->bondAngle1-60),0);
-    newC = addC(newC, normAngle(newC->C1->bondAngle1-60),0);
-    newC = addC(newC, normAngle(newC->C1->bondAngle1-60),normAngle(newC->C1->bondAngle1-120));
+	newC = addC(newC, normAngle(chosen->bondAngle2 + 60), 0, 1);
+	newC = addC(newC, normAngle(newC->C1->bondAngle1 - 60), 0, 1);
+	newC = addC(newC, normAngle(newC->C1->bondAngle1 - 60), 0, 1);
+	newC = addC(newC, normAngle(newC->C1->bondAngle1 - 60), 0, 1);
+	newC = addC(newC, normAngle(newC->C1->bondAngle1 - 60), normAngle(newC->C1->bondAngle1 - 120), 1);
     connectToC(newC, chosen->C3);
     // which site do we add the new sites before?
     Spointer addBefore;
@@ -2136,7 +2302,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
     C2_res = C_2->C2;
     // check if process will result in a bridge
     bool bridge = false;
-    cpair pos = jumpToPos(C1_res->coords, normAngle(C1_res->bondAngle1-120));
+    cpair pos = jumpToPos(C1_res->coords, normAngle(C1_res->bondAngle1-120), 1);
     if(m_pah->m_cpositions.count(pos)) return;//bridge = true;
     // check if site is next to a bridge
     bridge = (C1_res->bridge || C2_res->bridge);
@@ -2145,8 +2311,8 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
     removeC(C_1, false);
     removeC(C_2, false);
     //if(!bridge) {
-        addC(C1_res, normAngle(C1_res->bondAngle1-120), 0, true);
-        addC(C1_res->C2, normAngle(C1_res->bondAngle1+60), normAngle(C1_res->bondAngle1+120), true);
+		addC(C1_res, normAngle(C1_res->bondAngle1 - 120), 0, 1, true);
+		addC(C1_res->C2, normAngle(C1_res->bondAngle1 + 60), normAngle(C1_res->bondAngle1 + 120), 1, true);
     //}
     // update H
     updateA(C1_res, C2_res, 'H');
@@ -2181,8 +2347,8 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // member C atoms of resulting R5 site
     removeC(C_2->C1, true);
     Cpointer C1_res, C2_res;
-    C1_res = addC(C_1, normAngle(C_1->bondAngle1+120), 0);
-    C2_res = addC(C1_res, normAngle(C_1->bondAngle1-90), normAngle(C_1->bondAngle1-180));                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+    C1_res = addC(C_1, normAngle(C_1->bondAngle1+120), 0, 1);
+	C2_res = addC(C1_res, normAngle(C_1->bondAngle1 - 90), normAngle(C_1->bondAngle1 - 180), pow(3, 0.5));
     updateA(C_1->C1, C_2->C2, 'H');
     // update sites and neighbours
     convSiteType(stt, C1_res, C2_res, R5);
@@ -2199,7 +2365,7 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // add ring counts
-    m_pah->m_rings5++;
+    m_pah->m_rings5_Lone++;
 }
 // ************************************************************
 // ID11- R5 desorption (AR7 in Matlab)
@@ -2212,7 +2378,7 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     C2_res = C_2->C2;
     removeC(C_1, false);
     removeC(C_2, false);
-    addC(C1_res, normAngle(C1_res->C1->bondAngle1-60), normAngle(C1_res->C1->bondAngle1), true);
+    addC(C1_res, normAngle(C1_res->C1->bondAngle1-60), normAngle(C1_res->C1->bondAngle1), 1, true);
     updateA(C1_res->C1, C2_res->C2, 'H');
     // update sites and neighbours
     Spointer S1, S2, S3, S4;
@@ -2227,7 +2393,7 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // add ring counts
-    m_pah->m_rings5--;
+    m_pah->m_rings5_Lone--;
 }
 // ************************************************************
 // ID12- R6 conversion to R5 (AR9 in Matlab)
@@ -2272,8 +2438,10 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
     if(b4) Cstart = C2_res;
     else Cstart = C_1;
     removeC(Cstart->C2, true);
-    C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1+120), 0, false);
-    C2_R5 = addC(C1_R5, normAngle(Cstart->bondAngle1-90), normAngle(Cstart->bondAngle1-180), false);
+	C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1 + 120), 0, 1, false);
+	C2_R5 = addC(C1_R5, normAngle(Cstart->bondAngle1 - 90), normAngle(Cstart->bondAngle1 - 180), pow(3, 0.5), false);
+	//C2_R5->coords.first = C2_R5->coords.first + (pow(3.0,0.5)-1.0)*cos(normAngle(Cstart->bondAngle1 - 90)*M_PI / 180);
+	//C2_R5->coords.second = C2_R5->coords.second + (pow(3.0, 0.5) - 1.0)*sin(normAngle(Cstart->bondAngle1 - 90)*M_PI / 180);
     // update H atoms
     if(b4) updateA(C1_res->C1, C_2->C2, 'H');
     else updateA(C_1->C1, C2_res->C2, 'H');
@@ -2310,7 +2478,7 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
     addCount(0, -2);
     // add ring counts
     m_pah->m_rings--;
-    m_pah->m_rings5++;
+    m_pah->m_rings5_Lone++;
 }
 // ************************************************************
 // ID13- R5 conversion to R6 on FE (AR5 in Matlab)
@@ -2339,17 +2507,17 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     if(b4) Cstart = C_AC; 
     else Cstart = C_2->C1;
     for(int i=0; i!=2; i++) removeC(Cstart->C2, false);
-    addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60), true);
+    addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60), 1, true);
     // this new C atom is irrelevant. Next add a R6 on the resulting FE (from RFE)
     Cpointer C1_new, C2_new, C3_new, C4_new; // save all new C atoms
     if(b4) 
         Cstart = C_2->C1;
     else 
         Cstart = C_1;
-    C1_new = addC(Cstart, normAngle(Cstart->bondAngle1+120), 0);
-    C2_new = addC(C1_new, normAngle(C1_new->C1->bondAngle1-60), 0);
-    C3_new = addC(C2_new, normAngle(C2_new->C1->bondAngle1-60), 0);
-    C4_new = addC(C3_new, normAngle(C3_new->C1->bondAngle1-60), normAngle(C3_new->C1->bondAngle1-120));
+    C1_new = addC(Cstart, normAngle(Cstart->bondAngle1+120), 0, 1);
+    C2_new = addC(C1_new, normAngle(C1_new->C1->bondAngle1-60), 0, 1);
+    C3_new = addC(C2_new, normAngle(C2_new->C1->bondAngle1-60), 0, 1);
+    C4_new = addC(C3_new, normAngle(C3_new->C1->bondAngle1-60), normAngle(C3_new->C1->bondAngle1-120), 1);
     // edit sites. first identify the neighbouring sites of resulting AC & FE3
     Spointer S1, S2, S3, S4;
     if(b4) {
@@ -2385,13 +2553,14 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     addCount(0, 2);
     // add ring counts
     m_pah->m_rings++;
-    m_pah->m_rings5--;
+    m_pah->m_rings5_Lone--;
 }
 // ************************************************************
 // ID14- R5 conversion to R6 on AC (AR4 in Matlab)
 // ************************************************************
 void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
+	//printStruct();
     // check if R5 is before or after RAC
     bool b4 = false;
     if(moveIt(stt,-1)->type == R5) b4 = true;
@@ -2415,7 +2584,7 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     if(b4) Cstart = C_AC; 
     else Cstart = C_2->C1;
     for(int i=0; i!=2; i++) removeC(Cstart->C2, false);
-    addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60), true);
+    addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60), 1, true);
     // this new C atom is irrelevant. Next add a R6 on the resulting AC (from RAC)
     Cpointer C1_new, C2_new; // save all new C atoms
     if(b4) Cstart = C_AC->C2->C2;
@@ -2436,8 +2605,8 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
         b2->bondAngle1 = b2->bondAngle2;
         b2->bondAngle2 = a;
     }
-    C1_new = addC(Cstart, normAngle(Cstart->bondAngle1+120), 0);
-    C2_new = addC(C1_new, normAngle(C1_new->C1->bondAngle1-60), normAngle(C1_new->C1->bondAngle1-120));
+    C1_new = addC(Cstart, normAngle(Cstart->bondAngle1+120), 0, 1);
+    C2_new = addC(C1_new, normAngle(C1_new->C1->bondAngle1-60), normAngle(C1_new->C1->bondAngle1-120), 1);
     // edit sites. first identify the neighbouring sites of resulting AC & FE3
     Spointer S1, S2, S3, S4;
     if(b4) {
@@ -2467,7 +2636,7 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
     // add ring counts
     m_pah->m_rings++;
-    m_pah->m_rings5--;
+    m_pah->m_rings5_Lone--;
 }
 // ************************************************************
 // ID15- R5 migration to neighbouring ZZ (AR6 in Matlab)
@@ -2496,14 +2665,14 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     if(b4) Cstart = C_RZZ; 
     else Cstart = C_2->C1;
     for(int i=0; i!=2; i++) removeC(Cstart->C2, false);
-    addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60),true);
+    addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60),1, true);
     // Next add a R5 on the neighbouring ZZ
     Cpointer C1_R5, C2_R5; // save all new C atoms
     if(b4) Cstart = C_RZZ->C2->C2;
     else Cstart = C_1;
     removeC(Cstart->C2, true);
-    C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1+120), 0);
-    C2_R5 = addC(C1_R5, normAngle(C1_R5->C1->bondAngle1-90), normAngle(C1_R5->C1->bondAngle1-180));
+	C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1 + 120), 0, 1);
+	C2_R5 = addC(C1_R5, normAngle(C1_R5->C1->bondAngle1 - 90), normAngle(C1_R5->C1->bondAngle1 - 180), pow(3, 0.5));
     // edit sites. first identify the neighbouring sites of resulting RZZ & R5
     Spointer S1, S2, S3, S4;
     if(b4) {
@@ -2578,7 +2747,7 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     // now close BY5 to form R6. First remove all bulk C
     for(int i=0; i!=3; i++) removeC(C_1->C2, true);
     // add a C atom
-    addC(C_1, normAngle(C_1->bondAngle1+120), normAngle(C_1->bondAngle1+60));
+	addC(C_1, normAngle(C_1->bondAngle1 + 120), normAngle(C_1->bondAngle1 + 60), 1);
     // delete neighbouring (to sFE3) FE sites from site map. Identify them first:
     Spointer Srem1 = moveIt(sFE3,-1);
     Spointer Srem2 = moveIt(sFE3,1);
@@ -2617,7 +2786,7 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 
     addCount(0, -2);
     // add ring counts
-    m_pah->m_rings5++;
+    m_pah->m_rings5_Lone++;
     //printSites(stt);
    // cout<<sp.None;
 }
@@ -2665,14 +2834,14 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     // then remove all bulk C in the BY5
     for(int i=0; i!=3; i++) removeC(C_1->C2, true);
     // then add a C to convert it to R6
-    addC(C_1, normAngle(C_1->bondAngle1+120), normAngle(C_1->bondAngle1+60));
+    addC(C_1, normAngle(C_1->bondAngle1+120), normAngle(C_1->bondAngle1+60), 1);
     // next remove R6 neighbouring with the original R5. removing bulk C:
     Cpointer Cstart;
     if(b4) Cstart = C_1->C1->C1->C1->C1;
     else Cstart = C_2;
     for(int i=0; i!=3; i++) removeC(Cstart->C2, false);
     // then add a C
-    addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60), true);
+    addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60), 1, true);
     // delete neighbouring (to sFE3) FE sites from site map. Identify them first:
     Spointer Srem1 = moveIt(sFE3,-1);
     Spointer Srem2 = moveIt(sFE3,1);
@@ -2764,7 +2933,7 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     removeC(C_start->C2, false);
     removeC(C_start->C2, false);
     // add a C atom after C_start (bulk in ZZ)
-    addC(C_start, normAngle(C_start->bondAngle1-120), normAngle(C_start->bondAngle1-60), true);
+    addC(C_start, normAngle(C_start->bondAngle1-120), normAngle(C_start->bondAngle1-60), 1, true);
     // update H
     updateA(C_start, C_end, 'H');
     // Remove one of the FE in FE2
@@ -2790,6 +2959,597 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 void PAHProcess::proc_D6R_FE_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	proc_O6R_FE_HACA_O2(stt, C_1, C_2);
+}
+
+//
+// ************************************************************
+// ID22- Bay-capping
+// ************************************************************
+void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	//printSitesMemb(stt);
+	printStruct();//++++
+	Cpointer newC1;
+	Cpointer newC2;
+
+	//if(checkHindrance(stt)) {
+	//    /*cout<<"Site hindered, process not performed.\n"*/ return;}
+	if (!(C_1->C2->bridge) || !(C_2->C1->bridge)) { // check if bulk C in AC site is a bridge
+		// Add and remove C
+		//if(C_1->C2->C3 != NULL) C_1->C2->C3->C3 = NULL;
+		//if(C_2->C1->C3 != NULL) C_2->C1->C3->C3 = NULL;
+		removeC(C_1->C2, true);
+		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
+		removeC(newC1->C2, true);
+		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 -90), normAngle(newC1->C1->bondAngle1 - 150), 1+pow(3,0.5));
+	}
+	else {
+		// update bridges info, both are no longer bridges
+		C_1->C2->C1 = C_1->C2->C3;// update neighbour
+		C_2->C1->C2 = C_2->C1->C3;
+		C_1->C2->bridge = false;
+		C_2->C1->bridge = false;
+		angletype a = C_2->C1->bondAngle1;
+		C_2->C1->bondAngle1 = C_2->C1->bondAngle2;
+		C_2->C1->bondAngle2 = a;
+		//C_1->C2->C3 = NULL;
+		//C_2->C1->C3 = NULL;
+		// connect C_1 and C_2
+		connectToC(C_1, C_2);
+		// Add C
+		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
+		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 - 120), 1);
+	}
+	printStruct();
+	// Add and remove H
+	updateA(C_1, C_2, 'H');
+	// neighbouring sites:
+	Spointer S1 = moveIt(stt, -1);
+	Spointer S2 = moveIt(stt, 1);
+	// Update Site and neighbours
+	convSiteType(stt, newC1, newC2, (kmcSiteType)0);
+	updateSites(S1, S1->C1, newC1, 1); // neighbours
+	updateSites(S2, newC2, S2->C2, 1);
+	// Update combined site for Site and neighbours
+	Spointer S3, S4;
+	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+	updateCombinedSites(stt);
+	updateCombinedSites(S1); updateCombinedSites(S2);
+	updateCombinedSites(S3); updateCombinedSites(S4);
+	// add ring counts
+	m_pah->m_rings++;
+	m_pah->m_rings5_Lone--;
+	m_pah->m_rings5_Embedded++;
+	//printSites(stt);
+}
+
+// ************************************************************
+// ID23- Embedded 5-member ring migration to ZZ
+// ************************************************************
+void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	bool b4 = false;
+	//printStruct();
+	//printSites();
+	//Spointer S1 = moveIt(stt, -1);
+	if (moveIt(stt, -1)->comb == FE2 || moveIt(stt, 1)->comb == FE2) {
+		if (moveIt(stt, -1)->comb == FE2 && moveIt(stt, 1)->comb == FE2) {
+			// Define a distribution that has two equally probably outcomes
+			boost::bernoulli_distribution<> choiceDistrib;
+			// Now build an object that will generate a sample using rng
+			boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+			b4 = choiceGenerator(); // if FE3 on both sides, choose a random one
+		}
+		if (moveIt(stt, -1)->comb == FE2){
+			// Define a distribution that has two thirds to one third probably outcome
+			boost::bernoulli_distribution<> choiceDistrib(1.0/3.0);
+			// Now build an object that will generate a sample using rng
+			boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+			b4 = choiceGenerator(); 
+		}
+	}
+	else{
+		// Define a distribution that has two equally probably outcomes
+		boost::bernoulli_distribution<> choiceDistrib;
+		// Now build an object that will generate a sample using rng
+		boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+		b4 = choiceGenerator(); // if FE3 on both sides, choose a random one
+	}
+
+	Spointer sFE2;
+	Cpointer CRem, CFE;
+	if (b4) {
+		sFE2 = moveIt(stt, -1);
+		CFE = C_2->C1->C1;
+		CRem = sFE2->C2;
+	}
+	else {
+		sFE2 = moveIt(stt, 1);
+		CFE = C_1->C2;
+		CRem = sFE2->C1;
+	}
+	// add a C atom
+	addC(CFE, normAngle(CFE->bondAngle1 + 30), normAngle(CFE->bondAngle1 - 30), 1);
+	CRem->C1->bondAngle1 = normAngle(CRem->C1->bondAngle1 - 30);
+	removeC(CRem, false);
+	
+	/*// delete neighbouring (to sFE3) FE sites from site map. Identify them first:
+	// then remove them
+	if (b4){
+		Spointer Srem1 = moveIt(sFE2, -1);
+		removeSite(Srem1);
+	}
+	else{
+		Spointer Srem2 = moveIt(sFE2, 1);
+		removeSite(Srem2);
+	}
+	// edit sites. first identify the neighbouring sites of resulting RFE & R5
+	Spointer S1, S2, S3, S4;
+	Cpointer C21 = C_2->C1;
+	Cpointer C22 = C_2->C2;
+	Cpointer C11 = C_1->C1;
+	Cpointer C12 = C_1->C2;
+	if (b4) {
+		S1 = moveIt(sFE2, -1); // neighbour of FE3
+		Spointer stt2;
+		stt2 = moveIt(stt, 1);
+		convSiteType(sFE2, CFE->C1, CFE, R5); // convert FE3 to R5
+		convSiteType(stt, CFE, C_1->C2, RFE); // convert BY5 to RFE
+		addSite(ZZ, C21, C22, stt2);
+		updateSites(S1, S1->C1, CFE->C1, -1);
+		addR5toSite(S1, S1->C1, S1->C2); // remove a bulk C from S1 and add R5
+	}
+	else {
+		S2 = moveIt(sFE2, 1); // neighbour of FE3
+		convSiteType(sFE2, CFE, CFE->C2, R5); // convert FE3 to R5
+		convSiteType(stt, C_1->C2, CFE, RFE); // convert BY5 to RFE
+		addSite(ZZ, C11, C12, stt);
+		updateSites(S2, CFE->C2, S2->C2, -1);
+		addR5toSite(S2, S2->C1, S2->C2); // remove a bulk C from S2 and add R5
+	}
+	// update H atoms
+	if (b4){
+		updateA(S1->C2->C1, C_2, 'H');
+	}
+	else{
+		updateA(C_1, S2->C1->C2, 'H');
+	}
+
+	// update combined sites for all sites involved and their neighbours
+	// (excluding new FE sites, since their combined site type will still be None)
+	if (b4){
+		S3 = moveIt(S1, -1);
+	}
+	else{
+		S4 = moveIt(S2, 1);
+	}
+	updateCombinedSites(stt); updateCombinedSites(sFE2); // new R5 and RFE
+	if (b4){
+		updateCombinedSites(S1); updateCombinedSites(S3);
+	}
+	else{
+		updateCombinedSites(S2); updateCombinedSites(S4); // neighbours
+	}*/
+
+	//GL413 try :P
+	//printStruct();
+	
+	//Reassign connectivity at next site
+	if (b4) sFE2->C2 = C_2->C1->C1;
+	else sFE2->C1 = C_1->C2->C2;
+
+	// edit sites. first identify the neighbouring sites of resulting RFE & R5
+	Spointer S1, S2, S3, S4;
+	Cpointer C21 = C_2->C1;
+	Cpointer C22 = C_2->C2;
+	Cpointer C11 = C_1->C1;
+	Cpointer C12 = C_1->C2;
+	if (b4) {
+		S1 = moveIt(sFE2, -1);
+		if ((int)sFE2->type == 0){ //sFE2 is a FE
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
+			updateSites(S1, S1->C1, sFE2->C1, 5);
+		}
+		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
+		}
+		else if ((int)sFE2->type == 2){ //sFE2 is a AC
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, BY5R5);
+		}
+		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, BY6); //BY6 with an R5 inside is treated same as a BY6
+		}
+		convSiteType(stt, sFE2->C2, stt->C2, ZZ);
+
+	}
+	else {
+		S2 = moveIt(sFE2, 1); 
+		if ((int)sFE2->type == 0){ //sFE2 is a FE
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
+			updateSites(S2, sFE2->C2, S2->C2, 5);
+		}
+		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
+		}
+		else if ((int)sFE2->type == 2){ //sFE2 is a AC
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, BY5R5);
+		}
+		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, BY6); //BY6 with an R5 inside is treated same as a BY6
+		}
+		convSiteType(stt, stt->C1, sFE2->C1, ZZ);
+	}
+	// update H atoms
+	if (b4){
+		updateA(S1->C2->C1, C_2, 'H');
+	}
+	else{
+		updateA(C_1, S2->C1->C2, 'H');
+	}
+	//printStruct();
+	// update combined sites for all sites involved and their neighbours
+	// (excluding new FE sites, since their combined site type will still be None)
+	if (b4){
+		S3 = moveIt(S1, -1);
+	}
+	else{
+		S4 = moveIt(S2, 1);
+	}
+	updateCombinedSites(stt); updateCombinedSites(sFE2); 
+	if (b4){
+		updateCombinedSites(S1);
+		updateCombinedSites(S3);
+	}
+	else{
+		updateCombinedSites(S2);
+		updateCombinedSites(S4); // neighbours
+	}
+}
+
+// ************************************************************
+// ID24 - R6 growth on RZZ 
+// ************************************************************
+void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	//printSitesMemb(stt);
+	//printStruct();//++++
+	Cpointer newC1;
+	Cpointer newC2;
+	if (checkHindrance(stt)) {
+		/*cout<<"Site hindered, process not performed.\n"*/ return;
+	}
+	if (!(C_1->C2->bridge) || !(C_2->C1->bridge)) { // check if bulk C in AC site is a bridge
+		// Add and remove C
+		//if(C_1->C2->C3 != NULL) C_1->C2->C3->C3 = NULL;
+		//if(C_2->C1->C3 != NULL) C_2->C1->C3->C3 = NULL;
+		removeC(C_1->C2, true);
+		removeC(C_2->C1, true);
+		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
+		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 - 120), 1);
+	}
+	else {
+		// update bridges info, both are no longer bridges
+		C_1->C2->C1 = C_1->C2->C3;// update neighbour
+		C_2->C1->C2 = C_2->C1->C3;
+		C_1->C2->bridge = false;
+		C_2->C1->bridge = false;
+		angletype a = C_2->C1->bondAngle1;
+		C_2->C1->bondAngle1 = C_2->C1->bondAngle2;
+		C_2->C1->bondAngle2 = a;
+		//C_1->C2->C3 = NULL;
+		//C_2->C1->C3 = NULL;
+		// connect C_1 and C_2
+		connectToC(C_1, C_2);
+		// Add C
+		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
+		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 - 120), 1);
+	}
+	//printStruct();
+	// Add and remove HR
+	updateA(C_1->C1, C_2->C2, 'H');
+	// neighbouring sites:
+	Spointer S1 = moveIt(stt, -1);
+	Spointer S2 = moveIt(stt, 1);
+	// Update Site and neighbours
+	convSiteType(stt, newC1, newC2, (kmcSiteType) 0); // Converts RZZ to FE
+	if (S1->type == R5){ 
+		convSiteType(S1, S1->C1, stt->C1, (kmcSiteType)20); // Converts R5 to R5R6}
+		updateSites(S2, newC2, S2->C2, 1); 
+	}
+	else if (S1->type == R5R6)
+	{
+		convSiteType(S1, S1->C1, S1->C2->C2, (kmcSiteType)18); // Converts R5R6 to ACR5}
+		updateSites(S2, newC2, S2->C2, 1);
+	} 
+	else if(S1->type == R5R6_emb){
+		convSiteType(S1, S1->C1, S1->C2->C2, (kmcSiteType)22); // Converts R5R6 to BY5R5}
+		updateSites(S2, newC2, S2->C2, 1); 
+	}
+
+	else if (S2->type == R5) {
+		convSiteType(S2, stt->C2, S2->C2, (kmcSiteType)20); // Converts R5 to R5R6}
+		updateSites(S1, S1->C1, newC1, 1);
+	}
+	else if (S2->type == R5R6){
+		convSiteType(S2, S2->C1->C1, S2->C2, (kmcSiteType)18); // Converts R5 to ACR5}
+		updateSites(S1, S1->C1, newC1, 1);
+	} 
+	else if (S2->type == R5R6_emb){
+		convSiteType(S2, S2->C1->C1, S2->C2, (kmcSiteType)22); // Converts R5 to BY5R5}
+		updateSites(S1, S1->C1, newC1, 1);
+	}
+
+	
+	// Update combined site for Site and neighbours
+	Spointer S3, S4;
+	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+	updateCombinedSites(stt);
+	updateCombinedSites(S1); updateCombinedSites(S2);
+	updateCombinedSites(S3); updateCombinedSites(S4);
+	// add ring counts
+	m_pah->m_rings++;
+	//printSites(stt);
+	//printStruct();
+}
+
+
+// ************************************************************
+// ID25 - R6 growth on RFER 
+// ************************************************************
+void PAHProcess::proc_G6R_RFER(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	proc_G6R_AC(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID26 - R6 growth on R5
+// ************************************************************
+void PAHProcess::proc_G6R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	//    printSites(stt);
+	Cpointer newC1, newC2, newC3, newC4;
+	if (checkHindrance(stt)) {
+		/*cout<<"Site hindered, process not performed.\n"*/ return;
+	}
+	//First we need to resize the R5 bond length or our R6s will be huge.
+	moveC(C_1, C_1->bondAngle1, C_1->bondAngle2, 0.5*(pow(3,0.5)-1));
+	moveC(C_2, C_1->bondAngle1, C_1->bondAngle2, -0.5*(pow(3, 0.5) - 1));
+
+	// Add C
+	newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
+	newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), 0, 1);
+	newC3 = addC(newC2, normAngle(newC2->C1->bondAngle1 - 60), 0, 1);
+	newC4 = addC(newC3, normAngle(newC3->C1->bondAngle1 - 60), normAngle(newC3->C1->bondAngle1 - 120), 1);
+	//C_1->C3 = C_2; C_2->C3 = C_1;
+	// Add and remove H
+	updateA(C_1->C1, C_2->C2, 'H');
+	// neighbouring sites:
+	Spointer S1 = moveIt(stt, -1);
+	Spointer S2 = moveIt(stt, 1);
+	// Update Site and neighbours
+	updateSites(stt, newC2, newC3, 0);
+	updateSites(S1, S1->C1, newC1, 1);
+	updateSites(S2, newC4, S2->C2, 1);
+	// Add new Sites
+	Spointer newS1 = addSite(FE, newC3, newC4, S2);
+	Spointer newS2 = addSite(FE, newC2, newC3, newS1);
+	Spointer newS3 = addSite(FE, newC1, newC2, newS2);
+	
+	// Update combined sites for all new sites and original neighbours
+	Spointer S3, S4;
+	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+	updateCombinedSites(stt);
+	updateCombinedSites(newS1); updateCombinedSites(newS2); // new sites
+	updateCombinedSites(S1); updateCombinedSites(S2); // original neighbours
+	updateCombinedSites(S3); updateCombinedSites(S4); // neighbours of neighbours
+	// Add H count
+	addCount(0, 2);
+	// add ring counts
+	m_pah->m_rings++;
+}
+
+// ************************************************************
+// ID27 - RBY5 closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_RBY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	proc_L6_BY6(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID28 - RACR closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_RACR(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	proc_L6_BY6(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID29 - R5 growth on RFE 
+// ************************************************************
+void PAHProcess::proc_G5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	proc_G5R_ZZ(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID30 - R6 migration & conversion to R5 at RAC
+// ************************************************************
+void PAHProcess::proc_C6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_C6R_BY5_FE3(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID31 - R6 migration & conversion to R5 at RAC
+// ************************************************************
+void PAHProcess::proc_C6R_RAC_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_C6R_BY5_FE3(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID32 - R6 desorption at RAC -> pyrene
+// ************************************************************
+void PAHProcess::proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_M6R_BY5_FE3(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID34- R5 exchange with R6 
+// ************************************************************
+void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	//printStruct();
+	//First check if R6 is to the left or the right of R5
+	bool b4 = false;
+	Spointer sFE2, checksite;
+	Cpointer CRem, CFE;
+	checksite = moveIt(stt, -1);
+	if ((int)checksite->type < 4) b4 = true ;
+
+	if (b4) {
+		sFE2 = moveIt(stt, -1);
+		CFE = C_1->C2;
+		CRem = sFE2->C2;
+	}
+	else {
+		sFE2 = moveIt(stt, 1);
+		CFE = C_1;
+		CRem = sFE2->C1;
+	}
+	// add a C atom
+	addC(CFE, normAngle(CFE->bondAngle1 + 30), normAngle(CFE->bondAngle1 - 30), 1);
+	CRem->C1->bondAngle1 = normAngle(CRem->C1->bondAngle1 - 30);
+	//printStruct(CRem);
+	removeC(CRem, false);
+	if (b4) sFE2->C2 = C_2->C1;
+	else sFE2->C1 = C_1->C2;
+
+	// edit sites. first identify the neighbouring sites of resulting RFE & R5
+	Spointer S1, S2, S3, S4;
+	Cpointer C21 = C_2->C1;
+	Cpointer C22 = C_2->C2;
+	Cpointer C11 = C_1->C1;
+	Cpointer C12 = C_1->C2;
+	if (b4) {
+		S1 = moveIt(sFE2, -1);
+		if ((int)sFE2->type == 0){ //sFE2 is a FE
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
+			updateSites(S1, S1->C1, sFE2->C1, 5);
+		}
+		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
+		}
+		else if ((int)sFE2->type == 2){ //sFE2 is a AC
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, BY5R5);
+		}
+		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, BY6); //BY6 with an R5 inside is treated same as a BY6
+		}
+		convSiteType(stt, stt->C2->C1, stt->C2, FE); //stt is originally the R5R6 site that will become the new FE site
+		S2 = moveIt(stt, 1); // neighbour of stt
+		updateSites(S2, stt->C2, S2->C2, -5); //convert the neighbour to its same version but next to an R5
+	}
+	else {
+		S2 = moveIt(sFE2, 1);
+		if ((int)sFE2->type == 0){ //sFE2 is a FE
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
+			updateSites(S2, sFE2->C2, S2->C2, 5);
+		}
+		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
+		}
+		else if ((int)sFE2->type == 2){ //sFE2 is a AC
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, BY5R5);
+		}
+		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, BY6); //BY6 with an R5 inside is treated same as a BY6
+		}
+		convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
+		S1 = moveIt(stt, -1); // neighbour of stt
+		updateSites(S1, S1->C1, stt->C1, -5); //convert the neighbour to its same version but NOT next to an R5
+	}
+	// update H atoms
+	if (b4){
+		updateA(S1->C2->C1, C_2, 'H');
+	}
+	else{
+		updateA(C_1, S2->C1->C2, 'H');
+	}
+	//printStruct();
+	// update combined sites for all sites involved and their neighbours
+	// (excluding new FE sites, since their combined site type will still be None)
+	if (b4){
+		S3 = moveIt(S1, -1);
+	}
+	else{
+		S4 = moveIt(S2, 1);
+	}
+	updateCombinedSites(stt); updateCombinedSites(sFE2); updateCombinedSites(S1); updateCombinedSites(S2);
+	if (b4){
+		updateCombinedSites(S3);
+	}
+	else{
+		updateCombinedSites(S4); // neighbours
+	}
+}
+
+// ************************************************************
+// ID35- R7 growth on embedded-obstructed R5
+// ************************************************************
+void PAHProcess::proc_GR7_BY5R5(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	//printSitesMemb(stt);
+	//printStruct();//++++
+	Cpointer newC1;
+	Cpointer newC2;
+	if (checkHindrance(stt)) {
+		/*cout<<"Site hindered, process not performed.\n"*/ return;
+	}
+	if (!(C_1->C2->bridge) || !(C_2->C1->bridge)) { // check if bulk C in AC site is a bridge
+		// Add and remove C
+		//if(C_1->C2->C3 != NULL) C_1->C2->C3->C3 = NULL;
+		//if(C_2->C1->C3 != NULL) C_2->C1->C3->C3 = NULL;
+		removeC(C_1->C2, true);
+		removeC(C_1->C2, true);
+		removeC(C_2->C1, true);
+		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
+		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 - 120), 1);
+	}
+	else {
+		// update bridges info, both are no longer bridges
+		C_1->C2->C1 = C_1->C2->C3;// update neighbour
+		C_2->C1->C2 = C_2->C1->C3;
+		C_1->C2->bridge = false;
+		C_2->C1->bridge = false;
+		angletype a = C_2->C1->bondAngle1;
+		C_2->C1->bondAngle1 = C_2->C1->bondAngle2;
+		C_2->C1->bondAngle2 = a;
+		//C_1->C2->C3 = NULL;
+		//C_2->C1->C3 = NULL;
+		// connect C_1 and C_2
+		connectToC(C_1, C_2);
+		// Add C
+		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
+		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 - 120), 1);
+	}
+	//printStruct();
+	// Add and remove H
+	updateA(C_1->C1, C_2->C2, 'H');
+	// neighbouring sites:
+	Spointer S1 = moveIt(stt, -1);
+	Spointer S2 = moveIt(stt, 1);
+	Spointer S5 = moveIt(S1, -1);
+	Spointer S6 = moveIt(S2, 1);
+	// Update Site and neighbours
+	convSiteType (stt, newC1, newC2, FE); //FE of an heptagon
+	updateSites(S1, S1->C1, newC1, 1); // neighbours
+	updateSites(S2, newC2, S2->C2, 1);
+	//Check for R5R6 sites and embed them
+	if ((int)S5->type == 20){
+		convSiteType(S5, S5->C1, S5->C2, (kmcSiteType)21);
+	}
+	if ((int)S6->type == 20){
+		convSiteType(S6, S6->C1, S6->C2, (kmcSiteType)21);
+	}
+	// Update combined site for Site and neighbours
+	Spointer S3, S4;
+	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+	updateCombinedSites(stt);
+	updateCombinedSites(S1); updateCombinedSites(S2);
+	updateCombinedSites(S3); updateCombinedSites(S4);
+	// add ring counts
+	m_pah->m_rings7_Embedded++;
+	//printSites(stt);
 }
 
 size_t PAHProcess::SiteListSize() const {

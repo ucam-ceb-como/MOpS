@@ -64,8 +64,14 @@ namespace Sweep {
             FE3=13, AC_FE3=14, FE_HACA=15, BY5_FE3=16,
             // Combined Sites: FE2:FE with FE at one side, but not an FE3
             FE2=17,
-            // 
-            // Combined Sites
+			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
+			ACR5 = 18,
+			//
+			RAC_FE3 = 19,
+			// R5 shoulder with shoulder with an R6
+			R5R6 = 20, R5R6_emb = 21, BY5R5 = 22,
+			//eBY5 = 20,
+			// Combined Sites
             None,
             // Error ID
             Inv=-1,
@@ -104,8 +110,9 @@ namespace Sweep {
         //! typedefs used in the model
         typedef std::vector<double> rvector;
         typedef std::vector<int> intvector;
-        typedef int angletype;
-        typedef int coordtype;
+        typedef double angletype; //Changed to allow changing the side length of a R5 (gl413)
+		typedef double bondlength; //Changed to allow changing the side length of a R5 (gl413)
+        typedef double coordtype; //Changed to allow changing the side length of a R5 (gl413)
         typedef std::pair<coordtype, coordtype> cpair;
         typedef std::pair<int, int> intpair;
         
@@ -131,6 +138,11 @@ namespace Sweep {
                 case FE_HACA: return "FE_HACA";
                 case BY5_FE3: return "BY5_FE3";
                 case FE2: return "FE2";
+				case ACR5: return "ACR5";
+				case RAC_FE3: return "RAC_FE3";
+				case R5R6: return "R5R6";
+				case R5R6_emb: return "R5R6_emb";
+				case BY5R5: return "BY5R5";
                 case None: return "None";
                 case Inv: return "Invalid";
                 case any: return "any";
@@ -155,6 +167,10 @@ namespace Sweep {
             else if(str == "RFER") return RFER;
             else if(str == "RZZR") return RZZR;
             else if(str == "RACR") return RACR;
+			else if (str == "ACR5") return ACR5;
+			else if (str == "R5R6") return R5R6;
+			else if (str == "R5R6_emb") return R5R6_emb;
+			else if (str == "BY5R5") return BY5R5;
             return Inv;
         }
         //! Get a vector of all site types
@@ -178,6 +194,11 @@ namespace Sweep {
             temp.push_back(AC_FE3);
             temp.push_back(FE_HACA);
             temp.push_back(BY5_FE3);
+			temp.push_back(ACR5);
+			temp.push_back(RAC_FE3);
+			temp.push_back(R5R6);
+			temp.push_back(R5R6_emb);
+			temp.push_back(BY5R5);
             return temp;
         }
         //! Get a vector of all site types for phenyl addition

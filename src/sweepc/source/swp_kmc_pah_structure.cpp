@@ -70,7 +70,10 @@ PAHStructure::PAHStructure() {
     m_cfirst = NULLC;
     m_clast = NULLC;
     m_rings = 0;
-    m_rings5 = 0;
+	m_rings5_Lone = 0;
+	m_rings5_Embedded = 0;
+	m_rings7_Lone = 0;
+	m_rings7_Embedded = 0;
     m_counts = intpair(0, 0);
     m_parent = NULL;
 }
@@ -119,8 +122,10 @@ void PAHStructure::clear() {
     m_counts.first = 0;
     m_counts.second = 0;
     m_cpositions.clear();
-    m_rings = 0;
-    m_rings5 = 0;
+	m_rings5_Lone = 0;
+	m_rings5_Embedded = 0;
+	m_rings7_Lone = 0;
+	m_rings7_Embedded = 0;
 }
 
 void PAHStructure::setParent(Sweep::AggModels::PAH* parent) {
@@ -151,8 +156,20 @@ int PAHStructure::numofRings() const{
     return m_rings;
 }
 
-int PAHStructure::numofRings5() const{
-    return m_rings5;
+int PAHStructure::numofLoneRings5() const{
+	return m_rings5_Lone;
+}
+
+int PAHStructure::numofEmbeddedRings5() const{
+	return m_rings5_Embedded;
+}
+
+int PAHStructure::numofLoneRings7() const{
+	return m_rings7_Lone;
+}
+
+int PAHStructure::numofEmbeddedRings7() const{
+	return m_rings7_Embedded;
 }
 
 int PAHStructure::numofEdgeC() const{
@@ -179,9 +196,24 @@ void PAHStructure::setnumofRings(int val)
     m_rings=val;
 }
 
-void PAHStructure::setnumofRings5(int val)
+void PAHStructure::setnumofLoneRings5(int val)
 {
-    m_rings5=val;
+	m_rings5_Lone = val;
+}
+
+void PAHStructure::setnumofEmbeddedRings5(int val)
+{
+	m_rings5_Embedded = val;
+}
+
+void PAHStructure::setnumofLoneRings7(int val)
+{
+	m_rings7_Lone = val;
+}
+
+void PAHStructure::setnumofEmbeddedRings7(int val)
+{
+	m_rings7_Embedded = val;
 }
 
 void PAHStructure::initialise(StartingStructure ss) {
@@ -220,8 +252,11 @@ void PAHStructure::Serialize(std::ostream &out) const
     val=numofRings();
     out.write((char*)&(val), sizeof(val));
 
-    val=numofRings5();
-    out.write((char*)&(val), sizeof(val));
+	val = numofLoneRings5();
+	out.write((char*)&(val), sizeof(val));
+
+	val = numofEmbeddedRings5();
+	out.write((char*)&(val), sizeof(val));
 
     PAHStructure m_copy (*this);
     PAHProcess p(m_copy);
@@ -240,8 +275,17 @@ void PAHStructure::Deserialize(std::istream &in)
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     int temp_numofRings = val;
 
-    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    int temp_numofRings5 = val;
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofLoneRings5 = val;
+
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofEmbeddedRings5 = val;
+
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofLoneRings7 = val;
+
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofEmbeddedRings7 = val;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     name = new char[val];
@@ -250,7 +294,7 @@ void PAHStructure::Deserialize(std::istream &in)
     delete [] name;
 
     PAHProcess p(*this);
-    p.initialise(m_SiteName, temp_numofRings, temp_numofRings5);
+	p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7);
 }
 
 void PAHStructure::WriteCposition(std::ostream &out) const
