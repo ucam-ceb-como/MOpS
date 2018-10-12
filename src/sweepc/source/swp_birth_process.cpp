@@ -114,7 +114,7 @@ void BirthProcess::SetProcessSwitch(const bool s) {
 // INFORMATION FOR THE SOLVER
 // Does the Cell inflow have particles present?
 bool BirthProcess::HasParticlesInCell() const {
-    if (m_cell->Particles().Count()>0u) return true;
+    if ((m_cell->Particles().Count() + m_cell->Particles().GetTotalParticleNumber()) > 0u) return true;
     else return false;
 }
 
@@ -160,8 +160,8 @@ double BirthProcess::InternalRate(
         const Geometry::LocalGeometry1d &local_geom) const {
     if (m_cell == NULL) throw runtime_error("No cell specified for sampling."
                 " (Sweep, BirthProcess::InternalRate)");
-
-    return A() * (double) m_cell->Particles().Count();
+	unsigned int n_total = m_cell->Particles().Count() + m_cell->Particles().GetTotalParticleNumber();
+	return A() * (double)n_total;
 }
 
 // RATE TERM CALCULATIONS.
@@ -205,14 +205,58 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
         throw runtime_error("No cell specified for sampling."
             " (Sweep, BirthProcess::Perform)");
 
-    int i = m_cell->Particles().Select(rng);
+	int i = 0;
+	if (!(m_mech->IsHybrid()))
+		i = m_cell->Particles().Select(rng);
+	else
+	{
+		// Check if should add from ensemble or bin
+		unsigned int ntotal_pn = m_cell->Particles().GetTotalParticleNumber();
+		unsigned int ntotal_ens = m_cell->ParticleCount();
+		boost::uniform_01<rng_type&, double> unifDistrib(rng);
+		double test = unifDistrib() * (ntotal_pn + ntotal_ens);
+		if (ntotal_pn >= test)
+		{
 
-    DoParticleBirth(t, i, sys,
-        m_cell->Particles().At(i)->getStatisticalWeight() * F(sys),
-        rng);
+			double repeats = F(sys);
+			if ((repeats > 0.0) && (repeats != floor(repeats))) {
+				boost::random::bernoulli_distribution<double> decider(repeats);
+				repeats = floor(repeats);
+				if (decider(rng))
+					repeats += 1;
+			}
+
+			unsigned int index = m_mech->SetRandomParticle(false, false, m_cell->Particles(), t, test, iUniform, rng);
+
+			sys.Particles().UpdateTotalsWithIndex(index, repeats);
+			sys.Particles().UpdateNumberAtIndex(index, (int)repeats);
+			sys.Particles().UpdateTotalParticleNumber((int)repeats);
+
+            // aab64 Here there should be a check that the index chosen is smaller than the threshold size
+			// because nothing stops the stream having a larger threshold size than current system.
+			// In that instance, particles could be added to the ensemble like with surface growth. 
+			// However this cannot be done here easily because it requires construction of the new particles. 
+			if (m_cell->Particles().GetCritialNumber() > sys.Particles().GetCritialNumber())
+				std::cout << "Particle-number model: mixture threshold larger than reactor threshold could inflow particle that cannot be stored\n";
+
+			i = -1;
+		}
+		else
+		{
+			i = m_cell->Particles().Select_usingGivenRand(iUniform, test - ntotal_pn, rng);
+		}
+
+	}
+    
+	if (i >= 0)
+	{
+		DoParticleBirth(t, i, sys,
+			m_cell->Particles().At(i)->getStatisticalWeight() * F(sys),
+			rng);
+		}
 
 	// aab64 Update particle temperature after heat transfer period
-	adjustParticleTemperature(sys, m_cell->Particles().At(i)->getStatisticalWeight() * F(sys), 1, sys.GetIsAdiabaticFlag(), 0, 4);
+	//adjustParticleTemperature(sys, m_cell->Particles().At(i)->getStatisticalWeight() * F(sys), 1, sys.GetIsAdiabaticFlag(), 0, 4);
 
     return 0;
 }

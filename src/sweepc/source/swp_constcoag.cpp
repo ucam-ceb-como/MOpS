@@ -182,7 +182,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip1 == -2)
 	{
-		unsigned int index1 = m_mech->SetRandomParticle(true, false, sys, t, alpha1 - n_other, iUniform, rng);
+		unsigned int index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1 - n_other, iUniform, rng);
 		if (index1 >= sys.Particles().GetCritialNumber())
 			std::cout << "Index1 is too large\n";
 
@@ -237,7 +237,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	if (hybrid_flag && ip2 == -2)
 	{
 		int ip1_adjustment = 0;
-		index2 = m_mech->SetRandomParticle(false, true, sys, t, alpha2 - n_other, iUniform, rng);
+		index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2 - n_other, iUniform, rng);
 		if (index2 >= sys.Particles().GetCritialNumber())
 			std::cout << "Index2 is too large\n";
 		// Note don't need to add it to the ensemble unless coagulation is successful

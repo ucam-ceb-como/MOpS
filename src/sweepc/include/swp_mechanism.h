@@ -348,7 +348,7 @@ public:
 	unsigned int SetRandomParticle(
 		bool isSP1,
 		bool isSP2,
-		Cell &sys, 
+		Sweep::Ensemble &ens,
 		double t,
 		double random_number, 
 		Sweep::PropID prop,

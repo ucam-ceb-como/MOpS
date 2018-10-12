@@ -1594,13 +1594,13 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 
 //! Compute nth diameter moment, adjusted because distribution is truncated
 //! to maximum/minimum physical particle size thresholds (conditional expectation)
-unsigned int Mechanism::SetRandomParticle(bool isSP1, bool isSP2, Cell &sys, double t, double random_number,
+unsigned int Mechanism::SetRandomParticle(bool isSP1, bool isSP2, Sweep::Ensemble &ens, double t, double random_number,
 	Sweep::PropID prop, rng_type &rng) const
 {		
 	// Generate a random number
 	double alpha = random_number;
 
-	unsigned int critical_index = sys.Particles().GetCritialNumber();
+	unsigned int critical_index = ens.GetCritialNumber();
 	unsigned int index = 0;
 	bool canstop = false;
 
@@ -1611,7 +1611,7 @@ unsigned int Mechanism::SetRandomParticle(bool isSP1, bool isSP2, Cell &sys, dou
 		unsigned int n_index = 0;
 		while (index < critical_index && !canstop)
 		{
-			n_index = sys.Particles().NumberAtIndex(index);
+			n_index = ens.NumberAtIndex(index);
 			if (n_index >= alpha && n_index > 0)
 				canstop = true;
 			else
@@ -1626,7 +1626,7 @@ unsigned int Mechanism::SetRandomParticle(bool isSP1, bool isSP2, Cell &sys, dou
 		double n_index = 0.0;
 		while (index < critical_index && !canstop)
 		{
-			n_index = (double)(sys.Particles().NumberAtIndex(index)) * sys.Particles().PropertyAtIndex(prop, index);
+			n_index = (double)(ens.NumberAtIndex(index)) * ens.PropertyAtIndex(prop, index);
 			if ((n_index >= alpha) && (n_index > 0.0))
 				canstop = true;
 			else
