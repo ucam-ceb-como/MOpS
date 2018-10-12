@@ -386,7 +386,7 @@ m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
  * Weighted coagulation is not symmetric, nothing happens to the second particle,
  * it simply defined a size increment for the first particle.
  */
-int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop1,
+/*int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop1,
                                  const Sweep::PropID prop2,
                                  const Sweep::Processes::CoagWeightRule weight_rule,
                                  Cell &sys, rng_type &rng,
@@ -653,6 +653,267 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	}
 	
     return 0;
+}*/
+
+
+/*!
+*@param[in]        t           Time at which coagulation is being performed
+*@param[in]        prop1       Rule for choosing first particle
+*@param[in]        prop2       Rule for choosing second particle
+*@param[in]        weight_rule Specify how to combine particle weights
+*@param[in,out]    sys         Cell containing particles that are coagulating
+*@param[in,out]    rng         Random number generator
+*@param[in]        maj         Specify which majorant to use
+*
+*@return       Negative on failure, 0 on success
+*
+* Weighted coagulation is not symmetric, nothing happens to the second particle,
+* it simply defined a size increment for the first particle.
+*/
+// aab64 Alterred to accommodate particle-number model
+int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop1,
+	const Sweep::PropID prop2,
+	const Sweep::Processes::CoagWeightRule weight_rule,
+	Cell &sys, rng_type &rng,
+	MajorantType maj) const {
+
+	PartPtrVector dummy;
+	
+	unsigned int index1 = 0, index2 = 0;
+	bool ip1_flag = false, ip2_flag = false;
+
+	// Choose and get first particle, then update it.
+	Particle *sp1 = NULL;
+
+	// Is this an incepting class particle?
+	int ip1 = ChooseIndexWeightedCoag(t, prop1, sys, rng);
+	if (ip1 < 0)
+	{
+		index1 = -1 * ip1;
+		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
+		sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
+		sp1->SetTime(t);
+		sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
+		sys.Particles().UpdateNumberAtIndex(index1, -1);
+		sys.Particles().UpdateTotalParticleNumber(-1);
+		ip1 = sys.Particles().Add(*sp1, rng);
+	}
+	else
+	{
+		if (ip1 >= 0) {
+			sp1 = sys.Particles().At(ip1);
+		}
+		else {
+			// Failed to choose a particle.
+			return -1;
+		}
+	}
+
+	// Choose and get unique second particle, then update it.  Note, we are allowed to do
+	// this even if the first particle was invalidated.
+	int ip2 = ip1;
+	unsigned int guard = 0;
+	while ((ip2 == ip1) && (++guard < 1000))
+		ip2 = ChooseIndexWeightedCoag(t, prop2, sys, rng);
+
+	Particle *sp2 = NULL;
+
+	// Is this an incepting class particle?
+	if (ip2 < 0)
+	{
+		index2 = -1 * ip2;
+		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
+		// Note don't need to add it to the ensemble
+		sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
+		sp2->SetTime(t);
+	}
+	else
+	{
+		if ((ip2 >= 0) && (ip2 != ip1)) {
+			sp2 = sys.Particles().At(ip2);
+		}
+		else {
+			// Failed to select a unique particle.
+			return -1;
+		}
+	}
+
+	//Calculate the majorant rate before updating the particles
+	const double majk = MajorantKernel(*sp1, *sp2, sys, maj);
+
+	//Update the particles
+	if (t > sp1->LastUpdateTime())
+		m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
+	// Check that particle is still valid.  If not,
+	// remove it and cease coagulating.
+	if (!sp1->IsValid()) {
+		// Must remove first particle now.
+		sys.Particles().Remove(ip1);
+
+		// Invalidating the index tells this routine not to perform coagulation.
+		ip1 = -1;
+		return 0;
+	}
+
+	if (t > sp2->LastUpdateTime())
+		m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
+	// Check validity of particles after update.
+	if (!sp2->IsValid()) {
+		// Tell the ensemble to update particle one before we confuse things
+		// by removing particle 2
+		sys.Particles().Update(ip1);
+
+		// Must remove second particle now.
+		if (!ip2_flag)
+			sys.Particles().Remove(ip2);
+		else
+		{
+			delete sp2;
+			sp2 = NULL;
+		}
+		// Invalidating the index tells this routine not to perform coagulation.
+		ip2 = -1;
+
+		return 0;
+	}
+
+	// Check that both the particles are still valid.
+	if ((ip1 != -1) && (ip2 != -1)) {
+		// Must check for ficticious event now by comparing the original
+		// majorant rate and the current (after updates) true rate.
+
+		double truek = CoagKernel(*sp1, *sp2, sys);
+		double ceff = 0;
+		if (majk < truek)
+			std::cout << "maj< true" << std::endl;
+
+		//added by ms785 to include the collision efficiency in the calculation of the rate
+		if (sys.ParticleModel()->AggModel() == AggModels::PAH_KMC_ID)
+		{
+			ceff = sys.ParticleModel()->CollisionEff(sp1, sp2);
+			truek *= ceff;
+		}
+
+		if (!Fictitious(majk, truek, rng))
+		{
+			//Adjust the statistical weight
+			switch (weight_rule) {
+			case Sweep::Processes::CoagWeightHarmonic:
+				sp1->setStatisticalWeight(1.0 / (1.0 / sp1->getStatisticalWeight() +
+					1.0 / sp2->getStatisticalWeight()));
+				break;
+			case Sweep::Processes::CoagWeightHalf:
+				sp1->setStatisticalWeight(0.5 * sp1->getStatisticalWeight());
+				break;
+			case Sweep::Processes::CoagWeightMass:
+				sp1->setStatisticalWeight(sp1->getStatisticalWeight() * sp1->Mass() /
+					(sp1->Mass() + sp2->Mass()));
+				break;
+			case Sweep::Processes::CoagWeightRule4: {
+				// This is an arbitrary weighting for illustrative purposes
+				const double x1 = sp1->Mass() / std::sqrt(sp1->getStatisticalWeight());
+				const double x2 = sp1->Mass() / std::sqrt(sp2->getStatisticalWeight());
+				sp1->setStatisticalWeight(sp1->getStatisticalWeight() * x1 /
+					(x1 + x2));
+				break;
+			}
+			default:
+				throw std::logic_error("Unrecognised weight rule (Coagulation::WeightedPerform)");
+			}
+
+			// In the weighted particle method the contents of particle 2
+			// is added to particle 1 while particle 2 is left unchanged.
+			// If particle 1 is a single primary particle made up one PAH:
+			// the incepted PAH, after the coagulate event there is then
+			// one less incepted PAH. This is what the check does. If
+			// particle 1 is a PAH other than the incepted PAH, there is
+			// not a need to made an adjustment to the number of incepted PAHs.
+			//sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
+
+			// Add contents of particle 2 onto particle 1
+			sp1->Coagulate(*sp2, rng);
+			sp1->SetTime(t);
+			sp1->incrementCoagCount();
+
+			assert(sp1->IsValid());
+			// Tell the ensemble that particles 1 and 2 have changed
+			sys.Particles().Update(ip1);
+			if (!ip2_flag)
+				sys.Particles().Update(ip2);
+			else if (sp2 != NULL)                                                            // Particle sp2 is not in the ensemble, must manually delete it
+			{
+				delete sp2;
+				sp2 = NULL;
+			}
+		}
+		else {
+			sys.Particles().Update(ip1);
+			if (!ip2_flag)
+				sys.Particles().Update(ip2);
+			else if (sp2 != NULL)                                                            // Particle sp2 is not in the ensemble, must manually delete it
+			{
+				delete sp2;
+				sp2 = NULL;
+			}
+			return 1; // Ficticious event.
+		}
+	}
+	else {
+		// One or both particles were invalidated on update,
+		// but that's not a problem.  Information on the update
+		// of valid particles must be propagated into the binary
+		// tree
+		if (ip1 != -1)
+			sys.Particles().Update(ip1);
+
+		if (ip2 != -1)
+		{
+			if (!ip2_flag)
+				sys.Particles().Update(ip2);
+			else if (sp2 != NULL)                                                            // Particle sp2 is not in the ensemble, must manually delete it
+			{
+				delete sp2;
+				sp2 = NULL;
+			}
+		}
+	}
+	if (ip2_flag && sp2 != NULL)                                                            // Particle sp2 is not in the ensemble, must manually delete it
+	{
+		delete sp2;
+		sp2 = NULL;
+	}
+
+	return 0;
+}
+
+// aab64 To choose particle index with particle-number model
+int Coagulation::ChooseIndexWeightedCoag(double t, const Sweep::PropID prop, Cell &sys, rng_type &rng) const
+{
+	int index = -1;
+
+	double p_incep = sys.Particles().GetPropertyTotal(prop);
+	double p_other = sys.Particles().GetSum(prop);
+	double p_total =  p_incep + p_other;
+
+	boost::uniform_01<rng_type&, double> unifDistrib(rng);
+
+	double alpha = unifDistrib() * p_total;
+	
+	if (alpha <= p_incep)
+	{
+		index = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha, prop, rng);
+		if (index >= sys.Particles().GetCritialNumber())
+			std::cout << "Index is too large\n";
+		index *= -1;
+	}
+	else
+	{
+		index = sys.Particles().Select_usingGivenRand(prop, alpha - p_incep, rng);
+		if (index < 0)
+			std::cout << "Failed to choose a particle from the ensemble\n";
+	}
+	
+	return index;
 }
 
 // aab64 temp

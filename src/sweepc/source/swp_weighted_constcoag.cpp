@@ -198,7 +198,8 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
 	if (!(m_mech->IsHybrid()))
         return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
 	else
-		return WeightedPerform_hybrid(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default, local_geom);
+		//return WeightedPerform_hybrid(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default, local_geom);
+		return WeightedPerform_hybrid(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
 
 }
 
