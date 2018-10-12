@@ -301,7 +301,7 @@ int DimerInception::Perform(const double t, Cell &sys,
 			}
 			else
 			{
-				if (!sys.Particles().IsFirstSP())
+				/*if (!sys.Particles().IsFirstSP())
 				{
 					// Flag that register of particle properties is set up
 					sys.Particles().SetInceptedSP();
@@ -321,7 +321,8 @@ int DimerInception::Perform(const double t, Cell &sys,
 					}
 					sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(),
 						sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
-				}
+				}*/
+				
 
 				// Adjust particle number properties
 				sys.Particles().UpdateNumberAtIndex(ParticleComp()[0], 1);
