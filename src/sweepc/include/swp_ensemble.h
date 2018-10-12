@@ -276,22 +276,31 @@ public:
 	// aab64 for hybrid particle number model
 	bool IsFirstSP(void) const { return m_inceptedFirstSP; }
 	void SetInceptedSP() { m_inceptedFirstSP = true; }
+	
 	void UpdateNumberAtIndex(unsigned int index, int update);
 	void ResetNumberAtIndex(unsigned int index);
+	
 	void InitialiseDiameters(double molecularWeight, double density);
+	void InitialiseParticleNumberModel();
+	
 	unsigned int NumberAtIndex(unsigned int index) const { return m_particle_numbers[index]; }
+	
 	unsigned int SetTotalParticleNumber();
+	unsigned int GetTotalParticleNumber() const { return m_total_number; }
+	
 	void SetCriticalSize(unsigned int threshold) { m_critical_size = threshold; }
 	unsigned int GetCritialNumber() const { return m_critical_size; }
+	
 	void UpdateTotalParticleNumber(int update) { m_total_number += update; }
 	void UpdateTotalsWithIndex(unsigned int index, double change);
 	void UpdateTotalsWithIndices(unsigned int i1, unsigned int i2);
-	unsigned int GetTotalParticleNumber() const { return m_total_number; }
+	
 	double PropertyAtIndex(Sweep::PropID prop, unsigned int index) const;
 	double GetPropertyTotal (Sweep::PropID prop) const;
 	double Diameter2AtIndex(unsigned int index) const { return m_pn_diameters2[index]; }
 	double DiameterAtIndex(unsigned int index) const { return m_pn_diameters[index]; }
 	double MassAtIndex(unsigned int index) const { return m_pn_mass[index]; }
+	
 	// This could be a single function with a case statement but it would be slower and some propIDs don't exist
 	double GetTotalDiameter() const { return m_total_diameter; }
 	double GetTotalDiameter2() const { return m_total_diameter2; }
@@ -304,7 +313,9 @@ public:
 	double GetTotalMass2() const { return m_total_mass2; }
 	double GetTotalMass3() const { return m_total_mass3; }
 	unsigned int GetTotalComponent() const { return m_total_component; }
+	
 	void DoubleTotals();
+	
 	Particle *const GetPNParticleAt(unsigned int index);
 	int SetPNParticle(Particle &sp, rng_type &rng, unsigned int index);
 

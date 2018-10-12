@@ -149,11 +149,15 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
 
 			// aab64 for hybrid particle number model
 			m_inceptedFirstSP = rhs.m_inceptedFirstSP;
+			m_critical_size = rhs.m_critical_size;
 			if (rhs.m_critical_size > 0)
 			{
 				m_pn_particles.resize(rhs.m_critical_size, NULL);
-				for (unsigned int i = 0; i != rhs.Count(); ++i) {
-					m_pn_particles[i] = rhs.m_pn_particles[i]->Clone();
+				if (rhs.m_pn_particles[0] != NULL) 
+				{
+					for (unsigned int i = 0; i != rhs.Count(); ++i) {
+						m_pn_particles[i] = rhs.m_pn_particles[i]->Clone();
+					}
 				}
 
 				m_particle_numbers.resize(rhs.m_critical_size, 0);
@@ -809,6 +813,7 @@ void Sweep::Ensemble::ClearMain()
 		delete m_pn_particles[i];
 		m_pn_particles[i] = NULL;
 	}
+
 }
 
 // SELECTING PARTICLES.
@@ -1049,20 +1054,44 @@ double Sweep::Ensemble::PropertyAtIndex(Sweep::PropID prop, unsigned int index) 
 	case iDcol:
 		return_val = m_pn_diameters[index];
 		break;
+	case iDW:
+		return_val = m_pn_diameters[index];
+		break;
 	case iD2:
+		return_val = m_pn_diameters2[index];
+		break;
+	case iD2W:
 		return_val = m_pn_diameters2[index];
 		break;
 	case iD_1:
 		return_val = m_pn_diameters_1[index];
 		break;
+	case iD_1W:
+		return_val = m_pn_diameters_1[index];
+		break;
 	case iD_2:
+		return_val = m_pn_diameters_2[index];
+		break;
+	case iD_2W:
 		return_val = m_pn_diameters_2[index];
 		break;
 	case iM_1_2:
 		return_val = m_pn_mass_1_2[index];
 		break;
+	case iM_1_2W:
+		return_val = m_pn_mass_1_2[index];
+		break;
 	case iD2_M_1_2:
 		return_val = m_pn_diameters2_mass_1_2[index];
+		break;
+	case iD2_M_1_2W:
+		return_val = m_pn_diameters2_mass_1_2[index];
+		break;
+	case iW:
+		return_val = m_particle_numbers[index];
+		break;
+	case iUniform:
+		return_val = 1.0;
 		break;
 	case iM:
 		return_val = m_pn_mass[index];
@@ -1078,26 +1107,65 @@ double Sweep::Ensemble::GetPropertyTotal(Sweep::PropID prop) const
 	case iDcol:
 		return_val = m_total_diameter;
 		break;
+	case iDW:
+		return_val = m_total_diameter;
+		break;
 	case iD2:
+		return_val = m_total_diameter2;
+		break;
+	case iD2W:
 		return_val = m_total_diameter2;
 		break;
 	case iD_1:
 		return_val = m_total_diameter_1;
 		break;
+	case iD_1W:
+		return_val = m_total_diameter_1;
+		break;
 	case iD_2:
+		return_val = m_total_diameter_2;
+		break;
+	case iD_2W:
 		return_val = m_total_diameter_2;
 		break;
 	case iM_1_2:
 		return_val = m_total_mass_1_2;
 		break;
+	case iM_1_2W:
+		return_val = m_total_mass_1_2;
+		break;
 	case iD2_M_1_2:
 		return_val = m_total_diameter2_mass_1_2;
+		break;
+	case iD2_M_1_2W:
+		return_val = m_total_diameter2_mass_1_2;
+		break;
+	case iW:
+		return_val = m_total_number;
+		break;
+	case iUniform:
+		return_val = m_total_number;
 		break;
 	case iM:
 		return_val = m_total_mass;
 		break;
 	}
 	return return_val;
+}
+
+void Sweep::Ensemble::InitialiseParticleNumberModel()
+{
+	m_particle_numbers.resize(m_critical_size, 0);
+	m_pn_mass.resize(m_critical_size, 0);
+	m_pn_diameters3.resize(m_critical_size, 0);
+	m_pn_diameters.resize(m_critical_size, 0);
+	m_pn_diameters2.resize(m_critical_size, 0);
+	m_pn_diameters_1.resize(m_critical_size, 0);
+	m_pn_diameters_2.resize(m_critical_size, 0);
+	m_pn_mass2.resize(m_critical_size, 0);
+	m_pn_mass3.resize(m_critical_size, 0);
+	m_pn_mass_1_2.resize(m_critical_size, 0);
+	m_pn_diameters2_mass_1_2.resize(m_critical_size, 0);
 }
 
 void Sweep::Ensemble::InitialiseDiameters(double molecularWeight, double density)

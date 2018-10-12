@@ -248,7 +248,8 @@ bool checkCoagulationKernel(int old_id, int this_id) {
  */
 Sweep::PartPtrList readEnsembleFile(
         const string fname,
-        const Sweep::Mechanism &smech) {
+        const Sweep::Mechanism &smech, 
+		std::vector<unsigned int> &particle_numbers_list) {
     // Open the save point file.
     ifstream fin;
     fin.open(fname.c_str(), ios_base::in | ios_base::binary);
@@ -296,6 +297,16 @@ Sweep::PartPtrList readEnsembleFile(
             particles.push_back(sp);
         }
 
+		// aab64 Read hybrid particle-number info 
+		if (fileensemble.GetCritialNumber() > 0)
+		{
+			particle_numbers_list.resize(fileensemble.GetCritialNumber(), 0);
+			for (unsigned int i = 0; i < fileensemble.GetCritialNumber(); ++i)
+			{
+				particle_numbers_list[i] = fileensemble.NumberAtIndex(i);
+			}
+		}
+
         // Close the input file.
         fin.close();
 
@@ -339,8 +350,30 @@ void readInitialPopulation(
         std::string filename;
         filename = fnode->Data();
         std::cout << "parser: binary file " << filename << " specified for input.\n";
-        fileParticleList = readEnsembleFile(filename, mech.ParticleMech());
-    }
+		std::vector<unsigned int> particle_numbers;
+		particle_numbers.resize(1, 0);
+        fileParticleList = readEnsembleFile(filename, mech.ParticleMech(), particle_numbers);
+		
+		// aab64 Initialise and store hybrid particle-number info for the cell
+		if (particle_numbers.size() > 1 || particle_numbers[1] > 0)
+		{
+			mix.Particles().SetCriticalSize(particle_numbers.size());
+			mix.Particles().InitialiseParticleNumberModel();
+			mix.Particles().InitialiseDiameters(mix.ParticleModel()->Components()[0]->MolWt(),
+				mix.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
+			for (unsigned int i = 0; i < mix.Particles().GetCritialNumber(); ++i)
+			{
+				mix.Particles().UpdateTotalsWithIndex(i, particle_numbers[i]);
+				mix.Particles().UpdateNumberAtIndex(i, particle_numbers[i]);
+				mix.Particles().UpdateTotalParticleNumber(particle_numbers[i]);
+			}
+		}
+		/*else
+		{
+			mix.Particles().SetCriticalSize(0);
+			mix.Particles().InitialiseParticleNumberModel();
+		}*/
+	}
 
 	// aab64 Choose which file reader to use depending if particle distributions are required
 	vector<CamXML::Element*> subitems;
@@ -369,6 +402,7 @@ void readInitialPopulation(
     while(it != itEnd) {
         weightSum += (*it++)->getStatisticalWeight();
     }
+	weightSum += mix.Particles().GetTotalParticleNumber(); // Add particle-number particles to the total weight
 
     mix.SetParticles(allParticleList.begin(), allParticleList.end(), initialM0 / weightSum);
 }
@@ -460,6 +494,7 @@ Mops::Mixture* readMixture(
     // Now load some particles
 	mix->Particles().SetCriticalSize(mech.ParticleMech().GetCriticalThreshold());
     mix->Particles().Initialise(pcount);
+	mix->Particles().InitialiseParticleNumberModel();
     mix->Reset(maxm0);
 
     subnode = NULL; subnode = node.GetFirstChild("population");
