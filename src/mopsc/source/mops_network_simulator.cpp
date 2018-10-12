@@ -227,7 +227,7 @@ void NetworkSimulator::Run(
 					<< "Total statistical weight pre-split (-)" << " , " << "Total statistical weight post-split (-)" << " , "
 					<< "Average collision diameter pre-split (-)" << " , " << "Average collision diameter post-split (-)" << " , "
 					<< "Incepting weight pre-split (-)" << " , " << "Incepting weight post-split (-)" << " , "
-					<< "Incepting factor pre-split (-)" << " , " << "Incepting factor post-split (-)" << " , ";
+					<< "PN count pre-split (-)" << " , " << "PN count post-split (-)" << " , ";
 				for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
 					partProcFile << tmpPNames[process_iter] << " , ";
 				}

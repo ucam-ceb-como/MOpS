@@ -234,7 +234,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
 		else
 			tmpDcin = 0.0;
-		tmpIncFactorin = r.Mixture()->GetInceptionFactor();
+		tmpIncFactorin = r.Mixture()->Particles().GetTotalParticleNumber();;
 		tmpIncWeightin = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPin);
 		tmpTin = r.Mixture()->GasPhase().Temperature();
@@ -260,7 +260,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
 		else
 			tmpDcout = 0.0;
-		tmpIncFactorout = r.Mixture()->GetInceptionFactor();
+		tmpIncFactorout = r.Mixture()->Particles().GetTotalParticleNumber();
 		tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
 		tmpTout = r.Mixture()->GasPhase().Temperature();
@@ -335,7 +335,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			if (tmpWtVarin > 0.0)
 				tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
 			else
-				tmpDcin = 0.0;			tmpIncFactorin = r.Mixture()->GetInceptionFactor();
+				tmpDcin = 0.0;			
+			tmpIncFactorin = r.Mixture()->Particles().GetTotalParticleNumber();
 			tmpIncWeightin = r.Mixture()->GetInceptingWeight();
 			r.Mixture()->GasPhase().GetConcs(tmpGPin);
 			tmpTin = r.Mixture()->GasPhase().Temperature();
@@ -360,7 +361,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 				tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
 			else
 				tmpDcout = 0.0;
-			tmpIncFactorout = r.Mixture()->GetInceptionFactor();
+			tmpIncFactorout = r.Mixture()->Particles().GetTotalParticleNumber();
 			tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
 			tmpTout = r.Mixture()->GasPhase().Temperature();
