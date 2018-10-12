@@ -137,11 +137,11 @@ double SurfaceReaction::Rate(double t, const Cell &sys,
     double rate = m_arr.A;
 
     // Chemical species concentration dependence.
-    /*rate *= chemRatePart(sys.GasPhase());
+    rate *= chemRatePart(sys.GasPhase());
 
     // Temperature dependance.
     double T = sys.GasPhase().Temperature();
-    rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));*/
+    rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
     // Particle dependence.
     rate *= (sys.Particles().GetSum(m_pid) + (PI * sys.Particles().GetTotalDiameter2())); //iWS
@@ -174,11 +174,11 @@ double SurfaceReaction::Rate(double t, const Cell &sys, const Particle &sp) cons
     double rate = m_arr.A;
 
     // Chemical species concentration dependence.
-   /* rate *= chemRatePart(sys.GasPhase());
+   rate *= chemRatePart(sys.GasPhase());
 
     // Temperature dependance.
     double T = sys.GasPhase().Temperature();
-    rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));*/
+    rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 
     // Paticle dependence.
     rate *= sp.Property(m_pid);
@@ -193,11 +193,11 @@ double SurfaceReaction::Rate(double t, const Cell &sys) const
 	double rate = m_arr.A;
 
 	// Chemical species concentration dependence.
-	/*rate *= chemRatePart(sys.GasPhase());
+	rate *= chemRatePart(sys.GasPhase());
 
 	// Temperature dependance.
 	double T = sys.GasPhase().Temperature();
-	rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));*/
+	rate *= pow(T, m_arr.n) * exp(-m_arr.E / (R * T));
 	
 	return rate;
 }
