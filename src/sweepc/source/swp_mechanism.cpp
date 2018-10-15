@@ -1407,7 +1407,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 *@param[in]        t           Time upto which particles to be updated
 *@param[in,out]    rng         Random number generator
 */
-/*void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
+void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
 {
 	// Note: this method is faster but can be inaccurate because random choice of
 	// surface growth affects the whole size class in one lump. 
@@ -1469,9 +1469,18 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 							sp_add->UpdateCache();
 						}
 					}
-					for (unsigned int j = 0; j < n_index; j++)
+					if (!IsWeightedCoag())
+					{
+						for (unsigned int j = 0; j < n_index; j++)
+						{
+							Particle * sp2 = sp_add->Clone();
+							sys.Particles().Add(*sp2, rng);
+						}
+					}
+					else
 					{
 						Particle * sp2 = sp_add->Clone();
+						sp2->setStatisticalWeight(n_index);
 						sys.Particles().Add(*sp2, rng);
 					}
 					delete sp_add;
@@ -1491,7 +1500,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 	}
 	delete sp_critical_size;
 	sp_critical_size = NULL;
-}*/
+}
 
 
 
@@ -1503,7 +1512,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 *@param[in]        t           Time upto which particles to be updated
 *@param[in,out]    rng         Random number generator
 */
-void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
+/*void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
 {
 	// Note: this method is significantly slower but more accurate because random choice of
 	// surface growth affects only one particle in the size class at a time.
@@ -1587,7 +1596,7 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	}
 	delete sp_critical_size;
 	sp_critical_size = NULL;
-}
+}*/
 
 
 
