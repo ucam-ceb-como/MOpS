@@ -86,11 +86,6 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 		double T = sys.GasPhase().Temperature();
 		double P = sys.GasPhase().Pressure();
 
-		/*std::ofstream file;
-		file.open("coag_rate_diags.csv", std::ios::app);
-		file << t << "," << sys.ParticleCount() << "," << sys.Particles().GetTotalParticleNumber() << ",";
-		file.close();*/
-
 		fvector props(6, 0);
 
 		// Calculate the rate.
@@ -135,21 +130,12 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
 	double m_1_2 = data.Property(iM_1_2);
 	double d2m_1_2 = data.Property(iD2_M_1_2);
 
-	/*std::ofstream file;
-	file.open("coag_rate_diags.csv", std::ios::app);
-	file << d << "," << d2 << "," << d_1 << "," << d_2 << "," << m_1_2 << "," << d2m_1_2 << ",";
-	file.close();*/
-
 	d += props[0];
 	d2 += props[1];
 	d_1 += props[2];
 	d_2 += props[3];
 	m_1_2 += props[4];
 	d2m_1_2 += props[5];
-	
-	/*file.open("coag_rate_diags.csv", std::ios::app);
-	file << props[0] << "," << props[1] << "," << props[2] << "," << props[3] << "," << props[4] << "," << props[5] << "\n";
-	file.close();*/
 
 	// Get individual terms.
 	double terms[TYPE_COUNT];
@@ -212,10 +198,6 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 		double T = sys.GasPhase().Temperature();
 		double P = sys.GasPhase().Pressure();
 
-	/*	std::ofstream file;
-		file.open("coag_rate_diags.csv", std::ios::app);
-		file << t << "," << sys.ParticleCount() << "," << sys.Particles().GetTotalParticleNumber() << ",";
-		file.close();*/
 
 		fvector props(6, 0);
 		
@@ -265,10 +247,6 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::partic
 	double m_1_2 = data.Property(iM_1_2);
 	double d2m_1_2 = data.Property(iD2_M_1_2);
 
-	/*std::ofstream file;
-	file.open("coag_rate_diags.csv", std::ios::app);
-	file << d << "," << d2 << "," << d_1 << "," << d_2 << "," << m_1_2 << "," << d2m_1_2 << ",";
-	file.close();*/
 
 	d += props[0];
 	d2 += props[1];
@@ -276,10 +254,7 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::partic
 	d_2 += props[3];
 	m_1_2 += props[4];
 	d2m_1_2 += props[5];
-	
-	/*file.open("coag_rate_diags.csv", std::ios::app);
-	file << props[0] << "," << props[1] << "," << props[2] << "," << props[3] << "," << props[4] << "," << props[5] << "\n";
-	file.close();*/
+
 
 	fvector::iterator isf = iterm;
 	fvector::iterator ifm = iterm + 4;

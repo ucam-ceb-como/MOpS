@@ -101,7 +101,7 @@ public:
         double t,                  // Time.
         const Cell &sys,       // Indicates true kernel (not majorant).
         const Geometry::LocalGeometry1d &local_geom,
-        fvector::iterator &iterm // Iterator to the first term.
+        fvector::iterator &iterm // Iterator to the first term. 
         ) const;
 
     //! Perform a coagulation with particles chosen according to the transition kernel
@@ -145,7 +145,8 @@ private:
     double T_mu,  // T / viscosity
     double MFP,   // Gas mean-free path.
     double vol,   // System sample volume.
-    fvector::iterator &iterm // Iterator to first coagulation term.
+    fvector::iterator &iterm, // Iterator to first coagulation term.
+	fvector & props
     ) const;
 
     // COAGULATION KERNEL ROUTINES.

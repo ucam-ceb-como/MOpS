@@ -118,7 +118,7 @@ double Sweep::Processes::WeightedTransitionCoagulation::Rate(double t, const Cel
                                                                   const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
-    unsigned int n = sys.ParticleCount();
+	unsigned int n = sys.ParticleCount() + sys.Particles().GetTotalParticleNumber();
 
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
@@ -126,12 +126,27 @@ double Sweep::Processes::WeightedTransitionCoagulation::Rate(double t, const Cel
         double T = sys.GasPhase().Temperature();
         double P = sys.GasPhase().Pressure();
 
+		fvector props(7, 0);
+
+		// Calculate the rate.
+		props[0] = sys.Particles().GetTotalDiameter();
+		props[1] = sys.Particles().GetTotalDiameter2();
+		props[2] = sys.Particles().GetTotalDiameter_1();
+		props[3] = sys.Particles().GetTotalDiameter_2();
+		props[4] = sys.Particles().GetTotalMass_1_2();
+		props[5] = sys.Particles().GetTotalDiameter2_mass_1_2();
+		props[6] = sys.Particles().GetTotalParticleNumber();
+
         // Create a vector so we can call through to RateTerms
         Sweep::fvector vec(TYPE_COUNT);
         fvector::iterator it = vec.begin();
 
         return RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T/sys.GasPhase().Viscosity(),
-                MeanFreePathAir(T,P), sys.SampleVolume(), it);
+                MeanFreePathAir(T,P), sys.SampleVolume(), it, props);
+
+		props.clear();
+		fvector().swap(props);
+
     } else {
         // Not enough particles so return 0
         return 0.0;
@@ -161,20 +176,35 @@ unsigned int Sweep::Processes::WeightedTransitionCoagulation::TermCount() const 
  */
 double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(double t, const Cell &sys,
                                                                        const Geometry::LocalGeometry1d &local_geom,
-                                                                       fvector::iterator &iterm) const
+																	   fvector::iterator &iterm) const
 {
     // Get the number of particles in the system.
-    unsigned int n = sys.ParticleCount();
+	unsigned int n = sys.ParticleCount() + sys.Particles().GetTotalParticleNumber();
 
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
         // Get system properties required to calculate coagulation rate.
         double T = sys.GasPhase().Temperature();
         double P = sys.GasPhase().Pressure();
-		
+
+		fvector props(7, 0);
+
+		// Calculate the rate.
+		props[0] = sys.Particles().GetTotalDiameter();
+		props[1] = sys.Particles().GetTotalDiameter2();
+		props[2] = sys.Particles().GetTotalDiameter_1();
+		props[3] = sys.Particles().GetTotalDiameter_2();
+		props[4] = sys.Particles().GetTotalMass_1_2();
+		props[5] = sys.Particles().GetTotalDiameter2_mass_1_2();
+		props[6] = sys.Particles().GetTotalParticleNumber();
+
         double r = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T/sys.GasPhase().Viscosity(),
-                MeanFreePathAir(T,P), sys.SampleVolume(), iterm);
-        return r;
+			MeanFreePathAir(T, P), sys.SampleVolume(), iterm, props);
+		
+		props.clear();
+		fvector().swap(props);
+        
+		return r;
 
     } else {
         // Free-molecular.
@@ -209,7 +239,7 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(double t, cons
 double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
 		const Ensemble::particle_cache_type &data, double n, double sqrtT,
         double T_mu, double MFP, double vol,
-        fvector::iterator &iterm) const
+		fvector::iterator &iterm, fvector & props) const
 {
     // Some prerequisites.
     double n_1 = n - 1.0;
@@ -218,22 +248,37 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
 	double c = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    const double d        = data.Property(Sweep::iDcol);
-    const double d2       = data.Property(Sweep::iD2);
-    const double d_1      = data.Property(Sweep::iD_1);
-    const double d_2      = data.Property(Sweep::iD_2);
-    const double m_1_2    = data.Property(Sweep::iM_1_2);
-    const double d2m_1_2  = data.Property(Sweep::iD2_M_1_2);
+	double d        = data.Property(Sweep::iDcol); // aab64 removed const to adapt as below
+    double d2       = data.Property(Sweep::iD2);
+    double d_1      = data.Property(Sweep::iD_1);
+    double d_2      = data.Property(Sweep::iD_2);
+    double m_1_2    = data.Property(Sweep::iM_1_2);
+    double d2m_1_2  = data.Property(Sweep::iD2_M_1_2);
 
     // Weighted particle specific properties
-    const double w        = data.Property(Sweep::iW);
-    const double dw       = data.Property(Sweep::iDW);
-    const double d2w	    = data.Property(Sweep::iD2W);
-    const double d_1w     = data.Property(Sweep::iD_1W);
-    const double d_2w     = data.Property(Sweep::iD_2W);
-    const double m_1_2w   = data.Property(Sweep::iM_1_2W);
-    const double d2m_1_2w = data.Property(Sweep::iD2_M_1_2W);
+    double w        = data.Property(Sweep::iW);
+    double dw       = data.Property(Sweep::iDW);
+    double d2w	    = data.Property(Sweep::iD2W);
+    double d_1w     = data.Property(Sweep::iD_1W);
+    double d_2w     = data.Property(Sweep::iD_2W);
+    double m_1_2w   = data.Property(Sweep::iM_1_2W);
+    double d2m_1_2w = data.Property(Sweep::iD2_M_1_2W);
 
+	d += props[0];
+	d2 += props[1];
+	d_1 += props[2];
+	d_2 += props[3];
+	m_1_2 += props[4];
+	d2m_1_2 += props[5];
+
+	dw += props[0];
+	d2w += props[1];
+	d_1w += props[2];
+	d_2w += props[3];
+	m_1_2w += props[4];
+	d2m_1_2w += props[5];
+	w += props[6];
+	
     fvector::iterator ifm = iterm;
     fvector::iterator isf = iterm+4;
 
@@ -312,7 +357,7 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
     // uniformly and one with probability proportional
     // to particle mass.
 
-    if (sys.ParticleCount() < 2) {
+    if ((sys.ParticleCount() + sys.Particles().GetTotalParticleNumber()) < 2) {
         return 1;
     }
 
@@ -380,7 +425,7 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
         	throw std::logic_error("Unrecognised term, (Sweep, WeightedTransitionCoagulation::Perform)");
     }
 
-    return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, maj);
+    return WeightedPerform_hybrid(t, prop1, prop2, m_CoagWeightRule, sys, rng, maj);
 }
 
 void WeightedTransitionCoagulation::ChooseProps(Sweep::Cell &sys, unsigned int iterm) const
