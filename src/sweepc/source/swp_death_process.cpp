@@ -156,7 +156,7 @@ double DeathProcess::InternalRate(
         const Geometry::LocalGeometry1d &local_geom) const {
 	// aab64 if weighted particles, use sum of weights in place of N
 	if (m_dtype == DeathProcess::iWtdDelete)
-		return m_a * sys.Particles().GetSum(iW);
+		return m_a * (sys.Particles().GetSum(iW) + sys.Particles().GetTotalParticleNumber());
 	else
 	{
 		unsigned int n_total = sys.Particles().Count() + sys.Particles().GetTotalParticleNumber();             // Account for particles in the incepting class
@@ -252,10 +252,31 @@ int DeathProcess::Perform_wtd(double t, Sweep::Cell &sys,
 	rng_type &rng, 
 	double &num) const
 {
-	// Get particle index
-	int i = sys.Particles().Select(iW, rng);
-
+	int i = -1;
 	// aab64 for hybrid particle model
+	if (!(m_mech->IsHybrid()))
+		i = sys.Particles().Select(iW, rng);
+	else
+	{
+		// Check if should remove from ensemble or bin
+		unsigned int ntotal_pn = sys.Particles().GetTotalParticleNumber();
+		unsigned int ntotal_ens = sys.Particles().GetSum(iW);
+		boost::uniform_01<rng_type&, double> unifDistrib(rng);
+		double test = unifDistrib() * (ntotal_pn + ntotal_ens);
+		if (ntotal_pn >= test)
+		{
+			unsigned int index = m_mech->SetRandomParticle(false, false, sys.Particles(), t, test, iUniform, rng);
+			sys.Particles().UpdateTotalsWithIndex(index, -1.0);
+			sys.Particles().UpdateNumberAtIndex(index, -1);
+			sys.Particles().UpdateTotalParticleNumber(-1);
+			i = -1;
+		}
+		else
+		{
+			i = sys.Particles().Select_usingGivenRand(iW, test - ntotal_pn, rng);
+		}
+	}
+
 	if (i >= 0)
 	{
 		Sweep::Particle *sp = sys.Particles().At(i);
@@ -268,26 +289,13 @@ int DeathProcess::Perform_wtd(double t, Sweep::Cell &sys,
 			{
 				sp->setStatisticalWeight(sp_wt - 1.0);
 				sys.Particles().Update(i);
-				//if (m_mech->IsHybrid() && i == 0)
-				//	sys.AdjustIncepted(-1.0);                  // If incepting class, track the change
 				num = num - 1.0;
 			}
 			// remove the particle to free up 
 			// ensemble space for new particles
 			else
 			{
-				if (m_mech->IsHybrid() &&                      // If this is particle hybrid model,
-					i == 0 &&                                  // and the incepting class is selected,
-					sys.ParticleCount() > 1 )
-					//&&                 // and N>1 => can't delete this particle,
-					//sys.GetIncepted() > 0)                     // and class not empty so need to do something...
-				{
-					//sys.AdjustIncepted(-sp_wt);
-					sp->setStatisticalWeight(sp_wt - sp_wt);   // Empty the class 
-					sys.Particles().Update(i);
-				}
-				else
-					DoParticleDeath(t, i, sys, rng);           // Just remove the particle
+				DoParticleDeath(t, i, sys, rng);           // Just remove the particle
 				num = num - sp_wt;
 			}
 		}
@@ -297,8 +305,6 @@ int DeathProcess::Perform_wtd(double t, Sweep::Cell &sys,
 		{
 			sp->setStatisticalWeight(sp_wt - num);
 			sys.Particles().Update(i);
-			//if (m_mech->IsHybrid() && i == 0)
-				//sys.AdjustIncepted(-num);                      // If incepting class, track the change
 			num = 0;
 		}
 	}
@@ -346,8 +352,8 @@ void DeathProcess::PerformDT (
 					// we know apriori how much the weight needs to change
 					// from the mass balance and can effect this change
 					// by scaling the weights
-				    double num = sys.Particles().GetSum(iW) * A() * dt;
-				    while (num > 0 && sys.ParticleCount() > 0) 
+					double num = (sys.Particles().GetSum(iW) + sys.Particles().GetTotalParticleNumber()) * A() * dt;
+					while (num > 0 && (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber()) > 0)
 					    Perform_wtd(t, sys, local_geom, 0, rng, num);
 				}
 				else

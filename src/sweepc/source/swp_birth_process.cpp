@@ -217,9 +217,9 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
 		double test = unifDistrib() * (ntotal_pn + ntotal_ens);
 		if (ntotal_pn >= test)
 		{
-
 			double repeats = F(sys);
-			if ((repeats > 0.0) && (repeats != floor(repeats))) {
+			if (repeats != floor(repeats)) 
+			{
 				boost::random::bernoulli_distribution<double> decider(repeats);
 				repeats = floor(repeats);
 				if (decider(rng))
