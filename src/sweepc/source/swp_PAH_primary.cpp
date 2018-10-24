@@ -1550,7 +1550,7 @@ double PAHPrimary::CalcRadiusOfGyration_COM()
 // d_m is calculated based on Eq.(11) in Morphology and mobility diameter of carbonaceous aerosols during agglomeration and surface growth
 // Georgios A. Kelesidis, Eirini Goudeli, Sotiris E. Pratsinis. Carbon 121 (2017) 527-535
 // rva is calculated based on Eq.(3) in The Structure of Agglomerates Consisting of Polydisperse Particles
-// M. L. Eggersdorfer and S. E. Pratsinis. Aerosol Science and Technology, 46:347–353, 2012
+// M. L. Eggersdorfer and S. E. Pratsinis. Aerosol Science and Technology, 46:347?53, 2012
 double PAHPrimary::CalcMobilityDiam()
 {
 	double nva = 0.0;
@@ -5091,7 +5091,7 @@ bool PAHPrimary::MergeCondition()
 			}
 		}
 	}
-	//condition = true; //try to force all particle spherical
+	condition = true; //try to force all particle spherical
 	return condition;
 }
 

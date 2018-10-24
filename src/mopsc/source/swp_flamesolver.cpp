@@ -276,12 +276,15 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                 }
             }
 
-            if((checkSum < 0.997) || checkSum > 1.003) {
+			//comment by hdy, in order to use the key gas-phase species mole fractions calculated by KM2
+			//while other species still the result by ABF mech
+			//so they might not sum to 1
+            /*if((checkSum < 0.997) || checkSum > 1.003) {
                 std::ostringstream msg;
                 msg << "Mole fractions sum to " << checkSum
                     << ", but should sum to 1.000 (FlameSolver::LoadGasProfile)";
                 throw std::runtime_error(msg.str());
-            }
+            }*/
 
             // Set up the gas-phase by setting temperature, pressure and
             // normalising the mixture fractions.
