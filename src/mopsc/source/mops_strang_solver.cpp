@@ -123,6 +123,11 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	m_chemtime += calcDeltaCT(m_cpu_mark);
 
 	m_cpu_mark = clock();
+	
+	// aab64 Temporary functions for gas-phase properties
+	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
+	fvector Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+	r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
 
 	// Solve one whole step of population balance (Sweep).
 	if (!r.IsConstV()) r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
@@ -141,6 +146,11 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		m_chemtime += calcDeltaCT(m_cpu_mark);
 
 		m_cpu_mark = clock();
+		// aab64 Temporary functions for gas-phase properties
+		tmpGasPhase = (&r.Mixture()->GasPhase());
+		Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+
 		// Solve whole step of population balance (Sweep).
 		if (!r.IsConstV()) r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
 		Run(ts1, ts2 += dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
@@ -151,6 +161,12 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	// Solve last half-step of gas-phase chemistry.    
 	m_ode.ResetSolver();
 	m_ode.Solve(r, t2 += h);
+
+	// aab64 Temporary functions for gas-phase properties
+	tmpGasPhase = (&r.Mixture()->GasPhase());
+	Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+	r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+
 	r.SetTime(t2);
 	m_chemtime += calcDeltaCT(m_cpu_mark);
 
@@ -220,6 +236,11 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     m_cpu_mark = clock();
 
+	// aab64 Temporary functions for gas-phase properties
+	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
+	fvector Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+	r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+
 	if (writediags) {
 		// Diagnostics variables at start of split step
 		tmpSVin = r.Mixture()->SampleVolume();
@@ -229,9 +250,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
 		tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
 		tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
-		tmpWtVarin = r.Mixture()->Particles().GetSum(Sweep::iW);
+		tmpWtVarin = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
 		if (tmpWtVarin > 0.0)
-			tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+			tmpDcin = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) / 
+			(r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
 		else
 			tmpDcin = 0.0;
 		tmpIncFactorin = r.Mixture()->Particles().GetTotalParticleNumber();;
@@ -255,9 +277,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 		tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
 		tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
-		tmpWtVarout = r.Mixture()->Particles().GetSum(Sweep::iW);
+		tmpWtVarout = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
 		if (tmpWtVarout > 0.0)
-			tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+			tmpDcout = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) /
+			(r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
 		else
 			tmpDcout = 0.0;
 		tmpIncFactorout = r.Mixture()->Particles().GetTotalParticleNumber();
@@ -322,6 +345,11 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
         m_cpu_mark = clock();
 
+		// aab64 Temporary functions for gas-phase properties
+		tmpGasPhase = (&r.Mixture()->GasPhase());
+		Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+
 		// Diagnostics variables at start of split step
 		if (writediags) {
 			tmpSVin = r.Mixture()->SampleVolume();
@@ -331,9 +359,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
 			tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
 			tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
-			tmpWtVarin = r.Mixture()->Particles().GetSum(Sweep::iW);
+			tmpWtVarin = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
 			if (tmpWtVarin > 0.0)
-				tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+				tmpDcin = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) /
+				(r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
 			else
 				tmpDcin = 0.0;			
 			tmpIncFactorin = r.Mixture()->Particles().GetTotalParticleNumber();
@@ -356,9 +385,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
 			tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
 			tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
-			tmpWtVarout = r.Mixture()->Particles().GetSum(Sweep::iW);
+			tmpWtVarout = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
 			if (tmpWtVarout > 0.0)
-				tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
+				tmpDcout = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) /
+				(r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
 			else
 				tmpDcout = 0.0;
 			tmpIncFactorout = r.Mixture()->Particles().GetTotalParticleNumber();
@@ -418,6 +448,11 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     m_ode.Solve(r, t2+=h);
     r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
+
+	// aab64 Temporary functions for gas-phase properties
+	tmpGasPhase = (&r.Mixture()->GasPhase());
+	Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+	r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
 
     // Calculate total computation time.
     m_tottime += calcDeltaCT(totmark);

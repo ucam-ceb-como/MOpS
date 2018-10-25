@@ -134,7 +134,11 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
 		m_rateFactor = rhs.m_rateFactor;
 		// coagulation properties for PSI
 		m_cprop1 = rhs.m_cprop1;
-		m_cprop2 = rhs.m_cprop2;		
+		m_cprop2 = rhs.m_cprop2;	
+		// aab64 temperature update variables (temporary)
+		m_bulk_heat_capacity = rhs.m_bulk_heat_capacity;
+		m_particle_density = rhs.m_particle_density;
+		m_enthalpies = rhs.m_enthalpies;
 	}
 	assert(isValid());
     return *this;
@@ -378,6 +382,13 @@ void Cell::AddOutflow(double rate, const Sweep::Mechanism &mech)
     m_outflow.push_back(death);
 }
 
+// aab64 Temporary functions for gas-phase properties
+void Cell::setGasPhaseProperties(double cp_bulk, double rhop, fvector enthalpies)
+{
+	m_bulk_heat_capacity = cp_bulk;
+	m_particle_density = rhop;
+	m_enthalpies = enthalpies;
+}
 
 // READ/WRITE/COPY.
 

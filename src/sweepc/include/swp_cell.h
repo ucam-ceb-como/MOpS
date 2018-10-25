@@ -252,6 +252,12 @@ public:
 	// aab64 coagulation scaling for weighted events
 	int GetRateFactor() const { return m_rateFactor; }
 
+	// aab64 Temporary functions for gas-phase properties
+	void setGasPhaseProperties(double cp_bulk, double rhop, fvector enthalpies);
+	double getBulkHeatCapacity() const { return m_bulk_heat_capacity; }
+	double getParticleDensity() const { return m_particle_density; }
+	void getEnthalpies(fvector &enthalpies) { enthalpies = m_enthalpies; }
+
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
@@ -314,6 +320,11 @@ private:
 	// aab64 temp
 	PropID m_cprop1;
 	PropID m_cprop2;
+
+	double m_bulk_heat_capacity;
+	double m_particle_density;
+
+	fvector m_enthalpies;
 
 };
 

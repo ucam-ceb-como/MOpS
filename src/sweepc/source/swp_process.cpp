@@ -745,12 +745,16 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 			Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();
 			
 			// Set enthalpy, heat capacity and density for both phases
-			fvector Hs = gas->getMolarEnthalpy(oldTg);
-			fvector Cs;
-			gas->CalcCps(oldTg, Cs);
-			double Cg = gas->BulkCp();          // bulk gp heat capacity at oldTg
-			double Hp = Hs[28];                 // enthalpy of titania crystals at oldTg
-			double rhog = gas->Density();       // molar density of gp at oldTg
+			//fvector Hs = gas->getMolarEnthalpy(oldTg);
+			//double Cg = gas->BulkCp();          // bulk gp heat capacity at oldTg
+			//double Hp = Hs[28];                 // enthalpy of titania crystals at oldTg
+			//double rhog = gas->Density();       // molar density of gp at oldTg
+
+			double Cg = sys.getBulkHeatCapacity();
+			fvector Hs;
+			sys.getEnthalpies(Hs);
+			double Hp = Hs[28]; // note only valid for titania! 
+			double rhog = sys.getParticleDensity();
 
 			// Concentration change in system due to new particle(s)
 			double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume());
