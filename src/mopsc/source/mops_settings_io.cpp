@@ -351,11 +351,11 @@ void readInitialPopulation(
         filename = fnode->Data();
         std::cout << "parser: binary file " << filename << " specified for input.\n";
 		std::vector<unsigned int> particle_numbers;
-		particle_numbers.resize(1, 0);
+		particle_numbers.resize(0, 0);
         fileParticleList = readEnsembleFile(filename, mech.ParticleMech(), particle_numbers);
 		
 		// aab64 Initialise and store hybrid particle-number info for the cell
-		if (particle_numbers.size() > 1 || particle_numbers[1] > 0)
+		if (particle_numbers.size() > 0)
 		{
 			mix.Particles().SetCriticalSize(particle_numbers.size());
 			mix.Particles().InitialiseParticleNumberModel();
