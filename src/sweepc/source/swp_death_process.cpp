@@ -259,21 +259,30 @@ int DeathProcess::Perform_wtd(double t, Sweep::Cell &sys,
 	else
 	{
 		// Check if should remove from ensemble or bin
+		// Note this doesn't work as setup because there is no neat way of reducing the bin
+		// count by less than 1 (would require additional checks in other places e.g. coagulation)
 		unsigned int ntotal_pn = sys.Particles().GetTotalParticleNumber();
 		unsigned int ntotal_ens = sys.Particles().GetSum(iW);
 		boost::uniform_01<rng_type&, double> unifDistrib(rng);
 		double test = unifDistrib() * (ntotal_pn + ntotal_ens);
-		if (ntotal_pn >= test)
+		if (ntotal_pn >= test && num >= 1)
 		{
 			unsigned int index = m_mech->SetRandomParticle(false, false, sys.Particles(), t, test, iUniform, rng);
 			sys.Particles().UpdateTotalsWithIndex(index, -1.0);
 			sys.Particles().UpdateNumberAtIndex(index, -1);
 			sys.Particles().UpdateTotalParticleNumber(-1);
 			i = -1;
+			num -= 1;
 		}
 		else
 		{
-			i = sys.Particles().Select_usingGivenRand(iW, test - ntotal_pn, rng);
+			if (sys.ParticleCount() > 0)
+				i = sys.Particles().Select_usingGivenRand(iW, test - ntotal_pn, rng);
+			else
+			{
+				i = -1;
+				num = 0;
+			}
 		}
 	}
 
