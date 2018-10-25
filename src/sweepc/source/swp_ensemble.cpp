@@ -294,7 +294,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     // Initialise doubling.
     m_maxcount   = 0;
     m_ndble      = 0;
-	m_dbleon = false;// true;
+	m_dbleon =  true;
     m_dbleactive = false;
     //m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0 / 4.0);
 	m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0 );
@@ -340,7 +340,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
  * @param val   Switch for doubling.
  */
 void Sweep::Ensemble::SetDoubling(const bool val) {
-	m_dbleon = false;// val;
+	m_dbleon = val;
 }
 
 unsigned int Sweep::Ensemble::DoubleLimit() {
@@ -422,11 +422,11 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
 
     // Initialise doubling.
     m_ndble      = 0;
-	m_dbleon = false;// true;
+	m_dbleon =  true;
 
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
-		m_dbleactive = false;// true;
+		m_dbleactive =  true;
     } else
         m_dbleactive = false;
 
@@ -502,7 +502,7 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 {
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
-		m_dbleactive = false;// true;
+		m_dbleactive =  true;
         //printf("sweep: Particle doubling activated.\n");
     }
 
@@ -674,7 +674,7 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
     // Particle removal might reduce the particle count
     // sufficiently to require particle doubling.
 	// But only do so if not using IWDSA as otherwise ensemble is likely to overflow during next LPDA
-	// if(doubling) dble();
+	if(doubling) dble();
 
     assert(m_tree.size() == m_count);
 }
@@ -718,7 +718,7 @@ void Sweep::Ensemble::RemoveInvalids(void)
     }
 
     // If we removed too many invalid particles then we'll have to double.
-   // dble();
+    dble();
     assert(m_tree.size() == m_count);
 }
 
@@ -904,11 +904,11 @@ int Sweep::Ensemble::Select_usingGivenRand(Sweep::PropID id, double rng_number, 
 double Sweep::Ensemble::Scaling() const
 {
     // The scaling factor includes the contraction term and the doubling term.
-    //return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
+    return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
     
 	// aab64 The scaling factor includes the contraction term and the doubling term.
 	// for weighted particles, the contraction factor depends on the weight of the removed particle 
-	return m_wtdcontfctr;// *pow(2.0, (double)m_ndble);
+	//return m_wtdcontfctr;// *pow(2.0, (double)m_ndble);
 }
 
 // Resets the ensemble scaling.
@@ -1496,7 +1496,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Read if doubling is active.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n==1) {
-					m_dbleactive = false; // true;
+					m_dbleactive = true;
                 } else {
                     m_dbleactive = false;
                 }
@@ -1504,7 +1504,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Read if doubling is turned on.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n==1) {
-					m_dbleon = false;// true;
+					m_dbleon = true;
                 } else {
                     m_dbleon = false;
                 }
@@ -1625,7 +1625,7 @@ void Sweep::Ensemble::init(void)
     m_dblecutoff = 0;
     m_dblelimit  = 0;
     m_dbleslack  = 0;
-	m_dbleon = false;// true;
+	m_dbleon = true;
 
 	// aab64 for hybrid particle number model
 	m_inceptedFirstSP = false;
