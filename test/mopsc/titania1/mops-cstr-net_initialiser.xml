@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mops version="3">
+    <!-- Sim parameters -->
+    <runs>1</runs>
+    <iter>10</iter>
+    <atol>1.0e-17</atol>
+    <rtol>1.0e-4</rtol>
+    <maxm0>0.4e14</maxm0>
+    <pcount>4096</pcount>
+    <relax>0.8</relax>
+	
+	<!-- Initial reactor composition -->
+    <mixture id="reac_mixture">
+        <temperature units="K">1500</temperature>
+        <pressure units="bar">4.5</pressure>	
+        <component id="TICL4">0.2</component>
+        <component id="O2">0.80</component>
+    </mixture>
+	
+	<!-- Initial reactor composition -->
+    <mixture id="init_mixture">
+        <temperature units="K">1500</temperature>
+        <pressure units="bar">4.5</pressure>
+	    <component id="AR">1.0</component>
+    </mixture>
+	
+    <!-- Stage 1 -->
+    <reactor constt="true" constv="true" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
+	    <initial>reac_mixture</initial>
+        <flow dir="in" frac="1.0">reac_mixture</flow>
+        <restime unit="s">0.002</restime>
+    </reactor>
+	
+    <!-- Time stepping -->
+    <timeintervals>
+      	<start>0.0</start>
+        <time splits="25" steps="10000">0.01</time>
+    </timeintervals>
+   
+    <!-- Output specifications -->
+    <output>
+        <statsbound property="dcol">
+            <lower>0</lower>
+            <upper>1.0e30</upper>
+        </statsbound>
+        <console interval="1" msgs="true">
+            <tabular>
+                <column fmt="sci">time</column>
+	            <column fmt="sci">CT</column>
+                <column fmt="float">#sp</column>
+                <column fmt="sci">TICL4</column>
+                <column fmt="sci">O2</column>
+                <column fmt="sci">M0</column>
+            </tabular>
+        </console>
+        <ptrack enable="true" ptcount="1"/>
+        <filename>Network</filename>
+    </output>
+</mops>

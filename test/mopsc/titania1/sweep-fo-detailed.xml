@@ -8,15 +8,15 @@
         <molwt>79.87</molwt>
     </component>
 	
-    <!-- Define particle types (Detailed) -->
-    <particle id="[Ru]" model="bintree" subtree="false">
+<!-- Define particle types (Detailed) -->
+    <particle id="[Ru]" model="bintree" subtree="false" hybrid="true" threshold="100000">
         <description>A rutile particle.</description>
 	    <fractdim>1.8</fractdim>
         <coalthresh>1.0</coalthresh>
         <sintering enable="true" model="GBD">
 		    <A units="s/m4K">7.44E+16</A>
             <E units="K">31032</E>
-		    <Dpmin units="m">0</Dpmin>
+		    <Dpmin units="nm">0.001</Dpmin>
         </sintering>
     </particle>
         <!--sintering enable="true" model="Rutile">
@@ -26,7 +26,7 @@
         </sintering-->
 	
 	<!-- Define particle types (Spherical) -->
-    <!--particle id="[Ru]" model="spherical" subtree="false">
+    <!--particle id="[Ru]" model="spherical" subtree="false" hybrid="false">
         <description>A rutile particle.</description>
     </particle-->
 	
