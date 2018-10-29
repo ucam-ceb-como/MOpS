@@ -39,3 +39,6 @@ include_directories(include
 # Linking against sprog will also require the following libraries
 # to resolve references from within sprog.
 target_link_libraries(sprog camxml comostrings chemkinReader)
+
+install (TARGETS sprog EXPORT sprog DESTINATION lib)
+install (DIRECTORY include DESTINATION .)

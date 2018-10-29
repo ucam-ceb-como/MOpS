@@ -15,3 +15,6 @@ add_library(comostrings source/console_io.cpp
                         ${INCS})
 
 include_directories (include)
+
+install (TARGETS comostrings EXPORT comostrings DESTINATION lib)
+install (DIRECTORY include DESTINATION .)

@@ -28,3 +28,6 @@ include_directories(include
                     ../../utils/include)
 
 target_link_libraries(chemkinReader ${Boost_LIBRARIES})
+
+install (TARGETS chemkinReader EXPORT chemkinReader DESTINATION lib)
+install (DIRECTORY include DESTINATION .)

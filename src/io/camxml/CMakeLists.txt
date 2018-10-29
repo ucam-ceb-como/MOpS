@@ -17,3 +17,6 @@ include_directories (include ../comostrings/include)
 # Anyone linking against this library will also need to link against the comostrings
 # library, because it is references from camxml.
 target_link_libraries(camxml comostrings)
+
+install (TARGETS camxml EXPORT camxml DESTINATION lib)
+install (DIRECTORY include DESTINATION .)
