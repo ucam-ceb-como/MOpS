@@ -340,7 +340,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	bool ip1_flag = false;
 	bool ip2_flag = false;
 
-	unsigned int index1 = 0, index2 = 0;
+	unsigned int index1 = 0, index2 = 0, n_index1 = 0;
 
 	// Choose and get first particle.
 	Particle *sp1 = NULL;
@@ -378,9 +378,10 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha1 <= n_incep)
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
+				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				--n_incep;
-				++n_other;
+				//--n_incep;
+				//++n_other;
 			}
 			else
 			{
@@ -393,11 +394,12 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha1 <= dc_incep)
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iDcol, rng);
+				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				--n_incep;
-				double delta_index = sys.Particles().PropertyAtIndex(iD_1, index1);
-				dc_1_incep -= delta_index;
-				dc_1_other += delta_index;
+				//--n_incep;
+				//double delta_index = sys.Particles().PropertyAtIndex(iD_1, index1);
+				//dc_1_incep -= delta_index;
+				//dc_1_other += delta_index;
 			}
 			else
 			{
@@ -410,11 +412,12 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha1 <= n_incep)
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
+				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				--n_incep;
-				double delta_index = sys.Particles().PropertyAtIndex(iD_1, index1);
-				dc_1_incep -= delta_index;
-				dc_1_other += delta_index;
+				//--n_incep;
+				//double delta_index = sys.Particles().PropertyAtIndex(iD_1, index1);
+				//dc_1_incep -= delta_index;
+				//dc_1_other += delta_index;
 			}
 			else
 			{
@@ -427,11 +430,12 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha1 <= dc_incep)
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iDcol, rng);
+				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				--n_incep;
-				double delta_index = sys.Particles().PropertyAtIndex(iD_2, index1);
-				dc_2_incep -= delta_index;
-				dc_2_other += delta_index;
+				//--n_incep;
+				//double delta_index = sys.Particles().PropertyAtIndex(iD_2, index1);
+				//dc_2_incep -= delta_index;
+				//dc_2_other += delta_index;
 			}
 			else
 			{
@@ -444,11 +448,12 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha1 <= n_incep)
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
+				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				--n_incep;
-				double delta_index = sys.Particles().PropertyAtIndex(iD2_M_1_2, index1);
-				dc2_m_1_2_incep -= delta_index;
-				dc2_m_1_2_other += delta_index;
+				//--n_incep;
+				//double delta_index = sys.Particles().PropertyAtIndex(iD2_M_1_2, index1);
+				//dc2_m_1_2_incep -= delta_index;
+				//dc2_m_1_2_other += delta_index;
 			}
 			else
 			{
@@ -461,11 +466,12 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha1 <= dc2_incep)
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iD2, rng);
+				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				--n_incep;
-				double delta_index = sys.Particles().PropertyAtIndex(iM_1_2, index1);
-				m_1_2_incep -= delta_index;
-				m_1_2_other += delta_index;
+				//--n_incep;
+				//double delta_index = sys.Particles().PropertyAtIndex(iM_1_2, index1);
+				//m_1_2_incep -= delta_index;
+				//m_1_2_other += delta_index;
 			}
 			else
 			{
@@ -478,9 +484,10 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha1 <= n_incep)
 			{
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
+				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				--n_incep;
-				++n_other;
+				//--n_incep;
+				//++n_other;
 			}
 			else
 			{
@@ -498,10 +505,10 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 			sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
 			sp1->SetTime(t);
-			sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
-			sys.Particles().UpdateNumberAtIndex(index1, -1);
-			sys.Particles().UpdateTotalParticleNumber(-1);
- 			ip1 = sys.Particles().Add(*sp1, rng);                                        // Add the particle to the ensemble
+			//sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
+			//sys.Particles().UpdateNumberAtIndex(index1, -1);
+			//sys.Particles().UpdateTotalParticleNumber(-1);
+ 			//ip1 = sys.Particles().Add(*sp1, rng);                                        // Add the particle to the ensemble
 		}
 		else
 		{
@@ -516,10 +523,10 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 
 		// Choose and get unique second particle.  Note, we are allowed to do
 		// this even if the first particle was invalidated.
-		// Incepting class can be selected twice, provided it contains at least two particles
 		ip2 = ip1;
+		index2 = index1;
 		unsigned int guard = 0;
-		bool mustSwitch = (ip1 == -2) && (n_incep == 0);
+		bool mustSwitch = (ip1 == -2) && (n_incep == 1);
 
 		switch (term) {
 		case SlipFlow1:
@@ -527,6 +534,11 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha2 <= n_incep && !mustSwitch)
 			{
 				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
+				if (index2 == index1 && n_index1 == 1)
+				{
+					while ((index2 == index1) && (++guard < 1000))
+						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
+				}
 				ip2 = -2;
 			}
 			else
@@ -540,6 +552,11 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha2 <= dc_1_incep && !mustSwitch)
 			{
 				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
+				if (index2 == index1 && n_index1 == 1)
+				{
+					while ((index2 == index1) && (++guard < 1000))
+						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
+				}
 				ip2 = -2;
 			}
 			else
@@ -553,6 +570,11 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha2 <= dc_1_incep && !mustSwitch)
 			{
 				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
+				if (index2 == index1 && n_index1 == 1)
+				{
+					while ((index2 == index1) && (++guard < 1000))
+						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
+				}
 				ip2 = -2;
 			}
 			else
@@ -566,6 +588,11 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha2 <= dc_2_incep && !mustSwitch)
 			{
 				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_2, rng);
+				if (index2 == index1 && n_index1 == 1)
+				{
+					while ((index2 == index1) && (++guard < 1000))
+						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_2, rng);
+				}
 				ip2 = -2;
 			}
 			else
@@ -579,6 +606,11 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha2 <= dc2_m_1_2_incep && !mustSwitch)
 			{
 				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD2_M_1_2, rng);
+				if (index2 == index1 && n_index1 == 1)
+				{
+					while ((index2 == index1) && (++guard < 1000))
+						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD2_M_1_2, rng);
+				}
 				ip2 = -2;
 			}
 			else
@@ -592,6 +624,11 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha2 <= m_1_2_incep && !mustSwitch)
 			{
 				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iM_1_2, rng);
+				if (index2 == index1 && n_index1 == 1)
+				{
+					while ((index2 == index1) && (++guard < 1000))
+						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iM_1_2, rng);
+				}
 				ip2 = -2;
 			}
 			else
@@ -605,6 +642,11 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			if (alpha2 <= n_incep && !mustSwitch)
 			{
 				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
+				if (index2 == index1 && n_index1 == 1)
+				{
+					while ((index2 == index1) && (++guard < 1000))
+						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
+				}
 				ip2 = -2;
 			}
 			else
@@ -646,8 +688,14 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	// Check that particle is still valid.  If not,
 	// remove it and cease coagulating.
 	if (!sp1->IsValid()) {
-		// Must remove first particle now.
-		sys.Particles().Remove(ip1);
+		if (!ip1_flag)
+			// Must remove first particle now.
+			sys.Particles().Remove(ip1);
+		else
+		{
+			delete sp1;
+			sp1 = NULL;
+		}
 		// Invalidating the index tells this routine not to perform coagulation.
 		ip1 = -1;
 		return 0;
@@ -659,7 +707,8 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	if (!sp2->IsValid()) {
 		// Tell the ensemble to update particle one before we confuse things
 		// by removing particle 2
-		sys.Particles().Update(ip1);
+		if (!ip1_flag)
+			sys.Particles().Update(ip1);
 		if (!ip2_flag)
 			// Must remove second particle now.
 			sys.Particles().Remove(ip2);
@@ -675,7 +724,8 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	}
 
 	// Check that both the particles are still valid.
-	if ((ip1 != -1) && (ip2 != -1)) {
+	if ((ip1 != -1) && (ip2 != -1)) 
+	{
 		// Must check for ficticious event now by comparing the original
 		// majorant rate and the current (after updates) true rate.
 		double truek = CoagKernel(*sp1, *sp2, sys);
@@ -707,6 +757,13 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		}
 
 		if (!Fictitious(majk, truek, rng)) {
+			if (ip1_flag)
+			{
+                sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
+				sys.Particles().UpdateNumberAtIndex(index1, -1);
+				sys.Particles().UpdateTotalParticleNumber(-1);
+				ip1 = sys.Particles().Add_PNP(*sp1, rng, ip2);    
+			}
 			// If particle sp2 is used, we now need to remove it from the incepting class
 			if (ip2_flag)
 			{
@@ -715,12 +772,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				sys.Particles().UpdateTotalParticleNumber(-1);
 			}
 			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
-
-			/*std::ofstream cFile;
-			cFile.open("coag-event-diags.csv", std::ios::app);
-			cFile << t << " , " << sp1->CollDiameter() << " , " << sp2->CollDiameter() << " , " << ip1_flag << " , " << ip2_flag << " , " << maj << " , " << sys.GetMuLN() << " , " << sys.GetSigmaLN() << " , " << sys.GetMomentsk_0() << " , " << sys.GetMomentsk_1() << " , " << sys.GetMomentsk_2() << " , " << sys.GetDistParams_diam() <<  "\n";
-			cFile.close();*/
-
+			
 			if (ip2_flag && sp2 != NULL)                                                     // Particle sp2 is not in the ensemble, must manually delete it
 			{
 				delete sp2;
@@ -729,7 +781,13 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		}
 		else
 		{
-			sys.Particles().Update(ip1);
+			if (!ip1_flag)
+				sys.Particles().Update(ip1);
+			else if (sp1 != NULL)                                                            // Particle sp1 is not in the ensemble, must manually delete it
+			{
+				delete sp1;
+				sp1 = NULL;
+			}
 			if (!ip2_flag)
 				sys.Particles().Update(ip2);
 			else if (sp2 != NULL)                                                            // Particle sp2 is not in the ensemble, must manually delete it
@@ -747,11 +805,17 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		// of valid particles must be propagated into the binary
 		// tree
 		if (ip1 != -1)
-			sys.Particles().Update(ip1);
+			if (!ip1_flag)
+				sys.Particles().Update(ip1);
 		if (ip2 != -1)
 		{
 			if (!ip2_flag)
 				sys.Particles().Update(ip2);
+		}
+		if (ip1_flag && sp1 != NULL)                                                         // Particle sp2 is not in the ensemble, must manually delete it
+		{
+			delete sp1;
+			sp1 = NULL;
 		}
 		if (ip2_flag && sp2 != NULL)                                                         // Particle sp2 is not in the ensemble, must manually delete it
 		{
@@ -759,11 +823,11 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			sp2 = NULL;
 		}
 	}
-	if (ip2_flag && sp2 != NULL)                                                             // Particle sp2 is not in the ensemble, must manually delete it
+	/*if (ip2_flag && sp2 != NULL)                                                             // Particle sp2 is not in the ensemble, must manually delete it
 	{
 		delete sp2;
 		sp2 = NULL;
-	}
+	}*/
 	return 0;
 }
 

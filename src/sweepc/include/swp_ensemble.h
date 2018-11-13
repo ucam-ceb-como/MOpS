@@ -181,6 +181,16 @@ public:
 	// control of destruction of the particle.
 	int Add(Particle &sp, rng_type &rng);
 
+    // aab64 For particle-number/particle model
+    // Adds particle to the ensemble from the PN model during coagulation
+    // Identical to the function above except it checks that the particle
+    // removed in contraction is not one required in the coagulation event.
+    // To do: Join these functions! 
+	// Adds the given particle to the ensemble.  Returns the new
+	// particle's index in the ensemble.  The ensemble then takes
+	// control of destruction of the particle.
+	int Add_PNP(Particle &sp, rng_type &rng, int i2);
+
 	//Find a particle that is a single PAH of a given structure
 	int CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, int ind);
 

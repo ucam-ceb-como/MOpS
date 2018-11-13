@@ -679,7 +679,7 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 
 	PartPtrVector dummy;
 	
-	unsigned int index1 = 0, index2 = 0;
+	unsigned int index1 = 0, index2 = 0, n_index1 = 0;
 	bool ip1_flag = false, ip2_flag = false;
 
 	// Choose and get first particle, then update it.
@@ -690,13 +690,15 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	if (ip1 < 0)
 	{
 		index1 = -1 * ip1;
+		ip1 = -2;
+		n_index1 = sys.Particles().NumberAtIndex(index1);
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 		sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
 		sp1->SetTime(t);
-		sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
-		sys.Particles().UpdateNumberAtIndex(index1, -1);
-		sys.Particles().UpdateTotalParticleNumber(-1);
-		ip1 = sys.Particles().Add(*sp1, rng);
+		//sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
+		//sys.Particles().UpdateNumberAtIndex(index1, -1);
+		//sys.Particles().UpdateTotalParticleNumber(-1);
+		//ip1 = sys.Particles().Add(*sp1, rng);
 	}
 	else
 	{
@@ -712,9 +714,25 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	// Choose and get unique second particle, then update it.  Note, we are allowed to do
 	// this even if the first particle was invalidated.
 	int ip2 = ip1;
+	index2 = index1;
 	unsigned int guard = 0;
-	while ((ip2 == ip1) && (++guard < 1000))
+	if (!ip1_flag)
+	{
+		while ((ip2 == ip1) && (++guard < 1000))
+			ip2 = ChooseIndexWeightedCoag(t, prop2, sys, rng);
+	}
+	else
+	{
 		ip2 = ChooseIndexWeightedCoag(t, prop2, sys, rng);
+		if (ip2 < 0)
+		{
+			if ((index1 == (-1 * ip2)) && n_index1 == 1)
+			{
+				while ((ip2 < 0) && (index1 == (-1 * ip2)) && (++guard < 1000))
+					ip2 = ChooseIndexWeightedCoag(t, prop2, sys, rng);
+			}
+		}
+	}
 
 	Particle *sp2 = NULL;
 
@@ -748,8 +766,13 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	// remove it and cease coagulating.
 	if (!sp1->IsValid()) {
 		// Must remove first particle now.
-		sys.Particles().Remove(ip1);
-
+		if (!ip1_flag)
+			sys.Particles().Remove(ip1);
+		else
+		{
+			delete sp1;
+			sp1 = NULL;
+		}
 		// Invalidating the index tells this routine not to perform coagulation.
 		ip1 = -1;
 		return 0;
@@ -761,7 +784,8 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	if (!sp2->IsValid()) {
 		// Tell the ensemble to update particle one before we confuse things
 		// by removing particle 2
-		sys.Particles().Update(ip1);
+		if (!ip1_flag)
+			sys.Particles().Update(ip1);
 
 		// Must remove second particle now.
 		if (!ip2_flag)
@@ -830,6 +854,14 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 			// not a need to made an adjustment to the number of incepted PAHs.
 			//sys.Particles().SetNumOfInceptedPAH(-1,sp1->Primary());
 
+			if (ip1_flag)
+			{
+				sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
+				sys.Particles().UpdateNumberAtIndex(index1, -1);
+				sys.Particles().UpdateTotalParticleNumber(-1);
+				ip1 = sys.Particles().Add_PNP(*sp1, rng, ip2);
+			}			
+
 			// Add contents of particle 2 onto particle 1
 			sp1->Coagulate(*sp2, rng);
 			sp1->SetTime(t);
@@ -847,7 +879,13 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 			}
 		}
 		else {
-			sys.Particles().Update(ip1);
+			if (!ip1_flag)	
+				sys.Particles().Update(ip1);
+			else
+			{
+				delete sp1;
+				sp1 = NULL;
+			}
 			if (!ip2_flag)
 				sys.Particles().Update(ip2);
 			else if (sp2 != NULL)                                                            // Particle sp2 is not in the ensemble, must manually delete it
@@ -858,13 +896,22 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 			return 1; // Ficticious event.
 		}
 	}
-	else {
+	else 
+	{
 		// One or both particles were invalidated on update,
 		// but that's not a problem.  Information on the update
 		// of valid particles must be propagated into the binary
 		// tree
 		if (ip1 != -1)
-			sys.Particles().Update(ip1);
+		{
+			if (!ip1_flag)
+				sys.Particles().Update(ip1);
+			else if (sp1 != NULL)
+			{
+				delete sp1;
+				sp1 = NULL;
+			}
+		}
 
 		if (ip2 != -1)
 		{
@@ -877,11 +924,11 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 			}
 		}
 	}
-	if (ip2_flag && sp2 != NULL)                                                            // Particle sp2 is not in the ensemble, must manually delete it
+	/*if (ip2_flag && sp2 != NULL)                                                            // Particle sp2 is not in the ensemble, must manually delete it
 	{
 		delete sp2;
 		sp2 = NULL;
-	}
+	}*/
 
 	return 0;
 }

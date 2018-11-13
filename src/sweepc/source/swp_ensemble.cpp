@@ -518,8 +518,6 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
 
 		i = indexGenerator();
-		while (i == m_capacity) // aab64 can't remove last particle in case this is a coagulating inception (hybrid)
-			i = indexGenerator();
 
 		// aab64 Account for particle weights in sample volume contraction
 		double wi = m_particles[i]->getStatisticalWeight();
@@ -558,6 +556,83 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
     assert(m_tree.size() == m_count);
 
     return i;
+}
+
+/*!
+* @param[in,out]   sp          Particle to add to the ensemble
+* @param[in,out]   rng         Random number generator
+*
+* @return      Index of added particle
+*
+* Particles must be heap allocated, because the ensemble takes the
+* address of sp and, by default, calls delete on the resulting pointer
+* when the particle is no longer needed.  It would probably make
+* sense to change the type of the first argument to Particle* to
+* reflect the fact that the ensemble mainly deals with the pointer.
+*
+*/
+int Sweep::Ensemble::Add_PNP(Particle &sp, rng_type &rng, int i2)
+{
+	// Check for doubling activation.
+	if (!m_dbleactive && (m_count >= m_dblecutoff - 1)) {
+		m_dbleactive = true;
+		//printf("sweep: Particle doubling activated.\n");
+	}
+
+	// Check ensemble for space, if there is not enough space then need
+	// to generate some by contracting the ensemble.
+	int i = -1;
+	if (m_count < m_capacity) {
+		// There is space in the tree for a new particle.
+		i = -1;
+	}
+	else {
+		// We must contract the ensemble to accommodate a new particle.
+		boost::uniform_smallint<int> indexDistrib(0, m_capacity);
+		boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
+
+		i = indexGenerator();
+		while (i == m_capacity || i == i2) // aab64 can't remove last particle in case this is a coagulating inception (hybrid)
+			i = indexGenerator();
+
+		// aab64 Account for particle weights in sample volume contraction
+		double wi = m_particles[i]->getStatisticalWeight();
+		double wsp = sp.getStatisticalWeight();
+		double wtot = m_tree.head().Property(iW) + m_total_number;
+		m_wtdcontfctr *= (wtot + wsp - wi);
+		m_wtdcontfctr *= 1.0 / (wtot + wsp);
+
+		++m_ncont;
+		if (!m_contwarn && ((double)(m_ncont) / (double)m_capacity > 0.01)) {
+			m_contwarn = true;
+			printf("sweep: Ensemble contracting too often; "
+				"possible stiffness issue.\n");
+		}
+	}
+
+	if (i < 0) {
+		// We are adding a new particle.
+		i = m_count++;
+		m_particles[i] = &sp;
+		m_tree.push_back(tree_type::value_type(sp, m_particles.begin() + i));
+		//m_numofInceptedPAH++;
+	}
+	else if ((unsigned)i < m_capacity) {
+		// Replace an existing particle (if i=m_capacity) then
+		// we are removing the new particle, so just ignore it.
+		Replace(i, sp);
+	}
+	else {
+		// The new particle is to be removed immediately
+		assert(static_cast<unsigned int>(i) == m_capacity);
+		delete &sp;
+	}
+
+	m_maxcount = std::max(m_maxcount, m_count);
+
+	assert(m_tree.size() == m_count);
+
+	return i;
 }
 
 int Sweep::Ensemble::SetPNParticle(Particle &sp, rng_type &rng, unsigned int index)
