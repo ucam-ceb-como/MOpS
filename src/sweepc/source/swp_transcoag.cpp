@@ -339,6 +339,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 	bool hybrid_flag = m_mech->IsHybrid() && n_incep > 0.0;
 	bool ip1_flag = false;
 	bool ip2_flag = false;
+	bool coag_in_place = false;
 
 	unsigned int index1 = 0, index2 = 0, n_index1 = 0;
 
@@ -380,8 +381,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				//--n_incep;
-				//++n_other;
 			}
 			else
 			{
@@ -396,10 +395,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iDcol, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				//--n_incep;
-				//double delta_index = sys.Particles().PropertyAtIndex(iD_1, index1);
-				//dc_1_incep -= delta_index;
-				//dc_1_other += delta_index;
 			}
 			else
 			{
@@ -414,10 +409,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				//--n_incep;
-				//double delta_index = sys.Particles().PropertyAtIndex(iD_1, index1);
-				//dc_1_incep -= delta_index;
-				//dc_1_other += delta_index;
 			}
 			else
 			{
@@ -432,10 +423,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iDcol, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				//--n_incep;
-				//double delta_index = sys.Particles().PropertyAtIndex(iD_2, index1);
-				//dc_2_incep -= delta_index;
-				//dc_2_other += delta_index;
 			}
 			else
 			{
@@ -450,10 +437,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				//--n_incep;
-				//double delta_index = sys.Particles().PropertyAtIndex(iD2_M_1_2, index1);
-				//dc2_m_1_2_incep -= delta_index;
-				//dc2_m_1_2_other += delta_index;
 			}
 			else
 			{
@@ -468,10 +451,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iD2, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				//--n_incep;
-				//double delta_index = sys.Particles().PropertyAtIndex(iM_1_2, index1);
-				//m_1_2_incep -= delta_index;
-				//m_1_2_other += delta_index;
 			}
 			else
 			{
@@ -486,8 +465,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
-				//--n_incep;
-				//++n_other;
 			}
 			else
 			{
@@ -504,11 +481,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				std::cout << "Index1 is too large\n";
 			ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 			sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
-			sp1->SetTime(t);
-			//sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
-			//sys.Particles().UpdateNumberAtIndex(index1, -1);
-			//sys.Particles().UpdateTotalParticleNumber(-1);
- 			//ip1 = sys.Particles().Add(*sp1, rng);                                        // Add the particle to the ensemble
+			sp1->SetTime(t); 
 		}
 		else
 		{
@@ -527,132 +500,154 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		index2 = index1;
 		unsigned int guard = 0;
 		bool mustSwitch = (ip1 == -2) && (n_incep == 1);
+		bool unsuitableChoice = true;
 
 		switch (term) {
 		case SlipFlow1:
-			alpha2 = unifDistrib() * n_total;
-			if (alpha2 <= n_incep && !mustSwitch)
+			while (unsuitableChoice && (++guard < 1000))
 			{
-				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
-				if (index2 == index1 && n_index1 == 1)
+				alpha2 = unifDistrib() * n_total;
+				if (alpha2 <= n_incep && !mustSwitch)
 				{
-					while ((index2 == index1) && (++guard < 1000))
-						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
+					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
+					if (!(index2 == index1 && n_index1 == 1))
+					{
+						unsuitableChoice = false;
+						ip2 = -2;
+					}
 				}
-				ip2 = -2;
-			}
-			else
-			{
-				while ((ip2 == ip1) && (++guard < 1000))
+				else
+				{
 					ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
+					if (!(ip2 == ip1))
+						unsuitableChoice = false;
+				}
 			}
 			break;
 		case SlipFlow2:
-			alpha2 = unifDistrib() * (dc_1_incep + dc_1_other);
-			if (alpha2 <= dc_1_incep && !mustSwitch)
+			while (unsuitableChoice && (++guard < 1000))
 			{
-				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
-				if (index2 == index1 && n_index1 == 1)
+				alpha2 = unifDistrib() * (dc_1_incep + dc_1_other);
+				if (alpha2 <= dc_1_incep && !mustSwitch)
 				{
-					while ((index2 == index1) && (++guard < 1000))
-						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
+					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
+					if (!(index2 == index1 && n_index1 == 1))
+					{
+						unsuitableChoice = false;
+						ip2 = -2;
+					}
 				}
-				ip2 = -2;
-			}
-			else
-			{
-				while ((ip2 == ip1) && (++guard < 1000))
+				else
+				{
 					ip2 = sys.Particles().Select_usingGivenRand(iD_1, alpha2 - dc_1_incep, rng);
+					if (!(ip2 == ip1))
+						unsuitableChoice = false;
+				}
 			}
 			break;
 		case SlipFlow3:
-			alpha2 = unifDistrib() * (dc_1_incep + dc_1_other);
-			if (alpha2 <= dc_1_incep && !mustSwitch)
+			while (unsuitableChoice && (++guard < 1000))
 			{
-				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
-				if (index2 == index1 && n_index1 == 1)
+				alpha2 = unifDistrib() * (dc_1_incep + dc_1_other);
+				if (alpha2 <= dc_1_incep && !mustSwitch)
 				{
-					while ((index2 == index1) && (++guard < 1000))
-						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
+					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
+					if (!(index2 == index1 && n_index1 == 1))
+					{
+						unsuitableChoice = false;
+						ip2 = -2;
+					}
 				}
-				ip2 = -2;
-			}
-			else
-			{
-				while ((ip2 == ip1) && (++guard < 1000))
+				else
+				{
 					ip2 = sys.Particles().Select_usingGivenRand(iD_1, alpha2 - dc_1_incep, rng);
+					if (!(ip2 == ip1))
+						unsuitableChoice = false;
+				}
 			}
 			break;
 		case SlipFlow4:
-			alpha2 = unifDistrib() * (dc_2_incep + dc_2_other);
-			if (alpha2 <= dc_2_incep && !mustSwitch)
+			while (unsuitableChoice && (++guard < 1000))
 			{
-				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_2, rng);
-				if (index2 == index1 && n_index1 == 1)
+				alpha2 = unifDistrib() * (dc_2_incep + dc_2_other);
+				if (alpha2 <= dc_2_incep && !mustSwitch)
 				{
-					while ((index2 == index1) && (++guard < 1000))
-						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_2, rng);
+					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_2, rng);
+					if (!(index2 == index1 && n_index1 == 1))
+					{
+						unsuitableChoice = false;
+						ip2 = -2;
+					}
 				}
-				ip2 = -2;
-			}
-			else
-			{
-				while ((ip2 == ip1) && (++guard < 1000))
+				else
+				{
 					ip2 = sys.Particles().Select_usingGivenRand(iD_2, alpha2 - dc_2_incep, rng);
+					if (!(ip2 == ip1))
+						unsuitableChoice = false;
+				}
 			}
 			break;
 		case FreeMol1:
-			alpha2 = unifDistrib() * (dc2_m_1_2_incep + dc2_m_1_2_other);
-			if (alpha2 <= dc2_m_1_2_incep && !mustSwitch)
+			while (unsuitableChoice && (++guard < 1000))
 			{
-				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD2_M_1_2, rng);
-				if (index2 == index1 && n_index1 == 1)
+				alpha2 = unifDistrib() * (dc2_m_1_2_incep + dc2_m_1_2_other);
+				if (alpha2 <= dc2_m_1_2_incep && !mustSwitch)
 				{
-					while ((index2 == index1) && (++guard < 1000))
-						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD2_M_1_2, rng);
+					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD2_M_1_2, rng);
+					if (!(index2 == index1 && n_index1 == 1))
+					{
+						unsuitableChoice = false;
+						ip2 = -2;
+					}
 				}
-				ip2 = -2;
-			}
-			else
-			{
-				while ((ip2 == ip1) && (++guard < 1000))
+				else
+				{
 					ip2 = sys.Particles().Select_usingGivenRand(iD2_M_1_2, alpha2 - dc2_m_1_2_incep, rng);
+					if (!(ip2 == ip1))
+						unsuitableChoice = false;
+				}
 			}
 			break;
 		case FreeMol2:
-			alpha2 = unifDistrib() * (m_1_2_incep + m_1_2_other);
-			if (alpha2 <= m_1_2_incep && !mustSwitch)
+			while (unsuitableChoice && (++guard < 1000))
 			{
-				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iM_1_2, rng);
-				if (index2 == index1 && n_index1 == 1)
+				alpha2 = unifDistrib() * (m_1_2_incep + m_1_2_other);
+				if (alpha2 <= m_1_2_incep && !mustSwitch)
 				{
-					while ((index2 == index1) && (++guard < 1000))
-						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iM_1_2, rng);
+					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iM_1_2, rng);
+					if (!(index2 == index1 && n_index1 == 1))
+					{
+						unsuitableChoice = false;
+						ip2 = -2;
+					}
 				}
-				ip2 = -2;
-			}
-			else
-			{
-				while ((ip2 == ip1) && (++guard < 1000))
+				else
+				{
 					ip2 = sys.Particles().Select_usingGivenRand(iM_1_2, alpha2 - m_1_2_incep, rng);
+					if (!(ip2 == ip1))
+						unsuitableChoice = false;
+				}
 			}
 			break;
 		default:
-			alpha2 = unifDistrib() * n_total;
-			if (alpha2 <= n_incep && !mustSwitch)
+			while (unsuitableChoice && (++guard < 1000))
 			{
-				index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
-				if (index2 == index1 && n_index1 == 1)
+				alpha2 = unifDistrib() * n_total;
+				if (alpha2 <= n_incep && !mustSwitch)
 				{
-					while ((index2 == index1) && (++guard < 1000))
-						index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
+					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
+					if (!(index2 == index1 && n_index1 == 1))
+					{
+						unsuitableChoice = false;
+						ip2 = -2;
+					}
 				}
-				ip2 = -2;
-			}
-			else
-			{
-				while ((ip2 == ip1) && (++guard < 1000))
+				else
+				{
 					ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
+					if (!(ip2 == ip1))
+						unsuitableChoice = false;
+				}
 			}
 			break;
 		}
@@ -664,7 +659,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		if (index2 >= sys.Particles().GetCritialNumber())
 			std::cout << "Index2 is too large\n";
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
-		// Note don't need to add it to the ensemble unless coagulation is successful
 		sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
 		sp2->SetTime(t); 
 	}
@@ -759,19 +753,36 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 		if (!Fictitious(majk, truek, rng)) {
 			if (ip1_flag)
 			{
+				// We are removing the particle from the PN model and adding it to the ensemble
                 sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
 				sys.Particles().UpdateNumberAtIndex(index1, -1);
 				sys.Particles().UpdateTotalParticleNumber(-1);
-				ip1 = sys.Particles().Add_PNP(*sp1, rng, ip2);    
+				unsigned int index12 = index1 + index2;
+				// Allow for coagulation in place if the combined particle is small enough
+				if (ip2_flag && (index12 < sys.Particles().GetCritialNumber()))
+				{
+					coag_in_place = true;
+					sys.Particles().UpdateTotalsWithIndex(index12, 1.0);
+					sys.Particles().UpdateNumberAtIndex(index12, 1);
+					sys.Particles().UpdateTotalParticleNumber(1);
+					if (sp1 != NULL) 
+					{
+						delete sp1;
+						sp1 = NULL;
+					}
+				}
+				else 
+					ip1 = sys.Particles().Add_PNP(*sp1, rng, ip2);    
 			}
-			// If particle sp2 is used, we now need to remove it from the incepting class
 			if (ip2_flag)
 			{
+			    // We are removing the particle from the PN model and adding it to the ensemble
 				sys.Particles().UpdateTotalsWithIndex(index2, -1.0);
 				sys.Particles().UpdateNumberAtIndex(index2, -1);
 				sys.Particles().UpdateTotalParticleNumber(-1);
 			}
-			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
+			if (!coag_in_place)
+				JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
 			
 			if (ip2_flag && sp2 != NULL)                                                     // Particle sp2 is not in the ensemble, must manually delete it
 			{
@@ -823,11 +834,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			sp2 = NULL;
 		}
 	}
-	/*if (ip2_flag && sp2 != NULL)                                                             // Particle sp2 is not in the ensemble, must manually delete it
-	{
-		delete sp2;
-		sp2 = NULL;
-	}*/
 	return 0;
 }
 

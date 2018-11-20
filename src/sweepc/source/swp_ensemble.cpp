@@ -520,8 +520,10 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 		i = indexGenerator();
 
 		// aab64 Account for particle weights in sample volume contraction
-		double wi = m_particles[i]->getStatisticalWeight();
 		double wsp = sp.getStatisticalWeight();
+		double wi = wsp;
+		if (i < m_capacity)
+			wi = m_particles[i]->getStatisticalWeight();
 		double wtot = m_tree.head().Property(iW) + m_total_number;
 		m_wtdcontfctr *= (wtot + wsp - wi);
 		m_wtdcontfctr *= 1.0 / (wtot + wsp);
