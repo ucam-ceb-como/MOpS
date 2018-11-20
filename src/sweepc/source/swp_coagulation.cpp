@@ -695,10 +695,6 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 		sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
 		sp1->SetTime(t);
-		//sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
-		//sys.Particles().UpdateNumberAtIndex(index1, -1);
-		//sys.Particles().UpdateTotalParticleNumber(-1);
-		//ip1 = sys.Particles().Add(*sp1, rng);
 	}
 	else
 	{
@@ -716,7 +712,28 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	int ip2 = ip1;
 	index2 = index1;
 	unsigned int guard = 0;
-	if (!ip1_flag)
+	bool unsuitableChoice = true;
+	while (unsuitableChoice && (++guard < 1000))
+	{
+		ip2 = ChooseIndexWeightedCoag(t, prop2, sys, rng);
+		if (!ip1_flag) // Ensemble particle - must check if same particle picked twice
+		{
+			if (!(ip1 == ip2))
+				unsuitableChoice = false;
+		}
+		else // Particle 1 comes from the PN model
+		{
+			if (ip2 < 0) // Particle 2 comes from the PN model 
+			{
+				index2 = -1 * ip2;
+				if (!((index1 == index2) && n_index1 == 1)) // There is more than one particle at chosen index so can use twice
+					unsuitableChoice = false;
+			}
+		}
+	}
+
+
+	/*if (!ip1_flag)
 	{
 		while ((ip2 == ip1) && (++guard < 1000))
 			ip2 = ChooseIndexWeightedCoag(t, prop2, sys, rng);
@@ -732,7 +749,7 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 					ip2 = ChooseIndexWeightedCoag(t, prop2, sys, rng);
 			}
 		}
-	}
+	}*/
 
 	Particle *sp2 = NULL;
 
@@ -924,12 +941,6 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 			}
 		}
 	}
-	/*if (ip2_flag && sp2 != NULL)                                                            // Particle sp2 is not in the ensemble, must manually delete it
-	{
-		delete sp2;
-		sp2 = NULL;
-	}*/
-
 	return 0;
 }
 
