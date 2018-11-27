@@ -505,11 +505,7 @@ void Reactor::RHS_ConstT(double t, const double *const y,  double *ydot) const
     } else {
         // Constant pressure
         // Volume compensating change in density.
-        //////////////////////////csl37-const-pressure
-		// ydot[m_iDens] = 0.0;
-		////////////////////////// change in T: use EOS
-		ydot[m_iDens] = - (y[m_iDens] * ydot[m_iT] / y[m_iT]);
-		//////////////////////////
+        ydot[m_iDens] = 0.0;
     }
 }
 

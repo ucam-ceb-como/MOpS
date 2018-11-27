@@ -2543,10 +2543,10 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 			//! the surface area is the particle free surface area
 			//! and the collision diameter is calculated using the
 			//! primary coordinates
-	//		if (m_pmodel->getTrackPrimaryCoordinates()) {
-	//			m_surf = m_free_surf;
-	//			m_dcol = CollisionDiameter();
-	//		}else{
+			if (m_pmodel->getTrackPrimaryCoordinates()) {
+				m_surf = m_free_surf;
+				m_dcol = CollisionDiameter();
+			}else{
 				
 				//! If primary separations are tracked then
 				//! the surface area is the particle free surface area
@@ -2566,7 +2566,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 					(1.0 / m_pmodel->GetFractDim()));
 				m_dcol = aggcolldiam;
 
-	//		}
+			}
 
             m_dmob = MobDiameter();
             
