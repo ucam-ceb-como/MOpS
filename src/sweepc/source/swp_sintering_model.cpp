@@ -167,7 +167,7 @@ double SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) con
         case GBD:
         default:
             return m_A * dp * dp * dp * dp * sys.GasPhase().Temperature() *
-                   exp((m_E*(1-pow(m_dpmin/dp,5.0)))/sys.GasPhase().Temperature());
+                   exp((m_E*(1-pow(m_dpmin/dp,3.0)))/sys.GasPhase().Temperature());
             break;
         case SSD:
             return m_A * dp * dp * dp * sys.GasPhase().Temperature() *
