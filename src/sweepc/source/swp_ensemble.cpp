@@ -501,9 +501,9 @@ Particle *const Sweep::Ensemble::GetPNParticleAt(unsigned int index)
 int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 {
     // Check for doubling activation.
-    if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
+    if (!m_dbleactive && ((m_count + m_total_number) >= m_dblecutoff-1)) {
 		m_dbleactive =  true;
-        //printf("sweep: Particle doubling activated.\n");
+        printf("sweep: Particle doubling activated.\n");
     }
 
     // Check ensemble for space, if there is not enough space then need
@@ -576,9 +576,9 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 int Sweep::Ensemble::Add_PNP(Particle &sp, rng_type &rng, int i2)
 {
 	// Check for doubling activation.
-	if (!m_dbleactive && (m_count >= m_dblecutoff - 1)) {
+	if (!m_dbleactive && ((m_count + m_total_number) >= m_dblecutoff - 1)) {
 		m_dbleactive = true;
-		//printf("sweep: Particle doubling activated.\n");
+		printf("sweep: Particle doubling activated.\n");
 	}
 
 	// Check ensemble for space, if there is not enough space then need
@@ -790,7 +790,7 @@ void Sweep::Ensemble::RemoveInvalids(void)
     // Stop doubling because the number of particles has dropped from above
     // m_dblelimit during this function, which means a rapid loss of particles
     // so doubling will make the sample volume needlessly large.
-    if(m_count < m_capacity - m_dblecutoff) {
+	if ((m_count + m_total_number) < m_capacity - m_dblecutoff) {
         m_dbleactive = false;
     }
 
@@ -979,13 +979,12 @@ int Sweep::Ensemble::Select_usingGivenRand(Sweep::PropID id, double rng_number, 
 
 // Returns the scaling factor due to internal ensemble processes.
 double Sweep::Ensemble::Scaling() const
-{
+{   
     // The scaling factor includes the contraction term and the doubling term.
-    return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
-    
-	// aab64 The scaling factor includes the contraction term and the doubling term.
-	// for weighted particles, the contraction factor depends on the weight of the removed particle 
-	//return m_wtdcontfctr;// *pow(2.0, (double)m_ndble);
+    //return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
+
+	// aab64 for weighted particles, the contraction factor depends on the weight of the removed particle 
+	return m_wtdcontfctr * pow(2.0, (double)m_ndble);
 }
 
 // Resets the ensemble scaling.
@@ -1317,65 +1316,67 @@ void Sweep::Ensemble::dble()
     // ensemble is back above half full, the routine updates the binary tree.
 
     // Check that doubling is on and the activation condition has been met.
-    if (m_dbleon && m_dbleactive && m_count > 0) {
+    if (m_dbleon && m_dbleactive && (m_count + m_total_number) > 0) {
         const unsigned originalCount = m_count;
 		bool proceed = true;
+		bool IWDSA = false;
 
         // Continue while there are too few particles in the ensemble.
-        while (m_count < m_dblelimit && proceed) {
-            if(m_count == 0) {
+		while ((m_count + m_total_number) < m_dblelimit && proceed) {
+            /*if(m_count == 0) {
                 throw std::runtime_error("Attempt to double particle ensemble with 0 particles");
-            }
+            }*/
 			std::cout << "Doubling!" <<std::endl;
 			std::cout << m_count << std::endl;
 
-            // Copy particles.
-			size_t starter = 0;
-            const size_t prevCount = m_count;
-			int ii = 0;
-			bool IWDSA;
-			if (m_particles[0]->Primary()->AggID() == AggModels::PAH_KMC_ID){
-				IWDSA = m_particles[0]->Primary()->ParticleModel()->Components(0)->WeightedPAHs();
-			}
-			else{
-				IWDSA = false;
-			}
-            for (size_t i = 0; i != prevCount; ++i) {
+			if (m_count > 0)
+			{
+				// Copy particles.
+				size_t starter = 0;
+				const size_t prevCount = m_count;
+				int ii = 0;
+				if (m_particles[0]->Primary()->AggID() == AggModels::PAH_KMC_ID){
+					IWDSA = m_particles[0]->Primary()->ParticleModel()->Components(0)->WeightedPAHs();
+				}
+				else{
+					IWDSA = false;
+				}
+				for (size_t i = 0; i != prevCount; ++i) {
 
-            //if (m_particles[i]->Primary()->AggID() ==AggModels::PAH_KMC_ID)
-            //{
-            //    const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-            //    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
-            //    // if not 0, it is a pyrene
-            //    if (rhsparticle->Pyrene()!=0)
-            //        m_numofInceptedPAH++;
-            //}
-				int numberPAH = 0;
-				if (IWDSA){
-					const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-					if (m_particles[i]->Primary()->AggID() == AggModels::PAH_KMC_ID){
+					//if (m_particles[i]->Primary()->AggID() ==AggModels::PAH_KMC_ID)
+					//{
+					//    const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+					//    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+					//    // if not 0, it is a pyrene
+					//    if (rhsparticle->Pyrene()!=0)
+					//        m_numofInceptedPAH++;
+					//}
+					int numberPAH = 0;
+					if (IWDSA){
+						const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+						if (m_particles[i]->Primary()->AggID() == AggModels::PAH_KMC_ID){
 
-						rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
-						numberPAH = rhsparticle->NumPAH();
+							rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+							numberPAH = rhsparticle->NumPAH();
+						}
+					}
+					if (numberPAH > 1 || !IWDSA){ //If this particle is not just a single PAH
+
+						size_t iCopy = prevCount + ii;
+						// Create a copy of a particle and add it to the ensemble.
+						m_particles[iCopy] = m_particles[i]->Clone();
+
+						// Keep count of the added particles
+						++m_count;
+						++ii;
+					}
+					else{ //If this particle is a single PAH, double its statistical weight
+						double oldweight = m_particles[i]->getStatisticalWeight();
+						m_particles[i]->setStatisticalWeight(2.0*oldweight);
+						Update(i);
 					}
 				}
-				if (numberPAH > 1 || !IWDSA){ //If this particle is not just a single PAH
-					
-					size_t iCopy = prevCount + ii;
-					// Create a copy of a particle and add it to the ensemble.
-					m_particles[iCopy] = m_particles[i]->Clone();
-
-					// Keep count of the added particles
-					++m_count;
-					++ii;
-				}
-				else{ //If this particle is a single PAH, double its statistical weight
-					double oldweight = m_particles[i]->getStatisticalWeight();
-					m_particles[i]->setStatisticalWeight(2.0*oldweight);
-					Update(i);
-				}
-            }
-
+			}
 			if (m_total_number > 0)
 			{
 				for (unsigned int i = 0; i < m_critical_size; ++i)
@@ -1463,6 +1464,10 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
         // Output number of contractions.
         n = (unsigned int)m_ncont;
         out.write((char*)&n, sizeof(n));
+
+		// Output final contraction factor.
+		double wcf = m_wtdcontfctr;
+		out.write((char*)&wcf, sizeof(wcf));
 
         // Output number of doublings.
         n = (unsigned int)m_ndble;
@@ -1565,6 +1570,11 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Read number of contractions.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_ncont = n;
+
+				// Rad the final contraction factor
+				double wcf = 0.0;
+				in.read(reinterpret_cast<char*>(&wcf), sizeof(wcf));
+				m_wtdcontfctr = wcf;
 
                 // Read number of doublings.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
