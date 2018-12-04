@@ -9,20 +9,26 @@
     </component>
 	
 <!-- Define particle types (Detailed) -->
-    <particle id="[Ru]" model="bintree" subtree="false" hybrid="true" threshold="100000">
+    <particle id="[Ru]" model="bintree" subtree="false" hybrid="false" threshold="1070" track="primaryCoordinates">
         <description>A rutile particle.</description>
 	    <fractdim>1.8</fractdim>
         <coalthresh>1.0</coalthresh>
-        <sintering enable="true" model="GBD">
-		    <A units="s/m4K">7.44E+16</A>
-            <E units="K">31032</E>
-		    <Dpmin units="nm">0.001</Dpmin>
-        </sintering>
+		<sintering enable="true" model="GBD">
+			<!-- GBD model params based on Eggersdorfer et al. (2012)-->
+			<A units="s/m4K">9.112e+17</A>
+			<E units="K">31030</E>
+			<Dpmin units="m">4e-9</Dpmin>
+		</sintering>
     </particle>
         <!--sintering enable="true" model="Rutile">
 		    <A units="s/m4K">3.7E+16</A>
             <E units="K">31032</E>
 		    <Dpmin units="nm">3.4</Dpmin>
+        <sintering enable="true" model="GBD">
+		    <A units="s/m4K">7.44E+16</A>
+            <E units="K">31032</E>
+		    <Dpmin units="m">0</Dpmin>
+        </sintering>
         </sintering-->
 	
 	<!-- Define particle types (Spherical) -->

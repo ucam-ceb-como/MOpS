@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mops version="3">
     <!-- Sim parameters -->
-    <runs>1</runs>
+    <runs>2</runs>
     <iter>10</iter>
     <atol>1.0e-17</atol>
     <rtol>1.0e-4</rtol>
-    <maxm0>5e19</maxm0>
-    <pcount>4096</pcount>
+    <maxm0>0.0075e14</maxm0>
+    <pcount>512</pcount>
     <relax>0.8</relax>
 	
 	<!-- Initial reactor composition -->
@@ -18,40 +18,56 @@
     </mixture>
 	
 	<!-- Initial reactor composition -->
+    <mixture id="reac_mixture2">
+        <temperature units="K">573</temperature>
+        <pressure units="bar">4.5</pressure>	
+        <component id="TICL4">0.52</component>
+        <component id="O2">0.48</component>
+    </mixture>
+	
+	<!-- Initial reactor composition -->
     <mixture id="init_mixture">
-        <temperature units="K">1500</temperature>
+        <component id="AR">1.0</component>
+        <temperature units="K">1200</temperature>
         <pressure units="bar">4.5</pressure>
-	    <!--component id="AR">1.0</component-->
-        <component id="TICL4">0.0001</component>
+	<!--component id="TICL4">0.0001</component>
         <component id="O2">0.595</component>
         <component id="CL">0.0168</component>
         <component id="CL2">0.388</component>
         <component id="CLO">0.0001</component>	
-		<population>
-		    <m0>2.9311e+17</m0>
-			<file>Network(stage1)(0)-SP(10000).ens</file>
-		</population>
+        <population>
+            <m0>1.48e+17</m0>
+	    <file>Network(stage1-init)(0)-SP(20000).ens</file>
+        </population-->
     </mixture>
 	
 	<!-- Initial reactor composition -->
     <mixture id="o2_mixture">
-        <temperature units="K">3000</temperature>
+        <temperature units="K">2000</temperature>
         <pressure units="bar">4.5</pressure>
-	    <component id="O2">1.0</component>
+	<component id="O2">1.0</component>
     </mixture>
 	
     <!-- Stage 1 -->
-    <reactor constt="false" constv="true" id="stage2" type="psr" units="mol/mol" order="1" dtype="cdelete">
-	    <initial>init_mixture</initial>
-        <flow dir="in" frac="0.62">o2_mixture</flow>
-        <flow dir="in" frac="0.38">reac_mixture</flow>
+    <reactor constt="false" constv="true" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
+	<initial>init_mixture</initial>
+        <flow dir="in" frac="0.52">o2_mixture</flow>
+        <flow dir="in" frac="0.48">reac_mixture</flow>
         <restime unit="s">0.002</restime>
     </reactor>
+	
+    <!-- Stage 2 -->
+    <!--reactor constt="false" constv="true" id="stage2" type="psr" units="mol/mol" order="2" dtype="cdelete">
+	    <initial>init_mixture</initial>
+        <flow dir="in" frac="0.7">stage1</flow>
+        <flow dir="in" frac="0.3">reac_mixture2</flow>
+        <restime unit="s">0.01</restime>
+    </reactor-->
 	
     <!-- Time stepping -->
     <timeintervals>
       	<start>0.0</start>
-        <time splits="50" steps="10000">0.01</time>
+        <time splits="20" steps="3500">0.0035</time>
     </timeintervals>
    
     <!-- Output specifications -->
