@@ -1540,7 +1540,7 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 		index = i;
 		n_index = sys.Particles().NumberAtIndex(i);
 
-		if (n_index > 0)
+		if (n_index > 0 && rate_constant > 0.0)
 		{
 			rate_index = rate_constant * sys.Particles().Diameter2AtIndex(index);
 			boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate_index);
