@@ -1407,7 +1407,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 *@param[in]        t           Time upto which particles to be updated
 *@param[in,out]    rng         Random number generator
 */
-/*void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
+void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
 {
 	// Note: this method is faster but can be inaccurate because random choice of
 	// surface growth affects the whole size class in one lump. 
@@ -1435,7 +1435,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 		index = i;
 		n_index = sys.Particles().NumberAtIndex(i);
 
-		if (n_index > 0)
+		if (n_index > 0 && rate_constant > 0.0)
 		{
 			rate_index = rate_constant * sys.Particles().Diameter2AtIndex(index);
 			boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate_index);
@@ -1480,27 +1480,37 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 					else
 					{
 						Particle * sp2 = sp_add->Clone();
-						sp2->setStatisticalWeight(n_index);
+						sp2->setStatisticalWeight((double)n_index);
 						sys.Particles().Add(*sp2, rng);
 					}
 					delete sp_add;
 					sp_add = NULL;
 				}
+				sys.SetNotPSIFlag(true);
+				for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+				{
+					if ((*i)->IsDeferred())
+					{
+						(*i)->Perform(t, sys, rng, added_total);
+					}
+				}
+				sys.SetNotPSIFlag(false);
+				added_total = 0.0;
 			}
 		}
 	}
 	sys.SetNotPSIFlag(true);
 	
-	for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+/*	for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 	{
 		if ((*i)->IsDeferred())
 		{
 			(*i)->Perform(t, sys, rng, added_total);
 		}
-	}
+	}*/
 	delete sp_critical_size;
 	sp_critical_size = NULL;
-}*/
+}
 
 
 
@@ -1512,7 +1522,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 *@param[in]        t           Time upto which particles to be updated
 *@param[in,out]    rng         Random number generator
 */
-void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
+/*void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
 {
 	// Note: this method is significantly slower but more accurate because random choice of
 	// surface growth affects only one particle in the size class at a time.
@@ -1581,22 +1591,33 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 						delete sp_add;
 						sp_add = NULL;
 					}
+
+					sys.SetNotPSIFlag(true);
+					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					{
+						if ((*i)->IsDeferred())
+						{
+							(*i)->Perform(t, sys, rng, added_total);
+						}
+					}
+					sys.SetNotPSIFlag(false);
+					added_total = 0;
 				}
 			}
 		}
 	}
 	sys.SetNotPSIFlag(true);
 
-	for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-	{
-		if ((*i)->IsDeferred())
-		{
-			(*i)->Perform(t, sys, rng, added_total);
-		}
-	}
+	//for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+	//{
+	//	if ((*i)->IsDeferred())
+	//	{
+	//		(*i)->Perform(t, sys, rng, added_total);
+	//	}
+	//}
 	delete sp_critical_size;
 	sp_critical_size = NULL;
-}
+}*/
 
 
 
