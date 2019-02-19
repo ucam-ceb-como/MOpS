@@ -1407,7 +1407,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 *@param[in]        t           Time upto which particles to be updated
 *@param[in,out]    rng         Random number generator
 */
-void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
+/*void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
 {
 	// Note: this method is faster but can be inaccurate because random choice of
 	// surface growth affects the whole size class in one lump. 
@@ -1501,16 +1501,16 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	}
 	sys.SetNotPSIFlag(true);
 	
-/*	for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-	{
-		if ((*i)->IsDeferred())
-		{
-			(*i)->Perform(t, sys, rng, added_total);
-		}
-	}*/
+	//for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+	//{
+	//	if ((*i)->IsDeferred())
+	//	{
+	//		(*i)->Perform(t, sys, rng, added_total);
+	//	}
+	//}
 	delete sp_critical_size;
 	sp_critical_size = NULL;
-}
+}*/
 
 
 
@@ -1522,7 +1522,7 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 *@param[in]        t           Time upto which particles to be updated
 *@param[in,out]    rng         Random number generator
 */
-/*void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
+void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
 {
 	// Note: this method is significantly slower but more accurate because random choice of
 	// surface growth affects only one particle in the size class at a time.
@@ -1617,14 +1617,14 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	//}
 	delete sp_critical_size;
 	sp_critical_size = NULL;
-}*/
+}
 
 
 
 
 //! Compute nth diameter moment, adjusted because distribution is truncated
 //! to maximum/minimum physical particle size thresholds (conditional expectation)
-unsigned int Mechanism::SetRandomParticle(bool isSP1, bool isSP2, Sweep::Ensemble &ens, double t, double random_number,
+unsigned int Mechanism::SetRandomParticle(Sweep::Ensemble &ens, double t, double random_number,
 	Sweep::PropID prop, rng_type &rng) const
 {		
 	// Generate a random number

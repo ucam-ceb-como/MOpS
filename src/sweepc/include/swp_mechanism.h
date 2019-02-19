@@ -346,8 +346,6 @@ public:
     //! Set properties of particle picked for coagulation/outflow using 
     //! distribution parameters
 	unsigned int SetRandomParticle(
-		bool isSP1,
-		bool isSP2,
 		Sweep::Ensemble &ens,
 		double t,
 		double random_number, 
