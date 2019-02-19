@@ -215,7 +215,7 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
 		double test = unifDistrib() * (ntotal_pn + ntotal_ens);
 		if (ntotal_pn >= test)
 		{
-			unsigned int index = m_mech->SetRandomParticle(false, false, sys.Particles(), t, test, iUniform, rng);
+			unsigned int index = m_mech->SetRandomParticle(sys.Particles(), t, test, iUniform, rng);
 			sys.Particles().UpdateTotalsWithIndex(index, -1.0);
 			sys.Particles().UpdateNumberAtIndex(index, -1);
 			sys.Particles().UpdateTotalParticleNumber(-1);
@@ -267,7 +267,7 @@ int DeathProcess::Perform_wtd(double t, Sweep::Cell &sys,
 		double test = unifDistrib() * (ntotal_pn + ntotal_ens);
 		if (ntotal_pn >= test && num >= 1)
 		{
-			unsigned int index = m_mech->SetRandomParticle(false, false, sys.Particles(), t, test, iUniform, rng);
+			unsigned int index = m_mech->SetRandomParticle(sys.Particles(), t, test, iUniform, rng);
 			sys.Particles().UpdateTotalsWithIndex(index, -1.0);
 			sys.Particles().UpdateNumberAtIndex(index, -1);
 			sys.Particles().UpdateTotalParticleNumber(-1);

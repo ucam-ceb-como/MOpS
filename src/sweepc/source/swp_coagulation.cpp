@@ -701,7 +701,7 @@ int Coagulation::ChooseIndexWeightedCoag(double t, const Sweep::PropID prop, Cel
 	
 	if (alpha <= p_incep)
 	{
-		index = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha, prop, rng);
+		index = m_mech->SetRandomParticle(sys.Particles(), t, alpha, prop, rng);
 		if (index >= sys.Particles().GetCritialNumber())
 			std::cout << "Index is too large\n";
 		index *= -1;

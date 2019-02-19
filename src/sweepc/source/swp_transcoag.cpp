@@ -378,7 +378,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			alpha1 = unifDistrib() * n_total;
 			if (alpha1 <= n_incep)
 			{
-				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
+				index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
 			}
@@ -392,7 +392,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			alpha1 = unifDistrib() * (dc_incep + dc_other);
 			if (alpha1 <= dc_incep)
 			{
-				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iDcol, rng);
+				index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iDcol, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
 			}
@@ -406,7 +406,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			alpha1 = unifDistrib() * n_total;
 			if (alpha1 <= n_incep)
 			{
-				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
+				index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
 			}
@@ -420,7 +420,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			alpha1 = unifDistrib() * (dc_incep + dc_other);
 			if (alpha1 <= dc_incep)
 			{
-				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iDcol, rng);
+				index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iDcol, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
 			}
@@ -434,7 +434,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			alpha1 = unifDistrib() * n_total;
 			if (alpha1 <= n_incep)
 			{
-				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
+				index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
 			}
@@ -448,7 +448,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			alpha1 = unifDistrib() * (dc2_incep + dc2_other);
 			if (alpha1 <= dc2_incep)
 			{
-				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iD2, rng);
+				index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iD2, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
 			}
@@ -462,7 +462,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			alpha1 = unifDistrib() * n_total;
 			if (alpha1 <= n_incep)
 			{
-				index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1, iUniform, rng);
+				index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
 				n_index1 = sys.Particles().NumberAtIndex(index1);
 				ip1 = -2;
 			}
@@ -509,7 +509,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				alpha2 = unifDistrib() * n_total;
 				if (alpha2 <= n_incep && !mustSwitch)
 				{
-					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
+					index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iUniform, rng);
 					if (!(index2 == index1 && n_index1 == 1))
 					{
 						unsuitableChoice = false;
@@ -530,7 +530,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				alpha2 = unifDistrib() * (dc_1_incep + dc_1_other);
 				if (alpha2 <= dc_1_incep && !mustSwitch)
 				{
-					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
+					index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iD_1, rng);
 					if (!(index2 == index1 && n_index1 == 1))
 					{
 						unsuitableChoice = false;
@@ -551,7 +551,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				alpha2 = unifDistrib() * (dc_1_incep + dc_1_other);
 				if (alpha2 <= dc_1_incep && !mustSwitch)
 				{
-					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_1, rng);
+					index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iD_1, rng);
 					if (!(index2 == index1 && n_index1 == 1))
 					{
 						unsuitableChoice = false;
@@ -572,7 +572,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				alpha2 = unifDistrib() * (dc_2_incep + dc_2_other);
 				if (alpha2 <= dc_2_incep && !mustSwitch)
 				{
-					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD_2, rng);
+					index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iD_2, rng);
 					if (!(index2 == index1 && n_index1 == 1))
 					{
 						unsuitableChoice = false;
@@ -593,7 +593,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				alpha2 = unifDistrib() * (dc2_m_1_2_incep + dc2_m_1_2_other);
 				if (alpha2 <= dc2_m_1_2_incep && !mustSwitch)
 				{
-					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iD2_M_1_2, rng);
+					index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iD2_M_1_2, rng);
 					if (!(index2 == index1 && n_index1 == 1))
 					{
 						unsuitableChoice = false;
@@ -614,7 +614,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				alpha2 = unifDistrib() * (m_1_2_incep + m_1_2_other);
 				if (alpha2 <= m_1_2_incep && !mustSwitch)
 				{
-					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iM_1_2, rng);
+					index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iM_1_2, rng);
 					if (!(index2 == index1 && n_index1 == 1))
 					{
 						unsuitableChoice = false;
@@ -635,7 +635,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				alpha2 = unifDistrib() * n_total;
 				if (alpha2 <= n_incep && !mustSwitch)
 				{
-					index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2, iUniform, rng);
+					index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iUniform, rng);
 					if (!(index2 == index1 && n_index1 == 1))
 					{
 						unsuitableChoice = false;
@@ -759,7 +759,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				sys.Particles().UpdateTotalParticleNumber(-1);
 				unsigned int index12 = index1 + index2;
 				// Allow for coagulation in place if the combined particle is small enough
-				if (ip2_flag && (index12 < sys.Particles().GetCritialNumber()))
+				/*if (ip2_flag && (index12 < sys.Particles().GetCritialNumber()))
 				{
 					coag_in_place = true;
 					sys.Particles().UpdateTotalsWithIndex(index12, 1.0);
@@ -771,7 +771,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 						sp1 = NULL;
 					}
 				}
-				else 
+				else */
 					ip1 = sys.Particles().Add_PNP(*sp1, rng, ip2);    
 			}
 			if (ip2_flag)
@@ -781,7 +781,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 				sys.Particles().UpdateNumberAtIndex(index2, -1);
 				sys.Particles().UpdateTotalParticleNumber(-1);
 			}
-			if (!coag_in_place)
+			//if (!coag_in_place)
 				JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
 			
 			if (ip2_flag && sp2 != NULL)                                                     // Particle sp2 is not in the ensemble, must manually delete it

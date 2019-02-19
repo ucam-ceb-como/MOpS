@@ -130,11 +130,13 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     // uniformly and one with probability proportional
     // to particle mass.
 	int ip1 = -1, ip2 = -1;
+	unsigned int index1 = 0, index2 = 0;
 
 	// aab64 hybrid particle model flags
 	bool hybrid_flag = m_mech->IsHybrid();
 	bool ip1_flag = false;
 	bool ip2_flag = false;
+	bool coag_in_place = false;
 
 	double n_incep = sys.Particles().GetTotalParticleNumber();
 	double n_other = sys.ParticleCount();
@@ -143,7 +145,6 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	boost::uniform_01<rng_type&, double> unifDistrib(rng);
 	double alpha1 = unifDistrib() * n_total;
 	double alpha2 = unifDistrib() * n_total;
-
 	if (n_total <= 0)
 		return -1;
 
@@ -163,10 +164,6 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			{
 				ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1, rng);
 			}
-			if (n_other >= alpha2)
-			{
-				ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2, rng);
-			}
 		}
 		else
 		{
@@ -178,27 +175,18 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 	// Choose and get first particle, then update it.
 	Particle *sp1 = NULL;
 	double dsp1 = 0.0;
+	bool must_switch = false;
 
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip1 == -2)
 	{
-		unsigned int index1 = m_mech->SetRandomParticle(true, false, sys.Particles(), t, alpha1 - n_other, iUniform, rng);
+		// Note don't need to add it to the ensemble unless coagulation is successful
+		index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1 - n_other, iUniform, rng);
 		if (index1 >= sys.Particles().GetCritialNumber())
 			std::cout << "Index1 is too large\n";
-
 		sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
 		sp1->SetTime(t);
-		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
-		sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
-		sys.Particles().UpdateNumberAtIndex(index1, -1);
-		sys.Particles().UpdateTotalParticleNumber(-1);
-		dsp1 = sp1->CollDiameter();                                           // Update moments for removal of a particle from the space
-
-		// If incepting class is now empty, pick another particle before adding sp1 to the ensemble
-		if (ip2 == -2 && sys.Particles().GetTotalParticleNumber() == 0)
-			ip2 = sys.Particles().Select(rng);
-
-		ip1 = sys.Particles().Add(*sp1, rng);                                        // Add the particle to the ensemble
+		ip1_flag = true;                                                                // Flag sp1 as an incepting class particle
 	}
 	else
 	{
@@ -210,41 +198,56 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			return -1;
 		}
 	}
-	if (ip1_flag)
+
+	// Choose and get unique second particle, then update it.  Note, we are allowed to do
+	// this even if the first particle was invalidated.
+	unsigned int guard = 0;
+	if (!hybrid_flag)
 	{
-		++n_other;
-		--n_incep;
-	}
-    // Choose and get unique second particle, then update it.  Note, we are allowed to do
-    // this even if the first particle was invalidated.
-    unsigned int guard = 0;
-	while ((ip2 == ip1) && (++guard < 1000))
-	{
-		if (hybrid_flag && ip2 != -2)
+		while ((ip2 == ip1) && (++guard < 1000))
 		{
-			ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2, rng);
-		}
-		else
 			ip2 = sys.Particles().Select(rng);
+		}
+	}
+	else
+	{
+		ip2 = ip1;
+		bool unsuitableChoice = true;
+		unsigned int n_index1 = sys.Particles().NumberAtIndex(index1);
+		while (unsuitableChoice && (++guard < 1000))
+		{
+			alpha2 = unifDistrib() * n_total;
+			if (alpha2 <= n_incep)
+			{
+				index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iUniform, rng); 
+				if (index2 >= sys.Particles().GetCritialNumber())
+					std::cout << "Index2 is too large\n";
+				if (!((index2 == index1) && (n_index1 == 1)))
+				{
+					unsuitableChoice = false;
+					ip2 = -2;
+				}
+			}
+			else
+			{
+				ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
+				if (!(ip2 == ip1))
+					unsuitableChoice = false;
+			}
+		}
 	}
 
 	// Choose and get second particle, then update it.
-    Particle *sp2 = NULL;
+	Particle *sp2 = NULL;
 	double dsp2 = 0.0;
-	unsigned int index2 = 0;
 
 	// Is this an incepting class particle?
 	if (hybrid_flag && ip2 == -2)
 	{
-		int ip1_adjustment = 0;
-		index2 = m_mech->SetRandomParticle(false, true, sys.Particles(), t, alpha2 - n_other, iUniform, rng);
-		if (index2 >= sys.Particles().GetCritialNumber())
-			std::cout << "Index2 is too large\n";
 		// Note don't need to add it to the ensemble unless coagulation is successful
 		sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
 		sp2->SetTime(t);
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
-		dsp2 = sp2->CollDiameter();
 	}
 	else
 	{
@@ -257,36 +260,47 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 		}
 	}
 
-    //Calculate the majorant rate before updating the particles
-    const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
-	
-    //Update the particles
+	//Calculate the majorant rate before updating the particles
+	const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
+
+	//Update the particles
 	if (t > sp1->LastUpdateTime())
 		m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
 
-    // Check that particle is still valid.  If not,
-    // remove it and cease coagulating.
-    if (!sp1->IsValid()) {
-        // Must remove first particle now.
-		sys.Particles().Remove(ip1);
-		
-        // Invalidating the index tells this routine not to perform coagulation.
-        ip1 = -1;
-        return 0;
-    }
+	// Check that particle is still valid.  If not,
+	// remove it and cease coagulating.
+	if (!sp1->IsValid()) {
+		if (!ip1_flag)
+		{
+			// Must remove first particle now.
+			sys.Particles().Remove(ip1);
+		}
+		else
+		{
+			// Particle sp1 is not in the ensemble, must manually delete it
+			delete sp1;
+			sp1 = NULL;
+		}
+		// Invalidating the index tells this routine not to perform coagulation.
+		ip1 = -1;
+		return 0;
+	}
 
 	if (t > sp2->LastUpdateTime())
 		m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
-	
+
 	// Check validity of particles after update.
-    if (!sp2->IsValid()) {
-        // Tell the ensemble to update particle one before we confuse things
-        // by removing particle 2
-        sys.Particles().Update(ip1);
+	if (!sp2->IsValid()) {
+		// Tell the ensemble to update particle one before we confuse things
+		// by removing particle 2
+		if (!ip1_flag)
+			sys.Particles().Update(ip1);
 
 		if (!ip2_flag)
+		{
 			// Must remove second particle now.
 			sys.Particles().Remove(ip2);
+		}
 		else
 		{
 			// Particle sp2 is not in the ensemble, must manually delete it
@@ -294,75 +308,120 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
 			sp2 = NULL;
 		}
 
-        // Invalidating the index tells this routine not to perform coagulation.
-        ip2 = -1;
+		// Invalidating the index tells this routine not to perform coagulation.
+		ip2 = -1;
 
-        return 0;
-    }
+		return 0;
+	}
 
-    // Check that both the particles are still valid.
-    if ((ip1 != -1) && (ip2 != -1)) {
-        // Must check for ficticious event now by comparing the original
-        // majorant rate and the current (after updates) true rate.
-		
-        double truek = CoagKernel(*sp1, *sp2, sys);
-		
-        if (!Fictitious(majk, truek, rng)) {
-			// If particle sp2 is used, we now need to remove it from the incepting class
+	// Check that both the particles are still valid.
+	if ((ip1 != -1) && (ip2 != -1)) {
+		// Must check for ficticious event now by comparing the original
+		// majorant rate and the current (after updates) true rate.
+
+		double truek = CoagKernel(*sp1, *sp2, sys);
+
+		if (!Fictitious(majk, truek, rng)) {
+			if (ip1_flag)
+			{
+				sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
+				sys.Particles().UpdateNumberAtIndex(index1, -1);
+				sys.Particles().UpdateTotalParticleNumber(-1);
+				unsigned int index12 = index1 + index2;
+				// Allow for coagulation in place if the combined particle is small enough
+				if (ip2_flag && (index12 < sys.Particles().GetCritialNumber()))
+				{
+					coag_in_place = true;
+					sys.Particles().UpdateTotalsWithIndex(index12, 1.0);
+					sys.Particles().UpdateNumberAtIndex(index12, 1);
+					sys.Particles().UpdateTotalParticleNumber(1);
+					if (sp1 != NULL)
+					{
+						delete sp1;
+						sp1 = NULL;
+					}
+				}
+				else
+				{
+					// otherwise add the particle to the ensemble
+					ip1 = sys.Particles().Add_PNP(*sp1, rng, ip2);
+				}
+			}
 			if (ip2_flag)
 			{
 				sys.Particles().UpdateTotalsWithIndex(index2, -1.0);
 				sys.Particles().UpdateNumberAtIndex(index2, -1);
 				sys.Particles().UpdateTotalParticleNumber(-1);
 			}
-			JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
+			if (!coag_in_place)
+				JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
 			if (ip2_flag && sp2 != NULL)
 			{
-				// Particle sp2 is not in the ensemble, must manually delete it
 				delete sp2;
 				sp2 = NULL;
 			}
 
-        } else {
-			sys.Particles().Update(ip1);
+		}
+		else {
+			if (!ip1_flag)
+				sys.Particles().Update(ip1);
+			else if (sp1 != NULL)
+			{
+				delete sp1;
+				sp1 = NULL;
+			}
 			if (!ip2_flag)
 				sys.Particles().Update(ip2);
 			else if (sp2 != NULL)
 			{
-				// Particle sp2 is not in the ensemble, must manually delete it
 				delete sp2;
 				sp2 = NULL;
 			}
-            return 1; // Ficticious event.
-        }
-    } else {
-        // One or both particles were invalidated on update,
-        // but that's not a problem.  Information on the update
-        // of valid particles must be propagated into the binary
-        // tree
+			return 1; // Ficticious event.
+		}
+	}
+	else {
+		// One or both particles were invalidated on update,
+		// but that's not a problem.  Information on the update
+		// of valid particles must be propagated into the binary
+		// tree
 		if (ip1 != -1)
-            sys.Particles().Update(ip1);
-
+		{
+			if (!ip1_flag)
+				sys.Particles().Update(ip1);
+		}
 		if (ip2 != -1 && !ip2_flag)
 			sys.Particles().Update(ip2);
 
+		if (ip1_flag && sp1 != NULL)
+		{
+			delete sp1;
+			sp1 = NULL;
+		}
 		if (ip2_flag && sp2 != NULL)
 		{
-			// Particle sp2 is not in the ensemble, must manually delete it
 			delete sp2;
 			sp2 = NULL;
 		}
-    }
+	}
+	if (ip1_flag && sp1 != NULL && ip1 == -2)
+	{
+		delete sp1;
+		sp1 = NULL;
+	}
 
 	if (ip2_flag && sp2 != NULL)
 	{
-		// Particle sp2 is not in the ensemble, must manually delete it
 		delete sp2;
 		sp2 = NULL;
 	}
 
-    return 0;
+	return 0;
 }
+
+
+
+
 
 /**
  * Calculate the coagulation kernel between two particles in a given environment.
