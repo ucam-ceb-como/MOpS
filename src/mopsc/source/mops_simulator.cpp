@@ -2501,7 +2501,9 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 					pn_particles_header.push_back("Diameter at index (m)");
 					pn_particles_header.push_back("Mass at index (kg)");
 
-					CSV_IO pn_particles_out(m_output_filename + "-particle-numbers.csv", true);
+					string fname_pn = m_output_filename + "-particle-numbers(" + cstr(times[i].EndTime()) +"s).csv";
+
+					CSV_IO pn_particles_out(fname_pn, true);
 					pn_particles_out.Write(pn_particles_header);
 
 					for (unsigned int i = 0; i < r->Mixture()->Particles().GetCritialNumber(); ++i)
