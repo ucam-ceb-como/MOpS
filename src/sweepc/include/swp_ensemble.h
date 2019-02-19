@@ -312,17 +312,17 @@ public:
 	double MassAtIndex(unsigned int index) const { return m_pn_mass[index]; }
 	
 	// This could be a single function with a case statement but it would be slower and some propIDs don't exist
-	double GetTotalDiameter() const { return m_total_diameter; }
-	double GetTotalDiameter2() const { return m_total_diameter2; }
-	double GetTotalDiameter_1() const { return m_total_diameter_1; }
-	double GetTotalDiameter_2() const { return m_total_diameter_2; }
-	double GetTotalDiameter3() const { return m_total_diameter3; }
-	double GetTotalDiameter2_mass_1_2() const { return m_total_diameter2_mass_1_2; }
-	double GetTotalMass_1_2() const { return m_total_mass_1_2; }
-	double GetTotalMass() const { return m_total_mass; }
-	double GetTotalMass2() const { return m_total_mass2; }
-	double GetTotalMass3() const { return m_total_mass3; }
-	unsigned int GetTotalComponent() const { return m_total_component; }
+	double GetTotalDiameter() const;
+	double GetTotalDiameter2() const;
+	double GetTotalDiameter_1() const;
+	double GetTotalDiameter_2() const;
+	double GetTotalDiameter3() const;
+	double GetTotalDiameter2_mass_1_2() const;
+	double GetTotalMass_1_2() const;
+	double GetTotalMass() const;
+	double GetTotalMass2() const;
+	double GetTotalMass3() const;
+	unsigned int GetTotalComponent() const;
 	
 	void DoubleTotals();
 	

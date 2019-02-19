@@ -1111,6 +1111,72 @@ void Sweep::Ensemble::DoubleTotals()
 	m_total_number *= 2;
 }
 
+double Sweep::Ensemble::GetTotalDiameter() const { 
+	if (m_total_number > 0)
+		return m_total_diameter;
+	else
+		return 0.0;
+}
+double Sweep::Ensemble::GetTotalDiameter2() const {
+	if (m_total_number > 0)
+		return m_total_diameter2;
+	else
+		return 0.0;
+}
+double Sweep::Ensemble::GetTotalDiameter_1() const {
+	if (m_total_number > 0)
+		return m_total_diameter_1;
+	else
+		return 0.0;
+}
+double Sweep::Ensemble::GetTotalDiameter_2() const {
+	if (m_total_number > 0)
+		return m_total_diameter_2;
+	else
+		return 0.0;
+}
+double Sweep::Ensemble::GetTotalDiameter3() const {
+	if (m_total_number > 0)
+		return m_total_diameter3;
+	else
+		return 0.0;
+}
+double Sweep::Ensemble::GetTotalDiameter2_mass_1_2() const {
+	if (m_total_number > 0)
+		return m_total_diameter2_mass_1_2;
+	else
+		return 0.0;
+}
+double Sweep::Ensemble::GetTotalMass_1_2() const {
+	if (m_total_number > 0)
+		return m_total_mass_1_2;
+	else
+		return 0.0;
+}
+double Sweep::Ensemble::GetTotalMass() const {
+	if (m_total_number > 0)
+		return m_total_mass;
+	else
+		return 0.0;
+}
+double Sweep::Ensemble::GetTotalMass2() const {
+	if (m_total_number > 0)
+		return m_total_mass2;
+	else
+		return 0.0;
+}
+double Sweep::Ensemble::GetTotalMass3() const {
+	if (m_total_number > 0)
+		return m_total_mass3;
+	else
+		return 0.0;
+}
+unsigned int Sweep::Ensemble::GetTotalComponent() const {
+	if (m_total_number > 0)
+		return m_total_component;
+	else
+		return 0;
+}
 
 void Sweep::Ensemble::ResetNumberAtIndex(unsigned int index)
 {
@@ -1178,53 +1244,56 @@ double Sweep::Ensemble::PropertyAtIndex(Sweep::PropID prop, unsigned int index) 
 
 double Sweep::Ensemble::GetPropertyTotal(Sweep::PropID prop) const
 {
-	double return_val;
-	switch (prop) {
-	case iDcol:
-		return_val = m_total_diameter;
-		break;
-	case iDW:
-		return_val = m_total_diameter;
-		break;
-	case iD2:
-		return_val = m_total_diameter2;
-		break;
-	case iD2W:
-		return_val = m_total_diameter2;
-		break;
-	case iD_1:
-		return_val = m_total_diameter_1;
-		break;
-	case iD_1W:
-		return_val = m_total_diameter_1;
-		break;
-	case iD_2:
-		return_val = m_total_diameter_2;
-		break;
-	case iD_2W:
-		return_val = m_total_diameter_2;
-		break;
-	case iM_1_2:
-		return_val = m_total_mass_1_2;
-		break;
-	case iM_1_2W:
-		return_val = m_total_mass_1_2;
-		break;
-	case iD2_M_1_2:
-		return_val = m_total_diameter2_mass_1_2;
-		break;
-	case iD2_M_1_2W:
-		return_val = m_total_diameter2_mass_1_2;
-		break;
-	case iW:
-		return_val = m_total_number;
-		break;
-	case iUniform:
-		return_val = m_total_number;
-		break;
-	case iM:
-		return_val = m_total_mass;
-		break;
+	double return_val = 0.0;
+	if (m_total_number > 0)
+	{
+		switch (prop) {
+		case iDcol:
+			return_val = m_total_diameter;
+			break;
+		case iDW:
+			return_val = m_total_diameter;
+			break;
+		case iD2:
+			return_val = m_total_diameter2;
+			break;
+		case iD2W:
+			return_val = m_total_diameter2;
+			break;
+		case iD_1:
+			return_val = m_total_diameter_1;
+			break;
+		case iD_1W:
+			return_val = m_total_diameter_1;
+			break;
+		case iD_2:
+			return_val = m_total_diameter_2;
+			break;
+		case iD_2W:
+			return_val = m_total_diameter_2;
+			break;
+		case iM_1_2:
+			return_val = m_total_mass_1_2;
+			break;
+		case iM_1_2W:
+			return_val = m_total_mass_1_2;
+			break;
+		case iD2_M_1_2:
+			return_val = m_total_diameter2_mass_1_2;
+			break;
+		case iD2_M_1_2W:
+			return_val = m_total_diameter2_mass_1_2;
+			break;
+		case iW:
+			return_val = m_total_number;
+			break;
+		case iUniform:
+			return_val = m_total_number;
+			break;
+		case iM:
+			return_val = m_total_mass;
+			break;
+		}
 	}
 	return return_val;
 }
