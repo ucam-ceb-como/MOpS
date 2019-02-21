@@ -156,11 +156,11 @@ double DeathProcess::InternalRate(
         const Geometry::LocalGeometry1d &local_geom) const {
 	// aab64 if weighted particles, use sum of weights in place of N
 	if (m_dtype == DeathProcess::iWtdDelete)
-		return m_a * (sys.Particles().GetSum(iW) + sys.Particles().GetTotalParticleNumber());
+            return m_a * (sys.Particles().GetSum(iW) + sys.Particles().GetTotalParticleNumber());
 	else
 	{
-		unsigned int n_total = sys.Particles().Count() + sys.Particles().GetTotalParticleNumber();             // Account for particles in the incepting class
-		return m_a * n_total;
+            unsigned int n_total = sys.Particles().Count() + sys.Particles().GetTotalParticleNumber();             // Account for particles in the incepting class
+            return m_a * n_total;
 	}
 }
 
@@ -202,33 +202,32 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
                           rng_type &rng) const
 {
     // Get particle index
-	int i = 0;
-	// aab64 for hybrid particle model
-	if (!(m_mech->IsHybrid()))
-	    i = sys.Particles().Select(rng);
-	else
-	{
-		// Check if should remove from ensemble or bin
-		unsigned int ntotal_pn = sys.Particles().GetTotalParticleNumber();
-		unsigned int ntotal_ens = sys.ParticleCount();
-		boost::uniform_01<rng_type&, double> unifDistrib(rng);
-		double test = unifDistrib() * (ntotal_pn + ntotal_ens);
-		if (ntotal_pn >= test)
-		{
-			unsigned int index = m_mech->SetRandomParticle(sys.Particles(), t, test, iUniform, rng);
-			sys.Particles().UpdateTotalsWithIndex(index, -1.0);
-			sys.Particles().UpdateNumberAtIndex(index, -1);
-			sys.Particles().UpdateTotalParticleNumber(-1);
-			i = -1;
-		}
-		else
-		{
-			i = sys.Particles().Select_usingGivenRand(iUniform, test - ntotal_pn, rng);
-		}
-	}
+    int i = 0;
+    // aab64 for hybrid particle model
+    if (!(m_mech->IsHybrid()))
+        i = sys.Particles().Select(rng);
+    else
+    {
+        // Check if should remove from ensemble or bin
+        unsigned int ntotal_pn = sys.Particles().GetTotalParticleNumber();
+        unsigned int ntotal_ens = sys.ParticleCount();
+        boost::uniform_01<rng_type&, double> unifDistrib(rng);
+        double test = unifDistrib() * (ntotal_pn + ntotal_ens);
+        if (ntotal_pn >= test)
+        {
+            unsigned int index = m_mech->SetRandomParticle(sys.Particles(), t, test, iUniform, rng);
+            sys.Particles().UpdateTotalsWithIndex(index, -1.0);
+            sys.Particles().UpdateNumberAtIndex(index, -1);
+            sys.Particles().UpdateTotalParticleNumber(-1);
+            i = -1;
+        }
+        else
+        {
+            i = sys.Particles().Select_usingGivenRand(iUniform, test - ntotal_pn, rng);
+        }
+    }
 
     if (i >= 0) DoParticleDeath(t, i, sys, rng);
-
     return 0;
 }
 
@@ -337,47 +336,44 @@ void DeathProcess::PerformDT (
         rng_type &rng) const {
 
     // Only do if set to 'continuous' mode.
-    if (!IsStochastic()) 
-	{
+    if (!IsStochastic()) {
         Process::PerformDT(t, dt, sys, local_geom, rng);
 
         if (m_dtype == DeathProcess::iContRescale
-                || (m_dtype == DeathProcess::iContAdaptive && !m_toggled)) 
-		{
+                || (m_dtype == DeathProcess::iContAdaptive && !m_toggled)) {
             // Don't delete anything, just rescale the sample volume
             sys.AdjustSampleVolume(1.0/(1.0 - (dt) * A()));
-        } 
-		else 
-		{
+        } else {
+
             // Get the rate of the process
             double rate = InternalRate(t, sys, local_geom) * dt;
             if (rate > 0.0) {
-				boost::random::poisson_distribution<unsigned, double> rpt(rate);
-				
-				if (m_dtype == DeathProcess::iWtdDelete)
-				{
+                boost::random::poisson_distribution<unsigned, double> rpt(rate);
+                if (m_dtype == DeathProcess::iWtdDelete)
+                {
                     // aab64 replacement for cdelete for weighted particles 
-				    // should be adjusted to allow multiple outflows
-					// we know apriori how much the weight needs to change
-					// from the mass balance and can effect this change
-					// by scaling the weights
-					double num = (sys.Particles().GetSum(iW) + sys.Particles().GetTotalParticleNumber()) * A() * dt;
-					while (num > 0 && (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber()) > 0)
-					    Perform_wtd(t, sys, local_geom, 0, rng, num);
-				}
-				else
-				{
-				    unsigned num = rpt(rng);
-				    while (num > 0) 
-					{
-					    // Do the process to the particle.
-					    Perform(t, sys, local_geom, 0, rng);
-					    num--;
-				    }
-				}
+                    // should be adjusted to allow multiple outflows
+                    // we know apriori how much the weight needs to change
+                    // from the mass balance and can effect this change
+                    // by scaling the weights
+                    double num = (sys.Particles().GetSum(iW) + sys.Particles().GetTotalParticleNumber()) * A() * dt;
+                    while (num > 0 && (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber()) > 0)
+                                        Perform_wtd(t, sys, local_geom, 0, rng, num);
+                }
+                else
+                {
+                    unsigned num = rpt(rng);
+                    while (num > 0) 
+                    {
+                        // Do the process to the particle.
+                        Perform(t, sys, local_geom, 0, rng);
+                        num--;
+                    }
+                }
             }
         }
     }
+
 }
 
 /*!
@@ -397,8 +393,10 @@ void DeathProcess::DoParticleDeath(
 
     if (m_dtype == DeathProcess::iContDelete
             || m_dtype == DeathProcess::iStochDelete
-			|| m_dtype == DeathProcess::iWtdDelete) {
-		sys.Particles().Remove(isp, true);                   // Just delete the particle
+            || m_dtype == DeathProcess::iWtdDelete) {
+        // Just delete the particle
+        sys.Particles().Remove(isp, true);
+
     } else if (m_dtype == DeathProcess::iContMove
             || m_dtype == DeathProcess::iStochMove
             || (m_dtype == DeathProcess::iContAdaptive && m_toggled)) {

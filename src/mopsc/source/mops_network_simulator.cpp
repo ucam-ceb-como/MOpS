@@ -137,7 +137,6 @@ void NetworkSimulator::Run(
         // Initialise reactors and simulators
         t2 = mTimes[0].StartTime();
         for (it=this->Begin(); it!=this->End(); ++it) {
-
             // Set the start times
             it->reac->SetTime(t2);
 
@@ -154,108 +153,105 @@ void NetworkSimulator::Run(
                 it->sim->setupLOI(*(it->reac), *(it->sol));
             }
 
+            // aab64 temporary 
+            // Add headers to coagulation diagnostics file
+            /*ofstream coagFile1, coagFile2;
+            std::string coagfname;
+            coagfname = "Coag-event-diagnostics-3micros.csv";
+            coagFile1.open(coagfname.c_str());
+            coagFile1 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , " 
+                << "dc1_0" << " , " << "dc2_0" << " , " << "w1_0" << " , " << "w2_0" << " , "
+                << "dc1_1" << " , " << "dc2_1" << " , " << "w1_1" << " , " << "w2_1" << " , "
+                << "dca_0" << " , " << "dca_1" << "\n";
+            coagFile1.close();
+            coagfname = "Coag-event-diagnostics-3ms.csv";
+            coagFile2.open(coagfname.c_str());
+            coagFile2 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
+                << "dc1_0" << " , " << "dc2_0" << " , " << "w1_0" << " , " << "w2_0" << " , "
+                << "dc1_1" << " , " << "dc2_1" << " , " << "w1_1" << " , " << "w2_1" << " , "
+                << "dca_0" << " , " << "dca_1" << "\n";
+            coagFile2.close();*/
 
-			// aab64 temporary 
-			// Add headers to coagulation diagnostics file
-			/*ofstream coagFile1, coagFile2;
-			std::string coagfname;
-			coagfname = "Coag-event-diagnostics-3micros.csv";
-			coagFile1.open(coagfname.c_str());
-			coagFile1 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , " 
-				<< "dc1_0" << " , " << "dc2_0" << " , " << "w1_0" << " , " << "w2_0" << " , "
-				<< "dc1_1" << " , " << "dc2_1" << " , " << "w1_1" << " , " << "w2_1" << " , "
-				<< "dca_0" << " , " << "dca_1" << "\n";
-			coagFile1.close();
-			coagfname = "Coag-event-diagnostics-3ms.csv";
-			coagFile2.open(coagfname.c_str());
-			coagFile2 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
-				<< "dc1_0" << " , " << "dc2_0" << " , " << "w1_0" << " , " << "w2_0" << " , "
-				<< "dc1_1" << " , " << "dc2_1" << " , " << "w1_1" << " , " << "w2_1" << " , "
-				<< "dca_0" << " , " << "dca_1" << "\n";
-			coagFile2.close();*/
+            // aab64 temporary 
+            // Add headers to psc diagnostics file
+            /*ofstream pscFile1, pscFile2;
+            std::string pscfname;
+            pscfname = "PSC-event-diagnostics-3micros.csv";
+            pscFile1.open(pscfname.c_str());
+            pscFile1 << "Time (s)" << " , " << "dc_0" << " , " << "dc_1" << " , " << "w_0" << " , " << "w_1" << "\n";
+            pscFile1.close();
+            pscfname = "PSC-event-diagnostics-3ms.csv";
+            pscFile2.open(pscfname.c_str());
+            pscFile2 << "Time (s)" << " , " << "dc_0" << " , " << "dc_1" << " , " << "w_0" << " , " << "w_1" << "\n";
+            pscFile2.close();*/
 
-			// aab64 temporary 
-			// Add headers to psc diagnostics file
-			/*ofstream pscFile1, pscFile2;
-			std::string pscfname;
-			pscfname = "PSC-event-diagnostics-3micros.csv";
-			pscFile1.open(pscfname.c_str());
-			pscFile1 << "Time (s)" << " , " << "dc_0" << " , " << "dc_1" << " , " << "w_0" << " , " << "w_1" << "\n";
-			pscFile1.close();
-			pscfname = "PSC-event-diagnostics-3ms.csv";
-			pscFile2.open(pscfname.c_str());
-			pscFile2 << "Time (s)" << " , " << "dc_0" << " , " << "dc_1" << " , " << "w_0" << " , " << "w_1" << "\n";
-			pscFile2.close();*/
+            // aab64 temporary 
+            // Add headers to outflow diagnostics file
+            /*ofstream deathFile1;
+            std::string deathfname;
+            deathfname = "Outflow-event-diagnostics.csv";
+            deathFile1.open(deathfname.c_str());
+            deathFile1 << "Time (s)" << " , " << "Num" << " , " << "RTD" << " , " << "wt" << " , " << "age" << " , " << "mass" << "\n";
+            deathFile1.close();*/
 
-			// aab64 temporary 
-			// Add headers to outflow diagnostics file
-			/*ofstream deathFile1;
-			std::string deathfname;
-			deathfname = "Outflow-event-diagnostics.csv";
-			deathFile1.open(deathfname.c_str());
-			deathFile1 << "Time (s)" << " , " << "Num" << " , " << "RTD" << " , " << "wt" << " , " << "age" << " , " << "mass" << "\n";
-			deathFile1.close();*/
+            /*ofstream pscFile1;
+            std::string pscfname;
+            pscfname = "sp_update_times.csv";
+            pscFile1.open(pscfname.c_str());
+            // t maj N Ninc Ntotal ip1flag ip1 ip2flag ip2 sp1_wt sp2_wt sp1_d sp2_d sp1_age sp2_age sp1_lut sp2_lut coag successful
+            pscFile1 << "Time (s) , maj, N, Ninc, Ninc_total, ip1_flag , ip1 , ip2_flag , ip2 , sp1_wt , sp2_wt , sp1_dp , sp2_dp , sp1_age , sp2_age , sp1_lut , sp2_lut , coag successful? \n";
+            pscFile1.close();*/
 
-			/*ofstream pscFile1;
-			std::string pscfname;
-			pscfname = "sp_update_times.csv";
-			pscFile1.open(pscfname.c_str());
-			// t maj N Ninc Ntotal ip1flag ip1 ip2flag ip2 sp1_wt sp2_wt sp1_d sp2_d sp1_age sp2_age sp1_lut sp2_lut coag successful
-			pscFile1 << "Time (s) , maj, N, Ninc, Ninc_total, ip1_flag , ip1 , ip2_flag , ip2 , sp1_wt , sp2_wt , sp1_dp , sp2_dp , sp1_age , sp2_age , sp1_lut , sp2_lut , coag successful? \n";
-			pscFile1.close();*/
+            //////////////////////////////////////////// aab64 ////////////////////////////////////////////
+            if (it->sim->GetWriteDiagsStatus()) {
+                /* Create partProc diagnostics csv file with pre/post split SV, #SPs, #events in split
+                step including additions in LPDA, create gasConcFile with pre/post split concs 
+                Note that this is defintely not an elegant implentation and is only really intended 
+                to verify expected process behaviour in the TiO2 case */
+                ofstream partProcFile, gasConcFile;
+                unsigned int process_iter;
+                std::vector<std::string> tmpPNames;
+                it->reac->Mech()->ParticleMech().GetProcessNames(tmpPNames, 0);
+                std::string rname (it->reac->GetName());
+                std::string partfname, chemfname;
+                partfname = "Part-split-diagnostics(" + rname + ").csv";
+                chemfname = "Chem-split-diagnostics(" + rname + ").csv";
 
-			//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-			if (it->sim->GetWriteDiagsStatus()) {
-				/* Create partProc diagnostics csv file with pre/post split SV, #SPs, #events in split
-				step including additions in LPDA, create gasConcFile with pre/post split concs 
-			    Note that this is defintely not an elegant implentation and is only really intended 
-			    to verify expected process behaviour in the TiO2 case */
-				ofstream partProcFile, gasConcFile;
-				unsigned int process_iter;
-				std::vector<std::string> tmpPNames;
-				it->reac->Mech()->ParticleMech().GetProcessNames(tmpPNames, 0);
-				std::string rname (it->reac->GetName());
-				std::string partfname, chemfname;
-				partfname = "Part-split-diagnostics(" + rname + ").csv";
-				chemfname = "Chem-split-diagnostics(" + rname + ").csv";
+                // Add headers to partProc diagnostics file
+                partProcFile.open(partfname.c_str());
+                partProcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , "
+                    << "SV in (-)" << " , " << "SV out (-)" << " , "
+                    << "SP in (-)" << " , " << "SP out (-)" << " , "
+                    << "Total statistical weight pre-split (-)" << " , " << "Total statistical weight post-split (-)" << " , "
+                    << "Average collision diameter pre-split (-)" << " , " << "Average collision diameter post-split (-)" << " , "
+                    << "Incepting weight pre-split (-)" << " , " << "Incepting weight post-split (-)" << " , "
+                    << "PN count pre-split (-)" << " , " << "PN count post-split (-)" << " , ";
+                for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
+                    partProcFile << tmpPNames[process_iter] << " , ";
+                }
+                partProcFile << "TransitionRegimeCoagulationTerms (kernel specific)";
+                for (process_iter = tmpPNames.size(); process_iter < it->reac->Mech()->ParticleMech().GetTermCount() + 1; process_iter++) {
+                    partProcFile << " , ";
+                }
+                partProcFile << "FictitiousCoagulationTerms (kernel specific)";
+                for (process_iter = tmpPNames.size(); process_iter < it->reac->Mech()->ParticleMech().GetTermCount() + 1; process_iter++) {
+                    partProcFile << " , ";
+                }
+                partProcFile << "Inflow events" << " , " << "Outflow events" << "\n";
+                partProcFile.close();
 
-				// Add headers to partProc diagnostics file
-				partProcFile.open(partfname.c_str());
-				partProcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , "
-					<< "SV in (-)" << " , " << "SV out (-)" << " , "
-					<< "SP in (-)" << " , " << "SP out (-)" << " , "
-					<< "Total statistical weight pre-split (-)" << " , " << "Total statistical weight post-split (-)" << " , "
-					<< "Average collision diameter pre-split (-)" << " , " << "Average collision diameter post-split (-)" << " , "
-					<< "Incepting weight pre-split (-)" << " , " << "Incepting weight post-split (-)" << " , "
-					<< "PN count pre-split (-)" << " , " << "PN count post-split (-)" << " , ";
-				for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
-					partProcFile << tmpPNames[process_iter] << " , ";
-				}
-				partProcFile << "TransitionRegimeCoagulationTerms (kernel specific)";
-				for (process_iter = tmpPNames.size(); process_iter < it->reac->Mech()->ParticleMech().GetTermCount() + 1;
-					process_iter++) {
-					partProcFile << " , ";
-				}
-				partProcFile << "FictitiousCoagulationTerms (kernel specific)";
-				for (process_iter = tmpPNames.size(); process_iter < it->reac->Mech()->ParticleMech().GetTermCount() + 1;
-					process_iter++) {
-					partProcFile << " , ";
-				}
-				partProcFile << "Inflow events" << " , " << "Outflow events" << "\n";
-				partProcFile.close();
-
-				// Add headers to gasConc diagnostics file
-				gasConcFile.open(chemfname.c_str());
-				gasConcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , ";
-				for (process_iter = 0; process_iter < it->reac->Mech()->GasMech().Species().size() - 1; process_iter++) {
-					gasConcFile << it->reac->Mech()->GasMech().Species(process_iter)->Name() << " pre-split (mol/m3)" << " , "
-						<< it->reac->Mech()->GasMech().Species(process_iter)->Name() << " post-split (mol/m3)" << " , ";
-				}
-				gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << " , "
-					<< "Temperature pre-split (K)" << " , " << "Temperature post-split (K)" << "\n";
-				gasConcFile.close();
-			}
-			//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+                // Add headers to gasConc diagnostics file
+                gasConcFile.open(chemfname.c_str());
+                gasConcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , ";
+                for (process_iter = 0; process_iter < it->reac->Mech()->GasMech().Species().size() - 1; process_iter++) {
+                    gasConcFile << it->reac->Mech()->GasMech().Species(process_iter)->Name() << " pre-split (mol/m3)" << " , "
+                    << it->reac->Mech()->GasMech().Species(process_iter)->Name() << " post-split (mol/m3)" << " , ";
+                }
+                gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << " , "
+                    << "Temperature pre-split (K)" << " , " << "Temperature post-split (K)" << "\n";
+                gasConcFile.close();
+            }
+            //////////////////////////////////////////// aab64 ////////////////////////////////////////////
         }
 
         // Loop over time intervals
@@ -282,23 +278,20 @@ void NetworkSimulator::Run(
 
                     it->sim->m_cpu_mark = std::clock();
                     
-
-
-
-					//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-					/* If the solve function with diagnostics capacity replaces the original solve function, this
-					if statement is no longer necessary */
-					if (it->sim->GetWriteDiagsStatus()) {
-						it->sol->Solve(*(it->reac), t2, iint->SplittingStepCount(),
-							it->sim->m_niter, rng, &Mops::Simulator::fileOutput,
-							(void*)(it->sim), it->sim->GetWriteDiagsStatus());
-					}
-					else {
-						it->sol->Solve(*(it->reac), t2, iint->SplittingStepCount(),
-							it->sim->m_niter, rng, &Mops::Simulator::fileOutput,
-							(void*)(it->sim));
-					}
-					//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+                    //////////////////////////////////////////// aab64 ////////////////////////////////////////////
+                    /* If the solve function with diagnostics capacity replaces the original solve function, this
+                    if statement is no longer necessary */
+                    if (it->sim->GetWriteDiagsStatus()) {
+                        it->sol->Solve(*(it->reac), t2, iint->SplittingStepCount(),
+                            it->sim->m_niter, rng, &Mops::Simulator::fileOutput,
+                        (void*)(it->sim), it->sim->GetWriteDiagsStatus());
+                    }
+                    else {
+                        it->sol->Solve(*(it->reac), t2, iint->SplittingStepCount(),
+                            it->sim->m_niter, rng, &Mops::Simulator::fileOutput,
+                        (void*)(it->sim));
+                    }
+                    //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
 

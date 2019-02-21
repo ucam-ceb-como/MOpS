@@ -61,8 +61,7 @@ const std::string BinTreeStats::m_statnames[BinTreeStats::STAT_COUNT] = {
     std::string("GStdev of Avg. Primary Diameter (-)"),
     std::string("Mean GStdev of Primary Diameter (-)"),
     std::string("GMean of Collision Diameter (m)"),
-    std::string("GMean of Avg. Primary Diameter (m)"),
-	std::string("Avg. Radius of Gyration (m)")
+    std::string("GMean of Avg. Primary Diameter (m)")
 };
 
 const IModelStats::StatType BinTreeStats::m_mask[BinTreeStats::STAT_COUNT] = {
@@ -75,8 +74,7 @@ const IModelStats::StatType BinTreeStats::m_mask[BinTreeStats::STAT_COUNT] = {
     IModelStats::Avg,  // Gstdev of mean dpri
     IModelStats::Avg,  // Mean gstdev of dpri
     IModelStats::Avg,  // Gmean of dcol
-    IModelStats::Avg,  // Gmean of avg dpri
-	IModelStats::Avg   // Radius of gyration
+    IModelStats::Avg   // Gmean of avg dpri
 };
 
 const std::string BinTreeStats::m_const_pslnames[BinTreeStats::PSL_COUNT] = {
@@ -142,8 +140,8 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
     // Calculate total weight
-	double TotalWeight = (e.Count() + e.GetTotalParticleNumber())>0 ? (e.GetSum(iW) + e.GetTotalParticleNumber()) : 0.0;
-	double invTotalWeight = (e.Count() + e.GetTotalParticleNumber())>0 ? 1.0 / (e.GetSum(iW) + e.GetTotalParticleNumber()) : 0.0;
+    double TotalWeight = (e.Count() + e.GetTotalParticleNumber())>0 ? (e.GetSum(iW) + e.GetTotalParticleNumber()) : 0.0;
+    double invTotalWeight = (e.Count() + e.GetTotalParticleNumber())>0 ? 1.0/(e.GetSum(iW) + e.GetTotalParticleNumber()) : 0.0;
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
@@ -186,47 +184,46 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
         }
     }
 
-	if (e.GetTotalParticleNumber() != 0)
-	{
-		//Sweep::Particle * sp_temp = e.GetInceptedSP().Clone();
-		//const AggModels::BinTreePrimary * const prim =
-		//	dynamic_cast<const AggModels::BinTreePrimary*>(sp_temp->Primary());
-		//double sz = e.GetInceptedSP().Property(m_statbound.PID);
-		// Check if the value of the property is within the stats bound
-		//if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {
+    if (e.GetTotalParticleNumber() != 0)
+    {
+        //Sweep::Particle * sp_temp = e.GetInceptedSP().Clone();
+        //const AggModels::BinTreePrimary * const prim = dynamic_cast<const AggModels::BinTreePrimary*>(sp_temp->Primary());
+        //double sz = e.GetInceptedSP().Property(m_statbound.PID);
+        // Check if the value of the property is within the stats bound
+        //if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {
 
-		double wt = e.GetTotalParticleNumber() * invTotalWeight;
-		double dpri = e.GetTotalDiameter() * invTotalWeight;//0;
-		//double d_index = 0;
-		//double n_index = 0;
-		//for (unsigned int i = 0; i < e.GetCritialNumber(); ++i)
-		//{
-			//n_index = e.NumberAtIndex(i);
-			//d_index = e.PropertyAtIndex(iDcol, i);
-			//dpri += (n_index * d_index);
+        double wt = e.GetTotalParticleNumber() * invTotalWeight;
+        double dpri = e.GetTotalDiameter() * invTotalWeight;//0;
+        //double d_index = 0;
+        //double n_index = 0;
+        //for (unsigned int i = 0; i < e.GetCritialNumber(); ++i)
+        //{
+            //n_index = e.NumberAtIndex(i);
+            //d_index = e.PropertyAtIndex(iDcol, i);
+            //dpri += (n_index * d_index);
 
-			// Collect the collision and primary diameters
-			//for (unsigned int j = 0; j < n_index; ++j)
-			//{
-			//	d.push_back(d_index);
-			//	d.push_back(d_index);
-			//	diams.push_back(d);
-			//	weights.push_back(1);
-			//	d.clear();
-			//}
-			//++n;
-		//}
+            // Collect the collision and primary diameters
+            //for (unsigned int j = 0; j < n_index; ++j)
+            //{
+                //d.push_back(d_index);
+                //d.push_back(d_index);
+                //diams.push_back(d);
+                //weights.push_back(1);
+                //d.clear();
+            //}
+            //++n;
+        //}
 
-		//std::cout << dpri << " | " << e.GetTotalDiameter() << endl;
+        //std::cout << dpri << " | " << e.GetTotalDiameter() << endl;
 		
-		m_stats[iNPrim] += wt;
-		m_stats[iPrimDiam] += dpri;
-		m_stats[iSintLevel] += wt; // prim->GetAvgSinterLevel() * 
-		m_stats[iSintRate] += 0;   // prim->GetSintRate() * wt
-		m_stats[iSintTime] += 0;   // prim->GetSintTime() * wt
-		m_stats[iGStdevMean] += 0; // prim->GetPrimaryGStdDev() * wt
-		//}
-	}
+        m_stats[iNPrim] += wt;
+        m_stats[iPrimDiam] += dpri;
+        m_stats[iSintLevel] += wt; // prim->GetAvgSinterLevel() * 
+        m_stats[iSintRate] += 0;   // prim->GetSintRate() * wt
+        m_stats[iSintTime] += 0;   // prim->GetSintTime() * wt
+        m_stats[iGStdevMean] += 0; // prim->GetPrimaryGStdDev() * wt
+        //}
+    }
 
     // Now get the geometric standard devs, using [0] for dcol, [1] for dpri
     // Default to 1.0 GSTDEV (Can't have GSTDEV=0)
@@ -529,13 +526,13 @@ void BinTreeStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mod
 }
 
 /////////////////////////////////////////////////// csl37-pp
-void BinTreeStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const
+void BinTreeStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const
 {
-    const AggModels::BinTreePrimary* const prim =
-        dynamic_cast<const AggModels::BinTreePrimary *>(sp.Primary());
+	const AggModels::BinTreePrimary* const prim =
+		dynamic_cast<const AggModels::BinTreePrimary *>(sp.Primary());
 
-    if (prim != NULL) {
-        prim->PrintPrimary(nodes, primaries, k);
-    }
+	if (prim != NULL) {
+		prim->PrintPrimary(surface, primary_diameter, k);
+	}
 }
 //////////////////////////////////////////////////

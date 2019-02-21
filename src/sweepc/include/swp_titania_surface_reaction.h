@@ -126,10 +126,10 @@ public:
         const Particle &sp
         ) const;
 
-	// aab64 Return rate constant and chemistry part for hybrid method
-	double Rate(
-		double t,
-		const Cell &sys) const;
+    // aab64 Return rate constant and chemistry part for hybrid method
+    double Rate(
+        double t,
+        const Cell &sys) const;
 
     //! Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;

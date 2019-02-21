@@ -165,12 +165,12 @@ double SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) con
                    exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature());
             break;
         case GBD:
-            default: {
-                //double T = sys.GetBulkParticleTemperature(); // aab64 use particle temperature (if available)
-				double T = sys.GasPhase().Temperature();
-                return m_A * dp * dp * dp * dp * T *
-                    exp((m_E*(1 - (m_dpmin / dp))) / T);
-                break; }
+        default:{
+            //double T = sys.GetBulkParticleTemperature(); // aab64 use particle temperature (if available)
+            double T = sys.GasPhase().Temperature();
+            return m_A * dp * dp * dp * dp * T *
+                   exp((m_E*(1-(m_dpmin/dp)))/T);
+            break;}
         case SSD:
             return m_A * dp * dp * dp * sys.GasPhase().Temperature() *
                    exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature());
@@ -204,17 +204,17 @@ double SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) con
             dp = pow(6.0 * p.Volume() / Sweep::PI, Sweep::ONE_THIRD);
             return m_A * dp * dp * exp(m_E / sys.GasPhase().Temperature());
             break;
-        case Rutile:{
-                // Buesser et al., J. Phys. Chem. C, 2011, 115, 11030-11035
-                // SintTime function from MD calculations
-                // default: m_A = 3.7E16 s/m4K,
-                //			m_E = 258 kJ/mol = 31032 K
-                //			m_dpmin = 3.4 nm
-                double T = sys.GasPhase().Temperature();
-                //double T = sys.GetBulkParticleTemperature(); // aab64 use particle temperature (if available)
-                return m_A * dp * dp * dp * dp * T *
-                    exp((m_E* (1 - pow((m_dpmin / dp) - (T / 4100.0), 3.76)) / T));
-                break; }
+		case Rutile:{
+			// Buesser et al., J. Phys. Chem. C, 2011, 115, 11030-11035
+			// SintTime function from MD calculations
+			// default: m_A = 3.7E16 s/m4K,
+			//			m_E = 258 kJ/mol = 31032 K
+			//			m_dpmin = 3.4 nm
+			double T = sys.GasPhase().Temperature();
+			//double T = sys.GetBulkParticleTemperature(); // aab64 use particle temperature (if available)
+			return m_A * dp * dp * dp * dp * T *
+				exp((m_E* (1 - pow((m_dpmin / dp) - (T / 4100.0), 3.76)) / T));
+			break; }
         case Constant:
             // Only dependent on the 'pre-exponential' (has units s in this case)
             return m_A;

@@ -46,16 +46,11 @@
 #include "csv_io.h"
 #include <stdexcept>
 
-
-
 ////////////////// aab64 - Debugging purposes only //////////////////
 #include <iostream>
 #include <fstream>
 #include <string>
 /////////////////////////////////////////////////////////////////////
-
-
-
 using namespace Mops;
 using namespace std;
 using namespace Strings;
@@ -190,21 +185,21 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
                          Sweep::rng_type &rng,
                          OutFnPtr out, void *data, bool writediags)
 {
-	// aab64 Make note of energy balance state
-	if (r.EnergyEquation() != r.ConstT) {
-		r.Mixture()->SetIsAdiabaticFlag(true);
-	}
-	else {
-		r.Mixture()->SetIsAdiabaticFlag(false);
-	}
+    // aab64 Make note of energy balance state
+    if (r.EnergyEquation() != r.ConstT) {
+        r.Mixture()->SetIsAdiabaticFlag(true);
+    }
+    else {
+        r.Mixture()->SetIsAdiabaticFlag(false);
+    }
 
-	//Diagnostics file
+    //Diagnostics file
     ofstream partProcFile, gasConcFile;
 	
     // Diagnostic variables
-	double tmpSVin, tmpSVout, tmpWtVarin, tmpWtVarout, tmpDcin, tmpDcout;
-	double tmpIncWeightin, tmpIncWeightout, tmpIncFactorin, tmpIncFactorout;
-	double tmpTin, tmpTout;
+    double tmpSVin, tmpSVout, tmpWtVarin, tmpWtVarout, tmpDcin, tmpDcout;
+    double tmpIncWeightin, tmpIncWeightout, tmpIncFactorin, tmpIncFactorout;
+    double tmpTin, tmpTout;
     unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout, tmpInfin, tmpInfout, tmpOutfin, tmpOutfout;
     unsigned int process_iter;
     std::vector<unsigned int> tmpPCin, tmpPCout, tmpFCin, tmpFCout;
@@ -228,231 +223,226 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     double rho = 0.0;
 
     m_cpu_mark = clock();
-    // Solve first half-step of gas-phase chemistry.
-    rho = r.Mixture()->GasPhase().MassDensity();
-    m_ode.Solve(r, t2+=h);
-    r.SetTime(t2);
+        // Solve first half-step of gas-phase chemistry.
+        rho = r.Mixture()->GasPhase().MassDensity();
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
     m_cpu_mark = clock();
 
-	// aab64 Temporary functions for gas-phase properties
-	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
-	fvector Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
-	r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+    // aab64 Temporary functions for gas-phase properties
+    Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
+    fvector Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+    r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
 
-	if (writediags) {
-		// Diagnostics variables at start of split step
-		tmpSVin = r.Mixture()->SampleVolume();
-		tmpSPin = r.Mixture()->ParticleCount();
-		tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
-		tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
-		tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
-		tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
-		tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
-		tmpWtVarin = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
-		if (tmpWtVarin > 0.0)
-			tmpDcin = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) / 
-			(r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
-		else
-			tmpDcin = 0.0;
-		tmpIncFactorin = r.Mixture()->Particles().GetTotalParticleNumber();;
-		tmpIncWeightin = r.Mixture()->GetInceptingWeight();
-		r.Mixture()->GasPhase().GetConcs(tmpGPin);
-		tmpTin = r.Mixture()->GasPhase().Temperature();
-	}
+    if (writediags) {
+        // Diagnostics variables at start of split step
+        tmpSVin = r.Mixture()->SampleVolume();
+        tmpSPin = r.Mixture()->ParticleCount();
+        tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
+        tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+        tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
+        tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
+        tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
+        tmpWtVarin = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
+        if (tmpWtVarin > 0.0)
+            tmpDcin = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) / 
+                (r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
+        else
+            tmpDcin = 0.0;
+        tmpIncFactorin = r.Mixture()->Particles().GetTotalParticleNumber();;
+        tmpIncWeightin = r.Mixture()->GetInceptingWeight();
+        r.Mixture()->GasPhase().GetConcs(tmpGPin);
+        tmpTin = r.Mixture()->GasPhase().Temperature();
+    }
 
     // Solve one whole step of population balance (Sweep).
-    if (!r.IsConstV()) r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); //aab64
-    Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+    if (!r.IsConstV()) //aab64
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
-    m_swp_ctime += calcDeltaCT(m_cpu_mark);
+        m_swp_ctime += calcDeltaCT(m_cpu_mark);
+    
+    if (writediags) {
+        // Diagnostic variables at end of split step
+        tmpSVout = r.Mixture()->SampleVolume();
+        tmpSPout = r.Mixture()->ParticleCount();
+        tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
+        tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+        tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
+        tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
+        tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
+        tmpWtVarout = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
+        if (tmpWtVarout > 0.0)
+            tmpDcout = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) /
+                (r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
+        else
+            tmpDcout = 0.0;
+        tmpIncFactorout = r.Mixture()->Particles().GetTotalParticleNumber();
+        tmpIncWeightout = r.Mixture()->GetInceptingWeight();
+        r.Mixture()->GasPhase().GetConcs(tmpGPout);
+        tmpTout = r.Mixture()->GasPhase().Temperature();
+        std::string rname(r.GetName());
+        std::string partfname, chemfname;
+        partfname = "Part-split-diagnostics(" + rname + ").csv";
+        chemfname = "Chem-split-diagnostics(" + rname + ").csv";
 
-	if (writediags) {
-		// Diagnostic variables at end of split step
-		tmpSVout = r.Mixture()->SampleVolume();
-		tmpSPout = r.Mixture()->ParticleCount();
-		tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
-		tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
-		tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
-		tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
-		tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
-		tmpWtVarout = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
-		if (tmpWtVarout > 0.0)
-			tmpDcout = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) /
-			(r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
-		else
-			tmpDcout = 0.0;
-		tmpIncFactorout = r.Mixture()->Particles().GetTotalParticleNumber();
-		tmpIncWeightout = r.Mixture()->GetInceptingWeight();
-		r.Mixture()->GasPhase().GetConcs(tmpGPout);
-		tmpTout = r.Mixture()->GasPhase().Temperature();
-		std::string rname(r.GetName());
-		std::string partfname, chemfname;
-		partfname = "Part-split-diagnostics(" + rname + ").csv";
-		chemfname = "Chem-split-diagnostics(" + rname + ").csv";
+        // Output particle diagnostics to file
+        partProcFile.open(partfname.c_str(), ios::app);
+        partProcFile << ts2 << " , " << tstop << " , " << 0 << " , "
+            << tmpSVin << " , " << tmpSVout << " , "
+            << tmpSPin << " , " << tmpSPout << " , "
+            << tmpWtVarin << " , " << tmpWtVarout << " , "
+            << tmpDcin << " , " << tmpDcout << " , "
+            << tmpIncWeightin << " , " << tmpIncWeightout << " , "
+            << tmpIncFactorin << " , " << tmpIncFactorout << " , ";
+        for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size(); process_iter++) {
+            partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+        }
+        if (r.Mech()->ParticleMech().AnyDeferred()) {
+            partProcFile << tmpAddout - tmpAddin << " , ";
+        }
+        else {
+            partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+        }
+        for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1; process_iter < tmpPCin.size(); process_iter++) {
+            partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+        }
+        for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1; process_iter < tmpPCin.size(); process_iter++) {
+            partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
+        }
+        partProcFile << tmpInfout - tmpInfin << " , " << tmpOutfout - tmpOutfin << "\n";
+        partProcFile.close();
 
-		// Output particle diagnostics to file
-		partProcFile.open(partfname.c_str(), ios::app);
-		partProcFile << ts2 << " , " << tstop << " , " << 0 << " , "
-			<< tmpSVin << " , " << tmpSVout << " , "
-			<< tmpSPin << " , " << tmpSPout << " , "
-			<< tmpWtVarin << " , " << tmpWtVarout << " , "
-			<< tmpDcin << " , " << tmpDcout << " , "
-			<< tmpIncWeightin << " , " << tmpIncWeightout << " , "
-			<< tmpIncFactorin << " , " << tmpIncFactorout << " , ";
-		for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
-			process_iter++) {
-			partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
-		}
-		if (r.Mech()->ParticleMech().AnyDeferred()) {
-			    partProcFile << tmpAddout - tmpAddin << " , ";
-		}
-		else {
-		    partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
-		}
-		for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
-			process_iter < tmpPCin.size(); process_iter++) {
-			partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
-		}
-		for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
-			process_iter < tmpPCin.size(); process_iter++) {
-			partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
-		}
-		partProcFile << tmpInfout - tmpInfin << " , " << tmpOutfout - tmpOutfin << "\n";
-		partProcFile.close();
-		
-		// Output gasphase diagnostics to file
-		gasConcFile.open(chemfname.c_str(), ios::app);
-		gasConcFile << ts2 << " , " << tstop << " , " << 0 << " , ";
-		for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
-			gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
-		}
-		gasConcFile << tmpTin << " , " << tmpTout << " , ";
-		gasConcFile << "\n";
-		gasConcFile.close();
-	}
+        // Output gasphase diagnostics to file
+        gasConcFile.open(chemfname.c_str(), ios::app);
+        gasConcFile << ts2 << " , " << tstop << " , " << 0 << " , ";
+        for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
+            gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
+        }
+        gasConcFile << tmpTin << " , " << tmpTout << " , ";
+        gasConcFile << "\n";
+        gasConcFile.close();
+    }
 
-	for (int i=1; i<nsteps; ++i) {
-
-	    m_cpu_mark = clock();
-        // Solve whole step of gas-phase chemistry.
-        rho = r.Mixture()->GasPhase().MassDensity();
-        m_ode.ResetSolver();
-        m_ode.Solve(r, t2+=dt);
-        r.SetTime(t2);
+    for (int i=1; i<nsteps; ++i) {
+        m_cpu_mark = clock();
+            // Solve whole step of gas-phase chemistry.
+            rho = r.Mixture()->GasPhase().MassDensity();
+            m_ode.ResetSolver();
+            m_ode.Solve(r, t2+=dt);
+            r.SetTime(t2);
         m_chemtime += calcDeltaCT(m_cpu_mark);
 
         m_cpu_mark = clock();
 
-		// aab64 Temporary functions for gas-phase properties
-		tmpGasPhase = (&r.Mixture()->GasPhase());
-		Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
-		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+        // aab64 Temporary functions for gas-phase properties
+        tmpGasPhase = (&r.Mixture()->GasPhase());
+        Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+        r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
 
-		// Diagnostics variables at start of split step
-		if (writediags) {
-			tmpSVin = r.Mixture()->SampleVolume();
-			tmpSPin = r.Mixture()->ParticleCount();
-			tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
-			tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
-			tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
-			tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
-			tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
-			tmpWtVarin = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
-			if (tmpWtVarin > 0.0)
-				tmpDcin = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) /
-				(r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
-			else
-				tmpDcin = 0.0;			
-			tmpIncFactorin = r.Mixture()->Particles().GetTotalParticleNumber();
-			tmpIncWeightin = r.Mixture()->GetInceptingWeight();
-			r.Mixture()->GasPhase().GetConcs(tmpGPin);
-			tmpTin = r.Mixture()->GasPhase().Temperature();
-		}
+        // Diagnostics variables at start of split step
+        if (writediags) {
+            tmpSVin = r.Mixture()->SampleVolume();
+            tmpSPin = r.Mixture()->ParticleCount();
+            tmpPCin = r.Mech()->ParticleMech().GetProcessUsageCounts();
+            tmpFCin = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+            tmpAddin = r.Mech()->ParticleMech().GetDeferredAddCount();
+            tmpInfin = r.Mech()->ParticleMech().GetInflowCount();
+            tmpOutfin = r.Mech()->ParticleMech().GetOutflowCount();
+            tmpWtVarin = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
+            if (tmpWtVarin > 0.0)
+                tmpDcin = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) /
+                    (r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
+            else
+                tmpDcin = 0.0;			
+            tmpIncFactorin = r.Mixture()->Particles().GetTotalParticleNumber();
+            tmpIncWeightin = r.Mixture()->GetInceptingWeight();
+            r.Mixture()->GasPhase().GetConcs(tmpGPin);
+            tmpTin = r.Mixture()->GasPhase().Temperature();
+        }
 
-        // Solve whole step of population balance (Sweep).
-	    if (!r.IsConstV()) r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
-	    Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
-        m_swp_ctime += calcDeltaCT(m_cpu_mark);  
+            // Solve whole step of population balance (Sweep).
+	if (!r.IsConstV()) // aab64
+            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+        m_swp_ctime += calcDeltaCT(m_cpu_mark);        
 
-		if (writediags) {
-			// Diagnostic variables at end of split step
-			tmpSVout = r.Mixture()->SampleVolume();
-			tmpSPout = r.Mixture()->ParticleCount();
-			tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
-			tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
-			tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
-			tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
-			tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
-			tmpWtVarout = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
-			if (tmpWtVarout > 0.0)
-				tmpDcout = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) /
-				(r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
-			else
-				tmpDcout = 0.0;
-			tmpIncFactorout = r.Mixture()->Particles().GetTotalParticleNumber();
-			tmpIncWeightout = r.Mixture()->GetInceptingWeight();
-			r.Mixture()->GasPhase().GetConcs(tmpGPout);
-			tmpTout = r.Mixture()->GasPhase().Temperature();
-			std::string rname(r.GetName());
-			std::string partfname, chemfname;
-			partfname = "Part-split-diagnostics(" + rname + ").csv";
-			chemfname = "Chem-split-diagnostics(" + rname + ").csv";
+        if (writediags) {
+            // Diagnostic variables at end of split step
+            tmpSVout = r.Mixture()->SampleVolume();
+            tmpSPout = r.Mixture()->ParticleCount();
+            tmpPCout = r.Mech()->ParticleMech().GetProcessUsageCounts();
+            tmpFCout = r.Mech()->ParticleMech().GetFictitiousProcessCounts();
+            tmpAddout = r.Mech()->ParticleMech().GetDeferredAddCount();
+            tmpInfout = r.Mech()->ParticleMech().GetInflowCount();
+            tmpOutfout = r.Mech()->ParticleMech().GetOutflowCount();
+            tmpWtVarout = r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW);
+            if (tmpWtVarout > 0.0)
+                tmpDcout = (r.Mixture()->Particles().GetSum(Sweep::iDW) + r.Mixture()->Particles().GetTotalDiameter()) /
+                    (r.Mixture()->Particles().GetTotalParticleNumber() + r.Mixture()->Particles().GetSum(Sweep::iW));
+            else
+                tmpDcout = 0.0;
+            tmpIncFactorout = r.Mixture()->Particles().GetTotalParticleNumber();
+            tmpIncWeightout = r.Mixture()->GetInceptingWeight();
+            r.Mixture()->GasPhase().GetConcs(tmpGPout);
+            tmpTout = r.Mixture()->GasPhase().Temperature();
+            std::string rname(r.GetName());
+            std::string partfname, chemfname;
+            partfname = "Part-split-diagnostics(" + rname + ").csv";
+            chemfname = "Chem-split-diagnostics(" + rname + ").csv";
 
-			// Output particle diagnostics to file
-			partProcFile.open(partfname.c_str(), ios::app);
-			partProcFile << ts2 << " , " << tstop << " , " << i << " , "
-				<< tmpSVin << " , " << tmpSVout << " , "
-				<< tmpSPin << " , " << tmpSPout << " , "
-			    << tmpWtVarin << " , " << tmpWtVarout << " , "
-			    << tmpDcin << " , " << tmpDcout << " , "
-				<< tmpIncWeightin << " , " << tmpIncWeightout << " , "
-				<< tmpIncFactorin << " , " << tmpIncFactorout << " , ";
-			for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
-				process_iter++) {
-				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
-			}
-			if (r.Mech()->ParticleMech().AnyDeferred()) {
-			    partProcFile << tmpAddout - tmpAddin << " , ";
-		    }
-		    else {
-			    partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
-		    }
-			for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
-				process_iter < tmpPCin.size(); process_iter++) {
-				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
-			}
-			for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1;
-			    process_iter < tmpPCin.size(); process_iter++) {
-			    partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
-			}
-			partProcFile << tmpInfout - tmpInfin << " , " << tmpOutfout - tmpOutfin << "\n";
-			partProcFile.close();
+            // Output particle diagnostics to file
+            partProcFile.open(partfname.c_str(), ios::app);
+            partProcFile << ts2 << " , " << tstop << " , " << i << " , "
+                << tmpSVin << " , " << tmpSVout << " , "
+                << tmpSPin << " , " << tmpSPout << " , "
+                << tmpWtVarin << " , " << tmpWtVarout << " , "
+                << tmpDcin << " , " << tmpDcout << " , "
+                << tmpIncWeightin << " , " << tmpIncWeightout << " , "
+                << tmpIncFactorin << " , " << tmpIncFactorout << " , ";
+            for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size(); process_iter++) {
+                partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+            }
+            if (r.Mech()->ParticleMech().AnyDeferred()) {
+                partProcFile << tmpAddout - tmpAddin << " , ";
+            }
+            else {
+                partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+            }
+            for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1; process_iter < tmpPCin.size(); process_iter++) {
+                partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
+            }
+            for (process_iter = r.Mech()->ParticleMech().Inceptions().size() + 1; process_iter < tmpPCin.size(); process_iter++) {
+                partProcFile << tmpFCout[process_iter] - tmpFCin[process_iter] << " , ";
+            }
+            partProcFile << tmpInfout - tmpInfin << " , " << tmpOutfout - tmpOutfin << "\n";
+            partProcFile.close();
 			
-		    // Output gasphase diagnostics to file
-		    gasConcFile.open(chemfname.c_str(), ios::app);
-		    gasConcFile << ts2 << " , " << tstop << " , " << i << " , ";
-		    for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
-				gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
-			}
-			gasConcFile << tmpTin << " , " << tmpTout << " , ";
-		    gasConcFile << "\n";
-		    gasConcFile.close();
-		}
+            // Output gasphase diagnostics to file
+            gasConcFile.open(chemfname.c_str(), ios::app);
+            gasConcFile << ts2 << " , " << tstop << " , " << i << " , ";
+            for (process_iter = 0; process_iter < tmpGPin.size(); process_iter++) {
+                gasConcFile << tmpGPin[process_iter] << " , " << tmpGPout[process_iter] << " , ";
+            }
+            gasConcFile << tmpTin << " , " << tmpTout << " , ";
+            gasConcFile << "\n";
+            gasConcFile.close();
+        }
     }
 
     m_cpu_mark = clock();
-    // Solve last half-step of gas-phase chemistry.    
-    m_ode.ResetSolver();
-    m_ode.Solve(r, t2+=h);
-    r.SetTime(t2);
+        // Solve last half-step of gas-phase chemistry.    
+        m_ode.ResetSolver();
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
-	// aab64 Temporary functions for gas-phase properties
-	tmpGasPhase = (&r.Mixture()->GasPhase());
-	Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
-	r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+    // aab64 Temporary functions for gas-phase properties
+    tmpGasPhase = (&r.Mixture()->GasPhase());
+    Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+    r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
 
     // Calculate total computation time.
     m_tottime += calcDeltaCT(totmark);
@@ -461,7 +451,6 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     if (out) out(nsteps, niter, r, *this, data);
 }
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
 
 
 // SOLUTION ROUTINES.
@@ -482,40 +471,41 @@ void StrangSolver::multiStrangStep(double dt, unsigned int n, Mops::Reactor &r,
     double rho = 0.0;
 
     m_cpu_mark = clock();
-    // Solve first half-step of gas-phase chemistry.
-    rho = r.Mixture()->GasPhase().MassDensity();
-    m_ode.Solve(r, t2+=h);
-    r.SetTime(t2);
+        // Solve first half-step of gas-phase chemistry.
+        rho = r.Mixture()->GasPhase().MassDensity();
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
     m_cpu_mark = clock();
 
     // Solve one whole step of population balance (Sweep).
-    r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-    Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
-    m_swp_ctime += calcDeltaCT(m_cpu_mark);
+        m_swp_ctime += calcDeltaCT(m_cpu_mark);
     
     for (unsigned int i=1; i!=n; ++i) {
         m_cpu_mark = clock();
-        // Solve whole step of gas-phase chemistry.
-        rho = r.Mixture()->GasPhase().MassDensity();
-        m_ode.ResetSolver();
-        m_ode.Solve(r, t2+=dt);
-        r.SetTime(t2);
+            // Solve whole step of gas-phase chemistry.
+            rho = r.Mixture()->GasPhase().MassDensity();
+            m_ode.ResetSolver();
+            m_ode.Solve(r, t2+=dt);
+            r.SetTime(t2);
         m_chemtime += calcDeltaCT(m_cpu_mark);
 
         m_cpu_mark = clock();
-        // Solve whole step of population balance (Sweep).
-        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+            // Solve whole step of population balance (Sweep).
+            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
         m_swp_ctime += calcDeltaCT(m_cpu_mark);
+        
     }
 
     m_cpu_mark = clock();
-    // Solve last half-step of gas-phase chemistry.    
-    m_ode.ResetSolver();
-    m_ode.Solve(r, t2+=h);
-    r.SetTime(t2);
+        // Solve last half-step of gas-phase chemistry.    
+        m_ode.ResetSolver();
+        m_ode.Solve(r, t2+=h);
+        r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 }

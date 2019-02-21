@@ -126,7 +126,7 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 	m_inflowcount = rhs.m_inflowcount;
 	m_outflowcount = rhs.m_outflowcount;
 
-    m_weighted_coag = rhs.m_weighted_coag;
+        m_weighted_coag = rhs.m_weighted_coag;
 	m_var_incept_weight = rhs.m_var_incept_weight;
 	m_max_incept_weight = rhs.m_max_incept_weight;
 	m_min_incept_weight = rhs.m_min_incept_weight;
@@ -565,7 +565,7 @@ double Mechanism::CalcRates(double t, const Cell &sys, const Geometry::LocalGeom
 
     // Get rates of inception processes.
     sum += Inception::CalcRates(t, sys, local_geom, m_inceptions, rates);
-	
+
     // Query other processes for their rates.
     sum += ParticleProcess::CalcRates(t, sys, local_geom, m_processes, rates, m_inceptions.size());
 
@@ -771,7 +771,7 @@ double Mechanism::CalcJumpRateTerms(double t, const Cell &sys, const Geometry::L
     }
 
     // Query other processes for their rates.
-	if (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber() > 0) {
+    if (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber() > 0) {
         for(PartProcPtrVector::const_iterator i=m_processes.begin();
             (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
             if (!(*i)->IsDeferred()) {
@@ -841,7 +841,7 @@ double Mechanism::CalcDeferredRateTerms(double t, const Cell &sys, const Geometr
     double sum = 0.0;
 
     // Query other processes for their rates.
-	if (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber() > 0) {
+    if (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber() > 0) {
         for(PartProcPtrVector::const_iterator i=m_processes.begin();
             (i!=m_processes.end()) && (iterm!=terms.end()); ++i) {
             if ((*i)->IsDeferred()) {
@@ -1051,60 +1051,48 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
     // Test for now
     assert(sys.ParticleModel() != NULL);
 
-    // aab64 Do special inception with no particle - just do heat transfer
-    // Note this is a very messy route of accessing adjustParticleTemperature function
-    // It would be better to do this differently, possibly split that function to each
-    // member or else define a new one with better accessibility
-   /* if (i == 1000000) {
-	    if (sys.ParticleCount() != 0){
-	        m_inceptions[m_inceptions.size() - 1]->Perform(t, sys, local_geom, 0, rng);
-	        m_proccount[m_inceptions.size() - 1] += 1;
-        }
-    }
-	else{*/
-	    // aab64 if there are no particles, set the particle phase temperature 
-	    // equal to the gas phase temperature
-	if (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber() == 0){
-	        sys.SetBulkParticleTemperature(sys.GasPhase().Temperature());
-	    };
+    // aab64 if there are no particles, set the particle phase temperature 
+    // equal to the gas phase temperature
+    if (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber() == 0){
+        sys.SetBulkParticleTemperature(sys.GasPhase().Temperature());
+    };
 
-        // Work out to which process this term belongs.
-        int j = i - m_inceptions.size();
+    // Work out to which process this term belongs.
+    int j = i - m_inceptions.size();
 
-        if (j < 0) {
-            // This is an inception process.
-            m_inceptions[i]->Perform(t, sys, local_geom, 0, rng);
-            m_proccount[i] += 1;
-        }
-        else {
-            // This is another process.
-            for (PartProcPtrVector::const_iterator ip = m_processes.begin(); ip != m_processes.end(); ++ip) {
-                if (j < (int)(*ip)->TermCount()) {
-                    // Do the process.
-                    if ((*ip)->Perform(t, sys, local_geom, j, rng) == 0) {
-                        m_proccount[i] += 1;
-                    } else {
-                        m_fictcount[i] += 1;
-                    }
-                    return;
+    if (j < 0) {
+        // This is an inception process.
+        m_inceptions[i]->Perform(t, sys, local_geom, 0, rng);
+        m_proccount[i] += 1;
+    } else {
+        // This is another process.
+        for(PartProcPtrVector::const_iterator ip=m_processes.begin(); ip!=m_processes.end(); ++ip) {
+            if (j < (int)(*ip)->TermCount()) {
+                // Do the process.
+                if ((*ip)->Perform(t, sys, local_geom, j, rng) == 0) {
+                    m_proccount[i] += 1;
                 } else {
-                    j -= (*ip)->TermCount();
+                    m_fictcount[i] += 1;
                 }
+                return;
+            } else {
+                j -= (*ip)->TermCount();
             }
+        }
 
-            // We are here because the process was neither an inception
-            // nor a single particle process.  It is therefore either a
-            // coagulation or a birth/death process.
-            for (CoagPtrVector::const_iterator it = m_coags.begin(); it != m_coags.end(); ++it) {
-                // Check if coagulation process.
-                if (j < static_cast<int>((*it)->TermCount())) {
-                    // This is the coagulation process.
-                    if ((*it)->Perform(t, sys, local_geom, j, rng) == 0) {
-                        m_proccount[i] += 1;
-                    } else {
-                        m_fictcount[i] += 1;
-                    }
-                    return;
+        // We are here because the process was neither an inception
+        // nor a single particle process.  It is therefore either a
+        // coagulation or a birth/death process.
+        for(CoagPtrVector::const_iterator it = m_coags.begin(); it != m_coags.end(); ++it) {
+            // Check if coagulation process.
+            if (j < static_cast<int>((*it)->TermCount())) {
+                // This is the coagulation process.
+                if ((*it)->Perform(t, sys, local_geom, j, rng) == 0) {
+                    m_proccount[i] += 1;
+                } else {
+                    m_fictcount[i] += 1;
+                }
+                return;
             } else {
                 // This must be the birth/death process.
                 j -= (*it)->TermCount();
@@ -1140,10 +1128,10 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
             return;
         } else {
             // Hopefully a death process then!
-            j -= sys.InflowCount();
+            j -= sys.InflowCount();;
         }
 
-        if ((j < (int)sys.OutflowCount()) && (j >= 0)) {
+        if ((j < (int)sys.OutflowCount()) && (j>=0)) {
             // An outflow process.
             sys.Outflows(j)->Perform(t, sys, local_geom, 0, rng);
             //////////////////////////////////////////// aab64 ////////////////////////////////////////////
@@ -1153,9 +1141,9 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
         } else {
             throw std::runtime_error("Unknown index of process, couldn't Perform."
                     " (Sweep, Mechanism::DoProcess)");
-	    }
         }
-    //}
+
+    }
 }
 
 
@@ -1297,16 +1285,14 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 			ind++;
         }
 		
-	    // aab64 is the above a candidate for omp?? 
-		// But index variable i would need to be a signed integral type 
-	    // To perform deferred processes on all particles individually using OpenMP:
-	    // Need to rework from the above
-	    // To do: Need to check the rng is not being overwritten or put inside pragma critical
+        // aab64 is the above a candidate for omp?? 
+        // But index variable i would need to be a signed integral type
+        // To perform deferred processes on all particles individually using OpenMP:
+        // Need to rework from the above
+        // To do: Need to check the rng is not being overwritten or put inside pragma critical
 
-	    
-		
-        // Now remove any invalid particles and update the ensemble.
-        sys.Particles().RemoveInvalids();
+		// Now remove any invalid particles and update the ensemble.
+		sys.Particles().RemoveInvalids();
 
 		if (sys.ParticleModel()->Components(0)->WeightedPAHs() && AggModel() == AggModels::PAH_KMC_ID){
 			//Check for duplicates
@@ -1374,27 +1360,27 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 
         // Start particle doubling again.  This will also double the ensemble
         // if too many particles have been removed.
-		sys.Particles().UnfreezeDoubling();
+        sys.Particles().UnfreezeDoubling();
 
-		// aab64 If required, scale the ensemble weights to prevent deterioration of the average
-		// (causing jumps e.g. when new, relatively large weight particles are incepted)
-		if ((sys.ParticleCount() > 1) && GetWeightScalingFlag())
-		{
-			double ratio = sys.ParticleCount() / sys.Particles().GetSum(iW);
-			if (ratio > GetWeightOnsetRatio())
-			{
-				double factor = GetWeightScalingFactor();
-				sys.AdjustSampleVolume(factor);
-				unsigned int part_i;
-				Particle *pi = NULL;
-				for (part_i = 0; part_i < sys.ParticleCount(); ++part_i)
-				{
-					pi = sys.Particles().At(part_i);
-					pi->setStatisticalWeight(pi->getStatisticalWeight() * factor);
-					sys.Particles().Update(part_i); 
-				}
-			}
-		}
+        // aab64 If required, scale the ensemble weights to prevent deterioration of the average
+        // (causing jumps e.g. when new, relatively large weight particles are incepted)
+        if ((sys.ParticleCount() > 1) && GetWeightScalingFlag())
+        {
+            double ratio = sys.ParticleCount() / sys.Particles().GetSum(iW);
+            if (ratio > GetWeightOnsetRatio())
+            {
+                double factor = GetWeightScalingFactor();
+                sys.AdjustSampleVolume(factor);
+                unsigned int part_i;
+                Particle *pi = NULL;
+                for (part_i = 0; part_i < sys.ParticleCount(); ++part_i)
+                {
+                    pi = sys.Particles().At(part_i);
+                    pi->setStatisticalWeight(pi->getStatisticalWeight() * factor);
+                    sys.Particles().Update(part_i); 
+                }
+            }
+        }
     }
 }
 
@@ -1669,6 +1655,8 @@ unsigned int Mechanism::SetRandomParticle(Sweep::Ensemble &ens, double t, double
 
 	if (index < 2)
 		std::cout << "Impossible index\n";
+	if (index >= ens.GetCritialNumber())
+		std::cout << "Index is too large\n";
 
 	return index;
 }
@@ -1769,14 +1757,13 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
                     if(rate > 0) {
                          boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
                          unsigned num = repeatDistrib(rng);
-						 //if (!sys.GetNotPSIFlag())
-						//	 num = ceil(rate);
+			 //if (!sys.GetNotPSIFlag())
+			 //	 num = ceil(rate);
                          if (num > 0) {
                              // Do the process to the particle.
                              (*i)->Perform(t, sys, sp, rng, num);
-							 
-							 // Increment the deferred jump counter
-			                 m_addcount += num; // aab64
+                             // Increment the deferred jump counter
+                             m_addcount += num; // aab64
                          }
                     }
                 }
@@ -1792,13 +1779,8 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
         // cache if it is.
         if (sp.IsValid())
             sp.UpdateCache();
-	}
+    }
 }
-
-
-
-
-
 
 void Mechanism::Mass_pah(Ensemble &m_ensemble) const
 {
@@ -1817,7 +1799,6 @@ void Mechanism::Mass_pah(Ensemble &m_ensemble) const
         writeParimary(pah_vector);
      }
 }
-
 
 // READ/WRITE/COPY.
 

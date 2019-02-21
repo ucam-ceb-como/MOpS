@@ -136,23 +136,27 @@ private:
      *  @param[in] trackPrimarySeparation Flag used to indicate whether to track primary separation.
      */
     template <class ParticleClass>
-    void ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimaryCoordinates) {
+    void ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimarySeparation) {
         m_root.Clear();
 
-		//! Copy properties of the original particle to the root node.
-        CopyParts(m_root, p);
-        
-		//! Copy the rest of the tree if particle is made up of more than one
-        //! primary.
-        if (p->m_leftchild != NULL)
-            CopyTree(m_root, p);
+        if (!trackPrimarySeparation) {
+            //! Disregards the connectivity of the original particle.
+            //! Call the helper function to generate structure.
+            ConstructTreeLoop(p);
+        } else {
+            //! Maintains the connectivity of the original particle.
+            //! Copy properties of the original particle to the root node.
+            CopyParts(m_root, p);
 
-        //! Generate structure of aggregate if coordinates of the primary
-        //! particles are not tracked on-the-fly.
-        if (!trackPrimaryCoordinates) {
-            calc_FM(m_root, rng, trackPrimaryCoordinates);
-            m_root.CentreCOM();
-		}
+            //! If true, particle is made up of more than one primary.
+            //! Copy the rest of the tree.
+            if (p->m_leftchild != NULL)
+                CopyTree(m_root, p);
+        }
+        //! Use the free-molecular regime to calculate the
+        //! aggregate structure.
+        calc_FM(m_root, rng, trackPrimarySeparation);
+        m_root.CentreCOM();
     };
     
     //! Copies the node without the children.
@@ -188,7 +192,7 @@ private:
         double dx, double dy,             //!< Sphere 2 x and y displacements.
         double &dz,                       //!< The output z-axis displacement of the bullet (+ve).
         double distanceCentreToCentre,    //!< Distance between the centres of primary particles.
-        const bool trackPrimaryCoordinates //!< Flag used to indicate whether to track primary coordinates.
+        const bool trackPrimarySeparation //!< Flag used to indicate whether to track primary separation.
         );
 
     //! Calculates the minimum collision distance.

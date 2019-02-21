@@ -113,58 +113,58 @@ class KMCSimulator;}
 class Ensemble
 {
 public:
-	// TYPEDEFS.
+    // TYPEDEFS.
 
-	//! The type of particle in the ensemble.
-	typedef Particle particle_type;
+    //! The type of particle in the ensemble.
+    typedef Particle particle_type;
 
-	//! Iterator for the particles.
-	typedef PartPtrVector::iterator iterator;
+    //! Iterator for the particles.
+    typedef PartPtrVector::iterator iterator;
 
-	//! Constant iterator for the particles.
-	typedef PartPtrVector::const_iterator const_iterator;
+    //! Constant iterator for the particles.
+    typedef PartPtrVector::const_iterator const_iterator;
 
-	//! Particle value cache for specifying distributions on the particle list
-	typedef Sweep::TreeTransCoagWeightedCache particle_cache_type;
+    //! Particle value cache for specifying distributions on the particle list
+    typedef Sweep::TreeTransCoagWeightedCache particle_cache_type;
 
-	// Constructors.
-	Ensemble(void); // Default constructor.
-	Ensemble(                             // Initialising constructor (incl. particles).
-		unsigned int count               //  - Capacity (max. number of particles).
-		);
-	Ensemble(const Ensemble &copy); // Copy constructor.
-	Ensemble(                            // Stream-reading constructor.
-		std::istream &in,                //   - Input stream.
-		const Sweep::ParticleModel &mech //   - Mechanism used to define particles.
-		);
+    // Constructors.
+    Ensemble(void); // Default constructor.
+    Ensemble(                             // Initialising constructor (incl. particles).
+        unsigned int count               //  - Capacity (max. number of particles).
+        );
+    Ensemble(const Ensemble &copy); // Copy constructor.
+    Ensemble(                            // Stream-reading constructor.
+        std::istream &in,                //   - Input stream.
+        const Sweep::ParticleModel &mech //   - Mechanism used to define particles.
+        );
 
-	// Destructor.
-	~Ensemble(void);
+    // Destructor.
+    ~Ensemble(void);
 
-	// Operators.
-	Ensemble &operator=(const Ensemble &rhs);
+    // Operators.
+    Ensemble &operator=(const Ensemble &rhs);
 
-	//! Overload of the << operator
-	friend std::ostream& operator<<(
-		std::ostream &os,
-		const Sweep::Ensemble &e);
+    //! Overload of the << operator
+    friend std::ostream& operator<<(
+            std::ostream &os,
+            const Sweep::Ensemble &e);
 
 
-	// INITIALISATION.
+    // INITIALISATION.
 
-	// Initialises the ensemble with the given capacity.
-	void Initialise(
-		unsigned int capacity             // Max. number of particles
-		);
+    // Initialises the ensemble with the given capacity.
+    void Initialise(
+        unsigned int capacity             // Max. number of particles
+        );
 
-	//! Initialise with some particles, downsampling as necessary
-	void SetParticles(std::list<Particle*>::iterator first, std::list<Particle*>::iterator last,
-		rng_type &rng);
+    //! Initialise with some particles, downsampling as necessary
+    void SetParticles(std::list<Particle*>::iterator first, std::list<Particle*>::iterator last,
+                      rng_type &rng);
 
-	//! Empty the tree and pass on ownership of the particles
-	PartPtrList TakeParticles();
+    //! Empty the tree and pass on ownership of the particles
+    PartPtrList TakeParticles();
 
-	void SetDoubling(const bool val);
+    void SetDoubling(const bool val);
 
 	unsigned int DoubleLimit();
 
@@ -172,24 +172,24 @@ public:
 
     // PARTICLE ADDITION AND REMOVAL.
 
-	// Returns a pointer to the particle at index i.
-	Particle *const At(unsigned int i);
-	const Particle *const At(unsigned int i) const;
+    // Returns a pointer to the particle at index i.
+    Particle *const At(unsigned int i);
+    const Particle *const At(unsigned int i) const;
 
-	// Adds the given particle to the ensemble.  Returns the new
-	// particle's index in the ensemble.  The ensemble then takes
-	// control of destruction of the particle.
-	int Add(Particle &sp, rng_type &rng);
+    // Adds the given particle to the ensemble.  Returns the new
+    // particle's index in the ensemble.  The ensemble then takes
+    // control of destruction of the particle.
+    int Add(Particle &sp, rng_type &rng);
 
     // aab64 For particle-number/particle model
     // Adds particle to the ensemble from the PN model during coagulation
     // Identical to the function above except it checks that the particle
     // removed in contraction is not one required in the coagulation event.
     // To do: Join these functions! 
-	// Adds the given particle to the ensemble.  Returns the new
-	// particle's index in the ensemble.  The ensemble then takes
-	// control of destruction of the particle.
-	int Add_PNP(Particle &sp, rng_type &rng, int i2);
+    // Adds the given particle to the ensemble.  Returns the new
+    // particle's index in the ensemble.  The ensemble then takes
+    // control of destruction of the particle.
+    int Add_PNP(Particle &sp, rng_type &rng, int i2);
 
 	//Find a particle that is a single PAH of a given structure
 	int CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, int ind);
@@ -200,134 +200,133 @@ public:
         bool fdel=true  // Set true to delete particle from memory as well, otherwise false.
         );
 
-	//! Removes invalid particles.
-	void RemoveInvalids(void);
+    //! Removes invalid particles.
+    void RemoveInvalids(void);
 
-	//! Replaces the particle at the given index with the given particle.
-	void Replace(
-		unsigned int i, // Index of particle to replace.
-		Particle &sp    // Particle to insert.
-		);
+    //! Replaces the particle at the given index with the given particle.
+    void Replace (
+        unsigned int i, // Index of particle to replace.
+        Particle &sp    // Particle to insert.
+        );
 
-	// Removes all particles from the ensemble.
-	void Clear();
-
-
-	// ITERATOR FUNCTIONS.
-
-	// Returns an iterator to the first particle.
-	iterator begin();
-
-	// Returns const_iterator to the first particle.
-	const_iterator begin() const;
-
-	// Returns an iterator to the last particle.
-	iterator end();
-
-	// Returns const_iterator to the last particle.
-	const_iterator end() const;
+    // Removes all particles from the ensemble.
+    void Clear();
 
 
-	// SELECTING PARTICLES.
+    // ITERATOR FUNCTIONS.
 
-	// Select a particle uniformly from the ensemble and returns
-	// its index. Returns negative on failure.
-	int Select(rng_type &rng) const;
+    // Returns an iterator to the first particle.
+    iterator begin();
 
-	// Randomly selects a particle, weighted by the given particle
-	// property index.  The particle properties are those stored in
-	// the ParticleData type. Returns particle index on success, otherwise
-	// negative.
-	int Select(Sweep::PropID id, rng_type &rng) const;
+    // Returns const_iterator to the first particle.
+    const_iterator begin() const;
 
-	int Select_usingGivenRand(Sweep::PropID id, double rng_number, rng_type &rng) const;
+    // Returns an iterator to the last particle.
+    iterator end();
 
-	// ENSEMBLE CAPACITY AND PARTICLE COUNT.
-
-	//! Returns the particle count.
-	unsigned int Count(void) const;
-
-	//!Returns the ensemble capacity.
-	unsigned int Capacity(void) const;
+    // Returns const_iterator to the last particle.
+    const_iterator end() const;
 
 
-	// SCALING AND PARTICLE DOUBLING.
+    // SELECTING PARTICLES.
 
-	//! Returns the scaling factor due to particle operations.
-	double Scaling() const;
+    // Select a particle uniformly from the ensemble and returns
+    // its index. Returns negative on failure.
+    int Select(rng_type &rng) const;
 
-	//! Resets the scaling parameters.
-	void ResetScaling();
+    // Randomly selects a particle, weighted by the given particle
+    // property index.  The particle properties are those stored in
+    // the ParticleData type. Returns particle index on success, otherwise
+    // negative.
+    int Select(Sweep::PropID id, rng_type &rng) const;
+    int Select_usingGivenRand(Sweep::PropID id, double rng_number, rng_type &rng) const;
 
-	//! Stops doubling algorithm.
-	inline void FreezeDoubling();
+    // ENSEMBLE CAPACITY AND PARTICLE COUNT.
 
-	//! Restarts doubling if it was off, and checks if the ensemble should be doubled.
-	inline void UnfreezeDoubling();
+    //! Returns the particle count.
+    unsigned int Count(void) const;
+
+    //!Returns the ensemble capacity.
+    unsigned int Capacity(void) const;
 
 
-	// GET SUMS OF PROPERTIES.
+    // SCALING AND PARTICLE DOUBLING.
 
-	//! Returns the sums over all particles of all their cached properties.
-	const particle_cache_type &GetSums(void) const;
+    //! Returns the scaling factor due to particle operations.
+    double Scaling() const;
 
-	// Returns the sum of one particle property with the given index
-	// from the binary tree.
-	double GetSum(
-		Sweep::PropID id // ID of the ParticleData property.
-		) const;
+    //! Resets the scaling parameters.
+    void ResetScaling();
 
-	//! Inform the ensemble that the particle at index i has been changed
-	void Update(unsigned int i);
+    //! Stops doubling algorithm.
+    inline void FreezeDoubling();
 
-	//! Get alpha for the ensemble (ABF model)
-	double Alpha(double T) const;
+    //! Restarts doubling if it was off, and checks if the ensemble should be doubled.
+    inline void UnfreezeDoubling();
 
-	// aab64 for hybrid particle number model
-	bool IsFirstSP(void) const { return m_inceptedFirstSP; }
-	void SetInceptedSP() { m_inceptedFirstSP = true; }
+
+    // GET SUMS OF PROPERTIES.
+
+    //! Returns the sums over all particles of all their cached properties.
+    const particle_cache_type &GetSums(void) const;
+
+    // Returns the sum of one particle property with the given index
+    // from the binary tree.
+    double GetSum(
+        Sweep::PropID id // ID of the ParticleData property.
+        ) const;
+
+    //! Inform the ensemble that the particle at index i has been changed
+    void Update(unsigned int i);
+
+    //! Get alpha for the ensemble (ABF model)
+    double Alpha(double T) const;
+
+    // aab64 for hybrid particle number model
+    bool IsFirstSP(void) const { return m_inceptedFirstSP; }
+    void SetInceptedSP() { m_inceptedFirstSP = true; }
 	
-	void UpdateNumberAtIndex(unsigned int index, int update);
-	void ResetNumberAtIndex(unsigned int index);
+    void UpdateNumberAtIndex(unsigned int index, int update);
+    void ResetNumberAtIndex(unsigned int index);
 	
-	void InitialiseDiameters(double molecularWeight, double density);
-	void InitialiseParticleNumberModel();
+    void InitialiseDiameters(double molecularWeight, double density);
+    void InitialiseParticleNumberModel();
 	
-	unsigned int NumberAtIndex(unsigned int index) const;
+    unsigned int NumberAtIndex(unsigned int index) const;
 	
-	unsigned int SetTotalParticleNumber();
-	unsigned int GetTotalParticleNumber() const { return m_total_number; }
+    unsigned int SetTotalParticleNumber();
+    unsigned int GetTotalParticleNumber() const { return m_total_number; }
 	
-	void SetCriticalSize(unsigned int threshold) { m_critical_size = threshold; }
-	unsigned int GetCritialNumber() const { return m_critical_size; }
+    void SetCriticalSize(unsigned int threshold) { m_critical_size = threshold; }
+    unsigned int GetCritialNumber() const { return m_critical_size; }
 	
-	void UpdateTotalParticleNumber(int update) { m_total_number += update; }
-	void UpdateTotalsWithIndex(unsigned int index, double change);
-	void UpdateTotalsWithIndices(unsigned int i1, unsigned int i2);
+    void UpdateTotalParticleNumber(int update) { m_total_number += update; }
+    void UpdateTotalsWithIndex(unsigned int index, double change);
+    void UpdateTotalsWithIndices(unsigned int i1, unsigned int i2);
 	
-	double PropertyAtIndex(Sweep::PropID prop, unsigned int index) const;
-	double GetPropertyTotal (Sweep::PropID prop) const;
-	double Diameter2AtIndex(unsigned int index) const { return m_pn_diameters2[index]; }
-	double DiameterAtIndex(unsigned int index) const { return m_pn_diameters[index]; }
-	double MassAtIndex(unsigned int index) const { return m_pn_mass[index]; }
+    double PropertyAtIndex(Sweep::PropID prop, unsigned int index) const;
+    double GetPropertyTotal (Sweep::PropID prop) const;
+    double Diameter2AtIndex(unsigned int index) const { return m_pn_diameters2[index]; }
+    double DiameterAtIndex(unsigned int index) const { return m_pn_diameters[index]; }
+    double MassAtIndex(unsigned int index) const { return m_pn_mass[index]; }
 	
-	// This could be a single function with a case statement but it would be slower and some propIDs don't exist
-	double GetTotalDiameter() const;
-	double GetTotalDiameter2() const;
-	double GetTotalDiameter_1() const;
-	double GetTotalDiameter_2() const;
-	double GetTotalDiameter3() const;
-	double GetTotalDiameter2_mass_1_2() const;
-	double GetTotalMass_1_2() const;
-	double GetTotalMass() const;
-	double GetTotalMass2() const;
-	double GetTotalMass3() const;
-	unsigned int GetTotalComponent() const;
+    // This could be a single function with a case statement but it would be slower and some propIDs don't exist
+    double GetTotalDiameter() const;
+    double GetTotalDiameter2() const;
+    double GetTotalDiameter_1() const;
+    double GetTotalDiameter_2() const;
+    double GetTotalDiameter3() const;
+    double GetTotalDiameter2_mass_1_2() const;
+    double GetTotalMass_1_2() const;
+    double GetTotalMass() const;
+    double GetTotalMass2() const;
+    double GetTotalMass3() const;
+    unsigned int GetTotalComponent() const;
 	
-	void DoubleTotals();
+    void DoubleTotals();
 	
-	Particle *const GetPNParticleAt(unsigned int index);
-	int SetPNParticle(Particle &sp, rng_type &rng, unsigned int index);
+    Particle *const GetPNParticleAt(unsigned int index);
+    int SetPNParticle(Particle &sp, rng_type &rng, unsigned int index);
 
     // READ/WRITE/COPY.
 
@@ -363,8 +362,8 @@ private:
     //unsigned int m_numofInceptedPAH;  // Number of starting PAH in the ensemble
 
     // ENSEMBLE SCALING VARIABLES.
-    double m_contfactor;       // Contraction scaling factor, precalculated for speed
-	unsigned int m_ncont;    // Number of ensemble contractions that have occurred..
+    double m_contfactor;       // Contraction scaling factor, precalculated for speed.
+    unsigned int m_ncont;    // Number of ensemble contractions that have occurred.
     double m_wtdcontfctr;    // Number of ensemble contractions that have occurred.
     bool m_contwarn;         // Has a contraction warning msg been printed?
 
@@ -377,35 +376,35 @@ private:
     unsigned int m_dbleslack;  // Slack space at end of ensemble after doubling operation.
     bool m_dbleon;             // Allows user to manually switch off/on doubling.  Does not affect activation criterion.
 
-	// aab64 Hybrid particle number model
-	bool m_inceptedFirstSP;
-	unsigned int m_critical_size; 
-	unsigned int m_total_number;
-	unsigned int m_total_component;
-	double m_total_diameter;
-	double m_total_diameter2;
-	double m_total_diameter_1;
-	double m_total_diameter_2;
-	double m_total_diameter2_mass_1_2;
-	double m_total_mass_1_2;
-	double m_total_mass;
-	double m_total_mass2;
-	double m_total_mass3;
-	double m_total_diameter3;
+    // aab64 Hybrid particle number model
+    bool m_inceptedFirstSP;
+    unsigned int m_critical_size; 
+    unsigned int m_total_number;
+    unsigned int m_total_component;
+    double m_total_diameter;
+    double m_total_diameter2;
+    double m_total_diameter_1;
+    double m_total_diameter_2;
+    double m_total_diameter2_mass_1_2;
+    double m_total_mass_1_2;
+    double m_total_mass;
+    double m_total_mass2;
+    double m_total_mass3;
+    double m_total_diameter3;
 
-	std::vector<unsigned int> m_particle_numbers;
-	std::vector<double> m_pn_diameters;
-	std::vector<double> m_pn_diameters2;
-	std::vector<double> m_pn_diameters_1;
-	std::vector<double> m_pn_diameters_2;
-	std::vector<double> m_pn_diameters2_mass_1_2;
-	std::vector<double> m_pn_mass_1_2;
-	std::vector<double> m_pn_mass;
-	std::vector<double> m_pn_mass2;
-	std::vector<double> m_pn_mass3;
-	std::vector<double> m_pn_diameters3;
+    std::vector<unsigned int> m_particle_numbers;
+    std::vector<double> m_pn_diameters;
+    std::vector<double> m_pn_diameters2;
+    std::vector<double> m_pn_diameters_1;
+    std::vector<double> m_pn_diameters_2;
+    std::vector<double> m_pn_diameters2_mass_1_2;
+    std::vector<double> m_pn_mass_1_2;
+    std::vector<double> m_pn_mass;
+    std::vector<double> m_pn_mass2;
+    std::vector<double> m_pn_mass3;
+    std::vector<double> m_pn_diameters3;
 
-	PartPtrVector m_pn_particles;
+    PartPtrVector m_pn_particles;
 
     //! Reset the contents of the binary tree
     void rebuildTree();

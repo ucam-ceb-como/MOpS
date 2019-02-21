@@ -73,13 +73,12 @@ public:
     // the given mechanism to define the stochastic processes.  Updates given
     // system accordingly.  On error returns <0, otherwise returns 0.
     int Run(
-        double &t,             // Simulation start time.  Will return the stop time.
-        double tstop,          // Stop time for simulation.
-        Cell &sys,             // System to solve.
+        double &t,        // Simulation start time.  Will return the stop time.
+        double tstop,     // Stop time for simulation.
+        Cell &sys,      // System to solve.
         const Mechanism &mech, // Mechanism to use to solve system.
         rng_type &rng
         );
-
 
     //! Performs a single stochastic event on the ensemble
     static void timeStep(

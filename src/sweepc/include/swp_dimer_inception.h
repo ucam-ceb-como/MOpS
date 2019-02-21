@@ -94,6 +94,7 @@ public:
         unsigned int iterm,
         rng_type &rng) const;
 
+
 	// RATE TERM CALCULATIONS.
 
     // Returns the number of rate terms for this process.
@@ -139,7 +140,7 @@ public:
         std::istream &in,            // Input stream.
         const Sweep::Mechanism &mech // Parent mechanism.
         );
-	
+
 protected:
     // Default constructor is protected to prevent an inception being
     // defined without knowledge of the parent mechanism.
@@ -167,7 +168,6 @@ private:
 
     // Free-molecular enhancement factor.
     const double m_efm;
-
 };
 }
 }

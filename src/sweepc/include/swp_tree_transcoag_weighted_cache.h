@@ -141,8 +141,8 @@ private:
     double m_d_2_w;             //!< D^_2 * W
     double m_m_1_2_w;           //!< M^-1/2 * W
     double m_d2m_1_2_w;         //!< D^2 * M^-1/2 * W
-	double m_S_w;               //!< S * W> aab64
-	double m_V_w;               //!< V * W> aab64
+    double m_S_w;               //!< S * W> aab64
+    double m_V_w;               //!< V * W> aab64
 
     // SilicaPrimary properties
     

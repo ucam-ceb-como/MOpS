@@ -314,22 +314,6 @@ void ImgNode::setRadius(double r)
     m_r3 = m_r2 * m_r;
 }
 
-//! Set the bounding sphere. Units of nm.
-void ImgNode::setBoundSph(Coords::Vector bsph)
-{
-    m_cen_bsph[0] = bsph[0] * 1.0e9;
-    m_cen_bsph[1] = bsph[1] * 1.0e9;
-    m_cen_bsph[2] = bsph[2] * 1.0e9;
-}
-
-//! Set the centre-of-mass. Units of nm.
-void ImgNode::setCOM(Coords::Vector mass)
-{
-    m_cen_mass[0] = mass[0] * 1.0e9;
-    m_cen_mass[1] = mass[1] * 1.0e9;
-    m_cen_mass[2] = mass[2] * 1.0e9;
-}
-
 //! Set the distance between the centres of primary particles.
 void ImgNode::setDistance(double distance)
 {

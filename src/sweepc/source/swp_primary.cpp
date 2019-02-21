@@ -810,15 +810,3 @@ int AggModels::Primary::InceptedPAH() const
             return 0;
     }
 }
-
-//csl37: get primary coords
-void AggModels::Primary::GetPrimaryCoords(std::vector<fvector> &coords) const
-{
-	//spherical model coords are (0,0,0,0)
-	fvector c(4);
-	c[0] = 0.0;
-    c[1] = 0.0;
-    c[2] = 0.0;
-    c[3] = 0.0;
-    coords.push_back(c);
-}

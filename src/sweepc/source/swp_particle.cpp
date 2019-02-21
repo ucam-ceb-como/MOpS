@@ -150,8 +150,8 @@ Particle::Particle(std::istream &in, const Sweep::ParticleModel &model, void *du
         in.read(reinterpret_cast<char*>(&m_CoagCount), sizeof(m_CoagCount));
         in.read(reinterpret_cast<char*>(&m_FragCount), sizeof(m_FragCount));
         in.read(reinterpret_cast<char*>(&m_createt), sizeof(m_createt));
-		in.read(reinterpret_cast<char*>(&mLPDAtime), sizeof(mLPDAtime));
-		in.read(reinterpret_cast<char*>(&m_hybrid), sizeof(m_hybrid));
+        in.read(reinterpret_cast<char*>(&mLPDAtime), sizeof(mLPDAtime));
+        in.read(reinterpret_cast<char*>(&m_hybrid), sizeof(m_hybrid));
     }
     else {
         throw std::invalid_argument("Input stream not ready \
@@ -566,7 +566,7 @@ Particle &Particle::operator=(const Sweep::Particle &rhs)
         m_FragCount = rhs.m_FragCount;
         m_createt = rhs.m_createt;
         mLPDAtime = rhs.mLPDAtime;
-		m_hybrid = rhs.m_hybrid;
+        m_hybrid = rhs.m_hybrid;
     }
     return *this;
 }
@@ -983,10 +983,7 @@ Particle *const Particle::Clone() const
  * @return	true iff internal structures pass tests
  */
 bool Particle::IsValid() const {
-	if (m_hybrid)
-	    return (m_primary != NULL) && (m_primary->IsValid()) && (m_StatWeight >= 0); // aab64 let stat weight be equal to zero for hybrid model trial
-	else
-		return (m_primary != NULL) && (m_primary->IsValid()) && (m_StatWeight > 0);
+	return (m_primary != NULL) && (m_primary->IsValid()) && (m_StatWeight > 0);
 }
 
 void Particle::writeParticlePOVRAY(std::ofstream &out) const
@@ -1024,17 +1021,11 @@ void Particle::Serialize(std::ostream &out, void *duplicates) const
         out.write((char*)&m_CoagCount, sizeof(m_CoagCount));
         out.write((char*)&m_FragCount, sizeof(m_FragCount));
         out.write(reinterpret_cast<const char*>(&m_createt), sizeof(m_createt));
-		out.write(reinterpret_cast<const char*>(&mLPDAtime), sizeof(mLPDAtime));
-		out.write(reinterpret_cast<const char*>(&m_hybrid), sizeof(m_hybrid));
+        out.write(reinterpret_cast<const char*>(&mLPDAtime), sizeof(mLPDAtime));
+        out.write(reinterpret_cast<const char*>(&m_hybrid), sizeof(m_hybrid));
     }
     else {
         throw std::invalid_argument("Output stream not ready \
                                     (Sweep, Particle::Serialize).");
     }
-}
-
-//csl37: get primary particle coords
-void Particle::getParticleCoords(std::vector<fvector> &coords) const
-{
-	m_primary->GetPrimaryCoords(coords);
 }

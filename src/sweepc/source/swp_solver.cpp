@@ -94,45 +94,44 @@ Solver::~Solver(void)
 int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
                 rng_type &rng)
 {
-	// aab64 Initialise register of particle-number particles
-	if (mech.IsHybrid() && !sys.Particles().IsFirstSP())
-	{
+    // aab64 Initialise register of particle-number particles
+    if (mech.IsHybrid() && !sys.Particles().IsFirstSP())
+    {
+        std::cout << "Initialising particle-number register with threshold Nthresh = "
+                  << sys.Particles().GetCritialNumber() << "\n";
+        // Get the cell vertices
+        fvector vertices = Geometry::LocalGeometry1d().cellVertices();
 
-		std::cout << "Initialising particle-number register with threshold Nthresh = "
-			<< sys.Particles().GetCritialNumber() << "\n";
-		// Get the cell vertices
-		fvector vertices = Geometry::LocalGeometry1d().cellVertices();
+        // Sample a uniformly distributed position, note that this method
+        // works whether the vertices come in increasing or decreasing order,
+        // but 1d is assumed for now.
+        double posn = vertices.front();
 
-		// Sample a uniformly distributed position, note that this method
-		// works whether the vertices come in increasing or decreasing order,
-		// but 1d is assumed for now.
-		double posn = vertices.front();
+        const double width = vertices.back() - posn;
+        boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+        posn += width * uniformGenerator();
 
-		const double width = vertices.back() - posn;
-		boost::uniform_01<rng_type&, double> uniformGenerator(rng);
-		posn += width * uniformGenerator();
+        // Flag that register of particle properties is set up
+        sys.Particles().SetInceptedSP();
+        sys.Particles().SetCriticalSize(mech.GetCriticalThreshold());
 
-		// Flag that register of particle properties is set up
-		sys.Particles().SetInceptedSP();
-		sys.Particles().SetCriticalSize(mech.GetCriticalThreshold());
-
-			// Initialise lookup of particles below critical size
-			for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
-			{
-				Particle * sp_pn = mech.CreateParticle(t);
-				std::vector<double> newComposition(1);
-				std::vector<double> noTrackers(1);
-				newComposition[0] = i;
-				noTrackers[0] = 0.0;
-				sp_pn->setPositionAndTime(posn, t);
-				sp_pn->Primary()->SetComposition(newComposition);
-				sp_pn->Primary()->SetValues(noTrackers);
-				sp_pn->UpdateCache();
-				sys.Particles().SetPNParticle(*sp_pn, rng, i);
-			}
-			sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(),
-				sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
-	}
+        // Initialise lookup of particles below critical size
+        for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
+        {
+            Particle * sp_pn = mech.CreateParticle(t);
+            std::vector<double> newComposition(1);
+            std::vector<double> noTrackers(1);
+            newComposition[0] = i;
+            noTrackers[0] = 0.0;
+            sp_pn->setPositionAndTime(posn, t);
+            sp_pn->Primary()->SetComposition(newComposition);
+            sp_pn->Primary()->SetValues(noTrackers);
+            sp_pn->UpdateCache();
+            sys.Particles().SetPNParticle(*sp_pn, rng, i);
+        }
+        sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(),
+	sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
+    }
 
     int err = 0;
     double tsplit, dtg, jrate, tflow(t);
@@ -141,23 +140,22 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
     dtg     = tstop - t;
 	
     double tin = t; //store start time 
-
-	// aab64 Variables used to shift incepting weight over time
-	double nmax = sys.Particles().Capacity();
-	double nnew = sys.ParticleCount();
-	double nmin = 1.0; // minimum particles for which to activate scaling
-	double wmax = 1.0; // maximum incepting weight
-	double wmin = 1.0; // minimum incepting weight
-	double wnew = 1.0; // incepting weight for next step
-	double a = 1.0;    // constant in scaling
-	double b = 1.0;    // constant in scaling
-	double c = 1.0;    // constant in scaling
-	std::string wtfn = "L";  // inception weight function
+    // aab64 Variables used to shift incepting weight over time
+    double nmax = sys.Particles().Capacity();
+    double nnew = sys.ParticleCount();
+    double nmin = 1.0; // minimum particles for which to activate scaling
+    double wmax = 1.0; // maximum incepting weight
+    double wmin = 1.0; // minimum incepting weight
+    double wnew = 1.0; // incepting weight for next step
+    double a = 1.0;    // constant in scaling
+    double b = 1.0;    // constant in scaling
+    double c = 1.0;    // constant in scaling
+    std::string wtfn = "L";  // inception weight function
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
-	{
-		nnew = sys.ParticleCount();
+    {
+        nnew = sys.ParticleCount();
 
 		// aab64 AIW - Adaptive inception weighting:
 		/* Shift incepting particle weight over time, as the ensemble fills up
@@ -288,7 +286,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 			}
 		}
 
-		if (mech.AnyDeferred() && (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber()  > 0.0))  {
+        if (mech.AnyDeferred() && (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber()  > 0.0))  {
 
             // Get the process jump rates (and the total rate).
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
@@ -300,13 +298,12 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
             // is no need to perform LPDA splitting steps.
             tsplit = tstop;
         }
-
-		tin = t;
+	tin = t;
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
-            
-			// Sweep does not do transport
+
+            // Sweep does not do transport
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
             timeStep(t, std::min(t + dtg / 3.0, tsplit), sys, Geometry::LocalGeometry1d(),
                      mech, rates, jrate, rng);
@@ -315,15 +312,15 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
             if (sys.OutflowCount() > 0 || sys.InflowCount() > 0)
                 mech.DoParticleFlow(t, t - tflow, sys, Geometry::LocalGeometry1d(), rng);
             tflow = t;
-		}
-
+        }
         sys.SetCurrentProcessTau(t - tin); // aab64 store time passed in current loop for heat transfer
 
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
-	    mech.LPDA(t, sys, rng);
-		if (mech.IsHybrid() && sys.Particles().IsFirstSP())
-			mech.UpdateSections(t, t - tin, sys, rng);
+        mech.LPDA(t, sys, rng);
+
+        if (mech.IsHybrid() && sys.Particles().IsFirstSP())
+            mech.UpdateSections(t, t - tin, sys, rng);
     }
 
     return err;
@@ -382,11 +379,14 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
     // selecting a process and performing that process.
     double dt;
 
+    //std::cout << "Solver::timeStep in cell " << &sys << " from " << t << " with rate " << jrate;
+
     // Calculate exponentially distributed time step size.
     if (jrate > 0.0) {
         boost::exponential_distribution<double> waitDistrib(jrate);
         boost::variate_generator<Sweep::rng_type&, boost::exponential_distribution<double> > waitGenerator(rng, waitDistrib);
         dt = waitGenerator();
+        //std::cout << ' ' << dt;
     } else {
         // Avoid divide by zero.
         dt = std::numeric_limits<double>::max();
@@ -394,10 +394,9 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
 
     // Truncate if step is too long or select a process
     // to perform.
-	if (t + dt <= t_stop) {
-
-		boost::uniform_01<rng_type &> uniformGenerator(rng);
-		const int i = chooseIndex(rates, uniformGenerator);
+    if (t+dt <= t_stop) {
+        boost::uniform_01<rng_type &> uniformGenerator(rng);
+        const int i = chooseIndex(rates, uniformGenerator);
 
 		if (mech.GetIsSurfInc()) 
 		{
@@ -418,12 +417,12 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
 		}
 
         mech.DoProcess(i, t+dt, sys, geom, rng);
-				
-		t += dt;
-		
+        t += dt;
     } else {
         t = t_stop;
+        //std:cout << " step truncated to end at " << t_stop;
     }
+    //std::cout << std::endl;
 }
 
 // Selects a process using a DIV algorithm and the process rates

@@ -288,7 +288,7 @@ void ParticleStats::Calculate(const Ensemble &e, double scale)
     // Note that m_stats[iM0] at this point does not in fact contain an M0 value,
     // since it has not yet been scaled by sample volume.  This is intentional
     // since here one should divide by the total statistical weight of all particles.
-	const double invWeight = ((e.Count() + e.GetTotalParticleNumber())>0) ? 1.0 / m_stats[iM0] : 0.0;
+    const double invWeight = ((e.Count() + e.GetTotalParticleNumber())>0) ? 1.0 / m_stats[iM0] : 0.0;
 
     // Scale the summed stats and calculate the averages,
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {
@@ -609,7 +609,7 @@ void ParticleStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
 }
 
 /////////////////////////////////////////////////csl37-pp
-void ParticleStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const
+void ParticleStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const
 {
 }
 //////////////////////////////////////////////////

@@ -125,215 +125,191 @@ int DimerInception::Perform(const double t, Cell &sys,
 
     // This routine performs the inception on the given chemical system.
 
-	// aab64 Inception approximation ideas to reduce ensemble filling rate
-	// (1) PSI - particle surface inception: do surface growth on existing large particle
-	// (2) HCI - heavy cluster inception: incept larger primary particle
-	// Caution - may introduce large errors in the primary size distribution.
+    // aab64 Inception approximation ideas to reduce ensemble filling rate
+    // (1) PSI - particle surface inception: do surface growth on existing large particle
+    // (2) HCI - heavy cluster inception: incept larger primary particle
+    // Caution - may introduce large errors in the primary size distribution.
 
-	// aab64 hybrid particle model
-	// If hybrid_flag is active, track the number of incepting particles
-	int iprng = -1;
-	int iprng2 = -1;
-	unsigned int nsp = sys.ParticleCount();
-	double dcol_1, dcol_2, sw_0, sw_1;
-	Particle *sprng = NULL;
-	Particle *sprng2 = NULL;
-	// Get surface inception settings
-	bool surfincflag = m_mech->GetIsSurfInc();
-	double dcol_switch = m_mech->GetSurfIncValue();
-	double dcol_switch_min = m_mech->GetSurfIncCutoffValue();
-	bool sizeflag = false;
-	std::string PSItype;
-	m_mech->GetPSItype(PSItype); // event, both, weight
-	Sweep::PropID prop1 = sys.getCoagProp1();
-	Sweep::PropID prop2 = sys.getCoagProp2();
-	if (nsp > 1 && surfincflag) 
-	{
-		// Get average particle collision diameter
-		//dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
+    // aab64 hybrid particle model
+    // If hybrid_flag is active, track the number of incepting particles
+    int iprng = -1, iprng2 = -1;
+    unsigned int nsp = sys.ParticleCount();
+    double dcol_1, dcol_2, sw_0, sw_1;
+    Particle *sprng = NULL;
+    Particle *sprng2 = NULL;
+    // Get surface inception settings
+    bool surfincflag = m_mech->GetIsSurfInc();
+    double dcol_switch = m_mech->GetSurfIncValue();
+    double dcol_switch_min = m_mech->GetSurfIncCutoffValue();
+    bool sizeflag = false;
+    std::string PSItype;
+    m_mech->GetPSItype(PSItype); // event, both, weight
+    Sweep::PropID prop1 = sys.getCoagProp1();
+    Sweep::PropID prop2 = sys.getCoagProp2();
+    if (nsp > 1 && surfincflag) 
+    {
+        // Get average particle collision diameter
+        //dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
 
-		// Select a particle at random, weighted by collision diameter sqrd
-		//Sweep::PropID prop1 = iD2;
-		iprng = sys.Particles().Select(prop1, rng);
-		if (iprng >= 0)
-			sprng = sys.Particles().At(iprng);
-		else
-			return -1; // Failed to choose a particle.
+        // Select a particle at random, weighted by collision diameter sqrd
+        //Sweep::PropID prop1 = iD2;
+        iprng = sys.Particles().Select(prop1, rng);
+        if (iprng >= 0)
+            sprng = sys.Particles().At(iprng);
+        else
+            return -1; // Failed to choose a particle.
 
-		// Select a second particle at random, weighted by inverse sqrt mass times weight
-		//Sweep::PropID prop2 = iM_1_2W;
-		iprng2 = sys.Particles().Select(prop2, rng);
-		if (iprng2 >= 0) 
-			sprng2 = sys.Particles().At(iprng2);
-		else 
-			return -1; // Failed to choose a particle.
+        // Select a second particle at random, weighted by inverse sqrt mass times weight
+        //Sweep::PropID prop2 = iM_1_2W;
+        iprng2 = sys.Particles().Select(prop2, rng);
+        if (iprng2 >= 0) 
+            sprng2 = sys.Particles().At(iprng2);
+        else 
+            return -1; // Failed to choose a particle.
 
-		// Toggle size flag if selected particle has collision diameter > switch collision diameter
-		dcol_1 = sprng->CollDiameter();
-		dcol_2 = sprng2->CollDiameter();
-		if (dcol_2 > dcol_1)
-			sprng = sprng2;
+        // Toggle size flag if selected particle has collision diameter > switch collision diameter
+        dcol_1 = sprng->CollDiameter();
+        dcol_2 = sprng2->CollDiameter();
+        if (dcol_2 > dcol_1)
+            sprng = sprng2;
 
-		sw_0 = sprng->getStatisticalWeight();
-		sizeflag = (sys.ParticleCount() == sys.Particles().Capacity()); 
-		// aab64 temp change (dcol_1 > dcol_switch) && (dcol_2 <= dcol_switch_min);
-	}
+        sw_0 = sprng->getStatisticalWeight();
+        sizeflag = (sys.ParticleCount() == sys.Particles().Capacity()); 
+        // aab64 temp change (dcol_1 > dcol_switch) && (dcol_2 <= dcol_switch_min);
+    }
 
-		// If surface inception is active AND average particle size is large enough
-		// THEN do surface inception on a random particle.
-		if (surfincflag && sizeflag)
-		{
-			// Inception stoichiometry determines particle composition
-			unsigned int nInceptingParticle_ui = (unsigned int)ParticleComp()[0];
-			double nInceptingParticle_d = ParticleComp()[0];
+    // If surface inception is active AND average particle size is large enough
+    // THEN do surface inception on a random particle.
+    if (surfincflag && sizeflag)
+    {
+        // Inception stoichiometry determines particle composition
+        unsigned int nInceptingParticle_ui = (unsigned int)ParticleComp()[0];
+        double nInceptingParticle_d = ParticleComp()[0];
 
-			// PSItype = event: Update the number of rutiles in the particle, leave the weight
-			if (PSItype == "E")
-			{
-				// Use inception composition and weight ratio to determine number of units to add to particle
-				unsigned int weightRatio = (unsigned int)(sys.GetInceptingWeight() / sprng->getStatisticalWeight());
-				unsigned int nChosenParticle = weightRatio * nInceptingParticle_ui;
+        // PSItype = event: Update the number of rutiles in the particle, leave the weight
+        if (PSItype == "E")
+        {
+            // Use inception composition and weight ratio to determine number of units to add to particle
+            unsigned int weightRatio = (unsigned int)(sys.GetInceptingWeight() / sprng->getStatisticalWeight());
+            unsigned int nChosenParticle = weightRatio * nInceptingParticle_ui;
 
-				// Avoid doing extra update of gas-phase and temperature during surface growth
-				// Store a flag in the sys object that can be checked inside Perform(.)
-				sys.SetNotPSIFlag(false);
+            // Avoid doing extra update of gas-phase and temperature during surface growth
+            // Store a flag in the sys object that can be checked inside Perform(.)
+            sys.SetNotPSIFlag(false);
 
-				// 2. Call perform for surface growth process, and do one surface event.
-				// ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
-				// How does this generalise for other systems with different # processes and comp?
-				int m = m_mech->Processes(0)->Perform(t, sys, *sprng, rng, nChosenParticle);
+            // 2. Call perform for surface growth process, and do one surface event.
+            // ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
+            // How does this generalise for other systems with different # processes and comp?
+            int m = m_mech->Processes(0)->Perform(t, sys, *sprng, rng, nChosenParticle);
 
-				// Reset flag in the sys object for outside this function
-				sys.SetNotPSIFlag(true);
+            // Reset flag in the sys object for outside this function
+            sys.SetNotPSIFlag(true);
 
-				// 3. Update the cached properties (note could this be left off to make 
-				// it more efficient, assuming that the small change is insignificant?).
-				sprng->UpdateCache();
-			}
-			// PSItype = weight: Update the particle weight and leave the number of rutiles unchanged
-			else if (PSItype == "W")
-			{
-				double nChosenParticle = sprng->Composition()[0];
-				double newWeight = (nChosenParticle * sprng->getStatisticalWeight()) + (nInceptingParticle_d * sys.GetInceptingWeight());
-				newWeight *= (1.0 / (nChosenParticle));
-				sprng->setStatisticalWeight(newWeight);
-			}
-			// PSItype = both: Update both the weight and the number of rutiles of the particle
-			else
-			{
-				// Avoid doing extra update of gas-phase and temperature during surface growth
-				// Store a flag in the sys object that can be checked inside Perform(.)
-				sys.SetNotPSIFlag(false);
+            // 3. Update the cached properties (note could this be left off to make 
+            // it more efficient, assuming that the small change is insignificant?).
+            sprng->UpdateCache();
+        }
+        // PSItype = weight: Update the particle weight and leave the number of rutiles unchanged
+        else if (PSItype == "W")
+        {
+            double nChosenParticle = sprng->Composition()[0];
+            double newWeight = (nChosenParticle * sprng->getStatisticalWeight()) + (nInceptingParticle_d * sys.GetInceptingWeight());
+            newWeight *= (1.0 / (nChosenParticle));
+            sprng->setStatisticalWeight(newWeight);
+        }
+        // PSItype = both: Update both the weight and the number of rutiles of the particle
+        else
+        {
+            // Avoid doing extra update of gas-phase and temperature during surface growth
+            // Store a flag in the sys object that can be checked inside Perform(.)
+            sys.SetNotPSIFlag(false);
 
-				// 2. Call perform for surface growth process, and do one surface event.
-				// ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
-				// How does this generalise for other systems with different # processes and comp?
-				int m = m_mech->Processes(0)->Perform(t, sys, *sprng, rng, nInceptingParticle_d);
+            // 2. Call perform for surface growth process, and do one surface event.
+            // ParticleComp()[0] is the number of TiO2 units added, dx, in this case...
+            // How does this generalise for other systems with different # processes and comp?
+            int m = m_mech->Processes(0)->Perform(t, sys, *sprng, rng, nInceptingParticle_d);
 
-				// Reset flag in the sys object for outside this function
-				sys.SetNotPSIFlag(true);
+            // Reset flag in the sys object for outside this function
+            sys.SetNotPSIFlag(true);
 
-				// Update the weight 
-				double nChosenParticle = sprng->Composition()[0];
-				double newWeight = (nChosenParticle * sprng->getStatisticalWeight());
-				newWeight += (nInceptingParticle_d * sys.GetInceptingWeight());
-				newWeight *= (1.0 / (nChosenParticle + nInceptingParticle_d));
-				sprng->setStatisticalWeight(newWeight);
+            // Update the weight 
+            double nChosenParticle = sprng->Composition()[0];
+            double newWeight = (nChosenParticle * sprng->getStatisticalWeight());
+            newWeight += (nInceptingParticle_d * sys.GetInceptingWeight());
+            newWeight *= (1.0 / (nChosenParticle + nInceptingParticle_d));
+            sprng->setStatisticalWeight(newWeight);
 
-				// 3. Update the cached properties (note could this be left off to make 
-				// it more efficient, assuming that the small change is insignificant?).
-				sprng->UpdateCache();
-			}
+            // 3. Update the cached properties (note could this be left off to make 
+            // it more efficient, assuming that the small change is insignificant?).
+            sprng->UpdateCache();
+        }
 
-			// Update gas-phase chemistry of system 
-			double particleWt = sys.GetInceptingWeight();
-			adjustGas(sys, particleWt, 1, sys.GetInceptionFactor()); // nInceptingParticle_ui
-			adjustParticleTemperature(sys, particleWt, 1, sys.GetIsAdiabaticFlag(), nInceptingParticle_d, 1, sys.GetInceptionFactor());
-		}
-		else
-		{
+        // Update gas-phase chemistry of system 
+        double particleWt = sys.GetInceptingWeight();
+        adjustGas(sys, particleWt, 1, sys.GetInceptionFactor()); // nInceptingParticle_ui
+        adjustParticleTemperature(sys, particleWt, 1, sys.GetIsAdiabaticFlag(), nInceptingParticle_d, 1, sys.GetInceptionFactor());
+    }
+    else
+    {
+        // Get the cell vertices
+        fvector vertices = local_geom.cellVertices();
 
-			// Get the cell vertices
-			fvector vertices = local_geom.cellVertices();
+        // Sample a uniformly distributed position, note that this method
+        // works whether the vertices come in increasing or decreasing order,
+        // but 1d is assumed for now.
+        double posn = vertices.front();
 
-			// Sample a uniformly distributed position, note that this method
-			// works whether the vertices come in increasing or decreasing order,
-			// but 1d is assumed for now.
-			double posn = vertices.front();
+        const double width = vertices.back() - posn;
+        boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+        posn += width * uniformGenerator();
 
-			const double width = vertices.back() - posn;
-			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
-			posn += width * uniformGenerator();
+        // Add particle to system's ensemble.
+        if (!m_mech->IsHybrid())
+        {
+            // Create a new particle of the type specified
+            // by the system ensemble.
+            Particle *sp = m_mech->CreateParticle(t);
 
-			// Add particle to system's ensemble.
-			if (!m_mech->IsHybrid())
-			{
-				// Create a new particle of the type specified
-				// by the system ensemble.
-				Particle *sp = m_mech->CreateParticle(t);
+            // aab64 Get incepting particle weight for cases where wt != 1.0:
+            // Check if SWA is in play and variable inception weighting is active.
+            // Update newly incepted particle weight if necessary.
+            if (m_mech->IsWeightedCoag() && m_mech->IsVariableWeightedInception()) 
+            {
+                sp->setStatisticalWeight(sys.GetInceptingWeight());
+            }
 
-				// aab64 Get incepting particle weight for cases where wt != 1.0:
-				// Check if SWA is in play and variable inception weighting is active.
-				// Update newly incepted particle weight if necessary.
-				if (m_mech->IsWeightedCoag() && m_mech->IsVariableWeightedInception()) {
-					sp->setStatisticalWeight(sys.GetInceptingWeight());
-				}
+            sp->setPositionAndTime(posn, t);
 
-				sp->setPositionAndTime(posn, t);
+            // Initialise the new particle.
+            sp->Primary()->SetComposition(ParticleComp());
+            sp->Primary()->SetValues(ParticleTrackers());
 
-				// Initialise the new particle.
-				sp->Primary()->SetComposition(ParticleComp());
-				sp->Primary()->SetValues(ParticleTrackers());
+            // aab64 Adjust composition to allow inception of heavier particles
+            // Perform adjustment before updating the cache and computing properties.
+            bool heavyAllowed = m_mech->GetIsHeavy();
+            if (heavyAllowed)
+                sp->Primary()->AdjustForInception(sys.GetInceptionFactor());
 
-				// aab64 Adjust composition to allow inception of heavier particles
-				// Perform adjustment before updating the cache and computing properties.
-				bool heavyAllowed = m_mech->GetIsHeavy();
-				if (heavyAllowed)
-					sp->Primary()->AdjustForInception(sys.GetInceptionFactor());
+            sp->UpdateCache();
 
-				sp->UpdateCache();
+            sys.Particles().Add(*sp, rng);
 
-				sys.Particles().Add(*sp, rng);
+            // Update gas-phase chemistry of system.
+            adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
+            adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+        }
+        else
+        {
+            // Adjust particle number properties
+            sys.Particles().UpdateNumberAtIndex(ParticleComp()[0], 1);
+            sys.Particles().UpdateTotalParticleNumber(1);
+            sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
 
-				// Update gas-phase chemistry of system.
-				adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
-				adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-			}
-			else
-			{
-				/*if (!sys.Particles().IsFirstSP())
-				{
-					// Flag that register of particle properties is set up
-					sys.Particles().SetInceptedSP();
-					sys.Particles().SetCriticalSize(m_mech->GetCriticalThreshold());
-
-					// Initialise lookup of particles below critical size
-					for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
-					{
-						Particle * sp_pn = m_mech->CreateParticle(t);
-						std::vector<double> newComposition(1);
-						newComposition[0] = i;
-						sp_pn->setPositionAndTime(posn, t);
-						sp_pn->Primary()->SetComposition(newComposition);
-						sp_pn->Primary()->SetValues(ParticleTrackers());
-						sp_pn->UpdateCache();
-						sys.Particles().SetPNParticle(*sp_pn, rng, i);
-					}
-					sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(),
-						sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
-				}*/
-				
-
-				// Adjust particle number properties
-				sys.Particles().UpdateNumberAtIndex(ParticleComp()[0], 1);
-				sys.Particles().UpdateTotalParticleNumber(1);
-				sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
-
-				// Update gas-phase chemistry of system.
-				adjustGas(sys, sys.GetInceptingWeight(), 1, sys.GetInceptionFactor());
-				adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-			}
-		}
+            // Update gas-phase chemistry of system.
+            adjustGas(sys, sys.GetInceptingWeight(), 1, sys.GetInceptionFactor());
+            adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+        }
+    }
 
     return 0;
 }
@@ -396,16 +372,16 @@ double DimerInception::Rate(double t, const Cell &sys, const Geometry::LocalGeom
     double T = sys.GasPhase().Temperature();
     double P = sys.GasPhase().Pressure();
 
-	// aab64 Divide the inception rate by the current particle weight
-	// aab64 Divide by current incepting composition scale factor for cases with heavier inception
-	// This really belongs in the rate fn below for consistency. 
-	// To do: ensure that it is always correctly implemented when rates 
-	// are computed. 
-	double scaleFac = sys.GetInceptionFactor() * sys.GetInceptingWeight();
-	double scaledRate = Rate(sys.GasPhase(), sqrt(T),
-		MeanFreePathAir(T, P),
-		sys.SampleVolume());
-	scaledRate *= (1.0 / scaleFac); 
+    // aab64 Divide the inception rate by the current particle weight
+    // aab64 Divide by current incepting composition scale factor for cases with heavier inception
+    // This really belongs in the rate fn below for consistency. 
+    // To do: ensure that it is always correctly implemented when rates 
+    // are computed. 
+    double scaleFac = sys.GetInceptionFactor() * sys.GetInceptingWeight();
+    double scaledRate = Rate(sys.GasPhase(), sqrt(T),
+    MeanFreePathAir(T, P),
+    sys.SampleVolume());
+    scaledRate *= (1.0 / scaleFac); 
 
     // Calculate the rate.
     return scaledRate;
@@ -474,7 +450,7 @@ double DimerInception::chemRatePart(const EnvironmentInterface &gas) const
             rate *= (NA * conc);
         }
     }
-	
+
     return rate;
 }
 
@@ -504,13 +480,13 @@ double DimerInception::RateTerms(const double t, const Cell &sys,
             Rate = 0.0;
 
         *iterm = Rate; 
-	}else{
-		// aab64 Divide by current incepting particle weight for cases when wt != 1.0. 
-		// aab64 Divide by current incepting composition scale factor for cases with heavier inception
-		double scaleFac = 1.0 / (sys.GetInceptingWeight() * sys.GetInceptionFactor());
+    } else {
+        // aab64 Divide by current incepting particle weight for cases when wt != 1.0. 
+        // aab64 Divide by current incepting composition scale factor for cases with heavier inception
+        double scaleFac = 1.0 / (sys.GetInceptingWeight() * sys.GetInceptionFactor());
         *iterm = Rate(sys.GasPhase(), sqrt(T),
                       MeanFreePathAir(T,P),
-					  sys.SampleVolume()) * scaleFac; 
+                      sys.SampleVolume()) * scaleFac; 
     }
 
     return *(iterm++);

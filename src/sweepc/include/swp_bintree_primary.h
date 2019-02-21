@@ -104,9 +104,9 @@ public:
     //! Updates the particle cache using the particle details
     void UpdateCache();
 
-    //! Updates the particle cache from the root node
-    //  calls UpdateCache()
-    void UpdateCacheRoot();
+	//! Updates the particle cache from the root node
+	//  calls UpdateCache()
+	void UpdateCacheRoot();
 
     //! Updates sintering level
     double SinteringLevel();
@@ -131,9 +131,6 @@ public:
     // GENERAL DATA ACCESS METHODS
     //! Overload of the Mobility Diameter
     double MobDiameter() const;
-
-	//! Get the collision diameter
-	double CollisionDiameter();
 
     //! Get the number of primaries in the particle
     int  GetNumPrimary() const {return m_numprimary;}
@@ -165,13 +162,13 @@ public:
     //! Sets the value of one of the chemical components
     void SetComponent(std::string name, double val);
 
-    //!Gets the distance between centres of primary particles
-    double GetDistance() const {return m_distance_centreToCentre;}
+	//!Gets the distance between centres of primary particles
+	double GetDistance() const {return m_distance_centreToCentre;}
 
     //! Calculates the radius of gyration.
     double GetRadiusOfGyration() const;
     
-    //! Returns a vector of primary coordinates, radius, and mass (5D).
+    //! Returns a vector of primary coordinates and radius (4D).
     void GetPriCoords(std::vector<fvector> &coords) const;
 
 	//! Returns primary coords and frame orientation
@@ -214,7 +211,7 @@ public:
 
 	//! Return primary particle details and connectivity
 	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
-
+	
 protected:
     //! Empty primary not meaningful
     BinTreePrimary();
@@ -244,8 +241,8 @@ protected:
     //! Checks if the sintering level, merges particles if necessary
     bool CheckSintering();
 
-    //! Checks if condition for merger is met
-    bool MergeCondition();
+	//! Checks if condition for merger is met
+	bool MergeCondition();
 
     //! Set the sintering time of a tree
     void SetSinteringTime(double time);
@@ -264,8 +261,8 @@ protected:
     int m_numprimary;
 
     //! Sum of the diameter of the primaries under this treenode
-    // This is usually the spherical equivalent diameter (= Primary::m_diam) 
-    // unless centre to centre distance tracking is turned on
+	// This is usually the spherical equivalent diameter (= Primary::m_diam) 
+	// unless centre to centre distance tracking is turned on
     double m_primarydiam;
 
 	//primary volume -- different to m_vol if centre to centre seapration is tracked
@@ -455,9 +452,6 @@ private:
 	//! Add new neighbours during a merger event
 	double AddNeighbour(double A_n_k, BinTreePrimary *small_prim, BinTreePrimary *node);
 	
-	//! Adjust composition of neighbours following surface growth event
-	void AdjustNeighbours(BinTreePrimary *prim, const double delta_r, const fvector &dcomp, const fvector &dvalues, rng_type &rng);
-
 	//Function to adjust primary properties
 	void AdjustPrimary(double dV, double d_ij, BinTreePrimary *prim_ignore);
 
@@ -469,23 +463,6 @@ private:
 		
 	//! function to modify the centre to centre separations and coordinates and neighbours
 	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, BinTreePrimary *prim_ignore);
-
-	//////////////// csl37 - new merge functions
-	void GetNecks(BinTreePrimary *prim, BinTreePrimary *node, fvector &necks);
-
-	//struct functor
-	struct merge_radius_functor{
-		merge_radius_functor(double const& vol, fvector const& necks) : a_vol(vol), a_necks(necks) {} //constructor
-
-		std::pair<double, double> operator()(double const& r);	//calculate function and first derivative
-
-	private:
-		double a_vol;
-		fvector a_necks;
-	};
-
-	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *node, BinTreePrimary *small_prim, double const r_new, double const r_old);
-	////////////////
 
     // PRINTING TREES
     //! Recursive loop function for print tree

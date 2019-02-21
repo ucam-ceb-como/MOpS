@@ -385,7 +385,7 @@ private:
         int n,      // Number of terms in polynomial.
         fvector &Xs // Output vector for all species.
         ) const;
-	
+
 
 };
 };

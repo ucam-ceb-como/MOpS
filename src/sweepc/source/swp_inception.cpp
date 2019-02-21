@@ -96,13 +96,13 @@ Inception &Inception::operator =(const Inception &rhs)
         m_a    = rhs.m_a;
         m_newcomp = rhs.m_newcomp;
         m_newvals = rhs.m_newvals;
-		m_allowHeavy = rhs.m_allowHeavy;
-		m_upper_dlim_heavy = rhs.m_upper_dlim_heavy;
-		m_lower_dlim_heavy = rhs.m_lower_dlim_heavy;
-		m_issurfinc = rhs.m_issurfinc;
-		m_upper_dlim_surfinc = rhs.m_upper_dlim_surfinc;
-		m_lower_dlim_surfinc = rhs.m_lower_dlim_surfinc;
-		m_psitype = rhs.m_psitype;
+        m_allowHeavy = rhs.m_allowHeavy;
+        m_upper_dlim_heavy = rhs.m_upper_dlim_heavy;
+        m_lower_dlim_heavy = rhs.m_lower_dlim_heavy;
+        m_issurfinc = rhs.m_issurfinc;
+        m_upper_dlim_surfinc = rhs.m_upper_dlim_surfinc;
+        m_lower_dlim_surfinc = rhs.m_lower_dlim_surfinc;
+        m_psitype = rhs.m_psitype;
     }
     return *this;
 }
@@ -133,7 +133,7 @@ void Inception::SetParticleComp(unsigned int i, double comp)
             m_newcomp.resize(m_mech->ComponentCount(),0.0);
         }
         // Set value.
-		m_newcomp[i] = comp;
+        m_newcomp[i] = comp;
     }
 }
 
@@ -174,64 +174,63 @@ void Inception::SetParticleTracker(unsigned int i, double track)
     }
 }
 
-
 // aab64 Set flag for heavy inceptions
 void Inception::SetIsHeavy(bool heavyflag, double upperdlimval, double lowerdlimval)
 {
-	m_allowHeavy = heavyflag;
-	m_upper_dlim_heavy = upperdlimval;
-	m_lower_dlim_heavy = lowerdlimval;
+    m_allowHeavy = heavyflag;
+    m_upper_dlim_heavy = upperdlimval;
+    m_lower_dlim_heavy = lowerdlimval;
 }
 
 // aab64 Get flag for heavy inceptions
 bool Inception::GetIsHeavy() const
 {
-	return m_allowHeavy;
+    return m_allowHeavy;
 }
 
 // aab64 Get flag for heavy inception
 double Inception::GetHeavyOnset() const
 {
-	return m_upper_dlim_heavy;
+    return m_upper_dlim_heavy;
 }
 
 // aab64 Get flag for heavy inception
 double Inception::GetHeavyCutoff() const
 {
-	return m_lower_dlim_heavy;
+    return m_lower_dlim_heavy;
 }
 
 // aab64 Set flag and onset point for surface inception
 void Inception::SetSurfInc(bool surfincflag, double upperdlimval, double lowerdlimval, std::string &psitype)
 {
-	m_issurfinc = surfincflag;
-	m_upper_dlim_surfinc = upperdlimval;
-	m_lower_dlim_surfinc = lowerdlimval;
-	m_psitype = psitype;
+    m_issurfinc = surfincflag;
+    m_upper_dlim_surfinc = upperdlimval;
+    m_lower_dlim_surfinc = lowerdlimval;
+    m_psitype = psitype;
 }
 
 // aab64 Get flag for surface inception
 bool Inception::GetSurfIncFlag() const
 {
-	return m_issurfinc;
+    return m_issurfinc;
 }
 
 // aab64 Get flag for surface inception
 double Inception::GetSurfIncOnset() const
 {
-	return m_upper_dlim_surfinc;
+    return m_upper_dlim_surfinc;
 }
 
 // aab64 Get flag for surface inception
 double Inception::GetSurfIncCutoff() const
 {
-	return m_lower_dlim_surfinc;
+    return m_lower_dlim_surfinc;
 }
 
 // aab64 Get surface inception type
 std::string Inception::GetPSItype() const
 {
-	return m_psitype;
+    return m_psitype;
 }
 
 

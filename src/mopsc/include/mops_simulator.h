@@ -167,10 +167,10 @@ public:
 
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	//! Set simulator to write the diagnostics CSV file.
-	void SetWriteDiagsFile(bool writediags);
-	//! Get diags status
-	bool GetWriteDiagsStatus();
+    //! Set simulator to write the diagnostics CSV file.
+    void SetWriteDiagsFile(bool writediags);
+    //! Get diags status
+    bool GetWriteDiagsStatus();
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 

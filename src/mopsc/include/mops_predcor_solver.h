@@ -198,7 +198,6 @@ private:
         Sweep::rng_type &rng  // Random number generator
         );
 
-	
     // Terminates an iteration step.
     void endIteration();
 

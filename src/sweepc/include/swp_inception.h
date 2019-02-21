@@ -118,32 +118,32 @@ public:
     // new particle.
     void SetParticleTracker(unsigned int i, double track);
 
-	// aab64 Set flag for heavy inceptions
-	void SetIsHeavy(bool heavyflag, double upperdlimval, double lowerlimval);
+    // aab64 Set flag for heavy inceptions
+    void SetIsHeavy(bool heavyflag, double upperdlimval, double lowerlimval);
 
-	// aab64 Get flag for heavy inceptions
-	bool GetIsHeavy() const;
+    // aab64 Get flag for heavy inceptions
+    bool GetIsHeavy() const;
 
-	// aab64 Get heavy inception point
-	double GetHeavyOnset() const;
+    // aab64 Get heavy inception point
+    double GetHeavyOnset() const;
 
-	// aab64 Get heavy inception point
-	double GetHeavyCutoff() const;
+    // aab64 Get heavy inception point
+    double GetHeavyCutoff() const;
 
-	// aab64 Set flag and onset point for surface inception
-	void SetSurfInc(bool surfincflag, double upperdlimval, double lowerdlimval, std::string &psitype);
+    // aab64 Set flag and onset point for surface inception
+    void SetSurfInc(bool surfincflag, double upperdlimval, double lowerdlimval, std::string &psitype);
 
-	// aab64 Get flag for surface inception
-	bool GetSurfIncFlag() const;
+    // aab64 Get flag for surface inception
+    bool GetSurfIncFlag() const;
 
-	// aab64 Get surface inception onset point
-	double GetSurfIncOnset() const;
+    // aab64 Get surface inception onset point
+    double GetSurfIncOnset() const;
 
-	// aab64 Get surface inception cutoff point
-	double GetSurfIncCutoff() const;
+    // aab64 Get surface inception cutoff point
+    double GetSurfIncCutoff() const;
 
-	// aab64 Get surface inception type
-	std::string GetPSItype() const;
+    // aab64 Get surface inception type
+    std::string GetPSItype() const;
 
 	// TOTAL RATE CALCULATIONS.
 
@@ -195,22 +195,22 @@ private:
     //! Initial tracker values for newly incepted particles
     fvector m_newvals;
 
-	//! aab64 Flag for heavy inception activation
-	bool m_allowHeavy;
+    //! aab64 Flag for heavy inception activation
+    bool m_allowHeavy;
 
-	//! aab64 Onset point for heavy inception
-	double m_upper_dlim_heavy;
-	double m_lower_dlim_heavy;
+    //! aab64 Onset point for heavy inception
+    double m_upper_dlim_heavy;
+    double m_lower_dlim_heavy;
 
-	//! aab64 Flag for surface inception 
-	bool m_issurfinc;
+    //! aab64 Flag for surface inception 
+    bool m_issurfinc;
 
-	//! aab64 Onset point for surface inception
-	double m_upper_dlim_surfinc;
-	double m_lower_dlim_surfinc;
+    //! aab64 Onset point for surface inception
+    double m_upper_dlim_surfinc;
+    double m_lower_dlim_surfinc;
 
-	//! aab64 PSI type for surface inception
-	std::string m_psitype;
+    //! aab64 PSI type for surface inception
+    std::string m_psitype;
 };
 } // namespace Processes
 } // namespace Sweep

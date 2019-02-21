@@ -746,7 +746,7 @@ void ParticleModel::init(void)
     m_efm = 2.2;
 
     //! Postprocess based on the inception species concentration.
-    m_postprocessingType = concentration;
+    m_postprocessingType = XA4;
 
     //! Primary particles are assumed to be in contact.
     m_trackPrimarySeparation = false;

@@ -357,23 +357,23 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.SetAggModel(AggModels::Spherical_ID);
     }
 
-	string strh = particleXML->GetAttributeValue("hybrid");
-	if (strh == "true")
-	{
-		mech.SetHybrid(true);
-		string strn = particleXML->GetAttributeValue("threshold");
-		unsigned int threshold = 100;
-		if (strn != "")
-			threshold = (unsigned int)(cdble(strn));
-		if (threshold < 1)
-			throw std::runtime_error("Hybrid threshold must be positive. (Sweep::MechParser::readV1)");
-		mech.SetCriticalThreshold(threshold);
-	}
-	else
-	{
-		mech.SetHybrid(false);
-		mech.SetCriticalThreshold(0);
-	}
+    string strh = particleXML->GetAttributeValue("hybrid");
+    if (strh == "true")
+    {
+        mech.SetHybrid(true);
+        string strn = particleXML->GetAttributeValue("threshold");
+        unsigned int threshold = 100;
+        if (strn != "")
+            threshold = (unsigned int)(cdble(strn));
+        if (threshold < 1)
+            throw std::runtime_error("Hybrid threshold must be positive. (Sweep::MechParser::readV1)");
+        mech.SetCriticalThreshold(threshold);
+    }
+    else
+    {
+        mech.SetHybrid(false);
+        mech.SetCriticalThreshold(0);
+    }
 
     //! Check whether to track the distance betweeen the centres of primary
     //! particles or the coordinates of the primary particles, but this only
@@ -853,13 +853,13 @@ void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
 
             try {
                 readInception(*(*i), *icn);
-				// aab64 set flags for heavy inception or surface inceptions
-				if (icn->GetIsHeavy())
-					mech.SetIsHeavy(true, icn->GetHeavyOnset(), icn->GetHeavyCutoff());
-				if (icn->GetSurfIncFlag()) {
-					std::string psitype = icn->GetPSItype();
-					mech.SetIsSurfInc(true, icn->GetSurfIncOnset(), icn->GetSurfIncCutoff(), psitype);
-				}
+                // aab64 set flags for heavy inception or surface inceptions
+                if (icn->GetIsHeavy())
+                    mech.SetIsHeavy(true, icn->GetHeavyOnset(), icn->GetHeavyCutoff());
+                if (icn->GetSurfIncFlag()) {
+                    std::string psitype = icn->GetPSItype();
+                    mech.SetIsSurfInc(true, icn->GetSurfIncOnset(), icn->GetSurfIncCutoff(), psitype);
+                }
             }
             catch (std::exception &e) {
                 delete icn;
@@ -884,136 +884,136 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
     str = xml.GetAttributeValue("name");
     if (str != "") icn.SetName(str);
 
-	// aab64 Get info from artifical inception node about sampling heavy particles
-	if (str == "extra inception")
-	{
-		bool hciflag = false;
-		bool psiflag = false;
-		CamXML::Element *allowHeavyXML = xml.GetFirstChild("hci");
-		if (allowHeavyXML != NULL)
-		{
-			const std::string allowHeavySwitch = allowHeavyXML->GetAttributeValue("flag");
-			if (allowHeavySwitch == "on")
-			{
-				hciflag = true;
-				std::cout << "Activating heavy inception\n";
-				CamXML::Element *dlimvalu = allowHeavyXML->GetFirstChild("upperdlim");
-				CamXML::Element *dlimvall = allowHeavyXML->GetFirstChild("lowerdlim");
-				double upperdlim, lowerdlim;
-				if (dlimvalu != NULL)
-					upperdlim = cdble(dlimvalu->Data());
-				if (upperdlim < 0.0)
-					throw std::runtime_error("Limiting heavy inception point must be positive.\n");
-				if (dlimvall != NULL)
-					lowerdlim = cdble(dlimvall->Data());
-				if (lowerdlim < 0.0)
-					throw std::runtime_error("Limiting heavy inception point must be positive.\n");
-				if (upperdlim < lowerdlim)
-					throw std::runtime_error("Upper limiting heavy inception point cannot be smaller than lower limit.\n");
-				icn.SetIsHeavy(true, upperdlim, lowerdlim);
-			}
-		}
-		CamXML::Element *surfincXML = xml.GetFirstChild("psi");
-		if (surfincXML != NULL)
-		{
-			const std::string surfincSwitch = surfincXML->GetAttributeValue("flag");
-			if (surfincSwitch == "on")
-			{
-				psiflag = true;
-				std::cout << "Activating surface inception\n";
-				CamXML::Element *dlimvalu = surfincXML->GetFirstChild("upperdlim");
-				CamXML::Element *dlimvall = surfincXML->GetFirstChild("lowerdlim");
-				double upperdlim, lowerdlim;
-				if (dlimvalu != NULL)
-					upperdlim = cdble(dlimvalu->Data());
-				if (upperdlim < 0.0)
-					throw std::runtime_error("Limiting surface inception point must be positive.\n");
-				if (dlimvall != NULL)
-					lowerdlim = cdble(dlimvall->Data());
-				if (lowerdlim < 0.0)
-					throw std::runtime_error("Limiting surface inception point must be positive.\n");
-				if (upperdlim < lowerdlim)
-					throw std::runtime_error("Upper limiting surface inception point cannot be smaller than lower limit.\n");
-				CamXML::Element *psitypedata = surfincXML->GetFirstChild("type");
-				std::string psitype = "E";
-				if (psitypedata != NULL)
-				{
-					const std::string psitypename = psitypedata->Data();
-					if (psitypename == "both")
-						psitype = "B";
-					else if (psitypename == "weight")
-						psitype = "W";
-					else if (psitypename == "event")
-						psitype = "E";
-					else
-						throw std::runtime_error("Unrecognized PSItype. \nPermissable types: event, weight (SWA only), both (SWA only).\n");
-					std::cout << "Using " << psitypename << " update for PSI." << std::endl;
-				}
-				icn.SetSurfInc(true, upperdlim, lowerdlim, psitype);
-			}
-		}
-		if (psiflag && hciflag)
-			throw std::runtime_error("Can't do both PSI and HCI - please choose one.\n");
-	}
-	else
-	{
+    // aab64 Get info from artifical inception node about sampling heavy particles
+    if (str == "extra inception")
+    {
+        bool hciflag = false;
+        bool psiflag = false;
+        CamXML::Element *allowHeavyXML = xml.GetFirstChild("hci");
+        if (allowHeavyXML != NULL)
+        {
+            const std::string allowHeavySwitch = allowHeavyXML->GetAttributeValue("flag");
+            if (allowHeavySwitch == "on")
+            {
+                hciflag = true;
+                std::cout << "Activating heavy inception\n";
+                CamXML::Element *dlimvalu = allowHeavyXML->GetFirstChild("upperdlim");
+                CamXML::Element *dlimvall = allowHeavyXML->GetFirstChild("lowerdlim");
+                double upperdlim, lowerdlim;
+                if (dlimvalu != NULL)
+                    upperdlim = cdble(dlimvalu->Data());
+                if (upperdlim < 0.0)
+                    throw std::runtime_error("Limiting heavy inception point must be positive.\n");
+                if (dlimvall != NULL)
+                    lowerdlim = cdble(dlimvall->Data());
+                if (lowerdlim < 0.0)
+                    throw std::runtime_error("Limiting heavy inception point must be positive.\n");
+                if (upperdlim < lowerdlim)
+                    throw std::runtime_error("Upper limiting heavy inception point cannot be smaller than lower limit.\n");
+                icn.SetIsHeavy(true, upperdlim, lowerdlim);
+            }
+        }
+        CamXML::Element *surfincXML = xml.GetFirstChild("psi");
+        if (surfincXML != NULL)
+        {
+            const std::string surfincSwitch = surfincXML->GetAttributeValue("flag");
+            if (surfincSwitch == "on")
+            {
+                psiflag = true;
+                std::cout << "Activating surface inception\n";
+                CamXML::Element *dlimvalu = surfincXML->GetFirstChild("upperdlim");
+                CamXML::Element *dlimvall = surfincXML->GetFirstChild("lowerdlim");
+                double upperdlim, lowerdlim;
+                if (dlimvalu != NULL)
+                    upperdlim = cdble(dlimvalu->Data());
+                if (upperdlim < 0.0)
+                    throw std::runtime_error("Limiting surface inception point must be positive.\n");
+                if (dlimvall != NULL)
+                    lowerdlim = cdble(dlimvall->Data());
+                if (lowerdlim < 0.0)
+                    throw std::runtime_error("Limiting surface inception point must be positive.\n");
+                if (upperdlim < lowerdlim)
+                    throw std::runtime_error("Upper limiting surface inception point cannot be smaller than lower limit.\n");
+                CamXML::Element *psitypedata = surfincXML->GetFirstChild("type");
+                std::string psitype = "E";
+                if (psitypedata != NULL)
+                {
+                    const std::string psitypename = psitypedata->Data();
+                    if (psitypename == "both")
+                        psitype = "B";
+                    else if (psitypename == "weight")
+                        psitype = "W";
+                    else if (psitypename == "event")
+                        psitype = "E";
+                    else
+                        throw std::runtime_error("Unrecognized PSItype. \nPermissable types: event, weight (SWA only), both (SWA only).\n");
+                    std::cout << "Using " << psitypename << " update for PSI." << std::endl;
+                }
+                icn.SetSurfInc(true, upperdlim, lowerdlim, psitype);
+            }
+        }
+        if (psiflag && hciflag)
+            throw std::runtime_error("Can't do both PSI and HCI - please choose one.\n");
+    }
+    else
+    {
 
-		// Read reactants.
-		readReactants(xml, icn);
+    // Read reactants.
+    readReactants(xml, icn);
 
-		// Find the rate calculation method (a coagulation kernel)
-		// Currently the only possibilities are free molecular and transition
-		// regime kernels.  These are handled by a boolean flag.  An enum
-		// will be needed if more cases are introduced (or possibly a pointer
-		// to an appropriate member function of DimerInception.)
-		bool useFreeMolRegime = false;
-		str = xml.GetAttributeValue("rate");
-		if (!str.empty()) {
-			if (str == "freemolecular")
-				useFreeMolRegime = true;
-			else if (str == "transition")
-				useFreeMolRegime = false;
-			else
-				throw std::runtime_error("Unrecognised rate type " + str + " in Sweep::MechParser::readInception");
-		}
+    // Find the rate calculation method (a coagulation kernel)
+    // Currently the only possibilities are free molecular and transition
+    // regime kernels.  These are handled by a boolean flag.  An enum
+    // will be needed if more cases are introduced (or possibly a pointer
+    // to an appropriate member function of DimerInception.)
+    bool useFreeMolRegime = false;
+    str = xml.GetAttributeValue("rate");
+    if(!str.empty()) {
+        if(str ==  "freemolecular")
+            useFreeMolRegime = true;
+        else if(str == "transition")
+            useFreeMolRegime = false;
+        else
+            throw std::runtime_error("Unrecognised rate type " + str + " in Sweep::MechParser::readInception");
+    }
 
-		// Get reactant masses and diameters, and set inception
-		// parameters.
-		fvector mass, diam;
-		readReactantMDs(xml, mass, diam);
-		if (mass.size() == 2) {
-			if (useFreeMolRegime)
-				icn.SetInceptingSpeciesFreeMol(mass[0], mass[1], diam[0], diam[1]);
-			else
-				icn.SetInceptingSpecies(mass[0], mass[1], diam[0], diam[1]);
-		}
-		else if (mass.size() == 1) {
-			if (useFreeMolRegime)
-				icn.SetInceptingSpeciesFreeMol(mass[0], mass[0], diam[0], diam[0]);
-			else
-				icn.SetInceptingSpecies(mass[0], mass[0], diam[0], diam[0]);
-		}
-		else
-			throw std::runtime_error("One or two inception species must be specified in Sweep::MechParser::readInception");
+    // Get reactant masses and diameters, and set inception
+    // parameters.
+    fvector mass, diam;
+    readReactantMDs(xml, mass, diam);
+    if (mass.size() == 2) {
+        if(useFreeMolRegime)
+            icn.SetInceptingSpeciesFreeMol(mass[0], mass[1], diam[0], diam[1]);
+        else
+            icn.SetInceptingSpecies(mass[0], mass[1], diam[0], diam[1]);
+    }
+    else if (mass.size() == 1) {
+        if(useFreeMolRegime)
+            icn.SetInceptingSpeciesFreeMol(mass[0], mass[0], diam[0], diam[0]);
+        else
+            icn.SetInceptingSpecies(mass[0], mass[0], diam[0], diam[0]);
+    }
+    else
+        throw std::runtime_error("One or two inception species must be specified in Sweep::MechParser::readInception");
 
 
-		// Rate scaling now that a process has been created
-		double A = 0.0;
-		const CamXML::Element *el = xml.GetFirstChild("A");
-		if (el != NULL) {
-			A = cdble(el->Data());
-			icn.SetA(A);
-		}
+    // Rate scaling now that a process has been created
+    double A = 0.0;
+    const CamXML::Element *el = xml.GetFirstChild("A");
+    if (el != NULL) {
+        A = cdble(el->Data());
+        icn.SetA(A);
+    }
 
-		// Read products.
-		readProducts(xml, icn);
+    // Read products.
+    readProducts(xml, icn);
 
-		// Read initial particle composition.
-		readInceptedComposition(xml, icn);
+    // Read initial particle composition.
+    readInceptedComposition(xml, icn);
 
-		// Read initial tracker variable values.
-		readInceptedTrackers(xml, icn);
-	}
+    // Read initial tracker variable values.
+    readInceptedTrackers(xml, icn);
+    }
 }
 
 
@@ -1935,95 +1935,95 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                         throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available with weights \
                                                 (Sweep, MechParser::readCoagulation)");
 
-					// aab64 Set weighted coagulation flag and 
-					// check if variable inception weights should be used.
-					// If so, get minimum and maximum weights, onset point
-					// and scaling function type: linear, quadratic, exponential. 
-					mech.SetWeightedCoag(true);
-					bool varIncWeight = false;
-					double maxIncWeight = 100.0;
-					double minIncWeight = 1.0;
-					double minSPonset = 1.0; 
-					std::string WeightFn = "L";
-					CamXML::Element *incWeightXML = (*it)->GetFirstChild("inceptionweightchange");
-					if (incWeightXML != NULL) {
-						CamXML::Element *incWeightFnXML = incWeightXML->GetFirstChild("weightchangefun");
-						CamXML::Element *maxwtel = incWeightXML->GetFirstChild("maxinceptionweight");
-						CamXML::Element *minwtel = incWeightXML->GetFirstChild("mininceptionweight");
-						CamXML::Element *minnspel = incWeightXML->GetFirstChild("onsetsp");
+                    // aab64 Set weighted coagulation flag and 
+                    // check if variable inception weights should be used.
+                    // If so, get minimum and maximum weights, onset point
+                    // and scaling function type: linear, quadratic, exponential. 
+                    mech.SetWeightedCoag(true);
+                    bool varIncWeight = false;
+                    double maxIncWeight = 100.0;
+                    double minIncWeight = 1.0;
+                    double minSPonset = 1.0; 
+                    std::string WeightFn = "L";
+                    CamXML::Element *incWeightXML = (*it)->GetFirstChild("inceptionweightchange");
+                    if (incWeightXML != NULL) {
+                        CamXML::Element *incWeightFnXML = incWeightXML->GetFirstChild("weightchangefun");
+                        CamXML::Element *maxwtel = incWeightXML->GetFirstChild("maxinceptionweight");
+                        CamXML::Element *minwtel = incWeightXML->GetFirstChild("mininceptionweight");
+                        CamXML::Element *minnspel = incWeightXML->GetFirstChild("onsetsp");
 
-						// If adaptive inception weighting is on, get and set further parameters
-						const std::string incWeightRuleName = incWeightXML->GetAttributeValue("flag");
-						if (incWeightRuleName == "on") {
-							varIncWeight = true;
-							std::cout << "Applying adaptive inception weight scheme..." << std::endl;
-							// Minimum inception weight
-							if (minwtel != NULL) {
-								minIncWeight = cdble(minwtel->Data());
-								if (minIncWeight <= 0.0)
-									throw std::runtime_error("Inception weights must be positive.\n");
-							}
-							// Maximum inception weight
-							if (maxwtel != NULL) {
-								maxIncWeight = cdble(maxwtel->Data());
-							}
-							// Minimum adaptive weight threshold
-							if (minnspel != NULL) {
-								minSPonset = cdble(minnspel->Data());
-								if (minSPonset < 1.0)
-									throw std::runtime_error("Minimum onset must be >= 1.0.\n");
-							}
-							// Check max weight is greater than min weight
-							if (maxIncWeight < minIncWeight)
-								throw std::runtime_error("Max inception weight cannot be smaller than min inception weight.\n");
-							// Get scaling function 
-							if (incWeightFnXML != NULL) {
-								const std::string incWeightFnName = incWeightFnXML->Data();
-								if (incWeightFnName == "linear") {
-									WeightFn = "L";
-								}
-								else if (incWeightFnName == "quadratic") {
-									WeightFn = "Q";
-								}
-								else if (incWeightFnName == "exponential") {
-									WeightFn = "E";
-								}
-								else
-									throw std::runtime_error("Unrecognized adaptive inception weight function. \nPermissable function names: linear, quadratic, exponential.\n");
-								std::cout << "Found " << incWeightFnName << " weight scaling function." << std::endl;
-							}
-							mech.SetVariableWeightedInception(varIncWeight, maxIncWeight, minIncWeight, minSPonset, WeightFn);
-						}
-					}
+                        // If adaptive inception weighting is on, get and set further parameters
+                        const std::string incWeightRuleName = incWeightXML->GetAttributeValue("flag");
+                        if (incWeightRuleName == "on") {
+                            varIncWeight = true;
+                            std::cout << "Applying adaptive inception weight scheme..." << std::endl;
+                            // Minimum inception weight
+                            if (minwtel != NULL) {
+                                minIncWeight = cdble(minwtel->Data());
+                                if (minIncWeight <= 0.0)
+                                    throw std::runtime_error("Inception weights must be positive.\n");
+                            }
+                            // Maximum inception weight
+                            if (maxwtel != NULL) {
+                                maxIncWeight = cdble(maxwtel->Data());
+                            }
+                            // Minimum adaptive weight threshold
+                            if (minnspel != NULL) {
+                                minSPonset = cdble(minnspel->Data());
+                                if (minSPonset < 1.0)
+                                    throw std::runtime_error("Minimum onset must be >= 1.0.\n");
+                            }
+                            // Check max weight is greater than min weight
+                            if (maxIncWeight < minIncWeight)
+                                throw std::runtime_error("Max inception weight cannot be smaller than min inception weight.\n");
+                            // Get scaling function 
+                            if (incWeightFnXML != NULL) {
+                                const std::string incWeightFnName = incWeightFnXML->Data();
+                                if (incWeightFnName == "linear") {
+                                    WeightFn = "L";
+                                }
+                                else if (incWeightFnName == "quadratic") {
+                                    WeightFn = "Q";
+                                }
+                                else if (incWeightFnName == "exponential") {
+                                    WeightFn = "E";
+                                }
+                                else
+                                    throw std::runtime_error("Unrecognized adaptive inception weight function. \nPermissable function names: linear, quadratic, exponential.\n");
+                                std::cout << "Found " << incWeightFnName << " weight scaling function." << std::endl;
+                            }
+                            mech.SetVariableWeightedInception(varIncWeight, maxIncWeight, minIncWeight, minSPonset, WeightFn);
+                            }
+                        }
 
-					// aab64 Ensemble weight scaling to reduce numerical coagulation rate
-					bool weightScaling = false;
-					double onsetRatio = 10.0;
-					double factor = 1.0;
-					CamXML::Element *weightScaleXML = (*it)->GetFirstChild("weightscaling");
-					if (weightScaleXML != NULL) {
-						CamXML::Element *ratioel = weightScaleXML->GetFirstChild("onsetratio");
-						CamXML::Element *factorel = weightScaleXML->GetFirstChild("factor");
-						const std::string weightScaleName = weightScaleXML->GetAttributeValue("flag");
-						if (weightScaleName == "on") 
-						{
-							weightScaling = true;
-							if (ratioel != NULL) {
-								onsetRatio = cdble(ratioel->Data());
-								if (onsetRatio < 1.0)
-									throw std::runtime_error("Ratio must be >= 1.0.\n");
-							}
-								if (factorel != NULL) {
-									factor = cdble(factorel->Data());
-									if (factor < 0.0)
-										throw std::runtime_error("Factor must be positive.\n");
-							}
-							std::cout << "Applying ensemble weight scaling at ratio N/sum(w) = " << onsetRatio << " and multiplier " << factor << std::endl;
-							mech.SetWeightScaling(weightScaling, onsetRatio, factor);
-						}
-						else
-							std::cout << "No ensemble weight scaling." << std::endl;
-					}
+                        // aab64 Ensemble weight scaling to reduce numerical coagulation rate
+                        bool weightScaling = false;
+                        double onsetRatio = 10.0;
+                        double factor = 1.0;
+                        CamXML::Element *weightScaleXML = (*it)->GetFirstChild("weightscaling");
+                        if (weightScaleXML != NULL) {
+                            CamXML::Element *ratioel = weightScaleXML->GetFirstChild("onsetratio");
+                            CamXML::Element *factorel = weightScaleXML->GetFirstChild("factor");
+                            const std::string weightScaleName = weightScaleXML->GetAttributeValue("flag");
+                            if (weightScaleName == "on") 
+                            {
+                                weightScaling = true;
+                                if (ratioel != NULL) {
+                                    onsetRatio = cdble(ratioel->Data());
+                                    if (onsetRatio < 1.0)
+                                        throw std::runtime_error("Ratio must be >= 1.0.\n");
+                                }
+                                if (factorel != NULL) {
+                                    factor = cdble(factorel->Data());
+                                    if (factor < 0.0)
+                                        throw std::runtime_error("Factor must be positive.\n");
+                                }
+                                std::cout << "Applying ensemble weight scaling at ratio N/sum(w) = " << onsetRatio << " and multiplier " << factor << std::endl;
+                                mech.SetWeightScaling(weightScaling, onsetRatio, factor);
+                            }
+                            else
+                                std::cout << "No ensemble weight scaling." << std::endl;
+                            }
                 }
 
                 // Rate scaling now that a process has been created

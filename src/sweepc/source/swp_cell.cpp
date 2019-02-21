@@ -63,18 +63,19 @@ namespace Sweep {
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor (public).
-	Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
-		: m_ensemble(), m_model(&model),
-		m_smpvol(1.0), m_fixed_chem(false),
-		m_incepting_weight(1.0), m_incFactor(1.0),
-		m_notpsiflag(true), m_rateFactor(1.0),
-		m_cprop1(iUniform), m_cprop2(iUniform)
+Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
+: m_ensemble(), m_model(&model),
+  m_smpvol(1.0), m_fixed_chem(false),
+  m_incepting_weight(1.0), m_incFactor(1.0),
+  m_notpsiflag(true), m_rateFactor(1.0),
+  m_cprop1(iUniform), m_cprop2(iUniform)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
     else
         m_gas = new Sweep::SprogIdealGasWrapper(*model.Species());
-	assert(isValid());
+
+    assert(isValid());
 }
 
 // Copy constructor.
@@ -107,7 +108,7 @@ Cell::~Cell(void)
 Cell &Cell::operator=(const Sweep::Cell &rhs)
 {
     if (this != &rhs) {
-		//assert(rhs.isValid());
+	//assert(rhs.isValid());
         delete m_gas;
         m_gas        = rhs.m_gas->Clone();
         m_ensemble   = rhs.m_ensemble;
@@ -117,30 +118,21 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_inflow     = rhs.m_inflow;
         m_outflow    = rhs.m_outflow;
 
-	    // aab64 added variables
-		// particle temperature
-	    m_bulk_particle_temp = rhs.m_bulk_particle_temp;
-	    // current process time step
-	    m_proc_tau = rhs.m_proc_tau;
-	    // flag for adiabatic operation
-	    m_adiabatic_flag = rhs.m_adiabatic_flag;
-		// incepting particle weight for bintree model
-		m_incepting_weight = rhs.m_incepting_weight;
-		// incepting composition adjustment factor
-		m_incFactor = rhs.m_incFactor;
-		// PSI flag
-		m_notpsiflag = rhs.m_notpsiflag;
-		// coagulation scaling for weighted events
-		m_rateFactor = rhs.m_rateFactor;
-		// coagulation properties for PSI
-		m_cprop1 = rhs.m_cprop1;
-		m_cprop2 = rhs.m_cprop2;	
-		// aab64 temperature update variables (temporary)
-		m_bulk_heat_capacity = rhs.m_bulk_heat_capacity;
-		m_particle_density = rhs.m_particle_density;
-		m_enthalpies = rhs.m_enthalpies;
-	}
-	assert(isValid());
+        // aab64 added variables
+        m_bulk_particle_temp = rhs.m_bulk_particle_temp;  // particle temperature
+        m_proc_tau = rhs.m_proc_tau;                      // current process time step
+        m_adiabatic_flag = rhs.m_adiabatic_flag;          // flag for adiabatic operation
+        m_incepting_weight = rhs.m_incepting_weight;      // incepting particle weight for bintree model
+        m_incFactor = rhs.m_incFactor;                    // incepting composition adjustment factor
+        m_notpsiflag = rhs.m_notpsiflag;                  // PSI flag
+        m_rateFactor = rhs.m_rateFactor;                  // coagulation scaling for weighted events
+        m_cprop1 = rhs.m_cprop1;                          // coagulation properties for PSI
+        m_cprop2 = rhs.m_cprop2;	
+        m_bulk_heat_capacity = rhs.m_bulk_heat_capacity;  // aab64 temperature update variables (temporary)
+        m_particle_density = rhs.m_particle_density;
+        m_enthalpies = rhs.m_enthalpies;
+    }
+    assert(isValid());
     return *this;
 }
 
@@ -174,7 +166,7 @@ const Ensemble &Cell::Particles(void) const {return m_ensemble;}
 // Returns the particle count.
 unsigned int Cell::ParticleCount(void) const
 {
-	assert(isValid());
+    assert(isValid());
     return m_ensemble.Count();
 }
 
@@ -207,7 +199,7 @@ void Cell::SetParticles(
     m_ensemble.SetParticles(particle_list_begin, particle_list_end, rng);
 
     m_smpvol = 1.0 / statistical_weight;
-	assert(isValid());
+    assert(isValid());
 }
 
 /**
@@ -241,7 +233,7 @@ void Cell::SetParticles(
     assert(rngCopy == rng);
 
     m_smpvol = 1.0 / statistical_weight;
-	assert(isValid());
+    assert(isValid());
 }
 
 // Returns particle statistics.
@@ -276,7 +268,7 @@ void Cell::AdjustSampleVolume(double scale_factor)
     // The effects of ensemble rescalings are now incorporated in this sample
     // volume.
     m_ensemble.ResetScaling();
-	assert(isValid());
+    assert(isValid());
 }
 
 unsigned int Cell::NumOfStartingSpecies(const int index) const 
@@ -306,7 +298,7 @@ void Cell::Reset(const double m0)
         // The ensemble has not yet been initialised
         m_smpvol = 1.0;
     }
-	assert(isValid());
+    assert(isValid());
 }
 
 
@@ -385,9 +377,9 @@ void Cell::AddOutflow(double rate, const Sweep::Mechanism &mech)
 // aab64 Temporary functions for gas-phase properties
 void Cell::setGasPhaseProperties(double cp_bulk, double rhop, fvector enthalpies)
 {
-	m_bulk_heat_capacity = cp_bulk;
-	m_particle_density = rhop;
-	m_enthalpies = enthalpies;
+    m_bulk_heat_capacity = cp_bulk;
+    m_particle_density = rhop;
+    m_enthalpies = enthalpies;
 }
 
 // READ/WRITE/COPY.
@@ -399,7 +391,7 @@ void Cell::setGasPhaseProperties(double cp_bulk, double rhop, fvector enthalpies
  */
 void Cell::Serialize(std::ostream &out) const
 {
-	assert(isValid());
+    assert(isValid());
     if (out.good()) {
         // Output the gas mixture
         // First check how the mixture is stored
@@ -490,7 +482,7 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 
 // aab64 check cell consistency, implemented to ensure gas phase mixture pointers are never NULL 
 bool Cell::isValid() const {
-	return m_gas != NULL; 
+    return m_gas != NULL; 
 }
 
 } // Sweep namespace

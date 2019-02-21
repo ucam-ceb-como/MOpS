@@ -214,7 +214,7 @@ Sweep::TreeTransCoagWeightedCache &Sweep::TreeTransCoagWeightedCache::operator+=
     m_inv_dcolsqr  += rhs.m_inv_dcolsqr;
     m_inv_sqrtmass += rhs.m_inv_sqrtmass;
     m_d2_m_1_2     += rhs.m_d2_m_1_2;
-	m_weight       += rhs.m_weight;
+    m_weight       += rhs.m_weight;
     m_weight_mass  += rhs.m_weight_mass;
     m_d_w          += rhs.m_d_w;
     m_d2_w         += rhs.m_d2_w;
@@ -222,8 +222,8 @@ Sweep::TreeTransCoagWeightedCache &Sweep::TreeTransCoagWeightedCache::operator+=
     m_d_2_w        += rhs.m_d_2_w;
     m_m_1_2_w      += rhs.m_m_1_2_w;
     m_d2m_1_2_w    += rhs.m_d2m_1_2_w;
-	m_S_w          += rhs.m_S_w; // aab64
-	m_V_w          += rhs.m_V_w; // aab64
+    m_S_w          += rhs.m_S_w; // aab64
+    m_V_w          += rhs.m_V_w; // aab64
     m_sites        += rhs.m_sites;
     m_sinterrate   += rhs.m_sinterrate;
     m_coverage     += rhs.m_coverage;
@@ -252,7 +252,7 @@ void Sweep::TreeTransCoagWeightedCache::Clear(void)
     m_mass         = 0.0;
     m_numcarbon    = 0;
     m_frag         = 0;
-    m_numcarbon    = 0;
+    m_numcarbon = 0;
     m_dcolsqr      = 0.0;
     m_inv_dcol     = 0.0;
     m_inv_dcolsqr  = 0.0;
@@ -290,9 +290,9 @@ double Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
         case iDmob:   // Mobility diameter.
             return m_dmob;
         case iS:      // Surface area.
-			return m_surf; // aab64 m_S_w;
+            return m_surf; // aab64 m_S_w;
         case iV:      // Volume.
-			return m_vol; // aab64 m_V_w;
+            return m_vol; // aab64 m_V_w;
         case iM:      // Mass.
             return m_mass;
 
@@ -331,10 +331,10 @@ double Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
             return m_m_1_2_w;
         case iD2_M_1_2W:
             return m_d2m_1_2_w;
-		case iWS:
-			return m_S_w; // aab64 weighted surface area
-		case iWV:
-			return m_V_w; // aab64 weighted volume
+        case iWS:
+            return m_S_w; // aab64 weighted surface area
+        case iWV:
+            return m_V_w; // aab64 weighted volume
         case iASN:
             return m_sites;
         case iSintRate:

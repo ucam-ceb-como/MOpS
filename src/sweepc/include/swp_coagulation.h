@@ -131,16 +131,16 @@ public:
         SlipFlow // Slip-flow majorant.
     };
 
-	// aab64 To choose particle index with particle-number model
-	int ChooseIndexWeightedCoag(
-		double t,
-		const Sweep::PropID prop,
-		Cell &sys, rng_type &rng) const;
+    // aab64 To choose particle index with particle-number model
+    int ChooseIndexWeightedCoag(
+        double t,
+        const Sweep::PropID prop,
+        Cell &sys, rng_type &rng) const;
 
-	// aab64 temp
-	virtual void ChooseProps(
-		Sweep::Cell &sys,
-		unsigned int iterm) const;
+    // aab64 temp
+    virtual void ChooseProps(
+        Sweep::Cell &sys,
+        unsigned int iterm) const;
 
 protected:
 
@@ -162,17 +162,17 @@ protected:
                         const Sweep::PropID prop2,
                         const Sweep::Processes::CoagWeightRule weight_rule,
                         Cell &sys, rng_type &rng,
-						Sweep::Processes::Coagulation::MajorantType maj) const;
+                        Sweep::Processes::Coagulation::MajorantType maj) const;
     
-	//! aab64 For hybrid particle model
+    //! aab64 For hybrid particle model
     //! Select two particles and stick them together in a weighted particle event
     /*int WeightedPerform_hybrid(const double t, const Sweep::PropID prop1,
                         const Sweep::PropID prop2,
                         const Sweep::Processes::CoagWeightRule weight_rule,
                         Cell &sys, rng_type &rng,
-						Sweep::Processes::Coagulation::MajorantType maj, const Geometry::LocalGeometry1d& local_geom) const;
-	*/
-	int WeightedPerform_hybrid(const double t, const Sweep::PropID prop1,
+			Sweep::Processes::Coagulation::MajorantType maj, const Geometry::LocalGeometry1d& local_geom) const;
+    */
+    int WeightedPerform_hybrid(const double t, const Sweep::PropID prop1,
 		const Sweep::PropID prop2,
 		const Sweep::Processes::CoagWeightRule weight_rule,
 		Cell &sys, rng_type &rng,

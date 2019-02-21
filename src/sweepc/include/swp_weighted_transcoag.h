@@ -101,7 +101,7 @@ public:
         double t,                  // Time.
         const Cell &sys,       // Indicates true kernel (not majorant).
         const Geometry::LocalGeometry1d &local_geom,
-        fvector::iterator &iterm // Iterator to the first term. 
+        fvector::iterator &iterm // Iterator to the first term.
         ) const;
 
     //! Perform a coagulation with particles chosen according to the transition kernel
@@ -112,10 +112,10 @@ public:
         unsigned int iterm,
         rng_type &rng) const;
 
-	// aab64 temp
-	virtual void ChooseProps(
-		Sweep::Cell &sys,
-		unsigned int iterm) const;
+    // aab64 temp
+    virtual void ChooseProps(
+        Sweep::Cell &sys,
+        unsigned int iterm) const;
 
     //! Write the object to a binary stream.
     virtual void Serialize(std::ostream &out) const;
@@ -146,7 +146,7 @@ private:
     double MFP,   // Gas mean-free path.
     double vol,   // System sample volume.
     fvector::iterator &iterm, // Iterator to first coagulation term.
-	fvector & props
+    fvector & props
     ) const;
 
     // COAGULATION KERNEL ROUTINES.

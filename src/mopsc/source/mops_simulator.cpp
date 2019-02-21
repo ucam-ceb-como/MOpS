@@ -117,7 +117,7 @@ Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
         m_output_iter = rhs.m_output_iter;
         m_write_jumps = rhs.m_write_jumps;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-		m_write_diags = rhs.m_write_diags;
+	m_write_diags = rhs.m_write_diags;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
         m_write_ensemble_file = rhs.m_write_ensemble_file;
         m_write_PAH = rhs.m_write_PAH;
@@ -355,7 +355,6 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     // so that it will be deleted when we leave this scope.
     std::auto_ptr<Mixture> initmix(r.Mixture()->Clone());
 
-
     // Initialise the reactor with the start time.
     t2 = m_times[0].StartTime();
     r.SetTime(t2);
@@ -441,57 +440,55 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         if (s.GetLOIStatus() == true) setupLOI(r, s);
 
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-		if (m_write_diags) {
-			/* Create partProc diagnostics csv file with pre/post split SV, #SPs, #events in split
-			step including additions in LPDA, create gasConcFile with pre/post split concs 
-			Note that this is defintely not an elegant implentation and is only really intended 
-			to verify expected process behaviour in the TiO2 case */
-			ofstream partProcFile, gasConcFile;
-			unsigned int process_iter;
-			std::vector<std::string> tmpPNames;
-			std::string rname(r.GetName());
-			std::string partfname, chemfname;
-			partfname = "Part-split-diagnostics(" + rname + ").csv";
-			chemfname = "Chem-split-diagnostics(" + rname + ").csv";
+        if (m_write_diags) {
+            /* Create partProc diagnostics csv file with pre/post split SV, #SPs, #events in split
+            step including additions in LPDA, create gasConcFile with pre/post split concs 
+            Note that this is defintely not an elegant implentation and is only really intended 
+            to verify expected process behaviour in the TiO2 case */
+            ofstream partProcFile, gasConcFile;
+            unsigned int process_iter;
+            std::vector<std::string> tmpPNames;
+            std::string rname(r.GetName());
+            std::string partfname, chemfname;
+            partfname = "Part-split-diagnostics(" + rname + ").csv";
+            chemfname = "Chem-split-diagnostics(" + rname + ").csv";
 
-			r.Mech()->ParticleMech().GetProcessNames(tmpPNames, 0);
+            r.Mech()->ParticleMech().GetProcessNames(tmpPNames, 0);
 
-			// Add headers to partProc diagnostics file
-			partProcFile.open(partfname.c_str());
-			partProcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , "
-				<< "SV in (-)" << " , " << "SV out (-)" << " , "
-				<< "SP in (-)" << " , " << "SP out (-)" << " , "
-				<< "Total statistical weight pre-split (-)" << " , " << "Total statistical weight post-split (-)" << " , "
-				<< "Average collision diameter pre-split (-)" << " , " << "Average collision diameter post-split (-)" << " , "
-				<< "Incepting weight pre-split (-)" << " , " << "Incepting weight post-split (-)" << " , "
-				<< "PN count pre-split (-)" << " , " << "PN count post-split (-)" << " , ";
-			for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
+            // Add headers to partProc diagnostics file
+            partProcFile.open(partfname.c_str());
+            partProcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , "
+                << "SV in (-)" << " , " << "SV out (-)" << " , "
+                << "SP in (-)" << " , " << "SP out (-)" << " , "
+                << "Total statistical weight pre-split (-)" << " , " << "Total statistical weight post-split (-)" << " , "
+                << "Average collision diameter pre-split (-)" << " , " << "Average collision diameter post-split (-)" << " , "
+                << "Incepting weight pre-split (-)" << " , " << "Incepting weight post-split (-)" << " , "
+                << "PN count pre-split (-)" << " , " << "PN count post-split (-)" << " , ";
+            for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
 				partProcFile << tmpPNames[process_iter] << " , ";
-			}
-			partProcFile << "TransitionRegimeCoagulationTerms (kernel specific)";
-			for (process_iter = tmpPNames.size(); process_iter < r.Mech()->ParticleMech().GetTermCount()+1; 
-				process_iter++) {
-				partProcFile << " , ";
-			}
-			partProcFile << "FictitiousCoagulationTerms (kernel specific)";
-			for (process_iter = tmpPNames.size(); process_iter < r.Mech()->ParticleMech().GetTermCount() + 1;
-				process_iter++) {
-				partProcFile << " , ";
-			}
-			partProcFile << "Inflow events" << " , " << "Outflow events" << "\n";
-			partProcFile.close();
+            }
+            partProcFile << "TransitionRegimeCoagulationTerms (kernel specific)";
+            for (process_iter = tmpPNames.size(); process_iter < r.Mech()->ParticleMech().GetTermCount()+1; process_iter++) {
+                partProcFile << " , ";
+            }
+            partProcFile << "FictitiousCoagulationTerms (kernel specific)";
+            for (process_iter = tmpPNames.size(); process_iter < r.Mech()->ParticleMech().GetTermCount() + 1; process_iter++) {
+                partProcFile << " , ";
+            }
+            partProcFile << "Inflow events" << " , " << "Outflow events" << "\n";
+            partProcFile.close();
 
-			// Add headers to gasConc diagnostics file
-			gasConcFile.open(chemfname.c_str());
-			gasConcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , ";
-			for (process_iter = 0; process_iter < r.Mech()->GasMech().Species().size() - 1; process_iter++) {
-				gasConcFile << r.Mech()->GasMech().Species(process_iter)->Name() << " pre-split (mol/m3)" << " , "
-					<< r.Mech()->GasMech().Species(process_iter)->Name() << " post-split (mol/m3)" << " , ";
-			}
-			gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << " , "
-				<< "Temperature pre-split (K)" << " , " << "Temperature post-split (K)" << "\n";
-			gasConcFile.close();
-		}
+            // Add headers to gasConc diagnostics file
+            gasConcFile.open(chemfname.c_str());
+            gasConcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , ";
+            for (process_iter = 0; process_iter < r.Mech()->GasMech().Species().size() - 1; process_iter++) {
+                gasConcFile << r.Mech()->GasMech().Species(process_iter)->Name() << " pre-split (mol/m3)" << " , "
+                << r.Mech()->GasMech().Species(process_iter)->Name() << " post-split (mol/m3)" << " , ";
+            }
+            gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << " , "
+                << "Temperature pre-split (K)" << " , " << "Temperature post-split (K)" << "\n";
+            gasConcFile.close();
+        }
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -511,21 +508,17 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             for (istep=0; istep<iint->StepCount(); ++istep, ++global_step) {
                 // Run the solver for this step (timed).
                 m_cpu_mark = clock();
-
-
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 /* If the solve function with diagnostics capacity replaces the original solve function, this 
    if statement is no longer necessary */
-				if (m_write_diags) {
-					s.Solve(r, t2 += dt, iint->SplittingStepCount(), m_niter,
-						rng, &fileOutput, (void*)this, m_write_diags);
-				} else {
-					s.Solve(r, t2 += dt, iint->SplittingStepCount(), m_niter,
-						rng, &fileOutput, (void*)this);
-				}
+        if (m_write_diags) {
+                s.Solve(r, t2 += dt, iint->SplittingStepCount(), m_niter,
+                        rng, &fileOutput, (void*)this, m_write_diags);
+        } else {
+                s.Solve(r, t2+=dt, iint->SplittingStepCount(), m_niter,
+                        rng, &fileOutput, (void*)this);
+        }
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-				
 
                 //Set up and solve Jacobian here
                 if (s.GetLOIStatus() == true)
@@ -776,7 +769,7 @@ void Simulator::postProcessSimulation(
         multVals(agpfwdrates[0], m_nruns*m_niter);
         multVals(agprevrates[0], m_nruns*m_niter);
         multVals(agpwdot[0], m_nruns*m_niter);
-        multVals(agpsdot[0], m_nruns*m_niter); // added by mm864
+    multVals(agpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(apprates[0], m_nruns*m_niter);
         multVals(appjumps[0], m_nruns*m_niter);
         multVals(appwdot[0], m_nruns*m_niter);
@@ -787,12 +780,12 @@ void Simulator::postProcessSimulation(
         multVals(egpfwdrates[0], m_nruns*m_niter);
         multVals(egprevrates[0], m_nruns*m_niter);
         multVals(egpwdot[0], m_nruns*m_niter);
-        multVals(egpsdot[0], m_nruns*m_niter); // added by mm864
+    multVals(egpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(epprates[0], m_nruns*m_niter);
         multVals(eppjumps[0], m_nruns*m_niter);
         multVals(eppwdot[0], m_nruns*m_niter);
-	multVals(ecpu[0], m_nruns*m_niter);
-	multVals(eTp[0], m_nruns*m_niter); // aab64
+        multVals(ecpu[0], m_nruns*m_niter);
+        multVals(eTp[0], m_nruns*m_niter); // aab64
     } else {
         multVals(achem[0], m_nruns);
         multVals(astat[0], m_nruns);
@@ -800,7 +793,7 @@ void Simulator::postProcessSimulation(
         multVals(agpfwdrates[0], m_nruns);
         multVals(agprevrates[0], m_nruns);
         multVals(agpwdot[0], m_nruns);
-        multVals(agpsdot[0], m_nruns); // added by mm864
+    multVals(agpsdot[0], m_nruns); // added by mm864
         multVals(apprates[0], m_nruns);
         multVals(appjumps[0], m_nruns);
         multVals(appwdot[0], m_nruns);
@@ -812,12 +805,12 @@ void Simulator::postProcessSimulation(
         multVals(egpfwdrates[0], m_nruns);
         multVals(egprevrates[0], m_nruns);
         multVals(egpwdot[0], m_nruns);
-        multVals(egpsdot[0], m_nruns); // added by mm864
+    multVals(egpsdot[0], m_nruns); // added by mm864
         multVals(epprates[0], m_nruns);
         multVals(eppjumps[0], m_nruns);
         multVals(eppwdot[0], m_nruns);
-	multVals(ecpu[0], m_nruns);
-	multVals(eTp[0], m_nruns); // aab64
+        multVals(ecpu[0], m_nruns);
+        multVals(eTp[0], m_nruns); // aab64
     }
 
     // READ ALL OUTPUT POINTS.
@@ -848,8 +841,8 @@ void Simulator::postProcessSimulation(
 
                         readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                         readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
-					    readPartTrackPoint(fin, pmech, ptrack[irun][step]);
-					    readParticleTemperatureDataPoint(fin, mech, aTp[step], eTp[step], true); // aab64
+                        readPartTrackPoint(fin, pmech, ptrack[irun][step]);
+                        readParticleTemperatureDataPoint(fin, mech, aTp[step], eTp[step], true); // aab64
                     }
                 }
                 else  {
@@ -866,8 +859,8 @@ void Simulator::postProcessSimulation(
 
                     readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                     readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
-		    readPartTrackPoint(fin, pmech, ptrack[irun][step]);
-	            readParticleTemperatureDataPoint(fin, mech, aTp[step], eTp[step], true); // aab64
+                    readPartTrackPoint(fin, pmech, ptrack[irun][step]);
+                    readParticleTemperatureDataPoint(fin, mech, aTp[step], eTp[step], true); // aab64
                 }
             }
         }
@@ -889,8 +882,8 @@ void Simulator::postProcessSimulation(
         calcAvgConf(apprates, epprates, m_nruns*m_niter);
         calcAvgConf(appjumps, eppjumps, m_nruns*m_niter);
         calcAvgConf(appwdot, eppwdot, m_nruns*m_niter);
-	calcAvgConf(acpu, ecpu, m_nruns*m_niter);
-	calcAvgConf(aTp, eTp, m_nruns*m_niter); // aab64
+        calcAvgConf(acpu, ecpu, m_nruns*m_niter);
+        calcAvgConf(aTp, eTp, m_nruns*m_niter); // aab64
     } else {
         calcAvgConf(achem, echem, m_nruns);
         calcAvgConf(astat, estat, m_nruns);
@@ -902,8 +895,8 @@ void Simulator::postProcessSimulation(
         calcAvgConf(apprates, epprates, m_nruns);
         calcAvgConf(appjumps, eppjumps, m_nruns);
         calcAvgConf(appwdot, eppwdot, m_nruns);
-	calcAvgConf(acpu, ecpu, m_nruns);
-	calcAvgConf(aTp, eTp, m_nruns); // aab64
+        calcAvgConf(acpu, ecpu, m_nruns);
+        calcAvgConf(aTp, eTp, m_nruns); // aab64
     }
 
     // POST-PROCESS ELEMENT FLUX
@@ -951,7 +944,7 @@ void Simulator::postProcessSimulation(
         /*!
          * Useful for reproduction of Stein and Fahr's stabilomer grid.
          * Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
-         * J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
+         * J. Phys. Chem. 89, 3714\963725. doi:10.1021/j100263a027.
          */
         // postProcessPAHinfo(mech, times);
 
@@ -964,7 +957,7 @@ void Simulator::postProcessSimulation(
 		/*!
 		* Useful for reproduction of Stein and Fahr's stabilomer grid.
 		* Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
-		* J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
+		* J. Phys. Chem. 89, 3714\963725. doi:10.1021/j100263a027.
 		*/
 		// postProcessPAHinfo(mech, times);
 
@@ -1037,9 +1030,9 @@ void Simulator::outputGasPhase(const Reactor &r) const
 // the binary output file. (No need modification, modification when read) 
 void Simulator::outputParticleTemperature(const Reactor &r) const
 {
-	//double Tp = r.Mixture()->GetBulkParticleTemperature();
-	double Tp = r.Mixture()->Particles().GetTotalParticleNumber();
-	m_file.write((char*)&Tp, sizeof(Tp));
+    //double Tp = r.Mixture()->GetBulkParticleTemperature();
+    double Tp = r.Mixture()->Particles().GetTotalParticleNumber();
+    m_file.write((char*)&Tp, sizeof(Tp));
 }
 
 // Writes the particle stats to the binary output file.
@@ -1165,10 +1158,10 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             me->outputPartTrack(r);
 
             // Write sensitivityto file.
-	    s.OutputSensitivity(me->m_senfile, r, me);
+            s.OutputSensitivity(me->m_senfile, r, me);
 
-	    // aab64 Write the particle conditions to the output file.
-	    me->outputParticleTemperature(r);
+            // aab64 Write the particle conditions to the output file.
+            me->outputParticleTemperature(r);
         }
     }
 }
@@ -2403,14 +2396,14 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	vector<fvector> ppsl;
 
 	////////////////////////////////////////// csl37-pp
-	vector<fvector> nodes;
-	vector<string> nodes_header;
-	vector<fvector> prims;
+	vector<fvector> surface;
+	vector<string> surfout_header;
+	vector<fvector> primary_diameter;
 	vector<string> primary_header;
-	CSV_IO nodesout(m_output_filename + "-primary-nodes.csv", true);
-	CSV_IO primsout(m_output_filename + "-primary.csv", true);
+	CSV_IO surfout(m_output_filename + "-primary-surface.csv", true);
+	CSV_IO diamout(m_output_filename + "-primary-diameter.csv", true);
 	///////////////////////////////////////////
-	
+
 	// Get reference to the particle mechanism.
 	const Sweep::Mechanism &pmech = mech.ParticleMech();
 
@@ -2485,7 +2478,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 				if (i == times.size() - 1){
 					for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
 					{
-						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), nodes, prims, k);
+						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), surface, primary_diameter, k);
 					}
 				}
 				/////////////////////////////////////////
@@ -2535,41 +2528,41 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 		//delete out[i];
 	}
 	//////////////////////////////////////////// csl37-pp
-	nodes_header.push_back("Particle Index");
-	nodes_header.push_back("Number of primaries below node");
-	nodes_header.push_back("Common surface area (m2)");
-	nodes_header.push_back("Sintering level");
-	nodes_header.push_back("Separation (m)");
-	nodes_header.push_back("Neck radius (m)");
-	nodes_header.push_back("Left radius (m)");
-	nodes_header.push_back("Right radius (m)");
-	nodes_header.push_back("Left Index");
-	nodes_header.push_back("Right Index");
+	surfout_header.push_back("Particle Index");
+	surfout_header.push_back("Number of primaries below node");
+	surfout_header.push_back("Common surface area (m2)");
+	surfout_header.push_back("Sintering level");
+	surfout_header.push_back("Separation (m)");
+	surfout_header.push_back("Neck radius (m)");
+	surfout_header.push_back("Left radius (m)");
+	surfout_header.push_back("Right radius (m)");
+	surfout_header.push_back("Left Index");
+	surfout_header.push_back("Right Index");
 
-	nodesout.Write(nodes_header);
-	for (unsigned int k = 0; k < nodes.size(); k++)
+	surfout.Write(surfout_header);
+	for (unsigned int k = 0; k < surface.size(); k++)
 	{
-		nodesout.Write(nodes[k]);
+		surfout.Write(surface[k]);
 	}
-	nodesout.Close();
+	surfout.Close();
 
 	primary_header.push_back("Particle Index");
 	primary_header.push_back("Primary diameter (m)");
 	primary_header.push_back("Sph. equiv. diameter (m)");
-	primary_header.push_back("(Geom.) Primary volume (m3)");
-	primary_header.push_back("(Comp.) Primary volume (m3)");
+	primary_header.push_back("True primary volume (m3)");
+	primary_header.push_back("Primary volume (m3)");
 	primary_header.push_back("Primary surface (m2)");
 	primary_header.push_back("Position x");
 	primary_header.push_back("Position y");
 	primary_header.push_back("Position z");
 	primary_header.push_back("Radius (m)");
 
-	primsout.Write(primary_header);
-	for (unsigned int k = 0; k < prims.size(); k++)
+	diamout.Write(primary_header);
+	for (unsigned int k = 0; k < primary_diameter.size(); k++)
 	{
-		primsout.Write(prims[k]);
+		diamout.Write(primary_diameter[k]);
 	}
-	primsout.Close();
+	diamout.Close();
 
 	///////////////////////////////////////////
 	//// Close output CSV files.
@@ -2577,9 +2570,6 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 		out[i]->Close();
 		delete out[i];
 	}
-	
-
-
 }
 
 /*

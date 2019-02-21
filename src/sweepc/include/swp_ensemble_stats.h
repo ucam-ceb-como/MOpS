@@ -127,7 +127,7 @@ public:
         );
 
 	///////////////////////////////////////// csl37-pp
-	void PrintPrimary(const Sweep::Particle &sp, const Sweep::ParticleModel& model, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const;
+	void PrintPrimary(const Sweep::Particle &sp, const Sweep::ParticleModel& model, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
 	/////////////////////////////////////////
 
     // READ/WRITE/COPY.

@@ -254,11 +254,11 @@ public:
         unsigned int n=1        // Number of times to perform adjustment.
         );
 
-	// aab64 Adjusts the primary composition by the given scaling to
+    // aab64 Adjusts the primary composition by the given scaling to
     // allow heavier particles to be incepted.  
-	virtual void AdjustForInception(
-		double incFac = 1.0       // Factor by which to modify composition elements.
-		);
+    virtual void AdjustForInception(
+	double incFac = 1.0       // Factor by which to modify composition elements.
+    );
 
     // Combines this primary with another.  This is also the
     // implementation of the + and += operators.
@@ -279,9 +279,6 @@ public:
         rng_type &rng,  // Random number generator
         double wt     // Statistical weight
         );
-	
-	//csl37: get primary coords
-	virtual void GetPrimaryCoords(std::vector<fvector> &coords) const;
 
     // READ/WRITE/COPY.
 

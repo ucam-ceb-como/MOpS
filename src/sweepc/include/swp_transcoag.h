@@ -112,10 +112,10 @@ public:
         unsigned int iterm,
         rng_type &rng) const;
 
-	// aab64 temp
-	virtual void ChooseProps(
-		Sweep::Cell &sys,
-		unsigned int iterm) const;
+    // aab64 temp
+    virtual void ChooseProps(
+        Sweep::Cell &sys,
+        unsigned int iterm) const;
 
 protected:
     //! Transition coagulation kernel between two particles
@@ -159,7 +159,7 @@ private:
         double T_mu,  // T / viscosity
         double MFP,   // Gas mean-free path.
         double vol,    // System sample volume.
-		fvector & props // Pass the average incepting class props
+        fvector & props // Pass the average incepting class props
         ) const;
 
     // More efficient rate routine for coagulation only.  
@@ -173,7 +173,7 @@ private:
         double MFP,   // Gas mean-free path.
         double vol,   // System sample volume.
         fvector::iterator &iterm, // Iterator to first coagulation term.
-		fvector & props // Pass the average incepting class props
+        fvector & props // Pass the average incepting class props
         ) const;
 
         // COAGULATION KERNEL ROUTINES.

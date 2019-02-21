@@ -250,8 +250,8 @@ void ODE_Solver::ResetSolver(void)
 // contents has been changed between calls to Solve().
 void ODE_Solver::ResetSolver(Reactor &reac)
 {
-	// aab64 check mixture pointer not NULL
-	assert(&reac.Mixture()->GasPhase());
+    // aab64 check mixture pointer not NULL
+    assert(&reac.Mixture()->GasPhase());
 	
     // Check that this reactor has the same problem size
     // as the last reactor.  If not then we have to resize the
@@ -272,8 +272,8 @@ void ODE_Solver::ResetSolver(Reactor &reac)
         Initialise(reac);
     }
 	
-	// aab64 check mixture pointer not NULL
-	assert(&reac.Mixture()->GasPhase());
+    // aab64 check mixture pointer not NULL
+    assert(&reac.Mixture()->GasPhase());
 }
 
 

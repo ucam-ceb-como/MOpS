@@ -104,9 +104,9 @@ public:
     static Particle* createFromXMLNode(const CamXML::Element& xml,
                                        const Sweep::ParticleModel& model);
 
-	// aab64 
-	//! Create a new particle using the model according to the xml data
-	static Particle* createFromXMLNodeDetailed(const CamXML::Element& xml,
+    // aab64 
+    //! Create a new particle using the model according to the xml data
+    static Particle* createFromXMLNodeDetailed(const CamXML::Element& xml,
 		const Sweep::ParticleModel& model, rng_type &rng);
 
     // Operators.
@@ -271,12 +271,10 @@ public:
 
     // Recalculate derived properties from the primary particle
     void UpdateCache();
-	
-	//csl37: get particle coordinates
-	void getParticleCoords(std::vector<fvector> &coords) const;
 
-	void SetHybrid(bool hybrid_flag) { m_hybrid = hybrid_flag; }
-	bool IsHybrid() const { return m_hybrid; }
+    // aab64 for hybrid particle-number/particle model
+    void SetHybrid(bool hybrid_flag) { m_hybrid = hybrid_flag; }
+    bool IsHybrid() const { return m_hybrid; }
 
     // READ/WRITE/COPY.
 
@@ -320,8 +318,8 @@ private:
     //! Last time particle was updated.  Required for LPDA.
     double mLPDAtime;
 
-	// aab64 tracker for hybrid particle model
-	bool m_hybrid;
+    // aab64 tracker for hybrid particle model
+    bool m_hybrid;
 
     // Can't create a particle without knowledge of the components
     // and the tracker variables.

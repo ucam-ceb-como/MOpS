@@ -205,7 +205,7 @@ double TitaniaSurfaceReaction::Rate(
         //  = S * \rho - \eta_{Cl} / 4
         rate *= std::max(sys.Particles().GetSum(Sweep::iS) * rho_s -
                          sys.Particles().GetSum(Sweep::iASN)/4.0, 0.0);
-	
+
     } else {
         // Just use parent class infrastructure, hoping the correct parameters
         // have been chosen in sweep.xml
@@ -261,6 +261,7 @@ double TitaniaSurfaceReaction::Rate(
         //  = S * \rho - \eta_{Cl} / 4
         rate *= std::max(sp.Property(Sweep::iS) * rho_s -
                 sp.Property(Sweep::iASN)/4.0, 0.0);
+
     } else {
         // Just use parent class infrastructure, hoping the correct parameters
         // have been chosen in sweep.xml

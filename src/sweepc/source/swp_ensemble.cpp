@@ -132,7 +132,7 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             m_ncont      = rhs.m_ncont;
             m_contfactor = rhs.m_contfactor;
             m_contwarn   = rhs.m_contwarn;
-			m_wtdcontfctr = rhs.m_wtdcontfctr; // aab64
+            m_wtdcontfctr = rhs.m_wtdcontfctr; // aab64
             // Doubling.
             m_maxcount   = rhs.m_maxcount;
             m_ndble      = rhs.m_ndble;
@@ -147,79 +147,79 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
                 m_particles[i] = rhs.m_particles[i]->Clone();
             }
 
-			// aab64 for hybrid particle number model
-			m_inceptedFirstSP = rhs.m_inceptedFirstSP;
-			m_critical_size = rhs.m_critical_size;
-			if (rhs.m_critical_size > 0)
-			{
-				m_pn_particles.resize(rhs.m_critical_size, NULL);
-				if (rhs.m_pn_particles[0] != NULL) 
-				{
-					for (unsigned int i = 0; i != rhs.Count(); ++i) {
-						m_pn_particles[i] = rhs.m_pn_particles[i]->Clone();
-					}
-				}
+            // aab64 for hybrid particle number model
+            m_inceptedFirstSP = rhs.m_inceptedFirstSP;
+            m_critical_size = rhs.m_critical_size;
+            if (rhs.m_critical_size > 0)
+            {
+                m_pn_particles.resize(rhs.m_critical_size, NULL);
+                if (rhs.m_pn_particles[0] != NULL) 
+                {
+                    for (unsigned int i = 0; i != rhs.Count(); ++i) {
+                        m_pn_particles[i] = rhs.m_pn_particles[i]->Clone();
+                    }
+                }
 
-				m_particle_numbers.resize(rhs.m_critical_size, 0);
-				m_pn_diameters.resize(rhs.m_critical_size, 0);
-				m_pn_diameters2.resize(rhs.m_critical_size, 0);
-				m_pn_diameters_1.resize(rhs.m_critical_size, 0);
-				m_pn_diameters_2.resize(rhs.m_critical_size, 0);
-				m_pn_diameters2_mass_1_2.resize(rhs.m_critical_size, 0);
-				m_pn_mass_1_2.resize(rhs.m_critical_size, 0);
-				m_pn_mass.resize(rhs.m_critical_size, 0);
-				m_pn_mass2.resize(rhs.m_critical_size, 0);
-				m_pn_mass3.resize(rhs.m_critical_size, 0);
-				m_pn_diameters3.resize(rhs.m_critical_size, 0);
-				m_critical_size = rhs.m_critical_size;
+                m_particle_numbers.resize(rhs.m_critical_size, 0);
+                m_pn_diameters.resize(rhs.m_critical_size, 0);
+                m_pn_diameters2.resize(rhs.m_critical_size, 0);
+                m_pn_diameters_1.resize(rhs.m_critical_size, 0);
+                m_pn_diameters_2.resize(rhs.m_critical_size, 0);
+                m_pn_diameters2_mass_1_2.resize(rhs.m_critical_size, 0);
+                m_pn_mass_1_2.resize(rhs.m_critical_size, 0);
+                m_pn_mass.resize(rhs.m_critical_size, 0);
+                m_pn_mass2.resize(rhs.m_critical_size, 0);
+                m_pn_mass3.resize(rhs.m_critical_size, 0);
+                m_pn_diameters3.resize(rhs.m_critical_size, 0);
+                m_critical_size = rhs.m_critical_size;
 				
-				// Copy vectors.
-				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
-					m_particle_numbers[i] = rhs.m_particle_numbers[i];
-				}
-				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
-					m_pn_diameters[i] = rhs.m_pn_diameters[i];
-				}
-				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
-					m_pn_diameters2[i] = rhs.m_pn_diameters2[i];
-				}
-				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
-					m_pn_diameters_1[i] = rhs.m_pn_diameters_1[i];
-				}
-				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
-					m_pn_diameters_2[i] = rhs.m_pn_diameters_2[i];
-				}
-				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
-					m_pn_diameters2_mass_1_2[i] = rhs.m_pn_diameters2_mass_1_2[i];
-				}
-				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
-					m_pn_mass_1_2[i] = rhs.m_pn_mass_1_2[i];
-				}
-				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
-					m_pn_mass[i] = rhs.m_pn_mass[i];
-				}
-				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
-					m_pn_mass2[i] = rhs.m_pn_mass2[i];
-				}
-				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
-					m_pn_mass3[i] = rhs.m_pn_mass3[i];
-				}
-				for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
-					m_pn_diameters3[i] = rhs.m_pn_diameters3[i];
-				}
-				m_total_number = rhs.m_total_number;
-				m_total_diameter = rhs.m_total_diameter;
-				m_total_diameter2 = rhs.m_total_diameter2;
-				m_total_diameter_1 = rhs.m_total_diameter_1;
-				m_total_diameter_2 = rhs.m_total_diameter_2;
-				m_total_diameter2_mass_1_2 = rhs.m_total_diameter2_mass_1_2;
-				m_total_mass_1_2 = rhs.m_total_mass_1_2;
-				m_total_mass = rhs.m_total_mass;
-				m_total_mass2 = rhs.m_total_mass2;
-				m_total_mass3 = rhs.m_total_mass3;
-				m_total_diameter3 = rhs.m_total_diameter3;
-				m_total_component = rhs.m_total_component;
-			}
+                // Copy vectors.
+                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                    m_particle_numbers[i] = rhs.m_particle_numbers[i];
+                }
+                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                    m_pn_diameters[i] = rhs.m_pn_diameters[i];
+                }
+                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                    m_pn_diameters2[i] = rhs.m_pn_diameters2[i];
+                }
+                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                    m_pn_diameters_1[i] = rhs.m_pn_diameters_1[i];
+                }
+                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                    m_pn_diameters_2[i] = rhs.m_pn_diameters_2[i];
+                }
+                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                    m_pn_diameters2_mass_1_2[i] = rhs.m_pn_diameters2_mass_1_2[i];
+                }
+                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                    m_pn_mass_1_2[i] = rhs.m_pn_mass_1_2[i];
+                }
+                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                    m_pn_mass[i] = rhs.m_pn_mass[i];
+                }
+                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                    m_pn_mass2[i] = rhs.m_pn_mass2[i];
+                }
+                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                    m_pn_mass3[i] = rhs.m_pn_mass3[i];
+                }
+                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                    m_pn_diameters3[i] = rhs.m_pn_diameters3[i];
+                }
+                m_total_number = rhs.m_total_number;
+                m_total_diameter = rhs.m_total_diameter;
+                m_total_diameter2 = rhs.m_total_diameter2;
+                m_total_diameter_1 = rhs.m_total_diameter_1;
+                m_total_diameter_2 = rhs.m_total_diameter_2;
+                m_total_diameter2_mass_1_2 = rhs.m_total_diameter2_mass_1_2;
+                m_total_mass_1_2 = rhs.m_total_mass_1_2;
+                m_total_mass = rhs.m_total_mass;
+                m_total_mass2 = rhs.m_total_mass2;
+                m_total_mass3 = rhs.m_total_mass3;
+                m_total_diameter3 = rhs.m_total_diameter3;
+                m_total_component = rhs.m_total_component;
+            }
 
             m_tree.resize(m_capacity);
             rebuildTree();
@@ -286,15 +286,15 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_tree.resize(m_capacity);
 
     // Initialise scaling.
-	m_ncont       = 0; 
-	m_wtdcontfctr = 1.0; // aab64 weighted contraction factor
-    m_contfactor  = (double)(m_capacity) / (double)(m_capacity+1);
-    m_contwarn    = false;
+    m_ncont      = 0;
+    m_wtdcontfctr= 1.0; // aab64 weighted contraction factor
+    m_contfactor = (double)(m_capacity) / (double)(m_capacity+1);
+    m_contwarn   = false;
 
     // Initialise doubling.
     m_maxcount   = 0;
     m_ndble      = 0;
-	m_dbleon =  true;
+    m_dbleon     = true;
     m_dbleactive = false;
     //m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0 / 4.0);
 	m_dblecutoff = (int)(3.0 * (double)m_capacity / 4.0 );
@@ -306,32 +306,32 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 	//m_dblelimit = m_halfcap/4.0 - m_dbleslack;
 	m_dblelimit = m_halfcap - m_dbleslack;
 
-	// aab64 for hybrid particle number model
-	m_inceptedFirstSP = false;
-	m_total_number = 0;
-	m_total_diameter = 0.0;
-	m_total_diameter2 = 0.0;
-	m_total_diameter_1 = 0.0;
-	m_total_diameter_2 = 0.0;
-	m_total_diameter2_mass_1_2 = 0.0;
-	m_total_mass_1_2 = 0.0;
-	m_total_mass = 0.0;
-	m_total_mass2 = 0.0;
-	m_total_mass3 = 0.0;
-	m_total_diameter3 = 0.0;
-	m_total_component = 0;
-	m_particle_numbers.resize(m_critical_size, 0);
-	m_pn_diameters.resize(m_critical_size, 0);
-	m_pn_diameters2.resize(m_critical_size, 0);
-	m_pn_diameters_1.resize(m_critical_size, 0);
-	m_pn_diameters_2.resize(m_critical_size, 0);
-	m_pn_diameters2_mass_1_2.resize(m_critical_size, 0);
-	m_pn_mass_1_2.resize(m_critical_size, 0);
-	m_pn_mass.resize(m_critical_size, 0);
-	m_pn_mass2.resize(m_critical_size, 0);
-	m_pn_mass3.resize(m_critical_size, 0);
-	m_pn_diameters3.resize(m_critical_size, 0);
-	m_pn_particles.resize(m_critical_size, NULL);
+    // aab64 for hybrid particle number model
+    m_inceptedFirstSP = false;
+    m_total_number = 0;
+    m_total_diameter = 0.0;
+    m_total_diameter2 = 0.0;
+    m_total_diameter_1 = 0.0;
+    m_total_diameter_2 = 0.0;
+    m_total_diameter2_mass_1_2 = 0.0;
+    m_total_mass_1_2 = 0.0;
+    m_total_mass = 0.0;
+    m_total_mass2 = 0.0;
+    m_total_mass3 = 0.0;
+    m_total_diameter3 = 0.0;
+    m_total_component = 0;
+    m_particle_numbers.resize(m_critical_size, 0);
+    m_pn_diameters.resize(m_critical_size, 0);
+    m_pn_diameters2.resize(m_critical_size, 0);
+    m_pn_diameters_1.resize(m_critical_size, 0);
+    m_pn_diameters_2.resize(m_critical_size, 0);
+    m_pn_diameters2_mass_1_2.resize(m_critical_size, 0);
+    m_pn_mass_1_2.resize(m_critical_size, 0);
+    m_pn_mass.resize(m_critical_size, 0);
+    m_pn_mass2.resize(m_critical_size, 0);
+    m_pn_mass3.resize(m_critical_size, 0);
+    m_pn_diameters3.resize(m_critical_size, 0);
+    m_pn_particles.resize(m_critical_size, NULL);
 }
 
 /*!
@@ -340,7 +340,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
  * @param val   Switch for doubling.
  */
 void Sweep::Ensemble::SetDoubling(const bool val) {
-	m_dbleon = val;
+    m_dbleon = val;
 }
 
 unsigned int Sweep::Ensemble::DoubleLimit() {
@@ -397,8 +397,8 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
     if(count > m_capacity) {
         // Some particles were thrown away and we must rescale
         m_count = m_capacity;
-		m_ncont = 0; 
-		m_wtdcontfctr = 1.0; // aab64
+        m_ncont = 0;
+        m_wtdcontfctr = 1.0; // aab64
 
         iterator it = begin();
         const iterator itEnd = end();
@@ -408,9 +408,9 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
         }
     }
     else {
-		m_count = count;
-		m_ncont = 0; 
-		m_wtdcontfctr = 1.0; // aab64
+        m_count = count;
+        m_ncont = 0;
+        m_wtdcontfctr = 1.0; // aab64
     }
     m_maxcount = m_count;
 
@@ -422,11 +422,11 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
 
     // Initialise doubling.
     m_ndble      = 0;
-	m_dbleon =  true;
+    m_dbleon     = true;
 
     // Check for doubling activation.
     if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
-		m_dbleactive =  true;
+        m_dbleactive = true;
     } else
         m_dbleactive = false;
 
@@ -473,16 +473,16 @@ const Particle *const Sweep::Ensemble::At(unsigned int i) const
         return NULL;
     }
 }
-
+    
 Particle *const Sweep::Ensemble::GetPNParticleAt(unsigned int index)
 {
-	// Check that the index in within range, then return the particle.
-	if (index < m_critical_size) {
-		return m_pn_particles[index];
-	}
-	else {
-		return NULL;
-	}
+    // Check that the index in within range, then return the particle.
+    if (index < m_critical_size) {
+        return m_pn_particles[index];
+    }
+    else {
+        return NULL;
+    }
 }
 
 /*!
@@ -502,7 +502,7 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
 {
     // Check for doubling activation.
     if (!m_dbleactive && ((m_count + m_total_number) >= m_dblecutoff-1)) {
-		m_dbleactive =  true;
+        m_dbleactive = true;
         printf("sweep: Particle doubling activated.\n");
     }
 
@@ -516,17 +516,16 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         // We must contract the ensemble to accommodate a new particle.
         boost::uniform_smallint<int> indexDistrib(0, m_capacity);
         boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
+        i = indexGenerator();
 
-		i = indexGenerator();
-
-		// aab64 Account for particle weights in sample volume contraction
-		double wsp = sp.getStatisticalWeight();
-		double wi = wsp;
-		if (i < m_capacity)
-			wi = m_particles[i]->getStatisticalWeight();
-		double wtot = m_tree.head().Property(iW) + m_total_number;
-		m_wtdcontfctr *= (wtot + wsp - wi);
-		m_wtdcontfctr *= 1.0 / (wtot + wsp);
+        // aab64 Account for particle weights in sample volume contraction
+        double wsp = sp.getStatisticalWeight();
+        double wi = wsp;
+        if (i < m_capacity)
+            wi = m_particles[i]->getStatisticalWeight();
+        double wtot = m_tree.head().Property(iW) + m_total_number;
+        m_wtdcontfctr *= (wtot + wsp - wi);
+        m_wtdcontfctr *= 1.0 / (wtot + wsp);
 
         ++m_ncont;
         if (!m_contwarn && ((double)(m_ncont)/(double)m_capacity > 0.01)) {
@@ -546,8 +545,7 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
         Replace(i, sp);
-	}
-	else {
+    } else {
         // The new particle is to be removed immediately
         assert(static_cast<unsigned int>(i) == m_capacity);
         delete &sp;
@@ -647,6 +645,7 @@ int Sweep::Ensemble::SetPNParticle(Particle &sp, rng_type &rng, unsigned int ind
 	else
 		return -1;
 }
+
 int Sweep::Ensemble::CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, int ind)
 {
 	iterator it1;
@@ -777,7 +776,6 @@ void Sweep::Ensemble::RemoveInvalids(void)
 
     // Now delete the invalid particles and nullify the corresponding pointers
     while(validEnd != m_particles.end()) {
-
         delete *validEnd;
         *validEnd = NULL;
         ++validEnd;
@@ -790,7 +788,7 @@ void Sweep::Ensemble::RemoveInvalids(void)
     // Stop doubling because the number of particles has dropped from above
     // m_dblelimit during this function, which means a rapid loss of particles
     // so doubling will make the sample volume needlessly large.
-	if ((m_count + m_total_number) < m_capacity - m_dblecutoff) {
+    if((m_count + m_total_number) < m_capacity - m_dblecutoff) {
         m_dbleactive = false;
     }
 
@@ -827,7 +825,6 @@ void Sweep::Ensemble::Replace(unsigned int i, Particle &sp)
     //SetNumOfInceptedPAH(1);
     // Check index is within range.
     if (i<m_count) {
-
         // First delete current particle, then
         // set pointer to new particle.
         delete m_particles[i];
@@ -862,7 +859,7 @@ void Sweep::Ensemble::ClearMain()
     //m_numofInceptedPAH = 0;
 
     m_ncont = 0; // No contractions any more.
-	m_wtdcontfctr = 1.0; // aab64.
+    m_wtdcontfctr = 1.0; // aab64.
 
     m_tree.clear();
 
@@ -871,26 +868,24 @@ void Sweep::Ensemble::ClearMain()
     m_ndble      = 0;
     m_dbleactive = false;
 
-	// aab64 for hybrid particle model
-	m_inceptedFirstSP = false;
-
-	m_total_number = 0;
-	m_total_component = 0;
-	m_total_diameter = 0.0;
-	m_total_diameter2 = 0.0;
-	m_total_diameter_1 = 0.0;
-	m_total_diameter_2 = 0.0;
-	m_total_diameter2_mass_1_2 = 0.0;
-	m_total_mass_1_2 = 0.0;
-	m_total_mass = 0.0;
-	m_total_mass2 = 0.0;
-	m_total_mass3 = 0.0;
-	m_total_diameter3 = 0.0;
-	for (PartPtrVector::size_type i = 0; i != m_pn_particles.size(); ++i) {
-		delete m_pn_particles[i];
-		m_pn_particles[i] = NULL;
-	}
-
+    // aab64 for hybrid particle model
+    m_inceptedFirstSP = false;
+    m_total_number = 0;
+    m_total_component = 0;
+    m_total_diameter = 0.0;
+    m_total_diameter2 = 0.0;
+    m_total_diameter_1 = 0.0;
+    m_total_diameter_2 = 0.0;
+    m_total_diameter2_mass_1_2 = 0.0;
+    m_total_mass_1_2 = 0.0;
+    m_total_mass = 0.0;
+    m_total_mass2 = 0.0;
+    m_total_mass3 = 0.0;
+    m_total_diameter3 = 0.0;
+    for (PartPtrVector::size_type i = 0; i != m_pn_particles.size(); ++i) {
+        delete m_pn_particles[i];
+        m_pn_particles[i] = NULL;
+    }
 }
 
 // SELECTING PARTICLES.
@@ -957,41 +952,41 @@ int Sweep::Ensemble::Select(Sweep::PropID id, rng_type &rng) const
 */
 int Sweep::Ensemble::Select_usingGivenRand(Sweep::PropID id, double rng_number, rng_type &rng) const
 {
-	assert(m_tree.size() == m_count);
+    assert(m_tree.size() == m_count);
 
-	// This routine uses the binary tree to select a particle weighted
-	// by a given particle property (by index).
+    // This routine uses the binary tree to select a particle weighted
+    // by a given particle property (by index).
 
-	// Do not try to use the tree for uniform selection
-	if (id == Sweep::iUniform)
-		return Select(rng);
+    // Do not try to use the tree for uniform selection
+    if (id == Sweep::iUniform)
+        return Select(rng);
 
-	double r = rng_number;
+    double r = rng_number;
 
-	WeightExtractor we(id);
-	assert(abs((m_tree.head().Property(id) - we(m_tree.head())) / m_tree.head().Property(id)) < 1e-9);
-	tree_type::const_iterator it2 = m_tree.select(r, we);
-
-	return (it2 - m_tree.begin());
+    WeightExtractor we(id);
+    assert(abs((m_tree.head().Property(id) - we(m_tree.head())) / m_tree.head().Property(id)) < 1e-9);
+    tree_type::const_iterator it2 = m_tree.select(r, we);
+    
+    return (it2 - m_tree.begin());
 }
 
 // SCALING AND PARTICLE DOUBLING.
 
 // Returns the scaling factor due to internal ensemble processes.
 double Sweep::Ensemble::Scaling() const
-{   
+{
     // The scaling factor includes the contraction term and the doubling term.
     //return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
 
-	// aab64 for weighted particles, the contraction factor depends on the weight of the removed particle 
-	return m_wtdcontfctr * pow(2.0, (double)m_ndble);
+    // aab64 for weighted particles, the contraction factor depends on the weight of the removed particle 
+    return m_wtdcontfctr * pow(2.0, (double)m_ndble);
 }
 
 // Resets the ensemble scaling.
 void Sweep::Ensemble::ResetScaling()
 {
-	m_ncont = 0; 
-	m_wtdcontfctr = 1.0; // aab64
+    m_ncont = 0;
+    m_wtdcontfctr = 1.0; // aab64
     m_ndble = 0;
     m_contwarn = false;
 }
@@ -1065,274 +1060,274 @@ double Sweep::Ensemble::Alpha(double T) const {
 // aab64 Hybrid particle number model
 void Sweep::Ensemble::UpdateNumberAtIndex(unsigned int index, int update)
 {
-	m_particle_numbers[index] += update;
+    m_particle_numbers[index] += update;
 }
 void Sweep::Ensemble::UpdateTotalsWithIndex(unsigned int index, double change)
 {
-	m_total_diameter += change * m_pn_diameters[index];
-	m_total_diameter2 += change * m_pn_diameters2[index];
-	m_total_diameter_1 += change * m_pn_diameters_1[index];
-	m_total_diameter_2 += change * m_pn_diameters_2[index];
-	m_total_diameter2_mass_1_2 += change * m_pn_diameters2_mass_1_2[index];
-	m_total_mass_1_2 += change * m_pn_mass_1_2[index];
-	m_total_mass += change * m_pn_mass[index];
-	m_total_mass2 += change * m_pn_mass2[index];
-	m_total_mass3 += change * m_pn_mass3[index];
-	m_total_diameter3 += change * m_pn_diameters3[index];
-	m_total_component += change * index;
+    m_total_diameter += change * m_pn_diameters[index];
+    m_total_diameter2 += change * m_pn_diameters2[index];
+    m_total_diameter_1 += change * m_pn_diameters_1[index];
+    m_total_diameter_2 += change * m_pn_diameters_2[index];
+    m_total_diameter2_mass_1_2 += change * m_pn_diameters2_mass_1_2[index];
+    m_total_mass_1_2 += change * m_pn_mass_1_2[index];
+    m_total_mass += change * m_pn_mass[index];
+    m_total_mass2 += change * m_pn_mass2[index];
+    m_total_mass3 += change * m_pn_mass3[index];
+    m_total_diameter3 += change * m_pn_diameters3[index];
+    m_total_component += change * index;
 }
 void Sweep::Ensemble::UpdateTotalsWithIndices(unsigned int i1, unsigned int i2)
 {
-	m_total_diameter += m_particle_numbers[i1] * (m_pn_diameters[i2] - m_pn_diameters[i1]);
-	m_total_diameter2 += m_particle_numbers[i1] * (m_pn_diameters2[i2] - m_pn_diameters2[i1]);
-	m_total_diameter_1 += m_particle_numbers[i1] * (m_pn_diameters_1[i2] - m_pn_diameters_1[i1]);
-	m_total_diameter_2 += m_particle_numbers[i1] * (m_pn_diameters_2[i2] - m_pn_diameters_2[i1]);
-	m_total_diameter2_mass_1_2 += m_particle_numbers[i1] * (m_pn_diameters2_mass_1_2[i2] - m_pn_diameters2_mass_1_2[i1]);
-	m_total_mass_1_2 += m_particle_numbers[i1] * (m_pn_mass_1_2[i2] - m_pn_mass_1_2[i1]);
-	m_total_mass += m_particle_numbers[i1] * (m_pn_mass[i2] - m_pn_mass[i1]);
-	m_total_mass2 += m_particle_numbers[i1] * (m_pn_mass2[i2] - m_pn_mass2[i1]);
-	m_total_mass3 += m_particle_numbers[i1] * (m_pn_mass3[i2] - m_pn_mass3[i1]);
-	m_total_diameter3 += m_particle_numbers[i1] * (m_pn_diameters3[i2] - m_pn_diameters3[i1]);
-	m_total_component += m_particle_numbers[i1] * (i2 - i1);
+    m_total_diameter += m_particle_numbers[i1] * (m_pn_diameters[i2] - m_pn_diameters[i1]);
+    m_total_diameter2 += m_particle_numbers[i1] * (m_pn_diameters2[i2] - m_pn_diameters2[i1]);
+    m_total_diameter_1 += m_particle_numbers[i1] * (m_pn_diameters_1[i2] - m_pn_diameters_1[i1]);
+    m_total_diameter_2 += m_particle_numbers[i1] * (m_pn_diameters_2[i2] - m_pn_diameters_2[i1]);
+    m_total_diameter2_mass_1_2 += m_particle_numbers[i1] * (m_pn_diameters2_mass_1_2[i2] - m_pn_diameters2_mass_1_2[i1]);
+    m_total_mass_1_2 += m_particle_numbers[i1] * (m_pn_mass_1_2[i2] - m_pn_mass_1_2[i1]);
+    m_total_mass += m_particle_numbers[i1] * (m_pn_mass[i2] - m_pn_mass[i1]);
+    m_total_mass2 += m_particle_numbers[i1] * (m_pn_mass2[i2] - m_pn_mass2[i1]);
+    m_total_mass3 += m_particle_numbers[i1] * (m_pn_mass3[i2] - m_pn_mass3[i1]);
+    m_total_diameter3 += m_particle_numbers[i1] * (m_pn_diameters3[i2] - m_pn_diameters3[i1]);
+    m_total_component += m_particle_numbers[i1] * (i2 - i1);
 }
 void Sweep::Ensemble::DoubleTotals()
 {
-	m_total_diameter *= 2.0;
-	m_total_diameter2 *= 2.0;
-	m_total_diameter_1 *= 2.0;
-	m_total_diameter_2 *= 2.0;
-	m_total_diameter2_mass_1_2 *= 2.0;
-	m_total_mass_1_2 *= 2.0;
-	m_total_mass *= 2.0;
-	m_total_mass2 *= 2.0;
-	m_total_mass3 *= 2.0;
-	m_total_diameter3 *= 2.0;
-	m_total_component *= 2;
-	m_total_number *= 2;
+    m_total_diameter *= 2.0;
+    m_total_diameter2 *= 2.0;
+    m_total_diameter_1 *= 2.0;
+    m_total_diameter_2 *= 2.0;
+    m_total_diameter2_mass_1_2 *= 2.0;
+    m_total_mass_1_2 *= 2.0;
+    m_total_mass *= 2.0;
+    m_total_mass2 *= 2.0;
+    m_total_mass3 *= 2.0;
+    m_total_diameter3 *= 2.0;
+    m_total_component *= 2;
+    m_total_number *= 2;
 }
 
 double Sweep::Ensemble::GetTotalDiameter() const { 
-	if (m_total_number > 0)
-		return m_total_diameter;
-	else
-		return 0.0;
+    if (m_total_number > 0)
+        return m_total_diameter;
+    else
+        return 0.0;
 }
 double Sweep::Ensemble::GetTotalDiameter2() const {
-	if (m_total_number > 0)
-		return m_total_diameter2;
-	else
-		return 0.0;
+    if (m_total_number > 0)
+        return m_total_diameter2;
+    else
+        return 0.0;
 }
 double Sweep::Ensemble::GetTotalDiameter_1() const {
-	if (m_total_number > 0)
-		return m_total_diameter_1;
-	else
-		return 0.0;
+    if (m_total_number > 0)
+        return m_total_diameter_1;
+    else
+        return 0.0;
 }
 double Sweep::Ensemble::GetTotalDiameter_2() const {
-	if (m_total_number > 0)
-		return m_total_diameter_2;
-	else
-		return 0.0;
+    if (m_total_number > 0)
+        return m_total_diameter_2;
+    else
+    return 0.0;
 }
 double Sweep::Ensemble::GetTotalDiameter3() const {
-	if (m_total_number > 0)
-		return m_total_diameter3;
-	else
-		return 0.0;
+    if (m_total_number > 0)
+        return m_total_diameter3;
+    else
+        return 0.0;
 }
 double Sweep::Ensemble::GetTotalDiameter2_mass_1_2() const {
-	if (m_total_number > 0)
-		return m_total_diameter2_mass_1_2;
-	else
-		return 0.0;
+    if (m_total_number > 0)
+        return m_total_diameter2_mass_1_2;
+    else
+        return 0.0;
 }
 double Sweep::Ensemble::GetTotalMass_1_2() const {
-	if (m_total_number > 0)
-		return m_total_mass_1_2;
-	else
-		return 0.0;
+    if (m_total_number > 0)
+        return m_total_mass_1_2;
+    else
+        return 0.0;
 }
 double Sweep::Ensemble::GetTotalMass() const {
-	if (m_total_number > 0)
-		return m_total_mass;
-	else
-		return 0.0;
+    if (m_total_number > 0)
+        return m_total_mass;
+    else
+        return 0.0;
 }
 double Sweep::Ensemble::GetTotalMass2() const {
-	if (m_total_number > 0)
-		return m_total_mass2;
-	else
-		return 0.0;
+    if (m_total_number > 0)
+        return m_total_mass2;
+    else
+        return 0.0;
 }
 double Sweep::Ensemble::GetTotalMass3() const {
-	if (m_total_number > 0)
-		return m_total_mass3;
-	else
-		return 0.0;
+    if (m_total_number > 0)
+        return m_total_mass3;
+    else
+        return 0.0;
 }
 unsigned int Sweep::Ensemble::GetTotalComponent() const {
-	if (m_total_number > 0)
-		return m_total_component;
-	else
-		return 0;
+    if (m_total_number > 0)
+        return m_total_component;
+    else
+        return 0;
 }
 unsigned int Sweep::Ensemble::NumberAtIndex(unsigned int index) const { 
-	if (m_total_number > 0)
-		return m_particle_numbers[index];
-	else
-		return 0;
+    if (m_total_number > 0)
+        return m_particle_numbers[index];
+    else
+        return 0;
 }
 void Sweep::Ensemble::ResetNumberAtIndex(unsigned int index)
 {
-	m_particle_numbers[index] = 0;
+    m_particle_numbers[index] = 0;
 }
 unsigned int Sweep::Ensemble::SetTotalParticleNumber() {
-	m_total_number = 0;
-	for (unsigned int i = 0; i < m_critical_size; ++i){
-		m_total_number += m_particle_numbers[i];
-	}
-	return m_total_number;
+    m_total_number = 0;
+    for (unsigned int i = 0; i < m_critical_size; ++i){
+        m_total_number += m_particle_numbers[i];
+    }
+    return m_total_number;
 }
 double Sweep::Ensemble::PropertyAtIndex(Sweep::PropID prop, unsigned int index) const
 {
-	double return_val;
-	switch (prop) {
-	case iDcol:
-		return_val = m_pn_diameters[index];
-		break;
-	case iDW:
-		return_val = m_pn_diameters[index];
-		break;
-	case iD2:
-		return_val = m_pn_diameters2[index];
-		break;
-	case iD2W:
-		return_val = m_pn_diameters2[index];
-		break;
-	case iD_1:
-		return_val = m_pn_diameters_1[index];
-		break;
-	case iD_1W:
-		return_val = m_pn_diameters_1[index];
-		break;
-	case iD_2:
-		return_val = m_pn_diameters_2[index];
-		break;
-	case iD_2W:
-		return_val = m_pn_diameters_2[index];
-		break;
-	case iM_1_2:
-		return_val = m_pn_mass_1_2[index];
-		break;
-	case iM_1_2W:
-		return_val = m_pn_mass_1_2[index];
-		break;
-	case iD2_M_1_2:
-		return_val = m_pn_diameters2_mass_1_2[index];
-		break;
-	case iD2_M_1_2W:
-		return_val = m_pn_diameters2_mass_1_2[index];
-		break;
-	case iW:
-		return_val = m_particle_numbers[index];
-		break;
-	case iUniform:
-		return_val = 1.0;
-		break;
-	case iM:
-		return_val = m_pn_mass[index];
-		break;
-	}
-	return return_val;
+    double return_val;
+    switch (prop) {
+        case iDcol:
+            return_val = m_pn_diameters[index];
+            break;
+        case iDW:
+            return_val = m_pn_diameters[index];
+            break;
+        case iD2:
+            return_val = m_pn_diameters2[index];
+            break;
+        case iD2W:
+            return_val = m_pn_diameters2[index];
+            break;
+        case iD_1:
+            return_val = m_pn_diameters_1[index];
+            break;
+        case iD_1W:
+            return_val = m_pn_diameters_1[index];
+            break;
+        case iD_2:
+            return_val = m_pn_diameters_2[index];
+            break;
+        case iD_2W:
+            return_val = m_pn_diameters_2[index];
+            break;
+        case iM_1_2:
+            return_val = m_pn_mass_1_2[index];
+            break;
+        case iM_1_2W:
+            return_val = m_pn_mass_1_2[index];
+            break;
+        case iD2_M_1_2:
+            return_val = m_pn_diameters2_mass_1_2[index];
+            break;
+        case iD2_M_1_2W:
+            return_val = m_pn_diameters2_mass_1_2[index];
+            break;
+        case iW:
+            return_val = m_particle_numbers[index];
+            break;
+        case iUniform:
+                return_val = 1.0;
+                break;
+        case iM:
+            return_val = m_pn_mass[index];
+            break;
+    }
+    return return_val;
 }
 
 double Sweep::Ensemble::GetPropertyTotal(Sweep::PropID prop) const
 {
-	double return_val = 0.0;
-	if (m_total_number > 0)
-	{
-		switch (prop) {
-		case iDcol:
-			return_val = m_total_diameter;
-			break;
-		case iDW:
-			return_val = m_total_diameter;
-			break;
-		case iD2:
-			return_val = m_total_diameter2;
-			break;
-		case iD2W:
-			return_val = m_total_diameter2;
-			break;
-		case iD_1:
-			return_val = m_total_diameter_1;
-			break;
-		case iD_1W:
-			return_val = m_total_diameter_1;
-			break;
-		case iD_2:
-			return_val = m_total_diameter_2;
-			break;
-		case iD_2W:
-			return_val = m_total_diameter_2;
-			break;
-		case iM_1_2:
-			return_val = m_total_mass_1_2;
-			break;
-		case iM_1_2W:
-			return_val = m_total_mass_1_2;
-			break;
-		case iD2_M_1_2:
-			return_val = m_total_diameter2_mass_1_2;
-			break;
-		case iD2_M_1_2W:
-			return_val = m_total_diameter2_mass_1_2;
-			break;
-		case iW:
-			return_val = m_total_number;
-			break;
-		case iUniform:
-			return_val = m_total_number;
-			break;
-		case iM:
-			return_val = m_total_mass;
-			break;
-		}
-	}
-	return return_val;
+    double return_val = 0.0;
+    if (m_total_number > 0)
+    {
+        switch (prop) {
+            case iDcol:
+                return_val = m_total_diameter;
+                break;
+            case iDW:
+                return_val = m_total_diameter;
+                break;
+            case iD2:
+                return_val = m_total_diameter2;
+                break;
+            case iD2W:
+                return_val = m_total_diameter2;
+                break;
+            case iD_1:
+                return_val = m_total_diameter_1;
+                break;
+            case iD_1W:
+                return_val = m_total_diameter_1;
+                break;
+            case iD_2:
+                return_val = m_total_diameter_2;
+                break;
+            case iD_2W:
+                return_val = m_total_diameter_2;
+                break;
+            case iM_1_2:
+                return_val = m_total_mass_1_2;
+                break;
+            case iM_1_2W:
+                return_val = m_total_mass_1_2;
+                break;
+            case iD2_M_1_2:
+                return_val = m_total_diameter2_mass_1_2;
+                break;
+            case iD2_M_1_2W:
+                return_val = m_total_diameter2_mass_1_2;
+                break;
+            case iW:
+                return_val = m_total_number;
+                break;
+            case iUniform:
+                return_val = m_total_number;
+                break;
+            case iM:
+                return_val = m_total_mass;
+                break;
+        }
+    }
+    return return_val;
 }
 
 void Sweep::Ensemble::InitialiseParticleNumberModel()
 {
-	m_particle_numbers.resize(m_critical_size, 0);
-	m_pn_mass.resize(m_critical_size, 0);
-	m_pn_diameters3.resize(m_critical_size, 0);
-	m_pn_diameters.resize(m_critical_size, 0);
-	m_pn_diameters2.resize(m_critical_size, 0);
-	m_pn_diameters_1.resize(m_critical_size, 0);
-	m_pn_diameters_2.resize(m_critical_size, 0);
-	m_pn_mass2.resize(m_critical_size, 0);
-	m_pn_mass3.resize(m_critical_size, 0);
-	m_pn_mass_1_2.resize(m_critical_size, 0);
-	m_pn_diameters2_mass_1_2.resize(m_critical_size, 0);
+    m_particle_numbers.resize(m_critical_size, 0);
+    m_pn_mass.resize(m_critical_size, 0);
+    m_pn_diameters3.resize(m_critical_size, 0);
+    m_pn_diameters.resize(m_critical_size, 0);
+    m_pn_diameters2.resize(m_critical_size, 0);
+    m_pn_diameters_1.resize(m_critical_size, 0);
+    m_pn_diameters_2.resize(m_critical_size, 0);
+    m_pn_mass2.resize(m_critical_size, 0);
+    m_pn_mass3.resize(m_critical_size, 0);
+    m_pn_mass_1_2.resize(m_critical_size, 0);
+    m_pn_diameters2_mass_1_2.resize(m_critical_size, 0);
 }
 
 void Sweep::Ensemble::InitialiseDiameters(double molecularWeight, double density)
 {
-	double expon = 1.0 / 3.0;
-	for (unsigned int i = 1; i < m_critical_size; ++i){
-		m_pn_mass[i] = (i / NA) * (molecularWeight);
-		m_pn_diameters3[i] = m_pn_mass[i] * 6.0 / (PI * density);
-		m_pn_diameters[i] = pow(m_pn_diameters3[i], expon);
-		m_pn_diameters2[i] = m_pn_diameters[i] * m_pn_diameters[i];
-		m_pn_diameters_1[i] = 1.0 / m_pn_diameters[i];
-		m_pn_diameters_2[i] = m_pn_diameters_1[i] * m_pn_diameters_1[i];
-		m_pn_mass2[i] = (m_pn_mass[i] * m_pn_mass[i]);
-		m_pn_mass3[i] = (m_pn_mass2[i] * m_pn_mass[i]);
-		m_pn_mass_1_2[i] = 1.0 / sqrt(m_pn_mass[i]);
-		m_pn_diameters2_mass_1_2[i] = m_pn_diameters2[i] * m_pn_mass_1_2[i];
-	}
+    double expon = 1.0 / 3.0;
+    for (unsigned int i = 1; i < m_critical_size; ++i){
+        m_pn_mass[i] = (i / NA) * (molecularWeight);
+        m_pn_diameters3[i] = m_pn_mass[i] * 6.0 / (PI * density);
+        m_pn_diameters[i] = pow(m_pn_diameters3[i], expon);
+        m_pn_diameters2[i] = m_pn_diameters[i] * m_pn_diameters[i];
+        m_pn_diameters_1[i] = 1.0 / m_pn_diameters[i];
+        m_pn_diameters_2[i] = m_pn_diameters_1[i] * m_pn_diameters_1[i];
+        m_pn_mass2[i] = (m_pn_mass[i] * m_pn_mass[i]);
+        m_pn_mass3[i] = (m_pn_mass2[i] * m_pn_mass[i]);
+        m_pn_mass_1_2[i] = 1.0 / sqrt(m_pn_mass[i]);
+        m_pn_diameters2_mass_1_2[i] = m_pn_diameters2[i] * m_pn_mass_1_2[i];
+    }
 }
 
 // UPDATE ENSEMBLE.
@@ -1393,72 +1388,71 @@ void Sweep::Ensemble::dble()
     if (m_dbleon && m_dbleactive && (m_count + m_total_number) > 0) {
         const unsigned originalCount = m_count;
 		bool proceed = true;
-		bool IWDSA = false;
+		bool IWDSA;
 
         // Continue while there are too few particles in the ensemble.
-		while ((m_count + m_total_number) < m_dblelimit && proceed) {
+        while ((m_count + m_total_number) < m_dblelimit && proceed) {
             /*if(m_count == 0) {
                 throw std::runtime_error("Attempt to double particle ensemble with 0 particles");
             }*/
 			std::cout << "Doubling!" <<std::endl;
 			std::cout << m_count << std::endl;
 
-			if (m_count > 0)
-			{
-				// Copy particles.
-				size_t starter = 0;
-				const size_t prevCount = m_count;
-				int ii = 0;
-				if (m_particles[0]->Primary()->AggID() == AggModels::PAH_KMC_ID){
-					IWDSA = m_particles[0]->Primary()->ParticleModel()->Components(0)->WeightedPAHs();
-				}
-				else{
-					IWDSA = false;
-				}
-				for (size_t i = 0; i != prevCount; ++i) {
-
-					//if (m_particles[i]->Primary()->AggID() ==AggModels::PAH_KMC_ID)
-					//{
-					//    const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-					//    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
-					//    // if not 0, it is a pyrene
-					//    if (rhsparticle->Pyrene()!=0)
-					//        m_numofInceptedPAH++;
-					//}
-					int numberPAH = 0;
-					if (IWDSA){
-						const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
-						if (m_particles[i]->Primary()->AggID() == AggModels::PAH_KMC_ID){
-
-							rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
-							numberPAH = rhsparticle->NumPAH();
-						}
-					}
-					if (numberPAH > 1 || !IWDSA){ //If this particle is not just a single PAH
-
-						size_t iCopy = prevCount + ii;
-						// Create a copy of a particle and add it to the ensemble.
-						m_particles[iCopy] = m_particles[i]->Clone();
-
-						// Keep count of the added particles
-						++m_count;
-						++ii;
-					}
-					else{ //If this particle is a single PAH, double its statistical weight
-						double oldweight = m_particles[i]->getStatisticalWeight();
-						m_particles[i]->setStatisticalWeight(2.0*oldweight);
-						Update(i);
-					}
-				}
+            if (m_count > 0)
+            {
+            // Copy particles.
+            const size_t prevCount = m_count;
+			int ii = 0;
+			if (m_particles[0]->Primary()->AggID() == AggModels::PAH_KMC_ID){
+				IWDSA = m_particles[0]->Primary()->ParticleModel()->Components(0)->WeightedPAHs();
 			}
-			if (m_total_number > 0)
-			{
-				for (unsigned int i = 0; i < m_critical_size; ++i)
-				{
-					m_particle_numbers[i] *= 2.0;
-				}
-				DoubleTotals();
+			else{
+				IWDSA = false;
 			}
+            for (size_t i = 0; i != prevCount; ++i) {
+
+            //if (m_particles[i]->Primary()->AggID() ==AggModels::PAH_KMC_ID)
+            //{
+            //    const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+            //    rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+            //    // if not 0, it is a pyrene
+            //    if (rhsparticle->Pyrene()!=0)
+            //        m_numofInceptedPAH++;
+            //}
+				int numberPAH = 0;
+				if (IWDSA){
+					const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
+					if (m_particles[i]->Primary()->AggID() == AggModels::PAH_KMC_ID){
+
+						rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
+						numberPAH = rhsparticle->NumPAH();
+					}
+				}
+				if (numberPAH > 1 || !IWDSA){ //If this particle is not just a single PAH
+					
+					size_t iCopy = prevCount + ii;
+					// Create a copy of a particle and add it to the ensemble.
+					m_particles[iCopy] = m_particles[i]->Clone();
+
+					// Keep count of the added particles
+					++m_count;
+					++ii;
+				}
+				else{ //If this particle is a single PAH, double its statistical weight
+					double oldweight = m_particles[i]->getStatisticalWeight();
+					m_particles[i]->setStatisticalWeight(2.0*oldweight);
+					Update(i);
+				}
+            }
+	}
+        if (m_total_number > 0)
+        {
+            for (unsigned int i = 0; i < m_critical_size; ++i)
+            {
+                m_particle_numbers[i] *= 2.0;
+            }
+            DoubleTotals();
+        }
 
             // Update scaling.
             ++m_ndble;
@@ -1539,9 +1533,9 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
         n = (unsigned int)m_ncont;
         out.write((char*)&n, sizeof(n));
 
-		// Output final contraction factor.
-		double wcf = m_wtdcontfctr;
-		out.write((char*)&wcf, sizeof(wcf));
+        // Output final contraction factor.
+        double wcf = m_wtdcontfctr;
+        out.write((char*)&wcf, sizeof(wcf));
 
         // Output number of doublings.
         n = (unsigned int)m_ndble;
@@ -1568,24 +1562,24 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 		
-		// aab64 For particle number model
-		n = m_critical_size;
-		out.write((char*)&n, sizeof(n));
-		if (m_critical_size > 0)
-		{
-			// Output all elements in the data vector.
-			fvector::const_iterator i;
-			std::vector<unsigned int>::const_iterator j;
-			for (j = m_particle_numbers.begin(); j != m_particle_numbers.end(); j++) {
-				out.write((char*)&(*j), sizeof(*j));
-			}
-			for (i = m_pn_diameters.begin(); i != m_pn_diameters.end(); i++) {
-				out.write((char*)&(*i), sizeof(*i));
-			}
-			for (i = m_pn_mass.begin(); i != m_pn_mass.end(); i++) {
-				out.write((char*)&(*i), sizeof(*i));
-			}
-		}
+        // aab64 For particle number model
+        n = m_critical_size;
+        out.write((char*)&n, sizeof(n));
+        if (m_critical_size > 0)
+        {
+            // Output all elements in the data vector.
+            fvector::const_iterator i;
+            std::vector<unsigned int>::const_iterator j;
+            for (j = m_particle_numbers.begin(); j != m_particle_numbers.end(); j++) {
+                out.write((char*)&(*j), sizeof(*j));
+            }
+            for (i = m_pn_diameters.begin(); i != m_pn_diameters.end(); i++) {
+                out.write((char*)&(*i), sizeof(*i));
+            }
+            for (i = m_pn_mass.begin(); i != m_pn_mass.end(); i++) {
+                out.write((char*)&(*i), sizeof(*i));
+            }
+        }
 		
 
     } else {
@@ -1645,10 +1639,10 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_ncont = n;
 
-				// Rad the final contraction factor
-				double wcf = 0.0;
-				in.read(reinterpret_cast<char*>(&wcf), sizeof(wcf));
-				m_wtdcontfctr = wcf;
+                // Read the final contraction factor
+                double wcf = 0.0;
+                in.read(reinterpret_cast<char*>(&wcf), sizeof(wcf));
+                m_wtdcontfctr = wcf;
 
                 // Read number of doublings.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -1657,7 +1651,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Read if doubling is active.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n==1) {
-					m_dbleactive = true;
+                    m_dbleactive = true;
                 } else {
                     m_dbleactive = false;
                 }
@@ -1665,7 +1659,7 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Read if doubling is turned on.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 if (n==1) {
-					m_dbleon = true;
+                    m_dbleon = true;
                 } else {
                     m_dbleon = false;
                 }
@@ -1678,35 +1672,35 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                     m_contwarn = false;
                 }
 
-				// aab64 for particle number model
-				in.read(reinterpret_cast<char*>(&n), sizeof(n));
-				m_critical_size = n;
+                // aab64 for particle number model
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_critical_size = n;
 
-				// Fill the data vector.
-				if (m_critical_size > 0)
-				{
-					double val;
-					unsigned int num;
-					m_particle_numbers.reserve(m_critical_size);
-					m_pn_diameters.reserve(m_critical_size);
-					m_pn_mass.reserve(m_critical_size);
-					for (unsigned int i = 0; i < m_critical_size; i++) {
-						in.read(reinterpret_cast<char*>(&num), sizeof(num));
-						m_particle_numbers.push_back(num);
-					}
-					for (unsigned int i = 0; i < m_critical_size; i++) {
-						in.read(reinterpret_cast<char*>(&val), sizeof(val));
-						m_pn_diameters.push_back(val);
-					}
-					for (unsigned int i = 0; i < m_critical_size; i++) {
-						in.read(reinterpret_cast<char*>(&val), sizeof(val));
-						m_pn_mass.push_back(val);
-					}
-				}
+                // Fill the data vector.
+                if (m_critical_size > 0)
+                {
+                    double val;
+                    unsigned int num;
+                    m_particle_numbers.reserve(m_critical_size);
+                    m_pn_diameters.reserve(m_critical_size);
+                    m_pn_mass.reserve(m_critical_size);
+                    for (unsigned int i = 0; i < m_critical_size; i++) {
+                        in.read(reinterpret_cast<char*>(&num), sizeof(num));
+                        m_particle_numbers.push_back(num);
+                    }
+                    for (unsigned int i = 0; i < m_critical_size; i++) {
+                        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                        m_pn_diameters.push_back(val);
+                    }
+                    for (unsigned int i = 0; i < m_critical_size; i++) {
+                        in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                        m_pn_mass.push_back(val);
+                    }
+                }
 			
                 // Calculate binary tree.
                 rebuildTree();
-				
+
                 break;
 			}
             default:
@@ -1729,36 +1723,36 @@ void Sweep::Ensemble::releaseMem(void)
         delete m_particles[i];
         m_particles[i] = NULL;
     }
-	m_particles.clear();
+    m_particles.clear();
 
-	// Delete particles from memory and delete vectors.
-	for (int i = 0; i != (int)m_pn_particles.size(); ++i) {
-		delete m_pn_particles[i];
-		m_pn_particles[i] = NULL;
-	}
-	m_pn_particles.clear();
+    // Delete particles from memory and delete vectors.
+    for (int i = 0; i != (int)m_pn_particles.size(); ++i) {
+        delete m_pn_particles[i];
+        m_pn_particles[i] = NULL;
+        }
+    m_pn_particles.clear();
 
-	m_pn_diameters.clear();
-	m_pn_diameters2.clear();
-	m_pn_diameters3.clear();
-	m_pn_diameters_1.clear();
-	m_pn_diameters_2.clear();
-	m_pn_diameters2_mass_1_2.clear();
-	m_pn_mass.clear();
-	m_pn_mass2.clear();
-	m_pn_mass3.clear();
-	m_pn_mass_1_2.clear();
-	m_particle_numbers.clear();
-	fvector().swap(m_pn_diameters);
-	fvector().swap(m_pn_diameters2);
-	fvector().swap(m_pn_diameters3);
-	fvector().swap(m_pn_diameters_1);
-	fvector().swap(m_pn_diameters_2);
-	fvector().swap(m_pn_diameters2_mass_1_2);
-	fvector().swap(m_pn_mass);
-	fvector().swap(m_pn_mass2);
-	fvector().swap(m_pn_mass3);
-	fvector().swap(m_pn_mass_1_2);
+    m_pn_diameters.clear();
+    m_pn_diameters2.clear();
+    m_pn_diameters3.clear();
+    m_pn_diameters_1.clear();
+    m_pn_diameters_2.clear();
+    m_pn_diameters2_mass_1_2.clear();
+    m_pn_mass.clear();
+    m_pn_mass2.clear();
+    m_pn_mass3.clear();
+    m_pn_mass_1_2.clear();
+    m_particle_numbers.clear();
+    fvector().swap(m_pn_diameters);
+    fvector().swap(m_pn_diameters2);
+    fvector().swap(m_pn_diameters3);
+    fvector().swap(m_pn_diameters_1);
+    fvector().swap(m_pn_diameters_2);
+    fvector().swap(m_pn_diameters2_mass_1_2);
+    fvector().swap(m_pn_mass);
+    fvector().swap(m_pn_mass2);
+    fvector().swap(m_pn_mass3);
+    fvector().swap(m_pn_mass_1_2);
 }
 
 // Sets the ensemble to its initial condition.  Used in constructors.
@@ -1775,8 +1769,8 @@ void Sweep::Ensemble::init(void)
 
     // Scaling.
     m_contfactor = 0;
-	m_ncont = 0; 
-	m_wtdcontfctr = 1.0; // aab64
+    m_ncont      = 0;
+    m_wtdcontfctr = 1.0; // aab64
     m_contwarn   = false;
 
     // Doubling algorithm.
@@ -1786,23 +1780,23 @@ void Sweep::Ensemble::init(void)
     m_dblecutoff = 0;
     m_dblelimit  = 0;
     m_dbleslack  = 0;
-	m_dbleon = true;
+    m_dbleon     = true;
 
-	// aab64 for hybrid particle number model
-	m_inceptedFirstSP = false;
-	m_critical_size = 0;
-	m_total_number = 0;
-	m_total_diameter = 0.0;
-	m_total_diameter2 = 0.0;
-	m_total_diameter_1 = 0.0;
-	m_total_diameter_2 = 0.0;
-	m_total_diameter2_mass_1_2 = 0.0;
-	m_total_mass_1_2 = 0.0;
-	m_total_mass = 0.0;
-	m_total_mass2 = 0.0;
-	m_total_mass3 = 0.0;
-	m_total_diameter3 = 0.0;
-	m_total_component = 0;
+    // aab64 for hybrid particle number model
+    m_inceptedFirstSP = false;
+    m_critical_size = 0;
+    m_total_number = 0;
+    m_total_diameter = 0.0;
+    m_total_diameter2 = 0.0;
+    m_total_diameter_1 = 0.0;
+    m_total_diameter_2 = 0.0;
+    m_total_diameter2_mass_1_2 = 0.0;
+    m_total_mass_1_2 = 0.0;
+    m_total_mass = 0.0;
+    m_total_mass2 = 0.0;
+    m_total_mass3 = 0.0;
+    m_total_diameter3 = 0.0;
+    m_total_component = 0;
 
 }
 

@@ -146,98 +146,75 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
                           const unsigned int iterm,
                           rng_type &rng) const {
 	
-	// Position of newly incepted particle
-	double posn;
+    // Position of newly incepted particle
+    double posn;
 
-	if (mUseFixedPosition) {
-		// If there is a fixed position the rate should only be positive for the cell containing the fixed position
-		if (local_geom.isInCell(mFixedPosition))
-			posn = mFixedPosition;
-		else
-			return 0;
-	}
-	else {
-		// Get the cell vertices
-		fvector vertices = local_geom.cellVertices();
+    if (mUseFixedPosition) {
+        // If there is a fixed position the rate should only be positive for the cell containing the fixed position
+        if (local_geom.isInCell(mFixedPosition))
+            posn = mFixedPosition;
+        else
+            return 0;
+        }
+    else {
+        // Get the cell vertices
+        fvector vertices = local_geom.cellVertices();
 
-		// Sample a uniformly distributed position, note that this method
-		// works whether the vertices come in increasing or decreasing order,
-		// but 1d is assumed for now.
-		posn = vertices.front();
+        // Sample a uniformly distributed position, note that this method
+        // works whether the vertices come in increasing or decreasing order,
+        // but 1d is assumed for now.
+        posn = vertices.front();
 
-		const double width = vertices.back() - posn;
-		boost::uniform_01<rng_type&, double> unifDistrib(rng);
-		posn += width * unifDistrib();
+        const double width = vertices.back() - posn;
+        boost::uniform_01<rng_type&, double> unifDistrib(rng);
+        posn += width * unifDistrib();
+    }
 
-	}
 
-	// Initialise the new particle.
-	std::vector<double> newComposition(mComponentDistributions.size());
-	for (unsigned i = 0; i < mComponentDistributions.size(); ++i) {
-		// Construct the distribution on the fly.  If this becomes a performance
-		// bottleneck some optimisations might be possible, but caching the distribution
-		// object in the mechanism is a bad idea, because the mechanism is potentially
-		// shared between threads, which is very dangerous for cached data!
-		newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
-			mComponentDistributions[i].second)(rng);
-	}
+    // Initialise the new particle.
+    std::vector<double> newComposition(mComponentDistributions.size());
+    for (unsigned i = 0; i < mComponentDistributions.size(); ++i) {
+        // Construct the distribution on the fly.  If this becomes a performance
+        // bottleneck some optimisations might be possible, but caching the distribution
+        // object in the mechanism is a bad idea, because the mechanism is potentially
+        // shared between threads, which is very dangerous for cached data!
+        newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
+                                                                  mComponentDistributions[i].second)(rng);
+    }
 
-	// aab64 hybrid particle model
-	// If hybrid_flag is active, track the number of incepting particles
-	// Add particle to system's ensemble.
-	if (!m_mech->IsHybrid())
-	{
-		// Create a new particle of the type specified
-		// by the system ensemble.
-		Particle * sp = m_mech->CreateParticle(t);
+    // aab64 hybrid particle model
+    // If hybrid_flag is active, track the number of incepting particles
+    // Add particle to system's ensemble.
+    if (!m_mech->IsHybrid())
+    {
+        // Create a new particle of the type specified
+        // by the system ensemble.
+        Particle * sp = m_mech->CreateParticle(t);
 
-		sp->setPositionAndTime(posn, t);
+        sp->setPositionAndTime(posn, t);
 
-		sp->Primary()->SetComposition(newComposition);
+        sp->Primary()->SetComposition(newComposition);
 
-		sp->Primary()->SetValues(ParticleTrackers());
-		sp->UpdateCache();
+        sp->Primary()->SetValues(ParticleTrackers());
+        sp->UpdateCache();
 
-		sys.Particles().Add(*sp, rng);
+        sys.Particles().Add(*sp, rng);
 
-		// Update gas-phase chemistry of system.
-		adjustGas(sys, sp->getStatisticalWeight());
-		adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-	}
+        // Update gas-phase chemistry of system.
+        adjustGas(sys, sp->getStatisticalWeight());
+        adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+    }
+    else
+    {
+        // Adjust particle number properties
+        sys.Particles().UpdateNumberAtIndex(ParticleComp()[0], 1);
+        sys.Particles().UpdateTotalParticleNumber(1);
+        sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
 
-	else
-	{
-		/*if (!sys.Particles().IsFirstSP())
-		{
-			// Flag that register of particle properties is set up
-			sys.Particles().SetInceptedSP();
-			sys.Particles().SetCriticalSize(m_mech->GetCriticalThreshold());
-
-			// Initialise lookup of particles below critical size
-			for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
-			{
-				Particle * sp_pn = m_mech->CreateParticle(t);
-				sp_pn->setPositionAndTime(posn, t);
-				std::vector<double> newComposition(1);
-				newComposition[0] = i;
-				sp_pn->Primary()->SetComposition(newComposition);
-				sp_pn->Primary()->SetValues(ParticleTrackers());
-				sp_pn->UpdateCache();
-				sys.Particles().SetPNParticle(*sp_pn, rng, i);
-			}
-			sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(), 
-				sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
-		}*/
-
-		// Adjust particle number properties
-		sys.Particles().UpdateNumberAtIndex(ParticleComp()[0], 1);
-		sys.Particles().UpdateTotalParticleNumber(1);
-		sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
-
-		// Update gas-phase chemistry of system.
-		adjustGas(sys, sys.GetInceptingWeight());
-		adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
-	}
+        // Update gas-phase chemistry of system.
+        adjustGas(sys, sys.GetInceptingWeight());
+        adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+    }
 
     return 0;
 }

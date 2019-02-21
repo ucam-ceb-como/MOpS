@@ -519,7 +519,7 @@ void SurfVolStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mod
 }
 
 /////////////////////////////////////////////////csl37-pp
-void SurfVolStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const
+void SurfVolStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const
 {
 }
 //////////////////////////////////////////////////

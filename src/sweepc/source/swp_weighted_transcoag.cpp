@@ -118,7 +118,7 @@ double Sweep::Processes::WeightedTransitionCoagulation::Rate(double t, const Cel
                                                                   const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
-	unsigned int n = sys.ParticleCount() + sys.Particles().GetTotalParticleNumber();
+    unsigned int n = sys.ParticleCount() + sys.Particles().GetTotalParticleNumber();
 
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
@@ -126,16 +126,14 @@ double Sweep::Processes::WeightedTransitionCoagulation::Rate(double t, const Cel
         double T = sys.GasPhase().Temperature();
         double P = sys.GasPhase().Pressure();
 
-		fvector props(7, 0);
-
-		// Calculate the rate.
-		props[0] = sys.Particles().GetTotalDiameter();
-		props[1] = sys.Particles().GetTotalDiameter2();
-		props[2] = sys.Particles().GetTotalDiameter_1();
-		props[3] = sys.Particles().GetTotalDiameter_2();
-		props[4] = sys.Particles().GetTotalMass_1_2();
-		props[5] = sys.Particles().GetTotalDiameter2_mass_1_2();
-		props[6] = sys.Particles().GetTotalParticleNumber();
+	fvector props(7, 0);
+	props[0] = sys.Particles().GetTotalDiameter();
+	props[1] = sys.Particles().GetTotalDiameter2();
+	props[2] = sys.Particles().GetTotalDiameter_1();
+	props[3] = sys.Particles().GetTotalDiameter_2();
+	props[4] = sys.Particles().GetTotalMass_1_2();
+	props[5] = sys.Particles().GetTotalDiameter2_mass_1_2();
+	props[6] = sys.Particles().GetTotalParticleNumber();
 
         // Create a vector so we can call through to RateTerms
         Sweep::fvector vec(TYPE_COUNT);
@@ -143,10 +141,8 @@ double Sweep::Processes::WeightedTransitionCoagulation::Rate(double t, const Cel
 
         return RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T/sys.GasPhase().Viscosity(),
                 MeanFreePathAir(T,P), sys.SampleVolume(), it, props);
-
-		props.clear();
-		fvector().swap(props);
-
+        props.clear();
+        fvector().swap(props);
     } else {
         // Not enough particles so return 0
         return 0.0;
@@ -176,10 +172,10 @@ unsigned int Sweep::Processes::WeightedTransitionCoagulation::TermCount() const 
  */
 double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(double t, const Cell &sys,
                                                                        const Geometry::LocalGeometry1d &local_geom,
-																	   fvector::iterator &iterm) const
+                                                                       fvector::iterator &iterm) const
 {
     // Get the number of particles in the system.
-	unsigned int n = sys.ParticleCount() + sys.Particles().GetTotalParticleNumber();
+    unsigned int n = sys.ParticleCount() + sys.Particles().GetTotalParticleNumber();
 
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
@@ -187,24 +183,20 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(double t, cons
         double T = sys.GasPhase().Temperature();
         double P = sys.GasPhase().Pressure();
 
-		fvector props(7, 0);
-
-		// Calculate the rate.
-		props[0] = sys.Particles().GetTotalDiameter();
-		props[1] = sys.Particles().GetTotalDiameter2();
-		props[2] = sys.Particles().GetTotalDiameter_1();
-		props[3] = sys.Particles().GetTotalDiameter_2();
-		props[4] = sys.Particles().GetTotalMass_1_2();
-		props[5] = sys.Particles().GetTotalDiameter2_mass_1_2();
-		props[6] = sys.Particles().GetTotalParticleNumber();
+        fvector props(7, 0);
+        props[0] = sys.Particles().GetTotalDiameter();
+        props[1] = sys.Particles().GetTotalDiameter2();
+        props[2] = sys.Particles().GetTotalDiameter_1();
+        props[3] = sys.Particles().GetTotalDiameter_2();
+        props[4] = sys.Particles().GetTotalMass_1_2();
+        props[5] = sys.Particles().GetTotalDiameter2_mass_1_2();
+        props[6] = sys.Particles().GetTotalParticleNumber();
 
         double r = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T/sys.GasPhase().Viscosity(),
-			MeanFreePathAir(T, P), sys.SampleVolume(), iterm, props);
-		
-		props.clear();
-		fvector().swap(props);
-        
-		return r;
+                MeanFreePathAir(T,P), sys.SampleVolume(), iterm, props);
+        props.clear();
+        fvector().swap(props);
+        return r;
 
     } else {
         // Free-molecular.
@@ -239,16 +231,16 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(double t, cons
 double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
 		const Ensemble::particle_cache_type &data, double n, double sqrtT,
         double T_mu, double MFP, double vol,
-		fvector::iterator &iterm, fvector & props) const
+        fvector::iterator &iterm, fvector & props) const
 {
     // Some prerequisites.
     double n_1 = n - 1.0;
     double a   = CSF * T_mu * A();
     double b   = a * MFP * 1.257 * 2.0;
-	double c = CFMMAJ * m_efm * CFM * sqrtT * A();
+    double c = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-	double d        = data.Property(Sweep::iDcol); // aab64 removed const to adapt as below
+    double d        = data.Property(Sweep::iDcol); // aab64 removed const to adapt as below
     double d2       = data.Property(Sweep::iD2);
     double d_1      = data.Property(Sweep::iD_1);
     double d_2      = data.Property(Sweep::iD_2);
@@ -264,44 +256,44 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
     double m_1_2w   = data.Property(Sweep::iM_1_2W);
     double d2m_1_2w = data.Property(Sweep::iD2_M_1_2W);
 
-	d += props[0];
-	d2 += props[1];
-	d_1 += props[2];
-	d_2 += props[3];
-	m_1_2 += props[4];
-	d2m_1_2 += props[5];
+    d += props[0];
+    d2 += props[1];
+    d_1 += props[2];
+    d_2 += props[3];
+    m_1_2 += props[4];
+    d2m_1_2 += props[5];
 
-	dw += props[0];
-	d2w += props[1];
-	d_1w += props[2];
-	d_2w += props[3];
-	m_1_2w += props[4];
-	d2m_1_2w += props[5];
-	w += props[6];
+    dw += props[0];
+    d2w += props[1];
+    d_1w += props[2];
+    d_2w += props[3];
+    m_1_2w += props[4];
+    d2m_1_2w += props[5];
+    w += props[6];
 	
     fvector::iterator ifm = iterm;
     fvector::iterator isf = iterm+4;
 
-	double rateFactor = 1.0;
-	/*if (n > 1) 
-		rateFactor = floor((n) / (w));*/
+    double rateFactor = 1.0;
+    /*if (n > 1) 
+	rateFactor = floor((n) / (w));*/
 
     // Get individual terms
 
     // Free-molecular.
     *(iterm) =  n_1 * d2m_1_2w * c / vol / rateFactor;
-	*(++iterm) = (d2 * m_1_2w - d2m_1_2w) * c / vol / rateFactor;
-	*(++iterm) = (d2w * m_1_2 - d2m_1_2w) * c / vol / rateFactor;
-	*(++iterm) = (d2m_1_2 * w - d2m_1_2w) * c / vol / rateFactor;
+    *(++iterm) = (d2 * m_1_2w - d2m_1_2w) * c / vol / rateFactor;
+    *(++iterm) = (d2w * m_1_2 - d2m_1_2w) * c / vol / rateFactor;
+    *(++iterm) = (d2m_1_2 * w - d2m_1_2w) * c / vol / rateFactor;
 
     // Slip-flow.
-	*(++iterm) = 2 * n_1 * w * a / vol / rateFactor;
-	*(++iterm) = (d * d_1w - w) * a / vol / rateFactor;
-	*(++iterm) = (dw * d_1 - w) * a / vol / rateFactor;
-	*(++iterm) = n_1 * d_1w * b / vol / rateFactor;
-	*(++iterm) = (d * d_2w - d_1w) * b / vol / rateFactor;
-	*(++iterm) = (dw * d_2 - d_1w) * b / vol / rateFactor;
-	*(++iterm) = (d_1 * w - d_1w) * b / vol / rateFactor;
+    *(++iterm) = 2 * n_1 * w * a / vol / rateFactor;
+    *(++iterm) = (d * d_1w - w) * a / vol / rateFactor;
+    *(++iterm) = (dw * d_1 - w) * a / vol / rateFactor;
+    *(++iterm) = n_1 * d_1w * b / vol / rateFactor;
+    *(++iterm) = (d * d_2w - d_1w) * b / vol / rateFactor;
+    *(++iterm) = (dw * d_2 - d_1w) * b / vol / rateFactor;
+    *(++iterm) = (d_1 * w - d_1w) * b / vol / rateFactor;
 
     // Return iterator to next term after the coagulation terms.
     ++iterm;
