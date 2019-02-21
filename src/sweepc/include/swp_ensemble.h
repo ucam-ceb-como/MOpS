@@ -293,7 +293,7 @@ public:
 	void InitialiseDiameters(double molecularWeight, double density);
 	void InitialiseParticleNumberModel();
 	
-	unsigned int NumberAtIndex(unsigned int index) const { return m_particle_numbers[index]; }
+	unsigned int NumberAtIndex(unsigned int index) const;
 	
 	unsigned int SetTotalParticleNumber();
 	unsigned int GetTotalParticleNumber() const { return m_total_number; }

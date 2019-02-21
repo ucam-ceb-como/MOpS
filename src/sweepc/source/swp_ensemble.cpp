@@ -1177,7 +1177,12 @@ unsigned int Sweep::Ensemble::GetTotalComponent() const {
 	else
 		return 0;
 }
-
+unsigned int Sweep::Ensemble::NumberAtIndex(unsigned int index) const { 
+	if (m_total_number > 0)
+		return m_particle_numbers[index];
+	else
+		return 0;
+}
 void Sweep::Ensemble::ResetNumberAtIndex(unsigned int index)
 {
 	m_particle_numbers[index] = 0;
