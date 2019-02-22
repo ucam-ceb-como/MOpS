@@ -1185,7 +1185,7 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
             m_console_mask.push_back(mech.GasMech().Species().size()+1);
         } else if ((*i).compare("T")==0) {
             // This variable is the mixture temperature.
-            header.push_back("Particle-number count (-)");
+            header.push_back("T (K)");
             m_console_mask.push_back(mech.GasMech().Species().size());
         } else if ((*i).compare("TIME")==0 || (*i).compare("time")==0 ||
                    (*i).compare("Time")==0) {
@@ -1826,7 +1826,7 @@ void Simulator::writeGasPhaseCSV(const std::string &filename,
     csv.Close();
 }
 
-// aab64 Writes particle temperature profile to a CSV file.
+// aab64 Writes particle-number total to a CSV file.
 void Simulator::writeParticleTemperatureCSV(const std::string &filename,
 	const Mechanism &mech,
 	const timevector &times,
@@ -1836,11 +1836,11 @@ void Simulator::writeParticleTemperatureCSV(const std::string &filename,
 	// Open file for the CSV results.
 	CSV_IO csv(filename, true);
 
-	// Write the header row to the gas-phase chemistry CSV file.
+	// Write the header row to the CSV file.
 	vector<string> head;
 	head.push_back("Step");
 	head.push_back("Time (s)");
-	head.push_back("T (K)");
+	head.push_back("Particle-number count (-)");
 
 	for (unsigned int i = head.size(); i != 2; --i) {
 		head.insert(head.begin() + i, "Err");
