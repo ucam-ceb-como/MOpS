@@ -38,8 +38,8 @@ end
 
 % load data
 folder = [basedir filedir];
-pdiags = csvread([folder 'Part-split-diagnostics(stage2).csv'],1);
-cdiags = csvread([folder 'Chem-split-diagnostics(stage2).csv'],1);
+pdiags = csvread([folder 'Part-split-diagnostics(stage1).csv'],1);
+cdiags = csvread([folder 'Chem-split-diagnostics(stage1).csv'],1);
 
 figure(1)
 set(gcf,'color','white')
@@ -76,12 +76,12 @@ xlabel('Time (ms)')
 ylabel('NPN (-)')
 
 subplot(235)
-plot(pdiags(:,1)*1000,pdiags(:,10))
+plot(pdiags(:,1)*1000,pdiags(:,10)*1e9)
 hold on
-plot(pdiags(:,1)*1000,pdiags(:,11),':')
+plot(pdiags(:,1)*1000,pdiags(:,11)*1e9,':')
 legend('Pre','Post','location','North','orientation','horizontal')
 xlabel('Time (ms)')
-ylabel('Average diameter (-)')
+ylabel('Average diameter (nm)')
 
 %% Rates
 

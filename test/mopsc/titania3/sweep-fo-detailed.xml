@@ -8,8 +8,9 @@
         <molwt>79.87</molwt>
     </component>
 	
-<!-- Define particle types (Detailed) -->
-    <particle id="[Ru]" model="bintree" subtree="false" hybrid="true" threshold="100" coagulate-in-list="false">
+    <!-- Define particle types (Detailed) -->
+    <!-- A threshold of 1000 corresponds to a particle size of ~4 nm -->
+    <particle id="[Ru]" model="bintree" subtree="false" hybrid="true" threshold="1000" coagulate-in-list="true">
         <description>A rutile particle.</description>
 	<fractdim>1.8</fractdim>
         <coalthresh>1.0</coalthresh>
@@ -18,17 +19,7 @@
             <E units="K">31030</E>
             <Dpmin units="m">4e-9</Dpmin>
         </sintering>
-        <!--sintering enable="true" model="GBD">
-	    <A units="s/m4K">7.44E+16</A>
-            <E units="K">31032</E>
-            <Dpmin units="m">0</Dpmin>
-        </sintering-->
     </particle>
-	
-    <!-- Define particle types (Spherical) -->
-    <!--particle id="[Ru]" model="spherical" subtree="false" hybrid="false">
-        <description>A rutile particle.</description>
-    </particle-->
 	
     <!-- Coagulation -->
     <coagulation>

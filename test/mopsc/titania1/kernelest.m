@@ -2,7 +2,7 @@ function [D,DgofD]=kernelest(m0,dn,sigma,npts,D)
    
     N     = length(dn);
     if isempty(D)
-        D = (linspace(min(dn)*.25,max(dn)*2,npts))';
+        D = (linspace(min(dn),max(dn),npts))';
     else
         npts = length(D);
     end

@@ -5,8 +5,8 @@
     <iter>10</iter>
     <atol>1.0e-17</atol>
     <rtol>1.0e-4</rtol>
-    <maxm0>0.4e14</maxm0>
-    <pcount>4096</pcount>
+    <maxm0>0.2e14</maxm0>
+    <pcount>128</pcount>
     <relax>0.8</relax>
 	
 	<!-- Initial reactor composition -->
@@ -26,7 +26,7 @@
 	
     <!-- Stage 1 -->
     <reactor constt="true" constv="true" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
-	    <initial>reac_mixture</initial>
+	    <initial>init_mixture</initial>
         <flow dir="in" frac="1.0">reac_mixture</flow>
         <restime unit="s">0.002</restime>
     </reactor>
@@ -34,7 +34,7 @@
     <!-- Time stepping -->
     <timeintervals>
       	<start>0.0</start>
-        <time splits="25" steps="10000">0.01</time>
+        <time splits="10" steps="4000">0.004</time>
     </timeintervals>
    
     <!-- Output specifications -->
