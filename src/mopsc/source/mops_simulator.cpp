@@ -922,7 +922,7 @@ void Simulator::postProcessSimulation(
         writePartTrackCSV(m_output_filename+"("+cstr(irun)+")-track", mech,
                           times, ptrack[irun]);
     }
-    writeParticleTemperatureCSV(m_output_filename + "-part-temp.csv", mech, times, aTp, eTp); // aab64
+    writeParticleTemperatureCSV(m_output_filename + "-total-particle-number.csv", mech, times, aTp, eTp); // aab64
 
     // Only write jump file if the flag has been set.
     if (m_write_jumps) {
@@ -1185,7 +1185,7 @@ void Simulator::setupConsole(const Mops::Mechanism &mech)
             m_console_mask.push_back(mech.GasMech().Species().size()+1);
         } else if ((*i).compare("T")==0) {
             // This variable is the mixture temperature.
-            header.push_back("T (K)");
+            header.push_back("Particle-number count (-)");
             m_console_mask.push_back(mech.GasMech().Species().size());
         } else if ((*i).compare("TIME")==0 || (*i).compare("time")==0 ||
                    (*i).compare("Time")==0) {
