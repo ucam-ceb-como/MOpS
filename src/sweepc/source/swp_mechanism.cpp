@@ -84,7 +84,7 @@ m_heavyallowed(false), m_upp_dval_heavy(1.0e-7), m_low_dval_heavy(1.0e-9),
 m_surfincflag(false), m_upp_dval_surfinc(1.0e-7),
 m_low_dval_surfinc(1.0e-9), m_psi_type("E"),
 m_weightscaling_flag(false), m_weightscaling_onset(10.0), m_weightscaling_factor(1.0),
-m_hybrid(false)
+m_hybrid(false), m_coagulate_in_list(false)
 {
 }
 
@@ -126,7 +126,7 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 	m_inflowcount = rhs.m_inflowcount;
 	m_outflowcount = rhs.m_outflowcount;
 
-        m_weighted_coag = rhs.m_weighted_coag;
+    m_weighted_coag = rhs.m_weighted_coag;
 	m_var_incept_weight = rhs.m_var_incept_weight;
 	m_max_incept_weight = rhs.m_max_incept_weight;
 	m_min_incept_weight = rhs.m_min_incept_weight;
@@ -146,6 +146,7 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 	m_weightscaling_factor = rhs.m_weightscaling_factor;
 
 	m_hybrid = rhs.m_hybrid;
+    m_coagulate_in_list = rhs.m_coagulate_in_list;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
@@ -2027,6 +2028,7 @@ void Mechanism::releaseMem(void)
 	m_weightscaling_flag = false;
 	m_weightscaling_onset = 0;
 	m_hybrid = false;
+	m_coagulate_in_list = false;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 }
 

@@ -1551,7 +1551,7 @@ BinTreePrimary &BinTreePrimary::Merge()
 		}
 
 		//csl37-test
-		assert(new_prim->m_primarydiam < 1e-3);
+		//assert(new_prim->m_primarydiam < 1e-3);
 		//csl37-test-
 
 		UpdateCache();

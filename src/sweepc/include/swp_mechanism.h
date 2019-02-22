@@ -417,6 +417,8 @@ public:
     void SetHybrid(bool hybrid_flag) const { m_hybrid = hybrid_flag; }
     bool IsHybrid() const { return m_hybrid; }
     void SetCriticalThreshold(unsigned int threshold) const { m_threshold = threshold; } 
+	bool CoagulateInList() const { return m_coagulate_in_list; }
+	void SetCoagulateInList(bool flag) const { m_coagulate_in_list = flag; }
     unsigned int GetCriticalThreshold() const { return m_threshold; }
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 	
@@ -479,6 +481,7 @@ private:
 
     mutable bool m_hybrid;                  // identify hybrid particle model
     mutable unsigned int m_threshold;       // hybrid threshold value
+	mutable bool m_coagulate_in_list;       // Do coagulation below threshold size in the particle-number list
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
     // Clears the mechanism from memory.

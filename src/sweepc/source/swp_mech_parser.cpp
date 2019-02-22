@@ -367,12 +367,18 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             threshold = (unsigned int)(cdble(strn));
         if (threshold < 1)
             throw std::runtime_error("Hybrid threshold must be positive. (Sweep::MechParser::readV1)");
-        mech.SetCriticalThreshold(threshold);
+		mech.SetCriticalThreshold(threshold);
+		string strn = particleXML->GetAttributeValue("coagulate-in-list");
+		if (strn == "true")
+			mech.SetCoagulateInList(true);
+		else
+			mech.SetCoagulateInList(false);
     }
     else
     {
         mech.SetHybrid(false);
-        mech.SetCriticalThreshold(0);
+		mech.SetCriticalThreshold(0);
+		mech.SetCoagulateInList(false);
     }
 
     //! Check whether to track the distance betweeen the centres of primary
