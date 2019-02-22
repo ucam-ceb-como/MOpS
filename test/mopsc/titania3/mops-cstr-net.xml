@@ -5,43 +5,36 @@
     <iter>10</iter>
     <atol>1.0e-17</atol>
     <rtol>1.0e-4</rtol>
-    <maxm0>1.28e10</maxm0>
-    <pcount>128</pcount>
+    <maxm0>2.56e12</maxm0>
+    <pcount>256</pcount>
     <relax>0.8</relax>
 	
 	<!-- Reactant mixture -->
     <mixture id="reactant_mixture1">
-        <temperature units="K">500</temperature>
+        <temperature units="K">1200</temperature>
         <pressure units="bar">3.00</pressure>	
-        <component id="TICL4">1.0</component>
-    </mixture>
-	
-	<!-- Plasma mixture -->
-    <mixture id="plasma_mixture">
-        <temperature units="K">2000</temperature>
-        <pressure units="bar">3.00</pressure>	
-        <component id="O2">1.0</component>
+        <component id="TICL4">0.2</component>
+        <component id="O2">0.8</component>
     </mixture>
 	
 	<!-- Initial mixture -->
     <mixture id="initial_mixture">
-        <temperature units="K">300</temperature>
+        <temperature units="K">1200</temperature>
         <pressure units="bar">3.00</pressure>
 	    <component id="AR">1.0</component>
     </mixture>
 	
     <!-- Stage 1 -->
-    <reactor constt="false" constv="true" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
+    <reactor constt="true" constv="true" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
 	        <initial>initial_mixture</initial>
             <flow dir="in" frac="0.14">reactant_mixture1</flow>
-            <flow dir="in" frac="0.86">plasma_mixture</flow>
             <restime unit="s">0.002</restime>
     </reactor>
 
     <!-- Time stepping -->
     <timeintervals>
       	<start>0.0</start>
-        <time splits="100" steps="10000">0.01</time>
+        <time splits="100" steps="2000">0.002</time>
     </timeintervals>
    
     <!-- Output specifications -->
