@@ -1567,6 +1567,9 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
         out.write((char*)&n, sizeof(n));
         if (m_critical_size > 0)
         {
+			n = m_total_number;
+			out.write((char*)&n, sizeof(n));
+
             // Output all elements in the data vector.
             fvector::const_iterator i;
             std::vector<unsigned int>::const_iterator j;
@@ -1679,6 +1682,9 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Fill the data vector.
                 if (m_critical_size > 0)
                 {
+					in.read(reinterpret_cast<char*>(&n), sizeof(n));
+					m_total_number = n;
+
                     double val;
                     unsigned int num;
                     m_particle_numbers.reserve(m_critical_size);
