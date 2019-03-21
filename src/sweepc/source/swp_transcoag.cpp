@@ -450,8 +450,11 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         // Is this an incepting class particle?
         if (ip1 == -2)
         {
-            if (index1 >= sys.Particles().GetCritialNumber())
-                std::cout << "Index1 is too large\n";
+			if (index1 == -1)
+			{
+				// Property sums updated - easiest option is not to perform this coagulation event.
+				return -1;
+			}
             ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
             sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
             sp1->SetTime(t); 
@@ -612,8 +615,20 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         // Is this an incepting class particle?
         if (ip2 == -2)
         {
-            if (index2 >= sys.Particles().GetCritialNumber())
-                std::cout << "Index2 is too large\n";
+			// Note this could be factored into the loops above
+			// but that would require constantly checking for something
+			// that should very infrequently be a problem.
+			// Easiest option is to exit without performing the coagulation event. 
+			if (index2 == -1)
+			{
+				if (ip1_flag)
+				{
+					delete sp1;
+					sp1 = NULL;
+				}
+				// Property sums updated
+				return -1;
+			}
             ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
             sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
             sp2->SetTime(t); 

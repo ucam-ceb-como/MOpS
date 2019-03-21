@@ -218,8 +218,9 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
         // because nothing stops the stream having a larger threshold size than current system.
         // In that instance, particles could be added to the ensemble like with surface growth. 
         // However this cannot be done here easily because it requires construction of the new particles. 
-        if (m_cell->Particles().GetCritialNumber() > sys.Particles().GetCritialNumber())
-            std::cout << "Particle-number model: mixture threshold larger than reactor threshold could inflow particle that cannot be stored\n";
+		if (m_cell->Particles().GetCritialNumber() > sys.Particles().GetCritialNumber())
+			printf("sweep: Mixture PN threshold > reactor PN threshold; "
+			       "could inflow particle that cannot be stored\n");
 
         boost::uniform_01<rng_type&, double> unifDistrib(rng);
         double test = unifDistrib() * (ntotal_pn + ntotal_ens);
@@ -236,9 +237,15 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
             if (repeats > 0.0)
             {
                 unsigned int index = m_mech->SetRandomParticle(m_cell->Particles(), t, test, iUniform, rng);
-                sys.Particles().UpdateTotalsWithIndex(index, repeats);
-                sys.Particles().UpdateNumberAtIndex(index, (int)repeats);
-                sys.Particles().UpdateTotalParticleNumber((int)repeats);
+				// Note: if index < 0, this will still be counted as an event which is not correct. 
+				// However, it should not occur since round off should not affect uniform particle
+				// choice (based on particle count). 
+				if (index > 0)
+				{
+					sys.Particles().UpdateTotalsWithIndex(index, repeats);
+					sys.Particles().UpdateNumberAtIndex(index, (int)repeats);
+					sys.Particles().UpdateTotalParticleNumber((int)repeats);
+				}
             }
             i = -1;
         }

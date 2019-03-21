@@ -438,31 +438,11 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 		{
 			if (ip2 < 0) // Particle 2 comes from the PN model 
 			{
-				index2 = -1 * ip2;
-				if (!((index1 == index2) && n_index1 == 1)) // There is more than one particle at chosen index so can use twice
+				if (!((index1 == -1 * ip2) && n_index1 == 1)) // There is more than one particle at chosen index so can use twice
 					unsuitableChoice = false;
 			}
 		}
 	}
-
-
-	/*if (!ip1_flag)
-	{
-		while ((ip2 == ip1) && (++guard < 1000))
-			ip2 = ChooseIndexWeightedCoag(t, prop2, sys, rng);
-	}
-	else
-	{
-		ip2 = ChooseIndexWeightedCoag(t, prop2, sys, rng);
-		if (ip2 < 0)
-		{
-			if ((index1 == (-1 * ip2)) && n_index1 == 1)
-			{
-				while ((ip2 < 0) && (index1 == (-1 * ip2)) && (++guard < 1000))
-					ip2 = ChooseIndexWeightedCoag(t, prop2, sys, rng);
-			}
-		}
-	}*/
 
 	Particle *sp2 = NULL;
 
@@ -471,7 +451,6 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	{
 		index2 = -1 * ip2;
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
-		// Note don't need to add it to the ensemble
 		sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
 		sp2->SetTime(t);
 	}
@@ -516,6 +495,11 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 		// by removing particle 2
 		if (!ip1_flag)
 			sys.Particles().Update(ip1);
+		else if (sp1 != NULL)
+		{
+			delete sp1;
+			sp1 = NULL;
+		}
 
 		// Must remove second particle now.
 		if (!ip2_flag)
@@ -591,7 +575,7 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 				sys.Particles().UpdateTotalParticleNumber(-1);
 				unsigned int index12 = index1 + index2;
 				// Allow for coagulation in place if the combined particle is small enough
-				if (ip2_flag && (index12 < sys.Particles().GetCritialNumber()))
+				if ((m_mech->CoagulateInList()) && ip2_flag && (index12 < sys.Particles().GetCritialNumber()))
 				{
 					coag_in_place = true;
 					sys.Particles().UpdateTotalsWithIndex(index12, 1.0);
@@ -697,8 +681,12 @@ int Coagulation::ChooseIndexWeightedCoag(double t, const Sweep::PropID prop, Cel
 	if (alpha <= p_incep)
 	{
 		index = m_mech->SetRandomParticle(sys.Particles(), t, alpha, prop, rng);
-		if (index >= sys.Particles().GetCritialNumber())
-			std::cout << "Index is too large\n";
+		if (index == -1)
+		{
+			// Property sums updated
+			index = ChooseIndexWeightedCoag(t, prop, sys, rng);
+			return index;
+		}
 		index *= -1;
 	}
 	else

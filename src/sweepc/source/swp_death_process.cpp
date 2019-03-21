@@ -216,10 +216,16 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
         if (ntotal_pn >= test)
         {
             unsigned int index = m_mech->SetRandomParticle(sys.Particles(), t, test, iUniform, rng);
-            sys.Particles().UpdateTotalsWithIndex(index, -1.0);
-            sys.Particles().UpdateNumberAtIndex(index, -1);
-            sys.Particles().UpdateTotalParticleNumber(-1);
-            i = -1;
+			// Note: if index < 0, this will still be counted as an event which is not correct. 
+			// However, it should not occur since round off should not affect uniform particle
+			// choice (based on particle count). 
+			if (index > 0)
+			{
+				sys.Particles().UpdateTotalsWithIndex(index, -1.0);
+				sys.Particles().UpdateNumberAtIndex(index, -1);
+				sys.Particles().UpdateTotalParticleNumber(-1);
+			}
+			i = -1;
         }
         else
         {

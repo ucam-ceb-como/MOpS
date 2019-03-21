@@ -183,8 +183,8 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     {
         // Note don't need to add it to the ensemble unless coagulation is successful
         index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1 - n_other, iUniform, rng);
-        if (index1 >= sys.Particles().GetCritialNumber())
-            std::cout << "Index1 is too large\n";
+		if (index1 < 0)
+			return -1;
         sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
         sp1->SetTime(t);
         ip1_flag = true;                                                                // Flag sp1 as an incepting class particle
@@ -221,8 +221,15 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
             if (alpha2 <= n_incep)
             {
                 index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iUniform, rng); 
-                if (index2 >= sys.Particles().GetCritialNumber())
-                    std::cout << "Index2 is too large\n";
+				if (index2 < 0)
+				{
+					if (ip1_flag)
+					{
+						delete sp1;
+						sp1 = NULL;
+					}
+					return -1;
+				}
                 if (!((index2 == index1) && (n_index1 == 1)))
                 {
                     unsuitableChoice = false;

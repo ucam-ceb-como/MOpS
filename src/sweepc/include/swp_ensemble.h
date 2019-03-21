@@ -288,7 +288,7 @@ public:
 	
     void UpdateNumberAtIndex(unsigned int index, int update);
     void ResetNumberAtIndex(unsigned int index);
-	
+	void RecalcPNPropertySums();
     void InitialiseDiameters(double molecularWeight, double density);
     void InitialiseParticleNumberModel();
 	

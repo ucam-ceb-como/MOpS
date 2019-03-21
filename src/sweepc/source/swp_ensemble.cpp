@@ -1298,6 +1298,40 @@ double Sweep::Ensemble::GetPropertyTotal(Sweep::PropID prop) const
     return return_val;
 }
 
+void Sweep::Ensemble::RecalcPNPropertySums()
+{
+     m_total_diameter = 0.0;
+     m_total_diameter2 = 0.0;
+     m_total_diameter_1 = 0.0;
+     m_total_diameter_2 = 0.0;
+     m_total_diameter2_mass_1_2 = 0.0;
+     m_total_mass_1_2 = 0.0;
+     m_total_mass = 0.0;
+     m_total_mass2 = 0.0;
+     m_total_mass3 = 0.0;
+     m_total_diameter3 = 0.0;
+
+	 double n_index = 0.0;
+
+     for (int i = 0; i < m_critical_size; ++i)
+     {
+         n_index = (double)m_particle_numbers[i];
+         if (n_index > 0)
+         {
+             m_total_diameter += n_index * m_pn_diameters[i];
+             m_total_diameter2 += n_index * m_pn_diameters2[i];
+             m_total_diameter_1 += n_index * m_pn_diameters_1[i];
+             m_total_diameter_2 += n_index * m_pn_diameters_2[i];
+             m_total_diameter2_mass_1_2 += n_index * m_pn_diameters2_mass_1_2[i];
+             m_total_mass_1_2 += n_index * m_pn_mass_1_2[i];
+             m_total_mass += n_index * m_pn_mass[i];
+             m_total_mass2 += n_index * m_pn_mass2[i];
+             m_total_mass3 += n_index * m_pn_mass3[i];
+             m_total_diameter3 += n_index * m_pn_diameters3[i];
+         }
+     }
+}
+
 void Sweep::Ensemble::InitialiseParticleNumberModel()
 {
     m_particle_numbers.resize(m_critical_size, 0);
