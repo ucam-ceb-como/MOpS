@@ -681,7 +681,7 @@ int Coagulation::ChooseIndexWeightedCoag(double t, const Sweep::PropID prop, Cel
 	if (alpha <= p_incep)
 	{
 		index = m_mech->SetRandomParticle(sys.Particles(), t, alpha, prop, rng);
-		if (index == -1)
+		if (index == 0)
 		{
 			// Property sums updated
 			index = ChooseIndexWeightedCoag(t, prop, sys, rng);

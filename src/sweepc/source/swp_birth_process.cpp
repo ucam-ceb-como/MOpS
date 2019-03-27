@@ -237,7 +237,7 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
             if (repeats > 0.0)
             {
                 unsigned int index = m_mech->SetRandomParticle(m_cell->Particles(), t, test, iUniform, rng);
-				// Note: if index < 0, this will still be counted as an event which is not correct. 
+				// Note: if index <= 0, this will still be counted as an event which is not correct. 
 				// However, it should not occur since round off should not affect uniform particle
 				// choice (based on particle count). 
 				if (index > 0)

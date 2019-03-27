@@ -183,7 +183,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     {
         // Note don't need to add it to the ensemble unless coagulation is successful
         index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1 - n_other, iUniform, rng);
-		if (index1 < 0)
+		if (index1 == 0)
 			return -1;
         sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
         sp1->SetTime(t);
@@ -221,7 +221,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
             if (alpha2 <= n_incep)
             {
                 index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iUniform, rng); 
-				if (index2 < 0)
+				if (index2 == 0)
 				{
 					if (ip1_flag)
 					{

@@ -366,7 +366,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                 if (alpha1 <= n_incep)
                 {
                     index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
-                    n_index1 = sys.Particles().NumberAtIndex(index1);
                     ip1 = -2;
                 } else {
                     ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1 - n_incep, rng);
@@ -378,7 +377,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                 if (alpha1 <= dc_incep)
                 {
                     index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iDcol, rng);
-                    n_index1 = sys.Particles().NumberAtIndex(index1);
                     ip1 = -2;
                 } else {
                     ip1 = sys.Particles().Select_usingGivenRand(iDcol, alpha1 - dc_incep, rng);
@@ -390,7 +388,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                 if (alpha1 <= n_incep)
                 {
                     index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
-                    n_index1 = sys.Particles().NumberAtIndex(index1);
                     ip1 = -2;
                 } else {
                     ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1 - n_incep, rng);
@@ -402,7 +399,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                 if (alpha1 <= dc_incep)
                 {
                     index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iDcol, rng);
-                    n_index1 = sys.Particles().NumberAtIndex(index1);
                     ip1 = -2;
                 } else {
                     ip1 = sys.Particles().Select_usingGivenRand(iDcol, alpha1 - dc_incep, rng);
@@ -414,7 +410,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                 if (alpha1 <= n_incep)
                 {
                     index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
-                    n_index1 = sys.Particles().NumberAtIndex(index1);
                     ip1 = -2;
                 } else {
                     ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1 - n_incep, rng);
@@ -426,7 +421,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                 if (alpha1 <= dc2_incep)
                 {
                     index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iD2, rng);
-                    n_index1 = sys.Particles().NumberAtIndex(index1);
                     ip1 = -2;
                 } else {
                     ip1 = sys.Particles().Select_usingGivenRand(iD2, alpha1 - dc2_incep, rng);
@@ -438,7 +432,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                 if (alpha1 <= n_incep)
                 {
                     index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
-                    n_index1 = sys.Particles().NumberAtIndex(index1);
                     ip1 = -2;
                 } else {
                     ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1 - n_incep, rng);
@@ -450,11 +443,12 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         // Is this an incepting class particle?
         if (ip1 == -2)
         {
-			if (index1 == -1)
+			if (index1 == 0)
 			{
 				// Property sums updated - easiest option is not to perform this coagulation event.
 				return -1;
 			}
+			n_index1 = sys.Particles().NumberAtIndex(index1);
             ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
             sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
             sp1->SetTime(t); 
@@ -619,7 +613,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 			// but that would require constantly checking for something
 			// that should very infrequently be a problem.
 			// Easiest option is to exit without performing the coagulation event. 
-			if (index2 == -1)
+			if (index2 == 0)
 			{
 				if (ip1_flag)
 				{

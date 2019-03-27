@@ -1657,7 +1657,7 @@ unsigned int Mechanism::SetRandomParticle(Sweep::Ensemble &ens, double t, double
 	// The algorithm can fail to find a suitable particle if
 	// ens.GetPropertySum() > sum(ens.NumberAtIndex(i)+ens.PropertyAtIndex(prop,i)).
 	// This can happen due to round off error in long simulations. 
-	// If this happens, reset the property totals and return an impossible index (-1). 
+	// If this happens, reset the property totals and return an index of 0. 
 	// The function requesting the index is responsible for dealing with the failure to
 	// find a suitable index e.g. by not performing the coagulation event or requesting a new one.
 	if (index == ens.GetCritialNumber())
@@ -1665,7 +1665,7 @@ unsigned int Mechanism::SetRandomParticle(Sweep::Ensemble &ens, double t, double
 	    printf("sweep: Index is out of bounds; "
 			   "recomputing property totals.\n");
 	    ens.RecalcPNPropertySums();
-		return -1;
+		return 0;
 	}
 
 	return index;
