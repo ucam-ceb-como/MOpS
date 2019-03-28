@@ -105,6 +105,10 @@ namespace Sweep {
             //! Reactive carbon members
             Cpointer C1;
             Cpointer C2;
+			//! Position of growth vector
+			cpair vec_coords;
+			//! Components of growth vector
+			cpair vec_components;
         };
         
 
@@ -149,6 +153,9 @@ namespace Sweep {
 			else if (angle == -30 || angle == -150) return (-0.5);
 			return sin(angle*M_PI / 180);
         }
+		coordtype inline z_inc(const angletype &angle) {
+			return sin(angle*M_PI / 180);
+		}
         //! Changes reflex angle into +ve and -ve angle format
         angletype inline normAngle(angletype angle) {
             angletype temp = angle;

@@ -144,6 +144,7 @@ namespace Sweep{
 			int m_rings5_Embedded; // 5-membered rings
 			int m_rings7_Lone; // 5-membered rings
 			int m_rings7_Embedded; // 5-membered rings
+			std::list<cpair> m_InternalCarbons; //List of internal Carbon atoms coordinates
         private:
             //! write m_cpositions
             void WriteCposition(std::ostream &out) const;

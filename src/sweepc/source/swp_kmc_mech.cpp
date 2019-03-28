@@ -2476,7 +2476,7 @@ double B6R_ACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f*site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f*site_count*0.1; // Rate Equation slowed by 10
 }
 
 // ************************************************************

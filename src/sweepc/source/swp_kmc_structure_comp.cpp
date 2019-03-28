@@ -14,7 +14,7 @@ Carbon::Carbon(): C1(NULLC),
     A(0),
     bondAngle1(0),
     bondAngle2(0),
-    coords(0,0)
+    coords(0,0,0)
 {
 }
 

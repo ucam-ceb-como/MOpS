@@ -291,10 +291,11 @@ void PAHStructure::Deserialize(std::istream &in)
     name = new char[val];
     in.read(name, val);
     std::string m_SiteName = string(name, val);
+	std::list<cpair> temp_internalcoords;
     delete [] name;
 
     PAHProcess p(*this);
-	p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7);
+	p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, temp_internalcoords);
 }
 
 void PAHStructure::WriteCposition(std::ostream &out) const
@@ -304,9 +305,11 @@ void PAHStructure::WriteCposition(std::ostream &out) const
 	std::set<cpair>::iterator itEnd = m_cpositions.end();
 	for (std::set<cpair>::iterator it = m_cpositions.begin(); it != itEnd; ++it)
 	{
-		val = (*it).first;
+		val = std::get<0>(*it);
 		out.write((char*)&val, sizeof(val));
-		val = (*it).second;
+		val = std::get<1>(*it);
+		out.write((char*)&val, sizeof(val));
+		val = std::get<2>(*it);
 		out.write((char*)&val, sizeof(val));
 	}
 }
@@ -323,8 +326,9 @@ void PAHStructure::ReadCposition(std::istream &in, const int size)
 {
     double val=0.0;
     m_cpositions.clear();
-    int m_first=0;
-    int m_second=0;
+    double m_first=0;
+	double m_second = 0;
+	double m_third = 0;
 
     cpair position;
     for (int i=0; i!=size;++i)
@@ -333,8 +337,10 @@ void PAHStructure::ReadCposition(std::istream &in, const int size)
         m_first = (int)val;
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_second = (int)val;
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		m_third = (int)val;
 
-        position = make_pair(m_first, m_second);
+        position = std::make_tuple(m_first, m_second, m_third);
         m_cpositions.insert(m_cpositions.end(), position);
     }
 }

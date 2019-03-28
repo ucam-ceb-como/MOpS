@@ -93,7 +93,7 @@ PAHStructure* PAHProcess::clonePAH() const {
     PAHStructure* temp = new PAHStructure();
     PAHProcess p(*temp);
     std::vector<kmcSiteType> sites = SiteVector();
-	p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded);
+	p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_InternalCarbons);
     return temp;
 }
 // Public Read Processes
@@ -161,14 +161,15 @@ void PAHProcess::printStruct() const{
             angle = prev->bondAngle1;
         }
         // outputs text in the form of "X: (C-H or C-C)    bond angle with next C"
-        std::cout << "coords ("<<prev->coords.first<<","<< prev->coords.second<<")"<< btxt << ": C-" << prev->A << "\t" << angle << '\n';
+		std::cout << "coords (" << std::get<0>(prev->coords) << "," << std::get<1>(prev->coords) << "," << std::get<2>(prev->coords) << ")" << btxt << ": C-" << prev->A << "\t" << angle << '\n';
         // moves iterator to next C
         Cpointer oldnow = now;
         now = moveCPointer(prev, now);
         prev = oldnow;
     } while 
-    (!(count!=1&&prev->coords.first == m_pah->m_cfirst->coords.first
-   &&prev->coords.second == m_pah->m_cfirst->coords.second));
+		(!(count != 1 && std::get<0>(prev->coords) == std::get<0>(m_pah->m_cfirst->coords)
+		&& std::get<1>(prev->coords) == std::get<1>(m_pah->m_cfirst->coords)
+		&& std::get<2>(prev->coords) == std::get<2>(m_pah->m_cfirst->coords)));
     // displays C and H counts
     std::cout << "C Count: " << m_pah->m_counts.first << '\n';
     std::cout << "H Count: " << m_pah->m_counts.second << '\n';
@@ -318,7 +319,7 @@ bool PAHProcess::saveDOT(const std::string &filename, const std::string &title) 
         // sets max size for drawing structure (in inches)
         dotfile<< "\tgraph [size=15];\n";
         // sets style for C nodes
-        dotfile<< "\tnode [shape=circle, style=filled, color=black, height=0.2, width=0.2];\n";
+        dotfile<< "\tnode [shape=circle, style=filled, color=black];\n";
         // sets style for bonds
         dotfile<< "\tedge [weight=2, style=\"setlinewidth(10)\"];\n";
         // sets caption for graph
@@ -326,8 +327,8 @@ bool PAHProcess::saveDOT(const std::string &filename, const std::string &title) 
             dotfile<< "\tgraph [label=\""<<title<<"\"];\n";
         }
         // get coordinates of current C
-        coordtype x=prev->coords.first;
-        coordtype y=prev->coords.second;
+        coordtype x = std::get<0>(prev->coords);
+		coordtype y = std::get<1>(prev->coords);
         int c=0; // index of current C
         int count=0;
         float CC_CHratio = 10; // length ratio between C-C and C-H bonds
@@ -337,37 +338,52 @@ bool PAHProcess::saveDOT(const std::string &filename, const std::string &title) 
             //}
             c++;
             // write position coordinates of C atom with index c, with ! suffixed to pin node
-            dotfile<<"\tC"<<c<<" [pos = \""<<x<<','<<y<<"!\"";
+            dotfile<<"\t"<<c<<" [pos = \""<<x<<','<<y<<"!\"";
             if(c==1) dotfile<<", color=red";
-            dotfile<<"];\n";
+            dotfile<<", height=0.5, width=0.5, fixedsize=shape];\n";
+			// stores index of current C
+			CH_index.push_back(c);
             if(prev->A=='H') { // if bonded with H
+				c++;
                 // write position coordinates of H atom with bonded C index, with ! suffixed to pin node
-                dotfile<<"\tH"<<c<<" [pos = \""<<(x+x_inc(prev->bondAngle2)/CC_CHratio);
+                dotfile<<"\t"<<c<<" [pos = \""<<(x+x_inc(prev->bondAngle2)/CC_CHratio);
                 // set style for H node
-                dotfile<<','<<(y+y_inc(prev->bondAngle2)/CC_CHratio)<<"!\", color=skyblue, fontcolor=skyblue, height=0.1, width=0.1];\n";
-                // stores index of current C
-                CH_index.push_back(c);
+				dotfile << ',' << (y + y_inc(prev->bondAngle2) / CC_CHratio) << "!\", color=skyblue, fontcolor=skyblue, height=0.25, width=0.25, fixedsize=shape];\n";
             }
             // move iterator to next C
             Cpointer oldnow = now;
             now = moveCPointer(prev, now);
             prev = oldnow;
             // obtain coordinates
-            x=prev->coords.first;
-            y=prev->coords.second;
+			x = std::get<0>(prev->coords);
+			y = std::get<1>(prev->coords);
+
         }
         while
-        (!(count!=1&&prev->coords.first == m_pah->m_cfirst->coords.first
-   &&prev->coords.second == m_pah->m_cfirst->coords.second));
+		(!(count != 1 && std::get<0>(prev->coords) == std::get<0>(m_pah->m_cfirst->coords)
+		&& std::get<1>(prev->coords) == std::get<1>(m_pah->m_cfirst->coords)));
+
+		// get coordinates of first internal C
+		int c_copy = c;
+		std::list<cpair>::iterator it;
+		for (it = m_pah->m_InternalCarbons.begin(); it != m_pah->m_InternalCarbons.end(); ++it){
+			c_copy++;
+			coordtype x = std::get<0>(*it);
+			coordtype y = std::get<1>(*it);
+			dotfile << "\t" << c_copy << " [pos = \"" << x << ',' << y << "!\"";
+			dotfile << ", height=0.25, width=0.25, fixedsize=shape];\n";
+		}
+
         // connects each C atom
-        for(int i=1; i<c; i++) {
-            dotfile<<"\tC"<<i<<" -- "<<"C"<<(i+1)<<";\n";
-        }
-        dotfile<<"\tC"<<c<<" -- "<<"C1;\n"; // connects last C with first C
-        // connects each H atom with corresponding C atoms
-        for(int i=0; i!=(int)CH_index.size(); i++) {
-            dotfile<<"\tH"<<CH_index[i]<<" -- "<<"C"<<CH_index[i]<<";\n";
-        }
+		for (int i = 1; i != (int)CH_index.size(); i++) {
+			dotfile << "\t" << CH_index[i-1] << " -- " << CH_index[i] << ";\n";
+		}
+		int last = (int)CH_index.size() - 1;
+		dotfile << "\t" << CH_index[last] << " -- " << "1;\n"; // connects last C with first C
+        // connects each H atom with corresponding C atoms Not needed
+        /*for(int i=0; i!=(int)CH_index.size(); i++) {
+            dotfile<<"\t"<<CH_index[i]<<" -- "<<CH_index[i]<<";\n";
+        }*/
         // close dot file
         dotfile<<"}";
         dotfile.close();
@@ -378,6 +394,113 @@ bool PAHProcess::saveDOT(const std::string &filename, const std::string &title) 
     else cout << "unable to open file\n";
     return false;
 }
+
+//! Store results in external file, returns success/failure
+// Stores structure into a DOT file for Graphviz
+bool PAHProcess::saveDOT3D(const std::string &filename) const {
+	bool success = saveDOT3D(filename, std::string("none"));
+	return success;
+}
+
+// Stores structure into a DOT file for Graphviz with a title on graph for 3D files
+bool PAHProcess::saveDOT3D(const std::string &filename, const std::string &title) const {
+	ofstream dotfile;
+	// creates or opens filename
+	//cout << "Attempting to open " << filename << "...\n";//++++
+	dotfile.open(filename.c_str());
+	if (dotfile.is_open()) { // if successful
+		// vector to store indices of C bonded with H atom
+		std::vector<int> CH_index;
+		// set iterator to starting position
+		Cpointer now = m_pah->m_cfirst->C2;
+		Cpointer prev = m_pah->m_cfirst;
+		//cout << filename << " had been opened, prepare writing..\n";//++++
+		// draw undirected graph
+		dotfile << "Graph G {\n";
+		// sets max size for drawing structure (in inches)
+		dotfile << "\tgraph [size=15, dimen=3];\n";
+		// sets style for C nodes
+		dotfile << "\tnode [shape=point, style=filled, color=black];\n";
+		// sets style for bonds
+		dotfile << "\tedge [shape=cylinder, color=black];\n";
+		// sets caption for graph
+		if (title != "none") {
+			dotfile << "\tgraph [label=\"" << title << "\"];\n";
+		}
+		// get coordinates of current C
+		coordtype x = std::get<0>(prev->coords);
+		coordtype y = std::get<1>(prev->coords);
+		coordtype z = std::get<2>(prev->coords);
+		int c = 0; // index of current C
+		int count = 0;
+		float CC_CHratio = 10; // length ratio between C-C and C-H bonds
+		do {
+			//if(now->bridge) {
+			//cout<<"Bridge at "<<now<<'\n';
+			//}
+			c++;
+			// write position coordinates of C atom with index c, with ! suffixed to pin node
+			dotfile << "\t" << c << " [pos = \"" << x << ',' << y << ',' << z << "!\"";
+			if (c == 1) dotfile << ", color=red";
+			dotfile << ", height=0.5, width=0.5, fixedsize=shape];\n";
+			// stores index of current C
+			CH_index.push_back(c);
+			if (prev->A == 'H') { // if bonded with H
+				c++;
+				// write position coordinates of H atom with bonded C index, with ! suffixed to pin node
+				dotfile << "\t" << c << " [pos = \"" << (x + x_inc(prev->bondAngle2) / CC_CHratio);
+				// set style for H node
+				dotfile << ',' << (y + y_inc(prev->bondAngle2) / CC_CHratio);
+				// set style for H node
+				dotfile << ',' << (z + 10*sin(30*M_PI/180) / CC_CHratio) << "!\", color=skyblue, fontcolor=skyblue, height=0.25, width=0.25, fixedsize=shape];\n";
+			}
+			// move iterator to next C
+			Cpointer oldnow = now;
+			now = moveCPointer(prev, now);
+			prev = oldnow;
+			// obtain coordinates
+			x = std::get<0>(prev->coords);
+			y = std::get<1>(prev->coords);
+			z = std::get<2>(prev->coords);
+
+		} while
+			(!(count != 1 && std::get<0>(prev->coords) == std::get<0>(m_pah->m_cfirst->coords)
+			&& std::get<1>(prev->coords) == std::get<1>(m_pah->m_cfirst->coords)
+			&& std::get<2>(prev->coords) == std::get<2>(m_pah->m_cfirst->coords)));
+
+		// get coordinates of first internal C
+		int c_copy = c;
+		std::list<cpair>::iterator it;
+		for (it = m_pah->m_InternalCarbons.begin(); it != m_pah->m_InternalCarbons.end(); ++it){
+			c_copy++;
+			coordtype x = std::get<0>(*it);
+			coordtype y = std::get<1>(*it);
+			coordtype z = std::get<2>(*it);
+			dotfile << "\t" << c_copy << " [pos = \"" << x << ',' << y << ',' << z << "!\"";
+			dotfile << ", height=0.25, width=0.25, fixedsize=shape];\n";
+		}
+		// connects each C atom
+		for (int i = 1; i != (int)CH_index.size(); i++) {
+			dotfile << "\t" << CH_index[i - 1] << " -- " << CH_index[i] << ";\n";
+		}
+		int last = (int)CH_index.size() - 1;
+		dotfile << "\t" << CH_index[last] << " -- " << "1;\n"; // connects last C with first C
+		// connects each H atom with corresponding C atoms
+		/*for (int i = 0; i != (int)CH_index.size(); i++) {
+			dotfile << "\tH" << CH_index[i] << " -- " << "C" << CH_index[i] << ";\n";
+		}*/
+		
+		// close dot file
+		dotfile << "}";
+		dotfile.close();
+		//cout<<".DOT file writing complete.\n";//++++
+		return true;
+	}
+	// if unable to open/create dot file
+	else cout << "unable to open file\n";
+	return false;
+}
+
 // Protected Read Processes
 //! Get other member of the site a particular C atom is a member of
 Cpointer PAHProcess::getPair(const Cpointer Carb, bool after) const {/*
@@ -418,11 +541,12 @@ bool PAHProcess::allowed(const Spointer& st, StructureProc proc) const {
     return true;
 }
 //! Jump to a position coordinate given starting position and angle towards new position
-cpair PAHProcess::jumpToPos(const cpair& starting, const angletype& direction, const bondlength& distance) const{
-    cpair temp;
+cpair PAHProcess::jumpToPos(const cpair& starting, const angletype& direction, const angletype& direction2, const bondlength& distance) const{
     // calculate new coordinates
-    temp.first = starting.first + distance*x_inc(direction);
-	temp.second = starting.second + distance*y_inc(direction);
+	auto temp = std::make_tuple(std::get<0>(starting) +distance*x_inc(direction), std::get<1>(starting) +distance*y_inc(direction), std::get<2>(starting) +distance*z_inc(direction2));
+	
+	/*temp.first = starting.first + distance*x_inc(direction);
+	temp.second = starting.second + distance*y_inc(direction);*/
     return temp;
 }
 //! Search a particular site (si) from svector associated with stype and erases it.
@@ -458,50 +582,50 @@ bool PAHProcess::checkHindrance(const Spointer& st) const {
 	case R5:
     case FE:
         // move position to O1, O2, O3, and O4
-        mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, 1); // position O1
+        mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, 0, 1); // position O1
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-		mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, pow(3,0.5)); // position O1
+		mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, 0, pow(3,0.5)); // position O1
 		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-60), 1); // position O2
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-60), 0, 1); // position O2
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 60), pow(3,0.5)); // position O2
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 60), 0, pow(3,0.5)); // position O2
 		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-120), 1); // position O3
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-120), 0, 1); // position O3
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 120), pow(3,0.5)); // position O3
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 120), 0, pow(3,0.5)); // position O3
 		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-180), 1); // position O4
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-180), 0, 1); // position O4
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 180), pow(3, 0.5)); // position O4
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 180), 0, pow(3, 0.5)); // position O4
 		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
         break;
     case RFE:
     case ZZ:
         // move position to O1, O2 and O3
-        mpos = jumpToPos(st->C1->coords, normAngle(st->C1->bondAngle1+120), 1); // position O1
+        mpos = jumpToPos(st->C1->coords, normAngle(st->C1->bondAngle1+120), 0, 1); // position O1
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-		mpos = jumpToPos(st->C1->coords, normAngle(st->C1->bondAngle1 + 120), pow(3, 0.5)); // position O1
+		mpos = jumpToPos(st->C1->coords, normAngle(st->C1->bondAngle1 + 120), 0, pow(3, 0.5)); // position O1
 		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1+60), 1); // position O2
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1+60), 0, 1); // position O2
 		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1 + 60), pow(3, 0.5)); // position O2
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1 + 60), 0, pow(3, 0.5)); // position O2
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1), 1); // position O3
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1), 0, 1); // position O3
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1), pow(3,0.5)); // position O3
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle1), 0, pow(3,0.5)); // position O3
 		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
         break;
     case RZZ:
 	case BY5R5:
     case AC:
         // move position to O1 and O2
-        mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, 1); // position O1
+        mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, 0, 1); // position O1
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-		mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, pow(3,0.5)); // position O1
+		mpos = jumpToPos(st->C1->coords, st->C1->bondAngle2, 0, pow(3,0.5)); // position O1
 		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-60), 1); // position O2
+        mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2-60), 0, 1); // position O2
 		if (m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 60), pow(3,0.5)); // position O2
+		mpos = jumpToPos(mpos, normAngle(st->C1->bondAngle2 - 60), 0, pow(3,0.5)); // position O2
         if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
         break;
     default:
@@ -520,17 +644,17 @@ bool PAHProcess::checkHindrance(const Spointer& st) const {
 */
 bool PAHProcess::checkHindrancePhenyl(const Cpointer C_1) const {
     // position to check, start at O1
-    cpair mpos = jumpToPos(C_1->coords, C_1->bondAngle2, 1); // position O1
+    cpair mpos = jumpToPos(C_1->coords, C_1->bondAngle2, 0, 1); // position O1
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2+60), 1); // position O2
+    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2+60), 0, 1); // position O2
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-    mpos = jumpToPos(mpos, C_1->bondAngle2, 1); // position O3
+    mpos = jumpToPos(mpos, C_1->bondAngle2, 0, 1); // position O3
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-60), 1); //position O4
+    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-60), 0, 1); //position O4
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-120), 1); // position O5
+    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-120), 0, 1); // position O5
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
-    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-180), 1); // position O6
+    mpos = jumpToPos(mpos, normAngle(C_1->bondAngle2-180), 0, 1); // position O6
     if(m_pah->m_cpositions.count(mpos)) return true; // check if position occupied
     return false;
 }
@@ -673,7 +797,7 @@ Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2, bond
     cb->C2 = C_1->C2;
     cb->bondAngle1 = normAngle(angle2); // convert angle to +ve/-ve form
     // set new coordinates and store
-    cb->coords = jumpToPos(C_1->coords, angle1, length);
+    cb->coords = jumpToPos(C_1->coords, angle1, 0, length);
     if(!m_pah->m_carbonList.insert(cb).second)
         std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
     m_pah->m_cpositions.insert(cb->coords);
@@ -689,13 +813,104 @@ Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2, bond
     return cb;
 }
 
-void PAHProcess::moveC(Cpointer C_1, angletype angle1, angletype angle2, bondlength distance) {
+void PAHProcess::moveC(Cpointer C_1, cpair newpos) {
 	// Remove coordinates of C from m_pah->m_cpositions
 	m_pah->m_cpositions.erase(m_pah->m_cpositions.find(C_1->coords));
 	// Set new positions of Carbon C_1
-	C_1->coords.first = C_1->coords.first + distance*cos(normAngle(angle1)*M_PI / 180);
-	C_1->coords.second = C_1->coords.second + distance*sin(normAngle(angle1)*M_PI / 180);
+	auto temp = std::make_tuple(std::get<0>(newpos), std::get<1>(newpos), std::get<2>(newpos));
+	/*C_1->coords.first = newpos.first;
+	C_1->coords.second = newpos.second;*/
+	C_1->coords = temp;
 	m_pah->m_cpositions.insert(C_1->coords);
+}
+
+void PAHProcess::moveC(Cpointer C_1, Cpointer Cprev, double new_distance) {
+	// Remove coordinates of C from m_pah->m_cpositions
+	m_pah->m_cpositions.erase(m_pah->m_cpositions.find(C_1->coords));
+	//Calculate distance between two carbons
+	double dist = pow(pow(std::get<0>(C_1->coords) - std::get<0>(Cprev->coords), 2) + pow(std::get<1>(C_1->coords) - std::get<1>(Cprev->coords), 2) + pow(std::get<2>(C_1->coords) - std::get<2>(Cprev->coords), 2), 0.5);
+	//Calculate new positions
+	auto temp = std::make_tuple(std::get<0>(Cprev->coords) + (std::get<0>(C_1->coords) - std::get<0>(Cprev->coords)) / dist*new_distance, std::get<1>(Cprev->coords) + (std::get<1>(C_1->coords) - std::get<1>(Cprev->coords)) / dist*new_distance, std::get<2>(Cprev->coords) + (std::get<2>(C_1->coords) - std::get<2>(Cprev->coords)) / dist*new_distance);
+	/*C_1->coords.first = newpos.first;
+	C_1->coords.second = newpos.second;*/
+	C_1->coords = temp;
+	m_pah->m_cpositions.insert(C_1->coords);
+}
+
+void PAHProcess::includeCurvature(cpair C_1, cpair C_2, cpair C_3){
+	//C_1 and C_2 are the R5 positions before bay capping. Before the bond was 3^0.5 long and is rescaled to length 1. 
+	//C_3 are the coordinates of a neighbouring Carbon atom to define the plane.
+	//A is the vector in 3D space that represents the edge of the just encapped pentagon.
+	//B is the vector in 3D space between C_1 and C_3 to define a plane.
+
+	double Ax = (std::get<0>(C_2) -std::get<0>(C_1)) / pow(3, 0.5); //x component of A
+	double Ay = (std::get<1>(C_2) -std::get<1>(C_1)) / pow(3, 0.5); //y component of A
+	double Az = (std::get<2>(C_2) -std::get<2>(C_1)) / pow(3, 0.5); //z component of A
+
+	double Bx = (std::get<0>(C_3) -std::get<0>(C_1)); //x component of B
+	double By = (std::get<1>(C_3) -std::get<1>(C_1)); //y component of B
+	double Bz = (std::get<2>(C_3) -std::get<2>(C_1)); //z component of B
+
+	double C_x1, C_y1, C_x2, C_y2, C_z1, C_z2, R5centre_x, R5centre_y, R5centre_z;
+	C_x1 = (std::get<0>(C_2) +std::get<0>(C_1)) / 2.0 - Ax / 2.0;
+	C_x2 = (std::get<0>(C_2) +std::get<0>(C_1)) / 2.0 + Ax / 2.0;
+	C_y1 = (std::get<1>(C_2) +std::get<1>(C_1)) / 2.0 - Ay / 2.0;
+	C_y2 = (std::get<1>(C_2) +std::get<1>(C_1)) / 2.0 + Ay / 2.0;
+	C_z1 = (std::get<2>(C_2) +std::get<2>(C_1)) / 2.0 - Az / 2.0;
+	C_z2 = (std::get<2>(C_2) +std::get<2>(C_1)) / 2.0 + Az / 2.0;
+
+
+	//R5centre is the position of the just encapped 5 member ring
+	//normal components
+	double nx = (Ay*Bz - Az*By);
+	double ny = (Az*Bx - Ax*Bz);
+	double nz = (Ax*By - Ay*Bx);
+
+	Ax = C_x2 - ((std::get<0>(C_2) +std::get<0>(C_1)) / 2.0);
+	Ay = C_y2 - ((std::get<1>(C_2) +std::get<1>(C_1)) / 2.0);
+	Az = C_z2 - ((std::get<2>(C_2) +std::get<2>(C_1)) / 2.0);
+
+	double R5x = (Ay*nz - Az*ny);
+	double R5y = (Az*nx - Ax*nz);
+	double R5z = (Ax*ny - Ay*nx);
+	double magnitude = pow(pow(R5x, 2.0) + pow(R5y, 2.0) + pow(R5z, 2.0), 0.5);
+
+	R5x = R5x / magnitude;
+	R5y = R5y / magnitude;
+	R5z = R5z / magnitude;
+	double distance = (sin(54.0 * M_PI / 180.0) / (2.0*sin(36.0 * M_PI / 180.0)));
+
+	R5centre_x = ((std::get<0>(C_2) +std::get<0>(C_1)) / 2.0) + R5x*distance;
+	R5centre_y = ((std::get<1>(C_2) +std::get<1>(C_1)) / 2.0) + R5y*distance;
+	R5centre_z = ((std::get<2>(C_2) +std::get<2>(C_1)) / 2.0) + R5z*distance;
+	
+	Ccontainer::iterator it;
+	for (it = m_pah->m_carbonList.begin(); it != m_pah->m_carbonList.end(); ++it) {
+		double Cnew_x, Cnew_y, Cnew_z, Cdistance;
+		Cpointer C_change = *it;
+		Cdistance = pow(pow((std::get<0>(C_change->coords) - R5centre_x), 2) + pow((std::get<1>(C_change->coords) - R5centre_y), 2) + pow(std::get<2>(C_change->coords) - R5centre_z,2), 0.5);
+		Cnew_x = R5centre_x + cos(30.0*M_PI / 180.0)*(std::get<0>(C_change->coords) - R5centre_x);
+		Cnew_y = R5centre_y + cos(30.0*M_PI / 180.0)*(std::get<1>(C_change->coords) - R5centre_y);
+		Cnew_z = std::get<2>(C_change->coords) + Cdistance *sin(30.0*M_PI / 180.0);
+		auto temp = std::make_tuple(Cnew_x, Cnew_y, Cnew_z);
+
+		moveC(C_change, temp);
+		int test = 1;
+	}
+	std::list<cpair>::iterator it2;
+	for (it2 = m_pah->m_InternalCarbons.begin(); it2 != m_pah->m_InternalCarbons.end(); ++it2){
+		double Cnew_x, Cnew_y, Cnew_z, Cdistance;
+		Cdistance = pow(pow((std::get<0>(*it2) - R5centre_x), 2) + pow((std::get<1>(*it2) - R5centre_y), 2) + pow(std::get<2>(*it2) - R5centre_z, 2), 0.5);
+		Cnew_x = R5centre_x + cos(30.0*M_PI / 180.0)*(std::get<0>(*it2) - R5centre_x);
+		Cnew_y = R5centre_y + cos(30.0*M_PI / 180.0)*(std::get<1>(*it2) - R5centre_y);
+		Cnew_z = std::get<2>(*it2) + Cdistance *sin(30.0*M_PI / 180.0);
+		auto temp = std::make_tuple(Cnew_x, Cnew_y, Cnew_z);
+		cpair & s(*it2);
+		s = temp;
+		int test = 1;
+	}
+	return;
+
 }
 
 /*! Create a carbon atom bridging next to C_1
@@ -714,7 +929,7 @@ Cpointer PAHProcess::bridgeC(Cpointer C_1) {
     cb->bondAngle2 = normAngle(C_1->bondAngle2 - 180); // opposite direction of C_1->bondAngle2
     cb->bridge = true;
     // set new coordinates and store
-    cb->coords = jumpToPos(C_1->coords, C_1->bondAngle2, 1);
+    cb->coords = jumpToPos(C_1->coords, C_1->bondAngle2, 0, 1);
     if(!m_pah->m_carbonList.insert(cb).second)
         std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
     m_pah->m_cpositions.insert(cb->coords);
@@ -771,11 +986,11 @@ void PAHProcess::removeC(Cpointer C_1, bool bulk) {
         m_pah->m_clast = C_1->C1;
     }
     if(m_pah->m_cpositions.find(C_1->coords)== m_pah->m_cpositions.end()) {
-        cout<<"ERROR: removeC: coordinates ("<<C_1->coords.first<<','<<C_1->coords.second<<") not in m_pah->m_cpositions!\n";
+		cout << "ERROR: removeC: coordinates (" << std::get<0>(C_1->coords) << ',' << std::get<1>(C_1->coords) << ',' << std::get<2>(C_1->coords)<<") not in m_pah->m_cpositions!\n";
         cout<<"Coordinates of nearby 5 C atoms:\n";
         Cpointer now = C_1->C1->C1->C1->C1->C1;
         for(int i=0; i!=11; i++) {
-            cout<<'('<<now->coords.first<<','<<now->coords.second<<")";
+			cout << '(' << std::get<0>(now->coords) << ',' << std::get<1>(now->coords) << ',' << std::get<2>(now->coords) <<")";
             if(now == C_1) cout<<" - ";
             cout<<'\n';
             now = now->C2;
@@ -794,7 +1009,8 @@ void PAHProcess::removeC(Cpointer C_1, bool bulk) {
         C_1->C3->C3 = NULL;
         C_1->C3->bridge = false;
     }
-    // Remove coordinates of C from m_pah->m_cpositions
+    // Remove coordinates of C from m_pah->m_cpositions and add them to m_pah->m_InternalCarbons
+	if(bulk) m_pah->m_InternalCarbons.push_back(C_1->coords);
     m_pah->m_cpositions.erase(m_pah->m_cpositions.find(C_1->coords));
     // delete Carbon object
     delete C_1;
@@ -848,8 +1064,10 @@ void PAHProcess::addR5toSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
     int stype = (int) st->type;
     if(stype<5) // i.e. uncombined principal sites (eg FE)
         stype += 6;
-    else if(stype < 10) // i.e. principal sites with 5R at one side (eg RFE)
-        stype += 4;
+	else if (stype < 10) // i.e. principal sites with 5R at one side (eg RFE)
+		stype += 4;
+	else if (stype == 18) stype = 22;
+	else if (stype == 20 || stype == 21) stype += 1;
     else {
         std::cout<<"ERROR: add5RtoSite: illegal site type to add 5R to.\n";
         return;}
@@ -1249,6 +1467,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
     std::tuple <int, int, int> rings;
     intpair CH;
 	int rings_Embedded;
+	std::list <cpair> IntCarbons;
     // Structure for Benzene
 	std::string BENZENE_Sites = "FE,FE,FE,FE,FE,FE";
 	auto BENZENE_Rings = std::make_tuple (1, 0, 0) ;
@@ -1264,11 +1483,15 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
 	auto PYRENE_Rings = std::make_tuple (4, 0, 0);
 	intpair PYRENE_CH(16, 10);
 	int PYRENE_RINGS_EMBEDDED = 0;
+	std::list <cpair> PYRENE_intCarbons;
+	PYRENE_intCarbons.push_back(std::make_tuple(0, -pow(3, 0.5), 0));
+	PYRENE_intCarbons.push_back(std::make_tuple(1, -pow(3, 0.5), 0));
 	// Structure for BENZOPYRENE
 	std::string BENZOPYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,ZZ,FE,FE,FE,AC,FE";
 	auto BENZOPYRENE_Rings = std::make_tuple (5, 0, 0);
 	intpair BENZOPYRENE_CH(20, 12);
 	int BENZOPYRENE_RINGS_EMBEDDED = 0;
+	//Internal Carbons missing
 	// Structure for Coronene
 	std::string CORONENE_Sites = "FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ";
 	auto CORONENE_Rings = std::make_tuple(7, 0, 0);
@@ -1279,6 +1502,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
 	auto TEST_Rings = std::make_tuple(8, 2, 0);
 	intpair TEST_CH(18, 10);
 	int TEST_RINGS_EMBEDDED = 0;
+	//Internal Carbons missing
     // Choose structure
     switch(ss) {
     case BENZENE_C:
@@ -1298,6 +1522,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
         rings = PYRENE_Rings;
         CH = PYRENE_CH;
 		rings_Embedded = PYRENE_RINGS_EMBEDDED;
+		IntCarbons = PYRENE_intCarbons;
         break;
     case BENZOPYRENE_C:
         chosen = BENZOPYRENE_Sites;
@@ -1323,7 +1548,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
             abort();
     }
     // Create Structure
-	return initialise(chosen, std::get<0>(rings), std::get<1>(rings), rings_Embedded, std::get<2>(rings), rings_Embedded);
+	return initialise(chosen, std::get<0>(rings), std::get<1>(rings), rings_Embedded, std::get<2>(rings), rings_Embedded, IntCarbons);
     //printSites(m_pah->m_siteList.begin());
 }
 
@@ -1440,7 +1665,9 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
-        //cout << "Pyrene Initialised!\n";
+		//Set Internal Carbons list
+		//m_pah->m_InternalCarbons = IntCarbons;
+		//cout << "Pyrene Initialised!\n";
         break;
     case BENZOPYRENE_C:
         // add first C atom
@@ -1498,7 +1725,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
  *
  * @return       Initialized PAH structure
  */
-PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded){
+PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, std::list<cpair> internalCarbons){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
         m_pah = pah;
@@ -1522,12 +1749,12 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
         }
         siteList_vec.push_back(temp);
     }
-	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded);
+	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, internalCarbons);
     return *m_pah;
 }
 
 // Create Structure from vector of site types
-void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded) {
+void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::list<cpair> inCarbs) {
     // current C, bondangle and coordinates
     Cpointer newC=addC();
     m_pah->m_cfirst = newC;
@@ -1605,6 +1832,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 	m_pah->m_rings5_Embedded = 0;
 	m_pah->m_rings7_Lone = 0;
 	m_pah->m_rings7_Embedded = 0;
+	m_pah->m_InternalCarbons = inCarbs;
     for(Ccontainer::iterator i = m_pah->m_carbonList.begin();
         i != m_pah->m_carbonList.end(); i++)
         updateA(*i, 'H');
@@ -1621,7 +1849,7 @@ Cpointer PAHProcess::drawType0Site(Cpointer Cnow, int bulkC) {
     angletype angle = normAngle(Cnow->bondAngle1-60);
     for(int c=0; c<=bulkC; ++c) {
         // check if adding on existing C atom (bridge)
-        cpair pos = jumpToPos(Cnow->coords, angle, 1);
+        cpair pos = jumpToPos(Cnow->coords, angle, 0, 1);
         if(m_pah->m_cpositions.count(pos)) {
             // this coordinate is filled
             Cpointer Cpos = findC(pos);
@@ -1656,7 +1884,7 @@ Cpointer PAHProcess::drawType1Site(Cpointer Cnow, int bulkC, kmcSiteType prevTyp
     angletype angle = Cnow->bondAngle1-60;
     if(bulkC == 0) {
         angle = normAngle(angle-30);
-        cpair pos = jumpToPos(Cnow->coords, angle, 1);
+        cpair pos = jumpToPos(Cnow->coords, angle, 0, 1);
         if(m_pah->m_cpositions.count(pos)) { // reached end of PAH
             Cpointer Cpos = findC(pos);
             Cnow->bondAngle1 = angle;
@@ -1709,22 +1937,22 @@ bool PAHProcess::checkCoordinates() const{
         }
         if(next->bridge) {// if next C is a bridge
             if(now == next->C1) { // check if current C is next->C1
-                corr_coords = jumpToPos(now->coords, now->bondAngle1, 1);
+                corr_coords = jumpToPos(now->coords, now->bondAngle1, 0, 1);
                 next = next->C3; // cross bridge
             }else if(now == next->C3) { // check if current C is from bridge
-                corr_coords = jumpToPos(now->coords, now->bondAngle2, 1);
+                corr_coords = jumpToPos(now->coords, now->bondAngle2, 0, 1);
                 next = next->C2;
             }
         }else { // if next C is not a bridge
-            corr_coords = jumpToPos(now->coords, now->bondAngle1, 1);
+            corr_coords = jumpToPos(now->coords, now->bondAngle1, 0, 1);
             next = next->C2;
         }
         now = oldnext;
         // check coordinates
         if(now->coords != corr_coords) {
             cout<<"checkCoordinates() failed at "<<count<<"th C atom..\n"
-                <<"Coordinates: ("<<now->coords.first<<','<<now->coords.second<<")\n"
-                <<"Correct      : ("<<corr_coords.first<<','<<corr_coords.second<<")\n";
+				<< "Coordinates: (" << std::get<0>(now->coords) << ',' << std::get<1>(now->coords) << ',' << std::get<2>(now->coords) <<")\n"
+				<< "Correct      : (" << std::get<0>(corr_coords) << ',' << std::get<1>(corr_coords) << ',' << std::get<2>(corr_coords)<<")\n";
             saveDOT(std::string("KMC_DEBUG/error_struct.dot"));
             return false;
         }
@@ -1824,7 +2052,6 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     Cpointer site_C1 = site_perf->C1;
     Cpointer site_C2 = site_perf->C2;
     //cout << jp.getName() << '\n';
-    //printSites(site_perf);
     //cout<<'\t'<<kmcSiteName(site_perf->type)<<' '<<site_C1<<' '<<site_C2<<'\n';
     // find structure change function
     std::ostringstream dotname, dotname2;
@@ -1914,6 +2141,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     if(m_pah->m_cfirst->A != 'H')
         cout<<"WARNING: A of m_cfirst is not H..\n";
     //cout<<"----PROCESS PERFORMED!-----\n";*/
+	printSites();
     Spointer S1,S2,S3,S4;
     S1 = moveIt(site_perf, -1); S2 = moveIt(site_perf, 1);
     S3 = moveIt(site_perf, -2); S4 = moveIt(site_perf, 2);
@@ -1999,12 +2227,12 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateSites(S1, S1->C1, newC1, 1); // neighbours
     updateSites(S2, newC2, S2->C2, 1);
 	//Check for R5R6 sites and embed them
-	if ((int)S5->type == 20){
+	/*if ((int)S5->type == 20){
 		convSiteType(S5, S5->C1, S5->C2, (kmcSiteType)21);
 	}
 	if ((int)S6->type == 20){
 		convSiteType(S6, S6->C1, S6->C2, (kmcSiteType)21);
-	}
+	}*/
     // Update combined site for Site and neighbours
     Spointer S3, S4;
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
@@ -2302,7 +2530,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
     C2_res = C_2->C2;
     // check if process will result in a bridge
     bool bridge = false;
-    cpair pos = jumpToPos(C1_res->coords, normAngle(C1_res->bondAngle1-120), 1);
+    cpair pos = jumpToPos(C1_res->coords, normAngle(C1_res->bondAngle1-120), 0, 1);
     if(m_pah->m_cpositions.count(pos)) return;//bridge = true;
     // check if site is next to a bridge
     bridge = (C1_res->bridge || C2_res->bridge);
@@ -2378,6 +2606,9 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     C2_res = C_2->C2;
     removeC(C_1, false);
     removeC(C_2, false);
+	//double dist_inc = (tan(36 * M_PI / 180) / tan(30 * M_PI / 180) - 1.0) / ((tan(36 * M_PI / 180) / tan(30 * M_PI / 180)) + 1.0);
+	//moveC(C1_res, C1_res->C1, 1);
+	//moveC(C2_res, C2_res->C2, 1);
     addC(C1_res, normAngle(C1_res->C1->bondAngle1-60), normAngle(C1_res->C1->bondAngle1), 1, true);
     updateA(C1_res->C1, C2_res->C2, 'H');
     // update sites and neighbours
@@ -2400,6 +2631,7 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
     //printSites(stt);
+	//printStruct();
     if(checkHindrance(stt)) {
         /*cout<<"Site hinderzed, process not performed.\n"*/ return;}
     // check if FE3 is before or after AC
@@ -2438,8 +2670,14 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
     if(b4) Cstart = C2_res;
     else Cstart = C_1;
     removeC(Cstart->C2, true);
+	//double dist_inc = (tan(36 * M_PI / 180) / tan(30 * M_PI / 180) - 1.0) / ((tan(36 * M_PI / 180) / tan(30 * M_PI / 180)) + 1.0);
+	/*moveC(Cstart, Cstart->C1, 1 + dist_inc);
+	C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1 + 108), 0, 1, false);
+	C2_R5 = addC(C1_R5, normAngle(Cstart->bondAngle1 - 72), normAngle(Cstart->bondAngle1 - 144), 1.0, false);
+	moveC(C2_R5->C2, C2_R5->C2->C2, 1 + dist_inc);*/
 	C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1 + 120), 0, 1, false);
 	C2_R5 = addC(C1_R5, normAngle(Cstart->bondAngle1 - 90), normAngle(Cstart->bondAngle1 - 180), pow(3, 0.5), false);
+
 	//C2_R5->coords.first = C2_R5->coords.first + (pow(3.0,0.5)-1.0)*cos(normAngle(Cstart->bondAngle1 - 90)*M_PI / 180);
 	//C2_R5->coords.second = C2_R5->coords.second + (pow(3.0, 0.5) - 1.0)*sin(normAngle(Cstart->bondAngle1 - 90)*M_PI / 180);
     // update H atoms
@@ -2506,6 +2744,9 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     Cpointer Cstart;
     if(b4) Cstart = C_AC; 
     else Cstart = C_2->C1;
+	/*double dist_inc = (tan(36 * M_PI / 180) / tan(30 * M_PI / 180) - 1.0) / ((tan(36 * M_PI / 180) / tan(30 * M_PI / 180)) + 1.0);
+	moveC(Cstart, Cstart->C1, 1);
+	moveC(Cstart->C2->C2->C2, Cstart->C2->C2->C2->C2, 1);*/
     for(int i=0; i!=2; i++) removeC(Cstart->C2, false);
     addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60), 1, true);
     // this new C atom is irrelevant. Next add a R6 on the resulting FE (from RFE)
@@ -2583,6 +2824,9 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     Cpointer Cstart;
     if(b4) Cstart = C_AC; 
     else Cstart = C_2->C1;
+	/*double dist_inc = (tan(36 * M_PI / 180) / tan(30 * M_PI / 180) - 1.0) / ((tan(36 * M_PI / 180) / tan(30 * M_PI / 180)) + 1.0);
+	moveC(Cstart, Cstart->C1, 1);
+	moveC(Cstart->C2->C2->C2, Cstart->C2->C2->C2->C2, 1);*/
     for(int i=0; i!=2; i++) removeC(Cstart->C2, false);
     addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60), 1, true);
     // this new C atom is irrelevant. Next add a R6 on the resulting AC (from RAC)
@@ -2664,6 +2908,10 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     Cpointer Cstart;
     if(b4) Cstart = C_RZZ; 
     else Cstart = C_2->C1;
+	/*double dist_inc = (tan(36 * M_PI / 180) / tan(30 * M_PI / 180) - 1.0) / ((tan(36 * M_PI / 180) / tan(30 * M_PI / 180)) + 1.0);
+
+	moveC(Cstart->C2->C2->C2, Cstart->C2->C2->C2->C2, 1);
+	moveC(Cstart, Cstart->C1, 1);*/
     for(int i=0; i!=2; i++) removeC(Cstart->C2, false);
     addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60),1, true);
     // Next add a R5 on the neighbouring ZZ
@@ -2671,6 +2919,12 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     if(b4) Cstart = C_RZZ->C2->C2;
     else Cstart = C_1;
     removeC(Cstart->C2, true);
+	
+	/*moveC(Cstart, Cstart->C1, 1 + dist_inc);
+	moveC(Cstart->C2, Cstart->C2->C2, 1 + dist_inc);
+	C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1 + 108), 0, 1.0, false);
+	C2_R5 = addC(C1_R5, normAngle(Cstart->bondAngle1 - 72), normAngle(Cstart->bondAngle1 +108 - 72 - 180), 1.0, false);*/
+	
 	C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1 + 120), 0, 1);
 	C2_R5 = addC(C1_R5, normAngle(C1_R5->C1->bondAngle1 - 90), normAngle(C1_R5->C1->bondAngle1 - 180), pow(3, 0.5));
     // edit sites. first identify the neighbouring sites of resulting RZZ & R5
@@ -2742,12 +2996,23 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
         CFE = sFE3->C1;
         CRem = sFE3->C2;
     }
-    CRem->C1->bondAngle1 = normAngle(CRem->C1->bondAngle1-30);
-    removeC(CRem, false);
-    // now close BY5 to form R6. First remove all bulk C
-    for(int i=0; i!=3; i++) removeC(C_1->C2, true);
-    // add a C atom
+	// close BY5 to form R6. First remove all bulk C
+	for (int i = 0; i != 3; i++) removeC(C_1->C2, true);
+	// add a C atom
 	addC(C_1, normAngle(C_1->bondAngle1 + 120), normAngle(C_1->bondAngle1 + 60), 1);
+	/*double dist_inc = (tan(36 * M_PI / 180) / tan(30 * M_PI / 180) - 1.0) / ((tan(36 * M_PI / 180) / tan(30 * M_PI / 180)) + 1.0);
+	moveC(CRem->C1->C1, CRem->C1->C1->C1, 1 + dist_inc);*/
+	//addC(CRem->C1->C1, normAngle(CRem->C1->C1->bondAngle1 - 6), 0, 1);
+	//removeC(CRem->C1, false);
+	Cpointer CR5_1 = CRem->C1;
+	removeC(CRem, false);
+	CR5_1->bondAngle1 = CR5_1->bondAngle1 - 30;
+	//addC(CR5_1, normAngle(CR5_1->C1->bondAngle1 - 72), normAngle(CR5_1->C1->bondAngle1 - 144), 1);
+	//removeC(CR5_1->C2->C2, false);
+	//moveC(CR5_1->C2->C2, CR5_1->C2->C2->C2, 1 + dist_inc);
+
+
+	
     // delete neighbouring (to sFE3) FE sites from site map. Identify them first:
     Spointer Srem1 = moveIt(sFE3,-1);
     Spointer Srem2 = moveIt(sFE3,1);
@@ -2759,18 +3024,18 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     if(b4) {
         S1 = moveIt(sFE3, -1); // neighbour of FE3
         S2 = moveIt(stt, 1); // neighbour of BY5 (stt)
-        convSiteType(sFE3, CFE->C1, CFE, R5); // convert FE3 to R5
-        convSiteType(stt, CFE, C_1->C2, RFE); // convert BY5 to RFE
+		convSiteType(sFE3, CR5_1->C1, CR5_1, R5); // convert FE3 to R5
+		convSiteType(stt, CR5_1, C_1->C2, RFE); // convert BY5 to RFE
         updateSites(S2, C_1->C2, S2->C2, +1); // add a bulk C to S2
-        updateSites(S1, S1->C1, CFE->C1, -1);
+		updateSites(S1, S1->C1, CR5_1->C1, -1);
         addR5toSite(S1, S1->C1, S1->C2); // remove a bulk C from S1 and add R5
     } else {
         S2 = moveIt(sFE3, 1); // neighbour of FE3
         S1 = moveIt(stt, -1); // neighbour of BY5 (stt)
-        convSiteType(sFE3, CFE, CFE->C2, R5); // convert FE3 to R5
-        convSiteType(stt, C_1->C2, CFE, RFE); // convert BY5 to RFE
+		convSiteType(sFE3, CR5_1, CR5_1->C2, R5); // convert FE3 to R5
+		convSiteType(stt, C_1->C2, CR5_1, RFE); // convert BY5 to RFE
         updateSites(S1, S1->C1, C_1->C2, +1); // add a bulk C to S1
-        updateSites(S2, CFE->C2, S2->C2, -1);
+		updateSites(S2, CR5_1->C2, S2->C2, -1);
         addR5toSite(S2, S2->C1, S2->C2); // remove a bulk C from S2 and add R5
     }
     
@@ -2967,9 +3232,15 @@ void PAHProcess::proc_D6R_FE_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//printSitesMemb(stt);
-	printStruct();//++++
+	//printStruct();//++++
 	Cpointer newC1;
 	Cpointer newC2;
+	cpair CR5_1;
+	cpair CR5_2;
+	cpair CR5_3;
+	CR5_1 = C_1->C2->coords;
+	CR5_2 = C_1->C2->C2->coords;
+	CR5_3 = C_1->coords;
 
 	//if(checkHindrance(stt)) {
 	//    /*cout<<"Site hindered, process not performed.\n"*/ return;}
@@ -2977,10 +3248,15 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		// Add and remove C
 		//if(C_1->C2->C3 != NULL) C_1->C2->C3->C3 = NULL;
 		//if(C_2->C1->C3 != NULL) C_2->C1->C3->C3 = NULL;
+		double dist_inc = (tan(36 * M_PI / 180) / tan(30 * M_PI / 180) - 1.0) / ((tan(36 * M_PI / 180) / tan(30 * M_PI / 180)) + 1.0);
 		removeC(C_1->C2, true);
-		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
+		newC1 = addC(C_1, normAngle(C_1->bondAngle1 - 150), 0, 1 + dist_inc);
 		removeC(newC1->C2, true);
-		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 -90), normAngle(newC1->C1->bondAngle1 - 150), 1+pow(3,0.5));
+		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 +120), 1.0);
+		/*removeC(C_1->C2, true);
+		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 75), 0, 1.5);
+		removeC(newC1->C2, true);
+		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 -45), normAngle(newC1->C1->bondAngle1 - 60), 1.5);*/
 	}
 	else {
 		// update bridges info, both are no longer bridges
@@ -2996,10 +3272,10 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		// connect C_1 and C_2
 		connectToC(C_1, C_2);
 		// Add C
-		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
-		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 - 120), 1);
+		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 75), 0, 1.5);
+		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 45), normAngle(newC1->C1->bondAngle1 - 60), 1.5);
 	}
-	printStruct();
+	//printStruct();
 	// Add and remove H
 	updateA(C_1, C_2, 'H');
 	// neighbouring sites:
@@ -3020,6 +3296,8 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	m_pah->m_rings5_Lone--;
 	m_pah->m_rings5_Embedded++;
 	//printSites(stt);
+	//printStruct();
+	//includeCurvature(CR5_1, CR5_2, CR5_3);
 }
 
 // ************************************************************
@@ -3068,6 +3346,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	}
 	// add a C atom
 	addC(CFE, normAngle(CFE->bondAngle1 + 30), normAngle(CFE->bondAngle1 - 30), 1);
+	//addC(CFE, normAngle(CFE->bondAngle1 + 30), normAngle(CFE->bondAngle1 - 30), 1);
 	CRem->C1->bondAngle1 = normAngle(CRem->C1->bondAngle1 - 30);
 	removeC(CRem, false);
 	
@@ -3221,8 +3500,12 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		//if(C_2->C1->C3 != NULL) C_2->C1->C3->C3 = NULL;
 		removeC(C_1->C2, true);
 		removeC(C_2->C1, true);
+		//double dist_inc = (tan(36 * M_PI / 180) / tan(30 * M_PI / 180) - 1.0) / ((tan(36 * M_PI / 180) / tan(30 * M_PI / 180)) + 1.0);
+		//moveC(C_1, C_1->C1, 1 + dist_inc);
 		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
 		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 - 120), 1);
+		
+		//moveC(newC2->C2, newC2->C2->C2, 1 + dist_inc);
 	}
 	else {
 		// update bridges info, both are no longer bridges
@@ -3307,8 +3590,8 @@ void PAHProcess::proc_G6R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		/*cout<<"Site hindered, process not performed.\n"*/ return;
 	}
 	//First we need to resize the R5 bond length or our R6s will be huge.
-	moveC(C_1, C_1->bondAngle1, C_1->bondAngle2, 0.5*(pow(3,0.5)-1));
-	moveC(C_2, C_1->bondAngle1, C_1->bondAngle2, -0.5*(pow(3, 0.5) - 1));
+	//moveC(C_1, C_1->bondAngle1, C_1->bondAngle2, 0.5*(pow(3,0.5)-1));
+	//moveC(C_2, C_1->bondAngle1, C_1->bondAngle2, -0.5*(pow(3, 0.5) - 1));
 
 	// Add C
 	newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
@@ -3438,7 +3721,12 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 		}
 		convSiteType(stt, stt->C2->C1, stt->C2, FE); //stt is originally the R5R6 site that will become the new FE site
 		S2 = moveIt(stt, 1); // neighbour of stt
-		updateSites(S2, stt->C2, S2->C2, -5); //convert the neighbour to its same version but next to an R5
+		if ((int)S2->type >= 10 && (int)S2->type <= 12){ //The site in the middle had 2R5s to each site, so lucky!
+			updateSites(S2, stt->C2, S2->C2, -3); //convert the neighbour to its same version but next to an R5
+		}
+		else{
+			updateSites(S2, stt->C2, S2->C2, -5); //convert the neighbour to its same version but next to an R5
+		}
 	}
 	else {
 		S2 = moveIt(sFE2, 1);
@@ -3457,7 +3745,12 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 		}
 		convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
 		S1 = moveIt(stt, -1); // neighbour of stt
-		updateSites(S1, S1->C1, stt->C1, -5); //convert the neighbour to its same version but NOT next to an R5
+		if ((int)S1->type >= 10 && (int)S1->type <= 12){ //The site in the middle had 2R5s to each site, so lucky!
+			updateSites(S1, S1->C1, stt->C1, -3); //convert the neighbour to its same version but next to ONLY ONE R5
+		}
+		else{
+			updateSites(S1, S1->C1, stt->C1, -5); //convert the neighbour to its same version but NOT next to an R5
+		}
 	}
 	// update H atoms
 	if (b4){
@@ -3502,8 +3795,9 @@ void PAHProcess::proc_GR7_BY5R5(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_t
 		removeC(C_1->C2, true);
 		removeC(C_1->C2, true);
 		removeC(C_2->C1, true);
-		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
-		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 - 120), 1);
+		//moveC(C_1, C_1->C1, 1.5);
+		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120 - atan(0.5/1.5) * 180.0/M_PI), 0, pow(2.5,0.5));
+		newC2 = addC(newC1, normAngle(newC1->C1->C1->bondAngle1 - 30), normAngle(newC1->C1->C1->bondAngle1 - 90), 2.0);
 	}
 	else {
 		// update bridges info, both are no longer bridges
@@ -3519,8 +3813,8 @@ void PAHProcess::proc_GR7_BY5R5(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_t
 		// connect C_1 and C_2
 		connectToC(C_1, C_2);
 		// Add C
-		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120), 0, 1);
-		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 - 120), 1);
+		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 90), 0, 1.5);
+		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 - 90), 1.5);
 	}
 	//printStruct();
 	// Add and remove H
@@ -3532,8 +3826,10 @@ void PAHProcess::proc_GR7_BY5R5(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_t
 	Spointer S6 = moveIt(S2, 1);
 	// Update Site and neighbours
 	convSiteType (stt, newC1, newC2, FE); //FE of an heptagon
-	updateSites(S1, S1->C1, newC1, 1); // neighbours
-	updateSites(S2, newC2, S2->C2, 1);
+	if (S1->type == R5) convSiteType(S1, S1->C1, newC1, R5R6); // neighbours
+	else updateSites(S1, S1->C1, newC1, 1); // neighbours
+	if (S2->type == R5) convSiteType(S2, newC2, S2->C2, R5R6);
+	else updateSites(S2, newC2, S2->C2, 1);
 	//Check for R5R6 sites and embed them
 	if ((int)S5->type == 20){
 		convSiteType(S5, S5->C1, S5->C2, (kmcSiteType)21);

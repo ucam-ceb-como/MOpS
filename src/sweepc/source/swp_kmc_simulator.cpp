@@ -228,9 +228,13 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             // saveDOTperLoop(100000*tstart,loopcount,PAH_ID);
 
 			std::string loopcount_str = "KMC_DEBUG/";
+			std::string loopcount_str3D = "KMC_DEBUG/3D/";
 			loopcount_str.append(std::to_string(counter_GLC));
+			loopcount_str3D.append(std::to_string(counter_GLC));
 			loopcount_str.append(".dot");
+			loopcount_str3D.append("3D.dot");
 			m_simPAHp.saveDOT(loopcount_str);
+			m_simPAHp.saveDOT3D(loopcount_str3D);
 			counter_GLC += 1;
 
             // Choose jump according to rates

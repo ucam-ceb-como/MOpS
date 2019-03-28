@@ -102,9 +102,9 @@ public:
     //! Initialisation of structure given a starting structure (new method)
     virtual PAHStructure& initialise_new(StartingStructure ss);
     //! Initialisation of structure given a string of site types (separated by ',')
-	virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded);
+	virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, std::list<cpair> internalCarbons);
     //! Create Structure from vector of site types and number of rings
-	void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded);
+	void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::list<cpair> inCarbs);
     //! Structure processes: returns success or failure
     bool performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID);
 
@@ -131,6 +131,8 @@ public:
     //! Store structure results in external file, returns success/failure
     bool saveDOT(const std::string &filename) const;
     bool saveDOT(const std::string &filename, const std::string &title) const;
+	bool saveDOT3D(const std::string &filename) const;
+	bool saveDOT3D(const std::string &filename, const std::string &title) const;
     //! obtains a vector of the PAH site list
     std::vector<kmcSiteType> SiteVector() const;
     //! obtains a string containing the PAH site list
@@ -205,7 +207,7 @@ private:
     //! Choose a random site of any site types in vtype
     Spointer chooseRandomSite(std::vector<kmcSiteType> vtype, rng_type &rng);
     //! Jump to a position coordinate given starting position and angle towards new position
-	cpair jumpToPos(const cpair& starting, const angletype& direction, const bondlength& distance) const;
+	cpair jumpToPos(const cpair& starting, const angletype& direction, const angletype& direction2, const bondlength& distance) const;
     //! Search a particular site (si) from svector associated with stype and erases it from sitemap
     void delSiteFromMap(const kmcSiteType& stype, const Spointer& si);
     //! Overload: search and erase from svectors associated with all site types in vector v
@@ -225,7 +227,11 @@ private:
     //! Creates a new carbon atom attached next to C_1.
     Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2, bondlength length, bool bulk=false);
 	//! Moves a carbon position .
-	void moveC(Cpointer C_1, angletype angle1, angletype angle2, bondlength length);
+	void moveC(Cpointer C_1, cpair newpos);
+	//! Moves a carbon position .
+	void moveC(Cpointer C_1, Cpointer Cprev, double new_distance);
+	//! Includes curvature in a PAH after a pentagon is integrated in the structure.
+	void includeCurvature(cpair C_1, cpair C_2, cpair C_3);
     //! Creates a carbon atom bridging next to C_1. 
     Cpointer bridgeC(Cpointer C_1);
     /*//! Creates a bulk carbon atom connected to C_1

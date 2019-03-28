@@ -84,7 +84,7 @@ namespace Sweep {
         //! Enumeration of processes on data structure available.
         enum StructureProc {
             // Growth
-            G6R=0, G5R=1,
+            G6R=0, G5R=1, GR7=13,
             // Desorption
             D6R=2, D5R=3,
             // Migration
@@ -113,7 +113,7 @@ namespace Sweep {
         typedef double angletype; //Changed to allow changing the side length of a R5 (gl413)
 		typedef double bondlength; //Changed to allow changing the side length of a R5 (gl413)
         typedef double coordtype; //Changed to allow changing the side length of a R5 (gl413)
-        typedef std::pair<coordtype, coordtype> cpair;
+        typedef std::tuple<coordtype, coordtype, coordtype> cpair;
         typedef std::pair<int, int> intpair;
         
         
