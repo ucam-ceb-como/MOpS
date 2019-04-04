@@ -201,7 +201,7 @@ int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
 
     // aab64 for hybrid particle model
     if (!(m_mech->IsHybrid() && ip2 == -2)) // if this particle was introduced from the bin, it does not exist in the ensemble
-	sys.Particles().Remove(ip2, true);
+		sys.Particles().Remove(ip2, true);
     return ip1;
 }
 
@@ -400,24 +400,23 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 
 	// Is this an incepting class particle?
 	int ip1 = ChooseIndexWeightedCoag(t, prop1, sys, rng);
-	if (ip1 < 0)
+	if (ip1 > sys.Particles().Capacity())
 	{
-		index1 = -1 * ip1;
+		index1 = ip1 - sys.Particles().Capacity();
 		ip1 = -2;
 		n_index1 = sys.Particles().NumberAtIndex(index1);
 		ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
 		sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
 		sp1->SetTime(t);
 	}
-	else
+	else if (ip1 >= 0)
 	{
-		if (ip1 >= 0) {
-			sp1 = sys.Particles().At(ip1);
-		}
-		else {
-			// Failed to choose a particle.
-			return -1;
-		}
+		sp1 = sys.Particles().At(ip1);
+	}
+	else 
+	{
+		// Failed to choose a particle.
+		return -1;
 	}
 
 	// Choose and get unique second particle, then update it.  Note, we are allowed to do
@@ -432,37 +431,44 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 		if (!ip1_flag) // Ensemble particle - must check if same particle picked twice
 		{
 			if (!(ip1 == ip2))
+			{
 				unsuitableChoice = false;
+			}
 		}
 		else // Particle 1 comes from the PN model
 		{
-			if (ip2 < 0) // Particle 2 comes from the PN model 
+			if (ip2 > sys.Particles().Capacity()) // Particle 2 comes from the PN model 
 			{
-				if (!((index1 == -1 * ip2) && n_index1 == 1)) // There is more than one particle at chosen index so can use twice
-					unsuitableChoice = false;
+				if (n_index1 == 1) // There is more than one particle at chosen index so can use twice
+                {
+                    if (!(index1 == (ip2 - sys.Particles().Capacity())))
+					    unsuitableChoice = false;
+                }
+                else
+                    unsuitableChoice = false;
 			}
+            else
+                unsuitableChoice = false;
 		}
 	}
 
 	Particle *sp2 = NULL;
 
 	// Is this an incepting class particle?
-	if (ip2 < 0)
+	if (ip2 > sys.Particles().Capacity())
 	{
-		index2 = -1 * ip2;
+		index2 = ip2 - sys.Particles().Capacity();
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
 		sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
 		sp2->SetTime(t);
 	}
-	else
+	else if ((ip2 >= 0) && (ip2 != ip1)) 
 	{
-		if ((ip2 >= 0) && (ip2 != ip1)) {
-			sp2 = sys.Particles().At(ip2);
-		}
-		else {
-			// Failed to select a unique particle.
-			return -1;
-		}
+		sp2 = sys.Particles().At(ip2);
+	}
+	else {
+		// Failed to select a unique particle.
+		return -1;
 	}
 
 	//Calculate the majorant rate before updating the particles
@@ -687,7 +693,7 @@ int Coagulation::ChooseIndexWeightedCoag(double t, const Sweep::PropID prop, Cel
 			index = ChooseIndexWeightedCoag(t, prop, sys, rng);
 			return index;
 		}
-		index *= -1;
+		index += sys.Particles().Capacity();
 	}
 	else
 	{
