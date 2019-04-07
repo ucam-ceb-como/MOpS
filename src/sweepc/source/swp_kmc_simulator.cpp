@@ -135,13 +135,16 @@ void KMCSimulator::targetPAH(PAHStructure& pah) {
  * @param[in]        r_factor        Model parameter: Growth factor, a multiplier that is applied to the growth rate of PAHs within primary particles when the number of PAHs exceeds a critical number of PAHs.
  * @param[in]        PAH_ID          "Unique" identification number attached to this PAH.
  */
-void KMCSimulator::updatePAH(PAHStructure* pah, 
+double KMCSimulator::updatePAH(PAHStructure* pah, 
                             const double tstart, 
                             const double dt,  
                             const int waitingSteps,  
+							const int maxloops,
                             rng_type &rng,
                             double r_factor,
-                            int PAH_ID) {
+                            int PAH_ID,
+							bool calcrates,
+							double ratefactor) {
 	// wjm34: remove call to initReaction count to save time in updating.
     //initReactionCount();
     m_t = tstart;
@@ -171,22 +174,38 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
     double t_step_max = dt/waitingSteps;
     //double oldtnext;
     int loopcount=0;
-    while (m_t < t_max) {
+	bool proceed = true;
+	Spointer Sp1;
+	int test;
+    while (m_t < t_max && proceed) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
         //m_simGas.interpolateProfiles(m_t, true, r_factor);
-        m_gas->Interpolate(m_t, r_factor);
         loopcount++;
 
         // Calculate rates of each jump process
-        m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
+		if (calcrates){
+			m_gas->Interpolate(m_t, r_factor);
+			m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
+		}
 
         // Calculate time step, update time
         typedef boost::exponential_distribution<double> exponential_distrib;
-        exponential_distrib waitingTimeDistrib(m_kmcmech.TotalRate());
+        exponential_distrib waitingTimeDistrib(m_kmcmech.TotalRate()*ratefactor);
         boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
         double t_step = waitingTimeGenerator();
         t_next = m_t+t_step;
         if(t_next < t_max && t_step < t_step_max) {
+
+			//if (PAH_ID == 677){
+			//	std::list<Site> tester = pah->GetSiteList();
+			//	cout << "Check start " << PAH_ID << endl << t_next << endl;
+			//	cout << "Rings = "<< pah->numofRings() << endl;;
+			//	for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+			//		cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+			//	}
+			//}
+
+			//cout << "Check start " << PAH_ID << endl << t_next << endl;
 
             //if (pah->numofC()>5000&&pah->numofC()<6000)//||pah->havebridgeC()    //if (PAH_ID==224835)
             //if we want to check a PAH with specified ID or number of Carbon, 
@@ -199,8 +218,25 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             //dotname << "KMC_DEBUG/p_" << (t_next*1e8) << ".dot";
             //m_simPAHp.saveDOT(dotname.str());
             // Update data structure
+            m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 
-            m_simPAHp.performProcess(*jp_perf.first, rng);
+			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
+			//Set t_next to t_max so the updatePAH routine will be exited
+			//if (pah->numofRings() < 4){
+			//	proceed = false;
+			//	//t_next = t_max;
+			//}
+
+			//if (PAH_ID == 677){
+			//	std::list<Site> tester = pah->GetSiteList();
+			//	cout << "Check end " << PAH_ID << endl << t_next << endl;
+			//	cout << "Rings = " << pah->numofRings() << endl;;
+			//	for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
+			//		cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
+			//	}
+			//}
+
+			//cout << "Check end " << PAH_ID << endl << t_next << endl;
 
             /*if(m_simPAH->m_parent->ID() % 100000 == 609) {
             if(!m_simPAHp.checkCoordinates()) {
@@ -215,10 +251,12 @@ void KMCSimulator::updatePAH(PAHStructure* pah,
             }*/
         }else {
             //oldtnext = t_next;
-            t_next = m_t+t_step_max;
+            t_next = t_max;
         }
+		if (loopcount == maxloops) proceed = false; //If maxloops is set to 0, this condition will never be true
         m_t = t_next;
     }
+	return m_t;
 }
 
 //! Outputs rates into a csv file (assuming all site counts as 1)

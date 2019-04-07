@@ -429,7 +429,7 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
             else if (Mode() == "REDUCED")
                 redmass = nRings1 * nRings2 / (nRings1 + nRings2);
             else throw std::runtime_error("Mode of collision efficiency is modified by unknown process. Please check Sweep::ParticleModel::CollisionEff()."); 
-            if (redmass >= target_Rings_Inception) ceffi = 1;
+            if (redmass >= target_Rings_Inception) ceffi = 1.0;
             else ceffi = 0;
         }
 
@@ -746,7 +746,7 @@ void ParticleModel::init(void)
     m_efm = 2.2;
 
     //! Postprocess based on the inception species concentration.
-    m_postprocessingType = normal;
+    m_postprocessingType = concentration;
 
     //! Primary particles are assumed to be in contact.
     m_trackPrimarySeparation = false;

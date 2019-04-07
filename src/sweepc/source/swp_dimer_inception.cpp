@@ -98,17 +98,9 @@ DimerInception &DimerInception::operator =(const DimerInception &rhs)
         m_kfm  = rhs.m_kfm;
         m_ksf1 = rhs.m_ksf1;
         m_ksf2 = rhs.m_ksf2;
-		m_single_step = rhs.m_single_step;
     }
     return *this;
 }
-
-//**************************************************************************csl37:TTIP
-void DimerInception::SetSingleStep(bool single_step)
-{
-	m_single_step = single_step;
-}
-//**************************************************************************csl37:TTIP
 
 /*!
  * Create a new particle and add it to the ensemble with position uniformly
@@ -223,17 +215,10 @@ double DimerInception::Rate(double t, const Cell &sys, const Geometry::LocalGeom
     double T = sys.GasPhase().Temperature();
     double P = sys.GasPhase().Pressure();
 	
-	//**************************************************************************csl37:TTIP
-	//single step TTIP decomposition
-	if (m_single_step == true){
-		return SingleStepRate(sys.GasPhase(), T, sys.Particles().GetSum(Sweep::iS), sys.SampleVolume());
-	}else{
-		// Calculate the rate.
-		return Rate(sys.GasPhase(), sqrt(T),
+	// Calculate the rate.
+	return Rate(sys.GasPhase(), sqrt(T),
                 MeanFreePathAir(T,P),
                 sys.SampleVolume());
-	}
-	//**************************************************************************csl37:TTIP
 }
 
 
@@ -277,32 +262,6 @@ double DimerInception::Rate(const EnvironmentInterface &gas, double sqrtT,
 
     return rate;
 }
-
-//**************************************************************************csl37:TTIP
-//calculate single step inception rate for TTIP mechanism as per c4e-169
-double DimerInception::SingleStepRate(const EnvironmentInterface &gas, double T, double A_smpl, double V_smpl) const
-{
-	double gamma = 1.0;
-	double alpha = 1.0;
-
-	double rate = 0.0;
-	double A = A_smpl / V_smpl;
-
-	//calculate k1 and k2
-	double k1 = 3.96e5 * exp(-8479.7 / T);		// (1/s)
-	double k2 = 1.0e9 * exp(-15155.6 / T);		// (m/s)	
-	//k2 = 0;		//csl37: for inception only case
-
-	if (gamma * k1 >= A*alpha*k2) {
-		//the factor of 2 cancels the factor of 0.5 in chemRatePart (intended for two-body collision)
-		rate = (k1 - A*alpha*k2) * chemRatePart(gas) * V_smpl * 2.0;	
-	}else{
-		rate = (1-gamma)*k1 * chemRatePart(gas) * V_smpl * 2.0;	
-	}
-
-	return rate;
-}
-//**************************************************************************csl37:TTIP
 
 /*!
  * Calculates the gas-phase chemistry contribution to the rate
@@ -355,11 +314,6 @@ double DimerInception::RateTerms(const double t, const Cell &sys,
             Rate = 0.0;
 
         *iterm = Rate; 
-	//**************************************************************************csl37:TTIP
-	//if single step TTIP decomposition
-    }else if (m_single_step == true){
-		*iterm = SingleStepRate(sys.GasPhase(), T, sys.Particles().GetSum(Sweep::iS), sys.SampleVolume());
-	//**************************************************************************csl37:TTIP
 	}else{
         *iterm = Rate(sys.GasPhase(), sqrt(T),
                       MeanFreePathAir(T,P),

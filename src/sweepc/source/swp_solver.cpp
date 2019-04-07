@@ -158,6 +158,8 @@ double Solver::calcSplitTime(double t, double tstop, double jrate,
     // not longer than the maximum allowable time.
     double tsplit = (n + 1) * m_splitratio / (jrate + 1.0);
 
+	//double tsplit = m_splitratio / (jrate + 1.0);
+
     // Now put the split end time into tsplit, again
     // checking that it is not beyond the stop time.
     return min(tsplit+t, tstop);
@@ -206,7 +208,7 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
     if (t+dt <= t_stop) {
         boost::uniform_01<rng_type &> uniformGenerator(rng);
         const int i = chooseIndex(rates, uniformGenerator);
-        //std::cout << ' ' << i;
+        //std::cout << ' ' << i <<endl;
         mech.DoProcess(i, t+dt, sys, geom, rng);
         t += dt;
     } else {

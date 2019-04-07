@@ -100,6 +100,9 @@ public:
     //! Allow PAHs in soot particles to point to the same memory location after a doubling event.
     double SharedPointers() const;
 
+	//! Allow particles composed of only single PAHs to be respresented with weighted particles
+	double WeightedPAHs() const;
+
     // Sets the density (g/cm3).
     void SetDensity(double dens);
 
@@ -114,6 +117,9 @@ public:
 
     //! Allow PAHs in soot particles to point to the same memory location after a doubling event.
     void SetSharedPointers(int sp);
+
+	//! Allow particles composed of only single PAHs to be respresented with weighted particles
+	void SetWeightedPAHs(int wpah);
 
     // Returns component symbol or name.
     const std::string &Name() const;
@@ -165,6 +171,9 @@ private:
     
     //! Allow PAHs in soot particles to point to the same memory location after a doubling event.
     double m_sharedPointers;
+
+	//! Allow particles composed of only single PAHs to be respresented with weighted particles
+	double m_weightedPAHs;
 };
 
 // Typedef of a vector of pointers to Component objects.

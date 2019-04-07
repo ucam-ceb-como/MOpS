@@ -68,8 +68,11 @@ Console_IO::Console_IO(void)
     m_autodivide = false;
 
 #ifdef _WIN32
+// Two digit exponents are used in Visual Studio 2015 onwards and this statement has been made obsolete and removed.
+#ifdef _TWO_DIGIT_EXPONENT
     // Ensure exponents only have two digits.
     _set_output_format(_TWO_DIGIT_EXPONENT);
+#endif
 #endif
 }
 

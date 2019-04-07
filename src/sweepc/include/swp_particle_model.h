@@ -257,17 +257,19 @@ public:
 
     };
 
+    //! Gas-phase trasfer species.
     enum PostProcessStartingStr {
         A1, A2, A4, A5
     };
 
-    //! Postprocess based on the inception species concentration (XA4) or based
-    //! on the molar rate of production by chemical reaction of the inception
+    //! Postprocess based on the inception species concentration 
+	//! (XA4 for soot, concentration otherwise) or based on the 
+    //! molar rate of production by chemical reaction of the inception
     //! species per unit volume (wdotA4).
     enum postprocessingType {
         XA4,
         wdotA4,
-		normal,
+		concentration,
     };
 
     //! Choose between drag models

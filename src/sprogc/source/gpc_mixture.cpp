@@ -146,28 +146,40 @@ void Mixture::SetTemperature(double T)
     m_data[temperatureIndex()] = T;
 }
 
-//set convective velocity
+// Set convective velocity
 void Mixture::SetConvectiveVelocity(double u)
 {
     m_data[ConvectiveVelocityIndex()] = u;
 }
 
-//get convective velocity
+// Get convective velocity
 double Mixture::GetConvectiveVelocity() const
 {
     return m_data[ConvectiveVelocityIndex()];
 }
 
-//set thermophoretic velocity
+// Set thermophoretic velocity
 void Mixture::SetThermophoreticVelocity(double v)
 {
     m_data[ThermophoreticVelocityIndex()] = v;
 }
 
-//get thermophoretic velocity
+// Get thermophoretic velocity
 double Mixture::GetThermophoreticVelocity() const
 {
     return m_data[ThermophoreticVelocityIndex()];
+}
+
+// Set diffusion term
+void Mixture::SetDiffusionTerm(double D)
+{
+    m_data[DiffusionTermIndex()] = D;
+}
+
+// Get diffusion term
+double Mixture::GetDiffusionTerm() const
+{
+    return m_data[DiffusionTermIndex()];
 }
 // CONCENTRATIONS/FRACTIONS.
 

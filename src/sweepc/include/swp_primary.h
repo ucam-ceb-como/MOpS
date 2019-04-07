@@ -201,6 +201,9 @@ public:
 
     //! Returns fragmentation flag.
     int Frag(void) const;
+	//! Returns the number of rings.
+	int NumRings(void) const;
+
     //! Returns the property with the given ID.
     double Property(const Sweep::PropID id) const;
 
@@ -290,7 +293,6 @@ public:
 
 	//csl37: remove primary tracking
 	virtual void removeTracking();
-
     // READ/WRITE/COPY.
 
     // Returns a copy of the primary.
@@ -339,6 +341,7 @@ protected:
     double m_mass; // Mass.
     int m_numcarbon; //!< Number of carbon atoms.
     int m_frag;      //!< Fragmentation flag.
+	int m_numOf6Rings;
 
 	// Property for titania phase transformation model
 	double m_phaseterm;

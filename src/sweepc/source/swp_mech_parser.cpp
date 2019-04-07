@@ -58,6 +58,7 @@
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
 #include "swp_weighted_transcoag.h"
+#include "swp_transcoag_weighted_PAHs.h"
 #include "swp_weighted_erosionfrag.h"
 #include "swp_weighted_symmetricfrag.h"
 #include "swp_coag_weight_rules.h"
@@ -695,6 +696,29 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else {
             comp->SetSharedPointers(0);
         }
+		
+		//! Numerical parameter
+		/*!
+		* Allow PAHs in soot particles to point to the same memory location after a doubling event.
+		*/
+		el = (*i)->GetFirstChild("weightedPAHs");
+		if (el != NULL) {
+			str = el->Data();
+			if (str != "") {
+				comp->SetWeightedPAHs(int(cdble(str)));
+			}
+			else {
+				std::string msg("Component ");
+				msg += comp->Name();
+				msg += " weightedPAHs contains no data (Sweep, MechParser::readComponents).";
+
+				delete comp;
+				throw runtime_error(msg);
+			}
+		}
+		else {
+			comp->SetWeightedPAHs(0);
+		}
 
         // Get component mol. wt.
         el = (*i)->GetFirstChild("molwt");
@@ -852,12 +876,6 @@ void MechParser::readInception(CamXML::Element &xml, Processes::DimerInception &
             useFreeMolRegime = true;
         else if(str == "transition")
             useFreeMolRegime = false;
-		//**************************************************************************csl37:TTIP
-		else if(str == "TTIP")	{//single step TTIP reaction
-			useFreeMolRegime = false;
-			icn.SetSingleStep(true);
-		}
-		//**************************************************************************csl37:TTIP
         else
             throw std::runtime_error("Unrecognised rate type " + str + " in Sweep::MechParser::readInception");
     }
@@ -1223,10 +1241,6 @@ void MechParser::readSurfRxns(CamXML::Document &xml, Mechanism &mech)
                 rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iEleyRidealDesorption);
             } else if (str2.compare("multivariate")==0) {
                 rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iMultivariate);
-			//**************************************************************************csl37:TTIP
-			} else if (str2.compare("TTIP")==0) {
-                rxn = new TitaniaSurfaceReaction(mech, TitaniaSurfaceReaction::iTTIP);
-			//**************************************************************************csl37:TTIP
             } else {
                 throw runtime_error("Unrecognised titania reaction form" + str2 +
                         "in MechParser::readSurfRxns");
@@ -1888,11 +1902,18 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                 if(weightXML == NULL) {
                     // Unweighted case
                     if(kernelName == "transition")
-                        coag.reset(new Processes::TransitionCoagulation(mech));
+						if (mech.Components()[0]->WeightedPAHs()){
+							coag.reset(new Processes::TransitionCoagulationWeightedPAHs(mech));
+						}
+						else{
+							coag.reset(new Processes::TransitionCoagulation(mech));
+						}
                     else if(kernelName == "additive")
                         coag.reset(new Processes::AdditiveCoagulation(mech));
                     else if(kernelName == "constant")
                         coag.reset(new Processes::ConstantCoagulation(mech));
+					else if (kernelName == "transitionweightedPAHs")
+						coag.reset(new Processes::TransitionCoagulationWeightedPAHs(mech));
                     else
                         // Unrecognised option
                         throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available in DSA \

@@ -142,6 +142,12 @@ unsigned int Cell::ParticleCount(void) const
     return m_ensemble.Count();
 }
 
+// Returns the particle statistical weight.
+double Cell::ParticleWeightSum(void) const
+{
+	return m_ensemble.GetSum(iW);
+}
+
 /**
  * Initialise the ensemble to hold particles of the type specified
  * by the model and containing the particular particles contained

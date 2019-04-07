@@ -206,35 +206,6 @@ double TitaniaSurfaceReaction::Rate(
         rate *= std::max(sys.Particles().GetSum(Sweep::iS) * rho_s -
                          sys.Particles().GetSum(Sweep::iASN)/4.0, 0.0);
 	
-	//**************************************************************************csl37:TTIP
-	// rate calculated as per c4e 169
-	} else if (GetRateForm() == iTTIP) {
-
-		double gamma = 1.0;
-		double alpha = 1.0;
-
-		double T = sys.GasPhase().Temperature();
-		double V_smpl = sys.SampleVolume();
-		double A_tot = sys.Particles().GetSum(m_pid);
-
-		//calculate k1 and k2
-		double k1 = 3.96e5 * exp(-8479.7 / T);		// (1/s)
-		double k2 = 1.0e9 * exp(-15155.6 / T);		// (m/s)
-		
-		// rate = k_s * [TTIP] * A * N_A * V_smpl	(events/s), 
-		// where A = A_surf/V_smpl, is the surface area of the particles per unit volume
-		if ( gamma * k1 >= alpha*k2 *  A_tot / V_smpl ) {
-			//k_s = k_2
-			rate *= alpha*k2 * chemRatePart(sys.GasPhase()) *  A_tot * NA;
-		} else {
-			//k_s = k_1 / A
-			rate *= gamma * k1 * chemRatePart(sys.GasPhase()) * V_smpl * NA;
-		}
-
-		//majorant rate
-		if (m_mech->AnyDeferred()) rate *= m_majfactor;
-
-	//**************************************************************************csl37:TTIP
     } else {
         // Just use parent class infrastructure, hoping the correct parameters
         // have been chosen in sweep.xml
@@ -290,35 +261,6 @@ double TitaniaSurfaceReaction::Rate(
         //  = S * \rho - \eta_{Cl} / 4
         rate *= std::max(sp.Property(Sweep::iS) * rho_s -
                 sp.Property(Sweep::iASN)/4.0, 0.0);
-	//**************************************************************************csl37:TTIP
-	// rate calculated as per c4e 169
-	} else if (GetRateForm() == iTTIP) {
-
-		double gamma = 1.0;
-		double alpha = 1.0;
-
-		double T = sys.GasPhase().Temperature();
-		double V_smpl = sys.SampleVolume();
-		double A_tot = sys.Particles().GetSum(m_pid);
-
-		//calculate k1 and k2
-		double k1 = 3.96e5 * exp(-8479.7 / T);		// (1/s)
-		double k2 = 1.0e9 * exp(-15155.6 / T);		// (m/s)
-		
-		//rate = k_s * [TTIP] * A * N_A * V_smpl	(events/s), 
-		// where A = A_surf/V_smpl, is the surface area of the particles per unit volume
-		if ( gamma * k1 >= alpha*k2 *  A_tot / V_smpl ) {
-			//k_s = k_2
-			rate *= alpha*k2 * chemRatePart(sys.GasPhase()) *  NA * sp.Property(m_pid);
-		} else {
-			//k_s = k_1 / A
-			rate *= gamma * k1 * chemRatePart(sys.GasPhase()) * V_smpl * NA * sp.Property(m_pid) / A_tot;
-		}
-
-		//majorant rate
-		if (m_mech->AnyDeferred()) rate *= m_majfactor;
-
-	//**************************************************************************csl37:TTIP
     } else {
         // Just use parent class infrastructure, hoping the correct parameters
         // have been chosen in sweep.xml

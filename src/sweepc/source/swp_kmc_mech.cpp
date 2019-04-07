@@ -554,7 +554,7 @@ void O6R_FE3_O2::initialise() {
     addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
     addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
-    addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r4f
+	addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r5f(1)
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f(2)
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
@@ -667,7 +667,7 @@ double O6R_FE3_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
     //    r_f = r_f/(r_f+1.0);
     //}
     //else r_f=0;
-    return m_rate = m_r[0]*site_count; // Rate Equation
+	return m_rate = m_r[0] * site_count; // Rate Equation
 }
 double O6R_FE3_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p12(gp, pah_st);
@@ -695,7 +695,7 @@ void O6R_FE_HACA_O2::initialise() {
     addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
     addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
-    addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r4f
+	addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r5f(1)
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
@@ -808,7 +808,7 @@ double O6R_FE_HACA_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, 
     //    r_f = r_f/(r_f+1.0);
     //}
     //else r_f=0;
-    return m_rate = m_r[0]* site_count; // Rate Equation
+	return m_rate = m_r[0] * site_count; // Rate Equation
 }
 double O6R_FE_HACA_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p12(gp, pah_st);
@@ -1583,7 +1583,7 @@ double O6R_FE2_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
     //    r_f = r_f/(r_f+1.0);
     //}
     //else r_f=0;
-    return m_rate = m_r[0]* site_count; // Rate Equation
+	return m_rate = m_r[0] * site_count; // Rate Equation
 }
 double O6R_FE2_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p12(gp, pah_st);
@@ -1611,7 +1611,7 @@ void O6R_FE2_O2::initialise() {
     addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
     addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
-    addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r4f
+	addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));   //5 - r5f(1)
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
@@ -1653,7 +1653,7 @@ double O6R_FE2_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+	return m_rate = m_r[5] * r_f* site_count; // Rate Equation
 }
 double O6R_FE2_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p12(gp, pah_st);

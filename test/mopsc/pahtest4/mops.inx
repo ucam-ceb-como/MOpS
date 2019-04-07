@@ -5,8 +5,8 @@
 	<iter>20</iter>
 	<atol>1.0e-17</atol> 
 	<rtol>1.0e-4</rtol>
-	<pcount>16</pcount>
-	<maxm0>1e11</maxm0>
+	<pcount>64</pcount>
+	<maxm0>5e15</maxm0>
 	<relax>0.8</relax>
 
 	<!-- Reactor definition (given initial conditions). -->
@@ -88,11 +88,6 @@
 		<time steps="1" splits="10">0.023283</time>
 		<time steps="1" splits="10">0.023976</time>
 		<time steps="1" splits="10">0.025317</time>
-		<time steps="1" splits="10">0.026828</time>
-		<time steps="1" splits="10">0.028288</time>
-		<time steps="1" splits="10">0.029146</time>
-		<time steps="1" splits="10">0.029989</time>
-		<time steps="1" splits="10">0.030816</time>
 	</timeintervals>
 
 	<!-- Simulation output settings. -->

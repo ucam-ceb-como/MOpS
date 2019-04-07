@@ -57,26 +57,26 @@ namespace Sweep
 		iNumCarbon,  /**< Number of carbon atoms. */
         iFrag,       /**< Fragmentation flag. */
 
-        // The next properties are provided for calculation of
-        // collision rates.
-        iD2,      // Collision diameter squared.
-        iD_1,     // Inverse collision diameter.
-        iD_2,     // Inverse of the diameter squared.
-        iM_1_2,   // Inverse of the square-root of the mass.
+		// The next properties are provided for calculation of
+		// collision rates.
+		iD2,      // Collision diameter squared.
+		iD_1,     // Inverse collision diameter.
+		iD_2,     // Inverse of the diameter squared.
+		iM_1_2,   // Inverse of the square-root of the mass.
 
-        //! Statistical weight
-        iW,
+		//! Statistical weight
+		iW,
 
-        //! Statistical weight time physical mass
-        iWM,
-        iDW,		// dcol * weight
-        iD2W,		// dcol * dcol * weight
-        iD_1W,		// weight / dcol
-        iD_2W,		// weight / dcol ^ 2
-        iM_1_2W,	// mass ^ -1/2 * weight
-        iD2_M_1_2W, // dcol * dcol * mass ^ -1/2 * weight
+		//! Statistical weight time physical mass
+		iWM,
+		iDW,		// dcol * weight
+		iD2W,		// dcol * dcol * weight
+		iD_1W,		// weight / dcol
+		iD_2W,		// weight / dcol ^ 2
+		iM_1_2W,	// mass ^ -1/2 * weight
+		iD2_M_1_2W, // dcol * dcol * mass ^ -1/2 * weight
 
-        iD2_M_1_2, // D^2 * M^-1/2.
+		iD2_M_1_2, // D^2 * M^-1/2.
 		iFS,		// the free surface available for other particles to sinter
 
 		// Silica model properties
@@ -85,6 +85,9 @@ namespace Sweep
 
 		// Silicon properties
 		iCoverage,     // Ratio of component 0 to component 1
+
+		iUniform1
+
 
 		//Titania model properties
 		iAn_2_3_comp	//Anatase fraction ^ (2/3) * total composition

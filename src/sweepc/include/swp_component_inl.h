@@ -74,6 +74,9 @@ inline double Sweep::Component::ThresholdOxidation() const {return m_thresholdOx
 //! Allow PAHs in soot particles to point to the same memory location after a doubling event.
 inline double Sweep::Component::SharedPointers() const {return m_sharedPointers;};
 
+//! Allow particles composed of only single PAHs to be respresented with weighted particles
+inline double Sweep::Component::WeightedPAHs() const { return m_weightedPAHs; };
+
 //! Sets the density (g/cm3).
 inline void Sweep::Component::SetDensity(const double dens) {m_density = dens;};
 
@@ -91,6 +94,9 @@ inline void Sweep::Component::SetThresholdOxidation(const int to) {m_thresholdOx
 
 //! Allow PAHs in soot particles to point to the same memory location after a doubling event.
 inline void Sweep::Component::SetSharedPointers(const int sp) {m_sharedPointers = sp;};
+
+//! Allow particles composed of only single PAHs to be respresented with weighted particles
+inline void Sweep::Component::SetWeightedPAHs(const int wpah) { m_weightedPAHs = wpah; };
 
 // COMPONENT NAME.
 

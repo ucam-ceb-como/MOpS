@@ -119,6 +119,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
                              unsigned int iterm,
                              Sweep::rng_type &rng) const
 {
+	PartPtrVector dummy;
     // Select properties by which to choose particles.
     // Note we need to choose 2 particles.  One particle must be chosen
     // uniformly and one with probability proportional
@@ -160,7 +161,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
     const double majk = MajorantKernel(*sp1, *sp2, sys, Default);
 
     //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t, rng);
+    m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
@@ -172,7 +173,7 @@ int ConstantCoagulation::Perform(double t, Sweep::Cell &sys,
         return 0;
     }
 
-    m_mech->UpdateParticle(*sp2, sys, t, rng);
+    m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
         // Tell the ensemble to update particle one before we confuse things

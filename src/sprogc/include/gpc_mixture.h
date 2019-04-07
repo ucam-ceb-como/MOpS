@@ -107,17 +107,23 @@ public:
     //! Set bulk gas velocity (species must be defined already)
     void SetVelocity(const double v) {m_data[velocityIndex()] = v;}
 
-	//set convective velocity
+	//! Set convective velocity
 	void SetConvectiveVelocity(double u);
 
-	//get convective velocity
+	//! Get convective velocity
 	double GetConvectiveVelocity(void) const;
 
-	//set thermophoretic velocity
+	//! Set thermophoretic velocity
 	void SetThermophoreticVelocity(double v);
 
-	//get thermophoretic velocity
+	//! Get thermophoretic velocity
 	double GetThermophoreticVelocity(void) const;
+
+	//! Set diffusion term
+	void SetDiffusionTerm(double D);
+
+	//! Get diffusion term
+	double GetDiffusionTerm(void) const;
 
     //PARTICLE RELATED DATA (NO NEED CHANGING)
 
@@ -322,8 +328,11 @@ public:
 	//!  Index of thermophoretic velocity
     size_t ThermophoreticVelocityIndex() const {return m_species->size() + 10;}
 
+	//!  Index of diffusion term
+    size_t DiffusionTermIndex() const {return m_species->size() + 11;}
+
     //! Number of items of data that are not species concentrations that are stored at the end of m_data
-    static const size_t sNumNonSpeciesData = 11;
+    static const size_t sNumNonSpeciesData = 12;
 
     // Writes the mixture to a binary data stream.
     virtual void Serialize(std::ostream &out) const;

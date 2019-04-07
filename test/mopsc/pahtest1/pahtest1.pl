@@ -82,7 +82,7 @@ while(<$momentFile>) {
   }
 }
 
-# Precalculated value: M0 = 1.35e+19, Fv = 2.09e-8
+# Precalculated value: M0 = 1.39e+19, Fv = 2.52e-8
 
 # 20 repetitions
 # mean values and 99% confidence interval widths

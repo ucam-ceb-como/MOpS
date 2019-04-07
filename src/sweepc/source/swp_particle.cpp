@@ -372,6 +372,11 @@ int Particle::Frag(void) const
 {
     return m_primary->Frag();
 }
+
+int Particle::NumRings() const
+{
+	return m_primary->NumRings();
+}
 /*!
  * Pass through to primary particle
  */
@@ -470,7 +475,7 @@ double Particle::Property(PropID id) const
         case iFS:
             throw std::logic_error("Free surface no longer supported (Particle::Property)");
             return 0.0;       
-		case -1:
+        case -1:
             // Special case property, used to select particles
             // uniformly.
             return 1.0;
@@ -789,5 +794,4 @@ void Particle::setTracking()
 //csl37: remove primary tracking
 void Particle::removeTracking()
 {
-	m_primary->removeTracking();
-}
+	m_primary->removeTracking();}
