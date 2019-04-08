@@ -88,7 +88,8 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_rightparticle(NULL),
     m_r(0.0),
     m_r2(0.0),
-    m_r3(0.0)
+    m_r3(0.0),
+	m_tracked(false)
 {
     m_cen_bsph[0] = 0.0;
     m_cen_bsph[1] = 0.0;
@@ -140,7 +141,8 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_rightparticle(NULL),
     m_r(0.0),
     m_r2(0.0),
-    m_r3(0.0)
+    m_r3(0.0),
+	m_tracked(false)
 {
     m_cen_bsph[0] = 0.0;
     m_cen_bsph[1] = 0.0;
@@ -189,7 +191,8 @@ m_leftchild(NULL),
 m_rightchild(NULL),
 m_parent(NULL),
 m_leftparticle(NULL),
-m_rightparticle(NULL)
+m_rightparticle(NULL),
+m_tracked(false)
 {
     Deserialize(in, model);
 }
@@ -399,6 +402,11 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
     }
     m_children_sintering=0.0;
 
+	//csl37
+	//this becomes a node so turn off tracking flag
+	//flag should have been copied to newleft/right already
+	m_tracked = false;
+
     UpdateCache();
 
     //! It is assumed that primary pi from particle Pq and primary pj from
@@ -545,21 +553,17 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
             double r = uniformGenerator();
             theta  = 2.0 * PI * uniformGenerator();
 
-            double sumr = m_leftchild->Radius() + m_rightchild->Radius();
+			double sumr = m_leftchild->Radius() + m_rightchild->Radius();
 
-            double x3 = sumr * sqrt(r) * cos(theta);
-            double y3 = sumr * sqrt(r) * sin(theta);
-			assert(sumr > 0);	//csl37-debug
+			double x3 = sumr * sqrt(r) * cos(theta);
+			double y3 = sumr * sqrt(r) * sin(theta);
+			double z3 = -sumr;
 
-            double x3 = (sumr / 2.0) * sqrt(r) * cos(theta);
-            double y3 = (sumr / 2.0) * sqrt(r) * sin(theta);
-            double z3 = -sumr;
+			double x4 = R[0][0] * x3 + R[0][1] * y3 + R[0][2] * z3;
+			double y4 = R[1][0] * x3 + R[1][1] * y3 + R[1][2] * z3;
+			double z4 = R[2][0] * x3 + R[2][1] * y3 + R[2][2] * z3;
 
-            double x4 = R[0][0] * x3 + R[0][1] * y3 + R[0][2] * z3;
-            double y4 = R[1][0] * x3 + R[1][1] * y3 + R[1][2] * z3;
-            double z4 = R[2][0] * x3 + R[2][1] * y3 + R[2][2] * z3;
-
-            this->m_leftchild->Translate(x4, y4, z4);
+			this->m_leftchild->Translate(x4, y4, z4);
             
             //! The two particles are initially at the origin. Keep doubling
             //! the distance between them so that they do not overlap. This is
@@ -1643,6 +1647,23 @@ BinTreePrimary &BinTreePrimary::Merge()
 	//initialise parameters
 	double r_big,r_small; //, d_ij, x_ij;
 	double r_new = 0.0;
+
+	//if merging primary is tracked save frame coordinates
+	Coords::Vector frame_x;
+	Coords::Vector frame_z;
+	bool update_tracking = false;
+	if (m_rightparticle->m_tracked == true){
+		update_tracking = true;
+		m_rightparticle->m_tracked = false;
+		frame_x = m_rightparticle->m_frame_x;
+		frame_z = m_rightparticle->m_frame_orient;
+	}
+	else if (m_leftparticle->m_tracked == true){
+		update_tracking = true;
+		m_leftparticle->m_tracked = false;
+		frame_x = m_leftparticle->m_frame_x;
+		frame_z = m_leftparticle->m_frame_orient;
+	}
 
     // Make sure this primary has children to merge
     if( m_leftchild!=NULL) {

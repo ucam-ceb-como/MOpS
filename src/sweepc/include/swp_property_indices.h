@@ -86,7 +86,7 @@ namespace Sweep
 		// Silicon properties
 		iCoverage,     // Ratio of component 0 to component 1
 
-		iUniform1
+		iUniform1,
 
 
 		//Titania model properties
