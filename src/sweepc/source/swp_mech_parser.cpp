@@ -1724,12 +1724,13 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 
 		TitaniaPhaseTransformation *phasetransform = NULL;
 
-		if (str.compare("titania")==0) {
+		if (str.compare("titania") == 0) {
 			//check that the particle model is valid
-			if(mech.AggModel()==AggModels::Spherical_ID || mech.AggModel()==AggModels::BinTree_ID) {
+			if (mech.AggModel() == AggModels::Spherical_ID || mech.AggModel() == AggModels::BinTree_ID) {
 				// Create a new Titania phase transformation object.
 				phasetransform = new TitaniaPhaseTransformation(mech);
-			} else {
+			}
+			else {
 				throw runtime_error("Only Spherical and BinTree models supported for phase transformation (Sweep, MechParser::readPhaseTransformation).");
 			}
 		} else {

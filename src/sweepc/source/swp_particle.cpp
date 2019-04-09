@@ -640,6 +640,7 @@ unsigned int Particle::AdjustIntPar(const fvector &dcomp,
  *
  *@return       Number of times changes actually applied
  */
+/*
 unsigned int Particle::AdjustPhase(const fvector &dcomp,
                               const fvector &dvalues,
                               rng_type &rng,
@@ -664,6 +665,24 @@ unsigned int Particle::AdjustPhase(const fvector &dcomp,
     UpdateCache();
 
     return m;
+}
+*/
+unsigned int Particle::AdjustPhase(const fvector &dcomp,
+	const fvector &dvalues,
+	rng_type &rng,
+	unsigned int n, const double d_crit, const bool melt)
+{
+
+	// This is a leaf-node sub-particle as it contains a
+	// primary particle.  The adjustment is applied to
+	// the primary.
+	n = m_primary->AdjustPhase(dcomp, dvalues, rng, n, d_crit, melt);
+
+	// Where-ever the adjustment has been applied this sub-particle must
+	// now update its cache.
+	UpdateCache();
+
+	return n;
 }
 
 /*!

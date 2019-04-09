@@ -256,7 +256,9 @@ public:
 	unsigned int AdjustPhase(const fvector &dcomp,
                               const fvector &dvalues,
                               rng_type &rng,
-                              unsigned int n);
+                              unsigned int n,
+							  const double d_crit,
+							  const bool melt);
 
     //! Combines this particle with another.
     Particle &Coagulate(const Particle &sp, rng_type &rng);

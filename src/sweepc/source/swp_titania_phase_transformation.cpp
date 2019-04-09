@@ -197,16 +197,22 @@ double TitaniaPhaseTransformation::Rate(
         ) const
 {
 	//rate constant
-	double rate = 3.0*m_arr.A;
+//	double rate = 3.0*m_arr.A;
 
 	//temperature dependence
 	double T = sys.GasPhase().Temperature();
-	rate *= exp(-m_arr.E / (R * T));
+//	rate *= exp(-m_arr.E / (R * T));
 
 	//particle dependence
-	rate *= sys.Particles().GetSum(m_pid);
+//	rate *= sys.Particles().GetSum(m_pid);
 
-    return rate;
+	if (T <= m_arr.n){
+		double rate = 1e6*sys.Particles().GetSum(m_pid);
+		return rate;
+	}
+	else{
+		return 0.0;
+	}
 }//csl37-done
 
 /*!
@@ -225,16 +231,22 @@ double TitaniaPhaseTransformation::Rate(
 {
 	//rate expressed as the change in number of components
 	//rate constant
-	double rate = 3.0*m_arr.A;
+//	double rate = 3.0*m_arr.A;
 
 	//temperature dependence
 	double T = sys.GasPhase().Temperature();
-	rate *= exp(-m_arr.E / (R * T));
+//	rate *= exp(-m_arr.E / (R * T));
 
 	//particle dependence
-	rate *= sp.Property(m_pid);
+//	rate *= sp.Property(m_pid);
 
-	return rate;
+	if (T <= m_arr.n){
+		double rate = 1e6*sys.Particles().GetSum(m_pid);
+		return rate;
+	}
+	else{
+		return 0.0;
+	}
 }//csl37-done
 
 
@@ -281,7 +293,12 @@ int TitaniaPhaseTransformation::Perform(double t, Sweep::Cell &sys,
 
                 if (!Fictitious(majr, truer, rng)) {
                     // Adjust particle.
-                    times = sp->Adjust(m_dcomp, m_dvals, rng, 1);
+                    //times = sp->AdjustPhase(m_dcomp, m_dvals, rng, 1);
+					bool melt = true;
+					if (sys.GasPhase().Temperature() < m_arr.n){
+						melt = false;
+					}
+					times = sp->AdjustPhase(m_dcomp, m_dvals, rng, 1, m_arr.A, melt);
                     sys.Particles().Update(i);
 
                 }
@@ -291,7 +308,12 @@ int TitaniaPhaseTransformation::Perform(double t, Sweep::Cell &sys,
             }
         } else {
             // No particle update required, just perform the process
-            times = sp->AdjustPhase(m_dcomp, m_dvals, rng, 1);
+           // times = sp->AdjustPhase(m_dcomp, m_dvals, rng, 1);
+			bool melt = true;
+			if (sys.GasPhase().Temperature() < m_arr.n){
+				melt = false;
+			}
+			times = sp->AdjustPhase(m_dcomp, m_dvals, rng, 1, m_arr.A, melt);
 
             if (sp->IsValid()) {
                 // Tell the binary tree to recalculate
@@ -323,7 +345,11 @@ int TitaniaPhaseTransformation::Perform(double t, Sweep::Cell &sys,
 int TitaniaPhaseTransformation::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
                           unsigned int n) const
 {
-	    unsigned int m = sp.AdjustPhase(m_dcomp, m_dvals, rng, n);
+		bool melt = true;
+		if (sys.GasPhase().Temperature() < m_arr.n){
+			melt = false;
+		}
+		unsigned int m = sp.AdjustPhase(m_dcomp, m_dvals, rng, n, m_arr.A, melt);
 		return m;
 }//csl37-done
 

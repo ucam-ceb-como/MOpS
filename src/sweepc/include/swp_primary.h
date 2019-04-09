@@ -262,7 +262,9 @@ public:
 		const fvector &dcomp,	// Composition changes.
         const fvector &dvalues,	// Tracker variable changes.
         rng_type &rng,			// Random number for leaf node
-        unsigned int n			// Number of times to perform adjustment.
+        unsigned int n,			// Number of times to perform adjustment.
+		const double d_crit,
+		const bool melt
 		);
 
     // Combines this primary with another.  This is also the

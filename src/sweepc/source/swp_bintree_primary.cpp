@@ -3011,6 +3011,7 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
  * @param[in]   rng     Random number generator
  * @param[in]   n       Number of times for adjustment
  */
+/*
 unsigned int BinTreePrimary::AdjustPhase(const fvector &dcomp,
         const fvector &dvalues, rng_type &rng, unsigned int n)
 {
@@ -3037,6 +3038,80 @@ unsigned int BinTreePrimary::AdjustPhase(const fvector &dcomp,
     UpdateCache(this);
 
     return n;
+}
+*/
+//helper function
+unsigned int BinTreePrimary::AdjustPhase(const fvector &dcomp,
+	const fvector &dvalues, rng_type &rng, unsigned int n, const double d_crit, const bool melt)
+{
+	n = this->AdjustPhase(rng, d_crit, melt);
+	// Update property cache.
+	UpdateCache(this);
+	return n;
+}
+unsigned int BinTreePrimary::AdjustPhase(rng_type &rng, const double d_crit, const bool melt)
+{
+	unsigned int n = 1;
+
+	// Update the children
+	if (m_leftchild != NULL) {
+		m_leftchild->AdjustPhase(rng, d_crit, melt);
+		m_rightchild->AdjustPhase(rng, d_crit, melt);
+	}else{ // this is a primary
+		
+		//select adjustment based on volume equivalent size
+		double d_p = m_diam;
+		fvector dcomp{ -1.0, 0.0, 0.0 };
+		fvector dvalues{ 0.0, 0.0, 0.0 };
+		//get number of liquid and anatase
+		if (melt == false){
+
+			if (d_p < d_crit){ //anatase transformation
+				dcomp[1] = 1.0;
+			}
+			else{ //rutile transformation
+				dcomp[2] = 1.0;
+			}
+
+			//transform everything
+			n = (unsigned int)m_comp[0];
+
+			// Call to Primary to adjust the state space
+			if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); };
+		}
+		else{
+			//particle has melted: transform solid phases back to liquid phase
+			//transform anatase to liquid
+			dcomp[0] = 1.0;
+			dcomp[1] = -1.0;
+			dcomp[2] = 0.0;
+
+			//transform everything
+			n = (unsigned int)m_comp[1];
+
+			// Call to Primary to adjust the state space
+			if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); };
+
+			//transform rutile to liquid
+			dcomp[0] = 1.0;
+			dcomp[1] = 0.0;
+			dcomp[2] = -1.0;
+
+			//transform everything
+			n = (unsigned int)m_comp[2];
+
+			// Call to Primary to adjust the state space
+			if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); };
+		}
+		// Stop doing the adjustment if n is 0.
+		if (n > 0) {
+			// Update only the primary
+			UpdatePrimary();
+		}
+
+	}
+
+	return n;
 }
 
 /*! Adjust composition of neighbours 

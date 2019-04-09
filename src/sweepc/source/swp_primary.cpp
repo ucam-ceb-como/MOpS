@@ -292,7 +292,9 @@ void AggModels::Primary::UpdateCache(void)
 	// 0 if components don't exist
 	double An = AggModels::Primary::GetComponent("An");
 	double Ru = AggModels::Primary::GetComponent("Ru");
-	m_phaseterm = pow( An, TWO_THIRDS) * pow((An + Ru), ONE_THIRD);
+//	m_phaseterm = pow( An, TWO_THIRDS) * pow((An + Ru), ONE_THIRD);
+	double Liq = AggModels::Primary::GetComponent("Liq");
+	m_phaseterm = Liq;
 }
 
 // Returns the particle equivalent sphere diameter.
@@ -476,7 +478,7 @@ unsigned int AggModels::Primary::AdjustIntPar(const fvector &dcomp, const fvecto
 unsigned int AggModels::Primary::AdjustPhase(const fvector &dcomp,
                               const fvector &dvalues,
                               rng_type &rng,
-                              unsigned int n)
+							  unsigned int n, const double d_crit, const bool melt)
 {
 	n = AggModels::Primary::Adjust(dcomp, dvalues, rng, n);
 	
