@@ -3061,8 +3061,9 @@ unsigned int BinTreePrimary::AdjustPhase(rng_type &rng, const double d_crit, con
 		
 		//select adjustment based on volume equivalent size
 		double d_p = m_diam;
-		fvector dcomp{ -1.0, 0.0, 0.0 };
-		fvector dvalues{ 0.0, 0.0, 0.0 };
+		fvector dcomp(3,0.0);
+		dcomp[0] = -1.0;
+		fvector dvalues(3,0.0);
 		//get number of liquid and anatase
 		if (melt == false){
 
