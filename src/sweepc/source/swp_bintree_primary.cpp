@@ -3038,6 +3038,7 @@ unsigned int BinTreePrimary::AdjustPhase(const fvector &dcomp,
 
     return n;
 }
+
 /*! Adjust composition of neighbours 
 *   use composition change vector from adjust to decide which components to transfer 
 */
@@ -3933,6 +3934,14 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
 
         val = m_frame_x[2];
         out.write((char*)&val, sizeof(val));
+
+		// Output if primary is tracked
+		if (m_tracked) {
+			out.write((char*)&trueval, sizeof(trueval));
+		}
+		else {
+			out.write((char*)&falseval, sizeof(falseval));
+		}
 
         // Output base class.
         Primary::Serialize(out);
