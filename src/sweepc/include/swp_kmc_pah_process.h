@@ -216,6 +216,12 @@ private:
     bool checkHindrance(const Spointer& st) const;
     //! Check steric hindrance for phenyl addition reactions
     bool checkHindrancePhenyl(const Cpointer C_1) const;
+	//! Check steric hindrance between a carbon and all other carbons in a PAH.
+	bool checkHindrance_C_PAH(cpair coords) const;
+	//! Check position between a carbon and internal carbons in a PAH.
+	void checkHindrance_C_intPAH(cpair coords) const;
+	//! Check steric hindrance between two carbons.
+	bool checkHindrance_twoC(const Cpointer C_1, const Cpointer C_2) const;
     //! Returns site iterator x steps after i
     Spointer moveIt(Spointer i, int x);
     //! Finds C atom with specific coordinates

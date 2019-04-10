@@ -106,9 +106,9 @@ namespace Sweep {
             Cpointer C1;
             Cpointer C2;
 			//! Position of growth vector
-			cpair vec_coords;
+			//cpair vec_coords;
 			//! Components of growth vector
-			cpair vec_components;
+			//cpair vec_components;
         };
         
 

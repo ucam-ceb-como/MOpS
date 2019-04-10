@@ -3214,7 +3214,7 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
 			temp.push_back(val);
 
             //! Uncomment the call to saveDOTperLoop to print out the structure of each PAH.
-			m_PAH[i]->saveDOTperLoop(timeStep,uniquePAHCounter);
+			//m_PAH[i]->saveDOTperLoop(timeStep,uniquePAHCounter);
 
 			uniquePAHCounter = uniquePAHCounter + 1;
 

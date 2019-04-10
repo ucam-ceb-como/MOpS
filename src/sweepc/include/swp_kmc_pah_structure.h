@@ -110,8 +110,8 @@ namespace Sweep{
 			void setnumofRings(int val); // 6-membered
 			void setnumofLoneRings5(int val); // 5-membered
 			void setnumofEmbeddedRings5(int val); // 5-membered
-			void setnumofLoneRings7(int val); // 5-membered
-			void setnumofEmbeddedRings7(int val); // 5-membered
+			void setnumofLoneRings7(int val); // 7-membered
+			void setnumofEmbeddedRings7(int val); // 7-membered
 
             //! check PAH have bridge or not
             bool havebridgeC();
@@ -142,8 +142,8 @@ namespace Sweep{
 			int m_rings; // 6-membered rings
 			int m_rings5_Lone; // 5-membered rings
 			int m_rings5_Embedded; // 5-membered rings
-			int m_rings7_Lone; // 5-membered rings
-			int m_rings7_Embedded; // 5-membered rings
+			int m_rings7_Lone; // 7-membered rings
+			int m_rings7_Embedded; // 7-membered rings
 			std::list<cpair> m_InternalCarbons; //List of internal Carbon atoms coordinates
         private:
             //! write m_cpositions

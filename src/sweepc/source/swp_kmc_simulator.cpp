@@ -129,6 +129,7 @@ void KMCSimulator::targetPAH(PAHStructure& pah) {
 
 
 int counter_GLC = 0;
+int init_flag = 0;
 /*!
  * @param[in,out]    pah             PAH structure KMC-ARS jump process will be performed on.
  * @param[in]        tsart           The latest time the PAH was updated.
@@ -150,9 +151,10 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 							double ratefactor) {
 	// wjm34: remove call to initReaction count to save time in updating.
 	m_t = tstart;
-	if (m_t == 0) {
+	if (init_flag == 0) {
 		initCSVIO();
 		initReactionCount();
+		init_flag = 1;
 	};
 	
     
@@ -186,6 +188,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 	Spointer Sp1;
 	int test;
 	rvector rates(m_kmcmech.JPList().size(), 0);
+	calcrates = true;
 	
     while (m_t < t_max && proceed) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
@@ -194,16 +197,18 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
         // Calculate rates of each jump process
 		if (calcrates){
-			m_gas->Interpolate(m_t, r_factor);
-			m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
-			rates = m_kmcmech.Rates();
-			writeRatesCSV(m_t, rates);
+			//m_gas->Interpolate(m_t, r_factor);
+			//m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
+			//rates = m_kmcmech.Rates();
+			//writeRatesCSV(m_t, rates);
 			//writeCHSiteCountCSV();
 			//writetimestep(m_t);
 			//writeRxnCountCSV();
 		}
 
         // Calculate time step, update time
+		m_gas->Interpolate(m_t, r_factor);
+		m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
         typedef boost::exponential_distribution<double> exponential_distrib;
         exponential_distrib waitingTimeDistrib(m_kmcmech.TotalRate()*ratefactor);
         boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
@@ -227,7 +232,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //its structure can be drawed by this function, used for tracking suspicious PAH.
             // saveDOTperLoop(100000*tstart,loopcount,PAH_ID);
 
-			std::string loopcount_str = "KMC_DEBUG/";
+			/*std::string loopcount_str = "KMC_DEBUG/";
 			std::string loopcount_str3D = "KMC_DEBUG/3D/";
 			loopcount_str.append(std::to_string(counter_GLC));
 			loopcount_str3D.append(std::to_string(counter_GLC));
@@ -235,7 +240,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			loopcount_str3D.append("3D.dot");
 			m_simPAHp.saveDOT(loopcount_str);
 			m_simPAHp.saveDOT3D(loopcount_str3D);
-			counter_GLC += 1;
+			counter_GLC += 1;*/
 
             // Choose jump according to rates
             ChosenProcess jp_perf = m_kmcmech.chooseReaction(rng);
@@ -243,12 +248,55 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //std::ostringstream dotname;
             //dotname << "KMC_DEBUG/p_" << (t_next*1e8) << ".dot";
             //m_simPAHp.saveDOT(dotname.str());
-            // Update data structure
+
+			//Save information for a single PAH
+			if (PAH_ID == 578){
+				m_rxn_count[jp_perf.second]++;
+				writeRxnCountCSV();
+				writeCHSiteCountCSV();
+				//writeTimerCSV();
+				rates = m_kmcmech.Rates();
+				writeRatesCSV(m_t, rates);
+				//writetimestep(m_t);
+				std::string dotname = "KMC_DEBUG/1/";
+				dotname.append(std::to_string(m_t));
+				dotname.append(".dot");
+				m_simPAHp.saveDOT(dotname);
+			}
+
+			/*if (PAH_ID == 784){
+				m_rxn_count[jp_perf.second]++;
+				writeRxnCountCSV();
+				writeCHSiteCountCSV();
+				//writeTimerCSV();
+				rates = m_kmcmech.Rates();
+				writeRatesCSV(m_t, rates);
+				//writetimestep(m_t);
+				std::string dotname = "KMC_DEBUG/784/";
+				dotname.append(std::to_string(m_t));
+				dotname.append(".dot");
+				m_simPAHp.saveDOT(dotname);
+			}*/
+			
+
+            // Update data structure -- Perform jump process
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
-			m_rxn_count[jp_perf.second]++;
-			writeCHSiteCountCSV();
-			//writetimestep(m_t);
-			writeRxnCountCSV();
+
+			if (PAH_ID == 578){
+				std::string dotname = "KMC_DEBUG/1/";
+				dotname.append(std::to_string(m_t));
+				dotname.append("_after.dot");
+				m_simPAHp.saveDOT(dotname);
+			}
+
+			/*if (PAH_ID == 784){
+				std::string dotname = "KMC_DEBUG/784/";
+				dotname.append(std::to_string(m_t));
+				dotname.append("_after.dot");
+				m_simPAHp.saveDOT(dotname);
+			}*/
+			
+			
 			
 			
 			// get counts for all site types
@@ -446,7 +494,12 @@ void KMCSimulator::writeCHSiteCountCSV() {
 }
 //! Writes data for rates count (csv)
 void KMCSimulator::writeRatesCSV(double& time, rvector& v_rates) {
-    int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35, 36};
+	std::vector<std::string> temp;
+	temp.push_back(Strings::cstr(time));
+	for (size_t i = 0; i<v_rates.size(); i++)
+		temp.push_back(Strings::cstr(v_rates[i]));
+	m_rates_csv.Write(temp);
+    /*int convC[] = {1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35, 36};
     //int convM[] = {1, 2,14,15, 8,10,11,12,13, 3, 7, 9, 5, 4, 6,22,24,16,21};
     int ID;
     //if(runNo==1) {
@@ -458,7 +511,7 @@ void KMCSimulator::writeRatesCSV(double& time, rvector& v_rates) {
         temp[convC[ID-1]] = v_rates[i];
     }
     m_rates_csv.Write(temp);
-    //}
+    //}*/
 }
 //! Initialise CSV_IOs
 void KMCSimulator::initCSVIO() {
@@ -681,15 +734,16 @@ void KMCSimulator::writeCSVlabels() {
         pah_headings.push_back(header);
     }
     m_pah_csv.Write(pah_headings);
-    // Write headings for rate file
+    // Write headings for rates
     std::vector<std::string> rates_header;
     rates_header.push_back("Time");
-    for(size_t i=0; i<m_kmcmech.JPList().size()+1; i++) {
+    /*for(size_t i=0; i<m_kmcmech.JPList().size()+1; i++) {
         std::ostringstream ID_name("ID");
         ID_name << (i+1);
         rates_header.push_back(ID_name.str());
-    }
-    m_rates_csv.Write(rates_header);
+    }*/
+	m_rates_csv.Write(rates_header);
+	m_rates_csv.Write(rxn_headings);
 }
 //! Save the structure DOT file after every X loops
 void KMCSimulator::saveDOTperXLoops(int X, int &loopcount, int& runcount) {

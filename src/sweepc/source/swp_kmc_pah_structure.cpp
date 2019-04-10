@@ -258,6 +258,12 @@ void PAHStructure::Serialize(std::ostream &out) const
 	val = numofEmbeddedRings5();
 	out.write((char*)&(val), sizeof(val));
 
+	val = numofLoneRings7();
+	out.write((char*)&(val), sizeof(val));
+
+	val = numofEmbeddedRings7();
+	out.write((char*)&(val), sizeof(val));
+
     PAHStructure m_copy (*this);
     PAHProcess p(m_copy);
     std::string m_SiteName = p.SiteString(',');

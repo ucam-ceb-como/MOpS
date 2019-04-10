@@ -18,3 +18,35 @@ neato -Tjpg "$dotfiles" -o "$jpgfiles"
 echo "$dotnames"\ graph\ drawing\ Done!!
 done
 
+sourcedots=KMC_DEBUG/1
+resultjpgs=JPG\ files/1
+for dotnames in `ls "$sourcedots"`
+do
+jpgname=${dotnames/.dot/.jpg}
+dotfiles="$sourcedots"/"$dotnames"
+jpgfiles="$resultjpgs"/"$jpgname"
+neato -Tjpg "$dotfiles" -o "$jpgfiles"
+echo "$dotnames"\ graph\ drawing\ Done!!
+done
+
+#sourcedots=KMC_DEBUG/674
+#resultjpgs=JPG\ files/674
+#for dotnames in `ls "$sourcedots"`
+#do
+#jpgname=${dotnames/.dot/.jpg}
+#dotfiles="$sourcedots"/"$dotnames"
+#jpgfiles="$resultjpgs"/"$jpgname"
+#neato -Tjpg "$dotfiles" -o "$jpgfiles"
+#echo "$dotnames"\ graph\ drawing\ Done!!
+#done
+
+#sourcedots=KMC_DEBUG/784
+#resultjpgs=JPG\ files/784
+#for dotnames in `ls "$sourcedots"`
+#do
+#jpgname=${dotnames/.dot/.jpg}
+#dotfiles="$sourcedots"/"$dotnames"
+#jpgfiles="$resultjpgs"/"$jpgname"
+#neato -Tjpg "$dotfiles" -o "$jpgfiles"
+#echo "$dotnames"\ graph\ drawing\ Done!!
+#done

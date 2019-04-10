@@ -53,7 +53,42 @@ namespace Sweep {
     namespace KMC_ARS {
         //! Enumeration of site types.
         enum kmcSiteType {
-            // Principal Sites, uncombined basic types
+			// Principal Sites, uncombined basic types
+			FE = 0, ZZ = 1, AC = 2, BY5 = 3, BY6 = 4, R5 = 50,
+			// Principal sites with R5 at one side
+			RFE = 101, RZZ = 102, RAC = 103, RBY5 = 104,
+			// Principal sites with R5 at both sides
+			RFER = 202, RZZR = 203, RACR = 204,
+			// Combined Sites: FE3:FE with 2 FEs on both sides, AC_FE3:AC next to FE3
+			// FE_HACA:FE with non-FEs on both sides
+			FE3 = 13, AC_FE3 = 14, FE_HACA = 15, BY5_FE3 = 16,
+			// Combined Sites: FE2:FE with FE at one side, but not an FE3
+			FE2 = 17,
+			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
+			//ACR5 = 18,
+			//
+			RAC_FE3 = 19,
+			// R5 shoulder with shoulder with an R6
+			R5R6 = 51, R5R6_emb = 52, BY5R5 = 53, BY6R5 = 54,
+			// Double R5 shoulder with R6
+			R5R6R5 = 152, R5R6_embR5 = 153, R5BY5R5 = 154,
+			//eBY5 = 20,
+			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
+			ACR5 = 62, R6ACR5 = 63, R6ACR5R6 = 64, R5ACR5 = 163, R6ACR5R5 = 164, R5ACR5R5 = 264,
+			// Principal sites with Embedded R5R6 at one side
+			R5R6FE = 501, R5R6ZZ = 502, R5R6AC = 503, R5R6BY5 = 504,
+			// Principal sites with Embedded R5R6 at one side and R5 to the other
+			R5R6FER = 602, R5R6ZZR = 603, R5R6ACR = 604,
+			// Combined Sites
+			None,
+			// Error ID
+			Inv = -1,
+			// Any Site:
+			any = 1000,
+			// Benzene addition sites:
+			benz = 1001
+			/*
+			// Principal Sites, uncombined basic types
             FE=0,ZZ=1,AC=2,BY5=3,BY6=4,R5=5,
             // Principal sites with R5 at one side
             RFE=6, RZZ=7, RAC=8, RBY5=9,
@@ -65,12 +100,20 @@ namespace Sweep {
             // Combined Sites: FE2:FE with FE at one side, but not an FE3
             FE2=17,
 			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
-			ACR5 = 18,
+			//ACR5 = 18,
 			//
 			RAC_FE3 = 19,
 			// R5 shoulder with shoulder with an R6
-			R5R6 = 20, R5R6_emb = 21, BY5R5 = 22,
+			R5R6 = 20, R5R6_emb = 21, BY5R5 = 22, BY6R5 = 23,
+			// Double R5 shoulder with R6
+			R5R6R5 = 25, R5R6_embR5 = 26, R5BY5R5 = 27,
 			//eBY5 = 20,
+			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
+			ACR5 = 30, R6ACR5 = 31, R6ACR5R6 = 32, R5ACR5 = 35, R6ACR5R5 = 36, R5ACR5R5 = 40,
+			// Principal sites with Embedded R5R6 at one side
+			R5R6FE = 56, R5R6ZZ = 57, R5R6AC = 58, R5R6BY5 = 59,
+			// Principal sites with Embedded R5R6 at one side and R5 to the other
+			R5R6FER = 62, R5R6ZZR = 63, R5R6ACR = 64,
 			// Combined Sites
             None,
             // Error ID
@@ -78,7 +121,7 @@ namespace Sweep {
             // Any Site:
             any=100,
             // Benzene addition sites:
-            benz=101
+            benz=101*/
         };
         
         //! Enumeration of processes on data structure available.
@@ -139,14 +182,30 @@ namespace Sweep {
                 case BY5_FE3: return "BY5_FE3";
                 case FE2: return "FE2";
 				case ACR5: return "ACR5";
+				case R6ACR5: return "R6ACR5";
+				case R6ACR5R6: return "R6ACR5R6";
+				case R5ACR5: return "R5ACR5";
+				case R6ACR5R5: return "R6ACR5R5";
+				case R5ACR5R5: return "R5ACR5R5";
 				case RAC_FE3: return "RAC_FE3";
 				case R5R6: return "R5R6";
 				case R5R6_emb: return "R5R6_emb";
 				case BY5R5: return "BY5R5";
+				case R5R6R5: return "R5R6R5";
+				case R5R6_embR5: return "R5R6_embR5";
+				case R5BY5R5: return "R5BY5R5";
+				case BY6R5: return "BY6R5";
                 case None: return "None";
                 case Inv: return "Invalid";
                 case any: return "any";
                 case benz: return "benz";
+				case R5R6FE: return "R5R6FE";
+				case R5R6ZZ: return "R5R6ZZ";
+				case R5R6AC: return "R5R6AC";
+				case R5R6BY5: return "R5R6BY5";
+				case R5R6FER: return "R5R6FER";
+				case R5R6ZZR: return "R5R6ZZR";
+				case R5R6ACR: return "R5R6ACR";
             }
             return "ERROR";
         }
@@ -168,9 +227,25 @@ namespace Sweep {
             else if(str == "RZZR") return RZZR;
             else if(str == "RACR") return RACR;
 			else if (str == "ACR5") return ACR5;
+			else if (str == "R6ACR5") return R6ACR5;
+			else if (str == "R6ACR5R6") return R6ACR5R6;
+			else if (str == "R6ACR5R5") return R6ACR5R5;
+			else if (str == "R5ACR5") return R5ACR5;
+			else if (str == "R5ACR5R5") return R5ACR5R5;
 			else if (str == "R5R6") return R5R6;
 			else if (str == "R5R6_emb") return R5R6_emb;
 			else if (str == "BY5R5") return BY5R5;
+			else if (str == "R5R6R5") return R5R6R5;
+			else if (str == "R5R6_embR5") return R5R6_embR5;
+			else if (str == "R5BY5R5") return R5BY5R5;
+			else if (str == "BY5R5") return BY6R5;
+			else if (str == "R5R6FE") return R5R6FE;
+			else if (str == "R5R6ZZ") return R5R6ZZ;
+			else if (str == "R5R6AC") return R5R6AC;
+			else if (str == "R5R6BY5") return R5R6BY5;
+			else if (str == "R5R6FER") return R5R6FER;
+			else if (str == "R5R6ZZR") return R5R6ZZR;
+			else if (str == "R5R6ACR") return R5R6ACR;
             return Inv;
         }
         //! Get a vector of all site types
@@ -195,10 +270,26 @@ namespace Sweep {
             temp.push_back(FE_HACA);
             temp.push_back(BY5_FE3);
 			temp.push_back(ACR5);
+			temp.push_back(R6ACR5);
+			temp.push_back(R6ACR5R6);
+			temp.push_back(R6ACR5R5);
+			temp.push_back(R5ACR5);
+			temp.push_back(R5ACR5R5);
 			temp.push_back(RAC_FE3);
 			temp.push_back(R5R6);
 			temp.push_back(R5R6_emb);
 			temp.push_back(BY5R5);
+			temp.push_back(R5R6R5);
+			temp.push_back(R5R6_embR5);
+			temp.push_back(R5BY5R5);
+			temp.push_back(BY6R5);
+			temp.push_back(R5R6FE);
+			temp.push_back(R5R6ZZ);
+			temp.push_back(R5R6AC);
+			temp.push_back(R5R6BY5);
+			temp.push_back(R5R6FER);
+			temp.push_back(R5R6ZZR);
+			temp.push_back(R5R6ACR);
             return temp;
         }
         //! Get a vector of all site types for phenyl addition
