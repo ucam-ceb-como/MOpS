@@ -250,7 +250,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //m_simPAHp.saveDOT(dotname.str());
 
 			//Save information for a single PAH
-			if (PAH_ID == 578){
+			if (PAH_ID == 688){
 				m_rxn_count[jp_perf.second]++;
 				writeRxnCountCSV();
 				writeCHSiteCountCSV();
@@ -282,7 +282,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             // Update data structure -- Perform jump process
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 
-			if (PAH_ID == 578){
+			if (PAH_ID == 688){
 				std::string dotname = "KMC_DEBUG/1/";
 				dotname.append(std::to_string(m_t));
 				dotname.append("_after.dot");

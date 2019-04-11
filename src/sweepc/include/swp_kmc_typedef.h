@@ -74,7 +74,7 @@ namespace Sweep {
 			R5R6R5 = 152, R5R6_embR5 = 153, R5BY5R5 = 154,
 			//eBY5 = 20,
 			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
-			ACR5 = 62, R6ACR5 = 63, R6ACR5R6 = 64, R5ACR5 = 163, R6ACR5R5 = 164, R5ACR5R5 = 264,
+			ACR5 = 62, R6ACR5 = 63, R6ACR5R6 = 64, ACACR5 = 65, R5ACR5 = 163, R6ACR5R5 = 164, R5ACR5R5 = 264,
 			// Principal sites with Embedded R5R6 at one side
 			R5R6FE = 501, R5R6ZZ = 502, R5R6AC = 503, R5R6BY5 = 504,
 			// Principal sites with Embedded R5R6 at one side and R5 to the other
@@ -184,6 +184,7 @@ namespace Sweep {
 				case ACR5: return "ACR5";
 				case R6ACR5: return "R6ACR5";
 				case R6ACR5R6: return "R6ACR5R6";
+				case ACACR5: return "ACACR5";
 				case R5ACR5: return "R5ACR5";
 				case R6ACR5R5: return "R6ACR5R5";
 				case R5ACR5R5: return "R5ACR5R5";
@@ -229,6 +230,7 @@ namespace Sweep {
 			else if (str == "ACR5") return ACR5;
 			else if (str == "R6ACR5") return R6ACR5;
 			else if (str == "R6ACR5R6") return R6ACR5R6;
+			else if (str == "ACACR5") return ACACR5;
 			else if (str == "R6ACR5R5") return R6ACR5R5;
 			else if (str == "R5ACR5") return R5ACR5;
 			else if (str == "R5ACR5R5") return R5ACR5R5;
@@ -272,6 +274,7 @@ namespace Sweep {
 			temp.push_back(ACR5);
 			temp.push_back(R6ACR5);
 			temp.push_back(R6ACR5R6);
+			temp.push_back(ACACR5);
 			temp.push_back(R6ACR5R5);
 			temp.push_back(R5ACR5);
 			temp.push_back(R5ACR5R5);

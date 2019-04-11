@@ -82,6 +82,10 @@ public:
     bool checkCoordinates() const;
     // Check to see if all sites are connected to each other
     bool checkSiteContinuity() const;
+	// Check if site stt is a valid site type.
+	bool checkSiteValid(int type);
+	// Check if site stt is a valid site type.
+	bool checkSiteValid(Spointer& stt);
     // Check to see if site neighbours has a valid combined site type
     bool checkCombinedSiteType(Spointer& stt);
 
@@ -226,6 +230,8 @@ private:
     Spointer moveIt(Spointer i, int x);
     //! Finds C atom with specific coordinates
     Cpointer findC(cpair coordinates);
+	//! Find Site to the other side of a bridge
+	Spointer findSite(Cpointer C_1);
 
     // Write Process
     //! Creates a lone carbon atom
