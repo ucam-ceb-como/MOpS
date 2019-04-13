@@ -151,16 +151,16 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_O6R_FE2_O2 = new O6R_FE2_O2; j_O6R_FE2_O2->initialise();                     //! 21- R6 Oxidation at ZZ by O2.
 	JumpProcess* j_D6R_FE_AC = new D6R_FE_AC; j_D6R_FE_AC->initialise();						//! 22- R6 Desorption from FE to AC site.
 	//JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();                           //*< 23 - Bay-capping.
-	//JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //*< 24 - Embedded 5-member ring migration to ZZ.
+	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //*< 24 - Embedded 5-member ring migration to ZZ.
 	JumpProcess* j_G6R_RZZ = new G6R_RZZ; j_G6R_RZZ->initialise();                              //*< 25 - R6 growth on RZZ.
 	JumpProcess* j_G6R_RFER = new G6R_RFER; j_G6R_RFER->initialise();                           //*< 26 - R6 growth on RFER.
 	//JumpProcess* j_G6R_R5 = new G6R_R5; j_G6R_R5->initialise();                                 //*< 27 - R6 growth on R5.
 	JumpProcess* j_L6_RBY5 = new L6_RBY5; j_L6_RBY5->initialise();                              //*< 28 - RBY5 closure reaction.
 	JumpProcess* j_L6_RACR = new L6_RACR; j_L6_RACR->initialise();                              //*< 29 - RACR closure reaction.
 	//JumpProcess* j_G5R_RFE = new G5R_RFE; j_G5R_RFE->initialise();                              //*< 30 - R5 growth on RFE.
-	//JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //*< 31 - R6 migration & conversion to R5 at RAC.
-	//JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //*< 32 - R6 migration & conversion to R5 at RAC.
-	//JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //*< 33 - R6 desorption at RAC -> pyrene.
+	JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //*< 31 - R6 migration & conversion to R5 at RAC.
+	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //*< 32 - R6 migration & conversion to R5 at RAC.
+	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //*< 33 - R6 desorption at RAC -> pyrene.
 	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //*< 34 - R5 exchange with R6.
 	//JumpProcess* j_GR7_BY5R5 = new GR7_BY5R5; j_GR7_BY5R5->initialise();                        //*< 35 - R7 growth in an embedded R5.
        
@@ -188,16 +188,16 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_O6R_FE2_O2);        //! 21- R6 Oxidation at ZZ by O2.
 	temp.push_back(j_D6R_FE_AC);         //! 22- R6 Desorption from FE to AC site.
 	//temp.push_back(j_B6R_ACR5);         //*< 23 - Bay-capping.
-	//temp.push_back(j_M5R_ACR5_ZZ);      //*< 24 - Embedded 5-member ring migration to ZZ.
+	temp.push_back(j_M5R_ACR5_ZZ);      //*< 24 - Embedded 5-member ring migration to ZZ.
 	temp.push_back(j_G6R_RZZ);          //*< 25 - R6 growth on RZZ.
 	temp.push_back(j_G6R_RFER);         //*< 26 - R6 growth on RFER.
 	//temp.push_back(j_G6R_R5);           //*< 27 - R6 growth on R5.
 	temp.push_back(j_L6_RBY5);          //*< 28 - RBY5 closure reaction.
 	temp.push_back(j_L6_RACR);          //*< 29 - RACR closure reaction.
 	//temp.push_back(j_G5R_RFE);          //*< 30 - R5 growth on RFE.
-	//temp.push_back(j_C6R_RAC_FE3);      //*< 31 - R6 migration & conversion to R5 at RAC.
-	//temp.push_back(j_C6R_RAC_FE3violi); //*< 32 - R6 migration & conversion to R5 at RAC.
-	//temp.push_back(j_M6R_RAC_FE3);      //*< 33 - R6 desorption at RAC -> pyrene.
+	temp.push_back(j_C6R_RAC_FE3);      //*< 31 - R6 migration & conversion to R5 at RAC.
+	temp.push_back(j_C6R_RAC_FE3violi); //*< 32 - R6 migration & conversion to R5 at RAC.
+	temp.push_back(j_M6R_RAC_FE3);      //*< 33 - R6 desorption at RAC -> pyrene.
 	temp.push_back(j_MR5_R6);           //*< 34 - R5 exchange with R6.
 	//temp.push_back(j_GR7_BY5R5);           //*< 35 - R7 growth in an embedded R5.
 

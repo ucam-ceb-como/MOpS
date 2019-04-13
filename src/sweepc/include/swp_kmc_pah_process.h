@@ -226,6 +226,8 @@ private:
 	void checkHindrance_C_intPAH(cpair coords) const;
 	//! Check steric hindrance between two carbons.
 	bool checkHindrance_twoC(const Cpointer C_1, const Cpointer C_2) const;
+	//!Gets distance between two carbons.
+	double PAHProcess::getDistance_twoC(const Cpointer C_1, const Cpointer C_2) const;
     //! Returns site iterator x steps after i
     Spointer moveIt(Spointer i, int x);
     //! Finds C atom with specific coordinates
