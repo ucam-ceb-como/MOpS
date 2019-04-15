@@ -3063,17 +3063,41 @@ unsigned int BinTreePrimary::AdjustPhase(rng_type &rng, const double d_crit, con
 		//select adjustment based on volume equivalent size
 		double d_p = m_diam;
 		fvector dcomp(3,0.0);
-		dcomp[0] = -1.0;
 		fvector dvalues(3,0.0);
 		//get number of liquid and anatase
 		if (melt == false){
 
-			if (d_p < d_crit){ //anatase transformation
-				dcomp[1] = 1.0;
+			//total composition excluding liquid phase
+			double total_comp = 0.0;
+			for (int i = 0; i < m_pmodel->ComponentCount(); i++){
+				if (i != 0) total_comp += Composition(i);
 			}
-			else{ //rutile transformation
-				dcomp[2] = 1.0;
+
+			if (total_comp > 0.0){//if solid phases exist then convert liquid to solid phase probabilistically
+				boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+				double j = uniformGenerator() * total_comp; //generate random number
+				for (int i = 0; i < m_pmodel->ComponentCount(); i++){
+					if (i != 0){
+						if (j <= Composition(i)){ // change in composition
+							dcomp[0] += -1.0;
+							dcomp[i] += 1.0;
+							break;
+						}
+						else{
+							j -= Composition(i);
+						}
+					}
+				}
 			}
+			else{
+				dcomp[0] = -1.0;
+				if (d_p < d_crit){ //anatase transformation
+					dcomp[1] = 1.0;
+				}
+				else{ //rutile transformation
+					dcomp[2] = 1.0;
+				}
+			}			
 
 			//transform everything
 			n = (unsigned int)m_comp[0];
