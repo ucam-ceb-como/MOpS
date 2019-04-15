@@ -536,7 +536,7 @@ void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
 	unsigned int liquidindex = ParticleModel()->MeltModel().GetLiquidIndex();
 
 	//has the particle melted
-	if (Liquid = true){
+	if (Liquid == true){
 		// melt the particle
 		for (int i = 0; i < m_pmodel->ComponentCount(); i++){
 			if (i != liquidindex) {
