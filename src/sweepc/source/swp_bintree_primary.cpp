@@ -4658,22 +4658,29 @@ void BinTreePrimary::checkTracking(int &count)
 void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &primary_diameter, int k) const
 {
 	fvector node(10);	
-	fvector primary(10);
+	fvector primary;
+	fvector comp;
 
 	if ((m_leftchild==NULL) && (m_rightchild==NULL)){
 		//if leaf then print diameter
-		primary[0] = k+1;
-		primary[1] = m_primarydiam;
-		primary[2] = m_diam;
-		primary[3] = m_primaryvol;
-		primary[4] = m_vol;
-		primary[5] = m_free_surf;
+		primary.push_back((double)k+1);
+		primary.push_back(m_primarydiam);
+		primary.push_back(m_diam);
+		primary.push_back(m_primaryvol);
+		primary.push_back(m_vol);
+		primary.push_back(m_free_surf);
+
+		//primary coordinates
 		vector<fvector> coords;
 		this->GetPriCoords(coords);
-		primary[6] = coords[0][0];
-		primary[7] = coords[0][1];
-		primary[8] = coords[0][2];
-		primary[9] = coords[0][3];
+		primary.push_back(coords[0][0]);
+		primary.push_back(coords[0][1]);
+		primary.push_back(coords[0][2]);
+		primary.push_back(coords[0][3]);
+
+		//primary composition
+		fvector comp = Primary::Composition();
+		primary.insert(primary.end(),comp.begin(),comp.end());
 
 		primary_diameter.push_back(primary);
 		

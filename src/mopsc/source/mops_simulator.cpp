@@ -2360,6 +2360,14 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	primary_header.push_back("Position y");
 	primary_header.push_back("Position z");
 	primary_header.push_back("Radius (m)");
+	
+	// Get composition
+	const Sweep::ParticleModel &model = mech.ParticleMech();
+	unsigned int ncomp = model.ComponentCount();
+	// Add component to header
+	for (unsigned int i = 0; i != ncomp; ++i) {
+		primary_header.push_back(model.Components(i)->Name());
+	}
 
 	primsout.Write(primary_header);
 	for (unsigned int k = 0; k < prims.size(); k++)
