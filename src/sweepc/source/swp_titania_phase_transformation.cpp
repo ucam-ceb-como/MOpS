@@ -346,10 +346,11 @@ int TitaniaPhaseTransformation::Perform(double t, Cell &sys, Particle &sp, rng_t
                           unsigned int n) const
 {
 		bool melt = true;
+		unsigned int m = 0;
 		if (sys.GasPhase().Temperature() < m_arr.n){
 			melt = false;
 		}
-		unsigned int m = sp.AdjustPhase(m_dcomp, m_dvals, rng, n, m_arr.A, melt);
+		m = sp.AdjustPhase(m_dcomp, m_dvals, rng, n, m_arr.A, melt);
 		return m;
 }//csl37-done
 

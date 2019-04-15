@@ -318,6 +318,8 @@ void ParticleModel::SetAggModel(AggModels::AggModelType id) {m_aggmodel = id;}
 // Returns the sintering model.
 Processes::SinteringModel &ParticleModel::SintModel(void) const {return m_sint_model;}
 
+// MELTING MODEL //csl
+Processes::MeltingModel &ParticleModel::MeltModel(void) const { return m_melt_model; }
 
 // PARTICLE FUNCTIONS.
 

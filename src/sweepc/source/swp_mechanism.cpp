@@ -1106,6 +1106,11 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
 
         sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
 
+		//Melting point phase transformation csl37
+		if (m_melt_model.IsEnabled()) {
+			sp.Melt(rng, sys);
+		}
+
         // Check particle is valid and recalculate cache.
         if (sp.IsValid()) {
             sp.UpdateCache();
@@ -1150,6 +1155,11 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
             if (m_sint_model.IsEnabled()) {
                 sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
             }
+
+			//Melting point phase transformation  csl37
+			if (m_melt_model.IsEnabled()) {
+				sp.Melt(rng, sys);
+			}
         }
 
         // Check that the particle is still valid, only calculate

@@ -667,6 +667,7 @@ unsigned int Particle::AdjustPhase(const fvector &dcomp,
     return m;
 }
 */
+
 unsigned int Particle::AdjustPhase(const fvector &dcomp,
 	const fvector &dvalues,
 	rng_type &rng,
@@ -683,6 +684,21 @@ unsigned int Particle::AdjustPhase(const fvector &dcomp,
 	UpdateCache();
 
 	return n;
+}
+
+void Particle::Melt(rng_type &rng, Cell &sys)
+{
+
+	// This is a leaf-node sub-particle as it contains a
+	// primary particle.  The adjustment is applied to
+	// the primary.
+	m_primary->Melt(rng, sys);
+
+	// Where-ever the adjustment has been applied this sub-particle must
+	// now update its cache.
+	UpdateCache();
+
+	return;
 }
 
 /*!

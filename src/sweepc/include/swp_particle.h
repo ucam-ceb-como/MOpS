@@ -259,6 +259,9 @@ public:
                               unsigned int n,
 							  const double d_crit,
 							  const bool melt);
+	
+	//Melting point dependent phase change
+	void Melt(rng_type &rng, Cell &sys);
 
     //! Combines this particle with another.
     Particle &Coagulate(const Particle &sp, rng_type &rng);

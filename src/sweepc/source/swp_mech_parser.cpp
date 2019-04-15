@@ -1708,6 +1708,7 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
  *
  *@exception    std::runtime_error   
  */
+/*
 void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 {
     vector<CamXML::Element*> items, subitems;
@@ -1754,8 +1755,127 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
         mech.AddProcess(*phasetransform);
     }
 }
+*/
+void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
+{
+	vector<CamXML::Element*> items, subitems, subsubitems;
+	vector<CamXML::Element*>::iterator i, j, m;
+	CamXML::Element *el = NULL;
+	string str;
+	unsigned int k = 0;
 
-// Reads a interparticle process from a sweep mechanism XML file.
+	// Get all phase transformations
+	xml.Root()->GetChildren("transformation", items);
+
+	for (i = items.begin(), k = 0; i != items.end(); ++i, ++k) {
+
+		str = (*i)->GetAttributeValue("type");
+
+		if (str.compare("melting") == 0) {//melting point dependent transformation is treated like sintering
+
+			//check that the particle model is valid
+			if (mech.AggModel() == AggModels::Spherical_ID || mech.AggModel() == AggModels::BinTree_ID) {
+			
+				//enable melting
+				mech.MeltModel().Enable();
+
+				//set liquid phase
+				el = (*i)->GetFirstChild("liquid");
+				if (el != NULL) {
+					str = el->GetAttributeValue("id");
+					//get component index
+					int id = mech.ComponentIndex(str);
+					mech.MeltModel().SetLiquidIndex(id);
+				}
+				else{
+					throw runtime_error("Liquid phase not specified (Sweep, MechParser::readPhaseTransformation).");
+				}
+
+				//loop over phases
+				(*i)->GetChildren("phase", subitems);
+				for (j = subitems.begin(); j != subitems.end(); ++j) {
+					
+					fvector dcomp(mech.ComponentCount(), 0.0);
+					double A = 0.0;
+					double T = 0.0;
+					
+					//parameter
+					el = (*j)->GetFirstChild("A");
+					if (el != NULL) A = cdble(el->Data());
+					
+					//bulk melting temperature
+					el = (*j)->GetFirstChild("Tbulk");
+					if (el != NULL) T = cdble(el->Data());
+					
+					//get components
+					(*j)->GetChildren("component", subsubitems);
+					for (m = subsubitems.begin(); m != subsubitems.end(); ++m) {
+						// Get component ID.
+						string str = (*m)->GetAttributeValue("id");
+						int id = mech.ComponentIndex(str);
+						if (id >= 0) {
+							// Get component change.
+							str = (*m)->GetAttributeValue("dx");
+							double dx = cdble(str);
+							// Set component change.
+							dcomp[id] += dx;
+						}
+						else {
+							throw runtime_error(str + ": Component not found in mechanism "
+								"Sweep, MechParser::readCompChanges).");
+						}
+					}
+					
+					//transition name
+					str = (*j)->GetAttributeValue("type");
+					
+					//create phase melting object
+					mech.MeltModel().AddPhase(str,A,T,dcomp);
+				}
+
+			}
+			else {
+				throw runtime_error("Only Spherical and BinTree models supported for phase transformation (Sweep, MechParser::readPhaseTransformation).");
+			}
+		}//Kinetic transformation is read like any ordinary process
+		else if (str.compare("kinetic") == 0){
+
+			TitaniaPhaseTransformation *phasetransform = NULL;
+
+			//check that the particle model is valid
+			if (mech.AggModel() == AggModels::Spherical_ID || mech.AggModel() == AggModels::BinTree_ID) {
+				// Create a new Titania phase transformation object.
+				phasetransform = new TitaniaPhaseTransformation(mech);
+			}
+			else {
+				throw runtime_error("Only Spherical and BinTree models supported for phase transformation (Sweep, MechParser::readPhaseTransformation).");
+			}
+
+			// Set default name.
+			phasetransform->SetName("Phase Transformation " + cstr(k));
+
+			// Read the phase transformation properties.
+			try {
+				readPhaseTransformation(*(*i), *phasetransform);
+			}
+			catch (std::exception &e) {
+				delete phasetransform;
+				throw;
+			}
+
+			// Add phase transformation to mechanism.
+			mech.AddProcess(*phasetransform);
+		}
+		else {
+			// Unrecognised reaction type.
+			throw runtime_error("Unrecognised phase transformation type: " + str +
+				" (Sweep, MechParser::readPhaseTransformation).");
+		}
+
+		
+	}
+}
+
 void MechParser::readPhaseTransformation(CamXML::Element &xml, Processes::TitaniaPhaseTransformation &phasetransform)
 {
     string str;

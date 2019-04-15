@@ -3040,6 +3040,7 @@ unsigned int BinTreePrimary::AdjustPhase(const fvector &dcomp,
     return n;
 }
 */
+
 //helper function
 unsigned int BinTreePrimary::AdjustPhase(const fvector &dcomp,
 	const fvector &dvalues, rng_type &rng, unsigned int n, const double d_crit, const bool melt)
@@ -3113,6 +3114,20 @@ unsigned int BinTreePrimary::AdjustPhase(rng_type &rng, const double d_crit, con
 	}
 
 	return n;
+}
+
+//Melting point dependent phase change
+void BinTreePrimary::Melt(rng_type &rng, Cell &sys){
+
+	// Update the children
+	if (m_leftchild != NULL) {
+		m_leftchild->Melt(rng, sys);
+		m_rightchild->Melt(rng, sys);
+	}
+	else{ // this is a primary
+
+		Primary::Melt(rng, sys);
+	}
 }
 
 /*! Adjust composition of neighbours 

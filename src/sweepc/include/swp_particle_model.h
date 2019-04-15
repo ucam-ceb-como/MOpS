@@ -53,6 +53,7 @@
 #include "swp_tracker.h"
 #include "swp_aggmodel_type.h"
 #include "swp_sintering_model.h"
+#include "swp_titania_melting_model.h"
 #include "swp_environment_interface.h"
 
 #include "local_geometry1d.h"
@@ -166,7 +167,11 @@ public:
     // Returns the sintering model.
     Processes::SinteringModel &SintModel(void) const;
 
+	// MELTING MODEL
 
+	//return the melting model
+	Processes::MeltingModel &MeltModel(void) const;
+	
     // PARTICLE FUNCTIONS.
 
     //! Create a new particle on the heap
@@ -389,6 +394,9 @@ protected:
 
     //! The sintering model.
     mutable Processes::SinteringModel m_sint_model;
+
+	// Melting model //csl
+	mutable Processes::MeltingModel m_melt_model;
 
     //! Calculate a phsyical particle diffusion coefficient from its drag
     double EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const;

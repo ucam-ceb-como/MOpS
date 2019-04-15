@@ -48,6 +48,8 @@
 #include <stdexcept>
 #include <memory.h>
 
+#include <boost/random/uniform_smallint.hpp>
+
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
 
@@ -466,6 +468,41 @@ unsigned int AggModels::Primary::CalculateMaxAdjustments(
     return n;
 }
 
+/*!
+* Calculates the maximum possible number of adjustments
+*
+* This is relevant for Processes which remove components from a Primary,
+* particularly where multiple components are present in a particle.
+*
+* @param dcomp     The component changes for the Process
+* @return          Number of times allowed
+*/
+unsigned int AggModels::Primary::CalculateMaxAdjustments(const fvector &dcomp) const
+{
+	unsigned int i;
+	unsigned int n = 0;
+
+	// First check if there is a negative in dcomp
+	bool neg_change(false);
+	for (i = 0; i != dcomp.size(); ++i) {
+		if (dcomp[i] < 0.0) {
+			neg_change = true;
+			n = std::numeric_limits<unsigned int>::max();
+		}
+	}
+
+	// Calculate the actual number of events only if there is a negative
+	// change in the component amount
+	if (neg_change) {
+		for (i = 0; i != min(m_comp.size(), dcomp.size()); ++i) {
+			if (dcomp[i] < 0.0)
+				n = std::min(n, (unsigned int)abs(m_comp[i] / dcomp[i]));
+		}
+	}
+
+	return n;
+}
+
 // Adjusts the particle n times for IntParticle reaction
 unsigned int AggModels::Primary::AdjustIntPar(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
 {
@@ -483,6 +520,68 @@ unsigned int AggModels::Primary::AdjustPhase(const fvector &dcomp,
 	n = AggModels::Primary::Adjust(dcomp, dvalues, rng, n);
 	
     return n;
+}
+
+//Melting point dependent phase change
+void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
+{
+	
+	fvector dcomp(m_pmodel->ComponentCount(), 0.0);
+	fvector dvalues(m_pmodel->TrackerCount(), 0.0); //for now the transformation model doesn't adjust the tracker variables
+	unsigned int n = 0;
+
+	//check if liquid
+	bool Liquid = ParticleModel()->MeltModel().IsLiquid(sys, *this);
+	//get index of liquid component
+	unsigned int liquidindex = ParticleModel()->MeltModel().GetLiquidIndex();
+
+	//has the particle melted
+	if (Liquid = true){
+		// melt the particle
+		for (int i = 0; i < m_pmodel->ComponentCount(); i++){
+			if (i != liquidindex) {
+				//create composition change
+				dcomp.assign(m_pmodel->ComponentCount(), 0.0);
+				dcomp[liquidindex] += 1.0;
+				dcomp[i] += -1.0;
+				// transform components
+				n = Primary::CalculateMaxAdjustments(dcomp); //transform everything
+				if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); }; //adjust primary
+			}
+		}
+	}
+	else{
+		//total composition excluding liquid phase
+		double total_comp = 0.0;
+		for (int i = 0; i < m_pmodel->ComponentCount(); i++){
+			if (i != liquidindex) total_comp += Composition(i);
+		}
+
+		if (total_comp > 0.0){//if solid phases exist then convert liquid to solid phase probabilistically
+			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+			double j = uniformGenerator() * total_comp; //generate random number
+			for (int i = 0; i < m_pmodel->ComponentCount(); i++){
+				if (i != liquidindex){
+					if (j <= Composition(i)){ // change in composition
+						dcomp[liquidindex] += -1.0;
+						dcomp[i] += 1.0;
+						break;
+					}
+					else{
+						j -= Composition(i);
+					}
+				}
+			}
+		}
+		else{
+			//if all liquid then tranform based on maximum melting point
+			ParticleModel()->MeltModel().CompositionChange(sys, *this, dcomp); //get change in composition	
+		}
+
+		// transform components
+		n = Primary::CalculateMaxAdjustments(dcomp); //transform everything
+		if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); }; //adjust primary
+	}
 }
 
 // Property for titania phase transformation model

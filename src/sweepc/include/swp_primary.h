@@ -63,6 +63,7 @@
 #include "swp_particle_model.h"
 #include "swp_aggmodel_type.h"
 #include "swp_sintering_model.h"
+#include "swp_titania_melting_model.h"
 #include "swp_property_indices.h"
 
 #include <iostream>
@@ -267,6 +268,9 @@ public:
 		const bool melt
 		);
 
+	//Melting point dependent phase change
+	virtual void Melt( rng_type &rng, Cell &sys	);
+
     // Combines this primary with another.  This is also the
     // implementation of the + and += operators.
     virtual Primary &Coagulate(const Primary &rhs,
@@ -360,6 +364,9 @@ protected:
 
     //! Calculate the number of allowable adjustments for a LPDA process
     unsigned int CalculateMaxAdjustments(const fvector &dcomp, unsigned int n) const;
+
+	//! Calculate the maxmimum number of allowable adjustments for a process
+	unsigned int CalculateMaxAdjustments(const fvector &dcomp) const;
 
     // MEMORY MANAGEMENT.
 
