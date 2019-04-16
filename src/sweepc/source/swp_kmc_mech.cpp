@@ -150,7 +150,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_O6R_FE2_OH = new O6R_FE2_OH; j_O6R_FE2_OH->initialise();                     //! 20- R6 Oxidation at ZZ by OH.
     JumpProcess* j_O6R_FE2_O2 = new O6R_FE2_O2; j_O6R_FE2_O2->initialise();                     //! 21- R6 Oxidation at ZZ by O2.
 	JumpProcess* j_D6R_FE_AC = new D6R_FE_AC; j_D6R_FE_AC->initialise();						//! 22- R6 Desorption from FE to AC site.
-	//JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();                           //*< 23 - Bay-capping.
+	JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();                           //*< 23 - Bay-capping.
 	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //*< 24 - Embedded 5-member ring migration to ZZ.
 	JumpProcess* j_G6R_RZZ = new G6R_RZZ; j_G6R_RZZ->initialise();                              //*< 25 - R6 growth on RZZ.
 	JumpProcess* j_G6R_RFER = new G6R_RFER; j_G6R_RFER->initialise();                           //*< 26 - R6 growth on RFER.
@@ -187,7 +187,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_O6R_FE2_OH);        //! 20- R6 Oxidation at ZZ by OH.
 	temp.push_back(j_O6R_FE2_O2);        //! 21- R6 Oxidation at ZZ by O2.
 	temp.push_back(j_D6R_FE_AC);         //! 22- R6 Desorption from FE to AC site.
-	//temp.push_back(j_B6R_ACR5);         //*< 23 - Bay-capping.
+	temp.push_back(j_B6R_ACR5);         //*< 23 - Bay-capping.
 	temp.push_back(j_M5R_ACR5_ZZ);      //*< 24 - Embedded 5-member ring migration to ZZ.
 	temp.push_back(j_G6R_RZZ);          //*< 25 - R6 growth on RZZ.
 	temp.push_back(j_G6R_RFER);         //*< 26 - R6 growth on RFER.

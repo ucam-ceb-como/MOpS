@@ -270,6 +270,8 @@ private:
     void addR5toSite(Spointer& st, Cpointer Carb1, Cpointer Carb2);
     //! Changes site type into combined site without R5 (e.g. RFE -> FE)
     void remR5fromSite(Spointer& st, Cpointer Carb1, Cpointer Carb2);
+	//! Redraws 5 member rings
+	void PAHProcess::redrawR5(Spointer& st, Cpointer Carb1, Cpointer Carb2);
     //! Changes site type into another site type
     void convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcSiteType t);
     //! Remove site

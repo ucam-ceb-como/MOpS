@@ -331,7 +331,7 @@ bool PAHProcess::saveDOT(const std::string &filename, const std::string &title) 
 		coordtype y = std::get<1>(prev->coords);
         int c=0; // index of current C
         int count=0;
-        float CC_CHratio = 10; // length ratio between C-C and C-H bonds
+        float CC_CHratio = 1; // length ratio between C-C and C-H bonds
         do {
             //if(now->bridge) {
                 //cout<<"Bridge at "<<now<<'\n';
@@ -1245,12 +1245,48 @@ void PAHProcess::remR5fromSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
     st->C1 = Carb1;
     st->C2 = Carb2;*/
 }
+//! Redraws 5 member rings in a zigzag
+void PAHProcess::redrawR5(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
+	removeC(Carb1->C2, false); removeC(Carb1->C2, false);
+	cpair mpos = jumpToPos(Carb1->coords, normAngle(Carb1->C1->bondAngle1 - 60), 0, 1);
+	if (!checkHindrance_C_PAH(mpos)) {
+		addC(Carb1, normAngle(Carb1->C1->bondAngle1 - 60), normAngle(Carb1->C1->bondAngle1), 1, true);
+		convSiteType(st, Carb1, Carb2, ZZ);
+		proc_G5R_ZZ(st, Carb1, Carb2);
+	}
+	else {
+		Carb1->bondAngle1 = normAngle(Carb1->C1->bondAngle1-60);
+		Cpointer C1_res, C2_res;
+		C1_res = addC(Carb1, normAngle(Carb1->bondAngle1 + 120), 0, 1);
+		C2_res = addC(C1_res, normAngle(Carb1->bondAngle1 - 90), normAngle(Carb1->bondAngle1 - 180), pow(3, 0.5));
+		updateA(Carb1->C1, Carb2->C2, 'H');
+		// update sites and neighbours
+		convSiteType(st, C1_res, C2_res, R5);
+		Spointer S1, S2, S3, S4;
+		// neighbours
+		S1 = moveIt(st, -1);
+		S2 = moveIt(st, 1);
+		addR5toSite(S1, S1->C1, C1_res);
+		addR5toSite(S2, C2_res, S2->C2);
+		// update combined sites
+		S3 = moveIt(S1, -1);
+		S4 = moveIt(S2, 1);
+		updateCombinedSites(st); // update resulting site
+		updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
+		updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
+		// add ring counts
+		m_pah->m_rings5_Lone++;
+	}
+}
 //! Changes site type into another site type
 void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcSiteType t) {
     // removes site from m_pah->m_siteMap (principal site)
     delSiteFromMap(st->type, st);
     // change site type
     st->type = t;
+	if (!checkSiteValid(st)) {
+		cout << "Invalid site. This may be alright if the edge is unreactive but it may also be an error. \n";
+	}
     // add site to m_pah->m_siteMap
     m_pah->m_siteMap[t].push_back(st);
     // update member C
@@ -2097,10 +2133,12 @@ Cpointer PAHProcess::drawType2Site(Cpointer Cnow, int bulkC) {
 
 //! Finds C atom with specific coordinates
 Cpointer PAHProcess::findC(cpair coordinates) {
+	double tol = 1e-3;
     for(Ccontainer::iterator i=m_pah->m_carbonList.begin();
         i != m_pah->m_carbonList.end(); ++i) {
-            if((*i)->coords == coordinates)
-                return (*i);
+		if (abs(std::get<0>((*i)->coords) - std::get<0>(coordinates)) < tol && abs(std::get<1>((*i)->coords) - std::get<1>(coordinates)) < tol && abs(std::get<2>((*i)->coords) - std::get<2>(coordinates)) < tol){
+			return (*i);
+		}
     }
     return NULLC;
 }
@@ -2855,26 +2893,27 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update site stt and new neighbours
     // new neighbours:
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
-	if (S1->type >= 62 && S2->type >= 62) {
+	updateSites(stt, C1_new, C2_new, 0); // only change C1 and C2, site still FE
+	updateSites(S1, S1->C1, C1_new, -1);
+	updateSites(S2, C2_new, S2->C2, -1);
+	/*if (S1->type >= 62 && S2->type >= 62) {
 		//Resulting type is an R5
 		int stype1 = S1->type; int stype2 = S2->type;
 		stype1 = stype1 % 10 - 2;
 		stype2 = stype2 % 10 - 2;
 		C1_new = C1_new->C1; C2_new = C2_new->C2;
-		removeC(C1_new->C2, false); removeC(C2_new->C1, false);
-		addC(C1_new, normAngle(C1_new->C1->bondAngle1 - 60), normAngle(C1_new->C1->bondAngle1), 1, true);
-		convSiteType(stt, C1_new, C2_new, ZZ);
 		convSiteType(S1, S1->C1, C1_new, (kmcSiteType)stype1);
 		convSiteType(S2, C2_new, S2->C2, (kmcSiteType)stype2);
 		m_pah->m_rings5_Embedded--;
-		proc_G5R_ZZ(stt, stt->C1, stt->C2);
+		redrawR5(stt, C1_new, C2_new);
+		//proc_G5R_ZZ(stt, stt->C1, stt->C2);
 	}
 	else {
 		//Flat PAH desorption
 		updateSites(stt, C1_new, C2_new, 0); // only change C1 and C2, site still FE
 		updateSites(S1, S1->C1, C1_new, -1);
 		updateSites(S2, C2_new, S2->C2, -1);
-	}
+	}*/
     // update combined sites
     Spointer S3, S4;
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
@@ -2954,11 +2993,111 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
     // update sites and neighbours
     Spointer S1, S2, S3, S4;
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
-	if (S1->type == R5R6 || (S2->type == R5R6)) updateSites(stt, C1_res, C2_res, 102);
-	else if (S1->type == ACR5 || S2->type == ACR5) updateSites(stt, C1_res, C2_res, 502);
-	else updateSites(stt, C1_res, C2_res, 2);
-	updateSites(S1, S1->C1, C1_res, -1);
-	updateSites(S2, C2_res, S2->C2, -1);
+	if (S1->type == R5R6 || (S2->type == R5R6)) {
+		S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+		updateSites(stt, C1_res, C2_res, 102);
+		updateSites(S1, S1->C1, C1_res, -1);
+		updateSites(S2, C2_res, S2->C2, -1);
+		if ((int)S3->type > 500) updateSites(S3, S3->C1, S3->C2, -400);
+		if ((int)S4->type > 500) updateSites(S4, S4->C1, S4->C2, -400);
+	}
+	else if (S1->type == ACR5 && S2->type == ACR5) {
+		updateSites(stt, C1_res, C2_res, 1003);
+		updateSites(S1, S1->C1, C1_res, -11);
+		updateSites(S2, C2_res, S2->C2, -11);
+	}
+	else if (S1->type == ACR5 || S2->type == ACR5) {
+		updateSites(stt, C1_res, C2_res, 502);
+		updateSites(S1, S1->C1, C1_res, -1);
+		updateSites(S2, C2_res, S2->C2, -1);
+	}
+	else if (((int)S1->type >= 63 && (int)S1->type <= 65) && ((int)S2->type >= 63 && (int)S2->type <= 65)){
+		double dist1 = getDistance_twoC(C_1->C1, C_1->C1->C1);
+		double dist2 = getDistance_twoC(C_2->C2, C_2->C2->C2);
+		if (dist1 > 1.1 && dist2 > 1.1){
+			updateSites(stt, C1_res, C2_res, 2);
+			updateSites(S1, S1->C1, C1_res, -1);
+			updateSites(S2, C2_res, S2->C2, -1);
+		}
+		else if (dist1 > 1.1){
+			updateSites(stt, C1_res, C2_res, 502);
+			updateSites(S1, S1->C1, C1_res, -11);
+			updateSites(S2, C2_res, S2->C2, -1);
+		}
+		else if (dist2 > 1.1){
+			updateSites(stt, C1_res, C2_res, 502);
+			updateSites(S1, S1->C1, C1_res, -1);
+			updateSites(S2, C2_res, S2->C2, -11);
+		}
+		else {
+			updateSites(stt, C1_res, C2_res, 1003);
+			updateSites(S1, S1->C1, C1_res, -11);
+			updateSites(S2, C2_res, S2->C2, -11);
+		}
+	}
+	else if ((int)S1->type >= 63 && (int)S1->type <= 65) {
+		double dist2 = getDistance_twoC(C_1->C1, C_1->C1->C1);
+		if (dist2 > 1.1){
+			updateSites(stt, C1_res, C2_res, 502);
+			updateSites(S1, S1->C1, C1_res, -11);
+			updateSites(S2, C2_res, S2->C2, -1);
+		}
+		else{
+			updateSites(stt, C1_res, C2_res, 2);
+			updateSites(S1, S1->C1, C1_res, -1);
+			updateSites(S2, C2_res, S2->C2, -1);
+		}
+	}
+	else if ((int)S2->type >= 63 && (int)S2->type <= 65) {
+		double dist2 = getDistance_twoC(C_2->C2, C_2->C2->C2);
+		if (dist2 > 1.1){
+			updateSites(stt, C1_res, C2_res, 502);
+			updateSites(S1, S1->C1, C1_res, -1);
+			updateSites(S2, C2_res, S2->C2, -11);
+		}
+		else{
+			updateSites(stt, C1_res, C2_res, 2);
+			updateSites(S1, S1->C1, C1_res, -1);
+			updateSites(S2, C2_res, S2->C2, -1);
+		}
+	}
+	else if (S1->type == R5R6FE || (S2->type == R5R6FE)) {
+		if (S1->type == R5R6FE && (S2->type == R5R6FE)) {
+			convSiteType(stt, C1_res, C2_res, FE);
+			S3 = moveIt(S1, -1);
+			S4 = moveIt(S1, +1);
+			convSiteType(S3, S3->C1, S3->C2, FE);
+			convSiteType(S4, S4->C1, S4->C2, FE);
+			convSiteType(S1, S1->C1, S1->C1->C2, R5);
+			convSiteType(S2, S2->C1, S2->C1->C2, R5);
+			redrawR5(S1, S1->C1->C1, S1->C2->C2);
+			redrawR5(S2, S2->C1->C1, S2->C2->C2);
+			m_pah->m_rings5_Embedded--; m_pah->m_rings5_Embedded--;
+		}
+		else if (S1->type == R5R6FE){
+			convSiteType(stt, C1_res, C2_res, ZZ);
+			S3 = moveIt(S1, -1);
+			convSiteType(S3, S3->C1, S3->C2, FE);
+			convSiteType(S1, S1->C1, S1->C1->C2, R5);
+			redrawR5(S1, S1->C1->C1, S1->C2->C2);
+			updateSites(S2, C2_res, S2->C2, -1);
+			m_pah->m_rings5_Embedded--;
+		}
+		else {
+			convSiteType(stt, C1_res, C2_res, ZZ);
+			S4 = moveIt(S1, +1);
+			convSiteType(S4, S4->C1, S4->C2, FE);
+			convSiteType(S2, S2->C1, S2->C1->C2, R5);
+			redrawR5(S2, S2->C1->C1, S2->C2->C2);
+			updateSites(S1, S1->C1, C1_res, -1);
+			m_pah->m_rings5_Embedded--;
+		}
+	}
+	else {
+		updateSites(stt, C1_res, C2_res, 2);
+		updateSites(S1, S1->C1, C1_res, -1);
+		updateSites(S2, C2_res, S2->C2, -1);
+	}
     // update combined sites
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
     updateCombinedSites(stt); // update resulting site
@@ -3061,7 +3200,8 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
         if(moveIt(stt,-2)->comb == FE3)
             b4 = true;
     }
-
+	if (b4 && (int)moveIt(stt, -4)->type >= 50 && (int)moveIt(stt, -4)->type <= 65) return; // Two pentagons will collide if this is the case
+	if (!b4 && (int)moveIt(stt, +4)->type >= 50 && (int)moveIt(stt, +4)->type <= 65) return; // Two pentagons will collide if this is the case
     Cpointer C1_res, C2_res, C1_R5, C2_R5;
     Spointer FE_res;
     // removing R6 first. save the two member C for resulting FE
@@ -3315,37 +3455,113 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // R5 will be removed and replaced by ZZ. first identify the C member of the
     // resulting RZZ site, C_RZZ. Identify where the R5 site is too.
     Spointer sR5;
-    Cpointer C_RZZ;
+	Cpointer C_RZZ, Cstart, Ccheck;
     if(b4) {
         sR5 = moveIt(stt, -1);
         C_RZZ = sR5->C1->C1;
+		Cstart = C_RZZ;
+		Ccheck = Cstart;
     }else {
         sR5 = moveIt(stt, 1);
         C_RZZ = sR5->C2->C2;
+		Cstart = C_2->C1;
+		Ccheck = sR5->C2->C2;
     }
+	//Check for ZZ site
+	cpair mpos = jumpToPos(Ccheck->coords, normAngle(Ccheck->C1->bondAngle1 - 60), 0, 1);
     // remove R5 first, leaving a ZZ site (adding another C atom after removing C)
-    Cpointer Cstart;
-    if(b4) Cstart = C_RZZ; 
-    else Cstart = C_2->C1;
-	/*double dist_inc = (tan(36 * M_PI / 180) / tan(30 * M_PI / 180) - 1.0) / ((tan(36 * M_PI / 180) / tan(30 * M_PI / 180)) + 1.0);
-
-	moveC(Cstart->C2->C2->C2, Cstart->C2->C2->C2->C2, 1);
-	moveC(Cstart, Cstart->C1, 1);*/
     for(int i=0; i!=2; i++) removeC(Cstart->C2, false);
-    addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60),1, true);
-    // Next add a R5 on the neighbouring ZZ
-    Cpointer C1_R5, C2_R5; // save all new C atoms
-    if(b4) Cstart = C_RZZ->C2->C2;
-    else Cstart = C_1;
-    removeC(Cstart->C2, true);
-	
-	/*moveC(Cstart, Cstart->C1, 1 + dist_inc);
-	moveC(Cstart->C2, Cstart->C2->C2, 1 + dist_inc);
-	C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1 + 108), 0, 1.0, false);
-	C2_R5 = addC(C1_R5, normAngle(Cstart->bondAngle1 - 72), normAngle(Cstart->bondAngle1 +108 - 72 - 180), 1.0, false);*/
-	
-	C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1 + 120), 0, 1);
-	C2_R5 = addC(C1_R5, normAngle(C1_R5->C1->bondAngle1 - 90), normAngle(C1_R5->C1->bondAngle1 - 180), pow(3, 0.5));
+	Cpointer C1_R5, C2_R5; // save all new C atoms
+	if (!checkHindrance_C_PAH(mpos)) {
+		//Create ZZ carbon
+		addC(Cstart, normAngle(Cstart->bondAngle1 - 120), normAngle(Cstart->bondAngle1 - 60), 1, true);
+		// Next add a R5 on the neighbouring ZZ
+		if (b4) Cstart = C_RZZ->C2->C2;
+		else Cstart = C_1;
+		//Remove neighbouring ZZ carbon
+		removeC(Cstart->C2, true);
+		//Add new R5
+		C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1 + 120), 0, 1);
+		C2_R5 = addC(C1_R5, normAngle(C1_R5->C1->bondAngle1 - 90), normAngle(C1_R5->C1->bondAngle1 - 180), pow(3, 0.5));
+		// update H atoms
+		if (b4) updateA(C_RZZ->C1, C_2->C2, 'H');
+		else updateA(C_1->C1, C_RZZ->C2, 'H');
+	}
+	else { // migration over bridge.
+		if (b4){
+			//Adjust angle of previous carbon
+			Cstart->bondAngle1 = normAngle(Cstart->C1->bondAngle1 - 60);
+			//Connect carbon to existing ZZ carbon
+			Cpointer C_newbridge, C_sharedbridge, C_oldbridge;
+			Cstart->C2 = findC(mpos);
+			C_newbridge = Cstart->C2;
+			C_sharedbridge = Cstart->C2->C1;
+			C_oldbridge = Cstart->C2->C1->C3;
+			//Adjust bridges
+			C_newbridge->bridge = true;
+			C_newbridge->C3 = C_sharedbridge;
+			C_newbridge->C1 = Cstart;
+			C_newbridge->bondAngle2 = normAngle(Cstart->bondAngle1 + 60);
+			C_sharedbridge->C1 = C_oldbridge;
+			C_sharedbridge->C2 = C_2;
+			C_sharedbridge->C3 = C_newbridge;
+			C_sharedbridge->bondAngle1 = C_newbridge->bondAngle2 + 60;
+			C_sharedbridge->bondAngle2 = C_newbridge->bondAngle2 - 180;
+			C_oldbridge->bridge = false;
+			C_oldbridge->C2 = C_sharedbridge;
+			C_oldbridge->C3 = NULL;
+			C_oldbridge->bondAngle1 = C_oldbridge->C1->bondAngle1 + 60;
+			C_oldbridge->bondAngle2 = 0;
+			updateA(Cstart, 'H');
+			// Next add a R5 on the neighbouring ZZ
+			if (b4) Cstart = C_sharedbridge;
+			else Cstart = C_1;
+			//Add new R5
+			C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1), 0, 1);
+			C2_R5 = addC(C1_R5, normAngle(C1_R5->C1->bondAngle1 - 90), normAngle(C1_R5->C1->bondAngle1 - 180), pow(3, 0.5));
+			//C2_R5->C2 = C_2;
+			//Update 'H'
+			updateA(C1_R5, 'H'); updateA(C2_R5, 'H'); updateA(C2_R5->C2, 'C');
+		}
+		else{
+			//Adjust angle of previous carbon
+			Cstart->bondAngle1 = normAngle(Cstart->C1->bondAngle1 - 60);
+			//Connect carbon to existing ZZ carbon
+			Cpointer C_newbridge, C_sharedbridge, C_oldbridge;
+			Ccheck->C1 = findC(mpos);
+			C_newbridge = Ccheck->C1;
+			C_sharedbridge = C_newbridge->C2;
+			C_oldbridge = C_sharedbridge->C3;
+			//Adjust bridges
+			C_newbridge->bridge = true;
+			C_newbridge->C3 = C_sharedbridge;
+			C_newbridge->C2 = Ccheck;
+			C_newbridge->bondAngle1 = normAngle(C_newbridge->C1->bondAngle1 - 60);
+			C_newbridge->bondAngle2 = normAngle(C_newbridge->C1->bondAngle1 + 60);
+			C_sharedbridge->C2 = C_oldbridge;
+			C_sharedbridge->C1 = C_1;
+			C_1->C2 = C_sharedbridge;
+			C_sharedbridge->C3 = C_newbridge;
+			C_sharedbridge->bondAngle1 = C_newbridge->bondAngle2 + 60;
+			C_sharedbridge->bondAngle2 = C_newbridge->bondAngle2 - 180;
+			C_oldbridge->bridge = false;
+			C_oldbridge->C1 = C_sharedbridge;
+			C_oldbridge->C3 = NULL;
+			C_oldbridge->bondAngle2 = 0;
+			updateA(Ccheck, 'H');
+			// Next add a R5 on the neighbouring ZZ
+			if (b4) Cstart = C_sharedbridge;
+			else Cstart = C_1;
+			//Add new R5
+			Cstart->bondAngle1 = normAngle(Cstart->C1->bondAngle1 + 60);
+			C1_R5 = addC(Cstart, normAngle(Cstart->bondAngle1), 0, 1);
+			C2_R5 = addC(C1_R5, normAngle(C1_R5->C1->bondAngle1 - 90), normAngle(C1_R5->C1->bondAngle1 - 180), pow(3, 0.5));
+			//C2_R5->C2 = C_2;
+			//Update 'H'
+			updateA(C1_R5, 'H'); updateA(C2_R5, 'H'); updateA(C2_R5->C2, 'C');
+		}
+	}
+    
     // edit sites. first identify the neighbouring sites of resulting RZZ & R5
     Spointer S1, S2, S3, S4;
     if(b4) {
@@ -3363,9 +3579,6 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
         convSiteType(stt, C1_R5, C2_R5, R5); // convert RZZ to R5
         remR5fromSite(S2, C_RZZ, S2->C2); // update S2
     }
-    // update H atoms
-    if(b4) updateA(C_RZZ->C1, C_2->C2, 'H');
-    else updateA(C_1->C1, C_RZZ->C2, 'H');
     // update combined sites for all sites involved and their neighbours
     // (excluding new FE sites, since their combined site type will still be None)
     S3 = moveIt(S1, -1);
@@ -3547,6 +3760,13 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		}
 		Spointer Srem1 = moveIt(stt, -1);
 		Spointer Srem2 = moveIt(stt, 1);
+		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
+	}
+	else if (ntype1 == 51 && ntype2 == 51) convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)264);
+	else if (ntype1 == 51 || ntype2 == 51){
+		if (ntype1 == 51) ntype1 = 0;
+		if (ntype2 == 51) ntype2 = 0;
+		newType = 163 + ntype1 + ntype2;
 		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
 	}
 	else {
@@ -3869,16 +4089,16 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		CFE = C_1->C2;
 		CRem = sFE2->C1;
 	}
-	//Check for unsupported sites. You are welcome to program neighbouring pentagons.
+	//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
 	if ((int)sFE2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) return; // The result would be an indene, not supported. YET!
-	if ((int)sFE2->type == 101 || (int)sFE2->type == 501) return;
+	if ((int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 51) return; // This would violate the IPR.
 	if ((int)sFE2->type == 0){
 		if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501) return;
 		if ((int)checkR5_1->type >= 50 && (int)checkR5_1->type <= 65) return;
 		if ((int)checkR5_1->type >= 152 && (int)checkR5_1->type <= 165) return;
 		if ((int)checkR5_1->type >= 264 && (int)checkR5_1->type <= 265) return;
 		if ((int)checkR5_1->type == 0){
-			if ((int)checkR5_2->type >= 50 && (int)checkR5_2->type <= 63) return;
+			if ((int)checkR5_2->type >= 50 && (int)checkR5_2->type <= 65) return;
 			if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) return;
 			if ((int)checkR5_2->type >= 152 && (int)checkR5_2->type <= 165) return;
 			if ((int)checkR5_2->type >= 264 && (int)checkR5_2->type <= 265) return;
@@ -3925,12 +4145,13 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	CRem->C1->bondAngle1 = normAngle(CRem->C1->bondAngle1 - 30);
 	removeC(CRem, false);
 	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
-		Cpointer C1_new;
+		Cpointer C1_new, C2_new;
 		if (b4) C1_new = checkR5_1->C1->C1;
 		else C1_new = C_1->C2->C2->C2;
+		C2_new = C1_new->C2->C2->C2;
 		//R5 has moved to the edge and will now be free.
-		removeC(C1_new->C2, false); removeC(C1_new->C2, false);
-		addC(C1_new, normAngle(C1_new->C1->bondAngle1 - 60), normAngle(C1_new->C1->bondAngle1), 1, true);
+		//removeC(C1_new->C2, false); removeC(C1_new->C2, false);
+		//addC(C1_new, normAngle(C1_new->C1->bondAngle1 - 60), normAngle(C1_new->C1->bondAngle1), 1, true);
 		if (b4) {
 			sFE2->C1 = C_2->C1->C1->C1;
 			sFE2->C2 = C_2->C1->C1;
@@ -3942,10 +4163,11 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 			convSiteType(stt, C_1, sFE2->C1, ZZ);
 		}
 		convSiteType(sFE2, sFE2->C1, sFE2->C2, FE);
-		convSiteType(checkR5_1, C1_new, C1_new->C2->C2, ZZ);
-		updateSites(checkR5_2, checkR5_1->C2, checkR5_2->C2, -1);
+		//convSiteType(checkR5_1, C1_new, C1_new->C2->C2, ZZ);
+		updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, -1);
 		m_pah->m_rings5_Embedded--;
-		proc_G5R_ZZ(checkR5_1, checkR5_1->C1, checkR5_1->C2);
+		redrawR5(checkR5_1, C1_new, C2_new);
+		//proc_G5R_ZZ(checkR5_1, checkR5_1->C1, checkR5_1->C2);
 	}
 
 	
@@ -3966,7 +4188,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 			//convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
 			//updateSites(S1, S1->C1, sFE2->C1, 500);
 		}
-		else if ((int)sFE2->type == 0 && (int)S1->type == 1){ //sFE2 is a FE followed by a ZZ
+		else if ((int)sFE2->type == 0 ){ 
 			//This means that the pentagon has migrated to the edge but will have a carbon out of the structure.
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
 			updateSites(S1, S1->C1, sFE2->C1, 500);
@@ -3990,7 +4212,12 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 			//convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
 			//updateSites(S2, sFE2->C2, S2->C2, 500);
 		}
-		else if ((int)sFE2->type == 0 && (int)S2->type == 1){ //sFE2 is a FE followed by a ZZ
+		else if ((int)sFE2->type == 0){
+			//This means that the pentagon has migrated to the edge but will have a carbon out of the structure.
+			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
+			updateSites(S2, sFE2->C2, S2->C2, 500);
+		}
+		else if ((int)sFE2->type == 0 && (int)S2->type == 2){ //sFE2 is a FE followed by a ZZ
 			//This means that the pentagon has migrated to the edge but will have a carbon out of the structure.
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
 			updateSites(S2, sFE2->C2, S2->C2, 500);
@@ -4273,7 +4500,9 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 		S1 = moveIt(sFE2, -1);
 		if ((int)sFE2->type == 0){ //sFE2 is a FE
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
-			int stype = S1->type + 500;
+			int stype = S1->type;
+			if (stype >= 62 && stype <= 164) stype = stype + 101;
+			else stype = stype + 500;
 			convSiteType(S1, S1->C1, sFE2->C1, (kmcSiteType)stype);
 			//updateSites(S1, S1->C1, sFE2->C1, 5);
 		}
@@ -4304,7 +4533,9 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 		S2 = moveIt(sFE2, 1);
 		if ((int)sFE2->type == 0){ //sFE2 is a FE
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
-			int stype = S2->type + 500;
+			int stype = S2->type;
+			if (stype >= 62 && stype <= 164) stype = stype + 101;
+			else stype = stype + 500;
 			convSiteType(S2, sFE2->C2, S2->C2, (kmcSiteType)stype);
 			//updateSites(S2, sFE2->C2, S2->C2, 5);
 		}
