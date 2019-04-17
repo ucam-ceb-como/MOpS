@@ -94,44 +94,7 @@ Solver::~Solver(void)
 int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
                 rng_type &rng)
 {
-    // aab64 Initialise register of particle-number particles
-    if (mech.IsHybrid() && !sys.Particles().IsFirstSP())
-    {
-        std::cout << "Initialising particle-number register with threshold Nthresh = "
-                  << sys.Particles().GetCritialNumber() << "\n";
-        // Get the cell vertices
-        fvector vertices = Geometry::LocalGeometry1d().cellVertices();
 
-        // Sample a uniformly distributed position, note that this method
-        // works whether the vertices come in increasing or decreasing order,
-        // but 1d is assumed for now.
-        double posn = vertices.front();
-
-        const double width = vertices.back() - posn;
-        boost::uniform_01<rng_type&, double> uniformGenerator(rng);
-        posn += width * uniformGenerator();
-
-        // Flag that register of particle properties is set up
-        sys.Particles().SetInceptedSP();
-        sys.Particles().SetCriticalSize(mech.GetCriticalThreshold());
-
-        // Initialise lookup of particles below critical size
-        for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
-        {
-            Particle * sp_pn = mech.CreateParticle(t);
-            std::vector<double> newComposition(1);
-            std::vector<double> noTrackers(1);
-            newComposition[0] = i;
-            noTrackers[0] = 0.0;
-            sp_pn->setPositionAndTime(posn, t);
-            sp_pn->Primary()->SetComposition(newComposition);
-            sp_pn->Primary()->SetValues(noTrackers);
-            sp_pn->UpdateCache();
-            sys.Particles().SetPNParticle(*sp_pn, rng, i);
-        }
-        sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(),
-	sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
-    }
 
     int err = 0;
     double tsplit, dtg, jrate, tflow(t);
@@ -319,7 +282,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
         // update all deferred processes.
         mech.LPDA(t, sys, rng);
 
-        if (mech.IsHybrid() && sys.Particles().IsFirstSP())
+        if (mech.IsHybrid() && sys.Particles().GetTotalParticleNumber() > 0)
             mech.UpdateSections(t, t - tin, sys, rng);
     }
 
@@ -451,3 +414,36 @@ int Solver::chooseProcess(const fvector &rates, double (*rand_u01)())
     }
     return j;
 };
+
+
+// aab64 Initialise a list of PN particles using the given mechanism
+void Solver::InitialisePNParticles(double t, Cell &sys, const Mechanism &mech)
+{
+	// aab64 Initialise register of particle-number particles
+	//if (mech.IsHybrid() && !sys.Particles().IsFirstSP())
+	//{
+		std::cout << "Initialising particle-number register with threshold Nthresh = "
+			<< sys.Particles().GetCritialNumber() << "\n";
+
+		// Flag that register of particle properties is set up
+		sys.Particles().SetInceptedSP();
+		sys.Particles().SetCriticalSize(mech.GetCriticalThreshold());
+
+		// Initialise lookup of particles below critical size
+		for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
+		{
+			Particle * sp_pn = mech.CreateParticle(t);
+			std::vector<double> newComposition(1);
+			std::vector<double> noTrackers(1);
+			newComposition[0] = i;
+			noTrackers[0] = 0.0;
+			sp_pn->setPositionAndTime(0.0, t);
+			sp_pn->Primary()->SetComposition(newComposition);
+			sp_pn->Primary()->SetValues(noTrackers);
+			sp_pn->UpdateCache();
+			sys.Particles().SetPNParticle(*sp_pn, i);
+		}
+		sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(),
+		sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
+	//}
+}

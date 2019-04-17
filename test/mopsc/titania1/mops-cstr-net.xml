@@ -1,63 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mops version="3">
     <!-- Sim parameters -->
-    <runs>1</runs>
+    <runs>2</runs>
     <iter>10</iter>
     <atol>1.0e-17</atol>
     <rtol>1.0e-4</rtol>
-    <maxm0>1.28e10</maxm0>
-    <pcount>128</pcount>
+    <maxm0>1e11</maxm0>
+    <pcount>16384</pcount>
     <relax>0.8</relax>
 	
 	<!-- Reactant mixture -->
     <mixture id="reactant_mixture1">
-        <temperature units="K">500</temperature>
-        <pressure units="bar">3.00</pressure>	
+        <temperature units="K">600</temperature>
+        <pressure units="bar">4</pressure>	
         <component id="TICL4">1.0</component>
-    </mixture>
-	
-	<!-- Reactant mixture -->
-    <mixture id="reactant_mixture2">
-        <temperature units="K">500</temperature>
-        <pressure units="bar">3.00</pressure>	
-        <component id="TICL4">0.6</component>
-        <component id="O2">0.4</component>
     </mixture>
 	
 	<!-- Plasma mixture -->
     <mixture id="plasma_mixture">
-        <temperature units="K">2000</temperature>
-        <pressure units="bar">3.00</pressure>	
+        <temperature units="K">2750</temperature>
+        <pressure units="bar">4</pressure>	
         <component id="O2">1.0</component>
     </mixture>
 	
 	<!-- Initial mixture -->
     <mixture id="initial_mixture">
         <temperature units="K">300</temperature>
-        <pressure units="bar">3.00</pressure>
+        <pressure units="bar">4</pressure>
 	    <component id="AR">1.0</component>
     </mixture>
 	
     <!-- Stage 1 -->
     <reactor constt="false" constv="true" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
-	        <initial>initial_mixture</initial>
-            <flow dir="in" frac="0.14">reactant_mixture1</flow>
-            <flow dir="in" frac="0.86">plasma_mixture</flow>
-            <restime unit="s">0.002</restime>
-    </reactor>
-    
-    <!-- Stage 2 -->
-    <!--reactor constt="false" constv="true" id="stage2" type="psr" units="mol/mol" order="2" dtype="cdelete" btype="continuous">
 	    <initial>initial_mixture</initial>
-        <flow dir="in" frac="0.5">stage1</flow>
-        <flow dir="in" frac="0.5">reactant_mixture2</flow>
-        <restime unit="s">0.015</restime>
-    </reactor-->	
-
+        <flow dir="in" frac="0.15">reactant_mixture1</flow>
+        <flow dir="in" frac="0.85">plasma_mixture</flow>
+        <restime unit="s">0.003</restime>
+    </reactor>
+   
     <!-- Time stepping -->
     <timeintervals>
       	<start>0.0</start>
-        <time splits="10" steps="100000">0.1</time>
+        <time splits="20" steps="6000">0.06</time>
     </timeintervals>
    
     <!-- Output specifications -->

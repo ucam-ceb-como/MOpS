@@ -326,7 +326,7 @@ public:
     void DoubleTotals();
 	
     Particle *const GetPNParticleAt(unsigned int index);
-    int SetPNParticle(Particle &sp, rng_type &rng, unsigned int index);
+    int SetPNParticle(Particle &sp, unsigned int index);
 
     // READ/WRITE/COPY.
 

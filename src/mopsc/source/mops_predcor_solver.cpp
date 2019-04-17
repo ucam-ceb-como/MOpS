@@ -101,7 +101,7 @@ PredCorSolver::~PredCorSolver(void)
 void PredCorSolver::Initialise(Reactor &r)
 {
     // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
-    r.Mixture()->SetFixedChem(true);
+    //r.Mixture()->SetFixedChem(true);
 
     // Set up ODE solver.
     FlameSolver::Initialise(r);
@@ -121,6 +121,12 @@ void PredCorSolver::Initialise(Reactor &r)
     m_srcterms_copy.resize(2, SrcPoint(r.Mech()->GasMech().SpeciesCount()+2));
     m_ode.SetExtSrcTerms(m_srcterms);
     m_ode_copy.SetExtSrcTerms(m_srcterms);
+
+	// aab64 Initialise register of particle-number particles
+	if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
+	{
+		InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
+	}
 
     // Clone the reactor.
     delete m_reac_copy;
@@ -149,8 +155,14 @@ void PredCorSolver::Reset(Reactor &r)
     m_ode_copy.SetExtSrcTerms(m_srcterms);
 
     // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
-    r.Mixture()->SetFixedChem(true);
+	//r.Mixture()->SetFixedChem(true);
 
+	// aab64 Initialise register of particle-number particles
+	if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
+	{
+		InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
+	}
+	
     // Clone the reactor.
     delete m_reac_copy;
     m_reac_copy = r.Clone();
@@ -180,10 +192,11 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
                           Sweep::rng_type &rng, OutFnPtr out, void *data)
 {
     int step=0, iter=0;
-
+	
     // Calculate step size.
-    double dt = (tstop - r.Time()) / (double)nsteps;
+	double dt = (tstop - r.Time()) / (double)nsteps;
 
+	
     // Internal splits without file output.
     for (step=0; step<nsteps-1; ++step) {
         // Start the iteration procedure.
@@ -649,7 +662,7 @@ void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
     }
 #endif
 
-    // Reset reactor and solver for another iteration.
+	// Reset reactor and solver for another iteration.
     r = *m_reac_copy;
 	
     // aab64: check what happens to flow pointers during assignment
@@ -684,21 +697,27 @@ void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
     // Generate chemistry profile over the step using the current
     // source terms.
     m_cpu_mark = clock();
-        generateChemProfile(r, dt);
+    generateChemProfile(r, dt);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
     // Solve step using Sweep in order to update the
     // source terms.
     m_cpu_mark = clock();
-        // Set the stop time.    
-        double ts2 = ts1+dt;
+    // Set the stop time.    
+    double ts2 = ts1+dt;
 
-        // Scale M0 according to gas-phase expansion.
-        r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()
+    // Scale M0 according to gas-phase expansion.
+	if (!r.IsConstV()) 
+		r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()
                 / r.Mixture()->GasPhase().MassDensity());
 
-        // Run Sweep for this time step.
-        Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+	// aab64 Temporary functions for gas-phase properties
+	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
+	fvector Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+	r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+
+    // Run Sweep for this time step.
+    Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng);
     m_swp_ctime += calcDeltaCT(m_cpu_mark);
 
     // Now update the source terms at the end of the step.
@@ -777,7 +796,7 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
 // species source terms.
 double PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
 {
-    if (r.EnergyEquation() == Reactor::Adiabatic) {
+    /*if (r.EnergyEquation() == Reactor::Adiabatic) {
         // Adiabatic temperature model.
         fvector Hs;
         double C;
@@ -807,7 +826,7 @@ double PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
     } else if (r.EnergyEquation() == Reactor::ConstT) {
         // Constant temperature model.
         return 0.0;
-    }
+    }*/
 
     // Assume constant temperature by default.
     return 0.0;

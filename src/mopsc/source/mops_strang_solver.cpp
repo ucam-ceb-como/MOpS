@@ -92,6 +92,11 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	else {
 		r.Mixture()->SetIsAdiabaticFlag(false);
 	}
+	// aab64 Initialise register of particle-number particles
+	if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
+	{
+		InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
+	}
 
 	// Mark the time at the start of the step, in order to
 	// calculate total computation time.
@@ -157,11 +162,6 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	m_ode.ResetSolver();
 	m_ode.Solve(r, t2 += h);
 
-	// aab64 Temporary functions for gas-phase properties
-	tmpGasPhase = (&r.Mixture()->GasPhase());
-	Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
-	r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
-
 	r.SetTime(t2);
 	m_chemtime += calcDeltaCT(m_cpu_mark);
 
@@ -191,7 +191,12 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     }
     else {
         r.Mixture()->SetIsAdiabaticFlag(false);
-    }
+	}
+	// aab64 Initialise register of particle-number particles
+	if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
+	{
+		InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
+	}
 
     //Diagnostics file
     ofstream partProcFile, gasConcFile;

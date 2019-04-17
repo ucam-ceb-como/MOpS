@@ -155,7 +155,7 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
                 m_pn_particles.resize(rhs.m_critical_size, NULL);
                 if (rhs.m_pn_particles[0] != NULL) 
                 {
-                    for (unsigned int i = 0; i != rhs.Count(); ++i) {
+                    for (unsigned int i = 0; i != rhs.GetCritialNumber(); ++i) {
                         m_pn_particles[i] = rhs.m_pn_particles[i]->Clone();
                     }
                 }
@@ -635,7 +635,7 @@ int Sweep::Ensemble::Add_PNP(Particle &sp, rng_type &rng, int i2)
 	return i;
 }
 
-int Sweep::Ensemble::SetPNParticle(Particle &sp, rng_type &rng, unsigned int index)
+int Sweep::Ensemble::SetPNParticle(Particle &sp, unsigned int index)
 {
 	if (index < m_critical_size)
 	{
