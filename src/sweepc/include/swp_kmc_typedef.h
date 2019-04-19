@@ -47,6 +47,7 @@
 
 #include <vector>
 #include <string>
+#include <tuple>
 #include "swp_params.h"
 
 namespace Sweep {

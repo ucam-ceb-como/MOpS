@@ -227,7 +227,7 @@ private:
 	//! Check steric hindrance between two carbons.
 	bool checkHindrance_twoC(const Cpointer C_1, const Cpointer C_2) const;
 	//!Gets distance between two carbons.
-	double PAHProcess::getDistance_twoC(const Cpointer C_1, const Cpointer C_2) const;
+	double getDistance_twoC(const Cpointer C_1, const Cpointer C_2) const;
     //! Returns site iterator x steps after i
     Spointer moveIt(Spointer i, int x);
     //! Finds C atom with specific coordinates
@@ -271,7 +271,7 @@ private:
     //! Changes site type into combined site without R5 (e.g. RFE -> FE)
     void remR5fromSite(Spointer& st, Cpointer Carb1, Cpointer Carb2);
 	//! Redraws 5 member rings
-	void PAHProcess::redrawR5(Spointer& st, Cpointer Carb1, Cpointer Carb2);
+	void redrawR5(Spointer& st, Cpointer Carb1, Cpointer Carb2);
     //! Changes site type into another site type
     void convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcSiteType t);
     //! Remove site

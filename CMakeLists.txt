@@ -28,12 +28,13 @@ enable_testing()
 
 # Turn off line breaks in error messages so that IDEs can parse the errors properly
 IF(CMAKE_COMPILER_IS_GNUCC)
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")  
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  #SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Wall -Wextra -Weffc++ -Wno-format-errors")
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Wall -Wextra -Weffc++ -Wno-format-errors")
 
   # Add -pg to the compile and link flags to enable profiling
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Wall")
   SET(CMAKE_LINK_FLAGS_DEBUG "${CMAKE_LINK_FLAGS_DEBUG}")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
@@ -192,4 +193,5 @@ include_directories(${Boost_INCLUDE_DIRS}
                     ${MOPSSUITE_SOURCE_DIR}/src/odesolvers/radau/include
                     ${MOPSSUITE_SOURCE_DIR}/src/camflow/include
                     ${MOPSSUITE_SOURCE_DIR}/src/mopsc/include
-                    ${MOPSSUITE_SOURCE_DIR}/src/brush/include)
+                    ${MOPSSUITE_SOURCE_DIR}/src/brush/include
+					/home/gl413/Codes/Openbabel/install/include/openbabel-2.0)

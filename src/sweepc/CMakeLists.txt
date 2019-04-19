@@ -89,8 +89,10 @@ include_directories(include
                     ../io/comostrings/include
                     ../io/camxml/include
                     ../geometry/include
-                    ../sprogc/include)
+                    ../sprogc/include
+					/home/gl413/Codes/Openbabel/install/include/openbabel-2.0)
 
 # To link againast sweep the following libraries will also
 # be required to resolve references from within sweep.
 target_link_libraries(sweep sprog geometry camxml comostrings chemkinReader)
+target_link_libraries(sweep /home/gl413/Codes/Openbabel/install/lib/libopenbabel.so)

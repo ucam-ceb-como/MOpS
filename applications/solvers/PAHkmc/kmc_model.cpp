@@ -100,6 +100,9 @@ int main(int argc, char *argv[])
     int R6_num = 0;
     int R5_num_Lone = 0;
 	int R5_num_Embedded = 0;
+	int R7_num_Lone = 0;
+	int R7_num_Embedded = 0;
+	std::list<cpair> intCarbons;
     std::string site_savemode = "END";
 
     KMCSimulator* Simulator;
@@ -144,6 +147,10 @@ int main(int argc, char *argv[])
 			R5_num_Lone = (int)Strings::cdble(attr->GetValue());
 			attr = node->GetAttribute("R5_Embedded");
 			R5_num_Embedded = (int)Strings::cdble(attr->GetValue());
+			attr = node->GetAttribute("R7_Lone");
+			R7_num_Lone = (int)Strings::cdble(attr->GetValue());
+			attr = node->GetAttribute("R7_Embedded");
+			R7_num_Embedded = (int)Strings::cdble(attr->GetValue());
         }
 
         // get input file names
@@ -237,7 +244,7 @@ int main(int argc, char *argv[])
             if(startStruct != NONE)
                 pahp.initialise(startStruct);
             else
-				pahp.initialise(startStruct_str, R6_num, R5_num_Lone, R5_num_Embedded);
+				pahp.initialise(startStruct_str, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, intCarbons);
             //pahp.setPAH(*pah[0]);
             std::cout << "Pointer to PAH:"<<pah[i]<<"\n";
             Sweep::rng_type rng2(1+i);
@@ -288,8 +295,8 @@ int main(int argc, char *argv[])
             }
             std::cout<<"Done simulation for PAH "<<ID+i<<std::endl<<endl;
             std::cout<<"PAH Structure: "<<pahp.SiteString(',')<<std::endl;
-            std::cout<<"PAH Ring Counts ~ R6:"<<pahp.getRingsCount().first<<" -- R5:"
-                <<pahp.getRingsCount().second<<std::endl;
+            std::cout<<"PAH Ring Counts ~ R6:"<<std::get<0>(pahp.getRingsCount())<<" -- R5:"
+				<< std::get<1>(pahp.getRingsCount()) << std::endl;
             std::cout<<"PAH Atom Counts ~ C:"<<pahp.getCHCount().first<<" -- H:"
                 <<pahp.getCHCount().second<<std::endl;
             std::cout<<"No of Edge C ~ "<<pahp.CarbonListSize()<<std::endl;

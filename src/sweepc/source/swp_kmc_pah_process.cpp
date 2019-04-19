@@ -54,6 +54,10 @@
 #include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 
+#include <openbabel/base.h>
+#include <openbabel/mol.h>
+#include <openbabel/forcefield.h>
+
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
 using namespace std;
@@ -943,7 +947,8 @@ void PAHProcess::includeCurvature(cpair C_1, cpair C_2, cpair C_3){
 	//C_3 are the coordinates of a neighbouring Carbon atom to define the plane.
 	//A is the vector in 3D space that represents the edge of the just encapped pentagon.
 	//B is the vector in 3D space between C_1 and C_3 to define a plane.
-
+	
+	OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField("Ghemical");
 	double Ax = (std::get<0>(C_2) -std::get<0>(C_1)) / pow(3, 0.5); //x component of A
 	double Ay = (std::get<1>(C_2) -std::get<1>(C_1)) / pow(3, 0.5); //y component of A
 	double Az = (std::get<2>(C_2) -std::get<2>(C_1)) / pow(3, 0.5); //z component of A
