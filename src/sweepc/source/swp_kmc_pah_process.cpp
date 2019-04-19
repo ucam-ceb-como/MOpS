@@ -948,7 +948,42 @@ void PAHProcess::includeCurvature(cpair C_1, cpair C_2, cpair C_3){
 	//A is the vector in 3D space that represents the edge of the just encapped pentagon.
 	//B is the vector in 3D space between C_1 and C_3 to define a plane.
 	
+	//Defines a forcefield object
 	OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField("Ghemical");
+	
+	//Creates molecule object
+	OBMol = mol;
+	OBMol* pmol = pOb->CastAndClear<OBMol>();
+	OBMol &mol = *pmol;
+	
+	mol.BeginModify();
+	
+	//Loads external Carbon Atoms
+	Ccontainer::iterator it;
+	for (it = m_pah->m_carbonList.begin(); it != m_pah->m_carbonList.end(); ++it) {
+		//Edge carbons
+		OBAtom *atom  = mol.NewAtom();
+		atom->SetAtomicNum(6);
+		Cpointer C_change = *it;
+		atom->SetVector(std::get<0>(C_change->coords),std::get<1>(C_change->coords),std::get<2>(C_change->coords));
+		
+		//Hydrogens
+		if (C_change->A == 'H'){
+			OBAtom *atom  = mol.NewAtom();
+			atom->SetAtomicNum(1);
+			atom->SetVector(std::get<0>(C_change->coords) + 0.05*cos(C_change->bondAngle2*M_PI/180),std::get<1>(C_change->coords) + 0.05*sin(C_change->bondAngle2*M_PI/180),std::get<2>(C_change->coords));
+		}
+	}
+	//Internal carbons
+	std::list<cpair>::iterator it;
+	for (it = m_pah->m_InternalCarbons.begin(); it != m_pah->m_InternalCarbons.end(); ++it){
+		OBAtom *atom  = mol.NewAtom();
+		atom->SetAtomicNum(6);
+		atom->SetVector(std::get<0>(*it),std::get<1>(*it),std::get<2>(*it));
+	}
+	
+	mol.EndModify();
+	
 	double Ax = (std::get<0>(C_2) -std::get<0>(C_1)) / pow(3, 0.5); //x component of A
 	double Ay = (std::get<1>(C_2) -std::get<1>(C_1)) / pow(3, 0.5); //y component of A
 	double Az = (std::get<2>(C_2) -std::get<2>(C_1)) / pow(3, 0.5); //z component of A
