@@ -54,6 +54,7 @@
 #include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 
+#include <openbabel/babelconfig.h>
 #include <openbabel/base.h>
 #include <openbabel/mol.h>
 #include <openbabel/forcefield.h>
@@ -335,7 +336,7 @@ bool PAHProcess::saveDOT(const std::string &filename, const std::string &title) 
 		coordtype y = std::get<1>(prev->coords);
         int c=0; // index of current C
         int count=0;
-        float CC_CHratio = 1; // length ratio between C-C and C-H bonds
+        float CC_CHratio = 10; // length ratio between C-C and C-H bonds
         do {
             //if(now->bridge) {
                 //cout<<"Bridge at "<<now<<'\n';
@@ -952,9 +953,9 @@ void PAHProcess::includeCurvature(cpair C_1, cpair C_2, cpair C_3){
 	OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField("Ghemical");
 	
 	//Creates molecule object
-	OBMol = mol;
-	OBMol* pmol = pOb->CastAndClear<OBMol>();
-	OBMol &mol = *pmol;
+	OpenBabel::OBMol mol;
+	//OpenBabel::OBMol* mol = pOb->CastAndClear<OBMol>();
+	//OBMol &mol = *pmol;
 	
 	mol.BeginModify();
 	
@@ -962,28 +963,28 @@ void PAHProcess::includeCurvature(cpair C_1, cpair C_2, cpair C_3){
 	Ccontainer::iterator it;
 	for (it = m_pah->m_carbonList.begin(); it != m_pah->m_carbonList.end(); ++it) {
 		//Edge carbons
-		OBAtom *atom  = mol.NewAtom();
+		OpenBabel::OBAtom *atom  = mol.NewAtom();
 		atom->SetAtomicNum(6);
 		Cpointer C_change = *it;
 		atom->SetVector(std::get<0>(C_change->coords),std::get<1>(C_change->coords),std::get<2>(C_change->coords));
 		
 		//Hydrogens
 		if (C_change->A == 'H'){
-			OBAtom *atom  = mol.NewAtom();
+			OpenBabel::OBAtom *atom  = mol.NewAtom();
 			atom->SetAtomicNum(1);
 			atom->SetVector(std::get<0>(C_change->coords) + 0.05*cos(C_change->bondAngle2*M_PI/180),std::get<1>(C_change->coords) + 0.05*sin(C_change->bondAngle2*M_PI/180),std::get<2>(C_change->coords));
 		}
 	}
 	//Internal carbons
-	std::list<cpair>::iterator it;
-	for (it = m_pah->m_InternalCarbons.begin(); it != m_pah->m_InternalCarbons.end(); ++it){
-		OBAtom *atom  = mol.NewAtom();
+	std::list<cpair>::iterator it2;
+	for (it2 = m_pah->m_InternalCarbons.begin(); it2 != m_pah->m_InternalCarbons.end(); ++it2){
+		OpenBabel::OBAtom *atom  = mol.NewAtom();
 		atom->SetAtomicNum(6);
-		atom->SetVector(std::get<0>(*it),std::get<1>(*it),std::get<2>(*it));
+		atom->SetVector(std::get<0>(*it2),std::get<1>(*it2),std::get<2>(*it2));
 	}
 	
 	mol.EndModify();
-	
+	/*
 	double Ax = (std::get<0>(C_2) -std::get<0>(C_1)) / pow(3, 0.5); //x component of A
 	double Ay = (std::get<1>(C_2) -std::get<1>(C_1)) / pow(3, 0.5); //y component of A
 	double Az = (std::get<2>(C_2) -std::get<2>(C_1)) / pow(3, 0.5); //z component of A
@@ -1049,7 +1050,7 @@ void PAHProcess::includeCurvature(cpair C_1, cpair C_2, cpair C_3){
 		cpair & s(*it2);
 		s = temp;
 		int test = 1;
-	}
+	}*/
 	return;
 
 }
@@ -2493,16 +2494,29 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     Spointer S1,S2,S3,S4;
     S1 = moveIt(site_perf, -1); S2 = moveIt(site_perf, 1);
     S3 = moveIt(site_perf, -2); S4 = moveIt(site_perf, 2);
+	if (!checkSiteValid(S1) || !checkSiteValid(S2) || !checkSiteValid(S3) || !checkSiteValid(S4)){
+		std::cout << "Structure produced invalid site type after performing process "
+			<< "ID" << id << " on PAH ID: " << PAH_ID << "...\n"
+			<< "*************\nAfter performing process --\n";
+		printSites(site_perf);
+		std::ostringstream msg;
+		msg << "ERROR: Structure produced invalid combined site type after performing process "
+			<< "ID" << id << " on PAH ID: " << PAH_ID << "..."
+			<< " (Sweep::KMC_ARS::PAHProcess::performProcess)";
+		throw std::runtime_error(msg.str());
+		assert(false);
+		abort();
+	}
     if(!checkCombinedSiteType(site_perf) || !checkCombinedSiteType(S1)
         || !checkCombinedSiteType(S2) || !checkCombinedSiteType(S3)
         || !checkCombinedSiteType(S4)) {
         std::cout<<"Structure produced invalid combined site type after performing process "
-            << "ID"<<id<<" on PAH ID: "<<m_pah->m_parent->ID()<<"...\n"
+            << "ID"<<id<<" on PAH ID: "<< PAH_ID <<"...\n"
             <<"*************\nAfter performing process --\n";
         printSites(site_perf);
         std::ostringstream msg;
         msg << "ERROR: Structure produced invalid combined site type after performing process "
-            << "ID"<<id<<" on PAH ID: "<<m_pah->m_parent->ID()<<"..."
+            << "ID"<<id<<" on PAH ID: "<< PAH_ID <<"..."
             << " (Sweep::KMC_ARS::PAHProcess::performProcess)";
         throw std::runtime_error(msg.str());
         assert(false);
@@ -2933,9 +2947,13 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update site stt and new neighbours
     // new neighbours:
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
-	updateSites(stt, C1_new, C2_new, 0); // only change C1 and C2, site still FE
-	updateSites(S1, S1->C1, C1_new, -1);
-	updateSites(S2, C2_new, S2->C2, -1);
+	if ((S1->type == 62 && S2->type == 2) || (S2->type == 62 && S1->type == 2)){
+		convSiteType(stt, C1_new->C1, C2_new->C2, ZZ);
+		convSiteType(S1, S1->C1, C1_new->C1, FE);
+		convSiteType(S2, C2_new->C2, S2->C2, FE);
+		m_pah->m_rings5_Embedded--;
+		redrawR5(stt, C1_new->C1, C2_new->C2);
+	}
 	/*if (S1->type >= 62 && S2->type >= 62) {
 		//Resulting type is an R5
 		int stype1 = S1->type; int stype2 = S2->type;
@@ -2947,13 +2965,15 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		m_pah->m_rings5_Embedded--;
 		redrawR5(stt, C1_new, C2_new);
 		//proc_G5R_ZZ(stt, stt->C1, stt->C2);
-	}
+	}*/
 	else {
 		//Flat PAH desorption
 		updateSites(stt, C1_new, C2_new, 0); // only change C1 and C2, site still FE
 		updateSites(S1, S1->C1, C1_new, -1);
 		updateSites(S2, C2_new, S2->C2, -1);
-	}*/
+		// add H atoms
+		updateA(C1_new->C1, C2_new->C2, 'H');
+	}
     // update combined sites
     Spointer S3, S4;
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
@@ -2961,8 +2981,6 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     
-    // add H atoms
-    updateA(C1_new->C1, C2_new->C2, 'H');
     // update H count
     addCount(0,-2);
     // add ring counts
@@ -4542,9 +4560,19 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
 			int stype = S1->type;
 			if (stype >= 62 && stype <= 164) stype = stype + 101;
-			else stype = stype + 500;
-			convSiteType(S1, S1->C1, sFE2->C1, (kmcSiteType)stype);
-			//updateSites(S1, S1->C1, sFE2->C1, 5);
+			else if (stype == 0){
+				convSiteType(S1, S1->C1->C1, S1->C2->C2, ZZ);
+				convSiteType(sFE2, S1->C2, sFE2->C2, FE);
+				Spointer S3 = moveIt(S1, -1);
+				updateSites(S3, S3->C1, S3->C2->C1, -1);
+				m_pah->m_rings5_Embedded--;
+				redrawR5(S1, S1->C1, S1->C2);
+			}
+			else {
+				stype = stype + 500;
+				convSiteType(S1, S1->C1, sFE2->C1, (kmcSiteType)stype);
+				//updateSites(S1, S1->C1, sFE2->C1, 5);
+			}
 		}
 		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
@@ -4575,9 +4603,20 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
 			int stype = S2->type;
 			if (stype >= 62 && stype <= 164) stype = stype + 101;
-			else stype = stype + 500;
-			convSiteType(S2, sFE2->C2, S2->C2, (kmcSiteType)stype);
-			//updateSites(S2, sFE2->C2, S2->C2, 5);
+			else if (stype == 0){
+				convSiteType(S2, S2->C1->C1, S2->C2->C2, ZZ);
+				convSiteType(sFE2, sFE2->C1, S2->C1, FE);
+				Spointer S4 = moveIt(S2, +1);
+				updateSites(S4, S4->C1->C2, S4->C2, -1);
+				redrawR5(S2, S2->C1, S2->C2);
+				m_pah->m_rings5_Embedded--;
+			}
+			else {
+				stype = stype + 500;
+				convSiteType(S2, sFE2->C2, S2->C2, (kmcSiteType)stype);
+				//updateSites(S2, sFE2->C2, S2->C2, 5);
+			}
+		
 		}
 		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
