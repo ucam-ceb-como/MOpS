@@ -10,8 +10,9 @@ IF(WIN32)
   SET(Boost_USE_STATIC_LIBS TRUE)
   SET(MSVC_BUILD_DIR "/\${CTEST_CONFIGURATION_TYPE}")
   SET(SHELL_INTERPRETER "bash")
+  SET(CMAKE_MODULE_PATH ${PROJECT_BINARY_DIR}/../cmake/modules)
 ELSE(WIN32)
-  SET(CMAKE_MODULE_PATH $ENV{HOME})
+  set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
   SET(BOOST_ROOT $ENV{HOME}/boost)
   SET(Boost_USE_MULTITHREADED OFF)
 ENDIF(WIN32)
@@ -23,6 +24,15 @@ ENDIF(Boost_FOUND)
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+
+# find and setup openbabel
+find_package(PkgConfig REQUIRED)
+find_package(OpenBabel2 REQUIRED COMPONENTS forcefields)
+include_directories(${OPENBABEL2_INCLUDE_DIR})
+IF(OPENBABEL2_FOUND)
+    MESSAGE("Openbabel includes located in: ${OPENBABEL2_INCLUDE_DIR}")
+    MESSAGE("Openbabel libraries located in: ${OPENBABEL2_LIBRARIES}")
+ENDIF(OPENBABEL2_FOUND)
 
 enable_testing()
 
@@ -116,7 +126,8 @@ add_test(mops.network2 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/n
 
 ########## The PAH-KMC Application ######################
 add_executable(PAHkmc-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/PAHkmc/kmc_model.cpp)
-target_link_libraries(PAHkmc-app sweep ${Boost_LIBRARIES})
+target_link_libraries(PAHkmc-app sweep ${Boost_LIBRARIES} ${OPENBABEL2_LIBRARIES})
+#target_link_libraries(PAHkmc-app sweep /home/gl413/Codes/Openbabel/install/lib/libopenbabel.so)
 
 ########## The Brush application #######################
 add_executable(brush-app ${MOPSSUITE_SOURCE_DIR}/applications/solvers/brush/brush.cpp)
@@ -193,5 +204,6 @@ include_directories(${Boost_INCLUDE_DIRS}
                     ${MOPSSUITE_SOURCE_DIR}/src/odesolvers/radau/include
                     ${MOPSSUITE_SOURCE_DIR}/src/camflow/include
                     ${MOPSSUITE_SOURCE_DIR}/src/mopsc/include
-                    ${MOPSSUITE_SOURCE_DIR}/src/brush/include
-					/home/gl413/Codes/Openbabel/install/include/openbabel-2.0)
+                    ${MOPSSUITE_SOURCE_DIR}/src/brush/include)
+					#/home/gl413/Codes/Openbabel/install/include/openbabel-2.0)
+install(TARGETS mops-app DESTINATION ${PROJECT_SOURCE_DIR}/bin/try)

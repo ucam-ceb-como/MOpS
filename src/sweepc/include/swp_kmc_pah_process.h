@@ -244,8 +244,10 @@ private:
 	void moveC(Cpointer C_1, cpair newpos);
 	//! Moves a carbon position .
 	void moveC(Cpointer C_1, Cpointer Cprev, double new_distance);
+	//! Runs optimisation of a PAHusing Openbabel
+	void optimisePAH();
 	//! Includes curvature in a PAH after a pentagon is integrated in the structure.
-	void includeCurvature(cpair C_1, cpair C_2, cpair C_3);
+	void includeCurvature(cpair CR5_1, cpair CR5_2, cpair CR5_3, cpair CR5_4);
     //! Creates a carbon atom bridging next to C_1. 
     Cpointer bridgeC(Cpointer C_1);
     /*//! Creates a bulk carbon atom connected to C_1
@@ -300,6 +302,8 @@ private:
     void updateCombinedSites(Spointer& st);
     //! Sets third species bonded to C to a species sp if it is a reactive surface carbon
     void updateA(Cpointer C, char sp);
+	//! Overload function, forces char to C atom.
+	void updateA(Cpointer C, char sp, bool flag);
     //! Overload function, updateA for all C from C_1 to C_2 inclusive
     void updateA(Cpointer C_1, Cpointer C_2, char spc);
     
