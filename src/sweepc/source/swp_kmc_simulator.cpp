@@ -291,6 +291,10 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				dotname.append(std::to_string(m_t));
 				dotname.append("_after.dot");
 				m_simPAHp.saveDOT(dotname);
+				
+				std::string xyzname = "KMC_DEBUG/1_xyz/";
+				xyzname.append(std::to_string(m_t));
+				m_simPAHp.optimisePAH(true, xyzname);
 			}
 
 			/*if (PAH_ID == 784){

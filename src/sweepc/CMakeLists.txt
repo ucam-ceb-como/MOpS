@@ -83,16 +83,19 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   ${INCS})
 
 include_directories(include 
+					${OPENBABEL2_INCLUDE_DIR}
                     ${Boost_INCLUDE_DIRS} 
                     ../utils/include
                     ../io/chemkinReader/include
                     ../io/comostrings/include
                     ../io/camxml/include
                     ../geometry/include
-                    ../sprogc/include
-					/home/gl413/Codes/Openbabel/install/include/openbabel-2.0)
+                    ../sprogc/include)
+					#/home/gl413/Codes/Openbabel/install/include/openbabel-2.0)
 
 # To link againast sweep the following libraries will also
 # be required to resolve references from within sweep.
 target_link_libraries(sweep sprog geometry camxml comostrings chemkinReader)
-target_link_libraries(sweep /home/gl413/Codes/Openbabel/install/lib/libopenbabel.so)
+#target_link_libraries(sweep /home/gl413/Codes/Openbabel/install/lib/libopenbabel.so)
+target_link_libraries(sweep ${OPENBABEL2_LIBRARIES})
+

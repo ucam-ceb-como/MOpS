@@ -945,13 +945,13 @@ void PAHProcess::moveC(Cpointer C_1, Cpointer Cprev, double new_distance) {
 	m_pah->m_cpositions.insert(C_1->coords);
 }
 //Minimisation of a PAH
-void PAHProcess::optimisePAH(){
+void PAHProcess::optimisePAH(bool savefile, const std::string &filename) const{
 	
 	//Prints available forcefields.
 	//OpenBabel::OBPlugin::List("forcefields");
 	
 	//Defines a forcefield object
-	OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField("MMFF94s");
+	OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField("Ghemical");
 	if (!pFF) {
     cerr << ": could not find forcefield MMFF94s." <<endl;
     exit (-1);
@@ -960,6 +960,8 @@ void PAHProcess::optimisePAH(){
 	//Creates molecule object
 	OpenBabel::OBMol mol;
 	mol.BeginModify();
+	std::list<std::pair<int, int> > R5pairs;
+	std::list<Cpointer>CR5_pair;
 	
 	//Loads external Carbon Atoms
 	Ccontainer::iterator it;
@@ -969,6 +971,23 @@ void PAHProcess::optimisePAH(){
 		atom->SetAtomicNum(6);
 		Cpointer C_change = *it;
 		atom->SetVector(std::get<0>(C_change->coords),std::get<1>(C_change->coords),std::get<2>(C_change->coords));
+		atom->SetAromatic();
+		
+		//5 member ring detection
+		double dist = getDistance_twoC(C_change, C_change->C2);
+		if (dist > 1.6){
+			R5pairs.push_back(std::make_pair(atom->GetIdx(), 0));
+			CR5_pair.push_back(C_change->C2);
+		}
+		
+		auto result1 = std::find(std::begin(CR5_pair), std::end(CR5_pair), C_change);
+		if (result1 != std::end(CR5_pair)){
+			int index = std::distance(CR5_pair.begin(), result1);
+			std::list<std::pair<int, int>>::iterator it_R5pairs = R5pairs.begin();
+			std::advance(it_R5pairs, index);
+			auto new_pair = make_pair(it_R5pairs->first,atom->GetIdx());
+			*it_R5pairs = new_pair;
+		}
 		
 		//Hydrogens
 		if (C_change->A == 'H'){
@@ -983,136 +1002,38 @@ void PAHProcess::optimisePAH(){
 		OpenBabel::OBAtom *atom  = mol.NewAtom();
 		atom->SetAtomicNum(6);
 		atom->SetVector(std::get<0>(*it2),std::get<1>(*it2),std::get<2>(*it2));
+		atom->SetAromatic();
 	}
 	
+	//Bond generation
 	mol.ConnectTheDots();
+	std::list<std::pair<int, int>>::iterator it_R5pairs2;
+	for(it_R5pairs2 = R5pairs.begin(); it_R5pairs2 != R5pairs.end(); ++it_R5pairs2){
+		mol.AddBond(it_R5pairs2->first,it_R5pairs2->second,5);
+	}
 	mol.PerceiveBondOrders();
+	
 	
 	mol.EndModify();
 	
-	pFF->SetLogFile(&cerr);
+	/*pFF->SetLogFile(&cerr);
 	pFF->SetLogLevel(OBFF_LOGLVL_LOW);
 	pFF->SetVDWCutOff(6.0);
 	pFF->SetElectrostaticCutOff(10.0);
 	pFF->SetUpdateFrequency(10);
-	pFF->EnableCutOff(false);
+	pFF->EnableCutOff(false);*/
 	
-	saveDOT("KMC_DEBUG/BEFORE_MINIMISATION.dot");
-	ofstream ofs1;
-	ofs1.open("BEFORE_MIN.xyz");
-	ofstream ofs2;
-	ofs2.open("AFTER_MIN.xyz");
-	OpenBabel::OBConversion conv;
-    OpenBabel::OBFormat *format_out = conv.FindFormat("xyz"); // default output format
-	conv.SetInAndOutFormats(format_out, format_out);
-	conv.Write(&mol, &ofs1);
-	ofs1.close();
-	
-	//Initialise minimisation
-	if (!pFF->Setup(mol)) {
-      cerr << ": could not setup force field." << endl;
-      exit (-1);
-    }
-	bool done = true;
-	pFF->SteepestDescentInitialize(300, 1e-6);
-	
-	
-	//Perform minimisation
-	unsigned int totalSteps = 1;
-    while (done) {
-		done = pFF->SteepestDescentTakeNSteps(1);
-		totalSteps++;
-		
-		if (pFF->DetectExplosion()) {
-			cerr << "explosion has occured!" << endl;
-			return;
-		}
-		else
-        pFF->GetCoordinates(mol);
+	if (savefile){
+		ofstream ofs1;
+		std::string filename1 = filename;
+		filename1.append("_before.xyz");
+		OpenBabel::OBConversion conv;
+		OpenBabel::OBFormat *format_out = conv.FindFormat("xyz"); // default output format
+		conv.SetInAndOutFormats(format_out, format_out);
+		ofs1.open(filename1);
+		conv.Write(&mol, &ofs1);
+		ofs1.close();
 	}
-	pFF->GetCoordinates(mol);
-	conv.Write(&mol, &ofs2);
-	ofs2.close();
-	return;
-}
-
-void PAHProcess::includeCurvature(cpair CR5_1, cpair CR5_2, cpair CR5_3, cpair CR5_4){
-	
-	//Prints available forcefields.
-	//OpenBabel::OBPlugin::List("forcefields");
-	
-	//Defines a forcefield object
-	OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField("Ghemical");
-	if (!pFF) {
-    cerr << ": could not find forcefield MMFF94s." <<endl;
-    exit (-1);
-	}
-	int C5_1, C5_2, C5_3, C5_4;
-	//Creates molecule object
-	OpenBabel::OBMol mol;
-	mol.BeginModify();
-	
-	//Loads external Carbon Atoms
-	int counter = 1;
-	Ccontainer::iterator it;
-	for (it = m_pah->m_carbonList.begin(); it != m_pah->m_carbonList.end(); ++it) {
-		Cpointer C_change = *it;
-		//Edge carbons
-		if (C_change->coords == CR5_3) C5_3 = counter;
-		if (C_change->coords == CR5_4) C5_4 = counter;
-		OpenBabel::OBAtom *atom  = mol.NewAtom();
-		atom->SetAtomicNum(6);
-		if (C_change->coords == CR5_3 || C_change->coords == CR5_4){
-			atom->SetVector(std::get<0>(C_change->coords),std::get<1>(C_change->coords),std::get<2>(C_change->coords)+0.2);
-		}else{
-			atom->SetVector(std::get<0>(C_change->coords),std::get<1>(C_change->coords),std::get<2>(C_change->coords));
-		}
-		atom->SetAromatic();
-		counter ++;
-		
-		//Hydrogens
-		/*if (C_change->A == 'H'){
-			OpenBabel::OBAtom *atom  = mol.NewAtom();
-			atom->SetAtomicNum(1);
-			atom->SetVector(std::get<0>(C_change->coords) + 1.0*cos(C_change->bondAngle2*M_PI/180),std::get<1>(C_change->coords) + 1.0*sin(C_change->bondAngle2*M_PI/180),std::get<2>(C_change->coords));
-			counter ++;
-		}*/
-	}
-	//Internal carbons
-	std::list<cpair>::iterator it2;
-	for (it2 = m_pah->m_InternalCarbons.begin(); it2 != m_pah->m_InternalCarbons.end(); ++it2){
-		OpenBabel::OBAtom *atom  = mol.NewAtom();
-		atom->SetAtomicNum(6);
-		atom->SetVector(std::get<0>(*it2),std::get<1>(*it2),std::get<2>(*it2));
-		atom->SetAromatic();
-		if (*it2 == CR5_1) C5_1 = counter;
-		if (*it2 == CR5_2) C5_2 = counter;
-		counter ++;
-	}
-	
-	mol.ConnectTheDots();
-	mol.AddBond(C5_1,C5_2,5);
-	mol.AddBond(C5_3,C5_4,5);
-	mol.PerceiveBondOrders();
-	
-	mol.EndModify();
-	
-	pFF->SetLogFile(&cerr);
-	pFF->SetLogLevel(OBFF_LOGLVL_LOW);
-	//pFF->SetVDWCutOff(6.0);
-	//pFF->SetElectrostaticCutOff(10.0);
-	//pFF->SetUpdateFrequency(10);
-	//pFF->EnableCutOff(false);
-	
-	ofstream ofs1;
-	ofs1.open("BEFORE_MIN.xyz");
-	ofstream ofs2;
-	ofs2.open("AFTER_MIN.xyz");
-	OpenBabel::OBConversion conv;
-    OpenBabel::OBFormat *format_out = conv.FindFormat("xyz"); // default output format
-	conv.SetInAndOutFormats(format_out, format_out);
-	conv.Write(&mol, &ofs1);
-	ofs1.close();
 	
 	//Initialise minimisation
 	if (!pFF->Setup(mol)) {
@@ -1137,8 +1058,184 @@ void PAHProcess::includeCurvature(cpair CR5_1, cpair CR5_2, cpair CR5_3, cpair C
         pFF->GetCoordinates(mol);
 	}
 	pFF->GetCoordinates(mol);
-	conv.Write(&mol, &ofs2);
-	ofs2.close();
+	if (savefile){
+		ofstream ofs2;
+		std::string filename2 = filename;
+		filename2.append("_after.xyz");
+		OpenBabel::OBConversion conv;
+		OpenBabel::OBFormat *format_out = conv.FindFormat("xyz"); // default output format
+		conv.SetInAndOutFormats(format_out, format_out);
+		ofs2.open(filename2);
+		conv.Write(&mol, &ofs2);
+		ofs2.close();
+	}
+	return;
+}
+
+void PAHProcess::includeCurvature(cpair CR5_1, cpair CR5_2, cpair CR5_3, cpair CR5_4, bool savefile, const std::string &filename) const{
+	
+	//Prints available forcefields.
+	//OpenBabel::OBPlugin::List("forcefields");
+	
+	//Defines a forcefield object
+	OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField("Ghemical");
+	if (!pFF) {
+    cerr << ": could not find forcefield MMFF94s." <<endl;
+    exit (-1);
+	}
+	int C5_1, C5_2, C5_3, C5_4;
+	//Creates molecule object
+	OpenBabel::OBMol mol;
+	mol.BeginModify();
+	
+	//Loads external Carbon Atoms
+	std::list<std::pair<int, int> > R5pairs;
+	std::list<Cpointer>CR5_pair;
+	int counter = 1;
+	Ccontainer::iterator it;
+	for (it = m_pah->m_carbonList.begin(); it != m_pah->m_carbonList.end(); ++it) {
+		Cpointer C_change = *it;
+		//Edge carbons
+		if (C_change->coords == CR5_3) C5_3 = counter;
+		if (C_change->coords == CR5_4) C5_4 = counter;
+		OpenBabel::OBAtom *atom  = mol.NewAtom();
+		atom->SetAtomicNum(6);
+		if (C_change->coords == CR5_3 || C_change->coords == CR5_4){
+			atom->SetVector(std::get<0>(C_change->coords),std::get<1>(C_change->coords),std::get<2>(C_change->coords)+0.2);
+		}else{
+			atom->SetVector(std::get<0>(C_change->coords),std::get<1>(C_change->coords),std::get<2>(C_change->coords));
+		}
+		atom->SetAromatic();
+		
+		//Edge 5 member ring detection.
+		double dist = getDistance_twoC(C_change, C_change->C2);
+		if (dist > 1.6){
+			R5pairs.push_back(std::make_pair(atom->GetIdx(), 0));
+			CR5_pair.push_back(C_change->C2);
+		}
+		
+		auto result1 = std::find(std::begin(CR5_pair), std::end(CR5_pair), C_change);
+		if (result1 != std::end(CR5_pair)){
+			int index = std::distance(CR5_pair.begin(), result1);
+			std::list<std::pair<int, int>>::iterator it_R5pairs = R5pairs.begin();
+			std::advance(it_R5pairs, index);
+			auto new_pair = make_pair(it_R5pairs->first,atom->GetIdx());
+			*it_R5pairs = new_pair;
+		}
+		counter ++;
+		
+		//Hydrogens
+		if (C_change->A == 'H'){
+			OpenBabel::OBAtom *atom  = mol.NewAtom();
+			atom->SetAtomicNum(1);
+			atom->SetVector(std::get<0>(C_change->coords) + 1.0*cos(C_change->bondAngle2*M_PI/180),std::get<1>(C_change->coords) + 1.0*sin(C_change->bondAngle2*M_PI/180),std::get<2>(C_change->coords));
+			counter ++;
+		}
+	}
+	//Internal carbons
+	std::list<cpair>::iterator it2;
+	for (it2 = m_pah->m_InternalCarbons.begin(); it2 != m_pah->m_InternalCarbons.end(); ++it2){
+		OpenBabel::OBAtom *atom  = mol.NewAtom();
+		atom->SetAtomicNum(6);
+		atom->SetVector(std::get<0>(*it2),std::get<1>(*it2),std::get<2>(*it2));
+		atom->SetAromatic();
+		if (*it2 == CR5_1) C5_1 = counter;
+		if (*it2 == CR5_2) C5_2 = counter;
+		counter ++;
+	}
+	
+	//Bond generation
+	mol.ConnectTheDots();
+	std::list<std::pair<int, int>>::iterator it_R5pairs2;
+	for(it_R5pairs2 = R5pairs.begin(); it_R5pairs2 != R5pairs.end(); ++it_R5pairs2){
+		mol.AddBond(it_R5pairs2->first,it_R5pairs2->second,5);
+	}
+	mol.AddBond(C5_1,C5_2,5);
+	mol.AddBond(C5_3,C5_4,5);
+	mol.PerceiveBondOrders();
+	
+	mol.EndModify();
+	
+	//pFF->SetLogFile(&cerr);
+	//pFF->SetLogLevel(OBFF_LOGLVL_LOW);
+	//pFF->SetVDWCutOff(6.0);
+	//pFF->SetElectrostaticCutOff(10.0);
+	//pFF->SetUpdateFrequency(10);
+	//pFF->EnableCutOff(false);
+	
+	if (savefile){
+		ofstream ofs1;
+		std::string filename1 = filename;
+		filename1.append("_before.xyz");
+		OpenBabel::OBConversion conv;
+		OpenBabel::OBFormat *format_out = conv.FindFormat("xyz"); // default output format
+		conv.SetInAndOutFormats(format_out, format_out);
+		ofs1.open(filename1);
+		conv.Write(&mol, &ofs1);
+		ofs1.close();
+	}
+	
+	//Initialise minimisation
+	if (!pFF->Setup(mol)) {
+      cerr << ": could not setup force field." << endl;
+      exit (-1);
+    }
+	bool done = true;
+	pFF->SteepestDescentInitialize(1500, 1e-6);
+	
+	
+	//Perform minimisation
+	unsigned int totalSteps = 1;
+    while (done) {
+		done = pFF->SteepestDescentTakeNSteps(1);
+		totalSteps++;
+		
+		if (pFF->DetectExplosion()) {
+			cerr << "explosion has occured!" << endl;
+			return;
+		}
+		else
+        pFF->GetCoordinates(mol);
+	}
+	pFF->GetCoordinates(mol);
+	if (savefile){
+		ofstream ofs2;
+		std::string filename2 = filename;
+		filename2.append("_after.xyz");
+		OpenBabel::OBConversion conv;
+		OpenBabel::OBFormat *format_out = conv.FindFormat("xyz"); // default output format
+		conv.SetInAndOutFormats(format_out, format_out);
+		ofs2.open(filename2);
+		conv.Write(&mol, &ofs2);
+		ofs2.close();
+	}
+	
+	//Passes new coordinates back to MOPS
+	Ccontainer::iterator it3 = m_pah->m_carbonList.begin();
+	std::list<cpair>::iterator it4 = m_pah->m_InternalCarbons.begin();
+	for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
+		if (it3 != m_pah->m_carbonList.end()){
+			double x_pos = a->GetX();
+			double y_pos = a->GetY();
+			double z_pos = a->GetZ();
+			auto temp = std::make_tuple(x_pos, y_pos, z_pos);
+			Cpointer C_back = *it3;
+			//cout << std::get<0>(C_back->coords) << " " << std::get<1>(C_back->coords) << " " << std::get<2>(C_back->coords) << "\n";
+			C_back->coords = temp;
+			//cout << a->GetX() << " " << a->GetY() << " " << a->GetZ() << "\n";
+			//cout << std::get<0>(C_back->coords) << " " << std::get<1>(C_back->coords) << " " << std::get<2>(C_back->coords) << "\n";*/
+			if (C_back->A == 'H') ++a;
+			++it3;
+		}
+		else {
+			auto temp = std::make_tuple(a->GetX(),a->GetY(),a->GetZ());
+			/*std::get<0>(*it4) = a->GetX();
+			std::get<1>(*it4) = a->GetY();
+			std::get<2>(*it4) = a->GetZ();*/
+			*it4 = temp;
+			++it4;
+		}
+	}
 	return;
 }
 
@@ -4145,7 +4242,8 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		removeC(C_1->C2, true);
 		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 90), 0, 1.4);
 		removeC(newC1->C2, true);
-		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 -30), 3.45);
+		newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 -120), 3.45);
+		newC2->bondAngle2 = normAngle(newC2->bondAngle1+120);
 		CR5_3 = newC1->coords;
 		// Add and remove H
 		updateA(C_1, 'C');
@@ -4196,7 +4294,7 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	m_pah->m_rings5_Embedded++;
 	//printSites(stt);
 	//printStruct();
-	includeCurvature(CR5_1, CR5_2, CR5_3, CR5_4);
+	includeCurvature(CR5_1, CR5_2, CR5_3, CR5_4, true, "curved_guy");
 }
 
 // ************************************************************

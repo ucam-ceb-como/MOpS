@@ -141,6 +141,10 @@ public:
     std::vector<kmcSiteType> SiteVector() const;
     //! obtains a string containing the PAH site list
     std::string SiteString(char delimiter) const;
+	//! Runs optimisation of a PAHusing Openbabel
+	void optimisePAH(bool savefile=false, const std::string &filename="") const;
+	//! Includes curvature in a PAH after a pentagon is integrated in the structure.
+	void includeCurvature(cpair CR5_1, cpair CR5_2, cpair CR5_3, cpair CR5_4, bool savefile=false, const std::string &filename="")const ;
     
     // Update Processes
 
@@ -244,10 +248,6 @@ private:
 	void moveC(Cpointer C_1, cpair newpos);
 	//! Moves a carbon position .
 	void moveC(Cpointer C_1, Cpointer Cprev, double new_distance);
-	//! Runs optimisation of a PAHusing Openbabel
-	void optimisePAH();
-	//! Includes curvature in a PAH after a pentagon is integrated in the structure.
-	void includeCurvature(cpair CR5_1, cpair CR5_2, cpair CR5_3, cpair CR5_4);
     //! Creates a carbon atom bridging next to C_1. 
     Cpointer bridgeC(Cpointer C_1);
     /*//! Creates a bulk carbon atom connected to C_1
