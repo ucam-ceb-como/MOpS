@@ -135,6 +135,7 @@ public:
     //! Store structure results in external file, returns success/failure
     bool saveDOT(const std::string &filename) const;
     bool saveDOT(const std::string &filename, const std::string &title) const;
+	bool saveXYZ(const std::string &filename) const;
 	bool saveDOT3D(const std::string &filename) const;
 	bool saveDOT3D(const std::string &filename, const std::string &title) const;
     //! obtains a vector of the PAH site list
@@ -216,6 +217,20 @@ private:
     Spointer chooseRandomSite(std::vector<kmcSiteType> vtype, rng_type &rng);
     //! Jump to a position coordinate given starting position and angle towards new position
 	cpair jumpToPos(const cpair& starting, const angletype& direction, const angletype& direction2, const bondlength& distance) const;
+	//! Jump to a position coordinate given starting position and a vector. Handles 3D growth.
+	cpair jumpToPos(cpair& starting, cpair& direction, const bondlength& distance) const;
+	//! Gets a vector between two points.
+	cpair get_vector(cpair p1, cpair p2);
+	//! Rescales a vector.
+	cpair scale_vector(cpair vec);
+	//! Changes vector direction.
+	cpair invert_vector(cpair vec);
+	//! Returns the resultant of two vectors.
+	cpair add_vector(cpair vec1, cpair vec2);
+	//! Returns the normal vector to the face of a ring.
+	cpair norm_vector(cpair p1, cpair p2, cpair p3);
+	//! Returns the cross product of two vectors. If v1 is the surface normal vector and v2 goes from C->newC v1xv2 redefines the next growth vector.
+	cpair cross_vector(cpair vec1, cpair vec2);
     //! Search a particular site (si) from svector associated with stype and erases it from sitemap
     void delSiteFromMap(const kmcSiteType& stype, const Spointer& si);
     //! Overload: search and erase from svectors associated with all site types in vector v
@@ -226,6 +241,8 @@ private:
     bool checkHindrancePhenyl(const Cpointer C_1) const;
 	//! Check steric hindrance between a carbon and all other carbons in a PAH.
 	bool checkHindrance_C_PAH(cpair coords) const;
+	//! Check steric hindrance between a new carbon position and all other carbons in a PAH.
+	bool checkHindrance_newC(Cpointer C_1) const;
 	//! Check position between a carbon and internal carbons in a PAH.
 	void checkHindrance_C_intPAH(cpair coords) const;
 	//! Check steric hindrance between two carbons.
@@ -244,6 +261,8 @@ private:
     Cpointer addC();
     //! Creates a new carbon atom attached next to C_1.
     Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2, bondlength length, bool bulk=false);
+	//! Creates a new carbon atom attached next to C1 using a vector to tell the position of the next carbon atom.
+	Cpointer addC(Cpointer C_1, cpair direction, bondlength length, bool bulk=false);
 	//! Moves a carbon position .
 	void moveC(Cpointer C_1, cpair newpos);
 	//! Moves a carbon position .
@@ -304,6 +323,8 @@ private:
     void updateA(Cpointer C, char sp);
 	//! Overload function, forces char to C atom.
 	void updateA(Cpointer C, char sp, bool flag);
+	//! Overload function, forces char to C atom and defines growth vector.
+	void updateA(Cpointer C, char sp, cpair gro_vec);
     //! Overload function, updateA for all C from C_1 to C_2 inclusive
     void updateA(Cpointer C_1, Cpointer C_2, char spc);
     

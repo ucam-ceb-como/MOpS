@@ -91,6 +91,9 @@ namespace Sweep {
             angletype bondAngle2;
             //! Coordinates of atom
             cpair coords;
+			//! Vector of H position
+			cpair growth_vector;
+			// The philosophy behind this is: direction of an H atom if C atom is reactive or (0,0,0) if unreactive.
         };
 
         //static Ccontainer NULLSET(1, Carbon());
