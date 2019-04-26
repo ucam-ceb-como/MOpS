@@ -135,7 +135,7 @@ public:
     //! Store structure results in external file, returns success/failure
     bool saveDOT(const std::string &filename) const;
     bool saveDOT(const std::string &filename, const std::string &title) const;
-	bool saveXYZ(const std::string &filename) const;
+	void saveXYZ(const std::string &filename) const;
 	bool saveDOT3D(const std::string &filename) const;
 	bool saveDOT3D(const std::string &filename, const std::string &title) const;
     //! obtains a vector of the PAH site list
@@ -218,19 +218,19 @@ private:
     //! Jump to a position coordinate given starting position and angle towards new position
 	cpair jumpToPos(const cpair& starting, const angletype& direction, const angletype& direction2, const bondlength& distance) const;
 	//! Jump to a position coordinate given starting position and a vector. Handles 3D growth.
-	cpair jumpToPos(cpair& starting, cpair& direction, const bondlength& distance) const;
+	cpair jumpToPos(const cpair& starting, const cpair& direction, const bondlength& distance) const;
 	//! Gets a vector between two points.
-	cpair get_vector(cpair p1, cpair p2);
+	cpair get_vector(cpair p1, cpair p2)const;
 	//! Rescales a vector.
-	cpair scale_vector(cpair vec);
+	cpair scale_vector(cpair vec)const;
 	//! Changes vector direction.
-	cpair invert_vector(cpair vec);
+	cpair invert_vector(cpair vec)const;
 	//! Returns the resultant of two vectors.
-	cpair add_vector(cpair vec1, cpair vec2);
+	cpair add_vector(cpair vec1, cpair vec2)const;
 	//! Returns the normal vector to the face of a ring.
-	cpair norm_vector(cpair p1, cpair p2, cpair p3);
+	cpair norm_vector(cpair p1, cpair p2, cpair p3)const;
 	//! Returns the cross product of two vectors. If v1 is the surface normal vector and v2 goes from C->newC v1xv2 redefines the next growth vector.
-	cpair cross_vector(cpair vec1, cpair vec2);
+	cpair cross_vector(cpair vec1, cpair vec2)const;
     //! Search a particular site (si) from svector associated with stype and erases it from sitemap
     void delSiteFromMap(const kmcSiteType& stype, const Spointer& si);
     //! Overload: search and erase from svectors associated with all site types in vector v

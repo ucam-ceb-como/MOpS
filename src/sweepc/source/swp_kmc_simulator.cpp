@@ -250,7 +250,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //m_simPAHp.saveDOT(dotname.str());
 
 			//Save information for a single PAH
-			if (PAH_ID == 355){
+			if (PAH_ID == 42){
 				m_rxn_count[jp_perf.second]++;
 				writeRxnCountCSV();
 				writeCHSiteCountCSV();
@@ -262,6 +262,10 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				dotname.append(std::to_string(m_t));
 				dotname.append(".dot");
 				m_simPAHp.saveDOT(dotname);
+				std::string xyzname = ("KMC_DEBUG/1_xyz/");
+				xyzname.append(std::to_string(m_t));
+				xyzname.append("_before");
+				m_simPAHp.saveXYZ(xyzname);
 				cout << jp_perf.first->getName();
 				cout << "Time = " << m_t;
 				m_simPAHp.printSites();
@@ -286,15 +290,16 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             // Update data structure -- Perform jump process
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 
-			if (PAH_ID == 355){
+			if (PAH_ID == 42){
 				std::string dotname = "KMC_DEBUG/1/";
 				dotname.append(std::to_string(m_t));
 				dotname.append("_after.dot");
 				m_simPAHp.saveDOT(dotname);
 				
-				std::string xyzname = "KMC_DEBUG/1_xyz/";
+				std::string xyzname = ("KMC_DEBUG/1_xyz/");
 				xyzname.append(std::to_string(m_t));
-				m_simPAHp.optimisePAH(true, xyzname);
+				xyzname.append("_after");
+				m_simPAHp.saveXYZ(xyzname);
 			}
 
 			/*if (PAH_ID == 784){
