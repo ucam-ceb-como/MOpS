@@ -995,6 +995,9 @@ void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
 			crates[j->first] += dc;
 			idrho += dc;
 		}
+
+		double dc = rate * (double)(*i)->ParticleComp()[0] * invVolNA;
+		crates[28] += dc;
 	}
 
 	// Loop over the contributions of all other processes (except coagulation and transport).
@@ -1019,6 +1022,9 @@ void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
 			crates[j->first] += dc;
 			idrho += dc;
 		}
+
+		double dc = rate * (double)(*i)->CompChange()[0] * invVolNA;
+		crates[28] += dc;
 	}
 
 	// Now convert to changes in mole fractions.
@@ -1579,7 +1585,6 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 						sp_add = NULL;
 					}
 
-					sys.SetNotPSIFlag(true);
 					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 					{
 						if ((*i)->IsDeferred())
@@ -1587,7 +1592,6 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 							(*i)->Perform(t, sys, rng, added_total);
 						}
 					}
-					sys.SetNotPSIFlag(false);
 					added_total = 0;
 				}
 			}

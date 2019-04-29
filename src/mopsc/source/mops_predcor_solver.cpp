@@ -101,7 +101,7 @@ PredCorSolver::~PredCorSolver(void)
 void PredCorSolver::Initialise(Reactor &r)
 {
     // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
-    //r.Mixture()->SetFixedChem(true);
+    r.Mixture()->SetFixedChem(true);
 
     // Set up ODE solver.
     FlameSolver::Initialise(r);
@@ -155,7 +155,7 @@ void PredCorSolver::Reset(Reactor &r)
     m_ode_copy.SetExtSrcTerms(m_srcterms);
 
     // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
-	//r.Mixture()->SetFixedChem(true);
+	r.Mixture()->SetFixedChem(true);
 
 	// aab64 Initialise register of particle-number particles
 	if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
@@ -779,7 +779,7 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
 
     // Calculate density change based on whether reactor is constant
     // volume or constant pressure.
-    if (r.IsConstP()) {
+    /*if (r.IsConstP()) {
         // Constant pressure: zero density derivative.
         src.Terms[r.Mech()->GasMech().SpeciesCount()+1] = 0.0;
     } else {
@@ -789,14 +789,16 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
 		dconc += csrc[i];
 	}
 	src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] += dconc;
-    }
+    }*/
+	src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] -= src.Terms[r.Mech()->GasMech().SpeciesCount()] * 
+		(r.Mixture()->GasPhase().Density() / r.Mixture()->GasPhase().Temperature()); // aab64 temporary hard coded constant pressure
 }
 
 // Calculate the adiabatic temperature change rate due to the
 // species source terms.
 double PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
 {
-    /*if (r.EnergyEquation() == Reactor::Adiabatic) {
+    if (r.EnergyEquation() == Reactor::Adiabatic) {
         // Adiabatic temperature model.
         fvector Hs;
         double C;
@@ -806,27 +808,28 @@ double PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
         // r.Mixture()->GasPhase().Hs(Hs);
 
         // Calculate heat capacity and enthalpy.
-        if (r.IsConstV()) {
+        //if (r.IsConstV()) {
             // Constant volume reactor: Use Cv, Us.
-            C = r.Mixture()->GasPhase().BulkCv();
-            r.Mixture()->GasPhase().Us(Hs);
-        } else {
+        //    C = r.Mixture()->GasPhase().BulkCp();
+        //    r.Mixture()->GasPhase().Hs(Hs);
+       // } else {
             // Constant pressure reactor: Use Cp, Hs.
             C = r.Mixture()->GasPhase().BulkCp();
             r.Mixture()->GasPhase().Hs(Hs);
-        }
+        //}
 
         // Calculate and return temperature source term.
         double Tdot = 0.0;
         for (unsigned int i=0; i!=r.Mech()->GasMech().SpeciesCount(); ++i) {
             Tdot -= Hs[i] * src[i];
         }
+		src[28] = 0;
         return Tdot / (C * r.Mixture()->GasPhase().Density());
 
     } else if (r.EnergyEquation() == Reactor::ConstT) {
         // Constant temperature model.
         return 0.0;
-    }*/
+    }
 
     // Assume constant temperature by default.
     return 0.0;

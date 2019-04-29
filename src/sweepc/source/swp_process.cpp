@@ -487,229 +487,6 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n, double incFac) con
     }
 }
 
-// aab64 adjusts the particle-phase temperature using change in composition of the particle
-/*
-* Same warning as in adjustGas above applies
-* @param[in, out]   sys      System in which the gas phase is changing
-* @param[in]        wt       Statistical weight of reaction
-* @param[in]        n        Repeat count of reaction
-* @param[in]        adjustT  Update temperature for adiabatic case
-*
-* @pre      The gas phase in sys must be of type SprogIdealGasWrapper
-*
-* @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
-*/
-/*void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bool adjustT, double dcomp, int processID, double incFac) const {
-	if (adjustT) {
-		// Function will update the temperature oldTp, oldTg to temperature newTp, newTg for the particles and gas (K)
-		double newTp, newTg, newRho;
-		double oldTp = sys.GetBulkParticleTemperature();
-		double oldTg = sys.GasPhase().Temperature();
-		
-		// This method requires write access to the gas phase, which is not
-		// standard in sweep.  This means it cannot use the generic gas
-		// phase interface
-		SprogIdealGasWrapper *gasWrapper = dynamic_cast<SprogIdealGasWrapper*>(&sys.GasPhase());
-		
-		if (gasWrapper == NULL)
-			throw std::runtime_error("Could not cast gas phase to SprogIdealGasWrapper in Process::adjustGas");
-
-		// If excecution reaches here, the cast must have been successful
-		Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();
-
-		// Get particle-phase volume and area per m3 reactor
-		// Use weighted sums for totoal particle volume and surface area
-		double Vp = (sys.Particles().GetSum(Sweep::iWV)) / (sys.SampleVolume());
-		double Sp = (sys.Particles().GetSum(Sweep::iWS)) / (sys.SampleVolume());
-
-		// Overall heat transfer coefficient
-		double h = 0.0;
-		double rad = 0.0;
-		int radSwitch = 1;   // 1 for PBB, 2 for RWR, 3 for RNR
-		double radCoeff = 4; // Exponent of the temperature term in radiation
-
-		if (processID == 0) {
-			// From Tian et al. (2017) for titania and Michelsen et al. (2007)
-			// Conduction
-			double lambda = MeanFreePathAir(oldTg, gas->Pressure());                     // Mean free path, P.m.[K]^-1
-			double ka = (5.83 * 1.0e7) * pow((oldTg / 273), 0.82);                       // Thermal conductivity of the gas, W.[m.K]^-1
-			double alphaT = 1.0;                                                         // Thermal accomodation coefficient, -
-			double gammaAir = 1.3;                                                       // Heat capacity ratio of air from Michelsen et al. (2007)
-			double f = (9.0 * gammaAir - 5.0) / 4.0;                                     // Eucken correction
-			double G = (8.0 * f) / (alphaT * (gammaAir + 1.0));                          // Factor in denominator of conductivity term
-			double Dp = (sys.Particles().GetSum(iDcol)) / (sys.SampleVolume());          // Average particle diameter, m 
-			h = (2.0 * ka) / (Dp + (G * lambda));                                        // Overall heat transfer coefficient, J.[m2.K.s]^-1
-
-			// Radiation
-			double Em = 0.251;                                                           // Function of the complex refractive index, m=2.51-1.7i => Em=Im[(m^2-1)/(m^2+2)]
-			double hP = 6.62607004e-34;                                                  // Planck constant, m^2.kg.[s]^-1
-			double cs = 299792458.0;                                                     // Speed of light, m.[s]^-1
-			double kSB = 5.6704e-8;                                                      // Stefan-Boltzmann constant, W.[m2.K4]^-1
-			if (radSwitch == 2 || radSwitch == 3) {
-				rad = 1194.0 * pow(PI, 2) * Vp * Em * pow(KB, 5) / (pow(hP*cs, 3) * hP); // Build up radiation term for Rayleigh assumption
-				radCoeff = 5;                                                            // T^5
-			}
-			else {
-				rad = Sp * kSB;                                                          // Build up radiation term for perfect black body assumption
-				radCoeff = 4;                                                            // T^4
-			}
-		}
-
-		// Set enthalpy, heat capacity and density for both phases
-		fvector Hs = gas->getMolarEnthalpy(oldTp);
-		fvector Cs;
-		gas->CalcCps(oldTp, Cs);
-		double Cg = gas->BulkCp();          // bulk gp heat capacity at oldTg
-		double Cp = Cs[28];                 // heat capacity of titania crystals at oldTp
-		double Hp = Hs[28];                 // enthalpy of titania crystals at oldTp
-		Hs = gas->getMolarEnthalpy(oldTg);  // enthalpy of gp species at oldTg
-		double rhog = gas->Density();       // molar density of gp at oldTg
-		double rhop = 53337;                // mol.[m3]^-1, molar density of titania (rutile)
-
-		// Concentration change in system due to new particle(s)
-		double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume());
-
-		// Time step parameters
-		double t0 = 0.0;
-		double tf = sys.GetCurrentProcessTau();
-
-		// Integration parameters a, b for gas (g) and particle phase (p)
-		double ag = 0.0, ap = 0.0;
-		double bg = 0.0, bp = 0.0;
-		double gg = 0.0, gp = 0.0;
-
-		// Distribute the formation energy between the phases
-		double xg = 1.0; 
-		double xp = 1.0 - xg; 
-
-		if (tf != 0.0) {
-
-			if (processID == 1 || processID == 2) { // inception or surface growth
-				// Contributions of gp species
-				Sprog::StoichMap::const_iterator i;
-				for (i = m_reac.begin(); i != m_reac.end(); ++i) {
-					ag -= (double)(i->second) * n_NAvol * Hs[i->first];
-				}
-				for (i = m_prod.begin(); i != m_prod.end(); ++i) {
-					ag += (double)(i->second) * n_NAvol * Hs[i->first];
-				}
-				// Contribution of particle formation
-				ag += (dcomp * n_NAvol * Hp * xg / (tf - t0)); // Divide by the time interval, multiply by arbitarily assigned gp component xg
-				ag *= (-1.0);
-
-				// Contributions of particles
-				ap += (-1.0 * n_NAvol * dcomp * Hp * xp / (tf - t0));
-			}
-			else if (processID == 4) { // inflow
-				ag += (-1.0 * n_NAvol * xg * (Hp - Hp) / (tf - t0)); // (temporary) Enthalpy at Tin - how to get Tin?
-				ap += (-1.0 * n_NAvol * xp * (Hp - Hp) / (tf - t0)); // (temporary) Enthalpy at Tin - how to get Tin?
-			}
-			
-			if (processID == 0) {
-				double dt = tf - t0;
-
-				// Heat transfer pseudo-constants
-				ag = (h * Sp) / (Cg);               // Divided by rhog. Technically also h is a function of tg
-				ap = (h * Sp) / (Cp * rhop * Vp);   // Technically also h is a function of tg
-				gg = rad / (Cg);                    // Divided by rhog
-				gp = rad / (Cp * rhop * Vp);
-
-				int newt_its = 10000;
-				double tol = 1e-2;
-				double c_a, c_b, c_c, c_d, c_e, c_f, c_g, c_h, c_i;
-				double x1 = oldTp, x2 = oldTg, x3 = rhog;
-				double dx1, dx2, dx3;
-				double f1, f2, f3, det, cof11, cof12, cof21, cof22, x13, x14, x23, x24, x22;
-				double j11, j12, j13, j21, j22, j23, j31, j32, j33;
-
-				c_a = 1.0 + dt * ap;
-				c_b = radCoeff * dt * gp;
-				c_c = -1.0 * dt * ap;
-				c_d = -1.0 * radCoeff * dt * gp;
-
-				for (int i = 0; i < newt_its; i++) {
-
-					c_e = -1.0 * dt * ag / x3;
-					c_f = -1.0 * radCoeff * dt * gg / x3;
-					c_g = 1.0 + (dt * ag / x3);
-					c_h = radCoeff * dt * gg / x3;
-					c_i = -1.0 * dt * gg / x3;
-
-					x13 = pow(x1, radCoeff - 1);
-					x14 = pow(x1, radCoeff);
-					x22 = pow(x2, 2);
-					if (radSwitch != 3){
-						x23 = pow(x2, radCoeff - 1);
-						x24 = pow(x2, radCoeff);
-					}
-					else {
-						x23 = 0.0;
-						x24 = 0.0;
-					}
-
-					f1 = (c_a * x1) + ((c_b / radCoeff) * x14) + (c_c * x2) + ((c_d / radCoeff) * x24) - oldTp;
-					f2 = (c_g * x2) + ((c_h / radCoeff) * x24) + (c_e * x1) + ((c_f / radCoeff) * x14) - oldTg;
-					f3 = (2.0 * x3) - (oldTg * (x3 / x2)) - rhog;
-
-					j11 = c_a + (c_b * x13);
-					j12 = c_c + (c_d * x23);
-					j13 = 0.0;
-					j21 = c_e + (c_f * x13);
-					j22 = c_g + (c_h * x23);
-					j23 = (c_e / x3) * (x2 - x1) + (c_i / x3) * (x24 - x14); 
-					j31 = 0.0;
-					j32 = oldTg * (x3 / x22);
-					j33 = 2.0 - (oldTg / x2);
-
-					det = j11 * (j22 * j33 - j23 * j32) - j12 * (j21 * j33 - j23 * j31) + j13 * (j21 * j32 - j22 * j31);
-					det = 1.0 / det;
-
-					dx1 = det * (((j22 * j33 - j23 * j32) * f1) + ((j13 * j32 - j12 * j33) * f2) + ((j12 * j23 - j13 * j22) * f3));
-					dx2 = det * (((j23 * j31 - j21 * j33) * f1) + ((j11 * j33 - j13 * j31) * f2) + ((j13 * j21 - j11 * j23) * f3));
-					dx3 = det * (((j21 * j32 - j22 * j31) * f1) + ((j12 * j31 - j11 * j32) * f2) + ((j11 * j22 - j12 * j21) * f3));
-
-					x1 = x1 - dx1;
-					x2 = x2 - dx2;
-					x3 = x3 - dx3;
-
-					if (abs(dx1) < tol && abs(dx2) < tol && abs(dx3) < tol) {
-						break;
-					}
-				}
-				if (abs(dx1) > tol || abs(dx2) > tol || abs(dx3) > tol) {
-					cout << "-------------------------------------\n";
-					cout << "Max its reached without finding root!\n";
-					cout << "Tp0=" << oldTp << ", Tg0=" << oldTg << ", rhog0=" << rhog << "\n";
-					cout << "|dx1|=" << abs(dx1) << ", |dx2|=" << abs(dx2) << ", |dx3|=" << abs(dx3) << "\n";
-					cout << "Tpf=" << x1 << ", Tgf=" << x2 << ", rhogf=" << x3 << "\n";
-					cout << "-------------------------------------\n";
-				}
-				newTp = x1;
-				newTg = x2;
-				newRho = x3;
-			}
-			else {
-				// Add denominator
-				ag *= (1.0 / (Cg * rhog));
-				ap *= (1.0 / (Cp * rhop * Vp));
-
-				// Solve for new particle and gp temperatures
-				newTp = oldTp + ap * (tf - t0);
-				newTg = oldTg + ag * (tf - t0);
-
-				//Solve for new gas density
-				newRho = rhog;
-				newRho *= 1.0 / (1.0 + (1.0 / newTg) * (newTg - oldTg));
-			}
-			
-			// Update particle temperature and gas density
-			sys.SetBulkParticleTemperature(newTp);
-			gas->SetTemperature(newTg);
-			gas->SetDensity(newRho);
-		}
-	}
-}*/
-
 // aab64 adjusts the gas-phase temperature using change in composition of the particle
 // Simplified version of the above without particle temperatures and heat transfer.
 /*
@@ -725,7 +502,7 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n, double incFac) con
 */
 void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bool adjustT, double dcomp, int processID, double incFac) const 
 {
-	if (adjustT)
+	if (adjustT && !sys.FixedChem())
 	{
 		if (processID == 1 || processID == 2 || processID == 4) 
 		{
@@ -781,7 +558,9 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 					ag += (dcomp * n_NAvol * Hp);
 				}
 				else { // inflow (4)
-					ag += (-1.0 * n_NAvol * (Hp - Hp) / (tf - t0)); // (temporary) Enthalpy at Tin - how to get Tin?
+					ag += (-1.0 * n_NAvol * (Hp - Hp) / (tf - t0)); // (temporary) Enthalpy at Tin - how to get Tin? 
+				                                                    // A: pass it to the function as an optional argument 
+					                                                // in inflow only (to do)?
 				}
 
 				// Add denominator
