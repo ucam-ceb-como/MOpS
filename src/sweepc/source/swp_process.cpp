@@ -507,7 +507,7 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 		if (processID == 1 || processID == 2 || processID == 4) 
 		{
 			// Function will update the temperature oldTg to temperature newTg
-			double newTg, newRho;
+			double newTg;
 			double oldTg = sys.GasPhase().Temperature();
 
 			// This method requires write access to the gas phase, which is not
@@ -530,8 +530,7 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 			double Cg = sys.getBulkHeatCapacity();
 			fvector Hs;
 			sys.getEnthalpies(Hs);
-			double Hp = Hs[28]; // note only valid for titania! 
-			double rhog = sys.getParticleDensity();
+			double Hp = Hs[28]; // note only valid for titania!
 
 			// Concentration change in system due to new particle(s)
 			double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume());
@@ -564,19 +563,23 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 				}
 
 				// Add denominator
-				ag *= (-1.0 / Cg);
+				ag *= (1.0 / Cg);
 
 				// Solve for new particle and gp temperatures
-				double gc = R / sys.GasPhase().Pressure();
-				newTg = oldTg / (1 - (ag * gc)); // discrete update, (tf - t0) not included because update is a single step change at time t
+				//double gc = R / sys.GasPhase().Pressure();
+				//newTg = oldTg / (1 - (ag * gc)); // discrete update, (tf - t0) not included because update is a single step change at time t
 
 				//Solve for new gas density
-				newRho = 1.0 / (gc * newTg);
+				//double newRho = 1.0 / (gc * newTg);
+
+				ag *= (1.0 / gas->Density());
+				newTg = oldTg - ag;
 
 				// Update particle temperature and gas density
 				sys.SetBulkParticleTemperature(newTg);
 				gas->SetTemperature(newTg);
-				gas->SetDensity(newRho);
+				//gas->SetDensity(newRho);
+
 			}
 		}
 	}

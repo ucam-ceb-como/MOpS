@@ -713,8 +713,19 @@ void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
 
 	// aab64 Temporary functions for gas-phase properties
 	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
-	fvector Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
-	r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+
+	if (r.IsConstV()) {
+		// Constant volume reactor: Use Cv, Us.
+		fvector Hs;
+		tmpGasPhase->Us(Hs);
+		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCv(), tmpGasPhase->Density(), Hs);
+	}
+	else {
+		// Constant pressure reactor: Use Cp, Hs.
+		fvector Hs;
+		tmpGasPhase->Hs(Hs);
+		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);
+	}
 
     // Run Sweep for this time step.
     Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng);
@@ -777,21 +788,22 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
         src.Terms[r.Mech()->GasMech().SpeciesCount()] += energySrcTerm(r, csrc); //csrc src.Terms
     }
 
+
     // Calculate density change based on whether reactor is constant
     // volume or constant pressure.
-    /*if (r.IsConstP()) {
+    if (r.IsConstP()) {
         // Constant pressure: zero density derivative.
         src.Terms[r.Mech()->GasMech().SpeciesCount()+1] = 0.0;
     } else {
-	// aab64 Constant volume: add gdot to wdot for density derivative.
-	//Compute gdot
-	for (unsigned int i = 0; i != r.Mech()->GasMech().SpeciesCount(); ++i) {
-		dconc += csrc[i];
-	}
-	src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] += dconc;
-    }*/
-	src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] -= src.Terms[r.Mech()->GasMech().SpeciesCount()] * 
-		(r.Mixture()->GasPhase().Density() / r.Mixture()->GasPhase().Temperature()); // aab64 temporary hard coded constant pressure
+		// aab64 Constant volume: add gdot to wdot for density derivative.
+		//Compute gdot
+		for (unsigned int i = 0; i != r.Mech()->GasMech().SpeciesCount(); ++i) {
+			dconc += csrc[i];
+		}
+		src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] += dconc;
+    }
+	//src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] -= src.Terms[r.Mech()->GasMech().SpeciesCount()] * 
+	//	(r.Mixture()->GasPhase().Density() / r.Mixture()->GasPhase().Temperature()); // aab64 temporary hard coded constant pressure
 }
 
 // Calculate the adiabatic temperature change rate due to the
@@ -808,15 +820,15 @@ double PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
         // r.Mixture()->GasPhase().Hs(Hs);
 
         // Calculate heat capacity and enthalpy.
-        //if (r.IsConstV()) {
+        if (r.IsConstV()) {
             // Constant volume reactor: Use Cv, Us.
-        //    C = r.Mixture()->GasPhase().BulkCp();
-        //    r.Mixture()->GasPhase().Hs(Hs);
-       // } else {
+            C = r.Mixture()->GasPhase().BulkCv();
+            r.Mixture()->GasPhase().Us(Hs);
+        } else {
             // Constant pressure reactor: Use Cp, Hs.
             C = r.Mixture()->GasPhase().BulkCp();
             r.Mixture()->GasPhase().Hs(Hs);
-        //}
+        }
 
         // Calculate and return temperature source term.
         double Tdot = 0.0;

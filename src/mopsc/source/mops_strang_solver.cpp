@@ -126,11 +126,26 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	
 	// aab64 Temporary functions for gas-phase properties
 	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
-	fvector Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
-	r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+	//fvector Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+	//r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);
+
+	if (r.IsConstV()) {
+		// Constant volume reactor: Use Cv, Us.
+		fvector Hs;
+		tmpGasPhase->Us(Hs);
+		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCv(), tmpGasPhase->Density(), Hs);
+	}
+	else {
+		// Constant pressure reactor: Use Cp, Hs.
+		fvector Hs;
+		tmpGasPhase->Hs(Hs);
+		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);
+	}
 
 	// Solve one whole step of population balance (Sweep).
-	if (!r.IsConstV()) r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
+	if (!r.IsConstV()) 
+		r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
+	
 	Run(ts1, ts2 += dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
 	m_swp_ctime += calcDeltaCT(m_cpu_mark);
@@ -148,11 +163,25 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		m_cpu_mark = clock();
 		// aab64 Temporary functions for gas-phase properties
 		tmpGasPhase = (&r.Mixture()->GasPhase());
-		Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
-		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+		//Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
+		//r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+		
+		if (r.IsConstV()) {
+			// Constant volume reactor: Use Cv, Us.
+			fvector Hs;
+			tmpGasPhase->Us(Hs);
+			r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCv(), tmpGasPhase->Density(), Hs);
+		}
+		else {
+			// Constant pressure reactor: Use Cp, Hs.
+			fvector Hs;
+			tmpGasPhase->Hs(Hs);
+			r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);
+		}
 
 		// Solve whole step of population balance (Sweep).
-		if (!r.IsConstV()) r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
+		if (!r.IsConstV()) 
+			r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
 		Run(ts1, ts2 += dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 		m_swp_ctime += calcDeltaCT(m_cpu_mark);
 	}
@@ -238,8 +267,19 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     // aab64 Temporary functions for gas-phase properties
     Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
-    fvector Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
-    r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+
+	if (r.IsConstV()) {
+		// Constant volume reactor: Use Cv, Us.
+		fvector Hs;
+		tmpGasPhase->Us(Hs);
+		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCv(), tmpGasPhase->Density(), Hs);
+	}
+	else {
+		// Constant pressure reactor: Use Cp, Hs.
+		fvector Hs;
+		tmpGasPhase->Hs(Hs);
+		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);
+	}
 
     if (writediags) {
         // Diagnostics variables at start of split step
@@ -265,9 +305,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     // Solve one whole step of population balance (Sweep).
     if (!r.IsConstV()) //aab64
         r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+    
+    Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
-        m_swp_ctime += calcDeltaCT(m_cpu_mark);
+    m_swp_ctime += calcDeltaCT(m_cpu_mark);
     
     if (writediags) {
         // Diagnostic variables at end of split step
@@ -344,8 +385,19 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
         // aab64 Temporary functions for gas-phase properties
         tmpGasPhase = (&r.Mixture()->GasPhase());
-        Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
-        r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
+
+		if (r.IsConstV()) {
+			// Constant volume reactor: Use Cv, Us.
+			fvector Hs;
+			tmpGasPhase->Us(Hs);
+			r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCv(), tmpGasPhase->Density(), Hs);
+		}
+		else {
+			// Constant pressure reactor: Use Cp, Hs.
+			fvector Hs;
+			tmpGasPhase->Hs(Hs);
+			r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);
+		}
 
         // Diagnostics variables at start of split step
         if (writediags) {
@@ -371,8 +423,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
             // Solve whole step of population balance (Sweep).
 	if (!r.IsConstV()) // aab64
             r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
-        m_swp_ctime += calcDeltaCT(m_cpu_mark);        
+           
+	Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+
+    m_swp_ctime += calcDeltaCT(m_cpu_mark);        
 
         if (writediags) {
             // Diagnostic variables at end of split step
@@ -446,8 +500,6 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     // aab64 Temporary functions for gas-phase properties
     tmpGasPhase = (&r.Mixture()->GasPhase());
-    Hs = tmpGasPhase->getMolarEnthalpy(r.Mixture()->GasPhase().Temperature());
-    r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);  // enthalpy of titania!!!
 
     // Calculate total computation time.
     m_tottime += calcDeltaCT(totmark);
