@@ -421,6 +421,13 @@ namespace KMC_ARS {
 		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 		void initialise();
 	};
+	
+	//! ID36.
+	class GR7_R6ACR5 : public Sweep::KMC_ARS::JumpProcess { //R7 growth at embedded-obstructed R5-2
+	public:
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
 }
 
 }

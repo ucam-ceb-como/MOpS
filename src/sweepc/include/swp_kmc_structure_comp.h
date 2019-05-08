@@ -77,8 +77,10 @@ namespace Sweep {
             //! Neighbouring carbon atoms
             Cpointer C1; // prev
             Cpointer C2; // next
-            //! 3rd carbon attached
+            //! 3rd carbon attached - through bridges
             Cpointer C3;
+			//! Internal carbon attached
+            Cpointer C4;
             //! Bulk or edge C atom
             bool edge;
              //! For bridging carbon atoms

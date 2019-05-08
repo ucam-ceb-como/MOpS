@@ -250,67 +250,35 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //m_simPAHp.saveDOT(dotname.str());
 
 			//Save information for a single PAH
-			if (PAH_ID == 42){
-				m_rxn_count[jp_perf.second]++;
-				writeRxnCountCSV();
-				writeCHSiteCountCSV();
-				//writeTimerCSV();
-				rates = m_kmcmech.Rates();
-				writeRatesCSV(m_t, rates);
-				//writetimestep(m_t);
-				std::string dotname = "KMC_DEBUG/1/";
-				dotname.append(std::to_string(m_t));
-				dotname.append(".dot");
-				m_simPAHp.saveDOT(dotname);
-				std::string xyzname = ("KMC_DEBUG/1_xyz/");
-				xyzname.append(std::to_string(m_t));
+			if (PAH_ID == 586){
+				std::string xyzname = ("KMC_DEBUG/");
+				xyzname.append(std::to_string(PAH_ID));
+				xyzname.append("_xyz/");
+				xyzname.append(std::to_string(m_t*10.0));
 				xyzname.append("_before");
-				m_simPAHp.saveXYZ(xyzname);
-				cout << jp_perf.first->getName();
-				cout << "Time = " << m_t;
+				savePAH(PAH_ID, xyzname);
+				cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
 				m_simPAHp.printSites();
-				
 			}
-
-			/*if (PAH_ID == 784){
-				m_rxn_count[jp_perf.second]++;
-				writeRxnCountCSV();
-				writeCHSiteCountCSV();
-				//writeTimerCSV();
-				rates = m_kmcmech.Rates();
-				writeRatesCSV(m_t, rates);
-				//writetimestep(m_t);
-				std::string dotname = "KMC_DEBUG/784/";
-				dotname.append(std::to_string(m_t));
-				dotname.append(".dot");
-				m_simPAHp.saveDOT(dotname);
-			}*/
-			
+			/*m_rxn_count[jp_perf.second]++;
+			writeRxnCountCSV();
+			writeCHSiteCountCSV();
+			//writeTimerCSV();
+			rates = m_kmcmech.Rates();
+			writeRatesCSV(m_t, rates);*/
 
             // Update data structure -- Perform jump process
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 
-			if (PAH_ID == 42){
-				std::string dotname = "KMC_DEBUG/1/";
-				dotname.append(std::to_string(m_t));
-				dotname.append("_after.dot");
-				m_simPAHp.saveDOT(dotname);
-				
-				std::string xyzname = ("KMC_DEBUG/1_xyz/");
-				xyzname.append(std::to_string(m_t));
+			//Save information for a single PAH
+			if (PAH_ID == 586){
+				std::string xyzname = ("KMC_DEBUG/");
+				xyzname.append(std::to_string(PAH_ID));
+				xyzname.append("_xyz/");
+				xyzname.append(std::to_string(m_t*10.0));
 				xyzname.append("_after");
-				m_simPAHp.saveXYZ(xyzname);
+				savePAH(PAH_ID, xyzname);
 			}
-
-			/*if (PAH_ID == 784){
-				std::string dotname = "KMC_DEBUG/784/";
-				dotname.append(std::to_string(m_t));
-				dotname.append("_after.dot");
-				m_simPAHp.saveDOT(dotname);
-			}*/
-			
-			
-			
 			
 			// get counts for all site types
 			/*if (PAH_ID == 1 || PAH_ID == 2){
@@ -1018,4 +986,11 @@ void KMCSimulator::TestGP() {
         cout<<endl;
     }
     cout<<"---(Sweep, KMC_ARS::KMCSimulator) Finished testing..."<<endl<<endl;
+}
+
+//Save DEBUG information for a single PAH
+void KMCSimulator::savePAH(int PAH_number, const std::string &filename){
+	std::string xyzname = filename;
+	m_simPAHp.saveXYZ(xyzname);
+	//m_simPAHp.printSites();
 }

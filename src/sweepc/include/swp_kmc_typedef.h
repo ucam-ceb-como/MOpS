@@ -80,6 +80,8 @@ namespace Sweep {
 			R5R6FE = 501, R5R6ZZ = 502, R5R6AC = 503, R5R6BY5 = 504,
 			// Principal sites with Embedded R5R6 at one side and R5 to the other
 			R5R6FER = 602, R5R6ZZR = 603, R5R6ACR = 604,
+			// Principal sites with Embedded R5R6 to both sides
+			R5R6FER5R6 = 1002, R5R6ZZR5R6 = 1003, R5R6ACR5R6 = 1004,
 			// Combined Sites
 			None,
 			// Error ID
@@ -208,6 +210,9 @@ namespace Sweep {
 				case R5R6FER: return "R5R6FER";
 				case R5R6ZZR: return "R5R6ZZR";
 				case R5R6ACR: return "R5R6ACR";
+				case R5R6FER5R6: return "R5R6FER5R6";
+				case R5R6ZZR5R6: return "R5R6ZZR5R6";
+				case R5R6ACR5R6: return "R5R6ACR5R6";
             }
             return "ERROR";
         }
@@ -249,6 +254,9 @@ namespace Sweep {
 			else if (str == "R5R6FER") return R5R6FER;
 			else if (str == "R5R6ZZR") return R5R6ZZR;
 			else if (str == "R5R6ACR") return R5R6ACR;
+			else if (str == "R5R6FER5R6") return R5R6FER;
+			else if (str == "R5R6ZZR5R6") return R5R6ZZR;
+			else if (str == "R5R6ACR5R6") return R5R6ACR;
             return Inv;
         }
         //! Get a vector of all site types
@@ -294,6 +302,9 @@ namespace Sweep {
 			temp.push_back(R5R6FER);
 			temp.push_back(R5R6ZZR);
 			temp.push_back(R5R6ACR);
+			temp.push_back(R5R6FER5R6);
+			temp.push_back(R5R6ZZR5R6);
+			temp.push_back(R5R6ACR5R6);
             return temp;
         }
         //! Get a vector of all site types for phenyl addition

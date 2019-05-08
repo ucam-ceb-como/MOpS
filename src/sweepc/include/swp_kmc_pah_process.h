@@ -57,6 +57,10 @@
 #include <map>
 #include <set>
 
+#include <openbabel/babelconfig.h>
+#include <openbabel/base.h>
+#include <openbabel/mol.h>
+
 namespace Sweep{
 namespace KMC_ARS{
 
@@ -135,17 +139,21 @@ public:
     //! Store structure results in external file, returns success/failure
     bool saveDOT(const std::string &filename) const;
     bool saveDOT(const std::string &filename, const std::string &title) const;
-	void saveXYZ(const std::string &filename) const;
+	void saveXYZ(const std::string &filename);
 	bool saveDOT3D(const std::string &filename) const;
 	bool saveDOT3D(const std::string &filename, const std::string &title) const;
     //! obtains a vector of the PAH site list
     std::vector<kmcSiteType> SiteVector() const;
     //! obtains a string containing the PAH site list
     std::string SiteString(char delimiter) const;
+	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
+	OpenBabel::OBMol passPAH(bool detectBonds=true);
+	//! Passes a PAH from OpenBabel to MOpS.
+	void passbackPAH(OpenBabel::OBMol mol);
 	//! Runs optimisation of a PAHusing Openbabel
-	void optimisePAH(bool savefile=false, const std::string &filename="") const;
+	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, int nsteps=1500) ;
 	//! Includes curvature in a PAH after a pentagon is integrated in the structure.
-	void includeCurvature(cpair CR5_1, cpair CR5_2, cpair CR5_3, cpair CR5_4, bool savefile=false, const std::string &filename="")const ;
+	//OpenBabel::OBMol includeCurvature(OpenBabel::OBMol mol, cpair CR5_1, cpair CR5_2) ;
     
     // Update Processes
 
@@ -190,7 +198,8 @@ public:
 	void proc_C6R_RAC_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);   //!< ID31.
 	void proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID32.
 	void proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);             //!< ID34.
-	void proc_GR7_BY5R5(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);             //!< ID35.
+	void proc_GR7_BY5R5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID35.
+	void proc_GR7_R6ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID36.
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts
@@ -244,7 +253,7 @@ private:
 	//! Check steric hindrance between a new carbon position and all other carbons in a PAH.
 	bool checkHindrance_newC(Cpointer C_1) const;
 	//! Check position between a carbon and internal carbons in a PAH.
-	void checkHindrance_C_intPAH(cpair coords) const;
+	cpair checkHindrance_C_intPAH(cpair coords) const;
 	//! Check steric hindrance between two carbons.
 	bool checkHindrance_twoC(const Cpointer C_1, const Cpointer C_2) const;
 	//!Gets distance between two carbons.
@@ -293,6 +302,8 @@ private:
     void remR5fromSite(Spointer& st, Cpointer Carb1, Cpointer Carb2);
 	//! Redraws 5 member rings
 	void redrawR5(Spointer& st, Cpointer Carb1, Cpointer Carb2);
+	//! Finds if 5-membered ring has an edge on two different opposing sites
+	Spointer findR5oppSite(Spointer& st);
     //! Changes site type into another site type
     void convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcSiteType t);
     //! Remove site

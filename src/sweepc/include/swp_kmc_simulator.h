@@ -121,6 +121,8 @@ namespace Sweep{
             void saveDOTperLoop(int LOOPcount,int loopcount, int PAH_ID);
             //! Save the structure DOT file after every X simulation sec interval
             void saveDOTperXsec(const double& X, const int& seed, const double& time, const double &time_max, KMCMechanism& copyMod, int& intervalcount);
+			//! Save DEBUG information for a single PAH
+			void savePAH(int PAH_number, const std::string &filename);
             //! Update structure of PAH after time dt.
             double updatePAH(PAHStructure* pah,         //! structure of pah.
                            const double tstart,       //! start time.
