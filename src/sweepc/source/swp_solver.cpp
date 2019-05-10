@@ -283,6 +283,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
         mech.LPDA(t, sys, rng);
 
         if (mech.IsHybrid() && sys.Particles().GetTotalParticleNumber() > 0)
+			sys.Particles().RecalcPNPropertySums();
             mech.UpdateSections(t, t - tin, sys, rng);
     }
 

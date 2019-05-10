@@ -1033,6 +1033,7 @@ void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
 		// Quotient rule for dXk/dt = d(Ck/CT)/dt
 		xrates[k] = (invrho * crates[k]) - (invrho * invrho * sys.GasPhase().SpeciesConcentration(k) * idrho);
 	}
+	xrates[28] = 0.0;
 }
 
 

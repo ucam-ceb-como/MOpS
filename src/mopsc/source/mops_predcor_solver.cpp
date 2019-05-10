@@ -785,7 +785,7 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
     if (r.EnergyEquation() == Reactor::ConstT) {
         src.Terms[r.Mech()->GasMech().SpeciesCount()] = 0.0;
     } else {
-        src.Terms[r.Mech()->GasMech().SpeciesCount()] += energySrcTerm(r, csrc); //csrc src.Terms
+		src.Terms[r.Mech()->GasMech().SpeciesCount()] += energySrcTerm(r, csrc); //csrc src.Terms
     }
 
 
@@ -802,8 +802,6 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
 		}
 		src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] += dconc;
     }
-	//src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] -= src.Terms[r.Mech()->GasMech().SpeciesCount()] * 
-	//	(r.Mixture()->GasPhase().Density() / r.Mixture()->GasPhase().Temperature()); // aab64 temporary hard coded constant pressure
 }
 
 // Calculate the adiabatic temperature change rate due to the
