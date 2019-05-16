@@ -139,7 +139,8 @@ public:
     //! Store structure results in external file, returns success/failure
     bool saveDOT(const std::string &filename) const;
     bool saveDOT(const std::string &filename, const std::string &title) const;
-	void saveXYZ(const std::string &filename);
+	void saveXYZ(const std::string &filename, bool optimise=false);
+	void save_trajectory_xyz(const double timer, const std::string &filename, bool optimise=false);
 	bool saveDOT3D(const std::string &filename) const;
 	bool saveDOT3D(const std::string &filename, const std::string &title) const;
     //! obtains a vector of the PAH site list
@@ -151,7 +152,7 @@ public:
 	//! Passes a PAH from OpenBabel to MOpS.
 	void passbackPAH(OpenBabel::OBMol mol);
 	//! Runs optimisation of a PAHusing Openbabel
-	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, int nsteps=1500) ;
+	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, int nsteps=1500, std::string forcefield="mmff94") ;
 	//! Includes curvature in a PAH after a pentagon is integrated in the structure.
 	//OpenBabel::OBMol includeCurvature(OpenBabel::OBMol mol, cpair CR5_1, cpair CR5_2) ;
     
@@ -264,6 +265,8 @@ private:
     Cpointer findC(cpair coordinates);
 	//! Find Site to the other side of a bridge
 	Spointer findSite(Cpointer C_1);
+	//! Finds C with distance less than 1.8 of current ZZ carbon
+	Cpointer findThirdC(Cpointer C_1);
 
     // Write Process
     //! Creates a lone carbon atom
@@ -302,8 +305,6 @@ private:
     void remR5fromSite(Spointer& st, Cpointer Carb1, Cpointer Carb2);
 	//! Redraws 5 member rings
 	void redrawR5(Spointer& st, Cpointer Carb1, Cpointer Carb2);
-	//! Finds if 5-membered ring has an edge on two different opposing sites
-	Spointer findR5oppSite(Spointer& st);
     //! Changes site type into another site type
     void convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcSiteType t);
     //! Remove site
