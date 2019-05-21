@@ -132,8 +132,11 @@ public:
     //! Overload of the Mobility Diameter
     double MobDiameter() const;
 
-	//! Get the collision diameter
+	//! The collision diameter
 	double CollisionDiameter();
+
+	//! Calculate radius of gyration
+	double RadiusOfGyration() const;
 
     //! Get the number of primaries in the particle
     int  GetNumPrimary() const {return m_numprimary;}
@@ -169,7 +172,7 @@ public:
 	double GetDistance() const {return m_distance_centreToCentre;}
 
     //! Calculates the radius of gyration.
-    double GetRadiusOfGyration() const;
+	double GetRadiusOfGyration() const { return m_Rg; };
     
     //! Returns a vector of primary coordinates, radius, and mass (5D).
     void GetPriCoords(std::vector<fvector> &coords) const;
@@ -314,6 +317,9 @@ protected:
     double m_r;  //!< Bounding sphere radius of aggregate/primary.
     double m_r2; //!< r squared (useful for efficient collision detection computation).
     double m_r3; //!< r cubed (useful for calculating centre-of-mass).
+
+	//! Radius of gyration
+	double m_Rg;
 
     // TREE STRUCTURE PROPERTIES
     // The children are the next nodes in the binary tree and are used to

@@ -88,7 +88,8 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_rightparticle(NULL),
     m_r(0.0),
     m_r2(0.0),
-    m_r3(0.0)
+    m_r3(0.0),
+	m_Rg(0.0)
 {
     m_cen_bsph[0] = 0.0;
     m_cen_bsph[1] = 0.0;
@@ -140,7 +141,8 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_rightparticle(NULL),
     m_r(0.0),
     m_r2(0.0),
-    m_r3(0.0)
+    m_r3(0.0),
+	m_Rg(0.0)
 {
     m_cen_bsph[0] = 0.0;
     m_cen_bsph[1] = 0.0;
@@ -889,7 +891,7 @@ bool BinTreePrimary::particlesOverlap(const Coords::Vector &p1, double r1,
 }
 
 //! Calculates the radius of gyration of a particle.
-double BinTreePrimary::GetRadiusOfGyration() const
+double BinTreePrimary::RadiusOfGyration() const
 {
     double sum=0;
     double mass;
@@ -1026,6 +1028,7 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
     m_sint_time               = source->m_sint_time;
 	m_frame_orient			  = source->m_frame_orient;
 	m_frame_x				  = source->m_frame_x;
+	m_Rg				      = source->m_Rg;
 
     //! Set particles.
     m_leftchild     = source->m_leftchild;
@@ -1900,6 +1903,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         if (m_parent == NULL) m_avg_sinter = 1.0;
         else m_avg_sinter = 0.0;
         m_numprimary    = 1;
+		m_Rg = 0.0;
         UpdatePrimary();
     }
 
@@ -1981,11 +1985,16 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 
 			}
 
+			//! Radius of gyration
+			m_Rg = RadiusOfGyration();
+
+			//! Mobility diameter
             m_dmob = MobDiameter();
             
         } else {
             m_diam=0;
             m_dmob=0;
+			m_Rg = 0.0;
         }	
 
     }
@@ -3183,6 +3192,9 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
         val = m_r3;
         out.write((char*)&val, sizeof(val));
 
+		val = m_Rg;
+		out.write((char*)&val, sizeof(val));
+
         val = m_children_sintering;
         out.write((char*)&val, sizeof(val));
 
@@ -3334,6 +3346,9 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_r3 = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		m_Rg = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_children_sintering = val;
