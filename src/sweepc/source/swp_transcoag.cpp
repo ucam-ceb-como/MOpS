@@ -117,9 +117,9 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
 {
     // Some prerequisites.
     double n_1 = n - 1.0;
-    double a = CSF * T_mu * A();
+    double a = MAJ2 * CSF * T_mu * A();
     double b = a * MFP * 1.257 * A();
-    double c = CFMMAJ * m_efm * CFM * sqrtT * A();
+    double c = MAJ2 * CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
     double d       = data.Property(Sweep::iDcol); // aab64 removed const to adapt as below
@@ -227,9 +227,9 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::partic
 {
     // Some prerequisites.
     double n_1 = n - 1.0;
-    double a   = CSF * T_mu * A();
+    double a   = MAJ2 * CSF * T_mu * A();
     double b   = a * MFP * 1.257 * 2.0;
-    double c   = CFMMAJ * m_efm * CFM * sqrtT * A();
+    double c   = MAJ2 * CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
     double d       = data.Property(Sweep::iDcol); // aab64 removed const to adapt as below
@@ -906,7 +906,7 @@ double Sweep::Processes::TransitionCoagulation::FreeMolKernel(const Particle &sp
 
     if (maj) {
         // The majorant form is always >= the non-majorant form.
-        return CFMMAJ * m_efm * CFM * sqrt(T) * A() *
+        return MAJ2 * CFMMAJ * m_efm * CFM * sqrt(T) * A() *
                (std::sqrt(invm1) + std::sqrt(invm2)) *
                (d1 * d1 + d2 * d2);
     } else {
@@ -928,10 +928,22 @@ double Sweep::Processes::TransitionCoagulation::SlipFlowKernel(const Particle &s
     const double d2 = sp2.CollDiameter();
 
     // For the slip-flow kernel the majorant and non-majorant forms are identical.
-    return ((1.257 * 2.0 * MeanFreePathAir(T,P) *
-             (1.0 / d1 / d1 + 1.0 / d2 / d2)) +
-            (1.0 / d1 + 1.0 / d2)) *
-           CSF * T * (d1 + d2)
-           * A() / mu;
+	// aab64 - temp constant majorant multiplier
+	if (maj)
+	{
+		// The majorant form is always >= the non-majorant form.
+		return MAJ2 * ((1.257 * 2.0 * MeanFreePathAir(T, P) *
+			(1.0 / d1 / d1 + 1.0 / d2 / d2)) +
+			(1.0 / d1 + 1.0 / d2)) *
+			CSF * T * (d1 + d2)
+			* A() / mu;
+	}
+	else {
+		return ((1.257 * 2.0 * MeanFreePathAir(T, P) *
+			(1.0 / d1 / d1 + 1.0 / d2 / d2)) +
+			(1.0 / d1 + 1.0 / d2)) *
+			CSF * T * (d1 + d2)
+			* A() / mu;
+	}
 }
 

@@ -714,7 +714,7 @@ void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
 	// aab64 Temporary functions for gas-phase properties
 	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
 
-	if (r.IsConstV()) {
+	/*if (r.IsConstV()) {
 		// Constant volume reactor: Use Cv, Us.
 		fvector Hs;
 		tmpGasPhase->Us(Hs);
@@ -725,7 +725,7 @@ void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
 		fvector Hs;
 		tmpGasPhase->Hs(Hs);
 		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);
-	}
+	}*/
 
     // Run Sweep for this time step.
     Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng);
@@ -834,7 +834,7 @@ double PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
             Tdot -= Hs[i] * src[i];
         }
 		src[28] = 0;
-        return Tdot / (C * r.Mixture()->GasPhase().Density());
+        return Tdot / (C * r.Mixture()->GasPhase().Density()); // This is not compensating for the thermal bulk of particles (cf. temperature update in swp_process)
 
     } else if (r.EnergyEquation() == Reactor::ConstT) {
         // Constant temperature model.

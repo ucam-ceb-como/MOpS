@@ -1988,7 +1988,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 		m_primaryvol	= m_leftchild->m_primaryvol + m_rightchild->m_primaryvol;
 
 		//calculate bounding sphere
-		calcBoundSph();
+		//calcBoundSph();
 
         // Calculate the sintering level of the two primaries connected by this node
         m_children_sintering = SinteringLevel();

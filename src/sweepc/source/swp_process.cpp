@@ -535,6 +535,15 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 			// Concentration change in system due to new particle(s)
 			double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume());
 
+			Cg *= gas->Density();
+			//double mw = sys.ParticleModel()->Components()[0]->MolWt(); // note only valid for titania!
+			//double rhop = (sys.Particles().GetSum(iM) + sys.Particles().GetTotalMass()) / (mw * sys.SampleVolume());
+			//fvector Cs;
+			//gas->CalcCvs(oldTg, Cs);
+			//Cg += (rhop * Cs[28]);
+
+			Cg += sys.getParticleDensity();
+
 			// Time step parameters
 			double t0 = 0.0;
 			double tf = sys.GetCurrentProcessTau();
@@ -566,19 +575,11 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 				ag *= (1.0 / Cg);
 
 				// Solve for new particle and gp temperatures
-				//double gc = R / sys.GasPhase().Pressure();
-				//newTg = oldTg / (1 - (ag * gc)); // discrete update, (tf - t0) not included because update is a single step change at time t
-
-				//Solve for new gas density
-				//double newRho = 1.0 / (gc * newTg);
-
-				ag *= (1.0 / gas->Density());
 				newTg = oldTg - ag;
 
 				// Update particle temperature and gas density
 				sys.SetBulkParticleTemperature(newTg);
 				gas->SetTemperature(newTg);
-				//gas->SetDensity(newRho);
 
 			}
 		}

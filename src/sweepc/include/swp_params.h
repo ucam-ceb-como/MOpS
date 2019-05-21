@@ -82,6 +82,7 @@ namespace Sweep
     const double CFM     = 4.65695224e-12; // Sqrt(KB * PI / 2) = sqrt(J/K).
     const double CFM_CGS = 1.47265760e-08; // = sqrt(erg/K).
 	const double CFMMAJ  = 2;  //ms785    1.41 can only be used if the particles are spherical
+	const double MAJ2    = 1; // aab64
    // const double CFMMAJ  = 1.4178;	
 
     // Slip-flow coagulation kernel parameters.

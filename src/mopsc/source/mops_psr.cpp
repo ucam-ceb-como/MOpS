@@ -501,7 +501,7 @@ void PSR::RHS_Complete(double t, const double *const y, double *ydot) const {
             hsum += hval * (*it)->Mixture()->GasPhase().Density()
                     * (*it)->GetFlowFraction();
         }
-        ydot[m_iT] += hsum * m_invrt * m_iscaling / (y[m_iDens] * C * Sprog::R);
+		ydot[m_iT] += hsum * m_invrt * m_iscaling / (y[m_iDens] * C * Sprog::R + m_mix->getParticleDensity());
 
         // Loop over species in the reactor to get energy change due to mol change
         hsum = 0.0;
@@ -509,7 +509,7 @@ void PSR::RHS_Complete(double t, const double *const y, double *ydot) const {
             hsum -= wdot[i] * H_wdot[i];
             if (m_sarea > 0.0) hsum -= sdot[i] * H_wdot[i] * m_sarea / m_svol;
         }
-        ydot[m_iT] += hsum / (y[m_iDens] * C * Sprog::R);
+        ydot[m_iT] += hsum / (y[m_iDens] * C * Sprog::R + m_mix->getParticleDensity());
     }
     // Add imposed temperature gradient, if defined
     if (m_Tfunc) ydot[m_iT] += m_Tfunc(t, y, ydot, *this);
