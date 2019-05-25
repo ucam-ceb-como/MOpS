@@ -409,21 +409,21 @@ namespace KMC_ARS {
 	};
 
 	//! ID34.
-	class MR5_R6 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
+	class MR5_R6 : public Sweep::KMC_ARS::JumpProcess { //R5 flip with R6
 	public:
 		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 		void initialise();
 	};
 
 	//! ID35.
-	class GR7_BY5R5 : public Sweep::KMC_ARS::JumpProcess { //R7 growth at embedded-obstructed R5
+	class GR7_R5R6AC : public Sweep::KMC_ARS::JumpProcess { //R7 growth at embedded-obstructed R5
 	public:
 		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 		void initialise();
 	};
 	
 	//! ID36.
-	class GR7_R6ACR5 : public Sweep::KMC_ARS::JumpProcess { //R7 growth at embedded-obstructed R5-2
+	class GR7_FEACR5 : public Sweep::KMC_ARS::JumpProcess { //R7 growth at embedded-obstructed R5-2
 	public:
 		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 		void initialise();

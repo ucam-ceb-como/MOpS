@@ -199,8 +199,8 @@ public:
 	void proc_C6R_RAC_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);   //!< ID31.
 	void proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID32.
 	void proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);             //!< ID34.
-	void proc_GR7_BY5R5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID35.
-	void proc_GR7_R6ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID36.
+	void proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID35.
+	void proc_GR7_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID36.
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts

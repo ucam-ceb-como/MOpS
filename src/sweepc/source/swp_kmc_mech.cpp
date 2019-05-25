@@ -162,8 +162,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //*< 32 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //*< 33 - R6 desorption at RAC -> pyrene.
 	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //*< 34 - R5 exchange with R6.
-	JumpProcess* j_GR7_BY5R5 = new GR7_BY5R5; j_GR7_BY5R5->initialise();                        //*< 35 - R7 growth in an embedded R5.
-	JumpProcess* j_GR7_R6ACR5 = new GR7_R6ACR5; j_GR7_R6ACR5->initialise();                        //*< 36 - R7 growth in an embedded R5-2.
+	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //*< 35 - R7 growth in an embedded R5.
+	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //*< 36 - R7 growth in an embedded R5-2.
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
     temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
@@ -200,8 +200,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_C6R_RAC_FE3violi); //*< 32 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_M6R_RAC_FE3);      //*< 33 - R6 desorption at RAC -> pyrene.
 	temp.push_back(j_MR5_R6);           //*< 34 - R5 exchange with R6.
-	temp.push_back(j_GR7_BY5R5);           //*< 35 - R7 growth in an embedded R5.
-	temp.push_back(j_GR7_R6ACR5);           //*< 36 - R7 growth in an embedded R5-2.
+	temp.push_back(j_GR7_R5R6AC);           //*< 35 - R7 growth in an embedded R5.
+	temp.push_back(j_GR7_FEACR5);           //*< 36 - R7 growth in an embedded R5-2.
 
     return temp;
 }
@@ -1874,7 +1874,6 @@ void M5R_RZZ::initialise() {
 double M5R_RZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
-	double R5_anchored_count = ((double)pah_st.getSiteCount(R5R6)) + ((double)pah_st.getSiteCount(R5R6_emb)) + ((double)pah_st.getSiteCount(BY5R5)) + ((double)pah_st.getSiteCount(BY6R5)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
@@ -1885,12 +1884,11 @@ double M5R_RZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-	return m_rate = 1.34e12*r_f* (site_count - R5_anchored_count); // Rate Equation
+	return m_rate = 1.34e12*r_f* (site_count); // Rate Equation
 }
 double M5R_RZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
-	double R5_anchored_count = ((double)pah_st.getSiteCount(R5R6)) + ((double)pah_st.getSiteCount(R5R6_emb)) + ((double)pah_st.getSiteCount(BY5R5)) + ((double)pah_st.getSiteCount(BY6R5)); // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
@@ -1901,13 +1899,11 @@ double M5R_RZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-	return m_rate = r3f*r_f* (site_count - R5_anchored_count); // Rate Equation
+	return m_rate = r3f*r_f* (site_count); // Rate Equation
 }
 double M5R_RZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
-	double R5_anchored_count = ((double)pah_st.getSiteCount(R5R6)) + ((double)pah_st.getSiteCount(R5R6_emb)) + ((double)pah_st.getSiteCount(BY5R5)) + ((double)pah_st.getSiteCount(BY6R5)); // Site count
-	//double R5_anchored_count = 0.0; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r3f = 1.34e12;
@@ -1918,11 +1914,11 @@ double M5R_RZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-	if (site_count - R5_anchored_count <= 0){
+	if (site_count <= 0){
 		return m_rate = 0;
 	}
 	else{
-		return m_rate = r3f*r_f* (site_count - R5_anchored_count); // Rate Equation
+		return m_rate = r3f*r_f* (site_count); // Rate Equation
 	}
 	
 }
@@ -2862,7 +2858,7 @@ double MR5_R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 // ************************************************************
 
 // Elementary rate constants, site type, process type and name
-void GR7_BY5R5::initialise() {
+void GR7_R5R6AC::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
 	addReaction(rxnV3, Reaction(7.81e07, 1.772, 10.33, sp::H));     // 0 - r1f
@@ -2873,12 +2869,12 @@ void GR7_BY5R5::initialise() {
 	addReaction(rxnV3, Reaction(6.600E+24, -3.360E+00, 1.780E+01, sp::C2H2));                // 5 - A3-4 + C2H2 <=> A4 + H
 
 
-	m_sType = BY5R5; // sitetype
+	m_sType = R5R6AC; // sitetype
 	m_name = "R7 growth in an embedded R5"; // name of process
 	m_ID = 35;
 }
 
-double GR7_BY5R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+double GR7_R5R6AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
 	if (site_count == 0) return m_rate = 0;
@@ -2897,7 +2893,7 @@ double GR7_BY5R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 // ************************************************************
 
 // Elementary rate constants, site type, process type and name
-void GR7_R6ACR5::initialise() {
+void GR7_FEACR5::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
 	addReaction(rxnV3, Reaction(7.81e07, 1.772, 10.33, sp::H));     // 0 - r1f
@@ -2908,12 +2904,12 @@ void GR7_R6ACR5::initialise() {
 	addReaction(rxnV3, Reaction(6.600E+24, -3.360E+00, 1.780E+01, sp::C2H2));                // 5 - A3-4 + C2H2 <=> A4 + H
 
 
-	m_sType = R6ACR5; // sitetype
+	m_sType = FEACR5; // sitetype
 	m_name = "R7 growth in an embedded R5-2"; // name of process
 	m_ID = 36;
 }
 
-double GR7_R6ACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+double GR7_FEACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
 	if (site_count == 0) return m_rate = 0;

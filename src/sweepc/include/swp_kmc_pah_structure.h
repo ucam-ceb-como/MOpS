@@ -105,6 +105,7 @@ namespace Sweep{
             //! set number of carbon and hydrogen for particular PAH
             void setnumofC(int val);
             void setnumofH(int val);
+			
 
             //! set number of rings for particular PAH
 			void setnumofRings(int val); // 6-membered
@@ -145,6 +146,7 @@ namespace Sweep{
 			int m_rings7_Lone; // 7-membered rings
 			int m_rings7_Embedded; // 7-membered rings
 			std::list<cpair> m_InternalCarbons; //List of internal Carbon atoms coordinates
+			
         private:
             //! write m_cpositions
             void WriteCposition(std::ostream &out) const;

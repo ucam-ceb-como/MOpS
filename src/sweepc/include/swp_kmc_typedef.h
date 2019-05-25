@@ -55,7 +55,7 @@ namespace Sweep {
         //! Enumeration of site types.
         enum kmcSiteType {
 			// Principal Sites, uncombined basic types
-			FE = 0, ZZ = 1, AC = 2, BY5 = 3, BY6 = 4, R5 = 50,
+			FE = 0, ZZ = 1, AC = 2, BY5 = 3, BY6 = 4, R5 = 100,
 			// Principal sites with R5 at one side
 			RFE = 101, RZZ = 102, RAC = 103, RBY5 = 104,
 			// Principal sites with R5 at both sides
@@ -70,18 +70,16 @@ namespace Sweep {
 			//
 			RAC_FE3 = 19,
 			// R5 shoulder with shoulder with an R6
-			R5R6 = 51, R5R6_emb = 52, BY5R5 = 53, BY6R5 = 54,
-			// Double R5 shoulder with R6
-			R5R6R5 = 152, R5R6_embR5 = 153, R5BY5R5 = 154,
-			//eBY5 = 20,
-			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
-			ACR5 = 62, R6ACR5 = 63, R6ACR5R6 = 64, ACACR5 = 65, R5ACR5 = 163, R6ACR5R5 = 164, ZZACR5R5 = 165, R5ACR5R5 = 264,
-			// Principal sites with Embedded R5R6 at one side
-			R5R6FE = 501, R5R6ZZ = 502, R5R6AC = 503, R5R6BY5 = 504,
-			// Principal sites with Embedded R5R6 at one side and R5 to the other
+			R5R6 = 501, R5R6ZZ = 502, R5R6AC = 503, R5R6BY5 = 504,
+			// Double R5, one shouldered with R6
 			R5R6FER = 602, R5R6ZZR = 603, R5R6ACR = 604,
 			// Principal sites with Embedded R5R6 to both sides
 			R5R6FER5R6 = 1002, R5R6ZZR5R6 = 1003, R5R6ACR5R6 = 1004,
+			//eBY5 = 20,
+			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
+			ACR5 = 2002, FEACR5 = 2003, ZZACR5 = 2004, FEACR5FE = 2014, ACACR5 = 2005,
+			// Armchair with R5 and R5s
+			R5ACR5 = 2103, R5FEACR5 = 2104, R5ZZACR5 = 2105, R5ACR5R5 = 2204,
 			// Combined Sites
 			None,
 			// Error ID
@@ -122,7 +120,7 @@ namespace Sweep {
             // Error ID
             Inv=-1,
             // Any Site:
-            any=100,
+            any=100, 
             // Benzene addition sites:
             benz=101*/
         };
@@ -184,27 +182,7 @@ namespace Sweep {
                 case FE_HACA: return "FE_HACA";
                 case BY5_FE3: return "BY5_FE3";
                 case FE2: return "FE2";
-				case ACR5: return "ACR5";
-				case R6ACR5: return "R6ACR5";
-				case R6ACR5R6: return "R6ACR5R6";
-				case ACACR5: return "ACACR5";
-				case R5ACR5: return "R5ACR5";
-				case R6ACR5R5: return "R6ACR5R5";
-				case ZZACR5R5: return "ZZACR5R5";
-				case R5ACR5R5: return "R5ACR5R5";
-				case RAC_FE3: return "RAC_FE3";
 				case R5R6: return "R5R6";
-				case R5R6_emb: return "R5R6_emb";
-				case BY5R5: return "BY5R5";
-				case R5R6R5: return "R5R6R5";
-				case R5R6_embR5: return "R5R6_embR5";
-				case R5BY5R5: return "R5BY5R5";
-				case BY6R5: return "BY6R5";
-                case None: return "None";
-                case Inv: return "Invalid";
-                case any: return "any";
-                case benz: return "benz";
-				case R5R6FE: return "R5R6FE";
 				case R5R6ZZ: return "R5R6ZZ";
 				case R5R6AC: return "R5R6AC";
 				case R5R6BY5: return "R5R6BY5";
@@ -214,6 +192,20 @@ namespace Sweep {
 				case R5R6FER5R6: return "R5R6FER5R6";
 				case R5R6ZZR5R6: return "R5R6ZZR5R6";
 				case R5R6ACR5R6: return "R5R6ACR5R6";
+				case ACR5: return "ACR5";
+				case FEACR5: return "FEACR5";
+				case ZZACR5: return "ZZACR5";
+				case FEACR5FE: return "FEACR5FE";
+				case ACACR5: return "ACACR5";
+				case R5ACR5: return "R5ACR5";
+				case R5FEACR5: return "R5FEACR5";
+				case R5ZZACR5: return "R5ZZACR5";
+				case R5ACR5R5: return "R5ACR5R5";
+				case RAC_FE3: return "RAC_FE3";
+                case None: return "None";
+                case Inv: return "Invalid";
+                case any: return "any";
+                case benz: return "benz";
             }
             return "ERROR";
         }
@@ -234,22 +226,7 @@ namespace Sweep {
             else if(str == "RFER") return RFER;
             else if(str == "RZZR") return RZZR;
             else if(str == "RACR") return RACR;
-			else if (str == "ACR5") return ACR5;
-			else if (str == "R6ACR5") return R6ACR5;
-			else if (str == "R6ACR5R6") return R6ACR5R6;
-			else if (str == "ACACR5") return ACACR5;
-			else if (str == "R6ACR5R5") return R6ACR5R5;
-			else if (str == "ZZACR5R5") return ZZACR5R5;
-			else if (str == "R5ACR5") return R5ACR5;
-			else if (str == "R5ACR5R5") return R5ACR5R5;
 			else if (str == "R5R6") return R5R6;
-			else if (str == "R5R6_emb") return R5R6_emb;
-			else if (str == "BY5R5") return BY5R5;
-			else if (str == "R5R6R5") return R5R6R5;
-			else if (str == "R5R6_embR5") return R5R6_embR5;
-			else if (str == "R5BY5R5") return R5BY5R5;
-			else if (str == "BY5R5") return BY6R5;
-			else if (str == "R5R6FE") return R5R6FE;
 			else if (str == "R5R6ZZ") return R5R6ZZ;
 			else if (str == "R5R6AC") return R5R6AC;
 			else if (str == "R5R6BY5") return R5R6BY5;
@@ -259,6 +236,15 @@ namespace Sweep {
 			else if (str == "R5R6FER5R6") return R5R6FER;
 			else if (str == "R5R6ZZR5R6") return R5R6ZZR;
 			else if (str == "R5R6ACR5R6") return R5R6ACR;
+			else if (str == "ACR5") return ACR5;
+			else if (str == "FEACR5") return FEACR5;
+			else if (str == "ZZACR5") return ZZACR5;
+			else if (str == "FEACR5FE") return FEACR5FE;
+			else if (str == "ACACR5") return ACACR5;
+			else if (str == "R5ACR5") return R5ACR5;
+			else if (str == "R5FEACR5") return R5FEACR5;
+			else if (str == "R5ZZACR5") return R5ZZACR5;
+			else if (str == "R5ACR5R5") return R5ACR5R5;
             return Inv;
         }
         //! Get a vector of all site types
@@ -282,32 +268,25 @@ namespace Sweep {
             temp.push_back(AC_FE3);
             temp.push_back(FE_HACA);
             temp.push_back(BY5_FE3);
-			temp.push_back(ACR5);
-			temp.push_back(R6ACR5);
-			temp.push_back(R6ACR5R6);
-			temp.push_back(ACACR5);
-			temp.push_back(R6ACR5R5);
-			temp.push_back(ZZACR5R5);
-			temp.push_back(R5ACR5);
-			temp.push_back(R5ACR5R5);
-			temp.push_back(RAC_FE3);
 			temp.push_back(R5R6);
-			temp.push_back(R5R6_emb);
-			temp.push_back(BY5R5);
-			temp.push_back(R5R6R5);
-			temp.push_back(R5R6_embR5);
-			temp.push_back(R5BY5R5);
-			temp.push_back(BY6R5);
-			temp.push_back(R5R6FE);
 			temp.push_back(R5R6ZZ);
 			temp.push_back(R5R6AC);
 			temp.push_back(R5R6BY5);
 			temp.push_back(R5R6FER);
 			temp.push_back(R5R6ZZR);
 			temp.push_back(R5R6ACR);
-			temp.push_back(R5R6FER5R6);
-			temp.push_back(R5R6ZZR5R6);
-			temp.push_back(R5R6ACR5R6);
+			temp.push_back(R5R6FER);
+			temp.push_back(R5R6ZZR);
+			temp.push_back(R5R6ACR);
+			temp.push_back(ACR5);
+			temp.push_back(FEACR5);
+			temp.push_back(ZZACR5);
+			temp.push_back(FEACR5FE);
+			temp.push_back(ACACR5);
+			temp.push_back(R5ACR5);
+			temp.push_back(R5FEACR5);
+			temp.push_back(R5ZZACR5);
+			temp.push_back(R5ACR5R5);
             return temp;
         }
         //! Get a vector of all site types for phenyl addition

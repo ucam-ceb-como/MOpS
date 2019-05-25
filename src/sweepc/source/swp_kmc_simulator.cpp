@@ -127,12 +127,10 @@ void KMCSimulator::targetPAH(PAHStructure& pah) {
     m_simPAHp = PAHProcess(*m_simPAH);
 }
 
-
 int counter_GLC = 0;
 int init_flag = 0;
-std::list<int> tracked_PAHs = {583, 701, 755, 564};
-std::list<bool> init_tracked_PAHs(tracked_PAHs.size(),false);
-std::list<bool>::iterator it_tracked;
+int init_trajectory = 0;
+//std::list<int> tracked_PAHs = {583, 701, 755, 564, 1038,791};
 /*!
  * @param[in,out]    pah             PAH structure KMC-ARS jump process will be performed on.
  * @param[in]        tsart           The latest time the PAH was updated.
@@ -159,8 +157,22 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		initReactionCount();
 		init_flag = 1;
 	};
+	std::list<int> tracked_PAHs = {355,509};
+	if (init_trajectory != tracked_PAHs.size()){
+		auto finder = std::find(std::begin(tracked_PAHs), std::end(tracked_PAHs), PAH_ID);
+		if (finder != tracked_PAHs.end()){
+			for (std::list<int>::iterator track_iter = tracked_PAHs.begin(); track_iter != tracked_PAHs.end(); ++track_iter){
+				std::string xyzname = ("KMC_DEBUG/");
+				xyzname.append(std::to_string(PAH_ID));
+				xyzname.append("/");
+				xyzname.append(std::to_string(PAH_ID));
+				xyzname.append("trajectory");
+				savePAH(PAH_ID, xyzname);
+			}
+			++init_trajectory;
+		}
+	}
 	
-    
     double t_max = m_t + dt;
     targetPAH(*pah);
     /*if(m_simPAHp.checkCoordinates())
@@ -255,47 +267,33 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			//Save information for a single PAH
 			auto finder = std::find(std::begin(tracked_PAHs), std::end(tracked_PAHs), PAH_ID);
 			if (finder != tracked_PAHs.end()){
-				int index = std::distance(tracked_PAHs.begin(), finder);
-				it_tracked = init_tracked_PAHs.begin();
-				std::advance(it_tracked, index);
-				//if (std::count(tracked_PAHs.begin(),tracked_PAHs.end(),PAH_ID) ){
-				//if (PAH_ID == 1030 || PAH_ID == 263 || PAH_ID == 93){
 				std::string xyzname = ("KMC_DEBUG/");
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
-				if (!*it_tracked){
-					std::string xyzname2 = xyzname;
-					xyzname2.append(std::to_string(PAH_ID));
-					xyzname2.append("trajectory");
-					savePAH(PAH_ID, xyzname2);
-					*it_tracked = true;
-				}
-				xyzname.append(std::to_string(m_t*10.0));
+				xyzname.append(std::to_string(m_t));
 				xyzname.append("_before");
 				savePAH(PAH_ID, xyzname);
 				cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
 				m_simPAHp.printSites();
-				
 			}
 			
-			/*m_rxn_count[jp_perf.second]++;
+			m_rxn_count[jp_perf.second]++;
 			writeRxnCountCSV();
-			writeCHSiteCountCSV();
+			//writeCHSiteCountCSV();
 			//writeTimerCSV();
-			rates = m_kmcmech.Rates();
-			writeRatesCSV(m_t, rates);*/
+			//rates = m_kmcmech.Rates();
+			//writeRatesCSV(m_t, rates);*/
 
             // Update data structure -- Perform jump process
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 
 			//Save information for a single PAH
 			if (std::count(tracked_PAHs.begin(),tracked_PAHs.end(),PAH_ID) ){
-				//if (PAH_ID == 1030 || PAH_ID == 263 || PAH_ID == 93){
 				std::string xyzname = ("KMC_DEBUG/");
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
 				std::string xyzname2 = xyzname;
-				xyzname.append(std::to_string(m_t*10.0));
+				xyzname.append(std::to_string(m_t));
 				xyzname.append("_after");
 				savePAH(PAH_ID, xyzname);
 				xyzname2.append(std::to_string(PAH_ID));
