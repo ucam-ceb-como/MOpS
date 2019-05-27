@@ -282,9 +282,11 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
         // update all deferred processes.
         mech.LPDA(t, sys, rng);
 
-        if (mech.IsHybrid() && sys.Particles().GetTotalParticleNumber() > 0)
+		if (mech.IsHybrid() && sys.Particles().GetTotalParticleNumber() > 0)
+		{
 			sys.Particles().RecalcPNPropertySums();
-            mech.UpdateSections(t, t - tin, sys, rng);
+			mech.UpdateSections(t, t - tin, sys, rng);
+		}
     }
 
     return err;
