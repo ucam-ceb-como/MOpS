@@ -662,6 +662,12 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 				factorApart *= 2;
 			}
 
+			double dx = this->m_leftchild->m_cen_bsph[0];
+			double dy = this->m_leftchild->m_cen_bsph[1];
+			double dz = this->m_leftchild->m_cen_bsph[2];
+
+			double initialDistance = dx * dx + dy * dy + dz * dz;
+
 			numberOfOverlaps = 0;
 
 			//Loop over Brownian steps 
@@ -672,9 +678,9 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 				double phi2 = acos(2.0 * uniformGenerator() - 1.0);
 
 				//! In terms of Cartesian coordinates.
-				double x2 = cos(theta) * sin(phi);
-				double y2 = sin(theta) * sin(phi);
-				double z2 = cos(phi);
+				double x2 = cos(theta2) * sin(phi2);
+				double y2 = sin(theta2) * sin(phi2);
+				double z2 = cos(phi2);
 
 				//Brownian step size: this is the average primary size
 				double step_size = m_leftchild->m_primarydiam;
@@ -693,9 +699,9 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 				}
 
 				// Get the boundins sphere separation
-				double dx = this->m_leftchild->m_cen_bsph[0];
-				double dy = this->m_leftchild->m_cen_bsph[1];
-				double dz = this->m_leftchild->m_cen_bsph[2];
+				dx = this->m_leftchild->m_cen_bsph[0];
+				dy = this->m_leftchild->m_cen_bsph[1];
+				dz = this->m_leftchild->m_cen_bsph[2];
 
 				double newDistance = dx * dx + dy * dy + dz * dz;
 
@@ -703,7 +709,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 				//! origin (first condition) i.e. travelled too far in the wrong direction
 				//! or if there are multiple points of overlap (second condition), 
 				//! the trial is abandoned and another trajectory is chosen.
-				if ((newDistance > sumr * sumr) || (numberOfOverlaps > 1)) {
+				if ((newDistance > initialDistance*2) || (numberOfOverlaps > 1)) {
 					this->m_leftchild->centreBoundSph();
 					numberOfOverlaps = 0;
 					Overlap = false;
