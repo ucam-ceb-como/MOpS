@@ -456,6 +456,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
         bool Overlap = false;
 
+		/*
         //! Incremental translation.
         while (!Overlap) {
             //! Sphere point picking. This is the random direction step of
@@ -630,6 +631,88 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
             //    }
             //}
         }
+		*/
+
+		//////////////////////////////////////////////// DLCA collision
+		////////////////////////////////////////////////
+		while (!Overlap) {
+			//! Generate random point on sphere
+			double theta = 2.0 * PI * uniformGenerator();
+			double phi = acos(2.0 * uniformGenerator() - 1.0);
+
+			//! In terms of Cartesian coordinates.
+			double x = cos(theta) * sin(phi);
+			double y = sin(theta) * sin(phi);
+			double z = cos(phi);
+
+			double sumr = m_leftchild->Radius() + m_rightchild->Radius();
+
+			// translate the left child
+			this->m_leftchild->Translate(sumr*x, sumr*y, sumr*z);
+
+			//! The two particles are initially at the origin. Keep doubling
+			//! the distance between them so that they do not overlap. This is
+			//! more efficient than picking an arbitrarily large distance.
+			int numberOfOverlaps = 0;
+			int factorApart = 1;
+			double Separation = 0.0;
+
+			while (this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation)) {
+				this->m_leftchild->Translate(factorApart * x * sumr, factorApart * y * sumr, factorApart * z * sumr);
+				factorApart *= 2;
+			}
+
+			numberOfOverlaps = 0;
+
+			//Loop over Brownian steps 
+			while (!Overlap) {
+
+				//Generate a random direction
+				double theta2 = 2.0 * PI * uniformGenerator();
+				double phi2 = acos(2.0 * uniformGenerator() - 1.0);
+
+				//! In terms of Cartesian coordinates.
+				double x2 = cos(theta) * sin(phi);
+				double y2 = sin(theta) * sin(phi);
+				double z2 = cos(phi);
+
+				//Brownian step size: this is the average primary size
+				double step_size = m_leftchild->m_primarydiam;
+
+				//Take a brownian step in small increments
+				unsigned int increment = 0;
+				unsigned int tot_increments = 10;
+				while (Overlap == false && increment < tot_increments){
+
+					//! Translate particle in 10% increments of Brownian step
+					this->m_leftchild->Translate(step_size * x2 / tot_increments, step_size * y2 / tot_increments, step_size * z2 / tot_increments);
+
+					Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
+
+					increment++;
+				}
+
+				// Get the boundins sphere separation
+				double dx = this->m_leftchild->m_cen_bsph[0];
+				double dy = this->m_leftchild->m_cen_bsph[1];
+				double dz = this->m_leftchild->m_cen_bsph[2];
+
+				double newDistance = dx * dx + dy * dy + dz * dz;
+
+				//! If the left particle has failed to collide with the particle at the
+				//! origin (first condition) i.e. travelled too far in the wrong direction
+				//! or if there are multiple points of overlap (second condition), 
+				//! the trial is abandoned and another trajectory is chosen.
+				if ((newDistance > sumr * sumr) || (numberOfOverlaps > 1)) {
+					this->m_leftchild->centreBoundSph();
+					numberOfOverlaps = 0;
+					Overlap = false;
+					break;
+				}
+			}
+		}
+		////////////////////////////////////////////////
+		////////////////////////////////////////////////
 
         double deltax = m_rightparticle->m_cen_bsph[0] - m_leftparticle->m_cen_bsph[0];
         double deltay = m_rightparticle->m_cen_bsph[1] - m_leftparticle->m_cen_bsph[1];
