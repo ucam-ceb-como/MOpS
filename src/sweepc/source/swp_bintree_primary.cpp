@@ -598,7 +598,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
                 //! abandoned and another trajectory is chosen.
                 if ((newDistance > oldDistance && newDistance > sumr * sumr) || (numberOfOverlaps > 1)) {
                     this->m_leftchild->centreBoundSph();
-                    this->m_leftchild->centreCOM();
+                    //this->m_leftchild->centreCOM();
                     numberOfOverlaps = 0;
                     Overlap = false;
                     break;
