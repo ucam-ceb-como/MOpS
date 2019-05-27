@@ -1593,6 +1593,8 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 							(*i)->Perform(t, sys, rng, added_total);
 						}
 					}
+					// Increment the deferred jump counter
+					m_addcount += num;
 					added_total = 0;
 				}
 			}
