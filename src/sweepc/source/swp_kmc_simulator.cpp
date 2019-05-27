@@ -157,7 +157,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		initReactionCount();
 		init_flag = 1;
 	};
-	std::list<int> tracked_PAHs = {355,509};
+	std::list<int> tracked_PAHs = {4790, 539, 1985};
 	if (init_trajectory != tracked_PAHs.size()){
 		auto finder = std::find(std::begin(tracked_PAHs), std::end(tracked_PAHs), PAH_ID);
 		if (finder != tracked_PAHs.end()){
