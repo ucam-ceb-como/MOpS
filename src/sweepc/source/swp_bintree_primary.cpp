@@ -683,19 +683,33 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 				double z2 = cos(phi2);
 
 				//Brownian step size: this is the average primary size
-				double step_size = m_leftchild->m_primarydiam;
+				double step_size = m_leftchild->m_primarydiam / m_leftchild->m_numprimary;
 
-				//Take a brownian step in small increments
-				unsigned int increment = 0;
-				unsigned int tot_increments = 10;
-				while (Overlap == false && increment < tot_increments){
+				//First take an entire Brownian step
+				this->m_leftchild->Translate(step_size * x2, step_size * y2, step_size * z2);
+				Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
 
-					//! Translate particle in 10% increments of Brownian step
-					this->m_leftchild->Translate(step_size * x2 / tot_increments, step_size * y2 / tot_increments, step_size * z2 / tot_increments);
+				//If overlap then:
+				if (Overlap == true){
 
-					Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
+					//Reverse the step
+					this->m_leftchild->Translate(-step_size * x2, -step_size * y2, -step_size * z2);
+					Overlap = false;
+					numberOfOverlaps = 0;
 
-					increment++;
+					//Take the Brownian step in small increments
+					unsigned int increment = 0;
+					unsigned int tot_increments = 10;
+					
+					while (Overlap == false && increment < tot_increments){
+
+						//! Translate particle in 10% increments of Brownian step
+						this->m_leftchild->Translate(step_size * x2 / tot_increments, step_size * y2 / tot_increments, step_size * z2 / tot_increments);
+
+						Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
+
+						increment++;
+					}
 				}
 
 				// Get the boundins sphere separation
