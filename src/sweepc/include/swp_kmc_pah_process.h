@@ -201,6 +201,7 @@ public:
 	void proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);             //!< ID34.
 	void proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID35.
 	void proc_GR7_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID36.
+	void proc_G6R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID37.
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts

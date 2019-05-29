@@ -155,13 +155,14 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 	if (init_flag == 0) {
 		initCSVIO();
 		initReactionCount();
+		readTrackedPAH();
 		init_flag = 1;
 	};
-	std::list<int> tracked_PAHs = {4790, 539, 1985};
-	if (init_trajectory != tracked_PAHs.size()){
-		auto finder = std::find(std::begin(tracked_PAHs), std::end(tracked_PAHs), PAH_ID);
-		if (finder != tracked_PAHs.end()){
-			for (std::list<int>::iterator track_iter = tracked_PAHs.begin(); track_iter != tracked_PAHs.end(); ++track_iter){
+	//std::list<int> tracked_PAHs = {4790, 539, 1985};
+	if (init_trajectory != m_tracked_pahs.size()){
+		auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
+		if (finder != m_tracked_pahs.end()){
+			for (std::list<int>::iterator track_iter = m_tracked_pahs.begin(); track_iter != m_tracked_pahs.end(); ++track_iter){
 				std::string xyzname = ("KMC_DEBUG/");
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
@@ -265,8 +266,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //m_simPAHp.saveDOT(dotname.str());
 
 			//Save information for a single PAH
-			auto finder = std::find(std::begin(tracked_PAHs), std::end(tracked_PAHs), PAH_ID);
-			if (finder != tracked_PAHs.end()){
+			auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
+			if (finder != m_tracked_pahs.end()){
 				std::string xyzname = ("KMC_DEBUG/");
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
@@ -288,7 +289,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 
 			//Save information for a single PAH
-			if (std::count(tracked_PAHs.begin(),tracked_PAHs.end(),PAH_ID) ){
+			if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
 				std::string xyzname = ("KMC_DEBUG/");
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
@@ -1014,4 +1015,13 @@ void KMCSimulator::savePAH(int PAH_number, const std::string &filename){
 	std::string xyzname = filename;
 	m_simPAHp.saveXYZ(xyzname);
 	//m_simPAHp.printSites();
+}
+
+//Read PAHs to be tracked through the simulation from file.
+void KMCSimulator::readTrackedPAH(const std::string &filename){
+	std::ifstream src(filename);
+	int PAH_number;
+	while (src >> PAH_number){
+		m_tracked_pahs.push_back(PAH_number);
+	}
 }

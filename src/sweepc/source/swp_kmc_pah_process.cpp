@@ -779,7 +779,7 @@ bool PAHProcess::checkHindrance(const Spointer& st) const {
 }
 //! Checks if new C position is already occupied by edge carbons. 
 bool PAHProcess::checkHindrance_C_PAH(cpair coords) const {
-	double tol = 1e-1;
+	double tol = 1e0;
 	for (std::set<cpair>::iterator it = m_pah->m_cpositions.begin(); it != m_pah->m_cpositions.end(); ++it) {
 		if (abs(std::get<0>(coords) - std::get<0>(*it)) < tol && abs(std::get<1>(coords) - std::get<1>(*it)) < tol && abs(std::get<2>(coords) - std::get<2>(*it)) < tol){
 			return true;
@@ -851,7 +851,7 @@ bool PAHProcess::checkHindrancePhenyl(const Cpointer C_1) const {
 	cpair mpos;
 	// This function should compare new atomic coordinates to existing ones. 
 	//Vector typespace
-	/*cpair vec1 = get_vector(C_1->C1->coords, C_1->coords);
+	cpair vec1 = get_vector(C_1->C1->coords, C_1->coords);
 	cpair vec2 = get_vector(C_1->C2->coords, C_1->coords);
 	cpair ivec = invert_vector(C_1->growth_vector);
 	cpair ivec2 = invert_vector(vec2);
@@ -866,7 +866,7 @@ bool PAHProcess::checkHindrancePhenyl(const Cpointer C_1) const {
 	mpos = jumpToPos(mpos, ivec2, 1.4); // position O5
 	if (checkHindrance_C_PAH(mpos)) return true;
 	mpos = jumpToPos(mpos, ivec, 1.4); // position O6
-	if (checkHindrance_C_PAH(mpos)) return true;*/
+	if (checkHindrance_C_PAH(mpos)) return true;
 	
 	//Angle typespace
 	/*mpos = jumpToPos(C_1->coords, C_1->bondAngle2, 0, 1.4); // position O1
@@ -1192,7 +1192,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		atom->SetAromatic();
 		atom->SetImplicitValence(3);
 		if ( std::isnan (std::get<0>(C_change->coords))){
-			cout << "NaN in coordinates";
+			cout << "NaN in coordinates while passing them to OB.\n";
 		} 
 		//atom->SetHyb(2);
 		
@@ -2254,8 +2254,8 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
 	intpair PYRENE_CH(16, 10);
 	int PYRENE_RINGS_EMBEDDED = 0;
 	std::list <cpair> PYRENE_intCarbons;
-	PYRENE_intCarbons.push_back(std::make_tuple(0, -pow(3, 0.5), 0));
-	PYRENE_intCarbons.push_back(std::make_tuple(1, -pow(3, 0.5), 0));
+	PYRENE_intCarbons.push_back(std::make_tuple(1.4*cos(-60.0*M_PI/180.0), 1.4*sin(-60.0*M_PI/180.0), 0.0));
+	PYRENE_intCarbons.push_back(std::make_tuple(1.4*cos(-60.0*M_PI/180.0) + 1.4, 1.4*sin(-60.0*M_PI/180.0), 0.0));
 	// Structure for BENZOPYRENE
 	std::string BENZOPYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,ZZ,FE,FE,FE,AC,FE";
 	auto BENZOPYRENE_Rings = std::make_tuple (5, 0, 0);
@@ -2333,7 +2333,8 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         m_pah = pah;
     }else if(m_pah->m_cfirst != NULL)
          m_pah->clear();
-    switch(ss) {
+	std::list <cpair> P_intCarbons;
+	switch(ss) {
         Cpointer newC;
         
     case BENZENE_C:
@@ -2443,8 +2444,33 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
     case PYRENE_C:
         // add first C atom
         m_pah->m_cfirst = addC();
+		updateA(m_pah->m_cfirst, 'H', std::make_tuple(cos(120.0 *M_PI / 180.0),sin(120.0 *M_PI / 180.0),0.0));
         // adds next C atoms according to structure
-        newC = addC(m_pah->m_cfirst, 0, 0, 1.4);
+		newC = addC(m_pah->m_cfirst, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-60.0*M_PI/180.0),sin(-60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-60.0*M_PI/180.0),sin(-60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(1.0,0.0,0.0) );
+		newC = addC(newC, std::make_tuple(cos(-120.0*M_PI/180.0),sin(-120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-60.0 *M_PI / 180.0),sin(-60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-180.0*M_PI/180.0),sin(-180.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-120.0*M_PI/180.0),sin(-120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-60.0 *M_PI / 180.0),sin(-60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-180.0*M_PI/180.0),sin(-180.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-120.0 *M_PI / 180.0),sin(-120.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(120.0*M_PI/180.0),sin(120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(180.0*M_PI/180.0),sin(180.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-120.0 *M_PI / 180.0),sin(-120.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(120.0*M_PI/180.0),sin(120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(-1.0,0.0,0.0) );
+		newC = addC(newC, std::make_tuple(cos(60.0*M_PI/180.0),sin(60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(120.0 *M_PI / 180.0),sin(120.0 *M_PI / 180.0),0.0) );
+        /*newC = addC(m_pah->m_cfirst, 0, 0, 1.4);
 		newC = addC(newC, -60, 0, 1.4);
 		newC = addC(newC, 0, 0, 1.4);
 		newC = addC(newC, -60, 0, 1.4);
@@ -2455,13 +2481,14 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		newC = addC(newC, 120, 0, 1.4);
 		newC = addC(newC, 180, 0, 1.4);
 		newC = addC(newC, 120, 0, 1.4);
-		newC = addC(newC, 60, 0, 1.4);
+		newC = addC(newC, 60, 0, 1.4);*/
         // adds the last C atom, with bond angle towards m_cfirst
-		m_pah->m_clast = addC(newC, 0, 60, 1.4);
+		m_pah->m_clast = addC(newC, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(m_pah->m_clast, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
         // closes structure
         connectToC(m_pah->m_clast, m_pah->m_cfirst);
         // update H atoms
-        updateA(m_pah->m_cfirst, m_pah->m_clast, 'H');
+        //updateA(m_pah->m_cfirst, m_pah->m_clast, 'H');
         // set C & H counts
         setCount(PYRENE_C, PYRENE_H);
         // set ring counts
@@ -2474,7 +2501,9 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         updateSites();
         updateCombinedSites();
 		//Set Internal Carbons list
-		//m_pah->m_InternalCarbons = IntCarbons;
+		P_intCarbons.push_back(std::make_tuple(0.0, -2*1.4*cos(30.0*M_PI/180.0), 0.0));
+		P_intCarbons.push_back(std::make_tuple(1.4, -2*1.4*cos(30.0*M_PI/180.0), 0.0));
+		m_pah->m_InternalCarbons = P_intCarbons;
 		//cout << "Pyrene Initialised!\n";
         break;
     case BENZOPYRENE_C:
@@ -3041,6 +3070,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			proc_GR7_R5R6AC(site_perf, site_C1, site_C2); break;
 		case 36:
 			proc_GR7_FEACR5(site_perf, site_C1, site_C2); break;
+		case 37:
+			proc_G6R_R5R6ZZ(site_perf, site_C1, site_C2); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -3636,7 +3667,7 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update site stt and new neighbours
     // new neighbours:
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
-	if (S1->type >= 2002 && S1->type <= 2004 && S2->type >= 2002 && S2->type <= 2004){
+	if (S1->type >= 2002 && S1->type <= 2104 && S2->type >= 2002 && S2->type <= 2104){
 		//Needs debugging!!! DONE?
 		convSiteType(stt, C1_new->C1, C2_new->C2, ZZ);
 		updateSites(S1, S1->C1, C1_new->C1, -2002);
@@ -4773,14 +4804,18 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		newType = 2103 + ntype1 + ntype2;
 		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
 	}
-	else if (ntype1 == 501 || ntype2 == 501){
-		if (ntype1 == 501 && ntype2 == 501) convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)2204);
-		else {
-			ntype1 = ntype1 % 501;
-			ntype2 = ntype2 % 501;
-			newType = 2103 + ntype1 + ntype2;
-			convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
+	else if ( (ntype1 >= 501 && ntype1 <= 504) || (ntype2 >= 501 && ntype2 <= 504)){
+		newType = 2002;
+		if ( (ntype1 >= 501 && ntype1 <= 504) ) {
+			ntype1 = ntype1 % 500;
+			newType = newType + 100;
 		}
+		if ( (ntype2 >= 501 && ntype2 <= 504) ){
+			ntype2 = ntype2 % 500;
+			newType = newType + 100;
+		}
+		newType = newType + ntype1 + ntype2;
+		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
 	}
 	else if ( (ntype1 >= 2002 && ntype1 <= 2003) || (ntype2 >= 2002 && ntype2 <= 2003) ){
 		ntype1 = ntype1 % 2002;
@@ -5383,7 +5418,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		updateA(C_1, S2->C1->C2, 'H');
 	}*/
 	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
-		updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+		if ( (int)opp_site->type >= 2100) updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
+		else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
 		Spointer S1_opp_site = moveIt(opp_site, -1);
 		Spointer S2_opp_site = moveIt(opp_site, +1);
 		/*if ((int)S1_opp_site->type >= 501 && (int)S1_opp_site->type <= 504 ) {
@@ -5419,7 +5455,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		updateCombinedSites(opp_site_after);
 	}
 	else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
-		updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
+		if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
+		else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
 		updateCombinedSites(opp_site_after);
 	}
 	else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
@@ -5497,54 +5534,48 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// Add and remove HR
 	//updateA(C_1->C1, C_2->C2, 'H');
 	// neighbouring sites:
+	Spointer SR5;
+	bool b4 = false;
 	Spointer S1 = moveIt(stt, -1);
 	Spointer S2 = moveIt(stt, 1);
+	if (S1->type == R5 || ((int) S1->type >= 501 && (int) S1->type <= 504 )) {
+		SR5 = S1;
+		S1 = moveIt(SR5, -1);
+		b4 = true;
+	}
+	else if (S2->type == R5 || ((int) S2->type >= 501 && (int) S2->type <= 504 )) {
+		SR5 = S2;
+		S2 = moveIt(SR5, +1);
+		b4 = false;
+	}
+	else {
+		cout << "RZZ not neighbouring an R5 or R5R6 site. Error.\n";
+		printSites(stt);
+		saveXYZ("KMC_DEBUG/RZZ_neighbour_error");
+	}
 	Spointer S3, S4;
 	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
 	// Update Site and neighbours
 	convSiteType(stt, newC1, newC2, FE); // Converts RZZ to FE
-	if (S1->type == R5){ 
-		convSiteType(S1, S1->C1, stt->C1, R5R6); // Converts R5 to R5R6}
-		updateSites(S2, newC2, S2->C2, 1); 
-		int stype = (int)S3->type;
-		//if (stype < 10) stype += 50;
-		//else if (stype >= 10 && stype <= 12) stype += 52;
-		if (stype == 1004 || stype == 2103) stype += 0;
-		else stype += 400;
-		convSiteType(S3, S3->C1, S3->C2, (kmcSiteType)stype);
+	if (b4){
+		if (SR5->type == R5) {
+			updateSites(SR5, SR5->C1, stt->C1, +401);
+			updateSites(S1, S1->C1, S1->C2, +400);
+		}
+		else updateSites(SR5, SR5->C1, stt->C1, +1501);
+		updateSites(S2, stt->C2, S2->C2, +1);
 	}
-	else if (S1->type == R5R6)
-	{
-		convSiteType(S1, S1->C1, S1->C2->C2, ACR5); // Converts R5R6 to ACR5}
-		updateSites(S2, newC2, S2->C2, 1);
-	} 
-	else if(S1->type == R5R6ZZ){
-		convSiteType(S1, S1->C1, S1->C2->C2, R5R6AC); // Converts R5R6 to R5R6AC}
-		updateSites(S2, newC2, S2->C2, 1); 
+	else{
+		if (SR5->type == R5) {
+			updateSites(SR5, stt->C2, SR5->C2, +401);
+			updateSites(S2, S2->C1, S2->C2, +400);
+		}
+		else updateSites(SR5, stt->C2, SR5->C2, +1501);
+		updateSites(S1, S1->C1, stt->C1, +1);
 	}
 
-	else if (S2->type == R5) {
-		convSiteType(S2, stt->C2, S2->C2, R5R6); // Converts R5 to R5R6}
-		updateSites(S1, S1->C1, newC1, 1);
-		int stype = (int)S4->type;
-		//if (stype < 10) stype += 50;
-		//else if (stype >= 10 && stype <= 12) stype += 52;
-		if (stype == 1004 || stype == 2103) stype += 0;
-		else stype += 400;
-		convSiteType(S4, S4->C1, S4->C2, (kmcSiteType)stype);
-	}
-	else if (S2->type == R5R6){
-		convSiteType(S2, S2->C1->C1, S2->C2, ACR5); // Converts R5 to ACR5}
-		updateSites(S1, S1->C1, newC1, 1);
-	} 
-	else if (S2->type == R5R6ZZ){
-		convSiteType(S2, S2->C1->C1, S2->C2, R5R6AC); // Converts R5 to R5R6AC}
-		updateSites(S1, S1->C1, newC1, 1);
-	}
-
-	
 	// Update combined site for Site and neighbours
-	updateCombinedSites(stt);
+	updateCombinedSites(stt); updateCombinedSites(SR5);
 	updateCombinedSites(S1); updateCombinedSites(S2);
 	updateCombinedSites(S3); updateCombinedSites(S4);
 	// add ring counts
@@ -5972,6 +6003,13 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 void PAHProcess::proc_GR7_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	proc_GR7_R5R6AC(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID37- R6 growth on R5R6ZZ
+// ************************************************************
+void PAHProcess::proc_G6R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	proc_G6R_RZZ(stt, C_1, C_2);
 }
 
 size_t PAHProcess::SiteListSize() const {
