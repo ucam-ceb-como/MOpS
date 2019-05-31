@@ -68,7 +68,8 @@ Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
   m_smpvol(1.0), m_fixed_chem(false),
   m_incepting_weight(1.0), m_incFactor(1.0),
   m_notpsiflag(true), m_rateFactor(1.0),
-  m_cprop1(iUniform), m_cprop2(iUniform)
+  m_cprop1(iUniform), m_cprop2(iUniform), 
+  m_constv(false)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
@@ -131,6 +132,7 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_bulk_heat_capacity = rhs.m_bulk_heat_capacity;  // aab64 temperature update variables (temporary)
         m_particle_density = rhs.m_particle_density;
         m_enthalpies = rhs.m_enthalpies;
+		m_constv = rhs.m_constv;
     }
     assert(isValid());
     return *this;

@@ -272,10 +272,12 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
                     sys.Particles().Update(i);
 
                     // Apply changes to gas-phase chemistry.
-                    if (times > 0) {
-			adjustGas(sys, sp->getStatisticalWeight());
-			adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
-		    }
+					if (times > 0) {
+						if (!sys.GetIsAdiabaticFlag())
+							adjustGas(sys, sp->getStatisticalWeight());
+						else
+							adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
+					}
                 }
             } else {
                 // If not valid then remove the particle.
@@ -296,9 +298,11 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
             }
 
             // Apply changes to gas-phase chemistry.
-            if (times > 0) {
-		adjustGas(sys, sp->getStatisticalWeight());
-		adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
+			if (times > 0) {
+				if (!sys.GetIsAdiabaticFlag())
+					adjustGas(sys, sp->getStatisticalWeight());
+				else
+					adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
             }
         }
     } else {
@@ -318,18 +322,22 @@ int SurfaceReaction::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
 
     // Do normal update
     if (m > 0 && sys.GetNotPSIFlag())
-    {
-        adjustGas(sys, sp.getStatisticalWeight(), m);
-        adjustParticleTemperature(sys, sp.getStatisticalWeight(), m, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
+	{
+		if (!sys.GetIsAdiabaticFlag())
+			adjustGas(sys, sp.getStatisticalWeight(), m);
+		else
+			adjustParticleTemperature(sys, sp.getStatisticalWeight(), m, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
     }
     return m;
 }
 
 // aab64 Do surface growth gas-phase adjustment for hybrid method
 int SurfaceReaction::Perform(double t, Cell &sys, rng_type &rng, unsigned int n) const
-{	
-    adjustGas(sys, 1, n);
-    adjustParticleTemperature(sys, 1, n, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); 
+{
+	if (!sys.GetIsAdiabaticFlag())
+		adjustGas(sys, 1, n);
+	else
+		adjustParticleTemperature(sys, 1, n, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); 
     return n;
 }
 

@@ -257,6 +257,10 @@ public:
     double getParticleDensity() const { return m_particle_density; }
     void getEnthalpies(fvector &enthalpies) { enthalpies = m_enthalpies; }
 
+	// aab64 Set constv/constp flag for particle energy balance
+	void setConstV(bool flag) { m_constv = flag; }
+	bool IsConstV() { return m_constv; }
+
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
@@ -324,6 +328,9 @@ private:
     double m_particle_density;
 
     fvector m_enthalpies;
+
+	// aab64 flag constant volume/pressure for particle temperature update
+	bool m_constv;
 
 };
 

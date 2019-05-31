@@ -128,6 +128,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
 	double mw = r.Mixture()->ParticleModel()->Components()[0]->MolWt(); // note only valid for titania!
 	if (r.IsConstV()) {
+		r.Mixture()->setConstV(true);
 		// Constant volume reactor: Use Cv, Us.
 		fvector Hs, Cs;
 		tmpGasPhase->Us(Hs);
@@ -138,6 +139,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCv(), rhop * Cs[28], Hs);
 	}
 	else {
+		r.Mixture()->setConstV(false);
 		// Constant pressure reactor: Use Cp, Hs.
 		fvector Hs, Cs;
 		tmpGasPhase->Hs(Hs);
@@ -199,9 +201,13 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	}
 
 	m_cpu_mark = clock();
-	// Solve last half-step of gas-phase chemistry.    
+	// Solve last half-step of gas-phase chemistry.  
+	rho = r.Mixture()->GasPhase().MassDensity();
 	m_ode.ResetSolver();
 	m_ode.Solve(r, t2 += h);
+
+	if (!r.IsConstV())
+		r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
 
 	r.SetTime(t2);
 	m_chemtime += calcDeltaCT(m_cpu_mark);
@@ -266,13 +272,13 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     // Variables required to ensure particle number density is correctly
     // scaled with gas-phase expansion.
-    double rho = 0.0;
+	double rho = 0.0;
 
     m_cpu_mark = clock();
-        // Solve first half-step of gas-phase chemistry.
-        rho = r.Mixture()->GasPhase().MassDensity();
-        m_ode.Solve(r, t2+=h);
-        r.SetTime(t2);
+    // Solve first half-step of gas-phase chemistry.
+    rho = r.Mixture()->GasPhase().MassDensity();
+    m_ode.Solve(r, t2+=h);
+    r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
     m_cpu_mark = clock();
@@ -324,7 +330,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     // Solve one whole step of population balance (Sweep).
     if (!r.IsConstV()) //aab64
-        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+		r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
     
     Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
@@ -394,11 +400,11 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     for (int i=1; i<nsteps; ++i) {
         m_cpu_mark = clock();
-            // Solve whole step of gas-phase chemistry.
-            rho = r.Mixture()->GasPhase().MassDensity();
-            m_ode.ResetSolver();
-            m_ode.Solve(r, t2+=dt);
-            r.SetTime(t2);
+        // Solve whole step of gas-phase chemistry.
+        rho = r.Mixture()->GasPhase().MassDensity();
+        m_ode.ResetSolver();
+        m_ode.Solve(r, t2+=dt);
+        r.SetTime(t2);
         m_chemtime += calcDeltaCT(m_cpu_mark);
 
         m_cpu_mark = clock();
@@ -448,13 +454,13 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
             tmpTin = r.Mixture()->GasPhase().Temperature();
         }
 
-            // Solve whole step of population balance (Sweep).
-	if (!r.IsConstV()) // aab64
-            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-           
-	Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+		// Solve whole step of population balance (Sweep).
+		if (!r.IsConstV()) // aab64
+			r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
 
-    m_swp_ctime += calcDeltaCT(m_cpu_mark);        
+		Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+
+		m_swp_ctime += calcDeltaCT(m_cpu_mark);        
 
         if (writediags) {
             // Diagnostic variables at end of split step
@@ -520,15 +526,17 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     }
 
     m_cpu_mark = clock();
-        // Solve last half-step of gas-phase chemistry.    
-        m_ode.ResetSolver();
-        m_ode.Solve(r, t2+=h);
-        r.SetTime(t2);
+    // Solve last half-step of gas-phase chemistry. 
+	rho = r.Mixture()->GasPhase().MassDensity();
+    m_ode.ResetSolver();
+    m_ode.Solve(r, t2+=h);
+
+	if (!r.IsConstV())
+		r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
+
+    r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
-
-    // aab64 Temporary functions for gas-phase properties
-    tmpGasPhase = (&r.Mixture()->GasPhase());
-
+	
     // Calculate total computation time.
     m_tottime += calcDeltaCT(totmark);
 

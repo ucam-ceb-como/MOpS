@@ -245,9 +245,11 @@ int DimerInception::Perform(const double t, Cell &sys,
         }
 
         // Update gas-phase chemistry of system 
-        double particleWt = sys.GetInceptingWeight();
-        adjustGas(sys, particleWt, 1, sys.GetInceptionFactor()); // nInceptingParticle_ui
-        adjustParticleTemperature(sys, particleWt, 1, sys.GetIsAdiabaticFlag(), nInceptingParticle_d, 1, sys.GetInceptionFactor());
+		double particleWt = sys.GetInceptingWeight();
+		if (!sys.GetIsAdiabaticFlag())
+			adjustGas(sys, particleWt, 1, sys.GetInceptionFactor()); // nInceptingParticle_ui
+		else
+			adjustParticleTemperature(sys, particleWt, 1, sys.GetIsAdiabaticFlag(), nInceptingParticle_d, 1, sys.GetInceptionFactor());
     }
     else
     {
@@ -295,8 +297,10 @@ int DimerInception::Perform(const double t, Cell &sys,
             sys.Particles().Add(*sp, rng);
 
             // Update gas-phase chemistry of system.
-            adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
-            adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+			if (!sys.GetIsAdiabaticFlag())
+				adjustGas(sys, sp->getStatisticalWeight(), 1, sys.GetInceptionFactor());
+			else
+				adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
         }
         else
         {
@@ -304,10 +308,11 @@ int DimerInception::Perform(const double t, Cell &sys,
             sys.Particles().UpdateNumberAtIndex(ParticleComp()[0], 1);
             sys.Particles().UpdateTotalParticleNumber(1);
             sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
-
             // Update gas-phase chemistry of system.
-            adjustGas(sys, sys.GetInceptingWeight(), 1, sys.GetInceptionFactor());
-            adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+			if (!sys.GetIsAdiabaticFlag())
+				adjustGas(sys, sys.GetInceptingWeight(), 1, sys.GetInceptionFactor());
+			else
+				adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
         }
     }
 

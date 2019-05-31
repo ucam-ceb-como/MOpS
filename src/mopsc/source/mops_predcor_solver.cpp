@@ -101,7 +101,11 @@ PredCorSolver::~PredCorSolver(void)
 void PredCorSolver::Initialise(Reactor &r)
 {
     // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
-    r.Mixture()->SetFixedChem(true);
+	r.Mixture()->SetFixedChem(true);
+	if (r.IsConstV())
+	{
+		r.Mixture()->setConstV(true);
+	}
 
     // Set up ODE solver.
     FlameSolver::Initialise(r);
@@ -156,6 +160,10 @@ void PredCorSolver::Reset(Reactor &r)
 
     // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
 	r.Mixture()->SetFixedChem(true);
+	if (r.IsConstV())
+	{
+		r.Mixture()->setConstV(true);
+	}
 
 	// aab64 Initialise register of particle-number particles
 	if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
@@ -195,7 +203,6 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	
     // Calculate step size.
 	double dt = (tstop - r.Time()) / (double)nsteps;
-
 	
     // Internal splits without file output.
     for (step=0; step<nsteps-1; ++step) {
