@@ -138,6 +138,14 @@ public:
     // Sets the under-relaxation coefficient.
     void SetUnderRelaxCoeff(double relax);
 
+	// aab64 Calculates and stores various properties used to complete the 
+	// energy balance so they can be computed less frequently. 
+	// Sets constv/p flag for the cell so it is accessible for the temperature update. 
+	void storeTemperatureProperties(
+		Reactor &r,           // The reactor to solve.
+		Sweep::rng_type &rng  // Random number generator
+		);
+
     // SOLUTION.
 
     // Runs the solver for the given reactor, advancing it
@@ -178,9 +186,7 @@ public:
             bool writediags // write split diagnostics
     );
     //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-
-    
+	    
     //SENSITIVITY.
 
     //!Returns the double** m_sensitivity matrix with values calculated by CVODES.

@@ -1059,12 +1059,6 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
     // Test for now
     assert(sys.ParticleModel() != NULL);
 
-    // aab64 if there are no particles, set the particle phase temperature 
-    // equal to the gas phase temperature
-    if (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber() == 0){
-        sys.SetBulkParticleTemperature(sys.GasPhase().Temperature());
-    };
-
     // Work out to which process this term belongs.
     int j = i - m_inceptions.size();
 

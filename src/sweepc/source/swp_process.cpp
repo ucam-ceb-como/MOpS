@@ -500,227 +500,143 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n, double incFac) con
 *
 * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
 */
-void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bool adjustT, double dcomp, int processID, double incFac) const 
+void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bool adjustT, 
+	double dcomp, int processID, double incFac) const 
 {
-	if (sys.IsConstV() && !sys.FixedChem())
+	if (!sys.FixedChem())
 	{
-		if (processID == 1 || processID == 2 || processID == 4) 
+		// This method requires write access to the gas phase, which is not
+		// standard in sweep.  This means it cannot use the generic gas
+		// phase interface
+		SprogIdealGasWrapper *gasWrapper = dynamic_cast<SprogIdealGasWrapper*>(&sys.GasPhase());
+
+		if (gasWrapper == NULL)
+			throw std::runtime_error("Could not cast gas phase to SprogIdealGasWrapper in Process::adjustGas");
+
+		// If excecution reaches here, the cast must have been successful
+		Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();
+
+		// Function will update the temperature oldTg to temperature newTg
+		double oldTg = sys.GasPhase().Temperature();
+		double newTg = oldTg;
+
+		// Thermal parameters 
+		// Cg, Cp, Cp * rhop and Hs/Us are stored on sys object for
+		// faster computation. They are updated less frequently.
+		fvector Hs, Cs;
+		sys.getEnthalpies(Hs);
+		double Cg = sys.getBulkHeatCapacity();
+		double Cp = sys.getParticleHeatCapacity();
+		bool constv = sys.IsConstV();
+
+		// Set enthalpy, heat capacity and density for both phases
+		// Uncomment to update properties each time this function is called. 
+		/*if (constv)
 		{
-			// This method requires write access to the gas phase, which is not
-			// standard in sweep.  This means it cannot use the generic gas
-			// phase interface
-			SprogIdealGasWrapper *gasWrapper = dynamic_cast<SprogIdealGasWrapper*>(&sys.GasPhase());
+			gas->Us(Hs);
+			gas->CalcCvs(oldTg, Cs);
+			Cg = gas->BulkCv();
+			Cp = Cs[28]; 
+		}
+		else
+		{
+			gas->Hs(Hs); 
+			gas->CalcCps(oldTg, Cs);
+			Cg = gas->BulkCp();
+			Cp = Cs[28];
+		}*/
+		// Note: only valid for titania!
+		double mw = sys.ParticleModel()->Components()[0]->MolWt(); 
+		double rhop = (sys.Particles().GetSum(iM) + sys.Particles().GetTotalMass()) / (mw * sys.SampleVolume());
+		double rhog = gas->Density();
+		double Cprhop = Cp * rhop;
+		double Cgrhog = Cg * rhog;
+		double rhog_mass = gas->MassDensity();
+		double P_R = gas->Pressure() / R;
+		double Hp = Hs[28];
 
-			if (gasWrapper == NULL)
-				throw std::runtime_error("Could not cast gas phase to SprogIdealGasWrapper in Process::adjustGas");
+		// Get the existing concentrations
+		fvector newConcs;
+		gas->GetConcs(newConcs);
 
-			// If excecution reaches here, the cast must have been successful
-			Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();
+		// Concentration change in system due to new particle(s)
+		// Added incFac to scale change if more units are present in incepted particle
+		double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume());
 
-			// Get the existing concentrations
-			fvector newConcs;
-			gas->GetConcs(newConcs);
-
-			// Now adjust the concentrations
+		// Compute the change in concentrations and enthalpy
+		double deltaHr = 0.0;
+		double gdot = 0.0;
+		double change = 0.0;
+		if (processID == 1 || processID == 2) {                // Inception or surface growth
 			Sprog::StoichMap::const_iterator i;
-			double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume()); // aab64 added incFac to scale change if more units are present in incepted particle
 			for (i = m_reac.begin(); i != m_reac.end(); ++i)
-				newConcs[i->first] -= (double)(i->second) * n_NAvol;
+			{
+				change = (double)(i->second) * n_NAvol;
+				newConcs[i->first] -= change;
+				deltaHr -= change * Hs[i->first];
+				gdot -= change;
+			}
 			for (i = m_prod.begin(); i != m_prod.end(); ++i)
-				newConcs[i->first] += (double)(i->second) * n_NAvol;
+			{
+				change = (double)(i->second) * n_NAvol;
+				newConcs[i->first] += change;
+				deltaHr += change * Hs[i->first];
+				gdot += change;
+			}
+			deltaHr += (dcomp * n_NAvol * Hp);                 // Contribution of particle formation
+		} else if (processID == 4) {                           // Inflow - need to get (f/tau and?) Hp_in
+			double Hp_in = Hp;
+			deltaHr += n_NAvol * (Hp_in - Hp);
+		}
 
-			// Set the new data
+		// Start to adjust the temperature by subtracting deltaHr/(rho*C)
+		deltaHr *= 1.0 / (Cgrhog + Cprhop);
+		newTg -= deltaHr;
+		
+		if (constv)
+		{
+			// a) dCk/dt = gdot_k
+			// b) drho/dt = dC/dt (constant volume)
+			// c) dT/dt * rho * Cv = - deltaHr_total + deltaHflow - (drho/dt * R * T) 
+		
+			// Adjust the concentrations as in a) and b) above
+			gas->SetConcs(newConcs);
+
+			// Add denominator to gdot
+			gdot *= 1.0 / (Cgrhog + Cprhop);
+			
+			// Finish adjusting the temperature as in c) above
+			// newTg *= 1.0 / (1.0 + R * gdot);                // This way assumes T at tf
+			newTg -= (R * oldTg * gdot);                       // This way assumes T at t0
+			gas->SetTemperature(newTg);
+		}
+		else
+		{
+			// a) dT/dt * rho * Cv = - deltaHr_total + deltaHflow
+			// b) gamma = (drho/dt / rho) + (dT/dt / T)
+			// c) dCk/dt = gdot_k - gamma * Ck
+			// d) rho = P / (R * T)
+
+			// Adjust the temperature as in a) above
+			// Taking rho at tf:
+			//double a = Cprhop;
+			//double b = (Cg * P_R) - (oldTg * Cprhop) + (deltaHr);
+			//double c = -oldTg * Cg * P_R;
+			//newTg = (-b + sqrt((b * b) - (4 * a * c))) / (2 * a); 
+			// Taking rho at t0, temperature update is already complete.
+			gas->SetTemperature(newTg);
+
+			// Compute gas-phase expansion as in b) above
+			double gamma = (gdot / rhog) + ((newTg - oldTg) / oldTg);	
+
+			// Adjust the concentrations as in c) above
+			fvector::const_iterator j;					
+			for (int j = 0; j != newConcs.size(); ++j)
+				newConcs[j] -= (gamma * newConcs[j]);
 			gas->SetConcs(newConcs);
 			
-			// Function will update the temperature oldTg to temperature newTg
-			double oldTg = sys.GasPhase().Temperature();
-			double newTg = oldTg;
-
-			// Set enthalpy, heat capacity and density for both phases
-			//fvector Hs = gas->getMolarEnthalpy(oldTg);
-			//double Cg = gas->BulkCp();          // bulk gp heat capacity at oldTg
-			//double Hp = Hs[28];                 // enthalpy of titania crystals at oldTg
-			//double rhog = gas->Density();       // molar density of gp at oldTg
-			//double mw = sys.ParticleModel()->Components()[0]->MolWt(); // note only valid for titania!
-			//double rhop = (sys.Particles().GetSum(iM) + sys.Particles().GetTotalMass()) / (mw * sys.SampleVolume());
-			//fvector Cs;
-			//gas->CalcCvs(oldTg, Cs);
-			//Cg += (rhop * Cs[28]);
-
-			double Cgrhog = sys.getBulkHeatCapacity();
-			Cgrhog *= gas->Density();
-			double Cprhop = sys.getParticleDensity();
-			fvector Hs;
-			sys.getEnthalpies(Hs);
-			double Hp = Hs[28]; // note only valid for titania!
-			if (Cprhop == 0)
-			{
-				double mw = sys.ParticleModel()->Components()[0]->MolWt(); // note only valid for titania!
-				double rhop = (sys.Particles().GetSum(iM) + sys.Particles().GetTotalMass()) / (mw * sys.SampleVolume());
-				fvector Cs;
-				gas->CalcCvs(oldTg, Cs);
-				Cprhop = (rhop * Cs[28]);
-			}
-									
-			// Time step parameters
-			double t0 = 0.0;
-			double tf = sys.GetCurrentProcessTau();
-
-			// Integration parameter a for gas (g) phase
-			double deltaHr = 0.0;
-			double gdot = 0.0;
-
-			if (tf != 0.0) 
-			{
-				if (processID == 1 || processID == 2) { // inception or surface growth
-					// Contributions of gp species
-					for (i = m_reac.begin(); i != m_reac.end(); ++i) {
-						deltaHr -= (double)(i->second) * n_NAvol * Hs[i->first];
-						gdot -= (double)(i->second) * n_NAvol;
-					}
-					for (i = m_prod.begin(); i != m_prod.end(); ++i) {
-						deltaHr += (double)(i->second) * n_NAvol * Hs[i->first];
-						gdot += (double)(i->second) * n_NAvol;
-					}
-					// Contribution of particle formation
-					deltaHr += (dcomp * n_NAvol * Hp);
-				}
-				else { // inflow (4)
-					deltaHr += (-1.0 * n_NAvol * (Hp - Hp) / (tf - t0)); 
-					// (temporary) Enthalpy at Tin - how to get Tin? 
-				    // A: pass it to the function as an optional argument 
-					// in inflow only (to do)?
-				}
-
-				// Add denominators
-				deltaHr *= 1.0 / (Cgrhog + Cprhop);
-				gdot *= 1.0 / (Cgrhog + Cprhop);
-				
-				// Solve for new particle and gp temperatures
-				newTg = oldTg - deltaHr;
-				newTg *= 1.0 / (1.0 + R * gdot);
-
-				// Update particle temperature and gas density
-				sys.SetBulkParticleTemperature(newTg);
-				gas->SetTemperature(newTg);
-			}
-		}
-	}
-	else if (!sys.IsConstV() && !sys.FixedChem()) 
-	{
-		if (processID == 1 || processID == 2 || processID == 4)
-		{
-		
-			// This method requires write access to the gas phase, which is not
-			// standard in sweep.  This means it cannot use the generic gas
-			// phase interface
-			SprogIdealGasWrapper *gasWrapper = dynamic_cast<SprogIdealGasWrapper*>(&sys.GasPhase());
-
-			if (gasWrapper == NULL)
-				throw std::runtime_error("Could not cast gas phase to SprogIdealGasWrapper in Process::adjustGas");
-
-			// If excecution reaches here, the cast must have been successful
-			Sprog::Thermo::IdealGas *gas = gasWrapper->Implementation();
-		
-			double oldTg = gas->Temperature();
-			double newTg = oldTg;
-			double rhog_mass = gas->MassDensity();
-			double rhog = gas->Density();
-			double Cprhop = sys.getParticleDensity();
-
-			// Set enthalpy, heat capacity and density for both phases
-			//fvector Hs = gas->getMolarEnthalpy(oldTg);
-			//double Cg = gas->BulkCp();          // bulk gp heat capacity at oldTg
-			//double Hp = Hs[28];                 // enthalpy of titania crystals at oldTg
-			if (Cprhop == 0)
-			{
-				double mw = sys.ParticleModel()->Components()[0]->MolWt(); // note only valid for titania!
-				double rhop = (sys.Particles().GetSum(iM) + sys.Particles().GetTotalMass()) / (mw * sys.SampleVolume());
-				fvector Cs;
-				gas->CalcCvs(oldTg, Cs);
-					Cprhop = (rhop * Cs[28]);
-			}
-			
-			double Cg = sys.getBulkHeatCapacity();
-			fvector Hs;
-			sys.getEnthalpies(Hs);
-			double Hp = Hs[28]; // note only valid for titania!
-			double P_R = gas->Pressure() / R;
-	
-			// Concentration change in system due to new particle(s)
-			double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume());
-	
-			// Time step parameters
-			double t0 = 0.0;
-			double tf = sys.GetCurrentProcessTau();
-				
-			// Integration parameter a for gas (g) phase
-			double deltaHr = 0.0;
-			double gdot = 0.0;
-	
-			if (tf != 0.0)
-			{
-				if (processID == 1 || processID == 2) { // inception or surface growth
-					// Contributions of gp species
-					Sprog::StoichMap::const_iterator i;
-					for (i = m_reac.begin(); i != m_reac.end(); ++i) {
-						deltaHr -= (double)(i->second) * n_NAvol * Hs[i->first];
-						gdot -= (double)(i->second) * n_NAvol;
-					}
-					for (i = m_prod.begin(); i != m_prod.end(); ++i) {
-						deltaHr += (double)(i->second) * n_NAvol * Hs[i->first];
-						gdot += (double)(i->second) * n_NAvol;
-					}
-					// Contribution of particle formation
-						deltaHr += (dcomp * n_NAvol * Hp);
-				}
-				else { // inflow (4)
-					deltaHr += (-1.0 * n_NAvol * (Hp - Hp) / (tf - t0)); 
-					// (temporary) Enthalpy at Tin - how to get Tin? 
-					// A: pass it to the function as an optional argument 
-					// in inflow only (to do)?
-				}
-						
-				double a, b, c;
-
-				a = Cprhop;
-				b = (Cg * P_R) - (oldTg * Cprhop) + (deltaHr);
-				c = -oldTg * Cg * P_R;
-
-				newTg = (-b + sqrt((b * b) - (4 * a * c))) / (2 * a);
-				double newrhog = P_R / newTg;
-
-				double gamma = (gdot / rhog) + (newTg - oldTg) / oldTg;
-
-				// Get the existing concentrations
-				fvector newConcs;
-				gas->GetConcs(newConcs);
-
-				// Now adjust the concentrations
-				Sprog::StoichMap::const_iterator i;
-				fvector::const_iterator j;
-				double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume()); // aab64 added incFac to scale change if more units are present in incepted particle
-				for (i = m_reac.begin(); i != m_reac.end(); ++i)
-					newConcs[i->first] -= (double)(i->second) * n_NAvol;
-				for (i = m_prod.begin(); i != m_prod.end(); ++i)
-					newConcs[i->first] += (double)(i->second) * n_NAvol;
-				for (int j = 0; j != newConcs.size(); ++j)
-					newConcs[j] -= (gamma * newConcs[j]);
-
-				// Set the new data
-				gas->SetConcs(newConcs);
-				sys.AdjustSampleVolume(rhog_mass / gas->MassDensity());
-
-				// Add denominator
-				//deltaHr *= 1.0 / (Cg * rhog + Cprhop);
-				//gdot *= 1.0 / (Cg * rhog + Cprhop);
-				//newTg = oldTg - deltaHr;
-				//newTg *= 1.0 / (1.0 + R * gdot);
-
-				// Update particle temperature and gas density
-				sys.SetBulkParticleTemperature(newTg);
-				gas->SetTemperature(newTg);
-			}
+			// Account for gas phase expansion (via gamma)
+			sys.AdjustSampleVolume(rhog_mass / gas->MassDensity());
 		}
 	}
 }

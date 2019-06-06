@@ -563,7 +563,7 @@ void Reactor::RHS_Adiabatic(double t, const double *const y,  double *ydot) cons
     }
 
     // Complete temperature derivative.
-    dT_dt *= - y[m_iT] / (C * y[m_iDens]);
+    dT_dt *= - y[m_iT] / (C * y[m_iDens] + (m_mix->getParticleDensity() / Sprog::R));
     ydot[m_iT] += dT_dt;
 
     // Add imposed temperature gradient, if defined.

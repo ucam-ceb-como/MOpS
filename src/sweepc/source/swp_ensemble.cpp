@@ -425,7 +425,7 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
     m_dbleon     = true;
 
     // Check for doubling activation.
-    if (!m_dbleactive && (m_count >= m_dblecutoff-1)) {
+    if (!m_dbleactive && ((m_count + m_total_number) >= (m_capacity - m_dblecutoff))) { // aab64 temp. m_dblecutoff - 1
         m_dbleactive = true;
     } else
         m_dbleactive = false;

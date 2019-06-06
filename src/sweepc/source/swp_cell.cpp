@@ -69,7 +69,7 @@ Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
   m_incepting_weight(1.0), m_incFactor(1.0),
   m_notpsiflag(true), m_rateFactor(1.0),
   m_cprop1(iUniform), m_cprop2(iUniform), 
-  m_constv(false)
+  m_constv(false), m_particle_density(0.0)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
@@ -120,8 +120,6 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_outflow    = rhs.m_outflow;
 
         // aab64 added variables
-        m_bulk_particle_temp = rhs.m_bulk_particle_temp;  // particle temperature
-        m_proc_tau = rhs.m_proc_tau;                      // current process time step
         m_adiabatic_flag = rhs.m_adiabatic_flag;          // flag for adiabatic operation
         m_incepting_weight = rhs.m_incepting_weight;      // incepting particle weight for bintree model
         m_incFactor = rhs.m_incFactor;                    // incepting composition adjustment factor
@@ -130,6 +128,7 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_cprop1 = rhs.m_cprop1;                          // coagulation properties for PSI
         m_cprop2 = rhs.m_cprop2;	
         m_bulk_heat_capacity = rhs.m_bulk_heat_capacity;  // aab64 temperature update variables (temporary)
+		m_particle_heat_capacity = rhs.m_particle_heat_capacity;
         m_particle_density = rhs.m_particle_density;
         m_enthalpies = rhs.m_enthalpies;
 		m_constv = rhs.m_constv;
@@ -377,9 +376,10 @@ void Cell::AddOutflow(double rate, const Sweep::Mechanism &mech)
 }
 
 // aab64 Temporary functions for gas-phase properties
-void Cell::setGasPhaseProperties(double cp_bulk, double rhop, fvector enthalpies)
+void Cell::setGasPhaseProperties(double C_bulk, double C_particle, double rhop, fvector enthalpies)
 {
-    m_bulk_heat_capacity = cp_bulk;
+    m_bulk_heat_capacity = C_bulk;
+	m_particle_heat_capacity = C_particle;
     m_particle_density = rhop;
     m_enthalpies = enthalpies;
 }

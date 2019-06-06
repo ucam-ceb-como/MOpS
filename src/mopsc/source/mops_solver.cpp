@@ -260,6 +260,36 @@ void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
+// aab64 Calculates and stores various properties used to complete the 
+// energy balance so they can be computed less frequently. 
+// Sets constv/p flag for the cell so it is accessible for the temperature update.
+void Solver::storeTemperatureProperties(Reactor &r, Sweep::rng_type &rng)
+{
+	// aab64 Temporary functions for gas-phase properties
+	// Note: only valid for titania!
+	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
+	double mw = r.Mixture()->ParticleModel()->Components()[0]->MolWt(); 
+	fvector Hs, Cs;
+	double bulkCg;
+	double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
+		r.Mixture()->Particles().GetTotalMass())
+		/ (mw * r.Mixture()->SampleVolume());
+	if (r.IsConstV()) {
+		// Constant volume reactor: Use Cv, Us.
+		r.Mixture()->setConstV(true);
+		tmpGasPhase->Us(Hs);
+		tmpGasPhase->Cvs(Cs);
+		bulkCg = tmpGasPhase->BulkCv();
+	}
+	else {
+		// Constant pressure reactor: Use Cp, Hs.
+		r.Mixture()->setConstV(false);
+		tmpGasPhase->Hs(Hs);
+		tmpGasPhase->Cps(Cs);
+		bulkCg = tmpGasPhase->BulkCp();
+	}
+	r.Mixture()->setGasPhaseProperties(bulkCg, Cs[28], rhop * Cs[28], Hs);
+}
 
 /*!
 Retrieves the solution vector if the basic gpc ode solver is called

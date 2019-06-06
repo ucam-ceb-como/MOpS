@@ -199,21 +199,7 @@ public:
         std::istream &in,                 // Input stream.
         const Sweep::ParticleModel &model // Model used to define particles.
         );
-
-    // aab64 set particle temperature
-    void SetBulkParticleTemperature(double ptemp) {
-        m_bulk_particle_temp = ptemp;
-    }
-
-    // aab64 get particle temperature
-    double GetBulkParticleTemperature() const { return m_bulk_particle_temp; }
-
-    // aab64 Set the process time interval
-    void SetCurrentProcessTau(double tau) { m_proc_tau = tau; }
-
-    // aab64 Get the process time interval 
-    double GetCurrentProcessTau() const { return m_proc_tau; }
-
+	
     // aab64 Set the process time interval
     void SetIsAdiabaticFlag(bool flag) { m_adiabatic_flag = flag; }
 
@@ -252,8 +238,9 @@ public:
     int GetRateFactor() const { return m_rateFactor; }
 
     // aab64 Temporary functions for gas-phase properties
-    void setGasPhaseProperties(double cp_bulk, double rhop, fvector enthalpies);
-    double getBulkHeatCapacity() const { return m_bulk_heat_capacity; }
+	void setGasPhaseProperties(double C_bulk, double C_particle, double rhop, fvector enthalpies);
+	double getBulkHeatCapacity() const { return m_bulk_heat_capacity; }
+	double getParticleHeatCapacity() const { return m_particle_heat_capacity; }
     double getParticleDensity() const { return m_particle_density; }
     void getEnthalpies(fvector &enthalpies) { enthalpies = m_enthalpies; }
 
@@ -297,13 +284,7 @@ private:
     // mechanism, but are used by the Mechanism class when
     // calculating rates.
     Processes::DeathPtrVector m_outflow;
-
-    // aab64 new particle temp
-    double m_bulk_particle_temp;
-
-    // aab64 The process time interval
-    double m_proc_tau; 
-
+	
     // aab64 Flag for adiabatic operation
     bool m_adiabatic_flag;
 
@@ -326,6 +307,7 @@ private:
 
     double m_bulk_heat_capacity;
     double m_particle_density;
+	double m_particle_heat_capacity;
 
     fvector m_enthalpies;
 

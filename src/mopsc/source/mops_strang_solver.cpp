@@ -115,6 +115,9 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 	// scaled with gas-phase expansion.
 	double rho = 0.0;
 
+	// aab64 Function to store heat capacity and particle density for the step
+	storeTemperatureProperties(r, rng);
+
 	m_cpu_mark = clock();
 	// Solve first half-step of gas-phase chemistry.
 	rho = r.Mixture()->GasPhase().MassDensity();
@@ -124,31 +127,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
 	m_cpu_mark = clock();
 	
-	// aab64 Temporary functions for gas-phase properties
-	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
-	double mw = r.Mixture()->ParticleModel()->Components()[0]->MolWt(); // note only valid for titania!
-	if (r.IsConstV()) {
-		r.Mixture()->setConstV(true);
-		// Constant volume reactor: Use Cv, Us.
-		fvector Hs, Cs;
-		tmpGasPhase->Us(Hs);
-		tmpGasPhase->Cvs(Cs);
-		double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
-			r.Mixture()->Particles().GetTotalMass())
-			/ (mw * r.Mixture()->SampleVolume());
-		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCv(), rhop * Cs[28], Hs);
-	}
-	else {
-		r.Mixture()->setConstV(false);
-		// Constant pressure reactor: Use Cp, Hs.
-		fvector Hs, Cs;
-		tmpGasPhase->Hs(Hs);
-		tmpGasPhase->Cps(Cs);
-		double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
-			r.Mixture()->Particles().GetTotalMass())
-			/ (mw * r.Mixture()->SampleVolume());
-		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), rhop * Cs[28], Hs);
-	}	
+	// aab64 Function to store heat capacity and particle density for the step
+	storeTemperatureProperties(r, rng);
 
 	// Solve one whole step of population balance (Sweep).
 	if (!r.IsConstV()) 
@@ -169,29 +149,9 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 		m_chemtime += calcDeltaCT(m_cpu_mark);
 
 		m_cpu_mark = clock();
-		// aab64 Temporary functions for gas-phase properties
-		tmpGasPhase = (&r.Mixture()->GasPhase());
-		mw = r.Mixture()->ParticleModel()->Components()[0]->MolWt(); // note only valid for titania!
-		if (r.IsConstV()) {
-			// Constant volume reactor: Use Cv, Us.
-			fvector Hs, Cs;
-			tmpGasPhase->Us(Hs);
-			tmpGasPhase->Cvs(Cs);
-			double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
-				r.Mixture()->Particles().GetTotalMass())
-				/ (mw * r.Mixture()->SampleVolume());
-			r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCv(), rhop * Cs[28], Hs);
-		}
-		else {
-			// Constant pressure reactor: Use Cp, Hs.
-			fvector Hs, Cs;
-			tmpGasPhase->Hs(Hs);
-			tmpGasPhase->Cps(Cs);
-			double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
-				r.Mixture()->Particles().GetTotalMass())
-				/ (mw * r.Mixture()->SampleVolume());
-			r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), rhop * Cs[28], Hs);
-		}
+
+		// aab64 Function to store heat capacity and particle density for the step
+		storeTemperatureProperties(r, rng);
 
 		// Solve whole step of population balance (Sweep).
 		if (!r.IsConstV()) 
@@ -273,6 +233,9 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     // Variables required to ensure particle number density is correctly
     // scaled with gas-phase expansion.
 	double rho = 0.0;
+	
+	// aab64 Function to store heat capacity and particle density for the step
+	storeTemperatureProperties(r, rng);
 
     m_cpu_mark = clock();
     // Solve first half-step of gas-phase chemistry.
@@ -283,29 +246,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     m_cpu_mark = clock();
 
-    // aab64 Temporary functions for gas-phase properties
-    Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
-	double mw = r.Mixture()->ParticleModel()->Components()[0]->MolWt(); // note only valid for titania!
-	if (r.IsConstV()) {
-		// Constant volume reactor: Use Cv, Us.
-		fvector Hs, Cs;
-		tmpGasPhase->Us(Hs);
-		tmpGasPhase->Cvs(Cs);
-		double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
-			r.Mixture()->Particles().GetTotalMass())
-			/ (mw * r.Mixture()->SampleVolume());
-		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCv(), rhop * Cs[28], Hs);
-	}
-	else {
-		// Constant pressure reactor: Use Cp, Hs.
-		fvector Hs, Cs;
-		tmpGasPhase->Hs(Hs);
-		tmpGasPhase->Cps(Cs);
-		double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
-			r.Mixture()->Particles().GetTotalMass())
-			/ (mw * r.Mixture()->SampleVolume());
-		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), rhop * Cs[28], Hs);
-	}
+	// aab64 Function to store heat capacity and particle density for the step
+	storeTemperatureProperties(r, rng);
 
     if (writediags) {
         // Diagnostics variables at start of split step
@@ -409,29 +351,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
         m_cpu_mark = clock();
 
-        // aab64 Temporary functions for gas-phase properties
-        tmpGasPhase = (&r.Mixture()->GasPhase());
-		mw = r.Mixture()->ParticleModel()->Components()[0]->MolWt(); // note only valid for titania!
-		if (r.IsConstV()) {
-			// Constant volume reactor: Use Cv, Us.
-			fvector Hs, Cs;
-			tmpGasPhase->Us(Hs);
-			tmpGasPhase->Cvs(Cs);
-			double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
-				r.Mixture()->Particles().GetTotalMass())
-				/ (mw * r.Mixture()->SampleVolume());
-			r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCv(), rhop * Cs[28], Hs);
-		}
-		else {
-			// Constant pressure reactor: Use Cp, Hs.
-			fvector Hs, Cs;
-			tmpGasPhase->Hs(Hs);
-			tmpGasPhase->Cps(Cs);
-			double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
-				r.Mixture()->Particles().GetTotalMass())
-				/ (mw * r.Mixture()->SampleVolume());
-			r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), rhop * Cs[28], Hs);
-		}
+		// aab64 Function to store heat capacity and particle density for the step
+		storeTemperatureProperties(r, rng);
 
         // Diagnostics variables at start of split step
         if (writediags) {

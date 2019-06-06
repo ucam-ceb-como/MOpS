@@ -276,7 +276,6 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
                 mech.DoParticleFlow(t, t - tflow, sys, Geometry::LocalGeometry1d(), rng);
             tflow = t;
         }
-        sys.SetCurrentProcessTau(t - tin); // aab64 store time passed in current loop for heat transfer
 
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
