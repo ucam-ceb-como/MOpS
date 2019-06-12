@@ -146,6 +146,7 @@ namespace Sweep{
 			int m_rings7_Lone; // 7-membered rings
 			int m_rings7_Embedded; // 7-membered rings
 			std::list<cpair> m_InternalCarbons; //List of internal Carbon atoms coordinates
+			std::list<cpair> m_R5R7; //List of R5s and R7s center coordinates
 			
         private:
             //! write m_cpositions

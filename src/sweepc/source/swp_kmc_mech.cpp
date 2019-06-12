@@ -165,6 +165,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //*< 35 - R7 growth in an embedded R5.
 	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //*< 36 - R7 growth in an embedded R5-2.
 	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();                        //*< 37 - R6 growth on R5R6ZZ
+	JumpProcess* j_L7_ACACR5 = new L7_ACACR5; j_L7_ACACR5->initialise();                        //*< 38 - R7 bay closure on ACACR5
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
     temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
@@ -203,7 +204,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_MR5_R6);           //*< 34 - R5 exchange with R6.
 	temp.push_back(j_GR7_R5R6AC);           //*< 35 - R7 growth in an embedded R5.
 	temp.push_back(j_GR7_FEACR5);           //*< 36 - R7 growth in an embedded R5-2.
-	temp.push_back(j_G6R_R5R6ZZ);          //*< 25 - R6 growth on R5R6ZZ.
+	temp.push_back(j_G6R_R5R6ZZ);          //*< 37 - R6 growth on R5R6ZZ.
+	temp.push_back(j_L7_ACACR5);          //*< 38 - R7 bay closure on ACACR5.
 
     return temp;
 }
@@ -384,7 +386,7 @@ double G6R_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	//double r_f4 = 0;
 	//double r_f5 = 0;
 
-	if (T < 300) {
+	if (T < 600) {
 		r_f = 0;
 		r_f2 = 0;
 	}
@@ -635,7 +637,7 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	//double A1_conc = gp[gp.C6H6];
 	//double C2H2_conc = gp[gp.C2H2];
 
-	if (T < 300) {
+	if (T < 600) {
 		r_f = 0;
 	}
 	else{
@@ -2385,7 +2387,7 @@ double D6R_FE_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 	//if (ring_count <= 4) return m_rate = 0.0;
 	double T = gp[gp.T];
 	double r_f = 0.0;
-	if (T < 300) {
+	if (T < 600) {
 		return m_rate = 0.0;
 	}
 	else return m_rate = (m_r[12] + m_r[20] + m_r[18]) * site_count / 2.0; //Lumped consumption of A4
@@ -2956,4 +2958,64 @@ double G6R_R5R6ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 	}
 	else r_f = 0;
 	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+}
+
+// ************************************************************
+// ID38 - R7-bay closure at ACACR5
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void L7_ACACR5::initialise() {
+    // Adding elementary reactions
+    // 0.0267 atm
+    rxnvector& rxnV = m_rxnvector0p0267;
+    addReaction(rxnV, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
+    // 0.12 atm
+    rxnvector& rxnV2 = m_rxnvector0p12;
+    addReaction(rxnV2, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(2.22e11, .658, 23.99, sp::None));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+    addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+    m_sType = ACACR5; // sitetype
+    m_name = "BY7 closure on ACACR5"; // name of process
+    m_ID = 38;
+}
+// Jump rate calculation
+double L7_ACACR5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    // check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    if(site_count==0) return m_rate=0;
+    
+    
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
+}
+double L7_ACACR5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate0p0267(gp, pah_st);
+}
+double L7_ACACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate0p0267(gp, pah_st);
 }

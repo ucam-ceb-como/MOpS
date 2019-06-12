@@ -152,6 +152,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 							double ratefactor) {
 	// wjm34: remove call to initReaction count to save time in updating.
 	m_t = tstart;
+	double t_max = m_t + dt;
+    targetPAH(*pah);
 	if (init_flag == 0) {
 		initCSVIO();
 		initReactionCount();
@@ -174,8 +176,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		}
 	}
 	
-    double t_max = m_t + dt;
-    targetPAH(*pah);
+    
     /*if(m_simPAHp.checkCoordinates())
         cout<<"Coordinates of structure OK. Commencing updatePAH..\n";
     else {
@@ -299,7 +300,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				savePAH(PAH_ID, xyzname);
 				xyzname2.append(std::to_string(PAH_ID));
 				xyzname2.append("trajectory");
-				m_simPAHp.save_trajectory_xyz(m_t, xyzname2, true);
+				m_simPAHp.save_trajectory_xyz(m_t, xyzname2, false);
 			}
 			
 			// get counts for all site types

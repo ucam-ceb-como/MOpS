@@ -1,5 +1,5 @@
 /*!
-  * \author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260) && Gustavo Leon (gl413)
   * \file       swp_kmc_pah_process.h
   *
   * \brief      Defines the data structure which holds information of PAH molecules
@@ -136,6 +136,12 @@ public:
     void printSitesMemb() const;
     //! Print sites in console, with an arrow pointing at site stt
     void printSites(Spointer& stt) const;
+	//! Create a copy of the sites type
+	std::list<std::string> copySites() const;
+	//! Create a copy of the sites type
+	std::list<std::string> copySites(Spointer& stt) const;
+	//! Print copied sites before JP in console
+	void printBeforeSites(std::list<std::string>& before_site_list) const;
     //! Store structure results in external file, returns success/failure
     bool saveDOT(const std::string &filename) const;
     bool saveDOT(const std::string &filename, const std::string &title) const;
@@ -149,6 +155,8 @@ public:
     std::string SiteString(char delimiter) const;
 	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
 	OpenBabel::OBMol passPAH(bool detectBonds=true);
+	//! Connects the atoms in a PAH using OpenBabel routines. Equivalent to OpenBabel::OBMol::ConnectTheDots();
+	void connectPAH(OpenBabel::OBMol my_mol);
 	//! Passes a PAH from OpenBabel to MOpS.
 	void passbackPAH(OpenBabel::OBMol mol);
 	//! Runs optimisation of a PAHusing Openbabel
@@ -202,6 +210,7 @@ public:
 	void proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID35.
 	void proc_GR7_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID36.
 	void proc_G6R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID37.
+	void proc_L7_ACACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID38.
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts
@@ -260,6 +269,8 @@ private:
 	bool checkHindrance_twoC(const Cpointer C_1, const Cpointer C_2) const;
 	//!Gets distance between two carbons.
 	double getDistance_twoC(const Cpointer C_1, const Cpointer C_2) const;
+	//!Overload. Gets distance between two coordinates.
+	double getDistance_twoC(const cpair C_1, const cpair C_2) const;
     //! Returns site iterator x steps after i
     Spointer moveIt(Spointer i, int x);
     //! Finds C atom with specific coordinates
@@ -280,6 +291,14 @@ private:
 	void moveC(Cpointer C_1, cpair newpos);
 	//! Moves a carbon position .
 	void moveC(Cpointer C_1, Cpointer Cprev, double new_distance);
+	//! Adds an R5 to the list of R5s and R7s
+	void addR5internal(Cpointer C_1, Cpointer C_2);
+	//! Removes an R5 from the list of R5s and R7s
+	void removeR5internal(Cpointer C_1, Cpointer C_2);
+	//! Return internal R5 associated to two carbons
+	cpair findR5internal(Cpointer C_1, Cpointer C_2);
+	//! Return coords of final position of an internal R5 based on two carbons
+	cpair endposR5internal(Cpointer C_1, Cpointer C_2);
     //! Creates a carbon atom bridging next to C_1. 
     Cpointer bridgeC(Cpointer C_1);
     /*//! Creates a bulk carbon atom connected to C_1
