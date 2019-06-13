@@ -60,13 +60,14 @@
 #include <openbabel/mol.h>
 #include <openbabel/obconversion.h> //Used to export to xyz
 #include <openbabel/forcefield.h>
+#include <openbabel/ring.h>
+#include <openbabel/math/vector3.h>
 
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
 using namespace std;
 
 static std::vector<kmcSiteType> PHsites = vectPHsites();
-
 // Constructors and Destructor
 //! Default Constructor
 PAHProcess::PAHProcess() {
@@ -1636,6 +1637,23 @@ void PAHProcess::passbackPAH(OpenBabel::OBMol mol) {
 			++it2;
 		}
 	}
+	//Modify the R5 and R7 centers and pass them back to MOpS.
+	m_pah->m_R5R7.clear();
+	vector<OpenBabel::OBRing*>::iterator iring;
+	vector<int>::iterator j;
+	vector<OpenBabel::OBRing*> vr;
+    vr = mol.GetSSSR();
+	vector<OpenBabel::OBRing*> *rlist = (vector<OpenBabel::OBRing*>*)mol.GetData("RingList");
+	for (iring = vr.begin();iring != vr.end();++iring){
+		//cout<<(**iring).PathSize()<<"\n";
+		if( (**iring).PathSize()==5 || (**iring).PathSize()==7 ){
+			OpenBabel::vector3 centre, norm1, norm2;
+			bool centre_found = (**iring).findCenterAndNormal(centre, norm1, norm2);
+			cpair temp = std::make_tuple(centre.GetX(),centre.GetY(),centre.GetZ());
+			m_pah->m_R5R7.push_back(temp);
+			//cout<<centre<<"\n";
+		}
+	}
 }
 int forcefield_error_counter = 0;
 //! Minimisation of a PAH
@@ -1970,6 +1988,7 @@ void PAHProcess::redrawR5(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
 		updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
 		// add ring counts
 		m_pah->m_rings5_Lone++;
+		addR5internal(C1_res,C2_res);
 	}
 }
 int convSiteType_error_counter =0;
@@ -3392,7 +3411,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     }
 	
 	//Save an XYZ
-	//saveXYZ("KMC_DEBUG/AFTER");
+	saveXYZ("KMC_DEBUG/AFTER");
     //printSites(site_perf);
     return true;
 }
@@ -4331,6 +4350,7 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // add ring counts
     m_pah->m_rings5_Lone++;
+	addR5internal(C1_res,C2_res);
 }
 // ************************************************************
 // ID11- R5 desorption (AR7 in Matlab)
@@ -4338,6 +4358,7 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
     // member C atoms of resulting R5 site
+	removeR5internal(C_1,C_2);
     Cpointer C1_res, C2_res;
     C1_res = C_1->C1;
     C2_res = C_2->C2;
@@ -4483,6 +4504,7 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
     // add ring counts
     m_pah->m_rings--;
     m_pah->m_rings5_Lone++;
+	addR5internal(C1_R5, C2_R5);
 }
 // ************************************************************
 // ID13- R5 conversion to R6 on FE (AR5 in Matlab)
@@ -4510,6 +4532,7 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     Cpointer Cstart;
     if(b4) Cstart = C_AC; 
     else Cstart = C_2->C1;
+	removeR5internal(sR5->C1, sR5->C2);
 	cpair R5dir = get_vector(sR5->C1->C1->coords, sR5->C1->coords);
 	cpair Hdir1 = sR5->C1->growth_vector;
 	cpair Hdir2 = sR5->C2->growth_vector;
@@ -4620,6 +4643,7 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     Cpointer Cstart;
     if(b4) Cstart = C_AC; 
     else Cstart = C_2->C1;
+	removeR5internal(sR5->C1, sR5->C2);
 	cpair Hdir1 = sR5->C1->growth_vector;
 	cpair Hdir2 = sR5->C2->growth_vector;
 	cpair CZZdir = invert_vector(Hdir1);
@@ -4976,6 +5000,7 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     m_pah->m_rings5_Lone++;
     //printSites(stt);
    // cout<<sp.None;
+   addR5internal(CR5_1, CR5_1->C2);
 }
 // ************************************************************
 // ID17- R6 migration & conversion to R5 at BY5 (pyrene+R5; pathway 2-violi; AR24 in Matlab)
