@@ -3445,11 +3445,11 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	/*Cpointer Ccheck = site_perf->C1->C1;
 	for (int ii=1; ii!=6; ++ii){
 		double dist = getDistance_twoC(Ccheck,Ccheck->C2);*/
-	if (PAH_ID==5){
+	/*if (PAH_ID==5){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol, 3000);
 		passbackPAH(mol);
-	}
+	}*/
 		/*Ccheck = Ccheck->C2;
 	}*/
 	//printSites(site_perf);
