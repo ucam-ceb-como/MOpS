@@ -211,6 +211,8 @@ public:
 	void proc_GR7_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID36.
 	void proc_G6R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID37.
 	void proc_L7_ACACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID38.
+	void proc_G6R_R5R6FER(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID39.
+	void proc_G6R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID40.
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts
@@ -295,6 +297,8 @@ private:
 	void addR5internal(Cpointer C_1, Cpointer C_2);
 	//! Removes an R5 from the list of R5s and R7s
 	void removeR5internal(Cpointer C_1, Cpointer C_2);
+	//! Removes an R7 from the list of R5s and R7s
+	void removeR7internal(Cpointer C_1, Cpointer C_2);
 	//! Return internal R5 associated to two carbons
 	cpair findR5internal(Cpointer C_1, Cpointer C_2);
 	//! Return coords of final position of an internal R5 based on two carbons

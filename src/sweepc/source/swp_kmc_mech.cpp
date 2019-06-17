@@ -162,10 +162,12 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //*< 32 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //*< 33 - R6 desorption at RAC -> pyrene.
 	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //*< 34 - R5 exchange with R6.
-	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //*< 35 - R7 growth in an embedded R5.
-	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //*< 36 - R7 growth in an embedded R5-2.
+	//JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //*< 35 - R7 growth in an embedded R5.
+	//JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //*< 36 - R7 growth in an embedded R5-2.
 	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();                        //*< 37 - R6 growth on R5R6ZZ
-	JumpProcess* j_L7_ACACR5 = new L7_ACACR5; j_L7_ACACR5->initialise();                        //*< 38 - R7 bay closure on ACACR5
+	//JumpProcess* j_L7_ACACR5 = new L7_ACACR5; j_L7_ACACR5->initialise();                        //*< 38 - R7 bay closure on ACACR5
+	JumpProcess* j_G6R_R5R6FER = new G6R_RFER; j_G6R_R5R6FER->initialise();                       //*< 39 - R6 growth on RFER.
+	JumpProcess* j_G6R_R5R6FER5R6 = new G6R_R5R6FER5R6; j_G6R_R5R6FER5R6->initialise();           //*< 40 - R6 growth on RFER.
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
     temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
@@ -202,10 +204,12 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_C6R_RAC_FE3violi); //*< 32 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_M6R_RAC_FE3);      //*< 33 - R6 desorption at RAC -> pyrene.
 	temp.push_back(j_MR5_R6);           //*< 34 - R5 exchange with R6.
-	temp.push_back(j_GR7_R5R6AC);           //*< 35 - R7 growth in an embedded R5.
-	temp.push_back(j_GR7_FEACR5);           //*< 36 - R7 growth in an embedded R5-2.
+	//temp.push_back(j_GR7_R5R6AC);           //*< 35 - R7 growth in an embedded R5.
+	//temp.push_back(j_GR7_FEACR5);           //*< 36 - R7 growth in an embedded R5-2.
 	temp.push_back(j_G6R_R5R6ZZ);          //*< 37 - R6 growth on R5R6ZZ.
-	temp.push_back(j_L7_ACACR5);          //*< 38 - R7 bay closure on ACACR5.
+	//temp.push_back(j_L7_ACACR5);          //*< 38 - R7 bay closure on ACACR5.
+	temp.push_back(j_G6R_R5R6FER);         //*< 39 - R6 growth on RFER.
+	temp.push_back(j_G6R_R5R6FER5R6);      //*< 40 - R6 growth on RFER.
 
     return temp;
 }
@@ -3018,4 +3022,70 @@ double L7_ACACR5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
 }
 double L7_ACACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID39 - R6 growth on R5R6FER
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void G6R_R5R6FER::initialise() {
+	// 1 atm
+	rxnvector& rxnV3 = m_rxnvector1;
+	addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
+	addReaction(rxnV3, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
+	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
+	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
+	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
+	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f
+
+	m_sType = R5R6FER; // sitetype
+	m_name = "G6R at R5R6FER"; // name of process
+	m_ID = 26;
+}
+
+double G6R_R5R6FER::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+	}
+	else r_f = 0;
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+}
+
+// ************************************************************
+// ID40 - R6 growth on R5R6FER5R6
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void G6R_R5R6FER5R6::initialise() {
+	// 1 atm
+	rxnvector& rxnV3 = m_rxnvector1;
+	addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
+	addReaction(rxnV3, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
+	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
+	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
+	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
+	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f
+
+	m_sType = R5R6FER5R6; // sitetype
+	m_name = "G6R at R5R6FER5R6"; // name of process
+	m_ID = 26;
+}
+
+double G6R_R5R6FER5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f; // radical fraction
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+	}
+	else r_f = 0;
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
 }

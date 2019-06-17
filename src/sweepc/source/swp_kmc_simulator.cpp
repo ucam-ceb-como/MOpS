@@ -170,7 +170,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				xyzname.append("/");
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("trajectory");
-				savePAH(PAH_ID, xyzname);
+				for (int ii=0; ii!=6; ++ii) m_simPAHp.save_trajectory_xyz(m_t, xyzname, false);
 			}
 			++init_trajectory;
 		}
@@ -288,16 +288,16 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
             // Update data structure -- Perform jump process
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
-
+			
 			//Save information for a single PAH
 			if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
 				std::string xyzname = ("KMC_DEBUG/");
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
 				std::string xyzname2 = xyzname;
-				xyzname.append(std::to_string(m_t));
-				xyzname.append("_after");
-				savePAH(PAH_ID, xyzname);
+				//xyzname.append(std::to_string(m_t));
+				//xyzname.append("_after");
+				//savePAH(PAH_ID, xyzname);
 				xyzname2.append(std::to_string(PAH_ID));
 				xyzname2.append("trajectory");
 				m_simPAHp.save_trajectory_xyz(m_t, xyzname2, false);
