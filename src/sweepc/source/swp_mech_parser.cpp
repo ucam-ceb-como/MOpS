@@ -1785,9 +1785,16 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 
 			//check that the particle model is valid
 			if (mech.AggModel() == AggModels::Spherical_ID || mech.AggModel() == AggModels::BinTree_ID) {
-			
+
 				//enable melting
 				mech.MeltModel().Enable();
+
+				//is a fixed crossover size specified?
+				el = (*i)->GetFirstChild("crossover");
+				if (el != NULL) {
+					str = el->GetAttributeValue("enable");
+					if (str == "true") mech.MeltModel().EnableFixedCrossover();
+				}
 
 				//set liquid phase
 				el = (*i)->GetFirstChild("liquid");
@@ -1808,7 +1815,9 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 					fvector dcomp(mech.ComponentCount(), 0.0);
 					double A = 0.0;
 					double T = 0.0;
-					
+					double dmin = 0.0;
+					double dmax = 0.0;
+
 					//parameter
 					el = (*j)->GetFirstChild("A");
 					if (el != NULL) A = cdble(el->Data());
@@ -1817,6 +1826,24 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 					el = (*j)->GetFirstChild("Tbulk");
 					if (el != NULL) T = cdble(el->Data());
 					
+					//if the crossover size is fixed then get the range of diameters for the liquid -> crystal phase transformation
+					if (mech.MeltModel().IsEnableFixedCrossover()){
+						el = (*j)->GetFirstChild("dmin");
+						if (el != NULL) {
+							dmin = cdble(el->Data());
+						}
+						else{
+							throw runtime_error("Diameter range not specified (Sweep, MechParser::readPhaseTransformation).");
+						}
+						el = (*j)->GetFirstChild("dmax");
+						if (el != NULL) {
+							dmax = cdble(el->Data());
+						}
+						else{
+							throw runtime_error("Diameter range not specified (Sweep, MechParser::readPhaseTransformation).");
+						}
+					}
+
 					//get components
 					(*j)->GetChildren("component", subsubitems);
 					for (m = subsubitems.begin(); m != subsubitems.end(); ++m) {
@@ -1840,7 +1867,7 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 					str = (*j)->GetAttributeValue("type");
 					
 					//create phase melting object
-					mech.MeltModel().AddPhase(str,A,T,dcomp);
+					mech.MeltModel().AddPhase(str,A,T,dmin,dmax,dcomp);
 				}
 
 			}

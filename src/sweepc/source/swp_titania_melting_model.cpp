@@ -55,7 +55,7 @@ using namespace Sweep::Processes;
 
 // Default constructor.
 MeltingModel::MeltingModel()
-	: m_enable(false), m_liquidindex(0)
+	: m_enable(false), m_liquidindex(0), m_fixedcrossover(false)
 {
 }
 
@@ -85,6 +85,7 @@ MeltingModel &MeltingModel::operator=(const Sweep::Processes::MeltingModel &rhs)
     if (this != &rhs) {		// TODO change this
         m_enable = rhs.m_enable;
 		m_liquidindex = rhs.m_liquidindex;
+		m_fixedcrossover = rhs.m_fixedcrossover;
 
 		// Copy phases.
 		for (PhasePtrVector::const_iterator i = rhs.m_phases.begin();i != rhs.m_phases.end(); ++i) {
@@ -103,15 +104,19 @@ MeltingModel::PHASE::PHASE(void)
 	name = "";
 	T_bulk = 0.0;
 	A = 0.0;
+	dmin = 0.0;
+	dmax = 0.0;
 };
 
 // Initialising constructor.
-MeltingModel::PHASE::PHASE(std::string aname, double aA, double aT, fvector adcomp)
+MeltingModel::PHASE::PHASE(std::string aname, double aA, double aT, double admin, double admax, fvector adcomp)
 {
 	name = aname;
 	T_bulk = aT;
 	A = aA;
 	dcomp = adcomp;
+	dmin = admin;
+	dmax = admax;
 };
 
 // Copy constructor.
@@ -121,6 +126,8 @@ MeltingModel::PHASE::PHASE(const PHASE &copy)
 	T_bulk = copy.T_bulk;
 	A = copy.A;
 	dcomp = copy.dcomp;
+	dmin = copy.dmin;
+	dmax = copy.dmax;
 };
 
 // Clone
@@ -132,7 +139,9 @@ MeltingModel::PHASE* const MeltingModel::PHASE::Clone(void) const
 // Returns melting point for given particle size
 double MeltingModel::PHASE::MeltingPoint(double d){
 	double T = 0.0;
-	T = std::max(T_bulk*(1 - A / d), 0.0); //lower bound T=0;
+	if (d < dmax && d >= dmin){
+		T = std::max(T_bulk*(1 - A / d), 0.0); //lower bound T=0;
+	}
 	return T;
 }
 
@@ -149,9 +158,9 @@ void MeltingModel::Enable(void) { m_enable = true; }
 void MeltingModel::Disable(void) { m_enable = false; }
 
 // Create a melting point transformation 
-void MeltingModel::AddPhase(std::string name, double A, double T, fvector dcomp){
-	PHASE *new_phase = NULL;
-	new_phase = new PHASE(name, A, T, dcomp);
+void MeltingModel::AddPhase(std::string name, double A, double T, double dmin, double dmax, fvector dcomp){
+	PHASE *new_phase = NULL;	
+	new_phase = new PHASE(name, A, T, dmin, dmax, dcomp);
 	m_phases.push_back(new_phase);
 	return;
 }
@@ -167,13 +176,24 @@ void MeltingModel::CompositionChange(const Cell &sys, const AggModels::Primary &
 
 	//loop over phases
 	PhasePtrVector::const_iterator i;
-	for (i = m_phases.begin(); i != m_phases.end(); ++i) {
-		//get melting point
-		Tmelt = (*i)->MeltingPoint(dp);
-		//return composition change for highest melting point
-		if (Tmelt > T){
-			T = Tmelt;
-			dcomp = (*i)->dcomp;
+	if (m_fixedcrossover){
+		//fixed crossover size
+		for (i = m_phases.begin(); i != m_phases.end(); ++i) {
+			if (dp > (*i)->dmin && dp <= (*i)->dmax)
+			{
+				dcomp = (*i)->dcomp;
+			}
+		}
+	}else{
+		//melting point dependent crossover size
+		for (i = m_phases.begin(); i != m_phases.end(); ++i) {
+			//get melting point
+			Tmelt = (*i)->MeltingPoint(dp);
+			//return composition change for highest melting point
+			if (Tmelt > T){
+				T = Tmelt;
+				dcomp = (*i)->dcomp;
+			}
 		}
 	}
 }
@@ -212,7 +232,7 @@ bool MeltingModel::IsLiquid(const Cell &sys, const AggModels::Primary &p) const{
 	return liquid;
 }
 
-//return index of liquid component
+//set index of liquid component
 void MeltingModel::SetLiquidIndex(unsigned int index) {
 	m_liquidindex = index;
 }
@@ -222,9 +242,19 @@ unsigned int MeltingModel::GetLiquidIndex(void) const{
 	return m_liquidindex;
 }
 
+//enable fixed crossover diameter
+void MeltingModel::EnableFixedCrossover(){
+	m_fixedcrossover = true;
+}
+
+//return if fixed crossover diameter is enabled
+bool MeltingModel::IsEnableFixedCrossover() const{
+	return m_fixedcrossover;
+}
+
 // READ/WRITE/COPY.
 
-// Creates a copy of the sintering model.
+// Creates a copy of the melting model.
 MeltingModel *const MeltingModel::Clone(void) const
 {
 	return new MeltingModel(*this);
@@ -253,7 +283,15 @@ void MeltingModel::Serialize(std::ostream &out) const
 		unsigned int val = (unsigned int)m_liquidindex;
         out.write((char*)&val, sizeof(val));
 
-		//write number of phases
+		// Write if fixed crossover is enabled
+		if (m_fixedcrossover) {
+			out.write((char*)&trueval, sizeof(trueval));
+		}
+		else {
+			out.write((char*)&falseval, sizeof(falseval));
+		}
+
+		// Write number of phases
 		unsigned int n = (unsigned int) m_phases.size();
 		out.write((char*)&n, sizeof(n));
 
@@ -275,6 +313,14 @@ void MeltingModel::Serialize(std::ostream &out) const
 			double aT_bulk = (double)(*i)->T_bulk;
 			out.write((char*)&aT_bulk, sizeof(aT_bulk));
 
+			//write dmin
+			double admin = (double)(*i)->dmin;
+			out.write((char*)&admin, sizeof(admin));
+
+			//write dmax
+			double admax = (double)(*i)->dmax;
+			out.write((char*)&admax, sizeof(admax));
+
 			// Write size of dcomp
 			n = (unsigned int) (*i)->dcomp.size();
 			out.write((char*)&n, sizeof(n));
@@ -289,7 +335,7 @@ void MeltingModel::Serialize(std::ostream &out) const
 
 	} else {
 		throw std::invalid_argument("Output stream not ready "
-                               "(Sweep, SinteringModel::Serialize).");
+                               "(Sweep, MeltingModel::Serialize).");
     }
 }
 
@@ -319,6 +365,10 @@ void MeltingModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_liquidindex = (unsigned int)val;
 
+				// Read if fixed crossover is enabled
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+				m_fixedcrossover = (n == 1);
+
 				// Read number of phases
 				in.read(reinterpret_cast<char*>(&n), sizeof(n));
 
@@ -340,6 +390,14 @@ void MeltingModel::Deserialize(std::istream &in)
 					double aT;
 					in.read(reinterpret_cast<char*>(&aT), sizeof(aT));
 
+					//read dmin
+					double admin;
+					in.read(reinterpret_cast<char*>(&admin), sizeof(admin));
+
+					//read dmax
+					double admax;
+					in.read(reinterpret_cast<char*>(&admax), sizeof(admax));
+
 					//read size of dcomp
 					unsigned int an;
 					in.read(reinterpret_cast<char*>(&an), sizeof(an));
@@ -352,7 +410,7 @@ void MeltingModel::Deserialize(std::istream &in)
 					}
 
 					//create new phase
-					PHASE new_phase(name, aA, aT, dcomp);
+					PHASE new_phase(name, aA, aT, admin, admax, dcomp);
 					m_phases.push_back(&new_phase);
 
 					delete[] name;
@@ -361,10 +419,10 @@ void MeltingModel::Deserialize(std::istream &in)
                 break;
             default:
                 throw std::runtime_error("Serialized version number is invalid "
-                                    "(Sweep, SinteringModel::Deserialize).");
+                                    "(Sweep, MeltingModel::Deserialize).");
         }
     } else {
 		throw std::invalid_argument("Input stream not ready "
-                               "(Sweep, SinteringModel::Deserialize).");
+                               "(Sweep, MeltingModel::Deserialize).");
     }
 }

@@ -107,9 +107,13 @@ public:
 
 	void SetLiquidIndex(unsigned int index);
 
+	void EnableFixedCrossover();
+
+	bool IsEnableFixedCrossover() const;
+
 	unsigned int GetLiquidIndex(void) const;
 
-	void AddPhase(std::string name, double A, double T, fvector dcomp);
+	void AddPhase(std::string name, double A, double T, double dmin, double dmax, fvector dcomp);
 
 	void CompositionChange(const Cell &sys, const AggModels::Primary &p, fvector &dcomp);
 
@@ -123,6 +127,9 @@ private:
 	// index of liquid phase
 	unsigned int m_liquidindex; 
 
+	// fixed crossover flag
+	bool m_fixedcrossover;
+
 	//Get highed melting temperature
 	double MeltingTemp(const AggModels::Primary &p) const;
 
@@ -133,6 +140,8 @@ private:
 		double A; // parameter
 		double T_bulk; // bulk melting temperature
 		fvector dcomp; // change in composition
+		double dmin;   // Diameter range for phase change
+		double dmax;
 
 		// CONSTRUCTORS
 
@@ -140,7 +149,7 @@ private:
 		PHASE(void);
 		
 		// Initialising constructor.
-		PHASE(std::string aname, double aA, double aT, fvector adcomp);
+		PHASE(std::string aname, double aA, double aT, double admin, double admax, fvector adcomp);
 
 		// Copy constructor.
 		PHASE(const PHASE &copy);

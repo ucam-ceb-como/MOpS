@@ -206,13 +206,9 @@ double TitaniaPhaseTransformation::Rate(
 	//particle dependence
 //	rate *= sys.Particles().GetSum(m_pid);
 
-	if (T <= m_arr.n){
-		double rate = 1e6*sys.Particles().GetSum(m_pid);
-		return rate;
-	}
-	else{
-		return 0.0;
-	}
+	double rate = 1e6*sys.Particles().GetSum(m_pid);
+	return rate;
+
 }//csl37-done
 
 /*!
@@ -240,13 +236,9 @@ double TitaniaPhaseTransformation::Rate(
 	//particle dependence
 //	rate *= sp.Property(m_pid);
 
-	if (T <= m_arr.n){
-		double rate = 1e6*sys.Particles().GetSum(m_pid);
-		return rate;
-	}
-	else{
-		return 0.0;
-	}
+	double rate = 1e6*sys.Particles().GetSum(m_pid);
+	return rate;
+
 }//csl37-done
 
 
