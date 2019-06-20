@@ -660,7 +660,7 @@ cpair PAHProcess::scale_vector(cpair vec) const{
 	cpair temp = vec;
 	if (abs(std::get<0>(vec)*std::get<0>(vec) + std::get<1>(vec)*std::get<1>(vec) + std::get<2>(vec)*std::get<2>(vec) - 1.0)  > tol)
 	{
-		double magnitude = pow(std::get<0>(vec)*std::get<0>(vec) + std::get<1>(vec)*std::get<1>(vec) + std::get<2>(vec)*std::get<2>(vec), 0.5);
+		double magnitude = sqrt(std::get<0>(vec)*std::get<0>(vec) + std::get<1>(vec)*std::get<1>(vec) + std::get<2>(vec)*std::get<2>(vec));
 		temp = std::make_tuple(std::get<0>(vec)/magnitude, std::get<1>(vec)/magnitude, std::get<2>(vec)/magnitude);
 		/*std::get<0>(temp) = std::get<0>(temp)/magnitude;
 		std::get<1>(temp) = std::get<1>(temp)/magnitude;
@@ -692,7 +692,7 @@ cpair PAHProcess::add_vector(cpair vec1, cpair vec2) const{
 cpair PAHProcess::norm_vector(cpair p1, cpair p2, cpair p3) const{
 	cpair vec1 = scale_vector(std::make_tuple(std::get<0>(p2) - std::get<0>(p1), std::get<1>(p2) - std::get<1>(p1), std::get<2>(p2) - std::get<2>(p1)));
 	cpair vec2 = scale_vector(std::make_tuple(std::get<0>(p3) - std::get<0>(p2), std::get<1>(p3) - std::get<1>(p2), std::get<2>(p3) - std::get<2>(p2)));
-	cpair temp = std::make_tuple(std::get<1>(vec1)*std::get<2>(vec2) - std::get<2>(vec1)*std::get<1>(vec2), std::get<0>(vec1)*std::get<2>(vec2) - std::get<2>(vec1)*std::get<0>(vec2), std::get<0>(vec1)*std::get<1>(vec2) - std::get<1>(vec1)*std::get<0>(vec2));
+	cpair temp = std::make_tuple(std::get<1>(vec1)*std::get<2>(vec2) - std::get<2>(vec1)*std::get<1>(vec2), std::get<2>(vec1)*std::get<0>(vec2) - std::get<0>(vec1)*std::get<2>(vec2), std::get<0>(vec1)*std::get<1>(vec2) - std::get<1>(vec1)*std::get<0>(vec2));
 	double theta = acos(std::get<0>(vec1) * std::get<0>(vec2) + std::get<1>(vec1) * std::get<1>(vec2) + std::get<2>(vec1) * std::get<2>(vec2))*180.0/M_PI;
 	if (theta <= 180.0){
 		std::get<0>(temp) = std::get<0>(temp) * -1.0;
@@ -1261,6 +1261,17 @@ cpair PAHProcess::findR5internal(Cpointer C_1, Cpointer C_2) {
 	cpair temp = *it2;
 	m_pah->m_R5loc.erase(it2);
 	return temp;
+}
+//! Are the two carbon atoms members of an R5 with coordinates in R5Internal??
+bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2) {
+	cpair R5_pos_loc = endposR5internal(C_1, C_2);
+	std::list<cpair>::iterator it1;
+	double minimal_dist = 0.5;
+	for (it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+		double dist = getDistance_twoC(R5_pos_loc, *it1);
+		if (dist <= minimal_dist) return true;
+	}
+	return false;
 }
 //! Return coords of final position of an internal R5 based on two carbons
 cpair PAHProcess::endposR5internal(Cpointer C_1, Cpointer C_2) {
@@ -2261,13 +2272,42 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	if (stype + bulkCchange == 2102) {
 		stype = 1002; bulkCchange = 0;
 	}
-	if (stype + bulkCchange == 2005) {
+	if (stype + bulkCchange == 2004 || stype + bulkCchange == 2014) {
+		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
+		Cpointer Ccheck = st->C1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		bool decide_PAH = false;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
+		if(decide_PAH == true){
+			stype = 2004; bulkCchange = 0;
+		}
+		else {
+			stype = 2014; bulkCchange = 0;
+		}
+	}
+	if (stype + bulkCchange == 2005 || stype + bulkCchange == 2015) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
+		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
+		Cpointer Ccheck = st->C1->C2;
+		Cpointer Ccheck2 = Ccheck->C2;
+		Cpointer Ccheck3 = st->C2->C1;
+		Cpointer Ccheck4 = Ccheck3->C2;
+		bool decide_PAH = false;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
+		if(decide_PAH == true){
+			stype = 2005; bulkCchange = 0;
+		}
+		else {
+			stype = 2015; bulkCchange = 0;
+		}
+	}
+	if (stype + bulkCchange == 2013) {
+		stype = 2003; bulkCchange = 0;
 	}
 	if (st->type == None)
 	{
+		//This means a None site is modified.
 		cout << "Added" << bulkCchange << "carbons to a None site.\n";
 		bulkCchange = 0;
 		ifstream  src("KMC_DEBUG/BEFORE.xyz");
@@ -3126,6 +3166,7 @@ bool PAHProcess::checkSiteValid(int type) {
 		case ZZACR5: return true;
 		case FEACR5FE: return true;
 		case ACACR5: return true;
+		case FEZZACR5: return true;
 		case R5ACR5: return true;
 		case R5FEACR5: return true;
 		case R5ZZACR5: return true;
@@ -3536,11 +3577,11 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		convSiteType(stt, newC1, newC2, FE);
 		if (S1->type==R5) {
 			convSiteType(S1, S1->C1, newC1, R5R6); // neighbours
-			updateSites(S2, newC2, S2->C2, +1500);
+			updateSites(S2, newC2, S2->C2, +1501);
 		}
 		else if (S2->type==R5){
 			convSiteType(S2, newC2, S2->C2, R5R6);
-			updateSites(S1, S1->C1, newC1, +1500);
+			updateSites(S1, S1->C1, newC1, +1501);
 		}
 		else {
 			cout<<"R5R6FER not next to R5. Error.\n";
@@ -3549,8 +3590,8 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	}
 	else if ( stt->type == R5R6FER5R6 ){
 		convSiteType(stt, newC1, newC2, FE);
-		updateSites(S2, newC2, S2->C2, +1500);
-		updateSites(S1, S1->C1, newC1, +1500);
+		updateSites(S2, newC2, S2->C2, +1501);
+		updateSites(S1, S1->C1, newC1, +1501);
 	}
 	else{
 		updateSites(stt, newC1, newC2, -2);
@@ -4415,7 +4456,7 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	cpair Hdir2 = cross_vector( get_vector(C_1->coords, C_1->C2->coords),normvec );
 	double dist = getDistance_twoC(C_1,C_2);
 	double dist2 = dist / 2.35 * 1.47;
-	double theta = acos( (dist - dist2)/2.0 / 1.5 );
+	double theta = acos( (dist - dist2)/2.0 / dist2 );
 	cpair resultantvec = std::make_tuple((dist - dist2)/2.0 * std::get<0>(Cdir) + 1.5*sin(theta) * std::get<0>(crossvec), (dist - dist2)/2.0 * std::get<1>(Cdir) + 1.5*sin(theta) * std::get<1>(crossvec), (dist - dist2)/2.0 * std::get<2>(Cdir)+ 1.5*sin(theta) * std::get<2>(crossvec));
 	cpair intdir = scale_vector(resultantvec);
     removeC(C_2->C1, true);
@@ -5705,13 +5746,15 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 			}
 		}
 	}
-	
 	R5_dist = getDistance_twoC(CFE, CFE->C2);
+	double dist2;
+	if (R5_dist < 2.5) dist2 = 1.4;
+	else dist2 = R5_dist / 2.7 * 1.5;
+	double theta = asin(R5_dist/2.0/dist2);
+	double magn = dist2 * cos(theta);
 	cpair R5dir = get_vector(C_1->C2->coords,C_2->C1->coords);
 	cpair normvec = (norm_vector(C_1->C2->coords, C_1->C2->C2->coords, C_1->C2->C2->C2->coords));
 	cpair crossvec = cross_vector(R5dir, normvec);
-	double theta = asin(R5_dist/2.0/1.4);
-	double magn = 1.4 * cos(theta);
 	cpair resultantvec = std::make_tuple(R5_dist/2.0 * std::get<0>(R5dir) + magn * std::get<0>(crossvec), R5_dist/2.0 * std::get<1>(R5dir) + magn * std::get<1>(crossvec), R5_dist/2.0 * std::get<2>(R5dir)+ magn * std::get<2>(crossvec));
 	cpair Cnewdir = scale_vector(resultantvec);
 	//cpair Cnewdir = get_vector(C_2->C1->coords,C_2->coords);
@@ -6094,7 +6137,7 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	m_pah->m_rings++;
 	//printSites(stt);
 	//printStruct();
-	if (getDistance_twoC(C_1, C_2) >= 3.5){
+	if (getDistance_twoC(stt->C1->C1, stt->C2->C2) >= 3.0){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -6569,6 +6612,17 @@ void PAHProcess::proc_G6R_R5R6FER(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 void PAHProcess::proc_G6R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	proc_G6R_AC(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID41- R7 bay closure on FEZZACR5
+// ************************************************************
+void PAHProcess::proc_L7_FEZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
+	proc_L6_BY6(stt, C_1, C_2);
+	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
 }
 
 size_t PAHProcess::SiteListSize() const {

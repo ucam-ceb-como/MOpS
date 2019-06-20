@@ -273,7 +273,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
 				xyzname.append(std::to_string(m_t));
-				xyzname.append("_before");
+				//xyzname.append("_before");
 				savePAH(PAH_ID, xyzname);
 				cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
 				m_simPAHp.printSites();
@@ -290,7 +290,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 			
 			//Save information for a single PAH
-			if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
+			/*if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
 				std::string xyzname = ("KMC_DEBUG/");
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
@@ -301,7 +301,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				xyzname2.append(std::to_string(PAH_ID));
 				xyzname2.append("trajectory");
 				m_simPAHp.save_trajectory_xyz(m_t, xyzname2, false);
-			}
+			}*/
 			
 			// get counts for all site types
 			/*if (PAH_ID == 1 || PAH_ID == 2){

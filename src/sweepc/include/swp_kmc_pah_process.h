@@ -213,6 +213,7 @@ public:
 	void proc_L7_ACACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID38.
 	void proc_G6R_R5R6FER(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID39.
 	void proc_G6R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID40.
+	void proc_L7_FEZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID41
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts
@@ -301,6 +302,8 @@ private:
 	void removeR7internal(Cpointer C_1, Cpointer C_2);
 	//! Return internal R5 associated to two carbons
 	cpair findR5internal(Cpointer C_1, Cpointer C_2);
+	//! Are the two carbon atoms members of an R5 with coordinates in R5Internal??
+	bool isR5internal(Cpointer C_1, Cpointer C_2);
 	//! Return coords of final position of an internal R5 based on two carbons
 	cpair endposR5internal(Cpointer C_1, Cpointer C_2);
     //! Creates a carbon atom bridging next to C_1. 
