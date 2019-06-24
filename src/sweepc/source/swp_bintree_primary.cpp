@@ -456,7 +456,6 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
         bool Overlap = false;
 
-		/*
         //! Incremental translation.
         while (!Overlap) {
             //! Sphere point picking. This is the random direction step of
@@ -631,10 +630,10 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
             //    }
             //}
         }
-		*/
 
 		//////////////////////////////////////////////// DLCA collision
 		////////////////////////////////////////////////
+		/*
 		while (!Overlap) {
 			//! Generate random point on sphere
 			double theta = 2.0 * PI * uniformGenerator();
@@ -731,6 +730,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 				}
 			}
 		}
+		*/
 		////////////////////////////////////////////////
 		////////////////////////////////////////////////
 
@@ -739,10 +739,6 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
         double deltaz = m_rightparticle->m_cen_bsph[2] - m_leftparticle->m_cen_bsph[2];
 
         m_distance_centreToCentre = sqrt(deltax * deltax + deltay * deltay + deltaz * deltaz);
-
-		//csl37-test
-		assert(m_distance_centreToCentre >= 0.0);
-		//csl37-test
 
         //! Calculate properties of this particle.
         this->calcBoundSph();
