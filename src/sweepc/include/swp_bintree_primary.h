@@ -132,6 +132,12 @@ public:
     //! Overload of the Mobility Diameter
     double MobDiameter() const;
 
+	//! The collision diameter
+	double CollisionDiameter();
+
+	//! Calculate radius of gyration
+	double RadiusOfGyration() const;
+
     //! Get the number of primaries in the particle
     int  GetNumPrimary() const {return m_numprimary;}
 
@@ -166,7 +172,7 @@ public:
 	double GetDistance() const {return m_distance_centreToCentre;}
 
     //! Calculates the radius of gyration.
-    double GetRadiusOfGyration() const;
+	double GetRadiusOfGyration() const { return m_Rg; };
     
     //! Returns a vector of primary coordinates and radius (4D).
     void GetPriCoords(std::vector<fvector> &coords) const;
@@ -312,6 +318,9 @@ protected:
     double m_r2; //!< r squared (useful for efficient collision detection computation).
     double m_r3; //!< r cubed (useful for calculating centre-of-mass).
 
+	//! Radius of gyration
+	double m_Rg;
+
     // TREE STRUCTURE PROPERTIES
     // The children are the next nodes in the binary tree and are used to
     // ascend/descend the tree in a standard manner.
@@ -443,17 +452,30 @@ private:
     //! Merges the two children primaries together
     BinTreePrimary &Merge();
 
+	//! Functor used by the Newton method to solve the new primary radius given a primary new volume and list of necks
+	struct merge_radius_functor{
+		merge_radius_functor(double const& vol, fvector const& necks) : a_vol(vol), a_necks(necks) {} // Constructor
+
+		std::pair<double, double> operator()(double const& r);	//! Calculate function and first derivative
+
+	private:
+		double a_vol;		//! New volume
+		fvector a_necks;	//! List of neck areas
+	};
+
+	//! function to return fvector of neck radii for merged primary
+	void GetNecks(BinTreePrimary *prim, BinTreePrimary *node, fvector &necks);
+
     //! Updates the pointers after a merge event
     void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
 
-	//! Overloaded ChangePointer for centre to centre separation and coordinate tracking models
-	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *small_prim, BinTreePrimary *node);
+    // Updates pointers after merge event (overload for coordinate tracking model)
+    void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *node,
+	BinTreePrimary *small_prim, double const r_new, double const r_old);
 	
-	//! Add new neighbours during a merger event
-	double AddNeighbour(double A_n_k, BinTreePrimary *small_prim, BinTreePrimary *node);
-	
-	//Function to adjust primary properties
-	void AdjustPrimary(double dV, double d_ij, BinTreePrimary *prim_ignore);
+    //! Adjust composition of neighbours following surface growth event
+    void AdjustNeighbours(BinTreePrimary *prim, const double delta_r, const fvector &dcomp, 
+	const fvector &dvalues, rng_type &rng);
 
 	//! Update primary free surface area and volume
 	void UpdateOverlappingPrimary();

@@ -5,36 +5,44 @@
     <iter>10</iter>
     <atol>1.0e-17</atol>
     <rtol>1.0e-4</rtol>
-    <maxm0>2.56e12</maxm0>
-    <pcount>256</pcount>
+    <maxm0>1e12</maxm0>
+    <pcount>4096</pcount>
     <relax>0.8</relax>
 	
 	<!-- Reactant mixture -->
     <mixture id="reactant_mixture1">
-        <temperature units="K">1200</temperature>
-        <pressure units="bar">3.00</pressure>	
-        <component id="TICL4">0.2</component>
-        <component id="O2">0.8</component>
+        <temperature units="K">600</temperature>
+        <pressure units="bar">4</pressure>	
+        <component id="TICL4">0.26</component>
+        <component id="O2">0.74</component>
+    </mixture>
+	
+	<!-- Plasma mixture -->
+    <mixture id="plasma_mixture">
+        <temperature units="K">2750</temperature>
+        <pressure units="bar">4</pressure>	
+        <component id="O2">1.0</component>
     </mixture>
 	
 	<!-- Initial mixture -->
     <mixture id="initial_mixture">
-        <temperature units="K">1200</temperature>
-        <pressure units="bar">3.00</pressure>
+        <temperature units="K">1000</temperature>
+        <pressure units="bar">4</pressure>
 	    <component id="AR">1.0</component>
     </mixture>
 	
     <!-- Stage 1 -->
-    <reactor constt="true" constv="true" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
-	        <initial>initial_mixture</initial>
-            <flow dir="in" frac="0.14">reactant_mixture1</flow>
-            <restime unit="s">0.002</restime>
+    <reactor constt="false" constv="false" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
+	    <initial>initial_mixture</initial>
+        <flow dir="in" frac="0.42">reactant_mixture1</flow>
+        <flow dir="in" frac="0.58">plasma_mixture</flow>
+        <restime unit="s">0.003</restime>
     </reactor>
 
     <!-- Time stepping -->
     <timeintervals>
       	<start>0.0</start>
-        <time splits="100" steps="2000">0.002</time>
+        <time splits="10" steps="3000">0.03</time>
     </timeintervals>
    
     <!-- Output specifications -->

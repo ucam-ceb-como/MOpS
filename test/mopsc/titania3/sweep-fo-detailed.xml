@@ -10,9 +10,9 @@
 	
     <!-- Define particle types (Detailed) -->
     <!-- A threshold of 1000 corresponds to a particle size of ~4 nm -->
-    <particle id="[Ru]" model="bintree" subtree="false" hybrid="true" threshold="1000" coagulate-in-list="true">
+    <particle id="[Ru]" model="bintree" subtree="false" track="primaryCoordinates" hybrid="true" threshold="10000" coagulate-in-list="false">
         <description>A rutile particle.</description>
-	<fractdim>1.8</fractdim>
+	    <fractdim>1.8</fractdim>
         <coalthresh>1.0</coalthresh>
         <sintering enable="true" model="GBD">
 	        <A units="s/m4K">9.112E+17</A>

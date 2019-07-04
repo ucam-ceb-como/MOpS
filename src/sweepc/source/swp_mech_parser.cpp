@@ -519,6 +519,16 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             mech.SintModel().Disable();
         }
 
+		// Get critical exponent alpha (default is alpha = 1)
+		// TODO: add paper reference
+		if ((*i)->GetFirstChild("alpha") != NULL) {
+			str = (*i)->GetFirstChild("alpha")->Data();
+			mech.SintModel().Setalpha(cdble(str));
+		}
+		else{
+			mech.SintModel().Setalpha(1.0);
+		}
+
     } else {
         // No sintering model defined.
         mech.SintModel().Disable();

@@ -458,6 +458,7 @@ int Coagulation::WeightedPerform_hybrid(const double t, const Sweep::PropID prop
 	if (ip2 > sys.Particles().Capacity())
 	{
 		index2 = ip2 - sys.Particles().Capacity();
+		ip2 = -2;
 		ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
 		sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
 		sp2->SetTime(t);

@@ -143,6 +143,14 @@ public:
     // Sets the minimum primary particle diameter in the system (Dpmin) in m.
     void SetDpmin(double dpmin);
 
+	// CRITICAL EXPONENT
+
+	// Returns the critical exponent.
+	double alpha(void) const;
+
+	// Sets the critical exponent.
+	void Setalpha(double alpha);
+
     // SINTERING MODEL TYPE.
 
     // Returns the sintering model type.
@@ -209,6 +217,9 @@ private:
 
     // Minimum primary particle diameter in the system (Dpmin) in m.
     double m_dpmin;
+
+	//Critical exponent
+	double m_alpha;
 
     // Sintering model type.
     SintType m_type;
