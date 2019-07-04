@@ -159,7 +159,12 @@ void MeltingModel::Disable(void) { m_enable = false; }
 
 // Create a melting point transformation 
 void MeltingModel::AddPhase(std::string name, double A, double T, double dmin, double dmax, fvector dcomp){
-	PHASE *new_phase = NULL;	
+	PHASE *new_phase = NULL;
+	if (!m_fixedcrossover){	// If not using a fixed cross size
+		dmin = 0.0;	
+		dmax = 1.0e30;	// some large number
+	}
+
 	new_phase = new PHASE(name, A, T, dmin, dmax, dcomp);
 	m_phases.push_back(new_phase);
 	return;
