@@ -221,7 +221,7 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
         m_stats[iSintLevel] += wt; // prim->GetAvgSinterLevel() * 
         m_stats[iSintRate] += 0;   // prim->GetSintRate() * wt
         m_stats[iSintTime] += 0;   // prim->GetSintTime() * wt
-        m_stats[iGStdevMean] += 0; // prim->GetPrimaryGStdDev() * wt
+        m_stats[iGStdevMean] += wt; // prim->GetPrimaryGStdDev() * wt
         //}
     }
 
