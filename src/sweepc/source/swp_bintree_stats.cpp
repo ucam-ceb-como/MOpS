@@ -222,6 +222,8 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
         m_stats[iSintRate] += 0;   // prim->GetSintRate() * wt
         m_stats[iSintTime] += 0;   // prim->GetSintTime() * wt
         m_stats[iGStdevMean] += wt; // prim->GetPrimaryGStdDev() * wt
+		//m_stats[iRg] += 0.0; // prim->GetRadiusOfGyration() * wt; (for loose primaries)
+		// Rg_prim = sqrt(3.0/5.0) * m_primarydiam / 2.0 (via Pratsinis method)
         //}
     }
 
