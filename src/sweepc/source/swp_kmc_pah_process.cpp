@@ -829,9 +829,8 @@ bool PAHProcess::checkHindrance(const Spointer& st) const {
 bool PAHProcess::checkHindrance_C_PAH(cpair coords) const {
 	double tol = 3e-1;
 	for (std::set<cpair>::iterator it = m_pah->m_cpositions.begin(); it != m_pah->m_cpositions.end(); ++it) {
-		if (abs(std::get<0>(coords) - std::get<0>(*it)) < tol && abs(std::get<1>(coords) - std::get<1>(*it)) < tol && abs(std::get<2>(coords) - std::get<2>(*it)) < tol){
-			return true;
-		}
+		double dist = getDistance_twoC(coords, *it);
+		if (dist <= tol) return true;
 	}
 	return false;
 }
@@ -859,21 +858,19 @@ cpair PAHProcess::checkHindrance_C_intPAH(cpair coords) const {
 }
 //! Checks if new C position is already occupied by edge carbons. 
 bool PAHProcess::checkHindrance_newC(Cpointer C_1) const {
-	double tol = 1e0;
+	double tol = 5e-1;
 	cpair mpos = jumpToPos(C_1->coords, C_1->growth_vector, 1.4);
 	for (std::set<cpair>::iterator it = m_pah->m_cpositions.begin(); it != m_pah->m_cpositions.end(); ++it) {
-		if (abs(std::get<0>(mpos) - std::get<0>(*it)) < tol && abs(std::get<1>(mpos) - std::get<1>(*it)) < tol && abs(std::get<2>(mpos) - std::get<2>(*it)) < tol){
-			return true;
-		}
+		double dist = getDistance_twoC(mpos, *it);
+		if (dist <= tol) return true;
 	}
 	return false;
 }
 
 bool PAHProcess::checkHindrance_twoC(const Cpointer C_1, const Cpointer C_2) const {
-	double tol = 1e0;
-	if (abs(std::get<0>(C_1->coords) - std::get<0>(C_2->coords)) < tol && abs(std::get<1>(C_1->coords) - std::get<1>(C_2->coords)) < tol && abs(std::get<2>(C_1->coords) - std::get<2>(C_2->coords)) < tol){
-		return false;
-	}
+	double tol = 5e-1;
+	double dist = getDistance_twoC(C_1, C_2);
+	if (dist<= tol)	return false;
 	else return true;
 }
 
@@ -2986,7 +2983,7 @@ Cpointer PAHProcess::drawType0Site(Cpointer Cnow, int bulkC) {
     for(int c=0; c<=bulkC; ++c) {
         // check if adding on existing C atom (bridge)
         cpair pos = jumpToPos(Cnow->coords, angle, 0, 1.4);
-        if(m_pah->m_cpositions.count(pos)) {
+        if(checkHindrance_C_PAH(pos)) {
             // this coordinate is filled
             Cpointer Cpos = findC(pos);
             if(Cpos != m_pah->m_cfirst) { // it is a bridged C atom
@@ -3021,7 +3018,7 @@ Cpointer PAHProcess::drawType1Site(Cpointer Cnow, int bulkC, kmcSiteType prevTyp
     if(bulkC == 0) {
         angle = normAngle(angle-30);
         cpair pos = jumpToPos(Cnow->coords, angle, 0, 1.4);
-        if(m_pah->m_cpositions.count(pos)) { // reached end of PAH
+        if(checkHindrance_C_PAH(pos)) { // reached end of PAH
             Cpointer Cpos = findC(pos);
             Cnow->bondAngle1 = angle;
             connectToC(Cnow, Cpos);
@@ -3044,10 +3041,10 @@ Cpointer PAHProcess::drawType2Site(Cpointer Cnow, int bulkC) {
 
 //! Finds C atom with specific coordinates
 Cpointer PAHProcess::findC(cpair coordinates) {
-	double tol = 1e-1;
-    for(Ccontainer::iterator i=m_pah->m_carbonList.begin();
-        i != m_pah->m_carbonList.end(); ++i) {
-		if (abs(std::get<0>((*i)->coords) - std::get<0>(coordinates)) < tol && abs(std::get<1>((*i)->coords) - std::get<1>(coordinates)) < tol && abs(std::get<2>((*i)->coords) - std::get<2>(coordinates)) < tol){
+	double tol = 3e-1;
+    for(Ccontainer::iterator i=m_pah->m_carbonList.begin(); i != m_pah->m_carbonList.end(); ++i) {
+		double distance = getDistance_twoC(coordinates, (*i)->coords);
+		if (distance < tol){
 			return (*i);
 		}
     }
@@ -4301,7 +4298,8 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
 			}
 		}
 		else {
-			updateSites(stt, C1_res, C2_res, 2);
+			if (isR5internal(C1_res->C2, C2_res->C1)) updateSites(stt, C1_res, C2_res, 2002);
+			else updateSites(stt, C1_res, C2_res, 2);
 			updateSites(S1, S1->C1, C1_res, -1);
 			updateSites(S2, C2_res, S2->C2, -1);
 		}
@@ -4550,9 +4548,9 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	if (b4 && (int)moveIt(stt, -4)->type == 100) return;
 	if (b4 && (int)moveIt(stt, -4)->type >= 500 && (int)moveIt(stt, -4)->type <= 504) return; // Two pentagons will collide if this is the case
 	if (b4 && (int)moveIt(stt, -4)->type >= 2000 && (int)moveIt(stt, -4)->type <= 2204) return; // Two pentagons will collide if this is the case
-	if (b4 && (int)moveIt(stt, +4)->type == 100) return;
-	if (b4 && (int)moveIt(stt, +4)->type >= 500 && (int)moveIt(stt, +4)->type <= 504) return; // Two pentagons will collide if this is the case
-	if (b4 && (int)moveIt(stt, +4)->type >= 2000 && (int)moveIt(stt, +4)->type <= 2204) return; // Two pentagons will collide if this is the case
+	if (!b4 && (int)moveIt(stt, +4)->type == 100) return;
+	if (!b4 && (int)moveIt(stt, +4)->type >= 500 && (int)moveIt(stt, +4)->type <= 504) return; // Two pentagons will collide if this is the case
+	if (!b4 && (int)moveIt(stt, +4)->type >= 2000 && (int)moveIt(stt, +4)->type <= 2204) return; // Two pentagons will collide if this is the case
     Cpointer C1_res, C2_res, C1_R5, C2_R5, C_xR5;
     Spointer FE_res;
 	cpair Hdir1, Hdir2, normvec, perpdir, crossvec, intdir, resultantvec, Cdir;
@@ -4700,10 +4698,10 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		updateA(C1_new, 'H', invert_vector(Cdir));
 		C2_new = addC(C1_new, opp_vec, dist);
 		updateA(C2_new, 'H', starting_direction);
-		C3_new = addC(C2_new, invert_vector(Cdir), dist);
+		C3_new = addC(C2_new, Cdir, dist);
 		updateA(C3_new, 'H', opp_vec);
 		C4_new = addC(C3_new, invert_vector(starting_direction), dist);
-		updateA(C4_new, 'H', invert_vector(Cdir));
+		updateA(C4_new, 'H', Cdir);
 		updateA(C_2, 'C', Cdir);
 	}
     else {
@@ -4780,23 +4778,25 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // resulting AC site, C_AC. Identify where the R5 site is too.
     Spointer sR5;
     Cpointer C_AC;
-	cpair starting_direction, Hdir1, Hdir2, FEdir, Hdir;
+	cpair starting_direction, Hdir1, Hdir2, FEdir, Hdir, CZZdir;
     if(b4) {
         sR5 = moveIt(stt, -1);
         C_AC = sR5->C1->C1;
 		starting_direction = get_vector(C_2->C1->coords, C_2->coords);
 		Hdir1 = get_vector(C_1->C2->C2->coords, C_1->C2->coords);
 		FEdir = get_vector(C_1->C2->coords, C_2->coords);
-		Hdir2 = get_vector(C_2->C1->coords, C_2->coords);
+		Hdir2 = starting_direction;
 		Hdir = starting_direction;
+		CZZdir = get_vector(C_1->C2->coords, C_1->C2->C2->coords);
     }else {
         sR5 = moveIt(stt, 1);
         C_AC = sR5->C2->C2;
-		starting_direction = get_vector(C_1->C2->coords, C_1->coords);
+		starting_direction = get_vector(C_2->C1->C1->coords, C_2->C1->coords);
 		Hdir1 = get_vector(C_1->C2->coords, C_1->coords);
 		FEdir = get_vector(C_1->coords, C_2->C1->coords);
-		Hdir2 = get_vector(C_2->C1->C1->coords, C_2->C1->coords);
+		Hdir2 = starting_direction;
 		Hdir = Hdir1;
+		CZZdir = FEdir;
     }
     // check if there's a bridge in the BY5
     bool bridge = false;
@@ -4807,11 +4807,9 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     if(b4) Cstart = C_AC; 
     else Cstart = C_2->C1;
 	removeR5internal(sR5->C1, sR5->C2);
-	cpair CZZdir = invert_vector(Hdir1);
     for(int i=0; i!=2; i++) removeC(Cstart->C2, false);
 	addC(Cstart, CZZdir, 1.4, true);
 	updateA(C_AC, 'H', Hdir);
-    //addC(Cstart, normAngle(Cstart->bondAngle1-120), normAngle(Cstart->bondAngle1-60), 1.4, true);
     // this new C atom is irrelevant. Next add a R6 on the resulting AC (from RAC)
     Cpointer C1_new, C2_new; // save all new C atoms
 	if(b4) Cstart = C_AC->C2->C2;
@@ -4834,10 +4832,10 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     }
     C1_new = addC(Cstart, starting_direction, 1.4);
 	updateA(C1_new, 'H', Hdir1);
+	updateA(Cstart, 'C', Hdir1);
 	C2_new = addC(C1_new, FEdir, 1.4);
 	updateA(C2_new, 'H', Hdir2);
 	updateA(C_2, 'C', FEdir);
-    
     //C1_new = addC(Cstart, normAngle(Cstart->bondAngle1+120), 0, 1.4);
     //C2_new = addC(C1_new, normAngle(C1_new->C1->bondAngle1-60), normAngle(C1_new->C1->bondAngle1-120), 1.4);
     // edit sites. first identify the neighbouring sites of resulting AC & FE3
@@ -5843,6 +5841,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
 			if (!optimised) addR5internal(sFE2->C2->C1, sFE2->C2);
 		}
+		else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a R5 neighbour {
+			updateSites(sFE2, sFE2->C1, sFE2->C2, +2002);
+			if (!optimised) addR5internal(sFE2->C2->C1->C1, sFE2->C2->C1);
+		}
 		convSiteType(stt, sFE2->C2, stt->C2, ZZ);
 
 	}
@@ -5875,6 +5877,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
 			if (!optimised) addR5internal(sFE2->C1, sFE2->C1->C2);
 		}
+		else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a BY5 {
+			updateSites(sFE2, sFE2->C1, sFE2->C2, +2002);
+			if (!optimised) addR5internal(sFE2->C1->C2, sFE2->C1->C2->C2);
+		}
 		convSiteType(stt, stt->C1, sFE2->C1, ZZ);
 	}
 	// update H atoms
@@ -5885,7 +5891,14 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		updateA(C_1, S2->C1->C2, 'H');
 	}*/
 	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
-		if ( (int)opp_site->type >= 2100) updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
+		if ( (int)opp_site->type >= 2100) {
+			Spointer S1_opp_site = moveIt(opp_site, -1);
+			Spointer S2_opp_site = moveIt(opp_site, +1);
+			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
+				updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+			}
+			else updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
+		}
 		else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
 		Spointer S1_opp_site = moveIt(opp_site, -1);
 		Spointer S2_opp_site = moveIt(opp_site, +1);
@@ -5977,13 +5990,13 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				if ( ((S1_before >= 501 && S1_before <= 504) || (S1_before >= 1002 && S1_before <= 1004) || (S1_before >= 2103 && S1_before <= 2204 ) ) && ( (S2_after >= 501 && S2_after <= 504) || (S2_after >= 1002 && S2_after <= 1004) || (S2_after >= 2103 && S2_after <= 2204 ) ) ){
 					//Both second neighbour sites could be the coupled site to the R5R6ZZ. Move to next neighbours.
 				}
-				else if ( ((S1_before >= 501 && S1_before <= 504) || (S1_before >= 1002 && S1_before <= 1004) || (S1_before >= 2103 && S1_before <= 2204 ) ) && !( (S2_after >= 501 && S2_after <= 504) || (S2_after >= 1002 && S2_after <= 1004) || (S2_after >= 2103 && S2_after <= 2204 ) ) ){
+				else if ( !((S1_before >= 501 && S1_before <= 504) || (S1_before >= 1002 && S1_before <= 1004) || (S1_before >= 2103 && S1_before <= 2204 ) ) && ( (S2_after >= 501 && S2_after <= 504) || (S2_after >= 1002 && S2_after <= 1004) || (S2_after >= 2103 && S2_after <= 2204 ) ) ){
 					SR5 = S2;
 					S2 = moveIt(SR5, +1);
 					b4 = false;
 					break;
 				}
-				else if ( !((S1_before >= 501 && S1_before <= 504) || (S1_before >= 1002 && S1_before <= 1004) || (S1_before >= 2103 && S1_before <= 2204 ) ) && ( (S2_after >= 501 && S2_after <= 504) || (S2_after >= 1002 && S2_after <= 1004) || (S2_after >= 2103 && S2_after <= 2204 ) ) ){
+				else if ( ((S1_before >= 501 && S1_before <= 504) || (S1_before >= 1002 && S1_before <= 1004) || (S1_before >= 2103 && S1_before <= 2204 ) ) && !( (S2_after >= 501 && S2_after <= 504) || (S2_after >= 1002 && S2_after <= 1004) || (S2_after >= 2103 && S2_after <= 2204 ) ) ){
 					SR5 = S1;
 					S1 = moveIt(SR5, -1);
 					b4 = true;

@@ -111,6 +111,8 @@ namespace Sweep{
             void initCSVIO();
             //! Initialise reaction count
             void initReactionCount();
+			//! Prints rates to command line
+            void printRates(double& time, const std::vector<double>& v_rates);
             //! Reads chemical mechanism / profile (if not obtained from Mops)
             void LoadGasProfiles(const std::string gasphase, const std::string chemfile, const std::string thermfile);
             //! Write column headings for CSV files

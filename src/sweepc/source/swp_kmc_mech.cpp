@@ -296,27 +296,34 @@ void G6R_AC::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
 	//------------Reactions for A3-4----------------------------
-	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));            // A3 + H <=> A3-4 + H2                - 0              - Forward
-	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));           // A3 + H <=> A3-4 + H2                - 1              - Backward
-	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
-	addReaction(rxnV3, Reaction(4.596E+05, 2.070E+00, 1.017E+01, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
-	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));            // A3-4 + H (+M) <=> A3 (+M)           - 4              - Forward - High rate
-	addReaction(rxnV3, Reaction(2.100E+139, -3.480E+01, 1.838E+01, sp::None));          // A3-4 + H (+M) <=> A3 (+M)           - 5              - Forward - High rate
+	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4              - Forward
+	//Using rates by On the low-temperature limit of HACA. Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(1.190E+22, -2.450E+00, 1.889E+01, sp::C2H2));         // A3* + C2H2 -> A4 + H              	- 5              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(1.060E+14, -4.900E-01, 8.204E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
+	//Method using QSSA from ABF:
+	/*addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));       // A3-4 + H (+M) <=> A3 (+M)         	- 4              - Forward - High rate
+	addReaction(rxnV3, Reaction(2.100E+139, -3.480E+01, 1.838E+01, sp::None));       // A3-4 + H (+M) <=> A3 (+M)           - 5              - Forward - High rate*/
 	//Parameters = [  1.00000000e-03   1.71400000e+02   1.71400000e+02   4.99280000e+03]
-	addReaction(rxnV3, Reaction(2.315E+31, -4.589E+00, 1.185E+02, sp::None));                // A3-4 + H (+M) <=> A3 (+M)           - 6              - Backward
+	/*addReaction(rxnV3, Reaction(2.315E+31, -4.589E+00, 1.185E+02, sp::None));                // A3-4 + H (+M) <=> A3 (+M)           - 6              - Backward
 	addReaction(rxnV3, Reaction(8.000E+61, -1.450E+01, 3.480E+01, sp::C2H2));                // A3-4 + C2H2 <=> A3C2H2              - 7              - Forward
 	addReaction(rxnV3, Reaction(4.107E+69, -1.626E+01, 6.773E+01, sp::None));                // A3-4 + C2H2 <=> A3C2H2              - 8              - Backward
 	addReaction(rxnV3, Reaction(1.200E+26, -3.440E+00, 3.020E+01, sp::C2H2));                // A3-4 + C2H2 <=> A3C2H + H           - 9              - Forward
 	addReaction(rxnV3, Reaction(6.319E+33, -5.219E+00, 3.169E+01, sp::H));           // A3-4 + C2H2 <=> A3C2H + H           - 10             - Backward
-	addReaction(rxnV3, Reaction(6.600E+24, -3.360E+00, 1.780E+01, sp::C2H2));                // A3-4 + C2H2 <=> A4 + H              - 11             - Forward
+	addReaction(rxnV3, Reaction(6.600E+24, -3.360E+00, 1.780E+01, sp::C2H2));        // A3-4 + C2H2 <=> A4 + H              - 11             - Forward
 	addReaction(rxnV3, Reaction(1.815E+34, -4.875E+00, 7.521E+01, sp::H));           // A3-4 + C2H2 <=> A4 + H              - 12             - Backward
 	////------------Reactions for A3C2H----------------------------
 	addReaction(rxnV3, Reaction(5.000E+13, 0.000E+00, 0.000E+00, sp::C2H));          // A3 + C2H <=> A3C2H + H              - 13             - Forward
 	addReaction(rxnV3, Reaction(9.332E+20, -1.526E+00, 2.401E+01, sp::H));           // A3 + C2H <=> A3C2H + H              - 14             - Backward
 	addReaction(rxnV3, Reaction(1.900E+64, -1.512E+01, 2.930E+01, sp::H));           // A3C2H + H <=> A3C2H2                - 15             - Forward
-	addReaction(rxnV3, Reaction(1.852E+64, -1.510E+01, 6.074E+01, sp::None));                // A3C2H + H <=> A3C2H2                - 16             - Backward
+	addReaction(rxnV3, Reaction(1.852E+64, -1.510E+01, 6.074E+01, sp::None));        // A3C2H + H <=> A3C2H2                - 16             - Backward
 	////------------Reactions for A3C2H2----------------------------
 	addReaction(rxnV3, Reaction(2.000E+63, -1.528E+01, 4.320E+01, sp::None));                // A3C2H2 <=> A4 + H           - 17             - Forward
 	addReaction(rxnV3, Reaction(1.071E+65, -1.504E+01, 6.768E+01, sp::H));           // A3C2H2 <=> A4 + H           - 18             - Backward
@@ -325,10 +332,11 @@ void G6R_AC::initialise() {
 	addReaction(rxnV3, Reaction(4.700E+40, -7.125E+00, 7.662E+01, sp::H));           // A3C2H + H <=> A4 + H                - 20             - Backward
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));            // A4 + H <=> A4- + H2         - 21             - Forward
 	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));           // A4 + H <=> A4- + H2         - 22             - Backward
-	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A4 + OH <=> A4- + H2O               - 23             - Forward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A4 + OH <=> A4- + H2O               - 23             - Forward
 	addReaction(rxnV3, Reaction(9.600E+04, 2.162E+00, 9.780E+00, sp::H2O));          // A4 + OH <=> A4- + H2O               - 24             - Backward
-	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::H));            // A4- + H <=> A4              - 25             - Forward
-	addReaction(rxnV3, Reaction(4.635E+18, -7.927E-01, 1.113E+02, sp::None));                // A4- + H <=> A4              - 26             - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A4* + H -> A4              			- 25              - Forward*/
+	//addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::H));            // A4- + H <=> A4              - 25             - Forward
+	//addReaction(rxnV3, Reaction(4.635E+18, -7.927E-01, 1.113E+02, sp::None));                // A4- + H <=> A4              - 26             - Backward
 	////------------Reactions for A4-----------------------------	
 	/*
     addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
@@ -346,8 +354,9 @@ void G6R_AC::initialise() {
 }
 // Jump rate calculation
 double G6R_AC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -363,7 +372,22 @@ double G6R_AC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
     return setRate0p0267(gp, pah_st);
 }
 double G6R_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]+m_r[8]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = (m_r[5]+m_r[6])*r_f* site_count; // Rate Equation
+	
+	/*//ABF. Previous version.
 	// Calculating R3b3
 	// Parameters alpha = 0.001, T3 = 117.4, T1 = 171.4, T2 = 4992.8
 	double T = gp[gp.T];
@@ -383,7 +407,8 @@ double G6R_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	double R3b3 = r_c* gp[gp.H];
 
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_f = 0; // radical fraction
@@ -457,12 +482,9 @@ double G6R_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 		double A3C2H2 = arr2(2);
 		double A4 = arr2(3);
 		double A4rad = arr2(4);
-
-
-
 	}
 
-	return m_rate = r_f2;
+	return m_rate = r_f2;*/
 
     /*return setRate0p0267(gp, pah_st);*/
 }
@@ -496,16 +518,104 @@ void G6R_FE::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //7 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
+	//Reactions from Narayanaswamy2010 and Mebel2016 for 1 atm.
+	//rxns of A1-
+	addReaction(rxnV3, Reaction(1.910e+61, -1.460e+01, 2.861e+01, sp::C2H2));        // A1- + C2H2 <=> A1C2H2                - 0             - Forward
+	addReaction(rxnV3, Reaction(2.499e+69, -1.643e+01, 7.129e+01, sp::None));        // A1- + C2H2 <=> A1C2H2                - 1             - Backward
+	addReaction(rxnV3, Reaction(1.100e+31, -4.830e+00, 2.662e+01, sp::C2H2));        // A1- + C2H2 <=> A1C2H + H             - 2             - Forward
+	addReaction(rxnV3, Reaction(2.542e+37, -6.213e+00, 3.761e+01, sp::H));           // A1- + C2H2 <=> A1C2H + H             - 3             - Backward
+	addReaction(rxnV3, Reaction(1.360e+75, -1.840e+01, 4.088e+01, sp::C2H2));        // A1- + C2H2 <=> A1C2H3*               - 4             - Forward
+	addReaction(rxnV3, Reaction(4.055e+82, -2.012e+01, 7.940e+01, sp::None));        // A1- + C2H2 <=> A1C2H3*               - 5             - Backward
+	addReaction(rxnV3, Reaction(6.000e+12, 0.000e+00, 0.000e+00, sp::C2H3));         // A1- + C2H3 <=> A1C2H3                - 6             - Forward
+	addReaction(rxnV3, Reaction(8.216e+23, -2.162e+00, 1.191e+02, sp::None));        // A1- + C2H3 <=> A1C2H3                - 7             - Backward
+	addReaction(rxnV3, Reaction(9.450e-03, 4.470e+00, 4.472e+00, sp::C2H4));         // A1- + C2H4 <=> A1 + C2H3             - 8             - Forward
+	addReaction(rxnV3, Reaction(2.316e-02, 4.416e+00, 6.709e+00, sp::C2H3));         // A1- + C2H4 <=> A1 + C2H3             - 9             - Backward
+	addReaction(rxnV3, Reaction(1.260e+04, 2.610e+00, 1.434e+00, sp::C4H4));         // A1- + C4H4 <=> A2 + H                - 10            - Forward
+	addReaction(rxnV3, Reaction(1.130e+16, 7.538e-01, 6.694e+01, sp::H));            // A1- + C4H4 <=> A2 + H                - 11            - Backward
+	addReaction(rxnV3, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::H));            // A1- + H <=> A1              		 - 12            - Forward
+	addReaction(rxnV3, Reaction(9.613e+08, 1.635e+00, 1.236e+02, sp::None));           // A1- + H <=> A1              		 - 13            - Backward
+	addReaction(rxnV3, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A1 + H <=> A1- + H2         		 - 14            - Forward
+	addReaction(rxnV3, Reaction(1.811e+09, 8.635e-01, -1.055e+01, sp::H2));          // A1 + H <=> A1- + H2         		 - 15            - Backward
+	addReaction(rxnV3, Reaction(4.570e+08, 1.880e+00, 1.484e+01, sp::OH));           // A1 + OH <=> A1- + H2O                - 16            - Forward
+	addReaction(rxnV3, Reaction(5.142e+05, 2.381e+00, 1.956e+01, sp::H2O));          // A1 + OH <=> A1- + H2O                - 17            - Backward
+	//rxns of A1C2H3
+	addReaction(rxnV3, Reaction(1.870e+07, 1.470e+00, 5.533e+00, sp::C2H3));         // A1 + C2H3 <=> A1C2H3 + H             - 18            - Forward
+	addReaction(rxnV3, Reaction(2.042e+14, -2.214e-01, 1.041e+01, sp::H));           // A1 + C2H3 <=> A1C2H3 + H             - 19            - Backward
+	addReaction(rxnV3, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A1C2H3* + H <=> A1C2H3               - 20            - Forward
+	addReaction(rxnV3, Reaction(2.523e+17, -3.422e-01, 1.161e+02, sp::None));        // A1C2H3* + H <=> A1C2H3               - 21            - Backward
+	addReaction(rxnV3, Reaction(4.570e+08, 1.880e+00, 1.484e+01, sp::H));            // A1C2H3 + H <=> A1C2H3* + H2          - 22            - Forward
+	addReaction(rxnV3, Reaction(4.115e+04, 2.615e+00, 2.435e+00, sp::H2));           // A1C2H3 + H <=> A1C2H3* + H2          - 23            - Backward
+	addReaction(rxnV3, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A1C2H3 + OH <=> A1C2H3* + H2O        - 24            - Forward
+	addReaction(rxnV3, Reaction(1.788e+02, 2.628e+00, 1.226e+01, sp::H2O));          // A1C2H3 + OH <=> A1C2H3* + H2O        - 25            - Backward
+	addReaction(rxnV3, Reaction(3.010e+14, 3.400e-01, 1.113e+02, sp::None));         // A1C2H3 <=> A1C2H2 + H                - 26            - Forward
+	addReaction(rxnV3, Reaction(2.184e+11, 7.219e-01, -6.994e-01, sp::H));           // A1C2H3 <=> A1C2H2 + H                - 27            - Backward
+	addReaction(rxnV3, Reaction(6.350e+04, 2.750e+00, 1.165e+01, sp::H));            // A1C2H3 + H <=> A1C2H2 + H2           - 28            - Forward
+	addReaction(rxnV3, Reaction(2.509e+01, 3.375e+00, 3.404e+00, sp::H2));           // A1C2H3 + H <=> A1C2H2 + H2           - 29            - Backward
+	addReaction(rxnV3, Reaction(6.550e-02, 4.200e+00, -8.604e-01, sp::OH));          // A1C2H3 + OH <=> A1C2H2 + H2O         - 30            - Forward
+	addReaction(rxnV3, Reaction(6.705e-04, 4.613e+00, 6.162e+00, sp::H2O));          // A1C2H3 + OH <=> A1C2H2 + H2O         - 31            - Backward
+	//rxns of A1C2H3*
+	addReaction(rxnV3, Reaction(2.440e+30, -5.730e+00, 3.207e+01, sp::None));        // A1C2H2 <=> A1C2H3*           		 - 32            - Forward
+	addReaction(rxnV3, Reaction(5.560e+29, -5.620e+00, 2.791e+01, sp::None));        // A1C2H2 <=> A1C2H3*           		 - 33            - Backward
+	addReaction(rxnV3, Reaction(3.020e+10, 7.020e-01, 5.530e+00, sp::C2H2));         // A1C2H3* + C2H2 <=> A2 + H            - 34            - Forward
+	addReaction(rxnV3, Reaction(1.387e+21, -7.978e-01, 7.245e+01, sp::H));           // A1C2H3* + C2H2 <=> A2 + H            - 35            - Backward
+	//rxns of A1C2H
+	addReaction(rxnV3, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A1C2H* + H <=> A1C2H                 - 36            - Forward
+	addReaction(rxnV3, Reaction(2.075e+17, -3.346e-01, 1.168e+02, sp::None));        // A1C2H* + H <=> A1C2H                 - 37            - Backward
+	addReaction(rxnV3, Reaction(4.570e+08, 1.880e+00, 1.484e+01, sp::H));            // A1C2H + H <=> A1C2H* + H2            - 38            - Forward
+	addReaction(rxnV3, Reaction(5.003e+04, 2.608e+00, 1.761e+00, sp::H2));           // A1C2H + H <=> A1C2H* + H2            - 39            - Backward
+	addReaction(rxnV3, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A1C2H + OH <=> A1C2H* + H2O          - 40            - Forward
+	addReaction(rxnV3, Reaction(2.174e+02, 2.621e+00, 1.158e+01, sp::H2O));          // A1C2H + OH <=> A1C2H* + H2O          - 41            - Backward
+	addReaction(rxnV3, Reaction(1.590e+62, -1.450e+01, 3.176e+01, sp::H));           // A1C2H + H <=> A1C2H2                 - 42            - Forward
+	addReaction(rxnV3, Reaction(9.003e+63, -1.495e+01, 6.344e+01, sp::None));        // A1C2H + H <=> A1C2H2                 - 43            - Backward
+	addReaction(rxnV3, Reaction(1.650e+11, 4.900e-01, 1.063e+01, sp::H));            // A1C2H2 + H <=> A1C2H + H2            - 44            - Forward
+	addReaction(rxnV3, Reaction(1.587e+09, 1.184e+00, 8.265e+01, sp::H2));           // A1C2H2 + H <=> A1C2H + H2            - 45            - Backward
+	addReaction(rxnV3, Reaction(2.500e+12, 0.000e+00, 0.000e+00, sp::OH));           // A1C2H2 + OH <=> A1C2H + H2O          - 46            - Forward
+	addReaction(rxnV3, Reaction(6.230e+11, 4.815e-01, 8.728e+01, sp::H2O));          // A1C2H2 + OH <=> A1C2H + H2O          - 47            - Backward
+	addReaction(rxnV3, Reaction(3.600e+17, -1.440e+00, 1.576e+01, sp::C2H3));        // A1C2H + C2H3 <=> A2 + H              - 48            - Forward
+	addReaction(rxnV3, Reaction(1.619e+29, -3.226e+00, 7.470e+01, sp::H));           // A1C2H + C2H3 <=> A2 + H              - 49            - Backward
+	//rxns of A1C2H*
+	addReaction(rxnV3, Reaction(4.490e+82, -2.000e+01, 5.183e+01, sp::C2H2));        // A1C2H* + C2H2 <=> A2-                - 50            - Forward
+	addReaction(rxnV3, Reaction(1.338e+94, -2.184e+01, 1.435e+02, sp::None));        // A1C2H* + C2H2 <=> A2-                - 51            - Backward
+	addReaction(rxnV3, Reaction(1.180e+104, -2.570e+01, 7.682e+01, sp::C2H2));       // A1C2H* + C2H2 <=> A2*                - 52            - Forward
+	addReaction(rxnV3, Reaction(3.917e+115, -2.755e+01, 1.688e+02, sp::None));       // A1C2H* + C2H2 <=> A2*                - 53            - Backward
+	addReaction(rxnV3, Reaction(1.760e+40, -7.040e+00, 4.821e+01, sp::C2H2));        // A1C2H* + C2H2 <=> A1C2HX2 + H        - 54            - Forward
+	addReaction(rxnV3, Reaction(9.718e+46, -8.438e+00, 6.084e+01, sp::H));           // A1C2H* + C2H2 <=> A1C2HX2 + H        - 55            - Backward
+	addReaction(rxnV3, Reaction(3.620e+28, -4.240e+00, 2.386e+01, sp::C2H4));        // A1C2H* + C2H4 <=> A2 + H             - 56            - Forward
+	addReaction(rxnV3, Reaction(1.583e+40, -6.094e+00, 8.758e+01, sp::H));           // A1C2H* + C2H4 <=> A2 + H             - 57            - Backward
+	//rxns of A1C2H2
+	addReaction(rxnV3, Reaction(3.570e+22, -2.720e+00, 1.447e+01, sp::C2H2));        // A1C2H2 + C2H2 <=> A2 + H             - 58            - Forward
+	addReaction(rxnV3, Reaction(3.736e+32, -4.109e+00, 7.723e+01, sp::H));           // A1C2H2 + C2H2 <=> A2 + H             - 59            - Backward
+	//rxns of A1C2HX2
+	addReaction(rxnV3, Reaction(1.010e+86, -2.060e+01, 5.670e+01, sp::H));           // A1C2HX2 + H <=> A2-          		 - 60            - Forward
+	addReaction(rxnV3, Reaction(5.450e+90, -2.104e+01, 1.358e+02, sp::None));        // A1C2HX2 + H <=> A2-          		 - 61            - Backward
+	addReaction(rxnV3, Reaction(6.000e+108, -2.660e+01, 8.359e+01, sp::H));          // A1C2HX2 + H <=> A2*          		 - 62            - Forward
+	addReaction(rxnV3, Reaction(3.607e+113, -2.705e+01, 1.629e+02, sp::None));       // A1C2HX2 + H <=> A2*          		 - 63            - Backward
+	//rxns of A2-		 
+	addReaction(rxnV3, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A2- + H <=> A2               		 - 64            - Forward
+	addReaction(rxnV3, Reaction(4.126e+17, -3.390e-01, 1.195e+02, sp::None));        // A2- + H <=> A2               		 - 65            - Backward
+	addReaction(rxnV3, Reaction(4.570e+08, 1.880e+00, 1.484e+01, sp::H));            // A2 + H <=> A2- + H2          		 - 66            - Forward
+	addReaction(rxnV3, Reaction(2.516e+04, 2.612e+00, -9.970e-01, sp::H2));          // A2 + H <=> A2- + H2          		 - 67            - Backward
+	addReaction(rxnV3, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A2 + OH <=> A2- + H2O                - 68            - Forward
+	addReaction(rxnV3, Reaction(1.093e+02, 2.625e+00, 8.825e+00, sp::H2O));          // A2 + OH <=> A2- + H2O                - 69            - Backward
+	//rxns of A2*
+	addReaction(rxnV3, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A2* + H <=> A2               		 - 70            - Forward
+	addReaction(rxnV3, Reaction(3.703e+17, -3.255e-01, 1.192e+02, sp::None));        // A2* + H <=> A2               		 - 71            - Backward
+	addReaction(rxnV3, Reaction(4.570e+08, 1.880e+00, 1.484e+01, sp::H));            // A2 + H <=> A2* + H2          		 - 72            - Forward
+	addReaction(rxnV3, Reaction(2.803e+04, 2.599e+00, -6.926e-01, sp::H2));          // A2 + H <=> A2* + H2          		 - 73            - Backward
+	addReaction(rxnV3, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A2 + OH <=> A2* + H2O                - 74            - Forward
+	addReaction(rxnV3, Reaction(1.218e+02, 2.611e+00, 9.129e+00, sp::H2O));          // A2 + OH <=> A2* + H2O                - 75            - Backward
+	//rxns of A2
 
 	//Reactions for the ABF mechanism
-	//Reactions of A1 -
+	/*//Reactions of A1 -
 	addReaction(rxnV3, Reaction(2.510e+12, 0.000e+00, 6.190e+00, sp::C2H4));			// A1- + C2H4 <=> A1C2H3 + H            - 0             - Forward
 	addReaction(rxnV3, Reaction(1.190e+18, -1.324e+00, 1.005e+01, sp::H));				// A1- + C2H4 <=> A1C2H3 + H            - 1             - Backward
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));				// A1 + H <=> A1- + H2					- 2             - Forward
 	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));				// A1 + H <=> A1- + H2					- 3             - Backward
-	addReaction(rxnV3, Reaction(1.000e+14, 0.000e+00, 0.000e+00, sp::None));            // A1- + H (+M) <=> A1 (+M)				- 4
-	addReaction(rxnV3, Reaction(6.600e+75, -1.630e+01, 7.000e+00, sp::None));           // A1- + H (+M) <=> A1 (+M)				- 5
-	addReaction(rxnV3, Reaction(1.600e+08, 1.420e+00, 1.450e+00, sp::OH));              // A1 + OH <=> A1- + H2O                - 6             - Forward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));               // A1- + H -> A1              			- 4              - Forward
+	//addReaction(rxnV3, Reaction(1.000e+14, 0.000e+00, 0.000e+00, sp::None));            // A1- + H (+M) <=> A1 (+M)			- 4
+	//addReaction(rxnV3, Reaction(6.600e+75, -1.630e+01, 7.000e+00, sp::None));           // A1- + H (+M) <=> A1 (+M)			- 5
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));              // A1 + OH <=> A1- + H2O                - 6             - Forward
 	addReaction(rxnV3, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::H2O));             // A1 + OH <=> A1- + H2O                - 7             - Backward
 	addReaction(rxnV3, Reaction(3.300e+33, -5.700e+00, 2.550e+01, sp::C2H2));           // A1- + C2H2 <=> A1C2H + H             - 8             - Forward
 	addReaction(rxnV3, Reaction(5.077e+41, -7.589e+00, 3.365e+01, sp::H));              // A1- + C2H2 <=> A1C2H + H             - 9             - Backward
@@ -525,22 +635,24 @@ void G6R_FE::initialise() {
 	addReaction(rxnV3, Reaction(1.105e+22, -1.680e+00, 2.918e+01, sp::H));              // A1C2H + C2H <=> A1C2H)2 + H          - 21            - Backward
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));               // A1C2H + H <=> A1C2H* + H2            - 22            - Forward
 	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));              // A1C2H + H <=> A1C2H* + H2            - 23            - Backward
-	addReaction(rxnV3, Reaction(1.600e+08, 1.420e+00, 1.450e+00, sp::OH));              // A1C2H + OH <=> A1C2H* + H2O          - 24            - Forward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));              // A1C2H + OH <=> A1C2H* + H2O          - 24            - Forward
 	addReaction(rxnV3, Reaction(1.359e+06, 1.948e+00, 9.131e+00, sp::H2O));             // A1C2H + OH <=> A1C2H* + H2O          - 25            - Backward
-	addReaction(rxnV3, Reaction(1.000e+14, 0.000e+00, 0.000e+00, sp::None));            // A1C2H* + H (+M) <=> A1C2H (+M)		- 26
-	addReaction(rxnV3, Reaction(6.600e+75, -1.630e+01, 7.000e+00, sp::None));           // A1C2H* + H (+M) <=> A1C2H (+M)		- 27
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));               // A1C2H* + H -> A1C2H         			- 26              - Forward
+	//addReaction(rxnV3, Reaction(1.000e+14, 0.000e+00, 0.000e+00, sp::None));            // A1C2H* + H (+M) <=> A1C2H (+M)		- 26
+	//addReaction(rxnV3, Reaction(6.600e+75, -1.630e+01, 7.000e+00, sp::None));           // A1C2H* + H (+M) <=> A1C2H (+M)		- 27
 	addReaction(rxnV3, Reaction(5.000e+13, 0.000e+00, 0.000e+00, sp::C2H));             // A1 + C2H <=> A1C2H + H               - 28            - Forward
 	addReaction(rxnV3, Reaction(3.885e+20, -1.578e+00, 2.991e+01, sp::H));              // A1 + C2H <=> A1C2H + H               - 29            - Backward
 	//Reactions of A1C2H3
-	addReaction(rxnV3, Reaction(1.600e+08, 1.420e+00, 1.450e+00, sp::OH));              // A1C2H3 + OH <=> A1C2H3* + H2O        - 30            - Forward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));              // A1C2H3 + OH <=> A1C2H3* + H2O        - 30            - Forward
 	addReaction(rxnV3, Reaction(1.336e+06, 1.973e+00, 1.121e+01, sp::H2O));             // A1C2H3 + OH <=> A1C2H3* + H2O        - 31            - Backward
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));               // A1C2H3 + H <=> A1C2H3* + H2          - 32            - Forward
 	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));              // A1C2H3 + H <=> A1C2H3* + H2          - 33            - Backward
 	addReaction(rxnV3, Reaction(7.900e+11, 0.000e+00, 6.400e+00, sp::C2H3));            // A1 + C2H3 <=> A1C2H3 + H             - 34            - Forward
 	addReaction(rxnV3, Reaction(4.561e+16, -1.046e+00, 1.067e+01, sp::H));              // A1 + C2H3 <=> A1C2H3 + H             - 35            - Backward
 	//Reactions of A1C2H3*
-	addReaction(rxnV3, Reaction(1.000e+14, 0.000e+00, 0.000e+00, sp::None));            // A1C2H3* + H (+M) <=> A1C2H3 (+M)		- 36
-	addReaction(rxnV3, Reaction(6.600e+75, -1.630e+01, 7.000e+00, sp::None));           // A1C2H3* + H (+M) <=> A1C2H3 (+M)		- 37
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));                // A1C2H3* + H -> A1C2H3              	- 4              - Forward
+	//addReaction(rxnV3, Reaction(1.000e+14, 0.000e+00, 0.000e+00, sp::None));            // A1C2H3* + H (+M) <=> A1C2H3 (+M)		- 36
+	//addReaction(rxnV3, Reaction(6.600e+75, -1.630e+01, 7.000e+00, sp::None));           // A1C2H3* + H (+M) <=> A1C2H3 (+M)		- 37
 	//Reactions of A1C2H*
 	addReaction(rxnV3, Reaction(1.800e+19, -1.670e+00, 1.880e+01, sp::C2H2));           // A1C2H* + C2H2 <=> A1C2H)2 + H        - 38            - Forward
 	addReaction(rxnV3, Reaction(4.444e+27, -3.504e+00, 2.648e+01, sp::H));              // A1C2H* + C2H2 <=> A1C2H)2 + H        - 39            - Backward
@@ -552,16 +664,16 @@ void G6R_FE::initialise() {
 	//Reactions of A2 production
 	addReaction(rxnV3, Reaction(1.600e+16, -1.330e+00, 6.660e+00, sp::C2H2));           // A1C2H3* + C2H2 <=> A2 + H            - 44            - Forward
 	addReaction(rxnV3, Reaction(1.600e+16, -1.330e+00, 5.4000e+00, sp::C2H2));          // n-A1C2H2 + C2H2 <=> A2 + H           - 45            - Forward
-
+	*/
 	
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+    /*addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
     addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
     addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
     addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
     addReaction(rxnV3, Reaction(1.1e7, 1.71, 3.9, sp::C2H2));   //5 - r4f1
     addReaction(rxnV3, Reaction(3.3e33, -5.7, 25.5, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //7 - r5f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //7 - r5f*/
 	
     m_sType = FE; // sitetype
     m_name = "G6R at FE"; // name of process
@@ -570,7 +682,8 @@ void G6R_FE::initialise() {
 // Jump rate calculation
 double G6R_FE::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     
@@ -589,11 +702,19 @@ double G6R_FE::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 
 	// check if site count is zero
-
+	double T = gp[gp.T];
+	double r_f;
+	double r_f2_ss, r_f2_peq;
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+	//int ring_count = ((int)pah_st.getRingsCount().first); // Ring count
+	//if (ring_count > 2) return m_rate = 0.0;
+	if (site_count == 0) return m_rate = 0;
+	
+	/*//For ABF mechanism with 3-body reactions
 	// Calculating 3 body reactions
 	//Parameters alpha = 0.2, T3 = 122.8, T1 = 478.4, T2 = 5411.9
 	//Parameters = [1.00000000e+00   1.00000000e-01   5.84900000e+02   6.11300000e+03]
-	double T = gp[gp.T];
 	double P = gp[gp.P]; //Pressure in Pa
 	double M_eff1 = P / 8.314E+06 / T;
 	double M = M_eff1 + (1 * gp[gp.H2]) + (5 * gp[gp.H2O]) + (1 * gp[gp.CH4]) + (0.5*gp[gp.CO]) + (1 * gp[gp.CO2]) + (2 * gp[gp.C2H6]);
@@ -633,44 +754,143 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	r_c3 *= F3;
 	double R3b3 = r_c3* gp[gp.H];
 
-
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
 	//int ring_count = ((int)pah_st.getRingsCount().first); // Ring count
 	//if (ring_count > 2) return m_rate = 0.0;
 	//if (site_count == 0) return m_rate = 0;
-	double r_f; // radical fraction
-	double r_f2=0.0; // radical fraction
 	//double A1_conc = gp[gp.C6H6];
-	//double C2H2_conc = gp[gp.C2H2];
+	//double C2H2_conc = gp[gp.C2H2];*/
 
 	if (T < 600) {
 		r_f = 0;
 	}
 	else{
-		/*double Anrad = (m_r[0] + m_r[2] + m_r[21] + m_r[22] * C2H2_conc / A1_conc) / (m_r[1] + m_r[3] + m_r[20] + m_r[23]);
-		double NC8H7 = (m_r[24] * Anrad / m_r[25]);
-		double AnC2H = (Anrad * m_r[5] + m_r[12] + NC8H7 * m_r[27]) / (m_r[4] + m_r[13] + m_r[26]);
-		double AnC2Hrad = AnC2H*(m_r[6] + m_r[8]) / (m_r[7] + m_r[9]);
-		double Anextrad = ((AnC2H*m_r[34])*(m_r[30] * (m_r[16] + m_r[18] + m_r[35]) + m_r[28] * (m_r[36] + (m_r[16] + m_r[18] + m_r[35]))) + AnC2Hrad*m_r[10] * (m_r[30] * (m_r[33] + (m_r[16] + m_r[18] + m_r[35])) + m_r[28] * (m_r[33] + m_r[36] + (m_r[16] + m_r[18] + m_r[35])))) / (m_r[30] * m_r[33] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29])) + m_r[30] * (m_r[32] + m_r[11])*(m_r[16] + m_r[18] + m_r[35]) + m_r[28] * (m_r[33] * (m_r[11] + (m_r[17] + m_r[19] + m_r[29])) + m_r[11] * (m_r[36] + (m_r[16] + m_r[18] + m_r[35])) + m_r[32] * (m_r[33] + m_r[36] + (m_r[16] + m_r[18] + m_r[35]))));
-		*/
-		//FIRST TRY BY GLC
-		//r_f = (AnC2Hrad * m_r[10] * (m_r[28] * (m_r[17] + m_r[19] + m_r[29]) + m_r[30] * (m_r[31] + (m_r[17] + m_r[19] + m_r[29]))) /*+ m_r[30] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29])))*/ + AnC2H * m_r[34] * (m_r[28] * (m_r[32] + m_r[11] + (m_r[17] + m_r[19] + m_r[29])) + m_r[30] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29])))) / (m_r[30] * m_r[33] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29])) + m_r[30] * (m_r[32] + m_r[11]) * (m_r[16] + m_r[18] + m_r[35]) + m_r[28] * (m_r[33] * (m_r[11] + (m_r[17] + m_r[19] + m_r[29])) + m_r[11] * (m_r[36] + (m_r[16] + m_r[18] + m_r[35])) + m_r[32] * (m_r[33] + m_r[36] + (m_r[16] + m_r[18] + m_r[35])))) ;
-		//REMOVED DENOMINATOR, SIMILAR TO ABF, INCLUDE DENOMINATOR IN REVERSE REACTION.
-		//r_f = (AnC2Hrad * m_r[10] * (m_r[28] * (m_r[17] + m_r[19] + m_r[29]) + m_r[30] * (m_r[31] + (m_r[17] + m_r[19] + m_r[29]))) /*+ m_r[30] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29])))*/ + AnC2H * m_r[34] * (m_r[28] * (m_r[32] + m_r[11] + (m_r[17] + m_r[19] + m_r[29])) + m_r[30] * (m_r[32] + m_r[11] + m_r[31] + (m_r[17] + m_r[19] + m_r[29]))));
+		//Reactions from Mebel2016 and Narayanaswamy2010 and Blanquart2009
+		matrix<double> arr1(10, 10);
+		boost::numeric::ublas::vector<double> arr2(10);
+		matrix<double> arr1_peq(7, 7);
+		boost::numeric::ublas::vector<double> arr2_peq(7);
+		for (unsigned k = 0; k < arr1.size1(); ++k)
+			for (unsigned l = 0; l < arr1.size2(); ++l)
+				arr1(k, l) = 0.0;
+		for (unsigned k = 0; k < arr2.size(); ++k)
+			arr2(k) = 0.0;
+		for (unsigned k = 0; k < arr1_peq.size1(); ++k)
+			for (unsigned l = 0; l < arr1_peq.size2(); ++l)
+				arr1_peq(k, l) = 0.0;
+		for (unsigned k = 0; k < arr2_peq.size(); ++k)
+			arr2_peq(k) = 0.0;
 
-		//(A1C2H_1_solve[i] * R11[i] * (R40[i] * (Rb14[i] + Rb15[i] + R41[i]) + R42[i] *     (Rb40[i] + (Rb14[i] + Rb15[i] + R41[i])))                                                                       + A1C2H_solve[i] * Rb45[i] * (R40[i] * (R43[i] + Rb11[i] + (Rb14[i] + Rb15[i] + R41[i]))     + R42[i] * (R43[i] + Rb11[i] + Rb40[i] + (Rb14[i] + Rb15[i] + R41[i])))) / (R42[i] * R45[i] * (R43[i] + Rb11[i] + Rb40[i] + (Rb14[i] + Rb15[i] + R41[i])) + R42[i] * (R43[i] + Rb11[i]) * (R14[i] + R15[i] + Rb41[i]) + R40[i] * (R45[i] * (Rb11[i] + (Rb14[i] + Rb15[i] + R41[i])) + Rb11[i] * (Rb42[i] + (R14[i] + R15[i] + Rb41[i])) + R43[i] * (R45[i] + Rb42[i] + (R14[i] + R15[i] + Rb41[i]))))
+		//Species_list_SS = ['A1-','A1C2H3','A1C2H3*','A1C2H','A1C2H*','A1C2H2','A1C2HX2','A2-','A2*','A2']
+		arr1(0, 0) =  (m_r[0] + m_r[2] + m_r[4] + m_r[6] + m_r[8] + m_r[10] + m_r[12] + m_r[15] + m_r[17]);
+		arr1(0, 1) = -(m_r[7]);
+		arr1(0, 2) = -(m_r[5]);
+		arr1(0, 3) = -(m_r[3]);
+		arr1(0, 5) = -(m_r[1]);
+		arr1(0, 9) = -(m_r[11]);
+		arr1(1, 0) = -(m_r[6]);
+		arr1(1, 1) =  (m_r[7] + m_r[19] + m_r[21] + m_r[22] + m_r[24] + m_r[26] + m_r[28] + m_r[30]);
+		arr1(1, 2) = -(m_r[20] + m_r[23] + m_r[25]);
+		arr1(1, 5) = -(m_r[27] + m_r[29] + m_r[31]);
+		arr1(2, 0) = -(m_r[4]);
+		arr1(2, 1) = -(m_r[21] + m_r[22] + m_r[24]);
+		arr1(2, 2) =  (m_r[5] + m_r[33] + m_r[20] + m_r[23] + m_r[25] + m_r[34]);
+		arr1(2, 5) = -(m_r[32]);
+		arr1(2, 9) = -(m_r[35]);
+		arr1(3, 0) = -(m_r[2]);
+		arr1(3, 3) =  (m_r[3] + m_r[37] + m_r[38] + m_r[40] + m_r[42] + m_r[45] + m_r[47] + m_r[48]);
+		arr1(3, 4) = -(m_r[36] + m_r[39] + m_r[41]);
+		arr1(3, 5) = -(m_r[43] + m_r[44] + m_r[46]);
+		arr1(3, 9) = -(m_r[49]);
+		arr1(4, 3) = -(m_r[37] + m_r[38] + m_r[40]);
+		arr1(4, 4) =  (m_r[36] + m_r[39] + m_r[41] + m_r[50] + m_r[52] + m_r[54] /*+ m_r[56]*/);
+		arr1(4, 6) = -(m_r[55]);
+		arr1(4, 7) = -(m_r[51]);
+		arr1(4, 8) = -(m_r[53]);
+		/*arr1(4, 9) = -(m_r[57])*/;
+		arr1(5, 0) = -(m_r[0]);
+		arr1(5, 1) = -(m_r[26] + m_r[28] + m_r[30]);
+		arr1(5, 2) = -(m_r[33]);
+		arr1(5, 3) = -(m_r[42] + m_r[45] + m_r[47]);
+		arr1(5, 5) =  (m_r[1] + m_r[32] + m_r[43] + m_r[44] + m_r[46] + m_r[27] + m_r[29] + m_r[31] + m_r[58]);
+		arr1(5, 9) = -(m_r[59]);
+		arr1(6, 4) = -(m_r[54]);
+		arr1(6, 6) =  (m_r[55] + m_r[60] + m_r[62]);
+		arr1(6, 7) = -(m_r[61]);
+		arr1(6, 8) = -(m_r[63]);
+		arr1(7, 4) = -(m_r[50]);
+		arr1(7, 6) = -(m_r[60]);
+		arr1(7, 7) =  (m_r[51] + m_r[61] + m_r[64] + m_r[67] + m_r[69]);
+		arr1(7, 9) = -(m_r[65] + m_r[66] + m_r[68]);
+		arr1(8, 4) = -(m_r[52]);
+		arr1(8, 6) = -(m_r[62]);
+		arr1(8, 8) =  (m_r[53] + m_r[63] + m_r[70] + m_r[73] + m_r[75]);
+		arr1(8, 9) = -(m_r[71] + m_r[72] + m_r[74]);
+		arr1(9, 0) = -(m_r[10]);
+		arr1(9, 2) = -(m_r[34]);
+		arr1(9, 3) = -(m_r[48]);
+		/*arr1(9, 4) = -(m_r[56]);*/
+		arr1(9, 5) = -(m_r[58]);
+		arr1(9, 7) = -(m_r[64] + m_r[67] + m_r[69]);
+		arr1(9, 8) = -(m_r[70] + m_r[73] + m_r[75]);
+		arr1(9, 9) =  (m_r[35] + m_r[59] + m_r[49] /*+ m_r[57]*/ + m_r[11] + m_r[65] + m_r[66] + m_r[68] + m_r[71] + m_r[72] + m_r[74]);
 
-		//FOR ABF TURN THIS ON:
-		/*double Anrad = (m_r[0] + m_r[2]) / (m_r[1] + m_r[3]);
-		double AnC2H = (Anrad*m_r[6] + m_r[20]) / (m_r[7] + m_r[21]); //NEEDS TO BE CHECKED: double AnC2H = (Anrad * m_r[4] + m_r[20]) / (m_r[5] + m_r[21]);
-		double AnC2Hrad = AnC2H*(m_r[24] + m_r[26]) / (m_r[25] + m_r[27]);
-		double AnC2H_2 = (AnC2H*m_r[28] + AnC2Hrad*m_r[36]) / (m_r[37] + m_r[29]);
-		double Anextrad = (AnC2Hrad*m_r[34] + AnC2H_2*m_r[40]) / (m_r[35] + m_r[41]);
-		r_f = Anextrad*(m_r[45] + m_r[47]);
-		*/
+
+		arr2(0) =  (m_r[9] + m_r[13] + m_r[14] + m_r[16]);
+		arr2(1) =  (m_r[18]);
+
+		//std::cout << arr1 << std::endl;
+		//std::cout << arr2 << std::endl;
+
+		permutation_matrix<size_t> pm(arr1.size1());
+		lu_factorize(arr1, pm);
+		lu_substitute(arr1, pm, arr2);
+		
+		//Species_list_PEQ = ['A1-','A1C2H3','A1C2H3*','A1C2H','A1C2H*','A1C2H2','A1C2HX2']
+		arr1_peq(0, 0) =  (m_r[0] + m_r[2] + m_r[4] + m_r[6] + m_r[8] + m_r[10] + m_r[12] + m_r[15] + m_r[17]);
+		arr1_peq(0, 1) = -(m_r[7]);
+		arr1_peq(0, 2) = -(m_r[5]);
+		arr1_peq(0, 3) = -(m_r[3]);
+		arr1_peq(0, 5) = -(m_r[1]);
+		arr1_peq(1, 0) = -(m_r[6]);
+		arr1_peq(1, 1) =  (m_r[7] + m_r[19] + m_r[21] + m_r[22] + m_r[24] + m_r[26] + m_r[28] + m_r[30]);
+		arr1_peq(1, 2) = -(m_r[20] + m_r[23] + m_r[25]);
+		arr1_peq(1, 5) = -(m_r[27] + m_r[29] + m_r[31]);
+		arr1_peq(2, 0) = -(m_r[4]);
+		arr1_peq(2, 1) = -(m_r[21] + m_r[22] + m_r[24]);
+		arr1_peq(2, 2) =  (m_r[5] + m_r[33] + m_r[20] + m_r[23] + m_r[25] + m_r[34]);
+		arr1_peq(2, 5) = -(m_r[32]);
+		arr1_peq(3, 0) = -(m_r[2]);
+		arr1_peq(3, 3) =  (m_r[3] + m_r[37] + m_r[38] + m_r[40] + m_r[42] + m_r[45] + m_r[47] + m_r[48]);
+		arr1_peq(3, 4) = -(m_r[36] + m_r[39] + m_r[41]);
+		arr1_peq(3, 5) = -(m_r[43] + m_r[44] + m_r[46]);
+		arr1_peq(4, 3) = -(m_r[37] + m_r[38] + m_r[40]);
+		arr1_peq(4, 4) =  (m_r[36] + m_r[39] + m_r[41] + m_r[50] + m_r[52] + m_r[54] /*+ m_r[56]*/);
+		arr1_peq(4, 6) = -(m_r[55]);
+		arr1_peq(5, 0) = -(m_r[0]);
+		arr1_peq(5, 1) = -(m_r[26] + m_r[28] + m_r[30]);
+		arr1_peq(5, 2) = -(m_r[33]);
+		arr1_peq(5, 3) = -(m_r[42] + m_r[45] + m_r[47]);
+		arr1_peq(5, 5) =  (m_r[1] + m_r[32] + m_r[43] + m_r[44] + m_r[46] + m_r[27] + m_r[29] + m_r[31] + m_r[58]);
+		arr1_peq(6, 4) = -(m_r[54]);
+		arr1_peq(6, 6) =  (m_r[55] + m_r[60] + m_r[62]);
 
 
-		matrix<double> arr1(7, 7);
+		arr2_peq(0) =  (m_r[9] + m_r[13] + m_r[14] + m_r[16]);
+		arr2_peq(1) =  (m_r[18]);
+
+		//std::cout << arr1 << std::endl;
+		//std::cout << arr2 << std::endl;
+
+		permutation_matrix<size_t> pm_peq(arr1_peq.size1());
+		lu_factorize(arr1_peq, pm_peq);
+		lu_substitute(arr1_peq, pm_peq, arr2_peq);
+
+		r_f2_ss =  arr2(4)*m_r[50] + arr2(6)*m_r[60] + arr2(4)*m_r[52] + arr2(6)*m_r[62] + arr2(2)*m_r[34] + arr2(5)*m_r[58] + arr2(3)*m_r[48] /*+ arr2(4)*m_r[56]*/ + arr2(0)*m_r[10]; //Production of the sum of A2* and A2*/
+		
+		r_f2_peq = arr2_peq(4)*m_r[50] + arr2_peq(6)*m_r[60] + arr2_peq(4)*m_r[52] + arr2_peq(6)*m_r[62] + arr2_peq(2)*m_r[34] + arr2_peq(5)*m_r[58] + arr2_peq(3)*m_r[48] /*+ arr2_peq(4)*m_r[56]*/ + arr2_peq(0)*m_r[10]; //Production of the sum of A2* and A2*/
+		
+		//For ABF REACTIONS:
+		/*matrix<double> arr1(7, 7);
 		boost::numeric::ublas::vector<double> arr2(7);
 		for (unsigned k = 0; k < arr1.size1(); ++k)
 			for (unsigned l = 0; l < arr1.size2(); ++l)
@@ -724,7 +944,7 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 		double A1C2Hrad = arr2(5);
 		double A1C2H2 = arr2(6);
 
-		r_f2 = arr2(5)*m_r[40] + arr2(6)*m_r[42] + arr2(1)*m_r[45] + arr2(4)*m_r[44]; //Production of the sum of A2* and A2
+		r_f2 = arr2(5)*m_r[40] + arr2(6)*m_r[42] + arr2(1)*m_r[45] + arr2(4)*m_r[44];*/ //Production of the sum of A2* and A2
 		//double r_f3 = arr2(8)*(m_r[44] + m_r[46]);
 		//double A2radtoA1ratio = arr2(9);
 		//double A2toA1ratio = arr2(8);
@@ -740,7 +960,8 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 
 	else r_f=0;
 	double m_rate_old = m_r[51]*r_f* site_count; // Rate Equation
-	m_rate = r_f2* site_count / 6.0; // Rate Equation
+	m_rate = r_f2_ss* site_count / 6.0; // Rate Equation
+	//m_rate = r_f2_peq * site_count / 6.0; // Rate Equation
 	return m_rate ; // Rate Equation
     //return setRate0p0267(gp, pah_st);
 }
@@ -772,12 +993,15 @@ void L6_BY6::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
+	//From Raj2009
+    addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      				//0 - r1f
+    addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   				//1 - r1b
+    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  				//2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); 				//3 - r2b
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));    	//4 - r3f           // Harding et al. 2005 Recommended by Frenklach2018
+    //addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  			//4 - r3f
+    addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   			//5 - r4f
+	addReaction(rxnV3, Reaction(3.49e12, -0.39, 2.44, sp::None));   			//6 - r4f			//Second route Raj2009
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = BY6; // sitetype
     m_name = "BY6 closure"; // name of process
@@ -786,7 +1010,8 @@ void L6_BY6::initialise() {
 // Jump rate calculation
 double L6_BY6::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     
@@ -803,7 +1028,20 @@ double L6_BY6::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
     return setRate0p0267(gp, pah_st);
 }
 double L6_BY6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+    // check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    
+    
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]);
+    double r_f; // radical fraction 
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = 2*(m_r[5]+m_r[6])*r_f* site_count; // Rate Equation
 }
 // 
 // ************************************************************
@@ -833,12 +1071,18 @@ void PH_benz::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4              - Forward
+	addReaction(rxnV3, Reaction(2.220E+83,-2.079E+01, 4.689E+01, sp::C6H6));   		 // A2* + A1 -> A2--A1 + H				- 5 */
+    /*addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
     addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
     addReaction(rxnV3, Reaction(1.0e10, .734, 1.43, sp::OH));  //2 - r2f
     addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.9e76, -18.4043, 47.87, sp::C6H6));   //5 - r4f
+    addReaction(rxnV3, Reaction(1.9e76, -18.4043, 47.87, sp::C6H6));   //5 - r4f*/
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
 
     m_sType = benz; // sitetype
@@ -848,7 +1092,8 @@ void PH_benz::initialise() {
 // Jump rate calculation
 double PH_benz::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     
@@ -860,7 +1105,7 @@ double PH_benz::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
     }
     else r_f=0;
     if((double)pah_st.getSiteCount(R5)!=0) site_count++;
-    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
 }
 double PH_benz::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
@@ -906,13 +1151,32 @@ void D6R_FE3::initialise() {
 
 
 	//Added by GLC
+	//Reactions from Narayanaswamy2010 and Mebel2016 for 1 atm.
+	//rxns of A1-
+	//rxns of A2-		 
+	addReaction(rxnV3, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A2- + H <=> A2               		 - 0            - Forward
+	addReaction(rxnV3, Reaction(4.126e+17, -3.390e-01, 1.195e+02, sp::None));        // A2- + H <=> A2               		 - 1            - Backward
+	addReaction(rxnV3, Reaction(4.570e+08, 1.880e+00, 1.484e+01, sp::H));            // A2 + H <=> A2- + H2          		 - 2            - Forward
+	addReaction(rxnV3, Reaction(2.516e+04, 2.612e+00, -9.970e-01, sp::H2));          // A2 + H <=> A2- + H2          		 - 3            - Backward
+	addReaction(rxnV3, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A2 + OH <=> A2- + H2O                - 4            - Forward
+	addReaction(rxnV3, Reaction(1.093e+02, 2.625e+00, 8.825e+00, sp::H2O));          // A2 + OH <=> A2- + H2O                - 5            - Backward
+	addReaction(rxnV3, Reaction(1.130e+16, 7.538e-01, 6.694e+01, sp::H));            // A1- + C4H4 <=> A2 + H                - 6            - Backward
+	addReaction(rxnV3, Reaction(1.387e+21, -7.978e-01, 7.245e+01, sp::H));           // A1C2H3* + C2H2 <=> A2 + H            - 7            - Backward
+	addReaction(rxnV3, Reaction(1.619e+29, -3.226e+00, 7.470e+01, sp::H));           // A1C2H + C2H3 <=> A2 + H              - 8            - Backward
+	addReaction(rxnV3, Reaction(1.338e+94, -2.184e+01, 1.435e+02, sp::None));        // A1C2H* + C2H2 <=> A2-                - 9            - Backward
+	addReaction(rxnV3, Reaction(3.917e+115, -2.755e+01, 1.688e+02, sp::None));       // A1C2H* + C2H2 <=> A2*                - 10            - Backward
+	addReaction(rxnV3, Reaction(1.583e+40, -6.094e+00, 8.758e+01, sp::H));           // A1C2H* + C2H4 <=> A2 + H             - 11            - Backward
+	addReaction(rxnV3, Reaction(3.736e+32, -4.109e+00, 7.723e+01, sp::H));           // A1C2H2 + C2H2 <=> A2 + H             - 12            - Backward
+	addReaction(rxnV3, Reaction(5.450e+90, -2.104e+01, 1.358e+02, sp::None));        // A1C2HX2 + H <=> A2-          		 - 13            - Backward
+	addReaction(rxnV3, Reaction(3.607e+113, -2.705e+01, 1.629e+02, sp::None));       // A1C2HX2 + H <=> A2*          		 - 14            - Backward
+	
 	//Reactions for the ABF mechanism
-	//------------Reactions for A1-----------------------------
+	/*//------------Reactions for A1-----------------------------
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));            // A1 + H <=> A1- + H2					- 0              - Forward
 	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));           // A1 + H <=> A1- + H2					- 1              - Backward
-	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A1 + OH <=> A1- + H2O               - 2              - Forward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A1 + OH <=> A1- + H2O               - 2              - Forward
 	addReaction(rxnV3, Reaction(1.136E+05, 2.055E+00, 9.453E+00, sp::H2O));          // A1 + OH <=> A1- + H2O               - 3              - Backward
-	//       A1- + H (+M) <=> A1 (+M) Reaction ommitted
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A1- + H -> A1              			- 4              - Forward
 	addReaction(rxnV3, Reaction(1.100e+07, 1.710e+00, 3.894e+00, sp::C2H2));           // A1- + C2H2 <=> n-A1C2H2              - 10            - Forward
 	addReaction(rxnV3, Reaction(1.300e+04, 0.000e+00, 4.1778e+01, sp::None));        // A1- + C2H2 <=> n-A1C2H2             - 5              - Backward
 	addReaction(rxnV3, Reaction(3.300E+33, -5.700E+00, 2.550E+01, sp::C2H2));        // A1- + C2H2 <=> A1C2H + H            - 6              - Forward
@@ -937,9 +1201,9 @@ void D6R_FE3::initialise() {
 	addReaction(rxnV3, Reaction(9.521E+44, -9.486E+00, 5.563E+01, sp::None));        // A1C2H + H <=> i-A1C2H2              - 23             - Backward
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));            // A1C2H + H <=> A1C2H* + H2           - 24             - Forward
 	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));           // A1C2H + H <=> A1C2H* + H2           - 25             - Backward
-	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A1C2H + OH <=> A1C2H* + H2O         - 26             - Forward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A1C2H + OH <=> A1C2H* + H2O         - 26             - Forward
 	addReaction(rxnV3, Reaction(1.263E+05, 2.245E+00, 8.610E+00, sp::H2O));          // A1C2H + OH <=> A1C2H* + H2O         - 27             - Backward
-	//       A1C2H* + H (+M) <=> A1C2H (+M) Reaction ommitted
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A1- + H -> A1              			- 4              - Forward
 	addReaction(rxnV3, Reaction(5.000E+13, 0.000E+00, 0.000E+00, sp::C2H));          // A1C2H + C2H <=> A1C2H)2 + H         - 28             - Forward
 	addReaction(rxnV3, Reaction(4.296E+20, -1.286E+00, 2.828E+01, sp::H));           // A1C2H + C2H <=> A1C2H)2 + H         - 29             - Backward
 	//------------Reactions for i-A1C2H2----------------------------
@@ -965,27 +1229,23 @@ void D6R_FE3::initialise() {
 	//------------Reactions for A2----------------------------
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));            // A2 + H <=> A2-1 + H2                - 44             - Forward
 	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));           // A2 + H <=> A2-1 + H2                - 45             - Backward
-	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A2 + OH <=> A2-1 + H2O              - 46             - Forward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A2 + OH <=> A2-1 + H2O              - 46             - Forward
 	addReaction(rxnV3, Reaction(1.597E+05, 2.116E+00, 9.183E+00, sp::H2O));          // A2 + OH <=> A2-1 + H2O              - 47             - Backward
-	//       A2-1 + H (+M) <=> A2 (+M) Reaction ommitted
-	//------------Reactions for A2-1----------------------------
-	//       A2-1 + H (+M) <=> A2 (+M) Reaction ommitted	
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A1- + H -> A1              			- 4              - Forward
 	//I STARTED THE SECOND PART HERE!!!
 	//------------3 body reactions------------------------------
 	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));            // A1- + H (+M) <=> A1 (+M)            - 48              - Forward - High rate
 	addReaction(rxnV3, Reaction(6.600E+72, -1.630E+01, 7.000E+00, sp::None));           // A1- + H (+M) <=> A1 (+M)            - 49              - Forward - High rate
 	addReaction(rxnV3, Reaction(1.392E+34, -5.237E+00, 1.200E+02, sp::None));           // A1- + H (+M) <=> A1 (+M)            - 50              - Backward
 	//Parameters = [1.00000000e+00   1.00000000e-01   5.84900000e+02   6.11300000e+03]
-
 	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));            // A1C2H* + H (+M) <=> A1C2H (+M)      - 51              - Forward - High rate
 	addReaction(rxnV3, Reaction(6.600E+72, -1.630E+01, 7.000E+00, sp::None));           // A1C2H* + H (+M) <=> A1C2H (+M)      - 52              - Forward - High rate
 	addReaction(rxnV3, Reaction(1.252E+34, -5.427E+00, 1.209E+02, sp::None));           // A1C2H* + H (+M) <=> A1C2H (+M)      - 53              - Backward
 	//Parameters = [1.00000000e+00   1.00000000e-01   5.84900000e+02   6.11300000e+03]
-
 	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));            // A2-1 + H (+M) <=> A2 (+M)           - 54              - Forward - High rate
 	addReaction(rxnV3, Reaction(3.800E+124, -3.143E+01, 1.868E+01, sp::None));          // A2-1 + H (+M) <=> A2 (+M)           - 55              - Forward - High rate
 	addReaction(rxnV3, Reaction(2.662E+37, -6.271E+00, 1.225E+02, sp::None));           // A2-1 + H (+M) <=> A2 (+M)           - 56              - Backward
-	//Parameters = [2.00000000e-01   1.22800000e+02   4.78400000e+02   5.41190000e+03]
+	//Parameters = [2.00000000e-01   1.22800000e+02   4.78400000e+02   5.41190000e+03]*/
 
 
 	m_sType = FE3; // sitetype
@@ -995,7 +1255,8 @@ void D6R_FE3::initialise() {
 // Jump rate calculation
 double D6R_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -1012,15 +1273,16 @@ double D6R_FE3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 }
 double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	//int ring_count = ((int)pah_st.getRingsCount().first); // Ring count
 	auto ring_count = pah_st.getRingsCount();
 	int ring_count_6 = std::get<0>(ring_count);
 	if (site_count == 0) return m_rate = 0;
 	if (ring_count_6 <= 1) return m_rate = 0;
 
-	// Calculating 3 body reactions
-	//Parameters alpha = 0.2, T3 = 122.8, T1 = 478.4, T2 = 5411.9
+	// Calculating 3 body reactions for ABF
+	/*//Parameters alpha = 0.2, T3 = 122.8, T1 = 478.4, T2 = 5411.9
 	//Parameters = [1.00000000e+00   1.00000000e-01   5.84900000e+02   6.11300000e+03]
 	double T = gp[gp.T];
 	double P = gp[gp.P]; //Pressure in Pa
@@ -1069,6 +1331,7 @@ double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 	//}
 	//else r_f = 0;
 
+	//Used for ABF
 	matrix<double> arr1(10, 10);
 	boost::numeric::ublas::vector<double> arr2(10);
 	for (unsigned k = 0; k < arr1.size1(); ++k)
@@ -1160,8 +1423,14 @@ double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 	//double test = m_r[44] + m_r[46]; //This rate grows well back to A1.
 	//double prod_A2 = (m_r[45] + m_r[47] + R3b3) * r_f;
 	//double test2 = 1.0;
-	m_rate = (m_r[41] + m_r[35]) * r_f* site_count / 2.0; // Rate Equation
+	m_rate = (m_r[41] + m_r[35]) * r_f* site_count / 2.0; // Rate Equation*/
 	//m_rate = PA2toA1;
+	//New rates
+	double r_denom = (m_r[0] + m_r[3] + m_r[5]);
+	if (r_denom <=0) return m_rate = 0.0;
+	double r_num = (m_r[1] + m_r[2] + m_r[4]);
+	m_rate = ((m_r[6] + m_r[7] + m_r[8] /*+ m_r[11]*/ + m_r[12]) + r_num/r_denom*(m_r[9] + m_r[10] + m_r[13] + m_r[14])) * site_count / 2.0;
+	
 	return m_rate;
 	
 
@@ -1209,7 +1478,8 @@ void O6R_FE3_O2::initialise() {
 // Jump rate calculation
 double O6R_FE3_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     double r_denom = (m_r[1]+m_r[3]+m_r[4]);
@@ -1223,7 +1493,8 @@ double O6R_FE3_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, co
 }
 double O6R_FE3_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -1279,7 +1550,8 @@ void O6R_FE3_OH::initialise() {
 // Jump rate calculation
 double O6R_FE3_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     
@@ -1294,7 +1566,8 @@ double O6R_FE3_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, co
 }
 double O6R_FE3_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     //double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -1350,7 +1623,8 @@ void O6R_FE_HACA_O2::initialise() {
 // Jump rate calculation
 double O6R_FE_HACA_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     double r_denom = (m_r[1]+m_r[3]+m_r[4]);
@@ -1364,7 +1638,8 @@ double O6R_FE_HACA_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*
 }
 double O6R_FE_HACA_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -1421,7 +1696,8 @@ void O6R_FE_HACA_OH::initialise() {
 // Jump rate calculation
 double O6R_FE_HACA_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
 
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -1435,7 +1711,8 @@ double O6R_FE_HACA_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*
 }
 double O6R_FE_HACA_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
 
     //double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -1479,13 +1756,30 @@ void G5R_ZZ::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //7 - r5f(2)
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
+	//Frenklach2018 and Blanquart
+    addReaction(rxnV3, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A2- + H <=> A2               		 - 0            - Forward
+	addReaction(rxnV3, Reaction(4.126e+17, -3.390e-01, 1.195e+02, sp::None));        // A2- + H <=> A2               		 - 1            - Backward
+	addReaction(rxnV3, Reaction(4.570e+08, 1.880e+00, 1.484e+01, sp::H));            // A2 + H <=> A2- + H2          		 - 2            - Forward
+	addReaction(rxnV3, Reaction(2.516e+04, 2.612e+00, -9.970e-01, sp::H2));          // A2 + H <=> A2- + H2          		 - 3            - Backward
+	addReaction(rxnV3, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A2 + OH <=> A2- + H2O                - 4            - Forward
+	addReaction(rxnV3, Reaction(1.093e+02, 2.625e+00, 8.825e+00, sp::H2O));          // A2 + OH <=> A2- + H2O                - 5            - Backward
+	addReaction(rxnV3, Reaction(1.250e+27, -3.950e+00, 1.6779e+01, sp::C2H2));       // A2- + C2H2 <=> A2R5 + H              - 6            - Forward
+	addReaction(rxnV3, Reaction(3.090e+20, -2.780e+00, 8.8890e+00, sp::C2H2));       // A2- + C2H2 <=> A2R5 + H              - 7            - Forward
+	addReaction(rxnV3, Reaction(3.090e+25, -3.110e+00, 3.1586e+01, sp::C2H2));       // A2- + C2H2 <=> A2C2H + H             - 8            - Forward
+	addReaction(rxnV3, Reaction(2.850e+07,  1.520e+00, 1.3190e+01, sp::C2H2));       // A2- + C2H2 <=> A2C2H + H             - 9            - Forward
+	/*addReaction(rxnV3, Reaction(1.250e+27, -3.950e+00, 1.6495e+01, sp::C2H2));     // A5- + C2H2 <=> A5R5 + H              - 10            - Forward
+	addReaction(rxnV3, Reaction(3.090e+20, -2.780e+00, 8.8890e+00, sp::C2H2));       // A5- + C2H2 <=> A5R5 + H              - 11            - Forward
+	addReaction(rxnV3, Reaction(3.090e+25, -3.110e+00, 3.1586e+01, sp::C2H2));       // A5- + C2H2 <=> A5C2H + H             - 12            - Forward
+	addReaction(rxnV3, Reaction(2.850e+07,  1.520e+00, 1.3190e+01, sp::C2H2));       // A5- + C2H2 <=> A5C2H + H             - 13            - Forward*/
+	
+	//ABF
+	/*addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
     addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
     addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
     addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
     addReaction(rxnV3, Reaction(6.8e11, 0, 22.0, sp::C2H2));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f*/
     m_sType = ZZ; // sitetype
     m_name = "R5 growth on ZZ"; // name of process
     m_ID = 10;
@@ -1493,7 +1787,8 @@ void G5R_ZZ::initialise() {
 // Jump rate calculation
 double G5R_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -1507,7 +1802,8 @@ double G5R_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 }
 double G5R_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     double r4f = m_r[5];
@@ -1522,7 +1818,19 @@ double G5R_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
     return m_rate = r4f*r_f* site_count; // Rate Equation
 }
 double G5R_ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+    // check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    
+    double r_denom = (m_r[0]+m_r[3]+m_r[5]+m_r[6]+m_r[7]+m_r[8]+m_r[9]);
+    double r_f; // radical fraction 
+    if(r_denom>0) {
+        r_f = (m_r[2]+m_r[4])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = (m_r[6] + m_r[7]) * r_f * site_count/2.0; // Rate Equation
 }
 
 
@@ -1558,13 +1866,28 @@ void D5R_R5::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //7 - r5f(2)
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(5.06e7, 1.93, 12.95, sp::H));      //0 - r1f
-    addReaction(rxnV3, Reaction(1.28e6, 1.93, 62.34, sp::H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
+    //Frenklach2018 and Blanquart -- Could not use because of lack of A2R5- thermal data (Most mechanisms assume A2R5- is the radical from any hydrogen abstractions except from R5 site)
+	/*addReaction(rxnV3, Reaction(6.080e+12, 2.700e-01, 0.000e+00, sp::H));          // A2R5- + H -> A2R5            - 0 Frenklach2005
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));           // A2R5 + H <=> A2R5- + H2      - 1 Hou2017
+	addReaction(rxnV3, Reaction(2.516e+04, 2.612e+00, -9.970e-01, sp::H2));          // A2 + H <=> A2- + H2          - 2 Fitted
+	addReaction(rxnV3, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A2 + OH <=> A2- + H2O        - 3            - Forward
+	addReaction(rxnV3, Reaction(1.093e+02, 2.625e+00, 8.825e+00, sp::H2O));          // A2 + OH <=> A2- + H2O                - 4            - Backward
+	
+	addReaction(rxnV3, Reaction(1.736e+35, -5.235e+00, 6.138e+01, sp::H));     // A2- + C2H2 <=> A2R5 + H              - 6             - Backward
+	addReaction(rxnV3, Reaction(4.292e+28, -4.065e+00, 5.359e+01, sp::H));     // A2- + C2H2 <=> A2R5 + H              - 7             - Backward*/
+	
+	//ABF - Frenklach and Whitesides2010
+	addReaction(rxnV3, Reaction(5.07e7, 1.93, 12.951, sp::H));      //0 - r1f //R10 in Whitesides2010
+    addReaction(rxnV3, Reaction(9.46e3, 2.56, 5.025, sp::H2));   //1 - r1b //R11 in Whitesides2010
+    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f 
     addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(6.08e12, 0, 0, sp::H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.6e14, 0, 42.42, sp::None));   //5 - r4f
+    addReaction(rxnV3, Reaction(6.08e12, 0.27, 0.280, sp::H));  //4 - r3f //R11 in Whitesides2010
+    addReaction(rxnV3, Reaction(1.6e14, 0, 42.42, sp::None));   //5 - r4f Frenklach1998 DFT with very old methods. I would not recommend it: gl413
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+	addReaction(rxnV3, Reaction(1.736e+35, -5.235e+00, 6.138e+01, sp::H));     // A2- + C2H2 <=> A2R5 + H              - 6             - Backward
+	addReaction(rxnV3, Reaction(4.292e+28, -4.065e+00, 5.359e+01, sp::H));     // A2- + C2H2 <=> A2R5 + H              - 7             - Backward
+	//route by hydrogen addition
+	
     m_sType = R5; // sitetype
     m_name = "R5 desorption"; // name of process
     m_ID = 11;
@@ -1572,7 +1895,8 @@ void D5R_R5::initialise() {
 // Jump rate calculation
 double D5R_R5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
 
     // Calculating r3f
@@ -1606,17 +1930,21 @@ double D5R_R5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 }
 double D5R_R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
-    
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    //Frenklach and Blanquart
+    return m_rate = (m_r[0] + m_r[1]) * site_count; // Rate Equation
+	
+	//ABF
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+    return m_rate = m_r[5]*r_f* site_count; // Rate Equation*/
 }
 // ************************************************************
 // ID12- R6 conversion to R5 (AR9 in Matlab)
@@ -1659,7 +1987,8 @@ void C6R_AC_FE3::initialise() {
 // Jump rate calculation
 double C6R_AC_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     
@@ -1727,7 +2056,8 @@ void C5R_RFE::initialise() {
 // Jump rate calculation
 double C5R_RFE::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]);
@@ -1746,7 +2076,8 @@ double C5R_RFE::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 }
 double C5R_RFE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r4f = m_r[5]+m_r[6];
@@ -1800,7 +2131,8 @@ void C5R_RAC::initialise() {
 // Jump rate calculation
 double C5R_RAC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
@@ -1815,7 +2147,8 @@ double C5R_RAC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
 }
 double C5R_RAC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
@@ -1830,7 +2163,8 @@ double C5R_RAC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 }
 double C5R_RAC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r3f = 1.34e12; 
@@ -1883,7 +2217,8 @@ void M5R_RZZ::initialise() {
 // Jump rate calculation
 double M5R_RZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
@@ -1898,7 +2233,8 @@ double M5R_RZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
 }
 double M5R_RZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r3f = 7.297e8 * gp[gp.T] - 5.0641e11; 
@@ -1913,7 +2249,8 @@ double M5R_RZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 }
 double M5R_RZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r3f = 1.34e12;
@@ -1964,7 +2301,8 @@ void C6R_BY5_FE3::initialise() {
 // Jump rate calculation
 double C6R_BY5_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -2013,7 +2351,8 @@ void C6R_BY5_FE3violi::initialise() {
 // Jump rate calculation
 double C6R_BY5_FE3violi::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -2093,7 +2432,8 @@ void L5R_BY5::initialise() {
 // Jump rate calculation
 double L5R_BY5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -2144,7 +2484,8 @@ void M6R_BY5_FE3::initialise() {
 // Jump rate calculation
 double M6R_BY5_FE3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -2204,7 +2545,8 @@ void O6R_FE2_OH::initialise() {
 // Jump rate calculation
 double O6R_FE2_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
 
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -2218,7 +2560,8 @@ double O6R_FE2_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, co
 }
 double O6R_FE2_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
 
     //double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -2274,7 +2617,8 @@ void O6R_FE2_O2::initialise() {
 // Jump rate calculation
 double O6R_FE2_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     double r_denom = (m_r[1]+m_r[3]+m_r[4]);
@@ -2288,7 +2632,8 @@ double O6R_FE2_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, co
 }
 double O6R_FE2_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
@@ -2327,39 +2672,45 @@ void D6R_FE_AC::initialise() {
 	//addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	//------------Reactions for A3-4----------------------------
-	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));            // A3 + H <=> A3-4 + H2                - 0              - Forward
-	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));           // A3 + H <=> A3-4 + H2                - 1              - Backward
-	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
-	addReaction(rxnV3, Reaction(4.596E+05, 2.070E+00, 1.017E+01, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
-	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));            // A3-4 + H (+M) <=> A3 (+M)           - 4              - Forward - High rate
-	addReaction(rxnV3, Reaction(2.100E+139, -3.480E+01, 1.838E+01, sp::None));          // A3-4 + H (+M) <=> A3 (+M)           - 5              - Forward - High rate
+	//Reverse reactions fitted from Blanquart thermal data with Frenklach rates from 2018
+	addReaction(rxnV3, Reaction(5.465e+30, -3.657e+00, 8.624e+01, sp::H));          // A3- + C2H2 <=> A4 + H                - 1             - Backward
+	addReaction(rxnV3, Reaction(4.868e+22, -1.697e+00, 7.555e+01, sp::H));          // A3- + C2H2 <=> A4 + H                - 2             - Backward
+	//Reactions for ABF
+	/*//------------Reactions for A3-4----------------------------
+	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));            	// A3 + H <=> A3-4 + H2              	- 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));           	// A3 + H <=> A3-4 + H2              	- 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           	// A3 + OH <=> A3-4 + H2O              	- 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          	// A3 + OH <=> A3-4 + H2O              	- 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            	// A3- + H -> A3              			- 4              - Forward
+	//addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::None));         	// A3-4 + H (+M) <=> A3 (+M)           	- 4              - Forward - High rate
+	//addReaction(rxnV3, Reaction(2.100E+139, -3.480E+01, 1.838E+01, sp::None));    	// A3-4 + H (+M) <=> A3 (+M)          	- 5              - Forward - High rate
 	//Parameters = [  1.00000000e-03   1.71400000e+02   1.71400000e+02   4.99280000e+03]
-	addReaction(rxnV3, Reaction(2.315E+31, -4.589E+00, 1.185E+02, sp::None));                // A3-4 + H (+M) <=> A3 (+M)           - 6              - Backward
-	addReaction(rxnV3, Reaction(8.000E+61, -1.450E+01, 3.480E+01, sp::C2H2));                // A3-4 + C2H2 <=> A3C2H2              - 7              - Forward
-	addReaction(rxnV3, Reaction(4.107E+69, -1.626E+01, 6.773E+01, sp::None));                // A3-4 + C2H2 <=> A3C2H2              - 8              - Backward
-	addReaction(rxnV3, Reaction(1.200E+26, -3.440E+00, 3.020E+01, sp::C2H2));                // A3-4 + C2H2 <=> A3C2H + H           - 9              - Forward
-	addReaction(rxnV3, Reaction(6.319E+33, -5.219E+00, 3.169E+01, sp::H));           // A3-4 + C2H2 <=> A3C2H + H           - 10             - Backward
-	addReaction(rxnV3, Reaction(6.600E+24, -3.360E+00, 1.780E+01, sp::C2H2));                // A3-4 + C2H2 <=> A4 + H              - 11             - Forward
-	addReaction(rxnV3, Reaction(1.815E+34, -4.875E+00, 7.521E+01, sp::H));           // A3-4 + C2H2 <=> A4 + H              - 12             - Backward
+	addReaction(rxnV3, Reaction(2.315E+31, -4.589E+00, 1.185E+02, sp::None));      		// A3-4 + H (+M) <=> A3 (+M)           - 6              - Backward
+	addReaction(rxnV3, Reaction(8.000E+61, -1.450E+01, 3.480E+01, sp::C2H2));      		// A3-4 + C2H2 <=> A3C2H2              - 7              - Forward
+	addReaction(rxnV3, Reaction(4.107E+69, -1.626E+01, 6.773E+01, sp::None));        	// A3-4 + C2H2 <=> A3C2H2              - 8              - Backward
+	addReaction(rxnV3, Reaction(1.200E+26, -3.440E+00, 3.020E+01, sp::C2H2));         	// A3-4 + C2H2 <=> A3C2H + H           - 9              - Forward
+	addReaction(rxnV3, Reaction(6.319E+33, -5.219E+00, 3.169E+01, sp::H));           	// A3-4 + C2H2 <=> A3C2H + H           - 10             - Backward
+	addReaction(rxnV3, Reaction(6.600E+24, -3.360E+00, 1.780E+01, sp::C2H2));      		// A3-4 + C2H2 <=> A4 + H              - 11             - Forward
+	addReaction(rxnV3, Reaction(1.815E+34, -4.875E+00, 7.521E+01, sp::H));        		// A3-4 + C2H2 <=> A4 + H              - 12             - Backward
 	////------------Reactions for A3C2H----------------------------
-	addReaction(rxnV3, Reaction(5.000E+13, 0.000E+00, 0.000E+00, sp::C2H));          // A3 + C2H <=> A3C2H + H              - 13             - Forward
-	addReaction(rxnV3, Reaction(9.332E+20, -1.526E+00, 2.401E+01, sp::H));           // A3 + C2H <=> A3C2H + H              - 14             - Backward
-	addReaction(rxnV3, Reaction(1.900E+64, -1.512E+01, 2.930E+01, sp::H));           // A3C2H + H <=> A3C2H2                - 15             - Forward
-	addReaction(rxnV3, Reaction(1.852E+64, -1.510E+01, 6.074E+01, sp::None));                // A3C2H + H <=> A3C2H2                - 16             - Backward
+	addReaction(rxnV3, Reaction(5.000E+13, 0.000E+00, 0.000E+00, sp::C2H));          	// A3 + C2H <=> A3C2H + H              - 13             - Forward
+	addReaction(rxnV3, Reaction(9.332E+20, -1.526E+00, 2.401E+01, sp::H));           	// A3 + C2H <=> A3C2H + H              - 14             - Backward
+	addReaction(rxnV3, Reaction(1.900E+64, -1.512E+01, 2.930E+01, sp::H));           	// A3C2H + H <=> A3C2H2                - 15             - Forward
+	addReaction(rxnV3, Reaction(1.852E+64, -1.510E+01, 6.074E+01, sp::None));        	// A3C2H + H <=> A3C2H2                - 16             - Backward
 	////------------Reactions for A3C2H2----------------------------
-	addReaction(rxnV3, Reaction(2.000E+63, -1.528E+01, 4.320E+01, sp::None));                // A3C2H2 <=> A4 + H           - 17             - Forward
+	addReaction(rxnV3, Reaction(2.000E+63, -1.528E+01, 4.320E+01, sp::None));           // A3C2H2 <=> A4 + H           - 17             - Forward
 	addReaction(rxnV3, Reaction(1.071E+65, -1.504E+01, 6.768E+01, sp::H));           // A3C2H2 <=> A4 + H           - 18             - Backward
 	////------------Reactions for A4----------------------------
 	addReaction(rxnV3, Reaction(9.000E+38, -7.390E+00, 2.070E+01, sp::H));           // A3C2H + H <=> A4 + H                - 19             - Forward
 	addReaction(rxnV3, Reaction(4.700E+40, -7.125E+00, 7.662E+01, sp::H));           // A3C2H + H <=> A4 + H                - 20             - Backward
-	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));            // A4 + H <=> A4- + H2         - 21             - Forward
-	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));           // A4 + H <=> A4- + H2         - 22             - Backward
-	addReaction(rxnV3, Reaction(1.600E+08, 1.420E+00, 1.450E+00, sp::OH));           // A4 + OH <=> A4- + H2O               - 23             - Forward
+	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A4 + H <=> A4- + H2         - 21             - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A4 + H <=> A4- + H2         - 22             - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A4 + OH <=> A4- + H2O               - 23             - Forward
 	addReaction(rxnV3, Reaction(9.600E+04, 2.162E+00, 9.780E+00, sp::H2O));          // A4 + OH <=> A4- + H2O               - 24             - Backward
-	addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::H));            // A4- + H <=> A4              - 25             - Forward
-	addReaction(rxnV3, Reaction(4.635E+18, -7.927E-01, 1.113E+02, sp::None));                // A4- + H <=> A4              - 26             - Backward
-	////------------Reactions for A4-----------------------------	
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A4- + H -> A4              			- 25              - Forward
+	//addReaction(rxnV3, Reaction(1.000E+14, 0.000E+00, 0.000E+00, sp::H));          // A4- + H <=> A4              - 25             - Forward
+	//addReaction(rxnV3, Reaction(4.635E+18, -7.927E-01, 1.113E+02, sp::None));                // A4- + H <=> A4              - 26             - Backward
+	////------------Reactions for A4-----------------------------	*/
 
 	m_sType = FE_HACA; // sitetype
 	m_name = "R6 (FE-HACA) desorption"; // name of process
@@ -2368,7 +2719,8 @@ void D6R_FE_AC::initialise() {
 // Jump rate calculation
 double D6R_FE_AC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2385,19 +2737,24 @@ double D6R_FE_AC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
 }
 double D6R_FE_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	//int ring_count = ((int)pah_st.getRingsCount().first); // Ring count
 	auto ring_count = pah_st.getRingsCount();
 	int ring_count_6 = std::get<0>(ring_count);
-	//if (ring_count <= 4) return m_rate = 0.0;
+	if (ring_count_6 <= 4) return m_rate = 0.0;
 	double T = gp[gp.T];
 	double r_f = 0.0;
 	if (T < 600) {
 		return m_rate = 0.0;
 	}
-	else return m_rate = (m_r[12] + m_r[20] + m_r[18]) * site_count / 2.0; //Lumped consumption of A4
-
+	else{
+		//For Frenklach2018
+		return m_rate = (m_r[1] + m_r[2]) * site_count / 2.0; //Lumped consumption of A4
+		//For ABF
+		//return m_rate = (m_r[12] + m_r[20] + m_r[18]) * site_count / 2.0; //Lumped consumption of A4
+	}
 }
 
 // ************************************************************
@@ -2459,7 +2816,8 @@ void B6R_ACR5::initialise() {
 // Jump rate calculation
 double B6R_ACR5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[2] + m_r[3]);
@@ -2475,7 +2833,8 @@ double B6R_ACR5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 }
 double B6R_ACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2517,7 +2876,8 @@ void M5R_ACR5_ZZ::initialise() {
 // Jump rate calculation
 double M5R_ACR5_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2542,12 +2902,21 @@ double M5R_ACR5_ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 void G6R_RZZ::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
+	//Checked 2019
+	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	
+	//Previous. No idea where they got the rates from.
+	/*addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f
+	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f*/
 
 	m_sType = RZZ; // sitetype
 	m_name = "G6R at RZZ"; // name of process
@@ -2556,7 +2925,8 @@ void G6R_RZZ::initialise() {
 
 double G6R_RZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2575,12 +2945,21 @@ double G6R_RZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 void G6R_RFER::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
+	//Checked 2019
+	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	
+	//Previous. No idea about the C2H2 rate
+	/*addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f
+	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f*/
 
 	m_sType = RFER; // sitetype
 	m_name = "G6R at RFER"; // name of process
@@ -2589,7 +2968,8 @@ void G6R_RFER::initialise() {
 
 double G6R_RFER::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2622,7 +3002,8 @@ void G6R_R5::initialise() {
 
 double G6R_R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2655,7 +3036,8 @@ void L6_RBY5::initialise() {
 }
 double L6_RBY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2687,7 +3069,8 @@ void L6_RACR::initialise() {
 }
 double L6_RACR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2719,7 +3102,8 @@ void G5R_RFE::initialise() {
 }
 double G5R_RFE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2752,7 +3136,8 @@ void C6R_RAC_FE3::initialise() {
 
 double C6R_RAC_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2785,7 +3170,8 @@ void C6R_RAC_FE3violi::initialise() {
 
 double C6R_RAC_FE3violi::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2819,7 +3205,8 @@ void M6R_RAC_FE3::initialise() {
 
 double M6R_RAC_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -2851,7 +3238,8 @@ void MR5_R6::initialise() {
 
 double MR5_R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = m_r[1] + m_r[3] + m_r[4];
@@ -2886,7 +3274,8 @@ void GR7_R5R6AC::initialise() {
 
 double GR7_R5R6AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = m_r[1] + m_r[3] + m_r[4] + m_r[5];
@@ -2921,7 +3310,8 @@ void GR7_FEACR5::initialise() {
 
 double GR7_FEACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = m_r[1] + m_r[3] + m_r[4] + m_r[5];
@@ -2940,12 +3330,21 @@ double GR7_FEACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 void G6R_R5R6ZZ::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
+	//Checked 2019
+	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	
+	//Previous. No idea about the C2H2 rate
+	/*addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f
+	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f*/
 
 	m_sType = R5R6ZZ; // sitetype
 	m_name = "G6R at R5R6ZZ"; // name of process
@@ -2954,7 +3353,8 @@ void G6R_R5R6ZZ::initialise() {
 
 double G6R_R5R6ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -3006,7 +3406,8 @@ void L7_ACACR5::initialise() {
 // Jump rate calculation
 double L7_ACACR5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     
@@ -3033,12 +3434,21 @@ double L7_ACACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 void G6R_R5R6FER::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
+	//Checked 2019
+	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	
+	//Previous. No idea about the C2H2 rate
+	/*addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f
+	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f*/
 
 	m_sType = R5R6FER; // sitetype
 	m_name = "G6R at R5R6FER"; // name of process
@@ -3047,7 +3457,8 @@ void G6R_R5R6FER::initialise() {
 
 double G6R_R5R6FER::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -3066,12 +3477,21 @@ double G6R_R5R6FER::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 void G6R_R5R6FER5R6::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
+	//Checked 2019
+	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	
+	//Previous. No idea about the C2H2 rate
+	/*addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f
+	addReaction(rxnV3, Reaction(8.00e07, 1.560, 3.800, sp::C2H2));  // 5 - r4f*/
 
 	m_sType = R5R6FER5R6; // sitetype
 	m_name = "G6R at R5R6FER5R6"; // name of process
@@ -3080,7 +3500,8 @@ void G6R_R5R6FER5R6::initialise() {
 
 double G6R_R5R6FER5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	// check if site count is zero
-	double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
@@ -3132,7 +3553,8 @@ void L7_FEZZACR5::initialise() {
 // Jump rate calculation
 double L7_FEZZACR5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType)); // Site count
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     
     

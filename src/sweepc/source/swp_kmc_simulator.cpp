@@ -161,7 +161,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		init_flag = 1;
 	};
 	//std::list<int> tracked_PAHs = {4790, 539, 1985};
-	if (init_trajectory != m_tracked_pahs.size()){
+	/*if (init_trajectory != m_tracked_pahs.size()){
 		auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
 		if (finder != m_tracked_pahs.end()){
 			for (std::list<int>::iterator track_iter = m_tracked_pahs.begin(); track_iter != m_tracked_pahs.end(); ++track_iter){
@@ -174,7 +174,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			}
 			++init_trajectory;
 		}
-	}
+	}*/
 	
     
     /*if(m_simPAHp.checkCoordinates())
@@ -272,21 +272,23 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				std::string xyzname = ("KMC_DEBUG/");
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
-				xyzname.append(std::to_string(m_t));
+				xyzname.append(std::to_string(m_t*1000.0));
 				//xyzname.append("_before");
 				savePAH(PAH_ID, xyzname);
 				cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
 				m_simPAHp.printSites();
+				printRates(m_t, m_kmcmech.Rates());
 			}
 			
 			m_rxn_count[jp_perf.second]++;
 			writeRxnCountCSV();
-			//writeCHSiteCountCSV();
+			writeCHSiteCountCSV();
 			//writeTimerCSV();
 			//rates = m_kmcmech.Rates();
 			//writeRatesCSV(m_t, rates);*/
 
             // Update data structure -- Perform jump process
+			//printRates(m_t, m_kmcmech.Rates());
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 			
 			//Save information for a single PAH
@@ -550,6 +552,17 @@ void KMCSimulator::initCSVIO() {
 void KMCSimulator::initReactionCount() {
     m_rxn_count.assign(m_kmcmech.JPList().size(), 0);
 }
+
+//! Prints rates to command line
+void KMCSimulator::printRates(double& time, const std::vector<double>& v_rates) {
+	cout << "Rates calculated at Time = " << time << "\n";
+    for(size_t i=0; i<m_kmcmech.JPList().size(); i++) {
+        // gets name of each jump process and puts them in a row
+        cout << (m_kmcmech.JPList()[i]->getName()) << "\t ->" << v_rates[i] << "\n";
+    }
+	cout << "\n";
+}
+	
 //! Reads chemical mechanism / profile (if not obtained from Mops)
 //! Similar function as Sweep::Flamesolver::LoadGasProfile
 void KMCSimulator::LoadGasProfiles(const std::string gasphase, const std::string chemfile, const std::string thermfile) {
