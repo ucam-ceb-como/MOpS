@@ -277,7 +277,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				savePAH(PAH_ID, xyzname);
 				cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
 				m_simPAHp.printSites();
-				printRates(m_t, m_kmcmech.Rates());
+				//printRates(m_t, m_kmcmech.Rates());
 			}
 			
 			m_rxn_count[jp_perf.second]++;

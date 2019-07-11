@@ -211,9 +211,18 @@ public:
 	void proc_GR7_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID36.
 	void proc_G6R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID37.
 	void proc_L7_ACACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID38.
-	void proc_G6R_R5R6FER(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID39.
-	void proc_G6R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID40.
-	void proc_L7_FEZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID41
+	void proc_G6R_R5R6FER(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID39.
+	void proc_G6R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                  //!< ID40.
+	void proc_L7_FEZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID41
+	void proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);         //!< ID42
+	void proc_C5R_R5R6ZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);      //!< ID43
+	void proc_L6_R5R6BY5(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID44
+	void proc_L6_R5R6ACR(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID45
+	void proc_L6_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID46
+	void proc_L6_ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID47
+	void proc_L6_R5FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID48
+	void proc_L6_FEACR5FE(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID49
+	void proc_L6_R5ACR5R5(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID50
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts

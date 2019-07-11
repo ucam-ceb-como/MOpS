@@ -452,7 +452,7 @@ namespace KMC_ARS {
 		void initialise();
 	};
 	
-	//! ID25.
+	//! ID40.
 	class G6R_R5R6FER5R6 : public Sweep::KMC_ARS::JumpProcess {
 	public:
 		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -464,6 +464,69 @@ namespace KMC_ARS {
 	public:
 		double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 		double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
+	
+	//! ID42.
+	class C5R_RZZR : public Sweep::KMC_ARS::JumpProcess {
+	public:
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
+	
+	//! ID43.
+	class C5R_R5R6ZZR : public Sweep::KMC_ARS::JumpProcess {
+	public:
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
+	
+	//! ID44.
+	class L6_R5R6BY5 : public Sweep::KMC_ARS::JumpProcess {
+	public:
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
+	
+	//! ID45.
+	class L6_R5R6ACR : public Sweep::KMC_ARS::JumpProcess {
+	public:
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
+	
+	//! ID46.
+	class L6_R5R6ACR5R6 : public Sweep::KMC_ARS::JumpProcess {
+	public:
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
+	
+	//! ID47.
+	class L6_ZZACR5 : public Sweep::KMC_ARS::JumpProcess {
+	public:
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
+	
+	//! ID48.
+	class L6_R5FEACR5 : public Sweep::KMC_ARS::JumpProcess {
+	public:
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
+	
+	//! ID49.
+	class L6_FEACR5FE : public Sweep::KMC_ARS::JumpProcess {
+	public:
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
+	
+	//! ID50.
+	class L6_R5ACR5R5 : public Sweep::KMC_ARS::JumpProcess {
+	public:
 		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 		void initialise();
 	};

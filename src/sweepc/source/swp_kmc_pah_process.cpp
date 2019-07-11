@@ -229,13 +229,14 @@ void PAHProcess::printSites() const{
     cout << "*******************\n";
     cout << "Sites List:\n_____\n";
     // displays total site count
-    cout << "Total Site Count: " << m_pah->m_siteList.size() << '\n';
+    cout << "Total Site Count: " << m_pah->m_siteList.size() << "\t Total Edge Carbons: " << m_pah->m_carbonList.size() << "\t\t\t Total Internal Carbons: " << m_pah->m_InternalCarbons.size()<<'\n';
+	cout << "Total R6 rings: " << m_pah->m_rings << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded \t Total R7 rings: " << m_pah->m_rings7_Embedded << '\n';
     for(i=m_pah->m_siteList.begin(); i!=m_pah->m_siteList.end(); i++) {
         // convert site type into string
         st = kmcSiteName(i->type);
         // displays site type
         cout << st << '\n';
-    }
+	}
     cout << "********************\n";
 }
 //! Print Sites in console, with an arrow pointing at site stt
@@ -246,7 +247,8 @@ void PAHProcess::printSites(Spointer& stt) const{
     cout << "*******************\n";
     cout << "Sites List:\n_____\n";
     // displays total site count
-    cout << "Total Site Count: " << m_pah->m_siteList.size() << '\n';
+    cout << "Total Site Count: " << m_pah->m_siteList.size() << "\t Total Edge Carbons: " << m_pah->m_carbonList.size() << "\t\t\t Total Internal Carbons: " << m_pah->m_InternalCarbons.size()<<'\n';
+	cout << "Total R6 rings: " << m_pah->m_rings << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded \t Total R7 rings: " << m_pah->m_rings7_Embedded << '\n';
     for(i=m_pah->m_siteList.begin(); i!=m_pah->m_siteList.end(); i++) {
         // convert site type into string
         st = kmcSiteName(i->type);
@@ -256,7 +258,7 @@ void PAHProcess::printSites(Spointer& stt) const{
         if(i == stt) st.append(pointer);
         // displays site type (and arrow)
         cout << st << '\n';
-    }
+	}
     cout << "********************\n";
 }
 //! Create a copy of the sites type
@@ -313,7 +315,8 @@ void PAHProcess::printSitesMemb(Spointer& stt) const{
     cout << "*******************\n";
     cout << "Sites List:\n_____\n";
     // displays total site count
-    cout << "Total Site Count: " << m_pah->m_siteList.size() << '\n';
+    cout << "Total Site Count: " << m_pah->m_siteList.size() << "\t Total Edge Carbons: " << m_pah->m_carbonList.size() << "\t\t\t Total Internal Carbons: " << m_pah->m_InternalCarbons.size()<<'\n';
+	cout << "Total R6 rings: " << m_pah->m_rings << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded \t Total R7 rings: " << m_pah->m_rings7_Embedded << '\n';
     for(i=m_pah->m_siteList.begin(); i!=m_pah->m_siteList.end(); i++) {
         // convert site type into string
         cout<< kmcSiteName(i->type);
@@ -324,7 +327,7 @@ void PAHProcess::printSitesMemb(Spointer& stt) const{
         if(i == stt) cout<<pointer;
         // displays site type (and arrow)
         cout <<'\n';
-    }
+	}
     cout << "********************\n";
 }
 void PAHProcess::printSitesMemb() const{
@@ -334,7 +337,8 @@ void PAHProcess::printSitesMemb() const{
     cout << "*******************\n";
     cout << "Sites List:\n_____\n";
     // displays total site count
-    cout << "Total Site Count: " << m_pah->m_siteList.size() << '\n';
+    cout << "Total Site Count: " << m_pah->m_siteList.size() << "\t Total Edge Carbons: " << m_pah->m_carbonList.size() << "\t\t\t Total Internal Carbons: " << m_pah->m_InternalCarbons.size()<<'\n';
+	cout << "Total R6 rings: " << m_pah->m_rings << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded \t Total R7 rings: " << m_pah->m_rings7_Embedded << '\n';
     for(i=m_pah->m_siteList.begin(); i!=m_pah->m_siteList.end(); i++) {
         // convert site type into string
         cout<< kmcSiteName(i->type);
@@ -348,7 +352,6 @@ void PAHProcess::printSitesMemb() const{
     }
     cout << "********************\n";
 }
-
 //! Store results in external file, returns success/failure
 // Stores structure into a DOT file for Graphviz
 bool PAHProcess::saveDOT(const std::string &filename) const {
@@ -3384,6 +3387,30 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			proc_G6R_R5R6ZZ(site_perf, site_C1, site_C2); break;
 		case 38:
 			proc_L7_ACACR5(site_perf, site_C1, site_C2); break;
+		case 39:
+			proc_G6R_R5R6FER(site_perf, site_C1, site_C2); break;
+		case 40:
+			proc_G6R_R5R6FER5R6(site_perf, site_C1, site_C2); break;
+		case 41:
+			proc_L7_FEZZACR5(site_perf, site_C1, site_C2); break;
+		case 42:
+			proc_C5R_RZZR(site_perf, site_C1, site_C2, rng); break;
+		case 43:
+			proc_C5R_R5R6ZZR(site_perf, site_C1, site_C2, rng); break;
+		case 44:
+			proc_L6_R5R6BY5(site_perf, site_C1, site_C2); break;
+		case 45:
+			proc_L6_R5R6ACR(site_perf, site_C1, site_C2); break;
+		case 46:
+			proc_L6_R5R6ACR5R6(site_perf, site_C1, site_C2); break;
+		case 47:
+			proc_L6_ZZACR5(site_perf, site_C1, site_C2); break;
+		case 48:
+			proc_L6_R5FEACR5(site_perf, site_C1, site_C2); break;
+		case 49:
+			proc_L6_FEACR5FE(site_perf, site_C1, site_C2); break;
+		case 50:
+			proc_L6_R5ACR5R5(site_perf, site_C1, site_C2); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -3728,6 +3755,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
             //saveDOT(std::string("BY6ClosureProblem.dot"));
             std::cerr<<"ERROR: newType is > 4 (PAHProcess::proc_L6_BY6)\n";
         }
+		convSiteType(stt, stt->C1, stt->C2, (kmcSiteType)4);
         updateSites(stt, moveIt(stt,-1)->C1, moveIt(stt,1)->C2,(newType-4));
     }
     else {
@@ -4008,14 +4036,10 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update site stt and new neighbours
     // new neighbours:
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
-	if (S1->type >= 2002 && S1->type <= 2104 && S2->type >= 2002 && S2->type <= 2104){
-		//Needs debugging!!! DONE?
-		removeR5internal(C1_new, C2_new);
-		convSiteType(stt, C1_new->C1, C2_new->C2, ZZ);
-		updateSites(S1, S1->C1, C1_new->C1, -2002);
-		updateSites(S2, C2_new->C2, S2->C2, -2002);
-		m_pah->m_rings5_Embedded--;
-		redrawR5(stt, C1_new->C1, C2_new->C2);
+	if (isR5internal(C1_new, C2_new) ){
+		updateSites(S1, S1->C1, C1_new, -1);
+		updateSites(S2, C2_new, S2->C2, -1);
+		updateSites(stt, C1_new, C2_new, 100);
 	}
 	else {
 		//Flat PAH desorption
@@ -4313,13 +4337,36 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
 	}
 	else {
 		//Assuming that the site removed was an heptagon
+		bool R5_bool0, R5_bool1, R5_bool2;
+		R5_bool0 = isR5internal(C1_res, C1_res->C2);
+		if ( isR5internal(C1_res->C2, C1_res->C2->C2) || isR5internal(C2_res->C1->C1, C2_res->C1)) R5_bool1 = true;
+		else R5_bool1 = false;
+		R5_bool2 = isR5internal(C2_res->C1, C2_res);
+		
+		if (R5_bool0 && R5_bool2){
+			if ((int)S1->type >= 2002 && (int)S2->type >= 2002) updateSites(stt, C1_res, C2_res, 1003);
+			else if ((int)S1->type >= 2002 || (int)S2->type >= 2002) updateSites(stt, C1_res, C2_res, 603);
+			else updateSites(stt, C1_res, C2_res, 203);
+		}
+		if ( R5_bool0 && R5_bool1) updateSites(stt, C1_res, C2_res, 2103);
+		if ( R5_bool2 && R5_bool1) updateSites(stt, C1_res, C2_res, 2103);
+		if ( !R5_bool0 && !R5_bool2 && R5_bool1) updateSites(stt, C1_res, C2_res, 2003);
+		if (R5_bool0 && ! R5_bool2 && !R5_bool1){
+			if ((int)S1->type >= 2002) updateSites(stt, C1_res, C2_res, 503);
+			else updateSites(stt, C1_res, C2_res, 103);
+		}
+		if (!R5_bool0 && R5_bool2 && !R5_bool1){
+			if ((int)S2->type >= 2002) updateSites(stt, C1_res, C2_res, 503);
+			else updateSites(stt, C1_res, C2_res, 103);
+		}
+		
 		if (S1->type == ACR5 && S2->type == ACR5) {
-			updateSites(stt, C1_res, C2_res, 2204);
+			//updateSites(stt, C1_res, C2_res, 2204);
 			updateSites(S1, S1->C1, C1_res, -1501);
 			updateSites(S2, C2_res, S2->C2, -1501);
 		}
 		else if (S1->type == ACR5 || S2->type == ACR5) {
-			updateSites(stt, C1_res, C2_res, 2103);
+			//updateSites(stt, C1_res, C2_res, 2103);
 			updateSites(S1, S1->C1, C1_res, -1);
 			updateSites(S2, C2_res, S2->C2, -1);
 		}
@@ -4327,22 +4374,22 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
 			double dist1 = getDistance_twoC(C1_res, C1_res->C1);
 			double dist2 = getDistance_twoC(C2_res, C2_res->C2);
 			if (dist1 > 1.1 && dist2 > 1.1){
-				updateSites(stt, C1_res, C2_res, 2002);
+				//updateSites(stt, C1_res, C2_res, 2002);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1);
 			}
 			else if (dist1 > 1.1){
-				updateSites(stt, C1_res, C2_res, 502);
+				//updateSites(stt, C1_res, C2_res, 502);
 				updateSites(S1, S1->C1, C1_res, -1501);
 				updateSites(S2, C2_res, S2->C2, -1);
 			}
 			else if (dist2 > 1.1){
-				updateSites(stt, C1_res, C2_res, 502);
+				//updateSites(stt, C1_res, C2_res, 502);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1501);
 			}
 			else {
-				updateSites(stt, C1_res, C2_res, 1003);
+				//updateSites(stt, C1_res, C2_res, 1003);
 				updateSites(S1, S1->C1, C1_res, -1501);
 				updateSites(S2, C2_res, S2->C2, -1501);
 			}
@@ -4350,12 +4397,12 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
 		else if ((int)S1->type >= 2003 && (int)S1->type <= 2005) {
 			double dist2 = getDistance_twoC(C1_res, C1_res->C1);
 			if (dist2 > 1.1){
-				updateSites(stt, C1_res, C2_res, 502);
+				//updateSites(stt, C1_res, C2_res, 502);
 				updateSites(S1, S1->C1, C1_res, -1501);
 				updateSites(S2, C2_res, S2->C2, -1);
 			}
 			else{
-				updateSites(stt, C1_res, C2_res, 2);
+				//updateSites(stt, C1_res, C2_res, 2);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1);
 			}
@@ -4363,12 +4410,12 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
 		else if ((int)S2->type >= 2003 && (int)S2->type <= 2005) {
 			double dist2 = getDistance_twoC(C2_res, C2_res->C2);
 			if (dist2 > 1.1){
-				updateSites(stt, C1_res, C2_res, 502);
+				//updateSites(stt, C1_res, C2_res, 502);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1501);
 			}
 			else{
-				updateSites(stt, C1_res, C2_res, 2);
+				//updateSites(stt, C1_res, C2_res, 2);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1);
 			}
@@ -4413,7 +4460,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
 			}
 		}
 		else {
-			updateSites(stt, C1_res, C2_res, 2003);
+			//updateSites(stt, C1_res, C2_res, 2003);
 			updateSites(S1, S1->C1, C1_res, -1);
 			updateSites(S2, C2_res, S2->C2, -1);
 		}
@@ -4485,6 +4532,11 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // add ring counts
     m_pah->m_rings5_Lone++;
 	addR5internal(C1_res,C2_res);
+	if (dist > 2.7){
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 }
 // ************************************************************
 // ID11- R5 desorption (AR7 in Matlab)
@@ -5383,7 +5435,7 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
         convSiteType(stt, C_1, C_2->C1, FE); // convert BY5 to FE
         updateSites(S1, S1->C1, Cstart, -1); // remove a bulk C from S1
         updateSites(S2, C_2->C1, S2->C2, +1); // add a bulk C to S2
-		if( (int)S1->type >= 501 && (int) S1->type <= 504) updateSites(sFE3, Cstart, C_1, +500); // convert FE3 to R5R6
+		//if( (int)S1->type >= 501 && (int) S1->type <= 504) updateSites(sFE3, Cstart, C_1, +500); // convert FE3 to R5R6
     } else {
         S1 = moveIt(stt, -1); // neighbour of BY5 (stt)
         S2 = moveIt(sFE3, 1); // neighbour of FE3
@@ -5391,7 +5443,7 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
         convSiteType(stt, C_1->C2, C_2, FE); // convert BY5 to FE
         updateSites(S1, S1->C1, C_1->C2, +1); // add a bulk C to S1
         updateSites(S2, sFE3->C2, S2->C2, -1); // remove a bulk C from S2
-		if((int)S2->type >= 501 && (int)S2->type <= 504) updateSites(sFE3, Cstart, C_2->C2->C2, +500); // convert FE3 to R5R6
+		//if((int)S2->type >= 501 && (int)S2->type <= 504) updateSites(sFE3, Cstart, C_2->C2->C2, +500); // convert FE3 to R5R6
     }
     
     // update H atoms
@@ -5407,6 +5459,12 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     addCount(0, -2);
     //printSites(stt);
    // cout<<sp.None;
+   double distrr = getDistance_twoC(Cnew, Cnew->C2);
+   if (distrr < 1.15 || distrr > 1.8){
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+   }
 }
 // ************************************************************
 // ID20 & ID21- R6 oxidation at ZZ site
@@ -6120,6 +6178,9 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		else if ((int) SR5->type >= 501 && (int) SR5->type <= 504 ){
 			updateSites(SR5, SR5->C1, stt->C1, +1501);
 		}
+		else if ((int) SR5->type >= 602 && (int) SR5->type <= 604 ){
+			updateSites(SR5, SR5->C1, stt->C1, +1501);
+		}
 		else if ((int) SR5->type >= 1002 && (int) SR5->type <= 1004) {
 			updateSites(SR5, SR5->C1, stt->C1, +1101);
 		}
@@ -6133,6 +6194,9 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			else updateSites(S2, stt->C2, S2->C2, +1);
 		}
 		else if ((int) SR5->type >= 501 && (int) SR5->type <= 504 ){
+			updateSites(SR5, stt->C2, SR5->C2, +1501);
+		}
+		else if ((int) SR5->type >= 602 && (int) SR5->type <= 604 ){
 			updateSites(SR5, stt->C2, SR5->C2, +1501);
 		}
 		else if ((int) SR5->type >= 1002 && (int) SR5->type <= 1004) {
@@ -6636,6 +6700,195 @@ void PAHProcess::proc_L7_FEZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	passbackPAH(mol);
 	proc_L6_BY6(stt, C_1, C_2);
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
+}
+
+// ************************************************************
+// ID42 - R5 conversion to R6 on RZZR (2R5 collision)
+// ************************************************************
+void PAHProcess::proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+    //printSites(stt);
+	//printStruct();
+	bool b4;
+	if (stt->type == RZZR){
+		// Define a distribution that has two equally probably outcomes
+		boost::bernoulli_distribution<> choiceDistrib;
+		// Now build an object that will generate a sample using rng
+		boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+		b4 = choiceGenerator();
+	}
+	else{
+		//Site must be R5R6ZZR
+		Spointer S1 = moveIt(stt, -1);
+		Spointer S2 = moveIt(stt, +1);
+		if (S1->type == R5 && (int)S2->type >= 501) b4 = true;
+		else if ( (int)S1->type >= 501 && S2->type == R5) b4 = false;
+		else {
+			cout<<"proc_C5R_RZZR has inconsistent sites. Process not performed.\n";
+			printSites(stt);
+			return;
+		}
+	}
+    Spointer sR5;
+    Cpointer C_AC;
+	cpair starting_direction, Hdir1, Hdir2, FEdir, Hdir, CZZdir;
+    if(b4) {
+        sR5 = moveIt(stt, -1);
+        C_AC = sR5->C1->C1;
+		starting_direction = get_vector(C_2->C1->coords, C_2->coords);
+		Hdir1 = get_vector(C_1->C2->C2->coords, C_1->C2->coords);
+		FEdir = get_vector(C_1->C2->coords, C_2->coords);
+		Hdir2 = starting_direction;
+		Hdir = starting_direction;
+		CZZdir = get_vector(C_1->C2->coords, C_1->C2->C2->coords);
+    }else {
+        sR5 = moveIt(stt, 1);
+        C_AC = sR5->C2->C2;
+		starting_direction = get_vector(C_2->C1->C1->coords, C_2->C1->coords);
+		Hdir1 = get_vector(C_1->C2->coords, C_1->coords);
+		FEdir = get_vector(C_1->coords, C_2->C1->coords);
+		Hdir2 = starting_direction;
+		Hdir = Hdir1;
+		CZZdir = FEdir;
+    }
+    // check if there's a bridge in the BY5
+    bool bridge = false;
+    if(b4) bridge = C_2->C1->bridge;
+    else bridge = C_1->C2->bridge;
+    // remove R5 first, leaving a ZZ site (adding another C atom after removing C)
+    Cpointer Cstart;
+    if(b4) Cstart = C_AC; 
+    else Cstart = C_2->C1;
+	removeR5internal(sR5->C1, sR5->C2);
+    for(int i=0; i!=2; i++) removeC(Cstart->C2, false);
+	addC(Cstart, CZZdir, 1.4, true);
+	updateA(C_AC, 'H', Hdir);
+    // this new C atom is irrelevant. Next add a R6 on the resulting AC (from RAC)
+    Cpointer C1_new, C2_new; // save all new C atoms
+	if(b4) Cstart = C_AC->C2->C2;
+	else Cstart = C_1;
+	if(!bridge){
+        for(int i=0; i!=2; i++) removeC(Cstart->C2, true);
+    } else {//else if there's a bridge, convert the bridge atoms to normal edge atoms
+        Cpointer b1 = Cstart->C2;
+        Cpointer b2 = b1->C3;
+        connectToC(Cstart, b2->C2);
+        b1->C3 = NULL;
+        b2->C3 = NULL;
+        b1->bridge = false;
+        b2->bridge = false;
+        b1->C1 = b2;
+        b2->C2 = b1;
+    }
+    C1_new = addC(Cstart, starting_direction, 1.4);
+	updateA(C1_new, 'H', Hdir1);
+	updateA(Cstart, 'C', Hdir1);
+	C2_new = addC(C1_new, FEdir, 1.4);
+	updateA(C2_new, 'H', Hdir2);
+	updateA(C_2, 'C', FEdir);
+    // edit sites. first identify the neighbouring sites of resulting AC & FE3
+    Spointer S1, S2, S3, S4;
+    if(b4) {
+        S1 = moveIt(sR5, -1); // neighbour of R5
+        S2 = moveIt(stt, 1); // neighbour of RZZR (stt)
+        convSiteType(sR5, C_AC, C1_new, AC); // convert R5 to AC
+        remR5fromSite(S1, S1->C1, C_AC); // convert S1 from RS1 to S1 (e.g RFE -> FE)
+        convSiteType(stt, C1_new, C2_new, FE); // convert RZZR to FE
+		if (S2->type != R5) updateSites(S2, C2_new, S2->C2, +1501);
+        else updateSites(S2, C2_new, S2->C2, +401); // update resulting FE neighbour
+    } else {
+        S1 = moveIt(stt, -1); // neighbour of RZZR (stt)
+        S2 = moveIt(sR5, 1); // neighbour of R5
+        convSiteType(sR5, C2_new, C_AC, AC); // convert R5 to AC
+        remR5fromSite(S2, C_AC, S2->C2); // convert S1 from RS1 to S1 (e.g RFE -> FE)
+        convSiteType(stt, C1_new, C2_new, FE); // convert RAC to FE
+		if (S1->type != R5) updateSites(S1, S1->C1, C1_new, +1501);
+        else updateSites(S1, S1->C1, C1_new, +401); // update resulting FE neighbour
+    }
+    S3 = moveIt(S1, -1);
+    S4 = moveIt(S2, 1);
+    updateCombinedSites(stt); updateCombinedSites(sR5); // new FE and AC
+    updateCombinedSites(S1); updateCombinedSites(S2); 
+    updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
+    // add ring counts
+    m_pah->m_rings++;
+    m_pah->m_rings5_Lone--;
+}
+
+// ************************************************************
+// ID43 - R5 conversion to R6 on R5R6ZZR (2R5 collision)
+// ************************************************************
+void PAHProcess::proc_C5R_R5R6ZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_C5R_RZZR(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID44 - R5R6BY5 closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_R5R6BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
+	proc_L6_BY6(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID45 - R5R6ACR closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_R5R6ACR(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
+	proc_L6_BY6(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID46 - R5R6ACR5R6 closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
+	proc_L6_BY6(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID47 - ZZACR5 closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
+	proc_L6_BY6(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID48 - R5FEACR5 closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_R5FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
+	proc_L6_BY6(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID49 - FEACR5FE closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_FEACR5FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
+	proc_L6_BY6(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID50 - R5ACR5R5 closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_R5ACR5R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
+	proc_L6_BY6(stt, C_1, C_2);
 }
 
 size_t PAHProcess::SiteListSize() const {
