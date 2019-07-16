@@ -3446,21 +3446,41 @@ double MR5_R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 void GR7_R5R6AC::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
+	//Reactions provided by Menon2019 at B3LYP level. Might need to be changed.
+	//Pathway A
+	addReaction(rxnV3, Reaction(6.58594E+07,1.76634E+00,9.33825E+00, sp::H));			//H + 7-memb-1 <=> 7-memb-2a + H2		//0
+	addReaction(rxnV3, Reaction(1.15481E+05,2.30995E+00,5.60390E+00, sp::H2));         	//H + 7-memb-1 <=> 7-memb-2a + H2		//1
+	addReaction(rxnV3, Reaction(3.88643E+03,2.59182E+00,5.48872E+00, sp::C2H2));		//Acety + 7-memb-2a <=> 7-memb-3a		//2
+	addReaction(rxnV3, Reaction(6.50688E+12,7.10131E-01,4.39670E+01, sp::None));       	//Acety + 7-memb-2a <=> 7-memb-3a		//3
+	addReaction(rxnV3, Reaction(5.75482E+11,7.03403E-02,1.55667E+00, sp::None));		//7-memb-3a <=> 7-memb-4a				//4
+	addReaction(rxnV3, Reaction(1.74248E+12,4.18589E-01,2.88623E+01, sp::None));       	//7-memb-3a <=> 7-memb-4a				//5
+	addReaction(rxnV3, Reaction(3.20705E+10,9.58088E-01,2.25574E+01, sp::None));		//7-memb-4a <=> 7-memb-5 + H			//6
+	addReaction(rxnV3, Reaction(1.29267E+08,1.50516E+00,3.23074E+00, sp::H));          	//7-memb-4a <=> 7-memb-5 + H			//7
+	//Pathway B                 
+	addReaction(rxnV3, Reaction(1.4788E+07, 1.85386E+00,9.82012E+00, sp::H));			//H + 7-memb-1 <=> 7-memb-2b + H2		//8
+	addReaction(rxnV3, Reaction(5.91414E+04,2.23375E+00,8.96025E+00, sp::H2));         	//H + 7-memb-1 <=> 7-memb-2b + H2		//9
+	addReaction(rxnV3, Reaction(1.09789E+03,2.58074E+00,9.42378E+00, sp::C2H2));       	//Acety + 7-memb-2b <=> 7-memb-3b		//10
+	addReaction(rxnV3, Reaction(2.89436E+12,7.09941E-01,3.62228E+01, sp::None));       	//Acety + 7-memb-2b <=> 7-memb-3b		//11
+	addReaction(rxnV3, Reaction(5.09705E+11,1.37833E-01,1.86806E+01, sp::None));       	//7-memb-3b <=> 7-memb-4b				//12
+	addReaction(rxnV3, Reaction(9.93601E+11,4.09784E-01,4.63933E+01, sp::None));       	//7-memb-3b <=> 7-memb-4b				//13
+	addReaction(rxnV3, Reaction(3.58968E+11,6.03489E-01,2.80765E+01, sp::None));       	//7-memb-4b <=> 7-memb-5 + H			//14
+	addReaction(rxnV3, Reaction(6.25772E+08,1.37967E+00,1.71007E+01, sp::H));          	//7-memb-4b <=> 7-memb-5 + H			//15
+	
+	//OLD
+	/*addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
 	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
 	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
 	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
 	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4              - Forward
 	//Menon2019 DO NOT TRUST.
 	addReaction(rxnV3, Reaction(9.720E+02, 3.10E+00, 6.10E+00, sp::C2H2));         // A3* + C2H2 -> A4 + H              	- 5             
-	addReaction(rxnV3, Reaction(6.33E+03, 2.61E+00, 4.71E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6              
+	addReaction(rxnV3, Reaction(6.33E+03, 2.61E+00, 4.71E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6      */        
 	//Using rates by On the low-temperature limit of HACA. Frenklach et al. 2018
 	
 	//addReaction(rxnV3, Reaction(1.190E+22, -2.450E+00, 1.889E+01, sp::C2H2));         // A3* + C2H2 -> A4 + H              	- 5              - Frenklach et al. 2018
 	//addReaction(rxnV3, Reaction(1.060E+14, -4.900E-01, 8.204E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6              - Frenklach et al. 2018
 	//addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
 	//addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
-
 
 	m_sType = R5R6AC; // sitetype
 	m_name = "R7 growth in an embedded R5"; // name of process
@@ -3473,13 +3493,47 @@ double GR7_R5R6AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
-	double r_denom = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[6];
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(6, 6);
+	boost::numeric::ublas::vector<double> arr2(6);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	arr1(0,0) = m_r[1] + m_r[2];
+    arr1(0,1) = - m_r[3];
+    arr1(1,0) = -m_r[2]; 
+    arr1(1,1) = m_r[3] + m_r[4];
+    arr1(1,2) = - m_r[5];
+    arr1(2,1) = - m_r[4];
+    arr1(2,2) = m_r[5] + m_r[6];
+    arr1(3,3) = m_r[9] + m_r[10];
+    arr1(3,4) = - m_r[11];
+    arr1(4,3) = - m_r[10];
+    arr1(4,4) = + m_r[11] + m_r[12];
+    arr1(4,5) = - m_r[13];
+    arr1(5,4) = - m_r[12];
+    arr1(5,5) = + m_r[13] + m_r[14];
+    arr2(0) = +m_r[0];
+    arr2(2) = 0.0*(+1.0*m_r[7]);
+    arr2(3) = +m_r[8];
+    arr2(5) = 0.0*(+1.0*m_r[15]);
+	
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	return m_rate = (m_r[6] * arr2(2) + m_r[14] * arr2(5))*site_count;
+	//OLD
+	/*double r_denom = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[6];
 	double r_f; // radical fraction 
 	if (r_denom>0) {
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = (m_r[5] + m_r[6]) * r_f* site_count; // Rate Equation
+	return m_rate = (m_r[5] + m_r[6]) * r_f* site_count; // Rate Equation*/
 }
 
 // ************************************************************
@@ -3490,6 +3544,27 @@ double GR7_R5R6AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 void GR7_FEACR5::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
+	//Reactions provided by Menon2019 at B3LYP level. Might need to be changed.
+	//Pathway A
+	addReaction(rxnV3, Reaction(5.8971E+07,1.8466E+00,9.3299E+00, sp::H));			//H + 7-memb-1 <=> 7-memb-2a + H2		//0
+	addReaction(rxnV3, Reaction(1.2148E+05,2.2285E+00,5.0102E+00, sp::H2));         //H + 7-memb-1 <=> 7-memb-2a + H2		//1
+	addReaction(rxnV3, Reaction(1.3478E+03,2.5734E+00,6.1505E+00, sp::C2H2));		//Acety + 7-memb-2a <=> 7-memb-3a		//2
+	addReaction(rxnV3, Reaction(2.3662E+12,7.0522E-01,3.5866E+01, sp::None));       //Acety + 7-memb-2a <=> 7-memb-3a		//3
+	addReaction(rxnV3, Reaction(1.9579E+11,1.1067E-01,2.3440E+01, sp::None));		//7-memb-3a <=> 7-memb-4a				//4
+	addReaction(rxnV3, Reaction(3.4121E+11,6.2533E-01,5.1779E+01, sp::None));       //7-memb-3a <=> 7-memb-4a				//5
+	addReaction(rxnV3, Reaction(1.7700E+10,1.0938E+00,2.6150E+01, sp::None));		//7-memb-4a <=> 7-memb-5 + H			//6
+	addReaction(rxnV3, Reaction(5.3209E+07,1.5146E+00,2.8370E+00, sp::H));          //7-memb-4a <=> 7-memb-5 + H			//7
+	//Pathway B
+	addReaction(rxnV3, Reaction(5.3149E+07,1.8580E+00,8.3759E+00, sp::H));			//H + 7-memb-1 <=> 7-memb-2b + H2		//8
+	addReaction(rxnV3, Reaction(9.1063E+04,2.2769E+00,4.2404E+00, sp::H2));         //H + 7-memb-1 <=> 7-memb-2b + H2		//9
+	addReaction(rxnV3, Reaction(3.5208E+03,2.5977E+00,4.7459E+00, sp::C2H2));       //Acety + 7-memb-2b <=> 7-memb-3b		//10
+	addReaction(rxnV3, Reaction(4.7358E+12,7.0201E-01,3.7437E+01, sp::None));       //Acety + 7-memb-2b <=> 7-memb-3b		//11
+	addReaction(rxnV3, Reaction(1.1252E+11,1.2767E-01,2.8620E+01, sp::None));       //7-memb-3b <=> 7-memb-4b				//12
+	addReaction(rxnV3, Reaction(2.3828E+11,5.9635E-01,5.5326E+01, sp::None));       //7-memb-3b <=> 7-memb-4b				//13
+	addReaction(rxnV3, Reaction(1.5046E+10,1.0755E+00,2.7612E+01, sp::None));       //7-memb-4b <=> 7-memb-5 + H			//14
+	addReaction(rxnV3, Reaction(5.8411E+07,1.5329E+00,2.7734E+00, sp::H));          //7-memb-4b <=> 7-memb-5 + H			//15
+	
+	/*Previous.
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
 	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
 	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
@@ -3497,14 +3572,12 @@ void GR7_FEACR5::initialise() {
 	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4              - Forward
 	//Menon2019 DO NOT TRUST.
 	addReaction(rxnV3, Reaction(9.720E+02, 3.10E+00, 6.10E+00, sp::C2H2));         // A3* + C2H2 -> A4 + H              	- 5             
-	addReaction(rxnV3, Reaction(6.33E+03, 2.61E+00, 4.71E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6    
+	addReaction(rxnV3, Reaction(6.33E+03, 2.61E+00, 4.71E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6    */
 	//Using rates by On the low-temperature limit of HACA. Frenklach et al. 2018
 	//addReaction(rxnV3, Reaction(1.190E+22, -2.450E+00, 1.889E+01, sp::C2H2));         // A3* + C2H2 -> A4 + H              	- 5              - Frenklach et al. 2018
 	//addReaction(rxnV3, Reaction(1.060E+14, -4.900E-01, 8.204E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6              - Frenklach et al. 2018
 	//addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
 	//addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
-
-
 	m_sType = FEACR5; // sitetype
 	m_name = "R7 growth in an embedded R5-2"; // name of process
 	m_ID = 36;
@@ -3516,13 +3589,48 @@ double GR7_FEACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(6, 6);
+	boost::numeric::ublas::vector<double> arr2(6);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	arr1(0,0) = m_r[1] + m_r[2];
+    arr1(0,1) = - m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+    arr1(1,2) = - m_r[5];
+    arr1(2,1) = - m_r[4];
+    arr1(2,2) = m_r[5] + m_r[6];
+    arr1(3,3) = m_r[9] + m_r[10];
+    arr1(3,4) = - m_r[11];
+    arr1(4,3) = - m_r[10];
+    arr1(4,4) = + m_r[11] + m_r[12];
+    arr1(4,5) = - m_r[13];
+    arr1(5,4) = - m_r[12];
+    arr1(5,5) = + m_r[13] + m_r[14];
+    arr2(0) = +m_r[0];
+    arr2(2) = 0.0*(+1.0*m_r[7]);
+    arr2(3) = +m_r[8];
+    arr2(5) = 0.0*(+1.0*m_r[15]);
+	
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	return m_rate = (m_r[6] * arr2(2) + m_r[14] * arr2(5))*site_count;
+	
+	/*OLD
 	double r_denom = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[6];
 	double r_f; // radical fraction 
 	if (r_denom>0) {
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = (m_r[5] + m_r[6]) * r_f* site_count; // Rate Equation
+	return m_rate = (m_r[5] + m_r[6]) * r_f* site_count; // Rate Equation*/
 }
 
 // ************************************************************
@@ -3594,39 +3702,85 @@ void L7_ACACR5::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
+	//Pathway A
+	addReaction(rxnV3, Reaction(2.76732E+07,1.91279E+00,9.54190E+00, sp::H));		//H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//0
+	addReaction(rxnV3, Reaction(4.21185E+04,2.26366E+00,6.87815E+00, sp::H2));      //H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//1
+	addReaction(rxnV3, Reaction(4.70295E+11,1.42940E-01,4.72228E+00, sp::None));	//7-membHabs-2a <=> 7-membHabs-3a				//2
+	addReaction(rxnV3, Reaction(1.47581E+12,3.66538E-01,2.73731E+01, sp::None));    //7-membHabs-2a <=> 7-membHabs-3a				//3
+	addReaction(rxnV3, Reaction(6.42375E+09,1.09295E+00,3.21573E+01, sp::None));	//7-membHabs-3a <=> 7-membHabs-4 + H			//4
+	addReaction(rxnV3, Reaction(1.69261E+08,1.52168E+00,1.63656E+00, sp::H));       //7-membHabs-3a <=> 7-membHabs-4 + H			//5
+	//Pathway B
+	addReaction(rxnV3, Reaction(2.84300E+07,1.90572E+00,9.53262E+00, sp::H));		//H + 7-membHabs-1 <=> 7-membHabs-2b + H2		//6
+	addReaction(rxnV3, Reaction(5.33824E+04,2.26128E+00,7.52478E+00, sp::H2));      //H + 7-membHabs-1 <=> 7-membHabs-2b + H2		//7
+	addReaction(rxnV3, Reaction(6.59893E+11,8.15588E-02,2.62478E+00, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//8
+	addReaction(rxnV3, Reaction(5.13229E+12,3.39661E-01,2.54015E+01, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//9
+	addReaction(rxnV3, Reaction(2.00638E+10,1.09912E+00,3.28066E+01, sp::None));    //7-membHabs-3b <=> 7-membHabs-4 + H			//10
+	addReaction(rxnV3, Reaction(1.72899E+08,1.48867E+00,1.50412E+00, sp::H));       //7-membHabs-3b <=> 7-membHabs-4 + H			//11
+	
+	//Old. Do not use!!!
+    /*addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
     addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
     addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
     addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
     addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f*/
     m_sType = ACACR5; // sitetype
     m_name = "BY7 closure on ACACR5"; // name of process
     m_ID = 38;
 }
 // Jump rate calculation
 double L7_ACACR5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double L7_ACACR5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double L7_ACACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
-    
-    
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+	double T = gp[gp.T];
+    if (T <= 1300) return m_rate = 0.0;
+	
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(4, 4);
+	boost::numeric::ublas::vector<double> arr2(4);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	arr1(0,0) = m_r[1] + m_r[2];
+    arr1(0,1) = - m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = + m_r[3] + m_r[4];
+    arr1(2,2) = +m_r[7] + m_r[9];
+    arr1(2,3) = - m_r[8];
+    arr1(3,2) = - m_r[9];
+    arr1(3,3) = m_r[8] + m_r[10];
+    arr2(0) = +m_r[0];
+    arr2(1) = 0.0*(m_r[5]);
+    arr2(2) = +m_r[6];
+    arr2(3) = 0.0*(m_r[11]);
+	
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(3))*site_count;
+	
+	//Old. Do not use!!!
+	/*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
-}
-double L7_ACACR5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
-}
-double L7_ACACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation*/
 }
 
 // ************************************************************
@@ -3741,39 +3895,85 @@ void L7_FEZZACR5::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
+	//Pathway A
+	addReaction(rxnV3, Reaction(2.76732E+07,1.91279E+00,9.54190E+00, sp::H));		//H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//0
+	addReaction(rxnV3, Reaction(4.21185E+04,2.26366E+00,6.87815E+00, sp::H2));      //H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//1
+	addReaction(rxnV3, Reaction(4.70295E+11,1.42940E-01,4.72228E+00, sp::None));	//7-membHabs-2a <=> 7-membHabs-3a				//2
+	addReaction(rxnV3, Reaction(1.47581E+12,3.66538E-01,2.73731E+01, sp::None));    //7-membHabs-2a <=> 7-membHabs-3a				//3
+	addReaction(rxnV3, Reaction(6.42375E+09,1.09295E+00,3.21573E+01, sp::None));	//7-membHabs-3a <=> 7-membHabs-4 + H			//4
+	addReaction(rxnV3, Reaction(1.69261E+08,1.52168E+00,1.63656E+00, sp::H));       //7-membHabs-3a <=> 7-membHabs-4 + H			//5
+	//Pathway B
+	addReaction(rxnV3, Reaction(2.84300E+07,1.90572E+00,9.53262E+00, sp::H));		//H + 7-membHabs-1 <=> 7-membHabs-2b + H2		//6
+	addReaction(rxnV3, Reaction(5.33824E+04,2.26128E+00,7.52478E+00, sp::H2));      //H + 7-membHabs-1 <=> 7-membHabs-2b + H2		//7
+	addReaction(rxnV3, Reaction(6.59893E+11,8.15588E-02,2.62478E+00, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//8
+	addReaction(rxnV3, Reaction(5.13229E+12,3.39661E-01,2.54015E+01, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//9
+	addReaction(rxnV3, Reaction(2.00638E+10,1.09912E+00,3.28066E+01, sp::None));    //7-membHabs-3b <=> 7-membHabs-4 + H			//10
+	addReaction(rxnV3, Reaction(1.72899E+08,1.48867E+00,1.50412E+00, sp::H));       //7-membHabs-3b <=> 7-membHabs-4 + H			//11
+	
+	//Old. Do not use!!!
+    /*addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
     addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
     addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
     addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
     addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f*/
     m_sType = FEZZACR5; // sitetype
     m_name = "BY7 closure on FEZZACR5"; // name of process
     m_ID = 41;
 }
 // Jump rate calculation
 double L7_FEZZACR5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double L7_FEZZACR5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double L7_FEZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
-    
-    
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+	double T = gp[gp.T];
+    if (T <= 1300) return m_rate = 0.0;
+	
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(4, 4);
+	boost::numeric::ublas::vector<double> arr2(4);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	arr1(0,0) = m_r[1] + m_r[2];
+    arr1(0,1) = - m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = + m_r[3] + m_r[4];
+    arr1(2,2) = +m_r[7] + m_r[9];
+    arr1(2,3) = - m_r[8];
+    arr1(3,2) = - m_r[9];
+    arr1(3,3) = m_r[8] + m_r[10];
+    arr2(0) = +m_r[0];
+    arr2(1) = 0.0*(m_r[5]);
+    arr2(2) = +m_r[6];
+    arr2(3) = 0.0*(m_r[11]);
+	
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(3))*site_count;
+	
+	//Old. Do not use!!!
+	/*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
     double r_f; // radical fraction 
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation
-}
-double L7_FEZZACR5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
-}
-double L7_FEZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation*/
 }
 
 // ************************************************************

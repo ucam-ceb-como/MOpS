@@ -109,6 +109,10 @@ public:
     virtual PAHStructure& initialise(StartingStructure ss);
     //! Initialisation of structure given a starting structure (new method)
     virtual PAHStructure& initialise_new(StartingStructure ss);
+	//! Initialisation of structure given an existing PAH (cloning)
+	virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, Ccontainer edgeCarbons, std::list<cpair> internalCarbons);
+    //! Create Structure from given an existing PAH (cloning)
+	void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, Ccontainer edCarbons, std::list<cpair> inCarbs);
     //! Initialisation of structure given a string of site types (separated by ',')
 	virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, std::list<cpair> internalCarbons);
     //! Create Structure from vector of site types and number of rings
@@ -312,9 +316,9 @@ private:
 	//! Return internal R5 associated to two carbons
 	cpair findR5internal(Cpointer C_1, Cpointer C_2);
 	//! Are the two carbon atoms members of an R5 with coordinates in R5Internal??
-	bool isR5internal(Cpointer C_1, Cpointer C_2);
+	bool isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
 	//! Return coords of final position of an internal R5 based on two carbons
-	cpair endposR5internal(Cpointer C_1, Cpointer C_2);
+	cpair endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
     //! Creates a carbon atom bridging next to C_1. 
     Cpointer bridgeC(Cpointer C_1);
     /*//! Creates a bulk carbon atom connected to C_1

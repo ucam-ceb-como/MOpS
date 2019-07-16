@@ -101,7 +101,8 @@ PAHStructure* PAHProcess::clonePAH() const {
     PAHStructure* temp = new PAHStructure();
     PAHProcess p(*temp);
     std::vector<kmcSiteType> sites = SiteVector();
-	p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_InternalCarbons);
+	p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_carbonList, m_pah->m_InternalCarbons);
+	//p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_InternalCarbons);
     return temp;
 }
 // Public Read Processes
@@ -1263,8 +1264,8 @@ cpair PAHProcess::findR5internal(Cpointer C_1, Cpointer C_2) {
 	return temp;
 }
 //! Are the two carbon atoms members of an R5 with coordinates in R5Internal??
-bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2) {
-	cpair R5_pos_loc = endposR5internal(C_1, C_2);
+bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
+	cpair R5_pos_loc = endposR5internal(C_1, C_2, invert_dir);
 	std::list<cpair>::iterator it1;
 	double minimal_dist = 0.5;
 	for (it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
@@ -1274,11 +1275,13 @@ bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2) {
 	return false;
 }
 //! Return coords of final position of an internal R5 based on two carbons
-cpair PAHProcess::endposR5internal(Cpointer C_1, Cpointer C_2) {
+cpair PAHProcess::endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
 	//C_1 is the carbon that stays in the R5, C_2 the R6 that becomes part of the R5
 	double R5_dist = getDistance_twoC(C_1, C_2);
 	cpair R5dir = get_vector(C_1->coords,C_2->coords);
-	cpair normvec = invert_vector(norm_vector(C_1->coords, C_2->coords, C_2->C2->coords));
+	cpair normvec;
+	if (invert_dir) normvec = norm_vector(C_1->coords, C_2->coords, C_2->C2->coords);
+	else normvec = invert_vector(norm_vector(C_1->coords, C_2->coords, C_2->C2->coords));
 	cpair crossvec = cross_vector(R5dir, normvec);
 	double theta = atan(R5_dist/2.0/0.7);
 	double magn = 0.7 / cos(theta);
@@ -2548,7 +2551,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
 	intpair NAPHTHALENE_CH(10, 0);
 	int NAPHTHALENE_RINGS_EMBEDDED = 0;
 	// Structure for Pyrene
-	std::string PYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,FE,FE,ZZ,FE";
+	std::string PYRENE_Sites = "FE,ZZ,FE,FE,ZZ,FE,ZZ,FE,FE,ZZ";
 	auto PYRENE_Rings = std::make_tuple (4, 0, 0);
 	intpair PYRENE_CH(16, 10);
 	int PYRENE_RINGS_EMBEDDED = 0;
@@ -2853,6 +2856,111 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 }
 
 /*!
+ * Initialization of PAH structure from an existing PAH structure (cloning)
+ *
+ * @param[in]    siteList_str    Comma-separated string of site types
+ * @param[in]    R6_num          Number of 6-member rings
+ * @param[in]    R5_num          Number of 5-member rings
+ *
+ * @return       Initialized PAH structure
+ */
+PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, Ccontainer edgeCarbons, std::list<cpair> internalCarbons){
+    if(m_pah == NULL) {
+        PAHStructure* pah = new PAHStructure();
+        m_pah = pah;
+    }else if(m_pah->m_cfirst != NULL)
+        m_pah->clear();
+    // create a vector from the string
+    std::vector<std::string> siteList_strvec;
+    Strings::split(siteList_str, siteList_strvec, std::string(","));
+    // convert into vector of siteTypes
+    std::vector<kmcSiteType> siteList_vec;
+    for(size_t i=0; i<siteList_strvec.size(); i++) {
+        kmcSiteType temp = kmcSiteType_str(siteList_strvec[i]);
+        if(temp == Inv) {
+            std::cout<<"ERROR: Starting Structure site List contains invalid site type"
+                <<".. (PAHProcess::initialise)\n\n";
+            std::ostringstream msg;
+            msg << "ERROR: Starting Structure site List contains invalid site type."
+                << " (Sweep::KMC_ARS::PAHProcess::initialise)";
+                throw std::runtime_error(msg.str());
+                assert(false);
+        }
+        siteList_vec.push_back(temp);
+    }
+	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, edgeCarbons, internalCarbons);
+    return *m_pah;
+}
+
+
+// Create Structure from an existing PAH structure (cloning)
+void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, Ccontainer edCarbons, std::list<cpair> inCarbs) {
+    //Add first carbon.
+	Cpointer newC = addC();
+    m_pah->m_cfirst = newC;
+	m_pah->m_clast = NULLC;
+	
+	//Find first carbon in edge carbon container.	
+	double tol = 3e-1;
+	Ccontainer::iterator edCarbons_it;
+    for(Ccontainer::iterator carbiter=edCarbons.begin(); carbiter != edCarbons.end(); ++carbiter) {
+		double distance = getDistance_twoC(newC->coords, (*carbiter)->coords);
+		if (distance < tol)	edCarbons_it = carbiter;
+    }
+		
+	// current C and coordinates
+	moveC(newC, (*edCarbons_it)->coords);
+	updateA(newC, (*edCarbons_it)->A, (*edCarbons_it)->growth_vector);
+	Cpointer nextC = (*edCarbons_it)->C2;
+    
+    // start drawing..
+    for(size_t i=0; i<vec.size(); i++) {
+		int vec_carb_number = (int)vec[i] % 10 + 1;
+		Cpointer site_carb_1 = newC;
+		for (size_t j=0; j<vec_carb_number; j++) {
+			if( !checkHindrance_C_PAH(nextC->coords)){
+				newC = addC(newC, std::make_tuple(1.0,0.0,0.0), 7.17);
+				moveC(newC, nextC->coords);
+				updateA(newC, nextC->A, nextC->growth_vector);
+			}
+			else{
+				connectToC(newC, m_pah->m_cfirst);
+				m_pah->m_clast = newC;
+				newC = newC->C2;
+			}
+			nextC = nextC->C2;
+		}
+		Cpointer site_carb_2 = newC;
+        addSite(vec[i], site_carb_1, site_carb_2);
+    }
+	
+    // check if PAH closes correctly
+	if (m_pah->m_clast == NULLC || !checkHindrance_twoC(newC->C1, m_pah->m_cfirst)) {
+        // PAH did not close properly. invalid structure
+        cout << "createPAH: PAH did not close properly. Could be problem "
+            <<"with site list input...\n";
+        std::ostringstream msg;
+        msg << "ERROR: PAH did not close properly.."
+            << " (Sweep::KMC_ARS::PAHProcess::createPAH)";
+        //saveDOT("KMC_DEBUG/KMC_PAH_X_CLOSE.dot");
+        throw std::runtime_error(msg.str());
+        assert(false);
+        return;
+    }
+    m_pah->m_rings = R6;
+	m_pah->m_rings5_Lone = R5_Lone;
+	m_pah->m_rings5_Embedded = 0;
+	m_pah->m_rings7_Lone = 0;
+	m_pah->m_rings7_Embedded = 0;
+	m_pah->m_InternalCarbons = inCarbs;
+	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
+	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1;
+	m_pah->setnumofC(totalC_num);
+    m_pah->setnumofH((int)vec.size());
+    updateCombinedSites();
+}
+
+/*!
  * Initialization of PAH structure given a list of site types and number of 6 and 5-member rings
  *
  * @param[in]    siteList_str    Comma-separated string of site types
@@ -2982,10 +3090,25 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 //! For createPAH function: drawing type 0 sites
 Cpointer PAHProcess::drawType0Site(Cpointer Cnow, int bulkC) {
     // draw site
+	//cpair prev_direction, starting_direction, Hdirprev, Hdir;
     angletype angle = normAngle(Cnow->bondAngle1-60);
     for(int c=0; c<=bulkC; ++c) {
+		//Determine directions
+		/*if (Cnow->C1 == NULLC) {
+			starting_direction = make_tuple( 1.0, 0.0, 0.0);
+			Hdirprev = std::make_tuple(cos(120.0 *M_PI / 180.0),sin(120.0 *M_PI / 180.0),0.0);
+			Hdir = std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0);
+		}
+		else {
+			prev_direction = get_vector(Cnow->C1->coords,Cnow->coords);
+			Hdirprev = Cnow->C1->growth_vector;
+			starting_direction = add_vector(prev_direction, invert_vector(Hdirprev));
+			Hdir = prev_direction;
+		}
+		*/
         // check if adding on existing C atom (bridge)
         cpair pos = jumpToPos(Cnow->coords, angle, 0, 1.4);
+		//cpair pos = jumpToPos(Cnow->coords, starting_direction, 1.4);
         if(checkHindrance_C_PAH(pos)) {
             // this coordinate is filled
             Cpointer Cpos = findC(pos);
@@ -3007,6 +3130,8 @@ Cpointer PAHProcess::drawType0Site(Cpointer Cnow, int bulkC) {
                 return Cpos;
             }
         }else {
+			//Cnow = addC(Cnow, starting_direction, 1.4, false);
+			//if (c==bulkC) updateA(Cnow, 'H', Hdir);
             Cnow = addC(Cnow, angle, angle, 1.4, false);
             angle = normAngle(angle+60);
         }
@@ -3801,8 +3926,8 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			}
 			newType = (new_point + ntype1 + ntype2);
 		}
-		else if (ntype_site == 504) {
-			new_point = 2002;
+		else if (ntype_site == 1004) {
+			new_point = 2102;
 			ntype1 = ntype1 % 10;
 			ntype2 = ntype2 % 10;
 			newType = (new_point + ntype1 + ntype2);
@@ -3814,9 +3939,62 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			ntype1 = ntype1 % 10;
 			ntype2 = ntype2 % 10;
 			newType = (new_point + ntype1 + ntype2);
+			m_pah->m_rings5_Embedded++;
+			m_pah->m_rings5_Lone--;
 			/*if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
 			else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;*/
 		}
+		else if (ntype_site == 2104 || ntype_site == 2204) {
+			Spointer S1 = moveIt(stt, -1);
+			Spointer S2 = moveIt(stt, +1);
+			new_point = 0;
+			if ( ((int)S2->type >= 501 && (int)S2->type <= 504) && ((int)S1->type >= 501 && (int)S1->type <= 504) ){
+				new_point = 2102;
+				ntype1 = ntype1 % 10;
+				ntype2 = ntype2 % 10;
+			}
+			else if((int)S1->type >= 501 && (int)S1->type <= 504) {
+				if (S2->type != R5){
+					new_point = 0;
+					ntype1 = (ntype1 % 10) + 2002;
+				}
+				else{
+					Spointer S4 = moveIt(S1, +1);
+					updateSites(S4, S4->C1, S4->C2, +400);
+					ntype2 = 100;
+				}
+			}
+			else if((int)S2->type >= 501 && (int)S2->type <= 504) {
+				if (S1->type != R5){
+					new_point = 0;
+					ntype2 = (ntype2 % 10) + 2002;
+				}
+				else{
+					Spointer S3 = moveIt(S1, -1);
+					updateSites(S3, S3->C1, S3->C2, +400);
+					ntype1 = 100;
+				}
+			}
+			else if (S1->type == R5 || S2->type ==R5){
+				if (S1->type == R5){
+					Spointer S3 = moveIt(S1, -1);
+					updateSites(S3, S3->C1, S3->C2, +400);
+					ntype1 = 502;
+				}
+				else ntype1 = ntype1 % 10;
+				if (S2->type == R5){
+					Spointer S4 = moveIt(S2, +1);
+					updateSites(S4, S4->C1, S4->C2, +400);
+					ntype2 = 502;
+				}
+				else ntype2 = ntype2 % 10;
+			}
+			
+			newType = (new_point + ntype1 + ntype2);
+			/*if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
+			else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;*/
+		}
+		
 
 		if ((kmcSiteType)newType == None) {
 			//saveDOT(std::string("BY6ClosureProblem.dot"));
@@ -4036,7 +4214,7 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update site stt and new neighbours
     // new neighbours:
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
-	if (isR5internal(C1_new, C2_new) ){
+	if (isR5internal(C1_new, C2_new, false) ){
 		updateSites(S1, S1->C1, C1_new, -1);
 		updateSites(S2, C2_new, S2->C2, -1);
 		updateSites(stt, C1_new, C2_new, 100);
@@ -5900,7 +6078,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 			if (!optimised) addR5internal(sFE2->C2->C1, sFE2->C2);
 		}
 		else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a R5 neighbour {
-			updateSites(sFE2, sFE2->C1, sFE2->C2, +2002);
+			updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
 			if (!optimised) addR5internal(sFE2->C2->C1->C1, sFE2->C2->C1);
 		}
 		convSiteType(stt, sFE2->C2, stt->C2, ZZ);
@@ -5936,7 +6114,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 			if (!optimised) addR5internal(sFE2->C1, sFE2->C1->C2);
 		}
 		else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a BY5 {
-			updateSites(sFE2, sFE2->C1, sFE2->C2, +2002);
+			updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
 			if (!optimised) addR5internal(sFE2->C1->C2, sFE2->C1->C2->C2);
 		}
 		convSiteType(stt, stt->C1, sFE2->C1, ZZ);
@@ -6173,7 +6351,7 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		if (SR5->type == R5) {
 			updateSites(SR5, SR5->C1, stt->C1, +401);
 			if ( (int)S1->type < 2000) updateSites(S1, S1->C1, S1->C2, +400);
-			else updateSites(S1, S1->C1, stt->C1, +1);
+			//else updateSites(S1, S1->C1, stt->C1, +1); THIS WAS WRONG.
 		}
 		else if ((int) SR5->type >= 501 && (int) SR5->type <= 504 ){
 			updateSites(SR5, SR5->C1, stt->C1, +1501);
@@ -6191,7 +6369,7 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		if (SR5->type == R5) {
 			updateSites(SR5, stt->C2, SR5->C2, +401);
 			if ( (int)S2->type < 2000) updateSites(S2, S2->C1, S2->C2, +400);
-			else updateSites(S2, stt->C2, S2->C2, +1);
+			//else updateSites(S2, stt->C2, S2->C2, +1);  THIS WAS WRONG.
 		}
 		else if ((int) SR5->type >= 501 && (int) SR5->type <= 504 ){
 			updateSites(SR5, stt->C2, SR5->C2, +1501);
@@ -6535,6 +6713,7 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Cpointer newC2;
 	cpair Hdir1 = C_2->growth_vector;
 	cpair Hdir2 = C_1->growth_vector;
+	cpair starting_direction = get_vector(C_1->C2->C2->coords,C_2->C1->coords);
 	cpair FEdir = get_vector(C_1->coords,C_2->coords);
 	if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
 		/*cout<<"Site hindered, process not performed.\n"*/ return;
@@ -6543,7 +6722,6 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		// Add and remove C
 		//if(C_1->C2->C3 != NULL) C_1->C2->C3->C3 = NULL;
 		//if(C_2->C1->C3 != NULL) C_2->C1->C3->C3 = NULL;
-		
 		removeC(C_1->C2, true);
 		removeC(C_1->C2, true);
 		removeC(C_2->C1, true);
@@ -6586,8 +6764,8 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		connectToC(C_1, C_2);
 		// Add C
 		//newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 90), 0, 1.4*1.5);
-		//newC2 = addC(newC1, normAngle(newC1->C1->bondAngle1 - 60), normAngle(newC1->C1->bondAngle1 - 90), 1.4*1.5);
-		newC1 = addC(C_1, C_1->growth_vector, 1.1);
+		double distR7 = getDistance_twoC(C_1, C_2);
+		newC1 = addC(C_1, starting_direction, 1.3);
 		updateA(C_1,'C', C_1->growth_vector);
 		updateA(newC1, 'H', Hdir1);
 		newC2 = addC(newC1, FEdir, 1.4);
