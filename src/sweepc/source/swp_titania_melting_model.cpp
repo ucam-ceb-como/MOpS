@@ -55,7 +55,7 @@ using namespace Sweep::Processes;
 
 // Default constructor.
 MeltingModel::MeltingModel()
-	: m_enable(false), m_liquidindex(0), m_fixedcrossover(false)
+	: m_enable(false), m_fixedcrossover(false)
 {
 }
 
@@ -84,7 +84,6 @@ MeltingModel &MeltingModel::operator=(const Sweep::Processes::MeltingModel &rhs)
 {
     if (this != &rhs) {		// TODO change this
         m_enable = rhs.m_enable;
-		m_liquidindex = rhs.m_liquidindex;
 		m_fixedcrossover = rhs.m_fixedcrossover;
 
 		// Copy phases.
@@ -106,10 +105,12 @@ MeltingModel::PHASE::PHASE(void)
 	A = 0.0;
 	dmin = 0.0;
 	dmax = 0.0;
+	id = 0;
 };
 
 // Initialising constructor.
-MeltingModel::PHASE::PHASE(std::string aname, double aA, double aT, double admin, double admax, fvector adcomp)
+MeltingModel::PHASE::PHASE(std::string aname, double aA, double aT, double admin,
+	double admax, std::vector<fvector> adcomp, unsigned int iid)
 {
 	name = aname;
 	T_bulk = aT;
@@ -117,6 +118,7 @@ MeltingModel::PHASE::PHASE(std::string aname, double aA, double aT, double admin
 	dcomp = adcomp;
 	dmin = admin;
 	dmax = admax;
+	id = iid;
 };
 
 // Copy constructor.
@@ -128,6 +130,7 @@ MeltingModel::PHASE::PHASE(const PHASE &copy)
 	dcomp = copy.dcomp;
 	dmin = copy.dmin;
 	dmax = copy.dmax;
+	id = copy.id;
 };
 
 // Clone
@@ -158,21 +161,58 @@ void MeltingModel::Enable(void) { m_enable = true; }
 void MeltingModel::Disable(void) { m_enable = false; }
 
 // Create a melting point transformation 
-void MeltingModel::AddPhase(std::string name, double A, double T, double dmin, double dmax, fvector dcomp){
+void MeltingModel::AddPhase(std::string name, double A, double T,
+	double dmin, double dmax, std::vector<fvector> ddcomp, unsigned int iid){
+	
 	PHASE *new_phase = NULL;
+
 	if (!m_fixedcrossover){	// If not using a fixed cross size
 		dmin = 0.0;	
 		dmax = 1.0e30;	// some large number
 	}
 
-	new_phase = new PHASE(name, A, T, dmin, dmax, dcomp);
+	//add phase
+	new_phase = new PHASE(name, A, T, dmin, dmax, ddcomp, iid);
 	m_phases.push_back(new_phase);
+
+	//create reverse melting process
+	for (std::vector<fvector>::const_iterator it = ddcomp.begin(); it != ddcomp.end(); ++it){
+		fvector dcomp = *it;
+		fvector dmelt(dcomp.size(),0.0);
+
+		for (unsigned int j = 0; j != dcomp.size(); j++){
+			if (dcomp[j] != 0.0){ dmelt[j] = -1.0*dcomp[j]; }
+		}
+		m_dcompmelt.push_back(dmelt);
+	}
+
 	return;
 }
 
+// Return the composition change for melting
+void MeltingModel::MeltingCompositionChange(std::vector<fvector> &dcomp) const{
+	
+	dcomp = m_dcompmelt;
+	return;
+}
+
+// Return component transformation for a particular phase
+void MeltingModel::CompositionChange(unsigned int iid, std::vector<fvector> &dcomp){
+
+	//loop over phases
+	PhasePtrVector::const_iterator i;
+	for (i = m_phases.begin(); i != m_phases.end(); ++i) {
+		//compare phase id
+		if ((*i)->id == iid){
+			// return phase transformation
+			dcomp = (*i)->dcomp;
+		}
+	}
+	return;
+}
 
 // PHASE FORMATION
-void MeltingModel::CompositionChange(const Cell &sys, const AggModels::Primary &p, fvector &dcomp)
+void MeltingModel::CompositionChange(const Cell &sys, const AggModels::Primary &p, std::vector<fvector> &dcomp)
 {
 	//primary size
 	double dp = 6.0 * p.Volume() / p.SurfaceArea();
@@ -201,6 +241,7 @@ void MeltingModel::CompositionChange(const Cell &sys, const AggModels::Primary &
 			}
 		}
 	}
+	return;
 }
 
 //return higher melting point
@@ -237,16 +278,6 @@ bool MeltingModel::IsLiquid(const Cell &sys, const AggModels::Primary &p) const{
 	return liquid;
 }
 
-//set index of liquid component
-void MeltingModel::SetLiquidIndex(unsigned int index) {
-	m_liquidindex = index;
-}
-
-//return index of liquid component
-unsigned int MeltingModel::GetLiquidIndex(void) const{
-	return m_liquidindex;
-}
-
 //enable fixed crossover diameter
 void MeltingModel::EnableFixedCrossover(){
 	m_fixedcrossover = true;
@@ -271,6 +302,7 @@ void MeltingModel::Serialize(std::ostream &out) const
     const unsigned int trueval  = 1;
     const unsigned int falseval = 0;
 	unsigned int n=0;
+	unsigned int nn = 0;
 
     if (out.good()) {
         // Output the version ID (=0 at the moment).
@@ -284,10 +316,6 @@ void MeltingModel::Serialize(std::ostream &out) const
             out.write((char*)&falseval, sizeof(falseval));
         }
 
-        // Write liquid component index.
-		unsigned int val = (unsigned int)m_liquidindex;
-        out.write((char*)&val, sizeof(val));
-
 		// Write if fixed crossover is enabled
 		if (m_fixedcrossover) {
 			out.write((char*)&trueval, sizeof(trueval));
@@ -296,8 +324,24 @@ void MeltingModel::Serialize(std::ostream &out) const
 			out.write((char*)&falseval, sizeof(falseval));
 		}
 
+		//writing melting transformations
+		unsigned int n = (unsigned int)m_dcompmelt.size();
+		out.write((char*)&n, sizeof(n));
+
+		for (unsigned int j = 0; j != n; j++){
+
+			nn = (unsigned int)m_dcompmelt[j].size();
+			out.write((char*)&n, sizeof(nn));
+
+			for (unsigned int k = 0; k != nn; k++){
+				double adcomp = (double)m_dcompmelt[j][k];
+				out.write((char*)&adcomp, sizeof(adcomp));
+			}
+		}
+
+
 		// Write number of phases
-		unsigned int n = (unsigned int) m_phases.size();
+		n = (unsigned int) m_phases.size();
 		out.write((char*)&n, sizeof(n));
 
 		// Write phases
@@ -326,15 +370,26 @@ void MeltingModel::Serialize(std::ostream &out) const
 			double admax = (double)(*i)->dmax;
 			out.write((char*)&admax, sizeof(admax));
 
+			//write phase id
+			unsigned int iid = (unsigned int)(*i)->id;
+			out.write((char*)&iid, sizeof(iid));
+
 			// Write size of dcomp
 			n = (unsigned int) (*i)->dcomp.size();
 			out.write((char*)&n, sizeof(n));
 			
-			// write dcomp
 			for (unsigned int j = 0; j != n; j++){
-				double adcomp = (double)(*i)->dcomp[j];
-				out.write((char*)&adcomp, sizeof(adcomp));
-			}			
+				// Write size of composition in dcomp
+				nn = (unsigned int)(*i)->dcomp[j].size();
+				out.write((char*)&n, sizeof(nn));
+
+				// Write composition in dcomp
+				for (unsigned int k = 0; k != nn; k++){
+					double adcomp = (double)(*i)->dcomp[j][k];
+					out.write((char*)&adcomp, sizeof(adcomp));
+				}
+				
+			}		
 			
 		}
 
@@ -366,13 +421,31 @@ void MeltingModel::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_enable = (n==1);
 
-                // Read liquid component index.
-                in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                m_liquidindex = (unsigned int)val;
-
 				// Read if fixed crossover is enabled
 				in.read(reinterpret_cast<char*>(&n), sizeof(n));
 				m_fixedcrossover = (n == 1);
+
+				//Read number of melting transformations
+				unsigned int an;
+				in.read(reinterpret_cast<char*>(&an), sizeof(an));
+
+				//Read melting transformations
+				for (unsigned int j = 0; j != an; ++j) {
+
+					//read size of composition in dmelt
+					unsigned int ann;
+					in.read(reinterpret_cast<char*>(&ann), sizeof(ann));
+
+					fvector ddmelt;
+
+					//read composition in dcomp
+					for (unsigned int k = 0; k != ann; ++k) {
+						in.read(reinterpret_cast<char*>(&val), sizeof(val));
+						ddmelt.push_back(val);
+					}
+
+					m_dcompmelt.push_back(ddmelt);
+				}
 
 				// Read number of phases
 				in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -403,19 +476,35 @@ void MeltingModel::Deserialize(std::istream &in)
 					double admax;
 					in.read(reinterpret_cast<char*>(&admax), sizeof(admax));
 
+					//read phase is
+					unsigned int iid;
+					in.read(reinterpret_cast<char*>(&iid), sizeof(iid));
+
 					//read size of dcomp
 					unsigned int an;
 					in.read(reinterpret_cast<char*>(&an), sizeof(an));
 
 					//read dcomp
-					fvector dcomp;
+					std::vector<fvector> dcomp;
 					for (unsigned int j = 0; j != an; ++j) {
-						in.read(reinterpret_cast<char*>(&val), sizeof(val));
-						dcomp.push_back(val);
+						
+						//read size of composition in dcomp
+						unsigned int ann;
+						in.read(reinterpret_cast<char*>(&ann), sizeof(ann));
+						
+						fvector ddcomp;
+
+						//read composition in dcomp
+						for (unsigned int k = 0; k != ann; ++k) {
+							in.read(reinterpret_cast<char*>(&val), sizeof(val));
+							ddcomp.push_back(val);
+						}
+
+						dcomp.push_back(ddcomp);
 					}
 
 					//create new phase
-					PHASE new_phase(name, aA, aT, admin, admax, dcomp);
+					PHASE new_phase(name, aA, aT, admin, admax, dcomp, iid);
 					m_phases.push_back(&new_phase);
 
 					delete[] name;

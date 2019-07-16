@@ -43,6 +43,7 @@
 #include "swp_mech_parser.h"
 #include "swp_component.h"
 #include "swp_tracker.h"
+#include "swp_phase.h"
 #include "swp_inception.h"
 #include "swp_constant_inception.h"
 #include "swp_surface_reaction.h"
@@ -174,6 +175,9 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     // Read the particle components and the trackers.
     readComponents(xml, mech);
     readTrackers(xml, mech);
+
+	// Read the phases
+	readPhases(xml, mech);
 
     // READ DEFINED MODELS.
 
@@ -801,6 +805,62 @@ void MechParser::readTrackers(CamXML::Document &xml, Sweep::Mechanism &mech)
         mech.AddTracker(*t);
     }
 }
+
+// Reads phases from a sweep mechanism XML file.
+void MechParser::readPhases(CamXML::Document &xml, Sweep::Mechanism &mech)
+{
+	vector<CamXML::Element*> items, subitems;
+	vector<CamXML::Element*>::iterator i, ii;
+	CamXML::Element *el;
+
+	// Get all component specifications from the XML data.
+	xml.Root()->GetChildren("phase", items);
+
+	// Loop over the components and add them to the mechanism.
+	for (i = items.begin(); i != items.end(); ++i) {
+		Phase *phase = new Phase();
+
+		// Get component ID.
+		string str = (*i)->GetAttributeValue("id");
+		if (str != "") {
+			phase->SetName(str);
+		}
+		else {
+			// Component must have an id!
+			delete phase;
+			throw runtime_error("Component statement found with no ""id"" attribute "
+				"(Sweep, MechParser::readPhases).");
+		}
+
+		// Get phase type
+		str = (*i)->GetAttributeValue("type");
+		if (str == "liquid") {
+			phase->SetLiquid();
+		}
+
+		// Get components that belong to the phase
+		(*i)->GetChildren("component", subitems);
+		for (ii = subitems.begin(); ii != subitems.end(); ++ii) {
+
+			string str = (*ii)->GetAttributeValue("id");
+			int id = mech.ComponentIndex(str);
+
+			if (id >= 0) {
+				// Add component to phase
+				phase->AddComponent(id);
+			}
+			else {
+				throw runtime_error(str + ": Component not found in mechanism "
+					"Sweep, MechParser::readPhase).");
+			}
+
+		}
+
+		// Add phase to mechanism.
+		mech.AddPhase(*phase);
+	}
+}
+
 
 // Reads inception processes from a sweep mechanism XML file.
 void MechParser::readInceptions(CamXML::Document &xml, Sweep::Mechanism &mech)
@@ -1768,8 +1828,8 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 */
 void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 {
-	vector<CamXML::Element*> items, subitems, subsubitems;
-	vector<CamXML::Element*>::iterator i, j, m;
+	vector<CamXML::Element*> items, subitems, subsubitems, subsubsubitems;
+	vector<CamXML::Element*>::iterator i, j, l, m;
 	CamXML::Element *el = NULL;
 	string str;
 	unsigned int k = 0;
@@ -1786,6 +1846,20 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 			//check that the particle model is valid
 			if (mech.AggModel() == AggModels::Spherical_ID || mech.AggModel() == AggModels::BinTree_ID) {
 
+				// Check that a liquid phase exists
+				int n_liq = 0;
+				for (int ii = 0; ii < mech.PhaseCount(); ++ii){
+					if (mech.PhaseIsLiquid(ii)){ ++n_liq; }
+				}
+				if (n_liq < 1){
+					throw runtime_error("Liquid phase not found in mechanism "
+						"Sweep, MechParser::readPhaseTransformation).");
+				}
+				else if (n_liq > 1){
+					throw runtime_error("Multiple liquid phases found in mechanism "
+						"Sweep, MechParser::readPhaseTransformation).");
+				}
+
 				//enable melting
 				mech.MeltModel().Enable();
 
@@ -1796,28 +1870,36 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 					if (str == "true") mech.MeltModel().EnableFixedCrossover();
 				}
 
-				//set liquid phase
-				el = (*i)->GetFirstChild("liquid");
-				if (el != NULL) {
-					str = el->GetAttributeValue("id");
-					//get component index
-					int id = mech.ComponentIndex(str);
-					mech.MeltModel().SetLiquidIndex(id);
-				}
-				else{
-					throw runtime_error("Liquid phase not specified (Sweep, MechParser::readPhaseTransformation).");
-				}
-
 				//loop over phases
 				(*i)->GetChildren("phase", subitems);
 				for (j = subitems.begin(); j != subitems.end(); ++j) {
 					
-					fvector dcomp(mech.ComponentCount(), 0.0);
+					vector<fvector> ddcomp;
 					double A = 0.0;
 					double T = 0.0;
 					double dmin = 0.0;
 					double dmax = 0.0;
+					int iid = 0;
 
+					//transition name
+					string phasename = (*j)->GetAttributeValue("id");
+
+					// Get component ID.
+					int id = mech.PhaseIndex(phasename);
+					if (id >= 0) {
+						iid = id;
+					}
+					else {
+						throw runtime_error(str + ": Phase not found in mechanism "
+							"Sweep, MechParser::readPhaseTransformation).");
+					}
+
+					// Check that the phase is not liquid
+					if (mech.PhaseIsLiquid(id)){
+						throw runtime_error(phasename + ": Phase should not be liquid "
+							"Sweep, MechParser::readPhaseTransformation).");
+					}
+					
 					//parameter
 					el = (*j)->GetFirstChild("A");
 					if (el != NULL) A = cdble(el->Data());
@@ -1833,41 +1915,61 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 							dmin = cdble(el->Data());
 						}
 						else{
-							throw runtime_error("Diameter range not specified (Sweep, MechParser::readPhaseTransformation).");
+							throw runtime_error(phasename + "Diameter range not specified (Sweep, MechParser::readPhaseTransformation).");
 						}
 						el = (*j)->GetFirstChild("dmax");
 						if (el != NULL) {
 							dmax = cdble(el->Data());
 						}
 						else{
-							throw runtime_error("Diameter range not specified (Sweep, MechParser::readPhaseTransformation).");
+							throw runtime_error(phasename + "Diameter range not specified (Sweep, MechParser::readPhaseTransformation).");
 						}
 					}
 
-					//get components
-					(*j)->GetChildren("component", subsubitems);
-					for (m = subsubitems.begin(); m != subsubitems.end(); ++m) {
-						// Get component ID.
-						string str = (*m)->GetAttributeValue("id");
-						int id = mech.ComponentIndex(str);
-						if (id >= 0) {
-							// Get component change.
-							str = (*m)->GetAttributeValue("dx");
-							double dx = cdble(str);
-							// Set component change.
-							dcomp[id] += dx;
+					//get elements
+					(*j)->GetChildren("element", subsubitems);
+					for (l = subsubitems.begin(); l != subsubitems.end(); ++l) {
+
+						fvector dcomp(mech.ComponentCount(), 0.0);
+
+						//get components
+						(*l)->GetChildren("component", subsubsubitems);
+						for (m = subsubsubitems.begin(); m != subsubsubitems.end(); ++m) {
+							// Get component ID.
+							string str = (*m)->GetAttributeValue("id");
+							int id = mech.ComponentIndex(str);
+							if (id >= 0) {
+								// Get component change.
+								str = (*m)->GetAttributeValue("dx");
+								double dx = cdble(str);
+								// Set component change.
+								dcomp[id] += dx;
+							}
+							else {
+								throw runtime_error(str + ": Component not found in mechanism "
+									"Sweep, MechParser::readPhaseTransformation).");
+							}
 						}
-						else {
-							throw runtime_error(str + ": Component not found in mechanism "
-								"Sweep, MechParser::readCompChanges).");
+
+						// Check mass conservation of component change.
+						double mass = 0.0;
+						double avg_mass = 0.0;
+						for (unsigned int j = 0; j != mech.ComponentCount(); j++){
+							mass += mech.Components(j)->MolWt() * dcomp[j] / NA;
+							avg_mass += mech.Components(j)->MolWt() / NA;
 						}
+						avg_mass /= mech.ComponentCount();
+
+						if (mass > 0.001*avg_mass){ // tolerance of 0.1% average component mass
+							throw runtime_error(phasename + "Phase transformation does not conserve mass "
+								"Sweep, MechParser::readPhaseTransformation).");
+						}
+
+						ddcomp.push_back(dcomp);
 					}
 					
-					//transition name
-					str = (*j)->GetAttributeValue("type");
-					
-					//create phase melting object
-					mech.MeltModel().AddPhase(str,A,T,dmin,dmax,dcomp);
+					//add phase change to melting model
+					mech.MeltModel().AddPhase(phasename,A,T,dmin,dmax,ddcomp,iid);
 				}
 
 			}

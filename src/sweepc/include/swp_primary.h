@@ -147,6 +147,10 @@ public:
     // Sets the ith trackervalue.
     void SetValue(unsigned int i, double val);
 
+	// PHASE
+
+	// Get mass of a specific phase
+	double GetPhaseMass(int i) const;
 
     // PRIMARY CREATE TIME.
 

@@ -55,6 +55,7 @@
 #include "swp_sintering_model.h"
 #include "swp_titania_melting_model.h"
 #include "swp_environment_interface.h"
+#include "swp_phase.h"
 
 #include "local_geometry1d.h"
 
@@ -152,6 +153,24 @@ public:
     // Sets the vector of tracker variables.
     void SetTrackers(const TrackPtrVector &track);
 
+	// PHASES
+
+	PhasePtrVector m_phases;	//csl37
+
+	// Add phase to particle model
+	void AddPhase(Phase &phase);
+	
+	// Return component indices for a phase 
+	std::vector<unsigned int> GetPhaseComponents(int i) const;
+
+	// Returns the number of phases in the ParticleModel
+	unsigned int PhaseCount(void) const;
+
+	// Return if the phase is liquid
+	bool PhaseIsLiquid(int i) const;
+
+	// Return the phase index
+	int PhaseIndex(const std::string &name) const;
 
     // AGGREGATION MODEL TYPE.
 

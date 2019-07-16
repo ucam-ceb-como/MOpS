@@ -214,6 +214,24 @@ void AggModels::Primary::SetValue(unsigned int i, double val)
 	}
 }
 
+// PHASE VARIABLES
+
+// Get mass specific phase	//csl
+double AggModels::Primary::GetPhaseMass(int i) const{
+
+	// Get component indices for phase 
+	std::vector<unsigned int> indices = m_pmodel->GetPhaseComponents(i);
+
+	// Loop over composition and calculate mass and volume.
+	double mass = 0.0;
+	for (std::vector<unsigned int>::const_iterator it = indices.begin(); it != indices.end(); ++it){
+		mass += m_pmodel->Components((*it))->MolWt() * m_comp[(*it)] / NA;
+	}
+
+	return mass;
+}
+
+
 
 // PRIMARY CREATE TIME.
 
@@ -527,60 +545,61 @@ void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
 {
 	
 	fvector dcomp(m_pmodel->ComponentCount(), 0.0);
+	std::vector<fvector> all_dcomp;
 	fvector dvalues(m_pmodel->TrackerCount(), 0.0); //for now the transformation model doesn't adjust the tracker variables
 	unsigned int n = 0;
 
 	//check if liquid
 	bool Liquid = ParticleModel()->MeltModel().IsLiquid(sys, *this);
-	//get index of liquid component
-	unsigned int liquidindex = ParticleModel()->MeltModel().GetLiquidIndex();
 
 	//has the particle melted
 	if (Liquid == true){
 		// melt the particle
-		for (int i = 0; i < m_pmodel->ComponentCount(); i++){
-			if (i != liquidindex) {
-				//create composition change
-				dcomp.assign(m_pmodel->ComponentCount(), 0.0);
-				dcomp[liquidindex] += 1.0;
-				dcomp[i] += -1.0;
-				// transform components
-				n = Primary::CalculateMaxAdjustments(dcomp); //transform everything
-				if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); }; //adjust primary
-			}
-		}
+		ParticleModel()->MeltModel().MeltingCompositionChange(all_dcomp);
 	}
 	else{
 		//total composition excluding liquid phase
-		double total_comp = 0.0;
-		for (int i = 0; i < m_pmodel->ComponentCount(); i++){
-			if (i != liquidindex) total_comp += Composition(i);
-		}
+		double mass = 0.0;
+		fvector phaseMass(m_pmodel->PhaseCount(), 0.0);
 
-		if (total_comp > 0.0){//if solid phases exist then convert liquid to solid phase probabilistically
+		//add all components then subtract the liquid components
+		for (int i = 0; i < m_pmodel->PhaseCount(); i++){
+			if (!m_pmodel->PhaseIsLiquid(i)){
+				phaseMass[i] = GetPhaseMass(i);
+				mass += phaseMass[i];
+			}
+		}
+		
+		if (mass > 0.0){//if solid phases exist then convert liquid to solid phase probabilistically
 			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
-			double j = uniformGenerator() * total_comp; //generate random number
-			for (int i = 0; i < m_pmodel->ComponentCount(); i++){
-				if (i != liquidindex){
-					if (j <= Composition(i)){ // change in composition
-						dcomp[liquidindex] += -1.0;
-						dcomp[i] += 1.0;
-						break;
-					}
-					else{
-						j -= Composition(i);
-					}
+			double j = uniformGenerator() * mass; //generate random number
+			for (int i = 0; i < m_pmodel->PhaseCount(); i++){
+				
+				if ( j <= phaseMass[i] ){ // change in composition
+					
+					ParticleModel()->MeltModel().CompositionChange(i, all_dcomp);
+					break;
+				}
+				else{
+					j -= phaseMass[i];
 				}
 			}
 		}
 		else{
-			//if all liquid then tranform based on maximum melting point
-			ParticleModel()->MeltModel().CompositionChange(sys, *this, dcomp); //get change in composition	
-		}
+			//if everything is liquid then tranform based on melting model
+			ParticleModel()->MeltModel().CompositionChange(sys, *this, all_dcomp); //get change in composition	
+		}	
+	}
+
+	//loop over all composition changes and transform components
+	for (std::vector<fvector>::const_iterator it = all_dcomp.begin(); it != all_dcomp.end(); ++it){
+
+		dcomp = *it;
 
 		// transform components
 		n = Primary::CalculateMaxAdjustments(dcomp); //transform everything
 		if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); }; //adjust primary
+
 	}
 }
 
