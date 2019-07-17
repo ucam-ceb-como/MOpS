@@ -178,7 +178,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_L6_R5FEACR5 = new L6_R5FEACR5; j_L6_R5FEACR5->initialise();             		 //*< 48 - R5FEACR5 closure reaction.
 	JumpProcess* j_L6_FEACR5FE = new L6_FEACR5FE; j_L6_FEACR5FE->initialise();             		 //*< 49 - FEACR5FE closure reaction.
 	JumpProcess* j_L6_R5ACR5R5 = new L6_R5ACR5R5; j_L6_R5ACR5R5->initialise();             		 //*< 50 - R5ACR5R5 closure reaction.
-	
+	JumpProcess* j_L7_R5ZZACR5 = new L7_R5ZZACR5; j_L7_R5ZZACR5->initialise();                   //*< 51 - R7 bay closure on L7_R5ZZACR5.
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
     temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
@@ -231,6 +231,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_L6_R5FEACR5);        //*< 48 - R5FEACR5 closure reaction.
 	temp.push_back(j_L6_FEACR5FE);        //*< 49 - FEFEACR5FE closure reaction.
 	temp.push_back(j_L6_R5ACR5R5);        //*< 50 - R5ACR5R5 closure reaction.
+	temp.push_back(j_L7_R5ZZACR5);          //*< 51 - R7 bay closure on L7_R5ZZACR5.
 
     return temp;
 }
@@ -4281,4 +4282,111 @@ double L6_R5ACR5R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	}
 	else r_f = 0;
 	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+}
+
+// ************************************************************
+// ID41 - R7-bay closure at R5ZZACR5
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void L7_R5ZZACR5::initialise() {
+    // Adding elementary reactions
+    // 0.0267 atm
+    rxnvector& rxnV = m_rxnvector0p0267;
+    addReaction(rxnV, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
+    addReaction(rxnV, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
+    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp::H));  //4 - r3f
+    addReaction(rxnV, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
+    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
+    // 0.12 atm
+    rxnvector& rxnV2 = m_rxnvector0p12;
+    addReaction(rxnV2, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
+    addReaction(rxnV2, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
+    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV2, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
+    addReaction(rxnV2, Reaction(2.22e11, .658, 23.99, sp::None));   //5 - r4f
+    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//Pathway A
+	addReaction(rxnV3, Reaction(2.76732E+07,1.91279E+00,9.54190E+00, sp::H));		//H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//0
+	addReaction(rxnV3, Reaction(4.21185E+04,2.26366E+00,6.87815E+00, sp::H2));      //H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//1
+	addReaction(rxnV3, Reaction(4.70295E+11,1.42940E-01,4.72228E+00, sp::None));	//7-membHabs-2a <=> 7-membHabs-3a				//2
+	addReaction(rxnV3, Reaction(1.47581E+12,3.66538E-01,2.73731E+01, sp::None));    //7-membHabs-2a <=> 7-membHabs-3a				//3
+	addReaction(rxnV3, Reaction(6.42375E+09,1.09295E+00,3.21573E+01, sp::None));	//7-membHabs-3a <=> 7-membHabs-4 + H			//4
+	addReaction(rxnV3, Reaction(1.69261E+08,1.52168E+00,1.63656E+00, sp::H));       //7-membHabs-3a <=> 7-membHabs-4 + H			//5
+	//Pathway B
+	addReaction(rxnV3, Reaction(2.84300E+07,1.90572E+00,9.53262E+00, sp::H));		//H + 7-membHabs-1 <=> 7-membHabs-2b + H2		//6
+	addReaction(rxnV3, Reaction(5.33824E+04,2.26128E+00,7.52478E+00, sp::H2));      //H + 7-membHabs-1 <=> 7-membHabs-2b + H2		//7
+	addReaction(rxnV3, Reaction(6.59893E+11,8.15588E-02,2.62478E+00, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//8
+	addReaction(rxnV3, Reaction(5.13229E+12,3.39661E-01,2.54015E+01, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//9
+	addReaction(rxnV3, Reaction(2.00638E+10,1.09912E+00,3.28066E+01, sp::None));    //7-membHabs-3b <=> 7-membHabs-4 + H			//10
+	addReaction(rxnV3, Reaction(1.72899E+08,1.48867E+00,1.50412E+00, sp::H));       //7-membHabs-3b <=> 7-membHabs-4 + H			//11
+	
+	//Old. Do not use!!!
+    /*addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
+    addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
+    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
+    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
+    addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
+    addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f*/
+    m_sType = R5ZZACR5; // sitetype
+    m_name = "BY7 closure on R5ZZACR5"; // name of process
+    m_ID = 51;
+}
+// Jump rate calculation
+double L7_R5ZZACR5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double L7_R5ZZACR5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double L7_R5ZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    // check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+	double T = gp[gp.T];
+    if (T <= 1300) return m_rate = 0.0;
+	
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(4, 4);
+	boost::numeric::ublas::vector<double> arr2(4);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	arr1(0,0) = m_r[1] + m_r[2];
+    arr1(0,1) = - m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = + m_r[3] + m_r[4];
+    arr1(2,2) = +m_r[7] + m_r[9];
+    arr1(2,3) = - m_r[8];
+    arr1(3,2) = - m_r[9];
+    arr1(3,3) = m_r[8] + m_r[10];
+    arr2(0) = +m_r[0];
+    arr2(1) = 0.0*(m_r[5]);
+    arr2(2) = +m_r[6];
+    arr2(3) = 0.0*(m_r[11]);
+	
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(3))*site_count;
+	
+	//Old. Do not use!!!
+	/*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
+    double r_f; // radical fraction 
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation*/
 }

@@ -79,7 +79,7 @@ namespace Sweep {
 			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
 			ACR5 = 2002, FEACR5 = 2003, ZZACR5 = 2004, FEACR5FE = 2014, ACACR5 = 2005, FEZZACR5 = 2015,
 			// Armchair with R5 and R5s
-			R5ACR5 = 2103, R5FEACR5 = 2104, R5ZZACR5 = 2105, R5ACR5R5 = 2204, ACR5RFER = 2205,
+			R5ACR5 = 2103, R5FEACR5 = 2104, R5ZZACR5 = 2105, R5ACR5R5 = 2204, ACR5RFER = 2205, SPIRAL = 9999,
 			// Combined Sites
 			None,
 			// Error ID
@@ -204,6 +204,7 @@ namespace Sweep {
 				case R5ACR5R5: return "R5ACR5R5";
 				case ACR5RFER: return "ACR5RFER";
 				case RAC_FE3: return "RAC_FE3";
+				case SPIRAL: return "SPIRAL";
                 case None: return "None";
                 case Inv: return "Invalid";
                 case any: return "any";

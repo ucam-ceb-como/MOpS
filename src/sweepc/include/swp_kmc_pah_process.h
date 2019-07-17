@@ -227,6 +227,7 @@ public:
 	void proc_L6_R5FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID48
 	void proc_L6_FEACR5FE(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID49
 	void proc_L6_R5ACR5R5(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID50
+	void proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID51
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts
@@ -303,6 +304,10 @@ private:
     Cpointer addC(Cpointer C_1, angletype angle1, angletype angle2, bondlength length, bool bulk=false);
 	//! Creates a new carbon atom attached next to C1 using a vector to tell the position of the next carbon atom.
 	Cpointer addC(Cpointer C_1, cpair direction, bondlength length, bool bulk=false);
+	//! Overload routine. Passes a OpenBabel molecule so it is modified. 
+	Cpointer addC(Cpointer C_1, cpair direction, bondlength length, OpenBabel::OBMol mol, bool bulk=false);
+	//! Adds bond to OpenBabel structure between two carbons. 
+	void addOBbond(Cpointer C_1, Cpointer C_2, OpenBabel::OBMol mol);
 	//! Moves a carbon position .
 	void moveC(Cpointer C_1, cpair newpos);
 	//! Moves a carbon position .

@@ -1147,6 +1147,85 @@ Cpointer PAHProcess::addC(Cpointer C_1, cpair direction, bondlength length, bool
     return cb;
 }
 
+//Overload routine. Passes a OpenBabel molecule so it is modified. 
+Cpointer PAHProcess::addC(Cpointer C_1, cpair direction, bondlength length, OpenBabel::OBMol mol, bool bulk) {
+    Cpointer cb;
+    // Create new carbon atom
+    cb = new Carbon;
+    // Set details of new Carbon
+    cb->C1 = C_1;
+    cb->C2 = C_1->C2;
+    
+	// set new coordinates and store
+	cpair mpos = jumpToPos(C_1->coords, direction, length);
+	if (bulk){// Carbon is coming from bulk, removing from Internal carbons
+		mpos = checkHindrance_C_intPAH(mpos);
+	}
+	cb->coords = mpos;
+    if(!m_pah->m_carbonList.insert(cb).second)
+        std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
+    m_pah->m_cpositions.insert(cb->coords);
+    // Edit details of connected carbon(s)
+    if(C_1->C2 != NULL) {
+        // change member pointer of original neighbour of C_1
+        C_1->C2->C1 = cb;
+    }
+    C_1->C2 = cb;
+    if(!bulk) addCount(1,0);
+    if(C_1 == m_pah->m_clast) m_pah->m_clast = cb;
+	//Add carbon to OpenBabel structure
+	OpenBabel::OBAtom *atom  = mol.NewAtom();
+	atom->SetAtomicNum(6);
+	atom->SetVector(std::get<0>(cb->coords),std::get<1>(cb->coords),std::get<2>(cb->coords));
+	atom->SetAromatic();
+	atom->SetImplicitValence(3);
+	
+	double tol = 2e-1;
+	for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
+		double x_pos = a->GetX();
+		double y_pos = a->GetY();
+		double z_pos = a->GetZ();
+		cpair temp = std::make_tuple(x_pos, y_pos, z_pos);
+		if (getDistance_twoC(C_1->coords, temp) < tol){
+			// a is the starting carbon
+			mol.AddBond(a->GetIdx(), atom->GetIdx(),5);
+			++a;
+			mol.DeleteAtom(&*a);
+			break;
+		}
+	}
+    return cb;
+}
+
+//! Adds bond to OpenBabel structure between two carbons. 
+void PAHProcess::addOBbond(Cpointer C_1, Cpointer C_2, OpenBabel::OBMol mol){
+	double tol = 2e-1;
+	OpenBabel::OBMolAtomIter c1(mol);
+	OpenBabel::OBMolAtomIter c2(mol);
+	OpenBabel::OBMolAtomIter h2(mol);
+	bool r1 = false;
+	bool r2 = false;
+	for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
+		double x_pos = a->GetX();
+		double y_pos = a->GetY();
+		double z_pos = a->GetZ();
+		cpair temp = std::make_tuple(x_pos, y_pos, z_pos);
+		if (getDistance_twoC(C_1->coords, temp) < tol){
+			c1 = a;
+			r1 = true;
+		}
+		if (getDistance_twoC(C_2->coords, temp) < tol){
+			c2 = a;
+			h2 = a;
+			++h2;
+			mol.DeleteAtom(&*h2);
+			r2 = true;
+		}
+		if (r1&&r2) break;
+	}
+	mol.AddBond(c1->GetIdx(), c2->GetIdx(), 5);
+}
+
 void PAHProcess::moveC(Cpointer C_1, cpair newpos) {
 	// Remove coordinates of C from m_pah->m_cpositions
 	double min_dist = 1e3;
@@ -2330,41 +2409,55 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		printSites(st);
 		++updatesites_error_counter;
 	}
+	if (st->type == SPIRAL)
+	{
+		//A spiral site is modified. Currently we cannot modify them back into reality.
+		stype = 9999;
+		bulkCchange = 0;
+	}
 	if (!checkSiteValid(stype + bulkCchange)){
-		cout << "ERROR: updateSites: Created undefined site:\n";
-		cout << "Type = " << stype << "\n";
-		cout << "BulkC change = " << bulkCchange << "\n";
-		/*cout << "ERROR: updateSites: Bulk C + Type gave invalid site\n";
-		std::ostringstream msg;
-		msg << "ERROR: Bulk C + Type gave invalid site. Trying to add "
-			<< bulkCchange << " bulk C to a " << kmcSiteName(st->type)
-			<< " (Sweep::KMC_ARS::PAHProcess::updateSites)";*/
-		//saveDOT("KMC_DEBUG/KMC_PAH_X_UPDATE.dot");
-		ifstream  src("KMC_DEBUG/BEFORE.xyz");
-		std::string filename = "KMC_DEBUG/BEFORE_";
-		filename.append(std::to_string(updatesites_error_counter));
-		filename.append(".xyz");
-		//filename.append(std::to_string(this->m_pah->m_parent->ID()));
-		ofstream dst(filename);
-		dst << src.rdbuf();
-		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_BulkplusC_";
-		filename2.append(std::to_string(updatesites_error_counter));
-		//filename2.append("_");
-		//filename2.append(std::to_string(this->m_pah->m_parent->ID()));
-		saveXYZ(filename2);
-		cout<<"Saving file: "<< filename<<"\n";
-		cout<<"Saving file: "<< filename2<<".xyz\n";
-		//saveXYZ("KMC_DEBUG/KMC_PAH_X_UPDATE");
-		/*throw std::runtime_error(msg.str());
-		assert(false);*/
-		delSiteFromMap(st->type, st);
-		st->type = None;
-		m_pah->m_siteMap[st->type].push_back(st);
-		st->C1 = Carb1;
-		st->C2 = Carb2;
-		printSites(st);
-		++updatesites_error_counter;
-		return;
+		//There are two options. An invalid transformation or an spiral formation.
+		if ( (stype + bulkCchange)%10 >=7 && (stype + bulkCchange)%10 <=8 ){
+			//The transformation just formed a 7 or 8 member site that will not react further. Transform it into a SPIRAL site.
+			stype = 9999;
+			bulkCchange = 0;
+		}
+		else {
+			cout << "ERROR: updateSites: Created undefined site:\n";
+			cout << "Type = " << stype << "\n";
+			cout << "BulkC change = " << bulkCchange << "\n";
+			/*cout << "ERROR: updateSites: Bulk C + Type gave invalid site\n";
+			std::ostringstream msg;
+			msg << "ERROR: Bulk C + Type gave invalid site. Trying to add "
+				<< bulkCchange << " bulk C to a " << kmcSiteName(st->type)
+				<< " (Sweep::KMC_ARS::PAHProcess::updateSites)";*/
+			//saveDOT("KMC_DEBUG/KMC_PAH_X_UPDATE.dot");
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_";
+			filename.append(std::to_string(updatesites_error_counter));
+			filename.append(".xyz");
+			//filename.append(std::to_string(this->m_pah->m_parent->ID()));
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_BulkplusC_";
+			filename2.append(std::to_string(updatesites_error_counter));
+			//filename2.append("_");
+			//filename2.append(std::to_string(this->m_pah->m_parent->ID()));
+			saveXYZ(filename2);
+			cout<<"Saving file: "<< filename<<"\n";
+			cout<<"Saving file: "<< filename2<<".xyz\n";
+			//saveXYZ("KMC_DEBUG/KMC_PAH_X_UPDATE");
+			/*throw std::runtime_error(msg.str());
+			assert(false);*/
+			delSiteFromMap(st->type, st);
+			st->type = None;
+			m_pah->m_siteMap[st->type].push_back(st);
+			st->C1 = Carb1;
+			st->C2 = Carb2;
+			printSites(st);
+			++updatesites_error_counter;
+			return;
+		}
 	}
 	// removes site from m_pah->m_siteMap (principal site)
 	delSiteFromMap(st->type, st);
@@ -3298,6 +3391,7 @@ bool PAHProcess::checkSiteValid(int type) {
 		case R5ACR5R5: return true;
 		case ACR5RFER: return true;
 		case RAC_FE3: return true;
+		case SPIRAL: return true;
 		case None: return true;
 		case Inv: return true;
 		case any: return true;
@@ -3536,6 +3630,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			proc_L6_FEACR5FE(site_perf, site_C1, site_C2); break;
 		case 50:
 			proc_L6_R5ACR5R5(site_perf, site_C1, site_C2); break;
+		case 51:
+			proc_L7_R5ZZACR5(site_perf, site_C1, site_C2); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -3910,9 +4006,21 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			}
 		else if (ntype_site == 504) {
 			new_point = 2003;
-			if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
-			else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;
-			newType = (new_point + ntype1 + ntype2);
+			if (ntype1 >= 2103 && ntype2 < 501) {
+				//The R5R6BY5 site is next to a complex bay site.
+				new_point = ntype1 + 1;
+				ntype1= 1;
+			}
+			else if (ntype2 >= 2103 && ntype1 <501) {
+				//The R5R6BY5 site is next to a complex bay site.
+				new_point = ntype2 + 1;
+				ntype2= 1;
+			}
+			else {
+				if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
+				else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;
+				newType = (new_point + ntype1 + ntype2);
+			}
 		}
 		else if (ntype_site == 604) {
 			new_point = 2103;
@@ -3989,12 +4097,11 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				}
 				else ntype2 = ntype2 % 10;
 			}
-			
-			newType = (new_point + ntype1 + ntype2);
-			/*if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
-			else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;*/
 		}
 		
+		newType = (new_point + ntype1 + ntype2);
+		/*if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
+		else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;*/
 
 		if ((kmcSiteType)newType == None) {
 			//saveDOT(std::string("BY6ClosureProblem.dot"));
@@ -6226,13 +6333,13 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				if ( ((S1_before >= 501 && S1_before <= 504) || (S1_before >= 1002 && S1_before <= 1004) || (S1_before >= 2103 && S1_before <= 2204 ) ) && ( (S2_after >= 501 && S2_after <= 504) || (S2_after >= 1002 && S2_after <= 1004) || (S2_after >= 2103 && S2_after <= 2204 ) ) ){
 					//Both second neighbour sites could be the coupled site to the R5R6ZZ. Move to next neighbours.
 				}
-				else if ( !((S1_before >= 501 && S1_before <= 504) || (S1_before >= 1002 && S1_before <= 1004) || (S1_before >= 2103 && S1_before <= 2204 ) ) && ( (S2_after >= 501 && S2_after <= 504) || (S2_after >= 1002 && S2_after <= 1004) || (S2_after >= 2103 && S2_after <= 2204 ) ) ){
+				else if ( ((S1_before >= 501 && S1_before <= 504) || (S1_before >= 1002 && S1_before <= 1004) || (S1_before >= 2103 && S1_before <= 2204 ) ) && !( (S2_after >= 501 && S2_after <= 504) || (S2_after >= 1002 && S2_after <= 1004) || (S2_after >= 2103 && S2_after <= 2204 ) ) ){
 					SR5 = S2;
 					S2 = moveIt(SR5, +1);
 					b4 = false;
 					break;
 				}
-				else if ( ((S1_before >= 501 && S1_before <= 504) || (S1_before >= 1002 && S1_before <= 1004) || (S1_before >= 2103 && S1_before <= 2204 ) ) && !( (S2_after >= 501 && S2_after <= 504) || (S2_after >= 1002 && S2_after <= 1004) || (S2_after >= 2103 && S2_after <= 2204 ) ) ){
+				else if ( !((S1_before >= 501 && S1_before <= 504) || (S1_before >= 1002 && S1_before <= 1004) || (S1_before >= 2103 && S1_before <= 2204 ) ) && ( (S2_after >= 501 && S2_after <= 504) || (S2_after >= 1002 && S2_after <= 1004) || (S2_after >= 2103 && S2_after <= 2204 ) ) ){
 					SR5 = S1;
 					S1 = moveIt(SR5, -1);
 					b4 = true;
@@ -6713,7 +6820,7 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Cpointer newC2;
 	cpair Hdir1 = C_2->growth_vector;
 	cpair Hdir2 = C_1->growth_vector;
-	cpair starting_direction = get_vector(C_1->C2->C2->coords,C_2->C1->coords);
+	cpair starting_direction = get_vector(C_1->C2->C2->coords,C_2->coords);
 	cpair FEdir = get_vector(C_1->coords,C_2->coords);
 	if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
 		/*cout<<"Site hindered, process not performed.\n"*/ return;
@@ -6725,13 +6832,13 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		removeC(C_1->C2, true);
 		removeC(C_1->C2, true);
 		removeC(C_2->C1, true);
-		newC1 = addC(C_1, C_1->growth_vector, 1.4);
+		newC1 = addC(C_1, starting_direction, 1.4, mol);
 		updateA(C_1,'C', C_1->growth_vector);
 		updateA(newC1, 'H', Hdir1);
-		newC2 = addC(newC1, FEdir, 1.4);
+		newC2 = addC(newC1, FEdir, 1.4, mol);
 		updateA(C_2,'C', C_2->growth_vector);
 		updateA(newC2, 'H', Hdir2);
-		
+		addOBbond(newC2, C_2, mol);
 		/*removeC(C_1->C2, true);
 		removeC(C_1->C2, true);
 		removeC(C_2->C1, true);
@@ -6765,12 +6872,13 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		// Add C
 		//newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 90), 0, 1.4*1.5);
 		double distR7 = getDistance_twoC(C_1, C_2);
-		newC1 = addC(C_1, starting_direction, 1.3);
+		newC1 = addC(C_1, starting_direction, 1.4, mol);
 		updateA(C_1,'C', C_1->growth_vector);
 		updateA(newC1, 'H', Hdir1);
-		newC2 = addC(newC1, FEdir, 1.4);
+		newC2 = addC(newC1, FEdir, 1.4, mol);
 		updateA(C_2,'C', C_2->growth_vector);
 		updateA(newC2, 'H', Hdir2);
+		addOBbond(newC2, C_2, mol);
 	}
 	//printStruct();
 	// Add and remove H
@@ -6824,9 +6932,9 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// add ring counts
 	m_pah->m_rings7_Embedded++;
 	//printSites(stt);
-	OpenBabel::OBMol newmol = passPAH();
-	newmol = optimisePAH(newmol);
-	passbackPAH(newmol);
+	//OpenBabel::OBMol newmol = passPAH();
+	mol = optimisePAH(mol);
+	passbackPAH(mol);
 }
 
 // ************************************************************
@@ -7067,6 +7175,17 @@ void PAHProcess::proc_L6_R5ACR5R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
 	proc_L6_BY6(stt, C_1, C_2);
+}
+
+// ************************************************************
+// ID51 - R7 bay closure on R5ZZACR5
+// ************************************************************
+void PAHProcess::proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
+	proc_L6_BY6(stt, C_1, C_2);
+	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
 }
 
 size_t PAHProcess::SiteListSize() const {
