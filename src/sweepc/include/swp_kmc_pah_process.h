@@ -164,7 +164,7 @@ public:
 	//! Passes a PAH from OpenBabel to MOpS.
 	void passbackPAH(OpenBabel::OBMol mol);
 	//! Runs optimisation of a PAHusing Openbabel
-	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, int nsteps=1500, std::string forcefield="mmff94") ;
+	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, int nsteps=4000, std::string forcefield="mmff94") ;
 	//! Includes curvature in a PAH after a pentagon is integrated in the structure.
 	//OpenBabel::OBMol includeCurvature(OpenBabel::OBMol mol, cpair CR5_1, cpair CR5_2) ;
     
@@ -382,6 +382,8 @@ private:
 	void updateA(Cpointer C, char sp, bool flag);
 	//! Overload function, forces char to C atom and defines growth vector.
 	void updateA(Cpointer C, char sp, cpair gro_vec);
+	//! Overload function, forces char to C atom and defines growth vector.
+	void updateA(Cpointer C, char sp, cpair gro_vec, OpenBabel::OBMol mol);
     //! Overload function, updateA for all C from C_1 to C_2 inclusive
     void updateA(Cpointer C_1, Cpointer C_2, char spc);
     

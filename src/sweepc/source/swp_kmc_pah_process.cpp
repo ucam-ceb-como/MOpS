@@ -1189,8 +1189,6 @@ Cpointer PAHProcess::addC(Cpointer C_1, cpair direction, bondlength length, Open
 		if (getDistance_twoC(C_1->coords, temp) < tol){
 			// a is the starting carbon
 			mol.AddBond(a->GetIdx(), atom->GetIdx(),5);
-			++a;
-			mol.DeleteAtom(&*a);
 			break;
 		}
 	}
@@ -1202,7 +1200,6 @@ void PAHProcess::addOBbond(Cpointer C_1, Cpointer C_2, OpenBabel::OBMol mol){
 	double tol = 2e-1;
 	OpenBabel::OBMolAtomIter c1(mol);
 	OpenBabel::OBMolAtomIter c2(mol);
-	OpenBabel::OBMolAtomIter h2(mol);
 	bool r1 = false;
 	bool r2 = false;
 	for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
@@ -1216,9 +1213,6 @@ void PAHProcess::addOBbond(Cpointer C_1, Cpointer C_2, OpenBabel::OBMol mol){
 		}
 		if (getDistance_twoC(C_2->coords, temp) < tol){
 			c2 = a;
-			h2 = a;
-			++h2;
-			mol.DeleteAtom(&*h2);
 			r2 = true;
 		}
 		if (r1&&r2) break;
@@ -1420,7 +1414,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		atom->SetAromatic();
 		atom->SetImplicitValence(3);
 		if ( std::isnan (std::get<0>(C_change->coords))){
-			cout << "NaN in coordinates while passing them to OB.\n";
+			cout << "NaN in coordinates while passing them to OB.\n"; 				//SETBREAKPOINT
 		} 
 		//atom->SetHyb(2);
 		
@@ -1491,7 +1485,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		atom->SetImplicitValence(3);
 		double checkcoord = atom->GetX();
 		if (std::isnan(checkcoord)) {
-			cout << "NaN in internal coordinates";
+			cout << "NaN in internal coordinates"; //SETBREAKPOINT
 		} 
 		//atom->SetHyb(2);
 		counter ++;
@@ -1786,7 +1780,7 @@ OpenBabel::OBMol PAHProcess::optimisePAH(OpenBabel::OBMol mol, int nsteps, std::
 	//Initialise minimisation
 	if (!pFF->Setup(mol)) {
       cout << "Error: could not setup force field.\n" << endl;
-	  cout << "Sites before calling optimiser:\n";
+	  cout << "Sites before calling optimiser:\n"; //SETBREAKPOINT
 	  printSites();
 	  std::string filename_error = "KMC_DEBUG/Forcefield_error_";
 	  filename_error.append(std::to_string(forcefield_error_counter));
@@ -1983,7 +1977,7 @@ void PAHProcess::addR5toSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
     int stype = (int) st->type;
 	stype += 101;
 	if ((kmcSiteType)stype == None) {
-		std::cout << "ERROR: add5RtoSite: illegal site type to add 5R to.\n";
+		std::cout << "ERROR: add5RtoSite: illegal site type to add 5R to.\n"; //SETBREAKPOINT
 		printSites(st);
 		return;
 	}
@@ -2023,7 +2017,7 @@ void PAHProcess::remR5fromSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
     int stype = (int) st->type;
 	stype -= 101;
 	if ((kmcSiteType)stype == None) {
-		std::cout << "ERROR: rem5RfromSite: illegal site type to remove 5R from.\n";
+		std::cout << "ERROR: rem5RfromSite: illegal site type to remove 5R from.\n"; //SETBREAKPOINT
 		printSites(st);
 		return;
 	}
@@ -2106,13 +2100,28 @@ void PAHProcess::redrawR5(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
 int convSiteType_error_counter =0;
 //! Changes site type into another site type
 void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcSiteType t) {
+	//Checks for sites with similar number of R6s and R5s.
+	int stype = (int)t;
+	if (stype == 2004 || stype == 2014) {
+		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
+		Cpointer Ccheck = st->C1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		bool decide_PAH = false;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
+		if(decide_PAH == true){
+			stype = 2004;
+		}
+		else {
+			stype = 2014;
+		}
+		t = (kmcSiteType) stype;
+	}
     // removes site from m_pah->m_siteMap (principal site)
     delSiteFromMap(st->type, st);
     // change site type
     st->type = t;
 	if (!checkSiteValid(st)) {
-		cout << "Invalid site convSiteType. This may be alright if the edge is unreactive but it may also be an error. \n";
-		printSites(st);
+		cout << "Invalid site convSiteType. This may be alright if the edge is unreactive but it may also be an error. \n"; //SETBREAKPOINT
+		printSites(st); 
 		ifstream  src("KMC_DEBUG/BEFORE.xyz");
 		std::string filename = "KMC_DEBUG/BEFORE_convSiteType";
 		filename.append(std::to_string(convSiteType_error_counter));
@@ -2185,6 +2194,35 @@ void PAHProcess::updateA(Cpointer C, char sp, cpair gro_vec) {
 	C->A = sp;
 	if (sp == 'C') C->growth_vector=std::make_tuple (0.0,0.0,0.0);
 	else C->growth_vector=gro_vec;
+}
+
+//! Overload function, forces char to C atom and defines growth vector, modifies OBmol object.
+void PAHProcess::updateA(Cpointer C, char sp, cpair gro_vec, OpenBabel::OBMol mol) {
+	C->A = sp;
+	if (sp == 'C') {
+		C->growth_vector=std::make_tuple (0.0,0.0,0.0);
+		OpenBabel::OBMolAtomIter cmol(mol);
+		double tol = 2e-1;
+		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
+			double x_pos = a->GetX();
+			double y_pos = a->GetY();
+			double z_pos = a->GetZ();
+			cpair temp = std::make_tuple(x_pos, y_pos, z_pos);
+			if (getDistance_twoC(C->coords, temp) < tol){
+				cmol = a;
+				break;
+			}
+		}
+		++cmol;
+		mol.DeleteAtom(&*cmol);
+	}
+	else {
+		C->growth_vector=gro_vec;
+		cpair hloc = jumpToPos(C->coords, gro_vec, 1.085);
+		OpenBabel::OBAtom *atom  = mol.NewAtom();
+		atom->SetAtomicNum(1);
+		atom->SetVector(std::get<0>(hloc),std::get<1>(hloc),std::get<2>(hloc));
+	}
 }
 
 //! Overload function, updateA for all C from C_1 to C_2 inclusive
@@ -2294,7 +2332,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
     // check if site type change is valid (as long as site still principal site)
 	int stype = (int)st->type;
 	if (!checkSiteValid(stype)){
-		cout << "ERROR: updateSites: Invalid site type before update\n";
+		cout << "ERROR: updateSites: Invalid site type before update\n"; //SETBREAKPOINT
 		std::ostringstream msg;
 		msg << "ERROR: updateSites: Invalid site type before update\n";
 		//saveDOT("KMC_DEBUG/KMC_PAH_X_UPDATE_prev.dot");
@@ -2319,7 +2357,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		return;
 	}
 	if ((stype + bulkCchange) < 0){
-		cout << "ERROR: updateSites: Bulk C change invalid (Principal)\n";
+		cout << "ERROR: updateSites: Bulk C change invalid (Principal)\n"; //SETBREAKPOINT
 		std::ostringstream msg;
 		msg << "ERROR: Bulk C change invalid (Principal). Trying to add "
 			<< bulkCchange << " bulk C to a " << kmcSiteName(st->type)
@@ -2390,7 +2428,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	if (st->type == None)
 	{
 		//This means a None site is modified.
-		cout << "Added" << bulkCchange << "carbons to a None site.\n";
+		cout << "Added" << bulkCchange << "carbons to a None site.\n"; //SETBREAKPOINT
 		bulkCchange = 0;
 		ifstream  src("KMC_DEBUG/BEFORE.xyz");
 		std::string filename = "KMC_DEBUG/BEFORE_";
@@ -2412,18 +2450,18 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	if (st->type == SPIRAL)
 	{
 		//A spiral site is modified. Currently we cannot modify them back into reality.
-		stype = 9999;
+		stype = 9999; //SETBREAKPOINT
 		bulkCchange = 0;
 	}
 	if (!checkSiteValid(stype + bulkCchange)){
 		//There are two options. An invalid transformation or an spiral formation.
 		if ( (stype + bulkCchange)%10 >=7 && (stype + bulkCchange)%10 <=8 ){
 			//The transformation just formed a 7 or 8 member site that will not react further. Transform it into a SPIRAL site.
-			stype = 9999;
+			stype = 9999; //SETBREAKPOINT
 			bulkCchange = 0;
 		}
 		else {
-			cout << "ERROR: updateSites: Created undefined site:\n";
+			cout << "ERROR: updateSites: Created undefined site:\n"; //SETBREAKPOINT
 			cout << "Type = " << stype << "\n";
 			cout << "BulkC change = " << bulkCchange << "\n";
 			/*cout << "ERROR: updateSites: Bulk C + Type gave invalid site\n";
@@ -3646,10 +3684,10 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     S1 = moveIt(site_perf, -1); S2 = moveIt(site_perf, 1);
     S3 = moveIt(site_perf, -2); S4 = moveIt(site_perf, 2);
 	if (!checkSiteValid(S1) || !checkSiteValid(S2) || !checkSiteValid(S3) || !checkSiteValid(S4)){
-		std::cout << "ERROR. Structure produced invalid site type after performing process "
+		std::cout << "ERROR. Structure produced invalid site type after performing process " 
 			<< "ID" << id << " on PAH ID: " << PAH_ID << "...\n"
 			<< "*************\nAfter performing process --\n";
-		printBeforeSites(Sitelist_before);
+		printBeforeSites(Sitelist_before); //SETBREAKPOINT
 		printSites(site_perf);
 		ifstream  src("KMC_DEBUG/BEFORE.xyz");
 		std::string filename = "KMC_DEBUG/BEFORE_performProcess_";
@@ -3677,7 +3715,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         std::cout<<"ERROR. Structure produced invalid combined site type after performing process "
             << "ID"<<id<<" on PAH ID: "<< PAH_ID <<"...\n"
             <<"*************\nAfter performing process --\n";
-        printBeforeSites(Sitelist_before);
+        printBeforeSites(Sitelist_before); //SETBREAKPOINT
 		printSites(site_perf);
 		ifstream  src("KMC_DEBUG/BEFORE.xyz");
 		std::string filename = "KMC_DEBUG/BEFORE_performProcess_";
@@ -3705,7 +3743,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         //saveDOT("KMC_DEBUG/KMC_C_Counts_ERROR.dot");
 		ifstream  src("KMC_DEBUG/BEFORE.xyz");
 		std::string filename = "KMC_DEBUG/BEFORE_performProcess_";
-		filename.append(std::to_string(perform_process_error_counter));
+		filename.append(std::to_string(perform_process_error_counter)); //SETBREAKPOINT
 		filename.append(".xyz");
 		ofstream dst(filename);
 		dst << src.rdbuf();
@@ -4003,7 +4041,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			int stype1 = (int)S1->type + 400; int stype2 = (int)S2->type + 400;
 			convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype1);
 			convSiteType(S2, S2->C1, S2->C2, (kmcSiteType)stype2);
-			}
+		}
 		else if (ntype_site == 504) {
 			new_point = 2003;
 			if (ntype1 >= 2103 && ntype2 < 501) {
@@ -4044,15 +4082,70 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		}
 		else if (ntype_site == 2014 || ntype_site == 2004) {
 			new_point = 2;
-			ntype1 = ntype1 % 10;
-			ntype2 = ntype2 % 10;
+			ntype1 = ntype1;
+			ntype2 = ntype2;
 			newType = (new_point + ntype1 + ntype2);
-			m_pah->m_rings5_Embedded++;
-			m_pah->m_rings5_Lone--;
 			/*if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
 			else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;*/
 		}
-		else if (ntype_site == 2104 || ntype_site == 2204) {
+		else if (ntype_site == 2104 || ntype_site == 2105 || ntype_site == 2205) {
+			//A site type 2104 has an R5 member to only one side. Detect where is the site.
+			new_point = 0;
+			Spointer S1 = moveIt(stt, -1);
+			Spointer S2 = moveIt(stt, +1);
+			if (ntype1 == 100 || ntype2 == 100){
+				if (ntype1 == 100 && ntype2 == 100) {
+					if (ntype_site == 2104)	{
+						cout << "Error. R5FEACR5 site cannot have R5 sites to both sides";
+						saveXYZ("KMC_DEBUG/R5FEACR5_error");
+					}
+					else {
+						cout << "Error. R5ZZACR5 site cannot have R5 sites to both sides";
+						saveXYZ("KMC_DEBUG/R5ZZACR5_error");
+					}
+					return;
+				}
+				else if (ntype1 == 100){
+					//R5 to the left
+					Spointer S3 = moveIt(S1, -1);
+					updateSites(S3, S3->C1, S3->C2, +400);
+					ntype1 = 502;
+					ntype2 = ntype2;
+				}
+				else {
+					//R5 to the right
+					Spointer S4 = moveIt(S2, +1);
+					updateSites(S4, S4->C1, S4->C2, +400);
+					ntype1 = ntype1;
+					ntype2 = 502;
+				}
+			}
+			else if ( ((int)S2->type >= 501 && (int)S2->type <= 504)  &&  ((int)S1->type >= 501 && (int)S1->type <= 504) ) {
+				//Both sites are R5R6 neighbours. Detect which one is has an R5 on the R5ACR5FE site.
+				new_point = 2102;
+				ntype1 = ntype1 % 10;
+				ntype2 = ntype2 % 10;
+			}
+			else if ( !((int)S2->type >= 501 && (int)S2->type <= 504)  &&  ((int)S1->type >= 501 && (int)S1->type <= 504) ) {
+				//R5R6 neighbour to the left. 
+				new_point = 2002;
+				ntype1 = ntype1 % 10;
+				ntype2 = ntype2;
+			}
+			else if ( ((int)S2->type >= 501 && (int)S2->type <= 504)  &&  !((int)S1->type >= 501 && (int)S1->type <= 504) ) {
+				//R5R6 neighbour to the right. 
+				new_point = 2002;
+				ntype1 = ntype1;
+				ntype2 = ntype2 % 10;
+			}
+			else {
+				cout << "Error. No R5 or R%R6 neighbour sites to R5FEACR5. \n";
+				saveXYZ("KMC_DEBUG/R5FEACR5_error");
+				return;
+			}
+		}
+		else if (ntype_site == 2204) {
+			//A site type 2204 has R5 members to both sides.
 			Spointer S1 = moveIt(stt, -1);
 			Spointer S2 = moveIt(stt, +1);
 			new_point = 0;
@@ -4067,9 +4160,10 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 					ntype1 = (ntype1 % 10) + 2002;
 				}
 				else{
-					Spointer S4 = moveIt(S1, +1);
+					Spointer S4 = moveIt(S2, +1);
 					updateSites(S4, S4->C1, S4->C2, +400);
 					ntype2 = 100;
+					ntype1 = (ntype1 % 10) + 2002;
 				}
 			}
 			else if((int)S2->type >= 501 && (int)S2->type <= 504) {
@@ -4081,19 +4175,20 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 					Spointer S3 = moveIt(S1, -1);
 					updateSites(S3, S3->C1, S3->C2, +400);
 					ntype1 = 100;
+					ntype2 = (ntype2 % 10) + 2002;
 				}
 			}
 			else if (S1->type == R5 || S2->type ==R5){
 				if (S1->type == R5){
 					Spointer S3 = moveIt(S1, -1);
 					updateSites(S3, S3->C1, S3->C2, +400);
-					ntype1 = 502;
+					ntype1 = 501;
 				}
 				else ntype1 = ntype1 % 10;
 				if (S2->type == R5){
 					Spointer S4 = moveIt(S2, +1);
 					updateSites(S4, S4->C1, S4->C2, +400);
-					ntype2 = 502;
+					ntype2 = 501;
 				}
 				else ntype2 = ntype2 % 10;
 			}
@@ -5637,7 +5732,7 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// update H count
 	addCount(0, -2);
 	// add ring counts
-	m_pah->m_rings5_Embedded++;
+	m_pah->m_rings5_Lone++;
 	//Optimise if needed
 	if (double dist = getDistance_twoC(C_1, C_2) > 2.6){
 		OpenBabel::OBMol mol = passPAH();
@@ -6813,13 +6908,13 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//printSitesMemb(stt);
 	//printStruct();//++++
-	OpenBabel::OBMol mol = passPAH();
+	OpenBabel::OBMol mol = passPAH(); //SETBREAKPOINT
 	mol = optimisePAH(mol);
 	passbackPAH(mol);
 	Cpointer newC1;
 	Cpointer newC2;
-	cpair Hdir1 = C_2->growth_vector;
-	cpair Hdir2 = C_1->growth_vector;
+	cpair Hdir1 = get_vector(C_1->C2->coords, C_1->coords);
+	cpair Hdir2 = get_vector(C_2->C1->coords, C_2->coords);
 	cpair starting_direction = get_vector(C_1->C2->C2->coords,C_2->coords);
 	cpair FEdir = get_vector(C_1->coords,C_2->coords);
 	if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
@@ -6832,13 +6927,13 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		removeC(C_1->C2, true);
 		removeC(C_1->C2, true);
 		removeC(C_2->C1, true);
-		newC1 = addC(C_1, starting_direction, 1.4, mol);
+		newC1 = addC(C_1, starting_direction, 1.4);
 		updateA(C_1,'C', C_1->growth_vector);
 		updateA(newC1, 'H', Hdir1);
-		newC2 = addC(newC1, FEdir, 1.4, mol);
+		newC2 = addC(newC1, FEdir, 1.4);
 		updateA(C_2,'C', C_2->growth_vector);
 		updateA(newC2, 'H', Hdir2);
-		addOBbond(newC2, C_2, mol);
+		//addOBbond(newC2, C_2, mol);
 		/*removeC(C_1->C2, true);
 		removeC(C_1->C2, true);
 		removeC(C_2->C1, true);
@@ -6932,9 +7027,9 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// add ring counts
 	m_pah->m_rings7_Embedded++;
 	//printSites(stt);
-	//OpenBabel::OBMol newmol = passPAH();
-	mol = optimisePAH(mol);
-	passbackPAH(mol);
+	OpenBabel::OBMol newmol = passPAH();
+	newmol = optimisePAH(newmol);
+	passbackPAH(newmol);
 }
 
 // ************************************************************
@@ -7145,6 +7240,7 @@ void PAHProcess::proc_L6_ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
 	proc_L6_BY6(stt, C_1, C_2);
+	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 }
 
 // ************************************************************
@@ -7154,7 +7250,8 @@ void PAHProcess::proc_L6_R5FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
-	proc_L6_BY6(stt, C_1, C_2);
+	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
+	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 }
 
 // ************************************************************
@@ -7164,7 +7261,8 @@ void PAHProcess::proc_L6_FEACR5FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
-	proc_L6_BY6(stt, C_1, C_2);
+	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
+	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 }
 
 // ************************************************************
@@ -7174,7 +7272,8 @@ void PAHProcess::proc_L6_R5ACR5R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
-	proc_L6_BY6(stt, C_1, C_2);
+	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
+	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 }
 
 // ************************************************************
@@ -7184,7 +7283,7 @@ void PAHProcess::proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
-	proc_L6_BY6(stt, C_1, C_2);
+	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
 }
 

@@ -276,7 +276,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				//xyzname.append("_before");
 				savePAH(PAH_ID, xyzname);
 				cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
-				m_simPAHp.printSites();
+				m_simPAHp.printSites(); //SETBREAKPOINT
 				//printRates(m_t, m_kmcmech.Rates());
 			}
 			
@@ -289,7 +289,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
-            m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
+            m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID); //SETBREAKPOINT
 			
 			//Save information for a single PAH
 			/*if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
