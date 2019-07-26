@@ -249,6 +249,10 @@ public:
 	int NumLoneRings5() const;
 	//! returns the number of embedded5-member rings in the particle.
 	int NumEmbeddedRings5() const;
+	//! returns the number of lone 7-member rings in the particle.
+	int NumLoneRings7() const;
+	//! returns the number of embedded7-member rings in the particle.
+	int NumEmbeddedRings7() const;
     //! returns sqrt(L*W)
     double sqrtLW() const;
 
@@ -484,10 +488,14 @@ private:
     int m_numOfEdgeC;
     //! Total number of 6-member rings in this soot particle
     int m_numOfRings;
-	//! Total number of 6-member rings in this soot particle
+	//! Total number of edge 5-member rings in this soot particle
 	int m_numOfLoneRings5;
-	//! Total number of 6-member rings in this soot particle
+	//! Total number of internal 5-member rings in this soot particle
 	int m_numOfEmbeddedRings5;
+	//! Total number of edge 7-member rings in this soot particle
+	int m_numOfLoneRings7;
+	//! Total number of internal 7-member rings in this soot particle
+	int m_numOfEmbeddedRings7;
     //! Number of PAHs below this node
     int m_numPAH;
     //! Number of primaries below this node

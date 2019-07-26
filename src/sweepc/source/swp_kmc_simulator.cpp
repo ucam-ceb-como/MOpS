@@ -154,7 +154,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 	m_t = tstart;
 	double t_max = m_t + dt;
     targetPAH(*pah);
-	if (init_flag == 0) {
+	if (m_rxn_count.size() == 0) {
 		initCSVIO();
 		initReactionCount();
 		readTrackedPAH();

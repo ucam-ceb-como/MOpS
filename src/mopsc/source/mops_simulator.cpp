@@ -2385,7 +2385,10 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         header.push_back("#C");                        //! Number of carbon atoms.
         header.push_back("#H");                        //! Number of hydrogen atoms.
         header.push_back("#Rings6");                   //! Number of 6-member rings.
-        header.push_back("#Rings5");                   //! Number of 5-member rings.
+		header.push_back("#EdgeRings5");               //! Number of edge 5-member rings.
+        header.push_back("#EmbeddedRings5");           //! Number of embedded 5-member rings.
+		header.push_back("#EdgeRings7");               //! Number of edge 7-member rings.
+        header.push_back("#EmbeddedRings7");           //! Number of embedded 7-member rings.
         header.push_back("#EdgeC");                    //! Number of carbon atoms on the edge of the PAH.
         header.push_back("Mass(u)");                   //! PAH mass (u).
         header.push_back("Mass(kg)");                  //! PAH mass (kg).
@@ -2496,8 +2499,11 @@ void Simulator::postProcessPPPSLs(const Mechanism &mech,
 		header.push_back("#C");                        //! Number of carbon atoms.
 		header.push_back("#H");                        //! Number of hydrogen atoms.
 		header.push_back("#Rings6");                   //! Number of 6-member rings.
-		header.push_back("#Rings5");                   //! Number of 5-member rings.
-		header.push_back("#PAHs");                   //! Number of PAHs
+		header.push_back("#EdgeRings5");               //! Number of edge 5-member rings.
+        header.push_back("#EmbeddedRings5");           //! Number of embedded 5-member rings.
+		header.push_back("#EdgeRings7");               //! Number of edge 7-member rings.
+        header.push_back("#EmbeddedRings7");           //! Number of embedded 7-member rings.
+		header.push_back("#PAHs");                     //! Number of PAHs
 		header.push_back("Mass(kg)");                  //! PP mass (kg).
 		header.push_back("PP volume (m3)");           //! PP volume (m3).
 		header.push_back("diameter (m)");              //! Spherical diameter (m).

@@ -3080,9 +3080,9 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
     }
     m_pah->m_rings = R6;
 	m_pah->m_rings5_Lone = R5_Lone;
-	m_pah->m_rings5_Embedded = 0;
-	m_pah->m_rings7_Lone = 0;
-	m_pah->m_rings7_Embedded = 0;
+	m_pah->m_rings5_Embedded = R5_Embedded;
+	m_pah->m_rings7_Lone = R7_Lone;
+	m_pah->m_rings7_Embedded = R7_Embedded;
 	m_pah->m_InternalCarbons = inCarbs;
 	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
 	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1;
@@ -3131,11 +3131,14 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
 // Create Structure from vector of site types
 void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::list<cpair> inCarbs) {
     // current C, bondangle and coordinates
-    Cpointer newC=addC();
+    Cpointer newC=addC(); //SETBREAKPOINT#:R6>4
     m_pah->m_cfirst = newC;
     m_pah->m_clast = NULLC;
     // number of bulk C to be added
     int bulkC;
+	// angle to start drawing PAH.
+	double angle = 0.0;
+	int counts = 0; int countsR5 = 0;
     // type of site; if type 0, basic site types (FE - BY6); if type 1, R5 and basic sites with
     // a R5 at one side (RFE - RBY5); if type 2, basic sites wit R5 at each side (RFER - RACR)
     unsigned short int site_t;
@@ -3145,10 +3148,18 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
         // get number of bulk C to be added and site type
         if((int)vec[i] <= 4) {
             bulkC = (int) vec[i]; site_t = 0;
-        }else if((int)vec[i] >= 5 && (int)vec[i] <= 9) {
-            bulkC = (int) vec[i] - 5; site_t = 1;
-        }else if((int)vec[i] >= 10 && (int)vec[i] <= 12) {
-            bulkC = (int) vec[i] - 8; site_t = 2;
+        }else if((int)vec[i] >= 100 && (int)vec[i] <= 104) {
+            bulkC = (int) vec[i] - 100; site_t = 1;
+        }else if((int)vec[i] >= 202 && (int)vec[i] <= 204) {
+            bulkC = (int) vec[i] - 200; site_t = 2;
+		}else if((int)vec[i] >= 501 && (int)vec[i] <= 504) {
+            bulkC = (int) vec[i] - 500; site_t = 1;
+        }else if((int)vec[i] >= 602 && (int)vec[i] <= 604) {
+            bulkC = (int) vec[i] - 600; site_t = 2;
+		}else if((int)vec[i] >= 1002 && (int)vec[i] <= 1004) {
+            bulkC = (int) vec[i] - 1000; site_t = 2;
+		}else if((int)vec[i] >= 2002 && (int)vec[i] <= 2015) {
+            bulkC = (int) vec[i] %10; site_t = 3;
 		}
 		/**
 		* If this condition is true, vec[i] is the site tye ACR5.
@@ -3158,7 +3169,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 			bulkC = (int)vec[i] - 16; site_t = 0;
 
 		}
-		else {
+		/*else {
             cout << "createPAH: Combined site types in list of sites. Please use only\n"
                 << "principal site types\n";
             std::ostringstream msg;
@@ -3167,27 +3178,34 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
                 throw std::runtime_error(msg.str());
                 assert(false);
             return;
-        }
-        kmcSiteType prevType;
+        }*/
+		//cout << "Angle = " << angle << ". Next site to draw = " <<  (kmcSiteType)vec[i] << "\n";
+        kmcSiteType prevType; //SETBREAKPOINT#:R6>4
         if(i==0) prevType = vec.back();
         else prevType = vec[i-1];
         switch(site_t) {
         case 0:
-            newC = drawType0Site(newC, bulkC); break;
+            newC = drawType0Site(newC, bulkC, angle); break;
         case 1:
-            newC = drawType1Site(newC, bulkC, prevType); break;
+            newC = drawType1Site(newC, bulkC, prevType, angle); break;
         case 2:
-            newC = drawType2Site(newC, bulkC); break;
+            newC = drawType2Site(newC, bulkC, angle); break;
+		case 3:
+            newC = drawType3Site(newC, bulkC, angle); break;
         default:
             cout << "createPAH: Invalid site_t number...\n";
             std::ostringstream msg;
             msg << "ERROR: invalid site classification."
                 << " (Sweep::KMC_ARS::PAHProcess::createPAH)";
-                throw std::runtime_error(msg.str());
-                assert(false);
-            return;
+            //    throw std::runtime_error(msg.str());
+            //    assert(false);
+            //return;
         }
         addSite(vec[i], S_C1, newC);
+		counts = bulkC;
+		if((int)vec[i] == 100 || (int)prevType == 100) countsR5 = 1;
+		else countsR5 = 0;
+		angle = normAngle( angle -60.0 + counts*60.0 - 1.0*countsR5*30.0) ;
     }
     // check if PAH closes correctly
 	if (m_pah->m_clast == NULLC || checkHindrance_twoC(newC, m_pah->m_cfirst)) {
@@ -3197,16 +3215,17 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
         std::ostringstream msg;
         msg << "ERROR: PAH did not close properly.."
             << " (Sweep::KMC_ARS::PAHProcess::createPAH)";
+		cout << msg;
         //saveDOT("KMC_DEBUG/KMC_PAH_X_CLOSE.dot");
-        throw std::runtime_error(msg.str());
-        assert(false);
-        return;
+        //throw std::runtime_error(msg.str());
+        //assert(false);
+        //return;
     }
     m_pah->m_rings = R6;
 	m_pah->m_rings5_Lone = R5_Lone;
-	m_pah->m_rings5_Embedded = 0;
-	m_pah->m_rings7_Lone = 0;
-	m_pah->m_rings7_Embedded = 0;
+	m_pah->m_rings5_Embedded = R5_Embedded;
+	m_pah->m_rings7_Lone = R7_Lone;
+	m_pah->m_rings7_Embedded = R7_Embedded;
 	m_pah->m_InternalCarbons = inCarbs;
     for(Ccontainer::iterator i = m_pah->m_carbonList.begin();
         i != m_pah->m_carbonList.end(); i++)
@@ -3219,10 +3238,11 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 }
 
 //! For createPAH function: drawing type 0 sites
-Cpointer PAHProcess::drawType0Site(Cpointer Cnow, int bulkC) {
+Cpointer PAHProcess::drawType0Site(Cpointer Cnow, int bulkC, double angle) {
     // draw site
 	//cpair prev_direction, starting_direction, Hdirprev, Hdir;
-    angletype angle = normAngle(Cnow->bondAngle1-60);
+	angle = normAngle(angle - 60);
+    //angletype angle = normAngle(Cnow->bondAngle1-60);
     for(int c=0; c<=bulkC; ++c) {
 		//Determine directions
 		/*if (Cnow->C1 == NULLC) {
@@ -3245,17 +3265,17 @@ Cpointer PAHProcess::drawType0Site(Cpointer Cnow, int bulkC) {
             Cpointer Cpos = findC(pos);
             if(Cpos != m_pah->m_cfirst) { // it is a bridged C atom
                 Cpointer Cbridge = Cpos->C1;
-                Cnow->bondAngle1 = angle;
+                //Cnow->bondAngle1 = angle;
                 Cpos->bridge = true; Cbridge->bridge = true;
                 Cpos->C3 = Cbridge; Cbridge->C3 = Cpos;
                 connectToC(Cnow, Cpos);
                 Cbridge->C2 = NULLC;
                 angle = normAngle(angle + 120);
-                Cbridge->bondAngle1 = angle;
+                //Cbridge->bondAngle1 = angle;
                 Cnow = Cbridge;
                 --bulkC;
             }else { // reached end of PAH
-                Cnow->bondAngle1 = angle;
+                //Cnow->bondAngle1 = angle;
                 connectToC(Cnow, Cpos);
                 m_pah->m_clast = Cnow;
                 return Cpos;
@@ -3271,31 +3291,42 @@ Cpointer PAHProcess::drawType0Site(Cpointer Cnow, int bulkC) {
 }
 
 //! For createPAH function: drawing type 1 sites
-Cpointer PAHProcess::drawType1Site(Cpointer Cnow, int bulkC, kmcSiteType prevType) {
+Cpointer PAHProcess::drawType1Site(Cpointer Cnow, int bulkC, kmcSiteType prevType, double angle) {
     //draw R5 site
-    angletype angle = Cnow->bondAngle1-60;
+	if ((int)prevType == 100) angle = normAngle(angle-30);
+	//angletype angle = Cnow->bondAngle1-60;
     if(bulkC == 0) {
+		angle = normAngle(angle-60);
         angle = normAngle(angle-30);
-        cpair pos = jumpToPos(Cnow->coords, angle, 0, 1.4);
+        cpair pos = jumpToPos(Cnow->coords, angle, 0, 1.4*sqrt(3.0));
         if(checkHindrance_C_PAH(pos)) { // reached end of PAH
             Cpointer Cpos = findC(pos);
-            Cnow->bondAngle1 = angle;
+            //Cnow->bondAngle1 = angle;
             connectToC(Cnow, Cpos);
             m_pah->m_clast = Cnow;
             return Cpos; // m_cfirst
         }
-        else Cnow = addC(Cnow, angle, normAngle(angle-30), 1.4, false);
+        else Cnow = addC(Cnow, angle, normAngle(angle-30), 1.4*sqrt(3.0), false);
         return Cnow;
     }else { //draw RXX site
-            return drawType0Site(Cnow, bulkC);
+            return drawType0Site(Cnow, bulkC, angle);
     }
 }
 
 //! For createPAH function: drawing type 2 sites
-Cpointer PAHProcess::drawType2Site(Cpointer Cnow, int bulkC) {
+Cpointer PAHProcess::drawType2Site(Cpointer Cnow, int bulkC, double angle) {
     //angletype angle = Cnow->bondAngle1;
     //Cnow->bondAngle1 = normAngle(angle-60);
-    return drawType0Site(Cnow, bulkC);
+	angle = normAngle(angle-30);
+    return drawType0Site(Cnow, bulkC, angle);
+}
+
+//! For createPAH function: drawing type 2 sites
+Cpointer PAHProcess::drawType3Site(Cpointer Cnow, int bulkC, double angle) {
+    //angletype angle = Cnow->bondAngle1;
+    //Cnow->bondAngle1 = normAngle(angle-60);
+	angle = normAngle(angle-30);
+    return drawType0Site(Cnow, bulkC, angle);
 }
 
 //! Finds C atom with specific coordinates
@@ -3853,8 +3884,8 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		convSiteType(stt, newC1, newC2, FE);
 		convSiteType(S1, S1->C1, newC1, R5R6); // neighbours
 		convSiteType(S2, newC2, S2->C2, R5R6);
-		updateSites(S3, S3->C1, S3->C2, +400); // neighbours of neighbours
-		updateSites(S4, S4->C1, S4->C2, +400);
+		if ((int)S3->type < 2000) updateSites(S3, S3->C1, S3->C2, +400); // neighbours of neighbours
+		if ((int)S4->type < 2000) updateSites(S4, S4->C1, S4->C2, +400);
 	}
 	else if ( stt->type == R5R6FER ){
 		convSiteType(stt, newC1, newC2, FE);
@@ -4036,7 +4067,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			}
 		}
 		else if (ntype_site == 204) {
-			newType = 1002;
+			new_point = 1002; ntype1 = 0; ntype2 = 0;
 			Spointer S1 = moveIt(stt, -2); Spointer S2 = moveIt(stt, 2);
 			int stype1 = (int)S1->type + 400; int stype2 = (int)S2->type + 400;
 			convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype1);
@@ -6228,7 +6259,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, FE);
 			//convSiteType(checkR5_1, C1_new, C1_new->C2->C2, ZZ);
 			updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, -1);
-			m_pah->m_rings5_Embedded--;
+			m_pah->m_rings5_Lone--;
 			redrawR5(checkR5_1, C1_new, C2_new);
 			//proc_G5R_ZZ(checkR5_1, checkR5_1->C1, checkR5_1->C2);
 		}

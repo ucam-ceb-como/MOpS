@@ -359,11 +359,13 @@ private:
     //! Add counts
     void addCount(int C_in, int H_in);
     //! For createPAH function: drawing type 0 sites
-    Cpointer drawType0Site(Cpointer Cnow, int bulkC);
+    Cpointer drawType0Site(Cpointer Cnow, int bulkC, double angle);
     //! For createPAH function: drawing type 1 sites
-    Cpointer drawType1Site(Cpointer Cnow, int bulkC, kmcSiteType prevType);
+    Cpointer drawType1Site(Cpointer Cnow, int bulkC, kmcSiteType prevType, double angle);
     //! For createPAH function: drawing type 2 sites
-    Cpointer drawType2Site(Cpointer Cnow, int bulkC);
+    Cpointer drawType2Site(Cpointer Cnow, int bulkC, double angle);
+	//! For createPAH function: drawing type 3 sites
+    Cpointer drawType3Site(Cpointer Cnow, int bulkC, double angle);
 
     //! Update Sites and its members in structure
     //! All principal sites
