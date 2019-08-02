@@ -1,0 +1,1052 @@
+[  3%] Built target camflowGridGenerator
+[  8%] Built target linInterp-test
+[ 11%] [ 12%] Built target comostrings
+Built target radau
+[ 22%] Built target chemkinReader
+[ 26%] Built target camxml
+[ 32%] Built target cvode
+[ 33%] Built target chemkinReader-test
+[ 37%] Built target cvodes
+[ 41%] Built target sprog
+[ 41%] Built target geometry
+[ 42%] Built target sprogc-test
+[ 53%] Built target camflow
+[ 56%] Built target camflow-app
+[ 85%] Built target sweep
+Scanning dependencies of target PAHkmc-app
+make[2]: Warning: File `CMakeFiles/PAHkmc-app.dir/depend.make' has modification time 0.12 s in the future
+[ 90%] Building CXX object CMakeFiles/PAHkmc-app.dir/applications/solvers/PAHkmc/kmc_model.cpp.o
+[ 96%] Built target mops
+[ 96%] Built target mops-app
+[ 99%] Built target brush
+[100%] [100%] [100%] Built target brush-moonmd-test
+Built target brush-app
+Built target sweepFixedMix-test
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:48:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_maths_functional.h:89:51: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     static Functional *const Read(std::istream &in);
+                                                   ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_maths_functional.h: In copy constructor ‘Sweep::Maths::Linear::Linear(const Sweep::Maths::Linear&)’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_maths_functional.h:100:5: warning: ‘Sweep::Maths::Linear::m_m’ should be initialized in the member initialization list [-Weffc++]
+     Linear(const Linear &copy) {*this = copy;}
+     ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_maths_functional.h:100:5: warning: ‘Sweep::Maths::Linear::m_c’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_maths_functional.h: At global scope:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_maths_functional.h:184:87: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+ inline Sweep::Maths::Functional *const Sweep::Maths::Functional::Read(std::istream &in)
+                                                                                       ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:49:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_coords.h:91:47: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+         const double *const operator[](int i) const {return &A[i][0];}
+                                               ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:52:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:56,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_component.h:143:34: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Component *const Clone(void) const;
+                                  ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:53:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:56,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_tracker.h:80:32: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Tracker *const Clone(void) const;
+                                ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:55:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:56,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_sintering_model.h:190:39: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     SinteringModel *const Clone(void) const;
+                                       ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_species.h:46:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:60,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:56,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_element.h:110:51: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Sprog::Mechanism *const Mechanism(void) const;
+                                                   ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_element.h:119:32: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Element *const Clone(void) const;
+                                ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:60:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:56,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_species.h:94:35: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const int SiteOccupancy(void) const;
+                                   ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_species.h:187:51: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Sprog::Mechanism *const Mechanism(void) const;
+                                                   ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_species.h:206:32: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Species *const Clone(void) const;
+                                ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_species.h:277:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:60,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:56,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_species_inl.h:51:47: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+ inline const int Species::SiteOccupancy(void) const {return site_occupancy;};
+                                               ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_species_inl.h:68:63: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+ inline const Sprog::Mechanism *const Species::Mechanism(void) const {return m_mech;};
+                                                               ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_species_inl.h:87:44: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+ inline Species *const Species::Clone(void) const {return new Species(*this);};
+                                            ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:56:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:89:56: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Sprog::SpeciesPtrVector *const Species(void) const;
+                                                        ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:104:55: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Component *const Components(unsigned int i) const;
+                                                       ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:135:51: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Tracker *const Trackers(unsigned int i) const;
+                                                   ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:173:55: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Particle *const CreateParticle(const double time) const;
+                                                       ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:176:78: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Particle *const CreateParticle(const double time, const double position) const;
+                                                                              ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:182:38: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     ParticleModel *const Clone(void) const;
+                                      ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:320:35: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const bool WriteBinaryTrees() const {return m_write_bintree;}
+                                   ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:326:41: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const double GetBinTreeCoalThresh() const {return m_bintree_coalthresh;}
+                                         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:332:32: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const double GetFractDim() const {return m_fract_dim;}
+                                ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:338:37: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const double GetEnhancementFM() const {return m_efm;}
+                                     ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:344:44: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const bool getTrackPrimarySeparation() const {return m_trackPrimarySeparation;}
+                                            ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_model.h:351:45: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const bool getTrackPrimaryCoordinates() const {return m_trackPrimaryCoordinates;}
+                                             ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_model_factory.h:48:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:64,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_primary.h:117:59: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Sweep::ParticleModel *const ParticleModel(void) const;
+                                                           ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_primary.h:280:40: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     virtual Primary *const Clone(void) const;
+                                        ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_model_factory.h:50:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:64,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_model_stats.h:126:52: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     virtual IModelStats *const Clone(void) const = 0;
+                                                    ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle.h:50:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:64,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_model_factory.h:68:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+         );
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_model_factory.h:76:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+         );
+         ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle.h:50:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:64,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_model_factory.h:85:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+         );
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_model_factory.h:103:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+         );
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_model_factory.h:119:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+         );
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_model_factory.h:130:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+         );
+         ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/camxml.h:46:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:64,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:84:66: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Attribute *const GetAttribute(const std::string &name) const;
+                                                                  ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:87:67: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Attribute *const GetAttribute(const std::wstring &name) const;
+                                                                   ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:99:33: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Element *const Parent(void) const;
+                                 ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:110:46: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Element *const GetChild(const int index) const;
+                                              ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:113:58: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Element *const GetFirstChild(const std::string &tag) const;
+                                                          ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:116:59: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Element *const GetFirstChild(const std::wstring &tag) const;
+                                                           ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:129:28: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Element *const Clone() const;
+                            ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:147:51: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Element *const SetParent(Element &parent);
+                                                   ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:150:57: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Element *const AddChild(const std::string &tag);
+                                                         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:153:58: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Element *const AddChild(const std::wstring &tag);
+                                                          ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:156:66: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Element *const AddChild(Element &child, bool clone=true);
+                                                                  ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:53:7: warning: ‘class CamXML::Element’ has pointer data members [-Weffc++]
+ class Element
+       ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:53:7: warning:   but does not override ‘CamXML::Element(const CamXML::Element&)’ [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:53:7: warning:   or ‘operator=(const CamXML::Element&)’ [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmlelement.h:183:41: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+ inline Element *const Element::Parent() const {return m_parent;};
+                                         ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/camxml.h:47:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:64,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmldocument.h:85:36: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     inline Element *const Root(void) {return m_root;};
+                                    ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmldocument.h:86:48: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     inline Element *const SetRoot(Element &root) {delete m_root; m_root = &root; return m_root;};
+                                                ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmldocument.h:89:69: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Element *const parseElement(std::wistringstream &fin, STATUS &st);
+                                                                     ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmldocument.h:90:68: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Attribute *const parseAttr(std::wistringstream &fin, STATUS &st);
+                                                                    ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmldocument.h:58:7: warning: ‘class CamXML::Document’ has pointer data members [-Weffc++]
+ class Document
+       ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmldocument.h:58:7: warning:   but does not override ‘CamXML::Document(const CamXML::Document&)’ [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/io/camxml/include/xmldocument.h:58:7: warning:   or ‘operator=(const CamXML::Document&)’ [-Weffc++]
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:64:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle.h:114:46: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Sweep::AggModels::Primary *const Primary();
+                                              ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle.h:116:54: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Sweep::AggModels::Primary *const Primary() const;
+                                                      ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle.h:273:29: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Particle *const Clone() const;
+                             ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_gasphase.h:59:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_idealgas.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_gas_profile.h:54,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:68,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_mixture.h:229:45: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const SpeciesPtrVector *const Species() const;
+                                             ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_mixture.h:241:27: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     double *const RawData();
+                           ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_mixture.h:242:35: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const double *const RawData() const;
+                                   ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_mixture.h:248:36: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     virtual Mixture *const Clone() const;
+                                    ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_idealgas.h:46:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_gas_profile.h:54,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:68,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_gasphase.h:84:7: warning: ‘class Sprog::Thermo::GasPhase’ has pointer data members [-Weffc++]
+ class GasPhase : public ThermoInterface, public Mixture
+       ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_gasphase.h:84:7: warning:   but does not override ‘Sprog::Thermo::GasPhase(const Sprog::Thermo::GasPhase&)’ [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_gasphase.h:84:7: warning:   or ‘operator=(const Sprog::Thermo::GasPhase&)’ [-Weffc++]
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_gas_profile.h:54:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:68,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_idealgas.h:359:37: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     virtual IdealGas *const Clone() const;
+                                     ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:51:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_structure_comp.h:71:15: warning: ‘class Sweep::KMC_ARS::Carbon’ has pointer data members [-Weffc++]
+         class Carbon {
+               ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_structure_comp.h:71:15: warning:   but does not override ‘Sweep::KMC_ARS::Carbon(const Sweep::KMC_ARS::Carbon&)’ [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_structure_comp.h:71:15: warning:   or ‘operator=(const Sweep::KMC_ARS::Carbon&)’ [-Weffc++]
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:42:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/atom.h:80:14: warning: ‘class OpenBabel::OBAtom’ has pointer data members [-Weffc++]
+  class OBAPI OBAtom: public OBBase
+              ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/atom.h:80:14: warning:   but does not override ‘OpenBabel::OBAtom(const OpenBabel::OBAtom&)’ [-Weffc++]
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:43:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/bond.h:69:15: warning: ‘class OpenBabel::OBBond’ has pointer data members [-Weffc++]
+   class OBAPI OBBond: public OBBase
+               ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/bond.h:69:15: warning:   but does not override ‘OpenBabel::OBBond(const OpenBabel::OBBond&)’ [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/bond.h:69:15: warning:   or ‘operator=(const OpenBabel::OBBond&)’ [-Weffc++]
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:45:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:49:15: warning: ‘class OpenBabel::OBGlobalDataBase’ has pointer data members [-Weffc++]
+   class OBAPI OBGlobalDataBase
+               ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:49:15: warning:   but does not override ‘OpenBabel::OBGlobalDataBase(const OpenBabel::OBGlobalDataBase&)’ [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:49:15: warning:   or ‘operator=(const OpenBabel::OBGlobalDataBase&)’ [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h: In constructor ‘OpenBabel::OBGlobalDataBase::OBGlobalDataBase()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:61:7: warning: ‘OpenBabel::OBGlobalDataBase::_filename’ should be initialized in the member initialization list [-Weffc++]
+       OBGlobalDataBase(): _init(false), _dataptr(NULL) { }
+       ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:61:7: warning: ‘OpenBabel::OBGlobalDataBase::_dir’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:61:7: warning: ‘OpenBabel::OBGlobalDataBase::_subdir’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:61:7: warning: ‘OpenBabel::OBGlobalDataBase::_envvar’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h: In constructor ‘OpenBabel::OBElement::OBElement()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_num’ should be initialized in the member initialization list [-Weffc++]
+       OBElement()    {}
+       ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_name’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_Rcov’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_Rvdw’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_mass’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_elNeg’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_ARENeg’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_ionize’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_elAffinity’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_red’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_green’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_blue’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/data.h:92:7: warning: ‘OpenBabel::OBElement::_maxbonds’ should be initialized in the member initialization list [-Weffc++]
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:46:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/chains.h: At global scope:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/chains.h:49:15: warning: ‘class OpenBabel::OBChainsParser’ has pointer data members [-Weffc++]
+   class OBAPI OBChainsParser
+               ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/chains.h:49:15: warning:   but does not override ‘OpenBabel::OBChainsParser(const OpenBabel::OBChainsParser&)’ [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/chains.h:49:15: warning:   or ‘operator=(const OpenBabel::OBChainsParser&)’ [-Weffc++]
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:48:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/bitvec.h: In constructor ‘OpenBabel::OBBitVec::OBBitVec()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/bitvec.h:77:7: warning: ‘OpenBabel::OBBitVec::_size’ should be initialized in the member initialization list [-Weffc++]
+       OBBitVec()
+       ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/bitvec.h: In constructor ‘OpenBabel::OBBitVec::OBBitVec(unsigned int)’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/bitvec.h:86:7: warning: ‘OpenBabel::OBBitVec::_size’ should be initialized in the member initialization list [-Weffc++]
+       OBBitVec(unsigned size_in_bits)
+       ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/bitvec.h: In copy constructor ‘OpenBabel::OBBitVec::OBBitVec(const OpenBabel::OBBitVec&)’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/bitvec.h:94:7: warning: ‘OpenBabel::OBBitVec::_set’ should be initialized in the member initialization list [-Weffc++]
+       OBBitVec(const OBBitVec & bv)
+       ^
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/typer.h:28:0,
+                 from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:29,
+                 from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h: In constructor ‘OpenBabel::OBSmartsPattern::OBSmartsPattern()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:208:3: warning: ‘OpenBabel::OBSmartsPattern::_d’ should be initialized in the member initialization list [-Weffc++]
+   OBSmartsPattern() : _pat(NULL), _buffer(NULL), LexPtr(NULL), MainPtr(NULL) { }
+   ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:208:3: warning: ‘OpenBabel::OBSmartsPattern::_growbond’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:208:3: warning: ‘OpenBabel::OBSmartsPattern::_mlist’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:208:3: warning: ‘OpenBabel::OBSmartsPattern::_str’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h: In copy constructor ‘OpenBabel::OBSmartsPattern::OBSmartsPattern(const OpenBabel::OBSmartsPattern&)’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:211:3: warning: ‘OpenBabel::OBSmartsPattern::_d’ should be initialized in the member initialization list [-Weffc++]
+   OBSmartsPattern(const OBSmartsPattern& cp): _pat(NULL), _buffer(NULL), LexPtr(NULL), MainPtr(NULL)
+   ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:211:3: warning: ‘OpenBabel::OBSmartsPattern::_growbond’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:211:3: warning: ‘OpenBabel::OBSmartsPattern::_mlist’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:211:3: warning: ‘OpenBabel::OBSmartsPattern::_str’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h: In constructor ‘OpenBabel::OBSmartsMatcher::OBSmartsMatcher()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:385:5: warning: ‘OpenBabel::OBSmartsMatcher::RSCACHE’ should be initialized in the member initialization list [-Weffc++]
+     OBSmartsMatcher() {}
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:385:5: warning: ‘OpenBabel::OBSmartsMatcher::Fragments’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h: At global scope:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:395:15: warning: ‘class OpenBabel::OBSSMatch’ has pointer data members [-Weffc++]
+   class OBAPI OBSSMatch
+               ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:395:15: warning:   but does not override ‘OpenBabel::OBSSMatch(const OpenBabel::OBSSMatch&)’ [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/parsmart.h:395:15: warning:   or ‘operator=(const OpenBabel::OBSSMatch&)’ [-Weffc++]
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:50:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h: In constructor ‘OpenBabel::OBRing::OBRing()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:50:5: warning: ‘OpenBabel::OBRing::_parent’ should be initialized in the member initialization list [-Weffc++]
+     OBRing()    {}
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:50:5: warning: ‘OpenBabel::OBRing::ring_id’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:50:5: warning: ‘OpenBabel::OBRing::_path’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:50:5: warning: ‘OpenBabel::OBRing::_pathset’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h: In constructor ‘OpenBabel::OBRing::OBRing(std::vector<int>&, OpenBabel::OBBitVec)’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:53:5: warning: ‘OpenBabel::OBRing::_parent’ should be initialized in the member initialization list [-Weffc++]
+     OBRing(std::vector<int>& path, OBBitVec set) : _path(path), _pathset(set) {}
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:53:5: warning: ‘OpenBabel::OBRing::ring_id’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h: In constructor ‘OpenBabel::OBRingSearch::OBRingSearch()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:122:5: warning: ‘OpenBabel::OBRingSearch::_bonds’ should be initialized in the member initialization list [-Weffc++]
+     OBRingSearch()    {}
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:122:5: warning: ‘OpenBabel::OBRingSearch::_rlist’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h: At global scope:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:164:15: warning: ‘class OpenBabel::OBRTree’ has pointer data members [-Weffc++]
+   class OBAPI OBRTree
+               ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:164:15: warning:   but does not override ‘OpenBabel::OBRTree(const OpenBabel::OBRTree&)’ [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/ring.h:164:15: warning:   or ‘operator=(const OpenBabel::OBRTree&)’ [-Weffc++]
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/math/matrix3x3.h:27:0,
+                 from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/math/transform3d.h:23,
+                 from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/math/spacegroup.h:23,
+                 from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:29,
+                 from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:51,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/oberror.h:106:17: warning: ‘class OpenBabel::OBMessageHandler’ has pointer data members [-Weffc++]
+   class OBERROR OBMessageHandler
+                 ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/oberror.h:106:17: warning:   but does not override ‘OpenBabel::OBMessageHandler(const OpenBabel::OBMessageHandler&)’ [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/oberror.h:106:17: warning:   or ‘operator=(const OpenBabel::OBMessageHandler&)’ [-Weffc++]
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/math/spacegroup.h:23:0,
+                 from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:29,
+                 from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:51,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/math/transform3d.h:35:15: warning: base class ‘class OpenBabel::matrix3x3’ has a non-virtual destructor [-Weffc++]
+   class OBAPI transform3d: private matrix3x3, private vector3
+               ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/math/transform3d.h:35:15: warning: base class ‘class OpenBabel::vector3’ has a non-virtual destructor [-Weffc++]
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:30:0,
+                 from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:51,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obutil.h:101:15: warning: ‘class OpenBabel::OBSqrtTbl’ has pointer data members [-Weffc++]
+   class OBAPI OBSqrtTbl
+               ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obutil.h:101:15: warning:   but does not override ‘OpenBabel::OBSqrtTbl(const OpenBabel::OBSqrtTbl&)’ [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obutil.h:101:15: warning:   or ‘operator=(const OpenBabel::OBSqrtTbl&)’ [-Weffc++]
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:51:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:69:15: warning: ‘class OpenBabel::OBExternalBond’ has pointer data members [-Weffc++]
+   class OBAPI OBExternalBond
+               ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:69:15: warning:   but does not override ‘operator=(const OpenBabel::OBExternalBond&)’ [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h: In constructor ‘OpenBabel::OBSetData::OBSetData()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:154:3: warning: ‘OpenBabel::OBSetData::_vdata’ should be initialized in the member initialization list [-Weffc++]
+   OBSetData() : OBGenericData("SetData", OBGenericDataType::SetData) {}
+   ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h: In constructor ‘OpenBabel::OBTorsion::OBTorsion()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:558:5: warning: ‘OpenBabel::OBTorsion::_ads’ should be initialized in the member initialization list [-Weffc++]
+     OBTorsion(): _bc((OBAtom *)NULL, (OBAtom *)NULL)      {      }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h: In constructor ‘OpenBabel::OBSerialNums::OBSerialNums()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:787:3: warning: ‘OpenBabel::OBSerialNums::_serialMap’ should be initialized in the member initialization list [-Weffc++]
+   OBSerialNums() :
+   ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h: In copy constructor ‘OpenBabel::OBSerialNums::OBSerialNums(const OpenBabel::OBSerialNums&)’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:791:3: warning: ‘OpenBabel::OBSerialNums::_serialMap’ should be initialized in the member initialization list [-Weffc++]
+   OBSerialNums(const OBSerialNums &cp) : OBGenericData(cp)
+   ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h: In constructor ‘OpenBabel::OBVibrationData::OBVibrationData()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:823:5: warning: ‘OpenBabel::OBVibrationData::_vLx’ should be initialized in the member initialization list [-Weffc++]
+     OBVibrationData(): OBGenericData("VibrationData", OBGenericDataType::VibrationData){};
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:823:5: warning: ‘OpenBabel::OBVibrationData::_vFrequencies’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:823:5: warning: ‘OpenBabel::OBVibrationData::_vIntensities’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:823:5: warning: ‘OpenBabel::OBVibrationData::_vRamanActivities’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h: In constructor ‘OpenBabel::OBDOSData::OBDOSData()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:868:5: warning: ‘OpenBabel::OBDOSData::_fermi’ should be initialized in the member initialization list [-Weffc++]
+     OBDOSData(): OBGenericData("DOSData", OBGenericDataType::DOSData){};
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:868:5: warning: ‘OpenBabel::OBDOSData::_vEnergies’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:868:5: warning: ‘OpenBabel::OBDOSData::_vDensities’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:868:5: warning: ‘OpenBabel::OBDOSData::_vIntegration’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h: In constructor ‘OpenBabel::OBOrbitalData::OBOrbitalData()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:914:5: warning: ‘OpenBabel::OBOrbitalData::_alphaOrbitals’ should be initialized in the member initialization list [-Weffc++]
+     OBOrbitalData(): OBGenericData("OrbitalData", OBGenericDataType::ElectronicData),
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:914:5: warning: ‘OpenBabel::OBOrbitalData::_betaOrbitals’ should be initialized in the member initialization list [-Weffc++]
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:51:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h: In constructor ‘OpenBabel::OBElectronicTransitionData::OBElectronicTransitionData()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:975:5: warning: ‘OpenBabel::OBElectronicTransitionData::_vWavelengths’ should be initialized in the member initialization list [-Weffc++]
+     OBElectronicTransitionData(): OBGenericData("ElectronicTransitionData", OBGenericDataType::ElectronicTransitionData) {}
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:975:5: warning: ‘OpenBabel::OBElectronicTransitionData::_vForces’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:975:5: warning: ‘OpenBabel::OBElectronicTransitionData::_vEDipole’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:975:5: warning: ‘OpenBabel::OBElectronicTransitionData::_vRotatoryStrengthsVelocity’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:975:5: warning: ‘OpenBabel::OBElectronicTransitionData::_vRotatoryStrengthsLength’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h: In constructor ‘OpenBabel::OBRotationData::OBRotationData()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:1007:4: warning: ‘OpenBabel::OBRotationData::RotConsts’ should be initialized in the member initialization list [-Weffc++]
+    OBRotationData(): OBGenericData("RotationData", OBGenericDataType::RotationData){}
+    ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:1007:4: warning: ‘OpenBabel::OBRotationData::SymNum’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:1007:4: warning: ‘OpenBabel::OBRotationData::type’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h: In constructor ‘OpenBabel::OBVectorData::OBVectorData()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:1036:4: warning: ‘OpenBabel::OBVectorData::_vec’ should be initialized in the member initialization list [-Weffc++]
+    OBVectorData(): OBGenericData("VectorData", OBGenericDataType::VectorData){}
+    ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h: In constructor ‘OpenBabel::OBMatrixData::OBMatrixData()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/generic.h:1057:5: warning: ‘OpenBabel::OBMatrixData::_matrix’ should be initialized in the member initialization list [-Weffc++]
+     OBMatrixData(): OBGenericData("MatrixData", OBGenericDataType::MatrixData){}
+     ^
+In file included from /home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/mol.h:54:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:62,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBMolAtomIter::OBMolAtomIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:48:5: warning: ‘OpenBabel::OBMolAtomIter::_i’ should be initialized in the member initialization list [-Weffc++]
+     OBMolAtomIter() :_parent(NULL), _ptr(NULL) { }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBMolAtomDFSIter::OBMolAtomDFSIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:75:5: warning: ‘OpenBabel::OBMolAtomDFSIter::_notVisited’ should be initialized in the member initialization list [-Weffc++]
+     OBMolAtomDFSIter() : _parent(NULL), _ptr(NULL) { }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:75:5: warning: ‘OpenBabel::OBMolAtomDFSIter::_stack’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBMolAtomBFSIter::OBMolAtomBFSIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:111:5: warning: ‘OpenBabel::OBMolAtomBFSIter::_notVisited’ should be initialized in the member initialization list [-Weffc++]
+     OBMolAtomBFSIter(): _parent(NULL), _ptr(NULL) { }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:111:5: warning: ‘OpenBabel::OBMolAtomBFSIter::_queue’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:111:5: warning: ‘OpenBabel::OBMolAtomBFSIter::_depth’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBMolBondBFSIter::OBMolBondBFSIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:142:5: warning: ‘OpenBabel::OBMolBondBFSIter::_notVisited’ should be initialized in the member initialization list [-Weffc++]
+     OBMolBondBFSIter(): _parent(NULL), _ptr(NULL) { }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:142:5: warning: ‘OpenBabel::OBMolBondBFSIter::_queue’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:142:5: warning: ‘OpenBabel::OBMolBondBFSIter::_depth’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBMolBondIter::OBMolBondIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:171:5: warning: ‘OpenBabel::OBMolBondIter::_i’ should be initialized in the member initialization list [-Weffc++]
+     OBMolBondIter() : _parent(NULL), _ptr(NULL) {}
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBAtomAtomIter::OBAtomAtomIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:197:5: warning: ‘OpenBabel::OBAtomAtomIter::_i’ should be initialized in the member initialization list [-Weffc++]
+     OBAtomAtomIter() : _parent(NULL), _ptr(NULL) { }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBAtomBondIter::OBAtomBondIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:223:5: warning: ‘OpenBabel::OBAtomBondIter::_i’ should be initialized in the member initialization list [-Weffc++]
+     OBAtomBondIter(): _parent(NULL), _ptr(NULL) { }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBResidueIter::OBResidueIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:249:5: warning: ‘OpenBabel::OBResidueIter::_i’ should be initialized in the member initialization list [-Weffc++]
+     OBResidueIter() : _ptr(NULL), _parent(NULL) { }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBResidueAtomIter::OBResidueAtomIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:275:5: warning: ‘OpenBabel::OBResidueAtomIter::_i’ should be initialized in the member initialization list [-Weffc++]
+     OBResidueAtomIter() : _parent(NULL), _ptr(NULL) { }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBMolAngleIter::OBMolAngleIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:302:5: warning: ‘OpenBabel::OBMolAngleIter::_vangle’ should be initialized in the member initialization list [-Weffc++]
+     OBMolAngleIter() :_parent(NULL) { }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:302:5: warning: ‘OpenBabel::OBMolAngleIter::_i’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:302:5: warning: ‘OpenBabel::OBMolAngleIter::_angle’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBMolTorsionIter::OBMolTorsionIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:326:5: warning: ‘OpenBabel::OBMolTorsionIter::_vtorsion’ should be initialized in the member initialization list [-Weffc++]
+     OBMolTorsionIter() :_parent(NULL) { }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:326:5: warning: ‘OpenBabel::OBMolTorsionIter::_i’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:326:5: warning: ‘OpenBabel::OBMolTorsionIter::_torsion’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBMolPairIter::OBMolPairIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:353:5: warning: ‘OpenBabel::OBMolPairIter::_i’ should be initialized in the member initialization list [-Weffc++]
+     OBMolPairIter() :_parent(NULL) { }
+     ^
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:353:5: warning: ‘OpenBabel::OBMolPairIter::_j’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:353:5: warning: ‘OpenBabel::OBMolPairIter::_pair’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h: In constructor ‘OpenBabel::OBMolRingIter::OBMolRingIter()’:
+/home/gl413/Codes/Openbabel/include/openbabel-2.0/openbabel/obiter.h:380:5: warning: ‘OpenBabel::OBMolRingIter::_i’ should be initialized in the member initialization list [-Weffc++]
+     OBMolRingIter() : _ptr(NULL), _parent(NULL), _rings(NULL) { }
+     ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h: At global scope:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:70:7: warning: ‘class Sweep::KMC_ARS::PAHProcess’ has pointer data members [-Weffc++]
+ class PAHProcess {
+       ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:70:7: warning:   but does not override ‘operator=(const Sweep::KMC_ARS::PAHProcess&)’ [-Weffc++]
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:54:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_PAH.h:67:24: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     PAH *const Clone() const;
+                        ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:176:38: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Particle *const At(unsigned int i);
+                                      ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:177:46: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Particle *const At(unsigned int i) const;
+                                              ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:346:11: warning: base class ‘struct std::unary_function<const Sweep::TreeTransCoagWeightedCache&, double>’ has a non-virtual destructor [-Weffc++]
+     class WeightExtractor : public std::unary_function<const particle_cache_type&, double>
+           ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble_stats.h:48:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:49,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_stats.h:190:38: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     ParticleStats *const Clone(void) const;
+                                      ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_birth_process.h:46:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_process.h:110:47: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Sweep::Mechanism *const Mechanism() const;
+                                               ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_process.h:230:48: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     virtual Process *const Clone(void) const = 0;
+                                                ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:50:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_birth_process.h:121:37: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     BirthProcess *const Clone(void) const;
+                                     ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:51:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_death_process.h:127:37: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     DeathProcess *const Clone(void) const;
+                                     ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:129:59: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Sweep::ParticleModel *const ParticleModel(void) const {return m_model;}
+                                                           ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:164:60: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Processes::BirthProcess *const Inflows(unsigned int i) const;
+                                                            ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:178:61: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Processes::DeathProcess *const Outflows(unsigned int i) const;
+                                                             ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:60:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_inception.h:137:40: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Inception *const Clone(void) const=0;
+                                        ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:61:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_process.h:183:56: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     virtual ParticleProcess *const Clone(void) const = 0;
+                                                        ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:62:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_coagulation.h:75:52: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     virtual Coagulation *const Clone(void) const = 0;
+                                                    ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_coagulation.h: In constructor ‘Sweep::Processes::Coagulation::Coagulation()’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_coagulation.h:142:5: warning: ‘Sweep::Processes::Coagulation::mPositionChoice’ should be initialized in the member initialization list [-Weffc++]
+     Coagulation(void) {};
+     ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:63:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_fragmentation.h: At global scope:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_fragmentation.h:75:54: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     virtual Fragmentation *const Clone(void) const = 0;
+                                                      ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_fragmentation.h: In constructor ‘Sweep::Processes::Fragmentation::Fragmentation()’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_fragmentation.h:146:5: warning: ‘Sweep::Processes::Fragmentation::m_pid’ should be initialized in the member initialization list [-Weffc++]
+     Fragmentation(void) {};
+     ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_fragmentation.h:146:5: warning: ‘Sweep::Processes::Fragmentation::mPositionChoice’ should be initialized in the member initialization list [-Weffc++]
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h: At global scope:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:101:66: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Processes::Inception *const Inceptions(unsigned int i) const;
+                                                                  ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:113:71: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     const Processes::ParticleProcess *const Processes(unsigned int i) const;
+                                                                       ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:270:34: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     Mechanism *const Clone(void) const;
+                                  ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:82:7: warning: base class ‘class Sweep::ParticleModel’ has a non-virtual destructor [-Weffc++]
+ class Mechanism : public ParticleModel
+       ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mech_parser.h:48:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_pah_inception.h:135:37: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     PAHInception *const Clone(void) const;
+                                     ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mech_parser.h:49:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_dimer_inception.h:129:39: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     DimerInception *const Clone(void) const;
+                                       ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mech_parser.h:50:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_silicon_inception.h:198:41: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     SiliconInception *const Clone(void) const;
+                                         ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_surface_reaction.h:50:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mech_parser.h:51,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h: In constructor ‘Sprog::Kinetics::ARRHENIUS::ARRHENIUS()’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:62:9: warning: ‘Sprog::Kinetics::ARRHENIUS::A’ should be initialized in the member initialization list [-Weffc++]
+         ARRHENIUS(void) // Default constructor.
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:62:9: warning: ‘Sprog::Kinetics::ARRHENIUS::n’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:62:9: warning: ‘Sprog::Kinetics::ARRHENIUS::E’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h: In constructor ‘Sprog::Kinetics::ARRHENIUS::ARRHENIUS(double, double, double)’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:64:9: warning: ‘Sprog::Kinetics::ARRHENIUS::A’ should be initialized in the member initialization list [-Weffc++]
+         ARRHENIUS(double aA, double an, double aE) // Initialising constructor.
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:64:9: warning: ‘Sprog::Kinetics::ARRHENIUS::n’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:64:9: warning: ‘Sprog::Kinetics::ARRHENIUS::E’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h: In constructor ‘Sprog::Kinetics::COVERAGE::COVERAGE()’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:86:9: warning: ‘Sprog::Kinetics::COVERAGE::Eta’ should be initialized in the member initialization list [-Weffc++]
+         COVERAGE(void) // Default constructor.
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:86:9: warning: ‘Sprog::Kinetics::COVERAGE::Miu’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:86:9: warning: ‘Sprog::Kinetics::COVERAGE::Epsilon’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:86:9: warning: ‘Sprog::Kinetics::COVERAGE::spName’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h: In constructor ‘Sprog::Kinetics::COVERAGE::COVERAGE(double, double, double, std::string&)’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:89:7: warning: ‘Sprog::Kinetics::COVERAGE::Eta’ should be initialized in the member initialization list [-Weffc++]
+       COVERAGE(double e, double m, double eps, std::string &name) // Initialising constructor.
+       ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:89:7: warning: ‘Sprog::Kinetics::COVERAGE::Miu’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:89:7: warning: ‘Sprog::Kinetics::COVERAGE::Epsilon’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:89:7: warning: ‘Sprog::Kinetics::COVERAGE::spName’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h: In constructor ‘Sprog::Kinetics::FORD::FORD()’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:108:9: warning: ‘Sprog::Kinetics::FORD::F_k’ should be initialized in the member initialization list [-Weffc++]
+         FORD(void) // Default constructor.
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:108:9: warning: ‘Sprog::Kinetics::FORD::spName’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h: In constructor ‘Sprog::Kinetics::FORD::FORD(double, std::string&)’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:111:7: warning: ‘Sprog::Kinetics::FORD::F_k’ should be initialized in the member initialization list [-Weffc++]
+       FORD(double f, std::string &name) // Initialising constructor.
+       ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:111:7: warning: ‘Sprog::Kinetics::FORD::spName’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h: In constructor ‘Sprog::Kinetics::LTCOEFFS::LTCOEFFS()’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:130:9: warning: ‘Sprog::Kinetics::LTCOEFFS::B’ should be initialized in the member initialization list [-Weffc++]
+         LTCOEFFS(void) {B=C=0.0;}; // Default constructor.
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:130:9: warning: ‘Sprog::Kinetics::LTCOEFFS::C’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h: In constructor ‘Sprog::Kinetics::LTCOEFFS::LTCOEFFS(double, double)’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:131:9: warning: ‘Sprog::Kinetics::LTCOEFFS::B’ should be initialized in the member initialization list [-Weffc++]
+         LTCOEFFS(double aB, double aC) {B=aB; C=aC;}; // Initialising constructor.
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:131:9: warning: ‘Sprog::Kinetics::LTCOEFFS::C’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h: In constructor ‘Sprog::Kinetics::FALLOFF_PARAMS::FALLOFF_PARAMS()’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:167:9: warning: ‘Sprog::Kinetics::FALLOFF_PARAMS::LowP_Limit’ should be initialized in the member initialization list [-Weffc++]
+         FALLOFF_PARAMS(void) {ThirdBody=-1,Params[0]=Params[1]=Params[2]=Params[3]=Params[4]=0.0;};
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:167:9: warning: ‘Sprog::Kinetics::FALLOFF_PARAMS::ThirdBody’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h: In constructor ‘Sprog::Kinetics::FALLOFF_PARAMS::FALLOFF_PARAMS(Sprog::Kinetics::ARRHENIUS, int, double, double, double, double, double)’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:168:9: warning: ‘Sprog::Kinetics::FALLOFF_PARAMS::LowP_Limit’ should be initialized in the member initialization list [-Weffc++]
+         FALLOFF_PARAMS(ARRHENIUS lowp, int tb, double a=0.0, double b=0.0, double c=0.0, double d=0.0, double e=0.0) {
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:168:9: warning: ‘Sprog::Kinetics::FALLOFF_PARAMS::ThirdBody’ should be initialized in the member initialization list [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h: In constructor ‘Sprog::Kinetics::FALLOFF_PARAMS::FALLOFF_PARAMS(double, double, double, int, double, double, double, double, double)’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:171:9: warning: ‘Sprog::Kinetics::FALLOFF_PARAMS::LowP_Limit’ should be initialized in the member initialization list [-Weffc++]
+         FALLOFF_PARAMS(double lpa, double lpn, double lpe, int tb, double a=0.0, double b=0.0, double c=0.0,
+         ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sprogc/include/gpc_rate_params.h:171:9: warning: ‘Sprog::Kinetics::FALLOFF_PARAMS::ThirdBody’ should be initialized in the member initialization list [-Weffc++]
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mech_parser.h:51:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_surface_reaction.h: At global scope:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_surface_reaction.h:170:48: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     virtual SurfaceReaction *const Clone(void) const;
+                                                ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mech_parser.h:52:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_condensation.h:164:45: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     virtual Condensation *const Clone(void) const;
+                                             ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mech_parser.h:54:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_silica_interparticle.h:183:47: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+      virtual InterParticle *const Clone(void) const;
+                                               ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:53:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mech_parser.h:265:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+         );
+         ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_particle_image.h:56:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_PAH_primary.h:56,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_simulator.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:73,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_imgnode.h:60:7: warning: ‘class Sweep::Imaging::ImgNode’ has pointer data members [-Weffc++]
+ class ImgNode
+       ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_imgnode.h:60:7: warning:   but does not override ‘Sweep::Imaging::ImgNode(const Sweep::Imaging::ImgNode&)’ [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_imgnode.h:60:7: warning:   or ‘operator=(const Sweep::Imaging::ImgNode&)’ [-Weffc++]
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_simulator.h:53:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:73,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_PAH_primary.h:140:43: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     virtual PAHPrimary *const Clone(void) const;
+                                           ^
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_simulator.h:53:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:73,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_PAH_primary.h:78:7: warning: ‘class Sweep::AggModels::PAHPrimary’ has pointer data members [-Weffc++]
+ class PAHPrimary : public Primary
+       ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_PAH_primary.h:78:7: warning:   but does not override ‘operator=(const Sweep::AggModels::PAHPrimary&)’ [-Weffc++]
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:73:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_simulator.h:71:15: warning: ‘class Sweep::KMC_ARS::KMCSimulator’ has pointer data members [-Weffc++]
+         class KMCSimulator {
+               ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_simulator.h:71:15: warning:   but does not override ‘operator=(const Sweep::KMC_ARS::KMCSimulator&)’ [-Weffc++]
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:73:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_simulator.h:202:15: warning: ‘class Sweep::KMC_ARS::CSV_data’ has pointer data members [-Weffc++]
+         class CSV_data {
+               ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_simulator.h:202:15: warning:   but does not override ‘Sweep::KMC_ARS::CSV_data(const Sweep::KMC_ARS::CSV_data&)’ [-Weffc++]
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_simulator.h:202:15: warning:   or ‘operator=(const Sweep::KMC_ARS::CSV_data&)’ [-Weffc++]
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:88:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_surfvol_stats.h:159:37: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+     SurfVolStats *const Clone(void) const;
+                                     ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp: In function ‘int main(int, char**)’:
+/home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:105:2: error: expected ‘,’ or ‘;’ before ‘int’
+  int num_C = 0;
+  ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:157:4: error: ‘num_C’ was not declared in this scope
+    num_C = (int)Strings::cdble(attr->GetValue());
+    ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:253:106: error: ‘num_C’ was not declared in this scope
+     pahp.initialise(startStruct_str, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, num_C, num_H, intCarbons);
+                                                                                                          ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp: At global scope:
+/home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:74:5: warning: unused parameter ‘argc’ [-Wunused-parameter]
+ int main(int argc, char *argv[])
+     ^
+/home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:74:5: warning: unused parameter ‘argv’ [-Wunused-parameter]
+In file included from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_process.h:51:0,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_mech.h:53,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_pah_structure.h:50,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_ensemble.h:69,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_cell.h:48,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_mechanism.h:57,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_solver.h:46,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/sweep.h:52,
+                 from /home/gl413/Codes/mops-c-Git_flat_graphene/applications/solvers/PAHkmc/kmc_model.cpp:48:
+/home/gl413/Codes/mops-c-Git_flat_graphene/src/sweepc/include/swp_kmc_structure_comp.h:102:25: warning: ‘Sweep::KMC_ARS::NULLC’ defined but not used [-Wunused-variable]
+         static Cpointer NULLC(new Carbon);//SET.begin();
+                         ^
+cc1plus: warning: unrecognized command line option "-Wno-format-errors" [enabled by default]
+make[2]: *** [CMakeFiles/PAHkmc-app.dir/applications/solvers/PAHkmc/kmc_model.cpp.o] Error 1
+make[1]: *** [CMakeFiles/PAHkmc-app.dir/all] Error 2
+make: *** [all] Error 2

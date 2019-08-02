@@ -56,6 +56,7 @@
 #include <cstdlib>
 #include <boost/random/exponential_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
+#include <boost/filesystem.hpp>
 
 #include "string_functions.h"
 #include "swp_kmc_simulator.h"
@@ -273,11 +274,15 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
 				xyzname.append(std::to_string(m_t*1000.0));
-				//xyzname.append("_before");
+				xyzname.append("_before");
 				savePAH(PAH_ID, xyzname);
 				cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
 				m_simPAHp.printSites(); //SETBREAKPOINT
 				//printRates(m_t, m_kmcmech.Rates());
+			}
+			//Add PAH to tracked list on the fly.
+			if (jp_perf.second == 23 || jp_perf.second >= 35){
+				addTrackedPAH(PAH_ID); //SETBREAKPOINT
 			}
 			
 			m_rxn_count[jp_perf.second]++;
@@ -289,21 +294,21 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
-            m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID); //SETBREAKPOINT
+            m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 			
 			//Save information for a single PAH
-			/*if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
+			if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
 				std::string xyzname = ("KMC_DEBUG/");
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
 				std::string xyzname2 = xyzname;
-				//xyzname.append(std::to_string(m_t));
-				//xyzname.append("_after");
-				//savePAH(PAH_ID, xyzname);
-				xyzname2.append(std::to_string(PAH_ID));
-				xyzname2.append("trajectory");
-				m_simPAHp.save_trajectory_xyz(m_t, xyzname2, false);
-			}*/
+				xyzname.append(std::to_string(m_t));
+				xyzname.append("_after");
+				savePAH(PAH_ID, xyzname);
+				//xyzname2.append(std::to_string(PAH_ID));
+				//xyzname2.append("trajectory");
+				//m_simPAHp.save_trajectory_xyz(m_t, xyzname2, false);
+			}
 			
 			// get counts for all site types
 			/*if (PAH_ID == 1 || PAH_ID == 2){
@@ -1036,6 +1041,36 @@ void KMCSimulator::readTrackedPAH(const std::string &filename){
 	std::ifstream src(filename);
 	int PAH_number;
 	while (src >> PAH_number){
+		addTrackedPAH(PAH_number);
+		//m_tracked_pahs.push_back(PAH_number);
+	}
+}
+
+//Add PAH to the tracked list on the fly.
+void KMCSimulator::addTrackedPAH(int PAH_number){
+	// Check if PAH_number is already tracked.
+	auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_number); 
+	if (finder == m_tracked_pahs.end()){
+		std::cout << "Adding PAH number " << PAH_number << " to tracked list. \n";
 		m_tracked_pahs.push_back(PAH_number);
+	}
+	else{
+		std::cout << "PAH number " << PAH_number << " already existed in tracked list. \n";
+	}
+	// Check if saving folder exists.
+	std::string dir_path = "KMC_DEBUG/";
+	dir_path.append(std::to_string(PAH_number));
+	boost::filesystem::path dir(dir_path);
+	if (boost::filesystem::exists(dir)){
+		// Folder already existed.
+		std::cout << "Folder " << dir << " already existed. \n";
+	}
+	else {
+		if(boost::filesystem::create_directory(dir)) {
+			std::cout << "Creating folder " << dir << ". \n";
+		}
+		else{
+			std::cout << "Error creating folder " << dir << ". \n Continuing simulation. PAH coordinates may not be saved. \n";
+		}
 	}
 }

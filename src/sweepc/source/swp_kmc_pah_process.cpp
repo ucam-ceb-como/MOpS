@@ -101,7 +101,9 @@ PAHStructure* PAHProcess::clonePAH() const {
     PAHStructure* temp = new PAHStructure();
     PAHProcess p(*temp);
     std::vector<kmcSiteType> sites = SiteVector();
-	p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_carbonList, m_pah->m_InternalCarbons);
+	Spointer first_site = SiteList().begin();
+	cpair first_c_pos = first_site->C1->coords;
+	p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_carbonList, m_pah->m_InternalCarbons, m_pah->m_R5loc, m_pah->m_R7loc, first_c_pos);
 	//p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_InternalCarbons);
     return temp;
 }
@@ -2394,9 +2396,9 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	}
 	if (stype + bulkCchange == 2004 || stype + bulkCchange == 2014) {
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
-		Cpointer Ccheck = st->C1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2004; bulkCchange = 0;
 		}
@@ -2409,9 +2411,9 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
-		Cpointer Ccheck = st->C1->C2;
+		Cpointer Ccheck = Carb1->C2;
 		Cpointer Ccheck2 = Ccheck->C2;
-		Cpointer Ccheck3 = st->C2->C1;
+		Cpointer Ccheck3 = Carb2->C1;
 		Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
 		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
@@ -2751,7 +2753,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
             abort();
     }
     // Create Structure
-	return initialise(chosen, std::get<0>(rings), std::get<1>(rings), rings_Embedded, std::get<2>(rings), rings_Embedded, IntCarbons);
+	return initialise(chosen, std::get<0>(rings), std::get<1>(rings), rings_Embedded, std::get<2>(rings), rings_Embedded, std::get<0>(CH), std::get<1>(CH), IntCarbons);
     //printSites(m_pah->m_siteList.begin());
 }
 
@@ -2995,7 +2997,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
  *
  * @return       Initialized PAH structure
  */
-PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, Ccontainer edgeCarbons, std::list<cpair> internalCarbons){
+PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, Ccontainer edgeCarbons, std::list<cpair> internalCarbons, std::list<cpair> R5_locs, std::list<cpair> R7_locs){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
         m_pah = pah;
@@ -3019,24 +3021,28 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
         }
         siteList_vec.push_back(temp);
     }
-	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, edgeCarbons, internalCarbons);
+	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, edgeCarbons, internalCarbons, R5_locs, R7_locs, m_pah->m_cfirst->coords);
     return *m_pah;
 }
 
 
 // Create Structure from an existing PAH structure (cloning)
-void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, Ccontainer edCarbons, std::list<cpair> inCarbs) {
+void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, Ccontainer edCarbons, std::list<cpair> inCarbs, std::list<cpair> R5loc, std::list<cpair> R7loc, cpair first_carbon_coords) {
     //Add first carbon.
 	Cpointer newC = addC();
+	moveC(newC, first_carbon_coords);
     m_pah->m_cfirst = newC;
 	m_pah->m_clast = NULLC;
 	
 	//Find first carbon in edge carbon container.	
-	double tol = 3e-1;
+	double mindist = 1e3;
 	Ccontainer::iterator edCarbons_it;
     for(Ccontainer::iterator carbiter=edCarbons.begin(); carbiter != edCarbons.end(); ++carbiter) {
 		double distance = getDistance_twoC(newC->coords, (*carbiter)->coords);
-		if (distance < tol)	edCarbons_it = carbiter;
+		if (distance < mindist){
+			edCarbons_it = carbiter;
+			mindist = distance;
+		}	
     }
 		
 	// current C and coordinates
@@ -3053,13 +3059,30 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 				newC = addC(newC, std::make_tuple(1.0,0.0,0.0), 7.17);
 				moveC(newC, nextC->coords);
 				updateA(newC, nextC->A, nextC->growth_vector);
+				if (!nextC->bridge) nextC = nextC->C2;
+				else {
+					if (checkHindrance_C_PAH(nextC->C3->coords)) nextC = nextC->C2;
+					else nextC = nextC->C3;
+				}
 			}
-			else{
-				connectToC(newC, m_pah->m_cfirst);
-				m_pah->m_clast = newC;
-				newC = newC->C2;
+			else{ //position already occupied
+				Cpointer Cpos = findC(nextC->coords);
+				if(Cpos != m_pah->m_cfirst) { // it is a bridged C atom
+					Cpointer Cbridge = Cpos->C1;
+					Cpos->bridge = true; Cbridge->bridge = true;
+					Cpos->C3 = Cbridge; Cbridge->C3 = Cpos;
+					connectToC(newC, Cpos);
+					Cbridge->C2 = NULLC;
+					newC = Cbridge;
+					nextC = nextC->C3->C2;
+					j++;
+				}
+				else { // reached end of PAH
+					connectToC(newC, m_pah->m_cfirst);
+					m_pah->m_clast = newC;
+					newC = newC->C2;
+				}
 			}
-			nextC = nextC->C2;
 		}
 		Cpointer site_carb_2 = newC;
         addSite(vec[i], site_carb_1, site_carb_2);
@@ -3068,12 +3091,13 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
     // check if PAH closes correctly
 	if (m_pah->m_clast == NULLC || !checkHindrance_twoC(newC->C1, m_pah->m_cfirst)) {
         // PAH did not close properly. invalid structure
-        cout << "createPAH: PAH did not close properly. Could be problem "
+        cout << "createPAH: PAH did not close properly. Could be problem " //SETBREAKPOINT
             <<"with site list input...\n";
         std::ostringstream msg;
         msg << "ERROR: PAH did not close properly.."
             << " (Sweep::KMC_ARS::PAHProcess::createPAH)";
-        //saveDOT("KMC_DEBUG/KMC_PAH_X_CLOSE.dot");
+        saveXYZ("KMC_DEBUG/KMC_PAH_X_CLOSE");
+		//saveDOT("KMC_DEBUG/KMC_PAH_X_CLOSE.dot");
         throw std::runtime_error(msg.str());
         assert(false);
         return;
@@ -3084,6 +3108,8 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 	m_pah->m_rings7_Lone = R7_Lone;
 	m_pah->m_rings7_Embedded = R7_Embedded;
 	m_pah->m_InternalCarbons = inCarbs;
+	m_pah->m_R5loc = R5loc;
+	m_pah->m_R7loc = R7loc;
 	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
 	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1;
 	m_pah->setnumofC(totalC_num);
@@ -3100,7 +3126,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
  *
  * @return       Initialized PAH structure
  */
-PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, std::list<cpair> internalCarbons){
+PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, int num_C, int num_H, std::list<cpair> internalCarbons){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
         m_pah = pah;
@@ -3119,18 +3145,23 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
             std::ostringstream msg;
             msg << "ERROR: Starting Structure site List contains invalid site type."
                 << " (Sweep::KMC_ARS::PAHProcess::initialise)";
-                throw std::runtime_error(msg.str());
-                assert(false);
+                //throw std::runtime_error(msg.str());
+                //assert(false);
         }
         siteList_vec.push_back(temp);
     }
-	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, internalCarbons);
+	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, num_C, num_H);
     return *m_pah;
 }
 
-// Create Structure from vector of site types
-void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::list<cpair> inCarbs) {
-    // current C, bondangle and coordinates
+// Create Structure from vector of site types. This function is used to assign PAHs from output files.
+void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, int num_C, int num_H) {
+    //This function worked with Serialise and Deserialaise to recognise identical PAHs through the simulation and avoid memory requirements.
+	//However, the existence of 3D structures makes it extremely hard for the program to recognise repeated structures. Because of this,
+	//it was decided that this function would just reproduce the statistics saved from the binary files to be able to compute mass spectra. 
+	//If a PAH is desired for postprocessing, defining it in an additional list "tracked_pahs.txt" will produce its output through the OB routines.
+	//gl413
+	// current C, bondangle and coordinates
     Cpointer newC=addC(); //SETBREAKPOINT#:R6>4
     m_pah->m_cfirst = newC;
     m_pah->m_clast = NULLC;
@@ -3158,27 +3189,20 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
             bulkC = (int) vec[i] - 600; site_t = 2;
 		}else if((int)vec[i] >= 1002 && (int)vec[i] <= 1004) {
             bulkC = (int) vec[i] - 1000; site_t = 2;
-		}else if((int)vec[i] >= 2002 && (int)vec[i] <= 2015) {
+		}else if((int)vec[i] >= 2002 && (int)vec[i] <= 2115) {
             bulkC = (int) vec[i] %10; site_t = 3;
 		}
-		/**
-		* If this condition is true, vec[i] is the site tye ACR5.
-		* It is essentially a special type of armchair site (a basic site type and associated with two bulk carbon atoms).
-		*/
-		else if ((int)vec[i] == 30) {
-			bulkC = (int)vec[i] - 16; site_t = 0;
-
-		}
-		/*else {
-            cout << "createPAH: Combined site types in list of sites. Please use only\n"
-                << "principal site types\n";
+		else {
+            cout << "createPAH: Unrecognised site type. It becomes impossible to track the number of PAHs without defined site types.\n"
+                << "The statistics for this PAH will be excluded.\n"; //SETBREAKPOINT
+			cout << "Site = " << vec[i] << "\n";
             std::ostringstream msg;
-            msg << "ERROR: Combined site types found in list of sites."
+            msg << "ERROR: Unrecognised site types found in list of sites."
                 << " (Sweep::KMC_ARS::PAHProcess::createPAH)";
-                throw std::runtime_error(msg.str());
-                assert(false);
-            return;
-        }*/
+                //throw std::runtime_error(msg.str());
+                //assert(false);
+            //return;
+        }
 		//cout << "Angle = " << angle << ". Next site to draw = " <<  (kmcSiteType)vec[i] << "\n";
         kmcSiteType prevType; //SETBREAKPOINT#:R6>4
         if(i==0) prevType = vec.back();
@@ -3209,31 +3233,39 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
     }
     // check if PAH closes correctly
 	if (m_pah->m_clast == NULLC || checkHindrance_twoC(newC, m_pah->m_cfirst)) {
-        // PAH did not close properly. invalid structure
-        cout << "createPAH: PAH did not close properly. Could be problem "
-            <<"with site list input...\n";
-        std::ostringstream msg;
-        msg << "ERROR: PAH did not close properly.."
-            << " (Sweep::KMC_ARS::PAHProcess::createPAH)";
-		cout << msg;
+		//In the previous typespace this check was used to see if the PAH made sense. In 2D this is easily achieved. However, in 3D PAHs this is far from trivial.
+        //For this reason the PAH is forced to be "closed" so the carbons are not double counted.
+		// PAH did not close properly. invalid structure
+        //cout << "createPAH: PAH did not close properly. Could be problem "
+        //    <<"with site list input...\n";
+        //std::ostringstream msg;
+        //msg << "ERROR: PAH did not close properly.."
+        //   << " (Sweep::KMC_ARS::PAHProcess::createPAH)";
+		//cout << msg;
         //saveDOT("KMC_DEBUG/KMC_PAH_X_CLOSE.dot");
         //throw std::runtime_error(msg.str());
         //assert(false);
         //return;
+		//This connects the first and last carbons in the sitelist even if they are in unreal positions.
+		connectToC(newC, m_pah->m_cfirst);
+        m_pah->m_clast = newC;
     }
-    m_pah->m_rings = R6;
-	m_pah->m_rings5_Lone = R5_Lone;
-	m_pah->m_rings5_Embedded = R5_Embedded;
-	m_pah->m_rings7_Lone = R7_Lone;
-	m_pah->m_rings7_Embedded = R7_Embedded;
-	m_pah->m_InternalCarbons = inCarbs;
-    for(Ccontainer::iterator i = m_pah->m_carbonList.begin();
+    m_pah->m_rings = R6; //Read from binary file.
+	m_pah->m_rings5_Lone = R5_Lone; //Read from binary file.
+	m_pah->m_rings5_Embedded = R5_Embedded; //Read from binary file.
+	m_pah->m_rings7_Lone = R7_Lone; //Read from binary file. However, nbot tracked right now.
+	m_pah->m_rings7_Embedded = R7_Embedded; //Read from binary file.
+	//m_pah->m_InternalCarbons = inCarbs; // Not used.
+    /*for(Ccontainer::iterator i = m_pah->m_carbonList.begin(); //Not used.
         i != m_pah->m_carbonList.end(); i++)
-        updateA(*i, 'H');
-	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
-	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1;
-	m_pah->setnumofC(totalC_num);
-    m_pah->setnumofH((int)vec.size());
+        updateA(*i, 'H');*/
+	//Euler's characteristic equation for a topology containing 5, 6 and 7 membered rings with an open contiguous face (outside).
+	//This was used to recompute the number of carbons, but it is less expensive to just write it in the binary and read it.
+	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1;
+	//m_pah->setnumofC(totalC_num);
+    //m_pah->setnumofH((int)vec.size());
+	m_pah->setnumofC(num_C);
+	m_pah->setnumofH(num_H);
     updateCombinedSites();
 }
 
@@ -4423,8 +4455,8 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// cannot happen if neighbour is a pentagon.
 	Spointer checkR5_1 = moveIt(stt,-2);
 	Spointer checkR5_2 = moveIt(stt,+2);
-	if ( (int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 ) return;
-	if ( (int)checkR5_2->type == 101 || (int)checkR5_2->type == 501 ) return;
+	if ( (int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 2002) return;
+	if ( (int)checkR5_2->type == 101 || (int)checkR5_2->type == 501 || (int)checkR5_2->type == 2002) return;
     // member C atoms of resulting FE site
     Cpointer C1_new, C2_new;
     C1_new = C_1->C1->C1;
@@ -4503,6 +4535,12 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
     //cpair pos = jumpToPos(C1_res->coords, normAngle(C1_res->bondAngle1-120), 0, 1.4);
 	bool bridge = checkHindrance_C_PAH((pos));
 	if (bridge) {
+		Spointer S1 = moveIt(stt, -1);
+		Spointer S2 = moveIt(stt, +1);
+		if ((int)S1->type > 2000 || (int)S2->type > 2000 ) {
+			//This would expose three edges of a pentagon. Not supported YET!
+			return;
+		}
 		//cout<<"Oxidation generated a bridge\n";
 		//saveXYZ("KMC_DEBUG/Oxidation_to_bridge_before");
 	}
@@ -4519,7 +4557,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
 			std::ostringstream msg;
             msg << "Error finding Carbon in Oxidation to bridge. \n";
 			saveXYZ("KMC_DEBUG/Oxidation_to_bridge_error_find_carbon");
-            throw std::runtime_error(msg.str());
+            //throw std::runtime_error(msg.str());
 		}			
 		Cpointer C_kk = C_k->C1;
 		C1_res->C2 = C_k;

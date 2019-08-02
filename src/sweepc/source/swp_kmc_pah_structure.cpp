@@ -267,6 +267,12 @@ void PAHStructure::Serialize(std::ostream &out) const
 
 	val = numofEmbeddedRings7();
 	out.write((char*)&(val), sizeof(val));
+	
+	val = numofC();
+	out.write((char*)&(val), sizeof(val));
+	
+	val = numofH();
+	out.write((char*)&(val), sizeof(val));
 
     PAHStructure m_copy (*this);
     PAHProcess p(m_copy);
@@ -296,6 +302,12 @@ void PAHStructure::Deserialize(std::istream &in)
 
 	in.read(reinterpret_cast<char*>(&val), sizeof(val));
 	int temp_numofEmbeddedRings7 = val;
+	
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofC = val;
+	
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofH = val;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     name = new char[val];
@@ -305,7 +317,7 @@ void PAHStructure::Deserialize(std::istream &in)
     delete [] name;
 
     PAHProcess p(*this);
-	p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, temp_internalcoords);
+	p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, temp_numofC, temp_numofH, temp_internalcoords);
 }
 
 void PAHStructure::WriteCposition(std::ostream &out) const

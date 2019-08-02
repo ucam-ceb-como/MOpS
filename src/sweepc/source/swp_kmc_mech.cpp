@@ -134,10 +134,10 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_L6_BY6 = new L6_BY6; j_L6_BY6->initialise();									//!  3- BY6 closure [AR14].
     JumpProcess* j_PH_benz = new PH_benz; j_PH_benz->initialise();								//!  4- phenyl addition [AR15].
     JumpProcess* j_D6R_FE3 = new D6R_FE3; j_D6R_FE3->initialise();								//!  5- R6 Desorption at FE [AR8].
-    JumpProcess* j_O6R_FE3_O2 = new O6R_FE3_O2; j_O6R_FE3_O2->initialise();						//!  6- R6 Oxidation at FE by O2 [AR10].
-    JumpProcess* j_O6R_FE3_OH = new O6R_FE3_OH; j_O6R_FE3_OH->initialise();						//!  7- R6 Oxidation at FE by OH [AR11].
-    JumpProcess* j_O6R_FE_HACA_O2 = new O6R_FE_HACA_O2; j_O6R_FE_HACA_O2->initialise();			//!  8- R6 Oxidation at AC by O2 [AR12].
-    JumpProcess* j_O6R_FE_HACA_OH = new O6R_FE_HACA_OH; j_O6R_FE_HACA_OH->initialise();			//!  9- R6 Oxidation at AC by OH [AR13].
+    //JumpProcess* j_O6R_FE3_O2 = new O6R_FE3_O2; j_O6R_FE3_O2->initialise();						//!  6- R6 Oxidation at FE by O2 [AR10].
+    //JumpProcess* j_O6R_FE3_OH = new O6R_FE3_OH; j_O6R_FE3_OH->initialise();						//!  7- R6 Oxidation at FE by OH [AR11].
+    //JumpProcess* j_O6R_FE_HACA_O2 = new O6R_FE_HACA_O2; j_O6R_FE_HACA_O2->initialise();			//!  8- R6 Oxidation at AC by O2 [AR12].
+    //JumpProcess* j_O6R_FE_HACA_OH = new O6R_FE_HACA_OH; j_O6R_FE_HACA_OH->initialise();			//!  9- R6 Oxidation at AC by OH [AR13].
     JumpProcess* j_G5R_ZZ = new G5R_ZZ; j_G5R_ZZ->initialise();									//! 10- R5 growth at ZZ [AR3].
     JumpProcess* j_D5R_R5 = new D5R_R5; j_D5R_R5->initialise();									//! 11- R5 desorption [AR7].
     JumpProcess* j_C6R_AC_FE3 = new C6R_AC_FE3; j_C6R_AC_FE3->initialise();						//! 12- R6 conversion to R5 [AR9].
@@ -148,8 +148,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_C6R_BY5_FE3violi = new C6R_BY5_FE3violi; j_C6R_BY5_FE3violi->initialise();   //! 17- R6 migration & conversion to R5 at BY5 (violi) [AR24].
     JumpProcess* j_L5R_BY5 = new L5R_BY5; j_L5R_BY5->initialise();                              //! 18- BY5 closure [AR16].
     JumpProcess* j_M6R_BY5_FE3 = new M6R_BY5_FE3; j_M6R_BY5_FE3->initialise();                  //! 19- R6 desorption at bay -> pyrene [AR21].
-    JumpProcess* j_O6R_FE2_OH = new O6R_FE2_OH; j_O6R_FE2_OH->initialise();                     //! 20- R6 Oxidation at ZZ by OH.
-    JumpProcess* j_O6R_FE2_O2 = new O6R_FE2_O2; j_O6R_FE2_O2->initialise();                     //! 21- R6 Oxidation at ZZ by O2.
+    //JumpProcess* j_O6R_FE2_OH = new O6R_FE2_OH; j_O6R_FE2_OH->initialise();                     //! 20- R6 Oxidation at ZZ by OH.
+    //JumpProcess* j_O6R_FE2_O2 = new O6R_FE2_O2; j_O6R_FE2_O2->initialise();                     //! 21- R6 Oxidation at ZZ by O2.
 	JumpProcess* j_D6R_FE_AC = new D6R_FE_AC; j_D6R_FE_AC->initialise();						//! 22- R6 Desorption from FE to AC site.
 	JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();                           //*< 23 - Bay-capping.
 	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //*< 24 - Embedded 5-member ring migration to ZZ.
@@ -187,10 +187,10 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_L6_BY6);            //!  3- BY6 closure [AR14].
     temp.push_back(j_PH_benz);           //!  4- phenyl addition [AR15].
     temp.push_back(j_D6R_FE3);           //!  5- R6 Desorption at FE [AR8].
-    temp.push_back(j_O6R_FE3_O2);        //!  6- R6 Oxidation at FE by O2 [AR10].
-    temp.push_back(j_O6R_FE3_OH);        //!  7- R6 Oxidation at FE by OH [AR11].
-    temp.push_back(j_O6R_FE_HACA_O2);    //!  8- R6 Oxidation at AC by O2 [AR12].
-    temp.push_back(j_O6R_FE_HACA_OH);    //!  9- R6 Oxidation at AC by OH [AR13].
+    //temp.push_back(j_O6R_FE3_O2);        //!  6- R6 Oxidation at FE by O2 [AR10].
+    //temp.push_back(j_O6R_FE3_OH);        //!  7- R6 Oxidation at FE by OH [AR11].
+    //temp.push_back(j_O6R_FE_HACA_O2);    //!  8- R6 Oxidation at AC by O2 [AR12].
+    //temp.push_back(j_O6R_FE_HACA_OH);    //!  9- R6 Oxidation at AC by OH [AR13].
     temp.push_back(j_G5R_ZZ);            //! 10- R5 growth at ZZ [AR3].
     temp.push_back(j_D5R_R5);            //! 11- R5 desorption [AR7].
     temp.push_back(j_C6R_AC_FE3);        //! 12- R6 conversion to R5 [AR9].
@@ -201,8 +201,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_C6R_BY5_FE3violi);  //! 17- R6 migration & conversion to R5 at BY5 (violi) [AR24].
     temp.push_back(j_L5R_BY5);           //! 18- BY5 closure [AR16].
     temp.push_back(j_M6R_BY5_FE3);       //! 19- R6 desorption at bay -> pyrene [AR21].
-    temp.push_back(j_O6R_FE2_OH);        //! 20- R6 Oxidation at ZZ by OH.
-	temp.push_back(j_O6R_FE2_O2);        //! 21- R6 Oxidation at ZZ by O2.
+    //temp.push_back(j_O6R_FE2_OH);        //! 20- R6 Oxidation at ZZ by OH.
+	//temp.push_back(j_O6R_FE2_O2);        //! 21- R6 Oxidation at ZZ by O2.
 	temp.push_back(j_D6R_FE_AC);         //! 22- R6 Desorption from FE to AC site.
 	temp.push_back(j_B6R_ACR5);         //*< 23 - Bay-capping.
 	temp.push_back(j_M5R_ACR5_ZZ);      //*< 24 - Embedded 5-member ring migration to ZZ.
@@ -258,8 +258,10 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
         }
     }else if(pressure > 0.07 && pressure <= 0.5) { // mechanism at 0.12atm
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-            (m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p12(), gp);
-            m_rates[i] = (m_jplist[i])->setRate0p12(gp, st/*, t*/);
+			(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp); // As a test, decided to use the mechanism for 1atm that has been debugged.
+            //(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p12(), gp);
+            m_rates[i] = (m_jplist[i])->setRate1(gp, st/*, t*/);
+			//m_rates[i] = (m_jplist[i])->setRate0p12(gp, st/*, t*/);
             temp += m_rates[i];
         }
     }else std::cout<<"ERROR: No reaction mechanism for this pressure condition.\n";
@@ -908,7 +910,7 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 		//std::cout << pm_peq << std::endl;
 		lu_substitute(arr1_peq, pm_peq, arr2_peq);
 		//std::cout << arr2_peq << std::endl;
-
+		
 		r_f2_ss =  arr2(4)*m_r[50] + arr2(6)*m_r[60] + arr2(4)*m_r[52] + arr2(6)*m_r[62] + arr2(2)*m_r[34] + arr2(5)*m_r[58] + arr2(3)*m_r[48] + arr2(4)*m_r[56] + arr2(0)*m_r[10]; //Production of the sum of A2* and A2*/
 		
 		r_f2_peq = arr2_peq(4)*m_r[50] + arr2_peq(6)*m_r[60] + arr2_peq(4)*m_r[52] + arr2_peq(6)*m_r[62] + arr2_peq(2)*m_r[34] + arr2_peq(5)*m_r[58] + arr2_peq(3)*m_r[48] + arr2_peq(4)*m_r[56] + arr2_peq(0)*m_r[10]; //Production of the sum of A2* and A2*/
@@ -979,7 +981,7 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 		//double test = 1.0;
 	}
 	catch ( const std::runtime_error& (s)){
-		return m_rate = 0.0; //SETBREAKPOINT
+		return m_rate = 0.0; 
 	}
 
 	double r_denom = (m_r[47]+m_r[49]+m_r[50]+m_r[51]);
@@ -990,8 +992,10 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 
 	else r_f=0;
 	double m_rate_old = m_r[51]*r_f* site_count; // Rate Equation
-	//m_rate = r_f2_ss* site_count / 6.0; // Rate Equation
-	m_rate = r_f2_peq * site_count / 6.0; // Rate Equation
+	//cout << "Temp = " << T; 
+	if (T<1400) m_rate = r_f2_peq * site_count / 6.0;
+	else m_rate = r_f2_ss * site_count / 6.0; // Rate Equation
+	
 	return m_rate ; // Rate Equation
     //return setRate0p0267(gp, pah_st);
 }
@@ -1459,7 +1463,7 @@ double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 	double r_denom = (m_r[0] + m_r[3] + m_r[5]);
 	if (r_denom <=0) return m_rate = 0.0;
 	double r_num = (m_r[1] + m_r[2] + m_r[4]);
-	m_rate = ((m_r[6] + m_r[7] + m_r[8] /*+ m_r[11]*/ + m_r[12]) + r_num/r_denom*(m_r[9] + m_r[10] + m_r[13] + m_r[14])) * site_count / 2.0;
+	m_rate = ((m_r[6] + m_r[7] + m_r[8] /*+ m_r[11]*/ + m_r[12]) + r_num/r_denom*(m_r[9] + m_r[10] + m_r[13] + m_r[14])) * site_count / 2.0; 
 	
 	return m_rate;
 	

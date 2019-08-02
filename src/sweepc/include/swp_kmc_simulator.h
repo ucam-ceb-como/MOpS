@@ -127,6 +127,8 @@ namespace Sweep{
 			void savePAH(int PAH_number, const std::string &filename);
 			//! Read PAHs to be tracked through the simulation from file.
 			void readTrackedPAH(const std::string &filename="tracked_pahs.txt");
+			//! Add PAH to the tracked list on the fly.
+			void addTrackedPAH(int PAH_number);
             //! Update structure of PAH after time dt.
             double updatePAH(PAHStructure* pah,         //! structure of pah.
                            const double tstart,       //! start time.

@@ -102,6 +102,8 @@ int main(int argc, char *argv[])
 	int R5_num_Embedded = 0;
 	int R7_num_Lone = 0;
 	int R7_num_Embedded = 0;
+	int num_C = 0;
+	int num_H = 0;
 	std::list<cpair> intCarbons;
     std::string site_savemode = "END";
 
@@ -151,6 +153,10 @@ int main(int argc, char *argv[])
 			R7_num_Lone = (int)Strings::cdble(attr->GetValue());
 			attr = node->GetAttribute("R7_Embedded");
 			R7_num_Embedded = (int)Strings::cdble(attr->GetValue());
+			attr = node->GetAttribute("R7_Embedded");
+			num_C = (int)Strings::cdble(attr->GetValue());
+			attr = node->GetAttribute("R7_Embedded");
+			num_H = (int)Strings::cdble(attr->GetValue());
         }
 
         // get input file names
@@ -244,7 +250,7 @@ int main(int argc, char *argv[])
             if(startStruct != NONE)
                 pahp.initialise(startStruct);
             else
-				pahp.initialise(startStruct_str, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, intCarbons);
+				pahp.initialise(startStruct_str, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, num_C, num_H, intCarbons);
             //pahp.setPAH(*pah[0]);
             std::cout << "Pointer to PAH:"<<pah[i]<<"\n";
             Sweep::rng_type rng2(1+i);
