@@ -189,7 +189,7 @@ public:
     // Reads the object from a binary stream.
     void Deserialize(std::istream &in);
 
-    double CollisionEff(Particle *p1, Particle *p2) const;
+	double CollisionEff(Particle *p1, Particle *p2, const Cell &sys) const;
 
     //! Initialise the Knudsem drag coefficient  calculation
     void SetKnudsenDragConstants(const double A, const double B, const double E);

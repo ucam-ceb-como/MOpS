@@ -5074,11 +5074,13 @@ bool PAHPrimary::MergeCondition()
 			double r_j = m_rightparticle->m_primarydiam / 2.0;
 			double d_ij = m_distance_centreToCentre;
 
-			if (d_ij <= 0.0 ){
+			if (d_ij <= 0.0 ){ 
 			//if (d_ij <= 0.0 || d_ij < 0.5*(r_i + r_j)){
 				//ensures that particles are merged if the sintering step overshoots
 				condition = true;
 			}
+			//else if (r_i*2.0 <= 5.0e-9 || r_j*2.0 <= 5.0e-9)
+			{ condition = true; } //add by hdy; test the effect of coalescence while turn off sintering
 			else{
 				//! Primaries are merged when the neck radius is 95% of the smaller primary radius.
 				//! The second condition ensures that primaries are merged even if sintering overshoots
@@ -5091,7 +5093,7 @@ bool PAHPrimary::MergeCondition()
 			}
 		}
 	}
-	condition = true; //try to force all particle spherical
+	//condition = true; //try to force all particle spherical
 	return condition;
 }
 

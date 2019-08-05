@@ -294,7 +294,7 @@ int Coagulation::WeightedPerform(const double t, const Sweep::PropID prop1,
 		//added by ms785 to include the collision efficiency in the calculation of the rate
 		if (sys.ParticleModel()->AggModel()==AggModels::PAH_KMC_ID)
 		{
-			 ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
+			 ceff=sys.ParticleModel()->CollisionEff(sp1,sp2,sys);
 			 truek*=ceff;
 		}
 

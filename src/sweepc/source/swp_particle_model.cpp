@@ -381,7 +381,7 @@ Sweep::Particle *const ParticleModel::CreateParticle(const double time, const do
  * @param[in]    p1    Particle 1.
  * @param[in]    p2    Particle 2.
  */ 
-double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
+double ParticleModel::CollisionEff(Particle *p1, Particle *p2, const Cell &sys) const
 {
     int ncarbon1, ncarbon2;
     const AggModels::PAHPrimary *pah1 = NULL;
@@ -415,6 +415,9 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
         int target_Rings_Condensation = condensationThreshold();
 
         int nRings1,nRings2;
+		double dc1, dc2, dc;
+		double phi_0, T, Hmk, D_min;
+		double p1, p2, p3, p4;
 
         //! Inception: PAH + PAH = Particle.
         if (pah1->NumPAH() == 1 && pah2->NumPAH() == 1) {
@@ -438,23 +441,38 @@ double ParticleModel::CollisionEff(Particle *p1, Particle *p2) const
         //! Condensation: PAH + Particle (2 >= PAHs) = Particle.
         else if(pah1->NumPAH() > 1 && pah2->NumPAH() == 1){
             nRings2 = (int)(1.0*pah2->NumRings());
-            if (nRings2 >= target_Rings_Condensation) ceffi = 1.0;
+			if (nRings2 >= target_Rings_Condensation) ceffi = 1.0;
             else ceffi = 0;
         }
         else if(pah1->NumPAH() == 1 && pah2->NumPAH() > 1){
             nRings1 = (int)(1.0*pah1->NumRings());
-            if (nRings1 >= target_Rings_Condensation) ceffi = 1.0;
+			if (nRings1 >= target_Rings_Condensation) ceffi = 1.0;
             else ceffi = 0;
         }
         
         //! Coagulation event: Particle + Particle = Particle. All particles are able to coagulate.
         else {
-			/*if (pah1->CollDiameter() < 3.0e-9 || pah2->CollDiameter() < 3.0e-9)
-				ceffi = 0.1;
-			else if (pah1->CollDiameter() < 6.0e-9 || pah2->CollDiameter() < 6.0e-9)
-				ceffi = 0.5;
-			else*/
-				ceffi = 1;
+
+			dc1 = pah1->CollDiameter()*1.0e9; //unit: nm
+			dc2 = pah2->CollDiameter()*1.0e9; //unit: nm
+			dc = (dc1 * dc2) / (dc1 + dc2);
+			
+			//dc = min(dc1,dc2);
+			//Hmk = 7 * pow(10, -20); //unit: J
+			//D_min = 0.388; //unit: nm
+			//phi_0 = Hmk / D_min /12 * dc; //reduced version
+			//phi_0 = (Hmk / 6.0) * ( dc1*dc2/(2.0*D_min*(dc1+dc2+D_min)) + dc1*dc2/(2.0*(dc1+D_min)*(dc2+D_min))
+				//+ log(D_min*(dc1+dc2+D_min)/(dc1+D_min)/(dc2+D_min)));
+
+			p1 = -6.6891e-23;
+			p2 = 1.1244e-21;
+			p3 = 1.1394e-20;
+			p4 = -5.5373e-21;
+			phi_0 = p1*pow(dc, 3) + p2*pow(dc, 2) + p3*pow(dc, 1) + p4;
+			T = sys.GasPhase().Temperature();
+			ceffi = 1 - (1 + phi_0 / (KB*T)) *exp(-phi_0 / (KB*T));
+			
+			//ceffi = 1;
         }
 
         return ceffi;
