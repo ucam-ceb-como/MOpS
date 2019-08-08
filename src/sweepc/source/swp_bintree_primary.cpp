@@ -89,6 +89,7 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_r(0.0),
     m_r2(0.0),
     m_r3(0.0),
+	m_Rg(0.0)
 	m_tracked(false)
 {
     m_cen_bsph[0] = 0.0;
@@ -142,6 +143,7 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_r(0.0),
     m_r2(0.0),
     m_r3(0.0),
+	m_Rg(0.0)
 	m_tracked(false)
 {
     m_cen_bsph[0] = 0.0;
@@ -604,7 +606,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
                 //! abandoned and another trajectory is chosen.
                 if ((newDistance > oldDistance && newDistance > sumr * sumr) || (numberOfOverlaps > 1)) {
                     this->m_leftchild->centreBoundSph();
-                    this->m_leftchild->centreCOM();
+                    //this->m_leftchild->centreCOM();
                     numberOfOverlaps = 0;
                     Overlap = false;
                     break;
@@ -637,15 +639,114 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
             //}
         }
 
+		//////////////////////////////////////////////// DLCA collision
+		////////////////////////////////////////////////
+		/*
+		while (!Overlap) {
+			//! Generate random point on sphere
+			double theta = 2.0 * PI * uniformGenerator();
+			double phi = acos(2.0 * uniformGenerator() - 1.0);
+
+			//! In terms of Cartesian coordinates.
+			double x = cos(theta) * sin(phi);
+			double y = sin(theta) * sin(phi);
+			double z = cos(phi);
+
+			double sumr = m_leftchild->Radius() + m_rightchild->Radius();
+
+			// translate the left child
+			this->m_leftchild->Translate(sumr*x, sumr*y, sumr*z);
+
+			//! The two particles are initially at the origin. Keep doubling
+			//! the distance between them so that they do not overlap. This is
+			//! more efficient than picking an arbitrarily large distance.
+			int numberOfOverlaps = 0;
+			int factorApart = 1;
+			double Separation = 0.0;
+
+			while (this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation)) {
+				this->m_leftchild->Translate(factorApart * x * sumr, factorApart * y * sumr, factorApart * z * sumr);
+				factorApart *= 2;
+			}
+
+			double dx = this->m_leftchild->m_cen_bsph[0];
+			double dy = this->m_leftchild->m_cen_bsph[1];
+			double dz = this->m_leftchild->m_cen_bsph[2];
+
+			double initialDistance = dx * dx + dy * dy + dz * dz;
+
+			numberOfOverlaps = 0;
+
+			//Loop over Brownian steps 
+			while (!Overlap) {
+
+				//Generate a random direction
+				double theta2 = 2.0 * PI * uniformGenerator();
+				double phi2 = acos(2.0 * uniformGenerator() - 1.0);
+
+				//! In terms of Cartesian coordinates.
+				double x2 = cos(theta2) * sin(phi2);
+				double y2 = sin(theta2) * sin(phi2);
+				double z2 = cos(phi2);
+
+				//Brownian step size: this is the average primary size
+				double step_size = m_leftchild->m_primarydiam / m_leftchild->m_numprimary;
+
+				//First take an entire Brownian step
+				this->m_leftchild->Translate(step_size * x2, step_size * y2, step_size * z2);
+				Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
+
+				//If overlap then:
+				if (Overlap == true){
+
+					//Reverse the step
+					this->m_leftchild->Translate(-step_size * x2, -step_size * y2, -step_size * z2);
+					Overlap = false;
+					numberOfOverlaps = 0;
+
+					//Take the Brownian step in small increments
+					unsigned int increment = 0;
+					unsigned int tot_increments = 10;
+					
+					while (Overlap == false && increment < tot_increments){
+
+						//! Translate particle in 10% increments of Brownian step
+						this->m_leftchild->Translate(step_size * x2 / tot_increments, step_size * y2 / tot_increments, step_size * z2 / tot_increments);
+
+						Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
+
+						increment++;
+					}
+				}
+
+				// Get the boundins sphere separation
+				dx = this->m_leftchild->m_cen_bsph[0];
+				dy = this->m_leftchild->m_cen_bsph[1];
+				dz = this->m_leftchild->m_cen_bsph[2];
+
+				double newDistance = dx * dx + dy * dy + dz * dz;
+
+				//! If the left particle has failed to collide with the particle at the
+				//! origin (first condition) i.e. travelled too far in the wrong direction
+				//! or if there are multiple points of overlap (second condition), 
+				//! the trial is abandoned and another trajectory is chosen.
+				if ((newDistance > initialDistance*2) || (numberOfOverlaps > 1)) {
+					this->m_leftchild->centreBoundSph();
+					numberOfOverlaps = 0;
+					Overlap = false;
+					break;
+				}
+			}
+		}
+		*/
+		////////////////////////////////////////////////
+		////////////////////////////////////////////////
+
         double deltax = m_rightparticle->m_cen_bsph[0] - m_leftparticle->m_cen_bsph[0];
         double deltay = m_rightparticle->m_cen_bsph[1] - m_leftparticle->m_cen_bsph[1];
         double deltaz = m_rightparticle->m_cen_bsph[2] - m_leftparticle->m_cen_bsph[2];
 
         m_distance_centreToCentre = sqrt(deltax * deltax + deltay * deltay + deltaz * deltaz);
-
-		//csl37-test
-		assert(m_distance_centreToCentre >= 0.0);
-		//csl37-test
 
         //! Calculate properties of this particle.
         this->calcBoundSph();
@@ -897,7 +998,7 @@ bool BinTreePrimary::particlesOverlap(const Coords::Vector &p1, double r1,
 }
 
 //! Calculates the radius of gyration of a particle.
-double BinTreePrimary::GetRadiusOfGyration() const
+double BinTreePrimary::RadiusOfGyration() const
 {
     double sum=0;
     double mass;
@@ -1053,6 +1154,7 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
     m_sint_time               = source->m_sint_time;
 	m_frame_orient			  = source->m_frame_orient;
 	m_frame_x				  = source->m_frame_x;
+	m_Rg				      = source->m_Rg;
 
     //! Set particles.
     m_leftchild     = source->m_leftchild;
@@ -1956,6 +2058,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
         if (m_parent == NULL) m_avg_sinter = 1.0;
         else m_avg_sinter = 0.0;
         m_numprimary    = 1;
+		m_Rg = 0.0;
         UpdatePrimary();
     }
 
@@ -2039,11 +2142,16 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 
 			}
 
+			//! Radius of gyration
+			m_Rg = RadiusOfGyration();
+
+			//! Mobility diameter
             m_dmob = MobDiameter();
             
         } else {
             m_diam=0;
             m_dmob=0;
+			m_Rg = 0.0;
         }	
 
     }
@@ -3395,6 +3503,9 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
         val = m_r3;
         out.write((char*)&val, sizeof(val));
 
+		val = m_Rg;
+		out.write((char*)&val, sizeof(val));
+
         val = m_children_sintering;
         out.write((char*)&val, sizeof(val));
 
@@ -3554,6 +3665,9 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_r3 = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		m_Rg = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_children_sintering = val;
