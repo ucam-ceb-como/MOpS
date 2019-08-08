@@ -89,7 +89,7 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_r(0.0),
     m_r2(0.0),
     m_r3(0.0),
-	m_Rg(0.0)
+	m_Rg(0.0),
 	m_tracked(false)
 {
     m_cen_bsph[0] = 0.0;
@@ -143,7 +143,7 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_r(0.0),
     m_r2(0.0),
     m_r3(0.0),
-	m_Rg(0.0)
+	m_Rg(0.0),
 	m_tracked(false)
 {
     m_cen_bsph[0] = 0.0;
