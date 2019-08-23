@@ -266,7 +266,13 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //std::ostringstream dotname;
             //dotname << "KMC_DEBUG/p_" << (t_next*1e8) << ".dot";
             //m_simPAHp.saveDOT(dotname.str());
-
+			
+			//Add PAH to tracked list on the fly.
+			if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
+					|| jp_perf.first->getID() == 41 || jp_perf.first->getID() >= 44){
+				addTrackedPAH(PAH_ID); //SETBREAKPOINT
+			}
+			
 			//Save information for a single PAH
 			auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
 			if (finder != m_tracked_pahs.end()){
@@ -275,16 +281,12 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				xyzname.append("/");
 				xyzname.append(std::to_string(m_t*1000.0));
 				xyzname.append("_before");
-				savePAH(PAH_ID, xyzname);
+				savePAH(PAH_ID, xyzname); //SETBREAKPOINT
 				cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
-				m_simPAHp.printSites(); //SETBREAKPOINT
+				m_simPAHp.printSites(); 
 				//printRates(m_t, m_kmcmech.Rates());
 			}
-			//Add PAH to tracked list on the fly.
-			if (jp_perf.second == 23 || jp_perf.second >= 35){
-				addTrackedPAH(PAH_ID); //SETBREAKPOINT
-			}
-			
+
 			m_rxn_count[jp_perf.second]++;
 			writeRxnCountCSV();
 			writeCHSiteCountCSV();
@@ -302,7 +304,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				xyzname.append(std::to_string(PAH_ID));
 				xyzname.append("/");
 				std::string xyzname2 = xyzname;
-				xyzname.append(std::to_string(m_t));
+				xyzname.append(std::to_string(m_t*1000.0));
 				xyzname.append("_after");
 				savePAH(PAH_ID, xyzname);
 				//xyzname2.append(std::to_string(PAH_ID));

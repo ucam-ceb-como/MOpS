@@ -1378,7 +1378,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 	std::list<int>::iterator sn_iter, sn_iter1, sn_iter2;
 	if (detectBonds){
 		for (std::list<Site>::iterator site_it = m_pah->m_siteList.begin(); site_it != m_pah->m_siteList.end(); site_it++) {
-			if ( (int)site_it->type % 10 == 4 ){
+			if ( (int)site_it->type % 10 >= 4 ){
 				Cpointer CR6_1 = site_it->C1;
 				Cpointer CR6_2 = site_it->C2;
 				if (getDistance_twoC (CR6_1,CR6_2) <=2.17){
@@ -1977,12 +1977,16 @@ Spointer PAHProcess::addSite(kmcSiteType stype, Cpointer C_1, Cpointer C_2) {
 //! Changes site type into combined site with R5 (e.g. FE -> RFE)
 void PAHProcess::addR5toSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
     int stype = (int) st->type;
-	stype += 101;
-	if ((kmcSiteType)stype == None) {
-		std::cout << "ERROR: add5RtoSite: illegal site type to add 5R to.\n"; //SETBREAKPOINT
+	int index_change = 101;
+	updateSites(st, Carb1, Carb2, index_change); //SETBREAKPOINT
+	/*if ((kmcSiteType)stype == None) {
+		std::cout << "ERROR: add5RtoSite: illegal site type to add 5R to.\n"; 
 		printSites(st);
 		return;
 	}
+	
+	stype += 101;
+	
 	// removes site from m_pah->m_siteMap (principal site)
 	delSiteFromMap(st->type, st);
 	// change site type
@@ -1991,7 +1995,7 @@ void PAHProcess::addR5toSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
 	m_pah->m_siteMap[st->type].push_back(st);
 	// update member C
 	st->C1 = Carb1;
-	st->C2 = Carb2;
+	st->C2 = Carb2;*/
 
 	/*
     if(stype<5) // i.e. uncombined principal sites (eg FE)
@@ -2017,9 +2021,11 @@ void PAHProcess::addR5toSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
 //! Changes site type into combined site without R5 (e.g. RFE -> FE)
 void PAHProcess::remR5fromSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
     int stype = (int) st->type;
-	stype -= 101;
+	int index_change = -101;
+	updateSites(st, Carb1, Carb2, index_change); //SETBREAKPOINT
+	/*stype -= 101;
 	if ((kmcSiteType)stype == None) {
-		std::cout << "ERROR: rem5RfromSite: illegal site type to remove 5R from.\n"; //SETBREAKPOINT
+		std::cout << "ERROR: rem5RfromSite: illegal site type to remove 5R from.\n"; 
 		printSites(st);
 		return;
 	}
@@ -2031,7 +2037,7 @@ void PAHProcess::remR5fromSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
 	m_pah->m_siteMap[st->type].push_back(st);
 	// update member C
 	st->C1 = Carb1;
-	st->C2 = Carb2;
+	st->C2 = Carb2;*/
 	/*
     if(stype<13 && stype>9) // i.e. principal sites with 5R at both sides (eg RFER)
         stype -= 4;
@@ -2108,7 +2114,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
 		Cpointer Ccheck = st->C1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2004;
 		}
@@ -2117,10 +2123,58 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		}
 		t = (kmcSiteType) stype;
 	}
+	if (stype == 2104 || stype == 2114) {
+		//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
+		Cpointer Ccheck = st->C1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		bool decide_PAH = false;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
+		if(decide_PAH == true){
+			stype = 2114;
+		}
+		else {
+			stype = 2104;
+		}
+		t = (kmcSiteType) stype;
+	}
+	if (stype == 2105 || stype == 2115) {
+		//There are two possible sites R5ZZACR5 and ACR5R5R6ZZ. Decide which one.
+		Cpointer Ccheck = st->C1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		bool decide_PAH = false;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
+		if(decide_PAH == true){
+			stype = 2105;
+		}
+		else {
+			stype = 2115;
+		}
+		t = (kmcSiteType) stype;
+	}
+	if (stype == 2005 || stype == 2015) {
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
+		Cpointer Ccheck = Carb1->C2;
+		Cpointer Ccheck2 = Ccheck->C2;
+		Cpointer Ccheck3 = Carb2->C1;
+		Cpointer Ccheck4 = Ccheck3->C2;
+		bool decide_PAH = false;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
+		if(decide_PAH == true){
+			stype = 2005;
+		}
+		else {
+			stype = 2015;
+		}
+	}
     // removes site from m_pah->m_siteMap (principal site)
     delSiteFromMap(st->type, st);
     // change site type
     st->type = t;
+	if (t == 105 || t == 205 || t ==505 || t ==605 || t == 1005){
+		//Assume an spiral has been formed
+		st->type = SPIRAL;
+	}
 	if (!checkSiteValid(st)) {
 		cout << "Invalid site convSiteType. This may be alright if the edge is unreactive but it may also be an error. \n"; //SETBREAKPOINT
 		printSites(st); 
@@ -2406,6 +2460,36 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			stype = 2014; bulkCchange = 0;
 		}
 	}
+	if (stype == 2104 || stype == 2114) {
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+		//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
+		Cpointer Ccheck = st->C1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		bool decide_PAH = false;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
+		if(decide_PAH == true){
+			stype = 2114; bulkCchange = 0;
+		}
+		else {
+			stype = 2104; bulkCchange = 0;
+		}
+	}
+	if (stype == 2105 || stype == 2115) {
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+		//There are two possible sites R5ZZACR5 and ACR5R5R6ZZ. Decide which one.
+		Cpointer Ccheck = st->C1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		bool decide_PAH = false;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
+		if(decide_PAH == true){
+			stype = 2105; bulkCchange = 0;
+		}
+		else {
+			stype = 2115; bulkCchange = 0;
+		}
+	}
 	if (stype + bulkCchange == 2005 || stype + bulkCchange == 2015) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
@@ -2457,7 +2541,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	}
 	if (!checkSiteValid(stype + bulkCchange)){
 		//There are two options. An invalid transformation or an spiral formation.
-		if ( (stype + bulkCchange)%10 >=7 && (stype + bulkCchange)%10 <=8 ){
+		if ( (stype + bulkCchange)%10 >=5 && (stype + bulkCchange)%10 <=6 ){
 			//The transformation just formed a 7 or 8 member site that will not react further. Transform it into a SPIRAL site.
 			stype = 9999; //SETBREAKPOINT
 			bulkCchange = 0;
@@ -3488,7 +3572,9 @@ bool PAHProcess::checkSiteValid(int type) {
 		case FEZZACR5: return true;
 		case R5ACR5: return true;
 		case R5FEACR5: return true;
+		case ACR5R5R6: return true;
 		case R5ZZACR5: return true;
+		case ACR5R5R6ZZ: return true;
 		case R5ACR5R5: return true;
 		case ACR5RFER: return true;
 		case RAC_FE3: return true;
@@ -3733,6 +3819,10 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			proc_L6_R5ACR5R5(site_perf, site_C1, site_C2); break;
 		case 51:
 			proc_L7_R5ZZACR5(site_perf, site_C1, site_C2); break;
+		case 52:
+			proc_L6_ACR5R5R6(site_perf, site_C1, site_C2); break;
+		case 53:
+			proc_L7_ACR5R5R6ZZ(site_perf, site_C1, site_C2); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -3814,7 +3904,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		filename2.append(std::to_string(perform_process_error_counter));
 		saveXYZ(filename2);
         cout<<"ERROR. Calculated total did not tally with double C counts!\n";
-        cout<<"Last performed process: "<<jp.getName()<<", ID = "<<jp.getID()<<"PAH ID = "<<PAH_ID<<'\n';
+        cout<<"Last process performed: "<<jp.getName()<<", ID = "<<jp.getID()<<", PAH ID = "<<PAH_ID<<'\n';
 		cout<<"R6s = "<<m_pah->m_rings<<", R5s = "<<m_pah->m_rings5_Lone<<" alone + "<<m_pah->m_rings5_Embedded<<" embedded, R7s = "<<m_pah->m_rings7_Embedded<<"\n";
         std::ostringstream msg;
         msg << "\nCalculated total: "<<calc_total<<'\n'
@@ -4087,21 +4177,27 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			new_point = 502;
 			if (ntype1 == 100) {
 				newType = (new_point + ntype2);
+				ntype1 = 0; ntype2 = 0;
 				Spointer S1 = moveIt(stt, -2);
-				int stype1 = (int)S1->type + 400;
+				int stype1 = (int)S1->type;
+				if (stype1 <= 1010) stype1 += 400;
 				convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype1);
 			}
 			else {
 				newType = (new_point + ntype1);
+				ntype1 = 0; ntype2 = 0;
 				Spointer S2 = moveIt(stt, 2);
-				int stype2 = (int)S2->type + 400;
+				int stype2 = (int)S2->type;
+				if (stype2 <= 1010) stype2 += 400;
 				convSiteType(S2, S2->C1, S2->C2, (kmcSiteType)stype2);
 			}
 		}
 		else if (ntype_site == 204) {
 			new_point = 1002; ntype1 = 0; ntype2 = 0;
 			Spointer S1 = moveIt(stt, -2); Spointer S2 = moveIt(stt, 2);
-			int stype1 = (int)S1->type + 400; int stype2 = (int)S2->type + 400;
+			int stype1 = (int)S1->type; int stype2 = (int)S2->type;
+			if (stype1 <= 1010) stype1 += 400;
+			if (stype2 <= 1010) stype2 += 400;
 			convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype1);
 			convSiteType(S2, S2->C1, S2->C2, (kmcSiteType)stype2);
 		}
@@ -4202,10 +4298,18 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				ntype2 = ntype2 % 10;
 			}
 			else {
-				cout << "Error. No R5 or R%R6 neighbour sites to R5FEACR5. \n";
+				cout << "Error. No R5 or R5R6 neighbour sites to R5FEACR5. \n";
 				saveXYZ("KMC_DEBUG/R5FEACR5_error");
 				return;
 			}
+		}
+		else if (ntype_site == 2114 || ntype_site == 2115) {
+			new_point = 2;
+			ntype1 = ntype1;
+			ntype2 = ntype2;
+			newType = (new_point + ntype1 + ntype2);
+			/*if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
+			else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;*/
 		}
 		else if (ntype_site == 2204) {
 			//A site type 2204 has R5 members to both sides.
@@ -7124,6 +7228,7 @@ void PAHProcess::proc_L7_ACACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
 	proc_L6_BY6(stt, C_1, C_2);
+	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
 }
 
@@ -7149,6 +7254,7 @@ void PAHProcess::proc_L7_FEZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
 	proc_L6_BY6(stt, C_1, C_2);
+	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
 }
 
@@ -7353,6 +7459,32 @@ void PAHProcess::proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
 	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
+	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
+	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
+}
+
+// ************************************************************
+// ID52 - ACR5R5R6 closure reaction
+// ************************************************************
+void PAHProcess::proc_L6_ACR5R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
+	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
+	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
+	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
+}
+
+// ************************************************************
+// ID53 - R7 bay closure on ACR5R5R6ZZ
+// ************************************************************
+void PAHProcess::proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
+	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
+	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
+	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
 }
 

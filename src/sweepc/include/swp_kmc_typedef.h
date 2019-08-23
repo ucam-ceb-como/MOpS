@@ -79,7 +79,7 @@ namespace Sweep {
 			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
 			ACR5 = 2002, FEACR5 = 2003, ZZACR5 = 2004, FEACR5FE = 2014, ACACR5 = 2005, FEZZACR5 = 2015,
 			// Armchair with R5 and R5s
-			R5ACR5 = 2103, R5FEACR5 = 2104, R5ZZACR5 = 2105, R5ACR5R5 = 2204, ACR5RFER = 2205, SPIRAL = 9999,
+			R5ACR5 = 2103, R5FEACR5 = 2104, ACR5R5R6 = 2114, R5ZZACR5 = 2105, ACR5R5R6ZZ = 2115, R5ACR5R5 = 2204, ACR5RFER = 2205, SPIRAL = 9999,
 			// Combined Sites
 			None,
 			// Error ID
@@ -200,7 +200,9 @@ namespace Sweep {
 				case FEZZACR5: return "FEZZACR5";
 				case R5ACR5: return "R5ACR5";
 				case R5FEACR5: return "R5FEACR5";
+				case ACR5R5R6: return "ACR5R5R6";
 				case R5ZZACR5: return "R5ZZACR5";
+				case ACR5R5R6ZZ: return "ACR5R5R6ZZ";
 				case R5ACR5R5: return "R5ACR5R5";
 				case ACR5RFER: return "ACR5RFER";
 				case RAC_FE3: return "RAC_FE3";
@@ -247,7 +249,9 @@ namespace Sweep {
 			else if (str == "FEZZACR5") return FEZZACR5;
 			else if (str == "R5ACR5") return R5ACR5;
 			else if (str == "R5FEACR5") return R5FEACR5;
+			else if (str == "ACR5R5R6") return ACR5R5R6;
 			else if (str == "R5ZZACR5") return R5ZZACR5;
+			else if (str == "ACR5R5R6ZZ") return ACR5R5R6ZZ;
 			else if (str == "R5ACR5R5") return R5ACR5R5;
 			else if (str == "ACR5RFER") return ACR5RFER;
             return Inv;
@@ -291,7 +295,9 @@ namespace Sweep {
 			temp.push_back(FEZZACR5);
 			temp.push_back(R5ACR5);
 			temp.push_back(R5FEACR5);
+			temp.push_back(ACR5R5R6);
 			temp.push_back(R5ZZACR5);
+			temp.push_back(ACR5R5R6ZZ);
 			temp.push_back(R5ACR5R5);
 			temp.push_back(ACR5RFER);
             return temp;

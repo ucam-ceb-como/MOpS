@@ -264,7 +264,7 @@ int PAHInception::AddInceptedPAH(const int i, const double t, Cell &sys,rng_type
 double PAHInception::Rate(double t, const Cell &sys,
                         const Geometry::LocalGeometry1d &local_geom) const
 {
-    const double rate = NA * sys.GasPhase().PropertyValue(mPAHFormationIndex) * A();
+    const double rate = NA * sys.GasPhase().PropertyValue(mPAHFormationIndex) * A(); //SETBREAKPOINT
 
     // PAHFormation rate may be negative which means no inception
     if(rate < 0.0)
