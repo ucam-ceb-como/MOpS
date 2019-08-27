@@ -2111,8 +2111,11 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 	//Checks for sites with similar number of R6s and R5s.
 	int stype = (int)t;
 	if (stype == 2004 || stype == 2014) {
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
-		Cpointer Ccheck = st->C1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
 		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
 		if(decide_PAH == true){
@@ -2124,8 +2127,11 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		t = (kmcSiteType) stype;
 	}
 	if (stype == 2104 || stype == 2114) {
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
 		//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
-		Cpointer Ccheck = st->C1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
 		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
 		if(decide_PAH == true){
@@ -2137,8 +2143,11 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		t = (kmcSiteType) stype;
 	}
 	if (stype == 2105 || stype == 2115) {
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
 		//There are two possible sites R5ZZACR5 and ACR5R5R6ZZ. Decide which one.
-		Cpointer Ccheck = st->C1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
 		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
 		if(decide_PAH == true){
@@ -2171,7 +2180,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
     delSiteFromMap(st->type, st);
     // change site type
     st->type = t;
-	if (t == 105 || t == 205 || t ==505 || t ==605 || t == 1005){
+	if ( !checkSiteValid(st) && ( (int)t%10 >= 5 && (int)t%10 <= 7) ){
 		//Assume an spiral has been formed
 		st->type = SPIRAL;
 	}
@@ -2460,12 +2469,12 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			stype = 2014; bulkCchange = 0;
 		}
 	}
-	if (stype == 2104 || stype == 2114) {
+	if (stype + bulkCchange == 2104 || stype + bulkCchange == 2114) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 		//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
-		Cpointer Ccheck = st->C1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
 		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
 		if(decide_PAH == true){
@@ -2475,12 +2484,12 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			stype = 2104; bulkCchange = 0;
 		}
 	}
-	if (stype == 2105 || stype == 2115) {
+	if (stype + bulkCchange == 2105 || stype + bulkCchange == 2115) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 		//There are two possible sites R5ZZACR5 and ACR5R5R6ZZ. Decide which one.
-		Cpointer Ccheck = st->C1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = st->C2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
 		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
 		if(decide_PAH == true){
@@ -4255,11 +4264,11 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			if (ntype1 == 100 || ntype2 == 100){
 				if (ntype1 == 100 && ntype2 == 100) {
 					if (ntype_site == 2104)	{
-						cout << "Error. R5FEACR5 site cannot have R5 sites to both sides";
+						cout << "Error. R5FEACR5 site cannot have R5 sites to both sides.\n";
 						saveXYZ("KMC_DEBUG/R5FEACR5_error");
 					}
 					else {
-						cout << "Error. R5ZZACR5 site cannot have R5 sites to both sides";
+						cout << "Error. R5ZZACR5 site cannot have R5 sites to both sides.\n";
 						saveXYZ("KMC_DEBUG/R5ZZACR5_error");
 					}
 					return;
@@ -5070,6 +5079,7 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateA(C_1->C1, C_2->C2, 'H');*/
     // update sites and neighbours
     convSiteType(stt, C1_res, C2_res, R5);
+	addR5internal(C1_res,C2_res);
     Spointer S1, S2, S3, S4;
     // neighbours
     S1 = moveIt(stt,-1); 
@@ -5084,7 +5094,6 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // add ring counts
     m_pah->m_rings5_Lone++;
-	addR5internal(C1_res,C2_res);
 	if (dist > 2.7){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
@@ -5726,16 +5735,18 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		convSiteType(sFE3, CR5_1, CR5_1->C2, R5); // convert FE3 to R5
 		convSiteType(stt, CR5_1->C2, C_1->C2, RFE); // convert BY5 to RFE
         updateSites(S2, C_1->C2, S2->C2, +1); // add a bulk C to S2
-		updateSites(S1, S1->C1, CR5_1, -1);
-        addR5toSite(S1, S1->C1, S1->C2); // remove a bulk C from S1 and add R5
+		if ((int)S1->type <= 2000) updateSites(S1, S1->C1, CR5_1, -1);
+		addR5internal(CR5_1, CR5_1->C2);
+        addR5toSite(S1, S1->C1, CR5_1); // remove a bulk C from S1 and add R5
     } else {
         S2 = moveIt(sFE3, 1); // neighbour of FE3
         S1 = moveIt(stt, -1); // neighbour of BY5 (stt)
 		convSiteType(sFE3, CR5_1, CR5_1->C2, R5); // convert FE3 to R5
 		convSiteType(stt, C_1->C2, CR5_1, RFE); // convert BY5 to RFE
         updateSites(S1, S1->C1, C_1->C2, +1); // add a bulk C to S1
-		updateSites(S2, CR5_1->C2, S2->C2, -1);
-        addR5toSite(S2, S2->C1, S2->C2); // remove a bulk C from S2 and add R5
+		if ((int)S2->type <= 2000) updateSites(S2, CR5_1->C2, S2->C2, -1);
+		addR5internal(CR5_1, CR5_1->C2);
+        addR5toSite(S2, CR5_1->C2, S2->C2); // remove a bulk C from S2 and add R5
     }
     
     // update H atoms
@@ -5753,7 +5764,6 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     m_pah->m_rings5_Lone++;
     //printSites(stt);
    // cout<<sp.None;
-   addR5internal(CR5_1, CR5_1->C2);
 }
 // ************************************************************
 // ID17- R6 migration & conversion to R5 at BY5 (pyrene+R5; pathway 2-violi; AR24 in Matlab)
@@ -5837,6 +5847,7 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		// convert site
 		if (newType>2005) {
 			//saveDOT(std::string("BY5ClosureProblem.dot"));
+			saveXYZ("BY5ClosureProblem");
 			std::cerr << "ERROR: newType is > 65 (PAHProcess::proc_L5R_BY5)\n";
 		}
 		Spointer Srem1 = moveIt(stt, -1);
@@ -7414,7 +7425,11 @@ void PAHProcess::proc_L6_ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
-	proc_L6_BY6(stt, C_1, C_2);
+	cout << "Printing internal R5 positions:.\n";
+	for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+		cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+	}
+	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 }
 
@@ -7425,6 +7440,10 @@ void PAHProcess::proc_L6_R5FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
+	cout << "Printing internal R5 positions:.\n";
+	for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+		cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+	}
 	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 }
@@ -7436,6 +7455,10 @@ void PAHProcess::proc_L6_FEACR5FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
+	cout << "Printing internal R5 positions:.\n";
+	for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+		cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+	}
 	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 }
@@ -7447,6 +7470,10 @@ void PAHProcess::proc_L6_R5ACR5R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
+	cout << "Printing internal R5 positions:.\n";
+	for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+		cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+	}
 	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 }
@@ -7458,6 +7485,10 @@ void PAHProcess::proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
+	cout << "Printing internal R5 positions:.\n";
+	for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+		cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+	}
 	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
@@ -7470,6 +7501,10 @@ void PAHProcess::proc_L6_ACR5R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
+	cout << "Printing internal R5 positions:.\n";
+	for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+		cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+	}
 	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
@@ -7482,6 +7517,10 @@ void PAHProcess::proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
 	passbackPAH(mol);
+	cout << "Printing internal R5 positions:.\n";
+	for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+		cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+	}
 	proc_L6_BY6(stt, C_1, C_2); //SETBREAKPOINT
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
