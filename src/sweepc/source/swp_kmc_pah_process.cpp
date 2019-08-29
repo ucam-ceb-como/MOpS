@@ -142,6 +142,18 @@ std::tuple <int, int, int> PAHProcess::getRingsCount() const {
 	std::tuple <int, int, int> rings_tuple = std::make_tuple(m_pah->m_rings, m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone + m_pah->m_rings7_Embedded);
 	return rings_tuple;
 }
+
+//! Get R5 embedded count
+int PAHProcess::getR5EmbeddedCount() const{
+	int R5_embedded = m_pah->m_rings5_Embedded;
+	return R5_embedded;
+}
+
+//! Get R7 embedded count
+int PAHProcess::getR7EmbeddedCount() const{
+	int R7_embedded = m_pah->m_rings7_Embedded;
+	return R7_embedded;
+}
 //! Get number of bridges
 int PAHProcess::numberOfBridges() const {
     int num = 0;
@@ -2115,7 +2127,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
-		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
 		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
 		if(decide_PAH == true){
@@ -2131,14 +2143,14 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 		//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
-		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
 		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
 		if(decide_PAH == true){
-			stype = 2114;
+			stype = 2104;
 		}
 		else {
-			stype = 2104;
+			stype = 2114;
 		}
 		t = (kmcSiteType) stype;
 	}
@@ -2457,6 +2469,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	if (stype + bulkCchange == 2102) {
 		stype = 1002; bulkCchange = 0;
 	}
+	if (stype %100 >= 10 && stype != 9999) stype -= 10;
 	if (stype + bulkCchange == 2004 || stype + bulkCchange == 2014) {
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
 		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
@@ -2474,14 +2487,14 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 		//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
-		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
 		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
 		if(decide_PAH == true){
-			stype = 2114; bulkCchange = 0;
+			stype = 2104; bulkCchange = 0;
 		}
 		else {
-			stype = 2104; bulkCchange = 0;
+			stype = 2114; bulkCchange = 0;
 		}
 	}
 	if (stype + bulkCchange == 2105 || stype + bulkCchange == 2115) {
@@ -3283,6 +3296,8 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 		}else if((int)vec[i] >= 1002 && (int)vec[i] <= 1004) {
             bulkC = (int) vec[i] - 1000; site_t = 2;
 		}else if((int)vec[i] >= 2002 && (int)vec[i] <= 2115) {
+            bulkC = (int) vec[i] %10; site_t = 3;
+		}else if((int)vec[i] >= 2204 && (int)vec[i] <= 2205) {
             bulkC = (int) vec[i] %10; site_t = 3;
 		}
 		else {
@@ -4175,30 +4190,33 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
         if(newType>4) {
             //saveDOT(std::string("BY6ClosureProblem.dot"));
             std::cerr<<"ERROR: newType is > 4 (PAHProcess::proc_L6_BY6)\n";
+			saveXYZ("BY6ClosureProblem");
         }
 		convSiteType(stt, stt->C1, stt->C2, (kmcSiteType)4);
         updateSites(stt, moveIt(stt,-1)->C1, moveIt(stt,1)->C2,(newType-4));
     }
     else {
 		int new_point = 0;
-		if (ntype_site == 4) newType = (ntype1 + ntype2 + 2);
+		if (ntype_site == 4) new_point = 2;
 		else if (ntype_site == 104) {
 			new_point = 502;
 			if (ntype1 == 100) {
-				newType = (new_point + ntype2);
-				ntype1 = 0; ntype2 = 0;
+				ntype1 = 0;
 				Spointer S1 = moveIt(stt, -2);
 				int stype1 = (int)S1->type;
 				if (stype1 <= 1010) stype1 += 400;
 				convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype1);
+				if ( ntype2 < 2000) new_point = 502;
+				else new_point = 102;
 			}
 			else {
-				newType = (new_point + ntype1);
-				ntype1 = 0; ntype2 = 0;
+				ntype2 = 0;
 				Spointer S2 = moveIt(stt, 2);
 				int stype2 = (int)S2->type;
 				if (stype2 <= 1010) stype2 += 400;
 				convSiteType(S2, S2->C1, S2->C2, (kmcSiteType)stype2);
+				if ( ntype1 < 2000) new_point = 502;
+				else new_point = 102;
 			}
 		}
 		else if (ntype_site == 204) {
@@ -4225,7 +4243,6 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			else {
 				if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
 				else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;
-				newType = (new_point + ntype1 + ntype2);
 			}
 		}
 		else if (ntype_site == 604) {
@@ -4238,13 +4255,11 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				ntype2 = 0;
 				ntype1 -= 501;
 			}
-			newType = (new_point + ntype1 + ntype2);
 		}
 		else if (ntype_site == 1004) {
 			new_point = 2102;
 			ntype1 = ntype1 % 10;
 			ntype2 = ntype2 % 10;
-			newType = (new_point + ntype1 + ntype2);
 			/*if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
 			else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;*/
 		}
@@ -4252,7 +4267,6 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			new_point = 2;
 			ntype1 = ntype1;
 			ntype2 = ntype2;
-			newType = (new_point + ntype1 + ntype2);
 			/*if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
 			else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;*/
 		}
@@ -4276,16 +4290,28 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				else if (ntype1 == 100){
 					//R5 to the left
 					Spointer S3 = moveIt(S1, -1);
-					updateSites(S3, S3->C1, S3->C2, +400);
-					ntype1 = 502;
-					ntype2 = ntype2;
+					if ((int)S3->type < 2000) updateSites(S3, S3->C1, S3->C2, +400);
+					if ( (int)S2->type < 2000) {
+						ntype1 = 502;
+						ntype2 = ntype2;
+					}
+					else { 
+						ntype1 = 102;
+						ntype2 = ntype2;
+					}
 				}
 				else {
 					//R5 to the right
 					Spointer S4 = moveIt(S2, +1);
-					updateSites(S4, S4->C1, S4->C2, +400);
-					ntype1 = ntype1;
-					ntype2 = 502;
+					if ((int)S4->type < 2000) updateSites(S4, S4->C1, S4->C2, +400);
+					if ( (int)S1->type < 2000) {
+						ntype1 = ntype1;
+						ntype2 = 502;
+					}
+					else { 
+						ntype1 = ntype1;
+						ntype2 = 102;
+					}
 				}
 			}
 			else if ( ((int)S2->type >= 501 && (int)S2->type <= 504)  &&  ((int)S1->type >= 501 && (int)S1->type <= 504) ) {
@@ -4316,7 +4342,6 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			new_point = 2;
 			ntype1 = ntype1;
 			ntype2 = ntype2;
-			newType = (new_point + ntype1 + ntype2);
 			/*if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
 			else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;*/
 		}
@@ -4337,7 +4362,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				}
 				else{
 					Spointer S4 = moveIt(S2, +1);
-					updateSites(S4, S4->C1, S4->C2, +400);
+					if ( (int)S4->type < 2000) updateSites(S4, S4->C1, S4->C2, +400);
 					ntype2 = 100;
 					ntype1 = (ntype1 % 10) + 2002;
 				}
@@ -4349,7 +4374,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				}
 				else{
 					Spointer S3 = moveIt(S1, -1);
-					updateSites(S3, S3->C1, S3->C2, +400);
+					if ( (int)S3->type < 2000) updateSites(S3, S3->C1, S3->C2, +400);
 					ntype1 = 100;
 					ntype2 = (ntype2 % 10) + 2002;
 				}
@@ -4357,13 +4382,13 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			else if (S1->type == R5 || S2->type ==R5){
 				if (S1->type == R5){
 					Spointer S3 = moveIt(S1, -1);
-					updateSites(S3, S3->C1, S3->C2, +400);
+					if ( (int)S3->type < 2000) updateSites(S3, S3->C1, S3->C2, +400);
 					ntype1 = 501;
 				}
 				else ntype1 = ntype1 % 10;
 				if (S2->type == R5){
 					Spointer S4 = moveIt(S2, +1);
-					updateSites(S4, S4->C1, S4->C2, +400);
+					if ( (int)S4->type < 2000) updateSites(S4, S4->C1, S4->C2, +400);
 					ntype2 = 501;
 				}
 				else ntype2 = ntype2 % 10;
@@ -4373,11 +4398,15 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		newType = (new_point + ntype1 + ntype2);
 		/*if (ntype1 >= 501 && ntype1 <= 504) ntype1 -= 501;
 		else if (ntype2 >= 501 && ntype1 <= 504) ntype2 -= 501;*/
-
+		if (newType == 9999 || ntype1 == 9999 || ntype2 == 9999){
+			//Neighbour is a SPIRAL, convert product site in SPIRAL
+			newType = 9999;
+		}
 		if ((kmcSiteType)newType == None) {
 			//saveDOT(std::string("BY6ClosureProblem.dot"));
 			std::cerr << "ERROR: newType is None (PAHProcess::proc_L6_BY6)\n";
 		}
+		
 		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
 
 		/*
@@ -4592,9 +4621,30 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update site stt and new neighbours
     // new neighbours:
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
-	if (isR5internal(C1_new, C2_new, false) ){
-		updateSites(S1, S1->C1, C1_new, -1);
-		updateSites(S2, C2_new, S2->C2, -1);
+	if (isR5internal(C1_new, C2_new, false) || isR5internal(C1_new, C2_new, true) ){
+		//FE3 desorption allows pentagon going to the edge
+		if ( (int)S1->type >= 2000 && (int)S1->type <= 2100 ) updateSites(S1, S1->C1, C1_new, -1901);
+		else if ( (int)S1->type >= 2100 ) {
+			Spointer S3 = moveIt(S1, -1);
+			if ( (int)S3->type == 100) updateSites(S1, S1->C1, C1_new, -1901);
+			else updateSites(S1, S1->C1, C1_new, -1501);
+		}
+		else {
+			cout << "FE3 desorption next to an R5 with wrong neightbour site. S1 site type = " << S1->type << "\n";
+			saveXYZ("KMC_DEBUG/FE3-R5-S1 desorption_error");
+			cout << "Saving file KMC_DEBUG/FE3-R5-S1 desorption_error.\n";
+		}
+		if ( (int)S2->type >= 2000 && (int)S2->type <= 2100 ) updateSites(S2, C2_new, S2->C2, -1901);
+		else if ( (int)S2->type >= 2100 ) {
+			Spointer S4 = moveIt(S2, +1);
+			if ( (int)S4->type == 100) updateSites(S2, C2_new, S2->C2, -1901);
+			else updateSites(S2, C2_new, S2->C2, -1501);
+		}
+		else {
+			cout << "FE3 desorption next to an R5 with wrong neightbour site. S2 site type = " << S2->type << "\n";
+			saveXYZ("KMC_DEBUG/FE3-R5-S2 desorption_error");
+			cout << "Saving file KMC_DEBUG/FE3-R5-S2 desorption_error.\n";
+		}
 		updateSites(stt, C1_new, C2_new, 100);
 	}
 	else {
@@ -5880,6 +5930,10 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		newType = 2104 + ntype1 + ntype2;
 		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
 	}
+	else if (ntype1 == 9999 || ntype2 == 9999){
+		newType = 9999;
+		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
+	}
 	else {
 		int new_point = 0;
 		newType = (ntype1 + ntype2 + 2002);
@@ -6132,7 +6186,15 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Cpointer newC2;
 	cpair CR5_1, CR5_2;
 	cpair vec1, vec2, Hdir1, Hdir2;
-
+	
+	// check if ACR5 has an opposite site.
+	Spointer opp_site, opp_site_second;
+	bool opp_site_bool = false;
+	Cpointer thirdC = findThirdC(C_1->C2);
+	Cpointer thirdC2 = findThirdC(C_1->C2->C2);
+	if (thirdC != NULLC || thirdC2 != NULLC) {
+		opp_site_bool = true;
+	}
 	//if(checkHindrance(stt)) {
 	//    /*cout<<"Site hindered, process not performed.\n"*/ return;}
 	if (!(C_1->C2->bridge) || !(C_2->C1->bridge)) { // check if bulk C in AC site is a bridge
@@ -6190,6 +6252,9 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		updateA(newC2, 'H', Hdir2);
 		updateA(C_2, 'C', Hdir2);
 		//newC2->bondAngle2 = normAngle(newC2->bondAngle1+120);
+		//This makes sure that embedded pentagons does not account this process as embedding
+		m_pah->m_rings5_Lone++;
+		m_pah->m_rings5_Embedded--;
 	}
 	CR5_1 = newC1->coords;
 	CR5_2 = newC2->coords;
@@ -6208,6 +6273,10 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	updateCombinedSites(S1); updateCombinedSites(S2);
 	updateCombinedSites(S3); updateCombinedSites(S4);
 	// add ring counts
+	if (opp_site_bool) {
+		m_pah->m_rings5_Lone++;
+		m_pah->m_rings5_Embedded--;
+	}
 	m_pah->m_rings++;
 	m_pah->m_rings5_Lone--;
 	m_pah->m_rings5_Embedded++;
@@ -6436,6 +6505,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	Cpointer C12 = C_1->C2;
 	if (b4) {
 		S1 = moveIt(sFE2, -1);
+		S2 = moveIt(stt, +1);
 		if ((int)sFE2->type == 0 && (int)S1->type == 0){ //sFE2 is a FE
 			//This means that the pentagon has migrated to the edge. This is handled above.
 			//convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
@@ -6471,6 +6541,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 
 	}
 	else {
+		S1 = moveIt(stt, -1); 
 		S2 = moveIt(sFE2, 1); 
 		if ((int)sFE2->type == 0 && (int)S2->type == 0){ //sFE2 is a FE
 			//This means that the pentagon has migrated to the edge. This is handled above.
@@ -6524,21 +6595,17 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
 		Spointer S1_opp_site = moveIt(opp_site, -1);
 		Spointer S2_opp_site = moveIt(opp_site, +1);
-		/*if ((int)S1_opp_site->type >= 501 && (int)S1_opp_site->type <= 504 ) {
-			updateSites(opp_site, opp_site->C1, opp_site->C2, +400);
-		}
-		else if ((int)S2_opp_site->type >= 501 && (int)S2_opp_site->type <= 504 ) {
-			updateSites(opp_site, opp_site->C1, opp_site->C2, +400);
-		}*/
 		updateCombinedSites(opp_site);
 	}
 	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
 		updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
-		if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
-		else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
-		updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
+		if (opp_site_after != S1 && opp_site_after != S2) {
+			if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
+			else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
+			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
+			updateCombinedSites(opp_site_after);
+		}
 		updateCombinedSites(opp_site);
-		updateCombinedSites(opp_site_after);
 	}
 	else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
 		updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
@@ -6552,14 +6619,18 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	}
 	else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
 		updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -1500);
-		updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
 		updateCombinedSites(opp_site_second);
-		updateCombinedSites(opp_site_after);
+		if (opp_site_after != S1 && opp_site_after != S2) {
+			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
+			updateCombinedSites(opp_site_after);
+		}
 	}
 	else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
-		if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
-		else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
-		updateCombinedSites(opp_site_after);
+		if (opp_site_after != S1 && opp_site_after != S2) {
+			if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
+			else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
+			updateCombinedSites(opp_site_after);
+		}
 	}
 	else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
 		updateSites(opp_site, opp_site->C1, opp_site->C2, -500);

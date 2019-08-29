@@ -312,6 +312,12 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				//m_simPAHp.save_trajectory_xyz(m_t, xyzname2, false);
 			}
 			
+			//Remove PAH from tracked list on the fly.
+			if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
+					|| jp_perf.first->getID() == 41 || jp_perf.first->getID() >= 44){
+				if ( (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount())  < 1) removeTrackedPAH(PAH_ID); //SETBREAKPOINT
+			}
+			
 			// get counts for all site types
 			/*if (PAH_ID == 1 || PAH_ID == 2){
 				std::cout << "PAH_ID: " << PAH_ID << "\t";
@@ -1074,5 +1080,30 @@ void KMCSimulator::addTrackedPAH(int PAH_number){
 		else{
 			std::cout << "Error creating folder " << dir << ". \n Continuing simulation. PAH coordinates may not be saved. \n";
 		}
+	}
+}
+
+//Add PAH to the tracked list on the fly.
+void KMCSimulator::removeTrackedPAH(int PAH_number){
+	// Find PAH_number.
+	auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_number); 
+	if (finder == m_tracked_pahs.end()){
+		std::cout << "Trying to remove PAH number " << PAH_number << ", but it was not found in tracked list. \n";
+	}
+	else{
+		std::cout << "Removing PAH number " << PAH_number << " from tracked list. \n";
+		m_tracked_pahs.erase(finder);
+	}
+	// Check if saving folder exists.
+	std::string dir_path = "KMC_DEBUG/";
+	dir_path.append(std::to_string(PAH_number));
+	boost::filesystem::path dir(dir_path);
+	if (boost::filesystem::exists(dir)){
+		// Folder already existed.
+		std::cout << "Deleting folder " << dir << ". \n";
+		boost::filesystem::remove_all(dir);
+	}
+	else {
+		std::cout << "Trying to remove folder " << dir << ", but it did not exist. Continuing simulation. \n";
 	}
 }

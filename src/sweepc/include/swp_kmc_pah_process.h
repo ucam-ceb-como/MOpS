@@ -127,6 +127,10 @@ public:
     unsigned int getSiteCount(const kmcSiteType& st) const;
     //! Get Ring Counts
     std::tuple <int, int, int> getRingsCount() const;
+	//! Get R5 embedded count
+    int getR5EmbeddedCount() const;
+	//! Get R7 embedded count
+    int getR7EmbeddedCount() const;
     //! Get number of bridges
     int numberOfBridges() const;
     //! Print structure in console

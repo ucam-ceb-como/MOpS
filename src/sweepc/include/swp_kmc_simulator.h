@@ -129,6 +129,8 @@ namespace Sweep{
 			void readTrackedPAH(const std::string &filename="tracked_pahs.txt");
 			//! Add PAH to the tracked list on the fly.
 			void addTrackedPAH(int PAH_number);
+			//! Remove PAH from the tracked list on the fly.
+			void removeTrackedPAH(int PAH_number);
             //! Update structure of PAH after time dt.
             double updatePAH(PAHStructure* pah,         //! structure of pah.
                            const double tstart,       //! start time.

@@ -238,9 +238,9 @@ namespace Sweep {
 			else if (str == "R5R6FER") return R5R6FER;
 			else if (str == "R5R6ZZR") return R5R6ZZR;
 			else if (str == "R5R6ACR") return R5R6ACR;
-			else if (str == "R5R6FER5R6") return R5R6FER;
-			else if (str == "R5R6ZZR5R6") return R5R6ZZR;
-			else if (str == "R5R6ACR5R6") return R5R6ACR;
+			else if (str == "R5R6FER5R6") return R5R6FER5R6;
+			else if (str == "R5R6ZZR5R6") return R5R6ZZR5R6;
+			else if (str == "R5R6ACR5R6") return R5R6ACR5R6;
 			else if (str == "ACR5") return ACR5;
 			else if (str == "FEACR5") return FEACR5;
 			else if (str == "ZZACR5") return ZZACR5;
@@ -254,6 +254,7 @@ namespace Sweep {
 			else if (str == "ACR5R5R6ZZ") return ACR5R5R6ZZ;
 			else if (str == "R5ACR5R5") return R5ACR5R5;
 			else if (str == "ACR5RFER") return ACR5RFER;
+			else if (str == "SPIRAL") return SPIRAL;
             return Inv;
         }
         //! Get a vector of all site types
