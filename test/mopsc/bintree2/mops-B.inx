@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mops version="2">
+  
+  <!-- Default parameters (can be overidden). --> 
+  <runs>2</runs>
+  <iter>1</iter>
+  <atol>1.0e-14</atol> 
+  <rtol>1.0e-3</rtol>
+  <pcount>512</pcount>
+  <maxm0>1.0e10</maxm0>
+  <relax>0.5</relax>
+  
+  <!-- Reactor definition (given initial conditions). -->
+  <reactor type="batch" constt="true" id="Test_System" units="mol/mol">
+    <component id="AR">1.00</component>
+    <temperature units="K">1000.0</temperature>
+    <pressure units="bar">1.0</pressure>
+	<doubling enable="true"/>
+    <population>
+      <particle count="512">
+        <component id="Rutile" dx="100"/>
+      </particle>
+      <m0>1.0e16</m0>
+    </population>
+  </reactor>
+  
+  <!-- Output time sequence. -->
+  <timeintervals splits="1">
+    <start>0.0</start>
+    <time steps="100" splits="1">1.0</time>
+	<time steps="500" splits="1">1.1</time>
+  </timeintervals>
+  
+  <!-- Simulation output settings. -->
+  <output>
+	<!-- Write full binary tree -->
+	<writebintree enable="true"/>
+  
+    <statsbound property="dcol">
+      <lower>0.0</lower>
+      <upper>1.0e30</upper>
+    </statsbound>
+
+    <console interval="1" msgs="true">
+      <tabular>
+        <column fmt="sci">time</column>
+        <column fmt="float">#sp</column>
+        <!--column fmt="sci">T</column-->
+        <column fmt="sci">M0</column>
+        <column fmt="sci">M1</columns>
+      </tabular>
+    </console>
+    
+    <!-- File name for output (excluding extensions). -->
+    <filename>bintreeB</filename>
+  </output>
+</mops>
