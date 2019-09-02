@@ -274,7 +274,7 @@ public:
         double wt     // Statistical weight
         );
 	
-	//csl37: get primary coords
+	// Get primary coords
 	virtual void GetPrimaryCoords(std::vector<fvector> &coords) const;
 
     // READ/WRITE/COPY.

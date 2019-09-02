@@ -4752,10 +4752,6 @@ void PAHPrimary::SumCaps(PAHPrimary *prim, double &CapAreas, double &CapVolumes,
 		//! Calculate cap volume and add to sum
 		CapVolumes += M_PI * (2 * pow(r_i, 3.0) + pow(x_ij, 3.0) - 3.0*pow(r_i, 2.0)*x_ij) / 3.0;
 
-		//csl37-test
-		assert(CapVolumes >= -1e-30);
-		//csl37-test
-
 		//! Neck area * r_i / x_ij
 		SumNecks += abs(M_PI*(r_i*r_i - x_ij*x_ij) * r_i / x_ij);
 
@@ -5036,9 +5032,7 @@ void PAHPrimary::AdjustPrimary(double V1, double d_ij, PAHPrimary *prim_ignore)
 		//! change in volume (exclude contribution from merging neck)
 		double dV = dr_max * (m_free_surf + 2.0*M_PI*(r_i*r_i - r_i*x_i) + max(m_sum_necks - abs(M_PI*(r_i*r_i - x_i*x_i)*r_i / x_i), 0.0));
 
-		//csl37-test
 		assert(dV > 0.0);
-		//csl37-test
 
 		//! change in radius
 		if (V0 + dV > V1){
@@ -5048,10 +5042,8 @@ void PAHPrimary::AdjustPrimary(double V1, double d_ij, PAHPrimary *prim_ignore)
 			dr_i = dr_max;
 		}
 
-		//csl37-test
 		assert(dr_i > 0.0);
 		assert(dr_i <= 1.1*dr_max);
-		//csl37-test
 
 		//! Update the particle separations ignoring the smaller primary
 		if (m_parent != NULL) UpdateConnectivity(this, dr_i, prim_ignore);
@@ -5264,10 +5256,8 @@ double PAHPrimary::AddNeighbour(double A_n_k, PAHPrimary *small_prim, PAHPrimary
 			//! re-calculate change in radis
 			dr_i = B_ik * dx_i;
 
-			//csl37-test
 			assert(dx_i <= 0.0);
 			assert(dr_i >= 0.0);
-			//csl37-test
 		}
 		else{
 			dx_i = dx_max;
