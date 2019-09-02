@@ -551,6 +551,16 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         string str = (*i)->GetAttributeValue("id");
         if (str != "") {
             comp->SetName(str);
+			
+			// Applies to flamepp:
+			// If any component is soot and the postprocessingtype is not wdotA4 
+			// then set postprocessingtype to XA4 (the default type is concentration).
+			// Note: this assumes that all soot simulations have a component id "soot",
+			// otherwise the generic mechanism is used. 
+			if (str == "soot" && mech.Postprocessing() != Sweep::ParticleModel::wdotA4){
+				mech.setPostprocessingType(Sweep::ParticleModel::XA4);
+			}
+
         } else {
             // Component must have an id!
             delete comp;
