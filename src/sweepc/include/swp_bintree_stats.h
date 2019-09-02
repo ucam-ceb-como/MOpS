@@ -107,9 +107,8 @@ public:
         unsigned int start = 0          // Optional start index for the first variable.
         ) const;
 
-	////////////////////////////////////////////// csl37-pp
+	//! Return primary particle details and connectivity
 	void PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const;
-	//////////////////////////////////////////////
 
     // READ/WRITE/COPY
     //! Creates a copy of the object.

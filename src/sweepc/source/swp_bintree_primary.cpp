@@ -3860,7 +3860,6 @@ void BinTreePrimary::TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u,
 	}
 }
 
-////////////////////////////////////////////////////////////////////////csl37-pp
 /*!
  *  Print primary particle details and connectivity
  *
@@ -3882,7 +3881,7 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 		primary[4] = m_vol;
 		primary[5] = m_free_surf;
 		vector<fvector> coords;
-		this->GetPriCoords(coords);
+		this->GetPriCoords(coords); //get primary coodinates
 		primary[6] = coords[0][0];
 		primary[7] = coords[0][1];
 		primary[8] = coords[0][2];
@@ -3890,7 +3889,7 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 
 		primary_diameter.push_back(primary);
 		
-		if (m_parent == NULL){	//single particle case
+		if (m_parent == NULL){	//connectivity information for single primary case
 			node[0] = k+1;
 			node[1] = m_numprimary;
 			node[2] = 0.0;
@@ -3899,7 +3898,8 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 			node[5] = 0.0;
 			node[6] = m_primarydiam/2.0;
 			node[7] = 0.0;
-			node[8] = reinterpret_cast<uintptr_t>(this);	//print pointer
+			//print pointer to this primary as integer (assume this a unique id to the primary)
+			node[8] = reinterpret_cast<uintptr_t>(this);	
 			node[9] = 0.0;
 
 			surface.push_back(node);
@@ -3922,11 +3922,14 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 		node[5] = R_ij;
 		node[6] = r_i;
 		node[7] = r_j;
-		node[8] = reinterpret_cast<uintptr_t>(m_leftparticle);	//print pointer
-		node[9] = reinterpret_cast<uintptr_t>(m_rightparticle);	//print pointer
-		
+		//print pointer to left primary as integer (assume this a unique id to the primary)
+		node[8] = reinterpret_cast<uintptr_t>(m_leftparticle);	
+		//print pointer to right primary as integer (assume this a unique id to the primary)
+		node[9] = reinterpret_cast<uintptr_t>(m_rightparticle);	
+
 		surface.push_back(node);
 		
+		//continue down binary tree
 		m_leftchild->PrintPrimary(surface, primary_diameter, k);
 		m_rightchild->PrintPrimary(surface, primary_diameter, k);
 	}

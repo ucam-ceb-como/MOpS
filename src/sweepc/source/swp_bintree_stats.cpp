@@ -486,7 +486,7 @@ void BinTreeStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mod
     }
 }
 
-/////////////////////////////////////////////////// csl37-pp
+// Return primary particle details and connectivity
 void BinTreeStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const
 {
     const AggModels::BinTreePrimary* const prim =
@@ -496,4 +496,3 @@ void BinTreeStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> 
         prim->PrintPrimary(nodes, primaries, k);
     }
 }
-//////////////////////////////////////////////////
