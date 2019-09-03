@@ -63,6 +63,7 @@ using namespace Strings;
 FlameSolver::FlameSolver()
 {
 	m_stagnation = false;
+	m_endconditions = false;
 }
 
 //! Copy constructor
@@ -79,6 +80,12 @@ FlameSolver *const FlameSolver::Clone() const {
 // Default destructor.
 FlameSolver::~FlameSolver()
 {
+}
+
+// Set the end conditions flag
+void FlameSolver::SetEndConditions(bool val)
+{
+	m_endconditions = val;
 }
 
 // PROFILE INPUT.
@@ -437,7 +444,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         //save the old gas phase mass density
 		old_dens = r.Mixture()->GasPhase().MassDensity();
 
-        // Update the chemical conditions.
+        // Update the chemical conditions to time t.
         const double gasTimeStep = linInterpGas(t, r.Mixture()->GasPhase());
 		
 		//save conditions for stagnation flame correction
@@ -452,6 +459,26 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         // Scale particle M0 according to gas-phase expansion.
         // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
 			r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
+		}
+
+		//! impose from the end of the time step
+		if (m_endconditions == true){
+			//update gas-phase conditions to right end point
+			linInterpGas(tstop, r.Mixture()->GasPhase());
+			//save new conditions
+			double u_new = r.Mixture()->GasPhase().GetConvectiveVelocity();
+			double v_new = r.Mixture()->GasPhase().GetThermophoreticVelocity();
+			double rho_new = r.Mixture()->GasPhase().MassDensity();
+			//apply sample volume adjustment now
+			if (m_stagnation == true){
+				//calculate correction
+				double scale_factor = 1.0;
+				if (t > 0.0) {
+					scale_factor = 1.0 + (v_new - v_old - u_new*(rho_new - rho_old) / rho_new) / (u_new + v_new); //no diffusion term
+				}
+				//adjust sample volume
+				r.Mixture()->AdjustSampleVolume(scale_factor);
+			}
 		}
 
         //! Tried and tested only for the PAH-PP/KMC-ARS model, binary tree and
@@ -500,8 +527,12 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates); 
 
         // Calculate the splitting end time.
-        tsplit = calcSplitTime(t, std::min(t + std::min(dtg, gasTimeStep), tstop), jrate, r.Mixture()->ParticleWeightSum());
-		//tsplit = tstop;
+		if (m_endconditions == true){
+			//enforce single split
+			tsplit = tstop;
+		} else{
+			tsplit = calcSplitTime(t, std::min(t + std::min(dtg, gasTimeStep), tstop), jrate, r.Mixture()->ParticleWeightSum());
+		}
 
         //std::cout << "At time " << t << " split time is " << tsplit << ", spacing of gas data is " << gasTimeStep << '\n';
 
@@ -529,7 +560,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
         r.SetTime(t);
 
 		//! sample volume adjustment with stagnation flame correction
-		if(m_stagnation == true){
+		if(m_stagnation == true && m_endconditions == false){
 			//interpolate gas-phase conditions to t
 			linInterpGas(t, r.Mixture()->GasPhase());
 			double u_new = r.Mixture()->GasPhase().GetConvectiveVelocity();

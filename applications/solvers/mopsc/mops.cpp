@@ -75,7 +75,9 @@ int main(int argc, char* argv[])
     bool fwdotA4(false);    //!< Should postprocess based on the molar rate of
                             //!< production by chemical reaction of the
                             //!< inception species?
-
+	bool fendpoint(false);		//! If using flamepp, should the 
+								//! conditions at the end of the time step be 
+								//! imposed over the time step?
     try {
 
         // Generic options for the program
@@ -127,6 +129,7 @@ int main(int argc, char* argv[])
 		("ppri", "write full primary particle data")
         ("jumps", "write stochastic jumps data")
         ("wdotA4", "postprocess based on the molar rate of production by chemical reaction of the inception species")
+		("endpoint", "postprocess using timestep endpoint conditions")
         ;
 
         // Combine sets of program options
@@ -195,6 +198,7 @@ int main(int argc, char* argv[])
         if (vm.count("jumps")) fjumps = true;
         if (vm.count("ensemble")) fensembles = true;
         if (vm.count("wdotA4")) fwdotA4 = true;
+		if (vm.count("endpoint")) fendpoint = true;
     }
 
     // Display any error messages from incorrect command-line flags
@@ -279,8 +283,12 @@ int main(int argc, char* argv[])
 
     try {
         // Load the gas profile for flamepp calculations
-        if (soltype == Mops::FlamePP)
-            dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gpfile, mech);
+		if (soltype == Mops::FlamePP){
+			dynamic_cast<Sweep::FlameSolver*>(solver)->LoadGasProfile(gpfile, mech);
+			
+			// set endconditions flag
+			dynamic_cast<Sweep::FlameSolver*>(solver)->SetEndConditions(fendpoint);
+		}
 
     } catch (std::logic_error &le) {
         std::cerr << "mops: Failed to read chemical profile due to bad inputs. Message:\n"
