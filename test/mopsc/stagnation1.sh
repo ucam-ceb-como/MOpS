@@ -82,12 +82,12 @@ line1=(`echo $csvline1 | tr ',' '\n'`)
 m0=${line1[4]}
 echo "Checking M0..."
 CheckValues $m0True $m0 $m0err
-Dc=${line1[20]}
+mass=${line1[20]}
 echo "Checking Mass..."
-CheckValues $DcTrue $Dc $Dcerr
-np=${line1[24]}
+CheckValues $massTrue $mass $masserr
+mass2=${line1[24]}
 echo "Checking Mass2..."
-CheckValues $npTrue $np $nperr
+CheckValues $mass2True $mass2 $mass2err
 
 rm -f Z1*
 
