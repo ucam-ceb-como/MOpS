@@ -105,9 +105,9 @@ public:
 
 	// DATA ACCESS METHODS
 
-	void EnableFixedCrossover();
+	void EnableCrossover();
 
-	bool IsEnableFixedCrossover() const;
+	bool IsEnableCrossover() const;
 
 	void AddPhase(std::string name, double A, double T, double dmin,
 		double dmax, std::vector<fvector> ddcomp, unsigned int iid);
@@ -126,7 +126,7 @@ private:
     bool m_enable;
 
 	// fixed crossover flag
-	bool m_fixedcrossover;
+	bool m_crossover;
 
 	//Get highed melting temperature
 	double MeltingTemp(const AggModels::Primary &p) const;

@@ -776,6 +776,26 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             }
         }
 
+		//Phase
+
+		//get the phase the component belongs to
+		el = (*i)->GetFirstChild("phase");
+		if (el != NULL) {
+			str = el->Data();
+			if (str != "") {
+				comp->SetPhase(str);
+			}
+		}
+
+		//get the element the component belongs to
+		el = (*i)->GetFirstChild("element");
+		if (el != NULL) {
+			str = el->Data();
+			if (str != "") {
+				comp->SetElement(str);
+			}
+		}
+
         // Add component to mechanism.
         mech.AddComponent(*comp);
     }
@@ -1863,11 +1883,11 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 				//enable melting
 				mech.MeltModel().Enable();
 
-				//is a fixed crossover size specified?
+				//is a crossover size specified?
 				el = (*i)->GetFirstChild("crossover");
 				if (el != NULL) {
 					str = el->GetAttributeValue("enable");
-					if (str == "true") mech.MeltModel().EnableFixedCrossover();
+					if (str == "true") mech.MeltModel().EnableCrossover();
 				}
 
 				//loop over phases
@@ -1909,7 +1929,7 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 					if (el != NULL) T = cdble(el->Data());
 					
 					//if the crossover size is fixed then get the range of diameters for the liquid -> crystal phase transformation
-					if (mech.MeltModel().IsEnableFixedCrossover()){
+					if (mech.MeltModel().IsEnableCrossover()){
 						el = (*j)->GetFirstChild("dmin");
 						if (el != NULL) {
 							dmin = cdble(el->Data());

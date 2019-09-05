@@ -1,4 +1,4 @@
-/*
+ /*
   Author(s):      Matthew Celnik (msc37)
   Project:        sweepc (population balance solver)
   Sourceforge:    http://sourceforge.net/projects/mopssuite
@@ -55,7 +55,7 @@ using namespace Sweep::Processes;
 
 // Default constructor.
 MeltingModel::MeltingModel()
-	: m_enable(false), m_fixedcrossover(false)
+	: m_enable(false), m_crossover(false)
 {
 }
 
@@ -84,7 +84,7 @@ MeltingModel &MeltingModel::operator=(const Sweep::Processes::MeltingModel &rhs)
 {
     if (this != &rhs) {		// TODO change this
         m_enable = rhs.m_enable;
-		m_fixedcrossover = rhs.m_fixedcrossover;
+		m_crossover = rhs.m_crossover;
 
 		// Copy phases.
 		for (PhasePtrVector::const_iterator i = rhs.m_phases.begin();i != rhs.m_phases.end(); ++i) {
@@ -166,7 +166,7 @@ void MeltingModel::AddPhase(std::string name, double A, double T,
 	
 	PHASE *new_phase = NULL;
 
-	if (!m_fixedcrossover){	// If not using a fixed cross size
+	if (!m_crossover){	// If not using a fixed cross size
 		dmin = 0.0;	
 		dmax = 1.0e30;	// some large number
 	}
@@ -221,8 +221,8 @@ void MeltingModel::CompositionChange(const Cell &sys, const AggModels::Primary &
 
 	//loop over phases
 	PhasePtrVector::const_iterator i;
-	if (m_fixedcrossover){
-		//fixed crossover size
+	if (m_crossover){
+		// crossover size specified
 		for (i = m_phases.begin(); i != m_phases.end(); ++i) {
 			if (dp > (*i)->dmin && dp <= (*i)->dmax)
 			{
@@ -279,13 +279,13 @@ bool MeltingModel::IsLiquid(const Cell &sys, const AggModels::Primary &p) const{
 }
 
 //enable fixed crossover diameter
-void MeltingModel::EnableFixedCrossover(){
-	m_fixedcrossover = true;
+void MeltingModel::EnableCrossover(){
+	m_crossover = true;
 }
 
 //return if fixed crossover diameter is enabled
-bool MeltingModel::IsEnableFixedCrossover() const{
-	return m_fixedcrossover;
+bool MeltingModel::IsEnableCrossover() const{
+	return m_crossover;
 }
 
 // READ/WRITE/COPY.
@@ -317,7 +317,7 @@ void MeltingModel::Serialize(std::ostream &out) const
         }
 
 		// Write if fixed crossover is enabled
-		if (m_fixedcrossover) {
+		if (m_crossover) {
 			out.write((char*)&trueval, sizeof(trueval));
 		}
 		else {
@@ -423,7 +423,7 @@ void MeltingModel::Deserialize(std::istream &in)
 
 				// Read if fixed crossover is enabled
 				in.read(reinterpret_cast<char*>(&n), sizeof(n));
-				m_fixedcrossover = (n == 1);
+				m_crossover = (n == 1);
 
 				//Read number of melting transformations
 				unsigned int an;
