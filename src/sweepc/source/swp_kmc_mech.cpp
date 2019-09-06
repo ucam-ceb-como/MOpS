@@ -163,8 +163,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //*< 32 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //*< 33 - R6 desorption at RAC -> pyrene.
 	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //*< 34 - R5 exchange with R6.
-	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //*< 35 - R7 growth in an embedded R5.
-	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //*< 36 - R7 growth in an embedded R5-2.
+	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //*< 35 - R7 growth on R5R6AC.
+	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //*< 36 - R7 growth on FEACR5.
 	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();                        //*< 37 - R6 growth on R5R6ZZ.
 	JumpProcess* j_L7_ACACR5 = new L7_ACACR5; j_L7_ACACR5->initialise();                        //*< 38 - R7 bay closure on ACACR5.
 	JumpProcess* j_G6R_R5R6FER = new G6R_RFER; j_G6R_R5R6FER->initialise();                       //*< 39 - R6 growth on RFER.
@@ -218,8 +218,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_C6R_RAC_FE3violi); //*< 32 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_M6R_RAC_FE3);      //*< 33 - R6 desorption at RAC -> pyrene.
 	temp.push_back(j_MR5_R6);           //*< 34 - R5 exchange with R6.
-	temp.push_back(j_GR7_R5R6AC);           //*< 35 - R7 growth in an embedded R5.
-	temp.push_back(j_GR7_FEACR5);           //*< 36 - R7 growth in an embedded R5-2.
+	temp.push_back(j_GR7_R5R6AC);           //*< 35 - R7 growth on R5R6AC.
+	temp.push_back(j_GR7_FEACR5);           //*< 36 - R7 growth on FEACR5.
 	temp.push_back(j_G6R_R5R6ZZ);          //*< 37 - R6 growth on R5R6ZZ.
 	temp.push_back(j_L7_ACACR5);          //*< 38 - R7 bay closure on ACACR5.
 	temp.push_back(j_G6R_R5R6FER);         //*< 39 - R6 growth on RFER.
@@ -3502,7 +3502,7 @@ void GR7_R5R6AC::initialise() {
 	//addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
 
 	m_sType = R5R6AC; // sitetype
-	m_name = "R7 growth in an embedded R5"; // name of process
+	m_name = "R7 growth on R5R6AC"; // name of process
 	m_ID = 35;
 }
 
@@ -3598,7 +3598,7 @@ void GR7_FEACR5::initialise() {
 	//addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
 	//addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
 	m_sType = FEACR5; // sitetype
-	m_name = "R7 growth in an embedded R5-2"; // name of process
+	m_name = "R7 growth on FEACR5"; // name of process
 	m_ID = 36;
 }
 
