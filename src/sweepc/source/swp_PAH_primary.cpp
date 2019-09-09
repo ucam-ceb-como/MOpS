@@ -5080,7 +5080,7 @@ bool PAHPrimary::MergeCondition()
 				condition = true;
 			}
 			//else if (r_i*2.0 <= 5.0e-9 || r_j*2.0 <= 5.0e-9)
-			{ condition = true; } //add by hdy; test the effect of coalescence while turn off sintering
+			//{ condition = true; } //add by hdy; test the effect of coalescence while turn off sintering
 			else{
 				//! Primaries are merged when the neck radius is 95% of the smaller primary radius.
 				//! The second condition ensures that primaries are merged even if sintering overshoots
