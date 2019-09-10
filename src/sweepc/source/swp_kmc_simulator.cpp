@@ -269,7 +269,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			
 			//Add PAH to tracked list on the fly.
 			if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
-					|| jp_perf.first->getID() == 41 || jp_perf.first->getID() >= 44){
+					|| jp_perf.first->getID() == 41 || jp_perf.first->getID() >= 44 || std::get<0>(m_simPAHp.getRingsCount()) >= 20){
 				addTrackedPAH(PAH_ID); //SETBREAKPOINT
 			}
 			
