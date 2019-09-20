@@ -156,6 +156,8 @@ namespace Sweep{
             std::vector<int> ReactionCounts() const; 
 			//! list of PAHs to output coordinates and trajectory
 			std::list<int> m_tracked_pahs;
+			//! list of PAHs to output coordinates and trajectory
+			std::list<int> m_tracked_pahs_fixed;
             //! CSV input filename
              std::string m_csv_in;
             //! DOT output filename

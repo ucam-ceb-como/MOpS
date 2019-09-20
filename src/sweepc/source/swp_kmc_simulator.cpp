@@ -268,10 +268,10 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //m_simPAHp.saveDOT(dotname.str());
 			
 			//Add PAH to tracked list on the fly.
-			if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
-					|| jp_perf.first->getID() == 41 || jp_perf.first->getID() >= 44 || std::get<0>(m_simPAHp.getRingsCount()) >= 20){
-				addTrackedPAH(PAH_ID); //SETBREAKPOINT
-			}
+			int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
+			if (R5R7 > 1 && std::get<0>(m_simPAHp.getRingsCount()) >= 20) addTrackedPAH(PAH_ID); 	
+			else if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
+					|| jp_perf.first->getID() == 41 || jp_perf.first->getID() >= 44 ) addTrackedPAH(PAH_ID); 
 			
 			//Save information for a single PAH
 			auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
@@ -281,7 +281,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				xyzname.append("/");
 				xyzname.append(std::to_string(m_t*1000.0));
 				xyzname.append("_before");
-				savePAH(PAH_ID, xyzname); //SETBREAKPOINT
+				savePAH(PAH_ID, xyzname); 
 				cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
 				m_simPAHp.printSites(); 
 				//printRates(m_t, m_kmcmech.Rates());
@@ -313,11 +313,14 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			}
 			
 			//Remove PAH from tracked list on the fly.
-			if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
+			R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
+			if (R5R7 < 1 && std::get<0>(m_simPAHp.getRingsCount()) <= 20) {
+				if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
 					|| jp_perf.first->getID() == 41 || jp_perf.first->getID() >= 44){
-				if ( (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount())  < 1) removeTrackedPAH(PAH_ID); //SETBREAKPOINT
+					removeTrackedPAH(PAH_ID);
+				}
 			}
-			
+						
 			// get counts for all site types
 			/*if (PAH_ID == 1 || PAH_ID == 2){
 				std::cout << "PAH_ID: " << PAH_ID << "\t";
@@ -1050,6 +1053,7 @@ void KMCSimulator::readTrackedPAH(const std::string &filename){
 	int PAH_number;
 	while (src >> PAH_number){
 		addTrackedPAH(PAH_number);
+		m_tracked_pahs_fixed.push_back(PAH_number);
 		//m_tracked_pahs.push_back(PAH_number);
 	}
 }
@@ -1091,8 +1095,12 @@ void KMCSimulator::removeTrackedPAH(int PAH_number){
 		std::cout << "Trying to remove PAH number " << PAH_number << ", but it was not found in tracked list. \n";
 	}
 	else{
-		std::cout << "Removing PAH number " << PAH_number << " from tracked list. \n";
-		m_tracked_pahs.erase(finder);
+		//Checks that PAH is not in the fixed tracked PAH list.
+		auto fix_finder = std::find(std::begin(m_tracked_pahs_fixed), std::end(m_tracked_pahs_fixed), PAH_number); 
+		if (fix_finder == m_tracked_pahs_fixed.end()){
+			std::cout << "Removing PAH number " << PAH_number << " from tracked list. \n";
+			m_tracked_pahs.erase(finder);
+		}
 	}
 	// Check if saving folder exists.
 	std::string dir_path = "KMC_DEBUG/";

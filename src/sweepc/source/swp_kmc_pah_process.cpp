@@ -1604,8 +1604,8 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			++it_R6pairs2;
 		}
 		
-		//Checks hydrogen bonds
-		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
+		//Checks hydrogen bonds //NEEDS DEBUGGING. NOT COMPLETE.
+		/*for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
 			if (a->GetAtomicNum() == 1){
 				OpenBabel::OBBond* my_bond = mol.GetBond(a->GetIdx(), a->GetIdx() - 1);
 				if (my_bond == NULL){
@@ -1616,10 +1616,10 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					mol.AddBond(a->GetIdx(), a->GetIdx() - 1,5);
 				}
 			}
-		}
+		}*/
 		
-		//Checks for sp3 carbon
-		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
+		//Checks for sp3 carbon //NEEDS DEBUGGING. NOT COMPLETE.
+		/*for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
 			if (a->GetAtomicNum() == 6 && a->GetValence() >= 4){
 				OpenBabel::OBAtomAtomIter wrong_nbr; //SETBREAKPOINT
 				double maxdist = 0.1;
@@ -1633,8 +1633,9 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 				OpenBabel::OBBond* my_bond_del = mol.GetBond(a->GetIdx(), wrong_nbr->GetIdx());
 				mol.DeleteBond(my_bond_del);
 			}
-		}
-		//Assign aromatic bond orders to all bonds.
+		}*/
+		
+		//Assign aromatic bond orders to all bonds. //NOT WORKING. DO NOT USE.
 		/*for (OpenBabel::OBBondIterator bond_iter=mol.BeginBonds(); bond_iter != mol.EndBonds(); bond_iter++){
 			OpenBabel::OBBond* my_bond = *bond_iter;
 			int BOrder = my_bond->GetBO();
@@ -2097,7 +2098,7 @@ Spointer PAHProcess::addSite(kmcSiteType stype, Cpointer C_1, Cpointer C_2) {
 void PAHProcess::addR5toSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
     int stype = (int) st->type;
 	int index_change = 101;
-	updateSites(st, Carb1, Carb2, index_change); //SETBREAKPOINT
+	updateSites(st, Carb1, Carb2, index_change); 
 	/*if ((kmcSiteType)stype == None) {
 		std::cout << "ERROR: add5RtoSite: illegal site type to add 5R to.\n"; 
 		printSites(st);
@@ -2141,7 +2142,7 @@ void PAHProcess::addR5toSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
 void PAHProcess::remR5fromSite(Spointer& st, Cpointer Carb1, Cpointer Carb2) {
     int stype = (int) st->type;
 	int index_change = -101;
-	updateSites(st, Carb1, Carb2, index_change); //SETBREAKPOINT
+	updateSites(st, Carb1, Carb2, index_change); 
 	/*stype -= 101;
 	if ((kmcSiteType)stype == None) {
 		std::cout << "ERROR: rem5RfromSite: illegal site type to remove 5R from.\n"; 
@@ -8171,7 +8172,9 @@ void PAHProcess::proc_L6_ACR5R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 		m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	}
-	else if (opp_site_bool == 1) m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
+	else if (opp_site_bool == 1) {
+		m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
+	}
 }
 
 // ************************************************************
@@ -8226,7 +8229,9 @@ void PAHProcess::proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 		m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	}
-	else if (opp_site_bool == 1) m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
+	else if (opp_site_bool == 1) {
+		m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
+	}
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
 }
 
