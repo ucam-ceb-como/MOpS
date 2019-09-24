@@ -44,6 +44,7 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_particle_model.cpp
                   source/swp_particle_process.cpp
                   source/swp_particle_stats.cpp
+				  source/swp_phase.cpp
                   source/swp_primary.cpp
                   source/swp_process.cpp
                   source/swp_process_factory.cpp

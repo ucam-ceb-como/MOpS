@@ -184,6 +184,9 @@ public:
     //! Returns the ith tracked value.  Returns 0.0 if i invalid.
     double Values(unsigned int i) const;
 
+	// PHASE
+
+	double PhaseMass(int i) const;
 
     // POSITION DATA
     

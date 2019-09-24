@@ -97,6 +97,9 @@ private:
         Mechanism &mech        // Mechanism to construct from XML.
         );
 
+	// Read phases
+	static void readPhases(CamXML::Document &xml, Sweep::Mechanism &mech);
+
     // INCEPTIONS.
 
     // Reads inception processes from a sweep mechanism XML file.

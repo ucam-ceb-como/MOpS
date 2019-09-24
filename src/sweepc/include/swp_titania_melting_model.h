@@ -105,17 +105,18 @@ public:
 
 	// DATA ACCESS METHODS
 
-	void SetLiquidIndex(unsigned int index);
-
 	void EnableFixedCrossover();
 
 	bool IsEnableFixedCrossover() const;
 
-	unsigned int GetLiquidIndex(void) const;
+	void AddPhase(std::string name, double A, double T, double dmin,
+		double dmax, std::vector<fvector> ddcomp, unsigned int iid);
 
-	void AddPhase(std::string name, double A, double T, double dmin, double dmax, fvector dcomp);
+	void MeltingCompositionChange(std::vector<fvector> &dcomp) const;
 
-	void CompositionChange(const Cell &sys, const AggModels::Primary &p, fvector &dcomp);
+	void CompositionChange(unsigned int iid, std::vector<fvector> &dcomp);
+
+	void CompositionChange(const Cell &sys, const AggModels::Primary &p, std::vector<fvector> &dcomp);
 
 	bool IsLiquid(const Cell &sys, const AggModels::Primary &p) const;
 
@@ -124,14 +125,15 @@ private:
     // Model on/off flag.
     bool m_enable;
 
-	// index of liquid phase
-	unsigned int m_liquidindex; 
-
 	// fixed crossover flag
 	bool m_fixedcrossover;
 
 	//Get highed melting temperature
 	double MeltingTemp(const AggModels::Primary &p) const;
+
+	//Melting composition changes
+	//A separate change in composition must be specified for each type of element of each type of solid phase
+	std::vector<fvector> m_dcompmelt;
 
 	// phase changes
 	struct PHASE
@@ -139,9 +141,10 @@ private:
 		std::string name;
 		double A; // parameter
 		double T_bulk; // bulk melting temperature
-		fvector dcomp; // change in composition
+		std::vector<fvector> dcomp; // change in composition
 		double dmin;   // Diameter range for phase change
 		double dmax;
+		unsigned int id;	// Phase id
 
 		// CONSTRUCTORS
 
@@ -149,12 +152,12 @@ private:
 		PHASE(void);
 		
 		// Initialising constructor.
-		PHASE(std::string aname, double aA, double aT, double admin, double admax, fvector adcomp);
+		PHASE(std::string aname, double aA, double aT, double admin, double admax, std::vector<fvector> adcomp, unsigned int iid);
 
 		// Copy constructor.
 		PHASE(const PHASE &copy);
 
-		//FUNCTIONS
+		// FUNCTIONS
 
 		// Clone
 		PHASE* const Clone(void) const;
@@ -166,6 +169,7 @@ private:
 	// define a vector of phases
 	typedef std::vector<PHASE*> PhasePtrVector;
 	PhasePtrVector m_phases;
+
 };
 };
 };
