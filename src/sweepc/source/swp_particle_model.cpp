@@ -349,6 +349,12 @@ int ParticleModel::PhaseIndex(const std::string &name) const
 	return -1;
 }
 
+// Returns the phase with the given index.
+Phase *const ParticleModel::Phases(unsigned int i)
+{
+	return m_phases[i];
+}
+
 // AGGREGATION MODEL TYPE.
 
 // Returns the ID of the aggregation model used by dependent particles.

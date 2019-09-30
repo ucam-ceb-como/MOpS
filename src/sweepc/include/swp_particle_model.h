@@ -155,7 +155,7 @@ public:
 
 	// PHASES
 
-	PhasePtrVector m_phases;	//csl37
+	PhasePtrVector m_phases;
 
 	// Add phase to particle model
 	void AddPhase(Phase &phase);
@@ -171,6 +171,9 @@ public:
 
 	// Return the phase index
 	int PhaseIndex(const std::string &name) const;
+
+	// Return phase with given index
+	Phase *const Phases(unsigned int i);
 
     // AGGREGATION MODEL TYPE.
 

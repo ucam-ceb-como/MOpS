@@ -96,7 +96,7 @@ private:
 
 	std::vector<unsigned int> m_compIndex; // Vector of component indices that belong to phase
 
-	bool m_liquid; //Liquid phase
+	bool m_liquid; // Liquid phase
 
 };
 

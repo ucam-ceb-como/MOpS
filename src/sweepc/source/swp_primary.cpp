@@ -540,7 +540,7 @@ unsigned int AggModels::Primary::AdjustPhase(const fvector &dcomp,
     return n;
 }
 
-//Melting point dependent phase change
+//Thermodynamic phase transformation (melting model)
 void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
 {
 	
@@ -557,26 +557,26 @@ void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
 		// melt the particle
 		ParticleModel()->MeltModel().MeltingCompositionChange(all_dcomp);
 	}
-	else{
+	else{ //particle is solid
 		//total composition excluding liquid phase
 		double mass = 0.0;
 		fvector phaseMass(m_pmodel->PhaseCount(), 0.0);
-
-		//add all components then subtract the liquid components
+		
+		//add all components excluding liquid components
 		for (int i = 0; i < m_pmodel->PhaseCount(); i++){
 			if (!m_pmodel->PhaseIsLiquid(i)){
 				phaseMass[i] = GetPhaseMass(i);
 				mass += phaseMass[i];
 			}
 		}
-		
+
 		if (mass > 0.0){//if solid phases exist then convert liquid to solid phase probabilistically
 			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
 			double j = uniformGenerator() * mass; //generate random number
 			for (int i = 0; i < m_pmodel->PhaseCount(); i++){
-				
-				if ( j <= phaseMass[i] ){ // change in composition
-					
+
+				if (j <= phaseMass[i]){ // change in composition
+
 					ParticleModel()->MeltModel().CompositionChange(i, all_dcomp);
 					break;
 				}
@@ -588,7 +588,7 @@ void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
 		else{
 			//if everything is liquid then tranform based on melting model
 			ParticleModel()->MeltModel().CompositionChange(sys, *this, all_dcomp); //get change in composition	
-		}	
+		}
 	}
 
 	//loop over all composition changes and transform components

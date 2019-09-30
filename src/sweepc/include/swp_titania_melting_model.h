@@ -5,7 +5,11 @@
   Copyright (C) 2019 Casper Lindberg.
 
   File purpose:
-    Implement a melting point dependent phase change
+    Implement size dependent phase transformation from non-crystalline (liquid) 
+	to solid crystal phases. Three models are supported:
+	1. "melting" point dependent transformation
+	2. "Gibbs" model with crossover size
+	3. Ti/O "Composition" dependent crossover size
 
   Licence:
     This file is part of "sweepc".
@@ -25,13 +29,12 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
   Contact:
-    Dr Markus Kraft
+    Prof. Markus Kraft
     Dept of Chemical Engineering
     University of Cambridge
-    New Museums Site
-    Pembroke Street
+    Philippa Fawcett Drive
     Cambridge
-    CB2 3RA
+    CB3 0AS
     UK
 
     Email:       mk306@cam.ac.uk
@@ -64,6 +67,13 @@ class MeltingModel
 {
 public:
 
+	// Model types.
+	enum TransformationType {
+		Melting,	// Melting temperature dependent transformation
+		Gibbs,          // Gibbs energy of transformation
+		Composition         // (Oxygen) composition dependent transformation
+	};
+
     // Constructors.
 	MeltingModel(); // Default constructor.
 	MeltingModel(const MeltingModel &copy); // Copy-constructor.
@@ -77,7 +87,6 @@ public:
     // Operators.
 	MeltingModel &operator=(const MeltingModel &rhs);
 
-
     // MODEL ENABLE/DISABLE.
 
     // Returns true is the model is enabled, otherwise false.
@@ -88,7 +97,6 @@ public:
 
     // Disables this sintering model.
     void Disable(void);
-
 
     // READ/WRITE/COPY.
 
@@ -103,14 +111,41 @@ public:
         std::istream &in // Input stream.
         );
 
-	// DATA ACCESS METHODS
+	// MODEL TYPE
 
-	void EnableCrossover();
+	// Returns the model type.
+	TransformationType Type(void) const;
 
-	bool IsEnableCrossover() const;
+	// Sets the model type.
+	void SetType(TransformationType t);
 
-	void AddPhase(std::string name, double A, double T, double dmin,
-		double dmax, std::vector<fvector> ddcomp, unsigned int iid);
+	// DATA ACCESS
+
+	// Set oxygen component indices
+	void SetOxygenComp(std::vector<unsigned int> OIndex);
+
+	// Return oxygen component indices
+	std::vector<unsigned int> GetOxygenComp() const;
+
+	// Set titanium component indices
+	void SetTitaniumComp(std::vector<unsigned int> TiIndex);
+
+	// Return titanium component indices
+	std::vector<unsigned int> GetTitaniumComp() const;
+
+	unsigned int PhaseChangeCount(void) const;
+
+	bool PhaseChangeValid(std::string id) const;
+
+	// INITIALISATION
+
+	// Add a phase transformation
+	void AddPhase(std::string name, double A, double T, std::vector<fvector> ddcomp, unsigned int iid);
+
+	// Add phase crossover diameter
+	void AddCrossover(std::string name, std::string id_l, std::string id_r, double aa, double ab, double ac, double ad);
+
+	// PERFORM TRANSFORMATION
 
 	void MeltingCompositionChange(std::vector<fvector> &dcomp) const;
 
@@ -120,30 +155,40 @@ public:
 
 	bool IsLiquid(const Cell &sys, const AggModels::Primary &p) const;
 
+
 private:
 
     // Model on/off flag.
     bool m_enable;
 
-	// fixed crossover flag
-	bool m_crossover;
+	// Transformation type
+	TransformationType m_type;
 
-	//Get highed melting temperature
-	double MeltingTemp(const AggModels::Primary &p) const;
+	// Oxygen component indices
+	std::vector<unsigned int> m_OIndex;
 
-	//Melting composition changes
-	//A separate change in composition must be specified for each type of element of each type of solid phase
+	// Titanium component indices
+	std::vector<unsigned int> m_TiIndex;
+
+	// Melting composition changes (reverse of phase changes)
+	// A separate change in composition must be specified for each type of element of each type of solid phase
 	std::vector<fvector> m_dcompmelt;
 
-	// phase changes
+	// Get highed melting temperature
+	double MeltingTemp(const AggModels::Primary &p) const;
+
+	// Return O:Ti ratio
+	double OTiRatio(const AggModels::Primary &p) const;
+
+	// STRUCTURES
+
+	// Phase changes
 	struct PHASE
 	{
 		std::string name;
 		double A; // parameter
 		double T_bulk; // bulk melting temperature
 		std::vector<fvector> dcomp; // change in composition
-		double dmin;   // Diameter range for phase change
-		double dmax;
 		unsigned int id;	// Phase id
 
 		// CONSTRUCTORS
@@ -152,7 +197,7 @@ private:
 		PHASE(void);
 		
 		// Initialising constructor.
-		PHASE(std::string aname, double aA, double aT, double admin, double admax, std::vector<fvector> adcomp, unsigned int iid);
+		PHASE(std::string aname, double aA, double aT, std::vector<fvector> adcomp, unsigned int iid);
 
 		// Copy constructor.
 		PHASE(const PHASE &copy);
@@ -166,9 +211,56 @@ private:
 		double MeltingPoint(double d);
 	};
 
-	// define a vector of phases
+	// Crossover diameter between solid phases for the Composition and Gibbs models
+	struct CROSSOVER
+	{
+		std::string name;
+		//pointers to phase transformations
+		PHASE* phase_l;	// phase transformation for dp < dcross
+		PHASE* phase_r;	// phase transformation for dp > dcross
+		//crossover size parameters c4e-238 Eq. (30)
+		double a, b, c, d;
+
+		// CONSTRUCTORS
+		
+		// Default constructor.
+		CROSSOVER(void);
+
+		// Initialising constructor (Composition model).
+		CROSSOVER(std::string aname, PHASE* aphase_l, PHASE* aphase_r,
+			double aa, double ab, double ac, double ad);
+
+		// Initialising constructor (Gibbs model).
+		CROSSOVER(std::string aname, PHASE* aphase_l, PHASE* aphase_r, double aa);
+
+		// Copy constructor.
+		CROSSOVER(const CROSSOVER &copy);
+
+		// FUNCTIONS
+
+		// Clone
+		CROSSOVER* const Clone(void) const;
+
+		// Crossover diameter
+		double CrossoverDiameter(double sigma_o) const;
+
+		double CrossoverDiameter() const;
+
+		// Return phase transformation
+		const PHASE* const GetTransformation(double dp, double sigma_o) const;
+		
+		const PHASE* const GetTransformation(double dp) const;
+	};
+
+	// Define a vector of phases
 	typedef std::vector<PHASE*> PhasePtrVector;
 	PhasePtrVector m_phases;
+
+	//The model currently supports only a single crossover
+	CROSSOVER* m_crossover;
+	//	// Define a vector of crossovers
+	//	typedef std::vector<CROSSOVER*> CrossoverPtrVector;
+	//	CrossoverPtrVector m_crossovers;
 
 };
 };
