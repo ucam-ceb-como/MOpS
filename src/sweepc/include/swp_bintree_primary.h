@@ -120,11 +120,9 @@ public:
 
 	//! Adjusts a particle according to a phase transformation reaction
 	unsigned int AdjustPhase(const fvector &dcomp,
-		const fvector &dvalues, rng_type &rng, unsigned int n, const double d_crit, const bool melt);
-	// helper function
-	unsigned int AdjustPhase(rng_type &rng, const double d_crit, const bool melt);
+		const fvector &dvalues, rng_type &rng, unsigned int n);
 
-	//Melting point dependent phase change
+	//! Melting point dependent phase change
 	void Melt(rng_type &rng, Cell &sys);
 	
     //! Adjusts a particle according to an interparticle reaction

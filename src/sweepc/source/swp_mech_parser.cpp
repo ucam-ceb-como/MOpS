@@ -1778,54 +1778,6 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
  *
  *@exception    std::runtime_error   
  */
-/*
-void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
-{
-    vector<CamXML::Element*> items, subitems;
-    vector<CamXML::Element*>::iterator i, j;
-    string str;
-    unsigned int k = 0;
-
-    // Get all phase transformations
-    xml.Root()->GetChildren("transformation", items);
-
-    for (i=items.begin(),k=0; i!=items.end(); ++i,++k) {
-
-		str = (*i)->GetAttributeValue("type");
-
-		TitaniaPhaseTransformation *phasetransform = NULL;
-
-		if (str.compare("titania") == 0) {
-			//check that the particle model is valid
-			if (mech.AggModel() == AggModels::Spherical_ID || mech.AggModel() == AggModels::BinTree_ID) {
-				// Create a new Titania phase transformation object.
-				phasetransform = new TitaniaPhaseTransformation(mech);
-			}
-			else {
-				throw runtime_error("Only Spherical and BinTree models supported for phase transformation (Sweep, MechParser::readPhaseTransformation).");
-			}
-		} else {
-            // Unrecognised reaction type.
-            throw runtime_error("Unrecognised phase transformation type: " + str +
-                                " (Sweep, MechParser::readPhaseTransformation).");
-        }
-
-        // Set default name.
-        phasetransform->SetName("Phase Transformation " + cstr(k));
-
-        // Read the phase transformation properties.
-        try {
-            readPhaseTransformation(*(*i), *phasetransform);
-        } catch (std::exception &e) {
-            delete phasetransform;
-            throw;
-        }
-
-        // Add phase transformation to mechanism.
-        mech.AddProcess(*phasetransform);
-    }
-}
-*/
 void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 {
 	vector<CamXML::Element*> items, subitems, subsubitems, subsubsubitems;

@@ -191,7 +191,7 @@ public:
 
 	// MELTING MODEL
 
-	//return the melting model
+	// Return the titania phase melting model
 	Processes::MeltingModel &MeltModel(void) const;
 	
     // PARTICLE FUNCTIONS.
@@ -417,7 +417,7 @@ protected:
     //! The sintering model.
     mutable Processes::SinteringModel m_sint_model;
 
-	// Melting model //csl
+	//! Titania phase transformation (melting) model
 	mutable Processes::MeltingModel m_melt_model;
 
     //! Calculate a phsyical particle diffusion coefficient from its drag

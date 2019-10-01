@@ -53,7 +53,7 @@ namespace Sweep {
 
 namespace Processes {
 
-const double TitaniaPhaseTransformation::m_majfactor = 2.0;//csl37-done
+const double TitaniaPhaseTransformation::m_majfactor = 2.0;
 
 // Default constructor
 TitaniaPhaseTransformation::TitaniaPhaseTransformation()
@@ -61,7 +61,7 @@ TitaniaPhaseTransformation::TitaniaPhaseTransformation()
 {
 	m_defer = false;
     m_name = "PhaseTransformation";
-}//csl37-done
+}
 
 /*!
  * Mechanism constructor
@@ -75,7 +75,7 @@ TitaniaPhaseTransformation::TitaniaPhaseTransformation(
 {
 	m_defer = false;
     m_name = "PhaseTransformation";
-}//csl37-done
+}
 
 
 /*!
@@ -87,7 +87,7 @@ TitaniaPhaseTransformation::TitaniaPhaseTransformation(
 TitaniaPhaseTransformation::TitaniaPhaseTransformation(const TitaniaPhaseTransformation &copy)
 {
     *this = copy;
-}//csl37-done
+}
 
 /*!
  * Stream-reading constructor
@@ -102,7 +102,7 @@ TitaniaPhaseTransformation::TitaniaPhaseTransformation(
         )
 {
     Deserialize(in, mech);
-}//csl37-done
+}
 
 // Assignment operator
 TitaniaPhaseTransformation &TitaniaPhaseTransformation::operator =(const TitaniaPhaseTransformation &rhs)
@@ -113,35 +113,35 @@ TitaniaPhaseTransformation &TitaniaPhaseTransformation::operator =(const Titania
 		m_pid    = rhs.m_pid;
     }
     return *this;
-}//csl37-done
+}
 
 // Creates a copy of the particle process
 TitaniaPhaseTransformation *const TitaniaPhaseTransformation::Clone(void) const
 {
     return new TitaniaPhaseTransformation(*this);
-}//csl37-done
+}
 
 // PARTICLE PROPERTY ID.
 
 // Returns the ID number of the particle property to which
 // the rate of this process is proportional.
-PropID TitaniaPhaseTransformation::PropertyID(void) const {return m_pid;}//csl37-done
+PropID TitaniaPhaseTransformation::PropertyID(void) const {return m_pid;}
 
 // Sets the ID number of the particle property to which
 // the rate of this process is proportional.
 void TitaniaPhaseTransformation::SetPropertyID(PropID pid)
 {
     m_pid = pid;
-}//csl37-done
+}
 
 // RATE CONSTANT AND PARAMETERS.
 
 //! Returns the Arrhenius parameter.
-Sprog::Kinetics::ARRHENIUS &TitaniaPhaseTransformation::Arrhenius() {return m_arr;}//csl37-done
-const Sprog::Kinetics::ARRHENIUS &TitaniaPhaseTransformation::Arrhenius() const {return m_arr;}//csl37-done
+Sprog::Kinetics::ARRHENIUS &TitaniaPhaseTransformation::Arrhenius() {return m_arr;}
+const Sprog::Kinetics::ARRHENIUS &TitaniaPhaseTransformation::Arrhenius() const {return m_arr;}
 
 //! Sets the fixed rate constant.
-void TitaniaPhaseTransformation::SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr) {m_arr = arr;}//csl37-done
+void TitaniaPhaseTransformation::SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr) {m_arr = arr;}
 
 
 // RATE TERM CALCULATIONS.
@@ -149,7 +149,7 @@ void TitaniaPhaseTransformation::SetArrhenius(Sprog::Kinetics::ARRHENIUS &arr) {
 //   process, which may have multiple terms
 
 //! Returns the number of rate terms for this process.
-unsigned int TitaniaPhaseTransformation::TermCount(void) const {return 1;}//csl37-done
+unsigned int TitaniaPhaseTransformation::TermCount(void) const {return 1;}
 
 /*!
  * @brief       Returns the majorant rate.
@@ -180,7 +180,7 @@ double TitaniaPhaseTransformation::RateTerms(double t, const Cell &sys, const Ge
                              fvector::iterator &iterm) const
 {
     return *(iterm++) = Rate(t, sys, local_geom);
-}//csl37-done
+}
 
 /*!
  * Returns the rate for the whole system
@@ -197,19 +197,17 @@ double TitaniaPhaseTransformation::Rate(
         ) const
 {
 	//rate constant
-//	double rate = 3.0*m_arr.A;
+	double rate = 3.0*m_arr.A;
 
 	//temperature dependence
 	double T = sys.GasPhase().Temperature();
-//	rate *= exp(-m_arr.E / (R * T));
+	rate *= exp(-m_arr.E / (R * T));
 
 	//particle dependence
-//	rate *= sys.Particles().GetSum(m_pid);
+	rate *= sys.Particles().GetSum(m_pid);
 
-	double rate = 1e6*sys.Particles().GetSum(m_pid);
 	return rate;
-
-}//csl37-done
+}
 
 /*!
  * Calculates the single-particle rate
@@ -227,20 +225,17 @@ double TitaniaPhaseTransformation::Rate(
 {
 	//rate expressed as the change in number of components
 	//rate constant
-//	double rate = 3.0*m_arr.A;
+	double rate = 3.0*m_arr.A;
 
 	//temperature dependence
 	double T = sys.GasPhase().Temperature();
-//	rate *= exp(-m_arr.E / (R * T));
+	rate *= exp(-m_arr.E / (R * T));
 
 	//particle dependence
-//	rate *= sp.Property(m_pid);
+	rate *= sp.Property(m_pid);
 
-	double rate = 1e6*sys.Particles().GetSum(m_pid);
 	return rate;
-
-}//csl37-done
-
+}
 
 // PERFORMING THE PROCESS.
 
@@ -285,14 +280,8 @@ int TitaniaPhaseTransformation::Perform(double t, Sweep::Cell &sys,
 
                 if (!Fictitious(majr, truer, rng)) {
                     // Adjust particle.
-                    //times = sp->AdjustPhase(m_dcomp, m_dvals, rng, 1);
-					bool melt = true;
-					if (sys.GasPhase().Temperature() < m_arr.n){
-						melt = false;
-					}
-					times = sp->AdjustPhase(m_dcomp, m_dvals, rng, 1, m_arr.A, melt);
+                    times = sp->AdjustPhase(m_dcomp, m_dvals, rng, 1);
                     sys.Particles().Update(i);
-
                 }
             } else {
                 // If not valid then remove the particle.
@@ -300,12 +289,7 @@ int TitaniaPhaseTransformation::Perform(double t, Sweep::Cell &sys,
             }
         } else {
             // No particle update required, just perform the process
-           // times = sp->AdjustPhase(m_dcomp, m_dvals, rng, 1);
-			bool melt = true;
-			if (sys.GasPhase().Temperature() < m_arr.n){
-				melt = false;
-			}
-			times = sp->AdjustPhase(m_dcomp, m_dvals, rng, 1, m_arr.A, melt);
+            times = sp->AdjustPhase(m_dcomp, m_dvals, rng, 1);
 
             if (sp->IsValid()) {
                 // Tell the binary tree to recalculate
@@ -323,7 +307,7 @@ int TitaniaPhaseTransformation::Perform(double t, Sweep::Cell &sys,
     }
 
     return 0;
-}//csl37-done
+}
 
 /*!
  * @brief       Performs process on a given particle n times
@@ -337,14 +321,9 @@ int TitaniaPhaseTransformation::Perform(double t, Sweep::Cell &sys,
 int TitaniaPhaseTransformation::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
                           unsigned int n) const
 {
-		bool melt = true;
-		unsigned int m = 0;
-		if (sys.GasPhase().Temperature() < m_arr.n){
-			melt = false;
-		}
-		m = sp.AdjustPhase(m_dcomp, m_dvals, rng, n, m_arr.A, melt);
+		unsigned int m = sp.AdjustPhase(m_dcomp, m_dvals, rng, n);
 		return m;
-}//csl37-done
+}
 
 
 //! Returns the process type.

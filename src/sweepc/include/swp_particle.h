@@ -259,11 +259,9 @@ public:
 	unsigned int AdjustPhase(const fvector &dcomp,
                               const fvector &dvalues,
                               rng_type &rng,
-                              unsigned int n,
-							  const double d_crit,
-							  const bool melt);
+                              unsigned int n);
 	
-	//Melting point dependent phase change
+	//! Melting point dependent phase change
 	void Melt(rng_type &rng, Cell &sys);
 
     //! Combines this particle with another.

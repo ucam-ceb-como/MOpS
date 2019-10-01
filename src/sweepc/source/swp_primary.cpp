@@ -216,7 +216,7 @@ void AggModels::Primary::SetValue(unsigned int i, double val)
 
 // PHASE VARIABLES
 
-// Get mass specific phase	//csl
+// Get the mass of a specific phase
 double AggModels::Primary::GetPhaseMass(int i) const{
 
 	// Get component indices for phase 
@@ -230,8 +230,6 @@ double AggModels::Primary::GetPhaseMass(int i) const{
 
 	return mass;
 }
-
-
 
 // PRIMARY CREATE TIME.
 
@@ -308,13 +306,12 @@ void AggModels::Primary::UpdateCache(void)
         m_numcarbon_temp = m_comp[i];
         m_numcarbon += m_numcarbon_temp;
     }
-	//csl37: phaseterm calculated here for spherical particle
-	// 0 if components don't exist
+
+	// phaseterm for kinetic titania phase transformation
+	// Components An and Ru assumed, 0 if components don't exist
 	double An = AggModels::Primary::GetComponent("An");
 	double Ru = AggModels::Primary::GetComponent("Ru");
-//	m_phaseterm = pow( An, TWO_THIRDS) * pow((An + Ru), ONE_THIRD);
-	double Liq = AggModels::Primary::GetComponent("Liq");
-	m_phaseterm = Liq;
+	m_phaseterm = pow( An, TWO_THIRDS) * pow((An + Ru), ONE_THIRD);
 }
 
 // Returns the particle equivalent sphere diameter.
@@ -533,7 +530,7 @@ unsigned int AggModels::Primary::AdjustIntPar(const fvector &dcomp, const fvecto
 unsigned int AggModels::Primary::AdjustPhase(const fvector &dcomp,
                               const fvector &dvalues,
                               rng_type &rng,
-							  unsigned int n, const double d_crit, const bool melt)
+							  unsigned int n)
 {
 	n = AggModels::Primary::Adjust(dcomp, dvalues, rng, n);
 	

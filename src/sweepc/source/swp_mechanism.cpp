@@ -1106,7 +1106,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
 
         sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
 
-		//Melting point phase transformation csl37
+		//Melting point phase transformation
 		if (m_melt_model.IsEnabled()) {
 			sp.Melt(rng, sys);
 		}
@@ -1140,9 +1140,6 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
                     if(rate > 0) {
                          boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
                          unsigned num = repeatDistrib(rng);
-						 //csl37
-						 if( (*i)->ID() == TitaniaPhase_ID ){ num = 1; };
-						 //csl37
                          if (num > 0) {
                              // Do the process to the particle.
                              (*i)->Perform(t, sys, sp, rng, num);
@@ -1156,7 +1153,7 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
                 sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
             }
 
-			//Melting point phase transformation  csl37
+			//Melting point phase transformation
 			if (m_melt_model.IsEnabled()) {
 				sp.Melt(rng, sys);
 			}

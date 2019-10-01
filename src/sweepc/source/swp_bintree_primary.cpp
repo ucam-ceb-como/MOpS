@@ -2508,7 +2508,6 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
  * @param[in]   rng     Random number generator
  * @param[in]   n       Number of times for adjustment
  */
-/*
 unsigned int BinTreePrimary::AdjustPhase(const fvector &dcomp,
         const fvector &dvalues, rng_type &rng, unsigned int n)
 {
@@ -2535,106 +2534,6 @@ unsigned int BinTreePrimary::AdjustPhase(const fvector &dcomp,
     UpdateCache(this);
 
     return n;
-}
-*/
-
-//helper function
-unsigned int BinTreePrimary::AdjustPhase(const fvector &dcomp,
-	const fvector &dvalues, rng_type &rng, unsigned int n, const double d_crit, const bool melt)
-{
-	n = this->AdjustPhase(rng, d_crit, melt);
-	// Update property cache.
-	UpdateCache(this);
-	return n;
-}
-unsigned int BinTreePrimary::AdjustPhase(rng_type &rng, const double d_crit, const bool melt)
-{
-	unsigned int n = 1;
-
-	// Update the children
-	if (m_leftchild != NULL) {
-		m_leftchild->AdjustPhase(rng, d_crit, melt);
-		m_rightchild->AdjustPhase(rng, d_crit, melt);
-	}else{ // this is a primary
-		
-		//select adjustment based on volume equivalent size
-		double d_p = m_diam;
-		fvector dcomp(3,0.0);
-		fvector dvalues(3,0.0);
-		//get number of liquid and anatase
-		if (melt == false){
-
-			//total composition excluding liquid phase
-			double total_comp = 0.0;
-			for (int i = 0; i < m_pmodel->ComponentCount(); i++){
-				if (i != 0) total_comp += Composition(i);
-			}
-
-			if (total_comp > 0.0){//if solid phases exist then convert liquid to solid phase probabilistically
-				boost::uniform_01<rng_type&, double> uniformGenerator(rng);
-				double j = uniformGenerator() * total_comp; //generate random number
-				for (int i = 0; i < m_pmodel->ComponentCount(); i++){
-					if (i != 0){
-						if (j <= Composition(i)){ // change in composition
-							dcomp[0] += -1.0;
-							dcomp[i] += 1.0;
-							break;
-						}
-						else{
-							j -= Composition(i);
-						}
-					}
-				}
-			}
-			else{
-				dcomp[0] = -1.0;
-				if (d_p < d_crit){ //anatase transformation
-					dcomp[1] = 1.0;
-				}
-				else{ //rutile transformation
-					dcomp[2] = 1.0;
-				}
-			}			
-
-			//transform everything
-			n = (unsigned int)m_comp[0];
-
-			// Call to Primary to adjust the state space
-			if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); };
-		}
-		else{
-			//particle has melted: transform solid phases back to liquid phase
-			//transform anatase to liquid
-			dcomp[0] = 1.0;
-			dcomp[1] = -1.0;
-			dcomp[2] = 0.0;
-
-			//transform everything
-			n = (unsigned int)m_comp[1];
-
-			// Call to Primary to adjust the state space
-			if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); };
-
-			//transform rutile to liquid
-			dcomp[0] = 1.0;
-			dcomp[1] = 0.0;
-			dcomp[2] = -1.0;
-
-			//transform everything
-			n = (unsigned int)m_comp[2];
-
-			// Call to Primary to adjust the state space
-			if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); };
-		}
-		// Stop doing the adjustment if n is 0.
-		if (n > 0) {
-			// Update only the primary
-			UpdatePrimary();
-		}
-
-	}
-
-	return n;
 }
 
 //Melting point dependent phase change
