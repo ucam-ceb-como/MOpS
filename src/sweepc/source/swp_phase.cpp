@@ -1,35 +1,38 @@
 /*
-Author(s):      Casper Lindberg (csl37)
-Project:        sweep (population balance solver)
-Sourceforge:    http://sourceforge.net/projects/mopssuite
+	Author(s):      Casper Lindberg (csl37)
+	Project:        sweep (population balance solver)
+	Sourceforge:    http://sourceforge.net/projects/mopssuite
 
-Copyright (C) 2019 Casper Lindberg
+	Copyright (C) 2019 Casper Lindberg
 
-File purpose:
+	Licence:
+	This file is part of "sweepc".
 
+	sweepc is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
 
-Licence:
-This file is part of "sweepc".
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU Lesser General Public License for more details.
 
-sweepc is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
+	You should have received a copy of the GNU Lesser General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
+	Contact:
+		Prof. Markus Kraft
+		Dept of Chemical Engineering
+		University of Cambridge
+		Philippa Fawcett Drive
+		Cambridge
+		CB3 0AS
+		UK
 
-You should have received a copy of the GNU Lesser General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-Contact:
-
-
-Email:       mk306@cam.ac.uk
-Website:     http://como.cheng.cam.ac.uk
+	Email:       mk306@cam.ac.uk
+	Website:     http://como.cheng.cam.ac.uk
 */
 
 #include "swp_phase.h"
@@ -70,14 +73,13 @@ Phase::~Phase()
 {
 }
 
-
 // OPERATOR OVERLOADS.
 Phase &Phase::operator=(const Phase &rhs)
 {
     if (this != &rhs) {
         m_name    = rhs.m_name;
 		m_liquid  = rhs.m_liquid;
-		// Copy components.
+		// Copy component indices.
 		for (std::vector<unsigned int>::const_iterator it = rhs.m_compIndex.begin(); it != rhs.m_compIndex.end(); ++it) {
 			m_compIndex.push_back((*it));
 		}
@@ -95,13 +97,12 @@ std::vector<unsigned int> Phase::GetComponents() const{
 	return m_compIndex;
 }
 
-
 // Set liquid phase
 void Phase::SetLiquid(){
 	m_liquid = true;
 }
 
-// Get liquid
+// Return if phase is liquid
 bool Phase::GetLiquid() const{
 	return m_liquid;
 }
@@ -109,9 +110,8 @@ bool Phase::GetLiquid() const{
 // Set name 
 void Phase::SetName(const std::string &name) { m_name = name; }
 
-// Get name 
+// Return name 
 std::string Phase::Name() { return m_name; }
-
 
 // READ/WRITE/COPY.
 

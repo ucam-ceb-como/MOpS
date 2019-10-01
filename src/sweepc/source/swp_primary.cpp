@@ -549,7 +549,7 @@ void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
 	//check if liquid
 	bool Liquid = ParticleModel()->MeltModel().IsLiquid(sys, *this);
 
-	//has the particle melted
+	//has the particle melted?
 	if (Liquid == true){
 		// melt the particle
 		ParticleModel()->MeltModel().MeltingCompositionChange(all_dcomp);
@@ -567,13 +567,15 @@ void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
 			}
 		}
 
-		if (mass > 0.0){//if solid phases exist then convert liquid to solid phase probabilistically
+		if (mass > 0.0){
+			//if solid phases exist then convert liquid to solid phase probabilistically
+			//weighted by mass of existing solid phases
 			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
 			double j = uniformGenerator() * mass; //generate random number
 			for (int i = 0; i < m_pmodel->PhaseCount(); i++){
 
-				if (j <= phaseMass[i]){ // change in composition
-
+				if (j <= phaseMass[i]){ 
+					//get change in composition	
 					ParticleModel()->MeltModel().CompositionChange(i, all_dcomp);
 					break;
 				}
@@ -594,9 +596,8 @@ void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
 		dcomp = *it;
 
 		// transform components
-		n = Primary::CalculateMaxAdjustments(dcomp); //transform everything
+		n = Primary::CalculateMaxAdjustments(dcomp); //transform everything: get max adjustment
 		if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); }; //adjust primary
-
 	}
 }
 

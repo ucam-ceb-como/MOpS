@@ -155,6 +155,7 @@ public:
 
 	// PHASES
 
+	// Phases
 	PhasePtrVector m_phases;
 
 	// Add phase to particle model

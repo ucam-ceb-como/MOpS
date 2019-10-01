@@ -46,31 +46,32 @@ using namespace Sweep::Processes;
 
 // CONSTRUCTORS AND DESTRUCTORS.
 
-// Default constructor.
+//! Default constructor.
 MeltingModel::MeltingModel()
 	: m_enable(false)
 {
 	m_crossover = NULL;
 }
 
-// Copy constructor.
+//! Copy constructor.
 MeltingModel::MeltingModel(const Sweep::Processes::MeltingModel &copy)
 {
     *this = copy;
 }
 
-// Stream-reading constructor.
+//! Stream-reading constructor.
 MeltingModel::MeltingModel(std::istream &in)
 {
     Deserialize(in);
 }
 
-// Destructor.
+//! Destructor.
 MeltingModel::~MeltingModel()
 {
+	// delete the crossover
 	delete m_crossover;
 	m_crossover = NULL;
-	//
+	// delete the phase transformations
 	for (PhasePtrVector::const_iterator i = m_phases.begin(); i != m_phases.end(); ++i){
 		delete *i;
 	}
@@ -79,7 +80,7 @@ MeltingModel::~MeltingModel()
 
 // OPERATOR OVERLOADING.
 
-// Assignment operator.
+//! Assignment operator.
 MeltingModel &MeltingModel::operator=(const Sweep::Processes::MeltingModel &rhs)
 {
     if (this != &rhs) {	
@@ -89,11 +90,12 @@ MeltingModel &MeltingModel::operator=(const Sweep::Processes::MeltingModel &rhs)
 		m_TiIndex = rhs.m_TiIndex;
 		m_dcompmelt = rhs.m_dcompmelt;
 		
-		// Copy phases.
+		// Copy phase transformations
 		for (PhasePtrVector::const_iterator i = rhs.m_phases.begin();i != rhs.m_phases.end(); ++i) {
 			m_phases.push_back((*i)->Clone());
 		}
 
+		// Copy crossover
 		m_crossover = rhs.m_crossover->Clone();		
     }
     return *this;
@@ -102,7 +104,7 @@ MeltingModel &MeltingModel::operator=(const Sweep::Processes::MeltingModel &rhs)
 
 // PHASE STRUCTURE DEFINITIONS
 
-// Default constructor.
+//! Default constructor.
 MeltingModel::PHASE::PHASE(void)
 {
 	name = "";
@@ -111,7 +113,7 @@ MeltingModel::PHASE::PHASE(void)
 	id = 0;
 };
 
-// Initialising constructor.
+//! Initialising constructor.
 MeltingModel::PHASE::PHASE(std::string aname, double aA, double aT, std::vector<fvector> adcomp, unsigned int iid)
 {
 	name = aname;
@@ -121,7 +123,7 @@ MeltingModel::PHASE::PHASE(std::string aname, double aA, double aT, std::vector<
 	id = iid;
 };
 
-// Copy constructor.
+//! Copy constructor.
 MeltingModel::PHASE::PHASE(const PHASE &copy)
 {
 	name = copy.name;
@@ -131,13 +133,13 @@ MeltingModel::PHASE::PHASE(const PHASE &copy)
 	id = copy.id;
 };
 
-// Clone
+//! Clone
 MeltingModel::PHASE* const MeltingModel::PHASE::Clone(void) const
 {
 	return new PHASE(*this);
 }
 
-// Returns melting point for given particle size
+//! Returns the melting point for given particle size
 double MeltingModel::PHASE::MeltingPoint(double d){
 	double T = 0.0;
 
@@ -146,16 +148,16 @@ double MeltingModel::PHASE::MeltingPoint(double d){
 	return T;
 }
 
-// Create a phase transformation 
+//! Create a phase transformation 
 void MeltingModel::AddPhase(std::string name, double A, double T, std::vector<fvector> ddcomp, unsigned int iid){
 
 	PHASE *new_phase = NULL;
 
-	//add phase
+	//create and add new phase transformation
 	new_phase = new PHASE(name, A, T, ddcomp, iid);
 	m_phases.push_back(new_phase);
 
-	//create reverse melting process
+	//create reverse tranformation for melting process
 	for (std::vector<fvector>::const_iterator it = ddcomp.begin(); it != ddcomp.end(); ++it){
 		fvector dcomp = *it;
 		fvector dmelt(dcomp.size(), 0.0);
@@ -171,7 +173,7 @@ void MeltingModel::AddPhase(std::string name, double A, double T, std::vector<fv
 
 // CROSSOVER STRUCTURE DEFINITIONS
 
-// Default constructor.
+//! Default constructor.
 MeltingModel::CROSSOVER::CROSSOVER(void)
 {
 	name = "";
@@ -183,7 +185,7 @@ MeltingModel::CROSSOVER::CROSSOVER(void)
 	d = 0.0;
 };
 
-// Initialising constructor (Composition model).
+//! Initialising constructor (Composition model).
 MeltingModel::CROSSOVER::CROSSOVER(std::string aname, PHASE* aphase_l, PHASE* aphase_r, 
 	double aa, double ab, double ac, double ad)
 {
@@ -196,7 +198,7 @@ MeltingModel::CROSSOVER::CROSSOVER(std::string aname, PHASE* aphase_l, PHASE* ap
 	d = ad;
 };
 
-// Initialising constructor (Gibbs model).
+//! Initialising constructor (Gibbs model).
 MeltingModel::CROSSOVER::CROSSOVER(std::string aname, PHASE* aphase_l, PHASE* aphase_r, double aa)
 {
 	name = aname;
@@ -208,7 +210,7 @@ MeltingModel::CROSSOVER::CROSSOVER(std::string aname, PHASE* aphase_l, PHASE* ap
 	d = 0.0;
 };
 
-// Copy constructor.
+//! Copy constructor.
 MeltingModel::CROSSOVER::CROSSOVER(const CROSSOVER &copy)
 {
 	name = copy.name;
@@ -220,26 +222,25 @@ MeltingModel::CROSSOVER::CROSSOVER(const CROSSOVER &copy)
 	d = copy.d;
 };
 
-// Clone
+//! Clone
 MeltingModel::CROSSOVER* const MeltingModel::CROSSOVER::Clone(void) const
 {
 	return new CROSSOVER(*this);
 }
 
-// Returns the crossover diameter for the composition and Gibbs models
-// c4e-238 Eq. (30). 
+//! Returns the crossover diameter for the composition model c4e-238 Eq. (30). 
 double MeltingModel::CROSSOVER::CrossoverDiameter(double sigma_o) const
 {
 	return a + b * erf(c*(sigma_o - d));
 }
 
-// Overload for Gibbs model
+//! Returns the fixed crossover diameter for the Gibbs model c4e-238 Eq. (30).
 double MeltingModel::CROSSOVER::CrossoverDiameter() const
 {
 	return a;
 }
 
-// Return phase transformation (Composition model)
+//! Return phase transformation (Composition model)
 const MeltingModel::PHASE* const MeltingModel::CROSSOVER::GetTransformation(double dp, double sigma_o) const
 {
 	if (dp < CrossoverDiameter(sigma_o)){
@@ -250,7 +251,7 @@ const MeltingModel::PHASE* const MeltingModel::CROSSOVER::GetTransformation(doub
 	}
 }
 
-// Return phase transformation (Gibbs model)
+//! Return phase transformation (Gibbs model)
 const MeltingModel::PHASE* const MeltingModel::CROSSOVER::GetTransformation(double dp) const
 {
 	if (dp < CrossoverDiameter()){
@@ -261,7 +262,7 @@ const MeltingModel::PHASE* const MeltingModel::CROSSOVER::GetTransformation(doub
 	}
 }
 
-// Create a phase crossover
+//! Create a phase crossover diameter
 void MeltingModel::AddCrossover(std::string name, std::string id_l, std::string id_r, double aa, double ab, double ac, double ad){
 
 	CROSSOVER* new_crossover = NULL;
@@ -294,56 +295,56 @@ void MeltingModel::AddCrossover(std::string name, std::string id_l, std::string 
 
 // MODEL ENABLE/DISABLE.
 
-// Returns true is the model is enabled, otherwise false.
+//! Returns true is the model is enabled, otherwise false.
 bool MeltingModel::IsEnabled(void) const { return m_enable; }
 
-// Enables this sintering model.
+//! Enables this model.
 void MeltingModel::Enable(void) { m_enable = true; }
 
-// Disables this sintering model.
+//! Disables this model.
 void MeltingModel::Disable(void) { m_enable = false; }
 
 // MODEL TYPE
 
-// Returns the model type.
+//! Returns the model type.
 MeltingModel::TransformationType MeltingModel::Type(void) const { return m_type; }
 
-// Sets the model type.
+//! Sets the model type.
 void MeltingModel::SetType(TransformationType t) { m_type = t; }
 
 // DATA ACCESS
 
-// Set oxygen component indices
+//! Set oxygen component indices
 void MeltingModel::SetOxygenComp(std::vector<unsigned int> OIndex)
 {
 	m_OIndex = OIndex;
 }
 
-// Return oxygen component indices
+//! Return oxygen component indices
 std::vector<unsigned int> MeltingModel::GetOxygenComp() const
 {
 	return m_OIndex;
 }
 
-// Set titanium component indices
+//! Set titanium component indices
 void MeltingModel::SetTitaniumComp(std::vector<unsigned int> TiIndex)
 {
 	m_TiIndex = TiIndex;
 }
 
-// Return titanium component indices
+//! Return titanium component indices
 std::vector<unsigned int> MeltingModel::GetTitaniumComp() const
 {
 	return m_TiIndex;
 }
 
-// Return number of phase changes
+//! Return number of phase transformations
 unsigned int MeltingModel::PhaseChangeCount(void) const
 {
 	return m_phases.size();
 }
 
-// Check a phase change exists
+//! Check a phase transformation exists
 bool MeltingModel::PhaseChangeValid(std::string id) const
 {
 	PhasePtrVector::const_iterator i;
@@ -358,7 +359,7 @@ bool MeltingModel::PhaseChangeValid(std::string id) const
 
 // PERFORMING THE PROCESS
 
-// Return O:Ti ratio
+//! Return O:Ti ratio
 double MeltingModel::OTiRatio(const AggModels::Primary &p) const
 {
 	double nO = 0.0;
@@ -379,7 +380,7 @@ double MeltingModel::OTiRatio(const AggModels::Primary &p) const
 	return nO / nTi;
 }
 
-// Check if particle is liquid
+//! Check if particle is liquid i.e. above transformation temperature
 bool MeltingModel::IsLiquid(const Cell &sys, const AggModels::Primary &p) const{
 
 	bool liquid = false;
@@ -391,11 +392,11 @@ bool MeltingModel::IsLiquid(const Cell &sys, const AggModels::Primary &p) const{
 	return liquid;
 }
 
-// Return the melting temperature for a particle
+//! Return the melting temperature for a particle
+//  This is the highest melting temperature
 double MeltingModel::MeltingTemp(const AggModels::Primary &p) const
 {
-	//primary size
-	double dp = p.SphDiameter();
+	double dp = p.SphDiameter(); //primary size
 	double T = 0.0;
 	double Tmelt = 0.0;
 
@@ -413,14 +414,14 @@ double MeltingModel::MeltingTemp(const AggModels::Primary &p) const
 	return T;
 }
 
-// Return the composition change for melting
+//! Returns composition change for melting (crystal -> non-crystalline)
 void MeltingModel::MeltingCompositionChange(std::vector<fvector> &dcomp) const{
 	
 	dcomp = m_dcompmelt;
 	return;
 }
 
-// Return component transformation for a particular phase change
+//! Return composition change for given non-crystalline -> crystal phase transformation
 void MeltingModel::CompositionChange(unsigned int iid, std::vector<fvector> &dcomp){
 
 	//loop over phases
@@ -435,20 +436,18 @@ void MeltingModel::CompositionChange(unsigned int iid, std::vector<fvector> &dco
 	return;
 }
 
-// Phase transformation 
+//! Return composition change for non-crystalline -> crystal transformation 
 void MeltingModel::CompositionChange(const Cell &sys, const AggModels::Primary &p, std::vector<fvector> &dcomp)
 {
-	//primary size
-	double dp = p.SphDiameter();
+	double dp = p.SphDiameter(); 	//primary size
 	double T = 0.0;
 	double Tmelt = 0.0;
-
-	//loop over phases
 	PhasePtrVector::const_iterator i;
-
+	
+	//Get transformation model
 	switch (m_type){
-		case Melting:
-			//melting point dependent crossover size
+		case Melting: //melting point dependent crossover size
+			//loop over phases
 			for (i = m_phases.begin(); i != m_phases.end(); ++i) {
 				//get melting point
 				Tmelt = (*i)->MeltingPoint(dp);
@@ -472,13 +471,13 @@ void MeltingModel::CompositionChange(const Cell &sys, const AggModels::Primary &
 
 // READ/WRITE/COPY.
 
-// Creates a copy of the melting model.
+//! Creates a copy of the melting model.
 MeltingModel *const MeltingModel::Clone(void) const
 {
 	return new MeltingModel(*this);
 }
 
-// Writes the object to a binary stream.
+//! Writes the object to a binary stream.
 void MeltingModel::Serialize(std::ostream &out) const
 {
     const unsigned int trueval  = 1;
@@ -620,7 +619,7 @@ void MeltingModel::Serialize(std::ostream &out) const
     }
 }
 
-// Reads the object from a binary stream.
+//! Reads the object from a binary stream.
 void MeltingModel::Deserialize(std::istream &in)
 {
     if (in.good()) {

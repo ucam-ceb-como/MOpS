@@ -6,7 +6,7 @@
   Copyright (C) 2019 Casper Lindberg
 
   File purpose:
-    
+	Definition of a phase. The class identifies components that belong to a specific phase. 
 
   Licence:
     This file is part of "sweepc".
@@ -25,8 +25,14 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-  Contact:
-   
+	Contact:
+	Prof. Markus Kraft
+	Dept of Chemical Engineering
+	University of Cambridge
+	Philippa Fawcett Drive
+	Cambridge
+	CB3 0AS
+	UK
 
     Email:       mk306@cam.ac.uk
     Website:     http://como.cheng.cam.ac.uk
@@ -75,8 +81,10 @@ public:
 	// Return component indices
 	std::vector<unsigned int> GetComponents() const;
 
+	// Set if phase is liquid (for the melting model)
 	void SetLiquid();
 
+	// Return true if the phase is liquid (for the melting model)
 	bool GetLiquid() const;
 
     // READ/WRITE/COPY.

@@ -653,8 +653,8 @@ unsigned int Particle::AdjustPhase(const fvector &dcomp,
     // the primary.
     n = m_primary->AdjustPhase(dcomp, dvalues, rng, n);
 
-	int loops = 0; //csl37 - max number of loops set to 20
-	while (n<m && loops < 20){  //csl37 - max number of loops set to 20
+	int loops = 0;
+	while (n<m && loops < 20){  //max number of loops set to 20
 		n += m_primary->AdjustPhase(dcomp, dvalues, rng, m-n);
 		loops ++;
 	}

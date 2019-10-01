@@ -327,7 +327,7 @@ int TitaniaPhaseTransformation::Perform(double t, Cell &sys, Particle &sp, rng_t
 
 
 //! Returns the process type.
-ProcessType TitaniaPhaseTransformation::ID(void) const {return TitaniaPhase_ID;}//csl37-done
+ProcessType TitaniaPhaseTransformation::ID(void) const {return TitaniaPhase_ID;}
 
 /*!
  * Writes the object to a binary stream.

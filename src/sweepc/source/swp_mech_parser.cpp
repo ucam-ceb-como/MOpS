@@ -826,11 +826,11 @@ void MechParser::readTrackers(CamXML::Document &xml, Sweep::Mechanism &mech)
     }
 }
 
-// Creates phases
+// Assign components to phases
 void MechParser::assignPhases(Sweep::Mechanism &mech)
 {
 
-	// Loop over components and assign phases
+	// Loop over components and assign to phases
 	for (int i = 0; i < mech.ComponentCount(); ++i) {
 
 		//Get phase of component
@@ -1774,13 +1774,13 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
 // PHASE TRANSFORMATION REACTION.
 
 /*!
- *  Read phase transformation reaction processes from a sweep mechanism XML file.
+ *  Read phase transformation process from a sweep mechanism XML file.
  *
  *@exception    std::runtime_error   
  */
 void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 {
-	vector<CamXML::Element*> items, subitems, subsubitems, subsubsubitems;
+	vector<CamXML::Element*> items, subitems, subsubitems;
 	vector<CamXML::Element*>::iterator i, j, l, m;
 	CamXML::Element *el = NULL;
 	std::string str;
@@ -1792,9 +1792,12 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 
 	for (i = items.begin(), k = 0; i != items.end(); ++i, ++k) {
 
+		// transformation type
 		type = (*i)->GetAttributeValue("type");
 
-		//transformation type
+		//----------------------------------------------------
+		//--------------- titania_melting_model --------------
+		//----------------------------------------------------
 		if (type.compare("melting") == 0 || type.compare("gibbs") == 0 || type.compare("composition") == 0) {
 
 			// Check that the particle model is valid
@@ -1833,14 +1836,14 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 						"Sweep, MechParser::readPhaseTransformation).");
 				}			
 
-				// Loop over phases
+				// Loop over phase transformations
 				(*i)->GetChildren("phase", subitems);
 				for (j = subitems.begin(); j != subitems.end(); ++j) {
 
 					double A = 0.0;
 					double T = 0.0;
 
-					//transition name
+					// crystal phase name or symbol
 					string phasename = (*j)->GetAttributeValue("id");
 
 					// Get component ID.
@@ -1864,10 +1867,10 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 							"Temperature not specified (Sweep, MechParser::readPhaseTransformation).");
 					}
 
-					vector<fvector> ddcomp;
-					vector<std::string> elems; //vector of elements
+					vector<fvector> ddcomp;		//vector of component changes
+					vector<std::string> elems;	//vector of elements
 
-					//get components and sort by element
+					//get components and sort/separate by element
 					(*j)->GetChildren("component", subsubitems);
 					for (m = subsubitems.begin(); m != subsubitems.end(); ++m) {
 						
@@ -1882,7 +1885,7 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 							// Get component change.
 							str = (*m)->GetAttributeValue("dx");
 							double dx = cdble(str);
-							// Check element vector and add new element
+							// Check if element already exists in element vector
 							int i_elem = -1;							
 							for (int ii = 0; ii < elems.size(); ++ii){
 								if ((elems[ii]).compare(elem) == 0) i_elem = ii;
@@ -1934,7 +1937,7 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 					if (mech.MeltModel().PhaseChangeCount() < 2){
 						throw runtime_error("2 phases expected (Sweep, MechParser::readPhaseTransformation).");
 					}
-					// Check that there is one crossovermech.MeltModel().PhaseChangeCount() - 1) + 
+					// Check that there is one crossover
 					if (subitems.size() == 1){
 
 						for (m = subitems.begin(); m != subitems.end(); ++m){
@@ -1954,6 +1957,7 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 							if (el != NULL) ad = cdble(el->Data());
 
 							// Get phase changes 
+							// These point to the phase changes above and below crossover diameter 
 							id_above = (*m)->GetAttributeValue("id_above");
 							//check phase exists
 							if (!mech.MeltModel().PhaseChangeValid(id_above)){
@@ -2008,7 +2012,11 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 			else {
 				throw runtime_error("Only Spherical and BinTree models supported for phase transformation (Sweep, MechParser::readPhaseTransformation).");
 			}
-		}//Kinetic transformation is read like any ordinary process
+		}
+		//----------------------------------------------------
+		//----------- titania_phase_transformation -----------
+		//----------------------------------------------------
+		// This is a kinetic transformation, which is read like an ordinary process 
 		else if (str.compare("kinetic") == 0){
 
 			TitaniaPhaseTransformation *phasetransform = NULL;
