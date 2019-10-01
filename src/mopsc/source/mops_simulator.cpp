@@ -481,9 +481,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             //@todo Reinstate fractal dimension calculations for
             // the PAH-PP model
 
-			if (iint == m_times.end() - 1){
-				createSavePoint(r, global_step, irun);
-			}
+            createSavePoint(r, global_step, irun);
             if (s.GetLOIStatus() == true){
                 r.DestroyJac(m_loi_J, r.Mech()->GasMech().SpeciesCount());
             }
@@ -2277,60 +2275,61 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 		// Calculate the total step count after this interval.
 		step += times[i].StepCount();
 
-		if (i == times.size() - 1){	//csl37-only write PSL for last time point
 		// Loop over all runs.
-			for (unsigned int irun = 0; irun != m_nruns; ++irun) {
-				// Read the save point for this step and run.
-				r = readSavePoint(step, irun, mech);
+		for (unsigned int irun = 0; irun != m_nruns; ++irun) {
+			// Read the save point for this step and run.
+			r = readSavePoint(step, irun, mech);
 
-				if (r != NULL) {
-					double scale = (double)m_nruns;
-					if (m_output_every_iter) scale *= (double)m_niter;
+			if (r != NULL) {
+				double scale = (double)m_nruns;
+				if (m_output_every_iter) scale *= (double)m_niter;
 
-					// Get PSL for all particles.
-					for (unsigned int j = 0; j != r->Mixture()->ParticleCount(); ++j) {
-						// Get PSL.
-						stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
-							times[i].EndTime(), psl,
-							1.0 / (r->Mixture()->SampleVolume()*scale));
+				// Get PSL for all particles.
+				for (unsigned int j = 0; j != r->Mixture()->ParticleCount(); ++j) {
+					// Get PSL.
+					stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
+						times[i].EndTime(), psl,
+						1.0 / (r->Mixture()->SampleVolume()*scale));
+					if (i == times.size() - 1){	//csl37-only write PSL for last time point
 						// Output particle PSL to CSV file.1
 						out[i]->Write(psl);
 					}
-
-					// Draw particle images for tracked particles.
-					unsigned int n = min(m_ptrack_count, r->Mixture()->ParticleCount());
-					for (unsigned int j = 0; j != n; ++j) {
-						double t = times[i].EndTime();
-						string fname = m_output_filename + "-tem(" + cstr(t) +
-							"s, " + cstr(j) + ").pov";
-						std::ofstream file;
-						file.open(fname.c_str());
-
-						r->Mixture()->Particles().At(j)->writeParticlePOVRAY(file);
-
-						file.close();
-					}
-
-					////////////////////////////////////////// csl37-pp
-					// print primary data and connection data
-					// loop over particles at last save point
-					if (i == times.size() - 1){
-						for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
-						{
-							stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), nodes, prims, k);
-						}
-					}
-					/////////////////////////////////////////
-
-					delete r;
-				}
-				else {
-					// Throw error if the reactor was not read.
-					throw runtime_error("Unable to read reactor from save point "
-						"(Mops, ParticleSolver::postProcessPSLs).");
 				}
 
+				// Draw particle images for tracked particles.
+				unsigned int n = min(m_ptrack_count, r->Mixture()->ParticleCount());
+				for (unsigned int j = 0; j != n; ++j) {
+					double t = times[i].EndTime();
+					string fname = m_output_filename + "-tem(" + cstr(t) +
+						"s, " + cstr(j) + ").pov";
+					std::ofstream file;
+					file.open(fname.c_str());
+
+					r->Mixture()->Particles().At(j)->writeParticlePOVRAY(file);
+
+					file.close();
+				}
+
+				////////////////////////////////////////// csl37-pp
+				// print primary data and connection data
+				// loop over particles at last save point
+				if (i == times.size() - 1){
+					for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
+					{
+						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), nodes, prims, k);
+					}
+				}
+				/////////////////////////////////////////
+
+				delete r;
 			}
+			else {
+				// Throw error if the reactor was not read.
+				throw runtime_error("Unable to read reactor from save point "
+					"(Mops, ParticleSolver::postProcessPSLs).");
+			}
+
+			
 		}
 		
 		//out[i]->Close(); 
@@ -2384,10 +2383,8 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	///////////////////////////////////////////
 	//// Close output CSV files.
 	for (unsigned int i = 0; i != times.size(); ++i) {
-		if (i == times.size() - 1){	//csl37-only write PSL for last time point
-			out[i]->Close();
-			delete out[i];
-		}
+		out[i]->Close();
+		delete out[i];
 	}
 }
 
