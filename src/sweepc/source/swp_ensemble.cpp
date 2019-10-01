@@ -339,7 +339,7 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
         m_dbleactive = false;
 
 	//csl37: add tracked particles -- we can remove this now that we a function to initialise tracking
-	int i = 0;
+	unsigned int i = 0;
 	while(i < m_tracked_number && i<m_count){
 		m_tracked_particles[i] = m_particles[i];
 		i++;
@@ -1354,8 +1354,7 @@ Particle *const Sweep::Ensemble::TrackedAt(unsigned int i)
 void Sweep::Ensemble::InitialiseTracking(){
 	//csl37: add tracked particles
 	m_tracked_number = 0;	//only done for one particle	//csl37-no tracking
-	m_tracked_number = 0;	//only done for one particle	//csl37-TTIP
-	int i = 0;
+	unsigned int i = 0;
 	while(i < m_tracked_number && i<m_count){
 		m_tracked_particles[i] = m_particles[i];
 		//initialise tracking of primary

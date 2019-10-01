@@ -521,7 +521,7 @@ void MeltingModel::Serialize(std::ostream &out) const
 		n = (unsigned int)m_TiIndex.size();
 		out.write((char*)&n, sizeof(n));
 		for (unsigned int k = 0; k != n; k++){
-			unsigned int TiIndex = (double)m_TiIndex[k];
+			unsigned int TiIndex = (unsigned int)m_TiIndex[k];
 			out.write((char*)&TiIndex, sizeof(TiIndex));
 		}
 
@@ -529,7 +529,7 @@ void MeltingModel::Serialize(std::ostream &out) const
 		n = (unsigned int)m_OIndex.size();
 		out.write((char*)&n, sizeof(n));
 		for (unsigned int k = 0; k != n; k++){
-			unsigned int OIndex = (double)m_OIndex[k];
+			unsigned int OIndex = (unsigned int)m_OIndex[k];
 			out.write((char*)&OIndex, sizeof(OIndex));
 		}
 

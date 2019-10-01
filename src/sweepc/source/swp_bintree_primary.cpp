@@ -551,7 +551,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
             //! sum of the primary particle radii as this is the maximum
             //! distance they can be apart. Then we apply the rotation matrix
             //! obtained above to the point:
-            http://mathworld.wolfram.com/DiskPointPicking.html
+			// http://mathworld.wolfram.com/DiskPointPicking.html
             double r = uniformGenerator();
             theta  = 2.0 * PI * uniformGenerator();
 
@@ -1005,7 +1005,7 @@ double BinTreePrimary::RadiusOfGyration() const
     double totalmass=0;
     double r2;
     double Rg;
-    double rix, riy, riz, rjx, rjy, rjz, drx, dry, drz;
+    double rix, riy, riz, rjx, rjy, rjz;
     vector<fvector> coords;
 
 	//! If single primary then return Rg = 0 because primaries are treated as points particles

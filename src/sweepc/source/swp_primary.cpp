@@ -560,7 +560,7 @@ void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
 		fvector phaseMass(m_pmodel->PhaseCount(), 0.0);
 		
 		//add all components excluding liquid components
-		for (int i = 0; i < m_pmodel->PhaseCount(); i++){
+		for (unsigned int i = 0; i < m_pmodel->PhaseCount(); i++){
 			if (!m_pmodel->PhaseIsLiquid(i)){
 				phaseMass[i] = GetPhaseMass(i);
 				mass += phaseMass[i];
@@ -572,7 +572,7 @@ void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
 			//weighted by mass of existing solid phases
 			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
 			double j = uniformGenerator() * mass; //generate random number
-			for (int i = 0; i < m_pmodel->PhaseCount(); i++){
+			for (unsigned int i = 0; i < m_pmodel->PhaseCount(); i++){
 
 				if (j <= phaseMass[i]){ 
 					//get change in composition	

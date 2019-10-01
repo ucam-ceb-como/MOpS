@@ -831,7 +831,7 @@ void MechParser::assignPhases(Sweep::Mechanism &mech)
 {
 
 	// Loop over components and assign to phases
-	for (int i = 0; i < mech.ComponentCount(); ++i) {
+	for (unsigned int i = 0; i < mech.ComponentCount(); ++i) {
 
 		//Get phase of component
 		std::string phaseName = mech.Components(i)->Phase();
@@ -1887,7 +1887,7 @@ void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
 							double dx = cdble(str);
 							// Check if element already exists in element vector
 							int i_elem = -1;							
-							for (int ii = 0; ii < elems.size(); ++ii){
+							for (unsigned int ii = 0; ii < elems.size(); ++ii){
 								if ((elems[ii]).compare(elem) == 0) i_elem = ii;
 							}
 							if (i_elem >= 0){ //element exists
