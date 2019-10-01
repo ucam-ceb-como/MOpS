@@ -119,7 +119,6 @@ bool Component::IsValidValue(const double r) const {
     return r >= m_minValid;
 }
 
-//csl37 TODO: add serialization
 // READ/WRITE/COPY.
 
 // Creates a copy of the component.
@@ -151,6 +150,17 @@ void Component::Serialize(std::ostream &out) const
 
         // Write the component name to the stream.
         out.write(m_name.c_str(), n);
+
+		// Write phase to the stream.
+		n = m_phase.length();
+		out.write((char*)&n, sizeof(n));
+		out.write(m_phase.c_str(), n);
+
+		// Write element to the stream.
+		n = m_element.length();
+		out.write((char*)&n, sizeof(n));
+		out.write(m_element.c_str(), n);
+
     } else {
         throw std::invalid_argument("Output stream not ready "
                                     "(Sweep, Component::Serialize).");
@@ -193,6 +203,20 @@ void Component::Deserialize(std::istream &in)
                 in.read(name, n);
                 m_name.assign(name, n);
                 delete [] name;
+
+				// Read the phase.
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+				name = new char[n];
+				in.read(name, n);
+				m_phase.assign(name, n);
+				delete[] name;
+
+				// Read the element.
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+				name = new char[n];
+				in.read(name, n);
+				m_element.assign(name, n);
+				delete[] name;
 
                 break;
             default:
