@@ -2261,13 +2261,11 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	// write the header row as well.
 	vector<CSV_IO*> out(times.size(), NULL);
 	for (unsigned int i = 0; i != times.size(); ++i) {
-		if (i == times.size() - 1){	//csl37-only write PSL for last time point
-			double t = times[i].EndTime();
-			out[i] = new CSV_IO();
-			out[i]->Open(m_output_filename + "-psl(" +
-				cstr(t) + "s).csv", true);
-			out[i]->Write(header);
-		}
+		double t = times[i].EndTime();
+		out[i] = new CSV_IO();
+		out[i]->Open(m_output_filename + "-psl(" +
+			cstr(t) + "s).csv", true);
+		out[i]->Write(header);
 	}
 
 	// Loop over all time intervals.
@@ -2290,10 +2288,8 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 					stats.PSL(*(r->Mixture()->Particles().At(j)), mech.ParticleMech(),
 						times[i].EndTime(), psl,
 						1.0 / (r->Mixture()->SampleVolume()*scale));
-					if (i == times.size() - 1){	//csl37-only write PSL for last time point
-						// Output particle PSL to CSV file.1
-						out[i]->Write(psl);
-					}
+					// Output particle PSL to CSV file.
+					out[i]->Write(psl);
 				}
 
 				// Draw particle images for tracked particles.
