@@ -1,0 +1,160 @@
+<mechanism name="Titanium Dioxide" units="CGS">
+
+<!-- Define particle components. -->
+<component id="Ti_L">
+    <description>Ti atom non-crystalline</description>
+    <density>3.84</density>
+    <molwt>47.87</molwt>
+	<phase>Liquid</phase>
+	<element>Ti</element>
+</component>
+<component id="O_L">
+    <description>O atom non-crystalline</description>
+    <density>3.84</density>
+    <molwt>16.00</molwt>
+	<phase>Liquid</phase>
+	<element>O</element>
+</component>
+<component id="Ti_An">
+    <description>Ti atom anatase</description>
+    <density>3.84</density>
+    <molwt>47.87</molwt>
+	<phase>An</phase>
+	<element>Ti</element>
+</component>
+<component id="O_An">
+    <description>O atom anatase</description>
+    <density>3.84</density>
+    <molwt>16.00</molwt>
+	<phase>An</phase>
+	<element>O</element>
+</component>
+<component id="Ti_Ru">
+    <description>Ti atom rutile</description>
+    <density>3.84</density>
+    <molwt>47.87</molwt>
+	<phase>Ru</phase>
+	<element>Ti</element>
+</component>
+<component id="O_Ru">
+    <description>O atom rutile</description>
+    <density>3.84</density>
+    <molwt>16.00</molwt>
+	<phase>Ru</phase>
+	<element>O</element>
+</component>
+
+<!-- Define particle types. -->
+<particle id="[Titania]" model="bintree" subtree="false" track="primaryCoordinates">
+<description>A titania particle.</description>
+    <efm>2.64</efm>
+    <fractdim>1.8</fractdim>
+    <coalthresh>1.0</coalthresh>
+    <sintering enable="true" model="GBD">
+		<!-- GBD model params based on Eggersdorfer et al. (2012)-->
+        <A units="s/m4K">2.278e+17</A>
+		<E units="K">31030</E>
+		<Dpmin units="m">4e-09</Dpmin>
+        <alpha>3</alpha>
+    </sintering>
+</particle>
+
+<!-- Coagulation -->
+<coagulation>
+   <A>1</A>
+   <kernel>transition</kernel>
+</coagulation>
+
+<!-- Phase formation. "Composition" model defined in c4e-238. -->
+<transformation type="composition" name="Composition dependent transformation">
+	<!-- Identify non-crystalline (liquid) phase -->
+    <liquid id="Liquid"/>
+	<!-- Define non-crystalline to anatase transformation -->
+    <phase id="An">				<!-- Identify "An" crystal phase -->	
+		<!-- Transformation (melting) temperature T = Tbulk*(1-A/d) -->
+        <A>0.0</A> 				<!-- Set A = 0 for constant T -->
+		<Tbulk>2000</Tbulk> 	<!-- Transformation temperature (K) -->
+		<!-- Define component changes -->
+		<component id="Ti_L" dx="-0.5"/>
+		<component id="Ti_An" dx="+0.5"/>
+		<component id="O_L" dx="-0.5"/>
+		<component id="O_An" dx="+0.5"/>
+    </phase>
+	<!-- Define non-crystalline to rutile transformation -->
+    <phase id="Ru">				<!-- Identify "Ru" crystal phase -->
+		<!-- Transformation temperature (same as above) -->
+        <A>0.0</A>
+		<Tbulk>2000</Tbulk>
+		<!-- Define component changes -->
+		<component id="Ti_L" dx="-0.5"/>
+		<component id="Ti_Ru" dx="+0.5"/>
+		<component id="O_L" dx="-0.5"/>
+		<component id="O_Ru" dx="+0.5"/>
+    </phase>
+	<!-- Define composition dependent crossover diameter -->
+	<crossover name="An/Ru" id_below="An" id_above="Ru">	<!-- Identify phase transformation below and above crossover diameter -->
+		<!-- Form of crossover diameter defined in c4e-238: d = a + b * erf(c*([nO/nTi] - d)) -->
+		<a>9.1e-09</a> 	<!-- (m) -->
+		<b>3.9e-09</a> 	<!-- (m) -->
+		<c>120</a>		<!-- (-) -->
+		<d>1.79</a>		<!-- (-) -->
+	</crossover>
+</transformation>
+
+<!-- Dimer Inception -->
+<inception name="2Ti(OH)4 molecule inception" rate="freemolecular">
+    <formula>"H4O4TI + H4O4TI to [Titania2]</formula>
+    <A>0.001</A>
+    <!-- g, cm, s -->
+    <reactant id="H4O4TI" stoich="2" m="1.925e-022" d="5.128e-8" />
+    <product id="H2O" stoich="+4.0" />
+    <particleout id="[Titania]"/>
+    <component id="Ti_L" dx="+2.0"/>
+    <component id="O_L" dx="+4.0"/>
+</inception>
+
+<inception name="Ti(OH)4 + Ti(OH)3 molecule inception" rate="freemolecular">
+    <formula>"H4O4TI + H3O3TI to [Titania2]</formula>
+    <A>0.001</A>
+    <!-- g, cm, s -->
+    <reactant id="H3O3TI" stoich="1" m="1.642e-022" d="5.128e-8" />
+    <reactant id="H4O4TI" stoich="1" m="1.925e-022" d="5.128e-8" />
+    <product id="H2O" stoich="+3.5" />
+    <particleout id="[Titania]"/>
+    <component id="Ti_L" dx="+2.0"/>
+    <component id="O_L" dx="+3.5"/>
+</inception>
+
+<inception name="2Ti(OH)3 molecule inception" rate="freemolecular">
+    <formula>"H3O3TI + H3O3TI to [Titania2]</formula>
+    <A>0.001</A>
+    <!-- g, cm, s -->
+    <reactant id="H3O3TI" stoich="2" m="1.642e-022" d="5.128e-8" />
+    <product id="H2O" stoich="+3.0" />
+    <particleout id="[Titania]"/>
+    <component id="Ti_L" dx="+2.0"/>
+    <component id="O_L" dx="+3.0"/>
+</inception>
+
+<!-- Condensation reaction -->
+<condensation type="condensation" name="Ti(OH)4 condensation" defer="false">
+    <formula>[Titania] + Ti(OH)4 to [Titania+1]</formula>
+    <A>0.2</A>
+    <!-- g, cm, s -->
+    <reactant id="H4O4TI" stoich="1" m="1.323e-22" d="1e-100"/>
+    <product id="H2O" stoich="+2.0" />
+    <component id="Ti_L" dx="+1.0"/>
+    <component id="O_L" dx="+2.0"/>
+</condensation>
+
+<condensation type="condensation" name="Ti(OH)4 condensation" defer="false">
+    <formula>[Titania] + Ti(OH)3 to [Titania+1]</formula>
+    <A>0.2</A>
+    <!-- g, cm, s -->
+    <reactant id="H3O3TI" stoich="1" m="1.323e-22" d="1e-100"/>
+    <product id="H2O" stoich="+1.5" />
+    <component id="Ti_L" dx="+1.0"/>
+    <component id="O_L" dx="+1.5"/>
+</condensation>
+
+</mechanism>
