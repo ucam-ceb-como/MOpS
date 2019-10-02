@@ -1293,10 +1293,12 @@ void PAHProcess::moveC(Cpointer C_1, Cpointer Cprev, double new_distance) {
 	m_pah->m_cpositions.insert(C_1->coords);
 }
 //! Adds an R5 to the list of R5s and R7s
-void PAHProcess::addR5internal(Cpointer C_1, Cpointer C_2) {
+void PAHProcess::addR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
 	double R5_dist = getDistance_twoC(C_1, C_2);
 	cpair R5dir = get_vector(C_1->coords,C_2->coords);
-	cpair normvec = norm_vector(C_1->coords, C_2->coords, C_2->C2->coords);
+	cpair normvec;
+	if (invert_dir) normvec = invert_vector(norm_vector(C_1->coords, C_2->coords, C_2->C2->coords));
+	else normvec = norm_vector(C_1->coords, C_2->coords, C_2->C2->coords);
 	cpair crossvec = cross_vector(R5dir, normvec);
 	double theta = atan(R5_dist/2.0/0.7);
 	double magn = 0.7 / cos(theta);
@@ -2336,6 +2338,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		else {
 			stype = 2015;
 		}
+		t = (kmcSiteType) stype;
 	}
     // removes site from m_pah->m_siteMap (principal site)
     delSiteFromMap(st->type, st);
@@ -2344,6 +2347,8 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 	if ( !checkSiteValid(st) && ( (int)t%10 >= 5 && (int)t%10 <= 7) ){
 		//Assume an spiral has been formed
 		st->type = SPIRAL;
+		stype = 9999;
+		t = (kmcSiteType) stype;
 	}
 	if (!checkSiteValid(st)) {
 		cout << "Invalid site convSiteType. This may be alright if the edge is unreactive but it may also be an error. \n"; //SETBREAKPOINT
@@ -2613,11 +2618,12 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	}
 	if (stype + bulkCchange == 500) {
 		stype = 100; bulkCchange = 0;
-		removeR5internal(Carb1,Carb2);
+		//removeR5internal(Carb1,Carb2);
 	}
 	if (stype + bulkCchange == 2102) {
 		stype = 1002; bulkCchange = 0;
 	}
+	//Converts all site types with an extra digit 2014, 2114, ... into 2004, 2104, ... so the next section changes the index and then decides which resulting site is obtained.
 	if (stype %100 >= 10 && stype != 9999) stype -= 10;
 	if (stype + bulkCchange == 2004 || stype + bulkCchange == 2014) {
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
@@ -2745,6 +2751,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		//There are two options. An invalid transformation or an spiral formation.
 		if ( (stype + bulkCchange)%10 >=5 && (stype + bulkCchange)%10 <=7 ){
 			//The transformation just formed a 7 to 9 member site that will not react further. Transform it into a SPIRAL site.
+			delSiteFromMap(st->type, st);
 			stype = 9999; //SETBREAKPOINT
 			bulkCchange = 0;
 			//Optimise to avoid atoms in the spiral to overlap in positions.
@@ -2761,6 +2768,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			// change site type back to original site.
 			st->type = (kmcSiteType)(stype);
 			///////////////////////////////////////////////////////////
+			m_pah->m_siteMap[st->type].push_back(st);
 		}
 		else {
 			cout << "ERROR: updateSites: Created undefined site:\n"; //SETBREAKPOINT
@@ -3326,7 +3334,7 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
     return *m_pah;
 }
 
-
+int create_pah_counter = 0;
 // Create Structure from an existing PAH structure (cloning)
 void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, Ccontainer edCarbons, std::list<cpair> inCarbs, std::list<cpair> R5loc, std::list<cpair> R7loc, cpair first_carbon_coords) {
     //Add first carbon.
@@ -3389,20 +3397,6 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
         addSite(vec[i], site_carb_1, site_carb_2);
     }
 	
-    // check if PAH closes correctly
-	if (m_pah->m_clast == NULLC || !checkHindrance_twoC(newC->C1, m_pah->m_cfirst)) {
-        // PAH did not close properly. invalid structure
-        cout << "createPAH: PAH did not close properly. Could be problem " //SETBREAKPOINT
-            <<"with site list input...\n";
-        std::ostringstream msg;
-        msg << "ERROR: PAH did not close properly.."
-            << " (Sweep::KMC_ARS::PAHProcess::createPAH)";
-        saveXYZ("KMC_DEBUG/KMC_PAH_X_CLOSE");
-		//saveDOT("KMC_DEBUG/KMC_PAH_X_CLOSE.dot");
-        throw std::runtime_error(msg.str());
-        assert(false);
-        return;
-    }
     m_pah->m_rings = R6;
 	m_pah->m_rings5_Lone = R5_Lone;
 	m_pah->m_rings5_Embedded = R5_Embedded;
@@ -3416,6 +3410,27 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 	m_pah->setnumofC(totalC_num);
     m_pah->setnumofH((int)vec.size());
     updateCombinedSites();
+	
+	// check if PAH closes correctly
+	// This was moved to the end because the PAH was not giving enough information to debug.
+	if (m_pah->m_clast == NULLC || !checkHindrance_twoC(newC->C1, m_pah->m_cfirst)) {
+        // PAH did not close properly. invalid structure
+        cout << "createPAH: PAH did not close properly. Could be problem " //SETBREAKPOINT
+            <<"with site list input...\n";
+        std::ostringstream msg;
+        msg << "ERROR: PAH did not close properly.."
+            << " (Sweep::KMC_ARS::PAHProcess::createPAH)";
+		printSites();
+		std:string filename = "KMC_DEBUG/KMC_PAH_X_CLOSE_";
+		filename.append(std::to_string(create_pah_counter));
+		cout << "Saving file " << filename << ".xyz\n";
+        saveXYZ(filename);
+		//saveDOT("KMC_DEBUG/KMC_PAH_X_CLOSE.dot");
+        //throw std::runtime_error(msg.str());
+        //assert(false);
+        //return;
+		create_pah_counter++;
+    }
 }
 
 /*!
@@ -4162,7 +4177,9 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSitesMemb(stt);
     //printStruct();//++++
 	//Optimise PAH if needed.
-	if (double dist = getDistance_twoC(C_1,C_2) < 2.6 ) {
+	Spointer S1 = moveIt(stt, -1); 
+    Spointer S2 = moveIt(stt, 1);
+	if (double dist = getDistance_twoC(C_1,C_2) < 2.6 || (int)S1->type % 10 >=4 || (int)S2->type % 10 >=4) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -4215,8 +4232,6 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     }
     //printStruct();
     // neighbouring sites:
-    Spointer S1 = moveIt(stt, -1); 
-    Spointer S2 = moveIt(stt, 1);
 	Spointer S3 = moveIt(S1, -1);
 	Spointer S4 = moveIt(S2, 1);
     // Update Site and neighbours
@@ -6251,7 +6266,7 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 	}
-	else addR5internal(C_1,C_2);
+	else addR5internal(C_1,C_2, true);
 }
 // ************************************************************
 // ID19- R6 desorption at bay -> pyrene (AR21 in Matlab)
