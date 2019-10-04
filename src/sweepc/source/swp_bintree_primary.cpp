@@ -456,6 +456,12 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 
         bool Overlap = false;
 
+		if (true){	//Select between BCCA and DLCA (currently only using BCCA)
+		///////////////////////////////////////////////////////////////////////////////
+		//	Ballistic Cluster Cluster Aggregation (BCCA)
+		//	Gives D_f ~ 1.91 and k_f ~ 1.333
+		///////////////////////////////////////////////////////////////////////////////
+        
         //! Incremental translation.
         while (!Overlap) {
             //! Sphere point picking. This is the random direction step of
@@ -630,10 +636,16 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
             //    }
             //}
         }
-
-		//////////////////////////////////////////////// DLCA collision
-		////////////////////////////////////////////////
-		/*
+		///////////////////////////////////////////////////////////////////////////////
+		}
+		else{	//DLCA disabled
+		///////////////////////////////////////////////////////////////////////////////
+		//	Diffusion Limited Cluster Aggregation (DLCA)
+		//	Gives D_f ~ 1.8 and k_f ~ 1.36
+		//	Instead of ballistic trajectories as with BCCA, DLCA models Brownian motion. 
+		//	The "bullet" particle takes steps in random directions with step size 
+		//	equal to the average primary diameter.
+		///////////////////////////////////////////////////////////////////////////////
 		while (!Overlap) {
 			//! Generate random point on sphere
 			double theta = 2.0 * PI * uniformGenerator();
@@ -688,7 +700,8 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 				this->m_leftchild->Translate(step_size * x2, step_size * y2, step_size * z2);
 				Overlap = this->checkForOverlap(*m_leftchild, *m_rightchild, numberOfOverlaps, Separation);
 
-				//If overlap then:
+					//If particles overlap then reverse the step and retake it in smaller increments 
+					//until the particles are approximately in point contact
 				if (Overlap == true){
 
 					//Reverse the step
@@ -730,9 +743,8 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 				}
 			}
 		}
-		*/
-		////////////////////////////////////////////////
-		////////////////////////////////////////////////
+		}
+		///////////////////////////////////////////////////////////////////////////////
 
         double deltax = m_rightparticle->m_cen_bsph[0] - m_leftparticle->m_cen_bsph[0];
         double deltay = m_rightparticle->m_cen_bsph[1] - m_leftparticle->m_cen_bsph[1];
@@ -790,9 +802,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
         m_distance_centreToCentre = m_leftparticle->m_primarydiam / 2.0 + m_rightparticle->m_primarydiam / 2.0;
     }
 
-	//csl37-test
 	assert(m_distance_centreToCentre >= 0.0);
-	//csl37-test
 
 	CheckSintering();
 
@@ -1845,12 +1855,8 @@ void BinTreePrimary::ChangePointer(BinTreePrimary *source, BinTreePrimary *targe
 
 			//! Update centre to centre separation ensuring primaries are at least in point contact
 			m_distance_centreToCentre = std::min(r_j + r_new, d_ij_new);
-			//csl37-test
-			if (m_distance_centreToCentre < 0.0){
-				std::cout << "d_ij=" << m_distance_centreToCentre << endl;
-			}
+			
 			assert(m_distance_centreToCentre >= 0.0);
-			//csl37-test
 
 			//! adjust coordinates of new neighbour and all its neighbour
 			//! this translates the branch along old separation vector d_ik to appropriate separation
@@ -3042,11 +3048,8 @@ void BinTreePrimary::SinterNode(
 				double A_i = std::max(0.0,m_leftparticle->m_free_surf + m_leftparticle->m_sum_necks - M_PI*(r_i*r_i - x_i*x_i)*r_i/x_i);
 				double A_j = std::max(0.0,m_rightparticle->m_free_surf + m_rightparticle->m_sum_necks - M_PI*(r_j*r_j - x_j*x_j)*r_j / x_j);
 				
-				//csl37-test
 				assert(A_i >= 0.0);
 				assert(A_j >= 0.0);
-				assert(A_i + A_j > 0.0);
-				//csl37-test
 
 				//! @todo Remove derivation and replace with reference to preprint
 				//!       or paper if results do get published.
@@ -3923,7 +3926,6 @@ void BinTreePrimary::TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u,
 	}
 }
 
-////////////////////////////////////////////////////////////////////////csl37-pp
 /*!
  *  Print primary particle details and connectivity
  *
@@ -3948,7 +3950,7 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 
 		//primary coordinates
 		vector<fvector> coords;
-		this->GetPriCoords(coords);
+		this->GetPriCoords(coords); //get primary coodinates
 		primary.push_back(coords[0][0]);
 		primary.push_back(coords[0][1]);
 		primary.push_back(coords[0][2]);
@@ -3960,7 +3962,7 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 
 		primary_diameter.push_back(primary);
 		
-		if (m_parent == NULL){	//single particle case
+		if (m_parent == NULL){	//connectivity information for single primary case
 			node[0] = k+1;
 			node[1] = m_numprimary;
 			node[2] = 0.0;
@@ -3969,7 +3971,8 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 			node[5] = 0.0;
 			node[6] = m_primarydiam/2.0;
 			node[7] = 0.0;
-			node[8] = reinterpret_cast<uintptr_t>(this);	//print pointer
+			//print pointer to this primary as integer (assume this a unique id to the primary)
+			node[8] = reinterpret_cast<uintptr_t>(this);	
 			node[9] = 0.0;
 
 			surface.push_back(node);
@@ -3992,11 +3995,14 @@ void BinTreePrimary::PrintPrimary(vector<fvector> &surface, vector<fvector> &pri
 		node[5] = R_ij;
 		node[6] = r_i;
 		node[7] = r_j;
-		node[8] = reinterpret_cast<uintptr_t>(m_leftparticle);	//print pointer
-		node[9] = reinterpret_cast<uintptr_t>(m_rightparticle);	//print pointer
+		//print pointer to left primary as integer (assume this a unique id to the primary)
+		node[8] = reinterpret_cast<uintptr_t>(m_leftparticle);	
+		//print pointer to right primary as integer (assume this a unique id to the primary)
+		node[9] = reinterpret_cast<uintptr_t>(m_rightparticle);	
 		
 		surface.push_back(node);
 		
+		//continue down binary tree
 		m_leftchild->PrintPrimary(surface, primary_diameter, k);
 		m_rightchild->PrintPrimary(surface, primary_diameter, k);
 	}
