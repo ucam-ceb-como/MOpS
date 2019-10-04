@@ -283,14 +283,9 @@ public:
     // Recalculate derived properties from the primary particle
     void UpdateCache();
 
-	//csl37: get particle coordinates
+	// Get particle coordinates
 	void getParticleCoords(std::vector<fvector> &coords) const;
 
-	//csl37: initialise primary particle tracking for videos
-	void setTracking();
-
-	//csl37: remove primary tracking
-	void removeTracking();
     // READ/WRITE/COPY.
 
     //! Clone the particle.

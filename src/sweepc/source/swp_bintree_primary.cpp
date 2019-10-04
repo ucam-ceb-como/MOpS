@@ -89,8 +89,7 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_r(0.0),
     m_r2(0.0),
     m_r3(0.0),
-	m_Rg(0.0),
-	m_tracked(false)
+	m_Rg(0.0)
 {
     m_cen_bsph[0] = 0.0;
     m_cen_bsph[1] = 0.0;
@@ -143,8 +142,7 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_r(0.0),
     m_r2(0.0),
     m_r3(0.0),
-	m_Rg(0.0),
-	m_tracked(false)
+	m_Rg(0.0)
 {
     m_cen_bsph[0] = 0.0;
     m_cen_bsph[1] = 0.0;
@@ -193,8 +191,7 @@ m_leftchild(NULL),
 m_rightchild(NULL),
 m_parent(NULL),
 m_leftparticle(NULL),
-m_rightparticle(NULL),
-m_tracked(false)
+m_rightparticle(NULL)
 {
     Deserialize(in, model);
 }
@@ -403,11 +400,6 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 		newright->m_rightchild->m_parent    = newright;
     }
     m_children_sintering=0.0;
-
-	//csl37
-	//this becomes a node so turn off tracking flag
-	//flag should have been copied to newleft/right already
-	m_tracked = false;
 
     UpdateCache();
 
@@ -1083,25 +1075,6 @@ void BinTreePrimary::GetPrimaryCoords(std::vector<fvector> &coords) const
         c[1] = m_cen_mass[1];
         c[2] = m_cen_mass[2];
         c[3] = m_r;
-		if (m_tracked == true){
-			c[4] = m_frame_orient[0];
-			c[5] = m_frame_orient[1];
-			c[6] = m_frame_orient[2];
-			c[7] = m_frame_x[0];
-			c[8] = m_frame_x[1];
-			c[9] = m_frame_x[2];
-		}else{
-			c[4] = 0.0;
-			c[5] = 0.0;
-			c[6] = 0.0;
-			c[7] = 0.0;
-			c[8] = 0.0;
-			c[9] = 0.0;
-		}
-		//csl37-phase tracking
-		//print components
-		c[10] = GetComponent("An");
-		c[11] = GetComponent("Ru");
         coords.push_back(c);
     } else {
         m_leftchild->GetPrimaryCoords(coords);
@@ -1423,24 +1396,7 @@ BinTreePrimary &BinTreePrimary::Merge()
 
 	//initialise parameters
 	double r_big,r_small; //, d_ij, x_ij;
-	double r_new = 0.0;
-
-	//if merging primary is tracked save frame coordinates
-	Coords::Vector frame_x;
-	Coords::Vector frame_z;
-	bool update_tracking = false;
-	if (m_rightparticle->m_tracked == true){
-		update_tracking = true;
-		m_rightparticle->m_tracked = false;
-		frame_x = m_rightparticle->m_frame_x;
-		frame_z = m_rightparticle->m_frame_orient;
-	}
-	else if (m_leftparticle->m_tracked == true){
-		update_tracking = true;
-		m_leftparticle->m_tracked = false;
-		frame_x = m_leftparticle->m_frame_x;
-		frame_z = m_leftparticle->m_frame_orient;
-	}
+	double r_new = 0.0;	
 
     // Make sure this primary has children to merge
     if( m_leftchild!=NULL) {
@@ -1751,13 +1707,6 @@ BinTreePrimary &BinTreePrimary::Merge()
 		//if coordinates are tracked then update the tracked radii
 		if(m_pmodel->getTrackPrimaryCoordinates()){
 			new_prim->setRadius(new_prim->m_primarydiam / 2.0);
-		}
-
-		//update tracking
-		if(update_tracking == true){
-			new_prim->m_tracked = true;
-			new_prim->m_frame_x = frame_x;
-			new_prim->m_frame_orient = frame_z;
 		}
 
 		UpdateCache();
@@ -3435,14 +3384,6 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
         val = m_frame_x[2];
         out.write((char*)&val, sizeof(val));
 
-		// Output if primary is tracked
-		if (m_tracked) {
-			out.write((char*)&trueval, sizeof(trueval));
-		}
-		else {
-			out.write((char*)&falseval, sizeof(falseval));
-		}
-
         // Output base class.
         Primary::Serialize(out);
 
@@ -3597,14 +3538,6 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
         m_frame_x[2] = val;
-
-		 // Read if primary is tracked.
-        in.read(reinterpret_cast<char*>(&val_unsigned), sizeof(val_unsigned));
-        if (val_int==1) {
-            m_tracked = true;
-        } else {
-            m_tracked = false;
-        }
 
         // Input base class.
         Primary::Deserialize(in, model);
@@ -3831,34 +3764,11 @@ void BinTreePrimary::transform(const Coords::Matrix &mat)
 
 	Coords::Vector A_x;
 	Coords::Vector A_z;
-	//csl37-orientation
-	//if primary is tracked then rotate the orientation vector
-	if(m_tracked == true) {
-		//construct vector from CoM to end of orientation vector
-	    A_z[0] = m_cen_mass[0] + m_frame_orient[0];
-		A_z[1] = m_cen_mass[1] + m_frame_orient[1];
-		A_z[2] = m_cen_mass[2] + m_frame_orient[2];
-		A_x[0] = m_cen_mass[0] + m_frame_x[0];
-		A_x[1] = m_cen_mass[1] + m_frame_x[1];
-		A_x[2] = m_cen_mass[2] + m_frame_x[2];
-		//rotate A
-		A_z = mat.Mult(A_z);
-		A_x = mat.Mult(A_x);
-	}
 
     //! Rotate centre-of-mass and bounding sphere coordinates.
     m_cen_mass = mat.Mult(m_cen_mass);
     m_cen_bsph = mat.Mult(m_cen_bsph);
 
-	if(m_tracked == true){
-		//calculate new orientation vector
-		m_frame_orient[0] = A_z[0] - m_cen_mass[0];
-		m_frame_orient[1] = A_z[1] - m_cen_mass[1];
-		m_frame_orient[2] = A_z[2] - m_cen_mass[2];
-		m_frame_x[0] = A_x[0] - m_cen_mass[0];
-		m_frame_x[1] = A_x[1] - m_cen_mass[1];
-		m_frame_x[2] = A_x[2] - m_cen_mass[2];
-	}
 }
 
 /*!
@@ -4011,28 +3921,6 @@ void BinTreePrimary::TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u,
 	if(m_parent->m_parent != NULL){
 		m_parent->TranslateNeighbours(prim, u, delta_d, prim_ignore);
 	}
-}
-
-//csl37: remove primary tracking
-void BinTreePrimary::removeTracking()
-{
-	//set tracking flag to false
-	m_tracked = false;
-
-	//work down bintree structure
-	if (m_leftchild != NULL) m_leftchild->removeTracking();
-	if (m_rightchild != NULL) m_rightchild->removeTracking();
-}
-
-//csl37: checks that only one priamry is tracked
-void BinTreePrimary::checkTracking(int &count)
-{
-	//set tracking flag to false
-	if(m_tracked == true) count++;
-
-	//work down bintree structure
-	if (m_leftchild != NULL) m_leftchild->checkTracking(count);
-	if (m_rightchild != NULL) m_rightchild->checkTracking(count);
 }
 
 ////////////////////////////////////////////////////////////////////////csl37-pp

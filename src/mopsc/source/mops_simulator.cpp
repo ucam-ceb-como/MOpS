@@ -421,25 +421,6 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         // Initialise some LOI stuff
         if (s.GetLOIStatus() == true) setupLOI(r, s);
 
-		//////////////////////////////////////////// csl37 ////////////////////////////////////////////
-		//initialise tracking
-		r.Mixture()->Particles().InitialiseTracking();
-
-		/* write particle coordiantes for animation 
-		once this works, writing to file should be a post-process 
-		*/
-		ofstream PartCoordsFile;
-		std::string rname(r.GetName());
-		std::string PartCoordsName;
-		PartCoordsName = "Part-Coords(" + rname + ").csv";
-
-		PartCoordsFile.open(PartCoordsName.c_str());
-		PartCoordsFile << "Time (s)" << " , " << "x (m)" << " , " << "y (m)" << " , " << "z (m)" << " , " << "r (m)" <<
-			" , " << "k1" << " , " << "k2" << " , " << "k3" << " , " << "i1" << " , " << "i2" << " , " << "i3" << 
-			" , " << "An" << " , " << "Ru" << " \n ";
-		PartCoordsFile.close();
-		//////////////////////////////////////////// csl37 ////////////////////////////////////////////
-
         // Loop over the time intervals.
         unsigned int global_step = 0;
         timevector::const_iterator iint;

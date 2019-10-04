@@ -292,20 +292,11 @@ public:
     //void SetNumOfInceptedPAH(int m_amount);
     //void SetNumOfInceptedPAH(int m_amount, Sweep::AggModels::Primary *m_primary);
 
-	// csl37
-	// Ensemble tracking
-	void UpdateTracking(int p_old, int p_merged);
-	Particle *const TrackedAt(unsigned int i);
-	void InitialiseTracking();
 private:
     //! Vector of particles in the ensemble.
     PartPtrVector m_particles;
     Sweep::KMC_ARS::KMCSimulator *m_kmcsimulator;
-
-	// csl37
-	// Ensemble tracking
-	unsigned int m_tracked_number;
-	PartPtrVector m_tracked_particles;    
+   
 // ENSEMBLE CAPACITY VARIABLES.
     unsigned int m_levels;   // Number of levels in the binary tree.
     unsigned int m_capacity; // The ensemble capacity (max. particle count).

@@ -222,13 +222,6 @@ public:
     //! Deserialise a BinTreePrimary particle
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
 
-	//flag to indicate particle is tracked 
-	bool m_tracked;
-	//set tracking flag
-	void setTracking() { m_tracked = true; };
-	//csl37: remove primary tracking
-	void removeTracking();
-
 	//! Return primary particle details and connectivity
 	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
 
@@ -432,10 +425,6 @@ protected:
 	
 	//! Function to translate neighbours of a primary except prim_ignore
 	void TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u, double delta_d, BinTreePrimary *prim_ignore);
-
-	//csl37-debug
-	//csl37: checks that only one priamry is tracked
-	void checkTracking(int &count);
 
 private:
     // GENERAL PARTICLE MODEL PROPERTIES
