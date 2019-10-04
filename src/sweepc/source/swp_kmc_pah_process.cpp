@@ -101,9 +101,10 @@ PAHStructure* PAHProcess::clonePAH() const {
     PAHStructure* temp = new PAHStructure();
     PAHProcess p(*temp);
     std::vector<kmcSiteType> sites = SiteVector();
+	std::vector<int> carbon_per_site = SiteIntVector();
 	Spointer first_site = SiteList().begin();
 	cpair first_c_pos = first_site->C1->coords;
-	p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_carbonList, m_pah->m_InternalCarbons, m_pah->m_R5loc, m_pah->m_R7loc, first_c_pos);
+	p.createPAH(sites, carbon_per_site, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_carbonList, m_pah->m_InternalCarbons, m_pah->m_R5loc, m_pah->m_R7loc, first_c_pos);
 	//p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_InternalCarbons);
     return temp;
 }
@@ -682,14 +683,18 @@ cpair PAHProcess::get_vector(cpair p1, cpair p2) const{
 cpair PAHProcess::scale_vector(cpair vec) const{
 	//check if vector is unitary
 	double tol = 1e-3;
+	double magnitude = sqrt(std::get<0>(vec)*std::get<0>(vec) + std::get<1>(vec)*std::get<1>(vec) + std::get<2>(vec)*std::get<2>(vec));
 	cpair temp = vec;
-	if (abs(std::get<0>(vec)*std::get<0>(vec) + std::get<1>(vec)*std::get<1>(vec) + std::get<2>(vec)*std::get<2>(vec) - 1.0)  > tol)
+	if (magnitude > tol)
 	{
-		double magnitude = sqrt(std::get<0>(vec)*std::get<0>(vec) + std::get<1>(vec)*std::get<1>(vec) + std::get<2>(vec)*std::get<2>(vec));
 		temp = std::make_tuple(std::get<0>(vec)/magnitude, std::get<1>(vec)/magnitude, std::get<2>(vec)/magnitude);
 		/*std::get<0>(temp) = std::get<0>(temp)/magnitude;
 		std::get<1>(temp) = std::get<1>(temp)/magnitude;
 		std::get<2>(temp) = std::get<2>(temp)/magnitude;*/
+	}
+	else{
+		//Vector is really small. Dividing by a very small number risks raising errors.
+		temp = std::make_tuple(std::get<0>(vec), std::get<1>(vec), std::get<2>(vec));
 	}
 	return temp;
 }
@@ -719,10 +724,13 @@ cpair PAHProcess::norm_vector(cpair p1, cpair p2, cpair p3) const{
 	cpair vec2 = scale_vector(std::make_tuple(std::get<0>(p3) - std::get<0>(p2), std::get<1>(p3) - std::get<1>(p2), std::get<2>(p3) - std::get<2>(p2)));
 	cpair temp = std::make_tuple(std::get<1>(vec1)*std::get<2>(vec2) - std::get<2>(vec1)*std::get<1>(vec2), std::get<2>(vec1)*std::get<0>(vec2) - std::get<0>(vec1)*std::get<2>(vec2), std::get<0>(vec1)*std::get<1>(vec2) - std::get<1>(vec1)*std::get<0>(vec2));
 	double theta = acos(std::get<0>(vec1) * std::get<0>(vec2) + std::get<1>(vec1) * std::get<1>(vec2) + std::get<2>(vec1) * std::get<2>(vec2))*180.0/M_PI;
-	if (theta <= 180.0){
-		std::get<0>(temp) = std::get<0>(temp) * -1.0;
-		std::get<1>(temp) = std::get<1>(temp) * -1.0;
-		std::get<2>(temp) = std::get<2>(temp) * -1.0;
+	if (theta < 180.0){
+		temp = std::make_tuple(std::get<0>(temp) * -1.0, std::get<1>(temp) * -1.0, std::get<2>(temp) * -1.0);
+	}
+	if ( (theta <= 0.1 && theta >= -0.1) || (theta >= 179.9 && theta <= 180.1) ){
+		cout << "Error in PAHProcess::norm_vector. Computed the cross product of almost parallel vectors. Returning arbitrary vector. \n";
+		//Arbitrarily define the normal vector as 
+		temp = std::make_tuple(std::get<0>(temp), std::get<1>(temp), std::get<2>(temp));
 	}
 	cpair temp2 = scale_vector(temp);
 	return temp2;
@@ -733,6 +741,13 @@ cpair PAHProcess::cross_vector (cpair vec1, cpair vec2) const{
 	cpair vec1_adj = scale_vector(vec1);
 	cpair vec2_adj = scale_vector(vec2);
 	cpair temp = std::make_tuple(std::get<1>(vec1_adj) * std::get<2>(vec2_adj) - std::get<2>(vec1_adj) * std::get<1>(vec2_adj), std::get<2>(vec1_adj) * std::get<0>(vec2_adj) - std::get<0>(vec1_adj) * std::get<2>(vec2_adj), std::get<0>(vec1_adj) * std::get<1>(vec2_adj) - std::get<1>(vec1_adj) * std::get<0>(vec2_adj));
+	double magnitude = sqrt(std::get<0>(temp)*std::get<0>(temp) + std::get<1>(temp)*std::get<1>(temp) + std::get<2>(temp)*std::get<2>(temp));
+	if (magnitude <= 1e-3){
+		//Cross product of two parallel vectors. 
+		cout << "Error in PAHProcess::cross_vector. Computed the cross product of almost parallel vectors. Returning arbitrary vector. \n";
+		//Arbitrarily define the normal vector as 
+		temp = std::make_tuple(std::get<0>(temp), std::get<1>(temp), std::get<2>(temp));
+	}
 	cpair temp2 = scale_vector(temp);
 	return temp2;
 }
@@ -2562,6 +2577,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
                                int bulkCchange) { // addition to number of bulk C in site
     // check if site type change is valid (as long as site still principal site)
 	int stype = (int)st->type;
+	int original_stype = stype;
 	if (!checkSiteValid(stype)){
 		cout << "ERROR: updateSites: Invalid site type before update\n"; //SETBREAKPOINT
 		std::ostringstream msg;
@@ -2624,7 +2640,9 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		stype = 1002; bulkCchange = 0;
 	}
 	//Converts all site types with an extra digit 2014, 2114, ... into 2004, 2104, ... so the next section changes the index and then decides which resulting site is obtained.
-	if (stype %100 >= 10 && stype != 9999) stype -= 10;
+	if (stype %100 >= 10 && stype != 9999) {
+		stype -= 10;
+	}
 	if (stype + bulkCchange == 2004 || stype + bulkCchange == 2014) {
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
 		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
@@ -2649,7 +2667,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 		// change site type back to original site.
-		st->type = (kmcSiteType)(stype);
+		st->type = (kmcSiteType)(original_stype);
 		///////////////////////////////////////////////////////////
 		
 		//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
@@ -2675,7 +2693,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 		// change site type back to original site.
-		st->type = (kmcSiteType)(stype);
+		st->type = (kmcSiteType)(original_stype);
 		///////////////////////////////////////////////////////////
 		//There are two possible sites R5ZZACR5 and ACR5R5R6ZZ. Decide which one.
 		Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
@@ -2700,7 +2718,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 		// change site type back to original site.
-		st->type = (kmcSiteType)(stype);
+		st->type = (kmcSiteType)(original_stype);
 		///////////////////////////////////////////////////////////
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
 		Cpointer Ccheck = Carb1->C2;
@@ -3316,6 +3334,7 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
     Strings::split(siteList_str, siteList_strvec, std::string(","));
     // convert into vector of siteTypes
     std::vector<kmcSiteType> siteList_vec;
+	std::vector<int> carb_siteList_vec;
     for(size_t i=0; i<siteList_strvec.size(); i++) {
         kmcSiteType temp = kmcSiteType_str(siteList_strvec[i]);
         if(temp == Inv) {
@@ -3329,14 +3348,16 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
                 assert(false);
         }
         siteList_vec.push_back(temp);
+		int number_carbs = (int)temp %10 + 1;
+		carb_siteList_vec.push_back(number_carbs);
     }
-	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, edgeCarbons, internalCarbons, R5_locs, R7_locs, m_pah->m_cfirst->coords);
+	createPAH(siteList_vec, carb_siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, edgeCarbons, internalCarbons, R5_locs, R7_locs, m_pah->m_cfirst->coords);
     return *m_pah;
 }
 
 int create_pah_counter = 0;
 // Create Structure from an existing PAH structure (cloning)
-void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, Ccontainer edCarbons, std::list<cpair> inCarbs, std::list<cpair> R5loc, std::list<cpair> R7loc, cpair first_carbon_coords) {
+void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, std::vector<int>& carb_vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, Ccontainer edCarbons, std::list<cpair> inCarbs, std::list<cpair> R5loc, std::list<cpair> R7loc, cpair first_carbon_coords) {
     //Add first carbon.
 	Cpointer newC = addC();
 	moveC(newC, first_carbon_coords);
@@ -3361,7 +3382,9 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
     
     // start drawing..
     for(size_t i=0; i<vec.size(); i++) {
-		int vec_carb_number = (int)vec[i] % 10 + 1;
+		int vec_carb_number = carb_vec[i];
+		//int vec_carb_number = (int)vec[i] % 10 + 1;
+		
 		Cpointer site_carb_1 = newC;
 		for (size_t j=0; j<vec_carb_number; j++) {
 			if( !checkHindrance_C_PAH(nextC->coords)){
@@ -3415,7 +3438,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 	// This was moved to the end because the PAH was not giving enough information to debug.
 	if (m_pah->m_clast == NULLC || !checkHindrance_twoC(newC->C1, m_pah->m_cfirst)) {
         // PAH did not close properly. invalid structure
-        cout << "createPAH: PAH did not close properly. Could be problem " //SETBREAKPOINT
+        cout << "Error: createPAH: PAH did not close properly. Could be problem " //SETBREAKPOINT
             <<"with site list input...\n";
         std::ostringstream msg;
         msg << "ERROR: PAH did not close properly.."
@@ -3911,6 +3934,13 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     
     // choose random site of type stp to perform process
 	site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
+	if ( site_perf->type != stp && site_perf->comb != stp && stp != benz){
+		
+		cout << "chooseRandomSite ERROR. Choose random site selected incorrect site. Error. Not performing jump process.\n";
+		cout << "Jump process performed: " << id << ". " << jp.getName() << "\n";
+		printSites(site_perf);
+		return false;
+	}
 	//Used before defining R5R6ZZ as an individual site type.
 	/*if (id == 15 || id == 14){
 		site_perf = RZZchooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
@@ -4343,7 +4373,7 @@ void PAHProcess::proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // add ring counts
     m_pah->m_rings++;
 	//Optimise if needed
-	if (double dist = getDistance_twoC(newC4, C_2) > 1.65){
+	if (double dist = getDistance_twoC(newC4, C_2) > 1.59){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -4474,8 +4504,8 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				if (stype1 <= 1010) stype1 += 400;
 				convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype1);
 				ntype1 = 0;
-				if (ntype2 >= 501 && ntype1 <= 604) ntype2 -= 501;
-				else if (ntype2 >= 1002 && ntype1 <= 1004) ntype2 -= 901;
+				if (ntype2 >= 501 && ntype2 <= 604) ntype2 -= 501;
+				else if (ntype2 >= 1002 && ntype2 <= 1004) ntype2 -= 901;
 			}
 			else {
 				Spointer S2 = moveIt(stt, 2);
@@ -4617,7 +4647,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				if (ntype1 > 600) ntype1 = (ntype1 % 10) + 100;
 				else ntype1 = (ntype1 % 10);
 				if (ntype2 > 600) ntype2 = (ntype2 % 10) + 100;
-				else ntype1 = (ntype1 % 10);
+				else ntype2 = (ntype2 % 10);
 			}
 			else if((int)S1->type >= 501 && (int)S1->type <= 1004) {
 				if (S2->type != R5){
@@ -5714,6 +5744,8 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
 	//printStruct();
+	if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
+        /*cout<<"Site hindered, process not performed.\n"*/ return;}
 	bool b4;
 	//check if R5 in RAC is reactive or R5 is already partially embedded.
 	if (moveIt(stt, -1)->type == R5 || moveIt(stt, +1)->type == R5){
@@ -7516,7 +7548,7 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		removeC(C_1->C2, true);
 		removeC(C_1->C2, true);
 		removeC(C_2->C1, true);
-		newC1 = addC(C_1, starting_direction, 1.4);
+		newC1 = addC(C_1, starting_direction, 1.55);
 		updateA(C_1,'C', C_1->growth_vector);
 		updateA(newC1, 'H', Hdir1);
 		newC2 = addC(newC1, FEdir, 1.4);
@@ -7807,19 +7839,27 @@ void PAHProcess::proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
     if(b4) {
         S1 = moveIt(sR5, -1); // neighbour of R5
         S2 = moveIt(stt, 1); // neighbour of RZZR (stt)
+		S4 = moveIt(stt, 2); // neighbour of R5 (stt)
         convSiteType(sR5, C_AC, C1_new, AC); // convert R5 to AC
         remR5fromSite(S1, S1->C1, C_AC); // convert S1 from RS1 to S1 (e.g RFE -> FE)
         convSiteType(stt, C1_new, C2_new, FE); // convert RZZR to FE
 		if (S2->type != R5) updateSites(S2, C2_new, S2->C2, +1501);
-        else updateSites(S2, C2_new, S2->C2, +401); // update resulting FE neighbour
+        else {
+			updateSites(S2, C2_new, S2->C2, +401); // update resulting FE neighbour
+			updateSites(S4, S4->C1, S4->C2, +400); // update resulting FE neighbour
+		}
     } else {
         S1 = moveIt(stt, -1); // neighbour of RZZR (stt)
         S2 = moveIt(sR5, 1); // neighbour of R5
+		S3 = moveIt(stt, -2); // neighbour of R5 (stt)
         convSiteType(sR5, C2_new, C_AC, AC); // convert R5 to AC
         remR5fromSite(S2, C_AC, S2->C2); // convert S1 from RS1 to S1 (e.g RFE -> FE)
         convSiteType(stt, C1_new, C2_new, FE); // convert RAC to FE
 		if (S1->type != R5) updateSites(S1, S1->C1, C1_new, +1501);
-        else updateSites(S1, S1->C1, C1_new, +401); // update resulting FE neighbour
+        else {
+			updateSites(S1, S1->C1, C1_new, +401); // update resulting FE neighbour
+			updateSites(S3, S3->C1, S3->C2, +400); // update resulting FE neighbour
+		}
     }
     S3 = moveIt(S1, -1);
     S4 = moveIt(S2, 1);
@@ -8267,6 +8307,35 @@ std::vector<kmcSiteType> PAHProcess::SiteVector() const {
     std::vector<kmcSiteType> temp;
     for(Spointer i=SiteList().begin(); i!= SiteList().end(); ++i) {
         temp.push_back((*i).type);
+    }
+    return temp;
+};
+
+//! obtains a vector of the carbons per site in PAH site list
+std::vector<int> PAHProcess::SiteIntVector() const {
+    std::vector<int> temp;
+    for(Spointer i=SiteList().begin(); i!= SiteList().end(); ++i) {
+		int site_number = (int)((*i).type);
+		int carbon_number;
+		if (site_number == 9999 || (*i).type == None){
+			Cpointer Cspiral_1 = i->C1;
+			Cpointer Cspiral_2 = i->C2;
+			Cpointer Cspiral_bridge = NULLC;
+			int carbon_spiral_counter = 0;
+			do{
+				carbon_spiral_counter++;
+				if (Cspiral_1->bridge && Cspiral_1->C3 != Cspiral_bridge){
+					Cspiral_bridge = Cspiral_1;
+					Cspiral_1 = Cspiral_1->C3;
+				}
+				else {
+					Cspiral_1 = Cspiral_1->C2;
+				}
+			}while (Cspiral_1 != Cspiral_2);
+			carbon_number = carbon_spiral_counter;
+		}
+		else carbon_number = site_number % 10 + 1;
+		temp.push_back(carbon_number);
     }
     return temp;
 };

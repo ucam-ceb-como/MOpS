@@ -112,7 +112,7 @@ public:
 	//! Initialisation of structure given an existing PAH (cloning)
 	virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, Ccontainer edgeCarbons, std::list<cpair> internalCarbons, std::list<cpair> R5_locs, std::list<cpair> R7_locs);
     //! Create Structure from given an existing PAH (cloning)
-	void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, Ccontainer edCarbons, std::list<cpair> inCarbs, std::list<cpair> R5loc, std::list<cpair> R7loc, cpair first_carbon_coords);
+	void createPAH(std::vector<kmcSiteType>& vec, std::vector<int>& carb_vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, Ccontainer edCarbons, std::list<cpair> inCarbs, std::list<cpair> R5loc, std::list<cpair> R7loc, cpair first_carbon_coords);
     //! Initialisation of structure given a string of site types (separated by ',')
 	virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, int num_C, int num_H, std::list<cpair> internalCarbons);
     //! Create Structure from vector of site types and number of rings
@@ -159,6 +159,8 @@ public:
 	bool saveDOT3D(const std::string &filename, const std::string &title) const;
     //! obtains a vector of the PAH site list
     std::vector<kmcSiteType> SiteVector() const;
+	//! obtains a vector of the carbons per site in PAH site list
+	std::vector<int> SiteIntVector() const;
     //! obtains a string containing the PAH site list
     std::string SiteString(char delimiter) const;
 	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
