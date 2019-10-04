@@ -278,6 +278,14 @@ void Simulator::SetOutputStatBoundary(Sweep::PropID pid, double lower, double up
     m_statbound.PID   = pid;
 }
 
+// PARTICLE TRACKING FOR VIDEOS 
+
+//! Set number of track particles 
+void Simulator::SetTrackBintreeParticleCount(unsigned int val) { m_track_bintree_particle_count = val; }
+
+//! Return the (max) number of tracked particles 
+const unsigned int Simulator::TrackBintreeParticleCount() const { return m_track_bintree_particle_count; }
+
 // POVRAY OUTPUT.
 
 void Simulator::SetParticleTrackCount(unsigned int ptcount) {
@@ -368,6 +376,30 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 	if (rank==0)						//ms785
 	#endif
 
+	// Create output files for particle tracking videos
+	if (m_track_bintree_particle_count>0){
+
+		//open files for each tracked particle
+		for (unsigned int i = 0; i < m_track_bintree_particle_count; i++){
+
+			// file name
+			m_TrackParticlesName.push_back(m_output_filename + "-video(" + std::to_string(i) + ").csv");
+
+			//get component names
+			std::string component_names;
+			for (unsigned int j = 0; j < r.Mech()->ParticleMech().ComponentCount(); j++){
+				component_names.append(",");
+				component_names.append(r.Mech()->ParticleMech().Components(j)->Name());
+			}
+
+			// write headers
+			std::ofstream TrackParticlesFile;
+			TrackParticlesFile.open(m_TrackParticlesName[i].c_str(), ios::app);
+			TrackParticlesFile << "Time (s),x (m),y (m),z (m),r (m),k1,k2,k3,i1,i2,i3" << component_names << "\n";
+			TrackParticlesFile.close();
+		}
+	}
+
     fileOutput(m_output_step, m_output_iter, r, s, this);
 
 	#ifdef USE_MPI
@@ -421,24 +453,17 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         // Initialise some LOI stuff
         if (s.GetLOIStatus() == true) setupLOI(r, s);
 
-		//////////////////////////////////////////// csl37 ////////////////////////////////////////////
-		//initialise tracking
-		r.Mixture()->Particles().InitialiseTracking();
-
-		/* write particle coordiantes for animation 
-		once this works, writing to file should be a post-process 
+		/*
+			Initialise bintree particle tracking for videos
+			This is not currently done as a post-process 
+			TODO: do this as a post-process
 		*/
-		ofstream PartCoordsFile;
-		std::string rname(r.GetName());
-		std::string PartCoordsName;
-		PartCoordsName = "Part-Coords(" + rname + ").csv";
-
-		PartCoordsFile.open(PartCoordsName.c_str());
-		PartCoordsFile << "Time (s)" << " , " << "x (m)" << " , " << "y (m)" << " , " << "z (m)" << " , " << "r (m)" <<
-			" , " << "k1" << " , " << "k2" << " , " << "k3" << " , " << "i1" << " , " << "i2" << " , " << "i3" << 
-			" , " << "An" << " , " << "Ru" << " \n ";
-		PartCoordsFile.close();
-		//////////////////////////////////////////// csl37 ////////////////////////////////////////////
+		if (m_track_bintree_particle_count>0){
+			
+			//initialise tracking			
+			r.Mixture()->Particles().SetParticleTrackingNumber(m_track_bintree_particle_count);
+			r.Mixture()->Particles().InitialiseParticleTracking();
+		}
 
         // Loop over the time intervals.
         unsigned int global_step = 0;
@@ -1077,6 +1102,40 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             s.OutputSensitivity(me->m_senfile, r, me);
         }
     }
+
+	/*
+	Print bintree particle coordinate tracking for videos
+	This is not currently done as a post-process
+	TODO: do this as a post-process
+	*/
+	for (unsigned int i = 0; i < me->m_track_bintree_particle_count; i++){
+
+		std::string TrackParticlesName = me->m_TrackParticlesName[i];
+
+		//get primary coordinates
+
+		if (r.Mixture()->Particles().TrackedAt(i) != NULL){
+
+			vector<fvector> coords;
+			r.Mixture()->Particles().TrackedAt(i)->getFrameCoords(coords);
+
+			//time
+			double time = r.Time();
+
+			//iterate through vector printing primary coordinates
+			std::ofstream fileout;
+			fileout.open(TrackParticlesName.c_str(), ios::app);
+			for (vector<fvector>::const_iterator it = coords.begin(); it != coords.end(); it++){
+				//print time, x, y, z, r, and orientation vectors, composition
+				fileout << time;
+				for (fvector::const_iterator iit = (*it).begin(); iit != (*it).end(); iit++){
+					fileout << "," << (*iit);
+				}
+				fileout <<"\n";
+			}
+			fileout.close();
+		}
+	}
 }
 
 

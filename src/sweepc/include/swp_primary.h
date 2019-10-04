@@ -293,8 +293,9 @@ public:
         double wt     // Statistical weight
         );
 	
-	//csl37: get primary coords
-	virtual void GetPrimaryCoords(std::vector<fvector> &coords) const;
+	//! Returns the frame position and orientation, and primary coordinates
+	//	Used by bintree_primary for particle tracking
+	virtual void GetFrameCoords(std::vector<fvector> &coords) const;
 
 	//csl37: set primary tracking
 	virtual void setTracking();

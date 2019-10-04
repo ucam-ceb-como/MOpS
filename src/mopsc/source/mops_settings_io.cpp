@@ -1178,6 +1178,25 @@ void readOutput(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
             sim.SetMassSpectra(false);
         }
     }
+
+	// PARTICLE TRACKING FOR VIDEOS (alternative to POVRAY output)
+	// This is relevant for the bintree primary model
+	subnode = node.GetFirstChild("trackparticle");
+	if (subnode != NULL) {
+		std::string str_enable = subnode->GetAttributeValue("enable");
+		if (str_enable.compare("true") == 0) {
+			std::cout << "sweep: Warning! Tracking particles for videos.\n";
+			//set number of tracked particles
+			std::string str_ptcount = subnode->GetAttributeValue("pcount");			
+			sim.SetTrackBintreeParticleCount((unsigned int)Strings::cdble(str_ptcount));
+		}
+		else {
+			sim.SetTrackBintreeParticleCount(0);
+		}
+	}
+	else {
+		sim.SetTrackBintreeParticleCount(0);
+	}
 }
 
 } // anonymous namespace

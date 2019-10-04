@@ -62,6 +62,8 @@
 
 using namespace Sweep;
 
+//csl37-todo check serialisation
+
 // CONSTRUCTORS AND DESTRUCTORS.
 
 // Default constructor.
@@ -238,10 +240,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 	//m_dblelimit = m_halfcap/4.0 - m_dbleslack;
 	m_dblelimit = m_halfcap - m_dbleslack;
 
-	//csl37: for testing purposes 
-	//in future initialise such that the number of tracked particles can be modified
-	m_tracked_number = 0; //csl37-no tracking
-	m_tracked_particles.resize(m_tracked_number, NULL);
+	m_tracked_number = 0;
 }
 
 /*!
@@ -259,6 +258,12 @@ unsigned int Sweep::Ensemble::DoubleLimit() {
 
 bool Sweep::Ensemble::IsDoublingOn() {
 	return m_dbleactive;
+}
+
+//! Set number of particle tracked for videos
+void Sweep::Ensemble::SetParticleTrackingNumber(unsigned int val)
+{
+	m_tracked_number = val;
 }
 
 /**
@@ -337,13 +342,6 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
         m_dbleactive = true;
     } else
         m_dbleactive = false;
-
-	//csl37: add tracked particles -- we can remove this now that we a function to initialise tracking
-	unsigned int i = 0;
-	while(i < m_tracked_number && i<m_count){
-		m_tracked_particles[i] = m_particles[i];
-		i++;
-	}
 
     // Build the tree with the weights for the new particles.
     rebuildTree();
@@ -437,14 +435,16 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng)
         m_tree.push_back(tree_type::value_type(sp, m_particles.begin() + i));
         //m_numofInceptedPAH++;
 
-		//csl37:ToDo check if need to add to tracked particle here
+		//Add particle to tracked list if number tracked particles below desired number
+		if (m_tracked_particles.size() < m_tracked_number){
+			m_tracked_particles.push_back(&sp);
+		}
 
     } else if ((unsigned)i < m_capacity) {
         // Replace an existing particle (if i=m_capacity) then
         // we are removing the new particle, so just ignore it.
         Replace(i, sp);
 
-		//csl37:ToDo replace function will remove tracked particle
     } else {
         // The new particle is to be removed immediately
         assert(static_cast<unsigned int>(i) == m_capacity);
@@ -523,11 +523,6 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
     //        }
     //    }
     //SetNumOfInceptedPAH(-1,m_particles[i]->Primary());
-    
-	//csl37: for only one particle, set to NULL
-	//expand to multiple
-//	if(m_tracked_particles[0] == m_particles[i] && i<m_count) m_tracked_particles[0] = NULL;	//csl37-no tracking
-//	if(m_tracked_particles[0] == m_particles[i] && i<m_count) m_tracked_particles[0] = NULL; //csl37-ttip
 
 	// See if IWDSA is being used. If so, do not attempt doubling at the end of this routine.
 	bool doubling = true;
@@ -564,6 +559,19 @@ void Sweep::Ensemble::Remove(unsigned int i, bool fdel)
         m_tree.pop_back();
     }
 
+	//Remove tracked pointer if tracked
+	if (m_tracked_number > 0){
+		PartPtrVector::const_iterator it = m_tracked_particles.begin();
+		while (it != m_tracked_particles.end()){
+			if ((*it) == m_particles[i]){
+				it = m_tracked_particles.erase(it);
+			}
+			else{
+				it++;
+			}
+		}
+	}
+
     // Particle removal might reduce the particle count
     // sufficiently to require particle doubling.
 	// But only do so if not using IWDSA as otherwise ensemble is likely to overflow during next LPDA
@@ -594,11 +602,14 @@ void Sweep::Ensemble::RemoveInvalids(void)
     // Now delete the invalid particles and nullify the corresponding pointers
     while(validEnd != m_particles.end()) {
 
-		//csl37: for only one particle, set to NULL
-		//expand to multiple
-		//if(m_tracked_particles[0] == *validEnd) m_tracked_particles[0] = NULL;	//csl37- no tracking
-//		if(m_tracked_particles[0] == *validEnd) m_tracked_particles[0] = NULL;	//csl37-ttip
+		//Remove tracked pointer, if tracked
+		if (m_tracked_number > 0){
+			for (PartPtrVector::const_iterator it = m_tracked_particles.begin(); it != m_tracked_particles.end(); it++){
+				if ((*it) == (*validEnd)) m_tracked_particles.erase(it);
+			}
+		}
 
+		// delete particle
         delete *validEnd;
         *validEnd = NULL;
         ++validEnd;
@@ -648,10 +659,13 @@ void Sweep::Ensemble::Replace(unsigned int i, Particle &sp)
     //SetNumOfInceptedPAH(1);
     // Check index is within range.
     if (i<m_count) {
-		//csl37: for only one particle, set to NULL
-		//expand to multiple
-	//	if(m_tracked_particles[0] == m_particles[i]) m_tracked_particles[0] = NULL; //csl37- no tracking
-//		if(m_tracked_particles[0] == m_particles[i]) m_tracked_particles[0] = NULL;		//csl37-ttip
+
+		//if particles are being tracked we need to find and replace the pointer
+		if (m_tracked_number > 0){
+			for (unsigned int j = 0; j < m_tracked_particles.size(); j++){
+				if (m_tracked_particles[j] == m_particles[i]) m_tracked_particles[j] = &sp;
+			}
+		}
 
         // First delete current particle, then
         // set pointer to new particle.
@@ -695,11 +709,8 @@ void Sweep::Ensemble::ClearMain()
     m_ndble      = 0;
     m_dbleactive = false;
 
-	//csl37: set tracked particle pointers to NULL
-    for (PartPtrVector::size_type i = 0; i != m_tracked_particles.size(); ++i) {
-        m_tracked_particles[i] = NULL;
-    }
-
+	// clear tracked particles since particles have been deleted
+	m_tracked_particles.clear();
 }
 
 // SELECTING PARTICLES.
@@ -962,18 +973,18 @@ void Sweep::Ensemble::dble()
         if(originalCount < m_count)
             rebuildTree();
 
-		//csl37-tracking
-		//unflag primaries in untracked particles that have been copies from tracked particles 
-		/*	//csl37-no tracking
-		/*
-		for(int j = 0; j != m_count; j++) {
-			//if particle is not tracked unflag primaries
-			//currently assumes that only one particle is tracked
-			if(m_particles[j] != m_tracked_particles[0]) {
-				m_particles[j]->removeTracking();
+		//Remove tracking flags from untracked duplicates
+		if (m_tracked_number > 0){
+			//check all particle in the ensemble
+			for (int j = 0; j != m_count; j++) {
+				//if particle is not tracked then unflag primaries
+				bool track_flag = false;
+				for (unsigned int k = 0; k < m_tracked_particles.size(); k++){
+					if (m_particles[j] == m_tracked_particles[k]) track_flag = true;
+				}
+				if (track_flag == false) m_particles[j]->removeTracking();
 			}
 		}
-		*/
     }
 }
 
@@ -1067,11 +1078,13 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
 
 		//csl37
 		// Output the tracked particles.
+		/*
 		n = (unsigned int)m_tracked_number;
         out.write((char*)&n, sizeof(n));
         for (unsigned int i=0; i!=m_tracked_number; ++i) {
             m_tracked_particles[i]->Serialize(out, &uniquePAHAdresses);
         }
+		*/
 		
 
     } else {
@@ -1161,13 +1174,14 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
 
 				//csl37
 				// Read the particles.
+				/*
 				in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_tracked_number = n;
                 for (unsigned int i=0; i!=m_tracked_number; ++i) {
                     Particle *p = new Particle(in, model, &duplicates);
                     m_tracked_particles[i] = p;
                 }
-				
+				*/
 			
                 // Calculate binary tree.
                 rebuildTree();
@@ -1196,12 +1210,7 @@ void Sweep::Ensemble::releaseMem(void)
     }
     m_particles.clear();
 
-	//csl37
-	// Delete particles from memory and delete vectors.
-    for (int i=0; i!=(int)m_tracked_particles.size(); ++i) {
-        delete m_tracked_particles[i];
-        m_tracked_particles[i] = NULL;
-    }
+	// Also clear the tracked pointers.
     m_tracked_particles.clear();
 }
 
@@ -1231,9 +1240,7 @@ void Sweep::Ensemble::init(void)
     m_dbleslack  = 0;
     m_dbleon     = true;
 
-	//csl37
 	m_tracked_number = 0;
-
 }
 
 //int Sweep::Ensemble::NumOfInceptedPAH() const
@@ -1331,29 +1338,38 @@ double Ensemble::WeightExtractor::operator()(const particle_cache_type& cache) c
     return cache.Property(mId);
 }
 
+/*!
+* Updates tracking after a coagulation event
+*
+* @param[in] p_old		index of old particle that will be removed
+* @param[in] p_merged	index of new merged particle
+*
+* Note: if p_merged is already tracked then both copies will be kept.
+*/
 void Sweep::Ensemble::UpdateTracking(int p_old, int p_merged){
 
-	//csl37
-	//works for one particle at the moment
-	if(m_tracked_particles[0] == m_particles[p_old])
-		m_tracked_particles[0] = m_particles[p_merged];
+	//replace tracking poiner of old particle with new particle
+	for (unsigned int i = 0; i < m_tracked_particles.size(); i++){
+		if (m_tracked_particles[i] == m_particles[p_old]) 
+			m_tracked_particles[i] = m_particles[p_merged];
+	}
 
 }
 
-// Returns a pointer to the given tracked.
-Particle *const Sweep::Ensemble::TrackedAt(unsigned int i)
+//! Returns a pointer to the given tracked particle.
+const Particle *const Sweep::Ensemble::TrackedAt(unsigned int i) const
 {
     // Check that the index in within range, then return the particle.
-    if (i < m_tracked_number) {
+	if ((int)i <= (int)(m_tracked_particles.size() - 1)) {
         return m_tracked_particles[i];
     } else {
         return NULL;
     }
 }
 
-void Sweep::Ensemble::InitialiseTracking(){
-	//csl37: add tracked particles
-	m_tracked_number = 0;	//only done for one particle	//csl37-no tracking
+//! Initialise tracking of initial population 
+void Sweep::Ensemble::InitialiseParticleTracking(){
+	
 	unsigned int i = 0;
 	while(i < m_tracked_number && i<m_count){
 		m_tracked_particles[i] = m_particles[i];
@@ -1361,4 +1377,10 @@ void Sweep::Ensemble::InitialiseTracking(){
 		m_tracked_particles[i]->setTracking();
 		i++;
 	}
+}
+
+//! Return number of particles currently being tracked for videos
+unsigned int Sweep::Ensemble::TrackedParticleNumber() const
+{
+	return m_tracked_particles.size();
 }

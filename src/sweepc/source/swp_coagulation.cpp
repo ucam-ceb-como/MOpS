@@ -194,11 +194,10 @@ int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
     sp1->SetTime(t);
     sp1->incrementCoagCount();
 
-	//csl37
 	//if one of the coagulating particles is tracked then we wish to keep tracking it 
-	//once we're tracking multiple particles we'll want to check if both are tracked and update according (or could also keep two copies)
-	// sys.Particles().UpdateTracking(ip2,ip1); //csl37-no tracking
-//	sys.Particles().UpdateTracking(ip2,ip1); //csl37-ttip
+	if (sys.Particles().TrackedParticleNumber() > 0){
+		sys.Particles().UpdateTracking(ip2, ip1);
+	}
 
     // Tell the ensemble that particle 1 has changed
     sys.Particles().Update(ip1);

@@ -1075,10 +1075,12 @@ void BinTreePrimary::GetPriCoords(std::vector<fvector> &coords) const
     }
 }
 
-void BinTreePrimary::GetPrimaryCoords(std::vector<fvector> &coords) const
+//! Returns the frame position and orientation, and primary coordinates
+//! Used by particle tracking for videos
+void BinTreePrimary::GetFrameCoords(std::vector<fvector> &coords) const
 {
-    if (isLeaf()) {
-        fvector c(12);
+    if (isLeaf()) { //this is a primary
+        fvector c(10);
         c[0] = m_cen_mass[0];
         c[1] = m_cen_mass[1];
         c[2] = m_cen_mass[2];
@@ -1098,14 +1100,15 @@ void BinTreePrimary::GetPrimaryCoords(std::vector<fvector> &coords) const
 			c[8] = 0.0;
 			c[9] = 0.0;
 		}
-		//csl37-phase tracking
-		//print components
-		c[10] = GetComponent("An");
-		c[11] = GetComponent("Ru");
+		//get composition
+		fvector comp = this->Composition();
+		c.insert(c.end(),comp.begin(),comp.end());
+
+		//add to coords
         coords.push_back(c);
-    } else {
-        m_leftchild->GetPrimaryCoords(coords);
-        m_rightchild->GetPrimaryCoords(coords);
+    } else {	//this is a non-leaf node
+		m_leftchild->GetFrameCoords(coords);
+		m_rightchild->GetFrameCoords(coords);
     }
 }
 

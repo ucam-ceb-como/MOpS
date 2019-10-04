@@ -653,6 +653,8 @@ unsigned int Particle::AdjustPhase(const fvector &dcomp,
     // the primary.
     n = m_primary->AdjustPhase(dcomp, dvalues, rng, n);
 
+	// Adjust phase may return n < m if the selected primary does not contain enough components.
+	// The loop tries to apply the adjustment to other primaries (when using the bintree model).
 	int loops = 0;
 	while (n<m && loops < 20){  //max number of loops set to 20
 		n += m_primary->AdjustPhase(dcomp, dvalues, rng, m-n);
@@ -795,10 +797,11 @@ void Particle::Serialize(std::ostream &out, void *duplicates) const
     }
 }
 
-//csl37: get primary particle coords
-void Particle::getParticleCoords(std::vector<fvector> &coords) const
+//! Returns the frame position and orientation, and primary coordinates
+//! Used by particle tracking for videos
+void Particle::getFrameCoords(std::vector<fvector> &coords) const
 {
-	m_primary->GetPrimaryCoords(coords);
+	m_primary->GetFrameCoords(coords);
 }
 
 //csl37: initialise primary particle tracking for videos
@@ -810,4 +813,5 @@ void Particle::setTracking()
 //csl37: remove primary tracking
 void Particle::removeTracking()
 {
-	m_primary->removeTracking();}
+	m_primary->removeTracking();
+}

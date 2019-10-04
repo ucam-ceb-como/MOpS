@@ -184,8 +184,8 @@ public:
     //! Returns a vector of primary coordinates, radius, and mass (5D).
     void GetPriCoords(std::vector<fvector> &coords) const;
 
-	//! Returns primary coords and frame orientation
-    void GetPrimaryCoords(std::vector<fvector> &coords) const;
+	//! Returns the frame position and orientation, and primary coordinates
+	void GetFrameCoords(std::vector<fvector> &coords) const;
 
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
