@@ -94,6 +94,29 @@ public:
 
     double MinPAH() const;
 
+	// PHASE
+
+	// Return phase
+	const std::string &Phase() const;
+
+	// Set phase
+	void SetPhase(const std::string &phase);
+
+	// Return element
+	const std::string &Element() const;
+
+	// Set element
+	void SetElement(const std::string &element);
+
+    //! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in a PAH below a certain threshold it is removed. Return this threshold in terms of the total number of 6-member rings.
+    double ThresholdOxidation() const;
+
+    //! Allow PAHs in soot particles to point to the same memory location after a doubling event.
+    double SharedPointers() const;
+
+	//! Allow particles composed of only single PAHs to be respresented with weighted particles
+	double WeightedPAHs() const;
+
     // Sets the density (g/cm3).
     void SetDensity(double dens);
 
@@ -102,6 +125,15 @@ public:
     void SetGrowthFact(double gf);
 
     void SetMinPAH(int mp);
+
+    //! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in a PAH below a certain threshold it is removed. Sets this threshold in terms of the total number of 6-member rings.
+    void SetThresholdOxidation(int to);
+
+    //! Allow PAHs in soot particles to point to the same memory location after a doubling event.
+    void SetSharedPointers(int sp);
+
+	//! Allow particles composed of only single PAHs to be respresented with weighted particles
+	void SetWeightedPAHs(int wpah);
 
     // Returns component symbol or name.
     const std::string &Name() const;
@@ -147,6 +179,21 @@ private:
 
     //! minimum number of PAHs withinin the primary that are needed to apply m_growthfact
     int m_minPAH;
+
+    //! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in the PAH (in a particle) below this threshold it is removed.
+    double m_thresholdOxidation;
+    
+    //! Allow PAHs in soot particles to point to the same memory location after a doubling event.
+    double m_sharedPointers;
+
+	//! Allow particles composed of only single PAHs to be respresented with weighted particles
+	double m_weightedPAHs;
+
+	//! Component phase
+	std::string m_phase;
+
+	//! Component element
+	std::string m_element;
 };
 
 // Typedef of a vector of pointers to Component objects.

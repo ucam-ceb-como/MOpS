@@ -120,6 +120,11 @@ private:
     //! Mass.
     double m_mass;
 
+    //! Number of carbons.
+    int m_numcarbon;
+
+	//! Fragmentation flag.
+	int m_frag;
     // Collision rate calculation particle properties.
     double m_dcolsqr;      //!< Collision diameter squared.
     double m_inv_dcol;     //!< Inverse collision diameter.
@@ -148,6 +153,11 @@ private:
     // Silicon model properties
     //! Coverage fraction of active sites (ratio of components)
     double m_coverage;
+
+	int m_select;
+
+	//Titania model properties
+	double m_phaseterm;	//Anatase fraction ^ (2/3) * total composition
 };
 }
 

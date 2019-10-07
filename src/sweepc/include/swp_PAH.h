@@ -74,6 +74,8 @@ public:
     PAH();
     void Serialize(std::ostream &out) const;
     void Deserialize(std::istream &in);
+
+	Sweep::KMC_ARS::PAHStructure* GetPAHStruct();
 private:
 
     //! Simulated time at point when molecule created

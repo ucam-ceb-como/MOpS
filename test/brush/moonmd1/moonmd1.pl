@@ -39,7 +39,7 @@ use warnings;
 # Clean up any outputs from previous simulations
 my @outputFiles = glob("moonmd1results*");
 if($#outputFiles > 0) {
-  system("rm @outputFiles");
+  system("rm -f @outputFiles");
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -161,7 +161,7 @@ if(($maxcoag != 1) && ($maxcoag != 2)) {
 # Clean outputs, there should always be some files to delete.
 @outputFiles = glob("moonmd1results*");
 #print "Files to remove: @outputFiles\n";
-system("rm @outputFiles");
+system("rm -f @outputFiles");
 
 #print "All tests passed\n";
 exit 0;

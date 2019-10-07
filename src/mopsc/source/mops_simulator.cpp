@@ -78,7 +78,7 @@ Simulator::Simulator(void)
   m_output_filename("mops-out"), m_output_every_iter(false),
   m_output_step(0), m_output_iter(0), m_write_jumps(false),
   m_write_ensemble_file(false),
-  m_write_PAH(false), m_mass_spectra(true), m_mass_spectra_ensemble(true), 
+  m_write_PAH(false), m_write_PP(false), m_mass_spectra(true), m_mass_spectra_ensemble(true),
   m_mass_spectra_xmer(1), m_mass_spectra_frag(false), 
   m_ptrack_count(0)
 {
@@ -114,6 +114,7 @@ Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
         m_write_jumps = rhs.m_write_jumps;
         m_write_ensemble_file = rhs.m_write_ensemble_file;
         m_write_PAH = rhs.m_write_PAH;
+		m_write_PP = rhs.m_write_PP;
         m_mass_spectra = rhs.m_mass_spectra;
         m_mass_spectra_ensemble = rhs.m_mass_spectra_ensemble;
         m_mass_spectra_xmer = rhs.m_mass_spectra_xmer;
@@ -264,6 +265,9 @@ void Simulator::SetWriteEnsembleFile(bool writeensemble) {m_write_ensemble_file=
 
 //! Set simulator to write the detailed PAH info in the psl file.
 void Simulator::SetWritePAH(bool postpocessPAH) {m_write_PAH=postpocessPAH;}
+
+//! Set simulator to write the detailed primary particles info in the psl file.
+void Simulator::SetWritePP(bool postpocessPP) { m_write_PP = postpocessPP; }
 
 // STATISTICAL BOUNDS OUTPUT
 
@@ -840,13 +844,32 @@ void Simulator::postProcessSimulation(
     // Now post-process the PSLs.
     postProcessPSLs(mech, times);
 
-    // Now post-process the ensemble to find interested information, in this case, PAH mass distribution of the largest soot aggregate in the ensemnble
+    //! Post-process the ensemble.
     if (m_write_PAH && pmech.WriteBinaryTrees()) {
-        // more potential functionality can be added in the below function
-        postProcessPAHinfo(mech, times);
-        // then output details about the whole particle ensemble
+        //! Uncomment to ouput PAH mass distribution of the largest soot aggregate in the ensemble.
+        /*!
+         * Useful for reproduction of Stein and Fahr's stabilomer grid.
+         * Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
+         * J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
+         */
+        // postProcessPAHinfo(mech, times);
+
+        //! Output PAH details for the whole particle ensemble
         postProcessPAHPSLs(mech, times);
     }
+
+	if (m_write_PP && pmech.WriteBinaryTrees()) {
+		//! Uncomment to ouput PAH mass distribution of the largest soot aggregate in the ensemble.
+		/*!
+		* Useful for reproduction of Stein and Fahr's stabilomer grid.
+		* Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
+		* J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
+		*/
+		// postProcessPAHinfo(mech, times);
+
+		//! Output PAH details for the whole particle ensemble
+		postProcessPPPSLs(mech, times);
+}
 }
 
 
@@ -2195,14 +2218,12 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
     unsigned int step = 0;
     fvector psl;
     vector<fvector> ppsl;
-
-	////////////////////////////////////////// csl37-pp
-	vector<fvector> surface;
-	vector<string> surfout_header;
-	fvector primary_diameter;
-	CSV_IO surfout(m_output_filename + "-primary-surface.csv", true);
-	CSV_IO diamout(m_output_filename + "-primary-diameter.csv", true);
-	///////////////////////////////////////////
+	vector<fvector> nodes;
+	vector<string> nodes_header;
+	vector<fvector> prims;
+	vector<string> primary_header;
+	CSV_IO nodesout(m_output_filename + "-primary-nodes.csv", true);
+	CSV_IO primsout(m_output_filename + "-primary.csv", true);
 
     // Get reference to the particle mechanism.
     const Sweep::Mechanism &pmech = mech.ParticleMech();
@@ -2263,53 +2284,89 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                     file.close();
                 }
 
-				////////////////////////////////////////// csl37-pp
-				// loop over particles at last save point
-				if (i== times.size()-1 ){
-					for (unsigned int k=0; k!=r->Mixture()->ParticleCount(); k++)
+				// Print primary and connectivity data
+				// This is currently only done at the last save point
+				if (i == times.size() - 1){
+					for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
 					{
-						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), surface, primary_diameter, k);
+						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), nodes, prims, k);
 					}
 				}
-				//////////////////////////////////////////
 
                 delete r;
-            } else {
+			}
+			else {
                 // Throw error if the reactor was not read.
                 throw runtime_error("Unable to read reactor from save point "
                                     "(Mops, ParticleSolver::postProcessPSLs).");
             }
+
+			
         }
+		
+		//out[i]->Close(); 
+		//delete out[i];
     }
 
-	//////////////////////////////////////////// csl37-pp
-	surfout_header.push_back("Particle Index");
-	surfout_header.push_back("Number of primaries below node");
-	surfout_header.push_back("Common surface area (m2)");
-	surfout_header.push_back("Sintering level");
-	surfout_header.push_back("Left diameter (m)");
-	surfout_header.push_back("Right diameter (m)");
-	surfout_header.push_back("Left Index");
-	surfout_header.push_back("Right Index");
+	// Write bintreeprimary connectivity data 
+	nodes_header.push_back("Particle Index");
+	nodes_header.push_back("Number of primaries below node");
+	nodes_header.push_back("Common surface area (m2)");
+	nodes_header.push_back("Sintering level");
+	nodes_header.push_back("Separation (m)");
+	nodes_header.push_back("Neck radius (m)");
+	nodes_header.push_back("Left radius (m)");
+	nodes_header.push_back("Right radius (m)");
+	nodes_header.push_back("Left Index");
+	nodes_header.push_back("Right Index");
 
-	surfout.Write(surfout_header);
-	for (unsigned int k=0; k<surface.size(); k++)
+	nodesout.Write(nodes_header);
+	for (unsigned int k = 0; k < nodes.size(); k++)
 	{
-		surfout.Write(surface[k]);			// need to correct this
+		nodesout.Write(nodes[k]);
 	}
-	diamout.Write(primary_diameter);
-	surfout.Close();
-	diamout.Close();
-	///////////////////////////////////////////
+	nodesout.Close();
 
-    // Close output CSV files.
+	// Write primary particle data 
+	primary_header.push_back("Particle Index");
+	primary_header.push_back("Primary diameter (m)");
+	primary_header.push_back("Sph. equiv. diameter (m)");
+	primary_header.push_back("(Geom.) Primary volume (m3)");
+	primary_header.push_back("(Comp.) Primary volume (m3)");
+	primary_header.push_back("Primary surface (m2)");
+	primary_header.push_back("Position x");
+	primary_header.push_back("Position y");
+	primary_header.push_back("Position z");
+	primary_header.push_back("Radius (m)");
+	
+	// Get composition
+	const Sweep::ParticleModel &model = mech.ParticleMech();
+	unsigned int ncomp = model.ComponentCount();
+	// Add component to header
+	for (unsigned int i = 0; i != ncomp; ++i) {
+		primary_header.push_back(model.Components(i)->Name());
+	}
+
+	primsout.Write(primary_header);
+	for (unsigned int k = 0; k < prims.size(); k++)
+	{
+		primsout.Write(prims[k]);
+	}
+	primsout.Close();
+
+	//// Close output CSV files.
     for (unsigned int i=0; i!=times.size(); ++i) {
         out[i]->Close();
         delete out[i];
     }
 }
 
-// Processes the PAH-PSLs at each save point into single files.
+/*
+ * @brief Processes the PAH-PSLs at each save point into single files.
+ *
+ * @param[in]    mech     Partcle mechanism.
+ * @param[in]    times    Times at which to save output.
+ */
 void Simulator::postProcessPAHPSLs(const Mechanism &mech,
                                 const timevector &times) const
 {
@@ -2328,21 +2385,22 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         vector<string> separator;
 
         // add the name for the columns
-        header.push_back("Index");
-        header.push_back("#C");   // #C represent the num of Carbon
-        header.push_back("#H");
-        header.push_back("#Rings6");
-        header.push_back("#Rings5");
-        header.push_back("#EdgeC");
-        header.push_back("Mass(u)");
-        header.push_back("Mass(kg)");
-        header.push_back("PAHCollDiameter (m)");
-        header.push_back("PAH denbsity (kg/m3)");
-        header.push_back("PAH volume (m3)");
-        header.push_back("diameter (m)");
-        header.push_back("collision diameter (m)");
-        header.push_back("time created (s)");
-        header.push_back("PAH_ID");
+        header.push_back("Index");                     //! Particle index (-1 for gas-phase PAHs).
+        header.push_back("#C");                        //! Number of carbon atoms.
+        header.push_back("#H");                        //! Number of hydrogen atoms.
+        header.push_back("#Rings6");                   //! Number of 6-member rings.
+        header.push_back("#Rings5");                   //! Number of 5-member rings.
+        header.push_back("#EdgeC");                    //! Number of carbon atoms on the edge of the PAH.
+        header.push_back("Mass(u)");                   //! PAH mass (u).
+        header.push_back("Mass(kg)");                  //! PAH mass (kg).
+        header.push_back("PAHCollDiameter (m)");       //! PAH collision diameter (m).
+        header.push_back("PAH density (kg/m3)");       //! PAH density (kg/m3).
+        header.push_back("PAH volume (m3)");           //! PAH volume (m3).
+        header.push_back("diameter (m)");              //! Spherical diameter (m).
+        header.push_back("collision diameter (m)");    //! Larger of the spherical or collison diameter (m).
+        header.push_back("time created (s)");          //! Time created (s).
+        header.push_back("PAH_ID");                    //! Index of PAH.
+		header.push_back("Frequency");                 //! Number of PAHs pointing to the same memory location.
 
 
         // Open output files for all PSL save points.  Remember to
@@ -2374,38 +2432,141 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
                     double scale = (double)m_nruns;
                     if (m_output_every_iter) scale *= (double)m_niter;
 
-                    // Get PSL for all particles.
+                    //! Provide a way to detect multiple instances of PAHs.
+					std::set<void*> duplicates;
+                    
+                    // Provide a way to map a PAH to its memory location.
+					std::vector<std::string> Mapping;
+					
+                    //! Loop over all particles and PAHs within the particles and write PAH information to csv file.
                     for (unsigned int j=0; j!=r->Mixture()->ParticleCount(); ++j) {
-
                         Sweep::Particle* sp=r->Mixture()->Particles().At(j);
                         Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
-                        // store the mass of individual PAH within the selected particle in the vector temp_PAH
-                        pah->OutputPAHPSL(temp_PAH, j, den);
-                        // check whether it is a gasphase PAH, yes set index to -1
-                        if (pah->Numprimary()==1 && pah->NumPAH()==1)
-                            temp_PAH[0][0]=-1;
-
-                        // Output particle PSL to CSV file.
+                        pah->OutputPAHPSL(temp_PAH, j, den, duplicates, Mapping, i);
+						if (j == r->Mixture()->ParticleCount() - 1){
                         for (size_t ii = 0; ii!=temp_PAH.size(); ++ii) 
                             out[i]->Write(temp_PAH[ii]);
-                        // temp_PAH must be cleared before next output
+
+							    //! temp_PAH must be cleared before next output.
                         temp_PAH.clear();
+                    }
                     }
 
                     delete r;
                 } else {
-                    // Throw error if the reactor was not read.
+                    //! Throw error if the reactor was not read.
                     throw runtime_error("Unable to read reactor from save point "
                                         "(Mops, ParticleSolver::postProcessPSLs).");
                 }
             }
+
+			out[i]->Close(); 
+			delete out[i]; 
         }
 
-        // Close output CSV files.
+        //! Close output CSV files.
+        //for (unsigned int i=0; i!=times.size(); ++i) {
+        //    out[i]->Close();
+        //    delete out[i];
+        //}
+    }
+}
+
+/*
+* @brief Processes the Primary Particle-PSLs at each save point into single files.
+*
+* @param[in]    mech     Partcle mechanism.
+* @param[in]    times    Times at which to save output.
+*/
+void Simulator::postProcessPPPSLs(const Mechanism &mech,
+	const timevector &times) const
+{
+	Reactor *r = NULL;
+	unsigned int step = 0;
+	std::vector<std::vector<double> > temp_PP;
+
+	// Get reference to the particle mechanism.
+	const Sweep::Mechanism &pmech = mech.ParticleMech();
+	double den = pmech.Components(0)->Density();
+
+	// postProcessXmer is only designed for PAH-PP model
+	if (pmech.AggModel() == Sweep::AggModels::PAH_KMC_ID){
+		// Build header row for CSV output files.
+		vector<string> header;
+		vector<string> separator;
+
+		// add the name for the columns
+		header.push_back("Index");                     //! Particle index (-1 for gas-phase PAHs).
+		header.push_back("#C");                        //! Number of carbon atoms.
+		header.push_back("#H");                        //! Number of hydrogen atoms.
+		header.push_back("#Rings6");                   //! Number of 6-member rings.
+		header.push_back("#Rings5");                   //! Number of 5-member rings.
+		header.push_back("#PAHs");                   //! Number of PAHs
+		header.push_back("Mass(kg)");                  //! PP mass (kg).
+		header.push_back("PP volume (m3)");           //! PP volume (m3).
+		header.push_back("diameter (m)");              //! Spherical diameter (m).
+
+		// Open output files for all PSL save points.  Remember to
+		// write the header row as well.
+		vector<CSV_IO*> out(times.size(), NULL);
         for (unsigned int i=0; i!=times.size(); ++i) {
+			double t = times[i].EndTime();
+			out[i] = new CSV_IO();
+			out[i]->Open(m_output_filename + "-postprocess-PP(" +
+				cstr(t) + "s).csv", true);
+			out[i]->Write(header);
+		}
+
+		// Loop over all time intervals.
+		for (unsigned int i = 0; i != times.size(); ++i) {
+			// Calculate the total step count after this interval.
+			step += times[i].StepCount();
+
+			// Loop over all runs.
+			for (unsigned int irun = 0; irun != m_nruns; ++irun) {
+				// Read the save point for this step and run.
+				r = readSavePoint(step, irun, mech);
+				//create separator to distinguish the results of independant runs
+				separator.push_back(cstr(irun + 1) + "runs");
+				out[i]->Write(separator);
+				separator.clear();
+
+				if (r != NULL) {
+					double scale = (double)m_nruns;
+					if (m_output_every_iter) scale *= (double)m_niter;
+
+					//! Loop over all particles and PAHs within the particles and write PAH information to csv file.
+					for (unsigned int j = 0; j != r->Mixture()->ParticleCount(); ++j) {
+						Sweep::Particle* sp = r->Mixture()->Particles().At(j);
+						Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
+						pah->OutputPPPSL(temp_PP, j, den, i);
+						if (j == r->Mixture()->ParticleCount() - 1){
+							for (size_t ii = 0; ii != temp_PP.size(); ++ii)
+								out[i]->Write(temp_PP[ii]);
+
+							//! temp_PAH must be cleared before next output.
+							temp_PP.clear();
+						}
+					}
+
+					delete r;
+				}
+				else {
+					//! Throw error if the reactor was not read.
+					throw runtime_error("Unable to read reactor from save point "
+						"(Mops, ParticleSolver::postProcessPSLs).");
+				}
+			}
+
             out[i]->Close();
             delete out[i];
         }
+
+		// Close output CSV files.
+		//for (unsigned int i = 0; i != times.size(); ++i) {
+		//	out[i]->Close();
+		//	delete out[i];
+		//}
     }
 }
 
@@ -2708,7 +2869,7 @@ void Simulator::postProcessXmer(const Mechanism &mech,
                                     //if (MassSpectraFrag())
                                     //pah->FindXmer(psl_xmer,k+1);
                                     if (MassSpectraFrag()&& k<=1 && temp[11]>3 && 1 == temp[15])
-                                        pah->Fragtest(psl_xmer, k, pmech.Mode(),pmech.Threshold());
+                                        pah->Fragtest(psl_xmer, k, pmech.Mode(),pmech.inceptionThreshold());
                                 }
                             }
                         }

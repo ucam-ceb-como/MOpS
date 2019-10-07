@@ -45,17 +45,23 @@
 #include "swp_condensation.h"
 #include "swp_actsites_reaction.h"
 #include "swp_transcoag.h"
+#include "swp_transcoag_weighted_PAHs.h"
 #include "swp_addcoag.h"
 #include "swp_constcoag.h"
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
 #include "swp_weighted_transcoag.h"
+#include "swp_erosionfrag.h"
+#include "swp_symmetricfrag.h"
+#include "swp_weighted_erosionfrag.h"
+#include "swp_weighted_symmetricfrag.h"
 #include "swp_pah_inception.h"
 #include "swp_dimer_inception.h"
 #include "swp_silicon_inception.h"
 #include "swp_constant_inception.h"
 #include "swp_silica_interparticle.h"
 #include "swp_titania_surface_reaction.h"
+#include "swp_titania_phase_transformation.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -135,6 +141,8 @@ ParticleProcess *const ProcessFactory::ReadPartProcess(std::istream &in,
                 return new ActSiteReaction(in, mech);
             case TitaniaSR_ID:
                 return new TitaniaSurfaceReaction(in, mech);
+			case TitaniaPhase_ID:
+                return new TitaniaPhaseTransformation(in, mech);
             default:
                 throw runtime_error("Invalid particle process type read from "
                                     "input stream (Sweep, "
@@ -167,6 +175,9 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
             case Transition_Coagulation_ID:
                 proc = new TransitionCoagulation(in, mech);
                 break;
+			case Transition_Coagulation_Weighted_PAHs_ID:
+				proc = new TransitionCoagulationWeightedPAHs(in, mech);
+				break;
             case Additive_Coagulation_ID:
                 proc = new AdditiveCoagulation(in, mech);
                 break;
@@ -195,6 +206,46 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
     }
 }
 
+// Reads an coagulation from a binary stream.  The first item read
+// is the coagulation ID which tells the ModelFactory what type
+// of coagulation to read.
+Fragmentation *const ProcessFactory::ReadFrag(std::istream &in, 
+                                            const Sweep::Mechanism &mech)
+{
+    if (in.good()) {
+        Fragmentation *proc = NULL;
+
+        // Read the process type from the input stream.
+        unsigned int type;
+        in.read((char*)&type, sizeof(type));
+
+        // Read an inception of this particular type.  This will throw
+        // an exception if the type is invalid.
+        switch ((ProcessType)type) {
+            case Erosion_Fragmentation_ID:
+                proc = new ErosionFragmentation(in, mech);
+                break;
+            case Symmetric_Fragmentation_ID:
+                proc = new SymmetricFragmentation(in, mech);
+                break;
+            case Weighted_Erosion_Fragmentation_ID:
+                proc = new WeightedErosionFragmentation(in, mech);
+                break;
+            case Weighted_Symmetric_Fragmentation_ID:
+                proc = new WeightedSymmetricFragmentation(in, mech);
+                break;
+            default:
+                throw runtime_error("Invalid fragmentation type read from "
+                                    "input stream (Sweep, "
+                                    "ProcessFactory::ReadFrag).");
+        }
+
+        return proc;
+    } else {
+        throw invalid_argument("Input stream not ready "
+                               "(Sweep, ProcessFactory::ReadFrag).");
+    }
+}
 
 // STREAM OUTPUT.
 

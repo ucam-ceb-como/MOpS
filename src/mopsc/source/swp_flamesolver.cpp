@@ -62,6 +62,8 @@ using namespace Strings;
 // Default constructor.
 FlameSolver::FlameSolver()
 {
+	m_stagnation = false;
+	m_endconditions = false;
 }
 
 //! Copy constructor
@@ -78,6 +80,12 @@ FlameSolver *const FlameSolver::Clone() const {
 // Default destructor.
 FlameSolver::~FlameSolver()
 {
+}
+
+// Set the end conditions flag
+void FlameSolver::SetEndConditions(bool val)
+{
+	m_endconditions = val;
 }
 
 // PROFILE INPUT.
@@ -127,6 +135,21 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         Acol = findinlist(string("Alpha"), subs);
         Rcol = findinlist(string("wdotA4"), subs);
 
+		//! Columns necessary for post-process with stagnation flame transport correction
+		int ucol=-1,vcol=-1,Diffcol= -1;
+		// Convective velocity
+		ucol = findinlist(string("ConvectiveVelocity[m/s]"), subs);
+		// Thermophoretic velocity
+		vcol = findinlist(string("ThermophoreticVelocity[m/s]"), subs);
+		// Diffusion term
+		Diffcol = findinlist(string("DiffusionTerm"), subs);
+		// if velocity columns are supplied than turn on stagnation flame correction
+		if (ucol > 0 && vcol > 0){
+			m_stagnation = true;
+			cout << "Stagnation flame correction turned on. \n";
+			if(Diffcol < 0) cout << "Diffusion correction not supplied. \n";
+		}
+
         // Columns to ignore, but which are useful to have in files for brush compatibility
         int Xcol = findinlist(string("X[cm]"), subs);
         int Dcol = findinlist(string("RHO[g/cm3]"), subs);
@@ -165,7 +188,8 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
         map<unsigned int,int> spcols;
         for (int i=0; (unsigned)i!=subs.size(); ++i) {
             if ((i!=tcol) && (i!=Tcol) && (i!=Pcol) && (i!=Acol) && (i!=Rcol) &&
-                (i!=Xcol) && (i!=Dcol) && (i!=Vcol) && (i!=Gcol)) {
+                (i!=Xcol) && (i!=Dcol) && (i!=Vcol) && (i!=Gcol) &&
+				(i!=ucol) && (i!=vcol) && (i!=Diffcol)) {
                 // Try to find this species in the mechanism
                 const int speciesMechIndex = mech.GasMech().FindSpecies(subs[i]);
 
@@ -212,6 +236,9 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             double P = 0.0;
             double alpha = 0.0;
             double PAHRate = 0.0;
+			double u_conv = 0.0;
+			double v_thermo = 0.0;
+			double diffusion_term = 0.0;
             GasPoint gpoint(mech.GasMech().Species());
 
             // Split the line by columns.
@@ -237,6 +264,13 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
                     alpha = cdble(subs[i]);
                 } else if (i==Rcol) {
                     PAHRate = cdble(subs[i]);
+				} else if (i==ucol) {
+					//this is the convective velocity column
+					u_conv = cdble(subs[i]);
+				} else if (i==vcol) {
+					v_thermo = cdble(subs[i]);
+				} else if (i==Diffcol) {
+					diffusion_term = cdble(subs[i]);
                 } else {
                     // This is a gas-phase species column.
                     map<unsigned int,int>::iterator isp = spcols.find(i);
@@ -263,10 +297,39 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
             gpoint.Gas.SetTemperature(T);
             gpoint.Gas.SetPressure(P*1.0e5);//also set the molar density of gas mixture
             gpoint.Gas.Normalise();
-            //gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);//convert from mol/(cm3*s) to mol/(m3*s)
-            // PAHRate*1E6 record the Inception rate of pyrene, but currently we use the method that transfer the mass from gasphase to kmc phase according to their concentrations not the rates
-            // so the PAHFormation rate is set to be 0, and PAHRate is not useful at all
-            gpoint.Gas.SetPAHFormationRate(PAHRate*0);
+
+			//! If using the sample volume correction (for a stagnation flame) 
+			//! then set the convective and  thermophoretic velocities, and diffusion term
+			if(m_stagnation == true){
+				gpoint.Gas.SetConvectiveVelocity(u_conv);
+				gpoint.Gas.SetThermophoreticVelocity(v_thermo);
+				if(Diffcol > 0) {
+					gpoint.Gas.SetDiffusionTerm(diffusion_term);
+				}else{
+					// If diffusion term not supplied then set to 0
+					gpoint.Gas.SetDiffusionTerm(0.0);
+				}
+			}else{
+				// set terms to 0
+				gpoint.Gas.SetConvectiveVelocity(0.0);
+				gpoint.Gas.SetThermophoreticVelocity(0.0);
+				gpoint.Gas.SetDiffusionTerm(0.0);
+			}
+
+            //! If postprocessing based on the molar rate of production by
+            //! chemical reaction of the inception species per unit volume
+            //! wdotA4 (mol/cm3/s), PAHRate determines the rate at which the
+            //! inception species is inserted into the ensemble. Otherwise it
+            //! is not required; the number of stochastic particles made up of
+            //! a single primary corresponding to the inception species is
+            //! adjusted to match the inception species concentration in
+            //! FlameSolver::Solve.
+            if (mech.ParticleMech().Postprocessing() == ParticleModel::wdotA4) {
+                gpoint.Gas.SetPAHFormationRate(PAHRate*1E6);    //!< Convert from mol/(cm3*s) to mol/(m3*s).
+            } else {
+                gpoint.Gas.SetPAHFormationRate(PAHRate*0);      //!< Explicitly set to 0 in case the wdotA4 column in the gasphase.inp file is non-zero.
+            }
+
             gpoint.Gas.SetAlpha(alpha);
 
             // Add the profile point.
@@ -332,64 +395,144 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     double t  = r.Time();
     dtg     = tstop - t;
 
-	///////////////////////////////csl37-flamepp-fix 
-	double old_density = r.Mixture()->GasPhase().MassDensity();
-	///////////////////////////////
-
-    // Set the chemical conditions.
+	//declare variables for sample volume adjustment
+	double old_dens(0.0);
+	//! sample volume adjustment
+	if(m_stagnation == false){
+		//! If the initial composition was not specified, linearly interpolate the
+		//! gas-phrase profile to obtain properties at the initial time step which
+		//! may not necessarily be zero.
+		if (!(r.Mixture()->GasPhase().MassDensity() >= 0))
     linInterpGas(t, r.Mixture()->GasPhase());
 
-	///////////////////////////////csl37-flamepp-fix -- Must adjust sample volume after setting chemical conditions
-	r.Mixture()->AdjustSampleVolume(old_density / r.Mixture()->GasPhase().MassDensity());
-	///////////////////////////////
+		//! Save density from previous time step for sample volume adjustment.
+		old_dens = r.Mixture()->GasPhase().MassDensity();
+
+		//! Update the chemical conditions.
+		linInterpGas(t, r.Mixture()->GasPhase());
+
+		//! Adjust sample volume using the change in the density. Note that the
+		//! code has to go through the loop below twice for the sample volume to be
+		//! adjusted. However, it was found that the loop is only performed once;
+		//! therefore, the sample volume adjustment has to be performed here.
+		 r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
+	}
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
+		//if (t == 0.0){
+		//	if (r.Mixture()->ParticleModel()->Components(0)->WeightedPAHs()){
+		//		Particle *sp = NULL;
+		//		sp = mech.CreateParticle(t);
+		//		sp->setStatisticalWeight(r.Mixture()->Particles().Capacity() / 4.0);
+		//		sp->UpdateCache();
+		//		(r.Mixture()->Particles()).Add(*sp, rng);
+		//	}
+		//	else{
+		//		for (int iii = 0; iii < r.Mixture()->Particles().Capacity()/4.0; iii++){
+		//			Particle *sp = NULL;
+		//			sp = mech.CreateParticle(t);
+		//			//sp->setStatisticalWeight(1.0);
+		//			sp->UpdateCache();
+		//			(r.Mixture()->Particles()).Add(*sp, rng);
+		//		}
+		//	}
+
+		//}
 
         //save the old gas phase mass density
-        double old_dens = r.Mixture()->GasPhase().MassDensity();
+		old_dens = r.Mixture()->GasPhase().MassDensity();
 
-        // Update the chemical conditions.
+        // Update the chemical conditions to time t.
         const double gasTimeStep = linInterpGas(t, r.Mixture()->GasPhase());
 
+		//save conditions for stagnation flame correction
+		double u_old = r.Mixture()->GasPhase().GetConvectiveVelocity();
+		double v_old = r.Mixture()->GasPhase().GetThermophoreticVelocity();
+		double rho_old = r.Mixture()->GasPhase().MassDensity();
+		double diffusion_term = r.Mixture()->GasPhase().GetDiffusionTerm();
+		double t_old = t;
+		
+		//!sample volume adjustment
+		if(m_stagnation == false){
         // Scale particle M0 according to gas-phase expansion.
         // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
         r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
+		}
 
-        if (mech.AggModel()== AggModels::PAH_KMC_ID)
-        {
+		//! impose from the end of the time step
+		if (m_endconditions == true){
+			//update gas-phase conditions to right end point
+			linInterpGas(tstop, r.Mixture()->GasPhase());
+			//save new conditions
+			double u_new = r.Mixture()->GasPhase().GetConvectiveVelocity();
+			double v_new = r.Mixture()->GasPhase().GetThermophoreticVelocity();
+			double rho_new = r.Mixture()->GasPhase().MassDensity();
+			//apply sample volume adjustment now
+			if (m_stagnation == true){
+				//calculate correction
+				double scale_factor = 1.0;
+				if (t > 0.0) {
+					scale_factor = 1.0 + (v_new - v_old - u_new*(rho_new - rho_old) / rho_new) / (u_new + v_new); //no diffusion term
+				}
+				//adjust sample volume
+				r.Mixture()->AdjustSampleVolume(scale_factor);
+			}
+		}
+
+        //! Tried and tested only for the PAH-PP/KMC-ARS model, binary tree and
+        //! the spherical particle model. Only relevant if postprocessing based
+        //! on the inception species concentration.
+        if ((mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID) && 
+            r.Mixture()->ParticleModel()->Postprocessing() == ParticleModel::XA4) {
             int index;
+            double numCarbons;
+
             switch (mech.InceptedPAH()){
                 case ParticleModel::A1:
                     index=r.Mech()->GasMech().FindSpecies("A1");
+                    numCarbons = 6;
                     break;
                 case ParticleModel::A2:
                     index=r.Mech()->GasMech().FindSpecies("A2");
+                    numCarbons = 10;
                     break;
                 case ParticleModel::A4:
                     index=r.Mech()->GasMech().FindSpecies("A4");
+                    numCarbons = 16;
                     break;
                 case ParticleModel::A5:
                     index=r.Mech()->GasMech().FindSpecies("A5");
+                    numCarbons = 20;
                     break;
                 default:
                     throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4 and A5 are supported now (Sweep::FlameSolver::Solve())");
             }
+            if (mech.Inceptions(0) != NULL) {
+                if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID &&
+                    mech.Inceptions(0)->ParticleComp(0) == numCarbons) {
             // calculate the amount of stochastic pyrene particles in the ensemble
             unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);
             // if Pmount exceeds the capacity of the ensemble at the begining of the simulation,
             // the process should be terminated since further running is meaningless.
             if (t < 1.0e-20 && Pamount >= r.Mixture()->Particles().Capacity())
                 throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
-            mech.MassTransfer(Pamount,t,*r.Mixture(),rng);
+                    mech.MassTransfer(Pamount, t, *r.Mixture(), rng, Geometry::LocalGeometry1d());
+        }
+            }
         }
 
         // Get the process jump rates (and the total rate).
         jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
         // Calculate the splitting end time.
-        tsplit = calcSplitTime(t, std::min(t + std::min(dtg, gasTimeStep), tstop), jrate, r.Mixture()->ParticleCount());
+		if (m_endconditions == true){
+			//enforce single split
+			tsplit = tstop;
+		} else{
+			tsplit = calcSplitTime(t, std::min(t + std::min(dtg, gasTimeStep), tstop), jrate, r.Mixture()->ParticleWeightSum());
+		}
 
         //std::cout << "At time " << t << " split time is " << tsplit << ", spacing of gas data is " << gasTimeStep << '\n';
 
@@ -401,16 +544,39 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
             // Perform time step.
             timeStep(t, std::min(t + dtg / 3.0, tsplit), *r.Mixture(), Geometry::LocalGeometry1d(),
                      mech, rates, jrate, rng);
+
+			if (r.Mixture()->ParticleCount() < r.Mixture()->Particles().DoubleLimit() && 
+				r.Mixture()->Particles().IsDoublingOn() && 
+				r.Mixture()->ParticleModel()->Components(0)->WeightedPAHs()){
+				break;
         }
 
+        }
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
         // Perhaps better to use t - 0.5 * dtg not just t
         mech.LPDA(t, *r.Mixture(), rng);
 
         r.SetTime(t);
+
+		//! sample volume adjustment with stagnation flame correction
+		if(m_stagnation == true && m_endconditions == false){
+			//interpolate gas-phase conditions to t
+			linInterpGas(t, r.Mixture()->GasPhase());
+			double u_new = r.Mixture()->GasPhase().GetConvectiveVelocity();
+			double v_new = r.Mixture()->GasPhase().GetThermophoreticVelocity();
+			double rho_new = r.Mixture()->GasPhase().MassDensity();
+			//calculate correction
+			double scale_factor = 1.0;
+			if( t > 0.0) {
+				scale_factor = 1.0 + (v_new-v_old - u_old*(rho_new-rho_old)/rho_old)/(u_old+v_old) + diffusion_term * (t-t_old);
     }
+			//adjust sample volume
+			r.Mixture()->AdjustSampleVolume(scale_factor);
+		}
     
+    }
+
     // Restore initial chemical conditions to sys.
     r.Mixture()->SetFixedChem(fixedchem);
 
@@ -469,6 +635,18 @@ double FlameSolver::linInterpGas(double t,
         // Now use linear interpolation to calculate the temperature.
         double dT = (j->Gas.Temperature() - i->Gas.Temperature()) * dt / dt_pro;
         gas.SetTemperature(gas.Temperature()+dT);
+
+		// Interpolate the convective and thermophoretic velocities, and diffusion term
+		double du =  (j->Gas.GetConvectiveVelocity() - i->Gas.GetConvectiveVelocity()) * dt / dt_pro;
+		gas.SetConvectiveVelocity(gas.GetConvectiveVelocity() + du);
+		double dv =  (j->Gas.GetThermophoreticVelocity() - i->Gas.GetThermophoreticVelocity()) * dt / dt_pro;
+		gas.SetThermophoreticVelocity(gas.GetThermophoreticVelocity() + dv);
+		double dD =  (j->Gas.GetDiffusionTerm() - i->Gas.GetDiffusionTerm()) * dt / dt_pro;
+		gas.SetDiffusionTerm(gas.GetDiffusionTerm() + dD);
+
+		//! Interpolate A4 rate of production
+		double dwdotA4 = (j->Gas.PAHFormationRate() - i->Gas.PAHFormationRate()) * dt / dt_pro;
+		gas.SetPAHFormationRate(gas.PAHFormationRate() + dwdotA4);
 
         // Now set the gas density, calculated using the values above.
         gas.SetDensity(dens);

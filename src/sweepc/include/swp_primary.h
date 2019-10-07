@@ -63,6 +63,7 @@
 #include "swp_particle_model.h"
 #include "swp_aggmodel_type.h"
 #include "swp_sintering_model.h"
+#include "swp_titania_melting_model.h"
 #include "swp_property_indices.h"
 
 #include <iostream>
@@ -119,6 +120,9 @@ public:
 
     // PRIMARY COMPOSITION.
 
+	//Returns named component
+	double GetComponent(std::string name) const;
+
     // Returns the composition vector.
     const fvector &Composition(void) const;
 
@@ -143,6 +147,10 @@ public:
     // Sets the ith trackervalue.
     void SetValue(unsigned int i, double val);
 
+	// PHASE
+
+	// Get mass of a specific phase
+	double GetPhaseMass(int i) const;
 
     // PRIMARY CREATE TIME.
 
@@ -193,6 +201,14 @@ public:
     // Returns the mass.
     double Mass(void) const;
 
+    //! Returns the number of carbon atoms.
+    int NumCarbon(void) const;
+
+    //! Returns fragmentation flag.
+    int Frag(void) const;
+	//! Returns the number of rings.
+	int NumRings(void) const;
+
     //! Returns the property with the given ID.
     double Property(const Sweep::PropID id) const;
 
@@ -217,6 +233,11 @@ public:
     // Sets the mass.
     void SetMass(double m);
 
+    //! Sets the number of carbon atoms.
+    void SetNumCarbon(int numcarbon);
+
+    //! Sets fragmentation flag.
+    void SetFrag(int frag);
     //! Check particle still meets physical conditions for being a particle.
     bool IsValid() const;
 
@@ -241,9 +262,25 @@ public:
         unsigned int n=1        // Number of times to perform adjustment.
         );
 
+	//Adjusts the particle n times for the phase transformation process
+	virtual unsigned int AdjustPhase(
+		const fvector &dcomp,	// Composition changes.
+        const fvector &dvalues,	// Tracker variable changes.
+        rng_type &rng,			// Random number for leaf node
+        unsigned int n			// Number of times to perform adjustment.
+		);
+
+	//Melting point dependent phase change
+	virtual void Melt( rng_type &rng, Cell &sys	);
+
     // Combines this primary with another.  This is also the
     // implementation of the + and += operators.
     virtual Primary &Coagulate(const Primary &rhs,
+                               rng_type &rng);
+
+    // Combines this primary with another.  This is also the
+    // implementation of the + and += operators.
+    virtual Primary &Fragment(const Primary &rhs,
                                rng_type &rng);
 
     // This routine sinters the Primary for the given length of
@@ -255,6 +292,9 @@ public:
         rng_type &rng,  // Random number generator
         double wt     // Statistical weight
         );
+	
+	// Get primary coords
+	virtual void GetPrimaryCoords(std::vector<fvector> &coords) const;
 
     // READ/WRITE/COPY.
 
@@ -278,6 +318,13 @@ public:
 
 	virtual double GetCoverageFraction() const;
 
+    //! Check whether the number of carbon atoms in the primary is equal to
+    //! that of the inception species.
+    int InceptedPAH() const;
+
+	// Term for titania phase transformation
+	virtual double GetPhaseTerm(void) const;
+
 protected:
     // Particle model used to define the Primary.
     const Sweep::ParticleModel *m_pmodel;
@@ -288,13 +335,19 @@ protected:
     double m_createt;   // Time at which primary was created.
     double m_time;      // Last time primary was updated.  Required for LPDA.
 
-    // Basic derived properties (calculated from above properties).
+    //! Basic derived properties (calculated from above properties).
     double m_diam; // Equivalent spherical diameter.
     double m_dcol; // Collision diameter.
     double m_dmob; // Mobility diameter.
     double m_surf; // Surface area.
     double m_vol;  // Volume.
     double m_mass; // Mass.
+    int m_numcarbon; //!< Number of carbon atoms.
+    int m_frag;      //!< Fragmentation flag.
+	int m_numOf6Rings;
+
+	// Property for titania phase transformation model
+	double m_phaseterm;
 
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.
@@ -308,6 +361,9 @@ protected:
 
     //! Calculate the number of allowable adjustments for a LPDA process
     unsigned int CalculateMaxAdjustments(const fvector &dcomp, unsigned int n) const;
+
+	//! Calculate the maxmimum number of allowable adjustments for a process
+	unsigned int CalculateMaxAdjustments(const fvector &dcomp) const;
 
     // MEMORY MANAGEMENT.
 

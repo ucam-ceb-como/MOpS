@@ -49,7 +49,8 @@ using namespace Sweep;
 
 // Default constructor.
 Component::Component()
-: m_density(0.0), m_molwt(0.0), m_minValid(0.0), m_name(""),m_coalesc_thresh(1.0), m_growthfact(1.0), m_minPAH(0)
+: m_density(0.0), m_molwt(0.0), m_minValid(0.0), m_name(""),m_coalesc_thresh(1.0), m_growthfact(1.0), m_minPAH(0), 
+m_phase(""), m_element("")
 {
 }
 
@@ -67,6 +68,8 @@ Component::Component(double molwt,
     m_coalesc_thresh = 1.0;     //added by ms785, do not coalesce particles by default
     m_growthfact=1.0;           //added by ms785
     m_minPAH=0;                 //added by ms785
+	m_phase = "";
+	m_element = "";
 }
 
 // Copy constructor.
@@ -98,6 +101,8 @@ Component &Component::operator=(const Component &rhs)
         m_coalesc_thresh= rhs.m_coalesc_thresh;
         m_growthfact= rhs.m_growthfact;
         m_minPAH= rhs.m_minPAH;
+		m_phase = rhs.m_phase;
+		m_element = rhs.m_element;
     }
     return *this;
 }
@@ -113,7 +118,6 @@ Component &Component::operator=(const Component &rhs)
 bool Component::IsValidValue(const double r) const {
     return r >= m_minValid;
 }
-
 
 // READ/WRITE/COPY.
 
@@ -146,6 +150,17 @@ void Component::Serialize(std::ostream &out) const
 
         // Write the component name to the stream.
         out.write(m_name.c_str(), n);
+
+		// Write phase to the stream.
+		n = m_phase.length();
+		out.write((char*)&n, sizeof(n));
+		out.write(m_phase.c_str(), n);
+
+		// Write element to the stream.
+		n = m_element.length();
+		out.write((char*)&n, sizeof(n));
+		out.write(m_element.c_str(), n);
+
     } else {
         throw std::invalid_argument("Output stream not ready "
                                     "(Sweep, Component::Serialize).");
@@ -188,6 +203,20 @@ void Component::Deserialize(std::istream &in)
                 in.read(name, n);
                 m_name.assign(name, n);
                 delete [] name;
+
+				// Read the phase.
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+				name = new char[n];
+				in.read(name, n);
+				m_phase.assign(name, n);
+				delete[] name;
+
+				// Read the element.
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+				name = new char[n];
+				in.read(name, n);
+				m_element.assign(name, n);
+				delete[] name;
 
                 break;
             default:

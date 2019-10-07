@@ -125,7 +125,7 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
             // Solve whole step of population balance (Sweep).
             r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
             Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
-        m_swp_ctime += calcDeltaCT(m_cpu_mark);        
+        m_swp_ctime += calcDeltaCT(m_cpu_mark);
     }
 
     m_cpu_mark = clock();

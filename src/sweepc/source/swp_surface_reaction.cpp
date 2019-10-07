@@ -162,6 +162,14 @@ double SurfaceReaction::Rate(double t, const Cell &sys,
 // the system. Process must be linear in particle number.
 double SurfaceReaction::Rate(double t, const Cell &sys, const Particle &sp) const
 {
+    //! For the purpose of checking consistency with the spherical soot model
+    //! solved using the method of moments with interpolative closure which
+    //! assumes that only pyrene (A4) is able to incept and condense.
+    //if(sp.Primary()->InceptedPAH()){
+    //    double rate = 0.0;
+    //    return rate;
+    //}
+
     // Rate constant.
     double rate = m_arr.A;
 
@@ -222,6 +230,8 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
                              unsigned int iterm,
                              rng_type &rng) const
 {
+	PartPtrVector dummy;
+
     int i = sys.Particles().Select(static_cast<Sweep::PropID>(m_pid), rng);
     unsigned int times;
 
@@ -233,7 +243,7 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
         if (m_mech->AnyDeferred()) {
             // Calculate majorant rate then update the particle.
             double majr = MajorantRate(t, sys, *sp);
-            m_mech->UpdateParticle(*sp, sys, t, rng);
+            m_mech->UpdateParticle(*sp, sys, t, i, rng, dummy);
 
             // Check that the particle is still valid.
             if (sp->IsValid()) {

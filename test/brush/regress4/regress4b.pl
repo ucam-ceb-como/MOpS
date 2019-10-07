@@ -40,7 +40,7 @@ use warnings;
 # Clean up any outputs from previous simulations
 my @outputFiles = glob("regress4b*");
 if($#outputFiles > 0) {
-  system("rm @outputFiles");
+  system("rm -f @outputFiles");
 }
 
 print "CSTR transport for additive kernel test problem\n";
@@ -124,7 +124,7 @@ if(!(abs($var - 2.219e-43) < 1e-43)) {
 
 # Clean outputs, there should always be some files to delete.
 @outputFiles = glob("regress4b*");
-system("rm @outputFiles");
+system("rm -f @outputFiles");
 
 #print "All tests passed\n";
 exit 0;

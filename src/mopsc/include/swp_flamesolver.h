@@ -65,6 +65,8 @@ public:
     // Destructors.
     virtual ~FlameSolver(void); // Default destructor.
 
+	// Set the end conditions flag
+	void SetEndConditions(bool val);
 
     // PROFILE INPUT.
 
@@ -98,6 +100,12 @@ protected:
 
     //* The gas-phase chemistry profile.
     GasProfile m_gas_prof;
+
+	//! Stagnation flame correction flag
+	bool m_stagnation;
+
+	//! Flag to impose the gas-phase conditions at the end of the time step over the entire time step
+	bool m_endconditions;
 
     // HELPER FUNCTIONS.
 

@@ -427,8 +427,7 @@ void SurfVolHydrogenStats::Deserialize(std::istream &in, const Sweep::ParticleMo
     }
 }
 
-/////////////////////////////////////////////////csl37-pp
-void SurfVolHydrogenStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, fvector &primary_diameter, int k) const
+// Get primary particle details and connectivity (only used for PAHPrimary and BintreePrimary)
+void SurfVolHydrogenStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const
 {
 }
-//////////////////////////////////////////////////

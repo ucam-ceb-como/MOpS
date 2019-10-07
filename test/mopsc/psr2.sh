@@ -192,7 +192,7 @@ CheckTest
 # If we've made it here, everything has been going well!
 echo "All tests passed. :D"
 # Remove temporary files
-rm psrtest*
+rm -f psrtest*
 
 cd ..
 

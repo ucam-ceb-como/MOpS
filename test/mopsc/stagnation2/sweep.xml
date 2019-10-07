@@ -1,0 +1,44 @@
+?xml version="1.0" encoding="ISO-8859-1"?>
+<mechanism name="Titanium Dioxide" units="CGS">
+
+<!-- Define particle components. -->
+<component id="Titania">
+    <description>Titania</description>
+    <density>3.84</density>
+    <molwt>79.87</molwt>
+</component>
+
+<!-- Define particle types. -->
+<particle id="[Titania]" model="spherical">
+<description>A titania particle.</description>
+    <efm>2.64</efm>
+</particle>
+
+<!-- Coagulation -->
+<coagulation>
+   <A>1.000</A>
+   <kernel>transition</kernel>
+</coagulation>
+
+<!-- Dimer Inception -->
+<inception name="2Ti(OH)4 molecule inception" rate="freemolecular">
+    <formula>"H4O4TI + H4O4TI to [Titania2]</formula>
+    <A>1.000</A>
+    <!-- g, cm, s -->
+    <reactant id="H4O4TI" stoich="2" m="1.925e-022" d="5.128e-8" />
+    <product id="H2O" stoich="+4.0" />
+    <particleout id="[Titania]"/>
+    <component id="Titania" dx="+2.0"/>
+</inception>
+
+<!-- Condensation reaction -->
+<condensation type="condensation" name="Ti(OH)4 condensation" defer="false">
+    <formula>[Titania] + Ti(OH)4 to [Titania+1]</formula> 
+    <A>1.000</A>
+    <!-- g, cm, s -->
+    <reactant id="H4O4TI" stoich="1" m="1.323e-22" d="1e-100"/>
+    <product id="H2O" stoich="+2.0" />
+    <component id="Titania" dx="+1"/>
+</condensation>
+
+</mechanism>

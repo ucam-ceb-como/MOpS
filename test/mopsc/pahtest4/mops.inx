@@ -1,0 +1,115 @@
+<mops version="2">
+  
+	<!-- Default parameters (can be overidden). --> 
+	<runs>1</runs>
+	<iter>20</iter>
+	<atol>1.0e-17</atol> 
+	<rtol>1.0e-4</rtol>
+	<pcount>64</pcount>
+	<maxm0>5e15</maxm0>
+	<relax>0.8</relax>
+
+	<!-- Reactor definition (given initial conditions). -->
+	<reactor type="batch" constt="true" constv="false" id="Test_System" units="mol/mol">
+		<temperature units="K">850</temperature>
+		<pressure units="bar">4.00</pressure>  
+	</reactor>
+
+	<!-- Output time sequence. -->
+	<timeintervals>
+		<start>0.0</start>
+		<time steps="1" splits="10">0.000040</time>
+		<time steps="1" splits="10">0.000085</time>
+		<time steps="1" splits="10">0.000137</time>
+		<time steps="1" splits="10">0.000200</time>
+		<time steps="1" splits="10">0.000274</time>
+		<time steps="1" splits="10">0.000369</time>
+		<time steps="1" splits="10">0.000479</time>
+		<time steps="1" splits="10">0.000588</time>
+		<time steps="1" splits="10">0.000690</time>
+		<time steps="1" splits="10">0.000778</time>
+		<time steps="1" splits="10">0.000863</time>
+		<time steps="1" splits="10">0.000941</time>
+		<time steps="1" splits="10">0.001020</time>
+		<time steps="1" splits="10">0.001100</time>
+		<time steps="1" splits="10">0.001185</time>
+		<time steps="1" splits="10">0.001270</time>
+		<time steps="1" splits="10">0.001354</time>
+		<time steps="1" splits="10">0.001451</time>
+		<time steps="1" splits="10">0.001561</time>
+		<time steps="1" splits="10">0.001670</time>
+		<time steps="1" splits="10">0.001791</time>
+		<time steps="1" splits="10">0.001947</time>
+		<time steps="1" splits="10">0.002102</time>
+		<time steps="1" splits="10">0.002290</time>
+		<time steps="1" splits="10">0.002496</time>
+		<time steps="1" splits="10">0.002702</time>
+		<time steps="1" splits="10">0.002969</time>
+		<time steps="1" splits="10">0.003234</time>
+		<time steps="1" splits="10">0.003562</time>
+		<time steps="1" splits="10">0.003913</time>
+		<time steps="1" splits="10">0.004381</time>
+		<time steps="1" splits="10">0.004918</time>
+		<time steps="1" splits="10">0.005501</time>
+		<time steps="1" splits="10">0.006092</time>
+		<time steps="1" splits="10">0.006675</time>
+		<time steps="1" splits="10">0.007248</time>
+		<time steps="1" splits="10">0.007810</time>
+		<time steps="1" splits="10">0.008358</time>
+		<time steps="1" splits="10">0.008893</time>
+		<time steps="1" splits="10">0.009413</time>
+		<time steps="1" splits="10">0.009918</time>
+		<time steps="1" splits="10">0.010409</time>
+		<time steps="1" splits="10">0.010885</time>
+		<time steps="1" splits="10">0.011349</time>
+		<time steps="1" splits="10">0.011807</time>
+		<time steps="1" splits="10">0.012270</time>
+		<time steps="1" splits="10">0.012737</time>
+		<time steps="1" splits="10">0.013208</time>
+		<time steps="1" splits="10">0.013696</time>
+		<time steps="1" splits="10">0.014226</time>
+		<time steps="1" splits="10">0.014760</time>
+		<time steps="1" splits="10">0.015245</time>
+		<time steps="1" splits="10">0.015703</time>
+		<time steps="1" splits="10">0.016113</time>
+		<time steps="1" splits="10">0.016517</time>
+		<time steps="1" splits="10">0.016884</time>
+		<time steps="1" splits="10">0.017227</time>
+		<time steps="1" splits="10">0.017547</time>
+		<time steps="1" splits="10">0.017865</time>
+		<time steps="1" splits="10">0.018208</time>
+		<time steps="1" splits="10">0.018612</time>
+		<time steps="1" splits="10">0.019083</time>
+		<time steps="1" splits="10">0.019618</time>
+		<time steps="1" splits="10">0.020269</time>
+		<time steps="1" splits="10">0.021092</time>
+		<time steps="1" splits="10">0.021842</time>
+		<time steps="1" splits="10">0.022577</time>
+		<time steps="1" splits="10">0.023283</time>
+		<time steps="1" splits="10">0.023976</time>
+		<time steps="1" splits="10">0.025317</time>
+	</timeintervals>
+
+	<!-- Simulation output settings. -->
+	<output>
+		<statsbound property="dcol">
+			<lower>0</lower>
+			<upper>1.0e30</upper>
+		</statsbound>
+		
+		<console interval="1" msgs="true">
+			<tabular>
+				<column fmt="sci">time</column>
+				<column fmt="float">#sp</column>
+				<column fmt="sci">m0</column>
+				<column fmt="sci">T</column>
+				<column fmt="sci">fv</column>
+				<column fmt="sci">ct</column>
+			</tabular>
+		</console>
+		
+		<writebintree enable="true"/>     
+		<!-- File name for output (excluding extensions). -->
+		<filename>pahtest4-test-sharedPointers</filename>
+	</output>
+</mops>

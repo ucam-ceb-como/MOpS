@@ -53,7 +53,9 @@
 #include "swp_tracker.h"
 #include "swp_aggmodel_type.h"
 #include "swp_sintering_model.h"
+#include "swp_titania_melting_model.h"
 #include "swp_environment_interface.h"
+#include "swp_phase.h"
 
 #include "local_geometry1d.h"
 
@@ -72,7 +74,7 @@ class Particle;
 class ParticleModel
 {
 public:
-	// Constructors.
+    // Constructors.
     ParticleModel(void);                      // Default Constructor.
     ParticleModel(const ParticleModel &copy); // Copy-Constructor.
     ParticleModel(std::istream &in);          // Stream-reading constructor.
@@ -83,7 +85,7 @@ public:
     // Operators.
     ParticleModel &operator=(const ParticleModel &rhs);
 
-	// CHEMICAL SPECIES.
+    // CHEMICAL SPECIES.
 
     // Returns the chemical species vector.
     const Sprog::SpeciesPtrVector *const Species(void) const;
@@ -92,7 +94,7 @@ public:
     void SetSpecies(const Sprog::SpeciesPtrVector &sp);
 
 
-	// COMPONENT DEFINITIONS.
+    // COMPONENT DEFINITIONS.
 
     // Returns the number of components in the mechanism.
     unsigned int ComponentCount(void) const;
@@ -104,8 +106,8 @@ public:
     const Component *const Components(unsigned int i) const;
 
     // Returns the index of the component with the
-	// given name in the mechanism if found, otherwise
-	// return negative.
+    // given name in the mechanism if found, otherwise
+    // return negative.
     int ComponentIndex(const std::string &name) const;
 
     // Adds a component to the mechanism and returns the index
@@ -123,7 +125,7 @@ public:
     void SetComponents(const CompPtrVector &comps);
 
 
-	// TRACKER VARIABLES.
+    // TRACKER VARIABLES.
 
     // Returns the number of tracker variables.
     unsigned int TrackerCount(void) const;
@@ -135,7 +137,7 @@ public:
     const Tracker *const Trackers(unsigned int i) const;
 
     // Returns the index of the tracker variable with the given name
-	// on success, otherwise returns negative.
+    // on success, otherwise returns negative.
     int GetTrackerIndex(const std::string &name) const;
 
     // Adds a tracker variable to the mechanism.
@@ -151,6 +153,28 @@ public:
     // Sets the vector of tracker variables.
     void SetTrackers(const TrackPtrVector &track);
 
+	// PHASES
+
+	// Phases
+	PhasePtrVector m_phases;
+
+	// Add phase to particle model
+	void AddPhase(Phase &phase);
+	
+	// Return component indices for a phase 
+	std::vector<unsigned int> GetPhaseComponents(int i) const;
+
+	// Returns the number of phases in the ParticleModel
+	unsigned int PhaseCount(void) const;
+
+	// Return if the phase is liquid
+	bool PhaseIsLiquid(int i) const;
+
+	// Return the phase index
+	int PhaseIndex(const std::string &name) const;
+
+	// Return phase with given index
+	Phase *const Phases(unsigned int i);
 
     // AGGREGATION MODEL TYPE.
 
@@ -166,7 +190,11 @@ public:
     // Returns the sintering model.
     Processes::SinteringModel &SintModel(void) const;
 
+	// MELTING MODEL
 
+	// Return the titania phase melting model
+	Processes::MeltingModel &MeltModel(void) const;
+	
     // PARTICLE FUNCTIONS.
 
     //! Create a new particle on the heap
@@ -257,8 +285,19 @@ public:
 
     };
 
+    //! Gas-phase trasfer species.
     enum PostProcessStartingStr {
         A1, A2, A4, A5
+    };
+
+    //! Postprocess based on the inception species concentration 
+	//! (XA4 for soot, concentration otherwise) or based on the 
+    //! molar rate of production by chemical reaction of the inception
+    //! species per unit volume (wdotA4).
+    enum postprocessingType {
+        XA4,
+        wdotA4,
+		concentration,
     };
 
     //! Choose between drag models
@@ -273,14 +312,29 @@ public:
     //! Choose the thermophoresis model
     void setThermophoresisType(const ThermophoresisType& therm) {m_ThermophoresisType = therm;}
 
-	double ColliParaA() const;
+    double ColliParaA() const;
     double ColliParaB() const;
     double ColliParaC() const;
 
     void SetCollisionEffPara(double A, double B, double C);
 
-    void SetThreshold(int target) ;
-    double Threshold() const ;
+    //! Set the minimum number of 6-member rings (excludes 5-member rings) a
+    //! PAH has to have to be able to incept.
+    void setInceptionThreshold(int target);
+
+    //! Set the minimum number of 6-member rings (excludes 5-member rings) a
+    //! PAH has to have to be able to condense onto a particle (2 or more
+    //! PAHs).
+    void setCondensationThreshold(int target);
+
+    //! Return the minimum number of 6-member rings (excludes 5-member rings) a
+    //! PAH has to have to be able to incept.
+    int inceptionThreshold() const;
+
+    //! Return the minimum number of 6-member rings (excludes 5-member rings) a
+    //! PAH has to have to be able to condense onto a particle (2 or more
+    //! PAHs).
+    int condensationThreshold() const;
 
     void SetMode(const std::string &mode);
     const std::string &Mode() const;
@@ -312,6 +366,23 @@ public:
 
     //! Returns the value of the free-molecular enhancement factor.
     const double GetEnhancementFM() const {return m_efm;}
+
+    //! Activates tracking of the distance between the centres of primary particles.
+    void setTrackPrimarySeparation(bool flag) {m_trackPrimarySeparation = flag;}
+
+    //! Return the flag used to indicate whether to track the distance between the centres of primary particles.
+    const bool getTrackPrimarySeparation() const {return m_trackPrimarySeparation;}
+
+    //! Activates tracking of the coordinates of primary particles.
+    void setTrackPrimaryCoordinates(bool flag) {m_trackPrimaryCoordinates = flag;}
+
+    //! Return the flag used to indicate whether to track the coordinates of
+    //! primary particles.
+    const bool getTrackPrimaryCoordinates() const {return m_trackPrimaryCoordinates;}
+
+    void setPostprocessingType(postprocessingType Type) {m_postprocessingType = Type;};
+
+    postprocessingType Postprocessing(void) const {return m_postprocessingType;};
 
     //! Index for temperature gradient in gas phase interface
     void setTGradIndex(const EnvironmentInterface::PropertyIndex index) {m_TemperatureGradientIndex = index;}
@@ -346,6 +417,9 @@ protected:
 
     //! The sintering model.
     mutable Processes::SinteringModel m_sint_model;
+
+	//! Titania phase transformation (melting) model
+	mutable Processes::MeltingModel m_melt_model;
 
     //! Calculate a phsyical particle diffusion coefficient from its drag
     double EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const;
@@ -425,12 +499,18 @@ private:
 
     //! Thermphoresis expression to use
     ThermophoresisType m_ThermophoresisType;
-	
-	//! Three parameter for Abhjeet's collision efficiency model
+    
+    //! Three parameter for Abhjeet's collision efficiency model.
     double colliParaA, colliParaB, colliParaC;
 
-    //! Threshould for particular mode
-    double m_threshold;
+    //! The minimum number of 6-member rings (excludes 5-member rings) a PAH
+    //! has to have to be able to incept which depends on the particular mode
+    //! of inception.
+    int m_inceptionThreshold;
+
+    //! The minimum number of 6-member rings (excludes 5-member rings) a PAH
+    //! has to have to be able to condense onto a particle (2 or more PAHs).
+    int m_condensationThreshold;
 
     //! Define three modes, collision efficience depends on the smaller, the bigger, the combined mass or reduced mass
     std::string m_mode;
@@ -450,6 +530,14 @@ private:
     //! Free molecular enhancement factor (coag., cond. & incep.)
     double m_efm;
 
+    //! Flag to indicate whether to track the distance between the centres of neighbouring primary particles.
+    bool m_trackPrimarySeparation;
+
+    //! Flag to indicate whether to track the coordinates of primary particles.
+    bool m_trackPrimaryCoordinates;
+
+    postprocessingType m_postprocessingType;
+
     //! Index for temperature gradient
     EnvironmentInterface::PropertyIndex m_TemperatureGradientIndex;
 
@@ -467,7 +555,6 @@ private:
 
     //! Index for thermal conductivity of mixture
     EnvironmentInterface::PropertyIndex m_ThermalConductivityIndex;
-
 
 };
 } //namespace Sweep

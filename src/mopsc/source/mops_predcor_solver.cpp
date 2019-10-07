@@ -396,11 +396,6 @@ void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
        r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()		
                 / r.Mixture()->GasPhase().MassDensity());									
 
-		//////////////////////////////////////////////////////////////////////////////csl37 -- scale by molar density instead of mass density
-		// r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().Density()
-        //        / r.Mixture()->GasPhase().Density());
-		//////////////////////////////////////////////////////////////////////////////
-
         // Run Sweep for this time step.
         Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng);
     m_swp_ctime += calcDeltaCT(m_cpu_mark);

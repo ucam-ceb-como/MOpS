@@ -60,6 +60,7 @@
 #include "swp_inception.h"
 #include "swp_particle_process.h"
 #include "swp_coagulation.h"
+#include "swp_fragmentation.h"
 
 #include <vector>
 #include <string>
@@ -122,6 +123,12 @@ public:
     //! Returns the vector of coagulations.
     const Processes::CoagPtrVector &Coagulations(void) const;
 
+    // Adds a coagulation process to the mechanism.
+    void AddFragmentation(Processes::Fragmentation &frag);
+    
+    //! Returns the vector of coagulations.
+    const Processes::FragPtrVector &Fragmentations(void) const;
+
     // PROCESS INFORMATION.
 
     // Returns the number of processes (including 
@@ -143,7 +150,6 @@ public:
         std::vector<std::string> &names, // Output vector for names.
         unsigned int start=0             // Optional vector start index.
         ) const;
-
 
 	// RATE CALCULATION.
 
@@ -227,12 +233,13 @@ public:
             const Geometry::LocalGeometry1d& local_geom,
             rng_type &rng) const;
 
-    // transfer mass from gas-phase to particle ensemble used for PAH-PP model
+    //! Transfer mass from gas phase to particle ensemble used for PAH-PP model.
     void MassTransfer(
-        int i,          // the number of pyrene supposed in the emsemble
-        double t,         // Current time (s).
-        Cell &sys,      // System to update (includes ensemble).
-        rng_type &rng   // Random number generator
+        int i,                                         //!< The number of pyrene supposed in the ensemble.
+        double t,                                      //!< Current time (s).
+        Cell &sys,                                     //!< System to update (includes ensemble).
+        rng_type &rng,                                 //!< Random number generator.
+        const Geometry::LocalGeometry1d& local_geom    //!< Information regarding surrounding cells.
         ) const;
 
 
@@ -251,7 +258,9 @@ public:
         Particle &sp, // Particle to update.
         Cell &sys,    // System to which the particle belongs.
         double t,       // Time up to which to integrate.
-        rng_type &rng
+		int ind,        // Index of particle in the emsemble
+        rng_type &rng, 
+		PartPtrVector &overflow
         ) const;
 
     // READ/WRITE/COPY.
@@ -289,6 +298,9 @@ private:
 
     //! List of coagulation processes
     Processes::CoagPtrVector m_coags;
+
+    //! List of coagulation processes
+    Processes::FragPtrVector m_frags;
 
     // Auxilliary information about the processes.
     int m_icoag;                 // Index of first coagulation process in mechanism.

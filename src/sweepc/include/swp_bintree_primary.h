@@ -57,6 +57,8 @@
 #include "swp_particle_model.h"
 #include "swp_bintree_serializer.h"
 #include "swp_particle_image.h"
+#include "swp_coords.h"
+#include <set>
 
 namespace Sweep {
 
@@ -96,8 +98,15 @@ public:
     //! Coagulates this particle with rhs
     BinTreePrimary &Coagulate(const Primary &rhs, rng_type &rng);
 
+    //! Coagulates this particle with rhs
+    BinTreePrimary &Fragment(const Primary &rhs, rng_type &rng);
+
     //! Updates the particle cache using the particle details
     void UpdateCache();
+
+	//! Updates the particle cache from the root node
+	//  calls UpdateCache()
+	void UpdateCacheRoot();
 
     //! Updates sintering level
     double SinteringLevel();
@@ -109,6 +118,13 @@ public:
     unsigned int Adjust(const fvector &dcomp,
             const fvector &dvalues, rng_type &rng, unsigned int n);
 
+	//! Adjusts a particle according to a phase transformation reaction
+	unsigned int AdjustPhase(const fvector &dcomp,
+		const fvector &dvalues, rng_type &rng, unsigned int n);
+
+	//! Melting point dependent phase change
+	void Melt(rng_type &rng, Cell &sys);
+	
     //! Adjusts a particle according to an interparticle reaction
     unsigned int AdjustIntPar(const fvector &dcomp,
             const fvector &dvalues, rng_type &rng, unsigned int n);
@@ -122,6 +138,12 @@ public:
     // GENERAL DATA ACCESS METHODS
     //! Overload of the Mobility Diameter
     double MobDiameter() const;
+
+	//! The collision diameter
+	double CollisionDiameter();
+
+	//! Calculate radius of gyration
+	double RadiusOfGyration() const;
 
     //! Get the number of primaries in the particle
     int  GetNumPrimary() const {return m_numprimary;}
@@ -153,13 +175,46 @@ public:
     //! Sets the value of one of the chemical components
     void SetComponent(std::string name, double val);
 
+	//!Gets the distance between centres of primary particles
+	double GetDistance() const {return m_distance_centreToCentre;}
+
+    //! Calculates the radius of gyration.
+	double GetRadiusOfGyration() const { return m_Rg; };
+    
+    //! Returns a vector of primary coordinates, radius, and mass (5D).
+    void GetPriCoords(std::vector<fvector> &coords) const;
+
+	//! Returns primary coords and frame orientation
+    void GetPrimaryCoords(std::vector<fvector> &coords) const;
+
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
     friend class BinTreeSerializer<class BinTreePrimary>;
 
-    // The image writer needs full access to private attributes
+    ///////////////////////////////////////////////////////////////////////////
+    /// The following ParticleImage functions have to be declared as friends to
+    /// be able to access the private members of the BinTreePrimary class.
+    ///////////////////////////////////////////////////////////////////////////
     template <class ParticleClass>
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);
+
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimaryCoordinates);
+
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::CopyTree(ImgNode &node, const ParticleClass *source);
+
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::CopyParts(ImgNode &node, const ParticleClass *source);
+
+    template <class ParticleClass>
+    friend void Sweep::Imaging::ParticleImage::UpdateAllPointers(ImgNode &node, const ParticleClass *original);
+
+    template <class ParticleClass>
+    friend std::stack<bool> Sweep::Imaging::ParticleImage::recordPath(const ParticleClass* bottom, const ParticleClass* const top);
+
+    template <class ParticleClass>
+    friend ParticleClass* Sweep::Imaging::ParticleImage::descendPath(ParticleClass *here, std::stack<bool> &takeLeftBranch);
 
     //! Serialise a BinTreePrimary particle
     void Serialize(std::ostream &out) const;
@@ -167,9 +222,8 @@ public:
     //! Deserialise a BinTreePrimary particle
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
 
-	/////////////////////////////////////////////////////////// csl37-pp
-	void PrintPrimary(std::vector<fvector> &surface, fvector &primary_diameter, int k) const;
-	///////////////////////////////////////////////////////////
+	//! Return primary particle details and connectivity
+	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
 
 protected:
     //! Empty primary not meaningful
@@ -200,6 +254,9 @@ protected:
     //! Checks if the sintering level, merges particles if necessary
     bool CheckSintering();
 
+	//! Checks if condition for merger is met
+	bool MergeCondition();
+
     //! Set the sintering time of a tree
     void SetSinteringTime(double time);
 
@@ -217,7 +274,18 @@ protected:
     int m_numprimary;
 
     //! Sum of the diameter of the primaries under this treenode
+	// This is usually the spherical equivalent diameter (= Primary::m_diam) 
+	// unless centre to centre distance tracking is turned on
     double m_primarydiam;
+
+	//primary volume -- different to m_vol if centre to centre seapration is tracked
+	double m_primaryvol;
+
+	//! Sum of primary free surface areas under this node
+	double m_free_surf;
+
+	//! Sum of neck radii * ri/xij
+	double m_sum_necks;
 
     //! Equivalent spherical radius of sum of childrens' volume
     double m_children_radius;
@@ -227,6 +295,18 @@ protected:
 
     //! Common surface area between two connected children
     double m_children_surf;
+
+    //! Distance between the centres of primary particles.
+    double m_distance_centreToCentre;
+
+    //! For tracking the coordinates of primary particles.
+    Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
+    Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
+
+	//! For tracking the particle frame orientation
+	Coords::Vector m_frame_orient;
+	//! For tracking the particle frame position
+	Coords::Vector m_frame_x;
 
     //! Sintering level of children connected by this node
     double m_children_sintering;
@@ -239,6 +319,14 @@ protected:
 
     //! Absolute amount of time for which particles are sintered
     double m_sint_time;
+
+    //! Radius of bounding sphere raised to powers of 1, 2 and 3.
+    double m_r;  //!< Bounding sphere radius of aggregate/primary.
+    double m_r2; //!< r squared (useful for efficient collision detection computation).
+    double m_r3; //!< r cubed (useful for calculating centre-of-mass).
+
+	//! Radius of gyration
+	double m_Rg;
 
     // TREE STRUCTURE PROPERTIES
     // The children are the next nodes in the binary tree and are used to
@@ -262,6 +350,81 @@ protected:
 
     //! Right particle node (always a leaf)
     BinTreePrimary *m_rightparticle;
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// Functions for manipulating coordinates of primary particles in an
+    /// aggregate.
+    ///////////////////////////////////////////////////////////////////////////
+
+    //! Returns the bounding-sphere centre.
+    const Coords::Vector &boundSphCentre(void) const;
+
+    //! Calculates the bounding sphere position and radius using the left and
+    //! right child node values.
+    void calcBoundSph(void);
+
+    //! Calculates the centre-of-mass using the left and right child node
+    //! values.
+    void calcCOM(void);
+
+    //! Put the bounding-sphere at the origin.
+    void centreBoundSph(void);
+
+    //! Put the centre-of-mass at the origin.
+    void centreCOM(void);
+
+    //! Returns true if this node is a leaf (has no children).
+    bool isLeaf(void) const;
+
+    //! Returns the bounding sphere radius.
+    double Radius(void) const;
+
+    //! Rotates the aggregate node and child structure about its centre-of-mass
+    //! by the given angles (spherical coordinates).
+    void rotateCOM(double theta, fvector V);
+
+    //! Translates (moves) the aggregate node and child structure by the given
+    //! amounts along the cartesian axes.
+    void Translate(double dx, double dy, double dz);
+
+    //! Write the coordinates of the primaries belonging to the node pointed to
+    //! by the this pointer.
+    void writePrimaryCoordinatesRadius(void);
+
+    //! Check for the overlap of primary particles.
+    bool checkForOverlap(
+        BinTreePrimary &target, //!< Target node.
+        BinTreePrimary &bullet, //!< Bullet node.
+        int &numberOfOverlaps,  //!< Number of overlaps.
+        double &Separation      //!< Separation between the centres of the primary particles for use with the Newton bisection method.   
+        );
+    
+    //! Determine whether the particles overlap.
+    static bool particlesOverlap(
+        const Coords::Vector &p1, //!< Positional vector of sphere 1.
+        double r1,                //!< Radius of sphere 1.
+        const Coords::Vector &p2, //!< Positional vector of sphere 2.
+        double r2,                //!< Radius of sphere 2.
+        double &Separation        //!< Separation between the centres of the primary particles for use with the Newton bisection method.   
+        );
+
+    //! Sets the radius of the bounding sphere.
+    void setRadius(double r);
+
+    //! Transforms the node coordinates using the given transformation matrix.
+    void transform(const Coords::Matrix &mat);
+
+	//! Function to return the separation unit vector between two coordinates
+	Coords::Vector UnitVector(Coords::Vector x_i, Coords::Vector x_j);
+	
+	//! Calculates distance between two points
+	double Separation(Coords::Vector x_i, Coords::Vector x_j);
+	
+	//! Translates a primary particle
+	void TranslatePrimary(Coords::Vector u, double delta_d);
+	
+	//! Function to translate neighbours of a primary except prim_ignore
+	void TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u, double delta_d, BinTreePrimary *prim_ignore);
 
 private:
     // GENERAL PARTICLE MODEL PROPERTIES
@@ -296,9 +459,39 @@ private:
     //! Merges the two children primaries together
     BinTreePrimary &Merge();
 
+	//! Functor used by the Newton method to solve the new primary radius given a primary new volume and list of necks
+	struct merge_radius_functor{
+		merge_radius_functor(double const& vol, fvector const& necks) : a_vol(vol), a_necks(necks) {} // Constructor
+
+		std::pair<double, double> operator()(double const& r);	//! Calculate function and first derivative
+
+	private:
+		double a_vol;		//! New volume
+		fvector a_necks;	//! List of neck areas
+	};
+
+	//! function to return fvector of neck radii for merged primary
+	void GetNecks(BinTreePrimary *prim, BinTreePrimary *node, fvector &necks);
+
     //! Updates the pointers after a merge event
     void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
 
+	// Updates pointers after merge event (overload for coordinate tracking model)
+	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *node,
+						BinTreePrimary *small_prim, double const r_new, double const r_old);
+
+	//! Adjust composition of neighbours following surface growth event
+	void AdjustNeighbours(BinTreePrimary *prim, const double delta_r, const fvector &dcomp, 
+							const fvector &dvalues, rng_type &rng);
+
+	//! Update primary free surface area and volume
+	void UpdateOverlappingPrimary();
+
+	//! function to identify neighbours and sum their cap areas and volumes
+	void SumCaps(BinTreePrimary *prim, double &CapAreas, double &CapVolumes, double &SumNecks);
+		
+	//! function to modify the centre to centre separations and coordinates and neighbours
+	void UpdateConnectivity(BinTreePrimary *prim, double delta_r, BinTreePrimary *prim_ignore);
 
     // PRINTING TREES
     //! Recursive loop function for print tree
@@ -315,7 +508,6 @@ private:
     //! Deserialise a BinTreePrimary node
     virtual void DeserializePrimary(std::istream &in,
             const Sweep::ParticleModel &model, void*);
-
 };
 
 }

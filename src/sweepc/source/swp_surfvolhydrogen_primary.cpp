@@ -252,6 +252,37 @@ SurfVolHydrogenPrimary &SurfVolHydrogenPrimary::Coagulate(const Primary &rhs, rn
     return *this;
 }
 
+/*!
+ * Combines this primary with another.
+ *
+ * \param[in]       rhs         Particle to add to current instance
+ * \param[in,out]   rng         Random number generator
+ *
+ * \return      Reference to the current instance after rhs has been added
+ */
+SurfVolHydrogenPrimary &SurfVolHydrogenPrimary::Fragment(const Primary &rhs, rng_type &rng)
+
+{
+    // Store the resultant surface area.
+    const double s = m_surf + rhs.SurfaceArea();
+
+    // Perform the coagulation.
+    Primary::Fragment(rhs, rng);
+
+    // The spherical particle Coagulate() routine has set the
+    // surface area incorrectly.  We now replace the surface area
+    // to the correct point-contact value.
+    m_surf    = std::max(m_surf, s);
+
+    // This has a knock-on affect of changing the collision diameter.
+    // Note, we can avoid recalling UpdateCache() here, because only
+    // a couple of cached values will have changed.
+    m_dcol = (m_diam + sqrt(m_surf / PI)) * 0.5;
+    m_dmob = m_dcol;
+
+    return *this;
+}
+
 // This routine sinters the Primary for the given length of
 // time using the provided sintering model.
 void SurfVolHydrogenPrimary::Sinter(double dt, Cell &sys,

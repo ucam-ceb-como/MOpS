@@ -63,7 +63,8 @@ const std::string PAHStats::m_statnames[PAHStats::STAT_COUNT] = {
 	std::string("Avg. Number of Hydrogen Atoms"),
 	std::string("Avg. Number of Edge Carbon Atoms"),
 	std::string("Avg. Number of Rings"),
-    std::string("Avg. Coalesc Threshold"),
+    //std::string("Avg. Coalesc Threshold"), //should be the same thing as Avg. Sintering Level
+	std::string("Avg. Sint Level"),
     std::string("Num Primaries double Part"),
 };
 
@@ -78,7 +79,8 @@ const IModelStats::StatType PAHStats::m_mask[PAHStats::STAT_COUNT] = {
 	IModelStats::Avg,  // Avg. Number of Hydrogen atoms
 	IModelStats::Avg,  // Avg. Number of Edge Carbon Atoms
 	IModelStats::Avg,  // Avg. Number of Rings
-    IModelStats::Avg,  // Avg. Coalesc Threshold
+    //IModelStats::Avg,  // Avg. Coalesc Threshold, should be the same thing as Avg. Sintering Level
+	IModelStats::Avg,  // Avg. Sintering Level, if primary coordinates are tracked
     IModelStats::Avg,  // Num Primaries double Part
 };
 
@@ -184,7 +186,9 @@ void PAHStats::Calculate(const Ensemble &e, double scale)
             m_stats[iNEDGEC]	  	+= pah->NumEdgeC() * wt;
             m_stats[iNRINGS]	  	+= pah->NumRings() * wt;
             m_stats[iNPAH+1]    	+= pah->NumPAH() * wt; //used to calculate sum of Number of PAHs.
-            m_stats[iCOAL]    		+= pah->AvgCoalesc() * wt;
+			//m_stats[iCOAL]          += pah->AvgCoalesc() * wt; //should be the same thing as AvgSinter()
+            m_stats[iSINT]    		+= pah->AvgSinter() * wt; //AvgSinter() can return coalescence level (in the old model, coordinates are not tracked)
+			                                                  //or return sintering level (in the new model, coordinates are not tracked)
             if (pah->NumPAH() > 1)
             {
                 wtreal += wt;
@@ -352,17 +356,14 @@ void PAHStats::PSL(const Sweep::Particle &sp, double time,
         *(++j) = (double) (pah->sqrtLW());
 		*(++j) = (double) (pah->LdivW());
 		*(++j) = (double) (pah->PrimaryDiam())*1e9/(double)(pah->Numprimary());//convert to nm
-        *(++j) = (double) (pah->Rg())*1e9;
+        //*(++j) = (double) (pah->Rg())*1e9; //use function GetRadiusOfGyration() to calculate
+		*(++j) = (double)(pah->GetRadiusOfGyration())*1e9;
         *(++j) = (double) (pah->Fdim());
 
     } else {
         fill (j+1, j+2, 0.0);
     }
 }
-
-
-
-
 
 // READ/WRITE/COPY.
 
@@ -475,8 +476,13 @@ void PAHStats::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
     }
 }
 
-/////////////////////////////////////////////////csl37-pp
-void PAHStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, fvector &primary_diameter, int k) const
+// Get primary particle details and connectivity
+void PAHStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const
 {
+	const AggModels::PAHPrimary* const prim =
+		dynamic_cast<const AggModels::PAHPrimary *>(sp.Primary());
+
+	if (prim != NULL) {
+		prim->PrintPrimary(nodes, primaries, k);
+	}
 }
-//////////////////////////////////////////////////

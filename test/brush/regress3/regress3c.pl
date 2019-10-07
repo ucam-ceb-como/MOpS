@@ -45,7 +45,7 @@ print "Diffusion using Li Wang drag coefficients\n";
 # Clean up any outputs from previous simulations
 my @outputFiles = glob("regress3c*");
 if($#outputFiles > 0) {
-  system("rm @outputFiles");
+  system("rm -f @outputFiles");
 }
 
 # Path of executable should be supplied as first argument to this script
@@ -125,7 +125,7 @@ if(!(abs($m2b - 3.03e-47) < 1e-48)) {
 
 # Clean outputs, there should always be some files to delete.
 @outputFiles = glob("regress3c*");
-system("rm @outputFiles");
+system("rm -f @outputFiles");
 
 
 #print "All tests passed\n";

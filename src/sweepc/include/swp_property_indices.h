@@ -45,45 +45,52 @@
 
 namespace Sweep
 {
-    //! Symbolic indices for particle properties
+    //! Symbolic indices for particle properties.
     enum PropID {
-        iUniform=-1, // Special Case:  Always returns 1.0.  Used to select particles uniformly.
-        iDsph,   // Equivalent sphere diameter.
-        iDcol,   // Collision diameter.
-        iDmob,   // Mobility diameter.
-        iS,      // Surface area.
-        iV,      // Volume.
-        iM,      // Mass.
-        // The next properties are provided for calculation of
-        // collision rates.
-        iD2,      // Collision diameter squared.
-        iD_1,     // Inverse collision diameter.
-        iD_2,     // Inverse of the diameter squared.
-        iM_1_2,   // Inverse of the square-root of the mass.
+        iUniform=-1, /**< Special Case:  Always returns 1.0.  Used to select particles uniformly. */
+        iDsph,       /**< Equivalent sphere diameter. */
+        iDcol,       /**< Collision diameter. */
+        iDmob,       /**< Mobility diameter. */
+        iS,          /**< Surface area. */
+        iV,          /**< Volume. */
+        iM,          /**< Mass. */
+		iNumCarbon,  /**< Number of carbon atoms. */
+        iFrag,       /**< Fragmentation flag. */
 
-        //! Statistical weight
-        iW,
+		// The next properties are provided for calculation of
+		// collision rates.
+		iD2,      // Collision diameter squared.
+		iD_1,     // Inverse collision diameter.
+		iD_2,     // Inverse of the diameter squared.
+		iM_1_2,   // Inverse of the square-root of the mass.
 
-        //! Statistical weight time physical mass
-        iWM,
-        iDW,		// dcol * weight
-        iD2W,		// dcol * dcol * weight
-        iD_1W,		// weight / dcol
-        iD_2W,		// weight / dcol ^ 2
-        iM_1_2W,	// mass ^ -1/2 * weight
-        iD2_M_1_2W, // dcol * dcol * mass ^ -1/2 * weight
+		//! Statistical weight
+		iW,
 
-        iD2_M_1_2, // D^2 * M^-1/2.
+		//! Statistical weight time physical mass
+		iWM,
+		iDW,		// dcol * weight
+		iD2W,		// dcol * dcol * weight
+		iD_1W,		// weight / dcol
+		iD_2W,		// weight / dcol ^ 2
+		iM_1_2W,	// mass ^ -1/2 * weight
+		iD2_M_1_2W, // dcol * dcol * mass ^ -1/2 * weight
+
+		iD2_M_1_2, // D^2 * M^-1/2.
 		iFS,		// the free surface available for other particles to sinter
-
-		iNumCarbon, // Number of Carbon atoms
 
 		// Silica model properties
 		iASN, // Number of active (OH) sites available
 		iSintRate, // Sintering rate of a particle
 
 		// Silicon properties
-		iCoverage     // Ratio of component 0 to component 1
+		iCoverage,     // Ratio of component 0 to component 1
+
+		iUniform1,
+
+
+		//Titania model properties
+		iAn_2_3_comp	//Anatase fraction ^ (2/3) * total composition
     };
 }
 

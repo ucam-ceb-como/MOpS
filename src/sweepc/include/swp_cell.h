@@ -104,6 +104,9 @@ public:
     // Returns the number of particles in the ensemble.
     unsigned int ParticleCount(void) const;
 
+	// Returns the number of particles in the ensemble.
+	double ParticleWeightSum(void) const;
+
     // Returns particle statistics.
     void GetVitalStats(Stats::EnsembleStats &stats) const;
 

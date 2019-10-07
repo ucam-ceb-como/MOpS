@@ -138,6 +138,15 @@ public:
     //! Returns the mass.
     double Mass(void) const;
 
+    //! Returns the number of carbons.
+    int NumCarbon(void) const;
+
+	//! Returns the number of rings.
+	int NumRings(void) const;
+
+    //! Returns fragmentation flag.
+    int Frag(void) const;
+
     //! Returns the number of surface reaction sites.
     double GetSites(void) const;
 
@@ -150,10 +159,12 @@ public:
     //! Geometric average diameter of aggregate sub-units
     double avgeomdiam(double) const;
 
+	//! Phase composition term for phase transformation process
+    double GetPhaseTerm(void) const;
+
 
     //! Returns the property with the given ID.
     double Property(Sweep::PropID id) const;
-
 
 
     // COMPOSITION.
@@ -173,6 +184,9 @@ public:
     //! Returns the ith tracked value.  Returns 0.0 if i invalid.
     double Values(unsigned int i) const;
 
+	// PHASE
+
+	double PhaseMass(int i) const;
 
     // POSITION DATA
     
@@ -213,6 +227,16 @@ public:
     //! Reset count of coagulation events
     void resetCoagCount() {m_CoagCount=0;}
 
+    // COAG COUNT
+    //! Number of coagulations since count was reset
+    unsigned int getFragCount() const;
+
+    //! Increment count of coagulation events
+    void incrementFragCount() {++m_FragCount;}
+
+    //! Reset count of coagulation events
+    void resetFragCount() {m_FragCount=0;}
+
     // PARTICLE OPERATIONS.
 
     //! Adjust particle composition as a result of surface reactions and other processes
@@ -231,8 +255,20 @@ public:
         unsigned int n                    // Number of times to perform adjustment.
         );
 
+	//! Adjust particle composition as a result of a phase transformation process
+	unsigned int AdjustPhase(const fvector &dcomp,
+                              const fvector &dvalues,
+                              rng_type &rng,
+                              unsigned int n);
+	
+	//! Melting point dependent phase change
+	void Melt(rng_type &rng, Cell &sys);
+
     //! Combines this particle with another.
     Particle &Coagulate(const Particle &sp, rng_type &rng);
+
+    //! Combines this particle with another.
+    Particle &Fragment(const Particle &sp, rng_type &rng);
 
     //! Sinter over a given time step
     void Sinter(
@@ -246,6 +282,9 @@ public:
 
     // Recalculate derived properties from the primary particle
     void UpdateCache();
+
+	// Get particle coordinates
+	void getParticleCoords(std::vector<fvector> &coords) const;
 
     // READ/WRITE/COPY.
 
@@ -279,6 +318,9 @@ private:
 
     //! Number of coagulations experienced by this particle
     unsigned int m_CoagCount;
+
+    //! Number of coagulations experienced by this particle
+    unsigned int m_FragCount;
 
     //! Time at which particle was created (earliest part).
     double m_createt;

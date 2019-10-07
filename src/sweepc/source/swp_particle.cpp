@@ -64,6 +64,7 @@ Particle::Particle(void)
 , m_StatWeight(1.0)
 , m_primary(NULL)
 , m_CoagCount(0)
+, m_FragCount(0)
 , m_createt(0.0)
 , mLPDAtime(0.0)
 {
@@ -75,6 +76,7 @@ Particle::Particle(double time, const Sweep::ParticleModel &model)
 , m_PositionTime(0.0)
 , m_StatWeight(1.0)
 , m_CoagCount(0)
+, m_FragCount(0)
 , m_createt(0.0)
 , mLPDAtime(0.0)
 {
@@ -91,6 +93,7 @@ Particle::Particle(double time, double weight, const Sweep::ParticleModel &model
 , m_PositionTime(0.0)
 , m_StatWeight(weight)
 , m_CoagCount(0)
+, m_FragCount(0)
 , m_createt(0.0)
 , mLPDAtime(0.0)
 {
@@ -104,6 +107,7 @@ Particle::Particle(Sweep::AggModels::Primary &pri)
 , m_StatWeight(1.0)
 , m_primary(&pri)
 , m_CoagCount(0)
+, m_FragCount(0)
 {
     m_createt = pri.CreateTime();
     mLPDAtime = pri.CreateTime();
@@ -137,6 +141,7 @@ Particle::Particle(std::istream &in, const Sweep::ParticleModel &model, void *du
         in.read(reinterpret_cast<char*>(&m_PositionTime), sizeof(m_PositionTime));
         in.read(reinterpret_cast<char*>(&m_StatWeight), sizeof(m_StatWeight));
         in.read(reinterpret_cast<char*>(&m_CoagCount), sizeof(m_CoagCount));
+        in.read(reinterpret_cast<char*>(&m_FragCount), sizeof(m_FragCount));
         in.read(reinterpret_cast<char*>(&m_createt), sizeof(m_createt));
         in.read(reinterpret_cast<char*>(&mLPDAtime), sizeof(mLPDAtime));
     }
@@ -269,6 +274,7 @@ Particle &Particle::operator=(const Sweep::Particle &rhs)
         m_PositionTime = rhs.m_PositionTime;
         m_StatWeight = rhs.m_StatWeight;
         m_CoagCount = rhs.m_CoagCount;
+        m_FragCount = rhs.m_FragCount;
         m_createt = rhs.m_createt;
         mLPDAtime = rhs.mLPDAtime;
     }
@@ -355,6 +361,22 @@ double Particle::Mass(void) const
     return m_primary->Mass();
 }
 
+//! Pass through to primary particle.
+int Particle::NumCarbon(void) const
+{
+    return m_primary->NumCarbon();
+}
+
+//! Pass through to primary particle.
+int Particle::Frag(void) const
+{
+    return m_primary->Frag();
+}
+
+int Particle::NumRings() const
+{
+	return m_primary->NumRings();
+}
 /*!
  * Pass through to primary particle
  */
@@ -392,7 +414,11 @@ double Particle::avgeomdiam(double oneovernumsubpart) const
     return std::pow(m_primary->Property(Sweep::iDsph),oneovernumsubpart);
 }
 
-
+//! Phase composition term for phase transformation process
+double Particle::GetPhaseTerm(void) const
+{
+	return m_primary->GetPhaseTerm();
+}
 
 /*!
  * Provide an interface that allows run time specification of particle properties
@@ -420,6 +446,15 @@ double Particle::Property(PropID id) const
             return Volume();
         case iM:      // Mass.
             return Mass();
+        
+        //! Number of carbon atoms.
+        case iNumCarbon:
+            return NumCarbon();
+
+        //! Fragmentation flag.
+        case iFrag:
+            return Frag();
+
         // Collision rate properties:
         case iD2:
             return CollDiameter() * CollDiameter();
@@ -439,14 +474,13 @@ double Particle::Property(PropID id) const
             return GetCoverageFraction();
         case iFS:
             throw std::logic_error("Free surface no longer supported (Particle::Property)");
-            return 0.0;
-        case iNumCarbon:
-            throw std::logic_error("Number of Carbon no longer supported (Particle::Property)");
-            return 0.0;
+            return 0.0;       
         case -1:
             // Special case property, used to select particles
             // uniformly.
             return 1.0;
+		case iAn_2_3_comp:
+			return GetPhaseTerm();
         default:
             throw std::logic_error("Unrecognised property requested (Particle::Property)");
             return 0.0;
@@ -536,6 +570,13 @@ unsigned int Particle::getCoagCount() const {
     return m_CoagCount;
 }
 
+/*!
+ *@return   Number of coagulation events since counter was reset
+ */
+unsigned int Particle::getFragCount() const {
+    return m_FragCount;
+}
+
 // PARTICLE ADJUSTMENT AND PROCESSES.
 
 /*!
@@ -592,6 +633,56 @@ unsigned int Particle::AdjustIntPar(const fvector &dcomp,
 }
 
 /*!
+ * Apply the given composition and values changes n times
+ * for the phase transformation 
+ *
+ *@param[in]        n       Number of times to apply changes
+ *
+ *@return       Number of times changes actually applied
+ */
+unsigned int Particle::AdjustPhase(const fvector &dcomp,
+                              const fvector &dvalues,
+                              rng_type &rng,
+                              unsigned int n)
+{
+    
+	unsigned int m = n;
+
+    // This is a leaf-node sub-particle as it contains a
+    // primary particle.  The adjustment is applied to
+    // the primary.
+    n = m_primary->AdjustPhase(dcomp, dvalues, rng, n);
+
+	int loops = 0;
+	while (n<m && loops < 20){  //max number of loops set to 20
+		n += m_primary->AdjustPhase(dcomp, dvalues, rng, m-n);
+		loops ++;
+	}
+
+    // Where-ever the adjustment has been applied this sub-particle must
+    // now update its cache.
+    UpdateCache();
+
+    return m;
+}
+
+// Phase transformation
+void Particle::Melt(rng_type &rng, Cell &sys)
+{
+
+	// This is a leaf-node sub-particle as it contains a
+	// primary particle.  The adjustment is applied to
+	// the primary.
+	m_primary->Melt(rng, sys);
+
+	// Where-ever the adjustment has been applied this sub-particle must
+	// now update its cache.
+	UpdateCache();
+
+	return;
+}
+
+/*!
  * Combines this particle with another.
  *
  * \param[in]       rhs         Particle to add to current instance
@@ -601,6 +692,21 @@ unsigned int Particle::AdjustIntPar(const fvector &dcomp,
 Particle &Particle::Coagulate(const Particle &rhs, rng_type &rng)
 {
     m_primary->Coagulate(*rhs.m_primary, rng);
+    UpdateCache();
+
+    return *this;
+}
+
+/*!
+ * Combines this particle with another.
+ *
+ * \param[in]       rhs         Particle to add to current instance
+ * \param[in,out]   rng         Random number generator
+ * \return      Reference to the current instance after rhs has been added
+ */
+Particle &Particle::Fragment(const Particle &rhs, rng_type &rng)
+{
+    m_primary->Fragment(*rhs.m_primary, rng);
     UpdateCache();
 
     return *this;
@@ -679,6 +785,7 @@ void Particle::Serialize(std::ostream &out, void *duplicates) const
         out.write((char*)&m_PositionTime, sizeof(m_PositionTime));
         out.write((char*)&m_StatWeight, sizeof(m_StatWeight));
         out.write((char*)&m_CoagCount, sizeof(m_CoagCount));
+        out.write((char*)&m_FragCount, sizeof(m_FragCount));
         out.write(reinterpret_cast<const char*>(&m_createt), sizeof(m_createt));
         out.write(reinterpret_cast<const char*>(&mLPDAtime), sizeof(mLPDAtime));
     }
@@ -686,4 +793,10 @@ void Particle::Serialize(std::ostream &out, void *duplicates) const
         throw std::invalid_argument("Output stream not ready \
                                     (Sweep, Particle::Serialize).");
     }
+}
+
+// Get primary particle coords
+void Particle::getParticleCoords(std::vector<fvector> &coords) const
+{
+	m_primary->GetPrimaryCoords(coords);
 }

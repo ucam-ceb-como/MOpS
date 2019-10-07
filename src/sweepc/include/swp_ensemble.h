@@ -66,6 +66,7 @@
 #include "swp_tree_transcoag_weighted_cache.h"
 #include "swp_property_indices.h"
 #include "swp_gas_profile.h"
+#include "swp_kmc_pah_structure.h"
 
 #include "binary_tree.hpp"
 
@@ -165,6 +166,10 @@ public:
 
     void SetDoubling(const bool val);
 
+	unsigned int DoubleLimit();
+
+	bool IsDoublingOn();
+
     // PARTICLE ADDITION AND REMOVAL.
 
     // Returns a pointer to the particle at index i.
@@ -175,6 +180,9 @@ public:
     // particle's index in the ensemble.  The ensemble then takes
     // control of destruction of the particle.
     int Add(Particle &sp, rng_type &rng);
+
+	//Find a particle that is a single PAH of a given structure
+	int CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, int ind);
 
     //! Removes the particle at the given index from the ensemble.
     void Remove(
@@ -274,8 +282,8 @@ public:
         const Sweep::ParticleModel &mech // Model used to define particles.
         );
 
-    int NumOfInceptedPAH() const;// return the number of pyrene in current state.
-    int IndexOfInceptedPAH() const; //move backwards.
+    int NumOfInceptedPAH(int ID) const;// return the number of pyrene in current state.
+    int IndexOfInceptedPAH(int ID) const; //move backwards.
     Sweep::KMC_ARS::KMCSimulator* Simulator();
     void SetSimulator(Sweep::GasProfile& gp);
 
@@ -288,8 +296,8 @@ private:
     //! Vector of particles in the ensemble.
     PartPtrVector m_particles;
     Sweep::KMC_ARS::KMCSimulator *m_kmcsimulator;
-
-    // ENSEMBLE CAPACITY VARIABLES.
+   
+// ENSEMBLE CAPACITY VARIABLES.
     unsigned int m_levels;   // Number of levels in the binary tree.
     unsigned int m_capacity; // The ensemble capacity (max. particle count).
     unsigned int m_halfcap;  // Half the ensemble capacity.

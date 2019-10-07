@@ -268,6 +268,8 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                                    unsigned int iterm,
                                    Sweep::rng_type &rng) const
 {
+	PartPtrVector dummy;
+
     // Select properties by which to choose particles (-1 means
     // choose uniformly).  Note we need to choose 2 particles.  There
     // are six possible rate terms to choose from; 4 slip-flow and 2
@@ -371,7 +373,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
     double majk = MajorantKernel(*sp1, *sp2, sys, maj);
 
     //Update the particles
-    m_mech->UpdateParticle(*sp1, sys, t, rng);
+    m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
     // Check that particle is still valid.  If not,
     // remove it and cease coagulating.
     if (!sp1->IsValid()) {
@@ -383,7 +385,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         return 0;
     }
 
-    m_mech->UpdateParticle(*sp2, sys, t, rng);
+    m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
     // Check validity of particles after update.
     if (!sp2->IsValid()) {
         // Tell the ensemble to update particle one before we confuse things
@@ -406,19 +408,32 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         // majorant rate and the current (after updates) true rate.
 
         double truek = CoagKernel(*sp1, *sp2, sys);
-		double ceff=0;
-		if (majk<truek)
-		    std::cout << "maj< true"<< std::endl;
+        double ceff=0;
 
-		//added by ms785 to include the collision efficiency in the calculation of the rate
-		if (sys.ParticleModel()->AggModel()==AggModels::PAH_KMC_ID)
-		{
-			 ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
-			 truek*=ceff;
-		}
+        if (majk<truek)
+            std::cout << "maj< true"<< std::endl;
 
+        //added by ms785 to include the collision efficiency in the calculation of the rate
+        if (sys.ParticleModel()->AggModel() == AggModels::PAH_KMC_ID)
+        {
+            ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
+            truek*=ceff;
+        }
 
-
+        //! For the purpose of checking consistency with the spherical soot
+        //! model solved using the method of moments with interpolative closure
+        //! which assumes that only pyrene (A4) is able to incept and condense.
+        else if (sys.ParticleModel()->AggModel() == AggModels::BinTree_ID || sys.ParticleModel()->AggModel() == AggModels::Spherical_ID) {
+            if (sp1->Primary()->InceptedPAH() && sp2->Primary()->InceptedPAH()) {
+                ceff = 1;
+            } else if (sp1->Primary()->InceptedPAH() && sp2->NumCarbon() > 16 || sp1->NumCarbon() > 16 && sp2->Primary()->InceptedPAH()) {
+                ceff = 1;
+            } else {
+                ceff = 1;
+            }
+            truek*=ceff;
+        }
+        
         if (!Fictitious(majk, truek, rng)) {
             JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
         } else {

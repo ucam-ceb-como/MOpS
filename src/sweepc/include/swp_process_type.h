@@ -74,6 +74,9 @@ namespace Processes
 		// Interparticle processes.
         InterParticle_ID=300,  // Silica interparticle reaction
 
+		// Phase transformation
+		TitaniaPhase_ID = 400,	//Titania anatase to rutile phase transformation
+
         // ARSSC model processes. (no longer used)
         ARSSC_Inception_ID=1000,   // ARS-SC inception process.
         ARSSC_Reaction_ID=1001,    // ARS-SC reaction process.
@@ -92,6 +95,20 @@ namespace Processes
         Weighted_Constant_Coagulation_ID = 10005,
         //! Transition coagulation with weighted particles
         Weighted_Transition_Coagulation_ID = 10006,
+
+		//! Transition coagulation with weighted particles
+		Transition_Coagulation_Weighted_PAHs_ID = 10007,
+
+        // Coagulation processes
+        Erosion_Fragmentation_ID=20000,   // Transition regime coagulation
+        Symmetric_Fragmentation_ID=20001,     // Additive coagulation kernel
+
+        // 10002&3 previously used for coagulations involving secondary particles
+
+        //! Additive coagulation with weighted particles
+        Weighted_Erosion_Fragmentation_ID = 20002,
+        //! Constant coagulation with weighted particles
+        Weighted_Symmetric_Fragmentation_ID = 20003,
 
     };
 }

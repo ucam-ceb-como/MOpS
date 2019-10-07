@@ -43,19 +43,27 @@
 #include "swp_mech_parser.h"
 #include "swp_component.h"
 #include "swp_tracker.h"
+#include "swp_phase.h"
 #include "swp_inception.h"
 #include "swp_constant_inception.h"
 #include "swp_surface_reaction.h"
 #include "swp_titania_surface_reaction.h"
+#include "swp_titania_phase_transformation.h"
 #include "swp_actsites_reaction.h"
 #include "swp_condensation.h"
 #include "swp_transcoag.h"
 #include "swp_addcoag.h"
 #include "swp_constcoag.h"
+#include "swp_erosionfrag.h"
+#include "swp_symmetricfrag.h"
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
 #include "swp_weighted_transcoag.h"
+#include "swp_transcoag_weighted_PAHs.h"
+#include "swp_weighted_erosionfrag.h"
+#include "swp_weighted_symmetricfrag.h"
 #include "swp_coag_weight_rules.h"
+#include "swp_frag_weight_rules.h"
 #include "swp_silica_interparticle.h"
 #include "swp_sprog_idealgas_wrapper.h"
 
@@ -83,59 +91,59 @@ namespace {
 /*!
  * Read and set initial particle composition for an inception
  *
- *@param[in]		xml		XML node with component children
- *@param[in,out]	icn		Inception instance for which to set composition of newly incepted particles
+ *@param[in]        xml     XML node with component children
+ *@param[in,out]    icn     Inception instance for which to set composition of newly incepted particles
  */
 void readInceptedComposition(const CamXML::Element &xml, Sweep::Processes::Inception &icn) {
     // Get the component (= composition) XML
-	vector<CamXML::Element*> subitems;
+    vector<CamXML::Element*> subitems;
     xml.GetChildren("component", subitems);
 
-	for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); ++j) {
-		// Get component ID.
-		std::string str = (*j)->GetAttributeValue("id");
-		int id = icn.Mechanism()->ComponentIndex(str);
+    for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); ++j) {
+        // Get component ID.
+        std::string str = (*j)->GetAttributeValue("id");
+        int id = icn.Mechanism()->ComponentIndex(str);
 
-		if (id >= 0) {
-			// Get component change.
-			str = (*j)->GetAttributeValue("dx");
-			double dx = cdble(str);
-			// Set component change.
-			icn.SetParticleComp(id, dx);
-		} else {
-			// Unknown component in mechanism.
-			throw runtime_error(str + ": Component not found in mechanism (loadInceptedComposition)");
-		}
-	}
+        if (id >= 0) {
+            // Get component change.
+            str = (*j)->GetAttributeValue("dx");
+            double dx = cdble(str);
+            // Set component change.
+            icn.SetParticleComp(id, dx);
+        } else {
+            // Unknown component in mechanism.
+            throw runtime_error(str + ": Component not found in mechanism (loadInceptedComposition)");
+        }
+    }
 }
 
 /*!
  * Read and set initial particle tracker values for an inception
  *
- *@param[in]		xml		XML node with track children
- *@param[in,out]	icn		Inception instance for which to set tracker values of newly incepted particles
+ *@param[in]        xml     XML node with track children
+ *@param[in,out]    icn     Inception instance for which to set tracker values of newly incepted particles
  */
 void readInceptedTrackers(const CamXML::Element &xml, Sweep::Processes::Inception &icn) {
     // Get the component (= composition) XML
-	vector<CamXML::Element*> subitems;
-	xml.GetChildren("track", subitems);
+    vector<CamXML::Element*> subitems;
+    xml.GetChildren("track", subitems);
 
-	for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); j++) {
-		// Get tracker ID.
-		std::string str = (*j)->GetAttributeValue("id");
-		int id = icn.Mechanism()->GetTrackerIndex(str);
+    for (vector<CamXML::Element*>::iterator j=subitems.begin(); j!=subitems.end(); j++) {
+        // Get tracker ID.
+        std::string str = (*j)->GetAttributeValue("id");
+        int id = icn.Mechanism()->GetTrackerIndex(str);
 
-		if (id >= 0) {
-			// Get tracker change.
-			str = (*j)->GetAttributeValue("dx");
-			double dx = cdble(str);
-			// Set tracker change.
-			icn.SetParticleTracker(id, dx);
-		} else {
-			// Unknown tracker variable in mechanism.
-			throw runtime_error(str + ": Tracker variable not found in mechanism (loadInceptedTrackers)");
-		}
-	}
+        if (id >= 0) {
+            // Get tracker change.
+            str = (*j)->GetAttributeValue("dx");
+            double dx = cdble(str);
+            // Set tracker change.
+            icn.SetParticleTracker(id, dx);
+        } else {
+            // Unknown tracker variable in mechanism.
+            throw runtime_error(str + ": Tracker variable not found in mechanism (loadInceptedTrackers)");
+        }
+    }
 }
 
 } // anonymous namespace
@@ -167,6 +175,9 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     // Read the particle components and the trackers.
     readComponents(xml, mech);
     readTrackers(xml, mech);
+
+	// Assign phases
+	assignPhases(mech);
 
     // READ DEFINED MODELS.
 
@@ -335,11 +346,11 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     } else if (str == "surfvolcubic") {
         mech.SetAggModel(AggModels::SurfVolCubic_ID);
     } else if (str == "PAH") {
-	// Reject all old style input files
-		throw std::runtime_error("PAH-PP MODEL are no longer supported (Sweep::MechParser::readV1), you can use NEW PAH_KMC model");
+    // Reject all old style input files
+        throw std::runtime_error("PAH-PP MODEL are no longer supported (Sweep::MechParser::readV1), you can use NEW PAH_KMC model");
     } else if (str == "PAH_KMC") {
         mech.SetAggModel(AggModels::PAH_KMC_ID);
-	} else if (str == "silica") {
+    } else if (str == "silica") {
         throw std::runtime_error("Old silica model is deprecated. Use bintreesilica or surfvolsilica."
                 " in Sweep::MechParser::readV1");
     } else if (str == "bintree") {
@@ -350,6 +361,36 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     } else {
         mech.SetAggModel(AggModels::Spherical_ID);
     }
+
+    //! Check whether to track the distance betweeen the centres of primary
+    //! particles or the coordinates of the primary particles, but this only
+    //! applies to the binary tree and PAH-KMC (and maybe surface-volume)
+    //! models.
+    //! By default, in terms of type space, primary particles are assumed to be
+    //! in point contact but the partial rounding/sintering of particles is
+    //! implicitly taken into account where mass addition (surface growth and
+    //! condensation) and sintering events modify the common surface area
+    //! between pairs of neighbouring primaries. By turning on this flag, mass
+    //! addition events lead to an increase in primary diameter at a rate
+    //! dependent on its neighbour while sintering leads to a simultaneous
+    //! decrease in the distance betweeen the centres of neighbouring primaries
+    //! and an increase in their diameters. Note that if the coordinates of the
+    //! primary particles are tracked their separation is known.
+    if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID) {
+        str = particleXML->GetAttributeValue("track");
+        if (str == "primarySeparation") {
+            mech.setTrackPrimarySeparation(true);
+        } else if (str == "primaryCoordinates") {
+            mech.setTrackPrimaryCoordinates(true);
+        } else {
+            mech.setTrackPrimarySeparation(false);
+            mech.setTrackPrimaryCoordinates(false);
+        }
+    } else {
+        mech.setTrackPrimarySeparation(false);
+        mech.setTrackPrimaryCoordinates(false);
+    }
+
     // See if there are any secondary particle criteria
     const CamXML::Element* secondaryXML = particleXML->GetFirstChild("secondaryparticle");
     if(secondaryXML != NULL) {
@@ -419,8 +460,8 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         if (str == "viscous_flow") {
             mech.SintModel().SetType(SinteringModel::ViscousFlow);
         } else if (str == "rutile") {
-        	// Special MD fit for GBD sintering of rutile
-        	mech.SintModel().SetType(SinteringModel::Rutile);
+            // Special MD fit for GBD sintering of rutile
+            mech.SintModel().SetType(SinteringModel::Rutile);
         } else if (str == "ssd") {
             // Solid-state diffusion (d^3)
             mech.SintModel().SetType(SinteringModel::SSD);
@@ -459,6 +500,16 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             mech.SintModel().Disable();
         }
 
+		// Get critical exponent alpha (default is alpha = 1)
+		// TODO: add paper reference
+		if ((*i)->GetFirstChild("alpha") != NULL) {
+			str = (*i)->GetFirstChild("alpha")->Data();
+			mech.SintModel().Setalpha(cdble(str));
+		}
+		else{
+			mech.SintModel().Setalpha(1.0);
+		}
+
     } else {
         // No sintering model defined.
         mech.SintModel().Disable();
@@ -476,12 +527,16 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         readSurfRxns(xml, mech);
         readInterParticles(xml, mech);
         readCondensations(xml, mech);
+		readPhaseTransformation(xml, mech);
     }
     readDiffusionProcs(xml, mech);
     readAdvectionProcs(xml, mech);
 
     // Read which coagulation kernel to use
     readCoagulation(xml, mech);
+
+    // Read which coagulation kernel to use
+    readFragmentation(xml, mech);
 }
 
 // Reads components from a sweep mechanism XML file.
@@ -502,6 +557,16 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         string str = (*i)->GetAttributeValue("id");
         if (str != "") {
             comp->SetName(str);
+			
+			// Applies to flamepp:
+			// If any component is soot and the postprocessingtype is not wdotA4 
+			// then set postprocessingtype to XA4 (the default type is concentration).
+			// Note: this assumes that all soot simulations have a component id "soot",
+			// otherwise the generic mechanism is used. 
+			if (str == "soot" && mech.Postprocessing() != Sweep::ParticleModel::wdotA4){
+				mech.setPostprocessingType(Sweep::ParticleModel::XA4);
+			}
+
         } else {
             // Component must have an id!
             delete comp;
@@ -614,6 +679,71 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             comp->SetMinPAH(0);
         }
 
+        //! Model parameter. 
+        /*!
+         * The number of 6-member rings in a PAH in a particle below which it is removed.
+         */
+        el = (*i)->GetFirstChild("thresholdOxidation");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                comp->SetThresholdOxidation(int(cdble(str)));
+            } else {
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " thresholdOxidation contains no data (Sweep, MechParser::readComponents).";
+
+                delete comp;
+                throw runtime_error(msg);
+            }
+        } else {
+            comp->SetThresholdOxidation(0);
+        }
+
+        //! Numerical parameter
+        /*!
+         * Allow PAHs in soot particles to point to the same memory location after a doubling event.
+         */
+        el = (*i)->GetFirstChild("sharedPointers");
+        if (el!=NULL) {
+            str = el->Data();
+            if (str != "") {
+                comp->SetSharedPointers(int(cdble(str)));
+            } else {
+                std::string msg("Component ");
+                msg += comp->Name();
+                msg += " sharedPointers contains no data (Sweep, MechParser::readComponents).";
+
+                delete comp;
+                throw runtime_error(msg);
+            }
+        } else {
+            comp->SetSharedPointers(0);
+        }
+		
+		//! Numerical parameter
+		/*!
+		* Allow PAHs in soot particles to point to the same memory location after a doubling event.
+		*/
+		el = (*i)->GetFirstChild("weightedPAHs");
+		if (el != NULL) {
+			str = el->Data();
+			if (str != "") {
+				comp->SetWeightedPAHs(int(cdble(str)));
+			}
+			else {
+				std::string msg("Component ");
+				msg += comp->Name();
+				msg += " weightedPAHs contains no data (Sweep, MechParser::readComponents).";
+
+				delete comp;
+				throw runtime_error(msg);
+			}
+		}
+		else {
+			comp->SetWeightedPAHs(0);
+		}
+
         // Get component mol. wt.
         el = (*i)->GetFirstChild("molwt");
         if (el!=NULL) {
@@ -639,7 +769,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
             throw runtime_error(msg);
         }
 
-		// Get minimum valid value for component
+        // Get minimum valid value for component
         el = (*i)->GetFirstChild("min");
         if (el!=NULL) {
             str = el->Data();
@@ -655,6 +785,26 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
                 throw runtime_error(msg);
             }
         }
+
+		//Phase
+
+		//get the phase the component belongs to
+		el = (*i)->GetFirstChild("phase");
+		if (el != NULL) {
+			str = el->Data();
+			if (str != "") {
+				comp->SetPhase(str);
+			}
+		}
+
+		//get the element the component belongs to
+		el = (*i)->GetFirstChild("element");
+		if (el != NULL) {
+			str = el->Data();
+			if (str != "") {
+				comp->SetElement(str);
+			}
+		}
 
         // Add component to mechanism.
         mech.AddComponent(*comp);
@@ -684,6 +834,42 @@ void MechParser::readTrackers(CamXML::Document &xml, Sweep::Mechanism &mech)
 
         mech.AddTracker(*t);
     }
+}
+
+// Assign components to phases
+void MechParser::assignPhases(Sweep::Mechanism &mech)
+{
+
+	// Loop over components and assign to phases
+	for (unsigned int i = 0; i < mech.ComponentCount(); ++i) {
+
+		//Get phase of component
+		std::string phaseName = mech.Components(i)->Phase();
+
+		//Does phase already exist?
+		int i_phase = mech.PhaseIndex(phaseName);
+
+		if (i_phase >= 0) //phase exists
+		{
+			Phase *phase = mech.Phases(i_phase);
+			
+			// Add component to existing phase
+			phase->AddComponent(i);
+		}
+		else{
+			// Phase does not exist: create a new phase
+			Phase *phase = new Phase();
+
+			// Phase name/symbol
+			phase->SetName(phaseName);
+
+			// Add component to phase
+			phase->AddComponent(i);
+
+			// Add phase to mechanism.
+			mech.AddPhase(*phase);
+		}
+	}
 }
 
 // Reads inception processes from a sweep mechanism XML file.
@@ -1282,14 +1468,14 @@ void MechParser::readSurfRxn(CamXML::Element &xml, Processes::SurfaceReaction &r
             // the constant does not require scaling as its units are s^-1.
             rxn.SetPropertyID(Sweep::iCoverage);
         }
-		else if (str.compare("asn")==0) {
+        else if (str.compare("asn")==0) {
             rxn.SetPropertyID(Sweep::iASN);
 
             // Must scale rate constant from cm3 to m3, surface area
             // is multiplied by the site density so that it is a dimensionless
             // quantity hence A has units cm^3 s^-1.
-			arr.A *= (1.0e-6);
-		}
+            arr.A *= (1.0e-6);
+        }
         else if (str.compare("d")==0) {
             // This reaction depends on some power of the diameter.
             switch (power) {
@@ -1447,7 +1633,7 @@ void MechParser::readInterParticles(CamXML::Document &xml, Mechanism &mech)
             throw std::runtime_error("Could not find species H4O4SI in MechParser::ReadInterParticles");
 
         // Create a new interparticle object.
-    	InterParticle *intpar = new InterParticle(mech, isp);
+        InterParticle *intpar = new InterParticle(mech, isp);
 
         // Set default name.
         intpar->SetName("Inter Particle " + cstr(k));
@@ -1478,9 +1664,9 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
     // Is reaction deferred.
     str = xml.GetAttributeValue("defer");
     if (str=="true") {
-    	intpar.SetDeferred(true);
+        intpar.SetDeferred(true);
     } else {
-    	intpar.SetDeferred(false);
+        intpar.SetDeferred(false);
     }
 
     readReactants(xml, intpar);
@@ -1542,35 +1728,35 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
         else if (str.compare("s")==0) {
             // This reaction depends on surface area.  Ignore power,
             // they must have meant 1.
-        	intpar.SetPropertyID(Sweep::iS);
+            intpar.SetPropertyID(Sweep::iS);
             arr.A *= (1.0e-2);
         }
-		else if (str.compare("asn")==0) {
+        else if (str.compare("asn")==0) {
             intpar.SetPropertyID(Sweep::iASN);
 
             // Must scale rate constant from cm3 to m3, surface area
             // is multiplied by the site density so that it is a dimensionless
             // quantity hence A has units cm^3 s^-1.
             //arr.A *= (1.0e-6);
-			arr.A *= (1.0e-6);
+            arr.A *= (1.0e-6);
         }
         else if (str.compare("d")==0) {
             // This reaction depends on some power of the diameter.
             switch (power) {
                 case 1:
-                	intpar.SetPropertyID(Sweep::iDcol);
+                    intpar.SetPropertyID(Sweep::iDcol);
                     arr.A *= (1.0e-4);
                     break;
                 case 2:
-                	intpar.SetPropertyID(Sweep::iD2);
+                    intpar.SetPropertyID(Sweep::iD2);
                     arr.A *= (1.0e-2);
                     break;
                 case -1:
-					intpar.SetPropertyID(Sweep::iD_1);
+                    intpar.SetPropertyID(Sweep::iD_1);
                     arr.A *= (1.0e2);
                     break;
                 case -2:
-					intpar.SetPropertyID(Sweep::iD_2);
+                    intpar.SetPropertyID(Sweep::iD_2);
                     arr.A *= (1.0e4);
                     break;
                 default:
@@ -1595,7 +1781,379 @@ void MechParser::readInterParticle(CamXML::Element &xml, Processes::InterParticl
 
 }
 
+// PHASE TRANSFORMATION REACTION.
 
+/*!
+ *  Read phase transformation process from a sweep mechanism XML file.
+ *
+ *@exception    std::runtime_error   
+ */
+void MechParser::readPhaseTransformation(CamXML::Document &xml, Mechanism &mech)
+{
+	vector<CamXML::Element*> items, subitems, subsubitems;
+	vector<CamXML::Element*>::iterator i, j, l, m;
+	CamXML::Element *el = NULL;
+	std::string str;
+	std::string type;
+	unsigned int k = 0;
+
+	// Get all phase transformations
+	xml.Root()->GetChildren("transformation", items);
+
+	for (i = items.begin(), k = 0; i != items.end(); ++i, ++k) {
+
+		// transformation type
+		type = (*i)->GetAttributeValue("type");
+
+		//----------------------------------------------------
+		//--------------- titania_melting_model --------------
+		//----------------------------------------------------
+		if (type.compare("melting") == 0 || type.compare("gibbs") == 0 || type.compare("composition") == 0) {
+
+			// Check that the particle model is valid
+			if (mech.AggModel() == AggModels::Spherical_ID || mech.AggModel() == AggModels::BinTree_ID) {
+			
+				// Enable model
+				mech.MeltModel().Enable();
+
+				// Set model type
+				if (type.compare("melting") == 0){
+					mech.MeltModel().SetType(MeltingModel::Melting);
+				}
+				else if (type.compare("gibbs") == 0) {
+					mech.MeltModel().SetType(MeltingModel::Gibbs);
+				}
+				else if (type.compare("composition") == 0){
+					mech.MeltModel().SetType(MeltingModel::Composition);
+				}
+
+				// Get the name of liquid phase
+				el = (*i)->GetFirstChild("liquid");
+				if (el != NULL) {
+					str = el->GetAttributeValue("id");
+				}
+				else{ // Otherwise assume the liquid phase is named "Liquid"
+					str = "Liquid";
+				}
+				// Set liquid phase
+				int i_phase = mech.PhaseIndex(str);
+				if (i_phase >= 0){// Check that a liquid phase exists
+					Phase *phase = mech.Phases(i_phase);
+					phase->SetLiquid();
+				}
+				else{
+					throw runtime_error(str+" Liquid phase not found in mechanism "
+						"Sweep, MechParser::readPhaseTransformation).");
+				}			
+
+				// Loop over phase transformations
+				(*i)->GetChildren("phase", subitems);
+				for (j = subitems.begin(); j != subitems.end(); ++j) {
+
+					double A = 0.0;
+					double T = 0.0;
+
+					// crystal phase name or symbol
+					string phasename = (*j)->GetAttributeValue("id");
+
+					// Get component ID.
+					int iid = mech.PhaseIndex(phasename);
+					if (iid < 0) {
+						throw runtime_error(str + ": Phase not found in mechanism "
+							"Sweep, MechParser::readPhaseTransformation).");
+					}
+
+					//Temperature parameters
+					//parameter
+					el = (*j)->GetFirstChild("A");
+					if (el != NULL) A = cdble(el->Data());
+					//bulk melting temperature
+					el = (*j)->GetFirstChild("Tbulk");
+					if (el != NULL) {
+						T = cdble(el->Data());
+					}
+					else{
+						throw runtime_error(phasename +
+							"Temperature not specified (Sweep, MechParser::readPhaseTransformation).");
+					}
+
+					vector<fvector> ddcomp;		//vector of component changes
+					vector<std::string> elems;	//vector of elements
+
+					//get components and sort/separate by element
+					(*j)->GetChildren("component", subsubitems);
+					for (m = subsubitems.begin(); m != subsubitems.end(); ++m) {
+						
+						fvector dcomp(mech.ComponentCount(), 0.0);
+						
+						// Get component ID.
+						string str = (*m)->GetAttributeValue("id");
+						int id = mech.ComponentIndex(str);
+						if (id >= 0) {
+							// Get component element
+							std::string elem = mech.Components()[id]->Element();
+							// Get component change.
+							str = (*m)->GetAttributeValue("dx");
+							double dx = cdble(str);
+							// Check if element already exists in element vector
+							int i_elem = -1;							
+							for (unsigned int ii = 0; ii < elems.size(); ++ii){
+								if ((elems[ii]).compare(elem) == 0) i_elem = ii;
+							}
+							if (i_elem >= 0){ //element exists
+								// Set component change.
+								ddcomp[i_elem][id] += dx;
+							}
+							else{ // Add new element to vector
+								elems.push_back(elem);
+								// Add composition change
+								dcomp[id] += dx;
+								ddcomp.push_back(dcomp);
+							}
+						}
+						else {
+							throw runtime_error(str + ": Component not found in mechanism "
+								"Sweep, MechParser::readPhaseTransformation).");
+						}
+					}
+
+					// Check mass conservation of component change
+					vector<fvector>::const_iterator jj;
+					for (jj = ddcomp.begin(); jj != ddcomp.end(); ++jj){
+
+						double mass = 0.0;
+						double avg_mass = 0.0;
+						for (unsigned int ii = 0; ii != mech.ComponentCount(); ii++){
+							mass += mech.Components(ii)->MolWt() * (*jj)[ii] / NA;
+							avg_mass += mech.Components(ii)->MolWt() / NA;
+						}
+						avg_mass /= mech.ComponentCount();
+
+						if (mass > 0.001*avg_mass){ // tolerance of 0.1% average component mass
+							throw runtime_error(phasename + "Phase transformation does not conserve mass "
+								"Sweep, MechParser::readPhaseTransformation).");
+						}
+
+					}
+
+					// Add phase change to melting model
+					mech.MeltModel().AddPhase(phasename, A, T, ddcomp, iid);
+				}
+
+				// Get crossover diameter (Gibbs and Composition models). Only one crossover is supported
+				if (type.compare("gibbs") == 0 || type.compare("composition") == 0) {
+					(*i)->GetChildren("crossover", subitems);
+					// Check that there are at least 2 phase changes
+					if (mech.MeltModel().PhaseChangeCount() < 2){
+						throw runtime_error("2 phases expected (Sweep, MechParser::readPhaseTransformation).");
+					}
+					// Check that there is one crossover
+					if (subitems.size() == 1){
+
+						for (m = subitems.begin(); m != subitems.end(); ++m){
+							
+							std::string name, id_below, id_above;
+							name = (*m)->GetAttributeValue("name");
+							
+							// Get crossover diameter parameters
+							double aa(0.0), ab(0.0), ac(0.0), ad(0.0);
+							el = (*m)->GetFirstChild("a");
+							if (el != NULL) aa = cdble(el->Data());
+							el = (*m)->GetFirstChild("b");
+							if (el != NULL) ab = cdble(el->Data());
+							el = (*m)->GetFirstChild("c");
+							if (el != NULL) ac = cdble(el->Data());
+							el = (*m)->GetFirstChild("d");
+							if (el != NULL) ad = cdble(el->Data());
+
+							// Get phase changes 
+							// These point to the phase changes above and below crossover diameter 
+							id_above = (*m)->GetAttributeValue("id_above");
+							//check phase exists
+							if (!mech.MeltModel().PhaseChangeValid(id_above)){
+								throw runtime_error(id_above + "Phase change not found "
+									"Sweep, MechParser::readPhaseTransformation).");
+							}
+
+							id_below = (*m)->GetAttributeValue("id_below");
+							//check phase exists
+							if (!mech.MeltModel().PhaseChangeValid(id_below)){
+								throw runtime_error(id_below + "Phase change not found "
+									"Sweep, MechParser::readPhaseTransformation).");
+							}
+
+							mech.MeltModel().AddCrossover(name, id_below, id_above, aa, ab, ac, ad);
+						}
+					}
+					else{
+						throw runtime_error("1 crossover expected (Sweep, MechParser::readPhaseTransformation).");
+					}
+				}
+				
+				// Get oxygen and titanium components for Composition model
+				if (type.compare("composition") == 0) {
+					std::vector<unsigned int> oxygenindex;
+					std::vector<unsigned int> titaniumindex;
+
+					for (unsigned int ii = 0; ii < mech.ComponentCount(); ++ii){
+						if (mech.Components()[ii]->Element().compare("O") == 0){
+							oxygenindex.push_back(ii);
+						}
+						else if (mech.Components()[ii]->Element().compare("Ti") == 0){
+							titaniumindex.push_back(ii);
+						}
+
+					}
+					// Set Ti and O indices
+					if (oxygenindex.size() > 0){
+						mech.MeltModel().SetOxygenComp(oxygenindex);
+					}
+					else{
+						throw runtime_error("Components of element O not found (Sweep, MechParser::readPhaseTransformation).");
+					}
+					if (titaniumindex.size() > 0){
+						mech.MeltModel().SetTitaniumComp(titaniumindex);
+					}
+					else{
+						throw runtime_error("Components of element Ti not found (Sweep, MechParser::readPhaseTransformation).");
+					}
+				}
+			}
+			else {
+				throw runtime_error("Only Spherical and BinTree models supported for phase transformation (Sweep, MechParser::readPhaseTransformation).");
+			}
+		}
+		//----------------------------------------------------
+		//----------- titania_phase_transformation -----------
+		//----------------------------------------------------
+		// This is a kinetic transformation, which is read like an ordinary process 
+		else if (str.compare("kinetic") == 0){
+
+			TitaniaPhaseTransformation *phasetransform = NULL;
+
+			//check that the particle model is valid
+			if (mech.AggModel() == AggModels::Spherical_ID || mech.AggModel() == AggModels::BinTree_ID) {
+				// Create a new Titania phase transformation object.
+				phasetransform = new TitaniaPhaseTransformation(mech);
+			}
+			else {
+				throw runtime_error("Only Spherical and BinTree models supported for phase transformation (Sweep, MechParser::readPhaseTransformation).");
+			}
+
+			// Set default name.
+			phasetransform->SetName("Phase Transformation " + cstr(k));
+
+			// Read the phase transformation properties.
+			try {
+				readPhaseTransformation(*(*i), *phasetransform);
+			}
+			catch (std::exception &e) {
+				delete phasetransform;
+				throw;
+			}
+
+			// Add phase transformation to mechanism.
+			mech.AddProcess(*phasetransform);
+		}
+		else {
+			// Unrecognised reaction type.
+			throw runtime_error("Unrecognised phase transformation type: " + str +
+				" (Sweep, MechParser::readPhaseTransformation).");
+		}
+
+		
+	}
+}
+
+void MechParser::readPhaseTransformation(CamXML::Element &xml, Processes::TitaniaPhaseTransformation &phasetransform)
+{
+    string str;
+    CamXML::Element *el = NULL;
+
+    // Read name.
+    str = xml.GetAttributeValue("name");
+    if (str != "") phasetransform.SetName(str);
+
+    // Is reaction deferred.
+    str = xml.GetAttributeValue("defer");
+    if (str=="true") {
+    	phasetransform.SetDeferred(true);
+    } else {
+    	phasetransform.SetDeferred(false);
+    }
+
+	/////////////////////////////////////////////////////////////////
+	//check that components are correct for phase transformation
+	vector<CamXML::Element*> items;
+    vector<CamXML::Element*>::iterator i;
+	bool Ru(false);
+	bool An(false);
+
+	// Get list of component changes from XML.
+    xml.GetChildren("component", items);
+
+    for (i=items.begin(); i!=items.end(); ++i) {
+        // Get component ID.
+        string str = (*i)->GetAttributeValue("id");
+		if(str.compare("Ru") == 0)	Ru = true;
+		if(str.compare("An") == 0)	An = true;
+    }
+	
+	if( Ru != true || An != true) {
+        throw runtime_error(" 'Ru' and 'An' components are required for phase transformation "
+                                "Sweep, MechParser::readPhaseTransformation).");
+    }
+	/////////////////////////////////////////////////////////////////
+
+    // Read particle composition change.
+    readCompChanges(xml, phasetransform);
+
+    // Read tracker variable changes.
+    readTrackChanges(xml, phasetransform);
+
+    //========== Read Arrhenius rate parameters ======================
+    Sprog::Kinetics::ARRHENIUS arr;
+    el = xml.GetFirstChild("A");
+    if (el != NULL) {
+        arr.A = cdble(el->Data());
+    } else {
+        // Reaction must have constant.
+        throw runtime_error("Phase transformation found with no rate constant "
+                            "defined (Sweep, MechParser::readPhaseTransformation).");
+    }
+	el = xml.GetFirstChild("n");
+    if (el!=NULL) {
+        arr.n = cdble(el->Data());
+    } else {
+        // Default temperature power is 0.
+        arr.n = 0.0;
+    }
+    el = xml.GetFirstChild("E");
+    if (el!=NULL) {
+        arr.E = cdble(el->Data()) * R / RCAL;
+    } else {
+        // Default activation energy is zero.
+        arr.E = 0.0;
+    }
+
+	//========= Particle dependency ==================================
+    el = xml.GetFirstChild("particleterm");
+    if (el!=NULL) {
+        // Get property ID.
+        str = el->GetAttributeValue("id");
+
+        if (str.compare("an")==0) {
+            // This reaction depends on surface area.
+            phasetransform.SetPropertyID(Sweep::iAn_2_3_comp);
+		}
+    } else {
+        throw runtime_error("Surface process defined without ""particleterm"" "
+                            "element (Sweep, MechParser::readPhaseTransformation).");
+    }
+
+    phasetransform.SetArrhenius(arr);
+
+}
 
 //COAGULATION
 
@@ -1654,11 +2212,18 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                 if(weightXML == NULL) {
                     // Unweighted case
                     if(kernelName == "transition")
-                        coag.reset(new Processes::TransitionCoagulation(mech));
+						if (mech.Components()[0]->WeightedPAHs()){
+							coag.reset(new Processes::TransitionCoagulationWeightedPAHs(mech));
+						}
+						else{
+							coag.reset(new Processes::TransitionCoagulation(mech));
+						}
                     else if(kernelName == "additive")
                         coag.reset(new Processes::AdditiveCoagulation(mech));
                     else if(kernelName == "constant")
                         coag.reset(new Processes::ConstantCoagulation(mech));
+					else if (kernelName == "transitionweightedPAHs")
+						coag.reset(new Processes::TransitionCoagulationWeightedPAHs(mech));
                     else
                         // Unrecognised option
                         throw std::runtime_error("Coagulation kernel " + kernelName + " not yet available in DSA \
@@ -1742,6 +2307,142 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                 // Get rid of the auto_ptr without deleting the coagulation object
                 coag.release();
             }
+        }
+    }
+}
+
+//COAGULATION
+
+/**
+ * @param[in]       xml     XML document containing zero or more top level \<coagulation\> nodes
+ * @param[in,out]   mech    Mechanism to which to add coagulation processes
+ *
+ * @exception   runtime_error   Kernel no specified
+ * @exception   runtime_error   Unrecongised/unsupported kernel
+ * @exception   runtime_error   Unrecongised/unsupported weight rule
+ *
+ * By default a transition regime coagulation process is created and added to the mechanism,
+ * this will happen if no coagulation nodes are found immediately below the root node of the
+ * XML tree.
+ */
+void MechParser::readFragmentation(CamXML::Document &xml, Sweep::Mechanism &mech)
+{
+    vector<CamXML::Element*> items;
+
+    // Get list of inceptions from XML data.
+    xml.Root()->GetChildren("fragmentation", items);
+
+    for(vector<CamXML::Element*>::const_iterator it = items.begin();
+        it != items.end(); ++it) {
+
+        // Read the user choice of kernel.  If no kernel is specified
+        // a default will be used
+        const CamXML::Element* const kernel = (*it)->GetFirstChild("kernel");
+        if(kernel ==  NULL)
+        {
+            throw std::runtime_error("No kernel given for fragmentation \
+                                        (Sweep, MechParser::readFragmentation)");
+        }
+        else
+        {
+            Processes::FragWeightRule weightRule;
+
+            // Work out which kernel to use and create it
+            const string kernelName = kernel->Data();
+
+            // Create a process of the appropriate type, but wrap it with an auto_ptr so
+            // that it gets deleted if an exception is thrown when reading in the value
+            // of A.
+            std::auto_ptr<Processes::Fragmentation> frag;
+
+            // Unweighted case
+            if(kernelName == "erosion") {
+                frag.reset(new Processes::ErosionFragmentation(mech));
+            } else if(kernelName == "symmetric") {
+                frag.reset(new Processes::SymmetricFragmentation(mech));
+            } else if(kernelName == "weightederosion") {
+                CamXML::Element *weightXML = (*it)->GetFirstChild("weightrule");
+                if(weightXML == NULL) {
+                    throw std::runtime_error("Fragulation weight rule must be specified for erosion \
+                                                (Sweep, MechParser::readFragulation)");
+                } else {
+                    const std::string weightRuleName = weightXML->Data();
+                    if(weightRuleName == "w1" || weightRuleName == "number") {
+                        weightRule = Processes::FragWeightNumber;
+                        std::cerr << "Found number weight rule" << std::endl;
+                    }
+                    else if(weightRuleName == "w2" || weightRuleName == "mass") {
+                        weightRule = Processes::FragWeightMass;
+                        std::cerr << "Found mass weight rule" << std::endl;
+                    }
+                    else
+                        throw std::runtime_error("Fragmentation weight rule " + weightRuleName + " not supported \
+                                                    (Sweep, MechParser::readFragmentation)");
+                    frag.reset(new Processes::WeightedErosionFragmentation(mech, weightRule));
+                }
+            } else if(kernelName == "weightedsymmetric") {
+                weightRule = Processes::FragWeightSymmetric;
+                frag.reset(new Processes::WeightedSymmetricFragmentation(mech, weightRule));
+            } else {
+                // Unrecognised option
+                throw std::runtime_error("Fragmentation kernel " + kernelName + " not yet available with weights \
+                                        (Sweep, MechParser::readFragmentation)");
+            }
+
+            // Choice of position of newly coagulated particle
+            const CamXML::Element *positionChoiceXML = (*it)->GetFirstChild("positionchoice");
+
+            // This is an optional input
+            if (positionChoiceXML != NULL) {
+                const std::string choice = positionChoiceXML->Data();
+                if(choice == "none")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::NoPositionChoice);
+                else if (choice == "uniform")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::UniformPositionChoice);
+                else if (choice == "mass")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::MassPositionChoice);
+                else if (choice == "largestmass")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::LargestMassPositionChoice);
+                else if (choice == "midpoint")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::MidpointPositionChoice);
+                else if (choice == "centreofmass")
+                    frag->SetPositionChoiceRule(Processes::Fragmentation::CentreOfMassPositionChoice);
+                else
+                    // Unrecognised option
+                    throw std::runtime_error("Position choice rule " + choice + " not yet available \
+                                                (Sweep, MechParser::readFragmentation)");
+            }
+
+            // Rate scaling now that a process has been created
+            double A = 0.0;
+            CamXML::Element *el = (*it)->GetFirstChild("A");
+            if (el != NULL) {
+                A = cdble(el->Data());
+            } else {
+                A = 1.0;
+            }
+            frag->SetA(A);
+
+            el = (*it)->GetFirstChild("particleterm");
+            if (el!=NULL) {
+                string str = el->GetAttributeValue("id");
+                if (str.compare("size")==0) {
+                    frag->SetPropertyID(Sweep::iNumCarbon);
+                } else if (str.compare("uniform")==0) {
+                    frag->SetPropertyID(Sweep::iFrag);
+                } else {
+                    throw std::runtime_error("Surface process defined with unrecognised ""particleterm"" "
+                                            "(Sweep, MechParser::readFragmentation).");
+                }
+            } else {
+                throw runtime_error("Surface process defined without ""particleterm"" "
+                            "element (Sweep, MechParser::readFragmentation).");
+            }
+
+            mech.AddFragmentation(*frag);
+
+            // Get rid of the auto_ptr without deleting the coagulation object
+            frag.release();
         }
     }
 }

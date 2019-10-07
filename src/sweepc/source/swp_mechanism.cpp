@@ -75,7 +75,7 @@ Mechanism::Mechanism(void)
 // Copy constructor.
 Mechanism::Mechanism(const Mechanism &copy)
 {
-	*this = copy;
+    *this = copy;
 }
 
 // Default destructor.
@@ -130,6 +130,14 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
             m_coags.back()->SetMechanism(*this);
         }
 
+        // Copy coagulation processes.
+        for (FragPtrVector::const_iterator i=rhs.m_frags.begin();
+            i!=rhs.m_frags.end(); ++i) {
+            m_frags.push_back((*i)->Clone());
+
+            // Need to update the parent mechanism
+            m_frags.back()->SetMechanism(*this);
+        }
 
         // Copy process counters.
         m_proccount.assign(rhs.m_proccount.begin(), rhs.m_proccount.end());
@@ -240,6 +248,35 @@ const CoagPtrVector &Mechanism::Coagulations(void) const
     return m_coags;
 }
 
+// COAGULATIONS.
+
+/*!
+ * @param[in,out]   coag    New coagulation process
+ *
+ * Ownership of the process will be taken by the mechanism.  The
+ * process must be heap allocated so that delete can be called on
+ * it.
+ */
+void Mechanism::AddFragmentation(Fragmentation& frag)
+{
+
+    m_frags.push_back(&frag);
+    m_termcount += frag.TermCount();
+    ++m_processcount;
+
+    m_termcount += frag.TermCount();
+    m_proccount.resize(m_termcount, 0);
+    m_fictcount.resize(m_termcount, 0);
+
+    // Set the coagulation to belong to this mechanism.
+    frag.SetMechanism(*this);
+}
+
+const FragPtrVector &Mechanism::Fragmentations(void) const
+{
+    return m_frags;
+}
+
 // PROCESS INFORMATION.
 
 // Returns the number of processes (including
@@ -300,6 +337,12 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
          it != m_coags.end(); ++it) {
         *i++ = (*it)->Name();
     }
+
+    // Add coagulation name.
+    for (FragPtrVector::const_iterator it = m_frags.begin();
+         it != m_frags.end(); ++it) {
+        *i++ = (*it)->Name();
+    }
 }
 
 
@@ -324,8 +367,11 @@ double Mechanism::CalcRates(double t, const Cell &sys, const Geometry::LocalGeom
     // Get coagulation rate.
     sum += Coagulation::CalcRates(t, sys, local_geom, m_coags, rates, m_inceptions.size() + m_processes.size());
 
+    // Get coagulation rate.
+    sum += Fragmentation::CalcRates(t, sys, local_geom, m_frags, rates, m_inceptions.size() + m_processes.size() + m_frags.size());
+
     // Get birth rates from the Cell.
-    fvector::iterator i = rates.begin() + m_inceptions.size() + m_processes.size() + m_coags.size();
+    fvector::iterator i = rates.begin() + m_inceptions.size() + m_processes.size() + m_coags.size() + m_frags.size();
     const BirthPtrVector &inf = sys.Inflows();
     for (BirthPtrVector::const_iterator j=inf.begin(); j!=inf.end(); ++j) {
         *i = (*j)->Rate(t, sys, local_geom);
@@ -403,6 +449,20 @@ double Mechanism::CalcJumps(double t, const Cell &sys, const Geometry::LocalGeom
         coagterms += m_coags[j]->TermCount();
     }
 
+    // Get number of coagulation jumps.
+    unsigned int fragterms(0);       // Number of terms already used
+    for (unsigned int j=0; j!=m_frags.size(); ++j) {
+        unsigned int fragsum(0);     // Sum of double and fictitious jumps
+        // Sum up all terms of this process
+        for (unsigned int k=0; k!=m_frags[j]->TermCount(); ++k) {
+            fragsum += m_proccount[k+m_inceptions.size()+m_processes.size()+coagterms+fragterms];
+            fragsum += m_fictcount[k+m_inceptions.size()+m_processes.size()+coagterms+fragterms];
+        }
+        (*iterm++) = fragsum;
+        sum += fragsum;
+        fragterms += m_frags[j]->TermCount();
+    }
+
     return sum;
 }
 
@@ -455,6 +515,9 @@ double Mechanism::CalcRateTerms(double t, const Cell &sys, const Geometry::Local
 
     // Coagulation
     sum += Coagulation::CalcRateTerms(t, sys, local_geom, m_coags, iterm);
+
+    // Coagulation
+    sum += Fragmentation::CalcRateTerms(t, sys, local_geom, m_frags, iterm);
 
     // Birth processes
     const BirthPtrVector &inf = sys.Inflows();
@@ -514,6 +577,9 @@ double Mechanism::CalcJumpRateTerms(double t, const Cell &sys, const Geometry::L
 
     // Get coagulation rate.
     sum += Coagulation::CalcRateTerms(t, sys, local_geom, m_coags, iterm);
+
+    // Get coagulation rate.
+    sum += Fragmentation::CalcRateTerms(t, sys, local_geom, m_frags, iterm);
 
     // Get birth rates from the Cell.
     const BirthPtrVector &inf = sys.Inflows();
@@ -722,6 +788,25 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
             }
         }
 
+        // We are here because the process was neither an inception
+        // nor a single particle process.  It is therefore either a
+        // coagulation or a birth/death process.
+        for(FragPtrVector::const_iterator it = m_frags.begin(); it != m_frags.end(); ++it) {
+            // Check if coagulation process.
+            if (j < static_cast<int>((*it)->TermCount())) {
+                // This is the coagulation process.
+                if ((*it)->Perform(t, sys, local_geom, j, rng) == 0) {
+                    m_proccount[i] += 1;
+                } else {
+                    m_fictcount[i] += 1;
+                }
+                return;
+            } else {
+                // This must be the birth/death process.
+                j -= (*it)->TermCount();
+            }
+        }
+
         if ((j < (int)sys.InflowCount()) && (j>=0)) {
             // An inflow process.
             sys.Inflows(j)->Perform(t, sys, local_geom, 0, rng);
@@ -813,14 +898,34 @@ void Mechanism::DoParticleFlow(
  * @param[in,out]   rng         Random number generator
  *
  */
-void Mechanism::MassTransfer(int i, double t, Cell &sys, rng_type &rng) const
+void Mechanism::MassTransfer(int i, double t, Cell &sys, rng_type &rng, const Geometry::LocalGeometry1d& local_geom) const
 {
+    if (AggModel() == AggModels::Spherical_ID || AggModel() == AggModels::BinTree_ID) {
+        int j = sys.Particles().NumOfInceptedPAH(AggModel());
+
+        if (i > j) {
+            while (i > j) {
+                m_inceptions[0]->Perform(t, sys, local_geom, 0, rng);
+                j++;
+            }
+        } else if (i < j) {
+            while (i < j) {
+                int Pindex = sys.Particles().IndexOfInceptedPAH(AggModel());
+                if (Pindex<0)
+                    throw runtime_error("There are no InceptedPAH in the ensemble, and all the InceptedPAH molecules are consumed due to unknown reason (Mops, Sweep::Mechanism::MassTransfer).");
+                sys.Particles().Remove(Pindex);
+                //std::cout << "j-i is " << j-i <<std::endl;
+                j--;
+            }
+        }
+    } else {
         // Test for now
         assert(sys.ParticleModel() != NULL);
         // This is an inception process.
         const Sweep::Processes::PAHInception *m_pahinception = NULL;
         m_pahinception = dynamic_cast<const Sweep::Processes::PAHInception*>(m_inceptions[0]);
         m_pahinception->AddInceptedPAH(i, t, sys, rng);
+    }
 }
 
 // LINEAR PROCESS DEFERMENT ALGORITHM.
@@ -846,14 +951,87 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
         // Stop ensemble from doubling while updating particles.
         sys.Particles().FreezeDoubling();
 
+		PartPtrVector overflow;
+
         // Perform deferred processes on all particles individually.
-        Ensemble::iterator i;
+		int oldweight;
+		Ensemble::iterator i;
+		int ind = 0;
         for (i=sys.Particles().begin(); i!=sys.Particles().end(); ++i) {
-            UpdateParticle(*(*i), sys, t, rng);
+			oldweight = (*(*i)).getStatisticalWeight();
+            UpdateParticle(*(*i), sys, t, ind, rng, overflow); 
+			if (oldweight != (*(*i)).getStatisticalWeight()){
+				sys.Particles().Update(ind);
+			}
+			ind++;
         }
 
-        // Now remove any invalid particles and update the ensemble.
-        sys.Particles().RemoveInvalids();
+		// Now remove any invalid particles and update the ensemble.
+		sys.Particles().RemoveInvalids();
+
+		if (sys.ParticleModel()->Components(0)->WeightedPAHs() && AggModel() == AggModels::PAH_KMC_ID){
+			//Check for duplicates
+			ind = 0;
+			int count = 0;
+			for (i = sys.Particles().begin(); i != sys.Particles().end(); ++i) {
+				if ((*i) != NULL) {
+					AggModels::PAHPrimary *pah =
+						dynamic_cast<AggModels::PAHPrimary*>((*(*i)).Primary());
+
+					if (pah->NumPAH() == 1){
+						int indpart;
+						indpart = sys.Particles().CheckforPAH(*(pah->GetPAHVector()[0]->GetPAHStruct()), t, ind);
+						if (indpart != -1 && indpart != ind){ //There is a matching particle
+							int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
+							int oldweight2 = (*sys.Particles().At(ind)).getStatisticalWeight();
+							(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + oldweight2);
+							sys.Particles().Update(indpart);
+							//Invalidate the PAH (and hence the particle) by setting statistical weight to negative 1
+							(*sys.Particles().At(ind)).setStatisticalWeight(-1.0);
+							count++;
+						}
+					}
+				}
+				ind++;
+			}
+
+			// Now remove any invalid particles and update the ensemble.
+			sys.Particles().RemoveInvalids();
+
+			PartPtrVector::iterator it1;
+			ind = 0;
+			for (it1 = overflow.begin(); it1 != overflow.end(); ++it1) {
+				if ((*it1) != NULL) {
+					AggModels::PAHPrimary *pah =
+						dynamic_cast<AggModels::PAHPrimary*>((*(*it1)).Primary());
+
+					if (pah->NumPAH() == 1){
+						int indpart;
+						indpart = sys.Particles().CheckforPAH(*(pah->GetPAHVector()[0]->GetPAHStruct()), t, -1);
+						if (indpart != -1){ //There is a matching particle
+							int oldweight1 = (*sys.Particles().At(indpart)).getStatisticalWeight();
+							(*sys.Particles().At(indpart)).setStatisticalWeight(oldweight1 + 1.0);
+							delete overflow[ind];
+							sys.Particles().Update(indpart);
+						}
+						else{ //No matching particle, must add to ensemble
+							if (sys.ParticleCount() < sys.Particles().Capacity()){
+								sys.Particles().Add(*(overflow[ind]), rng);
+							}
+							else
+							{
+								std::cout << "No room in ensemble after LPDA" << std::endl;
+							}
+						}
+					}
+				}
+				ind++;
+			}
+
+		}
+
+		//double pert = double(count) *100.0 / double(sys.Particles().Count());
+		//std:cout << pert;
 
         // Start particle doubling again.  This will also double the ensemble
         // if too many particles have been removed.
@@ -870,7 +1048,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
  *@param[in]        t           Time upto which particle to be updated
  *@param[in,out]    rng         Random number generator
  */
-void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng) const
+void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_type &rng, PartPtrVector &overflow) const
 {
     // Deal with the growth of the PAHs
     if (AggModel() == AggModels::PAH_KMC_ID)
@@ -880,26 +1058,41 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
         dt = t - sp.LastUpdateTime();
         sp.SetTime(t);
 
-        // If the agg model is PAH_KMC_ID then all the primary
-        // particles must be PAHPrimary.
-        AggModels::PAHPrimary *pah =
-                dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
+		if (dt > 0){ //Only do this if dt is greater than 0
 
-        // Update individual PAHs within this particle by using KMC code
-        // sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
-        pah->UpdatePAHs(t, *this, sys, rng);
+			// If the agg model is PAH_KMC_ID then all the primary
+			// particles must be PAHPrimary.
+			AggModels::PAHPrimary *pah =
+				dynamic_cast<AggModels::PAHPrimary*>(sp.Primary());
 
-        pah->UpdateCache();
-        pah->CheckRounding();
-        if (sp.IsValid()) {
-            sp.UpdateCache();
+			if (!sys.ParticleModel()->getTrackPrimarySeparation() && !sys.ParticleModel()->getTrackPrimaryCoordinates())
+			{
+				// Update individual PAHs within this particle by using KMC code
+				// sys has been inserted as an argument, since we would like use Update() Fuction to call KMC code
+				pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng, overflow);
+			}
+			else{
+				double free_surf = pah->GetFreeSurfArea();
+				pah->UpdatePAHs(t, dt, *this, sys, sp.getStatisticalWeight(), ind, rng, overflow, free_surf);
+			}
 
-            // Sinter the particles for the soot model (as no deferred process)
-            if (m_sint_model.IsEnabled()) {
-                pah->Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
-            }
-            sp.UpdateCache();
-        }
+			pah->UpdateCache();
+
+			if (!sys.ParticleModel()->getTrackPrimarySeparation() && !sys.ParticleModel()->getTrackPrimaryCoordinates())
+				pah->CheckRounding();
+			else
+				pah->CheckSintering();
+
+			if (sp.IsValid()) {
+				sp.UpdateCache();
+
+				// Sinter the particles for the soot model (as no deferred process)
+				if (m_sint_model.IsEnabled()) {
+					pah->Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+					sp.UpdateCache();
+				}
+			}
+		}
     }
 
     // Sinter the particles if no deferred processes
@@ -912,6 +1105,11 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
         sp.SetTime(t);
 
         sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+
+		//Melting point phase transformation
+		if (m_melt_model.IsEnabled()) {
+			sp.Melt(rng, sys);
+		}
 
         // Check particle is valid and recalculate cache.
         if (sp.IsValid()) {
@@ -952,8 +1150,13 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, rng_type &rng)
 
             // Perform sintering update.
             if (m_sint_model.IsEnabled()) {
-			    sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
+                sp.Sinter(dt, sys, m_sint_model, rng, sp.getStatisticalWeight());
             }
+
+			//Melting point phase transformation
+			if (m_melt_model.IsEnabled()) {
+				sp.Melt(rng, sys);
+			}
         }
 
         // Check that the particle is still valid, only calculate
@@ -1038,6 +1241,14 @@ void Mechanism::Serialize(std::ostream &out) const
             ProcessFactory::Write(*(*i), out);
         }
 
+        // Coagulation
+        n = m_frags.size();
+        out.write(reinterpret_cast<const char*>(&n), sizeof(n));
+        for (FragPtrVector::const_iterator i = m_frags.begin();
+             i != m_frags.end(); ++i) {
+            ProcessFactory::Write(*(*i), out);
+        }
+
         // Write index of first coag process.
         int m = (int)m_icoag;
         out.write((char*)&m, sizeof(m));
@@ -1105,6 +1316,14 @@ void Mechanism::Deserialize(std::istream &in)
                     Coagulation *pCoag = ProcessFactory::ReadCoag(in, *this);
                     pCoag->SetMechanism(*this);
                     m_coags.push_back(pCoag);
+                }
+
+                // Read coagulation process.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                for(unsigned int i = 0; i != n; ++i) {
+                    Fragmentation *pFrag = ProcessFactory::ReadFrag(in, *this);
+                    pFrag->SetMechanism(*this);
+                    m_frags.push_back(pFrag);
                 }
 
                 // Read index of first coag process.

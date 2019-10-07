@@ -65,7 +65,7 @@ CheckErr $?
 ans=`grep -i "sphere" spherical-tem\(0.1s\,\ 0\).pov` 
 if [ "$ans" == "$true" ]; then
     echo "Correct POVray particle: $true."
-    rm spherical*
+    rm -f spherical*
 else
     echo "ERROR: WRONG PARTICLE FROM SPHERICAL PRIMARY."
     exit 1
@@ -84,7 +84,7 @@ CheckErr $?
 ans=`grep -i "sphere" surfvol-tem\(0.1s\,\ 0\).pov | wc -l`
 if [ "$ans" -eq "$true" ]; then
     echo "Correct POVray particle: $true."
-    rm surfvol*
+    rm -f surfvol*
 else
     echo "ERROR: WRONG PARTICLE FROM SURFVOL PRIMARY."
     exit 2
@@ -122,6 +122,6 @@ else
 fi
 
 # Clean bintree files
-rm bintree*
+rm -f bintree*
 
 echo "All tests passed! :D"

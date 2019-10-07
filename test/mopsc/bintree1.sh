@@ -84,4 +84,4 @@ CheckErr $?
 
 # If we've made it to here, all tests have passed!
 echo "All tests passed. :D"
-rm bintree*
+rm -f bintree*

@@ -111,7 +111,10 @@ void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
             // Convert to radius in nm
             m_root.Insert(svp->PP_Diameter() * 0.5e9);
         }
-        calc_FM(m_root, *(&rng));
+
+        //! At the moment tracking of the distance between the centres of
+        //! primary particles does not apply to the surface-volume model.
+        calc_FM(m_root, *(&rng), false);
 
     } else if (model.AggModel() == AggModels::BinTree_ID ||
             model.AggModel() == AggModels::BinTreeSilica_ID) {
@@ -119,14 +122,14 @@ void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
 
         const AggModels::BinTreePrimary *p;
         p = dynamic_cast<const AggModels::BinTreePrimary*>(sp.Primary());
-        ConstructTree(p, *(&rng));
+        ConstructTree(p, *(&rng), model.getTrackPrimaryCoordinates());
 
     } else if (model.AggModel() == AggModels::PAH_KMC_ID) {
         // PAHPP (binary tree like) model
 
         const AggModels::PAHPrimary *p;
         p = dynamic_cast<const AggModels::PAHPrimary*>(sp.Primary());
-        ConstructTree(p, *(&rng));
+        ConstructTree(p, *(&rng), model.getTrackPrimaryCoordinates());
     } else {
         throw std::runtime_error("Unknown particle model. (ParticleImage::Construct)");
     }
@@ -135,6 +138,65 @@ void ParticleImage::Construct(const Particle &sp, const ParticleModel &model)
     //m_root.Project();
 }
 
+/*!
+ *  This function is like a limited assignment operator, except that the
+ *  children are not copied and the pointers to the particles may need
+ *  adjusting after this method has finished.
+ *
+ *  @param[in,out] node   Pointer to node of ImgNode tree.
+ *  @param[in]     source Pointer to the primary to be copied.
+ */
+template <class ParticleClass>
+void ParticleImage::CopyParts(ImgNode &node, const ParticleClass *source)
+{
+	//! Since m_cen_bshp and m_cen_mass are vectors do unit conversion in
+    //! function.
+    node.setBoundSph(source->m_cen_bsph);
+    node.setCOM(source->m_cen_mass);
+
+	//! Units of nm.
+    node.setRadius(source->m_primarydiam*0.5e9);
+    node.setDistance(source->m_distance_centreToCentre*1.0e9);
+}
+
+/*!
+ *  Recursively copy the tree for non-leaf nodes.
+ *
+ *  @param[in,out] node   Pointer to node of ImgNode tree.
+ *  @param[in]     source Pointer to the primary to be copied.
+ */
+template <class ParticleClass>
+void ParticleImage::CopyTree(ImgNode &node, const ParticleClass *source)
+{
+    //! Create the new left and right children with nothing in them.
+    node.m_leftchild = new ImgNode();
+    node.m_rightchild = new ImgNode();
+
+    //! Copy the properties such as the volume, surface area and list of
+    //! constituent PAH molecules.
+    CopyParts(*node.m_leftchild, source->m_leftchild);
+    CopyParts(*node.m_rightchild, source->m_rightchild);
+
+    // Set the pointers to the parent.
+    node.m_leftchild->m_parent=&node;
+    node.m_rightchild->m_parent=&node;
+
+    //! The left and right particle are set further down in UpdateAllPointers.
+    //! These are the pointers that specify which primary particles touch each
+    //! other in the aggregate structure.
+    node.m_leftparticle=NULL;
+    node.m_rightparticle=NULL;
+
+    //! Recurse to copy the subtrees.
+    if (source->m_leftchild->m_leftchild!=NULL)
+        CopyTree(*node.m_leftchild, source->m_leftchild);
+
+    if (source->m_rightchild->m_leftchild!=NULL)
+        CopyTree(*node.m_rightchild, source->m_rightchild);
+
+    //! Set the leftparticle and rightparticle.
+    UpdateAllPointers(node, source);
+}
 
 //! Generates a projection on the zx plane (set all y to 0)
 void ParticleImage::Project()
@@ -285,6 +347,93 @@ double ParticleImage::RadiusofGyration()
     return Rg;
 }
 
+/*!
+ *  Each node contains two pointers (m_leftparticle and m_rightparticle)
+ *  to primary particles that are connected by this node.
+ *  This function is used when the entire particle tree is duplicated.
+ *  It sets the pointers in the copied node, that the connectivity
+ *  of the primary particles in this node is the same as in the original node.
+ *
+ *  @todo give this method a more accurate name.
+ *
+ *  @param[in,out] node     Pointer to node of ImgNode tree.
+ *  @param[in]     original Pointer to the primary to be copied.
+ */
+template <class ParticleClass>
+void ParticleImage::UpdateAllPointers(ImgNode &node, const ParticleClass *original)
+{
+    //! The primary has no children => there are no left and right particles.
+    if (original->m_leftchild == NULL) {
+        //! Since this is not a connecting node it does not have left and
+        //!right particles.
+        node.m_leftparticle=NULL;
+        node.m_rightparticle=NULL;
+    } else {
+        //! Find the route to m_leftparticle in the original tree.
+        std::stack<bool> route = recordPath(original->m_leftparticle, original);
+
+        //! Now follow the same route down the new tree to find the new left particle.
+        node.m_leftparticle = descendPath(&node, route);
+
+        //! Find the route to m_rightparticle in the original tree.
+        route = recordPath(original->m_rightparticle, original);
+
+        //! Now follow the same route down the new tree to find the new right particle.
+        node.m_rightparticle = descendPath(&node, route);
+    }
+}
+
+/*!
+ *  This is a helper function for UpdateAllPointers.
+ *  It climbs up the tree from bottom to top recording a route
+ *  suitable for use in call to @see descendPath.
+ *
+ *  @param[in] bottom Tree node from which to start climbing.
+ *  @param[in] top    Tree node at which to stop climbing.
+ *
+ *  @pre top must be above bottom in a tree.
+ *
+ *  @return Stack that can be used to descend the same path by moving to the
+ *          left child each time the top of the stack is true.
+ */
+template <class ParticleClass>
+std::stack<bool> ParticleImage::recordPath(const ParticleClass* bottom, const ParticleClass* const top) {
+    std::stack<bool> wasLeftChild;
+
+    while(bottom != top) {
+        //! check whether bottom was a left child of its parent.
+        wasLeftChild.push(bottom == bottom->m_parent->m_leftchild);
+
+        //! Climb one level up the tree.
+        bottom = bottom->m_parent;
+    }
+    return wasLeftChild;
+}
+
+/*!
+ *  @param[in]     here           Point in tree from which to start descent.
+ *  @param[in,out] takeLeftBranch Instructions for which child to move to at each level.
+ *
+ *  @return The node at the bottom of the path.
+ *
+ *  @pre  here must be a node of tree in which takeLeftBranch is a valid path.
+ *  @post takeLeftBranch.empty() == true.
+ */
+template <class ParticleClass>
+ParticleClass* ParticleImage::descendPath(ParticleClass *here, std::stack<bool> &takeLeftBranch) {
+    while(!takeLeftBranch.empty()) {
+        //! Move one step down the tree in the instructed direction.
+        if(takeLeftBranch.top())
+            here = here->m_leftchild;
+        else
+            here = here->m_rightchild;
+
+        //! This instuction has now been processed.
+        takeLeftBranch.pop();
+    }
+    return here;
+}
+
 // RENDERING FUNCTIONS.
 
 // Draws the particle image to a POVRAY file.
@@ -339,66 +488,72 @@ void ParticleImage::WritePOVRAY(std::ofstream &file)
 
 
 /*!
- * @brief       Generate the free-molecular structure of a particle
+ *  @brief Generate the free-molecular structure of a particle.
  *
- * Calculates the aggregate structure down from the given
- * node.  Assumes that the tree leaves have been initialised
- * with the correct radii, and recalculates their positions.
+ *  Calculates the aggregate structure down from the given
+ *  node. Assumes that the tree leaves have been initialised
+ *  with the correct radii, and recalculates their positions.
  *
- * @param node  Pointer to node of ImgNode tree
- * @param rng   Random number generator
+ *  @param[in,out] node                   Pointer to node of ImgNode tree.
+ *  @param[in]     rng                    Random number generator.
+ *  @param[in]     trackPrimaryCoordinates Flag used to indicate whether to track primary coordinates.
  */
-void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng)
+void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng, const bool trackPrimaryCoordinates)
 {
-    ImgNode *target = node.m_left;
-    ImgNode *bullet = node.m_right;
+    ImgNode *target = node.m_leftchild;
+    ImgNode *bullet = node.m_rightchild;
 
     if ((target != NULL) && (bullet != NULL)) {
-        // Pass calculation down binary tree left & right branches.
-        calc_FM(*target,  rng);
-        calc_FM(*bullet,  rng);
+        //! Pass calculation down binary tree left & right branches.
+        calc_FM(*target, rng, trackPrimaryCoordinates);
+        calc_FM(*bullet, rng, trackPrimaryCoordinates);
 
-        // The first part of the collision algorithm is to
-        // randomly orientate both left and right aggregates.
-        // They are both then placed so that their bounding
-        // spheres are at the origin.
+        //! The first part of the collision algorithm is to
+        //! randomly orientate both left and right aggregates.
+        //! They are both then placed so that their bounding
+        //! spheres are at the origin.
 
-        // Rotate left node randomly about CoM.
-        // Generate a random number on [0,1)-double-interval
+        //! Rotate left node randomly about CoM.
+        //! Generate a random number on [0,1)-double-interval.
         boost::uniform_01<rng_type&, double> uniformGenerator(rng);
         double phi1   = uniformGenerator() * 2.0 * PI;
         double theta1 = ((2.0*uniformGenerator())-1.0) * PI;
         target->RotateCOM(theta1, phi1);
 
-        // Rotate right node randomly about CoM.
+        //! Rotate right node randomly about CoM.
         double phi2   = uniformGenerator() * 2.0 * PI;
         double theta2 = ((2.0*uniformGenerator())-1.0) * PI;
         bullet->RotateCOM(theta2, phi2);
 
-        // Move both spheres so that the bounding spheres
-        // sit at the origin.
+        //! Move both spheres so that the bounding spheres
+        //! sit at the origin.
         target->CentreBoundSph();
         bullet->CentreBoundSph();
 
-        // Perform the collision of the left and right nodes.
-        // This ma require several iterations if the chosen
-        // x-y displacement means that the aggregates cannot
-        // collide in the z-direction.
+        //! Perform the collision of the left and right nodes.
+        //! This may require several iterations if the chosen
+        //! x-y displacement means that the aggregates cannot
+        //! collide in the z-direction.
         Coords::Vector D;
         double sumr=0.0;
         bool hit = false;
         while (!hit) {
-            // Need to reset target and bullet here, in case
-            // the have been changed by the tree traversal
-            // code below.
-            target = node.m_left;
-            bullet = node.m_right;
-            sumr = target->Radius() + bullet->Radius();
+            //! Need to reset target and bullet here, in case
+            //! they have been changed by the tree traversal
+            //! code below.
+            target = node.m_leftchild;
+            bullet = node.m_rightchild;
 
-            // Create a random displacement of the bullet node
-            // in the x-y plane.  The displacement is never
-            // greater than the sum of the radii, therefore they
-            // should always touch.
+            if (!trackPrimaryCoordinates) {
+                sumr = target->Radius() + bullet->Radius();
+            } else {
+                sumr = node.m_distance_centreToCentre;
+            }
+
+            //! Create a random displacement of the bullet node
+            //! in the x-y plane.  The displacement is never
+            //! greater than the sum of the radii, therefore they
+            //! should always touch.
             D[0] = ((2.0 * uniformGenerator()) - 1.0) * sumr;
             D[1] = ((2.0 * uniformGenerator()) - 1.0) * sumr;
 
@@ -406,29 +561,40 @@ void ParticleImage::calc_FM(ImgNode &node, Sweep::rng_type &rng)
             //// target and bullet.  We do this in case both the
             //// target and bullet are leaf nodes, and hence the
             //// binary tree traversal won't happen.
-           // hit = calcCollZ(target->m_cen_mass, target->m_r,
-           //                 bullet->m_cen_mass, bullet->m_r,
-           //                 D[0], D[1], dz1);
-           // if (!hit) continue; // Should never happen.
-           // D[2] = target->m_cen_bsph[2] + dz1;
+            // hit = calcCollZ(target->m_cen_mass, target->m_r,
+            //                 bullet->m_cen_mass, bullet->m_r,
+            //                 D[0], D[1], dz1);
+            // if (!hit) continue; // Should never happen.
+            // D[2] = target->m_cen_bsph[2] + dz1;
 
-            // The next code determines the displacement along the z-axis
-            // required for the target and bullet aggregates to touch.  This
-            // requires falling down the tree progressively recalculating
-            // the nearest nodes at each level, until the leaf nodes
-            // are reached.
-            // This next code calculates the minimum distance between the
-            // target's children and bullet's children, or the target or
-            // bullet if they have no children.  The two children with
-            // the smallest separation are chosen as the next target
-            // and bullet.
-            hit = minCollZ(*target, *bullet, D[0], D[1], D[2]);
+            if (!trackPrimaryCoordinates) {
+                //! The next code determines the displacement along the z-axis
+                //! required for the target and bullet aggregates to touch.  This
+                //! requires falling down the tree progressively recalculating
+                //! the nearest nodes at each level, until the leaf nodes
+                //! are reached.
+                //! This next code calculates the minimum distance between the
+                //! target's children and bullet's children, or the target or
+                //! bullet if they have no children.  The two children with
+                //! the smallest separation are chosen as the next target
+                //! and bullet.
+                hit = minCollZ(*target, *bullet, D[0], D[1], D[2]);
+            } else {
+                //! By including pointers to a node's left and right particles,
+                //! we can directly calculate the displacement in the z
+                //! direction for these two particles which maintains the
+                //! particle's connectivity thus negating the need to call
+                //! calcCollZ function through minCollZ.
+                hit = calcCollZ(node.m_leftparticle->BoundSphCentre(), node.m_leftparticle->Radius(),
+                                node.m_rightparticle->BoundSphCentre(), node.m_rightparticle->Radius(),
+                                D[0], D[1], D[2], sumr, trackPrimaryCoordinates);
+            }
         }
 
-        // We have a new location for the bullet (right node), so move it.
-        node.m_right->Translate(D[0], D[1], D[2]);
+        //! We have a new location for the bullet (right node), so move it.
+        node.m_rightchild->Translate(D[0], D[1], D[2]);
 
-        // Calculate properties of this node.
+        //! Calculate properties of this node.
         node.CalcBoundSph();
         node.CalcCOM();
         node.CentreBoundSph();
@@ -467,19 +633,19 @@ bool ParticleImage::minCollZ(const ImgNode &target,
             // Bullet is a leaf (both leaves).
            return calcCollZ(target.BoundSphCentre(), target.Radius(),
                             bullet.BoundSphCentre(), bullet.Radius(),
-                            dx, dy, dz);
+                            dx, dy, dz, 0.0, false);
         } else {
             // Bullet is not a leaf, call sub-nodes.
             // Calculate minimum dz for the target and the bullet left subnode.
             hit1 = calcCollZ(target.BoundSphCentre(), target.Radius(),
-                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(),
-                             dx, dy, dz);
-            if (hit1) hit = minCollZ(target, *bullet.m_left, dx, dy, dz);
+                             bullet.m_leftchild->BoundSphCentre(), bullet.m_leftchild->Radius(),
+                             dx, dy, dz, 0.0, false);
+            if (hit1) hit = minCollZ(target, *bullet.m_leftchild, dx, dy, dz);
             // Calculate minimum dz for the target and the bullet right subnode.
             hit1 = calcCollZ(target.BoundSphCentre(), target.Radius(),
-                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(),
-                             dx, dy, dz2);
-            if (hit1) hit = minCollZ(target, *bullet.m_right, dx, dy, dz2) || hit;
+                             bullet.m_rightchild->BoundSphCentre(), bullet.m_rightchild->Radius(),
+                             dx, dy, dz2, 0.0, false);
+            if (hit1) hit = minCollZ(target, *bullet.m_rightchild, dx, dy, dz2) || hit;
             // Return minimum dz.
             dz = min(dz, dz2);
             return hit;
@@ -489,15 +655,15 @@ bool ParticleImage::minCollZ(const ImgNode &target,
         if (bullet.IsLeaf()) {
             // Bullet is a leaf, call target sub-nodes..
             // Calculate minimum dz for the target left subnode and the bullet.
-            hit1 = calcCollZ(target.m_left->BoundSphCentre(), target.m_left->Radius(),
+            hit1 = calcCollZ(target.m_leftchild->BoundSphCentre(), target.m_leftchild->Radius(),
                              bullet.BoundSphCentre(), bullet.Radius(),
-                             dx, dy, dz);
-            if (hit1) hit = minCollZ(*target.m_left, bullet, dx, dy, dz);
+                             dx, dy, dz, 0.0, false);
+            if (hit1) hit = minCollZ(*target.m_leftchild, bullet, dx, dy, dz);
             // Calculate minimum dz for the target right subnode and the bullet.
-            hit1 = calcCollZ(target.m_right->BoundSphCentre(), target.m_right->Radius(),
+            hit1 = calcCollZ(target.m_rightchild->BoundSphCentre(), target.m_rightchild->Radius(),
                              bullet.BoundSphCentre(), bullet.Radius(),
-                             dx, dy, dz2);
-            if (hit1) hit = minCollZ(*target.m_right, bullet, dx, dy, dz2) || hit;
+                             dx, dy, dz2, 0.0, false);
+            if (hit1) hit = minCollZ(*target.m_rightchild, bullet, dx, dy, dz2) || hit;
             // Return minimum dz.
             dz = min(dz, dz2);
             return hit;
@@ -505,25 +671,25 @@ bool ParticleImage::minCollZ(const ImgNode &target,
             // Bullet is not a leaf (neither is a leaf), check all left/right
             // collision combinations.
             // Target left and bullet left.
-            hit1 = calcCollZ(target.m_left->BoundSphCentre(), target.m_left->Radius(),
-                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(),
-                             dx, dy, dz);
-            if (hit1) hit = minCollZ(*target.m_left, *bullet.m_left, dx, dy, dz);
+            hit1 = calcCollZ(target.m_leftchild->BoundSphCentre(), target.m_leftchild->Radius(),
+                             bullet.m_leftchild->BoundSphCentre(), bullet.m_leftchild->Radius(),
+                             dx, dy, dz, 0.0, false);
+            if (hit1) hit = minCollZ(*target.m_leftchild, *bullet.m_leftchild, dx, dy, dz);
             // Target left and bullet right.
-            hit1 = calcCollZ(target.m_left->BoundSphCentre(), target.m_left->Radius(),
-                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(),
-                             dx, dy, dz2);
-            if (hit1) hit = minCollZ(*target.m_left, *bullet.m_right, dx, dy, dz2) || hit;
+            hit1 = calcCollZ(target.m_leftchild->BoundSphCentre(), target.m_leftchild->Radius(),
+                             bullet.m_rightchild->BoundSphCentre(), bullet.m_rightchild->Radius(),
+                             dx, dy, dz2, 0.0, false);
+            if (hit1) hit = minCollZ(*target.m_leftchild, *bullet.m_rightchild, dx, dy, dz2) || hit;
             // Target right and bullet left.
-            hit1 = calcCollZ(target.m_right->BoundSphCentre(), target.m_right->Radius(),
-                             bullet.m_left->BoundSphCentre(), bullet.m_left->Radius(),
-                             dx, dy, dz3);
-            if (hit1) hit = minCollZ(*target.m_right, *bullet.m_left, dx, dy, dz3) || hit;
+            hit1 = calcCollZ(target.m_rightchild->BoundSphCentre(), target.m_rightchild->Radius(),
+                             bullet.m_leftchild->BoundSphCentre(), bullet.m_leftchild->Radius(),
+                             dx, dy, dz3, 0.0, false);
+            if (hit1) hit = minCollZ(*target.m_rightchild, *bullet.m_leftchild, dx, dy, dz3) || hit;
             // Target right and bullet right.
-            hit1 = calcCollZ(target.m_right->BoundSphCentre(), target.m_right->Radius(),
-                             bullet.m_right->BoundSphCentre(), bullet.m_right->Radius(),
-                             dx, dy, dz4);
-            if (hit1) hit = minCollZ(*target.m_right, *bullet.m_right, dx, dy, dz4) || hit;
+            hit1 = calcCollZ(target.m_rightchild->BoundSphCentre(), target.m_rightchild->Radius(),
+                             bullet.m_rightchild->BoundSphCentre(), bullet.m_rightchild->Radius(),
+                             dx, dy, dz4, 0.0, false);
+            if (hit1) hit = minCollZ(*target.m_rightchild, *bullet.m_rightchild, dx, dy, dz4) || hit;
             // Returns minimum dz.
             dz = min(min(dz, dz2), min(dz3, dz4));
             return hit;
@@ -532,35 +698,49 @@ bool ParticleImage::minCollZ(const ImgNode &target,
 }
 
 /*!
- * @brief       Calculates the z-displacement of a sphere
+ *  @brief Calculates the z-displacement of a sphere.
  *
- * Calculates the z-displacement of a bullet sphere for a +ve
- * collision with a target sphere.  Returns true if the
- * spheres collide, otherwise false.
+ *  Calculates the z-displacement of a bullet sphere for a +ve
+ *  collision with a target sphere. Returns true if the
+ *  spheres collide, otherwise false.
  *
- * @param p1    Coordinates of sphere 1
- * @param r1    Radius of sphere 1
- * @param p2    Coordinates of sphere 2
- * @param r2    Radius of sphere 2
- * @param dx    ?
- * @param dy    ?
- * @param dz    ?
- * @return      Have the nodes collided?
+ *  @param[in]  p1                     Coordinates of sphere 1.
+ *  @param[in]  r1                     Radius of sphere 1.
+ *  @param[in]  p2                     Coordinates of sphere 2.
+ *  @param[in]  r2                     Radius of sphere 2
+ *  @param[in]  dx                     Bullet x displacement.
+ *  @param[in]  dy                     Bullet y displacement.
+ *  @param[out] dz                     Bullet z displacement.
+ *  @param[in]  distanceCentreToCentre Distance between the centres of neighbouring primary particles.
+ *  @param[in]  trackPrimaryCoordinates Flag used to indicate whether to track primary coordinates.
+ *
+ *  @return Have the nodes collided?
  */
 bool ParticleImage::calcCollZ(const Coords::Vector &p1, double r1,
                               const Coords::Vector &p2, double r2,
-                              double dx, double dy, double &dz)
+                              double dx, double dy, double &dz,
+                              double distanceCentreToCentre, const bool trackPrimaryCoordinates)
 {
-    // Calculate the square of the sum of the radii.
-    double sumrsqr = r1 + r2; sumrsqr *= sumrsqr;
+    double sumrsqr;
 
-    // Calculate dx, dy and dz.  Remember to include
-    // argument contributions.
+    if (!trackPrimaryCoordinates) {
+        sumrsqr = r1 + r2;
+    } else {
+        sumrsqr = distanceCentreToCentre;
+    }
+
+    //! Calculate the square of the sum of the radii, or the distance between
+    //! the centres of neighbouring primary particles if tracking primary
+    //! separation.
+    sumrsqr *= sumrsqr;
+
+    //! Calculate dx, dy and dz. Remember to include
+    //! argument contributions.
     double xdev = p2[0] - p1[0] + dx;
     double ydev = p2[1] - p1[1] + dy;
     double zdev = p2[2] - p1[2];
 
-    // Calculate dx, dy and dz squared.
+    //! Calculate dx, dy and dz squared.
     double dxsqr = xdev * xdev;
     double dysqr = ydev * ydev;
     double dzsqr = zdev * zdev;
@@ -569,16 +749,16 @@ bool ParticleImage::calcCollZ(const Coords::Vector &p1, double r1,
     double b = 2.0 * zdev;
     double c = dxsqr + dysqr + dzsqr - sumrsqr;
 
-    // Calculate determinant.
-    double det = (b*b) - (4.0*c);
+    //! Calculate discriminant.
+    double dis = (b*b) - (4.0*c);
 
-    if (det >= 0.0) {
-        // Spheres intersect.
-        dz = - 0.5 * (b + sqrt(det));
+    if (dis >= 0.0) {
+        //! Spheres intersect.
+        dz = - 0.5 * (b + sqrt(dis));
         return true;
     } else {
-        // Spheres do not intersect.
-        dz = 1.0e10; // A large number.
+        //! Spheres do not intersect.
+        dz = 1.0e10; //!< A large number.
         return false;
     }
 }

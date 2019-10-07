@@ -140,10 +140,11 @@ public:
     void Project();
 
 private:
-    // Size.
-    double m_r;  // Bounding sphere radius of aggregate/primary.
-    double m_r2; // r squared (useful for efficient collision detection computation).
-    double m_r3; // r cubed (useful for calculating centre-of-mass).
+    //! Size.
+    double m_distance_centreToCentre; //!< The distance between the centres of primary particles.
+    double m_r;                       //!< Bounding sphere radius of aggregate/primary.
+    double m_r2;                      //!< r squared (useful for efficient collision detection computation).
+    double m_r3;                      //!< r cubed (useful for calculating centre-of-mass).
 
     double m_mass;
 
@@ -154,9 +155,19 @@ private:
     // Minimum branch depth beneath this node.
     unsigned int m_mindepth;
 
-    // Binary tree (divide & conquer) structure.
-    ImgNode *m_parent;         // Parent node.
-    ImgNode *m_left, *m_right; // Left and right child nodes.
+    //! Binary tree (divide & conquer) structure.
+    ImgNode *m_parent;                         //!< Parent node.
+    ImgNode *m_leftchild, *m_rightchild;       //!< The left and right child nodes.
+    ImgNode *m_leftparticle, *m_rightparticle; //!< The left and right particle nodes.
+
+	//! Set the bounding sphere.
+    void setBoundSph(Coords::Vector bsphp);
+
+    //! Set the centre-of-mass.
+    void setCOM(Coords::Vector mass);
+
+    //! Set the distance between the centres of primary particles.
+    void setDistance(double distance);
 
     // Sets the radius of the bounding sphere.
     void setRadius(double r);

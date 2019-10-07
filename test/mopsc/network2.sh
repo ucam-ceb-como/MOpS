@@ -159,7 +159,7 @@ $exe -p -w -r $tempfile -c chem.inp > /dev/null
 CheckErr $?
 CheckTest
 
-rm casea*
+rm -f casea*
 
 ###################################################################
 # NETWORK CASE B: Linear network
@@ -191,7 +191,7 @@ fname="caseb(r4)-chem.csv"
 trueList="3.17E-006 1.22E-006 2.60E-006 1000 1.22E-005"
 CheckTest
 
-rm caseb*
+rm -f caseb*
 
 ###################################################################
 # NETWORK CASE C: RECYCLE LOOPS, AAARGH!
@@ -240,7 +240,7 @@ echo "All tests passed. :D"
 # Remove temporary files
 echo "Cleaning files.."
 
-rm casec*
-rm $tempfile
+rm -f casec*
+rm -f $tempfile
 
 cd ..
