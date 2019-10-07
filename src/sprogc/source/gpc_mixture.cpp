@@ -163,12 +163,8 @@ void Mixture::GetConcs(fvector &concs) const
     concs.resize(numSpecies);
 
     // Loop over all mole fractions and convert to concentrations.
-	//************************************************************
     const double density = m_data[densityIndex()];
-	//************************************************************csl37-const-pressure
-	//************************************************************hardcoded to keep pressure at constant 1 atm 
-	//const double density = 101325/ (R * Temperature());
-	//************************************************************
+	
     for (unsigned int i = 0; i != gasSpeciesCount; ++i) {
         concs[i] = m_data[i] * density;
     }
@@ -251,12 +247,7 @@ double Mixture::MoleFraction(unsigned int i) const
 double Mixture::MolarConc(unsigned int i) const
 {
     if (i < gasSpeciesCount) {
-        //************************************************************
 		return m_data[i] * m_data[densityIndex()];
-		//************************************************************csl37-const-pressure
-		//************************************************************hardcoded to keep pressure at constant 1 atm
-		//return m_data[i] * 101325/ (R * Temperature());
-		//************************************************************
     } 
 	else {
         return MolarSurfConc(i);
@@ -594,12 +585,7 @@ void Mixture::Normalise()
 // Returns the mixture molar density. (C)
 double Mixture::Density() const
 {
-	//************************************************************
     return m_data[densityIndex()];
-	//************************************************************csl37-const-pressure
-	//************************************************************hardcoded to keep pressure at constant 1 atm
-	//return 101325/ (R * Temperature());
-	//************************************************************
 }
 
 // Returns the mixture mass density. (include gas phase only) (C, currently not in used for mops-sprogc)
@@ -612,24 +598,15 @@ double Mixture::MassDensity() const
     for (unsigned int i=0; i!=gasSpeciesCount; ++i) {
         rho += m_data[i] * (*m_species)[i]->MolWt();
     }
-	//************************************************************
     rho *= m_data[densityIndex()];
-	//************************************************************csl37-const-pressure
-	//************************************************************hardcoded to keep pressure at constant 1 atm
-	//rho *= 101325/ (R * Temperature());
-	//************************************************************
+
     return rho;
 }
 
 // Sets the mixture molar density. (C, debugged)
 void Mixture::SetDensity(double dens)
 {
-	//************************************************************
     m_data[densityIndex()] = dens;
-	//************************************************************csl37-const-pressure
-	//************************************************************hardcoded to keep pressure at constant 1 atm
-	//m_data[densityIndex()] = 101325/ (R * Temperature());
-	//************************************************************
 }
 
 // Sets the molar density using the supplied mass density. (THIS SHOULD BE: SET MOLAR DENSITY) (C, currently not in used for mops-sprogc)
