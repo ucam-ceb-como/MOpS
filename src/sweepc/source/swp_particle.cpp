@@ -804,13 +804,13 @@ void Particle::getFrameCoords(std::vector<fvector> &coords) const
 	m_primary->GetFrameCoords(coords);
 }
 
-//csl37: initialise primary particle tracking for videos
+//! Initialise primary particle tracking for videos
 void Particle::setTracking()
 {
 	m_primary->setTracking();
 }
 
-//csl37: remove primary tracking
+//! Remove primary tracking
 void Particle::removeTracking()
 {
 	m_primary->removeTracking();

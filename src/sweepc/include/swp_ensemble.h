@@ -292,7 +292,9 @@ public:
     //void SetNumOfInceptedPAH(int m_amount);
     //void SetNumOfInceptedPAH(int m_amount, Sweep::AggModels::Primary *m_primary);
 
-	// PARTICLE TRACKING OUTPUT FOR VIDEOS // csl37
+	// PARTICLE TRACKING OUTPUT FOR VIDEOS
+
+	//! Updates tracking after a coagulation event
 	void UpdateTracking(int p_old, int p_merged);
 
 	//! Returns a pointer to the given tracked particle.
@@ -312,12 +314,12 @@ private:
     PartPtrVector m_particles;
     Sweep::KMC_ARS::KMCSimulator *m_kmcsimulator;
 
-	// csl37
 	// PARTICLE TRACKING OUTPUT FOR VIDEOS
+
 	//! (maximum) number of particles tracked for videos
 	unsigned int m_tracked_number;
 
-	//! Vector of pointers to tracked particles 
+	//! Vector of pointers of tracked particles 
 	PartPtrVector m_tracked_particles;    
 
 // ENSEMBLE CAPACITY VARIABLES.

@@ -283,14 +283,17 @@ public:
     // Recalculate derived properties from the primary particle
     void UpdateCache();
 
+	// PARTICLE TRACKING FOR VIDEOS
+
 	//! Returns the frame position and orientation, and primary coordinates
 	void getFrameCoords(std::vector<fvector> &coords) const;
 
-	//csl37: initialise primary particle tracking for videos
+	//! Initialise primary particle tracking for videos
 	void setTracking();
 
-	//csl37: remove primary tracking
+	//! Remove primary tracking
 	void removeTracking();
+
     // READ/WRITE/COPY.
 
     //! Clone the particle.

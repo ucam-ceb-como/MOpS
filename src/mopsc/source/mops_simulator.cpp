@@ -395,7 +395,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 			// write headers
 			std::ofstream TrackParticlesFile;
 			TrackParticlesFile.open(m_TrackParticlesName[i].c_str(), ios::app);
-			TrackParticlesFile << "Time (s),x (m),y (m),z (m),r (m),k1,k2,k3,i1,i2,i3" << component_names << "\n";
+			TrackParticlesFile << "Time (s),x (m),y (m),z (m),r (m),orient-x_x (m),orient-x_y (m),orient-x_z (m),orient-z_x (m),orient-z_y (m),orient-z_z (m)" << component_names << "\n";
 			TrackParticlesFile.close();
 		}
 	}
@@ -1126,7 +1126,7 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
 			std::ofstream fileout;
 			fileout.open(TrackParticlesName.c_str(), ios::app);
 			for (vector<fvector>::const_iterator it = coords.begin(); it != coords.end(); it++){
-				//print time, x, y, z, r, and orientation vectors, composition
+				//print time, x, y, z, r, orientation, composition
 				fileout << time;
 				for (fvector::const_iterator iit = (*it).begin(); iit != (*it).end(); iit++){
 					fileout << "," << (*iit);

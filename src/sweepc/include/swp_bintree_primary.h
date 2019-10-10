@@ -184,9 +184,6 @@ public:
     //! Returns a vector of primary coordinates, radius, and mass (5D).
     void GetPriCoords(std::vector<fvector> &coords) const;
 
-	//! Returns the frame position and orientation, and primary coordinates
-	void GetFrameCoords(std::vector<fvector> &coords) const;
-
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
     friend class BinTreeSerializer<class BinTreePrimary>;
@@ -222,15 +219,19 @@ public:
     //! Deserialise a BinTreePrimary particle
     void Deserialize(std::istream &in, const Sweep::ParticleModel &model);
 
-	//flag to indicate particle is tracked 
-	bool m_tracked;
-	//set tracking flag
-	void setTracking() { m_tracked = true; };
-	//csl37: remove primary tracking
-	void removeTracking();
-
 	//! Return primary particle details and connectivity
 	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
+
+	// PARTICLE TRACKING FOR VIDEOS
+
+	//! Set tracking flag
+	void setTracking();
+
+	//! Remove primary tracking flag
+	void removeTracking();
+
+	//! Returns the frame position and orientation, and primary coordinates
+	void GetFrameCoords(std::vector<fvector> &coords) const;
 
 protected:
     //! Empty primary not meaningful
@@ -310,10 +311,21 @@ protected:
     Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
     Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
 
-	//! For tracking the particle frame orientation
-	Coords::Vector m_frame_orient;
-	//! For tracking the particle frame position
-	Coords::Vector m_frame_x;
+	// PARTICLE TRACKING FOR VIDEOS
+
+	//! For tracking the particle frame orientation 
+	//	Two points are defined, initially on the x-axis (1e-9,0,0)
+	//  and the z-axis (0,0,1e-9). These together with the coordinates 
+	//	of a single tracked primary, which defines the centre of the 
+	//	image frame, allow us to track the orientation of the particle
+	//	frame under rotations during coagulation.
+	Coords::Vector m_frame_orient_x;	//(frame x-axis)
+	Coords::Vector m_frame_orient_z;	//(frame z-axis)
+	
+	//! Flag to indicate particle is tracked 
+	//	A single primary is tracked within an aggregate.
+	//  This defines the centre of particle image frame.
+	bool m_tracked;
 
     //! Sintering level of children connected by this node
     double m_children_sintering;
@@ -432,10 +444,6 @@ protected:
 	
 	//! Function to translate neighbours of a primary except prim_ignore
 	void TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u, double delta_d, BinTreePrimary *prim_ignore);
-
-	//csl37-debug
-	//csl37: checks that only one priamry is tracked
-	void checkTracking(int &count);
 
 private:
     // GENERAL PARTICLE MODEL PROPERTIES

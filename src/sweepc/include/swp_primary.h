@@ -293,15 +293,18 @@ public:
         double wt     // Statistical weight
         );
 	
+	// PARTICLE TRACKING FOR VIDEOS
+
 	//! Returns the frame position and orientation, and primary coordinates
 	//	Used by bintree_primary for particle tracking
 	virtual void GetFrameCoords(std::vector<fvector> &coords) const;
 
-	//csl37: set primary tracking
+	//! Set primary tracking
 	virtual void setTracking();
 
-	//csl37: remove primary tracking
+	//! Remove primary tracking
 	virtual void removeTracking();
+
     // READ/WRITE/COPY.
 
     // Returns a copy of the primary.

@@ -100,13 +100,13 @@ BinTreePrimary::BinTreePrimary() : Primary(),
     m_cen_mass[1] = 0.0;
     m_cen_mass[2] = 0.0;
 
-	m_frame_orient[0] = 0.0;
-	m_frame_orient[1] = 0.0;
-	m_frame_orient[2] = 1.0e-9;
+	m_frame_orient_z[0] = 0.0;
+	m_frame_orient_z[1] = 0.0;
+	m_frame_orient_z[2] = 1.0e-9;
 
-	m_frame_x[0] = 1.0e-9;
-	m_frame_x[1] = 0.0;
-	m_frame_x[2] = 0.0;
+	m_frame_orient_x[0] = 1.0e-9;
+	m_frame_orient_x[1] = 0.0;
+	m_frame_orient_x[2] = 0.0;
 }
 
 /*!
@@ -154,13 +154,13 @@ BinTreePrimary::BinTreePrimary(const double time,
     m_cen_mass[1] = 0.0;
     m_cen_mass[2] = 0.0;
 
-	m_frame_orient[0] = 0.0;
-	m_frame_orient[1] = 0.0;
-	m_frame_orient[2] = 1.0e-9;
+	m_frame_orient_z[0] = 0.0;
+	m_frame_orient_z[1] = 0.0;
+	m_frame_orient_z[2] = 1.0e-9;
 
-	m_frame_x[0] = 1.0e-9;
-	m_frame_x[1] = 0.0;
-	m_frame_x[2] = 0.0;
+	m_frame_orient_x[0] = 1.0e-9;
+	m_frame_orient_x[1] = 0.0;
+	m_frame_orient_x[2] = 0.0;
 }
 
 //! Copy constructor.
@@ -367,7 +367,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
     const BinTreePrimary *rhsparticle = NULL;
     rhsparticle = dynamic_cast<const AggModels::BinTreePrimary*>(&rhs);
 
-    // Don't sum-up components now. Wait for UpdateCache so as to not
+	// Don't sum-up components now. Wait for UpdateCache so as to not
     // double-count the values.
 
     // Create the new particles
@@ -375,16 +375,19 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
     BinTreePrimary *newright = new BinTreePrimary(m_time, *m_pmodel);
     BinTreePrimary copy_rhs(*rhsparticle);
 
-
     //Randomly select where to add the second particle
     boost::bernoulli_distribution<> bernoulliDistrib;
     if (bernoulliDistrib(rng)) {
         newleft->CopyParts(this);
         newright->CopyParts(&copy_rhs);
+		//if both particles are being tracked remove tracking from the one that will be deleted
+		if (newleft->m_tracked == true && newright->m_tracked == true) newright->removeTracking();
     }
     else {
         newright->CopyParts(this);
         newleft->CopyParts(&copy_rhs);
+		//if both particles are being tracked remove tracking from the one that will be deleted
+		if (newright->m_tracked == true && newleft->m_tracked == true) newleft->removeTracking();
     }
 
     // Set the pointers
@@ -403,11 +406,6 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 		newright->m_rightchild->m_parent    = newright;
     }
     m_children_sintering=0.0;
-
-	//csl37
-	//this becomes a node so turn off tracking flag
-	//flag should have been copied to newleft/right already
-	m_tracked = false;
 
     UpdateCache();
 
@@ -1075,43 +1073,6 @@ void BinTreePrimary::GetPriCoords(std::vector<fvector> &coords) const
     }
 }
 
-//! Returns the frame position and orientation, and primary coordinates
-//! Used by particle tracking for videos
-void BinTreePrimary::GetFrameCoords(std::vector<fvector> &coords) const
-{
-    if (isLeaf()) { //this is a primary
-        fvector c(10);
-        c[0] = m_cen_mass[0];
-        c[1] = m_cen_mass[1];
-        c[2] = m_cen_mass[2];
-        c[3] = m_r;
-		if (m_tracked == true){
-			c[4] = m_frame_orient[0];
-			c[5] = m_frame_orient[1];
-			c[6] = m_frame_orient[2];
-			c[7] = m_frame_x[0];
-			c[8] = m_frame_x[1];
-			c[9] = m_frame_x[2];
-		}else{
-			c[4] = 0.0;
-			c[5] = 0.0;
-			c[6] = 0.0;
-			c[7] = 0.0;
-			c[8] = 0.0;
-			c[9] = 0.0;
-		}
-		//get composition
-		fvector comp = this->Composition();
-		c.insert(c.end(),comp.begin(),comp.end());
-
-		//add to coords
-        coords.push_back(c);
-    } else {	//this is a non-leaf node
-		m_leftchild->GetFrameCoords(coords);
-		m_rightchild->GetFrameCoords(coords);
-    }
-}
-
 /*!
  *  @brief Copy state-space and derived properties from source.
  *
@@ -1155,9 +1116,10 @@ void BinTreePrimary::CopyParts(const BinTreePrimary *source)
     m_avg_sinter              = source->m_avg_sinter;
     m_sint_rate               = source->m_sint_rate;
     m_sint_time               = source->m_sint_time;
-	m_frame_orient			  = source->m_frame_orient;
-	m_frame_x				  = source->m_frame_x;
+	m_frame_orient_z		  = source->m_frame_orient_z;
+	m_frame_orient_x		  = source->m_frame_orient_x;
 	m_Rg				      = source->m_Rg;
+	m_tracked				  = source->m_tracked;
 
     //! Set particles.
     m_leftchild     = source->m_leftchild;
@@ -1428,21 +1390,21 @@ BinTreePrimary &BinTreePrimary::Merge()
 	double r_big,r_small; //, d_ij, x_ij;
 	double r_new = 0.0;
 
-	//if merging primary is tracked save frame coordinates
+	//! If a merging primary is tracked save the frame orientation vectors
 	Coords::Vector frame_x;
 	Coords::Vector frame_z;
 	bool update_tracking = false;
 	if (m_rightparticle->m_tracked == true){
 		update_tracking = true;
 		m_rightparticle->m_tracked = false;
-		frame_x = m_rightparticle->m_frame_x;
-		frame_z = m_rightparticle->m_frame_orient;
+		frame_x = m_rightparticle->m_frame_orient_x;
+		frame_z = m_rightparticle->m_frame_orient_z;
 	}
 	else if (m_leftparticle->m_tracked == true){
 		update_tracking = true;
 		m_leftparticle->m_tracked = false;
-		frame_x = m_leftparticle->m_frame_x;
-		frame_z = m_leftparticle->m_frame_orient;
+		frame_x = m_leftparticle->m_frame_orient_x;
+		frame_z = m_leftparticle->m_frame_orient_z;
 	}
 
     // Make sure this primary has children to merge
@@ -1756,11 +1718,11 @@ BinTreePrimary &BinTreePrimary::Merge()
 			new_prim->setRadius(new_prim->m_primarydiam / 2.0);
 		}
 
-		//update tracking
+		//! Update tracking
 		if(update_tracking == true){
 			new_prim->m_tracked = true;
-			new_prim->m_frame_x = frame_x;
-			new_prim->m_frame_orient = frame_z;
+			new_prim->m_frame_orient_x = frame_x;
+			new_prim->m_frame_orient_z = frame_z;
 		}
 
 		UpdateCache();
@@ -2089,6 +2051,9 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 		//calculate bounding sphere
 		calcBoundSph();
 
+		//! Particle tracking
+		if (m_leftchild->m_tracked == true || m_rightchild->m_tracked == true) m_tracked = true;
+
         // Calculate the sintering level of the two primaries connected by this node
         m_children_sintering = SinteringLevel();
         if (MergeCondition()) CheckSintering();
@@ -2150,7 +2115,7 @@ void BinTreePrimary::UpdateCache(BinTreePrimary *root)
 
 			//! Mobility diameter
             m_dmob = MobDiameter();
-            
+
         } else {
             m_diam=0;
             m_dmob=0;
@@ -3420,22 +3385,25 @@ void BinTreePrimary::SerializePrimary(std::ostream &out, void*) const
         val = m_sint_time;
         out.write((char*)&val, sizeof(val));
 
-		val = m_frame_orient[0];
+		// frame orientation vectors
+		// Note: serialization is not actually needed because the output
+		// files are not currently produced in the postpocessing step
+		val = m_frame_orient_z[0];
         out.write((char*)&val, sizeof(val));
 
-        val = m_frame_orient[1];
+        val = m_frame_orient_z[1];
         out.write((char*)&val, sizeof(val));
 
-        val = m_frame_orient[2];
+        val = m_frame_orient_z[2];
         out.write((char*)&val, sizeof(val));
 
-		val = m_frame_x[0];
+		val = m_frame_orient_x[0];
         out.write((char*)&val, sizeof(val));
 
-        val = m_frame_x[1];
+        val = m_frame_orient_x[1];
         out.write((char*)&val, sizeof(val));
 
-        val = m_frame_x[2];
+        val = m_frame_orient_x[2];
         out.write((char*)&val, sizeof(val));
 
 		// Output if primary is tracked
@@ -3584,22 +3552,22 @@ void BinTreePrimary::DeserializePrimary(std::istream &in,
         m_sint_time = val;
 
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_frame_orient[0] = val;
+        m_frame_orient_z[0] = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_frame_orient[1] = val;
+        m_frame_orient_z[1] = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_frame_orient[2] = val;
+        m_frame_orient_z[2] = val;
 
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_frame_x[0] = val;
+        m_frame_orient_x[0] = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_frame_x[1] = val;
+        m_frame_orient_x[1] = val;
 
         in.read(reinterpret_cast<char*>(&val), sizeof(val));
-        m_frame_x[2] = val;
+        m_frame_orient_x[2] = val;
 
 		 // Read if primary is tracked.
         in.read(reinterpret_cast<char*>(&val_unsigned), sizeof(val_unsigned));
@@ -3819,7 +3787,7 @@ double BinTreePrimary::Radius(void) const
 /*!
  *  Transform the primary particle coordinates using the transformation matrix
  *  so as to rotate it.
- *
+ *:
  *  @param[in]    mat               Transformation matrix.
  *  @param[in]    PAHTracerMatch    Flag used to indicate whether the particle
  *                                  contains the PAH to be traced.
@@ -3832,35 +3800,14 @@ void BinTreePrimary::transform(const Coords::Matrix &mat)
     if (m_rightchild != NULL) 
         m_rightchild->transform(mat);
 
-	Coords::Vector A_x;
-	Coords::Vector A_z;
-	//csl37-orientation
-	//if primary is tracked then rotate the orientation vector
-	if(m_tracked == true) {
-		//construct vector from CoM to end of orientation vector
-	    A_z[0] = m_cen_mass[0] + m_frame_orient[0];
-		A_z[1] = m_cen_mass[1] + m_frame_orient[1];
-		A_z[2] = m_cen_mass[2] + m_frame_orient[2];
-		A_x[0] = m_cen_mass[0] + m_frame_x[0];
-		A_x[1] = m_cen_mass[1] + m_frame_x[1];
-		A_x[2] = m_cen_mass[2] + m_frame_x[2];
-		//rotate A
-		A_z = mat.Mult(A_z);
-		A_x = mat.Mult(A_x);
-	}
-
     //! Rotate centre-of-mass and bounding sphere coordinates.
     m_cen_mass = mat.Mult(m_cen_mass);
     m_cen_bsph = mat.Mult(m_cen_bsph);
 
-	if(m_tracked == true){
-		//calculate new orientation vector
-		m_frame_orient[0] = A_z[0] - m_cen_mass[0];
-		m_frame_orient[1] = A_z[1] - m_cen_mass[1];
-		m_frame_orient[2] = A_z[2] - m_cen_mass[2];
-		m_frame_x[0] = A_x[0] - m_cen_mass[0];
-		m_frame_x[1] = A_x[1] - m_cen_mass[1];
-		m_frame_x[2] = A_x[2] - m_cen_mass[2];
+	//! If the primary is tracked then rotate the frame orientation
+	if (m_tracked == true) {
+		m_frame_orient_z = mat.Mult(m_frame_orient_z);
+		m_frame_orient_x = mat.Mult(m_frame_orient_x);
 	}
 }
 
@@ -4016,7 +3963,9 @@ void BinTreePrimary::TranslateNeighbours(BinTreePrimary *prim, Coords::Vector u,
 	}
 }
 
-//csl37: remove primary tracking
+// PARTICLE TRACKING FOR VIDEOS
+
+//! Remove primary tracking flag
 void BinTreePrimary::removeTracking()
 {
 	//set tracking flag to false
@@ -4027,15 +3976,56 @@ void BinTreePrimary::removeTracking()
 	if (m_rightchild != NULL) m_rightchild->removeTracking();
 }
 
-//csl37: checks that only one priamry is tracked
-void BinTreePrimary::checkTracking(int &count)
-{
-	//set tracking flag to false
-	if(m_tracked == true) count++;
+//! Set tracking flag
+//  A single primary in the aggregate is tracked to centre the image frame
+void BinTreePrimary::setTracking()
+ { 
+	 m_tracked = true;
 
-	//work down bintree structure
-	if (m_leftchild != NULL) m_leftchild->checkTracking(count);
-	if (m_rightchild != NULL) m_rightchild->checkTracking(count);
+	// work done binary tree to a primary
+	if (m_leftchild != NULL) m_leftchild->setTracking();
+}
+
+//! Returns the frame position and orientation, and primary coordinates
+//! Used by particle tracking for videos
+void BinTreePrimary::GetFrameCoords(std::vector<fvector> &coords) const
+{
+	if (isLeaf()) { //this is a primary
+		fvector c(10);
+		c[0] = m_cen_mass[0];	//primary coordinates
+		c[1] = m_cen_mass[1];
+		c[2] = m_cen_mass[2];
+		c[3] = m_r;				//primary radius
+		if (m_tracked == true){	
+			//the frame orientation vectors are output
+			//for the single tracked primary
+			//the primary coordinates define the centre of the frame
+			c[4] = m_frame_orient_x[0];	
+			c[5] = m_frame_orient_x[1];
+			c[6] = m_frame_orient_x[2];
+			c[7] = m_frame_orient_z[0];
+			c[8] = m_frame_orient_z[1];
+			c[9] = m_frame_orient_z[2];
+		}
+		else{
+			c[4] = 0.0;
+			c[5] = 0.0;
+			c[6] = 0.0;
+			c[7] = 0.0;
+			c[8] = 0.0;
+			c[9] = 0.0;
+		}
+		//get primary composition
+		fvector comp = this->Composition();
+		c.insert(c.end(), comp.begin(), comp.end());
+
+		//add to coords vector
+		coords.push_back(c);
+	}
+	else {	//this is a non-leaf node
+		m_leftchild->GetFrameCoords(coords);
+		m_rightchild->GetFrameCoords(coords);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////csl37-pp
