@@ -828,6 +828,8 @@ void ParticleModel::SetInceptedPAH(const std::string &name)
 {
     if (!name.compare("A1"))
         m_InceptedPAH = A1;
+	else if (!name.compare("A1CH3"))
+        m_InceptedPAH = A1CH3;
     else if (!name.compare("A2"))
         m_InceptedPAH = A2;
     else if (!name.compare("A3"))

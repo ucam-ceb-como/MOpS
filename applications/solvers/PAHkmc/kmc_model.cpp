@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
 
         node = root->GetFirstChild("startStruct");
         if(node->Data() == "BENZENE") startStruct = BENZENE_C;
+		else if(node->Data() == "TOLUENE") startStruct = TOLUENE_C;
         else if(node->Data() == "NAPHTHALENE") startStruct = NAPHTHALENE_C;
         else if(node->Data() == "PYRENE") startStruct = PYRENE_C;
 		else if(node->Data() == "BENZOPYRENE") startStruct = BENZOPYRENE_C;

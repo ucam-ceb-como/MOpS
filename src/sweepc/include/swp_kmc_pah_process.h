@@ -133,6 +133,8 @@ public:
     int getR7EmbeddedCount() const;
     //! Get number of bridges
     int numberOfBridges() const;
+	//! Get number of methyl moeities
+	int numberOfMethyl() const;
     //! Print structure in console
     void printStruct() const;
     //! Print Structure in console, with arrow pointing at current C
@@ -320,6 +322,8 @@ private:
 	void moveC(Cpointer C_1, cpair newpos);
 	//! Moves a carbon position .
 	void moveC(Cpointer C_1, Cpointer Cprev, double new_distance);
+	//! Move a carbon in z direction.
+	void moveC_z(Cpointer C_1, double z_distance);
 	//! Adds an R5 to the list of R5s and R7s
 	void addR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
 	//! Removes an R5 from the list of R5s and R7s

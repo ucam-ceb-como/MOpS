@@ -1041,9 +1041,9 @@ void KMCSimulator::TestGP() {
 }
 
 //Save DEBUG information for a single PAH
-void KMCSimulator::savePAH(int PAH_number, const std::string &filename){
+void KMCSimulator::savePAH(int PAH_number, const std::string &filename, bool optimise){
 	std::string xyzname = filename;
-	m_simPAHp.saveXYZ(xyzname);
+	m_simPAHp.saveXYZ(xyzname, optimise);
 	//m_simPAHp.printSites();
 }
 

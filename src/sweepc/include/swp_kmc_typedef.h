@@ -87,7 +87,9 @@ namespace Sweep {
 			// Any Site:
 			any = 1000,
 			// Benzene addition sites:
-			benz = 1001
+			benz = 1001,
+			// Methyl sites:
+			Methyl = 6666
 			/*
 			// Principal Sites, uncombined basic types
             FE=0,ZZ=1,AC=2,BY5=3,BY6=4,R5=5,
@@ -147,7 +149,7 @@ namespace Sweep {
         
         //! Enumeration of starting structures
         enum StartingStructure {
-            BENZENE_C=6, BENZENE_H=6, NAPHTHALENE_C=10, NAPHTHALENE_H=8, PYRENE_C=16, PYRENE_H=10, 
+            BENZENE_C=6, BENZENE_H=6, TOLUENE_C=7, TOLUENE_H=8, NAPHTHALENE_C=10, NAPHTHALENE_H=8, PYRENE_C=16, PYRENE_H=10, 
             BENZOPYRENE_C=20, BENZOPYRENE_H=12, CORONENE_C=24, CORONENE_H=12,
             TEST_STRUCT, NONE};
 
@@ -211,6 +213,7 @@ namespace Sweep {
                 case Inv: return "Invalid";
                 case any: return "any";
                 case benz: return "benz";
+				case Methyl: return "Methyl";
             }
             return "ERROR";
         }
@@ -255,6 +258,7 @@ namespace Sweep {
 			else if (str == "R5ACR5R5") return R5ACR5R5;
 			else if (str == "ACR5RFER") return ACR5RFER;
 			else if (str == "SPIRAL") return SPIRAL;
+			else if (str == "Methyl") return Methyl;
             return Inv;
         }
         //! Get a vector of all site types
@@ -301,6 +305,8 @@ namespace Sweep {
 			temp.push_back(ACR5R5R6ZZ);
 			temp.push_back(R5ACR5R5);
 			temp.push_back(ACR5RFER);
+			temp.push_back(SPIRAL);
+			temp.push_back(Methyl);
             return temp;
         }
         //! Get a vector of all site types for phenyl addition

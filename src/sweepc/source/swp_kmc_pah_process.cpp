@@ -164,6 +164,14 @@ int PAHProcess::numberOfBridges() const {
     num /= 2;
     return num;
 }
+//! Get number of methyl moeities
+int PAHProcess::numberOfMethyl() const {
+    int num = 0;
+    for(Ccontainer::const_iterator i=m_pah->m_carbonList.begin(); i!=m_pah->m_carbonList.end(); i++) {
+        if((*i)->A=='M') num++;
+    }
+    return num;
+}
 //! Print Structure in console
 void PAHProcess::printStruct() const{
     // iterator set to first C in structure
@@ -472,7 +480,8 @@ bool PAHProcess::saveDOT(const std::string &filename, const std::string &title) 
 void PAHProcess::saveXYZ(const std::string &filename, bool optimise) {
 	OpenBabel::OBMol mol = passPAH(optimise);
 	if (optimise){
-		mol = optimisePAH(mol, 3000, "Ghemical");
+		mol = optimisePAH(mol, 8000, "mmff94");
+		//mol = optimisePAH(mol, 4000, "Ghemical");
 	}
 	ofstream ofs1;
 	std::string filename1 = filename;
@@ -489,7 +498,7 @@ void PAHProcess::saveXYZ(const std::string &filename, bool optimise) {
 void PAHProcess::save_trajectory_xyz(const double timer, const std::string &filename, bool optimise) {
 	OpenBabel::OBMol mol = passPAH(optimise);
 	if (optimise){
-		mol = optimisePAH(mol, 3000, "mmff94");
+		mol = optimisePAH(mol, 4000, "mmff94");
 	}
 	ofstream ofs1;
 	std::string filename1 = filename;
@@ -1307,6 +1316,30 @@ void PAHProcess::moveC(Cpointer C_1, Cpointer Cprev, double new_distance) {
 	C_1->coords = temp;
 	m_pah->m_cpositions.insert(C_1->coords);
 }
+//! Move a carbon in z direction.
+void PAHProcess::moveC_z(Cpointer C_1, double z_distance) {
+	// Remove coordinates of C from m_pah->m_cpositions
+	double min_dist = 1e3;
+	std::set<cpair>::iterator it2;
+	for (std::set<cpair>::iterator it = m_pah->m_cpositions.begin(); it != m_pah->m_cpositions.end(); ++it) {
+		double x_dist = std::get<0>(C_1->coords) - std::get<0>(*it);
+		double y_dist = std::get<1>(C_1->coords) - std::get<1>(*it);
+		double z_dist = std::get<2>(C_1->coords) - std::get<2>(*it);
+		double dist = sqrt(x_dist * x_dist + y_dist * y_dist + z_dist * z_dist);
+		if (dist < min_dist) {
+			it2 = it;
+			min_dist = dist;
+		}
+		if (dist < 1e-2) break;
+	}
+	m_pah->m_cpositions.erase(*it2);
+	//m_pah->m_cpositions.erase(m_pah->m_cpositions.find(C_1->coords));
+	// Set new positions of Carbon C_1
+	cpair temp = std::make_tuple(std::get<0>(C_1->coords), std::get<1>(C_1->coords), std::get<2>(C_1->coords) + z_distance);/*C_1->coords.first = newpos.first;
+	C_1->coords.second = newpos.second;*/
+	C_1->coords = temp;
+	m_pah->m_cpositions.insert(C_1->coords);
+}
 //! Adds an R5 to the list of R5s and R7s
 void PAHProcess::addR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
 	double R5_dist = getDistance_twoC(C_1, C_2);
@@ -1405,6 +1438,7 @@ cpair PAHProcess::endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) 
 int nancounter = 0;
 //! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
 OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
+	std::list<OpenBabel::OBAtom> methyl_list;
 	//R6 Bay detection
 	std::list<int> R6pairs1, R6pairs2;
 	std::list<int>::iterator R6_iter1, R6_iter2;
@@ -1416,7 +1450,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 	std::list<int>::iterator sn_iter, sn_iter1, sn_iter2, sn_iter3, sn_iter4;
 	if (detectBonds){
 		for (std::list<Site>::iterator site_it = m_pah->m_siteList.begin(); site_it != m_pah->m_siteList.end(); site_it++) {
-			if ( (int)site_it->type % 10 >= 4 ){
+			if ( (int)site_it->type % 10 >= 4 && (int)site_it->type!=6666 ){
 				Cpointer CR6_1 = site_it->C1;
 				Cpointer CR6_2 = site_it->C2;
 				if (getDistance_twoC (CR6_1,CR6_2) <=2.17){
@@ -1547,6 +1581,60 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 			//atom->SetVector(std::get<0>(C_change->coords) + 1.0*cos(C_change->bondAngle2*M_PI/180),std::get<1>(C_change->coords) + 1.0*sin(C_change->bondAngle2*M_PI/180),std::get<2>(C_change->coords));
 			counter ++;
+		}
+		else if (C_change->A == 'M'){
+			OpenBabel::OBAtom *methylc  = mol.NewAtom();
+			methylc->SetAtomicNum(6);
+			methylc->SetVector(std::get<0>(C_change->coords) + 1.5 * std::get<0>(C_change->growth_vector),std::get<1>(C_change->coords) + 1.5 * std::get<1>(C_change->growth_vector),std::get<2>(C_change->coords) + 1.5 * std::get<2>(C_change->growth_vector));
+			/*methyl_list.push_back(methylc);
+			methylc->SetImplicitValence(4);
+			mol.AddHydrogens(methylc);*/
+			cpair Hcoords = std::make_tuple(std::get<0>(C_change->coords) + (1.5 + 1.095*sin(20.8/180.0*M_PI)) * std::get<0>(C_change->growth_vector),std::get<1>(C_change->coords) + (1.5 + 1.095*sin(20.8/180.0*M_PI)) * std::get<1>(C_change->growth_vector),std::get<2>(C_change->coords) + (1.5 + 1.095*sin(20.8/180.0*M_PI)) * std::get<2>(C_change->growth_vector));
+			OpenBabel::OBAtom *h1  = mol.NewAtom();
+			h1->SetAtomicNum(1);
+			OpenBabel::OBAtom *h2  = mol.NewAtom();
+			h2->SetAtomicNum(1);
+			OpenBabel::OBAtom *h3  = mol.NewAtom();
+			h3->SetAtomicNum(1);
+			double Radius = 1.095*cos(20.8/180.0*M_PI);
+			
+			if (abs(std::get<2>(C_change->growth_vector) - 1.0) < 1e-3){
+				h1->SetVector(std::get<0>(Hcoords),std::get<1>(Hcoords)+Radius,std::get<2>(Hcoords));
+				h2->SetVector(std::get<0>(Hcoords)+Radius*cos(-30.0/180.0*M_PI),std::get<1>(Hcoords)+Radius*sin(-30.0/180.0*M_PI),std::get<2>(Hcoords));
+				h3->SetVector(std::get<0>(Hcoords)+Radius*cos(210.0/180.0*M_PI),std::get<1>(Hcoords)+Radius*sin(210.0/180.0*M_PI),std::get<2>(Hcoords));
+			}
+			else if (abs(std::get<1>(C_change->growth_vector) - 1.0) < 1e-3){
+				h1->SetVector(std::get<0>(Hcoords),std::get<1>(Hcoords),std::get<2>(Hcoords)+Radius);
+				h2->SetVector(std::get<0>(Hcoords)+Radius*cos(-30.0/180.0*M_PI),std::get<1>(Hcoords),std::get<2>(Hcoords)+Radius*sin(-30.0/180.0*M_PI));
+				h3->SetVector(std::get<0>(Hcoords)+Radius*cos(210.0/180.0*M_PI),std::get<1>(Hcoords),std::get<2>(Hcoords)+Radius*sin(210.0/180.0*M_PI));
+			}
+			else if (abs(std::get<0>(C_change->growth_vector) - 1.0) < 1e-3){
+				h1->SetVector(std::get<0>(Hcoords),std::get<1>(Hcoords),std::get<2>(Hcoords)+Radius);
+				h2->SetVector(std::get<0>(Hcoords),std::get<1>(Hcoords)+Radius*cos(-30.0/180.0*M_PI),std::get<2>(Hcoords)+Radius*sin(-30.0/180.0*M_PI));
+				h3->SetVector(std::get<0>(Hcoords),std::get<1>(Hcoords)+Radius*cos(210.0/180.0*M_PI),std::get<2>(Hcoords)+Radius*sin(210.0/180.0*M_PI));
+			}
+			else{
+				double aa = std::get<0>(C_change->coords);
+				double bb = std::get<1>(C_change->coords);
+				double cc = std::get<2>(C_change->coords);
+				//double rr = sqrt(bb*bb*Radius*Radius*(aa*aa+bb*bb));
+				//double h1x = (rr + (aa*aa + bb*bb)*std::get<0>(Hcoords) )/(aa*aa+bb*bb);
+				//double h1y = (-aa*rr + (aa*aa*bb + bb*bb*bb)*std::get<1>(Hcoords)) / (aa*aa*bb+bb*bb*bb);
+				//double h1z = std::get<2>(Hcoords);
+				cpair Angiras_vector = std::make_tuple(cc, 0.0, -1.0*aa);
+				Angiras_vector = scale_vector(Angiras_vector);
+				cpair Casper_vector = cross_vector(Angiras_vector, C_change->coords);
+				
+				h1->SetVector(std::get<0>(Hcoords) + Radius*(std::get<0>(Angiras_vector)), std::get<1>(Hcoords) + Radius*(std::get<1>(Angiras_vector)), std::get<2>(Hcoords) + Radius*(std::get<2>(Angiras_vector)));
+				h2->SetVector(std::get<0>(Hcoords) + Radius*(-0.5*std::get<0>(Angiras_vector) + sqrt(3.0)/2.0*std::get<0>(Casper_vector)), std::get<1>(Hcoords) + Radius*(-0.5*std::get<1>(Angiras_vector) + sqrt(3.0)/2.0*std::get<1>(Casper_vector)), std::get<2>(Hcoords) + Radius*(-0.5*std::get<2>(Angiras_vector) + sqrt(3.0)/2.0*std::get<2>(Casper_vector)));
+				h3->SetVector(std::get<0>(Hcoords) + Radius*(-0.5*std::get<0>(Angiras_vector) - sqrt(3.0)/2.0*std::get<0>(Casper_vector)), std::get<1>(Hcoords) + Radius*(-0.5*std::get<1>(Angiras_vector) - sqrt(3.0)/2.0*std::get<1>(Casper_vector)), std::get<2>(Hcoords) + Radius*(-0.5*std::get<2>(Angiras_vector) - sqrt(3.0)/2.0*std::get<2>(Casper_vector)));
+							
+				//h1->SetVector( h1x, h1y, h1z);
+				//cpair get_vector(Hcoords, std::make_tuple(h1x, h1y, h1z));
+				//h2->SetVector( (rr + (aa*aa + bb*bb)*std::get<0>(Hcoords) )/(aa*aa+bb*bb), (-aa*rr + (aa*aa*bb + bb*bb*bb)*std::get<1>(Hcoords)) / (aa*aa*bb+bb*bb*bb), std::get<2>(Hcoords));
+			}
+			//atom->SetVector(std::get<0>(C_change->coords) + 1.0*cos(C_change->bondAngle2*M_PI/180),std::get<1>(C_change->coords) + 1.0*sin(C_change->bondAngle2*M_PI/180),std::get<2>(C_change->coords));
+			counter +=4;
 		}
 	}
 	//Internal carbons
@@ -1865,6 +1953,24 @@ void PAHProcess::passbackPAH(OpenBabel::OBMol mol) {
 				C_back->growth_vector = vec;
 				//cout <<"C vector direction = " << std::get<0>(C_back->growth_vector) << " " << std::get<1>(C_back->growth_vector) << " " << std::get<2>(C_back->growth_vector) << "\n";
 			}
+			
+			if (C_back->A == 'M') {
+				cpair p1 = C_back->coords;
+				++a;
+				double Hx_pos = a->GetX();
+				double Hy_pos = a->GetY();
+				double Hz_pos = a->GetZ();
+				cpair p2 = std::make_tuple(Hx_pos, Hy_pos, Hz_pos);
+				cpair vec = get_vector(p1, p2);
+				//cout <<"C vector direction = " << std::get<0>(C_back->growth_vector) << " " << std::get<1>(C_back->growth_vector) << " " << std::get<2>(C_back->growth_vector) << "\n";
+				C_back->growth_vector = vec;
+				/*for( OpenBabel::OBAtomAtomIter nbr(*a); nbr; ++nbr )
+				{
+					mol.DeleteAtom(&*nbr);
+				}*/
+				//cout <<"C vector direction = " << std::get<0>(C_back->growth_vector) << " " << std::get<1>(C_back->growth_vector) << " " << std::get<2>(C_back->growth_vector) << "\n";
+				++a; ++a; ++a;
+			}
 			++it;
 		}
 		else {
@@ -1900,7 +2006,7 @@ OpenBabel::OBMol PAHProcess::optimisePAH(OpenBabel::OBMol mol, int nsteps, std::
 	//OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField("Ghemical");
 	OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField(forcefield);
 	if (!pFF) {
-    cerr << ": could not find forcefield MMFF94s." <<endl;
+    cerr << ": could not find forcefield " << forcefield << "." <<endl;
     exit (-1);
 	}
 	
@@ -1930,8 +2036,10 @@ OpenBabel::OBMol PAHProcess::optimisePAH(OpenBabel::OBMol mol, int nsteps, std::
 	  ++forcefield_error_counter;
 	  return mol;
     }
-	bool done = true;
-	pFF->SteepestDescentInitialize(nsteps, 1e-6);
+	
+	/////// Method that uses initialisation. Not recommended by OpenBabel documentation.
+	/*bool done = true;
+	pFF->SteepestDescentInitialize(nsteps, 1e-7);
 	
 	//Perform minimisation
 	unsigned int totalSteps = 1;
@@ -1943,7 +2051,10 @@ OpenBabel::OBMol PAHProcess::optimisePAH(OpenBabel::OBMol mol, int nsteps, std::
 		}
 		else
         pFF->GetCoordinates(mol);
-	}
+	}*/
+	//// Method recommended in case minimisation is just used until the nsteps without modifications.
+	pFF->SteepestDescent(nsteps, 1e-7);
+	
 	pFF->GetCoordinates(mol);
 	mol.EndModify();
 	return mol;
@@ -2548,6 +2659,8 @@ void PAHProcess::updateSites() {
             default:
                 std::cout << "ERROR: updateSites(): more than 4 bulk carbon atoms detected\n"; break;
             }
+			if (now->A == 'M') sitetype = Methyl;
+			if (siteC1->A == 'M') sitetype = Methyl;
             Spointer end_of_siteList = m_pah->m_siteList.end();
             addSite(sitetype, siteC1, now, end_of_siteList);
             bulk = 0;
@@ -2640,7 +2753,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		stype = 1002; bulkCchange = 0;
 	}
 	//Converts all site types with an extra digit 2014, 2114, ... into 2004, 2104, ... so the next section changes the index and then decides which resulting site is obtained.
-	if (stype %100 >= 10 && stype != 9999) {
+	if (stype %100 >= 10 && stype != 9999 && stype != 6666) {
 		stype -= 10;
 	}
 	if (stype + bulkCchange == 2004 || stype + bulkCchange == 2014) {
@@ -2763,6 +2876,12 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	{
 		//A spiral site is modified. Currently we cannot modify them back into reality.
 		stype = 9999; //SETBREAKPOINT
+		bulkCchange = 0;
+	}
+	if (st->type == Methyl)
+	{
+		//A Methyl site is modified. Currently we cannot modify them back into reality.
+		stype = 6666; //SETBREAKPOINT
 		bulkCchange = 0;
 	}
 	if (!checkSiteValid(stype + bulkCchange)){
@@ -3004,6 +3123,11 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
 	auto BENZENE_Rings = std::make_tuple (1, 0, 0) ;
 	intpair BENZENE_CH(6, 6);
 	int BENZENE_RINGS_EMBEDDED = 0;
+	// Structure for Toluene
+	std::string TOLUENE_Sites = "FE,Methyl,Methyl,FE,FE,FE";
+	auto TOLUENE_Rings = std::make_tuple (1, 0, 0) ;
+	intpair TOLUENE_CH(7, 8);
+	int TOLUENE_RINGS_EMBEDDED = 0;
 	// Structure for Naphthalene
 	std::string NAPHTHALENE_Sites = "FE,FE,FE,ZZ,FE,FE,FE,ZZ";
 	auto NAPHTHALENE_Rings = std::make_tuple(2, 0, 0);
@@ -3041,6 +3165,12 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
         rings = BENZENE_Rings;
         CH = BENZENE_CH;
 		rings_Embedded = BENZENE_RINGS_EMBEDDED;
+        break;
+	case TOLUENE_C:
+        chosen = TOLUENE_Sites;
+        rings = TOLUENE_Rings;
+        CH = TOLUENE_CH;
+		rings_Embedded = TOLUENE_RINGS_EMBEDDED;
         break;
     case NAPHTHALENE_C:
         chosen = NAPHTHALENE_Sites;
@@ -3170,6 +3300,45 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         updateSites();
         updateCombinedSites();*/
         //cout << "Benzene Initialised!\n";
+        break;
+	case TOLUENE_C:
+        //cout << "newC pointer created\n";
+        // add first C atom
+        m_pah->m_cfirst = addC();
+		updateA(m_pah->m_cfirst, 'H', std::make_tuple(cos(120.0 *M_PI / 180.0),sin(120.0 *M_PI / 180.0),0.0) );
+        //cout << "m_cfirst is " << m_cfirst << '\n';
+        // adds next C atoms according to structure
+        newC = addC(m_pah->m_cfirst, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+        //cout << "newC is " << newC << '\n';
+        newC = addC(newC, std::make_tuple(cos(-60.0 *M_PI / 180.0),sin(-60.0 *M_PI / 180.0),0.0), 1.4);
+		updateA(newC, 'M', std::make_tuple(1.0,0.0,0.0) );
+        //cout << "newC is " << newC << '\n';
+        newC = addC(newC, std::make_tuple(cos(-120.0 *M_PI / 180.0),sin(-120.0 *M_PI / 180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-60.0 *M_PI / 180.0),sin(-60.0 *M_PI / 180.0),0.0) );
+        //cout << "newC is " << newC << '\n';
+		newC = addC(newC, std::make_tuple(cos(-180.0 *M_PI / 180.0),sin(-180.0 *M_PI / 180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-120.0 *M_PI / 180.0),sin(-120.0 *M_PI / 180.0),0.0) );
+        //cout << "newC is " << newC << '\n';
+        // adds the last C atom, with bond angle towards m_cfirst
+		m_pah->m_clast = addC(newC, std::make_tuple(cos(120.0 *M_PI / 180.0),sin(120.0 *M_PI / 180.0),0.0), 1.4);
+		updateA(m_pah->m_clast, 'H', std::make_tuple(-1.0,0.0,0.0) );
+        //cout << "m_clast is " << m_clast << '\n';
+        // closes structure
+        connectToC(m_pah->m_clast, m_pah->m_cfirst);
+        //cout << "m_clast and m_cfirst connected, updating A\n";
+        // set C & H counts
+        setCount(TOLUENE_C, TOLUENE_H);
+        // set ring counts
+        m_pah->m_rings = 1;
+        m_pah->m_rings5_Lone = 0;
+		m_pah->m_rings5_Embedded = 0;
+		m_pah->m_rings7_Lone = 0;
+		m_pah->m_rings7_Embedded = 0;
+        // update all sites and combined sites
+        updateSites();
+        updateCombinedSites();
+        //cout << "TOLUENE Initialised!\n";
         break;
     case NAPHTHALENE_C:
         // add first C atom
@@ -3429,9 +3598,9 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, std::vector<int>& carb
 	m_pah->m_R5loc = R5loc;
 	m_pah->m_R7loc = R7loc;
 	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
-	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1;
+	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1 + numberOfMethyl();
 	m_pah->setnumofC(totalC_num);
-    m_pah->setnumofH((int)vec.size());
+    m_pah->setnumofH((int)vec.size() + 2 * numberOfMethyl());
     updateCombinedSites();
 	
 	// check if PAH closes correctly
@@ -3533,7 +3702,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 		}else if((int)vec[i] >= 2204 && (int)vec[i] <= 2205) {
             bulkC = (int) vec[i] %10; site_t = 3;
 		}
-		else if((int)vec[i] == 9999) {
+		else if((int)vec[i] == 9999 || (int)vec[i] == 6666) {
             bulkC = (int) vec[i] %10; site_t = 3;
 		}
 		else {
@@ -3843,6 +4012,7 @@ bool PAHProcess::checkSiteValid(int type) {
 		case Inv: return true;
 		case any: return true;
 		case benz: return true;
+		case Methyl: return true;
 	}
 	return false;
 }
@@ -4154,7 +4324,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         //abort();
     }
 	//int calc_total = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
-	int calc_total = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1;
+	int calc_total = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1 + numberOfMethyl();
 	if(calc_total != getCHCount().first) {
         //saveDOT("KMC_DEBUG/KMC_C_Counts_ERROR.dot");
 		ifstream  src("KMC_DEBUG/BEFORE.xyz");
@@ -4330,7 +4500,9 @@ void PAHProcess::proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Spointer S2 = moveIt(stt, 1);
     if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
-	if ( (int)S1->type%10 >= 4 || (int)S2->type%10 >= 4) return;
+	if ( (int)S1->type != 6666 && (int)S2->type != 6666 ){
+		if ( (int)S1->type%10 >= 4 || (int)S2->type%10 >= 4) return;
+	}
     // Add C
 	cpair start_direction = C_1->growth_vector;
 	newC1 = addC(C_1, start_direction, 1.4);
@@ -4386,12 +4558,14 @@ void PAHProcess::proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
     // Remove C
+	int ntype_site = (int)stt->type;
     Cpointer now = C_1->C2;
     do{
         Cpointer next;
         if(!now->bridge) {
             next = now->C2;
             //if(now->C3 != NULL) now->C3->C3 = NULL;
+			if (ntype_site > 2000) moveC_z(now, 0.1);
             removeC(now, true);
             now = next;
         }
@@ -4427,7 +4601,6 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //delSiteFromMap(stt->comb, stt);
     // Convert the BY6 site into the resulting site after reaction,
     // finding resulting site type:
-	int ntype_site = (int)stt->type;
 	int ntype1 = (int) moveIt(stt, -1)->type;
     int ntype2 = (int) moveIt(stt, 1)->type;
 	int newType;
@@ -4700,6 +4873,10 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			//Neighbour is a SPIRAL, convert product site in SPIRAL
 			newType = 9999;
 		}
+		if (newType == 6666 || ntype1 == 6666 || ntype2 == 6666){
+			//Neighbour is a Methyl, convert product site in Methyl
+			newType = 6666;
+		}
 		if ((kmcSiteType)newType == None) {
 			//saveDOT(std::string("BY6ClosureProblem.dot"));
 			std::cerr << "ERROR: newType is None (PAHProcess::proc_L6_BY6)\n";
@@ -4762,9 +4939,9 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // add ring counts
     m_pah->m_rings++;
 	//Optimise PAH if needed.
-	if (double dist = getDistance_twoC(C_1,C_2) > 1.6 ) {
+	if (double dist = getDistance_twoC(C_1,C_2) > 1.6 || ntype_site > 2000) {
 		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
+		mol = optimisePAH(mol, 8000);
 		passbackPAH(mol);
 	}
 }
@@ -6255,6 +6432,10 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		newType = 9999;
 		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
 	}
+	else if (ntype1 == 6666 || ntype2 == 6666){
+		newType = 6666;
+		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
+	}
 	else {
 		int new_point = 0;
 		newType = (ntype1 + ntype2 + 2002);
@@ -6526,6 +6707,8 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		cpair AJvector = get_vector(C_2->C1->coords,C_2->coords);
 		cpair lat_direction = add_vector(AJvector, invert_vector(AGvector));
 		double dist = getDistance_twoC(C_1,C_2);
+		moveC_z(C_1->C2, 0.2);
+		moveC_z(C_2->C1, 0.2);
         removeC(C_1->C2, true);
         removeC(C_2->C1, true);
 		
@@ -6604,7 +6787,7 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//printSites(stt);
 	//saveXYZ("Before_second_min");
 	OpenBabel::OBMol newmol = passPAH();
-	newmol = optimisePAH(newmol);
+	newmol = optimisePAH(newmol, 8000);
 	passbackPAH(newmol);
 	//optimisePAH(true, true, "curved_guy");
 	//includeCurvature(CR5_1, CR5_2, CR5_3, CR5_4, true, "curved_guy");
@@ -7024,7 +7207,7 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Spointer SR5;
 	bool b4 = false;
 	if (stt->type == R5R6ZZ) { //G6R_R5R6ZZ
-		if ( (((int) S1->type >= 501 && (int) S1->type <= 504) || ((int) S1->type >= 1002 && (int) S1->type <= 1004) || ((int) S1->type >= 2103 && (int) S1->type <= 2205 ) || S1->type == SPIRAL) && (((int) S2->type >= 501 && (int) S2->type <= 504) || ((int) S2->type >= 1002 && (int) S2->type <= 1004) || ((int) S2->type >= 2103 && (int) S2->type <= 2205 ) || S2->type == SPIRAL) ) {
+		if ( (((int) S1->type >= 501 && (int) S1->type <= 504) || ((int) S1->type >= 1002 && (int) S1->type <= 1004) || ((int) S1->type >= 2103 && (int) S1->type <= 2205 ) || S1->type == SPIRAL || S1->type == Methyl) && (((int) S2->type >= 501 && (int) S2->type <= 504) || ((int) S2->type >= 1002 && (int) S2->type <= 1004) || ((int) S2->type >= 2103 && (int) S2->type <= 2205 ) || S2->type == SPIRAL || S2->type == Methyl) ) {
 			if ( (isR5internal(C_1, C_1->C2, true) || isR5internal(C_1, C_1->C2, false)) && !(isR5internal(C_2->C1, C_2, true) || isR5internal(C_2->C1, C_2, false)) ){
 				SR5 = S1;
 				S1 = moveIt(SR5, -1);
@@ -7545,8 +7728,11 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		// Add and remove C
 		//if(C_1->C2->C3 != NULL) C_1->C2->C3->C3 = NULL;
 		//if(C_2->C1->C3 != NULL) C_2->C1->C3->C3 = NULL;
+		moveC_z(C_1->C2, 0.2);
 		removeC(C_1->C2, true);
+		moveC_z(C_1->C2, 0.2);
 		removeC(C_1->C2, true);
+		moveC_z(C_2->C1, 0.2);
 		removeC(C_2->C1, true);
 		newC1 = addC(C_1, starting_direction, 1.55);
 		updateA(C_1,'C', C_1->growth_vector);
@@ -8317,7 +8503,7 @@ std::vector<int> PAHProcess::SiteIntVector() const {
     for(Spointer i=SiteList().begin(); i!= SiteList().end(); ++i) {
 		int site_number = (int)((*i).type);
 		int carbon_number;
-		if (site_number == 9999 || (*i).type == None){
+		if (site_number == 9999 || site_number == 6666 || (*i).type == None){
 			Cpointer Cspiral_1 = i->C1;
 			Cpointer Cspiral_2 = i->C2;
 			Cpointer Cspiral_bridge = NULLC;

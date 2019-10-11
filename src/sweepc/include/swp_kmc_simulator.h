@@ -124,7 +124,7 @@ namespace Sweep{
             //! Save the structure DOT file after every X simulation sec interval
             void saveDOTperXsec(const double& X, const int& seed, const double& time, const double &time_max, KMCMechanism& copyMod, int& intervalcount);
 			//! Save DEBUG information for a single PAH
-			void savePAH(int PAH_number, const std::string &filename);
+			void savePAH(int PAH_number, const std::string &filename, bool optimise=false);
 			//! Read PAHs to be tracked through the simulation from file.
 			void readTrackedPAH(const std::string &filename="tracked_pahs.txt");
 			//! Add PAH to the tracked list on the fly.

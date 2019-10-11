@@ -2519,6 +2519,20 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				}
 
 			}
+			
+			if( abs(t - 0.0592) <= 1e-6){
+				//cout << "Saving all PAHs to xyz files\n";
+				std::string xyz_filename = "KMC_DEBUG/Resultfiles/592ms/";
+				xyz_filename.append(std::to_string((*it)->PAH_ID));
+				sys.Particles().Simulator()->savePAH((*it)->PAH_ID, xyz_filename, true);
+			}
+			
+			if( abs(t - 0.0664) <= 1e-6){
+				//cout << "Saving all PAHs to xyz files\n";
+				std::string xyz_filename = "KMC_DEBUG/Resultfiles/664ms/";
+				xyz_filename.append(std::to_string((*it)->PAH_ID));
+				sys.Particles().Simulator()->savePAH((*it)->PAH_ID, xyz_filename, true);
+			}
 
 			/*!
              * The second condition ensures that the m_InvalidPAH is modified in the correct way
@@ -2822,6 +2836,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 			}
 
+
 			/*!
 			* The second condition ensures that the m_InvalidPAH is modified in the correct way
 			* consider 2 PAH, the first is invalid, the other is valid. If not using the
@@ -2868,6 +2883,9 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
     switch (str){
     case ParticleModel::A1:
         m_control=Sweep::KMC_ARS::BENZENE_C;
+        break;
+	case ParticleModel::A1CH3:
+        m_control=Sweep::KMC_ARS::TOLUENE_C;
         break;
     case ParticleModel::A2:
         m_control=10;
@@ -2961,6 +2979,11 @@ int PAHPrimary::InceptedPAH() const
         switch (str){
         case ParticleModel::A1:
             if (NumCarbon() == BENZENE_C && NumHydrogen() == BENZENE_H)
+                return 1;
+            else return 0;
+            break;
+		case ParticleModel::A1CH3:
+            if (NumCarbon() == TOLUENE_C && NumHydrogen() == TOLUENE_H)
                 return 1;
             else return 0;
             break;
