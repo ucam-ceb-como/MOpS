@@ -80,7 +80,7 @@ Simulator::Simulator(void)
   m_write_ensemble_file(false),
   m_write_PAH(false), m_write_PP(false), m_mass_spectra(true), m_mass_spectra_ensemble(true),
   m_mass_spectra_xmer(1), m_mass_spectra_frag(false), 
-  m_ptrack_count(0)
+  m_ptrack_count(0), m_track_bintree_particle_count(0)
 {
 }
 
@@ -120,6 +120,7 @@ Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
         m_mass_spectra_xmer = rhs.m_mass_spectra_xmer;
         m_mass_spectra_frag = rhs.m_mass_spectra_frag;
         m_ptrack_count = rhs.m_ptrack_count;
+		m_track_bintree_particle_count = rhs.m_track_bintree_particle_count;
     }
     return *this;
 }
@@ -383,7 +384,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 		for (unsigned int i = 0; i < m_track_bintree_particle_count; i++){
 
 			// file name
-			m_TrackParticlesName.push_back(m_output_filename + "-video(" + std::to_string(i) + ").csv");
+			m_TrackParticlesName.push_back(m_output_filename + "-video(" + cstr(i) + ").csv");
 
 			//get component names
 			std::string component_names;
