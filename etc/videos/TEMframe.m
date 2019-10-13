@@ -1,7 +1,7 @@
 %{  
  Author:    Casper Lindberg (csl37)
 
- Purpose:   Draws a single TEM frame
+ Purpose:   Draws a single TEM frame from a video file
 %}
 function TEMframe()
 
