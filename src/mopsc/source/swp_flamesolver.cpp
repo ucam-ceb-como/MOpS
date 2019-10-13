@@ -418,7 +418,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 		 r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
 	}
 
-	// Loop over time until we reach the stop time.
+    // Loop over time until we reach the stop time.
     while (t < tstop)
     {
 		//if (t == 0.0){
@@ -446,7 +446,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 
         // Update the chemical conditions to time t.
         const double gasTimeStep = linInterpGas(t, r.Mixture()->GasPhase());
-		
+
 		//save conditions for stagnation flame correction
 		double u_old = r.Mixture()->GasPhase().GetConvectiveVelocity();
 		double v_old = r.Mixture()->GasPhase().GetThermophoreticVelocity();
@@ -458,7 +458,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 		if(m_stagnation == false){
         // Scale particle M0 according to gas-phase expansion.
         // (considering mass const, V'smpvol*massdens' = Vsmpvol*massdens)
-			r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
+        r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity());
 		}
 
 		//! impose from the end of the time step
@@ -512,19 +512,19 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
             if (mech.Inceptions(0) != NULL) {
                 if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID &&
                     mech.Inceptions(0)->ParticleComp(0) == numCarbons) {
-                    // calculate the amount of stochastic pyrene particles in the ensemble
-                    unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);
-                    // if Pmount exceeds the capacity of the ensemble at the begining of the simulation,
-                    // the process should be terminated since further running is meaningless.
-                    if (t < 1.0e-20 && Pamount >= r.Mixture()->Particles().Capacity())
-                        throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
-                    mech.MassTransfer(Pamount, t, *r.Mixture(), rng, Geometry::LocalGeometry1d());
-                }
+					// calculate the amount of stochastic pyrene particles in the ensemble
+					unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);
+					// if Pmount exceeds the capacity of the ensemble at the begining of the simulation,
+					// the process should be terminated since further running is meaningless.
+					if (t < 1.0e-20 && Pamount >= r.Mixture()->Particles().Capacity())
+						throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
+							mech.MassTransfer(Pamount, t, *r.Mixture(), rng, Geometry::LocalGeometry1d());
+				}
             }
         }
 
         // Get the process jump rates (and the total rate).
-        jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates); 
+        jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
         // Calculate the splitting end time.
 		if (m_endconditions == true){
@@ -542,14 +542,14 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
             jrate = mech.CalcJumpRateTerms(t, *r.Mixture(), Geometry::LocalGeometry1d(), rates);
 
             // Perform time step.
-			timeStep(t, std::min(t + dtg / 3.0, tsplit), *r.Mixture(), Geometry::LocalGeometry1d(),
-				mech, rates, jrate, rng); 
+            timeStep(t, std::min(t + dtg / 3.0, tsplit), *r.Mixture(), Geometry::LocalGeometry1d(),
+                     mech, rates, jrate, rng);
 
 			if (r.Mixture()->ParticleCount() < r.Mixture()->Particles().DoubleLimit() && 
 				r.Mixture()->Particles().IsDoublingOn() && 
 				r.Mixture()->ParticleModel()->Components(0)->WeightedPAHs()){
 				break;
-			}
+        }
 
         }
         // Perform Linear Process Deferment Algorithm to

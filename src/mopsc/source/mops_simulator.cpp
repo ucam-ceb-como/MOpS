@@ -2296,15 +2296,12 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	unsigned int step = 0;
 	fvector psl;
 	vector<fvector> ppsl;
-
-	////////////////////////////////////////// csl37-pp
 	vector<fvector> nodes;
 	vector<string> nodes_header;
 	vector<fvector> prims;
 	vector<string> primary_header;
 	CSV_IO nodesout(m_output_filename + "-primary-nodes.csv", true);
 	CSV_IO primsout(m_output_filename + "-primary.csv", true);
-	///////////////////////////////////////////
 
 	// Get reference to the particle mechanism.
 	const Sweep::Mechanism &pmech = mech.ParticleMech();
@@ -2365,16 +2362,14 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 					file.close();
 				}
 
-				////////////////////////////////////////// csl37-pp
-				// print primary data and connection data
-				// loop over particles at last save point
+				// Print primary and connectivity data
+				// This is currently only done at the last save point
 				if (i == times.size() - 1){
 					for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
 					{
 						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), nodes, prims, k);
 					}
 				}
-				/////////////////////////////////////////
 
 				delete r;
 			}
@@ -2390,7 +2385,8 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 		//out[i]->Close(); 
 		//delete out[i];
 	}
-	//////////////////////////////////////////// csl37-pp
+
+	// Write bintreeprimary connectivity data 
 	nodes_header.push_back("Particle Index");
 	nodes_header.push_back("Number of primaries below node");
 	nodes_header.push_back("Common surface area (m2)");
@@ -2409,6 +2405,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	}
 	nodesout.Close();
 
+	// Write primary particle data 
 	primary_header.push_back("Particle Index");
 	primary_header.push_back("Primary diameter (m)");
 	primary_header.push_back("Sph. equiv. diameter (m)");
@@ -2435,7 +2432,6 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	}
 	primsout.Close();
 
-	///////////////////////////////////////////
 	//// Close output CSV files.
 	for (unsigned int i = 0; i != times.size(); ++i) {
 		out[i]->Close();

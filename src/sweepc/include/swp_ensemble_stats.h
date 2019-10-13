@@ -126,9 +126,8 @@ public:
         double scale     				    // Scaling factor to unit volume.
         );
 
-	///////////////////////////////////////// csl37-pp
+	//! Get primary particle details and connectivity
 	void PrintPrimary(const Sweep::Particle &sp, const Sweep::ParticleModel& model, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const;
-	/////////////////////////////////////////
 
     // READ/WRITE/COPY.
 

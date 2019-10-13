@@ -494,11 +494,11 @@ private:
 
     //! Updates the pointers after a merge event
     void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
-	
+
 	// Updates pointers after merge event (overload for coordinate tracking model)
 	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *node,
 						BinTreePrimary *small_prim, double const r_new, double const r_old);
-	
+
 	//! Adjust composition of neighbours following surface growth event
 	void AdjustNeighbours(BinTreePrimary *prim, const double delta_r, const fvector &dcomp, 
 							const fvector &dvalues, rng_type &rng);
