@@ -1190,11 +1190,6 @@ void BinTreePrimary::SetTime(double t) {
     }
 }
 
-//csl37: I don't think this works correctly:
-//random integer is generated between 0 and m_numprimary-1
-//the probability of choosing the left-most particle is twice that of choosing others
-//no chance of choosing the right-most particle
-
 /*!
  * @brief       Randomly selects a primary in the binary tree
  *
@@ -1976,7 +1971,7 @@ void BinTreePrimary::UpdatePrimary(void)
     //! both the spherical equivalent diameter and the free surface area is the
     //! sperhical surface area.
     if(!(m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) || m_parent == NULL){
-		//To Do (csl37): shouldn't reset properties if the particle has merged back to a single primary
+		//To Do (csl37): should not reset properties if this is a single primary due to a merge event
 		m_primarydiam = m_diam;
 		m_free_surf = m_surf;
 		m_primaryvol = m_vol;

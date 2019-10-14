@@ -378,6 +378,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 	#endif
 
 	// Create output files for particle tracking videos
+	// (This is not currently done as a post-process)
 	if (m_track_bintree_particle_count>0){
 
 		//open files for each tracked particle
