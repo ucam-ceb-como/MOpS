@@ -1438,7 +1438,7 @@ cpair PAHProcess::endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) 
 int nancounter = 0;
 //! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
 OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
-	std::list<OpenBabel::OBAtom> methyl_list;
+	std::list<int> methyl_list;
 	//R6 Bay detection
 	std::list<int> R6pairs1, R6pairs2;
 	std::list<int>::iterator R6_iter1, R6_iter2;
@@ -1635,6 +1635,11 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 			//atom->SetVector(std::get<0>(C_change->coords) + 1.0*cos(C_change->bondAngle2*M_PI/180),std::get<1>(C_change->coords) + 1.0*sin(C_change->bondAngle2*M_PI/180),std::get<2>(C_change->coords));
 			counter +=4;
+			methyl_list.push_back(methylc->GetIdx()-1);
+			methyl_list.push_back(methylc->GetIdx());
+			methyl_list.push_back(h1->GetIdx());
+			methyl_list.push_back(h2->GetIdx());
+			methyl_list.push_back(h3->GetIdx());
 		}
 	}
 	//Internal carbons
@@ -1710,18 +1715,52 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		}
 		
 		//Checks hydrogen bonds //NEEDS DEBUGGING. NOT COMPLETE.
-		/*for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
-			if (a->GetAtomicNum() == 1){
-				OpenBabel::OBBond* my_bond = mol.GetBond(a->GetIdx(), a->GetIdx() - 1);
-				if (my_bond == NULL){
-					for( OpenBabel::OBAtomAtomIter     nbr(*a); nbr; ++nbr ) { //SETBREAKPOINT
-						OpenBabel::OBBond* my_bond_del = mol.GetBond(a->GetIdx(), nbr->GetIdx());
-						if (my_bond_del != NULL) mol.DeleteBond(my_bond_del);
+		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
+			auto find_methyl = std::find(std::begin(methyl_list), std::end(methyl_list), a->GetIdx()); //SETBREAKPOINT
+			if (find_methyl == methyl_list.end()){
+				//The atom is not in a methyl group.
+				if (a->GetAtomicNum() == 1){
+					OpenBabel::OBAtom *prev_atom = mol.GetAtom(a->GetIdx() - 1);
+					if (prev_atom -> GetAtomicNum() == 6){
+						OpenBabel::OBBond* my_bond = mol.GetBond(a->GetIdx(), a->GetIdx() - 1);
+						if (my_bond == NULL){
+							for( OpenBabel::OBAtomAtomIter     nbr(*a); nbr; ++nbr ) { 
+								OpenBabel::OBBond* my_bond_del = mol.GetBond(a->GetIdx(), nbr->GetIdx());
+								if (my_bond_del != NULL) mol.DeleteBond(my_bond_del);
+							}
+							mol.AddBond(a->GetIdx(), a->GetIdx() - 1,5);
+						}
 					}
-					mol.AddBond(a->GetIdx(), a->GetIdx() - 1,5);
 				}
 			}
-		}*/
+			else {
+				//The atom is in a methyl group.
+				int index_methyl = std::distance(methyl_list.begin(), find_methyl);
+				if (index_methyl == 0){
+					//This is the carbon attached to the methyl.
+					OpenBabel::OBBond* my_bond = mol.GetBond(a->GetIdx(), a->GetIdx() + 1);
+					if (my_bond == NULL) mol.AddBond(a->GetIdx(), a->GetIdx() + 1,5);
+				}
+				else if (index_methyl == 1){
+					//This is the methyl carbon.
+					for (int i=1; i<=3; i++){
+						OpenBabel::OBBond* my_bond = mol.GetBond(a->GetIdx(), a->GetIdx() + i);
+						if (my_bond == NULL) mol.AddBond(a->GetIdx(), a->GetIdx() + i,5);
+					}
+				}
+				else {
+					//These are the hydrogens from the methyl group.
+					for( OpenBabel::OBAtomAtomIter     nbr(*a); nbr; ++nbr ) {
+						auto find_nbr = std::find(std::begin(methyl_list), std::end(methyl_list), nbr->GetIdx());
+						if (find_nbr == methyl_list.end()){
+							//Hydrogen is attached to other atom. Delete this bond.
+							OpenBabel::OBBond* my_bond_del = mol.GetBond(a->GetIdx(), nbr->GetIdx());
+							if (my_bond_del != NULL) mol.DeleteBond(my_bond_del);
+						}
+					}
+				}
+			}
+		}
 		
 		//Checks for sp3 carbon //NEEDS DEBUGGING. NOT COMPLETE.
 		/*for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
@@ -2678,7 +2717,7 @@ void PAHProcess::updateSites() {
     //for(it=m_pah->m_siteList.begin(); it!=m_pah->m_siteList.end(); it++) {
         //m_pah->m_siteMap[it->type].push_back(it);
     //}
-    setCount(m_pah->m_counts.first, (int) m_pah->m_siteList.size());
+    setCount(m_pah->m_counts.first, (int) m_pah->m_siteList.size() + 2 * numberOfMethyl() );
     //stericHindrance();
     //cout << "Principal Sites Updated, H count: "<< m_pah->m_counts[1] << "..\n";
 }
@@ -6864,6 +6903,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 			if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) return;
 			if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) return;
 			if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) return;
+			if ((int)checkR5_2->type == 9999 || (int)checkR5_2->type == 6666) return;
 		}
 	}
 	if (CRem_next->bridge) return;
@@ -7553,6 +7593,7 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 			if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) return;
 			if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) return;
 			if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) return;
+			if ((int)checkR5_2->type == 9999 || (int)checkR5_2->type == 6666) return;
 		}
 	}
 	if (CRem_next->bridge) return;
