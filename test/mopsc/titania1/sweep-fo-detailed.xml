@@ -9,26 +9,16 @@
     </component>
 	
 <!-- Define particle types (Detailed) -->
-    <particle id="[Ru]" model="bintree" subtree="false" hybrid="true" threshold="100" coagulate-in-list="false">
+    <particle id="[Ru]" model="bintree" subtree="false">
         <description>A rutile particle.</description>
 	<fractdim>1.8</fractdim>
         <coalthresh>1.0</coalthresh>
         <sintering enable="true" model="GBD">
-	        <A units="s/m4K">9.112E+17</A>
-            <E units="K">31030</E>
-            <Dpmin units="m">4e-9</Dpmin>
-        </sintering>
-        <!--sintering enable="true" model="GBD">
-	    <A units="s/m4K">7.44E+16</A>
+	        <A units="s/m4K">7.44E+16</A>
             <E units="K">31032</E>
             <Dpmin units="m">0</Dpmin>
-        </sintering-->
+        </sintering>
     </particle>
-	
-    <!-- Define particle types (Spherical) -->
-    <!--particle id="[Ru]" model="spherical" subtree="false" hybrid="false">
-        <description>A rutile particle.</description>
-    </particle-->
 	
     <!-- Coagulation -->
     <coagulation>
