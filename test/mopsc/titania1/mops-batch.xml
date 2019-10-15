@@ -5,26 +5,27 @@
   <iter>20</iter>
   <atol>1.0e-17</atol> 
   <rtol>1.0e-4</rtol>
-  <pcount>2048</pcount>
-  <maxm0>4e12</maxm0> 
+  <pcount>8192</pcount>
+  <maxm0>1.5e13</maxm0> 
   <relax>0.8</relax>
   
-    <reactor type="batch" constt="true" constv="true" id="Test_System" units="mol/mol">
+    <reactor type="batch" constt="true" constv="false" id="Test_System" units="mol/mol">
         <temperature units="K">1200</temperature>
         <pressure units="bar">4.00</pressure>	
-        <component id="TICL4">0.4681</component>
-        <component id="O2">0.5319</component>
+		<component id="AR">0.9</component>
+        <component id="TICL4">0.04681</component>
+        <component id="O2">0.05319</component>
    </reactor>
 
   <!-- Output time sequence -->
   <timeintervals>
     <start>0.0</start>
-	<time steps="100" splits="10">0.001</time>
+	<time steps="1000" splits="10">0.01</time>
   </timeintervals>
 
   <!-- Simulation output settings -->
   <output>
-    <filename>PP</filename>
+    <filename>ZZ</filename>
     <statsbound property="dcol">
       <lower>0</lower>
       <upper>1.0e30</upper>

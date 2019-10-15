@@ -11,10 +11,10 @@ set(0,'DefaultAxesFontSize',14);
 set(0,'DefaultLineMarkerSize',10)
 
 % for finding files
-basedir  = 'C:\Users\aab64\Documents\Data\MF_Comparison\P-no-dp-longer\';
+basedir  = ''; % C:\Users\aab64\Documents\Data\MF_Comparison\P-no-dp-longer\
 filedir  = '';
 filecmp  = '';
-filebase = 'Network(stage1)';
+filebase = 'PP';
 
 % for plotting psl data
 psltime  = '0.01';
