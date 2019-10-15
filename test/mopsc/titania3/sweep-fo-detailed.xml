@@ -9,7 +9,13 @@
     </component>
 	
     <!-- Define particle types (Detailed) -->
-    <!-- A threshold of 1000 corresponds to a particle size of ~4 nm -->
+    <!-- For hybrid model: -->
+	<!-- Set hybrid=true to use hybrid model -->
+	<!-- Use threshold to specify largest size tracked in hybrid -->
+	<!-- A threshold of 1000 corresponds to a particle size of ~4 nm -->
+	<!-- Set coagulate-in-list=true to perform coagulation in particle-number model
+	     if resulting size is less than the threshold. 
+		 Note: for detailed particle model this introduces an approximation error. -->
     <particle id="[Ru]" model="bintree" subtree="false" track="primaryCoordinates" hybrid="true" threshold="10000" coagulate-in-list="false">
         <description>A rutile particle.</description>
 	    <fractdim>1.8</fractdim>
