@@ -20,11 +20,18 @@
         <description>A rutile particle.</description>
 	    <fractdim>1.8</fractdim>
         <coalthresh>1.0</coalthresh>
+		<!-- Lindberg (2019) parameters with a min diameter of 4nm to speed sintering -->
         <sintering enable="true" model="GBD">
 	        <A units="s/m4K">9.112E+17</A>
             <E units="K">31030</E>
             <Dpmin units="m">4e-9</Dpmin>
         </sintering>
+		<!-- Kobata (1991) parameters (original approach) -->
+        <!--sintering enable="true" model="GBD">
+	        <A units="s/m4K">7.44E+16</A>
+            <E units="K">31032</E>
+            <Dpmin units="m">0</Dpmin>
+        </sintering-->
     </particle>
 	
     <!-- Coagulation -->
@@ -35,7 +42,8 @@
 
     <!-- Ti addition reactions
          A is in cm/s * Avogadro's number
-         E is in kcal/mol -->    
+         E is in kcal/mol 
+		 Parameters from Lindberg (2017) -->
     <reaction type="titania" name="TiCl4 addition" form="firstorder" defer="true">
         <formula>[Rutile_n] + TICL4 + 1.0 O2 to Rutile_n+1 + 2.0 CL2</formula>
         <reactant id="TICL4" stoich="+1.0" />
