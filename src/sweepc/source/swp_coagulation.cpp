@@ -199,8 +199,10 @@ int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
     sys.Particles().Update(ip1);
     // Particle 2 is now part of particle 1
 
-    // aab64 for hybrid particle model
-    if (!(m_mech->IsHybrid() && ip2 == -2)) // if this particle was introduced from the bin, it does not exist in the ensemble
+    // For hybrid particle model
+    // if this particle was introduced from the particle-number model, 
+    // it does not exist in the ensemble
+    if (!(m_mech->IsHybrid() && ip2 == -2)) 
 		sys.Particles().Remove(ip2, true);
     return ip1;
 }
@@ -704,14 +706,6 @@ int Coagulation::ChooseIndexWeightedCoag(double t, const Sweep::PropID prop, Cel
 	}
 	
 	return index;
-}
-
-// aab64 temp
-void Coagulation::ChooseProps(
-	Sweep::Cell &sys,
-	unsigned int iterm) const
-{
-	sys.SetCoagProps(iUniform, iUniform);
 }
 
 
