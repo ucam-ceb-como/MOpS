@@ -154,14 +154,9 @@ double DeathProcess::InternalRate(
         double t,
         const Cell &sys,
         const Geometry::LocalGeometry1d &local_geom) const {
-	// aab64 if weighted particles, use sum of weights in place of N
-	if (m_dtype == DeathProcess::iWtdDelete)
-            return m_a * (sys.Particles().GetSum(iW) + sys.Particles().GetTotalParticleNumber());
-	else
-	{
-            unsigned int n_total = sys.Particles().Count() + sys.Particles().GetTotalParticleNumber();             // Account for particles in the incepting class
-            return m_a * n_total;
-	}
+	unsigned int n_total = sys.Particles().Count() + sys.Particles().GetTotalParticleNumber();
+    // Account for particles in the incepting class
+    return m_a * n_total;
 }
 
 // RATE TERM CALCULATIONS.
@@ -237,94 +232,6 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
     return 0;
 }
 
-// aab64 Weighted perform
-// If weighted particles, use weights to randomly choose particles and
-// scale/remove particle depending on delta w required for the interval. 
-// Use when inception rate is high to free ensemble space for new particles.
-/*!
-* \param[in]       t           Time
-* \param[in,out]   sys         System to update
-* \param[in]       local_geom  Details of local physical layout
-* \param[in]       iterm       Process term responsible for this event
-* \param[in,out]   rng         Random number generator
-* \param[in,out]   num         Amount of weight change still required
-*
-* \return      0 on success, otherwise negative.
-*/
-int DeathProcess::Perform_wtd(double t, Sweep::Cell &sys,
-	const Geometry::LocalGeometry1d& local_geom,
-	unsigned int iterm,
-	rng_type &rng, 
-	double &num) const
-{
-	int i = -1;
-	// aab64 for hybrid particle model
-	if (!(m_mech->IsHybrid()))
-		i = sys.Particles().Select(iW, rng);
-	else
-	{
-		// Check if should remove from ensemble or bin
-		// Note this doesn't work as setup because there is no neat way of reducing the bin
-		// count by less than 1 (would require additional checks in other places e.g. coagulation)
-		unsigned int ntotal_pn = sys.Particles().GetTotalParticleNumber();
-		unsigned int ntotal_ens = sys.Particles().GetSum(iW);
-		boost::uniform_01<rng_type&, double> unifDistrib(rng);
-		double test = unifDistrib() * (ntotal_pn + ntotal_ens);
-		if (ntotal_pn >= test && num >= 1)
-		{
-			unsigned int index = m_mech->SetRandomParticle(sys.Particles(), t, test, iUniform, rng);
-			sys.Particles().UpdateTotalsWithIndex(index, -1.0);
-			sys.Particles().UpdateNumberAtIndex(index, -1);
-			sys.Particles().UpdateTotalParticleNumber(-1);
-			i = -1;
-			num -= 1;
-		}
-		else
-		{
-			if (sys.ParticleCount() > 0)
-				i = sys.Particles().Select_usingGivenRand(iW, test - ntotal_pn, rng);
-			else
-			{
-				i = -1;
-				num = 0;
-			}
-		}
-	}
-
-	if (i >= 0)
-	{
-		Sweep::Particle *sp = sys.Particles().At(i);
-		double sp_wt = sp->getStatisticalWeight();
-		if (sp_wt <= num)
-		{
-			// we can keep this particle and 
-			// just reduce its weight
-			if (sp_wt > 1.0)
-			{
-				sp->setStatisticalWeight(sp_wt - 1.0);
-				sys.Particles().Update(i);
-				num = num - 1.0;
-			}
-			// remove the particle to free up 
-			// ensemble space for new particles
-			else
-			{
-				DoParticleDeath(t, i, sys, rng);           // Just remove the particle
-				num = num - sp_wt;
-			}
-		}
-		// particle weight is larger than 
-		// required change, just rescale
-		else
-		{
-			sp->setStatisticalWeight(sp_wt - num);
-			sys.Particles().Update(i);
-			num = 0;
-		}
-	}
-	return 0;
-}
-
 /*!
  * Remove particles over time dt.
  *
@@ -355,26 +262,11 @@ void DeathProcess::PerformDT (
             double rate = InternalRate(t, sys, local_geom) * dt;
             if (rate > 0.0) {
                 boost::random::poisson_distribution<unsigned, double> rpt(rate);
-                if (m_dtype == DeathProcess::iWtdDelete)
-                {
-                    // aab64 replacement for cdelete for weighted particles 
-                    // should be adjusted to allow multiple outflows
-                    // we know apriori how much the weight needs to change
-                    // from the mass balance and can effect this change
-                    // by scaling the weights
-                    double num = (sys.Particles().GetSum(iW) + sys.Particles().GetTotalParticleNumber()) * A() * dt;
-                    while (num > 0 && (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber()) > 0)
-                                        Perform_wtd(t, sys, local_geom, 0, rng, num);
-                }
-                else
-                {
-                    unsigned num = rpt(rng);
-                    while (num > 0) 
-                    {
-                        // Do the process to the particle.
-                        Perform(t, sys, local_geom, 0, rng);
-                        num--;
-                    }
+                unsigned num = rpt(rng);
+                while (num > 0) {
+                    // Do the process to the particle.
+                    Perform(t, sys, local_geom, 0, rng);
+                    num--;
                 }
             }
         }
@@ -398,8 +290,7 @@ void DeathProcess::DoParticleDeath(
     Sweep::Particle *sp = sys.Particles().At(isp);
 
     if (m_dtype == DeathProcess::iContDelete
-            || m_dtype == DeathProcess::iStochDelete
-            || m_dtype == DeathProcess::iWtdDelete) {
+            || m_dtype == DeathProcess::iStochDelete) {
         // Just delete the particle
         sys.Particles().Remove(isp, true);
 
