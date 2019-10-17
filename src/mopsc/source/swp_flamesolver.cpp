@@ -479,6 +479,10 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
                     index=r.Mech()->GasMech().FindSpecies("A4");
                     numCarbons = 16;
                     break;
+				case ParticleModel::A4CH3:
+                    index=r.Mech()->GasMech().FindSpecies("A4CH3");
+                    numCarbons = 17;
+                    break;
                 case ParticleModel::A5:
                     index=r.Mech()->GasMech().FindSpecies("A5");
                     numCarbons = 20;

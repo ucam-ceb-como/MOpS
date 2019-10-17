@@ -139,6 +139,7 @@ int main(int argc, char *argv[])
 		else if(node->Data() == "TOLUENE") startStruct = TOLUENE_C;
         else if(node->Data() == "NAPHTHALENE") startStruct = NAPHTHALENE_C;
         else if(node->Data() == "PYRENE") startStruct = PYRENE_C;
+		else if(node->Data() == "METHYLPYRENE") startStruct = METHYLPYRENE_C;
 		else if(node->Data() == "BENZOPYRENE") startStruct = BENZOPYRENE_C;
         else if(node->Data() == "CORONENE") startStruct = CORONENE_C;
         else if(node->Data() == "TEST") startStruct = TEST_STRUCT;

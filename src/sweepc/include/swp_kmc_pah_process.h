@@ -258,8 +258,6 @@ private:
     bool allowed(const Spointer& st, StructureProc proc) const;
     //! Choose a random site of site type st
     Spointer chooseRandomSite(kmcSiteType st, rng_type &rng);
-	//! Choose a random site for valid RZZ migrations
-	Spointer RZZchooseRandomSite(kmcSiteType st, rng_type &rng);
     //! Choose a random site of any site types in vtype
     Spointer chooseRandomSite(std::vector<kmcSiteType> vtype, rng_type &rng);
     //! Jump to a position coordinate given starting position and angle towards new position

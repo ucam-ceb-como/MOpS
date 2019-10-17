@@ -136,8 +136,36 @@ unsigned int PAHProcess::getSiteCount(const kmcSiteType& st) const {
         if(getCHCount().first == 6) return 0;
         return (unsigned int) (m_pah->m_siteMap[st].size());
     }
-    return (unsigned int) m_pah->m_siteMap[st].size();
+	unsigned int site_number = m_pah->m_siteMap[st].size();
+	if (site_number >= 1) {
+		for(int i=0; i<(int)m_pah->m_siteMap[st].size(); i++) {
+			if(m_pah->m_siteMap[st][i]->C1->A == 'M' || m_pah->m_siteMap[st][i]->C2->A == 'M') site_number--;
+		}
+	}
+	return site_number;
 }
+/*
+//Gets site count and then substracts the number of sites containing methyl.
+unsigned int PAHProcess::getSiteCount(const kmcSiteType& st) const {
+    if(m_rates_save) {
+        if(st==benz) return 5;
+        else return 1;
+    }
+    if(st==benz) {
+        unsigned int sum=0;
+        for(int i=0; i!=(int)PHsites.size(); i++) {
+            sum += (unsigned int) m_pah->m_siteMap[PHsites[i]].size();
+        }
+        return sum;
+    }
+    if(st==FE3) {
+        if(getCHCount().first == 6) return 0;
+        return (unsigned int) (m_pah->m_siteMap[st].size());
+    }
+    return (unsigned int) m_pah->m_siteMap[st].size();
+}*/
+
+
 //! Get Ring Counts
 std::tuple <int, int, int> PAHProcess::getRingsCount() const {
 	std::tuple <int, int, int> rings_tuple = std::make_tuple(m_pah->m_rings, m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone + m_pah->m_rings7_Embedded);
@@ -1017,55 +1045,47 @@ Spointer PAHProcess::chooseRandomSite(kmcSiteType st, rng_type &rng) {
     } else {
         //cout << "~~Choosing from " << m_pah->m_siteMap[st].size() << " sites...\n";
         // choose site index from site vector associated with site type st
-        int sz = ((int) m_pah->m_siteMap[st].size())-1; // size - 1
-        if(sz > 0) {
-            // Set up an object to generate an uniform integer on [0, sz] now that we
-            // know that sz > 0 (and can safely be cast to an unsigned type.
-            typedef boost::uniform_smallint<unsigned int> site_index_distrib;
-            site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(sz));
-            boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
+        int sz = getSiteCount(st) - 1;
+		if (sz == ((int)m_pah->m_siteMap[st].size()-1) ){
+			// The number of sites coincides with all available sites
+			//int sz = ((int) m_pah->m_siteMap[st].size())-1; // size - 1
+			if(sz > 0) {
+				// Set up an object to generate an uniform integer on [0, sz] now that we
+				// know that sz > 0 (and can safely be cast to an unsigned type.
+				typedef boost::uniform_smallint<unsigned int> site_index_distrib;
+				site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(sz));
+				boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
 
-            const unsigned r = siteIndexGenerator();
-            //cout<<"~~Chose "<<r<<"th site..\n";
-            return m_pah->m_siteMap[st][r];
-        }
-        return m_pah->m_siteMap[st][0]; // if vector has only one element
-    }
-}
-
-Spointer PAHProcess::RZZchooseRandomSite(kmcSiteType st, rng_type &rng) {
-	// to choose any principal site
-		//cout << "~~Choosing from " << m_pah->m_siteMap[st].size() << " sites...\n";
-	int R5_unavail_sites = (int)m_pah->m_siteMap[R5R6].size() + (int)m_pah->m_siteMap[R5R6ZZ].size() + (int)m_pah->m_siteMap[R5R6AC].size() + (int)m_pah->m_siteMap[R5R6BY5].size();
-	if (R5_unavail_sites > 0){
-		Spointer S1, S2;
-		std::vector<int> list;
-		for (int i = 0; i < (int)m_pah->m_siteMap[st].size(); i++) {
-			S1 = moveIt(m_pah->m_siteMap[st][i], -1);
-			S2 = moveIt(m_pah->m_siteMap[st][i], +1);
-			if (S1->type != R5R6 && S2->type != R5R6 && S1->type != R5R6ZZ && S2->type != R5R6ZZ && S1->type != R5R6AC && S2->type != R5R6AC && S1->type != R5R6BY5 && S2->type != R5R6BY5){
-				//RZZ site available for migrations
-				list.push_back(i);
+				const unsigned r = siteIndexGenerator();
+				//cout<<"~~Chose "<<r<<"th site..\n";
+				return m_pah->m_siteMap[st][r];
 			}
+			return m_pah->m_siteMap[st][0]; // if vector has only one element
 		}
-		int sz = ((int)m_pah->m_siteMap[st].size()) - R5_unavail_sites - 1; // size - 1
-		if (sz >= 0) {
-			typedef boost::uniform_smallint<unsigned int> site_index_distrib;
-			site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(sz));
-			boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
+		else {
+			//There is unavailable sites (Methyl or other type)
+			//Create a copy of the site map for this site in a vector 
+			std::vector<Spointer> svector = m_pah->m_siteMap[st];
+			for(int i=(int)m_pah->m_siteMap[st].size()-1; i>=0; i--) {
+				if(m_pah->m_siteMap[st][i]->C1->A == 'M' || m_pah->m_siteMap[st][i]->C2->A == 'M'){
+					svector.erase(svector.begin()+i);
+				}
+			}
+			int new_sz = (int)svector.size()-1;
+			if (new_sz>0){
+				// Set up an object to generate an uniform integer on [0, sz] now that we
+				// know that sz > 0 (and can safely be cast to an unsigned type.
+				typedef boost::uniform_smallint<unsigned int> site_index_distrib;
+				site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(new_sz));
+				boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
 
-			const unsigned r = siteIndexGenerator();
-			return m_pah->m_siteMap[st][list[r]];
+				const unsigned r = siteIndexGenerator();
+				//cout<<"~~Chose "<<r<<"th site..\n";
+				return svector[r];
+			}
+			return svector[0]; // if vector has only one element
 		}
-		else{
-			Spointer normal_site = chooseRandomSite(st, rng);
-			return normal_site;
-		}
-	}
-	else{
-		Spointer normal_site = chooseRandomSite(st, rng);
-		return normal_site;
-	}
+    }
 }
 
 //! Choose a random site of any site types in vtype
@@ -1724,9 +1744,18 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					if (prev_atom -> GetAtomicNum() == 6){
 						OpenBabel::OBBond* my_bond = mol.GetBond(a->GetIdx(), a->GetIdx() - 1);
 						if (my_bond == NULL){
+							vector <OpenBabel::OBBond*> bonds_to_delete;
 							for( OpenBabel::OBAtomAtomIter     nbr(*a); nbr; ++nbr ) { 
 								OpenBabel::OBBond* my_bond_del = mol.GetBond(a->GetIdx(), nbr->GetIdx());
-								if (my_bond_del != NULL) mol.DeleteBond(my_bond_del);
+								bonds_to_delete.push_back(my_bond_del);
+							}
+							if(bonds_to_delete.size() != 0){
+								vector <OpenBabel::OBBond*>::iterator itb;
+								for (itb=bonds_to_delete.begin(); itb!=bonds_to_delete.end(); itb++){
+									if ( (*itb) != NULL ){
+										mol.DeleteBond((*itb), true);
+									}
+								}
 							}
 							mol.AddBond(a->GetIdx(), a->GetIdx() - 1,5);
 						}
@@ -1750,13 +1779,22 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 				}
 				else {
 					//These are the hydrogens from the methyl group.
+					vector <OpenBabel::OBBond*> bonds_to_delete;
 					for( OpenBabel::OBAtomAtomIter     nbr(*a); nbr; ++nbr ) {
 						auto find_nbr = std::find(std::begin(methyl_list), std::end(methyl_list), nbr->GetIdx());
 						if (find_nbr == methyl_list.end()){
 							//Hydrogen is attached to other atom. Delete this bond.
 							OpenBabel::OBBond* my_bond_del = mol.GetBond(a->GetIdx(), nbr->GetIdx());
-							if (my_bond_del != NULL) mol.DeleteBond(my_bond_del);
+							bonds_to_delete.push_back(my_bond_del);
 						}
+						if(bonds_to_delete.size() != 0){
+							vector <OpenBabel::OBBond*>::iterator itb;
+							for (itb=bonds_to_delete.begin(); itb!=bonds_to_delete.end(); itb++){
+								if ( (*itb) != NULL ){
+									mol.DeleteBond((*itb), true);
+								}
+							}
+						}	
 					}
 				}
 			}
@@ -2698,8 +2736,8 @@ void PAHProcess::updateSites() {
             default:
                 std::cout << "ERROR: updateSites(): more than 4 bulk carbon atoms detected\n"; break;
             }
-			if (now->A == 'M') sitetype = Methyl;
-			if (siteC1->A == 'M') sitetype = Methyl;
+			//if (now->A == 'M') sitetype = Methyl;
+			//if (siteC1->A == 'M') sitetype = Methyl;
             Spointer end_of_siteList = m_pah->m_siteList.end();
             addSite(sitetype, siteC1, now, end_of_siteList);
             bulk = 0;
@@ -3047,7 +3085,7 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
     switch(st->type) {
     case FE:
         // Check for FE3 (if there's FE on each side of the FE)
-        if(moveIt(st,1)->type == FE && moveIt(st,-1)->type == FE) {
+        if(moveIt(st,1)->type == FE && moveIt(st,1)->C1->A=='H' && moveIt(st,1)->C2->A=='H' && moveIt(st,-1)->type == FE && moveIt(st,-1)->C1->A=='H' && moveIt(st,-1)->C2->A=='H') {
             //if(st->C1->C1->C1->bridge || st->C2->C2->C2->bridge)
             st->comb = FE3;
             m_pah->m_siteMap[FE3].push_back(st);
@@ -3059,14 +3097,13 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
             break;
         }
         //Check for FE2 (if only one FE is beside this FE)
-        else if(moveIt(st,1)->type == FE || moveIt(st,-1)->type == FE){
+        else if( (moveIt(st,1)->type == FE && moveIt(st,1)->C1->A=='H' && moveIt(st,1)->C2->A=='H') || (moveIt(st,-1)->type == FE && moveIt(st,-1)->C1->A=='H' && moveIt(st,-1)->C2->A=='H')){
             Spointer S1,S2;
             S1 = moveIt(st,-1); S2 = moveIt(st, 1);
             // Check if that FE is not a FE3
             if(S2->type == FE && moveIt(S2,1)->type != FE) {
                 st->comb = FE2;
                 m_pah->m_siteMap[FE2].push_back(st);
-		//
                 // An FE2 site is a combined site where an FE site has an FE site only 
                 // For example, for ZZ - FE - FE - ZZ, both of the FE sites has a combi
                 //
@@ -3088,7 +3125,7 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
             break;
         }
         // Check for FE_HACA
-        else if(moveIt(st,1)->type != FE && moveIt(st,-1)->type != FE && moveIt(st,1)->type != RFE && moveIt(st,-1)->type != RFE) {
+        else if(moveIt(st,1)->type != FE && moveIt(st,1)->C1->A=='H' && moveIt(st,1)->C2->A=='H' && moveIt(st,-1)->type != FE && moveIt(st,-1)->C1->A=='H' && moveIt(st,-1)->C2->A=='H' && moveIt(st,1)->type != RFE && moveIt(st,-1)->type != RFE) {
             //if(st->C1->C1->bridge || st->C2->C2->bridge)
             st->comb = FE_HACA;
             m_pah->m_siteMap[FE_HACA].push_back(st);
@@ -3099,17 +3136,33 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
     case AC:
         // Check for AC_FE3
         if((moveIt(st,2)->comb==FE3 || moveIt(st,-2)->comb==FE3) && (moveIt(st,3)->comb!=FE3 || moveIt(st,-3)->comb!=FE3) && !st->C1->C2->bridge) {
-            st->comb = AC_FE3;
-            m_pah->m_siteMap[AC_FE3].push_back(st);
-            break;
+			if (moveIt(st,2)->comb==FE3 && st->C1->A=='H' && st->C2->A=='H' && st->C2->C2->A=='H' && st->C2->C2->C2->A=='H' && st->C2->C2->C2->C2->A=='H') {
+				st->comb = AC_FE3;
+				m_pah->m_siteMap[AC_FE3].push_back(st);
+				break;
+			}
+			else if (moveIt(st,-2)->comb==FE3 && st->C1->A=='H' && st->C2->A=='H' && st->C1->C1->A=='H' && st->C1->C1->C1->A=='H' && st->C1->C1->C1->C1->A=='H') {
+				st->comb = AC_FE3;
+				m_pah->m_siteMap[AC_FE3].push_back(st);
+				break;
+			}
+			else st->comb = None;
         }else st->comb = None;
         break;
     case BY5:
     // Check for BY5_FE3
         if((moveIt(st,2)->comb==FE3 || moveIt(st,-2)->comb==FE3) && (moveIt(st,3)->comb!=FE3 || moveIt(st,-3)->comb!=FE3) && !st->C1->C2->bridge) {
-            st->comb = BY5_FE3;
-            m_pah->m_siteMap[BY5_FE3].push_back(st);
-            break;
+			if (moveIt(st,2)->comb==FE3 && st->C1->A=='H' && st->C2->A=='H' && st->C2->C2->A=='H' && st->C2->C2->C2->A=='H' && st->C2->C2->C2->C2->A=='H') {
+				st->comb = BY5_FE3;
+				m_pah->m_siteMap[BY5_FE3].push_back(st);
+				break;
+			}
+			else if (moveIt(st,-2)->comb==FE3 && st->C1->A=='H' && st->C2->A=='H' && st->C1->C1->A=='H' && st->C1->C1->C1->A=='H' && st->C1->C1->C1->C1->A=='H') {
+				st->comb = BY5_FE3;
+				m_pah->m_siteMap[BY5_FE3].push_back(st);
+				break;
+			}
+			else st->comb = None;
         }else st->comb = None;
         break;
     default:
@@ -3163,7 +3216,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
 	intpair BENZENE_CH(6, 6);
 	int BENZENE_RINGS_EMBEDDED = 0;
 	// Structure for Toluene
-	std::string TOLUENE_Sites = "FE,Methyl,Methyl,FE,FE,FE";
+	std::string TOLUENE_Sites = "FE,FE,FE,FE,FE,FE";
 	auto TOLUENE_Rings = std::make_tuple (1, 0, 0) ;
 	intpair TOLUENE_CH(7, 8);
 	int TOLUENE_RINGS_EMBEDDED = 0;
@@ -3180,6 +3233,14 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
 	std::list <cpair> PYRENE_intCarbons;
 	PYRENE_intCarbons.push_back(std::make_tuple(1.4*cos(-60.0*M_PI/180.0), 1.4*sin(-60.0*M_PI/180.0), 0.0));
 	PYRENE_intCarbons.push_back(std::make_tuple(1.4*cos(-60.0*M_PI/180.0) + 1.4, 1.4*sin(-60.0*M_PI/180.0), 0.0));
+	// Structure for Methylpyrene
+	std::string METHYLPYRENE_Sites = "FE,ZZ,FE,FE,ZZ,FE,ZZ,FE,FE,ZZ";
+	auto METHYLPYRENE_Rings = std::make_tuple (4, 0, 0);
+	intpair METHYLPYRENE_CH(17, 12);
+	int METHYLPYRENE_RINGS_EMBEDDED = 0;
+	std::list <cpair> METHYLPYRENE_intCarbons;
+	METHYLPYRENE_intCarbons.push_back(std::make_tuple(1.4*cos(-60.0*M_PI/180.0), 1.4*sin(-60.0*M_PI/180.0), 0.0));
+	METHYLPYRENE_intCarbons.push_back(std::make_tuple(1.4*cos(-60.0*M_PI/180.0) + 1.4, 1.4*sin(-60.0*M_PI/180.0), 0.0));
 	// Structure for BENZOPYRENE
 	std::string BENZOPYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,ZZ,FE,FE,FE,AC,FE";
 	auto BENZOPYRENE_Rings = std::make_tuple (5, 0, 0);
@@ -3223,6 +3284,13 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
         CH = PYRENE_CH;
 		rings_Embedded = PYRENE_RINGS_EMBEDDED;
 		IntCarbons = PYRENE_intCarbons;
+        break;
+	case METHYLPYRENE_C:
+        chosen = METHYLPYRENE_Sites;
+        rings = METHYLPYRENE_Rings;
+        CH = METHYLPYRENE_CH;
+		rings_Embedded = METHYLPYRENE_RINGS_EMBEDDED;
+		IntCarbons = METHYLPYRENE_intCarbons;
         break;
     case BENZOPYRENE_C:
         chosen = BENZOPYRENE_Sites;
@@ -3474,6 +3542,71 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		P_intCarbons.push_back(std::make_tuple(1.4, -2*1.4*cos(30.0*M_PI/180.0), 0.0));
 		m_pah->m_InternalCarbons = P_intCarbons;
 		//cout << "Pyrene Initialised!\n";
+        break;
+	case METHYLPYRENE_C:
+        // add first C atom
+        m_pah->m_cfirst = addC();
+		updateA(m_pah->m_cfirst, 'H', std::make_tuple(cos(120.0 *M_PI / 180.0),sin(120.0 *M_PI / 180.0),0.0));
+        // adds next C atoms according to structure
+		newC = addC(m_pah->m_cfirst, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-60.0*M_PI/180.0),sin(-60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-60.0*M_PI/180.0),sin(-60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'M', std::make_tuple(1.0,0.0,0.0) );
+		newC = addC(newC, std::make_tuple(cos(-120.0*M_PI/180.0),sin(-120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-60.0 *M_PI / 180.0),sin(-60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-180.0*M_PI/180.0),sin(-180.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-120.0*M_PI/180.0),sin(-120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-60.0 *M_PI / 180.0),sin(-60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-180.0*M_PI/180.0),sin(-180.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-120.0 *M_PI / 180.0),sin(-120.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(120.0*M_PI/180.0),sin(120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(180.0*M_PI/180.0),sin(180.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-120.0 *M_PI / 180.0),sin(-120.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(120.0*M_PI/180.0),sin(120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(-1.0,0.0,0.0) );
+		newC = addC(newC, std::make_tuple(cos(60.0*M_PI/180.0),sin(60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(120.0 *M_PI / 180.0),sin(120.0 *M_PI / 180.0),0.0) );
+        /*newC = addC(m_pah->m_cfirst, 0, 0, 1.4);
+		newC = addC(newC, -60, 0, 1.4);
+		newC = addC(newC, 0, 0, 1.4);
+		newC = addC(newC, -60, 0, 1.4);
+		newC = addC(newC, -120, 0, 1.4);
+		newC = addC(newC, -180, 0, 1.4);
+		newC = addC(newC, -120, 0, 1.4);
+		newC = addC(newC, -180, 0, 1.4);
+		newC = addC(newC, 120, 0, 1.4);
+		newC = addC(newC, 180, 0, 1.4);
+		newC = addC(newC, 120, 0, 1.4);
+		newC = addC(newC, 60, 0, 1.4);*/
+        // adds the last C atom, with bond angle towards m_cfirst
+		m_pah->m_clast = addC(newC, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(m_pah->m_clast, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+        // closes structure
+        connectToC(m_pah->m_clast, m_pah->m_cfirst);
+        // update H atoms
+        //updateA(m_pah->m_cfirst, m_pah->m_clast, 'H');
+        // set C & H counts
+        setCount(METHYLPYRENE_C, METHYLPYRENE_H);
+        // set ring counts
+        m_pah->m_rings = 4;
+        m_pah->m_rings5_Lone = 0;
+		m_pah->m_rings5_Embedded = 0;
+		m_pah->m_rings7_Lone = 0;
+		m_pah->m_rings7_Embedded = 0;
+        // update all sites and combined sites
+        updateSites();
+        updateCombinedSites();
+		//Set Internal Carbons list
+		P_intCarbons.push_back(std::make_tuple(0.0, -2*1.4*cos(30.0*M_PI/180.0), 0.0));
+		P_intCarbons.push_back(std::make_tuple(1.4, -2*1.4*cos(30.0*M_PI/180.0), 0.0));
+		m_pah->m_InternalCarbons = P_intCarbons;
+		//cout << "Methylpyrene Initialised!\n";
         break;
     case BENZOPYRENE_C:
         // add first C atom
