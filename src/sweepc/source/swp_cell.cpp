@@ -66,9 +66,7 @@ namespace Sweep {
 Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
 : m_ensemble(), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false),
-  m_incepting_weight(1.0), m_incFactor(1.0),
-  m_notpsiflag(true), m_rateFactor(1.0),
-  m_cprop1(iUniform), m_cprop2(iUniform), 
+  m_incepting_weight(1.0),
   m_constv(false), m_particle_density(0.0)
 {
     if(const_gas)
@@ -119,19 +117,13 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_inflow     = rhs.m_inflow;
         m_outflow    = rhs.m_outflow;
 
-        // aab64 added variables
         m_adiabatic_flag = rhs.m_adiabatic_flag;          // flag for adiabatic operation
-        m_incepting_weight = rhs.m_incepting_weight;      // incepting particle weight for bintree model
-        m_incFactor = rhs.m_incFactor;                    // incepting composition adjustment factor
-        m_notpsiflag = rhs.m_notpsiflag;                  // PSI flag
-        m_rateFactor = rhs.m_rateFactor;                  // coagulation scaling for weighted events
-        m_cprop1 = rhs.m_cprop1;                          // coagulation properties for PSI
-        m_cprop2 = rhs.m_cprop2;	
-        m_bulk_heat_capacity = rhs.m_bulk_heat_capacity;  // aab64 temperature update variables (temporary)
-		m_particle_heat_capacity = rhs.m_particle_heat_capacity;
+        m_incepting_weight = rhs.m_incepting_weight;      // incepting particle weight
+        m_bulk_heat_capacity = rhs.m_bulk_heat_capacity;  // temperature update variables
+	m_particle_heat_capacity = rhs.m_particle_heat_capacity;
         m_particle_density = rhs.m_particle_density;
         m_enthalpies = rhs.m_enthalpies;
-		m_constv = rhs.m_constv;
+	m_constv = rhs.m_constv;                          // flag for constant volume operation
     }
     assert(isValid());
     return *this;
@@ -375,11 +367,11 @@ void Cell::AddOutflow(double rate, const Sweep::Mechanism &mech)
     m_outflow.push_back(death);
 }
 
-// aab64 Temporary functions for gas-phase properties
+// Store temperature properties to be used in particle step
 void Cell::setGasPhaseProperties(double C_bulk, double C_particle, double rhop, fvector enthalpies)
 {
     m_bulk_heat_capacity = C_bulk;
-	m_particle_heat_capacity = C_particle;
+    m_particle_heat_capacity = C_particle;
     m_particle_density = rhop;
     m_enthalpies = enthalpies;
 }
@@ -482,7 +474,7 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
     }
 }
 
-// aab64 check cell consistency, implemented to ensure gas phase mixture pointers are never NULL 
+// Check cell consistency, ensure gas phase mixture pointers are never null 
 bool Cell::isValid() const {
     return m_gas != NULL; 
 }

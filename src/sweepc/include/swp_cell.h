@@ -200,53 +200,31 @@ public:
         const Sweep::ParticleModel &model // Model used to define particles.
         );
 	
-    // aab64 Set the process time interval
+    // Flag to track whether energy balance is active for particle phase updates
     void SetIsAdiabaticFlag(bool flag) { m_adiabatic_flag = flag; }
 
-    // aab64 Get the process time interval 
+    // Flag to track whether energy balance is active for particle phase updates 
     bool GetIsAdiabaticFlag() const { return m_adiabatic_flag; }
 
-    // aab64 Set the incepting particle weight
+    // Set the incepting particle weight
     void SetInceptingWeight(double wt) { m_incepting_weight = wt; }
 
-    // aab64 Get the incepting particle weight 
+    // Get the incepting particle weight 
     double GetInceptingWeight() const { return m_incepting_weight; }
 
-    // aab64 Set the inception factor to change how many units are present
-    void SetInceptionFactor(double incfac) { m_incFactor = incfac; }
-
-    // aab64 Get the inception factor that determines how many units are added
-    double GetInceptionFactor() const { return m_incFactor; }
-
-    // aab64 Set PSI flag used to tell surface reaction not to update gas-phase and 
-    // temperature because this is handled using inception stoichiometry
-    void SetNotPSIFlag(bool psiflag) { m_notpsiflag = psiflag; }
-
-    // aab64 Get PSI flag used to tell surface reaction not to update gas-phase and 
-    // temperature because this is handled using inception stoichiometry
-    bool GetNotPSIFlag() const { return m_notpsiflag; }
-
-    // aab64 Store and access coagulation properties used to select particles for PSI
-    void SetCoagProps(PropID prop1, PropID prop2) { m_cprop1 = prop1; m_cprop2 = prop2; };
-    PropID getCoagProp1() const { return m_cprop1; };
-    PropID getCoagProp2() const { return m_cprop2; };
-
-    // aab64 coagulation scaling for weighted events
-    void SetRateFactor(double rateFac) { m_rateFactor = rateFac; }
-
-    // aab64 coagulation scaling for weighted events
-    int GetRateFactor() const { return m_rateFactor; }
-
-    // aab64 Temporary functions for gas-phase properties
-	void setGasPhaseProperties(double C_bulk, double C_particle, double rhop, fvector enthalpies);
-	double getBulkHeatCapacity() const { return m_bulk_heat_capacity; }
-	double getParticleHeatCapacity() const { return m_particle_heat_capacity; }
+    // Functions to store gas-phase properties used during splitting step (faster than updating each time)
+    void setGasPhaseProperties(double C_bulk,       // Heat capacity
+                               double C_particle,   // Particle heat capacity
+                               double rhop,         // Particle density
+                               fvector enthalpies); // Enthalpies
+    double getBulkHeatCapacity() const { return m_bulk_heat_capacity; }
+    double getParticleHeatCapacity() const { return m_particle_heat_capacity; }
     double getParticleDensity() const { return m_particle_density; }
     void getEnthalpies(fvector &enthalpies) { enthalpies = m_enthalpies; }
 
-	// aab64 Set constv/constp flag for particle energy balance
-	void setConstV(bool flag) { m_constv = flag; }
-	bool IsConstV() { return m_constv; }
+    // Set constv/constp flag for particle energy balance
+    void setConstV(bool flag) { m_constv = flag; }
+    bool IsConstV() { return m_constv; }
 
 protected:
     // Default constructor is protected as it makes no
@@ -285,35 +263,20 @@ private:
     // calculating rates.
     Processes::DeathPtrVector m_outflow;
 	
-    // aab64 Flag for adiabatic operation
+    // Flag for adiabatic operation
     bool m_adiabatic_flag;
 
-    // aab64 Current incepting particle weight in Bintree primary case
+    // Current incepting particle weight in Bintree primary case
     double m_incepting_weight;
 
-    // aab64 Scale the inception process to increase primary size more rapidly
-    double m_incFactor;
-
-    // aab64 PSI flag used to tell surface reaction not to update gas-phase and 
-    // temperature because this is handled using inception stoichiometry
-    bool m_notpsiflag;
-
-    // aab64 coagulation scaling for weighted events
-    int m_rateFactor;
-
-    // aab64 temp
-    PropID m_cprop1;
-    PropID m_cprop2;
-
+    // Variables to store gas-phase properties used during splitting step
     double m_bulk_heat_capacity;
     double m_particle_density;
-	double m_particle_heat_capacity;
-
+    double m_particle_heat_capacity;
     fvector m_enthalpies;
 
-	// aab64 flag constant volume/pressure for particle temperature update
-	bool m_constv;
-
+    // Flag constant volume/pressure for particle temperature update
+    bool m_constv;
 };
 
 } //namespace Sweep
