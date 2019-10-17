@@ -70,7 +70,6 @@ Particle::Particle(void)
 , m_FragCount(0)
 , m_createt(0.0)
 , mLPDAtime(0.0)
-, m_hybrid(false)
 {
 }
 
@@ -83,7 +82,6 @@ Particle::Particle(double time, const Sweep::ParticleModel &model)
 , m_FragCount(0)
 , m_createt(0.0)
 , mLPDAtime(0.0)
-, m_hybrid(false)
 {
     m_primary = new AggModels::Primary(time, model);
 }
@@ -101,7 +99,6 @@ Particle::Particle(double time, double weight, const Sweep::ParticleModel &model
 , m_FragCount(0)
 , m_createt(0.0)
 , mLPDAtime(0.0)
-, m_hybrid(false)
 {
     m_primary = new AggModels::Primary(time, model);
 }
@@ -113,7 +110,6 @@ Particle::Particle(Sweep::AggModels::Primary &pri)
 , m_StatWeight(1.0)
 , m_primary(&pri)
 , m_CoagCount(0)
-, m_hybrid(false)
 , m_FragCount(0)
 {
     m_createt = pri.CreateTime();
@@ -151,7 +147,6 @@ Particle::Particle(std::istream &in, const Sweep::ParticleModel &model, void *du
         in.read(reinterpret_cast<char*>(&m_FragCount), sizeof(m_FragCount));
         in.read(reinterpret_cast<char*>(&m_createt), sizeof(m_createt));
         in.read(reinterpret_cast<char*>(&mLPDAtime), sizeof(mLPDAtime));
-        in.read(reinterpret_cast<char*>(&m_hybrid), sizeof(m_hybrid));
     }
     else {
         throw std::invalid_argument("Input stream not ready \
@@ -566,7 +561,6 @@ Particle &Particle::operator=(const Sweep::Particle &rhs)
         m_FragCount = rhs.m_FragCount;
         m_createt = rhs.m_createt;
         mLPDAtime = rhs.mLPDAtime;
-        m_hybrid = rhs.m_hybrid;
     }
     return *this;
 }
@@ -1022,7 +1016,6 @@ void Particle::Serialize(std::ostream &out, void *duplicates) const
         out.write((char*)&m_FragCount, sizeof(m_FragCount));
         out.write(reinterpret_cast<const char*>(&m_createt), sizeof(m_createt));
         out.write(reinterpret_cast<const char*>(&mLPDAtime), sizeof(mLPDAtime));
-        out.write(reinterpret_cast<const char*>(&m_hybrid), sizeof(m_hybrid));
     }
     else {
         throw std::invalid_argument("Output stream not ready \

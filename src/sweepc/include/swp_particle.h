@@ -104,8 +104,7 @@ public:
     static Particle* createFromXMLNode(const CamXML::Element& xml,
                                        const Sweep::ParticleModel& model);
 
-    // aab64 
-    //! Create a new particle using the model according to the xml data
+    //! Create a new polydisperse particle using the model according to the xml data
     static Particle* createFromXMLNodeDetailed(const CamXML::Element& xml,
 		const Sweep::ParticleModel& model, rng_type &rng);
 
@@ -272,10 +271,6 @@ public:
     // Recalculate derived properties from the primary particle
     void UpdateCache();
 
-    // aab64 for hybrid particle-number/particle model
-    void SetHybrid(bool hybrid_flag) { m_hybrid = hybrid_flag; }
-    bool IsHybrid() const { return m_hybrid; }
-
     // READ/WRITE/COPY.
 
     //! Clone the particle.
@@ -317,9 +312,6 @@ private:
 
     //! Last time particle was updated.  Required for LPDA.
     double mLPDAtime;
-
-    // aab64 tracker for hybrid particle model
-    bool m_hybrid;
 
     // Can't create a particle without knowledge of the components
     // and the tracker variables.
