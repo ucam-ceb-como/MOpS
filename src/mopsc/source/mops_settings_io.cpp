@@ -297,7 +297,7 @@ Sweep::PartPtrList readEnsembleFile(
             particles.push_back(sp);
         }
 
-	// aab64 Read hybrid particle-number info 
+	// Read hybrid model particle-number info into list 
 	if (fileensemble.GetCritialNumber() > 0)
 	{
 	    particle_numbers_list.resize(fileensemble.GetCritialNumber(), 0);
@@ -353,8 +353,7 @@ void readInitialPopulation(
 	std::vector<unsigned int> particle_numbers;
 	particle_numbers.resize(0, 0);
         fileParticleList = readEnsembleFile(filename, mech.ParticleMech(), particle_numbers);
-		
-	// aab64 Initialise and store hybrid particle-number info for the cell
+	// Initialise and store hybrid particle-number info for the cell
 	if (particle_numbers.size() > 0)
 	{
 	    mix.Particles().SetCriticalSize(particle_numbers.size());
@@ -368,14 +367,9 @@ void readInitialPopulation(
 		mix.Particles().UpdateTotalParticleNumber(particle_numbers[i]);
 	    }
 	}
-	/*else
-	{
-	    mix.Particles().SetCriticalSize(0);
-	    mix.Particles().InitialiseParticleNumberModel();
-	}*/
     }
 
-    // aab64 Choose which file reader to use depending if particle distributions are required
+    // Choose which file reader to use depending if particle distributions are required
     vector<CamXML::Element*> subitems;
     subnode.GetChildren("particle", subitems); 
     string dflag;
@@ -632,15 +626,6 @@ Mops::PSR *const readPSR(
         str = attr->GetValue();
         if (str.compare("cdelete") == 0)
             reac->SetOutflowType(Sweep::Processes::DeathProcess::iContDelete);
-        else if (str.compare("wdelete") == 0) {
-            if (mech.ParticleMech().IsWeightedCoag())
-                reac->SetOutflowType(Sweep::Processes::DeathProcess::iWtdDelete);
-            else
-            {
-                std::cout << "dtype wdelete can only be used for weighted particles - switching to cdelete" << std::endl;
-                reac->SetOutflowType(Sweep::Processes::DeathProcess::iContDelete);
-            }
-        }
         else if (str.compare("cmove") == 0)
             reac->SetOutflowType(Sweep::Processes::DeathProcess::iContMove);
         else if (str.compare("rescale") == 0)
@@ -1194,6 +1179,7 @@ void readOutput(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
             // Also need to ensure full binary trees are written for certain
             // particle models.
             mech.ParticleMech().SetWriteBinaryTrees(true);
+
         } else if (str_enable.compare("false") == 0) {
             sim.SetParticleTrackCount(0);
         } else {
@@ -1488,9 +1474,10 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
 }
 
 
-// aab64 Version of the above reader that will construct (bintree) particles given 
+// Version of the above reader that will construct (bintree) particles given 
 // (mean,std) number of primaries per particle and (mean,std) number of component
 // units per particle (assuming lognormal distributions).
+// This has not been tested much. 
 /**
 * Read a list of initial particles specified in an XML file
 *
