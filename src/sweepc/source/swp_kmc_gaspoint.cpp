@@ -106,6 +106,7 @@ void KMCGasPoint::initData() {
     m_spnames.push_back("CH4");
     m_spnames.push_back("CO");
     m_spnames.push_back("CO2");
+	m_spnames.push_back("CH3");
 	m_spnames.push_back("C2H4");
 	m_spnames.push_back("C2H3");
 	m_spnames.push_back("C2H");

@@ -309,7 +309,8 @@ namespace Sweep {
 			temp.push_back(Methyl);
             return temp;
         }
-        //! Get a vector of all site types for phenyl addition
+        //! Get a vector of all site types for phenyl addition.
+		//Assumes only additions to R6 sites. Discourages additions to restricted sites.
         std::vector<kmcSiteType> inline vectPHsites() {
             std::vector<kmcSiteType> temp;
             temp.push_back(FE);
@@ -317,6 +318,7 @@ namespace Sweep {
             temp.push_back(AC);
             temp.push_back(RFE);
             temp.push_back(RZZ);
+			temp.push_back(R5R6ZZ);
             return temp;
         }
     };

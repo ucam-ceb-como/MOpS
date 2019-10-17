@@ -554,6 +554,24 @@ namespace KMC_ARS {
 		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 		void initialise();
 	};
+	
+	//! ID54.
+	class A_CH3 : public Sweep::KMC_ARS::JumpProcess {
+	public:
+		double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
+	
+	//! ID55.
+	class D_CH3 : public Sweep::KMC_ARS::JumpProcess {
+	public:
+		double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
 }
 
 }

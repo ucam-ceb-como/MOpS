@@ -128,10 +128,18 @@ unsigned int PAHProcess::getSiteCount(const kmcSiteType& st) const {
     if(st==benz) {
         unsigned int sum=0;
         for(int i=0; i!=(int)PHsites.size(); i++) {
-            sum += (unsigned int) m_pah->m_siteMap[PHsites[i]].size();
+			for(int j=0; j<(int)m_pah->m_siteMap[PHsites[i]].size(); j++) {
+				if (m_pah->m_siteMap[PHsites[i]][j]->C1->A == 'H' && m_pah->m_siteMap[PHsites[i]][j]->C2->A == 'H' ){
+					sum ++;
+				}
+			}
         }
         return sum;
     }
+	if(st==Methyl){
+		int num = numberOfMethyl();
+		return num;
+	}
     if(st==FE3) {
         if(getCHCount().first == 6) return 0;
         return (unsigned int) (m_pah->m_siteMap[st].size());
@@ -1031,7 +1039,7 @@ Spointer PAHProcess::chooseRandomSite(kmcSiteType st, rng_type &rng) {
     // to choose any principal site
     if(st == any) {
         // choose any site index from m_pah->m_siteList
-        // There does not seem to be any handling of the case that there are no sites.
+        // There does not seem to be any handling of the case that there are no sites. FULLERENES!!
 
         // Set up an object to generate an integer uniformly distributed on [0, size - 1]
         typedef boost::uniform_smallint<unsigned int> site_index_distrib;
@@ -1042,7 +1050,27 @@ Spointer PAHProcess::chooseRandomSite(kmcSiteType st, rng_type &rng) {
         return moveIt(m_pah->m_siteList.begin(), siteIndexGenerator());
     } else if(st == benz) { //to choose sites for phenyl addition
         return chooseRandomSite(PHsites, rng);
-    } else {
+	} else if(st == Methyl) {
+		std::vector<Spointer> svector;
+		for (Spointer site_it = m_pah->m_siteList.begin(); site_it != m_pah->m_siteList.end(); site_it++) {
+			if (site_it->C1->A == 'M'){
+				svector.push_back(site_it);
+			}
+		}
+		int new_sz = (int)svector.size()-1;
+		if (new_sz>0){
+			// Set up an object to generate an uniform integer on [0, sz] now that we
+			// know that sz > 0 (and can safely be cast to an unsigned type.
+			typedef boost::uniform_smallint<unsigned int> site_index_distrib;
+			site_index_distrib siteIndexDistrib(0, static_cast<unsigned int>(new_sz));
+			boost::variate_generator<rng_type &, site_index_distrib> siteIndexGenerator(rng, siteIndexDistrib);
+
+			const unsigned r = siteIndexGenerator();
+			//cout<<"~~Chose "<<r<<"th site..\n";
+			return svector[r];
+		}
+		return svector[0]; // if vector has only one element
+	} else {
         //cout << "~~Choosing from " << m_pah->m_siteMap[st].size() << " sites...\n";
         // choose site index from site vector associated with site type st
         int sz = getSiteCount(st) - 1;
@@ -1634,16 +1662,16 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 				h3->SetVector(std::get<0>(Hcoords),std::get<1>(Hcoords)+Radius*cos(210.0/180.0*M_PI),std::get<2>(Hcoords)+Radius*sin(210.0/180.0*M_PI));
 			}
 			else{
-				double aa = std::get<0>(C_change->coords);
-				double bb = std::get<1>(C_change->coords);
-				double cc = std::get<2>(C_change->coords);
+				double aa = std::get<0>(C_change->growth_vector);
+				double bb = std::get<1>(C_change->growth_vector);
+				double cc = std::get<2>(C_change->growth_vector);
 				//double rr = sqrt(bb*bb*Radius*Radius*(aa*aa+bb*bb));
 				//double h1x = (rr + (aa*aa + bb*bb)*std::get<0>(Hcoords) )/(aa*aa+bb*bb);
 				//double h1y = (-aa*rr + (aa*aa*bb + bb*bb*bb)*std::get<1>(Hcoords)) / (aa*aa*bb+bb*bb*bb);
 				//double h1z = std::get<2>(Hcoords);
 				cpair Angiras_vector = std::make_tuple(cc, 0.0, -1.0*aa);
 				Angiras_vector = scale_vector(Angiras_vector);
-				cpair Casper_vector = cross_vector(Angiras_vector, C_change->coords);
+				cpair Casper_vector = cross_vector(Angiras_vector, C_change->growth_vector);
 				
 				h1->SetVector(std::get<0>(Hcoords) + Radius*(std::get<0>(Angiras_vector)), std::get<1>(Hcoords) + Radius*(std::get<1>(Angiras_vector)), std::get<2>(Hcoords) + Radius*(std::get<2>(Angiras_vector)));
 				h2->SetVector(std::get<0>(Hcoords) + Radius*(-0.5*std::get<0>(Angiras_vector) + sqrt(3.0)/2.0*std::get<0>(Casper_vector)), std::get<1>(Hcoords) + Radius*(-0.5*std::get<1>(Angiras_vector) + sqrt(3.0)/2.0*std::get<1>(Casper_vector)), std::get<2>(Hcoords) + Radius*(-0.5*std::get<2>(Angiras_vector) + sqrt(3.0)/2.0*std::get<2>(Casper_vector)));
@@ -2628,6 +2656,7 @@ void PAHProcess::updateA(Cpointer C, char sp, cpair gro_vec) {
 	C->A = sp;
 	if (sp == 'C') C->growth_vector=std::make_tuple (0.0,0.0,0.0);
 	else C->growth_vector=gro_vec;
+	if (sp == 'M') addCount(1, 2);
 }
 
 //! Overload function, forces char to C atom and defines growth vector, modifies OBmol object.
@@ -4276,7 +4305,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     
     // choose random site of type stp to perform process
 	site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
-	if ( site_perf->type != stp && site_perf->comb != stp && stp != benz){
+	if ( site_perf->type != stp && site_perf->comb != stp && stp != benz && stp != Methyl){
 		
 		cout << "chooseRandomSite ERROR. Choose random site selected incorrect site. Error. Not performing jump process.\n";
 		cout << "Jump process performed: " << id << ". " << jp.getName() << "\n";
@@ -4428,6 +4457,10 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			proc_L6_ACR5R5R6(site_perf, site_C1, site_C2); break;
 		case 53:
 			proc_L7_ACR5R5R6ZZ(site_perf, site_C1, site_C2); break;
+		case 54:
+			proc_A_CH3(site_perf, site_C1, site_C2, rng); break;
+		case 55:
+			proc_D_CH3(site_perf, site_C1, site_C2); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -8648,6 +8681,92 @@ void PAHProcess::proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	}
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
+}
+
+// ************************************************************
+// ID54 - CH3 addition
+// ************************************************************
+void PAHProcess::proc_A_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	Cpointer chosen;
+    bool before; // true if C1 of site is chosen, false if C2
+	if(stt->C1->A != 'H' && stt->C2->A != 'H') return;
+	if(stt->C1->A == 'H' && stt->C2->A != 'H') {
+		before = true;
+		chosen = C_1;
+	}
+	else if (stt->C1->A != 'H' && stt->C2->A == 'H') {
+		before = false;
+		chosen = C_2;
+	}
+	else if ((int)stt->type>=100){
+		Spointer S1 = moveIt(stt, -1);
+		if ((int)S1->type>=100){
+			before = false;
+			chosen = C_2;
+		}
+		else {
+			before = true;
+			chosen = C_1;
+		}
+	}
+	else {
+		// choose one of the C atoms if site type is FE/AC/ZZ
+		// Define a distribution that has two equally probably outcomes
+		boost::bernoulli_distribution<> choiceDistrib;
+		// Now build an object that will generate a sample using rng
+		boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+		if(choiceGenerator()) {
+			chosen = C_1;
+			Spointer s_adjacent = moveIt(stt, -1);
+			if ( (int)s_adjacent->type %10 >=3 ) return;
+			before=true;
+		}
+		else {
+			chosen = C_2;
+			Spointer s_adjacent = moveIt(stt, +1);
+			if ( (int)s_adjacent->type %10 >=3 ) return;
+			before=false;
+		}
+    }
+    // check hindrance
+    if(checkHindrance_newC(chosen)) return;
+    // add C atoms
+	updateA(chosen, 'M', chosen->growth_vector);
+	// neighbouring site to be updated:
+    Spointer neighbour, neighbour2, prev;
+    if(before) {
+		prev = moveIt(stt,1);
+        neighbour = moveIt(stt,-1);
+		neighbour2 = moveIt(stt,-2);
+    }
+    else {
+		prev = moveIt(stt,-1);
+        neighbour = moveIt(stt,1);
+		neighbour2 = moveIt(stt,2);
+    }
+
+    // update combined sites for all new sites and neighbours (and their neighbours)
+    updateCombinedSites(stt); updateCombinedSites(prev); updateCombinedSites(neighbour); updateCombinedSites(neighbour2);
+}
+
+// ************************************************************
+// ID55 - CH3 desorption
+// ************************************************************
+void PAHProcess::proc_D_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	if(stt->C1->A != 'M') {
+		cout << "Error. No methyl group in site for CH3 desorption.\n";
+		return;
+	}
+	updateA(stt->C1, 'H', stt->C1->growth_vector);
+    Spointer neighbour, neighbour2, prev, prev2;
+	prev2 = moveIt(stt,-2);
+	prev = moveIt(stt,-1);
+	neighbour = moveIt(stt,1);
+	neighbour2 = moveIt(stt,2);
+	addCount(-1, -2);
+
+    // update combined sites for all new sites and neighbours (and their neighbours)
+    updateCombinedSites(stt); updateCombinedSites(prev); updateCombinedSites(prev2); updateCombinedSites(neighbour); updateCombinedSites(neighbour2);
 }
 
 size_t PAHProcess::SiteListSize() const {

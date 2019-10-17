@@ -238,6 +238,8 @@ public:
 	void proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                       //!< ID51
 	void proc_L6_ACR5R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                       //!< ID52
 	void proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID53
+	void proc_A_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);              //!< ID54
+	void proc_D_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2);                     		//!< ID55
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts

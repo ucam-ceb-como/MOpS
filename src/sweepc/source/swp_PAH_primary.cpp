@@ -2520,28 +2520,28 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 			}
 			
-			//if( abs(t - 0.0592) <= 1e-6){
-			if( abs(t - 0.01247) <= 1e-6){
+			if( abs(t - 0.0592) <= 1e-6){
+			//if( abs(t - 0.01247) <= 1e-6){
 				//cout << "Saving all PAHs to xyz files\n";
 				std::string xyz_filename = "KMC_DEBUG/Resultfiles/7mm/";
 				xyz_filename.append(std::to_string((*it)->PAH_ID));
 				sys.Particles().Simulator()->savePAH((*it)->PAH_ID, xyz_filename, true);
 			}
 			
-			//if( abs(t - 0.0664) <= 1e-6){
-			if( abs(t - 0.022304) <= 1e-6){
+			if( abs(t - 0.0664) <= 1e-6){
+			//if( abs(t - 0.022304) <= 1e-6){
 				//cout << "Saving all PAHs to xyz files\n";
 				std::string xyz_filename = "KMC_DEBUG/Resultfiles/15mm/";
 				xyz_filename.append(std::to_string((*it)->PAH_ID));
 				sys.Particles().Simulator()->savePAH((*it)->PAH_ID, xyz_filename, true);
 			}
-			
+			/*
 			if( abs(t - 0.05378) <= 1e-6){
 				//cout << "Saving all PAHs to xyz files\n";
 				std::string xyz_filename = "KMC_DEBUG/Resultfiles/40mm/";
 				xyz_filename.append(std::to_string((*it)->PAH_ID));
 				sys.Particles().Simulator()->savePAH((*it)->PAH_ID, xyz_filename, true);
-			}
+			}*/
 
 			/*!
              * The second condition ensures that the m_InvalidPAH is modified in the correct way
