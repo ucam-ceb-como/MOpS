@@ -239,23 +239,6 @@ void Process::PerformDT (
     assert(dt > 0.0);
 }
 
-// aab64 for hybrid particle model
-// Perform a coagulation with particles chosen according to the additive kernel
-// Not defined except for the constant inception case
-int Process::Perform_incepted(
-	double t,
-	Cell &sys,
-	const Geometry::LocalGeometry1d& local_geom,
-	unsigned int iterm,
-	rng_type &rng,
-	Sweep::Particle & sp_new
-	) const
-{
-	std::cout << "Only defined for constant inception" << std::endl;
-	return 1;
-}
-
-
 // FICTICIOUS EVENTS.
 
 /*!
@@ -457,7 +440,7 @@ double Process::chemRatePart(const EnvironmentInterface &gas) const
  *
  * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
  */
-void Process::adjustGas(Cell &sys, double wt, unsigned int n, double incFac) const
+void Process::adjustGas(Cell &sys, double wt, unsigned int n) const
 {
     if(!sys.FixedChem()) {
         // This method requires write access to the gas phase, which is not
@@ -476,7 +459,7 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n, double incFac) con
 
         // Now adjust the concentrations
         Sprog::StoichMap::const_iterator i;
-        double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume()); // aab64 added incFac to scale change if more units are present in incepted particle
+        double n_NAvol = wt * (double)n / (NA * sys.SampleVolume());
         for (i=m_reac.begin(); i!=m_reac.end(); ++i)
             newConcs[i->first] -= (double)(i->second) * n_NAvol;
         for (i=m_prod.begin(); i!=m_prod.end(); ++i)
@@ -487,8 +470,7 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n, double incFac) con
     }
 }
 
-// aab64 adjusts the gas-phase temperature using change in composition of the particle
-// Simplified version of the above without particle temperatures and heat transfer.
+// Adjusts the gas-phase temperature using change in composition of the particle
 /*
 * Same warning as in adjustGas above applies
 * @param[in, out]   sys      System in which the gas phase is changing
@@ -501,7 +483,7 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n, double incFac) con
 * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
 */
 void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bool adjustT, 
-	double dcomp, int processID, double incFac) const 
+	double dcomp, int processID) const 
 {
 	if (!sys.FixedChem())
 	{
@@ -560,8 +542,7 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bo
 		gas->GetConcs(newConcs);
 
 		// Concentration change in system due to new particle(s)
-		// Added incFac to scale change if more units are present in incepted particle
-		double n_NAvol = incFac * wt * (double)n / (NA * sys.SampleVolume());
+		double n_NAvol = wt * (double)n / (NA * sys.SampleVolume());
 
 		// Compute the change in concentrations and enthalpy
 		double deltaHr = 0.0;
