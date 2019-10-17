@@ -94,8 +94,6 @@ Solver::~Solver(void)
 int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
                 rng_type &rng)
 {
-
-
     int err = 0;
     double tsplit, dtg, jrate, tflow(t);
     fvector rates(mech.TermCount(), 0.0);
@@ -167,87 +165,6 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
 			// Set new incepting weight
 			sys.SetInceptingWeight(wnew);
 		}
-		
-		// aab64 06.10.2017 
-		// HCI - heavy cluster inception: 
-		// Incept larger primary particles with some probability
-		// To do: decide if this option is worth doing. 
-		// It will help with the ensemble capacity issue, 
-		// but may introduce large errors in the primary size distribution.
-		double dcol_ave;
-		bool sizeflag = false;
-		bool probflag = true; // will probably be a legacy variable that can be removed if 20.09.2017 stuff is replaced
-		bool heavyAllowed = mech.GetIsHeavy();
-		double dcol_lim = mech.GetHeavyValue();
-		double dcol_lim_min = mech.GetHeavyCutoffValue();
-
-		if (nnew > 1 && heavyAllowed)
-		{
-			// Get average particle collision diameter
-			dcol_ave = sys.Particles().GetSum(Sweep::iDW) / sys.Particles().GetSum(Sweep::iW);
-
-			// Select a particle at random, weighted by collision diameter sqrd
-			Sweep::PropID proprng = iD2;
-			int iprng = sys.Particles().Select(proprng, rng);
-			Particle *sprng = NULL;
-			if (iprng >= 0) {
-				sprng = sys.Particles().At(iprng);
-			}
-			else {
-				// Failed to choose a particle.
-				return -1;
-			}
-
-			// Select a particle at random, weighted by inverse collision diameter sqrd
-			proprng = iD_2;
-			int iprng2 = sys.Particles().Select(proprng, rng);
-			Particle *sprng2 = NULL;
-			if (iprng2 >= 0) {
-				sprng2 = sys.Particles().At(iprng2);
-			}
-			else {
-				// Failed to choose a particle.
-				return -1;
-			}
-
-			// Toggle size flag if selected particle has collision diameter > 
-			// switch collision diameter
-			sizeflag = (sprng->CollDiameter() > dcol_lim) && (sprng->CollDiameter() > dcol_lim_min);
-
-			// aab64 20.09.2017 
-			// Preliminary probabilistic implementation
-			// Toggle a probability flag with p=0.3
-			// To do: replace this with a probability based on some relevant property
-			// boost::uniform_01<rng_type&, double> uniformGenerator(rng); // with this here, it is probably not necessary to generate again below
-			// double urv = uniformGenerator();
-			// probflag = (urv < 0.3); 
-			// Toggle size flag if selected particle has collision diameter > 
-			// switch collision diameter
-			// sizeflag = (dcol_ave > dcol_lim);
-
-			// If HCI is active, AND
-			// ensemble has passed a minimum size criterion, AND
-			// probability flag is active, THEN
-			// adjust inception factor by sampling from lognormal distribution.
-			double newIncFactor = 1.0;
-			double meanIFdist = 0.0;
-			double stdIFdist = 1.0;
-			if (heavyAllowed && sizeflag && probflag)
-			{
-				newIncFactor = boost::random::lognormal_distribution<double>(meanIFdist, stdIFdist)(rng);
-				// Constrain newIncFactor to [1,100]. 
-				if (newIncFactor < 1.0)
-					newIncFactor = 1.0;
-				else if (newIncFactor > 100.0)
-					newIncFactor = 100.0;
-				// Set new value
-				sys.SetInceptionFactor((int)newIncFactor);
-			}
-			else
-			{
-				sys.SetInceptionFactor(newIncFactor);
-			}
-		}
 
         if (mech.AnyDeferred() && (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber()  > 0.0))  {
 
@@ -280,12 +197,13 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
         mech.LPDA(t, sys, rng);
-
-		if (mech.IsHybrid() && sys.Particles().GetTotalParticleNumber() > 0)
-		{
-			sys.Particles().RecalcPNPropertySums();
-			mech.UpdateSections(t, t - tin, sys, rng);
-		}
+        
+        // Perform deferred processes on particle-number particles
+	if (mech.IsHybrid() && sys.Particles().GetTotalParticleNumber() > 0)
+	{
+		sys.Particles().RecalcPNPropertySums();
+		mech.UpdateSections(t, t - tin, sys, rng);
+	}
     }
 
     return err;
@@ -363,24 +281,6 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
         boost::uniform_01<rng_type &> uniformGenerator(rng);
         const int i = chooseIndex(rates, uniformGenerator);
 
-		if (mech.GetIsSurfInc()) 
-		{
-			// aab64 Use coagulation rates to choose process term
-			// to be used for next PSI event
-			// (note this assumes only one coagulation process)
-			int coag_start = mech.Inceptions().size() + mech.Processes().size();
-			int coag_end = coag_start + mech.Coagulations()[0]->TermCount();
-			fvector coag_rates(mech.Coagulations()[0]->TermCount(), 0.0);
-			int j = 0;
-			for (int itr = coag_start; itr < coag_end; ++itr)
-			{
-				coag_rates[j] = rates[itr];
-				++j;
-			}
-			const int coag_event = chooseIndex(coag_rates, uniformGenerator);
-			mech.Coagulations()[0]->ChooseProps(sys, coag_event);
-		}
-
         mech.DoProcess(i, t+dt, sys, geom, rng);
         t += dt;
     } else {
@@ -417,35 +317,30 @@ int Solver::chooseProcess(const fvector &rates, double (*rand_u01)())
     return j;
 };
 
-
-// aab64 Initialise a list of PN particles using the given mechanism
+// Initialise a list of PN particles using the given mechanism
 void Solver::InitialisePNParticles(double t, Cell &sys, const Mechanism &mech)
 {
-	// aab64 Initialise register of particle-number particles
-	//if (mech.IsHybrid() && !sys.Particles().IsFirstSP())
-	//{
-		std::cout << "Initialising particle-number register with threshold Nthresh = "
-			<< sys.Particles().GetCritialNumber() << "\n";
+    std::cout << "Initialising particle-number register with threshold Nthresh = "
+              << sys.Particles().GetCritialNumber() << "\n";
 
-		// Flag that register of particle properties is set up
-		sys.Particles().SetInceptedSP();
-		sys.Particles().SetCriticalSize(mech.GetCriticalThreshold());
+    // Flag that register of particle properties is set up
+    sys.Particles().SetInceptedSP();
+    sys.Particles().SetCriticalSize(mech.GetCriticalThreshold());
 
-		// Initialise lookup of particles below critical size
-		for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
-		{
-			Particle * sp_pn = mech.CreateParticle(t);
-			std::vector<double> newComposition(1);
-			std::vector<double> noTrackers(1);
-			newComposition[0] = i;
-			noTrackers[0] = 0.0;
-			sp_pn->setPositionAndTime(0.0, t);
-			sp_pn->Primary()->SetComposition(newComposition);
-			sp_pn->Primary()->SetValues(noTrackers);
-			sp_pn->UpdateCache();
-			sys.Particles().SetPNParticle(*sp_pn, i);
-		}
-		sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(),
-		sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
-	//}
+    // Initialise lookup of particles below critical size
+    for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
+    {
+        Particle * sp_pn = mech.CreateParticle(t);
+	std::vector<double> newComposition(1);
+	std::vector<double> noTrackers(1);
+	newComposition[0] = i;
+	noTrackers[0] = 0.0;
+	sp_pn->setPositionAndTime(0.0, t);
+	sp_pn->Primary()->SetComposition(newComposition);
+	sp_pn->Primary()->SetValues(noTrackers);
+	sp_pn->UpdateCache();
+	sys.Particles().SetPNParticle(*sp_pn, i);
+    }
+    sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(),
+    sys.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
 }
