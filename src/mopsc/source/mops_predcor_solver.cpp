@@ -200,10 +200,10 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
                           Sweep::rng_type &rng, OutFnPtr out, void *data)
 {
     int step=0, iter=0;
-	
+
     // Calculate step size.
-	double dt = (tstop - r.Time()) / (double)nsteps;
-	
+    double dt = (tstop - r.Time()) / (double)nsteps;
+
     // Internal splits without file output.
     for (step=0; step<nsteps-1; ++step) {
         // Start the iteration procedure.
@@ -255,7 +255,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
 	// Diagnostic variables
 	double tmpSVin, tmpSVout, tmpWtVarin, tmpWtVarout, tmpDcin, tmpDcout;
-	double tmpIncWeightin, tmpIncWeightout, tmpIncFactorin, tmpIncFactorout;
+	double tmpIncWeightin, tmpIncWeightout;
 	double tmpTin, tmpTout;
 	unsigned int tmpSPin, tmpSPout, tmpAddin, tmpAddout, tmpInfin, tmpInfout, tmpOutfin, tmpOutfout;
 	int process_iter;
@@ -279,7 +279,6 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 				tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
 			else
 				tmpDcin = 0.0;
-			tmpIncFactorin = r.Mixture()->GetInceptionFactor();
 			tmpIncWeightin = r.Mixture()->GetInceptingWeight();
 			r.Mixture()->GasPhase().GetConcs(tmpGPin);
 			tmpTin = r.Mixture()->GasPhase().Temperature();
@@ -311,7 +310,6 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 				tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
 			else
 				tmpDcout = 0.0;
-			tmpIncFactorout = r.Mixture()->GetInceptionFactor();
 			tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 			r.Mixture()->GasPhase().GetConcs(tmpGPout);
 			tmpTout = r.Mixture()->GasPhase().Temperature();
@@ -327,8 +325,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 				<< tmpSPin << " , " << tmpSPout << " , "
 				<< tmpWtVarin << " , " << tmpWtVarout << " , "
 				<< tmpDcin << " , " << tmpDcout << " , "
-				<< tmpIncWeightin << " , " << tmpIncWeightout << " , "
-				<< tmpIncFactorin << " , " << tmpIncFactorout << " , ";
+				<< tmpIncWeightin << " , " << tmpIncWeightout << " , ";
 			for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 				process_iter++) {
 				partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
@@ -376,7 +373,6 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpDcin = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
 		else
 			tmpDcin = 0.0;
-		tmpIncFactorin = r.Mixture()->GetInceptionFactor();
 		tmpIncWeightin = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPin);
 		tmpTin = r.Mixture()->GasPhase().Temperature();
@@ -405,7 +401,6 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			tmpDcout = r.Mixture()->Particles().GetSum(Sweep::iDW) / r.Mixture()->Particles().GetSum(Sweep::iW);
 		else
 			tmpDcout = 0.0;
-		tmpIncFactorout = r.Mixture()->GetInceptionFactor();
 		tmpIncWeightout = r.Mixture()->GetInceptingWeight();
 		r.Mixture()->GasPhase().GetConcs(tmpGPout);
 		tmpTout = r.Mixture()->GasPhase().Temperature();
@@ -421,8 +416,7 @@ void PredCorSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 			<< tmpSPin << " , " << tmpSPout << " , "
 			<< tmpWtVarin << " , " << tmpWtVarout << " , "
 			<< tmpDcin << " , " << tmpDcout << " , "
-			<< tmpIncWeightin << " , " << tmpIncWeightout << " , "
-			<< tmpIncFactorin << " , " << tmpIncFactorout << " , ";
+			<< tmpIncWeightin << " , " << tmpIncWeightout << " , ";
 		for (process_iter = 0; process_iter < r.Mech()->ParticleMech().Inceptions().size();
 			process_iter++) {
 			partProcFile << tmpPCout[process_iter] - tmpPCin[process_iter] << " , ";
@@ -669,7 +663,7 @@ void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
     }
 #endif
 
-	// Reset reactor and solver for another iteration.
+    // Reset reactor and solver for another iteration.
     r = *m_reac_copy;
 	
     // aab64: check what happens to flow pointers during assignment
@@ -794,7 +788,6 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
     } else {
 		src.Terms[r.Mech()->GasMech().SpeciesCount()] += energySrcTerm(r, csrc); //csrc src.Terms
     }
-
 
     // Calculate density change based on whether reactor is constant
     // volume or constant pressure.
