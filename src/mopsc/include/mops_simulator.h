@@ -205,7 +205,6 @@ public:
     //! set the option whehter including the xmer in the large soot aggregate
     void SetMassSpectraFrag(const bool val);
 
-
     // STATISTICAL BOUNDS OUTPUT
 
     // Set simulator to output data of a given statistical range.
@@ -418,7 +417,7 @@ private:
 
     // aab64 Writes the particle temperature of the given 
     // reactor to the binary output file. 
-    void outputParticleTemperature(const Reactor &r) const;
+    void outputParticleNumber(const Reactor &r) const;
 
     // Writes the particle stats to the binary output file.
     void outputParticleStats(const Reactor &r) const;
@@ -487,7 +486,7 @@ private:
     // To allow the averages and confidence intervals to be calculated -
     // the data point is added to a vector of sums, and the squares are
     // added to the vector sumsqr if necessary.
-    static void readParticleTemperatureDataPoint(
+    static void readParticleNumberListDataPoint(
 	std::istream &in,            // Input stream.
 	const Mops::Mechanism &mech, // Chemical mechanism.
 	fvector &sum,                // Sums of chemistry data.
@@ -608,7 +607,7 @@ private:
         );
 
     // aab64 Writes particle temperature profile to a CSV file.
-    static void writeParticleTemperatureCSV(
+    static void writeParticleNumberListCSV(
 	const std::string &filename,     // Output file name (incl. extension).
 	const Mechanism &mech,           // Mechanism defining chemical species.
 	const timevector &times,         // Output time profile.

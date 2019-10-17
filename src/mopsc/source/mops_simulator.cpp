@@ -710,8 +710,8 @@ void Simulator::postProcessSimulation(
     // Runs -> time steps -> particles -> coordinate.
     vector<vector<vector<fvector> > > ptrack(m_nruns);
 
-    // aab64 Declare particle temperature outputs (averages and errors).
-    vector<vector<double> > aTp(npoints), eTp(npoints);
+    // aab64 Declare particle-number count outputs (averages and errors).
+    vector<vector<double> > aPN(npoints), ePN(npoints);
 
     // OPEN SIMULATION OUTPUT FILES.
 
@@ -756,8 +756,7 @@ void Simulator::postProcessSimulation(
     for(unsigned int irun=1; irun!=m_nruns; ++irun) {
         ptrack[irun][0].assign(ptrack[0][0].begin(), ptrack[0][0].end());
     }
-
-    readParticleTemperatureDataPoint(fin, mech, aTp[0], eTp[0], true); // aab64
+    readParticleNumberListDataPoint(fin, mech, aPN[0], ePN[0], true);
 
     // The initial conditions need to be multiplied by the number
     // of runs and iterations in order for the calcAvgConf to give
@@ -785,7 +784,7 @@ void Simulator::postProcessSimulation(
         multVals(eppjumps[0], m_nruns*m_niter);
         multVals(eppwdot[0], m_nruns*m_niter);
         multVals(ecpu[0], m_nruns*m_niter);
-        multVals(eTp[0], m_nruns*m_niter); // aab64
+        multVals(ePN[0], m_nruns*m_niter);
     } else {
         multVals(achem[0], m_nruns);
         multVals(astat[0], m_nruns);
@@ -798,7 +797,7 @@ void Simulator::postProcessSimulation(
         multVals(appjumps[0], m_nruns);
         multVals(appwdot[0], m_nruns);
         multVals(acpu[0], m_nruns);
-	multVals(aTp[0], m_nruns); // aab64
+	multVals(aPN[0], m_nruns);
         multVals(echem[0], m_nruns); 
         multVals(estat[0], m_nruns);
         multVals(egprates[0], m_nruns);
@@ -810,7 +809,7 @@ void Simulator::postProcessSimulation(
         multVals(eppjumps[0], m_nruns);
         multVals(eppwdot[0], m_nruns);
         multVals(ecpu[0], m_nruns);
-        multVals(eTp[0], m_nruns); // aab64
+        multVals(ePN[0], m_nruns);
     }
 
     // READ ALL OUTPUT POINTS.
@@ -842,7 +841,7 @@ void Simulator::postProcessSimulation(
                         readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                         readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                         readPartTrackPoint(fin, pmech, ptrack[irun][step]);
-                        readParticleTemperatureDataPoint(fin, mech, aTp[step], eTp[step], true); // aab64
+                        readParticleNumberListDataPoint(fin, mech, aPN[step], ePN[step], true);
                     }
                 }
                 else  {
@@ -860,7 +859,7 @@ void Simulator::postProcessSimulation(
                     readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                     readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                     readPartTrackPoint(fin, pmech, ptrack[irun][step]);
-                    readParticleTemperatureDataPoint(fin, mech, aTp[step], eTp[step], true); // aab64
+                    readParticleNumberListDataPoint(fin, mech, aPN[step], ePN[step], true);
                 }
             }
         }
@@ -883,7 +882,7 @@ void Simulator::postProcessSimulation(
         calcAvgConf(appjumps, eppjumps, m_nruns*m_niter);
         calcAvgConf(appwdot, eppwdot, m_nruns*m_niter);
         calcAvgConf(acpu, ecpu, m_nruns*m_niter);
-        calcAvgConf(aTp, eTp, m_nruns*m_niter); // aab64
+        calcAvgConf(aPN, ePN, m_nruns*m_niter);
     } else {
         calcAvgConf(achem, echem, m_nruns);
         calcAvgConf(astat, estat, m_nruns);
@@ -896,7 +895,7 @@ void Simulator::postProcessSimulation(
         calcAvgConf(appjumps, eppjumps, m_nruns);
         calcAvgConf(appwdot, eppwdot, m_nruns);
         calcAvgConf(acpu, ecpu, m_nruns);
-        calcAvgConf(aTp, eTp, m_nruns); // aab64
+        calcAvgConf(aPN, ePN, m_nruns);
     }
 
     // POST-PROCESS ELEMENT FLUX
@@ -922,7 +921,7 @@ void Simulator::postProcessSimulation(
         writePartTrackCSV(m_output_filename+"("+cstr(irun)+")-track", mech,
                           times, ptrack[irun]);
     }
-    writeParticleTemperatureCSV(m_output_filename + "-total-particle-number.csv", mech, times, aTp, eTp); // aab64
+    writeParticleNumberListCSV(m_output_filename + "-total-particle-number.csv", mech, times, aPN, ePN);
 
     // Only write jump file if the flag has been set.
     if (m_write_jumps) {
@@ -1026,13 +1025,12 @@ void Simulator::outputGasPhase(const Reactor &r) const
     m_file.write((char*)&P, sizeof(P));
 }
 
-// aab64 Writes the particle temperature of the given reactor to
-// the binary output file. (No need modification, modification when read) 
-void Simulator::outputParticleTemperature(const Reactor &r) const
+// aab64 Writes the particle-number count (number of particles in list using the hybrid model) 
+// of the given reactor to the binary output file. (No need modification, modification when read) 
+void Simulator::outputParticleNumber(const Reactor &r) const
 {
-    //double Tp = r.Mixture()->GetBulkParticleTemperature();
-    double Tp = r.Mixture()->Particles().GetTotalParticleNumber();
-    m_file.write((char*)&Tp, sizeof(Tp));
+    double PN = r.Mixture()->Particles().GetTotalParticleNumber();
+    m_file.write((char*)&PN, sizeof(PN));
 }
 
 // Writes the particle stats to the binary output file.
@@ -1160,8 +1158,8 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             // Write sensitivityto file.
             s.OutputSensitivity(me->m_senfile, r, me);
 
-            // aab64 Write the particle conditions to the output file.
-            me->outputParticleTemperature(r);
+            // aab64 Write the particle-number count to the output file.
+            me->outputParticleNumber(r);
         }
     }
 }
@@ -1445,18 +1443,18 @@ void Simulator::readGasPhaseDataPoint(std::istream &in, const Mops::Mechanism &m
     }
 }
 
-// aab64 Reads a particle temperature data point from the binary file.
+// Reads a particle-number list data point from the binary file.
 // To allow the averages and confidence intervals to be calculated
 // the data point is added to a vector of sums, and the squares are
 // added to the vector sumsqr if necessary.
-void Simulator::readParticleTemperatureDataPoint(std::istream &in, const Mops::Mechanism &mech,
+void Simulator::readParticleNumberListDataPoint(std::istream &in, const Mops::Mechanism &mech,
 	fvector &sum, fvector &sumsqr, bool calcsqrs)
 {
 	// Check for valid stream.
 	if (in.good()) {
-		double Tp = 0.0;
+		double PN = 0.0;
 
-		in.read(reinterpret_cast<char*>(&Tp), sizeof(Tp));
+		in.read(reinterpret_cast<char*>(&PN), sizeof(PN));
 
 		// Resize vectors.
 		sum.resize(1, 0.0);
@@ -1465,10 +1463,10 @@ void Simulator::readParticleTemperatureDataPoint(std::istream &in, const Mops::M
 		// Calculate sums and sums of square (for average and
 		// error calculation).
 
-		// Calculates sums and sums of squares of temperature
-		sum[0] += Tp;
+		// Calculates sums and sums of squares of count
+		sum[0] += PN;
 		if (calcsqrs) {
-			sumsqr[0] += (Tp*Tp);
+			sumsqr[0] += (PN*PN);
 		}
 	}
 }
@@ -1826,8 +1824,8 @@ void Simulator::writeGasPhaseCSV(const std::string &filename,
     csv.Close();
 }
 
-// aab64 Writes particle-number total to a CSV file.
-void Simulator::writeParticleTemperatureCSV(const std::string &filename,
+// Writes particle-number total to a CSV file.
+void Simulator::writeParticleNumberListCSV(const std::string &filename,
 	const Mechanism &mech,
 	const timevector &times,
 	std::vector<fvector> &avg,
@@ -2438,15 +2436,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 			if (r != NULL) {
 				double scale = (double)m_nruns;
 				if (m_output_every_iter) scale *= (double)m_niter;
-				// aab64 for hybrid particle model
-				/*if (r->Mixture()->Particles().IsFirstSP())
-				{
-					stats.PSL((r->Mixture()->Particles().GetInceptedSP()), mech.ParticleMech(),
-						times[i].EndTime(), psl,
-						1.0 / (r->Mixture()->SampleVolume()*scale));
-					// Output particle PSL to CSV file.
-					out[i]->Write(psl);
-				}*/
+				// Note for hybrid model: particles in list not added here.
 
 				// Get PSL for all particles.
 				for (unsigned int j = 0; j != r->Mixture()->ParticleCount(); ++j) {
@@ -2483,7 +2473,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 				}
 				/////////////////////////////////////////
 				
-				// aab64 for particle number model
+				// Output for particle-number list of hybrid model
 				if (r->Mixture()->Particles().GetCritialNumber() > 0)
 				{
 					vector<string> pn_particles(5);
@@ -2510,8 +2500,6 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 					}
 					pn_particles_out.Close();
 				}
-
-
 
 				delete r;
 			}
