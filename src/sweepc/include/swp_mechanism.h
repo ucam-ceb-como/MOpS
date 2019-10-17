@@ -153,61 +153,35 @@ public:
 
     // COAGULATION PROCESS WEIGHTED.
 
-    // aab64 Returns TRUE if coagulation process uses weighted transfer function.
+    // Returns TRUE if coagulation process uses weighted transfer function.
     bool IsWeightedCoag(void) const;
 
-    // aab64 Sets the coagulation process to be SWA or not. 
-    // Note that this is only for original activation, it is not meant to change the state
+    // Sets TRUE if coagulation process is weighted 
+    // Note that this is only for original activation, 
+    // it is not meant to change the state
     // during simulation and does not provide a means of doing so. 
     virtual void SetWeightedCoag(bool weightedCoag);
 
-    // aab64 Returns TRUE if inception process uses variable weights.
+    // Returns TRUE if inception process uses variable weights.
     bool IsVariableWeightedInception(void) const;
 
-    // aab64 Returns variable inception max weight.
+    // Returns variable inception max weight.
     double GetMaxInceptionWeight(void) const;
 
-    // aab64 Returns variable inception min weight.
+    // Returns variable inception min weight.
     double GetMinInceptionWeight(void) const;
 
-    // aab64 Returns minimum particles threshold to start
+    // Returns minimum particles threshold to start
     // adjusting incepting weight
     double GetMinSPForAIWOnset(void) const;
 
-    // aab64 Returns the type of inception weight scaling function
+    // Returns the type of inception weight scaling function
     void GetWeightScalingFn(std::string &weightfn) const;
 
-    // aab64 Sets flag for the inception process to use variable weighting.
+    // Sets flag for the inception process to use variable weighting.
     // Weights fluctuate between wmax and wmin depending on number of 
     // particles in ensemble relative to ensemble capacity.
     virtual void SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, std::string &weightfn);
-
-    // aab64 Set flag for heavy inceptions
-    virtual void SetIsHeavy(bool heavyflag, double upperdlimval, double lowerdlimval);
-
-    // aab64 Get flag for heavy inceptions
-    bool GetIsHeavy(void) const;
-
-    // aab64 Get onset value for heavy inceptions
-    double GetHeavyValue(void) const;
-
-    // aab64 Get cutoff value for heavy inceptions
-    double GetHeavyCutoffValue(void) const;
-
-    // aab64 Set flag and onset value for surface inceptions
-    virtual void SetIsSurfInc(bool surfincflag, double upperdlimval, double lowerdlimval, std::string &psitype);
-
-    // aab64 Get flag for surface inceptions
-    bool GetIsSurfInc(void) const;
-
-    // aab64 Get onset value for surface inceptions
-    double GetSurfIncValue(void) const;
-
-    // aab64 Get cutoff value for surface inceptions
-    double GetSurfIncCutoffValue(void) const;
-
-    // aab64 Get psi type
-    void GetPSItype(std::string &psitype) const;
 
     // aab64 Returns threshold to adjust ensemble weights
     double GetWeightOnsetRatio(void) const;
@@ -282,7 +256,7 @@ public:
         fvector &rates   // Return vector for rates-of-change.
         ) const;
 
-    //aab64 Add version to return concentration and fraction rates
+    // Add version of the above to return concentration and fraction rates
     // Calculates the rates-of-change of the chemical species fractions, 
     // gas-phase temperature and density due to particle processes.
     void CalcGasChangeRates(
@@ -333,7 +307,7 @@ public:
         rng_type &rng
         ) const;
 
-    //! aab64 For particle-number model: updates particles at each index
+    //! For particle-number model: updates particles at each index
     //! for surface growth over dt 
 	void UpdateSections(
 		double t,   // Time up to which to integrate.
@@ -342,7 +316,7 @@ public:
 		rng_type &rng
 		) const;
 
-    //! aab64 Set properties of particle picked for coagulation/outflow using 
+    //! Set properties of particle picked for coagulation/outflow using 
     //! distribution parameters
 	unsigned int SetRandomParticle(
 		Sweep::Ensemble &ens,
@@ -413,15 +387,23 @@ public:
     // Get the outflow count
     unsigned int GetOutflowCount() const { return m_outflowcount; }
     
-    // aab64 particle number hybrid parameters
-    void SetHybrid(bool hybrid_flag) const { m_hybrid = hybrid_flag; }
-    bool IsHybrid() const { return m_hybrid; }
-    void SetCriticalThreshold(unsigned int threshold) const { m_threshold = threshold; } 
-	bool CoagulateInList() const { return m_coagulate_in_list; }
-	void SetCoagulateInList(bool flag) const { m_coagulate_in_list = flag; }
-    unsigned int GetCriticalThreshold() const { return m_threshold; }
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 	
+        // Particle-number/particle hybrid model parameters
+        // ================================================
+
+        // Set/get flags for hybrid model behaviour
+        void SetHybrid(bool hybrid_flag) const { m_hybrid = hybrid_flag; }
+        bool IsHybrid() const { return m_hybrid; }
+	bool CoagulateInList() const { return m_coagulate_in_list; }
+	void SetCoagulateInList(bool flag) const { m_coagulate_in_list = flag; }
+
+        // Set/get hybrid threshold
+        void SetCriticalThreshold(unsigned int threshold) const { m_threshold = threshold; } 
+        unsigned int GetCriticalThreshold() const { return m_threshold; }
+        
+        // ================================================
+
 	//! return a vector contain the information of particular primary particle with X molecules
 	void Mass_pah(Ensemble &m_ensemble) const;
 
@@ -467,22 +449,20 @@ private:
     mutable double m_max_incept_weight;     // Maximum incepting weight, corresponding to Nmax SPs
     mutable std::string m_incept_weight_fn; // The type of inception weight scaling to use
 
-    mutable bool m_heavyallowed;            // Flag to allow heavier inception particles
-    mutable double m_upp_dval_heavy;        // Onset for heavier inceptions
-    mutable double m_low_dval_heavy;        // Cutoff for heavier inceptions
-    mutable bool m_surfincflag;             // Flag to allow surface inceptions
-    mutable double m_upp_dval_surfinc;      // Onset for surface inception
-    mutable double m_low_dval_surfinc;      // Cutoff for surface inception
-    mutable std::string m_psi_type;         // Type of particle surface inception to do
-
     mutable bool m_weightscaling_flag;      // Flag for adaptive ensemble weights
     mutable double m_weightscaling_onset;   // Onset ratio for adaptive ensemble weights
     mutable double m_weightscaling_factor;  // Factor multiplying N/sum(w) in weight scaling
 
-    mutable bool m_hybrid;                  // identify hybrid particle model
-    mutable unsigned int m_threshold;       // hybrid threshold value
-	mutable bool m_coagulate_in_list;       // Do coagulation below threshold size in the particle-number list
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+    // Particle-number/particle hybrid model parameters
+    // ================================================ 
+    
+    mutable bool m_hybrid;                  // identify hybrid particle model
+    mutable bool m_coagulate_in_list;       // Do coagulation below threshold size in the particle
+    mutable unsigned int m_threshold;       // hybrid threshold value-number list
+
+    // ================================================
 
     // Clears the mechanism from memory.
     void releaseMem(void);

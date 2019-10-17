@@ -80,9 +80,6 @@ Mechanism::Mechanism(void)
 : m_anydeferred(false), m_icoag(-1), m_termcount(0), m_processcount(0), 
 m_weighted_coag(false), m_var_incept_weight(false), 
 m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L"), 
-m_heavyallowed(false), m_upp_dval_heavy(1.0e-7), m_low_dval_heavy(1.0e-9),
-m_surfincflag(false), m_upp_dval_surfinc(1.0e-7),
-m_low_dval_surfinc(1.0e-9), m_psi_type("E"),
 m_weightscaling_flag(false), m_weightscaling_onset(10.0), m_weightscaling_factor(1.0),
 m_hybrid(false), m_coagulate_in_list(false)
 {
@@ -126,29 +123,21 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
 	m_inflowcount = rhs.m_inflowcount;
 	m_outflowcount = rhs.m_outflowcount;
 
-    m_weighted_coag = rhs.m_weighted_coag;
+        m_weighted_coag = rhs.m_weighted_coag;
 	m_var_incept_weight = rhs.m_var_incept_weight;
 	m_max_incept_weight = rhs.m_max_incept_weight;
 	m_min_incept_weight = rhs.m_min_incept_weight;
 	m_minsp_for_aiw = rhs.m_minsp_for_aiw;
 	m_incept_weight_fn = rhs.m_incept_weight_fn;
 
-	m_heavyallowed = rhs.m_heavyallowed;
-	m_upp_dval_heavy = rhs.m_upp_dval_heavy;
-	m_low_dval_heavy = rhs.m_low_dval_heavy;
-	m_surfincflag = rhs.m_surfincflag;
-	m_upp_dval_surfinc = rhs.m_upp_dval_surfinc;
-	m_low_dval_surfinc = rhs.m_low_dval_surfinc;
-	m_psi_type = rhs.m_psi_type;
-
 	m_weightscaling_flag = rhs.m_weightscaling_flag;
 	m_weightscaling_onset = rhs.m_weightscaling_onset;
 	m_weightscaling_factor = rhs.m_weightscaling_factor;
-
-	m_hybrid = rhs.m_hybrid;
-    m_coagulate_in_list = rhs.m_coagulate_in_list;
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
+        // Particle-number/particle model flags
+	m_hybrid = rhs.m_hybrid;
+        m_coagulate_in_list = rhs.m_coagulate_in_list;
 
 
         // Copy inceptions.
@@ -463,67 +452,6 @@ void Mechanism::SetVariableWeightedInception(bool isVarInceptWeight, double wmax
 	m_incept_weight_fn = weightfn;
 }
 
-// aab64 Set flag for heavy inceptions
-void Mechanism::SetIsHeavy(bool heavyflag, double upperdlimval, double lowerdlimval)
-{
-	m_heavyallowed = heavyflag;
-	m_upp_dval_heavy = upperdlimval;
-	m_low_dval_heavy = lowerdlimval;
-}
-
-// aab64 Get flag for heavy inceptions
-bool Mechanism::GetIsHeavy(void) const
-{
-	return m_heavyallowed;
-}
-
-// aab64 Get onset value for heavy inceptions
-double Mechanism::GetHeavyValue(void) const
-{
-	return m_upp_dval_heavy;
-}
-
-// aab64 Get cutoff value for heavy inceptions
-double Mechanism::GetHeavyCutoffValue(void) const
-{
-	return m_low_dval_heavy;
-}
-
-// aab64 Set flag and onset value for surface inceptions
-void Mechanism::SetIsSurfInc(bool surfincflag, double upperdlimval, double lowerdlimval, std::string &psitype)
-{
-	m_surfincflag = surfincflag;
-	m_upp_dval_surfinc = upperdlimval;
-	m_low_dval_surfinc = lowerdlimval;
-	m_psi_type = psitype;
-}
-
-// aab64 Get flag for surface inceptions
-bool Mechanism::GetIsSurfInc(void) const
-{
-	return m_surfincflag;
-}
-
-// aab64 Get onset value for surface inceptions
-double Mechanism::GetSurfIncValue(void) const
-{
-	return m_upp_dval_surfinc;
-}
-
-// aab64 Get cutoff value for surface inceptions
-double Mechanism::GetSurfIncCutoffValue(void) const
-{
-	return m_low_dval_surfinc;
-}
-
-// aab64 Get psi type
-void Mechanism::GetPSItype(std::string &psitype) const
-{
-	if (m_weighted_coag)
-		psitype = m_psi_type;
-	else
-		psitype = "E";
-}
 
 // aab64 Returns threshold to adjust ensemble weights
 double Mechanism::GetWeightOnsetRatio(void) const
@@ -940,7 +868,7 @@ void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
     }
 }
 
-//aab64 Add version to return concentration and fraction rates
+// Version to return concentration and fraction rates
 /*!
 * Calculates the rates-of-change of the chemical species fractions,
 * gas-phase temperature and density due to particle processes.
@@ -1033,7 +961,7 @@ void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
 		// Quotient rule for dXk/dt = d(Ck/CT)/dt
 		xrates[k] = (invrho * crates[k]) - (invrho * invrho * sys.GasPhase().SpeciesConcentration(k) * idrho);
 	}
-	xrates[28] = 0.0;
+	xrates[28] = 0.0; // Specific to titania!
 }
 
 
@@ -1519,7 +1447,7 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	double rate_constant = 0.0, rate_index = 0.0;
 	unsigned int n_index = 0, index = 0, n_add = 0, num = 0, added_total = 0;
 	unsigned int critical_size = sys.Particles().GetCritialNumber();
-	sys.SetNotPSIFlag(false);
+	// sys.SetNotPSIFlag(false);
 	Particle * sp_add = NULL;
 	Particle * sp_critical_size = sys.Particles().GetPNParticleAt(critical_size - 1)->Clone();
 	sp_critical_size->SetTime(t);
@@ -1570,7 +1498,7 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 						{
 							if ((*i)->IsDeferred())
 							{
-								(*i)->Perform(t, sys, *sp_add, rng, n_add);
+								(*i)->Perform(t, sys, *sp_add, rng, n_add, true);
 								sp_add->UpdateCache();
 							}
 						}
@@ -1594,7 +1522,7 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 			}
 		}
 	}
-	sys.SetNotPSIFlag(true);
+	// sys.SetNotPSIFlag(true);
 
 	//for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 	//{
@@ -1768,13 +1696,11 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
                     if(rate > 0) {
                          boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate);
                          unsigned num = repeatDistrib(rng);
-			 //if (!sys.GetNotPSIFlag())
-			 //	 num = ceil(rate);
                          if (num > 0) {
                              // Do the process to the particle.
                              (*i)->Perform(t, sys, sp, rng, num);
                              // Increment the deferred jump counter
-                             m_addcount += num; // aab64
+                             m_addcount += num;
                          }
                     }
                 }
@@ -2027,19 +1953,13 @@ void Mechanism::releaseMem(void)
 	m_max_incept_weight = 0;
 	m_incept_weight_fn.clear(); 
 
-	m_heavyallowed = false;
-	m_upp_dval_heavy = 0;
-	m_low_dval_heavy = 0;
-	m_surfincflag = false; 
-	m_upp_dval_surfinc = 0; // 2017.09.20 to do: look at this
-	m_low_dval_surfinc = 0;
-	m_psi_type.clear();
-
 	m_weightscaling_flag = false;
 	m_weightscaling_onset = 0;
+//////////////////////////////////////////// aab64 ////////////////////////////////////////////
+
+        // Hybrid model parameters
 	m_hybrid = false;
 	m_coagulate_in_list = false;
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 }
 
 

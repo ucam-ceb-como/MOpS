@@ -145,7 +145,7 @@ double SurfaceReaction::Rate(double t, const Cell &sys,
 
     // Particle dependence.
     // Note that this assumes that the property m_pid is surface area - for the particle-number model
-    rate *= (sys.Particles().GetSum(m_pid) + (PI * sys.Particles().GetTotalDiameter2())); //iWS
+    rate *= (sys.Particles().GetSum(m_pid) + (PI * sys.Particles().GetTotalDiameter2()));
 
     if (m_mech->AnyDeferred()) {
 
@@ -187,7 +187,7 @@ double SurfaceReaction::Rate(double t, const Cell &sys, const Particle &sp) cons
     return rate;
 }
 
-// aab64 Return rate constant and chemistry part for hybrid method
+// Return rate constant and chemistry part for hybrid method
 double SurfaceReaction::Rate(double t, const Cell &sys) const
 {
 	// Rate constant.
@@ -272,12 +272,12 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
                     sys.Particles().Update(i);
 
                     // Apply changes to gas-phase chemistry.
-					if (times > 0) {
-						if (!sys.GetIsAdiabaticFlag())
-							adjustGas(sys, sp->getStatisticalWeight());
-						else
-							adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
-					}
+		    if (times > 0) {
+                        if (!sys.GetIsAdiabaticFlag())
+                            adjustGas(sys, sp->getStatisticalWeight());
+                        else
+                            adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2);
+                    }
                 }
             } else {
                 // If not valid then remove the particle.
@@ -298,11 +298,11 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
             }
 
             // Apply changes to gas-phase chemistry.
-			if (times > 0) {
-				if (!sys.GetIsAdiabaticFlag())
-					adjustGas(sys, sp->getStatisticalWeight());
-				else
-					adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
+            if (times > 0) {
+                if (!sys.GetIsAdiabaticFlag())
+                    adjustGas(sys, sp->getStatisticalWeight());
+                else
+                    adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2);
             }
         }
     } else {
@@ -321,25 +321,39 @@ int SurfaceReaction::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
     unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
 
     // Do normal update
-    if (m > 0 && sys.GetNotPSIFlag())
-	{
-		if (!sys.GetIsAdiabaticFlag())
-			adjustGas(sys, sp.getStatisticalWeight(), m);
-		else
-			adjustParticleTemperature(sys, sp.getStatisticalWeight(), m, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); // aab64
+    if (m > 0)
+    {
+        if (!sys.GetIsAdiabaticFlag())
+            adjustGas(sys, sp.getStatisticalWeight(), m);
+        else
+            adjustParticleTemperature(sys, sp.getStatisticalWeight(), m, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2);
     }
     return m;
 }
 
-// aab64 Do surface growth gas-phase adjustment for hybrid method
+// Surface growth updates for the hybrid particle model (particle-number updates)
+// ==============================================================================
+
+// Just do gas-phase adjustment for surface growth
 int SurfaceReaction::Perform(double t, Cell &sys, rng_type &rng, unsigned int n) const
 {
 	if (!sys.GetIsAdiabaticFlag())
 		adjustGas(sys, 1, n);
 	else
-		adjustParticleTemperature(sys, 1, n, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2); 
-    return n;
+		adjustParticleTemperature(sys, 1, n, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2);
+	return n;
 }
+
+// Performs the process on a given particle in the system.  Particle
+// is given by index.  The process is performed n times.
+int SurfaceReaction::Perform(double t, Cell &sys, Particle &sp, rng_type &rng, unsigned int n, bool isParticleNumberUpdate) const
+{
+	// Just update the particle and leave the gas-phase update
+	unsigned int m = sp.Adjust(m_dcomp, m_dvals, rng, n);
+	return m;
+}
+
+// ==============================================================================
 
 // Adjusts a primary particle according to the rules of the reaction.
 unsigned int SurfaceReaction::adjustPri(Sweep::AggModels::Primary &pri, rng_type &rng, unsigned int n) const
