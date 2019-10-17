@@ -181,7 +181,7 @@ public:
     // control of destruction of the particle.
     int Add(Particle &sp, rng_type &rng);
 
-    // aab64 For particle-number/particle model
+    // For particle-number/particle (hybrid) model:
     // Adds particle to the ensemble from the PN model during coagulation
     // Identical to the function above except it checks that the particle
     // removed in contraction is not one required in the coagulation event.
@@ -239,6 +239,12 @@ public:
     // the ParticleData type. Returns particle index on success, otherwise
     // negative.
     int Select(Sweep::PropID id, rng_type &rng) const;
+
+    // Randomly selects a particle using a pre-chosen random number weighted
+    // by the given particle property index. 
+    // The particle properties are those stored in
+    // the ParticleData type. Returns particle index on success, otherwise
+    // negative.
     int Select_usingGivenRand(Sweep::PropID id, double rng_number, rng_type &rng) const;
 
     // ENSEMBLE CAPACITY AND PARTICLE COUNT.
@@ -282,35 +288,45 @@ public:
     //! Get alpha for the ensemble (ABF model)
     double Alpha(double T) const;
 
-    // aab64 for hybrid particle number model
+    // Hybrid particle-number/particle model functions
+    // ===============================================
+    // Note whether the first particle inception has happened. 
+    // Particle-number lists are only initiated at this point. 
     bool IsFirstSP(void) const { return m_inceptedFirstSP; }
     void SetInceptedSP() { m_inceptedFirstSP = true; }
-	
-    void UpdateNumberAtIndex(unsigned int index, int update);
-    void ResetNumberAtIndex(unsigned int index);
-	void RecalcPNPropertySums();
-    void InitialiseDiameters(double molecularWeight, double density);
-    void InitialiseParticleNumberModel();
-	
-    unsigned int NumberAtIndex(unsigned int index) const;
-	
-    unsigned int SetTotalParticleNumber();
-    unsigned int GetTotalParticleNumber() const { return m_total_number; }
-	
+
+    // Set/get threshold size 
     void SetCriticalSize(unsigned int threshold) { m_critical_size = threshold; }
     unsigned int GetCritialNumber() const { return m_critical_size; }
-	
+    
+    // Functions to update/reset the number count at a specific particle-number index
+    unsigned int SetTotalParticleNumber();
+    void ResetNumberAtIndex(unsigned int index);
+    void UpdateNumberAtIndex(unsigned int index, int update);
     void UpdateTotalParticleNumber(int update) { m_total_number += update; }
     void UpdateTotalsWithIndex(unsigned int index, double change);
     void UpdateTotalsWithIndices(unsigned int i1, unsigned int i2);
-	
+
+    // Recalculate property sums to avoid accummulation of rounding errors
+    void RecalcPNPropertySums();
+
+    // Functions to initialise properties
+    void InitialiseParticleNumberModel();
+    void InitialiseDiameters(double molecularWeight, double density);
+    int SetPNParticle(Particle &sp, unsigned int index);
+
+    // Functions to get properties (at specified index)	
     double PropertyAtIndex(Sweep::PropID prop, unsigned int index) const;
     double GetPropertyTotal (Sweep::PropID prop) const;
+    unsigned int GetTotalParticleNumber() const { return m_total_number; }
+    unsigned int NumberAtIndex(unsigned int index) const;
     double Diameter2AtIndex(unsigned int index) const { return m_pn_diameters2[index]; }
     double DiameterAtIndex(unsigned int index) const { return m_pn_diameters[index]; }
     double MassAtIndex(unsigned int index) const { return m_pn_mass[index]; }
+    Particle *const GetPNParticleAt(unsigned int index);
 	
-    // This could be a single function with a case statement but it would be slower and some propIDs don't exist
+    // This could be a single function with a case statement
+    // but it would be slower and some propIDs don't exist
     double GetTotalDiameter() const;
     double GetTotalDiameter2() const;
     double GetTotalDiameter_1() const;
@@ -322,11 +338,11 @@ public:
     double GetTotalMass2() const;
     double GetTotalMass3() const;
     unsigned int GetTotalComponent() const;
-	
+
+    // Function to double totals when doubling is triggered
     void DoubleTotals();
-	
-    Particle *const GetPNParticleAt(unsigned int index);
-    int SetPNParticle(Particle &sp, unsigned int index);
+
+    // ===============================================
 
     // READ/WRITE/COPY.
 
@@ -364,7 +380,7 @@ private:
     // ENSEMBLE SCALING VARIABLES.
     double m_contfactor;       // Contraction scaling factor, precalculated for speed.
     unsigned int m_ncont;    // Number of ensemble contractions that have occurred.
-    double m_wtdcontfctr;    // Number of ensemble contractions that have occurred.
+    double m_wtdcontfctr;    // Track change due to loss of particles (needed to account for unequal weights or PN/P model).
     bool m_contwarn;         // Has a contraction warning msg been printed?
 
     // DOUBLING ALGORITHM VARIABLES.
@@ -376,7 +392,9 @@ private:
     unsigned int m_dbleslack;  // Slack space at end of ensemble after doubling operation.
     bool m_dbleon;             // Allows user to manually switch off/on doubling.  Does not affect activation criterion.
 
-    // aab64 Hybrid particle number model
+    // Hybrid particle number model variables
+    // ===============================================
+
     bool m_inceptedFirstSP;
     unsigned int m_critical_size; 
     unsigned int m_total_number;
@@ -391,7 +409,6 @@ private:
     double m_total_mass2;
     double m_total_mass3;
     double m_total_diameter3;
-
     std::vector<unsigned int> m_particle_numbers;
     std::vector<double> m_pn_diameters;
     std::vector<double> m_pn_diameters2;
@@ -403,8 +420,9 @@ private:
     std::vector<double> m_pn_mass2;
     std::vector<double> m_pn_mass3;
     std::vector<double> m_pn_diameters3;
-
     PartPtrVector m_pn_particles;
+
+    // ===============================================
 
     //! Reset the contents of the binary tree
     void rebuildTree();

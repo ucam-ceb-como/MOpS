@@ -117,18 +117,19 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
 {
     // Some prerequisites.
     double n_1 = n - 1.0;
-    double a = MAJ2 * CSF * T_mu * A();
+    double a = CSF * T_mu * A();
     double b = a * MFP * 1.257 * A();
-    double c = MAJ2 * CFMMAJ * m_efm * CFM * sqrtT * A();
+    double c = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    double d       = data.Property(Sweep::iDcol); // aab64 removed const to adapt as below
+    double d       = data.Property(Sweep::iDcol);
     double d2      = data.Property(Sweep::iD2);
     double d_1     = data.Property(Sweep::iD_1);
     double d_2     = data.Property(Sweep::iD_2);
     double m_1_2   = data.Property(Sweep::iM_1_2);
     double d2m_1_2 = data.Property(Sweep::iD2_M_1_2);
 
+    // Add particle-number contributions
     d += props[0];
     d2 += props[1];
     d_1 += props[2];
@@ -227,26 +228,25 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::partic
 {
     // Some prerequisites.
     double n_1 = n - 1.0;
-    double a   = MAJ2 * CSF * T_mu * A();
+    double a   = CSF * T_mu * A();
     double b   = a * MFP * 1.257 * 2.0;
-    double c   = MAJ2 * CFMMAJ * m_efm * CFM * sqrtT * A();
+    double c   = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    double d       = data.Property(Sweep::iDcol); // aab64 removed const to adapt as below
+    double d       = data.Property(Sweep::iDcol);
     double d2      = data.Property(Sweep::iD2);
     double d_1     = data.Property(Sweep::iD_1);
     double d_2     = data.Property(Sweep::iD_2);
     double m_1_2   = data.Property(Sweep::iM_1_2);
     double d2m_1_2 = data.Property(Sweep::iD2_M_1_2);
 
-
+    // Add particle-number contributions
     d       += props[0];
     d2      += props[1];
     d_1     += props[2];
     d_2     += props[3];
     m_1_2   += props[4];
     d2m_1_2 += props[5];
-
 
     fvector::iterator isf = iterm;
     fvector::iterator ifm = iterm+4;
@@ -319,16 +319,17 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
     MajorantType maj;
     TermType term = (TermType)iterm;
 
+    // Store number of particles in each particle model
     double n_incep = sys.Particles().GetTotalParticleNumber();
     double n_other = sys.ParticleCount();
     double n_total = n_incep + n_other;
     unsigned int index1 = 0, index2 = 0, n_index1 = 0; 
 
-    // aab64 hybrid particle model flags
-    bool hybrid_flag = m_mech->IsHybrid() && n_incep > 0.0;
-    bool ip1_flag = false;
-    bool ip2_flag = false;
-    bool coag_in_place = false;
+    // Hybrid particle model flags
+    bool hybrid_flag = m_mech->IsHybrid() && n_incep > 0.0; // Check if particle-number list is relevant
+    bool ip1_flag = false;      // Flag particle 1 as a particle-number particle
+    bool ip2_flag = false;      // Flag particle 2 as a particle-number particle
+    bool coag_in_place = false; // Flag for coagulation in particle-number list
 
     // Choose and get first particle.
     Particle *sp1 = NULL;
@@ -343,7 +344,8 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         // Note we need to choose 2 particles.  There are six possible 
         // rate terms to choose from; 4 slip-flow and 2 free molecular.
         boost::uniform_01<rng_type&, double> unifDistrib(rng);
-		
+	
+        // Get property sums for number list	
         double dc_incep = sys.Particles().GetTotalDiameter();
         double dc2_incep = sys.Particles().GetTotalDiameter2();
         double dc_1_incep = sys.Particles().GetTotalDiameter_1();
@@ -351,6 +353,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         double m_1_2_incep = sys.Particles().GetTotalMass_1_2();
         double dc2_m_1_2_incep = sys.Particles().GetTotalDiameter2_mass_1_2();
 
+        // Get property sums for ensemble
         double dc_other = sys.Particles().GetSum(iDcol);
         double dc2_other = sys.Particles().GetSum(iD2);
         double dc_1_other = sys.Particles().GetSum(iD_1);
@@ -440,19 +443,24 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                 break;
         }
 
-        // Is this an incepting class particle?
+        // Is this a particle-number particle?
         if (ip1 == -2)
         {
-			if (index1 == 0)
-			{
-				// Property sums updated - easiest option is not to perform this coagulation event.
-				return -1;
-			}
-			n_index1 = sys.Particles().NumberAtIndex(index1);
-            ip1_flag = true;                                                             // Flag sp1 as an incepting class particle
+            if (index1 == 0)
+            {
+		// Property sums update triggered - round-off was too severe and
+                // no suitable particle could be found. The easiest option
+                // is not to perform this coagulation event.
+		return -1;
+            }
+	    n_index1 = sys.Particles().NumberAtIndex(index1);
+            // Flag sp1 as a particle-number particle
+            ip1_flag = true; 
+            // Clone a template particle of the correct size for sp1
             sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
             sp1->SetTime(t); 
         } else {
+            // An ensemble particle
             if (ip1 >= 0) {
                 sp1 = sys.Particles().At(ip1);
             } else {
@@ -466,7 +474,7 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
         ip2 = ip1;
         index2 = index1;
         unsigned int guard = 0;
-        bool mustSwitch = (ip1 == -2) && (n_incep == 1);
+        bool mustSwitch = (ip1 == -2) && (n_incep == 1); // sp1 was the only list particle
         bool unsuitableChoice = true;
 
         switch (term) {
@@ -606,29 +614,30 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
             }
         }
 
-        // Is this an incepting class particle?
+        // Is this a particle-number particle?
         if (ip2 == -2)
         {
-			// Note this could be factored into the loops above
-			// but that would require constantly checking for something
-			// that should very infrequently be a problem.
-			// Easiest option is to exit without performing the coagulation event. 
-			if (index2 == 0)
-			{
-				if (ip1_flag)
-				{
-					delete sp1;
-					sp1 = NULL;
-				}
-				// Property sums updated
-				return -1;
-			}
-            ip2_flag = true;                                                             // Flag sp2 as an incepting class particle
+            // Note this could be factored into the loops above
+            // but that would require constantly checking for something
+            // that should very infrequently be a problem.
+            // Easiest option is to exit without performing the coagulation event. 
+            if (index2 == 0)
+            {
+                if (ip1_flag)
+                {
+                    delete sp1;
+                    sp1 = NULL;
+                }
+                // Property sums updated
+                return -1;
+            }
+            ip2_flag = true; // Flag sp2 as a particle-number particle
             sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
             sp2->SetTime(t); 
         }
         else
         {
+            // An ensemble particle
             if ((ip2 >= 0) && (ip2 != ip1)) {
                 sp2 = sys.Particles().At(ip2);
             } else {
@@ -715,13 +724,14 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
             if (!Fictitious(majk, truek, rng)) {
                 if (ip1_flag)
                 {
-                    // We are removing the particle from the PN model and adding it to the ensemble
+                    // We are removing the particle from the PN model and
+                    // adding it to the ensemble
                     sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
                     sys.Particles().UpdateNumberAtIndex(index1, -1);
                     sys.Particles().UpdateTotalParticleNumber(-1);
                     unsigned int index12 = index1 + index2;
                     // Allow for coagulation in place if the combined particle is small enough
-					if ((m_mech->CoagulateInList()) && ip2_flag && (index12 < sys.Particles().GetCritialNumber()))
+                    if ((m_mech->CoagulateInList()) && ip2_flag && (index12 < sys.Particles().GetCritialNumber()))
                     {
                         coag_in_place = true;
                         sys.Particles().UpdateTotalsWithIndex(index12, 1.0);
@@ -737,7 +747,8 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                 }
                 if (ip2_flag)
                 {
-                    // We are removing the particle from the PN model and adding it to the ensemble
+                    // We are removing the particle from the PN model and
+                    // adding it to the ensemble
                     sys.Particles().UpdateTotalsWithIndex(index2, -1.0);
                     sys.Particles().UpdateNumberAtIndex(index2, -1);
                     sys.Particles().UpdateTotalParticleNumber(-1);
@@ -792,43 +803,6 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
             }
     	}
     return 0;
-}
-
-void TransitionCoagulation::ChooseProps(Sweep::Cell &sys, unsigned int iterm) const
-{
-	Sweep::PropID prop1, prop2;
-
-	// Properties to which the probabilities of particle selection will be proportional
-	switch (static_cast<TermType>(iterm)) {
-	case FreeMol1:
-		prop1 = iUniform;
-		prop2 = iD2_M_1_2;
-		break;
-	case FreeMol2:
-		prop1 = iD2;
-		prop2 = iM_1_2;
-		break;
-	case SlipFlow1:
-		prop1 = iUniform;
-		prop2 = iUniform;
-		break;
-	case SlipFlow2:
-		prop1 = iDcol;
-		prop2 = iD_1;
-		break;
-	case SlipFlow3:
-		prop1 = iUniform;
-		prop2 = iD_1;
-		break;
-	case SlipFlow4:
-		prop1 = iDcol;
-		prop2 = iD_2;
-		break;
-	default:
-		throw std::logic_error("Unrecognised term, (Sweep, TransitionCoagulation::Perform)");
-	}
-
-	sys.SetCoagProps(prop1, prop2);
 }
 
 
@@ -906,7 +880,7 @@ double Sweep::Processes::TransitionCoagulation::FreeMolKernel(const Particle &sp
 
     if (maj) {
         // The majorant form is always >= the non-majorant form.
-        return MAJ2 * CFMMAJ * m_efm * CFM * sqrt(T) * A() *
+        return CFMMAJ * m_efm * CFM * sqrt(T) * A() *
                (std::sqrt(invm1) + std::sqrt(invm2)) *
                (d1 * d1 + d2 * d2);
     } else {
@@ -928,22 +902,10 @@ double Sweep::Processes::TransitionCoagulation::SlipFlowKernel(const Particle &s
     const double d2 = sp2.CollDiameter();
 
     // For the slip-flow kernel the majorant and non-majorant forms are identical.
-	// aab64 - temp constant majorant multiplier
-	if (maj)
-	{
-		// The majorant form is always >= the non-majorant form.
-		return MAJ2 * ((1.257 * 2.0 * MeanFreePathAir(T, P) *
-			(1.0 / d1 / d1 + 1.0 / d2 / d2)) +
-			(1.0 / d1 + 1.0 / d2)) *
-			CSF * T * (d1 + d2)
-			* A() / mu;
-	}
-	else {
-		return ((1.257 * 2.0 * MeanFreePathAir(T, P) *
-			(1.0 / d1 / d1 + 1.0 / d2 / d2)) +
-			(1.0 / d1 + 1.0 / d2)) *
-			CSF * T * (d1 + d2)
-			* A() / mu;
-	}
+    return ((1.257 * 2.0 * MeanFreePathAir(T,P) *
+             (1.0 / d1 / d1 + 1.0 / d2 / d2)) +
+            (1.0 / d1 + 1.0 / d2)) *
+           CSF * T * (d1 + d2)
+           * A() / mu;
 }
 

@@ -202,7 +202,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 
         // Update gas-phase chemistry of system.
         adjustGas(sys, sp->getStatisticalWeight());
-        adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+        adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1);
     }
     else
     {
@@ -213,7 +213,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 
         // Update gas-phase chemistry of system.
         adjustGas(sys, sys.GetInceptingWeight());
-        adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1, sys.GetInceptionFactor());
+        adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1);
     }
 
     return 0;

@@ -126,7 +126,7 @@ public:
         const Particle &sp
         ) const;
 
-    // aab64 Return rate constant and chemistry part for hybrid method
+    // Return just the rate constant and chemistry part for hybrid method
     double Rate(
         double t,
         const Cell &sys) const;

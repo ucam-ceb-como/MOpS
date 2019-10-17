@@ -92,15 +92,6 @@ public:
     // sets deferred off.
     virtual void SetDeferred(bool defer);
 
-    // COAGULATION PROCESS WEIGHTED.
-
-    // aab64 Returns TRUE if coagulation process uses weighted transfer function.
-    //bool IsWeightedCoag(void) const;
-
-    // aab64 Sets the coagulation process to be SWA or not. 
-    // Note that this is only for original activation, it is not meant to change the state
-    // during simulation and does not provide a means of doing so. 
-    //virtual void SetWeightedCoag(bool weightedCoag);
 
     // CHANGES TO PARTICLE ON PROCESS OCCURANCE.
 
@@ -140,10 +131,10 @@ public:
         const Geometry::LocalGeometry1d &local_geom
         ) const = 0;
 
-    // aab64 Return rate constant and chemistry part for hybrid method
+    // Return rate constant and chemistry part for hybrid method
     virtual double Rate(
 	double dt,          // Time.
-	const Cell &sys // System for which to calculate rate.
+	const Cell &sys     // System for which to calculate rate.
     ) const;
 
     static double CalcRates(
@@ -191,7 +182,7 @@ public:
         unsigned int n // Number of times to perform the process.
         ) const = 0;
 
-    // aab64 Do surface growth gas-phase adjustment for hybrid method
+    // Do surface growth gas-phase adjustment for hybrid method
     // Performs the process on a given particle in the system.  Particle
     // is given by index.  The process is performed n times.
     virtual int Perform(
@@ -217,8 +208,6 @@ public:
 
 protected:
     bool m_defer; // Is the process solved by LPDA?
-
-    //bool m_weighted_coag; // aab64 Is the coagulation process one of the weighted ones?
 
     // Default constructor is protected to prevent processes being
     // defined without knowledge of the parent mechanism.

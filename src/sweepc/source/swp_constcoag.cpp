@@ -74,9 +74,8 @@ double Sweep::Processes::ConstantCoagulation::Rate(double t, const Cell &sys,
                                                         const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
-    unsigned int n = sys.ParticleCount(); // aab64 Removed const type to be compatible with the below. 
+    unsigned int n = sys.ParticleCount(); 
 
-    // aab64 for hybrid particle model
     if (m_mech->IsHybrid())
         n += sys.Particles().GetTotalParticleNumber();
 

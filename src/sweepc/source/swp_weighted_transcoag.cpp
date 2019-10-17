@@ -126,6 +126,7 @@ double Sweep::Processes::WeightedTransitionCoagulation::Rate(double t, const Cel
         double T = sys.GasPhase().Temperature();
         double P = sys.GasPhase().Pressure();
 
+        // Add particle-number list contributions
 	fvector props(7, 0);
 	props[0] = sys.Particles().GetTotalDiameter();
 	props[1] = sys.Particles().GetTotalDiameter2();
@@ -183,6 +184,7 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(double t, cons
         double T = sys.GasPhase().Temperature();
         double P = sys.GasPhase().Pressure();
 
+        // Add particle-number list contributions
         fvector props(7, 0);
         props[0] = sys.Particles().GetTotalDiameter();
         props[1] = sys.Particles().GetTotalDiameter2();
@@ -237,10 +239,10 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
     double n_1 = n - 1.0;
     double a   = CSF * T_mu * A();
     double b   = a * MFP * 1.257 * 2.0;
-    double c = CFMMAJ * m_efm * CFM * sqrtT * A();
+    double c   = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    double d        = data.Property(Sweep::iDcol); // aab64 removed const to adapt as below
+    double d        = data.Property(Sweep::iDcol);
     double d2       = data.Property(Sweep::iD2);
     double d_1      = data.Property(Sweep::iD_1);
     double d_2      = data.Property(Sweep::iD_2);
@@ -256,6 +258,8 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
     double m_1_2w   = data.Property(Sweep::iM_1_2W);
     double d2m_1_2w = data.Property(Sweep::iD2_M_1_2W);
 
+
+    // Add particle-number list contributions
     d += props[0];
     d2 += props[1];
     d_1 += props[2];
@@ -274,26 +278,22 @@ double Sweep::Processes::WeightedTransitionCoagulation::RateTerms(
     fvector::iterator ifm = iterm;
     fvector::iterator isf = iterm+4;
 
-    double rateFactor = 1.0;
-    /*if (n > 1) 
-	rateFactor = floor((n) / (w));*/
-
     // Get individual terms
 
     // Free-molecular.
-    *(iterm) =  n_1 * d2m_1_2w * c / vol / rateFactor;
-    *(++iterm) = (d2 * m_1_2w - d2m_1_2w) * c / vol / rateFactor;
-    *(++iterm) = (d2w * m_1_2 - d2m_1_2w) * c / vol / rateFactor;
-    *(++iterm) = (d2m_1_2 * w - d2m_1_2w) * c / vol / rateFactor;
+    *(iterm) =  n_1 * d2m_1_2w * c / vol;
+    *(++iterm) = (d2 * m_1_2w - d2m_1_2w) * c / vol;
+    *(++iterm) = (d2w * m_1_2 - d2m_1_2w) * c / vol;
+    *(++iterm) = (d2m_1_2 * w - d2m_1_2w) * c / vol;
 
     // Slip-flow.
-    *(++iterm) = 2 * n_1 * w * a / vol / rateFactor;
-    *(++iterm) = (d * d_1w - w) * a / vol / rateFactor;
-    *(++iterm) = (dw * d_1 - w) * a / vol / rateFactor;
-    *(++iterm) = n_1 * d_1w * b / vol / rateFactor;
-    *(++iterm) = (d * d_2w - d_1w) * b / vol / rateFactor;
-    *(++iterm) = (dw * d_2 - d_1w) * b / vol / rateFactor;
-    *(++iterm) = (d_1 * w - d_1w) * b / vol / rateFactor;
+    *(++iterm) = 2 * n_1 * w * a / vol;
+    *(++iterm) = (d * d_1w - w) * a / vol;
+    *(++iterm) = (dw * d_1 - w) * a / vol;
+    *(++iterm) = n_1 * d_1w * b / vol;
+    *(++iterm) = (d * d_2w - d_1w) * b / vol;
+    *(++iterm) = (dw * d_2 - d_1w) * b / vol;
+    *(++iterm) = (d_1 * w - d_1w) * b / vol;
 
     // Return iterator to next term after the coagulation terms.
     ++iterm;
@@ -420,63 +420,6 @@ int Sweep::Processes::WeightedTransitionCoagulation::Perform(
     return WeightedPerform_hybrid(t, prop1, prop2, m_CoagWeightRule, sys, rng, maj);
 }
 
-void WeightedTransitionCoagulation::ChooseProps(Sweep::Cell &sys, unsigned int iterm) const
-{
-	Sweep::PropID prop1, prop2;
-
-	// Properties to which the probabilities of particle selection will be proportional
-	switch (static_cast<TermType>(iterm)) {
-	case FreeMol1:
-		prop1 = iUniform;
-		prop2 = iD2_M_1_2W;
-		break;
-	case FreeMol2:
-		prop1 = iD2;
-		prop2 = iM_1_2W;
-		break;
-	case FreeMol3:
-		prop1 = iM_1_2;
-		prop2 = iD2W;
-		break;
-	case FreeMol4:
-		prop1 = iD2_M_1_2;
-		prop2 = iW;
-		break;
-	case SlipFlow1:
-		prop1 = iUniform;
-		prop2 = iW;
-		break;
-	case SlipFlow2:
-		prop1 = iDcol;
-		prop2 = iD_1W;
-		break;
-	case SlipFlow3:
-		prop1 = iD_1;
-		prop2 = iDW;
-		break;
-	case SlipFlow4:
-		prop1 = iUniform;
-		prop2 = iD_1W;
-		break;
-	case SlipFlow5:
-		prop1 = iDcol;
-		prop2 = iD_2W;
-		break;
-	case SlipFlow6:
-		prop1 = iD_2;
-		prop2 = iDW;
-		break;
-	case SlipFlow7:
-		prop1 = iD_1;
-		prop2 = iW;
-		break;
-	default:
-		throw std::logic_error("Unrecognised term, (Sweep, WeightedTransitionCoagulation::Perform)");
-	}
-
-	sys.SetCoagProps(prop1, prop2);
-
-}
 
 // COAGULATION KERNELS.
 

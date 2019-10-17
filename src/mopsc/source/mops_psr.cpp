@@ -177,7 +177,6 @@ Mops::FlowStream *const PSR::Inflow(unsigned int i) const {
 // Returns the inflow stream pointers
 // aab64: changed definition from 
 // Mops::FlowPtrVector PSR::Inflows() const {
-// to the following
 const Mops::FlowPtrVector & PSR::Inflows() const {
     return m_inflow_ptrs;
 }
@@ -191,7 +190,6 @@ Mops::FlowStream *const PSR::Outflow(unsigned int i) const {
 // Returns the Outflow stream pointers
 // aab64: changed definition from 
 //Mops::FlowPtrVector PSR::Outflows() const {
-// to the following
 const Mops::FlowPtrVector & PSR::Outflows() const {
     return m_outflow_ptrs;
 }
@@ -501,6 +499,7 @@ void PSR::RHS_Complete(double t, const double *const y, double *ydot) const {
             hsum += hval * (*it)->Mixture()->GasPhase().Density()
                     * (*it)->GetFlowFraction();
         }
+		// Account for the particles in thermal bulk term on denominator
 		ydot[m_iT] += hsum * m_invrt * m_iscaling / (y[m_iDens] * C * Sprog::R + m_mix->getParticleDensity());
 
         // Loop over species in the reactor to get energy change due to mol change

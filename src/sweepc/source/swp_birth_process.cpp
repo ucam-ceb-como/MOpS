@@ -206,26 +206,32 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
             " (Sweep, BirthProcess::Perform)");
 
     int i = 0;
+    // If all particles in ensemble, select a particle at random
     if (!(m_mech->IsHybrid()))
         i = m_cell->Particles().Select(rng);
     else
     {
-        // Check if should add from ensemble or bin
+        // Select a particle from the ensemble or particle-number list
+        // ===========================================================
+        // Get totals
         double ntotal_pn = (double)(m_cell->Particles().GetTotalParticleNumber());
         double ntotal_ens = (double)(m_cell->ParticleCount());
 
-        // aab64 Here there should be a check that the index chosen is smaller than the threshold size
+        // Here there should be a check that the index chosen is smaller than the threshold size
         // because nothing stops the stream having a larger threshold size than current system.
         // In that instance, particles could be added to the ensemble like with surface growth. 
-        // However this cannot be done here easily because it requires construction of the new particles. 
-		if (m_cell->Particles().GetCritialNumber() > sys.Particles().GetCritialNumber())
-			printf("sweep: Mixture PN threshold > reactor PN threshold; "
-			       "could inflow particle that cannot be stored\n");
+        // However this cannot be done here easily because it requires construction of a new particles. 
+        // Print warning message.
+        if (m_cell->Particles().GetCritialNumber() > sys.Particles().GetCritialNumber())
+            printf("sweep: Mixture PN threshold > reactor PN threshold; "
+	           "could inflow particle that cannot be stored\n");
 
+        // Select the particle
         boost::uniform_01<rng_type&, double> unifDistrib(rng);
         double test = unifDistrib() * (ntotal_pn + ntotal_ens);
         if (ntotal_pn >= test)
         {
+            // Particle is chosen from the number list
             double repeats = F(sys);
             if (repeats != floor(repeats)) 
             {
@@ -237,20 +243,19 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
             if (repeats > 0.0)
             {
                 unsigned int index = m_mech->SetRandomParticle(m_cell->Particles(), t, test, iUniform, rng);
-				// Note: if index <= 0, this will still be counted as an event which is not correct. 
-				// However, it should not occur since round off should not affect uniform particle
-				// choice (based on particle count). 
-				if (index > 0)
-				{
-					sys.Particles().UpdateTotalsWithIndex(index, repeats);
-					sys.Particles().UpdateNumberAtIndex(index, (int)repeats);
-					sys.Particles().UpdateTotalParticleNumber((int)repeats);
-				}
+		// Check we found a valid index
+                if (index > 0)
+		{
+		    sys.Particles().UpdateTotalsWithIndex(index, repeats);
+		    sys.Particles().UpdateNumberAtIndex(index, (int)repeats);
+		    sys.Particles().UpdateTotalParticleNumber((int)repeats);
+		}
             }
             i = -1;
         }
         else
         {
+            // Particle is chosen from the ensemble
             i = m_cell->Particles().Select_usingGivenRand(iUniform, test - ntotal_pn, rng);
         }
 
@@ -262,8 +267,7 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
         rng);
     }
 
-    // aab64 Update particle temperature after heat transfer period
-    //adjustParticleTemperature(sys, m_cell->Particles().At(i)->getStatisticalWeight() * F(sys), 1, sys.GetIsAdiabaticFlag(), 0, 4);
+    // Add update for particle temperature mixing
 
     return 0;
 }

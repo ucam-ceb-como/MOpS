@@ -125,9 +125,9 @@ double Sweep::Processes::WeightedConstantCoagulation::RateTerms(double t, const 
                             const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
-    unsigned int n = sys.ParticleCount(); // aab64 Removed const type to be compatible with the below. 
+    unsigned int n = sys.ParticleCount();
 	
-    // aab64 for hybrid particle model
+    // For hybrid particle model
     if (m_mech->IsHybrid())
     {
         unsigned int n2 = sys.Particles().GetTotalParticleNumber();
@@ -175,9 +175,9 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
 
     unsigned int number = sys.ParticleCount();
 
-    // aab64 for hybrid particle model
-    if (m_mech->IsHybrid() && number < 2)   // Can still do coagulation if there are
-        number = sys.Particles().GetTotalParticleNumber();  // at least 2 particles in the incepting class
+    // For hybrid particle model - Can still do coagulation if there are at least 2 particles in total
+    if (m_mech->IsHybrid() && number < 2)
+        number = sys.Particles().GetTotalParticleNumber();
 
     if (number < 2) {
         return 1;
@@ -198,7 +198,6 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
     if (!(m_mech->IsHybrid()))
         return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
     else
-        //return WeightedPerform_hybrid(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default, local_geom);
         return WeightedPerform_hybrid(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
 }
 

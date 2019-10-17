@@ -99,7 +99,7 @@ Sweep::TreeCache::TreeCache(const Sweep::Particle &part)
     m_inv_dcolsqr  = 1.0 / m_dcolsqr;
     m_inv_sqrtmass = 1.0 / std::sqrt(m_mass);
     m_d2_m_1_2     = m_dcolsqr * m_inv_sqrtmass;
-    m_weight = part.getStatisticalWeight();
+    m_weight       = part.getStatisticalWeight();
 }
 
 // OPERATOR OVERLOADS.

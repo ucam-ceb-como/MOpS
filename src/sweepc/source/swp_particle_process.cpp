@@ -199,14 +199,14 @@ double ParticleProcess::CalcRates(double t, const Cell &sys,
     return sum;
 }
 
-// aab64 Return rate constant and chemistry part for hybrid method
+// Return rate constant and chemistry part for hybrid method
 double ParticleProcess::Rate(double t, const Cell &sys) const
 {
 	std::cout << "Only used with surface growth for titania hybrid\n";
 	return -1;
 }
 
-// aab64 Do surface growth gas-phase adjustment for hybrid method
+// Do surface growth gas-phase adjustment for hybrid method
 int ParticleProcess::Perform(double t, Cell &sys, rng_type &rng, unsigned int n) const
 {
 	std::cout << "Only used with surface growth for titania hybrid\n";

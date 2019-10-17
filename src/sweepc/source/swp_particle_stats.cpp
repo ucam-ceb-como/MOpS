@@ -238,15 +238,9 @@ void ParticleStats::Calculate(const Ensemble &e, double scale)
         }
     }
 
-	// aab64 for hybrid particle model
-	bool hybrid_flag = true;
-	if (hybrid_flag && e.GetTotalParticleNumber() != 0)
+	// Add contributions from hybrid particle-number/particle model
+	if (e.GetTotalParticleNumber() != 0)
 	{
-		//const Particle spInc = e.GetInceptedSP(); // Only average diameter
-		//double sz = spInc.Property(m_statbound.PID);
-		// Check if the value of the property is within the stats bound
-		//if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper)) {
-
 		double wt = e.GetTotalParticleNumber();
 		double dpri = e.GetTotalDiameter();
 		double surf = PI * e.GetTotalDiameter2();

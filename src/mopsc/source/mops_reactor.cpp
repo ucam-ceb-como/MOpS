@@ -562,7 +562,7 @@ void Reactor::RHS_Adiabatic(double t, const double *const y,  double *ydot) cons
         }
     }
 
-    // Complete temperature derivative.
+    // Complete temperature derivative, accounting for particle thermal bulk
     dT_dt *= - y[m_iT] / (C * y[m_iDens] + (m_mix->getParticleDensity() / Sprog::R));
     ydot[m_iT] += dT_dt;
 

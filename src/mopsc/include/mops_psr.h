@@ -100,7 +100,6 @@ public:
     //! Returns the inflow stream pointers
     // aab64: changed definition from 
     // Mops::FlowPtrVector Inflows() const; 
-    // to the following
     const Mops::FlowPtrVector &Inflows() const;
 
     //! Returns the flow-stream which describes the outflow conditions.
@@ -109,7 +108,6 @@ public:
     //! Returns the Outflow stream pointers
     // aab64: changed definition from 
     // Mops::FlowPtrVector Outflows() const;
-    // to the following 
     const Mops::FlowPtrVector &Outflows() const;
 
     //! Intialise the inflow's birth processes
