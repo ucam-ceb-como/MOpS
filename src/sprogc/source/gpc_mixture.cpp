@@ -113,7 +113,6 @@ Mixture &Mixture::operator=(const Mixture &mix)
         m_species = mix.m_species;
 		gasSpeciesCount = mix.gasSpeciesCount;
 		surfSpeciesCount = mix.surfSpeciesCount; 
-		m_pressure = mix.m_pressure; // aab64
     }
 
     return *this;
@@ -199,6 +198,7 @@ void Mixture::GetConcs(fvector &concs) const
 
     // Loop over all mole fractions and convert to concentrations.
     const double density = m_data[densityIndex()];
+	
     for (unsigned int i = 0; i != gasSpeciesCount; ++i) {
         concs[i] = m_data[i] * density;
     }
@@ -281,7 +281,7 @@ double Mixture::MoleFraction(unsigned int i) const
 double Mixture::MolarConc(unsigned int i) const
 {
     if (i < gasSpeciesCount) {
-        return m_data[i] * m_data[densityIndex()];
+		return m_data[i] * m_data[densityIndex()];
     } 
 	else {
         return MolarSurfConc(i);
@@ -633,6 +633,7 @@ double Mixture::MassDensity() const
         rho += m_data[i] * (*m_species)[i]->MolWt();
     }
     rho *= m_data[densityIndex()];
+
     return rho;
 }
 
@@ -754,11 +755,6 @@ double Mixture::getViscosity() const{
 	return mt.getViscosity(Temperature(),*this);
 }
 
-
-// aab64 This is a temporary function to keep pressure constant
-double Mixture::GetPressure() const{
-	return m_pressure;
-}
 
 /*!
  * This prevents segmentation faults when accessing the Champan Enksog viscosity

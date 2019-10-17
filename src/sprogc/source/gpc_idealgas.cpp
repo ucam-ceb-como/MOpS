@@ -118,13 +118,11 @@ double IdealGas::Pressure() const
 {
     // P = rho R T.
     return Density() * R * Temperature();
-    //return GetPressure(); // aab64 (temporary) 
 }
 
 // Sets the mixture density using the given pressure.
 void IdealGas::SetPressure(double p)
 {
-    //Mixture::SetPressure(p); //aab64
     SetDensity(p / (R * (Temperature())));
 }
 
