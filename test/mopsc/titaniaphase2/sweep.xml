@@ -1,12 +1,14 @@
 <mechanism name="Titanium Dioxide" units="CGS">
 
-<!-- Define particle components. -->
+<!-- Define particle components. 
+Each element (Ti and O) of each phase (non-crystalline, anatase and rutile)
+is defined as a separate component. -->
 <component id="Ti_L">
     <description>Ti atom non-crystalline</description>
-    <density>3.84</density>
+    <density>3.84</density>	<!-- use the same density (rho_anatase) for each component -->
     <molwt>47.87</molwt>
-	<phase>Liquid</phase>
-	<element>Ti</element>
+	<phase>Liquid</phase>	<!-- identify phase -->
+	<element>Ti</element>	<!-- identify element -->
 </component>
 <component id="O_L">
     <description>O atom non-crystalline</description>
@@ -44,14 +46,16 @@
 	<element>O</element>
 </component>
 
-<!-- Define particle types. -->
+<!-- Define particle type.
+Turn on the bintree primary model with coordinate tracking -->
 <particle id="[Titania]" model="bintree" subtree="false" track="primaryCoordinates">
 <description>A titania particle.</description>
-    <efm>2.64</efm>
-    <fractdim>1.8</fractdim>
-    <coalthresh>1.0</coalthresh>
+    <efm>2.64</efm>					<!-- molecular enhancement factor -->
+    <fractdim>1.8</fractdim>		<!-- not used when tracking primary coordinates -->
+    <coalthresh>1.0</coalthresh>	<!-- not used when tracking primary coordinates -->
+	<!-- GBD sintering model for titania (Eggersdorfer et al. 2012)
+	Parameters from c4e 226 with As=0.25, dcrit=4 nm, alpha_crit=3 -->
     <sintering enable="true" model="GBD">
-		<!-- GBD model params based on Eggersdorfer et al. (2012)-->
         <A units="s/m4K">2.278e+17</A>
 		<E units="K">31030</E>
 		<Dpmin units="m">4e-09</Dpmin>
@@ -67,29 +71,29 @@
 
 <!-- Phase formation. "Melting" model defined in c4e-238. -->
 <transformation type="melting" name="Melting temperature dependent transformation">
-	<!-- Identify non-crystalline (liquid) phase -->
+	<!-- Identify the non-crystalline (liquid) phase -->
     <liquid id="Liquid"/>
 	<!-- Define non-crystalline to anatase transformation -->
-    <phase id="An">				<!-- Identify "An" crystal phase -->	
+    <phase id="An">				<!-- "An" crystal phase -->	
 		<!-- Define melting temperature T = Tbulk*(1-A/d) -->
         <A>2.53e-10</A> 		<!-- Parameter A (m) -->
-		<Tbulk>2075</Tbulk> 	<!-- Bulk melting temperature (K) -->
+		<Tbulk>2075</Tbulk> 	<!-- Bulk melting temperature Tbulk (K) -->
 		<!-- Define component changes -->
-		<component id="Ti_L" dx="-0.5"/>
-		<component id="Ti_An" dx="+0.5"/>
-		<component id="O_L" dx="-0.5"/>
-		<component id="O_An" dx="+0.5"/>
+		<component id="Ti_L" dx="-1.0"/>
+		<component id="Ti_An" dx="+1.0"/>
+		<component id="O_L" dx="-1.0"/>
+		<component id="O_An" dx="+1.0"/>
     </phase>
 	<!-- Define non-crystalline to rutile transformation -->
-    <phase id="Ru">				<!-- Identify "Ru" crystal phase -->	
+    <phase id="Ru">				<!-- "Ru" crystal phase -->	
 		<!-- Define melting temperature T = Tbulk*(1-A/d) -->
         <A>4.67e-10</A>			<!-- Parameter A (m) -->
-		<Tbulk>2143</Tbulk>		<!-- Bulk melting temperature (K) -->
+		<Tbulk>2143</Tbulk>		<!-- Bulk melting temperature Tbulk (K) -->
 		<!-- Define component changes -->
-		<component id="Ti_L" dx="-0.5"/>
-		<component id="Ti_Ru" dx="+0.5"/>
-		<component id="O_L" dx="-0.5"/>
-		<component id="O_Ru" dx="+0.5"/>
+		<component id="Ti_L" dx="-1.0"/>
+		<component id="Ti_Ru" dx="+1.0"/>
+		<component id="O_L" dx="-1.0"/>
+		<component id="O_Ru" dx="+1.0"/>
     </phase>
 </transformation>
 
@@ -97,7 +101,7 @@
 <inception name="2Ti(OH)4 molecule inception" rate="freemolecular">
     <formula>"H4O4TI + H4O4TI to [Titania2]</formula>
     <A>1</A>
-    <!-- g, cm, s -->
+    <!-- g, cm, s -->  <!-- parameters from c4e 215 -->
     <reactant id="H4O4TI" stoich="2" m="1.925e-022" d="5.128e-8" />
     <product id="H2O" stoich="+4.0" />
     <particleout id="[Titania]"/>
@@ -110,6 +114,9 @@
     <formula>[Titania] + Ti(OH)4 to [Titania+1]</formula>
     <A>1</A>
     <!-- g, cm, s -->
+	<!-- parameters from c4e 215: 
+	m = m_TiO2 (to match MoMIC/Kinetics implementation)
+	Assume diameter of condensing species << particle diameter -->
     <reactant id="H4O4TI" stoich="1" m="1.323e-22" d="1e-100"/>
     <product id="H2O" stoich="+2.0" />
     <component id="Ti_L" dx="+1.0"/>
