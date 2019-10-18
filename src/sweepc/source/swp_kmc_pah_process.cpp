@@ -1486,16 +1486,16 @@ cpair PAHProcess::endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) 
 int nancounter = 0;
 //! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
 OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
-	std::list<int> methyl_list;
+	std::vector<int> methyl_list_flat;
 	//R6 Bay detection
-	std::list<int> R6pairs1, R6pairs2;
-	std::list<int>::iterator R6_iter1, R6_iter2;
-	std::list<Cpointer>CR6_pair1, CR6_pair2;
-	std::list<Cpointer>::iterator resR6, resR62;
+	std::vector<int> R6pairs1, R6pairs2;
+	std::vector<int>::iterator R6_iter1, R6_iter2;
+	std::vector<Cpointer>CR6_pair1, CR6_pair2;
+	std::vector<Cpointer>::iterator resR6, resR62;
 	//Second neighbours bond detection
-	std::list<int> C_intlist, first_neighbour, second_neighbour, bridge_neighbour, bridge_neighbour2;
-	std::list<Cpointer>C_list, C_first_neighbour, C_second_neighbour, C_bridge_neighbour, C_bridge_neighbour2;
-	std::list<int>::iterator sn_iter, sn_iter1, sn_iter2, sn_iter3, sn_iter4;
+	std::vector<int> C_intlist, first_neighbour, second_neighbour, bridge_neighbour, bridge_neighbour2;
+	std::vector<Cpointer>C_list, C_first_neighbour, C_second_neighbour, C_bridge_neighbour, C_bridge_neighbour2;
+	std::vector<int>::iterator sn_iter, sn_iter1, sn_iter2, sn_iter3, sn_iter4;
 	if (detectBonds){
 		for (std::list<Site>::iterator site_it = m_pah->m_siteList.begin(); site_it != m_pah->m_siteList.end(); site_it++) {
 			if ( (int)site_it->type % 10 >= 4 && (int)site_it->type!=6666 ){
@@ -1634,9 +1634,6 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			OpenBabel::OBAtom *methylc  = mol.NewAtom();
 			methylc->SetAtomicNum(6);
 			methylc->SetVector(std::get<0>(C_change->coords) + 1.5 * std::get<0>(C_change->growth_vector),std::get<1>(C_change->coords) + 1.5 * std::get<1>(C_change->growth_vector),std::get<2>(C_change->coords) + 1.5 * std::get<2>(C_change->growth_vector));
-			/*methyl_list.push_back(methylc);
-			methylc->SetImplicitValence(4);
-			mol.AddHydrogens(methylc);*/
 			cpair Hcoords = std::make_tuple(std::get<0>(C_change->coords) + (1.5 + 1.095*sin(20.8/180.0*M_PI)) * std::get<0>(C_change->growth_vector),std::get<1>(C_change->coords) + (1.5 + 1.095*sin(20.8/180.0*M_PI)) * std::get<1>(C_change->growth_vector),std::get<2>(C_change->coords) + (1.5 + 1.095*sin(20.8/180.0*M_PI)) * std::get<2>(C_change->growth_vector));
 			OpenBabel::OBAtom *h1  = mol.NewAtom();
 			h1->SetAtomicNum(1);
@@ -1683,11 +1680,11 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 			//atom->SetVector(std::get<0>(C_change->coords) + 1.0*cos(C_change->bondAngle2*M_PI/180),std::get<1>(C_change->coords) + 1.0*sin(C_change->bondAngle2*M_PI/180),std::get<2>(C_change->coords));
 			counter +=4;
-			methyl_list.push_back(methylc->GetIdx()-1);
-			methyl_list.push_back(methylc->GetIdx());
-			methyl_list.push_back(h1->GetIdx());
-			methyl_list.push_back(h2->GetIdx());
-			methyl_list.push_back(h3->GetIdx());
+			methyl_list_flat.push_back(methylc->GetIdx()-1);
+			methyl_list_flat.push_back(methylc->GetIdx());
+			methyl_list_flat.push_back(h1->GetIdx());
+			methyl_list_flat.push_back(h2->GetIdx());
+			methyl_list_flat.push_back(h3->GetIdx());
 		}
 	}
 	//Internal carbons
@@ -1732,11 +1729,11 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			
 		}
 		//Adds Bonds within C and its C2. Deletes bonds between C and C->C2->C2. Adds bonds between bridged carbons.
-		std::list<int>::iterator sn_iter;
-		std::list<int>::iterator sn_iter1 = first_neighbour.begin();
-		std::list<int>::iterator sn_iter2 = second_neighbour.begin();
-		std::list<int>::iterator sn_iter3 = bridge_neighbour.begin();
-		std::list<int>::iterator sn_iter4 = bridge_neighbour2.begin();
+		std::vector<int>::iterator sn_iter;
+		std::vector<int>::iterator sn_iter1 = first_neighbour.begin();
+		std::vector<int>::iterator sn_iter2 = second_neighbour.begin();
+		std::vector<int>::iterator sn_iter3 = bridge_neighbour.begin();
+		std::vector<int>::iterator sn_iter4 = bridge_neighbour2.begin();
 		for(sn_iter = C_intlist.begin(); sn_iter != C_intlist.end(); ++sn_iter){
 			OpenBabel::OBBond* my_bond = mol.GetBond(*sn_iter, *sn_iter1);
 			OpenBabel::OBBond* my_bond2 = mol.GetBond(*sn_iter, *sn_iter2);
@@ -1754,7 +1751,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		}
 		
 		//Deletes bonds within unclosed BY6.
-		std::list<int>::iterator it_R6pairs1, it_R6pairs2;
+		std::vector<int>::iterator it_R6pairs1, it_R6pairs2;
 		it_R6pairs2 = R6pairs2.begin();
 		for(it_R6pairs1 = R6pairs1.begin(); it_R6pairs1 != R6pairs1.end(); ++it_R6pairs1){
 			OpenBabel::OBBond* my_bond = mol.GetBond(*it_R6pairs1, *it_R6pairs2);
@@ -1764,8 +1761,8 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		
 		//Checks hydrogen bonds //NEEDS DEBUGGING. NOT COMPLETE.
 		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
-			auto find_methyl = std::find(std::begin(methyl_list), std::end(methyl_list), a->GetIdx()); //SETBREAKPOINT
-			if (find_methyl == methyl_list.end()){
+			auto find_methyl = std::find(methyl_list_flat.begin(), methyl_list_flat.end(), a->GetIdx()); //SETBREAKPOINT
+			if (find_methyl == methyl_list_flat.end()){
 				//The atom is not in a methyl group.
 				if (a->GetAtomicNum() == 1){
 					OpenBabel::OBAtom *prev_atom = mol.GetAtom(a->GetIdx() - 1);
@@ -1791,14 +1788,14 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 				}
 			}
 			else {
-				//The atom is in a methyl group.
-				int index_methyl = std::distance(methyl_list.begin(), find_methyl);
-				if (index_methyl == 0){
+				//The atom is in a methyl group. We need to find in which methyl group first.
+				int index_methyl = std::distance(methyl_list_flat.begin(), find_methyl);
+				if (index_methyl%5 == 0){
 					//This is the carbon attached to the methyl.
 					OpenBabel::OBBond* my_bond = mol.GetBond(a->GetIdx(), a->GetIdx() + 1);
 					if (my_bond == NULL) mol.AddBond(a->GetIdx(), a->GetIdx() + 1,5);
 				}
-				else if (index_methyl == 1){
+				else if (index_methyl%5 == 1){
 					//This is the methyl carbon.
 					for (int i=1; i<=3; i++){
 						OpenBabel::OBBond* my_bond = mol.GetBond(a->GetIdx(), a->GetIdx() + i);
@@ -1809,8 +1806,8 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					//These are the hydrogens from the methyl group.
 					vector <OpenBabel::OBBond*> bonds_to_delete;
 					for( OpenBabel::OBAtomAtomIter     nbr(*a); nbr; ++nbr ) {
-						auto find_nbr = std::find(std::begin(methyl_list), std::end(methyl_list), nbr->GetIdx());
-						if (find_nbr == methyl_list.end()){
+						auto find_nbr = std::find(std::begin(methyl_list_flat), std::end(methyl_list_flat), nbr->GetIdx());
+						if (find_nbr == methyl_list_flat.end()){
 							//Hydrogen is attached to other atom. Delete this bond.
 							OpenBabel::OBBond* my_bond_del = mol.GetBond(a->GetIdx(), nbr->GetIdx());
 							bonds_to_delete.push_back(my_bond_del);
@@ -4869,9 +4866,9 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			}
 			else {
 				if (ntype1 >= 501 && ntype1 <= 604) ntype1 -= 501;
-				else if (ntype2 >= 501 && ntype1 <= 604) ntype2 -= 501;
+				else if (ntype2 >= 501 && ntype2 <= 604) ntype2 -= 501;
 				else if (ntype1 >= 1002 && ntype1 <= 1004) ntype1 -= 901;
-				else if (ntype2 >= 1002 && ntype1 <= 1004) ntype2 -= 901;
+				else if (ntype2 >= 1002 && ntype2 <= 1004) ntype2 -= 901;
 			}
 		}
 		else if (ntype_site == 604) {
@@ -7111,7 +7108,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		opp_site_second = findSite(thirdC2);
 		opp_site_bool_second = true;
 	}
-	if (thirdC_after != NULLC){
+	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
 		opp_site_after = findSite(thirdC_after);
 		opp_site_bool_after = true;
 		int os_endtype = opp_site_after->type;
@@ -8744,6 +8741,10 @@ void PAHProcess::proc_A_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type 
         neighbour = moveIt(stt,1);
 		neighbour2 = moveIt(stt,2);
     }
+	
+	OpenBabel::OBMol mol = passPAH();
+	mol = mol = optimisePAH(mol);
+	passbackPAH(mol);
 
     // update combined sites for all new sites and neighbours (and their neighbours)
     updateCombinedSites(stt); updateCombinedSites(prev); updateCombinedSites(neighbour); updateCombinedSites(neighbour2);

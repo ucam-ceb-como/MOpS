@@ -4613,7 +4613,7 @@ double A_CH3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = 2*m_r[6]*r_f* site_count; // Rate Equation
+    return m_rate = m_r[6]*r_f* site_count/6.0; // Rate Equation
 }
 double A_CH3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     return setRate0p0267(gp, pah_st);
@@ -4632,7 +4632,7 @@ double A_CH3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = 2*m_r[9]*r_f* site_count; // Rate Equation
+    return m_rate = m_r[9]*r_f* site_count/6.0; // Rate Equation
 }
 
 // ************************************************************
@@ -4643,13 +4643,25 @@ void D_CH3::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(3.52751561e76, -1.71557169e+01, 105.3773, sp::None));      // A1- + CH3 -> A1CH3         	    - 9              - Richter, Howard 2005
+    addReaction(rxnV, Reaction(3.52751561e79, -1.71557169e+01, 105.3773, sp::None));      // A1- + CH3 -> A1CH3         	    - 9              - Richter, Howard 2005
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(3.52751561e76, -1.71557169e+01, 105.3773, sp::None));     // A1- + CH3 -> A1CH3         	    - 9              - Richter, Howard 2005
+    addReaction(rxnV2, Reaction(3.52751561e79, -1.71557169e+01, 105.3773, sp::None));     // A1- + CH3 -> A1CH3         	    - 9              - Richter, Howard 2005
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(3.52751561e76, -1.71557169e+01, 105.3773, sp::None));     // A1- + CH3 -> A1CH3         	    - 9              - Richter, Howard 2005
+	//------------Reactions for A3-4----------------------------
+	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4              - Forward
+	//Using rates by On the low-temperature limit of HACA. Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(1.190E+22, -2.450E+00, 1.889E+01, sp::C2H2));         // A3* + C2H2 -> A4 + H              	- 5              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(1.060E+14, -4.900E-01, 8.204E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
+	addReaction(rxnV3, Reaction(3.52751561e79, -1.71557169e+01, 105.3773, sp::None));     // A1- + CH3 -> A1CH3         	    - 10              - Richter, Howard 2005
 
     m_sType = Methyl; // sitetype
     m_name = "CH3 desorption"; // name of process
@@ -4667,5 +4679,21 @@ double D_CH3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
     return setRate0p0267(gp, pah_st);
 }
 double D_CH3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	return setRate0p0267(gp, pah_st);
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]+m_r[8]+m_r[9]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+	double for_rate = m_r[9]*r_f;
+	double rev_rate = for_rate * 100.0;
+    return m_rate = rev_rate* site_count; // Rate Equation
+	//return setRate0p0267(gp, pah_st);
 }
