@@ -158,6 +158,12 @@ public:
     // Sets the reactor solve using a constant volume assumption.
     void SetConstV(void);
 
+    // Returns true if the energy balance should include particle terms.
+    bool IncludeParticles(void) const;
+
+    // Sets the energy balance to include particle terms.
+    void SetIncludeParticles(void);
+	
 	// Sets the reactor volume (initialise volume).
     void SetVolume(double vol);
 	
@@ -268,6 +274,7 @@ protected:
     // Reactor model variables.
     EnergyModel m_emodel; // The energy model used to describe the reactor.
     bool m_constv;        // true=const. volume model, false=const. pressure model.
+    bool m_include_particle_terms; // true = inclusion of 
 
     // Imposed temperature profile.
     RHS1_FnPtr m_Tfunc; // External function for calculating dT/dt.

@@ -113,6 +113,7 @@ Reactor &Reactor::operator=(const Mops::Reactor &rhs)
         m_neq     = rhs.m_neq;
         m_iT      = rhs.m_iT;
         m_iDens   = rhs.m_iDens;
+        m_include_particle_terms = rhs.m_include_particle_terms;
 
         // Initialise the reactor with the mechanism.
         SetMech(*rhs.m_mech);
@@ -134,6 +135,7 @@ std::ostream& operator<<(
     os << "[Reactor]," <<
             " ConstP=" << r.IsConstP() <<
             " ConstV=" << r.IsConstV() <<
+            " Include particles in energy model=" << r.IncludeParticles() <<
             "\n";
     os << "filled with...\n" << *(r.Mixture());
     return os;
@@ -246,6 +248,14 @@ void Reactor::SetConstV(void)
     m_constv = true;
 }
 
+// Returns true if the reactor is at constant volume.
+bool Reactor::IncludeParticles(void) const {return m_include_particle_terms;};
+
+// Sets the reactor solve using a constant volume assumption.
+void Reactor::SetIncludeParticles(void)
+{
+    m_include_particle_terms = true;
+}
 
 // IMPOSED dT/dt PROFILE.
 
@@ -334,6 +344,13 @@ void Reactor::Serialize(std::ostream &out) const
         } else {
             out.write((char*)&falseval, sizeof(falseval));
         }
+	
+        // Output the energy balance restrictions	
+        if (m_include_particle_terms) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
 
         // Output equation count + special indices.
         n = (unsigned int)m_nsp;
@@ -398,6 +415,10 @@ void Reactor::Deserialize(std::istream &in, const Mops::Mechanism &mech)
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_constv = (n==1);
 
+		// Read the energy balance restrictions
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_include_particle_terms = (n==1);
+				
                 // Read equation count + special indices.
                 in.read(reinterpret_cast<char*>(&m_nsp), sizeof(m_nsp));
                 in.read(reinterpret_cast<char*>(&m_neq), sizeof(m_neq));
@@ -562,8 +583,14 @@ void Reactor::RHS_Adiabatic(double t, const double *const y,  double *ydot) cons
         }
     }
 
-    // Complete temperature derivative, accounting for particle thermal bulk
-    dT_dt *= - y[m_iT] / (C * y[m_iDens] + (m_mix->getParticleDensity() / Sprog::R));
+    // Complete temperature derivative, accounting for particle thermal bulk.
+    if (m_include_particle_terms) {
+        dT_dt *= - y[m_iT] / (C * y[m_iDens] + (m_mix->getParticleDensity() / Sprog::R));
+    }
+    else
+    {
+        dT_dt *= - y[m_iT] / (C * y[m_iDens]);
+    }
     ydot[m_iT] += dT_dt;
 
     // Add imposed temperature gradient, if defined.
@@ -656,6 +683,7 @@ void Reactor::init(void)
     m_emodel  = ConstT;
     m_constv  = false;
     m_Tfunc   = NULL;
+    m_include_particle_terms = false;
     // Derived reactor properties.
     m_neq     = 0;
     m_nsp     = 0;

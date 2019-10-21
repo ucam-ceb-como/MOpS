@@ -32,7 +32,8 @@
     </mixture>
 	
     <!-- Stage 1 -->
-    <reactor constt="false" constv="false" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
+	<!-- Set flag includeParticleTerms to true to include particle processes in the energy balance (requires constt to be false)-->
+    <reactor constt="false" constv="false" includeParticleTerms="true" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
 	    <initial>initial_mixture</initial>
         <flow dir="in" frac="0.42">reactant_mixture1</flow>
         <flow dir="in" frac="0.58">plasma_mixture</flow>

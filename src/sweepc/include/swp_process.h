@@ -272,14 +272,13 @@ protected:
          = 1           //  - Default is one time.
          ) const;
 
-    // aab64 Adjusts the temperature for particle-phase process using change in composition
-    void adjustParticleTemperature(
+    // Adjusts the temperature for particle-phase process using change in composition
+    // Currently only implemented for titania!
+	void adjustParticleTemperature(
 	Cell &sys,       // System to update.
 	double wt,       // Stochastic weight of particle
 	unsigned int n   // Number of times to apply process.
 	 = 1,            //  - Default is one time.
-	bool adjustT     // Update the temperature if adiabatic (if desired) 
-	 = false,        //  - Default is false (aab64 avoid changing existing code, except for titania) 
 	double dcomp     // Change in particle composition
 	 = 1.0,          // - Default is 1.0, 
 	int processID    // Contributing process

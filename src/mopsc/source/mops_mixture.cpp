@@ -110,7 +110,6 @@ const Sprog::Thermo::IdealGas& Mixture::GasPhase(void) const {
     const Sweep::SprogIdealGasWrapper *gasWrapper = dynamic_cast<const Sweep::SprogIdealGasWrapper*>(&Sweep::Cell::GasPhase());
 
     if(gasWrapper == NULL)
-		//assert(isValid());
         throw std::runtime_error("Could not cast gas phase to Sweep::SprogIdealGasWrapper in Mops::Mixture::GasPhase");
 
     // Since the exception was not thrown we have the proper kind of gas phase for using with mops
@@ -130,7 +129,6 @@ Sprog::Thermo::IdealGas& Mixture::GasPhase(void) {
     Sweep::SprogIdealGasWrapper *gasWrapper = dynamic_cast<Sweep::SprogIdealGasWrapper*>(&Sweep::Cell::GasPhase());
 
     if(gasWrapper == NULL)
-		//assert(isValid());
         throw std::runtime_error("Could not cast gas phase to Sweep::SprogIdealGasWrapper in Mops::Mixture::GasPhase");
 
     // Since the exception was not thrown we have the proper kind of gas phase for using with mops

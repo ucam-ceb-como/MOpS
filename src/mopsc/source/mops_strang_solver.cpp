@@ -82,101 +82,101 @@ StrangSolver::~StrangSolver(void)
 // up to the stop time.  calls the output routine once at the
 // end of the function.  niter is ignored.
 void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
-	Sweep::rng_type &rng,
-	OutFnPtr out, void *data)
+                         Sweep::rng_type &rng,
+                         OutFnPtr out, void *data)
 {
-	// aab64 Make note of energy balance state
-	if (r.EnergyEquation() != r.ConstT) {
-		r.Mixture()->SetIsAdiabaticFlag(true);
-	}
-	else {
-		r.Mixture()->SetIsAdiabaticFlag(false);
-	}
-	// aab64 Initialise register of particle-number particles
-	if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
-	{
-		InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
-	}
+    // Check if particle terms are to be included in the energy balance
+    if (r.IncludeParticles()) {
+        r.Mixture()->SetIsAdiabaticFlag(true);
+    }
+    else {
+        r.Mixture()->SetIsAdiabaticFlag(false);
+    }
 
-	// Mark the time at the start of the step, in order to
-	// calculate total computation time.
-	clock_t totmark = clock();
+    // Initialise the register of particle-number particles
+    if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
+    {
+        InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
+    }
 
-	// Time counters.
-	double t2 = r.Time();
-	double dt = (tstop - t2) / (double)nsteps; // Step size.
-	double h = dt * 0.5; // Half step size.
+    // Mark the time at the start of the step, in order to
+    // calculate total computation time.
+    clock_t totmark = clock();
 
-	// Sweep time counters.
-	double ts1 = r.Time();
-	double ts2 = ts1;
+    // Time counters.
+    double t2 = r.Time();
+    double dt = (tstop - t2) / (double)nsteps; // Step size.
+    double h  = dt * 0.5; // Half step size.
 
-	// Variables required to ensure particle number density is correctly
-	// scaled with gas-phase expansion.
-	double rho = 0.0;
+    // Sweep time counters.
+    double ts1 = r.Time();
+    double ts2 = ts1;
 
-	// aab64 Function to store heat capacity and particle density for the step
-	storeTemperatureProperties(r, rng);
+    // Variables required to ensure particle number density is correctly
+    // scaled with gas-phase expansion.
+    double rho = 0.0;
 
-	m_cpu_mark = clock();
-	// Solve first half-step of gas-phase chemistry.
-	rho = r.Mixture()->GasPhase().MassDensity();
-	m_ode.Solve(r, t2 += h);
+    // This function stores heat capacity and particle density for the step
+    storeTemperatureProperties(r, rng);
+
+    m_cpu_mark = clock();
+        // Solve first half-step of gas-phase chemistry.
+        rho = r.Mixture()->GasPhase().MassDensity();
+        m_ode.Solve(r, t2 += h);
 	r.SetTime(t2);
-	m_chemtime += calcDeltaCT(m_cpu_mark);
+    m_chemtime += calcDeltaCT(m_cpu_mark);
 
-	m_cpu_mark = clock();
+    m_cpu_mark = clock();
 	
-	// aab64 Function to store heat capacity and particle density for the step
-	storeTemperatureProperties(r, rng);
+    // Update heat capacity and particle density for the step
+    storeTemperatureProperties(r, rng);
 
-	// Solve one whole step of population balance (Sweep).
-	if (!r.IsConstV()) 
-		r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
+    // Solve one whole step of population balance (Sweep).
+    if (!r.IsConstV()) 
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
 	
-	Run(ts1, ts2 += dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+    Run(ts1, ts2 += dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
-	m_swp_ctime += calcDeltaCT(m_cpu_mark);
+    m_swp_ctime += calcDeltaCT(m_cpu_mark);
 
-	for (int i = 1; i<nsteps; ++i) {
+    for (int i = 1; i<nsteps; ++i) {
 
-		m_cpu_mark = clock();
-		// Solve whole step of gas-phase chemistry.
-		rho = r.Mixture()->GasPhase().MassDensity();
-		m_ode.ResetSolver();
-		m_ode.Solve(r, t2 += dt);
-		r.SetTime(t2);
-		m_chemtime += calcDeltaCT(m_cpu_mark);
+        m_cpu_mark = clock();
+        // Solve whole step of gas-phase chemistry.
+        rho = r.Mixture()->GasPhase().MassDensity();
+        m_ode.ResetSolver();
+        m_ode.Solve(r, t2 += dt);
+        r.SetTime(t2);
+        m_chemtime += calcDeltaCT(m_cpu_mark);
+        m_cpu_mark = clock();
+        
+        // Update heat capacity and particle density for the step
+        storeTemperatureProperties(r, rng);
+        
+        // Solve whole step of population balance (Sweep).
+        if (!r.IsConstV()) 
+            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+        Run(ts1, ts2 += dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+        m_swp_ctime += calcDeltaCT(m_cpu_mark);
+    }
 
-		m_cpu_mark = clock();
+    m_cpu_mark = clock();
+    // Solve last half-step of gas-phase chemistry.  
+    rho = r.Mixture()->GasPhase().MassDensity();
+    m_ode.ResetSolver();
+    m_ode.Solve(r, t2 += h);
+    
+    if (!r.IsConstV())
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
 
-		// aab64 Function to store heat capacity and particle density for the step
-		storeTemperatureProperties(r, rng);
-
-		// Solve whole step of population balance (Sweep).
-		if (!r.IsConstV()) 
-			r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
-		Run(ts1, ts2 += dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
-		m_swp_ctime += calcDeltaCT(m_cpu_mark);
-	}
-
-	m_cpu_mark = clock();
-	// Solve last half-step of gas-phase chemistry.  
-	rho = r.Mixture()->GasPhase().MassDensity();
-	m_ode.ResetSolver();
-	m_ode.Solve(r, t2 += h);
-
-	if (!r.IsConstV())
-		r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
-
-	r.SetTime(t2);
-	m_chemtime += calcDeltaCT(m_cpu_mark);
-
-	// Calculate total computation time.
-	m_tottime += calcDeltaCT(totmark);
-
-	// Call the output function.
-	if (out) out(nsteps, niter, r, *this, data);
+    r.SetTime(t2);
+    m_chemtime += calcDeltaCT(m_cpu_mark);
+    
+    // Calculate total computation time.
+    m_tottime += calcDeltaCT(totmark);
+    
+    // Call the output function.
+    if (out) out(nsteps, niter, r, *this, data);
 }
 
 
@@ -192,18 +192,19 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
                          Sweep::rng_type &rng,
                          OutFnPtr out, void *data, bool writediags)
 {
-    // aab64 Make note of energy balance state
-    if (r.EnergyEquation() != r.ConstT) {
+    // Check if particle terms are to be included in the energy balance
+    if (r.IncludeParticles()) {
         r.Mixture()->SetIsAdiabaticFlag(true);
     }
     else {
         r.Mixture()->SetIsAdiabaticFlag(false);
-	}
-	// aab64 Initialise register of particle-number particles
-	if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
-	{
-		InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
-	}
+    }
+    
+    // Initialise the register of particle-number particles
+    if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
+    {
+        InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
+    }
 
     //Diagnostics file
     ofstream partProcFile, gasConcFile;
@@ -232,10 +233,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     // Variables required to ensure particle number density is correctly
     // scaled with gas-phase expansion.
-	double rho = 0.0;
+    double rho = 0.0;
 	
-	// aab64 Function to store heat capacity and particle density for the step
-	storeTemperatureProperties(r, rng);
+    // This function stores heat capacity and particle density for the step
+    storeTemperatureProperties(r, rng);
 
     m_cpu_mark = clock();
     // Solve first half-step of gas-phase chemistry.
@@ -246,8 +247,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     m_cpu_mark = clock();
 
-	// aab64 Function to store heat capacity and particle density for the step
-	storeTemperatureProperties(r, rng);
+    // Update heat capacity and particle density for the step
+    storeTemperatureProperties(r, rng);
 
     if (writediags) {
         // Diagnostics variables at start of split step
@@ -271,9 +272,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     }
 
     // Solve one whole step of population balance (Sweep).
-    if (!r.IsConstV()) //aab64
-		r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-    
+    if (!r.IsConstV())
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
     Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
     m_swp_ctime += calcDeltaCT(m_cpu_mark);
@@ -351,8 +351,8 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
         m_cpu_mark = clock();
 
-		// aab64 Function to store heat capacity and particle density for the step
-		storeTemperatureProperties(r, rng);
+        // Update heat capacity and particle density for the step
+        storeTemperatureProperties(r, rng);
 
         // Diagnostics variables at start of split step
         if (writediags) {
@@ -375,13 +375,12 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
             tmpTin = r.Mixture()->GasPhase().Temperature();
         }
 
-		// Solve whole step of population balance (Sweep).
-		if (!r.IsConstV()) // aab64
-			r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+        // Solve whole step of population balance (Sweep).
+        if (!r.IsConstV())
+            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
-		Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
-
-		m_swp_ctime += calcDeltaCT(m_cpu_mark);        
+        m_swp_ctime += calcDeltaCT(m_cpu_mark);
 
         if (writediags) {
             // Diagnostic variables at end of split step
@@ -448,12 +447,12 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     m_cpu_mark = clock();
     // Solve last half-step of gas-phase chemistry. 
-	rho = r.Mixture()->GasPhase().MassDensity();
+    rho = r.Mixture()->GasPhase().MassDensity();
     m_ode.ResetSolver();
     m_ode.Solve(r, t2+=h);
 
-	if (!r.IsConstV())
-		r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity()); // aab64
+    if (!r.IsConstV())
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
 
     r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);

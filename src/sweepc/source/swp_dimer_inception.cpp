@@ -166,9 +166,10 @@ int DimerInception::Perform(const double t, Cell &sys,
 
         // Update gas-phase chemistry of system.
         if (!sys.GetIsAdiabaticFlag())
-            adjustGas(sys, sp->getStatisticalWeight(), 1);
+			adjustGas(sys, sp->getStatisticalWeight(), 1);
+		// Update gas-phase chemistry and temperature of system.
         else
-            adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1);
+            adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, ParticleComp()[0], 1);
     }
     else
     {
@@ -178,9 +179,10 @@ int DimerInception::Perform(const double t, Cell &sys,
         sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
         // Update gas-phase chemistry of system.
         if (!sys.GetIsAdiabaticFlag())
-            adjustGas(sys, sys.GetInceptingWeight(), 1);
+			adjustGas(sys, sys.GetInceptingWeight(), 1);
+		// Update gas-phase chemistry and temperature of system.
         else
-            adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, sys.GetIsAdiabaticFlag(), ParticleComp()[0], 1);
+            adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, ParticleComp()[0], 1);
     }
 
     return 0;

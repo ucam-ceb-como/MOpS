@@ -101,11 +101,11 @@ PredCorSolver::~PredCorSolver(void)
 void PredCorSolver::Initialise(Reactor &r)
 {
     // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
-	r.Mixture()->SetFixedChem(true);
-	if (r.IsConstV())
-	{
-		r.Mixture()->setConstV(true);
-	}
+    r.Mixture()->SetFixedChem(true);
+    if (r.IsConstV())
+    {
+        r.Mixture()->setConstV(true);
+    }
 
     // Set up ODE solver.
     FlameSolver::Initialise(r);
@@ -126,11 +126,11 @@ void PredCorSolver::Initialise(Reactor &r)
     m_ode.SetExtSrcTerms(m_srcterms);
     m_ode_copy.SetExtSrcTerms(m_srcterms);
 
-	// aab64 Initialise register of particle-number particles
-	if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
-	{
-		InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
-	}
+    // Initialise the register of particle-number particles
+    if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
+    {
+        InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
+    }
 
     // Clone the reactor.
     delete m_reac_copy;
@@ -159,17 +159,17 @@ void PredCorSolver::Reset(Reactor &r)
     m_ode_copy.SetExtSrcTerms(m_srcterms);
 
     // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
-	r.Mixture()->SetFixedChem(true);
-	if (r.IsConstV())
-	{
-		r.Mixture()->setConstV(true);
-	}
+    r.Mixture()->SetFixedChem(true);
+    if (r.IsConstV())
+    {
+        r.Mixture()->setConstV(true);
+    }
 
-	// aab64 Initialise register of particle-number particles
-	if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
-	{
-		InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
-	}
+    // Initialise the register of particle-number particles
+    if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
+    {
+        InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
+    }
 	
     // Clone the reactor.
     delete m_reac_copy;
@@ -698,38 +698,21 @@ void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
     // Generate chemistry profile over the step using the current
     // source terms.
     m_cpu_mark = clock();
-    generateChemProfile(r, dt);
+        generateChemProfile(r, dt);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
     // Solve step using Sweep in order to update the
     // source terms.
     m_cpu_mark = clock();
-    // Set the stop time.    
-    double ts2 = ts1+dt;
+        // Set the stop time.    
+        double ts2 = ts1+dt;
 
-    // Scale M0 according to gas-phase expansion.
-	if (!r.IsConstV()) 
-		r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()
-                / r.Mixture()->GasPhase().MassDensity());
+        // Scale M0 according to gas-phase expansion.
+       r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()		
+                / r.Mixture()->GasPhase().MassDensity());									
 
-	// aab64 Temporary functions for gas-phase properties
-	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
-
-	/*if (r.IsConstV()) {
-		// Constant volume reactor: Use Cv, Us.
-		fvector Hs;
-		tmpGasPhase->Us(Hs);
-		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCv(), tmpGasPhase->Density(), Hs);
-	}
-	else {
-		// Constant pressure reactor: Use Cp, Hs.
-		fvector Hs;
-		tmpGasPhase->Hs(Hs);
-		r.Mixture()->setGasPhaseProperties(tmpGasPhase->BulkCp(), tmpGasPhase->Density(), Hs);
-	}*/
-
-    // Run Sweep for this time step.
-    Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+        // Run Sweep for this time step.
+        Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng);
     m_swp_ctime += calcDeltaCT(m_cpu_mark);
 
     // Now update the source terms at the end of the step.
@@ -772,7 +755,7 @@ void PredCorSolver::generateChemProfile(Reactor &r, double dt)
 // Calculates the instantaneous source terms.
 void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
 {
-    //aab64 get concentrations and rates
+    // aab64 Get concentrations and rates to compute change in enthalpy
     Mops::fvector csrc;
     double dconc = 0.0;
     // Get rates-of-change using Sweep mechanism.
@@ -786,7 +769,7 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
     if (r.EnergyEquation() == Reactor::ConstT) {
         src.Terms[r.Mech()->GasMech().SpeciesCount()] = 0.0;
     } else {
-		src.Terms[r.Mech()->GasMech().SpeciesCount()] += energySrcTerm(r, csrc); //csrc src.Terms
+        src.Terms[r.Mech()->GasMech().SpeciesCount()] += energySrcTerm(r, csrc); // To use mole fracs: src.Terms
     }
 
     // Calculate density change based on whether reactor is constant
@@ -795,12 +778,12 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
         // Constant pressure: zero density derivative.
         src.Terms[r.Mech()->GasMech().SpeciesCount()+1] = 0.0;
     } else {
-		// aab64 Constant volume: add gdot to wdot for density derivative.
-		//Compute gdot
-		for (unsigned int i = 0; i != r.Mech()->GasMech().SpeciesCount(); ++i) {
-			dconc += csrc[i];
-		}
-		src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] += dconc;
+        // Constant volume: add gdot to wdot for density derivative.
+        // Compute gdot
+        for (unsigned int i = 0; i != r.Mech()->GasMech().SpeciesCount(); ++i) {
+            dconc += csrc[i];
+        }
+        src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] += dconc;
     }
 }
 
@@ -813,11 +796,7 @@ double PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
         fvector Hs;
         double C;
 
-	// aab64 Use Us function for constant volume
-        // Calculate species enthalpies
-        // r.Mixture()->GasPhase().Hs(Hs);
-
-        // Calculate heat capacity and enthalpy.
+        // Calculate heat capacity and enthalpy/internal energy.
         if (r.IsConstV()) {
             // Constant volume reactor: Use Cv, Us.
             C = r.Mixture()->GasPhase().BulkCv();
@@ -833,8 +812,8 @@ double PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
         for (unsigned int i=0; i!=r.Mech()->GasMech().SpeciesCount(); ++i) {
             Tdot -= Hs[i] * src[i];
         }
-		src[28] = 0;
-        return Tdot / (C * r.Mixture()->GasPhase().Density()); // This is not compensating for the thermal bulk of particles (cf. temperature update in swp_process)
+	src[28] = 0;
+        return Tdot / (C * r.Mixture()->GasPhase().Density());
 
     } else if (r.EnergyEquation() == Reactor::ConstT) {
         // Constant temperature model.

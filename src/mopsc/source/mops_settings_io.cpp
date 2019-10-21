@@ -550,6 +550,18 @@ Mops::PSR *const readPSR(
         // energy equation.
         reac->SetEnergyEquation(Reactor::Adiabatic);
     }
+    // Now check if particle terms should be included in the EB.
+    // This is only relevant with adiabatic energy equation.
+    if (reac->EnergyEquation() == Reactor::Adiabatic)
+    {
+        attr = node.GetAttribute("includeParticleTerms");
+        if (attr != NULL) {
+            str = attr->GetValue();
+            if (str.compare("true") == 0) {
+                reac->SetIncludeParticles();
+            }
+        }
+    }
 
     // Now check for constant volume.
     attr = node.GetAttribute("constv");

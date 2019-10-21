@@ -415,7 +415,7 @@ private:
     // the binary output file.
     void outputGasPhase(const Reactor &r) const;
 
-    // aab64 Writes the particle temperature of the given 
+    // Writes the particle-number count of the given 
     // reactor to the binary output file. 
     void outputParticleNumber(const Reactor &r) const;
 
@@ -482,7 +482,7 @@ private:
         bool calcsqrs = false        // Set =true to also calculate sums of squares.
         );
 
-    // aab64 Reads a particle temperature data point from the binary file.
+    // Reads a particle-number list data point from the binary file.
     // To allow the averages and confidence intervals to be calculated -
     // the data point is added to a vector of sums, and the squares are
     // added to the vector sumsqr if necessary.
@@ -606,7 +606,7 @@ private:
         const std::vector<fvector> &err  // Vector of confidence intervals.
         );
 
-    // aab64 Writes particle temperature profile to a CSV file.
+    // Writes the particle-number list count to a CSV file.
     static void writeParticleNumberListCSV(
 	const std::string &filename,     // Output file name (incl. extension).
 	const Mechanism &mech,           // Mechanism defining chemical species.

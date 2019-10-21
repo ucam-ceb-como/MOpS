@@ -1025,8 +1025,8 @@ void Simulator::outputGasPhase(const Reactor &r) const
     m_file.write((char*)&P, sizeof(P));
 }
 
-// aab64 Writes the particle-number count (number of particles in list using the hybrid model) 
-// of the given reactor to the binary output file. (No need modification, modification when read) 
+// Writes the particle-number count (number of particles in list using the hybrid model) 
+// of the given reactor to the binary output file. 
 void Simulator::outputParticleNumber(const Reactor &r) const
 {
     double PN = r.Mixture()->Particles().GetTotalParticleNumber();
@@ -1158,7 +1158,7 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             // Write sensitivityto file.
             s.OutputSensitivity(me->m_senfile, r, me);
 
-            // aab64 Write the particle-number count to the output file.
+            // Write the particle-number count to the output file.
             me->outputParticleNumber(r);
         }
     }

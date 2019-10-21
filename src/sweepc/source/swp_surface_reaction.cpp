@@ -276,7 +276,7 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
                         if (!sys.GetIsAdiabaticFlag())
                             adjustGas(sys, sp->getStatisticalWeight());
                         else
-                            adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2);
+                            adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, m_dcomp[0], 2);
                     }
                 }
             } else {
@@ -302,7 +302,7 @@ int SurfaceReaction::Perform(double t, Sweep::Cell &sys,
                 if (!sys.GetIsAdiabaticFlag())
                     adjustGas(sys, sp->getStatisticalWeight());
                 else
-                    adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2);
+                    adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, m_dcomp[0], 2);
             }
         }
     } else {
@@ -326,7 +326,7 @@ int SurfaceReaction::Perform(double t, Cell &sys, Particle &sp, rng_type &rng,
         if (!sys.GetIsAdiabaticFlag())
             adjustGas(sys, sp.getStatisticalWeight(), m);
         else
-            adjustParticleTemperature(sys, sp.getStatisticalWeight(), m, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2);
+            adjustParticleTemperature(sys, sp.getStatisticalWeight(), m, m_dcomp[0], 2);
     }
     return m;
 }
@@ -340,7 +340,7 @@ int SurfaceReaction::Perform(double t, Cell &sys, rng_type &rng, unsigned int n)
 	if (!sys.GetIsAdiabaticFlag())
 		adjustGas(sys, 1, n);
 	else
-		adjustParticleTemperature(sys, 1, n, sys.GetIsAdiabaticFlag(), m_dcomp[0], 2);
+		adjustParticleTemperature(sys, 1, n, m_dcomp[0], 2);
 	return n;
 }
 

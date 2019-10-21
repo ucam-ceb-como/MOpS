@@ -1381,7 +1381,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 					{
 						if ((*i)->IsDeferred())
 						{
-							(*i)->Perform(t, sys, *sp_add, rng, n_add);
+							(*i)->Perform(t, sys, *sp_add, rng, n_add, true);
 							sp_add->UpdateCache();
 						}
 					}

@@ -471,6 +471,7 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n) const
 }
 
 // Adjusts the gas-phase temperature using change in composition of the particle
+// Currently only implemented for titania!
 /*
 * Same warning as in adjustGas above applies
 * @param[in, out]   sys      System in which the gas phase is changing
@@ -482,8 +483,7 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n) const
 *
 * @exception   std::runtime_error      Could not cast gas phase to SprogIdealGasWrapper
 */
-void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, bool adjustT, 
-	double dcomp, int processID) const 
+void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, double dcomp, int processID) const 
 {
 	if (!sys.FixedChem())
 	{

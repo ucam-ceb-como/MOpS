@@ -260,8 +260,8 @@ void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
 
-// aab64 Calculates and stores various properties used to complete the 
-// energy balance so they can be computed less frequently. 
+// Calculates and stores various properties used to complete the 
+// energy balance with particles so they can be computed less frequently. 
 // Sets constv/p flag for the cell so it is accessible for the temperature update.
 void Solver::storeTemperatureProperties(Reactor &r, Sweep::rng_type &rng)
 {
