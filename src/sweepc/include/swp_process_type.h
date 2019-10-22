@@ -96,6 +96,9 @@ namespace Processes
 		//! Transition coagulation with weighted particles
 		Transition_Coagulation_Weighted_PAHs_ID = 10007,
 
+		//! Transition coagulation with hybrid particle-number/particle model
+		Hybrid_Transition_Coagulation_ID = 10008,
+
         // Coagulation processes
         Erosion_Fragmentation_ID=20000,   // Transition regime coagulation
         Symmetric_Fragmentation_ID=20001,     // Additive coagulation kernel

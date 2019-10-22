@@ -50,6 +50,7 @@
 #include "swp_actsites_reaction.h"
 #include "swp_condensation.h"
 #include "swp_transcoag.h"
+#include "swp_hybrid_transcoag.h"
 #include "swp_addcoag.h"
 #include "swp_constcoag.h"
 #include "swp_erosionfrag.h"
@@ -1794,6 +1795,10 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                     if(kernelName == "transition")
 						if (mech.Components()[0]->WeightedPAHs()){
 							coag.reset(new Processes::TransitionCoagulationWeightedPAHs(mech));
+						}
+						else if (mech.IsHybrid())
+						{
+							coag.reset(new Processes::HybridTransitionCoagulation(mech));							
 						}
 						else{
 							coag.reset(new Processes::TransitionCoagulation(mech));

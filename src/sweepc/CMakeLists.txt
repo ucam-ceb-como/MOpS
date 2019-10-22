@@ -30,6 +30,7 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_fixed_mixture.cpp
                   source/swp_fragmentation.cpp
                   source/swp_gas_profile.cpp
+                  source/swp_hybrid_transcoag.cpp
                   source/swp_imgnode.cpp
                   source/swp_inception.cpp
                   source/swp_mechanism.cpp

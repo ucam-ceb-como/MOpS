@@ -45,6 +45,7 @@
 #include "swp_condensation.h"
 #include "swp_actsites_reaction.h"
 #include "swp_transcoag.h"
+#include "swp_hybrid_transcoag.h"
 #include "swp_transcoag_weighted_PAHs.h"
 #include "swp_addcoag.h"
 #include "swp_constcoag.h"
@@ -172,6 +173,9 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
             case Transition_Coagulation_ID:
                 proc = new TransitionCoagulation(in, mech);
                 break;
+			case Hybrid_Transition_Coagulation_ID:
+				proc = new HybridTransitionCoagulation(in, mech);
+				break;
 			case Transition_Coagulation_Weighted_PAHs_ID:
 				proc = new TransitionCoagulationWeightedPAHs(in, mech);
 				break;
