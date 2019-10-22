@@ -125,16 +125,8 @@ double Sweep::Processes::WeightedConstantCoagulation::RateTerms(double t, const 
                             const Geometry::LocalGeometry1d &local_geom,
                             fvector::iterator &iterm) const
 {
-    unsigned int n = sys.ParticleCount();
-	
-    // For hybrid particle model
-    if (m_mech->IsHybrid())
-    {
-        unsigned int n2 = sys.Particles().GetTotalParticleNumber();
-        if (n > 1)
-            n2 += (n - 1);
-        n = n2;
-    }
+    const unsigned int n = sys.ParticleCount();
+
     if(n > 1) {
         const double r1 = (n - 1) * sys.Particles().GetSum(Sweep::iW)
                         * s_MajorantFactor * A() / sys.SampleVolume();
@@ -173,13 +165,7 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
     // uniformly and one with probability proportional
     // to particle mass.
 
-    unsigned int number = sys.ParticleCount();
-
-    // For hybrid particle model - Can still do coagulation if there are at least 2 particles in total
-    if (m_mech->IsHybrid() && number < 2)
-        number = sys.Particles().GetTotalParticleNumber();
-
-    if (number < 2) {
+    if (sys.ParticleCount() < 1) {
         return 1;
     }
 
@@ -195,10 +181,7 @@ int Sweep::Processes::WeightedConstantCoagulation::Perform(
             throw std::logic_error("Unrecognised term, (Sweep, WeightedConstantCoagulation::Perform)");
     }
 
-    if (!(m_mech->IsHybrid()))
-        return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
-    else
-        return WeightedPerform_hybrid(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
+    return WeightedPerform(t, prop1, prop2, m_CoagWeightRule, sys, rng, Default);
 }
 
 /**

@@ -44,9 +44,6 @@
 #include "swp_cell.h"
 #include "swp_mechanism.h"
 #include "swp_PAH_primary.h"
-#include <boost/random/uniform_01.hpp>
-#include <boost/random/exponential_distribution.hpp>
-#include <boost/random/variate_generator.hpp>
 
 using namespace Sweep::Processes;
 
@@ -78,7 +75,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
                                                           const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
-    unsigned int n = sys.ParticleCount() + sys.Particles().GetTotalParticleNumber();
+    unsigned int n = sys.ParticleCount();
 
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
@@ -86,24 +83,10 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
         double T = sys.GasPhase().Temperature();
         double P = sys.GasPhase().Pressure();
 
-        // Get the particle-number contributions
-        fvector props(6, 0);
-        props[0] = sys.Particles().GetTotalDiameter();
-        props[1] = sys.Particles().GetTotalDiameter2();
-        props[2] = sys.Particles().GetTotalDiameter_1();
-        props[3] = sys.Particles().GetTotalDiameter_2();
-        props[4] = sys.Particles().GetTotalMass_1_2();
-        props[5] = sys.Particles().GetTotalDiameter2_mass_1_2();
-	
         // Calculate the rate.
-        double rate = Rate(sys.Particles().GetSums(), (double)n, sqrt(T),
+        return Rate(sys.Particles().GetSums(), (double)n, sqrt(T),
                     T/sys.GasPhase().Viscosity(), MeanFreePathAir(T,P),
-                    sys.SampleVolume(), props);
-
-        props.clear();
-        fvector().swap(props);
-
-        return rate;
+                    sys.SampleVolume());
     } else {
         return 0.0;
     }
@@ -113,7 +96,7 @@ double Sweep::Processes::TransitionCoagulation::Rate(double t, const Cell &sys,
 // All parameters required to calculate rate passed
 // as arguments.
 double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_cache_type &data, double n, double sqrtT,
-                       double T_mu, double MFP, double vol, fvector & props) const
+                       double T_mu, double MFP, double vol) const
 {
     // Some prerequisites.
     double n_1 = n - 1.0;
@@ -122,20 +105,12 @@ double Sweep::Processes::TransitionCoagulation::Rate(const Ensemble::particle_ca
     double c = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    double d       = data.Property(Sweep::iDcol);
-    double d2      = data.Property(Sweep::iD2);
-    double d_1     = data.Property(Sweep::iD_1);
-    double d_2     = data.Property(Sweep::iD_2);
-    double m_1_2   = data.Property(Sweep::iM_1_2);
-    double d2m_1_2 = data.Property(Sweep::iD2_M_1_2);
-
-    // Add particle-number contributions
-    d += props[0];
-    d2 += props[1];
-    d_1 += props[2];
-    d_2 += props[3];
-    m_1_2 += props[4];
-    d2m_1_2 += props[5];
+    const double d       = data.Property(Sweep::iDcol);
+    const double d2      = data.Property(Sweep::iD2);
+    const double d_1     = data.Property(Sweep::iD_1);
+    const double d_2     = data.Property(Sweep::iD_2);
+    const double m_1_2   = data.Property(Sweep::iM_1_2);
+    const double d2m_1_2 = data.Property(Sweep::iD2_M_1_2);
 
     // Get individual terms.
     double terms[TYPE_COUNT];
@@ -189,7 +164,7 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
                             fvector::iterator &iterm) const
 {
     // Get the number of particles in the system.
-    unsigned int n = sys.ParticleCount() + sys.Particles().GetTotalParticleNumber();
+    unsigned int n = sys.ParticleCount();
 
     // Check that there are at least 2 particles before calculating rate.
     if (n > 1) {
@@ -197,21 +172,9 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
         double T = sys.GasPhase().Temperature();
         double P = sys.GasPhase().Pressure();
 
-        // Add contributions from particle-number list
-        fvector props(6, 0);
-        props[0] = sys.Particles().GetTotalDiameter();
-        props[1] = sys.Particles().GetTotalDiameter2();
-        props[2] = sys.Particles().GetTotalDiameter_1();
-        props[3] = sys.Particles().GetTotalDiameter_2();
-        props[4] = sys.Particles().GetTotalMass_1_2();
-        props[5] = sys.Particles().GetTotalDiameter2_mass_1_2();
-		
         // Calculate the rate terms.
-        double rate = RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T/sys.GasPhase().Viscosity(),
-                         MeanFreePathAir(T,P), sys.SampleVolume(), iterm, props);
-        props.clear();
-        fvector().swap(props);
-        return rate;
+        return RateTerms(sys.Particles().GetSums(), (double)n, sqrt(T), T/sys.GasPhase().Viscosity(),
+                         MeanFreePathAir(T,P), sys.SampleVolume(), iterm);
     } else {
         // No coagulation as there are too few particles.
         for(unsigned int i=0; i<TYPE_COUNT; i++) *(iterm++) = 0.0;
@@ -224,7 +187,7 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(double t, const Cell &
 // passed as arguments.
 double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::particle_cache_type &data, double n, double sqrtT,
                             double T_mu, double MFP, double vol,
-                            fvector::iterator &iterm, fvector & props) const
+                            fvector::iterator &iterm) const
 {
     // Some prerequisites.
     double n_1 = n - 1.0;
@@ -233,20 +196,12 @@ double Sweep::Processes::TransitionCoagulation::RateTerms(const Ensemble::partic
     double c   = CFMMAJ * m_efm * CFM * sqrtT * A();
 
     // Summed particle properties required for coagulation rate.
-    double d       = data.Property(Sweep::iDcol);
-    double d2      = data.Property(Sweep::iD2);
-    double d_1     = data.Property(Sweep::iD_1);
-    double d_2     = data.Property(Sweep::iD_2);
-    double m_1_2   = data.Property(Sweep::iM_1_2);
-    double d2m_1_2 = data.Property(Sweep::iD2_M_1_2);
-
-    // Add particle-number contributions
-    d       += props[0];
-    d2      += props[1];
-    d_1     += props[2];
-    d_2     += props[3];
-    m_1_2   += props[4];
-    d2m_1_2 += props[5];
+    const double d       = data.Property(Sweep::iDcol);
+    const double d2      = data.Property(Sweep::iD2);
+    const double d_1     = data.Property(Sweep::iD_1);
+    const double d_2     = data.Property(Sweep::iD_2);
+    const double m_1_2   = data.Property(Sweep::iM_1_2);
+    const double d2m_1_2 = data.Property(Sweep::iD2_M_1_2);
 
     fvector::iterator isf = iterm;
     fvector::iterator ifm = iterm+4;
@@ -315,493 +270,189 @@ int TransitionCoagulation::Perform(double t, Sweep::Cell &sys,
 {
 	PartPtrVector dummy;
 
+    // Select properties by which to choose particles (-1 means
+    // choose uniformly).  Note we need to choose 2 particles.  There
+    // are six possible rate terms to choose from; 4 slip-flow and 2
+    // free molecular.
+    if (sys.ParticleCount() < 2) {
+        return 1;
+    }
+
     int ip1=-1, ip2=-1;
     MajorantType maj;
     TermType term = (TermType)iterm;
 
-    // Store number of particles in each particle model
-    double n_incep = sys.Particles().GetTotalParticleNumber();
-    double n_other = sys.ParticleCount();
-    double n_total = n_incep + n_other;
-    unsigned int index1 = 0, index2 = 0, n_index1 = 0; 
-
-    // Hybrid particle model flags
-    bool hybrid_flag = m_mech->IsHybrid() && n_incep > 0.0; // Check if particle-number list is relevant
-    bool ip1_flag = false;      // Flag particle 1 as a particle-number particle
-    bool ip2_flag = false;      // Flag particle 2 as a particle-number particle
-    bool coag_in_place = false; // Flag for coagulation in particle-number list
+    // Select the first particle and note the majorant type.
+    switch (term) {
+        case SlipFlow1:
+            ip1 = sys.Particles().Select(rng);
+            maj = SlipFlow;
+            break;
+        case SlipFlow2:
+            ip1 = sys.Particles().Select(Sweep::iDcol, rng);
+            maj = SlipFlow;
+            break;
+        case SlipFlow3:
+            ip1 = sys.Particles().Select(rng);
+            maj = SlipFlow;
+            break;
+        case SlipFlow4:
+            ip1 = sys.Particles().Select(Sweep::iDcol, rng);
+            maj = SlipFlow;
+            break;
+        case FreeMol1:
+            ip1 = sys.Particles().Select(rng);
+            maj = FreeMol;
+            break;
+        case FreeMol2:
+            ip1 = sys.Particles().Select(Sweep::iD2, rng);
+            maj = FreeMol;
+            break;
+        default :
+            ip1 = sys.Particles().Select(rng);
+            maj = SlipFlow;
+            break;
+    }
 
     // Choose and get first particle.
-    Particle *sp1 = NULL;
-    Particle *sp2 = NULL;
+    Particle *sp1=NULL;
+    if (ip1 >= 0) {
+        sp1 = sys.Particles().At(ip1);
+    } else {
+        // Failed to choose a particle.
+        return -1;
+    }
 
-    // Hybrid model: if < 2 SPs but incepting class >= 2, we can still act
-    if (n_total < 2)
-        return 1;
-    else
-    {
-        // Select properties by which to choose particles. 
-        // Note we need to choose 2 particles.  There are six possible 
-        // rate terms to choose from; 4 slip-flow and 2 free molecular.
-        boost::uniform_01<rng_type&, double> unifDistrib(rng);
-	
-        // Get property sums for number list	
-        double dc_incep = sys.Particles().GetTotalDiameter();
-        double dc2_incep = sys.Particles().GetTotalDiameter2();
-        double dc_1_incep = sys.Particles().GetTotalDiameter_1();
-        double dc_2_incep = sys.Particles().GetTotalDiameter_2();
-        double m_1_2_incep = sys.Particles().GetTotalMass_1_2();
-        double dc2_m_1_2_incep = sys.Particles().GetTotalDiameter2_mass_1_2();
 
-        // Get property sums for ensemble
-        double dc_other = sys.Particles().GetSum(iDcol);
-        double dc2_other = sys.Particles().GetSum(iD2);
-        double dc_1_other = sys.Particles().GetSum(iD_1);
-        double dc_2_other = sys.Particles().GetSum(iD_2);
-        double m_1_2_other = sys.Particles().GetSum(iM_1_2);
-        double dc2_m_1_2_other = sys.Particles().GetSum(iD2_M_1_2);
 
-        // Select the first particle and note the majorant type
-        double alpha1 = 0.0, alpha2 = 0.0;
-        switch (term) {
-            case SlipFlow1:
-                alpha1 = unifDistrib() * n_total;
-                if (alpha1 <= n_incep)
-                {
-                    index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
-                    ip1 = -2;
-                } else {
-                    ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1 - n_incep, rng);
-                }
-                maj = SlipFlow;
-                break;
-            case SlipFlow2:
-                alpha1 = unifDistrib() * (dc_incep + dc_other);
-                if (alpha1 <= dc_incep)
-                {
-                    index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iDcol, rng);
-                    ip1 = -2;
-                } else {
-                    ip1 = sys.Particles().Select_usingGivenRand(iDcol, alpha1 - dc_incep, rng);
-                }
-                maj = SlipFlow;
-                break;
-            case SlipFlow3:
-                alpha1 = unifDistrib() * n_total;
-                if (alpha1 <= n_incep)
-                {
-                    index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
-                    ip1 = -2;
-                } else {
-                    ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1 - n_incep, rng);
-                }
-                maj = SlipFlow;
-                break;
-            case SlipFlow4:
-                alpha1 = unifDistrib() * (dc_incep + dc_other);
-                if (alpha1 <= dc_incep)
-                {
-                    index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iDcol, rng);
-                    ip1 = -2;
-                } else {
-                    ip1 = sys.Particles().Select_usingGivenRand(iDcol, alpha1 - dc_incep, rng);
-                }
-                maj = SlipFlow;
-                break;
-            case FreeMol1:
-                alpha1 = unifDistrib() * n_total;
-                if (alpha1 <= n_incep)
-                {
-                    index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
-                    ip1 = -2;
-                } else {
-                    ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1 - n_incep, rng);
-                }
-                maj = FreeMol;
-                break;
-            case FreeMol2:
-                alpha1 = unifDistrib() * (dc2_incep + dc2_other);
-                if (alpha1 <= dc2_incep)
-                {
-                    index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iD2, rng);
-                    ip1 = -2;
-                } else {
-                    ip1 = sys.Particles().Select_usingGivenRand(iD2, alpha1 - dc2_incep, rng);
-                }
-                maj = FreeMol;
-                break;
-            default:
-                alpha1 = unifDistrib() * n_total;
-                if (alpha1 <= n_incep)
-                {
-                    index1 = m_mech->SetRandomParticle(sys.Particles(), t, alpha1, iUniform, rng);
-                    ip1 = -2;
-                } else {
-                    ip1 = sys.Particles().Select_usingGivenRand(iUniform, alpha1 - n_incep, rng);
-                }
-                maj = SlipFlow;
-                break;
+    // Choose and get unique second particle.  Note, we are allowed to do
+    // this even if the first particle was invalidated.
+    ip2 = ip1;
+    unsigned int guard = 0;
+    switch (term) {
+        case SlipFlow1:
+            while ((ip2 == ip1) && (++guard<1000))
+                ip2 = sys.Particles().Select(rng);
+            break;
+        case SlipFlow2:
+            while ((ip2 == ip1) && (++guard<1000))
+                ip2 = sys.Particles().Select(Sweep::iD_1, rng);
+            break;
+        case SlipFlow3:
+            while ((ip2 == ip1) && (++guard<1000))
+                ip2 = sys.Particles().Select(Sweep::iD_1, rng);
+            break;
+        case SlipFlow4:
+            while ((ip2 == ip1) && (++guard<1000))
+                ip2 = sys.Particles().Select(Sweep::iD_2, rng);
+            break;
+        case FreeMol1:
+            while ((ip2 == ip1) && (++guard<1000))
+                ip2 = sys.Particles().Select(Sweep::iD2_M_1_2, rng);
+            break;
+        case FreeMol2:
+            while ((ip2 == ip1) && (++guard<1000))
+                ip2 = sys.Particles().Select(Sweep::iM_1_2, rng);
+            break;
+        default :
+            while ((ip2 == ip1) && (++guard<1000))
+                ip2 = sys.Particles().Select(rng);
+            break;
+    }
+
+
+    Particle *sp2=NULL;
+    if ((ip2>=0) && (ip2!=ip1)) {
+        sp2 = sys.Particles().At(ip2);
+    } else {
+        // Failed to select a unique particle.
+        return -1;
+    }
+
+    //Calculate the majorant rate before updating the particles
+    double majk = MajorantKernel(*sp1, *sp2, sys, maj);
+
+    //Update the particles
+    m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
+    // Check that particle is still valid.  If not,
+    // remove it and cease coagulating.
+    if (!sp1->IsValid()) {
+        // Must remove first particle now.
+        sys.Particles().Remove(ip1);
+
+        // Invalidating the index tells this routine not to perform coagulation.
+        ip1 = -1;
+        return 0;
+    }
+
+    m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
+    // Check validity of particles after update.
+    if (!sp2->IsValid()) {
+        // Tell the ensemble to update particle one before we confuse things
+        // by removing particle 2
+        sys.Particles().Update(ip1);
+
+        // Must remove second particle now.
+        sys.Particles().Remove(ip2);
+
+        // Invalidating the index tells this routine not to perform coagulation.
+        ip2 = -1;
+
+        return 0;
+    }
+
+
+    // Check that both the particles are still valid.
+    if ((ip1>=0) && (ip2>=0)) {
+        // Must check for ficticious event now by comparing the original
+        // majorant rate and the current (after updates) true rate.
+
+        double truek = CoagKernel(*sp1, *sp2, sys);
+        double ceff=0;
+
+        if (majk<truek)
+            std::cout << "maj< true"<< std::endl;
+
+        //added by ms785 to include the collision efficiency in the calculation of the rate
+        if (sys.ParticleModel()->AggModel() == AggModels::PAH_KMC_ID)
+        {
+            ceff=sys.ParticleModel()->CollisionEff(sp1,sp2);
+            truek*=ceff;
         }
 
-        // Is this a particle-number particle?
-        if (ip1 == -2)
-        {
-            if (index1 == 0)
-            {
-		// Property sums update triggered - round-off was too severe and
-                // no suitable particle could be found. The easiest option
-                // is not to perform this coagulation event.
-		return -1;
+        //! For the purpose of checking consistency with the spherical soot
+        //! model solved using the method of moments with interpolative closure
+        //! which assumes that only pyrene (A4) is able to incept and condense.
+        else if (sys.ParticleModel()->AggModel() == AggModels::BinTree_ID || sys.ParticleModel()->AggModel() == AggModels::Spherical_ID) {
+            if (sp1->Primary()->InceptedPAH() && sp2->Primary()->InceptedPAH()) {
+                ceff = 1;
+            } else if (sp1->Primary()->InceptedPAH() && sp2->NumCarbon() > 16 || sp1->NumCarbon() > 16 && sp2->Primary()->InceptedPAH()) {
+                ceff = 1;
+            } else {
+                ceff = 1;
             }
-	    n_index1 = sys.Particles().NumberAtIndex(index1);
-            // Flag sp1 as a particle-number particle
-            ip1_flag = true; 
-            // Clone a template particle of the correct size for sp1
-            sp1 = sys.Particles().GetPNParticleAt(index1)->Clone();
-            sp1->SetTime(t); 
+            truek*=ceff;
+        }
+        
+        if (!Fictitious(majk, truek, rng)) {
+            JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
         } else {
-            // An ensemble particle
-            if (ip1 >= 0) {
-                sp1 = sys.Particles().At(ip1);
-            } else {
-            // Failed to choose a particle.
-            return -1;
-            }
+            sys.Particles().Update(ip1);
+            sys.Particles().Update(ip2);
+            return 1; // Ficticious event.
         }
+    } else {
+        // One or both particles were invalidated on update,
+        // but that's not a problem.  Information on the update
+        // of valid particles must be propagated into the binary
+        // tree
+        if(ip1 >= 0)
+            sys.Particles().Update(ip1);
 
-        // Choose and get unique second particle.  Note, we are allowed to do
-        // this even if the first particle was invalidated.
-        ip2 = ip1;
-        index2 = index1;
-        unsigned int guard = 0;
-        bool mustSwitch = (ip1 == -2) && (n_incep == 1); // sp1 was the only list particle
-        bool unsuitableChoice = true;
+        if(ip2 >= 0)
+            sys.Particles().Update(ip2);
+    }
 
-        switch (term) {
-           case SlipFlow1:
-               while (unsuitableChoice && (++guard < 1000))
-                {
-                    alpha2 = unifDistrib() * n_total;
-                    if (alpha2 <= n_incep && !mustSwitch)
-                    {
-                        index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iUniform, rng);
-                        if (!(index2 == index1 && n_index1 == 1))
-                        {
-                            unsuitableChoice = false;
-                            ip2 = -2;
-                        }
-                    } else {
-                        ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
-                        if (!(ip2 == ip1))
-                            unsuitableChoice = false;
-                    }
-                }
-                break;
-            case SlipFlow2:
-                while (unsuitableChoice && (++guard < 1000))
-                {
-                    alpha2 = unifDistrib() * (dc_1_incep + dc_1_other);
-                    if (alpha2 <= dc_1_incep && !mustSwitch)
-                    {
-                        index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iD_1, rng);
-                        if (!(index2 == index1 && n_index1 == 1))
-                        {
-                            unsuitableChoice = false;
-                            ip2 = -2;
-                        }
-                    } else {
-                        ip2 = sys.Particles().Select_usingGivenRand(iD_1, alpha2 - dc_1_incep, rng);
-                        if (!(ip2 == ip1))
-                            unsuitableChoice = false;
-                    }
-                }
-                break;
-            case SlipFlow3:
-                while (unsuitableChoice && (++guard < 1000))
-                {
-                    alpha2 = unifDistrib() * (dc_1_incep + dc_1_other);
-                    if (alpha2 <= dc_1_incep && !mustSwitch)
-                    {
-                        index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iD_1, rng);
-                        if (!(index2 == index1 && n_index1 == 1))
-                        {
-                            unsuitableChoice = false;
-                            ip2 = -2;
-                        }
-                    } else {
-                        ip2 = sys.Particles().Select_usingGivenRand(iD_1, alpha2 - dc_1_incep, rng);
-                        if (!(ip2 == ip1))
-                            unsuitableChoice = false;
-                    }
-                }
-                break;
-            case SlipFlow4:
-                while (unsuitableChoice && (++guard < 1000))
-                {
-                    alpha2 = unifDistrib() * (dc_2_incep + dc_2_other);
-                    if (alpha2 <= dc_2_incep && !mustSwitch)
-                    {
-                        index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iD_2, rng);
-                        if (!(index2 == index1 && n_index1 == 1))
-                        {
-                            unsuitableChoice = false;
-                            ip2 = -2;
-                        }
-                    } else {
-                        ip2 = sys.Particles().Select_usingGivenRand(iD_2, alpha2 - dc_2_incep, rng);
-                        if (!(ip2 == ip1))
-                            unsuitableChoice = false;
-                    }
-                }
-                break;
-            case FreeMol1:
-                while (unsuitableChoice && (++guard < 1000))
-                {
-                    alpha2 = unifDistrib() * (dc2_m_1_2_incep + dc2_m_1_2_other);
-                    if (alpha2 <= dc2_m_1_2_incep && !mustSwitch)
-                    {
-                        index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iD2_M_1_2, rng);
-                        if (!(index2 == index1 && n_index1 == 1))
-                        {
-                            unsuitableChoice = false;
-                            ip2 = -2;
-                        }
-                    } else {
-                        ip2 = sys.Particles().Select_usingGivenRand(iD2_M_1_2, alpha2 - dc2_m_1_2_incep, rng);
-                        if (!(ip2 == ip1))
-                            unsuitableChoice = false;
-                    }
-                }
-                break;
-            case FreeMol2:
-                while (unsuitableChoice && (++guard < 1000))
-                {
-                    alpha2 = unifDistrib() * (m_1_2_incep + m_1_2_other);
-                    if (alpha2 <= m_1_2_incep && !mustSwitch)
-                    {
-                        index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iM_1_2, rng);
-                        if (!(index2 == index1 && n_index1 == 1))
-                        {
-                            unsuitableChoice = false;
-                            ip2 = -2;
-                        }
-                    } else {
-                        ip2 = sys.Particles().Select_usingGivenRand(iM_1_2, alpha2 - m_1_2_incep, rng);
-                        if (!(ip2 == ip1))
-                            unsuitableChoice = false;
-                        }
-                }
-                break;
-            default:
-                while (unsuitableChoice && (++guard < 1000))
-                {
-                    alpha2 = unifDistrib() * n_total;
-                    if (alpha2 <= n_incep && !mustSwitch)
-                    {
-                        index2 = m_mech->SetRandomParticle(sys.Particles(), t, alpha2, iUniform, rng);
-                        if (!(index2 == index1 && n_index1 == 1))
-                        {
-                            unsuitableChoice = false;
-                            ip2 = -2;
-                        }
-                    } else {
-                        ip2 = sys.Particles().Select_usingGivenRand(iUniform, alpha2 - n_incep, rng);
-                        if (!(ip2 == ip1))
-                            unsuitableChoice = false;
-                    }
-                }
-                break;
-            }
-        }
-
-        // Is this a particle-number particle?
-        if (ip2 == -2)
-        {
-            // Note this could be factored into the loops above
-            // but that would require constantly checking for something
-            // that should very infrequently be a problem.
-            // Easiest option is to exit without performing the coagulation event. 
-            if (index2 == 0)
-            {
-                if (ip1_flag)
-                {
-                    delete sp1;
-                    sp1 = NULL;
-                }
-                // Property sums updated
-                return -1;
-            }
-            ip2_flag = true; // Flag sp2 as a particle-number particle
-            sp2 = sys.Particles().GetPNParticleAt(index2)->Clone();
-            sp2->SetTime(t); 
-        }
-        else
-        {
-            // An ensemble particle
-            if ((ip2 >= 0) && (ip2 != ip1)) {
-                sp2 = sys.Particles().At(ip2);
-            } else {
-                // Failed to select a unique particle.
-                return -1;
-            }
-        }
-
-        //Calculate the majorant rate before updating the particles
-        double majk = MajorantKernel(*sp1, *sp2, sys, maj);
-
-        //Update the particles
-        if (t > sp1->LastUpdateTime())
-            m_mech->UpdateParticle(*sp1, sys, t, ip1, rng, dummy);
-        // Check that particle is still valid.  If not,
-        // remove it and cease coagulating.
-        if (!sp1->IsValid()) {
-            if (!ip1_flag) {
-                // Must remove first particle now.
-                sys.Particles().Remove(ip1);
-            } else {
-                delete sp1;
-                sp1 = NULL;
-            }
-            // Invalidating the index tells this routine not to perform coagulation.
-            ip1 = -1;
-            return 0;
-        }
-
-        if (t > sp2->LastUpdateTime())
-            m_mech->UpdateParticle(*sp2, sys, t, ip2, rng, dummy);
-        // Check validity of particles after update.
-        if (!sp2->IsValid()) {
-            // Tell the ensemble to update particle one before we confuse things
-            // by removing particle 2
-            if (!ip1_flag)
-                sys.Particles().Update(ip1);
-            // Must remove second particle now.
-            if (!ip2_flag)
-                sys.Particles().Remove(ip2);
-            else
-            {
-                // Particle sp2 is not in the ensemble, must manually delete it
-                delete sp2;
-                sp2 = NULL;
-            }
-            // Invalidating the index tells this routine not to perform coagulation.
-            ip2 = -1;
-            return 0;
-        }
-
-        // Check that both the particles are still valid.
-        if ((ip1 != -1) && (ip2 != -1)) 
-        {
-            // Must check for ficticious event now by comparing the original
-            // majorant rate and the current (after updates) true rate.
-            double truek = CoagKernel(*sp1, *sp2, sys);
-            double ceff = 0;
-            if (majk<truek)
-                std::cout << "maj< true" << std::endl;
-
-            //added by ms785 to include the collision efficiency in the calculation of the rate
-            if (sys.ParticleModel()->AggModel() == AggModels::PAH_KMC_ID)
-            {
-                ceff = sys.ParticleModel()->CollisionEff(sp1, sp2);
-                truek *= ceff;
-            }
-
-            //! For the purpose of checking consistency with the spherical soot
-            //! model solved using the method of moments with interpolative closure
-            //! which assumes that only pyrene (A4) is able to incept and condense.
-            else if (sys.ParticleModel()->AggModel() == AggModels::BinTree_ID || sys.ParticleModel()->AggModel() == AggModels::Spherical_ID) {
-                if (sp1->Primary()->InceptedPAH() && sp2->Primary()->InceptedPAH()) {
-                    ceff = 1;
-                }
-                else if (sp1->Primary()->InceptedPAH() && sp2->NumCarbon() > 16 || sp1->NumCarbon() > 16 && sp2->Primary()->InceptedPAH()) {
-                    ceff = 1;
-                } else {
-                    ceff = 1;
-                }
-                truek *= ceff;
-            }
-
-            if (!Fictitious(majk, truek, rng)) {
-                if (ip1_flag)
-                {
-                    // We are removing the particle from the PN model and
-                    // adding it to the ensemble
-                    sys.Particles().UpdateTotalsWithIndex(index1, -1.0);
-                    sys.Particles().UpdateNumberAtIndex(index1, -1);
-                    sys.Particles().UpdateTotalParticleNumber(-1);
-                    unsigned int index12 = index1 + index2;
-                    // Allow for coagulation in place if the combined particle is small enough
-                    if ((m_mech->CoagulateInList()) && ip2_flag && (index12 < sys.Particles().GetCritialNumber()))
-                    {
-                        coag_in_place = true;
-                        sys.Particles().UpdateTotalsWithIndex(index12, 1.0);
-                        sys.Particles().UpdateNumberAtIndex(index12, 1);
-                        sys.Particles().UpdateTotalParticleNumber(1);
-                        if (sp1 != NULL) 
-                        {
-                            delete sp1;
-                            sp1 = NULL;
-                        }
-                    } else 
-                        ip1 = sys.Particles().Add_PNP(*sp1, rng, ip2);    
-                }
-                if (ip2_flag)
-                {
-                    // We are removing the particle from the PN model and
-                    // adding it to the ensemble
-                    sys.Particles().UpdateTotalsWithIndex(index2, -1.0);
-                    sys.Particles().UpdateNumberAtIndex(index2, -1);
-                    sys.Particles().UpdateTotalParticleNumber(-1);
-                }
-                if (!coag_in_place)
-                    JoinParticles(t, ip1, sp1, ip2, sp2, sys, rng);
-			
-                if (ip2_flag && sp2 != NULL)                                                     // Particle sp2 is not in the ensemble, must manually delete it
-                {
-                    delete sp2;
-                    sp2 = NULL;
-                }
-            } else {
-                if (!ip1_flag)
-                    sys.Particles().Update(ip1);
-                else if (sp1 != NULL)                                                            // Particle sp1 is not in the ensemble, must manually delete it
-                {
-                    delete sp1;
-                    sp1 = NULL;
-                }
-                if (!ip2_flag)
-                    sys.Particles().Update(ip2);
-                else if (sp2 != NULL)                                                            // Particle sp2 is not in the ensemble, must manually delete it
-                {
-                    delete sp2;
-                    sp2 = NULL;
-                }
-                return 1; // Ficticious event.
-            }
-        } else {
-            // One or both particles were invalidated on update,
-            // but that's not a problem.  Information on the update
-            // of valid particles must be propagated into the binary
-            // tree
-            if (ip1 != -1)
-                if (!ip1_flag)
-                    sys.Particles().Update(ip1);
-            if (ip2 != -1)
-            {
-                if (!ip2_flag)
-                    sys.Particles().Update(ip2);
-            }
-            if (ip1_flag && sp1 != NULL)                                                         // Particle sp2 is not in the ensemble, must manually delete it
-            {
-                delete sp1;
-                sp1 = NULL;
-            }
-            if (ip2_flag && sp2 != NULL)                                                         // Particle sp2 is not in the ensemble, must manually delete it
-            {
-                delete sp2;
-                sp2 = NULL;
-            }
-    	}
     return 0;
 }
 

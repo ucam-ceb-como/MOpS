@@ -131,12 +131,6 @@ public:
         SlipFlow // Slip-flow majorant.
     };
 
-    // Choose particle index with particle-number model
-    int ChooseIndexWeightedCoag(
-        double t,
-        const Sweep::PropID prop,
-        Cell &sys, rng_type &rng) const;
-
 protected:
 
     /*!
@@ -158,15 +152,6 @@ protected:
                         const Sweep::Processes::CoagWeightRule weight_rule,
                         Cell &sys, rng_type &rng,
                         Sweep::Processes::Coagulation::MajorantType maj) const;
-    
-    //! Weighted perform for hybrid particle model
-    //! Select two particles and stick them together in a weighted particle event
-    int WeightedPerform_hybrid(const double t, const Sweep::PropID prop1,
-		const Sweep::PropID prop2,
-		const Sweep::Processes::CoagWeightRule weight_rule,
-		Cell &sys, rng_type &rng,
-		Sweep::Processes::Coagulation::MajorantType maj) const;
-
 
     //! Calculate kernel between two particles
     virtual double CoagKernel(const Particle &sp1, const Particle &sp2,

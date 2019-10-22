@@ -140,8 +140,7 @@ private:
     double T_mu,  // T / viscosity
     double MFP,   // Gas mean-free path.
     double vol,   // System sample volume.
-    fvector::iterator &iterm, // Iterator to first coagulation term.
-    fvector & props
+    fvector::iterator &iterm // Iterator to first coagulation term.
     ) const;
 
     // COAGULATION KERNEL ROUTINES.
