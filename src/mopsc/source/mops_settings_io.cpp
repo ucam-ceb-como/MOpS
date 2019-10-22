@@ -874,6 +874,14 @@ Reactor *const readReactor(const CamXML::Element &node,
         }
     }
 
+	// Check if particle terms are to be included in the energy balance
+	if (reac->IncludeParticles()) {
+		reac->Mixture()->SetIsAdiabaticFlag(true);
+	}
+	else {
+		reac->Mixture()->SetIsAdiabaticFlag(false);
+	}
+
     return reac;
 }
 
@@ -992,7 +1000,15 @@ void readNetwork(
                 }
 
                 flows.push_back(fn);
-            }
+			}
+
+			// Check if particle terms are to be included in the energy balance
+			if (reac->IncludeParticles()) {
+				reac->Mixture()->SetIsAdiabaticFlag(true);
+			}
+			else {
+				reac->Mixture()->SetIsAdiabaticFlag(false);
+			}
         }
         // Now that the reactors have been loaded, make node connections.
         for (std::vector<flowNode>::iterator it=flows.begin(); it!=flows.end(); ++it) {

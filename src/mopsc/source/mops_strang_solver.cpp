@@ -85,13 +85,6 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
                          Sweep::rng_type &rng,
                          OutFnPtr out, void *data)
 {
-    // Check if particle terms are to be included in the energy balance
-    if (r.IncludeParticles()) {
-        r.Mixture()->SetIsAdiabaticFlag(true);
-    }
-    else {
-        r.Mixture()->SetIsAdiabaticFlag(false);
-    }
 
     // Initialise the register of particle-number particles
     if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))

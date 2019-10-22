@@ -153,55 +153,6 @@ void NetworkSimulator::Run(
                 it->sim->setupLOI(*(it->reac), *(it->sol));
             }
 
-            // aab64 temporary 
-            // Add headers to coagulation diagnostics file
-            /*ofstream coagFile1, coagFile2;
-            std::string coagfname;
-            coagfname = "Coag-event-diagnostics-3micros.csv";
-            coagFile1.open(coagfname.c_str());
-            coagFile1 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , " 
-                << "dc1_0" << " , " << "dc2_0" << " , " << "w1_0" << " , " << "w2_0" << " , "
-                << "dc1_1" << " , " << "dc2_1" << " , " << "w1_1" << " , " << "w2_1" << " , "
-                << "dca_0" << " , " << "dca_1" << "\n";
-            coagFile1.close();
-            coagfname = "Coag-event-diagnostics-3ms.csv";
-            coagFile2.open(coagfname.c_str());
-            coagFile2 << "Time (s)" << " , " << "truek" << " , " << "majk" << " , "
-                << "dc1_0" << " , " << "dc2_0" << " , " << "w1_0" << " , " << "w2_0" << " , "
-                << "dc1_1" << " , " << "dc2_1" << " , " << "w1_1" << " , " << "w2_1" << " , "
-                << "dca_0" << " , " << "dca_1" << "\n";
-            coagFile2.close();*/
-
-            // aab64 temporary 
-            // Add headers to psc diagnostics file
-            /*ofstream pscFile1, pscFile2;
-            std::string pscfname;
-            pscfname = "PSC-event-diagnostics-3micros.csv";
-            pscFile1.open(pscfname.c_str());
-            pscFile1 << "Time (s)" << " , " << "dc_0" << " , " << "dc_1" << " , " << "w_0" << " , " << "w_1" << "\n";
-            pscFile1.close();
-            pscfname = "PSC-event-diagnostics-3ms.csv";
-            pscFile2.open(pscfname.c_str());
-            pscFile2 << "Time (s)" << " , " << "dc_0" << " , " << "dc_1" << " , " << "w_0" << " , " << "w_1" << "\n";
-            pscFile2.close();*/
-
-            // aab64 temporary 
-            // Add headers to outflow diagnostics file
-            /*ofstream deathFile1;
-            std::string deathfname;
-            deathfname = "Outflow-event-diagnostics.csv";
-            deathFile1.open(deathfname.c_str());
-            deathFile1 << "Time (s)" << " , " << "Num" << " , " << "RTD" << " , " << "wt" << " , " << "age" << " , " << "mass" << "\n";
-            deathFile1.close();*/
-
-            /*ofstream pscFile1;
-            std::string pscfname;
-            pscfname = "sp_update_times.csv";
-            pscFile1.open(pscfname.c_str());
-            // t maj N Ninc Ntotal ip1flag ip1 ip2flag ip2 sp1_wt sp2_wt sp1_d sp2_d sp1_age sp2_age sp1_lut sp2_lut coag successful
-            pscFile1 << "Time (s) , maj, N, Ninc, Ninc_total, ip1_flag , ip1 , ip2_flag , ip2 , sp1_wt , sp2_wt , sp1_dp , sp2_dp , sp1_age , sp2_age , sp1_lut , sp2_lut , coag successful? \n";
-            pscFile1.close();*/
-
             //////////////////////////////////////////// aab64 ////////////////////////////////////////////
             if (it->sim->GetWriteDiagsStatus()) {
                 /* Create partProc diagnostics csv file with pre/post split SV, #SPs, #events in split
