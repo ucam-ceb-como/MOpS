@@ -71,6 +71,7 @@ using namespace Strings;
 std::string default_timer_csv = "KMC_Model/PAH_loop_timer.csv";
 std::string default_rxncount_csv = "KMC_Model/PAH_reaction_count.csv";
 std::string default_pahlist_csv = "KMC_Model/PAH_CH_site_list.csv";
+std::string default_pahlist_after_csv = "KMC_Model/PAH_CH_site_list_after.csv";
 std::string default_rates_csv = "KMC_Model/PAH_jump_process_rates.csv";
 
 // Vector of all site types
@@ -291,12 +292,13 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			writeRxnCountCSV();
 			writeCHSiteCountCSV();
 			//writeTimerCSV();
-			//rates = m_kmcmech.Rates();
-			//writeRatesCSV(m_t, rates);*/
+			rates = m_kmcmech.Rates();
+			writeRatesCSV(m_t, rates);
 
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
+			writeCHSiteCountCSV_after();
 			
 			//Save information for a single PAH
 			if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
@@ -472,6 +474,10 @@ void KMCSimulator::setCSVreactioncountName(const std::string& filename) {
 void KMCSimulator::setCSVpahlistName(const std::string &filename) {
     m_pahlist_name = filename;
 }
+//! Set output CSV file name to keep track of CH and site counts after jump process
+void KMCSimulator::setCSVpahlist_afterName(const std::string &filename) {
+    m_pahlist_after_name = filename;
+}
 
 //! Set output CSV file name to keep track of time step//##
 void KMCSimulator::setCSVtimestep(const std::string &filename) {
@@ -514,6 +520,20 @@ void KMCSimulator::writeCHSiteCountCSV() {
     }
     m_pah_csv.Write(temp);
 }
+//! Writes data for CH_site_list.csv
+void KMCSimulator::writeCHSiteCountCSV_after() {
+    std::vector<float> temp;
+    // get CH count
+    intpair CH = m_simPAHp.getCHCount();
+    temp.push_back((float)CH.first);
+    temp.push_back((float)CH.second);
+    // get counts for all site types
+    for(int i=0; i<(int)allSiteType.size(); i++) {
+        int scount = m_simPAHp.getSiteCount(allSiteType[i]);
+        temp.push_back((float) scount);
+    }
+    m_pah_after_csv.Write(temp);
+}
 //! Writes data for rates count (csv)
 void KMCSimulator::writeRatesCSV(double& time, rvector& v_rates) {
 	std::vector<std::string> temp;
@@ -550,6 +570,10 @@ void KMCSimulator::initCSVIO() {
         cout<<"WARNING: Output CSV name for CH and site counts is not specified. Defaulting to "<<default_pahlist_csv<<"\n";
         m_pahlist_name = default_pahlist_csv;
     }
+	if(m_pahlist_after_name.length() == 0) {
+        cout<<"WARNING: Output CSV name for CH and site counts after is not specified. Defaulting to "<<default_pahlist_after_csv<<"\n";
+        m_pahlist_after_name = default_pahlist_after_csv;
+    }
 	if (m_rates_name.length() == 0) {
 		cout << "WARNING: Output CSV name for PAH rates is not specified. Defaulting to " << default_rates_csv << "\n";
 		m_rates_name = default_rates_csv;
@@ -559,6 +583,7 @@ void KMCSimulator::initCSVIO() {
     m_timer_csv.Open(m_timer_name, true);
     m_rxn_csv.Open(m_rxncount_name, true);
     m_pah_csv.Open(m_pahlist_name, true);
+	m_pah_after_csv.Open(m_pahlist_after_name, true);											  
     m_rates_csv.Open(m_rates_name, true);
     m_timestep_csv.Open(m_timestep_name, true);//##
     // Write column headings for CSV files
@@ -767,6 +792,7 @@ void KMCSimulator::writeCSVlabels() {
         pah_headings.push_back(header);
     }
     m_pah_csv.Write(pah_headings);
+	m_pah_after_csv.Write(pah_headings);								 
     // Write headings for rates
     std::vector<std::string> rates_header;
     rates_header.push_back("Time");
