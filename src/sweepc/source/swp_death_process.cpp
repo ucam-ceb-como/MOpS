@@ -198,12 +198,13 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
 {
     // Get particle index
     int i = 0;
-    // aab64 for hybrid particle model
+    // Check if using hybrid particle-number/particle model
+    // If not, select a particle from the ensemble
     if (!(m_mech->IsHybrid()))
         i = sys.Particles().Select(rng);
     else
     {
-        // Check if should remove from ensemble or bin
+        // Check if should remove from ensemble or number list
         unsigned int ntotal_pn = sys.Particles().GetTotalParticleNumber();
         unsigned int ntotal_ens = sys.ParticleCount();
         boost::uniform_01<rng_type&, double> unifDistrib(rng);

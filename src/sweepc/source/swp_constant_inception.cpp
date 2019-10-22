@@ -149,13 +149,13 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
     // Position of newly incepted particle
     double posn;
 
-    if (mUseFixedPosition) {
+    if(mUseFixedPosition) {
         // If there is a fixed position the rate should only be positive for the cell containing the fixed position
-        if (local_geom.isInCell(mFixedPosition))
+        if(local_geom.isInCell(mFixedPosition))
             posn = mFixedPosition;
         else
             return 0;
-        }
+    }
     else {
         // Get the cell vertices
         fvector vertices = local_geom.cellVertices();
@@ -182,9 +182,9 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
                                                                   mComponentDistributions[i].second)(rng);
     }
 
-    // aab64 hybrid particle model
-    // If hybrid_flag is active, track the number of incepting particles
-    // Add particle to system's ensemble.
+    // Check if using hybrid particle-number/particle model
+    // If hybrid_flag is active, track the number of particles in a list
+    // Otherwise add particle to system's ensemble.
     if (!m_mech->IsHybrid())
     {
         // Create a new particle of the type specified
