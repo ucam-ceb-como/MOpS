@@ -98,6 +98,8 @@ namespace Processes
 
 		//! Transition coagulation with hybrid particle-number/particle model
 		Hybrid_Transition_Coagulation_ID = 10008,
+		//! Constant coagulation with hybrid particle-number/particle model
+		Hybrid_Constant_Coagulation_ID = 10009,
 
         // Coagulation processes
         Erosion_Fragmentation_ID=20000,   // Transition regime coagulation

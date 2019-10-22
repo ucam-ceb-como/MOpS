@@ -53,6 +53,7 @@
 #include "swp_hybrid_transcoag.h"
 #include "swp_addcoag.h"
 #include "swp_constcoag.h"
+#include "swp_hybrid_constcoag.h"
 #include "swp_erosionfrag.h"
 #include "swp_symmetricfrag.h"
 #include "swp_weighted_addcoag.h"
@@ -1806,7 +1807,13 @@ void MechParser::readCoagulation(CamXML::Document &xml, Sweep::Mechanism &mech)
                     else if(kernelName == "additive")
                         coag.reset(new Processes::AdditiveCoagulation(mech));
                     else if(kernelName == "constant")
-                        coag.reset(new Processes::ConstantCoagulation(mech));
+						if (mech.IsHybrid())
+						{
+							coag.reset(new Processes::HybridConstantCoagulation(mech));
+						}
+						else{
+							coag.reset(new Processes::ConstantCoagulation(mech));
+						}
 					else if (kernelName == "transitionweightedPAHs")
 						coag.reset(new Processes::TransitionCoagulationWeightedPAHs(mech));
                     else
