@@ -1235,8 +1235,9 @@ void Sweep::Ensemble::ResetNumberAtIndex(unsigned int index)
 }
 
 // Set functions
-void Sweep::Ensemble::InitialiseParticleNumberModel()
+void Sweep::Ensemble::InitialiseParticleNumberModel(unsigned int threshold)
 {
+	m_hybrid_threshold = threshold;
     m_particle_numbers.resize(m_hybrid_threshold, 0);
     m_pn_mass.resize(m_hybrid_threshold, 0);
     m_pn_diameters3.resize(m_hybrid_threshold, 0);
