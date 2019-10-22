@@ -125,6 +125,13 @@ int DimerInception::Perform(const double t, Cell &sys,
 
     // This routine performs the inception on the given chemical system.
 
+    // Check if hybrid particle-number/particle model
+    // If not, add particle to ensemble.
+    if (!m_mech->IsHybrid())
+    {
+    // Create a new particle of the type specified
+    // by the system ensemble.
+    Particle *sp = m_mech->CreateParticle(t);
 
     // Get the cell vertices
     fvector vertices = local_geom.cellVertices();
@@ -138,38 +145,30 @@ int DimerInception::Perform(const double t, Cell &sys,
     boost::uniform_01<rng_type&, double> uniformGenerator(rng);
     posn += width * uniformGenerator();
 
-    // Check if hybrid particle-number/particle model
-    // Add particle to system's ensemble.
-    if (!m_mech->IsHybrid())
+    sp->setPositionAndTime(posn, t);
+
+    // aab64 Get incepting particle weight for cases where wt != 1.0:
+    // Check if SWA is in play and variable inception weighting is active.
+    // Update newly incepted particle weight if necessary.
+    if (m_mech->IsWeightedCoag() && m_mech->IsVariableWeightedInception()) 
     {
-        // Create a new particle of the type specified
-        // by the system ensemble.
-        Particle *sp = m_mech->CreateParticle(t);
+        sp->setStatisticalWeight(sys.GetInceptingWeight());
+    }
 
-        // aab64 Get incepting particle weight for cases where wt != 1.0:
-        // Check if SWA is in play and variable inception weighting is active.
-        // Update newly incepted particle weight if necessary.
-        if (m_mech->IsWeightedCoag() && m_mech->IsVariableWeightedInception()) 
-        {
-            sp->setStatisticalWeight(sys.GetInceptingWeight());
-        }
+    // Initialise the new particle.
+    sp->Primary()->SetComposition(ParticleComp());
+    sp->Primary()->SetValues(ParticleTrackers());
+    sp->UpdateCache();
 
-        sp->setPositionAndTime(posn, t);
+    // Add particle to system's ensemble.
+    sys.Particles().Add(*sp, rng);
 
-        // Initialise the new particle.
-        sp->Primary()->SetComposition(ParticleComp());
-        sp->Primary()->SetValues(ParticleTrackers());
-
-        sp->UpdateCache();
-
-        sys.Particles().Add(*sp, rng);
-
-        // Update gas-phase chemistry of system.
-        if (!sys.GetIsAdiabaticFlag())
-			adjustGas(sys, sp->getStatisticalWeight(), 1);
-		// Update gas-phase chemistry and temperature of system.
-        else
-            adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, ParticleComp()[0], 1);
+    // Update gas-phase chemistry of system.
+    if (!sys.GetIsAdiabaticFlag())
+        adjustGas(sys, sp->getStatisticalWeight());
+    // Update gas-phase chemistry and temperature of system.
+    else
+        adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, ParticleComp()[0], 1);
     }
     else
     {
@@ -177,10 +176,11 @@ int DimerInception::Perform(const double t, Cell &sys,
         sys.Particles().UpdateNumberAtIndex(ParticleComp()[0], 1);
         sys.Particles().UpdateTotalParticleNumber(1);
         sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
+
         // Update gas-phase chemistry of system.
         if (!sys.GetIsAdiabaticFlag())
-			adjustGas(sys, sys.GetInceptingWeight(), 1);
-		// Update gas-phase chemistry and temperature of system.
+            adjustGas(sys, sys.GetInceptingWeight());
+        // Update gas-phase chemistry and temperature of system.
         else
             adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, ParticleComp()[0], 1);
     }
@@ -246,7 +246,7 @@ double DimerInception::Rate(double t, const Cell &sys, const Geometry::LocalGeom
     double T = sys.GasPhase().Temperature();
     double P = sys.GasPhase().Pressure();
 
-    // aab64 Divide the inception rate by the current particle weight
+    // Divide the inception rate by the current particle weight
     // This really belongs in the rate fn below for consistency. 
     double scaleFac = sys.GetInceptingWeight();
     double scaledRate = Rate(sys.GasPhase(), sqrt(T),
@@ -352,7 +352,7 @@ double DimerInception::RateTerms(const double t, const Cell &sys,
 
         *iterm = Rate; 
     } else {
-        // aab64 Divide by current incepting particle weight for cases when wt != 1.0. 
+        // Divide by current incepting particle weight for cases when wt != 1.0. 
         double scaleFac = 1.0 / (sys.GetInceptingWeight());
         *iterm = Rate(sys.GasPhase(), sqrt(T),
                       MeanFreePathAir(T,P),
