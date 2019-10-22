@@ -352,7 +352,7 @@ int HybridConstantCoagulation::Perform(double t, Sweep::Cell &sys,
                 else
                 {
                     // otherwise add the particle to the ensemble
-                    ip1 = sys.Particles().Add_PNP(*sp1, rng, ip2);
+                    ip1 = sys.Particles().Add(*sp1, rng, ip2, true);
                 }
             }
             if (ip2_flag)

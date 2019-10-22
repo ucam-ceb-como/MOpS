@@ -744,7 +744,7 @@ int HybridTransitionCoagulation::Perform(double t, Sweep::Cell &sys,
                             sp1 = NULL;
                         }
                     } else 
-                        ip1 = sys.Particles().Add_PNP(*sp1, rng, ip2);    
+                        ip1 = sys.Particles().Add(*sp1, rng, ip2, true);    
                 }
                 if (ip2_flag)
                 {
