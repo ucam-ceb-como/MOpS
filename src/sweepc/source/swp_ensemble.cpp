@@ -149,62 +149,62 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
 
             // Hybrid particle-number/particle model variables
             m_inceptedFirstSP = rhs.m_inceptedFirstSP;
-            m_critical_size = rhs.m_critical_size;
-            if (rhs.m_critical_size > 0)
+            m_hybrid_threshold = rhs.m_hybrid_threshold;
+            if (rhs.m_hybrid_threshold > 0)
             {
-                m_pn_particles.resize(rhs.m_critical_size, NULL);
+                m_pn_particles.resize(rhs.m_hybrid_threshold, NULL);
                 if (rhs.m_pn_particles[0] != NULL) 
                 {
-                    for (unsigned int i = 0; i != rhs.GetCritialNumber(); ++i) {
+                    for (unsigned int i = 0; i != rhs.GetHybridThreshold(); ++i) {
                         m_pn_particles[i] = rhs.m_pn_particles[i]->Clone();
                     }
                 }
 
-                m_particle_numbers.resize(rhs.m_critical_size, 0);
-                m_pn_diameters.resize(rhs.m_critical_size, 0);
-                m_pn_diameters2.resize(rhs.m_critical_size, 0);
-                m_pn_diameters_1.resize(rhs.m_critical_size, 0);
-                m_pn_diameters_2.resize(rhs.m_critical_size, 0);
-                m_pn_diameters2_mass_1_2.resize(rhs.m_critical_size, 0);
-                m_pn_mass_1_2.resize(rhs.m_critical_size, 0);
-                m_pn_mass.resize(rhs.m_critical_size, 0);
-                m_pn_mass2.resize(rhs.m_critical_size, 0);
-                m_pn_mass3.resize(rhs.m_critical_size, 0);
-                m_pn_diameters3.resize(rhs.m_critical_size, 0);
-                m_critical_size = rhs.m_critical_size;
+                m_particle_numbers.resize(rhs.m_hybrid_threshold, 0);
+                m_pn_diameters.resize(rhs.m_hybrid_threshold, 0);
+                m_pn_diameters2.resize(rhs.m_hybrid_threshold, 0);
+                m_pn_diameters_1.resize(rhs.m_hybrid_threshold, 0);
+                m_pn_diameters_2.resize(rhs.m_hybrid_threshold, 0);
+                m_pn_diameters2_mass_1_2.resize(rhs.m_hybrid_threshold, 0);
+                m_pn_mass_1_2.resize(rhs.m_hybrid_threshold, 0);
+                m_pn_mass.resize(rhs.m_hybrid_threshold, 0);
+                m_pn_mass2.resize(rhs.m_hybrid_threshold, 0);
+                m_pn_mass3.resize(rhs.m_hybrid_threshold, 0);
+                m_pn_diameters3.resize(rhs.m_hybrid_threshold, 0);
+                m_hybrid_threshold = rhs.m_hybrid_threshold;
 				
                 // Copy vectors.
-                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                for (unsigned int i = 0; i != rhs.m_hybrid_threshold; ++i) {
                     m_particle_numbers[i] = rhs.m_particle_numbers[i];
                 }
-                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                for (unsigned int i = 0; i != rhs.m_hybrid_threshold; ++i) {
                     m_pn_diameters[i] = rhs.m_pn_diameters[i];
                 }
-                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                for (unsigned int i = 0; i != rhs.m_hybrid_threshold; ++i) {
                     m_pn_diameters2[i] = rhs.m_pn_diameters2[i];
                 }
-                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                for (unsigned int i = 0; i != rhs.m_hybrid_threshold; ++i) {
                     m_pn_diameters_1[i] = rhs.m_pn_diameters_1[i];
                 }
-                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                for (unsigned int i = 0; i != rhs.m_hybrid_threshold; ++i) {
                     m_pn_diameters_2[i] = rhs.m_pn_diameters_2[i];
                 }
-                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                for (unsigned int i = 0; i != rhs.m_hybrid_threshold; ++i) {
                     m_pn_diameters2_mass_1_2[i] = rhs.m_pn_diameters2_mass_1_2[i];
                 }
-                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                for (unsigned int i = 0; i != rhs.m_hybrid_threshold; ++i) {
                     m_pn_mass_1_2[i] = rhs.m_pn_mass_1_2[i];
                 }
-                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                for (unsigned int i = 0; i != rhs.m_hybrid_threshold; ++i) {
                     m_pn_mass[i] = rhs.m_pn_mass[i];
                 }
-                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                for (unsigned int i = 0; i != rhs.m_hybrid_threshold; ++i) {
                     m_pn_mass2[i] = rhs.m_pn_mass2[i];
                 }
-                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                for (unsigned int i = 0; i != rhs.m_hybrid_threshold; ++i) {
                     m_pn_mass3[i] = rhs.m_pn_mass3[i];
                 }
-                for (unsigned int i = 0; i != rhs.m_critical_size; ++i) {
+                for (unsigned int i = 0; i != rhs.m_hybrid_threshold; ++i) {
                     m_pn_diameters3[i] = rhs.m_pn_diameters3[i];
                 }
                 m_total_number = rhs.m_total_number;
@@ -320,18 +320,18 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_total_mass3 = 0.0;
     m_total_diameter3 = 0.0;
     m_total_component = 0;
-    m_particle_numbers.resize(m_critical_size, 0);
-    m_pn_diameters.resize(m_critical_size, 0);
-    m_pn_diameters2.resize(m_critical_size, 0);
-    m_pn_diameters_1.resize(m_critical_size, 0);
-    m_pn_diameters_2.resize(m_critical_size, 0);
-    m_pn_diameters2_mass_1_2.resize(m_critical_size, 0);
-    m_pn_mass_1_2.resize(m_critical_size, 0);
-    m_pn_mass.resize(m_critical_size, 0);
-    m_pn_mass2.resize(m_critical_size, 0);
-    m_pn_mass3.resize(m_critical_size, 0);
-    m_pn_diameters3.resize(m_critical_size, 0);
-    m_pn_particles.resize(m_critical_size, NULL);
+    m_particle_numbers.resize(m_hybrid_threshold, 0);
+    m_pn_diameters.resize(m_hybrid_threshold, 0);
+    m_pn_diameters2.resize(m_hybrid_threshold, 0);
+    m_pn_diameters_1.resize(m_hybrid_threshold, 0);
+    m_pn_diameters_2.resize(m_hybrid_threshold, 0);
+    m_pn_diameters2_mass_1_2.resize(m_hybrid_threshold, 0);
+    m_pn_mass_1_2.resize(m_hybrid_threshold, 0);
+    m_pn_mass.resize(m_hybrid_threshold, 0);
+    m_pn_mass2.resize(m_hybrid_threshold, 0);
+    m_pn_mass3.resize(m_hybrid_threshold, 0);
+    m_pn_diameters3.resize(m_hybrid_threshold, 0);
+    m_pn_particles.resize(m_hybrid_threshold, NULL);
 }
 
 /*!
@@ -478,7 +478,7 @@ const Particle *const Sweep::Ensemble::At(unsigned int i) const
 Particle *const Sweep::Ensemble::GetPNParticleAt(unsigned int index)
 {
     // Check that the index in within range, then return the particle.
-    if (index < m_critical_size) {
+    if (index < m_hybrid_threshold) {
         return m_pn_particles[index];
     }
     else {
@@ -572,7 +572,7 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng, int i2, bool hybrid_event_
 // Store template particle at a specific index
 int Sweep::Ensemble::SetPNParticle(Particle &sp, unsigned int index)
 {
-	if (index < m_critical_size)
+	if (index < m_hybrid_threshold)
 	{
 		m_pn_particles[index] = &sp;
 		return 0;
@@ -1237,22 +1237,22 @@ void Sweep::Ensemble::ResetNumberAtIndex(unsigned int index)
 // Set functions
 void Sweep::Ensemble::InitialiseParticleNumberModel()
 {
-    m_particle_numbers.resize(m_critical_size, 0);
-    m_pn_mass.resize(m_critical_size, 0);
-    m_pn_diameters3.resize(m_critical_size, 0);
-    m_pn_diameters.resize(m_critical_size, 0);
-    m_pn_diameters2.resize(m_critical_size, 0);
-    m_pn_diameters_1.resize(m_critical_size, 0);
-    m_pn_diameters_2.resize(m_critical_size, 0);
-    m_pn_mass2.resize(m_critical_size, 0);
-    m_pn_mass3.resize(m_critical_size, 0);
-    m_pn_mass_1_2.resize(m_critical_size, 0);
-    m_pn_diameters2_mass_1_2.resize(m_critical_size, 0);
+    m_particle_numbers.resize(m_hybrid_threshold, 0);
+    m_pn_mass.resize(m_hybrid_threshold, 0);
+    m_pn_diameters3.resize(m_hybrid_threshold, 0);
+    m_pn_diameters.resize(m_hybrid_threshold, 0);
+    m_pn_diameters2.resize(m_hybrid_threshold, 0);
+    m_pn_diameters_1.resize(m_hybrid_threshold, 0);
+    m_pn_diameters_2.resize(m_hybrid_threshold, 0);
+    m_pn_mass2.resize(m_hybrid_threshold, 0);
+    m_pn_mass3.resize(m_hybrid_threshold, 0);
+    m_pn_mass_1_2.resize(m_hybrid_threshold, 0);
+    m_pn_diameters2_mass_1_2.resize(m_hybrid_threshold, 0);
 }
 void Sweep::Ensemble::InitialiseDiameters(double molecularWeight, double density)
 {
     double expon = 1.0 / 3.0;
-    for (unsigned int i = 1; i < m_critical_size; ++i){
+    for (unsigned int i = 1; i < m_hybrid_threshold; ++i){
         m_pn_mass[i] = (i / NA) * (molecularWeight);
         m_pn_diameters3[i] = m_pn_mass[i] * 6.0 / (PI * density);
         m_pn_diameters[i] = pow(m_pn_diameters3[i], expon);
@@ -1267,7 +1267,7 @@ void Sweep::Ensemble::InitialiseDiameters(double molecularWeight, double density
 }
 unsigned int Sweep::Ensemble::SetTotalParticleNumber() {
     m_total_number = 0;
-    for (unsigned int i = 0; i < m_critical_size; ++i){
+    for (unsigned int i = 0; i < m_hybrid_threshold; ++i){
         m_total_number += m_particle_numbers[i];
     }
     return m_total_number;
@@ -1290,7 +1290,7 @@ void Sweep::Ensemble::RecalcPNPropertySums()
      m_total_diameter3 = 0.0;
      double n_index = 0.0;
 
-     for (int i = 0; i < m_critical_size; ++i)
+     for (int i = 0; i < m_hybrid_threshold; ++i)
      {
          n_index = (double)m_particle_numbers[i];
          if (n_index > 0)
@@ -1428,7 +1428,7 @@ void Sweep::Ensemble::dble()
         // Double particle-number counts
         if (m_total_number > 0)
         {
-            for (unsigned int i = 0; i < m_critical_size; ++i)
+            for (unsigned int i = 0; i < m_hybrid_threshold; ++i)
             {
                 m_particle_numbers[i] *= 2.0;
             }
@@ -1544,9 +1544,9 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
         }
 		
         // For hybrid particle-number/particle model
-        n = m_critical_size;
+        n = m_hybrid_threshold;
         out.write((char*)&n, sizeof(n));
-        if (m_critical_size > 0)
+        if (m_hybrid_threshold > 0)
         {
             n = m_total_number;
             out.write((char*)&n, sizeof(n));
@@ -1658,28 +1658,28 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
 
                 // Hybrid particle-number/particle model
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                m_critical_size = n;
+                m_hybrid_threshold = n;
 
                 // Fill the data vector.
-                if (m_critical_size > 0)
+                if (m_hybrid_threshold > 0)
                 {
 					in.read(reinterpret_cast<char*>(&n), sizeof(n));
 					m_total_number = n;
 
                     double val;
                     unsigned int num;
-                    m_particle_numbers.reserve(m_critical_size);
-                    m_pn_diameters.reserve(m_critical_size);
-                    m_pn_mass.reserve(m_critical_size);
-                    for (unsigned int i = 0; i < m_critical_size; i++) {
+                    m_particle_numbers.reserve(m_hybrid_threshold);
+                    m_pn_diameters.reserve(m_hybrid_threshold);
+                    m_pn_mass.reserve(m_hybrid_threshold);
+                    for (unsigned int i = 0; i < m_hybrid_threshold; i++) {
                         in.read(reinterpret_cast<char*>(&num), sizeof(num));
                         m_particle_numbers.push_back(num);
                     }
-                    for (unsigned int i = 0; i < m_critical_size; i++) {
+                    for (unsigned int i = 0; i < m_hybrid_threshold; i++) {
                         in.read(reinterpret_cast<char*>(&val), sizeof(val));
                         m_pn_diameters.push_back(val);
                     }
-                    for (unsigned int i = 0; i < m_critical_size; i++) {
+                    for (unsigned int i = 0; i < m_hybrid_threshold; i++) {
                         in.read(reinterpret_cast<char*>(&val), sizeof(val));
                         m_pn_mass.push_back(val);
                     }
@@ -1770,7 +1770,7 @@ void Sweep::Ensemble::init(void)
 
     // Hybrid particle-number/particle model parameters
     m_inceptedFirstSP = false;
-    m_critical_size = 0;
+    m_hybrid_threshold = 0;
     m_total_number = 0;
     m_total_diameter = 0.0;
     m_total_diameter2 = 0.0;

@@ -289,8 +289,8 @@ public:
     void SetInceptedSP() { m_inceptedFirstSP = true; }
 
     // Set/get threshold size 
-    void SetCriticalSize(unsigned int threshold) { m_critical_size = threshold; }
-    unsigned int GetCritialNumber() const { return m_critical_size; }
+    void SetHybridThreshold(unsigned int threshold) { m_hybrid_threshold = threshold; }
+    unsigned int GetHybridThreshold() const { return m_hybrid_threshold; }
     
     // Functions to update/reset the number count at a specific particle-number index
     unsigned int SetTotalParticleNumber();
@@ -389,7 +389,7 @@ private:
     // ===============================================
 
     bool m_inceptedFirstSP;
-    unsigned int m_critical_size; 
+    unsigned int m_hybrid_threshold; 
     unsigned int m_total_number;
     unsigned int m_total_component;
     double m_total_diameter;

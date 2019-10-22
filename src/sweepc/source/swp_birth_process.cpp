@@ -222,7 +222,7 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
         // In that instance, particles could be added to the ensemble like with surface growth. 
         // However this cannot be done here easily because it requires construction of a new particles. 
         // Print warning message.
-        if (m_cell->Particles().GetCritialNumber() > sys.Particles().GetCritialNumber())
+        if (m_cell->Particles().GetHybridThreshold() > sys.Particles().GetHybridThreshold())
             printf("sweep: Mixture PN threshold > reactor PN threshold; "
 	           "could inflow particle that cannot be stored\n");
 

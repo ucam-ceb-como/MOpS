@@ -2474,7 +2474,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 				/////////////////////////////////////////
 				
 				// Output for particle-number list of hybrid model
-				if (r->Mixture()->Particles().GetCritialNumber() > 0)
+				if (r->Mixture()->Particles().GetHybridThreshold() > 0)
 				{
 					vector<string> pn_particles(5);
 					vector<string> pn_particles_header;
@@ -2489,7 +2489,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 					CSV_IO pn_particles_out(fname_pn, true);
 					pn_particles_out.Write(pn_particles_header);
 
-					for (unsigned int i = 0; i < r->Mixture()->Particles().GetCritialNumber(); ++i)
+					for (unsigned int i = 0; i < r->Mixture()->Particles().GetHybridThreshold(); ++i)
 					{
 						pn_particles[0] = boost::lexical_cast<std::string>(i);
 						pn_particles[1] = boost::lexical_cast<std::string>(r->Mixture()->Particles().NumberAtIndex(i));

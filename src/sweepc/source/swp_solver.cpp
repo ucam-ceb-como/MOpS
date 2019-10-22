@@ -321,14 +321,14 @@ int Solver::chooseProcess(const fvector &rates, double (*rand_u01)())
 void Solver::InitialisePNParticles(double t, Cell &sys, const Mechanism &mech)
 {
     std::cout << "Initialising particle-number register with threshold Nthresh = "
-              << sys.Particles().GetCritialNumber() << "\n";
+              << sys.Particles().GetHybridThreshold() << "\n";
 
     // Flag that register of particle properties is set up
     sys.Particles().SetInceptedSP();
-    sys.Particles().SetCriticalSize(mech.GetCriticalThreshold());
+    sys.Particles().SetHybridThreshold(mech.GetHybridThreshold());
 
-    // Initialise lookup of particles below critical size
-    for (unsigned int i = 0; i < sys.Particles().GetCritialNumber(); i++)
+    // Initialise lookup of particles below threshold size
+    for (unsigned int i = 0; i < sys.Particles().GetHybridThreshold(); i++)
     {
         Particle * sp_pn = mech.CreateParticle(t);
 	std::vector<double> newComposition(1);

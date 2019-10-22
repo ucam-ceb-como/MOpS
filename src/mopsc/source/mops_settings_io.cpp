@@ -298,10 +298,10 @@ Sweep::PartPtrList readEnsembleFile(
         }
 
 	// Read hybrid model particle-number info into list 
-	if (fileensemble.GetCritialNumber() > 0)
+	if (fileensemble.GetHybridThreshold() > 0)
 	{
-	    particle_numbers_list.resize(fileensemble.GetCritialNumber(), 0);
-	    for (unsigned int i = 0; i < fileensemble.GetCritialNumber(); ++i)
+	    particle_numbers_list.resize(fileensemble.GetHybridThreshold(), 0);
+	    for (unsigned int i = 0; i < fileensemble.GetHybridThreshold(); ++i)
 	    {
 	        particle_numbers_list[i] = fileensemble.NumberAtIndex(i);
 	    }
@@ -356,11 +356,11 @@ void readInitialPopulation(
 	// Initialise and store hybrid particle-number info for the cell
 	if (particle_numbers.size() > 0)
 	{
-	    mix.Particles().SetCriticalSize(particle_numbers.size());
+	    mix.Particles().SetHybridThreshold(particle_numbers.size());
 	    mix.Particles().InitialiseParticleNumberModel();
 	    mix.Particles().InitialiseDiameters(mix.ParticleModel()->Components()[0]->MolWt(),
 	    mix.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
-	    for (unsigned int i = 0; i < mix.Particles().GetCritialNumber(); ++i)
+	    for (unsigned int i = 0; i < mix.Particles().GetHybridThreshold(); ++i)
 	    {
 		mix.Particles().UpdateTotalsWithIndex(i, particle_numbers[i]);
 		mix.Particles().UpdateNumberAtIndex(i, particle_numbers[i]);
@@ -488,7 +488,7 @@ Mops::Mixture* readMixture(
     }
 
     // Now load some particles
-    mix->Particles().SetCriticalSize(mech.ParticleMech().GetCriticalThreshold());
+	mix->Particles().SetHybridThreshold(mech.ParticleMech().GetHybridThreshold());
     mix->Particles().Initialise(pcount);
     mix->Particles().InitialiseParticleNumberModel();
     mix->Reset(maxm0);

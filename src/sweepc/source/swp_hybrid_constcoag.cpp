@@ -337,7 +337,7 @@ int HybridConstantCoagulation::Perform(double t, Sweep::Cell &sys,
                 sys.Particles().UpdateTotalParticleNumber(-1);
                 unsigned int index12 = index1 + index2;
                 // Allow for coagulation in place if the combined particle is small enough
-				if ((m_mech->CoagulateInList()) && ip2_flag && (index12 < sys.Particles().GetCritialNumber()))
+				if ((m_mech->CoagulateInList()) && ip2_flag && (index12 < sys.Particles().GetHybridThreshold()))
                 {
                     coag_in_place = true;
                     sys.Particles().UpdateTotalsWithIndex(index12, 1.0);

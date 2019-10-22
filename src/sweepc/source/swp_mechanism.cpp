@@ -1331,11 +1331,11 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 	// Update sections for surface growth
 	double added_total = 0.0, rate_constant = 0.0, rate_index = 0.0;
 	unsigned int n_index = 0, index = 0, num = 0, n_add = 0;
-	unsigned int critical_size = sys.Particles().GetCritialNumber();
+	unsigned int hybrid_threshold = sys.Particles().GetHybridThreshold();
 	sys.SetNotPSIFlag(false);
 	Particle * sp_add = NULL;
-	Particle * sp_critical_size = sys.Particles().GetPNParticleAt(critical_size - 1)->Clone();
-	sp_critical_size->SetTime(t);
+	Particle * sp_hybrid_threshold = sys.Particles().GetPNParticleAt(hybrid_threshold - 1)->Clone();
+	sp_hybrid_threshold->SetTime(t);
 
 	for (PartProcPtrVector::const_iterator j = m_processes.begin(); j != m_processes.end(); ++j)
 	{
@@ -1346,7 +1346,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 	}
 
 	// New surface update goes here
-	for (unsigned int i = critical_size - 1; i != 0; --i)
+	for (unsigned int i = hybrid_threshold - 1; i != 0; --i)
 	{
 		index = i;
 		n_index = sys.Particles().NumberAtIndex(i);
@@ -1363,7 +1363,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 			if (index > i)
 			{
 				added_total += n_index * (index - i);
-				if (index < critical_size)
+				if (index < hybrid_threshold)
 				{
 					sys.Particles().UpdateTotalsWithIndices(i, index);
 					sys.Particles().UpdateNumberAtIndex(index, n_index);
@@ -1375,8 +1375,8 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 					sys.Particles().UpdateTotalParticleNumber(-1 * n_index);
 					sys.Particles().ResetNumberAtIndex(i);
 
-					n_add = index - (critical_size - 1);
-					sp_add = sp_critical_size->Clone();
+					n_add = index - (hybrid_threshold - 1);
+					sp_add = sp_hybrid_threshold->Clone();
 					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 					{
 						if ((*i)->IsDeferred())
@@ -1424,8 +1424,8 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 	//		(*i)->Perform(t, sys, rng, added_total);
 	//	}
 	//}
-	delete sp_critical_size;
-	sp_critical_size = NULL;
+	delete sp_hybrid_threshold;
+	sp_hybrid_threshold = NULL;
 }*/
 
 
@@ -1446,11 +1446,10 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	// Update sections for surface growth
 	double rate_constant = 0.0, rate_index = 0.0;
 	unsigned int n_index = 0, index = 0, n_add = 0, num = 0, added_total = 0;
-	unsigned int critical_size = sys.Particles().GetCritialNumber();
-	// sys.SetNotPSIFlag(false);
+	unsigned int hybrid_threshold = sys.Particles().GetHybridThreshold();
 	Particle * sp_add = NULL;
-	Particle * sp_critical_size = sys.Particles().GetPNParticleAt(critical_size - 1)->Clone();
-	sp_critical_size->SetTime(t);
+	Particle * sp_hybrid_threshold = sys.Particles().GetPNParticleAt(hybrid_threshold - 1)->Clone();
+	sp_hybrid_threshold->SetTime(t);
 
 	for (PartProcPtrVector::const_iterator j = m_processes.begin(); j != m_processes.end(); ++j)
 	{
@@ -1461,7 +1460,7 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	}
 
 	// New surface update goes here
-	for (unsigned int i = critical_size - 1; i > 0; --i)
+	for (unsigned int i = hybrid_threshold - 1; i > 0; --i)
 	{
 		index = i;
 		n_index = sys.Particles().NumberAtIndex(i);
@@ -1483,7 +1482,7 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 					added_total += (index - i);
 					sys.Particles().UpdateTotalsWithIndex(i, -1.0);
 					sys.Particles().UpdateNumberAtIndex(i, -1);
-					if (index < critical_size)
+					if (index < hybrid_threshold)
 					{
 						sys.Particles().UpdateTotalsWithIndex(index, 1.0);
 						sys.Particles().UpdateNumberAtIndex(index, 1);
@@ -1492,8 +1491,8 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 					{
 						sys.Particles().UpdateTotalParticleNumber(-1);
 
-						n_add = index - (critical_size - 1);
-						sp_add = sp_critical_size->Clone();
+						n_add = index - (hybrid_threshold - 1);
+						sp_add = sp_hybrid_threshold->Clone();
 						for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 						{
 							if ((*i)->IsDeferred())
@@ -1522,8 +1521,9 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 			}
 		}
 	}
-	// sys.SetNotPSIFlag(true);
 
+    // The gas-phase updates can be performed all at once here instead of once per index as above. 
+	// This does mean the gas-phase gets more out of sync with the process updates (source-sink problem)
 	//for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
 	//{
 	//	if ((*i)->IsDeferred())
@@ -1531,8 +1531,8 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	//		(*i)->Perform(t, sys, rng, added_total);
 	//	}
 	//}
-	delete sp_critical_size;
-	sp_critical_size = NULL;
+	delete sp_hybrid_threshold;
+	sp_hybrid_threshold = NULL;
 }
 
 
@@ -1546,7 +1546,7 @@ unsigned int Mechanism::SetRandomParticle(Sweep::Ensemble &ens, double t, double
 	// Generate a random number
 	double alpha = random_number;
 
-	unsigned int critical_index = ens.GetCritialNumber();
+	unsigned int threshold_index = ens.GetHybridThreshold();
 	unsigned int index = 0;
 	bool canstop = false;
 
@@ -1555,7 +1555,7 @@ unsigned int Mechanism::SetRandomParticle(Sweep::Ensemble &ens, double t, double
 	if (prop == iUniform)                                                                     // Uniform selection
 	{
 		unsigned int n_index = 0;
-		while (index < critical_index && !canstop)
+		while (index < threshold_index && !canstop)
 		{
 			n_index = ens.NumberAtIndex(index);
 			if (n_index >= alpha && n_index > 0)
@@ -1570,7 +1570,7 @@ unsigned int Mechanism::SetRandomParticle(Sweep::Ensemble &ens, double t, double
 	else                                                                                      // Selection based on a property
 	{
 		double n_index = 0.0;
-		while (index < critical_index && !canstop)
+		while (index < threshold_index && !canstop)
 		{
 			n_index = (double)(ens.NumberAtIndex(index)) * ens.PropertyAtIndex(prop, index);
 			if ((n_index >= alpha) && (n_index > 0.0))
@@ -1589,7 +1589,7 @@ unsigned int Mechanism::SetRandomParticle(Sweep::Ensemble &ens, double t, double
 	// If this happens, reset the property totals and return an index of 0. 
 	// The function requesting the index is responsible for dealing with the failure to
 	// find a suitable index e.g. by not performing the coagulation event or requesting a new one.
-	if (index == ens.GetCritialNumber())
+	if (index == ens.GetHybridThreshold())
 	{
 	    printf("sweep: Index is out of bounds; "
 			   "recomputing property totals.\n");

@@ -369,7 +369,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
             threshold = (unsigned int)(cdble(strn));
         if (threshold < 1)
             throw std::runtime_error("Hybrid threshold must be positive. (Sweep::MechParser::readV1)");
-		mech.SetCriticalThreshold(threshold);
+		mech.SetHybridThreshold(threshold);
 		string strc = particleXML->GetAttributeValue("coagulate-in-list");
 		if (strc == "true")
 			mech.SetCoagulateInList(true);
@@ -379,7 +379,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
     else
     {
         mech.SetHybrid(false);
-		mech.SetCriticalThreshold(0);
+		mech.SetHybridThreshold(0);
 		mech.SetCoagulateInList(false);
     }
 

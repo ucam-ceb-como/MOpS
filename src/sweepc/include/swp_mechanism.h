@@ -389,20 +389,20 @@ public:
     
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 	
-        // Particle-number/particle hybrid model parameters
-        // ================================================
+    // Particle-number/particle hybrid model parameters
+	// ================================================
 
-        // Set/get flags for hybrid model behaviour
-        void SetHybrid(bool hybrid_flag) const { m_hybrid = hybrid_flag; }
-        bool IsHybrid() const { return m_hybrid; }
+	// Set/get flags for hybrid model behaviour
+	void SetHybrid(bool hybrid_flag) const { m_hybrid = hybrid_flag; }
+	bool IsHybrid() const { return m_hybrid; }
 	bool CoagulateInList() const { return m_coagulate_in_list; }
 	void SetCoagulateInList(bool flag) const { m_coagulate_in_list = flag; }
 
-        // Set/get hybrid threshold
-        void SetCriticalThreshold(unsigned int threshold) const { m_threshold = threshold; } 
-        unsigned int GetCriticalThreshold() const { return m_threshold; }
+	// Set/get hybrid threshold
+	void SetHybridThreshold(unsigned int threshold) const { m_hybrid_threshold = threshold; }
+	unsigned int GetHybridThreshold() const { return m_hybrid_threshold; }
         
-        // ================================================
+	// ================================================
 
 	//! return a vector contain the information of particular primary particle with X molecules
 	void Mass_pah(Ensemble &m_ensemble) const;
@@ -458,9 +458,9 @@ private:
     // Particle-number/particle hybrid model parameters
     // ================================================ 
     
-    mutable bool m_hybrid;                  // identify hybrid particle model
-    mutable bool m_coagulate_in_list;       // Do coagulation below threshold size in the particle
-    mutable unsigned int m_threshold;       // hybrid threshold value-number list
+    mutable bool m_hybrid;                    // Identify hybrid particle model
+    mutable bool m_coagulate_in_list;         // Do coagulation below threshold size in the particle
+    mutable unsigned int m_hybrid_threshold;  // Hybrid threshold value-number list
 
     // ================================================
 
