@@ -62,19 +62,19 @@ CheckErr $?
 
 ###################################################################
 # CASE B: Test surface growth (with coagulation)
-# Obtained with 2 runs 512 particles 
-# SHA-1: 308216377734f9f4f2e655a7cd65243e3bc7cddb
+# Obtained with 2 runs 1024 particles 
+# SHA-1: babede7cc254609b55bd760bb33826992630621a
 # #################################################################
 fname="bintreeB-part.csv"
 
-m0True="3.304E+14"	
-m0err="5.8E+12"
-DcTrue="2.1772E-08"
-Dcerr="5.6E-11"
-npTrue="2.521"	
-nperr="0.032"
-dpTrue="1.863E-08"	
-dperr="1.3E-10"
+m0True="3.122E+14"	
+m0err="2.15e+13"
+DcTrue="1.114E-08"
+Dcerr="2.9E-10"
+npTrue="11.34"	
+nperr="0.56"
+dpTrue="5.877E-09"
+dperr="3E-12"
 
 # Run MOPS
 echo "Running MOPS for CASE B: surface growth..."

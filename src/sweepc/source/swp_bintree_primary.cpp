@@ -2444,6 +2444,9 @@ unsigned int BinTreePrimary::Adjust(const fvector &dcomp,
 		
 		if (m_pmodel->getTrackPrimarySeparation() || m_pmodel->getTrackPrimaryCoordinates()) {
 			
+			//  Note (csl37): adjust could be improved for deferred growth processes by distributing the new mass
+			//	over all or multiple primaries rather than applying all of the deferred growth to a single primary.
+			//
 			//! Primary selection based on the relative free surface area
 			//! Work down tree selecting left/right child based on sum of primary free surface areas under node
 			//! generate random number, use bernoulli with p=free_surf(leftchild)/free_surf(this)

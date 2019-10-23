@@ -6,7 +6,7 @@
   <iter>1</iter>
   <atol>1.0e-14</atol> 
   <rtol>1.0e-3</rtol>
-  <pcount>512</pcount>
+  <pcount>1024</pcount>
   <maxm0>1.0e10</maxm0>
   <relax>0.5</relax>
   
@@ -17,7 +17,7 @@
     <pressure units="bar">1.0</pressure>
 	<doubling enable="true"/>
     <population>
-      <particle count="512">
+      <particle count="1024">
         <component id="Rutile" dx="100"/>
       </particle>
       <m0>1.0e16</m0>
@@ -28,7 +28,7 @@
   <timeintervals splits="1">
     <start>0.0</start>
     <time steps="100" splits="1">1.0</time>
-	<time steps="500" splits="1">1.1</time>
+	<time steps="400" splits="1">1.1</time>
   </timeintervals>
   
   <!-- Simulation output settings. -->
