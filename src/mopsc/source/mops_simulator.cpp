@@ -1765,13 +1765,13 @@ void Simulator::calcAvgConf(std::vector<fvector> &avg,
 void Simulator::buildOutputVector(unsigned int step, double time,
                                   fvector &avg, const fvector &err)
 {
-    for (unsigned int i=avg.size(); i!=0; --i) {
-        if (i < err.size()) {
+    for (int i=avg.size(); i!=0; --i) {
+        if (i <= err.size()) {
             avg.insert(avg.begin()+i, *(err.begin()+i-1));
         } else {
             avg.insert(avg.begin()+i, 0.0);
         }
-    }
+	}
     avg.insert(avg.begin(), time);
     avg.insert(avg.begin(), step);
 }
