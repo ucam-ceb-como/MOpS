@@ -151,6 +151,13 @@ public:
         unsigned int start=0             // Optional vector start index.
         ) const;
 
+	// Initialise a list of particle-number particles using the given mechanism
+	void InitialisePNParticles(
+		double t,                  // Current solution time.
+		Cell &sys,                 // System to update.
+		const Mechanism &mech      // Mechanism to use.
+		) const;
+
     // COAGULATION PROCESS WEIGHTED.
 
     // Returns TRUE if coagulation process uses weighted transfer function.

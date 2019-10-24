@@ -132,7 +132,15 @@ void NetworkSimulator::Run(
         double dt, t2;
 
         // Fill the reactors with their initial mixtures
-        net.ResetNetwork();
+		net.ResetNetwork();
+
+		// Initialise the register of particle-number particles
+		for (it = this->Begin(); it != this->End(); ++it) {
+			if ((it->reac)->Mech()->ParticleMech().IsHybrid())
+			{
+				(it->reac)->Mech()->ParticleMech().InitialisePNParticles(0.0, *(it->reac)->Mixture(), (it->reac)->Mech()->ParticleMech());
+			}
+		}
 
         // Initialise reactors and simulators
         t2 = mTimes[0].StartTime();

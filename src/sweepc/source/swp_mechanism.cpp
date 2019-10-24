@@ -392,6 +392,41 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
 }
 
 
+// Initialise a list of PN particles using the given mechanism
+void Mechanism::InitialisePNParticles(double t, Cell &sys, const Mechanism &mech) const
+{
+	if (sys.ParticleModel()->Components().size() != 1)
+	{
+		throw runtime_error("Particle-number model requires a 1D primary particle model "
+			"(Sweep, Mechanism::InitialisePNParticles).");
+	}
+	else
+	{
+		std::cout << "Initialising particle-number register with threshold Nthresh = "
+			<< sys.Particles().GetHybridThreshold() << "\n";
+
+		// Flag that register of particle properties is set up
+		sys.Particles().SetInceptedSP();
+		sys.Particles().SetHybridThreshold(mech.GetHybridThreshold());
+
+		// Initialise lookup of particles below threshold size
+		for (unsigned int i = 0; i < sys.Particles().GetHybridThreshold(); i++)
+		{
+			Particle * sp_pn = mech.CreateParticle(t);
+			std::vector<double> newComposition(1);
+			std::vector<double> noTrackers(1);
+			newComposition[0] = i;
+			noTrackers[0] = 0.0;
+			sp_pn->setPositionAndTime(0.0, t);
+			sp_pn->Primary()->SetComposition(newComposition);
+			sp_pn->Primary()->SetValues(noTrackers);
+			sp_pn->UpdateCache();
+			sys.Particles().SetPNParticle(*sp_pn, i);
+		}
+		sys.Particles().InitialiseDiameters(sys.ParticleModel()->Components()[0]->MolWt(),
+			sys.ParticleModel()->Components()[0]->Density()); 
+	}
+}
 
 // COAGULATION PROCESS WEIGHTED.
 

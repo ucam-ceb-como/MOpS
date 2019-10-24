@@ -86,11 +86,6 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
                          OutFnPtr out, void *data)
 {
 
-    // Initialise the register of particle-number particles
-    if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
-    {
-        InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
-    }
 
     // Mark the time at the start of the step, in order to
     // calculate total computation time.
@@ -182,20 +177,6 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
                          Sweep::rng_type &rng,
                          OutFnPtr out, void *data, bool writediags)
 {
-    // Check if particle terms are to be included in the energy balance
-    if (r.IncludeParticles()) {
-        r.Mixture()->SetIsAdiabaticFlag(true);
-    }
-    else {
-        r.Mixture()->SetIsAdiabaticFlag(false);
-    }
-    
-    // Initialise the register of particle-number particles
-    if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
-    {
-        InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
-    }
-
     //Diagnostics file
     ofstream partProcFile, gasConcFile;
 	

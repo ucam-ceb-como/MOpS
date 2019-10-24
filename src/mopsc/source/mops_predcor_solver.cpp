@@ -126,12 +126,6 @@ void PredCorSolver::Initialise(Reactor &r)
     m_ode.SetExtSrcTerms(m_srcterms);
     m_ode_copy.SetExtSrcTerms(m_srcterms);
 
-    // Initialise the register of particle-number particles
-    if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
-    {
-        InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
-    }
-
     // Clone the reactor.
     delete m_reac_copy;
     m_reac_copy = r.Clone();
@@ -163,12 +157,6 @@ void PredCorSolver::Reset(Reactor &r)
     if (r.IsConstV())
     {
         r.Mixture()->setConstV(true);
-    }
-
-    // Initialise the register of particle-number particles
-    if (r.Mech()->ParticleMech().IsHybrid() && !(r.Mixture()->Particles().IsFirstSP()))
-    {
-        InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
     }
 	
     // Clone the reactor.

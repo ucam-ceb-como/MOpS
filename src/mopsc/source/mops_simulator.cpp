@@ -491,7 +491,11 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         }
 //////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
-
+		// Initialise the register of particle-number particles
+		if (r.Mech()->ParticleMech().IsHybrid())
+		{
+			r.Mech()->ParticleMech().InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
+		}
 
         // Loop over the time intervals.
         unsigned int global_step = 0;

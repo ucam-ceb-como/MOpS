@@ -92,13 +92,6 @@ public:
         rng_type &rng
         );
 
-    // Initialise a list of particle-number particles using the given mechanism
-    void InitialisePNParticles(
-	double t,                  // Current solution time.
-	Cell &sys,                 // System to update.
-	const Mechanism &mech      // Mechanism to use.
-    );
-
 protected:
     // TIME STEPPING ROUTINES.
 
