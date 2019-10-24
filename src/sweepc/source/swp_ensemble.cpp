@@ -911,11 +911,12 @@ int Sweep::Ensemble::Select_usingGivenRand(Sweep::PropID id, double rng_number, 
 double Sweep::Ensemble::Scaling() const
 {
     // The scaling factor includes the contraction term and the doubling term.
-    //return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
-
-    // For weighted particles, the contraction factor depends 
-    // on the weight of the removed particle otherwise number density not conserved
-    return m_wtdcontfctr * pow(2.0, (double)m_ndble);
+    // For weighted particles, the contraction factor should also depend
+    // on the weight of the removed particle otherwise number density not conserved. 
+	if (m_hybrid_threshold > 0)
+		return m_wtdcontfctr * pow(2.0, (double)m_ndble);
+	else
+		return pow(m_contfactor, (double)m_ncont) * pow(2.0,(double)m_ndble);
 }
 
 // Resets the ensemble scaling.
