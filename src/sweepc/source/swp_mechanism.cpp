@@ -405,8 +405,6 @@ void Mechanism::InitialisePNParticles(double t, Cell &sys, const Mechanism &mech
 		std::cout << "Initialising particle-number register with threshold Nthresh = "
 			<< sys.Particles().GetHybridThreshold() << "\n";
 
-		// Flag that register of particle properties is set up
-		sys.Particles().SetInceptedSP();
 		sys.Particles().SetHybridThreshold(mech.GetHybridThreshold());
 
 		// Initialise lookup of particles below threshold size

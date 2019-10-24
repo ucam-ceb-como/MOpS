@@ -148,7 +148,7 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             }
 
             // Hybrid particle-number/particle model variables
-            m_inceptedFirstSP = rhs.m_inceptedFirstSP;
+			// ===============================================
             m_hybrid_threshold = rhs.m_hybrid_threshold;
             if (rhs.m_hybrid_threshold > 0)
             {
@@ -220,6 +220,7 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
                 m_total_diameter3 = rhs.m_total_diameter3;
                 m_total_component = rhs.m_total_component;
             }
+			// ===============================================
 
             m_tree.resize(m_capacity);
             rebuildTree();
@@ -307,7 +308,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
 	m_dblelimit = m_halfcap - m_dbleslack;
 
     // Hybrid particle-number/particle model variables
-    m_inceptedFirstSP = false;
+    // ===============================================
     m_total_number = 0;
     m_total_diameter = 0.0;
     m_total_diameter2 = 0.0;
@@ -332,6 +333,7 @@ void Sweep::Ensemble::Initialise(unsigned int capacity)
     m_pn_mass3.resize(m_hybrid_threshold, 0);
     m_pn_diameters3.resize(m_hybrid_threshold, 0);
     m_pn_particles.resize(m_hybrid_threshold, NULL);
+    // ===============================================
 }
 
 /*!
@@ -804,7 +806,7 @@ void Sweep::Ensemble::ClearMain()
     m_dbleactive = false;
 
     // Hybrid particle-number/particle model variables
-    m_inceptedFirstSP = false;
+    // ===============================================
     m_total_number = 0;
     m_total_component = 0;
     m_total_diameter = 0.0;
@@ -821,6 +823,7 @@ void Sweep::Ensemble::ClearMain()
         delete m_pn_particles[i];
         m_pn_particles[i] = NULL;
     }
+    // ===============================================
 }
 
 // SELECTING PARTICLES.
@@ -1770,7 +1773,7 @@ void Sweep::Ensemble::init(void)
     m_dbleon     = true;
 
     // Hybrid particle-number/particle model parameters
-    m_inceptedFirstSP = false;
+    // ===============================================
     m_hybrid_threshold = 0;
     m_total_number = 0;
     m_total_diameter = 0.0;
@@ -1784,6 +1787,7 @@ void Sweep::Ensemble::init(void)
     m_total_mass3 = 0.0;
     m_total_diameter3 = 0.0;
     m_total_component = 0;
+    // ===============================================
 }
 
 //int Sweep::Ensemble::NumOfInceptedPAH() const

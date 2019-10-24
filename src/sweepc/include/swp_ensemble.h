@@ -283,11 +283,6 @@ public:
 
     // Hybrid particle-number/particle model functions
     // ===============================================
-    // Note whether the first particle inception has happened. 
-    // Particle-number lists are only initiated at this point. 
-    bool IsFirstSP(void) const { return m_inceptedFirstSP; }
-    void SetInceptedSP() { m_inceptedFirstSP = true; }
-
     // Set/get threshold size 
     void SetHybridThreshold(unsigned int threshold) { m_hybrid_threshold = threshold; }
     unsigned int GetHybridThreshold() const { return m_hybrid_threshold; }
@@ -387,8 +382,6 @@ private:
 
     // Hybrid particle number model variables
     // ===============================================
-
-    bool m_inceptedFirstSP;
     unsigned int m_hybrid_threshold; 
     unsigned int m_total_number;
     unsigned int m_total_component;
