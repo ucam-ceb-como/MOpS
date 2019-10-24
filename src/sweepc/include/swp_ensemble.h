@@ -304,7 +304,7 @@ public:
     void RecalcPNPropertySums();
 
     // Functions to initialise properties
-    void InitialiseParticleNumberModel(unsigned int threshold);
+    void InitialiseParticleNumberModel();
     void InitialiseDiameters(double molecularWeight, double density);
     int SetPNParticle(Particle &sp, unsigned int index);
 

@@ -356,7 +356,8 @@ void readInitialPopulation(
 	// Initialise and store hybrid particle-number info for the cell
 	if (particle_numbers.size() > 0)
 	{
-		mix.Particles().InitialiseParticleNumberModel(particle_numbers.size());
+		mix.Particles().SetHybridThreshold(particle_numbers.size());
+		mix.Particles().InitialiseParticleNumberModel();
 	    mix.Particles().InitialiseDiameters(mix.ParticleModel()->Components()[0]->MolWt(),
 	    mix.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
 	    for (unsigned int i = 0; i < mix.Particles().GetHybridThreshold(); ++i)
@@ -487,8 +488,9 @@ Mops::Mixture* readMixture(
     }
 
     // Now load some particles
-    mix->Particles().Initialise(pcount);
-	mix->Particles().InitialiseParticleNumberModel(mech.ParticleMech().GetHybridThreshold());
+	mix->Particles().SetHybridThreshold(mech.ParticleMech().GetHybridThreshold());
+	mix->Particles().Initialise(pcount);
+	mix->Particles().InitialiseParticleNumberModel();
     mix->Reset(maxm0);
     subnode = NULL; subnode = node.GetFirstChild("population");
     if (subnode != NULL) {
