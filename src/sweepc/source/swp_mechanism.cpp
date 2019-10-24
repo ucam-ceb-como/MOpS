@@ -1765,7 +1765,7 @@ void Mechanism::Serialize(std::ostream &out) const
         } else {
             out.write((char*)&falseval, sizeof(falseval));
         }
-
+		
         // Write number of inceptions.
         unsigned int n = (unsigned int)m_inceptions.size();
         out.write((char*)&n, sizeof(n));
@@ -1813,6 +1813,10 @@ void Mechanism::Serialize(std::ostream &out) const
         // Write process count.
         n = (unsigned int)m_processcount;
         out.write((char*)&n, sizeof(n));
+
+		// Write hybrid threshold.
+		n = (unsigned int)m_hybrid_threshold;
+		out.write((char*)&n, sizeof(n));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, Mechanism::Serialize).");
@@ -1889,7 +1893,11 @@ void Mechanism::Deserialize(std::istream &in)
 
                 // Read process count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                m_processcount = n;
+				m_processcount = n;
+
+				// Read hybrid threshold.
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+				m_hybrid_threshold = n;
 
                 break;
             default:

@@ -728,6 +728,12 @@ private:
         const timevector &times // Simulation output time intervals.
         ) const;
 
+	// Processes the particle-number list PSLs at each save point into single files.
+	void postProcessParticleNumberPSLs(
+		const Mechanism &mech,  // Mechanism use to solve system.
+		const timevector &times // Simulation output time intervals.
+		) const;
+
     // Processes the PSLs at each save point into single files for PAHs.
     void postProcessPAHPSLs(
         const Mechanism &mech,  // Mechanism use to solve system.
