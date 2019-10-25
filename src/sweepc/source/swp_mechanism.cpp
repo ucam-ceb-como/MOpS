@@ -77,10 +77,7 @@ using namespace Strings;
 
 // Default constructor.
 Mechanism::Mechanism(void)
-: m_anydeferred(false), m_icoag(-1), m_termcount(0), m_processcount(0), 
-m_weighted_coag(false), m_var_incept_weight(false), 
-m_max_incept_weight(1.0), m_min_incept_weight(1.0), m_minsp_for_aiw(1.0), m_incept_weight_fn("L"), 
-m_weightscaling_flag(false), m_weightscaling_onset(10.0), m_weightscaling_factor(1.0),
+: m_anydeferred(false), m_icoag(-1), m_termcount(0), m_processcount(0),
 m_hybrid(false), m_coagulate_in_list(false)
 {
 }
@@ -115,25 +112,6 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         m_icoag        = rhs.m_icoag;
         m_termcount    = rhs.m_termcount;
         m_processcount = rhs.m_processcount;
-
-
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	m_addcount = rhs.m_addcount;
-	m_inflowcount = rhs.m_inflowcount;
-	m_outflowcount = rhs.m_outflowcount;
-
-        m_weighted_coag = rhs.m_weighted_coag;
-	m_var_incept_weight = rhs.m_var_incept_weight;
-	m_max_incept_weight = rhs.m_max_incept_weight;
-	m_min_incept_weight = rhs.m_min_incept_weight;
-	m_minsp_for_aiw = rhs.m_minsp_for_aiw;
-	m_incept_weight_fn = rhs.m_incept_weight_fn;
-
-	m_weightscaling_flag = rhs.m_weightscaling_flag;
-	m_weightscaling_onset = rhs.m_weightscaling_onset;
-	m_weightscaling_factor = rhs.m_weightscaling_factor;
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
         // Particle-number/particle model flags
 	m_hybrid = rhs.m_hybrid;
@@ -251,15 +229,6 @@ void Mechanism::AddProcess(ParticleProcess &p)
 
     // Check for any deferred.
     m_anydeferred = m_anydeferred || p.IsDeferred();
-
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-    // Initialise the counts
-    m_addcount = 0;
-    m_inflowcount = 0;
-    m_outflowcount = 0;
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
 
     // Set the process to belong to this mechanism.
     p.SetMechanism(*this);
@@ -426,91 +395,6 @@ void Mechanism::InitialisePNParticles(double t, Cell &sys, const Mechanism &mech
 	}
 }
 
-// COAGULATION PROCESS WEIGHTED.
-
-// aab64 Returns TRUE if coagulation process uses weighted transfer function.
-bool Mechanism::IsWeightedCoag(void) const
-{
-	return m_weighted_coag;
-}
-
-// aab64 Sets the coagulation process to be SWA or not. 
-// Note that this is only for original activation, it is not meant to change the state
-// during simulation and does not provide a means of doing so. 
-void Mechanism::SetWeightedCoag(bool weightedCoag)
-{
-	m_weighted_coag = weightedCoag;
-}
-
-// aab64 Returns TRUE if inception process uses variable weights.
-bool Mechanism::IsVariableWeightedInception(void) const
-{
-	return m_var_incept_weight;
-}
-
-// aab64 Returns variable inception max weight.
-double Mechanism::GetMaxInceptionWeight(void) const
-{
-	return m_max_incept_weight;
-}
-
-// aab64 Returns variable inception min weight.
-double Mechanism::GetMinInceptionWeight(void) const
-{
-	return m_min_incept_weight;
-}
-
-// aab64 Returns minimum particles threshold to start
-// adjusting incepting weight
-double Mechanism::GetMinSPForAIWOnset(void) const
-{
-	return m_minsp_for_aiw;
-}
-
-// aab64 Returns the type of inception weight scaling function
-void Mechanism::GetWeightScalingFn(std::string &wtfn) const
-{
-	wtfn = m_incept_weight_fn;
-}
-
-// aab64 Sets the inception process to use variable weighting.
-// Weights fluctuate between wmax and wmin depending on number of 
-// particles in ensemble relative to ensemble capacity.
-void Mechanism::SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, std::string &weightfn)
-{
-	m_var_incept_weight = isVarInceptWeight;
-	m_max_incept_weight = wmax;
-	m_min_incept_weight = wmin;
-	m_minsp_for_aiw = nmin;
-	m_incept_weight_fn = weightfn;
-}
-
-
-// aab64 Returns threshold to adjust ensemble weights
-double Mechanism::GetWeightOnsetRatio(void) const
-{
-	return m_weightscaling_onset;
-}
-
-// aab64 Returns the flag for adaptive ensemble weights
-bool Mechanism::GetWeightScalingFlag(void) const
-{
-	return m_weightscaling_flag;
-}
-
-// aab64 Returns the factor to mulitply the weight scaling
-double Mechanism::GetWeightScalingFactor(void) const
-{
-	return m_weightscaling_factor;
-}
-
-// aab64 Sets flag for the adaptive ensemble weights and the onset ratio
-void Mechanism::SetWeightScaling(bool isWeightScaling, double ratio, double factor)
-{
-	m_weightscaling_flag = isWeightScaling;
-	m_weightscaling_onset = ratio;
-	m_weightscaling_factor = factor;
-}
 
 
 // RATE CALCULATION.
@@ -644,17 +528,6 @@ void Mechanism::ResetJumpCount() const {
     fill(m_proccount.begin(), m_proccount.end(), 0.0);
     // Do for number of fictitious jumps
     fill(m_fictcount.begin(), m_fictcount.end(), 0.0);
-	
-
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-    // Do for deferred addition count
-    m_addcount = 0;
-    // Do for inflow count
-    m_inflowcount = 0;
-    // Do for outflow count
-    m_outflowcount = 0;
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 }
 
 
@@ -1084,10 +957,6 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
         if ((j < (int)sys.InflowCount()) && (j>=0)) {
             // An inflow process.
             sys.Inflows(j)->Perform(t, sys, local_geom, 0, rng);
-            //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-            // Increment the inflow jump counter (note a single type of event but not a single particle)
-            m_inflowcount++;
-            //////////////////////////////////////////// aab64 ////////////////////////////////////////////
             return;
         } else {
             // Hopefully a death process then!
@@ -1097,10 +966,6 @@ void Mechanism::DoProcess(unsigned int i, double t, Cell &sys,
         if ((j < (int)sys.OutflowCount()) && (j>=0)) {
             // An outflow process.
             sys.Outflows(j)->Perform(t, sys, local_geom, 0, rng);
-            //////////////////////////////////////////// aab64 ////////////////////////////////////////////
-            // Increment the outflow jump counter
-            m_outflowcount++;
-            //////////////////////////////////////////// aab64 ////////////////////////////////////////////
         } else {
             throw std::runtime_error("Unknown index of process, couldn't Perform."
                     " (Sweep, Mechanism::DoProcess)");
@@ -1324,26 +1189,6 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
         // Start particle doubling again.  This will also double the ensemble
         // if too many particles have been removed.
         sys.Particles().UnfreezeDoubling();
-
-        // aab64 If required, scale the ensemble weights to prevent deterioration of the average
-        // (causing jumps e.g. when new, relatively large weight particles are incepted)
-        if ((sys.ParticleCount() > 1) && GetWeightScalingFlag())
-        {
-            double ratio = sys.ParticleCount() / sys.Particles().GetSum(iW);
-            if (ratio > GetWeightOnsetRatio())
-            {
-                double factor = GetWeightScalingFactor();
-                sys.AdjustSampleVolume(factor);
-                unsigned int part_i;
-                Particle *pi = NULL;
-                for (part_i = 0; part_i < sys.ParticleCount(); ++part_i)
-                {
-                    pi = sys.Particles().At(part_i);
-                    pi->setStatisticalWeight(pi->getStatisticalWeight() * factor);
-                    sys.Particles().Update(part_i); 
-                }
-            }
-        }
     }
 }
 
@@ -1547,9 +1392,6 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 							(*i)->Perform(t, sys, rng, added_total);
 						}
 					}
-					// Increment the deferred jump counter
-					m_addcount += num;
-					added_total = 0;
 				}
 			}
 		}
@@ -1569,10 +1411,8 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 }
 
 
-
-
-//! Compute nth diameter moment, adjusted because distribution is truncated
-//! to maximum/minimum physical particle size thresholds (conditional expectation)
+// Select particle according to given property prop,
+// using given random_number instead of generating one
 unsigned int Mechanism::SetRandomParticle(Sweep::Ensemble &ens, double t, double random_number,
 	Sweep::PropID prop, rng_type &rng) const
 {		
@@ -1732,8 +1572,6 @@ void Mechanism::UpdateParticle(Particle &sp, Cell &sys, double t, int ind, rng_t
                          if (num > 0) {
                              // Do the process to the particle.
                              (*i)->Perform(t, sys, sp, rng, num);
-                             // Increment the deferred jump counter
-                             m_addcount += num;
                          }
                     }
                 }
@@ -1798,7 +1636,7 @@ void Mechanism::Serialize(std::ostream &out) const
         } else {
             out.write((char*)&falseval, sizeof(falseval));
         }
-		
+
         // Write number of inceptions.
         unsigned int n = (unsigned int)m_inceptions.size();
         out.write((char*)&n, sizeof(n));
@@ -1847,9 +1685,9 @@ void Mechanism::Serialize(std::ostream &out) const
         n = (unsigned int)m_processcount;
         out.write((char*)&n, sizeof(n));
 
-		// Write hybrid threshold.
-		n = (unsigned int)m_hybrid_threshold;
-		out.write((char*)&n, sizeof(n));
+        // Write hybrid threshold.
+        n = (unsigned int)m_hybrid_threshold;
+        out.write((char*)&n, sizeof(n));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, Mechanism::Serialize).");
@@ -1926,11 +1764,11 @@ void Mechanism::Deserialize(std::istream &in)
 
                 // Read process count.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
-				m_processcount = n;
+                m_processcount = n;
 
-				// Read hybrid threshold.
-				in.read(reinterpret_cast<char*>(&n), sizeof(n));
-				m_hybrid_threshold = n;
+                // Read hybrid threshold.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_hybrid_threshold = n;
 
                 break;
             default:
@@ -1979,28 +1817,8 @@ void Mechanism::releaseMem(void)
     m_processcount = 0;
     m_proccount.clear();
     m_fictcount.clear();
-	
 
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	m_addcount = 0;
-	m_inflowcount = 0;
-	m_outflowcount = 0;
-
-	m_weighted_coag = false; 
-	m_var_incept_weight = false; 
-	m_minsp_for_aiw = 0;
-	m_min_incept_weight = 0; 
-	m_max_incept_weight = 0;
-	m_incept_weight_fn.clear(); 
-
-	m_weightscaling_flag = false;
-	m_weightscaling_onset = 0;
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-        // Hybrid model parameters
-	m_hybrid = false;
-	m_coagulate_in_list = false;
+    // Hybrid model parameters
+    m_hybrid = false;
+    m_coagulate_in_list = false;
 }
-
-

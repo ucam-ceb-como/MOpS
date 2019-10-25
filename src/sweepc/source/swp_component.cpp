@@ -114,7 +114,6 @@ bool Component::IsValidValue(const double r) const {
     return r >= m_minValid;
 }
 
-
 // READ/WRITE/COPY.
 
 // Creates a copy of the component.

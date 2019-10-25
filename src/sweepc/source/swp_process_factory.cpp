@@ -174,9 +174,9 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
             case Transition_Coagulation_ID:
                 proc = new TransitionCoagulation(in, mech);
                 break;
-			case Hybrid_Transition_Coagulation_ID:
-				proc = new HybridTransitionCoagulation(in, mech);
-				break;
+            case Hybrid_Transition_Coagulation_ID:
+                proc = new HybridTransitionCoagulation(in, mech);
+                break;
 			case Transition_Coagulation_Weighted_PAHs_ID:
 				proc = new TransitionCoagulationWeightedPAHs(in, mech);
 				break;
@@ -185,10 +185,10 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
                 break;
             case Constant_Coagulation_ID:
                 proc = new ConstantCoagulation(in, mech);
-				break;
-			case Hybrid_Constant_Coagulation_ID:
-				proc = new HybridConstantCoagulation(in, mech);
-				break;
+                break;
+            case Hybrid_Constant_Coagulation_ID:
+                proc = new HybridConstantCoagulation(in, mech);
+                break;
             case Weighted_Additive_Coagulation_ID:
                 proc = new WeightedAdditiveCoagulation(in, mech);
                 break;

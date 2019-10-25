@@ -53,7 +53,6 @@
 #include <limits>
 #include <boost/random/exponential_distribution.hpp>
 #include <boost/random/uniform_01.hpp>
-#include <boost/random/lognormal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 
 using namespace Sweep;
@@ -99,75 +98,12 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
     fvector rates(mech.TermCount(), 0.0);
     // Global maximum time step.
     dtg     = tstop - t;
-	
     double tin = t; //store start time 
-    // aab64 Variables used to shift incepting weight over time
-    double nmax = sys.Particles().Capacity();
-    double nnew = sys.ParticleCount();
-    double nmin = 1.0; // minimum particles for which to activate scaling
-    double wmax = 1.0; // maximum incepting weight
-    double wmin = 1.0; // minimum incepting weight
-    double wnew = 1.0; // incepting weight for next step
-    double a = 1.0;    // constant in scaling
-    double b = 1.0;    // constant in scaling
-    double c = 1.0;    // constant in scaling
-    std::string wtfn = "L";  // inception weight function
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
-        nnew = sys.ParticleCount();
-
-		// aab64 AIW - Adaptive inception weighting:
-		/* Shift incepting particle weight over time, as the ensemble fills up
-		Check if particle weight should be updated if SWA is in play
-		Only step up weights after ensemble capacity hits a certain point nmin
-		(possibly find a way to do this incrementally at a few points, rather than 
-		continuously every time this process occurs). */
-		if (mech.IsWeightedCoag() && mech.IsVariableWeightedInception()) 
-		{
-			wmax = mech.GetMaxInceptionWeight();
-			wmin = mech.GetMinInceptionWeight();
-			nmin = mech.GetMinSPForAIWOnset();
-			mech.GetWeightScalingFn(wtfn); 
-			wnew = wmin;
-			// If the number of particles is large enough, update the incepting weight
-			if (nnew > nmin) {
-				// Compute and set new weighting (must occur before rate is calculated) 
-				if (wtfn == "E") {
-					// Exponential scaling
-					b = log(wmax / wmin);
-					b *= (1.0 / (nmax - nmin));
-					a = wmin * exp(-1.0 * b * nmin);
-					c = 0.0;
-					wnew = (a * exp(b * nnew)) + c;
-
-					// new scaling
-					/*double h = -1.0 * log((wmax - wmin) / (exp(nmax) - exp(nmin)));
-					double k = wmin - ((wmax - wmin) / (exp(nmax - nmin) - 1));
-					wnew = exp(nnew - h) + k;*/
-				}
-				else if (wtfn == "Q") {
-					// Quadratic scaling
-					a = (wmax - wmin) / ((nmax * nmax) - (2.0 * nmax * nmin) + (nmin * nmin));
-					b = -2.0 * a * nmin;
-					c = wmin - (a * nmin * nmin) - (b * nmin);
-					wnew = (a * nnew * nnew) + (b * nnew) + c;
-				}
-				else {
-					// Linear scaling
-					a = 0.0;
-					b = ((wmax - wmin) / (nmax - nmin));
-					c = wmin - (b * nmin);
-					wnew = (b * nnew) + c;
-				}				
-			}
-			// Set new incepting weight
-			sys.SetInceptingWeight(wnew);
-		}
-
-        if (mech.AnyDeferred() && (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber()  > 0.0))  {
-
+        if (mech.AnyDeferred() && (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber() > 0))  {
             // Get the process jump rates (and the total rate).
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
 
@@ -197,7 +133,7 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
         // Perform Linear Process Deferment Algorithm to
         // update all deferred processes.
         mech.LPDA(t, sys, rng);
-        
+
         // Perform deferred processes on particle-number particles
 	if (mech.IsHybrid() && sys.Particles().GetTotalParticleNumber() > 0)
 	{
@@ -280,7 +216,6 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
     if (t+dt <= t_stop) {
         boost::uniform_01<rng_type &> uniformGenerator(rng);
         const int i = chooseIndex(rates, uniformGenerator);
-
         mech.DoProcess(i, t+dt, sys, geom, rng);
         t += dt;
     } else {
@@ -316,4 +251,3 @@ int Solver::chooseProcess(const fvector &rates, double (*rand_u01)())
     }
     return j;
 };
-

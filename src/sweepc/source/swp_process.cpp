@@ -470,14 +470,16 @@ void Process::adjustGas(Cell &sys, double wt, unsigned int n) const
     }
 }
 
-// Adjusts the gas-phase temperature using change in composition of the particle
+// Adjusts the gas-phase composition and temperature 
+// using the change in composition of the particle
 // Currently only implemented for titania!
 /*
 * Same warning as in adjustGas above applies
-* @param[in, out]   sys      System in which the gas phase is changing
-* @param[in]        wt       Statistical weight of reaction
-* @param[in]        n        Repeat count of reaction
-* @param[in]        adjustT  Update temperature for adiabatic case
+* @param[in, out]   sys        System in which the gas phase is changing
+* @param[in]        wt         Statistical weight of reaction
+* @param[in]        n          Repeat count of reaction
+* @param[in]        dcomp      Composition change in particle
+* @param[in]        processID  Identify process as reaction (1, 2) or flow (3, 4)
 *
 * @pre      The gas phase in sys must be of type SprogIdealGasWrapper
 *

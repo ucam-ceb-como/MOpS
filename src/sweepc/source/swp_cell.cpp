@@ -66,7 +66,6 @@ namespace Sweep {
 Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
 : m_ensemble(), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false),
-  m_incepting_weight(1.0),
   m_constv(false), m_particle_density(0.0)
 {
     if(const_gas)
@@ -118,7 +117,6 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_outflow    = rhs.m_outflow;
 
         m_adiabatic_flag = rhs.m_adiabatic_flag;          // flag for adiabatic operation
-        m_incepting_weight = rhs.m_incepting_weight;      // incepting particle weight
         m_bulk_heat_capacity = rhs.m_bulk_heat_capacity;  // temperature update variables
 	m_particle_heat_capacity = rhs.m_particle_heat_capacity;
         m_particle_density = rhs.m_particle_density;

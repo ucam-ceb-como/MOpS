@@ -148,7 +148,7 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
             }
 
             // Hybrid particle-number/particle model variables
-			// ===============================================
+            // ===============================================
             m_hybrid_threshold = rhs.m_hybrid_threshold;
             if (rhs.m_hybrid_threshold > 0)
             {
@@ -220,7 +220,7 @@ Ensemble & Sweep::Ensemble::operator=(const Sweep::Ensemble &rhs)
                 m_total_diameter3 = rhs.m_total_diameter3;
                 m_total_component = rhs.m_total_component;
             }
-			// ===============================================
+            // ===============================================
 
             m_tree.resize(m_capacity);
             rebuildTree();
@@ -427,7 +427,7 @@ void Sweep::Ensemble::SetParticles(std::list<Particle*>::iterator first, std::li
     m_dbleon     = true;
 
     // Check for doubling activation.
-    if (!m_dbleactive && ((m_count + m_total_number) >= (m_capacity - m_dblecutoff))) {
+    if (!m_dbleactive && ((m_count + m_total_number) >= (m_dblecutoff-1))) {
         m_dbleactive = true;
     } else
         m_dbleactive = false;
@@ -521,14 +521,14 @@ int Sweep::Ensemble::Add(Particle &sp, rng_type &rng, int i2, bool hybrid_event_
         boost::variate_generator<Sweep::rng_type&, boost::uniform_smallint<int> > indexGenerator(rng, indexDistrib);
         i = indexGenerator();
 		
-		// Check if adding a particle from the particle-number list during coagulation. 
-		// In this case, we can't remove the last particle (index=m_capacity) or the
-		// paired coagulating particle (index=i2) as this would void the coagulation event.
-		if (hybrid_event_flag)
+        // Check if adding a particle from the particle-number list during coagulation. 
+        // In this case, we can't remove the last particle (index=m_capacity) or the
+        // paired coagulating particle (index=i2) as this would void the coagulation event.
+        if (hybrid_event_flag)
         {
             while (i == m_capacity || i == i2) 
                 i = indexGenerator(); 
-		}
+        }
 
         // Account for particle weights in sample volume contraction
         // (not as neat as using ncont but necessary if weighted or hybrid particles)

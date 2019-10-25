@@ -273,7 +273,6 @@ protected:
          ) const;
 
     // Adjusts the temperature for particle-phase process using change in composition
-    // Currently only implemented for titania!
 	void adjustParticleTemperature(
 	Cell &sys,       // System to update.
 	double wt,       // Stochastic weight of particle

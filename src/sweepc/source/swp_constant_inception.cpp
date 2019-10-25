@@ -145,7 +145,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
                           const Geometry::LocalGeometry1d &local_geom,
                           const unsigned int iterm,
                           rng_type &rng) const {
-	
+
     // Position of newly incepted particle
     double posn;
 
@@ -173,7 +173,7 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
 
     // Initialise the new particle.
     std::vector<double> newComposition(mComponentDistributions.size());
-    for (unsigned i = 0; i < mComponentDistributions.size(); ++i) {
+    for(unsigned i = 0; i < mComponentDistributions.size(); ++i) {
         // Construct the distribution on the fly.  If this becomes a performance
         // bottleneck some optimisations might be possible, but caching the distribution
         // object in the mechanism is a bad idea, because the mechanism is potentially
@@ -215,10 +215,10 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
         sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
         // Update gas-phase chemistry of system.
 		if (!sys.GetIsAdiabaticFlag())
-			adjustGas(sys, sys.GetInceptingWeight());
+			adjustGas(sys, 1);
 		// Update gas-phase chemistry and temperature of system.
 		else
-			adjustParticleTemperature(sys, sys.GetInceptingWeight(), 1, ParticleComp()[0], 1);
+			adjustParticleTemperature(sys, 1, 1, ParticleComp()[0], 1);
     }
 
     return 0;

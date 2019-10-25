@@ -66,8 +66,6 @@ namespace Sweep
 
 		//! Statistical weight
 		iW,
-		iWS,        // S * weight 
-		iWV,        // V * weight
 
 		//! Statistical weight time physical mass
 		iWM,

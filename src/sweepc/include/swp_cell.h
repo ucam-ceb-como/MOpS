@@ -206,13 +206,8 @@ public:
     // Flag to track whether energy balance is active for particle phase updates 
     bool GetIsAdiabaticFlag() const { return m_adiabatic_flag; }
 
-    // Set the incepting particle weight
-    void SetInceptingWeight(double wt) { m_incepting_weight = wt; }
-
-    // Get the incepting particle weight 
-    double GetInceptingWeight() const { return m_incepting_weight; }
-
-    // Functions to store gas-phase properties used during splitting step (faster than updating each time)
+    // Functions to store gas-phase properties used during splitting step 
+    // (faster than updating each time)
     void setGasPhaseProperties(double C_bulk,       // Heat capacity
                                double C_particle,   // Particle heat capacity
                                double rhop,         // Particle density

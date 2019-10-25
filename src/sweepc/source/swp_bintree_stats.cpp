@@ -164,13 +164,13 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
         //! Check if the value of the property is within the stats bound.
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-            m_stats[iNPrim]      += prim->GetNumPrimary()  * wt;
-            m_stats[iPrimDiam]   += prim->GetPrimaryDiam() * wt
-                                  / (double) prim->GetNumPrimary();
-            m_stats[iSintLevel]  += prim->GetAvgSinterLevel() * wt;
-            m_stats[iSintRate]   += prim->GetSintRate() * wt;
-            m_stats[iSintTime]   += prim->GetSintTime() * wt;
-            m_stats[iGStdevMean] += prim->GetPrimaryGStdDev() * wt;
+            m_stats[iNPrim]     += prim->GetNumPrimary()  * wt;
+            m_stats[iPrimDiam]  += prim->GetPrimaryDiam() * wt
+                    / (double) prim->GetNumPrimary();
+            m_stats[iSintLevel] += prim->GetAvgSinterLevel() * wt;
+            m_stats[iSintRate]  += prim->GetSintRate() * wt;
+            m_stats[iSintTime]  += prim->GetSintTime() * wt;
+            m_stats[iGStdevMean]+= prim->GetPrimaryGStdDev() * wt;
             m_stats[iRg]         += prim->GetRadiusOfGyration() * wt;
 
             // Collect the collision and primary diameters

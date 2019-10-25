@@ -372,7 +372,6 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
     BinTreePrimary *newright = new BinTreePrimary(m_time, *m_pmodel);
     BinTreePrimary copy_rhs(*rhsparticle);
 
-
     //Randomly select where to add the second particle
     boost::bernoulli_distribution<> bernoulliDistrib;
     if (bernoulliDistrib(rng)) {
@@ -400,7 +399,7 @@ BinTreePrimary &BinTreePrimary::Coagulate(const Primary &rhs, rng_type &rng)
 		newright->m_rightchild->m_parent    = newright;
     }
     m_children_sintering=0.0;
-	
+
     UpdateCache();
 
     //! It is assumed that primary pi from particle Pq and primary pj from

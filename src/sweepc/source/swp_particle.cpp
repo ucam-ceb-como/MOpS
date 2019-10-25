@@ -255,7 +255,7 @@ Particle* Particle::createFromXMLNode(const CamXML::Element& xml, const Sweep::P
 }
 
 
-// aab64 Version of the above XML reader that will construct (bintree) particles given 
+// Version of the above XML reader that will construct (bintree) particles given 
 // (mean,std) number of primaries per particle and (mean,std) number of component
 // units per particle (assuming normal distributions).
 // To do: add sintering if required, switch to lognormal distribution when suitable parameters are known.

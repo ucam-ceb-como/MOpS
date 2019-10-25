@@ -267,8 +267,6 @@ int BirthProcess::Perform(double t, Sweep::Cell &sys,
         rng);
     }
 
-    // Add update for particle temperature mixing
-
     return 0;
 }
 

@@ -158,50 +158,6 @@ public:
 		const Mechanism &mech      // Mechanism to use.
 		) const;
 
-    // COAGULATION PROCESS WEIGHTED.
-
-    // Returns TRUE if coagulation process uses weighted transfer function.
-    bool IsWeightedCoag(void) const;
-
-    // Sets TRUE if coagulation process is weighted 
-    // Note that this is only for original activation, 
-    // it is not meant to change the state
-    // during simulation and does not provide a means of doing so. 
-    virtual void SetWeightedCoag(bool weightedCoag);
-
-    // Returns TRUE if inception process uses variable weights.
-    bool IsVariableWeightedInception(void) const;
-
-    // Returns variable inception max weight.
-    double GetMaxInceptionWeight(void) const;
-
-    // Returns variable inception min weight.
-    double GetMinInceptionWeight(void) const;
-
-    // Returns minimum particles threshold to start
-    // adjusting incepting weight
-    double GetMinSPForAIWOnset(void) const;
-
-    // Returns the type of inception weight scaling function
-    void GetWeightScalingFn(std::string &weightfn) const;
-
-    // Sets flag for the inception process to use variable weighting.
-    // Weights fluctuate between wmax and wmin depending on number of 
-    // particles in ensemble relative to ensemble capacity.
-    virtual void SetVariableWeightedInception(bool isVarInceptWeight, double wmax, double wmin, double nmin, std::string &weightfn);
-
-    // aab64 Returns threshold to adjust ensemble weights
-    double GetWeightOnsetRatio(void) const;
-
-    // aab64 Returns factor to adjust ensemble weights
-    double GetWeightScalingFactor(void) const;
-
-    // aab64 Returns the flag for adaptive ensemble weights
-    bool GetWeightScalingFlag(void) const;
-
-    // aab64 Sets flag for the adaptive ensemble weights and the onset ratio
-    virtual void SetWeightScaling(bool isWeightScaling, double ratio, double factor);
-
 	// RATE CALCULATION.
 
     // Get total rates of all processes.  Returns the sum of
@@ -377,39 +333,21 @@ public:
 
     //! Get the number of times each process has been performed
     std::vector<unsigned int> GetProcessUsageCounts() const {return m_proccount;}
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-    // Get the number of times each fictitious process has been performed 
-    std::vector<unsigned int> GetFictitiousProcessCounts() const { return m_fictcount; }
-
-    // Get the term count
-    unsigned int GetTermCount() const { return m_termcount; }
-	
-    // Get the addition count
-    unsigned int GetDeferredAddCount() const { return m_addcount; }
-	
-    // Get the inflow count
-    unsigned int GetInflowCount() const { return m_inflowcount; }
-
-    // Get the outflow count
-    unsigned int GetOutflowCount() const { return m_outflowcount; }
-    
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 	
     // Particle-number/particle hybrid model parameters
-	// ================================================
+    // ================================================
 
-	// Set/get flags for hybrid model behaviour
-	void SetHybrid(bool hybrid_flag) const { m_hybrid = hybrid_flag; }
-	bool IsHybrid() const { return m_hybrid; }
-	bool CoagulateInList() const { return m_coagulate_in_list; }
-	void SetCoagulateInList(bool flag) const { m_coagulate_in_list = flag; }
+    // Set/get flags for hybrid model behaviour
+    void SetHybrid(bool hybrid_flag) const { m_hybrid = hybrid_flag; }
+    bool IsHybrid() const { return m_hybrid; }
+    bool CoagulateInList() const { return m_coagulate_in_list; }
+    void SetCoagulateInList(bool flag) const { m_coagulate_in_list = flag; }
 
-	// Set/get hybrid threshold
-	void SetHybridThreshold(unsigned int threshold) const { m_hybrid_threshold = threshold; }
-	unsigned int GetHybridThreshold() const { return m_hybrid_threshold; }
+    // Set/get hybrid threshold
+    void SetHybridThreshold(unsigned int threshold) const { m_hybrid_threshold = threshold; }
+    unsigned int GetHybridThreshold() const { return m_hybrid_threshold; }
         
-	// ================================================
+    // ================================================
 
 	//! return a vector contain the information of particular primary particle with X molecules
 	void Mass_pah(Ensemble &m_ensemble) const;
@@ -443,24 +381,6 @@ private:
 
     // Process counters.
     mutable std::vector<unsigned int> m_proccount, m_fictcount; 
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-    mutable unsigned int m_addcount;        // The addition count for deferred additions
-    mutable unsigned int m_inflowcount;     // The inflow count for stochastic inflow
-    mutable unsigned int m_outflowcount;    // The outflow count for stochastic inflow
-
-    mutable bool m_weighted_coag;           // Is the coagulation process one of the weighted ones?
-    mutable bool m_var_incept_weight;       // Is variable inception weighting turned on?
-    mutable double m_minsp_for_aiw;         // Minimum particle threshold for which inception weight should be adapted
-    mutable double m_min_incept_weight;     // Minimum incepting weight, corresponding to nmin
-    mutable double m_max_incept_weight;     // Maximum incepting weight, corresponding to Nmax SPs
-    mutable std::string m_incept_weight_fn; // The type of inception weight scaling to use
-
-    mutable bool m_weightscaling_flag;      // Flag for adaptive ensemble weights
-    mutable double m_weightscaling_onset;   // Onset ratio for adaptive ensemble weights
-    mutable double m_weightscaling_factor;  // Factor multiplying N/sum(w) in weight scaling
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
     // Particle-number/particle hybrid model parameters
     // ================================================ 
