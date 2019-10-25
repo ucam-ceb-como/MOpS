@@ -208,6 +208,17 @@ int PAHProcess::numberOfMethyl() const {
     }
     return num;
 }
+//! Is probably curved (has embedded or partially embedded R5s, R7s, more than 12 rings)
+bool PAHProcess::HasCurvedMoeities() const {
+	if (std::get<0>(getRingsCount()) >= 12 || getR5EmbeddedCount() >= 1 || getR7EmbeddedCount() >= 1) return true;
+	else {
+		for(Spointer i=m_pah->m_siteList.begin(); i!= m_pah->m_siteList.end(); i++) {
+			if ( (int)i->type >= 501) return true;
+		}
+		return false;
+	}
+}
+
 //! Print Structure in console
 void PAHProcess::printStruct() const{
     // iterator set to first C in structure
@@ -516,7 +527,8 @@ bool PAHProcess::saveDOT(const std::string &filename, const std::string &title) 
 void PAHProcess::saveXYZ(const std::string &filename, bool optimise) {
 	OpenBabel::OBMol mol = passPAH(optimise);
 	if (optimise){
-		mol = optimisePAH(mol, 8000, "mmff94");
+		if (HasCurvedMoeities()) mol = optimisePAH(mol, 8000, "mmff94");
+		else mol = optimisePAH(mol, 4000, "mmff94");
 		//mol = optimisePAH(mol, 4000, "Ghemical");
 	}
 	ofstream ofs1;

@@ -135,6 +135,8 @@ public:
     int numberOfBridges() const;
 	//! Get number of methyl moeities
 	int numberOfMethyl() const;
+	//! Is probably curved (has embedded or partially embedded R5s, R7s, more than 8 rings)
+	bool HasCurvedMoeities() const;
     //! Print structure in console
     void printStruct() const;
     //! Print Structure in console, with arrow pointing at current C

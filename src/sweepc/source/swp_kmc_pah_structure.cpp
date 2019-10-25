@@ -234,6 +234,18 @@ bool PAHStructure::havebridgeC(){
     return p.havebridgeC();
 }
 
+bool PAHStructure::hasCurvedSubunits(){
+	if (numofRings() >= 8 || numofEmbeddedRings5() >= 1 || numofEmbeddedRings7() >= 1) return true;
+	else {
+		std::list<Site> site_list =  GetSiteList();
+		for(Spointer i=site_list.begin(); i!= site_list.end(); i++) {
+			if ( (int)i->type >= 501 && (int)i->type <= 504 && (int)i->type%10 >=3) return true;
+			else if ( (int)i->type >= 600 ) return true;
+		}
+		return false;
+	}
+}
+
 void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
 {
     PAHProcess p(*this);

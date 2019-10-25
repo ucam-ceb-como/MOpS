@@ -116,6 +116,9 @@ namespace Sweep{
 
             //! check PAH have bridge or not
             bool havebridgeC();
+			
+			//! check if the PAH has embedded R5s, R7s or partially embedded R7s that may give curvature or if PAH is large enough.
+			bool hasCurvedSubunits();
 
             Sweep::AggModels::PAH* m_parent; // pointer to parent PAH
             
