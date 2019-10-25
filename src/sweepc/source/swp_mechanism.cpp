@@ -62,11 +62,6 @@
 #include "swp_PAH_primary.h"
 
 
-// aab64 temporary for tracking OMP threads
-#include <omp.h>
-typedef boost::mt19937 RandNumGen;
-
-
 using namespace Sweep;
 using namespace Sweep::Processes;
 using namespace std;
@@ -116,7 +111,6 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         // Particle-number/particle model flags
 	m_hybrid = rhs.m_hybrid;
         m_coagulate_in_list = rhs.m_coagulate_in_list;
-
 
         // Copy inceptions.
         for (IcnPtrVector::const_iterator i=rhs.m_inceptions.begin();
@@ -360,7 +354,6 @@ void Mechanism::GetProcessNames(std::vector<std::string> &names,
     }
 }
 
-
 // Initialise a list of PN particles using the given mechanism
 void Mechanism::InitialisePNParticles(double t, Cell &sys, const Mechanism &mech) const
 {
@@ -394,7 +387,6 @@ void Mechanism::InitialisePNParticles(double t, Cell &sys, const Mechanism &mech
 			sys.ParticleModel()->Components()[0]->Density()); 
 	}
 }
-
 
 
 // RATE CALCULATION.
@@ -1112,12 +1104,7 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 			}
 			ind++;
         }
-		
-        // aab64 is the above a candidate for omp?? 
-        // But index variable i would need to be a signed integral type
-        // To perform deferred processes on all particles individually using OpenMP:
-        // Need to rework from the above
-        // To do: Need to check the rng is not being overwritten or put inside pragma critical
+        // aab64: Could the particle updates be made more efficient here using OpenMP parallelization? 
 
 		// Now remove any invalid particles and update the ensemble.
 		sys.Particles().RemoveInvalids();

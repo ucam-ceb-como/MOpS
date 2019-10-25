@@ -52,9 +52,6 @@
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
-// aab64 OMP threads
-typedef boost::mt19937 RandNumGen;
-#include <omp.h>
 
 using namespace std;
 

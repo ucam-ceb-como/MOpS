@@ -261,9 +261,6 @@ private:
     // Flag for adiabatic operation
     bool m_adiabatic_flag;
 
-    // Current incepting particle weight in Bintree primary case
-    double m_incepting_weight;
-
     // Variables to store gas-phase properties used during splitting step
     double m_bulk_heat_capacity;
     double m_particle_density;

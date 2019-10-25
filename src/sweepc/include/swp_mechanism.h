@@ -298,28 +298,6 @@ public:
 		PartPtrVector &overflow
         ) const;
 
-
-    /* aab64 these two functions could replace the UpdateParticle 
-    function when it is called in LPDA, to allow OpenMP to be used
-    in the sintering part of the update - this needs to be checked */ 
-    //! non-sintering part of LPDA for one particle
-    void UpdateParticleNS(
-	Particle &sp, // Particle to update.
-	Cell &sys,    // System to which the particle belongs.
-	double t,       // Time up to which to integrate.
-	rng_type &rng, 
-	double &dtvec
-	) const;
-
-    //! sintering part of LPDA for one particle
-    void UpdateParticleS(
-	Particle &sp, // Particle to update.
-	Cell &sys,    // System to which the particle belongs.
-	double t,       // Time up to which to integrate.
-	rng_type &rng,
-	double dtvec
-	) const;
-		
     // READ/WRITE/COPY.
 
     // Creates a copy of the mechanism.
