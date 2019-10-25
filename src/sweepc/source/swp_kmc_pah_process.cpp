@@ -2581,16 +2581,18 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 	if (!checkSiteValid(st)) {
 		cout << "Invalid site convSiteType. This may be alright if the edge is unreactive but it may also be an error. \n"; //SETBREAKPOINT
 		printSites(st); 
-		ifstream  src("KMC_DEBUG/BEFORE.xyz");
-		std::string filename = "KMC_DEBUG/BEFORE_convSiteType";
-		filename.append(std::to_string(convSiteType_error_counter));
-		filename.append(".xyz");
-		ofstream dst(filename);
-		dst << src.rdbuf();
+		if (debug_pah) {
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_convSiteType";
+			filename.append(std::to_string(convSiteType_error_counter));
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_convSiteType_error_";
 		filename2.append(std::to_string(convSiteType_error_counter));
 		saveXYZ(filename2);
-		cout<<"Saving file: "<< filename<<"\n";
 		cout<<"Saving file: "<< filename2<<".xyz\n";
 		++convSiteType_error_counter;
 		return;
@@ -2799,19 +2801,21 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		std::ostringstream msg;
 		msg << "ERROR: updateSites: Invalid site type before update\n";
 		//saveDOT("KMC_DEBUG/KMC_PAH_X_UPDATE_prev.dot");
-		ifstream  src("KMC_DEBUG/BEFORE.xyz");
-		std::string filename = "KMC_DEBUG/BEFORE_";
-		filename.append(std::to_string(updatesites_error_counter));
-		filename.append(".xyz");
-		//filename.append(std::to_string(this->m_pah->m_parent->ID()));
-		ofstream dst(filename);
-		dst << src.rdbuf();
+		if (debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_";
+			filename.append(std::to_string(updatesites_error_counter));
+			filename.append(".xyz");
+			//filename.append(std::to_string(this->m_pah->m_parent->ID()));
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_prev_";
 		filename2.append(std::to_string(updatesites_error_counter));
 		//filename2.append("_");
 		//filename2.append(std::to_string(this->m_pah->m_parent->ID()));
 		saveXYZ(filename2);
-		cout<<"Saving file: "<< filename<<"\n";
 		cout<<"Saving file: "<< filename2<<".xyz\n";
 		//throw std::runtime_error(msg.str());
 		//assert(false);
@@ -2826,17 +2830,19 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			<< bulkCchange << " bulk C to a " << kmcSiteName(st->type)
 			<< " (Sweep::KMC_ARS::PAHProcess::updateSites)";
 		//saveDOT("KMC_DEBUG/KMC_PAH_X_UPDATE.dot");
-		ifstream  src("KMC_DEBUG/BEFORE.xyz");
-		std::string filename = "KMC_DEBUG/BEFORE_";
-		filename.append(std::to_string(updatesites_error_counter));
-		filename.append(".xyz");
-		//filename.append(std::to_string(this->m_pah->m_parent->ID()));
-		ofstream dst(filename);
-		dst << src.rdbuf();
+		if (debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_";
+			filename.append(std::to_string(updatesites_error_counter));
+			filename.append(".xyz");
+			//filename.append(std::to_string(this->m_pah->m_parent->ID()));
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_";
 		filename2.append(std::to_string(updatesites_error_counter));
 		saveXYZ(filename2);
-		cout<<"Saving file: "<< filename<<"\n";
 		cout<<"Saving file: "<< filename2<<".xyz\n";
 		//saveXYZ("KMC_DEBUG/KMC_PAH_X_UPDATE");
 		//throw std::runtime_error(msg.str());
@@ -2958,17 +2964,19 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		//This means a None site is modified.
 		cout << "Error. Added " << bulkCchange << " carbons to a None site.\n"; //SETBREAKPOINT
 		bulkCchange = 0;
-		ifstream  src("KMC_DEBUG/BEFORE.xyz");
-		std::string filename = "KMC_DEBUG/BEFORE_";
-		filename.append(std::to_string(updatesites_error_counter));
-		filename.append(".xyz");
-		ofstream dst(filename);
-		dst << src.rdbuf();
+		if(debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_";
+			filename.append(std::to_string(updatesites_error_counter));
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_None_site_";
 		filename2.append(std::to_string(updatesites_error_counter));
 		//filename2.append(std::to_string(this->m_pah->m_parent->ID()));
 		saveXYZ(filename2);
-		cout<<"Saving file: "<< filename<<"\n";
 		cout<<"Saving file: "<< filename2<<".xyz\n";
 		//throw std::runtime_error(msg.str());
 		//assert(false);
@@ -3020,19 +3028,21 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 				<< bulkCchange << " bulk C to a " << kmcSiteName(st->type)
 				<< " (Sweep::KMC_ARS::PAHProcess::updateSites)";*/
 			//saveDOT("KMC_DEBUG/KMC_PAH_X_UPDATE.dot");
-			ifstream  src("KMC_DEBUG/BEFORE.xyz");
-			std::string filename = "KMC_DEBUG/BEFORE_";
-			filename.append(std::to_string(updatesites_error_counter));
-			filename.append(".xyz");
-			//filename.append(std::to_string(this->m_pah->m_parent->ID()));
-			ofstream dst(filename);
-			dst << src.rdbuf();
+			if (debug_pah){
+				ifstream  src("KMC_DEBUG/BEFORE.xyz");
+				std::string filename = "KMC_DEBUG/BEFORE_";
+				filename.append(std::to_string(updatesites_error_counter));
+				filename.append(".xyz");
+				//filename.append(std::to_string(this->m_pah->m_parent->ID()));
+				ofstream dst(filename);
+				dst << src.rdbuf();
+				cout<<"Saving file: "<< filename<<"\n";
+			}
 			std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_BulkplusC_";
 			filename2.append(std::to_string(updatesites_error_counter));
 			//filename2.append("_");
 			//filename2.append(std::to_string(this->m_pah->m_parent->ID()));
 			saveXYZ(filename2);
-			cout<<"Saving file: "<< filename<<"\n";
 			cout<<"Saving file: "<< filename2<<".xyz\n";
 			//saveXYZ("KMC_DEBUG/KMC_PAH_X_UPDATE");
 			/*throw std::runtime_error(msg.str());
@@ -3267,6 +3277,14 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
 	std::list <cpair> METHYLPYRENE_intCarbons;
 	METHYLPYRENE_intCarbons.push_back(std::make_tuple(1.4*cos(-60.0*M_PI/180.0), 1.4*sin(-60.0*M_PI/180.0), 0.0));
 	METHYLPYRENE_intCarbons.push_back(std::make_tuple(1.4*cos(-60.0*M_PI/180.0) + 1.4, 1.4*sin(-60.0*M_PI/180.0), 0.0));
+	// Structure for Methylene Phenanthrene radical C15H9
+	std::string MPHENANTHRENER_Sites = "FE,ZZ,FE,FE,R5R6,R5R6,FE,FE,ZZ";
+	auto MPHENANTHRENER_Rings = std::make_tuple (3, 1, 0);
+	intpair MPHENANTHRENER_CH(15, 9);
+	int MPHENANTHRENER_RINGS_EMBEDDED = 0;
+	std::list <cpair> MPHENANTHRENER_intCarbons;
+	MPHENANTHRENER_intCarbons.push_back(std::make_tuple(1.4*cos(-60.0*M_PI/180.0), 1.4*sin(-60.0*M_PI/180.0), 0.0));
+	MPHENANTHRENER_intCarbons.push_back(std::make_tuple(1.4*cos(-60.0*M_PI/180.0) + 1.4, 1.4*sin(-60.0*M_PI/180.0), 0.0));
 	// Structure for BENZOPYRENE
 	std::string BENZOPYRENE_Sites = "ZZ,FE,FE,ZZ,FE,ZZ,ZZ,FE,FE,FE,AC,FE";
 	auto BENZOPYRENE_Rings = std::make_tuple (5, 0, 0);
@@ -3317,6 +3335,13 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
         CH = METHYLPYRENE_CH;
 		rings_Embedded = METHYLPYRENE_RINGS_EMBEDDED;
 		IntCarbons = METHYLPYRENE_intCarbons;
+        break;
+	case MPHENANTHRENER_C:
+        chosen = MPHENANTHRENER_Sites;
+        rings = MPHENANTHRENER_Rings;
+        CH = MPHENANTHRENER_CH;
+		rings_Embedded = MPHENANTHRENER_RINGS_EMBEDDED;
+		IntCarbons = MPHENANTHRENER_intCarbons;
         break;
     case BENZOPYRENE_C:
         chosen = BENZOPYRENE_Sites;
@@ -3633,6 +3658,57 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		P_intCarbons.push_back(std::make_tuple(1.4, -2*1.4*cos(30.0*M_PI/180.0), 0.0));
 		m_pah->m_InternalCarbons = P_intCarbons;
 		//cout << "Methylpyrene Initialised!\n";
+        break;
+	case MPHENANTHRENER_C:
+        // add first C atom
+        m_pah->m_cfirst = addC();
+		updateA(m_pah->m_cfirst, 'H', std::make_tuple(cos(120.0 *M_PI / 180.0),sin(120.0 *M_PI / 180.0),0.0));
+        // adds next C atoms according to structure
+		newC = addC(m_pah->m_cfirst, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-60.0*M_PI/180.0),sin(-60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-60.0*M_PI/180.0),sin(-60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(1.0,0.0,0.0) );
+		newC = addC(newC, std::make_tuple(cos(-120.0*M_PI/180.0),sin(-120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-60.0 *M_PI / 180.0),sin(-60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-180.0*M_PI/180.0),sin(-180.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-150.0*M_PI/180.0),sin(-150.0*M_PI/180.0),0.0), 1.4/cos(30.0*M_PI/180.0));
+		updateA(newC, 'H', std::make_tuple(cos(-90.0 *M_PI / 180.0),sin(-90.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(120.0*M_PI/180.0),sin(120.0*M_PI/180.0),0.0), 1.4/cos(30.0*M_PI/180.0));
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(180.0*M_PI/180.0),sin(180.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-120.0 *M_PI / 180.0),sin(-120.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(120.0*M_PI/180.0),sin(120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(-1.0,0.0,0.0) );
+		newC = addC(newC, std::make_tuple(cos(60.0*M_PI/180.0),sin(60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(120.0 *M_PI / 180.0),sin(120.0 *M_PI / 180.0),0.0) );
+        // adds the last C atom, with bond angle towards m_cfirst
+		m_pah->m_clast = addC(newC, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(m_pah->m_clast, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+        // closes structure
+        connectToC(m_pah->m_clast, m_pah->m_cfirst);
+        // update H atoms
+        //updateA(m_pah->m_cfirst, m_pah->m_clast, 'H');
+        // set C & H counts
+        setCount(MPHENANTHRENER_C, MPHENANTHRENER_H);
+        // set ring counts
+        m_pah->m_rings = 3;
+        m_pah->m_rings5_Lone = 1;
+		m_pah->m_rings5_Embedded = 0;
+		m_pah->m_rings7_Lone = 0;
+		m_pah->m_rings7_Embedded = 0;
+        // update all sites and combined sites
+        updateSites();
+        updateCombinedSites();
+		//Set Internal Carbons list
+		P_intCarbons.push_back(std::make_tuple(0.0, -2*1.4*cos(30.0*M_PI/180.0), 0.0));
+		P_intCarbons.push_back(std::make_tuple(1.4, -2*1.4*cos(30.0*M_PI/180.0), 0.0));
+		m_pah->m_InternalCarbons = P_intCarbons;
+		//cout << "MPHENANTHRENER Initialised!\n";
         break;
     case BENZOPYRENE_C:
         // add first C atom
@@ -4343,7 +4419,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	}*/
 	
 	//Save an XYZ
-	saveXYZ("KMC_DEBUG/BEFORE");
+	if(debug_pah) saveXYZ("KMC_DEBUG/BEFORE");
 	//Copy site list before performing process
 	std::list<std::string> Sitelist_before = copySites(site_perf);
 	///////
@@ -4477,12 +4553,15 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			<< "*************\nAfter performing process --\n";
 		printBeforeSites(Sitelist_before); //SETBREAKPOINT
 		printSites(site_perf);
-		ifstream  src("KMC_DEBUG/BEFORE.xyz");
-		std::string filename = "KMC_DEBUG/BEFORE_performProcess_";
-		filename.append(std::to_string(perform_process_error_counter));
-		filename.append(".xyz");
-		ofstream dst(filename);
-		dst << src.rdbuf();
+		if (debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_performProcess_";
+			filename.append(std::to_string(perform_process_error_counter));
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_performProcess_checkSiteValid_";
 		filename2.append(std::to_string(perform_process_error_counter));
 		saveXYZ(filename2);
@@ -4493,7 +4572,6 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		//throw std::runtime_error(msg.str());
 		//assert(false);
 		//abort();
-		cout<<"Saving file: "<< filename<<"\n";
 		cout<<"Saving file: "<< filename2<<".xyz\n";
 		++perform_process_error_counter;
 	}
@@ -4505,12 +4583,15 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
             <<"*************\nAfter performing process --\n";
         printBeforeSites(Sitelist_before); //SETBREAKPOINT
 		printSites(site_perf);
-		ifstream  src("KMC_DEBUG/BEFORE.xyz");
-		std::string filename = "KMC_DEBUG/BEFORE_performProcess_";
-		filename.append(std::to_string(perform_process_error_counter));
-		filename.append(".xyz");
-		ofstream dst(filename);
-		dst << src.rdbuf();
+		if(debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_performProcess_";
+			filename.append(std::to_string(perform_process_error_counter));
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_performProcess_checkCombinedSite_";
 		filename2.append(std::to_string(perform_process_error_counter));
 		saveXYZ(filename2);
@@ -4518,7 +4599,6 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         msg << "ERROR: Structure produced invalid combined site type after performing process "
             << "ID"<<id<<" on PAH ID: "<< PAH_ID <<"..."
             << " (Sweep::KMC_ARS::PAHProcess::performProcess)";
-		cout<<"Saving file: "<< filename<<"\n";
 		cout<<"Saving file: "<< filename2<<".xyz\n";
 		++perform_process_error_counter;	
         //throw std::runtime_error(msg.str());
@@ -4529,12 +4609,15 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	int calc_total = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1 + numberOfMethyl();
 	if(calc_total != getCHCount().first) {
         //saveDOT("KMC_DEBUG/KMC_C_Counts_ERROR.dot");
-		ifstream  src("KMC_DEBUG/BEFORE.xyz");
-		std::string filename = "KMC_DEBUG/BEFORE_performProcess_";
-		filename.append(std::to_string(perform_process_error_counter)); //SETBREAKPOINT
-		filename.append(".xyz");
-		ofstream dst(filename);
-		dst << src.rdbuf();
+		if(debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_performProcess_";
+			filename.append(std::to_string(perform_process_error_counter)); //SETBREAKPOINT
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_performProcess_C_Count_";
 		filename2.append(std::to_string(perform_process_error_counter));
 		saveXYZ(filename2);
@@ -4547,7 +4630,6 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         printBeforeSites(Sitelist_before);
 		printSites(site_perf);
 		//throw std::runtime_error(msg.str());
-		cout<<"Saving file: "<< filename<<"\n";
 		cout<<"Saving file: "<< filename2<<".xyz\n";
 		++perform_process_error_counter;
     }
@@ -5308,12 +5390,14 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		}
 		else {
 			cout << "FE3 desorption next to an R5 with wrong neightbour site. S1 site type = " << S1->type << "\n";
-			ifstream src("KMC_DEBUG/BEFORE.xyz");
-			std::string filename = "KMC_DEBUG/BEFORE_FE3-R5-S1_error";
-			filename.append(".xyz");
-			ofstream dst(filename);
-			dst << src.rdbuf();
-			cout << "Saving file KMC_DEBUG/BEFORE_FE3-R5-S1_error.\n";
+			if (debug_pah){
+				ifstream src("KMC_DEBUG/BEFORE.xyz");
+				std::string filename = "KMC_DEBUG/BEFORE_FE3-R5-S1_error";
+				filename.append(".xyz");
+				ofstream dst(filename);
+				dst << src.rdbuf();
+				cout << "Saving file KMC_DEBUG/BEFORE_FE3-R5-S1_error.\n";
+			}
 			saveXYZ("KMC_DEBUG/FE3-R5-S1 desorption_error");
 			cout << "Saving file KMC_DEBUG/FE3-R5-S1 desorption_error.\n";
 			printSites(S1);
@@ -5326,12 +5410,14 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		}
 		else {
 			cout << "FE3 desorption next to an R5 with wrong neightbour site. S2 site type = " << S2->type << "\n";
-			ifstream src("KMC_DEBUG/BEFORE.xyz");
-			std::string filename = "KMC_DEBUG/BEFORE_FE3-R5-S2_error";
-			filename.append(".xyz");
-			ofstream dst(filename);
-			dst << src.rdbuf();
-			cout << "Saving file KMC_DEBUG/BEFORE_FE3-R5-S2_error.\n";
+			if(debug_pah){
+				ifstream src("KMC_DEBUG/BEFORE.xyz");
+				std::string filename = "KMC_DEBUG/BEFORE_FE3-R5-S2_error";
+				filename.append(".xyz");
+				ofstream dst(filename);
+				dst << src.rdbuf();
+				cout << "Saving file KMC_DEBUG/BEFORE_FE3-R5-S2_error.\n";
+			}
 			saveXYZ("KMC_DEBUG/FE3-R5-S2 desorption_error");
 			cout << "Saving file KMC_DEBUG/FE3-R5-S2 desorption_error.\n";
 			printSites(S2);
@@ -7712,7 +7798,7 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 	//First check if R6 is to the left or the right of R5
 	bool b4 = false;
 	Spointer sFE2, checksite, checkR5_1, checkR5_2;
-	Cpointer CRem, CRem_before, CRem_next, CFE;
+	Cpointer CRem, CRem_before, CRem_next, CFE, CR5_otherside_1, CR5_otherside_2;
 	if ((int)moveIt(stt, -1)->type > 4 && (int)moveIt(stt, +1)->type > 4){
 		//Pentagons to both sides, JP not allowed
 		return;
@@ -7730,6 +7816,8 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 		CRem_before = CRem->C2;
 		Cdir = C_2->growth_vector;
 		Hdir = C_1->growth_vector;
+		CR5_otherside_1 = C_2->C2;
+		CR5_otherside_2 = C_2->C1;
 	}
 	else {
 		sFE2 = moveIt(stt, 1);
@@ -7741,6 +7829,8 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 		CRem_before = CRem->C1;
 		Cdir = get_vector(C_1->C2->coords, C_2->coords);
 		Hdir = C_2->growth_vector;
+		CR5_otherside_1 = C_1->C1;
+		CR5_otherside_2 = C_1->C2;
 	}
 	//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
 	if ((int)sFE2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) return; // The result would be an indene, not supported. YET!
@@ -7762,16 +7852,71 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 	if (CRem_next->bridge) return;
 	if (CRem_next->C2->bridge) return; if (CRem_next->C1->bridge) return;
 	if (CRem_next->C2->C2->bridge) return; if (CRem_next->C1->C1->bridge) return;
-	//check that two pentagons (including internals) will not collide
-	cpair R5coords = endposR5internal(CRem_before, CRem_next);
-	if (m_pah->m_R5loc.size()>=2){
-		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
-			double distR5s = getDistance_twoC(*it, R5coords);
-			if (distR5s > 0.1 && distR5s <2.1) {
+
+	// check if ACR5 has an opposite site.
+	Spointer opp_site, opp_site_second, opp_site_after;
+	bool opp_site_bool = false; bool opp_site_bool_second = false; bool opp_site_bool_after = false;
+	Cpointer thirdC = findThirdC(CR5_otherside_1);
+	Cpointer thirdC2 = findThirdC(CR5_otherside_2);
+	Cpointer thirdC_after = findThirdC(CRem_next);
+	// Seven cases:
+	// 1. One pentagon has one exposed edge  and migrates to a location where it will have one exposed edge. Normal migration.
+	// 2. One pentagon has one exposed edge  and migrates to a location where it will have two exposed edges. 
+	// 3. One pentagon has two exposed edges and migrates to a location where it will have two exposed edges. 
+	// 4. One pentagon has two exposed edges and migrates to a location where it will have one exposed edge.
+	// 5. One pentagon has two exposed edges and migrates to a location where it will have three exposed edges.
+	// 6. One pentagon has three exposed edges and migrates to a location where it will have three exposed edges.
+	// 7. One pentagon has three exposed edges and migrates to a location where it will have two exposed edges.
+	
+	if (thirdC != NULLC) {
+		opp_site = findSite(thirdC);
+		opp_site_bool = true;
+	}
+	if (thirdC2 != NULLC) {
+		opp_site_second = findSite(thirdC2);
+		opp_site_bool_second = true;
+	}
+	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
+		opp_site_after = findSite(thirdC_after);
+		opp_site_bool_after = true;
+		int os_endtype = opp_site_after->type;
+		if (os_endtype >= 200 && os_endtype <= 203) return;
+		if (os_endtype == 101) return;
+		if (os_endtype >= 600 && os_endtype <= 603) return;
+		if (os_endtype >= 1000 && os_endtype <= 1003) return;
+		if (os_endtype >= 500 && os_endtype <= 504) return;
+		if (os_endtype >= 2000 && os_endtype <= 2205) return;
+		if (os_endtype >= 2103 && os_endtype <= 2105) return;
+		if (os_endtype >= 2204 && os_endtype <= 2205) return;
+	}
+	
+	//Fundamental assumption: R5-R7 pairs cannot move away from each other!
+	cpair R5coords = findR5internal(CFE, CFE->C2);
+	if (m_pah->m_R7loc.size()>=1){
+		for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
+			double distR5R7 = getDistance_twoC(*it, R5coords);
+			if (distR5R7 < 3.1) {
+				m_pah->m_R5loc.push_back(R5coords);
 				return;
 			}
 		}
 	}
+	//check that two pentagons (including internals) will not collide
+	cpair R5coords_end = endposR5internal(CRem_before, CRem_next);
+	if (m_pah->m_R5loc.size()>=1){
+		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
+			double distR5s = getDistance_twoC(*it, R5coords_end);
+			if (distR5s < 2.8) {
+				//This distance is a parameter of this jump process. Might need some more tuning. 
+				//2.8 seems appropiate but may reject too many jumps.
+				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+				m_pah->m_R5loc.push_back(R5coords);
+				return;
+			}
+		}
+	}
+	
+	
 	// add a C atom
 	Cpointer newC = addC(CFE, Cdir, 1.4);
 	updateA(newC, 'H', Hdir);
@@ -7884,6 +8029,63 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 			//updateSites(S1, S1->C1, stt->C1, -5); //convert the neighbour to its same version but NOT next to an R5
 		}*/
 	}
+	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
+		if ( (int)opp_site->type >= 2100) {
+			Spointer S1_opp_site = moveIt(opp_site, -1);
+			Spointer S2_opp_site = moveIt(opp_site, +1);
+			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
+				updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+			}
+			else updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
+		}
+		else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+		Spointer S1_opp_site = moveIt(opp_site, -1);
+		Spointer S2_opp_site = moveIt(opp_site, +1);
+		updateCombinedSites(opp_site);
+	}
+	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+		updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+		if (opp_site_after != S1 && opp_site_after != S2) {
+			if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
+			else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
+			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
+			updateCombinedSites(opp_site_after);
+		}
+		updateCombinedSites(opp_site);
+	}
+	else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
+		//convSiteType(opp_site_second, opp_site_second->C1, opp_site_second->C2, (kmcSiteType)new_stype);
+		updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, +1500);
+		updateCombinedSites(opp_site);
+		updateCombinedSites(opp_site_second);
+	}
+	else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		updateCombinedSites(opp_site_second);
+	}
+	else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
+		updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -1500);
+		updateCombinedSites(opp_site_second);
+		if (opp_site_after != S1 && opp_site_after != S2) {
+			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
+			updateCombinedSites(opp_site_after);
+		}
+	}
+	else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+		if (opp_site_after != S1 && opp_site_after != S2) {
+			if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
+			else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
+			updateCombinedSites(opp_site_after);
+		}
+	}
+	else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
+		updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
+		updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
+		updateCombinedSites(opp_site);
+		updateCombinedSites(opp_site_second);
+		updateCombinedSites(opp_site_after);
+	}
+	
 	// update H atoms
 	/*if (b4){
 		updateA(S1->C2->C1, C_2, 'H');
@@ -8012,12 +8214,7 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				int stype = (int)S1->type;
 				stype = (stype % 10) + 2101;
 				convSiteType(S1, S1->C1, newC1, (kmcSiteType)stype); // neighbours
-			}	
-			else if ( (int)S1->type >= 501 && (int)S1->type <= 504){ 
-				int stype = (int)S1->type;
-				stype = (stype % 10) + 2001;
-				convSiteType(S1, S1->C1, newC1, (kmcSiteType)stype); // neighbours
-			}	
+			}		
 			else updateSites(S1, S1->C1, newC1, 1); // neighbours
 			updateSites(S2, newC2, S2->C2, 1);
 		}
@@ -8035,40 +8232,72 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				stype = (stype % 10) + 2101;
 				convSiteType(S2, newC2, S2->C2, (kmcSiteType)stype); // neighbours
 			}	
-			else if ( (int)S2->type >= 501 && (int)S2->type <= 504){ 
-				int stype = (int)S2->type;
-				stype = (stype % 10) + 2001;
-				convSiteType(S2, newC2, S2->C2, (kmcSiteType)stype); // neighbours
-			}	
 			else updateSites(S2, newC2, S2->C2, 1); // neighbours
 			updateSites(S1, S1->C1, newC1, 1);
 		}
 		else {
-			cout << "R5 not found on site R5R6AC for GR7_R5R6AC.\n";
-			ifstream  src("KMC_DEBUG/BEFORE.xyz");
-			std::string filename = "KMC_DEBUG/BEFORE_GR7_R5R6AC_error_";
-			filename.append(std::to_string(GR7_R5R6AC_error_counter));
-			filename.append(".xyz");
-			ofstream dst(filename);
-			dst << src.rdbuf();
-			std::string fileout = "KMC_DEBUG/GR7_R5R6AC_error_";
-			fileout.append(std::to_string(GR7_R5R6AC_error_counter));
-			cout << "Saving file " << fileout << ".xyz\n";
-			saveXYZ(fileout); //SETBREAKPOINT
-			GR7_R5R6AC_error_counter++;
-			cout << "Printing internal R5 positions:.\n";
-			for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
-				cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+			if ( (int)S1->type >= 501 && (int)S2->type <= 501){
+				//R5 to the left.
+				if ( (int)S1->type >= 501 && (int)S1->type <= 504){ 
+				//Side of an R5R6AC
+				int stype = (int)S1->type;
+				stype = (stype % 10) + 2001;
+				convSiteType(S1, S1->C1, newC1, (kmcSiteType)stype); // neighbours
+				}
+				else if ( (int)S1->type >= 602 && (int)S1->type <= 1004){ 
+					int stype = (int)S1->type;
+					stype = (stype % 10) + 2101;
+					convSiteType(S1, S1->C1, newC1, (kmcSiteType)stype); // neighbours
+				}		
+				else updateSites(S1, S1->C1, newC1, 1); // neighbours
+				updateSites(S2, newC2, S2->C2, 1);
 			}
-			cpair endR5_1 = endposR5internal(C_1->C1, C_1, true);
-			cpair endR5_2 = endposR5internal(C_1->C1, C_1, false);
-			cpair endR5_3 = endposR5internal(C_2, C_2->C2, true);
-			cpair endR5_4 = endposR5internal(C_2, C_2->C2, false);
-			cout << "Looking in positions:\n";
-			cout <<	std::get<0>(endR5_1) << ", " << std::get<1>(endR5_1) << ", " << std::get<2>(endR5_1) <<"\n";
-			cout <<	std::get<0>(endR5_2) << ", " << std::get<1>(endR5_2) << ", " << std::get<2>(endR5_2) <<"\n";
-			cout <<	std::get<0>(endR5_3) << ", " << std::get<1>(endR5_3) << ", " << std::get<2>(endR5_3) <<"\n";
-			cout <<	std::get<0>(endR5_4) << ", " << std::get<1>(endR5_4) << ", " << std::get<2>(endR5_4) <<"\n";
+			else if ( (int)S2->type >= 501 && (int)S1->type <= 501){
+				//R5 to the right.
+				if ( (int)S2->type >= 501 && (int)S2->type <= 504){ 
+					//Side of an R5R6AC
+					int stype = (int)S2->type;
+					stype = (stype % 10) + 2001;
+					convSiteType(S2, newC2, S2->C2, (kmcSiteType)stype); // neighbours
+				}
+				else if ( (int)S2->type >= 602 && (int)S2->type <= 1004){ 
+					int stype = (int)S2->type;
+					stype = (stype % 10) + 2101;
+					convSiteType(S2, newC2, S2->C2, (kmcSiteType)stype); // neighbours
+				}	
+				else updateSites(S2, newC2, S2->C2, 1); // neighbours
+				updateSites(S1, S1->C1, newC1, 1);
+			}
+			else {
+				cout << "R5 not found on site R5R6AC for GR7_R5R6AC.\n";
+				if(debug_pah){
+					ifstream  src("KMC_DEBUG/BEFORE.xyz");
+					std::string filename = "KMC_DEBUG/BEFORE_GR7_R5R6AC_error_";
+					filename.append(std::to_string(GR7_R5R6AC_error_counter));
+					filename.append(".xyz");
+					ofstream dst(filename);
+					dst << src.rdbuf();
+					cout << "Saving file " << filename <<"\n";
+				}
+				std::string fileout = "KMC_DEBUG/GR7_R5R6AC_error_";
+				fileout.append(std::to_string(GR7_R5R6AC_error_counter));
+				cout << "Saving file " << fileout << ".xyz\n";
+				saveXYZ(fileout); //SETBREAKPOINT
+				GR7_R5R6AC_error_counter++;
+				cout << "Printing internal R5 positions:.\n";
+				for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+					cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+				}
+				cpair endR5_1 = endposR5internal(C_1->C1, C_1, true);
+				cpair endR5_2 = endposR5internal(C_1->C1, C_1, false);
+				cpair endR5_3 = endposR5internal(C_2, C_2->C2, true);
+				cpair endR5_4 = endposR5internal(C_2, C_2->C2, false);
+				cout << "Looking in positions:\n";
+				cout <<	std::get<0>(endR5_1) << ", " << std::get<1>(endR5_1) << ", " << std::get<2>(endR5_1) <<"\n";
+				cout <<	std::get<0>(endR5_2) << ", " << std::get<1>(endR5_2) << ", " << std::get<2>(endR5_2) <<"\n";
+				cout <<	std::get<0>(endR5_3) << ", " << std::get<1>(endR5_3) << ", " << std::get<2>(endR5_3) <<"\n";
+				cout <<	std::get<0>(endR5_4) << ", " << std::get<1>(endR5_4) << ", " << std::get<2>(endR5_4) <<"\n";
+			}
 		}
 	}
 	else {

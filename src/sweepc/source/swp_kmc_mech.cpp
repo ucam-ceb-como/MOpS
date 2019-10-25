@@ -151,39 +151,39 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //JumpProcess* j_O6R_FE2_OH = new O6R_FE2_OH; j_O6R_FE2_OH->initialise();                     //! 20- R6 Oxidation at ZZ by OH.
     //JumpProcess* j_O6R_FE2_O2 = new O6R_FE2_O2; j_O6R_FE2_O2->initialise();                     //! 21- R6 Oxidation at ZZ by O2.
 	JumpProcess* j_D6R_FE_AC = new D6R_FE_AC; j_D6R_FE_AC->initialise();						//! 22- R6 Desorption from FE to AC site.
-	JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();                           //*< 23 - Bay-capping.
-	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //*< 24 - Embedded 5-member ring migration to ZZ.
-	JumpProcess* j_G6R_RZZ = new G6R_RZZ; j_G6R_RZZ->initialise();                              //*< 25 - R6 growth on RZZ.
-	JumpProcess* j_G6R_RFER = new G6R_RFER; j_G6R_RFER->initialise();                           //*< 26 - R6 growth on RFER.
-	//JumpProcess* j_G6R_R5 = new G6R_R5; j_G6R_R5->initialise();                                 //*< 27 - R6 growth on R5.
-	JumpProcess* j_L6_RBY5 = new L6_RBY5; j_L6_RBY5->initialise();                              //*< 28 - RBY5 closure reaction.
-	JumpProcess* j_L6_RACR = new L6_RACR; j_L6_RACR->initialise();                              //*< 29 - RACR closure reaction.
-	//JumpProcess* j_G5R_RFE = new G5R_RFE; j_G5R_RFE->initialise();                              //*< 30 - R5 growth on RFE.
-	JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //*< 31 - R6 migration & conversion to R5 at RAC.
-	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //*< 32 - R6 migration & conversion to R5 at RAC.
-	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //*< 33 - R6 desorption at RAC -> pyrene.
-	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //*< 34 - R5 exchange with R6.
-	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //*< 35 - R7 growth on R5R6AC.
-	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //*< 36 - R7 growth on FEACR5.
-	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();                        //*< 37 - R6 growth on R5R6ZZ.
-	JumpProcess* j_L7_ACACR5 = new L7_ACACR5; j_L7_ACACR5->initialise();                        //*< 38 - R7 bay closure on ACACR5.
-	JumpProcess* j_G6R_R5R6FER = new G6R_RFER; j_G6R_R5R6FER->initialise();                       //*< 39 - R6 growth on RFER.
-	JumpProcess* j_G6R_R5R6FER5R6 = new G6R_R5R6FER5R6; j_G6R_R5R6FER5R6->initialise();           //*< 40 - R6 growth on RFER.
-	JumpProcess* j_L7_FEZZACR5 = new L7_FEZZACR5; j_L7_FEZZACR5->initialise();                    //*< 41 - R7 bay closure on FEZZACR5.
-	JumpProcess* j_C5R_RZZR = new C5R_RZZR; j_C5R_RZZR->initialise();                    		 //*< 42 - R5 conversion to R6 on RZZR. (2R5 collision)
-	JumpProcess* j_C5R_R5R6ZZR = new C5R_R5R6ZZR; j_C5R_R5R6ZZR->initialise();                   //*< 43 - R5 conversion to R6 on R5R6ZZR. (2R5 collision)
-	JumpProcess* j_L6_R5R6BY5 = new L6_R5R6BY5; j_L6_R5R6BY5->initialise();                      //*< 44 - R5R6BY5 closure reaction.
-	JumpProcess* j_L6_R5R6ACR = new L6_R5R6ACR; j_L6_R5R6ACR->initialise();                      //*< 45 - R5R6ACR closure reaction.
-	JumpProcess* j_L6_R5R6ACR5R6 = new L6_R5R6ACR5R6; j_L6_R5R6ACR5R6->initialise();             //*< 46 - R5R6ACR5R6 closure reaction.
-	JumpProcess* j_L6_ZZACR5 = new L6_ZZACR5; j_L6_ZZACR5->initialise();             			 //*< 47 - ZZACR5 closure reaction.
-	JumpProcess* j_L6_R5FEACR5 = new L6_R5FEACR5; j_L6_R5FEACR5->initialise();             		 //*< 48 - R5FEACR5 closure reaction.
-	JumpProcess* j_L6_FEACR5FE = new L6_FEACR5FE; j_L6_FEACR5FE->initialise();             		 //*< 49 - FEACR5FE closure reaction.
-	JumpProcess* j_L6_R5ACR5R5 = new L6_R5ACR5R5; j_L6_R5ACR5R5->initialise();             		 //*< 50 - R5ACR5R5 closure reaction.
-	JumpProcess* j_L7_R5ZZACR5 = new L7_R5ZZACR5; j_L7_R5ZZACR5->initialise();                   //*< 51 - R7 bay closure on R5ZZACR5.
-	JumpProcess* j_L6_ACR5R5R6 = new L6_ACR5R5R6; j_L6_ACR5R5R6->initialise();             		 //*< 52 - ACR5R5R6 closure reaction.
-	JumpProcess* j_L7_ACR5R5R6ZZ = new L7_ACR5R5R6ZZ; j_L7_ACR5R5R6ZZ->initialise();             //*< 53 - R7 bay closure on ACR5R5R6ZZ.
-	//JumpProcess* j_A_CH3 = new A_CH3; j_A_CH3->initialise();             						 //*< 54 - CH3 addition.
-	//JumpProcess* j_D_CH3 = new D_CH3; j_D_CH3->initialise();             						 //*< 55 - CH3 desorption.
+	JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();                           //!< 23 - Bay-capping.
+	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //!< 24 - Embedded 5-member ring migration to ZZ.
+	JumpProcess* j_G6R_RZZ = new G6R_RZZ; j_G6R_RZZ->initialise();                              //!< 25 - R6 growth on RZZ.
+	JumpProcess* j_G6R_RFER = new G6R_RFER; j_G6R_RFER->initialise();                           //!< 26 - R6 growth on RFER.
+	//JumpProcess* j_G6R_R5 = new G6R_R5; j_G6R_R5->initialise();                                 //!< 27 - R6 growth on R5.
+	JumpProcess* j_L6_RBY5 = new L6_RBY5; j_L6_RBY5->initialise();                              //!< 28 - RBY5 closure reaction.
+	JumpProcess* j_L6_RACR = new L6_RACR; j_L6_RACR->initialise();                              //!< 29 - RACR closure reaction.
+	//JumpProcess* j_G5R_RFE = new G5R_RFE; j_G5R_RFE->initialise();                              //!< 30 - R5 growth on RFE.
+	JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //!< 31 - R6 migration & conversion to R5 at RAC.
+	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //!< 32 - R6 migration & conversion to R5 at RAC.
+	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //!< 33 - R6 desorption at RAC -> pyrene.
+	//JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6.
+	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //!< 35 - R7 growth on R5R6AC.
+	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //!< 36 - R7 growth on FEACR5.
+	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();                        //!< 37 - R6 growth on R5R6ZZ.
+	JumpProcess* j_L7_ACACR5 = new L7_ACACR5; j_L7_ACACR5->initialise();                        //!< 38 - R7 bay closure on ACACR5.
+	JumpProcess* j_G6R_R5R6FER = new G6R_RFER; j_G6R_R5R6FER->initialise();                       //!< 39 - R6 growth on RFER.
+	JumpProcess* j_G6R_R5R6FER5R6 = new G6R_R5R6FER5R6; j_G6R_R5R6FER5R6->initialise();           //!< 40 - R6 growth on RFER.
+	JumpProcess* j_L7_FEZZACR5 = new L7_FEZZACR5; j_L7_FEZZACR5->initialise();                    //!< 41 - R7 bay closure on FEZZACR5.
+	JumpProcess* j_C5R_RZZR = new C5R_RZZR; j_C5R_RZZR->initialise();                    		 //!< 42 - R5 conversion to R6 on RZZR. (2R5 collision)
+	JumpProcess* j_C5R_R5R6ZZR = new C5R_R5R6ZZR; j_C5R_R5R6ZZR->initialise();                   //!< 43 - R5 conversion to R6 on R5R6ZZR. (2R5 collision)
+	JumpProcess* j_L6_R5R6BY5 = new L6_R5R6BY5; j_L6_R5R6BY5->initialise();                      //!< 44 - R5R6BY5 closure reaction.
+	JumpProcess* j_L6_R5R6ACR = new L6_R5R6ACR; j_L6_R5R6ACR->initialise();                      //!< 45 - R5R6ACR closure reaction.
+	JumpProcess* j_L6_R5R6ACR5R6 = new L6_R5R6ACR5R6; j_L6_R5R6ACR5R6->initialise();             //!< 46 - R5R6ACR5R6 closure reaction.
+	JumpProcess* j_L6_ZZACR5 = new L6_ZZACR5; j_L6_ZZACR5->initialise();             			 //!< 47 - ZZACR5 closure reaction.
+	JumpProcess* j_L6_R5FEACR5 = new L6_R5FEACR5; j_L6_R5FEACR5->initialise();             		 //!< 48 - R5FEACR5 closure reaction.
+	JumpProcess* j_L6_FEACR5FE = new L6_FEACR5FE; j_L6_FEACR5FE->initialise();             		 //!< 49 - FEACR5FE closure reaction.
+	JumpProcess* j_L6_R5ACR5R5 = new L6_R5ACR5R5; j_L6_R5ACR5R5->initialise();             		 //!< 50 - R5ACR5R5 closure reaction.
+	JumpProcess* j_L7_R5ZZACR5 = new L7_R5ZZACR5; j_L7_R5ZZACR5->initialise();                   //!< 51 - R7 bay closure on R5ZZACR5.
+	JumpProcess* j_L6_ACR5R5R6 = new L6_ACR5R5R6; j_L6_ACR5R5R6->initialise();             		 //!< 52 - ACR5R5R6 closure reaction.
+	JumpProcess* j_L7_ACR5R5R6ZZ = new L7_ACR5R5R6ZZ; j_L7_ACR5R5R6ZZ->initialise();             //!< 53 - R7 bay closure on ACR5R5R6ZZ.
+	//JumpProcess* j_A_CH3 = new A_CH3; j_A_CH3->initialise();             						 //!< 54 - CH3 addition.
+	//JumpProcess* j_D_CH3 = new D_CH3; j_D_CH3->initialise();             						 //!< 55 - CH3 desorption.
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
     temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
@@ -208,39 +208,39 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //temp.push_back(j_O6R_FE2_OH);        //! 20- R6 Oxidation at ZZ by OH.
 	//temp.push_back(j_O6R_FE2_O2);        //! 21- R6 Oxidation at ZZ by O2.
 	temp.push_back(j_D6R_FE_AC);         //! 22- R6 Desorption from FE to AC site.
-	temp.push_back(j_B6R_ACR5);         //*< 23 - Bay-capping.
-	temp.push_back(j_M5R_ACR5_ZZ);      //*< 24 - Embedded 5-member ring migration to ZZ.
-	temp.push_back(j_G6R_RZZ);          //*< 25 - R6 growth on RZZ.
-	temp.push_back(j_G6R_RFER);         //*< 26 - R6 growth on RFER.
-	//temp.push_back(j_G6R_R5);           //*< 27 - R6 growth on R5.
-	temp.push_back(j_L6_RBY5);          //*< 28 - RBY5 closure reaction.
-	temp.push_back(j_L6_RACR);          //*< 29 - RACR closure reaction.
-	//temp.push_back(j_G5R_RFE);          //*< 30 - R5 growth on RFE.
-	temp.push_back(j_C6R_RAC_FE3);      //*< 31 - R6 migration & conversion to R5 at RAC.
-	temp.push_back(j_C6R_RAC_FE3violi); //*< 32 - R6 migration & conversion to R5 at RAC.
-	temp.push_back(j_M6R_RAC_FE3);      //*< 33 - R6 desorption at RAC -> pyrene.
-	temp.push_back(j_MR5_R6);           //*< 34 - R5 exchange with R6.
-	temp.push_back(j_GR7_R5R6AC);           //*< 35 - R7 growth on R5R6AC.
-	temp.push_back(j_GR7_FEACR5);           //*< 36 - R7 growth on FEACR5.
-	temp.push_back(j_G6R_R5R6ZZ);          //*< 37 - R6 growth on R5R6ZZ.
-	temp.push_back(j_L7_ACACR5);          //*< 38 - R7 bay closure on ACACR5.
-	temp.push_back(j_G6R_R5R6FER);         //*< 39 - R6 growth on RFER.
-	temp.push_back(j_G6R_R5R6FER5R6);      //*< 40 - R6 growth on RFER5R6.
-	temp.push_back(j_L7_FEZZACR5);          //*< 41 - R7 bay closure on FEZZACR5.
-	temp.push_back(j_C5R_RZZR);          //*< 42 - R5 conversion to R6 on RZZR. (2R5 collision)
-	temp.push_back(j_C5R_R5R6ZZR);        //*< 43 - R5 conversion to R6 on R5R6ZZR. (2R5 collision)
-	temp.push_back(j_L6_R5R6BY5); 		  //*< 44 - R5R6BY5 closure reaction.
-	temp.push_back(j_L6_R5R6ACR);         //*< 45 - R5R6ACR closure reaction.
-	temp.push_back(j_L6_R5R6ACR5R6);      //*< 46 - R5R6ACR5R6 closure reaction.
-	temp.push_back(j_L6_ZZACR5);          //*< 47 - ZZACR5 closure reaction.
-	temp.push_back(j_L6_R5FEACR5);        //*< 48 - R5FEACR5 closure reaction.
-	temp.push_back(j_L6_FEACR5FE);        //*< 49 - FEFEACR5FE closure reaction.
-	temp.push_back(j_L6_R5ACR5R5);        //*< 50 - R5ACR5R5 closure reaction.
-	temp.push_back(j_L7_R5ZZACR5);          //*< 51 - R7 bay closure on R5ZZACR5.
-	temp.push_back(j_L6_ACR5R5R6);        //*< 52 - ACR5R5R6 closure reaction.
-	temp.push_back(j_L7_ACR5R5R6ZZ);          //*< 53 - R7 bay closure on ACR5R5R6ZZ.
-	//temp.push_back(j_A_CH3);          		//*< 54 - CH3 addition.
-	//temp.push_back(j_D_CH3);          		//*< 55 - CH3 desorption.
+	temp.push_back(j_B6R_ACR5);         //!< 23 - Bay-capping.
+	temp.push_back(j_M5R_ACR5_ZZ);      //!< 24 - Embedded 5-member ring migration to ZZ.
+	temp.push_back(j_G6R_RZZ);          //!< 25 - R6 growth on RZZ.
+	temp.push_back(j_G6R_RFER);         //!< 26 - R6 growth on RFER.
+	//temp.push_back(j_G6R_R5);           //!< 27 - R6 growth on R5.
+	temp.push_back(j_L6_RBY5);          //!< 28 - RBY5 closure reaction.
+	temp.push_back(j_L6_RACR);          //!< 29 - RACR closure reaction.
+	//temp.push_back(j_G5R_RFE);          //!< 30 - R5 growth on RFE.
+	temp.push_back(j_C6R_RAC_FE3);      //!< 31 - R6 migration & conversion to R5 at RAC.
+	temp.push_back(j_C6R_RAC_FE3violi); //!< 32 - R6 migration & conversion to R5 at RAC.
+	temp.push_back(j_M6R_RAC_FE3);      //!< 33 - R6 desorption at RAC -> pyrene.
+	//temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6.
+	temp.push_back(j_GR7_R5R6AC);           //!< 35 - R7 growth on R5R6AC.
+	temp.push_back(j_GR7_FEACR5);           //!< 36 - R7 growth on FEACR5.
+	temp.push_back(j_G6R_R5R6ZZ);          //!< 37 - R6 growth on R5R6ZZ.
+	temp.push_back(j_L7_ACACR5);          //!< 38 - R7 bay closure on ACACR5.
+	temp.push_back(j_G6R_R5R6FER);         //!< 39 - R6 growth on RFER.
+	temp.push_back(j_G6R_R5R6FER5R6);      //!< 40 - R6 growth on RFER5R6.
+	temp.push_back(j_L7_FEZZACR5);          //!< 41 - R7 bay closure on FEZZACR5.
+	temp.push_back(j_C5R_RZZR);          //!< 42 - R5 conversion to R6 on RZZR. (2R5 collision)
+	temp.push_back(j_C5R_R5R6ZZR);        //!< 43 - R5 conversion to R6 on R5R6ZZR. (2R5 collision)
+	temp.push_back(j_L6_R5R6BY5); 		  //!< 44 - R5R6BY5 closure reaction.
+	temp.push_back(j_L6_R5R6ACR);         //!< 45 - R5R6ACR closure reaction.
+	temp.push_back(j_L6_R5R6ACR5R6);      //!< 46 - R5R6ACR5R6 closure reaction.
+	temp.push_back(j_L6_ZZACR5);          //!< 47 - ZZACR5 closure reaction.
+	temp.push_back(j_L6_R5FEACR5);        //!< 48 - R5FEACR5 closure reaction.
+	temp.push_back(j_L6_FEACR5FE);        //!< 49 - FEFEACR5FE closure reaction.
+	temp.push_back(j_L6_R5ACR5R5);        //!< 50 - R5ACR5R5 closure reaction.
+	temp.push_back(j_L7_R5ZZACR5);          //!< 51 - R7 bay closure on R5ZZACR5.
+	temp.push_back(j_L6_ACR5R5R6);        //!< 52 - ACR5R5R6 closure reaction.
+	temp.push_back(j_L7_ACR5R5R6ZZ);          //!< 53 - R7 bay closure on ACR5R5R6ZZ.
+	//temp.push_back(j_A_CH3);          		//!< 54 - CH3 addition.
+	//temp.push_back(j_D_CH3);          		//!< 55 - CH3 desorption.
 
     return temp;
 }
@@ -1001,7 +1001,7 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	else r_f=0;
 	double m_rate_old = m_r[51]*r_f* site_count; // Rate Equation
 	//cout << "Temp = " << T; 
-	if (T<1400) m_rate = r_f2_peq * site_count / 6.0;
+	if (T<700.0) m_rate = r_f2_peq * site_count / 6.0; //1400K is a typical cutoff.
 	else m_rate = r_f2_ss * site_count / 6.0; // Rate Equation
 	
 	return m_rate ; // Rate Equation
@@ -1318,10 +1318,11 @@ double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	//int ring_count = ((int)pah_st.getRingsCount().first); // Ring count
-	auto ring_count = pah_st.getRingsCount();
-	int ring_count_6 = std::get<0>(ring_count);
+	//auto ring_count = pah_st.getRingsCount();
+	//int ring_count_6 = std::get<0>(ring_count);
+	//if (ring_count_6 <= 1) return m_rate = 0;
 	if (site_count == 0) return m_rate = 0;
-	if (ring_count_6 <= 1) return m_rate = 0;
+	
 
 	// Calculating 3 body reactions for ABF
 	/*//Parameters alpha = 0.2, T3 = 122.8, T1 = 478.4, T2 = 5411.9
@@ -1468,10 +1469,11 @@ double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 	m_rate = (m_r[41] + m_r[35]) * r_f* site_count / 2.0; // Rate Equation*/
 	//m_rate = PA2toA1;
 	//New rates
-	double r_denom = (m_r[0] + m_r[3] + m_r[5] + m_r[9] + m_r[13]);
+	double r_denom = (m_r[0] + m_r[3] + m_r[5]);
+	//double r_denom = (m_r[0] + m_r[3] + m_r[5] + m_r[9] + m_r[13]);
 	if (r_denom <=0) return m_rate = 0.0;
 	double r_num = (m_r[1] + m_r[2] + m_r[4]);
-	m_rate = ((m_r[6] + m_r[7] + m_r[8] /*+ m_r[11]*/ + m_r[12]) + r_num/r_denom*(m_r[9] + m_r[10] + m_r[13] + m_r[14])) * site_count / 2.0; 
+	m_rate = ((m_r[6] + m_r[7] + m_r[8] + m_r[11] + m_r[12]) + r_num/r_denom*(m_r[9] + m_r[10] + m_r[13] + m_r[14])) * site_count / 2.0; 
 	
 	return m_rate;
 	
@@ -2378,7 +2380,7 @@ double M5R_RZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 	double r_f;
 	if (r_denom > 0) r_f = m_r[0] / r_denom;
 	else r_f = 0.0;
-	return m_rate = m_r[5] * r_f;
+	return m_rate = m_r[5] * r_f * site_count;
 	
 	/*Old version
     // calculate rate
@@ -2870,9 +2872,9 @@ double D6R_FE_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	//int ring_count = ((int)pah_st.getRingsCount().first); // Ring count
-	auto ring_count = pah_st.getRingsCount();
-	int ring_count_6 = std::get<0>(ring_count);
-	if (ring_count_6 <= 4) return m_rate = 0.0;
+	//auto ring_count = pah_st.getRingsCount();
+	//int ring_count_6 = std::get<0>(ring_count);
+	//if (ring_count_6 <= 4) return m_rate = 0.0;
 	double T = gp[gp.T];
 	double r_f = 0.0;
 	if (T < 600) {
@@ -3425,14 +3427,24 @@ double M6R_RAC_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 void MR5_R6::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
+	//------------Reactions for A3-4----------------------------
+	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4              - Forward
+	//Using rates by On the low-temperature limit of HACA. Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
+	
 	//H addition & migration
-	addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //0  //R12 in Whitesides2010
+	/*addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //0  //R12 in Whitesides2010
 	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, 3.5187e+01, sp::None));      //1  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(2.000e+12, 0.000e+00, 0.000e+00, sp::H));          //2  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(3.100e+11, 8.700e-01, 7.4323e+01, sp::None));      //3  //R7 in Whitesides2010
 	addReaction(rxnV3, Reaction(6.700e+11, 8.400e-01, 7.0790e+01, sp::None));      //4  //R8 in Whitesides2010
 	addReaction(rxnV3, Reaction(1.300e+11, 1.600e-01, 4.5900e+01, sp::None));      //5  //R9 in Whitesides2010
-	addReaction(rxnV3, Reaction(8.900e+05, 2.280e+00, 6.1489e+01, sp::None));      //6  //R14 in Whitesides2010
+	addReaction(rxnV3, Reaction(8.900e+05, 2.280e+00, 6.1489e+01, sp::None));      //6  //R14 in Whitesides2010*/
 	
 	//Old
 	/*addReaction(rxnV3, Reaction(7.81e07, 1.772, 10.33, sp::H));     // 0 - r1f
@@ -3452,13 +3464,13 @@ double MR5_R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
-	double r_denom = m_r[1] + m_r[3] + m_r[4];
+	double r_denom = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[6] + 1.0e11;
 	double r_f; // radical fraction 
 	if (r_denom>0) {
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 1.0 * r_f* site_count; // Rate Equation
+	return m_rate = 1.0e11/2.0 * r_f* site_count; // Rate Equation
 }
 
 // ************************************************************
@@ -3469,7 +3481,27 @@ double MR5_R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 void GR7_R5R6AC::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	//Reactions provided by Menon2019 at B3LYP level. Might need to be changed.
+	//Reactions provided by Menon2019 at M06-2X level.
+	//Pathway A
+	addReaction(rxnV3, Reaction(6.586e+07, 1.766e+00, 1.477e+01, sp::H));           //7-HACAsite2-1 + H => 7-HACAsite2-2a + H2      //0
+	addReaction(rxnV3, Reaction(1.155e+05, 2.310e+00, 8.819e+00, sp::H2));          //7-HACAsite2-2a + H2 => 7-HACAsite2-1 + H      //1
+	addReaction(rxnV3, Reaction(3.886e+03, 2.592e+00, 4.012e+00, sp::C2H2));                //7-HACAsite2-2a + Acety => 7-HACAsite2-3a      //2
+	addReaction(rxnV3, Reaction(6.507e+12, 7.101e-01, 4.505e+01, sp::None));                //7-HACAsite2-3a => 7-HACAsite2-2a + Acety      //3
+	addReaction(rxnV3, Reaction(5.755e+11, 7.034e-02, 2.983e+00, sp::None));                //7-HACAsite2-3a => 7-HACAsite2-4a      //4
+	addReaction(rxnV3, Reaction(1.742e+12, 4.186e-01, 2.904e+01, sp::None));                //7-HACAsite2-4a => 7-HACAsite2-3a      //5
+	addReaction(rxnV3, Reaction(3.207e+10, 9.581e-01, 2.313e+01, sp::None));                //7-HACAsite2-4a => 7-HACAsite2-5 + H   //6
+	addReaction(rxnV3, Reaction(1.293e+08, 1.505e+00, 7.425e+00, sp::H));           //7-HACAsite2-5 + H => 7-HACAsite2-4a   //7
+	//Pathway B
+	addReaction(rxnV3, Reaction(1.479e+07, 1.854e+00, 1.707e+01, sp::H));           //7-HACAsite2-1 + H => 7-HACAsite2-2b + H2      //8
+	addReaction(rxnV3, Reaction(5.914e+04, 2.234e+00, 1.187e+01, sp::H2));          //7-HACAsite2-2b + H2 => 7-HACAsite2-1 + H      //9
+	addReaction(rxnV3, Reaction(1.098e+03, 2.581e+00, 7.651e+00, sp::C2H2));                //7-HACAsite2-2b + Acety => 7-HACAsite2-3b      //10
+	addReaction(rxnV3, Reaction(2.894e+12, 7.099e-01, 3.830e+01, sp::None));                //7-HACAsite2-3b => 7-HACAsite2-2b + Acety      //11
+	addReaction(rxnV3, Reaction(5.097e+11, 1.378e-01, 1.974e+01, sp::None));                //7-HACAsite2-3b => 7-HACAsite2-4b      //12
+	addReaction(rxnV3, Reaction(9.936e+11, 4.098e-01, 4.526e+01, sp::None));                //7-HACAsite2-4b => 7-HACAsite2-3b      //13
+	addReaction(rxnV3, Reaction(3.590e+11, 6.035e-01, 3.005e+01, sp::None));                //7-HACAsite2-4b => 7-HACAsite2-5 + H   //14
+	addReaction(rxnV3, Reaction(6.258e+08, 1.380e+00, 2.451e+01, sp::H));           //7-HACAsite2-5 + H => 7-HACAsite2-4b   //15
+	
+	/*//Reactions provided by Menon2019 at B3LYP level. Might need to be changed.
 	//Pathway A
 	addReaction(rxnV3, Reaction(6.58594E+07,1.76634E+00,9.33825E+00, sp::H));			//H + 7-memb-1 <=> 7-memb-2a + H2		//0
 	addReaction(rxnV3, Reaction(1.15481E+05,2.30995E+00,5.60390E+00, sp::H2));         	//H + 7-memb-1 <=> 7-memb-2a + H2		//1
@@ -3487,7 +3519,7 @@ void GR7_R5R6AC::initialise() {
 	addReaction(rxnV3, Reaction(5.09705E+11,1.37833E-01,1.86806E+01, sp::None));       	//7-memb-3b <=> 7-memb-4b				//12
 	addReaction(rxnV3, Reaction(9.93601E+11,4.09784E-01,4.63933E+01, sp::None));       	//7-memb-3b <=> 7-memb-4b				//13
 	addReaction(rxnV3, Reaction(3.58968E+11,6.03489E-01,2.80765E+01, sp::None));       	//7-memb-4b <=> 7-memb-5 + H			//14
-	addReaction(rxnV3, Reaction(6.25772E+08,1.37967E+00,1.71007E+01, sp::H));          	//7-memb-4b <=> 7-memb-5 + H			//15
+	addReaction(rxnV3, Reaction(6.25772E+08,1.37967E+00,1.71007E+01, sp::H));          	//7-memb-4b <=> 7-memb-5 + H			//15*/
 	
 	//OLD
 	/*addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
@@ -3567,7 +3599,27 @@ double GR7_R5R6AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 void GR7_FEACR5::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	//Reactions provided by Menon2019 at B3LYP level. Might need to be changed.
+	//Reactions provided by Menon2019 at M06-2X level.
+	//Pathway A
+	addReaction(rxnV3, Reaction(5.897e+07, 1.847e+00, 1.712e+01, sp::H));           		//7-memb-1 + H => 7-memb-2a + H2        //0
+	addReaction(rxnV3, Reaction(1.215e+05, 2.229e+00, 7.720e+00, sp::H2));          		//7-memb-2a + H2 => 7-memb-1 + H        //1
+	addReaction(rxnV3, Reaction(1.348e+03, 2.573e+00, 4.935e+00, sp::C2H2));                //7-memb-2a + Acety => 7-memb-3a        //2
+	addReaction(rxnV3, Reaction(2.366e+12, 7.052e-01, 3.967e+01, sp::None));                //7-memb-3a => 7-memb-2a + Acety        //3
+	addReaction(rxnV3, Reaction(1.958e+11, 1.107e-01, 2.533e+01, sp::None));                //7-memb-3a => 7-memb-4a        //4
+	addReaction(rxnV3, Reaction(3.412e+11, 6.253e-01, 5.337e+01, sp::None));                //7-memb-4a => 7-memb-3a        //5
+	addReaction(rxnV3, Reaction(1.770e+10, 1.094e+00, 2.715e+01, sp::None));                //7-memb-4a => 7-memb-5 + H     //6
+	addReaction(rxnV3, Reaction(5.321e+07, 1.515e+00, 7.095e+00, sp::H));           		//7-memb-5 + H => 7-memb-4a     //7
+	//Pathway B
+	addReaction(rxnV3, Reaction(5.315e+07, 1.858e+00, 1.612e+01, sp::H));           		//7-memb-1 + H => 7-memb-2b + H2        //8
+	addReaction(rxnV3, Reaction(9.106e+04, 2.277e+00, 7.007e+00, sp::H2));          		//7-memb-2b + H2 => 7-memb-1 + H        //9
+	addReaction(rxnV3, Reaction(3.521e+03, 2.598e+00, 3.998e+00, sp::C2H2));                //7-memb-2b + Acety => 7-memb-3b        //10
+	addReaction(rxnV3, Reaction(4.736e+12, 7.020e-01, 4.080e+01, sp::None));                //7-memb-3b => 7-memb-2b + Acety        //11
+	addReaction(rxnV3, Reaction(1.125e+11, 1.277e-01, 3.051e+01, sp::None));                //7-memb-3b => 7-memb-4b        //12
+	addReaction(rxnV3, Reaction(2.383e+11, 5.964e-01, 5.790e+01, sp::None));                //7-memb-4b => 7-memb-3b        //13
+	addReaction(rxnV3, Reaction(1.505e+10, 1.076e+00, 2.884e+01, sp::None));                //7-memb-4b => 7-memb-5 + H     //14
+	addReaction(rxnV3, Reaction(5.841e+07, 1.533e+00, 7.084e+00, sp::H));           		//7-memb-5 + H => 7-memb-4b     //15
+		
+	/*//Reactions provided by Menon2019 at B3LYP level. Might need to be changed.
 	//Pathway A
 	addReaction(rxnV3, Reaction(5.8971E+07,1.8466E+00,9.3299E+00, sp::H));			//H + 7-memb-1 <=> 7-memb-2a + H2		//0
 	addReaction(rxnV3, Reaction(1.2148E+05,2.2285E+00,5.0102E+00, sp::H2));         //H + 7-memb-1 <=> 7-memb-2a + H2		//1
@@ -3585,7 +3637,7 @@ void GR7_FEACR5::initialise() {
 	addReaction(rxnV3, Reaction(1.1252E+11,1.2767E-01,2.8620E+01, sp::None));       //7-memb-3b <=> 7-memb-4b				//12
 	addReaction(rxnV3, Reaction(2.3828E+11,5.9635E-01,5.5326E+01, sp::None));       //7-memb-3b <=> 7-memb-4b				//13
 	addReaction(rxnV3, Reaction(1.5046E+10,1.0755E+00,2.7612E+01, sp::None));       //7-memb-4b <=> 7-memb-5 + H			//14
-	addReaction(rxnV3, Reaction(5.8411E+07,1.5329E+00,2.7734E+00, sp::H));          //7-memb-4b <=> 7-memb-5 + H			//15
+	addReaction(rxnV3, Reaction(5.8411E+07,1.5329E+00,2.7734E+00, sp::H));          //7-memb-4b <=> 7-memb-5 + H			//15*/
 	
 	/*Previous.
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
@@ -3705,26 +3757,47 @@ double G6R_R5R6ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 // Elementary rate constants, site type, process type and name
 void L7_ACACR5::initialise() {
     // Adding elementary reactions
-    // 0.0267 atm
-    rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp::H));  //4 - r3f
-    addReaction(rxnV, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
-    // 0.12 atm
-    rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV2, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
-    addReaction(rxnV2, Reaction(2.22e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
+	//M06-2X level.
+	//Pathway A
+	addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 9.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0
+	addReaction(rxnV3, Reaction(5.369e+04, 2.275e+00, 5.583e+00, sp::H2));          		//7-memb2-habs-1a + H2 => 7-memb2-start + H     //1
+	addReaction(rxnV3, Reaction(8.513e+11, 1.358e-01, 4.510e+00, sp::None));                //7-memb2-habs-1a => 7-memb2-habs-2a    //2
+	addReaction(rxnV3, Reaction(3.523e+12, 2.926e-01, 2.567e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-habs-1a    //3
+	addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.160e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4
+	addReaction(rxnV3, Reaction(1.033e+08, 1.495e+00, 2.895e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2a    //5
+	//Pathway B
+	addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 9.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6
+	addReaction(rxnV3, Reaction(5.144e+04, 2.267e+00, 7.132e+00, sp::H2));          		//7-memb2-habs-1b + H2 => 7-memb2-start + H     //7
+	addReaction(rxnV3, Reaction(7.041e+11, 1.839e-01, 1.034e+01, sp::None));                //7-memb2-habs-1b => 7-memb2-habs-2b    //8
+	addReaction(rxnV3, Reaction(2.944e+12, 4.130e-01, 2.862e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-habs-1b    //9
+	addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 2.957e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10
+	addReaction(rxnV3, Reaction(7.712e+07, 1.514e+00, 2.067e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2b    //11
+	
+	//Carbene route
+	//Pathway A
+	addReaction(rxnV3, Reaction(8.031e+10, 8.996e-01, 9.583e+01, sp::None));                //7-memb2-start => 7-memb2-carb-1a      //12
+	addReaction(rxnV3, Reaction(4.398e+11, 3.592e-01, 3.385e+00, sp::None));                //7-memb2-carb-1a => 7-memb2-start      //13
+	addReaction(rxnV3, Reaction(8.031e+11, 1.032e-02, 8.456e+00, sp::None));                //7-memb2-carb-1a => 7-memb2-carb-2a    //14
+	addReaction(rxnV3, Reaction(1.897e+12, 2.234e-01, 1.779e+01, sp::None));                //7-memb2-carb-2a => 7-memb2-carb-1a    //15
+	addReaction(rxnV3, Reaction(5.759e+11, 3.930e-01, 8.715e-01, sp::None));                //7-memb2-carb-2a => 7-memb2-carb-4a    //16
+	addReaction(rxnV3, Reaction(1.052e+11, 9.049e-01, 5.350e+01, sp::None));                //7-memb2-carb-4a => 7-memb2-carb-2a    //17
+	addReaction(rxnV3, Reaction(8.873e+10, 6.388e-01, 3.131e+01, sp::None));                //7-memb2-carb-4a => 7-memb2-carb-5a    //18
+	addReaction(rxnV3, Reaction(1.728e+10, 7.118e-01, 6.065e+01, sp::None));                //7-memb2-carb-5a => 7-memb2-carb-4a    //19
+	addReaction(rxnV3, Reaction(3.907e+09, 1.273e+00, 9.705e+01, sp::None));                //7-memb2-carb-5a => 7-memb2-end + H2   //20
+	addReaction(rxnV3, Reaction(2.448e+05, 1.999e+00, 8.640e+01, sp::H2));          		//7-memb2-end + H2 => 7-memb2-carb-5a   //21
+	//Pathway B
+	addReaction(rxnV3, Reaction(1.061e+11, 7.990e-01, 8.426e+01, sp::None));                //7-memb2-start => 7-memb2-carb-1b      //22
+	addReaction(rxnV3, Reaction(5.486e+11, 3.348e-01, 2.012e+00, sp::None));                //7-memb2-carb-1b => 7-memb2-start      //23
+	addReaction(rxnV3, Reaction(1.000e+12, -1.397e-02, 3.568e+00, sp::None));               //7-memb2-carb-1b => 7-memb2-carb-2b    //24
+	addReaction(rxnV3, Reaction(2.167e+12, 5.562e-01, 5.928e+01, sp::None));                //7-memb2-carb-2b => 7-memb2-carb-1b    //25
+	addReaction(rxnV3, Reaction(3.063e+11, 8.244e-01, 6.356e+01, sp::None));                //7-memb2-carb-2b => 7-memb2-carb-4b    //26
+	addReaction(rxnV3, Reaction(1.514e+10, 6.739e-01, 5.031e+01, sp::None));                //7-memb2-carb-4b => 7-memb2-carb-2b    //27
+	addReaction(rxnV3, Reaction(4.479e+09, 7.144e-01, 2.710e+01, sp::None));                //7-memb2-carb-4b => 7-memb2-end + H2   //28
+	addReaction(rxnV3, Reaction(2.332e+05, 1.742e+00, 5.510e+01, sp::H2));          		//7-memb2-end + H2 => 7-memb2-carb-4b   //29
+	
+	/*//B3LYP level.
 	//Pathway A
 	addReaction(rxnV3, Reaction(2.76732E+07,1.91279E+00,9.54190E+00, sp::H));		//H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//0
 	addReaction(rxnV3, Reaction(4.21185E+04,2.26366E+00,6.87815E+00, sp::H2));      //H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//1
@@ -3738,16 +3811,8 @@ void L7_ACACR5::initialise() {
 	addReaction(rxnV3, Reaction(6.59893E+11,8.15588E-02,2.62478E+00, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//8
 	addReaction(rxnV3, Reaction(5.13229E+12,3.39661E-01,2.54015E+01, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//9
 	addReaction(rxnV3, Reaction(2.00638E+10,1.09912E+00,3.28066E+01, sp::None));    //7-membHabs-3b <=> 7-membHabs-4 + H			//10
-	addReaction(rxnV3, Reaction(1.72899E+08,1.48867E+00,1.50412E+00, sp::H));       //7-membHabs-3b <=> 7-membHabs-4 + H			//11
+	addReaction(rxnV3, Reaction(1.72899E+08,1.48867E+00,1.50412E+00, sp::H));       //7-membHabs-3b <=> 7-membHabs-4 + H			//11*/
 	
-	//Old. Do not use!!!
-    /*addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f*/
     m_sType = ACACR5; // sitetype
     m_name = "BY7 closure on ACACR5"; // name of process
     m_ID = 38;
@@ -3765,8 +3830,7 @@ double L7_ACACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
 	double T = gp[gp.T];
-    if (T <= 1300) return m_rate = 0.0;
-	
+    if (T <= 1000) return m_rate = 0.0;
 	//Rate assuming PEQ approximation
 	matrix<double> arr1(4, 4);
 	boost::numeric::ublas::vector<double> arr2(4);
@@ -3777,33 +3841,63 @@ double L7_ACACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 		arr2(k) = 0.0;
 	
 	arr1(0,0) = m_r[1] + m_r[2];
-    arr1(0,1) = - m_r[3];
-    arr1(1,0) = -m_r[2];
-    arr1(1,1) = + m_r[3] + m_r[4];
-    arr1(2,2) = +m_r[7] + m_r[9];
-    arr1(2,3) = - m_r[8];
-    arr1(3,2) = - m_r[9];
-    arr1(3,3) = m_r[8] + m_r[10];
-    arr2(0) = +m_r[0];
-    arr2(1) = 0.0*(m_r[5]);
-    arr2(2) = +m_r[6];
-    arr2(3) = 0.0*(m_r[11]);
+	arr1(0,1) = - m_r[3];
+	arr1(1,0) = -m_r[2];
+	arr1(1,1) = + m_r[3] + m_r[4];
+	arr1(2,2) = +m_r[7] + m_r[9];
+	arr1(2,3) = - m_r[8];
+	arr1(3,2) = - m_r[9];
+	arr1(3,3) = m_r[8] + m_r[10];
+	arr2(0) = +m_r[0];
+	arr2(1) = 0.0*(m_r[5]);
+	arr2(2) = +m_r[6];
+	arr2(3) = 0.0*(m_r[11]);
 	
 	permutation_matrix<size_t> pm(arr1.size1());
 	lu_factorize(arr1, pm);
 	lu_substitute(arr1, pm, arr2);
 	
-	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(3))*site_count;
+	double rate = (m_r[4] * arr2(1) + m_r[10] * arr2(3))*site_count;
 	
-	//Old. Do not use!!!
-	/*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    double r_f; // radical fraction 
-    if(r_denom>0) {
-        r_f = (m_r[0]+m_r[2])/r_denom; 
-        r_f = r_f/(r_f+1.0);
-    }
-    else r_f=0;
-    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation*/
+	if (T>=2200) {
+		matrix<double> arr1_carbene(7, 7);
+		boost::numeric::ublas::vector<double> arr2_carbene(7);
+		for (unsigned k = 0; k < arr1_carbene.size1(); ++k)
+			for (unsigned l = 0; l < arr1_carbene.size2(); ++l)
+				arr1_carbene(k, l) = 0.0;
+		for (unsigned k = 0; k < arr2_carbene.size(); ++k)
+			arr2_carbene(k) = 0.0;
+		
+		arr1_carbene(0,0) = m_r[13] + m_r[14];
+		arr1_carbene(0,1) = -m_r[15];
+		arr1_carbene(1,0) = -m_r[14];
+		arr1_carbene(1,1) = m_r[15] + m_r[16];
+		arr1_carbene(1,2) = -m_r[17];
+		arr1_carbene(2,1) = -m_r[16];
+		arr1_carbene(2,2) = m_r[17] + m_r[18];
+		arr1_carbene(2,3) = -m_r[19];
+		arr1_carbene(3,2) = -m_r[18];
+		arr1_carbene(3,3) = m_r[19] + m_r[20];
+		arr1_carbene(4,4) = m_r[23] + m_r[24];
+		arr1_carbene(4,5) = -m_r[25];
+		arr1_carbene(5,4) = -m_r[24];
+		arr1_carbene(5,5) = m_r[25] + m_r[26];
+		arr1_carbene(5,6) = -m_r[27];
+		arr1_carbene(6,5) = -m_r[26];
+		arr1_carbene(6,6) = m_r[27] + m_r[28];
+		arr2_carbene(0) = +m_r[12];
+		arr2_carbene(3) = 0.0*(m_r[21]);
+		arr2_carbene(4) = +m_r[22];
+		arr2_carbene(6) = 0.0*(m_r[29]);
+		
+		permutation_matrix<size_t> pm_carbene(arr1_carbene.size1());
+		lu_factorize(arr1_carbene, pm_carbene);
+		lu_substitute(arr1_carbene, pm_carbene, arr2_carbene);
+		
+		rate += (m_r[20] * arr2_carbene(3) + m_r[28] * arr2_carbene(6)) * site_count;
+	}
+		
+	return m_rate = rate;
 }
 
 // ************************************************************
@@ -3898,27 +3992,48 @@ double G6R_R5R6FER5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
 // Elementary rate constants, site type, process type and name
 void L7_FEZZACR5::initialise() {
     // Adding elementary reactions
-    // 0.0267 atm
-    rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp::H));  //4 - r3f
-    addReaction(rxnV, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
-    // 0.12 atm
-    rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV2, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
-    addReaction(rxnV2, Reaction(2.22e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
+	//M06-2X level.
 	//Pathway A
+	addReaction(rxnV3, Reaction(2.767e+07, 1.913e+00, 9.542e+00, sp::H));           		//7-membHabs-1 + H => 7-membHabs-2a + H2        //0
+	addReaction(rxnV3, Reaction(4.212e+04, 2.264e+00, 6.878e+00, sp::H2));          		//7-membHabs-2a + H2 => 7-membHabs-1 + H        //1
+	addReaction(rxnV3, Reaction(4.703e+11, 1.429e-01, 4.722e+00, sp::None));                //7-membHabs-2a => 7-membHabs-3a        //2
+	addReaction(rxnV3, Reaction(1.476e+12, 3.665e-01, 2.737e+01, sp::None));                //7-membHabs-3a => 7-membHabs-2a        //3
+	addReaction(rxnV3, Reaction(6.424e+09, 1.093e+00, 3.216e+01, sp::None));                //7-membHabs-3a => 7-membHabs-4 + H     //4
+	addReaction(rxnV3, Reaction(1.693e+08, 1.522e+00, 1.637e+00, sp::H));           		//7-membHabs-4 + H => 7-membHabs-3a     //5
+	//Pathway B
+	addReaction(rxnV3, Reaction(2.843e+07, 1.906e+00, 9.533e+00, sp::H));           		//7-membHabs-1 + H => 7-membHabs-2b + H2        //6
+	addReaction(rxnV3, Reaction(5.338e+04, 2.261e+00, 7.525e+00, sp::H2));          		//7-membHabs-2b + H2 => 7-membHabs-1 + H        //7
+	addReaction(rxnV3, Reaction(6.599e+11, 8.156e-02, 2.625e+00, sp::None));                //7-membHabs-2b => 7-membHabs-3b        //8
+	addReaction(rxnV3, Reaction(5.132e+12, 3.397e-01, 2.540e+01, sp::None));                //7-membHabs-3b => 7-membHabs-2b        //9
+	addReaction(rxnV3, Reaction(2.006e+10, 1.099e+00, 3.281e+01, sp::None));                //7-membHabs-3b => 7-membHabs-4 + H     //10
+	addReaction(rxnV3, Reaction(1.729e+08, 1.489e+00, 1.504e+00, sp::H));           		//7-membHabs-4 + H => 7-membHabs-3b     //11
+	//Pathway A - Carbene
+	addReaction(rxnV3, Reaction(1.603e+11, 7.771e-01, 8.323e+01, sp::None));                //7-membHabs-1 => 7-memb-carb-1a        //12
+	addReaction(rxnV3, Reaction(3.050e+11, 2.944e-01, 8.342e-02, sp::None));                //7-memb-carb-1a => 7-membHabs-1        //13
+	addReaction(rxnV3, Reaction(2.488e+11, 1.200e-01, 1.162e+01, sp::None));                //7-memb-carb-1a => 7-memb-carb-2a      //14
+	addReaction(rxnV3, Reaction(1.472e+12, 6.757e-01, 4.509e+01, sp::None));                //7-memb-carb-2a => 7-memb-carb-1a      //15
+	addReaction(rxnV3, Reaction(1.397e+11, 5.806e-01, 2.701e+01, sp::None));                //7-memb-carb-2a => 7-memb-carb-4a      //16
+	addReaction(rxnV3, Reaction(3.264e+10, 7.336e-01, 5.681e+01, sp::None));                //7-memb-carb-4a => 7-memb-carb-2a      //17
+	addReaction(rxnV3, Reaction(5.515e+10, 8.485e-01, 5.932e+01, sp::None));                //7-memb-carb-4a => 7-memb-carb-5a      //18
+	addReaction(rxnV3, Reaction(7.566e+10, 6.747e-01, 3.856e+01, sp::None));                //7-memb-carb-5a => 7-memb-carb-4a      //19
+	addReaction(rxnV3, Reaction(6.206e+09, 8.471e-01, 2.861e+01, sp::None));                //7-memb-carb-5a => 7-membHabs-4 + H2   //20
+	addReaction(rxnV3, Reaction(2.164e+05, 1.798e+00, 5.870e+01, sp::H2));          		//7-membHabs-4 + H2 => 7-memb-carb-5a   //21
+	//Pathway B - Carbene
+	addReaction(rxnV3, Reaction(1.162e+11, 8.365e-01, 8.601e+01, sp::None));                //7-membHabs-1 => 7-memb-carb-1b        //22
+	addReaction(rxnV3, Reaction(4.948e+11, 3.313e-01, 1.476e+00, sp::None));                //7-memb-carb-1b => 7-membHabs-1        //23
+	addReaction(rxnV3, Reaction(5.744e+11, 3.921e-02, 8.721e+00, sp::None));                //7-memb-carb-1b => 7-memb-carb-2b      //24
+	addReaction(rxnV3, Reaction(2.164e+12, 2.924e-01, 1.861e+01, sp::None));                //7-memb-carb-2b => 7-memb-carb-1b      //25
+	addReaction(rxnV3, Reaction(9.900e+11, 3.314e-01, -2.850e+00, sp::None));               //7-memb-carb-2b => 7-memb-carb-4b      //26
+	addReaction(rxnV3, Reaction(1.025e+11, 8.748e-01, 5.711e+01, sp::None));                //7-memb-carb-4b => 7-memb-carb-2b      //27
+	addReaction(rxnV3, Reaction(6.156e+10, 7.822e-01, 3.925e+01, sp::None));                //7-memb-carb-4b => 7-memb-carb-5b      //28
+	addReaction(rxnV3, Reaction(9.567e+10, 6.963e-01, 3.520e+01, sp::None));                //7-memb-carb-5b => 7-memb-carb-4b      //29
+	addReaction(rxnV3, Reaction(3.478e+09, 1.288e+00, 8.743e+01, sp::None));                //7-memb-carb-5b => 7-membHabs-4 + H2   //30
+	addReaction(rxnV3, Reaction(1.696e+05, 2.086e+00, 9.563e+01, sp::H2));          		//7-membHabs-4 + H2 => 7-memb-carb-5b   //31
+	
+	//B3LYP level. Old.
+	/*//Pathway A
 	addReaction(rxnV3, Reaction(2.76732E+07,1.91279E+00,9.54190E+00, sp::H));		//H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//0
 	addReaction(rxnV3, Reaction(4.21185E+04,2.26366E+00,6.87815E+00, sp::H2));      //H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//1
 	addReaction(rxnV3, Reaction(4.70295E+11,1.42940E-01,4.72228E+00, sp::None));	//7-membHabs-2a <=> 7-membHabs-3a				//2
@@ -3931,16 +4046,8 @@ void L7_FEZZACR5::initialise() {
 	addReaction(rxnV3, Reaction(6.59893E+11,8.15588E-02,2.62478E+00, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//8
 	addReaction(rxnV3, Reaction(5.13229E+12,3.39661E-01,2.54015E+01, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//9
 	addReaction(rxnV3, Reaction(2.00638E+10,1.09912E+00,3.28066E+01, sp::None));    //7-membHabs-3b <=> 7-membHabs-4 + H			//10
-	addReaction(rxnV3, Reaction(1.72899E+08,1.48867E+00,1.50412E+00, sp::H));       //7-membHabs-3b <=> 7-membHabs-4 + H			//11
+	addReaction(rxnV3, Reaction(1.72899E+08,1.48867E+00,1.50412E+00, sp::H));       //7-membHabs-3b <=> 7-membHabs-4 + H			//11*/
 	
-	//Old. Do not use!!!
-    /*addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f*/
     m_sType = FEZZACR5; // sitetype
     m_name = "BY7 closure on FEZZACR5"; // name of process
     m_ID = 41;
@@ -3958,7 +4065,7 @@ double L7_FEZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
 	double T = gp[gp.T];
-    if (T <= 1300) return m_rate = 0.0;
+    if (T <= 800) return m_rate = 0.0;
 	
 	//Rate assuming PEQ approximation
 	matrix<double> arr1(4, 4);
@@ -3986,17 +4093,50 @@ double L7_FEZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	lu_factorize(arr1, pm);
 	lu_substitute(arr1, pm, arr2);
 	
-	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(3))*site_count;
+	double rate = (m_r[4] * arr2(1) + m_r[10] * arr2(3))*site_count;
 	
-	//Old. Do not use!!!
-	/*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    double r_f; // radical fraction 
-    if(r_denom>0) {
-        r_f = (m_r[0]+m_r[2])/r_denom; 
-        r_f = r_f/(r_f+1.0);
-    }
-    else r_f=0;
-    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation*/
+	if (T>=2000) {
+		matrix<double> arr1_carbene(8, 8);
+		boost::numeric::ublas::vector<double> arr2_carbene(8);
+		for (unsigned k = 0; k < arr1_carbene.size1(); ++k)
+			for (unsigned l = 0; l < arr1_carbene.size2(); ++l)
+				arr1_carbene(k, l) = 0.0;
+		for (unsigned k = 0; k < arr2_carbene.size(); ++k)
+			arr2_carbene(k) = 0.0;
+		
+		arr1_carbene(0,0) = m_r[13] + m_r[14];
+		arr1_carbene(0,1) = -m_r[15];
+		arr1_carbene(1,0) = -m_r[14];
+		arr1_carbene(1,1) = m_r[15] + m_r[16];
+		arr1_carbene(1,2) = -m_r[17];
+		arr1_carbene(2,1) = -m_r[16];
+		arr1_carbene(2,2) = m_r[17] + m_r[18];
+		arr1_carbene(2,3) = -m_r[19];
+		arr1_carbene(3,2) = -m_r[18];
+		arr1_carbene(3,3) = m_r[19] + m_r[20];
+		arr1_carbene(4,4) = m_r[23] + m_r[24];
+		arr1_carbene(4,5) = -m_r[25];
+		arr1_carbene(5,4) = -m_r[24];
+		arr1_carbene(5,5) = m_r[25] + m_r[26];
+		arr1_carbene(5,6) = -m_r[27];
+		arr1_carbene(6,5) = -m_r[26];
+		arr1_carbene(6,6) = m_r[27] + m_r[28];
+		arr1_carbene(6,7) = -m_r[29];
+		arr1_carbene(7,6) = -m_r[28];
+		arr1_carbene(7,7) = m_r[29] + m_r[30];
+		arr2_carbene(0) = +m_r[12];
+		arr2_carbene(3) = 0.0*(m_r[21]);
+		arr2_carbene(4) = +m_r[22];
+		arr2_carbene(7) = 0.0*(m_r[31]);
+		
+		permutation_matrix<size_t> pm_carbene(arr1_carbene.size1());
+		lu_factorize(arr1_carbene, pm_carbene);
+		lu_substitute(arr1_carbene, pm_carbene, arr2_carbene);
+		
+		rate += (m_r[20] * arr2_carbene(3) + m_r[30] * arr2_carbene(7)) * site_count;
+	}
+		
+	return m_rate = rate;
 }
 
 // ************************************************************
@@ -4311,27 +4451,48 @@ double L6_R5ACR5R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 // ************************************************************
 // Elementary rate constants, site type, process type and name
 void L7_R5ZZACR5::initialise() {
-    // Adding elementary reactions
-    // 0.0267 atm
-    rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp::H));  //4 - r3f
-    addReaction(rxnV, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
-    // 0.12 atm
-    rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV2, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
-    addReaction(rxnV2, Reaction(2.22e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+    // Adding elementary reactions. The rate for this process was assumed to be similar to that of L&_ACACR5
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
+	//M06-2X level.
+	//Pathway A
+	addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 9.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0
+	addReaction(rxnV3, Reaction(5.369e+04, 2.275e+00, 5.583e+00, sp::H2));          		//7-memb2-habs-1a + H2 => 7-memb2-start + H     //1
+	addReaction(rxnV3, Reaction(8.513e+11, 1.358e-01, 4.510e+00, sp::None));                //7-memb2-habs-1a => 7-memb2-habs-2a    //2
+	addReaction(rxnV3, Reaction(3.523e+12, 2.926e-01, 2.567e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-habs-1a    //3
+	addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.160e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4
+	addReaction(rxnV3, Reaction(1.033e+08, 1.495e+00, 2.895e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2a    //5
+	//Pathway B
+	addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 9.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6
+	addReaction(rxnV3, Reaction(5.144e+04, 2.267e+00, 7.132e+00, sp::H2));          		//7-memb2-habs-1b + H2 => 7-memb2-start + H     //7
+	addReaction(rxnV3, Reaction(7.041e+11, 1.839e-01, 1.034e+01, sp::None));                //7-memb2-habs-1b => 7-memb2-habs-2b    //8
+	addReaction(rxnV3, Reaction(2.944e+12, 4.130e-01, 2.862e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-habs-1b    //9
+	addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 2.957e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10
+	addReaction(rxnV3, Reaction(7.712e+07, 1.514e+00, 2.067e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2b    //11
+	
+	//Carbene route
+	//Pathway A
+	addReaction(rxnV3, Reaction(8.031e+10, 8.996e-01, 9.583e+01, sp::None));                //7-memb2-start => 7-memb2-carb-1a      //12
+	addReaction(rxnV3, Reaction(4.398e+11, 3.592e-01, 3.385e+00, sp::None));                //7-memb2-carb-1a => 7-memb2-start      //13
+	addReaction(rxnV3, Reaction(8.031e+11, 1.032e-02, 8.456e+00, sp::None));                //7-memb2-carb-1a => 7-memb2-carb-2a    //14
+	addReaction(rxnV3, Reaction(1.897e+12, 2.234e-01, 1.779e+01, sp::None));                //7-memb2-carb-2a => 7-memb2-carb-1a    //15
+	addReaction(rxnV3, Reaction(5.759e+11, 3.930e-01, 8.715e-01, sp::None));                //7-memb2-carb-2a => 7-memb2-carb-4a    //16
+	addReaction(rxnV3, Reaction(1.052e+11, 9.049e-01, 5.350e+01, sp::None));                //7-memb2-carb-4a => 7-memb2-carb-2a    //17
+	addReaction(rxnV3, Reaction(8.873e+10, 6.388e-01, 3.131e+01, sp::None));                //7-memb2-carb-4a => 7-memb2-carb-5a    //18
+	addReaction(rxnV3, Reaction(1.728e+10, 7.118e-01, 6.065e+01, sp::None));                //7-memb2-carb-5a => 7-memb2-carb-4a    //19
+	addReaction(rxnV3, Reaction(3.907e+09, 1.273e+00, 9.705e+01, sp::None));                //7-memb2-carb-5a => 7-memb2-end + H2   //20
+	addReaction(rxnV3, Reaction(2.448e+05, 1.999e+00, 8.640e+01, sp::H2));          		//7-memb2-end + H2 => 7-memb2-carb-5a   //21
+	//Pathway B
+	addReaction(rxnV3, Reaction(1.061e+11, 7.990e-01, 8.426e+01, sp::None));                //7-memb2-start => 7-memb2-carb-1b      //22
+	addReaction(rxnV3, Reaction(5.486e+11, 3.348e-01, 2.012e+00, sp::None));                //7-memb2-carb-1b => 7-memb2-start      //23
+	addReaction(rxnV3, Reaction(1.000e+12, -1.397e-02, 3.568e+00, sp::None));               //7-memb2-carb-1b => 7-memb2-carb-2b    //24
+	addReaction(rxnV3, Reaction(2.167e+12, 5.562e-01, 5.928e+01, sp::None));                //7-memb2-carb-2b => 7-memb2-carb-1b    //25
+	addReaction(rxnV3, Reaction(3.063e+11, 8.244e-01, 6.356e+01, sp::None));                //7-memb2-carb-2b => 7-memb2-carb-4b    //26
+	addReaction(rxnV3, Reaction(1.514e+10, 6.739e-01, 5.031e+01, sp::None));                //7-memb2-carb-4b => 7-memb2-carb-2b    //27
+	addReaction(rxnV3, Reaction(4.479e+09, 7.144e-01, 2.710e+01, sp::None));                //7-memb2-carb-4b => 7-memb2-end + H2   //28
+	addReaction(rxnV3, Reaction(2.332e+05, 1.742e+00, 5.510e+01, sp::H2));          		//7-memb2-end + H2 => 7-memb2-carb-4b   //29
+	
+	/*//B3LYP level.
 	//Pathway A
 	addReaction(rxnV3, Reaction(2.76732E+07,1.91279E+00,9.54190E+00, sp::H));		//H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//0
 	addReaction(rxnV3, Reaction(4.21185E+04,2.26366E+00,6.87815E+00, sp::H2));      //H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//1
@@ -4345,16 +4506,8 @@ void L7_R5ZZACR5::initialise() {
 	addReaction(rxnV3, Reaction(6.59893E+11,8.15588E-02,2.62478E+00, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//8
 	addReaction(rxnV3, Reaction(5.13229E+12,3.39661E-01,2.54015E+01, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//9
 	addReaction(rxnV3, Reaction(2.00638E+10,1.09912E+00,3.28066E+01, sp::None));    //7-membHabs-3b <=> 7-membHabs-4 + H			//10
-	addReaction(rxnV3, Reaction(1.72899E+08,1.48867E+00,1.50412E+00, sp::H));       //7-membHabs-3b <=> 7-membHabs-4 + H			//11
+	addReaction(rxnV3, Reaction(1.72899E+08,1.48867E+00,1.50412E+00, sp::H));       //7-membHabs-3b <=> 7-membHabs-4 + H			//11*/
 	
-	//Old. Do not use!!!
-    /*addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f*/
     m_sType = R5ZZACR5; // sitetype
     m_name = "BY7 closure on R5ZZACR5"; // name of process
     m_ID = 51;
@@ -4372,8 +4525,7 @@ double L7_R5ZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
 	double T = gp[gp.T];
-    if (T <= 1300) return m_rate = 0.0;
-	
+    if (T <= 1000) return m_rate = 0.0;
 	//Rate assuming PEQ approximation
 	matrix<double> arr1(4, 4);
 	boost::numeric::ublas::vector<double> arr2(4);
@@ -4384,33 +4536,63 @@ double L7_R5ZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 		arr2(k) = 0.0;
 	
 	arr1(0,0) = m_r[1] + m_r[2];
-    arr1(0,1) = - m_r[3];
-    arr1(1,0) = -m_r[2];
-    arr1(1,1) = + m_r[3] + m_r[4];
-    arr1(2,2) = +m_r[7] + m_r[9];
-    arr1(2,3) = - m_r[8];
-    arr1(3,2) = - m_r[9];
-    arr1(3,3) = m_r[8] + m_r[10];
-    arr2(0) = +m_r[0];
-    arr2(1) = 0.0*(m_r[5]);
-    arr2(2) = +m_r[6];
-    arr2(3) = 0.0*(m_r[11]);
+	arr1(0,1) = - m_r[3];
+	arr1(1,0) = -m_r[2];
+	arr1(1,1) = + m_r[3] + m_r[4];
+	arr1(2,2) = +m_r[7] + m_r[9];
+	arr1(2,3) = - m_r[8];
+	arr1(3,2) = - m_r[9];
+	arr1(3,3) = m_r[8] + m_r[10];
+	arr2(0) = +m_r[0];
+	arr2(1) = 0.0*(m_r[5]);
+	arr2(2) = +m_r[6];
+	arr2(3) = 0.0*(m_r[11]);
 	
 	permutation_matrix<size_t> pm(arr1.size1());
 	lu_factorize(arr1, pm);
 	lu_substitute(arr1, pm, arr2);
 	
-	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(3))*site_count;
+	double rate = (m_r[4] * arr2(1) + m_r[10] * arr2(3))*site_count;
 	
-	//Old. Do not use!!!
-	/*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    double r_f; // radical fraction 
-    if(r_denom>0) {
-        r_f = (m_r[0]+m_r[2])/r_denom; 
-        r_f = r_f/(r_f+1.0);
-    }
-    else r_f=0;
-    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation*/
+	if (T>=2200) {
+		matrix<double> arr1_carbene(7, 7);
+		boost::numeric::ublas::vector<double> arr2_carbene(7);
+		for (unsigned k = 0; k < arr1_carbene.size1(); ++k)
+			for (unsigned l = 0; l < arr1_carbene.size2(); ++l)
+				arr1_carbene(k, l) = 0.0;
+		for (unsigned k = 0; k < arr2_carbene.size(); ++k)
+			arr2_carbene(k) = 0.0;
+		
+		arr1_carbene(0,0) = m_r[13] + m_r[14];
+		arr1_carbene(0,1) = -m_r[15];
+		arr1_carbene(1,0) = -m_r[14];
+		arr1_carbene(1,1) = m_r[15] + m_r[16];
+		arr1_carbene(1,2) = -m_r[17];
+		arr1_carbene(2,1) = -m_r[16];
+		arr1_carbene(2,2) = m_r[17] + m_r[18];
+		arr1_carbene(2,3) = -m_r[19];
+		arr1_carbene(3,2) = -m_r[18];
+		arr1_carbene(3,3) = m_r[19] + m_r[20];
+		arr1_carbene(4,4) = m_r[23] + m_r[24];
+		arr1_carbene(4,5) = -m_r[25];
+		arr1_carbene(5,4) = -m_r[24];
+		arr1_carbene(5,5) = m_r[25] + m_r[26];
+		arr1_carbene(5,6) = -m_r[27];
+		arr1_carbene(6,5) = -m_r[26];
+		arr1_carbene(6,6) = m_r[27] + m_r[28];
+		arr2_carbene(0) = +m_r[12];
+		arr2_carbene(3) = 0.0*(m_r[21]);
+		arr2_carbene(4) = +m_r[22];
+		arr2_carbene(6) = 0.0*(m_r[29]);
+		
+		permutation_matrix<size_t> pm_carbene(arr1_carbene.size1());
+		lu_factorize(arr1_carbene, pm_carbene);
+		lu_substitute(arr1_carbene, pm_carbene, arr2_carbene);
+		
+		rate += (m_r[20] * arr2_carbene(3) + m_r[28] * arr2_carbene(6)) * site_count;
+	}
+		
+	return m_rate = rate;
 }
 
 // ************************************************************
@@ -4451,27 +4633,48 @@ double L6_ACR5R5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 // ************************************************************
 // Elementary rate constants, site type, process type and name
 void L7_ACR5R5R6ZZ::initialise() {
-    // Adding elementary reactions
-    // 0.0267 atm
-    rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp::H));  //4 - r3f
-    addReaction(rxnV, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
-    // 0.12 atm
-    rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV2, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV2, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV2, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
-    addReaction(rxnV2, Reaction(2.22e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+    // Adding elementary reactions. The rate for this jump process was assumed to be the same as L7_ACACR5.
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
+	//M06-2X level.
+	//Pathway A
+	addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 9.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0
+	addReaction(rxnV3, Reaction(5.369e+04, 2.275e+00, 5.583e+00, sp::H2));          		//7-memb2-habs-1a + H2 => 7-memb2-start + H     //1
+	addReaction(rxnV3, Reaction(8.513e+11, 1.358e-01, 4.510e+00, sp::None));                //7-memb2-habs-1a => 7-memb2-habs-2a    //2
+	addReaction(rxnV3, Reaction(3.523e+12, 2.926e-01, 2.567e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-habs-1a    //3
+	addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.160e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4
+	addReaction(rxnV3, Reaction(1.033e+08, 1.495e+00, 2.895e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2a    //5
+	//Pathway B
+	addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 9.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6
+	addReaction(rxnV3, Reaction(5.144e+04, 2.267e+00, 7.132e+00, sp::H2));          		//7-memb2-habs-1b + H2 => 7-memb2-start + H     //7
+	addReaction(rxnV3, Reaction(7.041e+11, 1.839e-01, 1.034e+01, sp::None));                //7-memb2-habs-1b => 7-memb2-habs-2b    //8
+	addReaction(rxnV3, Reaction(2.944e+12, 4.130e-01, 2.862e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-habs-1b    //9
+	addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 2.957e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10
+	addReaction(rxnV3, Reaction(7.712e+07, 1.514e+00, 2.067e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2b    //11
+	
+	//Carbene route
+	//Pathway A
+	addReaction(rxnV3, Reaction(8.031e+10, 8.996e-01, 9.583e+01, sp::None));                //7-memb2-start => 7-memb2-carb-1a      //12
+	addReaction(rxnV3, Reaction(4.398e+11, 3.592e-01, 3.385e+00, sp::None));                //7-memb2-carb-1a => 7-memb2-start      //13
+	addReaction(rxnV3, Reaction(8.031e+11, 1.032e-02, 8.456e+00, sp::None));                //7-memb2-carb-1a => 7-memb2-carb-2a    //14
+	addReaction(rxnV3, Reaction(1.897e+12, 2.234e-01, 1.779e+01, sp::None));                //7-memb2-carb-2a => 7-memb2-carb-1a    //15
+	addReaction(rxnV3, Reaction(5.759e+11, 3.930e-01, 8.715e-01, sp::None));                //7-memb2-carb-2a => 7-memb2-carb-4a    //16
+	addReaction(rxnV3, Reaction(1.052e+11, 9.049e-01, 5.350e+01, sp::None));                //7-memb2-carb-4a => 7-memb2-carb-2a    //17
+	addReaction(rxnV3, Reaction(8.873e+10, 6.388e-01, 3.131e+01, sp::None));                //7-memb2-carb-4a => 7-memb2-carb-5a    //18
+	addReaction(rxnV3, Reaction(1.728e+10, 7.118e-01, 6.065e+01, sp::None));                //7-memb2-carb-5a => 7-memb2-carb-4a    //19
+	addReaction(rxnV3, Reaction(3.907e+09, 1.273e+00, 9.705e+01, sp::None));                //7-memb2-carb-5a => 7-memb2-end + H2   //20
+	addReaction(rxnV3, Reaction(2.448e+05, 1.999e+00, 8.640e+01, sp::H2));          		//7-memb2-end + H2 => 7-memb2-carb-5a   //21
+	//Pathway B
+	addReaction(rxnV3, Reaction(1.061e+11, 7.990e-01, 8.426e+01, sp::None));                //7-memb2-start => 7-memb2-carb-1b      //22
+	addReaction(rxnV3, Reaction(5.486e+11, 3.348e-01, 2.012e+00, sp::None));                //7-memb2-carb-1b => 7-memb2-start      //23
+	addReaction(rxnV3, Reaction(1.000e+12, -1.397e-02, 3.568e+00, sp::None));               //7-memb2-carb-1b => 7-memb2-carb-2b    //24
+	addReaction(rxnV3, Reaction(2.167e+12, 5.562e-01, 5.928e+01, sp::None));                //7-memb2-carb-2b => 7-memb2-carb-1b    //25
+	addReaction(rxnV3, Reaction(3.063e+11, 8.244e-01, 6.356e+01, sp::None));                //7-memb2-carb-2b => 7-memb2-carb-4b    //26
+	addReaction(rxnV3, Reaction(1.514e+10, 6.739e-01, 5.031e+01, sp::None));                //7-memb2-carb-4b => 7-memb2-carb-2b    //27
+	addReaction(rxnV3, Reaction(4.479e+09, 7.144e-01, 2.710e+01, sp::None));                //7-memb2-carb-4b => 7-memb2-end + H2   //28
+	addReaction(rxnV3, Reaction(2.332e+05, 1.742e+00, 5.510e+01, sp::H2));          		//7-memb2-end + H2 => 7-memb2-carb-4b   //29
+	
+	/*//B3LYP level.
 	//Pathway A
 	addReaction(rxnV3, Reaction(2.76732E+07,1.91279E+00,9.54190E+00, sp::H));		//H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//0
 	addReaction(rxnV3, Reaction(4.21185E+04,2.26366E+00,6.87815E+00, sp::H2));      //H + 7-membHabs-1 <=> 7-membHabs-2a + H2		//1
@@ -4485,16 +4688,8 @@ void L7_ACR5R5R6ZZ::initialise() {
 	addReaction(rxnV3, Reaction(6.59893E+11,8.15588E-02,2.62478E+00, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//8
 	addReaction(rxnV3, Reaction(5.13229E+12,3.39661E-01,2.54015E+01, sp::None));    //7-membHabs-2b <=> 7-membHabs-3b				//9
 	addReaction(rxnV3, Reaction(2.00638E+10,1.09912E+00,3.28066E+01, sp::None));    //7-membHabs-3b <=> 7-membHabs-4 + H			//10
-	addReaction(rxnV3, Reaction(1.72899E+08,1.48867E+00,1.50412E+00, sp::H));       //7-membHabs-3b <=> 7-membHabs-4 + H			//11
+	addReaction(rxnV3, Reaction(1.72899E+08,1.48867E+00,1.50412E+00, sp::H));       //7-membHabs-3b <=> 7-membHabs-4 + H			//11*/
 	
-	//Old. Do not use!!!
-    /*addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      //0 - r1f
-    addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   //5 - r4f
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f*/
     m_sType = ACR5R5R6ZZ; // sitetype
     m_name = "BY7 closure on ACR5R5R6ZZ"; // name of process
     m_ID = 53;
@@ -4512,8 +4707,7 @@ double L7_ACR5R5R6ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
 	double T = gp[gp.T];
-    if (T <= 1300) return m_rate = 0.0;
-	
+    if (T <= 1000) return m_rate = 0.0;
 	//Rate assuming PEQ approximation
 	matrix<double> arr1(4, 4);
 	boost::numeric::ublas::vector<double> arr2(4);
@@ -4524,33 +4718,63 @@ double L7_ACR5R5R6ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
 		arr2(k) = 0.0;
 	
 	arr1(0,0) = m_r[1] + m_r[2];
-    arr1(0,1) = - m_r[3];
-    arr1(1,0) = -m_r[2];
-    arr1(1,1) = + m_r[3] + m_r[4];
-    arr1(2,2) = +m_r[7] + m_r[9];
-    arr1(2,3) = - m_r[8];
-    arr1(3,2) = - m_r[9];
-    arr1(3,3) = m_r[8] + m_r[10];
-    arr2(0) = +m_r[0];
-    arr2(1) = 0.0*(m_r[5]);
-    arr2(2) = +m_r[6];
-    arr2(3) = 0.0*(m_r[11]);
+	arr1(0,1) = - m_r[3];
+	arr1(1,0) = -m_r[2];
+	arr1(1,1) = + m_r[3] + m_r[4];
+	arr1(2,2) = +m_r[7] + m_r[9];
+	arr1(2,3) = - m_r[8];
+	arr1(3,2) = - m_r[9];
+	arr1(3,3) = m_r[8] + m_r[10];
+	arr2(0) = +m_r[0];
+	arr2(1) = 0.0*(m_r[5]);
+	arr2(2) = +m_r[6];
+	arr2(3) = 0.0*(m_r[11]);
 	
 	permutation_matrix<size_t> pm(arr1.size1());
 	lu_factorize(arr1, pm);
 	lu_substitute(arr1, pm, arr2);
 	
-	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(3))*site_count;
+	double rate = (m_r[4] * arr2(1) + m_r[10] * arr2(3))*site_count;
 	
-	//Old. Do not use!!!
-	/*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]);
-    double r_f; // radical fraction 
-    if(r_denom>0) {
-        r_f = (m_r[0]+m_r[2])/r_denom; 
-        r_f = r_f/(r_f+1.0);
-    }
-    else r_f=0;
-    return m_rate = 2*m_r[5]*r_f* site_count; // Rate Equation*/
+	if (T>=2200) {
+		matrix<double> arr1_carbene(7, 7);
+		boost::numeric::ublas::vector<double> arr2_carbene(7);
+		for (unsigned k = 0; k < arr1_carbene.size1(); ++k)
+			for (unsigned l = 0; l < arr1_carbene.size2(); ++l)
+				arr1_carbene(k, l) = 0.0;
+		for (unsigned k = 0; k < arr2_carbene.size(); ++k)
+			arr2_carbene(k) = 0.0;
+		
+		arr1_carbene(0,0) = m_r[13] + m_r[14];
+		arr1_carbene(0,1) = -m_r[15];
+		arr1_carbene(1,0) = -m_r[14];
+		arr1_carbene(1,1) = m_r[15] + m_r[16];
+		arr1_carbene(1,2) = -m_r[17];
+		arr1_carbene(2,1) = -m_r[16];
+		arr1_carbene(2,2) = m_r[17] + m_r[18];
+		arr1_carbene(2,3) = -m_r[19];
+		arr1_carbene(3,2) = -m_r[18];
+		arr1_carbene(3,3) = m_r[19] + m_r[20];
+		arr1_carbene(4,4) = m_r[23] + m_r[24];
+		arr1_carbene(4,5) = -m_r[25];
+		arr1_carbene(5,4) = -m_r[24];
+		arr1_carbene(5,5) = m_r[25] + m_r[26];
+		arr1_carbene(5,6) = -m_r[27];
+		arr1_carbene(6,5) = -m_r[26];
+		arr1_carbene(6,6) = m_r[27] + m_r[28];
+		arr2_carbene(0) = +m_r[12];
+		arr2_carbene(3) = 0.0*(m_r[21]);
+		arr2_carbene(4) = +m_r[22];
+		arr2_carbene(6) = 0.0*(m_r[29]);
+		
+		permutation_matrix<size_t> pm_carbene(arr1_carbene.size1());
+		lu_factorize(arr1_carbene, pm_carbene);
+		lu_substitute(arr1_carbene, pm_carbene, arr2_carbene);
+		
+		rate += (m_r[20] * arr2_carbene(3) + m_r[28] * arr2_carbene(6)) * site_count;
+	}
+		
+	return m_rate = rate;
 }
 
 // ************************************************************

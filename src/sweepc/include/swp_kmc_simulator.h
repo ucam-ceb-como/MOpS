@@ -101,6 +101,8 @@ namespace Sweep{
 			void setCSVpahlist_afterName(const std::string &filename);
             //! Set output CSV file name to keep track of rates for one run
             void setCSVratesName(const std::string& filename);
+			//! Set output CSV file name to keep track of jump process rates assuming 1 of each site
+			void setCSVtestratesName(const std::string &filename);
             //! Writes data for timeCount.csv
             void writeTimerCSV(const int& loop, const double& elapsedTime);
             //! Writes data for reaction_count.csv
@@ -111,6 +113,8 @@ namespace Sweep{
             void writeCHSiteCountCSV_after();
             //! Writes data for rates count (csv)
             void writeRatesCSV(double& time, rvector& v_rates);
+			//! Writes unitary rates data (csv)
+            void writeTestRatesCSV(double& time, rvector& v_rates);
             //! Initialise CSV_IOs
             void initCSVIO();
             //! Initialise reaction count
@@ -176,6 +180,8 @@ namespace Sweep{
              std::string m_pahlist_after_name;								  
             //! CSV rates counts filename (for one run)
              std::string m_rates_name;
+			 //! CSV rates filename (for one site each)
+             std::string m_testrates_name;
             //! CSV io object for timer
              CSV_IO m_timer_csv;
             //! CSV io object for reaction count
@@ -186,6 +192,8 @@ namespace Sweep{
              CSV_IO m_pah_after_csv;						
             //! CSV io object for rates counts (for one run)
              CSV_IO m_rates_csv;
+			 //! CSV io object for rates counts (for one run)
+             CSV_IO m_testrates_csv;
             //! CSV io object for time step
              CSV_IO m_timestep_csv;
         private:

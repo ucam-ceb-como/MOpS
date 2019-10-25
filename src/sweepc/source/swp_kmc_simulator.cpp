@@ -73,6 +73,7 @@ std::string default_rxncount_csv = "KMC_Model/PAH_reaction_count.csv";
 std::string default_pahlist_csv = "KMC_Model/PAH_CH_site_list.csv";
 std::string default_pahlist_after_csv = "KMC_Model/PAH_CH_site_list_after.csv";
 std::string default_rates_csv = "KMC_Model/PAH_jump_process_rates.csv";
+std::string default_testrates_csv = "KMC_Model/PAH_jump_process_testrates.csv";
 
 // Vector of all site types
 static std::vector<kmcSiteType> allSiteType = vectSiteType();
@@ -157,7 +158,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 	double t_max = m_t + dt;
     targetPAH(*pah);
 	if (m_rxn_count.size() == 0) {
-		initCSVIO();
+		//initCSVIO();
 		initReactionCount();
 		readTrackedPAH();
 		init_flag = 1;
@@ -372,22 +373,21 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 void KMCSimulator::TestRates(const double tstart, const double tstop, const int intervals) {
     // set name of output file
     //setCSVratesName(filename);
-    std::cout << "Saving Rates...\n";
-    m_rates_csv.Open(m_rates_name, true);
+    //std::cout << "Saving Rates...\n";
     rvector rates(m_kmcmech.JPList().size(), 0);
     double dt = (tstop-tstart)/intervals;
     m_simPAHp.m_rates_save = true;
     // for each interval
-    for(double t=tstart; t<= tstop; t+=dt) {
+    for(double t=tstart+dt; t<= tstop; t+=dt) {
         // interpolate & calculate rates
         m_gas->Interpolate(t);
         m_kmcmech.calculateRates(*m_gas, m_simPAHp, t);
         rates = m_kmcmech.Rates();
-        writeRatesCSV(t, rates);
+        writeTestRatesCSV(t, rates);
     }
     m_simPAHp.m_rates_save = false;
-    std::cout<<"Finished calculating rates for kMC mechanism. Results are saved in "
-        <<m_rates_name<<"\n\n";
+    //std::cout<<"Finished calculating rates for kMC mechanism. Results are saved in "
+    //    <<m_testrates_name<<"\n\n";
 }
 
 //! Obtains rates of PAH reactions with the current structure
@@ -483,9 +483,13 @@ void KMCSimulator::setCSVpahlist_afterName(const std::string &filename) {
 void KMCSimulator::setCSVtimestep(const std::string &filename) {
     m_timestep_name = filename;
 }
-//! Set output CSV file name to keep track of CH and site counts
+//! Set output CSV file name to keep track of jump process rates
 void KMCSimulator::setCSVratesName(const std::string &filename) {
     m_rates_name = filename;
+}
+//! Set output CSV file name to keep track of jump process rates assuming 1 of each site
+void KMCSimulator::setCSVtestratesName(const std::string &filename) {
+    m_testrates_name = filename;
 }
 //! Writes data for timeCount.csv
 void KMCSimulator::writeTimerCSV(const int& loop, const double& elapsedTime) {
@@ -502,6 +506,7 @@ void KMCSimulator::writetimestep(const std::vector<double>& timestep){
 void KMCSimulator::writeRxnCountCSV() {
     // change int vector to float
     std::vector<std::string> temp;
+	
     for(size_t i=0; i<m_rxn_count.size(); i++)
         temp.push_back(Strings::cstr(m_rxn_count[i]));
     m_rxn_csv.Write(temp);
@@ -538,6 +543,8 @@ void KMCSimulator::writeCHSiteCountCSV_after() {
 void KMCSimulator::writeRatesCSV(double& time, rvector& v_rates) {
 	std::vector<std::string> temp;
 	temp.push_back(Strings::cstr(time));
+	std::string temperature = Strings::cstr(((*m_gas)[m_gas->T]));
+	temp.push_back(temperature);
 	for (size_t i = 0; i<v_rates.size(); i++)
 		temp.push_back(Strings::cstr(v_rates[i]));
 	m_rates_csv.Write(temp);
@@ -555,6 +562,17 @@ void KMCSimulator::writeRatesCSV(double& time, rvector& v_rates) {
     m_rates_csv.Write(temp);
     //}*/
 }
+//! Writes data for rates count (csv)
+void KMCSimulator::writeTestRatesCSV(double& time, rvector& v_rates) {
+	std::vector<std::string> temp;
+	temp.push_back(Strings::cstr(time));
+	std::string temperature = Strings::cstr(((*m_gas)[m_gas->T]));
+	temp.push_back(temperature);
+	for (size_t i = 0; i<v_rates.size(); i++)
+		temp.push_back(Strings::cstr(v_rates[i]));
+	m_testrates_csv.Write(temp);
+}
+
 //! Initialise CSV_IOs
 void KMCSimulator::initCSVIO() {
     // Check if CSV file names specified, if not put them as default
@@ -578,6 +596,10 @@ void KMCSimulator::initCSVIO() {
 		cout << "WARNING: Output CSV name for PAH rates is not specified. Defaulting to " << default_rates_csv << "\n";
 		m_rates_name = default_rates_csv;
 	}
+	if (m_testrates_name.length() == 0) {
+		cout << "WARNING: Output CSV name for PAH rates is not specified. Defaulting to " << default_testrates_csv << "\n";
+		m_testrates_name = default_testrates_csv;
+	}
 
     // Open csv file
     m_timer_csv.Open(m_timer_name, true);
@@ -585,6 +607,7 @@ void KMCSimulator::initCSVIO() {
     m_pah_csv.Open(m_pahlist_name, true);
 	m_pah_after_csv.Open(m_pahlist_after_name, true);											  
     m_rates_csv.Open(m_rates_name, true);
+	m_testrates_csv.Open(m_testrates_name, true);
     m_timestep_csv.Open(m_timestep_name, true);//##
     // Write column headings for CSV files
     writeCSVlabels();
@@ -774,11 +797,15 @@ void KMCSimulator::writeCSVlabels() {
     m_timer_csv.Write(timer_headings);
     // Write headings for reaction count
     std::vector<string> rxn_headings;
+	rxn_headings.push_back("Time");
+	rxn_headings.push_back("Temperature");
+	std::vector<string> rxn_count_headings;
     for(size_t i=0; i<m_kmcmech.JPList().size(); i++) {
         // gets name of each jump process and puts them in a row
         rxn_headings.push_back(m_kmcmech.JPList()[i]->getName());
+		rxn_count_headings.push_back(m_kmcmech.JPList()[i]->getName());
     }
-    m_rxn_csv.Write(rxn_headings);
+    m_rxn_csv.Write(rxn_count_headings);
     // Write headings for CH and site list
     std::vector<string> pah_headings;
     // write headings for N_C and N_H
@@ -801,8 +828,10 @@ void KMCSimulator::writeCSVlabels() {
         ID_name << (i+1);
         rates_header.push_back(ID_name.str());
     }*/
-	m_rates_csv.Write(rates_header);
+	//m_rates_csv.Write(rates_header);
 	m_rates_csv.Write(rxn_headings);
+	//m_testrates_csv.Write(rates_header);
+	m_testrates_csv.Write(rxn_headings);
 }
 //! Save the structure DOT file after every X loops
 void KMCSimulator::saveDOTperXLoops(int X, int &loopcount, int& runcount) {

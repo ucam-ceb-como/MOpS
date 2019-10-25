@@ -2907,6 +2907,9 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
 	case ParticleModel::A4CH3:
         m_control=Sweep::KMC_ARS::METHYLPYRENE_C;
         break;
+	case ParticleModel::R5A3:
+        m_control=Sweep::KMC_ARS::MPHENANTHRENER_C;
+        break;
     case ParticleModel::A5:
         m_control=Sweep::KMC_ARS::BENZOPYRENE_C;
         break;
@@ -3013,6 +3016,11 @@ int PAHPrimary::InceptedPAH() const
             break;
 		case ParticleModel::A4CH3:
             if (NumCarbon() == METHYLPYRENE_C && NumHydrogen() == METHYLPYRENE_H)
+                return 1;
+            else return 0;
+            break;
+		case ParticleModel::R5A3:
+            if (NumCarbon() == MPHENANTHRENER_C && NumHydrogen() == MPHENANTHRENER_H)
                 return 1;
             else return 0;
             break;

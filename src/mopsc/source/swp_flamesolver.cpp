@@ -352,7 +352,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
     }
 }
 
-
+bool init_flag_0 = false;
 // SOLUTION AND POST-PROCESSING.
 
 // Performs stochastic stepping algorithm up to specified stop time using
@@ -410,7 +410,14 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     //! therefore, the sample volume adjustment has to be performed here.
 		 r.Mixture()->AdjustSampleVolume(old_dens / r.Mixture()->GasPhase().MassDensity() );
 	}
-
+	
+	//Save deferred jump process unitary rates. Comment if necessary. gl413
+	if (!init_flag_0) {
+		r.Mixture()->Particles().Simulator()->initCSVIO();
+		init_flag_0 = true;
+	}
+	r.Mixture()->Particles().Simulator()->TestRates(t,tstop,1);
+	
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
@@ -482,6 +489,10 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 				case ParticleModel::A4CH3:
                     index=r.Mech()->GasMech().FindSpecies("A4CH3");
                     numCarbons = 17;
+                    break;
+				case ParticleModel::R5A3: //This is the species Methylene Phenanthrene radical C15H9
+                    index=r.Mech()->GasMech().FindSpecies("R5A3");
+                    numCarbons = 15;
                     break;
                 case ParticleModel::A5:
                     index=r.Mech()->GasMech().FindSpecies("A5");

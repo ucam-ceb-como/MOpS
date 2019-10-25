@@ -259,7 +259,7 @@ public:
 
     //! Gas-phase trasfer species.
     enum PostProcessStartingStr {
-        A1, A1CH3, A2, A4, A4CH3, A5
+        A1, A1CH3, A2, A4, A4CH3, R5A3, A5
     };
 
     //! Postprocess based on the inception species concentration (XA4) or based
