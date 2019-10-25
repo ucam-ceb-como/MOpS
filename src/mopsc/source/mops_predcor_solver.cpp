@@ -52,7 +52,6 @@
 
 //#define CHECK_PTR
 
-
 using namespace Mops;
 using namespace std;
 using namespace Strings;
@@ -150,7 +149,7 @@ void PredCorSolver::Reset(Reactor &r)
     {
         r.Mixture()->setConstV(true);
     }
-	
+
     // Clone the reactor.
     delete m_reac_copy;
     m_reac_copy = r.Clone();

@@ -356,16 +356,16 @@ void readInitialPopulation(
 	// Initialise and store hybrid particle-number info for the cell
 	if (particle_numbers.size() > 0)
 	{
-		mix.Particles().SetHybridThreshold(particle_numbers.size());
-		mix.Particles().InitialiseParticleNumberModel();
-	    mix.Particles().InitialiseDiameters(mix.ParticleModel()->Components()[0]->MolWt(),
-	    mix.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
-	    for (unsigned int i = 0; i < mix.Particles().GetHybridThreshold(); ++i)
-	    {
-		mix.Particles().UpdateTotalsWithIndex(i, particle_numbers[i]);
-		mix.Particles().UpdateNumberAtIndex(i, particle_numbers[i]);
-		mix.Particles().UpdateTotalParticleNumber(particle_numbers[i]);
-	    }
+            mix.Particles().SetHybridThreshold(particle_numbers.size());
+            mix.Particles().InitialiseParticleNumberModel();
+            mix.Particles().InitialiseDiameters(mix.ParticleModel()->Components()[0]->MolWt(),
+            mix.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
+            for (unsigned int i = 0; i < mix.Particles().GetHybridThreshold(); ++i)
+            {
+                mix.Particles().UpdateTotalsWithIndex(i, particle_numbers[i]);
+                mix.Particles().UpdateNumberAtIndex(i, particle_numbers[i]);
+                mix.Particles().UpdateTotalParticleNumber(particle_numbers[i]);
+            }
 	}
     }
 
@@ -488,9 +488,9 @@ Mops::Mixture* readMixture(
     }
 
     // Now load some particles
-	mix->Particles().SetHybridThreshold(mech.ParticleMech().GetHybridThreshold());
-	mix->Particles().Initialise(pcount);
-	mix->Particles().InitialiseParticleNumberModel();
+    mix->Particles().SetHybridThreshold(mech.ParticleMech().GetHybridThreshold());
+    mix->Particles().Initialise(pcount);
+    mix->Particles().InitialiseParticleNumberModel();
     mix->Reset(maxm0);
     subnode = NULL; subnode = node.GetFirstChild("population");
     if (subnode != NULL) {
@@ -737,18 +737,18 @@ Reactor *const readReactor(const CamXML::Element &node,
         // energy equation.
         reac->SetEnergyEquation(Reactor::Adiabatic);
     }
-	// Now check if particle terms should be included in the EB.
-	// This is only relevant with adiabatic energy equation.
-	if (reac->EnergyEquation() == Reactor::Adiabatic)
-	{
-		attr = node.GetAttribute("includeParticleTerms");
-		if (attr != NULL) {
-			str = attr->GetValue();
-			if (str.compare("true") == 0) {
-				reac->SetIncludeParticles();
-			}
-		}
-	}
+    // Now check if particle terms should be included in the EB.
+    // This is only relevant with adiabatic energy equation.
+    if (reac->EnergyEquation() == Reactor::Adiabatic)
+    {
+        attr = node.GetAttribute("includeParticleTerms");
+        if (attr != NULL) {
+            str = attr->GetValue();
+            if (str.compare("true") == 0) {
+                reac->SetIncludeParticles();
+            }
+        }
+    }
     // Now check for constant volume.
     attr = node.GetAttribute("constv");
     if (attr != NULL) {
@@ -874,13 +874,13 @@ Reactor *const readReactor(const CamXML::Element &node,
         }
     }
 
-	// Check if particle terms are to be included in the energy balance
-	if (reac->IncludeParticles()) {
-		reac->Mixture()->SetIsAdiabaticFlag(true);
-	}
-	else {
-		reac->Mixture()->SetIsAdiabaticFlag(false);
-	}
+    // Check if particle terms are to be included in the energy balance
+    if (reac->IncludeParticles()) {
+        reac->Mixture()->SetIsAdiabaticFlag(true);
+    }
+    else {
+        reac->Mixture()->SetIsAdiabaticFlag(false);
+    }
 
     return reac;
 }
@@ -1000,15 +1000,14 @@ void readNetwork(
                 }
 
                 flows.push_back(fn);
-			}
-
-			// Check if particle terms are to be included in the energy balance
-			if (reac->IncludeParticles()) {
-				reac->Mixture()->SetIsAdiabaticFlag(true);
-			}
-			else {
-				reac->Mixture()->SetIsAdiabaticFlag(false);
-			}
+            }
+            // Check if particle terms are to be included in the energy balance
+            if (reac->IncludeParticles()) {
+                reac->Mixture()->SetIsAdiabaticFlag(true);
+            }
+            else {
+                reac->Mixture()->SetIsAdiabaticFlag(false);
+            }
         }
         // Now that the reactors have been loaded, make node connections.
         for (std::vector<flowNode>::iterator it=flows.begin(); it!=flows.end(); ++it) {

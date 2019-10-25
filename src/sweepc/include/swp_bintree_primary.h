@@ -217,7 +217,7 @@ public:
 
 	//! Return primary particle details and connectivity
 	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
-	
+
 protected:
     //! Empty primary not meaningful
     BinTreePrimary();

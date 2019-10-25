@@ -151,12 +151,12 @@ public:
         unsigned int start=0             // Optional vector start index.
         ) const;
 
-	// Initialise a list of particle-number particles using the given mechanism
-	void InitialisePNParticles(
-		double t,                  // Current solution time.
-		Cell &sys,                 // System to update.
-		const Mechanism &mech      // Mechanism to use.
-		) const;
+    // Initialise a list of particle-number particles using the given mechanism
+    void InitialisePNParticles(
+        double t,                  // Current solution time.
+        Cell &sys,                 // System to update.
+        const Mechanism &mech      // Mechanism to use.
+        ) const;
 
 	// RATE CALCULATION.
 
@@ -314,7 +314,6 @@ public:
 	
     // Particle-number/particle hybrid model parameters
     // ================================================
-
     // Set/get flags for hybrid model behaviour
     void SetHybrid(bool hybrid_flag) const { m_hybrid = hybrid_flag; }
     bool IsHybrid() const { return m_hybrid; }
@@ -324,7 +323,6 @@ public:
     // Set/get hybrid threshold
     void SetHybridThreshold(unsigned int threshold) const { m_hybrid_threshold = threshold; }
     unsigned int GetHybridThreshold() const { return m_hybrid_threshold; }
-        
     // ================================================
 
 	//! return a vector contain the information of particular primary particle with X molecules
@@ -362,11 +360,9 @@ private:
 
     // Particle-number/particle hybrid model parameters
     // ================================================ 
-    
     mutable bool m_hybrid;                    // Identify hybrid particle model
     mutable bool m_coagulate_in_list;         // Do coagulation below threshold size in the particle
     mutable unsigned int m_hybrid_threshold;  // Hybrid threshold value-number list
-
     // ================================================
 
     // Clears the mechanism from memory.

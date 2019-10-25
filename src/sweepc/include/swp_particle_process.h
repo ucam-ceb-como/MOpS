@@ -135,7 +135,7 @@ public:
     virtual double Rate(
 	double dt,          // Time.
 	const Cell &sys     // System for which to calculate rate.
-    ) const;
+        ) const;
 
     static double CalcRates(
         double t, // Time.
@@ -184,7 +184,6 @@ public:
 
 	// Surface growth updates for the hybrid particle model (particle-number updates)
 	// ==============================================================================
-
 	// Just do gas-phase adjustment for surface growth
 	virtual int Perform(
 		double t,                        // Current time (s).
@@ -203,7 +202,6 @@ public:
 		unsigned int n,                  // Number of times to perform the process.
 		bool isParticleNumberUpdate      // Differentiate this call as a particle-number update
 		) const;
-
 	// ==============================================================================
 
     // READ/WRITE/COPY.

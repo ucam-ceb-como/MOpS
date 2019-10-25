@@ -179,9 +179,9 @@ public:
     // Adds the given particle to the ensemble.  Returns the new
     // particle's index in the ensemble.  The ensemble then takes
     // control of destruction of the particle.
-	// For particle-number/particle (hybrid) model: the final two inputs 
-	// flag events in which we cannot delete the particle with index i2 
-	// if a contraction is triggered
+    // For particle-number/particle (hybrid) model: the final two inputs 
+    // flag events in which we cannot delete the particle with index i2 
+    // if a contraction is triggered
     int Add(Particle &sp, rng_type &rng, int i2 = 0, bool hybrid_event_flag = false);
 
 	//Find a particle that is a single PAH of a given structure
@@ -358,7 +358,7 @@ private:
     PartPtrVector m_particles;
     Sweep::KMC_ARS::KMCSimulator *m_kmcsimulator;
 
-    // ENSEMBLE CAPACITY VARIABLES.
+// ENSEMBLE CAPACITY VARIABLES.
     unsigned int m_levels;   // Number of levels in the binary tree.
     unsigned int m_capacity; // The ensemble capacity (max. particle count).
     unsigned int m_halfcap;  // Half the ensemble capacity.

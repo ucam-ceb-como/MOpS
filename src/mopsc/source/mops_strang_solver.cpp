@@ -46,11 +46,6 @@
 #include "csv_io.h"
 #include <stdexcept>
 
-////////////////// aab64 - Debugging purposes only //////////////////
-#include <iostream>
-#include <fstream>
-#include <string>
-/////////////////////////////////////////////////////////////////////
 using namespace Mops;
 using namespace std;
 using namespace Strings;
@@ -119,13 +114,11 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
     // Solve one whole step of population balance (Sweep).
     r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-	
     Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
     m_swp_ctime += calcDeltaCT(m_cpu_mark);
 
-    for (int i = 1; i<nsteps; ++i) {
-
+    for (int i=1; i<nsteps; ++i) {
         m_cpu_mark = clock();
         // Solve whole step of gas-phase chemistry.
         rho = r.Mixture()->GasPhase().MassDensity();
@@ -134,10 +127,10 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
         r.SetTime(t2);
         m_chemtime += calcDeltaCT(m_cpu_mark);
         m_cpu_mark = clock();
-        
+
         // Update heat capacity and particle density for the step
         storeTemperatureProperties(r, rng);
-        
+
         // Solve whole step of population balance (Sweep).
         r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
         Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
@@ -149,15 +142,13 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     rho = r.Mixture()->GasPhase().MassDensity();
     m_ode.ResetSolver();
     m_ode.Solve(r, t2+=h);
-    
     r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-
     r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
-    
+
     // Calculate total computation time.
     m_tottime += calcDeltaCT(totmark);
-    
+
     // Call the output function.
     if (out) out(nsteps, niter, r, *this, data);
 }

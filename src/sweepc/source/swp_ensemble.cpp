@@ -1545,8 +1545,8 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
             out.write((char*)&trueval, sizeof(trueval));
         } else {
             out.write((char*)&falseval, sizeof(falseval));
-        }
-		
+        }	
+
         // For hybrid particle-number/particle model
         n = m_hybrid_threshold;
         out.write((char*)&n, sizeof(n));
@@ -1568,7 +1568,6 @@ void Sweep::Ensemble::Serialize(std::ostream &out) const
                 out.write((char*)&(*i), sizeof(*i));
             }
         }
-		
 
     } else {
         throw std::invalid_argument("Output stream not ready "
@@ -1667,8 +1666,8 @@ void Sweep::Ensemble::Deserialize(std::istream &in, const Sweep::ParticleModel &
                 // Fill the data vector.
                 if (m_hybrid_threshold > 0)
                 {
-					in.read(reinterpret_cast<char*>(&n), sizeof(n));
-					m_total_number = n;
+                    in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                    m_total_number = n;
 
                     double val;
                     unsigned int num;

@@ -112,7 +112,6 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_fixed_chem = rhs.m_fixed_chem;
         m_inflow     = rhs.m_inflow;
         m_outflow    = rhs.m_outflow;
-
         m_adiabatic_flag = rhs.m_adiabatic_flag;          // flag for adiabatic operation
         m_bulk_heat_capacity = rhs.m_bulk_heat_capacity;  // temperature update variables
 	m_particle_heat_capacity = rhs.m_particle_heat_capacity;
@@ -287,6 +286,7 @@ void Cell::Reset(const double m0)
         m_smpvol = 1.0;
     }
     assert(isValid());
+
 }
 
 
