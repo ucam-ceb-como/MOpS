@@ -75,15 +75,6 @@ int main(int argc, char* argv[])
     bool fwdotA4(false);    //!< Should postprocess based on the molar rate of
                             //!< production by chemical reaction of the
                             //!< inception species?
-
-
-
-	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	bool fdiags(false);     // Should diagnostics from the split steps be output?
-	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-
-
     try {
 
         // Generic options for the program
@@ -134,9 +125,8 @@ int main(int argc, char* argv[])
         ("ppah", "write full PAHPP data")
 		("ppri", "write full primary particle data")
         ("jumps", "write stochastic jumps data")
-        ("wdotA4", "postprocess based on the molar rate of production by chemical reaction of the inception species") 
-	    ("diags", "write split diagnostics data") //aab64
-		;
+        ("wdotA4", "postprocess based on the molar rate of production by chemical reaction of the inception species")
+        ;
 
         // Combine sets of program options
         po::options_description cmdline_options;
@@ -204,10 +194,6 @@ int main(int argc, char* argv[])
         if (vm.count("jumps")) fjumps = true;
         if (vm.count("ensemble")) fensembles = true;
         if (vm.count("wdotA4")) fwdotA4 = true;
-	    if (vm.count("diags")) fdiags = true; // aab64
-
-
-        
     }
 
     // Display any error messages from incorrect command-line flags
@@ -246,14 +232,6 @@ int main(int argc, char* argv[])
     sim.SetWritePAH(fpah);
 	sim.SetWritePP(fpp);
 
-
-	
-	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	sim.SetWriteDiagsFile(fdiags);
-	//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-
-	
     // Create the solver
     solver = Mops::SolverFactory::Create(soltype);
 

@@ -78,9 +78,6 @@ Simulator::Simulator(void)
   m_console_interval(1), m_console_msgs(true),
   m_output_filename("mops-out"), m_output_every_iter(false),
   m_output_step(0), m_output_iter(0), m_write_jumps(false),
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-  m_write_diags(false), 
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
   m_write_ensemble_file(false),
   m_write_PAH(false), m_write_PP(false), m_mass_spectra(true), m_mass_spectra_ensemble(true),
   m_mass_spectra_xmer(1), m_mass_spectra_frag(false), 
@@ -116,9 +113,6 @@ Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
         m_output_step = rhs.m_output_step;
         m_output_iter = rhs.m_output_iter;
         m_write_jumps = rhs.m_write_jumps;
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-	m_write_diags = rhs.m_write_diags;
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
         m_write_ensemble_file = rhs.m_write_ensemble_file;
         m_write_PAH = rhs.m_write_PAH;
 		m_write_PP = rhs.m_write_PP;
@@ -266,17 +260,6 @@ void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
-
-
-
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-//! Set simulator to write the diagnosticss CSV file.
-void Simulator::SetWriteDiagsFile(bool writediags) {m_write_diags = writediags;}
-//! Get diags status
-bool Simulator::GetWriteDiagsStatus() { return m_write_diags;};
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-
 
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteEnsembleFile(bool writeensemble) {m_write_ensemble_file=writeensemble;}
@@ -439,63 +422,11 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         // Initialise some LOI stuff
         if (s.GetLOIStatus() == true) setupLOI(r, s);
 
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-        if (m_write_diags) {
-            /* Create partProc diagnostics csv file with pre/post split SV, #SPs, #events in split
-            step including additions in LPDA, create gasConcFile with pre/post split concs 
-            Note that this is defintely not an elegant implentation and is only really intended 
-            to verify expected process behaviour in the TiO2 case */
-            ofstream partProcFile, gasConcFile;
-            unsigned int process_iter;
-            std::vector<std::string> tmpPNames;
-            std::string rname(r.GetName());
-            std::string partfname, chemfname;
-            partfname = "Part-split-diagnostics(" + rname + ").csv";
-            chemfname = "Chem-split-diagnostics(" + rname + ").csv";
-
-            r.Mech()->ParticleMech().GetProcessNames(tmpPNames, 0);
-
-            // Add headers to partProc diagnostics file
-            partProcFile.open(partfname.c_str());
-            partProcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , "
-                << "SV in (-)" << " , " << "SV out (-)" << " , "
-                << "SP in (-)" << " , " << "SP out (-)" << " , "
-                << "Total statistical weight pre-split (-)" << " , " << "Total statistical weight post-split (-)" << " , "
-                << "Average collision diameter pre-split (-)" << " , " << "Average collision diameter post-split (-)" << " , "
-                << "Incepting weight pre-split (-)" << " , " << "Incepting weight post-split (-)" << " , "
-                << "PN count pre-split (-)" << " , " << "PN count post-split (-)" << " , ";
-            for (process_iter = 0; process_iter < tmpPNames.size() - 1; process_iter++) {
-				partProcFile << tmpPNames[process_iter] << " , ";
-            }
-            partProcFile << "TransitionRegimeCoagulationTerms (kernel specific)";
-            for (process_iter = tmpPNames.size(); process_iter < r.Mech()->ParticleMech().GetTermCount()+1; process_iter++) {
-                partProcFile << " , ";
-            }
-            partProcFile << "FictitiousCoagulationTerms (kernel specific)";
-            for (process_iter = tmpPNames.size(); process_iter < r.Mech()->ParticleMech().GetTermCount() + 1; process_iter++) {
-                partProcFile << " , ";
-            }
-            partProcFile << "Inflow events" << " , " << "Outflow events" << "\n";
-            partProcFile.close();
-
-            // Add headers to gasConc diagnostics file
-            gasConcFile.open(chemfname.c_str());
-            gasConcFile << "Time (s)" << " , " << "Time out (s)" << " , " << "Step number (-)" << " , ";
-            for (process_iter = 0; process_iter < r.Mech()->GasMech().Species().size() - 1; process_iter++) {
-                gasConcFile << r.Mech()->GasMech().Species(process_iter)->Name() << " pre-split (mol/m3)" << " , "
-                << r.Mech()->GasMech().Species(process_iter)->Name() << " post-split (mol/m3)" << " , ";
-            }
-            gasConcFile << "TiO2 pre-split (mol/m3)" << " , " << "TiO2 post-split (mol/m3)" << " , "
-                << "Temperature pre-split (K)" << " , " << "Temperature post-split (K)" << "\n";
-            gasConcFile.close();
+        // Initialise the register of particle-number particles
+        if (r.Mech()->ParticleMech().IsHybrid())
+        {
+            r.Mech()->ParticleMech().InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
         }
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-		// Initialise the register of particle-number particles
-		if (r.Mech()->ParticleMech().IsHybrid())
-		{
-			r.Mech()->ParticleMech().InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
-		}
 
         // Loop over the time intervals.
         unsigned int global_step = 0;
@@ -512,17 +443,8 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             for (istep=0; istep<iint->StepCount(); ++istep, ++global_step) {
                 // Run the solver for this step (timed).
                 m_cpu_mark = clock();
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-/* If the solve function with diagnostics capacity replaces the original solve function, this 
-   if statement is no longer necessary */
-        if (m_write_diags) {
-                s.Solve(r, t2 += dt, iint->SplittingStepCount(), m_niter,
-                        rng, &fileOutput, (void*)this, m_write_diags);
-        } else {
                 s.Solve(r, t2+=dt, iint->SplittingStepCount(), m_niter,
                         rng, &fileOutput, (void*)this);
-        }
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
 
                 //Set up and solve Jacobian here
                 if (s.GetLOIStatus() == true)
@@ -939,11 +861,11 @@ void Simulator::postProcessSimulation(
         postProcessXmer(mech, times);
 
     // Now post-process the PSLs.
-	postProcessPSLs(mech, times);
+    postProcessPSLs(mech, times);
 
-	// Now post-process the PSLs.
-	if (mech.ParticleMech().GetHybridThreshold() > 0)
-		postProcessParticleNumberPSLs(mech, times);
+    // Now post-process the PSLs.
+    if (mech.ParticleMech().GetHybridThreshold() > 0)
+        postProcessParticleNumberPSLs(mech, times);
 
     //! Post-process the ensemble.
     if (m_write_PAH && pmech.WriteBinaryTrees()) {
@@ -1779,7 +1701,7 @@ void Simulator::buildOutputVector(unsigned int step, double time,
         } else {
             avg.insert(avg.begin()+i, 0.0);
         }
-	}
+    }
     avg.insert(avg.begin(), time);
     avg.insert(avg.begin(), step);
 }

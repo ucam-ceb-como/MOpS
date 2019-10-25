@@ -104,7 +104,6 @@ namespace Settings_IO
     Sweep::PartPtrList ReadInitialParticles(const CamXML::Element &node,
                                             const Sweep::Mechanism & particle_mech);
 
-    // aab64
     //! Read initial particles from a file into a list
     //! This function is used to create detailed particles by sampling from a distribution
     Sweep::PartPtrList ReadInitialParticlesDetailed(const CamXML::Element &node,

@@ -85,26 +85,6 @@ public:
             void *data    // Custom data object which will be passed as argument to out().
         );
 
-
-	
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-    // Solves the coupled reactor using a Strang splitting algorithm
-    // up to the stop time.  calls the output routine once at the
-    // end of the function.  niter is ignored.
-    virtual void Solve(
-            Reactor &r,   // The reactor to solve.
-            double tstop,   // The end time for the step.
-            int nsteps,   // Number of internal steps to take.
-            int niter,    // Number of internal iterations to take.
-            Sweep::rng_type &rng,  // Random number generator
-            OutFnPtr out, // Output function pointer.
-            void *data,    // Custom data object which will be passed as argument to out().
-            bool writediags // writes split diagnostics
-    );
-//////////////////////////////////////////// aab64 ////////////////////////////////////////////
-
-
-
 private:
     // SIMULATION.
 
