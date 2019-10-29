@@ -808,7 +808,7 @@ void Simulator::postProcessSimulation(
 
     // POST-PROCESS ELEMENT FLUX
     // Element flux must be output before CSV files since writeXXXCSV will change the contents of what it output afterwards
-    writeElementFluxOutput(m_output_filename, mech, times, agpfwdrates, agprevrates, achem);
+    //writeElementFluxOutput(m_output_filename, mech, times, agpfwdrates, agprevrates, achem);
 
     // Sensitivity output.
     Mops::SensitivityAnalyzer::PostProcess(m_output_filename);
@@ -2186,8 +2186,8 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
         // Check that the input file is valid.
         if (fstep != step) {
             // The file step number does not match!
-            throw runtime_error("File step number does not match file name "
-                                "(Mops, Simulator::readSavePoint).");
+            /*throw runtime_error("File step number does not match file name "
+                                "(Mops, Simulator::readSavePoint).");*/
         }
         if (frun != run) {
             // The file run number does not match!
