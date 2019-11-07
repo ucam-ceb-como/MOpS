@@ -822,8 +822,6 @@ void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
 			idrho += dc;
 		}
 
-		double dc = rate * (double)(*i)->ParticleComp()[0] * invVolNA;
-		crates[28] += dc;
 	}
 
 	// Loop over the contributions of all other processes (except coagulation and transport).
@@ -848,9 +846,6 @@ void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
 			crates[j->first] += dc;
 			idrho += dc;
 		}
-
-		double dc = rate * (double)(*i)->CompChange()[0] * invVolNA;
-		crates[28] += dc;
 	}
 
 	// Now convert to changes in mole fractions.
@@ -859,7 +854,6 @@ void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
 		// Quotient rule for dXk/dt = d(Ck/CT)/dt
 		xrates[k] = (invrho * crates[k]) - (invrho * invrho * sys.GasPhase().SpeciesConcentration(k) * idrho);
 	}
-	xrates[28] = 0.0; // Specific to titania!
 }
 
 
@@ -1179,123 +1173,11 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
     }
 }
 
-// LINEAR PROCESS DEFERMENT ALGORITHM #2
-// aab64 Moment method for incepting sized particles
-/*!
-* Performs linear process updates on all particles in a system.
-*
-*@param[in,out]    sys         System containing particles to update
-*@param[in]        t           Time upto which particles to be updated
-*@param[in,out]    rng         Random number generator
-*/
-/*void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
-{
-	// Note: this method is faster but can be inaccurate because random choice of
-	// surface growth affects the whole size class in one lump. 
-
-	// Update sections for surface growth
-	double added_total = 0.0, rate_constant = 0.0, rate_index = 0.0;
-	unsigned int n_index = 0, index = 0, num = 0, n_add = 0;
-	unsigned int hybrid_threshold = sys.Particles().GetHybridThreshold();
-	sys.SetNotPSIFlag(false);
-	Particle * sp_add = NULL;
-	Particle * sp_hybrid_threshold = sys.Particles().GetPNParticleAt(hybrid_threshold - 1)->Clone();
-	sp_hybrid_threshold->SetTime(t);
-
-	for (PartProcPtrVector::const_iterator j = m_processes.begin(); j != m_processes.end(); ++j)
-	{
-		if ((*j)->IsDeferred())
-		{
-			rate_constant = PI * ((*j)->Rate(t, sys) * dt);
-		}
-	}
-
-	// New surface update goes here
-	for (unsigned int i = hybrid_threshold - 1; i != 0; --i)
-	{
-		index = i;
-		n_index = sys.Particles().NumberAtIndex(i);
-
-		if (n_index > 0 && rate_constant > 0.0)
-		{
-			rate_index = rate_constant * sys.Particles().Diameter2AtIndex(index);
-			boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate_index);
-
-			if (rate_index > 0) {
-				num = repeatDistrib(rng);
-				index += num;
-			}
-			if (index > i)
-			{
-				added_total += n_index * (index - i);
-				if (index < hybrid_threshold)
-				{
-					sys.Particles().UpdateTotalsWithIndices(i, index);
-					sys.Particles().UpdateNumberAtIndex(index, n_index);
-					sys.Particles().ResetNumberAtIndex(i);
-				}
-				else
-				{
-					sys.Particles().UpdateTotalsWithIndex(i, -1.0 * (double)n_index);
-					sys.Particles().UpdateTotalParticleNumber(-1 * n_index);
-					sys.Particles().ResetNumberAtIndex(i);
-
-					n_add = index - (hybrid_threshold - 1);
-					sp_add = sp_hybrid_threshold->Clone();
-					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-					{
-						if ((*i)->IsDeferred())
-						{
-							(*i)->Perform(t, sys, *sp_add, rng, n_add, true);
-							sp_add->UpdateCache();
-						}
-					}
-					if (!IsWeightedCoag())
-					{
-						for (unsigned int j = 0; j < n_index; j++)
-						{
-							Particle * sp2 = sp_add->Clone();
-							sys.Particles().Add(*sp2, rng);
-						}
-					}
-					else
-					{
-						Particle * sp2 = sp_add->Clone();
-						sp2->setStatisticalWeight((double)n_index);
-						sys.Particles().Add(*sp2, rng);
-					}
-					delete sp_add;
-					sp_add = NULL;
-				}
-				sys.SetNotPSIFlag(true);
-				for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-				{
-					if ((*i)->IsDeferred())
-					{
-						(*i)->Perform(t, sys, rng, added_total);
-					}
-				}
-				sys.SetNotPSIFlag(false);
-				added_total = 0.0;
-			}
-		}
-	}
-	sys.SetNotPSIFlag(true);
-	
-	//for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-	//{
-	//	if ((*i)->IsDeferred())
-	//	{
-	//		(*i)->Perform(t, sys, rng, added_total);
-	//	}
-	//}
-	delete sp_hybrid_threshold;
-	sp_hybrid_threshold = NULL;
-}*/
-
-
-
-// aab64 Moment method for incepting sized particles
+// LINEAR PROCESS DEFERMENT ALGORITHM #2: Hybrid particle-number/particle model
+// Applies surface updates to particles tracked in the particle-number list
+// Note: this method is less optimal than the one commented out below it, but
+// it produces results more similar to the standard particle model because random
+// choices for surface events are applied to only one particle at the index each time.
 /*!
 * Performs linear process updates on all particles in a system.
 *
@@ -1305,9 +1187,6 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 */
 void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
 {
-	// Note: this method is significantly slower but more accurate because random choice of
-	// surface growth affects only one particle in the size class at a time.
-
 	// Update sections for surface growth
 	double rate_constant = 0.0, rate_index = 0.0;
 	unsigned int n_index = 0, index = 0, n_add = 0, num = 0, added_total = 0;
@@ -1396,6 +1275,108 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 	delete sp_hybrid_threshold;
 	sp_hybrid_threshold = NULL;
 }
+
+// Alternative particle-number list update function
+// This function updates all particles at a given index with one 
+// random number choice. This should be more efficient, but is
+// less similar to the standard particle model. 
+/*!
+* Performs linear process updates on all particles in a system.
+*
+*@param[in,out]    sys         System containing particles to update
+*@param[in]        t           Time upto which particles to be updated
+*@param[in,out]    rng         Random number generator
+*/
+/*void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
+{
+	// Update sections for surface growth
+	double added_total = 0.0, rate_constant = 0.0, rate_index = 0.0;
+	unsigned int n_index = 0, index = 0, num = 0, n_add = 0;
+	unsigned int hybrid_threshold = sys.Particles().GetHybridThreshold();
+	Particle * sp_add = NULL;
+	Particle * sp_hybrid_threshold = sys.Particles().GetPNParticleAt(hybrid_threshold - 1)->Clone();
+	sp_hybrid_threshold->SetTime(t);
+
+	for (PartProcPtrVector::const_iterator j = m_processes.begin(); j != m_processes.end(); ++j)
+	{
+		if ((*j)->IsDeferred())
+		{
+			rate_constant = PI * ((*j)->Rate(t, sys) * dt);
+		}
+	}
+	for (unsigned int i = hybrid_threshold - 1; i != 0; --i)
+	{
+		index = i;
+		n_index = sys.Particles().NumberAtIndex(i);
+
+		if (n_index > 0 && rate_constant > 0.0)
+		{
+			rate_index = rate_constant * sys.Particles().Diameter2AtIndex(index);
+			boost::random::poisson_distribution<unsigned, double> repeatDistrib(rate_index);
+
+			if (rate_index > 0) {
+				num = repeatDistrib(rng);
+				index += num;
+			}
+			if (index > i)
+			{
+				added_total += n_index * (index - i);
+				if (index < hybrid_threshold)
+				{
+					sys.Particles().UpdateTotalsWithIndices(i, index);
+					sys.Particles().UpdateNumberAtIndex(index, n_index);
+					sys.Particles().ResetNumberAtIndex(i);
+				}
+				else
+				{
+					sys.Particles().UpdateTotalsWithIndex(i, -1.0 * (double)n_index);
+					sys.Particles().UpdateTotalParticleNumber(-1 * n_index);
+					sys.Particles().ResetNumberAtIndex(i);
+					n_add = index - (hybrid_threshold - 1);
+					sp_add = sp_hybrid_threshold->Clone();
+					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					{
+						if ((*i)->IsDeferred())
+						{
+							(*i)->Perform(t, sys, *sp_add, rng, n_add, true);
+							sp_add->UpdateCache();
+						}
+					}
+					// For weighted particles, this could be changed to add one particle with weight n_index
+					for (unsigned int j = 0; j < n_index; j++)
+					{
+						Particle * sp2 = sp_add->Clone();
+						sys.Particles().Add(*sp2, rng);
+					}
+					delete sp_add;
+					sp_add = NULL;
+				}
+				for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+				{
+					if ((*i)->IsDeferred())
+					{
+						(*i)->Perform(t, sys, rng, added_total);
+					}
+				}
+				added_total = 0.0;
+			}
+		}
+	}
+
+	// The gas-phase updates can be performed all at once here instead of once per index as above. 
+	// This does mean the gas-phase gets more out of sync with the process updates (source-sink problem)
+	//for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+	//{
+	//	if ((*i)->IsDeferred())
+	//	{
+	//		(*i)->Perform(t, sys, rng, added_total);
+	//	}
+	//}
+	delete sp_hybrid_threshold;
+	sp_hybrid_threshold = NULL;
+}
+*/
+
 
 
 // Select particle according to given property prop,
