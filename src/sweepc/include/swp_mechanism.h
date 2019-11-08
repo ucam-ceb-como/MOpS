@@ -219,17 +219,6 @@ public:
         fvector &rates   // Return vector for rates-of-change.
         ) const;
 
-    // Add version of the above to return concentration and fraction rates
-    // Calculates the rates-of-change of the chemical species fractions, 
-    // gas-phase temperature and density due to particle processes.
-    void CalcGasChangeRates(
-	double t,          // Time at which to get rates.
-	const Cell &sys, // System cell for which to get rates.
-	const Geometry::LocalGeometry1d& local_geom, // Information regarding surrounding cells
-	fvector &xrates,   // Return vector for rates-of-change.
-	fvector &crates   // Return vector for rates-of-change.
-	) const;
-
 
 	// PERFORMING THE PROCESSES.
 

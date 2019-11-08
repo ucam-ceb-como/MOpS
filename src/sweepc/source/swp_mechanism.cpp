@@ -764,96 +764,9 @@ void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
         // Quotient rule for dXk/dt = d(Ck/CT)/dt
         rates[k] = (invrho * rates[k]) - (invrho * invrho * sys.GasPhase().SpeciesConcentration(k) * idrho);
     }
-}
 
-// Version to return concentration and fraction rates
-/*!
-* Calculates the rates-of-change of the chemical species fractions,
-* gas-phase temperature and density due to particle processes.
-*
-*@param[in]    t      Time at which rates are to be calculated
-*@param[in]    sys    System for which rates are to be calculated
-*@param[in]    local_geom  Position information
-*@param[out]   rates  Vector of time rates of change of mole fractions, temperature and (?number) density
-*
-*@post  rates.size() == m_species.size() + 2
-* There is no precondition on rates.size().
-*/
-void Mechanism::CalcGasChangeRates(double t, const Cell &sys,
-	const Geometry::LocalGeometry1d &local_geom,
-	fvector &xrates, fvector &crates) const
-{
-	// Resize vector to hold all species and set all rates to zero.
-	crates.resize(m_species->size() + 2, 0.0);
-	fill(crates.begin(), crates.end(), 0.0);
-
-	xrates.resize(m_species->size() + 2, 0.0);
-	fill(xrates.begin(), xrates.end(), 0.0);
-
-	// Rate of change of total concentration
-	double idrho(0.0);
-
-	// Precalculate parameters.
-	double invVolNA = 1.0 / (sys.SampleVolume() * NA);
-
-	// Inceptions and surface processes can affect the gas-phase chemistry
-	// at the moment.
-
-	// Loop over the contributions of all inception processes.
-	for (IcnPtrVector::const_iterator i = m_inceptions.begin();
-		i != m_inceptions.end(); ++i) {
-
-		// Calculate the inception rate.
-		double rate = (*i)->Rate(t, sys, local_geom);
-
-		// Loop over all reactants, subtracting their contributions.
-		for (Sprog::StoichMap::const_iterator j = (*i)->Reactants().begin();
-			j != (*i)->Reactants().end(); ++j) {
-			double dc = rate * (double)j->second * invVolNA;
-			crates[j->first] -= dc;
-			idrho -= dc;
-		}
-
-		// Loop over all products, adding their contributions.
-		for (Sprog::StoichMap::const_iterator j = (*i)->Products().begin();
-			j != (*i)->Products().end(); ++j) {
-			double dc = rate * (double)j->second * invVolNA;
-			crates[j->first] += dc;
-			idrho += dc;
-		}
-
-	}
-
-	// Loop over the contributions of all other processes (except coagulation and transport).
-	for (PartProcPtrVector::const_iterator i = m_processes.begin();
-		i != m_processes.end(); ++i) {
-
-		// Calculate the process rate.
-		double rate = (*i)->Rate(t, sys, local_geom);
-
-		// Loop over all reactants, subtracting their contributions.
-		for (Sprog::StoichMap::const_iterator j = (*i)->Reactants().begin();
-			j != (*i)->Reactants().end(); ++j) {
-			double dc = rate * (double)j->second * invVolNA;
-			crates[j->first] -= dc;
-			idrho -= dc;
-		}
-
-		// Loop over all products, adding their contributions.
-		for (Sprog::StoichMap::const_iterator j = (*i)->Products().begin();
-			j != (*i)->Products().end(); ++j) {
-			double dc = rate * (double)j->second * invVolNA;
-			crates[j->first] += dc;
-			idrho += dc;
-		}
-	}
-
-	// Now convert to changes in mole fractions.
-	double invrho = 1.0 / sys.GasPhase().MolarDensity();
-	for (unsigned int k = 0; k != m_species->size(); ++k) {
-		// Quotient rule for dXk/dt = d(Ck/CT)/dt
-		xrates[k] = (invrho * crates[k]) - (invrho * invrho * sys.GasPhase().SpeciesConcentration(k) * idrho);
-	}
+    // Store total concentration change
+    rates[m_species->size() + 1] = idrho;
 }
 
 

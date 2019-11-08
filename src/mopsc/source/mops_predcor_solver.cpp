@@ -512,35 +512,43 @@ void PredCorSolver::generateChemProfile(Reactor &r, double dt)
 // Calculates the instantaneous source terms.
 void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
 {
-    // aab64 Get concentrations and rates to compute change in enthalpy
-    Mops::fvector csrc;
-    double dconc = 0.0;
     // Get rates-of-change using Sweep mechanism.
     src.Time = r.Time();
     r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), 
-                                                Geometry::LocalGeometry1d(), src.Terms, csrc);
+                                                Geometry::LocalGeometry1d(), src.Terms);
+
+    // Convert to concentrations to compute change in enthalpy
+    Mops::fvector csrc;
+    csrc.resize(r.Mech()->GasMech().SpeciesCount() + 2, 0.0);
+    fvector::iterator rhodot = src.Terms.begin() + r.Mech()->GasMech().SpeciesCount() + 1;
+    for (unsigned int k=0; k!=r.Mech()->GasMech().SpeciesCount(); ++k) {
+        csrc[k] = (r.Mixture()->GasPhase().Density() * src.Terms[k]) + 
+            (r.Mixture()->GasPhase().MoleFraction(k) * (*rhodot));
+    }
 
     // Calculate the enthalpy-based temperature change 
     // rate using the species change rates and an adiabatic
     // assumption.
+    double dT_dt = 0.0;
     if (r.EnergyEquation() == Reactor::ConstT) {
-        src.Terms[r.Mech()->GasMech().SpeciesCount()] = 0.0;
+        src.Terms[r.Mech()->GasMech().SpeciesCount()] = dT_dt;
     } else {
-        src.Terms[r.Mech()->GasMech().SpeciesCount()] += energySrcTerm(r, csrc); // To use mole fracs: src.Terms
+        // Note this does not account for particle formation so it should only be
+        // used for systems where enthalpy of particle formation is insignificant
+        dT_dt = energySrcTerm(r, csrc); 
+        src.Terms[r.Mech()->GasMech().SpeciesCount()] += dT_dt;
     }
 
     // Calculate density change based on whether reactor is constant
     // volume or constant pressure.
     if (r.IsConstP()) {
-        // Constant pressure: zero density derivative.
-        src.Terms[r.Mech()->GasMech().SpeciesCount()+1] = 0.0;
+        // Constant pressure: density change due to change in temperature.
+        double rho_T = r.Mixture()->GasPhase().Density() / r.Mixture()->GasPhase().Temperature();
+        src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] = dT_dt * (-1.0 * rho_T);
     } else {
         // Constant volume: add gdot to wdot for density derivative.
-        // Compute gdot
-        for (unsigned int i = 0; i != r.Mech()->GasMech().SpeciesCount(); ++i) {
-            dconc += csrc[i];
-        }
-        src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] += dconc;
+        // This was already done in calcGasChangeRates - no action required. 
+        src.Terms[r.Mech()->GasMech().SpeciesCount()+1] += 0.0;
     }
 }
 
@@ -569,7 +577,6 @@ double PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
         for (unsigned int i=0; i!=r.Mech()->GasMech().SpeciesCount(); ++i) {
             Tdot -= Hs[i] * src[i];
         }
-	src[28] = 0;
         return Tdot / (C * r.Mixture()->GasPhase().Density());
 
     } else if (r.EnergyEquation() == Reactor::ConstT) {
