@@ -152,15 +152,17 @@ int DimerInception::Perform(const double t, Cell &sys,
     sp->Primary()->SetValues(ParticleTrackers());
     sp->UpdateCache();
 
+	double spwt = sp->getStatisticalWeight();
+
     // Add particle to system's ensemble.
     sys.Particles().Add(*sp, rng);
 
     // Update gas-phase chemistry of system.
     if (!sys.GetIsAdiabaticFlag())
-        adjustGas(sys, sp->getStatisticalWeight());
+        adjustGas(sys, spwt);
     // Update gas-phase chemistry and temperature of system.
     else
-        adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, ParticleComp()[0], 1);
+        adjustParticleTemperature(sys, spwt, 1, ParticleComp()[0], 1);
     }
     else
     {
