@@ -314,6 +314,10 @@ public:
     unsigned int GetHybridThreshold() const { return m_hybrid_threshold; }
     // ================================================
 
+	//! Set/get the index that corresponds to the particle species in the gas-phase vector
+	void SetParticleSpeciesIndex(int index) const { m_i_particle_species = index; }
+	int GetParticleSpeciesIndex() const { return m_i_particle_species; }
+
 	//! return a vector contain the information of particular primary particle with X molecules
 	void Mass_pah(Ensemble &m_ensemble) const;
 
@@ -353,6 +357,8 @@ private:
     mutable bool m_coagulate_in_list;         // Do coagulation below threshold size in the particle
     mutable unsigned int m_hybrid_threshold;  // Hybrid threshold value-number list
     // ================================================
+
+	mutable int m_i_particle_species;         // Index of particulate species in gas-phase vector, used for enthalpy etc.
 
     // Clears the mechanism from memory.
     void releaseMem(void);

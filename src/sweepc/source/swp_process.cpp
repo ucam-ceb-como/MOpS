@@ -512,7 +512,7 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, do
 		double Cg = sys.getBulkHeatCapacity();
 		double Cp = sys.getParticleHeatCapacity();
 		bool constv = sys.IsConstV();
-
+		int pindex = m_mech->GetParticleSpeciesIndex();
 		// Set enthalpy, heat capacity and density for both phases
 		// Uncomment to update properties each time this function is called. 
 		/*if (constv)
@@ -520,16 +520,15 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, do
 			gas->Us(Hs);
 			gas->CalcCvs(oldTg, Cs);
 			Cg = gas->BulkCv();
-			Cp = Cs[28]; 
+			Cp = Cs[pindex]; 
 		}
 		else
 		{
 			gas->Hs(Hs); 
 			gas->CalcCps(oldTg, Cs);
 			Cg = gas->BulkCp();
-			Cp = Cs[28];
+			Cp = Cs[pindex];
 		}*/
-		// Note: only valid for titania!
 		double mw = sys.ParticleModel()->Components()[0]->MolWt(); 
 		double rhop = (sys.Particles().GetSum(iM) + sys.Particles().GetTotalMass()) / (mw * sys.SampleVolume());
 		double rhog = gas->Density();
@@ -537,7 +536,7 @@ void Process::adjustParticleTemperature(Cell &sys, double wt, unsigned int n, do
 		double Cgrhog = Cg * rhog;
 		double rhog_mass = gas->MassDensity();
 		double P_R = gas->Pressure() / R;
-		double Hp = Hs[28];
+		double Hp = Hs[pindex];
 
 		// Get the existing concentrations
 		fvector newConcs;

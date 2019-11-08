@@ -354,12 +354,13 @@ void readInitialPopulation(
 	particle_numbers.resize(0, 0);
         fileParticleList = readEnsembleFile(filename, mech.ParticleMech(), particle_numbers);
 	// Initialise and store hybrid particle-number info for the cell
+	// Note this only works if the primary particle model is univariate
 	if (particle_numbers.size() > 0)
 	{
             mix.Particles().SetHybridThreshold(particle_numbers.size());
             mix.Particles().InitialiseParticleNumberModel();
             mix.Particles().InitialiseDiameters(mix.ParticleModel()->Components()[0]->MolWt(),
-            mix.ParticleModel()->Components()[0]->Density()); // Works for current TiO2 -> Need to generalise
+            mix.ParticleModel()->Components()[0]->Density()); 
             for (unsigned int i = 0; i < mix.Particles().GetHybridThreshold(); ++i)
             {
                 mix.Particles().UpdateTotalsWithIndex(i, particle_numbers[i]);
@@ -557,8 +558,15 @@ Mops::PSR *const readPSR(
         attr = node.GetAttribute("includeParticleTerms");
         if (attr != NULL) {
             str = attr->GetValue();
-            if (str.compare("true") == 0) {
-                reac->SetIncludeParticles();
+			if (str.compare("true") == 0) {
+				if (reac->Mech()->ParticleMech().Components()[0]->Name().compare("Rutile") == 0)
+				{
+					reac->Mech()->ParticleMech().SetParticleSpeciesIndex(28);
+					reac->SetIncludeParticles();
+				}
+				else
+					throw std::runtime_error("Only Rutile primary particle supported for particle contributions to energy balance."
+					" (::readPSR)");
             }
         }
     }
@@ -745,10 +753,18 @@ Reactor *const readReactor(const CamXML::Element &node,
         if (attr != NULL) {
             str = attr->GetValue();
             if (str.compare("true") == 0) {
-                reac->SetIncludeParticles();
-            }
+				if (reac->Mech()->ParticleMech().Components()[0]->Name().compare("Rutile") == 0)
+				{
+					reac->Mech()->ParticleMech().SetParticleSpeciesIndex(28);
+					reac->SetIncludeParticles();
+				}
+				else
+					throw std::runtime_error("Only Rutile primary particle supported for particle contributions to energy balance."
+					" (Mops::Settings_IO::readReactor)");
+			}
         }
     }
+
     // Now check for constant volume.
     attr = node.GetAttribute("constv");
     if (attr != NULL) {

@@ -234,7 +234,6 @@ void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 // Sets constv/p flag for the cell so it is accessible for the temperature update.
 void Solver::storeTemperatureProperties(Reactor &r, Sweep::rng_type &rng)
 {
-	// Note: only valid for titania!
 	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
 	double mw = r.Mixture()->ParticleModel()->Components()[0]->MolWt(); 
 	fvector Hs, Cs;
@@ -256,7 +255,8 @@ void Solver::storeTemperatureProperties(Reactor &r, Sweep::rng_type &rng)
 		tmpGasPhase->Cps(Cs);
 		bulkCg = tmpGasPhase->BulkCp();
 	}
-	r.Mixture()->setGasPhaseProperties(bulkCg, Cs[28], rhop * Cs[28], Hs);
+	int pindex = r.Mech()->ParticleMech().GetParticleSpeciesIndex();
+	r.Mixture()->setGasPhaseProperties(bulkCg, Cs[pindex], rhop * Cs[pindex], Hs);
 }
 
 /*!

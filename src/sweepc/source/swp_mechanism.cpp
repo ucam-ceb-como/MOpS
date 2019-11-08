@@ -109,8 +109,10 @@ Mechanism &Mechanism::operator=(const Mechanism &rhs)
         m_processcount = rhs.m_processcount;
 
         // Particle-number/particle model flags
-	m_hybrid = rhs.m_hybrid;
+        m_hybrid = rhs.m_hybrid;
         m_coagulate_in_list = rhs.m_coagulate_in_list;
+
+		m_i_particle_species = rhs.m_i_particle_species;
 
         // Copy inceptions.
         for (IcnPtrVector::const_iterator i=rhs.m_inceptions.begin();
@@ -1569,6 +1571,10 @@ void Mechanism::Serialize(std::ostream &out) const
         // Write hybrid threshold.
         n = (unsigned int)m_hybrid_threshold;
         out.write((char*)&n, sizeof(n));
+
+		// Write location of particle species
+		n = (unsigned int)m_i_particle_species;
+		out.write((char*)&n, sizeof(n));
     } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, Mechanism::Serialize).");
@@ -1651,6 +1657,10 @@ void Mechanism::Deserialize(std::istream &in)
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_hybrid_threshold = n;
 
+				// Read location of particle species
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+				m_i_particle_species = n;
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -1698,6 +1708,8 @@ void Mechanism::releaseMem(void)
     m_processcount = 0;
     m_proccount.clear();
     m_fictcount.clear();
+
+	m_i_particle_species = -1;
 
     // Hybrid model parameters
     m_hybrid = false;
