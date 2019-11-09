@@ -118,6 +118,13 @@ public:
     unsigned int Adjust(const fvector &dcomp,
             const fvector &dvalues, rng_type &rng, unsigned int n);
 
+	//! Adjusts a particle according to a phase transformation reaction
+	unsigned int AdjustPhase(const fvector &dcomp,
+		const fvector &dvalues, rng_type &rng, unsigned int n);
+
+	//! Melting point dependent phase change
+	void Melt(rng_type &rng, Cell &sys);
+	
     //! Adjusts a particle according to an interparticle reaction
     unsigned int AdjustIntPar(const fvector &dcomp,
             const fvector &dvalues, rng_type &rng, unsigned int n);
@@ -174,11 +181,8 @@ public:
     //! Calculates the radius of gyration.
 	double GetRadiusOfGyration() const { return m_Rg; };
     
-    //! Returns a vector of primary coordinates and radius (4D).
+    //! Returns a vector of primary coordinates, radius, and mass (5D).
     void GetPriCoords(std::vector<fvector> &coords) const;
-
-	//! Returns primary coords and frame orientation
-    void GetPrimaryCoords(std::vector<fvector> &coords) const;
 
     // SERIALISATION/DESERIALISATION
     // The binary tree serialiser needs full access to private attributes.
@@ -217,6 +221,17 @@ public:
 
 	//! Return primary particle details and connectivity
 	void PrintPrimary(std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const;
+
+	// PARTICLE TRACKING FOR VIDEOS
+
+	//! Set tracking flag
+	void setTracking();
+
+	//! Remove primary tracking flag
+	void removeTracking();
+
+	//! Returns the frame position and orientation, and primary coordinates
+	void GetFrameCoords(std::vector<fvector> &coords) const;
 
 protected:
     //! Empty primary not meaningful
@@ -296,10 +311,21 @@ protected:
     Coords::Vector m_cen_bsph; //!< Bounding-sphere centre.
     Coords::Vector m_cen_mass; //!< Centre-of-mass coordinates.
 
-	//! For tracking the particle frame orientation
-	Coords::Vector m_frame_orient;
-	//! For tracking the particle frame position
-	Coords::Vector m_frame_x;
+	// PARTICLE TRACKING FOR VIDEOS
+
+	//! For tracking the particle frame orientation 
+	//	Two points are defined, initially on the x-axis (1e-9,0,0)
+	//  and the z-axis (0,0,1e-9). These together with the coordinates 
+	//	of a single tracked primary, which defines the centre of the 
+	//	image frame, allow us to track the orientation of the particle
+	//	frame under rotations during coagulation.
+	Coords::Vector m_frame_orient_x;	//(frame x-axis)
+	Coords::Vector m_frame_orient_z;	//(frame z-axis)
+	
+	//! Flag to indicate particle is tracked 
+	//	A single primary is tracked within an aggregate.
+	//  This defines the centre of particle image frame.
+	bool m_tracked;
 
     //! Sintering level of children connected by this node
     double m_children_sintering;
@@ -469,13 +495,13 @@ private:
     //! Updates the pointers after a merge event
     void ChangePointer(BinTreePrimary *source, BinTreePrimary *target);
 
-    // Updates pointers after merge event (overload for coordinate tracking model)
-    void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *node,
-	BinTreePrimary *small_prim, double const r_new, double const r_old);
-	
-    //! Adjust composition of neighbours following surface growth event
-    void AdjustNeighbours(BinTreePrimary *prim, const double delta_r, const fvector &dcomp, 
-	const fvector &dvalues, rng_type &rng);
+	// Updates pointers after merge event (overload for coordinate tracking model)
+	void ChangePointer(BinTreePrimary *source, BinTreePrimary *target, BinTreePrimary *node,
+						BinTreePrimary *small_prim, double const r_new, double const r_old);
+
+	//! Adjust composition of neighbours following surface growth event
+	void AdjustNeighbours(BinTreePrimary *prim, const double delta_r, const fvector &dcomp, 
+							const fvector &dvalues, rng_type &rng);
 
 	//! Update primary free surface area and volume
 	void UpdateOverlappingPrimary();

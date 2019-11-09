@@ -208,6 +208,14 @@ public:
     // Set number of particle trackings.
     void SetParticleTrackCount(unsigned int ptcount);
 
+	// PARTICLE TRACKING FOR VIDEOS  (alternative to POVRAY)
+
+	//! Set number of track particles 
+	void SetTrackBintreeParticleCount(unsigned int val);
+
+	//! Return the (max) number of tracked particles 
+	const unsigned int TrackBintreeParticleCount() const;
+
     // SOLUTION AND POST-PROCESSING.
 
     // Run the solver for the given reactor and the 
@@ -417,6 +425,13 @@ private:
     // given reactor to the binary output file.
     void outputPartRxnRates(const Reactor &r) const;
 
+	// PARTICLE TRACKING OUTPUT FOR VIDEOS
+
+	// Vector of file names
+	std::vector<std::string> m_TrackParticlesName;
+
+	//! (Maximum) number of particles tracked
+	unsigned int m_track_bintree_particle_count;
 
     // CONSOLE OUTPUT.
 

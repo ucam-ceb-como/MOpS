@@ -476,14 +476,13 @@ void PAHStats::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
     }
 }
 
-/////////////////////////////////////////////////csl37-pp
-void PAHStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const
+// Get primary particle details and connectivity
+void PAHStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const
 {
 	const AggModels::PAHPrimary* const prim =
 		dynamic_cast<const AggModels::PAHPrimary *>(sp.Primary());
 
 	if (prim != NULL) {
-		prim->PrintPrimary(surface, primary_diameter, k);
+		prim->PrintPrimary(nodes, primaries, k);
 	}
 }
-//////////////////////////////////////////////////

@@ -195,6 +195,11 @@ int Coagulation::JoinParticles(const double t, const int ip1, Particle *sp1,
     sp1->SetTime(t);
     sp1->incrementCoagCount();
 
+	//if one of the coagulating particles is tracked then we wish to keep tracking it 
+	if (sys.Particles().TrackedParticleNumber() > 0){
+		sys.Particles().UpdateTracking(ip2, ip1);
+	}
+
     // Tell the ensemble that particle 1 has changed
     sys.Particles().Update(ip1);
     // Particle 2 is now part of particle 1

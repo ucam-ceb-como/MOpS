@@ -1,0 +1,224 @@
+<mops version="2">
+
+<runs>4</runs>
+<atol>1.0e-17</atol>
+<rtol>1.0e-4</rtol>
+<pcount>512</pcount>
+<maxm0>1e+14</maxm0>
+
+<reactor type="batch" constt="false" constv="false" id="TTIP_flame" units="mol/mol">
+<temperature units="K">4.231500e+02</temperature>
+<pressure units="bar">1.013250e+00</pressure>
+<component id="C12H28O4TI">2.706370e-03</component>
+<component id="AR">8.445070e-01</component>
+<component id="O2">1.182340e-01</component>
+<component id="C2H4">3.455240e-02</component>
+</reactor>
+
+<timeintervals>
+<start>0.0</start>
+<time steps="1"  splits="1">0.000246928</time>
+<time steps="1"  splits="1">0.000537701</time>
+<time steps="1"  splits="1">0.000697657</time>
+<time steps="1"  splits="1">0.000875787</time>
+<time steps="1"  splits="1">0.00107721</time>
+<time steps="1"  splits="1">0.00118506</time>
+<time steps="1"  splits="1">0.00130124</time>
+<time steps="1"  splits="1">0.00142723</time>
+<time steps="1"  splits="1">0.00149301</time>
+<time steps="1"  splits="1">0.00156188</time>
+<time steps="1"  splits="1">0.00163413</time>
+<time steps="1"  splits="1">0.00171014</time>
+<time steps="1"  splits="1">0.00179034</time>
+<time steps="1"  splits="1">0.00187525</time>
+<time steps="1"  splits="1">0.00191899</time>
+<time steps="1"  splits="1">0.00196411</time>
+<time steps="1"  splits="1">0.00201068</time>
+<time steps="1"  splits="1">0.00205883</time>
+<time steps="1"  splits="1">0.00210864</time>
+<time steps="1"  splits="1">0.00216026</time>
+<time steps="1"  splits="1">0.00218655</time>
+<time steps="1"  splits="1">0.00221332</time>
+<time steps="1"  splits="1">0.00224061</time>
+<time steps="1"  splits="1">0.00225439</time>
+<time steps="1"  splits="1">0.00226829</time>
+<time steps="1"  splits="1">0.00228233</time>
+<time steps="1"  splits="1">0.0022965</time>
+<time steps="1"  splits="1">0.00231081</time>
+<time steps="1"  splits="1">0.002318</time>
+<time steps="1"  splits="1">0.00232522</time>
+<time steps="1"  splits="1">0.00233247</time>
+<time steps="1"  splits="1">0.00233611</time>
+<time steps="1"  splits="1">0.00233976</time>
+<time steps="1"  splits="1">0.00234341</time>
+<time steps="1"  splits="1">0.00234707</time>
+<time steps="1"  splits="1">0.00235442</time>
+<time steps="1"  splits="1">0.0023618</time>
+<time steps="1"  splits="1">0.00236551</time>
+<time steps="1"  splits="1">0.00236921</time>
+<time steps="1"  splits="1">0.00237292</time>
+<time steps="1"  splits="1">0.00237665</time>
+<time steps="1"  splits="1">0.00238037</time>
+<time steps="1"  splits="1">0.0023841</time>
+<time steps="1"  splits="1">0.00238597</time>
+<time steps="1"  splits="1">0.00238784</time>
+<time steps="1"  splits="1">0.00238971</time>
+<time steps="1"  splits="1">0.00239158</time>
+<time steps="1"  splits="1">0.00239346</time>
+<time steps="1"  splits="1">0.00239533</time>
+<time steps="1"  splits="1">0.0023972</time>
+<time steps="1"  splits="1">0.00239908</time>
+<time steps="1"  splits="1">0.00240283</time>
+<time steps="1"  splits="1">0.00240471</time>
+<time steps="1"  splits="1">0.00240659</time>
+<time steps="1"  splits="1">0.00241035</time>
+<time steps="1"  splits="1">0.00241412</time>
+<time steps="1"  splits="1">0.00241789</time>
+<time steps="1"  splits="1">0.00242165</time>
+<time steps="1"  splits="1">0.00242541</time>
+<time steps="1"  splits="1">0.00242918</time>
+<time steps="1"  splits="1">0.00243293</time>
+<time steps="1"  splits="1">0.00243669</time>
+<time steps="1"  splits="1">0.00243856</time>
+<time steps="1"  splits="1">0.00244044</time>
+<time steps="1"  splits="1">0.00244232</time>
+<time steps="1"  splits="1">0.00244419</time>
+<time steps="1"  splits="1">0.00244605</time>
+<time steps="1"  splits="1">0.00244793</time>
+<time steps="1"  splits="1">0.00244979</time>
+<time steps="1"  splits="1">0.00245165</time>
+<time steps="1"  splits="1">0.00245352</time>
+<time steps="1"  splits="1">0.00245537</time>
+<time steps="1"  splits="1">0.00245722</time>
+<time steps="1"  splits="1">0.00245908</time>
+<time steps="1"  splits="1">0.00246276</time>
+<time steps="1"  splits="1">0.00246644</time>
+<time steps="1"  splits="1">0.00247009</time>
+<time steps="1"  splits="1">0.00247372</time>
+<time steps="1"  splits="1">0.00247733</time>
+<time steps="1"  splits="1">0.00248091</time>
+<time steps="1"  splits="1">0.00248447</time>
+<time steps="1"  splits="1">0.002488</time>
+<time steps="1"  splits="1">0.00248975</time>
+<time steps="1"  splits="1">0.0024915</time>
+<time steps="1"  splits="1">0.00249323</time>
+<time steps="1"  splits="1">0.00249497</time>
+<time steps="1"  splits="1">0.00249669</time>
+<time steps="1"  splits="1">0.0024984</time>
+<time steps="1"  splits="1">0.00250012</time>
+<time steps="1"  splits="1">0.00250181</time>
+<time steps="1"  splits="1">0.00250517</time>
+<time steps="1"  splits="1">0.00250847</time>
+<time steps="1"  splits="1">0.00251174</time>
+<time steps="1"  splits="1">0.00251496</time>
+<time steps="1"  splits="1">0.00251813</time>
+<time steps="1"  splits="1">0.00252126</time>
+<time steps="1"  splits="1">0.00252433</time>
+<time steps="1"  splits="1">0.00252736</time>
+<time steps="1"  splits="1">0.00253033</time>
+<time steps="1"  splits="1">0.0025318</time>
+<time steps="1"  splits="1">0.00253326</time>
+<time steps="1"  splits="1">0.00253471</time>
+<time steps="1"  splits="1">0.00253614</time>
+<time steps="1"  splits="1">0.00253756</time>
+<time steps="1"  splits="1">0.00253897</time>
+<time steps="1"  splits="1">0.00254036</time>
+<time steps="1"  splits="1">0.00254174</time>
+<time steps="1"  splits="1">0.0025431</time>
+<time steps="1"  splits="1">0.00254445</time>
+<time steps="1"  splits="1">0.00254579</time>
+<time steps="1"  splits="1">0.00254711</time>
+<time steps="1"  splits="1">0.00254842</time>
+<time steps="1"  splits="1">0.00254972</time>
+<time steps="1"  splits="1">0.00255225</time>
+<time steps="1"  splits="1">0.00255473</time>
+<time steps="1"  splits="1">0.00255715</time>
+<time steps="1"  splits="1">0.00255952</time>
+<time steps="1"  splits="1">0.00256182</time>
+<time steps="1"  splits="1">0.00256296</time>
+<time steps="1"  splits="1">0.00256409</time>
+<time steps="1"  splits="1">0.00256629</time>
+<time steps="1"  splits="1">0.00256844</time>
+<time steps="1"  splits="1">0.00257054</time>
+<time steps="1"  splits="1">0.00257258</time>
+<time steps="1"  splits="1">0.00257458</time>
+<time steps="1"  splits="1">0.00257653</time>
+<time steps="1"  splits="1">0.00257843</time>
+<time steps="1"  splits="1">0.00258028</time>
+<time steps="1"  splits="1">0.00258209</time>
+<time steps="1"  splits="1">0.00258386</time>
+<time steps="1"  splits="1">0.00258559</time>
+<time steps="1"  splits="1">0.00258727</time>
+<time steps="1"  splits="1">0.00258892</time>
+<time steps="1"  splits="1">0.00259053</time>
+<time steps="1"  splits="1">0.00259362</time>
+<time steps="1"  splits="1">0.00259658</time>
+<time steps="1"  splits="1">0.00259942</time>
+<time steps="1"  splits="1">0.00260216</time>
+<time steps="1"  splits="1">0.0026048</time>
+<time steps="1"  splits="1">0.00260734</time>
+<time steps="1"  splits="1">0.00260981</time>
+<time steps="1"  splits="1">0.00261218</time>
+<time steps="1"  splits="1">0.00261669</time>
+<time steps="1"  splits="1">0.00262101</time>
+<time steps="1"  splits="1">0.00262311</time>
+<time steps="1"  splits="1">0.00262516</time>
+<time steps="1"  splits="1">0.00262914</time>
+<time steps="1"  splits="1">0.00263302</time>
+<time steps="1"  splits="1">0.00263683</time>
+<time steps="1"  splits="1">0.00264057</time>
+<time steps="1"  splits="1">0.00264798</time>
+<time steps="1"  splits="1">0.00265533</time>
+<time steps="1"  splits="1">0.00266267</time>
+<time steps="1"  splits="1">0.00266999</time>
+<time steps="1"  splits="1">0.00267732</time>
+<time steps="1"  splits="1">0.00268463</time>
+<time steps="1"  splits="1">0.00269929</time>
+<time steps="1"  splits="1">0.00271398</time>
+<time steps="1"  splits="1">0.00274366</time>
+<time steps="1"  splits="1">0.00280509</time>
+<time steps="1"  splits="1">0.00286944</time>
+<time steps="1"  splits="1">0.00301592</time>
+<time steps="1"  splits="1">0.00319144</time>
+<time steps="1"  splits="1">0.00342015</time>
+<time steps="1"  splits="1">0.00355718</time>
+<time steps="1"  splits="1">0.00373158</time>
+<time steps="1"  splits="1">0.00397743</time>
+<time steps="1"  splits="1">0.00412863</time>
+<time steps="1"  splits="1">0.00432499</time>
+<time steps="1"  splits="1">0.00459401</time>
+<time steps="1"  splits="1">0.00500025</time>
+<time steps="1"  splits="1">0.00523653</time>
+<time steps="1"  splits="1">0.00553087</time>
+<time steps="1"  splits="1">0.00568097</time>
+<time steps="1"  splits="1">0.00584464</time>
+<time steps="1"  splits="1">0.0059263</time>
+<time steps="1"  splits="1">0.00596625</time>
+<time steps="1"  splits="1">0.00600616</time>
+<time steps="1"  splits="1">0.00604595</time>
+<time steps="1"  splits="1">0.00608547</time>
+<time steps="1"  splits="1">0.00612465</time>
+<time steps="1"  splits="1">0.00616365</time>
+</timeintervals>
+
+<output>
+<filename>Z1</filename>
+<statsbound property="dcol">
+<lower>0</lower>
+<upper>1.0e30</upper>
+</statsbound>
+
+<console interval="1" msgs="true">
+<tabular>
+<column fmt="sci">time</column>
+<column fmt="float">#sp</column>
+<column fmt="sci">C12H28O4TI</column>
+<column fmt="sci">M0</column>
+<column fmt="sci">M1</column>
+<column fmt="sci">T</column>
+</tabular>
+</console>
+<writebintree enable="false"/>
+
+</output>
+</mops>

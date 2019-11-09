@@ -8,16 +8,18 @@
 		<molwt>79.87</molwt>
 	</component>
 
-	<!-- Define particle types. -->
-	<particle id="[Ru]" model="bintree" subtree="false" track="primaryCoordinates">
-		<description>A rutile particle.</description>
-		<fractdim>1.8</fractdim>
-		<coalthresh>1.0</coalthresh>
+	<!-- Define particle type. Bintree primary model with coordinate tracking -->
+	<particle id="[Titania]" model="bintree" subtree="false" track="primaryCoordinates">
+	<description>A titania particle.</description>
+		<efm>2.2</efm>					<!-- molecular enhancement factor -->
+		<fractdim>1.8</fractdim>		<!-- not used when tracking primary coordinates -->
+		<coalthresh>1.0</coalthresh>	<!-- not used when tracking primary coordinates -->
+		<!-- GBD sintering model for titania based on Eggersdorfer et al., 2012, J. Aerosol Sci., 46:7-19
+		see Lindberg et al., 2019, J. Comp. Phys. 397:108799 -->
 		<sintering enable="true" model="GBD">
-			<!-- GBD model params based on Eggersdorfer et al. (2012)-->
-			<A units="s/m4K">9.112e+17</A>
+			<A units="s/m4K">9.11e+17</A>
 			<E units="K">31030</E>
-			<Dpmin units="m">0</Dpmin>
+			<Dpmin units="m">4e-09</Dpmin>
 		</sintering>
 	</particle>
 
@@ -28,6 +30,7 @@
 	</coagulation>
 
 	<!-- Ti addition reactions. -->
+	<!-- The surface growth rate was fitted for the original bintree model in preprint 177 -->
 	<reaction type="titania" name="TiCl4 addition" form="firstorder" defer="true">
 		<formula>[Rutile_n] + TICL4 + 1.0 O2 to Rutile_n+1 + 2.0 CL2</formula>
 		<reactant id="TICL4" stoich="+1.0" />

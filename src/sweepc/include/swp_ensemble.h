@@ -353,10 +353,35 @@ public:
     //void SetNumOfInceptedPAH(int m_amount);
     //void SetNumOfInceptedPAH(int m_amount, Sweep::AggModels::Primary *m_primary);
 
+	// PARTICLE TRACKING OUTPUT FOR VIDEOS
+
+	//! Updates tracking after a coagulation event
+	void UpdateTracking(int p_old, int p_merged);
+
+	//! Returns a pointer to the given tracked particle.
+	const Particle *const TrackedAt(unsigned int i) const;
+	
+	//! Set number of particle tracked for videos
+	void SetParticleTrackingNumber(unsigned int val);
+
+	//! Return number of particles currently being tracked for videos
+	unsigned int TrackedParticleNumber() const;
+
+	//! Initialise tracking of initial particle population 
+	void InitialiseParticleTracking();
+
 private:
     //! Vector of particles in the ensemble.
     PartPtrVector m_particles;
     Sweep::KMC_ARS::KMCSimulator *m_kmcsimulator;
+
+	// PARTICLE TRACKING OUTPUT FOR VIDEOS
+
+	//! (maximum) number of particles tracked for videos
+	unsigned int m_tracked_number;
+
+	//! Vector of pointers of tracked particles 
+	PartPtrVector m_tracked_particles;    
 
 // ENSEMBLE CAPACITY VARIABLES.
     unsigned int m_levels;   // Number of levels in the binary tree.

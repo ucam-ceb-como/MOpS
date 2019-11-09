@@ -106,4 +106,30 @@ inline const std::string &Sweep::Component::Name() const {return m_name;};
 // Sets the symbol or name.
 inline void Sweep::Component::SetName(const std::string &name) {m_name = name;};
 
+// PHASE
+
+// Return phase
+inline const std::string &Sweep::Component::Phase() const
+{
+	return m_phase;
+};
+
+// Set phase
+inline void Sweep::Component::SetPhase(const std::string &phase)
+{
+	m_phase = phase;
+};
+
+// Return element
+inline const std::string &Sweep::Component::Element() const
+{
+	return m_element;
+};
+
+// Set element
+inline void Sweep::Component::SetElement(const std::string &element)
+{
+	m_element = element;
+};
+
 #endif

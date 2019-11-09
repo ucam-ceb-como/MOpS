@@ -155,6 +155,9 @@ private:
     double m_coverage;
 
 	int m_select;
+
+	//Titania model properties
+	double m_phaseterm;	//Anatase fraction ^ (2/3) * total composition
 };
 }
 

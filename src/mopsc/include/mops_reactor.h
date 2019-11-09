@@ -274,7 +274,7 @@ protected:
     // Reactor model variables.
     EnergyModel m_emodel; // The energy model used to describe the reactor.
     bool m_constv;        // true=const. volume model, false=const. pressure model.
-    bool m_include_particle_terms; // true = inclusion of 
+    bool m_include_particle_terms; // true = inclusion of particles in the energy balance
 
     // Imposed temperature profile.
     RHS1_FnPtr m_Tfunc; // External function for calculating dT/dt.

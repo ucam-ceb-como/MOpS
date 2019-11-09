@@ -698,7 +698,11 @@ double Particle::avgeomdiam(double oneovernumsubpart) const
     return std::pow(m_primary->Property(Sweep::iDsph),oneovernumsubpart);
 }
 
-
+//! Phase composition term for phase transformation process
+double Particle::GetPhaseTerm(void) const
+{
+	return m_primary->GetPhaseTerm();
+}
 
 /*!
  * Provide an interface that allows run time specification of particle properties
@@ -759,6 +763,8 @@ double Particle::Property(PropID id) const
             // Special case property, used to select particles
             // uniformly.
             return 1.0;
+		case iAn_2_3_comp:
+			return GetPhaseTerm();
         default:
             throw std::logic_error("Unrecognised property requested (Particle::Property)");
             return 0.0;
@@ -911,6 +917,58 @@ unsigned int Particle::AdjustIntPar(const fvector &dcomp,
 }
 
 /*!
+ * Apply the given composition and values changes n times
+ * for the phase transformation 
+ *
+ *@param[in]        n       Number of times to apply changes
+ *
+ *@return       Number of times changes actually applied
+ */
+unsigned int Particle::AdjustPhase(const fvector &dcomp,
+                              const fvector &dvalues,
+                              rng_type &rng,
+                              unsigned int n)
+{
+    
+	unsigned int m = n;
+
+    // This is a leaf-node sub-particle as it contains a
+    // primary particle.  The adjustment is applied to
+    // the primary.
+    n = m_primary->AdjustPhase(dcomp, dvalues, rng, n);
+
+	// Adjust phase may return n < m if the selected primary does not contain enough components.
+	// The loop tries to apply the adjustment to other primaries (when using the bintree model).
+	int loops = 0;
+	while (n<m && loops < 20){  //max number of loops set to 20
+		n += m_primary->AdjustPhase(dcomp, dvalues, rng, m-n);
+		loops ++;
+	}
+
+    // Where-ever the adjustment has been applied this sub-particle must
+    // now update its cache.
+    UpdateCache();
+
+    return m;
+}
+
+// Phase transformation
+void Particle::Melt(rng_type &rng, Cell &sys)
+{
+
+	// This is a leaf-node sub-particle as it contains a
+	// primary particle.  The adjustment is applied to
+	// the primary.
+	m_primary->Melt(rng, sys);
+
+	// Where-ever the adjustment has been applied this sub-particle must
+	// now update its cache.
+	UpdateCache();
+
+	return;
+}
+
+/*!
  * Combines this particle with another.
  *
  * \param[in]       rhs         Particle to add to current instance
@@ -1021,4 +1079,23 @@ void Particle::Serialize(std::ostream &out, void *duplicates) const
         throw std::invalid_argument("Output stream not ready \
                                     (Sweep, Particle::Serialize).");
     }
+}
+
+//! Returns the frame position and orientation, and primary coordinates
+//! Used by particle tracking for videos
+void Particle::getFrameCoords(std::vector<fvector> &coords) const
+{
+	m_primary->GetFrameCoords(coords);
+}
+
+//! Initialise primary particle tracking for videos
+void Particle::setTracking()
+{
+	m_primary->setTracking();
+}
+
+//! Remove primary tracking
+void Particle::removeTracking()
+{
+	m_primary->removeTracking();
 }

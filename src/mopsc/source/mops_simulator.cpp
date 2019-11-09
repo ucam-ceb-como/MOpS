@@ -81,7 +81,7 @@ Simulator::Simulator(void)
   m_write_ensemble_file(false),
   m_write_PAH(false), m_write_PP(false), m_mass_spectra(true), m_mass_spectra_ensemble(true),
   m_mass_spectra_xmer(1), m_mass_spectra_frag(false), 
-  m_ptrack_count(0)
+  m_ptrack_count(0), m_track_bintree_particle_count(0)
 {
 }
 
@@ -121,6 +121,7 @@ Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
         m_mass_spectra_xmer = rhs.m_mass_spectra_xmer;
         m_mass_spectra_frag = rhs.m_mass_spectra_frag;
         m_ptrack_count = rhs.m_ptrack_count;
+		m_track_bintree_particle_count = rhs.m_track_bintree_particle_count;
     }
     return *this;
 }
@@ -279,6 +280,14 @@ void Simulator::SetOutputStatBoundary(Sweep::PropID pid, double lower, double up
     m_statbound.PID   = pid;
 }
 
+// PARTICLE TRACKING FOR VIDEOS 
+
+//! Set number of track particles 
+void Simulator::SetTrackBintreeParticleCount(unsigned int val) { m_track_bintree_particle_count = val; }
+
+//! Return the (max) number of tracked particles 
+const unsigned int Simulator::TrackBintreeParticleCount() const { return m_track_bintree_particle_count; }
+
 // POVRAY OUTPUT.
 
 void Simulator::SetParticleTrackCount(unsigned int ptcount) {
@@ -369,6 +378,31 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 	if (rank==0)						//ms785
 	#endif
 
+	// Create output files for particle tracking videos
+	// (This is not currently done as a post-process)
+	if (m_track_bintree_particle_count>0){
+
+		//open files for each tracked particle
+		for (unsigned int i = 0; i < m_track_bintree_particle_count; i++){
+
+			// file name
+			m_TrackParticlesName.push_back(m_output_filename + "-video(" + cstr(i) + ").csv");
+
+			//get component names
+			std::string component_names;
+			for (unsigned int j = 0; j < r.Mech()->ParticleMech().ComponentCount(); j++){
+				component_names.append(",");
+				component_names.append(r.Mech()->ParticleMech().Components(j)->Name());
+			}
+
+			// write headers
+			std::ofstream TrackParticlesFile;
+			TrackParticlesFile.open(m_TrackParticlesName[i].c_str(), ios::app);
+			TrackParticlesFile << "Time (s),x (m),y (m),z (m),r (m),orient-x_x (m),orient-x_y (m),orient-x_z (m),orient-z_x (m),orient-z_y (m),orient-z_z (m)" << component_names << "\n";
+			TrackParticlesFile.close();
+		}
+	}
+
     fileOutput(m_output_step, m_output_iter, r, s, this);
 
 	#ifdef USE_MPI
@@ -421,6 +455,18 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
         // Initialise some LOI stuff
         if (s.GetLOIStatus() == true) setupLOI(r, s);
+
+		/*
+			Initialise bintree particle tracking for videos
+			This is not currently done as a post-process 
+			TODO: do this as a post-process
+		*/
+		if (m_track_bintree_particle_count>0){
+			
+			//initialise tracking			
+			r.Mixture()->Particles().SetParticleTrackingNumber(m_track_bintree_particle_count);
+			r.Mixture()->Particles().InitialiseParticleTracking();
+		}
 
         // Initialise the register of particle-number particles
         if (r.Mech()->ParticleMech().IsHybrid())
@@ -873,7 +919,7 @@ void Simulator::postProcessSimulation(
         /*!
          * Useful for reproduction of Stein and Fahr's stabilomer grid.
          * Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
-         * J. Phys. Chem. 89, 3714\963725. doi:10.1021/j100263a027.
+         * J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
          */
         // postProcessPAHinfo(mech, times);
 
@@ -886,7 +932,7 @@ void Simulator::postProcessSimulation(
 		/*!
 		* Useful for reproduction of Stein and Fahr's stabilomer grid.
 		* Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
-		* J. Phys. Chem. 89, 3714\963725. doi:10.1021/j100263a027.
+		* J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
 		*/
 		// postProcessPAHinfo(mech, times);
 
@@ -1092,6 +1138,40 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
             me->outputParticleNumber(r);
         }
     }
+
+	/*
+	Print bintree particle coordinate tracking for videos
+	This is not currently done as a post-process
+	TODO: do this as a post-process
+	*/
+	for (unsigned int i = 0; i < me->m_track_bintree_particle_count; i++){
+
+		std::string TrackParticlesName = me->m_TrackParticlesName[i];
+
+		//get primary coordinates
+
+		if (r.Mixture()->Particles().TrackedAt(i) != NULL){
+
+			vector<fvector> coords;
+			r.Mixture()->Particles().TrackedAt(i)->getFrameCoords(coords);
+
+			//time
+			double time = r.Time();
+
+			//iterate through vector printing primary coordinates
+			std::ofstream fileout;
+			fileout.open(TrackParticlesName.c_str(), ios::app);
+			for (vector<fvector>::const_iterator it = coords.begin(); it != coords.end(); it++){
+				//print time, x, y, z, r, orientation, composition
+				fileout << time;
+				for (fvector::const_iterator iit = (*it).begin(); iit != (*it).end(); iit++){
+					fileout << "," << (*iit);
+				}
+				fileout <<"\n";
+			}
+			fileout.close();
+		}
+	}
 }
 
 
@@ -2322,15 +2402,12 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	unsigned int step = 0;
 	fvector psl;
 	vector<fvector> ppsl;
-
-	////////////////////////////////////////// csl37-pp
-	vector<fvector> surface;
-	vector<string> surfout_header;
-	vector<fvector> primary_diameter;
+	vector<fvector> nodes;
+	vector<string> nodes_header;
+	vector<fvector> prims;
 	vector<string> primary_header;
-	CSV_IO surfout(m_output_filename + "-primary-surface.csv", true);
-	CSV_IO diamout(m_output_filename + "-primary-diameter.csv", true);
-	///////////////////////////////////////////
+	CSV_IO nodesout(m_output_filename + "-primary-nodes.csv", true);
+	CSV_IO primsout(m_output_filename + "-primary.csv", true);
 
 	// Get reference to the particle mechanism.
 	const Sweep::Mechanism &pmech = mech.ParticleMech();
@@ -2392,16 +2469,14 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 					file.close();
 				}
 
-				////////////////////////////////////////// csl37-pp
-				// print primary data and connection data
-				// loop over particles at last save point
+				// Print primary and connectivity data
+				// This is currently only done at the last save point
 				if (i == times.size() - 1){
 					for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
 					{
-						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), surface, primary_diameter, k);
+						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), nodes, prims, k);
 					}
 				}
-				/////////////////////////////////////////
 
 				delete r;
 			}
@@ -2417,44 +2492,53 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 		//out[i]->Close(); 
 		//delete out[i];
 	}
-	//////////////////////////////////////////// csl37-pp
-	surfout_header.push_back("Particle Index");
-	surfout_header.push_back("Number of primaries below node");
-	surfout_header.push_back("Common surface area (m2)");
-	surfout_header.push_back("Sintering level");
-	surfout_header.push_back("Separation (m)");
-	surfout_header.push_back("Neck radius (m)");
-	surfout_header.push_back("Left radius (m)");
-	surfout_header.push_back("Right radius (m)");
-	surfout_header.push_back("Left Index");
-	surfout_header.push_back("Right Index");
 
-	surfout.Write(surfout_header);
-	for (unsigned int k = 0; k < surface.size(); k++)
+	// Write bintreeprimary connectivity data 
+	nodes_header.push_back("Particle Index");
+	nodes_header.push_back("Number of primaries below node");
+	nodes_header.push_back("Common surface area (m2)");
+	nodes_header.push_back("Sintering level");
+	nodes_header.push_back("Separation (m)");
+	nodes_header.push_back("Neck radius (m)");
+	nodes_header.push_back("Left radius (m)");
+	nodes_header.push_back("Right radius (m)");
+	nodes_header.push_back("Left Index");
+	nodes_header.push_back("Right Index");
+
+	nodesout.Write(nodes_header);
+	for (unsigned int k = 0; k < nodes.size(); k++)
 	{
-		surfout.Write(surface[k]);
+		nodesout.Write(nodes[k]);
 	}
-	surfout.Close();
+	nodesout.Close();
 
+	// Write primary particle data 
 	primary_header.push_back("Particle Index");
 	primary_header.push_back("Primary diameter (m)");
 	primary_header.push_back("Sph. equiv. diameter (m)");
-	primary_header.push_back("True primary volume (m3)");
-	primary_header.push_back("Primary volume (m3)");
+	primary_header.push_back("(Geom.) Primary volume (m3)");
+	primary_header.push_back("(Comp.) Primary volume (m3)");
 	primary_header.push_back("Primary surface (m2)");
 	primary_header.push_back("Position x");
 	primary_header.push_back("Position y");
 	primary_header.push_back("Position z");
 	primary_header.push_back("Radius (m)");
-
-	diamout.Write(primary_header);
-	for (unsigned int k = 0; k < primary_diameter.size(); k++)
-	{
-		diamout.Write(primary_diameter[k]);
+	
+	// Get composition
+	const Sweep::ParticleModel &model = mech.ParticleMech();
+	unsigned int ncomp = model.ComponentCount();
+	// Add component to header
+	for (unsigned int i = 0; i != ncomp; ++i) {
+		primary_header.push_back(model.Components(i)->Name());
 	}
-	diamout.Close();
 
-	///////////////////////////////////////////
+	primsout.Write(primary_header);
+	for (unsigned int k = 0; k < prims.size(); k++)
+	{
+		primsout.Write(prims[k]);
+	}
+	primsout.Close();
+
 	//// Close output CSV files.
 	for (unsigned int i = 0; i != times.size(); ++i) {
 		out[i]->Close();

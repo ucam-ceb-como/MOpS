@@ -66,13 +66,12 @@ CheckErr $?
 
 ######################################################################
 # 1: FREE-MOLECULAR KERNEL
-# Rebased 3 Oct 2012, migration to BinTreeSilicaPrimary
-# on commit ca583a307d2c3f5c72f940c7ebb3bab9861cf7ac, 512 SPs & 20 runs
+# Rebased 10 Oct 2019, on commit 3a041cbb227c543d76ddd911c75e07e677bbe31c, 512 SPs & 20 runs
 
 # Define true vales
 name="M0 Fv dcol dpri sintlevel"
-true="2.86E+013 9.66E-012 8.24E-009 7.66E-009 0.919267"
-errs="5.86E+011 9.71E-016 6.94E-011 5.38E-011 0.003847"
+true="2.8684E+013 9.6632E-012 8.2088E-009 7.6571E-009 0.9284"
+errs="0.0718E+013 0.0010E-012 0.0888E-009 0.0734E-009 0.0040"
 
 # Run calculation
 echo "Running MOPS for free-molecular kernel case."
@@ -108,13 +107,12 @@ rm -f silica-fm*
 
 ######################################################################
 # 2: SLIP-FLOW (CONTINUUM) KERNEL
-# Rebased 3 Oct 2012, migration to BinTreeSilicaPrimary
-# on commit ca583a307d2c3f5c72f940c7ebb3bab9861cf7ac, 512 SPs & 20 runs
+# Rebased 10 Oct 2019, on commit 3a041cbb227c543d76ddd911c75e07e677bbe31c, 512 SPs & 20 runs
 
 # Define true vales
 name="M0 Fv dcol dpri sintlevel"
-true="1.62E+014 4.80E-009 7.50E-008 1.02E-008 0.0790885"
-errs="1.09E+013 7.64E-012 3.11E-009 5.97E-011 0.0077061"
+true="1.8227E+014 4.8098E-009 5.0328E-008 1.0257E-008 0.3624"
+errs="0.1217E+014 0.0005E-009 0.2743E-008 0.0137E-008 0.0274"
 
 # Run calculation
 echo "Running MOPS for slip flow kernel case."

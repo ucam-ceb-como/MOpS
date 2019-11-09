@@ -1,0 +1,1 @@
+The test case "test" can be run with the arguments: -p --strang

@@ -526,7 +526,8 @@ void Reactor::RHS_ConstT(double t, const double *const y,  double *ydot) const
     } else {
         // Constant pressure
         // Volume compensating change in density.
-        ydot[m_iDens] = 0.0;
+		// ydot[m_iDens] = 0.0;	
+		ydot[m_iDens] = - (y[m_iDens] * ydot[m_iT] / y[m_iT]); // if a temperature profile is imposed, use EOS
     }
 }
 

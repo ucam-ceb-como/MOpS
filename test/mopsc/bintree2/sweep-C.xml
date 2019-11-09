@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<mechanism name="BCCA coagulation test case" units="CGS">
+    
+	<!-- Define particle components. -->
+	<component id="Rutile">
+		<description>Rutile</description>
+		<density>4.26</density>
+		<molwt>79.87</molwt>
+	</component>
+	
+	<!-- Define particle types. -->
+	<particle id="[Ru]" model="bintree" subtree="false" track="primaryCoordinates">
+		<description>A rutile particle.</description>
+		<fractdim>1.8</fractdim>
+		<coalthresh>1.0</coalthresh>
+		<sintering enable="true" model="GBD">
+			<!-- GBD model params based on c4e-226-->
+			<A units="s/m4K">2.278e+17</A>
+			<E units="K">31030</E>
+			<Dpmin units="m">2.5e-09</Dpmin>
+			<alpha>3</alpha>
+		</sintering>
+	</particle>
+ 
+    <!-- Coagulation -->
+	<coagulation>
+		<A>1.0</A>
+		<kernel>transition</kernel>
+	</coagulation>
+
+</mechanism>

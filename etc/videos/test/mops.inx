@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mops version="2">
+<runs>1</runs>
+<atol>1.0e-17</atol>
+<rtol>1.0e-4</rtol>
+<pcount>256</pcount>
+<maxm0>1.5e12</maxm0>
+<!--maxm0>1e12</maxm0-->
+
+<reactor type="batch" constt="true" constv="false" id="TTIP_flame" units="mol/mol">
+<temperature units="K">1200</temperature>
+<pressure units="bar">1.01325</pressure>
+<component id="C12H28O4TI">0.0000187</component>
+<component id="N2">0.9999813</component>
+</reactor>
+
+<timeintervals>
+<start>0.0</start>
+<time steps="1000"  splits="10">0.50</time>
+</timeintervals>
+
+<output>
+<writebintree enable="true"/>
+<trackparticle enable="true" pcount="16"/>
+<filename>Z1</filename>
+<statsbound property="dcol">
+<lower>0.0</lower>
+<upper>1.0e30</upper>
+</statsbound>
+<console interval="1" msgs="true">
+<tabular>
+<column fmt="sci">time</column>
+<column fmt="float">#sp</column>
+<column fmt="sci">T</column>
+<column fmt="sci">M0</column>
+<column fmt="sci">M1</column>
+</tabular>
+</console>
+</output>
+</mops>
