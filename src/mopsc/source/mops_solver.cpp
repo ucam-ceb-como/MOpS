@@ -234,29 +234,32 @@ void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 // Sets constv/p flag for the cell so it is accessible for the temperature update.
 void Solver::storeTemperatureProperties(Reactor &r, Sweep::rng_type &rng)
 {
-	Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
-	double mw = r.Mixture()->ParticleModel()->Components()[0]->MolWt(); 
-	fvector Hs, Cs;
-	double bulkCg;
-	double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
-		r.Mixture()->Particles().GetTotalMass())
-		/ (mw * r.Mixture()->SampleVolume());
-	if (r.IsConstV()) {
-		// Constant volume reactor: Use Cv, Us.
-		r.Mixture()->setConstV(true);
-		tmpGasPhase->Us(Hs);
-		tmpGasPhase->Cvs(Cs);
-		bulkCg = tmpGasPhase->BulkCv();
+	if (r.IncludeParticles())
+	{
+		Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
+		double mw = r.Mixture()->ParticleModel()->Components()[0]->MolWt();
+		fvector Hs, Cs;
+		double bulkCg;
+		double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
+			r.Mixture()->Particles().GetTotalMass())
+			/ (mw * r.Mixture()->SampleVolume());
+		if (r.IsConstV()) {
+			// Constant volume reactor: Use Cv, Us.
+			r.Mixture()->setConstV(true);
+			tmpGasPhase->Us(Hs);
+			tmpGasPhase->Cvs(Cs);
+			bulkCg = tmpGasPhase->BulkCv();
+		}
+		else {
+			// Constant pressure reactor: Use Cp, Hs.
+			r.Mixture()->setConstV(false);
+			tmpGasPhase->Hs(Hs);
+			tmpGasPhase->Cps(Cs);
+			bulkCg = tmpGasPhase->BulkCp();
+		}
+		int pindex = r.Mech()->ParticleMech().GetParticleSpeciesIndex();
+		r.Mixture()->setGasPhaseProperties(bulkCg, Cs[pindex], rhop * Cs[pindex], Hs);
 	}
-	else {
-		// Constant pressure reactor: Use Cp, Hs.
-		r.Mixture()->setConstV(false);
-		tmpGasPhase->Hs(Hs);
-		tmpGasPhase->Cps(Cs);
-		bulkCg = tmpGasPhase->BulkCp();
-	}
-	int pindex = r.Mech()->ParticleMech().GetParticleSpeciesIndex();
-	r.Mixture()->setGasPhaseProperties(bulkCg, Cs[pindex], rhop * Cs[pindex], Hs);
 }
 
 /*!
