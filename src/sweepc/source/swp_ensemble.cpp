@@ -1421,17 +1421,15 @@ void Sweep::Ensemble::dble()
 			std::cout << "Doubling!" <<std::endl;
 			std::cout << m_count << std::endl;
 
+			bool IWDSA = false;
+
             if (m_count > 0)
             {
             // Copy particles.
             const size_t prevCount = m_count;
 			int ii = 0;
-			bool IWDSA;
 			if (m_particles[0]->Primary()->AggID() == AggModels::PAH_KMC_ID){
 				IWDSA = m_particles[0]->Primary()->ParticleModel()->Components(0)->WeightedPAHs();
-			}
-			else{
-				IWDSA = false;
 			}
             for (size_t i = 0; i != prevCount; ++i) {
 
