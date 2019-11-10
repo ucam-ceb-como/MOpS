@@ -63,7 +63,7 @@ namespace Sweep {
 Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
 : m_ensemble(), m_model(&model),
   m_smpvol(1.0), m_fixed_chem(false),
-  m_constv(false), m_particle_density(0.0)
+  m_constv(false), m_particle_density(0.0), m_adiabatic_flag(false)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
