@@ -168,9 +168,12 @@ public:
 
 
     // PARTICLE FUNCTIONS.
-
-    //! Create a new particle on the heap
+	
+	//! Create a new particle on the heap
     Particle *const CreateParticle(const double time) const;
+	
+    //! Create a new particle on the heap
+    Particle *const CreateParticle(const double time, const int k) const;
 
     //! Create a new particle on the heap
     Particle *const CreateParticle(const double time, const double position) const;
@@ -310,7 +313,7 @@ public:
     const std::string &Mode() const;
 
     void SetInceptedPAH(const std::string &name);
-    const PostProcessStartingStr &InceptedPAH() const;
+    const std::vector<PostProcessStartingStr> &InceptedPAH() const;
     //bool IsPyreneInception() const;
 
     //! Activates writing of entire binary trees
@@ -483,7 +486,7 @@ private:
     std::string m_mode;
 
     //! define a species that it will be transfered between gas and particle phase
-    PostProcessStartingStr m_InceptedPAH;
+    std::vector<PostProcessStartingStr> m_InceptedPAH;
 
     //! Add a flag to indicate reading/writing of full particle binary trees
     bool m_write_bintree;

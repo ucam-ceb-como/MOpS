@@ -350,6 +350,34 @@ Sweep::Particle *const ParticleModel::CreateParticle(const double time) const
 
 /*!
  * @param[in]       time        Time at which particle is being created
+ * @param[in]       k        	Type of particle to be created
+ *
+ * Creates a new particle and sets it up with all the models
+ * required by the ParticleModel. A particle created here
+ * will have a single primary.  Ownership of the particle
+ * (in particular responsibility for calling delete) is taken
+ * by the caller.
+ *
+ */
+Sweep::Particle *const ParticleModel::CreateParticle(const double time, const int k) const
+{
+    // Create new primary using the aggregation model currently
+    // set in this model.
+    AggModels::Primary *pri = ModelFactory::CreatePrimary(m_aggmodel, time, k, *this);
+
+    // Now create a particle from this primary.  This sets up the
+    // sub-model cache within the particle automatically.
+    Particle *part = new Particle(*pri);
+
+    // No position information available
+    part->setPositionAndTime(-1.0, -1.0);
+
+    // Returns particle.
+    return part;
+}
+
+/*!
+ * @param[in]       time        Time at which particle is being created
  * @param[in]       position    Position at which particle is being created
  *
  * Creates a new particle and sets it up with all the models
@@ -539,8 +567,12 @@ void ParticleModel::Serialize(std::ostream &out) const
         out.write((char*)&n, sizeof(n));
 
         //write the postprocess species
-        n = (unsigned int)m_InceptedPAH;
-        out.write((char*)&n, sizeof(n));
+		n = (unsigned int)m_InceptedPAH.size();
+		out.write((char*)&n, sizeof(n));
+		for (std::vector<ParticleModel::PostProcessStartingStr>::const_iterator it = m_InceptedPAH.begin(); it!=m_InceptedPAH.end();it++){
+			n = (unsigned int)(*it);
+			out.write((char*)&n, sizeof(n));
+		}
         // Write whether binary trees should be serialised.
         bool flag(false);
         flag = m_write_bintree;
@@ -612,6 +644,7 @@ void ParticleModel::Deserialize(std::istream &in)
         unsigned int n=0;
         double var(0.0);
         bool flag(false);
+		int size_m_InceptedPAH;
 
         switch (version) {
             case 0:
@@ -646,10 +679,14 @@ void ParticleModel::Deserialize(std::istream &in)
 
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_condensationThreshold = (int)n;
-
+				
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                size_m_InceptedPAH = (int)n;
+                for (int ii = 0; ii != size_m_InceptedPAH; ii++){
+					in.read(reinterpret_cast<char*>(&n), sizeof(n));
+					m_InceptedPAH.push_back((PostProcessStartingStr)n);
+				}
                 
-                in.read(reinterpret_cast<char*>(&n), sizeof(n));
-                m_InceptedPAH = (PostProcessStartingStr)n;
                 // Read if binary trees should be read..
                 in.read(reinterpret_cast<char*>(&flag), sizeof(flag));
                 m_write_bintree = flag;
@@ -827,28 +864,28 @@ void ParticleModel::SetMode(const std::string &mode) {m_mode = mode;}
 void ParticleModel::SetInceptedPAH(const std::string &name) 
 {
     if (!name.compare("A1"))
-        m_InceptedPAH = A1;
+        m_InceptedPAH.push_back(A1);
 	else if (!name.compare("A1CH3"))
-        m_InceptedPAH = A1CH3;
+        m_InceptedPAH.push_back(A1CH3);
     else if (!name.compare("A2"))
-        m_InceptedPAH = A2;
+        m_InceptedPAH.push_back(A2);
     else if (!name.compare("A3"))
         throw std::runtime_error("A3 is not supported as InceptedPAH currently and please use A1, A2, or A4 (Sweep::ParticleModel::SetInceptedPAH())");
     else if (!name.compare("A4"))
-            m_InceptedPAH = A4;
+            m_InceptedPAH.push_back(A4);
 	else if (!name.compare("A4CH3"))
-            m_InceptedPAH = A4CH3;
+            m_InceptedPAH.push_back(A4CH3);
 	else if (!name.compare("R5A3"))
-            m_InceptedPAH = R5A3;
+            m_InceptedPAH.push_back(R5A3);
     else if (!name.compare("A5"))
-            m_InceptedPAH = A5;
+            m_InceptedPAH.push_back(A5);
     else throw std::runtime_error("no information about the incepted PAH is available, only A1 A2 and A4 are supported now (Sweep::ParticleModel::SetInceptedPAH())");
 }
 
 //! return mode of collision efficency model
 const std::string &ParticleModel::Mode() const {return m_mode;}
 
-const ParticleModel::PostProcessStartingStr &ParticleModel::InceptedPAH() const {return m_InceptedPAH;}
+const std::vector<ParticleModel::PostProcessStartingStr> &ParticleModel::InceptedPAH() const {return m_InceptedPAH;}
 
 //bool ParticleModel::IsPyreneInception() const
 //{

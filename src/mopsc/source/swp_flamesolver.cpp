@@ -468,51 +468,56 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
             r.Mixture()->ParticleModel()->Postprocessing() == ParticleModel::XA4) {
             int index;
             double numCarbons;
-
-            switch (mech.InceptedPAH()){
-                case ParticleModel::A1:
-                    index=r.Mech()->GasMech().FindSpecies("A1");
-                    numCarbons = 6;
-                    break;
-				case ParticleModel::A1CH3:
-                    index=r.Mech()->GasMech().FindSpecies("A1CH3");
-                    numCarbons = 7;
-                    break;
-                case ParticleModel::A2:
-                    index=r.Mech()->GasMech().FindSpecies("A2");
-                    numCarbons = 10;
-                    break;
-                case ParticleModel::A4:
-                    index=r.Mech()->GasMech().FindSpecies("A4");
-                    numCarbons = 16;
-                    break;
-				case ParticleModel::A4CH3:
-                    index=r.Mech()->GasMech().FindSpecies("A4CH3");
-                    numCarbons = 17;
-                    break;
-				case ParticleModel::R5A3: //This is the species Methylene Phenanthrene radical C15H9
-                    index=r.Mech()->GasMech().FindSpecies("R5A3");
-                    numCarbons = 15;
-                    break;
-                case ParticleModel::A5:
-                    index=r.Mech()->GasMech().FindSpecies("A5");
-                    numCarbons = 20;
-                    break;
-                default:
-                    throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4 and A5 are supported now (Sweep::FlameSolver::Solve())");
-            }
-            if (mech.Inceptions(0) != NULL) {
-                if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID &&
-                    mech.Inceptions(0)->ParticleComp(0) == numCarbons) {
-                    // calculate the amount of stochastic pyrene particles in the ensemble
-                    unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);
-                    // if Pmount exceeds the capacity of the ensemble at the begining of the simulation,
-                    // the process should be terminated since further running is meaningless.
-                    if (t < 1.0e-20 && Pamount >= r.Mixture()->Particles().Capacity())
-                        throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
-                    mech.MassTransfer(Pamount, t, *r.Mixture(), rng, Geometry::LocalGeometry1d());
-                }
-            }
+			
+			std::vector<ParticleModel::PostProcessStartingStr> InceptedPAH_list = mech.InceptedPAH();
+			
+			int Incepted_species_loop = InceptedPAH_list.size();
+			for (std::vector<int>::size_type ii = 0; ii!=Incepted_species_loop; ii++){
+				switch (InceptedPAH_list[ii]){
+					case ParticleModel::A1:
+						index=r.Mech()->GasMech().FindSpecies("A1");
+						numCarbons = 6;
+						break;
+					case ParticleModel::A1CH3:
+						index=r.Mech()->GasMech().FindSpecies("A1CH3");
+						numCarbons = 7;
+						break;
+					case ParticleModel::A2:
+						index=r.Mech()->GasMech().FindSpecies("A2");
+						numCarbons = 10;
+						break;
+					case ParticleModel::A4:
+						index=r.Mech()->GasMech().FindSpecies("A4");
+						numCarbons = 16;
+						break;
+					case ParticleModel::A4CH3:
+						index=r.Mech()->GasMech().FindSpecies("A4CH3");
+						numCarbons = 17;
+						break;
+					case ParticleModel::R5A3: //This is the species Methylene Phenanthrene radical C15H9
+						index=r.Mech()->GasMech().FindSpecies("R5A3");
+						numCarbons = 15;
+						break;
+					case ParticleModel::A5:
+						index=r.Mech()->GasMech().FindSpecies("A5");
+						numCarbons = 20;
+						break;
+					default:
+						throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4 and A5 are supported now (Sweep::FlameSolver::Solve())");
+				}
+				if (mech.Inceptions(0) != NULL) {
+					if (mech.AggModel() == AggModels::PAH_KMC_ID || mech.AggModel() == AggModels::BinTree_ID || mech.AggModel() == AggModels::Spherical_ID &&
+						mech.Inceptions(0)->ParticleComp(0) == numCarbons) {
+						// calculate the amount of stochastic pyrene particles in the ensemble
+						unsigned int Pamount=r.Mixture()->NumOfStartingSpecies(index);
+						// if Pmount exceeds the capacity of the ensemble at the begining of the simulation,
+						// the process should be terminated since further running is meaningless.
+						if (t < 1.0e-20 && Pamount >= r.Mixture()->Particles().Capacity())
+							throw std::runtime_error("increase the M0 in mops.inx please, current choice is too small (Sweep::FlameSolver::Solve)");
+						mech.MassTransfer(Pamount, (int)ii, t, *r.Mixture(), rng, Geometry::LocalGeometry1d());
+					}
+				}
+			}
         }
 
         // Get the process jump rates (and the total rate).

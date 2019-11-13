@@ -65,6 +65,7 @@
 
 #include "swp_coords.h"
 
+#include <vector>
 #include <iostream>
 #include <stack>
 #include <map>
@@ -113,7 +114,7 @@ public:
     typedef std::set<void*> PahSerialisationMap;
 
     //! Build a new primary with one molecule
-    PAHPrimary(const double time, const Sweep::ParticleModel &model);
+    PAHPrimary(const double time, const Sweep::ParticleModel &model, int k);
 
     //! Build a new primary with one molecule
     PAHPrimary(const double time, const double position,
@@ -171,7 +172,7 @@ public:
 	void Adjust(const double old_vol);
 
     //! adds a PAH to a particle
-    void AddPAH(double time, const Sweep::ParticleModel &model);
+    void AddPAH(double time, const Sweep::ParticleModel &model, int k);
 
     //! returns the rounding level due to mass addition
     double CoalescenceLevel();

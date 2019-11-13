@@ -182,8 +182,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_L7_R5ZZACR5 = new L7_R5ZZACR5; j_L7_R5ZZACR5->initialise();                   //!< 51 - R7 bay closure on R5ZZACR5.
 	JumpProcess* j_L6_ACR5R5R6 = new L6_ACR5R5R6; j_L6_ACR5R5R6->initialise();             		 //!< 52 - ACR5R5R6 closure reaction.
 	JumpProcess* j_L7_ACR5R5R6ZZ = new L7_ACR5R5R6ZZ; j_L7_ACR5R5R6ZZ->initialise();             //!< 53 - R7 bay closure on ACR5R5R6ZZ.
-	//JumpProcess* j_A_CH3 = new A_CH3; j_A_CH3->initialise();             						 //!< 54 - CH3 addition.
-	//JumpProcess* j_D_CH3 = new D_CH3; j_D_CH3->initialise();             						 //!< 55 - CH3 desorption.
+	JumpProcess* j_A_CH3 = new A_CH3; j_A_CH3->initialise();             						 //!< 54 - CH3 addition.
+	JumpProcess* j_D_CH3 = new D_CH3; j_D_CH3->initialise();             						 //!< 55 - CH3 desorption.
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
     temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
@@ -239,8 +239,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_L7_R5ZZACR5);          //!< 51 - R7 bay closure on R5ZZACR5.
 	temp.push_back(j_L6_ACR5R5R6);        //!< 52 - ACR5R5R6 closure reaction.
 	temp.push_back(j_L7_ACR5R5R6ZZ);          //!< 53 - R7 bay closure on ACR5R5R6ZZ.
-	//temp.push_back(j_A_CH3);          		//!< 54 - CH3 addition.
-	//temp.push_back(j_D_CH3);          		//!< 55 - CH3 desorption.
+	temp.push_back(j_A_CH3);          		//!< 54 - CH3 addition.
+	temp.push_back(j_D_CH3);          		//!< 55 - CH3 desorption.
 
     return temp;
 }

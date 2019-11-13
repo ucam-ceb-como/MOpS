@@ -893,12 +893,13 @@ void Mechanism::DoParticleFlow(
  * Transfer InceptedPAH molecule (i.e. A1, A2 or A4), from the gas phase to the particle ensemble and vice versa used for PAH-PP model only
  * 
  * @param[in]       i           the number of pyrene supposed in the emsemble
+ * @param[in]       k           the index of inception species transfered
  * @param[in]       t           Time at which event is to take place
  * @param[in,out]   sys         System in which event is to take place
  * @param[in,out]   rng         Random number generator
  *
  */
-void Mechanism::MassTransfer(int i, double t, Cell &sys, rng_type &rng, const Geometry::LocalGeometry1d& local_geom) const
+void Mechanism::MassTransfer(int i, int k, double t, Cell &sys, rng_type &rng, const Geometry::LocalGeometry1d& local_geom) const
 {
     if (AggModel() == AggModels::Spherical_ID || AggModel() == AggModels::BinTree_ID) {
         int j = sys.Particles().NumOfInceptedPAH(AggModel());
@@ -924,7 +925,7 @@ void Mechanism::MassTransfer(int i, double t, Cell &sys, rng_type &rng, const Ge
         // This is an inception process.
         const Sweep::Processes::PAHInception *m_pahinception = NULL;
         m_pahinception = dynamic_cast<const Sweep::Processes::PAHInception*>(m_inceptions[0]);
-        m_pahinception->AddInceptedPAH(i, t, sys, rng);
+        m_pahinception->AddInceptedPAH(i, k, t, sys, rng);
     }
 }
 

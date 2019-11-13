@@ -115,7 +115,41 @@ AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelT
         case AggModels::SurfVolSilica_ID:
             return new AggModels::SurfVolSilicaPrimary(time, model);
 		case AggModels::PAH_KMC_ID:
-            return new AggModels::PAHPrimary(time, model);
+            return new AggModels::PAHPrimary(time, model, 0);
+			//Only returns the first PAH in the inception list.
+        case AggModels::BinTree_ID:
+            return new AggModels::BinTreePrimary(time, model);
+        case AggModels::BinTreeSilica_ID:
+            return new AggModels::BinTreeSilicaPrimary(time, model);
+        case AggModels::SurfVolCubic_ID:
+            return new AggModels::SurfVolCubicPrimary(time, model);
+        case AggModels::Spherical_ID:
+            // Spherical primary model is default.
+        default:
+            return new AggModels::Primary(time, model);
+    }
+}
+
+/*!
+ * @param[in]   id          Model for the aggregate structure of the particle
+ * @param[in]   time        Time at which particle is being created
+ * @param[in]   k        	Type of PAH used as primary particle
+ * @param[in]   model       Model which defines the meaning of the particles
+ *
+ * @return      Pointer to dynamically allocated primary (caller must delete)
+ */
+AggModels::Primary *const ModelFactory::CreatePrimary(const AggModels::AggModelType id,
+                                                      const double time, int k, const ParticleModel &model)
+{
+    switch (id) {
+        case AggModels::SurfVol_ID:
+            return new AggModels::SurfVolPrimary(time, model);
+        case AggModels::SurfVolHydrogen_ID:
+            return new AggModels::SurfVolHydrogenPrimary(time, model);
+        case AggModels::SurfVolSilica_ID:
+            return new AggModels::SurfVolSilicaPrimary(time, model);
+		case AggModels::PAH_KMC_ID:
+            return new AggModels::PAHPrimary(time, model, k);
         case AggModels::BinTree_ID:
             return new AggModels::BinTreePrimary(time, model);
         case AggModels::BinTreeSilica_ID:

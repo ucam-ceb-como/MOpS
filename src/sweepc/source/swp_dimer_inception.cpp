@@ -127,6 +127,7 @@ int DimerInception::Perform(const double t, Cell &sys,
     // Create a new particle of the type specified
     // by the system ensemble.
     Particle *sp = m_mech->CreateParticle(t);
+	//Incepting first PAH from inception list.
 
     // Get the cell vertices
     fvector vertices = local_geom.cellVertices();

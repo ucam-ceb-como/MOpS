@@ -59,11 +59,19 @@ class ModelFactory
 {
 public:
     // PRIMARY PARTICLE CREATION.
-
+	
+	//! Creates a new primary particle of the given type.
+    static AggModels::Primary *const CreatePrimary(
+        const AggModels::AggModelType id, // Model ID.
+        const double time,                  // Primary create time.		
+        const ParticleModel &model        // Defining particle model.
+        );
+	
     //! Creates a new primary particle of the given type.
     static AggModels::Primary *const CreatePrimary(
         const AggModels::AggModelType id, // Model ID.
         const double time,                  // Primary create time.
+		const int k,						// Type of inception species to create		
         const ParticleModel &model        // Defining particle model.
         );
 

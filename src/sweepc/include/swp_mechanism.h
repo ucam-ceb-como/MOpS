@@ -237,6 +237,7 @@ public:
     //! Transfer mass from gas phase to particle ensemble used for PAH-PP model.
     void MassTransfer(
         int i,                                         //!< The number of pyrene supposed in the ensemble.
+		int k,										   //!< The index of PAH to transfer
         double t,                                      //!< Current time (s).
         Cell &sys,                                     //!< System to update (includes ensemble).
         rng_type &rng,                                 //!< Random number generator.

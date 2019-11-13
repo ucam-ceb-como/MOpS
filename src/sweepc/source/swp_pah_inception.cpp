@@ -156,7 +156,8 @@ int PAHInception::Perform(const double t, Cell &sys,
 	}
 	else {
 		// Ignore all questions of position
-		sp = m_mech->CreateParticle(t);
+		sp = m_mech->CreateParticle(t, 0);
+		//This means creating the first PAH in the inception list. Not tested gl413
 	}
 
 	sp->UpdateCache();
@@ -185,6 +186,7 @@ int PAHInception::Perform(const double t, Cell &sys,
  * The mass form gas phase will be transfered to particle ensemble by using this function
  *
  * \param[in]       i           number of pyrene supposed in the ensemble
+ * \param[in]		k 			Index of PAH in inception list to incept
  * \param[in]       t           Time
  * \param[in,out]   sys         System to update
  * \param[in]       iterm       Process term responsible for this event
@@ -192,7 +194,7 @@ int PAHInception::Perform(const double t, Cell &sys,
  *
  * \return      0 on success, otherwise negative.
  */
-int PAHInception::AddInceptedPAH(const int i, const double t, Cell &sys,rng_type &rng) const {
+int PAHInception::AddInceptedPAH(const int i, const int k, const double t, Cell &sys,rng_type &rng) const {
 
     Particle *sp = NULL;
 
@@ -212,7 +214,7 @@ int PAHInception::AddInceptedPAH(const int i, const double t, Cell &sys,rng_type
 				sys.Particles().Update(Pindex);
 			}
 			else{
-				sp = m_mech->CreateParticle(t);
+				sp = m_mech->CreateParticle(t, k);
 				sp->setStatisticalWeight(i);
 				sp->UpdateCache();
 				// Add particle to main ensemble.
@@ -224,7 +226,7 @@ int PAHInception::AddInceptedPAH(const int i, const double t, Cell &sys,rng_type
 			{
 
 				// Ignore all questions of position
-				sp = m_mech->CreateParticle(t);
+				sp = m_mech->CreateParticle(t, k);
 				sp->UpdateCache();
 				// Add particle to main ensemble.
 				sys.Particles().Add(*sp, rng);

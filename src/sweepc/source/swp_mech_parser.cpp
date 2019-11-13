@@ -579,9 +579,34 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         el = (*i)->GetFirstChild("InceptedPAH");
         if (el!=NULL) {
             str = el->Data();
-            if (str != "") {
+            if (str != "" && str != "Multiple") {
                 mech.SetInceptedPAH(str);
-            } else {
+            } else if (str == "Multiple"){
+				cout << "Incepting multiple PAHs.\n";
+				vector<std::string> incepted_pah_list_str;
+				vector<CamXML::Element*> inception_items;
+				vector<CamXML::Element*>::iterator it_inc;
+				CamXML::Element *my_el;
+				my_el = (*i)->GetFirstChild("InceptedPAH_items");
+				if (my_el != NULL){
+					//Read the list
+					my_el->GetChildren("PAH", inception_items);
+				}else {
+					throw std::runtime_error("No inception PAH list found. (InceptedPAH_items)");
+				}
+				if(inception_items.size() == 0) {
+					std::string msg("Component ");
+					msg += comp->Name();
+					msg += " InceptedPAH_items contains no data (Sweep, MechParser::readComponents).";
+					delete comp;
+					throw runtime_error(msg);
+				}
+				for (it_inc=inception_items.begin(); it_inc!=inception_items.end(); ++it_inc){
+					std::string inc_pah_str = (*it_inc)->Data();
+					cout << "Incepting PAH: " << inc_pah_str << "\n";
+					mech.SetInceptedPAH(inc_pah_str);
+				}
+			}else {
                 // coalthresh contains no data.
                 std::string msg("Component ");
                 msg += comp->Name();

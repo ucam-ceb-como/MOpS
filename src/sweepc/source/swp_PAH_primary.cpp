@@ -152,9 +152,10 @@ PAHPrimary::PAHPrimary() : Primary(),
 /*!
  * @param[in]       time        Time at which particle is being created
  * @param[in]       model       Model which defines the meaning of the primary
+ * @param[in]       k       	Type of PAH used as primary particle
  *
  */
-PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model)
+PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model, int k)
 	: Primary(time, model),
 	m_numcarbon(0),
 	m_numH(0),
@@ -211,7 +212,7 @@ PAHPrimary::PAHPrimary(const double time, const Sweep::ParticleModel &model)
 	// Other parts of the code check for a non-zero composition
 	m_comp[0] = 1;
 
-	AddPAH(time, model);
+	AddPAH(time, model, k);
 
 	//Update the other properties
 	UpdateCache();
@@ -282,7 +283,8 @@ PAHPrimary::PAHPrimary(const double time, const double position,
 	// Other parts of the code check for a non-zero composition
 	m_comp[0] = 1;
 
-	AddPAH(time, model);
+	AddPAH(time, model, 0);
+	//This passes the first PAH in the inception list. Not tested. gl413
 
 	//Update the other properties
 	UpdateCache();
@@ -360,12 +362,15 @@ PAHPrimary::PAHPrimary(double time, const Sweep::ParticleModel &model, bool noPA
  * Add a PAH to the primary particle
  *
  * @param[in]   time        create time of the PAH
-
  * @param[in]   model       Particle model containing molecule database
+ * @param[in]   k        	Type of PAH used as primary particle
 */
-void PAHPrimary::AddPAH(double time,const Sweep::ParticleModel &model)
+void PAHPrimary::AddPAH(double time,const Sweep::ParticleModel &model, int k)
 {
-    boost::shared_ptr<PAH> new_PAH (new PAH(time, model.InceptedPAH()));
+	const std::vector<ParticleModel::PostProcessStartingStr> Incepted_PAH_list = model.InceptedPAH();
+	ParticleModel::PostProcessStartingStr Primary_PAH = Incepted_PAH_list[k];
+	boost::shared_ptr<PAH> new_PAH (new PAH(time, Primary_PAH));
+    //boost::shared_ptr<PAH> new_PAH (new PAH(time, model.InceptedPAH()));
     new_PAH->PAH_ID=ID;
     m_PAH.push_back(new_PAH);
     ID++;
@@ -2412,7 +2417,8 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						(*sys.Particles().At(ind)).setStatisticalWeight(statweight);
 
 						Particle *sp = NULL;
-						sp = model.CreateParticle(updatetime);
+						sp = model.CreateParticle(updatetime, 0);
+						//Creating the first type of primary particle. Not tested. gl413
 						AggModels::PAHPrimary *pri =
 							dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
 						pri->m_PAH.clear();
@@ -2750,7 +2756,8 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 						(*sys.Particles().At(ind)).setStatisticalWeight(statweight);
 
 						Particle *sp = NULL;
-						sp = model.CreateParticle(updatetime);
+						sp = model.CreateParticle(updatetime, 0);
+						//Creating the first type of primary particle. Not tested. gl413
 						AggModels::PAHPrimary *pri =
 							dynamic_cast<AggModels::PAHPrimary*>((*sp).Primary());
 						pri->m_PAH.clear();
@@ -2893,35 +2900,38 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 // currently, only A1,A2 and A4 can be specified as InceptedPAH due to the underlying KMC code
 bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
 {
-    ParticleModel::PostProcessStartingStr str = this->ParticleModel()->InceptedPAH();
-    int m_control;
-    switch (str){
-    case ParticleModel::A1:
-        m_control=Sweep::KMC_ARS::BENZENE_C;
-        break;
-	case ParticleModel::A1CH3:
-        m_control=Sweep::KMC_ARS::TOLUENE_C;
-        break;
-    case ParticleModel::A2:
-        m_control=10;
-        break;
-    case ParticleModel::A4:
-        m_control=Sweep::KMC_ARS::PYRENE_C;
-        break;
-	case ParticleModel::A4CH3:
-        m_control=Sweep::KMC_ARS::METHYLPYRENE_C;
-        break;
-	case ParticleModel::R5A3:
-        m_control=Sweep::KMC_ARS::MPHENANTHRENER_C;
-        break;
-    case ParticleModel::A5:
-        m_control=Sweep::KMC_ARS::BENZOPYRENE_C;
-        break;
-    default:
-        throw std::runtime_error("no information about the incepted PAH is available (Sweep::PAHPrimary::CheckInvalidPAHs())");
-    }
-    // if the PAH in the cluster is as the same size as the incepted PAH, it will be released but the current implementation is directly removed which causes mass loss, for a fully coupled model this part should be redesigned.
-	return (it->m_pahstruct->numofC() < m_control || (it->m_pahstruct->numofC() <= m_control && NumPAH() != 1));
+	std::vector<ParticleModel::PostProcessStartingStr> str_list = this->ParticleModel()->InceptedPAH();
+	for (std::vector<int>::size_type ii = 0; ii!=str_list.size(); ii++){
+		ParticleModel::PostProcessStartingStr str = str_list[ii];
+		int m_control;
+		switch (str){
+		case ParticleModel::A1:
+			m_control=Sweep::KMC_ARS::BENZENE_C;
+			break;
+		case ParticleModel::A1CH3:
+			m_control=Sweep::KMC_ARS::TOLUENE_C;
+			break;
+		case ParticleModel::A2:
+			m_control=10;
+			break;
+		case ParticleModel::A4:
+			m_control=Sweep::KMC_ARS::PYRENE_C;
+			break;
+		case ParticleModel::A4CH3:
+			m_control=Sweep::KMC_ARS::METHYLPYRENE_C;
+			break;
+		case ParticleModel::R5A3:
+			m_control=Sweep::KMC_ARS::MPHENANTHRENER_C;
+			break;
+		case ParticleModel::A5:
+			m_control=Sweep::KMC_ARS::BENZOPYRENE_C;
+			break;
+		default:
+			throw std::runtime_error("no information about the incepted PAH is available (Sweep::PAHPrimary::CheckInvalidPAHs())");
+		}
+		// if the PAH in the cluster is as the same size as the incepted PAH, it will be released but the current implementation is directly removed which causes mass loss, for a fully coupled model this part should be redesigned.
+		return (it->m_pahstruct->numofC() < m_control || (it->m_pahstruct->numofC() <= m_control && NumPAH() != 1));
+	}
 }
 
 //struct compare_class
@@ -2996,48 +3006,45 @@ int PAHPrimary::InceptedPAH() const
     // m_parent == NULL is to check whether this primary particle is part of an aggregate.
     if (m_parent == NULL && Numprimary() == 1 && NumPAH() == 1){
         //currently only Num of C and H is used to identify the Pyrene, Naphthalene and benzene
-        ParticleModel::PostProcessStartingStr str = ParticleModel()->InceptedPAH();
-        switch (str){
-        case ParticleModel::A1:
-            if (NumCarbon() == BENZENE_C && NumHydrogen() == BENZENE_H)
-                return 1;
-            else return 0;
-            break;
-		case ParticleModel::A1CH3:
-            if (NumCarbon() == TOLUENE_C && NumHydrogen() == TOLUENE_H)
-                return 1;
-            else return 0;
-            break;
-        case ParticleModel::A2:
-            if (NumCarbon() == NAPHTHALENE_C && NumHydrogen() == NAPHTHALENE_H)
-                return 1;
-            else return 0;
-            break;
-        case ParticleModel::A4:
-            if (NumCarbon() == PYRENE_C && NumHydrogen() == PYRENE_H)
-                return 1;
-            else return 0;
-            break;
-		case ParticleModel::A4CH3:
-            if (NumCarbon() == METHYLPYRENE_C && NumHydrogen() == METHYLPYRENE_H)
-                return 1;
-            else return 0;
-            break;
-		case ParticleModel::R5A3:
-            if (NumCarbon() == MPHENANTHRENER_C && NumHydrogen() == MPHENANTHRENER_H)
-                return 1;
-            else return 0;
-            break;
-        case ParticleModel::A5:
-            if (NumCarbon() == BENZOPYRENE_C && NumHydrogen() == BENZOPYRENE_H)
-                return 1;
-            else return 0;
-            break;
-        default:
-            return 0;
-        }
-    }
-    else return 0;
+        std::vector<ParticleModel::PostProcessStartingStr> str_list = ParticleModel()->InceptedPAH();
+		std::vector<ParticleModel::PostProcessStartingStr>::iterator it;
+		for (it=str_list.begin(); it!=str_list.end();++it){
+			ParticleModel::PostProcessStartingStr str = (*it);
+			switch (str){
+			case ParticleModel::A1:
+				if (NumCarbon() == BENZENE_C && NumHydrogen() == BENZENE_H)
+					return 1;
+				break;
+			case ParticleModel::A1CH3:
+				if (NumCarbon() == TOLUENE_C && NumHydrogen() == TOLUENE_H)
+					return 1;
+				break;
+			case ParticleModel::A2:
+				if (NumCarbon() == NAPHTHALENE_C && NumHydrogen() == NAPHTHALENE_H)
+					return 1;
+				else return 0;
+				break;
+			case ParticleModel::A4:
+				if (NumCarbon() == PYRENE_C && NumHydrogen() == PYRENE_H)
+					return 1;
+				break;
+			case ParticleModel::A4CH3:
+				if (NumCarbon() == METHYLPYRENE_C && NumHydrogen() == METHYLPYRENE_H)
+					return 1;
+				break;
+			case ParticleModel::R5A3:
+				if (NumCarbon() == MPHENANTHRENER_C && NumHydrogen() == MPHENANTHRENER_H)
+					return 1;
+				break;
+			case ParticleModel::A5:
+				if (NumCarbon() == BENZOPYRENE_C && NumHydrogen() == BENZOPYRENE_H)
+					return 1;
+				break;
+			}
+		}
+		return 0;
+	}
+	else return 0;
 }
 
 // dump information of this Xmer to a vector<vector<double> > 

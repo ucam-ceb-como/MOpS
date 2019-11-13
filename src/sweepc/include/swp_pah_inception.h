@@ -100,6 +100,7 @@ public:
     //! Perform an event to transfer mass from gasphase to particle pahse. This function is only used for PAH-PP model
     int AddInceptedPAH(
         int i,
+		int k,
         double t,
         Cell &sys,
         rng_type &rng) const;

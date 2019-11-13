@@ -771,30 +771,42 @@ void AggModels::Primary::init(void)
 //! the inception species.
 int AggModels::Primary::InceptedPAH() const
 {
-    ParticleModel::PostProcessStartingStr str = ParticleModel()->InceptedPAH();
-
-    switch (str){
-        case ParticleModel::A1:
-            if (NumCarbon() == BENZENE_C)
-                return 1;
-            else return 0;
-            break;
-        case ParticleModel::A2:
-            if (NumCarbon() == NAPHTHALENE_C)
-                return 1;
-            else return 0;
-            break;
-        case ParticleModel::A4:
-            if (NumCarbon() == PYRENE_C)
-                return 1;
-            else return 0;
-            break;
-        case ParticleModel::A5:
-            if (NumCarbon() == BENZOPYRENE_C)
-                return 1;
-            else return 0;
-            break;
-        default:
-            return 0;
-    }
+    std::vector<ParticleModel::PostProcessStartingStr> str_list = ParticleModel()->InceptedPAH();
+	for (std::vector<int>::size_type ii = 0; ii!=str_list.size(); ii++){
+		ParticleModel::PostProcessStartingStr str = str_list[ii];
+		//A1, A1CH3, A2, A4, A4CH3, R5A3, A5
+		switch (str){
+			case ParticleModel::A1:
+				if (NumCarbon() == BENZENE_C)
+					return 1;
+				break;
+			case ParticleModel::A1CH3:
+				if (NumCarbon() == TOLUENE_C)
+					return 1;
+				break;
+			case ParticleModel::A2:
+				if (NumCarbon() == NAPHTHALENE_C)
+					return 1;
+				break;
+			case ParticleModel::A4:
+				if (NumCarbon() == PYRENE_C)
+					return 1;
+				break;
+			case ParticleModel::A4CH3:
+				if (NumCarbon() == METHYLPYRENE_C)
+					return 1;
+				break;
+			case ParticleModel::R5A3:
+				if (NumCarbon() == MPHENANTHRENER_C)
+					return 1;
+				break;
+			case ParticleModel::A5:
+				if (NumCarbon() == BENZOPYRENE_C)
+					return 1;
+				break;
+			default:
+				return 0;
+		}
+	}
+	return 0;
 }
