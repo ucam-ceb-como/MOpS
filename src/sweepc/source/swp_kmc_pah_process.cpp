@@ -176,7 +176,13 @@ unsigned int PAHProcess::getSiteCount(const kmcSiteType& st) const {
 
 //! Get Ring Counts
 std::tuple <int, int, int> PAHProcess::getRingsCount() const {
-	std::tuple <int, int, int> rings_tuple = std::make_tuple(m_pah->m_rings, m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone + m_pah->m_rings7_Embedded);
+	std::tuple <int, int, int> rings_tuple;
+	if (m_rates_save) {
+		rings_tuple = std::make_tuple(1,1,1);
+	}
+	else{
+		rings_tuple = std::make_tuple(m_pah->m_rings, m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone + m_pah->m_rings7_Embedded);
+	}
 	return rings_tuple;
 }
 

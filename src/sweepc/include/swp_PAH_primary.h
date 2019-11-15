@@ -277,7 +277,7 @@ public:
     //! set pah_structure=Null before destructor delete it
     //void ReleasePAH(Primary &rhs);
     //! find soot particle with only one Incepted molecule (A1,A2 or A4)
-    int InceptedPAH() const;
+    int InceptedPAH(const int k) const;
     //! check whether this PAH is invalid
     bool CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const;
     //! remove invalid PAHs under this primary particle

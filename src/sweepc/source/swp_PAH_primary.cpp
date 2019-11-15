@@ -2291,7 +2291,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
         // this flag store the condition of a particular PAH within this cluster
         bool m_InvalidPAH = false;
         // check whether this updated primary particle is a inceptedPAH, used later to track the num of InceptedPAH in the ensemble
-        const int m_InceptedPAH = InceptedPAH();
+        //const int m_InceptedPAH = InceptedPAH();
 
         //! Loop over each PAH in this primary.
         const std::vector<boost::shared_ptr<PAH> >::iterator itEnd = m_PAH.end();
@@ -2622,7 +2622,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 		// this flag store the condition of a particular PAH within this cluster
 		bool m_InvalidPAH = false;
 		// check whether this updated primary particle is a inceptedPAH, used later to track the num of InceptedPAH in the ensemble
-		const int m_InceptedPAH = InceptedPAH();
+		//const int m_InceptedPAH = InceptedPAH();
 
 		double m_vol_old = m_vol; //volume before PAH growth; used for adjust primary after surface growth
 
@@ -3001,48 +3001,58 @@ double PAHPrimary::MassforXmer() const
 	return sum;	
 }
 
-int PAHPrimary::InceptedPAH() const
+/*
+ * Checks if PAH selected is an inception PAH.
+ * @param[in]        k                 Type of PAH checked.
+ */
+int PAHPrimary::InceptedPAH(const int k) const
 {
     // m_parent == NULL is to check whether this primary particle is part of an aggregate.
     if (m_parent == NULL && Numprimary() == 1 && NumPAH() == 1){
         //currently only Num of C and H is used to identify the Pyrene, Naphthalene and benzene
         std::vector<ParticleModel::PostProcessStartingStr> str_list = ParticleModel()->InceptedPAH();
-		std::vector<ParticleModel::PostProcessStartingStr>::iterator it;
-		for (it=str_list.begin(); it!=str_list.end();++it){
-			ParticleModel::PostProcessStartingStr str = (*it);
-			switch (str){
-			case ParticleModel::A1:
-				if (NumCarbon() == BENZENE_C && NumHydrogen() == BENZENE_H)
-					return 1;
-				break;
-			case ParticleModel::A1CH3:
-				if (NumCarbon() == TOLUENE_C && NumHydrogen() == TOLUENE_H)
-					return 1;
-				break;
-			case ParticleModel::A2:
-				if (NumCarbon() == NAPHTHALENE_C && NumHydrogen() == NAPHTHALENE_H)
-					return 1;
-				else return 0;
-				break;
-			case ParticleModel::A4:
-				if (NumCarbon() == PYRENE_C && NumHydrogen() == PYRENE_H)
-					return 1;
-				break;
-			case ParticleModel::A4CH3:
-				if (NumCarbon() == METHYLPYRENE_C && NumHydrogen() == METHYLPYRENE_H)
-					return 1;
-				break;
-			case ParticleModel::R5A3:
-				if (NumCarbon() == MPHENANTHRENER_C && NumHydrogen() == MPHENANTHRENER_H)
-					return 1;
-				break;
-			case ParticleModel::A5:
-				if (NumCarbon() == BENZOPYRENE_C && NumHydrogen() == BENZOPYRENE_H)
-					return 1;
-				break;
-			}
+		//std::vector<ParticleModel::PostProcessStartingStr>::iterator it;
+		ParticleModel::PostProcessStartingStr str = str_list[k];
+		
+		//ParticleModel::PostProcessStartingStr str = (*it);
+		switch (str){
+		case ParticleModel::A1:
+			if (NumCarbon() == BENZENE_C && NumHydrogen() == BENZENE_H)
+				return 1;
+			else return 0;
+			break;
+		case ParticleModel::A1CH3:
+			if (NumCarbon() == TOLUENE_C && NumHydrogen() == TOLUENE_H)
+				return 1;
+			else return 0;
+			break;
+		case ParticleModel::A2:
+			if (NumCarbon() == NAPHTHALENE_C && NumHydrogen() == NAPHTHALENE_H)
+				return 1;
+			else return 0;
+			break;
+		case ParticleModel::A4:
+			if (NumCarbon() == PYRENE_C && NumHydrogen() == PYRENE_H)
+				return 1;
+			else return 0;
+			break;
+		case ParticleModel::A4CH3:
+			if (NumCarbon() == METHYLPYRENE_C && NumHydrogen() == METHYLPYRENE_H)
+				return 1;
+			else return 0;
+			break;
+		case ParticleModel::R5A3:
+			if (NumCarbon() == MPHENANTHRENER_C && NumHydrogen() == MPHENANTHRENER_H)
+				return 1;
+			else return 0;
+			break;
+		case ParticleModel::A5:
+			if (NumCarbon() == BENZOPYRENE_C && NumHydrogen() == BENZOPYRENE_H)
+				return 1;
+			else return 0;
+			break;
+		default: return 0;
 		}
-		return 0;
 	}
 	else return 0;
 }

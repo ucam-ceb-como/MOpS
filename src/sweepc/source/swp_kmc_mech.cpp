@@ -1318,9 +1318,9 @@ double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	//int ring_count = ((int)pah_st.getRingsCount().first); // Ring count
-	//auto ring_count = pah_st.getRingsCount();
-	//int ring_count_6 = std::get<0>(ring_count);
-	//if (ring_count_6 <= 1) return m_rate = 0;
+	auto ring_count = pah_st.getRingsCount();
+	int ring_count_6 = std::get<0>(ring_count);
+	if (ring_count_6 <= 1) return m_rate = 0;
 	if (site_count == 0) return m_rate = 0;
 	
 

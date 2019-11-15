@@ -218,6 +218,8 @@ namespace Sweep{
             PAHProcess m_simPAHp;
             //! Reaction Counter
             std::vector<int> m_rxn_count;
+			//! Save PAHs at certain conditions
+			bool save_pah_detail=false;
         };
 
         // to write C-H data for PAHs after intervals

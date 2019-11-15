@@ -125,11 +125,11 @@ int PAHInception::Perform(const double t, Cell &sys,
 	//If using weighted PAHs...
 	if (sys.ParticleModel()->Components(0)->WeightedPAHs()){
 	//Check to see if a particle that matches that of the incepted PAHs already exists in the emsemble
-		int j = sys.Particles().NumOfInceptedPAH(m_mech->AggModel());
+		int j = sys.Particles().NumOfInceptedPAH(m_mech->AggModel(), 0);
 		if (j > 0) {
 			//There is already an inception PAH in the ensemble (should only be 1). 
 			//Just update it's statistical weight
-			int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel());
+			int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel(), 0);
 			sp = sys.Particles().At(Pindex);
 			int StatWeight = sp->getStatisticalWeight();
 			sp->setStatisticalWeight(StatWeight + 1.0);
@@ -199,7 +199,7 @@ int PAHInception::AddInceptedPAH(const int i, const int k, const double t, Cell 
     Particle *sp = NULL;
 
     // return current number of pyrene in the emsemble
-    int j = sys.Particles().NumOfInceptedPAH(m_mech->AggModel());
+    int j = sys.Particles().NumOfInceptedPAH(m_mech->AggModel(), k);
 
 	if (i > j)
 	{
@@ -207,7 +207,7 @@ int PAHInception::AddInceptedPAH(const int i, const int k, const double t, Cell 
 			if (j > 0) {
 				//There is already an inception PAH in the ensemble (should only be 1). 
 				//Just update it's statistical weight
-				int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel());
+				int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel(), k);
 				sp = sys.Particles().At(Pindex);
 				int StatWeight = sp->getStatisticalWeight();
 				sp->setStatisticalWeight(StatWeight + i - j);
@@ -237,7 +237,7 @@ int PAHInception::AddInceptedPAH(const int i, const int k, const double t, Cell 
     }
     else if (i<j){
 		if (sys.ParticleModel()->Components(0)->WeightedPAHs()){
-			int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel());
+			int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel(), k);
 			sp = sys.Particles().At(Pindex);
 			int StatWeight = sp->getStatisticalWeight();
 			sp->setStatisticalWeight(StatWeight + i - j);
@@ -246,7 +246,7 @@ int PAHInception::AddInceptedPAH(const int i, const int k, const double t, Cell 
 		else{
 			while (i < j)
 			{
-				int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel());
+				int Pindex = sys.Particles().IndexOfInceptedPAH(m_mech->AggModel(), k);
 				if (Pindex < 0)
 					throw runtime_error("There are no InceptedPAH in the ensemble, and all the InceptedPAH molecules are consumed due to unknown reason(Mops, Sweep::PAHInception::Perform).");
 				sys.Particles().Remove(Pindex);

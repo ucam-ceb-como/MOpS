@@ -247,7 +247,7 @@ public:
     // false: doesn't save rates, returns actual site counts
     bool m_rates_save;
 	// true, adds intermediate save points before each jump process to debug.
-	bool debug_pah=true;
+	bool debug_pah=false;
 
 private:
     // Read Process

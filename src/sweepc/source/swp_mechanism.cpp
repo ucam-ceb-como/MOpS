@@ -902,7 +902,7 @@ void Mechanism::DoParticleFlow(
 void Mechanism::MassTransfer(int i, int k, double t, Cell &sys, rng_type &rng, const Geometry::LocalGeometry1d& local_geom) const
 {
     if (AggModel() == AggModels::Spherical_ID || AggModel() == AggModels::BinTree_ID) {
-        int j = sys.Particles().NumOfInceptedPAH(AggModel());
+        int j = sys.Particles().NumOfInceptedPAH(AggModel(), k);
 
         if (i > j) {
             while (i > j) {
@@ -911,7 +911,7 @@ void Mechanism::MassTransfer(int i, int k, double t, Cell &sys, rng_type &rng, c
             }
         } else if (i < j) {
             while (i < j) {
-                int Pindex = sys.Particles().IndexOfInceptedPAH(AggModel());
+                int Pindex = sys.Particles().IndexOfInceptedPAH(AggModel(), k);
                 if (Pindex<0)
                     throw runtime_error("There are no InceptedPAH in the ensemble, and all the InceptedPAH molecules are consumed due to unknown reason (Mops, Sweep::Mechanism::MassTransfer).");
                 sys.Particles().Remove(Pindex);

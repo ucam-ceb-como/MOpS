@@ -412,11 +412,13 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 	}
 	
 	//Save deferred jump process unitary rates. Comment if necessary. gl413
-	if (!init_flag_0) {
-		r.Mixture()->Particles().Simulator()->initCSVIO();
-		init_flag_0 = true;
+	if (m_test_rates){
+		if (!init_flag_0) {
+			r.Mixture()->Particles().Simulator()->initCSVIO();
+			init_flag_0 = true;
+		}
+		r.Mixture()->Particles().Simulator()->TestRates(t,tstop,1);
 	}
-	r.Mixture()->Particles().Simulator()->TestRates(t,tstop,1);
 	
     // Loop over time until we reach the stop time.
     while (t < tstop)

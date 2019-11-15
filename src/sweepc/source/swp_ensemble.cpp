@@ -1164,15 +1164,15 @@ void Sweep::Ensemble::init(void)
 //}
 
 /*!
- * Iterate through all the stochastic particles and count the number of incepted PAHs
+ * Iterate through all the stochastic particles and count the number of incepted PAHs of type k
  *
  * An incepted PAH is a stochastic particle made up of a single primary and a single PAH matching the gas transfer species (PAH that bridges gas-phase profile and MOPS)
  */
-int Sweep::Ensemble::NumOfInceptedPAH(int ID) const
+int Sweep::Ensemble::NumOfInceptedPAH(int Model_ID, const int k) const
 {
     int numOfInceptedPAHs = 0;
 
-    if (ID == AggModels::Spherical_ID || ID == AggModels::BinTree_ID) {
+    if (Model_ID == AggModels::Spherical_ID || Model_ID == AggModels::BinTree_ID) {
         for (int i = 0; i < m_count; i++){
             if (m_particles[i]->Primary()->InceptedPAH()) {
                 numOfInceptedPAHs += 1;
@@ -1183,16 +1183,16 @@ int Sweep::Ensemble::NumOfInceptedPAH(int ID) const
             const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
             rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
 
-            numOfInceptedPAHs += rhsparticle->InceptedPAH();
+            numOfInceptedPAHs += rhsparticle->InceptedPAH(k);
         }
     }
 
     return numOfInceptedPAHs;
 }
 
-int Sweep::Ensemble::IndexOfInceptedPAH(int ID) const
+int Sweep::Ensemble::IndexOfInceptedPAH(int Model_ID, const int k) const
 {
-    if (ID == AggModels::Spherical_ID) {
+    if (Model_ID == AggModels::Spherical_ID) {
         for (int i =m_count-1;i>=0;--i){
             if (m_particles[i]->Primary()->InceptedPAH())
                 return i;
@@ -1201,7 +1201,7 @@ int Sweep::Ensemble::IndexOfInceptedPAH(int ID) const
         for (int i =m_count-1;i>=0;--i){
             const Sweep::AggModels::PAHPrimary *rhsparticle = NULL;
             rhsparticle = dynamic_cast<const AggModels::PAHPrimary*>(m_particles[i]->Primary());
-            if (rhsparticle->InceptedPAH() == 1)
+            if (rhsparticle->InceptedPAH(k) == 1)
                 return i;
         }
     }
