@@ -489,7 +489,10 @@ Mops::Mixture* readMixture(
     }
 
     // Now load some particles
-    mix->Particles().SetHybridThreshold(mech.ParticleMech().GetHybridThreshold());
+	if (mech.ParticleMech().IsHybrid())
+		mix->Particles().SetHybridThreshold(mech.ParticleMech().GetHybridThreshold());
+	else
+		mix->Particles().SetHybridThreshold(0);
     mix->Particles().Initialise(pcount);
     mix->Particles().InitialiseParticleNumberModel();
     mix->Reset(maxm0);

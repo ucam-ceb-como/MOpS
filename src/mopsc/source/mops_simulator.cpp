@@ -2561,99 +2561,102 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 void Simulator::postProcessParticleNumberPSLs(const Mechanism &mech,
 	const timevector &times) const
 {
-	Reactor *r = NULL;
-	unsigned int step = 0;
+	if (mech.ParticleMech().IsHybrid())
+	{
+		Reactor *r = NULL;
+		unsigned int step = 0;
 
-	// CSV header 
-	vector<string> pn_particles_header;
-	pn_particles_header.push_back("Composition index (-)");
-	pn_particles_header.push_back("Diameter at index (m)");
-	pn_particles_header.push_back("Mass at index (kg)");
-	pn_particles_header.push_back("Ave. number at index (-)");
-	pn_particles_header.push_back("Err");
-	pn_particles_header.push_back("Ave. density at index (m-3)");
-	pn_particles_header.push_back("Err");
-	pn_particles_header.push_back("Total number at index (-)");
+		// CSV header 
+		vector<string> pn_particles_header;
+		pn_particles_header.push_back("Composition index (-)");
+		pn_particles_header.push_back("Diameter at index (m)");
+		pn_particles_header.push_back("Mass at index (kg)");
+		pn_particles_header.push_back("Ave. number at index (-)");
+		pn_particles_header.push_back("Err");
+		pn_particles_header.push_back("Ave. density at index (m-3)");
+		pn_particles_header.push_back("Err");
+		pn_particles_header.push_back("Total number at index (-)");
 
-	// Values string
-	vector<string> pn_particles(8);
+		// Values string
+		vector<string> pn_particles(8);
 
-	// Get hybrid threshold
-	unsigned int threshold = mech.ParticleMech().GetHybridThreshold(); 
-	
-	unsigned int count = 0;
-	
-	double scale = (double)m_nruns;
-	if (m_output_every_iter) 
-		scale *= (double)m_niter;
+		// Get hybrid threshold
+		unsigned int threshold = mech.ParticleMech().GetHybridThreshold();
 
-	// Loop over all time intervals.
-	for (unsigned int i = 0; i != times.size(); ++i) {
-		// Calculate the total step count after this interval.
-		step += times[i].StepCount();
+		unsigned int count = 0;
 
-		// Vectors to store sums
-		vector<vector<double> > sum_N(threshold), sumsqr_N(threshold), indexVals(threshold);
+		double scale = (double)m_nruns;
+		if (m_output_every_iter)
+			scale *= (double)m_niter;
 
-		// File output
-		string fname_pn = m_output_filename + "-particle-numbers(" + cstr(times[i].EndTime()) + "s).csv";
-		CSV_IO pn_particles_out(fname_pn, true);
-		pn_particles_out.Write(pn_particles_header);
+		// Loop over all time intervals.
+		for (unsigned int i = 0; i != times.size(); ++i) {
+			// Calculate the total step count after this interval.
+			step += times[i].StepCount();
 
-		// Loop over all runs.
-		for (unsigned int irun = 0; irun != m_nruns; ++irun) {
-			// Read the save point for this step and run.
-			r = readSavePoint(step, irun, mech);
+			// Vectors to store sums
+			vector<vector<double> > sum_N(threshold), sumsqr_N(threshold), indexVals(threshold);
 
-			if (r != NULL) {
+			// File output
+			string fname_pn = m_output_filename + "-particle-numbers(" + cstr(times[i].EndTime()) + "s).csv";
+			CSV_IO pn_particles_out(fname_pn, true);
+			pn_particles_out.Write(pn_particles_header);
 
-				for (unsigned int i = 0; i < threshold; ++i)
-				{
-					if (irun == 0)
+			// Loop over all runs.
+			for (unsigned int irun = 0; irun != m_nruns; ++irun) {
+				// Read the save point for this step and run.
+				r = readSavePoint(step, irun, mech);
+
+				if (r != NULL) {
+
+					for (unsigned int i = 0; i < threshold; ++i)
 					{
-						sum_N[i].resize(2, 0.0);     // Store: number at index, density at index
-						sumsqr_N[i].resize(2, 0.0);  // Store: uncertainty in number and density at index
-						indexVals[i].push_back(i);   // Store: index, diameter at index, mass at index
-						indexVals[i].push_back(r->Mixture()->Particles().DiameterAtIndex(i));
-						indexVals[i].push_back(r->Mixture()->Particles().MassAtIndex(i));
+						if (irun == 0)
+						{
+							sum_N[i].resize(2, 0.0);     // Store: number at index, density at index
+							sumsqr_N[i].resize(2, 0.0);  // Store: uncertainty in number and density at index
+							indexVals[i].push_back(i);   // Store: index, diameter at index, mass at index
+							indexVals[i].push_back(r->Mixture()->Particles().DiameterAtIndex(i));
+							indexVals[i].push_back(r->Mixture()->Particles().MassAtIndex(i));
+						}
+
+						count = r->Mixture()->Particles().NumberAtIndex(i);
+						sum_N[i][0] += count;
+						sumsqr_N[i][0] += (count * count);
+						count = count / r->Mixture()->SampleVolume();
+						sum_N[i][1] += count;
+						sumsqr_N[i][1] += (count * count);
 					}
 
-					count = r->Mixture()->Particles().NumberAtIndex(i);
-					sum_N[i][0] += count;
-					sumsqr_N[i][0] += (count * count);
-					count = count / r->Mixture()->SampleVolume();
-					sum_N[i][1] += count;
-					sumsqr_N[i][1] += (count * count);
+					delete r;
 				}
-
-				delete r;
+				else {
+					// Throw error if the reactor was not read.
+					throw runtime_error("Unable to read reactor from save point "
+						"(Mops, ParticleSolver::postProcessParticleNumberPSLs).");
+				}
 			}
-			else {
-				// Throw error if the reactor was not read.
-				throw runtime_error("Unable to read reactor from save point "
-					"(Mops, ParticleSolver::postProcessParticleNumberPSLs).");
+
+			vector<vector<double> > totalSum = sum_N;
+
+			calcAvgConf(sum_N, sumsqr_N, scale);
+
+			// Write output
+			for (unsigned int i = 0; i < threshold; ++i) {
+				pn_particles[0] = boost::lexical_cast<std::string>(indexVals[i][0]); // Size index
+				pn_particles[1] = boost::lexical_cast<std::string>(indexVals[i][1]); // Diameter of particles of size index
+				pn_particles[2] = boost::lexical_cast<std::string>(indexVals[i][2]); // Mass of particles of size index
+				pn_particles[3] = boost::lexical_cast<std::string>(sum_N[i][0]);     // Average number of particles at size index
+				pn_particles[4] = boost::lexical_cast<std::string>(sumsqr_N[i][0]);  // Uncertainty in average number
+				pn_particles[5] = boost::lexical_cast<std::string>(sum_N[i][1]);     // Average number density of particles at size index
+				pn_particles[6] = boost::lexical_cast<std::string>(sumsqr_N[i][1]);  // Uncertainty in average number density
+				pn_particles[7] = boost::lexical_cast<std::string>(totalSum[i][0]);  // Total number of particles at size index
+				pn_particles_out.Write(pn_particles);
+
 			}
+			// Close file
+			pn_particles_out.Close();
 		}
-
-		vector<vector<double> > totalSum = sum_N;
-
-		calcAvgConf(sum_N, sumsqr_N, scale);
-		
-		// Write output
-		for (unsigned int i = 0; i < threshold; ++i) {
-			pn_particles[0] = boost::lexical_cast<std::string>(indexVals[i][0]); // Size index
-			pn_particles[1] = boost::lexical_cast<std::string>(indexVals[i][1]); // Diameter of particles of size index
-			pn_particles[2] = boost::lexical_cast<std::string>(indexVals[i][2]); // Mass of particles of size index
-			pn_particles[3] = boost::lexical_cast<std::string>(sum_N[i][0]);     // Average number of particles at size index
-			pn_particles[4] = boost::lexical_cast<std::string>(sumsqr_N[i][0]);  // Uncertainty in average number
-			pn_particles[5] = boost::lexical_cast<std::string>(sum_N[i][1]);     // Average number density of particles at size index
-			pn_particles[6] = boost::lexical_cast<std::string>(sumsqr_N[i][1]);  // Uncertainty in average number density
-			pn_particles[7] = boost::lexical_cast<std::string>(totalSum[i][0]);  // Total number of particles at size index
-			pn_particles_out.Write(pn_particles);
-
-		}
-		// Close file
-		pn_particles_out.Close();
 	}
 }
 
