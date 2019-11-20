@@ -474,6 +474,17 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             r.Mech()->ParticleMech().InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
         }
 
+		// Check if particle terms are to be included in the energy balance
+		if (r.IncludeParticles())
+			r.Mixture()->SetIsAdiabaticFlag(true);
+		else
+			r.Mixture()->SetIsAdiabaticFlag(false);
+		// Check if constant volume
+		if (r.IsConstV())
+			r.Mixture()->setConstV(true);
+		else
+			r.Mixture()->setConstV(false);
+
         // Loop over the time intervals.
         unsigned int global_step = 0;
         timevector::const_iterator iint;

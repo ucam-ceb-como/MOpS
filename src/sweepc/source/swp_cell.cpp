@@ -410,6 +410,14 @@ void Cell::Serialize(std::ostream &out) const
         // Output if fixed chem.
         out.write((char*)&m_fixed_chem, sizeof(m_fixed_chem));
 
+
+		// Output if constant volume. 
+		out.write((char*)&m_constv, sizeof(m_constv));
+
+
+		// Output if fully adiabatic.
+		out.write((char*)&m_adiabatic_flag, sizeof(m_adiabatic_flag));
+
         // Output the ensemble.
         m_ensemble.Serialize(out);
     } else {
@@ -459,6 +467,12 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
 
         // Read if fixed chem.
         in.read(reinterpret_cast<char*>(&m_fixed_chem), sizeof(m_fixed_chem));
+
+		// Read if constant volume.
+		in.read(reinterpret_cast<char*>(&m_constv), sizeof(m_constv));
+
+		// Read if fully adiabatic.
+		in.read(reinterpret_cast<char*>(&m_adiabatic_flag), sizeof(m_adiabatic_flag));
 
         // Read the ensemble.
         m_ensemble.Deserialize(in, model);

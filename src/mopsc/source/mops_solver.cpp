@@ -231,9 +231,9 @@ void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
 
 // Calculates and stores various properties used to complete the 
 // energy balance with particles so they can be computed less frequently. 
-// Sets constv/p flag for the cell so it is accessible for the temperature update.
 void Solver::storeTemperatureProperties(Reactor &r, Sweep::rng_type &rng)
 {
+	// Check if particle terms are to be included in the energy balance
 	if (r.IncludeParticles())
 	{
 		Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
@@ -245,14 +245,12 @@ void Solver::storeTemperatureProperties(Reactor &r, Sweep::rng_type &rng)
 			/ (mw * r.Mixture()->SampleVolume());
 		if (r.IsConstV()) {
 			// Constant volume reactor: Use Cv, Us.
-			r.Mixture()->setConstV(true);
 			tmpGasPhase->Us(Hs);
 			tmpGasPhase->Cvs(Cs);
 			bulkCg = tmpGasPhase->BulkCv();
 		}
 		else {
 			// Constant pressure reactor: Use Cp, Hs.
-			r.Mixture()->setConstV(false);
 			tmpGasPhase->Hs(Hs);
 			tmpGasPhase->Cps(Cs);
 			bulkCg = tmpGasPhase->BulkCp();

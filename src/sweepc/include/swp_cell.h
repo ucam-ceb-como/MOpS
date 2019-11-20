@@ -204,7 +204,7 @@ public:
     void SetIsAdiabaticFlag(bool flag) { m_adiabatic_flag = flag; }
 
     // Flag to track whether energy balance is active for particle phase updates 
-    bool GetIsAdiabaticFlag() const { return m_adiabatic_flag; }
+    bool GetIsAdiabaticFlag() { return m_adiabatic_flag; }
 
     // Functions to store gas-phase properties used during splitting step 
     // (faster than updating each time)

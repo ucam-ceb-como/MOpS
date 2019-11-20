@@ -140,7 +140,6 @@ public:
 
     // Calculates and stores various properties used to complete the 
     // energy balance so they can be computed less frequently. 
-    // Sets constv/p flag for the cell so it is accessible for the temperature update. 
     void storeTemperatureProperties(
             Reactor &r,           // The reactor to solve.
             Sweep::rng_type &rng  // Random number generator
