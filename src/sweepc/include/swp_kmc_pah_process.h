@@ -247,7 +247,7 @@ public:
     // false: doesn't save rates, returns actual site counts
     bool m_rates_save;
 	// true, adds intermediate save points before each jump process to debug.
-	bool debug_pah=false;
+	bool debug_pah=true;
 
 private:
     // Read Process
@@ -386,6 +386,8 @@ private:
     //! Update Sites and its members in structure
     //! All principal sites
     void updateSites();
+	//! All principal sites
+    void updateSites(std::string sitelist);
     //! Updates particular site
     void updateSites(Spointer& st, // site to be updated
         Cpointer Carb1, Cpointer Carb2, // new C members

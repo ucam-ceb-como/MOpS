@@ -162,7 +162,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //!< 31 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //!< 32 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //!< 33 - R6 desorption at RAC -> pyrene.
-	//JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6.
+	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6.
 	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //!< 35 - R7 growth on R5R6AC.
 	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //!< 36 - R7 growth on FEACR5.
 	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();                        //!< 37 - R6 growth on R5R6ZZ.
@@ -219,7 +219,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_C6R_RAC_FE3);      //!< 31 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_C6R_RAC_FE3violi); //!< 32 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_M6R_RAC_FE3);      //!< 33 - R6 desorption at RAC -> pyrene.
-	//temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6.
+	temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6.
 	temp.push_back(j_GR7_R5R6AC);           //!< 35 - R7 growth on R5R6AC.
 	temp.push_back(j_GR7_FEACR5);           //!< 36 - R7 growth on FEACR5.
 	temp.push_back(j_G6R_R5R6ZZ);          //!< 37 - R6 growth on R5R6ZZ.
@@ -997,12 +997,24 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	if(r_denom>0) {
 	 r_f = (m_r[46]+m_r[48])/r_denom; 
 	}
-
 	else r_f=0;
+	
+	
+	JumpProcess* j_D6R_FE3_contained = new D6R_FE3; j_D6R_FE3_contained->initialise();
+	(j_D6R_FE3_contained)->calculateElemRxnRate((j_D6R_FE3_contained)->getVec1(), gp);
+	double desorpt_rate = (j_D6R_FE3_contained)->setRate1(gp, pah_st);
+	
 	double m_rate_old = m_r[51]*r_f* site_count; // Rate Equation
 	//cout << "Temp = " << T; 
-	if (T<700.0) m_rate = r_f2_peq * site_count / 6.0; //1400K is a typical cutoff.
+	double lambda = 1.0;
+	double peq_rate = lambda * r_f2_peq * site_count / 6.0;
+	if (peq_rate > desorpt_rate) m_rate = peq_rate;
 	else m_rate = r_f2_ss * site_count / 6.0; // Rate Equation
+	
+		
+	/*
+	if (T<700.0) m_rate = r_f2_peq * site_count / 6.0; //1400K is a typical cutoff.
+	else m_rate = r_f2_ss * site_count / 6.0; // Rate Equation*/
 	
 	return m_rate ; // Rate Equation
     //return setRate0p0267(gp, pah_st);
