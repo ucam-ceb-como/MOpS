@@ -352,7 +352,7 @@ void FlameSolver::LoadGasProfile(const std::string &file, Mops::Mechanism &mech)
     }
 }
 
-bool init_flag_0 = false;
+
 // SOLUTION AND POST-PROCESSING.
 
 // Performs stochastic stepping algorithm up to specified stop time using
@@ -365,11 +365,15 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
                         rng_type &rng, Mops::Solver::OutFnPtr out, void *data)
 {
     double tsplit, dtg, jrate;
+	
 
     // construct kmcsimulater and initialize gasphase info for kmcsimulater 
     if (r.Mixture()->Particles().Simulator()==NULL)
     {
         r.Mixture()->Particles().SetSimulator(*(Gasphase()));
+		m_test_rates = r.Mixture()->ParticleModel()->Components(0)->DebugPAH();
+		if (m_test_rates) r.Mixture()->Particles().Simulator()->initCSVIO();
+		r.Mixture()->Particles().Simulator()->save_pah_detail = r.Mixture()->ParticleModel()->Components(0)->DebugPAH();
     }
 
     const Sweep::Mechanism &mech = r.Mech()->ParticleMech();
@@ -413,10 +417,6 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 	
 	//Save deferred jump process unitary rates. Comment if necessary. gl413
 	if (m_test_rates){
-		if (!init_flag_0) {
-			r.Mixture()->Particles().Simulator()->initCSVIO();
-			init_flag_0 = true;
-		}
 		r.Mixture()->Particles().Simulator()->TestRates(t,tstop,1);
 	}
 	

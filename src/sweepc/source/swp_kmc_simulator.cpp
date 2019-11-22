@@ -130,10 +130,6 @@ void KMCSimulator::targetPAH(PAHStructure& pah) {
     m_simPAHp = PAHProcess(*m_simPAH);
 }
 
-int counter_GLC = 0;
-int init_flag = 0;
-int init_trajectory = 0;
-//std::list<int> tracked_PAHs = {583, 701, 755, 564, 1038,791};
 /*!
  * @param[in,out]    pah             PAH structure KMC-ARS jump process will be performed on.
  * @param[in]        tsart           The latest time the PAH was updated.
@@ -161,23 +157,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		//initCSVIO();
 		initReactionCount();
 		readTrackedPAH();
-		init_flag = 1;
 	};
-	//std::list<int> tracked_PAHs = {4790, 539, 1985};
-	/*if (init_trajectory != m_tracked_pahs.size()){
-		auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
-		if (finder != m_tracked_pahs.end()){
-			for (std::list<int>::iterator track_iter = m_tracked_pahs.begin(); track_iter != m_tracked_pahs.end(); ++track_iter){
-				std::string xyzname = ("KMC_DEBUG/");
-				xyzname.append(std::to_string(PAH_ID));
-				xyzname.append("/");
-				xyzname.append(std::to_string(PAH_ID));
-				xyzname.append("trajectory");
-				for (int ii=0; ii!=6; ++ii) m_simPAHp.save_trajectory_xyz(m_t, xyzname, false);
-			}
-			++init_trajectory;
-		}
-	}*/
 	
     
     /*if(m_simPAHp.checkCoordinates())
@@ -251,16 +231,6 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //if we want to check a PAH with specified ID or number of Carbon, 
             //its structure can be drawed by this function, used for tracking suspicious PAH.
             // saveDOTperLoop(100000*tstart,loopcount,PAH_ID);
-
-			/*std::string loopcount_str = "KMC_DEBUG/";
-			std::string loopcount_str3D = "KMC_DEBUG/3D/";
-			loopcount_str.append(std::to_string(counter_GLC));
-			loopcount_str3D.append(std::to_string(counter_GLC));
-			loopcount_str.append(".dot");
-			loopcount_str3D.append("3D.dot");
-			m_simPAHp.saveDOT(loopcount_str);
-			m_simPAHp.saveDOT3D(loopcount_str3D);
-			counter_GLC += 1;*/
 
             // Choose jump according to rates
             ChosenProcess jp_perf = m_kmcmech.chooseReaction(rng);

@@ -618,6 +618,21 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         } else {
             mech.SetInceptedPAH("A4");
         }
+		
+		// Get flag for test rates.
+        el = (*i)->GetFirstChild("DebugPAH");
+        if (el!=NULL) {
+            str = el->Data();
+			if (str != "") {
+				if (std::stoi(str)==1){
+					cout << "DebugPAH set to True. Saving test rates for each jump process.";
+					comp->SetDebugPAH(true);
+				}else{
+					cout << "DebugPAH defined but not set to True. Not saving test rates for each jump process.";
+					comp->SetDebugPAH(false);
+				}
+			}
+		} 
 
         // Get coalesc threshold.
         el = (*i)->GetFirstChild("coalthresh");

@@ -77,6 +77,9 @@ inline double Sweep::Component::SharedPointers() const {return m_sharedPointers;
 //! Allow particles composed of only single PAHs to be respresented with weighted particles
 inline double Sweep::Component::WeightedPAHs() const { return m_weightedPAHs; };
 
+//! Enable saving test rates and debugging PAHs (saving to files)
+inline bool Sweep::Component::DebugPAH() const { return m_debugPAH; };
+
 //! Sets the density (g/cm3).
 inline void Sweep::Component::SetDensity(const double dens) {m_density = dens;};
 
@@ -97,6 +100,9 @@ inline void Sweep::Component::SetSharedPointers(const int sp) {m_sharedPointers 
 
 //! Allow particles composed of only single PAHs to be respresented with weighted particles
 inline void Sweep::Component::SetWeightedPAHs(const int wpah) { m_weightedPAHs = wpah; };
+
+//! Enable saving test rates and debugging PAHs (saving to files)
+inline void Sweep::Component::SetDebugPAH(const bool dpah) { m_debugPAH = dpah; };
 
 // COMPONENT NAME.
 

@@ -102,6 +102,9 @@ public:
 
 	//! Allow particles composed of only single PAHs to be respresented with weighted particles
 	double WeightedPAHs() const;
+	
+	//! Allow particles composed of only single PAHs to be respresented with weighted particles
+	bool DebugPAH() const;
 
     // Sets the density (g/cm3).
     void SetDensity(double dens);
@@ -120,6 +123,9 @@ public:
 
 	//! Allow particles composed of only single PAHs to be respresented with weighted particles
 	void SetWeightedPAHs(int wpah);
+	
+	//! Enable saving test rates and debugging PAHs (saving to files)
+	void SetDebugPAH(bool dpah);
 
     // Returns component symbol or name.
     const std::string &Name() const;
@@ -174,6 +180,9 @@ private:
 
 	//! Allow particles composed of only single PAHs to be respresented with weighted particles
 	double m_weightedPAHs;
+	
+	//! Enable saving test rates and debugging PAHs (saving to files)
+	bool m_debugPAH=false;
 };
 
 // Typedef of a vector of pointers to Component objects.

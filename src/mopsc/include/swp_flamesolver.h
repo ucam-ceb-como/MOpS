@@ -103,7 +103,7 @@ protected:
 	bool m_stagnation;
 	
 	//! Test rates flag for PAH model
-	bool m_test_rates=true;
+	bool m_test_rates=false;
 
     // HELPER FUNCTIONS.
 
