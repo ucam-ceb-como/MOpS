@@ -6,7 +6,7 @@ project (MOPSSUITE)
 
 IF(WIN32)
   SET(Boost_ADDITIONAL_VERSIONS "1.47" "1.47.0" "1.49" "1.49.0" "1.51" "1.51.0" "1.57.0")
-  SET(BOOST_ROOT "C:\Users\astri\Documents\MOpS\Boost\boost_1_57_0")
+  SET(BOOST_ROOT "C:/Program Files/boost")
   SET(Boost_USE_STATIC_LIBS TRUE)
   SET(MSVC_BUILD_DIR "/\${CTEST_CONFIGURATION_TYPE}")
   SET(SHELL_INTERPRETER "bash")
@@ -110,6 +110,8 @@ add_test(mops.imaging1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/i
 
 add_test(mops.titania1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titania1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titania1)
 
+add_test(mops.titania3 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titania3.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titania3)
+
 add_test(mops.stagnation1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/stagnation1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/stagnation1)
 
 add_test(mops.stagnation2 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/stagnation2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/stagnation2)
@@ -119,6 +121,8 @@ add_test(mops.titaniaphase1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mo
 add_test(mops.titaniaphase2 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titaniaphase2.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titaniaphase2)
 
 add_test(mops.titaniaphase3 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titaniaphase3.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titaniaphase3)
+
+add_test(mops.titaniahybrid1 ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titaniahybrid1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/titaniahybrid1)
 
 # Networking interface tests
 add_test(mops.network1a ${SHELL_INTERPRETER} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1.sh ${EXECUTABLE_OUTPUT_PATH}${MSVC_BUILD_DIR}/mops-app${EXE_SUFFIX} ${MOPSSUITE_SOURCE_DIR}/test/mopsc/network1 "a")
