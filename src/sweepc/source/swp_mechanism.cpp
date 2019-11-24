@@ -1102,7 +1102,6 @@ void Mechanism::LPDA(double t, Cell &sys, rng_type &rng) const
 */
 void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) const
 {
-	// Update sections for surface growth
 	double rate_constant = 0.0, rate_index = 0.0;
 	unsigned int n_index = 0, index = 0, n_add = 0, num = 0, added_total = 0;
 	unsigned int hybrid_threshold = sys.Particles().GetHybridThreshold();
@@ -1118,7 +1117,6 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 		}
 	}
 
-	// New surface update goes here
 	for (unsigned int i = hybrid_threshold - 1; i > 0; --i)
 	{
 		index = i;
@@ -1166,13 +1164,16 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 						sp_add = NULL;
 					}
 
-					for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-					{
-						if ((*i)->IsDeferred())
-						{
-							(*i)->Perform(t, sys, rng, added_total);
-						}
-					}
+					// The gas-phase updates can be performed one at a time here instead of once per index as below. 
+					// The rate constant would need to be updated each time and the added_total counter reset. 
+					// This was done in Preprint 211 for better match with the standard model. 
+					//for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+					//{
+					//	if ((*i)->IsDeferred())
+					//	{
+					//		(*i)->Perform(t, sys, rng, added_total);
+					//	}
+					//}
 				}
 			}
 		}
@@ -1180,13 +1181,13 @@ void Mechanism::UpdateSections(double t, double dt, Cell &sys, rng_type &rng) co
 
     // The gas-phase updates can be performed all at once here instead of once per index as above. 
 	// This does mean the gas-phase gets more out of sync with the process updates (source-sink problem)
-	//for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
-	//{
-	//	if ((*i)->IsDeferred())
-	//	{
-	//		(*i)->Perform(t, sys, rng, added_total);
-	//	}
-	//}
+	for (PartProcPtrVector::const_iterator i = m_processes.begin(); i != m_processes.end(); ++i)
+	{
+		if ((*i)->IsDeferred())
+		{
+			(*i)->Perform(t, sys, rng, added_total);
+		}
+	}
 	delete sp_hybrid_threshold;
 	sp_hybrid_threshold = NULL;
 }
@@ -1582,6 +1583,14 @@ void Mechanism::Serialize(std::ostream &out) const
         n = (unsigned int)m_hybrid_threshold;
         out.write((char*)&n, sizeof(n));
 
+		// Write hybrid state.
+		if (m_hybrid) {
+			out.write((char*)&trueval, sizeof(trueval));
+		}
+		else {
+			out.write((char*)&falseval, sizeof(falseval));
+		}
+
 		// Write location of particle species
 		n = (unsigned int)m_i_particle_species;
 		out.write((char*)&n, sizeof(n));
@@ -1666,6 +1675,10 @@ void Mechanism::Deserialize(std::istream &in)
                 // Read hybrid threshold.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_hybrid_threshold = n;
+
+				// Read hybrid state.
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+				m_hybrid = (n == 1);
 
 				// Read location of particle species
 				in.read(reinterpret_cast<char*>(&n), sizeof(n));
