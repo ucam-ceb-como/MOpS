@@ -1481,7 +1481,8 @@ BinTreePrimary &BinTreePrimary::Merge()
 
 			//! Impose lower bound in case the Newton method fails to find a solution
 			if (r_new < r_min){
-				std::cout << "BinTreePrimary::Merge: Imposing lower bound on new radius! \n";
+				if ((abs(r_new - r_min) / r_min) > 1e-10)
+					std::cout << "BinTreePrimary::Merge: Imposing lower bound on new radius! \n";
 				r_new = r_min;	
 			}
 
