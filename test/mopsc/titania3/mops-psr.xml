@@ -1,49 +1,33 @@
-<?xml version="1.0" encoding="utf-8"?>
-<mops version="3">
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mops version="2">
     <!-- Sim parameters -->
-    <runs>2</runs>
+    <runs>5</runs>
     <iter>10</iter>
     <atol>1.0e-17</atol>
     <rtol>1.0e-4</rtol>
-    <maxm0>1e12</maxm0>
-    <pcount>2048</pcount>
+    <maxm0>1e9</maxm0>
+    <pcount>256</pcount>
     <relax>0.8</relax>
-	
-	<!-- Reactant mixture -->
-    <mixture id="reactant_mixture1">
-        <temperature units="K">600</temperature>
-        <pressure units="bar">4</pressure>	
-        <component id="TICL4">0.26</component>
-        <component id="O2">0.74</component>
-    </mixture>
-	
-	<!-- Plasma mixture -->
-    <mixture id="plasma_mixture">
-        <temperature units="K">2750</temperature>
-        <pressure units="bar">4</pressure>	
-        <component id="O2">1.0</component>
-    </mixture>
-	
-	<!-- Initial mixture -->
-    <mixture id="initial_mixture">
-        <temperature units="K">1000</temperature>
-        <pressure units="bar">4</pressure>
-	    <component id="AR">1.0</component>
-    </mixture>
 	
     <!-- Stage 1 -->
 	<!-- Set flag includeParticleTerms to true to include particle processes in the energy balance (requires constt to be false)-->
     <reactor constt="false" constv="false" includeParticleTerms="true" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
-	    <initial>initial_mixture</initial>
-        <flow dir="in" frac="0.42">reactant_mixture1</flow>
-        <flow dir="in" frac="0.58">plasma_mixture</flow>
-        <restime unit="s">0.003</restime>
+        <temperature units="K">1200</temperature>
+        <pressure units="bar">4</pressure>
+        <component id="O2">1.0</component>	
+	    <inflow>
+            <temperature units="K">1200</temperature>
+            <pressure units="bar">4</pressure>	
+            <component id="TICL4">0.01</component>
+            <component id="O2">0.99</component>	
+	    </inflow>
+        <restime unit="s">0.001</restime>
     </reactor>
 
     <!-- Time stepping -->
     <timeintervals>
       	<start>0.0</start>
-        <time splits="10" steps="110">0.0011</time>
+        <time splits="10" steps="200">0.001</time>
     </timeintervals>
    
     <!-- Output specifications -->
@@ -55,14 +39,14 @@
         <console interval="1" msgs="true">
             <tabular>
                 <column fmt="sci">time</column>
-	            <column fmt="sci">CT</column>
                 <column fmt="float">#sp</column>
+	            <column fmt="sci">T</column>
                 <column fmt="sci">TICL4</column>
                 <column fmt="sci">O2</column>
                 <column fmt="sci">M0</column>
             </tabular>
         </console>
         <ptrack enable="true" ptcount="1"/>
-        <filename>Network</filename>
+        <filename>PSR</filename>
     </output>
 </mops>

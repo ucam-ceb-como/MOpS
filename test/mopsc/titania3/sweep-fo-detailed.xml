@@ -9,14 +9,7 @@
     </component>
 	
     <!-- Define particle types (Detailed) -->
-    <!-- For hybrid model: -->
-	<!-- Set hybrid=true to use hybrid model -->
-	<!-- Use threshold to specify largest size tracked in hybrid -->
-	<!-- A threshold of 1000 corresponds to a particle size of ~4 nm -->
-	<!-- Set coagulate-in-list=true to perform coagulation in particle-number model
-	     if resulting size is less than the threshold. 
-		 Note: for detailed particle model this introduces an approximation error. -->
-    <particle id="[Ru]" model="bintree" subtree="false" track="primaryCoordinates" hybrid="true" threshold="10000" coagulate-in-list="false">
+    <particle id="[Ru]" model="bintree" subtree="false" track="primaryCoordinates">
         <description>A rutile particle.</description>
 	    <fractdim>1.8</fractdim>
         <coalthresh>1.0</coalthresh>
@@ -26,12 +19,6 @@
             <E units="K">31030</E>
             <Dpmin units="m">4e-9</Dpmin>
         </sintering>
-		<!-- Kobata (1991) parameters (original approach) -->
-        <!--sintering enable="true" model="GBD">
-	        <A units="s/m4K">7.44E+16</A>
-            <E units="K">31032</E>
-            <Dpmin units="m">0</Dpmin>
-        </sintering-->
     </particle>
 	
     <!-- Coagulation -->
