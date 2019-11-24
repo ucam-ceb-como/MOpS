@@ -75,10 +75,7 @@ double Sweep::Processes::HybridConstantCoagulation::Rate(double t, const Cell &s
                                                         const Geometry::LocalGeometry1d &local_geom) const
 {
     // Get the number of particles in the system.
-    unsigned int n = sys.ParticleCount(); 
-
-    if (m_mech->IsHybrid())
-        n += sys.Particles().GetTotalParticleNumber();
+    unsigned int n = sys.ParticleCount() + sys.Particles().GetTotalParticleNumber();
 
     return A() * n * (n - 1) * s_MajorantFactor / sys.SampleVolume() / 2;
 }
