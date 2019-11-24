@@ -1419,7 +1419,7 @@ void Sweep::Ensemble::dble()
                 throw std::runtime_error("Attempt to double particle ensemble with 0 particles");
             }*/
 			std::cout << "Doubling!" <<std::endl;
-			std::cout << m_count << std::endl;
+			std::cout << m_count+ m_total_number << std::endl;
 
 			bool IWDSA = false;
 
@@ -1481,7 +1481,7 @@ void Sweep::Ensemble::dble()
             ++m_ndble;
 
 			std::cout << "Doubling done" << std::endl;
-			std::cout << m_count << std::endl;
+			std::cout << m_count + m_total_number << std::endl;
 			if (IWDSA) proceed = false;
         }
 
