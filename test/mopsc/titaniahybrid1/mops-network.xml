@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mops version="3">
     <!-- Sim parameters -->
-    <runs>3</runs>
+    <runs>5</runs>
     <iter>10</iter>
     <atol>1.0e-17</atol>
     <rtol>1.0e-4</rtol>
     <maxm0>1e12</maxm0>
-    <pcount>2048</pcount>
+    <pcount>1024</pcount>
     <relax>0.8</relax>
 	
 	<!-- Reactant mixture -->

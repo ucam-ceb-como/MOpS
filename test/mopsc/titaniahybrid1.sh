@@ -64,39 +64,47 @@ CheckErr $?
 # SHA-1: 
 #####################################################################
 # Run MOPS PSR
-echo "Running MOPS for titania 3: PSR"
+echo "Running MOPS for titania hybrid 1: PSR"
 "$program" -p --strang -s "sweep-fo-spherical.xml" -r "mops-psr.xml" --ensemble > /dev/null
 CheckErr $?
 
 fname="PSR-part.csv"
-m0True="9.655E+16"
-m0Err="3.8E+15"
-massTrue="1.659E-4"	
-massErr="2.4E-6"
-dpTrue="7.786E-9"
-dpErr="9.0E-11"
+m0True="4.2518E+15"
+m0Err="2.1259E+14"
+massTrue="8.6889E-3"	
+massErr="4.3445E-4"
+dpTrue="4.9767E-8"
+dpErr="2.4884E-9"
 
 csvline1=`tail -1 "$fname"`
 line1=(`echo $csvline1 | tr ',' '\n'`)
 m0=${line1[4]}
 echo "Checking M0..."
+echo $m0
 CheckValues $m0True $m0 $m0Err
 mass=${line1[20]}
 echo "Checking Mass..."
+echo $mass
 CheckValues $massTrue $mass $massErr
-dp=${line1[58]}
-echo "Checking Avg. primary diameter..."
+dp=${line1[8]}
+echo "Checking Avg. diameter..."
+echo $dp
 CheckValues $dpTrue $dp $dpErr
 
-fname="PSR-chem.csv"
-tempTrue="9.655E+16"
-tempErr="3.8E+15"
+echo "--------"
+
+fname="PSR-total-particle-number.csv"
+npTrue="222.15"
+npErr="11.108"
 
 csvline1=`tail -1 "$fname"`
 line1=(`echo $csvline1 | tr ',' '\n'`)
-temp=${line1[60]}
+np=${line1[2]}
 echo "Checking temperature..."
-CheckValues $tempTrue $temp $tempErr
+echo $np
+CheckValues $npTrue $np $npErr
+
+echo "--------"
 
 rm -f PSR*
 
@@ -105,49 +113,59 @@ echo "Titaniahybrid 1 test 1/2 passed: PSR."
 
 #####################################################################
 # Run MOPS Network
-echo "Running MOPS for titania 3: Network"
+echo "Running MOPS for titania hybrid 1: Network"
 "$program" -p --strang -s "sweep-fo-detailed.xml" -r "mops-network.xml" -w --ensemble > /dev/null
 CheckErr $?
 
 fname="Network(stage1)-part.csv"
-m0True="9.655E+16"
-m0Err="3.8E+15"
-massTrue="1.659E-4"	
-massErr="2.4E-6"
-dpTrue="7.786E-9"
-dpErr="9.0E-11"
+m0True="2.4783E+17"
+m0Err="1.2392E+16"
+massTrue="0.41164"	
+massErr="0.020582"
+dpTrue="3.9853E-8"
+dpErr="1.9927E-9"
 
 csvline1=`tail -1 "$fname"`
 line1=(`echo $csvline1 | tr ',' '\n'`)
 m0=${line1[4]}
 echo "Checking M0..."
+echo $m0
 CheckValues $m0True $m0 $m0Err
 mass=${line1[20]}
 echo "Checking Mass..."
+echo $mass
 CheckValues $massTrue $mass $massErr
-dp=${line1[58]}
+dp=${line1[38]}
 echo "Checking Avg. primary diameter..."
+echo $dp
 CheckValues $dpTrue $dp $dpErr
+
+echo "--------"
 
 fname="Network(stage2)-part.csv"
-m0True="9.655E+16"
-m0Err="3.8E+15"
-massTrue="1.659E-4"	
-massErr="2.4E-6"
-dpTrue="7.786E-9"
-dpErr="9.0E-11"
+m0True="1.4543E+17"
+m0Err="7.2715E+15"
+massTrue="0.48191"	
+massErr="0.024096"
+dpTrue="7.3569E-8"
+dpErr="3.6785E-9"
 
 csvline1=`tail -1 "$fname"`
 line1=(`echo $csvline1 | tr ',' '\n'`)
 m0=${line1[4]}
 echo "Checking M0..."
+echo $m0
 CheckValues $m0True $m0 $m0Err
 mass=${line1[20]}
 echo "Checking Mass..."
+echo $mass
 CheckValues $massTrue $mass $massErr
-dp=${line1[58]}
+dp=${line1[38]}
 echo "Checking Avg. primary diameter..."
+echo $dp
 CheckValues $dpTrue $dp $dpErr
+
+echo "--------"
 
 rm -f Network*
 

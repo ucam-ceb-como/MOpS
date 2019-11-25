@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mops version="3">
     <!-- Sim parameters -->
-    <runs>3</runs>
+    <runs>12</runs>
     <iter>10</iter>
     <atol>1.0e-17</atol>
     <rtol>1.0e-4</rtol>
