@@ -47,8 +47,8 @@ CheckErr $?
 # Run the perl script as a here document (laziness)
 perl << EOF
 ##################################################################
-# Comparison values, generated with N=4096, L=4 and rounded-up
-# Commit 3a041cbb227c543d76ddd911c75e07e677bbe31c
+# Comparison values, generated with N=4096, L=4 and rounded-off
+# Updated SHA-1: aa72af443a1a0de64f4ddb65595ead7221add564
 ##################################################################
 my @names = (  "M0",        "Fv",     "dcol",   "dpri",    "sint level");
 my @true = (4.3391E+015, 1.7752E-09, 8.6742E-09, 6.9869E-09,  0.84218);

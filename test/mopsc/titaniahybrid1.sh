@@ -61,7 +61,7 @@ CheckErr $?
 
 #####################################################################
 # Reference values from 20 runs with 1024 particles 
-# SHA-1: 
+# SHA-1: aa72af443a1a0de64f4ddb65595ead7221add564
 #####################################################################
 # Run MOPS PSR
 echo "Running MOPS for titania hybrid 1: PSR"
