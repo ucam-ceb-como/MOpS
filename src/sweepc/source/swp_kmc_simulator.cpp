@@ -128,6 +128,7 @@ KMCSimulator::~KMCSimulator() {
 void KMCSimulator::targetPAH(PAHStructure& pah) {
     m_simPAH = &pah;
     m_simPAHp = PAHProcess(*m_simPAH);
+	setDebugPAH(save_pah_detail);
 }
 
 /*!
@@ -240,11 +241,11 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             //m_simPAHp.saveDOT(dotname.str());
 			
 			if (save_pah_detail){
-				//Add PAH to tracked list on the fly.
-				int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
-				if (R5R7 > 1 && std::get<0>(m_simPAHp.getRingsCount()) >= 20) addTrackedPAH(PAH_ID); 	
+				//Add PAH to tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
+				/*int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
+				if (R5R7 > 1 || std::get<0>(m_simPAHp.getRingsCount()) >= 20) addTrackedPAH(PAH_ID); 	
 				else if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
-						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); 
+						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); */
 				
 				//Save information for a single PAH
 				auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
@@ -288,14 +289,14 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 					//m_simPAHp.save_trajectory_xyz(m_t, xyzname2, false);
 				}
 				
-				//Remove PAH from tracked list on the fly.
-				int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
+				//Remove PAH from tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
+				/*int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
 				if (R5R7 < 1 && std::get<0>(m_simPAHp.getRingsCount()) <= 20) {
 					if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
-						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) ){
+						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() < 2 ){
 						removeTrackedPAH(PAH_ID);
 					}
-				}
+				}*/
 			}
 						
 			// get counts for all site types
@@ -1143,4 +1144,9 @@ void KMCSimulator::removeTrackedPAH(int PAH_number){
 	else {
 		std::cout << "Trying to remove folder " << dir << ", but it did not exist. Continuing simulation. \n";
 	}
+}
+
+//! Sets the debug flag for PAHProcess.
+void KMCSimulator::setDebugPAH(const bool debug_pah) {
+    m_simPAHp.m_debug_pah = debug_pah;
 }

@@ -374,6 +374,7 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 		m_test_rates = r.Mixture()->ParticleModel()->Components(0)->DebugPAH();
 		if (m_test_rates) r.Mixture()->Particles().Simulator()->initCSVIO();
 		r.Mixture()->Particles().Simulator()->save_pah_detail = r.Mixture()->ParticleModel()->Components(0)->DebugPAH();
+		r.Mixture()->Particles().Simulator()->setDebugPAH(r.Mixture()->ParticleModel()->Components(0)->DebugPAH());
     }
 
     const Sweep::Mechanism &mech = r.Mech()->ParticleMech();

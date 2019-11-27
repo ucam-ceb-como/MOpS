@@ -2384,6 +2384,7 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
         header.push_back("Index");                     //! Particle index (-1 for gas-phase PAHs).
         header.push_back("#C");                        //! Number of carbon atoms.
         header.push_back("#H");                        //! Number of hydrogen atoms.
+		header.push_back("#CH3");                      //! Number of methyl moieties.
         header.push_back("#Rings6");                   //! Number of 6-member rings.
 		header.push_back("#EdgeRings5");               //! Number of edge 5-member rings.
         header.push_back("#EmbeddedRings5");           //! Number of embedded 5-member rings.

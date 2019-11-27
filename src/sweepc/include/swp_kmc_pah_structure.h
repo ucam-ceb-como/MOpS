@@ -88,6 +88,7 @@ namespace Sweep{
             //! return number of carbon and hydrogen for particular PAH
             int numofC() const;
             int numofH() const;
+			int numofCH3() const;
             //! return num of 6-membered rings
             int numofRings() const;
 			//! return num of lone 5-membered rings
@@ -105,6 +106,7 @@ namespace Sweep{
             //! set number of carbon and hydrogen for particular PAH
             void setnumofC(int val);
             void setnumofH(int val);
+			void setnumofCH3(int val);
 			
 
             //! set number of rings for particular PAH
@@ -142,6 +144,8 @@ namespace Sweep{
             std::map<kmcSiteType, svector> m_siteMap;
             //! Stores total counts of carbon and hydrogen
             intpair m_counts;
+			//! Stores number of methyl groups.
+			int m_methyl_counts;
             //! Stores number of rings
 			int m_rings; // 6-membered rings
 			int m_rings5_Lone; // 5-membered rings

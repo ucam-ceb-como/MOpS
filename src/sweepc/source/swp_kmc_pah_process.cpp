@@ -1516,7 +1516,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 	std::vector<int>::iterator sn_iter, sn_iter1, sn_iter2, sn_iter3, sn_iter4;
 	if (detectBonds){
 		for (std::list<Site>::iterator site_it = m_pah->m_siteList.begin(); site_it != m_pah->m_siteList.end(); site_it++) {
-			if ( (int)site_it->type % 10 >= 4 && (int)site_it->type!=6666 ){
+			if ( (int)site_it->type % 10 >= 4 ){
 				Cpointer CR6_1 = site_it->C1;
 				Cpointer CR6_2 = site_it->C2;
 				if (getDistance_twoC (CR6_1,CR6_2) <=2.17){
@@ -2941,7 +2941,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		stype = 1002; bulkCchange = 0;
 	}
 	//Converts all site types with an extra digit 2014, 2114, ... into 2004, 2104, ... so the next section changes the index and then decides which resulting site is obtained.
-	if (stype %100 >= 10 && stype != 9999 && stype != 6666) {
+	if (stype %100 >= 10 && stype != 9999) {
 		stype -= 10;
 	}
 	if (stype + bulkCchange == 2004 || stype + bulkCchange == 2014) {
@@ -3066,12 +3066,6 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	{
 		//A spiral site is modified. Currently we cannot modify them back into reality.
 		stype = 9999; 
-		bulkCchange = 0;
-	}
-	if (st->type == Methyl)
-	{
-		//A Methyl site is modified. Currently we cannot modify them back into reality.
-		stype = 6666; //SETBREAKPOINT
 		bulkCchange = 0;
 	}
 	if (!checkSiteValid(stype + bulkCchange)){
@@ -3324,17 +3318,20 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
     std::string chosen;
     std::tuple <int, int, int> rings;
     intpair CH;
+	int methyls;
 	int rings_Embedded;
 	std::list <cpair> IntCarbons;
     // Structure for Benzene
 	std::string BENZENE_Sites = "FE,FE,FE,FE,FE,FE";
 	auto BENZENE_Rings = std::make_tuple (1, 0, 0) ;
 	intpair BENZENE_CH(6, 6);
+	int BENZENE_methyls = 0;
 	int BENZENE_RINGS_EMBEDDED = 0;
 	// Structure for Toluene
 	std::string TOLUENE_Sites = "FE,FE,FE,FE,FE,FE";
 	auto TOLUENE_Rings = std::make_tuple (1, 0, 0) ;
 	intpair TOLUENE_CH(7, 8);
+	int TOLUENE_methyls = 1;
 	int TOLUENE_RINGS_EMBEDDED = 0;
 	// Structure for Naphthalene
 	std::string NAPHTHALENE_Sites = "FE,FE,FE,ZZ,FE,FE,FE,ZZ";
@@ -3380,6 +3377,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
 	std::string TEST_Sites = "FE,AC,FE,ZZ,RFE,R5,RAC,RFE,R5,RFE,FE,AC,FE,FE,FE,FE,BY5,AC,FE,BY5,FE,ZZ,FE,FE";
 	auto TEST_Rings = std::make_tuple(8, 2, 0);
 	intpair TEST_CH(18, 10);
+	int TEST_methyls = 0;
 	int TEST_RINGS_EMBEDDED = 0;
 	//Internal Carbons missing
     // Choose structure
@@ -3388,24 +3386,28 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
         chosen = BENZENE_Sites;
         rings = BENZENE_Rings;
         CH = BENZENE_CH;
+		methyls = BENZENE_methyls;
 		rings_Embedded = BENZENE_RINGS_EMBEDDED;
         break;
 	case TOLUENE_C:
         chosen = TOLUENE_Sites;
         rings = TOLUENE_Rings;
         CH = TOLUENE_CH;
+		methyls = TOLUENE_methyls;
 		rings_Embedded = TOLUENE_RINGS_EMBEDDED;
         break;
     case NAPHTHALENE_C:
         chosen = NAPHTHALENE_Sites;
         rings = NAPHTHALENE_Rings;
         CH = NAPHTHALENE_CH;
+		methyls = BENZENE_methyls;
 		rings_Embedded = NAPHTHALENE_RINGS_EMBEDDED;
         break;
     case PYRENE_C:
         chosen = PYRENE_Sites;
         rings = PYRENE_Rings;
         CH = PYRENE_CH;
+		methyls = BENZENE_methyls;
 		rings_Embedded = PYRENE_RINGS_EMBEDDED;
 		IntCarbons = PYRENE_intCarbons;
         break;
@@ -3413,6 +3415,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
         chosen = METHYLPYRENE_Sites;
         rings = METHYLPYRENE_Rings;
         CH = METHYLPYRENE_CH;
+		methyls = TOLUENE_methyls;
 		rings_Embedded = METHYLPYRENE_RINGS_EMBEDDED;
 		IntCarbons = METHYLPYRENE_intCarbons;
         break;
@@ -3420,6 +3423,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
         chosen = MPHENANTHRENER_Sites;
         rings = MPHENANTHRENER_Rings;
         CH = MPHENANTHRENER_CH;
+		methyls = BENZENE_methyls;
 		rings_Embedded = MPHENANTHRENER_RINGS_EMBEDDED;
 		IntCarbons = MPHENANTHRENER_intCarbons;
         break;
@@ -3427,18 +3431,21 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
         chosen = BENZOPYRENE_Sites;
         rings = BENZOPYRENE_Rings;
         CH = BENZOPYRENE_CH;
+		methyls = BENZENE_methyls;
 		rings_Embedded = BENZOPYRENE_RINGS_EMBEDDED;
         break;
     case CORONENE_C:
         chosen = CORONENE_Sites;
         rings = CORONENE_Rings;
         CH = CORONENE_CH;
+		methyls = BENZENE_methyls;
 		rings_Embedded = CORONENE_RINGS_EMBEDDED;
         break;
     case TEST_STRUCT:
         chosen = TEST_Sites;
         rings = TEST_Rings;
         CH = TEST_CH;
+		methyls = TEST_methyls;
 		rings_Embedded = TEST_RINGS_EMBEDDED;
         break;
     default: 
@@ -3447,7 +3454,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
             abort();
     }
     // Create Structure
-	return initialise(chosen, std::get<0>(rings), std::get<1>(rings), rings_Embedded, std::get<2>(rings), rings_Embedded, std::get<0>(CH), std::get<1>(CH), IntCarbons);
+	return initialise(chosen, std::get<0>(rings), std::get<1>(rings), rings_Embedded, std::get<2>(rings), rings_Embedded, std::get<0>(CH), std::get<1>(CH), methyls, IntCarbons);
     //printSites(m_pah->m_siteList.begin());
 }
 
@@ -3573,6 +3580,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		m_pah->m_rings5_Embedded = 0;
 		m_pah->m_rings7_Lone = 0;
 		m_pah->m_rings7_Embedded = 0;
+		m_pah->m_methyl_counts = 1;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -3730,6 +3738,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		m_pah->m_rings5_Embedded = 0;
 		m_pah->m_rings7_Lone = 0;
 		m_pah->m_rings7_Embedded = 0;
+		m_pah->m_methyl_counts = 1;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -3952,6 +3961,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, std::vector<int>& carb
 	m_pah->m_InternalCarbons = inCarbs;
 	m_pah->m_R5loc = R5loc;
 	m_pah->m_R7loc = R7loc;
+	m_pah->m_methyl_counts = numberOfMethyl();
 	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
 	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1 + numberOfMethyl();
 	m_pah->setnumofC(totalC_num);
@@ -3989,7 +3999,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, std::vector<int>& carb
  *
  * @return       Initialized PAH structure
  */
-PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, int num_C, int num_H, std::list<cpair> internalCarbons){
+PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, int num_C, int num_H, int num_CH3, std::list<cpair> internalCarbons){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
         m_pah = pah;
@@ -4013,12 +4023,12 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
         }
         siteList_vec.push_back(temp);
     }
-	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, num_C, num_H);
+	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, num_C, num_H, num_CH3);
     return *m_pah;
 }
 
 // Create Structure from vector of site types. This function is used to assign PAHs from output files.
-void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, int num_C, int num_H) {
+void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, int num_C, int num_H, int num_CH3) {
     //This function worked with Serialise and Deserialaise to recognise identical PAHs through the simulation and avoid memory requirements.
 	//However, the existence of 3D structures makes it extremely hard for the program to recognise repeated structures. Because of this,
 	//it was decided that this function would just reproduce the statistics saved from the binary files to be able to compute mass spectra. 
@@ -4057,7 +4067,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 		}else if((int)vec[i] >= 2204 && (int)vec[i] <= 2205) {
             bulkC = (int) vec[i] %10; site_t = 3;
 		}
-		else if((int)vec[i] == 9999 || (int)vec[i] == 6666) {
+		else if((int)vec[i] == 9999) {
             bulkC = (int) vec[i] %10; site_t = 3;
 		}
 		else {
@@ -4123,6 +4133,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, i
 	m_pah->m_rings5_Embedded = R5_Embedded; //Read from binary file.
 	m_pah->m_rings7_Lone = R7_Lone; //Read from binary file. However, nbot tracked right now.
 	m_pah->m_rings7_Embedded = R7_Embedded; //Read from binary file.
+	m_pah->m_methyl_counts = num_CH3; //Read from binary file.
 	//m_pah->m_InternalCarbons = inCarbs; // Not used.
     /*for(Ccontainer::iterator i = m_pah->m_carbonList.begin(); //Not used.
         i != m_pah->m_carbonList.end(); i++)
@@ -4865,9 +4876,6 @@ void PAHProcess::proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Spointer S2 = moveIt(stt, 1);
     if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
-	if ( (int)S1->type != 6666 && (int)S2->type != 6666 ){
-		if ( (int)S1->type%10 >= 4 || (int)S2->type%10 >= 4) return;
-	}
     // Add C
 	cpair start_direction = C_1->growth_vector;
 	newC1 = addC(C_1, start_direction, 1.4);
@@ -5237,10 +5245,6 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		if (newType == 9999 || ntype1 == 9999 || ntype2 == 9999){
 			//Neighbour is a SPIRAL, convert product site in SPIRAL
 			newType = 9999;
-		}
-		if (newType == 6666 || ntype1 == 6666 || ntype2 == 6666){
-			//Neighbour is a Methyl, convert product site in Methyl
-			newType = 6666;
 		}
 		if ((kmcSiteType)newType == None) {
 			//saveDOT(std::string("BY6ClosureProblem.dot"));
@@ -6801,10 +6805,6 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		newType = 9999;
 		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
 	}
-	else if (ntype1 == 6666 || ntype2 == 6666){
-		newType = 6666;
-		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
-	}
 	else {
 		int new_point = 0;
 		newType = (ntype1 + ntype2 + 2002);
@@ -7233,7 +7233,6 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 			if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) return;
 			if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) return;
 			if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) return;
-			if ((int)checkR5_2->type == 9999 || (int)checkR5_2->type == 6666) return;
 		}
 	}
 	if (CRem_next->bridge) return;
@@ -7575,7 +7574,7 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Spointer SR5;
 	bool b4 = false;
 	if (stt->type == R5R6ZZ) { //G6R_R5R6ZZ
-		if ( (((int) S1->type >= 501 && (int) S1->type <= 504) || ((int) S1->type >= 1002 && (int) S1->type <= 1004) || ((int) S1->type >= 2103 && (int) S1->type <= 2205 ) || S1->type == SPIRAL || S1->type == Methyl) && (((int) S2->type >= 501 && (int) S2->type <= 504) || ((int) S2->type >= 1002 && (int) S2->type <= 1004) || ((int) S2->type >= 2103 && (int) S2->type <= 2205 ) || S2->type == SPIRAL || S2->type == Methyl) ) {
+		if ( (((int) S1->type >= 501 && (int) S1->type <= 504) || ((int) S1->type >= 1002 && (int) S1->type <= 1004) || ((int) S1->type >= 2103 && (int) S1->type <= 2205 ) || S1->type == SPIRAL) && (((int) S2->type >= 501 && (int) S2->type <= 504) || ((int) S2->type >= 1002 && (int) S2->type <= 1004) || ((int) S2->type >= 2103 && (int) S2->type <= 2205 ) || S2->type == SPIRAL) ) {
 			if ( (isR5internal(C_1, C_1->C2, true) || isR5internal(C_1, C_1->C2, false)) && !(isR5internal(C_2->C1, C_2, true) || isR5internal(C_2->C1, C_2, false)) ){
 				SR5 = S1;
 				S1 = moveIt(SR5, -1);
@@ -7927,7 +7926,6 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 			if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) return;
 			if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) return;
 			if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) return;
-			if ((int)checkR5_2->type == 9999 || (int)checkR5_2->type == 6666) return;
 		}
 	}
 	if (CRem_next->bridge) return;
@@ -9115,10 +9113,11 @@ void PAHProcess::proc_A_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type 
         neighbour = moveIt(stt,1);
 		neighbour2 = moveIt(stt,2);
     }
-	
+	m_pah->m_methyl_counts += 1;
+	/*
 	OpenBabel::OBMol mol = passPAH();
 	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	passbackPAH(mol);*/
 
     // update combined sites for all new sites and neighbours (and their neighbours)
     updateCombinedSites(stt); updateCombinedSites(prev); updateCombinedSites(neighbour); updateCombinedSites(neighbour2);
@@ -9139,6 +9138,7 @@ void PAHProcess::proc_D_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	neighbour = moveIt(stt,1);
 	neighbour2 = moveIt(stt,2);
 	addCount(-1, -2);
+	m_pah->m_methyl_counts -= 1;
 
     // update combined sites for all new sites and neighbours (and their neighbours)
     updateCombinedSites(stt); updateCombinedSites(prev); updateCombinedSites(prev2); updateCombinedSites(neighbour); updateCombinedSites(neighbour2);
@@ -9171,7 +9171,7 @@ std::vector<int> PAHProcess::SiteIntVector() const {
     for(Spointer i=SiteList().begin(); i!= SiteList().end(); ++i) {
 		int site_number = (int)((*i).type);
 		int carbon_number;
-		if (site_number == 9999 || site_number == 6666 || (*i).type == None){
+		if (site_number == 9999 || (*i).type == None){
 			Cpointer Cspiral_1 = i->C1;
 			Cpointer Cspiral_2 = i->C2;
 			Cpointer Cspiral_bridge = NULLC;

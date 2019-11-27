@@ -139,6 +139,8 @@ namespace Sweep{
 			void addTrackedPAH(int PAH_number);
 			//! Remove PAH from the tracked list on the fly.
 			void removeTrackedPAH(int PAH_number);
+			//! Sets the debug flag for PAHProcess.
+			void setDebugPAH(const bool debug_pah);
             //! Update structure of PAH after time dt.
             double updatePAH(PAHStructure* pah,         //! structure of pah.
                            const double tstart,       //! start time.

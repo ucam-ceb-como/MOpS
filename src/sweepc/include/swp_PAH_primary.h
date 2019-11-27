@@ -240,6 +240,8 @@ public:
     int NumCarbon() const;
     //! returns the number of hydrogen atoms in the particle
     int NumHydrogen() const;
+	//! returns the number of methyl groups in the particle
+	int NumMethyl() const;
     //! returns the number of PAH in the particle
     int NumPAH() const;
     //! returns the number of hydrogen atoms in the particle
@@ -484,6 +486,7 @@ private:
     //derived from the PAHs by UpdataCache()
     int m_numcarbon;
     int m_numH;
+	int m_numCH3;
 
     //! total num of edge C in this soot particle
     int m_numOfEdgeC;

@@ -69,6 +69,7 @@ PAHStructure::PAHStructure() {
     //NULLC = m_carbonList.insert(Carbon()).first;
     m_cfirst = NULLC;
     m_clast = NULLC;
+	m_methyl_counts = 0;
     m_rings = 0;
 	m_rings5_Lone = 0;
 	m_rings5_Embedded = 0;
@@ -125,6 +126,7 @@ void PAHStructure::clear() {
     m_clast = NULL;
     m_counts.first = 0;
     m_counts.second = 0;
+	m_methyl_counts = 0;
     m_cpositions.clear();
 	m_rings5_Lone = 0;
 	m_rings5_Embedded = 0;
@@ -154,6 +156,10 @@ int PAHStructure::numofC() const{
 
 int PAHStructure::numofH() const{
     return m_counts.second;
+}
+
+int PAHStructure::numofCH3() const {
+    return m_methyl_counts;
 } 
 
 int PAHStructure::numofRings() const{
@@ -193,6 +199,11 @@ void PAHStructure::setnumofC(int val)
 void PAHStructure::setnumofH(int val)
 {
     m_counts.second=val;
+}
+
+void PAHStructure::setnumofCH3(int val)
+{
+    m_methyl_counts=val;
 }
 
 void PAHStructure::setnumofRings(int val)
@@ -285,6 +296,9 @@ void PAHStructure::Serialize(std::ostream &out) const
 	
 	val = numofH();
 	out.write((char*)&(val), sizeof(val));
+	
+	val = numofCH3();
+	out.write((char*)&(val), sizeof(val));
 
     PAHStructure m_copy (*this);
     PAHProcess p(m_copy);
@@ -320,6 +334,9 @@ void PAHStructure::Deserialize(std::istream &in)
 	
 	in.read(reinterpret_cast<char*>(&val), sizeof(val));
 	int temp_numofH = val;
+	
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofCH3 = val;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
     name = new char[val];
@@ -329,7 +346,7 @@ void PAHStructure::Deserialize(std::istream &in)
     delete [] name;
 
     PAHProcess p(*this);
-	p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, temp_numofC, temp_numofH, temp_internalcoords);
+	p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, temp_numofC, temp_numofH, temp_numofCH3, temp_internalcoords);
 }
 
 void PAHStructure::WriteCposition(std::ostream &out) const
