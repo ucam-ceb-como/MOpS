@@ -2479,6 +2479,11 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 	//Checks for sites with similar number of R6s and R5s.
 	int stype = (int)t;
 	int prev_stype = (int)st->type;
+	if (prev_stype == 9999){
+		//Site being converted is an SPIRAL. Keep it as an SPIRAL.
+		stype = 9999;
+		t = (kmcSiteType) stype;
+	}
 	if (stype == 2004 || stype == 2014) {
 		////////////////////////////////////////////////////////////
 		//		Optimise before deciding which PAH it is.

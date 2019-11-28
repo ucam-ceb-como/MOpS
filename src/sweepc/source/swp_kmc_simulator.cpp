@@ -242,10 +242,10 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			
 			if (save_pah_detail){
 				//Add PAH to tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
-				/*int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
+				int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
 				if (R5R7 > 1 || std::get<0>(m_simPAHp.getRingsCount()) >= 20) addTrackedPAH(PAH_ID); 	
 				else if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
-						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); */
+						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); 
 				
 				//Save information for a single PAH
 				auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
@@ -290,13 +290,13 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				}
 				
 				//Remove PAH from tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
-				/*int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
+				int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
 				if (R5R7 < 1 && std::get<0>(m_simPAHp.getRingsCount()) <= 20) {
 					if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
-						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() < 2 ){
+						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) ){
 						removeTrackedPAH(PAH_ID);
 					}
-				}*/
+				}
 			}
 						
 			// get counts for all site types
