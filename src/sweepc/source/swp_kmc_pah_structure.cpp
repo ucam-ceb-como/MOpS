@@ -235,6 +235,12 @@ void PAHStructure::initialise(StartingStructure ss) {
     PAHProcess p(*this);
     p.initialise(ss);
 }
+
+void PAHStructure::initialise_fromfile() {
+    PAHProcess p(*this);
+    p.initialise_fromfile();
+}
+
 PAHStructure*  PAHStructure::Clone() {
     PAHProcess p(*this);
     return p.clonePAH();

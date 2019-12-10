@@ -1117,32 +1117,32 @@ void KMCSimulator::addTrackedPAH(int PAH_number){
 	}
 }
 
-//Add PAH to the tracked list on the fly.
+//Remove PAH from the tracked list on the fly.
 void KMCSimulator::removeTrackedPAH(int PAH_number){
 	// Find PAH_number.
 	auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_number); 
-	if (finder == m_tracked_pahs.end()){
+	if (finder == std::end(m_tracked_pahs)){
 		std::cout << "Trying to remove PAH number " << PAH_number << ", but it was not found in tracked list. \n";
 	}
 	else{
 		//Checks that PAH is not in the fixed tracked PAH list.
 		auto fix_finder = std::find(std::begin(m_tracked_pahs_fixed), std::end(m_tracked_pahs_fixed), PAH_number); 
-		if (fix_finder == m_tracked_pahs_fixed.end()){
+		if (fix_finder == std::end(m_tracked_pahs_fixed)){
 			std::cout << "Removing PAH number " << PAH_number << " from tracked list. \n";
 			m_tracked_pahs.erase(finder);
+			// Check if saving folder exists.
+			std::string dir_path = "KMC_DEBUG/";
+			dir_path.append(std::to_string(PAH_number));
+			boost::filesystem::path dir(dir_path);
+			if (boost::filesystem::exists(dir)){
+				// Folder already existed.
+				std::cout << "Deleting folder " << dir << ". \n";
+				boost::filesystem::remove_all(dir);
+			}
+			else {
+				std::cout << "Trying to remove folder " << dir << ", but it did not exist. Continuing simulation. \n";
+			}
 		}
-	}
-	// Check if saving folder exists.
-	std::string dir_path = "KMC_DEBUG/";
-	dir_path.append(std::to_string(PAH_number));
-	boost::filesystem::path dir(dir_path);
-	if (boost::filesystem::exists(dir)){
-		// Folder already existed.
-		std::cout << "Deleting folder " << dir << ". \n";
-		boost::filesystem::remove_all(dir);
-	}
-	else {
-		std::cout << "Trying to remove folder " << dir << ", but it did not exist. Continuing simulation. \n";
 	}
 }
 

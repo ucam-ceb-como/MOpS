@@ -505,6 +505,10 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 						index=r.Mech()->GasMech().FindSpecies("A5");
 						numCarbons = 20;
 						break;
+					case ParticleModel::FromFile: //This is for debugging purposes. Assume for now that A4 concentration will lead to inception.
+						index=r.Mech()->GasMech().FindSpecies("A4");
+						numCarbons = 16;
+						break;
 					default:
 						throw std::runtime_error("no information about the incepted PAH is available, only A1 A2, A4 and A5 are supported now (Sweep::FlameSolver::Solve())");
 				}

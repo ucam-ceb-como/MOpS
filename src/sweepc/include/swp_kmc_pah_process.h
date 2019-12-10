@@ -117,7 +117,12 @@ public:
 	virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, int num_C, int num_H, int num_CH3, std::list<cpair> internalCarbons);
     //! Create Structure from vector of site types and number of rings
 	void createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, int num_C, int num_H, int num_CH3);
-    //! Structure processes: returns success or failure
+	//! Initialization of PAH structure from a file. Allows debugging cases for any structure.
+	virtual PAHStructure& initialise_fromfile();
+    //! Create a PAH structure from a file. Allows debugging cases for any structure.
+	void createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<int>& carb_vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::vector<std::string> edCarbons, std::vector<std::string> inCarbs, std::vector<std::string> R5loc, std::vector<std::string> R7loc);
+	
+	//! Structure processes: returns success or failure
     bool performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID);
 
     // Read Processes

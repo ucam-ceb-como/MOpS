@@ -84,6 +84,8 @@ namespace Sweep{
             std::set<cpair> m_cpositions;
             //! Initialise pah with pyrene (currently) or benzene
             void initialise(StartingStructure ss);
+			//! Initialise pah from file (debugging purposes)
+            void initialise_fromfile();
             PAHStructure* Clone() ;
             //! return number of carbon and hydrogen for particular PAH
             int numofC() const;

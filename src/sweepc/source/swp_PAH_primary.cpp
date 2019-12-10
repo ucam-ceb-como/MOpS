@@ -2523,7 +2523,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 
 				//! See if anything changed, as this will required a call to UpdatePrimary() below.
-				if (oldNumCarbon != (*it)->m_pahstruct->numofC() || oldNumH != (*it)->m_pahstruct->numofH() && ind != -1)
+				if ((oldNumCarbon != (*it)->m_pahstruct->numofC() || oldNumH != (*it)->m_pahstruct->numofH()) && ind != -1)
 				{
 					m_PAHclusterchanged = true;
 					m_PAHchanged = true;
@@ -2909,6 +2909,8 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
 	for (std::vector<int>::size_type ii = 0; ii!=str_list.size(); ii++){
 		ParticleModel::PostProcessStartingStr str = str_list[ii];
 		int m_control;
+		std::ifstream src("InceptedPAH.inx");
+		std:string token;
 		switch (str){
 		case ParticleModel::A1:
 			m_control=Sweep::KMC_ARS::BENZENE_C;
@@ -2931,11 +2933,20 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
 		case ParticleModel::A5:
 			m_control=Sweep::KMC_ARS::BENZOPYRENE_C;
 			break;
+		case ParticleModel::FromFile:
+			if (src.is_open()){
+				//Read the first line and split it with spaces
+				std::getline(src,token,' ');
+			}
+			src.close();
+			m_control=std::stoi(token);
+			break;
 		default:
 			throw std::runtime_error("no information about the incepted PAH is available (Sweep::PAHPrimary::CheckInvalidPAHs())");
 		}
 		// if the PAH in the cluster is as the same size as the incepted PAH, it will be released but the current implementation is directly removed which causes mass loss, for a fully coupled model this part should be redesigned.
-		return (it->m_pahstruct->numofC() < m_control || (it->m_pahstruct->numofC() <= m_control && NumPAH() != 1));
+		//return (it->m_pahstruct->numofC() < m_control || (it->m_pahstruct->numofC() <= m_control && NumPAH() != 1));
+		return (it->m_pahstruct->numofC() < 6 || (it->m_pahstruct->numofC() <= 6 && NumPAH() != 1)); //Forced benzene as the smaller available PAH.
 	}
 }
 
@@ -3018,7 +3029,9 @@ int PAHPrimary::InceptedPAH(const int k) const
         std::vector<ParticleModel::PostProcessStartingStr> str_list = ParticleModel()->InceptedPAH();
 		//std::vector<ParticleModel::PostProcessStartingStr>::iterator it;
 		ParticleModel::PostProcessStartingStr str = str_list[k];
-		
+		std::ifstream src("InceptedPAH.inx");
+		std:string token;
+		int carbon_number, hydrogen_number;
 		//ParticleModel::PostProcessStartingStr str = (*it);
 		switch (str){
 		case ParticleModel::A1:
@@ -3053,6 +3066,19 @@ int PAHPrimary::InceptedPAH(const int k) const
 			break;
 		case ParticleModel::A5:
 			if (NumCarbon() == BENZOPYRENE_C && NumHydrogen() == BENZOPYRENE_H)
+				return 1;
+			else return 0;
+			break;
+		case ParticleModel::FromFile:
+			if (src.is_open()){
+				//Read the first line and split it with spaces
+				std::getline (src,token,' ');
+				carbon_number = std::stoi(token);
+				std::getline (src,token,' ');
+				hydrogen_number = std::stoi(token);
+			}
+			src.close();
+			if (NumCarbon() == carbon_number && NumHydrogen() == hydrogen_number)
 				return 1;
 			else return 0;
 			break;

@@ -1477,7 +1477,7 @@ cpair PAHProcess::findR5internal(Cpointer C_1, Cpointer C_2) {
 bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
 	cpair R5_pos_loc = endposR5internal(C_1, C_2, invert_dir);
 	std::list<cpair>::iterator it1;
-	double minimal_dist = 0.7;
+	double minimal_dist = 0.8;
 	for (it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
 		double dist = getDistance_twoC(R5_pos_loc, *it1);
 		if (dist <= minimal_dist) return true;
@@ -2481,8 +2481,10 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 	int prev_stype = (int)st->type;
 	if (prev_stype == 9999){
 		//Site being converted is an SPIRAL. Keep it as an SPIRAL.
-		stype = 9999;
-		t = (kmcSiteType) stype;
+		return;
+		//stype = 9999;
+		//t = (kmcSiteType) stype;
+		//st->type = SPIRAL;
 	}
 	if (stype == 2004 || stype == 2014) {
 		////////////////////////////////////////////////////////////
@@ -3851,6 +3853,246 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
     }
     return *m_pah;
 }
+
+/*!
+ * Initialization of PAH structure from an file. Allows debugging cases for any structure.
+ *
+ * @param[in]    siteList_str    	Comma-separated string of site types
+ * @param[in]    R6_num          	Number of 6-member rings
+ * @param[in]    R5_num_Lone     	Number of edge 5-member rings
+ * @param[in]    R5_num_Embedded    Number of embedded 5-member rings
+ * @param[in]    R7_num_Lone     	Number of edge 7-member rings
+ * @param[in]    R7_num_Embedded    Number of embedded 7-member rings
+ * @param[in] 	 edgeCarbons		Vector of strings space separated containing edge carbons coordinates, bridge, A, growth vector coordinates, in the way that sitelist runs.
+ * @param[in] 	 internalCarbons	Vector of strings space separated containing internal carbon coordinates
+ * @param[in] 	 R5_locs			Vector of strings space separated containing R5 positions
+ * @param[in] 	 R7_locs			Vector of strings space separated containing R7 positions 
+ *
+ * @return       Initialized PAH structure
+ */
+PAHStructure& PAHProcess::initialise_fromfile(){
+    if(m_pah == NULL) {
+        PAHStructure* pah = new PAHStructure();
+        m_pah = pah;
+    }else if(m_pah->m_cfirst != NULL)
+        m_pah->clear();
+	
+	ifstream src("InceptedPAH.inx");
+	std::string line;
+	std::string siteList_str;
+	int R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded;
+	std::vector<std::string> edgeCarbons;
+	std::vector<std::string> internalCarbons;
+	std::vector<std::string> R5_locs;
+	std::vector<std::string> R7_locs;
+	if (src.is_open()){
+		std::getline(src,line); //Read first line. Not needed here.
+		std::getline(src,line); //Read second line. This contains the site list.
+		line.erase(line.end()-1, line.end());
+		siteList_str.assign(line);
+		std::getline(src,line); //Read third line. This contains the ring information.
+		line.erase(line.end()-1, line.end());
+		std::stringstream ss(line);
+		int ii = 0;
+		while(std::getline(ss, line, ' ')){
+			if (ii == 0) R6_num = std::stoi(line);
+			if (ii == 1) R5_num_Lone = std::stoi(line);
+			if (ii == 2) R5_num_Embedded = std::stoi(line);
+			if (ii == 3) R7_num_Lone = std::stoi(line);
+			if (ii == 4) R7_num_Embedded = std::stoi(line);
+			ii++;
+		}
+		std::getline(src,line); //Read fourth line. This should say Coordinates
+		
+		
+		while(std::getline (src,line) && line != "Internal\r"){
+			line.erase(line.end()-1, line.end());
+			edgeCarbons.push_back(line);
+		}
+		
+		while(std::getline (src,line) && line != "R5_locs\r"){
+			line.erase(line.end()-1, line.end());
+			internalCarbons.push_back(line);
+		}
+		
+		while(std::getline (src,line) && line != "R7_locs\r"){
+			line.erase(line.end()-1, line.end());
+			R5_locs.push_back(line);
+		}
+		
+		while(std::getline (src,line)){
+			line.erase(line.end()-1, line.end());
+			R7_locs.push_back(line);
+		}
+	}
+	else{
+		cout << "Could not open file InceptedPAH.inx.\n";
+		std::ostringstream msg;
+		msg << "ERROR: Could not open file InceptedPAH.inx."
+                << " (Sweep::KMC_ARS::PAHProcess::initialise_fromfile)";
+                throw std::runtime_error(msg.str());
+                assert(false);
+	}
+	src.close();
+	
+    // create a vector from the string
+    std::vector<std::string> siteList_strvec;
+    Strings::split(siteList_str, siteList_strvec, std::string(","));
+    // convert into vector of siteTypes
+    std::vector<kmcSiteType> siteList_vec;
+	std::vector<int> carb_siteList_vec;
+    for(size_t i=0; i<siteList_strvec.size(); i++) {
+        kmcSiteType temp = kmcSiteType_str(siteList_strvec[i]);
+        if(temp == Inv) {
+            std::cout<<"ERROR: Starting Structure site List contains invalid site type"
+                <<".. (PAHProcess::initialise)\n\n";
+			std::cout<<"Site = " << siteList_strvec[i] << "\n";
+            std::ostringstream msg;
+            msg << "ERROR: Starting Structure site List contains invalid site type."
+                << " (Sweep::KMC_ARS::PAHProcess::initialise)";
+                throw std::runtime_error(msg.str());
+                assert(false);
+        }
+        siteList_vec.push_back(temp);
+		int number_carbs;
+		if (i==0) number_carbs = (int)temp %10 + 2; // First site accounts for m_cfirst
+		else if (i==siteList_strvec.size()-1) number_carbs = (int)temp %10; // Last site closes PAH on m_cfirst.
+		else number_carbs = (int)temp %10 + 1;
+		carb_siteList_vec.push_back(number_carbs);
+    }
+	createPAH_fromfile(siteList_vec, carb_siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, edgeCarbons, internalCarbons, R5_locs, R7_locs);
+    return *m_pah;
+}
+
+// Create Structure from a file 
+void PAHProcess::createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<int>& carb_vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::vector<std::string> edCarbons, std::vector<std::string> inCarbs, std::vector<std::string> R5loc, std::vector<std::string> R7loc) {
+	Cpointer newC;
+	// start drawing..
+	// This loops through sites.
+	int carb_vec_sum = 0;
+    for(size_t i=0; i<vec.size(); i++) {
+		int vec_carb_number = carb_vec[i];
+		
+		Cpointer site_carb_1;
+		//This loops through carbons
+		for (size_t j=carb_vec_sum; j<vec_carb_number+carb_vec_sum; j++) {
+			cpair carbon_coords;
+			std::string carbon_string;
+			carbon_string.assign(edCarbons[j]);
+			std::vector<std::string> carbon_vector;
+			Strings::split(carbon_string, carbon_vector, std::string(" "));
+			carbon_coords = std::make_tuple(std::stod(carbon_vector[0]), std::stod(carbon_vector[1]), std::stod(carbon_vector[2]));
+			
+			if (i == 0 && j == 0){
+				//Add first carbon.
+				newC = addC();
+				m_pah->m_cfirst = newC;
+				m_pah->m_clast = NULLC;
+				moveC(newC, carbon_coords);
+				if (std::stoi(carbon_vector[3]) == 1) newC->bridge = true;
+				else newC->bridge = false;
+				char cstr[carbon_vector[4].size()+1];
+				std::strcpy(cstr, carbon_vector[4].c_str());
+				updateA(newC, *cstr, std::make_tuple(std::stod(carbon_vector[5]), std::stod(carbon_vector[6]), std::stod(carbon_vector[7])));
+			}
+			else if ( !checkHindrance_C_PAH(carbon_coords)){
+				//Only add carbons that are not occupied. Handles bridged atoms.
+				newC = addC(newC, std::make_tuple(1.0,0.0,0.0), 7.17);
+				moveC(newC, carbon_coords);
+				if (std::stoi(carbon_vector[3]) == 1) newC->bridge = true;
+				else newC->bridge = false;
+				char cstr[carbon_vector[4].size()+1];
+				std::strcpy(cstr, carbon_vector[4].c_str());
+				updateA(newC, *cstr, std::make_tuple(std::stod(carbon_vector[5]), std::stod(carbon_vector[6]), std::stod(carbon_vector[7])));
+				if (newC->bridge && newC->C1->bridge) {
+					newC->C3 = newC->C1;
+					newC->C1->C3 = newC;
+					newC->C1 = NULLC;
+					newC->C3->C2 = NULLC;
+				}
+			}
+			else {
+				//Adding a carbon for the second time. This means bridge.
+				Cpointer bridgedC = findC(carbon_coords);
+				if (!newC->bridge){
+					newC->C2 = bridgedC;
+					bridgedC->C1 = newC;
+					newC = bridgedC;
+				}
+				else {
+					newC = bridgedC;
+				}
+			}
+			if (j == 0) site_carb_1 = newC;
+		}
+		carb_vec_sum += vec_carb_number;
+		Cpointer site_carb_2 = newC;
+		addSite(vec[i], site_carb_1, site_carb_2);
+	}
+	connectToC(newC, m_pah->m_cfirst);
+	m_pah->m_clast = newC;
+	newC = newC->C2;
+
+    m_pah->m_rings = R6;
+	m_pah->m_rings5_Lone = R5_Lone;
+	m_pah->m_rings5_Embedded = R5_Embedded;
+	m_pah->m_rings7_Lone = R7_Lone;
+	m_pah->m_rings7_Embedded = R7_Embedded;
+	
+	for (size_t i = 0; i<inCarbs.size(); i++){
+		cpair carbon_coords;
+		std::string carbon_string;
+		carbon_string.assign(inCarbs[i]);
+		std::vector<std::string> carbon_vector;
+		Strings::split(carbon_string, carbon_vector, std::string(" "));
+		carbon_coords = std::make_tuple(std::stod(carbon_vector[0]), std::stod(carbon_vector[1]), std::stod(carbon_vector[2]));
+		m_pah->m_InternalCarbons.push_back(carbon_coords);
+	}
+	for (size_t i = 0; i<R5loc.size(); i++){
+		cpair carbon_coords;
+		std::string carbon_string;
+		carbon_string.assign(R5loc[i]);
+		std::vector<std::string> carbon_vector;
+		Strings::split(carbon_string, carbon_vector, std::string(" "));
+		carbon_coords = std::make_tuple(std::stod(carbon_vector[0]), std::stod(carbon_vector[1]), std::stod(carbon_vector[2]));
+		m_pah->m_R5loc.push_back(carbon_coords);
+	}
+	for (size_t i = 0; i<R7loc.size(); i++){
+		cpair carbon_coords;
+		std::string carbon_string;
+		carbon_string.assign(R7loc[i]);
+		std::vector<std::string> carbon_vector;
+		Strings::split(carbon_string, carbon_vector, std::string(" "));
+		carbon_coords = std::make_tuple(std::stod(carbon_vector[0]), std::stod(carbon_vector[1]), std::stod(carbon_vector[2]));
+		m_pah->m_R7loc.push_back(carbon_coords);
+	}
+	m_pah->m_methyl_counts = numberOfMethyl();
+	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
+	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1 + numberOfMethyl();
+	m_pah->setnumofC(totalC_num);
+    m_pah->setnumofH((int)vec.size() + 2 * numberOfMethyl());
+    updateCombinedSites();
+	
+	// check if PAH closes correctly
+	// This was moved to the end because the PAH was not giving enough information to debug.
+	if (m_pah->m_clast == NULLC || !checkHindrance_twoC(newC->C1, m_pah->m_cfirst)) {
+        // PAH did not close properly. invalid structure
+        cout << "Error: createPAH: PAH did not close properly. Could be problem " //SETBREAKPOINT
+            <<"with site list input...\n";
+        std::ostringstream msg;
+        msg << "ERROR: PAH did not close properly.."
+            << " (Sweep::KMC_ARS::PAHProcess::createPAH_fromfile)";
+		printSites();
+		std:string filename = "KMC_DEBUG/KMC_PAH_X_CLOSE_fromfile";
+		cout << "Saving file " << filename << ".xyz\n";
+        saveXYZ(filename);
+		//saveDOT("KMC_DEBUG/KMC_PAH_X_CLOSE.dot");
+        //throw std::runtime_error(msg.str());
+        //assert(false);
+        //return;
+    }
+}
+
 
 /*!
  * Initialization of PAH structure from an existing PAH structure (cloning)
@@ -7878,6 +8120,9 @@ void PAHProcess::proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 // ************************************************************
 void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
 	//printStruct();
+	OpenBabel::OBMol mol = passPAH();
+	mol = optimisePAH(mol, 1000);
+	passbackPAH(mol);
 	//First check if R6 is to the left or the right of R5
 	bool b4 = false;
 	Spointer sFE2, checkR5_1, checkR5_2;
@@ -7888,13 +8133,7 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 	}
 	else if ( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ) b4 = false;
 	else if ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) ) b4 = true;
-	else {
-		// Define a distribution that has two equally probably outcomes
-		boost::bernoulli_distribution<> choiceDistrib;
-		// Now build an object that will generate a sample using rng
-		boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
-		b4 = choiceGenerator(); // if FE3 on both sides, choose a random one
-	}
+	else return;
 	if (b4) {
 		sFE2 = moveIt(stt, -1);
 		checkR5_1 = moveIt (stt, -2);
@@ -7919,7 +8158,7 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 	}
 	//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
 	if ((int)sFE2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) return; // The result would be an indene, not supported. YET!
-	if ((int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002) return; // This would violate the IPR.
+	if ((int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002 || (int)sFE2->type == 1002) return; // This would violate the IPR.
 	if ((int)sFE2->type == 0){
 		if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) return;
 		//if ((int)checkR5_1->type >= 501 && (int)checkR5_1->type <= 65) return;
@@ -7936,17 +8175,6 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 	if (CRem_next->bridge) return;
 	if (CRem_next->C2->bridge) return; if (CRem_next->C1->bridge) return;
 	if (CRem_next->C2->C2->bridge) return; if (CRem_next->C1->C1->bridge) return;
-	
-	//There are two main cases. The R5 of the R5R6 is shown on a short or a long side.
-	double R5_dist = getDistance_twoC(CFE, CFE->C2);
-	bool optimised = false;
-	if (R5_dist > 1.6){
-		//The R5R6 site needs optimisation. 
-		optimised = true;
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
-	}
 
 	// check if R5R6 has an opposite site.
 	Spointer opp_site, opp_site_second, opp_site_after;
@@ -8011,7 +8239,7 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 		}
 	}
 	
-	R5_dist = getDistance_twoC(CFE, CFE->C2);
+	double R5_dist = getDistance_twoC(CFE, CFE->C2);
 	double dist2 = 1.4;
 	double theta = asin(R5_dist/2.0/dist2);
 	double magn = dist2 * cos(theta);

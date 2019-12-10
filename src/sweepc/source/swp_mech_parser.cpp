@@ -579,7 +579,7 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
         el = (*i)->GetFirstChild("InceptedPAH");
         if (el!=NULL) {
             str = el->Data();
-            if (str != "" && str != "Multiple") {
+            if (str != "" && str != "Multiple" && str != "FromFile") {
                 mech.SetInceptedPAH(str);
             } else if (str == "Multiple"){
 				cout << "Incepting multiple PAHs.\n";
@@ -606,6 +606,18 @@ void MechParser::readComponents(CamXML::Document &xml, Sweep::Mechanism &mech)
 					cout << "Incepting PAH: " << inc_pah_str << "\n";
 					mech.SetInceptedPAH(inc_pah_str);
 				}
+			}
+			else if (str == "FromFile"){
+				cout << "Incepting PAH from file. Reading file InceptedPAH.inx.\n";
+				std::ifstream src("InceptedPAH.inx");
+				if (src.good()){
+					mech.SetInceptedPAH("FromFile");
+				}
+				else {
+					cout << "Unable to open file InceptedPAH.inx. Setting incepted PAH to A4.\n";
+					mech.SetInceptedPAH("A4");
+				}
+				src.close();
 			}else {
                 // coalthresh contains no data.
                 std::string msg("Component ");
