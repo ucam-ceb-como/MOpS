@@ -196,7 +196,8 @@ public:
     void proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_O6R_FE3_O2(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_O6R_FE3_OH(Spointer& stt, Cpointer C_1, Cpointer C_2);
-    void proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2);
+	void proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2);
+    void proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_O6R_FE_HACA_OH(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
     void proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2);
@@ -247,6 +248,7 @@ public:
 	void proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID53
 	void proc_A_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);              //!< ID54
 	void proc_D_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2);                     		//!< ID55
+	void proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                     		//!< ID56
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts

@@ -136,7 +136,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_D6R_FE3 = new D6R_FE3; j_D6R_FE3->initialise();								//!  5- R6 Desorption at FE [AR8].
     //JumpProcess* j_O6R_FE3_O2 = new O6R_FE3_O2; j_O6R_FE3_O2->initialise();						//!  6- R6 Oxidation at FE by O2 [AR10].
     //JumpProcess* j_O6R_FE3_OH = new O6R_FE3_OH; j_O6R_FE3_OH->initialise();						//!  7- R6 Oxidation at FE by OH [AR11].
-    //JumpProcess* j_O6R_FE_HACA_O2 = new O6R_FE_HACA_O2; j_O6R_FE_HACA_O2->initialise();			//!  8- R6 Oxidation at AC by O2 [AR12].
+    JumpProcess* j_O6R_FE_HACA = new O6R_FE_HACA; j_O6R_FE_HACA->initialise();					//!  8- R6 Oxidation at FE-HACA [AR12].
     //JumpProcess* j_O6R_FE_HACA_OH = new O6R_FE_HACA_OH; j_O6R_FE_HACA_OH->initialise();			//!  9- R6 Oxidation at AC by OH [AR13].
     JumpProcess* j_G5R_ZZ = new G5R_ZZ; j_G5R_ZZ->initialise();									//! 10- R5 growth at ZZ [AR3].
     JumpProcess* j_D5R_R5 = new D5R_R5; j_D5R_R5->initialise();									//! 11- R5 desorption [AR7].
@@ -148,8 +148,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_C6R_BY5_FE3violi = new C6R_BY5_FE3violi; j_C6R_BY5_FE3violi->initialise();   //! 17- R6 migration & conversion to R5 at BY5 (violi) [AR24].
     JumpProcess* j_L5R_BY5 = new L5R_BY5; j_L5R_BY5->initialise();                              //! 18- BY5 closure [AR16].
     JumpProcess* j_M6R_BY5_FE3 = new M6R_BY5_FE3; j_M6R_BY5_FE3->initialise();                  //! 19- R6 desorption at bay -> pyrene [AR21].
-    //JumpProcess* j_O6R_FE2_OH = new O6R_FE2_OH; j_O6R_FE2_OH->initialise();                     //! 20- R6 Oxidation at ZZ by OH.
-    //JumpProcess* j_O6R_FE2_O2 = new O6R_FE2_O2; j_O6R_FE2_O2->initialise();                     //! 21- R6 Oxidation at ZZ by O2.
+    JumpProcess* j_O6R_FE2_side = new O6R_FE2_side; j_O6R_FE2_side->initialise();               //! 20- R6 Oxidation at FE2 by side reaction.
+    JumpProcess* j_O6R_FE2_top = new O6R_FE2_top; j_O6R_FE2_top->initialise();                  //! 21- R6 Oxidation at FE2 by top reaction.
 	JumpProcess* j_D6R_FE_AC = new D6R_FE_AC; j_D6R_FE_AC->initialise();						//! 22- R6 Desorption from FE to AC site.
 	JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();                           //!< 23 - Bay-capping.
 	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //!< 24 - Embedded 5-member ring migration to ZZ.
@@ -184,6 +184,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_L7_ACR5R5R6ZZ = new L7_ACR5R5R6ZZ; j_L7_ACR5R5R6ZZ->initialise();             //!< 53 - R7 bay closure on ACR5R5R6ZZ.
 	JumpProcess* j_A_CH3 = new A_CH3; j_A_CH3->initialise();             						 //!< 54 - CH3 addition.
 	JumpProcess* j_D_CH3 = new D_CH3; j_D_CH3->initialise();             						 //!< 55 - CH3 desorption.
+	JumpProcess* j_O5R_R5R6 = new O5R_R5R6; j_O5R_R5R6->initialise();             				//!< 56 - Oxidation of R5R6 site.
+    
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
     temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
@@ -193,7 +195,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_D6R_FE3);           //!  5- R6 Desorption at FE [AR8].
     //temp.push_back(j_O6R_FE3_O2);        //!  6- R6 Oxidation at FE by O2 [AR10].
     //temp.push_back(j_O6R_FE3_OH);        //!  7- R6 Oxidation at FE by OH [AR11].
-    //temp.push_back(j_O6R_FE_HACA_O2);    //!  8- R6 Oxidation at AC by O2 [AR12].
+    temp.push_back(j_O6R_FE_HACA);    //!  R6 Oxidation at FE-HACA [AR12].
     //temp.push_back(j_O6R_FE_HACA_OH);    //!  9- R6 Oxidation at AC by OH [AR13].
     temp.push_back(j_G5R_ZZ);            //! 10- R5 growth at ZZ [AR3].
     temp.push_back(j_D5R_R5);            //! 11- R5 desorption [AR7].
@@ -205,8 +207,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_C6R_BY5_FE3violi);  //! 17- R6 migration & conversion to R5 at BY5 (violi) [AR24].
     temp.push_back(j_L5R_BY5);           //! 18- BY5 closure [AR16].
     temp.push_back(j_M6R_BY5_FE3);       //! 19- R6 desorption at bay -> pyrene [AR21].
-    //temp.push_back(j_O6R_FE2_OH);        //! 20- R6 Oxidation at ZZ by OH.
-	//temp.push_back(j_O6R_FE2_O2);        //! 21- R6 Oxidation at ZZ by O2.
+    temp.push_back(j_O6R_FE2_side);        //! 20- R6 Oxidation at FE2 by side reaction.
+	temp.push_back(j_O6R_FE2_top);        //! 21- R6 Oxidation at FE2 by top reaction.
 	temp.push_back(j_D6R_FE_AC);         //! 22- R6 Desorption from FE to AC site.
 	temp.push_back(j_B6R_ACR5);         //!< 23 - Bay-capping.
 	temp.push_back(j_M5R_ACR5_ZZ);      //!< 24 - Embedded 5-member ring migration to ZZ.
@@ -241,6 +243,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_L7_ACR5R5R6ZZ);          //!< 53 - R7 bay closure on ACR5R5R6ZZ.
 	temp.push_back(j_A_CH3);          		//!< 54 - CH3 addition.
 	temp.push_back(j_D_CH3);          		//!< 55 - CH3 desorption.
+	temp.push_back(j_O5R_R5R6);          		//!< 56 - Oxidation of R5R6 site.
 
     return temp;
 }
@@ -1643,7 +1646,7 @@ double O6R_FE3_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 // ************************************************************
 
 // Elementary rate constants, site type, process type and name
-void O6R_FE_HACA_O2::initialise() {
+void O6R_FE_HACA::initialise() {
     // Adding elementary reactions
     // 0.0267atm
     rxnvector& rxnV = m_rxnvector0p0267;
@@ -1665,20 +1668,32 @@ void O6R_FE_HACA_O2::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
-    addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));   //5 - r4f
+    addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4
+	addReaction(rxnV3, Reaction(3.17e13, 0.00, 2.021,sp::O2));  						// S46
+    addReaction(rxnV3, Reaction(6.42e10, 1.00, 29183.0*8.314/4.184/1000.0,sp::None));  // S53 // S54
+    addReaction(rxnV3, Reaction(1.47e14, 0.00, 632.0*8.314/4.184/1000.0,sp::OH)); // S55
+    addReaction(rxnV3, Reaction(2.13e15, 0.00, 42305.0*8.314/4.184/1000.0,sp::None));  // S60
+    addReaction(rxnV3, Reaction(4.34e14, 0.00, 984.0*8.314/4.184/1000.0,sp::H));  // S65
+    addReaction(rxnV3, Reaction(2.14e16, 0.00, 52988.0*8.314/4.184/1000.0,sp::None));  // S70
+    addReaction(rxnV3, Reaction(6498889.53, 2.117, 5603.0*8.314/4.184/1000.0,sp::H));  // S75
+    addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S80
+    addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85
+    addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93
+    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96
+    addReaction(rxnV3, Reaction(1.00e12, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = FE_HACA; // sitetype
-    m_name = "R6 (FE_HACA) oxidation by O2"; // name of process
+    m_name = "R6 (FE_HACA) oxidation"; // name of process
     m_ID = 8;
 }
 // Jump rate calculation
-double O6R_FE_HACA_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    // check if site count is zero
+double O6R_FE_HACA::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+	/*// check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
@@ -1690,10 +1705,11 @@ double O6R_FE_HACA_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+    return m_rate = m_r[5]*r_f* site_count; // Rate Equation*/
 }
-double O6R_FE_HACA_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    // check if site count is zero
+double O6R_FE_HACA::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+	/*// check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
@@ -1705,10 +1721,52 @@ double O6R_FE_HACA_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+    return m_rate = m_r[5]*r_f* site_count; // Rate Equation*/
 }
-double O6R_FE_HACA_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p12(gp, pah_st);
+double O6R_FE_HACA::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    // check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(6, 6);
+	boost::numeric::ublas::vector<double> arr2(6);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	arr1(0,0) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
+    arr1(0,2) = -m_r[10] - m_r[13];
+    arr1(1,0) = -m_r[5];
+    arr1(1,1) = m_r[6] + m_r[9] + m_r[12];
+    arr1(1,2) = - m_r[8] - m_r[11];
+	arr1(2,0) = -m_r[7];
+    arr1(2,1) = - m_r[9] - m_r[12];
+    arr1(2,2) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
+	arr1(3,3) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
+    arr1(3,5) = -m_r[10] - m_r[13];
+    arr1(4,3) = -m_r[5];
+    arr1(4,4) = m_r[6] + m_r[9] + m_r[12];
+    arr1(4,5) = - m_r[8] - m_r[11];
+	arr1(5,3) = -m_r[7];
+    arr1(5,4) = - m_r[9] - m_r[12];
+    arr1(5,5) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
+
+    arr2(0) = +m_r[0] + m_r[2];
+    arr2(1) = +m_r[14];
+    arr2(2) = 0.0;
+	arr2(3) = +m_r[0] + m_r[2];
+    arr2(4) = +m_r[14];
+    arr2(5) = 0.0;
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0) + m_r[6] * arr2(4) + m_r[16] * arr2(3))*site_count*2.0;
 }
 
 // ************************************************************
@@ -2648,11 +2706,11 @@ double M6R_BY5_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 }
 
 // ************************************************************
-// ID20- R6 oxidation at ZZ by OH
+// ID20- R6 oxidation at FE2 (side)
 // ************************************************************
 
 // Elementary rate constants, site type, process type and name
-void O6R_FE2_OH::initialise() {
+void O6R_FE2_side::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
@@ -2674,20 +2732,36 @@ void O6R_FE2_OH::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::OH));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    //addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
-    //addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
-    //addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
-    //addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    //addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
-    addReaction(rxnV3, Reaction(1.3e13, 0, 10.62, sp::OH));   //5 - r4f
+    addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4
+	addReaction(rxnV3, Reaction(3.17e13, 0.00, 2.021,sp::O2));  						// S46
+    addReaction(rxnV3, Reaction(1.08e2, 3.28, 21866.0*8.314/4.184/1000.0,sp::None));  // S51
+    addReaction(rxnV3, Reaction(1.47e14, 0.00, 632.0*8.314/4.184/1000.0,sp::OH)); // S55
+    addReaction(rxnV3, Reaction(2.13e15, 0.00, 42305.0*8.314/4.184/1000.0,sp::None));  // S60
+    addReaction(rxnV3, Reaction(4.34e14, 0.00, 984.0*8.314/4.184/1000.0,sp::H));  // S65
+    addReaction(rxnV3, Reaction(2.14e16, 0.00, 52988.0*8.314/4.184/1000.0,sp::None));  // S70
+    addReaction(rxnV3, Reaction(6498889.53, 2.117, 5603.0*8.314/4.184/1000.0,sp::H));  // S75
+    addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S80
+    addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85
+    addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93
+    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96
+    addReaction(rxnV3, Reaction(1.00e12, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100
+	addReaction(rxnV3, Reaction(4.02e-2, 4.38, 24624.0*8.314/4.184/1000.0,sp::None));  // S52
+	
+	
+    //addReaction(rxnV3, Reaction(1.3e13, 0, 10.62, sp::OH));   //5 - r4f
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = FE2; // sitetype
-    m_name = "R6 (FE2) Oxidation by OH"; // name of process
+    m_name = "R6 (FE2) Oxidation side"; // name of process
     m_ID = 20;
 }
 // Jump rate calculation
-double O6R_FE2_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    // check if site count is zero
+double O6R_FE2_side::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+	/*// check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
@@ -2699,10 +2773,11 @@ double O6R_FE2_OH::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, co
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = m_r[6]*r_f* site_count; // Rate Equation
+    return m_rate = m_r[6]*r_f* site_count; // Rate Equation*/
 }
-double O6R_FE2_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    // check if site count is zero
+double O6R_FE2_side::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+    /*// check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
@@ -2714,17 +2789,59 @@ double O6R_FE2_OH::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
     //    r_f = r_f/(r_f+1.0);
     //}
     //else r_f=0;
-	return m_rate = m_r[0] * site_count; // Rate Equation
+	return m_rate = m_r[0] * site_count; // Rate Equation*/
 }
-double O6R_FE2_OH::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p12(gp, pah_st);
+double O6R_FE2_side::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    // check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(6, 6);
+	boost::numeric::ublas::vector<double> arr2(6);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	arr1(0,0) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
+    arr1(0,2) = -m_r[10] - m_r[13];
+    arr1(1,0) = -m_r[5];
+    arr1(1,1) = m_r[6] + m_r[9] + m_r[12];
+    arr1(1,2) = - m_r[8] - m_r[11];
+	arr1(2,0) = -m_r[7];
+    arr1(2,1) = - m_r[9] - m_r[12];
+    arr1(2,2) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
+	arr1(3,3) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
+    arr1(3,5) = -m_r[10] - m_r[13];
+    arr1(4,3) = -m_r[5];
+    arr1(4,4) = m_r[17] + m_r[9] + m_r[12];
+    arr1(4,5) = - m_r[8] - m_r[11];
+	arr1(5,3) = -m_r[7];
+    arr1(5,4) = - m_r[9] - m_r[12];
+    arr1(5,5) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
+
+    arr2(0) = +m_r[0] + m_r[2];
+    arr2(1) = +m_r[14];
+    arr2(2) = 0.0;
+	arr2(3) = +m_r[0] + m_r[2];
+    arr2(4) = +m_r[14];
+    arr2(5) = 0.0;
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0) + m_r[17] * arr2(4) + m_r[16] * arr2(3))*site_count;
 }
 
 // ************************************************************
-// ID21- R6 oxidation at ZZ by O2
+// ID21- R6 oxidation at FE2 (top)
 // ************************************************************
 // Elementary rate constants, site type, process type and name
-void O6R_FE2_O2::initialise() {
+void O6R_FE2_top::initialise() {
     // Adding elementary reactions
     // 0.0267atm
     rxnvector& rxnV = m_rxnvector0p0267;
@@ -2746,20 +2863,35 @@ void O6R_FE2_O2::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(4.2e13, 0, 13.00, sp::H));      //0 - r1f
-    addReaction(rxnV3, Reaction(3.9e12, 0, 11.00, sp::H2));   //1 - r1b
-    addReaction(rxnV3, Reaction(1.0e10, 0.734, 1.43, sp::OH));  //2 - r2f
-    addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
-    addReaction(rxnV3, Reaction(2.0e13, 0, 0, sp::H));  //4 - r3f
-    addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));   //5 - r4f
+    addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
+	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4
+	addReaction(rxnV3, Reaction(3.17e13, 0.00, 2.021,sp::O2));  						// S46
+    addReaction(rxnV3, Reaction(1.08e2, 3.28, 21866.0*8.314/4.184/1000.0,sp::None));  // S51
+    addReaction(rxnV3, Reaction(1.47e14, 0.00, 632.0*8.314/4.184/1000.0,sp::OH)); // S55
+    addReaction(rxnV3, Reaction(2.13e15, 0.00, 42305.0*8.314/4.184/1000.0,sp::None));  // S60
+    addReaction(rxnV3, Reaction(4.34e14, 0.00, 984.0*8.314/4.184/1000.0,sp::H));  // S65
+    addReaction(rxnV3, Reaction(2.14e16, 0.00, 52988.0*8.314/4.184/1000.0,sp::None));  // S70
+    addReaction(rxnV3, Reaction(6498889.53, 2.117, 5603.0*8.314/4.184/1000.0,sp::H));  // S75
+    addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S80
+    addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85
+    addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93
+    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96
+    addReaction(rxnV3, Reaction(1.00e12, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100
+	addReaction(rxnV3, Reaction(4.02e-2, 4.38, 24624.0*8.314/4.184/1000.0,sp::None));  // S52
+	
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));   //5 - r4f
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = FE2; // sitetype
-    m_name = "R6 (FE2) Oxidation by O2"; // name of process
+    m_name = "R6 (FE2) Oxidation top"; // name of process
     m_ID = 21;
 }
 // Jump rate calculation
-double O6R_FE2_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    // check if site count is zero
+double O6R_FE2_top::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+    /*// check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
@@ -2771,10 +2903,11 @@ double O6R_FE2_O2::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, co
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = m_r[5]*r_f* site_count; // Rate Equation
+    return m_rate = m_r[5]*r_f* site_count; // Rate Equation*/
 }
-double O6R_FE2_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    // check if site count is zero
+double O6R_FE2_top::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+	/*// check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
@@ -2786,10 +2919,52 @@ double O6R_FE2_O2::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-	return m_rate = m_r[5] * r_f* site_count; // Rate Equation
+	return m_rate = m_r[5] * r_f* site_count; // Rate Equation*/
 }
-double O6R_FE2_O2::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p12(gp, pah_st);
+double O6R_FE2_top::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    // check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(6, 6);
+	boost::numeric::ublas::vector<double> arr2(6);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	arr1(0,0) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
+    arr1(0,2) = -m_r[10] - m_r[13];
+    arr1(1,0) = -m_r[5];
+    arr1(1,1) = m_r[6] + m_r[9] + m_r[12];
+    arr1(1,2) = - m_r[8] - m_r[11];
+	arr1(2,0) = -m_r[7];
+    arr1(2,1) = - m_r[9] - m_r[12];
+    arr1(2,2) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
+	arr1(3,3) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
+    arr1(3,5) = -m_r[10] - m_r[13];
+    arr1(4,3) = -m_r[5];
+    arr1(4,4) = m_r[17] + m_r[9] + m_r[12];
+    arr1(4,5) = - m_r[8] - m_r[11];
+	arr1(5,3) = -m_r[7];
+    arr1(5,4) = - m_r[9] - m_r[12];
+    arr1(5,5) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
+
+    arr2(0) = +m_r[0] + m_r[2];
+    arr2(1) = +m_r[14];
+    arr2(2) = 0.0;
+	arr2(3) = +m_r[0] + m_r[2];
+    arr2(4) = +m_r[14];
+    arr2(5) = 0.0;
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0))*site_count;
 }
 
 // Elementary rate constants, site type, process type and name
@@ -2945,21 +3120,22 @@ void B6R_ACR5::initialise() {
 	rxnV2 = rxnV;
 
 	rxnvector& rxnV3 = m_rxnvector1;
-	//Rates taken from Raj 2019.
-	addReaction(rxnV3, Reaction(2.540E+11,9.310E-01,1.644E+01, sp::H));
-	addReaction(rxnV3, Reaction(1.830E+12,3.970E-01,8.815E+00, sp::H2));
-	addReaction(rxnV3, Reaction(1.630E+12,4.090E-01,5.975E+00, sp::C2H2));
-	addReaction(rxnV3, Reaction(9.130E+11,9.910E-01,4.599E+01, sp::None));
-	addReaction(rxnV3, Reaction(6.320E+11,1.660E-01,1.805E+01, sp::None));
-	addReaction(rxnV3, Reaction(9.750E+10,4.580E-01,1.583E+01, sp::None));
-	addReaction(rxnV3, Reaction(9.580E+11,-6.400E-02,1.631E+01, sp::None));
-	addReaction(rxnV3, Reaction(9.650E+11,5.010E-01,4.150E+01, sp::None));
-	addReaction(rxnV3, Reaction(3.160E+12,7.870E-01,3.651E+01, sp::None));
-	addReaction(rxnV3, Reaction(9.710E+11,5.070E-01,4.695E+00, sp::H));
-	addReaction(rxnV3, Reaction(2.780E+11,6.300E-02,2.387E+01, sp::None));
-	addReaction(rxnV3, Reaction(5.470E+11,6.450E-01,3.277E+01, sp::None));
-	addReaction(rxnV3, Reaction(8.150E+11,5.630E-01,2.486E+01, sp::None));
-	addReaction(rxnV3, Reaction(9.060E+11,4.560E-01,7.286E+00, sp::None));
+	//Rates taken from Raj 2019. Combustion and Flame 204 (2019) 331–340
+	addReaction(rxnV3, Reaction(2.540E+11,9.310E-01,1.644E+01, sp::H)); //1
+	addReaction(rxnV3, Reaction(1.830E+12,3.970E-01,8.815E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(1.630E+12,4.090E-01,5.975E+00, sp::C2H2)); //2
+	addReaction(rxnV3, Reaction(9.130E+11,9.910E-01,4.599E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(6.320E+11,1.660E-01,1.805E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(9.750E+10,4.580E-01,1.583E+01, sp::None)); //-3
+	addReaction(rxnV3, Reaction(9.580E+11,-6.400E-02,1.631E+01, sp::None)); //4
+	addReaction(rxnV3, Reaction(9.650E+11,5.010E-01,4.150E+01, sp::None)); //-4
+	addReaction(rxnV3, Reaction(3.160E+12,7.870E-01,3.651E+01, sp::None)); //5
+	addReaction(rxnV3, Reaction(9.710E+11,5.070E-01,4.695E+00, sp::H)); //-5
+	addReaction(rxnV3, Reaction(2.780E+11,6.300E-02,2.387E+01, sp::None)); //6
+	addReaction(rxnV3, Reaction(5.470E+11,6.450E-01,3.277E+01, sp::None)); //-6
+	addReaction(rxnV3, Reaction(8.150E+11,5.630E-01,2.486E+01, sp::None)); //7
+	addReaction(rxnV3, Reaction(9.060E+11,4.560E-01,7.286E+00, sp::H)); //-7
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4              - Forward
 
 	//OLD
 	/*addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));         // 0 - r1f
@@ -3011,7 +3187,7 @@ double B6R_ACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
 			arr1_peq(k, l) = 0.0;
 	for (unsigned k = 0; k < arr2_peq.size(); ++k)
 		arr2_peq(k) = 0.0;*/
-	arr1(0,0) = m_r[1] + m_r[2];
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[14];
 	arr1(0,1) = -m_r[3];
 	arr1(1,0) = -m_r[2];
 	arr1(1,1) = m_r[3] + m_r[4] + m_r[10];
@@ -3165,7 +3341,7 @@ void G6R_RFER::initialise() {
 	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
 	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
 	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
-	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010. Combination of S17 and S39
 	
 	//Previous. No idea about the C2H2 rate
 	/*addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
@@ -4933,3 +5109,58 @@ double D_CH3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double
     return m_rate = rev_rate* site_count; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
+
+
+// ************************************************************
+// ID56- Oxidation of R5R6 site.
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void O5R_R5R6::initialise() {
+    // Adding elementary reactions
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//ABF - Frenklach and Whitesides2010
+	//H abstraction
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));          // A2R5 + H <=> A2R5- + H2      - 0 Hou2017
+	addReaction(rxnV3, Reaction(5.0677e+04, 2.4449e+00, 4.5197e+00, sp::H2));       // A2R5 + H <=> A2R5- + H2      - 1 Hou2017
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	//Using rates by Frenklach 2018
+	//"Detailed, sterically-resolved modeling of soot oxidation: Role of O atoms, interplay with particle nanostructure, and emergence of inner particle burning"
+	addReaction(rxnV3, Reaction(3.450E+11, 0.000E+00, 13422.0*8.314/4.184/1000.0, sp::O2));         // S90
+	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
+
+    m_sType = R5R6; // sitetype
+    m_name = "Oxidation of partially embedded R5"; // name of process
+    m_ID = 56;
+}
+// Jump rate calculation
+double O5R_R5R6::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double O5R_R5R6::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double O5R_R5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+	//return setRate0p0267(gp, pah_st);
+}
+
+
+
+

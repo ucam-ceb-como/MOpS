@@ -2933,6 +2933,9 @@ bool PAHPrimary::CheckInvalidPAHs(const boost::shared_ptr<PAH> & it) const
 		case ParticleModel::A5:
 			m_control=Sweep::KMC_ARS::BENZOPYRENE_C;
 			break;
+		case ParticleModel::A7:
+			m_control=Sweep::KMC_ARS::CORONENE_C;
+			break;
 		case ParticleModel::FromFile:
 			if (src.is_open()){
 				//Read the first line and split it with spaces
@@ -3066,6 +3069,11 @@ int PAHPrimary::InceptedPAH(const int k) const
 			break;
 		case ParticleModel::A5:
 			if (NumCarbon() == BENZOPYRENE_C && NumHydrogen() == BENZOPYRENE_H)
+				return 1;
+			else return 0;
+			break;
+		case ParticleModel::A7:
+			if (NumCarbon() == CORONENE_C && NumHydrogen() == CORONENE_H)
 				return 1;
 			else return 0;
 			break;

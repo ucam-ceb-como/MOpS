@@ -97,6 +97,7 @@ void KMCGasPoint::initData() {
     m_spnames.push_back("T");
     m_spnames.push_back("H2");
     m_spnames.push_back("H");
+	m_spnames.push_back("O");
     m_spnames.push_back("O2");
     m_spnames.push_back("OH");
     m_spnames.push_back("C2H2");

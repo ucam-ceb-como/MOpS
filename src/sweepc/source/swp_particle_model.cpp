@@ -879,6 +879,8 @@ void ParticleModel::SetInceptedPAH(const std::string &name)
             m_InceptedPAH.push_back(R5A3);
     else if (!name.compare("A5"))
             m_InceptedPAH.push_back(A5);
+	else if (!name.compare("A7"))
+            m_InceptedPAH.push_back(A7);
 	else if (!name.compare("FromFile"))
             m_InceptedPAH.push_back(FromFile);
     else throw std::runtime_error("no information about the incepted PAH is available, only A1 A2 and A4 are supported now (Sweep::ParticleModel::SetInceptedPAH())");

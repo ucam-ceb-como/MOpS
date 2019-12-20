@@ -194,7 +194,7 @@ namespace KMC_ARS {
     };
 
     //! ID8.
-    class O6R_FE_HACA_O2 : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at AC by O2
+    class O6R_FE_HACA : public Sweep::KMC_ARS::JumpProcess { //R6 oxidation at AC by O2
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -301,7 +301,7 @@ namespace KMC_ARS {
     };
 
     //! ID20.
-    class O6R_FE2_OH : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
+    class O6R_FE2_side : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -310,7 +310,7 @@ namespace KMC_ARS {
     };
 
     //! ID21.
-    class O6R_FE2_O2 : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
+    class O6R_FE2_top : public Sweep::KMC_ARS::JumpProcess { //R6 desorption at bay -> pyrene
     public:
         double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
         double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -566,6 +566,15 @@ namespace KMC_ARS {
 	
 	//! ID55.
 	class D_CH3 : public Sweep::KMC_ARS::JumpProcess {
+	public:
+		double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
+		void initialise();
+	};
+	
+	//! ID56.
+	class O5R_R5R6 : public Sweep::KMC_ARS::JumpProcess {
 	public:
 		double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 		double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);

@@ -3846,6 +3846,72 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
         updateCombinedSites();
         //cout << "Benzopyrene Initialised!\n";
         break;
+	case CORONENE_C:
+		// "FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ,FE,ZZ"
+		// add first C atom
+        m_pah->m_cfirst = addC();
+		updateA(m_pah->m_cfirst, 'H', std::make_tuple(cos(120.0 *M_PI / 180.0),sin(120.0 *M_PI / 180.0),0.0));
+        // adds next C atoms according to structure
+		newC = addC(m_pah->m_cfirst, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-60.0*M_PI/180.0),sin(-60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-60.0*M_PI/180.0),sin(-60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(1.0,0.0,0.0) );
+		newC = addC(newC, std::make_tuple(cos(-120.0*M_PI/180.0),sin(-120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-60.0*M_PI/180.0),sin(-60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(1.0,0.0,0.0) );
+		newC = addC(newC, std::make_tuple(cos(-120.0*M_PI/180.0),sin(-120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-60.0 *M_PI / 180.0),sin(-60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-180.0*M_PI/180.0),sin(-180.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-120.0*M_PI/180.0),sin(-120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-60.0 *M_PI / 180.0),sin(-60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(-180.0*M_PI/180.0),sin(-180.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-120.0 *M_PI / 180.0),sin(-120.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(120.0*M_PI/180.0),sin(120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(180.0*M_PI/180.0),sin(180.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(-120.0 *M_PI / 180.0),sin(-120.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(120.0*M_PI/180.0),sin(120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(-1.0,0.0,0.0) );
+		newC = addC(newC, std::make_tuple(cos(60.0*M_PI/180.0),sin(60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+		newC = addC(newC, std::make_tuple(cos(120.0*M_PI/180.0),sin(120.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(-1.0,0.0,0.0) );
+		newC = addC(newC, std::make_tuple(cos(60.0*M_PI/180.0),sin(60.0*M_PI/180.0),0.0), 1.4);
+		updateA(newC, 'H', std::make_tuple(cos(120.0 *M_PI / 180.0),sin(120.0 *M_PI / 180.0),0.0) );
+        // adds the last C atom, with bond angle towards m_cfirst
+		m_pah->m_clast = addC(newC, std::make_tuple(1.0,0.0,0.0), 1.4);
+		updateA(m_pah->m_clast, 'C', std::make_tuple(cos(60.0 *M_PI / 180.0),sin(60.0 *M_PI / 180.0),0.0) );
+        // closes structure
+        connectToC(m_pah->m_clast, m_pah->m_cfirst);
+        // update H atoms
+        //updateA(m_pah->m_cfirst, m_pah->m_clast, 'H');
+        // set C & H counts
+        setCount(CORONENE_C, CORONENE_H);
+        // set ring counts
+        m_pah->m_rings = 7;
+        m_pah->m_rings5_Lone = 0;
+		m_pah->m_rings5_Embedded = 0;
+		m_pah->m_rings7_Lone = 0;
+		m_pah->m_rings7_Embedded = 0;
+        // update all sites and combined sites
+        updateSites();
+        updateCombinedSites();
+		//Set Internal Carbons list
+		P_intCarbons.push_back(std::make_tuple(0.0, -2*1.4*cos(30.0*M_PI/180.0), 0.0));
+		P_intCarbons.push_back(std::make_tuple(1.4, -2*1.4*cos(30.0*M_PI/180.0), 0.0));
+		P_intCarbons.push_back(std::make_tuple(-0.7, -3*1.4*cos(30.0*M_PI/180.0), 0.0));
+		P_intCarbons.push_back(std::make_tuple(2.1, -3*1.4*cos(30.0*M_PI/180.0), 0.0));
+		P_intCarbons.push_back(std::make_tuple(0.0, -4*1.4*cos(30.0*M_PI/180.0), 0.0));
+		P_intCarbons.push_back(std::make_tuple(1.4, -4*1.4*cos(30.0*M_PI/180.0), 0.0));
+		m_pah->m_InternalCarbons = P_intCarbons;
+		//cout << "Pyrene Initialised!\n";
+        break;
      default: 
             std::cout<<"ERROR: Starting Structure undefined.. (PAHProcess::initialise)\n\n";
             assert(false);
@@ -4778,7 +4844,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         case 7:
             proc_O6R_FE3_OH(site_perf, site_C1, site_C2); break;
         case 8:
-            proc_O6R_FE_HACA_O2(site_perf, site_C1, site_C2); break;
+            proc_O6R_FE_HACA(site_perf, site_C1, site_C2); break;
         case 9:
             proc_O6R_FE_HACA_OH(site_perf, site_C1, site_C2); break;
         case 10:
@@ -5788,10 +5854,77 @@ void PAHProcess::proc_O6R_FE3_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 void PAHProcess::proc_O6R_FE3_OH(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     proc_D6R_FE3(stt, C_1, C_2);
 }
+
 // ************************************************************
-// ID8- R6 oxidation at AC by O2 (AR12 in Matlab)
+// ID8- R6 oxidation at FE-HACA (AR12 in Matlab)
 // ************************************************************
-void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	//This jump process used to remove a full ring. However, the work by Singh 2016 showed that it probably forms an R5 which is more interesting.
+	//Converts an FE_HACA into an R5.
+    //printSites(stt);
+    Spointer S1, S2;
+	Cpointer CRem = C_2;
+	Cpointer CRem_before = C_1;
+	Cpointer CRem_next = C_2->C2;
+    S1 = moveIt(stt, -1);
+    S2 = moveIt(stt, 1);
+	
+	//check that two pentagons (including internals) will not collide
+	if (m_pah->m_R5loc.size()>=1){
+		cpair R5coords_end = endposR5internal(CRem_before, CRem_next, false);
+		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
+			double distR5s = getDistance_twoC(*it, R5coords_end);
+			if (distR5s < 2.8) {
+				//This distance is a parameter of this jump process. Might need some more tuning. 
+				//2.8 seems appropiate but may reject too many jumps.
+				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+				return;
+			}
+		}
+		R5coords_end = endposR5internal(CRem_before, CRem_next);
+		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
+			double distR5s = getDistance_twoC(*it, R5coords_end);
+			if (distR5s < 2.8) {
+				//This distance is a parameter of this jump process. Might need some more tuning. 
+				//2.8 seems appropiate but may reject too many jumps.
+				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+				return;
+			}
+		}
+	}
+	
+    Cpointer C_bulk;
+    for(C_bulk = S1->C1; C_bulk != S1->C2; C_bulk=C_bulk->C2) {
+        if(C_bulk->bridge) return;
+    }
+    for(C_bulk = S2->C1; C_bulk != S2->C2; C_bulk=C_bulk->C2) {
+        if(C_bulk->bridge) return;
+    }
+	//Remove carbon
+	removeC(CRem, false);
+    // Update Sites and neighbouring sites
+	if ( (int)S1->type < 2000) updateSites(S1, S1->C1, CRem_before, +500);
+	else updateSites(S1, S1->C1, CRem_before, +100);
+	if ( (int)S2->type < 2000) updateSites(S2, CRem_next, S2->C2, +500);
+	else updateSites(S2, CRem_next, S2->C2, +100);
+    Spointer S3, S4;
+    // update combined sites for all sites and their neighbours
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    updateCombinedSites(stt);
+    updateCombinedSites(S1); updateCombinedSites(S2);
+    updateCombinedSites(S3); updateCombinedSites(S4);
+    addCount(0,-1);
+    m_pah->m_rings--;
+	m_pah->m_rings5_Lone++;
+}
+
+
+// ************************************************************
+// ID8- R6 oxidation at FE-HACA (AR12 in Matlab)
+// ************************************************************
+void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	//This jump process removes a FE and assumes you form an AC or another site from the carbon inside.
+	//This causes several issues because recognising what site will be formed is not trivial.
     //printSites(stt);
     // member C atoms of resulting AC site
     Cpointer C1_res, C2_res;
@@ -6203,7 +6336,7 @@ void PAHProcess::proc_O6R_FE_HACA_O2(Spointer& stt, Cpointer C_1, Cpointer C_2) 
 // ID9- R6 oxidation at AC by OH (AR13 in Matlab)
 // ************************************************************
 void PAHProcess::proc_O6R_FE_HACA_OH(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-    proc_O6R_FE_HACA_O2(stt, C_1, C_2);
+    proc_O6R_FE_HACA(stt, C_1, C_2);
 }
 // ************************************************************
 // ID10- R5 growth on ZZ (AR3 in Matlab)
@@ -7203,37 +7336,45 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
    }
 }
 // ************************************************************
-// ID20 & ID21- R6 oxidation at ZZ site
+// ID20 & ID21- R6 oxidation at FE2 site
 // ************************************************************
 void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	//This jump process used to remove a full ring. However, the work by Singh 2016 showed that it probably forms an R5 which is more interesting.
+	//Converts an FE2 into an R5.
     //printSites(stt);
-    // identify if the other FE site is before or after this site
-    //std::ostringstream dotname, dotname2;
-    //dotname << "KMC_DEBUG/" << stt->C1 << "_1.dot";
-    //dotname2 << "KMC_DEBUG/" << stt->C1 << "_2.dot";
-    //saveDOT(dotname.str());
     bool b4 = false; // <-- position of other FE site
     Spointer other = moveIt(stt, -1);
     Spointer S1, S2;
+	Cpointer CRem, CRem_before, CRem_next;
     if(other->type == FE) {
         b4 = true;
         S1 = moveIt(other, -1);
         S2 = moveIt(stt, 1);
+		CRem = stt->C1;
     }
     else {
         other = moveIt(stt, 1);
-        S1 = moveIt(other, 1);
-        S2 = moveIt(stt, -1);
+        S2 = moveIt(other, 1);
+        S1 = moveIt(stt, -1);
+		CRem = stt->C2;
     }
-    // Check if there are any R5 nearby, if yes, don't perform process
-    // then check for nearby bridges
-    if(b4) {
-        if((int) moveIt(other, -1)->type > 4 || (int) moveIt(stt, 1)->type > 4)
-            return;
-    } else {
-        if((int) moveIt(other, 1)->type > 4 || (int) moveIt(stt, -1)->type > 4)
-            return;
-    }
+	CRem_before = CRem->C1;
+	CRem_next = CRem->C2;
+	
+	//check that two pentagons (including internals) will not collide
+	if (m_pah->m_R5loc.size()>=1){
+		cpair R5coords_end = endposR5internal(CRem_before, CRem_next);
+		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
+			double distR5s = getDistance_twoC(*it, R5coords_end);
+			if (distR5s < 2.8) {
+				//This distance is a parameter of this jump process. Might need some more tuning. 
+				//2.8 seems appropiate but may reject too many jumps.
+				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+				return;
+			}
+		}
+	}
+	
     Cpointer C_bulk;
     for(C_bulk = S1->C1; C_bulk != S1->C2; C_bulk=C_bulk->C2) {
         if(C_bulk->bridge) return;
@@ -7241,36 +7382,15 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     for(C_bulk = S2->C1; C_bulk != S2->C2; C_bulk=C_bulk->C2) {
         if(C_bulk->bridge) return;
     }
-    // Identify C1 & C2 for new ZZ site
-    Cpointer C_start, C_end;
-    if(b4) {
-        C_start = stt->C1->C1->C1;
-        C_end = stt->C2->C2;
-    } else {
-        C_start = stt->C1->C1;
-        C_end = stt->C2->C2->C2;
-    }
-	cpair CZZdir = invert_vector(C_start->C2->growth_vector);
-	cpair Cdir = get_vector(C_start->coords, C_start->C2->coords);
-    // Remove the 3 C atoms after C_start
-    removeC(C_start->C2, false);
-    removeC(C_start->C2, false);
-    removeC(C_start->C2, false);
-    // add a C atom after C_start (bulk in ZZ)
-	addC(C_start, CZZdir, 1.4, true);
-	updateA(C_start, 'H', Cdir);
-	updateA(C_end, 'H', Cdir);
-    //addC(C_start, normAngle(C_start->bondAngle1-120), normAngle(C_start->bondAngle1-60), 1.4, true);
-    // update H
-    //updateA(C_start, C_end, 'H');
+	//Remove carbon
+	removeC(CRem, false);
     // Remove one of the FE in FE2
     removeSite(other);
     // Update Sites and neighbouring sites
+	convSiteType(stt, CRem_before, CRem_next, R5);
+	updateSites(S1, S1->C1, CRem_before, +100);
+	updateSites(S2, CRem_next, S2->C2, +100);
     Spointer S3, S4;
-    S1 = moveIt(stt, -1); S2 = moveIt(stt, 1);
-    updateSites(stt, C_start, C_end, +1); // FE --> ZZ
-    updateSites(S1, S1->C1, C_start, -1); // S1 --> reduce 1
-    updateSites(S2, C_end, S2->C2, -1); // S2 --> reduce 1
     // update combined sites for all sites and their neighbours
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
     updateCombinedSites(stt);
@@ -7278,14 +7398,14 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S3); updateCombinedSites(S4);
     addCount(0,-1);
     m_pah->m_rings--;
-    //saveDOT(dotname2.str());
+	m_pah->m_rings5_Lone++;
 }
 
 // ************************************************************
 // ID22- R6 desorption from FE to form AC
 // ************************************************************
 void PAHProcess::proc_D6R_FE_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	proc_O6R_FE_HACA_O2(stt, C_1, C_2);
+	proc_O6R_FE_HACA_double(stt, C_1, C_2);
 }
 
 //
@@ -9375,6 +9495,80 @@ void PAHProcess::proc_D_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 
     // update combined sites for all new sites and neighbours (and their neighbours)
     updateCombinedSites(stt); updateCombinedSites(prev); updateCombinedSites(prev2); updateCombinedSites(neighbour); updateCombinedSites(neighbour2);
+}
+
+// ************************************************************
+// ID56 - Oxidation of R5R6 site
+// ************************************************************
+void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+	//printStruct();
+	OpenBabel::OBMol mol = passPAH();
+	mol = optimisePAH(mol, 1000);
+	passbackPAH(mol);
+	//First check if R6 is to the left or the right of R5
+	bool b4 = false;
+	Spointer other;
+	Cpointer CRem, CRem_before, CRem_next;
+	
+	if (( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ) && ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) )){
+		//Pentagons to both sides, JP not allowed
+		return;
+	}
+	else if ( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ) b4 = false;
+	else if ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) ) b4 = true;
+	else return;
+	if (b4) {
+		other = moveIt(stt, -1);
+		CRem = stt->C1;
+	}
+	else {
+		other = moveIt(stt, 1);
+		CRem = stt->C2;
+	}
+	CRem_next = CRem->C1;
+	CRem_before = CRem->C2;
+	Cpointer thirdC = findThirdC(CRem_before);
+	Cpointer thirdC2 = findThirdC(CRem_next);
+	bool bridged = false;
+	if (thirdC != NULLC && thirdC2 != NULLC) bridged = true;
+	if (bridged == false) {
+		cpair Cdir1, Cdir2, normdir;
+		normdir = norm_vector(CRem_before->coords, CRem->coords, CRem_next->coords);
+		Cdir1 = cross_vector(get_vector(CRem_before->C1->coords, CRem->coords), normdir);
+		Cdir2 = get_vector(CRem_before->coords, CRem_next->coords);
+		double Cdist = getDistance_twoC(CRem_before, CRem_next);
+		Cpointer newC = addC(CRem_before, Cdir1, Cdist/2.40*1.47, true);
+		newC = addC(newC, Cdir2, 1.45, true);
+	}
+	else{
+		thirdC->C3 = thirdC2;
+		thirdC2->C3 = thirdC;
+		thirdC2->C2 = CRem_next;
+		thirdC->C1 = CRem_before;
+		thirdC2->bridge = true;
+		thirdC->bridge = true;
+	}
+	Spointer newSite;
+	if (b4){
+		if ((int)stt->type < 2000) updateSites(stt, CRem_next, stt->C2, -501);
+		else updateSites(stt, CRem_next, stt->C2, -101);
+		if ((int)other->type < 2000) updateSites(other, other->C1, CRem_before, -501);
+		else updateSites(other, other->C1, CRem_before, -101);
+		newSite = addSite(AC, CRem_before, CRem_next, other);
+	}
+	else{
+		if ((int)stt->type < 2000) updateSites(stt, stt->C1, CRem_before, -501);
+		else updateSites(stt, stt->C1, CRem_before, -101);
+		if ((int)other->type < 2000) updateSites(other, CRem_next, other->C2, -501);
+		else updateSites(other, CRem_next, other->C2, -101);
+		newSite = addSite(AC, CRem_before, CRem_next, stt);
+	}
+	
+	Spointer S1 = moveIt(newSite, -1); Spointer S3 = moveIt(newSite, -2);
+	Spointer S2 = moveIt(newSite, +1); Spointer S4 = moveIt(newSite, +2);
+    // update combined sites for all new sites and neighbours (and their neighbours)
+    updateCombinedSites(stt); updateCombinedSites(other); updateCombinedSites(newSite); 
+	updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
 }
 
 size_t PAHProcess::SiteListSize() const {
