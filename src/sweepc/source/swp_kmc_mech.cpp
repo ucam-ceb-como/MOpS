@@ -1004,7 +1004,8 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	if (T<700.0) m_rate = r_f2_peq * site_count / 6.0; //1400K is a typical cutoff.
 	else m_rate = r_f2_ss * site_count / 6.0; // Rate Equation
 	
-	return m_rate ; // Rate Equation
+	//Sensitivity analysis factor
+	return m_rate * 0.5 ; // Rate Equation //Changed for sensitivity analysis to *0.5 or *2.0 
     //return setRate0p0267(gp, pah_st);
 }
 // 
@@ -2934,19 +2935,23 @@ void B6R_ACR5::initialise() {
 
 	rxnvector& rxnV3 = m_rxnvector1;
 	//Rates taken from Raj 2019.
-	addReaction(rxnV3, Reaction(2.540E+11,9.310E-01,1.644E+01, sp::H));
+	//addReaction(rxnV3, Reaction(2.540E+11,9.310E-01,1.644E+01, sp::H)); //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(2.540E+11,9.310E-01,1.844E+01, sp::H));
 	addReaction(rxnV3, Reaction(1.830E+12,3.970E-01,8.815E+00, sp::H2));
-	addReaction(rxnV3, Reaction(1.630E+12,4.090E-01,5.975E+00, sp::C2H2));
+	//addReaction(rxnV3, Reaction(1.630E+12,4.090E-01,5.975E+00, sp::C2H2)); //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.630E+12,4.090E-01,7.975E+00, sp::C2H2));
 	addReaction(rxnV3, Reaction(9.130E+11,9.910E-01,4.599E+01, sp::None));
 	addReaction(rxnV3, Reaction(6.320E+11,1.660E-01,1.805E+01, sp::None));
 	addReaction(rxnV3, Reaction(9.750E+10,4.580E-01,1.583E+01, sp::None));
 	addReaction(rxnV3, Reaction(9.580E+11,-6.400E-02,1.631E+01, sp::None));
 	addReaction(rxnV3, Reaction(9.650E+11,5.010E-01,4.150E+01, sp::None));
-	addReaction(rxnV3, Reaction(3.160E+12,7.870E-01,3.651E+01, sp::None));
+	//addReaction(rxnV3, Reaction(3.160E+12,7.870E-01,3.651E+01, sp::None)); //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(3.160E+12,7.870E-01,3.851E+01, sp::None));
 	addReaction(rxnV3, Reaction(9.710E+11,5.070E-01,4.695E+00, sp::H));
 	addReaction(rxnV3, Reaction(2.780E+11,6.300E-02,2.387E+01, sp::None));
 	addReaction(rxnV3, Reaction(5.470E+11,6.450E-01,3.277E+01, sp::None));
-	addReaction(rxnV3, Reaction(8.150E+11,5.630E-01,2.486E+01, sp::None));
+	//addReaction(rxnV3, Reaction(8.150E+11,5.630E-01,2.486E+01, sp::None)); //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(8.150E+11,5.630E-01,2.686E+01, sp::None));
 	addReaction(rxnV3, Reaction(9.060E+11,4.560E-01,7.286E+00, sp::None));
 
 	//OLD
@@ -3483,22 +3488,28 @@ void GR7_R5R6AC::initialise() {
 	rxnvector& rxnV3 = m_rxnvector1;
 	//Reactions provided by Menon2019 at M06-2X level.
 	//Pathway A
-	addReaction(rxnV3, Reaction(6.586e+07, 1.766e+00, 1.477e+01, sp::H));           //7-HACAsite2-1 + H => 7-HACAsite2-2a + H2      //0
+	//addReaction(rxnV3, Reaction(6.586e+07, 1.766e+00, 1.477e+01, sp::H));           //7-HACAsite2-1 + H => 7-HACAsite2-2a + H2      //0 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(6.586e+07, 1.766e+00, 1.677e+01, sp::H));           //7-HACAsite2-1 + H => 7-HACAsite2-2a + H2      //0 
 	addReaction(rxnV3, Reaction(1.155e+05, 2.310e+00, 8.819e+00, sp::H2));          //7-HACAsite2-2a + H2 => 7-HACAsite2-1 + H      //1
-	addReaction(rxnV3, Reaction(3.886e+03, 2.592e+00, 4.012e+00, sp::C2H2));                //7-HACAsite2-2a + Acety => 7-HACAsite2-3a      //2
+	//addReaction(rxnV3, Reaction(3.886e+03, 2.592e+00, 4.012e+00, sp::C2H2));                //7-HACAsite2-2a + Acety => 7-HACAsite2-3a      //2 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(3.886e+03, 2.592e+00, 6.012e+00, sp::C2H2));                //7-HACAsite2-2a + Acety => 7-HACAsite2-3a      //2
 	addReaction(rxnV3, Reaction(6.507e+12, 7.101e-01, 4.505e+01, sp::None));                //7-HACAsite2-3a => 7-HACAsite2-2a + Acety      //3
 	addReaction(rxnV3, Reaction(5.755e+11, 7.034e-02, 2.983e+00, sp::None));                //7-HACAsite2-3a => 7-HACAsite2-4a      //4
 	addReaction(rxnV3, Reaction(1.742e+12, 4.186e-01, 2.904e+01, sp::None));                //7-HACAsite2-4a => 7-HACAsite2-3a      //5
-	addReaction(rxnV3, Reaction(3.207e+10, 9.581e-01, 2.313e+01, sp::None));                //7-HACAsite2-4a => 7-HACAsite2-5 + H   //6
+	//addReaction(rxnV3, Reaction(3.207e+10, 9.581e-01, 2.313e+01, sp::None));                //7-HACAsite2-4a => 7-HACAsite2-5 + H   //6 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(3.207e+10, 9.581e-01, 2.513e+01, sp::None));                //7-HACAsite2-4a => 7-HACAsite2-5 + H   //6
 	addReaction(rxnV3, Reaction(1.293e+08, 1.505e+00, 7.425e+00, sp::H));           //7-HACAsite2-5 + H => 7-HACAsite2-4a   //7
 	//Pathway B
-	addReaction(rxnV3, Reaction(1.479e+07, 1.854e+00, 1.707e+01, sp::H));           //7-HACAsite2-1 + H => 7-HACAsite2-2b + H2      //8
+	//addReaction(rxnV3, Reaction(1.479e+07, 1.854e+00, 1.707e+01, sp::H));           //7-HACAsite2-1 + H => 7-HACAsite2-2b + H2      //8 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.479e+07, 1.854e+00, 1.907e+01, sp::H));           //7-HACAsite2-1 + H => 7-HACAsite2-2b + H2      //8
 	addReaction(rxnV3, Reaction(5.914e+04, 2.234e+00, 1.187e+01, sp::H2));          //7-HACAsite2-2b + H2 => 7-HACAsite2-1 + H      //9
-	addReaction(rxnV3, Reaction(1.098e+03, 2.581e+00, 7.651e+00, sp::C2H2));                //7-HACAsite2-2b + Acety => 7-HACAsite2-3b      //10
+	//addReaction(rxnV3, Reaction(1.098e+03, 2.581e+00, 7.651e+00, sp::C2H2));                //7-HACAsite2-2b + Acety => 7-HACAsite2-3b      //10 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.098e+03, 2.581e+00, 9.651e+00, sp::C2H2));                //7-HACAsite2-2b + Acety => 7-HACAsite2-3b      //10
 	addReaction(rxnV3, Reaction(2.894e+12, 7.099e-01, 3.830e+01, sp::None));                //7-HACAsite2-3b => 7-HACAsite2-2b + Acety      //11
 	addReaction(rxnV3, Reaction(5.097e+11, 1.378e-01, 1.974e+01, sp::None));                //7-HACAsite2-3b => 7-HACAsite2-4b      //12
 	addReaction(rxnV3, Reaction(9.936e+11, 4.098e-01, 4.526e+01, sp::None));                //7-HACAsite2-4b => 7-HACAsite2-3b      //13
-	addReaction(rxnV3, Reaction(3.590e+11, 6.035e-01, 3.005e+01, sp::None));                //7-HACAsite2-4b => 7-HACAsite2-5 + H   //14
+	//addReaction(rxnV3, Reaction(3.590e+11, 6.035e-01, 3.005e+01, sp::None));                //7-HACAsite2-4b => 7-HACAsite2-5 + H   //14 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(3.590e+11, 6.035e-01, 3.205e+01, sp::None));                //7-HACAsite2-4b => 7-HACAsite2-5 + H   //14
 	addReaction(rxnV3, Reaction(6.258e+08, 1.380e+00, 2.451e+01, sp::H));           //7-HACAsite2-5 + H => 7-HACAsite2-4b   //15
 	
 	/*//Reactions provided by Menon2019 at B3LYP level. Might need to be changed.
@@ -3601,22 +3612,28 @@ void GR7_FEACR5::initialise() {
 	rxnvector& rxnV3 = m_rxnvector1;
 	//Reactions provided by Menon2019 at M06-2X level.
 	//Pathway A
-	addReaction(rxnV3, Reaction(5.897e+07, 1.847e+00, 1.712e+01, sp::H));           		//7-memb-1 + H => 7-memb-2a + H2        //0
+	//addReaction(rxnV3, Reaction(5.897e+07, 1.847e+00, 1.712e+01, sp::H));           		//7-memb-1 + H => 7-memb-2a + H2        //0 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(5.897e+07, 1.847e+00, 1.912e+01, sp::H));           		//7-memb-1 + H => 7-memb-2a + H2        //0 
 	addReaction(rxnV3, Reaction(1.215e+05, 2.229e+00, 7.720e+00, sp::H2));          		//7-memb-2a + H2 => 7-memb-1 + H        //1
-	addReaction(rxnV3, Reaction(1.348e+03, 2.573e+00, 4.935e+00, sp::C2H2));                //7-memb-2a + Acety => 7-memb-3a        //2
+	//addReaction(rxnV3, Reaction(1.348e+03, 2.573e+00, 4.935e+00, sp::C2H2));                //7-memb-2a + Acety => 7-memb-3a        //2 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.348e+03, 2.573e+00, 6.935e+00, sp::C2H2));                //7-memb-2a + Acety => 7-memb-3a        //2 
 	addReaction(rxnV3, Reaction(2.366e+12, 7.052e-01, 3.967e+01, sp::None));                //7-memb-3a => 7-memb-2a + Acety        //3
 	addReaction(rxnV3, Reaction(1.958e+11, 1.107e-01, 2.533e+01, sp::None));                //7-memb-3a => 7-memb-4a        //4
 	addReaction(rxnV3, Reaction(3.412e+11, 6.253e-01, 5.337e+01, sp::None));                //7-memb-4a => 7-memb-3a        //5
-	addReaction(rxnV3, Reaction(1.770e+10, 1.094e+00, 2.715e+01, sp::None));                //7-memb-4a => 7-memb-5 + H     //6
+	//addReaction(rxnV3, Reaction(1.770e+10, 1.094e+00, 2.715e+01, sp::None));                //7-memb-4a => 7-memb-5 + H     //6 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.770e+10, 1.094e+00, 2.915e+01, sp::None));                //7-memb-4a => 7-memb-5 + H     //6 
 	addReaction(rxnV3, Reaction(5.321e+07, 1.515e+00, 7.095e+00, sp::H));           		//7-memb-5 + H => 7-memb-4a     //7
 	//Pathway B
-	addReaction(rxnV3, Reaction(5.315e+07, 1.858e+00, 1.612e+01, sp::H));           		//7-memb-1 + H => 7-memb-2b + H2        //8
+	//addReaction(rxnV3, Reaction(5.315e+07, 1.858e+00, 1.612e+01, sp::H));           		//7-memb-1 + H => 7-memb-2b + H2        //8 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(5.315e+07, 1.858e+00, 1.812e+01, sp::H));           		//7-memb-1 + H => 7-memb-2b + H2        //8 
 	addReaction(rxnV3, Reaction(9.106e+04, 2.277e+00, 7.007e+00, sp::H2));          		//7-memb-2b + H2 => 7-memb-1 + H        //9
-	addReaction(rxnV3, Reaction(3.521e+03, 2.598e+00, 3.998e+00, sp::C2H2));                //7-memb-2b + Acety => 7-memb-3b        //10
+	//addReaction(rxnV3, Reaction(3.521e+03, 2.598e+00, 3.998e+00, sp::C2H2));                //7-memb-2b + Acety => 7-memb-3b        //10 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(3.521e+03, 2.598e+00, 5.998e+00, sp::C2H2));                //7-memb-2b + Acety => 7-memb-3b        //10 
 	addReaction(rxnV3, Reaction(4.736e+12, 7.020e-01, 4.080e+01, sp::None));                //7-memb-3b => 7-memb-2b + Acety        //11
 	addReaction(rxnV3, Reaction(1.125e+11, 1.277e-01, 3.051e+01, sp::None));                //7-memb-3b => 7-memb-4b        //12
 	addReaction(rxnV3, Reaction(2.383e+11, 5.964e-01, 5.790e+01, sp::None));                //7-memb-4b => 7-memb-3b        //13
-	addReaction(rxnV3, Reaction(1.505e+10, 1.076e+00, 2.884e+01, sp::None));                //7-memb-4b => 7-memb-5 + H     //14
+	//addReaction(rxnV3, Reaction(1.505e+10, 1.076e+00, 2.884e+01, sp::None));                //7-memb-4b => 7-memb-5 + H     //14 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.505e+10, 1.076e+00, 3.084e+01, sp::None));                //7-memb-4b => 7-memb-5 + H     //14 
 	addReaction(rxnV3, Reaction(5.841e+07, 1.533e+00, 7.084e+00, sp::H));           		//7-memb-5 + H => 7-memb-4b     //15
 		
 	/*//Reactions provided by Menon2019 at B3LYP level. Might need to be changed.
@@ -3761,18 +3778,22 @@ void L7_ACACR5::initialise() {
     rxnvector& rxnV3 = m_rxnvector1;
 	//M06-2X level.
 	//Pathway A
-	addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 9.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0
+	//addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 9.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 11.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0 
 	addReaction(rxnV3, Reaction(5.369e+04, 2.275e+00, 5.583e+00, sp::H2));          		//7-memb2-habs-1a + H2 => 7-memb2-start + H     //1
 	addReaction(rxnV3, Reaction(8.513e+11, 1.358e-01, 4.510e+00, sp::None));                //7-memb2-habs-1a => 7-memb2-habs-2a    //2
 	addReaction(rxnV3, Reaction(3.523e+12, 2.926e-01, 2.567e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-habs-1a    //3
-	addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.160e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4
+	//addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.160e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4			//Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.360e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4
 	addReaction(rxnV3, Reaction(1.033e+08, 1.495e+00, 2.895e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2a    //5
 	//Pathway B
-	addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 9.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6
+	//addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 9.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 11.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6
 	addReaction(rxnV3, Reaction(5.144e+04, 2.267e+00, 7.132e+00, sp::H2));          		//7-memb2-habs-1b + H2 => 7-memb2-start + H     //7
 	addReaction(rxnV3, Reaction(7.041e+11, 1.839e-01, 1.034e+01, sp::None));                //7-memb2-habs-1b => 7-memb2-habs-2b    //8
 	addReaction(rxnV3, Reaction(2.944e+12, 4.130e-01, 2.862e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-habs-1b    //9
-	addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 2.957e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10
+	//addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 2.957e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10        //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 3.157e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10
 	addReaction(rxnV3, Reaction(7.712e+07, 1.514e+00, 2.067e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2b    //11
 	
 	//Carbene route
@@ -3996,18 +4017,22 @@ void L7_FEZZACR5::initialise() {
     rxnvector& rxnV3 = m_rxnvector1;
 	//M06-2X level.
 	//Pathway A
-	addReaction(rxnV3, Reaction(2.767e+07, 1.913e+00, 9.542e+00, sp::H));           		//7-membHabs-1 + H => 7-membHabs-2a + H2        //0
+	//addReaction(rxnV3, Reaction(2.767e+07, 1.913e+00, 9.542e+00, sp::H));           		//7-membHabs-1 + H => 7-membHabs-2a + H2        //0 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(2.767e+07, 1.913e+00, 11.542e+00, sp::H));           		//7-membHabs-1 + H => 7-membHabs-2a + H2        //0
 	addReaction(rxnV3, Reaction(4.212e+04, 2.264e+00, 6.878e+00, sp::H2));          		//7-membHabs-2a + H2 => 7-membHabs-1 + H        //1
 	addReaction(rxnV3, Reaction(4.703e+11, 1.429e-01, 4.722e+00, sp::None));                //7-membHabs-2a => 7-membHabs-3a        //2
 	addReaction(rxnV3, Reaction(1.476e+12, 3.665e-01, 2.737e+01, sp::None));                //7-membHabs-3a => 7-membHabs-2a        //3
-	addReaction(rxnV3, Reaction(6.424e+09, 1.093e+00, 3.216e+01, sp::None));                //7-membHabs-3a => 7-membHabs-4 + H     //4
+	//addReaction(rxnV3, Reaction(6.424e+09, 1.093e+00, 3.216e+01, sp::None));                //7-membHabs-3a => 7-membHabs-4 + H     //4 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(6.424e+09, 1.093e+00, 3.416e+01, sp::None));                //7-membHabs-3a => 7-membHabs-4 + H     //4
 	addReaction(rxnV3, Reaction(1.693e+08, 1.522e+00, 1.637e+00, sp::H));           		//7-membHabs-4 + H => 7-membHabs-3a     //5
 	//Pathway B
-	addReaction(rxnV3, Reaction(2.843e+07, 1.906e+00, 9.533e+00, sp::H));           		//7-membHabs-1 + H => 7-membHabs-2b + H2        //6
+	//addReaction(rxnV3, Reaction(2.843e+07, 1.906e+00, 9.533e+00, sp::H));           		//7-membHabs-1 + H => 7-membHabs-2b + H2        //6 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(2.843e+07, 1.906e+00, 11.533e+00, sp::H));           		//7-membHabs-1 + H => 7-membHabs-2b + H2        //6 
 	addReaction(rxnV3, Reaction(5.338e+04, 2.261e+00, 7.525e+00, sp::H2));          		//7-membHabs-2b + H2 => 7-membHabs-1 + H        //7
 	addReaction(rxnV3, Reaction(6.599e+11, 8.156e-02, 2.625e+00, sp::None));                //7-membHabs-2b => 7-membHabs-3b        //8
 	addReaction(rxnV3, Reaction(5.132e+12, 3.397e-01, 2.540e+01, sp::None));                //7-membHabs-3b => 7-membHabs-2b        //9
-	addReaction(rxnV3, Reaction(2.006e+10, 1.099e+00, 3.281e+01, sp::None));                //7-membHabs-3b => 7-membHabs-4 + H     //10
+	//addReaction(rxnV3, Reaction(2.006e+10, 1.099e+00, 3.281e+01, sp::None));                //7-membHabs-3b => 7-membHabs-4 + H     //10 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(2.006e+10, 1.099e+00, 3.481e+01, sp::None));                //7-membHabs-3b => 7-membHabs-4 + H     //10 
 	addReaction(rxnV3, Reaction(1.729e+08, 1.489e+00, 1.504e+00, sp::H));           		//7-membHabs-4 + H => 7-membHabs-3b     //11
 	//Pathway A - Carbene
 	addReaction(rxnV3, Reaction(1.603e+11, 7.771e-01, 8.323e+01, sp::None));                //7-membHabs-1 => 7-memb-carb-1a        //12
@@ -4321,12 +4346,14 @@ double L6_R5R6ACR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
 void L6_ZZACR5::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(9.24e07, 1.500, 11.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	//addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 25.99, sp::None));  // 5 - r4f 
 
 	m_sType = ZZACR5; // sitetype
 	m_name = "ZZACR5 closure"; // name of process
@@ -4354,12 +4381,14 @@ double L6_ZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 void L6_R5FEACR5::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(9.24e07, 1.500, 11.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	//addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 25.99, sp::None));  // 5 - r4f 
 
 	m_sType = R5FEACR5; // sitetype
 	m_name = "R5FEACR5 closure"; // name of process
@@ -4387,12 +4416,14 @@ double L6_R5FEACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 void L6_FEACR5FE::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(9.24e07, 1.500, 11.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	//addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 25.99, sp::None));  // 5 - r4f 
 
 	m_sType = FEACR5FE; // sitetype
 	m_name = "FEACR5FE closure"; // name of process
@@ -4420,12 +4451,14 @@ double L6_FEACR5FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 void L6_R5ACR5R5::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(9.24e07, 1.500, 11.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	//addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 25.99, sp::None));  // 5 - r4f 
 
 	m_sType = R5ACR5R5; // sitetype
 	m_name = "R5ACR5R5 closure"; // name of process
@@ -4451,23 +4484,27 @@ double L6_R5ACR5R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 // ************************************************************
 // Elementary rate constants, site type, process type and name
 void L7_R5ZZACR5::initialise() {
-    // Adding elementary reactions. The rate for this process was assumed to be similar to that of L&_ACACR5
+    // Adding elementary reactions. The rate for this process was assumed to be similar to that of L7_ACACR5
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
 	//M06-2X level.
 	//Pathway A
-	addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 9.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0
+	//addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 9.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 11.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0
 	addReaction(rxnV3, Reaction(5.369e+04, 2.275e+00, 5.583e+00, sp::H2));          		//7-memb2-habs-1a + H2 => 7-memb2-start + H     //1
 	addReaction(rxnV3, Reaction(8.513e+11, 1.358e-01, 4.510e+00, sp::None));                //7-memb2-habs-1a => 7-memb2-habs-2a    //2
 	addReaction(rxnV3, Reaction(3.523e+12, 2.926e-01, 2.567e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-habs-1a    //3
-	addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.160e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4
+	//addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.160e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.360e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4 
 	addReaction(rxnV3, Reaction(1.033e+08, 1.495e+00, 2.895e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2a    //5
 	//Pathway B
-	addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 9.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6
+	//addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 9.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 11.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6 
 	addReaction(rxnV3, Reaction(5.144e+04, 2.267e+00, 7.132e+00, sp::H2));          		//7-memb2-habs-1b + H2 => 7-memb2-start + H     //7
 	addReaction(rxnV3, Reaction(7.041e+11, 1.839e-01, 1.034e+01, sp::None));                //7-memb2-habs-1b => 7-memb2-habs-2b    //8
 	addReaction(rxnV3, Reaction(2.944e+12, 4.130e-01, 2.862e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-habs-1b    //9
-	addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 2.957e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10
+	//addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 2.957e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 3.157e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10 
 	addReaction(rxnV3, Reaction(7.712e+07, 1.514e+00, 2.067e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2b    //11
 	
 	//Carbene route
@@ -4602,12 +4639,14 @@ double L7_R5ZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 void L6_ACR5R5R6::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(9.24e07, 1.500, 11.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	//addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 25.99, sp::None));  // 5 - r4f 
 
 	m_sType = ACR5R5R6; // sitetype
 	m_name = "ACR5R5R6 closure"; // name of process
@@ -4638,18 +4677,22 @@ void L7_ACR5R5R6ZZ::initialise() {
     rxnvector& rxnV3 = m_rxnvector1;
 	//M06-2X level.
 	//Pathway A
-	addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 9.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0
+	//addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 9.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(3.915e+07, 1.876e+00, 11.421e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1a + H2     //0
 	addReaction(rxnV3, Reaction(5.369e+04, 2.275e+00, 5.583e+00, sp::H2));          		//7-memb2-habs-1a + H2 => 7-memb2-start + H     //1
 	addReaction(rxnV3, Reaction(8.513e+11, 1.358e-01, 4.510e+00, sp::None));                //7-memb2-habs-1a => 7-memb2-habs-2a    //2
 	addReaction(rxnV3, Reaction(3.523e+12, 2.926e-01, 2.567e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-habs-1a    //3
-	addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.160e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4
+	//addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.160e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(2.033e+10, 1.067e+00, 3.360e+01, sp::None));                //7-memb2-habs-2a => 7-memb2-end + H    //4 
 	addReaction(rxnV3, Reaction(1.033e+08, 1.495e+00, 2.895e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2a    //5
 	//Pathway B
-	addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 9.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6
+	//addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 9.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(3.091e+07, 1.891e+00, 11.308e+00, sp::H));           		//7-memb2-start + H => 7-memb2-habs-1b + H2     //6 
 	addReaction(rxnV3, Reaction(5.144e+04, 2.267e+00, 7.132e+00, sp::H2));          		//7-memb2-habs-1b + H2 => 7-memb2-start + H     //7
 	addReaction(rxnV3, Reaction(7.041e+11, 1.839e-01, 1.034e+01, sp::None));                //7-memb2-habs-1b => 7-memb2-habs-2b    //8
 	addReaction(rxnV3, Reaction(2.944e+12, 4.130e-01, 2.862e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-habs-1b    //9
-	addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 2.957e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10
+	//addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 2.957e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10 //Changed for sensitivity analysis to +-2kcal/mol
+	addReaction(rxnV3, Reaction(1.861e+10, 1.136e+00, 3.157e+01, sp::None));                //7-memb2-habs-2b => 7-memb2-end + H    //10 
 	addReaction(rxnV3, Reaction(7.712e+07, 1.514e+00, 2.067e+00, sp::H));           		//7-memb2-end + H => 7-memb2-habs-2b    //11
 	
 	//Carbene route
