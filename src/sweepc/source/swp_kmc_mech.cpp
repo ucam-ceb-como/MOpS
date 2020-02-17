@@ -162,7 +162,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //!< 31 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //!< 32 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //!< 33 - R6 desorption at RAC -> pyrene.
-	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6.
+	//JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6.
 	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //!< 35 - R7 growth on R5R6AC.
 	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //!< 36 - R7 growth on FEACR5.
 	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();                        //!< 37 - R6 growth on R5R6ZZ.
@@ -221,7 +221,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_C6R_RAC_FE3);      //!< 31 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_C6R_RAC_FE3violi); //!< 32 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_M6R_RAC_FE3);      //!< 33 - R6 desorption at RAC -> pyrene.
-	temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6.
+	//temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6.
 	temp.push_back(j_GR7_R5R6AC);           //!< 35 - R7 growth on R5R6AC.
 	temp.push_back(j_GR7_FEACR5);           //!< 36 - R7 growth on FEACR5.
 	temp.push_back(j_G6R_R5R6ZZ);          //!< 37 - R6 growth on R5R6ZZ.
@@ -2067,7 +2067,7 @@ double D5R_R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	double rf_H2_denom = m_r[6]/m_r[7] + m_r[8] + m_r[9] + m_r[10];
 	double rf_H2;
 	if (rf_H2_denom >0){
-		rf_H2 = (m_r[6] + m_r[3]) / rf_H2_denom;
+		rf_H2 = (m_r[6]) / rf_H2_denom;
 	}
 	else rf_H2 = 0;
 	return m_rate = rf_rad*m_r[5] + rf_H2*(m_r[9] + m_r[10]);
@@ -2190,8 +2190,10 @@ void C5R_RFE::initialise() {
 	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // An + OH <=> An* + H2O              - 2              - Forward
 	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // An + OH <=> An* + H2O              - 3              - Backward
 	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // An* + H -> An              			- 4              - Forward
-	addReaction(rxnV3, Reaction(1.1e7, 1.71, 3.9, sp::C2H2));   //5 - r4f1
-    addReaction(rxnV3, Reaction(3.3e33, -5.7, 25.5, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)
+	//addReaction(rxnV3, Reaction(1.1e7, 1.61, 3.896, sp::C2H2));   //5 - r4f1						//Needs to be updated. This comes from 1994.
+    //addReaction(rxnV3, Reaction(3.3e33, -5.7, 25.5, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2) 	//Needs to be updated. This comes from 1994.
+	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
 	
 	//H addition & migration
 	addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //7  //R12 in Whitesides2010
@@ -2587,7 +2589,7 @@ void L5R_BY5::initialise() {
     addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV, Reaction(3.49e39, -7.77, 13.37320574, sp::H)); //4 - r3f
     if(violi) {
-        addReaction(rxnV, Reaction(3.86e11, .21, 17.4, sp::None)); //5 - r4f - violi(2005) mechanism, include reverse.
+        addReaction(rxnV, Reaction(3.86e11, .21, 17.7, sp::None)); //5 - r4f - violi(2005) mechanism, include reverse.
     }
     else {
         addReaction(rxnV, Reaction(1.6451e12, .3239, 15.088227, sp::None)); // 5 - r4f - AR's work
@@ -2603,7 +2605,7 @@ void L5R_BY5::initialise() {
     addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H)); //4 - r3f
     if(violi)
-        addReaction(rxnV2, Reaction(7.72e11, .21, 17.4, sp::None)); //5 - r4f - violi(2005) mechanism, include reverse.
+        addReaction(rxnV2, Reaction(7.72e11, .21, 17.7, sp::None)); //5 - r4f - violi(2005) mechanism, include reverse.
     else {
         addReaction(rxnV2, Reaction(3.2902e12, .3239, 15.088227, sp::None)); // 5 - r4f - AR's work
         addReaction(rxnV2, Reaction(9.9866e13, 0, 22.560985, sp::None)); //6
@@ -2618,7 +2620,7 @@ void L5R_BY5::initialise() {
     addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV3, Reaction(3.49e39, -7.77, 13.37320574, sp::H)); //4 - r3f
     if(violi)
-        addReaction(rxnV3, Reaction(3.86e11, .21, 17.4, sp::None)); //5 - r4f - violi(2005) mechanism, include reverse.
+        addReaction(rxnV3, Reaction(3.86e11, .21, 17.7, sp::None)); //5 - r4f - violi(2005) mechanism, include reverse.
     else {
         addReaction(rxnV3, Reaction(1.6451e12, .3239, 15.088227, sp::None)); // 5 - r4f - AR's work
         addReaction(rxnV3, Reaction(9.9866e13, 0, 22.560985, sp::None)); //6
@@ -4979,7 +4981,12 @@ void A_CH3::initialise() {
     addReaction(rxnV, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV, Reaction(3.49e39, -7.77, 13.35468, sp::H));  //4 - r3f
     addReaction(rxnV, Reaction(1.87e7, 1.787, 3.262, sp::C2H2));   //5 - r4f
-	addReaction(rxnV, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
+	//addReaction(rxnV, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
+	//addReaction(rxnV, Reaction(5.354E-09, 1.45, -104.4, sp::None));  //6				Keq: A1- + CH3 -> A1CH3             - Klippenstein 2007
+	addReaction(rxnV, Reaction(2.331E+14, -0.283, -0.191, sp::CH3));  //6				kinf: A1- + CH3 -> A1CH3            - Klippenstein 2007
+	//addReaction(rxnV, Reaction(6.528E+102, -20.22, 14.98, sp::CH3));  //8				k0: A1- + CH3 -> A1CH3              - Klippenstein 2007
+	//addReaction(rxnV, Reaction(1.30E-03, 14.98, -3.11, sp::None));  //9				    Fcent: A1- + CH3 -> A1CH3           - Klippenstein 2007
+	
     //addReaction(rxnV, Reaction(2.20e12, 0, 7.5, sp::O2));          //6 - r5f
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
@@ -4989,7 +4996,11 @@ void A_CH3::initialise() {
     addReaction(rxnV2, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
     addReaction(rxnV2, Reaction(2.18e35, -6.51, 11.53110048, sp::H));  //4 - r3f
     addReaction(rxnV2, Reaction(1.87e7, 1.787, 3.262, sp::C2H2));   //5 - r4f
-	addReaction(rxnV2, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
+	//addReaction(rxnV2, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
+	//addReaction(rxnV, Reaction(5.354E-09, 1.45, -104.4, sp::None));  //6				Keq: A1- + CH3 -> A1CH3             - Klippenstein 2007
+	addReaction(rxnV, Reaction(2.331E+14, -0.283, -0.191, sp::CH3));  //6				kinf: A1- + CH3 -> A1CH3            - Klippenstein 2007
+	//addReaction(rxnV, Reaction(6.528E+102, -20.22, 14.98, sp::CH3));  //8				k0: A1- + CH3 -> A1CH3              - Klippenstein 2007
+	//addReaction(rxnV, Reaction(1.30E-03, 14.98, -3.11, sp::None));  //9				    Fcent: A1- + CH3 -> A1CH3           - Klippenstein 2007
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
@@ -5005,7 +5016,11 @@ void A_CH3::initialise() {
 	addReaction(rxnV3, Reaction(1.060E+14, -4.900E-01, 8.204E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
-	addReaction(rxnV3, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
+	//addReaction(rxnV3, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
+	//addReaction(rxnV, Reaction(5.354E-09, 1.45, -104.4, sp::None));  //9				Keq: A1- + CH3 -> A1CH3             - Klippenstein 2007
+	addReaction(rxnV, Reaction(2.331E+14, -0.283, -0.191, sp::CH3));  //9				kinf: A1- + CH3 -> A1CH3            - Klippenstein 2007
+	//addReaction(rxnV, Reaction(6.528E+102, -20.22, 14.98, sp::CH3));  //11				k0: A1- + CH3 -> A1CH3              - Klippenstein 2007
+	//addReaction(rxnV, Reaction(1.30E-03, 14.98, -3.11, sp::None));  //12				Fcent: A1- + CH3 -> A1CH3           - Klippenstein 2007
 
     m_sType = benz; // sitetype
     m_name = "CH3 addition"; // name of process
@@ -5055,12 +5070,41 @@ void D_CH3::initialise() {
     // Adding elementary reactions
     // 0.0267 atm
     rxnvector& rxnV = m_rxnvector0p0267;
-    addReaction(rxnV, Reaction(3.52751561e79, -1.71557169e+01, 105.3773, sp::None));      // A1- + CH3 -> A1CH3         	    - 9              - Richter, Howard 2005
+    //addReaction(rxnV, Reaction(3.52751561e79, -1.71557169e+01, 105.3773, sp::None));      // A1- + CH3 -> A1CH3         	    - 9              - Richter, Howard 2005 OLD
+	//------------Reactions for A3-4----------------------------
+	addReaction(rxnV, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
+	addReaction(rxnV, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
+	addReaction(rxnV, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	addReaction(rxnV, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4              - Forward
+	//Using rates by On the low-temperature limit of HACA. Frenklach et al. 2018
+	addReaction(rxnV, Reaction(1.190E+22, -2.450E+00, 1.889E+01, sp::C2H2));         // A3* + C2H2 -> A4 + H              	- 5              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(1.060E+14, -4.900E-01, 8.204E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
+	//addReaction(rxnV, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
+	addReaction(rxnV, Reaction(1.950E+27, -3.160, 107.447, sp::None));  //9				kinf: A1CH3 -> A1- + CH3            - Klippenstein 2007
+	addReaction(rxnV, Reaction(7.054562E-01, -22.966, 122.08, sp::None));  //10			k0: A1CH3 -> A1- + CH3              - Klippenstein 2007
     // 0.12 atm
     rxnvector& rxnV2 = m_rxnvector0p12;
-    addReaction(rxnV2, Reaction(3.52751561e79, -1.71557169e+01, 105.3773, sp::None));     // A1- + CH3 -> A1CH3         	    - 9              - Richter, Howard 2005
+    //addReaction(rxnV2, Reaction(3.52751561e79, -1.71557169e+01, 105.3773, sp::None));     // A1- + CH3 -> A1CH3         	    - 9              - Richter, Howard 2005 OLD
+	//------------Reactions for A3-4----------------------------
+	addReaction(rxnV2, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
+	addReaction(rxnV2, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
+	addReaction(rxnV2, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV2, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	addReaction(rxnV2, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4              - Forward
+	//Using rates by On the low-temperature limit of HACA. Frenklach et al. 2018
+	addReaction(rxnV2, Reaction(1.190E+22, -2.450E+00, 1.889E+01, sp::C2H2));         // A3* + C2H2 -> A4 + H              	- 5              - Frenklach et al. 2018
+	addReaction(rxnV2, Reaction(1.060E+14, -4.900E-01, 8.204E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6              - Frenklach et al. 2018
+	addReaction(rxnV2, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
+	addReaction(rxnV2, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
+	//addReaction(rxnV2, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
+	addReaction(rxnV2, Reaction(1.950E+27, -3.160, 107.447, sp::None));  //9				kinf: A1CH3 -> A1- + CH3            - Klippenstein 2007
+	addReaction(rxnV2, Reaction(7.054562E-01, -22.966, 122.08, sp::None));  //10			k0: A1CH3 -> A1- + CH3              - Klippenstein 2007
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
 	//------------Reactions for A3-4----------------------------
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));           // A3 + H <=> A3-4 + H2                - 0              - Forward
 	addReaction(rxnV3, Reaction(1.690E+04, 2.6200E+00, 4.559E+00, sp::H2));          // A3 + H <=> A3-4 + H2                - 1              - Backward
@@ -5072,8 +5116,9 @@ void D_CH3::initialise() {
 	addReaction(rxnV3, Reaction(1.060E+14, -4.900E-01, 8.204E+00, sp::C2H2));         // A3* + H -> A4 + H              	- 6              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
-	addReaction(rxnV3, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
-	addReaction(rxnV3, Reaction(3.52751561e79, -1.71557169e+01, 105.3773, sp::None));     // A1- + CH3 -> A1CH3         	    - 10              - Richter, Howard 2005
+	//addReaction(rxnV3, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
+	addReaction(rxnV3, Reaction(1.950E+27, -3.160, 107.447, sp::None));  //9				kinf: A1CH3 -> A1- + CH3            - Klippenstein 2007
+	addReaction(rxnV3, Reaction(7.054562E-01, -22.966, 122.08, sp::None));  //10			k0: A1CH3 -> A1- + CH3              - Klippenstein 2007
 
     m_sType = Methyl; // sitetype
     m_name = "CH3 desorption"; // name of process
@@ -5081,17 +5126,13 @@ void D_CH3::initialise() {
 }
 // Jump rate calculation
 double D_CH3::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	// check if site count is zero
-    double site_count = ((double)pah_st.getSiteCount(m_sType));
-	//double site_count = 1; // Site count
-    if(site_count==0) return m_rate=0;
-    return m_rate = m_r[0]* site_count; // Rate Equation
+    return setRate1(gp, pah_st); 
 }
 double D_CH3::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+    return setRate1(gp, pah_st);
 }
 double D_CH3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	//Rates updated according to paper:Klippenstein2007, reverse notation retrieved from Blanquart2008
 	// check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
@@ -5104,9 +5145,24 @@ double D_CH3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-	double for_rate = m_r[9]*r_f;
-	double rev_rate = for_rate * 100.0;
-    return m_rate = rev_rate* site_count; // Rate Equation
+	double T = gp[gp.T];
+	double P = gp[gp.P]; //Pressure in Pa
+	double M_eff1 = P / 8.314E+06 / T;
+	double M = M_eff1; // + (1 * gp[gp.H2]) + (5 * gp[gp.H2O]) + (1 * gp[gp.CH4]) + (0.5*gp[gp.CO]) + (1 * gp[gp.CO2]) + (2 * gp[gp.C2H6]);
+	double k_o1 = m_r[10];
+	double k_inf1 = m_r[9];
+	double F_cent1 = (1.0-0.7054562) * exp(-T / 9.999989E+09) + 0.7054562*exp(-T / 459.9180) + exp(-8.213938E+09 / T);
+	double logF_cent1 = log10(F_cent1);
+	double k_eff = k_inf1 / (1 + (k_inf1 / (k_o1*M)));
+	double N01 = 0.75 - 1.27*logF_cent1;
+	double C01 = -0.4 - 0.67*logF_cent1;
+	double logP_r1 = log10(k_o1*M / k_inf1);
+	double F1 = exp(logF_cent1 / (1 + pow(((logP_r1 + C01) / (N01 - 0.14*(logP_r1 + C01))), 2)));
+	k_eff *= F1;                                        
+	
+	//double for_rate = m_r[9]*r_f;
+	//double rev_rate = for_rate * 100.0;
+    return m_rate = k_eff* site_count; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 

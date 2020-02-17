@@ -1428,7 +1428,7 @@ void PAHProcess::removeR5internal(Cpointer C_1, Cpointer C_2) {
 	for (it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
 		double dist_x = std::get<0>(C_1->coords) + std::get<0>(C_2->coords) - 2*std::get<0>(*it1);
 		double dist_y = std::get<1>(C_1->coords) + std::get<1>(C_2->coords) - 2*std::get<1>(*it1);
-		double dist_z = std::get<2>(C_1->coords) + std::get<1>(C_2->coords) - 2*std::get<2>(*it1);
+		double dist_z = std::get<2>(C_1->coords) + std::get<2>(C_2->coords) - 2*std::get<2>(*it1);
 		double dist = sqrt(dist_x * dist_x + dist_y * dist_y + dist_z * dist_z);
 		if (dist < minimal_dist){
 			minimal_dist = dist;
@@ -4939,6 +4939,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			proc_A_CH3(site_perf, site_C1, site_C2, rng); break;
 		case 55:
 			proc_D_CH3(site_perf, site_C1, site_C2); break;
+		case 56:
+			proc_O5R_R5R6(site_perf, site_C1, site_C2); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -5900,17 +5902,43 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     for(C_bulk = S2->C1; C_bulk != S2->C2; C_bulk=C_bulk->C2) {
         if(C_bulk->bridge) return;
     }
+	//Get location of remaining carbon
+	cpair newpos;
+	cpair start_dir = get_vector(CRem_before->C1->coords, CRem->C2->coords);
+	cpair normvec = invert_vector(norm_vector(CRem_before->coords, CRem->coords, CRem->C2->coords));
+	cpair crossvec = cross_vector(start_dir, normvec);
+	cpair Hdir = crossvec;
+	bool optimise_flag = false;
+	double dist = getDistance_twoC(CRem_before->C1,CRem->C2);
+	if (dist < 3.4){
+		dist = dist /2.0;
+		double dist2 = sqrt(2.89 - dist * dist);
+		newpos = std::make_tuple(std::get<0>(CRem_before->C1->coords) + dist * std::get<0>(start_dir) + dist2 * std::get<0>(crossvec), std::get<1>(CRem_before->C1->coords) + dist * std::get<1>(start_dir) + dist2 * std::get<1>(crossvec), std::get<2>(CRem_before->C1->coords) + dist * std::get<2>(start_dir) + dist2 * std::get<2>(crossvec));
+	} else{
+		dist = dist /2.0;
+		newpos = std::make_tuple(std::get<0>(CRem_before->C1->coords) + dist * std::get<0>(start_dir), std::get<1>(CRem_before->C1->coords) + dist * std::get<1>(start_dir) , std::get<2>(CRem_before->C1->coords) + dist * std::get<2>(start_dir));
+		optimise_flag = true;
+	}
 	//Remove carbon
 	removeC(CRem, false);
+	//Move remaining carbon to new position
+	moveC(CRem_before, newpos);
+	
+	if (optimise_flag){
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
     // Update Sites and neighbouring sites
+	removeSite(stt);
 	if ( (int)S1->type < 2000) updateSites(S1, S1->C1, CRem_before, +500);
 	else updateSites(S1, S1->C1, CRem_before, +100);
-	if ( (int)S2->type < 2000) updateSites(S2, CRem_next, S2->C2, +500);
+	if ( (int)S2->type < 2000) updateSites(S2, CRem_before, S2->C2, +500);
 	else updateSites(S2, CRem_next, S2->C2, +100);
+	stt = S1;
     Spointer S3, S4;
     // update combined sites for all sites and their neighbours
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
-    updateCombinedSites(stt);
     updateCombinedSites(S1); updateCombinedSites(S2);
     updateCombinedSites(S3); updateCombinedSites(S4);
     addCount(0,-1);
@@ -9505,6 +9533,7 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	OpenBabel::OBMol mol = passPAH();
 	mol = optimisePAH(mol, 1000);
 	passbackPAH(mol);
+	//saveXYZ("KMC_DEBUG/Oxidation_PAH");
 	//First check if R6 is to the left or the right of R5
 	bool b4 = false;
 	Spointer other;
@@ -9518,25 +9547,30 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else if ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) ) b4 = true;
 	else return;
 	if (b4) {
+		other = moveIt(stt, +1);
+		CRem = stt->C2;
+	}
+	else {
 		other = moveIt(stt, -1);
 		CRem = stt->C1;
 	}
-	else {
-		other = moveIt(stt, 1);
-		CRem = stt->C2;
-	}
-	CRem_next = CRem->C1;
-	CRem_before = CRem->C2;
+	CRem_next = CRem->C2;
+	CRem_before = CRem->C1;
 	Cpointer thirdC = findThirdC(CRem_before);
 	Cpointer thirdC2 = findThirdC(CRem_next);
 	bool bridged = false;
+	cpair Cdir1, Cdir2, normdir, Cdir0;
 	if (thirdC != NULLC && thirdC2 != NULLC) bridged = true;
+	//Get normal vector
+	normdir = norm_vector(CRem_before->coords, CRem->coords, CRem_next->coords);
+	//Remove carbon first
+	removeC(CRem, false);
+	removeR5internal(CRem_before,CRem_next);
 	if (bridged == false) {
-		cpair Cdir1, Cdir2, normdir;
-		normdir = norm_vector(CRem_before->coords, CRem->coords, CRem_next->coords);
-		Cdir1 = cross_vector(get_vector(CRem_before->C1->coords, CRem->coords), normdir);
+		Cdir1 = cross_vector(get_vector(CRem_before->coords, CRem_next->coords), normdir);
 		Cdir2 = get_vector(CRem_before->coords, CRem_next->coords);
 		double Cdist = getDistance_twoC(CRem_before, CRem_next);
+		//Add carbons from internal positions
 		Cpointer newC = addC(CRem_before, Cdir1, Cdist/2.40*1.47, true);
 		newC = addC(newC, Cdir2, 1.45, true);
 	}
@@ -9548,19 +9582,29 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		thirdC2->bridge = true;
 		thirdC->bridge = true;
 	}
+	//Add Hydrogen
+	Cdir1 = get_vector(CRem_before->coords, CRem_before->C2->coords);
+	Cdir0  = get_vector(CRem_before->C1->coords, CRem_before->coords);
+	cpair Hdir1 = cross_vector(add_vector(Cdir0, Cdir1),invert_vector(normdir));
+	updateA(CRem_before, 'H', Hdir1);
+	Cdir1 = get_vector(CRem_next->coords, CRem_next->C2->coords);
+	Cdir0  = get_vector(CRem_next->C1->coords, CRem_next->coords);
+	Hdir1 = cross_vector(add_vector(Cdir0, Cdir1), invert_vector(normdir));
+	updateA(CRem_next, 'H', Hdir1);
+	//New site appearing
 	Spointer newSite;
 	if (b4){
-		if ((int)stt->type < 2000) updateSites(stt, CRem_next, stt->C2, -501);
-		else updateSites(stt, CRem_next, stt->C2, -101);
-		if ((int)other->type < 2000) updateSites(other, other->C1, CRem_before, -501);
-		else updateSites(other, other->C1, CRem_before, -101);
-		newSite = addSite(AC, CRem_before, CRem_next, other);
-	}
-	else{
 		if ((int)stt->type < 2000) updateSites(stt, stt->C1, CRem_before, -501);
 		else updateSites(stt, stt->C1, CRem_before, -101);
 		if ((int)other->type < 2000) updateSites(other, CRem_next, other->C2, -501);
 		else updateSites(other, CRem_next, other->C2, -101);
+		newSite = addSite(AC, CRem_before, CRem_next, other);
+	}
+	else{
+		if ((int)stt->type < 2000) updateSites(stt, CRem_next, stt->C2, -501);
+		else updateSites(stt, CRem_next, stt->C2, -101);
+		if ((int)other->type < 2000) updateSites(other, other->C1, CRem_before, -501);
+		else updateSites(other, other->C1, CRem_before, -101);
 		newSite = addSite(AC, CRem_before, CRem_next, stt);
 	}
 	
@@ -9569,6 +9613,7 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update combined sites for all new sites and neighbours (and their neighbours)
     updateCombinedSites(stt); updateCombinedSites(other); updateCombinedSites(newSite); 
 	updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
+	m_pah->m_rings5_Lone--;
 }
 
 size_t PAHProcess::SiteListSize() const {
