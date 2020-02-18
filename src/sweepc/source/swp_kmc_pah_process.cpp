@@ -7383,7 +7383,7 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	
 	//check that two pentagons (including internals) will not collide
 	if (m_pah->m_R5loc.size()>=1){
-		cpair R5coords_end = endposR5internal(CRem_before, CRem_next);
+		cpair R5coords_end = endposR5internal(CRem_before, CRem_next, true);
 		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 			double distR5s = getDistance_twoC(*it, R5coords_end);
 			if (distR5s < 2.8) {
@@ -7419,6 +7419,7 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     addCount(0,-1);
     m_pah->m_rings--;
 	m_pah->m_rings5_Lone++;
+	addR5internal(CRem_before,CRem_next,true);
 }
 
 // ************************************************************
