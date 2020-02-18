@@ -123,6 +123,7 @@ intpair PAHProcess::getCHCount() const {
 unsigned int PAHProcess::getSiteCount(const kmcSiteType& st) const {
     if(m_rates_save) {
         if(st==benz) return 5;
+		else if(st==FE2) return 2;
         else return 1;
     }
     if(st==benz) {
@@ -3229,13 +3230,13 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
                 // So we can either calculate the rate based on the number of FE2 sites
                 // or - as has been done here - remove half of the FE2 sites.
                 //
-                if(S2->comb == FE2) delSiteFromMap(S2->comb, st);
+                //if(S2->comb == FE2) delSiteFromMap(S2->comb, st); //Commented out to allow two FE2 sites next to each other. gl413
                 //
                 if(S2->comb != FE2) updateCombinedSites(S2);
             } else if(S1->type == FE && moveIt(S1,-1)->type != FE) {
                 st->comb = FE2;
                 m_pah->m_siteMap[FE2].push_back(st);
-                if(S1->comb == FE2) delSiteFromMap(S1->comb, st);
+                //if(S1->comb == FE2) delSiteFromMap(S1->comb, st); //Commented out to allow two FE2 sites next to each other. gl413
                 if(S1->comb != FE2) updateCombinedSites(S1);
             } else
                 st->comb = None;
@@ -5876,17 +5877,7 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		cpair R5coords_end = endposR5internal(CRem_before, CRem_next, false);
 		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 			double distR5s = getDistance_twoC(*it, R5coords_end);
-			if (distR5s < 2.8) {
-				//This distance is a parameter of this jump process. Might need some more tuning. 
-				//2.8 seems appropiate but may reject too many jumps.
-				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
-				return;
-			}
-		}
-		R5coords_end = endposR5internal(CRem_before, CRem_next);
-		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
-			double distR5s = getDistance_twoC(*it, R5coords_end);
-			if (distR5s < 2.8) {
+			if (distR5s < 3.0) {
 				//This distance is a parameter of this jump process. Might need some more tuning. 
 				//2.8 seems appropiate but may reject too many jumps.
 				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
@@ -5944,6 +5935,7 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     addCount(0,-1);
     m_pah->m_rings--;
 	m_pah->m_rings5_Lone++;
+	addR5internal(CRem_before,CRem_next);
 }
 
 

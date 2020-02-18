@@ -2796,6 +2796,8 @@ double O6R_FE2_side::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, co
 double O6R_FE2_side::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	if ((int)site_count % 2 != 0) std::cout << "Error. FE2 number of sites is " << site_count << " and is not even.\n";
+    site_count = site_count / 2.0;
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
@@ -2836,6 +2838,7 @@ double O6R_FE2_side::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
 	lu_factorize(arr1, pm);
 	lu_substitute(arr1, pm, arr2);
 	
+	//std::cout << arr2 << std::endl;
 	return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0) + m_r[17] * arr2(4) + m_r[16] * arr2(3))*site_count;
 }
 
@@ -2926,6 +2929,8 @@ double O6R_FE2_top::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
 double O6R_FE2_top::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
     // check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	if ((int)site_count % 2 != 0) std::cout << "Error. FE2 number of sites is " << site_count << " and is not even.\n";
+    site_count = site_count / 2.0;
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
@@ -2966,6 +2971,7 @@ double O6R_FE2_top::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	lu_factorize(arr1, pm);
 	lu_substitute(arr1, pm, arr2);
 	
+	//std::cout << arr2 << std::endl;
 	return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0))*site_count;
 }
 
