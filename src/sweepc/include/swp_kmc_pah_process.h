@@ -248,7 +248,16 @@ public:
 	void proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID53
 	void proc_A_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);              //!< ID54
 	void proc_D_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2);                     		//!< ID55
-	void proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                     		//!< ID56
+	void proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);           //!< ID56
+	void proc_O5R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);         //!< ID57
+	void proc_O5R_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);         //!< ID58
+	void proc_O5R_R5R6BY5(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID59
+	void proc_O5R_R5R6FER(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID60
+	void proc_O5R_R5R6ZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID61
+	void proc_O5R_R5R6ACR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID62
+	void proc_O5R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID63
+	void proc_O5R_R5R6ZZR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID64
+	void proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID65
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts

@@ -185,6 +185,15 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_A_CH3 = new A_CH3; j_A_CH3->initialise();             						 //!< 54 - CH3 addition.
 	JumpProcess* j_D_CH3 = new D_CH3; j_D_CH3->initialise();             						 //!< 55 - CH3 desorption.
 	JumpProcess* j_O5R_R5R6 = new O5R_R5R6; j_O5R_R5R6->initialise();             				//!< 56 - Oxidation of R5R6 site.
+	JumpProcess* j_O5R_R5R6ZZ = new O5R_R5R6ZZ; j_O5R_R5R6ZZ->initialise();             		//!< 57 - Oxidation of R5R6ZZ site.
+	JumpProcess* j_O5R_R5R6AC = new O5R_R5R6AC; j_O5R_R5R6AC->initialise();             		//!< 58 - Oxidation of R5R6AC site.
+	JumpProcess* j_O5R_R5R6BY5 = new O5R_R5R6BY5; j_O5R_R5R6BY5->initialise();             		//!< 59 - Oxidation of R5R6BY5 site.
+	JumpProcess* j_O5R_R5R6FER = new O5R_R5R6FER; j_O5R_R5R6FER->initialise();             		//!< 60 - Oxidation of R5R6FER site.
+	JumpProcess* j_O5R_R5R6ZZR = new O5R_R5R6ZZR; j_O5R_R5R6ZZR->initialise();             		//!< 61 - Oxidation of R5R6ZZR site.
+	JumpProcess* j_O5R_R5R6ACR = new O5R_R5R6ACR; j_O5R_R5R6ACR->initialise();             		//!< 62 - Oxidation of R5R6ACR site.
+	JumpProcess* j_O5R_R5R6FER5R6 = new O5R_R5R6FER5R6; j_O5R_R5R6FER5R6->initialise();         //!< 63 - Oxidation of R5R6FER5R6 site.
+	JumpProcess* j_O5R_R5R6ZZR5R6 = new O5R_R5R6ZZR5R6; j_O5R_R5R6ZZR5R6->initialise();         //!< 64 - Oxidation of R5R6ZZR5R6 site.
+	JumpProcess* j_O5R_R5R6ACR5R6 = new O5R_R5R6ACR5R6; j_O5R_R5R6ACR5R6->initialise();         //!< 65 - Oxidation of R5R6ACR5R6 site.
     
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
@@ -193,8 +202,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_L6_BY6);            //!  3- BY6 closure [AR14].
     temp.push_back(j_PH_benz);           //!  4- phenyl addition [AR15].
     temp.push_back(j_D6R_FE3);           //!  5- R6 Desorption at FE [AR8].
-    //temp.push_back(j_O6R_FE3_O2);        //!  6- R6 Oxidation at FE by O2 [AR10].
-    //temp.push_back(j_O6R_FE3_OH);        //!  7- R6 Oxidation at FE by OH [AR11].
+    temp.push_back(j_O6R_FE3_O2);        //!  6- R6 Oxidation at FE by O2 [AR10].
+    temp.push_back(j_O6R_FE3_OH);        //!  7- R6 Oxidation at FE by OH [AR11].
     temp.push_back(j_O6R_FE_HACA);    //!  R6 Oxidation at FE-HACA [AR12].
     //temp.push_back(j_O6R_FE_HACA_OH);    //!  9- R6 Oxidation at AC by OH [AR13].
     temp.push_back(j_G5R_ZZ);            //! 10- R5 growth at ZZ [AR3].
@@ -244,6 +253,15 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_A_CH3);          		//!< 54 - CH3 addition.
 	temp.push_back(j_D_CH3);          		//!< 55 - CH3 desorption.
 	temp.push_back(j_O5R_R5R6);          		//!< 56 - Oxidation of R5R6 site.
+	temp.push_back(j_O5R_R5R6ZZ);               //!< 57 - Oxidation of R5R6ZZ site.
+	temp.push_back(j_O5R_R5R6AC);               //!< 58 - Oxidation of R5R6AC site.
+	temp.push_back(j_O5R_R5R6BY5);              //!< 59 - Oxidation of R5R6BY5 site.
+	temp.push_back(j_O5R_R5R6FER);          		//!< 60 - Oxidation of R5R6FER site.
+	temp.push_back(j_O5R_R5R6ZZR);          		//!< 61 - Oxidation of R5R6ZZR site.
+	temp.push_back(j_O5R_R5R6ACR);          		//!< 62 - Oxidation of R5R6ACR site.
+	temp.push_back(j_O5R_R5R6FER5R6);          		//!< 63 - Oxidation of R5R6FER5R6 site.
+	temp.push_back(j_O5R_R5R6ZZR5R6);          		//!< 64 - Oxidation of R5R6ZZR5R6 site.
+	temp.push_back(j_O5R_R5R6ACR5R6);          		//!< 65 - Oxidation of R5R6ACR5R6 site.
 
     return temp;
 }
@@ -5223,6 +5241,452 @@ double O5R_R5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
 	//return setRate0p0267(gp, pah_st);
 }
 
+// ************************************************************
+// ID57- Oxidation of R5R6ZZ site.
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void O5R_R5R6ZZ::initialise() {
+    // Adding elementary reactions
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//ABF - Frenklach and Whitesides2010
+	//H abstraction
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));          // A2R5 + H <=> A2R5- + H2      - 0 Hou2017
+	addReaction(rxnV3, Reaction(5.0677e+04, 2.4449e+00, 4.5197e+00, sp::H2));       // A2R5 + H <=> A2R5- + H2      - 1 Hou2017
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	//Using rates by Frenklach 2018
+	//"Detailed, sterically-resolved modeling of soot oxidation: Role of O atoms, interplay with particle nanostructure, and emergence of inner particle burning"
+	addReaction(rxnV3, Reaction(3.450E+11, 0.000E+00, 13422.0*8.314/4.184/1000.0, sp::O2));         // S90
+	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
 
+    m_sType = R5R6ZZ; // sitetype
+    m_name = "Oxidation of R5R6ZZ"; // name of process
+    m_ID = 57;
+}
+// Jump rate calculation
+double O5R_R5R6ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double O5R_R5R6ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double O5R_R5R6ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+	//return setRate0p0267(gp, pah_st);
+}
 
+// ************************************************************
+// ID58- Oxidation of R5R6AC site.
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void O5R_R5R6AC::initialise() {
+    // Adding elementary reactions
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//ABF - Frenklach and Whitesides2010
+	//H abstraction
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));          // A2R5 + H <=> A2R5- + H2      - 0 Hou2017
+	addReaction(rxnV3, Reaction(5.0677e+04, 2.4449e+00, 4.5197e+00, sp::H2));       // A2R5 + H <=> A2R5- + H2      - 1 Hou2017
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	//Using rates by Frenklach 2018
+	//"Detailed, sterically-resolved modeling of soot oxidation: Role of O atoms, interplay with particle nanostructure, and emergence of inner particle burning"
+	addReaction(rxnV3, Reaction(3.450E+11, 0.000E+00, 13422.0*8.314/4.184/1000.0, sp::O2));         // S90
+	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
 
+    m_sType = R5R6AC; // sitetype
+    m_name = "Oxidation of R5R6AC"; // name of process
+    m_ID = 58;
+}
+// Jump rate calculation
+double O5R_R5R6AC::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double O5R_R5R6AC::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double O5R_R5R6AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+	//return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID59- Oxidation of R5R6BY5 site.
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void O5R_R5R6BY5::initialise() {
+    // Adding elementary reactions
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//ABF - Frenklach and Whitesides2010
+	//H abstraction
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));          // A2R5 + H <=> A2R5- + H2      - 0 Hou2017
+	addReaction(rxnV3, Reaction(5.0677e+04, 2.4449e+00, 4.5197e+00, sp::H2));       // A2R5 + H <=> A2R5- + H2      - 1 Hou2017
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	//Using rates by Frenklach 2018
+	//"Detailed, sterically-resolved modeling of soot oxidation: Role of O atoms, interplay with particle nanostructure, and emergence of inner particle burning"
+	addReaction(rxnV3, Reaction(3.450E+11, 0.000E+00, 13422.0*8.314/4.184/1000.0, sp::O2));         // S90
+	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
+
+    m_sType = R5R6BY5; // sitetype
+    m_name = "Oxidation of partially embedded R5"; // name of process
+    m_ID = 59;
+}
+// Jump rate calculation
+double O5R_R5R6BY5::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double O5R_R5R6BY5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double O5R_R5R6BY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+	//return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID60- Oxidation of R5R6FER site.
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void O5R_R5R6FER::initialise() {
+    // Adding elementary reactions
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//ABF - Frenklach and Whitesides2010
+	//H abstraction
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));          // A2R5 + H <=> A2R5- + H2      - 0 Hou2017
+	addReaction(rxnV3, Reaction(5.0677e+04, 2.4449e+00, 4.5197e+00, sp::H2));       // A2R5 + H <=> A2R5- + H2      - 1 Hou2017
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	//Using rates by Frenklach 2018
+	//"Detailed, sterically-resolved modeling of soot oxidation: Role of O atoms, interplay with particle nanostructure, and emergence of inner particle burning"
+	addReaction(rxnV3, Reaction(3.450E+11, 0.000E+00, 13422.0*8.314/4.184/1000.0, sp::O2));         // S90
+	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
+
+    m_sType = R5R6FER; // sitetype
+    m_name = "Oxidation of R5R6FER"; // name of process
+    m_ID = 60;
+}
+// Jump rate calculation
+double O5R_R5R6FER::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double O5R_R5R6FER::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double O5R_R5R6FER::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+	//return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID61- Oxidation of R5R6ZZR site.
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void O5R_R5R6ZZR::initialise() {
+    // Adding elementary reactions
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//ABF - Frenklach and Whitesides2010
+	//H abstraction
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));          // A2R5 + H <=> A2R5- + H2      - 0 Hou2017
+	addReaction(rxnV3, Reaction(5.0677e+04, 2.4449e+00, 4.5197e+00, sp::H2));       // A2R5 + H <=> A2R5- + H2      - 1 Hou2017
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	//Using rates by Frenklach 2018
+	//"Detailed, sterically-resolved modeling of soot oxidation: Role of O atoms, interplay with particle nanostructure, and emergence of inner particle burning"
+	addReaction(rxnV3, Reaction(3.450E+11, 0.000E+00, 13422.0*8.314/4.184/1000.0, sp::O2));         // S90
+	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
+
+    m_sType = R5R6ZZR; // sitetype
+    m_name = "Oxidation of R5R6ZZR"; // name of process
+    m_ID = 61;
+}
+// Jump rate calculation
+double O5R_R5R6ZZR::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double O5R_R5R6ZZR::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double O5R_R5R6ZZR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+	//return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID62- Oxidation of R5R6ACR site.
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void O5R_R5R6ACR::initialise() {
+    // Adding elementary reactions
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//ABF - Frenklach and Whitesides2010
+	//H abstraction
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));          // A2R5 + H <=> A2R5- + H2      - 0 Hou2017
+	addReaction(rxnV3, Reaction(5.0677e+04, 2.4449e+00, 4.5197e+00, sp::H2));       // A2R5 + H <=> A2R5- + H2      - 1 Hou2017
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	//Using rates by Frenklach 2018
+	//"Detailed, sterically-resolved modeling of soot oxidation: Role of O atoms, interplay with particle nanostructure, and emergence of inner particle burning"
+	addReaction(rxnV3, Reaction(3.450E+11, 0.000E+00, 13422.0*8.314/4.184/1000.0, sp::O2));         // S90
+	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
+
+    m_sType = R5R6ACR; // sitetype
+    m_name = "Oxidation of R5R6ACR"; // name of process
+    m_ID = 62;
+}
+// Jump rate calculation
+double O5R_R5R6ACR::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double O5R_R5R6ACR::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double O5R_R5R6ACR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+	//return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID63- Oxidation of R5R6FER5R6 site.
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void O5R_R5R6FER5R6::initialise() {
+    // Adding elementary reactions
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//ABF - Frenklach and Whitesides2010
+	//H abstraction
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));          // A2R5 + H <=> A2R5- + H2      - 0 Hou2017
+	addReaction(rxnV3, Reaction(5.0677e+04, 2.4449e+00, 4.5197e+00, sp::H2));       // A2R5 + H <=> A2R5- + H2      - 1 Hou2017
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	//Using rates by Frenklach 2018
+	//"Detailed, sterically-resolved modeling of soot oxidation: Role of O atoms, interplay with particle nanostructure, and emergence of inner particle burning"
+	addReaction(rxnV3, Reaction(3.450E+11, 0.000E+00, 13422.0*8.314/4.184/1000.0, sp::O2));         // S90
+	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
+
+    m_sType = R5R6FER5R6; // sitetype
+    m_name = "Oxidation of R5R6FER5R6"; // name of process
+    m_ID = 63;
+}
+// Jump rate calculation
+double O5R_R5R6FER5R6::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double O5R_R5R6FER5R6::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double O5R_R5R6FER5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation
+	//return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID64- Oxidation of R5R6ZZR5R6 site.
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void O5R_R5R6ZZR5R6::initialise() {
+    // Adding elementary reactions
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//ABF - Frenklach and Whitesides2010
+	//H abstraction
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));          // A2R5 + H <=> A2R5- + H2      - 0 Hou2017
+	addReaction(rxnV3, Reaction(5.0677e+04, 2.4449e+00, 4.5197e+00, sp::H2));       // A2R5 + H <=> A2R5- + H2      - 1 Hou2017
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	//Using rates by Frenklach 2018
+	//"Detailed, sterically-resolved modeling of soot oxidation: Role of O atoms, interplay with particle nanostructure, and emergence of inner particle burning"
+	addReaction(rxnV3, Reaction(3.450E+11, 0.000E+00, 13422.0*8.314/4.184/1000.0, sp::O2));         // S90
+	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
+
+    m_sType = R5R6ZZR5R6; // sitetype
+    m_name = "Oxidation of R5R6ZZR5R6"; // name of process
+    m_ID = 64;
+}
+// Jump rate calculation
+double O5R_R5R6ZZR5R6::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double O5R_R5R6ZZR5R6::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double O5R_R5R6ZZR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation
+	//return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID65- Oxidation of R5R6ACR5R6 site.
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void O5R_R5R6ACR5R6::initialise() {
+    // Adding elementary reactions
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//ABF - Frenklach and Whitesides2010
+	//H abstraction
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));          // A2R5 + H <=> A2R5- + H2      - 0 Hou2017
+	addReaction(rxnV3, Reaction(5.0677e+04, 2.4449e+00, 4.5197e+00, sp::H2));       // A2R5 + H <=> A2R5- + H2      - 1 Hou2017
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
+	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
+	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	//Using rates by Frenklach 2018
+	//"Detailed, sterically-resolved modeling of soot oxidation: Role of O atoms, interplay with particle nanostructure, and emergence of inner particle burning"
+	addReaction(rxnV3, Reaction(3.450E+11, 0.000E+00, 13422.0*8.314/4.184/1000.0, sp::O2));         // S90
+	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
+
+    m_sType = R5R6ACR5R6; // sitetype
+    m_name = "Oxidation of R5R6ACR5R6"; // name of process
+    m_ID = 65;
+}
+// Jump rate calculation
+double O5R_R5R6ACR5R6::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double O5R_R5R6ACR5R6::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double O5R_R5R6ACR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	//Rates updated according to paper: On the low-temperature limit of HACA. Frenklach et al. 2018
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    double r_f; // radical fraction
+    if(r_denom>0) {
+        r_f = (m_r[0]+m_r[2])/r_denom; 
+        r_f = r_f/(r_f+1.0);
+    }
+    else r_f=0;
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation
+	//return setRate0p0267(gp, pah_st);
+}

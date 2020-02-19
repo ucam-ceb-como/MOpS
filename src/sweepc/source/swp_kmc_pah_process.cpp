@@ -4941,7 +4941,25 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		case 55:
 			proc_D_CH3(site_perf, site_C1, site_C2); break;
 		case 56:
-			proc_O5R_R5R6(site_perf, site_C1, site_C2); break;
+			proc_O5R_R5R6(site_perf, site_C1, site_C2, rng); break;
+		case 57:
+			proc_O5R_R5R6ZZ(site_perf, site_C1, site_C2, rng); break;
+		case 58:
+			proc_O5R_R5R6AC(site_perf, site_C1, site_C2, rng); break;
+		case 59:
+			proc_O5R_R5R6BY5(site_perf, site_C1, site_C2, rng); break;
+		case 60:
+			proc_O5R_R5R6FER(site_perf, site_C1, site_C2, rng); break;
+		case 61:
+			proc_O5R_R5R6ZZR(site_perf, site_C1, site_C2, rng); break;
+		case 62:
+			proc_O5R_R5R6ACR(site_perf, site_C1, site_C2, rng); break;
+		case 63:
+			proc_O5R_R5R6FER5R6(site_perf, site_C1, site_C2, rng); break;
+		case 64:
+			proc_O5R_R5R6ZZR5R6(site_perf, site_C1, site_C2, rng); break;
+		case 65:
+			proc_O5R_R5R6ACR5R6(site_perf, site_C1, site_C2, rng); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -8275,9 +8293,13 @@ void PAHProcess::proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 // ************************************************************
 void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
 	//printStruct();
-	OpenBabel::OBMol mol = passPAH();
-	mol = optimisePAH(mol, 1000);
-	passbackPAH(mol);
+	for (Cpointer Ccheck = C_1->C1; Ccheck != C_2; Ccheck = Ccheck->C2){
+		if (getDistance_twoC(Ccheck, Ccheck->C2)>1.6 || getDistance_twoC(Ccheck, Ccheck->C2)<1.2 ){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol, 1000);
+			passbackPAH(mol);
+		}
+	}
 	//First check if R6 is to the left or the right of R5
 	bool b4 = false;
 	Spointer sFE2, checkR5_1, checkR5_2;
@@ -8412,7 +8434,7 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 	removeC(CRem, false);
 
 	OpenBabel::OBMol newmol = passPAH();
-	newmol = optimisePAH(newmol, 1000);
+	newmol = optimisePAH(newmol, 500);
 	passbackPAH(newmol);
 	
 	//addC(CFE, normAngle(CFE->bondAngle1 + 30), normAngle(CFE->bondAngle1 - 30), 1.4);
@@ -9535,32 +9557,68 @@ void PAHProcess::proc_D_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 // ID56 - Oxidation of R5R6 site
 // ************************************************************
-void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
 	//printStruct();
-	OpenBabel::OBMol mol = passPAH();
-	mol = optimisePAH(mol, 500);
-	passbackPAH(mol);
+	for (Cpointer Ccheck = C_1->C1; Ccheck != C_2; Ccheck = Ccheck->C2){
+		if (getDistance_twoC(Ccheck, Ccheck->C2)>1.58 || getDistance_twoC(Ccheck, Ccheck->C2)<1.2 ){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol, 600);
+			passbackPAH(mol);
+		}
+	}
 	//saveXYZ("KMC_DEBUG/Oxidation_PAH");
 	//First check if R6 is to the left or the right of R5
 	bool b4 = false;
 	Spointer other;
 	Cpointer CRem, CRem_before, CRem_next;
-	
-	if (( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ) && ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) )){
-		//Pentagons to both sides, JP not allowed
-		return;
+	//The pentagons are at one or both ends of the PAH. First identify which atom to remove.
+	if ((int)stt->type > 1000 && (int)stt->type < 1005 ){
+		//Site with embedded R5 to both sides.
+		// Define a distribution that has two equally probably outcomes
+		boost::bernoulli_distribution<> choiceDistrib;
+		// Now build an object that will generate a sample using rng
+		boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+		if(choiceGenerator()) {
+			b4 = true;
+			other = moveIt(stt, +1);
+			CRem = stt->C2;
+		}
+		else {
+			other = moveIt(stt, -1);
+			CRem = stt->C1;
+		}
 	}
-	else if ( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ) b4 = false;
-	else if ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) ) b4 = true;
-	else return;
-	if (b4) {
-		other = moveIt(stt, +1);
-		CRem = stt->C2;
+	else if ((int)stt->type > 600 && (int)stt->type < 605){
+		//Partially embedded R5 to one side and R5 to the other side.
+		Spointer next_site = moveIt(stt, -1);
+		if(next_site->type == R5){
+			b4 = true;
+			other = moveIt(stt, +1);
+			CRem = stt->C2;
+		}
+		else{
+			other = moveIt(stt, -1);
+			CRem = stt->C1;
+		}
 	}
 	else {
-		other = moveIt(stt, -1);
-		CRem = stt->C1;
+		//Partially embedded R5 at one end or the other.
+		if ( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ) {
+			other = moveIt(stt, -1);
+			CRem = stt->C1;
+		}
+		else if ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) ) {
+			b4 = true;
+			other = moveIt(stt, +1);
+			CRem = stt->C2;
+		}
+		else {
+			//Embedded R5R6 not found. Flag error.
+			std::cout << "Embedded R5 not found on R5R6 oxidation.\n";
+			return;
+		}
 	}
+
 	CRem_next = CRem->C2;
 	CRem_before = CRem->C1;
 	Cpointer thirdC = findThirdC(CRem_before);
@@ -9633,6 +9691,69 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(stt); updateCombinedSites(other); updateCombinedSites(newSite); 
 	updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
 	m_pah->m_rings5_Lone--;
+}
+
+// ************************************************************
+// ID57 - Oxidation of R5R6ZZ site
+// ************************************************************
+void PAHProcess::proc_O5R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_O5R_R5R6(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID58 - Oxidation of R5R6AC site
+// ************************************************************
+void PAHProcess::proc_O5R_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_O5R_R5R6(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID59 - Oxidation of R5R6BY5 site
+// ************************************************************
+void PAHProcess::proc_O5R_R5R6BY5(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_O5R_R5R6(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID60 - Oxidation of R5R6FER site
+// ************************************************************
+void PAHProcess::proc_O5R_R5R6FER(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_O5R_R5R6(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID61 - Oxidation of R5R6ZZR site
+// ************************************************************
+void PAHProcess::proc_O5R_R5R6ZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_O5R_R5R6(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID62 - Oxidation of R5R6ACR site
+// ************************************************************
+void PAHProcess::proc_O5R_R5R6ACR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_O5R_R5R6(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID63 - Oxidation of R5R6FER5R6 site
+// ************************************************************
+void PAHProcess::proc_O5R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_O5R_R5R6(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID64 - Oxidation of R5R6ZZR5R6 site
+// ************************************************************
+void PAHProcess::proc_O5R_R5R6ZZR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_O5R_R5R6(stt, C_1, C_2, rng);
+}
+
+// ************************************************************
+// ID65 - Oxidation of R5R6BY5 site
+// ************************************************************
+void PAHProcess::proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	proc_O5R_R5R6(stt, C_1, C_2, rng);
 }
 
 size_t PAHProcess::SiteListSize() const {
