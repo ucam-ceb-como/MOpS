@@ -5938,13 +5938,12 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		if (thirdC == NULLC) other_side = findSite(thirdC2);
 		else other_side = findSite(thirdC);
 	}
-	
+	addR5internal(CRem_before,CRem_next, true);
 	//Remove carbon
 	removeC(CRem, false);
 	//Move remaining carbon to new position
 	moveC(CRem_before, newpos);
-	
-	
+	updateA(CRem_before, 'A', Hdir);
 	
 	if (optimise_flag){
 		OpenBabel::OBMol mol = passPAH();
@@ -5967,7 +5966,6 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     addCount(0,-1);
     m_pah->m_rings--;
 	m_pah->m_rings5_Lone++;
-	addR5internal(CRem_before,CRem_next);
 }
 
 
