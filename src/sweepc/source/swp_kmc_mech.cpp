@@ -134,8 +134,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_L6_BY6 = new L6_BY6; j_L6_BY6->initialise();									//!  3- BY6 closure [AR14].
     JumpProcess* j_PH_benz = new PH_benz; j_PH_benz->initialise();								//!  4- phenyl addition [AR15].
     JumpProcess* j_D6R_FE3 = new D6R_FE3; j_D6R_FE3->initialise();								//!  5- R6 Desorption at FE [AR8].
-    //JumpProcess* j_O6R_FE3_O2 = new O6R_FE3_O2; j_O6R_FE3_O2->initialise();						//!  6- R6 Oxidation at FE by O2 [AR10].
-    //JumpProcess* j_O6R_FE3_OH = new O6R_FE3_OH; j_O6R_FE3_OH->initialise();						//!  7- R6 Oxidation at FE by OH [AR11].
+    JumpProcess* j_O6R_FE3_O2 = new O6R_FE3_O2; j_O6R_FE3_O2->initialise();						//!  6- R6 Oxidation at FE by O2 [AR10].
+    JumpProcess* j_O6R_FE3_OH = new O6R_FE3_OH; j_O6R_FE3_OH->initialise();						//!  7- R6 Oxidation at FE by OH [AR11].
     JumpProcess* j_O6R_FE_HACA = new O6R_FE_HACA; j_O6R_FE_HACA->initialise();					//!  8- R6 Oxidation at FE-HACA [AR12].
     //JumpProcess* j_O6R_FE_HACA_OH = new O6R_FE_HACA_OH; j_O6R_FE_HACA_OH->initialise();			//!  9- R6 Oxidation at AC by OH [AR13].
     JumpProcess* j_G5R_ZZ = new G5R_ZZ; j_G5R_ZZ->initialise();									//! 10- R5 growth at ZZ [AR3].

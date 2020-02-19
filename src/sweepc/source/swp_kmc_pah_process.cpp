@@ -5917,7 +5917,8 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Spointer other_side;
 	if (thirdC != NULLC || thirdC2 != NULLC) {
 		other_side_bool = true;
-		other_side = findSite(thirdC);
+		if (thirdC == NULLC) other_side = findSite(thirdC2);
+		else other_side = findSite(thirdC);
 	}
 	
 	//Remove carbon
@@ -9589,6 +9590,8 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		thirdC2->C3 = thirdC;
 		thirdC2->C2 = CRem_next;
 		thirdC->C1 = CRem_before;
+		CRem_before->C2 = thirdC;
+		CRem_next->C1 = thirdC2;
 		thirdC2->bridge = true;
 		thirdC->bridge = true;
 	}
