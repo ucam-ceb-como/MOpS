@@ -5910,10 +5910,22 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		newpos = std::make_tuple(std::get<0>(CRem_before->C1->coords) + dist * std::get<0>(start_dir), std::get<1>(CRem_before->C1->coords) + dist * std::get<1>(start_dir) , std::get<2>(CRem_before->C1->coords) + dist * std::get<2>(start_dir));
 		optimise_flag = true;
 	}
+	//Find if ring is exposed on other side
+	Cpointer thirdC = findThirdC(CRem_before);
+	Cpointer thirdC2 = findThirdC(CRem_next);
+	bool other_side_bool = false;
+	Spointer other_side;
+	if (thirdC != NULLC || thirdC2 != NULLC) {
+		other_side_bool = true;
+		other_side = findSite(thirdC);
+	}
+	
 	//Remove carbon
 	removeC(CRem, false);
 	//Move remaining carbon to new position
 	moveC(CRem_before, newpos);
+	
+	
 	
 	if (optimise_flag){
 		OpenBabel::OBMol mol = passPAH();
@@ -5927,6 +5939,7 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	if ( (int)S2->type < 2000) updateSites(S2, CRem_before, S2->C2, +500);
 	else updateSites(S2, CRem_next, S2->C2, +100);
 	stt = S1;
+	if (other_side_bool) updateSites(other_side, other_side->C1, other_side->C2, +2000);
     Spointer S3, S4;
     // update combined sites for all sites and their neighbours
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
@@ -9524,7 +9537,7 @@ void PAHProcess::proc_D_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//printStruct();
 	OpenBabel::OBMol mol = passPAH();
-	mol = optimisePAH(mol, 1000);
+	mol = optimisePAH(mol, 500);
 	passbackPAH(mol);
 	//saveXYZ("KMC_DEBUG/Oxidation_PAH");
 	//First check if R6 is to the left or the right of R5
@@ -9551,9 +9564,13 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	CRem_before = CRem->C1;
 	Cpointer thirdC = findThirdC(CRem_before);
 	Cpointer thirdC2 = findThirdC(CRem_next);
+	Spointer other_side;
 	bool bridged = false;
 	cpair Cdir1, Cdir2, normdir, Cdir0;
-	if (thirdC != NULLC && thirdC2 != NULLC) bridged = true;
+	if (thirdC != NULLC && thirdC2 != NULLC) {
+		bridged = true;
+		other_side = findSite(thirdC);
+	}
 	//Get normal vector
 	normdir = norm_vector(CRem_before->coords, CRem->coords, CRem_next->coords);
 	//Remove carbon first
@@ -9599,6 +9616,12 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		if ((int)other->type < 2000) updateSites(other, other->C1, CRem_before, -501);
 		else updateSites(other, other->C1, CRem_before, -101);
 		newSite = addSite(AC, CRem_before, CRem_next, stt);
+	}
+	
+	if (bridged){
+		updateSites(other_side, other_side->C1, other_side->C2, -2000);
+		Spointer S1_os = moveIt(other_side, -1); Spointer S2_os = moveIt(other_side, +1);
+		updateCombinedSites(S1_os); updateCombinedSites(S2_os);
 	}
 	
 	Spointer S1 = moveIt(newSite, -1); Spointer S3 = moveIt(newSite, -2);
