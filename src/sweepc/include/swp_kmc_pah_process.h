@@ -356,6 +356,10 @@ private:
 	bool isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
 	//! Return coords of final position of an internal R5 based on two carbons
 	cpair endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
+	//! Are the two carbon atoms members of an R7 with coordinates in R7Internal??
+	bool isR7internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
+	//! Return coords of final position of an internal R7 based on two carbons
+	cpair endposR7internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
     //! Creates a carbon atom bridging next to C_1. 
     Cpointer bridgeC(Cpointer C_1);
     /*//! Creates a bulk carbon atom connected to C_1

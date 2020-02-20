@@ -1485,6 +1485,19 @@ bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
 	}
 	return false;
 }
+
+//! Are the two carbon atoms members of an R7 with coordinates in R7Internal??
+bool PAHProcess::isR7internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
+	cpair R7_pos_loc = endposR7internal(C_1, C_2, invert_dir);
+	std::list<cpair>::iterator it1;
+	double minimal_dist = 0.8;
+	for (it1 = m_pah->m_R7loc.begin(); it1 != m_pah->m_R7loc.end(); ++it1) {
+		double dist = getDistance_twoC(R7_pos_loc, *it1);
+		if (dist <= minimal_dist) return true;
+	}
+	return false;
+}
+
 //! Return coords of final position of an internal R5 based on two carbons
 cpair PAHProcess::endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
 	//C_1 is the carbon that stays in the R5, C_2 the R6 that becomes part of the R5
@@ -1497,6 +1510,23 @@ cpair PAHProcess::endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) 
 	double theta = atan(R5_dist/2.0/0.7);
 	double magn = 0.7 / cos(theta);
 	cpair resultantvec = std::make_tuple(R5_dist/2.0 * std::get<0>(R5dir) + 0.7 * std::get<0>(crossvec), R5_dist/2.0 * std::get<1>(R5dir) + 0.7 * std::get<1>(crossvec), R5_dist/2.0 * std::get<2>(R5dir)+ 0.7 * std::get<2>(crossvec));
+	cpair intdir = scale_vector(resultantvec);
+	cpair mpos = jumpToPos(C_1->coords, intdir, magn);
+	return mpos;
+}
+
+//! Return coords of final position of an internal R5 based on two carbons
+cpair PAHProcess::endposR7internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
+	//C_1 is the carbon that stays in the R5, C_2 the R6 that becomes part of the R5
+	double R7_dist = getDistance_twoC(C_1, C_2);
+	cpair R7dir = get_vector(C_1->coords,C_2->coords);
+	cpair normvec;
+	if (invert_dir) normvec = norm_vector(C_1->coords, C_2->coords, C_2->C2->coords);
+	else normvec = invert_vector(norm_vector(C_1->coords, C_2->coords, C_2->C2->coords));
+	cpair crossvec = cross_vector(R7dir, normvec);
+	double theta = atan(R7_dist/2.0/0.75);
+	double magn = 0.7 / cos(theta);
+	cpair resultantvec = std::make_tuple(R7_dist/2.0 * std::get<0>(R7dir) + 0.7 * std::get<0>(crossvec), R7_dist/2.0 * std::get<1>(R7dir) + 0.7 * std::get<1>(crossvec), R7_dist/2.0 * std::get<2>(R7dir)+ 0.7 * std::get<2>(crossvec));
 	cpair intdir = scale_vector(resultantvec);
 	cpair mpos = jumpToPos(C_1->coords, intdir, magn);
 	return mpos;
@@ -5943,7 +5973,7 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	removeC(CRem, false);
 	//Move remaining carbon to new position
 	moveC(CRem_before, newpos);
-	updateA(CRem_before, 'A', Hdir);
+	updateA(CRem_before, 'H', Hdir);
 	
 	if (optimise_flag){
 		OpenBabel::OBMol mol = passPAH();
@@ -7411,8 +7441,23 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	CRem_before = CRem->C1;
 	CRem_next = CRem->C2;
 	
+	//This section assumes that the oxidation of an FE2 site on an heptagon forms a six-member ring. Needs confirmation.
+	bool heptagon_flag = false;
 	//check that two pentagons (including internals) will not collide
-	if (m_pah->m_R5loc.size()>=1){
+	if (m_pah->m_R7loc.size()>=1){
+		cpair R7coords_end = endposR7internal(CRem_before, CRem_next, true);
+		for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
+			double distR7s = getDistance_twoC(*it, R7coords_end);
+			if (distR7s < 1.7) {
+				//FE2 oxidation on an R7
+				heptagon_flag = true;
+				break;
+			}
+		}
+	}
+	
+	//check that two pentagons (including internals) will not collide
+	if (m_pah->m_R5loc.size()>=1 && !(heptagon_flag)){
 		cpair R5coords_end = endposR5internal(CRem_before, CRem_next, true);
 		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 			double distR5s = getDistance_twoC(*it, R5coords_end);
@@ -7424,6 +7469,8 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			}
 		}
 	}
+	
+	
 	
     Cpointer C_bulk;
     for(C_bulk = S1->C1; C_bulk != S1->C2; C_bulk=C_bulk->C2) {
@@ -7437,9 +7484,20 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // Remove one of the FE in FE2
     removeSite(other);
     // Update Sites and neighbouring sites
-	convSiteType(stt, CRem_before, CRem_next, R5);
-	updateSites(S1, S1->C1, CRem_before, +100);
-	updateSites(S2, CRem_next, S2->C2, +100);
+	if (!heptagon_flag){
+		convSiteType(stt, CRem_before, CRem_next, R5);
+		updateSites(S1, S1->C1, CRem_before, +100);
+		updateSites(S2, CRem_next, S2->C2, +100);
+		m_pah->m_rings--;
+		m_pah->m_rings5_Lone++;
+		addR5internal(CRem_before,CRem_next,true);
+	}
+	else {
+		convSiteType(stt, CRem_before, CRem_next, FE);
+		m_pah->m_rings7_Embedded--;
+		m_pah->m_rings++;
+		removeR7internal(CRem_before, CRem_next);
+	}
     Spointer S3, S4;
     // update combined sites for all sites and their neighbours
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
@@ -7447,9 +7505,6 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S1); updateCombinedSites(S2);
     updateCombinedSites(S3); updateCombinedSites(S4);
     addCount(0,-1);
-    m_pah->m_rings--;
-	m_pah->m_rings5_Lone++;
-	addR5internal(CRem_before,CRem_next,true);
 }
 
 // ************************************************************
