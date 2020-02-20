@@ -5925,10 +5925,15 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		cpair R5coords_end = endposR5internal(CRem_before, CRem_next, false);
 		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 			double distR5s = getDistance_twoC(*it, R5coords_end);
-			if (distR5s < 3.0) {
+			if (distR5s < 2.8) {
+				//This assumes that the R6 is adjacent to an R5. The correct route according to both Raj2013 and Singh2016 is the removal of two carbon atoms.
+				//Structural effects on the oxidation of soot particles by O2: Experimentaland theoretical study. Raj2013
+				// Oxidation of Graphene-Edge Six- and Five-Member Rings by Molecular Oxygen. Singh2016
 				//This distance is a parameter of this jump process. Might need some more tuning. 
 				//2.8 seems appropiate but may reject too many jumps.
 				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+				//return;
+				proc_O6R_FE_HACA_double(stt, C_1, C_2);
 				return;
 			}
 		}
@@ -6029,7 +6034,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 		//cout<<"Oxidation generated a bridge\n";
 		//saveXYZ("KMC_DEBUG/Oxidation_to_bridge_before");
 	}
-	bool hept_bool = false;
+	bool hept_bool = isR7internal(C_1, C_2);
     // check if site is next to a bridge
     if (C1_res->bridge || C2_res->bridge) return;
     //if(bridge) return;
@@ -6071,17 +6076,12 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 		updateA(C2_res,'H', Hdir2);
 		//saveXYZ("KMC_DEBUG/oxidation_issue");
 		double dist = getDistance_twoC(C1_res,C2_res);
-		if (dist > 3.2 && m_pah->m_rings7_Embedded >= 1){
+		
+		if (hept_bool){
 			//Assume that this site was in an heptagon.
 			removeR7internal(C1_res, C2_res);
-			hept_bool = true;
 			Cpointer Cnew3 = addC(Cnew2, FEdir, 1.4, true);
 		}
-		//cout<<"Distance = "<<dist<<", R7s = "<<m_pah->m_rings7_Embedded<<"\n";
-		//Cpointer Cnew1 = addC(C1_res, normAngle(C1_res->bondAngle1 - 120), 0, 1.4, true);
-		//Cpointer Cnew2 = addC(C1_res->C2, normAngle(C1_res->bondAngle1 + 60), normAngle(C1_res->bondAngle1 + 120), 1.4, true);
-		// update H
-		//updateA(C1_res, C2_res, 'H');
     }
     // update sites and neighbours
     Spointer S1, S2, S3, S4;
@@ -6216,7 +6216,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 				updateSites(S2, C2_res, S2->C2, -1);
 			}
 		}
-		else if (S1->type == R5R6 || (S2->type == R5R6)) {
+		/*else if (S1->type == R5R6 || (S2->type == R5R6)) {
 			if (S1->type == R5R6 && (S2->type == R5R6)) {
 				convSiteType(stt, C1_res, C2_res, FE);
 				S3 = moveIt(S1, -1);
@@ -6252,9 +6252,9 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 				convSiteType(S2, S2->C1, S2->C1->C2, R5);
 				redrawR5(S2, S2->C1->C1, S2->C2->C2);
 				updateSites(S1, S1->C1, C1_res, -1);
-				m_pah->m_rings5_Embedded--;*/
+				m_pah->m_rings5_Embedded--;
 			}
-		}
+		}*/
 		else {
 			if (isR5internal(C1_res->C2, C2_res->C1)) {
 				updateSites(stt, C1_res, C2_res, 2002);
