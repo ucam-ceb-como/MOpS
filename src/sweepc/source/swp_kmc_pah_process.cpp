@@ -1504,8 +1504,8 @@ cpair PAHProcess::endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) 
 	double R5_dist = getDistance_twoC(C_1, C_2);
 	cpair R5dir = get_vector(C_1->coords,C_2->coords);
 	cpair normvec;
-	if (invert_dir) normvec = norm_vector(C_1->coords, C_2->coords, C_2->C2->coords);
-	else normvec = invert_vector(norm_vector(C_1->coords, C_2->coords, C_2->C2->coords));
+	if (invert_dir) normvec = invert_vector(norm_vector(C_1->coords, C_2->coords, C_2->C2->coords));
+	else normvec = norm_vector(C_1->coords, C_2->coords, C_2->C2->coords);
 	cpair crossvec = cross_vector(R5dir, normvec);
 	double theta = atan(R5_dist/2.0/0.7);
 	double magn = 0.7 / cos(theta);
@@ -1521,12 +1521,12 @@ cpair PAHProcess::endposR7internal(Cpointer C_1, Cpointer C_2, bool invert_dir) 
 	double R7_dist = getDistance_twoC(C_1, C_2);
 	cpair R7dir = get_vector(C_1->coords,C_2->coords);
 	cpair normvec;
-	if (invert_dir) normvec = norm_vector(C_1->coords, C_2->coords, C_2->C2->coords);
-	else normvec = invert_vector(norm_vector(C_1->coords, C_2->coords, C_2->C2->coords));
+	if (invert_dir) normvec = invert_vector (norm_vector(C_1->coords, C_2->coords, C_2->C2->coords));
+	else normvec = norm_vector(C_1->coords, C_2->coords, C_2->C2->coords);
 	cpair crossvec = cross_vector(R7dir, normvec);
-	double theta = atan(R7_dist/2.0/0.75);
-	double magn = 0.7 / cos(theta);
-	cpair resultantvec = std::make_tuple(R7_dist/2.0 * std::get<0>(R7dir) + 0.7 * std::get<0>(crossvec), R7_dist/2.0 * std::get<1>(R7dir) + 0.7 * std::get<1>(crossvec), R7_dist/2.0 * std::get<2>(R7dir)+ 0.7 * std::get<2>(crossvec));
+	double theta = atan(R7_dist/2.0/1.56);
+	double magn = 1.56 / cos(theta);
+	cpair resultantvec = std::make_tuple(R7_dist/2.0 * std::get<0>(R7dir) + 1.56 * std::get<0>(crossvec), R7_dist/2.0 * std::get<1>(R7dir) + 1.56 * std::get<1>(crossvec), R7_dist/2.0 * std::get<2>(R7dir)+ 1.56 * std::get<2>(crossvec));
 	cpair intdir = scale_vector(resultantvec);
 	cpair mpos = jumpToPos(C_1->coords, intdir, magn);
 	return mpos;
@@ -2615,7 +2615,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		Cpointer Ccheck3 = Carb2->C1;
 		Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2, true) || isR5internal(Ccheck3, Ccheck4), true) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2005;
 		}
@@ -3065,7 +3065,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		Cpointer Ccheck3 = Carb2->C1;
 		Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2, true) || isR5internal(Ccheck3, Ccheck4, true)) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2005; bulkCchange = 0;
 		}
@@ -5922,7 +5922,7 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	
 	//check that two pentagons (including internals) will not collide
 	if (m_pah->m_R5loc.size()>=1){
-		cpair R5coords_end = endposR5internal(CRem_before, CRem_next, false);
+		cpair R5coords_end = endposR5internal(CRem_before, CRem_next, true);
 		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 			double distR5s = getDistance_twoC(*it, R5coords_end);
 			if (distR5s < 2.8) {
@@ -6027,14 +6027,15 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 	if (bridge) {
 		Spointer S1 = moveIt(stt, -1);
 		Spointer S2 = moveIt(stt, +1);
-		if ((int)S1->type > 2000 || (int)S2->type > 2000 ) {
+		if ((int)S1->type > 2000 || (int)S2->type > 2000 || S1->type== R5 || S2->type == R5 ) {
 			//This would expose three edges of a pentagon. Not supported YET!
 			return;
 		}
 		//cout<<"Oxidation generated a bridge\n";
 		//saveXYZ("KMC_DEBUG/Oxidation_to_bridge_before");
 	}
-	bool hept_bool = isR7internal(C_1, C_2);
+	bool hept_bool = false;
+	if  (isR7internal(C_1, C_2, true) || isR7internal(C_1, C_2)) hept_bool = true;
     // check if site is next to a bridge
     if (C1_res->bridge || C2_res->bridge) return;
     //if(bridge) return;
@@ -6122,25 +6123,31 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 				updateSites(stt, C1_res, C2_res, 1002);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1);
+				S3 = moveIt(S1, -1);
+				if (S3->type==R5) updateSites(S1, S1->C1, S1->C2, -400);
+				S4 = moveIt(S2, 1);
+				if (S4->type==R5) updateSites(S2, S2->C1, S2->C2, -400);
 			}
 			else if (S1->type == R5ACR5){
+				S3 = moveIt(S1, -1);
 				updateSites(stt, C1_res, C2_res, 502);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1);
+				if (S3->type==R5) updateSites(S1, S1->C1, S1->C2, -400);
 			}
 			else {
 				S4 = moveIt(S2, 1);
-				updateSites(stt, C1_res, C2_res, 102);
+				updateSites(stt, C1_res, C2_res, 502);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1);
-				updateSites(S4, S4->C1, S4->C2, -400);
+				if (S4->type==R5) updateSites(S2, S2->C1, S2->C2, -400);
 			}
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol);
 			passbackPAH(mol);
 		}
 		else if (S1->type == ACR5 && S2->type == ACR5) {
-			updateSites(stt, C1_res, C2_res, 1003);
+			updateSites(stt, C1_res, C2_res, 1002);
 			updateSites(S1, S1->C1, C1_res, -1501);
 			updateSites(S2, C2_res, S2->C2, -1501);
 		}
@@ -6150,8 +6157,8 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 			updateSites(S2, C2_res, S2->C2, -1);
 		}
 		else if (((int)S1->type >= 2003 && (int)S1->type <= 2005) && ((int)S2->type >= 2003 && (int)S2->type <= 2005)){
-			cpair R5check1 = endposR5internal(C1_res, C1_res->C1);
-			cpair R5check2 = endposR5internal(C2_res, C2_res->C2);
+			cpair R5check1 = endposR5internal(C1_res->C1, C1_res);
+			cpair R5check2 = endposR5internal(C2_res, C2_res->C2, true);
 			bool check_1 = false; bool check_2 = false;
 			for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 				double distR51 = getDistance_twoC(*it, R5check1);
@@ -6181,7 +6188,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 			}
 		}
 		else if ((int)S1->type >= 2003 && (int)S1->type <= 2005) {
-			cpair R5check1 = endposR5internal(C1_res, C1_res->C1);
+			cpair R5check1 = endposR5internal(C1_res->C1, C1_res);
 			bool check_1 = false; 
 			for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 				double distR51 = getDistance_twoC(*it, R5check1);
@@ -6199,7 +6206,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 			}
 		}
 		else if ((int)S2->type >= 2003 && (int)S2->type <= 2005) {
-			cpair R5check1 = endposR5internal(C1_res, C1_res->C1);
+			cpair R5check1 = endposR5internal(C1_res, C1_res->C1, true);
 			bool check_1 = false; 
 			for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 				double distR51 = getDistance_twoC(*it, R5check1);
@@ -6256,7 +6263,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 			}
 		}*/
 		else {
-			if (isR5internal(C1_res->C2, C2_res->C1)) {
+			if (isR5internal(C1_res->C2, C2_res->C1) || isR5internal(C1_res->C2, C2_res->C1, true)) {
 				updateSites(stt, C1_res, C2_res, 2002);
 				m_pah->m_rings5_Embedded--;
 				m_pah->m_rings5_Lone++;
@@ -6276,10 +6283,12 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 	else {
 		//Assuming that the site removed was an heptagon
 		bool R5_bool0, R5_bool1, R5_bool2;
-		R5_bool0 = isR5internal(C1_res, C1_res->C2);
-		if ( isR5internal(C1_res->C2, C1_res->C2->C2) || isR5internal(C2_res->C1->C1, C2_res->C1)) R5_bool1 = true;
+		if (isR5internal(C1_res, C1_res->C2, true) || isR5internal(C1_res, C1_res->C2) ) R5_bool0 = true;
+		else R5_bool0 = false;
+		if ( isR5internal(C1_res->C2, C1_res->C2->C2) || isR5internal(C2_res->C1->C1, C2_res->C1) || isR5internal(C1_res->C2, C1_res->C2->C2, true) || isR5internal(C2_res->C1->C1, C2_res->C1, true)) R5_bool1 = true;
 		else R5_bool1 = false;
-		R5_bool2 = isR5internal(C2_res->C1, C2_res);
+		if (isR5internal(C2_res->C1, C2_res) || isR5internal(C2_res->C1, C2_res, true)) R5_bool2 = true;
+		else R5_bool2 = false;
 		
 		if (R5_bool0 && R5_bool2){
 			if ((int)S1->type >= 2002 && (int)S2->type >= 2002) updateSites(stt, C1_res, C2_res, 1003);
@@ -7445,7 +7454,7 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	bool heptagon_flag = false;
 	//check that two pentagons (including internals) will not collide
 	if (m_pah->m_R7loc.size()>=1){
-		cpair R7coords_end = endposR7internal(CRem_before, CRem_next, true);
+		cpair R7coords_end = endposR7internal(CRem_before, CRem_next);
 		for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
 			double distR7s = getDistance_twoC(*it, R7coords_end);
 			if (distR7s < 1.7) {
@@ -7458,7 +7467,7 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	
 	//check that two pentagons (including internals) will not collide
 	if (m_pah->m_R5loc.size()>=1 && !(heptagon_flag)){
-		cpair R5coords_end = endposR5internal(CRem_before, CRem_next, true);
+		cpair R5coords_end = endposR5internal(CRem_before, CRem_next);
 		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 			double distR5s = getDistance_twoC(*it, R5coords_end);
 			if (distR5s < 2.8) {
@@ -7490,7 +7499,7 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		updateSites(S2, CRem_next, S2->C2, +100);
 		m_pah->m_rings--;
 		m_pah->m_rings5_Lone++;
-		addR5internal(CRem_before,CRem_next,true);
+		addR5internal(CRem_before,CRem_next);
 	}
 	else {
 		convSiteType(stt, CRem_before, CRem_next, FE);
@@ -7773,7 +7782,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		}
 	}
 	//check that two pentagons (including internals) will not collide
-	cpair R5coords_end = endposR5internal(CRem_before, CRem_next);
+	cpair R5coords_end = endposR5internal(CRem->C1, CRem);
 	if (m_pah->m_R5loc.size()>=1){
 		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 			double distR5s = getDistance_twoC(*it, R5coords_end);
@@ -8455,7 +8464,7 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 		}
 	}
 	//check that two pentagons (including internals) will not collide
-	cpair R5coords_end = endposR5internal(CRem_before, CRem_next);
+	cpair R5coords_end = endposR5internal(CRem->C1, CRem);
 	if (m_pah->m_R5loc.size()>=1){
 		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 			double distR5s = getDistance_twoC(*it, R5coords_end);

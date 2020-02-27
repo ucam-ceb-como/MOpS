@@ -134,8 +134,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_L6_BY6 = new L6_BY6; j_L6_BY6->initialise();									//!  3- BY6 closure [AR14].
     JumpProcess* j_PH_benz = new PH_benz; j_PH_benz->initialise();								//!  4- phenyl addition [AR15].
     JumpProcess* j_D6R_FE3 = new D6R_FE3; j_D6R_FE3->initialise();								//!  5- R6 Desorption at FE [AR8].
-    JumpProcess* j_O6R_FE3_O2 = new O6R_FE3_O2; j_O6R_FE3_O2->initialise();						//!  6- R6 Oxidation at FE by O2 [AR10].
-    JumpProcess* j_O6R_FE3_OH = new O6R_FE3_OH; j_O6R_FE3_OH->initialise();						//!  7- R6 Oxidation at FE by OH [AR11].
+    //JumpProcess* j_O6R_FE3_O2 = new O6R_FE3_O2; j_O6R_FE3_O2->initialise();						//!  6- R6 Oxidation at FE by O2 [AR10].
+    //JumpProcess* j_O6R_FE3_OH = new O6R_FE3_OH; j_O6R_FE3_OH->initialise();						//!  7- R6 Oxidation at FE by OH [AR11].
     JumpProcess* j_O6R_FE_HACA = new O6R_FE_HACA; j_O6R_FE_HACA->initialise();					//!  8- R6 Oxidation at FE-HACA [AR12].
     //JumpProcess* j_O6R_FE_HACA_OH = new O6R_FE_HACA_OH; j_O6R_FE_HACA_OH->initialise();			//!  9- R6 Oxidation at AC by OH [AR13].
     JumpProcess* j_G5R_ZZ = new G5R_ZZ; j_G5R_ZZ->initialise();									//! 10- R5 growth at ZZ [AR3].
@@ -202,8 +202,8 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_L6_BY6);            //!  3- BY6 closure [AR14].
     temp.push_back(j_PH_benz);           //!  4- phenyl addition [AR15].
     temp.push_back(j_D6R_FE3);           //!  5- R6 Desorption at FE [AR8].
-    temp.push_back(j_O6R_FE3_O2);        //!  6- R6 Oxidation at FE by O2 [AR10].
-    temp.push_back(j_O6R_FE3_OH);        //!  7- R6 Oxidation at FE by OH [AR11].
+    //temp.push_back(j_O6R_FE3_O2);        //!  6- R6 Oxidation at FE by O2 [AR10].
+    //temp.push_back(j_O6R_FE3_OH);        //!  7- R6 Oxidation at FE by OH [AR11].
     temp.push_back(j_O6R_FE_HACA);    //!  R6 Oxidation at FE-HACA [AR12].
     //temp.push_back(j_O6R_FE_HACA_OH);    //!  9- R6 Oxidation at AC by OH [AR13].
     temp.push_back(j_G5R_ZZ);            //! 10- R5 growth at ZZ [AR3].
@@ -1021,9 +1021,20 @@ double G6R_FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	else r_f=0;
 	
 	
-	JumpProcess* j_D6R_FE3_contained = new D6R_FE3; j_D6R_FE3_contained->initialise();
+	/*JumpProcess* j_D6R_FE3_contained = new D6R_FE3; j_D6R_FE3_contained->initialise();
 	(j_D6R_FE3_contained)->calculateElemRxnRate((j_D6R_FE3_contained)->getVec1(), gp);
 	double desorpt_rate = (j_D6R_FE3_contained)->setRate1(gp, pah_st);
+	*/
+	
+	//This is the reversible rate. Checks how far away from steady state are 6 FE sites and 2 FE3 sites  to decide if PEQ or SS approximation should be valid.
+	double FE3_site_count = site_count / 6.0 * 2.0;
+	double desorpt_rate;
+	double r_denom_desorpt = (m_r[64] + m_r[67] + m_r[69]);
+	if (r_denom_desorpt <=0) desorpt_rate = 0.0;
+	else{ 
+		double r_num_desorpt = (m_r[65] + m_r[66] + m_r[68]);
+		desorpt_rate = ((m_r[11] + m_r[35] + m_r[49] + m_r[57] + m_r[59]) + r_num_desorpt/r_denom_desorpt*(m_r[51] + m_r[53] + m_r[61] + m_r[63])) * FE3_site_count / 2.0; 
+	}
 	
 	double m_rate_old = m_r[51]*r_f* site_count; // Rate Equation
 	//cout << "Temp = " << T; 
@@ -1691,19 +1702,21 @@ void O6R_FE_HACA::initialise() {
 	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
 	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
 	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4
-	addReaction(rxnV3, Reaction(3.17e13, 0.00, 2.021,sp::O2));  						// S46
-    addReaction(rxnV3, Reaction(6.42e10, 1.00, 29183.0*8.314/4.184/1000.0,sp::None));  // S53 // S54
-    addReaction(rxnV3, Reaction(1.47e14, 0.00, 632.0*8.314/4.184/1000.0,sp::OH)); // S55
-    addReaction(rxnV3, Reaction(2.13e15, 0.00, 42305.0*8.314/4.184/1000.0,sp::None));  // S60
-    addReaction(rxnV3, Reaction(4.34e14, 0.00, 984.0*8.314/4.184/1000.0,sp::H));  // S65
-    addReaction(rxnV3, Reaction(2.14e16, 0.00, 52988.0*8.314/4.184/1000.0,sp::None));  // S70
-    addReaction(rxnV3, Reaction(6498889.53, 2.117, 5603.0*8.314/4.184/1000.0,sp::H));  // S75
-    addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S80
-    addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85
-    addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93
-    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96
-    addReaction(rxnV3, Reaction(1.00e12, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+	addReaction(rxnV3, Reaction(3.91e13, 0.00, 1496.0*8.314/4.184/1000.0,sp::O2));  						// S48 // S49	- 5
+    addReaction(rxnV3, Reaction(1.76e23, -3.681, 24155.0*8.314/4.184/1000.0,sp::None));  // S53 S54                         - 6	//Using reaction from He Lin et al @1atm
+    addReaction(rxnV3, Reaction(1.47e14, 0.00, 632.0*8.314/4.184/1000.0,sp::OH)); // S57 //S58                              - 7
+    addReaction(rxnV3, Reaction(2.13e15, 0.00, 42305.0*8.314/4.184/1000.0,sp::None));  // S62 // S63                        - 8
+    addReaction(rxnV3, Reaction(4.34e14, 0.00, 984.0*8.314/4.184/1000.0,sp::H));  // S67 // S68                             - 9
+    addReaction(rxnV3, Reaction(2.14e16, 0.00, 52988.0*8.314/4.184/1000.0,sp::None));  // S72 // S73                        - 10
+    addReaction(rxnV3, Reaction(5476782.795, 2.147, 5603.0*8.314/4.184/1000.0,sp::H));  // S77 // S78                        - 11
+    addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S82 // S83                           - 12
+    addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S87 // S88                            - 13
+    addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S94                                   - 14
+    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S97 // S98                              - 15
+    addReaction(rxnV3, Reaction(1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S101 // S102                           - 16 //It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f                                       - 
+	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 17              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 18              - Frenklach et al. 2018
     m_sType = FE_HACA; // sitetype
     m_name = "R6 (FE_HACA) oxidation"; // name of process
     m_ID = 8;
@@ -1756,7 +1769,8 @@ double O6R_FE_HACA::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	for (unsigned k = 0; k < arr2.size(); ++k)
 		arr2(k) = 0.0;
 	
-	arr1(0,0) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
+	// SS species are C*, C-O, C-OH, C*_2, C-O_2, C-OH_2
+	arr1(0,0) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16] + m_r[17] + m_r[18];
     arr1(0,2) = -m_r[10] - m_r[13];
     arr1(1,0) = -m_r[5];
     arr1(1,1) = m_r[6] + m_r[9] + m_r[12];
@@ -1764,7 +1778,7 @@ double O6R_FE_HACA::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	arr1(2,0) = -m_r[7];
     arr1(2,1) = - m_r[9] - m_r[12];
     arr1(2,2) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
-	arr1(3,3) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
+	arr1(3,3) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16] + m_r[17] + m_r[18];
     arr1(3,5) = -m_r[10] - m_r[13];
     arr1(4,3) = -m_r[5];
     arr1(4,4) = m_r[6] + m_r[9] + m_r[12];
@@ -1784,7 +1798,11 @@ double O6R_FE_HACA::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	lu_factorize(arr1, pm);
 	lu_substitute(arr1, pm, arr2);
 	
-	return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0) + m_r[6] * arr2(4) + m_r[16] * arr2(3))*site_count*2.0;
+	//std::cout << arr2 << std::endl;
+	if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) {
+		return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0) + m_r[6] * arr2(4) + m_r[16] * arr2(3))*site_count;
+	}
+	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.
 }
 
 // ************************************************************
@@ -2757,21 +2775,24 @@ void O6R_FE2_side::initialise() {
 	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
 	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
 	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4
-	addReaction(rxnV3, Reaction(3.17e13, 0.00, 2.021,sp::O2));  						// S46
-    addReaction(rxnV3, Reaction(1.08e2, 3.28, 21866.0*8.314/4.184/1000.0,sp::None));  // S51
-    addReaction(rxnV3, Reaction(1.47e14, 0.00, 632.0*8.314/4.184/1000.0,sp::OH)); // S55
-    addReaction(rxnV3, Reaction(2.13e15, 0.00, 42305.0*8.314/4.184/1000.0,sp::None));  // S60
-    addReaction(rxnV3, Reaction(4.34e14, 0.00, 984.0*8.314/4.184/1000.0,sp::H));  // S65
-    addReaction(rxnV3, Reaction(2.14e16, 0.00, 52988.0*8.314/4.184/1000.0,sp::None));  // S70
-    addReaction(rxnV3, Reaction(6498889.53, 2.117, 5603.0*8.314/4.184/1000.0,sp::H));  // S75
-    addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S80
-    addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85
-    addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93
-    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96
-    addReaction(rxnV3, Reaction(1.00e12, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100
-	addReaction(rxnV3, Reaction(4.02e-2, 4.38, 24624.0*8.314/4.184/1000.0,sp::None));  // S52
+	addReaction(rxnV3, Reaction(3.17e13, 0.00, 2.021,sp::O2));  						// S46                              - 5
+    addReaction(rxnV3, Reaction(8.82e9, -0.063, 16612.2*8.314/4.184/1000.0,sp::None));  // S51                                - 6 //Using reaction from He Lin et al @1atm
+    addReaction(rxnV3, Reaction(1.47e14, 0.00, 632.0*8.314/4.184/1000.0,sp::OH)); // S55                                    - 7
+    addReaction(rxnV3, Reaction(2.13e15, 0.00, 42305.0*8.314/4.184/1000.0,sp::None));  // S60                               - 8
+    addReaction(rxnV3, Reaction(4.34e14, 0.00, 984.0*8.314/4.184/1000.0,sp::H));  // S65                                    - 9
+    addReaction(rxnV3, Reaction(2.14e16, 0.00, 52988.0*8.314/4.184/1000.0,sp::None));  // S70                               - 10
+    addReaction(rxnV3, Reaction(5476782.795, 2.147, 5603.0*8.314/4.184/1000.0,sp::H));  // S75                               - 11 // Correct n value is 2.147
+    addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S80                                  - 12
+    addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85                                   - 13
+    addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93                                   - 14
+    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96                                     - 15
+    addReaction(rxnV3, Reaction(1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100    								- 16	//It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
+	addReaction(rxnV3, Reaction(1.76e23, -3.681, 24155.0*8.314/4.184/1000.0,sp::None));  // S52                               - 17	//Using reaction from He Lin et al @1atm
+	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 18              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 19              - Frenklach et al. 2018
 	
-	
+	//He Lin et al reference :
+	//New Insights into Thermal Decomposition of Polycyclic Aromatic Hydrocarbon Oxyradicals. Peng Liu, He Lin,* Yang Yang, Can Shao, Chen Gu, and Zhen Huang 2014
     //addReaction(rxnV3, Reaction(1.3e13, 0, 10.62, sp::OH));   //5 - r4f
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = FE2; // sitetype
@@ -2820,44 +2841,35 @@ double O6R_FE2_side::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	//Rate assuming PEQ approximation
-	matrix<double> arr1(6, 6);
-	boost::numeric::ublas::vector<double> arr2(6);
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
 	for (unsigned k = 0; k < arr1.size1(); ++k)
 		for (unsigned l = 0; l < arr1.size2(); ++l)
 			arr1(k, l) = 0.0;
 	for (unsigned k = 0; k < arr2.size(); ++k)
 		arr2(k) = 0.0;
 	
-	arr1(0,0) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
+	//Intermediaries are PAH*, PAH-O, PAH-OH
+	arr1(0,0) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16]+m_r[18]+m_r[19];
     arr1(0,2) = -m_r[10] - m_r[13];
     arr1(1,0) = -m_r[5];
-    arr1(1,1) = m_r[6] + m_r[9] + m_r[12];
+    arr1(1,1) = m_r[17] + m_r[9] + m_r[12];
     arr1(1,2) = - m_r[8] - m_r[11];
 	arr1(2,0) = -m_r[7];
     arr1(2,1) = - m_r[9] - m_r[12];
     arr1(2,2) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
-	arr1(3,3) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
-    arr1(3,5) = -m_r[10] - m_r[13];
-    arr1(4,3) = -m_r[5];
-    arr1(4,4) = m_r[17] + m_r[9] + m_r[12];
-    arr1(4,5) = - m_r[8] - m_r[11];
-	arr1(5,3) = -m_r[7];
-    arr1(5,4) = - m_r[9] - m_r[12];
-    arr1(5,5) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
 
     arr2(0) = +m_r[0] + m_r[2];
     arr2(1) = +m_r[14];
     arr2(2) = 0.0;
-	arr2(3) = +m_r[0] + m_r[2];
-    arr2(4) = +m_r[14];
-    arr2(5) = 0.0;
 
 	permutation_matrix<size_t> pm(arr1.size1());
 	lu_factorize(arr1, pm);
 	lu_substitute(arr1, pm, arr2);
 	
 	//std::cout << arr2 << std::endl;
-	return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0) + m_r[17] * arr2(4) + m_r[16] * arr2(3))*site_count;
+	if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) return m_rate = (m_r[17] * arr2(4) + m_r[16] * arr2(3))*site_count;
+	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.
 }
 
 // ************************************************************
@@ -2891,20 +2903,24 @@ void O6R_FE2_top::initialise() {
 	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
 	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
 	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4
-	addReaction(rxnV3, Reaction(3.17e13, 0.00, 2.021,sp::O2));  						// S46
-    addReaction(rxnV3, Reaction(1.08e2, 3.28, 21866.0*8.314/4.184/1000.0,sp::None));  // S51
-    addReaction(rxnV3, Reaction(1.47e14, 0.00, 632.0*8.314/4.184/1000.0,sp::OH)); // S55
-    addReaction(rxnV3, Reaction(2.13e15, 0.00, 42305.0*8.314/4.184/1000.0,sp::None));  // S60
-    addReaction(rxnV3, Reaction(4.34e14, 0.00, 984.0*8.314/4.184/1000.0,sp::H));  // S65
-    addReaction(rxnV3, Reaction(2.14e16, 0.00, 52988.0*8.314/4.184/1000.0,sp::None));  // S70
-    addReaction(rxnV3, Reaction(6498889.53, 2.117, 5603.0*8.314/4.184/1000.0,sp::H));  // S75
-    addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S80
-    addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85
-    addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93
-    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96
-    addReaction(rxnV3, Reaction(1.00e12, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100
-	addReaction(rxnV3, Reaction(4.02e-2, 4.38, 24624.0*8.314/4.184/1000.0,sp::None));  // S52
+	addReaction(rxnV3, Reaction(3.17e13, 0.00, 2.021,sp::O2));  						// S46                              - 5
+    addReaction(rxnV3, Reaction(8.82e9, -0.063, 16612.2*8.314/4.184/1000.0,sp::None));  // S51                              - 6 //Using reaction from He Lin et al @1atm
+    addReaction(rxnV3, Reaction(1.47e14, 0.00, 632.0*8.314/4.184/1000.0,sp::OH)); // S55                                    - 7
+    addReaction(rxnV3, Reaction(2.13e15, 0.00, 42305.0*8.314/4.184/1000.0,sp::None));  // S60                               - 8
+    addReaction(rxnV3, Reaction(4.34e14, 0.00, 984.0*8.314/4.184/1000.0,sp::H));  // S65                                    - 9
+    addReaction(rxnV3, Reaction(2.14e16, 0.00, 52988.0*8.314/4.184/1000.0,sp::None));  // S70                               - 10
+    addReaction(rxnV3, Reaction(5476782.795, 2.147, 5603.0*8.314/4.184/1000.0,sp::H));  // S75                              - 11 // Correct n value is 2.147
+    addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S80                                  - 12
+    addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85                                   - 13
+    addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93                                   - 14
+    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96                                     - 15
+    addReaction(rxnV3, Reaction(1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100									- 16	//It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
+	addReaction(rxnV3, Reaction(1.76e23, -3.681, 24155.0*8.314/4.184/1000.0,sp::None));  // S52                               - 17	//Using reaction from He Lin et al @1atm
+	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 18              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 19              - Frenklach et al. 2018
 	
+	//He Lin et al reference :
+	//New Insights into Thermal Decomposition of Polycyclic Aromatic Hydrocarbon Oxyradicals. Peng Liu, He Lin,* Yang Yang, Can Shao, Chen Gu, and Zhen Huang 2014
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));   //5 - r4f
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     m_sType = FE2; // sitetype
@@ -2953,15 +2969,16 @@ double O6R_FE2_top::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	//Rate assuming PEQ approximation
-	matrix<double> arr1(6, 6);
-	boost::numeric::ublas::vector<double> arr2(6);
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
 	for (unsigned k = 0; k < arr1.size1(); ++k)
 		for (unsigned l = 0; l < arr1.size2(); ++l)
 			arr1(k, l) = 0.0;
 	for (unsigned k = 0; k < arr2.size(); ++k)
 		arr2(k) = 0.0;
 	
-	arr1(0,0) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
+	//Intermediaries are PAH*, PAH-O, PAH-OH
+	arr1(0,0) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16]+m_r[18]+m_r[19];
     arr1(0,2) = -m_r[10] - m_r[13];
     arr1(1,0) = -m_r[5];
     arr1(1,1) = m_r[6] + m_r[9] + m_r[12];
@@ -2969,28 +2986,18 @@ double O6R_FE2_top::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	arr1(2,0) = -m_r[7];
     arr1(2,1) = - m_r[9] - m_r[12];
     arr1(2,2) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
-	arr1(3,3) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16];
-    arr1(3,5) = -m_r[10] - m_r[13];
-    arr1(4,3) = -m_r[5];
-    arr1(4,4) = m_r[17] + m_r[9] + m_r[12];
-    arr1(4,5) = - m_r[8] - m_r[11];
-	arr1(5,3) = -m_r[7];
-    arr1(5,4) = - m_r[9] - m_r[12];
-    arr1(5,5) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
 
     arr2(0) = +m_r[0] + m_r[2];
     arr2(1) = +m_r[14];
     arr2(2) = 0.0;
-	arr2(3) = +m_r[0] + m_r[2];
-    arr2(4) = +m_r[14];
-    arr2(5) = 0.0;
 
 	permutation_matrix<size_t> pm(arr1.size1());
 	lu_factorize(arr1, pm);
 	lu_substitute(arr1, pm, arr2);
 	
 	//std::cout << arr2 << std::endl;
-	return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0))*site_count;
+	if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0))*site_count;
+	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.
 }
 
 // Elementary rate constants, site type, process type and name
