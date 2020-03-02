@@ -6989,7 +6989,9 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Ccheck = sR5->C1->C1;
 	cpair mpos = jumpToPos(Ccheck->coords, ZZCdir, 1.4);
 	//cpair mpos = jumpToPos(Ccheck->coords, normAngle(Ccheck->C1->bondAngle1 - 60), 0, 1.4);
-    // remove R5 first, leaving a ZZ site (adding another C atom after removing C)
+    //Remove the R5 from internal coordinates list
+	cpair R5coords = findR5internal(Ccheck->C2, Ccheck->C2->C2);
+	// remove R5 first, leaving a ZZ site (adding another C atom after removing C)
     for(int i=0; i!=2; i++) removeC(Ccheck->C2, false);
 	Cpointer C1_R5, C2_R5; // save all new C atoms
 	if (!checkHindrance_C_PAH(mpos)) {
@@ -7095,7 +7097,8 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			//updateA(C1_R5, 'H'); updateA(C2_R5, 'H'); updateA(C2_R5->C2, 'C');
 		}
 	}
-    
+	//Add R5 to internal coordinates after the migration.
+    addR5internal(C1_R5, C2_R5);
     // edit sites. first identify the neighbouring sites of resulting RZZ & R5
     Spointer S1, S2, S3, S4;
     if(b4) {
