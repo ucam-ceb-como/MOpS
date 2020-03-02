@@ -4820,6 +4820,8 @@ bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
     return true;
 }
 int perform_process_error_counter = 0;
+int r5_error_counter = 0;
+int r7_error_counter = 0;
 //! Structure processes: returns success or failure
 bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID)
 {
@@ -5113,7 +5115,24 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		cout << "Printing internal R5 positions:.\n"; //SETBREAKPOINT
 		for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
 			cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
-		} 
+		}
+		if(m_debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_R5count_";
+			filename.append(std::to_string(r5_error_counter)); //SETBREAKPOINT
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
+		std::string filename2 = "KMC_DEBUG/AFTER_R5count_";
+		filename2.append(std::to_string(r5_error_counter));
+		saveXYZ(filename2);
+        printBeforeSites(Sitelist_before);
+		printSites(site_perf);
+		//throw std::runtime_error(msg.str());
+		cout<<"Saving file: "<< filename2<<".xyz\n";
+		++r5_error_counter;
 	}
 	
 	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
@@ -5122,7 +5141,24 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		cout << "Printing internal R7 positions:.\n"; //SETBREAKPOINT
 		for (std::list<cpair>::iterator it1 = m_pah->m_R7loc.begin(); it1 != m_pah->m_R7loc.end(); ++it1) {
 			cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
-		} 
+		}
+		if(m_debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_R7count_";
+			filename.append(std::to_string(r7_error_counter)); //SETBREAKPOINT
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
+		std::string filename2 = "KMC_DEBUG/AFTER_R7count_";
+		filename2.append(std::to_string(r7_error_counter));
+		saveXYZ(filename2);
+        printBeforeSites(Sitelist_before);
+		printSites(site_perf);
+		//throw std::runtime_error(msg.str());
+		cout<<"Saving file: "<< filename2<<".xyz\n";
+		++r7_error_counter;
 	}
 	
 	//Save an XYZ
