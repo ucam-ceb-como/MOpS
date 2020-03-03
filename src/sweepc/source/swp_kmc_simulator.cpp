@@ -268,7 +268,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			//writeTimerCSV();
 			rates = m_kmcmech.Rates();
 			writeRatesCSV(m_t, rates);
-
+			
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);

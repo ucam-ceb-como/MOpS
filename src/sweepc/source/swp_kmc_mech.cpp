@@ -2868,7 +2868,7 @@ double O6R_FE2_side::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
 	lu_substitute(arr1, pm, arr2);
 	
 	//std::cout << arr2 << std::endl;
-	if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) return m_rate = (m_r[17] * arr2(4) + m_r[16] * arr2(3))*site_count;
+	if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) return m_rate = (m_r[17] * arr2(1) + m_r[16] * arr2(0))*site_count;
 	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.
 }
 
