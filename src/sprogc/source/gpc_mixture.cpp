@@ -238,7 +238,7 @@ void Mixture::GetMassFractions(fvector &fracs) const
 	
 	std::vector<double> TOT; 
 	
-	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
+	for (unsigned int j = 1; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		val = 0.0;
 		tot = 0.0;
 		std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
@@ -254,7 +254,7 @@ void Mixture::GetMassFractions(fvector &fracs) const
 	}
 	
 	
-	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
+	for (unsigned int j = 1; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		TOT[j] = 1.0/ TOT[j];
 		std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
 		for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {
@@ -520,14 +520,14 @@ void Mixture::SetMassFracs(const fvector &fracs)
             m_data[i] *= tot;
             //std::cout << ' ' << m_data[i];
         }
-        //std::cout << " tot " << 1.0 / tot << std::endl;
+        //std::cout << "AK: tot " << 1.0 / tot << std::endl;
 
 		// Surface Mole Fraction from mass fraction 
 		
 		
 		std::vector<double> TOT; 
 	
-	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
+	for (unsigned int j = 1; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		val = 0.0, tot = 0.0, totfrac = 0.0;
 		
 		std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
@@ -545,7 +545,7 @@ void Mixture::SetMassFracs(const fvector &fracs)
 	}
 	
 	
-	for (unsigned int j = 0; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
+	for (unsigned int j = 1; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		TOT[j] = 1.0/ TOT[j];
 		std::string phname =  (*m_species)[0]->Mechanism()->Phase(j)->Name();
 		for (unsigned int i=gasSpeciesCount; i!=m_species->size(); ++i) {

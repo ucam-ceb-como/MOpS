@@ -181,17 +181,28 @@ void CamSetup::storeInlet(CamBoundary& cb, inletStruct& ud_inlet)
      *structure to use with the inlet boundary
      */
     std::vector<double> temp = getInletMassFrac(cb);
+    std::cout<< "CamSetup::storeInlet  TEMP 1" << "\n";
     camMixture_->SetMassFracs(temp);
+    std::cout<< "CamSetup::storeInlet  TEMP 2" << "\n";
     double T = cb.getTemperature();
+    std::cout<< "CamSetup::storeInlet  TEMP 3" << "\n";
     camMixture_->SetTemperature(T);
+    std::cout<< "CamSetup::storeInlet  TEMP 4" << "\n";
 
     ud_inlet.T = T;
+    std::cout<< "CamSetup::storeInlet  TEMP 5" << "\n";
     ud_inlet.FlowRate = getInletFlowRate(cb);
+    std::cout<< "CamSetup::storeInlet  TEMP 6" << "\n";
     ud_inlet.Vel = getInletVelocity(cb);
+    std::cout<< "CamSetup::storeInlet  TEMP 7" << "\n";
     ud_inlet.rVelGrad = 0.0;
+    std::cout<< "CamSetup::storeInlet  TEMP 8" << "\n";
     ud_inlet.Dens = ud_inlet.FlowRate/ud_inlet.Vel;
+    std::cout<< "CamSetup::storeInlet  TEMP 9" << "\n";
     ud_inlet.Species = temp;
+    std::cout<< "CamSetup::storeInlet  TEMP 10" << "\n";
     ud_inlet.Dk = camMixture_->getMixtureDiffusionCoeff(opPre);
+    std::cout<< "CamSetup::storeInlet  TEMP 11" << "\n";
 
     std::cout<< "Inlet Boundary:" << "\n"
         << "    Temp      : " << ud_inlet.T << "\n"
