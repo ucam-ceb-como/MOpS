@@ -13,7 +13,10 @@
 #include <map>
 #include <vector>
 #include <string>
-using namespace std;
+
+// ank25 commented out 
+// bad practice to have "using namespace in header files"
+//using namespace std;
 
 namespace IO
 {

@@ -74,9 +74,7 @@ void FlameLet::solve()
 */
 void FlameLet::solve(bool interface, bool steadyStateNoSoot)
 {
-    std::cout << "AK: Entering Flamelet::solve(bool, bool)\n";
     sootResidualZeroed = steadyStateNoSoot;
-    std::cout << "AK: Now calling Flamelet::solve(bool)\n";
     solve(interface);
 }
 
@@ -88,18 +86,14 @@ void FlameLet::solve
 {
 
     // Check that the problem has been setup properly.
-    std::cout << "AK: Now calling checkSetup() inside solve\n";
     checkSetup();
-    std::cout << "AK: Done with checkSetup() inside solve\n";
     /*
     *init the solution vector
     */
 
     initSolutionVector();
-    std::cout << "AK: Done with initSolutionVector() inside solve\n";
 
     reporter_->header("Flamelet");
-    std::cout << "AK: Done with reporter_->header inside solve\n";
 
     if(!interface)
     {
@@ -219,13 +213,9 @@ void FlameLet::solve
 
 void FlameLet::initSolutionVector()
 {
-
-    std::cout << "AK: entering FlameLet::initSolutionVector  \n";
-
     // Initialise the radiation class if necessary.
     if(admin_.getRadiationModel())
     {
-    std::cout << "AK: FlameLet::initSolutionVector : Initialise the radiation class  \n";
         radiation = new Radiation
         (
             admin_.getInputFile(),
@@ -240,23 +230,15 @@ void FlameLet::initSolutionVector()
     *left boundary is for the fuel and right boundary is
     *for oxidizer
     */
-    std::cout << "AK: FlameLet::initSolutionVector : TEMP 1 \n";
     CamBoundary& left = admin_.getLeftBoundary();
-    std::cout << "AK: FlameLet::initSolutionVector : TEMP 2 \n";
     CamBoundary& right = admin_.getRightBoundary();
-    std::cout << "AK: FlameLet::initSolutionVector : TEMP 3 \n";
     storeInlet(left,fuel);
-    std::cout << "AK: FlameLet::initSolutionVector : TEMP 4 \n";
     storeInlet(right,oxid);
-    std::cout << "AK: FlameLet::initSolutionVector : TEMP 5 \n";
     profile_.setMixingCenter(stoichZ);
-    std::cout << "AK: FlameLet::initSolutionVector : TEMP 6 \n";
     profile_.setMixingWidth(0.5*stoichZ);
-    std::cout << "AK: FlameLet::initSolutionVector : TEMP 7 \n";
     /*
     *initialize the ODE vector
     */
-    std::cout << "AK: FlameLet::initSolutionVector : Initialize the ODE vector  \n";
     solvect.resize(nEqn,0.0);
     vector<double> vSpec, vT, vMom_rho;		// ank25: Solve Mr/rho and not Mr in soot flamelet
     /*
@@ -277,7 +259,6 @@ void FlameLet::initSolutionVector()
     double inrsctOx, inrsctFl;
     double slopeOx, slopeFl;
     inrsctOx = oxid.T;
-    std::cout << "AK: FlameLet::initSolutionVector : TEMP HERE\n";
     slopeOx = (2000.0-oxid.T)/stoichZ;
     slopeFl = (2000.0-fuel.T)/(stoichZ-1.0);
     inrsctFl = fuel.T - slopeFl;
@@ -328,13 +309,10 @@ void FlameLet::initSolutionVector()
     */
     vT[iMesh_e] = fuel.T;
 
-    std::cout << "AK: FlameLet::initSolutionVector : Fuel and oxidizer temperature has been set\n";
-
     // Set the initial moment values (interior and boundary)
     // Also initial constants
     if (sootMom_.active())
     {
-    std::cout << "AK: FlameLet::initSolutionVector : Soot Moments are active \n";
         vMom_rho.resize(len*nMoments,0.0);
         for (size_t i=0; i<dz.size(); i++)
         {

@@ -520,13 +520,11 @@ void Mixture::SetMassFracs(const fvector &fracs)
             m_data[i] *= tot;
             //std::cout << ' ' << m_data[i];
         }
-        //std::cout << "AK: tot " << 1.0 / tot << std::endl;
+
 
 		// Surface Mole Fraction from mass fraction 
-		
-		
-		std::vector<double> TOT; 
-	
+			
+	std::vector<double> TOT; 
 	for (unsigned int j = 1; j!=(*m_species)[0]->Mechanism()->PhaseCount(); ++j){
 		val = 0.0, tot = 0.0, totfrac = 0.0;
 		

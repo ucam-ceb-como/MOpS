@@ -28,22 +28,18 @@ ScalarDissipationRate::ScalarDissipationRate
 
     sdrType_ = notFromCFD;
     
-    std::cout << "AK: Before readStrainRate in ScalarDissipationRate constructor";
     readStrainRate(inputFileName);
-    std::cout << "AK: Done with readStrainRate in ScalarDissipationRate constructor";
 
     for (size_t i=0; i<mixFracCoords.size(); ++i)
     {
         scalarDissipationRate_[0][i] = calculate(mixFracCoords[i]);
     }
 
-    std::cout << "AK: Done with calculate in ScalarDissipationRate constructor";
     interpolator_ = new Utils::LinearInterpolator<double, double>
                         (
                             mixFracCoords_,
                             scalarDissipationRate_[0]
                         );
-    std::cout << "AK: Done with interpolate in ScalarDissipationRate constructor";
 }
 
 //! Destructor.

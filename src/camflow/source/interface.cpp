@@ -361,16 +361,13 @@ void Interface::flameletSDR(const double& SDR) {
 
     if(flmlt == NULL ) flmlt = new FlameLet(ca, config, cc, cg, cp, cSoot, mech);
 
-    std::cout << "AK: Before call to setExternalSDR in interface::flameletSDR\n";
     flmlt->setExternalSDR(SDR);
 
     try{
         // Solve flamelet at base of flame with soot residual set to zero.
-   	std::cout << "AK: Before call to flmtl->solve in interface::flameletSDR\n";
     	flmlt->solve(false,true);  
     	//flmlt->solve(false,false); 
     	//flmlt->solve(false);
-   	std::cout << "AK: Before call to getFlameletVariables(flmlt) in interface::flameletSDR\n";
         getFlameletVariables(flmlt);
     }catch(CamError &ce){
         throw ;

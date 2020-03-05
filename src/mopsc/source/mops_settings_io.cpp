@@ -247,11 +247,11 @@ bool checkCoagulationKernel(int old_id, int this_id) {
  *
  */
 Sweep::PartPtrList readEnsembleFile(
-        const string fname,
+        const std::string fname,
         const Sweep::Mechanism &smech) {
     // Open the save point file.
-    ifstream fin;
-    fin.open(fname.c_str(), ios_base::in | ios_base::binary);
+    std::ifstream fin;
+    fin.open(fname.c_str(), std::ios_base::in | std::ios_base::binary);
 
     // Create empty particle pointer list
     Sweep::PartPtrList particles;
@@ -264,14 +264,14 @@ Sweep::PartPtrList readEnsembleFile(
         if (filemodel.AggModel() == smech.AggModel()) {
             std::cout << "parser: correct particle model found!\n";
         } else {
-            throw runtime_error("Wrong particle model specified in sweep.xml!");
+            throw std::runtime_error("Wrong particle model specified in sweep.xml!");
         }
 
         // For binary-tree based particles, check that the tree status is the same.
         if (filemodel.WriteBinaryTrees() == smech.WriteBinaryTrees()) {
             std::cout << "parser: binary tree status okay!\n";
         } else {
-            throw runtime_error("Wrong binary tree output flag in mops.inx.");
+            throw std::runtime_error("Wrong binary tree output flag in mops.inx.");
         }
 
         // Now, check the coagulation kernel, assuming only one coagulation process
@@ -280,7 +280,7 @@ Sweep::PartPtrList readEnsembleFile(
         if (checkCoagulationKernel(id, smech.Coagulations()[0]->ID())) {
             std::cout << "parser: coagulation process okay!\n";
         } else {
-            throw runtime_error("Conflicting coagulation kernel specification!");
+            throw std::runtime_error("Conflicting coagulation kernel specification!");
         }
 
         // Now it's time to load the particle ensemble.
@@ -301,7 +301,7 @@ Sweep::PartPtrList readEnsembleFile(
 
     } else {
         // Throw error if the output file failed to open.
-        throw runtime_error("Failed to open ensemble file "
+        throw std::runtime_error("Failed to open ensemble file "
                             "input (Mops, Simulator::readEnsembleFile).");
     }
 
@@ -529,7 +529,7 @@ Mops::PSR *const readPSR(
     if (attr != NULL) {
         str = attr->GetValue();
         if (str.length() > 0) {
-            stringstream AREA(str);
+            std::stringstream AREA(str);
             double ar;
             AREA >> ar;
             // This is a surface area.
@@ -548,7 +548,7 @@ Mops::PSR *const readPSR(
     if (attr != NULL) {
         str = attr->GetValue();
         if (str.length() > 0) {
-            stringstream VOLUME(str);
+            std::stringstream VOLUME(str);
             double vol;
             VOLUME >> vol;
             // This is a volume.
@@ -704,7 +704,7 @@ Reactor *const readReactor(const CamXML::Element &node,
     if (attr != NULL) {
         str = attr->GetValue();
         if (str.length() > 0) {
-			stringstream AREA(str);
+			std::stringstream AREA(str);
 			double ar;
 			AREA >> ar;
             // This is a surface area.
@@ -723,7 +723,7 @@ Reactor *const readReactor(const CamXML::Element &node,
     if (attr != NULL) {
         str = attr->GetValue();
         if (str.length() > 0) {
-			stringstream VOLUME(str);
+			std::stringstream VOLUME(str);
 			double vol;
 			VOLUME >> vol;
             // This is a volume. 

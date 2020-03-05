@@ -101,7 +101,7 @@ std::ostream& operator<<(
  * @param mix   Mixture object to add
  */
 void ReactorNetwork::AddMixture(
-        const string &id,
+        const std::string &id,
         const Mops::Mixture &mix) {
     if (HasKey(mMixtures, id))
         throw std::runtime_error("Error, existing mixture with same ID in network.");
@@ -116,7 +116,7 @@ void ReactorNetwork::AddMixture(
  * @param mix   PSR object to add
  */
 void ReactorNetwork::AddReactor(
-        const string &id,
+        const std::string &id,
         Mops::PSR &reac) {
     if (HasKey(mReactors, id))
         throw std::runtime_error("Error, existing reactor with same ID in network.");
@@ -131,8 +131,8 @@ void ReactorNetwork::AddReactor(
  * @param mid   Key of the mixture to fill the reactor with
  */
 void ReactorNetwork::FillReactor(
-        const string &rid,
-        const string &mid) {
+        const std::string &rid,
+        const std::string &mid) {
     if (HasKey(mReactors, rid) && HasKey(mMixtures, mid)) {
         std::cout << "Filling reactor (" << rid << ") with mixture ("
                 << mid << ")." << std::endl;

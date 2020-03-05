@@ -152,8 +152,8 @@ void NetworkSimulator::Run(
 
             // Set output parameters for this interval
             for (it=this->Begin(); it!=this->End(); ++it) {
-                it->sim->m_output_step = max((int)iint->SplittingStepCount(), 0);
-                it->sim->m_output_iter = max((int)it->sim->m_niter, 0);
+                it->sim->m_output_step = std::max((int)iint->SplittingStepCount(), 0);
+                it->sim->m_output_iter = std::max((int)it->sim->m_niter, 0);
             }
 
             // Loop over the steps in the interval
@@ -323,7 +323,7 @@ void NetworkSimulator::PostProcess() {
     Mops::Mechanism mech;
     Mops::timevector times;
     unsigned int ncput = 0;
-    vector<string> cput_head;
+    std::vector<std::string> cput_head;
 
     // Read the auxiliary file
     mSimInitial->readAux(mech, times, ncput, cput_head);

@@ -43,7 +43,10 @@
 #define GPC_RATE_PARAMS_H
 #include "gpc_params.h"
 #include <string>
-using namespace std; 
+
+// ank25 commented out 
+// bad practice to  have "using namespace" in header files
+// using namespace std; 
 
 namespace Sprog
 {
