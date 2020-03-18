@@ -5220,7 +5220,7 @@ void O5R_R5R6::initialise() {
 	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
 
     m_sType = R5R6; // sitetype
-    m_name = "Oxidation of partially embedded R5"; // name of process
+    m_name = "R5R6 oxidation"; // name of process
     m_ID = 56;
 }
 // Jump rate calculation
@@ -5370,7 +5370,7 @@ void O5R_R5R6BY5::initialise() {
 	addReaction(rxnV3, Reaction(6.290E+12/17.76148, 0.505E+00, 306.0*8.314/4.184/1000.0, sp::O));         // S104
 
     m_sType = R5R6BY5; // sitetype
-    m_name = "Oxidation of partially embedded R5"; // name of process
+    m_name = "Oxidation of R5R6BY5"; // name of process
     m_ID = 59;
 }
 // Jump rate calculation

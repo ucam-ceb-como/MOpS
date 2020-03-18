@@ -5024,7 +5024,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     S3 = moveIt(site_perf, -2); S4 = moveIt(site_perf, 2);
 	if (!checkSiteValid(S1) || !checkSiteValid(S2) || !checkSiteValid(S3) || !checkSiteValid(S4)){
 		std::cout << "ERROR. Structure produced invalid site type after performing process " 
-			<< "ID" << id << " on PAH ID: " << PAH_ID << "...\n"
+			<< "ID" << id << " Jump process: " << jp.getName() << " on PAH ID: " << PAH_ID << "...\n"
 			<< "*************\nAfter performing process --\n";
 		printBeforeSites(Sitelist_before); //SETBREAKPOINT
 		printSites(site_perf);
@@ -5042,7 +5042,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		saveXYZ(filename2);
 		std::ostringstream msg;
 		msg << "ERROR: Structure produced invalid combined site type after performing process "
-			<< "ID" << id << " on PAH ID: " << PAH_ID << "..."
+			<< "ID" << id << << " Jump process: " << jp.getName() " on PAH ID: " << PAH_ID << "..."
 			<< " (Sweep::KMC_ARS::PAHProcess::performProcess)";
 		//throw std::runtime_error(msg.str());
 		//assert(false);
@@ -5054,7 +5054,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         || !checkCombinedSiteType(S2) || !checkCombinedSiteType(S3)
         || !checkCombinedSiteType(S4)) {
         std::cout<<"ERROR. Structure produced invalid combined site type after performing process "
-            << "ID"<<id<<" on PAH ID: "<< PAH_ID <<"...\n"
+            << "ID"<<id << "Jump process: " << jp.getName() << " on PAH ID: "<< PAH_ID <<"...\n"
             <<"*************\nAfter performing process --\n";
         printBeforeSites(Sitelist_before); //SETBREAKPOINT
 		printSites(site_perf);
@@ -5072,7 +5072,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		saveXYZ(filename2);
         std::ostringstream msg;
         msg << "ERROR: Structure produced invalid combined site type after performing process "
-            << "ID"<<id<<" on PAH ID: "<< PAH_ID <<"..."
+            << "ID"<<id << "Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"..."
             << " (Sweep::KMC_ARS::PAHProcess::performProcess)";
 		cout<<"Saving file: "<< filename2<<".xyz\n";
 		++perform_process_error_counter;	
@@ -5112,6 +5112,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	if (m_pah->m_R5loc.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0){
 		cout << "Error. Number of R5s in m_pah->m_R5loc does not match number of lone and embedded R5s.\n";
 		cout << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded.\n";
+		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n"
 		cout << "Printing internal R5 positions:.\n"; //SETBREAKPOINT
 		for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
 			cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
@@ -5138,6 +5139,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
 		cout << "Error. Number of R7s in m_pah->m_R7loc does not match number of lone and embedded R5s.\n";
 		cout << "\t Total R7 rings: " << m_pah->m_rings7_Embedded << " embedded.\n";
+		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n"
 		cout << "Printing internal R7 positions:.\n"; //SETBREAKPOINT
 		for (std::list<cpair>::iterator it1 = m_pah->m_R7loc.begin(); it1 != m_pah->m_R7loc.end(); ++it1) {
 			cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
@@ -6004,7 +6006,7 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				//2.8 seems appropiate but may reject too many jumps.
 				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
 				//return;
-				proc_O6R_FE_HACA_double(stt, C_1, C_2);
+				//proc_O6R_FE_HACA_double(stt, C_1, C_2);
 				return;
 			}
 		}
@@ -6094,19 +6096,18 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 	cpair FEdir = get_vector(C_1->coords,C_2->coords);
 	cpair Hdir1 = C_2->growth_vector;
 	cpair Hdir2 = C_1->growth_vector;
+	// Check for not allowed JPs
+	Spointer S1 = moveIt(stt, -1);
+	Spointer S2 = moveIt(stt, +1);
+	if (S1->type== RFE || S2->type == RFE) return; //This would expose three edges of a pentagon. Not supported YET!
     // check if process will result in a bridge
 	cpair pos = jumpToPos(C1_res->coords, Cdir, 1.4);
     //cpair pos = jumpToPos(C1_res->coords, normAngle(C1_res->bondAngle1-120), 0, 1.4);
 	bool bridge = checkHindrance_C_PAH((pos));
 	if (bridge) {
-		Spointer S1 = moveIt(stt, -1);
-		Spointer S2 = moveIt(stt, +1);
-		if ((int)S1->type > 2000 || (int)S2->type > 2000 || S1->type== R5 || S2->type == R5 || S1->type== RFE || S2->type == RFE ) {
-			//This would expose three edges of a pentagon. Not supported YET!
-			return;
-		}
-		//cout<<"Oxidation generated a bridge\n";
-		//saveXYZ("KMC_DEBUG/Oxidation_to_bridge_before");
+		Cpointer thirdC = findThirdC(C1_res);
+		Spointer other = findSite(thirdC);
+		if ((int)S1->type > 2000 || (int)S2->type > 2000 || S1->type== R5 || S2->type == R5 || S1->type== RFE || S2->type == RFE || (int)other->type > 2000) return; //This would expose three edges of a pentagon. Not supported YET!
 	}
 	bool hept_bool = false;
 	if  (isR7internal(C_1, C_2, true) || isR7internal(C_1, C_2)) hept_bool = true;
@@ -6159,7 +6160,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 		}
     }
     // update sites and neighbours
-    Spointer S1, S2, S3, S4;
+    Spointer S3, S4;
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
 	if (!hept_bool){
 		if (S1->type == R5R6 && (S2->type == R5R6)) {
@@ -7872,6 +7873,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 				//This distance is a parameter of this jump process. Might need some more tuning. 
 				//2.8 seems appropiate but may reject too many jumps.
 				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+				m_pah->m_R5loc.push_back(R5coords);
 				return;
 			}
 		}
