@@ -76,6 +76,7 @@ PAHStructure::PAHStructure() {
 	m_rings7_Lone = 0;
 	m_rings7_Embedded = 0;
     m_counts = intpair(0, 0);
+	m_optimised = false;
     m_parent = NULL;
 }
 

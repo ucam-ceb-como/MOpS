@@ -1222,6 +1222,9 @@ Cpointer PAHProcess::addC(Cpointer C_1, angletype angle1, angletype angle2, bond
     C_1->C2 = cb;
     if(!bulk) addCount(1,0);
     if(C_1 == m_pah->m_clast) m_pah->m_clast = cb;
+	
+	//Any Carbon addition means that the structure will not have an optimised geometry.
+	m_pah->m_optimised = false;
     return cb;
 }
 
@@ -1256,6 +1259,8 @@ Cpointer PAHProcess::addC(Cpointer C_1, cpair direction, bondlength length, bool
     C_1->C2 = cb;
     if(!bulk) addCount(1,0);
     if(C_1 == m_pah->m_clast) m_pah->m_clast = cb;
+	//Any Carbon addition means that the structure will not have an optimised geometry.
+	m_pah->m_optimised = false;
     return cb;
 }
 
@@ -1304,6 +1309,8 @@ Cpointer PAHProcess::addC(Cpointer C_1, cpair direction, bondlength length, Open
 			break;
 		}
 	}
+	//Any Carbon addition means that the structure will not have an optimised geometry.
+	m_pah->m_optimised = false;
     return cb;
 }
 
@@ -2164,6 +2171,7 @@ void PAHProcess::passbackPAH(OpenBabel::OBMol mol) {
 			else m_pah->m_R7loc.push_back(temp);
 		}
 	}
+	m_pah->m_optimised = true;
 }
 
 int forcefield_error_counter = 0;
@@ -2255,6 +2263,8 @@ Cpointer PAHProcess::bridgeC(Cpointer C_1) {
     C_1->C3 = cb;
     updateA(C_1, 'C', C_1->growth_vector);
     addCount(1,0);
+	//Any Carbon addition means that the structure will not have an optimised geometry.
+	m_pah->m_optimised = false;
     return cb;
 }/*
 //! Creates a bulk carbon atom connected to C_1
@@ -2349,6 +2359,8 @@ void PAHProcess::removeC(Cpointer C_1, bool bulk) {
     if(!bulk) { // if desorption, decrease C count accordingly
         addCount(-1, 0); 
     }
+	//Any Carbon removal means that the structure will not have an optimised geometry.
+	m_pah->m_optimised = false;
 }
 
 //! Adds a site with members C_1 & C_2 before site b4site
@@ -2542,9 +2554,11 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		// update member C so the optimiser does not fail.
 		st->C1 = Carb1;
 		st->C2 = Carb2;
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
+		if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
 		// change site type back to original site.
 		st->type = (kmcSiteType)(prev_stype);
 		///////////////////////////////////////////////////////////
@@ -2568,9 +2582,11 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		// update member C so the optimiser does not fail.
 		st->C1 = Carb1;
 		st->C2 = Carb2;
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
+		if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
 		// change site type back to original site.
 		st->type = (kmcSiteType)(prev_stype);
 		///////////////////////////////////////////////////////////
@@ -2594,9 +2610,11 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		// update member C so the optimiser does not fail.
 		st->C1 = Carb1;
 		st->C2 = Carb2;
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
+		if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
 		// change site type back to original site.
 		st->type = (kmcSiteType)(prev_stype);
 		///////////////////////////////////////////////////////////
@@ -2620,9 +2638,11 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		// update member C so the optimiser does not fail.
 		st->C1 = Carb1;
 		st->C2 = Carb2;
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
+		if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
 		// change site type back to original site.
 		st->type = (kmcSiteType)(prev_stype);
 		///////////////////////////////////////////////////////////
@@ -3019,9 +3039,11 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		// update member C so the optimiser does not fail.
 		st->C1 = Carb1;
 		st->C2 = Carb2;
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
+		if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
 		// change site type back to original site.
 		st->type = (kmcSiteType)(original_stype);
 		///////////////////////////////////////////////////////////
@@ -3045,9 +3067,11 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		// update member C so the optimiser does not fail.
 		st->C1 = Carb1;
 		st->C2 = Carb2;
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
+		if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
 		// change site type back to original site.
 		st->type = (kmcSiteType)(original_stype);
 		///////////////////////////////////////////////////////////
@@ -3070,9 +3094,11 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		// update member C so the optimiser does not fail.
 		st->C1 = Carb1;
 		st->C2 = Carb2;
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
+		if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
 		// change site type back to original site.
 		st->type = (kmcSiteType)(original_stype);
 		///////////////////////////////////////////////////////////
@@ -3138,9 +3164,11 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			// update member C so the optimiser does not fail.
 			st->C1 = Carb1;
 			st->C2 = Carb2;
-			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
-			passbackPAH(mol);
+			if (!m_pah->m_optimised){
+				OpenBabel::OBMol mol = passPAH();
+				mol = optimisePAH(mol);
+				passbackPAH(mol);
+			}
 			// change site type back to original site.
 			st->type = (kmcSiteType)(stype);
 			///////////////////////////////////////////////////////////
@@ -3562,6 +3590,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		m_pah->m_rings5_Embedded = 0;
 		m_pah->m_rings7_Lone = 0;
 		m_pah->m_rings7_Embedded = 0;
+		m_pah->m_optimised = false;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -3636,6 +3665,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		m_pah->m_rings7_Lone = 0;
 		m_pah->m_rings7_Embedded = 0;
 		m_pah->m_methyl_counts = 1;
+		m_pah->m_optimised = false;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -3667,6 +3697,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		m_pah->m_rings5_Embedded = 0;
 		m_pah->m_rings7_Lone = 0;
 		m_pah->m_rings7_Embedded = 0;
+		m_pah->m_optimised = false;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -3728,6 +3759,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		m_pah->m_rings5_Embedded = 0;
 		m_pah->m_rings7_Lone = 0;
 		m_pah->m_rings7_Embedded = 0;
+		m_pah->m_optimised = false;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -3794,6 +3826,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		m_pah->m_rings7_Lone = 0;
 		m_pah->m_rings7_Embedded = 0;
 		m_pah->m_methyl_counts = 1;
+		m_pah->m_optimised = false;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -3846,6 +3879,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		m_pah->m_rings5_Embedded = 0;
 		m_pah->m_rings7_Lone = 0;
 		m_pah->m_rings7_Embedded = 0;
+		m_pah->m_optimised = false;
         // update all sites and combined sites
         updateSites("FE,ZZ,FE,FE,R5R6,R5R6,FE,FE,ZZ");
         updateCombinedSites();
@@ -3889,6 +3923,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		m_pah->m_rings5_Embedded = 0;
 		m_pah->m_rings7_Lone = 0;
 		m_pah->m_rings7_Embedded = 0;
+		m_pah->m_optimised = false;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -3947,6 +3982,7 @@ PAHStructure& PAHProcess::initialise(StartingStructure ss){
 		m_pah->m_rings5_Embedded = 0;
 		m_pah->m_rings7_Lone = 0;
 		m_pah->m_rings7_Embedded = 0;
+		m_pah->m_optimised = false;
         // update all sites and combined sites
         updateSites();
         updateCombinedSites();
@@ -3995,6 +4031,7 @@ PAHStructure& PAHProcess::initialise_fromfile(){
 	std::string line;
 	std::string siteList_str;
 	int R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded;
+	bool optimised;
 	std::vector<std::string> edgeCarbons;
 	std::vector<std::string> internalCarbons;
 	std::vector<std::string> R5_locs;
@@ -4152,6 +4189,7 @@ void PAHProcess::createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<i
 	m_pah->m_rings5_Embedded = R5_Embedded;
 	m_pah->m_rings7_Lone = R7_Lone;
 	m_pah->m_rings7_Embedded = R7_Embedded;
+	m_pah->m_optimised = false;
 	
 	for (size_t i = 0; i<inCarbs.size(); i++){
 		cpair carbon_coords;
@@ -4323,6 +4361,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, std::vector<int>& carb
 	m_pah->m_R5loc = R5loc;
 	m_pah->m_R7loc = R7loc;
 	m_pah->m_methyl_counts = numberOfMethyl();
+	m_pah->m_optimised = false;
 	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
 	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1 + numberOfMethyl();
 	m_pah->setnumofC(totalC_num);
@@ -4872,7 +4911,6 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			cout << std::get<0>(*it) <<", "<< std::get<1>(*it) <<", "<< std::get<2>(*it) <<"\n";
 		}
 	}*/
-	
 	//Save an XYZ
 	if(m_debug_pah) saveXYZ("KMC_DEBUG/BEFORE");
 	//Copy site list before performing process
@@ -5042,7 +5080,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		saveXYZ(filename2);
 		std::ostringstream msg;
 		msg << "ERROR: Structure produced invalid combined site type after performing process "
-			<< "ID" << id << << " Jump process: " << jp.getName() " on PAH ID: " << PAH_ID << "..."
+			<< "ID" << id << " Jump process: " << jp.getName() << " on PAH ID: " << PAH_ID << "..."
 			<< " (Sweep::KMC_ARS::PAHProcess::performProcess)";
 		//throw std::runtime_error(msg.str());
 		//assert(false);
@@ -5112,7 +5150,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	if (m_pah->m_R5loc.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0){
 		cout << "Error. Number of R5s in m_pah->m_R5loc does not match number of lone and embedded R5s.\n";
 		cout << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded.\n";
-		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n"
+		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n";
 		cout << "Printing internal R5 positions:.\n"; //SETBREAKPOINT
 		for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
 			cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
@@ -5139,7 +5177,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
 		cout << "Error. Number of R7s in m_pah->m_R7loc does not match number of lone and embedded R5s.\n";
 		cout << "\t Total R7 rings: " << m_pah->m_rings7_Embedded << " embedded.\n";
-		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n"
+		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n";
 		cout << "Printing internal R7 positions:.\n"; //SETBREAKPOINT
 		for (std::list<cpair>::iterator it1 = m_pah->m_R7loc.begin(); it1 != m_pah->m_R7loc.end(); ++it1) {
 			cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
@@ -5193,9 +5231,11 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Spointer S1 = moveIt(stt, -1); 
     Spointer S2 = moveIt(stt, 1);
 	if (double dist = getDistance_twoC(C_1,C_2) < 2.6 || (int)S1->type % 10 >=4 || (int)S2->type % 10 >=4) {
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
+		if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
 	}
     Cpointer newC1;
     Cpointer newC2;
@@ -5296,7 +5336,7 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     m_pah->m_rings++;
     //printSites(stt);
 	//Optimise PAH if needed.
-	if (double dist = getDistance_twoC(newC2,C_2) > 1.7 ) {
+	if (double dist = getDistance_twoC(newC2,C_2) > 1.7 && !m_pah->m_optimised) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -5355,7 +5395,7 @@ void PAHProcess::proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // add ring counts
     m_pah->m_rings++;
 	//Optimise if needed
-	if (double dist = getDistance_twoC(newC4, C_2) > 1.59){
+	if (double dist = getDistance_twoC(newC4, C_2) > 1.59 && !m_pah->m_optimised){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -5380,6 +5420,7 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
             now = next;
         }
         else {
+			m_pah->m_optimised = false;
             next = now->C3->C2; //
             // bridged bulk C will not be removed from edge
             Cpointer b = now->C3; // C bridged to now
@@ -5746,9 +5787,11 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     m_pah->m_rings++;
 	//Optimise PAH if needed.
 	if (double dist = getDistance_twoC(C_1,C_2) > 1.6 || ntype_site > 2000) {
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol, 8000);
-		passbackPAH(mol);
+		if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol, 8000);
+			passbackPAH(mol);
+		}
 	}
 }
 // 
@@ -6053,7 +6096,7 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	moveC(CRem_before, newpos);
 	updateA(CRem_before, 'H', Hdir);
 	
-	if (optimise_flag){
+	if (optimise_flag && !m_pah->m_optimised){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -6170,9 +6213,11 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 			updateSites(S2, C2_res, S2->C2, -1);
 			if ((int)S3->type > 500 && (int)S3->type < 2000) updateSites(S3, S3->C1, S3->C2, -400);
 			if ((int)S4->type > 500 && (int)S4->type < 2000) updateSites(S4, S4->C1, S4->C2, -400);
-			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
-			passbackPAH(mol);
+			if (!m_pah->m_optimised){
+				OpenBabel::OBMol mol = passPAH();
+				mol = optimisePAH(mol);
+				passbackPAH(mol);
+			}
 		}	
 		else if (S1->type == R5R6 || (S2->type == R5R6)) {
 			if (S1->type == R5R6){
@@ -6189,9 +6234,11 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 				updateSites(S2, C2_res, S2->C2, -1);
 				if ((int)S4->type <2000) updateSites(S4, S4->C1, S4->C2, -400);
 			}
-			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
-			passbackPAH(mol);
+			if (!m_pah->m_optimised){
+				OpenBabel::OBMol mol = passPAH();
+				mol = optimisePAH(mol);
+				passbackPAH(mol);
+			}
 		}
 		else if (S1->type == R5ACR5 || (S2->type == R5ACR5)) {
 			if (S1->type == R5ACR5 && S2->type == R5ACR5){
@@ -6217,9 +6264,11 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 				updateSites(S2, C2_res, S2->C2, -1);
 				if (S4->type==R5) updateSites(S2, S2->C1, S2->C2, -400);
 			}
-			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
-			passbackPAH(mol);
+			if (!m_pah->m_optimised){
+				OpenBabel::OBMol mol = passPAH();
+				mol = optimisePAH(mol);
+				passbackPAH(mol);
+			}
 		}
 		else if (S1->type == ACR5 && S2->type == ACR5) {
 			updateSites(stt, C1_res, C2_res, 1002);
@@ -6512,7 +6561,7 @@ void PAHProcess::proc_O6R_FE_HACA_OH(Spointer& stt, Cpointer C_1, Cpointer C_2) 
 // ************************************************************
 void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
-	if (double dist = getDistance_twoC(C_1,C_2) < 2.1 ) {
+	if (double dist = getDistance_twoC(C_1,C_2) < 2.1 && !m_pah->m_optimised) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -6559,7 +6608,7 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // add ring counts
     m_pah->m_rings5_Lone++;
-	if (dist > 2.7){
+	if (dist > 2.7 && !m_pah->m_optimised){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -6718,9 +6767,11 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // update H count
     addCount(0, -2);
-	OpenBabel::OBMol mol = passPAH();
-	mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
     // add ring counts
     m_pah->m_rings--;
     m_pah->m_rings5_Lone++;
@@ -7234,9 +7285,11 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     //printSites(stt);
     // cout<<sp.None;
     //Currently the pentagons formed by this jump process are too large. Use optimiser to fix it. Not ideal but quick solution.
-    OpenBabel::OBMol mol = passPAH();
-	mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 }
 // ************************************************************
 // ID17- R6 migration & conversion to R5 at BY5 (pyrene+R5; pathway 2-violi; AR24 in Matlab)
@@ -7395,7 +7448,7 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// add ring counts
 	m_pah->m_rings5_Lone++;
 	//Optimise if needed
-	if (double dist = getDistance_twoC(C_1, C_2) > 2.6){
+	if (double dist = getDistance_twoC(C_1, C_2) > 2.6 && !m_pah->m_optimised){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -7502,9 +7555,11 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
    // cout<<sp.None;
    double distrr = getDistance_twoC(Cnew, Cnew->C2);
    if (distrr < 1.15 || distrr > 1.8){
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
+	   if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+	   }
    }
 }
 // ************************************************************
@@ -7613,10 +7668,11 @@ void PAHProcess::proc_D6R_FE_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//printSitesMemb(stt);
 	//printStruct();//++++
-	
-	OpenBabel::OBMol mol = passPAH();
-	mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	//saveXYZ("After_1stmin");
 	Cpointer newC1;
 	Cpointer newC2;
@@ -7720,9 +7776,11 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	m_pah->m_rings5_Embedded++;
 	//printSites(stt);
 	//saveXYZ("Before_second_min");
-	OpenBabel::OBMol newmol = passPAH();
-	newmol = optimisePAH(newmol, 8000);
-	passbackPAH(newmol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol newmol = passPAH();
+		newmol = optimisePAH(newmol, 8000);
+		passbackPAH(newmol);
+	}
 	//optimisePAH(true, true, "curved_guy");
 	//includeCurvature(CR5_1, CR5_2, CR5_3, CR5_4, true, "curved_guy");
 }
@@ -7808,7 +7866,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	double bond_distance = 1.4;
 	double R5_dist = getDistance_twoC(CFE, CFE->C2);
 	bool optimised = false;
-	if (R5_dist < 1.6){
+	if (R5_dist < 1.6 && !m_pah->m_optimised){
 		//The ACR5 site is on the "short" side of an R5. 
 		optimised = true;
 		OpenBabel::OBMol mol = passPAH();
@@ -8329,7 +8387,7 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	m_pah->m_rings++;
 	//printSites(stt);
 	//printStruct();
-	if (getDistance_twoC(stt->C1->C1, stt->C2->C2) >= 3.0){
+	if (getDistance_twoC(stt->C1->C1, stt->C2->C2) >= 3.0 && !m_pah->m_optimised){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -8440,9 +8498,11 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 	//printStruct();
 	for (Cpointer Ccheck = C_1->C1; Ccheck != C_2; Ccheck = Ccheck->C2){
 		if (getDistance_twoC(Ccheck, Ccheck->C2)>1.6 || getDistance_twoC(Ccheck, Ccheck->C2)<1.2 ){
-			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol, 1000);
-			passbackPAH(mol);
+			if (!m_pah->m_optimised){
+				OpenBabel::OBMol mol = passPAH();
+				mol = optimisePAH(mol, 1000);
+				passbackPAH(mol);
+			}
 		}
 	}
 	//First check if R6 is to the left or the right of R5
@@ -8576,10 +8636,11 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 	Cpointer Cnew = addC(CFE, Cnewdir, 1.4);
 	updateA(Cnew, 'H', crossvec);
 	removeC(CRem, false);
-
-	OpenBabel::OBMol newmol = passPAH();
-	newmol = optimisePAH(newmol, 500);
-	passbackPAH(newmol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol newmol = passPAH();
+		newmol = optimisePAH(newmol, 500);
+		passbackPAH(newmol);
+	}
 	
 	//addC(CFE, normAngle(CFE->bondAngle1 + 30), normAngle(CFE->bondAngle1 - 30), 1.4);
 	//CRem->C1->bondAngle1 = normAngle(CRem->C1->bondAngle1 - 30);
@@ -8815,9 +8876,11 @@ int GR7_R5R6AC_error_counter = 0;
 void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//printSitesMemb(stt);
 	//printStruct();//++++
-	OpenBabel::OBMol mol = passPAH(); 
-	mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH(); 
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	Cpointer newC1;
 	Cpointer newC2;
 	cpair Hdir1 = get_vector(C_1->C2->coords, C_1->coords);
@@ -8877,17 +8940,19 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		// Add C
 		//newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 90), 0, 1.4*1.5);
 		double distR7 = getDistance_twoC(C_1, C_2);
-		newC1 = addC(C_1, starting_direction, 1.4, mol);
+		newC1 = addC(C_1, starting_direction, 1.4);
 		updateA(C_1,'C', C_1->growth_vector);
 		updateA(newC1, 'H', Hdir1);
-		newC2 = addC(newC1, FEdir, 1.4, mol);
+		newC2 = addC(newC1, FEdir, 1.4);
 		updateA(C_2,'C', C_2->growth_vector);
 		updateA(newC2, 'H', Hdir2);
-		//addOBbond(newC2, C_2, mol);
+		//addOBbond(newC2, C_2);
 	}
-	OpenBabel::OBMol newmol = passPAH();
-	newmol = optimisePAH(newmol);
-	passbackPAH(newmol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol newmol = passPAH();
+		newmol = optimisePAH(newmol);
+		passbackPAH(newmol);
+	}
 	//printStruct();
 	// Add and remove H
 	//updateA(C_1->C1, C_2->C2, 'H');
@@ -9033,9 +9098,11 @@ void PAHProcess::proc_G6R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ID38- R7 bay closure on ACACR5
 // ************************************************************
 void PAHProcess::proc_L7_ACACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	proc_L6_BY6(stt, C_1, C_2);
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
@@ -9059,9 +9126,11 @@ void PAHProcess::proc_G6R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) 
 // ID41- R7 bay closure on FEZZACR5
 // ************************************************************
 void PAHProcess::proc_L7_FEZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	proc_L6_BY6(stt, C_1, C_2);
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
@@ -9198,9 +9267,11 @@ void PAHProcess::proc_C5R_R5R6ZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 // ID44 - R5R6BY5 closure reaction
 // ************************************************************
 void PAHProcess::proc_L6_R5R6BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	proc_L6_BY6(stt, C_1, C_2);
 }
 
@@ -9208,9 +9279,11 @@ void PAHProcess::proc_L6_R5R6BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ID45 - R5R6ACR closure reaction
 // ************************************************************
 void PAHProcess::proc_L6_R5R6ACR(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	proc_L6_BY6(stt, C_1, C_2);
 }
 
@@ -9218,9 +9291,11 @@ void PAHProcess::proc_L6_R5R6ACR(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ID46 - R5R6ACR5R6 closure reaction
 // ************************************************************
 void PAHProcess::proc_L6_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	proc_L6_BY6(stt, C_1, C_2);
 }
 
@@ -9228,9 +9303,11 @@ void PAHProcess::proc_L6_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ID47 - ZZACR5 closure reaction
 // ************************************************************
 void PAHProcess::proc_L6_ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	// check if ZZACR5 has an opposite site of the R5.
 	Cpointer Ccheck = C_1->C2;
 	Cpointer Ccheck2;
@@ -9281,9 +9358,11 @@ void PAHProcess::proc_L6_ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ID48 - R5FEACR5 closure reaction
 // ************************************************************
 void PAHProcess::proc_L6_R5FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	// check if ZZACR5 has an opposite site of the R5.
 	Cpointer Ccheck = C_1->C2;
 	Cpointer Ccheck2;
@@ -9334,9 +9413,11 @@ void PAHProcess::proc_L6_R5FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ID49 - FEACR5FE closure reaction
 // ************************************************************
 void PAHProcess::proc_L6_FEACR5FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	// check if ZZACR5 has an opposite site of the R5.
 	Cpointer Ccheck = C_1->C2;
 	Cpointer Ccheck2;
@@ -9387,9 +9468,11 @@ void PAHProcess::proc_L6_FEACR5FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ID50 - R5ACR5R5 closure reaction
 // ************************************************************
 void PAHProcess::proc_L6_R5ACR5R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	// check if ZZACR5 has an opposite site of the R5.
 	Cpointer Ccheck = C_1->C2;
 	Cpointer Ccheck2;
@@ -9440,9 +9523,11 @@ void PAHProcess::proc_L6_R5ACR5R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ID51 - R7 bay closure on R5ZZACR5
 // ************************************************************
 void PAHProcess::proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	// check if ZZACR5 has an opposite site of the R5.
 	Cpointer Ccheck = C_1->C2;
 	Cpointer Ccheck2;
@@ -9495,9 +9580,11 @@ void PAHProcess::proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ID52 - ACR5R5R6 closure reaction
 // ************************************************************
 void PAHProcess::proc_L6_ACR5R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	// check if ZZACR5 has an opposite site of the R5.
 	Cpointer Ccheck = C_1->C2;
 	Cpointer Ccheck2;
@@ -9552,9 +9639,11 @@ void PAHProcess::proc_L6_ACR5R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ID53 - R7 bay closure on ACR5R5R6ZZ
 // ************************************************************
 void PAHProcess::proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);
+	if (!m_pah->m_optimised){
+		OpenBabel::OBMol mol = passPAH();
+		mol = mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
 	// check if ZZACR5 has an opposite site of the R5.
 	Cpointer Ccheck = C_1->C2;
 	Cpointer Ccheck2;
@@ -9668,10 +9757,6 @@ void PAHProcess::proc_A_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type 
 		neighbour2 = moveIt(stt,2);
     }
 	m_pah->m_methyl_counts += 1;
-	/*
-	OpenBabel::OBMol mol = passPAH();
-	mol = mol = optimisePAH(mol);
-	passbackPAH(mol);*/
 
     // update combined sites for all new sites and neighbours (and their neighbours)
     updateCombinedSites(stt); updateCombinedSites(prev); updateCombinedSites(neighbour); updateCombinedSites(neighbour2);
@@ -9705,9 +9790,11 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 	//printStruct();
 	for (Cpointer Ccheck = C_1->C1; Ccheck != C_2; Ccheck = Ccheck->C2){
 		if (getDistance_twoC(Ccheck, Ccheck->C2)>1.58 || getDistance_twoC(Ccheck, Ccheck->C2)<1.2 ){
-			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol, 600);
-			passbackPAH(mol);
+			if (!m_pah->m_optimised){
+				OpenBabel::OBMol mol = passPAH();
+				mol = mol = optimisePAH(mol);
+				passbackPAH(mol);
+			}
 		}
 	}
 	//saveXYZ("KMC_DEBUG/Oxidation_PAH");

@@ -157,7 +157,7 @@ namespace Sweep{
 			std::list<cpair> m_InternalCarbons; //List of internal Carbon atoms coordinates
 			std::list<cpair> m_R5loc; //List of R5s center coordinates
 			std::list<cpair> m_R7loc; //List of R7s center coordinates
-			bool optimised; //Flag to know if the PAH has been optimised or not.
+			bool m_optimised = false; //Flag to know if the PAH has been optimised or not.
 			
         private:
             //! write m_cpositions
