@@ -5148,6 +5148,13 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     }
 
 	if (m_pah->m_R5loc.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0){
+		//Try to fix this error by an optimisation.
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
+	if (m_pah->m_R5loc.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0){
+		//Throw error.
 		cout << "Error. Number of R5s in m_pah->m_R5loc does not match number of lone and embedded R5s.\n";
 		cout << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded.\n";
 		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n";
@@ -5175,6 +5182,13 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	}
 	
 	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
+		//Try to fix this error by an optimisation.
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
+	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
+		//Throw error.
 		cout << "Error. Number of R7s in m_pah->m_R7loc does not match number of lone and embedded R5s.\n";
 		cout << "\t Total R7 rings: " << m_pah->m_rings7_Embedded << " embedded.\n";
 		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n";
@@ -5199,6 +5213,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		//throw std::runtime_error(msg.str());
 		cout<<"Saving file: "<< filename2<<".xyz\n";
 		++r7_error_counter;
+		cout << "Trying to fix current error by optimising. \n";
 	}
 	
 	//Save an XYZ
@@ -7448,10 +7463,13 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// add ring counts
 	m_pah->m_rings5_Lone++;
 	//Optimise if needed
-	if (double dist = getDistance_twoC(C_1, C_2) > 2.6 && !m_pah->m_optimised){
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
+	if (double dist = getDistance_twoC(C_1, C_2) > 2.6){
+		if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
+		else addR5internal(C_1,C_2, true);
 	}
 	else addR5internal(C_1,C_2, true);
 }

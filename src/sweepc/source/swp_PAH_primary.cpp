@@ -577,7 +577,10 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
                 //! Create new shared pointers for single PAHs or PAHs in particles.
                 boost::shared_ptr<PAH> new_m_PAH (source->m_PAH[i]->Clone());
                 //m_PAH[i]=source->m_PAH[i]->Clone();
-                new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+                // Commented out to keep different PAH_ID numbers.
+				//new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
+				new_m_PAH->PAH_ID=ID; //Added to keep different PAH_ID numbers.
+				ID++; //Added to keep different PAH_ID numbers.
                 m_PAH.push_back(new_m_PAH);
             }
         }
@@ -2530,35 +2533,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 				}
 
 			}
-			
-			//if( abs(t - 0.01247) <= 1e-6){
-			/*if( abs(t - 0.0592) <= 1e-6){
-				if ( (*it)->m_pahstruct->hasCurvedSubunits()){
-					//cout << "Saving all PAHs to xyz files\n";
-					std::string xyz_filename = "KMC_DEBUG/Resultfiles/592ms/";
-					//std::string xyz_filename = "KMC_DEBUG/Resultfiles/7mm/";
-					xyz_filename.append(std::to_string((*it)->PAH_ID));
-					sys.Particles().Simulator()->savePAH((*it)->PAH_ID, xyz_filename, true);
-				}
-			}
-			
-			//if( abs(t - 0.022304) <= 1e-6){
-			if( abs(t - 0.0664) <= 1e-6){
-				if ( (*it)->m_pahstruct->hasCurvedSubunits()){
-					//cout << "Saving all PAHs to xyz files\n";
-					std::string xyz_filename = "KMC_DEBUG/Resultfiles/664ms/";
-					//std::string xyz_filename = "KMC_DEBUG/Resultfiles/15mm/";
-					xyz_filename.append(std::to_string((*it)->PAH_ID));
-					sys.Particles().Simulator()->savePAH((*it)->PAH_ID, xyz_filename, true);
-				}
-			}*/
-			/*
-			if( abs(t - 0.05378) <= 1e-6){
-				//cout << "Saving all PAHs to xyz files\n";
-				std::string xyz_filename = "KMC_DEBUG/Resultfiles/40mm/";
-				xyz_filename.append(std::to_string((*it)->PAH_ID));
-				sys.Particles().Simulator()->savePAH((*it)->PAH_ID, xyz_filename, true);
-			}*/
+
 
 			/*!
              * The second condition ensures that the m_InvalidPAH is modified in the correct way

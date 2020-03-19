@@ -371,8 +371,10 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
     if (r.Mixture()->Particles().Simulator()==NULL)
     {
         r.Mixture()->Particles().SetSimulator(*(Gasphase()));
-		m_test_rates = r.Mixture()->ParticleModel()->Components(0)->DebugPAH();
-		if (m_test_rates) r.Mixture()->Particles().Simulator()->initCSVIO();
+		m_test_rates = true;
+		//m_test_rates = r.Mixture()->ParticleModel()->Components(0)->DebugPAH();
+		//if (m_test_rates) r.Mixture()->Particles().Simulator()->initCSVIO();
+		r.Mixture()->Particles().Simulator()->initCSVIO();
 		r.Mixture()->Particles().Simulator()->save_pah_detail = r.Mixture()->ParticleModel()->Components(0)->DebugPAH();
 		r.Mixture()->Particles().Simulator()->setDebugPAH(r.Mixture()->ParticleModel()->Components(0)->DebugPAH());
     }
@@ -504,6 +506,10 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 					case ParticleModel::A5:
 						index=r.Mech()->GasMech().FindSpecies("A5");
 						numCarbons = 20;
+						break;
+					case ParticleModel::A7:
+						index=r.Mech()->GasMech().FindSpecies("A4"); // For now assume that the concentration of A4 is the concentration of A7.
+						numCarbons = 24;
 						break;
 					case ParticleModel::FromFile: //This is for debugging purposes. Assume for now that A4 concentration will lead to inception.
 						index=r.Mech()->GasMech().FindSpecies("A4");
