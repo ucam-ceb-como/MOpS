@@ -264,7 +264,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
 			m_rxn_count[jp_perf.second]++;
 			writeRxnCountCSV();
-			writeCHSiteCountCSV();
+			writeCHSiteCountCSV(PAH_ID);
 			//writeTimerCSV();
 			rates = m_kmcmech.Rates();
 			writeRatesCSV(m_t, rates);
@@ -272,7 +272,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
-			writeCHSiteCountCSV_after();
+			writeCHSiteCountCSV_after(PAH_ID);
 			
 			if (save_pah_detail){
 				//Save information for a single PAH
@@ -487,8 +487,10 @@ void KMCSimulator::writeRxnCountCSV() {
     m_rxn_csv.Write(temp);
 }
 //! Writes data for CH_site_list.csv
-void KMCSimulator::writeCHSiteCountCSV() {
+void KMCSimulator::writeCHSiteCountCSV(int ID) {
     std::vector<float> temp;
+	// write PAH_ID number
+	temp.push_back((float)ID);
     // get CH count
     intpair CH = m_simPAHp.getCHCount();
     temp.push_back((float)CH.first);
@@ -501,8 +503,10 @@ void KMCSimulator::writeCHSiteCountCSV() {
     m_pah_csv.Write(temp);
 }
 //! Writes data for CH_site_list.csv
-void KMCSimulator::writeCHSiteCountCSV_after() {
+void KMCSimulator::writeCHSiteCountCSV_after(int ID) {
     std::vector<float> temp;
+	// write PAH_ID number
+	temp.push_back((float)ID);
     // get CH count
     intpair CH = m_simPAHp.getCHCount();
     temp.push_back((float)CH.first);
@@ -783,6 +787,8 @@ void KMCSimulator::writeCSVlabels() {
     m_rxn_csv.Write(rxn_count_headings);
     // Write headings for CH and site list
     std::vector<string> pah_headings;
+	// write headings for PAH number
+	pah_headings.push_back("PAH_ID");
     // write headings for N_C and N_H
     pah_headings.push_back("N_C");
     pah_headings.push_back("N_H");

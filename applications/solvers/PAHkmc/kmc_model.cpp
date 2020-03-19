@@ -292,13 +292,13 @@ int main(int argc, char *argv[])
                     pahp.saveDOT(dotname.str());
                 }
                 if(i == 0 && site_savemode == "STEP") {
-                    Simulator->writeCHSiteCountCSV();
+                    Simulator->writeCHSiteCountCSV(i);
                 }
             }
             PAH_CH.push_back(CH_counts);
             std::cout<<"done!\n";
             Simulator->writeRxnCountCSV();
-            Simulator->writeCHSiteCountCSV();
+            Simulator->writeCHSiteCountCSV(i);
             if(save_dots) {
                 std::ostringstream dotname;
                 dotname << "DOT files/PAH" << i <<".dot";

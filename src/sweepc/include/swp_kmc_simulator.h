@@ -108,9 +108,9 @@ namespace Sweep{
             //! Writes data for reaction_count.csv
             void writeRxnCountCSV();
             //! Writes data for CH_site_list.csv
-            void writeCHSiteCountCSV();
+            void writeCHSiteCountCSV(int ID);
 			//! Writes data for CH_site_list_after.csv
-            void writeCHSiteCountCSV_after();
+            void writeCHSiteCountCSV_after(int ID);
             //! Writes data for rates count (csv)
             void writeRatesCSV(double& time, rvector& v_rates);
 			//! Writes unitary rates data (csv)
