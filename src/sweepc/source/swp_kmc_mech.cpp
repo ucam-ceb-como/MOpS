@@ -141,7 +141,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_G5R_ZZ = new G5R_ZZ; j_G5R_ZZ->initialise();									//! 10- R5 growth at ZZ [AR3].
     JumpProcess* j_D5R_R5 = new D5R_R5; j_D5R_R5->initialise();									//! 11- R5 desorption [AR7].
     JumpProcess* j_C6R_AC_FE3 = new C6R_AC_FE3; j_C6R_AC_FE3->initialise();						//! 12- R6 conversion to R5 [AR9].
-    JumpProcess* j_C5R_RFE = new C5R_RFE; j_C5R_RFE->initialise();                              //! 13- R5 conversion to R6 on FE [AR5].
+    JumpProcess* j_C5R_RFE = new C5R_RFE; j_C5R_RFE->initialise();                              //! 13- R5 conversion to R6 on RFE [AR5].
     JumpProcess* j_C5R_RAC = new C5R_RAC; j_C5R_RAC->initialise();                              //! 14- R5 conversion to R6 on AC [AR4].
     JumpProcess* j_M5R_RZZ = new M5R_RZZ; j_M5R_RZZ->initialise();                              //! 15- R5 migration to neighbouring ZZ [AR6]. 
     JumpProcess* j_C6R_BY5_FE3 = new C6R_BY5_FE3; j_C6R_BY5_FE3->initialise();                  //! 16- R6 migration & conversion to R5 at BY5 [AR22].
@@ -209,7 +209,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_G5R_ZZ);            //! 10- R5 growth at ZZ [AR3].
     temp.push_back(j_D5R_R5);            //! 11- R5 desorption [AR7].
     temp.push_back(j_C6R_AC_FE3);        //! 12- R6 conversion to R5 [AR9].
-    temp.push_back(j_C5R_RFE);           //! 13- R5 conversion to R6 on FE [AR5].
+    temp.push_back(j_C5R_RFE);           //! 13- R5 conversion to R6 on RFE [AR5].
     temp.push_back(j_C5R_RAC);           //! 14- R5 conversion to R6 on AC [AR4].
     temp.push_back(j_M5R_RZZ);           //! 15- R5 migration to neighbouring ZZ [AR6]. 
     temp.push_back(j_C6R_BY5_FE3);       //! 16- R6 migration & conversion to R5 at BY5 [AR22].
@@ -2038,7 +2038,7 @@ void D5R_R5::initialise() {
 	
 	//H addition & migration
 	addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //6  //R12 in Whitesides2010
-	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, 3.5187e+01, sp::None));      //7  //R13 in Whitesides2010
+	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, -3.5187e+01, sp::None));      //7  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(2.000e+12, 0.000e+00, 0.000e+00, sp::H));          //8  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(3.100e+11, 8.700e-01, 7.4323e+01, sp::None));      //9  //R7 in Whitesides2010
 	addReaction(rxnV3, Reaction(6.700e+11, 8.400e-01, 7.0790e+01, sp::None));      //10 //R8 in Whitesides2010
@@ -2187,7 +2187,7 @@ double C6R_AC_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 }
 
 // ************************************************************
-// ID13- R5 conversion to R6 on FE (AR5 in Matlab)
+// ID13- R5 conversion to R6 on RFE (AR5 in Matlab)
 // ************************************************************
 
 // Elementary rate constants, site type, process type and name
@@ -2228,12 +2228,12 @@ void C5R_RFE::initialise() {
 	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // An* + H -> An              			- 4              - Forward
 	//addReaction(rxnV3, Reaction(1.1e7, 1.61, 3.896, sp::C2H2));   //5 - r4f1						//Needs to be updated. This comes from 1994.
     //addReaction(rxnV3, Reaction(3.3e33, -5.7, 25.5, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2) 	//Needs to be updated. This comes from 1994.
-	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
-	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
 	
 	//H addition & migration
 	addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //7  //R12 in Whitesides2010
-	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, 3.5187e+01, sp::None));      //8  //R13 in Whitesides2010
+	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, -3.5187e+01, sp::None));      //8  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(2.000e+12, 0.000e+00, 0.000e+00, sp::H));          //9  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(3.100e+11, 8.700e-01, 7.4323e+01, sp::None));      //10  //R7 in Whitesides2010
 	addReaction(rxnV3, Reaction(6.700e+11, 8.400e-01, 7.0790e+01, sp::None));      //11 //R8 in Whitesides2010
@@ -2326,7 +2326,7 @@ void C5R_RAC::initialise() {
     rxnvector& rxnV3 = m_rxnvector1;
 	//H addition & migration
 	addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //0  //R12 in Whitesides2010
-	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, 3.5187e+01, sp::None));      //1  //R13 in Whitesides2010
+	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, -3.5187e+01, sp::None));      //1  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(2.000e+12, 0.000e+00, 0.000e+00, sp::H));          //2  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(3.100e+11, 8.700e-01, 7.4323e+01, sp::None));      //3  //R7 in Whitesides2010
 	addReaction(rxnV3, Reaction(6.700e+11, 8.400e-01, 7.0790e+01, sp::None));      //4  //R8 in Whitesides2010
@@ -2428,7 +2428,7 @@ void M5R_RZZ::initialise() {
     rxnvector& rxnV3 = m_rxnvector1;
 	//H addition & migration
 	addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //0  //R12 in Whitesides2010
-	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, 3.5187e+01, sp::None));      //1  //R13 in Whitesides2010
+	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, -3.5187e+01, sp::None));      //1  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(2.000e+12, 0.000e+00, 0.000e+00, sp::H));          //2  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(3.100e+11, 8.700e-01, 7.4323e+01, sp::None));      //3  //R7 in Whitesides2010
 	addReaction(rxnV3, Reaction(6.700e+11, 8.400e-01, 7.0790e+01, sp::None));      //4  //R8 in Whitesides2010
@@ -3660,7 +3660,7 @@ void MR5_R6::initialise() {
 	
 	//H addition & migration
 	/*addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //0  //R12 in Whitesides2010
-	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, 3.5187e+01, sp::None));      //1  //R13 in Whitesides2010
+	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, -3.5187e+01, sp::None));      //1  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(2.000e+12, 0.000e+00, 0.000e+00, sp::H));          //2  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(3.100e+11, 8.700e-01, 7.4323e+01, sp::None));      //3  //R7 in Whitesides2010
 	addReaction(rxnV3, Reaction(6.700e+11, 8.400e-01, 7.0790e+01, sp::None));      //4  //R8 in Whitesides2010
@@ -4370,7 +4370,7 @@ void C5R_RZZR::initialise() {
     rxnvector& rxnV3 = m_rxnvector1;
     //H addition & migration
 	addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //0  //R12 in Whitesides2010
-	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, 3.5187e+01, sp::None));      //1  //R13 in Whitesides2010
+	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, -3.5187e+01, sp::None));      //1  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(2.000e+12, 0.000e+00, 0.000e+00, sp::H));          //2  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(3.100e+11, 8.700e-01, 7.4323e+01, sp::None));      //3  //R7 in Whitesides2010
 	addReaction(rxnV3, Reaction(6.700e+11, 8.400e-01, 7.0790e+01, sp::None));      //4  //R8 in Whitesides2010
@@ -4408,7 +4408,7 @@ void C5R_R5R6ZZR::initialise() {
     rxnvector& rxnV3 = m_rxnvector1;
     //H addition & migration
 	addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //0  //R12 in Whitesides2010
-	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, 3.5187e+01, sp::None));      //1  //R13 in Whitesides2010
+	addReaction(rxnV3, Reaction(1.791e+00, 0.000e+00, -3.5187e+01, sp::None));      //1  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(2.000e+12, 0.000e+00, 0.000e+00, sp::H));          //2  //R13 in Whitesides2010
 	addReaction(rxnV3, Reaction(3.100e+11, 8.700e-01, 7.4323e+01, sp::None));      //3  //R7 in Whitesides2010
 	addReaction(rxnV3, Reaction(6.700e+11, 8.400e-01, 7.0790e+01, sp::None));      //4  //R8 in Whitesides2010

@@ -5213,7 +5213,6 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		//throw std::runtime_error(msg.str());
 		cout<<"Saving file: "<< filename2<<".xyz\n";
 		++r7_error_counter;
-		cout << "Trying to fix current error by optimising. \n";
 	}
 	
 	//Save an XYZ
@@ -6819,7 +6818,7 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     }else {
         sR5 = moveIt(stt, 1);
         C_AC = sR5->C2->C2;
-		starting_direction = C_1->growth_vector;
+		starting_direction = add_vector( get_vector(C_1->C1->coords, C_1->coords), get_vector(C_1->C2->coords,C_1->coords));
 		Cdir = get_vector(C_1->coords, C_1->C2->coords);
 		ZZdir = invert_vector(starting_direction);
 		Hdir = get_vector(C_1->C1->coords, C_1->coords);
