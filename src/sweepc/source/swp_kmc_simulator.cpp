@@ -500,6 +500,12 @@ void KMCSimulator::writeCHSiteCountCSV(int ID) {
         int scount = m_simPAHp.getSiteCount(allSiteType[i]);
         temp.push_back((float) scount);
     }
+	std::tuple <int, int, int> rings = m_simPAHp.getRingsCount();
+	temp.push_back((float)std::get<0>(rings));
+	temp.push_back((float)(std::get<1>(rings) - m_simPAHp.getR5EmbeddedCount()));
+	temp.push_back((float)m_simPAHp.getR5EmbeddedCount());
+	temp.push_back((float)(std::get<2>(rings) - m_simPAHp.getR7EmbeddedCount()));
+	temp.push_back((float)m_simPAHp.getR7EmbeddedCount());
     m_pah_csv.Write(temp);
 }
 //! Writes data for CH_site_list.csv
@@ -516,6 +522,12 @@ void KMCSimulator::writeCHSiteCountCSV_after(int ID) {
         int scount = m_simPAHp.getSiteCount(allSiteType[i]);
         temp.push_back((float) scount);
     }
+	std::tuple <int, int, int> rings = m_simPAHp.getRingsCount();
+	temp.push_back((float)std::get<0>(rings));
+	temp.push_back((float)(std::get<1>(rings) - m_simPAHp.getR5EmbeddedCount()));
+	temp.push_back((float)m_simPAHp.getR5EmbeddedCount());
+	temp.push_back((float)(std::get<2>(rings) - m_simPAHp.getR7EmbeddedCount()));
+	temp.push_back((float)m_simPAHp.getR7EmbeddedCount());
     m_pah_after_csv.Write(temp);
 }
 //! Writes data for rates count (csv)
@@ -799,6 +811,11 @@ void KMCSimulator::writeCSVlabels() {
         header = header.append(")");
         pah_headings.push_back(header);
     }
+	pah_headings.push_back("R6");
+	pah_headings.push_back("Edge R5");
+	pah_headings.push_back("Embedded R5");
+	pah_headings.push_back("Edge R7");
+	pah_headings.push_back("Embedded R7");
     m_pah_csv.Write(pah_headings);
 	m_pah_after_csv.Write(pah_headings);								 
     // Write headings for rates

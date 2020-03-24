@@ -1833,6 +1833,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		}
 		
 		//Checks hydrogen bonds //NEEDS DEBUGGING. NOT COMPLETE.
+		vector<int> valence_2_carbons;
 		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
 			auto find_methyl = std::find(methyl_list_flat.begin(), methyl_list_flat.end(), a->GetIdx()); 
 			if (find_methyl == methyl_list_flat.end()){
@@ -1858,6 +1859,12 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 							mol.AddBond(a->GetIdx(), a->GetIdx() - 1,5);
 						}
 					}
+				}
+				else {
+					//Check for carbons with valence 2 and add them to list.
+					if (a->GetValence() == 2){
+						valence_2_carbons.push_back(a->GetIdx());
+					}	
 				}
 			}
 			else {
@@ -1898,6 +1905,34 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 		}
 		
+		//Adds bond between two carbons with valence 2. 
+		if(valence_2_carbons.size() != 0){ 
+			for (int ii=0; ii!=valence_2_carbons.size(); ++ii){
+				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_2_carbons[ii]);
+				if (my_atom->GetValence() == 2){
+					int kk = ii;
+					double min_dist = 1e3;
+					for (int jj =0; jj!=valence_2_carbons.size(); ++jj){
+						if (jj!= ii){
+							double my_dist = my_atom->GetDistance(jj);
+							if (my_dist < min_dist){
+								kk = jj;
+								min_dist = my_dist;
+							}
+						}
+					}
+					if (kk != ii){
+						OpenBabel::OBBond* my_bond = mol.GetBond(ii, kk);
+						if (my_bond == NULL) mol.AddBond(ii, kk,5);
+					}
+				}
+			}
+		}
+		
+		//PerceiveBondOrders calls several routines that try to identify aromatic and unaromatic parts of a molecule. This is very nice but expensive.
+		//If this is not called, OB recognises bonds as single bonds.
+		mol.PerceiveBondOrders();
+		
 		//Checks for sp3 carbon //NEEDS DEBUGGING. NOT COMPLETE.
 		/*for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
 			if (a->GetAtomicNum() == 6 && a->GetValence() >= 4){
@@ -1923,9 +1958,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			cout << a1 << "-" << a2 << " Bond order = " << BOrder << "\n";
 		}*/
 		
-		//PerceiveBondOrders calls several routines that try to identify aromatic and unaromatic parts of a molecule. This is very nice but expensive.
-		//If this is not called, OB recognises bonds as single bonds.
-		mol.PerceiveBondOrders();
+		
 		/*for (OpenBabel::OBBondIterator bond_iter=mol.BeginBonds(); bond_iter != mol.EndBonds(); bond_iter++){
 			OpenBabel::OBBond* my_bond = *bond_iter;
 			OpenBabel::OBAtom *a1 = my_bond->GetBeginAtom(); OpenBabel::OBAtom *a2 = my_bond->GetEndAtom(); 
