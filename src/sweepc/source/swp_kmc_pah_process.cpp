@@ -1833,7 +1833,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		}
 		
 		//Checks hydrogen bonds //NEEDS DEBUGGING. NOT COMPLETE.
-		vector<int> valence_2_carbons;
+		vector<int> valence_2_carbons, valence_4_carbons;
 		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
 			auto find_methyl = std::find(methyl_list_flat.begin(), methyl_list_flat.end(), a->GetIdx()); 
 			if (find_methyl == methyl_list_flat.end()){
@@ -1864,7 +1864,10 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					//Check for carbons with valence 2 and add them to list.
 					if (a->GetValence() == 2){
 						valence_2_carbons.push_back(a->GetIdx());
-					}	
+					}
+					if (a->GetValence() == 4){
+						valence_4_carbons.push_back(a->GetIdx());
+					}					
 				}
 			}
 			else {
@@ -1924,6 +1927,30 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					if (kk != ii){
 						OpenBabel::OBBond* my_bond = mol.GetBond(ii, kk);
 						if (my_bond == NULL) mol.AddBond(ii, kk,5);
+					}
+				}
+			}
+		}
+		
+		//Deletes bond between two carbons with valence 4. 
+		if(valence_4_carbons.size() != 0){ 
+			for (int ii=0; ii!=valence_4_carbons.size(); ++ii){
+				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_4_carbons[ii]);
+				if (my_atom->GetValence() == 2){
+					int kk = ii;
+					double min_dist = 1e3;
+					for (int jj =0; jj!=valence_4_carbons.size(); ++jj){
+						if (jj!= ii){
+							double my_dist = my_atom->GetDistance(jj);
+							if (my_dist < min_dist){
+								kk = jj;
+								min_dist = my_dist;
+							}
+						}
+					}
+					if (kk != ii){
+						OpenBabel::OBBond* my_bond = mol.GetBond(ii, kk);
+						if (my_bond != NULL) mol.DeleteBond(my_bond, true);
 					}
 				}
 			}
