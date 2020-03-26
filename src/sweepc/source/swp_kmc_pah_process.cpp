@@ -1833,7 +1833,6 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		}
 		
 		//Checks hydrogen bonds //NEEDS DEBUGGING. NOT COMPLETE.
-		vector<int> valence_2_carbons, valence_4_carbons;
 		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
 			auto find_methyl = std::find(methyl_list_flat.begin(), methyl_list_flat.end(), a->GetIdx()); 
 			if (find_methyl == methyl_list_flat.end()){
@@ -1859,15 +1858,6 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 							mol.AddBond(a->GetIdx(), a->GetIdx() - 1,5);
 						}
 					}
-				}
-				else {
-					//Check for carbons with valence 2 and add them to list.
-					if (a->GetValence() == 2){
-						valence_2_carbons.push_back(a->GetIdx());
-					}
-					if (a->GetValence() == 4){
-						valence_4_carbons.push_back(a->GetIdx());
-					}					
 				}
 			}
 			else {
@@ -1908,6 +1898,19 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 		}
 		
+		vector<int> valence_2_carbons, valence_4_carbons;
+		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
+			auto find_methyl = std::find(methyl_list_flat.begin(), methyl_list_flat.end(), a->GetIdx()); 
+			if (find_methyl == methyl_list_flat.end()){
+				//The atom is not in a methyl group.
+				if (a->GetAtomicNum() == 6){
+					//Check for carbons with valence 2 and add them to list.
+					if (a->GetValence() == 2) valence_2_carbons.push_back(a->GetIdx());
+					if (a->GetValence() == 4) valence_4_carbons.push_back(a->GetIdx());
+				}
+			}
+		}
+		
 		//Adds bond between two carbons with valence 2. 
 		if(valence_2_carbons.size() != 0){ 
 			for (int ii=0; ii!=valence_2_carbons.size(); ++ii){
@@ -1917,7 +1920,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					double min_dist = 1e3;
 					for (int jj =0; jj!=valence_2_carbons.size(); ++jj){
 						if (jj!= ii){
-							double my_dist = my_atom->GetDistance(jj);
+							double my_dist = my_atom->GetDistance(valence_2_carbons[jj]);
 							if (my_dist < min_dist){
 								kk = jj;
 								min_dist = my_dist;
@@ -1925,8 +1928,8 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 						}
 					}
 					if (kk != ii){
-						OpenBabel::OBBond* my_bond = mol.GetBond(ii, kk);
-						if (my_bond == NULL) mol.AddBond(ii, kk,5);
+						OpenBabel::OBBond* my_bond = mol.GetBond(valence_2_carbons[ii], valence_2_carbons[kk]);
+						if (my_bond == NULL) mol.AddBond(valence_2_carbons[ii], valence_2_carbons[kk],5);
 					}
 				}
 			}
@@ -1936,12 +1939,12 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		if(valence_4_carbons.size() != 0){ 
 			for (int ii=0; ii!=valence_4_carbons.size(); ++ii){
 				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_4_carbons[ii]);
-				if (my_atom->GetValence() == 2){
+				if (my_atom->GetValence() == 4){
 					int kk = ii;
 					double min_dist = 1e3;
 					for (int jj =0; jj!=valence_4_carbons.size(); ++jj){
 						if (jj!= ii){
-							double my_dist = my_atom->GetDistance(jj);
+							double my_dist = my_atom->GetDistance(valence_4_carbons[jj]);
 							if (my_dist < min_dist){
 								kk = jj;
 								min_dist = my_dist;
@@ -1949,7 +1952,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 						}
 					}
 					if (kk != ii){
-						OpenBabel::OBBond* my_bond = mol.GetBond(ii, kk);
+						OpenBabel::OBBond* my_bond = mol.GetBond(valence_4_carbons[ii], valence_4_carbons[kk]);
 						if (my_bond != NULL) mol.DeleteBond(my_bond, true);
 					}
 				}
@@ -2741,6 +2744,8 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 			filename.append(".xyz");
 			ofstream dst(filename);
 			dst << src.rdbuf();
+			src.close();
+			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_convSiteType_error_";
@@ -3023,6 +3028,8 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			//filename.append(std::to_string(this->m_pah->m_parent->ID()));
 			ofstream dst(filename);
 			dst << src.rdbuf();
+			src.close();
+			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_prev_";
@@ -3052,6 +3059,8 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			//filename.append(std::to_string(this->m_pah->m_parent->ID()));
 			ofstream dst(filename);
 			dst << src.rdbuf();
+			src.close();
+			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_";
@@ -3191,6 +3200,8 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			filename.append(".xyz");
 			ofstream dst(filename);
 			dst << src.rdbuf();
+			src.close();
+			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_None_site_";
@@ -3253,6 +3264,8 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 				//filename.append(std::to_string(this->m_pah->m_parent->ID()));
 				ofstream dst(filename);
 				dst << src.rdbuf();
+				src.close();
+				dst.close();
 				cout<<"Saving file: "<< filename<<"\n";
 			}
 			std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_BulkplusC_";
@@ -4305,6 +4318,103 @@ void PAHProcess::createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<i
     }
 }
 
+//Save a PAH to file with all details from current typespace. Such file can be opened with initialise_fromfile.
+void PAHProcess::savePAH_tofile(const std::string &filename){
+	ofstream dst(filename);
+	if (dst.is_open()){
+		dst << std::to_string(getCHCount().first) << " " << std::to_string(getCHCount().second) << "\n";
+		std::string site_list_line;
+		for(std::list<Site>::iterator i=m_pah->m_siteList.begin(); i!=m_pah->m_siteList.end(); i++) {
+			// convert site type into string
+			site_list_line = kmcSiteName(i->type);
+			dst << site_list_line << ",";
+		}
+		dst << "\n";
+		//Save state
+		dst << std::to_string(m_pah->m_rings) << " " << 
+			   std::to_string(m_pah->m_rings5_Lone) << " " <<
+			   std::to_string(m_pah->m_rings5_Embedded) << " " <<
+			   std::to_string(m_pah->m_rings7_Lone) << " " <<
+			   std::to_string(m_pah->m_rings7_Embedded) << "\n";
+		//Save edge carbon coordinates
+		dst << "Coordinates\n";
+		Cpointer Cnow = m_pah->m_cfirst;
+		Cpointer Cprev = m_pah->m_cfirst;
+		do {
+			std::string my_line;
+			my_line.append(std::to_string(std::get<0>(Cnow->coords)));
+			my_line.append(" ");
+			my_line.append(std::to_string(std::get<1>(Cnow->coords)));
+			my_line.append(" ");
+			my_line.append(std::to_string(std::get<2>(Cnow->coords)));
+			my_line.append(" ");
+			if (Cnow-> bridge) my_line.append("1");
+			else my_line.append("0 ");
+			if (Cnow->A == 'C'){
+				my_line.append("C 0.0 0.0 0.0 \n");
+			}
+			else{
+				my_line.append("H ");
+				my_line.append(std::to_string(std::get<0>(Cnow->coords) + 1.085 * std::get<0>(Cnow->growth_vector)));
+				my_line.append(" ");
+				my_line.append(std::to_string(std::get<1>(Cnow->coords) + 1.085 * std::get<1>(Cnow->growth_vector)));
+				my_line.append(" ");
+				my_line.append(std::to_string(std::get<2>(Cnow->coords) + 1.085 * std::get<2>(Cnow->growth_vector)));
+				my_line.append("\n");
+			}
+			dst << my_line;
+			
+			if (Cnow-> bridge && Cprev != Cnow->C3){
+				Cprev = Cnow;
+				Cnow = Cnow->C3;
+			}
+			else{
+				Cprev = Cnow;
+				Cnow = Cnow->C2;
+			}
+		}while (Cnow != m_pah->m_cfirst);
+		//Save internal coordinates
+		dst << "Internal\n";
+		for(std::list<cpair>::iterator it = m_pah->m_InternalCarbons.begin(); it != m_pah->m_InternalCarbons.end(); ++it){
+			std::string my_line;
+			my_line.append(std::to_string(std::get<0>(*it)));
+			my_line.append(" ");
+			my_line.append(std::to_string(std::get<1>(*it)));
+			my_line.append(" ");
+			my_line.append(std::to_string(std::get<2>(*it)));
+			my_line.append("\n");
+			dst << my_line;
+		}
+		//Save R5 locations
+		dst << "R5_locs\n";
+		for(std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it != m_pah->m_R5loc.end(); ++it){
+			std::string my_line;
+			my_line.append(std::to_string(std::get<0>(*it)));
+			my_line.append(" ");
+			my_line.append(std::to_string(std::get<1>(*it)));
+			my_line.append(" ");
+			my_line.append(std::to_string(std::get<2>(*it)));
+			my_line.append("\n");
+			dst << my_line;
+		}
+		//Save R7 locations
+		dst << "R7_locs\n";
+		for(std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it != m_pah->m_R7loc.end(); ++it){
+			std::string my_line;
+			my_line.append(std::to_string(std::get<0>(*it)));
+			my_line.append(" ");
+			my_line.append(std::to_string(std::get<1>(*it)));
+			my_line.append(" ");
+			my_line.append(std::to_string(std::get<2>(*it)));
+			my_line.append("\n");
+			dst << my_line;
+		}
+	}
+	else{
+		cout << "Could not open destination file PAHProcess::savePAH_tofile.\n";
+	}
+	dst.close();
+}
 
 /*!
  * Initialization of PAH structure from an existing PAH structure (cloning)
@@ -5133,6 +5243,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			filename.append(".xyz");
 			ofstream dst(filename);
 			dst << src.rdbuf();
+			src.close();
+			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_performProcess_checkSiteValid_";
@@ -5163,6 +5275,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			filename.append(".xyz");
 			ofstream dst(filename);
 			dst << src.rdbuf();
+			src.close();
+			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_performProcess_checkCombinedSite_";
@@ -5189,6 +5303,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			filename.append(".xyz");
 			ofstream dst(filename);
 			dst << src.rdbuf();
+			src.close();
+			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
 		std::string filename2 = "KMC_DEBUG/KMC_PAH_performProcess_C_Count_";
@@ -5229,6 +5345,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			filename.append(".xyz");
 			ofstream dst(filename);
 			dst << src.rdbuf();
+			src.close();
+			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
 		std::string filename2 = "KMC_DEBUG/AFTER_R5count_";
@@ -5236,9 +5354,12 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		saveXYZ(filename2);
         printBeforeSites(Sitelist_before);
 		printSites(site_perf);
-		//throw std::runtime_error(msg.str());
 		cout<<"Saving file: "<< filename2<<".xyz\n";
+		filename2.append(".inx");
+		savePAH_tofile(filename2);
+		cout<<"Saving file: "<< filename2<<"\n";
 		++r5_error_counter;
+		//throw std::runtime_error(msg.str());
 	}
 	
 	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
@@ -5263,6 +5384,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			filename.append(".xyz");
 			ofstream dst(filename);
 			dst << src.rdbuf();
+			src.close();
+			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
 		std::string filename2 = "KMC_DEBUG/AFTER_R7count_";
@@ -5304,7 +5427,24 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//Optimise PAH if needed.
 	Spointer S1 = moveIt(stt, -1); 
     Spointer S2 = moveIt(stt, 1);
-	if (double dist = getDistance_twoC(C_1,C_2) < 2.6 || (int)S1->type % 10 >=4 || (int)S2->type % 10 >=4) {
+	Cpointer Ccheck = C_1;
+	Cpointer Ccheck2 = Ccheck->C2;
+	for (int i=1;i<=3;i++){
+		if (getDistance_twoC(Ccheck, Ccheck2) > 1.75 && !(m_pah->m_optimised)){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
+		if (Ccheck2->bridge && Ccheck2->C3 != Ccheck) {
+			Ccheck = Ccheck2;
+			Ccheck2 = Ccheck2->C3;
+		}
+		else {
+			Ccheck = Ccheck2;
+			Ccheck2 = Ccheck2->C2;
+		}
+	}	
+	if (getDistance_twoC(C_1,C_2) < 2.6 || (int)S1->type % 10 >=4 || (int)S2->type % 10 >=4) {
 		if (!m_pah->m_optimised){
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol);
@@ -6035,6 +6175,8 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				filename.append(".xyz");
 				ofstream dst(filename);
 				dst << src.rdbuf();
+				src.close();
+				dst.close();
 				cout << "Saving file KMC_DEBUG/BEFORE_FE3-R5-S1_error.\n";
 			}
 			saveXYZ("KMC_DEBUG/FE3-R5-S1 desorption_error");
@@ -6055,6 +6197,8 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				filename.append(".xyz");
 				ofstream dst(filename);
 				dst << src.rdbuf();
+				src.close();
+				dst.close();
 				cout << "Saving file KMC_DEBUG/BEFORE_FE3-R5-S2_error.\n";
 			}
 			saveXYZ("KMC_DEBUG/FE3-R5-S2 desorption_error");
@@ -7090,7 +7234,7 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // resulting RZZ site, C_RZZ. Identify where the R5 site is too.
     Spointer sR5;
 	Cpointer C_RZZ, Cstart, Ccheck;
-	cpair ZZCdir, Hdir1, Hdir2, Hdir;
+	cpair ZZCdir, Hdir1, Hdir2, Hdir, R5vec;
 	double ZZdist;
     if(b4) {
         sR5 = moveIt(stt, -1);
@@ -7100,6 +7244,7 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		ZZCdir = get_vector(C_1->C2->coords, C_1->C2->C2->coords );
 		Hdir = C_2->growth_vector;
 		ZZdist = getDistance_twoC(C_1->C2, C_2);
+		R5vec = get_vector(C_1->C2->coords, C_2->coords);
     }else {
         sR5 = moveIt(stt, 1);
 		Hdir1 = sR5->C1->growth_vector;
@@ -7108,9 +7253,9 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		ZZCdir = get_vector(C_1->coords, C_1->C2->coords );
 		Hdir = C_1->growth_vector;
 		ZZdist = getDistance_twoC(C_1, C_2->C1);
+		R5vec = get_vector(C_1->coords, C_2->C1->coords);
     }
 	cpair starting_direction = get_vector(sR5->C1->C1->coords, sR5->C1->coords);
-	cpair R5vec = get_vector(sR5->C1->coords, sR5->C2->coords);
 	//Check for ZZ site
 	Ccheck = sR5->C1->C1;
 	cpair mpos = jumpToPos(Ccheck->coords, ZZCdir, 1.4);
@@ -7137,9 +7282,12 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		C2_R5 = addC(C1_R5, R5vec, ZZdist/2.35*1.47);
 		updateA(C2_R5, 'H', Hdir2);
 		updateA(C2_R5->C2, 'C', Hdir1);
-		// update H atoms
-		//if (b4) updateA(C_RZZ->C1, C_2->C2, 'H');
-		//else updateA(C_1->C1, C_RZZ->C2, 'H');
+		
+		if (double newdist = getDistance_twoC(C2_R5, C2_R5->C2) > 1.8){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
 	}
 	else { // migration over bridge.
 		if (b4){
@@ -7222,9 +7370,14 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			//Update 'H'
 			//updateA(C1_R5, 'H'); updateA(C2_R5, 'H'); updateA(C2_R5->C2, 'C');
 		}
+		if (double newdist = getDistance_twoC(C2_R5, C2_R5->C2) > 1.8){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
 	}
 	//Add R5 to internal coordinates after the migration.
-    addR5internal(C1_R5, C2_R5);
+    if (!m_pah->m_optimised) addR5internal(C1_R5, C2_R5);
     // edit sites. first identify the neighbouring sites of resulting RZZ & R5
     Spointer S1, S2, S3, S4;
     if(b4) {
@@ -9116,6 +9269,8 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 					filename.append(".xyz");
 					ofstream dst(filename);
 					dst << src.rdbuf();
+					src.close();
+					dst.close();
 					cout << "Saving file " << filename <<"\n";
 				}
 				std::string fileout = "KMC_DEBUG/GR7_R5R6AC_error_";
