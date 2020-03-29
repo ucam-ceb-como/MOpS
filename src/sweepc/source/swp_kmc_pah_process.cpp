@@ -5727,6 +5727,12 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				new_point = ntype2 + 1;
 				ntype2= 1;
 			}
+			else if (ntype2 >= 501 && ntype1 >=501) {
+				//The R5R6BY5 site is next to a complex bay site.
+				new_point += 100;
+				ntype1 -= 501;
+				ntype2 -= 501;
+			}
 			else {
 				if (ntype1 >= 501 && ntype1 <= 604) ntype1 -= 501;
 				else if (ntype2 >= 501 && ntype2 <= 604) ntype2 -= 501;
@@ -8096,7 +8102,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	double bond_distance = 1.4;
 	double R5_dist = getDistance_twoC(CFE, CFE->C2);
 	bool optimised = false;
-	if (R5_dist < 1.6 && !m_pah->m_optimised){
+	if (R5_dist < 1.6){
 		//The ACR5 site is on the "short" side of an R5. 
 		optimised = true;
 		OpenBabel::OBMol mol = passPAH();

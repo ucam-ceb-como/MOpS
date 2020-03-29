@@ -162,7 +162,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //!< 31 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //!< 32 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //!< 33 - R6 desorption at RAC -> pyrene.
-	//JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6.
+	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6.
 	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //!< 35 - R7 growth on R5R6AC.
 	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //!< 36 - R7 growth on FEACR5.
 	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();                        //!< 37 - R6 growth on R5R6ZZ.
@@ -230,7 +230,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_C6R_RAC_FE3);      //!< 31 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_C6R_RAC_FE3violi); //!< 32 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_M6R_RAC_FE3);      //!< 33 - R6 desorption at RAC -> pyrene.
-	//temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6.
+	temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6.
 	temp.push_back(j_GR7_R5R6AC);           //!< 35 - R7 growth on R5R6AC.
 	temp.push_back(j_GR7_FEACR5);           //!< 36 - R7 growth on FEACR5.
 	temp.push_back(j_G6R_R5R6ZZ);          //!< 37 - R6 growth on R5R6ZZ.
@@ -3265,7 +3265,9 @@ void M5R_ACR5_ZZ::initialise() {
 	addReaction(rxnV, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A2 + OH <=> A2- + H2O                - 2            - Forward
 	addReaction(rxnV, Reaction(1.093e+02, 2.625e+00, 8.825e+00, sp::H2O));          // A2 + OH <=> A2- + H2O                - 3            - Backward
 	addReaction(rxnV, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A2- + H <=> A2						- 4            - Forward
-	addReaction(rxnV, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 5
+	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
 	//Assumes the mirgation of embedded rings is similar to migration to the edge	
 	
 	//ABF and old
@@ -3295,13 +3297,13 @@ double M5R_ACR5_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, c
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
-	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[6] + m_r[7]);
 	double r_f; // radical fraction 
 	if (r_denom>0) {
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = m_r[5] * r_f*site_count; // Rate Equation
+	return m_rate = m_r[7] * r_f*site_count; // Rate Equation
 }
 double M5R_ACR5_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	return setRate0p0267(gp, pah_st);
@@ -3657,6 +3659,7 @@ void MR5_R6::initialise() {
 	//Using rates by On the low-temperature limit of HACA. Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
 	
 	//H addition & migration
 	/*addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //0  //R12 in Whitesides2010
@@ -3685,13 +3688,13 @@ double MR5_R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
-	double r_denom = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[6] + 1.0e11;
+	double r_denom = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[6] + m_r[7];
 	double r_f; // radical fraction 
 	if (r_denom>0) {
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 1.0e11/2.0 * r_f* site_count; // Rate Equation
+	return m_rate = m_r[7] * r_f* site_count / 2.0; // Rate Equation
 }
 
 // ************************************************************
