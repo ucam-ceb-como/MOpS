@@ -9468,7 +9468,10 @@ void PAHProcess::proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
         convSiteType(sR5, C_AC, C1_new, AC); // convert R5 to AC
         remR5fromSite(S1, S1->C1, C_AC); // convert S1 from RS1 to S1 (e.g RFE -> FE)
         convSiteType(stt, C1_new, C2_new, FE); // convert RZZR to FE
-		if (S2->type != R5) updateSites(S2, C2_new, S2->C2, +1501);
+		if (S2->type != R5) {
+			if ((int)S2->type >=501 && (int)S2->type <=605) updateSites(S2, C2_new, S2->C2, +1501);
+			else updateSites(S2, C2_new, S2->C2, +1);
+		}
         else {
 			updateSites(S2, C2_new, S2->C2, +401); // update resulting FE neighbour
 			updateSites(S4, S4->C1, S4->C2, +400); // update resulting FE neighbour
@@ -9480,7 +9483,10 @@ void PAHProcess::proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
         convSiteType(sR5, C2_new, C_AC, AC); // convert R5 to AC
         remR5fromSite(S2, C_AC, S2->C2); // convert S1 from RS1 to S1 (e.g RFE -> FE)
         convSiteType(stt, C1_new, C2_new, FE); // convert RAC to FE
-		if (S1->type != R5) updateSites(S1, S1->C1, C1_new, +1501);
+		if (S1->type != R5) {
+			if ((int)S1->type >=501 && (int)S1->type <=605) updateSites(S1, S1->C1, C1_new, +1501);
+			else updateSites(S1, S1->C1, C1_new, +1);
+		}
         else {
 			updateSites(S1, S1->C1, C1_new, +401); // update resulting FE neighbour
 			updateSites(S3, S3->C1, S3->C2, +400); // update resulting FE neighbour
