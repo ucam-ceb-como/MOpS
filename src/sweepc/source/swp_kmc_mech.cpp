@@ -3265,8 +3265,8 @@ void M5R_ACR5_ZZ::initialise() {
 	addReaction(rxnV, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A2 + OH <=> A2- + H2O                - 2            - Forward
 	addReaction(rxnV, Reaction(1.093e+02, 2.625e+00, 8.825e+00, sp::H2O));          // A2 + OH <=> A2- + H2O                - 3            - Backward
 	addReaction(rxnV, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A2- + H <=> A2						- 4            - Forward
-	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
-	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
 	addReaction(rxnV, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
 	//Assumes the mirgation of embedded rings is similar to migration to the edge	
 	
@@ -3659,7 +3659,7 @@ void MR5_R6::initialise() {
 	//Using rates by On the low-temperature limit of HACA. Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
-	addReaction(rxnV, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
+	addReaction(rxnV3, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
 	
 	//H addition & migration
 	/*addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //0  //R12 in Whitesides2010

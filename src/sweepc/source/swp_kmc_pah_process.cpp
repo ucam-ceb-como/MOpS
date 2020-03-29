@@ -5729,9 +5729,11 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			}
 			else if (ntype2 >= 501 && ntype1 >=501) {
 				//The R5R6BY5 site is next to a complex bay site.
-				new_point += 100;
-				ntype1 -= 501;
-				ntype2 -= 501;
+				new_point += 101;
+				if (ntype1 >= 501 && ntype1 <= 604) ntype1 -= 501;
+				else if (ntype1 >= 1002 && ntype1 <= 1004) ntype1 -= 901;
+				if (ntype2 >= 501 && ntype2 <= 604) ntype2 -= 501;
+				else if (ntype2 >= 1002 && ntype2 <= 1004) ntype2 -= 901;
 			}
 			else {
 				if (ntype1 >= 501 && ntype1 <= 604) ntype1 -= 501;
