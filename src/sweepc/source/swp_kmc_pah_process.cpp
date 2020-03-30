@@ -5329,7 +5329,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 	}
-	if (m_pah->m_R5loc.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0){
+	if (m_pah->m_R5loc.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0 && SiteListSize() >= 3){
 		//Throw error.
 		cout << "Error. Number of R5s in m_pah->m_R5loc does not match number of lone and embedded R5s.\n";
 		cout << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded.\n";
@@ -5355,9 +5355,9 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
         printBeforeSites(Sitelist_before);
 		printSites(site_perf);
 		cout<<"Saving file: "<< filename2<<".xyz\n";
-		filename2.append(".inx");
-		savePAH_tofile(filename2);
-		cout<<"Saving file: "<< filename2<<"\n";
+		//filename2.append(".inx");
+		//savePAH_tofile(filename2);
+		//cout<<"Saving file: "<< filename2<<"\n";
 		++r5_error_counter;
 		//throw std::runtime_error(msg.str());
 	}
@@ -5368,7 +5368,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 	}
-	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
+	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0 && SiteListSize() >= 3){
 		//Throw error.
 		cout << "Error. Number of R7s in m_pah->m_R7loc does not match number of lone and embedded R5s.\n";
 		cout << "\t Total R7 rings: " << m_pah->m_rings7_Embedded << " embedded.\n";
@@ -5868,6 +5868,18 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				new_point = 2102;
 				ntype1 = ntype1;
 				ntype2 = ntype2 % 10;
+			}
+			else if ( ((int)S2->type >2000) ){
+				ntype2 = ntype2;
+				new_point = 2;
+				if ((int)S1->type >= 501 && (int)S1->type <= 604) ntype1 = ntype1 - 501;
+				else ntype1 = ntype1; //This is very likely to form a SPIRAL.
+			}
+			else if ( ((int)S1->type >2000) ){
+				ntype1 = ntype1;
+				new_point = 2;
+				if ((int)S2->type >= 501 && (int)S2->type <= 604) ntype2 = ntype2 - 501;
+				else ntype2 = ntype2; //This is very likely to form a SPIRAL.
 			}
 			else {
 				cout << "Error. No R5 or R5R6 neighbour sites to R5FEACR5. \n";
@@ -8193,7 +8205,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	if (optimised){
 		//The ACR5 site is on the "short" side of an R5. 
 		OpenBabel::OBMol newmol = passPAH();
-		newmol = optimisePAH(newmol, 1000);
+		newmol = optimisePAH(newmol);
 		passbackPAH(newmol);
 	}
 	
@@ -8734,15 +8746,18 @@ void PAHProcess::proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 // ************************************************************
 void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
 	//printStruct();
-	for (Cpointer Ccheck = C_1->C1; Ccheck != C_2; Ccheck = Ccheck->C2){
+	OpenBabel::OBMol mol = passPAH();
+	mol = optimisePAH(mol, 1000);
+	passbackPAH(mol);
+	/*for (Cpointer Ccheck = C_1->C1; Ccheck != C_2; Ccheck = Ccheck->C2){
 		if (getDistance_twoC(Ccheck, Ccheck->C2)>1.6 || getDistance_twoC(Ccheck, Ccheck->C2)<1.2 ){
 			if (!m_pah->m_optimised){
 				OpenBabel::OBMol mol = passPAH();
-				mol = optimisePAH(mol, 1000);
+				mol = optimisePAH(mol);
 				passbackPAH(mol);
 			}
 		}
-	}
+	}*/
 	//First check if R6 is to the left or the right of R5
 	bool b4 = false;
 	Spointer sFE2, checkR5_1, checkR5_2;
@@ -8876,7 +8891,7 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type
 	removeC(CRem, false);
 	if (!m_pah->m_optimised){
 		OpenBabel::OBMol newmol = passPAH();
-		newmol = optimisePAH(newmol, 500);
+		newmol = optimisePAH(newmol);
 		passbackPAH(newmol);
 	}
 	
