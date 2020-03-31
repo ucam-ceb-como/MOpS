@@ -6460,14 +6460,16 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 		else if (S1->type == R5R6 || (S2->type == R5R6)) {
 			if (S1->type == R5R6){
 				S3 = moveIt(S1, -1);
-				updateSites(stt, C1_res, C2_res, 102);
+				if (isR5internal(C2_res, C2_res->C2, true) || isR5internal(C2_res, C2_res->C2, false)) updateSites(stt, C1_res, C2_res, 502);
+				else updateSites(stt, C1_res, C2_res, 102);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1);
 				if ((int)S3->type <2000)  updateSites(S3, S3->C1, S3->C2, -400);
 			}
 			else {
 				S4 = moveIt(S2, 1);
-				updateSites(stt, C1_res, C2_res, 102);
+				if (isR5internal(C1_res->C1, C1_res, true) || isR5internal(C1_res->C1, C1_res, false)) updateSites(stt, C1_res, C2_res, 502);
+				else updateSites(stt, C1_res, C2_res, 102);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1);
 				if ((int)S4->type <2000) updateSites(S4, S4->C1, S4->C2, -400);
@@ -6490,14 +6492,16 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 			}
 			else if (S1->type == R5ACR5){
 				S3 = moveIt(S1, -1);
-				updateSites(stt, C1_res, C2_res, 502);
+				if (isR5internal(C2_res, C2_res->C2, true) || isR5internal(C2_res, C2_res->C2, false)) updateSites(stt, C1_res, C2_res, 1002);
+				else updateSites(stt, C1_res, C2_res, 502);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1);
 				if (S3->type==R5) updateSites(S1, S1->C1, S1->C2, -400);
 			}
 			else {
 				S4 = moveIt(S2, 1);
-				updateSites(stt, C1_res, C2_res, 502);
+				if (isR5internal(C1_res->C1, C1_res, true) || isR5internal(C1_res->C1, C1_res, false)) updateSites(stt, C1_res, C2_res, 1002);
+				else updateSites(stt, C1_res, C2_res, 502);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1);
 				if (S4->type==R5) updateSites(S2, S2->C1, S2->C2, -400);
@@ -6514,7 +6518,14 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 			updateSites(S2, C2_res, S2->C2, -1501);
 		}
 		else if (S1->type == ACR5 || S2->type == ACR5) {
-			updateSites(stt, C1_res, C2_res, 502);
+			if (S1->type == ACR5){
+				if (isR5internal(C2_res, C2_res->C2, true) || isR5internal(C2_res, C2_res->C2, false)) updateSites(stt, C1_res, C2_res, 1002);
+				else updateSites(stt, C1_res, C2_res, 502);
+			}
+			else {
+				if (isR5internal(C1_res->C1, C1_res, true) || isR5internal(C1_res->C1, C1_res, false)) updateSites(stt, C1_res, C2_res, 1002);
+				else updateSites(stt, C1_res, C2_res, 502);
+			}
 			updateSites(S1, S1->C1, C1_res, -1);
 			updateSites(S2, C2_res, S2->C2, -1);
 		}
