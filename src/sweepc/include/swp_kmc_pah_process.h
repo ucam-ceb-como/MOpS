@@ -260,6 +260,8 @@ public:
 	void proc_O5R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID63
 	void proc_O5R_R5R6ZZR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID64
 	void proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID65
+	
+	void proc_Crosslink(Spointer&stt, Cpointer C_1, Cpointer C_2, rng_type &rng);			//!< Crosslinking
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts

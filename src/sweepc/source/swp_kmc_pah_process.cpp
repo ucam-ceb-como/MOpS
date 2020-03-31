@@ -10248,6 +10248,12 @@ void PAHProcess::proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, 
 	proc_O5R_R5R6(stt, C_1, C_2, rng);
 }
 
+// New process for crosslinking
+void PAHProcess::proc_Crosslink(Spointer&stt, Cpointer C_1, Cpointer C_2, rng_type &rng){
+	cout << "Crosslinking called.\n";
+}
+
+
 size_t PAHProcess::SiteListSize() const {
     return m_pah->m_siteList.size();
 }
