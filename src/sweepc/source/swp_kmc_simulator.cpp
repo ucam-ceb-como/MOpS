@@ -215,6 +215,25 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		m_kmcmech.calculateInstantRates(*m_gas, m_simPAHp, m_t);
 		if (m_kmcmech.InstantTotalRate() > 1.0) {
 			ChosenProcess jp_instant_perf = m_kmcmech.chooseInstantReaction(rng);
+			
+			if (save_pah_detail){
+				//Save information for a single PAH
+				auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
+				if (finder != m_tracked_pahs.end()){
+					std::string xyzname = ("KMC_DEBUG/");
+					xyzname.append(std::to_string(PAH_ID));
+					xyzname.append("/");
+					xyzname.append(std::to_string(m_t*1000.0));
+					xyzname.append("_before_instant");
+					savePAH(PAH_ID, xyzname); 
+					cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
+					m_simPAHp.printSites();
+					//printRates(m_t, m_kmcmech.Rates());
+				}
+			}
+			
+			m_rxn_count[m_kmcmech.JPList().size() + jp_instant_perf.second]++;
+			writeRxnCountCSV();
 			m_simPAHp.performProcess(*jp_instant_perf.first, rng, PAH_ID);
 		} // For now only realising one migration per loop.
 		
@@ -577,15 +596,16 @@ void KMCSimulator::initCSVIO() {
 }
 //! Initialise reaction count
 void KMCSimulator::initReactionCount() {
-    m_rxn_count.assign(m_kmcmech.JPList().size(), 0);
+    m_rxn_count.assign(m_kmcmech.JPList().size() + m_kmcmech.IJPList().size(), 0);
 }
 
 //! Prints rates to command line
 void KMCSimulator::printRates(double& time, const std::vector<double>& v_rates) {
 	cout << "Rates calculated at Time = " << time << "\n";
-    for(size_t i=0; i<m_kmcmech.JPList().size(); i++) {
+    for(size_t i=0; i<m_kmcmech.JPList().size() + m_kmcmech.IJPList().size(); i++) {
         // gets name of each jump process and puts them in a row
-        cout << (m_kmcmech.JPList()[i]->getName()) << "\t ->" << v_rates[i] << "\n";
+		if (i<m_kmcmech.JPList().size()) cout << (m_kmcmech.JPList()[i]->getName()) << "\t ->" << v_rates[i] << "\n";
+		else cout << (m_kmcmech.IJPList()[i-m_kmcmech.JPList().size()]->getName()) << "\t ->" << v_rates[i] << "\n";
     }
 	cout << "\n";
 }
@@ -767,6 +787,11 @@ void KMCSimulator::writeCSVlabels() {
         // gets name of each jump process and puts them in a row
         rxn_headings.push_back(m_kmcmech.JPList()[i]->getName());
 		rxn_count_headings.push_back(m_kmcmech.JPList()[i]->getName());
+    }
+	for(size_t i=0; i<m_kmcmech.IJPList().size(); i++) {
+        // gets name of each jump process and puts them in a row
+        rxn_headings.push_back(m_kmcmech.IJPList()[i]->getName());
+		rxn_count_headings.push_back(m_kmcmech.IJPList()[i]->getName());
     }
     m_rxn_csv.Write(rxn_count_headings);
     // Write headings for CH and site list

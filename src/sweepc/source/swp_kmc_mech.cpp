@@ -372,6 +372,11 @@ const std::vector<JumpProcess*>& KMCMechanism::JPList() const {
     return m_jplist;
 }
 
+//! Returns vector of instant jump processes
+const std::vector<JumpProcess*>& KMCMechanism::IJPList() const {
+    return m_jplist_instant;
+}
+
 //! Returns vector of jump rates
 const std::vector<double>& KMCMechanism::Rates() const {
     return m_rates;

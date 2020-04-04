@@ -116,6 +116,9 @@ namespace KMC_ARS {
 
         //! Returns vector of jump processes
         const std::vector<JumpProcess*>& JPList() const;
+		
+		//! Returns vector of instant jump processes
+        const std::vector<JumpProcess*>& IJPList() const;
         
         //! Returns vector of jump rates
         const std::vector<double>& Rates() const;
