@@ -208,7 +208,17 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		}
 
         // Calculate time step, update time
+		//Interpolate gas phase species and temperature.
 		m_gas->Interpolate(m_t, r_factor);
+		
+		//Perform instant jump processes.
+		m_kmcmech.calculateInstantRates(*m_gas, m_simPAHp, m_t);
+		if (m_kmcmech.InstantTotalRate() > 1.0) {
+			ChosenProcess jp_instant_perf = m_kmcmech.chooseInstantReaction(rng);
+			m_simPAHp.performProcess(*jp_instant_perf.first, rng, PAH_ID);
+		} // For now only realising one migration per loop.
+		
+		//Calculate jump process rates
 		m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
         typedef boost::exponential_distribution<double> exponential_distrib;
 		size_t site_size = m_simPAHp.SiteListSize();
@@ -217,34 +227,17 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		if ( (int)site_size <=3 ) eff_ratefactor = 0.0;
 		else eff_ratefactor = ratefactor;
 		
+		//Generate exponentially distributed waiting time
         exponential_distrib waitingTimeDistrib(m_kmcmech.TotalRate()*eff_ratefactor);
         boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
         double t_step = waitingTimeGenerator();
         t_next = m_t+t_step;
+		
+		//If time + waiting time < time at the next grid element then perform process.
         if(t_next < t_max && t_step < t_step_max) {
-
-			//if (PAH_ID == 677){
-			//	std::list<Site> tester = pah->GetSiteList();
-			//	cout << "Check start " << PAH_ID << endl << t_next << endl;
-			//	cout << "Rings = "<< pah->numofRings() << endl;;
-			//	for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-			//		cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-			//	}
-			//}
-
-			//cout << "Check start " << PAH_ID << endl << t_next << endl;
-
-            //if (pah->numofC()>5000&&pah->numofC()<6000)//||pah->havebridgeC()    //if (PAH_ID==224835)
-            //if we want to check a PAH with specified ID or number of Carbon, 
-            //its structure can be drawed by this function, used for tracking suspicious PAH.
-            // saveDOTperLoop(100000*tstart,loopcount,PAH_ID);
 
             // Choose jump according to rates
             ChosenProcess jp_perf = m_kmcmech.chooseReaction(rng);
-            //cout<<jp_perf.first->getName()<<'\n';//++++
-            //std::ostringstream dotname;
-            //dotname << "KMC_DEBUG/p_" << (t_next*1e8) << ".dot";
-            //m_simPAHp.saveDOT(dotname.str());
 			
 			if (save_pah_detail){
 				//Add PAH to tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
@@ -305,11 +298,6 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				}*/
 			}
 						
-			// get counts for all site types
-			/*if (PAH_ID == 1 || PAH_ID == 2){
-				std::cout << "PAH_ID: " << PAH_ID << "\t";
-				std::cout << "R6: " << m_simPAHp.getRingsCount().first << "R5" << m_simPAHp.getRingsCount().second << " ";
-				m_simPAHp.printSites();
 
 			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
 			//Set t_next to t_max so the updatePAH routine will be exited
@@ -318,28 +306,6 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			//	//t_next = t_max;
 			//}
 
-			//if (PAH_ID == 677){
-			//	std::list<Site> tester = pah->GetSiteList();
-			//	cout << "Check end " << PAH_ID << endl << t_next << endl;
-			//	cout << "Rings = " << pah->numofRings() << endl;;
-			//	for (Sp1 = tester.begin(); Sp1 != tester.end(); ++Sp1){
-			//		cout << (int)(Sp1->type) << " " << (int)(Sp1->comb) << endl;
-			//	}
-			//}
-
-			//cout << "Check end " << PAH_ID << endl << t_next << endl;
-
-            /*if(m_simPAH->m_parent->ID() % 100000 == 609) {
-            if(!m_simPAHp.checkCoordinates()) {
-                cout<<"ERROR: Invalid coordinates produced after performing process "
-                    <<jp_perf->getName()<<" (ID" <<jp_id<<")\n";
-            }
-            }*/
-            /*
-             * wjm34: remove updating of jump counts to save time
-            if(process_success) {
-                m_rxn_count[jp_perf.second]++;
-            }*/
         }else {
             //oldtnext = t_next;
             t_next = t_max;

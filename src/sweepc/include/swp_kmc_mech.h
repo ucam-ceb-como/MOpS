@@ -101,11 +101,16 @@ namespace KMC_ARS {
         //! Choosing a reaction to be taken place, returns pointer to jump process
         //! and index of process in m_jplist
         ChosenProcess chooseReaction(rng_type &rng) const;
+		
+		//! Choosing a reaction to be taken place, returns pointer to jump process
+        //! and index of process in m_jplist
+        ChosenProcess chooseInstantReaction(rng_type &rng) const;
 
         //! Calculates jump rate for each jump process
-        void calculateRates(const KMCGasPoint& gp, 
-            PAHProcess& st, 
-            const double& t);
+        void calculateRates(const KMCGasPoint& gp, PAHProcess& st, const double& t);
+			
+		//! Calculates jump rate for each instant jump process
+        void calculateInstantRates(const KMCGasPoint& gp, PAHProcess& st, const double& t);
         
         // DATA ACCESS
 
@@ -117,17 +122,27 @@ namespace KMC_ARS {
 
         //! Returns total rates
         double TotalRate() const;
+		//! Returns total rates
+        double InstantTotalRate() const;
     private:
         //! Vector of jump processes
         std::vector<JumpProcess*> m_jplist;
+		//! Vector of jump processes that are near instant
+        std::vector<JumpProcess*> m_jplist_instant;
         //! Returns a vector of jump processes implemented in model
         std::vector<JumpProcess*> obtainJumpProcess();
+		//! Returns a vector of instant jump processes implemented in model.
+        std::vector<JumpProcess*> obtainInstantJumpProcess();
         //! Checks if this mechanism object is a copy
         bool isACopy;
         //! Vector of jump rates
         std::vector<double> m_rates;
+		//! Vector of instant jump rates
+        std::vector<double> m_instant_rates;
         //! Total rate
         double m_totalrate;
+		//! Total rate for instant jump processes
+        double m_instant_totalrate;
     };
         
     //! Process list:
