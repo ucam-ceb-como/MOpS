@@ -260,6 +260,7 @@ public:
 	void proc_O5R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID63
 	void proc_O5R_R5R6ZZR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID64
 	void proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID65
+	void proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);	//!<ID66
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts
@@ -284,6 +285,10 @@ private:
     Spointer chooseRandomSite(kmcSiteType st, rng_type &rng);
     //! Choose a random site of any site types in vtype
     Spointer chooseRandomSite(std::vector<kmcSiteType> vtype, rng_type &rng);
+	//! Creates a list of sites where an embedded R5 can migrate to.
+	std::list<Spointer> listMigrationSites(Spointer& stt, kmcSiteType s_type);
+	//! Assigns probabilities to individual sites and randomly selects a finishing site for a migration process.
+	std::tuple<Spointer,bool> chooseRandomMigrationSite (Spointer& start_site, std::list<Spointer> avail_end_sites, rng_type &rng);
     //! Jump to a position coordinate given starting position and angle towards new position
 	cpair jumpToPos(const cpair& starting, const angletype& direction, const angletype& direction2, const bondlength& distance) const;
 	//! Jump to a position coordinate given starting position and a vector. Handles 3D growth.
