@@ -1183,9 +1183,11 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 	else{
 		if ( isR5internal(stt->C1->C1, stt->C1,false) || isR5internal(stt->C1->C1,stt->C1,true) ) {
 			R5coords = findR5internal(stt->C1->C1, stt->C1);
+			b4 = false;
 		}
 		else {
 			R5coords = findR5internal(stt->C2->C1, stt->C2);
+			b4 = true;
 		}
 	}
 	
@@ -1201,126 +1203,130 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 	}
 	
 	//Add available sites to the left of stt.
-	do{
-		sFE2 = moveIt(sFE2, -1);
-		Spointer checkR5_1 = moveIt(sFE2,-1);
-		Spointer checkR5_2 = moveIt(sFE2,-2);
-		//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
-		if ((int)sFE2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) checking_site = false; // The result would be an indene, not supported. YET!
-		if ((int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002) checking_site = false; // This would violate the IPR.
-		if ((int)sFE2->type == 0){
-			if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) checking_site = false;
-			if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) checking_site = false;
-			if ((int)checkR5_1->type >= 2002 && (int)checkR5_1->type <= 2204) checking_site = false;
-			if ((int)checkR5_1->type >= 2204 && (int)checkR5_1->type <= 2205) checking_site = false;
-			if ((int)checkR5_1->type == 0){
-				if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) checking_site = false;
-				if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) checking_site = false;
-				if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) checking_site = false;
-			}
-		}
-		Cpointer CR5_otherside_end = sFE2->C2->C1;
-		if (CR5_otherside_end->bridge) checking_site = false;
-		if (CR5_otherside_end->C2->bridge) checking_site = false; 
-		if (CR5_otherside_end->C1->bridge) checking_site = false;
-		if (CR5_otherside_end->C2->C2->bridge) checking_site = false; 
-		if (CR5_otherside_end->C1->C1->bridge) checking_site = false;
-		
-		//Check for other side being valid
-		Cpointer thirdC_after = findThirdC(CR5_otherside_end);
-		if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
-			Spointer opp_site_after = findSite(thirdC_after);
-			//I have no clue how to flag an Spointer as error. This can cause seg faults.
-			int os_endtype = opp_site_after->type;
-			if (os_endtype >= 200 && os_endtype <= 203) checking_site = false;
-			if (os_endtype == 101) checking_site = false;
-			if (os_endtype >= 600 && os_endtype <= 603) checking_site = false;
-			if (os_endtype >= 1000 && os_endtype <= 1003) checking_site = false;
-			if (os_endtype >= 500 && os_endtype <= 504) checking_site = false;
-			if (os_endtype >= 2000 && os_endtype <= 2205) checking_site = false;
-			if (os_endtype >= 2103 && os_endtype <= 2105) checking_site = false;
-			if (os_endtype >= 2204 && os_endtype <= 2205) checking_site = false;
-		}
-		
-		//check that two pentagons (including internals) will not collide
-		cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
-		if (m_pah->m_R5loc.size()>=1){
-			for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
-				double distR5s = getDistance_twoC(*it, R5coords_end);
-				if (distR5s < 2.8) {
-					//This distance is a parameter of this jump process. Might need some more tuning. 
-					//2.8 seems appropiate but may reject too many jumps.
-					//Two pentagons will be next to each other violating the Isolated Pentagon Rule
-					checking_site = false;
-					break;
+	if (s_type == ACR5 || (s_type == R5R6 && b4)){
+		do{
+			sFE2 = moveIt(sFE2, -1);
+			Spointer checkR5_1 = moveIt(sFE2,-1);
+			Spointer checkR5_2 = moveIt(sFE2,-2);
+			//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
+			if ((int)sFE2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) checking_site = false; // The result would be an indene, not supported. YET!
+			if ((int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002) checking_site = false; // This would violate the IPR.
+			if ((int)sFE2->type == 0){
+				if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) checking_site = false;
+				if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) checking_site = false;
+				if ((int)checkR5_1->type >= 2002 && (int)checkR5_1->type <= 2204) checking_site = false;
+				if ((int)checkR5_1->type >= 2204 && (int)checkR5_1->type <= 2205) checking_site = false;
+				if ((int)checkR5_1->type == 0){
+					if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) checking_site = false;
+					if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) checking_site = false;
+					if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) checking_site = false;
 				}
 			}
-		}
-		if (checking_site) Migr_sites.push_front(sFE2);
-		if (sFE2->type == FE || (int)sFE2->type % 10 >=2) checking_site = false;
-	} while (checking_site == true);
+			Cpointer CR5_otherside_end = sFE2->C2->C1;
+			if (CR5_otherside_end->bridge) checking_site = false;
+			if (CR5_otherside_end->C2->bridge) checking_site = false; 
+			if (CR5_otherside_end->C1->bridge) checking_site = false;
+			if (CR5_otherside_end->C2->C2->bridge) checking_site = false; 
+			if (CR5_otherside_end->C1->C1->bridge) checking_site = false;
+			
+			//Check for other side being valid
+			Cpointer thirdC_after = findThirdC(CR5_otherside_end);
+			if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
+				Spointer opp_site_after = findSite(thirdC_after);
+				//I have no clue how to flag an Spointer as error. This can cause seg faults.
+				int os_endtype = opp_site_after->type;
+				if (os_endtype >= 200 && os_endtype <= 203) checking_site = false;
+				if (os_endtype == 101) checking_site = false;
+				if (os_endtype >= 600 && os_endtype <= 603) checking_site = false;
+				if (os_endtype >= 1000 && os_endtype <= 1003) checking_site = false;
+				if (os_endtype >= 500 && os_endtype <= 504) checking_site = false;
+				if (os_endtype >= 2000 && os_endtype <= 2205) checking_site = false;
+				if (os_endtype >= 2103 && os_endtype <= 2105) checking_site = false;
+				if (os_endtype >= 2204 && os_endtype <= 2205) checking_site = false;
+			}
+			
+			//check that two pentagons (including internals) will not collide
+			cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+			if (m_pah->m_R5loc.size()>=1){
+				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
+					double distR5s = getDistance_twoC(*it, R5coords_end);
+					if (distR5s < 2.8) {
+						//This distance is a parameter of this jump process. Might need some more tuning. 
+						//2.8 seems appropiate but may reject too many jumps.
+						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+						checking_site = false;
+						break;
+					}
+				}
+			}
+			if (checking_site) Migr_sites.push_front(sFE2);
+			if (sFE2->type == FE || (int)sFE2->type % 10 >=2) checking_site = false;
+		} while (checking_site == true);
+	}
 	
 	//Add available sites to the right of stt
 	sFE2 = stt;
 	checking_site = true;
-	do{
-		sFE2 = moveIt(sFE2, +1);
-		Spointer checkR5_1 = moveIt(sFE2,+1);
-		Spointer checkR5_2 = moveIt(sFE2,+2);
-		//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
-		if ((int)sFE2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) checking_site = false; // The result would be an indene, not supported. YET!
-		if ((int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002) checking_site = false; // This would violate the IPR.
-		if ((int)sFE2->type == 0){
-			if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) checking_site = false;
-			if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) checking_site = false;
-			if ((int)checkR5_1->type >= 2002 && (int)checkR5_1->type <= 2204) checking_site = false;
-			if ((int)checkR5_1->type >= 2204 && (int)checkR5_1->type <= 2205) checking_site = false;
-			if ((int)checkR5_1->type == 0){
-				if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) checking_site = false;
-				if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) checking_site = false;
-				if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) checking_site = false;
-			}
-		}
-		Cpointer CR5_otherside_end = sFE2->C1->C2;
-		if (CR5_otherside_end->bridge) checking_site = false;
-		if (CR5_otherside_end->C2->bridge) checking_site = false; 
-		if (CR5_otherside_end->C1->bridge) checking_site = false;
-		if (CR5_otherside_end->C2->C2->bridge) checking_site = false; 
-		if (CR5_otherside_end->C1->C1->bridge) checking_site = false;
-		
-		//Check for other side being valid
-		Cpointer thirdC_after = findThirdC(CR5_otherside_end);
-		if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
-			Spointer opp_site_after = findSite(thirdC_after);
-			//I have no clue how to flag an Spointer as error. This can cause seg faults.
-			int os_endtype = opp_site_after->type;
-			if (os_endtype >= 200 && os_endtype <= 203) checking_site = false;
-			if (os_endtype == 101) checking_site = false;
-			if (os_endtype >= 600 && os_endtype <= 603) checking_site = false;
-			if (os_endtype >= 1000 && os_endtype <= 1003) checking_site = false;
-			if (os_endtype >= 500 && os_endtype <= 504) checking_site = false;
-			if (os_endtype >= 2000 && os_endtype <= 2205) checking_site = false;
-			if (os_endtype >= 2103 && os_endtype <= 2105) checking_site = false;
-			if (os_endtype >= 2204 && os_endtype <= 2205) checking_site = false;
-		}
-		
-		//check that two pentagons (including internals) will not collide
-		cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
-		if (m_pah->m_R5loc.size()>=1){
-			for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
-				double distR5s = getDistance_twoC(*it, R5coords_end);
-				if (distR5s < 2.8) {
-					//This distance is a parameter of this jump process. Might need some more tuning. 
-					//2.8 seems appropiate but may reject too many jumps.
-					//Two pentagons will be next to each other violating the Isolated Pentagon Rule
-					checking_site = false;
-					break;
+	if (s_type == ACR5 || (s_type == R5R6 && !b4)) {
+		do{
+			sFE2 = moveIt(sFE2, +1);
+			Spointer checkR5_1 = moveIt(sFE2,+1);
+			Spointer checkR5_2 = moveIt(sFE2,+2);
+			//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
+			if ((int)sFE2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) checking_site = false; // The result would be an indene, not supported. YET!
+			if ((int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002) checking_site = false; // This would violate the IPR.
+			if ((int)sFE2->type == 0){
+				if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) checking_site = false;
+				if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) checking_site = false;
+				if ((int)checkR5_1->type >= 2002 && (int)checkR5_1->type <= 2204) checking_site = false;
+				if ((int)checkR5_1->type >= 2204 && (int)checkR5_1->type <= 2205) checking_site = false;
+				if ((int)checkR5_1->type == 0){
+					if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) checking_site = false;
+					if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) checking_site = false;
+					if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) checking_site = false;
 				}
 			}
-		}
-		if (checking_site) Migr_sites.push_back(sFE2);
-		if (sFE2->type == FE || (int)sFE2->type % 10 >=2) checking_site = false;
-	} while (checking_site == true);
+			Cpointer CR5_otherside_end = sFE2->C1->C2;
+			if (CR5_otherside_end->bridge) checking_site = false;
+			if (CR5_otherside_end->C2->bridge) checking_site = false; 
+			if (CR5_otherside_end->C1->bridge) checking_site = false;
+			if (CR5_otherside_end->C2->C2->bridge) checking_site = false; 
+			if (CR5_otherside_end->C1->C1->bridge) checking_site = false;
+			
+			//Check for other side being valid
+			Cpointer thirdC_after = findThirdC(CR5_otherside_end);
+			if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
+				Spointer opp_site_after = findSite(thirdC_after);
+				//I have no clue how to flag an Spointer as error. This can cause seg faults.
+				int os_endtype = opp_site_after->type;
+				if (os_endtype >= 200 && os_endtype <= 203) checking_site = false;
+				if (os_endtype == 101) checking_site = false;
+				if (os_endtype >= 600 && os_endtype <= 603) checking_site = false;
+				if (os_endtype >= 1000 && os_endtype <= 1003) checking_site = false;
+				if (os_endtype >= 500 && os_endtype <= 504) checking_site = false;
+				if (os_endtype >= 2000 && os_endtype <= 2205) checking_site = false;
+				if (os_endtype >= 2103 && os_endtype <= 2105) checking_site = false;
+				if (os_endtype >= 2204 && os_endtype <= 2205) checking_site = false;
+			}
+			
+			//check that two pentagons (including internals) will not collide
+			cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+			if (m_pah->m_R5loc.size()>=1){
+				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
+					double distR5s = getDistance_twoC(*it, R5coords_end);
+					if (distR5s < 2.8) {
+						//This distance is a parameter of this jump process. Might need some more tuning. 
+						//2.8 seems appropiate but may reject too many jumps.
+						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+						checking_site = false;
+						break;
+					}
+				}
+			}
+			if (checking_site) Migr_sites.push_back(sFE2);
+			if (sFE2->type == FE || (int)sFE2->type % 10 >=2) checking_site = false;
+		} while (checking_site == true);
+	}
 	return Migr_sites;
 }
 
@@ -1341,13 +1347,13 @@ std::tuple<Spointer,bool> PAHProcess::chooseRandomMigrationSite (Spointer& start
     
 	Spointer chosenSite;
 	ii = 0;
-	bool direction = false;
+	bool direction = true;
 	for (std::list<Spointer>::iterator it = avail_end_sites.begin(); it != avail_end_sites.end(); ++it) {
 		if (ii == ind) {
 			chosenSite = (*it);
 			break;
 		}
-		if ( (*it) == start_site) direction = true;
+		if ( (*it) == start_site) direction = false;
 		ii += 1;
 	}
 	std::tuple<Spointer,bool> Site_direction = std::make_tuple(chosenSite, direction);
@@ -10558,10 +10564,10 @@ void PAHProcess::proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	else stt_coupled = moveIt(stt,+1);
 	if (b4) {
 		convSiteType(stt, Cnew, stt->C2, ZZ);
-		newSite = addSite(ZZ, stt_coupled->C2, Cnew, stt);
+		newSite = addSite(ZZ, Cnew->C1->C1, Cnew, stt);
 	} else{
 		convSiteType(stt, stt->C1, Cnew, ZZ);
-		newSite = addSite(ZZ, Cnew, stt_coupled->C1, stt_coupled);
+		newSite = addSite(ZZ, Cnew, Cnew->C2->C2, stt_coupled);
 	}
 	
 	Spointer S1 = moveIt(sFE2, -1);
@@ -10755,9 +10761,9 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	Cpointer CFE, CRem, CRem_next, CRem_before, CR5_otherside_1, CR5_otherside_2;
 	Spointer checkR5_1, checkR5_2;
 	if (b4) {
-		CFE = C_2->C1->C1;
-		CR5_otherside_1 = C_2->C1;
-		CR5_otherside_2 = C_2->C1->C1;
+		CFE = C_2->C1;
+		CR5_otherside_1 = C_2->C2;
+		CR5_otherside_2 = C_2->C1;
 		checkR5_1 = moveIt(sFE2, -1);
 		checkR5_2 = moveIt(sFE2, -2);
 		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C1;
@@ -10766,9 +10772,9 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 		CRem_before = CRem->C2;
 	}
 	else {
-		CFE = C_1->C2;
-		CR5_otherside_1 = C_1->C2;
-		CR5_otherside_2 = C_1->C2->C2;
+		CFE = C_1;
+		CR5_otherside_1 = C_1->C1;
+		CR5_otherside_2 = C_1->C2;
 		checkR5_1 = moveIt(sFE2, +1);
 		checkR5_2 = moveIt(sFE2, +2);
 		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C2;
@@ -10813,13 +10819,13 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	
 	//Add a new carbon between current R5 carbons of ACR5
 	double R5_dist = getDistance_twoC(CFE, CFE->C2);
-	double dist2;
-	if (R5_dist < 2.5) dist2 = 1.4;
-	else dist2 = R5_dist / 2.7 * 1.5;
+	double dist2 = 1.4;
 	double theta = asin(R5_dist/2.0/dist2);
 	double magn = dist2 * cos(theta);
-	cpair R5dir = get_vector(C_1->C2->coords,C_2->C1->coords);
-	cpair normvec = (norm_vector(C_1->C2->coords, C_1->C2->C2->coords, C_1->C2->C2->C2->coords));
+	cpair R5dir = get_vector(CFE->coords, CFE->C2->coords);
+	cpair normvec;
+	if (b4) normvec = invert_vector((norm_vector(CFE->coords, CFE->C2->coords, CFE->C2->C2->coords)));
+	else normvec = (norm_vector(CFE->coords, CFE->C2->coords, CFE->C2->C2->coords));
 	cpair crossvec = cross_vector(R5dir, normvec);
 	cpair resultantvec = std::make_tuple(R5_dist/2.0 * std::get<0>(R5dir) + magn * std::get<0>(crossvec), R5_dist/2.0 * std::get<1>(R5dir) + magn * std::get<1>(crossvec), R5_dist/2.0 * std::get<2>(R5dir)+ magn * std::get<2>(crossvec));
 	cpair Cnewdir = scale_vector(resultantvec);
@@ -10836,15 +10842,17 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	
 	//First adjust starting site and add new site if needed.
 	Spointer stt_coupled, newSite;
-	if (b4) stt_coupled = moveIt(stt,-1);
-	else stt_coupled = moveIt(stt,+1);
+	if (b4) stt_coupled = moveIt(stt,+1);
+	else stt_coupled = moveIt(stt,-1);
 	if (b4) {
-		convSiteType(stt, Cnew, stt->C2, ZZ);
-		newSite = addSite(ZZ, stt_coupled->C2, Cnew, stt);
+		convSiteType(stt, Cnew->C1->C1, Cnew, ZZ);
+		newSite = addSite(FE, Cnew, stt_coupled->C1, stt_coupled);
 	} else{
-		convSiteType(stt, stt->C1, Cnew, ZZ);
-		newSite = addSite(ZZ, Cnew, stt_coupled->C1, stt_coupled);
+		convSiteType(stt, Cnew, Cnew->C2->C2, ZZ);
+		newSite = addSite(FE, stt_coupled->C2, Cnew, stt);
 	}
+	if ((int)stt_coupled->type < 2000) updateSites(stt_coupled, stt_coupled->C1, stt_coupled->C2, -500);
+	else updateSites(stt_coupled, stt_coupled->C1, stt_coupled->C2, -100);
 	
 	Spointer S1 = moveIt(sFE2, -1);
 	Spointer S2 = moveIt(sFE2, +1);
