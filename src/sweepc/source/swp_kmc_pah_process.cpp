@@ -1327,6 +1327,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 			if (sFE2->type == FE || (int)sFE2->type % 10 >=2) checking_site = false;
 		} while (checking_site == true);
 	}
+	m_pah->m_R5loc.push_back(R5coords);
 	return Migr_sites;
 }
 
@@ -10471,10 +10472,9 @@ void PAHProcess::proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	Spointer sFE2 = std::get<0>(site_dir);
 	bool b4 = std::get<1>(site_dir);
 	// The pentagon migrated N times and ended at the same position.
-	if (sFE2 == stt) {
-		addR5internal(C_1->C2, C_2->C1);
-		return;
-	}
+	if (sFE2 == stt) return;
+	//Remove R5coords from m_pah->m_R5loc
+	cpair R5coords = findR5internal(C_1->C2, C_2->C1);
 	// First select carbons and sites affected.
 	Cpointer CFE, CRem, CRem_next, CRem_before, CR5_otherside_1, CR5_otherside_2;
 	Spointer checkR5_1, checkR5_2;
@@ -10578,13 +10578,13 @@ void PAHProcess::proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
 		if (b4) {
 			Spointer sFE2_right = moveIt(sFE2, +1);
-			updateSites(sFE2_right, CRem_before, sFE2_right->C2, +99);
+			updateSites(sFE2_right, CRem_before, sFE2_right->C2, +100);
 			convSiteType(checkR5_1, CRem_next, CRem_before, R5);
 			updateSites(checkR5_2, checkR5_2->C1, CRem_next, +100);
 		}
 		else {
 			Spointer sFE2_left = moveIt(sFE2, -1);
-			updateSites(sFE2_left, sFE2_left->C1, CRem_before, +99);
+			updateSites(sFE2_left, sFE2_left->C1, CRem_before, +100);
 			convSiteType(checkR5_1, CRem_before, CRem_next, R5);
 			updateSites(checkR5_2, CRem_next, checkR5_2->C2, +100);
 		}
@@ -10752,11 +10752,11 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	Spointer sFE2 = std::get<0>(site_dir);
 	bool b4 = std::get<1>(site_dir);
 	// The pentagon migrated N times and ended at the same position.
-	if (sFE2 == stt) {
-		if (b4) addR5internal(stt->C1->C1,stt->C1);
-		else addR5internal(stt->C2->C1,stt->C2);
-		return;
-	}
+	if (sFE2 == stt) return;
+	//Remove R5coords from m_pah->m_R5loc
+	cpair R5coords;
+	if (b4) R5coords = findR5internal(stt->C2->C1, stt->C2);
+	else R5coords = findR5internal(stt->C1->C1, stt->C1);
 	// First select carbons and sites affected.
 	Cpointer CFE, CRem, CRem_next, CRem_before, CR5_otherside_1, CR5_otherside_2;
 	Spointer checkR5_1, checkR5_2;
@@ -10862,13 +10862,13 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
 		if (b4) {
 			Spointer sFE2_right = moveIt(sFE2, +1);
-			updateSites(sFE2_right, CRem_before, sFE2_right->C2, +99);
+			updateSites(sFE2_right, CRem_before, sFE2_right->C2, +100);
 			convSiteType(checkR5_1, CRem_next, CRem_before, R5);
 			updateSites(checkR5_2, checkR5_2->C1, CRem_next, +100);
 		}
 		else {
 			Spointer sFE2_left = moveIt(sFE2, -1);
-			updateSites(sFE2_left, sFE2_left->C1, CRem_before, +99);
+			updateSites(sFE2_left, sFE2_left->C1, CRem_before, +100);
 			convSiteType(checkR5_1, CRem_before, CRem_next, R5);
 			updateSites(checkR5_2, CRem_next, checkR5_2->C2, +100);
 		}
