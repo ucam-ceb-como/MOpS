@@ -211,32 +211,6 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		//Interpolate gas phase species and temperature.
 		m_gas->Interpolate(m_t, r_factor);
 		
-		//Perform instant jump processes.
-		m_kmcmech.calculateInstantRates(*m_gas, m_simPAHp, m_t);
-		if (m_kmcmech.InstantTotalRate() > 1.0) {
-			ChosenProcess jp_instant_perf = m_kmcmech.chooseInstantReaction(rng);
-			
-			if (save_pah_detail){
-				//Save information for a single PAH
-				auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
-				if (finder != m_tracked_pahs.end()){
-					std::string xyzname = ("KMC_DEBUG/");
-					xyzname.append(std::to_string(PAH_ID));
-					xyzname.append("/");
-					xyzname.append(std::to_string(m_t*1000.0));
-					xyzname.append("_before_instant");
-					savePAH(PAH_ID, xyzname); 
-					cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
-					m_simPAHp.printSites();
-					//printRates(m_t, m_kmcmech.Rates());
-				}
-			}
-			
-			m_rxn_count[m_kmcmech.JPList().size() + jp_instant_perf.second]++;
-			writeRxnCountCSV();
-			m_simPAHp.performProcess(*jp_instant_perf.first, rng, PAH_ID);
-		} // For now only realising one migration per loop.
-		
 		//Calculate jump process rates
 		m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
         typedef boost::exponential_distribution<double> exponential_distrib;
@@ -261,7 +235,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			if (save_pah_detail){
 				//Add PAH to tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
 				int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
-				if (R5R7 >= 1 || std::get<0>(m_simPAHp.getRingsCount()) >= 20) addTrackedPAH(PAH_ID); 	
+				if (R5R7 >= 1 || std::get<0>(m_simPAHp.getRingsCount()) >= 7) addTrackedPAH(PAH_ID); 	
 				/*else if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
 						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); */
 				
@@ -272,7 +246,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 					xyzname.append(std::to_string(PAH_ID));
 					xyzname.append("/");
 					xyzname.append(std::to_string(m_t*1000.0));
-					xyzname.append("_before");
+					xyzname.append("_A");
 					savePAH(PAH_ID, xyzname); 
 					cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
 					m_simPAHp.printSites();
@@ -300,7 +274,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 					xyzname.append("/");
 					std::string xyzname2 = xyzname;
 					xyzname.append(std::to_string(m_t*1000.0));
-					xyzname.append("_after");
+					xyzname.append("_B");
 					savePAH(PAH_ID, xyzname);
 					//xyzname2.append(std::to_string(PAH_ID));
 					//xyzname2.append("trajectory");
@@ -316,6 +290,32 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 					}
 				}*/
 			}
+			
+			//Perform instant jump processes.
+			m_kmcmech.calculateInstantRates(*m_gas, m_simPAHp, m_t);
+			if (m_kmcmech.InstantTotalRate() > 1.0) {
+				ChosenProcess jp_instant_perf = m_kmcmech.chooseInstantReaction(rng);
+				
+				if (save_pah_detail){
+					//Save information for a single PAH
+					auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
+					if (finder != m_tracked_pahs.end()){
+						std::string xyzname = ("KMC_DEBUG/");
+						xyzname.append(std::to_string(PAH_ID));
+						xyzname.append("/");
+						xyzname.append(std::to_string(m_t*1000.0));
+						xyzname.append("_C");
+						savePAH(PAH_ID, xyzname); 
+						cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
+						m_simPAHp.printSites();
+						//printRates(m_t, m_kmcmech.Rates());
+					}
+				}
+				
+				m_rxn_count[m_kmcmech.JPList().size() + jp_instant_perf.second]++;
+				writeRxnCountCSV();
+				m_simPAHp.performProcess(*jp_instant_perf.first, rng, PAH_ID);
+			} // For now only realising one migration per loop.
 						
 
 			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
@@ -326,6 +326,33 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			//}
 
         }else {
+			
+			//Perform instant jump processes.
+			m_kmcmech.calculateInstantRates(*m_gas, m_simPAHp, m_t);
+			if (m_kmcmech.InstantTotalRate() > 1.0) {
+				ChosenProcess jp_instant_perf = m_kmcmech.chooseInstantReaction(rng);
+				
+				if (save_pah_detail){
+					//Save information for a single PAH
+					auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
+					if (finder != m_tracked_pahs.end()){
+						std::string xyzname = ("KMC_DEBUG/");
+						xyzname.append(std::to_string(PAH_ID));
+						xyzname.append("/");
+						xyzname.append(std::to_string(m_t*1000.0));
+						xyzname.append("_C");
+						savePAH(PAH_ID, xyzname); 
+						cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
+						m_simPAHp.printSites();
+						//printRates(m_t, m_kmcmech.Rates());
+					}
+				}
+				
+				m_rxn_count[m_kmcmech.JPList().size() + jp_instant_perf.second]++;
+				writeRxnCountCSV();
+				m_simPAHp.performProcess(*jp_instant_perf.first, rng, PAH_ID);
+			} // For now only realising one migration per loop.
+			
             //oldtnext = t_next;
             t_next = t_max;
         }

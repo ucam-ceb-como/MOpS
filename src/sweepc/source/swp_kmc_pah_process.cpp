@@ -3804,7 +3804,7 @@ PAHStructure& PAHProcess::initialise_new(StartingStructure ss){
             abort();
     }
     // Create Structure
-	return initialise(chosen, std::get<0>(rings), std::get<1>(rings), rings_Embedded, std::get<2>(rings), rings_Embedded, std::get<0>(CH), std::get<1>(CH), methyls, IntCarbons);
+	return initialise_sitelist_string(chosen, std::get<0>(rings), std::get<1>(rings), rings_Embedded, std::get<2>(rings), rings_Embedded, std::get<0>(CH), std::get<1>(CH), methyls, IntCarbons);
     //printSites(m_pah->m_siteList.begin());
 }
 
@@ -4619,6 +4619,7 @@ void PAHProcess::savePAH_tofile(const std::string &filename){
  *
  * @return       Initialized PAH structure
  */
+//p.initialise(std::vector<std::tuple<int, cpair, cpair>> temp_site_vector, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, std::vector<std::tuple<cpair, int, int, cpair>> edgeCarbons, std::list<cpair> internalCarbons, std::list<cpair> R5_locs, std::list<cpair> R7_locs);
 PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, Ccontainer edgeCarbons, std::list<cpair> internalCarbons, std::list<cpair> R5_locs, std::list<cpair> R7_locs){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
@@ -4755,6 +4756,111 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, std::vector<int>& carb
 }
 
 /*!
+ * Initialization of PAH structure from binary file (deserialize)
+ *
+ * @return       Initialized PAH structure
+ */
+PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, cpair, cpair>> siteList_vector, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, std::vector<std::tuple<cpair, int, int, cpair>> edgeCarbons, std::list<cpair> internalCarbons, std::list<cpair> R5_locs, std::list<cpair> R7_locs){
+    if(m_pah == NULL) {
+        PAHStructure* pah = new PAHStructure();
+        m_pah = pah;
+    }else if(m_pah->m_cfirst != NULL)
+        m_pah->clear();
+	
+	//First fill Ccontainer
+	if (edgeCarbons.size() <= 0) {
+		std::cout<<"ERROR: Structure read from Binary file has no edge carbons."
+			<<".. (PAHProcess::initialise)\n\n";
+		std::ostringstream msg;
+		msg << "ERROR: Structure read from Binary file has no edge carbons."
+			<< " (Sweep::KMC_ARS::PAHProcess::initialise)";
+			throw std::runtime_error(msg.str());
+			assert(false);
+	}
+	//Add first carbon.
+	Cpointer newC = addC();
+    m_pah->m_cfirst = newC;
+	m_pah->m_clast = NULLC;
+	for (std::vector<std::tuple<cpair, int, int, cpair>>::iterator it = edgeCarbons.begin(); it != edgeCarbons.end(); it++){
+		if (it == edgeCarbons.begin()){
+			Cpointer newC = addC();
+			m_pah->m_cfirst = newC;
+			m_pah->m_clast = NULLC;
+			moveC(newC, std::get<0>(*it));
+			if (std::get<2>(*it) == 0) updateA(newC, 'C', std::get<3>(*it));
+			if (std::get<2>(*it) == 1) updateA(newC, 'H', std::get<3>(*it));
+			if (std::get<2>(*it) == 2) updateA(newC, 'M', std::get<3>(*it));
+		}
+		else {
+			if( !checkHindrance_C_PAH(std::get<0>(*it))){
+				newC = addC(newC, std::make_tuple(1.0,0.0,0.0), 7.17);
+				moveC(newC, std::get<0>(*it));
+				if (std::get<2>(*it) == 0) updateA(newC, 'C', std::get<3>(*it));
+				if (std::get<2>(*it) == 1) updateA(newC, 'H', std::get<3>(*it));
+				if (std::get<2>(*it) == 2) updateA(newC, 'M', std::get<3>(*it));
+				//newC->bridge = std::get<1>(*it);
+
+				//if (std::get<1>(*it) == 0) nextC = nextC->C2;
+				//else {
+				//	if (checkHindrance_C_PAH(nextC->C3->coords)) nextC = nextC->C2;
+				//	else nextC = nextC->C3;
+				//}
+			}
+			else{ //position already occupied
+				Cpointer Cpos = findC(std::get<0>(*it));
+				Cpointer Cbridge = Cpos->C1;
+				Cpos->bridge = true; Cbridge->bridge = true;
+				Cpos->C3 = Cbridge; Cbridge->C3 = Cpos;
+				connectToC(newC, Cpos);
+				Cbridge->C2 = NULLC;
+				it++;
+			}
+		}
+		if (it == edgeCarbons.end()){
+			m_pah->m_clast = newC;
+			connectToC(m_pah->m_clast, m_pah->m_cfirst);
+		}
+	}
+	
+	//Add sites	
+    for(std::vector<std::tuple<int, cpair, cpair>>::iterator it=siteList_vector.begin(); it!=siteList_vector.end(); it++) {
+        kmcSiteType temp = kmcSiteType(std::get<0>(*it));
+        if(temp == Inv) {
+            std::cout<<"ERROR: Structure read from Binary site list contains invalid site type."
+                <<".. (PAHProcess::initialise)\n\n";
+			std::cout<<"Site = " << temp << "\n";
+            std::ostringstream msg;
+            msg << "ERROR: Structure read from Binary site List contains invalid site type."
+                << " (Sweep::KMC_ARS::PAHProcess::initialise)";
+                throw std::runtime_error(msg.str());
+                assert(false);
+        }
+		Cpointer siteC1 = findC(std::get<1>(*it));
+		Cpointer siteC2 = findC(std::get<2>(*it));
+		addSite(temp, siteC1, siteC2);
+    }
+
+    m_pah->m_rings = R6_num;
+	m_pah->m_rings5_Lone = R5_num_Lone;
+	m_pah->m_rings5_Embedded = R5_num_Embedded;
+	m_pah->m_rings7_Lone = R7_num_Lone;
+	m_pah->m_rings7_Embedded = R7_num_Embedded;
+	m_pah->m_InternalCarbons = internalCarbons;
+	m_pah->m_R5loc = R5_locs;
+	m_pah->m_R7loc = R7_locs;
+	m_pah->m_methyl_counts = numberOfMethyl();
+	m_pah->m_optimised = false;
+	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
+	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1 + numberOfMethyl();
+	m_pah->setnumofC(totalC_num);
+    m_pah->setnumofH(SiteListSize() + 2 * numberOfMethyl());
+    updateCombinedSites();
+	return *m_pah;
+}
+
+
+
+/*!
  * Initialization of PAH structure given a list of site types and number of 6 and 5-member rings
  *
  * @param[in]    siteList_str    Comma-separated string of site types
@@ -4763,7 +4869,7 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, std::vector<int>& carb
  *
  * @return       Initialized PAH structure
  */
-PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, int num_C, int num_H, int num_CH3, std::list<cpair> internalCarbons){
+PAHStructure& PAHProcess::initialise_sitelist_string(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, int num_C, int num_H, int num_CH3, std::list<cpair> internalCarbons){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
         m_pah = pah;
@@ -4787,12 +4893,12 @@ PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R
         }
         siteList_vec.push_back(temp);
     }
-	createPAH(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, num_C, num_H, num_CH3);
+	createPAH_sitelist_string(siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, num_C, num_H, num_CH3);
     return *m_pah;
 }
 
 // Create Structure from vector of site types. This function is used to assign PAHs from output files.
-void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, int num_C, int num_H, int num_CH3) {
+void PAHProcess::createPAH_sitelist_string(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, int num_C, int num_H, int num_CH3) {
     //This function worked with Serialise and Deserialaise to recognise identical PAHs through the simulation and avoid memory requirements.
 	//However, the existence of 3D structures makes it extremely hard for the program to recognise repeated structures. Because of this,
 	//it was decided that this function would just reproduce the statistics saved from the binary files to be able to compute mass spectra. 

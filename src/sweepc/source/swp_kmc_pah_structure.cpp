@@ -192,6 +192,17 @@ int PAHStructure::numofSite() const
 {
     return m_siteList.size();
 }
+
+int PAHStructure::numofBridges() const
+{
+	int num;
+	for(Ccontainer::const_iterator i=m_carbonList.begin(); i!=m_carbonList.end(); i++) {
+        if((*i)->bridge) num++;
+    }
+    num /= 2;
+    return num;
+}
+
 void PAHStructure::setnumofC(int val)
 {
     m_counts.first=val;
@@ -281,6 +292,7 @@ void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
 void PAHStructure::Serialize(std::ostream &out) const
 {
     int val=0;
+	coordtype val_pos = 0.0;
 
     // output info for PAHProcess::createPAH().
     val=numofRings();
@@ -306,19 +318,132 @@ void PAHStructure::Serialize(std::ostream &out) const
 	
 	val = numofCH3();
 	out.write((char*)&(val), sizeof(val));
+	
+	val = numofSite();
+	out.write((char*)&(val), sizeof(val));
+	
+	for(std::list<Site>::const_iterator it = m_siteList.begin(); it != m_siteList.end(); ++it){
+		val = (int)(*it).type;
+		out.write((char*)&(val), sizeof(val));
+		val_pos = std::get<0>((*it).C1->coords);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<1>((*it).C1->coords);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<2>((*it).C1->coords);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<0>((*it).C2->coords);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<1>((*it).C2->coords);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<2>((*it).C2->coords);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+	}
 
-    PAHStructure m_copy (*this);
-    PAHProcess p(m_copy);
-    std::string m_SiteName = p.SiteString(',');
+	//Old method that stored the site list as a string
+    //PAHStructure m_copy (*this);
+    //PAHProcess p(m_copy);
+    //std::string m_SiteName = p.SiteString(',');
 
-    val = (unsigned int)m_SiteName.length();
-    out.write((char*)&val, sizeof(val));
-    out.write(m_SiteName.c_str(), val);
+    //val = (unsigned int)m_SiteName.length();
+    //out.write((char*)&val, sizeof(val));
+    //out.write(m_SiteName.c_str(), val);
+	
+	//Save number of bridges
+	val = numofBridges();
+	out.write((char*)&(val), sizeof(val));
+	
+	//Save edge carbon coordinates
+	val = numofEdgeC();
+	out.write((char*)&(val), sizeof(val));
+	
+	Cpointer Cnow = m_cfirst;
+	Cpointer Cprev = m_cfirst;
+	
+	//If a carbon is bridged it is stored twice. This way we ensure to recover the pointers correctly.
+	do {
+		val_pos = std::get<0>(Cnow->coords);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<1>(Cnow->coords);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<2>(Cnow->coords);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		
+		if (Cnow-> bridge) val = 1;
+		else val = 0;
+		out.write((char*)&val, sizeof(val));
+		if (Cnow->A == 'C'){
+			val = 0;
+			out.write((char*)&val, sizeof(val));
+			val_pos = 0.0;
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		}
+		else {
+			if (Cnow->A == 'H') val = 1;
+			else val = 2;
+			out.write((char*)&val, sizeof(val));
+			val_pos = std::get<0>(Cnow->growth_vector);
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+			val_pos = std::get<1>(Cnow->growth_vector);
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+			val_pos = std::get<2>(Cnow->growth_vector);
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		}
+		
+		if (Cnow-> bridge && Cprev != Cnow->C3){
+			Cprev = Cnow;
+			Cnow = Cnow->C3;
+		}
+		else{
+			Cprev = Cnow;
+			Cnow = Cnow->C2;
+		}
+	}while (Cnow != m_cfirst);
+	
+	//Save internal coordinates
+	val = m_InternalCarbons.size();
+	out.write((char*)&(val), sizeof(val));
+	for(std::list<cpair>::const_iterator it = m_InternalCarbons.begin(); it != m_InternalCarbons.end(); ++it){
+		val_pos = std::get<0>(*it);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<1>(*it);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<2>(*it);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+	}
+	
+	//Save R5 locations
+	val = m_R5loc.size();
+	out.write((char*)&(val), sizeof(val));
+	for(std::list<cpair>::const_iterator it = m_R5loc.begin(); it != m_R5loc.end(); ++it){
+		val_pos = std::get<0>(*it);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<1>(*it);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<2>(*it);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+	}
+	
+	//Save R7 locations
+	val = m_R7loc.size();
+	out.write((char*)&(val), sizeof(val));
+	for(std::list<cpair>::const_iterator it = m_R7loc.begin(); it != m_R7loc.end(); ++it){
+		val_pos = std::get<0>(*it);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<1>(*it);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		val_pos = std::get<2>(*it);
+		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+	}
+	
+	
 }
 
 void PAHStructure::Deserialize(std::istream &in)
 {
     int val = 0;
+	coordtype val_pos = 0.0;
     char *name = NULL;
 
     in.read(reinterpret_cast<char*>(&val), sizeof(val));
@@ -344,16 +469,134 @@ void PAHStructure::Deserialize(std::istream &in)
 	
 	in.read(reinterpret_cast<char*>(&val), sizeof(val));
 	int temp_numofCH3 = val;
-
-    in.read(reinterpret_cast<char*>(&val), sizeof(val));
-    name = new char[val];
-    in.read(name, val);
-    std::string m_SiteName = string(name, val);
+	
+	//Old method that stored sites as a list
+    //in.read(reinterpret_cast<char*>(&val), sizeof(val));
+    //name = new char[val];
+    //in.read(name, val);
+    //std::string m_SiteName = string(name, val);
+	
+	//delete [] name;
+	
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numSite = val;
+	
+	std::vector<std::tuple<int, cpair, cpair>> temp_site_vector;
+	for(int i=0; i!= temp_numSite; i++){
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		int site_type = val;
+		
+		coordtype x1, y1, z1, x2, y2, z2;
+		std::tuple<coordtype, coordtype, coordtype> s_C1, s_C2;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		x1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		y1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		z1 = val_pos;
+		s_C1 = std::make_tuple(x1, y1, z1);
+		
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		x2 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		y2 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		z2 = val_pos;
+		s_C2 = std::make_tuple(x2, y2, z2);
+		std::tuple<int, cpair, cpair> temp_site = std::make_tuple(site_type, s_C1, s_C2);
+		
+		temp_site_vector.push_back(temp_site);
+	}
+	
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofBridges = val;
+	
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofEdgeC = val;
+	
+	std::vector<std::tuple<cpair, int, int, cpair>> edgeCarbons;
+	int c_counter = 0;
+	do{
+		double x1, y1, z1;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		x1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		y1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		z1 = val_pos;
+		cpair Ccoords = std::make_tuple(x1, y1, z1);
+		
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		int bridge_int = val;
+		
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		int Hatom_int = val;
+		
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		x1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		y1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		z1 = val_pos;
+		cpair Cgrovec = std::make_tuple(x1, y1, z1);
+		
+		std::tuple<cpair, int, int, cpair> C_read = std::make_tuple(Ccoords, bridge_int, Hatom_int, Cgrovec);
+		edgeCarbons.push_back(C_read);
+		c_counter += 1;
+	}while (c_counter < temp_numofEdgeC + temp_numofBridges * 2);
+	
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofInternalC = val;
+		
 	std::list<cpair> temp_internalcoords;
-    delete [] name;
-
+	for (int i =0; i!= temp_numofInternalC; i++){
+		double x1, y1, z1;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		x1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		y1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		z1 = val_pos;
+		cpair Ccoords = std::make_tuple(x1, y1, z1);
+		temp_internalcoords.push_back(Ccoords);
+	}
+	
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofR5loc = val;
+		
+	std::list<cpair> temp_R5loc;
+	for (int i =0; i!= temp_numofR5loc; i++){
+		double x1, y1, z1;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		x1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		y1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		z1 = val_pos;
+		cpair R5coords = std::make_tuple(x1, y1, z1);
+		temp_R5loc.push_back(R5coords);
+	}
+	
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_numofR7loc = val;
+		
+	std::list<cpair> temp_R7loc;
+	for (int i =0; i!= temp_numofR7loc; i++){
+		double x1, y1, z1;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		x1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		y1 = val_pos;
+		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+		z1 = val_pos;
+		cpair R7coords = std::make_tuple(x1, y1, z1);
+		temp_R7loc.push_back(R7coords);
+	}
+	
     PAHProcess p(*this);
-	p.initialise(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, temp_numofC, temp_numofH, temp_numofCH3, temp_internalcoords);
+	//Previous method
+	//p.initialise_sitelist_string(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, temp_numofC, temp_numofH, temp_numofCH3, temp_internalcoords);
+	p.initialise(temp_site_vector, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, edgeCarbons, temp_internalcoords, temp_R5loc, temp_R7loc);
 }
 
 void PAHStructure::WriteCposition(std::ostream &out) const

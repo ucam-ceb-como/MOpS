@@ -105,6 +105,8 @@ namespace Sweep{
             int numofEdgeC() const;
             //! return num of site
             int numofSite() const;
+			//! return num of bridges
+            int numofBridges() const;
             //! set number of carbon and hydrogen for particular PAH
             void setnumofC(int val);
             void setnumofH(int val);
