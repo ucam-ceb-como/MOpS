@@ -1259,6 +1259,20 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 					}
 				}
 			}
+			
+			//check that pentagon and heptagon (including internals) will not collide
+			if (m_pah->m_R7loc.size()>=1){
+				for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
+					double distR5R7 = getDistance_twoC(*it, R5coords_end);
+					if (distR5R7 < 2.8) {
+						//This distance is a parameter of this jump process. Might need some more tuning. 
+						//2.8 seems appropiate but may reject too many jumps.
+						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+						checking_site = false;
+						break;
+					}
+				}
+			}
 			if (checking_site) Migr_sites.push_front(sFE2);
 			if (sFE2->type == FE || (int)sFE2->type % 10 >=2) checking_site = false;
 		} while (checking_site == true);
@@ -1315,6 +1329,19 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 					double distR5s = getDistance_twoC(*it, R5coords_end);
 					if (distR5s < 2.8) {
+						//This distance is a parameter of this jump process. Might need some more tuning. 
+						//2.8 seems appropiate but may reject too many jumps.
+						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+						checking_site = false;
+						break;
+					}
+				}
+			}
+			//check that pentagon and heptagon (including internals) will not collide
+			if (m_pah->m_R7loc.size()>=1){
+				for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
+					double distR5R7 = getDistance_twoC(*it, R5coords_end);
+					if (distR5R7 < 2.8) {
 						//This distance is a parameter of this jump process. Might need some more tuning. 
 						//2.8 seems appropiate but may reject too many jumps.
 						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
@@ -1445,6 +1472,7 @@ Cpointer PAHProcess::addC(Cpointer C_1, cpair direction, bondlength length, bool
     if(!m_pah->m_carbonList.insert(cb).second)
         std::cout<<"ERROR: ADDING SAME CARBON POINTER TO SET\n";
     m_pah->m_cpositions.insert(cb->coords);
+	cb->A = 'C';
     // Edit details of connected carbon(s)
     if(C_1->C2 != NULL) {
         // change member pointer of original neighbour of C_1
@@ -4777,13 +4805,13 @@ PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, cpair, cpair>> 
 			throw std::runtime_error(msg.str());
 			assert(false);
 	}
-	//Add first carbon.
-	Cpointer newC = addC();
-    m_pah->m_cfirst = newC;
-	m_pah->m_clast = NULLC;
+	
+	Cpointer newC;
+
 	for (std::vector<std::tuple<cpair, int, int, cpair>>::iterator it = edgeCarbons.begin(); it != edgeCarbons.end(); it++){
 		if (it == edgeCarbons.begin()){
-			Cpointer newC = addC();
+			//Add first carbon.
+			newC = addC();
 			m_pah->m_cfirst = newC;
 			m_pah->m_clast = NULLC;
 			moveC(newC, std::get<0>(*it));
@@ -7180,6 +7208,7 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     removeC(C_2, false);
 	double Cdist = getDistance_twoC(C1_res, C2_res);
 	Cpointer newC = addC(C1_res, Cdir, Cdist/2.35*1.4, true);
+	updateA(newC, 'C', newC->coords);
 	cpair Hdir = add_vector( get_vector(newC->coords, C1_res->coords),get_vector(newC->coords, C2_res->coords) );
 	updateA(C1_res, 'H', Hdir);
 	updateA(C2_res, 'H', Hdir);

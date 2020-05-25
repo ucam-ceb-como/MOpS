@@ -195,7 +195,7 @@ int PAHStructure::numofSite() const
 
 int PAHStructure::numofBridges() const
 {
-	int num;
+	int num = 0;
 	for(Ccontainer::const_iterator i=m_carbonList.begin(); i!=m_carbonList.end(); i++) {
         if((*i)->bridge) num++;
     }
@@ -371,23 +371,23 @@ void PAHStructure::Serialize(std::ostream &out) const
 		if (Cnow-> bridge) val = 1;
 		else val = 0;
 		out.write((char*)&val, sizeof(val));
-		if (Cnow->A == 'C'){
-			val = 0;
-			out.write((char*)&val, sizeof(val));
-			val_pos = 0.0;
-			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
-			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
-			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
-		}
-		else {
+		if (Cnow->A != 'C'){
 			if (Cnow->A == 'H') val = 1;
-			else val = 2;
+			if (Cnow->A == 'M') val = 2;
 			out.write((char*)&val, sizeof(val));
 			val_pos = std::get<0>(Cnow->growth_vector);
 			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
 			val_pos = std::get<1>(Cnow->growth_vector);
 			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
 			val_pos = std::get<2>(Cnow->growth_vector);
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		}
+		else {
+			val = 0;
+			out.write((char*)&val, sizeof(val));
+			val_pos = 0.0;
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
 			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
 		}
 		

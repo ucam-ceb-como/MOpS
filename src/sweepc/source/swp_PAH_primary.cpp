@@ -2359,7 +2359,7 @@ void PAHPrimary::UpdatePAHs(const double t, const double dt, const Sweep::Partic
 
 			//! Time for one particular PAH to grow.
 			double growtime = t - (*it)->lastupdated;
-			assert(growtime >= 0.0);
+			//assert(growtime >= 0.0);
 			double statweightold = statweight;
 			int numloops = 0;
 			bool calcrates = true;
