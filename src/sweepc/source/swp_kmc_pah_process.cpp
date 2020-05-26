@@ -1210,7 +1210,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 			Spointer checkR5_2 = moveIt(sFE2,-2);
 			//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
 			if ((int)sFE2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) checking_site = false; // The result would be an indene, not supported. YET!
-			if ((int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002) checking_site = false; // This would violate the IPR.
+			if ((int)sFE2->type == 100 || (int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002) checking_site = false; // This would violate the IPR.
 			if ((int)sFE2->type == 0){
 				if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) checking_site = false;
 				if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) checking_site = false;
@@ -1288,7 +1288,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 			Spointer checkR5_2 = moveIt(sFE2,+2);
 			//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
 			if ((int)sFE2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) checking_site = false; // The result would be an indene, not supported. YET!
-			if ((int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002) checking_site = false; // This would violate the IPR.
+			if ((int)sFE2->type == 100 || (int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002) checking_site = false; // This would violate the IPR.
 			if ((int)sFE2->type == 0){
 				if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) checking_site = false;
 				if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) checking_site = false;
@@ -2957,7 +2957,8 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		t = (kmcSiteType) stype;
 	}
 	if (!checkSiteValid(st)) {
-		cout << "Invalid site convSiteType. This may be alright if the edge is unreactive but it may also be an error. \n"; //SETBREAKPOINT
+		cout << "ERROR. Invalid site convSiteType. This may be alright if the edge is unreactive but it may also be an error. \n";
+		cout << "Sweep::PAHProcess::convSiteType. \n"; //SETBREAKPOINT
 		printSites(st); 
 		if (m_debug_pah) {
 			ifstream  src("KMC_DEBUG/BEFORE.xyz");
@@ -3238,9 +3239,13 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	int stype = (int)st->type;
 	int original_stype = stype;
 	if (!checkSiteValid(stype)){
-		cout << "ERROR: updateSites: Invalid site type before update\n"; //SETBREAKPOINT
+		cout << "ERROR: updateSites: Invalid site type before update.\n"; //SETBREAKPOINT
+		cout << "Site type: " << kmcSiteName(st->type)<< "\n";
+		cout << "Bulk change: " << bulkCchange<< "\n";
 		std::ostringstream msg;
-		msg << "ERROR: updateSites: Invalid site type before update\n";
+		msg << "ERROR: updateSites: Invalid site type before update.\n"
+			<< "Site type: " << kmcSiteName(st->type)<< "\n"
+			<< "Bulk change: " << bulkCchange<< "\n";
 		//saveDOT("KMC_DEBUG/KMC_PAH_X_UPDATE_prev.dot");
 		if (m_debug_pah){
 			ifstream  src("KMC_DEBUG/BEFORE.xyz");
@@ -3260,6 +3265,9 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		//filename2.append(std::to_string(this->m_pah->m_parent->ID()));
 		saveXYZ(filename2);
 		cout<<"Saving file: "<< filename2<<".xyz\n";
+		filename2.append(".txt");
+		savePAH_tofile(filename2);
+		cout<<"Saving file: "<< filename2<<"\n";
 		//throw std::runtime_error(msg.str());
 		//assert(false);
 		printSites(st);
@@ -3268,6 +3276,8 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	}
 	if ((stype + bulkCchange) < 0){
 		cout << "ERROR: updateSites: Bulk C change invalid (Principal)\n"; //SETBREAKPOINT
+		cout << "Trying to add " << bulkCchange << " bulk C to a " << kmcSiteName(st->type);
+		cout << " (Sweep::KMC_ARS::PAHProcess::updateSites)";
 		std::ostringstream msg;
 		msg << "ERROR: Bulk C change invalid (Principal). Trying to add "
 			<< bulkCchange << " bulk C to a " << kmcSiteName(st->type)
@@ -3289,6 +3299,9 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		filename2.append(std::to_string(updatesites_error_counter));
 		saveXYZ(filename2);
 		cout<<"Saving file: "<< filename2<<".xyz\n";
+		filename2.append(".txt");
+		savePAH_tofile(filename2);
+		cout<<"Saving file: "<< filename2<<"\n";
 		//saveXYZ("KMC_DEBUG/KMC_PAH_X_UPDATE");
 		//throw std::runtime_error(msg.str());
 		//assert(false);
@@ -3431,10 +3444,14 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		//filename2.append(std::to_string(this->m_pah->m_parent->ID()));
 		saveXYZ(filename2);
 		cout<<"Saving file: "<< filename2<<".xyz\n";
+		filename2.append(".txt");
+		savePAH_tofile(filename2);
+		cout<<"Saving file: "<< filename2<<"\n";
 		//throw std::runtime_error(msg.str());
 		//assert(false);
 		printSites(st);
 		++updatesites_error_counter;
+		return;
 	}
 	if (st->type == SPIRAL)
 	{
@@ -3496,6 +3513,9 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			//filename2.append(std::to_string(this->m_pah->m_parent->ID()));
 			saveXYZ(filename2);
 			cout<<"Saving file: "<< filename2<<".xyz\n";
+			filename2.append(".txt");
+			savePAH_tofile(filename2);
+			cout<<"Saving file: "<< filename2<<"\n";
 			//saveXYZ("KMC_DEBUG/KMC_PAH_X_UPDATE");
 			/*throw std::runtime_error(msg.str());
 			assert(false);*/
@@ -5272,7 +5292,7 @@ bool PAHProcess::checkSiteValid(int type) {
 		case ACR5RFER: return true;
 		case RAC_FE3: return true;
 		case SPIRAL: return true;
-		case None: return true;
+		//case None: return true; None should return an error
 		case Inv: return true;
 		case any: return true;
 		case benz: return true;
