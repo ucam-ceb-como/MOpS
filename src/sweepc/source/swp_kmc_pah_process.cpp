@@ -101,11 +101,15 @@ PAHStructure* PAHProcess::returnPAH(){
 PAHStructure* PAHProcess::clonePAH() const {
     PAHStructure* temp = new PAHStructure();
     PAHProcess p(*temp);
-    std::vector<kmcSiteType> sites = SiteVector();
-	std::vector<int> carbon_per_site = SiteIntVector();
-	Spointer first_site = SiteList().begin();
-	cpair first_c_pos = first_site->C1->coords;
-	p.createPAH(sites, carbon_per_site, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_carbonList, m_pah->m_InternalCarbons, m_pah->m_R5loc, m_pah->m_R7loc, first_c_pos);
+    //std::vector<kmcSiteType> sites = SiteVector();
+	//std::vector<int> carbon_per_site = SiteIntVector();
+	//Spointer first_site = SiteList().begin();
+	//cpair first_c_pos = first_site->C1->coords;
+	
+	std::vector<std::tuple<int, cpair, cpair>> sites = SiteVector_clone();
+	std::vector<std::tuple<cpair, int, int, cpair>> edgeCarbons = EdgeCarbonVector_clone();
+	p.initialise(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, edgeCarbons, m_pah->m_InternalCarbons, m_pah->m_R5loc, m_pah->m_R7loc);
+	//p.createPAH(sites, carbon_per_site, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_carbonList, m_pah->m_InternalCarbons, m_pah->m_R5loc, m_pah->m_R7loc, first_c_pos);
 	//p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_InternalCarbons);
     return temp;
 }
@@ -1665,7 +1669,7 @@ void PAHProcess::removeR7internal(Cpointer C_1, Cpointer C_2) {
 	for (it1 = m_pah->m_R7loc.begin(); it1 != m_pah->m_R7loc.end(); ++it1) {
 		double dist_x = std::get<0>(C_1->coords) + std::get<0>(C_2->coords) - 2*std::get<0>(*it1);
 		double dist_y = std::get<1>(C_1->coords) + std::get<1>(C_2->coords) - 2*std::get<1>(*it1);
-		double dist_z = std::get<2>(C_1->coords) + std::get<1>(C_2->coords) - 2*std::get<2>(*it1);
+		double dist_z = std::get<2>(C_1->coords) + std::get<2>(C_2->coords) - 2*std::get<2>(*it1);
 		double dist = sqrt(dist_x * dist_x + dist_y * dist_y + dist_z * dist_z);
 		if (dist < minimal_dist){
 			minimal_dist = dist;
@@ -1682,7 +1686,7 @@ cpair PAHProcess::findR5internal(Cpointer C_1, Cpointer C_2) {
 	for (it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
 		double dist_x = std::get<0>(C_1->coords) + std::get<0>(C_2->coords) - 2*std::get<0>(*it1);
 		double dist_y = std::get<1>(C_1->coords) + std::get<1>(C_2->coords) - 2*std::get<1>(*it1);
-		double dist_z = std::get<2>(C_1->coords) + std::get<1>(C_2->coords) - 2*std::get<2>(*it1);
+		double dist_z = std::get<2>(C_1->coords) + std::get<2>(C_2->coords) - 2*std::get<2>(*it1);
 		double dist = sqrt(dist_x * dist_x + dist_y * dist_y + dist_z * dist_z);
 		if (dist < minimal_dist){
 			minimal_dist = dist;
@@ -4667,7 +4671,6 @@ void PAHProcess::savePAH_tofile(const std::string &filename){
  *
  * @return       Initialized PAH structure
  */
-//p.initialise(std::vector<std::tuple<int, cpair, cpair>> temp_site_vector, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, std::vector<std::tuple<cpair, int, int, cpair>> edgeCarbons, std::list<cpair> internalCarbons, std::list<cpair> R5_locs, std::list<cpair> R7_locs);
 PAHStructure& PAHProcess::initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, Ccontainer edgeCarbons, std::list<cpair> internalCarbons, std::list<cpair> R5_locs, std::list<cpair> R7_locs){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
@@ -4864,11 +4867,10 @@ PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, cpair, cpair>> 
 				it++;
 			}
 		}
-		if (it == edgeCarbons.end()){
-			m_pah->m_clast = newC;
-			connectToC(m_pah->m_clast, m_pah->m_cfirst);
-		}
 	}
+	
+	m_pah->m_clast = newC;
+	connectToC(m_pah->m_clast, m_pah->m_cfirst);
 	
 	//Add sites	
     for(std::vector<std::tuple<int, cpair, cpair>>::iterator it=siteList_vector.begin(); it!=siteList_vector.end(); it++) {
@@ -11179,6 +11181,44 @@ std::vector<kmcSiteType> PAHProcess::SiteVector() const {
     }
     return temp;
 };
+
+//! obtains a vector of tuples from the PAH site list
+std::vector<std::tuple<int, cpair, cpair>> PAHProcess::SiteVector_clone() const {
+    std::vector<std::tuple<int, cpair, cpair>> temp;
+    for(Spointer i=SiteList().begin(); i!= SiteList().end(); ++i) {
+		std::tuple<int, cpair, cpair> i_site = std::make_tuple((int)(*i).type, (*i).C1->coords, (*i).C2->coords);
+        temp.push_back(i_site);
+    }
+    return temp;
+};
+
+//! obtains a vector of tuples from the PAH Ccontainer
+std::vector<std::tuple<cpair, int, int, cpair>> PAHProcess::EdgeCarbonVector_clone() const {
+	std::vector<std::tuple<cpair, int, int, cpair>> temp;
+	Cpointer Cnow = m_pah->m_cfirst;
+	Cpointer Cprev = m_pah->m_cfirst;
+	do{
+		int brdige_val, H_val;
+		if (Cnow-> bridge) brdige_val = 1;
+		else brdige_val = 0;
+		if (Cnow->A != 'C'){
+			if (Cnow->A == 'H') H_val = 1;
+			if (Cnow->A == 'M') H_val = 2;
+		}
+		else H_val = 0;
+		std::tuple<cpair, int, int, cpair> i_carb = std::make_tuple(Cnow->coords, brdige_val, H_val, Cnow->growth_vector);
+		temp.push_back(i_carb);
+		if (Cnow-> bridge && Cprev != Cnow->C3){
+			Cprev = Cnow;
+			Cnow = Cnow->C3;
+		}
+		else{
+			Cprev = Cnow;
+			Cnow = Cnow->C2;
+		}
+	}while (Cnow!=m_pah->m_cfirst);
+	return temp;
+}
 
 //! obtains a vector of the carbons per site in PAH site list
 std::vector<int> PAHProcess::SiteIntVector() const {

@@ -174,6 +174,10 @@ public:
     std::vector<kmcSiteType> SiteVector() const;
 	//! obtains a vector of the carbons per site in PAH site list
 	std::vector<int> SiteIntVector() const;
+	//! obtains a vector of tuples from the PAH site list
+	std::vector<std::tuple<int, cpair, cpair>> SiteVector_clone() const;
+	//! obtains a vector of tuples from the PAH Ccontainer
+	std::vector<std::tuple<cpair, int, int, cpair>> EdgeCarbonVector_clone() const;
     //! obtains a string containing the PAH site list
     std::string SiteString(char delimiter) const;
 	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
