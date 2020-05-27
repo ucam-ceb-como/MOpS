@@ -6725,6 +6725,19 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 	//printStruct(C_1);
     C1_res = C_1->C1;
     C2_res = C_2->C2;
+	Cpointer Ccheck = C1_res->C1;
+	for (int ii = 0; ii<4; ii++){
+		double Rdist = getDistance_twoC(Ccheck, Ccheck->C2);
+		if (Rdist < 1.2 || Rdist > 1.6){
+			if (!m_pah->m_optimised){
+				OpenBabel::OBMol mol = passPAH();
+				mol = optimisePAH(mol);
+				passbackPAH(mol);
+			}
+		}
+		Ccheck = Ccheck->C2;
+	}
+		
 	cpair Cdir = get_vector(C_2->coords,C_2->C2->coords);
 	cpair FEdir = get_vector(C_1->coords,C_2->coords);
 	cpair Hdir1 = C_2->growth_vector;
@@ -6794,9 +6807,76 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
     }
     // update sites and neighbours
     Spointer S3, S4;
-    S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
+    S1 = moveIt(stt,-1); S2 = moveIt(stt,1); S3 = moveIt(S1, -1); S4 = moveIt(S2, +1);
 	if (!hept_bool){
-		if (S1->type == R5R6 && (S2->type == R5R6)) {
+		bool leftR5 = (isR5internal(C1_res->C1, C1_res, true) || isR5internal(C1_res->C1, C1_res, false));
+		bool rightR5 = (isR5internal(C2_res, C2_res->C2, true) || isR5internal(C2_res, C2_res->C2, false));
+		int leftsite = (int)S1->type;
+		int rightsite = (int)S2->type;
+		int zerosite = 2;
+		
+		if (leftR5){
+			//R5 to the left
+			if (leftsite > 500 && leftsite < 2000) {
+				zerosite += 100;
+				updateSites(S1, S1->C1, C1_res, -401);
+				updateSites(S3, S3->C1, S3->C2, -400);
+			}
+			else if (leftsite > 2000) {
+				zerosite += 500;
+				if (leftsite == 2103) {
+					if((int)S3->type == 100) updateSites(S1, S1->C1, C1_res, -1501);
+					else updateSites(S1, S1->C1, C1_res, -1101);
+				}
+				else if (leftsite == 2114 || leftsite == 2115) {
+					updateSites(S1, S1->C1, C1_res, -11);
+				}
+				else if (leftsite == 2205) updateSites(S1, S1->C1, C1_res, -1);
+				else updateSites(S1, S1->C1, C1_res, -1501);
+			}
+			else updateSites(S1, S1->C1, C1_res, -1);
+		} else{
+			updateSites(S1, S1->C1, C1_res, -1);
+		}
+		if (rightR5){
+			//R5 to the right
+			if (rightsite > 500 && rightsite < 2000) {
+				zerosite += 100;
+				updateSites(S2, C2_res, S2->C2, -401);
+				updateSites(S4, S4->C1, S4->C2, -400);
+			}
+			else if (rightsite > 2000) {
+				zerosite += 500;
+				if (rightsite == 2103) {
+					if((int)S4->type == 100) updateSites(S2, C2_res, S2->C2, -1501);
+					else updateSites(S2, C2_res, S2->C2, -1101);
+				}
+				else if (rightsite == 2114 || rightsite == 2115) {
+					updateSites(S2, C2_res, S2->C2, -11);
+				}
+				else if (rightsite == 2205) updateSites(S2, C2_res, S2->C2, -1);
+				else updateSites(S2, C2_res, S2->C2, -1501);
+			}
+			else updateSites(S2, C2_res, S2->C2, -1);
+		} else{
+			updateSites(S2, C2_res, S2->C2, -1);
+		}
+		
+		if ( (isR5internal(C1_res->C2, C2_res->C1) || isR5internal(C1_res->C2, C2_res->C1, true)) && !leftR5 && !rightR5 ) {
+			zerosite = 2002;
+			Cpointer thirdC = findThirdC(C1_res->C2);
+			Cpointer thirdC2 = findThirdC(C2_res->C1);
+			if (thirdC == NULLC && thirdC2 == NULLC){
+				//Both carbons connected to the R5 that got exposed were embedded.
+				m_pah->m_rings5_Embedded--;
+				m_pah->m_rings5_Lone++;
+			}
+		}
+		
+		updateSites(stt, C1_res, C2_res, zerosite);
+		
+		
+		/*if (S1->type == R5R6 && (S2->type == R5R6)) {
 			S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
 			updateSites(stt, C1_res, C2_res, 202);
 			updateSites(S1, S1->C1, C1_res, -1);
@@ -6812,7 +6892,11 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 		else if (S1->type == R5R6 || (S2->type == R5R6)) {
 			if (S1->type == R5R6){
 				S3 = moveIt(S1, -1);
-				if (isR5internal(C2_res, C2_res->C2, true) || isR5internal(C2_res, C2_res->C2, false)) updateSites(stt, C1_res, C2_res, 502);
+				if (isR5internal(C2_res, C2_res->C2, true) || isR5internal(C2_res, C2_res->C2, false)) {
+					if ((int)S2->type>2000) {
+						updateSites(stt, C1_res, C2_res, 602);
+					else updateSites(stt, C1_res, C2_res, 602);
+				}
 				else updateSites(stt, C1_res, C2_res, 102);
 				updateSites(S1, S1->C1, C1_res, -1);
 				updateSites(S2, C2_res, S2->C2, -1);
@@ -6986,7 +7070,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 				updateSites(S1, S1->C1, C1_res, -1);
 				m_pah->m_rings5_Embedded--;
 			}
-		}*/
+		}
 		else {
 			if (isR5internal(C1_res->C2, C2_res->C1) || isR5internal(C1_res->C2, C2_res->C1, true)) {
 				updateSites(stt, C1_res, C2_res, 2002);
@@ -7001,7 +7085,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 			else updateSites(stt, C1_res, C2_res, 2);
 			updateSites(S1, S1->C1, C1_res, -1);
 			updateSites(S2, C2_res, S2->C2, -1);
-		}
+		}*/
 		// update combined sites
 		S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
 		updateCombinedSites(stt); // update resulting site
