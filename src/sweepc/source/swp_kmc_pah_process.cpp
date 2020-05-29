@@ -9937,7 +9937,7 @@ void PAHProcess::proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 		}
         else {
 			updateSites(S2, C2_new, S2->C2, +401); // update resulting FE neighbour
-			updateSites(S4, S4->C1, S4->C2, +400); // update resulting FE neighbour
+			if ((int)S4->type < 2000) updateSites(S4, S4->C1, S4->C2, +400); // update resulting FE neighbour
 		}
     } else {
         S1 = moveIt(stt, -1); // neighbour of RZZR (stt)
@@ -9952,7 +9952,7 @@ void PAHProcess::proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 		}
         else {
 			updateSites(S1, S1->C1, C1_new, +401); // update resulting FE neighbour
-			updateSites(S3, S3->C1, S3->C2, +400); // update resulting FE neighbour
+			if ((int)S3->type < 2000) updateSites(S3, S3->C1, S3->C2, +400); // update resulting FE neighbour
 		}
     }
     S3 = moveIt(S1, -1);
