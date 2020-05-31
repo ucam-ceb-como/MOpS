@@ -209,19 +209,20 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
         // Calculate time step, update time
 		//Interpolate gas phase species and temperature.
-		m_gas->Interpolate(m_t, r_factor);
+		double eff_ratefactor;
+		//Artificially fix that a PAH with 3 or less sites has rate 0
+		size_t site_size = m_simPAHp.SiteListSize();
+		if ( (int)site_size <=3 ) eff_ratefactor = 1E-12;
+		else eff_ratefactor = r_factor;
+		
+		m_gas->Interpolate(m_t, eff_ratefactor);
 		
 		//Calculate jump process rates
 		m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
         typedef boost::exponential_distribution<double> exponential_distrib;
-		size_t site_size = m_simPAHp.SiteListSize();
-		double eff_ratefactor;
-		//Artificially fix that a PAH with 3 or less sites has rate 0
-		if ( (int)site_size <=3 ) eff_ratefactor = 0.0;
-		else eff_ratefactor = ratefactor;
 		
 		//Generate exponentially distributed waiting time
-        exponential_distrib waitingTimeDistrib(m_kmcmech.TotalRate()*eff_ratefactor);
+        exponential_distrib waitingTimeDistrib(m_kmcmech.TotalRate());
         boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
         double t_step = waitingTimeGenerator();
         t_next = m_t+t_step;
@@ -235,7 +236,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			if (save_pah_detail){
 				//Add PAH to tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
 				int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
-				if (R5R7 >= 1 || std::get<0>(m_simPAHp.getRingsCount()) >= 7) addTrackedPAH(PAH_ID); 	
+				if (R5R7 >= 2) addTrackedPAH(PAH_ID); 	
+				//if (R5R7 >= 1 || std::get<0>(m_simPAHp.getRingsCount()) >= 7) addTrackedPAH(PAH_ID); 	
 				/*else if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
 						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); */
 				

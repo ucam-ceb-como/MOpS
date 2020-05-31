@@ -8956,6 +8956,10 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				S2 = moveIt(SR5, +1);
 				b4 = false;
 			}
+			else if ((int)S1->type == 9999 || (int)S2->type == 9999){
+				//SPIRAL site, reject.
+				return;
+			}
 			else {
 				cout << "R5R6ZZ not neighbouring an R5R6 site. Error.\n";
 				std::list<std::string> Sitelist_before = copySites(stt);
