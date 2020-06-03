@@ -63,6 +63,7 @@
 #include <openbabel/forcefield.h>
 #include <openbabel/ring.h>
 #include <openbabel/math/vector3.h>
+#include <time.h> //Added to test time spent in functions
 
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
@@ -1783,8 +1784,10 @@ cpair PAHProcess::endposR7internal(Cpointer C_1, Cpointer C_2, bool invert_dir) 
 }
 
 int nancounter = 0;
+double passPAH_clock = 0.0; 
 //! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
 OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
+	clock_t start = clock();
 	std::vector<int> methyl_list_flat;
 	//R6 Bay detection
 	std::vector<int> R6pairs1, R6pairs2;
@@ -2246,6 +2249,9 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		printSites();
 		nancounter++;
 	}
+	clock_t end = clock();
+	double duration_sec = double(end-start)/CLOCKS_PER_SEC;
+	passPAH_clock += duration_sec;
 	return mol;
 }
 //Needed for connect the dots.
@@ -2388,8 +2394,10 @@ void PAHProcess::connectPAH(OpenBabel::OBMol my_mol) {
     delete [] c;
  }
 
+double passbackPAH_clock = 0.0;
 //! Passes a PAH from OpenBabel to MOpS. Returns a mol object.
 void PAHProcess::passbackPAH(OpenBabel::OBMol mol) {
+	clock_t start = clock();
 	//Passes new coordinates back to MOPS
 	Ccontainer::iterator it = m_pah->m_carbonList.begin();
 	std::list<cpair>::iterator it2 = m_pah->m_InternalCarbons.begin();
@@ -2461,11 +2469,16 @@ void PAHProcess::passbackPAH(OpenBabel::OBMol mol) {
 		}
 	}
 	m_pah->m_optimised = true;
+	clock_t end = clock();
+	double duration_sec = double(end-start)/CLOCKS_PER_SEC;
+	passbackPAH_clock += duration_sec;
 }
 
 int forcefield_error_counter = 0;
+double optimisePAH_clock = 0.0;
 //! Minimisation of a PAH
 OpenBabel::OBMol PAHProcess::optimisePAH(OpenBabel::OBMol mol, int nsteps, std::string forcefield) {
+	clock_t start = clock();
 	mol.BeginModify();
 	//Defines a forcefield object
 	//OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField("Ghemical");
@@ -2522,6 +2535,9 @@ OpenBabel::OBMol PAHProcess::optimisePAH(OpenBabel::OBMol mol, int nsteps, std::
 	
 	pFF->GetCoordinates(mol);
 	mol.EndModify();
+	clock_t end = clock();
+	double duration_sec = double(end-start)/CLOCKS_PER_SEC;
+	optimisePAH_clock += duration_sec;
 	return mol;
 }
 
@@ -11348,3 +11364,9 @@ std::string PAHProcess::SiteString(char delimiter) const {
     }
     return temp.str();
 };
+
+// Update OpenBabel times.
+std::tuple<double, double, double> PAHProcess::updateOBtimes(){
+	std::tuple<double, double, double> temp = std::make_tuple(passPAH_clock, optimisePAH_clock, passbackPAH_clock);
+	return temp;
+}
