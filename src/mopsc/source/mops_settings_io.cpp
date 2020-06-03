@@ -631,7 +631,8 @@ Reactor *const readReactor(const CamXML::Element &node,
                                         const Mechanism &mech,
                                         const unsigned int max_particle_count,
 										const double maxM0,
-										const Mops::Simulator &sim)
+										const Mops::Simulator &sim
+										)
 {
     Reactor *reac = NULL;
     const CamXML::Element *subnode;
@@ -947,7 +948,6 @@ void readNetwork(
 
 }
 
-
 /*!
 @param[in]     node    XML node for input streams
 @param[in]     solver  the solver
@@ -1190,7 +1190,8 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
                                         Mops::Reactor *reac,
                                         std::vector<TimeInterval> &times,
                                         Simulator &sim, Solver &solver,
-                                        Mechanism &mech)
+                                        Mechanism &mech,
+										Sweep::rng_type &rng)
 {
     CamXML::Document doc;
     const CamXML::Element *root, *node;
@@ -1239,8 +1240,25 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
             throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
         }
-
-	
+		
+		// RESTART SIMULATION
+		//IF TRUE THE REACTOR OBJECT GETS OVERWRITTEN
+		
+		node = root->GetFirstChild("restart");
+		if (node != NULL) {
+			node = node->GetFirstChild("restart_file");
+			if (node){
+				std::string filename;
+				filename = node->Data();
+				std::cout << "Restart file " << filename << " specified.\n";
+				sim.SetRestartFlag(true);
+				readRestartFile(filename, reac, sim, rng);
+			} else {
+					throw std::runtime_error("Settings file does not contain output"
+                                " information (Mops::Settings_IO::LoadFromXML).");
+			}
+		}
+			
         // MECHANISM REDUCTION.
 
         node = root->GetFirstChild("LOI");
@@ -1261,6 +1279,47 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
     }
 
     return reac;
+}
+
+// Reads the reactor initial settings from a binary restart file.
+void Settings_IO::readRestartFile(const std::string filename, Mops::Reactor *reac, Simulator &sim, Sweep::rng_type &rng) {
+	ifstream fin;
+    fin.open(filename.c_str(), ios_base::in | ios_base::binary);
+	
+	if (fin.good()) {
+        // Read the step and run number (for file validation).
+        unsigned int fstep=0, frun=0;
+		Sweep::rng_type frng;
+        fin.read(reinterpret_cast<char*>(&fstep), sizeof(fstep));
+        fin.read(reinterpret_cast<char*>(&frun), sizeof(frun));
+		fin.read(reinterpret_cast<char*>(&frng), sizeof(frng));
+		
+		std::cout << "Setting current time step to " << fstep << std::endl;
+		sim.SetInitialTimeStep(fstep);
+		
+		std::cout << "Setting current run count to " << frun << std::endl;
+		sim.SetCurrentRunCount(frun);
+		
+		//Assign the rng state to the state serialized
+		rng = frng;
+		
+		// Get reference to the particle mechanism.
+		const Mops::Mechanism mech = *reac->Mech();
+		
+		if (reac != NULL) delete reac;
+		reac = NULL;
+		
+        // Deserialize the reactor from the file.
+        reac = ReactorFactory::Read(fin, mech);
+
+        // Close the input file.
+        fin.close();
+
+    } else {
+        // Throw error if the output file failed to open.
+        throw runtime_error("Failed to open restart file."
+                            "input (Settings_IO::readRestartFile()).");
+    }
 }
 
 
@@ -1294,9 +1353,9 @@ void Settings_IO::readTimeIntervals(const CamXML::Element &node,
         ti = new TimeInterval();
         ti->SetStartTime(Strings::cdble(subnode->Data()));
     } else {
-        throw std::runtime_error("Time intervals must have start time defined "
-                            "(Mops, Settings_IO::readTimeIntervals)");
-    }
+			throw std::runtime_error("Time intervals must have start time defined "
+								"(Mops, Settings_IO::readTimeIntervals)");
+	}
 
     node.GetChildren("time", nodes);
     for (i=nodes.begin(); i!=nodes.end(); ++i) {

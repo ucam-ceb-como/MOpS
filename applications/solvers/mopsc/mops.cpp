@@ -312,6 +312,9 @@ int main(int argc, char* argv[])
         delete solver; // Must clear memory now.
         return -1;
     }
+	
+	//Initialise the rng
+	Sweep::rng_type rng = sim.SetRNG(rand);
 
     // Read the settings file.
     try {
@@ -319,7 +322,7 @@ int main(int argc, char* argv[])
             net = Mops::Settings_IO::LoadNetwork(ifile, times, sim, *solver, mech);
             nsim = new Mops::NetworkSimulator(sim, times);
         } else
-            reactor = Mops::Settings_IO::LoadFromXML(ifile, reactor, times, sim, *solver, mech);
+            reactor = Mops::Settings_IO::LoadFromXML(ifile, reactor, times, sim, *solver, mech, rng);
     } catch (std::logic_error &le) {
         std::cerr << "mops: Failed to load MOPS settings file due to bad inputs. Message:\n  "
             << le.what() << "\n";
@@ -361,7 +364,7 @@ int main(int argc, char* argv[])
                 nsim->Run(*net, *solver, rand);
             } else {
                 sim.SetTimeVector(times);
-                sim.RunSimulation(*reactor, *solver, rand);
+                sim.RunSimulation(*reactor, *solver, rng);
             }
         }
     } catch (std::logic_error &le) {

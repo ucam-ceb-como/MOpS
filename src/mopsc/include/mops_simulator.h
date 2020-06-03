@@ -90,6 +90,18 @@ public:
 
     // Sets the number of runs to perform.
     void SetRunCount(unsigned int n);
+	
+	// Returns the number of current run
+	unsigned int CurrentRunCount(void) const;
+	
+	// Sets the number of current run.
+	void SetCurrentRunCount(unsigned int n);
+	
+	// Returns the number of restarting time step
+	unsigned int InitialTimeStep(void) const;
+
+	// Sets the number of current run.
+	void SetInitialTimeStep(unsigned int n);
 
     // Return time vector.
     const timevector &TimeVector() const;
@@ -148,6 +160,12 @@ public:
 
     // Sets whether or not messages are printed to the console.
     void SetUseConsoleMsgs(bool msgs);
+	
+	//Returns whether or not the simulation is restarted from file.
+	bool GetRestartFlag() const;
+	
+	//Sets the simulation restart flag.
+	void SetRestartFlag(bool restart_flag);
 
 
     // FILE OUTPUT.
@@ -210,6 +228,9 @@ public:
     void SetParticleTrackCount(unsigned int ptcount);
 
     // SOLUTION AND POST-PROCESSING.
+	
+	//! Initialize RNG with assigned seed
+	Sweep::rng_type SetRNG(size_t seed);
 
     // Run the solver for the given reactor and the 
     // given time intervals.
@@ -217,7 +238,7 @@ public:
         Reactor &r,              // Reactor object to solve.
         //const timevector &times, // Vector of time intervals.
         Solver &s,               // Solver to use for simulation.
-        size_t seed);
+        Sweep::rng_type &rng);	// RNG
 
     //! Post-processes binary output files into CSV files.
     void PostProcess(void);
@@ -241,9 +262,15 @@ private:
 
     // Number of runs to perform.
     unsigned int m_nruns;
+	
+	// Number of run being performed.
+    unsigned int m_irun;
 
     // Number of internal solver iterations to perform.
     unsigned int m_niter;
+	
+	// Number of starting time step to perform.
+    unsigned int m_initial_timestep;
 
     // Simulation time vector.
     timevector m_times;
@@ -275,6 +302,9 @@ private:
 
     // Set to true if the console is to print messages.
     bool m_console_msgs; 
+	
+	// Set to True in case the simulation is restarting from a given file.
+	bool m_restart=false;
 
     // Console output class.
     Console_IO m_console;
@@ -648,9 +678,18 @@ private:
     // Creates a simulation save point.  The save points can be
     // used to restart an interrupted simulation.
     void createSavePoint(
-        const Reactor &r,  // Reactor to output.
-        unsigned int step, // Step number.
-        unsigned int run   // Run number.
+        const Reactor &r,  		// Reactor to output.
+        unsigned int step, 		// Step number.
+        unsigned int run   		// Run number.
+        ) const;
+	
+	// Overload function. Creates a simulation save point including the rng state.  
+    // The save points can be used to restart an interrupted simulation.
+    void createSavePoint(
+        const Reactor &r,  		// Reactor to output.
+        unsigned int step, 		// Step number.
+        unsigned int run,   		// Run number.
+		Sweep::rng_type rng 	// Rng state
         ) const;
 
     //! Creates an ensemble binary file.
@@ -667,6 +706,14 @@ private:
         unsigned int run,     // Run number.
         const Mechanism &mech // Mechanism used to define reactor.
         ) const;
+		
+	// Overload function. Reads a save point file and its rng state.
+    Reactor *const readSavePoint(
+        unsigned int step,    // Step number.
+        unsigned int run,     // Run number.
+        const Mechanism &mech, // Mechanism used to define reactor.
+        Sweep::rng_type rng
+		) const;
 
     //! Do the grunt work for postprocessing a binary file
     void postProcessSimulation(

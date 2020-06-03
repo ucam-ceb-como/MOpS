@@ -72,9 +72,9 @@ using namespace Strings;
 
 // Default constructor.
 Simulator::Simulator(void)
-: m_nruns(1), m_niter(1), m_pcount(0), m_maxm0(0.0),
+: m_nruns(1), m_irun(0), m_niter(1), m_initial_timestep(0), m_pcount(0), m_maxm0(0.0),
   m_cpu_start((clock_t)0.0), m_cpu_mark((clock_t)0.0), m_runtime(0.0),
-  m_console_interval(1), m_console_msgs(true),
+  m_console_interval(1), m_console_msgs(true), m_restart(false),
   m_output_filename("mops-out"), m_output_every_iter(false),
   m_output_step(0), m_output_iter(0), m_write_jumps(false),
   m_write_ensemble_file(false),
@@ -99,7 +99,9 @@ Simulator::Simulator(const Mops::Simulator &copy)
 Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
     if (this != &rhs) {
         m_nruns = rhs.m_nruns;
+		m_irun = rhs.m_irun;
         m_niter = rhs.m_niter;
+		m_initial_timestep = rhs.m_initial_timestep;
         m_pcount = rhs.m_pcount;
         m_maxm0 = rhs.m_maxm0;
         m_cpu_start = rhs.m_cpu_start;
@@ -107,6 +109,7 @@ Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
         m_runtime = rhs.m_runtime;
         m_console_interval = rhs.m_console_interval;
         m_console_msgs = rhs.m_console_msgs;
+		m_restart = rhs.m_restart;
         m_output_filename = rhs.m_output_filename;
         m_output_every_iter = rhs.m_output_every_iter;
         m_output_step = rhs.m_output_step;
@@ -132,6 +135,18 @@ unsigned int Simulator::RunCount(void) const {return m_nruns;}
 
 // Sets the number of runs to peform.
 void Simulator::SetRunCount(unsigned int n) {m_nruns = n;}
+
+// Returns the number of current run
+unsigned int Simulator::CurrentRunCount(void) const {return m_irun;}
+
+// Sets the number of current run.
+void Simulator::SetCurrentRunCount(unsigned int n) {m_irun = n;}
+
+// Returns the number of restarting time step
+unsigned int Simulator::InitialTimeStep(void) const {return m_initial_timestep;}
+
+// Sets the number of current run.
+void Simulator::SetInitialTimeStep(unsigned int n) {m_initial_timestep = n;}
 
 // Returns the number of iteration to perform per step.
 unsigned int Simulator::IterCount(void) const {return m_niter;}
@@ -241,6 +256,18 @@ void Simulator::SetUseConsoleMsgs(bool msgs)
     m_console_msgs = msgs;
 }
 
+// RESTART SIMULATION.
+
+bool Simulator::GetRestartFlag() const
+{
+    return m_restart;
+}
+
+void Simulator::SetRestartFlag(bool restart_flag)
+{
+    m_restart = restart_flag;
+}
+
 
 // OUTPUT FILE NAME.
 
@@ -260,7 +287,7 @@ void Simulator::SetOutputEveryIter(bool fout) {m_output_every_iter=fout;}
 //! Set simulator to write the jumps CSV file.
 void Simulator::SetWriteJumpFile(bool writejumps) {m_write_jumps=writejumps;}
 
-//! Set simulator to write the jumps CSV file.
+//! Set simulator to write the ensemble file.
 void Simulator::SetWriteEnsembleFile(bool writeensemble) {m_write_ensemble_file=writeensemble;}
 
 //! Set simulator to write the detailed PAH info in the psl file.
@@ -324,11 +351,20 @@ void Simulator::SetMassSpectraFrag(const bool val)
     m_mass_spectra_frag = val;
 }
 
+//! Initialize RNG with assigned seed
+Sweep::rng_type Simulator::SetRNG(size_t seed) {
+	size_t runSeed = seed;
+	boost::hash_combine(runSeed, m_irun);
+	boost::mt19937 rng(runSeed);
+	return rng;
+}
+
+
 // SOLVING REACTORS.
 
 // Solves the given reactor for the given time intervals.
 void Simulator::RunSimulation(Mops::Reactor &r,
-                              Solver &s, size_t seed)
+                              Solver &s, Sweep::rng_type &rng)
 {
     unsigned int icon;
     double dt, t2; // Stop time for each step.
@@ -378,11 +414,12 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     icon = m_console_interval;
     setupConsole(*r.Mech());
 	string m_output_filename_base=m_output_filename;		//ms785
+	
 
 	// Loop over runs.
 	#ifdef USE_MPI
 	#else
-    for (unsigned int irun=0; irun!=m_nruns; ++irun) {
+    for (unsigned int irun=m_irun; irun!=m_nruns; ++irun) {
 	#endif
 
 		#ifdef USE_MPI
@@ -394,9 +431,9 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
 		#endif
 
-		size_t runSeed = seed;
-		boost::hash_combine(runSeed, irun);
-		boost::mt19937 rng(runSeed);
+		//size_t runSeed = seed;
+		//boost::hash_combine(runSeed, irun);
+		//boost::mt19937 rng(runSeed);
 
         // Start the CPU timing clock.
         m_cpu_start = clock();
@@ -422,9 +459,10 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         if (s.GetLOIStatus() == true) setupLOI(r, s);
 
         // Loop over the time intervals.
-        unsigned int global_step = 0;
-        timevector::const_iterator iint;
-        for (iint=m_times.begin(); iint!=m_times.end(); ++iint) {
+        unsigned int global_step = m_initial_timestep;
+        timevector::const_iterator iint=m_times.begin();
+		std::advance(iint,global_step);
+        for (iint; iint!=m_times.end(); ++iint) {
             // Get the step size for this interval.
             dt = (*iint).StepSize();
 
@@ -462,7 +500,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             //@todo Reinstate fractal dimension calculations for
             // the PAH-PP model
 
-            createSavePoint(r, global_step, irun);
+            createSavePoint(r, global_step, irun, rng);
             if (s.GetLOIStatus() == true){
                 r.DestroyJac(m_loi_J, r.Mech()->GasMech().SpeciesCount());
             }
@@ -476,6 +514,8 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             LOIReduction::RejectSpecies(m_loi_data, s.ReturnCompValue(), r.Mech(), rejects, s.ReturnKeptSpecies());
             r.Mech()->GasMech().WriteReducedMech(OutputFile() + std::string("-kept.inp"), rejects);
         }
+		SetInitialTimeStep(0);
+		
 
         // Print run time to the console.
         printf("mops: Run number %d completed in %.1f s.\n", irun+1, m_runtime);
@@ -2112,6 +2152,33 @@ void Simulator::createSavePoint(const Reactor &r, unsigned int step,
     }
 }
 
+// Overload function. Creates a simulation save point.  The save points can be
+// used to restart an interrupted simulation, but are primarily
+// used as output points for the particle size distributions. This serializes the RNG state.
+void Simulator::createSavePoint(const Reactor &r, unsigned int step,
+                                unsigned int run, Sweep::rng_type rng) const
+{
+    // Build the save point file name.
+    string fname = m_output_filename + "(" + cstr(run) + ")-SP(" +
+                   cstr(step) + ").sav";
+
+    // Open the save point file.
+    ofstream fout;
+    fout.open(fname.c_str(), ios_base::out | ios_base::trunc | ios_base::binary);
+
+    if (fout.good()) {
+        fout.write((char*)&step, sizeof(step));
+        fout.write((char*)&run, sizeof(run));
+		fout.write((char*)&rng, sizeof(rng));;
+        ReactorFactory::Write(r, fout);
+        fout.close();
+    } else {
+        // Throw error if the output file failed to open.
+        throw runtime_error("Failed to open file for save point "
+                            "output (Mops, Simulator::createSavePoint).");
+    }
+}
+
 /*!
  * @brief           Writes a binary file containing the ensemble
  *
@@ -2180,8 +2247,10 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
     if (m_file.good()) {
         // Read the step and run number (for file validation).
         unsigned int fstep=0, frun=0;
+		Sweep::rng_type frng;
         fin.read(reinterpret_cast<char*>(&fstep), sizeof(fstep));
         fin.read(reinterpret_cast<char*>(&frun), sizeof(frun));
+		fin.read(reinterpret_cast<char*>(&frng), sizeof(frng));
 
         // Check that the input file is valid.
         if (fstep != step) {
@@ -2194,6 +2263,60 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
             throw runtime_error("File run number does not match file name "
                                 "(Mops, Simulator::readSavePoint).");
         }
+
+        // Deserialize the reactor from the file.
+        r = ReactorFactory::Read(fin, mech);
+
+        // Close the input file.
+        fin.close();
+
+        return r;
+    } else {
+        // Throw error if the output file failed to open.
+        throw runtime_error("Failed to open file for save point "
+                            "input (Mops, Simulator::readSavePoint).");
+    }
+    return NULL;
+}
+
+// Overload function. Reads a save point file and its rng state.
+Reactor *const Simulator::readSavePoint(unsigned int step,
+                                        unsigned int run,
+                                        const Mechanism &mech,
+										Sweep::rng_type rng) const
+{
+    Reactor *r = NULL;
+
+    // Build the save posint file name.
+    string fname = m_output_filename + "(" + cstr(run) + ")-SP(" +
+                   cstr(step) + ").sav";
+
+    // Open the save point file.
+    ifstream fin;
+    fin.open(fname.c_str(), ios_base::in | ios_base::binary);
+
+    if (m_file.good()) {
+        // Read the step and run number (for file validation).
+        unsigned int fstep=0, frun=0;
+		Sweep::rng_type frng;
+        fin.read(reinterpret_cast<char*>(&fstep), sizeof(fstep));
+        fin.read(reinterpret_cast<char*>(&frun), sizeof(frun));
+		fin.read(reinterpret_cast<char*>(&frng), sizeof(frng));
+
+        // Check that the input file is valid.
+        if (fstep != step) {
+            // The file step number does not match!
+            throw runtime_error("File step number does not match file name "
+                                "(Mops, Simulator::readSavePoint).");
+        }
+        if (frun != run) {
+            // The file run number does not match!
+            throw runtime_error("File run number does not match file name "
+                                "(Mops, Simulator::readSavePoint).");
+        }
+		
+		//Assign serialized state to current rng state.
+		rng = frng;
 
         // Deserialize the reactor from the file.
         r = ReactorFactory::Read(fin, mech);
@@ -3073,6 +3196,13 @@ void Simulator::Serialize(std::ostream &out) const
         } else {
             out.write((char*)&falseval, sizeof(falseval));
         }
+		
+		// Restarted simulation.
+        if (m_restart) {
+            out.write((char*)&trueval, sizeof(trueval));
+        } else {
+            out.write((char*)&falseval, sizeof(falseval));
+        }
 
         // Name of output file.
         n = (unsigned int)m_output_filename.length();
@@ -3179,6 +3309,10 @@ void Simulator::Deserialize(std::istream &in)
                 // Console messages.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
                 m_console_msgs = (n==trueval);
+				
+				// Restarted simulation.
+                in.read(reinterpret_cast<char*>(&n), sizeof(n));
+                m_restart = (n==trueval);
 
                 // Name of output file.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

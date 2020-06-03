@@ -91,8 +91,17 @@ namespace Settings_IO
         std::vector<TimeInterval> &times, // Vector of output time intervals.
         Simulator &sim,                   // General settings incl. output settings. 
         Solver &solver,                   // The reactor solver (to set numerical params).
-        Mechanism &mech                   // Mechanism used to define reactor.
+        Mechanism &mech,                   // Mechanism used to define reactor.
+		Sweep::rng_type &rng			  // Random number generator object.
         );
+		
+	// Reads the reactor initial settings from a binary restart file.
+	void readRestartFile(
+		const std::string filename, 		//Input file name.
+		Reactor *reac, 						// Reactor object to be overwritten
+		Simulator &sim, 					// General settings incl. output settings. 
+		Sweep::rng_type &rng				// Random number generator object.
+		);
 
     // Reads time intervals from given XML node.
     void readTimeIntervals(
