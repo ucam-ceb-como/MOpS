@@ -96,8 +96,9 @@ namespace Settings_IO
         );
 		
 	// Reads the reactor initial settings from a binary restart file.
-	void readRestartFile(
+	Reactor *const readRestartFile(
 		const std::string filename, 		//Input file name.
+		const Mechanism &mech, 				// Mechanism used to define reactor.
 		Reactor *reac, 						// Reactor object to be overwritten
 		Simulator &sim, 					// General settings incl. output settings. 
 		Sweep::rng_type &rng				// Random number generator object.

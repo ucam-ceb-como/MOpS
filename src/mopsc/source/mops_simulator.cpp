@@ -373,7 +373,7 @@ void Simulator::RunSimulation(Mops::Reactor &r, Solver &s, size_t seed, Sweep::r
     std::auto_ptr<Mixture> initmix(r.Mixture()->Clone());
 
     // Initialise the reactor with the start time.
-    t2 = m_times[0].StartTime();
+    t2 = m_times[m_initial_timestep].StartTime();
     r.SetTime(t2);
     //r.Mixture()->GasPhase().SetMaxM0(m_maxm0);
 
@@ -402,7 +402,7 @@ void Simulator::RunSimulation(Mops::Reactor &r, Solver &s, size_t seed, Sweep::r
 	}
 	if (rank==0)						//ms785
 	#endif
-
+	m_output_step = m_initial_timestep;
     fileOutput(m_output_step, m_output_iter, r, s, this);
 
 	#ifdef USE_MPI
@@ -505,7 +505,6 @@ void Simulator::RunSimulation(Mops::Reactor &r, Solver &s, size_t seed, Sweep::r
             // the PAH-PP model
 
             createSavePoint(r, global_step, irun, rng);
-			r.Mixture()->Particles().Simulator()->printOBtimes();
             if (s.GetLOIStatus() == true){
                 r.DestroyJac(m_loi_J, r.Mech()->GasMech().SpeciesCount());
             }
