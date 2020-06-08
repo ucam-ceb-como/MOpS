@@ -141,8 +141,6 @@ namespace Sweep{
 			void removeTrackedPAH(int PAH_number);
 			//! Sets the debug flag for PAHProcess.
 			void setDebugPAH(const bool debug_pah);
-			//! Print OB times.
-			void printOBtimes();
             //! Update structure of PAH after time dt.
             double updatePAH(PAHStructure* pah,         //! structure of pah.
                            const double tstart,       //! start time.
@@ -224,10 +222,6 @@ namespace Sweep{
             PAHProcess m_simPAHp;
             //! Reaction Counter
             std::vector<int> m_rxn_count;
-			
-			double passPAH_clock;
-			double optimisePAH_clock;
-			double passbackPAH_clock;
         };
 
         // to write C-H data for PAHs after intervals

@@ -352,9 +352,9 @@ void Simulator::SetMassSpectraFrag(const bool val)
 }
 
 //! Initialize RNG with assigned seed
-Sweep::rng_type Simulator::SetRNG(size_t seed, unsigned int run) {
+Sweep::rng_type Simulator::SetRNG(size_t seed) {
 	size_t runSeed = seed;
-	boost::hash_combine(runSeed, run);
+	boost::hash_combine(runSeed, m_irun);
 	boost::mt19937 rng(runSeed);
 	return rng;
 }
@@ -363,7 +363,8 @@ Sweep::rng_type Simulator::SetRNG(size_t seed, unsigned int run) {
 // SOLVING REACTORS.
 
 // Solves the given reactor for the given time intervals.
-void Simulator::RunSimulation(Mops::Reactor &r, Solver &s, size_t seed, Sweep::rng_type &rng)
+void Simulator::RunSimulation(Mops::Reactor &r,
+                              Solver &s, Sweep::rng_type &rng)
 {
     unsigned int icon;
     double dt, t2; // Stop time for each step.
@@ -433,11 +434,6 @@ void Simulator::RunSimulation(Mops::Reactor &r, Solver &s, size_t seed, Sweep::r
 		//size_t runSeed = seed;
 		//boost::hash_combine(runSeed, irun);
 		//boost::mt19937 rng(runSeed);
-		if (!m_restart) {
-			Sweep::rng_type nrng = SetRNG(seed, irun);
-			rng == nrng;
-		}
-		
 
         // Start the CPU timing clock.
         m_cpu_start = clock();
@@ -505,7 +501,6 @@ void Simulator::RunSimulation(Mops::Reactor &r, Solver &s, size_t seed, Sweep::r
             // the PAH-PP model
 
             createSavePoint(r, global_step, irun, rng);
-			r.Mixture()->Particles().Simulator()->printOBtimes();
             if (s.GetLOIStatus() == true){
                 r.DestroyJac(m_loi_J, r.Mech()->GasMech().SpeciesCount());
             }

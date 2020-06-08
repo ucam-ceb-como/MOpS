@@ -314,7 +314,7 @@ int main(int argc, char* argv[])
     }
 	
 	//Initialise the rng
-	Sweep::rng_type rng = sim.SetRNG(rand, 0);
+	Sweep::rng_type rng = sim.SetRNG(rand);
 
     // Read the settings file.
     try {
@@ -364,7 +364,7 @@ int main(int argc, char* argv[])
                 nsim->Run(*net, *solver, rand);
             } else {
                 sim.SetTimeVector(times);
-                sim.RunSimulation(*reactor, *solver, rand, rng);
+                sim.RunSimulation(*reactor, *solver, rng);
             }
         }
     } catch (std::logic_error &le) {

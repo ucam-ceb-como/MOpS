@@ -82,9 +82,6 @@ static std::vector<kmcSiteType> allSiteType = vectSiteType();
 KMCSimulator::KMCSimulator():
      m_gasprof(), m_mech(), m_gas(), m_simPAH(), m_t(), m_fromfile(false), m_kmcmech(),m_simPAHp()
 {
-	passPAH_clock = 0.0;
-	optimisePAH_clock = 0.0;
-	passbackPAH_clock = 0.0;
 }
 
 //! Constructor from chemkin and gasphase files
@@ -94,9 +91,6 @@ KMCSimulator::KMCSimulator(const std::string gasphase, const std::string chemfil
     m_gasprof = new Sweep::GasProfile();
     LoadGasProfiles(gasphase, chemfile, thermfile);
     m_fromfile = true;
-	passPAH_clock = 0.0;
-	optimisePAH_clock = 0.0;
-	passbackPAH_clock = 0.0;
 }
 //! Constructor from a GasProfile object
 KMCSimulator::KMCSimulator(Sweep::GasProfile& gprofile):
@@ -106,9 +100,6 @@ KMCSimulator::KMCSimulator(Sweep::GasProfile& gprofile):
     m_gasprof = &gprofile;
     m_gas = new KMCGasPoint(gprofile, *gprofile[0].Gas.Species());
     m_mech = NULL;
-	passPAH_clock = 0.0;
-	optimisePAH_clock = 0.0;
-	passbackPAH_clock = 0.0;
 }
 
 //! Copy Constructor
@@ -121,9 +112,6 @@ KMCSimulator::KMCSimulator(KMCSimulator& s):
     m_gas = new KMCGasPoint(*s.m_gas);
     //m_simPAH = new PAHStructure(*(s.m_simPAH));
     m_simPAHp = PAHProcess(*m_simPAH);
-	passPAH_clock = s.passPAH_clock;
-	optimisePAH_clock = s.optimisePAH_clock;
-	passbackPAH_clock = s.passbackPAH_clock;
 }
 
 //! Default Destructor
@@ -1211,12 +1199,3 @@ void KMCSimulator::removeTrackedPAH(int PAH_number){
 void KMCSimulator::setDebugPAH(const bool debug_pah) {
     m_simPAHp.m_debug_pah = debug_pah;
 }
-
-//! Prints OpenBabel times.
-void KMCSimulator::printOBtimes() {
-    std::tuple<double, double, double> temp = m_simPAHp.updateOBtimes();
-	std::cout << "passPAH time = " << std::get<0>(temp) << " s." << std::endl;
-	std::cout << "optimisePAH time = " << std::get<1>(temp) << " s." << std::endl;
-	std::cout << "passbackPAH time = " << std::get<2>(temp) << " s." << std::endl;
-}
-

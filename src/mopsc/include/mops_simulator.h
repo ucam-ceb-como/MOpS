@@ -230,7 +230,7 @@ public:
     // SOLUTION AND POST-PROCESSING.
 	
 	//! Initialize RNG with assigned seed
-	Sweep::rng_type SetRNG(size_t seed, unsigned int run);
+	Sweep::rng_type SetRNG(size_t seed);
 
     // Run the solver for the given reactor and the 
     // given time intervals.
@@ -238,7 +238,6 @@ public:
         Reactor &r,              // Reactor object to solve.
         //const timevector &times, // Vector of time intervals.
         Solver &s,               // Solver to use for simulation.
-		size_t seed,			 //RNG seed used
         Sweep::rng_type &rng);	// RNG
 
     //! Post-processes binary output files into CSV files.
