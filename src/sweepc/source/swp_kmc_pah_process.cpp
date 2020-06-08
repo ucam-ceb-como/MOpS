@@ -5401,13 +5401,6 @@ int r7_error_counter = 0;
 bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID)
 {
     //printStruct();
-	//Test. Optimising before every transformation. Only optimises if structure has not been optimised previously.
-	if (!m_pah->m_optimised){
-			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
-			passbackPAH(mol);
-	}
-	
     //cout << "Start Performing Process..\n";
     kmcSiteType stp = jp.getSiteType();
 	Spointer site_perf;
