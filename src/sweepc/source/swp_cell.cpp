@@ -80,7 +80,7 @@ Cell::Cell(const Cell &copy)
 
 // Stream-reading constructor.
 Cell::Cell(std::istream &in, const Sweep::ParticleModel &model)
-: m_gas(new Sweep::SprogIdealGasWrapper(*model.Species()))
+: m_model(&model), m_gas(new Sweep::SprogIdealGasWrapper(*model.Species()))
 {
     Deserialize(in, model);
 }

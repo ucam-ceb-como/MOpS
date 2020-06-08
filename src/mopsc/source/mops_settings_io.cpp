@@ -1252,7 +1252,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 				filename = node->Data();
 				std::cout << "Restart file " << filename << " specified.\n";
 				sim.SetRestartFlag(true);
-				readRestartFile(filename, reac, sim, rng);
+				reac = readRestartFile(filename, mech, reac, sim, rng);
 			} else {
 					throw std::runtime_error("Settings file does not contain output"
                                 " information (Mops::Settings_IO::LoadFromXML).");
@@ -1282,7 +1282,18 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 }
 
 // Reads the reactor initial settings from a binary restart file.
-void Settings_IO::readRestartFile(const std::string filename, Mops::Reactor *reac, Simulator &sim, Sweep::rng_type &rng) {
+Reactor *const Settings_IO::readRestartFile(const std::string filename, const Mechanism &mech, Mops::Reactor *reac, Simulator &sim, Sweep::rng_type &rng) {
+	
+    //Creaty a copy of the reactor mixture
+    //This mixture is read from xml file at this point. It is not our restart mixture.
+    //Mixture *mix_clone = reac->Mixture()->Clone();
+
+	// We need a blank reactor object to create.  If the pointer
+	// passed to this function is valid then it needs to be
+	// deleted.
+	if (reac != NULL) delete reac;
+	reac = NULL;
+	
 	ifstream fin;
     fin.open(filename.c_str(), ios_base::in | ios_base::binary);
 	
@@ -1303,23 +1314,23 @@ void Settings_IO::readRestartFile(const std::string filename, Mops::Reactor *rea
 		//Assign the rng state to the state serialized
 		rng = frng;
 		
-		// Get reference to the particle mechanism.
-		const Mops::Mechanism mech = *reac->Mech();
-		
-		if (reac != NULL) delete reac;
-		reac = NULL;
-		
         // Deserialize the reactor from the file.
         reac = ReactorFactory::Read(fin, mech);
 
+        //Assign a particle model to the reactor
+        //reac->Mixture()->m_model = model_clone;
+
         // Close the input file.
         fin.close();
+		
+		return reac;
 
     } else {
         // Throw error if the output file failed to open.
         throw runtime_error("Failed to open restart file."
                             "input (Settings_IO::readRestartFile()).");
     }
+	return NULL;
 }
 
 
