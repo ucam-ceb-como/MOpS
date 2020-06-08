@@ -51,6 +51,9 @@ PAHkmc-app
 chemkinReader-test
 *.exe
 
+#VSCode environment files
+.vscode*
+
 # log files
 *log*
 
