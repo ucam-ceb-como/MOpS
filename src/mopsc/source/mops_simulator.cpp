@@ -444,7 +444,7 @@ void Simulator::RunSimulation(Mops::Reactor &r, Solver &s, size_t seed, Sweep::r
         m_runtime  = 0.0;
 
         // Initialise the reactor with the start time.
-        t2 = m_times[0].StartTime();
+        t2 = m_times[m_initial_timestep].StartTime();
         r.SetTime(t2);
         // also reset the contents of the reactor
         r.Fill(*(initmix->Clone()), true);

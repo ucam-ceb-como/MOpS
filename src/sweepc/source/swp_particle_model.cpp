@@ -136,6 +136,7 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
          m_ThermalConductivityIndex = rhs.m_ThermalConductivityIndex;
 
          m_postprocessingType = rhs.m_postprocessingType;
+         m_InceptedPAH = rhs.m_InceptedPAH;
 
          //! Tracking of primary separation or coordinates.
          m_trackPrimarySeparation = rhs.m_trackPrimarySeparation;

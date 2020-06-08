@@ -1284,6 +1284,10 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 // Reads the reactor initial settings from a binary restart file.
 Reactor *const Settings_IO::readRestartFile(const std::string filename, const Mechanism &mech, Mops::Reactor *reac, Simulator &sim, Sweep::rng_type &rng) {
 	
+    //Creaty a copy of the reactor mixture
+    //This mixture is read from xml file at this point. It is not our restart mixture.
+    //Mixture *mix_clone = reac->Mixture()->Clone();
+
 	// We need a blank reactor object to create.  If the pointer
 	// passed to this function is valid then it needs to be
 	// deleted.
@@ -1312,6 +1316,9 @@ Reactor *const Settings_IO::readRestartFile(const std::string filename, const Me
 		
         // Deserialize the reactor from the file.
         reac = ReactorFactory::Read(fin, mech);
+
+        //Assign a particle model to the reactor
+        //reac->Mixture()->m_model = model_clone;
 
         // Close the input file.
         fin.close();
