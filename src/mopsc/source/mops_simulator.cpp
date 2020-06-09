@@ -890,7 +890,7 @@ void Simulator::postProcessSimulation(
         /*!
          * Useful for reproduction of Stein and Fahr's stabilomer grid.
          * Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
-         * J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
+         * J. Phys. Chem. 89, 3714ï¿½3725. doi:10.1021/j100263a027.
          */
         postProcessPAHinfo(mech, times);
 
@@ -903,7 +903,7 @@ void Simulator::postProcessSimulation(
 		/*!
 		* Useful for reproduction of Stein and Fahr's stabilomer grid.
 		* Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
-		* J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
+		* J. Phys. Chem. 89, 3714ï¿½3725. doi:10.1021/j100263a027.
 		*/
 		 postProcessPAHinfo(mech, times);
 
@@ -2244,7 +2244,7 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
     ifstream fin;
     fin.open(fname.c_str(), ios_base::in | ios_base::binary);
 
-    if (m_file.good()) {
+    if (fin.good()) {
         // Read the step and run number (for file validation).
         unsigned int fstep=0, frun=0;
 		Sweep::rng_type frng;
@@ -2272,9 +2272,11 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
 
         return r;
     } else {
+
+        std::cout << "Missing file " << fname << " for postprocessing. Continuing to next file." << std::endl;
         // Throw error if the output file failed to open.
-        throw runtime_error("Failed to open file for save point "
-                            "input (Mops, Simulator::readSavePoint).");
+        //throw runtime_error("Failed to open file for save point "
+        //                    "input (Mops, Simulator::readSavePoint).");
     }
     return NULL;
 }
@@ -2295,7 +2297,7 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
     ifstream fin;
     fin.open(fname.c_str(), ios_base::in | ios_base::binary);
 
-    if (m_file.good()) {
+    if (fin.good()) {
         // Read the step and run number (for file validation).
         unsigned int fstep=0, frun=0;
 		Sweep::rng_type frng;
@@ -2326,9 +2328,10 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
 
         return r;
     } else {
+        std::cout << "Missing file " << fname << " for postprocessing. Continuing to next file." << std::endl;
         // Throw error if the output file failed to open.
-        throw runtime_error("Failed to open file for save point "
-                            "input (Mops, Simulator::readSavePoint).");
+        //throw runtime_error("Failed to open file for save point "
+        //                    "input (Mops, Simulator::readSavePoint).");
     }
     return NULL;
 }
@@ -2425,8 +2428,8 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 			}
 			else {
 				// Throw error if the reactor was not read.
-				throw runtime_error("Unable to read reactor from save point "
-					"(Mops, ParticleSolver::postProcessPSLs).");
+				//throw runtime_error("Unable to read reactor from save point "
+				//	"(Mops, ParticleSolver::postProcessPSLs).");
 			}
 
 			
@@ -2578,8 +2581,8 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
                     delete r;
                 } else {
                     //! Throw error if the reactor was not read.
-                    throw runtime_error("Unable to read reactor from save point "
-                                        "(Mops, ParticleSolver::postProcessPSLs).");
+                    //throw runtime_error("Unable to read reactor from save point "
+                    //                    "(Mops, ParticleSolver::postProcessPSLs).");
                 }
             }
 
@@ -2679,8 +2682,8 @@ void Simulator::postProcessPPPSLs(const Mechanism &mech,
 				}
 				else {
 					//! Throw error if the reactor was not read.
-					throw runtime_error("Unable to read reactor from save point "
-						"(Mops, ParticleSolver::postProcessPSLs).");
+					//throw runtime_error("Unable to read reactor from save point "
+					//	"(Mops, ParticleSolver::postProcessPSLs).");
 				}
 			}
 
@@ -2794,8 +2797,8 @@ void Simulator::postProcessPAHinfo(const Mechanism &mech,
                     delete r;
                 } else {
                     // Throw error if the reactor was not read.
-                    throw runtime_error("Unable to read reactor from save point "
-                                        "(Mops, ParticleSolver::postProcessXmer).");
+                    //throw runtime_error("Unable to read reactor from save point "
+                    //                    "(Mops, ParticleSolver::postProcessXmer).");
                 }
             }
         }

@@ -896,7 +896,7 @@ void Mixture::Deserialize(std::istream &in)
                 m_data.reserve(sz);
                 for (unsigned int i=0; i<sz; i++) {
                     in.read(reinterpret_cast<char*>(&val), sizeof(val));
-                    m_data.push_back(val);
+                    m_data[i]=val;
                 }
 
                 // The mixture has no species associated it with right now.
