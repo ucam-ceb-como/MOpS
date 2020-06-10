@@ -322,6 +322,7 @@ void PAHStructure::Serialize(std::ostream &out) const
 	val = numofSite();
 	out.write((char*)&(val), sizeof(val));
 	
+	//Serializes m_siteList
 	for(std::list<Site>::const_iterator it = m_siteList.begin(); it != m_siteList.end(); ++it){
 		val = (int)(*it).type;
 		out.write((char*)&(val), sizeof(val));
@@ -337,6 +338,36 @@ void PAHStructure::Serialize(std::ostream &out) const
 		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
 		val_pos = std::get<2>((*it).C2->coords);
 		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+	}
+
+	//Serializes m_siteMap
+	val = m_siteMap.size();
+	out.write((char*)&(val), sizeof(val));
+
+	std::map<kmcSiteType, svector>::const_iterator map_it;
+
+	for(map_it=m_siteMap.begin(); map_it!=m_siteMap.end(); map_it++){
+		val = (int)map_it->first;
+		out.write((char*)&(val), sizeof(val));
+
+		std::vector<Spointer> site_vector = map_it->second;
+		for(int site_it=0; site_it<site_vector.size(); site_it++){
+			Spointer S1 = site_vector[site_it];
+			val = (int)S1->type;
+			out.write((char*)&(val), sizeof(val));
+			val_pos = std::get<0>(S1->C1->coords);
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+			val_pos = std::get<1>(S1->C1->coords);
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+			val_pos = std::get<2>(S1->C1->coords);
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+			val_pos = std::get<0>(S1->C2->coords);
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+			val_pos = std::get<1>(S1->C2->coords);
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+			val_pos = std::get<2>(S1->C2->coords);
+			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
+		}
 	}
 
 	//Old method that stored the site list as a string
