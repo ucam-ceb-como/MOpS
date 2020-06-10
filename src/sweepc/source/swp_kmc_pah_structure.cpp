@@ -326,6 +326,8 @@ void PAHStructure::Serialize(std::ostream &out) const
 	for(std::list<Site>::const_iterator it = m_siteList.begin(); it != m_siteList.end(); ++it){
 		val = (int)(*it).type;
 		out.write((char*)&(val), sizeof(val));
+		val = (int)(*it).comb;
+		out.write((char*)&(val), sizeof(val));
 		val_pos = std::get<0>((*it).C1->coords);
 		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
 		val_pos = std::get<1>((*it).C1->coords);
@@ -358,6 +360,8 @@ void PAHStructure::Serialize(std::ostream &out) const
 		for(int site_it=0; site_it<site_vector.size(); site_it++){
 			Spointer S1 = site_vector[site_it];
 			val = (int)S1->type;
+			out.write((char*)&(val), sizeof(val));
+			val = (int)S1->comb;
 			out.write((char*)&(val), sizeof(val));
 			val_pos = std::get<0>(S1->C1->coords);
 			out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
@@ -516,10 +520,12 @@ void PAHStructure::Deserialize(std::istream &in)
 	in.read(reinterpret_cast<char*>(&val), sizeof(val));
 	int temp_numSite = val;
 	
-	std::vector<std::tuple<int, cpair, cpair>> temp_site_vector;
+	std::vector<std::tuple<int, int, cpair, cpair>> temp_site_vector;
 	for(int i=0; i!= temp_numSite; i++){
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
 		int site_type = val;
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		int comb_site_type = val;
 		
 		coordtype x1, y1, z1, x2, y2, z2;
 		std::tuple<coordtype, coordtype, coordtype> s_C1, s_C2;
@@ -538,7 +544,7 @@ void PAHStructure::Deserialize(std::istream &in)
 		in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
 		z2 = val_pos;
 		s_C2 = std::make_tuple(x2, y2, z2);
-		std::tuple<int, cpair, cpair> temp_site = std::make_tuple(site_type, s_C1, s_C2);
+		std::tuple<int, int, cpair, cpair> temp_site = std::make_tuple(site_type, comb_site_type, s_C1, s_C2);
 		
 		temp_site_vector.push_back(temp_site);
 	}
@@ -547,7 +553,7 @@ void PAHStructure::Deserialize(std::istream &in)
 	in.read(reinterpret_cast<char*>(&val), sizeof(val));
 	int temp_mapSize = val;
 
-	std::map<int, std::vector<std::tuple<int, cpair, cpair>>> temp_map;
+	std::map<int, std::vector<std::tuple<int, int, cpair, cpair>>> temp_map;
 
 	for(int map_it = 0; map_it!=temp_mapSize; map_it++){
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
@@ -556,11 +562,13 @@ void PAHStructure::Deserialize(std::istream &in)
 		in.read(reinterpret_cast<char*>(&val), sizeof(val));
 		int temp_sitetypesize = val;
 
-		std::vector<std::tuple<int, cpair, cpair>> temp_sitemap_vector;
+		std::vector<std::tuple<int, int, cpair, cpair>> temp_sitemap_vector;
 
 		for(int site_it=0; site_it!=temp_sitetypesize; site_it++){
 			in.read(reinterpret_cast<char*>(&val), sizeof(val));
 			int site_type = val;
+			in.read(reinterpret_cast<char*>(&val), sizeof(val));
+			int comb_site_type = val;
 			
 			coordtype x1, y1, z1, x2, y2, z2;
 			std::tuple<coordtype, coordtype, coordtype> s_C1, s_C2;
@@ -579,7 +587,7 @@ void PAHStructure::Deserialize(std::istream &in)
 			in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
 			z2 = val_pos;
 			s_C2 = std::make_tuple(x2, y2, z2);
-			std::tuple<int, cpair, cpair> temp_site = std::make_tuple(site_type, s_C1, s_C2);
+			std::tuple<int, int, cpair, cpair> temp_site = std::make_tuple(site_type, comb_site_type, s_C1, s_C2);
 			
 			temp_sitemap_vector.push_back(temp_site);
 		}
