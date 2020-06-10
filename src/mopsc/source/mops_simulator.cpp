@@ -363,7 +363,7 @@ Sweep::rng_type Simulator::SetRNG(size_t seed) {
 // SOLVING REACTORS.
 
 // Solves the given reactor for the given time intervals.
-void Simulator::RunSimulation(Mops::Reactor &r,
+void Simulator::RunSimulation(Mops::Reactor &r, Mops::Mixture &initmix,
                               Solver &s, Sweep::rng_type &rng)
 {
     unsigned int icon;
@@ -371,7 +371,9 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
     // Make a copy of the initial mixture and store in an auto pointer
     // so that it will be deleted when we leave this scope.
-    std::auto_ptr<Mixture> initmix(r.Mixture()->Clone());
+    //std::auto_ptr<Mixture> initmix(r.Mixture()->Clone());
+
+    //For now, if the simulation is being restarted the mixture will be initialised from this mixture. This is not
 
     // Initialise the reactor with the start time.
     t2 = m_times[m_initial_timestep].StartTime();
@@ -443,7 +445,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
         t2 = m_times[m_initial_timestep].StartTime();
         r.SetTime(t2);
         // also reset the contents of the reactor
-        r.Fill(*(initmix->Clone()), true);
+        if (!m_restart) r.Fill(*(initmix.Clone()), true);
 
         // Set up the ODE solver for this run.
         s.Reset(r);
@@ -515,6 +517,7 @@ void Simulator::RunSimulation(Mops::Reactor &r,
             r.Mech()->GasMech().WriteReducedMech(OutputFile() + std::string("-kept.inp"), rejects);
         }
 		SetInitialTimeStep(0);
+        if (m_restart) SetRestartFlag(false); //The next run will start from initial time.
 		
 
         // Print run time to the console.

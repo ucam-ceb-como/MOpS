@@ -236,6 +236,7 @@ public:
     // given time intervals.
     void RunSimulation(
         Reactor &r,              // Reactor object to solve.
+        Mixture &initmix,        // Reactor mixture at initial time.
         //const timevector &times, // Vector of time intervals.
         Solver &s,               // Solver to use for simulation.
         Sweep::rng_type &rng);	// RNG

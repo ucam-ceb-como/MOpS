@@ -1188,6 +1188,7 @@ void readOutput(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
 // Reads a new-format XML settings file.
 Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
                                         Mops::Reactor *reac,
+                                        Mops::Mixture *mix,
                                         std::vector<TimeInterval> &times,
                                         Simulator &sim, Solver &solver,
                                         Mechanism &mech,
@@ -1236,6 +1237,7 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         node = root->GetFirstChild("reactor");
         if (node != NULL) {
 			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0(), sim);
+            mix = reac->Mixture()->Clone();
         } else {
             throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
@@ -1252,9 +1254,10 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
 				filename = node->Data();
 				std::cout << "Restart file " << filename << " specified.\n";
 				sim.SetRestartFlag(true);
+                // reac has now the mixture read from the restart file.
 				reac = readRestartFile(filename, mech, reac, sim, rng);
 			} else {
-					throw std::runtime_error("Settings file does not contain output"
+					throw std::runtime_error("Settings file does not contain reastart_file"
                                 " information (Mops::Settings_IO::LoadFromXML).");
 			}
 		}

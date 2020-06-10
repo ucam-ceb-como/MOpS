@@ -221,6 +221,7 @@ int main(int argc, char* argv[])
     // Define all the objects required to run the simulation.
     Mops::Solver *solver   = NULL; // The solver.
     Mops::Reactor *reactor = NULL; // Reactor to solve.
+    Mops::Mixture *initmix;        // Reactor initial mixture.
     Mops::Mechanism mech;          // Chemical and particle mechanism.
     Mops::timevector times;        // A list of output times and step counts.
     Mops::Simulator sim;           // The simulator.
@@ -322,7 +323,7 @@ int main(int argc, char* argv[])
             net = Mops::Settings_IO::LoadNetwork(ifile, times, sim, *solver, mech);
             nsim = new Mops::NetworkSimulator(sim, times);
         } else
-            reactor = Mops::Settings_IO::LoadFromXML(ifile, reactor, times, sim, *solver, mech, rng);
+            reactor = Mops::Settings_IO::LoadFromXML(ifile, reactor, initmix, times, sim, *solver, mech, rng);
     } catch (std::logic_error &le) {
         std::cerr << "mops: Failed to load MOPS settings file due to bad inputs. Message:\n  "
             << le.what() << "\n";
@@ -364,7 +365,7 @@ int main(int argc, char* argv[])
                 nsim->Run(*net, *solver, rand);
             } else {
                 sim.SetTimeVector(times);
-                sim.RunSimulation(*reactor, *solver, rng);
+                sim.RunSimulation(*reactor, *initmix, *solver, rng);
             }
         }
     } catch (std::logic_error &le) {

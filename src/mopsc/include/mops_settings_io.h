@@ -88,11 +88,12 @@ namespace Settings_IO
     Reactor *const LoadFromXML(
         const std::string &filename,      // Input file name.
         Reactor *reac,                    // The reactor to be simulated.
+        Mixture *mix,                     // The initial mixture of the reactor.
         std::vector<TimeInterval> &times, // Vector of output time intervals.
         Simulator &sim,                   // General settings incl. output settings. 
         Solver &solver,                   // The reactor solver (to set numerical params).
         Mechanism &mech,                   // Mechanism used to define reactor.
-		Sweep::rng_type &rng			  // Random number generator object.
+		    Sweep::rng_type &rng			  // Random number generator object.
         );
 		
 	// Reads the reactor initial settings from a binary restart file.
