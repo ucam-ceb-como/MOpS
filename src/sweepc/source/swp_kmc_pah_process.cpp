@@ -107,8 +107,9 @@ PAHStructure* PAHProcess::clonePAH() const {
 	//cpair first_c_pos = first_site->C1->coords;
 	
 	std::vector<std::tuple<int, cpair, cpair>> sites = SiteVector_clone();
+	std::map<int, std::vector<std::tuple<int, cpair, cpair>>> site_map = SiteMap_clone();
 	std::vector<std::tuple<cpair, int, int, cpair>> edgeCarbons = EdgeCarbonVector_clone();
-	p.initialise(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, edgeCarbons, m_pah->m_InternalCarbons, m_pah->m_R5loc, m_pah->m_R7loc);
+	p.initialise(sites, site_map, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, edgeCarbons, m_pah->m_InternalCarbons, m_pah->m_R5loc, m_pah->m_R7loc);
 	//p.createPAH(sites, carbon_per_site, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_carbonList, m_pah->m_InternalCarbons, m_pah->m_R5loc, m_pah->m_R7loc, first_c_pos);
 	//p.createPAH(sites, m_pah->m_rings, m_pah->m_rings5_Lone, m_pah->m_rings5_Embedded, m_pah->m_rings7_Lone, m_pah->m_rings7_Embedded, m_pah->m_InternalCarbons);
     return temp;
@@ -4811,7 +4812,14 @@ void PAHProcess::createPAH(std::vector<kmcSiteType>& vec, std::vector<int>& carb
  *
  * @return       Initialized PAH structure
  */
-PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, cpair, cpair>> siteList_vector, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, std::vector<std::tuple<cpair, int, int, cpair>> edgeCarbons, std::list<cpair> internalCarbons, std::list<cpair> R5_locs, std::list<cpair> R7_locs){
+PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, cpair, cpair>> siteList_vector,
+									 std::map<int, std::vector<std::tuple<int, cpair, cpair>>> siteList_map,
+									 int R6_num, int R5_num_Lone, int R5_num_Embedded, 
+									 int R7_num_Lone, int R7_num_Embedded, 
+									 std::vector<std::tuple<cpair, int, int, cpair>> edgeCarbons, 
+									 std::list<cpair> internalCarbons, 
+									 std::list<cpair> R5_locs, 
+									 std::list<cpair> R7_locs){
     if(m_pah == NULL) {
         PAHStructure* pah = new PAHStructure();
         m_pah = pah;
@@ -4873,6 +4881,7 @@ PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, cpair, cpair>> 
 	connectToC(m_pah->m_clast, m_pah->m_cfirst);
 	
 	//Add sites	
+	m_pah->m_siteList.clear(); //cout << "m_pah->m_siteList cleared!\n";
     for(std::vector<std::tuple<int, cpair, cpair>>::iterator it=siteList_vector.begin(); it!=siteList_vector.end(); it++) {
         kmcSiteType temp = kmcSiteType(std::get<0>(*it));
         if(temp == Inv) {
@@ -4889,6 +4898,44 @@ PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, cpair, cpair>> 
 		Cpointer siteC2 = findC(std::get<2>(*it));
 		addSite(temp, siteC1, siteC2);
     }
+
+	//Create site map
+	m_pah->m_siteMap.clear();//cout << "m_pah->m_siteMap cleared!\n";
+	std::map<int, std::vector<std::tuple<int, cpair, cpair>>>::iterator map_it;
+	for(map_it=siteList_map.begin();map_it!=siteList_map.end();map_it++){
+		kmcSiteType site_type = (kmcSiteType)map_it->first;
+		svector Spointer_vec;
+		std::vector<std::tuple<int, cpair, cpair>> site_vec_coords = map_it->second;
+
+		for(int vec_it = 0; vec_it!=site_vec_coords.size();vec_it++){
+			Cpointer siteC1 = findC(std::get<1>(site_vec_coords[vec_it]));
+			Cpointer siteC2 = findC(std::get<2>(site_vec_coords[vec_it]));
+			Spointer Starget;
+			bool site_found = false;
+
+			for(Spointer S1 = m_pah->m_siteList.begin();S1!=m_pah->m_siteList.end();S1++){
+				//Check if this is the site to be written
+				if (S1->type == site_type){
+					if(S1->C1==siteC1 && S1->C2==siteC2){
+						//This is the correct site
+						Starget = S1;
+						Spointer_vec.push_back(Starget);
+						site_found = true;
+						break;
+					}
+				}
+			}
+			if (!site_found){
+				std::cout << "Error. Site not found while reading Site Map from binary file.";
+				std::ostringstream msg;
+            	msg << "ERROR: Site not found while reading Site Map from binary file."
+                	<< " (Sweep::KMC_ARS::PAHProcess::initialise)";
+                	throw std::runtime_error(msg.str());
+                	assert(false);
+			}
+		}
+		m_pah->m_siteMap[site_type] = Spointer_vec;
+	}
 
     m_pah->m_rings = R6_num;
 	m_pah->m_rings5_Lone = R5_num_Lone;
@@ -11277,6 +11324,26 @@ std::vector<std::tuple<int, cpair, cpair>> PAHProcess::SiteVector_clone() const 
 		std::tuple<int, cpair, cpair> i_site = std::make_tuple((int)(*i).type, (*i).C1->coords, (*i).C2->coords);
         temp.push_back(i_site);
     }
+    return temp;
+};
+
+//! obtains a map of tuples from the PAH site map
+std::map<int, std::vector<std::tuple<int, cpair, cpair>>> PAHProcess::SiteMap_clone() const {
+    std::map<int, std::vector<std::tuple<int, cpair, cpair>>> temp;
+	std::map<kmcSiteType, svector>::const_iterator map_it;
+	for(map_it=m_pah->m_siteMap.begin(); map_it!=m_pah->m_siteMap.end(); map_it++){
+		int sitetype = map_it->first;
+
+		std::vector<Spointer> site_vector = map_it->second;
+		std::vector<std::tuple<int, cpair, cpair>> site_vector_temp;
+
+		for(int site_it=0; site_it!= site_vector.size(); site_it++) {
+			Spointer S1 = site_vector[site_it];
+			std::tuple<int, cpair, cpair> i_site = std::make_tuple((int)S1->type, S1->C1->coords, S1->C2->coords);
+        	site_vector_temp.push_back(i_site);
+    	}
+		temp[sitetype] = site_vector_temp;
+	}
     return temp;
 };
 

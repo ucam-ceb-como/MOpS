@@ -351,6 +351,10 @@ void PAHStructure::Serialize(std::ostream &out) const
 		out.write((char*)&(val), sizeof(val));
 
 		std::vector<Spointer> site_vector = map_it->second;
+		val = site_vector.size();
+		out.write((char*)&(val), sizeof(val));
+
+
 		for(int site_it=0; site_it<site_vector.size(); site_it++){
 			Spointer S1 = site_vector[site_it];
 			val = (int)S1->type;
@@ -538,6 +542,49 @@ void PAHStructure::Deserialize(std::istream &in)
 		
 		temp_site_vector.push_back(temp_site);
 	}
+
+	//Deserializes m_siteMap
+	in.read(reinterpret_cast<char*>(&val), sizeof(val));
+	int temp_mapSize = val;
+
+	std::map<int, std::vector<std::tuple<int, cpair, cpair>>> temp_map;
+
+	for(int map_it = 0; map_it!=temp_mapSize; map_it++){
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		int temp_sitetype = val;
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(val));
+		int temp_sitetypesize = val;
+
+		std::vector<std::tuple<int, cpair, cpair>> temp_sitemap_vector;
+
+		for(int site_it=0; site_it!=temp_sitetypesize; site_it++){
+			in.read(reinterpret_cast<char*>(&val), sizeof(val));
+			int site_type = val;
+			
+			coordtype x1, y1, z1, x2, y2, z2;
+			std::tuple<coordtype, coordtype, coordtype> s_C1, s_C2;
+			in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+			x1 = val_pos;
+			in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+			y1 = val_pos;
+			in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+			z1 = val_pos;
+			s_C1 = std::make_tuple(x1, y1, z1);
+			
+			in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+			x2 = val_pos;
+			in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+			y2 = val_pos;
+			in.read(reinterpret_cast<char*>(&val_pos), sizeof(val_pos));
+			z2 = val_pos;
+			s_C2 = std::make_tuple(x2, y2, z2);
+			std::tuple<int, cpair, cpair> temp_site = std::make_tuple(site_type, s_C1, s_C2);
+			
+			temp_sitemap_vector.push_back(temp_site);
+		}
+		temp_map[temp_sitetype] = temp_sitemap_vector;
+	}
 	
 	in.read(reinterpret_cast<char*>(&val), sizeof(val));
 	int temp_numofBridges = val;
@@ -627,7 +674,7 @@ void PAHStructure::Deserialize(std::istream &in)
     PAHProcess p(*this);
 	//Previous method
 	//p.initialise_sitelist_string(m_SiteName, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, temp_numofC, temp_numofH, temp_numofCH3, temp_internalcoords);
-	p.initialise(temp_site_vector, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, edgeCarbons, temp_internalcoords, temp_R5loc, temp_R7loc);
+	p.initialise(temp_site_vector, temp_map, temp_numofRings, temp_numofLoneRings5, temp_numofEmbeddedRings5, temp_numofLoneRings7, temp_numofEmbeddedRings7, edgeCarbons, temp_internalcoords, temp_R5loc, temp_R7loc);
 }
 
 void PAHStructure::WriteCposition(std::ostream &out) const

@@ -112,7 +112,7 @@ public:
 	//! Initialisation of structure given an existing PAH (cloning)
 	virtual PAHStructure& initialise(std::string siteList_str, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, Ccontainer edgeCarbons, std::list<cpair> internalCarbons, std::list<cpair> R5_locs, std::list<cpair> R7_locs);
 	//! Initialization of PAH structure from binary file (deserialize)
-	virtual PAHStructure& initialise(std::vector<std::tuple<int, cpair, cpair>> siteList_vector, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, std::vector<std::tuple<cpair, int, int, cpair>> edgeCarbons, std::list<cpair> internalCarbons, std::list<cpair> R5_locs, std::list<cpair> R7_locs);
+	virtual PAHStructure& initialise(std::vector<std::tuple<int, cpair, cpair>> siteList_vector, std::map<int, std::vector<std::tuple<int, cpair, cpair>>> siteList_map, int R6_num, int R5_num_Lone, int R5_num_Embedded, int R7_num_Lone, int R7_num_Embedded, std::vector<std::tuple<cpair, int, int, cpair>> edgeCarbons, std::list<cpair> internalCarbons, std::list<cpair> R5_locs, std::list<cpair> R7_locs);
     //! Create Structure from given an existing PAH (cloning)
 	void createPAH(std::vector<kmcSiteType>& vec, std::vector<int>& carb_vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, Ccontainer edCarbons, std::list<cpair> inCarbs, std::list<cpair> R5loc, std::list<cpair> R7loc, cpair first_carbon_coords);
     //! Initialisation of structure given a string of site types (separated by ',')
@@ -176,6 +176,8 @@ public:
 	std::vector<int> SiteIntVector() const;
 	//! obtains a vector of tuples from the PAH site list
 	std::vector<std::tuple<int, cpair, cpair>> SiteVector_clone() const;
+    //! obtains a map of vector tuples from the PAH site map
+    std::map<int, std::vector<std::tuple<int, cpair, cpair>>> SiteMap_clone() const;
 	//! obtains a vector of tuples from the PAH Ccontainer
 	std::vector<std::tuple<cpair, int, int, cpair>> EdgeCarbonVector_clone() const;
     //! obtains a string containing the PAH site list
