@@ -1188,7 +1188,7 @@ void readOutput(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
 // Reads a new-format XML settings file.
 Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
                                         Mops::Reactor *reac,
-                                        Mops::Mixture *mix,
+                                        Mops::Mixture *initmix,
                                         std::vector<TimeInterval> &times,
                                         Simulator &sim, Solver &solver,
                                         Mechanism &mech,
@@ -1237,12 +1237,12 @@ Reactor *const Settings_IO::LoadFromXML(const std::string &filename,
         node = root->GetFirstChild("reactor");
         if (node != NULL) {
 			reac = readReactor(*node, mech, sim.MaxPartCount(), sim.MaxM0(), sim);
-            mix = reac->Mixture()->Clone();
         } else {
             throw std::runtime_error("Settings file does not contain a reactor definition"
                                 " (Mops::Settings_IO::LoadFromXML).");
         }
 		
+        initmix = reac->Mixture()->Clone();
 		// RESTART SIMULATION
 		//IF TRUE THE REACTOR OBJECT GETS OVERWRITTEN
 		
@@ -1319,9 +1319,6 @@ Reactor *const Settings_IO::readRestartFile(const std::string filename, const Me
 		
         // Deserialize the reactor from the file.
         reac = ReactorFactory::Read(fin, mech);
-
-        //Assign a particle model to the reactor
-        //reac->Mixture()->m_model = model_clone;
 
         // Close the input file.
         fin.close();

@@ -88,7 +88,7 @@ namespace Settings_IO
     Reactor *const LoadFromXML(
         const std::string &filename,      // Input file name.
         Reactor *reac,                    // The reactor to be simulated.
-        Mixture *mix,                     // The initial mixture of the reactor.
+        Mops::Mixture *initmix,            // The initial mixture of the reactor.
         std::vector<TimeInterval> &times, // Vector of output time intervals.
         Simulator &sim,                   // General settings incl. output settings. 
         Solver &solver,                   // The reactor solver (to set numerical params).
