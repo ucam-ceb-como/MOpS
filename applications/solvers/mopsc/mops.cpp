@@ -221,6 +221,7 @@ int main(int argc, char* argv[])
     // Define all the objects required to run the simulation.
     Mops::Solver *solver   = NULL; // The solver.
     Mops::Reactor *reactor = NULL; // Reactor to solve.
+    Mops::Mixture *initmix;        // Reactor initial mixture.
     Mops::Mechanism mech;          // Chemical and particle mechanism.
     Mops::timevector times;        // A list of output times and step counts.
     Mops::Simulator sim;           // The simulator.
