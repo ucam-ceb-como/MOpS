@@ -1248,6 +1248,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 				if (os_endtype >= 2000 && os_endtype <= 2205) checking_site = false;
 				if (os_endtype >= 2103 && os_endtype <= 2105) checking_site = false;
 				if (os_endtype >= 2204 && os_endtype <= 2205) checking_site = false;
+				if (os_endtype == 9999 || os_endtype == -1 || opp_site_after->type == None) checking_site = false;
 			}
 			
 			//check that two pentagons (including internals) will not collide
@@ -1326,6 +1327,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 				if (os_endtype >= 2000 && os_endtype <= 2205) checking_site = false;
 				if (os_endtype >= 2103 && os_endtype <= 2105) checking_site = false;
 				if (os_endtype >= 2204 && os_endtype <= 2205) checking_site = false;
+				if (os_endtype == 9999 || os_endtype == -1 || opp_site_after->type == None) checking_site = false;
 			}
 			
 			//check that two pentagons (including internals) will not collide
@@ -6302,7 +6304,36 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			Spointer S1 = moveIt(stt, -1);
 			Spointer S2 = moveIt(stt, +1);
 			new_point = 0;
-			if ( ((int)S2->type >= 501 && (int)S2->type <= 1004) && ((int)S1->type >= 501 && (int)S1->type <= 1004) ){
+			if ((int)S1->type>2000 || (int)S2->type>2000 ){
+				new_point = 0;
+				if ((int)S1->type>2000 && (int)S2->type>2000 ){
+					//Almost certain this will be an SPIRAL
+					new_point = 0;
+					ntype1=ntype1;
+					ntype2=ntype2;
+				}
+				else if ((int)S1->type>2000){
+					new_point = 0;
+					ntype1=ntype1;
+					if (S2->type == R5){
+						Spointer S4 = moveIt(S2, +1);
+						if ( (int)S4->type < 2000) updateSites(S4, S4->C1, S4->C2, +400);
+						ntype2 = 101;
+					}
+					else ntype2 = (ntype2 % 10) + 100;
+				}
+				else if ((int)S2->type>2000){
+					new_point = 0;
+					ntype2=ntype2;
+					if (S1->type == R5){
+						Spointer S3 = moveIt(S1, -1);
+						if ( (int)S3->type < 2000) updateSites(S3, S3->C1, S3->C2, +400);
+						ntype1 = 101;
+					}
+					else ntype1 = (ntype1 % 10) + 100;
+				}
+			}
+			else if ( ((int)S2->type >= 501 && (int)S2->type <= 1004) && ((int)S1->type >= 501 && (int)S1->type <= 1004) ){
 				new_point = 2102;
 				if (ntype1 > 600) ntype1 = (ntype1 % 10) + 100;
 				else ntype1 = (ntype1 % 10);

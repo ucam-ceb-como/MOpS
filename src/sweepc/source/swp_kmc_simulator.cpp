@@ -212,7 +212,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		double eff_ratefactor;
 		//Artificially fix that a PAH with 3 or less sites has rate 0
 		size_t site_size = m_simPAHp.SiteListSize();
-		if ( (int)site_size <=3 ) eff_ratefactor = 1E-12;
+		if ( (int)site_size <=4 ) eff_ratefactor = 1E-12;
 		else eff_ratefactor = r_factor;
 		
 		m_gas->Interpolate(m_t, eff_ratefactor);
