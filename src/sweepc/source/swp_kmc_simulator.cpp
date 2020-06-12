@@ -240,21 +240,20 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				//if (R5R7 >= 1 || std::get<0>(m_simPAHp.getRingsCount()) >= 7) addTrackedPAH(PAH_ID); 	
 				/*else if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
 						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); */
-				
-				//Save information for a single PAH
-				auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
-				if (finder != m_tracked_pahs.end()){
-					std::string xyzname = ("KMC_DEBUG/");
-					xyzname.append(std::to_string(PAH_ID));
-					xyzname.append("/");
-					xyzname.append(std::to_string(m_t*1000.0));
-					xyzname.append("_A");
-					savePAH(PAH_ID, xyzname); 
-					cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
-					m_simPAHp.printSites();
-					//printRates(m_t, m_kmcmech.Rates());
-				}
-			}
+            }
+            //Save information for a single PAH
+            auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
+            if (finder != m_tracked_pahs.end()){
+                std::string xyzname = ("KMC_DEBUG/");
+                xyzname.append(std::to_string(PAH_ID));
+                xyzname.append("/");
+                xyzname.append(std::to_string(m_t*1000.0));
+                xyzname.append("_A");
+                savePAH(PAH_ID, xyzname); 
+                cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
+                m_simPAHp.printSites();
+                //printRates(m_t, m_kmcmech.Rates());
+            }
 
 			m_rxn_count[jp_perf.second]++;
 			writeRxnCountCSV();
@@ -268,21 +267,22 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 			writeCHSiteCountCSV_after(PAH_ID);
 			
-			if (save_pah_detail){
-				//Save information for a single PAH
-				if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
-					std::string xyzname = ("KMC_DEBUG/");
-					xyzname.append(std::to_string(PAH_ID));
-					xyzname.append("/");
-					std::string xyzname2 = xyzname;
-					xyzname.append(std::to_string(m_t*1000.0));
-					xyzname.append("_B");
-					savePAH(PAH_ID, xyzname);
-					//xyzname2.append(std::to_string(PAH_ID));
-					//xyzname2.append("trajectory");
-					//m_simPAHp.save_trajectory_xyz(m_t, xyzname2, false);
-				}
-				
+			
+            //Save information for a single PAH
+            if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
+                std::string xyzname = ("KMC_DEBUG/");
+                xyzname.append(std::to_string(PAH_ID));
+                xyzname.append("/");
+                std::string xyzname2 = xyzname;
+                xyzname.append(std::to_string(m_t*1000.0));
+                xyzname.append("_B");
+                savePAH(PAH_ID, xyzname);
+                //xyzname2.append(std::to_string(PAH_ID));
+                //xyzname2.append("trajectory");
+                //m_simPAHp.save_trajectory_xyz(m_t, xyzname2, false);
+            }
+			
+            if (save_pah_detail){
 				//Remove PAH from tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
 				/*int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
 				if (R5R7 < 1 && std::get<0>(m_simPAHp.getRingsCount()) <= 20) {
@@ -291,28 +291,25 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 						removeTrackedPAH(PAH_ID);
 					}
 				}*/
-			}
-			
+            }
 			//Perform instant jump processes.
 			m_kmcmech.calculateInstantRates(*m_gas, m_simPAHp, m_t);
 			if (m_kmcmech.InstantTotalRate() > 1.0) {
 				ChosenProcess jp_instant_perf = m_kmcmech.chooseInstantReaction(rng);
 				
-				if (save_pah_detail){
-					//Save information for a single PAH
-					auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
-					if (finder != m_tracked_pahs.end()){
-						std::string xyzname = ("KMC_DEBUG/");
-						xyzname.append(std::to_string(PAH_ID));
-						xyzname.append("/");
-						xyzname.append(std::to_string(m_t*1000.0));
-						xyzname.append("_C");
-						savePAH(PAH_ID, xyzname); 
-						cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
-						m_simPAHp.printSites();
-						//printRates(m_t, m_kmcmech.Rates());
-					}
-				}
+                //Save information for a single PAH
+                auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
+                if (finder != m_tracked_pahs.end()){
+                    std::string xyzname = ("KMC_DEBUG/");
+                    xyzname.append(std::to_string(PAH_ID));
+                    xyzname.append("/");
+                    xyzname.append(std::to_string(m_t*1000.0));
+                    xyzname.append("_C");
+                    savePAH(PAH_ID, xyzname); 
+                    cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
+                    m_simPAHp.printSites();
+                    //printRates(m_t, m_kmcmech.Rates());
+                }
 				
 				m_rxn_count[m_kmcmech.JPList().size() + jp_instant_perf.second]++;
 				writeRxnCountCSV();
@@ -334,21 +331,20 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			if (m_kmcmech.InstantTotalRate() > 1.0) {
 				ChosenProcess jp_instant_perf = m_kmcmech.chooseInstantReaction(rng);
 				
-				if (save_pah_detail){
-					//Save information for a single PAH
-					auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
-					if (finder != m_tracked_pahs.end()){
-						std::string xyzname = ("KMC_DEBUG/");
-						xyzname.append(std::to_string(PAH_ID));
-						xyzname.append("/");
-						xyzname.append(std::to_string(m_t*1000.0));
-						xyzname.append("_C");
-						savePAH(PAH_ID, xyzname); 
-						cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
-						m_simPAHp.printSites();
-						//printRates(m_t, m_kmcmech.Rates());
-					}
-				}
+
+                //Save information for a single PAH
+                auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
+                if (finder != m_tracked_pahs.end()){
+                    std::string xyzname = ("KMC_DEBUG/");
+                    xyzname.append(std::to_string(PAH_ID));
+                    xyzname.append("/");
+                    xyzname.append(std::to_string(m_t*1000.0));
+                    xyzname.append("_C");
+                    savePAH(PAH_ID, xyzname); 
+                    cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
+                    m_simPAHp.printSites();
+                    //printRates(m_t, m_kmcmech.Rates());
+                }
 				
 				m_rxn_count[m_kmcmech.JPList().size() + jp_instant_perf.second]++;
 				writeRxnCountCSV();
