@@ -1216,6 +1216,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 			//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
 			if ((int)sFE2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) checking_site = false; // The result would be an indene, not supported. YET!
 			if ((int)sFE2->type == 100 || (int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002) checking_site = false; // This would violate the IPR.
+			if ((int)sFE2->type == 9999 || (int)sFE2->type == -1 || sFE2->type == None) checking_site = false;
 			if ((int)sFE2->type == 0){
 				if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) checking_site = false;
 				if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) checking_site = false;
@@ -1295,6 +1296,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 			//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
 			if ((int)sFE2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) checking_site = false; // The result would be an indene, not supported. YET!
 			if ((int)sFE2->type == 100 || (int)sFE2->type == 101 || (int)sFE2->type == 501 || (int)sFE2->type == 2002) checking_site = false; // This would violate the IPR.
+			if ((int)sFE2->type == 9999 || (int)sFE2->type == -1 || sFE2->type == None) checking_site = false;
 			if ((int)sFE2->type == 0){
 				if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) checking_site = false;
 				if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) checking_site = false;
@@ -2957,7 +2959,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
     delSiteFromMap(st->type, st);
     // change site type
     st->type = t;
-	if ( !checkSiteValid(st) && ( (int)t%10 >= 5 && (int)t%10 <= 7) ){
+	if ( !checkSiteValid(st) && ( (int)t%10 >= 5 && (int)t%10 <= 9) ){
 		//Assume an spiral has been formed
 		st->type = SPIRAL;
 		stype = 9999;
@@ -8176,10 +8178,26 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		newType = newType + ntype1 + ntype2;
 		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
 	}
-	else if ( (ntype1 >= 2002 && ntype1 <= 2003) || (ntype2 >= 2002 && ntype2 <= 2003) ){
+	else if(ntype1 > 2000 && ntype2 > 2000){
+		newType = 9999;
+		ntype1 = 0;
+		ntype2 = 0;
+		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
+	}
+	else if ( (ntype1 >= 2002 && ntype1 <= 2015) || (ntype2 >= 2002 && ntype2 <= 2015) ){
+		if (ntype1 % 2000 >= 10) ntype1 -= 10;
+		if (ntype2 % 2000 >= 10) ntype2 -= 10;
 		ntype1 = ntype1 % 2002;
 		ntype2 = ntype2 % 2002;
 		newType = 2104 + ntype1 + ntype2;
+		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
+	}
+	else if ( (ntype1 >= 2103 && ntype1 <= 2115) || (ntype2 >= 2103 && ntype2 <= 2115) ){
+		if (ntype1 % 2100 >= 10) ntype1 -= 10;
+		if (ntype2 % 2100 >= 10) ntype2 -= 10;
+		ntype1 = ntype1 % 2103;
+		ntype2 = ntype2 % 2103;
+		newType = 2204 + ntype1 + ntype2;
 		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
 	}
 	else if (ntype1 == 9999 || ntype2 == 9999){

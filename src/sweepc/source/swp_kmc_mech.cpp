@@ -2237,7 +2237,7 @@ void C6R_AC_FE3::initialise() {
     addReaction(rxnV3, Reaction(1.3e11, 1.08, 70.42, sp::None));   //5 - r4f  //Frenklach2005
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6 - r5f(2)
     m_sType = AC_FE3; // sitetype
-    m_name = "R6 conversion to R5"; // name of process
+    m_name = "R6 conversion to R5 on AC_FE3"; // name of process
     m_ID = 12;
 }
 // Jump rate calculation
@@ -2328,7 +2328,7 @@ void C5R_RFE::initialise() {
     addReaction(rxnV3, Reaction(3.3e33, -5.7, 25.5, sp::C2H2));   //6 - r4f2 (r4f = r4f1+r4f2)*/
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //7 - r5f
     m_sType = RFE; // sitetype
-    m_name = "R5 conversion to R6 on FE"; // name of process
+    m_name = "R5 conversion to R6 on RFE"; // name of process
     m_ID = 13;
 }
 // Jump rate calculation
@@ -2369,6 +2369,7 @@ double C5R_RFE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 		if (f_R5H_denom > 0.0){
 			f_R5H = m_r[7] / f_R5H_denom;
 		}
+		else f_R5H=0;
         //double f_R5H = m_r[0]/(m_r[1] + ((m_r[0]/r_denom) * r4f)); //For previous method. The m_r[0] makes no sense.
         r_f = r_f*f_R5H;
         //r_f = r_f/(r_f+1.0);
@@ -2418,7 +2419,7 @@ void C5R_RAC::initialise() {
     // r3f defined in setRate1, r4f = 0*/
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //4 - r5f
     m_sType = RAC; // sitetype
-    m_name = "R5 conversion to R6 on AC"; // name of process
+    m_name = "R5 conversion to R6 on RAC"; // name of process
     m_ID = 14;
 }
 // Jump rate calculation
@@ -2795,7 +2796,7 @@ void M6R_BY5_FE3::initialise() {
     rxnV3 = rxnV;
 
     m_sType = BY5_FE3; // sitetype
-    m_name = "R6 desorption at bay -> pyrene"; // name of process
+    m_name = "R6 desorption at bay BY5_FE3"; // name of process
     m_ID = 19;
 }
 // Jump rate calculation
@@ -3202,7 +3203,7 @@ void B6R_ACR5::initialise() {
 	*
 	* A. M. Mebel, M. C. Lin, T. Yu, and K. Morokuma. Theoretical study of potential
 	* energy surface and thermal rate constants for the C6H5 + H2 and C6H6 + H reactions.
-	* J. Phys. Chem. A, 101:3189–3196, 1997. doi:10.1021/jp9702356.
+	* J. Phys. Chem. A, 101:3189ï¿½3196, 1997. doi:10.1021/jp9702356.
 	*/
 	addReaction(rxnV, Reaction(3.23e7, 2.095, 15.842, sp::H));
 
@@ -3210,7 +3211,7 @@ void B6R_ACR5::initialise() {
 	* Cs* + H2 => Cs-H + H
 	*
 	* M. Frenklach. On surface growth mechanism of soot particles. Proc. Combust. Inst.,
-	* 26:2285–2293, 1996. doi:10.1016/S0082-0784(96)80056-7.
+	* 26:2285ï¿½2293, 1996. doi:10.1016/S0082-0784(96)80056-7.
 	*/
 	addReaction(rxnV, Reaction(3.4e9, 0.88, 7.86, sp::H2));
 
@@ -3219,7 +3220,7 @@ void B6R_ACR5::initialise() {
 	* A1- + C2H2 = A1C2H + H
 	*
 	* M. Frenklach and H. Wang. Detailed surface and gas-phase chemi-
-	* cal kinetics of diamond deposition. Phys. Rev. B, 43:1520–1545, 1991.
+	* cal kinetics of diamond deposition. Phys. Rev. B, 43:1520ï¿½1545, 1991.
 	* doi:10.1103/PhysRevB.43.1520.
 	*/
 	addReaction(rxnV, Reaction(3.48e39, -7.77, 13.36, sp::H));
@@ -3633,7 +3634,7 @@ void C6R_RAC_FE3::initialise() {
 	addReaction(rxnV3, Reaction(2.30e09, 1.603, 61.85, sp::None));  // 5 - r4f
 
 	m_sType = RAC_FE3; // sitetype
-	m_name = "R6 migration & conversion to R5 at RAC"; // name of process
+	m_name = "R6 migration & conversion to R5 at RAC_FE3"; // name of process
 	m_ID = 31;
 }
 
@@ -3667,7 +3668,7 @@ void C6R_RAC_FE3violi::initialise() {
 	addReaction(rxnV3, Reaction(1.23e10, 1.410, 85.20, sp::None));  // 5 - r4f
 
 	m_sType = RAC_FE3; // sitetype
-	m_name = "R6 migration & conversion to R5 at RAC"; // name of process
+	m_name = "R6 migration & conversion to R5 at RAC_FE3"; // name of process
 	m_ID = 32;
 }
 
@@ -3702,7 +3703,7 @@ void M6R_RAC_FE3::initialise() {
 	addReaction(rxnV3, Reaction(2.30e09, 1.603, 61.85, sp::None));  // 5 - r4f
 
 	m_sType = RAC_FE3; // sitetype
-	m_name = "R6 desorption at RAC -> pyrene"; // name of process
+	m_name = "R6 desorption at RAC_FE3"; // name of process
 	m_ID = 33;
 }
 
@@ -3756,7 +3757,7 @@ void MR5_R6::initialise() {
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f*/
 
 	m_sType = R5R6; // sitetype
-	m_name = "R5 exchange with R6"; // name of process
+	m_name = "R5R6 flip"; // name of process
 	m_ID = 34;
 }
 

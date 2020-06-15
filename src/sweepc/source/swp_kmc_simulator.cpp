@@ -209,13 +209,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
         // Calculate time step, update time
 		//Interpolate gas phase species and temperature.
-		double eff_ratefactor;
-		//Artificially fix that a PAH with 3 or less sites has rate 0
-		size_t site_size = m_simPAHp.SiteListSize();
-		if ( (int)site_size <=4 ) eff_ratefactor = 1E-12;
-		else eff_ratefactor = r_factor;
-		
-		m_gas->Interpolate(m_t, eff_ratefactor);
+
+		m_gas->Interpolate(m_t, r_factor);
 		
 		//Calculate jump process rates
 		m_kmcmech.calculateRates(*m_gas, m_simPAHp, m_t);
@@ -226,6 +221,21 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
         boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator(rng, waitingTimeDistrib);
         double t_step = waitingTimeGenerator();
         t_next = m_t+t_step;
+
+        //Artificially fix that a PAH with 4 or less sites has rate 0
+		size_t site_size = m_simPAHp.SiteListSize();
+		if ( (int)site_size <=4 ) {
+            std::cout << "PAH " << PAH_ID << " reached to " << site_size << " sites. Freezing and saving structure." << std::endl;
+            addTrackedPAH(PAH_ID);
+            m_simPAHp.printSites();
+            std::string xyzname = ("KMC_DEBUG/");
+            xyzname.append(std::to_string(PAH_ID));
+            xyzname.append("/");
+            xyzname.append(std::to_string(m_t*1000.0));
+            xyzname.append("_frozen");
+            savePAH(PAH_ID, xyzname); 
+            t_next = t_max;
+        }
 		
 		//If time + waiting time < time at the next grid element then perform process.
         if(t_next < t_max && t_step < t_step_max) {
