@@ -10844,6 +10844,7 @@ void PAHProcess::proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 		CRem_next = CRem->C2;
 		CRem_before = CRem->C1;
 	}
+	int end_site_type = (int)sFE2->type;
 
 	// check if ACR5 has an opposite site.
 	Spointer opp_site, opp_site_second, opp_site_after, opp_site_after_second;
@@ -11004,7 +11005,93 @@ void PAHProcess::proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
 	
 	//Adjust opposite sites for starting and ending position.
-	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
+	if (opp_site_bool && opp_site_bool_second) {
+		if (opp_site == opp_site_second) opp_site_bool_second = false;
+	}
+	if (opp_site_bool) {
+		if ( (int)opp_site->type >= 2100) {
+			Spointer S1_opp_site = moveIt(opp_site, -1);
+			Spointer S2_opp_site = moveIt(opp_site, +1);
+			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
+				updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+			}
+			else updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
+		}
+		else if  ((int)opp_site->type >= 2000) updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+		else updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
+		updateCombinedSites(opp_site);
+	}
+	if (opp_site_bool_second) {
+		if ( (int)opp_site_second->type >= 2100) {
+			Spointer S1_opp_site = moveIt(opp_site_second, -1);
+			Spointer S2_opp_site = moveIt(opp_site_second, +1);
+			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
+				updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -2000);
+			}
+			else updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -100);
+		}
+		else updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -2000);
+		updateCombinedSites(opp_site_second);
+	}
+
+	if (opp_site_bool_after && opp_site_bool_after_second){
+		if (opp_site_after == opp_site_after_second){
+			opp_site_bool_after_second = false;
+		}
+		else{
+			if (opp_site_after_second != stt_1 && opp_site_after_second != stt_2 && opp_site_after_second != S1 && opp_site_after_second != S2 &&
+				opp_site_after != stt_1 && opp_site_after != stt_2 && opp_site_after != S1 && opp_site_after != S2) {
+					if ((int)opp_site_after_second->type >= 500 && (int)opp_site_after_second->type <= 700) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -400);
+					else if ((int)opp_site_after_second->type >= 1000 && (int)opp_site_after_second->type <= 2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -800);
+					
+					if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
+					else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
+					
+					if ( (int)opp_site_after_second->type >=2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +100);
+					else updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +500);
+
+					if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
+					else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
+
+					updateCombinedSites(opp_site_after_second); updateCombinedSites(opp_site_after);
+					Spointer opps1 = moveIt(opp_site_after_second,-1);
+					Spointer opps2 = moveIt(opp_site_after_second,+1);
+					Spointer opps3 = moveIt(opp_site_after,-1);
+					Spointer opps4 = moveIt(opp_site_after,+1);
+					updateCombinedSites(opps1); updateCombinedSites(opps2); updateCombinedSites(opps3); updateCombinedSites(opps4);
+				}
+		}
+	}
+	else if(opp_site_bool_after){
+		if (opp_site_after != stt_1 && opp_site_after != stt_2 && opp_site_after != S1 && opp_site_after != S2) {
+			if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
+			else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
+
+			if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
+			else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
+		
+			updateCombinedSites(opp_site_after);
+			Spointer opps1 = moveIt(opp_site_after,-1);
+			Spointer opps2 = moveIt(opp_site_after,+1);
+			updateCombinedSites(opps1); updateCombinedSites(opps2);
+		}
+	}
+	else if(opp_site_bool_after_second){
+		if (opp_site_after_second != stt_1 && opp_site_after_second != stt_2 && opp_site_after_second != S1 && opp_site_after_second != S2) {
+			if ((int)opp_site_after_second->type >= 500 && (int)opp_site_after_second->type <= 700) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -400);
+			else if ((int)opp_site_after_second->type >= 1000 && (int)opp_site_after_second->type <= 2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -800);
+
+			if ( (int)opp_site_after_second->type >=2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +100);
+			else updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +2000);
+
+			updateCombinedSites(opp_site_after_second);
+			Spointer opps1 = moveIt(opp_site_after_second,-1);
+			Spointer opps2 = moveIt(opp_site_after_second,+1);
+			updateCombinedSites(opps1); updateCombinedSites(opps2);
+		}
+	}
+	//OLD METHOD.
+	/*if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
 		if ( (int)opp_site->type >= 2100) {
 			Spointer S1_opp_site = moveIt(opp_site, -1);
 			Spointer S2_opp_site = moveIt(opp_site, +1);
@@ -11059,7 +11146,7 @@ void PAHProcess::proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 		updateCombinedSites(opp_site);
 		updateCombinedSites(opp_site_second);
 		updateCombinedSites(opp_site_after);
-	}
+	}*/
 }
 
 
@@ -11126,6 +11213,8 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 		CRem_next = CRem->C2;
 		CRem_before = CRem->C1;
 	}
+
+	int end_site_type = (int)sFE2->type;
 
 	// check if R5R6 has an opposite site.
 	Spointer opp_site, opp_site_second, opp_site_after, opp_site_after_second;
@@ -11288,7 +11377,10 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
 	
 	//Adjust opposite sites for starting and ending position.
-	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
+	if (opp_site_bool && opp_site_bool_second) {
+		if (opp_site == opp_site_second) opp_site_bool_second = false;
+	}
+	if (opp_site_bool) {
 		if ( (int)opp_site->type >= 2100) {
 			Spointer S1_opp_site = moveIt(opp_site, -1);
 			Spointer S2_opp_site = moveIt(opp_site, +1);
@@ -11297,11 +11389,81 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 			}
 			else updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
 		}
-		else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
-		Spointer S1_opp_site = moveIt(opp_site, -1);
-		Spointer S2_opp_site = moveIt(opp_site, +1);
+		else if  ((int)opp_site->type >= 2000) updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+		else updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
 		updateCombinedSites(opp_site);
 	}
+	if (opp_site_bool_second) {
+		if ( (int)opp_site_second->type >= 2100) {
+			Spointer S1_opp_site = moveIt(opp_site_second, -1);
+			Spointer S2_opp_site = moveIt(opp_site_second, +1);
+			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
+				updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -2000);
+			}
+			else updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -100);
+		}
+		else updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -2000);
+		updateCombinedSites(opp_site_second);
+	}
+
+	if (opp_site_bool_after && opp_site_bool_after_second){
+		if (opp_site_after == opp_site_after_second){
+			opp_site_bool_after_second = false;
+		}
+		else{
+			if (opp_site_after_second != stt_1 && opp_site_after_second != stt_2 && opp_site_after_second != S1 && opp_site_after_second != S2 &&
+				opp_site_after != stt_1 && opp_site_after != stt_2 && opp_site_after != S1 && opp_site_after != S2) {
+					if ((int)opp_site_after_second->type >= 500 && (int)opp_site_after_second->type <= 700) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -400);
+					else if ((int)opp_site_after_second->type >= 1000 && (int)opp_site_after_second->type <= 2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -800);
+					
+					if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
+					else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
+					
+					if ( (int)opp_site_after_second->type >=2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +100);
+					else updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +500);
+
+					if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
+					else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
+
+					updateCombinedSites(opp_site_after_second); updateCombinedSites(opp_site_after);
+					Spointer opps1 = moveIt(opp_site_after_second,-1);
+					Spointer opps2 = moveIt(opp_site_after_second,+1);
+					Spointer opps3 = moveIt(opp_site_after,-1);
+					Spointer opps4 = moveIt(opp_site_after,+1);
+					updateCombinedSites(opps1); updateCombinedSites(opps2); updateCombinedSites(opps3); updateCombinedSites(opps4);
+				}
+		}
+	}
+	else if(opp_site_bool_after){
+		if (opp_site_after != stt_1 && opp_site_after != stt_2 && opp_site_after != S1 && opp_site_after != S2) {
+			if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
+			else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
+
+			if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
+			else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
+		
+			updateCombinedSites(opp_site_after);
+			Spointer opps1 = moveIt(opp_site_after,-1);
+			Spointer opps2 = moveIt(opp_site_after,+1);
+			updateCombinedSites(opps1); updateCombinedSites(opps2);
+		}
+	}
+	else if(opp_site_bool_after_second){
+		if (opp_site_after_second != stt_1 && opp_site_after_second != stt_2 && opp_site_after_second != S1 && opp_site_after_second != S2) {
+			if ((int)opp_site_after_second->type >= 500 && (int)opp_site_after_second->type <= 700) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -400);
+			else if ((int)opp_site_after_second->type >= 1000 && (int)opp_site_after_second->type <= 2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -800);
+
+			if ( (int)opp_site_after_second->type >=2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +100);
+			else updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +2000);
+
+			updateCombinedSites(opp_site_after_second);
+			Spointer opps1 = moveIt(opp_site_after_second,-1);
+			Spointer opps2 = moveIt(opp_site_after_second,+1);
+			updateCombinedSites(opps1); updateCombinedSites(opps2);
+		}
+	}/*
+
+	//OLD METHOD. Trying to improve in method above.
 	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
 		updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
 		if (opp_site_after != stt_1 && opp_site_after != stt_2) {
@@ -11343,7 +11505,7 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 		updateCombinedSites(opp_site);
 		updateCombinedSites(opp_site_second);
 		updateCombinedSites(opp_site_after);
-	}
+	}*/
 }
 
 
