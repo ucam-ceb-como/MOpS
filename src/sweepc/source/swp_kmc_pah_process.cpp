@@ -8197,7 +8197,7 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		if (ntype2 % 2100 >= 10) ntype2 -= 10;
 		ntype1 = ntype1 % 2103;
 		ntype2 = ntype2 % 2103;
-		newType = 2204 + ntype1 + ntype2;
+		newType = 2205 + ntype1 + ntype2;
 		convSiteType(stt, moveIt(stt, -1)->C1, moveIt(stt, 1)->C2, (kmcSiteType)newType);
 	}
 	else if (ntype1 == 9999 || ntype2 == 9999){
