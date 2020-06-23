@@ -10036,6 +10036,8 @@ void PAHProcess::proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
         convSiteType(stt, C1_new, C2_new, FE); // convert RZZR to FE
 		if (S2->type != R5) {
 			if ((int)S2->type >=501 && (int)S2->type <=605) updateSites(S2, C2_new, S2->C2, +1501);
+			else if ((int)S2->type >=602 && (int)S2->type <=604) updateSites(S2, C2_new, S2->C2, +1501);
+			else if ((int)S2->type >=1002 && (int)S2->type <=1004) updateSites(S2, C2_new, S2->C2, +1101);
 			else updateSites(S2, C2_new, S2->C2, +1);
 		}
         else {
@@ -10051,6 +10053,8 @@ void PAHProcess::proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
         convSiteType(stt, C1_new, C2_new, FE); // convert RAC to FE
 		if (S1->type != R5) {
 			if ((int)S1->type >=501 && (int)S1->type <=605) updateSites(S1, S1->C1, C1_new, +1501);
+			else if ((int)S1->type >=602 && (int)S1->type <=604) updateSites(S1, S1->C1, C1_new, +1501);
+			else if ((int)S1->type >=1002 && (int)S1->type <=1004) updateSites(S1, S1->C1, C1_new, +1101);
 			else updateSites(S1, S1->C1, C1_new, +1);
 		}
         else {
