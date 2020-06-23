@@ -1476,6 +1476,12 @@ Cpointer PAHProcess::addC(Cpointer C_1, cpair direction, bondlength length, bool
 	cpair mpos = jumpToPos(C_1->coords, direction, length);
 	if (bulk){// Carbon is coming from bulk, removing from Internal carbons
 		mpos = checkHindrance_C_intPAH(mpos);
+		double newdist = getDistance_twoC(C_1->coords,mpos);
+		if (newdist>1.7){
+			std::cout << "WARNING. Returning carbon from internal carbons with distance " << newdist << ".\n";
+			std::cout << "Adding from C coords (" << std::get<0>(C_1->coords) << "," << std::get<1>(C_1->coords) << "," << std::get<2>(C_1->coords) << ")\n";
+			std::cout << "New carbon coords    (" << std::get<0>(mpos) << "," << std::get<1>(mpos) << "," << std::get<2>(mpos) << ")\n";
+		}
 	}
 	cb->coords = mpos;
     if(!m_pah->m_carbonList.insert(cb).second)
@@ -7806,20 +7812,20 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	double ZZdist;
     if(b4) {
         sR5 = moveIt(stt, -1);
-		Hdir1 = sR5->C1->growth_vector;
-		Hdir2 = sR5->C2->growth_vector;
+		Hdir1 = add_vector(get_vector(sR5->C1->C1->coords, sR5->C1->coords), get_vector(sR5->C1->C2->coords, sR5->C1->coords) ); //sR5->C1->growth_vector;
+		Hdir2 = add_vector(get_vector(sR5->C2->C1->coords, sR5->C2->coords), get_vector(sR5->C2->C2->coords, sR5->C2->coords) ); //sR5->C2->growth_vector;
         C_RZZ = sR5->C1->C1;
 		ZZCdir = get_vector(C_1->C2->coords, C_1->C2->C2->coords );
-		Hdir = C_2->growth_vector;
+		Hdir = Hdir2;
 		ZZdist = getDistance_twoC(C_1->C2, C_2);
 		R5vec = get_vector(C_1->C2->coords, C_2->coords);
     }else {
         sR5 = moveIt(stt, 1);
-		Hdir1 = sR5->C1->growth_vector;
-		Hdir2 = sR5->C2->growth_vector;
+		Hdir1 = add_vector(get_vector(sR5->C1->C1->coords, sR5->C1->coords), get_vector(sR5->C1->C2->coords, sR5->C1->coords) ); //sR5->C1->growth_vector;
+		Hdir2 = add_vector(get_vector(sR5->C2->C1->coords, sR5->C2->coords), get_vector(sR5->C2->C2->coords, sR5->C2->coords) ); //sR5->C2->growth_vector;
         C_RZZ = sR5->C2->C2;
 		ZZCdir = get_vector(C_1->coords, C_1->C2->coords );
-		Hdir = C_1->growth_vector;
+		Hdir = Hdir1;
 		ZZdist = getDistance_twoC(C_1, C_2->C1);
 		R5vec = get_vector(C_1->coords, C_2->C1->coords);
     }
