@@ -182,6 +182,10 @@ public:
 	std::vector<std::tuple<cpair, int, int, cpair>> EdgeCarbonVector_clone() const;
     //! obtains a string containing the PAH site list
     std::string SiteString(char delimiter) const;
+    //! Returns how many carbons are in a site stt
+    int SiteSize(Spointer& stt) const;
+    //! Returns true if a site has the right number of carbons
+    bool SiteRightSize(Spointer& stt) const;
 	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
 	OpenBabel::OBMol passPAH(bool detectBonds=true);
 	//! Connects the atoms in a PAH using OpenBabel routines. Equivalent to OpenBabel::OBMol::ConnectTheDots();

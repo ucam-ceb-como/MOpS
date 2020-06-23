@@ -5489,6 +5489,23 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	if(m_debug_pah) saveXYZ("KMC_DEBUG/BEFORE");
 	//Copy site list before performing process
 	std::list<std::string> Sitelist_before = copySites(site_perf);
+	//Check if the site has the right number of carbons
+	if(!SiteRightSize(site_perf)){
+		std::string filename = "KMC_DEBUG/KMC_PAH_performProcess_SiteSize_";
+		filename.append(std::to_string(perform_process_error_counter));
+		saveXYZ(filename);
+		std::ostringstream msg;
+		msg << "ERROR: Site selected has incorrect number of carbons. Process not performed."
+			<< "ID" << id << " Jump process: " << jp.getName() << " on PAH ID: " << PAH_ID << "..."
+			<< " (Sweep::KMC_ARS::PAHProcess::performProcess)";
+		//throw std::runtime_error(msg.str());
+		//assert(false);
+		//abort();
+		printBeforeSites(Sitelist_before);
+		cout<<"Saving file: "<< filename<<".xyz\n";
+		++perform_process_error_counter;
+		return false;
+	}
 	///////
     switch(id) {
         case 1:
@@ -9904,6 +9921,7 @@ void PAHProcess::proc_G6R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ID38- R7 bay closure on ACACR5
 // ************************************************************
 void PAHProcess::proc_L7_ACACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
+
 	if (!m_pah->m_optimised){
 		OpenBabel::OBMol mol = passPAH();
 		mol = mol = optimisePAH(mol);
@@ -11633,3 +11651,35 @@ std::string PAHProcess::SiteString(char delimiter) const {
     }
     return temp.str();
 };
+
+//! Returns how many carbons are in a site stt
+int PAHProcess::SiteSize(Spointer& stt) const{
+	Cpointer Cnow = stt->C1;
+	Cpointer Cprev = Cnow;
+	Cpointer Cend = stt->C2;
+	int counter = 1;
+	do{
+		if (Cnow->bridge && !Cprev->bridge) {
+			Cprev = Cnow;
+			Cnow = Cnow->C3;
+		}
+		else {
+			Cprev = Cnow;
+			Cnow = Cnow->C2;
+		}
+		counter +=1;
+	} while(Cnow != Cend);
+	return counter;
+}
+
+//! Returns true if a site has the right number of carbons
+bool PAHProcess::SiteRightSize(Spointer& stt) const{
+	int stype = (int)stt->type;
+	if (stype == 9999) return true; // An spiral can have any numberof carbons.
+	if (stt->type==None) return true; // An error type can have any number of carbons.
+
+	int counter = SiteSize(stt);
+	stype = stype%10 + 2;
+	if (counter != stype) return false;
+	return true;
+}
