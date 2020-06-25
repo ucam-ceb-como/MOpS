@@ -2196,9 +2196,59 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 		}
 		
+		mol.SetAromaticPerceived();
+		//Comment in to print the details of every bond in the OBmol object
+		/*std::cout << "Bond  First Atom     Second Atom   Length    Order   Aromatic\n";
+		for (OpenBabel::OBBondIterator bond_iter=mol.BeginBonds(); bond_iter != mol.EndBonds(); bond_iter++){
+			OpenBabel::OBBond* bond = *bond_iter;
+			int bond_number = bond->GetIdx();
+			double length_bond = bond->GetLength();
+			int first_idx = bond->GetBeginAtomIdx();
+			int second_idx = bond->GetEndAtomIdx();
+			int order = bond->GetBondOrder();
+			int aromatic, aromatic_a1, aromatic_a2, hyb_a1, hyb_a2;
+			if (bond->IsAromatic()) aromatic = 1;
+			else aromatic = 0;
+			OpenBabel::OBAtom *my_first_atom  = mol.GetAtom(first_idx);
+			if (my_first_atom->IsAromatic()) aromatic_a1 = 1;
+			else aromatic_a1 = 0;
+			hyb_a1 = my_first_atom->GetHyb();
+			OpenBabel::OBAtom *my_second_atom  = mol.GetAtom(second_idx);
+			if (my_second_atom->IsAromatic()) aromatic_a2 = 1;
+			else aromatic_a2 = 0;
+			hyb_a2 = my_second_atom->GetHyb();
+
+			std::cout << bond_number << "     " << first_idx << " (" << aromatic_a1 <<") ("<< hyb_a1 << ")       " << second_idx << " (" << aromatic_a2 <<") ("<< hyb_a2 << ")       " << length_bond << "      " << order << "       " << aromatic << "\n";
+		}*/
+
 		//PerceiveBondOrders calls several routines that try to identify aromatic and unaromatic parts of a molecule. This is very nice but expensive.
 		//If this is not called, OB recognises bonds as single bonds.
-		mol.PerceiveBondOrders();
+		//mol.PerceiveBondOrders();
+
+		//Comment in to print the details of every bond in the OBmol object
+		mol.SetAromaticPerceived();
+		/*std::cout << "Bond  First Atom     Second Atom     Length    Order   Aromatic\n";
+		for (OpenBabel::OBBondIterator bond_iter=mol.BeginBonds(); bond_iter != mol.EndBonds(); bond_iter++){
+			OpenBabel::OBBond* bond = *bond_iter;
+			int bond_number = bond->GetIdx();
+			double length_bond = bond->GetLength();
+			int first_idx = bond->GetBeginAtomIdx();
+			int second_idx = bond->GetEndAtomIdx();
+			int order = bond->GetBondOrder();
+			int aromatic, aromatic_a1, aromatic_a2, hyb_a1, hyb_a2;
+			if (bond->IsAromatic()) aromatic = 1;
+			else aromatic = 0;
+			OpenBabel::OBAtom *my_first_atom  = mol.GetAtom(first_idx);
+			if (my_first_atom->IsAromatic()) aromatic_a1 = 1;
+			else aromatic_a1 = 0;
+			hyb_a1 = my_first_atom->GetHyb();
+			OpenBabel::OBAtom *my_second_atom  = mol.GetAtom(second_idx);
+			if (my_second_atom->IsAromatic()) aromatic_a2 = 1;
+			else aromatic_a2 = 0;
+			hyb_a2 = my_second_atom->GetHyb();
+
+			std::cout << bond_number << "     " << first_idx << " (" << aromatic_a1 <<") ("<< hyb_a1 << ")       " << second_idx << " (" << aromatic_a2 <<") ("<< hyb_a2 << ")       " << length_bond << "      " << order << "       " << aromatic << "\n";
+		}*/
 		
 		//Checks for sp3 carbon //NEEDS DEBUGGING. NOT COMPLETE.
 		/*for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
@@ -2529,7 +2579,7 @@ OpenBabel::OBMol PAHProcess::optimisePAH(OpenBabel::OBMol mol, int nsteps, std::
         pFF->GetCoordinates(mol);
 	}*/
 	//// Method recommended in case minimisation is just used until the nsteps without modifications.
-	pFF->SteepestDescent(nsteps, 1e-7);
+	pFF->SteepestDescent(nsteps, 1e-5);
 	
 	pFF->GetCoordinates(mol);
 	mol.EndModify();
@@ -11297,9 +11347,11 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	
 	//Remove carbon from end site 
 	removeC(CRem, false);
+	//saveXYZ("KMC_DEBUG/before_optimisation");
 	OpenBabel::OBMol mol = passPAH();
 	mol = optimisePAH(mol);
 	passbackPAH(mol);
+	//saveXYZ("KMC_DEBUG/after_optimisation");
 	
 	//First adjust starting site and add new site if needed.
 	Spointer stt_coupled, newSite;
