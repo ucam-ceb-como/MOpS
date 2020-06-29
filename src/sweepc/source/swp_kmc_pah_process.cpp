@@ -7449,7 +7449,7 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
     // add ring counts
     m_pah->m_rings5_Lone++;
-	if (dist > 2.7 && !m_pah->m_optimised){
+	if ( (dist > 2.7 && !m_pah->m_optimised) || (getDistance_twoC(C2_res, C2_res->C2->C2)<2.4&& !m_pah->m_optimised) ) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -7994,7 +7994,7 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			//Update 'H'
 			//updateA(C1_R5, 'H'); updateA(C2_R5, 'H'); updateA(C2_R5->C2, 'C');
 		}
-		if (double newdist = getDistance_twoC(C2_R5, C2_R5->C2) > 1.8){
+		if (double newdist = getDistance_twoC(C2_R5, C2_R5->C2) > 1.8 || getDistance_twoC(C2_R5, C2_R5->C2->C2) < 2.4){
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol);
 			passbackPAH(mol);
