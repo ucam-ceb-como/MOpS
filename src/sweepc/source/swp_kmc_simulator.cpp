@@ -283,7 +283,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 std::string xyzname = ("KMC_DEBUG/");
                 xyzname.append(std::to_string(PAH_ID));
                 xyzname.append("/");
-                std::string xyzname2 = xyzname;
+                //std::string xyzname2 = xyzname;
                 xyzname.append(std::to_string(m_t*1000.0));
                 xyzname.append("_B");
                 savePAH(PAH_ID, xyzname);

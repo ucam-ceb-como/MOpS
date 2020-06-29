@@ -7866,7 +7866,7 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		Hdir2 = add_vector(get_vector(sR5->C2->C1->coords, sR5->C2->coords), get_vector(sR5->C2->C2->coords, sR5->C2->coords) ); //sR5->C2->growth_vector;
         C_RZZ = sR5->C1->C1;
 		ZZCdir = get_vector(C_1->C2->coords, C_1->C2->C2->coords );
-		Hdir = Hdir2;
+		Hdir = add_vector(get_vector(sR5->C1->C1->C1->coords, sR5->C1->C1->coords), get_vector(sR5->C2->C2->C2->coords, sR5->C2->C2->coords) ); //Hdir2;
 		ZZdist = getDistance_twoC(C_1->C2, C_2);
 		R5vec = get_vector(C_1->C2->coords, C_2->coords);
     }else {
@@ -7875,7 +7875,7 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		Hdir2 = add_vector(get_vector(sR5->C2->C1->coords, sR5->C2->coords), get_vector(sR5->C2->C2->coords, sR5->C2->coords) ); //sR5->C2->growth_vector;
         C_RZZ = sR5->C2->C2;
 		ZZCdir = get_vector(C_1->coords, C_1->C2->coords );
-		Hdir = Hdir1;
+		Hdir = add_vector(get_vector(sR5->C1->C1->C1->coords, sR5->C1->C1->coords), get_vector(sR5->C2->C2->C2->coords, sR5->C2->C2->coords) ); //Hdir1;
 		ZZdist = getDistance_twoC(C_1, C_2->C1);
 		R5vec = get_vector(C_1->coords, C_2->C1->coords);
     }
