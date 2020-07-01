@@ -3403,7 +3403,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	if (stype + bulkCchange == 2104 || stype + bulkCchange == 2114) {
 		////////////////////////////////////////////////////////////
 		//		Optimise before deciding which PAH it is.
-		// change site type for the optimiser.
+		// change site type for the optimiser. 
 		st->type = (kmcSiteType)(stype + bulkCchange);
 		// update member C so the optimiser does not fail.
 		st->C1 = Carb1;
