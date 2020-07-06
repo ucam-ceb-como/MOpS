@@ -1791,7 +1791,7 @@ void O6R_FE_HACA::initialise() {
     addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S87 // S88                            - 13
     addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S94                                   - 14
     addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S97 // S98                              - 15
-    addReaction(rxnV3, Reaction(1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S101 // S102                           - 16 //It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
+    addReaction(rxnV3, Reaction(0.0*1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S101 // S102                       - 16 //It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f                                       - 
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 17              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 18              - Frenklach et al. 2018
@@ -1839,15 +1839,15 @@ double O6R_FE_HACA::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	//Rate assuming PEQ approximation
-	matrix<double> arr1(6, 6);
-	boost::numeric::ublas::vector<double> arr2(6);
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
 	for (unsigned k = 0; k < arr1.size1(); ++k)
 		for (unsigned l = 0; l < arr1.size2(); ++l)
 			arr1(k, l) = 0.0;
 	for (unsigned k = 0; k < arr2.size(); ++k)
 		arr2(k) = 0.0;
 	
-	// SS species are C*, C-O, C-OH, C*_2, C-O_2, C-OH_2
+	// SS species are C*, C-O, C-OH
 	arr1(0,0) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16] + m_r[17] + m_r[18];
     arr1(0,2) = -m_r[10] - m_r[13];
     arr1(1,0) = -m_r[5];
@@ -1856,31 +1856,24 @@ double O6R_FE_HACA::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	arr1(2,0) = -m_r[7];
     arr1(2,1) = - m_r[9] - m_r[12];
     arr1(2,2) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
-	arr1(3,3) = m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[7]+m_r[15]+m_r[16] + m_r[17] + m_r[18];
-    arr1(3,5) = -m_r[10] - m_r[13];
-    arr1(4,3) = -m_r[5];
-    arr1(4,4) = m_r[6] + m_r[9] + m_r[12];
-    arr1(4,5) = - m_r[8] - m_r[11];
-	arr1(5,3) = -m_r[7];
-    arr1(5,4) = - m_r[9] - m_r[12];
-    arr1(5,5) = m_r[8] + m_r[10] + m_r[11] + m_r[13];
 
     arr2(0) = +m_r[0] + m_r[2];
     arr2(1) = +m_r[14];
     arr2(2) = 0.0;
-	arr2(3) = +m_r[0] + m_r[2];
-    arr2(4) = +m_r[14];
-    arr2(5) = 0.0;
 
 	permutation_matrix<size_t> pm(arr1.size1());
 	lu_factorize(arr1, pm);
 	lu_substitute(arr1, pm, arr2);
 	
 	//std::cout << arr2 << std::endl;
-	if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) {
+	double Crad_fraction = arr2(0);
+	double CO_fraction = arr2(1);
+	double COH_fraction = arr2(2);
+	return m_rate = (m_r[6] * CO_fraction + m_r[16] * Crad_fraction)*site_count*2.0;
+	/*if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) {
 		return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0) + m_r[6] * arr2(4) + m_r[16] * arr2(3))*site_count;
 	}
-	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.
+	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.*/
 }
 
 // ************************************************************
@@ -2865,7 +2858,7 @@ void O6R_FE2_side::initialise() {
     addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85                                   - 13
     addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93                                   - 14
     addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96                                     - 15
-    addReaction(rxnV3, Reaction(1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100    								- 16	//It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
+    addReaction(rxnV3, Reaction(0.0*1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100    								- 16	//It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
 	addReaction(rxnV3, Reaction(1.76e23, -3.681, 24155.0*8.314/4.184/1000.0,sp::None));  // S52                               - 17	//Using reaction from He Lin et al @1atm
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 18              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 19              - Frenklach et al. 2018
@@ -2947,8 +2940,12 @@ double O6R_FE2_side::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
 	lu_substitute(arr1, pm, arr2);
 	
 	//std::cout << arr2 << std::endl;
-	if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) return m_rate = (m_r[17] * arr2(1) + m_r[16] * arr2(0))*site_count;
-	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.
+	double Crad_fraction = arr2(0);
+	double CO_fraction = arr2(1);
+	double COH_fraction = arr2(2);
+	return m_rate = (m_r[17] * CO_fraction + m_r[16] * Crad_fraction)*site_count;
+	/*if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) return m_rate = (m_r[17] * arr2(1) + m_r[16] * arr2(0))*site_count;
+	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.*/
 }
 
 // ************************************************************
@@ -2993,7 +2990,7 @@ void O6R_FE2_top::initialise() {
     addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85                                   - 13
     addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93                                   - 14
     addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96                                     - 15
-    addReaction(rxnV3, Reaction(1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100									- 16	//It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
+    addReaction(rxnV3, Reaction(0.0*1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100									- 16	//It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
 	addReaction(rxnV3, Reaction(1.76e23, -3.681, 24155.0*8.314/4.184/1000.0,sp::None));  // S52                               - 17	//Using reaction from He Lin et al @1atm
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 18              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 19              - Frenklach et al. 2018
@@ -3075,8 +3072,12 @@ double O6R_FE2_top::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	lu_substitute(arr1, pm, arr2);
 	
 	//std::cout << arr2 << std::endl;
-	if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0))*site_count;
-	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.
+	double Crad_fraction = arr2(0);
+	double CO_fraction = arr2(1);
+	double COH_fraction = arr2(2);
+	return m_rate = (m_r[6] * CO_fraction + m_r[16] * Crad_fraction)*site_count;
+	/*if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0))*site_count;
+	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.*/
 }
 
 // Elementary rate constants, site type, process type and name
@@ -3103,8 +3104,10 @@ void D6R_FE_AC::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
 	//Reverse reactions fitted from Blanquart thermal data with Frenklach rates from 2018
-	addReaction(rxnV3, Reaction(5.465e+30, -3.657e+00, 8.624e+01, sp::H));          // A3- + C2H2 <=> A4 + H                - 1             - Backward
-	addReaction(rxnV3, Reaction(4.868e+22, -1.697e+00, 7.555e+01, sp::H));          // A3- + C2H2 <=> A4 + H                - 2             - Backward
+	addReaction(rxnV3, Reaction(5.465e+30, -3.657e+00, 8.624e+01, sp::H));          			// A3- + C2H2 <=> A4 + H                - 0             - Backward
+	addReaction(rxnV3, Reaction(4.868e+22, -1.697e+00, 7.555e+01, sp::H));          			// A3- + C2H2 <=> A4 + H                - 1             - Backward
+	addReaction(rxnV3, Reaction(3.800e+10,  1.300e+00, 51929*8.314/4.184/1000.0, sp::None));    // S16 Whitesides2010	                - 2
+	addReaction(rxnV3, Reaction(4.000e+10,  1.530e+00, 57225*8.314/4.184/1000.0, sp::None));    // S17 Whitesides2010	                - 3
 	//Reactions for ABF
 	/*//------------Reactions for A3-4----------------------------
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));            	// A3 + H <=> A3-4 + H2              	- 0              - Forward
@@ -3143,7 +3146,7 @@ void D6R_FE_AC::initialise() {
 	////------------Reactions for A4-----------------------------	*/
 
 	m_sType = FE_HACA; // sitetype
-	m_name = "R6 (FE-HACA) desorption"; // name of process
+	m_name = "R6 (FE_HACA) desorption"; // name of process
 	m_ID = 22;
 }
 // Jump rate calculation
@@ -3181,7 +3184,7 @@ double D6R_FE_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 	}
 	else{
 		//For Frenklach2018
-		return m_rate = (m_r[1] + m_r[2]) * site_count / 2.0; //Lumped consumption of A4
+		return m_rate = (m_r[0] + m_r[1] + m_r[2] + m_r[3]) * site_count / 2.0; //Lumped consumption of A4
 		//For ABF
 		//return m_rate = (m_r[12] + m_r[20] + m_r[18]) * site_count / 2.0; //Lumped consumption of A4
 	}
@@ -4025,6 +4028,8 @@ void G6R_R5R6ZZ::initialise() {
 	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // - 3              - Backward
 	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // - 4              - Forward
 	addReaction(rxnV3, Reaction(1.235E+07, 1.530E+00, 9.311E+00, sp::C2H2));  		 // - 5  Whitesides and Frenklach2010
+	addReaction(rxnV3, Reaction(4.890e+09, 1.508e+00, 1.9862e+01, sp::H));          // A2R5 + H <=> A2R5- + H2      - 6 Hou2017
+	addReaction(rxnV3, Reaction(5.0677e+04, 2.4449e+00, 4.5197e+00, sp::H2));       // A2R5 + H <=> A2R5- + H2      - 7 Hou2017
 	
 	//Previous. No idea about the C2H2 rate
 	/*addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));     // 0 - r1f
@@ -4046,12 +4051,17 @@ double G6R_R5R6ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 	if (site_count == 0) return m_rate = 0;
 	// calculate rate
 	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5]);
-	double r_f; // radical fraction
+	double r_denom2 = (m_r[7] + m_r[3] + m_r[4] + m_r[5]);
+	double r_f, r_f2; // radical fraction
 	if (r_denom>0) {
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+	if (r_denom2>0) {
+		r_f2 = (m_r[6] + m_r[2]) / r_denom2;
+	}
+	else r_f2 = 0;
+	return m_rate = m_r[5] * (r_f + r_f2) * site_count; // Rate Equation
 }
 
 // ************************************************************
