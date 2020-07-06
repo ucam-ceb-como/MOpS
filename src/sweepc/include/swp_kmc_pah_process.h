@@ -167,7 +167,7 @@ public:
     bool saveDOT(const std::string &filename) const;
     bool saveDOT(const std::string &filename, const std::string &title) const;
 	void saveXYZ(const std::string &filename, bool optimise=false);
-	void save_trajectory_xyz(const double timer, const std::string &filename, bool optimise=false);
+	void save_trajectory_xyz(const std::string &filename, bool optimise=false);
 	bool saveDOT3D(const std::string &filename) const;
 	bool saveDOT3D(const std::string &filename, const std::string &title) const;
     //! obtains a vector of the PAH site list
@@ -240,7 +240,7 @@ public:
 	void proc_C6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID30.
 	void proc_C6R_RAC_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);   //!< ID31.
 	void proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID32.
-	void proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);             //!< ID34.
+	void proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID34.
 	void proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID35.
 	void proc_GR7_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID36.
 	void proc_G6R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID37.

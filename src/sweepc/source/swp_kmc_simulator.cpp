@@ -187,7 +187,6 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
     int loopcount=0;
 	bool proceed = true;
 	Spointer Sp1;
-	int test;
 	rvector rates(m_kmcmech.JPList().size(), 0);
 	calcrates = true;
 	
