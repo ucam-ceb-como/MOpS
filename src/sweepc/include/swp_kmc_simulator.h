@@ -135,6 +135,12 @@ namespace Sweep{
 			void savePAH(int PAH_number, const std::string &filename, bool optimise=false);
 			//! Read PAHs to be tracked through the simulation from file.
 			void readTrackedPAH(const std::string &filename="tracked_pahs.txt");
+            //! Open csv file for tracked PAH
+            void opentrackedPAHCSV(int ID);
+            //! Writes data for tracked PAH to csv file
+            void writetrackedPAHCSV();
+            //! Closes csv file for tracked PAH
+            void closetrackedPAHCSV();
 			//! Add PAH to the tracked list on the fly.
 			void addTrackedPAH(int PAH_number);
 			//! Remove PAH from the tracked list on the fly.
@@ -198,6 +204,8 @@ namespace Sweep{
              CSV_IO m_testrates_csv;
             //! CSV io object for time step
              CSV_IO m_timestep_csv;
+             //! CSV io object for tracked PAHs
+             CSV_IO m_trackedpah_csv;
 			 //! Save PAHs at certain conditions
 			bool save_pah_detail=false;
         private:

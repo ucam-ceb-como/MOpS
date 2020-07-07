@@ -160,6 +160,12 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		readTrackedPAH();
 	};
 	
+    bool tracked_csv = false;
+    auto fix_finder = std::find(std::begin(m_tracked_pahs_fixed), std::end(m_tracked_pahs_fixed), PAH_ID);
+    if (fix_finder != m_tracked_pahs_fixed.end()) {
+        opentrackedPAHCSV(PAH_ID); //Opens the csv file for tracked PAH
+        tracked_csv = true;
+    }
     
     /*if(m_simPAHp.checkCoordinates())
         cout<<"Coordinates of structure OK. Commencing updatePAH..\n";
@@ -262,6 +268,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
                 m_simPAHp.printSites();
                 //printRates(m_t, m_kmcmech.Rates());
+                if (tracked_csv) writetrackedPAHCSV();
             }
 
 			m_rxn_count[jp_perf.second]++;
@@ -318,6 +325,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
                     m_simPAHp.printSites();
                     //printRates(m_t, m_kmcmech.Rates());
+                    if (tracked_csv) writetrackedPAHCSV();
                 }
 				
 				m_rxn_count[m_kmcmech.JPList().size() + jp_instant_perf.second]++;
@@ -353,6 +361,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
                     m_simPAHp.printSites();
                     //printRates(m_t, m_kmcmech.Rates());
+                    if (tracked_csv) writetrackedPAHCSV();
                 }
 				
 				m_rxn_count[m_kmcmech.JPList().size() + jp_instant_perf.second]++;
@@ -366,6 +375,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		if (loopcount == maxloops) proceed = false; //If maxloops is set to 0, this condition will never be true
         m_t = t_next;
     }
+    if (tracked_csv) closetrackedPAHCSV();
 	return m_t;
 }
 
@@ -1139,7 +1149,75 @@ void KMCSimulator::readTrackedPAH(const std::string &filename){
 		addTrackedPAH(PAH_number);
 		m_tracked_pahs_fixed.push_back(PAH_number);
 		//m_tracked_pahs.push_back(PAH_number);
+        std::string temp_name = "KMC_DEBUG/";
+        temp_name.append(std::to_string(PAH_number));
+        temp_name.append("/");
+        temp_name.append(std::to_string(PAH_number));
+        temp_name.append("_tracker.csv");
+        CSV_IO temp_file;
+        temp_file.Open(temp_name,true);
+        // Write headings for CH and site list
+        std::vector<string> pah_headings;
+        // write headings for PAH number
+        pah_headings.push_back("Time");
+        // write headings for N_C and N_H
+        pah_headings.push_back("N_C");
+        pah_headings.push_back("N_H");
+        pah_headings.push_back("R6");
+        pah_headings.push_back("Edge R5");
+        pah_headings.push_back("Embedded R5");
+        pah_headings.push_back("Edge R7");
+        pah_headings.push_back("Embedded R7");
+        // write headings for number of sites for all site types "N(sitetype)"
+        for(int i=0; i<(int) allSiteType.size(); i++) {
+            std::string header = "N(";
+            header = header.append(kmcSiteName(allSiteType[i]));
+            header = header.append(")");
+            pah_headings.push_back(header);
+        }
+        temp_file.Write(pah_headings);
+        temp_file.Close();
 	}
+}
+
+//! Open csv file for tracked PAH
+void KMCSimulator::opentrackedPAHCSV(int ID) {
+    std::string temp_name = "KMC_DEBUG/";
+    temp_name.append(std::to_string(ID));
+    temp_name.append("/");
+    temp_name.append(std::to_string(ID));
+    temp_name.append("_tracker.csv");
+    m_trackedpah_csv.Open(temp_name, false);
+}
+
+//! Writes data for tracked PAH to csv file
+void KMCSimulator::writetrackedPAHCSV() {
+    //Values to write
+    std::vector<float> temp;
+	// write PAH_ID number
+	temp.push_back(m_t);
+    // get CH count
+    intpair CH = m_simPAHp.getCHCount();
+    temp.push_back((float)CH.first);
+    temp.push_back((float)CH.second);
+    // get rings count
+    std::tuple <int, int, int> rings = m_simPAHp.getRingsCount();
+	temp.push_back((float)std::get<0>(rings));
+	temp.push_back((float)(std::get<1>(rings) - m_simPAHp.getR5EmbeddedCount()));
+	temp.push_back((float)m_simPAHp.getR5EmbeddedCount());
+	temp.push_back((float)(std::get<2>(rings) - m_simPAHp.getR7EmbeddedCount()));
+	temp.push_back((float)m_simPAHp.getR7EmbeddedCount());
+    // get counts for all site types
+    for(int i=0; i<(int)allSiteType.size(); i++) {
+        int scount = m_simPAHp.getSiteCount(allSiteType[i]);
+        temp.push_back((float) scount);
+    }
+    m_trackedpah_csv.Write(temp);
+}
+
+//! Writes data for tracked PAH to csv file
+void KMCSimulator::closetrackedPAHCSV() {
+    m_trackedpah_csv.Close();
 }
 
 //Add PAH to the tracked list on the fly.
