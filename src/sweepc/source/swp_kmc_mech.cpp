@@ -1157,8 +1157,8 @@ void L6_BY6::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-	//From Raj2009
-    addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      				//0 - r1f
+	//From Raj2009 OLD METHOD
+    /*addReaction(rxnV3, Reaction(9.24e7, 1.5, 9.646, sp::H));      				//0 - r1f
     addReaction(rxnV3, Reaction(9.6e4, 1.96, 9.021, sp::H2));   				//1 - r1b
     addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  				//2 - r2f
     addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); 				//3 - r2b
@@ -1166,7 +1166,23 @@ void L6_BY6::initialise() {
     //addReaction(rxnV3, Reaction(8.02e19, -2.011, 1.968, sp::H));  			//4 - r3f
     addReaction(rxnV3, Reaction(1.11e11, .658, 23.99, sp::None));   			//5 - r4f
 	addReaction(rxnV3, Reaction(3.49e12, -0.39, 2.44, sp::None));   			//6 - r4f			//Second route Raj2009
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.434E+07,1.879E+00,8.801E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.644E+05,2.048E+00,7.507E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(9.266E+11,1.131E-01,1.034E+00, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.037E+12,3.770E-01,3.743E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(4.695E+09,1.110E+00,2.157E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(2.793E+08,1.420E+00,4.145E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	//Direct cyclisation
+	addReaction(rxnV3, Reaction(1.998E+11,3.603E-01,6.303E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.428E+12,3.177E-01,4.889E+00, sp::None)); //-2
+	addReaction(rxnV3, Reaction(5.766E+09,1.110E+00,2.532E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(4.133E+05,1.895E+00,1.011E+02, sp::H)); //-3
+
     m_sType = BY6; // sitetype
     m_name = "BY6 closure"; // name of process
     m_ID = 3;
@@ -1192,7 +1208,8 @@ double L6_BY6::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
     return setRate0p0267(gp, pah_st);
 }
 double L6_BY6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    // check if site count is zero
+	//OLD METHOD
+	/*// check if site count is zero
     double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
@@ -1205,7 +1222,39 @@ double L6_BY6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = 2*(m_r[5]+m_r[6])*r_f* site_count; // Rate Equation
+    return m_rate = 2*(m_r[5]+m_r[6])*r_f* site_count; // Rate Equation*/
+
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR6-H, H-ACR6-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+	arr1(2,2) = m_r[9] + m_r[10];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+	arr2(2) = +m_r[8];
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(2) ) * site_count;
 }
 // 
 // ************************************************************
@@ -2722,7 +2771,8 @@ void L5R_BY5::initialise() {
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6
     // 1 atm
     rxnvector& rxnV3 = m_rxnvector1;
-    addReaction(rxnV3, Reaction(7.25e7, 1.76, 9.69, sp::H));      //0 - r1f
+	//OLD METHOD
+    /*addReaction(rxnV3, Reaction(7.25e7, 1.76, 9.69, sp::H));      //0 - r1f
     addReaction(rxnV3, Reaction(3.40e9, .88, 7.870, sp::H2));   //1 - r1b
     addReaction(rxnV3, Reaction(2.1e13, 0, 4.56937799, sp::OH));  //2 - r2f
     addReaction(rxnV3, Reaction(3.68e8, 1.139, 17.10, sp::H2O)); //3 - r2b
@@ -2734,7 +2784,17 @@ void L5R_BY5::initialise() {
         addReaction(rxnV3, Reaction(9.9866e13, 0, 22.560985, sp::None)); //6
         addReaction(rxnV3, Reaction(5.75e10, .93, 30.4, sp::None));//7 - for rate calculation
     }
-    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6
+    //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.51674641, sp::O2));          //6*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.534E+07,1.854E+00,8.443E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.311E+05,1.977E+00,1.220E+01, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(1.485E+11,3.012E-01,1.732E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(8.560E+11,4.399E-01,2.480E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(7.973E+09,1.184E+00,2.938E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(1.611E+08,1.536E+00,1.781E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
 
     m_sType = BY5; // sitetype
     m_name = "BY5 closure"; // name of process
@@ -2763,7 +2823,36 @@ double L5R_BY5::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
     return setRate0p0267(gp, pah_st);
 }
 double L5R_BY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-    return setRate0p0267(gp, pah_st);
+    //return setRate0p0267(gp, pah_st); // OLD METHOD
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(2, 2);
+	boost::numeric::ublas::vector<double> arr2(2);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR5-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = m_r[4] * arr2(1) * site_count;
 }
 // ************************************************************
 // ID19- R6 desorption at bay -> pyrene (AR21 in Matlab)
@@ -3251,6 +3340,9 @@ void B6R_ACR5::initialise() {
 	addReaction(rxnV3, Reaction(8.150E+11,5.630E-01,2.486E+01, sp::None)); //7
 	addReaction(rxnV3, Reaction(9.060E+11,4.560E-01,7.286E+00, sp::H)); //-7
 	addReaction(rxnV3, Reaction(4.170E+13, 1.500E-01, 0.000E+00, sp::H));            // A3* + H -> A3              			- 4              - Forward
+	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 7              - Frenklach et al. 2018
+	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
+
 
 	//OLD
 	/*addReaction(rxnV3, Reaction(4.20e13, 0, 13.00, sp::H));         // 0 - r1f
@@ -3302,7 +3394,7 @@ double B6R_ACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
 			arr1_peq(k, l) = 0.0;
 	for (unsigned k = 0; k < arr2_peq.size(); ++k)
 		arr2_peq(k) = 0.0;*/
-	arr1(0,0) = m_r[1] + m_r[2] + m_r[14];
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[14] + m_r[15] + m_r[16];
 	arr1(0,1) = -m_r[3];
 	arr1(1,0) = -m_r[2];
 	arr1(1,1) = m_r[3] + m_r[4] + m_r[10];
@@ -3530,19 +3622,35 @@ void L6_RBY5::initialise() {
 	// Adding elementary reactions
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//OLD METHOD
+	/*addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.434E+07,1.879E+00,8.801E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.644E+05,2.048E+00,7.507E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(9.266E+11,1.131E-01,1.034E+00, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.037E+12,3.770E-01,3.743E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(4.695E+09,1.110E+00,2.157E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(2.793E+08,1.420E+00,4.145E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	//Direct cyclisation
+	addReaction(rxnV3, Reaction(1.998E+11,3.603E-01,6.303E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.428E+12,3.177E-01,4.889E+00, sp::None)); //-2
+	addReaction(rxnV3, Reaction(5.766E+09,1.110E+00,2.532E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(4.133E+05,1.895E+00,1.011E+02, sp::H)); //-3
 
 	m_sType = RBY5; // sitetype
 	m_name = "RBY5 closure"; // name of process
 	m_ID = 28;
 }
 double L6_RBY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	// check if site count is zero
+	/*// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
@@ -3553,7 +3661,39 @@ double L6_RBY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation*/
+
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR6-H, H-ACR6-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+	arr1(2,2) = m_r[9] + m_r[10];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+	arr2(2) = +m_r[8];
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(2) ) * site_count;
 }
 
 // ************************************************************
@@ -3563,19 +3703,35 @@ double L6_RBY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 void L6_RACR::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//OLD METHOD
+	/*addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.434E+07,1.879E+00,8.801E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.644E+05,2.048E+00,7.507E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(9.266E+11,1.131E-01,1.034E+00, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.037E+12,3.770E-01,3.743E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(4.695E+09,1.110E+00,2.157E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(2.793E+08,1.420E+00,4.145E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	//Direct cyclisation
+	addReaction(rxnV3, Reaction(1.998E+11,3.603E-01,6.303E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.428E+12,3.177E-01,4.889E+00, sp::None)); //-2
+	addReaction(rxnV3, Reaction(5.766E+09,1.110E+00,2.532E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(4.133E+05,1.895E+00,1.011E+02, sp::H)); //-3
 
 	m_sType = RACR; // sitetype
 	m_name = "RACR closure"; // name of process
 	m_ID = 29;
 }
 double L6_RACR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	// check if site count is zero
+	/*// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
@@ -3586,7 +3742,39 @@ double L6_RACR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation*/
+
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR6-H, H-ACR6-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+	arr1(2,2) = m_r[9] + m_r[10];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+	arr2(2) = +m_r[8];
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(2) ) * site_count;
 }
 
 // ************************************************************
@@ -4535,19 +4723,35 @@ double C5R_R5R6ZZR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 void L6_R5R6BY5::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//OLD METHOD
+	/*addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.434E+07,1.879E+00,8.801E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.644E+05,2.048E+00,7.507E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(9.266E+11,1.131E-01,1.034E+00, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.037E+12,3.770E-01,3.743E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(4.695E+09,1.110E+00,2.157E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(2.793E+08,1.420E+00,4.145E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	//Direct cyclisation
+	addReaction(rxnV3, Reaction(1.998E+11,3.603E-01,6.303E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.428E+12,3.177E-01,4.889E+00, sp::None)); //-2
+	addReaction(rxnV3, Reaction(5.766E+09,1.110E+00,2.532E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(4.133E+05,1.895E+00,1.011E+02, sp::H)); //-3
 
 	m_sType = R5R6BY5; // sitetype
 	m_name = "R5R6BY5 closure"; // name of process
 	m_ID = 44;
 }
 double L6_R5R6BY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	// check if site count is zero
+	/*// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
@@ -4558,7 +4762,39 @@ double L6_R5R6BY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation*/
+
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR6-H, H-ACR6-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+	arr1(2,2) = m_r[9] + m_r[10];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+	arr2(2) = +m_r[8];
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(2) ) * site_count;
 }
 
 // ************************************************************
@@ -4568,19 +4804,35 @@ double L6_R5R6BY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 void L6_R5R6ACR::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//OLD METHOD
+	/*addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.434E+07,1.879E+00,8.801E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.644E+05,2.048E+00,7.507E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(9.266E+11,1.131E-01,1.034E+00, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.037E+12,3.770E-01,3.743E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(4.695E+09,1.110E+00,2.157E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(2.793E+08,1.420E+00,4.145E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	//Direct cyclisation
+	addReaction(rxnV3, Reaction(1.998E+11,3.603E-01,6.303E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.428E+12,3.177E-01,4.889E+00, sp::None)); //-2
+	addReaction(rxnV3, Reaction(5.766E+09,1.110E+00,2.532E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(4.133E+05,1.895E+00,1.011E+02, sp::H)); //-3
 
 	m_sType = R5R6ACR; // sitetype
 	m_name = "R5R6ACR closure"; // name of process
 	m_ID = 45;
 }
 double L6_R5R6ACR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	// check if site count is zero
+	/*// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
@@ -4591,7 +4843,39 @@ double L6_R5R6ACR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation*/
+
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR6-H, H-ACR6-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+	arr1(2,2) = m_r[9] + m_r[10];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+	arr2(2) = +m_r[8];
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(2) ) * site_count;
 }
 
 // ************************************************************
@@ -4601,19 +4885,35 @@ double L6_R5R6ACR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 void L6_R5R6ACR5R6::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//OLD METHOD
+	/*addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.434E+07,1.879E+00,8.801E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.644E+05,2.048E+00,7.507E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(9.266E+11,1.131E-01,1.034E+00, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.037E+12,3.770E-01,3.743E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(4.695E+09,1.110E+00,2.157E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(2.793E+08,1.420E+00,4.145E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	//Direct cyclisation
+	addReaction(rxnV3, Reaction(1.998E+11,3.603E-01,6.303E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.428E+12,3.177E-01,4.889E+00, sp::None)); //-2
+	addReaction(rxnV3, Reaction(5.766E+09,1.110E+00,2.532E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(4.133E+05,1.895E+00,1.011E+02, sp::H)); //-3
 
 	m_sType = R5R6ACR5R6; // sitetype
 	m_name = "R5R6ACR5R6 closure"; // name of process
 	m_ID = 46;
 }
 double L6_R5R6ACR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	// check if site count is zero
+	/*// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
@@ -4624,7 +4924,39 @@ double L6_R5R6ACR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation*/
+
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR6-H, H-ACR6-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+	arr1(2,2) = m_r[9] + m_r[10];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+	arr2(2) = +m_r[8];
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(2) ) * site_count;
 }
 
 // ************************************************************
@@ -4634,19 +4966,35 @@ double L6_R5R6ACR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, cons
 void L6_ZZACR5::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//OLD METHOD
+	/*addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.434E+07,1.879E+00,8.801E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.644E+05,2.048E+00,7.507E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(9.266E+11,1.131E-01,1.034E+00, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.037E+12,3.770E-01,3.743E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(4.695E+09,1.110E+00,2.157E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(2.793E+08,1.420E+00,4.145E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	//Direct cyclisation
+	addReaction(rxnV3, Reaction(1.998E+11,3.603E-01,6.303E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.428E+12,3.177E-01,4.889E+00, sp::None)); //-2
+	addReaction(rxnV3, Reaction(5.766E+09,1.110E+00,2.532E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(4.133E+05,1.895E+00,1.011E+02, sp::H)); //-3
 
 	m_sType = ZZACR5; // sitetype
 	m_name = "ZZACR5 closure"; // name of process
 	m_ID = 47;
 }
 double L6_ZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	// check if site count is zero
+	/*// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
@@ -4657,7 +5005,39 @@ double L6_ZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation*/
+
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR6-H, H-ACR6-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+	arr1(2,2) = m_r[9] + m_r[10];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+	arr2(2) = +m_r[8];
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(2) ) * site_count;
 }
 
 // ************************************************************
@@ -4667,19 +5047,35 @@ double L6_ZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 void L6_R5FEACR5::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//OLD METHOD
+	/*addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.434E+07,1.879E+00,8.801E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.644E+05,2.048E+00,7.507E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(9.266E+11,1.131E-01,1.034E+00, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.037E+12,3.770E-01,3.743E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(4.695E+09,1.110E+00,2.157E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(2.793E+08,1.420E+00,4.145E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	//Direct cyclisation
+	addReaction(rxnV3, Reaction(1.998E+11,3.603E-01,6.303E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.428E+12,3.177E-01,4.889E+00, sp::None)); //-2
+	addReaction(rxnV3, Reaction(5.766E+09,1.110E+00,2.532E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(4.133E+05,1.895E+00,1.011E+02, sp::H)); //-3
 
 	m_sType = R5FEACR5; // sitetype
 	m_name = "R5FEACR5 closure"; // name of process
 	m_ID = 48;
 }
 double L6_R5FEACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	// check if site count is zero
+	/*// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
@@ -4690,7 +5086,39 @@ double L6_R5FEACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation*/
+
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR6-H, H-ACR6-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+	arr1(2,2) = m_r[9] + m_r[10];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+	arr2(2) = +m_r[8];
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(2) ) * site_count;
 }
 
 // ************************************************************
@@ -4700,19 +5128,35 @@ double L6_R5FEACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 void L6_FEACR5FE::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//OLD METHOD
+	/*addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.434E+07,1.879E+00,8.801E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.644E+05,2.048E+00,7.507E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(9.266E+11,1.131E-01,1.034E+00, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.037E+12,3.770E-01,3.743E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(4.695E+09,1.110E+00,2.157E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(2.793E+08,1.420E+00,4.145E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	//Direct cyclisation
+	addReaction(rxnV3, Reaction(1.998E+11,3.603E-01,6.303E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.428E+12,3.177E-01,4.889E+00, sp::None)); //-2
+	addReaction(rxnV3, Reaction(5.766E+09,1.110E+00,2.532E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(4.133E+05,1.895E+00,1.011E+02, sp::H)); //-3
 
 	m_sType = FEACR5FE; // sitetype
 	m_name = "FEACR5FE closure"; // name of process
 	m_ID = 49;
 }
 double L6_FEACR5FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	// check if site count is zero
+	/*// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
@@ -4723,7 +5167,39 @@ double L6_FEACR5FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation*/
+
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR6-H, H-ACR6-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+	arr1(2,2) = m_r[9] + m_r[10];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+	arr2(2) = +m_r[8];
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(2) ) * site_count;
 }
 
 // ************************************************************
@@ -4733,19 +5209,35 @@ double L6_FEACR5FE::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 void L6_R5ACR5R5::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//OLD METHOD
+	/*addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.434E+07,1.879E+00,8.801E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.644E+05,2.048E+00,7.507E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(9.266E+11,1.131E-01,1.034E+00, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.037E+12,3.770E-01,3.743E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(4.695E+09,1.110E+00,2.157E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(2.793E+08,1.420E+00,4.145E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	//Direct cyclisation
+	addReaction(rxnV3, Reaction(1.998E+11,3.603E-01,6.303E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.428E+12,3.177E-01,4.889E+00, sp::None)); //-2
+	addReaction(rxnV3, Reaction(5.766E+09,1.110E+00,2.532E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(4.133E+05,1.895E+00,1.011E+02, sp::H)); //-3
 
 	m_sType = R5ACR5R5; // sitetype
 	m_name = "R5ACR5R5 closure"; // name of process
 	m_ID = 50;
 }
 double L6_R5ACR5R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	// check if site count is zero
+	/*// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
@@ -4756,7 +5248,39 @@ double L6_R5ACR5R5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation*/
+
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR6-H, H-ACR6-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+	arr1(2,2) = m_r[9] + m_r[10];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+	arr2(2) = +m_r[8];
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(2) ) * site_count;
 }
 
 // ************************************************************
@@ -4915,19 +5439,35 @@ double L7_R5ZZACR5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 void L6_ACR5R5R6::initialise() {
 	// 1 atm
 	rxnvector& rxnV3 = m_rxnvector1;
-	addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
+	//OLD METHOD
+	/*addReaction(rxnV3, Reaction(9.24e07, 1.500, 9.646, sp::H));     // 0 - r1f
 	addReaction(rxnV3, Reaction(9.60e04, 1.960, 9.021, sp::H2));    // 1 - r1b
 	addReaction(rxnV3, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
 	addReaction(rxnV3, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2b
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
-	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f
+	addReaction(rxnV3, Reaction(1.11e11, 0.658, 23.99, sp::None));  // 5 - r4f*/
+
+	//Rates calculated by Angiras (unpublished as July2020)
+	addReaction(rxnV3, Reaction(3.434E+07,1.879E+00,8.801E+00, sp::H)); //1
+	addReaction(rxnV3, Reaction(2.644E+05,2.048E+00,7.507E+00, sp::H2)); //-1
+	addReaction(rxnV3, Reaction(9.266E+11,1.131E-01,1.034E+00, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.037E+12,3.770E-01,3.743E+01, sp::None)); //-2
+	addReaction(rxnV3, Reaction(4.695E+09,1.110E+00,2.157E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(2.793E+08,1.420E+00,4.145E+00, sp::H)); //-3
+	addReaction(rxnV3, Reaction(5.190E+03, 3.040E+00, 3.675E+00, sp::OH));           // A3 + OH <=> A3-4 + H2O              - 2              - Forward
+	addReaction(rxnV3, Reaction(5.590E+00, 3.573E+00, 8.659E+00, sp::H2O));          // A3 + OH <=> A3-4 + H2O              - 3              - Backward
+	//Direct cyclisation
+	addReaction(rxnV3, Reaction(1.998E+11,3.603E-01,6.303E+01, sp::None)); //2
+	addReaction(rxnV3, Reaction(1.428E+12,3.177E-01,4.889E+00, sp::None)); //-2
+	addReaction(rxnV3, Reaction(5.766E+09,1.110E+00,2.532E+01, sp::None)); //3
+	addReaction(rxnV3, Reaction(4.133E+05,1.895E+00,1.011E+02, sp::H)); //-3
 
 	m_sType = ACR5R5R6; // sitetype
 	m_name = "ACR5R5R6 closure"; // name of process
 	m_ID = 52;
 }
 double L6_ACR5R5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
-	// check if site count is zero
+	/*// check if site count is zero
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	if (site_count == 0) return m_rate = 0;
@@ -4938,7 +5478,39 @@ double L6_ACR5R5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation
+	return m_rate = 2 * m_r[5] * r_f* site_count; // Rate Equation*/
+
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+	//Rate assuming PEQ approximation
+	matrix<double> arr1(3, 3);
+	boost::numeric::ublas::vector<double> arr2(3);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	// SS species are C*, ACR6-H, H-ACR6-H
+	arr1(0,0) = m_r[1] + m_r[2] + m_r[7];
+    arr1(0,1) = -m_r[3];
+    arr1(1,0) = -m_r[2];
+    arr1(1,1) = m_r[3] + m_r[4];
+	arr1(2,2) = m_r[9] + m_r[10];
+
+    arr2(0) = +m_r[0] + m_r[6];
+    arr2(1) = 0.0;
+	arr2(2) = +m_r[8];
+
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	//std::cout << arr2 << std::endl;
+	return m_rate = (m_r[4] * arr2(1) + m_r[10] * arr2(2) ) * site_count;
 }
 
 // ************************************************************
