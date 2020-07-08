@@ -6698,7 +6698,7 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				cout << "Saving file KMC_DEBUG/BEFORE_FE3-R5-S1_error.\n";
 			}
 			saveXYZ("KMC_DEBUG/FE3-R5-S1 desorption_error");
-			cout << "Saving file KMC_DEBUG/FE3-R5-S1 desorption_error.\n";
+			cout << "Saving file KMC_DEBUG/FE3-R5-S1 desorption_error.\n"; 
 			printSites(S1);
 		}
 		if ( (int)S2->type >= 2000 && (int)S2->type <= 2100 ) updateSites(S2, C2_new, S2->C2, -1901);
