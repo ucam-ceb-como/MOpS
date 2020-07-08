@@ -5274,7 +5274,13 @@ Cpointer PAHProcess::findThirdC(Cpointer C_1) {
 		Cpointer C_check = *i;
 		if (C_check != C_1 && C_check != C_1->C1 && C_check != C_1->C1->C1 && C_check != C_1->C2 && C_check != C_1->C2->C2 && C_check != C_1->C3){
 			double dist = getDistance_twoC(C_check, C_1);
-			if (dist < 1.8) return C_check;
+			if (dist < 1.8) {
+				cpair vec1 = get_vector(C_1->C1->coords, C_1->coords);
+				cpair vec2 = get_vector(C_1->C2->coords, C_1->coords);
+				cpair addvec = add_vector(vec1, vec2);
+				addvec = jumpToPos(C_1->coords,addvec,1.4);
+				if (getDistance_twoC(C_check->coords, addvec)<1.8) return C_check; 
+			}
 		}
 	}
 	return NULLC;
