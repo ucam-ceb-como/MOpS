@@ -279,11 +279,11 @@ namespace Sweep {
             temp.push_back(RZZR);
             temp.push_back(RACR);
             temp.push_back(FE2);
-            temp.push_back(R5R7);
             temp.push_back(FE3);
             temp.push_back(AC_FE3);
             temp.push_back(FE_HACA);
             temp.push_back(BY5_FE3);
+            temp.push_back(R5R7);
 			temp.push_back(R5R6);
 			temp.push_back(R5R6ZZ);
 			temp.push_back(R5R6AC);

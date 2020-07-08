@@ -82,6 +82,9 @@ public:
     // Read a line of comma-separated values from the file into a vector
     // of strings.  Throws exception on error.
     void Read(std::vector<std::string> &values);
+    
+    // Reads a line of comma-separated ints from the file.
+    void Read(std::vector<int> &values);
 
     // Reads a line of comma-separated floats from the file.
     void Read(std::vector<float> &values);
@@ -97,6 +100,9 @@ public:
     // Writes a line of comma-separated values to the file from a
     // vector of strings.  Throws exception on error.
     void Write(const std::vector<std::string> &values);
+
+    // Writes a line of comma-separated ints to the file.
+    void Write(const std::vector<int> &values);
 
     // Writes a line of comma-separated floats to the file.
     void Write(const std::vector<float> &values);

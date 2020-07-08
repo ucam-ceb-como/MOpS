@@ -523,46 +523,46 @@ void KMCSimulator::writeRxnCountCSV() {
 }
 //! Writes data for CH_site_list.csv
 void KMCSimulator::writeCHSiteCountCSV(int ID) {
-    std::vector<float> temp;
+    std::vector<int> temp;
 	// write PAH_ID number
-	temp.push_back((float)ID);
+	temp.push_back(ID);
     // get CH count
     intpair CH = m_simPAHp.getCHCount();
-    temp.push_back((float)CH.first);
-    temp.push_back((float)CH.second);
+    temp.push_back(CH.first);
+    temp.push_back(CH.second);
     // get counts for all site types
     for(int i=0; i<(int)allSiteType.size(); i++) {
         int scount = m_simPAHp.getSiteCount(allSiteType[i]);
-        temp.push_back((float) scount);
+        temp.push_back(scount);
     }
 	std::tuple <int, int, int> rings = m_simPAHp.getRingsCount();
-	temp.push_back((float)std::get<0>(rings));
-	temp.push_back((float)(std::get<1>(rings) - m_simPAHp.getR5EmbeddedCount()));
-	temp.push_back((float)m_simPAHp.getR5EmbeddedCount());
-	temp.push_back((float)(std::get<2>(rings) - m_simPAHp.getR7EmbeddedCount()));
-	temp.push_back((float)m_simPAHp.getR7EmbeddedCount());
+	temp.push_back(std::get<0>(rings));
+	temp.push_back((std::get<1>(rings) - m_simPAHp.getR5EmbeddedCount()));
+	temp.push_back(m_simPAHp.getR5EmbeddedCount());
+	temp.push_back((std::get<2>(rings) - m_simPAHp.getR7EmbeddedCount()));
+	temp.push_back(m_simPAHp.getR7EmbeddedCount());
     m_pah_csv.Write(temp);
 }
 //! Writes data for CH_site_list.csv
 void KMCSimulator::writeCHSiteCountCSV_after(int ID) {
-    std::vector<float> temp;
+    std::vector<int> temp;
 	// write PAH_ID number
-	temp.push_back((float)ID);
+	temp.push_back(ID);
     // get CH count
     intpair CH = m_simPAHp.getCHCount();
-    temp.push_back((float)CH.first);
-    temp.push_back((float)CH.second);
+    temp.push_back(CH.first);
+    temp.push_back(CH.second);
     // get counts for all site types
     for(int i=0; i<(int)allSiteType.size(); i++) {
         int scount = m_simPAHp.getSiteCount(allSiteType[i]);
-        temp.push_back((float) scount);
+        temp.push_back(scount);
     }
 	std::tuple <int, int, int> rings = m_simPAHp.getRingsCount();
-	temp.push_back((float)std::get<0>(rings));
-	temp.push_back((float)(std::get<1>(rings) - m_simPAHp.getR5EmbeddedCount()));
-	temp.push_back((float)m_simPAHp.getR5EmbeddedCount());
-	temp.push_back((float)(std::get<2>(rings) - m_simPAHp.getR7EmbeddedCount()));
-	temp.push_back((float)m_simPAHp.getR7EmbeddedCount());
+	temp.push_back(std::get<0>(rings));
+	temp.push_back((std::get<1>(rings) - m_simPAHp.getR5EmbeddedCount()));
+	temp.push_back(m_simPAHp.getR5EmbeddedCount());
+	temp.push_back((std::get<2>(rings) - m_simPAHp.getR7EmbeddedCount()));
+	temp.push_back(m_simPAHp.getR7EmbeddedCount());
     m_pah_after_csv.Write(temp);
 }
 //! Writes data for rates count (csv)
@@ -1188,29 +1188,32 @@ void KMCSimulator::opentrackedPAHCSV(int ID) {
     temp_name.append(std::to_string(ID));
     temp_name.append("_tracker.csv");
     m_trackedpah_csv.Open(temp_name, false);
+    std::vector<std::string> n_vec;
+    n_vec.push_back(" ");
+    m_trackedpah_csv.Write(n_vec);
 }
 
 //! Writes data for tracked PAH to csv file
 void KMCSimulator::writetrackedPAHCSV() {
     //Values to write
-    std::vector<float> temp;
+    std::vector<int> temp;
 	// write PAH_ID number
 	temp.push_back(m_t);
     // get CH count
     intpair CH = m_simPAHp.getCHCount();
-    temp.push_back((float)CH.first);
-    temp.push_back((float)CH.second);
+    temp.push_back(CH.first);
+    temp.push_back(CH.second);
     // get rings count
     std::tuple <int, int, int> rings = m_simPAHp.getRingsCount();
-	temp.push_back((float)std::get<0>(rings));
-	temp.push_back((float)(std::get<1>(rings) - m_simPAHp.getR5EmbeddedCount()));
-	temp.push_back((float)m_simPAHp.getR5EmbeddedCount());
-	temp.push_back((float)(std::get<2>(rings) - m_simPAHp.getR7EmbeddedCount()));
-	temp.push_back((float)m_simPAHp.getR7EmbeddedCount());
+	temp.push_back(std::get<0>(rings));
+	temp.push_back((std::get<1>(rings) - m_simPAHp.getR5EmbeddedCount()));
+	temp.push_back(m_simPAHp.getR5EmbeddedCount());
+	temp.push_back((std::get<2>(rings) - m_simPAHp.getR7EmbeddedCount()));
+	temp.push_back(m_simPAHp.getR7EmbeddedCount());
     // get counts for all site types
     for(int i=0; i<(int)allSiteType.size(); i++) {
         int scount = m_simPAHp.getSiteCount(allSiteType[i]);
-        temp.push_back((float) scount);
+        temp.push_back(scount);
     }
     m_trackedpah_csv.Write(temp);
 }

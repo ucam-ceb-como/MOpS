@@ -133,6 +133,12 @@ void CSV_IO::Read(std::vector<std::string> &values)
 }
 
 // Reads a line of floats into a vector.
+void CSV_IO::Read(std::vector<int> &values)
+{
+    readLine<int>(values);
+}
+
+// Reads a line of floats into a vector.
 void CSV_IO::Read(std::vector<float> &values)
 {
     readLine<float>(values);
@@ -157,6 +163,12 @@ void CSV_IO::Read(std::vector<long double> &values)
 void CSV_IO::Write(const std::vector<std::string> &values)
 {
     writeLine<string>(values);
+}
+
+// Writes a line from a vector of ints.
+void CSV_IO::Write(const std::vector<int> &values)
+{
+    writeLine<int>(values);
 }
 
 // Writes a line from a vector of floats.
