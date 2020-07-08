@@ -1491,9 +1491,9 @@ double D6R_FE3::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doub
 	double site_count = ((double)pah_st.getSiteCount(m_sType));
 	//double site_count = 1; // Site count
 	//int ring_count = ((int)pah_st.getRingsCount().first); // Ring count
-	auto ring_count = pah_st.getRingsCount();
-	int ring_count_6 = std::get<0>(ring_count);
-	if (ring_count_6 <= 1) return m_rate = 0;
+	//auto ring_count = pah_st.getRingsCount();
+	//int ring_count_6 = std::get<0>(ring_count);
+	//if (ring_count_6 <= 1) return m_rate = 0;
 	if (site_count == 0) return m_rate = 0;
 	
 
@@ -3196,9 +3196,9 @@ void D6R_FE_AC::initialise() {
 	rxnvector& rxnV3 = m_rxnvector1;
 	//Reverse reactions fitted from Blanquart thermal data with Frenklach rates from 2018
 	addReaction(rxnV3, Reaction(5.465e+30, -3.657e+00, 8.624e+01, sp::H));          			// A3- + C2H2 <=> A4 + H                - 0             - Backward
-	addReaction(rxnV3, Reaction(4.868e+22, -1.697e+00, 7.555e+01, sp::H));          			// A3- + C2H2 <=> A4 + H                - 1             - Backward
-	addReaction(rxnV3, Reaction(3.800e+10,  1.300e+00, 51929*8.314/4.184/1000.0, sp::None));    // S16 Whitesides2010	                - 2
-	addReaction(rxnV3, Reaction(4.000e+10,  1.530e+00, 57225*8.314/4.184/1000.0, sp::None));    // S17 Whitesides2010	                - 3
+	addReaction(rxnV3, Reaction(4.868e+22, -1.697e+00, 7.555e+01, sp::H));          			// A3- + C2H2 <=> A4 + H  
+	addReaction(rxnV3, Reaction(1.815E+34, -4.875E+00, 7.521E+01, sp::H));           			// A3-4 + C2H2 <=> A4 + H              - 12             - Backward
+
 	//Reactions for ABF
 	/*//------------Reactions for A3-4----------------------------
 	addReaction(rxnV3, Reaction(4.570E+08, 1.880E+00, 1.4839E+01, sp::H));            	// A3 + H <=> A3-4 + H2              	- 0              - Forward
@@ -3275,7 +3275,7 @@ double D6R_FE_AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const do
 	}
 	else{
 		//For Frenklach2018
-		return m_rate = (m_r[0] + m_r[1] + m_r[2] + m_r[3]) * site_count / 2.0; //Lumped consumption of A4
+		return m_rate = (m_r[0] + m_r[1] + m_r[2])* site_count / 2.0; //Lumped consumption of A4
 		//For ABF
 		//return m_rate = (m_r[12] + m_r[20] + m_r[18]) * site_count / 2.0; //Lumped consumption of A4
 	}
