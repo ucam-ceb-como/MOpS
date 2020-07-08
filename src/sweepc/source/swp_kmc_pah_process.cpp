@@ -3705,6 +3705,13 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 			else st->comb = None;
         }else st->comb = None;
         break;
+	case ACR5:
+	//Check for R5R7
+		if (isR7internal(st->C1,st->C1->C2,true) || isR7internal(st->C1,st->C1->C2) || isR7internal(st->C2->C1,st->C2,true) || isR7internal(st->C2->C1,st->C2)){
+			st->comb = R5R7;
+			m_pah->m_siteMap[R5R7].push_back(st);
+			break;
+		}
     default:
         st->comb = None;
         break;
@@ -5351,6 +5358,7 @@ bool PAHProcess::checkSiteValid(int type) {
 		case FE_HACA: return true;
 		case BY5_FE3: return true;
 		case FE2: return true;
+		case R5R7: return true;
 		case R5R6: return true;
 		case R5R6ZZ: return true;
 		case R5R6AC: return true;
@@ -5449,6 +5457,12 @@ bool PAHProcess::checkCombinedSiteType(Spointer& stt) {
                     error_stype = i->type;
                 }
                 break;
+			case ACR5:
+				if(i->type != ACR5) {
+                    error = true;
+                    error_stype_comb = R5R7;
+                    error_stype = i->type;
+                }
             default: break;
             }
         }
@@ -5668,6 +5682,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			proc_O5R_R5R6ZZR5R6(site_perf, site_C1, site_C2, rng); break;
 		case 65:
 			proc_O5R_R5R6ACR5R6(site_perf, site_C1, site_C2, rng); break;
+		case 66:
+			proc_MR5R7_edge(site_perf, site_C1, site_C2, rng); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
             return false;
@@ -11563,6 +11579,126 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 	}*/
 }
 
+// ************************************************************
+// ID66 - R5R7 edge healing
+// ************************************************************
+void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
+	//printStruct();
+	bool b4 = false;
+	Cpointer CRem;
+	if ( (isR7internal(stt->C1,stt->C1->C2,true) || isR7internal(stt->C1,stt->C1->C2)) && (isR7internal(stt->C2->C1,stt->C2,true) || isR7internal(stt->C2->C1,stt->C2))){
+		//R5R7 to both sides.
+		// Define a distribution that has two equally probably outcomes
+		boost::bernoulli_distribution<> choiceDistrib;
+		// Now build an object that will generate a sample using rng
+		boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+		if(choiceGenerator()) {
+			b4 = true;
+			CRem = C_1;
+		} else {
+			b4 = false;
+			CRem = C_2;
+		}
+	}
+	else if (isR7internal(stt->C1,stt->C1->C2,true) || isR7internal(stt->C1,stt->C1->C2)){
+		b4 = true;
+		CRem = C_1;
+	}
+	else {
+		b4 = false;
+		CRem = C_2;
+	}
+	Cpointer CFE = C_1->C2;
+
+	// check if ACR5 has an opposite site.
+	Spointer opp_site, opp_site_second;
+	bool opp_site_bool = false; bool opp_site_bool_second = false;
+	Cpointer thirdC = findThirdC(C_1->C2);
+	Cpointer thirdC2 = findThirdC(C_2->C1);
+	if (thirdC != NULLC) {
+		opp_site = findSite(thirdC);
+		if (opp_site != m_pah->m_siteList.end()) opp_site_bool = true;
+	}
+	if (thirdC2 != NULLC) {
+		opp_site_second = findSite(thirdC2);
+		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
+	}
+
+	//Add a new carbon between current R5 carbons of ACR5
+	double R5_dist = getDistance_twoC(CFE, CFE->C2);
+	double dist2;
+	if (R5_dist < 2.5) dist2 = 1.4;
+	else dist2 = R5_dist / 2.7 * 1.5;
+	double theta = asin(R5_dist/2.0/dist2);
+	double magn = dist2 * cos(theta);
+	cpair R5dir = get_vector(C_1->C2->coords,C_2->C1->coords);
+	cpair normvec = (norm_vector(C_1->C2->coords, C_1->C2->C2->coords, C_1->C2->C2->C2->coords));
+	cpair crossvec = cross_vector(R5dir, normvec);
+	cpair resultantvec = std::make_tuple(R5_dist/2.0 * std::get<0>(R5dir) + magn * std::get<0>(crossvec), R5_dist/2.0 * std::get<1>(R5dir) + magn * std::get<1>(crossvec), R5_dist/2.0 * std::get<2>(R5dir)+ magn * std::get<2>(crossvec));
+	cpair Cnewdir = scale_vector(resultantvec);
+	//cpair Cnewdir = get_vector(C_2->C1->coords,C_2->coords);
+	// add a C atom
+	Cpointer Cnew = addC(CFE, Cnewdir, 1.4);
+	updateA(Cnew, 'H', crossvec);
+	
+	//Remove carbon from end site 
+	removeC(CRem, false);
+	OpenBabel::OBMol mol = passPAH();
+	mol = optimisePAH(mol);
+	passbackPAH(mol);
+
+	if (b4) {
+		convSiteType(stt, Cnew, C_2, ZZ);
+		Spointer S_other = moveIt(stt,-1);
+		updateSites(S_other, S_other->C1, Cnew, +1);
+	}
+	else {
+		convSiteType(stt, C_1, Cnew, ZZ);
+		Spointer S_other = moveIt(stt,+1);
+		updateSites(S_other, Cnew, S_other->C2, +1);
+	}
+
+	Spointer S1 = moveIt(stt,-1); 
+	Spointer S2 = moveIt(stt,+1); 
+	Spointer S3 = moveIt(stt,-2); 
+	Spointer S4 = moveIt(stt,+2); 
+	updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
+
+	//Adjust opposite sites for starting and ending position.
+	if (opp_site_bool && opp_site_bool_second) {
+		if (opp_site == opp_site_second) opp_site_bool_second = false;
+	}
+	if (opp_site_bool) {
+		if ( (int)opp_site->type >= 2100) {
+			Spointer S1_opp_site = moveIt(opp_site, -1);
+			Spointer S2_opp_site = moveIt(opp_site, +1);
+			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
+				updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+			}
+			else updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
+		}
+		else if  ((int)opp_site->type >= 2000) updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+		else updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
+		updateCombinedSites(opp_site);
+	}
+	if (opp_site_bool_second) {
+		if ( (int)opp_site_second->type >= 2100) {
+			Spointer S1_opp_site = moveIt(opp_site_second, -1);
+			Spointer S2_opp_site = moveIt(opp_site_second, +1);
+			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
+				updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -2000);
+			}
+			else updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -100);
+		}
+		else updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -2000);
+		updateCombinedSites(opp_site_second);
+	}
+	//Ring transformation
+	m_pah->m_rings5_Lone--;
+	m_pah->m_rings7_Embedded--;
+	m_pah->m_rings++;
+	m_pah->m_rings++;
+}
 
 
 size_t PAHProcess::SiteListSize() const {

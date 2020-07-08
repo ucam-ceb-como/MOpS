@@ -217,6 +217,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_O5R_R5R6FER5R6 = new O5R_R5R6FER5R6; j_O5R_R5R6FER5R6->initialise();         //!< 63 - Oxidation of R5R6FER5R6 site.
 	JumpProcess* j_O5R_R5R6ZZR5R6 = new O5R_R5R6ZZR5R6; j_O5R_R5R6ZZR5R6->initialise();         //!< 64 - Oxidation of R5R6ZZR5R6 site.
 	JumpProcess* j_O5R_R5R6ACR5R6 = new O5R_R5R6ACR5R6; j_O5R_R5R6ACR5R6->initialise();         //!< 65 - Oxidation of R5R6ACR5R6 site.
+	JumpProcess* j_MR5R7_edge = new MR5R7_edge; j_MR5R7_edge->initialise();        				//!< 66 - R5R7 pair edge healing.
     
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
@@ -285,6 +286,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_O5R_R5R6FER5R6);          		//!< 63 - Oxidation of R5R6FER5R6 site.
 	temp.push_back(j_O5R_R5R6ZZR5R6);          		//!< 64 - Oxidation of R5R6ZZR5R6 site.
 	temp.push_back(j_O5R_R5R6ACR5R6);          		//!< 65 - Oxidation of R5R6ACR5R6 site.
+	temp.push_back(j_MR5R7_edge);          		//!< 65 - Oxidation of R5R6ACR5R6 site.
 
     return temp;
 }
@@ -6360,4 +6362,77 @@ double O5R_R5R6ACR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
     else r_f=0;
     return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID66- R5R7 pair edge healing.
+// ************************************************************
+// Elementary rate constants, site type, process type and name
+void MR5R7_edge::initialise() {
+    // Adding elementary reactions
+    // 1 atm
+    rxnvector& rxnV3 = m_rxnvector1;
+	//ABF - Frenklach and Whitesides2010
+	//H abstraction
+	addReaction(rxnV3, Reaction(3.48e+08, 1.49, 3.44, sp::H));          			// BP + H -> BP1		0 
+	addReaction(rxnV3, Reaction(2.34e+09, 1.18, 30.77, sp::None));       			// BP1 -> BP + H		1 
+	addReaction(rxnV3, Reaction(2.12e+10, 0.67, 40.32, sp::None));          		// BP1 -> BP2			2 
+	addReaction(rxnV3, Reaction(8.39e+11, 0.29, 18.61, sp::None));          		// BP2 -> BP1			3 
+	addReaction(rxnV3, Reaction(1.03e+12, 0.15, 9.25, sp::None));          			// BP2 -> BP3			4
+	addReaction(rxnV3, Reaction(1.87e+12, 0.32, 15.04, sp::None));           		// BP3 -> BP2			5
+	addReaction(rxnV3, Reaction(6.65e+12, -0.13, 4.09, sp::None));          		// BP3 -> BP4			6 
+	addReaction(rxnV3, Reaction(1.52e+12, 0.00, 34.08, sp::None));           		// BP4 -> BP3			7
+	addReaction(rxnV3, Reaction(1.13e+10, 1.00, 15.65, sp::None));          		// BP4 -> BF + H		8 
+	addReaction(rxnV3, Reaction(2.82e+08, 1.36, 35.44, sp::H));           			// BF + H -> BP4		9
+
+
+    m_sType = R5R7; // sitetype
+    m_name = "R5R7 pair edge healing"; // name of process
+    m_ID = 66;
+}
+// Jump rate calculation
+double MR5R7_edge::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate1(gp, pah_st);
+}
+double MR5R7_edge::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+    return setRate1(gp, pah_st);
+}
+double MR5R7_edge::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	//Rates updated according to paper: A density functional theory study on the kinetics of seven-member ring formation in polyaromatic hydrocarbons 2020
+	// check if site count is zero
+    double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+    if(site_count==0) return m_rate=0;
+    // calculate rate
+    //Rate assuming PEQ approximation
+	matrix<double> arr1(4, 4);
+	boost::numeric::ublas::vector<double> arr2(4);
+	for (unsigned k = 0; k < arr1.size1(); ++k)
+		for (unsigned l = 0; l < arr1.size2(); ++l)
+			arr1(k, l) = 0.0;
+	for (unsigned k = 0; k < arr2.size(); ++k)
+		arr2(k) = 0.0;
+	
+	arr1(0,0) = m_r[1] + m_r[2];
+	arr1(0,1) = - m_r[3];
+	arr1(1,0) = -m_r[2];
+	arr1(1,1) = + m_r[3] + m_r[4];
+	arr1(1,2) = -m_r[5];
+	arr1(2,1) = -m_r[4];
+	arr1(2,2) = + m_r[5] + m_r[6];
+	arr1(2,3) = -m_r[7];
+	arr1(3,2) = -m_r[6];
+	arr1(3,3) = + m_r[7] + m_r[8];
+
+	arr2(0) = +m_r[0];
+	arr2(1) = 0.0;
+	arr2(2) = 0.0;
+	arr2(3) = 0.0;
+	
+	permutation_matrix<size_t> pm(arr1.size1());
+	lu_factorize(arr1, pm);
+	lu_substitute(arr1, pm, arr2);
+	
+	double rate = (m_r[8] * arr2(3))*site_count;
+	return m_rate = rate;
 }

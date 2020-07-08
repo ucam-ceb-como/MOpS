@@ -64,7 +64,7 @@ namespace Sweep {
 			// FE_HACA:FE with non-FEs on both sides
 			FE3 = 13, AC_FE3 = 14, FE_HACA = 15, BY5_FE3 = 16,
 			// Combined Sites: FE2:FE with FE at one side, but not an FE3
-			FE2 = 17,
+			FE2 = 17, R5R7 = 18,
 			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
 			//ACR5 = 18,
 			//
@@ -184,6 +184,7 @@ namespace Sweep {
                 case FE_HACA: return "FE_HACA";
                 case BY5_FE3: return "BY5_FE3";
                 case FE2: return "FE2";
+                case R5R7: return "R5R7";
 				case R5R6: return "R5R6";
 				case R5R6ZZ: return "R5R6ZZ";
 				case R5R6AC: return "R5R6AC";
@@ -278,6 +279,7 @@ namespace Sweep {
             temp.push_back(RZZR);
             temp.push_back(RACR);
             temp.push_back(FE2);
+            temp.push_back(R5R7);
             temp.push_back(FE3);
             temp.push_back(AC_FE3);
             temp.push_back(FE_HACA);
