@@ -6969,7 +6969,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 			if (leftsite > 500 && leftsite < 2000) {
 				zerosite += 100;
 				updateSites(S1, S1->C1, C1_res, -401);
-				updateSites(S3, S3->C1, S3->C2, -400);
+				if ((int)S3->type < 2000) updateSites(S3, S3->C1, S3->C2, -400);
 			}
 			else if (leftsite > 2000) {
 				zerosite += 500;
@@ -6992,7 +6992,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 			if (rightsite > 500 && rightsite < 2000) {
 				zerosite += 100;
 				updateSites(S2, C2_res, S2->C2, -401);
-				updateSites(S4, S4->C1, S4->C2, -400);
+				if ((int)S4->type < 2000) updateSites(S4, S4->C1, S4->C2, -400);
 			}
 			else if (rightsite > 2000) {
 				zerosite += 500;
