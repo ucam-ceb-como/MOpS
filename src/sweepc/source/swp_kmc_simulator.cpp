@@ -265,8 +265,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 xyzname.append(std::to_string(m_t*1000.0));
                 xyzname.append("_A");
                 savePAH(PAH_ID, xyzname); 
-                cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
-                m_simPAHp.printSites();
+                //cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
+                //m_simPAHp.printSites();
                 //printRates(m_t, m_kmcmech.Rates());
                 if (tracked_csv) writetrackedPAHCSV();
             }
@@ -278,14 +278,23 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			rates = m_kmcmech.Rates();
 			writeRatesCSV(m_t, rates);
 			
+            std::vector<std::string> temp = m_simPAHp.SiteVectorString();
+            temp.push_back(std::to_string(PAH_ID));
+            m_pah_sitelist_csv.Write(temp);
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 			writeCHSiteCountCSV_after(PAH_ID);
+
+            if(jp_perf.first->getID() == 23 || jp_perf.first->getID() == 56) {
+                std::vector<std::string> temp2 = m_simPAHp.SiteVectorString();
+                temp2.push_back(std::to_string(PAH_ID));
+                m_pah_sitelist_csv.Write(temp2);
+            }
 			
 			
             //Save information for a single PAH
-            if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
+            /*if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
                 std::string xyzname = ("KMC_DEBUG/");
                 xyzname.append(std::to_string(PAH_ID));
                 xyzname.append("/");
@@ -296,7 +305,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 //xyzname2.append(std::to_string(PAH_ID));
                 //xyzname2.append("trajectory");
                 //m_simPAHp.save_trajectory_xyz(m_t, xyzname2, false);
-            }
+            }*/
 			
             if (save_pah_detail){
 				//Remove PAH from tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
@@ -635,6 +644,7 @@ void KMCSimulator::initCSVIO() {
     m_rates_csv.Open(m_rates_name, true);
 	m_testrates_csv.Open(m_testrates_name, true);
     m_timestep_csv.Open(m_timestep_name, true);//##
+    m_pah_sitelist_csv.Open("KMC_Model/Site_list_arrange.csv",true);
     // Write column headings for CSV files
     writeCSVlabels();
 }

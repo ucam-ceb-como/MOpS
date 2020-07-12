@@ -152,7 +152,7 @@ typedef Sweep::KMC_ARS::KMCGasPoint sp;
 std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     std::vector<JumpProcess*> temp;
     //! Initialise all jump processes.
-    JumpProcess* j_G6R_AC = new G6R_AC; j_G6R_AC->initialise();									//!  1- R6 Growth on AC [AR1].
+    /*JumpProcess* j_G6R_AC = new G6R_AC; j_G6R_AC->initialise();									//!  1- R6 Growth on AC [AR1].
     JumpProcess* j_G6R_FE = new G6R_FE; j_G6R_FE->initialise();									//!  2- R6 Growth on FE [AR2].
     JumpProcess* j_L6_BY6 = new L6_BY6; j_L6_BY6->initialise();									//!  3- BY6 closure [AR14].
     JumpProcess* j_PH_benz = new PH_benz; j_PH_benz->initialise();								//!  4- phenyl addition [AR15].
@@ -173,10 +173,10 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_M6R_BY5_FE3 = new M6R_BY5_FE3; j_M6R_BY5_FE3->initialise();                  //! 19- R6 desorption at bay -> pyrene [AR21].
     JumpProcess* j_O6R_FE2_side = new O6R_FE2_side; j_O6R_FE2_side->initialise();               //! 20- R6 Oxidation at FE2 by side reaction.
     JumpProcess* j_O6R_FE2_top = new O6R_FE2_top; j_O6R_FE2_top->initialise();                  //! 21- R6 Oxidation at FE2 by top reaction.
-	JumpProcess* j_D6R_FE_AC = new D6R_FE_AC; j_D6R_FE_AC->initialise();						//! 22- R6 Desorption from FE to AC site.
+	JumpProcess* j_D6R_FE_AC = new D6R_FE_AC; j_D6R_FE_AC->initialise();						//! 22- R6 Desorption from FE to AC site.*/
 	JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();                           //!< 23 - Bay-capping.
-	//JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //!< 24 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
-	JumpProcess* j_G6R_RZZ = new G6R_RZZ; j_G6R_RZZ->initialise();                              //!< 25 - R6 growth on RZZ.
+	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //!< 24 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
+	/*JumpProcess* j_G6R_RZZ = new G6R_RZZ; j_G6R_RZZ->initialise();                              //!< 25 - R6 growth on RZZ.
 	JumpProcess* j_G6R_RFER = new G6R_RFER; j_G6R_RFER->initialise();                           //!< 26 - R6 growth on RFER.
 	//JumpProcess* j_G6R_R5 = new G6R_R5; j_G6R_R5->initialise();                                 //!< 27 - R6 growth on R5.
 	JumpProcess* j_L6_RBY5 = new L6_RBY5; j_L6_RBY5->initialise();                              //!< 28 - RBY5 closure reaction.
@@ -184,9 +184,9 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	//JumpProcess* j_G5R_RFE = new G5R_RFE; j_G5R_RFE->initialise();                              //!< 30 - R5 growth on RFE.
 	JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //!< 31 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //!< 32 - R6 migration & conversion to R5 at RAC.
-	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //!< 33 - R6 desorption at RAC -> pyrene.
-	//JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6. //Moved to instant jump process list.
-	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //!< 35 - R7 growth on R5R6AC.
+	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //!< 33 - R6 desorption at RAC -> pyrene.*/
+	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6. //Moved to instant jump process list.
+	/*JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //!< 35 - R7 growth on R5R6AC.
 	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //!< 36 - R7 growth on FEACR5.
 	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();                        //!< 37 - R6 growth on R5R6ZZ.
 	JumpProcess* j_L7_ACACR5 = new L7_ACACR5; j_L7_ACACR5->initialise();                        //!< 38 - R7 bay closure on ACACR5.
@@ -206,7 +206,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_L6_ACR5R5R6 = new L6_ACR5R5R6; j_L6_ACR5R5R6->initialise();             		 //!< 52 - ACR5R5R6 closure reaction.
 	JumpProcess* j_L7_ACR5R5R6ZZ = new L7_ACR5R5R6ZZ; j_L7_ACR5R5R6ZZ->initialise();             //!< 53 - R7 bay closure on ACR5R5R6ZZ.
 	JumpProcess* j_A_CH3 = new A_CH3; j_A_CH3->initialise();             						 //!< 54 - CH3 addition.
-	JumpProcess* j_D_CH3 = new D_CH3; j_D_CH3->initialise();             						 //!< 55 - CH3 desorption.
+	JumpProcess* j_D_CH3 = new D_CH3; j_D_CH3->initialise();             						 //!< 55 - CH3 desorption.*/
 	JumpProcess* j_O5R_R5R6 = new O5R_R5R6; j_O5R_R5R6->initialise();             				//!< 56 - Oxidation of R5R6 site.
 	JumpProcess* j_O5R_R5R6ZZ = new O5R_R5R6ZZ; j_O5R_R5R6ZZ->initialise();             		//!< 57 - Oxidation of R5R6ZZ site.
 	JumpProcess* j_O5R_R5R6AC = new O5R_R5R6AC; j_O5R_R5R6AC->initialise();             		//!< 58 - Oxidation of R5R6AC site.
@@ -217,11 +217,11 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_O5R_R5R6FER5R6 = new O5R_R5R6FER5R6; j_O5R_R5R6FER5R6->initialise();         //!< 63 - Oxidation of R5R6FER5R6 site.
 	JumpProcess* j_O5R_R5R6ZZR5R6 = new O5R_R5R6ZZR5R6; j_O5R_R5R6ZZR5R6->initialise();         //!< 64 - Oxidation of R5R6ZZR5R6 site.
 	JumpProcess* j_O5R_R5R6ACR5R6 = new O5R_R5R6ACR5R6; j_O5R_R5R6ACR5R6->initialise();         //!< 65 - Oxidation of R5R6ACR5R6 site.
-	JumpProcess* j_MR5R7_edge = new MR5R7_edge; j_MR5R7_edge->initialise();        				//!< 66 - R5R7 pair edge healing.
+	//JumpProcess* j_MR5R7_edge = new MR5R7_edge; j_MR5R7_edge->initialise();        				//!< 66 - R5R7 pair edge healing.
     
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
-    temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
+    /*temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
     temp.push_back(j_G6R_FE);            //!  2- R6 Growth on FE [AR2].
     temp.push_back(j_L6_BY6);            //!  3- BY6 closure [AR14].
     temp.push_back(j_PH_benz);           //!  4- phenyl addition [AR15].
@@ -242,10 +242,10 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_M6R_BY5_FE3);       //! 19- R6 desorption at bay -> pyrene [AR21].
     temp.push_back(j_O6R_FE2_side);        //! 20- R6 Oxidation at FE2 by side reaction.
 	temp.push_back(j_O6R_FE2_top);        //! 21- R6 Oxidation at FE2 by top reaction.
-	temp.push_back(j_D6R_FE_AC);         //! 22- R6 Desorption from FE to AC site.
+	temp.push_back(j_D6R_FE_AC);         //! 22- R6 Desorption from FE to AC site.*/
 	temp.push_back(j_B6R_ACR5);         //!< 23 - Bay-capping.
-	//temp.push_back(j_M5R_ACR5_ZZ);      //!< 24 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
-	temp.push_back(j_G6R_RZZ);          //!< 25 - R6 growth on RZZ.
+	temp.push_back(j_M5R_ACR5_ZZ);      //!< 24 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
+	/*temp.push_back(j_G6R_RZZ);          //!< 25 - R6 growth on RZZ.
 	temp.push_back(j_G6R_RFER);         //!< 26 - R6 growth on RFER.
 	//temp.push_back(j_G6R_R5);           //!< 27 - R6 growth on R5.
 	temp.push_back(j_L6_RBY5);          //!< 28 - RBY5 closure reaction.
@@ -253,9 +253,9 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	//temp.push_back(j_G5R_RFE);          //!< 30 - R5 growth on RFE.
 	temp.push_back(j_C6R_RAC_FE3);      //!< 31 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_C6R_RAC_FE3violi); //!< 32 - R6 migration & conversion to R5 at RAC.
-	temp.push_back(j_M6R_RAC_FE3);      //!< 33 - R6 desorption at RAC -> pyrene.
-	//temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6. //Moved to instant jump process list.
-	temp.push_back(j_GR7_R5R6AC);           //!< 35 - R7 growth on R5R6AC.
+	temp.push_back(j_M6R_RAC_FE3);      //!< 33 - R6 desorption at RAC -> pyrene.*/
+	temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6. //Moved to instant jump process list.
+	/*temp.push_back(j_GR7_R5R6AC);           //!< 35 - R7 growth on R5R6AC.
 	temp.push_back(j_GR7_FEACR5);           //!< 36 - R7 growth on FEACR5.
 	temp.push_back(j_G6R_R5R6ZZ);          //!< 37 - R6 growth on R5R6ZZ.
 	temp.push_back(j_L7_ACACR5);          //!< 38 - R7 bay closure on ACACR5.
@@ -275,7 +275,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_L6_ACR5R5R6);        //!< 52 - ACR5R5R6 closure reaction.
 	temp.push_back(j_L7_ACR5R5R6ZZ);          //!< 53 - R7 bay closure on ACR5R5R6ZZ.
 	temp.push_back(j_A_CH3);          		//!< 54 - CH3 addition.
-	temp.push_back(j_D_CH3);          		//!< 55 - CH3 desorption.
+	temp.push_back(j_D_CH3);          		//!< 55 - CH3 desorption.*/
 	temp.push_back(j_O5R_R5R6);          		//!< 56 - Oxidation of R5R6 site.
 	temp.push_back(j_O5R_R5R6ZZ);               //!< 57 - Oxidation of R5R6ZZ site.
 	temp.push_back(j_O5R_R5R6AC);               //!< 58 - Oxidation of R5R6AC site.
@@ -286,7 +286,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_O5R_R5R6FER5R6);          		//!< 63 - Oxidation of R5R6FER5R6 site.
 	temp.push_back(j_O5R_R5R6ZZR5R6);          		//!< 64 - Oxidation of R5R6ZZR5R6 site.
 	temp.push_back(j_O5R_R5R6ACR5R6);          		//!< 65 - Oxidation of R5R6ACR5R6 site.
-	temp.push_back(j_MR5R7_edge);          		//!< 65 - Oxidation of R5R6ACR5R6 site.
+	//temp.push_back(j_MR5R7_edge);          		//!< 65 - Oxidation of R5R6ACR5R6 site.
 
     return temp;
 }
@@ -295,11 +295,11 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 std::vector<JumpProcess*> KMCMechanism::obtainInstantJumpProcess(){
 	std::vector<JumpProcess*> temp;
     //! Initialise all instant jump processes.
-	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //!< 24 - Embedded 5-member ring migration to ZZ. 
-	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6. 
+	//JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //!< 24 - Embedded 5-member ring migration to ZZ. 
+	//JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6. 
 	
-	temp.push_back(j_M5R_ACR5_ZZ);      //!< 24 - Embedded 5-member ring migration to ZZ.
-	temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6.
+	//temp.push_back(j_M5R_ACR5_ZZ);      //!< 24 - Embedded 5-member ring migration to ZZ.
+	//temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6.
 	return temp;
 }
 
@@ -3479,7 +3479,8 @@ double M5R_ACR5_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, c
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = m_r[7] * r_f*site_count; // Rate Equation
+	//return m_rate = m_r[7] * r_f*site_count; // Rate Equation //Violi
+	return m_rate = 1.00E+10 * r_f*site_count; // Rate Equation //Whitesides
 }
 double M5R_ACR5_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	return setRate0p0267(gp, pah_st);
@@ -3966,7 +3967,8 @@ double MR5_R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = m_r[7] * r_f* site_count / 2.0; // Rate Equation
+	//return m_rate = m_r[7] * r_f* site_count / 2.0; // Rate Equation // Violi
+	return m_rate = 1.00E+10 * r_f* site_count / 2.0; // Rate Equation // Whitesides
 }
 
 // ************************************************************
@@ -5903,14 +5905,15 @@ double O5R_R5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -5953,14 +5956,15 @@ double O5R_R5R6ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6003,14 +6007,15 @@ double O5R_R5R6AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6053,14 +6058,15 @@ double O5R_R5R6BY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6103,14 +6109,15 @@ double O5R_R5R6FER::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6153,14 +6160,15 @@ double O5R_R5R6ZZR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6203,14 +6211,15 @@ double O5R_R5R6ACR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6253,14 +6262,15 @@ double O5R_R5R6FER5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6303,14 +6313,15 @@ double O5R_R5R6ZZR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6353,14 +6364,15 @@ double O5R_R5R6ACR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 

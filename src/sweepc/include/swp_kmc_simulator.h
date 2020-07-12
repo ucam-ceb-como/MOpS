@@ -206,6 +206,8 @@ namespace Sweep{
              CSV_IO m_timestep_csv;
              //! CSV io object for tracked PAHs
              CSV_IO m_trackedpah_csv;
+             //! CSV io object for sitelist
+             CSV_IO m_pah_sitelist_csv;
 			 //! Save PAHs at certain conditions
 			bool save_pah_detail=false;
         private:

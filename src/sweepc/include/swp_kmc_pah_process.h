@@ -172,6 +172,8 @@ public:
 	bool saveDOT3D(const std::string &filename, const std::string &title) const;
     //! obtains a vector of the PAH site list
     std::vector<kmcSiteType> SiteVector() const;
+    //! obtains a vector of the PAH site list
+    std::vector<std::string> SiteVectorString() const;
 	//! obtains a vector of the carbons per site in PAH site list
 	std::vector<int> SiteIntVector() const;
 	//! obtains a vector of tuples from the PAH site list
