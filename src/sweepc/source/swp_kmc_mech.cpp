@@ -3593,7 +3593,8 @@ double M5R_ACR5_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, c
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = m_r[7] * r_f*site_count; // Rate Equation
+	//return m_rate = m_r[7] * r_f*site_count; // Rate Equation
+	return m_rate = 1.0E10 * r_f*site_count; // Rate Equation
 }
 double M5R_ACR5_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	return setRate0p0267(gp, pah_st);
@@ -4064,7 +4065,7 @@ void MR5_R6::initialise() {
 	addReaction(rxnV3, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f*/
 
 	m_sType = R5R6; // sitetype
-	m_name = "R5R6 flip"; // name of process
+	m_name = "R5R6 migration"; // name of process
 	m_ID = 34;
 }
 
@@ -4080,7 +4081,8 @@ double MR5_R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 		r_f = (m_r[0] + m_r[2]) / r_denom;
 	}
 	else r_f = 0;
-	return m_rate = m_r[7] * r_f* site_count / 2.0; // Rate Equation
+	//return m_rate = m_r[7] * r_f* site_count * 2.0; // Rate Equation
+	return m_rate = 1.0E10 * r_f* site_count * 2.0; // Rate Equation
 }
 
 // ************************************************************
@@ -6017,14 +6019,15 @@ double O5R_R5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const dou
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0;
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6067,14 +6070,15 @@ double O5R_R5R6ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0;
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6117,14 +6121,15 @@ double O5R_R5R6AC::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const d
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0;
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6167,14 +6172,15 @@ double O5R_R5R6BY5::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0;
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6217,14 +6223,15 @@ double O5R_R5R6FER::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0;
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6267,14 +6274,15 @@ double O5R_R5R6ZZR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0;
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6317,14 +6325,15 @@ double O5R_R5R6ACR::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0;
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6367,14 +6376,15 @@ double O5R_R5R6FER5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count;
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6417,14 +6427,15 @@ double O5R_R5R6ZZR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count;
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6467,14 +6478,15 @@ double O5R_R5R6ACR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
 	//double site_count = 1; // Site count
     if(site_count==0) return m_rate=0;
     // calculate rate
-    double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
+    /*double r_denom = (m_r[1]+m_r[3]+m_r[4]+m_r[5]+m_r[6]+m_r[7]);
     double r_f; // radical fraction
     if(r_denom>0) {
         r_f = (m_r[0]+m_r[2])/r_denom; 
         r_f = r_f/(r_f+1.0);
     }
     else r_f=0;
-    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation
+    return m_rate = r_f*(m_r[6] + m_r[7]) * site_count; // Rate Equation*/
+	return m_rate = (m_r[6] + m_r[7]) * site_count;
 	//return setRate0p0267(gp, pah_st);
 }
 
