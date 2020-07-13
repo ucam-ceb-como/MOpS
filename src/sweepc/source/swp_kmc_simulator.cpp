@@ -280,7 +280,12 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
-            m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
+            if (jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34) {
+                m_kmcmech.calculateMigrationRates(*m_gas, m_simPAHp, m_t);
+                std::map<std::string,double> migr_rates = m_kmcmech.MigrationRates();
+                m_simPAHp.performMigrationProcess(*jp_perf.first, migr_rates, rng, PAH_ID);
+            }
+            else m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 			writeCHSiteCountCSV_after(PAH_ID);
 			
 			
@@ -308,31 +313,6 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 					}
 				}*/
             }
-			//Perform instant jump processes.
-			m_kmcmech.calculateInstantRates(*m_gas, m_simPAHp, m_t);
-			if (m_kmcmech.InstantTotalRate() > 1.0) {
-				ChosenProcess jp_instant_perf = m_kmcmech.chooseInstantReaction(rng);
-				
-                //Save information for a single PAH
-                auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
-                if (finder != m_tracked_pahs.end()){
-                    std::string xyzname = ("KMC_DEBUG/");
-                    xyzname.append(std::to_string(PAH_ID));
-                    xyzname.append("/");
-                    xyzname.append(std::to_string(m_t*1000.0));
-                    xyzname.append("_C");
-                    savePAH(PAH_ID, xyzname); 
-                    cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
-                    m_simPAHp.printSites();
-                    //printRates(m_t, m_kmcmech.Rates());
-                    if (tracked_csv) writetrackedPAHCSV();
-                }
-				
-				m_rxn_count[m_kmcmech.JPList().size() + jp_instant_perf.second]++;
-				writeRxnCountCSV();
-				m_simPAHp.performProcess(*jp_instant_perf.first, rng, PAH_ID);
-			} // For now only realising one migration per loop.
-						
 
 			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
 			//Set t_next to t_max so the updatePAH routine will be exited
@@ -340,37 +320,9 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			//	proceed = false;
 			//	//t_next = t_max;
 			//}
-
-        }else {
-			
-			//Perform instant jump processes.
-			m_kmcmech.calculateInstantRates(*m_gas, m_simPAHp, m_t);
-			if (m_kmcmech.InstantTotalRate() > 1.0) {
-				ChosenProcess jp_instant_perf = m_kmcmech.chooseInstantReaction(rng);
-				
-
-                //Save information for a single PAH
-                auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
-                if (finder != m_tracked_pahs.end()){
-                    std::string xyzname = ("KMC_DEBUG/");
-                    xyzname.append(std::to_string(PAH_ID));
-                    xyzname.append("/");
-                    xyzname.append(std::to_string(m_t*1000.0));
-                    xyzname.append("_C");
-                    savePAH(PAH_ID, xyzname); 
-                    cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_instant_perf.first->getName()<< ", Time = " << m_t<<"\n";
-                    m_simPAHp.printSites();
-                    //printRates(m_t, m_kmcmech.Rates());
-                    if (tracked_csv) writetrackedPAHCSV();
-                }
-				
-				m_rxn_count[m_kmcmech.JPList().size() + jp_instant_perf.second]++;
-				writeRxnCountCSV();
-				m_simPAHp.performProcess(*jp_instant_perf.first, rng, PAH_ID);
-			} // For now only realising one migration per loop.
 			
             //oldtnext = t_next;
-            t_next = t_max;
+            //t_next = t_max;
         }
 		if (loopcount == maxloops) proceed = false; //If maxloops is set to 0, this condition will never be true
         m_t = t_next;
@@ -640,16 +592,15 @@ void KMCSimulator::initCSVIO() {
 }
 //! Initialise reaction count
 void KMCSimulator::initReactionCount() {
-    m_rxn_count.assign(m_kmcmech.JPList().size() + m_kmcmech.IJPList().size(), 0);
+    m_rxn_count.assign(m_kmcmech.JPList().size(), 0);
 }
 
 //! Prints rates to command line
 void KMCSimulator::printRates(double& time, const std::vector<double>& v_rates) {
 	cout << "Rates calculated at Time = " << time << "\n";
-    for(size_t i=0; i<m_kmcmech.JPList().size() + m_kmcmech.IJPList().size(); i++) {
+    for(size_t i=0; i<m_kmcmech.JPList().size(); i++) {
         // gets name of each jump process and puts them in a row
-		if (i<m_kmcmech.JPList().size()) cout << (m_kmcmech.JPList()[i]->getName()) << "\t ->" << v_rates[i] << "\n";
-		else cout << (m_kmcmech.IJPList()[i-m_kmcmech.JPList().size()]->getName()) << "\t ->" << v_rates[i] << "\n";
+		cout << (m_kmcmech.JPList()[i]->getName()) << "\t ->" << v_rates[i] << "\n";
     }
 	cout << "\n";
 }
@@ -831,11 +782,6 @@ void KMCSimulator::writeCSVlabels() {
         // gets name of each jump process and puts them in a row
         rxn_headings.push_back(m_kmcmech.JPList()[i]->getName());
 		rxn_count_headings.push_back(m_kmcmech.JPList()[i]->getName());
-    }
-	for(size_t i=0; i<m_kmcmech.IJPList().size(); i++) {
-        // gets name of each jump process and puts them in a row
-        rxn_headings.push_back(m_kmcmech.IJPList()[i]->getName());
-		rxn_count_headings.push_back(m_kmcmech.IJPList()[i]->getName());
     }
     m_rxn_csv.Write(rxn_count_headings);
     // Write headings for CH and site list

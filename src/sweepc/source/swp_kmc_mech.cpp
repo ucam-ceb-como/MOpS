@@ -70,7 +70,7 @@ KMCMechanism::KMCMechanism() {
     m_jplist = obtainJumpProcess();
 	m_jplist_instant = obtainInstantJumpProcess();
     m_rates = std::vector<double>(m_jplist.size(),0);
-	m_instant_rates = std::vector<double>(m_jplist.size(),0);
+	m_instant_rates = InitializeMigrationRateMap();
     m_totalrate = 0;
 	m_instant_totalrate = 0;
     isACopy = false;
@@ -96,8 +96,11 @@ KMCMechanism::~KMCMechanism() {
     }
 	if (m_jplist_instant.size()!=0 && !isACopy){
         {
-            for (size_t i=0;i!=m_jplist_instant.size();++i)
-            delete m_jplist_instant[i];
+            for (auto it=m_jplist_instant.begin(); it!=m_jplist_instant.end();it++){
+				for (unsigned int ii=0; ii!=it->second.size();ii++){
+					delete (it->second)[ii];
+				}
+			} 
         }
         m_jplist_instant.clear();
     }
@@ -136,14 +139,6 @@ ChosenProcess KMCMechanism::chooseReaction(rng_type &rng) const {
     boost::uniform_01<rng_type &, double> uniformGenerator(rng);
     size_t ind = chooseIndex<double>(m_rates, uniformGenerator);
     return ChosenProcess(m_jplist[ind], ind);
-}
-
-//! Choosing a reaction to be taken place, returns pointer to jump process
-ChosenProcess KMCMechanism::chooseInstantReaction(rng_type &rng) const {
-    // chooses index from a vector of weights (double number in this case) randomly
-    boost::uniform_01<rng_type &, double> uniformGenerator(rng);
-    size_t ind = chooseIndex<double>(m_instant_rates, uniformGenerator);
-    return ChosenProcess(m_jplist_instant[ind], ind);
 }
 
 typedef Sweep::KMC_ARS::KMCGasPoint sp;
@@ -291,16 +286,108 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     return temp;
 }
 
-//! Returns a vector of instant jump processes implemented in model.
-std::vector<JumpProcess*> KMCMechanism::obtainInstantJumpProcess(){
-	std::vector<JumpProcess*> temp;
-    //! Initialise all instant jump processes.
-	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //!< 24 - Embedded 5-member ring migration to ZZ. 
-	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6. 
+//! Returns a map of instant jump processes implemented in model.
+std::map<std::string,std::vector<JumpProcess*>> KMCMechanism::obtainInstantJumpProcess(){
+	std::map<std::string, std::vector<JumpProcess*>> rate_map;
+	std::vector<JumpProcess*> temp_vector;
+	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();
+	temp_vector.push_back(j_M5R_ACR5_ZZ);
+	rate_map["Middle"] = temp_vector; 		//Middle migration
+	temp_vector.clear();
+	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();
+	temp_vector.push_back(j_MR5_R6);
+	rate_map["Corner"] = temp_vector; 		//Corner migration
+	temp_vector.clear();
+	JumpProcess* j_D5R_R5 = new D5R_R5; j_D5R_R5->initialise();
+	temp_vector.push_back(j_D5R_R5);
+	rate_map["R5"] = temp_vector; 			//R5 termination
+	temp_vector.clear();
+	JumpProcess* j_O5R_R5R6 = new O5R_R5R6; j_O5R_R5R6->initialise();
+	temp_vector.push_back(j_O5R_R5R6);
+	rate_map["R5R6"] = temp_vector;			//R5R6 termination
+	temp_vector.clear();
+	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();
+	JumpProcess* j_O5R_R5R6ZZ = new O5R_R5R6ZZ; j_O5R_R5R6ZZ->initialise();
+	temp_vector.push_back(j_G6R_R5R6ZZ);
+	temp_vector.push_back(j_O5R_R5R6ZZ);
+	rate_map["R5R6ZZ"] = temp_vector;		//R5R6ZZ termination
+	temp_vector.clear();
+	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();
+	JumpProcess* j_O5R_R5R6AC = new O5R_R5R6AC; j_O5R_R5R6AC->initialise();
+	temp_vector.push_back(j_GR7_R5R6AC);
+	temp_vector.push_back(j_O5R_R5R6AC);
+	rate_map["R5R6AC"] = temp_vector;		//R5R6AC termination
+	temp_vector.clear();
+	JumpProcess* j_L6_R5R6BY5 = new L6_R5R6BY5; j_L6_R5R6BY5->initialise();
+	JumpProcess* j_O5R_R5R6BY5 = new O5R_R5R6BY5; j_O5R_R5R6BY5->initialise();
+	temp_vector.push_back(j_L6_R5R6BY5);
+	temp_vector.push_back(j_O5R_R5R6BY5);
+	rate_map["R5R6BY5"] = temp_vector;		//R5R6BY5 termination
+	temp_vector.clear();
+	JumpProcess* j_G6R_R5R6FER = new G6R_R5R6FER; j_G6R_R5R6FER->initialise();
+	JumpProcess* j_O5R_R5R6FER = new O5R_R5R6FER; j_O5R_R5R6FER->initialise();
+	temp_vector.push_back(j_G6R_R5R6FER);
+	temp_vector.push_back(j_O5R_R5R6FER);
+	rate_map["R5R6FER"] = temp_vector;		//R5R6FER termination
+	temp_vector.clear();
+	JumpProcess* j_C5R_R5R6ZZR = new C5R_R5R6ZZR; j_C5R_R5R6ZZR->initialise();
+	JumpProcess* j_O5R_R5R6ZZR = new O5R_R5R6ZZR; j_O5R_R5R6ZZR->initialise();
+	temp_vector.push_back(j_C5R_R5R6ZZR);
+	temp_vector.push_back(j_O5R_R5R6ZZR);
+	rate_map["R5R6ZZR"] = temp_vector;		//R5R6ZZR termination
+	temp_vector.clear();
+	JumpProcess* j_L6_R5R6ACR = new L6_R5R6ACR; j_L6_R5R6ACR->initialise();
+	JumpProcess* j_O5R_R5R6ACR = new O5R_R5R6ACR; j_O5R_R5R6ACR->initialise();
+	temp_vector.push_back(j_L6_R5R6ACR);
+	temp_vector.push_back(j_O5R_R5R6ACR);
+	rate_map["R5R6ACR"] = temp_vector;		//R5R6ACR termination
+	temp_vector.clear();
+	JumpProcess* j_G6R_R5R6FER5R6 = new G6R_R5R6FER5R6; j_G6R_R5R6FER5R6->initialise();
+	JumpProcess* j_O5R_R5R6FER5R6 = new O5R_R5R6FER5R6; j_O5R_R5R6FER5R6->initialise();
+	temp_vector.push_back(j_G6R_R5R6FER5R6);
+	temp_vector.push_back(j_O5R_R5R6FER5R6);
+	rate_map["R5R6FER5R6"] = temp_vector;	//R5R6FER5R6 termination
+	temp_vector.clear();
+	JumpProcess* j_O5R_R5R6ZZR5R6 = new O5R_R5R6ZZR5R6; j_O5R_R5R6ZZR5R6->initialise();
+	temp_vector.push_back(j_O5R_R5R6ZZR5R6);
+	rate_map["R5R6ZZR5R6"] = temp_vector;	//R5R6ZZR5R6 termination
+	temp_vector.clear();
+	JumpProcess* j_L6_R5R6ACR5R6 = new L6_R5R6ACR5R6; j_L6_R5R6ACR5R6->initialise();
+	JumpProcess* j_O5R_R5R6ACR5R6 = new O5R_R5R6ACR5R6; j_O5R_R5R6ACR5R6->initialise();
+	temp_vector.push_back(j_L6_R5R6ACR5R6);
+	temp_vector.push_back(j_O5R_R5R6ACR5R6);
+	rate_map["R5R6ACR5R6"] = temp_vector;	//R5R6ACR5R6 termination
+	temp_vector.clear();
+	JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();
+	temp_vector.push_back(j_B6R_ACR5);
+	rate_map["ACR5"] = temp_vector;			//ACR5 termination
+	temp_vector.clear();
+	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();
+	temp_vector.push_back(j_GR7_FEACR5);
+	rate_map["FEACR5"] = temp_vector;		//FEACR5 termination
+	temp_vector.clear();
+	JumpProcess* j_L6_ZZACR5 = new L6_ZZACR5; j_L6_ZZACR5->initialise();
+	temp_vector.push_back(j_L6_ZZACR5);
+	rate_map["ZZACR5"] = temp_vector;
+	temp_vector.clear();
+	JumpProcess* j_L7_ACACR5 = new L7_ACACR5; j_L7_ACACR5->initialise();
+	temp_vector.push_back(j_L7_ACACR5);
+	rate_map["ACACR5"] = temp_vector;		//R5R6 termination		
+	temp_vector.clear();
+	JumpProcess* j_L6_R5ACR5R5 = new L6_R5ACR5R5; j_L6_R5ACR5R5->initialise();
+	temp_vector.push_back(j_L6_R5ACR5R5);
+	rate_map["R5ACR5"] = temp_vector;		//R5R6 termination
+	temp_vector.clear();
+	JumpProcess* j_L6_ACR5R5R6 = new L6_ACR5R5R6; j_L6_ACR5R5R6->initialise();
+	temp_vector.push_back(j_L6_ACR5R5R6);
+	rate_map["ACR5R5R6"] = temp_vector;		//R5R6 termination
 	
-	temp.push_back(j_M5R_ACR5_ZZ);      //!< 24 - Embedded 5-member ring migration to ZZ.
-	temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6.
-	return temp;
+	//JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //!< 24 - Embedded 5-member ring migration to ZZ. 
+	//JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6. 
+	
+	//temp.push_back(j_M5R_ACR5_ZZ);      //!< 24 - Embedded 5-member ring migration to ZZ.
+	//temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6.
+	return rate_map;
 }
 
 //! Calculates jump rate for each jump process
@@ -337,46 +424,47 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
 }
 
 //! Calculates jump rate for each jump process
-void KMCMechanism::calculateInstantRates(const KMCGasPoint& gp, 
+void KMCMechanism::calculateMigrationRates(const KMCGasPoint& gp, 
                     PAHProcess& st, 
                     const double& t) {
+	//This function populates the map m_instant_rates.
     double temp=0;
     double pressure = gp[gp.P]/1e5;
     // Choose suitable mechanism according to P
     if(pressure > 0.5 && pressure <= 5) { // mechanism at 1 atm 
-        for(int i = 0; i!= (int) m_jplist_instant.size() ; i++) {
-            (m_jplist_instant[i])->calculateElemRxnRate((m_jplist_instant[i])->getVec1(), gp);
-            m_instant_rates[i] = (m_jplist_instant[i])->setRate1(gp, st/*, t*/);
-            temp += m_instant_rates[i];
-        }
+		auto rate_iterator=m_instant_rates.begin();
+		for ( auto jp_it=m_jplist_instant.begin();jp_it!=m_jplist_instant.end();++jp_it) {
+			rate_iterator->second = 0.0;
+			for (unsigned int ii = 0; ii!=jp_it->second.size(); ii++){
+				(jp_it->second)[ii]->calculateElemRxnRate((jp_it->second)[ii]->getVec1(), gp);
+				rate_iterator->second += (jp_it->second)[ii]->setRate1(gp, st/*, t*/);
+			}
+		} 
     }else if(pressure > 0.01 && pressure <= 0.07) { // mechanism at 0.0267atm
-        for(int i = 0; i!= (int) m_jplist_instant.size() ; i++) {
-            (m_jplist_instant[i])->calculateElemRxnRate((m_jplist_instant[i])->getVec0p0267(), gp);
-            m_instant_rates[i] = (m_jplist_instant[i])->setRate0p0267(gp, st/*, t*/);
-            temp += m_instant_rates[i];
-        }
+		auto rate_iterator=m_instant_rates.begin();
+		for ( auto jp_it=m_jplist_instant.begin();jp_it!=m_jplist_instant.end();++jp_it) {
+			rate_iterator->second = 0.0;
+			for (unsigned int ii = 0; ii!=jp_it->second.size(); ii++){
+				(jp_it->second)[ii]->calculateElemRxnRate((jp_it->second)[ii]->getVec0p0267(), gp);
+				rate_iterator->second += (jp_it->second)[ii]->setRate0p0267(gp, st/*, t*/);
+			}
+		} 
     }else if(pressure > 0.07 && pressure <= 0.5) { // mechanism at 0.12atm
-        for(int i = 0; i!= (int) m_jplist_instant.size() ; i++) {
-			(m_jplist_instant[i])->calculateElemRxnRate((m_jplist_instant[i])->getVec1(), gp); // As a test, decided to use the mechanism for 1atm that has been debugged.
-            //(m_jplist_instant[i])->calculateElemRxnRate((m_jplist_instant[i])->getVec0p12(), gp);
-            m_instant_rates[i] = (m_jplist_instant[i])->setRate1(gp, st/*, t*/);
-			//m_rates[i] = (m_jplist_instant[i])->setRate0p12(gp, st/*, t*/);
-            temp += m_instant_rates[i];
-        }
+		auto rate_iterator=m_instant_rates.begin();
+		for ( auto jp_it=m_jplist_instant.begin();jp_it!=m_jplist_instant.end();++jp_it) {
+			rate_iterator->second = 0.0;
+			for (unsigned int ii = 0; ii!=jp_it->second.size(); ii++){
+				(jp_it->second)[ii]->calculateElemRxnRate((jp_it->second)[ii]->getVec1(), gp);
+				rate_iterator->second += (jp_it->second)[ii]->setRate1(gp, st/*, t*/);
+			}
+		} 
     }else std::cout<<"ERROR: No reaction mechanism for this pressure condition.\n";
     // update total rates
-    if (temp < 1e-20) temp = 1e-20;
-    m_instant_totalrate = temp;
 }
 
 //! Returns vector of jump processes
 const std::vector<JumpProcess*>& KMCMechanism::JPList() const {
     return m_jplist;
-}
-
-//! Returns vector of instant jump processes
-const std::vector<JumpProcess*>& KMCMechanism::IJPList() const {
-    return m_jplist_instant;
 }
 
 //! Returns vector of jump rates
@@ -390,8 +478,34 @@ double KMCMechanism::TotalRate() const {
 }
 
 //! Returns total rates
-double KMCMechanism::InstantTotalRate() const {
-    return m_instant_totalrate;
+std::map<std::string,double> KMCMechanism::MigrationRates() const {
+    return m_instant_rates;
+}
+
+//! Returns total rates
+std::map<std::string, double> KMCMechanism::InitializeMigrationRateMap() {
+	std::map<std::string, double> rate_map;
+	rate_map["Middle"] = 0.0; 		//Middle migration
+	rate_map["Corner"] = 0.0; 		//Corner migration
+	rate_map["R5"] = 0.0; 			//R5 termination
+	rate_map["R5R6"] = 0.0;			//R5R6 termination
+	rate_map["R5R6ZZ"] = 0.0;		//R5R6ZZ termination
+	rate_map["R5R6AC"] = 0.0;		//R5R6AC termination
+	rate_map["R5R6BY5"] = 0.0;		//R5R6BY5 termination
+	rate_map["R5R6FER"] = 0.0;		//R5R6FER termination
+	rate_map["R5R6ZZR"] = 0.0;		//R5R6ZZR termination
+	rate_map["R5R6ACR"] = 0.0;		//R5R6ACR termination
+	rate_map["R5R6FER5R6"] = 0.0;	//R5R6FER5R6 termination
+	rate_map["R5R6ZZR5R6"] = 0.0;	//R5R6ZZR5R6 termination
+	rate_map["R5R6ACR5R6"] = 0.0;	//R5R6ACR5R6 termination
+	rate_map["ACR5"] = 0.0;			//ACR5 termination
+	rate_map["FEACR5"] = 0.0;		//FEACR5 termination
+	rate_map["ZZACR5"] = 0.0;		
+	rate_map["ACACR5"] = 0.0;	
+	rate_map["R5ACR5"] = 0.0;		//R5R6 termination
+	rate_map["ACR5R5R6"] = 0.0;		//R5R6 termination
+	return rate_map;
+
 }
 
 //! Process list (rate calculations, energy units in kcal)

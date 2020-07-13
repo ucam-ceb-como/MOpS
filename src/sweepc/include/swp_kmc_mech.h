@@ -101,47 +101,44 @@ namespace KMC_ARS {
         //! Choosing a reaction to be taken place, returns pointer to jump process
         //! and index of process in m_jplist
         ChosenProcess chooseReaction(rng_type &rng) const;
-		
-		//! Choosing a reaction to be taken place, returns pointer to jump process
-        //! and index of process in m_jplist
-        ChosenProcess chooseInstantReaction(rng_type &rng) const;
 
         //! Calculates jump rate for each jump process
         void calculateRates(const KMCGasPoint& gp, PAHProcess& st, const double& t);
 			
 		//! Calculates jump rate for each instant jump process
-        void calculateInstantRates(const KMCGasPoint& gp, PAHProcess& st, const double& t);
+        void calculateMigrationRates(const KMCGasPoint& gp, PAHProcess& st, const double& t);
         
         // DATA ACCESS
 
         //! Returns vector of jump processes
         const std::vector<JumpProcess*>& JPList() const;
-		
-		//! Returns vector of instant jump processes
-        const std::vector<JumpProcess*>& IJPList() const;
         
         //! Returns vector of jump rates
         const std::vector<double>& Rates() const;
 
         //! Returns total rates
         double TotalRate() const;
+
 		//! Returns total rates
-        double InstantTotalRate() const;
+		std::map<std::string,double> MigrationRates() const;
+		
     private:
         //! Vector of jump processes
         std::vector<JumpProcess*> m_jplist;
 		//! Vector of jump processes that are near instant
-        std::vector<JumpProcess*> m_jplist_instant;
+        std::map<std::string, std::vector<JumpProcess*>> m_jplist_instant;
         //! Returns a vector of jump processes implemented in model
         std::vector<JumpProcess*> obtainJumpProcess();
 		//! Returns a vector of instant jump processes implemented in model.
-        std::vector<JumpProcess*> obtainInstantJumpProcess();
+        std::map<std::string, std::vector<JumpProcess*>> obtainInstantJumpProcess();
+		//! Initializes the migration rate map.
+		std::map<std::string, double> InitializeMigrationRateMap();
         //! Checks if this mechanism object is a copy
         bool isACopy;
         //! Vector of jump rates
         std::vector<double> m_rates;
 		//! Vector of instant jump rates
-        std::vector<double> m_instant_rates;
+        std::map<std::string, double> m_instant_rates;
         //! Total rate
         double m_totalrate;
 		//! Total rate for instant jump processes

@@ -50,6 +50,7 @@
 #include <fstream>
 #include <sstream>
 #include <cmath>
+#include <boost/random/exponential_distribution.hpp>
 #include <boost/random/uniform_smallint.hpp>
 #include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
@@ -1175,24 +1176,27 @@ Spointer PAHProcess::chooseRandomSite(std::vector<kmcSiteType> vtype, rng_type &
 }
 
 //! Creates a list of sites where an embedded R5 can migrate to.
-std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s_type){
+std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 	std::list<Spointer> Migr_sites = {stt};
-	if (stt->type != s_type) return Migr_sites;
+	if (stt->type != ACR5 || stt->type != R5R6) return Migr_sites;
 	bool checking_site = true;
 	Spointer sFE2 = stt;
 	cpair R5coords;
-	bool b4;
+	int s_type = (int)stt->type;
+	bool R5R6_b4;
+	bool check_left = true;
+	bool check_right = true;
 	
 	//Get R5 internal coordinates
 	if (s_type == ACR5) R5coords = findR5internal(stt->C1->C2, stt->C2->C1);
 	else{
 		if ( isR5internal(stt->C1->C1, stt->C1,false) || isR5internal(stt->C1->C1,stt->C1,true) ) {
 			R5coords = findR5internal(stt->C1->C1, stt->C1);
-			b4 = false;
+			R5R6_b4 = true;
 		}
-		else {
-			R5coords = findR5internal(stt->C2->C1, stt->C2);
-			b4 = true;
+		else if ( isR5internal(stt->C2, stt->C2->C2,false) || isR5internal(stt->C2, stt->C2->C2,true) ) {
+			R5coords = findR5internal(stt->C2, stt->C2->C2);
+			R5R6_b4 = false;
 		}
 	}
 	
@@ -1208,7 +1212,15 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 	}
 	
 	//Add available sites to the left of stt.
-	if (s_type == ACR5 || (s_type == R5R6 && b4)){
+	if (s_type == R5R6 && R5R6_b4) {
+		//Check if coupled site can lead to migration
+		sFE2 = moveIt(sFE2, -1);
+		if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504)  checking_site = false; check_left = false; // This would violate the IPR.
+		if ((int)sFE2->type >= 602 && (int)sFE2->type <= 604)  checking_site = false; check_left = false; // This would violate the IPR.
+		if ((int)sFE2->type >= 1002 && (int)sFE2->type <= 1004)  checking_site = false; check_left = false; // This would violate the IPR.
+		if ((int)sFE2->type >= 2000) checking_site = false; check_left = false;
+	}
+	if (check_left){
 		do{
 			sFE2 = moveIt(sFE2, -1);
 			Spointer checkR5_1 = moveIt(sFE2,-1);
@@ -1282,15 +1294,25 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 					}
 				}
 			}
+			if (sFE2==Migr_sites.back()) checking_site = false; check_left=false; check_right=false;
 			if (checking_site) Migr_sites.push_front(sFE2);
-			if (sFE2->type == FE || (int)sFE2->type % 10 >=2) checking_site = false;
+			if ((int)sFE2->type % 10 >=2) checking_site = false;
+			if (sFE2->comb == FE2) checking_site = false;
 		} while (checking_site == true);
 	}
-	
 	//Add available sites to the right of stt
 	sFE2 = stt;
 	checking_site = true;
-	if (s_type == ACR5 || (s_type == R5R6 && !b4)) {
+	//Add available sites to the left of stt.
+	if (s_type == R5R6 && !R5R6_b4) {
+		//Check if coupled site can lead to migration
+		sFE2 = moveIt(sFE2, +1);
+		if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504)  checking_site = false; check_right = false; // This would violate the IPR.
+		if ((int)sFE2->type >= 602 && (int)sFE2->type <= 604)  checking_site = false; check_right = false; // This would violate the IPR.
+		if ((int)sFE2->type >= 1002 && (int)sFE2->type <= 1004)  checking_site = false; check_right = false; // This would violate the IPR.
+		if ((int)sFE2->type >= 2000) checking_site = false; check_right = false;
+	}
+	if (check_right){
 		do{
 			sFE2 = moveIt(sFE2, +1);
 			Spointer checkR5_1 = moveIt(sFE2,+1);
@@ -1363,8 +1385,10 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 					}
 				}
 			}
+			if (sFE2 == Migr_sites.front()) checking_site = false; check_left=false; check_right=false;
 			if (checking_site) Migr_sites.push_back(sFE2);
-			if (sFE2->type == FE || (int)sFE2->type % 10 >=2) checking_site = false;
+			if ((int)sFE2->type % 10 >=2) checking_site = false;
+			if (sFE2->comb == FE2) checking_site = false;
 		} while (checking_site == true);
 	}
 	m_pah->m_R5loc.push_back(R5coords);
@@ -1372,25 +1396,145 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 }
 
 //! Assigns probabilities to individual sites and randomly selects a finishing site for a migration process.
-std::tuple<Spointer,bool> PAHProcess::chooseRandomMigrationSite (Spointer& start_site, std::list<Spointer> avail_end_sites, rng_type &rng) {
+std::tuple<Spointer,bool> PAHProcess::chooseRandomMigrationSite (Spointer& start_site, std::map<std::string,double> rates, std::list<Spointer> avail_end_sites, rng_type &rng) {
 	int N_end_sites = avail_end_sites.size();
+	std::vector<int> position(N_end_sites,0);
+	std::vector<double> left_sites_probs(N_end_sites,0.0);
+	std::vector<double> right_sites_probs(N_end_sites,0.0);
 	std::vector<double> end_sites_probs(N_end_sites,0.0);
-	size_t ii = 0;
+	//Each site has three transition probabilites. To solve the problem we have to calculate them first.
+	size_t ii = 0; size_t jj = 0;
 	for (std::list<Spointer>::iterator it = avail_end_sites.begin(); it != avail_end_sites.end(); ++it) {
-		if ( (*it)->type == FE) end_sites_probs[ii] = 1.0;
-		else if ( (*it)->type == R5R6) end_sites_probs[ii] = 1.0;
-		else end_sites_probs[ii] = 2.0;
+		if ( (*it)->comb == FE2) {
+			left_sites_probs.push_back(0.0);
+			right_sites_probs.push_back(0.0);
+			end_sites_probs.push_back(rates["R5"]);
+		}
+		else if ( (*it)->type == FE || (*it)->type == R5R6) {
+			left_sites_probs.push_back(rates["Corner"]);
+			right_sites_probs.push_back(rates["Corner"]);
+			end_sites_probs.push_back(rates["R5R6"]);
+		}
+		else if ( (*it)->type == ZZ || (*it)->type == ACR5) {
+			left_sites_probs.push_back(rates["Middle"]);
+			right_sites_probs.push_back(rates["Middle"]);
+			end_sites_probs.push_back(rates["ACR5"]);
+		}
+		else if ( (*it)->type == AC) {
+			std::list<Spointer>::iterator it2 = it;
+			it2 ++;
+			if (it2 == avail_end_sites.end()) it2--; it2--;
+			if ((*it2)->type == FE){
+				left_sites_probs.push_back(rates["Corner"]);
+				right_sites_probs.push_back(rates["Corner"]);
+				end_sites_probs.push_back(rates["R5R6ZZ"]);
+			}else{
+				left_sites_probs.push_back(rates["Middle"]);
+				right_sites_probs.push_back(rates["Middle"]);
+				end_sites_probs.push_back(rates["FEACR5"]);
+			}
+		}
+		else if ( (*it)->type == BY5) {
+			std::list<Spointer>::iterator it2 = it;
+			it2 ++;
+			if (it2 == avail_end_sites.end()) it2--; it2--;
+			if ((*it2)->type == FE){
+				left_sites_probs.push_back(rates["Corner"]);
+				right_sites_probs.push_back(rates["Corner"]);
+				end_sites_probs.push_back(rates["R5R6AC"]);
+			}else{
+				left_sites_probs.push_back(rates["Corner"]);
+				right_sites_probs.push_back(rates["Corner"]);
+				end_sites_probs.push_back(rates["ZZACR5"]);
+			}
+		}
+		else if ( (*it)->type == BY6) {
+			std::list<Spointer>::iterator it2 = it;
+			it2 ++;
+			if (it2 == avail_end_sites.end()) it2--; it2--;
+			if ((*it2)->type == FE){
+				left_sites_probs.push_back(rates["Corner"]);
+				right_sites_probs.push_back(rates["Corner"]);
+				end_sites_probs.push_back(rates["R5R6BY5"]);
+			}else{
+				left_sites_probs.push_back(rates["Corner"]);
+				right_sites_probs.push_back(rates["Corner"]);
+				end_sites_probs.push_back(rates["ACACR5"]);
+			}
+		}
+		else if ( (*it)->type == RZZ) {
+			left_sites_probs.push_back(rates["Corner"]);
+			right_sites_probs.push_back(rates["Corner"]);
+			end_sites_probs.push_back(rates["R5R6FER"]);
+		}
+		else if ( (*it)->type == RAC) {
+			left_sites_probs.push_back(rates["Corner"]);
+			right_sites_probs.push_back(rates["Corner"]);
+			end_sites_probs.push_back(rates["R5R6ZZR"]);
+		}
+		else if ( (*it)->type == RBY5) {
+			left_sites_probs.push_back(rates["Corner"]);
+			right_sites_probs.push_back(rates["Corner"]);
+			end_sites_probs.push_back(rates["R5R6ACR"]);
+		}
+		else if ( (*it)->type == R5R6ZZ) {
+			left_sites_probs.push_back(rates["Middle"]);
+			right_sites_probs.push_back(rates["Middle"]);
+			end_sites_probs.push_back(rates["R5R6FER5R6"]);
+		}
+		else if ( (*it)->type == R5R6AC) {
+			left_sites_probs.push_back(rates["Corner"]);
+			right_sites_probs.push_back(rates["Corner"]);
+			end_sites_probs.push_back(rates["R5R6ZZR5R6"]);
+		}
+		else if ( (*it)->type == R5R6BY5) {
+			left_sites_probs.push_back(rates["Corner"]);
+			right_sites_probs.push_back(rates["Corner"]);
+			end_sites_probs.push_back(rates["R5R6ACR5R6"]);
+		}
+		if ( (*it) == start_site) jj = ii;
+		if ( (*it) == avail_end_sites.front()) left_sites_probs[ii] = 0.0;
+		if ( (*it) == avail_end_sites.back()) right_sites_probs[ii] = 0.0;
 		ii += 1;
 	}
-	
-	boost::uniform_01<rng_type &, double> uniformGenerator(rng);
-    size_t ind = chooseIndex<double>(end_sites_probs, uniformGenerator);
+
+	//Calculate the parameter for the random walk length
+	double weighted_sum_numerator = 0.0;
+	double weighted_sum_denominator = 0.0;
+	for (unsigned int kk = 0; kk!=N_end_sites;kk++){
+		weighted_sum_numerator += end_sites_probs[kk];
+		weighted_sum_denominator += (left_sites_probs[kk] + right_sites_probs[kk])/2.0;
+	}
+	weighted_sum_numerator = weighted_sum_numerator / (float)N_end_sites;
+	weighted_sum_denominator = weighted_sum_denominator / (float)N_end_sites;
+	double lambda_param = weighted_sum_numerator / weighted_sum_denominator;
+
+	//Generate exponentially distributed Number of migration steps
+	boost::exponential_distribution<double> N_stepsDistrib(lambda_param);
+	boost::variate_generator<rng_type &, boost::exponential_distribution<double>> N_stepsGenerator(rng, N_stepsDistrib);
+	int N_steps_end = (int)N_stepsGenerator();
+
+	//Perform the random walk.
+	int N_steps = 0;
+	bool migrating_site = true;
+	do{
+		std::vector<double> transition_rates{left_sites_probs[jj], right_sites_probs[jj], end_sites_probs[jj]};
+		// chooses index from a vector of weights (double number in this case) randomly
+		boost::uniform_01<rng_type &, double> uniformGenerator(rng);
+		size_t ind = chooseIndex<double>(transition_rates, uniformGenerator);
+		if (ind == 0) jj --;
+		else if (ind == 1) jj++;
+		else migrating_site = false;
+		N_steps++;
+		if (N_steps >= N_steps_end) migrating_site = false;
+	} while(migrating_site);
     
+	//Return pointer to selected site
 	Spointer chosenSite;
 	ii = 0;
 	bool direction = true;
 	for (std::list<Spointer>::iterator it = avail_end_sites.begin(); it != avail_end_sites.end(); ++it) {
-		if (ii == ind) {
+		if (ii == jj) {
 			chosenSite = (*it);
 			break;
 		}
@@ -5597,7 +5741,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		case 23:
 			proc_B6R_ACR5(site_perf, site_C1, site_C2); break;
 		case 24:
-			proc_M5R_ACR5_multiple_sites(site_perf, site_C1, site_C2, rng); break;
+			//proc_M5R_ACR5_multiple_sites(site_perf, site_C1, site_C2, rng); break;
 			//proc_M5R_ACR5_ZZ(site_perf, site_C1, site_C2, rng); break;
 		case 25:
 			proc_G6R_RZZ(site_perf, site_C1, site_C2); break;
@@ -5618,7 +5762,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		case 33:
 			proc_C6R_RAC_FE3(site_perf, site_C1, site_C2, rng); break;
 		case 34:
-			proc_M5R_R5R6_multiple_sites(site_perf, site_C1, site_C2, rng); break;
+			//proc_M5R_R5R6_multiple_sites(site_perf, site_C1, site_C2, rng); break;
 			//proc_MR5_R6(site_perf, site_C1, site_C2); break;
 		case 35:
 			proc_GR7_R5R6AC(site_perf, site_C1, site_C2); break;
@@ -5882,6 +6026,282 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	//printSites(site_perf);
     return true;
 }
+
+
+//! Structure processes: returns success or failure. This handles the migration jump processes.
+bool PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::string,double> rates, rng_type &rng, int PAH_ID)
+{
+	kmcSiteType stp = jp.getSiteType();
+	Spointer site_perf;
+    int id = jp.getID();
+    
+    // choose random site of type stp to perform process
+	site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
+	if ( site_perf->type != stp && site_perf->comb != stp && stp != benz && stp != Methyl){
+		cout << "chooseRandomSite ERROR. Choose random site selected incorrect site. Error. Not performing jump process.\n";
+		cout << "Jump process performed: " << id << ". " << jp.getName() << "\n";
+		printSites(site_perf);
+		return false;
+	}
+    // stores pointers to site Carbon members
+    Cpointer site_C1 = site_perf->C1;
+    Cpointer site_C2 = site_perf->C2;
+
+	//Check if PAH needs optimisation
+	if (site_perf->type==ACR5){
+		double R5dist = getDistance_twoC(site_perf->C1->C2, site_perf->C1->C2->C2);
+		if (R5dist > 1.8 || (R5dist >1.395 && R5dist < 1.405)) {
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
+	}
+	else{
+		//Check that the site is correctly drawn.
+		if (( isR5internal(site_C1->C1, site_C1,false) || isR5internal(site_C1->C1,site_C1,true) ) && ( isR5internal(site_C2,site_C2->C2,false) || isR5internal(site_C2,site_C2->C2,true) )){
+			//Pentagons to both sides, JP not allowed
+			return false;
+		}
+		else if ( isR5internal(site_C1->C1, site_C1,false) || isR5internal(site_C1->C1,site_C1,true) ) {
+			double R5dist = getDistance_twoC(site_perf->C1, site_perf->C1->C2);
+			if (R5dist > 1.8 || (R5dist >1.395 && R5dist < 1.405)) {
+				OpenBabel::OBMol mol = passPAH();
+				mol = optimisePAH(mol);
+				passbackPAH(mol);
+			}
+		}
+		else if ( isR5internal(site_C2,site_C2->C2,false) || isR5internal(site_C2,site_C2->C2,true) ) {
+			double R5dist = getDistance_twoC(site_perf->C2->C1, site_perf->C2);
+			if (R5dist > 1.8 || (R5dist >1.395 && R5dist < 1.405)) {
+				OpenBabel::OBMol mol = passPAH();
+				mol = optimisePAH(mol);
+				passbackPAH(mol);
+			}
+		}
+		else return false;
+	}
+
+	//Solve the random walker
+	std::list<Spointer> Migration_sites = listMigrationSites (site_perf);
+	std::tuple<Spointer,bool> site_dir = chooseRandomMigrationSite (site_perf, rates, Migration_sites, rng);
+	Spointer sFE2 = std::get<0>(site_dir);
+	bool b4 = std::get<1>(site_dir);
+
+	//Save an XYZ
+	if(m_debug_pah) saveXYZ("KMC_DEBUG/BEFORE");
+	//Copy site list before performing process
+	std::list<std::string> Sitelist_before = copySites(site_perf);
+	//Check if the site has the right number of carbons
+	if(!SiteRightSize(site_perf)){
+		std::string filename = "KMC_DEBUG/KMC_PAH_performProcess_SiteSize_";
+		filename.append(std::to_string(perform_process_error_counter));
+		saveXYZ(filename);
+		std::ostringstream msg;
+		msg << "ERROR: Site selected has incorrect number of carbons. Process not performed."
+			<< "ID" << id << " Jump process: " << jp.getName() << " on PAH ID: " << PAH_ID << "..."
+			<< " (Sweep::KMC_ARS::PAHProcess::performProcess)";
+		//throw std::runtime_error(msg.str());
+		//assert(false);
+		//abort();
+		printBeforeSites(Sitelist_before);
+		cout<<"Saving file: "<< filename<<".xyz\n";
+		++perform_process_error_counter;
+		return false;
+	}
+
+	if (site_perf == sFE2) return true;
+
+	
+	///////
+    switch(id) {
+		case 24:
+			proc_M5R_ACR5_multiple_sites(site_perf, site_C1, site_C2, sFE2, b4, rng); break;
+			//proc_M5R_ACR5_ZZ(site_perf, site_C1, site_C2, rng); break;
+		case 34:
+			proc_M5R_R5R6_multiple_sites(site_perf, site_C1, site_C2, sFE2, b4, rng); break;
+			//proc_MR5_R6(site_perf, site_C1, site_C2); break;
+		default:
+            cout<<"ERROR: PAHProcess::performMigrationProcess: Process not found\n";
+            return false;
+	}
+	//printSites();
+    Spointer S1,S2,S3,S4;
+    S1 = moveIt(site_perf, -1); S2 = moveIt(site_perf, 1);
+    S3 = moveIt(site_perf, -2); S4 = moveIt(site_perf, 2);
+	if (!checkSiteValid(S1) || !checkSiteValid(S2) || !checkSiteValid(S3) || !checkSiteValid(S4)){
+		std::cout << "ERROR. Structure produced invalid site type after performing process " 
+			<< "ID" << id << " Jump process: " << jp.getName() << " on PAH ID: " << PAH_ID << "...\n"
+			<< "*************\nAfter performing process --\n";
+		printBeforeSites(Sitelist_before); //SETBREAKPOINT
+		printSites(site_perf);
+		if (m_debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_performMigrationProcess_";
+			filename.append(std::to_string(perform_process_error_counter));
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			src.close();
+			dst.close();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
+		std::string filename2 = "KMC_DEBUG/KMC_PAH_performMigrationProcess_checkSiteValid_";
+		filename2.append(std::to_string(perform_process_error_counter));
+		saveXYZ(filename2);
+		std::ostringstream msg;
+		msg << "ERROR: Structure produced invalid combined site type after performing process "
+			<< "ID" << id << " Jump process: " << jp.getName() << " on PAH ID: " << PAH_ID << "..."
+			<< " (Sweep::KMC_ARS::PAHProcess::performMigrationProcess)";
+		//throw std::runtime_error(msg.str());
+		//assert(false);
+		//abort();
+		cout<<"Saving file: "<< filename2<<".xyz\n";
+		++perform_process_error_counter;
+	}
+    if(!checkCombinedSiteType(site_perf) || !checkCombinedSiteType(S1)
+        || !checkCombinedSiteType(S2) || !checkCombinedSiteType(S3)
+        || !checkCombinedSiteType(S4)) {
+        std::cout<<"ERROR. Structure produced invalid combined site type after performing process "
+            << "ID"<<id << "Jump process: " << jp.getName() << " on PAH ID: "<< PAH_ID <<"...\n"
+            <<"*************\nAfter performing process --\n";
+        printBeforeSites(Sitelist_before); //SETBREAKPOINT
+		printSites(site_perf);
+		if(m_debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_performMigrationProcess_";
+			filename.append(std::to_string(perform_process_error_counter));
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			src.close();
+			dst.close();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
+		std::string filename2 = "KMC_DEBUG/KMC_PAH_performMigrationProcess_checkCombinedSite_";
+		filename2.append(std::to_string(perform_process_error_counter));
+		saveXYZ(filename2);
+        std::ostringstream msg;
+        msg << "ERROR: Structure produced invalid combined site type after performing process "
+            << "ID"<<id << "Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"..."
+            << " (Sweep::KMC_ARS::PAHProcess::performMigrationProcess)";
+		cout<<"Saving file: "<< filename2<<".xyz\n";
+		++perform_process_error_counter;	
+        //throw std::runtime_error(msg.str());
+        //assert(false);
+        //abort();
+    }
+	//int calc_total = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
+	int calc_total = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1 + numberOfMethyl();
+	if(calc_total != getCHCount().first) {
+        //saveDOT("KMC_DEBUG/KMC_C_Counts_ERROR.dot");
+		if(m_debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_performMigrationProcess_";
+			filename.append(std::to_string(perform_process_error_counter)); //SETBREAKPOINT
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			src.close();
+			dst.close();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
+		std::string filename2 = "KMC_DEBUG/KMC_PAH_performMigrationProcess_C_Count_";
+		filename2.append(std::to_string(perform_process_error_counter));
+		saveXYZ(filename2);
+        cout<<"ERROR. Calculated total did not tally with double C counts!\n";
+        cout<<"Last process performed: "<<jp.getName()<<", ID = "<<jp.getID()<<", PAH ID = "<<PAH_ID<<'\n';
+		cout<<"R6s = "<<m_pah->m_rings<<", R5s = "<<m_pah->m_rings5_Lone<<" alone + "<<m_pah->m_rings5_Embedded<<" embedded, R7s = "<<m_pah->m_rings7_Embedded<<"\n";
+        std::ostringstream msg;
+        msg << "\nCalculated total: "<<calc_total<<'\n'
+            << "Real total: " << getCHCount().first << '\n';
+        printBeforeSites(Sitelist_before);
+		printSites(site_perf);
+		//throw std::runtime_error(msg.str());
+		cout<<"Saving file: "<< filename2<<".xyz\n";
+		++perform_process_error_counter;
+    }
+
+	if (m_pah->m_R5loc.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0){
+		//Try to fix this error by an optimisation.
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
+	if (m_pah->m_R5loc.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0 && SiteListSize() >= 3){
+		//Throw error.
+		cout << "Error. Number of R5s in m_pah->m_R5loc does not match number of lone and embedded R5s.\n";
+		cout << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded.\n";
+		cout << "R5 coordinates in list = "<< m_pah->m_R5loc.size() << ".\n";
+		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n";
+		cout << "Printing internal R5 positions:\n"; //SETBREAKPOINT
+		for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+			cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+		}
+		if(m_debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_R5count_";
+			filename.append(std::to_string(r5_error_counter)); //SETBREAKPOINT
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			src.close();
+			dst.close();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
+		std::string filename2 = "KMC_DEBUG/AFTER_R5count_";
+		filename2.append(std::to_string(r5_error_counter));
+		saveXYZ(filename2);
+        printBeforeSites(Sitelist_before);
+		printSites(site_perf);
+		cout<<"Saving file: "<< filename2<<".xyz\n";
+		//filename2.append(".inx");
+		//savePAH_tofile(filename2);
+		//cout<<"Saving file: "<< filename2<<"\n";
+		++r5_error_counter;
+		//throw std::runtime_error(msg.str());
+	}
+	
+	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
+		//Try to fix this error by an optimisation.
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
+	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0 && SiteListSize() >= 3){
+		//Throw error.
+		cout << "Error. Number of R7s in m_pah->m_R7loc does not match number of lone and embedded R5s.\n";
+		cout << "\t Total R7 rings: " << m_pah->m_rings7_Embedded << " embedded.\n";
+		cout << "R7 coordinates in list = "<< m_pah->m_R7loc.size() << ".\n";
+		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n";
+		cout << "Printing internal R7 positions:\n"; //SETBREAKPOINT
+		for (std::list<cpair>::iterator it1 = m_pah->m_R7loc.begin(); it1 != m_pah->m_R7loc.end(); ++it1) {
+			cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+		}
+		if(m_debug_pah){
+			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			std::string filename = "KMC_DEBUG/BEFORE_R7count_";
+			filename.append(std::to_string(r7_error_counter)); //SETBREAKPOINT
+			filename.append(".xyz");
+			ofstream dst(filename);
+			dst << src.rdbuf();
+			src.close();
+			dst.close();
+			cout<<"Saving file: "<< filename<<"\n";
+		}
+		std::string filename2 = "KMC_DEBUG/AFTER_R7count_";
+		filename2.append(std::to_string(r7_error_counter));
+		saveXYZ(filename2);
+        printBeforeSites(Sitelist_before);
+		printSites(site_perf);
+		//throw std::runtime_error(msg.str());
+		cout<<"Saving file: "<< filename2<<".xyz\n";
+		++r7_error_counter;
+	}
+	return true;
+}
+
+
+
 //--------------------------------------------------------------------
 //----------------- STRUCTURE CHANGE PROCESSES -----------------------
 //--------------------------------------------------------------------
@@ -10871,19 +11291,7 @@ void PAHProcess::proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, 
 // ************************************************************
 // ID66- Recursive embedded 5-member ring migration
 // ************************************************************
-void PAHProcess::proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
-	//Check if the ACR5 need optimisation.
-	double R5dist = getDistance_twoC(stt->C1->C2, stt->C1->C2->C2);
-	if (R5dist > 1.8 || (R5dist >1.395 && R5dist < 1.405)) {
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
-	}
-
-	std::list<Spointer> ACR5_sites = listMigrationSites (stt, ACR5);
-	std::tuple<Spointer,bool> site_dir = chooseRandomMigrationSite (stt, ACR5_sites, rng);
-	Spointer sFE2 = std::get<0>(site_dir);
-	bool b4 = std::get<1>(site_dir);
+void PAHProcess::proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng) {
 	// The pentagon migrated N times and ended at the same position.
 	if (sFE2 == stt) return;
 	//Remove R5coords from m_pah->m_R5loc
@@ -11222,37 +11630,7 @@ void PAHProcess::proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 // ************************************************************
 // ID67- Recursive partially embedded 5-member ring migration
 // ************************************************************
-void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
-	
-	//Check that the site is correctly drawn.
-	if (( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ) && ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) )){
-		//Pentagons to both sides, JP not allowed
-		return;
-	}
-	else if ( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ) {
-		double R5dist = getDistance_twoC(stt->C1, stt->C1->C2);
-		if (R5dist > 1.8 || (R5dist >1.395 && R5dist < 1.405)) {
-			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
-			passbackPAH(mol);
-		}
-	}
-	else if ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) ) {
-		double R5dist = getDistance_twoC(stt->C2->C1, stt->C2);
-		if (R5dist > 1.8 || (R5dist >1.395 && R5dist < 1.405)) {
-			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
-			passbackPAH(mol);
-		}
-	}
-	else return;
-	
-	std::list<Spointer> R5R6_sites = listMigrationSites (stt, R5R6);
-	std::tuple<Spointer,bool> site_dir = chooseRandomMigrationSite (stt, R5R6_sites, rng);
-	Spointer sFE2 = std::get<0>(site_dir);
-	bool b4 = std::get<1>(site_dir);
-	// The pentagon migrated N times and ended at the same position.
-	if (sFE2 == stt) return;
+void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng) {
 	//Remove R5coords from m_pah->m_R5loc
 	cpair R5coords;
 	if (b4) R5coords = findR5internal(stt->C2->C1, stt->C2);
