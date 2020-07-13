@@ -1178,7 +1178,7 @@ Spointer PAHProcess::chooseRandomSite(std::vector<kmcSiteType> vtype, rng_type &
 //! Creates a list of sites where an embedded R5 can migrate to.
 std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 	std::list<Spointer> Migr_sites = {stt};
-	if (stt->type != ACR5 || stt->type != R5R6) return Migr_sites;
+	if (stt->type != ACR5 && stt->type != R5R6) return Migr_sites;
 	bool checking_site = true;
 	Spointer sFE2 = stt;
 	cpair R5coords;
@@ -1294,7 +1294,9 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 					}
 				}
 			}
-			if (sFE2==Migr_sites.back()) checking_site = false; check_left=false; check_right=false;
+			if (sFE2==Migr_sites.back() && Migr_sites.size()>1) {
+				checking_site = false; check_left=false; check_right=false;
+			}
 			if (checking_site) Migr_sites.push_front(sFE2);
 			if ((int)sFE2->type % 10 >=2) checking_site = false;
 			if (sFE2->comb == FE2) checking_site = false;
@@ -1385,7 +1387,9 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 					}
 				}
 			}
-			if (sFE2 == Migr_sites.front()) checking_site = false; check_left=false; check_right=false;
+			if (sFE2 == Migr_sites.front() && Migr_sites.size()>1) {
+				checking_site = false; check_left=false; check_right=false;
+			}
 			if (checking_site) Migr_sites.push_back(sFE2);
 			if ((int)sFE2->type % 10 >=2) checking_site = false;
 			if (sFE2->comb == FE2) checking_site = false;
@@ -1406,32 +1410,32 @@ std::tuple<Spointer,bool> PAHProcess::chooseRandomMigrationSite (Spointer& start
 	size_t ii = 0; size_t jj = 0;
 	for (std::list<Spointer>::iterator it = avail_end_sites.begin(); it != avail_end_sites.end(); ++it) {
 		if ( (*it)->comb == FE2) {
-			left_sites_probs.push_back(0.0);
-			right_sites_probs.push_back(0.0);
-			end_sites_probs.push_back(rates["R5"]);
+			left_sites_probs[ii] = 0.0;
+			right_sites_probs[ii] = 0.0;
+			end_sites_probs[ii] = rates["R5"];
 		}
 		else if ( (*it)->type == FE || (*it)->type == R5R6) {
-			left_sites_probs.push_back(rates["Corner"]);
-			right_sites_probs.push_back(rates["Corner"]);
-			end_sites_probs.push_back(rates["R5R6"]);
+			left_sites_probs[ii] = rates["Corner"];
+			right_sites_probs[ii] = rates["Corner"];
+			end_sites_probs[ii] = rates["R5R6"];
 		}
 		else if ( (*it)->type == ZZ || (*it)->type == ACR5) {
-			left_sites_probs.push_back(rates["Middle"]);
-			right_sites_probs.push_back(rates["Middle"]);
-			end_sites_probs.push_back(rates["ACR5"]);
+			left_sites_probs[ii] = rates["Middle"];
+			right_sites_probs[ii] = rates["Middle"];
+			end_sites_probs[ii] = rates["ACR5"];
 		}
 		else if ( (*it)->type == AC) {
 			std::list<Spointer>::iterator it2 = it;
 			it2 ++;
 			if (it2 == avail_end_sites.end()) it2--; it2--;
 			if ((*it2)->type == FE){
-				left_sites_probs.push_back(rates["Corner"]);
-				right_sites_probs.push_back(rates["Corner"]);
-				end_sites_probs.push_back(rates["R5R6ZZ"]);
+				left_sites_probs[ii] = rates["Corner"];
+				right_sites_probs[ii] = rates["Corner"];
+				end_sites_probs[ii] = rates["R5R6ZZ"];
 			}else{
-				left_sites_probs.push_back(rates["Middle"]);
-				right_sites_probs.push_back(rates["Middle"]);
-				end_sites_probs.push_back(rates["FEACR5"]);
+				left_sites_probs[ii] = rates["Middle"];
+				right_sites_probs[ii] = rates["Middle"];
+				end_sites_probs[ii] = rates["FEACR5"];
 			}
 		}
 		else if ( (*it)->type == BY5) {
@@ -1439,13 +1443,13 @@ std::tuple<Spointer,bool> PAHProcess::chooseRandomMigrationSite (Spointer& start
 			it2 ++;
 			if (it2 == avail_end_sites.end()) it2--; it2--;
 			if ((*it2)->type == FE){
-				left_sites_probs.push_back(rates["Corner"]);
-				right_sites_probs.push_back(rates["Corner"]);
-				end_sites_probs.push_back(rates["R5R6AC"]);
+				left_sites_probs[ii] = rates["Corner"];
+				right_sites_probs[ii] = rates["Corner"];
+				end_sites_probs[ii] = rates["R5R6AC"];
 			}else{
-				left_sites_probs.push_back(rates["Corner"]);
-				right_sites_probs.push_back(rates["Corner"]);
-				end_sites_probs.push_back(rates["ZZACR5"]);
+				left_sites_probs[ii] = rates["Corner"];
+				right_sites_probs[ii] = rates["Corner"];
+				end_sites_probs[ii] = rates["ZZACR5"];
 			}
 		}
 		else if ( (*it)->type == BY6) {
@@ -1453,44 +1457,44 @@ std::tuple<Spointer,bool> PAHProcess::chooseRandomMigrationSite (Spointer& start
 			it2 ++;
 			if (it2 == avail_end_sites.end()) it2--; it2--;
 			if ((*it2)->type == FE){
-				left_sites_probs.push_back(rates["Corner"]);
-				right_sites_probs.push_back(rates["Corner"]);
-				end_sites_probs.push_back(rates["R5R6BY5"]);
+				left_sites_probs[ii] = rates["Corner"];
+				right_sites_probs[ii] = rates["Corner"];
+				end_sites_probs[ii] = rates["R5R6BY5"];
 			}else{
-				left_sites_probs.push_back(rates["Corner"]);
-				right_sites_probs.push_back(rates["Corner"]);
-				end_sites_probs.push_back(rates["ACACR5"]);
+				left_sites_probs[ii] = rates["Corner"];
+				right_sites_probs[ii] = rates["Corner"];
+				end_sites_probs[ii] = rates["ACACR5"];
 			}
 		}
 		else if ( (*it)->type == RZZ) {
-			left_sites_probs.push_back(rates["Corner"]);
-			right_sites_probs.push_back(rates["Corner"]);
-			end_sites_probs.push_back(rates["R5R6FER"]);
+			left_sites_probs[ii] = rates["Corner"];
+			right_sites_probs[ii] = rates["Corner"];
+			end_sites_probs[ii] = rates["R5R6FER"];
 		}
 		else if ( (*it)->type == RAC) {
-			left_sites_probs.push_back(rates["Corner"]);
-			right_sites_probs.push_back(rates["Corner"]);
-			end_sites_probs.push_back(rates["R5R6ZZR"]);
+			left_sites_probs[ii] = rates["Corner"];
+			right_sites_probs[ii] = rates["Corner"];
+			end_sites_probs[ii] = rates["R5R6ZZR"];
 		}
 		else if ( (*it)->type == RBY5) {
-			left_sites_probs.push_back(rates["Corner"]);
-			right_sites_probs.push_back(rates["Corner"]);
-			end_sites_probs.push_back(rates["R5R6ACR"]);
+			left_sites_probs[ii] = rates["Corner"];
+			right_sites_probs[ii] = rates["Corner"];
+			end_sites_probs[ii] = rates["R5R6ACR"];
 		}
 		else if ( (*it)->type == R5R6ZZ) {
-			left_sites_probs.push_back(rates["Middle"]);
-			right_sites_probs.push_back(rates["Middle"]);
-			end_sites_probs.push_back(rates["R5R6FER5R6"]);
+			left_sites_probs[ii] = rates["Middle"];
+			right_sites_probs[ii] = rates["Middle"];
+			end_sites_probs[ii] = rates["R5R6FER5R6"];
 		}
 		else if ( (*it)->type == R5R6AC) {
-			left_sites_probs.push_back(rates["Corner"]);
-			right_sites_probs.push_back(rates["Corner"]);
-			end_sites_probs.push_back(rates["R5R6ZZR5R6"]);
+			left_sites_probs[ii] = rates["Corner"];
+			right_sites_probs[ii] = rates["Corner"];
+			end_sites_probs[ii] = rates["R5R6ZZR5R6"];
 		}
 		else if ( (*it)->type == R5R6BY5) {
-			left_sites_probs.push_back(rates["Corner"]);
-			right_sites_probs.push_back(rates["Corner"]);
-			end_sites_probs.push_back(rates["R5R6ACR5R6"]);
+			left_sites_probs[ii] = rates["Corner"];
+			right_sites_probs[ii] = rates["Corner"];
+			end_sites_probs[ii] = rates["R5R6ACR5R6"];
 		}
 		if ( (*it) == start_site) jj = ii;
 		if ( (*it) == avail_end_sites.front()) left_sites_probs[ii] = 0.0;

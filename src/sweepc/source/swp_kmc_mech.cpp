@@ -170,7 +170,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_O6R_FE2_top = new O6R_FE2_top; j_O6R_FE2_top->initialise();                  //! 21- R6 Oxidation at FE2 by top reaction.
 	JumpProcess* j_D6R_FE_AC = new D6R_FE_AC; j_D6R_FE_AC->initialise();						//! 22- R6 Desorption from FE to AC site.
 	JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();                           //!< 23 - Bay-capping.
-	//JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //!< 24 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
+	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //!< 24 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
 	JumpProcess* j_G6R_RZZ = new G6R_RZZ; j_G6R_RZZ->initialise();                              //!< 25 - R6 growth on RZZ.
 	JumpProcess* j_G6R_RFER = new G6R_RFER; j_G6R_RFER->initialise();                           //!< 26 - R6 growth on RFER.
 	//JumpProcess* j_G6R_R5 = new G6R_R5; j_G6R_R5->initialise();                                 //!< 27 - R6 growth on R5.
@@ -180,7 +180,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //!< 31 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //!< 32 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //!< 33 - R6 desorption at RAC -> pyrene.
-	//JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6. //Moved to instant jump process list.
+	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6. //Moved to instant jump process list.
 	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //!< 35 - R7 growth on R5R6AC.
 	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //!< 36 - R7 growth on FEACR5.
 	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();                        //!< 37 - R6 growth on R5R6ZZ.
@@ -239,7 +239,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_O6R_FE2_top);        //! 21- R6 Oxidation at FE2 by top reaction.
 	temp.push_back(j_D6R_FE_AC);         //! 22- R6 Desorption from FE to AC site.
 	temp.push_back(j_B6R_ACR5);         //!< 23 - Bay-capping.
-	//temp.push_back(j_M5R_ACR5_ZZ);      //!< 24 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
+	temp.push_back(j_M5R_ACR5_ZZ);      //!< 24 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
 	temp.push_back(j_G6R_RZZ);          //!< 25 - R6 growth on RZZ.
 	temp.push_back(j_G6R_RFER);         //!< 26 - R6 growth on RFER.
 	//temp.push_back(j_G6R_R5);           //!< 27 - R6 growth on R5.
@@ -249,7 +249,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_C6R_RAC_FE3);      //!< 31 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_C6R_RAC_FE3violi); //!< 32 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_M6R_RAC_FE3);      //!< 33 - R6 desorption at RAC -> pyrene.
-	//temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6. //Moved to instant jump process list.
+	temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6. //Moved to instant jump process list.
 	temp.push_back(j_GR7_R5R6AC);           //!< 35 - R7 growth on R5R6AC.
 	temp.push_back(j_GR7_FEACR5);           //!< 36 - R7 growth on FEACR5.
 	temp.push_back(j_G6R_R5R6ZZ);          //!< 37 - R6 growth on R5R6ZZ.
@@ -430,6 +430,7 @@ void KMCMechanism::calculateMigrationRates(const KMCGasPoint& gp,
 	//This function populates the map m_instant_rates.
     double temp=0;
     double pressure = gp[gp.P]/1e5;
+	st.m_rates_save = true;
     // Choose suitable mechanism according to P
     if(pressure > 0.5 && pressure <= 5) { // mechanism at 1 atm 
 		auto rate_iterator=m_instant_rates.begin();
@@ -439,6 +440,7 @@ void KMCMechanism::calculateMigrationRates(const KMCGasPoint& gp,
 				(jp_it->second)[ii]->calculateElemRxnRate((jp_it->second)[ii]->getVec1(), gp);
 				rate_iterator->second += (jp_it->second)[ii]->setRate1(gp, st/*, t*/);
 			}
+			rate_iterator++;
 		} 
     }else if(pressure > 0.01 && pressure <= 0.07) { // mechanism at 0.0267atm
 		auto rate_iterator=m_instant_rates.begin();
@@ -448,6 +450,7 @@ void KMCMechanism::calculateMigrationRates(const KMCGasPoint& gp,
 				(jp_it->second)[ii]->calculateElemRxnRate((jp_it->second)[ii]->getVec0p0267(), gp);
 				rate_iterator->second += (jp_it->second)[ii]->setRate0p0267(gp, st/*, t*/);
 			}
+			rate_iterator++;
 		} 
     }else if(pressure > 0.07 && pressure <= 0.5) { // mechanism at 0.12atm
 		auto rate_iterator=m_instant_rates.begin();
@@ -457,9 +460,10 @@ void KMCMechanism::calculateMigrationRates(const KMCGasPoint& gp,
 				(jp_it->second)[ii]->calculateElemRxnRate((jp_it->second)[ii]->getVec1(), gp);
 				rate_iterator->second += (jp_it->second)[ii]->setRate1(gp, st/*, t*/);
 			}
+			rate_iterator++;
 		} 
     }else std::cout<<"ERROR: No reaction mechanism for this pressure condition.\n";
-    // update total rates
+	st.m_rates_save = false;
 }
 
 //! Returns vector of jump processes
