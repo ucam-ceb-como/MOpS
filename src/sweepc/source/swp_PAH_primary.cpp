@@ -579,7 +579,8 @@ void PAHPrimary::CopyParts(const PAHPrimary *source)
                 //m_PAH[i]=source->m_PAH[i]->Clone();
                 // Commented out to keep different PAH_ID numbers.
 				//new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID+100000;
-				new_m_PAH->PAH_ID=ID; //Added to keep different PAH_ID numbers.
+				//new_m_PAH->PAH_ID=ID; //Added to keep different PAH_ID numbers.
+				new_m_PAH->PAH_ID=source->m_PAH[i]->PAH_ID; //This keeps the same PAH_ID numbers after reading a file.
 				ID++; //Added to keep different PAH_ID numbers.
                 m_PAH.push_back(new_m_PAH);
             }

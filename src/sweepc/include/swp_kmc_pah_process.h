@@ -130,7 +130,7 @@ public:
     bool performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID);
 
     //! Structure processes: returns success or failure
-    bool performMigrationProcess(const JumpProcess& jp, std::map<std::string,double> rates, rng_type &rng, int PAH_ID);
+    int performMigrationProcess(const JumpProcess& jp, std::map<std::string,double> rates, int N_end_steps, rng_type &rng, int PAH_ID);
 
     // Read Processes
     //! Get Counts
@@ -305,7 +305,7 @@ private:
 	//! Creates a list of sites where an embedded R5 can migrate to.
 	std::list<Spointer> listMigrationSites(Spointer& stt);
 	//! Assigns probabilities to individual sites and randomly selects a finishing site for a migration process.
-	std::tuple<Spointer,bool> chooseRandomMigrationSite (Spointer& start_site, std::map<std::string,double> rates, std::list<Spointer> avail_end_sites, rng_type &rng);
+	std::tuple<Spointer,bool,int> chooseRandomMigrationSite (Spointer& start_site, std::map<std::string,double> rates, std::list<Spointer> avail_end_sites, int N_end_steps, rng_type &rng);
     //! Jump to a position coordinate given starting position and angle towards new position
 	cpair jumpToPos(const cpair& starting, const angletype& direction, const angletype& direction2, const bondlength& distance) const;
 	//! Jump to a position coordinate given starting position and a vector. Handles 3D growth.

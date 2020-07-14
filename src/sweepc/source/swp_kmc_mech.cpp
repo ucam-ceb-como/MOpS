@@ -74,6 +74,7 @@ KMCMechanism::KMCMechanism() {
     m_totalrate = 0;
 	m_instant_totalrate = 0;
     isACopy = false;
+	m_include_migration = true;
 }
 //! Copy Constructor
 KMCMechanism::KMCMechanism(KMCMechanism& m) {
@@ -84,6 +85,7 @@ KMCMechanism::KMCMechanism(KMCMechanism& m) {
     m_totalrate = m.m_totalrate;
 	m_instant_totalrate = m.m_instant_totalrate;
     isACopy = true;
+	m_include_migration = m.m_include_migration;
 }
 //! Destructor
 KMCMechanism::~KMCMechanism() {
@@ -399,23 +401,41 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
     // Choose suitable mechanism according to P
     if(pressure > 0.5 && pressure <= 5) { // mechanism at 1 atm 
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-            (m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
-            m_rates[i] = (m_jplist[i])->setRate1(gp, st/*, t*/);
-            temp += m_rates[i];
+			if (!m_include_migration && ((m_jplist[i])->getID()==24 || (m_jplist[i])->getID()==34)){
+				m_rates[i] = 0.0;
+            	temp += m_rates[i];
+			}
+			else {
+				(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp);
+				m_rates[i] = (m_jplist[i])->setRate1(gp, st/*, t*/);
+				temp += m_rates[i];
+			}
         }
     }else if(pressure > 0.01 && pressure <= 0.07) { // mechanism at 0.0267atm
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-            (m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p0267(), gp);
-            m_rates[i] = (m_jplist[i])->setRate0p0267(gp, st/*, t*/);
-            temp += m_rates[i];
+			if (!m_include_migration && ((m_jplist[i])->getID()==24 || (m_jplist[i])->getID()==34)){
+				m_rates[i] = 0.0;
+            	temp += m_rates[i];
+			}
+			else {
+				(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p0267(), gp);
+				m_rates[i] = (m_jplist[i])->setRate0p0267(gp, st/*, t*/);
+				temp += m_rates[i];
+			}
         }
     }else if(pressure > 0.07 && pressure <= 0.5) { // mechanism at 0.12atm
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-			(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp); // As a test, decided to use the mechanism for 1atm that has been debugged.
-            //(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p12(), gp);
-            m_rates[i] = (m_jplist[i])->setRate1(gp, st/*, t*/);
-			//m_rates[i] = (m_jplist[i])->setRate0p12(gp, st/*, t*/);
-            temp += m_rates[i];
+			if (!m_include_migration && ((m_jplist[i])->getID()==24 || (m_jplist[i])->getID()==34)){
+				m_rates[i] = 0.0;
+            	temp += m_rates[i];
+			}
+			else{
+				(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec1(), gp); // As a test, decided to use the mechanism for 1atm that has been debugged.
+				//(m_jplist[i])->calculateElemRxnRate((m_jplist[i])->getVec0p12(), gp);
+				m_rates[i] = (m_jplist[i])->setRate1(gp, st/*, t*/);
+				//m_rates[i] = (m_jplist[i])->setRate0p12(gp, st/*, t*/);
+				temp += m_rates[i];
+			}
         }
     }else std::cout<<"ERROR: No reaction mechanism for this pressure condition.\n";
     // update total rates
@@ -479,6 +499,11 @@ const std::vector<double>& KMCMechanism::Rates() const {
 //! Returns total rates
 double KMCMechanism::TotalRate() const {
     return m_totalrate;
+}
+
+//! Returns total rates
+void KMCMechanism::SetIncludeMigrationRates(bool migr_flag){
+	m_include_migration = migr_flag;
 }
 
 //! Returns total rates

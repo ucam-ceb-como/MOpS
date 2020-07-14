@@ -120,6 +120,9 @@ namespace KMC_ARS {
         double TotalRate() const;
 
 		//! Returns total rates
+        void SetIncludeMigrationRates(bool migr_flag);
+
+		//! Returns rates for migration process
 		std::map<std::string,double> MigrationRates() const;
 		
     private:
@@ -143,6 +146,8 @@ namespace KMC_ARS {
         double m_totalrate;
 		//! Total rate for instant jump processes
         double m_instant_totalrate;
+		//! Include migration jump processes in rate calculation
+		bool m_include_migration;
     };
         
     //! Process list:

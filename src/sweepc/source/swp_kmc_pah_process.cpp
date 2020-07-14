@@ -1297,6 +1297,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 			if (sFE2==Migr_sites.back() && Migr_sites.size()>1) {
 				checking_site = false; check_left=false; check_right=false;
 			}
+			if ((int)sFE2->type % 10 >=2 && (Migr_sites.front()->type == FE || Migr_sites.front()->type == R5R6)) checking_site = false;
 			if (checking_site) Migr_sites.push_front(sFE2);
 			if ((int)sFE2->type % 10 >=2) checking_site = false;
 			if (sFE2->comb == FE2) checking_site = false;
@@ -1390,6 +1391,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 			if (sFE2 == Migr_sites.front() && Migr_sites.size()>1) {
 				checking_site = false; check_left=false; check_right=false;
 			}
+			if ((int)sFE2->type % 10 >=2 && (Migr_sites.back()->type == FE || Migr_sites.back()->type == R5R6)) checking_site = false;
 			if (checking_site) Migr_sites.push_back(sFE2);
 			if ((int)sFE2->type % 10 >=2) checking_site = false;
 			if (sFE2->comb == FE2) checking_site = false;
@@ -1400,7 +1402,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 }
 
 //! Assigns probabilities to individual sites and randomly selects a finishing site for a migration process.
-std::tuple<Spointer,bool> PAHProcess::chooseRandomMigrationSite (Spointer& start_site, std::map<std::string,double> rates, std::list<Spointer> avail_end_sites, rng_type &rng) {
+std::tuple<Spointer,bool,int> PAHProcess::chooseRandomMigrationSite (Spointer& start_site, std::map<std::string,double> rates, std::list<Spointer> avail_end_sites, int N_end_steps, rng_type &rng) {
 	int N_end_sites = avail_end_sites.size();
 	std::vector<int> position(N_end_sites,0);
 	std::vector<double> left_sites_probs(N_end_sites,0.0);
@@ -1516,7 +1518,7 @@ std::tuple<Spointer,bool> PAHProcess::chooseRandomMigrationSite (Spointer& start
 	//Generate exponentially distributed Number of migration steps
 	boost::exponential_distribution<double> N_stepsDistrib(lambda_param);
 	boost::variate_generator<rng_type &, boost::exponential_distribution<double>> N_stepsGenerator(rng, N_stepsDistrib);
-	int N_steps_end = (int)N_stepsGenerator();
+	int N_steps_end_internal = (int)N_stepsGenerator();
 
 	//Perform the random walk.
 	int N_steps = 0;
@@ -1530,7 +1532,8 @@ std::tuple<Spointer,bool> PAHProcess::chooseRandomMigrationSite (Spointer& start
 		else if (ind == 1) jj++;
 		else migrating_site = false;
 		N_steps++;
-		if (N_steps >= N_steps_end) migrating_site = false;
+		if (N_steps >= N_steps_end_internal) migrating_site = false;
+		if (N_steps >= N_end_steps) migrating_site = false;
 	} while(migrating_site);
     
 	//Return pointer to selected site
@@ -1545,7 +1548,7 @@ std::tuple<Spointer,bool> PAHProcess::chooseRandomMigrationSite (Spointer& start
 		if ( (*it) == start_site) direction = false;
 		ii += 1;
 	}
-	std::tuple<Spointer,bool> Site_direction = std::make_tuple(chosenSite, direction);
+	std::tuple<Spointer,bool,int> Site_direction = std::make_tuple(chosenSite, direction, N_steps);
 	return Site_direction;
 }
 
@@ -4679,7 +4682,9 @@ void PAHProcess::createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<i
 		}
 		carb_vec_sum += vec_carb_number;
 		Cpointer site_carb_2 = newC;
+		if (i==vec.size()-1) site_carb_2 = m_pah->m_cfirst;
 		addSite(vec[i], site_carb_1, site_carb_2);
+		site_carb_1 = site_carb_2;
 	}
 	connectToC(newC, m_pah->m_cfirst);
 	m_pah->m_clast = newC;
@@ -6033,7 +6038,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 
 
 //! Structure processes: returns success or failure. This handles the migration jump processes.
-bool PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::string,double> rates, rng_type &rng, int PAH_ID)
+int PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::string,double> rates, int N_end_steps, rng_type &rng, int PAH_ID)
 {
 	kmcSiteType stp = jp.getSiteType();
 	Spointer site_perf;
@@ -6045,7 +6050,7 @@ bool PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::st
 		cout << "chooseRandomSite ERROR. Choose random site selected incorrect site. Error. Not performing jump process.\n";
 		cout << "Jump process performed: " << id << ". " << jp.getName() << "\n";
 		printSites(site_perf);
-		return false;
+		return 0;
 	}
     // stores pointers to site Carbon members
     Cpointer site_C1 = site_perf->C1;
@@ -6064,7 +6069,7 @@ bool PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::st
 		//Check that the site is correctly drawn.
 		if (( isR5internal(site_C1->C1, site_C1,false) || isR5internal(site_C1->C1,site_C1,true) ) && ( isR5internal(site_C2,site_C2->C2,false) || isR5internal(site_C2,site_C2->C2,true) )){
 			//Pentagons to both sides, JP not allowed
-			return false;
+			return 0;
 		}
 		else if ( isR5internal(site_C1->C1, site_C1,false) || isR5internal(site_C1->C1,site_C1,true) ) {
 			double R5dist = getDistance_twoC(site_perf->C1, site_perf->C1->C2);
@@ -6074,7 +6079,7 @@ bool PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::st
 				passbackPAH(mol);
 			}
 		}
-		else if ( isR5internal(site_C2,site_C2->C2,false) || isR5internal(site_C2,site_C2->C2,true) ) {
+		else if ( isR5internal(site_C2->C1,site_C2,false) || isR5internal(site_C2->C1,site_C2,true) ) {
 			double R5dist = getDistance_twoC(site_perf->C2->C1, site_perf->C2);
 			if (R5dist > 1.8 || (R5dist >1.395 && R5dist < 1.405)) {
 				OpenBabel::OBMol mol = passPAH();
@@ -6082,14 +6087,15 @@ bool PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::st
 				passbackPAH(mol);
 			}
 		}
-		else return false;
+		else return 0;
 	}
 
 	//Solve the random walker
 	std::list<Spointer> Migration_sites = listMigrationSites (site_perf);
-	std::tuple<Spointer,bool> site_dir = chooseRandomMigrationSite (site_perf, rates, Migration_sites, rng);
+	std::tuple<Spointer,bool,int> site_dir = chooseRandomMigrationSite (site_perf, rates, Migration_sites, N_end_steps, rng);
 	Spointer sFE2 = std::get<0>(site_dir);
 	bool b4 = std::get<1>(site_dir);
+	int N_steps_performed = std::get<2>(site_dir);
 
 	//Save an XYZ
 	if(m_debug_pah) saveXYZ("KMC_DEBUG/BEFORE");
@@ -6110,10 +6116,10 @@ bool PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::st
 		printBeforeSites(Sitelist_before);
 		cout<<"Saving file: "<< filename<<".xyz\n";
 		++perform_process_error_counter;
-		return false;
+		return 0;
 	}
 
-	if (site_perf == sFE2) return true;
+	if (site_perf == sFE2) return N_steps_performed;
 
 	
 	///////
@@ -6126,7 +6132,7 @@ bool PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::st
 			//proc_MR5_R6(site_perf, site_C1, site_C2); break;
 		default:
             cout<<"ERROR: PAHProcess::performMigrationProcess: Process not found\n";
-            return false;
+            return 0;
 	}
 	//printSites();
     Spointer S1,S2,S3,S4;
@@ -6301,7 +6307,7 @@ bool PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::st
 		cout<<"Saving file: "<< filename2<<".xyz\n";
 		++r7_error_counter;
 	}
-	return true;
+	return N_steps_performed;
 }
 
 
@@ -11776,9 +11782,17 @@ void PAHProcess::proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpoin
 		//This means that the pentagon has migrated to a basic site.
 		if (b4) {
 			updateSites(S2, sFE2->C1, S2->C2, 2000 + (int)sFE2->type);
+			if ((int)S2->type<2000) {
+				Spointer S4 = moveIt(S2, +1);
+				updateSites(S4, S4->C1, S4->C2,+500);
+			}
 		}
 		else {
 			updateSites(S1, S1->C1, sFE2->C2, 2000 + (int)sFE2->type);
+			if ((int)S1->type<2000) {
+				Spointer S3 = moveIt(S1, -1);
+				updateSites(S3, S3->C1, S3->C2,+500);
+			}
 		}
 		removeSite(sFE2);
 	}
