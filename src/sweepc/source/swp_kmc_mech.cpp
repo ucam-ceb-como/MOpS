@@ -214,7 +214,10 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_O5R_R5R6FER5R6 = new O5R_R5R6FER5R6; j_O5R_R5R6FER5R6->initialise();         //!< 63 - Oxidation of R5R6FER5R6 site.
 	JumpProcess* j_O5R_R5R6ZZR5R6 = new O5R_R5R6ZZR5R6; j_O5R_R5R6ZZR5R6->initialise();         //!< 64 - Oxidation of R5R6ZZR5R6 site.
 	JumpProcess* j_O5R_R5R6ACR5R6 = new O5R_R5R6ACR5R6; j_O5R_R5R6ACR5R6->initialise();         //!< 65 - Oxidation of R5R6ACR5R6 site.
-	JumpProcess* j_MR5R7_edge = new MR5R7_edge; j_MR5R7_edge->initialise();        				//!< 66 - R5R7 pair edge healing.
+	JumpProcess* j_M5R_FEACR5_ZZ = new M5R_FEACR5_ZZ; j_M5R_FEACR5_ZZ->initialise();            //!< 66 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
+	JumpProcess* j_M5R_ZZACR5_ZZ = new M5R_ZZACR5_ZZ; j_M5R_ZZACR5_ZZ->initialise();            //!< 67 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
+	JumpProcess* j_M5R_ACACR5_ZZ = new M5R_ACACR5_ZZ; j_M5R_ACACR5_ZZ->initialise();            //!< 68 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
+	JumpProcess* j_MR5R7_edge = new MR5R7_edge; j_MR5R7_edge->initialise();        				//!< 69 - R5R7 pair edge healing.
     
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
@@ -283,7 +286,10 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_O5R_R5R6FER5R6);          		//!< 63 - Oxidation of R5R6FER5R6 site.
 	temp.push_back(j_O5R_R5R6ZZR5R6);          		//!< 64 - Oxidation of R5R6ZZR5R6 site.
 	temp.push_back(j_O5R_R5R6ACR5R6);          		//!< 65 - Oxidation of R5R6ACR5R6 site.
-	temp.push_back(j_MR5R7_edge);          		//!< 65 - Oxidation of R5R6ACR5R6 site.
+	temp.push_back(j_M5R_FEACR5_ZZ);      		//!< 66 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
+	temp.push_back(j_M5R_ZZACR5_ZZ);      		//!< 67 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
+	temp.push_back(j_M5R_ACACR5_ZZ);      		//!< 68 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
+	temp.push_back(j_MR5R7_edge);          		//!< 69 - Oxidation of R5R6ACR5R6 site.
 
     return temp;
 }
@@ -3606,7 +3612,7 @@ void M5R_ACR5_ZZ::initialise() {
 	rxnV3 = rxnV;
 	//
 	m_sType = ACR5; // sitetype
-	m_name = "Embedded 5-member ring migration to ZZ"; // name of process
+	m_name = "ACR5 migration"; // name of process
 	m_ID = 24;
 }
 // Jump rate calculation
@@ -6520,7 +6526,190 @@ double O5R_R5R6ACR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
 }
 
 // ************************************************************
-// ID66- R5R7 pair edge healing.
+// ID66 - Embedded 5-member ring migration from FEACR5 site to ZZ
+// ************************************************************
+
+void M5R_FEACR5_ZZ::initialise() {
+	// Adding elementary reactions
+	// 0.0267 atm
+	rxnvector& rxnV = m_rxnvector0p0267;
+	addReaction(rxnV, Reaction(4.570e+08, 1.880e+00, 1.484e+01, sp::H));            // A2 + H <=> A2- + H2          		 - 0            - Forward
+	addReaction(rxnV, Reaction(2.516e+04, 2.612e+00, -9.970e-01, sp::H2));          // A2 + H <=> A2- + H2          		 - 1            - Backward
+	addReaction(rxnV, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A2 + OH <=> A2- + H2O                - 2            - Forward
+	addReaction(rxnV, Reaction(1.093e+02, 2.625e+00, 8.825e+00, sp::H2O));          // A2 + OH <=> A2- + H2O                - 3            - Backward
+	addReaction(rxnV, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A2- + H <=> A2						- 4            - Forward
+	addReaction(rxnV, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
+	//Assumes the mirgation of embedded rings is similar to migration to the edge	
+	
+	//ABF and old
+	/*addReaction(rxnV, Reaction(1.74e08, 1.740, 9.370, sp::H));     // 0 - r1f
+	addReaction(rxnV, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
+	addReaction(rxnV, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
+	addReaction(rxnV, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2
+	addReaction(rxnV, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
+	addReaction(rxnV, Reaction(4.96e11, 0.755, 50, sp::None));  // 5*/
+	//
+	// 0.12 atm
+	rxnvector& rxnV2 = m_rxnvector0p12;
+	rxnV2 = rxnV;
+	//
+	// 1 atm
+	rxnvector& rxnV3 = m_rxnvector1;
+	rxnV3 = rxnV;
+	//
+	m_sType = FEACR5; // sitetype
+	m_name = "FEACR5 migration"; // name of process
+	m_ID = 66;
+}
+// Jump rate calculation
+double M5R_FEACR5_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[6] + m_r[7]);
+	double r_f; // radical fraction 
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+	}
+	else r_f = 0;
+	//return m_rate = m_r[7] * r_f*site_count; // Rate Equation
+	return m_rate = 1.0E10 * r_f*site_count; // Rate Equation
+}
+double M5R_FEACR5_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate0p0267(gp, pah_st);
+}
+double M5R_FEACR5_ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID67 - Embedded 5-member ring migration from ZZACR5 site to ZZ
+// ************************************************************
+
+void M5R_ZZACR5_ZZ::initialise() {
+	// Adding elementary reactions
+	// 0.0267 atm
+	rxnvector& rxnV = m_rxnvector0p0267;
+	addReaction(rxnV, Reaction(4.570e+08, 1.880e+00, 1.484e+01, sp::H));            // A2 + H <=> A2- + H2          		 - 0            - Forward
+	addReaction(rxnV, Reaction(2.516e+04, 2.612e+00, -9.970e-01, sp::H2));          // A2 + H <=> A2- + H2          		 - 1            - Backward
+	addReaction(rxnV, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A2 + OH <=> A2- + H2O                - 2            - Forward
+	addReaction(rxnV, Reaction(1.093e+02, 2.625e+00, 8.825e+00, sp::H2O));          // A2 + OH <=> A2- + H2O                - 3            - Backward
+	addReaction(rxnV, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A2- + H <=> A2						- 4            - Forward
+	addReaction(rxnV, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
+	//Assumes the mirgation of embedded rings is similar to migration to the edge	
+	
+	//ABF and old
+	/*addReaction(rxnV, Reaction(1.74e08, 1.740, 9.370, sp::H));     // 0 - r1f
+	addReaction(rxnV, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
+	addReaction(rxnV, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
+	addReaction(rxnV, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2
+	addReaction(rxnV, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
+	addReaction(rxnV, Reaction(4.96e11, 0.755, 50, sp::None));  // 5*/
+	//
+	// 0.12 atm
+	rxnvector& rxnV2 = m_rxnvector0p12;
+	rxnV2 = rxnV;
+	//
+	// 1 atm
+	rxnvector& rxnV3 = m_rxnvector1;
+	rxnV3 = rxnV;
+	//
+	m_sType = ZZACR5; // sitetype
+	m_name = "ZZACR5 migration"; // name of process
+	m_ID = 67;
+}
+// Jump rate calculation
+double M5R_ZZACR5_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[6] + m_r[7]);
+	double r_f; // radical fraction 
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+	}
+	else r_f = 0;
+	//return m_rate = m_r[7] * r_f*site_count; // Rate Equation
+	return m_rate = 1.0E10 * r_f*site_count; // Rate Equation
+}
+double M5R_ZZACR5_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate0p0267(gp, pah_st);
+}
+double M5R_ZZACR5_ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID68 - Embedded 5-member ring migration from ACACR5 site to ZZ
+// ************************************************************
+
+void M5R_ACACR5_ZZ::initialise() {
+	// Adding elementary reactions
+	// 0.0267 atm
+	rxnvector& rxnV = m_rxnvector0p0267;
+	addReaction(rxnV, Reaction(4.570e+08, 1.880e+00, 1.484e+01, sp::H));            // A2 + H <=> A2- + H2          		 - 0            - Forward
+	addReaction(rxnV, Reaction(2.516e+04, 2.612e+00, -9.970e-01, sp::H2));          // A2 + H <=> A2- + H2          		 - 1            - Backward
+	addReaction(rxnV, Reaction(7.665e+04, 2.105e+00, 9.394e+00, sp::OH));           // A2 + OH <=> A2- + H2O                - 2            - Forward
+	addReaction(rxnV, Reaction(1.093e+02, 2.625e+00, 8.825e+00, sp::H2O));          // A2 + OH <=> A2- + H2O                - 3            - Backward
+	addReaction(rxnV, Reaction(4.170e+13, 1.500e-01, 0.000e+00, sp::H));            // A2- + H <=> A2						- 4            - Forward
+	addReaction(rxnV, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
+	addReaction(rxnV, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
+	//Assumes the mirgation of embedded rings is similar to migration to the edge	
+	
+	//ABF and old
+	/*addReaction(rxnV, Reaction(1.74e08, 1.740, 9.370, sp::H));     // 0 - r1f
+	addReaction(rxnV, Reaction(3.90e12, 0, 11.00, sp::H2));    // 1 - r1b
+	addReaction(rxnV, Reaction(1.00e10, 0.734, 1.430, sp::OH));    // 2 - r2f
+	addReaction(rxnV, Reaction(3.68e08, 1.139, 17.10, sp::H2O));   // 3 - r2
+	addReaction(rxnV, Reaction(2.00e13, 0, 0, sp::H));     // 4 - r3f
+	addReaction(rxnV, Reaction(4.96e11, 0.755, 50, sp::None));  // 5*/
+	//
+	// 0.12 atm
+	rxnvector& rxnV2 = m_rxnvector0p12;
+	rxnV2 = rxnV;
+	//
+	// 1 atm
+	rxnvector& rxnV3 = m_rxnvector1;
+	rxnV3 = rxnV;
+	//
+	m_sType = ACACR5; // sitetype
+	m_name = "ACACR5 migration"; // name of process
+	m_ID = 68;
+}
+// Jump rate calculation
+double M5R_ACACR5_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	// check if site count is zero
+	double site_count = ((double)pah_st.getSiteCount(m_sType));
+	//double site_count = 1; // Site count
+	if (site_count == 0) return m_rate = 0;
+	// calculate rate
+	double r_denom = (m_r[1] + m_r[3] + m_r[4] + m_r[5] + m_r[6] + m_r[7]);
+	double r_f; // radical fraction 
+	if (r_denom>0) {
+		r_f = (m_r[0] + m_r[2]) / r_denom;
+	}
+	else r_f = 0;
+	//return m_rate = m_r[7] * r_f*site_count; // Rate Equation
+	return m_rate = 1.0E10 * r_f*site_count; // Rate Equation
+}
+double M5R_ACACR5_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate0p0267(gp, pah_st);
+}
+double M5R_ACACR5_ZZ::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
+	return setRate0p0267(gp, pah_st);
+}
+
+// ************************************************************
+// ID69- R5R7 pair edge healing.
 // ************************************************************
 // Elementary rate constants, site type, process type and name
 void MR5R7_edge::initialise() {
@@ -6543,7 +6732,7 @@ void MR5R7_edge::initialise() {
 
     m_sType = R5R7; // sitetype
     m_name = "R5R7 pair edge healing"; // name of process
-    m_ID = 66;
+    m_ID = 69;
 }
 // Jump rate calculation
 double MR5R7_edge::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {

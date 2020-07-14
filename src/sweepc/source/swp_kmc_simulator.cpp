@@ -277,13 +277,20 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			//writeTimerCSV();
 			rates = m_kmcmech.Rates();
 			writeRatesCSV(m_t, rates);
+            double migration_rates = 0.0;
+            for (unsigned int ii = 0; ii!= rates.size(); ii++){
+                int jp_num = jp_perf.first->getID();
+                if (jp_num == 24 || jp_num == 34 || jp_num == 66 || jp_num == 67 || jp_num == 68){
+                    migration_rates += rates[ii];
+                }
+            }
 			
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
             if (jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34) {
                 //We need an updated t_next for N_migration_steps
                 //Generate exponentially distributed waiting time
-                exponential_distrib waitingTimeDistrib_Migration(m_kmcmech.TotalRate()-rates[20]-rates[28]);
+                exponential_distrib waitingTimeDistrib_Migration(m_kmcmech.TotalRate()-migration_rates);
                 boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator_Migration(rng, waitingTimeDistrib_Migration);
                 t_step = waitingTimeGenerator_Migration();
                 t_next = m_t + t_step;
@@ -293,7 +300,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 std::map<std::string,double> migr_rates = m_kmcmech.MigrationRates();
 
                 //Calculate N_migration_steps with parameter (TotalRate - Migr.Rate) / Migr.Rate
-                double lambda_param = (m_kmcmech.TotalRate()-rates[20]-rates[28])/(rates[20]+rates[28]);
+                double lambda_param = (m_kmcmech.TotalRate()-migration_rates)/(migration_rates);
                 boost::exponential_distribution<double> N_stepsDistrib(lambda_param);
                 boost::variate_generator<rng_type &, boost::exponential_distribution<double>> N_stepsGenerator(rng, N_stepsDistrib);
                 int N_end_steps = (int)N_stepsGenerator();
@@ -312,7 +319,10 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 }
 
                 //Perform N_migration_steps
-                int N_steps_performed = m_simPAHp.performMigrationProcess(*jp_perf.first, migr_rates, N_actual_steps, rng, PAH_ID);
+                int N_steps_performed;
+                if (N_actual_steps>0){
+                    N_steps_performed = m_simPAHp.performMigrationProcess(*jp_perf.first, migr_rates, N_actual_steps, rng, PAH_ID);
+                }else N_steps_performed=0;
                 
                 //Program can perform up to N_actual_steps. N_steps_performed <= N_actual_steps. Advance the time for these steps.
                 for (N_actual_steps=0; N_actual_steps!= N_steps_performed; N_actual_steps++){
@@ -1182,7 +1192,7 @@ void KMCSimulator::opentrackedPAHCSV(int ID) {
 //! Writes data for tracked PAH to csv file
 void KMCSimulator::writetrackedPAHCSV() {
     //Values to write
-    std::vector<int> temp;
+    std::vector<double> temp;
 	// write PAH_ID number
 	temp.push_back(m_t);
     // get CH count

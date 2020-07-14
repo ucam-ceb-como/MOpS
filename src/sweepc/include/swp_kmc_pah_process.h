@@ -277,7 +277,10 @@ public:
 	void proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID65
 	void proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng);	//!<ID66
 	void proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng);	//!<ID67
-    void proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);	        //!<ID66
+    void proc_M5R_FEACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID68
+    void proc_M5R_ZZACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID69
+    void proc_M5R_ACACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID70
+    void proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);	        //!<ID71
 
     // true: saves rates only, returns all site count as 1
     // false: doesn't save rates, returns actual site counts
