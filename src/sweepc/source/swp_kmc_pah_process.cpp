@@ -5855,7 +5855,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			proc_O5R_R5R6ZZR5R6(site_perf, site_C1, site_C2, rng); break;
 		case 65:
 			proc_O5R_R5R6ACR5R6(site_perf, site_C1, site_C2, rng); break;
-		case 66:
+		case 69:
 			proc_MR5R7_edge(site_perf, site_C1, site_C2, rng); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
@@ -6102,7 +6102,7 @@ int PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::str
 			passbackPAH(mol);
 		}
 	}
-	else{
+	else if (site_perf->type==R5R6){
 		//Check that the site is correctly drawn.
 		if (( isR5internal(site_C1->C1, site_C1,false) || isR5internal(site_C1->C1,site_C1,true) ) && ( isR5internal(site_C2,site_C2->C2,false) || isR5internal(site_C2,site_C2->C2,true) )){
 			//Pentagons to both sides, JP not allowed
@@ -6117,6 +6117,30 @@ int PAHProcess::performMigrationProcess(const JumpProcess& jp, std::map<std::str
 			}
 		}
 		else if ( isR5internal(site_C2->C1,site_C2,false) || isR5internal(site_C2->C1,site_C2,true) ) {
+			double R5dist = getDistance_twoC(site_perf->C2->C1, site_perf->C2);
+			if (R5dist > 1.8 || (R5dist >1.395 && R5dist < 1.405)) {
+				OpenBabel::OBMol mol = passPAH();
+				mol = optimisePAH(mol);
+				passbackPAH(mol);
+			}
+		}
+		else return 0;
+	}
+	else{
+		//Check that the site is correctly drawn.
+		if (( isR5internal(site_C1->C2, site_C1->C2->C2,false) || isR5internal(site_C1->C2, site_C1->C2->C2,true) ) && ( isR5internal(site_C2->C1->C1,site_C2->C1,false) || isR5internal(site_C2->C1->C1,site_C2->C1,true) )){
+			//Pentagons to both sides, JP not allowed
+			return 0;
+		}
+		else if ( isR5internal(site_C1->C2, site_C1->C2->C2,false) || isR5internal(site_C1->C2, site_C1->C2->C2,true) ) {
+			double R5dist = getDistance_twoC(site_perf->C1, site_perf->C1->C2);
+			if (R5dist > 1.8 || (R5dist >1.395 && R5dist < 1.405)) {
+				OpenBabel::OBMol mol = passPAH();
+				mol = optimisePAH(mol);
+				passbackPAH(mol);
+			}
+		}
+		else if ( isR5internal(site_C2->C1->C1,site_C2->C1,false) || isR5internal(site_C2->C1->C1,site_C2->C1,true) ) {
 			double R5dist = getDistance_twoC(site_perf->C2->C1, site_perf->C2);
 			if (R5dist > 1.8 || (R5dist >1.395 && R5dist < 1.405)) {
 				OpenBabel::OBMol mol = passPAH();

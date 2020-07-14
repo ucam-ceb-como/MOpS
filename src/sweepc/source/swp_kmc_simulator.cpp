@@ -279,7 +279,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			writeRatesCSV(m_t, rates);
             double migration_rates = 0.0;
             for (unsigned int ii = 0; ii!= rates.size(); ii++){
-                int jp_num = jp_perf.first->getID();
+                int jp_num = m_kmcmech.JPList()[ii]->getID();
                 if (jp_num == 24 || jp_num == 34 || jp_num == 66 || jp_num == 67 || jp_num == 68){
                     migration_rates += rates[ii];
                 }
@@ -287,7 +287,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
-            if (jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34) {
+            if (jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34 || jp_perf.first->getID() == 66 || jp_perf.first->getID() == 67 || jp_perf.first->getID() == 68) {
                 //We need an updated t_next for N_migration_steps
                 //Generate exponentially distributed waiting time
                 exponential_distrib waitingTimeDistrib_Migration(m_kmcmech.TotalRate()-migration_rates);
