@@ -407,7 +407,7 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
     // Choose suitable mechanism according to P
     if(pressure > 0.5 && pressure <= 5) { // mechanism at 1 atm 
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-			if (!m_include_migration && ((m_jplist[i])->getID()==24 || (m_jplist[i])->getID()==34)){
+			if (!m_include_migration && ((m_jplist[i])->getID()==24 || (m_jplist[i])->getID()==34 || (m_jplist[i])->getID()==66 || (m_jplist[i])->getID()==67 || (m_jplist[i])->getID()==68)){
 				m_rates[i] = 0.0;
             	temp += m_rates[i];
 			}
@@ -419,7 +419,7 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
         }
     }else if(pressure > 0.01 && pressure <= 0.07) { // mechanism at 0.0267atm
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-			if (!m_include_migration && ((m_jplist[i])->getID()==24 || (m_jplist[i])->getID()==34)){
+			if (!m_include_migration && ((m_jplist[i])->getID()==24 || (m_jplist[i])->getID()==34 || (m_jplist[i])->getID()==66 || (m_jplist[i])->getID()==67 || (m_jplist[i])->getID()==68)){
 				m_rates[i] = 0.0;
             	temp += m_rates[i];
 			}
@@ -431,7 +431,7 @@ void KMCMechanism::calculateRates(const KMCGasPoint& gp,
         }
     }else if(pressure > 0.07 && pressure <= 0.5) { // mechanism at 0.12atm
         for(int i = 0; i!= (int) m_jplist.size() ; i++) {
-			if (!m_include_migration && ((m_jplist[i])->getID()==24 || (m_jplist[i])->getID()==34)){
+			if (!m_include_migration && ((m_jplist[i])->getID()==24 || (m_jplist[i])->getID()==34 || (m_jplist[i])->getID()==66 || (m_jplist[i])->getID()==67 || (m_jplist[i])->getID()==68)){
 				m_rates[i] = 0.0;
             	temp += m_rates[i];
 			}

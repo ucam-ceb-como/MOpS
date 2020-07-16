@@ -1422,6 +1422,11 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 //! Assigns probabilities to individual sites and randomly selects a finishing site for a migration process.
 std::tuple<Spointer,bool,int> PAHProcess::chooseRandomMigrationSite (Spointer& start_site, std::map<std::string,double> rates, std::list<Spointer> avail_end_sites, int N_end_steps, rng_type &rng) {
 	int N_end_sites = avail_end_sites.size();
+	std::tuple<Spointer,bool,int> Site_direction;
+	if (N_end_sites == 1) {
+		Site_direction = std::make_tuple(start_site, false, 0);
+		return Site_direction;
+	}
 	std::vector<int> position(N_end_sites,0);
 	std::vector<double> left_sites_probs(N_end_sites,0.0);
 	std::vector<double> right_sites_probs(N_end_sites,0.0);
@@ -1566,7 +1571,7 @@ std::tuple<Spointer,bool,int> PAHProcess::chooseRandomMigrationSite (Spointer& s
 		if ( (*it) == start_site) direction = false;
 		ii += 1;
 	}
-	std::tuple<Spointer,bool,int> Site_direction = std::make_tuple(chosenSite, direction, N_steps);
+	Site_direction = std::make_tuple(chosenSite, direction, N_steps);
 	return Site_direction;
 }
 
