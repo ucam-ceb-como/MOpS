@@ -1,5 +1,5 @@
 /*!
-  * \author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260) && Gustavo Leon (gl413)
   * \file       swp_kmc_gaspoint.h
   *
   * \brief        Defines the gas phase species data point for the kmc simulator

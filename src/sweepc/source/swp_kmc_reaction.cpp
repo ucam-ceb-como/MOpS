@@ -1,5 +1,5 @@
 /*!
-  * \author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260) && Gustavo Leon (gl413)
   * \file       swp_kmc_reaction.cpp
   *
   * \brief        Implementation file for swp_kmc_reaction.h

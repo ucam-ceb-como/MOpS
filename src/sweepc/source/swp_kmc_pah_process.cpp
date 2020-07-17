@@ -1,5 +1,5 @@
 /*!
-  * \author     Zakwan Zainuddin (zz260) Gustavo Leon (gl413)
+  * \author     Zakwan Zainuddin (zz260) && Gustavo Leon (gl413)
   * \file       swp_kmc_pah_process.cpp
   *
   * \brief        Implementation file for swp_kmc_pah_process.h.

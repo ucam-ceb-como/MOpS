@@ -1,5 +1,5 @@
 /*!
-  * \author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260) && Gustavo Leon (gl413)
   * \file       swp_kmc_jump_process.h
   *
   * \brief        Defines the JumpProcess class used by the kMC model.

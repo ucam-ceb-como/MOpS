@@ -1,5 +1,5 @@
 /*!
-  * \author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260) && Gustavo Leon (gl413)
   * \file       swp_kmc_structure_comp.h
   *
   * \brief        Defines the component struct and classes for the data structure

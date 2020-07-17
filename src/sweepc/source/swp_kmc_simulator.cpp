@@ -1,12 +1,12 @@
 /*!
-  * \author     Zakwan Zainuddin (zz260)
+  * \author     Zakwan Zainuddin (zz260) && Gustavo Leon (gl413)
   * \file       swp_kmc_simulator.cpp
   *
   * \brief      Implementation for swp_kmc_simulator.h
   *
   Project:      sweep (gas-phase chemistry solver).
   Sourceforge:  http://sourceforge.net/projects/mopssuite
-  Copyright (C) 2010 Zakwan Zainuddin.
+  Copyright (C) 2010 Zakwan Zainuddin 2020 Gustavo Leon
 
   File purpose:
     Simulator for the kMC Model.
