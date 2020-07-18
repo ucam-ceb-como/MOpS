@@ -682,7 +682,7 @@ namespace KMC_ARS {
 	};
 
 	//! ID66.
-	class M5R_FEACR5_ZZ : public Sweep::KMC_ARS::JumpProcess {
+	class M5R_ACR5_ZZ_ZZ : public Sweep::KMC_ARS::JumpProcess {
 	public:
 		double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
 		double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
@@ -691,24 +691,6 @@ namespace KMC_ARS {
 	};
 
 	//! ID67.
-	class M5R_ZZACR5_ZZ : public Sweep::KMC_ARS::JumpProcess {
-	public:
-		double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-		double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-		void initialise();
-	};
-
-	//! ID68.
-	class M5R_ACACR5_ZZ : public Sweep::KMC_ARS::JumpProcess {
-	public:
-		double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-		double setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-		double setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);
-		void initialise();
-	};
-
-	//! ID69.
 	class MR5R7_edge : public Sweep::KMC_ARS::JumpProcess {
 	public:
 		double setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/);

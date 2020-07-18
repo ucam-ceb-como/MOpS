@@ -5915,12 +5915,6 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 			//proc_M5R_FEACR5_multiple_sites(site_perf, site_C1, site_C2, sFE2, b4, rng); break;
 			proc_M5R_FEACR5(site_perf, site_C1, site_C2); break;
 		case 67:
-			//proc_M5R_ZZACR5_multiple_sites(site_perf, site_C1, site_C2, sFE2, b4, rng); break;
-			proc_M5R_ZZACR5(site_perf, site_C1, site_C2); break;
-		case 68:
-			//proc_M5R_ACACR5_multiple_sites(site_perf, site_C1, site_C2, sFE2, b4, rng); break;
-			proc_M5R_ACACR5(site_perf, site_C1, site_C2); break;
-		case 69:
 			proc_MR5R7_edge(site_perf, site_C1, site_C2, rng); break;
         default:
             cout<<"ERROR: PAHProcess::performProcess: Process not found\n";
@@ -12549,38 +12543,6 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		updateCombinedSites(S2);
 		updateCombinedSites(S4); // neighbours
 	}
-}
-
-// ************************************************************
-// ID69- Recursive embedded 5-member ring migration from ZZACR5 site
-// ************************************************************
-void PAHProcess::proc_M5R_ZZACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng) {
-	proc_M5R_FEACR5_multiple_sites(stt, C_1, C_2, sFE2, b4, rng);
-	//proc_M5R_FEACR5(stt, C_1, C_2);
-}
-
-// ************************************************************
-// ID70- Recursive embedded 5-member ring migration from ACACR5 site
-// ************************************************************
-void PAHProcess::proc_M5R_ACACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng) {
-	proc_M5R_FEACR5_multiple_sites(stt, C_1, C_2, sFE2, b4, rng);
-	//proc_M5R_FEACR5(stt, C_1, C_2);
-}
-
-// ************************************************************
-// ID69- Recursive embedded 5-member ring migration from ZZACR5 site
-// ************************************************************
-void PAHProcess::proc_M5R_ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	//proc_M5R_FEACR5_multiple_sites(stt, C_1, C_2, sFE2, b4, rng);
-	proc_M5R_FEACR5(stt, C_1, C_2);
-}
-
-// ************************************************************
-// ID70- Recursive embedded 5-member ring migration from ACACR5 site
-// ************************************************************
-void PAHProcess::proc_M5R_ACACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
-	//proc_M5R_FEACR5_multiple_sites(stt, C_1, C_2, sFE2, b4, rng);
-	proc_M5R_FEACR5(stt, C_1, C_2);
 }
 
 // ************************************************************
