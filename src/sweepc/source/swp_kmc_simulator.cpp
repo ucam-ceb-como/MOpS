@@ -286,11 +286,11 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 			writeCHSiteCountCSV_after(PAH_ID);
 
-            if(jp_perf.first->getID() == 23 || jp_perf.first->getID() == 56) {
+            /*if(jp_perf.first->getID() == 23 || jp_perf.first->getID() == 56) {
                 std::vector<std::string> temp2 = m_simPAHp.SiteVectorString();
                 temp2.push_back(std::to_string(PAH_ID));
                 m_pah_sitelist_csv.Write(temp2);
-            }
+            }*/
 			
 			
             //Save information for a single PAH
@@ -318,7 +318,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				}*/
             }
 			//Perform instant jump processes.
-			m_kmcmech.calculateInstantRates(*m_gas, m_simPAHp, m_t);
+			/*m_kmcmech.calculateInstantRates(*m_gas, m_simPAHp, m_t);
 			if (m_kmcmech.InstantTotalRate() > 1.0) {
 				ChosenProcess jp_instant_perf = m_kmcmech.chooseInstantReaction(rng);
 				
@@ -340,7 +340,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 				m_rxn_count[m_kmcmech.JPList().size() + jp_instant_perf.second]++;
 				writeRxnCountCSV();
 				m_simPAHp.performProcess(*jp_instant_perf.first, rng, PAH_ID);
-			} // For now only realising one migration per loop.
+			} // For now only realising one migration per loop.*/
 						
 
 			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
@@ -350,7 +350,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			//	//t_next = t_max;
 			//}
 
-        }else {
+        }
+        /*else {
 			
 			//Perform instant jump processes.
 			m_kmcmech.calculateInstantRates(*m_gas, m_simPAHp, m_t);
@@ -380,7 +381,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			
             //oldtnext = t_next;
             t_next = t_max;
-        }
+        }*/
 		if (loopcount == maxloops) proceed = false; //If maxloops is set to 0, this condition will never be true
         m_t = t_next;
     }
@@ -1206,7 +1207,7 @@ void KMCSimulator::opentrackedPAHCSV(int ID) {
 //! Writes data for tracked PAH to csv file
 void KMCSimulator::writetrackedPAHCSV() {
     //Values to write
-    std::vector<int> temp;
+    std::vector<double> temp;
 	// write PAH_ID number
 	temp.push_back(m_t);
     // get CH count
