@@ -9742,7 +9742,7 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	removeC(CRem, false);
 	if (!m_pah->m_optimised){
 		OpenBabel::OBMol newmol = passPAH();
-		newmol = optimisePAH(newmol);
+		newmol = optimisePAH(newmol,250);
 		passbackPAH(newmol);
 	}
 	if (!m_pah->m_optimised){
@@ -11053,6 +11053,7 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
     updateCombinedSites(stt); updateCombinedSites(other); updateCombinedSites(newSite); 
 	updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
 	m_pah->m_rings5_Lone--;
+	addCount(0,+1);
 }
 
 // ************************************************************
@@ -12485,7 +12486,7 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else {
 		//Reassign connectivity at next site
 		if (b4) sFE2->C2 = CFE;
-		else sFE2->C1 = CFE;
+		else sFE2->C1 = Cnew;
 	}
 	if (!m_pah->m_optimised){
 		if (b4) addR5internal(sFE2->C1, sFE2->C1->C2,true);

@@ -298,9 +298,6 @@ namespace Sweep {
 			temp.push_back(R5R6FER);
 			temp.push_back(R5R6ZZR);
 			temp.push_back(R5R6ACR);
-			temp.push_back(R5R6FER);
-			temp.push_back(R5R6ZZR);
-			temp.push_back(R5R6ACR);
 			temp.push_back(ACR5);
 			temp.push_back(FEACR5);
 			temp.push_back(ZZACR5);
