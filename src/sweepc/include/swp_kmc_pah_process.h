@@ -175,6 +175,8 @@ public:
 	bool saveDOT3D(const std::string &filename, const std::string &title) const;
     //! obtains a vector of the PAH site list
     std::vector<kmcSiteType> SiteVector() const;
+    //! obtains a vector of the PAH site list
+    std::vector<std::string> SiteVectorString() const;
 	//! obtains a vector of the carbons per site in PAH site list
 	std::vector<int> SiteIntVector() const;
 	//! obtains a vector of tuples from the PAH site list
@@ -280,6 +282,7 @@ public:
     void proc_M5R_FEACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID68
     void proc_M5R_ZZACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID69
     void proc_M5R_ACACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID70
+    void proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2); //!<ID68
     void proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);	        //!<ID71
 
     // true: saves rates only, returns all site count as 1

@@ -68,7 +68,7 @@ namespace Sweep {
 			// Armchair site formed by the sides of a 6-member aromatic ring, followed by a 5-member ring, then a 6-member ring
 			//ACR5 = 18,
 			//
-			RAC_FE3 = 19,
+			RAC_FE3 = 19, MIGR = 28, MIGR2 = 38, R5R6_MIGR = 48,
 			// R5 shoulder with shoulder with an R6
 			R5R6 = 501, R5R6ZZ = 502, R5R6AC = 503, R5R6BY5 = 504,
 			// Double R5, one shouldered with R6
@@ -209,6 +209,9 @@ namespace Sweep {
 				case R5ACR5R5: return "R5ACR5R5";
 				case ACR5RFER: return "ACR5RFER";
 				case RAC_FE3: return "RAC_FE3";
+                case MIGR: return "MIGR";
+                case MIGR2: return "MIGR2";
+                case R5R6_MIGR: return "R5R6_MIGR";
 				case SPIRAL: return "SPIRAL";
                 case None: return "None";
                 case Inv: return "Invalid";
@@ -281,6 +284,10 @@ namespace Sweep {
             temp.push_back(FE2);
             temp.push_back(FE3);
             temp.push_back(AC_FE3);
+            temp.push_back(RAC_FE3);
+            temp.push_back(MIGR);
+            temp.push_back(MIGR2);
+            temp.push_back(R5R6_MIGR);
             temp.push_back(FE_HACA);
             temp.push_back(BY5_FE3);
             temp.push_back(R5R7);
@@ -288,9 +295,6 @@ namespace Sweep {
 			temp.push_back(R5R6ZZ);
 			temp.push_back(R5R6AC);
 			temp.push_back(R5R6BY5);
-			temp.push_back(R5R6FER);
-			temp.push_back(R5R6ZZR);
-			temp.push_back(R5R6ACR);
 			temp.push_back(R5R6FER);
 			temp.push_back(R5R6ZZR);
 			temp.push_back(R5R6ACR);
