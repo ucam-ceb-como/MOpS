@@ -2050,6 +2050,8 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			OpenBabel::OBBond* my_bond2 = mol.GetBond(*sn_iter, *sn_iter2);
 			if (my_bond == NULL) mol.AddBond(*sn_iter, *sn_iter1,5);
 			if (my_bond2 != NULL) mol.DeleteBond(my_bond2);
+			my_bond = mol.GetBond(*sn_iter, *sn_iter1);
+			if (my_bond->GetLength()>5.0) mol.DeleteBond(my_bond);
 			++sn_iter1;
 			++sn_iter2;
 			auto find_bridge = std::find(std::begin(bridge_neighbour), std::end(bridge_neighbour), *sn_iter);
@@ -4666,22 +4668,36 @@ PAHStructure& PAHProcess::initialise_fromfile(){
     std::vector<kmcSiteType> siteList_vec;
 	std::vector<int> carb_siteList_vec;
     for(size_t i=0; i<siteList_strvec.size(); i++) {
-        kmcSiteType temp = kmcSiteType_str(siteList_strvec[i]);
+		bool defined_length_site = false;
+		int number_carbs;
+		kmcSiteType temp = kmcSiteType_str(siteList_strvec[i]);
         if(temp == Inv) {
-            std::cout<<"ERROR: Starting Structure site List contains invalid site type"
-                <<".. (PAHProcess::initialise)\n\n";
-			std::cout<<"Site = " << siteList_strvec[i] << "\n";
-            std::ostringstream msg;
-            msg << "ERROR: Starting Structure site List contains invalid site type."
-                << " (Sweep::KMC_ARS::PAHProcess::initialise)";
-                throw std::runtime_error(msg.str());
-                assert(false);
+			//Check if site has defined length as last char
+			int last_char = siteList_strvec[i].back() - '0';
+			if(last_char >= 1 && last_char<=9){
+				number_carbs = last_char-1;
+				std::string my_string = siteList_strvec[i];
+				my_string.pop_back();
+				temp = kmcSiteType_str(my_string);
+				defined_length_site = true;
+			}
+			if(temp == Inv) {
+				std::cout<<"ERROR: Starting Structure site List contains invalid site type"
+					<<".. (PAHProcess::initialise)\n\n";
+				std::cout<<"Site = " << siteList_strvec[i] << "\n";
+				std::ostringstream msg;
+				msg << "ERROR: Starting Structure site List contains invalid site type."
+					<< " (Sweep::KMC_ARS::PAHProcess::initialise)";
+					throw std::runtime_error(msg.str());
+					assert(false);
+			}
         }
         siteList_vec.push_back(temp);
-		int number_carbs;
-		if (i==0) number_carbs = (int)temp %10 + 2; // First site accounts for m_cfirst
-		else if (i==siteList_strvec.size()-1) number_carbs = (int)temp %10; // Last site closes PAH on m_cfirst.
-		else number_carbs = (int)temp %10 + 1;
+		if (!defined_length_site){
+			if (i==0) number_carbs = (int)temp %10 + 2; // First site accounts for m_cfirst
+			else if (i==siteList_strvec.size()-1) number_carbs = (int)temp %10; // Last site closes PAH on m_cfirst.
+			else number_carbs = (int)temp %10 + 1;
+		} 
 		carb_siteList_vec.push_back(number_carbs);
     }
 	createPAH_fromfile(siteList_vec, carb_siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, edgeCarbons, internalCarbons, R5_locs, R7_locs);
@@ -5717,8 +5733,8 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
     
     // choose random site of type stp to perform process
 	site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
+	//printSites(site_perf);
 	if ( site_perf->type != stp && site_perf->comb != stp && stp != benz && stp != Methyl){
-		
 		cout << "chooseRandomSite ERROR. Choose random site selected incorrect site. Error. Not performing jump process.\n";
 		cout << "Jump process performed: " << id << ". " << jp.getName() << "\n";
 		printSites(site_perf);
@@ -8958,10 +8974,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	bool optimised = true;
 	if (R5_dist < 1.6){
 		//The ACR5 site is on the "short" side of an R5. 
-		/*optimised = true;
+		optimised = true;
 		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);*/
+		mol = optimisePAH(mol, 250);
+		passbackPAH(mol);
 	}
 	
 	// check if ACR5 has an opposite site.
@@ -9046,9 +9062,9 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	removeC(CRem, false);
 	if (optimised){
 		//The ACR5 site is on the "short" side of an R5. 
-		/*OpenBabel::OBMol newmol = passPAH();
+		OpenBabel::OBMol newmol = passPAH();
 		newmol = optimisePAH(newmol, 250); // Only 250 steps for this test. Although more are probably needed.
-		passbackPAH(newmol);*/
+		passbackPAH(newmol);
 	}
 	
 	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
@@ -9096,8 +9112,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		else sFE2->C1 = C_1->C2->C2;
 	}
 
-	if (b4) addR5internal(sFE2->C1, sFE2->C1->C2,true);
-	else addR5internal(sFE2->C2->C1, sFE2->C2,true);
+	if (!optimised){
+		if (b4) addR5internal(sFE2->C1, sFE2->C1->C2,true);
+		else addR5internal(sFE2->C2->C1, sFE2->C2,true);
+	}
 	// edit sites. first identify the neighbouring sites of resulting RFE & R5
 	Spointer S1, S2, S3, S4;
 	if (b4) {

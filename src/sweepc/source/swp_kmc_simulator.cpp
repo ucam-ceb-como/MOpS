@@ -51,6 +51,7 @@
 
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <time.h>
 #include <math.h>
 #include <cstdlib>
@@ -248,14 +249,14 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             // Choose jump according to rates
             ChosenProcess jp_perf = m_kmcmech.chooseReaction(rng);
 			
-			if (save_pah_detail){
+			/*if (save_pah_detail){
 				//Add PAH to tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
 				int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
 				if (R5R7 >= 2) addTrackedPAH(PAH_ID); 	
 				//if (R5R7 >= 1 || std::get<0>(m_simPAHp.getRingsCount()) >= 7) addTrackedPAH(PAH_ID); 	
 				/*else if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
-						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); */
-            }
+						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); 
+            }*/
             //Save information for a single PAH
             auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
             if (finder != m_tracked_pahs.end()){
@@ -280,9 +281,15 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			
             std::vector<std::string> temp = m_simPAHp.SiteVectorString();
             temp.push_back(std::to_string(PAH_ID));
+            std::ostringstream streamObj;
+            streamObj << std::setprecision(7);
+            streamObj << m_t;
+            std::string streamObj_string = streamObj.str();
+            temp.push_back(streamObj_string);
             m_pah_sitelist_csv.Write(temp);
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
+            cout << m_t << std::endl;
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
 			writeCHSiteCountCSV_after(PAH_ID);
 
