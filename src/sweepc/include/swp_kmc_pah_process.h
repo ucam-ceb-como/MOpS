@@ -132,6 +132,12 @@ public:
     //! Structure processes: returns success or failure
     int performMigrationProcess(const JumpProcess& jp, std::map<std::string,double> rates, int N_end_steps, rng_type &rng, int PAH_ID);
 
+    //! Called before migration process starts. Loops through the random walker sites and appends them.
+    void startMigrationProcess();
+
+    //! Called after migration processes. Loops through the random walker sites and moves them to end locations.
+    void performMigrationProcess();
+
     // Read Processes
     //! Get Counts
     intpair getCHCount() const;
@@ -234,55 +240,58 @@ public:
     //void proc_M5R_eZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);
     
 	void proc_D6R_FE_AC(Spointer& stt, Cpointer C_1, Cpointer C_2);
-	void proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID22.
-	void proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID23.
-	void proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID24.
-	void proc_G6R_RFER(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID25.
-	void proc_G6R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID26.
-	void proc_L6_RBY5(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID27.
-	void proc_L6_RACR(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID28.
-	void proc_G5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID29.
-	void proc_C6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID30.
-	void proc_C6R_RAC_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);   //!< ID31.
-	void proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID32.
-	void proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID34.
-	void proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID35.
-	void proc_GR7_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			//!< ID36.
-	void proc_G6R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID37.
-	void proc_L7_ACACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                         //!< ID38.
-	void proc_G6R_R5R6FER(Spointer& stt, Cpointer C_1, Cpointer C_2);                       //!< ID39.
-	void proc_G6R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                    //!< ID40.
-	void proc_L7_FEZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                       //!< ID41
-	void proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);           //!< ID42
-	void proc_C5R_R5R6ZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID43
-	void proc_L6_R5R6BY5(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID44
-	void proc_L6_R5R6ACR(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID45
-	void proc_L6_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID46
-	void proc_L6_ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                         //!< ID47
-	void proc_L6_R5FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                       //!< ID48
-	void proc_L6_FEACR5FE(Spointer& stt, Cpointer C_1, Cpointer C_2);                       //!< ID49
-	void proc_L6_R5ACR5R5(Spointer& stt, Cpointer C_1, Cpointer C_2);                       //!< ID50
-	void proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                       //!< ID51
-	void proc_L6_ACR5R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                       //!< ID52
-	void proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID53
-	void proc_A_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);              //!< ID54
-	void proc_D_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2);                     		//!< ID55
-	void proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);           //!< ID56
-	void proc_O5R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);         //!< ID57
-	void proc_O5R_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);         //!< ID58
-	void proc_O5R_R5R6BY5(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID59
-	void proc_O5R_R5R6FER(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID60
-	void proc_O5R_R5R6ZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID61
-	void proc_O5R_R5R6ACR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);        //!< ID62
-	void proc_O5R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID63
-	void proc_O5R_R5R6ZZR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID64
-	void proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);     //!< ID65
-	void proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng);	//!<ID66
-	void proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng);	//!<ID67
-    void proc_M5R_FEACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID68
-    void proc_M5R_ZZACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID69
-    void proc_M5R_ACACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID70
-    void proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2); //!<ID68
+	void proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                              //!< ID22.
+	void proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);            //!< ID23.
+    void proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_2);                     //!< ID23.
+    void proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);   //!< ID23.
+	void proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                               //!< ID24.
+	void proc_G6R_RFER(Spointer& stt, Cpointer C_1, Cpointer C_2);                              //!< ID25.
+	void proc_G6R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2);                                //!< ID26.
+	void proc_L6_RBY5(Spointer& stt, Cpointer C_1, Cpointer C_2);                               //!< ID27.
+	void proc_L6_RACR(Spointer& stt, Cpointer C_1, Cpointer C_2);                               //!< ID28.
+	void proc_G5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2);                               //!< ID29.
+	void proc_C6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);            //!< ID30.
+	void proc_C6R_RAC_FE3violi(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);       //!< ID31.
+	void proc_M6R_RAC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);            //!< ID32.
+	void proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                                //!< ID34.
+    void proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2);                          //!< ID34.
+	void proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2);             			    //!< ID35.
+	void proc_GR7_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);             			    //!< ID36.
+	void proc_G6R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID37.
+	void proc_L7_ACACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                             //!< ID38.
+	void proc_G6R_R5R6FER(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID39.
+	void proc_G6R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!< ID40.
+	void proc_L7_FEZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID41
+	void proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);               //!< ID42
+	void proc_C5R_R5R6ZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);            //!< ID43
+	void proc_L6_R5R6BY5(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID44
+	void proc_L6_R5R6ACR(Spointer& stt, Cpointer C_1, Cpointer C_2);                            //!< ID45
+	void proc_L6_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                         //!< ID46
+	void proc_L6_ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                             //!< ID47
+	void proc_L6_R5FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID48
+	void proc_L6_FEACR5FE(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID49
+	void proc_L6_R5ACR5R5(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID50
+	void proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID51
+	void proc_L6_ACR5R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2);                           //!< ID52
+	void proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2);                         //!< ID53
+	void proc_A_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);                  //!< ID54
+	void proc_D_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2);                     		    //!< ID55
+	void proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);               //!< ID56
+	void proc_O5R_R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);             //!< ID57
+	void proc_O5R_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);             //!< ID58
+	void proc_O5R_R5R6BY5(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);            //!< ID59
+	void proc_O5R_R5R6FER(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);            //!< ID60
+	void proc_O5R_R5R6ZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);            //!< ID61
+	void proc_O5R_R5R6ACR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);            //!< ID62
+	void proc_O5R_R5R6FER5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);         //!< ID63
+	void proc_O5R_R5R6ZZR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);         //!< ID64
+	void proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);         //!< ID65
+	void proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4);	//!<ID66
+	void proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4);	//!<ID67
+    void proc_M5R_FEACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4); //!<ID68
+    //void proc_M5R_ZZACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID69
+    //void proc_M5R_ACACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID70
+    void proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!<ID68
     void proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng);	        //!<ID71
 
     // true: saves rates only, returns all site count as 1

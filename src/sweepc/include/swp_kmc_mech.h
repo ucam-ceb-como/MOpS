@@ -104,9 +104,7 @@ namespace KMC_ARS {
 
         //! Calculates jump rate for each jump process
         void calculateRates(const KMCGasPoint& gp, PAHProcess& st, const double& t);
-			
-		//! Calculates jump rate for each instant jump process
-        void calculateMigrationRates(const KMCGasPoint& gp, PAHProcess& st, const double& t);
+		
         
         // DATA ACCESS
 
@@ -118,36 +116,20 @@ namespace KMC_ARS {
 
         //! Returns total rates
         double TotalRate() const;
-
-		//! Returns total rates
-        void SetIncludeMigrationRates(bool migr_flag);
-
-		//! Returns rates for migration process
-		std::map<std::string,double> MigrationRates() const;
 		
     private:
         //! Vector of jump processes
         std::vector<JumpProcess*> m_jplist;
-		//! Vector of jump processes that are near instant
-        std::map<std::string, std::vector<JumpProcess*>> m_jplist_instant;
         //! Returns a vector of jump processes implemented in model
         std::vector<JumpProcess*> obtainJumpProcess();
 		//! Returns a vector of instant jump processes implemented in model.
         std::map<std::string, std::vector<JumpProcess*>> obtainInstantJumpProcess();
-		//! Initializes the migration rate map.
-		std::map<std::string, double> InitializeMigrationRateMap();
         //! Checks if this mechanism object is a copy
         bool isACopy;
         //! Vector of jump rates
         std::vector<double> m_rates;
-		//! Vector of instant jump rates
-        std::map<std::string, double> m_instant_rates;
         //! Total rate
         double m_totalrate;
-		//! Total rate for instant jump processes
-        double m_instant_totalrate;
-		//! Include migration jump processes in rate calculation
-		bool m_include_migration;
     };
         
     //! Process list:

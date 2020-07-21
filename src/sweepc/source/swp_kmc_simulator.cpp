@@ -51,6 +51,7 @@
 
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <time.h>
 #include <math.h>
 #include <cstdlib>
@@ -214,6 +215,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
         // Calculate time step, update time
 		//Interpolate gas phase species and temperature.
+        bool m_migrate = false;
 
 		m_gas->Interpolate(m_t, r_factor);
 		
@@ -248,14 +250,14 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             // Choose jump according to rates
             ChosenProcess jp_perf = m_kmcmech.chooseReaction(rng);
 			
-			if (save_pah_detail){
+			/*if (save_pah_detail){
 				//Add PAH to tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
 				int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
 				if (R5R7 >= 2) addTrackedPAH(PAH_ID); 	
 				//if (R5R7 >= 1 || std::get<0>(m_simPAHp.getRingsCount()) >= 7) addTrackedPAH(PAH_ID); 	
-				/*else if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
-						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); */
-            }
+				else if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
+						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); 
+            }*/
             //Save information for a single PAH
             auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
             if (finder != m_tracked_pahs.end()){
@@ -277,92 +279,35 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			//writeTimerCSV();
 			rates = m_kmcmech.Rates();
 			writeRatesCSV(m_t, rates);
-            double migration_rates = 0.0;
-            for (unsigned int ii = 0; ii!= rates.size(); ii++){
-                int jp_num = m_kmcmech.JPList()[ii]->getID();
-                if (jp_num == 24 || jp_num == 34 || jp_num == 66 || jp_num == 67 || jp_num == 68){
-                    migration_rates += rates[ii];
-                }
-            }
-			
+
+            //Saves the site list to file. Used to verify that migration by both methods gives same results
+            std::vector<std::string> temp = m_simPAHp.SiteVectorString();
+            temp.push_back(std::to_string(PAH_ID));
+            std::ostringstream streamObj;
+            streamObj << std::setprecision(7);
+            streamObj << m_t;
+            std::string streamObj_string = streamObj.str();
+            temp.push_back(streamObj_string);
+            m_pah_sitelist_csv.Write(temp);
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
-            if (jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34 || jp_perf.first->getID() == 66 || jp_perf.first->getID() == 67 || jp_perf.first->getID() == 68) {
-                //We need an updated t_next for N_migration_steps
-                //Generate exponentially distributed waiting time
-                exponential_distrib waitingTimeDistrib_Migration(m_kmcmech.TotalRate()-migration_rates);
-                boost::variate_generator<rng_type &, exponential_distrib> waitingTimeGenerator_Migration(rng, waitingTimeDistrib_Migration);
-                t_step = waitingTimeGenerator_Migration();
-                t_next = m_t + t_step;
-
-                //Calculate the migration rates used for the random walk
-                m_kmcmech.calculateMigrationRates(*m_gas, m_simPAHp, m_t);
-                std::map<std::string,double> migr_rates = m_kmcmech.MigrationRates();
-
-                //Calculate N_migration_steps with parameter (TotalRate - Migr.Rate) / Migr.Rate
-                double lambda_param = (m_kmcmech.TotalRate()-migration_rates)/(migration_rates);
-                boost::exponential_distribution<double> N_stepsDistrib(lambda_param);
-                boost::variate_generator<rng_type &, boost::exponential_distribution<double>> N_stepsGenerator(rng, N_stepsDistrib);
-                int N_end_steps = (int)N_stepsGenerator();
-
-                //Check how many of these steps fit in t_step
-                int N_actual_steps = 0;
-                double m_t_copy = m_t;
-                std::vector<double> times_advanced;
-                for (N_actual_steps=0; N_actual_steps!= N_end_steps; N_actual_steps++){
-                    double t_step_migration = waitingTimeGenerator();
-                    if (m_t_copy+t_step_migration < t_next) {
-                        m_t_copy = m_t_copy+t_step_migration;
-                        times_advanced.push_back(t_step_migration);
-                    }
-                    else break;
+            if (jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34 || jp_perf.first->getID() == 66 ) {
+                //Migration jump processes. Set flag m_migrate to true.
+                if (!m_migrate) {
+                    m_simPAHp.startMigrationProcess();
+                    m_migrate = true; 
                 }
-
-                //Perform N_migration_steps
-                int N_steps_performed;
-                if (N_actual_steps>0){
-                    N_steps_performed = m_simPAHp.performMigrationProcess(*jp_perf.first, migr_rates, N_actual_steps, rng, PAH_ID);
-                }else N_steps_performed=0;
-                
-                //Program can perform up to N_actual_steps. N_steps_performed <= N_actual_steps. Advance the time for these steps.
-                for (N_actual_steps=0; N_actual_steps!= N_steps_performed; N_actual_steps++){
-                    m_t = m_t+times_advanced[N_actual_steps];
-                    if (tracked_csv) writetrackedPAHCSV();
-                }
-                //Make that the next jump process is NOT a migration one.
-                m_kmcmech.SetIncludeMigrationRates(false);
+                m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
             }
             else {
+                if (m_migrate){
+                    //First update the multiple migration transformation
+                    m_simPAHp.performMigrationProcess();
+                    m_migrate = false;
+                }
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
-                m_kmcmech.SetIncludeMigrationRates(true); //If this was not a migration, allow migrations for next iteration.
             }
 			writeCHSiteCountCSV_after(PAH_ID);
-			
-			
-            //Save information for a single PAH
-            /*if (std::count(m_tracked_pahs.begin(),m_tracked_pahs.end(),PAH_ID) ){
-                std::string xyzname = ("KMC_DEBUG/");
-                xyzname.append(std::to_string(PAH_ID));
-                xyzname.append("/");
-                //std::string xyzname2 = xyzname;
-                xyzname.append(std::to_string(m_t*1000.0));
-                xyzname.append("_B");
-                savePAH(PAH_ID, xyzname);
-                //xyzname2.append(std::to_string(PAH_ID));
-                //xyzname2.append("trajectory");
-                //m_simPAHp.save_trajectory_xyz(m_t, xyzname2, false);
-            }*/
-			
-            if (save_pah_detail){
-				//Remove PAH from tracked list on the fly. These are the conditions in which the user wants to save files. They need to be adjusted manually.
-				/*int R5R7 = (m_simPAHp.getR5EmbeddedCount() + m_simPAHp.getR7EmbeddedCount());
-				if (R5R7 < 1 && std::get<0>(m_simPAHp.getRingsCount()) <= 20) {
-					if (jp_perf.first->getID() == 23 || jp_perf.first->getID() == 35 || jp_perf.first->getID() == 36 || jp_perf.first->getID() == 38 
-						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) ){
-						removeTrackedPAH(PAH_ID);
-					}
-				}*/
-            }
 
 			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
 			//Set t_next to t_max so the updatePAH routine will be exited
@@ -637,6 +582,7 @@ void KMCSimulator::initCSVIO() {
     m_rates_csv.Open(m_rates_name, true);
 	m_testrates_csv.Open(m_testrates_name, true);
     m_timestep_csv.Open(m_timestep_name, true);//##
+    m_pah_sitelist_csv.Open("KMC_Model/Site_list_arrange.csv",true);
     // Write column headings for CSV files
     writeCSVlabels();
 }
