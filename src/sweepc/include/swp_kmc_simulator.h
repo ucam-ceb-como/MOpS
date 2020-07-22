@@ -232,6 +232,8 @@ namespace Sweep{
             PAHProcess m_simPAHp;
             //! Reaction Counter
             std::vector<int> m_rxn_count;
+            //! Migration being delayed flag
+            bool m_migrate = false;
         };
 
         // to write C-H data for PAHs after intervals

@@ -233,9 +233,9 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	//temp.push_back(j_G5R_RFE);          //!< 30 - R5 growth on RFE.
 	temp.push_back(j_C6R_RAC_FE3);      //!< 31 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_C6R_RAC_FE3violi); //!< 32 - R6 migration & conversion to R5 at RAC.
-	temp.push_back(j_M6R_RAC_FE3);      //!< 33 - R6 desorption at RAC -> pyrene.
+	temp.push_back(j_M6R_RAC_FE3);      //!< 33 - R6 desorption at RAC -> pyrene.*/
 	temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6. //Moved to instant jump process list.
-	temp.push_back(j_GR7_R5R6AC);           //!< 35 - R7 growth on R5R6AC.
+	/*temp.push_back(j_GR7_R5R6AC);           //!< 35 - R7 growth on R5R6AC.
 	temp.push_back(j_GR7_FEACR5);           //!< 36 - R7 growth on FEACR5.
 	temp.push_back(j_G6R_R5R6ZZ);          //!< 37 - R6 growth on R5R6ZZ.
 	temp.push_back(j_L7_ACACR5);          //!< 38 - R7 bay closure on ACACR5.

@@ -289,6 +289,7 @@ public:
 	void proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4);	//!<ID66
 	void proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4);	//!<ID67
     void proc_M5R_FEACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4); //!<ID68
+    void proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4);
     //void proc_M5R_ZZACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID69
     //void proc_M5R_ACACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID70
     void proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!<ID68
@@ -335,6 +336,8 @@ private:
 	cpair add_vector(cpair vec1, cpair vec2)const;
 	//! Returns the normal vector to the face of a ring.
 	cpair norm_vector(cpair p1, cpair p2, cpair p3)const;
+    //! Returns the angle in DEGREES between three points.
+    double get_angle(cpair p1, cpair p2, cpair p3)const;
 	//! Returns the cross product of two vectors. If v1 is the surface normal vector and v2 goes from C->newC v1xv2 redefines the next growth vector.
 	cpair cross_vector(cpair vec1, cpair vec2)const;
     //! Search a particular site (si) from svector associated with stype and erases it from sitemap
@@ -455,6 +458,8 @@ private:
     void updateCombinedSites();
     //! Combined site for a particular site
     void updateCombinedSites(Spointer& st);
+    //! Combined site for a particular site, special case for migration processes.
+    void updateCombinedSitesMigration(Spointer& st, bool b4=true);
     //! Sets third species bonded to C to a species sp if it is a reactive surface carbon
     void updateA(Cpointer C, char sp);
 	//! Overload function, forces char to C atom.
