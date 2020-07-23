@@ -11969,7 +11969,7 @@ void PAHProcess::proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, 
 }
 
 // ************************************************************
-// ID66- Recursive embedded 5-member ring migration
+// ID66- Five member ring migration around the corner
 // ************************************************************
 void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4) {
 	// The pentagon migrated N times and ended at the same position.
@@ -12046,63 +12046,63 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
 		if (b4) {
 			Spointer sFE2_right = moveIt(sFE2, +1);
-			updateSites(sFE2_right, CRem_before, sFE2_right->C2, +0);
+			updateSites(sFE2_right, CRem_before, sFE2_right->C2, +100);
 			convSiteType(checkR5_1, CRem_next, CRem_before, R5);
-			updateSites(checkR5_2, checkR5_2->C1, CRem_next, +0);
+			updateSites(checkR5_2, checkR5_2->C1, CRem_next, +100);
 		}
 		else {
 			Spointer sFE2_left = moveIt(sFE2, -1);
-			updateSites(sFE2_left, sFE2_left->C1, CRem_before, +0);
+			updateSites(sFE2_left, sFE2_left->C1, CRem_before, +100);
 			convSiteType(checkR5_1, CRem_before, CRem_next, R5);
-			updateSites(checkR5_2, CRem_next, checkR5_2->C2, +0);
+			updateSites(checkR5_2, CRem_next, checkR5_2->C2, +100);
 		}
 		removeSite(sFE2);
 	}
 	else if ((int)sFE2->type == 0){
 		//This means that the pentagon has migrated to the edge but will have a single carbon out of the structure.
 		if (b4) {
-			updateSites(S1, S1->C1, sFE2->C1, 0);
-			updateSites(S2, sFE2->C1, S2->C2, 0);
+			updateSites(S1, S1->C1, sFE2->C1, 500);
+			updateSites(S2, sFE2->C1, S2->C2, 500);
 		}
 		else {
-			updateSites(S1, S1->C1, sFE2->C2, 0);
-			updateSites(S2, sFE2->C2, S2->C2, 0);
+			updateSites(S1, S1->C1, sFE2->C2, 500);
+			updateSites(S2, sFE2->C2, S2->C2, 500);
 		}
 		removeSite(sFE2);
 	}
 	else if ((int)sFE2->type >= 1 && (int)sFE2->type <= 4){
 		//This means that the pentagon has migrated to a basic site.
 		if (b4) {
-			updateSites(S2, sFE2->C1, S2->C2, 0);
-			/*if ((int)S2->type<2000) {
+			updateSites(S2, sFE2->C1, S2->C2, 2000 + (int)sFE2->type);
+			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
 				updateSites(S4, S4->C1, S4->C2,+500);
-			}*/
+			}
 		}
 		else {
-			updateSites(S1, S1->C1, sFE2->C2, 0);
-			/*if ((int)S1->type<2000) {
+			updateSites(S1, S1->C1, sFE2->C2, 2000 + (int)sFE2->type);
+			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
 				updateSites(S3, S3->C1, S3->C2,+500);
-			}*/
+			}
 		}
 		removeSite(sFE2);
 	}
 	else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){
 		//This means that the pentagon has migrated to neighbour an edge R5 edge.
 		if (b4) {
-			updateSites(S2, sFE2->C1, S2->C2, 0);
-			/*if ((int)S2->type<2000) {
+			updateSites(S2, sFE2->C1, S2->C2, 2000 + (int)sFE2->type);
+			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
 				updateSites(S4, S4->C1, S4->C2,+500);
-			}*/
+			}
 		}
 		else {
-			updateSites(S1, S1->C1, sFE2->C2, 0);
-			/*if ((int)S1->type<2000) {
+			updateSites(S1, S1->C1, sFE2->C2, 2000 + (int)sFE2->type);
+			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
 				updateSites(S3, S3->C1, S3->C2,+500);
-			}*/
+			}
 		}
 		removeSite(sFE2);
 	}
@@ -12111,36 +12111,36 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		Spointer S1 = moveIt(sFE2, -1);
 		Spointer S2 = moveIt(sFE2, +1);
 		if (b4) {
-			updateSites(S2, sFE2->C1, S2->C2, 0);
-			/*if ((int)S2->type<2000) {
+			updateSites(S2, sFE2->C1, S2->C2, 1600 + (int)sFE2->type);
+			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
 				updateSites(S4, S4->C1, S4->C2,+500);
-			}*/
+			}
 		}
 		else {
-			updateSites(S1, S1->C1, sFE2->C2, 0);
-			/*if ((int)S1->type<2000) {
+			updateSites(S1, S1->C1, sFE2->C2, 1600 + (int)sFE2->type);
+			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
 				updateSites(S3, S3->C1, S3->C2,+500);
-			}*/
+			}
 		}
 		removeSite(sFE2);
 	}
 	else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){
 		//This means that the pentagon has migrated to a bay containing an R5.
 		if (b4) {
-			updateSites(S2, sFE2->C1, S2->C2, 0);
-			/*if ((int)S2->type<2000) {
+			updateSites(S2, sFE2->C1, S2->C2, 100 + (int)sFE2->type);
+			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
 				updateSites(S4, S4->C1, S4->C2,+500);
-			}*/
+			}
 		}
 		else {
-			updateSites(S1, S1->C1, sFE2->C2, 0);
-			/*if ((int)S1->type<2000) {
+			updateSites(S1, S1->C1, sFE2->C2, 100 + (int)sFE2->type);
+			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
 				updateSites(S3, S3->C1, S3->C2,+500);
-			}*/
+			}
 		}
 		removeSite(sFE2);
 	}
@@ -12156,8 +12156,95 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	}
 	S3 = moveIt(S1, -1);
 	S4 = moveIt(S2, +1);
-	updateCombinedSites(stt_1); updateCombinedSites(stt); updateCombinedSites(newSite); updateCombinedSites(stt_2);
-	updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
+	updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
+	updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2); updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4);
+	
+	//Adjust opposite sites for starting and ending position.
+	if (opp_site_bool && opp_site_bool_second) {
+		if (opp_site == opp_site_second) opp_site_bool_second = false;
+	}
+	if (opp_site_bool) {
+		if ( (int)opp_site->type >= 2100) {
+			Spointer S1_opp_site = moveIt(opp_site, -1);
+			Spointer S2_opp_site = moveIt(opp_site, +1);
+			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
+				updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+			}
+			else updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
+		}
+		else if  ((int)opp_site->type >= 2000) updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+		else updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
+		updateCombinedSitesMigration(opp_site);
+	}
+	if (opp_site_bool_second) {
+		if ( (int)opp_site_second->type >= 2100) {
+			Spointer S1_opp_site = moveIt(opp_site_second, -1);
+			Spointer S2_opp_site = moveIt(opp_site_second, +1);
+			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
+				updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -2000);
+			}
+			else updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -100);
+		}
+		else updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -2000);
+		updateCombinedSitesMigration(opp_site_second);
+	}
+
+	if (opp_site_bool_after && opp_site_bool_after_second){
+		if (opp_site_after == opp_site_after_second){
+			opp_site_bool_after_second = false;
+		}
+		else{
+			if (opp_site_after_second != stt_1 && opp_site_after_second != stt_2 && opp_site_after_second != S1 && opp_site_after_second != S2 &&
+				opp_site_after != stt_1 && opp_site_after != stt_2 && opp_site_after != S1 && opp_site_after != S2) {
+					if ((int)opp_site_after_second->type >= 500 && (int)opp_site_after_second->type <= 700) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -400);
+					else if ((int)opp_site_after_second->type >= 1000 && (int)opp_site_after_second->type <= 2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -800);
+					
+					if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
+					else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
+					
+					if ( (int)opp_site_after_second->type >=2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +100);
+					else updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +500);
+
+					if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
+					else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
+
+					updateCombinedSitesMigration(opp_site_after_second); updateCombinedSitesMigration(opp_site_after);
+					Spointer opps1 = moveIt(opp_site_after_second,-1);
+					Spointer opps2 = moveIt(opp_site_after_second,+1);
+					Spointer opps3 = moveIt(opp_site_after,-1);
+					Spointer opps4 = moveIt(opp_site_after,+1);
+					updateCombinedSitesMigration(opps1); updateCombinedSitesMigration(opps2); updateCombinedSitesMigration(opps3); updateCombinedSitesMigration(opps4);
+				}
+		}
+	}
+	else if(opp_site_bool_after){
+		if (opp_site_after != stt_1 && opp_site_after != stt_2 && opp_site_after != S1 && opp_site_after != S2) {
+			if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
+			else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
+
+			if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
+			else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
+		
+			updateCombinedSitesMigration(opp_site_after);
+			Spointer opps1 = moveIt(opp_site_after,-1);
+			Spointer opps2 = moveIt(opp_site_after,+1);
+			updateCombinedSitesMigration(opps1); updateCombinedSitesMigration(opps2);
+		}
+	}
+	else if(opp_site_bool_after_second){
+		if (opp_site_after_second != stt_1 && opp_site_after_second != stt_2 && opp_site_after_second != S1 && opp_site_after_second != S2) {
+			if ((int)opp_site_after_second->type >= 500 && (int)opp_site_after_second->type <= 700) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -400);
+			else if ((int)opp_site_after_second->type >= 1000 && (int)opp_site_after_second->type <= 2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -800);
+
+			if ( (int)opp_site_after_second->type >=2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +100);
+			else updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +2000);
+
+			updateCombinedSitesMigration(opp_site_after_second);
+			Spointer opps1 = moveIt(opp_site_after_second,-1);
+			Spointer opps2 = moveIt(opp_site_after_second,+1);
+			updateCombinedSitesMigration(opps1); updateCombinedSitesMigration(opps2);
+		}
+	}
 }
 
 // ************************************************************
@@ -13723,7 +13810,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		Spointer start_site = std::get<0>(m_pah->m_R5walker_sites[ii]);
 		Cpointer start_site_C1 = start_site->C1;
 		Cpointer start_site_C2 = start_site->C2;
-		proc_M5R_ACR5_multiple_sites(start_site,start_site_C1,start_site_C2,sFE2,b4);
+		proc_M5R_ACR5_around_corner(start_site,start_site_C1,start_site_C2,sFE2,b4);
 		return;
 	}
 	//Carbon transformations
