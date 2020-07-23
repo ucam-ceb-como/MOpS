@@ -161,9 +161,9 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //JumpProcess* j_O6R_FE3_OH = new O6R_FE3_OH; j_O6R_FE3_OH->initialise();						//!  7- R6 Oxidation at FE by OH [AR11].
     JumpProcess* j_O6R_FE_HACA = new O6R_FE_HACA; j_O6R_FE_HACA->initialise();					//!  8- R6 Oxidation at FE-HACA [AR12].
     //JumpProcess* j_O6R_FE_HACA_OH = new O6R_FE_HACA_OH; j_O6R_FE_HACA_OH->initialise();			//!  9- R6 Oxidation at AC by OH [AR13].
-    JumpProcess* j_G5R_ZZ = new G5R_ZZ; j_G5R_ZZ->initialise();									//! 10- R5 growth at ZZ [AR3].
+    JumpProcess* j_G5R_ZZ = new G5R_ZZ; j_G5R_ZZ->initialise();									//! 10- R5 growth at ZZ [AR3].*/
     JumpProcess* j_D5R_R5 = new D5R_R5; j_D5R_R5->initialise();									//! 11- R5 desorption [AR7].
-    JumpProcess* j_C6R_AC_FE3 = new C6R_AC_FE3; j_C6R_AC_FE3->initialise();						//! 12- R6 conversion to R5 [AR9].
+    /*JumpProcess* j_C6R_AC_FE3 = new C6R_AC_FE3; j_C6R_AC_FE3->initialise();						//! 12- R6 conversion to R5 [AR9].
     JumpProcess* j_C5R_RFE = new C5R_RFE; j_C5R_RFE->initialise();                              //! 13- R5 conversion to R6 on RFE [AR5].
     JumpProcess* j_C5R_RAC = new C5R_RAC; j_C5R_RAC->initialise();                              //! 14- R5 conversion to R6 on AC [AR4].
     JumpProcess* j_M5R_RZZ = new M5R_RZZ; j_M5R_RZZ->initialise();                              //! 15- R5 migration to neighbouring ZZ [AR6]. 
@@ -231,9 +231,9 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //temp.push_back(j_O6R_FE3_OH);        //!  7- R6 Oxidation at FE by OH [AR11].
     temp.push_back(j_O6R_FE_HACA);    //!  R6 Oxidation at FE-HACA [AR12].
     //temp.push_back(j_O6R_FE_HACA_OH);    //!  9- R6 Oxidation at AC by OH [AR13].
-    temp.push_back(j_G5R_ZZ);            //! 10- R5 growth at ZZ [AR3].
+    temp.push_back(j_G5R_ZZ);            //! 10- R5 growth at ZZ [AR3].*/
     temp.push_back(j_D5R_R5);            //! 11- R5 desorption [AR7].
-    temp.push_back(j_C6R_AC_FE3);        //! 12- R6 conversion to R5 [AR9].
+    /*temp.push_back(j_C6R_AC_FE3);        //! 12- R6 conversion to R5 [AR9].
     temp.push_back(j_C5R_RFE);           //! 13- R5 conversion to R6 on RFE [AR5].
     temp.push_back(j_C5R_RAC);           //! 14- R5 conversion to R6 on AC [AR4].
     temp.push_back(j_M5R_RZZ);           //! 15- R5 migration to neighbouring ZZ [AR6]. 
