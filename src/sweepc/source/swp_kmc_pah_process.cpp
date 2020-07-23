@@ -11974,6 +11974,20 @@ void PAHProcess::proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, 
 void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4) {
 	// The pentagon migrated N times and ended at the same position.
 	if (sFE2 == stt) return;
+
+	int steps=-99999;
+	unsigned int ii = 0;
+	for (ii = 0; ii != m_pah->m_R5walker_sites.size();ii++){
+		Spointer migr_site_start = std::get<0>(m_pah->m_R5walker_sites[ii]);
+		Spointer site_check = moveIt(migr_site_start, std::get<1>(m_pah->m_R5walker_sites[ii]));
+		if (site_check == sFE2){
+			steps = std::get<1>(m_pah->m_R5walker_sites[ii]);
+			break;
+		}
+	}
+	if (steps==-99999){
+		std::cout << "Error on R5 migration. " << std::endl;
+	}
 	//Remove R5coords from m_pah->m_R5loc. This is done by starter function/
 	//findR5internal(C_1->C2, C_2->C1);
 	// First select carbons and sites affected.
@@ -12002,6 +12016,39 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		CRem_before = CRem->C1;
 	}
 	//int end_site_type = (int)sFE2->type;
+	// check if ACR5 has an opposite site.
+	Spointer opp_site, opp_site_second, opp_site_after, opp_site_after_second;
+	bool opp_site_bool = false; bool opp_site_bool_second = false; bool opp_site_bool_after = false; bool opp_site_bool_after_second = false;
+	Cpointer thirdC = findThirdC(CR5_otherside_1);
+	Cpointer thirdC2 = findThirdC(CR5_otherside_2);
+	Cpointer thirdC_after = findThirdC(CRem_before);
+	Cpointer thirdC_after2 = findThirdC(CRem_next);
+
+	// Seven cases:
+	// 1. One pentagon has one exposed edge  and migrates to a location where it will have one exposed edge. Normal migration.
+	// 2. One pentagon has one exposed edge  and migrates to a location where it will have two exposed edges. 
+	// 3. One pentagon has two exposed edges and migrates to a location where it will have two exposed edges. 
+	// 4. One pentagon has two exposed edges and migrates to a location where it will have one exposed edge.
+	// 5. One pentagon has two exposed edges and migrates to a location where it will have three exposed edges.
+	// 6. One pentagon has three exposed edges and migrates to a location where it will have three exposed edges.
+	// 7. One pentagon has three exposed edges and migrates to a location where it will have two exposed edges.
+	
+	if (thirdC != NULLC) {
+		opp_site = findSite(thirdC);
+		if (opp_site != m_pah->m_siteList.end()) opp_site_bool = true;
+	}
+	if (thirdC2 != NULLC) {
+		opp_site_second = findSite(thirdC2);
+		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
+	}
+	if (thirdC_after != NULLC) {
+		opp_site_after = findSite(thirdC_after);
+		if (opp_site_after != m_pah->m_siteList.end()) opp_site_bool_after = true;
+	}
+	if (thirdC_after2 != NULLC) {
+		opp_site_after_second = findSite(thirdC_after2);
+		if (opp_site_after_second != m_pah->m_siteList.end()) opp_site_bool_after_second = true;
+	}
 
 	//Add a new carbon between current R5 carbons of ACR5
 	double R5_dist = getDistance_twoC(CFE, CFE->C2);
@@ -12057,23 +12104,29 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			updateSites(checkR5_2, CRem_next, checkR5_2->C2, +100);
 		}
 		removeSite(sFE2);
+		std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
+		std::get<1>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
 	else if ((int)sFE2->type == 0){
 		//This means that the pentagon has migrated to the edge but will have a single carbon out of the structure.
 		if (b4) {
 			updateSites(S1, S1->C1, sFE2->C1, 500);
 			updateSites(S2, sFE2->C1, S2->C2, 500);
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 		}
 		else {
 			updateSites(S1, S1->C1, sFE2->C2, 500);
 			updateSites(S2, sFE2->C2, S2->C2, 500);
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 		}
 		removeSite(sFE2);
+		std::get<1>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
 	else if ((int)sFE2->type >= 1 && (int)sFE2->type <= 4){
 		//This means that the pentagon has migrated to a basic site.
 		if (b4) {
 			updateSites(S2, sFE2->C1, S2->C2, 2000 + (int)sFE2->type);
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
 				updateSites(S4, S4->C1, S4->C2,+500);
@@ -12081,17 +12134,20 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		}
 		else {
 			updateSites(S1, S1->C1, sFE2->C2, 2000 + (int)sFE2->type);
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
-		removeSite(sFE2);
+		removeSite(sFE2); 
+		std::get<1>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
 	else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){
 		//This means that the pentagon has migrated to neighbour an edge R5 edge.
 		if (b4) {
 			updateSites(S2, sFE2->C1, S2->C2, 2000 + (int)sFE2->type);
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
 				updateSites(S4, S4->C1, S4->C2,+500);
@@ -12099,12 +12155,14 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		}
 		else {
 			updateSites(S1, S1->C1, sFE2->C2, 2000 + (int)sFE2->type);
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
 		removeSite(sFE2);
+		std::get<1>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
 	else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){
 		//This means that the pentagon has migrated to neighbour an edge R5 edge.
@@ -12112,6 +12170,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		Spointer S2 = moveIt(sFE2, +1);
 		if (b4) {
 			updateSites(S2, sFE2->C1, S2->C2, 1600 + (int)sFE2->type);
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
 				updateSites(S4, S4->C1, S4->C2,+500);
@@ -12119,17 +12178,20 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		}
 		else {
 			updateSites(S1, S1->C1, sFE2->C2, 1600 + (int)sFE2->type);
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
 		removeSite(sFE2);
+		std::get<1>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
 	else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){
 		//This means that the pentagon has migrated to a bay containing an R5.
 		if (b4) {
 			updateSites(S2, sFE2->C1, S2->C2, 100 + (int)sFE2->type);
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
 				updateSites(S4, S4->C1, S4->C2,+500);
@@ -12137,12 +12199,14 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		}
 		else {
 			updateSites(S1, S1->C1, sFE2->C2, 100 + (int)sFE2->type);
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
 		removeSite(sFE2);
+		std::get<1>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
 	
 	//Update combined sites
@@ -13715,12 +13779,14 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		if (std::get<1>(m_pah->m_R5walker_sites[ii])>0) {
 			site_check2 = moveIt(site_check, +1);
 			steps =  std::get<1>(m_pah->m_R5walker_sites[ii]) + 1;
+			std::get<1>(m_pah->m_R5walker_sites[ii])++;
 			b4 = false;
 			leave_edge = true;
 		}
 		else {
 			site_check2 = moveIt(site_check, -1);
 			steps = std::get<1>(m_pah->m_R5walker_sites[ii]) - 1;
+			std::get<1>(m_pah->m_R5walker_sites[ii])--;
 			b4 = true;
 			leave_edge = true;
 		}
@@ -13807,9 +13873,21 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		//The R5 will leave the current edge and move to other edge. 
 		//This movement around the corner needs to correct the number of sites. 
 		//Otherwise results would be incorrect.
+		Spointer stt_coupled;
+		if (b4) {
+			stt_coupled = moveIt(stt,+1);
+			std::get<1>(m_pah->m_R5walker_sites[ii])--;
+		}
+		else {
+			stt_coupled = moveIt(stt,-1);
+			std::get<1>(m_pah->m_R5walker_sites[ii])++;
+		}
+		updateSites(stt,stt->C1,stt->C2,-500);
+		updateSites(stt_coupled,stt_coupled->C1,stt_coupled->C2,-501);
 		Spointer start_site = std::get<0>(m_pah->m_R5walker_sites[ii]);
 		Cpointer start_site_C1 = start_site->C1;
 		Cpointer start_site_C2 = start_site->C2;
+
 		proc_M5R_ACR5_around_corner(start_site,start_site_C1,start_site_C2,sFE2,b4);
 		return;
 	}
