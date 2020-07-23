@@ -302,7 +302,9 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             else {
                 if (m_migrate){
                     //First update the multiple migration transformation
+                    savePAH(PAH_ID,"KMC_DEBUG/BEFORE_MIGRATION");
                     m_simPAHp.performMigrationProcess();
+                    savePAH(PAH_ID,"KMC_DEBUG/AFTER_MIGRATION");
                     m_migrate = false;
                 }
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);

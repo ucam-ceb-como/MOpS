@@ -2327,7 +2327,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 		}
 		
-		vector<int> valence_2_carbons, valence_4_carbons;
+		/*vector<int> valence_2_carbons, valence_4_carbons;
 		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
 			auto find_methyl = std::find(methyl_list_flat.begin(), methyl_list_flat.end(), a->GetIdx()); 
 			if (find_methyl == methyl_list_flat.end()){
@@ -2391,7 +2391,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					}
 				}
 			}
-		}
+		}*/
 		
 		mol.SetAromaticPerceived();
 		//Comment in to print the details of every bond in the OBmol object
@@ -12312,6 +12312,103 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 }
 
 // ************************************************************
+// ID66- Termination of ACR5 migration
+// ************************************************************
+void PAHProcess::proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4) {
+	// The pentagon migrated N times and ended at the same position.
+	if (sFE2 == stt) return;
+	//Remove R5coords from m_pah->m_R5loc. This is done by starter function/
+	//findR5internal(C_1->C2, C_2->C1);
+	// First select carbons and sites affected.
+	Cpointer CFE, CRem, CRem_next, CRem_before, CR5_otherside_1, CR5_otherside_2;
+	Spointer checkR5_1, checkR5_2;
+	if (b4) {
+		CFE = C_2->C1->C1;
+		CR5_otherside_1 = C_2->C1;
+		CR5_otherside_2 = C_2->C1->C1;
+		checkR5_1 = moveIt(sFE2, -1);
+		checkR5_2 = moveIt(sFE2, -2);
+		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C1;
+		else CRem = sFE2->C2;
+		CRem_next = CRem->C1;
+		CRem_before = CRem->C2;
+	}
+	else {
+		CFE = C_1->C2;
+		CR5_otherside_1 = C_1->C2;
+		CR5_otherside_2 = C_1->C2->C2;
+		checkR5_1 = moveIt(sFE2, +1);
+		checkR5_2 = moveIt(sFE2, +2);
+		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C2;
+		else CRem = sFE2->C1;
+		CRem_next = CRem->C2;
+		CRem_before = CRem->C1;
+	}
+	//int end_site_type = (int)sFE2->type;
+
+	//Add a new carbon between current R5 carbons of ACR5
+	double R5_dist = getDistance_twoC(CFE, CFE->C2);
+	double dist2;
+	if (R5_dist < 2.5) dist2 = 1.4;
+	else dist2 = R5_dist / 2.7 * 1.5;
+	double theta = asin(R5_dist/2.0/dist2);
+	double magn = dist2 * cos(theta);
+	cpair R5dir = get_vector(C_1->C2->coords,C_2->C1->coords);
+	cpair normvec = (norm_vector(C_1->C2->coords, C_1->C2->C2->coords, C_1->C2->C2->C2->coords));
+	cpair crossvec = cross_vector(R5dir, normvec);
+	cpair resultantvec = std::make_tuple(R5_dist/2.0 * std::get<0>(R5dir) + magn * std::get<0>(crossvec), R5_dist/2.0 * std::get<1>(R5dir) + magn * std::get<1>(crossvec), R5_dist/2.0 * std::get<2>(R5dir)+ magn * std::get<2>(crossvec));
+	cpair Cnewdir = scale_vector(resultantvec);
+	//cpair Cnewdir = get_vector(C_2->C1->coords,C_2->coords);
+	// add a C atom
+	Cpointer Cnew = addC(CFE, Cnewdir, 1.4);
+	updateA(Cnew, 'H', crossvec);
+	
+	//Remove carbon from end site 
+	removeC(CRem, false);
+	OpenBabel::OBMol mol = passPAH();
+	mol = optimisePAH(mol, 500);
+	passbackPAH(mol);
+	
+	//First adjust starting site and add new site if needed.
+	Spointer stt_coupled, newSite;
+	if (b4) stt_coupled = moveIt(stt,-1);
+	else stt_coupled = moveIt(stt,+1);
+	if (b4) {
+		convSiteType(stt, Cnew, stt->C2, ZZ);
+		newSite = addSite(ZZ, Cnew->C1->C1, Cnew, stt);
+	} else{
+		convSiteType(stt, stt->C1, Cnew, ZZ);
+		newSite = addSite(ZZ, Cnew, Cnew->C2->C2, stt_coupled);
+	}
+	
+	Spointer S1 = moveIt(sFE2, -1);
+	Spointer S2 = moveIt(sFE2, +1);
+	//sFE2 should already be the correct site type. It just needs to reshuffle the pointers.
+	if (b4) {
+		updateSites(S1, S1->C1, sFE2->C1, 0);
+		convSiteType(S2, sFE2->C1, S2->C2, sFE2->type);
+	} else{
+		convSiteType(S1, S1->C1, sFE2->C2, sFE2->type);
+		updateSites(S2, sFE2->C2, S2->C2, 0);
+	}
+	removeSite(sFE2);
+	
+	//Update combined sites
+	Spointer stt_1, stt_2, S3, S4;
+	if (b4){
+		stt_1 = moveIt(newSite, -1);
+		stt_2 = moveIt(stt, +1);
+	}else{
+		stt_1 = moveIt(stt, -1);
+		stt_2 = moveIt(newSite, +1);
+	}
+	S3 = moveIt(S1, -1);
+	S4 = moveIt(S2, +1);
+	updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
+	updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2); updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4);
+}
+
+// ************************************************************
 // ID66- Recursive embedded 5-member ring migration
 // ************************************************************
 void PAHProcess::proc_M5R_ACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4) {
@@ -14927,13 +15024,13 @@ void PAHProcess::performMigrationProcess(){
 		}
 	}
 	if(m_pah->m_siteMap[MIGR2].size()>0){
-		for(unsigned int ii=0;ii!=m_pah->m_siteMap[MIGR].size();ii++){
-			migr_end_sites.push_back( (m_pah->m_siteMap[MIGR])[ii]);
+		for(unsigned int ii=0;ii!=m_pah->m_siteMap[MIGR2].size();ii++){
+			migr_end_sites.push_back( (m_pah->m_siteMap[MIGR2])[ii]);
 		}
 	}
 	if(m_pah->m_siteMap[R5R6_MIGR].size()>0){
-		for(unsigned int ii=0;ii!=m_pah->m_siteMap[MIGR].size();ii++){
-			migr_end_sites.push_back( (m_pah->m_siteMap[MIGR])[ii]);
+		for(unsigned int ii=0;ii!=m_pah->m_siteMap[R5R6_MIGR].size();ii++){
+			migr_end_sites.push_back( (m_pah->m_siteMap[R5R6_MIGR])[ii]);
 		}
 	}
 	//Hopefully this two vectors should be of the same length
@@ -14947,7 +15044,7 @@ void PAHProcess::performMigrationProcess(){
 		bool b4;
 		if(steps < 0) b4 = true;
 		else b4 = false;
-		if (site_perf->type == ZZ) proc_M5R_ACR5_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		if (site_perf->type == ZZ) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else if (site_perf->type == FE) proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else if ((int)site_perf->type>=2000 && (int)site_perf->type<=2100) proc_M5R_FEACR5_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else{
