@@ -15,7 +15,7 @@
 function [frame] = read_coords(file_name)
 
     %%read data 
-    data = csvread(file_name,1,0);
+    data = readmatrix(file_name);
     [m,~] = size(data);
     
     %%initialize counters
