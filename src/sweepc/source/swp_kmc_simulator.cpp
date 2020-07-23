@@ -259,7 +259,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             }*/
             //Save information for a single PAH
             auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
-            if (finder != m_tracked_pahs.end()){
+            if (finder != m_tracked_pahs.end() && !m_migrate){
                 std::string xyzname = ("KMC_DEBUG/");
                 xyzname.append(std::to_string(PAH_ID));
                 xyzname.append("/");
@@ -302,9 +302,9 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             else {
                 if (m_migrate){
                     //First update the multiple migration transformation
-                    savePAH(PAH_ID,"KMC_DEBUG/BEFORE_MIGRATION");
+                    //savePAH(PAH_ID,"KMC_DEBUG/BEFORE_MIGRATION");
                     m_simPAHp.performMigrationProcess();
-                    savePAH(PAH_ID,"KMC_DEBUG/AFTER_MIGRATION");
+                    //savePAH(PAH_ID,"KMC_DEBUG/AFTER_MIGRATION");
                     m_migrate = false;
                 }
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
