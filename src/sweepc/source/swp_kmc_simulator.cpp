@@ -287,7 +287,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             std::string streamObj_string = streamObj.str();
             temp.push_back(streamObj_string);
             m_pah_sitelist_csv.Write(temp);
-            // Update data structure -- Perform jump process
+            // Update data structure -- Perform jump process 
 			//printRates(m_t, m_kmcmech.Rates());
             cout << m_t << std::endl;
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);

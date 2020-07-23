@@ -1337,7 +1337,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt, kmcSiteType s
 			}
 			
 			//check that two pentagons (including internals) will not collide
-			cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+			cpair R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
 			if (m_pah->m_R5loc.size()>=1){
 				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 					double distR5s = getDistance_twoC(*it, R5coords_end);
@@ -3888,7 +3888,7 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 			}
 			
 			//check that two pentagons (including internals) will not collide
-			cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+			cpair R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
 			if (m_pah->m_R5loc.size()>=1){
 				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 					double distR5s = getDistance_twoC(*it, R5coords_end);
@@ -5785,13 +5785,13 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		msg << "ERROR: Site selected has incorrect number of carbons. Process not performed."
 			<< "ID" << id << " Jump process: " << jp.getName() << " on PAH ID: " << PAH_ID << "..."
 			<< " (Sweep::KMC_ARS::PAHProcess::performProcess)";
-		//throw std::runtime_error(msg.str());
-		//assert(false);
-		//abort();
 		printBeforeSites(Sitelist_before);
 		cout<<"Saving file: "<< filename<<".xyz\n";
 		++perform_process_error_counter;
 		return false;
+		throw std::runtime_error(msg.str());
+		assert(false);
+		abort();
 	}
 	///////
     switch(id) {
@@ -6043,7 +6043,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
-	}
+	}*/
 	if (m_pah->m_R5loc.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0 && SiteListSize() >= 3){
 		//Throw error.
 		cout << "Error. Number of R5s in m_pah->m_R5loc does not match number of lone and embedded R5s.\n";
@@ -6078,7 +6078,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		//throw std::runtime_error(msg.str());
 	}
 	
-	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
+	/*if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
 		//Try to fix this error by an optimisation.
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
@@ -9284,10 +9284,12 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	if (b4){
 		updateCombinedSites(S1);
 		updateCombinedSites(S3);
+		updateCombinedSites(S2);
 	}
 	else{
 		updateCombinedSites(S2);
 		updateCombinedSites(S4); // neighbours
+		updateCombinedSites(S1);
 	}
 }
 int G6RRZZ_error_counter = 0;
@@ -12339,7 +12341,7 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		}
 		
 		//check that two pentagons (including internals) will not collide
-		cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+		cpair R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
 		if (m_pah->m_R5loc.size()>=1){
 			for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 				double distR5s = getDistance_twoC(*it, R5coords_end);
@@ -12369,6 +12371,7 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	}
 	if ( (check_left && check_right) || (!check_left && !check_right) ) {
 		//This process should only return one site
+		m_pah->m_R5loc.push_back(R5coords);
 		return;
 	}
 	bool b4 = check_left;
@@ -12503,7 +12506,7 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	}
 	else {
 		//Reassign connectivity at next site
-		if (b4) sFE2->C2 = CFE;
+		if (b4) sFE2->C2 = Cnew;
 		else sFE2->C1 = Cnew;
 	}
 	if (!m_pah->m_optimised){
@@ -12679,10 +12682,12 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	if (b4){
 		updateCombinedSites(S1);
 		updateCombinedSites(S3);
+		updateCombinedSites(S2);
 	}
 	else{
 		updateCombinedSites(S2);
-		updateCombinedSites(S4); // neighbours
+		updateCombinedSites(S4); 
+		updateCombinedSites(S1);// neighbours
 	}
 }
 
