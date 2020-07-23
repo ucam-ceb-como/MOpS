@@ -12,7 +12,7 @@ function TEMvideo()
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     %% location of data
-    coords_file = '.\test\Z1-video(3).csv';
+    coords_file = ['.' filesep 'test' filesep 'Z1-video(3).csv'];
     
     %% video parameters
     frame_rate = 20;
@@ -41,7 +41,7 @@ function TEMvideo()
     new_frames = reorientate(frames, [1:n_frames]);
     
     %%create video structure
-    v = VideoWriter('video.mp4','MPEG-4');
+    v = VideoWriter('video.avi','Motion JPEG AVI');
     v.FrameRate = frame_rate;
     open(v);
 
