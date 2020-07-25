@@ -12424,15 +12424,22 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	if (b4) stt_coupled = moveIt(stt,+1);
 	else stt_coupled = moveIt(stt,-1);
 	if (b4) {
-		convSiteType(stt, Cnew->C1->C1, Cnew, ZZ);
-		newSite = addSite(R5R6, Cnew, stt_coupled->C1, stt_coupled);
-		newSite->comb = R5R6_MIGR;
+		//convSiteType(stt, Cnew->C1->C1, Cnew, ZZ);
+		sFE2->C1 = sFE2->C1;
+		sFE2->C2 = Cnew;
+		//newSite = addSite(R5R6, Cnew, stt_coupled->C1, stt_coupled);
+		stt->C1 = Cnew;
+		stt->C2 = stt_coupled->C1;
 	} else{
-		convSiteType(stt, Cnew, Cnew->C2->C2, ZZ);
-		newSite = addSite(R5R6, stt_coupled->C2, Cnew, stt);
-		newSite->comb = R5R6_MIGR;
+		//convSiteType(stt, Cnew, Cnew->C2->C2, ZZ);
+		sFE2->C1 = Cnew;
+		sFE2->C2 = sFE2->C2;
+		//newSite = addSite(R5R6, stt_coupled->C2, Cnew, stt);
+		stt->C1 = stt_coupled->C2;
+		stt->C2 = Cnew;
+
 	}
-	if ((int)stt_coupled->type < 2000) updateSites(stt_coupled, stt_coupled->C1, stt_coupled->C2, 0);
+	/*if ((int)stt_coupled->type < 2000) updateSites(stt_coupled, stt_coupled->C1, stt_coupled->C2, 0);
 	else updateSites(stt_coupled, stt_coupled->C1, stt_coupled->C2, 0);
 	
 	Spointer S1 = moveIt(sFE2, -1);
@@ -12471,17 +12478,9 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		//This means that the pentagon has migrated to a basic site.
 		if (b4) {
 			updateSites(S2, sFE2->C1, S2->C2, 0);
-			/*if ((int)S2->type<2000) {
-				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
-			}*/
 		}
 		else {
 			updateSites(S1, S1->C1, sFE2->C2, 0);
-			/*if ((int)S1->type<2000) {
-				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
-			}*/
 		}
 		removeSite(sFE2);
 	}
@@ -12489,17 +12488,9 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		//This means that the pentagon has migrated to neighbour an edge R5 edge.
 		if (b4) {
 			updateSites(S2, sFE2->C1, S2->C2, 0);
-			/*if ((int)S2->type<2000) {
-				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
-			}*/
 		}
 		else {
 			updateSites(S1, S1->C1, sFE2->C2, 0);
-			/*if ((int)S1->type<2000) {
-				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
-			}*/
 		}
 		removeSite(sFE2);
 	}
@@ -12509,17 +12500,9 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		Spointer S2 = moveIt(sFE2, +1);
 		if (b4) {
 			updateSites(S2, sFE2->C1, S2->C2, 0);
-			/*if ((int)S2->type<2000) {
-				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
-			}*/
 		}
 		else {
 			updateSites(S1, S1->C1, sFE2->C2, 0);
-			/*if ((int)S1->type<2000) {
-				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
-			}*/
 		}
 		removeSite(sFE2);
 	}
@@ -12527,17 +12510,9 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		//This means that the pentagon has migrated to a bay containing an R5.
 		if (b4) {
 			updateSites(S2, sFE2->C1, S2->C2, 0);
-			/*if ((int)S2->type<2000) {
-				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
-			}*/
 		}
 		else {
 			updateSites(S1, S1->C1, sFE2->C2, 0);
-			/*if ((int)S1->type<2000) {
-				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
-			}*/
 		}
 		removeSite(sFE2);
 	}
@@ -12555,7 +12530,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	S4 = moveIt(S2, +1);
 	updateCombinedSites(stt);
 	//updateCombinedSites(stt_1); updateCombinedSites(stt); updateCombinedSites(newSite); updateCombinedSites(stt_2);
-	//updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
+	//updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);*/
 }
 
 // ************************************************************
@@ -15261,27 +15236,30 @@ void PAHProcess::startMigrationProcess(){
 	if(m_pah->m_siteMap[R5R6_MIGR].size()>0){
 		for(unsigned int ii=0;ii!=m_pah->m_siteMap[R5R6_MIGR].size();ii++){
 			Spointer current_site = (m_pah->m_siteMap[R5R6_MIGR])[ii];
-			Spointer check_coupled_site = std::get<0>(migr_sites.back());
+			Spointer next_site;
+			Spointer check_coupled_site;
+			if (ii>0) check_coupled_site = (m_pah->m_siteMap[R5R6_MIGR])[ii-1];
+			else check_coupled_site = m_pah->m_siteList.end();
 			Spointer stt_left = moveIt((m_pah->m_siteMap[R5R6_MIGR])[ii],-1);
 			Spointer stt_right = moveIt((m_pah->m_siteMap[R5R6_MIGR])[ii],+1);
 			int steps;
 			if (check_coupled_site != stt_left && check_coupled_site != stt_right){
 				if ( isR5internal(current_site->C1->C1,current_site->C1,true) || isR5internal(current_site->C1->C1,current_site->C1,false)){
 					cpair R5coords = findR5internal(current_site->C1->C1,current_site->C1);
-					Spointer next_site = moveIt(current_site,+1);
+					next_site = moveIt(current_site,+1);
 					//Move the walker to its edge location. (Artificial move)
 					proc_M5R_R5R6_out_of_corner(current_site,current_site->C1,current_site->C2,next_site,false);
 					steps = -1;
 				}else if(isR5internal(current_site->C2,current_site->C2->C2,true) || isR5internal(current_site->C2,current_site->C2->C2,false)){
 					cpair R5coords = findR5internal(current_site->C2,current_site->C2->C2);
-					Spointer next_site = moveIt(current_site,-1);
+					next_site = moveIt(current_site,-1);
 					//Move the walker to its edge location. (Artificial move)
 					proc_M5R_R5R6_out_of_corner(current_site,current_site->C1,current_site->C2,next_site,true);
 					steps = 1;
 				} else{
 					std::cout << "R5 not found." << std::endl;
 				}
-				std::tuple<Spointer,int> migr_site_ii= std::make_tuple(current_site, steps);
+				std::tuple<Spointer,int> migr_site_ii= std::make_tuple(next_site, steps);
 				migr_sites.push_back(migr_site_ii);
 			}
 		}
