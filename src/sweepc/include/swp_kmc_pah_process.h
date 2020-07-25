@@ -197,6 +197,8 @@ public:
     int SiteSize(Spointer& stt) const;
     //! Returns true if a site has the right number of carbons
     bool SiteRightSize(Spointer& stt) const;
+    //! Returns true if site is allowed for migration
+    bool checkSiteMigration(Spointer stt, bool b4);
 	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
 	OpenBabel::OBMol passPAH(bool detectBonds=true);
 	//! Connects the atoms in a PAH using OpenBabel routines. Equivalent to OpenBabel::OBMol::ConnectTheDots();
@@ -290,6 +292,7 @@ public:
 	void proc_M5R_R5R6_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4);	//!<ID67
     void proc_M5R_FEACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4); //!<ID68
     void proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4);
+    void proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4);
     void proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4);
     //void proc_M5R_ZZACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID69
     //void proc_M5R_ACACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID70

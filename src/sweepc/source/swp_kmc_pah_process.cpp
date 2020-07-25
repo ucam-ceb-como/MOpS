@@ -1392,7 +1392,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 			}
 			
 			//check that two pentagons (including internals) will not collide
-			cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+			cpair R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
 			if (m_pah->m_R5loc.size()>=1){
 				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 					double distR5s = getDistance_twoC(*it, R5coords_end);
@@ -3918,24 +3918,18 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 		//Get R5 internal coordinates if they have not been cleared!
 		if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
 		else if (st->type == R5R6){
-			if (SiteSize(st)==3){
-				if ( isR5internal(st->C1->C1, st->C1,false) || isR5internal(st->C1->C1,st->C1,true) ) {
-					R5coords = findR5internal(st->C1->C1, st->C1);
-					check_left = false;
-				}
-				else if ( isR5internal(st->C2, st->C2->C2,false) || isR5internal(st->C2, st->C2->C2,true) ) {
-					R5coords = findR5internal(st->C2, st->C2->C2);
-					check_right = false;
-				}
-				else {
-					//R5 not found
-					st->comb = None;
-					break;
-				}
-			}else{
-				R5coords = findR5internal(st->C1, st->C1->C2);
-				check_left = true;
-				check_right = true;
+			if ( isR5internal(st->C1->C1, st->C1,false) || isR5internal(st->C1->C1,st->C1,true) ) {
+				R5coords = findR5internal(st->C1->C1, st->C1);
+				check_left = false;
+			}
+			else if ( isR5internal(st->C2, st->C2->C2,false) || isR5internal(st->C2, st->C2->C2,true) ) {
+				R5coords = findR5internal(st->C2, st->C2->C2);
+				check_right = false;
+			}
+			else {
+				//R5 not found
+				st->comb = None;
+				break;
 			}
 		}
 		else{
@@ -3954,20 +3948,23 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 			}
 		}
 
-		//Check for MIGR, MIGR2 OR R5R6_MIGR
-		if (check_left){
-			//Fundamental assumption: R5-R7 pairs cannot move away from each other!
-			if (m_pah->m_R7loc.size()>=1){
-				for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
-					double distR5R7 = getDistance_twoC(*it, R5coords);
-					if (distR5R7 < 3.1) {
-						check_left = false;
-						check_right = false;
-						st->comb = None;
-						break;
-					}
+		//Fundamental assumption: R5-R7 pairs cannot move away from each other!
+		if (m_pah->m_R7loc.size()>=1){
+			for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
+				double distR5R7 = getDistance_twoC(*it, R5coords);
+				if (distR5R7 < 3.1) {
+					check_left = false;
+					check_right = false;
+					st->comb = None;
+					break;
 				}
 			}
+		}
+		//Check for MIGR, MIGR2 OR R5R6_MIGR
+		if (check_left){
+			check_left = checkSiteMigration(S1,true);
+		}
+		/*if (check_left){
 			//Check site to the left
 			Spointer checkR5_1 = moveIt(S1,-1);
 			Spointer checkR5_2 = moveIt(S1,-2);
@@ -4040,8 +4037,12 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 					}
 				}
 			}
+		}*/
+		if(check_right){
+			check_right = checkSiteMigration(S2,false);
 		}
-		if (check_right){
+
+		/*if (check_right){
 			//Check site to the right
 			Spointer checkR5_1 = moveIt(S2,+1);
 			Spointer checkR5_2 = moveIt(S2,+2);
@@ -4087,7 +4088,7 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 			}
 			
 			//check that two pentagons (including internals) will not collide
-			cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+			cpair R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
 			if (m_pah->m_R5loc.size()>=1){
 				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 					double distR5s = getDistance_twoC(*it, R5coords_end);
@@ -4114,7 +4115,7 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 					}
 				}
 			}
-		}
+		}*/
 		//Add back the R5 location
 		m_pah->m_R5loc.push_back(R5coords);
 		if (check_left && check_right && st->type==ACR5) {
@@ -4268,7 +4269,9 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st, bool b4) {
 		}
 
 		//Check for MIGR, MIGR2 OR R5R6_MIGR
-		if (check_left){
+		if (check_left) check_left = checkSiteMigration(S1,true);
+		if (check_right) check_right = checkSiteMigration(S2,false);
+		/*if (check_left){
 			//Check site to the left
 			Spointer checkR5_1 = moveIt(S1,-1);
 			Spointer checkR5_2 = moveIt(S1,-2);
@@ -4388,7 +4391,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st, bool b4) {
 			}
 			
 			//check that two pentagons (including internals) will not collide
-			cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+			cpair R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
 			if (m_pah->m_R5loc.size()>=1){
 				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 					double distR5s = getDistance_twoC(*it, R5coords_end);
@@ -4415,7 +4418,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st, bool b4) {
 					}
 				}
 			}
-		}
+		}*/
 
 		if (check_left && check_right && st->type==ACR5) {
 			st->comb = MIGR2;
@@ -11972,6 +11975,11 @@ void PAHProcess::proc_O5R_R5R6ACR5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, 
 // ID66- Five member ring migration around the corner
 // ************************************************************
 void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4) {
+	//This process is called when the R5 walker moves to another edge. 
+	//It heals the vacancy present on the current edge and creates a vacancy on the next edge.
+	//It also resets the walker position to the new edge.
+	//It assumes the starting site is an ACR5 site or similar.
+	
 	// The pentagon migrated N times and ended at the same position.
 	if (sFE2 == stt) return;
 
@@ -12309,6 +12317,245 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			updateCombinedSitesMigration(opps1); updateCombinedSitesMigration(opps2);
 		}
 	}
+}
+
+// ************************************************************
+// ID67- Recursive partially embedded 5-member ring migration
+// ************************************************************
+void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4) {
+	//This process is called when the R5 walker moves out of the corner into an edge. 
+	//It heals the vacancy present on the current corner and creates a vacancy on the next edge.
+	//It also resets the walker position to the new edge.
+	//It assumes the starting site is an R5R6 site or similar.
+	// First select carbons and sites affected.
+	Cpointer CFE, CRem, CRem_next, CRem_before, CR5_otherside_1, CR5_otherside_2;
+	Spointer checkR5_1, checkR5_2;
+	if (b4) {
+		CFE = C_2->C1;
+		CR5_otherside_1 = C_2->C2;
+		CR5_otherside_2 = C_2->C1;
+		checkR5_1 = moveIt(sFE2, -1);
+		checkR5_2 = moveIt(sFE2, -2);
+		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C1;
+		else CRem = sFE2->C2;
+		CRem_next = CRem->C1;
+		CRem_before = CRem->C2;
+	}
+	else {
+		CFE = C_1;
+		CR5_otherside_1 = C_1->C1;
+		CR5_otherside_2 = C_1->C2;
+		checkR5_1 = moveIt(sFE2, +1);
+		checkR5_2 = moveIt(sFE2, +2);
+		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C2;
+		else CRem = sFE2->C1;
+		CRem_next = CRem->C2;
+		CRem_before = CRem->C1;
+	}
+
+	//int end_site_type = (int)sFE2->type;
+	//Add a new carbon between current R5 carbons of ACR5
+	Cpointer Cnew;
+	if (b4) {
+		cpair R5dirFE = get_vector(CFE->coords,CFE->C2->C2->coords);
+		double R5dirFEdist = getDistance_twoC(CFE->coords,CFE->C2->C2->coords);
+		double bond_dist = R5dirFEdist / 2.0;
+		double magnFE = bond_dist*sin(M_PI / 3.0);
+		cpair normvec = invert_vector(norm_vector(CFE->coords,CFE->C2->coords,CFE->C2->C2->coords));
+		cpair crossvecFE = cross_vector(R5dirFE, normvec);
+		cpair resultantvecFE = std::make_tuple(R5dirFEdist/4.0 * std::get<0>(R5dirFE) + magnFE * std::get<0>(crossvecFE),
+											R5dirFEdist/4.0 * std::get<1>(R5dirFE) + magnFE * std::get<1>(crossvecFE), 
+											R5dirFEdist/4.0 * std::get<2>(R5dirFE)+ magnFE * std::get<2>(crossvecFE));
+		cpair CnewdirFE = scale_vector(resultantvecFE);
+
+		Cnew = addC(CFE,CnewdirFE,bond_dist);
+		cpair mposFE = jumpToPos(Cnew->coords,R5dirFE,bond_dist);
+		double dotprod = std::get<0>(CnewdirFE)*std::get<0>(R5dirFE) + std::get<1>(CnewdirFE)*std::get<1>(R5dirFE) + std::get<2>(CnewdirFE)*std::get<2>(R5dirFE);
+		cpair Hdir = std::make_tuple(std::get<0>(CnewdirFE) - 2.0*dotprod*std::get<0>(R5dirFE),
+									std::get<1>(CnewdirFE) - 2.0*dotprod*std::get<1>(R5dirFE),
+									std::get<2>(CnewdirFE) - 2.0*dotprod*std::get<2>(R5dirFE));
+		updateA(Cnew,'H',Hdir);
+		moveC(Cnew->C2,mposFE);
+		updateA(Cnew->C2,'H',CnewdirFE);
+	}
+	else {
+		cpair R5dirFE = get_vector(CFE->C1->coords,CFE->C2->coords);
+		double R5dirFEdist = getDistance_twoC(CFE->C1->coords,CFE->C2->coords);
+		double bond_dist = R5dirFEdist / 2.0;
+		double magnFE = bond_dist*sin(M_PI / 3.0);
+		cpair normvec = invert_vector(norm_vector(CFE->C1->coords,CFE->coords,CFE->C2->coords));
+		cpair crossvecFE = cross_vector(R5dirFE, normvec);
+		cpair resultantvecFE = std::make_tuple(R5dirFEdist/4.0 * std::get<0>(R5dirFE) + magnFE * std::get<0>(crossvecFE),
+											R5dirFEdist/4.0 * std::get<1>(R5dirFE) + magnFE * std::get<1>(crossvecFE), 
+											R5dirFEdist/4.0 * std::get<2>(R5dirFE)+ magnFE * std::get<2>(crossvecFE));
+		cpair CnewdirFE = scale_vector(resultantvecFE);
+		cpair mposFE = jumpToPos(CFE->C1->coords,R5dirFE,bond_dist);
+		moveC(CFE,mposFE);
+		double dotprod = std::get<0>(CnewdirFE)*std::get<0>(R5dirFE) + std::get<1>(CnewdirFE)*std::get<1>(R5dirFE) + std::get<2>(CnewdirFE)*std::get<2>(R5dirFE);
+		cpair Hdir = std::make_tuple(std::get<0>(CnewdirFE) - 2.0*dotprod*std::get<0>(R5dirFE),
+									std::get<1>(CnewdirFE) - 2.0*dotprod*std::get<1>(R5dirFE),
+									std::get<2>(CnewdirFE) - 2.0*dotprod*std::get<2>(R5dirFE));
+		updateA(CFE,'H',Hdir);
+		Cnew = addC(CFE,R5dirFE,bond_dist);
+		updateA(Cnew->C2,'H',CnewdirFE);
+	}
+
+	/*double R5_dist = getDistance_twoC(CFE, CFE->C2);
+	double dist2 = 1.4;
+	double theta = asin(R5_dist/2.0/dist2);
+	double magn = dist2 * cos(theta);
+	cpair R5dir = get_vector(CFE->coords, CFE->C2->coords);
+	cpair normvec;
+	if (b4) normvec = invert_vector((norm_vector(CFE->coords, CFE->C2->coords, CFE->C2->C2->coords)));
+	else normvec = (norm_vector(CFE->coords, CFE->C2->coords, CFE->C2->C2->coords));
+	cpair crossvec = cross_vector(R5dir, normvec);
+	cpair resultantvec = std::make_tuple(R5_dist/2.0 * std::get<0>(R5dir) + magn * std::get<0>(crossvec), R5_dist/2.0 * std::get<1>(R5dir) + magn * std::get<1>(crossvec), R5_dist/2.0 * std::get<2>(R5dir)+ magn * std::get<2>(crossvec));
+	cpair Cnewdir = scale_vector(resultantvec);
+	//cpair Cnewdir = get_vector(C_2->C1->coords,C_2->coords);
+	// add a C atom
+	Cpointer Cnew = addC(CFE, Cnewdir, 1.4);
+	updateA(Cnew, 'H', crossvec);*/
+	
+	//Remove carbon from end site 
+	removeC(CRem, false);
+	
+	//First adjust starting site and add new site if needed.
+	Spointer stt_coupled, newSite;
+	if (b4) stt_coupled = moveIt(stt,+1);
+	else stt_coupled = moveIt(stt,-1);
+	if (b4) {
+		convSiteType(stt, Cnew->C1->C1, Cnew, ZZ);
+		newSite = addSite(R5R6, Cnew, stt_coupled->C1, stt_coupled);
+		newSite->comb = R5R6_MIGR;
+	} else{
+		convSiteType(stt, Cnew, Cnew->C2->C2, ZZ);
+		newSite = addSite(R5R6, stt_coupled->C2, Cnew, stt);
+		newSite->comb = R5R6_MIGR;
+	}
+	if ((int)stt_coupled->type < 2000) updateSites(stt_coupled, stt_coupled->C1, stt_coupled->C2, 0);
+	else updateSites(stt_coupled, stt_coupled->C1, stt_coupled->C2, 0);
+	
+	Spointer S1 = moveIt(sFE2, -1);
+	Spointer S2 = moveIt(sFE2, +1);
+	
+	//Adjust sites for ending position.
+	//Migration outside.
+	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
+		if (b4) {
+			Spointer sFE2_right = moveIt(sFE2, +1);
+			updateSites(sFE2_right, CRem_before, sFE2_right->C2, 0);
+			convSiteType(checkR5_1, CRem_next, CRem_before, R5);
+			updateSites(checkR5_2, checkR5_2->C1, CRem_next, 0);
+		}
+		else {
+			Spointer sFE2_left = moveIt(sFE2, -1);
+			updateSites(sFE2_left, sFE2_left->C1, CRem_before, 0);
+			convSiteType(checkR5_1, CRem_before, CRem_next, R5);
+			updateSites(checkR5_2, CRem_next, checkR5_2->C2, 0);
+		}
+		removeSite(sFE2);
+	}
+	else if ((int)sFE2->type == 0){
+		//This means that the pentagon has migrated to the edge but will have a single carbon out of the structure.
+		if (b4) {
+			updateSites(S1, S1->C1, sFE2->C1, 0);
+			updateSites(S2, sFE2->C1, S2->C2, 0);
+		}
+		else {
+			updateSites(S1, S1->C1, sFE2->C2, 0);
+			updateSites(S2, sFE2->C2, S2->C2, 0);
+		}
+		removeSite(sFE2);
+	}
+	else if ((int)sFE2->type >= 1 && (int)sFE2->type <= 4){
+		//This means that the pentagon has migrated to a basic site.
+		if (b4) {
+			updateSites(S2, sFE2->C1, S2->C2, 0);
+			/*if ((int)S2->type<2000) {
+				Spointer S4 = moveIt(S2, +1);
+				updateSites(S4, S4->C1, S4->C2,+500);
+			}*/
+		}
+		else {
+			updateSites(S1, S1->C1, sFE2->C2, 0);
+			/*if ((int)S1->type<2000) {
+				Spointer S3 = moveIt(S1, -1);
+				updateSites(S3, S3->C1, S3->C2,+500);
+			}*/
+		}
+		removeSite(sFE2);
+	}
+	else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){
+		//This means that the pentagon has migrated to neighbour an edge R5 edge.
+		if (b4) {
+			updateSites(S2, sFE2->C1, S2->C2, 0);
+			/*if ((int)S2->type<2000) {
+				Spointer S4 = moveIt(S2, +1);
+				updateSites(S4, S4->C1, S4->C2,+500);
+			}*/
+		}
+		else {
+			updateSites(S1, S1->C1, sFE2->C2, 0);
+			/*if ((int)S1->type<2000) {
+				Spointer S3 = moveIt(S1, -1);
+				updateSites(S3, S3->C1, S3->C2,+500);
+			}*/
+		}
+		removeSite(sFE2);
+	}
+	else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){
+		//This means that the pentagon has migrated to neighbour an edge R5 edge.
+		Spointer S1 = moveIt(sFE2, -1);
+		Spointer S2 = moveIt(sFE2, +1);
+		if (b4) {
+			updateSites(S2, sFE2->C1, S2->C2, 0);
+			/*if ((int)S2->type<2000) {
+				Spointer S4 = moveIt(S2, +1);
+				updateSites(S4, S4->C1, S4->C2,+500);
+			}*/
+		}
+		else {
+			updateSites(S1, S1->C1, sFE2->C2, 0);
+			/*if ((int)S1->type<2000) {
+				Spointer S3 = moveIt(S1, -1);
+				updateSites(S3, S3->C1, S3->C2,+500);
+			}*/
+		}
+		removeSite(sFE2);
+	}
+	else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){
+		//This means that the pentagon has migrated to a bay containing an R5.
+		if (b4) {
+			updateSites(S2, sFE2->C1, S2->C2, 0);
+			/*if ((int)S2->type<2000) {
+				Spointer S4 = moveIt(S2, +1);
+				updateSites(S4, S4->C1, S4->C2,+500);
+			}*/
+		}
+		else {
+			updateSites(S1, S1->C1, sFE2->C2, 0);
+			/*if ((int)S1->type<2000) {
+				Spointer S3 = moveIt(S1, -1);
+				updateSites(S3, S3->C1, S3->C2,+500);
+			}*/
+		}
+		removeSite(sFE2);
+	}
+	
+	//Update combined sites
+	Spointer stt_1, stt_2, S3, S4;
+	if (b4){
+		stt_1 = moveIt(newSite, -1);
+		stt_2 = moveIt(stt, +1);
+	}else{
+		stt_1 = moveIt(stt, -1);
+		stt_2 = moveIt(newSite, +1);
+	}
+	S3 = moveIt(S1, -1);
+	S4 = moveIt(S2, +1);
+	updateCombinedSites(stt);
+	//updateCombinedSites(stt_1); updateCombinedSites(stt); updateCombinedSites(newSite); updateCombinedSites(stt_2);
+	//updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
 }
 
 // ************************************************************
@@ -13160,7 +13407,7 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		}
 		
 		//check that two pentagons (including internals) will not collide
-		cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+		cpair R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
 		if (m_pah->m_R5loc.size()>=1){
 			for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 				double distR5s = getDistance_twoC(*it, R5coords_end);
@@ -13523,7 +13770,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			break;
 		}
 	}
-	cpair R5coords;
+	//cpair R5coords;
 	if (steps==-99999){
 		std::cout << "Error on R5 migration. " << std::endl;
 		return;
@@ -13600,7 +13847,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		}
 	}
 	if (!end_site_allowed){
-		m_pah->m_R5loc.push_back(R5coords);
+		//m_pah->m_R5loc.push_back(R5coords);
 		return;
 	}
 
@@ -13838,11 +14085,13 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		updateCombinedSitesMigration(sFE2,false); 
 		updateCombinedSitesMigration(S1,true);
 		updateCombinedSitesMigration(S3,true);
+		updateCombinedSitesMigration(S2,true);
 	}
 	else{
 		updateCombinedSitesMigration(sFE2,true); 
 		updateCombinedSitesMigration(S2,false);
 		updateCombinedSitesMigration(S4,false); // neighbours
+		updateCombinedSitesMigration(S1,false);
 	}
 }
 
@@ -13866,8 +14115,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			if (steps>0) b4 = true;
 			else if (steps<0) b4 = false;
 			else{
-				//Still not programmed. Needs a logic here.
-				cout << "Needs a logic here." << std::endl;
+				//This kind of site should never have number ot steps = 0
+				std::cout << "Error on R5 migration. " << std::endl;
 				return;
 			}
 			break;
@@ -13875,20 +14124,23 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		Spointer site_check2; //Only applies to corners.
 		if (std::get<1>(m_pah->m_R5walker_sites[ii])>0) {
 			site_check2 = moveIt(site_check, +1);
-			steps =  std::get<1>(m_pah->m_R5walker_sites[ii]) + 1;
-			std::get<1>(m_pah->m_R5walker_sites[ii])++;
-			b4 = false;
-			leave_edge = true;
 		}
 		else {
 			site_check2 = moveIt(site_check, -1);
-			steps = std::get<1>(m_pah->m_R5walker_sites[ii]) - 1;
-			std::get<1>(m_pah->m_R5walker_sites[ii])--;
-			b4 = true;
-			leave_edge = true;
 		}
 		if (site_check2 == stt){
-			std::get<1>(m_pah->m_R5walker_sites[ii]) = steps;
+			if (std::get<1>(m_pah->m_R5walker_sites[ii])>0){
+				steps =  std::get<1>(m_pah->m_R5walker_sites[ii])+1;
+				std::get<1>(m_pah->m_R5walker_sites[ii])++;
+				b4 = false;
+				leave_edge = true;
+			} else{
+				steps = std::get<1>(m_pah->m_R5walker_sites[ii]);
+				std::get<1>(m_pah->m_R5walker_sites[ii])--;
+				b4 = true;
+				leave_edge = true;
+			}
+			//std::get<1>(m_pah->m_R5walker_sites[ii]) = steps;
 			break;
 		}
 
@@ -14668,10 +14920,12 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	if (b4){
 		updateCombinedSitesMigration(S1,b4);
 		updateCombinedSitesMigration(S3,b4);
+		updateCombinedSitesMigration(S2,b4);
 	}
 	else{
 		updateCombinedSitesMigration(S2,b4);
 		updateCombinedSitesMigration(S4,b4); // neighbours
+		updateCombinedSitesMigration(S1,b4);
 	}
 
 }
@@ -14964,54 +15218,74 @@ void PAHProcess::startMigrationProcess(){
 	std::vector<std::tuple<Spointer,int>> migr_sites;
 	if(m_pah->m_siteMap[MIGR].size()>0){
 		for(unsigned int ii=0;ii!=m_pah->m_siteMap[MIGR].size();ii++){
-			std::tuple<Spointer,int> migr_site_ii= std::make_tuple((m_pah->m_siteMap[MIGR])[ii], 0);
+			Spointer st = (m_pah->m_siteMap[MIGR])[ii];
+			std::tuple<Spointer,int> migr_site_ii= std::make_tuple(st, 0);
 			migr_sites.push_back(migr_site_ii);
+			cpair R5coords;
+			if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C2->C1);
+			else{
+				if ( isR5internal(st->C1->C2, st->C1->C2->C2,false) || isR5internal(st->C1->C2, st->C1->C2->C2,true) ) {
+					R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
+				}
+				else if ( isR5internal(st->C2->C1->C1, st->C2->C1,false) || isR5internal(st->C2->C1->C1, st->C2->C1,true) ) {
+					R5coords = findR5internal(st->C2->C1->C1, st->C2->C1);
+				}
+				else {
+					//R5 not found
+					std::cout << "ERROR. R5 not found for " << st->type << " site in PAHProcess::startMigrationProcess." << std::endl;
+				}
+			}
 		}
 	}
 	if(m_pah->m_siteMap[MIGR2].size()>0){
 		for(unsigned int ii=0;ii!=m_pah->m_siteMap[MIGR2].size();ii++){
-			std::tuple<Spointer,int> migr_site_ii= std::make_tuple((m_pah->m_siteMap[MIGR2])[ii], 0);
+			Spointer st = (m_pah->m_siteMap[MIGR2])[ii];
+			std::tuple<Spointer,int> migr_site_ii= std::make_tuple(st, 0);
 			migr_sites.push_back(migr_site_ii);
+			cpair R5coords;
+			if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C2->C1);
+			else{
+				if ( isR5internal(st->C1->C2, st->C1->C2->C2,false) || isR5internal(st->C1->C2, st->C1->C2->C2,true) ) {
+					R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
+				}
+				else if ( isR5internal(st->C2->C1->C1, st->C2->C1,false) || isR5internal(st->C2->C1->C1, st->C2->C1,true) ) {
+					R5coords = findR5internal(st->C2->C1->C1, st->C2->C1);
+				}
+				else {
+					//R5 not found
+					std::cout << "ERROR. R5 not found for " << st->type << " site in PAHProcess::startMigrationProcess." << std::endl;
+				}
+			}
 		}
 	}
 	if(m_pah->m_siteMap[R5R6_MIGR].size()>0){
 		for(unsigned int ii=0;ii!=m_pah->m_siteMap[R5R6_MIGR].size();ii++){
-			std::tuple<Spointer,int> migr_site_ii= std::make_tuple((m_pah->m_siteMap[R5R6_MIGR])[ii], 0);
-			migr_sites.push_back(migr_site_ii);
-		}
-	}
-
-	for(unsigned int ii=0;ii!=migr_sites.size();ii++){
-		cpair R5coords;
-		//Get R5 internal coordinates
-		Spointer st = std::get<0>(migr_sites[ii]);
-		if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C2->C1);
-		else if (st->type == R5R6){
-			if ( isR5internal(st->C1->C1, st->C1,false) || isR5internal(st->C1->C1,st->C1,true) ) {
-				R5coords = findR5internal(st->C1->C1, st->C1);
-			}
-			else if ( isR5internal(st->C2, st->C2->C2,false) || isR5internal(st->C2, st->C2->C2,true) ) {
-				R5coords = findR5internal(st->C2, st->C2->C2);
-			}
-			else {
-				//R5 not found
-				std::cout << "ERROR. R5 not found for R5R6 site in PAHProcess::startMigrationProcess." << std::endl;
-			}
-		}
-		else{
-			if ( isR5internal(st->C1->C2, st->C1->C2->C2,false) || isR5internal(st->C1->C2, st->C1->C2->C2,true) ) {
-				R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
-			}
-			else if ( isR5internal(st->C2->C1->C1, st->C2->C1,false) || isR5internal(st->C2->C1->C1, st->C2->C1,true) ) {
-				R5coords = findR5internal(st->C2->C1->C1, st->C2->C1);
-			}
-			else {
-				//R5 not found
-				std::cout << "ERROR. R5 not found for " << st->type << " site in PAHProcess::startMigrationProcess." << std::endl;
+			Spointer current_site = (m_pah->m_siteMap[R5R6_MIGR])[ii];
+			Spointer check_coupled_site = std::get<0>(migr_sites.back());
+			Spointer stt_left = moveIt((m_pah->m_siteMap[R5R6_MIGR])[ii],-1);
+			Spointer stt_right = moveIt((m_pah->m_siteMap[R5R6_MIGR])[ii],+1);
+			int steps;
+			if (check_coupled_site != stt_left && check_coupled_site != stt_right){
+				if ( isR5internal(current_site->C1->C1,current_site->C1,true) || isR5internal(current_site->C1->C1,current_site->C1,false)){
+					cpair R5coords = findR5internal(current_site->C1->C1,current_site->C1);
+					Spointer next_site = moveIt(current_site,+1);
+					//Move the walker to its edge location. (Artificial move)
+					proc_M5R_R5R6_out_of_corner(current_site,current_site->C1,current_site->C2,next_site,false);
+					steps = -1;
+				}else if(isR5internal(current_site->C2,current_site->C2->C2,true) || isR5internal(current_site->C2,current_site->C2->C2,false)){
+					cpair R5coords = findR5internal(current_site->C2,current_site->C2->C2);
+					Spointer next_site = moveIt(current_site,-1);
+					//Move the walker to its edge location. (Artificial move)
+					proc_M5R_R5R6_out_of_corner(current_site,current_site->C1,current_site->C2,next_site,true);
+					steps = 1;
+				} else{
+					std::cout << "R5 not found." << std::endl;
+				}
+				std::tuple<Spointer,int> migr_site_ii= std::make_tuple(current_site, steps);
+				migr_sites.push_back(migr_site_ii);
 			}
 		}
 	}
-
 	m_pah->m_R5walker_sites = migr_sites;
 }
 
@@ -15053,4 +15327,91 @@ void PAHProcess::performMigrationProcess(){
 		}
 	}
 	m_pah->m_R5walker_sites.clear();
+}
+
+//! Returns true if site is allowed for migration
+bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
+	Spointer checkR5_1, checkR5_2;
+	if (b4){
+		checkR5_1 = moveIt(stt,-1);
+		checkR5_1 = moveIt(stt,-2);
+	}
+	else{
+		checkR5_1 = moveIt(stt,+1);
+		checkR5_1 = moveIt(stt,+2);
+	}
+
+	//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
+	if ((int)stt->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) return false; // The result would be an indene, not supported. YET!
+	if ((int)stt->type == 100 || (int)stt->type == 101 || (int)stt->type == 501 || (int)stt->type == 2002) return false; // This would violate the IPR.
+	if ((int)stt->type == 9999 || (int)stt->type == -1 || stt->type == None) return false;
+	if ((int)stt->type == 0){
+		if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) return false;
+		if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) return false;
+		if ((int)checkR5_1->type >= 2002 && (int)checkR5_1->type <= 2204) return false;
+		if ((int)checkR5_1->type >= 2204 && (int)checkR5_1->type <= 2205) return false;
+		if ((int)checkR5_1->type == 0){
+			if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) return false;
+			if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) return false;
+			if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) return false;
+		}
+	}
+	//Check for other sites
+	Cpointer CR5_otherside_end;
+	if (b4) CR5_otherside_end = stt->C2->C1;
+	else CR5_otherside_end = stt->C1->C2;
+	if (CR5_otherside_end->bridge) return false;
+	if (CR5_otherside_end->C2->bridge) return false; 
+	if (CR5_otherside_end->C1->bridge) return false;
+	if (CR5_otherside_end->C2->C2->bridge) return false; 
+	if (CR5_otherside_end->C1->C1->bridge) return false;
+	
+	//Check for other side being valid
+	Cpointer thirdC_after = findThirdC(CR5_otherside_end);
+	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
+		Spointer opp_site_after = findSite(thirdC_after);
+		//I have no clue how to flag an Spointer as error. This can cause seg faults.
+		if (opp_site_after != m_pah->m_siteList.end()){
+			int os_endtype = opp_site_after->type;
+			if (os_endtype >= 200 && os_endtype <= 203) return false;
+			if (os_endtype == 101) return false;
+			if (os_endtype >= 600 && os_endtype <= 603) return false;
+			if (os_endtype >= 1000 && os_endtype <= 1003) return false;
+			if (os_endtype >= 500 && os_endtype <= 504) return false;
+			if (os_endtype >= 2000 && os_endtype <= 2205) return false;
+			if (os_endtype >= 2103 && os_endtype <= 2105) return false;
+			if (os_endtype >= 2204 && os_endtype <= 2205) return false;
+			if (os_endtype == 9999 || os_endtype == -1 || opp_site_after->type == None) return false;
+		}
+	}
+		
+	//check that two pentagons (including internals) will not collide
+	cpair R5coords_end;
+	if (b4) R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+	else R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
+	if (m_pah->m_R5loc.size()>=1){
+		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
+			double distR5s = getDistance_twoC(*it, R5coords_end);
+			if (distR5s < 2.8) {
+				//This distance is a parameter of this jump process. Might need some more tuning. 
+				//2.8 seems appropiate but may reject too many jumps.
+				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+				return false;
+			}
+		}
+	}
+		
+	//check that pentagon and heptagon (including internals) will not collide
+	if (m_pah->m_R7loc.size()>=1){
+		for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
+			double distR5R7 = getDistance_twoC(*it, R5coords_end);
+			if (distR5R7 < 2.8) {
+				//This distance is a parameter of this jump process. Might need some more tuning. 
+				//2.8 seems appropiate but may reject too many jumps.
+				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
+				return false;
+			}
+		}
+	}
+	return true;
 }
