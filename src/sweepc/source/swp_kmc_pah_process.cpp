@@ -8899,7 +8899,12 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	//printStruct();
 	//printSites();
 	//Spointer S1 = moveIt(stt, -1);
-	if (moveIt(stt, -1)->comb == FE2 || moveIt(stt, 1)->comb == FE2) {
+	// Define a distribution that has two equally probably outcomes
+	boost::bernoulli_distribution<> choiceDistrib;
+	// Now build an object that will generate a sample using rng
+	boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
+	b4 = choiceGenerator(); // if FE3 on both sides, choose a random one
+	/*if (moveIt(stt, -1)->comb == FE2 || moveIt(stt, 1)->comb == FE2) {
 		if (moveIt(stt, -1)->comb == FE2 && moveIt(stt, 1)->comb == FE2) {
 			// Define a distribution that has two equally probably outcomes
 			boost::bernoulli_distribution<> choiceDistrib;
@@ -8921,7 +8926,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		// Now build an object that will generate a sample using rng
 		boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
 		b4 = choiceGenerator(); // if FE3 on both sides, choose a random one
-	}
+	}*/
 
 	Spointer sFE2, checkR5_1, checkR5_2;
 	Cpointer CRem, CFE, CRem_before, CRem_next, CR5_otherside_1, CR5_otherside_2;
