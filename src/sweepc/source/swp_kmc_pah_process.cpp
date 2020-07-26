@@ -4435,6 +4435,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st, bool b4) {
 			m_pah->m_siteMap[R5R6_MIGR].push_back(st);
 			break;
 		}
+		st->comb = None;
 		break;
     default:
         st->comb = None;
@@ -12219,7 +12220,15 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	S3 = moveIt(S1, -1);
 	S4 = moveIt(S2, +1);
 	updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
-	updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2,false); updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4,false);
+	if (S1->type==R5R6 && b4){
+		updateCombinedSitesMigration(S2,false);
+		updateCombinedSitesMigration(S1);
+	}
+	else{
+		updateCombinedSitesMigration(S1); 
+		updateCombinedSitesMigration(S2,false);
+	}
+	updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4,false);
 	
 	//Adjust opposite sites for starting and ending position.
 	if (opp_site_bool && opp_site_bool_second) {
@@ -12582,9 +12591,17 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	}
 	S3 = moveIt(S1, -1);
 	S4 = moveIt(S2, +1);
-	updateCombinedSitesMigration(stt);
+	//updateCombinedSitesMigration(stt);
 	updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
-	updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2); updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4);
+	if (b4 && S1->type==R5R6) {
+		updateCombinedSitesMigration(S2,false); updateCombinedSitesMigration(S1);
+	}else{
+		updateCombinedSitesMigration(S1); 
+		updateCombinedSitesMigration(S2,false);
+	}
+	
+	//updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2,false); 
+	updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4,false);
 
 	/*if ((int)stt_coupled->type < 2000) updateSites(stt_coupled, stt_coupled->C1, stt_coupled->C2, 0);
 	else updateSites(stt_coupled, stt_coupled->C1, stt_coupled->C2, 0);
