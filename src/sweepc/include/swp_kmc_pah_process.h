@@ -129,10 +129,7 @@ public:
 	//! Structure processes: returns success or failure
     bool performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID);
 
-    //! Structure processes: returns success or failure
-    int performMigrationProcess(const JumpProcess& jp, std::map<std::string,double> rates, int N_end_steps, rng_type &rng, int PAH_ID);
-
-    //! Called before migration process starts. Loops through the random walker sites and appends them.
+     //! Called before migration process starts. Loops through the random walker sites and appends them.
     void startMigrationProcess();
 
     //! Called after migration processes. Loops through the random walker sites and moves them to end locations.

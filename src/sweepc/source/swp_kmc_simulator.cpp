@@ -294,9 +294,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             if (jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34 || jp_perf.first->getID() == 66 ) {
                 //Migration jump processes. Set flag m_migrate to true.
                 if (!m_migrate) {
-                    savePAH(PAH_ID, "KMC_DEBUG/BEFORESTARTMIGRATION");
                     m_simPAHp.startMigrationProcess();
-                    savePAH(PAH_ID, "KMC_DEBUG/AFTERSTARTMIGRATION");
                     m_migrate = true; 
                 }
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
@@ -304,13 +302,10 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             else {
                 if (m_migrate){
                     //First update the multiple migration transformation
-                    savePAH(PAH_ID,"KMC_DEBUG/BEFORE_MIGRATION");
                     m_simPAHp.performMigrationProcess();
-                    savePAH(PAH_ID,"KMC_DEBUG/AFTER_MIGRATION");
                     m_migrate = false;
                 }
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
-                savePAH(PAH_ID,"KMC_DEBUG/AFTER_PERFORMPROCESS");
             }
 			writeCHSiteCountCSV_after(PAH_ID);
 
