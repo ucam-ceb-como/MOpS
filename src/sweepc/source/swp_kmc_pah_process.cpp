@@ -6242,14 +6242,6 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		printSites(site_perf);
 		return false;
 	}
-	//Used before defining R5R6ZZ as an individual site type.
-	/*if (id == 15 || id == 14){
-		site_perf = RZZchooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
-		//site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
-	}
-	else {
-		site_perf = chooseRandomSite(stp, rng); //cout<<"[random site chosen..]\n";
-	}*/
     // stores pointers to site Carbon members
     Cpointer site_C1 = site_perf->C1;
     Cpointer site_C2 = site_perf->C2;
