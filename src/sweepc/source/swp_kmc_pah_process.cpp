@@ -12032,7 +12032,6 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		CRem_next = CRem->C2;
 		CRem_before = CRem->C1;
 	}
-	saveXYZ("KMC_DEBUG/BEFOREMR5R6MIGR");
 	//int end_site_type = (int)sFE2->type;
 	//Add a new carbon between current R5 carbons of ACR5
 	Cpointer Cnew;
@@ -12047,15 +12046,16 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 											R5dirFEdist/4.0 * std::get<1>(R5dirFE) + magnFE * std::get<1>(crossvecFE), 
 											R5dirFEdist/4.0 * std::get<2>(R5dirFE)+ magnFE * std::get<2>(crossvecFE));
 		cpair CnewdirFE = scale_vector(resultantvecFE);
-
+		cpair mposFE = jumpToPos(CFE->coords,CnewdirFE,bond_dist);
+		mposFE = jumpToPos(mposFE,R5dirFE,bond_dist);
+		moveC(CFE->C2,mposFE);
 		Cnew = addC(CFE,CnewdirFE,bond_dist);
-		cpair mposFE = jumpToPos(Cnew->coords,R5dirFE,bond_dist);
+
 		double dotprod = std::get<0>(CnewdirFE)*std::get<0>(R5dirFE) + std::get<1>(CnewdirFE)*std::get<1>(R5dirFE) + std::get<2>(CnewdirFE)*std::get<2>(R5dirFE);
 		cpair Hdir = std::make_tuple(std::get<0>(CnewdirFE) - 2.0*dotprod*std::get<0>(R5dirFE),
 									std::get<1>(CnewdirFE) - 2.0*dotprod*std::get<1>(R5dirFE),
 									std::get<2>(CnewdirFE) - 2.0*dotprod*std::get<2>(R5dirFE));
 		updateA(Cnew,'H',Hdir);
-		moveC(Cnew->C2,mposFE);
 		updateA(Cnew->C2,'H',CnewdirFE);
 	}
 	else {

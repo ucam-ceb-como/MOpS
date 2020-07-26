@@ -318,11 +318,21 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			
             //oldtnext = t_next;
             //t_next = t_max;
+            if (loopcount == maxloops) proceed = false; //If maxloops is set to 0, this condition will never be true
+            m_t = t_next;
+        }else{
+            t_next = t_max;
+            m_t = t_next;
         }
-		if (loopcount == maxloops) proceed = false; //If maxloops is set to 0, this condition will never be true
-        m_t = t_next;
     }
+    
     if (tracked_csv) closetrackedPAHCSV();
+    std::string xyzname = ("KMC_DEBUG/");
+    xyzname.append(std::to_string(PAH_ID));
+    xyzname.append("/");
+    xyzname.append(std::to_string(m_t*1000000.0));
+    xyzname.append("_B");
+    savePAH(PAH_ID, xyzname); 
 	return m_t;
 }
 
