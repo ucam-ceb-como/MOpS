@@ -12218,16 +12218,16 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	//Update combined sites
 	Spointer stt_1, stt_2, S3, S4;
 	if (b4){
-		stt_1 = moveIt(newSite, -1);
+		stt_1 = moveIt(newSite, +1);
 		stt_2 = moveIt(stt, +1);
 	}else{
 		stt_1 = moveIt(stt, -1);
-		stt_2 = moveIt(newSite, +1);
+		stt_2 = moveIt(newSite, -1);
 	}
 	S3 = moveIt(S1, -1);
 	S4 = moveIt(S2, +1);
 	updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
-	updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2); updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4);
+	updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2,false); updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4,false);
 	
 	//Adjust opposite sites for starting and ending position.
 	if (opp_site_bool && opp_site_bool_second) {
@@ -12419,10 +12419,17 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	removeC(CRem, false);
 	
 	//First adjust starting site and add new site if needed.
-	Spointer stt_coupled;
+	Spointer stt_coupled, newSite;
 	if (b4) stt_coupled = moveIt(stt,+1);
 	else stt_coupled = moveIt(stt,-1);
 	if (b4) {
+		convSiteType(stt, Cnew->C1->C1, Cnew, ZZ);
+		newSite = addSite(FE, Cnew, Cnew->C2, stt_coupled);
+	} else{
+		convSiteType(stt, Cnew, Cnew->C2->C2, ZZ);
+		newSite = addSite(FE, Cnew->C1, Cnew, stt);
+	}
+	/*if (b4) {
 		//convSiteType(stt, Cnew->C1->C1, Cnew, ZZ);
 		sFE2->C1 = sFE2->C1;
 		sFE2->C2 = Cnew;
@@ -12437,7 +12444,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		stt->C1 = stt_coupled->C2;
 		stt->C2 = Cnew;
 
-	}
+	}*/
 	//Adjust sites for ending position.
 	Spointer S1 = moveIt(sFE2, -1);
 	Spointer S2 = moveIt(sFE2, +1);
@@ -12573,18 +12580,18 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	}
 	
 	//Update combined sites
-	/*Spointer stt_1, stt_2, S3, S4;
+	Spointer stt_1, stt_2, S3, S4;
 	if (b4){
-		stt_1 = moveIt(newSite, -1);
+		stt_1 = moveIt(newSite, +1);
 		stt_2 = moveIt(stt, +1);
 	}else{
 		stt_1 = moveIt(stt, -1);
-		stt_2 = moveIt(newSite, +1);
-	}*/
-	Spointer S3 = moveIt(S1, -1);
-	Spointer S4 = moveIt(S2, +1);
+		stt_2 = moveIt(newSite, -1);
+	}
+	S3 = moveIt(S1, -1);
+	S4 = moveIt(S2, +1);
 	updateCombinedSitesMigration(stt);
-	//updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
+	updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
 	updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2); updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4);
 
 	/*if ((int)stt_coupled->type < 2000) updateSites(stt_coupled, stt_coupled->C1, stt_coupled->C2, 0);
@@ -14465,8 +14472,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			std::get<2>(m_pah->m_R5walker_sites[ii])++;
 			start_site = std::get<1>(m_pah->m_R5walker_sites[ii]);
 		}
-		updateSites(stt,stt->C1,stt->C2,-500);
-		updateSites(stt_coupled,stt_coupled->C1,stt_coupled->C2,-501);
+		updateSites(stt,stt->C1,stt->C2,-501);
+		updateSites(stt_coupled,stt_coupled->C1,stt_coupled->C2,-500);
 		Cpointer start_site_C1 = start_site->C1;
 		Cpointer start_site_C2 = start_site->C2;
 
