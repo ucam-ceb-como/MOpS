@@ -27,6 +27,9 @@
 #       magnitude of the velocity projected into the streamline. Is this correct?
 #   2. Time is reported in two locations: Mops.inx and gasphase.csv -- and they 
 #       have the same values... Does this include U and U_thermophoretic?
+#       Ans: From create_mops.m in preprint 204 archive, time us from convective
+#           and thermophoretic veolicty. 
+#   3. In sweep.xml files, is Ru autodefined?
 #
 # *****************************************************************************
 
@@ -34,7 +37,7 @@ import sys, os, re
 import numpy as np 
 import matplotlib.pyplot as plt
 import pandas as pd
-# import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET
 
 # Functions to assist calculations
 def project(vector1, vector2):
@@ -61,7 +64,7 @@ foam_streamline_basename = "track0"
 foam_streamline_dir = os.path.join(foam_case_dir,foam_prostProcess_dir+str(foam_time))
 foam_streamline_file_scalar = os.path.join(foam_streamline_dir, foam_streamline_basename+"_p_T.csv" )
 foam_streamline_file_vector = os.path.join(foam_streamline_dir, foam_streamline_basename+"_U_V_T.csv" )
-
+## Need to expand for Species Data
 
 # Read Streamine Velocity Data
 velocity_data = pd.read_csv(foam_streamline_file_vector)
@@ -191,3 +194,9 @@ print(velocity_data)
 print(velocity_data.dtypes)
 
 # Create master dataframe:
+
+
+
+### Write Input Files. 
+# mops.inx
+top = ET.Element('mops')
