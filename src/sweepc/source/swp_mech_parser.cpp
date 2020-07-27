@@ -516,7 +516,7 @@ void MechParser::readV1(CamXML::Document &xml, Sweep::Mechanism &mech)
         // Get minimum primary particle diameter.
         // S. Tsantilis, H. Briesen and S.E. Pratsinis,
         // Sintering Time for Silica Particle Growth
-        // Aerosol Science and Technology 34: 237�246 (2001).
+        // Aerosol Science and Technology 34: 237-246 (2001).
         if ((*i)->GetFirstChild("Dpmin") != NULL) {
             str = (*i)->GetFirstChild("Dpmin")->Data();
             mech.SintModel().SetDpmin(cdble(str));
