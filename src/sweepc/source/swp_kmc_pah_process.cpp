@@ -11718,7 +11718,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		opp_site_after_second = findSite(thirdC_after2);
 		if (opp_site_after_second != m_pah->m_siteList.end()) opp_site_bool_after_second = true;
 	}
-
+	saveXYZ("KMC_DEBUG/AROUNDCORNER");
 	//Add a new carbon between current R5 carbons of ACR5
 	double R5_dist = getDistance_twoC(CFE, CFE->C2);
 	double dist2;
@@ -12285,7 +12285,7 @@ void PAHProcess::proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer
 		CR5_otherside_2 = C_2->C1->C1;
 		checkR5_1 = moveIt(sFE2, -1);
 		checkR5_2 = moveIt(sFE2, -2);
-		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C1;
+		if (checkR5_1->type == R5 && sFE2->type == R5) CRem = sFE2->C1;
 		else CRem = sFE2->C2;
 		CRem_next = CRem->C1;
 		CRem_before = CRem->C2;
@@ -12296,7 +12296,7 @@ void PAHProcess::proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer
 		CR5_otherside_2 = C_1->C2->C2;
 		checkR5_1 = moveIt(sFE2, +1);
 		checkR5_2 = moveIt(sFE2, +2);
-		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C2;
+		if (checkR5_1->type == R5 && sFE2->type == R5) CRem = sFE2->C2;
 		else CRem = sFE2->C1;
 		CRem_next = CRem->C2;
 		CRem_before = CRem->C1;
@@ -12341,24 +12341,36 @@ void PAHProcess::proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer
 	Spointer S1 = moveIt(sFE2, -1);
 	Spointer S2 = moveIt(sFE2, +1);
 	//sFE2 should already be the correct site type. It just needs to reshuffle the pointers.
-	if (b4) {
-		//updateSites(S1, S1->C1, sFE2->C1, 0);
-		S1->C1 = S1->C1;
-		S1->C2 = sFE2->C1;
-		//convSiteType(sFE2, sFE2->C1, S2->C2, sFE2->type);
-		sFE2->C1 = sFE2->C1;
-		sFE2->C2 = S2->C2;
-		removeSite(S2);
-	} else{
-		//convSiteType(S1, S1->C1, sFE2->C2, sFE2->type);
-		sFE2->C1 = S1->C1;
-		sFE2->C2 = sFE2->C2;
-		removeSite(S1);
-		//updateSites(S2, sFE2->C2, S2->C2, 0);
-		S2->C1 = sFE2->C2;
-		S2->C2 = S2->C2;
+	if (checkR5_1->type == R5 && sFE2->type == R5){
+		if (b4) {
+			S1->C1 = S1->C1;
+			S1->C2 = sFE2->C2;
+			removeSite(sFE2);
+		} else{
+			S2->C1 = sFE2->C1;
+			S2->C2 = S2->C2;
+			removeSite(sFE2);
+		}
+	}else{
+		if (b4) {
+			//updateSites(S1, S1->C1, sFE2->C1, 0);
+			S1->C1 = S1->C1;
+			S1->C2 = sFE2->C1;
+			//convSiteType(sFE2, sFE2->C1, S2->C2, sFE2->type);
+			sFE2->C1 = sFE2->C1;
+			sFE2->C2 = S2->C2;
+			removeSite(S2);
+		} else{
+			//convSiteType(S1, S1->C1, sFE2->C2, sFE2->type);
+			sFE2->C1 = S1->C1;
+			sFE2->C2 = sFE2->C2;
+			removeSite(S1);
+			//updateSites(S2, sFE2->C2, S2->C2, 0);
+			S2->C1 = sFE2->C2;
+			S2->C2 = S2->C2;
+		}
+		//removeSite(sFE2);
 	}
-	//removeSite(sFE2);
 	
 	//Update combined sites
 	/*Spointer stt_1, stt_2, S3, S4;
@@ -14198,15 +14210,19 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// (excluding new FE sites, since their combined site type will still be None)
 	if (b4){
 		S3 = moveIt(S1, -1);
+		S4 = moveIt(S2, 1);
 	}
 	else{
+		S3 = moveIt(S1, -1);
 		S4 = moveIt(S2, 1);
 	}
 	updateCombinedSitesMigration(stt); updateCombinedSitesMigration(sFE2,b4); updateCombinedSitesMigration(S1,b4); updateCombinedSitesMigration(S2,b4);
 	if (b4){
 		updateCombinedSitesMigration(S3,b4);
+		updateCombinedSitesMigration(S4,b4);
 	}
 	else{
+		updateCombinedSitesMigration(S3,b4);
 		updateCombinedSitesMigration(S4,b4); // neighbours
 	}
 }
@@ -14216,12 +14232,12 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
 	bool b4 = false;
-	/*// Define a distribution that has two equally probably outcomes
+	// Define a distribution that has two equally probably outcomes
 	boost::bernoulli_distribution<> choiceDistrib;
 	// Now build an object that will generate a sample using rng
 	boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
-	b4 = choiceGenerator(); // if FE3 on both sides, choose a random one*/
-	if (moveIt(stt, -1)->comb == FE2 || moveIt(stt, 1)->comb == FE2) {
+	b4 = choiceGenerator(); // if FE3 on both sides, choose a random one
+	/*if (moveIt(stt, -1)->comb == FE2 || moveIt(stt, 1)->comb == FE2) {
 		if (moveIt(stt, -1)->comb == FE2 && moveIt(stt, 1)->comb == FE2) {
 			// Define a distribution that has two equally probably outcomes
 			boost::bernoulli_distribution<> choiceDistrib;
@@ -14243,7 +14259,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		// Now build an object that will generate a sample using rng
 		boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
 		b4 = choiceGenerator(); // if FE3 on both sides, choose a random one
-	}
+	}*/
 	Spointer sFE2, checkR5_1, checkR5_2;
 	Cpointer CRem, CFE, CRem_before, CRem_next, CR5_otherside_1, CR5_otherside_2;
 	if (b4) {
@@ -14363,12 +14379,21 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	
 	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
 		//R5 has moved to the edge and will now be free.
-		//removeC(C1_new->C2, false); removeC(C1_new->C2, false);
-		//addC(C1_new, normAngle(C1_new->C1->bondAngle1 - 60), normAngle(C1_new->C1->bondAngle1), 1, true);
-		convSiteType(stt, stt->C1, stt->C2, ZZ);
-		convSiteType(sFE2, sFE2->C1, sFE2->C2, RFE);
+		//Since the FE2 will not move anymore it is probably a good idea to remove the walker.
+		convSiteType(stt, stt->C1, stt->C2, RFE);
+		convSiteType(sFE2, sFE2->C1, sFE2->C2, R5);
 		convSiteType(checkR5_1, checkR5_1->C1, checkR5_1->C2, R5);
 		updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, +100);
+		Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[ii]);
+		Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
+		if(site_perf==site_perf_2) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		else proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		//sFE2 is deleted in the previous call so we must not call it again from here.
+		updateCombinedSitesMigration(stt); updateCombinedSitesMigration(checkR5_1); updateCombinedSitesMigration(checkR5_2);
+		m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
+		addR5internal(checkR5_1->C1,checkR5_1->C2);
+		return;
+		//Need to check for opposite site logic before returning.
 	}
 
 	// edit sites. first identify the neighbouring sites of resulting RFE & R5
