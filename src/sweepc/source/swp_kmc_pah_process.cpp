@@ -13756,8 +13756,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	// (excluding new FE sites, since their combined site type will still be None)
 	if (b4){
 		S3 = moveIt(S1, -1);
+		S4 = moveIt(S2, 1);
 	}
 	else{
+		S3 = moveIt(S1, -1);
 		S4 = moveIt(S2, 1);
 	}
 	updateCombinedSitesMigration(stt);
@@ -13766,12 +13768,14 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		updateCombinedSitesMigration(S1,true);
 		updateCombinedSitesMigration(S3,true);
 		updateCombinedSitesMigration(S2,true);
+		updateCombinedSitesMigration(S4,false);
 	}
 	else{
 		updateCombinedSitesMigration(sFE2,true); 
 		updateCombinedSitesMigration(S2,false);
 		updateCombinedSitesMigration(S4,false); // neighbours
 		updateCombinedSitesMigration(S1,false);
+		updateCombinedSitesMigration(S3,true);
 	}
 }
 
