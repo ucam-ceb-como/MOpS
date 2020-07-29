@@ -9293,7 +9293,7 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//printStruct();//++++
 	if (!m_pah->m_optimised){
 		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
+		mol = optimisePAH(mol,2000);
 		passbackPAH(mol);
 	}
 	//saveXYZ("After_1stmin");
@@ -9401,7 +9401,7 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//saveXYZ("Before_second_min");
 	if (!m_pah->m_optimised){
 		OpenBabel::OBMol newmol = passPAH();
-		newmol = optimisePAH(newmol, 8000);
+		newmol = optimisePAH(newmol, 4000);
 		passbackPAH(newmol);
 	}
 	//optimisePAH(true, true, "curved_guy");
@@ -11724,7 +11724,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		opp_site_after_second = findSite(thirdC_after2);
 		if (opp_site_after_second != m_pah->m_siteList.end()) opp_site_bool_after_second = true;
 	}
-	saveXYZ("KMC_DEBUG/AROUNDCORNER");
+	//saveXYZ("KMC_DEBUG/AROUNDCORNER");
 	//Add a new carbon between current R5 carbons of ACR5
 	double R5_dist = getDistance_twoC(CFE, CFE->C2);
 	double dist2;
@@ -15006,14 +15006,16 @@ void PAHProcess::performMigrationProcess(){
 
 //! Returns true if site is allowed for migration
 bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
-	Spointer checkR5_1, checkR5_2;
+	Spointer checkR5_1, checkR5_2, checkR5_3;
 	if (b4){
 		checkR5_1 = moveIt(stt,-1);
 		checkR5_2 = moveIt(stt,-2);
+		checkR5_3 = moveIt(stt,-3);
 	}
 	else{
 		checkR5_1 = moveIt(stt,+1);
 		checkR5_2 = moveIt(stt,+2);
+		checkR5_3 = moveIt(stt,+3);
 	}
 
 	//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
@@ -15031,6 +15033,7 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 			if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) return false;
 		}
 	}
+	if ((int)stt->type == 1 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0 && (int)checkR5_3->type == 2002) return false;
 	//Check for other sites
 	Cpointer CR5_otherside_end;
 	if (b4) CR5_otherside_end = stt->C2->C1;
@@ -15062,8 +15065,15 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 		
 	//check that two pentagons (including internals) will not collide
 	cpair R5coords_end;
-	if (b4) R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
-	else R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
+	/*if (b4) R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+	else R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);*/
+	if (b4) {
+		if (CR5_otherside_end->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+		else R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2,true);
+	}else{
+		if (CR5_otherside_end->A=='H') R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end);
+		else R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
+	}
 	if (m_pah->m_R5loc.size()>=1){
 		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 			double distR5s = getDistance_twoC(*it, R5coords_end);
