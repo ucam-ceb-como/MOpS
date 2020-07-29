@@ -196,6 +196,8 @@ public:
     bool SiteRightSize(Spointer& stt) const;
     //! Returns true if site is allowed for migration
     bool checkSiteMigration(Spointer stt, bool b4);
+    //! Modifies pointer for R5 walkers to avoid overlaps.
+    void checkR5Walkers();
 	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
 	OpenBabel::OBMol passPAH(bool detectBonds=true);
 	//! Connects the atoms in a PAH using OpenBabel routines. Equivalent to OpenBabel::OBMol::ConnectTheDots();

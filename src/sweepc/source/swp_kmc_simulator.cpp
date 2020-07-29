@@ -297,7 +297,9 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     m_simPAHp.startMigrationProcess();
                     m_migrate = true; 
                 }
+                savePAH(PAH_ID,"KMC_DEBUG/BEFOREJPPERFORM");
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
+                savePAH(PAH_ID,"KMC_DEBUG/AFTERJPPERFORM");
             }
             else {
                 if (m_migrate){
