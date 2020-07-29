@@ -11895,7 +11895,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
-	
+	checkR5Walkers();
 	//Update combined sites
 	Spointer stt_1, stt_2, S3, S4, S5, S6;
 	if (b4){
@@ -12253,7 +12253,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
-	
+	checkR5Walkers();
 	//Update combined sites
 	Spointer stt_1, stt_2, S3, S4;
 	if (b4){
