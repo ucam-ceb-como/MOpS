@@ -11657,6 +11657,34 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 
 	int ii = migr_index;
 
+
+	//We need to be sure that sFE2 is NOT the start site for another walker.
+	unsigned int jj;
+	for(jj=0; jj!=m_pah->m_R5walker_sites.size();jj++){
+		Spointer check_site = std::get<0>(m_pah->m_R5walker_sites[jj]);
+		Spointer check_site_2 = std::get<1>(m_pah->m_R5walker_sites[jj]);
+		int steps = std::get<2>(m_pah->m_R5walker_sites[jj]);
+		Spointer sFE2_left = moveIt(sFE2,-1);
+		Spointer sFE2_right = moveIt(sFE2,+1);
+		if(sFE2==check_site || sFE2_right==check_site || sFE2_left==check_site){
+			//If this is the case we need to move sFE2 to another. Probably the healthiest thing is to move the walker.
+			bool b4;
+			if (steps<0) b4 = true;
+			else if (steps>0) b4 = false;
+			else{
+				//This should never be the case.
+				cout << "Error in R5 migration." << std::endl;
+			}
+			Spointer move_to_site = moveIt(check_site,steps);
+			proc_M5R_ACR5_termination(check_site,check_site->C1,check_site->C2,move_to_site,b4);
+			//This should move the ACR5 to its current location. Now move the walker.
+			std::get<0>(m_pah->m_R5walker_sites[jj]) = move_to_site;
+			std::get<1>(m_pah->m_R5walker_sites[jj]) = move_to_site;
+			std::get<2>(m_pah->m_R5walker_sites[jj]) = 0;
+			//sFE2 whould be ready to be modified.
+		}
+	}
+
 	//Remove R5coords from m_pah->m_R5loc. This is done by starter function/
 	//findR5internal(C_1->C2, C_2->C1);
 	// First select carbons and sites affected.
@@ -11895,7 +11923,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
-	checkR5Walkers();
+	
 	//Update combined sites
 	Spointer stt_1, stt_2, S3, S4, S5, S6;
 	if (b4){
@@ -12253,7 +12281,6 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
-	checkR5Walkers();
 	//Update combined sites
 	Spointer stt_1, stt_2, S3, S4;
 	if (b4){
@@ -13610,6 +13637,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	else {
 		std::get<2>(m_pah->m_R5walker_sites[ii])++;
 	}
+	checkR5Walkers();
 	
 	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
 		//R5 has moved to the edge and will now be free.
@@ -13772,7 +13800,6 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	//printStruct();
 	// update combined sites for all sites involved and their neighbours
 	// (excluding new FE sites, since their combined site type will still be None)
-	checkR5Walkers();
 	if (b4){
 		S3 = moveIt(S1, -1);
 		S4 = moveIt(S2, 1);
@@ -13912,6 +13939,14 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	if (steps==-99999){
 		std::cout << "Error on R5 migration. " << std::endl;
 	}
+	
+	if (b4) {
+		std::get<2>(m_pah->m_R5walker_sites[ii])--;
+	}
+	else {
+		std::get<2>(m_pah->m_R5walker_sites[ii])++;
+	}
+	checkR5Walkers();
 
 	Spointer sFE2, checkR5_1, checkR5_2;
 	Cpointer CRem, CRem_before, CRem_next, CFE, CR5_otherside_1, CR5_otherside_2;
@@ -13989,11 +14024,9 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		Spointer stt_coupled;
 		if (b4) {
 			stt_coupled = moveIt(stt,+1);
-			std::get<2>(m_pah->m_R5walker_sites[ii])--;
 		}
 		else {
 			stt_coupled = moveIt(stt,-1);
-			std::get<2>(m_pah->m_R5walker_sites[ii])++;
 		}
 		updateSites(stt,stt->C1,stt->C2,-500);
 		updateSites(stt_coupled,stt_coupled->C1,stt_coupled->C2,-501);
@@ -14013,12 +14046,10 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		Spointer stt_coupled, start_site;
 		if (b4) {
 			stt_coupled = moveIt(stt,+1);
-			std::get<2>(m_pah->m_R5walker_sites[ii])--;
 			start_site = std::get<0>(m_pah->m_R5walker_sites[ii]);
 		}
 		else {
 			stt_coupled = moveIt(stt,-1);
-			std::get<2>(m_pah->m_R5walker_sites[ii])++;
 			start_site = std::get<1>(m_pah->m_R5walker_sites[ii]);
 		}
 		updateSites(stt,stt->C1,stt->C2,-501);
@@ -14028,13 +14059,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 
 		proc_M5R_R5R6_out_of_corner(start_site,start_site_C1,start_site_C2,sFE2,b4,ii);
 		return;
-	}
-
-	if (b4) {
-		std::get<2>(m_pah->m_R5walker_sites[ii])--;
-	}
-	else {
-		std::get<2>(m_pah->m_R5walker_sites[ii])++;
 	}
 
 	// edit sites. first identify the neighbouring sites of resulting RFE & R5
@@ -14243,7 +14267,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//printStruct();
 	// update combined sites for all sites involved and their neighbours
 	// (excluding new FE sites, since their combined site type will still be None)
-	checkR5Walkers();
 	if (b4){
 		S3 = moveIt(S1, -1);
 		S4 = moveIt(S2, 1);
@@ -14421,6 +14444,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	else {
 		std::get<2>(m_pah->m_R5walker_sites[ii])++;
 	}
+	checkR5Walkers();
+	
 	
 	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
 		//R5 has moved to the edge and will now be free.
@@ -14583,7 +14608,6 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	//printStruct();
 	// update combined sites for all sites involved and their neighbours
 	// (excluding new FE sites, since their combined site type will still be None)
-	checkR5Walkers();
 	if (b4){
 		S3 = moveIt(S1, -1);
 	}
@@ -15108,21 +15132,61 @@ void PAHProcess::checkR5Walkers(){
 		Spointer start_site_ii = std::get<0>(m_pah->m_R5walker_sites[ii]);
 		Spointer start_site_ii2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
 		int ii_steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
-		for (int jj=0; jj!=m_pah->m_R5walker_sites.size();jj++){
-			if (jj != ii){
-				Spointer start_site_jj = std::get<0>(m_pah->m_R5walker_sites[jj]);
-				Spointer start_site_jj2 = std::get<1>(m_pah->m_R5walker_sites[jj]);
-				int jj_steps = std::get<2>(m_pah->m_R5walker_sites[jj]);
-				Spointer check_site = moveIt(start_site_jj,jj_steps);
-				if (check_site == start_site_ii || check_site == start_site_ii2){
-					//The current location of walker jj is the start location of walker ii.
-					//Swap them
-					std::get<0>(m_pah->m_R5walker_sites[ii]) = start_site_jj;
-					std::get<1>(m_pah->m_R5walker_sites[ii]) = start_site_jj2;
-					std::get<2>(m_pah->m_R5walker_sites[ii]) = ii_steps + jj_steps;
-					std::get<0>(m_pah->m_R5walker_sites[jj]) = start_site_ii;
-					std::get<1>(m_pah->m_R5walker_sites[jj]) = start_site_ii2;
-					std::get<2>(m_pah->m_R5walker_sites[jj]) = 0;
+		Spointer end_site_ii, end_site_ii2;
+		end_site_ii = moveIt(start_site_ii,ii_steps);
+		if (ii_steps!=0){
+			if ((int)end_site_ii->type>500 && (int)end_site_ii->type<1100){
+				if (ii_steps<0) {
+					end_site_ii = moveIt(start_site_ii2,ii_steps-1);
+					end_site_ii2 = moveIt(start_site_ii2,ii_steps);
+				}
+				else{
+					end_site_ii = moveIt(start_site_ii2,ii_steps);
+					end_site_ii2 = moveIt(start_site_ii2,ii_steps+1);
+				}
+			}
+			else{
+				end_site_ii = moveIt(start_site_ii,ii_steps);
+				end_site_ii2 = moveIt(start_site_ii,ii_steps);
+			}
+			for (int jj=0; jj!=m_pah->m_R5walker_sites.size();jj++){
+				if (jj != ii){
+					Spointer start_site_jj = std::get<0>(m_pah->m_R5walker_sites[jj]);
+					Spointer start_site_jj2 = std::get<1>(m_pah->m_R5walker_sites[jj]);
+					int jj_steps = std::get<2>(m_pah->m_R5walker_sites[jj]);
+					Spointer end_site_jj = moveIt(start_site_jj,jj_steps);
+					Spointer end_site_jj2 = moveIt(start_site_jj2,jj_steps);
+					Spointer check_site = moveIt(start_site_jj,jj_steps);
+					if (check_site == start_site_ii || check_site == start_site_ii2){
+						//The next position of walker jj will become the start location of walker ii.
+						//This will mess up the sites.
+						//First - Move walker ii to current position and steps = 0
+						//Second - Move walker jj to current position and steps = 0
+						bool local_b4;
+						if (jj_steps<0) {
+							local_b4 = true;
+							jj_steps++;
+						}
+						else {
+							local_b4 = false;
+							jj_steps--;
+						}
+						saveXYZ("KMC_DEBUG/BEFORE_II_TERMINATION");
+						proc_M5R_ACR5_termination(start_site_ii, start_site_ii->C1,start_site_ii->C2,end_site_ii,local_b4);
+						std::get<0>(m_pah->m_R5walker_sites[ii]) = end_site_ii;
+						std::get<1>(m_pah->m_R5walker_sites[ii]) = end_site_ii2;
+						std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
+						saveXYZ("KMC_DEBUG/AFTER_II_TERMINATION");
+						//Reread the pointers
+						end_site_jj = moveIt(start_site_jj,jj_steps);
+						end_site_jj2 = moveIt(start_site_jj2,jj_steps);
+						proc_M5R_ACR5_termination(start_site_jj, start_site_jj->C1,start_site_jj->C2,end_site_jj,local_b4);
+						std::get<0>(m_pah->m_R5walker_sites[jj]) = end_site_jj;
+						std::get<1>(m_pah->m_R5walker_sites[jj]) = end_site_jj2;
+						if (local_b4) std::get<2>(m_pah->m_R5walker_sites[jj]) = -1;
+						else std::get<2>(m_pah->m_R5walker_sites[jj]) = 1;
+						saveXYZ("KMC_DEBUG/AFTER_JJ_TERMINATION");
+					}
 				}
 			}
 		}
