@@ -297,16 +297,16 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     m_simPAHp.startMigrationProcess();
                     m_migrate = true; 
                 }
-                savePAH(PAH_ID,"KMC_DEBUG/BEFOREJPPERFORM");
+                //savePAH(PAH_ID,"KMC_DEBUG/BEFOREJPPERFORM");
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
-                savePAH(PAH_ID,"KMC_DEBUG/AFTERJPPERFORM");
+                //savePAH(PAH_ID,"KMC_DEBUG/AFTERJPPERFORM");
             }
             else {
                 if (m_migrate){
                     //First update the multiple migration transformation
-                    savePAH(PAH_ID,"KMC_DEBUG/BEFOREMIGRATION");
+                    //savePAH(PAH_ID,"KMC_DEBUG/BEFOREMIGRATION");
                     m_simPAHp.performMigrationProcess();
-                    savePAH(PAH_ID,"KMC_DEBUG/AFTERMIGRATION");
+                    //savePAH(PAH_ID,"KMC_DEBUG/AFTERMIGRATION");
                     m_migrate = false;
                 }
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);

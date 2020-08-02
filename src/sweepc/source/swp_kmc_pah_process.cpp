@@ -15171,12 +15171,12 @@ void PAHProcess::checkR5Walkers(){
 							local_b4 = false;
 							jj_steps--;
 						}
-						saveXYZ("KMC_DEBUG/BEFORE_II_TERMINATION");
+						//saveXYZ("KMC_DEBUG/BEFORE_II_TERMINATION");
 						proc_M5R_ACR5_termination(start_site_ii, start_site_ii->C1,start_site_ii->C2,end_site_ii,local_b4);
 						std::get<0>(m_pah->m_R5walker_sites[ii]) = end_site_ii;
 						std::get<1>(m_pah->m_R5walker_sites[ii]) = end_site_ii2;
 						std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
-						saveXYZ("KMC_DEBUG/AFTER_II_TERMINATION");
+						//saveXYZ("KMC_DEBUG/AFTER_II_TERMINATION");
 						//Reread the pointers
 						end_site_jj = moveIt(start_site_jj,jj_steps);
 						end_site_jj2 = moveIt(start_site_jj2,jj_steps);
@@ -15185,7 +15185,7 @@ void PAHProcess::checkR5Walkers(){
 						std::get<1>(m_pah->m_R5walker_sites[jj]) = end_site_jj2;
 						if (local_b4) std::get<2>(m_pah->m_R5walker_sites[jj]) = -1;
 						else std::get<2>(m_pah->m_R5walker_sites[jj]) = 1;
-						saveXYZ("KMC_DEBUG/AFTER_JJ_TERMINATION");
+						//saveXYZ("KMC_DEBUG/AFTER_JJ_TERMINATION");
 					}
 				}
 			}
