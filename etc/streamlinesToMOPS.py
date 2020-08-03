@@ -79,7 +79,7 @@ def prettify(elem):
     return reparsed.toprettyxml(indent="    ")
 
 
-def writeStreamline(data, number,comment=""):
+def writeStreamline(data, number, comment=""):
     """
         Write mops.inx and my_gasphase.csv for a streamline
     """
@@ -362,15 +362,15 @@ if(src == "FOAM"):
     dfInputs['ThermophoreticVelocity[m/s]'] = vmag_full
     dfInputs['Time'] = tres_full
     dfInputs['T'] = scalar_data['T']
-    dfInputs['P'] = scalar_data['p'] /100000  # pa to bar
+    dfInputs['P'] = scalar_data['p'] / 100000  # pa to bar
     dfInputs['wdotA4'] = scalar_data['p']*0
     dfInputs['DiffusionTerm'] = scalar_data['p']*0
 
     # Read Mole Fraction (X) data
     mole_fraction_1 = pd.read_csv(foam_streamline_file_mech_1)
-    mole_fraction_1 = mole_fraction_1.drop(columns=['x','y','z'])
+    mole_fraction_1 = mole_fraction_1.drop(columns=['x', 'y', 'z'])
     mole_fraction_2 = pd.read_csv(foam_streamline_file_mech_2)
-    mole_fraction_2 = mole_fraction_2.drop(columns=['x','y','z'])
+    mole_fraction_2 = mole_fraction_2.drop(columns=['x', 'y', 'z'])
     mole_fraction_1['streamline'] = scalar_data['streamline'].astype('int')
     mole_fraction_2['streamline'] = scalar_data['streamline'].astype('int')
 
@@ -412,7 +412,7 @@ elif(src == "kinetics"):
     time[0] = 0
     for i in range(1, len(time)):
         dx = grid[i]-grid[i-1]
-        velocity = (u[i]+v[i]+u[i-1]+v[i-1])/2.0  # average between point i and point i-1
+        velocity = (u[i]+v[i]+u[i-1]+v[i-1])/2.0  # average of point i & i-1
         dt = dx/velocity
         time[i] = time[i-1]+dt
     print(time)
@@ -422,7 +422,7 @@ elif(src == "kinetics"):
     dfInputs['ThermophoreticVelocity[m/s]'] = v
     dfInputs['Time'] = time
     dfInputs['T'] = temperature
-    dfInputs['P'] = pressure/100000.0  # pa to bar
+    dfInputs['P'] = pressure / 100000.0  # pa to bar
     dfInputs['wdotA4'] = pressure*0
     dfInputs['DiffusionTerm'] = pressure*0
 
