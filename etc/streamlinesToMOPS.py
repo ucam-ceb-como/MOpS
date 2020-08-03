@@ -1,4 +1,4 @@
-#! python3 
+#! python3
 # *****************************************************************************
 #
 # File:                 streamlinesForMOPS.py
@@ -175,7 +175,9 @@ def writeStreamline(data, number,comment=""):
     # used to do point of view tracking for TEM
     ptrack = ET.SubElement(output, 'ptrack')
     ptrack.set('enable', 'false')
-    ptrack.set('ptcount', str(1))
+    ptrack.set('ptcount', str(0))
+    writebintree = ET.SubElement(output, 'writebintree')
+    writebintree.set('enable', 'false')
     filename = ET.SubElement(output, 'filename')
     filename.text = 'Z'+str(number)
     print("Writing inx file")
