@@ -97,7 +97,7 @@ def writeStreamline(data, number, comment=""):
     rtol = ET.SubElement(root, 'rtol')
     rtol.text = str(1.0e-4)
     maxm0 = ET.SubElement(root, 'maxm0')
-    maxm0.text = str(1e17)
+    maxm0.text = str(7e+24)
     pcount = ET.SubElement(root, 'pcount')
     pcount.text = str(4096)
     reactor = ET.SubElement(root, 'reactor')
@@ -196,7 +196,7 @@ if(src == "FOAM"):
                                     "Stagnation2/20200723_mym_phi1.0_coarse_ttip_simple/")
     foam_time = 0.0025
     foam_prostProcess_dir = "postProcessing/sets/streamLines/"
-    # Streamline with molefraction data split into two files due 
+    # Streamline with molefraction data split into two files due
     # to restrictions on filename length
     foam_prostProcess_dir_mech_1 = "postProcessing/sets/streamLinesMoleFracs1/"
     foam_prostProcess_dir_mech_2 = "postProcessing/sets/streamLinesMoleFracs2/"
@@ -441,6 +441,3 @@ elif(src == "kinetics"):
     writeStreamline(dfInputs, -1, comment="case: {}".format(case.path()))
 else:
     print("please specify kinetics or FOAM for your data source.")
-
-
-

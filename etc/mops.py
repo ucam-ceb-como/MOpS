@@ -24,149 +24,205 @@
 
 import sys
 import pandas as pd
-import numpy as np 
+import numpy as np
 import re
 import os
 import xml.etree.ElementTree as ET
 import subprocess
 
-#define case class:
+
+# define case class:
 class case():
-    #Initialization
-    def __init__(self,path="WorkingDir"):
+    # Initialization
+    def __init__(self, path="WorkingDir",
+                 inputFile="mops.inx", sweepFile="sweep.xml",
+                 gasphaseFile="gasphase.csv"
+                 ):
+        # Early declaration of object properties:
+        self._inputFilePath = ""
+        self._inputFile = ""
+        self._caseName = ""
+        self._outputFileName = ""
+        self.files = []
+        self.fileDict = {}
+        self.timearray = []
+        self.directoryPath = ""
+
         # check that path is a string, else convert to stirng
         if(not isinstance(path, str)):
-            pathstr=str(path)
-            path=pathstr
+            path = str(path)
         # check directory exists
         if(os.path.isdir(path)):
-            # print("{} exists".format(path))
-            self.directoryPath=path
-            self.inputFile=os.path.join(self.directoryPath, "InputParams.xml")
+            self.directoryPath = path
         else:
             raise ValueError("{} is not a valid directory".format(path))
-        self._caseName=path
+        self._inputFilePath = os.path.join(self.directoryPath, inputFile)
+        # Read input file; returns true on success.
+        if(not self._readInputFile()):
+            raise ValueError("{} is not a file".format(self._inputFile))
+        self._caseName = path
         print("Reading in case from {}".format(self.directoryPath))
-        self.files=[]
-        self.fileDict={}
-        # self._readInputFile()
-        # self._readCatalogueFile()
+        self._readOutputFiles()
+
+    # read Input file
+    def _readInputFile(self):
+        """
+            Reads the mops input file (*.inx)
+            The inx file is an xml file. Use ElementTree module to read
+            the input file and extract information
+        """
+        # Check that self._inputFile is a valid file
+        if(not os.path.isfile(self._inputFilePath)):
+            print("The input file {} does not exist".format(self._inputFile))
+            return False
+        # Try to read input file.
+        tree = ET.parse(self._inputFilePath)
+        self._inputFile = tree.getroot()
+        element_filename = self._inputFile.find("./output/filename")
+        self._outputFileName = element_filename.text
+        # element_time_start = self._inputFile.find("./timeintervals/start")
+        # self.timearray.append(element_time_start.text)
+        times = self._inputFile.findall("./timeintervals/time")
+        for time in times:
+            # psl files have 6 sig fig in their names, truncate to match:
+            t = time.text
+            tstr = (f"{float(t):.6}")
+            self.timearray.append(tstr)
+        return True
 
     def readOutputFiles(self):
         "Reads the output files of kinetics"
-        read=self._readOutputFiles()
+        read = self._readOutputFiles()
         return read
 
-    #return full case path:
+    # return full case path:
     def caseName(self):
         "Returns the absolute case path"
         return self._caseName
 
-    #return full case path:
+    # return full case path:
     def path(self):
         "Returns the absolute case path"
         return os.path.abspath(self.directoryPath)
 
-    #return file keys:
+    # return file keys:
     def filenames(self):
         return self.fileDict.keys()
 
-    #return InputParamsElementTree
+    # return time array
+    def times(self):
+        return self.timearray
+
+    # return fine time
+    def tfinal(self):
+        return max(self.timearray)
+
+    # return InputParamsElementTree
     def inputfile(self):
         return self.inputParamsXML
 
-    #Read Input file
-    def _readInputFile(self):
-        "reads the kinetics input file"
-        return None
-    
-    #Read Catalogue file
+    # Read Catalogue file
     def _readOutputFiles(self):
         "reads the output files"
-        catFileName = self.outputBaseName+"Catalogue.xml"
-        catFile = ""
+        # Read Particle Size List in timearray
+        for time in self.timearray:
+            # check if PSL file exists:
+            pslFileName = "psl("+str(time)+"s)"
+            self._readFile(pslFileName)
+        # Read Aggregate Data files
+        self._readFile("part")
+        self._readFile("primary")
+        self._readFile("primary-nodes")
+        return True
 
-        if(os.path.isfile(catFile)):
-            return True
+    def _readFile(self, fileName):
+        """
+            Reads an output file given a generic file name
+            Adds it to the fileDict
+        """
+        fullFileName = self._outputFileName+"-"+fileName+".csv"
+        if(os.path.isfile(os.path.join(self.directoryPath, fullFileName))):
+            # print("File {} found".format(fullFileName))
+            key = fileName
+            df = pd.read_csv(os.path.join(self.directoryPath, fullFileName))
+            self.fileDict[key] = df
         else:
-            return False
+            print("File {} not found".format(fullFileName))
+        return None
 
-            # raise ValueError("{} is not a valid file. Check that the simulation has completed running.".format(catFile))
+    # overload len function
+    def __len__(self):
+        return(len(self.fileDict))
 
-    # #overload len function
-    # def __len__(self):
-    #     return(len(self.fileDict))
+    # overload [] operator
+    def __getitem__(self, key):
+        return self.fileDict[key]
 
-    # #overload [] operator
-    # def __getitem__(self,key):
-    #     return self.fileDict[key]
-
-    #Destructor:
+    # Destructor:
     def __del__(self):
         class_name = self.__class__.__name__
-        print("{} {} deleted from python memory".format(class_name,self.directoryPath))
+        print("{} {} deleted from python memory".format(class_name,
+                                                        self.directoryPath))
+
 
 # define executable wrapper class
 class exec():
     "A class that is a wrapper for a MOPS executable"
 
-
-    #Initialization
-    def __init__(self,executable,path="",args=""):
-        self._execName=executable
-        self._execPath=path
-        self._argumentString=args
-        self._args=self._argumentString.split()
+    # Initialization
+    def __init__(self, executable, path="", args=""):
+        self._execName = executable
+        self._execPath = path
+        self._argumentString = args
+        self._args = self._argumentString.split()
         # check that path is a string, else convert to stirng
         if(not isinstance(self._execPath, str)):
-            pathstr=str(path)
-            path=pathstr
+            pathstr = str(path)
+            path = pathstr
         try:
-            completed=subprocess.run([self._execName], capture_output=True, text=True)
+            completed = subprocess.run([self._execName], capture_output=True, text=True)
         except FileNotFoundError:
             if(os.path.isdir(self._execPath)):
                 print("{} is not in your default path... trying again with full path".format(self._execName))
                 try:
-                    completed=subprocess.run([os.path.join(self._execPath,self._execName)],capture_output=True, text=True)
+                    completed = subprocess.run([os.path.join(self._execPath, self._execName)], capture_output=True, text=True)
                     print("Found executable {}".format(self._execName))
-                    self._execPath=os.path.abspath(self._execPath)
+                    self._execPath = os.path.abspath(self._execPath)
                 except FileNotFoundError:
                     print("Cannot execute {}... please check the executable exists and the path is correct.".format(self._execName))
             else:
                 print("{} is not in your default path... please provide a full path as an argument".format(self._execName))
                 raise FileNotFoundError
 
-
     def run(self, caseobj):
         if(not isinstance(caseobj, case)):
             raise TypeError("Argument must be of type mops.case")
-            completed=False
+            completed = False
         else:
-            #append filesep to casename
-            rundir=caseobj.path()
+            # append filesep to casename
+            rundir = caseobj.path()
             print("Running case: {}".format(rundir))
-            command = ['cd', rundir, ";"] + [os.path.join(self._execPath,self._execName)] + self._args
+            command = ['cd', rundir, ";"] + [os.path.join(self._execPath, self._execName)] + self._args
             try:
-                completed=subprocess.run(command, text=True,cwd=rundir)
+                completed = subprocess.run(command, text=True,cwd=rundir)
             except FileNotFoundError:
                 try:
-                    command = [os.path.join(self._execPath,self._execName)] + self._args
-                    completed=subprocess.run(command,text=True,cwd=rundir)
+                    command = [os.path.join(self._execPath, self._execName)] + self._args
+                    completed = subprocess.run(command, text=True, cwd=rundir)
                 except FileNotFoundError:
                     print("Cannot execute {}... please check the executable exists and the path is correct.".format(self._execName))
-                    completed=False
+                    completed = False
         return completed
 
     def setArgs(self, argumentString):
         "Sets arguements for running MOpS executable (-p --flamepp -g 'gasphase.csv')"
         if(not isinstance(argumentString, str)):
-            argumentString=str(argumentString)
-        self._argumentString=argumentString
-        self._args=self._argumentString.split()
+            argumentString = str(argumentString)
+        self._argumentString = argumentString
+        self._args = self._argumentString.split()
         return None
 
-
-    #Destructor:
+    # Destructor:
     def __del__(self):
         class_name = self.__class__.__name__
-        print("Wrapper for {} {} deleted from python memory".format(class_name,self._execName))
+        print("Wrapper for {} {} deleted from python memory".format(class_name, self._execName))
