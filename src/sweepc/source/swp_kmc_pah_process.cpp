@@ -9781,7 +9781,7 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else sFE2->C1 = C_1->C2;
 
 	// edit sites. first identify the neighbouring sites of resulting RFE & R5
-	Spointer S1, S2, S3, S4;
+	Spointer S1, S2, S3, S4, S5, S6;
 	if (b4) {
 		S1 = moveIt(sFE2, -1);
 		if ((int)sFE2->type == 0){ //sFE2 is a FE
@@ -9986,16 +9986,28 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// (excluding new FE sites, since their combined site type will still be None)
 	if (b4){
 		S3 = moveIt(S1, -1);
+		S4 = moveIt(S2, 1);
+		S5 = moveIt(S1, -2);
+		S6 = moveIt(S2, 2);
 	}
 	else{
+		S3 = moveIt(S1, -1);
 		S4 = moveIt(S2, 1);
+		S5 = moveIt(S1, -2);
+		S6 = moveIt(S2, 2);
 	}
 	updateCombinedSites(stt); updateCombinedSites(sFE2); updateCombinedSites(S1); updateCombinedSites(S2);
 	if (b4){
 		updateCombinedSites(S3);
+		updateCombinedSites(S4);
+		updateCombinedSites(S5);
+		updateCombinedSites(S6);
 	}
 	else{
-		updateCombinedSites(S4); // neighbours
+		updateCombinedSites(S3);
+		updateCombinedSites(S4);
+		updateCombinedSites(S5);
+		updateCombinedSites(S6); // neighbours
 	}
 }
 
@@ -12679,8 +12691,10 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// (excluding new FE sites, since their combined site type will still be None)
 	if (b4){
 		S3 = moveIt(S1, -1);
+		S4 = moveIt(S2, 1);
 	}
 	else{
+		S3 = moveIt(S1, -1);
 		S4 = moveIt(S2, 1);
 	}
 	updateCombinedSites(stt); updateCombinedSites(sFE2); 
@@ -12688,11 +12702,13 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		updateCombinedSites(S1);
 		updateCombinedSites(S3);
 		updateCombinedSites(S2);
+		updateCombinedSites(S4);
 	}
 	else{
 		updateCombinedSites(S2);
 		updateCombinedSites(S4); 
 		updateCombinedSites(S1);// neighbours
+		updateCombinedSites(S3);
 	}
 }
 
