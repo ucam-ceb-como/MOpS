@@ -82,6 +82,17 @@ make -j 4 #for 4 threads of compilation (more if you can!)
 
 2) Out-source build (for those who don't use an IDE):
 
+
+Build Open Babel submodule:
+git submodule init
+git submodule update
+cd openbabel-2.3.1-Git
+bash build.sh
+Add openbabel environmental variables to bashrc
+source bashrc
+cd mops_directory
+
+
 mkdir debug
 cd debug
 cmake -D CMAKE_BUILD_TYPE=Debug ..
