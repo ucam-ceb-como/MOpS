@@ -82,17 +82,19 @@ make -j 4 #for 4 threads of compilation (more if you can!)
 
 2) Out-source build (for those who don't use an IDE):
 
+The KMC-ARS code requires OpenBabel built as an statically linked library for PAH optimisation.
+OpenBabel version 2.3.1 is the one currently used and has been added as a submodule of mops.
+The following commands build this version as a submodule:
 
-Build Open Babel submodule:
 git submodule init
 git submodule update
 cd openbabel-2.3.1-Git
 bash build.sh
-Add openbabel environmental variables to bashrc
-source bashrc
+#Add openbabel environmental variables to bashrc. A reminder of these variables is shown by bash build.sh
+source ~/.bashrc
 cd mops_directory
 
-
+#The following commands complete the out-source build of mops:
 mkdir debug
 cd debug
 cmake -D CMAKE_BUILD_TYPE=Debug ..
