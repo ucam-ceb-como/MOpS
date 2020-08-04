@@ -15172,7 +15172,7 @@ void PAHProcess::checkR5Walkers(){
 						}
 					}else{
 						check_site = moveIt(start_site_jj,jj_steps);
-						check_site2 = m_pah->m_siteList.end();
+						check_site2 = check_site;
 					}
 					if(check_site->type==FE || check_site2->type==FE){
 						if (jj_steps>0) check_site2 = moveIt(check_site,+1);

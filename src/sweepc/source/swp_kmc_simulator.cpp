@@ -309,7 +309,23 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     //savePAH(PAH_ID,"KMC_DEBUG/AFTERMIGRATION");
                     m_migrate = false;
                 }
+                if (finder != m_tracked_pahs.end() && !m_migrate){
+                    std::string xyzname = ("KMC_DEBUG/");
+                    xyzname.append(std::to_string(PAH_ID));
+                    xyzname.append("/");
+                    xyzname.append(std::to_string(m_t*1000000.0));
+                    xyzname.append("_B");
+                    savePAH(PAH_ID, xyzname); 
+                }
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
+                if (finder != m_tracked_pahs.end() && !m_migrate){
+                    std::string xyzname = ("KMC_DEBUG/");
+                    xyzname.append(std::to_string(PAH_ID));
+                    xyzname.append("/");
+                    xyzname.append(std::to_string(m_t*1000000.0));
+                    xyzname.append("_C");
+                    savePAH(PAH_ID, xyzname); 
+                }
             }
 			writeCHSiteCountCSV_after(PAH_ID);
 
