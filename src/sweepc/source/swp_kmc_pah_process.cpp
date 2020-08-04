@@ -11937,7 +11937,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	S4 = moveIt(S2, +1);
 	S5 = moveIt(S1, -2);
 	S6 = moveIt(S2, +2);
-	updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
+	updateCombinedSitesMigration(stt_1,b4); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
 	if (S1->type==R5R6 && b4){
 		updateCombinedSitesMigration(S2,false);
 		updateCombinedSitesMigration(S1);
