@@ -12282,22 +12282,55 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
 	//Update combined sites
-	Spointer stt_1, stt_2, stt_3, stt_4, S3, S4;
+	Spointer S3, S4, S5, S6;
 	if (b4){
-		stt_1 = moveIt(newSite, +1);
+		S1 = moveIt(stt,-1);
+		S2 = moveIt(newSite,+1);
+		S3 = moveIt(S1, -1);
+		S4 = moveIt(S2, 1);
+		S5 = moveIt(S1, -2);
+		S6 = moveIt(S2, 2);
+
+		/*stt_1 = moveIt(newSite, +1);
 		stt_2 = moveIt(stt, +1);
 		stt_3 = moveIt(newSite, +2);
-		stt_4 = moveIt(newSite, +3);
+		stt_4 = moveIt(newSite, +3);*/
 	}else{
-		stt_1 = moveIt(stt, -1);
+		S1 = moveIt(newSite,-1);
+		S2 = moveIt(stt,+1);
+		S3 = moveIt(S1, -1);
+		S4 = moveIt(S2, 1);
+		S5 = moveIt(S1, -2);
+		S6 = moveIt(S2, 2);
+		/*stt_1 = moveIt(stt, -1);
 		stt_2 = moveIt(newSite, -1);
 		stt_3 = moveIt(newSite, -2);
-		stt_4 = moveIt(newSite, -3);
+		stt_4 = moveIt(newSite, -3);*/
 	}
-	S3 = moveIt(S1, -1);
-	S4 = moveIt(S2, +1);
+	//S3 = moveIt(S1, -1);
+	//S4 = moveIt(S2, +1);
 	//updateCombinedSitesMigration(stt);
-	updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2); updateCombinedSitesMigration(stt_3); updateCombinedSitesMigration(stt_4);
+	if (b4){
+		updateCombinedSitesMigration(newSite);
+		updateCombinedSitesMigration(stt,b4);
+		updateCombinedSitesMigration(S1);
+		updateCombinedSitesMigration(S2,!b4);
+		updateCombinedSitesMigration(S3);
+		updateCombinedSitesMigration(S4,!b4);
+		updateCombinedSitesMigration(S5);
+		updateCombinedSitesMigration(S6,!b4);
+	}
+	else{
+		updateCombinedSitesMigration(newSite);
+		updateCombinedSitesMigration(stt,b4);
+		updateCombinedSitesMigration(S1);
+		updateCombinedSitesMigration(S2,b4);
+		updateCombinedSitesMigration(S3);
+		updateCombinedSitesMigration(S4,b4);
+		updateCombinedSitesMigration(S5);
+		updateCombinedSitesMigration(S6,b4);
+	}
+	/*updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2); updateCombinedSitesMigration(stt_3); updateCombinedSitesMigration(stt_4);
 	if (b4 && S1->type==R5R6) {
 		updateCombinedSitesMigration(S2,false); updateCombinedSitesMigration(S1);
 	}else{
@@ -12306,7 +12339,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	}
 	
 	//updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2,false); 
-	updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4,false);
+	updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4,false);*/
 }
 
 // ************************************************************
