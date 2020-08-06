@@ -3923,14 +3923,18 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 			m_pah->m_siteMap[MIGR2].push_back(st);
 			break;
 		}
-		if ( (check_left || check_right) && ( (int)st->type>=2000 && (int)st->type <=2005)) {
+		else if ( (check_left || check_right) && ( (int)st->type>=2000 && (int)st->type <=2005)) {
 			st->comb = MIGR;
 			m_pah->m_siteMap[MIGR].push_back(st);
 			break;
 		}
-		if ( (check_left || check_right) && st->type==R5R6) {
+		else if ( (check_left || check_right) && st->type==R5R6) {
 			st->comb = R5R6_MIGR;
 			m_pah->m_siteMap[R5R6_MIGR].push_back(st);
+			break;
+		}
+		else{
+			st->comb = None;
 			break;
 		}
 		break;
