@@ -196,6 +196,8 @@ public:
     bool SiteRightSize(Spointer& stt) const;
     //! Returns true if site is allowed for migration
     bool checkSiteMigration(Spointer stt, bool b4);
+    //! Returns -1 or +1 if the coupled site is to the left or right and 0 if there is no coupled site.
+    int coupledSiteDirection(Spointer stt);
     //! Modifies pointer for R5 walkers to avoid overlaps.
     void checkR5Walkers();
 	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
@@ -462,7 +464,7 @@ private:
     //! Combined site for a particular site
     void updateCombinedSites(Spointer& st);
     //! Combined site for a particular site, special case for migration processes.
-    void updateCombinedSitesMigration(Spointer& st, bool b4=true);
+    void updateCombinedSitesMigration(Spointer& st);
     //! Sets third species bonded to C to a species sp if it is a reactive surface carbon
     void updateA(Cpointer C, char sp);
 	//! Overload function, forces char to C atom.

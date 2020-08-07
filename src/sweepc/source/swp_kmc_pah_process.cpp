@@ -3964,158 +3964,10 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 		if (check_left){
 			check_left = checkSiteMigration(S1,true);
 		}
-		/*if (check_left){
-			//Check site to the left
-			Spointer checkR5_1 = moveIt(S1,-1);
-			Spointer checkR5_2 = moveIt(S1,-2);
-			//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
-			if ((int)S1->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) check_left = false; // The result would be an indene, not supported. YET!
-			if ((int)S1->type == 100 || (int)S1->type == 101 || (int)S1->type == 501 || (int)S1->type == 2002) check_left = false; // This would violate the IPR.
-			if ((int)S1->type == 9999 || (int)S1->type == -1 || S1->type == None) check_left = false;
-			if ((int)S1->type == 0){
-				if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) check_left = false;
-				if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) check_left = false;
-				if ((int)checkR5_1->type >= 2002 && (int)checkR5_1->type <= 2204) check_left = false;
-				if ((int)checkR5_1->type >= 2204 && (int)checkR5_1->type <= 2205) check_left = false;
-				if ((int)checkR5_1->type == 0){
-					if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) check_left = false;
-					if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) check_left = false;
-					if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) check_left = false;
-				}
-			}
-			Cpointer CR5_otherside_end = S1->C2->C1;
-			if (CR5_otherside_end->bridge) check_left = false;
-			if (CR5_otherside_end->C2->bridge) check_left = false; 
-			if (CR5_otherside_end->C1->bridge) check_left = false;
-			if (CR5_otherside_end->C2->C2->bridge) check_left = false; 
-			if (CR5_otherside_end->C1->C1->bridge) check_left = false;
-			
-			//Check for other side being valid
-			Cpointer thirdC_after = findThirdC(CR5_otherside_end);
-			if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
-				Spointer opp_site_after = findSite(thirdC_after);
-				//I have no clue how to flag an Spointer as error. This can cause seg faults.
-				if (opp_site_after != m_pah->m_siteList.end()){
-					int os_endtype = opp_site_after->type;
-					if (os_endtype >= 200 && os_endtype <= 203) check_left = false;
-					if (os_endtype == 101) check_left = false;
-					if (os_endtype >= 600 && os_endtype <= 603) check_left = false;
-					if (os_endtype >= 1000 && os_endtype <= 1003) check_left = false;
-					if (os_endtype >= 500 && os_endtype <= 504) check_left = false;
-					if (os_endtype >= 2000 && os_endtype <= 2205) check_left = false;
-					if (os_endtype >= 2103 && os_endtype <= 2105) check_left = false;
-					if (os_endtype >= 2204 && os_endtype <= 2205) check_left = false;
-					if (os_endtype == 9999 || os_endtype == -1 || opp_site_after->type == None) check_left = false;
-				}
-			}
-			
-			//check that two pentagons (including internals) will not collide
-			cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
-			if (m_pah->m_R5loc.size()>=1){
-				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
-					double distR5s = getDistance_twoC(*it, R5coords_end);
-					if (distR5s < 2.8) {
-						//This distance is a parameter of this jump process. Might need some more tuning. 
-						//2.8 seems appropiate but may reject too many jumps.
-						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
-						check_left = false;
-						break;
-					}
-				}
-			}
-			
-			//check that pentagon and heptagon (including internals) will not collide
-			if (m_pah->m_R7loc.size()>=1){
-				for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
-					double distR5R7 = getDistance_twoC(*it, R5coords_end);
-					if (distR5R7 < 2.8) {
-						//This distance is a parameter of this jump process. Might need some more tuning. 
-						//2.8 seems appropiate but may reject too many jumps.
-						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
-						check_left = false;
-						break;
-					}
-				}
-			}
-		}*/
 		if(check_right){
 			check_right = checkSiteMigration(S2,false);
 		}
 
-		/*if (check_right){
-			//Check site to the right
-			Spointer checkR5_1 = moveIt(S2,+1);
-			Spointer checkR5_2 = moveIt(S2,+2);
-			//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
-			if ((int)S2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) check_right = false; // The result would be an indene, not supported. YET!
-			if ((int)S2->type == 100 || (int)S2->type == 101 || (int)S2->type == 501 || (int)S2->type == 2002) check_right = false; // This would violate the IPR.
-			if ((int)S2->type == 9999 || (int)S2->type == -1 || S2->type == None) check_right = false;
-			if ((int)S2->type == 0){
-				if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) check_right = false;
-				if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) check_right = false;
-				if ((int)checkR5_1->type >= 2002 && (int)checkR5_1->type <= 2204) check_right = false;
-				if ((int)checkR5_1->type >= 2204 && (int)checkR5_1->type <= 2205) check_right = false;
-				if ((int)checkR5_1->type == 0){
-					if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) check_right = false;
-					if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) check_right = false;
-					if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) check_right = false;
-				}
-			}
-			Cpointer CR5_otherside_end = S2->C1->C2;
-			if (CR5_otherside_end->bridge) check_right = false;
-			if (CR5_otherside_end->C2->bridge) check_right = false; 
-			if (CR5_otherside_end->C1->bridge) check_right = false;
-			if (CR5_otherside_end->C2->C2->bridge) check_right = false; 
-			if (CR5_otherside_end->C1->C1->bridge) check_right = false;
-			
-			//Check for other side being valid
-			Cpointer thirdC_after = findThirdC(CR5_otherside_end);
-			if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
-				Spointer opp_site_after = findSite(thirdC_after);
-				//I have no clue how to flag an Spointer as error. This can cause seg faults.
-				if (opp_site_after != m_pah->m_siteList.end()){
-					int os_endtype = opp_site_after->type;
-					if (os_endtype >= 200 && os_endtype <= 203) check_right = false;
-					if (os_endtype == 101) check_right = false;
-					if (os_endtype >= 600 && os_endtype <= 603) check_right = false;
-					if (os_endtype >= 1000 && os_endtype <= 1003) check_right = false;
-					if (os_endtype >= 500 && os_endtype <= 504) check_right = false;
-					if (os_endtype >= 2000 && os_endtype <= 2205) check_right = false;
-					if (os_endtype >= 2103 && os_endtype <= 2105) check_right = false;
-					if (os_endtype >= 2204 && os_endtype <= 2205) check_right = false;
-					if (os_endtype == 9999 || os_endtype == -1 || opp_site_after->type == None) check_right = false;
-				}
-			}
-			
-			//check that two pentagons (including internals) will not collide
-			cpair R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
-			if (m_pah->m_R5loc.size()>=1){
-				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
-					double distR5s = getDistance_twoC(*it, R5coords_end);
-					if (distR5s < 2.8) {
-						//This distance is a parameter of this jump process. Might need some more tuning. 
-						//2.8 seems appropiate but may reject too many jumps.
-						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
-						check_right = false;
-						break;
-					}
-				}
-			}
-			
-			//check that pentagon and heptagon (including internals) will not collide
-			if (m_pah->m_R7loc.size()>=1){
-				for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
-					double distR5R7 = getDistance_twoC(*it, R5coords_end);
-					if (distR5R7 < 2.8) {
-						//This distance is a parameter of this jump process. Might need some more tuning. 
-						//2.8 seems appropiate but may reject too many jumps.
-						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
-						check_right = false;
-						break;
-					}
-				}
-			}
-		}*/
 		//Add back the R5 location
 		m_pah->m_R5loc.push_back(R5coords);
 		if (check_left && check_right && st->type==ACR5) {
@@ -4148,7 +4000,7 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 }
 
 //! Combined site for a particular site, different rules during migration processes calls.
-void PAHProcess::updateCombinedSitesMigration(Spointer& st, bool b4) {
+void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
     kmcSiteType ori_comb = st->comb;
     if(st->type != None) {
         delSiteFromMap(st->comb, st);
@@ -4256,8 +4108,10 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st, bool b4) {
 			check_right = true;
 		}
 		else if (st->type == R5R6){
-			check_left = b4;
-			check_right = !b4;
+			int dir = coupledSiteDirection(st);
+			if (dir==-1) check_left = false; //Coupled site is at the left, check right
+			if (dir==1) check_right = false; //Coupled site is at the right, check left
+			//dir = 0 check both
 		}
 		else if ((int)st->type>2000 && (int)st->type < 2099){
 			check_left = true;
@@ -4271,154 +4125,6 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st, bool b4) {
 		//Check for MIGR, MIGR2 OR R5R6_MIGR
 		if (check_left) check_left = checkSiteMigration(S1,true);
 		if (check_right) check_right = checkSiteMigration(S2,false);
-		/*if (check_left){
-			//Check site to the left
-			Spointer checkR5_1 = moveIt(S1,-1);
-			Spointer checkR5_2 = moveIt(S1,-2);
-			//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
-			if ((int)S1->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) check_left = false; // The result would be an indene, not supported. YET!
-			if ((int)S1->type == 100 || (int)S1->type == 101 || (int)S1->type == 501 || (int)S1->type == 2002) check_left = false; // This would violate the IPR.
-			if ((int)S1->type == 9999 || (int)S1->type == -1 || S1->type == None) check_left = false;
-			if ((int)S1->type == 0){
-				if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) check_left = false;
-				if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) check_left = false;
-				if ((int)checkR5_1->type >= 2002 && (int)checkR5_1->type <= 2204) check_left = false;
-				if ((int)checkR5_1->type >= 2204 && (int)checkR5_1->type <= 2205) check_left = false;
-				if ((int)checkR5_1->type == 0){
-					if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) check_left = false;
-					if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) check_left = false;
-					if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) check_left = false;
-				}
-			}
-			Cpointer CR5_otherside_end = S1->C2->C1;
-			if (CR5_otherside_end->bridge) check_left = false;
-			if (CR5_otherside_end->C2->bridge) check_left = false; 
-			if (CR5_otherside_end->C1->bridge) check_left = false;
-			if (CR5_otherside_end->C2->C2->bridge) check_left = false; 
-			if (CR5_otherside_end->C1->C1->bridge) check_left = false;
-			
-			//Check for other side being valid
-			Cpointer thirdC_after = findThirdC(CR5_otherside_end);
-			if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
-				Spointer opp_site_after = findSite(thirdC_after);
-				//I have no clue how to flag an Spointer as error. This can cause seg faults.
-				if (opp_site_after != m_pah->m_siteList.end()){
-					int os_endtype = opp_site_after->type;
-					if (os_endtype >= 200 && os_endtype <= 203) check_left = false;
-					if (os_endtype == 101) check_left = false;
-					if (os_endtype >= 600 && os_endtype <= 603) check_left = false;
-					if (os_endtype >= 1000 && os_endtype <= 1003) check_left = false;
-					if (os_endtype >= 500 && os_endtype <= 504) check_left = false;
-					if (os_endtype >= 2000 && os_endtype <= 2205) check_left = false;
-					if (os_endtype >= 2103 && os_endtype <= 2105) check_left = false;
-					if (os_endtype >= 2204 && os_endtype <= 2205) check_left = false;
-					if (os_endtype == 9999 || os_endtype == -1 || opp_site_after->type == None) check_left = false;
-				}
-			}
-			
-			//check that two pentagons (including internals) will not collide
-			cpair R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
-			if (m_pah->m_R5loc.size()>=1){
-				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
-					double distR5s = getDistance_twoC(*it, R5coords_end);
-					if (distR5s < 2.8) {
-						//This distance is a parameter of this jump process. Might need some more tuning. 
-						//2.8 seems appropiate but may reject too many jumps.
-						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
-						check_left = false;
-						break;
-					}
-				}
-			}
-			
-			//check that pentagon and heptagon (including internals) will not collide
-			if (m_pah->m_R7loc.size()>=1){
-				for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
-					double distR5R7 = getDistance_twoC(*it, R5coords_end);
-					if (distR5R7 < 2.8) {
-						//This distance is a parameter of this jump process. Might need some more tuning. 
-						//2.8 seems appropiate but may reject too many jumps.
-						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
-						check_left = false;
-						break;
-					}
-				}
-			}
-		}
-		if (check_right){
-			//Check site to the right
-			Spointer checkR5_1 = moveIt(S2,+1);
-			Spointer checkR5_2 = moveIt(S2,+2);
-			//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
-			if ((int)S2->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) check_right = false; // The result would be an indene, not supported. YET!
-			if ((int)S2->type == 100 || (int)S2->type == 101 || (int)S2->type == 501 || (int)S2->type == 2002) check_right = false; // This would violate the IPR.
-			if ((int)S2->type == 9999 || (int)S2->type == -1 || S2->type == None) check_right = false;
-			if ((int)S2->type == 0){
-				if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) check_right = false;
-				if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) check_right = false;
-				if ((int)checkR5_1->type >= 2002 && (int)checkR5_1->type <= 2204) check_right = false;
-				if ((int)checkR5_1->type >= 2204 && (int)checkR5_1->type <= 2205) check_right = false;
-				if ((int)checkR5_1->type == 0){
-					if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) check_right = false;
-					if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) check_right = false;
-					if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) check_right = false;
-				}
-			}
-			Cpointer CR5_otherside_end = S2->C1->C2;
-			if (CR5_otherside_end->bridge) check_right = false;
-			if (CR5_otherside_end->C2->bridge) check_right = false; 
-			if (CR5_otherside_end->C1->bridge) check_right = false;
-			if (CR5_otherside_end->C2->C2->bridge) check_right = false; 
-			if (CR5_otherside_end->C1->C1->bridge) check_right = false;
-			
-			//Check for other side being valid
-			Cpointer thirdC_after = findThirdC(CR5_otherside_end);
-			if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
-				Spointer opp_site_after = findSite(thirdC_after);
-				//I have no clue how to flag an Spointer as error. This can cause seg faults.
-				if (opp_site_after != m_pah->m_siteList.end()){
-					int os_endtype = opp_site_after->type;
-					if (os_endtype >= 200 && os_endtype <= 203) check_right = false;
-					if (os_endtype == 101) check_right = false;
-					if (os_endtype >= 600 && os_endtype <= 603) check_right = false;
-					if (os_endtype >= 1000 && os_endtype <= 1003) check_right = false;
-					if (os_endtype >= 500 && os_endtype <= 504) check_right = false;
-					if (os_endtype >= 2000 && os_endtype <= 2205) check_right = false;
-					if (os_endtype >= 2103 && os_endtype <= 2105) check_right = false;
-					if (os_endtype >= 2204 && os_endtype <= 2205) check_right = false;
-					if (os_endtype == 9999 || os_endtype == -1 || opp_site_after->type == None) check_right = false;
-				}
-			}
-			
-			//check that two pentagons (including internals) will not collide
-			cpair R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
-			if (m_pah->m_R5loc.size()>=1){
-				for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
-					double distR5s = getDistance_twoC(*it, R5coords_end);
-					if (distR5s < 2.8) {
-						//This distance is a parameter of this jump process. Might need some more tuning. 
-						//2.8 seems appropiate but may reject too many jumps.
-						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
-						check_right = false;
-						break;
-					}
-				}
-			}
-			
-			//check that pentagon and heptagon (including internals) will not collide
-			if (m_pah->m_R7loc.size()>=1){
-				for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
-					double distR5R7 = getDistance_twoC(*it, R5coords_end);
-					if (distR5R7 < 2.8) {
-						//This distance is a parameter of this jump process. Might need some more tuning. 
-						//2.8 seems appropiate but may reject too many jumps.
-						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
-						check_right = false;
-						break;
-					}
-				}
-			}
-		}*/
 
 		if (check_left && check_right && st->type==ACR5) {
 			st->comb = MIGR2;
@@ -11937,16 +11643,16 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	S4 = moveIt(S2, +1);
 	S5 = moveIt(S1, -2);
 	S6 = moveIt(S2, +2);
-	updateCombinedSitesMigration(stt_1,b4); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
+	updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
 	if (S1->type==R5R6 && b4){
-		updateCombinedSitesMigration(S2,false);
+		updateCombinedSitesMigration(S2);
 		updateCombinedSitesMigration(S1);
 	}
 	else{
 		updateCombinedSitesMigration(S1); 
-		updateCombinedSitesMigration(S2,false);
+		updateCombinedSitesMigration(S2);
 	}
-	updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4,false); updateCombinedSitesMigration(S5); updateCombinedSitesMigration(S6,false);
+	updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4); updateCombinedSitesMigration(S5); updateCombinedSitesMigration(S6);
 	
 	//Adjust opposite sites for starting and ending position.
 	if (opp_site_bool && opp_site_bool_second) {
@@ -12312,34 +12018,24 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	//updateCombinedSitesMigration(stt);
 	if (b4){
 		updateCombinedSitesMigration(newSite);
-		updateCombinedSitesMigration(stt,b4);
+		updateCombinedSitesMigration(stt);
 		updateCombinedSitesMigration(S1);
-		updateCombinedSitesMigration(S2,!b4);
+		updateCombinedSitesMigration(S2);
 		updateCombinedSitesMigration(S3);
-		updateCombinedSitesMigration(S4,!b4);
+		updateCombinedSitesMigration(S4);
 		updateCombinedSitesMigration(S5);
-		updateCombinedSitesMigration(S6,!b4);
+		updateCombinedSitesMigration(S6);
 	}
 	else{
 		updateCombinedSitesMigration(newSite);
-		updateCombinedSitesMigration(stt,b4);
+		updateCombinedSitesMigration(stt);
 		updateCombinedSitesMigration(S1);
-		updateCombinedSitesMigration(S2,b4);
+		updateCombinedSitesMigration(S2);
 		updateCombinedSitesMigration(S3);
-		updateCombinedSitesMigration(S4,b4);
+		updateCombinedSitesMigration(S4);
 		updateCombinedSitesMigration(S5);
-		updateCombinedSitesMigration(S6,b4);
+		updateCombinedSitesMigration(S6);
 	}
-	/*updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2); updateCombinedSitesMigration(stt_3); updateCombinedSitesMigration(stt_4);
-	if (b4 && S1->type==R5R6) {
-		updateCombinedSitesMigration(S2,false); updateCombinedSitesMigration(S1);
-	}else{
-		updateCombinedSitesMigration(S1); 
-		updateCombinedSitesMigration(S2,false);
-	}
-	
-	//updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2,false); 
-	updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4,false);*/
 }
 
 // ************************************************************
@@ -13788,7 +13484,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
 		Spointer S1_opp_site = moveIt(opp_site, -1);
 		Spointer S2_opp_site = moveIt(opp_site, +1);
-		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site, false); 
+		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
 	}
 	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
 		updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
@@ -13798,7 +13494,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
 			Spointer S1_opp_site = moveIt(opp_site_after, -1);
 			Spointer S2_opp_site = moveIt(opp_site_after, +1);
-			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site,false); 
+			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
 		}
 		updateCombinedSitesMigration(opp_site);
 	}
@@ -13847,18 +13543,18 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	}
 	updateCombinedSitesMigration(stt);
 	if (b4){
-		updateCombinedSitesMigration(sFE2,false); 
-		updateCombinedSitesMigration(S1,true);
-		updateCombinedSitesMigration(S3,true);
-		updateCombinedSitesMigration(S2,true);
-		updateCombinedSitesMigration(S4,false);
+		updateCombinedSitesMigration(sFE2); 
+		updateCombinedSitesMigration(S1);
+		updateCombinedSitesMigration(S3);
+		updateCombinedSitesMigration(S2);
+		updateCombinedSitesMigration(S4);
 	}
 	else{
-		updateCombinedSitesMigration(sFE2,true); 
-		updateCombinedSitesMigration(S2,false);
-		updateCombinedSitesMigration(S4,false); // neighbours
-		updateCombinedSitesMigration(S1,false);
-		updateCombinedSitesMigration(S3,true);
+		updateCombinedSitesMigration(sFE2); 
+		updateCombinedSitesMigration(S2);
+		updateCombinedSitesMigration(S4); // neighbours
+		updateCombinedSitesMigration(S1);
+		updateCombinedSitesMigration(S3);
 	}
 }
 
@@ -14243,7 +13939,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
 		Spointer S1_opp_site = moveIt(opp_site, -1);
 		Spointer S2_opp_site = moveIt(opp_site, +1);
-		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site); updateCombinedSitesMigration(S2_opp_site,false);
+		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site); updateCombinedSitesMigration(S2_opp_site);
 	}
 	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
 		updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
@@ -14253,7 +13949,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
 			Spointer S1_opp_site = moveIt(opp_site_after, -1);
 			Spointer S2_opp_site = moveIt(opp_site_after, +1);
-			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site); updateCombinedSitesMigration(S2_opp_site,false);
+			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site); updateCombinedSitesMigration(S2_opp_site);
 		}
 		updateCombinedSitesMigration(opp_site);
 	}
@@ -14316,19 +14012,19 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		S5 = moveIt(S1, -2);
 		S6 = moveIt(S2, 2);
 	}
-	updateCombinedSitesMigration(stt); updateCombinedSitesMigration(sFE2,b4); updateCombinedSitesMigration(S1,b4); updateCombinedSitesMigration(S2,b4);
+	updateCombinedSitesMigration(stt); updateCombinedSitesMigration(sFE2); updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2);
 	if (b4){
-		updateCombinedSitesMigration(S3,b4);
-		updateCombinedSitesMigration(S4,b4);
-		updateCombinedSitesMigration(S5,b4);
-		updateCombinedSitesMigration(S6,b4);
+		updateCombinedSitesMigration(S3);
+		updateCombinedSitesMigration(S4);
+		updateCombinedSitesMigration(S5);
+		updateCombinedSitesMigration(S6);
 		
 	}
 	else{
-		updateCombinedSitesMigration(S3,b4);
-		updateCombinedSitesMigration(S4,b4); // neighbours
-		updateCombinedSitesMigration(S5,b4);
-		updateCombinedSitesMigration(S6,b4);
+		updateCombinedSitesMigration(S3);
+		updateCombinedSitesMigration(S4); // neighbours
+		updateCombinedSitesMigration(S5);
+		updateCombinedSitesMigration(S6);
 	}
 }
 
@@ -14596,7 +14292,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
 		Spointer S1_opp_site = moveIt(opp_site, -1);
 		Spointer S2_opp_site = moveIt(opp_site, +1);
-		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site,false); 
+		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
 	}
 	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
 		updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
@@ -14606,7 +14302,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
 			Spointer S1_opp_site = moveIt(opp_site_after, -1);
 			Spointer S2_opp_site = moveIt(opp_site_after, +1);
-			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site,false); 
+			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
 		}
 		updateCombinedSitesMigration(opp_site);
 	}
@@ -14651,27 +14347,27 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	else{
 		S4 = moveIt(S2, 1);
 	}
-	updateCombinedSitesMigration(stt,b4); updateCombinedSitesMigration(sFE2,!b4); 
+	updateCombinedSitesMigration(stt); updateCombinedSitesMigration(sFE2); 
 	if (b4){
-		updateCombinedSitesMigration(S1,b4);
-		updateCombinedSitesMigration(S3,b4);
-		updateCombinedSitesMigration(S2,b4);
+		updateCombinedSitesMigration(S1);
+		updateCombinedSitesMigration(S3);
+		updateCombinedSitesMigration(S2);
 		if(S2->comb==FE2){
 			Spointer S2_2 = moveIt(S2,+2);
 			Spointer S2_3 = moveIt(S2,+3);
-			updateCombinedSitesMigration(S2_2,b4);
-			updateCombinedSitesMigration(S2_3,b4);
+			updateCombinedSitesMigration(S2_2);
+			updateCombinedSitesMigration(S2_3);
 		}
 	}
 	else{
-		updateCombinedSitesMigration(S2,b4);
-		updateCombinedSitesMigration(S4,b4); // neighbours
-		updateCombinedSitesMigration(S1,b4);
+		updateCombinedSitesMigration(S2);
+		updateCombinedSitesMigration(S4); // neighbours
+		updateCombinedSitesMigration(S1);
 		if(S1->comb==FE2){
 			Spointer S1_2 = moveIt(S1,-2);
 			Spointer S1_3 = moveIt(S1,-3);
-			updateCombinedSitesMigration(S1_2,b4);
-			updateCombinedSitesMigration(S1_3,b4);
+			updateCombinedSitesMigration(S1_2);
+			updateCombinedSitesMigration(S1_3);
 		}
 	}
 
@@ -15172,6 +14868,34 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 		}
 	}
 	return true;
+}
+
+//! Returns -1 or +1 if the coupled site is to the left or right and 0 if there is no coupled site.
+int PAHProcess::coupledSiteDirection(Spointer stt){
+	if ((int)stt->type<500) return 0;
+	if ((int)stt->type>2000 && (int)stt->type<2016) return 0;
+	if ((int)stt->type>=2114 && (int)stt->type<=2115) return 0;
+	Spointer check_left = stt;
+	Spointer check_right = stt;
+	bool left_bool = true;
+	bool right_bool = true;
+	for (int ii=0;ii!=5;ii++){
+		check_left = moveIt(check_left,-1);
+		check_right = moveIt(check_right,+1);
+		if ((int)check_left->type<500) left_bool = false;
+		if ((int)check_left->type>2000 && (int)check_left->type<2016) left_bool = false;
+		if ((int)check_left->type>=2114 && (int)check_left->type<=2115) left_bool = false;
+		if ((int)check_left->type==9999) left_bool = false;
+
+		if ((int)check_right->type<500) right_bool = false;
+		if ((int)check_right->type>2000 && (int)check_right->type<2016) right_bool = false;
+		if ((int)check_right->type>=2114 && (int)check_right->type<=2115) right_bool = false;
+		if ((int)check_right->type==9999) right_bool = false;
+
+		if(left_bool && !right_bool) return -1;
+		if(!left_bool && right_bool) return 1;
+	}
+	return 0;
 }
 
 //! Modifies pointer for R5 walkers to avoid overlaps.
