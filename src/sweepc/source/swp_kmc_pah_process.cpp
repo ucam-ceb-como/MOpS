@@ -12067,9 +12067,12 @@ void PAHProcess::proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer
 	Cpointer CFE, CRem, CRem_next, CRem_before, CR5_otherside_1, CR5_otherside_2;
 	Spointer checkR5_1, checkR5_2;
 	if (b4) {
-		CFE = C_2->C1->C1;
-		CR5_otherside_1 = C_2->C1;
-		CR5_otherside_2 = C_2->C1->C1;
+		//CFE = C_2->C1->C1;
+		CFE = C_1->C2;
+		//CR5_otherside_1 = C_2->C1;
+		CR5_otherside_1 = C_1->C2->C2;
+		//CR5_otherside_2 = C_2->C1->C1;
+		CR5_otherside_2 = C_1->C2;
 		checkR5_1 = moveIt(sFE2, -1);
 		checkR5_2 = moveIt(sFE2, -2);
 		if (checkR5_1->type == R5 && sFE2->type == R5) CRem = sFE2->C1;
@@ -12078,9 +12081,12 @@ void PAHProcess::proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer
 		CRem_before = CRem->C2;
 	}
 	else {
-		CFE = C_1->C2;
-		CR5_otherside_1 = C_1->C2;
-		CR5_otherside_2 = C_1->C2->C2;
+		//CFE = C_1->C2;
+		CFE = C_2->C1->C1;
+		//CR5_otherside_1 = C_1->C2;
+		CR5_otherside_1 = C_2->C1->C1;
+		//CR5_otherside_2 = C_1->C2->C2;
+		CR5_otherside_2 = C_2->C1;
 		checkR5_1 = moveIt(sFE2, +1);
 		checkR5_2 = moveIt(sFE2, +2);
 		if (checkR5_1->type == R5 && sFE2->type == R5) CRem = sFE2->C2;
@@ -14888,9 +14894,8 @@ void PAHProcess::performMigrationProcess(){
 		bool b4;
 		if(steps < 0) b4 = true;
 		else b4 = false;
-		if (site_perf->type == ZZ) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
-		else if (site_perf->type == FE) proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
-		else if (site_perf->type == AC) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		if (site_perf->type == FE) proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		else if((int)site_perf->type <= 4) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else if ((int)site_perf->type>=2000 && (int)site_perf->type<=2100) proc_M5R_FEACR5_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else{
 			//stt is already a termination site
