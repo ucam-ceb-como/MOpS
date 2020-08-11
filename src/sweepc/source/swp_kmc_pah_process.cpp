@@ -4011,6 +4011,8 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 	Spointer S2 = moveIt(st,+1);
 	bool check_left = true;
 	bool check_right = true;
+	cpair R5coords;
+	int steps=-99999;
     switch(s_type) {
     case 0:
         // Check for FE3 (if there's FE on each side of the FE)
@@ -4114,8 +4116,36 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 			//dir = 0 check both
 		}
 		else if ((int)st->type>2000 && (int)st->type < 2099){
+			bool b4;
 			check_left = true;
 			check_right = true;
+			if ((int)st->type!=2002){
+				for(unsigned int ii=0;ii!=m_pah->m_R5walker_sites.size();ii++){
+					Spointer start_site = std::get<0>(m_pah->m_R5walker_sites[ii]);
+					Spointer start_site_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
+					int num_steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+					Spointer check_site = moveIt(start_site,num_steps);
+					if (check_site==st){
+						steps = num_steps;
+						break;
+					}
+				}
+				if (steps < 0) check_left = false;
+				else if (steps > 0) check_right = false;
+				else{
+					if (isR5internal(st->C1->C2,st->C1->C2->C2,true) || isR5internal(st->C1->C2,st->C1->C2->C2,false)) {
+						check_right = false;
+						R5coords = findR5internal(st->C1->C2,st->C1->C2->C2);
+					}
+					else if (isR5internal(st->C2->C1->C1,st->C2->C1,true) || isR5internal(st->C2->C1->C1,st->C2->C1,false)) {
+						check_left = false;
+						R5coords = findR5internal(st->C2->C1->C1,st->C2->C1);
+					}
+					else{
+						std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
+					}
+				}
+			}
 		}
 		else {
 			st->comb = None;
@@ -4134,6 +4164,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 		if ( (check_left || check_right) && ( (int)st->type>=2000 && (int)st->type <=2005)) {
 			st->comb = MIGR;
 			m_pah->m_siteMap[MIGR].push_back(st);
+			if (steps == 0) m_pah->m_R5loc.push_back(R5coords);
 			break;
 		}
 		if ( (check_left || check_right) && st->type==R5R6) {
@@ -4142,6 +4173,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 			break;
 		}
 		st->comb = None;
+		if (steps == 0 && (int)st->type>2002 && (int)st->type < 2099) m_pah->m_R5loc.push_back(R5coords);
 		break;
     default:
         st->comb = None;
@@ -6260,81 +6292,84 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 		++perform_process_error_counter;
     }
 
-	if (m_pah->m_R5loc.size()+m_pah->m_R5walker_sites.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0){
-		//Try to fix this error by an optimisation.
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
-	}
-	if (m_pah->m_R5loc.size()+m_pah->m_R5walker_sites.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0 && SiteListSize() >= 3){
-		//Throw error.
-		cout << "Error. Number of R5s in m_pah->m_R5loc does not match number of lone and embedded R5s.\n";
-		cout << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded.\n";
-		cout << "R5 coordinates in list = "<< m_pah->m_R5loc.size() << ".\n";
-		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n";
-		cout << "Printing internal R5 positions:\n"; //SETBREAKPOINT
-		for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
-			cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+	if (id != 24 && id != 34 && id != 66){
+		//Not very useful during migration processes
+		if (m_pah->m_R5loc.size()+m_pah->m_R5walker_sites.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0){
+			//Try to fix this error by an optimisation.
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
 		}
-		if(m_debug_pah){
-			ifstream  src("KMC_DEBUG/BEFORE.xyz");
-			std::string filename = "KMC_DEBUG/BEFORE_R5count_";
-			filename.append(std::to_string(r5_error_counter)); //SETBREAKPOINT
-			filename.append(".xyz");
-			ofstream dst(filename);
-			dst << src.rdbuf();
-			src.close();
-			dst.close();
-			cout<<"Saving file: "<< filename<<"\n";
+		if (m_pah->m_R5loc.size()+m_pah->m_R5walker_sites.size() - (m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) != 0 && SiteListSize() >= 3){
+			//Throw error.
+			cout << "Error. Number of R5s in m_pah->m_R5loc does not match number of lone and embedded R5s.\n";
+			cout << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded.\n";
+			cout << "R5 coordinates in list = "<< m_pah->m_R5loc.size() << ".\n";
+			cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n";
+			cout << "Printing internal R5 positions:\n"; //SETBREAKPOINT
+			for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+				cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+			}
+			if(m_debug_pah){
+				ifstream  src("KMC_DEBUG/BEFORE.xyz");
+				std::string filename = "KMC_DEBUG/BEFORE_R5count_";
+				filename.append(std::to_string(r5_error_counter)); //SETBREAKPOINT
+				filename.append(".xyz");
+				ofstream dst(filename);
+				dst << src.rdbuf();
+				src.close();
+				dst.close();
+				cout<<"Saving file: "<< filename<<"\n";
+			}
+			std::string filename2 = "KMC_DEBUG/AFTER_R5count_";
+			filename2.append(std::to_string(r5_error_counter));
+			saveXYZ(filename2);
+			printBeforeSites(Sitelist_before);
+			printSites(site_perf);
+			cout<<"Saving file: "<< filename2<<".xyz\n";
+			//filename2.append(".inx");
+			//savePAH_tofile(filename2);
+			//cout<<"Saving file: "<< filename2<<"\n";
+			++r5_error_counter;
+			//throw std::runtime_error(msg.str());
 		}
-		std::string filename2 = "KMC_DEBUG/AFTER_R5count_";
-		filename2.append(std::to_string(r5_error_counter));
-		saveXYZ(filename2);
-        printBeforeSites(Sitelist_before);
-		printSites(site_perf);
-		cout<<"Saving file: "<< filename2<<".xyz\n";
-		//filename2.append(".inx");
-		//savePAH_tofile(filename2);
-		//cout<<"Saving file: "<< filename2<<"\n";
-		++r5_error_counter;
-		//throw std::runtime_error(msg.str());
-	}
-	
-	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
-		//Try to fix this error by an optimisation.
-		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
-		passbackPAH(mol);
-	}
-	if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0 && SiteListSize() >= 3){
-		//Throw error.
-		cout << "Error. Number of R7s in m_pah->m_R7loc does not match number of lone and embedded R5s.\n";
-		cout << "\t Total R7 rings: " << m_pah->m_rings7_Embedded << " embedded.\n";
-		cout << "R7 coordinates in list = "<< m_pah->m_R7loc.size() << ".\n";
-		cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n";
-		cout << "Printing internal R7 positions:\n"; //SETBREAKPOINT
-		for (std::list<cpair>::iterator it1 = m_pah->m_R7loc.begin(); it1 != m_pah->m_R7loc.end(); ++it1) {
-			cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+		
+		if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0){
+			//Try to fix this error by an optimisation.
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
 		}
-		if(m_debug_pah){
-			ifstream  src("KMC_DEBUG/BEFORE.xyz");
-			std::string filename = "KMC_DEBUG/BEFORE_R7count_";
-			filename.append(std::to_string(r7_error_counter)); //SETBREAKPOINT
-			filename.append(".xyz");
-			ofstream dst(filename);
-			dst << src.rdbuf();
-			src.close();
-			dst.close();
-			cout<<"Saving file: "<< filename<<"\n";
+		if (m_pah->m_R7loc.size() - (m_pah->m_rings7_Embedded) != 0 && SiteListSize() >= 3){
+			//Throw error.
+			cout << "Error. Number of R7s in m_pah->m_R7loc does not match number of lone and embedded R5s.\n";
+			cout << "\t Total R7 rings: " << m_pah->m_rings7_Embedded << " embedded.\n";
+			cout << "R7 coordinates in list = "<< m_pah->m_R7loc.size() << ".\n";
+			cout << " Jump process: " << jp.getName() <<" on PAH ID: "<< PAH_ID <<"\n";
+			cout << "Printing internal R7 positions:\n"; //SETBREAKPOINT
+			for (std::list<cpair>::iterator it1 = m_pah->m_R7loc.begin(); it1 != m_pah->m_R7loc.end(); ++it1) {
+				cout << std::get<0>(*it1) << ", " << std::get<1>(*it1) << ", " << std::get<2>(*it1) <<"\n";
+			}
+			if(m_debug_pah){
+				ifstream  src("KMC_DEBUG/BEFORE.xyz");
+				std::string filename = "KMC_DEBUG/BEFORE_R7count_";
+				filename.append(std::to_string(r7_error_counter)); //SETBREAKPOINT
+				filename.append(".xyz");
+				ofstream dst(filename);
+				dst << src.rdbuf();
+				src.close();
+				dst.close();
+				cout<<"Saving file: "<< filename<<"\n";
+			}
+			std::string filename2 = "KMC_DEBUG/AFTER_R7count_";
+			filename2.append(std::to_string(r7_error_counter));
+			saveXYZ(filename2);
+			printBeforeSites(Sitelist_before);
+			printSites(site_perf);
+			//throw std::runtime_error(msg.str());
+			cout<<"Saving file: "<< filename2<<".xyz\n";
+			++r7_error_counter;
 		}
-		std::string filename2 = "KMC_DEBUG/AFTER_R7count_";
-		filename2.append(std::to_string(r7_error_counter));
-		saveXYZ(filename2);
-        printBeforeSites(Sitelist_before);
-		printSites(site_perf);
-		//throw std::runtime_error(msg.str());
-		cout<<"Saving file: "<< filename2<<".xyz\n";
-		++r7_error_counter;
 	}
 	
 	//Save an XYZ
@@ -11362,34 +11397,10 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	if (sFE2 == stt) return;
 
 	int ii = migr_index;
-
-
-	//We need to be sure that sFE2 is NOT the start site for another walker.
-	/*unsigned int jj;
-	for(jj=0; jj!=m_pah->m_R5walker_sites.size();jj++){
-		Spointer check_site = std::get<0>(m_pah->m_R5walker_sites[jj]);
-		Spointer check_site_2 = std::get<1>(m_pah->m_R5walker_sites[jj]);
-		int steps = std::get<2>(m_pah->m_R5walker_sites[jj]);
-		Spointer sFE2_left = moveIt(sFE2,-1);
-		Spointer sFE2_right = moveIt(sFE2,+1);
-		if(sFE2==check_site || sFE2_right==check_site || sFE2_left==check_site){
-			//If this is the case we need to move sFE2 to another. Probably the healthiest thing is to move the walker.
-			bool b4;
-			if (steps<0) b4 = true;
-			else if (steps>0) b4 = false;
-			else{
-				//This should never be the case.
-				cout << "Error in R5 migration." << std::endl;
-			}
-			Spointer move_to_site = moveIt(check_site,steps);
-			proc_M5R_ACR5_termination(check_site,check_site->C1,check_site->C2,move_to_site,b4);
-			//This should move the ACR5 to its current location. Now move the walker.
-			std::get<0>(m_pah->m_R5walker_sites[jj]) = move_to_site;
-			std::get<1>(m_pah->m_R5walker_sites[jj]) = move_to_site;
-			std::get<2>(m_pah->m_R5walker_sites[jj]) = 0;
-			//sFE2 whould be ready to be modified.
-		}
-	}*/
+	int steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+	bool dir;
+	if (steps < 0) dir = true;
+	else dir = false;
 
 	//Remove R5coords from m_pah->m_R5loc. This is done by starter function/
 	//findR5internal(C_1->C2, C_2->C1);
@@ -11628,6 +11639,12 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		}
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
+	}
+
+	Spointer finsite = std::get<0>(m_pah->m_R5walker_sites[ii]);
+	if((int)finsite->type>=2003) {
+		if(dir) addR5internal(finsite->C2->C1->C1,finsite->C2->C1,true);
+		else addR5internal(finsite->C1->C2,finsite->C1->C2->C2,true);
 	}
 	
 	//Update combined sites
@@ -12101,10 +12118,12 @@ void PAHProcess::proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer
 	if (b4) stt_coupled = moveIt(stt,-1);
 	else stt_coupled = moveIt(stt,+1);
 	if (b4) {
-		convSiteType(stt, Cnew, stt->C2, ZZ);
+		//convSiteType(stt, Cnew, stt->C2, ZZ);
+		updateSites(stt, Cnew, stt->C2, 0);
 		newSite = addSite(ZZ, Cnew->C1->C1, Cnew, stt);
 	} else{
-		convSiteType(stt, stt->C1, Cnew, ZZ);
+		//convSiteType(stt, stt->C1, Cnew, ZZ);
+		updateSites(stt, stt->C1, Cnew, 0);
 		newSite = addSite(ZZ, Cnew, Cnew->C2->C2, stt_coupled);
 	}
 	
@@ -13282,17 +13301,38 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		std::cout << "Error on R5 migration. " << std::endl;
 		return;
 	}
-	//We need to identify if we can move left or right.
-	Spointer left_site = moveIt(stt,-1);
-	bool check_left = checkSiteMigration (left_site,true);
-	Spointer right_site = moveIt(stt,+1);
-	bool check_right = checkSiteMigration (right_site,false);
-	if (check_left && !check_right) b4 = true;
-	else if (!check_left && check_right) b4 = false;
+	if (steps > 0) b4 = true;
+	else if (steps<0) b4 = false;
 	else{
-		std::cout << "Error in R5 migration." <<std::endl;
-		return;
+		//We need to identify if we can move left or right.
+		if ((int)stt->type>=2003){
+			//An R5 was added to tell us the direction
+			if (isR5internal(stt->C1->C2,stt->C1->C2->C2,true) || isR5internal(stt->C1->C2,stt->C1->C2->C2,false)) b4 = true;
+			else if (isR5internal(stt->C2->C1->C1,stt->C2->C1,true) || isR5internal(stt->C2->C1->C1,stt->C2->C1,false)) b4 = false;
+			else{
+				saveXYZ("KMC_DEBUG/FEACR5MIGR");
+				std::cout << "Error in R5 migration." <<std::endl;
+				return;
+			}
+			cpair R5_coords_rem;
+			if (b4) R5_coords_rem = findR5internal(stt->C1->C2,stt->C1->C2->C2);
+			else R5_coords_rem = findR5internal(stt->C2->C1->C1,stt->C2->C1);
+		}
+		else{
+			Spointer left_site = moveIt(stt,-1);
+			bool check_left = checkSiteMigration (left_site,true);
+			Spointer right_site = moveIt(stt,+1);
+			bool check_right = checkSiteMigration (right_site,false);
+			if (check_left && !check_right) b4 = true;
+			else if (!check_left && check_right) b4 = false;
+			else{
+				saveXYZ("KMC_DEBUG/FEACR5MIGR");
+				std::cout << "Error in R5 migration." <<std::endl;
+				return;
+			}
+		}
 	}
+
 
 	Spointer sFE2, checkR5_1, checkR5_2;
 	Cpointer CRem, CRem_before, CRem_next, CFE, CR5_otherside_1, CR5_otherside_2;
@@ -13464,6 +13504,11 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
 		}
 		updateSites(stt, stt->C1, sFE2->C1, -2001);
+	}
+	steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+	if((int)sFE2->type>=2003 && steps == 0) {
+		if(b4) addR5internal(sFE2->C2->C1->C1,sFE2->C2->C1,true);
+		else addR5internal(sFE2->C1->C2,sFE2->C1->C2->C2,true);
 	}
 	// update H atoms
 	/*if (b4){
@@ -13927,6 +13972,12 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			//updateSites(S1, S1->C1, stt->C1, -5); //convert the neighbour to its same version but NOT next to an R5
 		}*/
 	}
+	steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+	if((int)sFE2->type>=2003 && steps == 0) {
+		if(b4) addR5internal(sFE2->C2->C1->C1,sFE2->C2->C1,true);
+		else addR5internal(sFE2->C1->C2,sFE2->C1->C2->C2,true);
+	}
+
 	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
 		if ( (int)opp_site->type >= 2100) {
 			Spointer S1_opp_site = moveIt(opp_site, -1);
@@ -14272,6 +14323,11 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
 		}
 		convSiteType(stt, stt->C1, stt->C2, ZZ);
+	}
+	steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+	if((int)sFE2->type>=2003 && steps == 0) {
+		if(b4) addR5internal(sFE2->C2->C1->C1,sFE2->C2->C1,true);
+		else addR5internal(sFE2->C1->C2,sFE2->C1->C2->C2,true);
 	}
 	// update H atoms
 	/*if (b4){
@@ -14659,11 +14715,13 @@ bool PAHProcess::SiteRightSize(Spointer& stt) const{
 //! Called before migration process starts. Loops through the random walker sites and appends them.
 void PAHProcess::startMigrationProcess(){
 	std::vector<std::tuple<Spointer,Spointer,int>> migr_sites;
+	std::vector<Spointer> migr_sites_appended; // Sites already included as walkers
 	if(m_pah->m_siteMap[MIGR].size()>0){
 		for(unsigned int ii=0;ii!=m_pah->m_siteMap[MIGR].size();ii++){
 			Spointer st = (m_pah->m_siteMap[MIGR])[ii];
 			std::tuple<Spointer,Spointer,int> migr_site_ii= std::make_tuple(st, st, 0);
 			migr_sites.push_back(migr_site_ii);
+			migr_sites_appended.push_back(st);
 			cpair R5coords;
 			if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C2->C1);
 			else{
@@ -14685,6 +14743,7 @@ void PAHProcess::startMigrationProcess(){
 			Spointer st = (m_pah->m_siteMap[MIGR2])[ii];
 			std::tuple<Spointer,Spointer,int> migr_site_ii= std::make_tuple(st, st, 0);
 			migr_sites.push_back(migr_site_ii);
+			migr_sites_appended.push_back(st);
 			cpair R5coords;
 			if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C2->C1);
 			else{
@@ -14705,27 +14764,28 @@ void PAHProcess::startMigrationProcess(){
 		for(unsigned int ii=0;ii!=m_pah->m_siteMap[R5R6_MIGR].size();ii++){
 			Spointer current_site = (m_pah->m_siteMap[R5R6_MIGR])[ii];
 			//Spointer next_site;
-			Spointer coupled_site;
-			Spointer check_coupled_site;
-			if (ii>0) check_coupled_site = (m_pah->m_siteMap[R5R6_MIGR])[ii-1];
-			else check_coupled_site = m_pah->m_siteList.end();
-			Spointer stt_left = moveIt((m_pah->m_siteMap[R5R6_MIGR])[ii],-1);
-			Spointer stt_right = moveIt((m_pah->m_siteMap[R5R6_MIGR])[ii],+1);
-			int steps;
-			bool b4;
-			if (check_coupled_site != stt_left && check_coupled_site != stt_right){
-				if ( isR5internal(current_site->C1->C1,current_site->C1,true) || isR5internal(current_site->C1->C1,current_site->C1,false)){
+			int coupled_site_dir = coupledSiteDirection(current_site);
+			Spointer coupled_site = moveIt(current_site,coupled_site_dir);
+			std::vector<Spointer>::iterator it, it2;
+			it = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),current_site);
+			it2 = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),coupled_site);
+			if (it == migr_sites_appended.end() && it2 == migr_sites_appended.end()){
+				int steps;
+				bool b4;
+				if (coupled_site_dir == -1){
+					//if ( isR5internal(current_site->C1->C1,current_site->C1,true) || isR5internal(current_site->C1->C1,current_site->C1,false)){
 					cpair R5coords = findR5internal(current_site->C1->C1,current_site->C1);
-					coupled_site = moveIt(current_site,-1);
+					//coupled_site = moveIt(current_site,-1);
 					steps=0;
 					b4 = true;
 					//next_site = moveIt(current_site,+1);
 					//Move the walker to its edge location. (Artificial move)
 					//proc_M5R_R5R6_out_of_corner(current_site,current_site->C1,current_site->C2,next_site,false);
 					//steps = -1;
-				}else if(isR5internal(current_site->C2,current_site->C2->C2,true) || isR5internal(current_site->C2,current_site->C2->C2,false)){
+				}else if (coupled_site_dir == 1){
+					//else if(isR5internal(current_site->C2,current_site->C2->C2,true) || isR5internal(current_site->C2,current_site->C2->C2,false)){
 					cpair R5coords = findR5internal(current_site->C2,current_site->C2->C2);
-					coupled_site = moveIt(current_site,+1);
+					//coupled_site = moveIt(current_site,+1);
 					steps=0;
 					b4 = false;
 					//next_site = moveIt(current_site,-1);
@@ -14741,9 +14801,80 @@ void PAHProcess::startMigrationProcess(){
 				if (b4) migr_site_ii = std::make_tuple(coupled_site, current_site, steps);
 				else migr_site_ii = std::make_tuple(current_site, coupled_site, steps);
 				migr_sites.push_back(migr_site_ii);
+				migr_sites_appended.push_back(current_site);
+				migr_sites_appended.push_back(coupled_site);
 			}
 		}
 	}
+
+	//Append sites that are currently locked walkers
+	std::vector<kmcSiteType> migr_site_types = {ACR5, FEACR5, ZZACR5, R5ACR5, R5R6};
+	std::vector<Spointer> possible_locked_sites;
+	for(unsigned int iii=0; iii!=migr_site_types.size();iii++){
+		for(unsigned int ii=0;ii!=m_pah->m_siteMap[migr_site_types[iii]].size();ii++){
+			Spointer st = (m_pah->m_siteMap[migr_site_types[iii]])[ii];
+			possible_locked_sites.push_back(st);
+		}
+	}
+	for(unsigned int ii=0;ii!=possible_locked_sites.size();ii++){
+		Spointer st = possible_locked_sites[ii];
+		std::vector<Spointer>::iterator it;
+		it = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),st);
+		if(it==migr_sites_appended.end()){
+			//The site st has not been appended. Needs to be checked.
+			cpair R5coords;
+			if (st->type == ACR5 || st->type == FEACR5 || st->type == ZZACR5 || st->type == R5ACR5){
+				std::tuple<Spointer,Spointer,int> migr_site_ii= std::make_tuple(st, st, 0);
+				migr_sites.push_back(migr_site_ii);
+				migr_sites_appended.push_back(st);
+				if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C2->C1);
+				else {
+					if ( isR5internal(st->C1->C2, st->C1->C2->C2,false) || isR5internal(st->C1->C2, st->C1->C2->C2,true) ) {
+					R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
+					}
+					else if ( isR5internal(st->C2->C1->C1, st->C2->C1,false) || isR5internal(st->C2->C1->C1, st->C2->C1,true) ) {
+						R5coords = findR5internal(st->C2->C1->C1, st->C2->C1);
+					}
+					else {
+						//R5 not found
+						std::cout << "ERROR. R5 not found for " << st->type << " site in PAHProcess::startMigrationProcess." << std::endl;
+					}
+				}
+			}
+			else{
+				//site is R5R6
+				int direction_int = coupledSiteDirection(st);
+				bool b4;
+				Spointer coupled_site = moveIt(st,direction_int);
+				std::vector<Spointer>::iterator it2;
+				it2 = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),coupled_site);
+				if(it!=migr_sites_appended.end()){
+					//coupled site has been added as migrator but not st
+					std::cout<< "Error in R5 migration." << std::endl;
+				}
+				else{
+					if ( direction_int == -1){
+						cpair R5coords = findR5internal(st->C1->C1,st->C1);
+						b4 = true;
+					}else if(direction_int == 1){
+						cpair R5coords = findR5internal(st->C2,st->C2->C2);
+						b4 = false;
+					} else{
+						std::cout << "R5 not found." << std::endl;
+					}
+					//std::tuple<Spointer,int> migr_site_ii = std::make_tuple(next_site, steps);
+					std::tuple<Spointer,Spointer,int> migr_site_ii;
+					
+					if (b4) migr_site_ii = std::make_tuple(coupled_site, st, 0);
+					else migr_site_ii = std::make_tuple(st, coupled_site, 0);
+					migr_sites.push_back(migr_site_ii);
+					migr_sites_appended.push_back(st);
+					migr_sites_appended.push_back(coupled_site);
+				}
+			}
+		}
+	}
+
 	m_pah->m_R5walker_sites = migr_sites;
 }
 
@@ -14759,6 +14890,7 @@ void PAHProcess::performMigrationProcess(){
 		else b4 = false;
 		if (site_perf->type == ZZ) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else if (site_perf->type == FE) proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		else if (site_perf->type == AC) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else if ((int)site_perf->type>=2000 && (int)site_perf->type<=2100) proc_M5R_FEACR5_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else{
 			//stt is already a termination site
@@ -14790,6 +14922,9 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 	//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
 	if ((int)stt->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) return false; // The result would be an indene, not supported. YET!
 	if ((int)stt->type == 100 || (int)stt->type == 101 || (int)stt->type == 501 || (int)stt->type == 2002) return false; // This would violate the IPR.
+	if ((int)stt->type >= 502 && (int)stt->type <= 502) return false; // This would violate the IPR.
+	if ((int)stt->type >= 602 && (int)stt->type <= 602) return false; // This would violate the IPR.
+	if ((int)stt->type >= 1002 && (int)stt->type <= 1004) return false; // This would violate the IPR.
 	if ((int)stt->type == 9999 || (int)stt->type == -1 || stt->type == None) return false;
 	if ((int)stt->type == 0){
 		if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) return false;
@@ -14892,8 +15027,10 @@ int PAHProcess::coupledSiteDirection(Spointer stt){
 		if ((int)check_right->type>=2114 && (int)check_right->type<=2115) right_bool = false;
 		if ((int)check_right->type==9999) right_bool = false;
 
-		if(left_bool && !right_bool) return -1;
-		if(!left_bool && right_bool) return 1;
+		if(left_bool && !right_bool && ii==0) return -1;
+		if(!left_bool && right_bool && ii==0) return 1;
+		if(left_bool && !right_bool && ii!=0) return 1;
+		if(!left_bool && right_bool && ii!=0) return -1;
 	}
 	return 0;
 }
