@@ -11648,27 +11648,37 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	}
 	
 	//Update combined sites
-	Spointer stt_1, stt_2, S3, S4, S5, S6;
+	Spointer stt_1, stt_2, end_site, origin_site, S3, S4, S5, S6;
 	if (b4){
 		stt_1 = moveIt(newSite, +1);
 		stt_2 = moveIt(stt, +1);
+		end_site = S2;
+		origin_site = moveIt(end_site,+1);
+		S1 = moveIt(end_site,-1);
+		S2 = moveIt(origin_site,1);
 	}else{
 		stt_1 = moveIt(stt, -1);
 		stt_2 = moveIt(newSite, -1);
+		end_site = S1;
+		origin_site = moveIt(end_site,-1);
+		S1 = moveIt(origin_site,-1);
+		S2 = moveIt(end_site,1);
 	}
 	S3 = moveIt(S1, -1);
 	S4 = moveIt(S2, +1);
 	S5 = moveIt(S1, -2);
 	S6 = moveIt(S2, +2);
 	updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
-	if (S1->type==R5R6 && b4){
+	/*if (S1->type==R5R6 && b4){
 		updateCombinedSitesMigration(S2);
 		updateCombinedSitesMigration(S1);
 	}
 	else{
 		updateCombinedSitesMigration(S1); 
 		updateCombinedSitesMigration(S2);
-	}
+	}*/
+	updateCombinedSitesMigration(origin_site); updateCombinedSitesMigration(end_site);
+	updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2);
 	updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4); updateCombinedSitesMigration(S5); updateCombinedSitesMigration(S6);
 	
 	//Adjust opposite sites for starting and ending position.
