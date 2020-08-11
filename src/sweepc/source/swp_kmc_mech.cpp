@@ -6273,7 +6273,7 @@ double O5R_R5R6FER5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
     }
     else r_f=0;
     return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
-	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+	return m_rate = (m_r[6] + m_r[7]) * site_count; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6324,7 +6324,7 @@ double O5R_R5R6ZZR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
     }
     else r_f=0;
     return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
-	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+	return m_rate = (m_r[6] + m_r[7]) * site_count; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
@@ -6375,7 +6375,7 @@ double O5R_R5R6ACR5R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, con
     }
     else r_f=0;
     return m_rate = r_f*(m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation*/
-	return m_rate = (m_r[6] + m_r[7]) * site_count/2.0; // Rate Equation
+	return m_rate = (m_r[6] + m_r[7]) * site_count; // Rate Equation
 	//return setRate0p0267(gp, pah_st);
 }
 
