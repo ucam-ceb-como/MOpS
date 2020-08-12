@@ -196,6 +196,9 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 	Spointer Sp1;
 	rvector rates(m_kmcmech.JPList().size(), 0);
 	calcrates = true;
+
+    double time_migration = 0.0;
+    clock_t timerStart, timerEnd;
 	
     while (m_t < t_max && proceed) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
@@ -292,6 +295,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			//printRates(m_t, m_kmcmech.Rates());
             cout << m_t << std::endl;
             if (jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34 || jp_perf.first->getID() == 66 ) {
+                timerStart = clock();
                 //Migration jump processes. Set flag m_migrate to true.
                 if (!m_migrate) {
                     m_simPAHp.startMigrationProcess();
@@ -308,6 +312,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     m_simPAHp.performMigrationProcess();
                     //savePAH(PAH_ID,"KMC_DEBUG/AFTERMIGRATION");
                     m_migrate = false;
+                    timerEnd = clock();
+                    time_migration += (timerEnd - timerStart) / double(CLOCKS_PER_SEC);
                 }
                 if (finder != m_tracked_pahs.end() && !m_migrate){
                     std::string xyzname = ("KMC_DEBUG/");
@@ -345,6 +351,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             m_t = t_next;
         }
     }
+
+    std::cout << "Wall time used for PAH_ID " << PAH_ID << " = " << time_migration << "s." << std::endl;
     
     if (tracked_csv) closetrackedPAHCSV();
     std::string xyzname = ("KMC_DEBUG/");
