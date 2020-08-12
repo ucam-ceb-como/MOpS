@@ -2327,7 +2327,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 		}
 		
-		/*vector<int> valence_2_carbons, valence_4_carbons;
+		vector<int> valence_2_carbons, valence_4_carbons;
 		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
 			auto find_methyl = std::find(methyl_list_flat.begin(), methyl_list_flat.end(), a->GetIdx()); 
 			if (find_methyl == methyl_list_flat.end()){
@@ -2340,7 +2340,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 		}
 		
-		//Adds bond between two carbons with valence 2. 
+		/*//Adds bond between two carbons with valence 2. 
 		if(valence_2_carbons.size() != 0){ 
 			for (unsigned int ii=0; ii!=valence_2_carbons.size(); ++ii){
 				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_2_carbons[ii]);
@@ -2367,7 +2367,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					}
 				}
 			}
-		}
+		}*/
 		
 		//Deletes bond between two carbons with valence 4. 
 		if(valence_4_carbons.size() != 0){ 
@@ -2391,7 +2391,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					}
 				}
 			}
-		}*/
+		}
 		
 		mol.SetAromaticPerceived();
 		//Comment in to print the details of every bond in the OBmol object
@@ -12014,6 +12014,13 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
+
+	Spointer finsite = std::get<0>(m_pah->m_R5walker_sites[ii]);
+	if((int)finsite->type>=2003) {
+		if(b4) addR5internal(finsite->C2->C1->C1,finsite->C2->C1,true);
+		else addR5internal(finsite->C1->C2,finsite->C1->C2->C2,true);
+	}
+
 	//Update combined sites
 	Spointer S3, S4, S5, S6;
 	if (b4){
