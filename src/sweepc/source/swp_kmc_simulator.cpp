@@ -197,6 +197,9 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 	rvector rates(m_kmcmech.JPList().size(), 0);
 	calcrates = true;
 	
+    double time_migration = 0.0;
+    clock_t timerStart, timerEnd;
+
     while (m_t < t_max && proceed) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
         //m_simGas.interpolateProfiles(m_t, true, r_factor);
@@ -290,7 +293,13 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             // Update data structure -- Perform jump process 
 			//printRates(m_t, m_kmcmech.Rates());
             cout << m_t << std::endl;
+            if(jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34 || jp_perf.first->getID() == 66) timerStart = clock();
             m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
+            if(jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34 || jp_perf.first->getID() == 66) {
+                timerEnd = clock();
+                time_migration += (timerEnd - timerStart) / double(CLOCKS_PER_SEC);
+            }
+
 			writeCHSiteCountCSV_after(PAH_ID);
 
             /*if(jp_perf.first->getID() == 23 || jp_perf.first->getID() == 56) {
@@ -392,6 +401,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		if (loopcount == maxloops) proceed = false; //If maxloops is set to 0, this condition will never be true
         m_t = t_next;
     }
+    std::cout << "Wall time used for PAH_ID " << PAH_ID << " = " << time_migration << "s." << std::endl;
+
     if (tracked_csv) closetrackedPAHCSV();
 	return m_t;
 }
