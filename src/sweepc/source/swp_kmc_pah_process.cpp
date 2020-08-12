@@ -14747,7 +14747,7 @@ void PAHProcess::startMigrationProcess(){
 			migr_sites_appended.push_back(st);
 			cpair R5coords;
 			if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C2->C1);
-			else{
+			/*else{
 				if ( isR5internal(st->C1->C2, st->C1->C2->C2,false) || isR5internal(st->C1->C2, st->C1->C2->C2,true) ) {
 					R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
 				}
@@ -14758,7 +14758,7 @@ void PAHProcess::startMigrationProcess(){
 					//R5 not found
 					std::cout << "ERROR. R5 not found for " << st->type << " site in PAHProcess::startMigrationProcess." << std::endl;
 				}
-			}
+			}*/
 		}
 	}
 	if(m_pah->m_siteMap[MIGR2].size()>0){
@@ -14851,7 +14851,7 @@ void PAHProcess::startMigrationProcess(){
 				migr_sites.push_back(migr_site_ii);
 				migr_sites_appended.push_back(st);
 				if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C2->C1);
-				else {
+				/*else {
 					if ( isR5internal(st->C1->C2, st->C1->C2->C2,false) || isR5internal(st->C1->C2, st->C1->C2->C2,true) ) {
 					R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
 					}
@@ -14862,7 +14862,7 @@ void PAHProcess::startMigrationProcess(){
 						//R5 not found
 						std::cout << "ERROR. R5 not found for " << st->type << " site in PAHProcess::startMigrationProcess." << std::endl;
 					}
-				}
+				}*/
 			}
 			else{
 				//site is R5R6
@@ -15078,7 +15078,7 @@ void PAHProcess::checkR5Walkers(){
 					Spointer check_corner_site, check_site, check_site2;
 					if (jj_steps<0) check_corner_site = moveIt(start_site_jj,jj_steps+1);
 					else check_corner_site = moveIt(start_site_jj,jj_steps-1);
-					if((int)check_corner_site->type>=501 && (int)check_corner_site->type>=1004 ){
+					if((int)check_corner_site->type>=501 && (int)check_corner_site->type<=1004 ){
 						if (jj_steps<0) {
 							check_site = moveIt(start_site_jj,jj_steps-1);
 							check_site2 = moveIt(start_site_jj,jj_steps);
@@ -15162,7 +15162,7 @@ void PAHProcess::checkR5Walkers(int jj){
 				Spointer check_corner_site, check_site, check_site2;
 				if (jj_steps<0) check_corner_site = moveIt(start_site_jj,jj_steps+1);
 				else check_corner_site = moveIt(start_site_jj,jj_steps-1);
-				if((int)check_corner_site->type>=501 && (int)check_corner_site->type>=1004 ){
+				if((int)check_corner_site->type>=501 && (int)check_corner_site->type<=1004 ){
 					if (jj_steps<0) {
 						check_site = moveIt(start_site_jj,jj_steps-1);
 						check_site2 = moveIt(start_site_jj,jj_steps);

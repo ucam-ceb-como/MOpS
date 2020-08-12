@@ -200,6 +200,8 @@ public:
     int coupledSiteDirection(Spointer stt);
     //! Modifies pointer for R5 walkers to avoid overlaps.
     void checkR5Walkers();
+    //! Modifies pointer for R5 walkers to avoid overlaps. Overload that know walker jj is moving.
+    void checkR5Walkers(int jj);
 	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
 	OpenBabel::OBMol passPAH(bool detectBonds=true);
 	//! Connects the atoms in a PAH using OpenBabel routines. Equivalent to OpenBabel::OBMol::ConnectTheDots();
