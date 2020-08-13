@@ -13465,7 +13465,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		//updateCombinedSitesMigration(stt); updateCombinedSitesMigration(checkR5_1); updateCombinedSitesMigration(checkR5_2);
 		m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
 		addR5internal(checkR5_1->C1,checkR5_1->C2);
-		Spointer start_site, end_site, S1, S2, S3, S4;
+		Spointer start_site, end_site, S1, S2, S3, S4, S5, S6;
 		if (b4) {
 			start_site = moveIt(stt,1);
 			end_site = moveIt(start_site, -1);
@@ -13473,12 +13473,16 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			S2 = moveIt(start_site, +1);
 			S3 = moveIt(S1, -1);
 			S4 = moveIt(S2, 1);
+			S5 = moveIt(S1, -2);
+			S6 = moveIt(S2, 2);
 			updateCombinedSitesMigration(start_site);
 			updateCombinedSitesMigration(end_site); 
 			updateCombinedSitesMigration(S1);
 			updateCombinedSitesMigration(S3);
 			updateCombinedSitesMigration(S2);
 			updateCombinedSitesMigration(S4);
+			updateCombinedSitesMigration(S5);
+			updateCombinedSitesMigration(S6);
 		}
 		else {
 			start_site = moveIt(stt,-1);
@@ -13487,19 +13491,23 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			S2 = moveIt(end_site, 1);
 			S3 = moveIt(S1, -1);
 			S4 = moveIt(S2, 1);
+			S5 = moveIt(S1, -2);
+			S6 = moveIt(S2, 2);
 			updateCombinedSitesMigration(start_site);
 			updateCombinedSitesMigration(end_site); 
 			updateCombinedSitesMigration(S2);
 			updateCombinedSitesMigration(S4); // neighbours
 			updateCombinedSitesMigration(S1);
 			updateCombinedSitesMigration(S3);
+			updateCombinedSitesMigration(S5);
+			updateCombinedSitesMigration(S6);
 		}
 		return;
 		//Need to check for opposite site logic before returning.
 	}
 	
 	// edit sites. first identify the neighbouring sites of resulting RFE & R5
-	Spointer S1, S2, S3, S4;
+	Spointer S1, S2, S3, S4, S5, S6;
 	if (b4) {
 		S1 = moveIt(sFE2, -1);
 		S2 = moveIt(stt, +1);
@@ -13648,10 +13656,14 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	if (b4){
 		S3 = moveIt(S1, -1);
 		S4 = moveIt(S2, 1);
+		S5 = moveIt(S1, -2);
+		S6 = moveIt(S2, 2);
 	}
 	else{
 		S3 = moveIt(S1, -1);
 		S4 = moveIt(S2, 1);
+		S5 = moveIt(S1, -2);
+		S6 = moveIt(S2, 2);
 	}
 	updateCombinedSitesMigration(stt);
 	if (b4){
@@ -13660,6 +13672,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		updateCombinedSitesMigration(S3);
 		updateCombinedSitesMigration(S2);
 		updateCombinedSitesMigration(S4);
+		updateCombinedSitesMigration(S5);
+		updateCombinedSitesMigration(S6);
 	}
 	else{
 		updateCombinedSitesMigration(sFE2); 
@@ -13667,6 +13681,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		updateCombinedSitesMigration(S4); // neighbours
 		updateCombinedSitesMigration(S1);
 		updateCombinedSitesMigration(S3);
+		updateCombinedSitesMigration(S5);
+		updateCombinedSitesMigration(S6);
 	}
 }
 
@@ -13926,7 +13942,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				//updateCombinedSitesMigration(stt); updateCombinedSitesMigration(checkR5_1); updateCombinedSitesMigration(checkR5_2);
 				m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
 				addR5internal(checkR5_1->C1,checkR5_1->C2);
-				Spointer start_site, end_site, S1, S2, S3, S4;
+				Spointer start_site, end_site, S1, S2, S3, S4, S5, S6;
 				if (b4) {
 					start_site = moveIt(stt,1);
 					end_site = moveIt(start_site, -1);
@@ -14350,7 +14366,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		//updateCombinedSitesMigration(stt); updateCombinedSitesMigration(checkR5_1); updateCombinedSitesMigration(checkR5_2);
 		m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
 		addR5internal(checkR5_1->C1,checkR5_1->C2);
-		Spointer start_site, end_site, S1, S2, S3, S4;
+		Spointer start_site, end_site, S1, S2, S3, S4, S5, S6;
 		if (b4) {
 			start_site = moveIt(stt,1);
 			end_site = moveIt(start_site, -1);
@@ -14358,12 +14374,16 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			S2 = moveIt(start_site, +1);
 			S3 = moveIt(S1, -1);
 			S4 = moveIt(S2, 1);
+			S5 = moveIt(S1, -2);
+			S6 = moveIt(S2, 2);
 			updateCombinedSitesMigration(start_site);
 			updateCombinedSitesMigration(end_site); 
 			updateCombinedSitesMigration(S1);
 			updateCombinedSitesMigration(S3);
 			updateCombinedSitesMigration(S2);
 			updateCombinedSitesMigration(S4);
+			updateCombinedSitesMigration(S5);
+			updateCombinedSitesMigration(S6);
 		}
 		else {
 			start_site = moveIt(stt,-1);
@@ -14378,13 +14398,15 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			updateCombinedSitesMigration(S4); // neighbours
 			updateCombinedSitesMigration(S1);
 			updateCombinedSitesMigration(S3);
+			updateCombinedSitesMigration(S5);
+			updateCombinedSitesMigration(S6);
 		}
 		return;
 		//Need to check for opposite site logic before returning.
 	}
 
 	// edit sites. first identify the neighbouring sites of resulting RFE & R5
-	Spointer S1, S2, S3, S4;
+	Spointer S1, S2, S3, S4, S5, S6;
 	if (b4) {
 		S1 = moveIt(sFE2, -1);
 		S2 = moveIt(stt, +1);
@@ -14533,17 +14555,23 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	if (b4){
 		S3 = moveIt(S1, -1);
 		S4 = moveIt(S2, 1);
+		S5 = moveIt(S1, -2);
+		S6 = moveIt(S2, 2);
 	}
 	else{
 		S3 = moveIt(S1, -1);
 		S4 = moveIt(S2, 1);
+		S5 = moveIt(S1, -2);
+		S6 = moveIt(S2, 2);
 	}
 	updateCombinedSitesMigration(stt); updateCombinedSitesMigration(sFE2); 
 	if (b4){
 		updateCombinedSitesMigration(S1);
 		updateCombinedSitesMigration(S3);
 		updateCombinedSitesMigration(S2);
-		updateCombinedSitesMigration(S4); // neighbours
+		updateCombinedSitesMigration(S4);
+		updateCombinedSitesMigration(S5);
+		updateCombinedSitesMigration(S6); // neighbours
 		if(S2->comb==FE2){
 			Spointer S2_2 = moveIt(S2,+2);
 			Spointer S2_3 = moveIt(S2,+3);
@@ -14556,6 +14584,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		updateCombinedSitesMigration(S4); // neighbours
 		updateCombinedSitesMigration(S1);
 		updateCombinedSitesMigration(S3);
+		updateCombinedSitesMigration(S5);
+		updateCombinedSitesMigration(S6); // neighbours
 		if(S1->comb==FE2){
 			Spointer S1_2 = moveIt(S1,-2);
 			Spointer S1_3 = moveIt(S1,-3);
