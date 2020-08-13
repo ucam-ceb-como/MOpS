@@ -15321,8 +15321,13 @@ void PAHProcess::checkR5Walkers(int jj){
 					check_site2 = check_site;
 				}
 				if(check_site->type==FE || check_site2->type==FE){
-					if (jj_steps>0) check_site2 = moveIt(check_site,+1);
-					else check_site2 = moveIt(check_site,-1);
+					if(check_site->type==FE){
+						if (jj_steps>0) check_site2 = moveIt(check_site,+1);
+						else check_site2 = moveIt(check_site,-1);
+					}else{
+						if (jj_steps>0) check_site = moveIt(check_site2,+1);
+						else check_site = moveIt(check_site2,-1);
+					}
 				}
 				if (check_site == start_site_ii || check_site == start_site_ii2 || check_site2 == start_site_ii || check_site == start_site_ii2){
 					//The next position of walker jj will become the start location of walker ii.
