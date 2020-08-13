@@ -14392,6 +14392,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			S2 = moveIt(end_site, 1);
 			S3 = moveIt(S1, -1);
 			S4 = moveIt(S2, 1);
+			S5 = moveIt(S1, -2);
+			S6 = moveIt(S2, 2);
 			updateCombinedSitesMigration(start_site);
 			updateCombinedSitesMigration(end_site); 
 			updateCombinedSitesMigration(S2);
