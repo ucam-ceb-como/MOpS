@@ -11313,11 +11313,11 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 		}
 	}
 	
-	Spointer S1 = moveIt(newSite, -1); Spointer S3 = moveIt(newSite, -2);
-	Spointer S2 = moveIt(newSite, +1); Spointer S4 = moveIt(newSite, +2);
+	Spointer S1 = moveIt(newSite, -1); Spointer S3 = moveIt(newSite, -2); Spointer S5 = moveIt(newSite, -3);
+	Spointer S2 = moveIt(newSite, +1); Spointer S4 = moveIt(newSite, +2); Spointer S6 = moveIt(newSite, +3);
     // update combined sites for all new sites and neighbours (and their neighbours)
     updateCombinedSites(stt); updateCombinedSites(other); updateCombinedSites(newSite); 
-	updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
+	updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4); updateCombinedSites(S5); updateCombinedSites(S6);
 	m_pah->m_rings5_Lone--;
 	addCount(0,+1);
 }
