@@ -15108,6 +15108,7 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 		}
 	}
 	if ((int)stt->type == 1 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0 && (int)checkR5_3->type == 2002) return false;
+	if((int)stt->type == 2002 || (int)stt->type == 2003 || (int)stt->type == 2103 || (int)stt->type == 2104) return false;
 	//Check for other sites
 	Cpointer CR5_otherside_end;
 	if (b4) CR5_otherside_end = stt->C2->C1;
