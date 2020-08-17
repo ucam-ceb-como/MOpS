@@ -13890,7 +13890,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			stt_coupled = moveIt(stt,-1);
 		}
 		updateSites(stt,stt->C1,stt->C2,-500);
-		updateSites(stt_coupled,stt_coupled->C1,stt_coupled->C2,-501);
+		if((int)stt_coupled->type>2000) updateSites(stt_coupled,stt_coupled->C1,stt_coupled->C2,-101);
+		else updateSites(stt_coupled,stt_coupled->C1,stt_coupled->C2,-501);
 		Spointer start_site = std::get<0>(m_pah->m_R5walker_sites[ii]);
 		Cpointer start_site_C1 = start_site->C1;
 		Cpointer start_site_C2 = start_site->C2;
@@ -13914,7 +13915,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			start_site = std::get<1>(m_pah->m_R5walker_sites[ii]);
 		}
 		updateSites(stt,stt->C1,stt->C2,-501);
-		updateSites(stt_coupled,stt_coupled->C1,stt_coupled->C2,-500);
+		if((int)stt_coupled->type>2000) updateSites(stt_coupled,stt_coupled->C1,stt_coupled->C2,-100);
+		else updateSites(stt_coupled,stt_coupled->C1,stt_coupled->C2,-500);
 		Cpointer start_site_C1 = start_site->C1;
 		Cpointer start_site_C2 = start_site->C2;
 
@@ -15090,8 +15092,8 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 	//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
 	if ((int)stt->type == 0 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0) return false; // The result would be an indene, not supported. YET!
 	if ((int)stt->type == 100 || (int)stt->type == 101 || (int)stt->type == 501 || (int)stt->type == 2002) return false; // This would violate the IPR.
-	if ((int)stt->type >= 502 && (int)stt->type <= 502) return false; // This would violate the IPR.
-	if ((int)stt->type >= 602 && (int)stt->type <= 602) return false; // This would violate the IPR.
+	//if ((int)stt->type >= 502 && (int)stt->type <= 502) return false; // This would violate the IPR.
+	if ((int)stt->type >= 602 && (int)stt->type <= 604) return false; // This would violate the IPR.
 	if ((int)stt->type >= 1002 && (int)stt->type <= 1004) return false; // This would violate the IPR.
 	if ((int)stt->type == 9999 || (int)stt->type == -1 || stt->type == None) return false;
 	if ((int)stt->type == 0){
@@ -15195,10 +15197,13 @@ int PAHProcess::coupledSiteDirection(Spointer stt){
 		if ((int)check_right->type>=2114 && (int)check_right->type<=2115) right_bool = false;
 		if ((int)check_right->type==9999) right_bool = false;
 
-		if(left_bool && !right_bool && ii==0) return -1;
-		if(!left_bool && right_bool && ii==0) return 1;
-		if(left_bool && !right_bool && ii!=0) return 1;
-		if(!left_bool && right_bool && ii!=0) return -1;
+		bool invert;
+		if (ii%2 == 0) invert = false;
+		else invert = true;
+		if(left_bool && !right_bool && !invert) return -1;
+		if(!left_bool && right_bool && !invert) return 1;
+		if(left_bool && !right_bool && invert) return 1;
+		if(!left_bool && right_bool && invert) return -1;
 	}
 	return 0;
 }
