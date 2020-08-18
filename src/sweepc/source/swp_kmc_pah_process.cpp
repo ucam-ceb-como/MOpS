@@ -3985,6 +3985,7 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 			m_pah->m_siteMap[R5R6_MIGR].push_back(st);
 			break;
 		}
+		st->comb = None;
 		break;
     default:
         st->comb = None;
@@ -6011,6 +6012,9 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	std::list<std::string> Sitelist_before = copySites(site_perf);
 	//Check if the site has the right number of carbons
 	if(!SiteRightSize(site_perf) && (id != 24 && id != 34 && id != 66)  ){
+		std::cout << "ERROR: Site selected has incorrect number of carbons. Process not performed."
+			<< "ID" << id << " Jump process: " << jp.getName() << " on PAH ID: " << PAH_ID << "..."
+			<< " (Sweep::KMC_ARS::PAHProcess::performProcess)";
 		std::string filename = "KMC_DEBUG/KMC_PAH_performProcess_SiteSize_";
 		filename.append(std::to_string(perform_process_error_counter));
 		saveXYZ(filename);
@@ -6247,6 +6251,10 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	if ( (!SiteRightSize(site_perf) || !SiteRightSize(S1)
         || !SiteRightSize(S2) || !SiteRightSize(S3)
         || !SiteRightSize(S4)) && (id != 24 && id != 34 && id != 66) ) {
+		
+		std::cout <<"ERROR: Site produced has incorrect number of carbons after process was performed."
+			<< "ID" << id << " Jump process: " << jp.getName() << " on PAH ID: " << PAH_ID << "..."
+			<< " (Sweep::KMC_ARS::PAHProcess::performProcess)";
 		std::string filename = "KMC_DEBUG/KMC_PAH_performProcess_SiteSize_";
 		filename.append(std::to_string(perform_process_error_counter));
 		saveXYZ(filename);
@@ -12139,17 +12147,21 @@ void PAHProcess::proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer
 	
 	//First adjust starting site and add new site if needed.
 	Spointer stt_coupled, newSite;
-	if (stt->type == RFE){
+	if (checkR5_1->type == R5 && sFE2->type == R5){
 		if (b4) stt_coupled = moveIt(stt,+1);
 		else stt_coupled = moveIt(stt,-1);
 		if (b4) {
+			int stype_diff = (int)stt->type - 101;
+			Cpointer Cold = stt->C2;
 			//convSiteType(stt, Cnew, stt->C2, ZZ);
-			updateSites(stt, stt->C1,Cnew, 0);
-			newSite = addSite(ZZ, Cnew, Cnew->C2->C2, stt_coupled);
+			updateSites(stt, stt->C1,Cnew, -stype_diff);
+			newSite = addSite((kmcSiteType)(1+stype_diff), Cnew, Cold, stt_coupled);
 		} else{
+			int stype_diff = (int)stt->type - 101;
+			Cpointer Cold = stt->C1;
 			//convSiteType(stt, stt->C1, Cnew, ZZ);
-			updateSites(stt, Cnew, stt->C2, 0);
-			newSite = addSite(ZZ, Cnew->C1->C1, Cnew, stt);
+			updateSites(stt, Cnew, stt->C2, -stype_diff);
+			newSite = addSite((kmcSiteType)(1+stype_diff), Cold, Cnew, stt);
 		}
 	}
 	else{
@@ -13383,8 +13395,13 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		CRem = sFE2->C2; //Not modified but pointer created
 		CRem_next = CRem->C1;
 		CRem_before = CRem->C2;
-		CR5_otherside_1 = C_1->C2->C2;
-		CR5_otherside_2 = C_1->C2;
+		if (SiteSize(stt)==4) {
+			CR5_otherside_1 = C_1->C2;
+			CR5_otherside_2 = C_1->C1;
+		}else{
+			CR5_otherside_1 = C_1->C2->C2;
+			CR5_otherside_2 = C_1->C2;
+		}
 	}
 	else {
 		sFE2 = moveIt(stt, 1);
@@ -13394,8 +13411,13 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		CRem = sFE2->C1; //Not modified but pointer created
 		CRem_next = CRem->C2; 
 		CRem_before = CRem->C1;
-		CR5_otherside_1 = C_2->C1->C1;
-		CR5_otherside_2 = C_2->C1;
+		if (SiteSize(stt)==4) {
+			CR5_otherside_1 = C_2->C1;
+			CR5_otherside_2 = C_2->C2;
+		} else {
+			CR5_otherside_1 = C_2->C1->C1;
+		 	CR5_otherside_2 = C_2->C1;
+		}
 	}
 
 	// check if ACR5 has an opposite site.
@@ -13454,7 +13476,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
 		//R5 has moved to the edge and will now be free.
 		//Since the FE2 will not move anymore it is probably a good idea to remove the walker.
-		convSiteType(stt, stt->C1, stt->C2, RFE);
+		updateSites(stt, stt->C1, stt->C2, -1901);
 		convSiteType(sFE2, sFE2->C1, sFE2->C2, R5);
 		convSiteType(checkR5_1, checkR5_1->C1, checkR5_1->C2, R5);
 		updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, +100);
