@@ -131,7 +131,7 @@ typedef Sweep::KMC_ARS::KMCGasPoint sp;
 std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     std::vector<JumpProcess*> temp;
     //! Initialise all jump processes.
-    /*JumpProcess* j_G6R_AC = new G6R_AC; j_G6R_AC->initialise();									//!  1- R6 Growth on AC [AR1].
+    JumpProcess* j_G6R_AC = new G6R_AC; j_G6R_AC->initialise();									//!  1- R6 Growth on AC [AR1].
     JumpProcess* j_G6R_FE = new G6R_FE; j_G6R_FE->initialise();									//!  2- R6 Growth on FE [AR2].
     JumpProcess* j_L6_BY6 = new L6_BY6; j_L6_BY6->initialise();									//!  3- BY6 closure [AR14].
     JumpProcess* j_PH_benz = new PH_benz; j_PH_benz->initialise();								//!  4- phenyl addition [AR15].
@@ -140,9 +140,9 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //JumpProcess* j_O6R_FE3_OH = new O6R_FE3_OH; j_O6R_FE3_OH->initialise();						//!  7- R6 Oxidation at FE by OH [AR11].
     JumpProcess* j_O6R_FE_HACA = new O6R_FE_HACA; j_O6R_FE_HACA->initialise();					//!  8- R6 Oxidation at FE-HACA [AR12].
     //JumpProcess* j_O6R_FE_HACA_OH = new O6R_FE_HACA_OH; j_O6R_FE_HACA_OH->initialise();			//!  9- R6 Oxidation at AC by OH [AR13].
-    JumpProcess* j_G5R_ZZ = new G5R_ZZ; j_G5R_ZZ->initialise();									//! 10- R5 growth at ZZ [AR3].*/
+    JumpProcess* j_G5R_ZZ = new G5R_ZZ; j_G5R_ZZ->initialise();									//! 10- R5 growth at ZZ [AR3].
     JumpProcess* j_D5R_R5 = new D5R_R5; j_D5R_R5->initialise();									//! 11- R5 desorption [AR7].
-    /*JumpProcess* j_C6R_AC_FE3 = new C6R_AC_FE3; j_C6R_AC_FE3->initialise();						//! 12- R6 conversion to R5 [AR9].
+    JumpProcess* j_C6R_AC_FE3 = new C6R_AC_FE3; j_C6R_AC_FE3->initialise();						//! 12- R6 conversion to R5 [AR9].
     JumpProcess* j_C5R_RFE = new C5R_RFE; j_C5R_RFE->initialise();                              //! 13- R5 conversion to R6 on RFE [AR5].
     JumpProcess* j_C5R_RAC = new C5R_RAC; j_C5R_RAC->initialise();                              //! 14- R5 conversion to R6 on AC [AR4].
     JumpProcess* j_M5R_RZZ = new M5R_RZZ; j_M5R_RZZ->initialise();                              //! 15- R5 migration to neighbouring ZZ [AR6]. 
@@ -152,10 +152,10 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     JumpProcess* j_M6R_BY5_FE3 = new M6R_BY5_FE3; j_M6R_BY5_FE3->initialise();                  //! 19- R6 desorption at bay -> pyrene [AR21].
     JumpProcess* j_O6R_FE2_side = new O6R_FE2_side; j_O6R_FE2_side->initialise();               //! 20- R6 Oxidation at FE2 by side reaction.
     JumpProcess* j_O6R_FE2_top = new O6R_FE2_top; j_O6R_FE2_top->initialise();                  //! 21- R6 Oxidation at FE2 by top reaction.
-	JumpProcess* j_D6R_FE_AC = new D6R_FE_AC; j_D6R_FE_AC->initialise();						//! 22- R6 Desorption from FE to AC site.*/
+	JumpProcess* j_D6R_FE_AC = new D6R_FE_AC; j_D6R_FE_AC->initialise();						//! 22- R6 Desorption from FE to AC site.
 	JumpProcess* j_B6R_ACR5 = new B6R_ACR5; j_B6R_ACR5->initialise();                           //!< 23 - Bay-capping.
 	JumpProcess* j_M5R_ACR5_ZZ = new M5R_ACR5_ZZ; j_M5R_ACR5_ZZ->initialise();                  //!< 24 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
-	/*JumpProcess* j_G6R_RZZ = new G6R_RZZ; j_G6R_RZZ->initialise();                              //!< 25 - R6 growth on RZZ.
+	JumpProcess* j_G6R_RZZ = new G6R_RZZ; j_G6R_RZZ->initialise();                              //!< 25 - R6 growth on RZZ.
 	JumpProcess* j_G6R_RFER = new G6R_RFER; j_G6R_RFER->initialise();                           //!< 26 - R6 growth on RFER.
 	//JumpProcess* j_G6R_R5 = new G6R_R5; j_G6R_R5->initialise();                                 //!< 27 - R6 growth on R5.
 	JumpProcess* j_L6_RBY5 = new L6_RBY5; j_L6_RBY5->initialise();                              //!< 28 - RBY5 closure reaction.
@@ -163,9 +163,9 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	//JumpProcess* j_G5R_RFE = new G5R_RFE; j_G5R_RFE->initialise();                              //!< 30 - R5 growth on RFE.
 	JumpProcess* j_C6R_RAC_FE3 = new C6R_RAC_FE3; j_C6R_RAC_FE3->initialise();                  //!< 31 - R6 migration & conversion to R5 at RAC.
 	JumpProcess* j_C6R_RAC_FE3violi = new C6R_RAC_FE3violi; j_C6R_RAC_FE3violi->initialise();   //!< 32 - R6 migration & conversion to R5 at RAC.
-	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //!< 33 - R6 desorption at RAC -> pyrene.*/
+	JumpProcess* j_M6R_RAC_FE3 = new M6R_RAC_FE3; j_M6R_RAC_FE3->initialise();                  //!< 33 - R6 desorption at RAC -> pyrene.
 	JumpProcess* j_MR5_R6 = new MR5_R6; j_MR5_R6->initialise();                                 //!< 34 - R5 exchange with R6. //Moved to instant jump process list.
-	/*JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //!< 35 - R7 growth on R5R6AC.
+	JumpProcess* j_GR7_R5R6AC = new GR7_R5R6AC; j_GR7_R5R6AC->initialise();                        //!< 35 - R7 growth on R5R6AC.
 	JumpProcess* j_GR7_FEACR5 = new GR7_FEACR5; j_GR7_FEACR5->initialise();                        //!< 36 - R7 growth on FEACR5.
 	JumpProcess* j_G6R_R5R6ZZ = new G6R_R5R6ZZ; j_G6R_R5R6ZZ->initialise();                        //!< 37 - R6 growth on R5R6ZZ.
 	JumpProcess* j_L7_ACACR5 = new L7_ACACR5; j_L7_ACACR5->initialise();                        //!< 38 - R7 bay closure on ACACR5.
@@ -197,11 +197,11 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	JumpProcess* j_O5R_R5R6ZZR5R6 = new O5R_R5R6ZZR5R6; j_O5R_R5R6ZZR5R6->initialise();         //!< 64 - Oxidation of R5R6ZZR5R6 site.
 	JumpProcess* j_O5R_R5R6ACR5R6 = new O5R_R5R6ACR5R6; j_O5R_R5R6ACR5R6->initialise();         //!< 65 - Oxidation of R5R6ACR5R6 site.
 	JumpProcess* j_M5R_ACR5_ZZ_ZZ = new M5R_ACR5_ZZ_ZZ; j_M5R_ACR5_ZZ_ZZ->initialise();         //!< 66 - ACR5 migration to both sides.
-	//JumpProcess* j_MR5R7_edge = new MR5R7_edge; j_MR5R7_edge->initialise();        				//!< 67 - R5R7 pair edge healing.
+	JumpProcess* j_MR5R7_edge = new MR5R7_edge; j_MR5R7_edge->initialise();        				//!< 67 - R5R7 pair edge healing.
     
        
 	//! Jump processes included in the model (Comment out any process to be omitted).
-    /*temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
+    temp.push_back(j_G6R_AC);            //!  1- R6 Growth on AC [AR1].
     temp.push_back(j_G6R_FE);            //!  2- R6 Growth on FE [AR2].
     temp.push_back(j_L6_BY6);            //!  3- BY6 closure [AR14].
     temp.push_back(j_PH_benz);           //!  4- phenyl addition [AR15].
@@ -210,9 +210,9 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     //temp.push_back(j_O6R_FE3_OH);        //!  7- R6 Oxidation at FE by OH [AR11].
     temp.push_back(j_O6R_FE_HACA);    //!  R6 Oxidation at FE-HACA [AR12].
     //temp.push_back(j_O6R_FE_HACA_OH);    //!  9- R6 Oxidation at AC by OH [AR13].
-    temp.push_back(j_G5R_ZZ);            //! 10- R5 growth at ZZ [AR3].*/
+    temp.push_back(j_G5R_ZZ);            //! 10- R5 growth at ZZ [AR3].
     temp.push_back(j_D5R_R5);            //! 11- R5 desorption [AR7].
-    /*temp.push_back(j_C6R_AC_FE3);        //! 12- R6 conversion to R5 [AR9].
+    temp.push_back(j_C6R_AC_FE3);        //! 12- R6 conversion to R5 [AR9].
     temp.push_back(j_C5R_RFE);           //! 13- R5 conversion to R6 on RFE [AR5].
     temp.push_back(j_C5R_RAC);           //! 14- R5 conversion to R6 on AC [AR4].
     temp.push_back(j_M5R_RZZ);           //! 15- R5 migration to neighbouring ZZ [AR6]. 
@@ -222,10 +222,10 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
     temp.push_back(j_M6R_BY5_FE3);       //! 19- R6 desorption at bay -> pyrene [AR21].
     temp.push_back(j_O6R_FE2_side);        //! 20- R6 Oxidation at FE2 by side reaction.
 	temp.push_back(j_O6R_FE2_top);        //! 21- R6 Oxidation at FE2 by top reaction.
-	temp.push_back(j_D6R_FE_AC);         //! 22- R6 Desorption from FE to AC site.*/
+	temp.push_back(j_D6R_FE_AC);         //! 22- R6 Desorption from FE to AC site.
 	temp.push_back(j_B6R_ACR5);         //!< 23 - Bay-capping.
 	temp.push_back(j_M5R_ACR5_ZZ);      //!< 24 - Embedded 5-member ring migration to ZZ. //Moved to instant jump process list.
-	/*temp.push_back(j_G6R_RZZ);          //!< 25 - R6 growth on RZZ.
+	temp.push_back(j_G6R_RZZ);          //!< 25 - R6 growth on RZZ.
 	temp.push_back(j_G6R_RFER);         //!< 26 - R6 growth on RFER.
 	//temp.push_back(j_G6R_R5);           //!< 27 - R6 growth on R5.
 	temp.push_back(j_L6_RBY5);          //!< 28 - RBY5 closure reaction.
@@ -233,9 +233,9 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	//temp.push_back(j_G5R_RFE);          //!< 30 - R5 growth on RFE.
 	temp.push_back(j_C6R_RAC_FE3);      //!< 31 - R6 migration & conversion to R5 at RAC.
 	temp.push_back(j_C6R_RAC_FE3violi); //!< 32 - R6 migration & conversion to R5 at RAC.
-	temp.push_back(j_M6R_RAC_FE3);      //!< 33 - R6 desorption at RAC -> pyrene.*/
+	temp.push_back(j_M6R_RAC_FE3);      //!< 33 - R6 desorption at RAC -> pyrene.
 	temp.push_back(j_MR5_R6);           //!< 34 - R5 exchange with R6. //Moved to instant jump process list.
-	/*temp.push_back(j_GR7_R5R6AC);           //!< 35 - R7 growth on R5R6AC.
+	temp.push_back(j_GR7_R5R6AC);           //!< 35 - R7 growth on R5R6AC.
 	temp.push_back(j_GR7_FEACR5);           //!< 36 - R7 growth on FEACR5.
 	temp.push_back(j_G6R_R5R6ZZ);          //!< 37 - R6 growth on R5R6ZZ.
 	temp.push_back(j_L7_ACACR5);          //!< 38 - R7 bay closure on ACACR5.
@@ -267,7 +267,7 @@ std::vector<JumpProcess*> KMCMechanism::obtainJumpProcess(){
 	temp.push_back(j_O5R_R5R6ZZR5R6);          		//!< 64 - Oxidation of R5R6ZZR5R6 site.
 	temp.push_back(j_O5R_R5R6ACR5R6);          		//!< 65 - Oxidation of R5R6ACR5R6 site.
 	temp.push_back(j_M5R_ACR5_ZZ_ZZ);      			//!< 66 - ACR5 migration to both sides.
-	//temp.push_back(j_MR5R7_edge);          		//!< 69 - Oxidation of R5R6ACR5R6 site.
+	temp.push_back(j_MR5R7_edge);          		//!< 69 - Oxidation of R5R6ACR5R6 site.
 
     return temp;
 }

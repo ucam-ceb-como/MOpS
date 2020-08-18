@@ -8794,6 +8794,17 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			updateCombinedSites(other_side);
 		}
 	}
+
+	//Optimise if needed
+	if (getDistance_twoC(C_1, C_2) > 2.6){
+		if (!m_pah->m_optimised){
+			OpenBabel::OBMol mol = passPAH();
+			mol = optimisePAH(mol);
+			passbackPAH(mol);
+		}
+		else addR5internal(C_1,C_2, true);
+	}
+	else addR5internal(C_1,C_2, true);
 	
 	// erase the existence of the neighbouring sites
 	Spointer Srem1 = moveIt(stt, -1);
@@ -8812,16 +8823,6 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	addCount(0, -2);
 	// add ring counts
 	m_pah->m_rings5_Lone++;
-	//Optimise if needed
-	if (getDistance_twoC(C_1, C_2) > 2.6){
-		if (!m_pah->m_optimised){
-			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
-			passbackPAH(mol);
-		}
-		else addR5internal(C_1,C_2, true);
-	}
-	else addR5internal(C_1,C_2, true);
 }
 // ************************************************************
 // ID19- R6 desorption at bay -> pyrene (AR21 in Matlab)
