@@ -2340,7 +2340,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 		}
 		
-		/*//Adds bond between two carbons with valence 2. 
+		//Adds bond between two carbons with valence 2. 
 		if(valence_2_carbons.size() != 0){ 
 			for (unsigned int ii=0; ii!=valence_2_carbons.size(); ++ii){
 				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_2_carbons[ii]);
@@ -2367,7 +2367,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					}
 				}
 			}
-		}*/
+		}
 		
 		//Deletes bond between two carbons with valence 4. 
 		if(valence_4_carbons.size() != 0){ 
@@ -12147,7 +12147,7 @@ void PAHProcess::proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer
 	
 	//First adjust starting site and add new site if needed.
 	Spointer stt_coupled, newSite;
-	if (checkR5_1->type == R5 && sFE2->type == R5){
+	if ((int)stt->type>=101 && (int)stt->type<=104){
 		if (b4) stt_coupled = moveIt(stt,+1);
 		else stt_coupled = moveIt(stt,-1);
 		if (b4) {
