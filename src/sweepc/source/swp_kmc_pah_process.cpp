@@ -13795,27 +13795,29 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				}
 				break;
 			} else{
-				//We need to check for the coupled site
-				Spointer coupled_site = m_pah->m_siteList.end();
-				if (std::get<2>(m_pah->m_R5walker_sites[ii])<0) coupled_site = moveIt(site_check,-1);
-				else if (std::get<2>(m_pah->m_R5walker_sites[ii])>0) coupled_site = moveIt(site_check,+1);
+				if ((int)site_check->type>=501 && (int)site_check->type<=1004){
+					//We need to check for the coupled site but only for corners.
+					Spointer coupled_site = m_pah->m_siteList.end();
+					if (std::get<2>(m_pah->m_R5walker_sites[ii])<0) coupled_site = moveIt(site_check,-1);
+					else if (std::get<2>(m_pah->m_R5walker_sites[ii])>0) coupled_site = moveIt(site_check,+1);
 
-				if(coupled_site == stt){
-					steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
-					if (steps>0){
-						b4 = false;
-						leave_edge = true;
-					} 
-					else if (steps<0) {
-						b4 = true;
-						leave_edge = true;
+					if(coupled_site == stt){
+						steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+						if (steps>0){
+							b4 = false;
+							leave_edge = true;
+						} 
+						else if (steps<0) {
+							b4 = true;
+							leave_edge = true;
+						}
+						else{
+							//The walker has an ACR5 but points to a corner. ERROR.
+							std::cout << "Error on R5 migration. " << std::endl;
+							return;
+						}
+						break;
 					}
-					else{
-						//The walker has an ACR5 but points to a corner. ERROR.
-						std::cout << "Error on R5 migration. " << std::endl;
-						return;
-					}
-					break;
 				}
 			}
 		}
@@ -15389,6 +15391,10 @@ void PAHProcess::checkR5Walkers(int jj){
 					std::get<0>(m_pah->m_R5walker_sites[ii]) = end_site_ii;
 					std::get<1>(m_pah->m_R5walker_sites[ii]) = end_site_ii2;
 					std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
+					if((int)end_site_ii->type>=2003) {
+						if(ii_steps < 0) addR5internal(end_site_ii->C2->C1->C1,end_site_ii->C2->C1,true);
+						else addR5internal(end_site_ii->C1->C2,end_site_ii->C1->C2->C2,true);
+					}
 					//saveXYZ("KMC_DEBUG/AFTER_II_TERMINATION");
 					//Reread the pointers
 					/*end_site_jj = moveIt(start_site_jj,jj_steps);
