@@ -4116,7 +4116,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 			if (dir==1) check_right = false; //Coupled site is at the right, check left
 			//dir = 0 check both
 		}
-		else if ((int)st->type>2000 && (int)st->type < 2099){
+		else if ((int)st->type>2000 && (int)st->type <= 2005){ // Possibly site 2103 - R5ACR5 should be allowed to migrate too.
 			bool b4;
 			check_left = true;
 			check_right = true;
@@ -15004,7 +15004,7 @@ void PAHProcess::startMigrationProcess(){
 	}
 
 	//Append sites that are currently locked walkers
-	std::vector<kmcSiteType> migr_site_types = {ACR5, FEACR5, ZZACR5, R5ACR5, R5R6};
+	std::vector<kmcSiteType> migr_site_types = {ACR5, FEACR5, ZZACR5, ACACR5, R5ACR5, R5R6};
 	std::vector<Spointer> possible_locked_sites;
 	for(unsigned int iii=0; iii!=migr_site_types.size();iii++){
 		for(unsigned int ii=0;ii!=m_pah->m_siteMap[migr_site_types[iii]].size();ii++){
@@ -15391,9 +15391,12 @@ void PAHProcess::checkR5Walkers(int jj){
 					std::get<0>(m_pah->m_R5walker_sites[ii]) = end_site_ii;
 					std::get<1>(m_pah->m_R5walker_sites[ii]) = end_site_ii2;
 					std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
-					if((int)end_site_ii->type>=2003) {
+					if((int)end_site_ii->type>=2003 && local_b4==false) {
 						if(ii_steps < 0) addR5internal(end_site_ii->C2->C1->C1,end_site_ii->C2->C1,true);
 						else addR5internal(end_site_ii->C1->C2,end_site_ii->C1->C2->C2,true);
+					} else if ((int)end_site_ii2->type>=2003 && local_b4==true) {
+						if(ii_steps < 0) addR5internal(end_site_ii2->C2->C1->C1,end_site_ii2->C2->C1,true);
+						else addR5internal(end_site_ii2->C1->C2,end_site_ii2->C1->C2->C2,true);
 					}
 					//saveXYZ("KMC_DEBUG/AFTER_II_TERMINATION");
 					//Reread the pointers
