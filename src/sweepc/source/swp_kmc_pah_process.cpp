@@ -6897,9 +6897,9 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 					if (S2->type == R5){
 						Spointer S4 = moveIt(S2, +1);
 						if ( (int)S4->type < 2000) updateSites(S4, S4->C1, S4->C2, +400);
-						ntype2 = 101;
+						ntype2 = 102;
 					}
-					else ntype2 = (ntype2 % 10) + 100;
+					else ntype2 = (ntype2 % 10) + 101;
 				}
 				else if ((int)S2->type>2000){
 					new_point = 0;
@@ -6907,9 +6907,9 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 					if (S1->type == R5){
 						Spointer S3 = moveIt(S1, -1);
 						if ( (int)S3->type < 2000) updateSites(S3, S3->C1, S3->C2, +400);
-						ntype1 = 101;
+						ntype1 = 102;
 					}
-					else ntype1 = (ntype1 % 10) + 100;
+					else ntype1 = (ntype1 % 10) + 101;
 				}
 			}
 			else if ( ((int)S2->type >= 501 && (int)S2->type <= 1004) && ((int)S1->type >= 501 && (int)S1->type <= 1004) ){
@@ -14631,7 +14631,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type &rng) {
 	//printStruct();
 	bool b4 = false;
-	Cpointer CRem;
+	Cpointer CRem, CFE;
 	if ( (isR7internal(stt->C1,stt->C1->C2,true) || isR7internal(stt->C1,stt->C1->C2)) && (isR7internal(stt->C2->C1,stt->C2,true) || isR7internal(stt->C2->C1,stt->C2))){
 		//R5R7 to both sides.
 		// Define a distribution that has two equally probably outcomes
@@ -14641,20 +14641,23 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 		if(choiceGenerator()) {
 			b4 = true;
 			CRem = C_1;
+			CFE = C_1->C2;
 		} else {
 			b4 = false;
 			CRem = C_2;
+			CFE = C_2->C1->C1;
 		}
 	}
 	else if (isR7internal(stt->C1,stt->C1->C2,true) || isR7internal(stt->C1,stt->C1->C2)){
 		b4 = true;
 		CRem = C_1;
+		CFE = C_1->C2;
 	}
 	else {
 		b4 = false;
 		CRem = C_2;
+		CFE = C_2->C1->C1;
 	}
-	Cpointer CFE = C_1->C2;
 
 	// check if ACR5 has an opposite site.
 	Spointer opp_site, opp_site_second;
@@ -14694,12 +14697,12 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	passbackPAH(mol);
 
 	if (b4) {
-		convSiteType(stt, Cnew, C_2, ZZ);
+		updateSites(stt, Cnew, C_2, -2001);
 		Spointer S_other = moveIt(stt,-1);
 		updateSites(S_other, S_other->C1, Cnew, +1);
 	}
 	else {
-		convSiteType(stt, C_1, Cnew, ZZ);
+		updateSites(stt, C_1, Cnew, -2001);
 		Spointer S_other = moveIt(stt,+1);
 		updateSites(S_other, Cnew, S_other->C2, +1);
 	}
@@ -14708,7 +14711,9 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	Spointer S2 = moveIt(stt,+1); 
 	Spointer S3 = moveIt(stt,-2); 
 	Spointer S4 = moveIt(stt,+2); 
-	updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4);
+	Spointer S5 = moveIt(stt,-3); 
+	Spointer S6 = moveIt(stt,+3); 
+	updateCombinedSites(stt); updateCombinedSites(S1); updateCombinedSites(S2); updateCombinedSites(S3); updateCombinedSites(S4); updateCombinedSites(S5); updateCombinedSites(S6);
 
 	//Adjust opposite sites for starting and ending position.
 	if (opp_site_bool && opp_site_bool_second) {
