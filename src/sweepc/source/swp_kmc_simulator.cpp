@@ -275,12 +275,13 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 if (tracked_csv) writetrackedPAHCSV();
             }
 
-			m_rxn_count[jp_perf.second]++;
-			writeRxnCountCSV();
+            m_rxn_count[jp_perf.second]++;
+            //Commented out and moved to the end of the simulation loop.
+			/*writeRxnCountCSV();
 			writeCHSiteCountCSV(PAH_ID);
 			//writeTimerCSV();
 			rates = m_kmcmech.Rates();
-			writeRatesCSV(m_t, rates);
+			writeRatesCSV(m_t, rates);*/
 
             //Saves the site list to file. Used to verify that migration by both methods gives same results
             /*std::vector<std::string> temp = m_simPAHp.SiteVectorString();
@@ -333,7 +334,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     savePAH(PAH_ID, xyzname); 
                 }
             }
-			writeCHSiteCountCSV_after(PAH_ID);
+			//writeCHSiteCountCSV_after(PAH_ID);
 
 			//Hard cut-off for PAHs. Cannot have less than one ring. Set number of carbons to 1 so that it will be invalidated
 			//Set t_next to t_max so the updatePAH routine will be exited
@@ -356,6 +357,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
         }
     }
 
+    writeRxnCountCSV();
+    writeCHSiteCountCSV(PAH_ID);
     //std::cout << "Wall time used for PAH_ID " << PAH_ID << " = " << time_migration << "s." << std::endl;
     
     if (tracked_csv) closetrackedPAHCSV();

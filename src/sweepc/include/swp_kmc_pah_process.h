@@ -359,14 +359,22 @@ private:
 	bool checkHindrance_C_PAH(cpair coords) const;
 	//! Check steric hindrance between a new carbon position and all other carbons in a PAH.
 	bool checkHindrance_newC(Cpointer C_1) const;
+    //! Check steric hindrance between a new carbon position and all other carbons in a PAH.
+	bool checkHindrance_newCposition(Cpointer C_1) const;
+    //! Check steric hindrance between a new carbon position and all other carbons in a PAH.
+	bool checkHindrance_newCposition(cpair mpos) const;
 	//! Check position between a carbon and internal carbons in a PAH.
 	cpair checkHindrance_C_intPAH(cpair coords) const;
 	//! Check steric hindrance between two carbons.
 	bool checkHindrance_twoC(const Cpointer C_1, const Cpointer C_2) const;
 	//!Gets distance between two carbons.
 	double getDistance_twoC(const Cpointer C_1, const Cpointer C_2) const;
+    //!Gets square of the distance between two carbons.
+	double getDistance_twoCsquared(const Cpointer C_1, const Cpointer C_2) const;
 	//!Overload. Gets distance between two coordinates.
 	double getDistance_twoC(const cpair C_1, const cpair C_2) const;
+    //!Overload. Gets squared of the distance between two coordinates.
+	double getDistance_twoCsquared(const cpair C_1, const cpair C_2) const;
     //! Returns site iterator x steps after i
     Spointer moveIt(Spointer i, int x);
     //! Finds C atom with specific coordinates

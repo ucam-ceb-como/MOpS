@@ -224,10 +224,11 @@ int PAHProcess::numberOfMethyl() const {
 }
 //! Is probably curved (has embedded or partially embedded R5s, R7s, more than 12 rings)
 bool PAHProcess::HasCurvedMoeities() const {
-	if (std::get<0>(getRingsCount()) >= 12 || getR5EmbeddedCount() >= 1 || getR7EmbeddedCount() >= 1) return true;
+	if (std::get<0>(getRingsCount()) >= 12 || getR5EmbeddedCount() >= 1 || getR7EmbeddedCount() >= 1 || getSiteCount(SPIRAL) >= 1) return true;
 	else {
 		for(Spointer i=m_pah->m_siteList.begin(); i!= m_pah->m_siteList.end(); i++) {
-			if ( (int)i->type >= 501) return true;
+			if ( (int)i->type >= 1000 && (int)i->type <= 1005) return true;
+			if ( (int)i->type >= 2100) return true;
 		}
 		return false;
 	}
@@ -990,6 +991,37 @@ bool PAHProcess::checkHindrance_newC(Cpointer C_1) const {
 	return false;
 }
 
+//! Checks if new C position is already occupied by edge carbons. 
+bool PAHProcess::checkHindrance_newCposition(Cpointer C_1) const {
+	double tol = 0.25;
+	cpair mpos = jumpToPos(C_1->coords, C_1->growth_vector, 1.4);
+	for (std::set<cpair>::iterator it = m_pah->m_cpositions.begin(); it != m_pah->m_cpositions.end(); ++it) {
+		double dist = getDistance_twoCsquared(mpos, *it);
+		if (dist <= tol) return true;
+	}
+	if (HasCurvedMoeities()){
+		for (std::list<cpair>::iterator it1 = m_pah->m_InternalCarbons.begin(); it1 != m_pah->m_InternalCarbons.end(); ++it1) {
+			double dist = getDistance_twoCsquared(mpos, *it1);
+			if (dist <= tol) return true;
+		}
+	}
+	return false;
+}
+
+//! Checks if new C position is already occupied by edge carbons. 
+bool PAHProcess::checkHindrance_newCposition(cpair mpos) const {
+	double tol = 0.25;
+	for (std::set<cpair>::iterator it = m_pah->m_cpositions.begin(); it != m_pah->m_cpositions.end(); ++it) {
+		double dist = getDistance_twoCsquared(mpos, *it);
+		if (dist <= tol) return true;
+	}
+	for (std::list<cpair>::iterator it1 = m_pah->m_InternalCarbons.begin(); it1 != m_pah->m_InternalCarbons.end(); ++it1) {
+		double dist = getDistance_twoCsquared(mpos, *it1);
+		if (dist <= tol) return true;
+	}
+	return false;
+}
+
 bool PAHProcess::checkHindrance_twoC(const Cpointer C_1, const Cpointer C_2) const {
 	double tol = 5e-1;
 	double dist = getDistance_twoC(C_1, C_2);
@@ -1005,12 +1037,28 @@ double PAHProcess::getDistance_twoC(const Cpointer C_1, const Cpointer C_2) cons
 	return sqrt(xdist*xdist + ydist*ydist + zdist*zdist);
 }
 
+double PAHProcess::getDistance_twoCsquared(const Cpointer C_1, const Cpointer C_2) const {
+	double xdist, ydist, zdist;
+	xdist = std::get<0>(C_1->coords) - std::get<0>(C_2->coords);
+	ydist = std::get<1>(C_1->coords) - std::get<1>(C_2->coords);
+	zdist = std::get<2>(C_1->coords) - std::get<2>(C_2->coords);
+	return xdist*xdist + ydist*ydist + zdist*zdist;
+}
+
 double PAHProcess::getDistance_twoC(const cpair C_1, const cpair C_2) const {
 	double xdist, ydist, zdist;
 	xdist = std::get<0>(C_1) - std::get<0>(C_2);
 	ydist = std::get<1>(C_1) - std::get<1>(C_2);
 	zdist = std::get<2>(C_1) - std::get<2>(C_2);
 	return sqrt(xdist*xdist + ydist*ydist + zdist*zdist);
+}
+
+double PAHProcess::getDistance_twoCsquared(const cpair C_1, const cpair C_2) const {
+	double xdist, ydist, zdist;
+	xdist = std::get<0>(C_1) - std::get<0>(C_2);
+	ydist = std::get<1>(C_1) - std::get<1>(C_2);
+	zdist = std::get<2>(C_1) - std::get<2>(C_2);
+	return xdist*xdist + ydist*ydist + zdist*zdist;
 }
 
 /*! Check steric hindrance for phenyl addition reactions
@@ -4116,7 +4164,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 			if (dir==1) check_right = false; //Coupled site is at the right, check left
 			//dir = 0 check both
 		}
-		else if ((int)st->type>2000 && (int)st->type <= 2005){ // Possibly site 2103 - R5ACR5 should be allowed to migrate too.
+		else if ( ((int)st->type>2000 && (int)st->type <= 2005) || ((int)st->type==2103)){ // Possibly site 2103 - R5ACR5 should be allowed to migrate too.
 			bool b4;
 			check_left = true;
 			check_right = true;
@@ -4134,16 +4182,32 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 				if (steps < 0) check_left = false;
 				else if (steps > 0) check_right = false;
 				else{
-					if (isR5internal(st->C1->C2,st->C1->C2->C2,true) || isR5internal(st->C1->C2,st->C1->C2->C2,false)) {
-						check_right = false;
-						R5coords = findR5internal(st->C1->C2,st->C1->C2->C2);
-					}
-					else if (isR5internal(st->C2->C1->C1,st->C2->C1,true) || isR5internal(st->C2->C1->C1,st->C2->C1,false)) {
-						check_left = false;
-						R5coords = findR5internal(st->C2->C1->C1,st->C2->C1);
-					}
-					else{
-						std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
+					if ((int)st->type==2103){
+						int coupled_site_dir = coupledSiteDirection(st);
+						if (coupled_site_dir == -1){
+							check_left = false;
+							R5coords = findR5internal(st->C2->C1->C1,st->C2->C1);
+						}
+						else if (coupled_site_dir == 1){
+							check_right = false;
+							R5coords = findR5internal(st->C1->C2,st->C1->C2->C2);
+						}
+						else{
+							std::cout << "Could not find coupled site of R5ACR5 site on updateCombinedSitesMigration." << std::endl;
+							R5coords = findR5internal(st->C1->C2,st->C1->C2->C2);
+						}
+					} else{
+						if (isR5internal(st->C1->C2,st->C1->C2->C2,true) || isR5internal(st->C1->C2,st->C1->C2->C2,false)) {
+							check_right = false;
+							R5coords = findR5internal(st->C1->C2,st->C1->C2->C2);
+						}
+						else if (isR5internal(st->C2->C1->C1,st->C2->C1,true) || isR5internal(st->C2->C1->C1,st->C2->C1,false)) {
+							check_left = false;
+							R5coords = findR5internal(st->C2->C1->C1,st->C2->C1);
+						}
+						else{
+							std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
+						}
 					}
 				}
 			}
@@ -4162,7 +4226,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 			m_pah->m_siteMap[MIGR2].push_back(st);
 			break;
 		}
-		if ( (check_left || check_right) && ( (int)st->type>=2000 && (int)st->type <=2005)) {
+		if ( (check_left || check_right) && ( ((int)st->type>=2000 && (int)st->type <=2005) || ((int)st->type==2103))) {
 			st->comb = MIGR;
 			m_pah->m_siteMap[MIGR].push_back(st);
 			if (steps == 0) m_pah->m_R5loc.push_back(R5coords);
@@ -6436,7 +6500,7 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	}
     Cpointer newC1;
     Cpointer newC2;
-    if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
+    if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
     if(!(C_1->C2->bridge) || !(C_2->C1->bridge)) { // check if bulk C in AC site is a bridge
         // Add and remove C
@@ -6548,7 +6612,7 @@ void PAHProcess::proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     Cpointer newC1, newC2, newC3, newC4;
 	Spointer S1 = moveIt(stt, -1);
 	Spointer S2 = moveIt(stt, 1);
-    if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
+    if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
     // Add C
 	cpair start_direction = C_1->growth_vector;
@@ -7914,7 +7978,7 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 	}
-    if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
+    if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
        /* cout<<"Site hindered, process not performed.\n";*/ return;}
     
     // member C atoms of resulting R5 site
@@ -8005,7 +8069,7 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	if (C_1->bridge || C_1->C2->bridge || C_2->C1->bridge || C_2->bridge){
 		// Process is not possible  since AC is a bridge
 		return;}
-    if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
+    if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
     // check if FE3 is before or after AC
     bool b4 = false;
@@ -8131,7 +8195,7 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 // ************************************************************
 void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
-    if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
+    if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
     
     // check if R5 is before or after the site
@@ -8243,7 +8307,7 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
 	//printStruct();
-	if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
+	if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
 	bool b4;
 	//check if R5 in RAC is reactive or R5 is already partially embedded.
@@ -8355,7 +8419,7 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 // ************************************************************
 void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //printSites(stt);
-    if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
+    if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
     
     // check if R5 is before or after RZZ
@@ -9060,7 +9124,7 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	if (thirdC != NULLC || thirdC2 != NULLC) {
 		opp_site_bool = true;
 	}
-	if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
+	if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
 	if (!(C_1->C2->bridge) || !(C_2->C1->bridge)) { // check if bulk C in AC site is a bridge
 		//Getting vectors
@@ -9560,7 +9624,7 @@ int G6RRZZ_error_counter = 0;
 void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Cpointer newC1;
 	Cpointer newC2;
-	if (checkHindrance_newC(C_1)|| checkHindrance_newC(C_2)) {
+	if (checkHindrance_newCposition(C_1)|| checkHindrance_newCposition(C_2)) {
 		/*cout<<"Site hindered, process not performed.\n"*/ return;
 	}
 	Spointer S1 = moveIt(stt, -1);
@@ -10268,7 +10332,7 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	cpair Hdir2 = get_vector(C_2->C1->coords, C_2->coords);
 	cpair starting_direction = get_vector(C_1->C2->C2->coords,C_2->coords);
 	cpair FEdir = get_vector(C_1->coords,C_2->coords);
-	if(checkHindrance_newC(C_1) || checkHindrance_newC(C_2)) {
+	if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
 		/*cout<<"Site hindered, process not performed.\n"*/ return;
 	}
 	if (!(C_1->C2->bridge) && !(C_2->C1->bridge)) { // check if bulk C in AC site is a bridge
@@ -11135,7 +11199,7 @@ void PAHProcess::proc_A_CH3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_type 
 		}
     }
     // check hindrance
-    if(checkHindrance_newC(chosen)) return;
+    if(checkHindrance_newCposition(chosen)) return;
     // add C atoms
 	updateA(chosen, 'M', chosen->growth_vector);
 	// neighbouring site to be updated:
