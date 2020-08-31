@@ -12317,9 +12317,9 @@ void PAHProcess::proc_M5R_ACR5_termination_toR5(Spointer& stt, Cpointer C_1, Cpo
 	
 	//First adjust starting site and add new site if needed.
 	Spointer stt_coupled, newSite;
-	if (b4) stt_coupled = moveIt(stt,+1);
-	else stt_coupled = moveIt(stt,-1);
 	if ((int) stt->type>=101 && (int) stt->type<=104){
+		if (b4) stt_coupled = moveIt(stt,+1);
+		else stt_coupled = moveIt(stt,-1);
 		if (b4) {
 			int stype_diff = (int)stt->type - 101;
 			Cpointer Cold = stt->C2;
@@ -12334,6 +12334,8 @@ void PAHProcess::proc_M5R_ACR5_termination_toR5(Spointer& stt, Cpointer C_1, Cpo
 			newSite = addSite((kmcSiteType)(1+stype_diff), Cold, Cnew, stt);
 		}
 	} else{
+		if (b4) stt_coupled = moveIt(stt,-1);
+		else stt_coupled = moveIt(stt,+1);
 		if (b4) {
 			//convSiteType(stt, Cnew, stt->C2, ZZ);
 			updateSites(stt, Cnew, stt->C2, 0);
