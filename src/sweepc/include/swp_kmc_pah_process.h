@@ -202,6 +202,8 @@ public:
     void checkR5Walkers();
     //! Modifies pointer for R5 walkers to avoid overlaps. Overload that know walker jj is moving.
     void checkR5Walkers(int jj);
+    //! Modifies pointer for R5 walker that moves into one of the coupled sites of other walker.
+    void checkRemR5Walkers(int jj, bool b4, Spointer sFE2);
 	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
 	OpenBabel::OBMol passPAH(bool detectBonds=true);
 	//! Connects the atoms in a PAH using OpenBabel routines. Equivalent to OpenBabel::OBMol::ConnectTheDots();

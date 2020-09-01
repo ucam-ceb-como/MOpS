@@ -11631,6 +11631,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 		}
+		checkRemR5Walkers(ii, b4, sFE2);
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
@@ -11654,6 +11655,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
+		checkRemR5Walkers(ii, b4, sFE2);
 		removeSite(sFE2); 
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
@@ -11677,6 +11679,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
+		checkRemR5Walkers(ii, b4, sFE2);
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
@@ -11702,6 +11705,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
+		checkRemR5Walkers(ii, b4, sFE2);
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
@@ -11725,6 +11729,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
+		checkRemR5Walkers(ii, b4, sFE2);
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
@@ -12005,6 +12010,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 		}
+		checkRemR5Walkers(ii, b4, sFE2);
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
@@ -12028,6 +12034,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
+		checkRemR5Walkers(ii, b4, sFE2);
 		removeSite(sFE2); 
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
@@ -12051,6 +12058,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
+		checkRemR5Walkers(ii, b4, sFE2);
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
@@ -12076,6 +12084,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
+		checkRemR5Walkers(ii, b4, sFE2);
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
@@ -12099,6 +12108,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 				updateSites(S3, S3->C1, S3->C2,+500);
 			}
 		}
+		checkRemR5Walkers(ii, b4, sFE2);
 		removeSite(sFE2);
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
 	}
@@ -13474,10 +13484,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		Spointer site_check = moveIt(migr_site_start, std::get<2>(m_pah->m_R5walker_sites[ii]));
 		Spointer migr_site_start_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
 		Spointer site_check_2 = moveIt(migr_site_start, std::get<2>(m_pah->m_R5walker_sites[ii]));
-		if (site_check == stt){
-			steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
-			break;
-		} else if (site_check_2 == stt){
+		if (site_check == stt && site_check_2 == stt){
 			steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 			break;
 		}
@@ -13700,7 +13707,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a R5 neighbour {
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
 		}
-		updateSites(stt, sFE2->C2, C_2, -2001);
+		if ((int)stt->type>2100){
+			if ((int)S2->type>=500) updateSites(stt, sFE2->C2, C_2, -1601);
+			else updateSites(stt, sFE2->C2, C_2, -2001);
+		} else updateSites(stt, sFE2->C2, C_2, -2001);
 	}
 	else {
 		S1 = moveIt(stt, -1); 
@@ -13736,7 +13746,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a BY5 {
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
 		}
-		updateSites(stt, stt->C1, sFE2->C1, -2001);
+		if ((int)stt->type>2100){
+			if ((int)S1->type>=500) updateSites(stt, stt->C1, sFE2->C1, -1601);
+			else updateSites(stt, stt->C1, sFE2->C1, -2001);
+		} else updateSites(stt, stt->C1, sFE2->C1, -2001);
 	}
 	steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 	if((int)sFE2->type>=2003 && steps == 0) {
@@ -14427,10 +14440,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		Spointer migr_site_start_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
 		Spointer site_check = moveIt(migr_site_start, std::get<2>(m_pah->m_R5walker_sites[ii]));
 		Spointer site_check_2 = moveIt(migr_site_start_2, std::get<2>(m_pah->m_R5walker_sites[ii]));
-		if (site_check == stt){
-			steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
-			break;
-		} else if (site_check_2 == stt){
+		if (site_check == stt && site_check_2 == stt){
 			steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 			break;
 		}
@@ -15553,6 +15563,24 @@ void PAHProcess::checkR5Walkers(int jj){
 					else std::get<2>(m_pah->m_R5walker_sites[jj]) = 1;*/
 					//saveXYZ("KMC_DEBUG/AFTER_JJ_TERMINATION");
 				}
+			}
+		}
+	}
+}
+
+//! Modifies pointer for R5 walker that moves into one of the coupled sites of other walker.
+void PAHProcess::checkRemR5Walkers(int jj, bool b4, Spointer sFE2){
+	for (int ii=0; ii!=m_pah->m_R5walker_sites.size();ii++){
+		if (ii!=jj){
+			Spointer check_site = std::get<0>(m_pah->m_R5walker_sites[ii]);
+			Spointer check_site2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
+			if (sFE2 == check_site){
+				if (b4) std::get<0>(m_pah->m_R5walker_sites[ii]) = moveIt(sFE2,+1);
+				else std::get<0>(m_pah->m_R5walker_sites[ii]) = moveIt(sFE2,-1);
+			} 
+			if (sFE2 == check_site2) {
+				if (b4) std::get<1>(m_pah->m_R5walker_sites[ii]) = moveIt(sFE2,+1);
+				else std::get<1>(m_pah->m_R5walker_sites[ii]) = moveIt(sFE2,-1);
 			}
 		}
 	}
