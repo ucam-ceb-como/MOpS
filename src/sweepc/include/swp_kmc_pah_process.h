@@ -163,6 +163,8 @@ public:
     void printSitesMemb() const;
     //! Print sites in console, with an arrow pointing at site stt
     void printSites(Spointer& stt) const;
+    //! Print Sites in console, with stars pointing to starting sites and arrows pointing to current sites.
+    void printSitesMigration();
 	//! Create a copy of the sites type
 	std::list<std::string> copySites() const;
 	//! Create a copy of the sites type

@@ -347,6 +347,94 @@ void PAHProcess::printSites(Spointer& stt) const{
 	}
     cout << "********************\n";
 }
+
+//! Print Sites in console, with stars pointing to starting sites and arrows pointing to current sites.
+void PAHProcess::printSitesMigration() {
+    Spointer i;
+    std::string st;
+    string current_position = "  <--  ";
+	string starting_position = "  ***  ";
+	string start_current_position = "  ***<--  ";
+    cout << "*******************\n";
+    cout << "Sites List:\n_____\n";
+    // displays total site count
+    cout << "Total Site Count: " << m_pah->m_siteList.size() << "\t Total Edge Carbons: " << m_pah->m_carbonList.size() << "\t\t\t Total Internal Carbons: " << m_pah->m_InternalCarbons.size()<<'\n';
+	cout << "Total R6 rings: " << m_pah->m_rings << "\t Total R5 rings: " << m_pah->m_rings5_Lone << " lone + "<< m_pah->m_rings5_Embedded << " embedded \t Total R7 rings: " << m_pah->m_rings7_Embedded << '\n';
+	cout << "Total walkers identified: " << m_pah->m_R5walker_sites.size() << std::endl;
+    for(i=m_pah->m_siteList.begin(); i!=m_pah->m_siteList.end(); i++) {
+        // convert site type into string
+        st = kmcSiteName(i->type);
+        st.append("\t");
+        st.append(kmcSiteName(i->comb));
+		for (unsigned int ii = 0;ii != m_pah->m_R5walker_sites.size();ii++){
+			Spointer migr_site_start = std::get<0>(m_pah->m_R5walker_sites[ii]);
+			int steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+			Spointer site_check = moveIt(migr_site_start, steps);
+			Spointer migr_site_start_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
+			Spointer site_check_2 = moveIt(migr_site_start_2, steps);
+			
+			// checks if site i equivalent to stt, if yes put an arrow
+			if (steps == 0){
+				if (migr_site_start == migr_site_start_2){
+					if (migr_site_start == i) {
+						st.append(start_current_position);
+						st.append(std::to_string(ii));
+					}
+				}else{
+					if (migr_site_start == i) {
+						st.append(start_current_position);
+						st.append(std::to_string(ii));
+						st.append("A");
+					}
+					if (migr_site_start_2 == i) {
+						st.append(start_current_position);
+						st.append(std::to_string(ii));
+						st.append("B");
+					}
+				}
+			}else{
+				if (migr_site_start == migr_site_start_2){
+					if (migr_site_start == i) {
+						st.append(starting_position);
+						st.append(std::to_string(ii));
+					}
+				}else{
+					if (migr_site_start == i) {
+						st.append(starting_position);
+						st.append(std::to_string(ii));
+						st.append("A");
+					}
+					if (migr_site_start_2 == i) {
+						st.append(starting_position);
+						st.append(std::to_string(ii));
+						st.append("B");
+					}
+				}
+				if (migr_site_start == migr_site_start_2){
+					if (site_check == i) {
+						st.append(current_position);
+						st.append(std::to_string(ii));
+					}
+				}else{
+					if (site_check == i) {
+						st.append(current_position);
+						st.append(std::to_string(ii));
+						st.append("A");
+					}
+					if (site_check_2 == i) {
+						st.append(current_position);
+						st.append(std::to_string(ii));
+						st.append("B");
+					}
+				}
+			}
+		}
+		// displays site type (and arrow)
+		std::cout << st << '\n';
+	} 
+    cout << "********************\n";
+}
+
 //! Create a copy of the sites type
 std::list<std::string> PAHProcess::copySites() const{
 	std::list<std::string> BeforeJPSite;
@@ -13491,7 +13579,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	}
 	//cpair R5coords;
 	if (steps==-99999){
-		std::cout << "Error on R5 migration. " << std::endl;
+		std::cout << "Error on R5 migration in proc_M5R_ACR5_ZZ_light. Walker not found." << std::endl;
+		printSitesMigration();
 		return;
 	}
 	if (steps > 0) b4 = true;
@@ -13503,8 +13592,9 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			if (isR5internal(stt->C1->C2,stt->C1->C2->C2,true) || isR5internal(stt->C1->C2,stt->C1->C2->C2,false)) b4 = true;
 			else if (isR5internal(stt->C2->C1->C1,stt->C2->C1,true) || isR5internal(stt->C2->C1->C1,stt->C2->C1,false)) b4 = false;
 			else{
-				saveXYZ("KMC_DEBUG/FEACR5MIGR");
-				std::cout << "Error in R5 migration." <<std::endl;
+				//saveXYZ("KMC_DEBUG/FEACR5MIGR");
+				std::cout << "Error on R5 migration in proc_M5R_ACR5_ZZ_light. Walker with needed R5loc not found." << std::endl;
+				printSitesMigration();
 				return;
 			}
 			cpair R5_coords_rem;
@@ -13519,8 +13609,9 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			if (check_left && !check_right) b4 = true;
 			else if (!check_left && check_right) b4 = false;
 			else{
-				saveXYZ("KMC_DEBUG/FEACR5MIGR");
-				std::cout << "Error in R5 migration." <<std::endl;
+				//saveXYZ("KMC_DEBUG/FEACR5MIGR");
+				std::cout << "Error on R5 migration in proc_M5R_ACR5_ZZ_light. Walker was allowed to migrate in both directions." << std::endl;
+				printSitesMigration();
 				return;
 			}
 		}
@@ -13895,7 +13986,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 					}
 					else{
 						//This kind of site should never have number ot steps = 0
-						std::cout << "Error on R5 migration. " << std::endl;
+						std::cout << "Error on R5 migration in proc_MR5_R6_light. " << std::endl;
+						printSitesMigration();
 						return;
 					}
 				}
@@ -13918,7 +14010,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 					}
 					else{
 						//This kind of site should never have number ot steps = 0
-						std::cout << "Error on R5 migration. " << std::endl;
+						std::cout << "Error on R5 migration in proc_MR5_R6_light. " << std::endl;
+						printSitesMigration();
 						return;
 					}
 				}
@@ -13938,7 +14031,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				}
 				else{
 					//The walker has an ACR5 but points to a corner. ERROR.
-					std::cout << "Error on R5 migration. " << std::endl;
+					std::cout << "Error on R5 migration in proc_MR5_R6_light. " << std::endl;
+					printSitesMigration();
 					return;
 				}
 				break;
@@ -13961,7 +14055,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 						}
 						else{
 							//The walker has an ACR5 but points to a corner. ERROR.
-							std::cout << "Error on R5 migration. " << std::endl;
+							std::cout << "Error on R5 migration in proc_MR5_R6_light. " << std::endl;
+							printSitesMigration();
 							return;
 						}
 						break;
@@ -13971,7 +14066,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		}
 	}
 	if (steps==-99999){
-		std::cout << "Error on R5 migration. " << std::endl;
+		std::cout << "Error on R5 migration in proc_MR5_R6_light. Walker not found." << std::endl;
+		printSitesMigration();
 	}
 	
 	if (b4) {
@@ -14446,7 +14542,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		}
 	}
 	if (steps==-99999){
-		std::cout << "Error on R5 migration. " << std::endl;
+		std::cout << "Error on R5 migration in proc_M5R_ACR5_ZZ_ZZ_light. Walker not found." << std::endl;
+		printSitesMigration();
 	}
 
 	//Check for unsupported sites. This section heavily assumes that the Isolated Pentagon Rule is valid.
@@ -15196,7 +15293,8 @@ void PAHProcess::startMigrationProcess(){
 				it2 = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),coupled_site);
 				if(it!=migr_sites_appended.end()){
 					//coupled site has been added as migrator but not st
-					std::cout<< "Error in R5 migration." << std::endl;
+					std::cout<< "Error on R5 migration in startMigrationProcess(). Copuled site appears as walker but not current site." << std::endl;
+					printSitesMigration();
 				}
 				else{
 					if ( direction_int == -1){
@@ -15242,7 +15340,8 @@ void PAHProcess::performMigrationProcess(){
 			//stt is already a termination site
 			//std::cout << "Start site is termination site. Do nothing." << std::endl;
 			if (steps!=0) {
-				std::cout << "Error in R5 migration. Site was not moved in performMigrationProcess()." <<std::endl;
+				std::cout << "Error on R5 migration. Site was not moved in performMigrationProcess()." <<std::endl;
+				printSitesMigration();
 			}
 		}
 	}
