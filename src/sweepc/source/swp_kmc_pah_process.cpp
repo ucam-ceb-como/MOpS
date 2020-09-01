@@ -13483,7 +13483,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		Spointer migr_site_start = std::get<0>(m_pah->m_R5walker_sites[ii]);
 		Spointer site_check = moveIt(migr_site_start, std::get<2>(m_pah->m_R5walker_sites[ii]));
 		Spointer migr_site_start_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
-		Spointer site_check_2 = moveIt(migr_site_start, std::get<2>(m_pah->m_R5walker_sites[ii]));
+		Spointer site_check_2 = moveIt(migr_site_start_2, std::get<2>(m_pah->m_R5walker_sites[ii]));
 		if (site_check == stt && site_check_2 == stt){
 			steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 			break;
