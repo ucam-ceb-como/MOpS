@@ -12327,7 +12327,7 @@ void PAHProcess::proc_M5R_ACR5_termination_toR5(Spointer& stt, Cpointer C_1, Cpo
 	
 	//First adjust starting site and add new site if needed.
 	Spointer stt_coupled, newSite;
-	if ((int) stt->type>=101 && (int) stt->type<=104){
+	if ((int) stt->type>=101 && (int) stt->type<=204){
 		if (b4) stt_coupled = moveIt(stt,+1);
 		else stt_coupled = moveIt(stt,-1);
 		if (b4) {
