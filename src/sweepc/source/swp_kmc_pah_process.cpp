@@ -1083,6 +1083,7 @@ bool PAHProcess::checkHindrance_newC(Cpointer C_1) const {
 bool PAHProcess::checkHindrance_newCposition(Cpointer C_1) const {
 	double tol = 0.25;
 	cpair mpos = jumpToPos(C_1->coords, C_1->growth_vector, 1.4);
+	if (getDistance_twoCsquared(mpos, C_1->coords)<0.5) return false;
 	for (std::set<cpair>::iterator it = m_pah->m_cpositions.begin(); it != m_pah->m_cpositions.end(); ++it) {
 		double dist = getDistance_twoCsquared(mpos, *it);
 		if (dist <= tol) return true;
@@ -12357,7 +12358,7 @@ void PAHProcess::proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer
 // ************************************************************
 // ID66- Termination of ACR5 migration
 // ************************************************************
-void PAHProcess::proc_M5R_ACR5_termination_toR5(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4) {
+void PAHProcess::proc_M5R_ACR5_termination_toR5(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, int steps) {
 	// The pentagon migrated N times and ended at the same position.
 	if (sFE2 == stt) return;
 	//Remove R5coords from m_pah->m_R5loc. This is done by starter function/
@@ -12415,7 +12416,7 @@ void PAHProcess::proc_M5R_ACR5_termination_toR5(Spointer& stt, Cpointer C_1, Cpo
 	
 	//First adjust starting site and add new site if needed.
 	Spointer stt_coupled, newSite;
-	if ((int) stt->type>=101 && (int) stt->type<=204){
+	if (steps == 0){
 		if (b4) stt_coupled = moveIt(stt,+1);
 		else stt_coupled = moveIt(stt,-1);
 		if (b4) {
@@ -13715,7 +13716,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, +100);
 		Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[ii]);
 		Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
-		if(site_perf==site_perf_2) proc_M5R_ACR5_termination_toR5(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		if(site_perf==site_perf_2) proc_M5R_ACR5_termination_toR5(site_perf,site_perf->C1,site_perf->C2,sFE2,b4,steps);
 		else proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		//sFE2 is deleted in the previous call so we must not call it again from here.
 		//updateCombinedSitesMigration(stt); updateCombinedSitesMigration(checkR5_1); updateCombinedSitesMigration(checkR5_2);
@@ -14207,7 +14208,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, +100);
 				Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[ii]);
 				Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
-				if(site_perf==site_perf_2) proc_M5R_ACR5_termination_toR5(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+				if(site_perf==site_perf_2) proc_M5R_ACR5_termination_toR5(site_perf,site_perf->C1,site_perf->C2,sFE2,b4,steps);
 				else proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 				//sFE2 is deleted in the previous call so we must not call it again from here.
 				//updateCombinedSitesMigration(stt); updateCombinedSitesMigration(checkR5_1); updateCombinedSitesMigration(checkR5_2);
@@ -14629,7 +14630,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, +100);
 		Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[ii]);
 		Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
-		if(site_perf==site_perf_2) proc_M5R_ACR5_termination_toR5(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		if(site_perf==site_perf_2) proc_M5R_ACR5_termination_toR5(site_perf,site_perf->C1,site_perf->C2,sFE2,b4,steps);
 		else proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		//sFE2 is deleted in the previous call so we must not call it again from here.
 		//updateCombinedSitesMigration(stt); updateCombinedSitesMigration(checkR5_1); updateCombinedSitesMigration(checkR5_2);
@@ -15335,6 +15336,8 @@ void PAHProcess::performMigrationProcess(){
 		if (site_perf->type == FE) proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else if((int)site_perf->type <= 4) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else if((int)site_perf->type <= 104) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		else if((int)site_perf->type <= 504) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		else if((int)site_perf->type <= 1004) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else if ((int)site_perf->type>=2000 && (int)site_perf->type<=2100) proc_M5R_FEACR5_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else{
 			//stt is already a termination site

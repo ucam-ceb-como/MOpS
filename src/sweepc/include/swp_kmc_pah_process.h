@@ -301,7 +301,7 @@ public:
     void proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, int migr_index);
     void proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, int migr_index);
     void proc_M5R_ACR5_termination(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4);
-    void proc_M5R_ACR5_termination_toR5(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4);
+    void proc_M5R_ACR5_termination_toR5(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, int steps);
     //void proc_M5R_ZZACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID69
     //void proc_M5R_ACACR5_multiple_sites(Spointer& stt, Cpointer C_1, Cpointer C_2, Spointer& sFE2, bool b4, rng_type &rng); //!<ID70
     void proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2);                        //!<ID68
