@@ -8141,9 +8141,20 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     C1_res = C_1->C1;
     C2_res = C_2->C2;
 	cpair Cdir = add_vector( invert_vector(C_1->growth_vector),C_2->growth_vector);
+	double Cdist = getDistance_twoC(C1_res, C2_res);
+	cpair Cnewpos = jumpToPos(C1_res->coords,Cdir,Cdist/2.35*1.4);
+	Cnewpos = checkHindrance_C_intPAH(Cnewpos);
+	double newdist = getDistance_twoC(C1_res->coords,Cnewpos);
+	if (newdist >= 1.7){
+		m_pah->m_InternalCarbons.push_back(Cnewpos);
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+		Cdir = add_vector( invert_vector(C_1->growth_vector),C_2->growth_vector);
+	} else m_pah->m_InternalCarbons.push_back(Cnewpos);
     removeC(C_1, false);
     removeC(C_2, false);
-	double Cdist = getDistance_twoC(C1_res, C2_res);
+	Cdist = getDistance_twoC(C1_res, C2_res);
 	Cpointer newC = addC(C1_res, Cdir, Cdist/2.35*1.4, true);
 	updateA(newC, 'C', newC->coords);
 	cpair Hdir = add_vector( get_vector(newC->coords, C1_res->coords),get_vector(newC->coords, C2_res->coords) );
@@ -15250,7 +15261,7 @@ void PAHProcess::startMigrationProcess(){
 				else migr_site_ii = std::make_tuple(current_site, coupled_site, steps);
 				migr_sites.push_back(migr_site_ii);
 				migr_sites_appended.push_back(current_site);
-				migr_sites_appended.push_back(coupled_site);
+				if (coupled_site->type != R5ACR5) migr_sites_appended.push_back(coupled_site);
 			}
 		}
 	}
