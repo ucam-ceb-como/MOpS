@@ -12425,12 +12425,16 @@ void PAHProcess::proc_M5R_ACR5_termination_toR5(Spointer& stt, Cpointer C_1, Cpo
 			//convSiteType(stt, Cnew, stt->C2, ZZ);
 			updateSites(stt, stt->C1,Cnew, -stype_diff);
 			newSite = addSite((kmcSiteType)(1+stype_diff), Cnew, Cold, stt_coupled);
+			Spointer prev_site = moveIt(newSite,+1);
+			if ((int)prev_site->type>=500) updateSites(newSite, newSite->C1, newSite->C2, +400);
 		} else{
 			int stype_diff = (int)stt->type - 101;
 			Cpointer Cold = stt->C1;
 			//convSiteType(stt, stt->C1, Cnew, ZZ);
 			updateSites(stt, Cnew, stt->C2, -stype_diff);
 			newSite = addSite((kmcSiteType)(1+stype_diff), Cold, Cnew, stt);
+			Spointer prev_site = moveIt(newSite,-1);
+			if ((int)prev_site->type>=500) updateSites(newSite, newSite->C1, newSite->C2, +400);
 		}
 	} else{
 		if (b4) stt_coupled = moveIt(stt,-1);
@@ -15252,7 +15256,7 @@ void PAHProcess::startMigrationProcess(){
 	}
 
 	//Append sites that are currently locked walkers
-	std::vector<kmcSiteType> migr_site_types = {ACR5, FEACR5, ZZACR5, ACACR5, R5ACR5, R5R6};
+	std::vector<kmcSiteType> migr_site_types = {ACR5, FEACR5, ZZACR5, ACACR5, R5ACR5, R5R6, R5R6FER5R6};
 	std::vector<Spointer> possible_locked_sites;
 	for(unsigned int iii=0; iii!=migr_site_types.size();iii++){
 		for(unsigned int ii=0;ii!=m_pah->m_siteMap[migr_site_types[iii]].size();ii++){
@@ -15286,7 +15290,7 @@ void PAHProcess::startMigrationProcess(){
 				}*/
 			}
 			else{
-				//site is R5R6
+				//site is R5R6 or R5R6FER5R6
 				int direction_int = coupledSiteDirection(st);
 				bool b4;
 				Spointer coupled_site = moveIt(st,direction_int);
