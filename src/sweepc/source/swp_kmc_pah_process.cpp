@@ -1452,7 +1452,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 			if (m_pah->m_R7loc.size()>=1){
 				for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
 					double distR5R7 = getDistance_twoC(*it, R5coords_end);
-					if (distR5R7 < 2.8) {
+					if (distR5R7 < 2.6) {
 						//This distance is a parameter of this jump process. Might need some more tuning. 
 						//2.8 seems appropiate but may reject too many jumps.
 						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
@@ -1546,7 +1546,7 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 			if (m_pah->m_R7loc.size()>=1){
 				for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
 					double distR5R7 = getDistance_twoC(*it, R5coords_end);
-					if (distR5R7 < 2.8) {
+					if (distR5R7 < 2.6) {
 						//This distance is a parameter of this jump process. Might need some more tuning. 
 						//2.8 seems appropiate but may reject too many jumps.
 						//Two pentagons will be next to each other violating the Isolated Pentagon Rule
@@ -2033,6 +2033,26 @@ cpair PAHProcess::findR5internal(Cpointer C_1, Cpointer C_2) {
 	m_pah->m_R5loc.erase(it2);
 	return temp;
 }
+
+//! Return internal R5 associated to two carbons and deletes it from R5 list.
+cpair PAHProcess::findR7internal(Cpointer C_1, Cpointer C_2) {
+	std::list<cpair>::iterator it1, it2;
+	double minimal_dist = 1e3;
+	for (it1 = m_pah->m_R7loc.begin(); it1 != m_pah->m_R7loc.end(); ++it1) {
+		double dist_x = std::get<0>(C_1->coords) + std::get<0>(C_2->coords) - 2*std::get<0>(*it1);
+		double dist_y = std::get<1>(C_1->coords) + std::get<1>(C_2->coords) - 2*std::get<1>(*it1);
+		double dist_z = std::get<2>(C_1->coords) + std::get<2>(C_2->coords) - 2*std::get<2>(*it1);
+		double dist = sqrt(dist_x * dist_x + dist_y * dist_y + dist_z * dist_z);
+		if (dist < minimal_dist){
+			minimal_dist = dist;
+			it2 = it1;
+		}
+	}
+	cpair temp = *it2;
+	m_pah->m_R7loc.erase(it2);
+	return temp;
+}
+
 //! Are the two carbon atoms members of an R5 with coordinates in R5Internal??
 bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
 	cpair R5_pos_loc = endposR5internal(C_1, C_2, invert_dir);
@@ -2061,7 +2081,7 @@ bool PAHProcess::isR7internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
 cpair PAHProcess::endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
 	//C_1 is the carbon that stays in the R5, C_2 the R6 that becomes part of the R5
 	double R5_dist = getDistance_twoC(C_1, C_2);
-	if (C_1->C2 == C_2 || R5_dist < 2.35){
+	if (C_1->C2 == C_2 && R5_dist < 2.35){
 		double r = R5_dist/(2.0*tan(M_PI/5.0));
 		cpair R5dir = get_vector(C_1->coords,C_2->coords);
 		cpair normvec;
@@ -2080,9 +2100,9 @@ cpair PAHProcess::endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) 
 		if (invert_dir) normvec = invert_vector(norm_vector(C_1->coords, C_2->coords, C_2->C2->coords));
 		else normvec = norm_vector(C_1->coords, C_2->coords, C_2->C2->coords);
 		cpair crossvec = cross_vector(R5dir, normvec);
-		cpair mpos = std::make_tuple(std::get<0>(C_1->coords) + R5_dist/2.0 * std::get<0>(R5dir) + 0.7 * std::get<0>(crossvec), 
-									 std::get<1>(C_1->coords) + R5_dist/2.0 * std::get<1>(R5dir) + 0.7 * std::get<1>(crossvec), 
-									 std::get<2>(C_1->coords) + R5_dist/2.0 * std::get<2>(R5dir) + 0.7 * std::get<2>(crossvec));
+		cpair mpos = std::make_tuple(std::get<0>(C_1->coords) + R5_dist/2.0 * std::get<0>(R5dir) + 0.8 * std::get<0>(crossvec), 
+									 std::get<1>(C_1->coords) + R5_dist/2.0 * std::get<1>(R5dir) + 0.8 * std::get<1>(crossvec), 
+									 std::get<2>(C_1->coords) + R5_dist/2.0 * std::get<2>(R5dir) + 0.8 * std::get<2>(crossvec));
 		return mpos;
 	}
 }
@@ -4048,9 +4068,22 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 	case 500:
 		//Check for R5R7
 		if (isR7internal(st->C1,st->C1->C2,true) || isR7internal(st->C1,st->C1->C2) || isR7internal(st->C2->C1,st->C2,true) || isR7internal(st->C2->C1,st->C2)){
-			st->comb = R5R7;
-			m_pah->m_siteMap[R5R7].push_back(st);
-			break;
+			cpair R5coords_R7, R7coords;
+			if (isR7internal(st->C1,st->C1->C2,true) || isR7internal(st->C1,st->C1->C2)){
+				R7coords = findR7internal(st->C1,st->C1->C2);
+				R5coords_R7 = findR5internal(st->C1->C2, st->C1->C2->C2);
+			} else{
+				R7coords = findR7internal(st->C2->C1,st->C2);
+				R5coords_R7 = findR5internal(st->C2->C1->C1, st->C2->C1);
+			}
+			double distR5R7 = getDistance_twoC(R7coords, R5coords_R7);
+			if (distR5R7 < 2.6){
+				st->comb = R5R7;
+				m_pah->m_siteMap[R5R7].push_back(st);
+				m_pah->m_R7loc.push_back(R7coords);
+				break;
+			}
+			m_pah->m_R7loc.push_back(R7coords);
 		}
 		//Get R5 internal coordinates if they have not been cleared!
 		if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
@@ -4242,9 +4275,26 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 	case 500:
 		//Check for R5R7
 		if (isR7internal(st->C1,st->C1->C2,true) || isR7internal(st->C1,st->C1->C2) || isR7internal(st->C2->C1,st->C2,true) || isR7internal(st->C2->C1,st->C2)){
-			st->comb = R5R7;
-			m_pah->m_siteMap[R5R7].push_back(st);
-			break;
+			cpair R5coords_R7, R7coords;
+			if (isR7internal(st->C1,st->C1->C2,true) || isR7internal(st->C1,st->C1->C2)){
+				R7coords = findR7internal(st->C1,st->C1->C2);
+				Cpointer CR5_otherside_end = st->C1->C2;
+				if (CR5_otherside_end->C2->A=='H') R5coords_R7 = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+				else R5coords_R7 = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2,true);
+			} else{
+				R7coords = findR7internal(st->C2->C1,st->C2);
+				Cpointer CR5_otherside_end = st->C2->C1;
+				if (CR5_otherside_end->A=='H') R5coords_R7 = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end);
+				else R5coords_R7 = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
+			}
+			double distR5R7 = getDistance_twoC(R7coords, R5coords_R7);
+			if (distR5R7 < 3.2){
+				st->comb = R5R7;
+				m_pah->m_siteMap[R5R7].push_back(st);
+				m_pah->m_R7loc.push_back(R7coords);
+				break;
+			}
+			m_pah->m_R7loc.push_back(R7coords);
 		}
 		//Get R5 internal coordinates if they have not been cleared!
 		//For ACR5 both sides need to be checked. Probably it is an overkill since the site we come from is obviously allowed.
@@ -13170,7 +13220,7 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		if (m_pah->m_R7loc.size()>=1){
 			for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
 				double distR5R7 = getDistance_twoC(*it, R5coords_end);
-				if (distR5R7 < 2.8) {
+				if (distR5R7 < 2.6) {
 					//This distance is a parameter of this jump process. Might need some more tuning. 
 					//2.8 seems appropiate but may reject too many jumps.
 					//Two pentagons will be next to each other violating the Isolated Pentagon Rule
@@ -13246,7 +13296,7 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		if (m_pah->m_R7loc.size()>=1){
 			for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
 				double distR5R7 = getDistance_twoC(*it, R5coords_end);
-				if (distR5R7 < 2.8) {
+				if (distR5R7 < 2.6) {
 					//This distance is a parameter of this jump process. Might need some more tuning. 
 					//2.8 seems appropiate but may reject too many jumps.
 					//Two pentagons will be next to each other violating the Isolated Pentagon Rule
@@ -15461,7 +15511,7 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 	if (m_pah->m_R7loc.size()>=1){
 		for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
 			double distR5R7 = getDistance_twoC(*it, R5coords_end);
-			if (distR5R7 < 2.8) {
+			if (distR5R7 < 2.6) {
 				//This distance is a parameter of this jump process. Might need some more tuning. 
 				//2.8 seems appropiate but may reject too many jumps.
 				//Two pentagons will be next to each other violating the Isolated Pentagon Rule

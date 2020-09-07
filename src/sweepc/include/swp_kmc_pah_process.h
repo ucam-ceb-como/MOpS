@@ -414,6 +414,8 @@ private:
 	void removeR7internal(Cpointer C_1, Cpointer C_2);
 	//! Return internal R5 associated to two carbons
 	cpair findR5internal(Cpointer C_1, Cpointer C_2);
+    //! Return internal R7 associated to two carbons
+	cpair findR7internal(Cpointer C_1, Cpointer C_2);
 	//! Are the two carbon atoms members of an R5 with coordinates in R5Internal??
 	bool isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
 	//! Return coords of final position of an internal R5 based on two carbons
