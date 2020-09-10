@@ -924,6 +924,15 @@ cpair PAHProcess::cross_vector (cpair vec1, cpair vec2) const{
 	return temp2;
 }
 
+//! Returns the dot product of two vectors. 
+double PAHProcess::dot_vector (cpair vec1, cpair vec2) const{
+	//check if vector is unitary
+	cpair vec1_adj = scale_vector(vec1);
+	cpair vec2_adj = scale_vector(vec2);
+	double temp = std::get<0>(vec1_adj) * std::get<0>(vec2_adj) + std::get<1>(vec1_adj) * std::get<1>(vec2_adj) + std::get<2>(vec1_adj) * std::get<2>(vec2_adj);
+	return temp;
+}
+
 //! Search a particular site (si) from svector associated with stype and erases it.
 void PAHProcess::delSiteFromMap(const kmcSiteType& stype, const Spointer& si) {
     // search site vector for site 'si'
@@ -4359,7 +4368,14 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 							R5coords = findR5internal(st->C2->C1->C1,st->C2->C1);
 						}
 						else{
-							std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
+							if (st->type==ACACR5 || st->type==ZZACR5){
+								st->comb = None;
+								break;
+							}else {
+								std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
+								st->comb = None;
+								break;
+							}
 						}
 					}
 				}
@@ -8488,9 +8504,11 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // resulting AC site, C_AC. Identify where the R5 site is too.
     Spointer sR5;
     Cpointer C_AC;
-	cpair starting_direction, Hdir1, Hdir2, FEdir, Hdir, CZZdir;
+	cpair starting_direction, Hdir1, Hdir2, FEdir, Hdir, CZZdir, R5normvec, R6normvec;
     if(b4) {
         sR5 = moveIt(stt, -1);
+		R5normvec = norm_vector(sR5->C1->coords, sR5->C2->coords, sR5->C2->C2->coords);
+		R6normvec = norm_vector(C_2->C1->coords, C_2->coords, C_2->C2->coords);
         C_AC = sR5->C1->C1;
 		starting_direction = get_vector(C_2->C1->coords, C_2->coords);
 		Hdir1 = get_vector(C_1->C2->C2->coords, C_1->C2->coords);
@@ -8500,6 +8518,8 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		CZZdir = get_vector(C_1->C2->coords, C_1->C2->C2->coords);
     }else {
         sR5 = moveIt(stt, 1);
+		R5normvec = norm_vector(sR5->C1->coords, sR5->C2->coords, sR5->C2->C2->coords);
+		R6normvec = norm_vector(C_1->C1->coords, C_1->coords, C_1->C2->coords);
         C_AC = sR5->C2->C2;
 		starting_direction = get_vector(C_2->C1->C1->coords, C_2->C1->coords);
 		Hdir1 = get_vector(C_1->C2->coords, C_1->coords);
@@ -8508,6 +8528,8 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		Hdir = Hdir1;
 		CZZdir = FEdir;
     }
+	double angle_norm_vectors = dot_vector(R5normvec, R6normvec);
+	//saveXYZ("KMC_DEBUG/RAC");
     // check if there's a bridge in the BY5
     bool bridge = false;
     if(b4) bridge = C_2->C1->bridge;
@@ -8570,6 +8592,13 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //else updateA(C_1->C1, C_AC->C2, 'H');
     // update combined sites for all sites involved and their neighbours
     // (excluding new FE sites, since their combined site type will still be None)
+	//saveXYZ("KMC_DEBUG/RAC_beforeoptim");
+	if (angle_norm_vectors < 0.30){
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+		//saveXYZ("KMC_DEBUG/RAC_afteroptim");
+	}
     S3 = moveIt(S1, -1);
     S4 = moveIt(S2, 1);
     updateCombinedSites(stt); updateCombinedSites(sR5); // new FE and AC
@@ -15302,7 +15331,7 @@ void PAHProcess::startMigrationProcess(){
 					//proc_M5R_R5R6_out_of_corner(current_site,current_site->C1,current_site->C2,next_site,true);
 					//steps = 1;
 				} else{
-					std::cout << "R5 not found." << std::endl;
+					std::cout << "Error. R5 not found in StartMigrationProcess for R5R6_MIGR site." << std::endl;
 				}
 				//std::tuple<Spointer,int> migr_site_ii = std::make_tuple(next_site, steps);
 				std::tuple<Spointer,Spointer,int> migr_site_ii;
@@ -15370,7 +15399,7 @@ void PAHProcess::startMigrationProcess(){
 						cpair R5coords = findR5internal(st->C2,st->C2->C2);
 						b4 = false;
 					} else{
-						std::cout << "R5 not found." << std::endl;
+						if (st->type==R5R6) std::cout << "Error in startMigrationProcess(). R5 not found." << std::endl;
 					}
 					//std::tuple<Spointer,int> migr_site_ii = std::make_tuple(next_site, steps);
 					std::tuple<Spointer,Spointer,int> migr_site_ii;

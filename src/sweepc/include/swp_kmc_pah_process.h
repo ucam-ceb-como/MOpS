@@ -352,6 +352,8 @@ private:
     double get_angle(cpair p1, cpair p2, cpair p3)const;
 	//! Returns the cross product of two vectors. If v1 is the surface normal vector and v2 goes from C->newC v1xv2 redefines the next growth vector.
 	cpair cross_vector(cpair vec1, cpair vec2)const;
+    //! Returns the dot product of two vectors. 
+    double dot_vector (cpair vec1, cpair vec2)const;
     //! Search a particular site (si) from svector associated with stype and erases it from sitemap
     void delSiteFromMap(const kmcSiteType& stype, const Spointer& si);
     //! Overload: search and erase from svectors associated with all site types in vector v
