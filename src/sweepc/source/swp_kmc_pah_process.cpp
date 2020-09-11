@@ -15017,8 +15017,10 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	else dist2 = R5_dist / 2.7 * 1.5;
 	double theta = asin(R5_dist/2.0/dist2);
 	double magn = dist2 * cos(theta);
-	cpair R5dir = get_vector(C_1->C2->coords,C_2->C1->coords);
-	cpair normvec = (norm_vector(C_1->C2->coords, C_1->C2->C2->coords, C_1->C2->C2->C2->coords));
+	cpair R5dir = get_vector(CFE->coords,CFE->C2->coords);
+	cpair normvec;
+	if (CFE->C2->C2->A=='C') normvec = invert_vector(norm_vector(CFE->coords, CFE->C2->coords, CFE->C2->C2->coords));
+	else normvec = norm_vector(CFE->coords, CFE->C2->coords, CFE->C2->C2->coords);
 	cpair crossvec = cross_vector(R5dir, normvec);
 	cpair resultantvec = std::make_tuple(R5_dist/2.0 * std::get<0>(R5dir) + magn * std::get<0>(crossvec), R5_dist/2.0 * std::get<1>(R5dir) + magn * std::get<1>(crossvec), R5_dist/2.0 * std::get<2>(R5dir)+ magn * std::get<2>(crossvec));
 	cpair Cnewdir = scale_vector(resultantvec);
@@ -15034,14 +15036,38 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	passbackPAH(mol);
 
 	if (b4) {
-		updateSites(stt, Cnew, C_2, -2001);
-		Spointer S_other = moveIt(stt,-1);
-		updateSites(S_other, S_other->C1, Cnew, +1);
+		if( (int)stt->type>2000){
+			//An ACR5 site or similar.
+			updateSites(stt, Cnew, C_2, -2001);
+			Spointer S_other = moveIt(stt,-1);
+			updateSites(S_other, S_other->C1, Cnew, +1);
+		}
+		else{
+			//An R5R6 site or similar
+			convSiteType(stt, Cnew, C_2, FE);
+			Spointer S_otherR7 = moveIt(stt,-1);
+			updateSites(S_otherR7, S_otherR7->C1, Cnew, +1);
+			Spointer S_otherR5 = moveIt(stt,+1);
+			if((int)stt->type>2000) updateSites(S_otherR5, S_otherR5->C1, S_otherR5->C2, -100);
+			else updateSites(S_otherR5, S_otherR5->C1, S_otherR5->C2, -500);
+		}
 	}
 	else {
-		updateSites(stt, C_1, Cnew, -2001);
-		Spointer S_other = moveIt(stt,+1);
-		updateSites(S_other, Cnew, S_other->C2, +1);
+		if( (int)stt->type>2000){
+			//An ACR5 site or similar.
+			updateSites(stt, C_1, Cnew, -2001);
+			Spointer S_other = moveIt(stt,+1);
+			updateSites(S_other, Cnew, S_other->C2, +1);
+		}
+		else{
+			//An R5R6 site or similar
+			convSiteType(stt, C_1, Cnew, FE);
+			Spointer S_otherR7 = moveIt(stt,+1);
+			updateSites(S_otherR7, Cnew, S_otherR7->C2, +1);
+			Spointer S_otherR5 = moveIt(stt,-1);
+			if((int)stt->type>2000) updateSites(S_otherR5, S_otherR5->C1, S_otherR5->C2, -100);
+			else updateSites(S_otherR5, S_otherR5->C1, S_otherR5->C2, -500);
+		}
 	}
 
 	Spointer S1 = moveIt(stt,-1); 
