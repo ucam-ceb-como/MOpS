@@ -2078,7 +2078,6 @@ double PAHProcess::getDistance_point_to_line(const cpair C_1, const cpair C_2, c
 
 //! Are the two carbon atoms members of an R5 with coordinates in R5Internal??
 bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
-	saveXYZ("KMC_DEBUG/BEFORE_isR5internal");
 	cpair R5vec = get_vector(C_1->coords,C_2->coords);
 	//Plane parameters for C_1
 	double a_1 = std::get<0>(R5vec);
