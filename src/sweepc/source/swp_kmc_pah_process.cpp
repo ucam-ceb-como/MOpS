@@ -1348,11 +1348,11 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 	//Get R5 internal coordinates
 	if (s_type == ACR5) R5coords = findR5internal(stt->C1->C2, stt->C2->C1);
 	else if (s_type == R5R6){
-		if ( isR5internal(stt->C1->C1, stt->C1,false) || isR5internal(stt->C1->C1,stt->C1,true) ) {
+		if ( isR5internal(stt->C1->C1, stt->C1)) {
 			R5coords = findR5internal(stt->C1->C1, stt->C1);
 			R5R6_b4 = true;
 		}
-		else if ( isR5internal(stt->C2, stt->C2->C2,false) || isR5internal(stt->C2, stt->C2->C2,true) ) {
+		else if ( isR5internal(stt->C2, stt->C2->C2)) {
 			R5coords = findR5internal(stt->C2, stt->C2->C2);
 			R5R6_b4 = false;
 		}
@@ -1362,11 +1362,11 @@ std::list<Spointer> PAHProcess::listMigrationSites (Spointer& stt){
 		}
 	}
 	else{
-		if ( isR5internal(stt->C1->C2, stt->C1->C2->C2,false) || isR5internal(stt->C1->C2, stt->C1->C2->C2,true) ) {
+		if ( isR5internal(stt->C1->C2, stt->C1->C2->C2)) {
 			R5coords = findR5internal(stt->C1->C2, stt->C1->C2->C2);
 			R5R6_b4 = true; check_right = false;
 		}
-		else if ( isR5internal(stt->C2->C1->C1, stt->C2->C1,false) || isR5internal(stt->C2->C1->C1, stt->C2->C1,true) ) {
+		else if ( isR5internal(stt->C2->C1->C1, stt->C2->C1)) {
 			R5coords = findR5internal(stt->C2->C1->C1, stt->C2->C1);
 			R5R6_b4 = false; check_left = false;
 		}
@@ -2077,7 +2077,7 @@ double PAHProcess::getDistance_point_to_line(const cpair C_1, const cpair C_2, c
 }
 
 //! Are the two carbon atoms members of an R5 with coordinates in R5Internal??
-bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
+bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2) {
 	cpair R5vec = get_vector(C_1->coords,C_2->coords);
 	//Plane parameters for C_1
 	double a_1 = std::get<0>(R5vec);
@@ -2111,15 +2111,37 @@ bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
 }
 
 //! Are the two carbon atoms members of an R7 with coordinates in R7Internal??
-bool PAHProcess::isR7internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
-	cpair R7_pos_loc = endposR7internal(C_1, C_2, invert_dir);
+bool PAHProcess::isR7internal(Cpointer C_1, Cpointer C_2) {
+	cpair R7vec = get_vector(C_1->coords,C_2->coords);
+	//Plane parameters for C_1
+	double a_1 = std::get<0>(R7vec);
+	double b_1 = std::get<1>(R7vec);
+	double c_1 = std::get<2>(R7vec);
+	double d_1 = std::get<0>(R7vec)*-1.0*std::get<0>(C_1->coords) + std::get<1>(R7vec)*-1.0*std::get<1>(C_1->coords) + std::get<2>(R7vec)*-1.0*std::get<2>(C_1->coords);
+	//Plane parameters for C_2
+	double a_2 = -1.0*std::get<0>(R7vec);
+	double b_2 = -1.0*std::get<1>(R7vec);
+	double c_2 = -1.0*std::get<2>(R7vec);
+	double d_2 = -1.0*std::get<0>(R7vec)*-1.0*std::get<0>(C_2->coords) - std::get<1>(R7vec)*-1.0*std::get<1>(C_2->coords) - std::get<2>(R7vec)*-1.0*std::get<2>(C_2->coords);
+	//Middle point
+	double bond_length = getDistance_twoC(C_1,C_2);
+
+	for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+		double dist1 = abs(a_1*std::get<0>(*it1) + b_1*std::get<1>(*it1) + c_1*std::get<2>(*it1) + d_1);
+		double dist2 = abs(a_2*std::get<0>(*it1) + b_2*std::get<1>(*it1) + c_2*std::get<2>(*it1) + d_2);
+		double dist3 = getDistance_point_to_line(*it1,C_1->coords,C_2->coords);
+		if (dist1 <= bond_length && dist2 <= bond_length && dist3 <= bond_length*0.95) return true;
+	}
+	return false;
+	//Previous method
+	/*cpair R7_pos_loc = endposR7internal(C_1, C_2, invert_dir);
 	std::list<cpair>::iterator it1;
 	double minimal_dist = 0.9;
 	for (it1 = m_pah->m_R7loc.begin(); it1 != m_pah->m_R7loc.end(); ++it1) {
 		double dist = getDistance_twoC(R7_pos_loc, *it1);
 		if (dist <= minimal_dist) return true;
 	}
-	return false;
+	return false;*/
 }
 
 //! Return coords of final position of an internal R5 based on two carbons
@@ -3280,7 +3302,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
 		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2004;
 		}
@@ -3308,7 +3330,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
 		Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2104;
 		}
@@ -3336,7 +3358,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		//There are two possible sites R5ZZACR5 and ACR5R5R6ZZ. Decide which one.
 		Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2105;
 		}
@@ -3367,7 +3389,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		Cpointer Ccheck3 = Carb2->C1;
 		Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2, true) || isR5internal(Ccheck3, Ccheck4), true) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2005;
 		}
@@ -3757,7 +3779,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
 		Cpointer Ccheck = Carb1->C2; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2004; bulkCchange = 0;
 		}
@@ -3785,7 +3807,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
 		Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2104; bulkCchange = 0;
 		}
@@ -3812,7 +3834,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		//There are two possible sites R5ZZACR5 and ACR5R5R6ZZ. Decide which one.
 		Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2,true) || isR5internal(Ccheck3, Ccheck4,true)) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2105; bulkCchange = 0;
 		}
@@ -3842,7 +3864,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		Cpointer Ccheck3 = Carb2->C1;
 		Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4) || isR5internal(Ccheck, Ccheck2, true) || isR5internal(Ccheck3, Ccheck4, true)) decide_PAH = true;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
 		if(decide_PAH == true){
 			stype = 2005; bulkCchange = 0;
 		}
@@ -4112,9 +4134,9 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
         break;
 	case 500:
 		//Check for R5R7
-		if (isR7internal(st->C1,st->C1->C2,true) || isR7internal(st->C1,st->C1->C2) || isR7internal(st->C2->C1,st->C2,true) || isR7internal(st->C2->C1,st->C2)){
+		if (isR7internal(st->C1,st->C1->C2) || isR7internal(st->C2->C1,st->C2) ){
 			cpair R5coords_R7, R7coords;
-			if (isR7internal(st->C1,st->C1->C2,true) || isR7internal(st->C1,st->C1->C2)){
+			if (isR7internal(st->C1,st->C1->C2) ){
 				R7coords = findR7internal(st->C1,st->C1->C2);
 				R5coords_R7 = findR5internal(st->C1->C2, st->C1->C2->C2);
 			} else{
@@ -4133,11 +4155,11 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 		//Get R5 internal coordinates if they have not been cleared!
 		if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
 		else if (st->type == R5R6){
-			if ( isR5internal(st->C1->C1, st->C1,false) || isR5internal(st->C1->C1,st->C1,true) ) {
+			if ( isR5internal(st->C1->C1, st->C1)) {
 				R5coords = findR5internal(st->C1->C1, st->C1);
 				check_left = false;
 			}
-			else if ( isR5internal(st->C2, st->C2->C2,false) || isR5internal(st->C2, st->C2->C2,true) ) {
+			else if ( isR5internal(st->C2, st->C2->C2) ) {
 				R5coords = findR5internal(st->C2, st->C2->C2);
 				check_right = false;
 			}
@@ -4148,11 +4170,11 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 			}
 		}
 		else if ((int)st->type>2000 && (int)st->type<=2103){
-			if ( isR5internal(st->C1->C2, st->C1->C2->C2,false) || isR5internal(st->C1->C2, st->C1->C2->C2,true) ) {
+			if ( isR5internal(st->C1->C2, st->C1->C2->C2) ) {
 				R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
 				check_right = false;
 			}
-			else if ( isR5internal(st->C2->C1->C1, st->C2->C1,false) || isR5internal(st->C2->C1->C1, st->C2->C1,true) ) {
+			else if ( isR5internal(st->C2->C1->C1, st->C2->C1) ) {
 				R5coords = findR5internal(st->C2->C1->C1, st->C2->C1);
 				check_left = false;
 			}
@@ -4322,9 +4344,9 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
         break;
 	case 500:
 		//Check for R5R7
-		if (isR7internal(st->C1,st->C1->C2,true) || isR7internal(st->C1,st->C1->C2) || isR7internal(st->C2->C1,st->C2,true) || isR7internal(st->C2->C1,st->C2)){
+		if (isR7internal(st->C1,st->C1->C2) || isR7internal(st->C2->C1,st->C2)){
 			cpair R5coords_R7, R7coords;
-			if (isR7internal(st->C1,st->C1->C2,true) || isR7internal(st->C1,st->C1->C2)){
+			if (isR7internal(st->C1,st->C1->C2) ){
 				R7coords = findR7internal(st->C1,st->C1->C2);
 				Cpointer CR5_otherside_end = st->C1->C2;
 				if (CR5_otherside_end->C2->A=='H') R5coords_R7 = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
@@ -4398,11 +4420,11 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 							}
 						}
 					} else{
-						if (isR5internal(st->C1->C2,st->C1->C2->C2,true) || isR5internal(st->C1->C2,st->C1->C2->C2,false)) {
+						if (isR5internal(st->C1->C2,st->C1->C2->C2)) {
 							check_right = false;
 							R5coords = findR5internal(st->C1->C2,st->C1->C2->C2);
 						}
-						else if (isR5internal(st->C2->C1->C1,st->C2->C1,true) || isR5internal(st->C2->C1->C1,st->C2->C1,false)) {
+						else if (isR5internal(st->C2->C1->C1,st->C2->C1)) {
 							check_left = false;
 							R5coords = findR5internal(st->C2->C1->C1,st->C2->C1);
 						}
@@ -7464,7 +7486,7 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update site stt and new neighbours
     // new neighbours:
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
-	if (isR5internal(C1_new, C2_new, false) || isR5internal(C1_new, C2_new, true) ){
+	if (isR5internal(C1_new, C2_new) ){
 		//FE3 desorption allows pentagon going to the edge
 		if ( (int)S1->type >= 2000 && (int)S1->type <= 2100 ) updateSites(S1, S1->C1, C1_new, -1901);
 		else if ( (int)S1->type >= 2100 ) {
@@ -7693,7 +7715,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 		}
 	}
 	bool hept_bool = false;
-	if  (isR7internal(C_1, C_2, true) || isR7internal(C_1, C_2)) hept_bool = true;
+	if  (isR7internal(C_1, C_2) ) hept_bool = true;
     // check if site is next to a bridge
     if (C1_res->bridge || C2_res->bridge) return;
     //if(bridge) return;
@@ -7745,8 +7767,8 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
     Spointer S3, S4;
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1); S3 = moveIt(S1, -1); S4 = moveIt(S2, +1);
 	if (!hept_bool){
-		bool leftR5 = (isR5internal(C1_res->C1, C1_res, true) || isR5internal(C1_res->C1, C1_res, false));
-		bool rightR5 = (isR5internal(C2_res, C2_res->C2, true) || isR5internal(C2_res, C2_res->C2, false));
+		bool leftR5 = (isR5internal(C1_res->C1, C1_res));
+		bool rightR5 = (isR5internal(C2_res, C2_res->C2));
 		int leftsite = (int)S1->type;
 		int rightsite = (int)S2->type;
 		int zerosite = 2;
@@ -7798,7 +7820,7 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 			updateSites(S2, C2_res, S2->C2, -1);
 		}
 		
-		if ( (isR5internal(C1_res->C2, C2_res->C1) || isR5internal(C1_res->C2, C2_res->C1, true)) && !leftR5 && !rightR5 ) {
+		if ( (isR5internal(C1_res->C2, C2_res->C1)) && !leftR5 && !rightR5 ) {
 			zerosite = 2002;
 			Cpointer thirdC = findThirdC(C1_res->C2);
 			Cpointer thirdC2 = findThirdC(C2_res->C1);
@@ -8033,11 +8055,11 @@ void PAHProcess::proc_O6R_FE_HACA_double(Spointer& stt, Cpointer C_1, Cpointer C
 	else {
 		//Assuming that the site removed was an heptagon
 		bool R5_bool0, R5_bool1, R5_bool2;
-		if (isR5internal(C1_res, C1_res->C2, true) || isR5internal(C1_res, C1_res->C2) ) R5_bool0 = true;
+		if (isR5internal(C1_res, C1_res->C2)) R5_bool0 = true;
 		else R5_bool0 = false;
-		if ( isR5internal(C1_res->C2, C1_res->C2->C2) || isR5internal(C2_res->C1->C1, C2_res->C1) || isR5internal(C1_res->C2, C1_res->C2->C2, true) || isR5internal(C2_res->C1->C1, C2_res->C1, true)) R5_bool1 = true;
+		if ( isR5internal(C1_res->C2, C1_res->C2->C2) || isR5internal(C2_res->C1->C1, C2_res->C1) ) R5_bool1 = true;
 		else R5_bool1 = false;
-		if (isR5internal(C2_res->C1, C2_res) || isR5internal(C2_res->C1, C2_res, true)) R5_bool2 = true;
+		if (isR5internal(C2_res->C1, C2_res) ) R5_bool2 = true;
 		else R5_bool2 = false;
 		
 		if (R5_bool0 && R5_bool2){
@@ -9868,12 +9890,12 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	bool b4 = false;
 	if (stt->type == R5R6ZZ) { //G6R_R5R6ZZ
 		if ( (((int) S1->type >= 501 && (int) S1->type <= 504) || ((int) S1->type >= 1002 && (int) S1->type <= 1004) || ((int) S1->type >= 2103 && (int) S1->type <= 2205 ) || S1->type == SPIRAL) && (((int) S2->type >= 501 && (int) S2->type <= 504) || ((int) S2->type >= 1002 && (int) S2->type <= 1004) || ((int) S2->type >= 2103 && (int) S2->type <= 2205 ) || S2->type == SPIRAL) ) {
-			if ( (isR5internal(C_1, C_1->C2, true) || isR5internal(C_1, C_1->C2, false)) && !(isR5internal(C_2->C1, C_2, true) || isR5internal(C_2->C1, C_2, false)) ){
+			if ( (isR5internal(C_1, C_1->C2) ) && !(isR5internal(C_2->C1, C_2) )){
 				SR5 = S1;
 				S1 = moveIt(SR5, -1);
 				b4 = true;
 			}
-			else if ( !(isR5internal(C_1, C_1->C2, true) || isR5internal(C_1, C_1->C2, false)) && (isR5internal(C_2->C1, C_2, true) || isR5internal(C_2->C1, C_2, false)) ){
+			else if ( !(isR5internal(C_1, C_1->C2)) && (isR5internal(C_2->C1, C_2) ) ){
 				SR5 = S2;
 				S2 = moveIt(SR5, +1);
 				b4 = false;
@@ -10186,12 +10208,12 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	bool b4 = false;
 	Spointer sFE2, checkR5_1, checkR5_2;
 	Cpointer CRem, CRem_before, CRem_next, CFE, CR5_otherside_1, CR5_otherside_2;
-	if (( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ) && ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) )){
+	if (( isR5internal(C_1->C1, C_1) ) && ( isR5internal(C_2,C_2->C2) )){
 		//Pentagons to both sides, JP not allowed
 		return;
 	}
-	else if ( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ) b4 = false;
-	else if ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) ) b4 = true;
+	else if ( isR5internal(C_1->C1, C_1) ) b4 = false;
+	else if ( isR5internal(C_2, C_2->C2) ) b4 = true;
 	else return;
 	if (b4) {
 		sFE2 = moveIt(stt, -1);
@@ -10642,7 +10664,7 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// Update Site and neighbours
 	convSiteType (stt, newC1, newC2, FE); //FE of an heptagon
 	if (stype == 503){
-		if ( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ){
+		if ( isR5internal(C_1->C1, C_1) ){
 			//R5 to the left.
 			if ( (int)S1->type >= 501 && (int)S1->type <= 504){ 
 			//Side of an R5R6AC
@@ -10659,7 +10681,7 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			updateSites(S2, newC2, S2->C2, 1);
 		}
 	
-		else if ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) ){
+		else if ( isR5internal(C_2,C_2->C2) ){
 			//R5 to the right.
 			if ( (int)S2->type >= 501 && (int)S2->type <= 504){ 
 				//Side of an R5R6AC
@@ -11006,7 +11028,7 @@ void PAHProcess::proc_L6_ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else Ccheck2 = Ccheck->C2;
 	bool opp_site_bool = false;
 	do {
-		if( (isR5internal(Ccheck, Ccheck2, true) || isR5internal(Ccheck, Ccheck2, false)) && opp_site_bool==false){
+		if( (isR5internal(Ccheck, Ccheck2)) && opp_site_bool==false){
 			Cpointer thirdC = findThirdC(Ccheck);
 			Cpointer thirdC2 = findThirdC(Ccheck2);
 			if (thirdC != NULLC || thirdC2 != NULLC) opp_site_bool = true;
@@ -11061,7 +11083,7 @@ void PAHProcess::proc_L6_R5FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else Ccheck2 = Ccheck->C2;
 	bool opp_site_bool = false;
 	do {
-		if( (isR5internal(Ccheck, Ccheck2, true) || isR5internal(Ccheck, Ccheck2, false)) && opp_site_bool==false){
+		if( (isR5internal(Ccheck, Ccheck2) ) && opp_site_bool==false){
 			Cpointer thirdC = findThirdC(Ccheck);
 			Cpointer thirdC2 = findThirdC(Ccheck2);
 			if (thirdC != NULLC || thirdC2 != NULLC) opp_site_bool = true;
@@ -11116,7 +11138,7 @@ void PAHProcess::proc_L6_FEACR5FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else Ccheck2 = Ccheck->C2;
 	bool opp_site_bool = false;
 	do {
-		if( (isR5internal(Ccheck, Ccheck2, true) || isR5internal(Ccheck, Ccheck2, false)) && opp_site_bool==false){
+		if( (isR5internal(Ccheck, Ccheck2) ) && opp_site_bool==false){
 			Cpointer thirdC = findThirdC(Ccheck);
 			Cpointer thirdC2 = findThirdC(Ccheck2);
 			if (thirdC != NULLC || thirdC2 != NULLC) opp_site_bool = true;
@@ -11171,7 +11193,7 @@ void PAHProcess::proc_L6_R5ACR5R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else Ccheck2 = Ccheck->C2;
 	bool opp_site_bool = false;
 	do {
-		if( (isR5internal(Ccheck, Ccheck2, true) || isR5internal(Ccheck, Ccheck2, false)) && opp_site_bool==false){
+		if( (isR5internal(Ccheck, Ccheck2) ) && opp_site_bool==false){
 			Cpointer thirdC = findThirdC(Ccheck);
 			Cpointer thirdC2 = findThirdC(Ccheck2);
 			if (thirdC != NULLC || thirdC2 != NULLC) opp_site_bool = true;
@@ -11226,7 +11248,7 @@ void PAHProcess::proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else Ccheck2 = Ccheck->C2;
 	bool opp_site_bool = false;
 	do {
-		if( (isR5internal(Ccheck, Ccheck2, true) || isR5internal(Ccheck, Ccheck2, false)) && opp_site_bool==false){
+		if( (isR5internal(Ccheck, Ccheck2) ) && opp_site_bool==false){
 			Cpointer thirdC = findThirdC(Ccheck);
 			Cpointer thirdC2 = findThirdC(Ccheck2);
 			if (thirdC != NULLC || thirdC2 != NULLC) opp_site_bool = true;
@@ -11283,7 +11305,7 @@ void PAHProcess::proc_L6_ACR5R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else Ccheck2 = Ccheck->C2;
 	int opp_site_bool = 0;
 	do {
-		if( (isR5internal(Ccheck, Ccheck2, true) || isR5internal(Ccheck, Ccheck2, false)) && opp_site_bool<=1){
+		if( (isR5internal(Ccheck, Ccheck2) ) && opp_site_bool<=1){
 			Cpointer thirdC = findThirdC(Ccheck);
 			Cpointer thirdC2 = findThirdC(Ccheck2);
 			if (thirdC != NULLC || thirdC2 != NULLC) opp_site_bool += 1;
@@ -11342,7 +11364,7 @@ void PAHProcess::proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else Ccheck2 = Ccheck->C2;
 	int opp_site_bool = 0;
 	do {
-		if( (isR5internal(Ccheck, Ccheck2, true) || isR5internal(Ccheck, Ccheck2, false)) && opp_site_bool<=1){
+		if( (isR5internal(Ccheck, Ccheck2) ) && opp_site_bool<=1){
 			Cpointer thirdC = findThirdC(Ccheck);
 			Cpointer thirdC2 = findThirdC(Ccheck2);
 			if (thirdC != NULLC || thirdC2 != NULLC) opp_site_bool += 1;
@@ -11526,11 +11548,11 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 	}
 	else {
 		//Partially embedded R5 at one end or the other.
-		if ( isR5internal(C_1->C1, C_1,false) || isR5internal(C_1->C1,C_1,true) ) {
+		if ( isR5internal(C_1->C1, C_1) ) {
 			other = moveIt(stt, -1);
 			CRem = stt->C1;
 		}
-		else if ( isR5internal(C_2,C_2->C2,false) || isR5internal(C_2,C_2->C2,true) ) {
+		else if ( isR5internal(C_2,C_2->C2) ) {
 			b4 = true;
 			other = moveIt(stt, +1);
 			CRem = stt->C2;
@@ -13198,11 +13220,11 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	bool optimised = true;
 	if (stt->type == ACR5) R5coords = findR5internal(stt->C1->C2, stt->C2->C1);
 	else{
-		if ( isR5internal(stt->C1->C2, stt->C1->C2->C2,false) || isR5internal(stt->C1->C2, stt->C1->C2->C2,true) ) {
+		if ( isR5internal(stt->C1->C2, stt->C1->C2->C2) ) {
 			R5coords = findR5internal(stt->C1->C2, stt->C1->C2->C2);
 			check_right = false;
 		}
-		else if ( isR5internal(stt->C2->C1->C1, stt->C2->C1,false) || isR5internal(stt->C2->C1->C1, stt->C2->C1,true) ) {
+		else if ( isR5internal(stt->C2->C1->C1, stt->C2->C1) ) {
 			R5coords = findR5internal(stt->C2->C1->C1, stt->C2->C1);
 			check_left = false;
 		}
@@ -13723,8 +13745,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		//We need to identify if we can move left or right.
 		if ((int)stt->type>=2003){
 			//An R5 was added to tell us the direction
-			if (isR5internal(stt->C1->C2,stt->C1->C2->C2,true) || isR5internal(stt->C1->C2,stt->C1->C2->C2,false)) b4 = true;
-			else if (isR5internal(stt->C2->C1->C1,stt->C2->C1,true) || isR5internal(stt->C2->C1->C1,stt->C2->C1,false)) b4 = false;
+			if (isR5internal(stt->C1->C2,stt->C1->C2->C2) ) b4 = true;
+			else if (isR5internal(stt->C2->C1->C1,stt->C2->C1) ) b4 = false;
 			else{
 				//saveXYZ("KMC_DEBUG/FEACR5MIGR");
 				std::cout << "Error on R5 migration in proc_M5R_ACR5_ZZ_light. Walker with needed R5loc not found." << std::endl;
@@ -15008,7 +15030,7 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	//printStruct();
 	bool b4 = false;
 	Cpointer CRem, CFE;
-	if ( (isR7internal(stt->C1,stt->C1->C2,true) || isR7internal(stt->C1,stt->C1->C2)) && (isR7internal(stt->C2->C1,stt->C2,true) || isR7internal(stt->C2->C1,stt->C2))){
+	if ( (isR7internal(stt->C1,stt->C1->C2) ) && (isR7internal(stt->C2->C1,stt->C2) )){
 		//R5R7 to both sides.
 		// Define a distribution that has two equally probably outcomes
 		boost::bernoulli_distribution<> choiceDistrib;
@@ -15024,7 +15046,7 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 			CFE = C_2->C1->C1;
 		}
 	}
-	else if (isR7internal(stt->C1,stt->C1->C2,true) || isR7internal(stt->C1,stt->C1->C2)){
+	else if (isR7internal(stt->C1,stt->C1->C2) ){
 		b4 = true;
 		CRem = C_1;
 		CFE = C_1->C2;
@@ -15350,10 +15372,10 @@ void PAHProcess::startMigrationProcess(){
 			cpair R5coords;
 			if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C2->C1);
 			else{
-				if ( isR5internal(st->C1->C2, st->C1->C2->C2,false) || isR5internal(st->C1->C2, st->C1->C2->C2,true) ) {
+				if ( isR5internal(st->C1->C2, st->C1->C2->C2) ) {
 					R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
 				}
-				else if ( isR5internal(st->C2->C1->C1, st->C2->C1,false) || isR5internal(st->C2->C1->C1, st->C2->C1,true) ) {
+				else if ( isR5internal(st->C2->C1->C1, st->C2->C1) ) {
 					R5coords = findR5internal(st->C2->C1->C1, st->C2->C1);
 				}
 				else {

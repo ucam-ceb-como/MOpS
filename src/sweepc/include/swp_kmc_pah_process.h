@@ -421,11 +421,11 @@ private:
     //! Returns distance from point C_1 to the line formed between points C_2 and C_3
     double getDistance_point_to_line(const cpair C_1, const cpair C_2, const cpair C_3) const;
 	//! Are the two carbon atoms members of an R5 with coordinates in R5Internal??
-	bool isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
+	bool isR5internal(Cpointer C_1, Cpointer C_2);
 	//! Return coords of final position of an internal R5 based on two carbons
 	cpair endposR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
 	//! Are the two carbon atoms members of an R7 with coordinates in R7Internal??
-	bool isR7internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
+	bool isR7internal(Cpointer C_1, Cpointer C_2);
 	//! Return coords of final position of an internal R7 based on two carbons
 	cpair endposR7internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
     //! Creates a carbon atom bridging next to C_1. 
