@@ -418,6 +418,8 @@ private:
 	cpair findR5internal(Cpointer C_1, Cpointer C_2);
     //! Return internal R7 associated to two carbons
 	cpair findR7internal(Cpointer C_1, Cpointer C_2);
+    //! Returns distance from point C_1 to the line formed between points C_2 and C_3
+    double getDistance_point_to_line(const cpair C_1, const cpair C_2, const cpair C_3) const;
 	//! Are the two carbon atoms members of an R5 with coordinates in R5Internal??
 	bool isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
 	//! Return coords of final position of an internal R5 based on two carbons

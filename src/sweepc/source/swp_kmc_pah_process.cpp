@@ -2062,16 +2062,53 @@ cpair PAHProcess::findR7internal(Cpointer C_1, Cpointer C_2) {
 	return temp;
 }
 
+//! Returns distance from point C_1 to the line formed between points C_2 and C_3
+double PAHProcess::getDistance_point_to_line(const cpair C_1, const cpair C_2, const cpair C_3) const {
+	cpair vec1 = std::make_tuple(std::get<0>(C_1) - std::get<0>(C_2), std::get<1>(C_1) - std::get<1>(C_2), std::get<2>(C_1) - std::get<2>(C_2));
+	cpair vec2 = std::make_tuple(std::get<0>(C_1) - std::get<0>(C_3), std::get<1>(C_1) - std::get<1>(C_3), std::get<2>(C_1) - std::get<2>(C_3));
+	cpair vec3 = std::make_tuple(std::get<0>(C_3) - std::get<0>(C_2), std::get<1>(C_3) - std::get<1>(C_2), std::get<2>(C_3) - std::get<2>(C_2));
+	cpair temp = std::make_tuple(	std::get<1>(vec1) * std::get<2>(vec2) - std::get<2>(vec1) * std::get<1>(vec2),
+	 								std::get<2>(vec1) * std::get<0>(vec2) - std::get<0>(vec1) * std::get<2>(vec2), 
+									std::get<0>(vec1) * std::get<1>(vec2) - std::get<1>(vec1) * std::get<0>(vec2));
+	double num = std::sqrt(std::get<0>(temp) * std::get<0>(temp) + std::get<1>(temp) * std::get<1>(temp) + std::get<2>(temp) * std::get<2>(temp));
+	double den = std::sqrt(std::get<0>(vec3) * std::get<0>(vec3) + std::get<1>(vec3) * std::get<1>(vec3) + std::get<2>(vec3) * std::get<2>(vec3));
+	double dist = num / den;
+	return dist;
+}
+
 //! Are the two carbon atoms members of an R5 with coordinates in R5Internal??
 bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
-	cpair R5_pos_loc = endposR5internal(C_1, C_2, invert_dir);
+	saveXYZ("KMC_DEBUG/BEFORE_isR5internal");
+	cpair R5vec = get_vector(C_1->coords,C_2->coords);
+	//Plane parameters for C_1
+	double a_1 = std::get<0>(R5vec);
+	double b_1 = std::get<1>(R5vec);
+	double c_1 = std::get<2>(R5vec);
+	double d_1 = std::get<0>(R5vec)*-1.0*std::get<0>(C_1->coords) + std::get<1>(R5vec)*-1.0*std::get<1>(C_1->coords) + std::get<2>(R5vec)*-1.0*std::get<2>(C_1->coords);
+	//Plane parameters for C_2
+	double a_2 = -1.0*std::get<0>(R5vec);
+	double b_2 = -1.0*std::get<1>(R5vec);
+	double c_2 = -1.0*std::get<2>(R5vec);
+	double d_2 = -1.0*std::get<0>(R5vec)*-1.0*std::get<0>(C_2->coords) - std::get<1>(R5vec)*-1.0*std::get<1>(C_2->coords) - std::get<2>(R5vec)*-1.0*std::get<2>(C_2->coords);
+	//Middle point
+	double bond_length = getDistance_twoC(C_1,C_2);
+
+	for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+		double dist1 = abs(a_1*std::get<0>(*it1) + b_1*std::get<1>(*it1) + c_1*std::get<2>(*it1) + d_1);
+		double dist2 = abs(a_2*std::get<0>(*it1) + b_2*std::get<1>(*it1) + c_2*std::get<2>(*it1) + d_2);
+		double dist3 = getDistance_point_to_line(*it1,C_1->coords,C_2->coords);
+		if (dist1 <= bond_length && dist2 <= bond_length && dist3 <= bond_length*0.95) return true;
+	}
+	return false;
+	//Previous version - uses endposR5internal
+	/*cpair R5_pos_loc = endposR5internal(C_1, C_2, invert_dir);
 	std::list<cpair>::iterator it1;
 	double minimal_dist = 0.9;
 	for (it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
 		double dist = getDistance_twoC(R5_pos_loc, *it1);
 		if (dist <= minimal_dist) return true;
 	}
-	return false;
+	return false;*/
 }
 
 //! Are the two carbon atoms members of an R7 with coordinates in R7Internal??
@@ -4111,7 +4148,7 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				break;
 			}
 		}
-		else{
+		else if ((int)st->type>2000 && (int)st->type<=2103){
 			if ( isR5internal(st->C1->C2, st->C1->C2->C2,false) || isR5internal(st->C1->C2, st->C1->C2->C2,true) ) {
 				R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
 				check_right = false;
@@ -4125,6 +4162,9 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				st->comb = None;
 				break;
 			}
+		}else{
+			st->comb = None;
+			break;
 		}
 
 		//Fundamental assumption: R5-R7 pairs cannot move away from each other!
