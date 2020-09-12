@@ -2126,7 +2126,7 @@ bool PAHProcess::isR7internal(Cpointer C_1, Cpointer C_2) {
 	//Middle point
 	double bond_length = getDistance_twoC(C_1,C_2);
 
-	for (std::list<cpair>::iterator it1 = m_pah->m_R5loc.begin(); it1 != m_pah->m_R5loc.end(); ++it1) {
+	for (std::list<cpair>::iterator it1 = m_pah->m_R7loc.begin(); it1 != m_pah->m_R7loc.end(); ++it1) {
 		double dist1 = abs(a_1*std::get<0>(*it1) + b_1*std::get<1>(*it1) + c_1*std::get<2>(*it1) + d_1);
 		double dist2 = abs(a_2*std::get<0>(*it1) + b_2*std::get<1>(*it1) + c_2*std::get<2>(*it1) + d_2);
 		double dist3 = getDistance_point_to_line(*it1,C_1->coords,C_2->coords);
