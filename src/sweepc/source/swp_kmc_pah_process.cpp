@@ -15657,6 +15657,14 @@ int PAHProcess::coupledSiteDirection(Spointer stt){
 		while ((int)check_right->type>=1000 && (int)check_right->type<=1004){
 			check_right = moveIt(check_right,+1);
 		}
+		if(check_left->type==R5FEACR5 || check_left->type==R5ACR5){
+			Spointer left_site = moveIt(check_left,-1);
+			if (left_site->type==R5) left_bool = false;
+		}
+		if(check_left->type==R5FEACR5 || check_left->type==R5ACR5){
+			Spointer right_site = moveIt(check_right,+1);
+			if (right_site->type==R5) right_bool = false;
+		}
 		
 		if ((int)check_left->type<500) left_bool = false;
 		if ((int)check_left->type>2000 && (int)check_left->type<2016) left_bool = false;
