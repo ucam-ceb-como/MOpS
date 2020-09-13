@@ -2112,6 +2112,7 @@ bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2) {
 
 //! Are the two carbon atoms members of an R7 with coordinates in R7Internal??
 bool PAHProcess::isR7internal(Cpointer C_1, Cpointer C_2) {
+	if(m_pah->m_R7loc.size()==0) return false;
 	cpair R7vec = get_vector(C_1->coords,C_2->coords);
 	//Plane parameters for C_1
 	double a_1 = std::get<0>(R7vec);
@@ -12577,7 +12578,7 @@ void PAHProcess::proc_M5R_ACR5_termination_toR5(Spointer& stt, Cpointer C_1, Cpo
 			updateSites(stt, stt->C1,Cnew, -stype_diff);
 			newSite = addSite((kmcSiteType)(1+stype_diff), Cnew, Cold, stt_coupled);
 			Spointer prev_site = moveIt(newSite,+1);
-			if ((int)prev_site->type>=500) updateSites(newSite, newSite->C1, newSite->C2, +400);
+			if ((int)prev_site->type>=500 && stype_diff>100) updateSites(newSite, newSite->C1, newSite->C2, +400);
 		} else{
 			int stype_diff = (int)stt->type - 101;
 			Cpointer Cold = stt->C1;
@@ -12585,7 +12586,7 @@ void PAHProcess::proc_M5R_ACR5_termination_toR5(Spointer& stt, Cpointer C_1, Cpo
 			updateSites(stt, Cnew, stt->C2, -stype_diff);
 			newSite = addSite((kmcSiteType)(1+stype_diff), Cold, Cnew, stt);
 			Spointer prev_site = moveIt(newSite,-1);
-			if ((int)prev_site->type>=500) updateSites(newSite, newSite->C1, newSite->C2, +400);
+			if ((int)prev_site->type>=500 && stype_diff>100) updateSites(newSite, newSite->C1, newSite->C2, +400);
 		}
 	} else{
 		if (b4) stt_coupled = moveIt(stt,-1);
@@ -15647,9 +15648,16 @@ int PAHProcess::coupledSiteDirection(Spointer stt){
 	Spointer check_right = stt;
 	bool left_bool = true;
 	bool right_bool = true;
-	for (int ii=0;ii!=5;ii++){
+	for (int ii=0;ii!=7;ii++){
 		check_left = moveIt(check_left,-1);
 		check_right = moveIt(check_right,+1);
+		while ((int)check_left->type>=1000 && (int)check_left->type<=1004){
+			check_left = moveIt(check_left,-1);
+		}
+		while ((int)check_right->type>=1000 && (int)check_right->type<=1004){
+			check_right = moveIt(check_right,+1);
+		}
+		
 		if ((int)check_left->type<500) left_bool = false;
 		if ((int)check_left->type>2000 && (int)check_left->type<2016) left_bool = false;
 		if ((int)check_left->type>=2114 && (int)check_left->type<=2115) left_bool = false;
