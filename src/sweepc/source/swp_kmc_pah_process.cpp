@@ -11744,15 +11744,10 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	//Remove R5coords from m_pah->m_R5loc. This is done by starter function/
 	//findR5internal(C_1->C2, C_2->C1);
 	// First select carbons and sites affected.
-	Cpointer CFE, CRem, CRem_next, CRem_before, CR5_otherside_1, CR5_otherside_2;
+	Cpointer CFE, CRem, CRem_next, CRem_before;
 	Spointer checkR5_1, checkR5_2;
 	if (b4) {
 		CFE = C_1->C2;
-		//CFE = C_2->C1->C1;
-		CR5_otherside_1 = CFE->C2;
-		//CR5_otherside_1 = C_2->C1;
-		CR5_otherside_2 = CFE;
-		//CR5_otherside_2 = C_2->C1->C1;
 		checkR5_1 = moveIt(sFE2, -1);
 		checkR5_2 = moveIt(sFE2, -2);
 		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C1;
@@ -11762,11 +11757,6 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	}
 	else {
 		CFE = C_2->C1->C1;
-		//CFE = C_1->C2;
-		CR5_otherside_1 = CFE;
-		//CR5_otherside_1 = C_1->C2;
-		CR5_otherside_2 = CFE->C2;
-		//CR5_otherside_2 = C_1->C2->C2;
 		checkR5_1 = moveIt(sFE2, +1);
 		checkR5_2 = moveIt(sFE2, +2);
 		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C2;
@@ -11775,40 +11765,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		CRem_before = CRem->C1;
 	}
 	//int end_site_type = (int)sFE2->type;
-	// check if ACR5 has an opposite site.
-	Spointer opp_site, opp_site_second, opp_site_after, opp_site_after_second;
-	bool opp_site_bool = false; bool opp_site_bool_second = false; bool opp_site_bool_after = false; bool opp_site_bool_after_second = false;
-	Cpointer thirdC = findThirdC(CR5_otherside_1);
-	Cpointer thirdC2 = findThirdC(CR5_otherside_2);
-	Cpointer thirdC_after = findThirdC(CRem_before);
-	Cpointer thirdC_after2 = findThirdC(CRem_next);
-
-	// Seven cases:
-	// 1. One pentagon has one exposed edge  and migrates to a location where it will have one exposed edge. Normal migration.
-	// 2. One pentagon has one exposed edge  and migrates to a location where it will have two exposed edges. 
-	// 3. One pentagon has two exposed edges and migrates to a location where it will have two exposed edges. 
-	// 4. One pentagon has two exposed edges and migrates to a location where it will have one exposed edge.
-	// 5. One pentagon has two exposed edges and migrates to a location where it will have three exposed edges.
-	// 6. One pentagon has three exposed edges and migrates to a location where it will have three exposed edges.
-	// 7. One pentagon has three exposed edges and migrates to a location where it will have two exposed edges.
 	
-	if (thirdC != NULLC) {
-		opp_site = findSite(thirdC);
-		if (opp_site != m_pah->m_siteList.end()) opp_site_bool = true;
-	}
-	if (thirdC2 != NULLC) {
-		opp_site_second = findSite(thirdC2);
-		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
-	}
-	if (thirdC_after != NULLC) {
-		opp_site_after = findSite(thirdC_after);
-		if (opp_site_after != m_pah->m_siteList.end()) opp_site_bool_after = true;
-	}
-	if (thirdC_after2 != NULLC) {
-		opp_site_after_second = findSite(thirdC_after2);
-		if (opp_site_after_second != m_pah->m_siteList.end()) opp_site_bool_after_second = true;
-	}
-	//saveXYZ("KMC_DEBUG/AROUNDCORNER");
 	//Add a new carbon between current R5 carbons of ACR5
 	double R5_dist = getDistance_twoC(CFE, CFE->C2);
 	double dist2;
@@ -12013,104 +11970,9 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	S5 = moveIt(S1, -2);
 	S6 = moveIt(S2, +2);
 	updateCombinedSitesMigration(stt_1); updateCombinedSitesMigration(stt); updateCombinedSitesMigration(newSite); updateCombinedSitesMigration(stt_2);
-	/*if (S1->type==R5R6 && b4){
-		updateCombinedSitesMigration(S2);
-		updateCombinedSitesMigration(S1);
-	}
-	else{
-		updateCombinedSitesMigration(S1); 
-		updateCombinedSitesMigration(S2);
-	}*/
 	updateCombinedSitesMigration(origin_site); updateCombinedSitesMigration(end_site);
 	updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2);
 	updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4); updateCombinedSitesMigration(S5); updateCombinedSitesMigration(S6);
-	
-	//Adjust opposite sites for starting and ending position.
-	if (opp_site_bool && opp_site_bool_second) {
-		if (opp_site == opp_site_second) opp_site_bool_second = false;
-	}
-	if (opp_site_bool) {
-		if ( (int)opp_site->type >= 2100) {
-			Spointer S1_opp_site = moveIt(opp_site, -1);
-			Spointer S2_opp_site = moveIt(opp_site, +1);
-			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
-				updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
-			}
-			else updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
-		}
-		else if  ((int)opp_site->type >= 2000) updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
-		else updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
-		updateCombinedSitesMigration(opp_site);
-	}
-	if (opp_site_bool_second) {
-		if ( (int)opp_site_second->type >= 2100) {
-			Spointer S1_opp_site = moveIt(opp_site_second, -1);
-			Spointer S2_opp_site = moveIt(opp_site_second, +1);
-			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
-				updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -2000);
-			}
-			else updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -100);
-		}
-		else updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -2000);
-		updateCombinedSitesMigration(opp_site_second);
-	}
-
-	if (opp_site_bool_after && opp_site_bool_after_second){
-		if (opp_site_after == opp_site_after_second){
-			opp_site_bool_after_second = false;
-		}
-		else{
-			if (opp_site_after_second != stt_1 && opp_site_after_second != stt_2 && opp_site_after_second != S1 && opp_site_after_second != S2 &&
-				opp_site_after != stt_1 && opp_site_after != stt_2 && opp_site_after != S1 && opp_site_after != S2) {
-					if ((int)opp_site_after_second->type >= 500 && (int)opp_site_after_second->type <= 700) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -400);
-					else if ((int)opp_site_after_second->type >= 1000 && (int)opp_site_after_second->type <= 2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -800);
-					
-					if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
-					else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
-					
-					if ( (int)opp_site_after_second->type >=2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +100);
-					else updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +500);
-
-					if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
-					else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
-
-					updateCombinedSitesMigration(opp_site_after_second); updateCombinedSitesMigration(opp_site_after);
-					Spointer opps1 = moveIt(opp_site_after_second,-1);
-					Spointer opps2 = moveIt(opp_site_after_second,+1);
-					Spointer opps3 = moveIt(opp_site_after,-1);
-					Spointer opps4 = moveIt(opp_site_after,+1);
-					updateCombinedSitesMigration(opps1); updateCombinedSitesMigration(opps2); updateCombinedSitesMigration(opps3); updateCombinedSitesMigration(opps4);
-				}
-		}
-	}
-	else if(opp_site_bool_after){
-		if (opp_site_after != stt_1 && opp_site_after != stt_2 && opp_site_after != S1 && opp_site_after != S2) {
-			if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
-			else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
-
-			if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
-			else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
-		
-			updateCombinedSitesMigration(opp_site_after);
-			Spointer opps1 = moveIt(opp_site_after,-1);
-			Spointer opps2 = moveIt(opp_site_after,+1);
-			updateCombinedSitesMigration(opps1); updateCombinedSitesMigration(opps2);
-		}
-	}
-	else if(opp_site_bool_after_second){
-		if (opp_site_after_second != stt_1 && opp_site_after_second != stt_2 && opp_site_after_second != S1 && opp_site_after_second != S2) {
-			if ((int)opp_site_after_second->type >= 500 && (int)opp_site_after_second->type <= 700) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -400);
-			else if ((int)opp_site_after_second->type >= 1000 && (int)opp_site_after_second->type <= 2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, -800);
-
-			if ( (int)opp_site_after_second->type >=2000) updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +100);
-			else updateSites(opp_site_after_second, opp_site_after_second->C1, opp_site_after_second->C2, +2000);
-
-			updateCombinedSitesMigration(opp_site_after_second);
-			Spointer opps1 = moveIt(opp_site_after_second,-1);
-			Spointer opps2 = moveIt(opp_site_after_second,+1);
-			updateCombinedSitesMigration(opps1); updateCombinedSitesMigration(opps2);
-		}
-	}
 }
 
 // ************************************************************
@@ -12123,12 +11985,10 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	//It assumes the starting site is an R5R6 site or similar.
 	// First select carbons and sites affected.
 	int ii = migr_index;
-	Cpointer CFE, CRem, CRem_next, CRem_before, CR5_otherside_1, CR5_otherside_2;
+	Cpointer CFE, CRem, CRem_next, CRem_before;
 	Spointer checkR5_1, checkR5_2;
 	if (b4) {
 		CFE = C_2->C1;
-		CR5_otherside_1 = C_2->C2;
-		CR5_otherside_2 = C_2->C1;
 		checkR5_1 = moveIt(sFE2, -1);
 		checkR5_2 = moveIt(sFE2, -2);
 		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C1;
@@ -12138,8 +11998,6 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	}
 	else {
 		CFE = C_1;
-		CR5_otherside_1 = C_1->C1;
-		CR5_otherside_2 = C_1->C2;
 		checkR5_1 = moveIt(sFE2, +1);
 		checkR5_2 = moveIt(sFE2, +2);
 		if (checkR5_1->type == FE && sFE2->type == FE) CRem = sFE2->C2;
@@ -14414,7 +14272,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		Cpointer start_site_C2 = start_site->C2;
 
 		proc_M5R_ACR5_around_corner(start_site,start_site_C1,start_site_C2,sFE2,b4,ii);
-		return;
 	}
 
 	//After this point we know that the process is accepted!
@@ -14441,181 +14298,203 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		return;
 	}
 
-	// edit sites. first identify the neighbouring sites of resulting RFE & R5
 	Spointer S3, S4, S5, S6;
-	if (b4) {
-		S1 = moveIt(sFE2, -1);
-		if ((int)sFE2->type == 0){ //sFE2 is a FE
-			if ((int)S1->type == 0){ //S1 is a FE
-				//R5 has moved to the edge and will now be free.
-				//Since the FE2 will not move anymore it is probably a good idea to remove the walker.
-				convSiteType(stt, stt->C1, stt->C2, RFE);
-				convSiteType(sFE2, sFE2->C1, sFE2->C2, R5);
-				convSiteType(checkR5_1, checkR5_1->C1, checkR5_1->C2, R5);
-				updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, +100);
-				Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[ii]);
-				Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
-				if(site_perf==site_perf_2) proc_M5R_ACR5_termination_toR5(site_perf,site_perf->C1,site_perf->C2,sFE2,b4,steps);
-				else proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
-				//sFE2 is deleted in the previous call so we must not call it again from here.
-				//updateCombinedSitesMigration(stt); updateCombinedSitesMigration(checkR5_1); updateCombinedSitesMigration(checkR5_2);
-				m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
-				addR5internal(checkR5_1->C1,checkR5_1->C2);
-				Spointer start_site, end_site, S1, S2, S3, S4, S5, S6;
-				if (b4) {
-					start_site = moveIt(stt,1);
-					end_site = moveIt(start_site, -1);
-					S1 = moveIt(end_site, -1);
-					S2 = moveIt(start_site, +1);
-					S3 = moveIt(S1, -1);
-					S4 = moveIt(S2, 1);
-					S5 = moveIt(S1, -2);
-					S6 = moveIt(S2, 2);
-					updateCombinedSitesMigration(start_site);
+	if (!leave_corner && !leave_edge){
+		// edit sites. first identify the neighbouring sites of resulting RFE & R5
+		if (b4) {
+			S1 = moveIt(sFE2, -1);
+			if ((int)sFE2->type == 0){ //sFE2 is a FE
+				if ((int)S1->type == 0){ //S1 is a FE
+					//R5 has moved to the edge and will now be free.
+					//Since the FE2 will not move anymore it is probably a good idea to remove the walker.
+					convSiteType(stt, stt->C1, stt->C2, RFE);
+					convSiteType(sFE2, sFE2->C1, sFE2->C2, R5);
+					convSiteType(checkR5_1, checkR5_1->C1, checkR5_1->C2, R5);
+					updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, +100);
+					Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[ii]);
+					Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
+					if(site_perf==site_perf_2) proc_M5R_ACR5_termination_toR5(site_perf,site_perf->C1,site_perf->C2,sFE2,b4,steps);
+					else proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+					//sFE2 is deleted in the previous call so we must not call it again from here.
+					//updateCombinedSitesMigration(stt); updateCombinedSitesMigration(checkR5_1); updateCombinedSitesMigration(checkR5_2);
+					m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
+					addR5internal(checkR5_1->C1,checkR5_1->C2);
+					Spointer start_site, end_site, S1, S2, S3, S4, S5, S6;
+					if (b4) {
+						start_site = moveIt(stt,1);
+						end_site = moveIt(start_site, -1);
+						S1 = moveIt(end_site, -1);
+						S2 = moveIt(start_site, +1);
+						S3 = moveIt(S1, -1);
+						S4 = moveIt(S2, 1);
+						S5 = moveIt(S1, -2);
+						S6 = moveIt(S2, 2);
+						updateCombinedSitesMigration(start_site);
+						updateCombinedSitesMigration(end_site); 
 					updateCombinedSitesMigration(end_site); 
-					updateCombinedSitesMigration(S1);
-					updateCombinedSitesMigration(S2);
-					updateCombinedSitesMigration(S3);
-					updateCombinedSitesMigration(S4);
-					updateCombinedSitesMigration(S5);
-					updateCombinedSitesMigration(S6);
-				}
-				else {
-					start_site = moveIt(stt,-1);
-					end_site = moveIt(start_site, +1);
+						updateCombinedSitesMigration(end_site); 
+					updateCombinedSitesMigration(end_site); 
+						updateCombinedSitesMigration(end_site); 
+						updateCombinedSitesMigration(S1);
+						updateCombinedSitesMigration(S2);
+						updateCombinedSitesMigration(S3);
+						updateCombinedSitesMigration(S4);
+						updateCombinedSitesMigration(S5);
+						updateCombinedSitesMigration(S6);
+					}
+					else {
+						start_site = moveIt(stt,-1);
+						end_site = moveIt(start_site, +1);
+						S1 = moveIt(start_site, -1); 
 					S1 = moveIt(start_site, -1); 
-					S2 = moveIt(end_site, 1);
-					S3 = moveIt(S1, -1);
-					S4 = moveIt(S2, 1);
-					S5 = moveIt(S1, -2);
-					S6 = moveIt(S2, 2);
-					updateCombinedSitesMigration(start_site);
+						S1 = moveIt(start_site, -1); 
+					S1 = moveIt(start_site, -1); 
+						S1 = moveIt(start_site, -1); 
+						S2 = moveIt(end_site, 1);
+						S3 = moveIt(S1, -1);
+						S4 = moveIt(S2, 1);
+						S5 = moveIt(S1, -2);
+						S6 = moveIt(S2, 2);
+						updateCombinedSitesMigration(start_site);
+						updateCombinedSitesMigration(end_site); 
 					updateCombinedSitesMigration(end_site); 
-					updateCombinedSitesMigration(S1);
-					updateCombinedSitesMigration(S2);
-					updateCombinedSitesMigration(S3);
-					updateCombinedSitesMigration(S4);
-					updateCombinedSitesMigration(S5);
-					updateCombinedSitesMigration(S6);
-				}
-				return;
+						updateCombinedSitesMigration(end_site); 
+					updateCombinedSitesMigration(end_site); 
+						updateCombinedSitesMigration(end_site); 
+						updateCombinedSitesMigration(S1);
+						updateCombinedSitesMigration(S2);
+						updateCombinedSitesMigration(S3);
+						updateCombinedSitesMigration(S4);
+						updateCombinedSitesMigration(S5);
+						updateCombinedSitesMigration(S6);
+					}
+					return;
+					//Need to check for opposite site logic before returning.			
 				//Need to check for opposite site logic before returning.			
+					//Need to check for opposite site logic before returning.			
+				//Need to check for opposite site logic before returning.			
+					//Need to check for opposite site logic before returning.			
+				}
+				else{
+					convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
+					int stype = S1->type;
+					if (stype >= 2002 && stype <= 2204) {
+						stype = stype + 100;
+						convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype);
+					}
+					else {
+						stype = stype + 500;
+						convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype);
+						//updateSites(S1, S1->C1, sFE2->C1, 5);
+					}
+				}
+			}
+			else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
+				convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
+			}
+			else if ((int)sFE2->type == 2){ //sFE2 is a AC
+				convSiteType(sFE2, sFE2->C1, sFE2->C2, FEACR5);
+			}
+			else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+				convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
+			}
+			else if ((int)sFE2->type == 4){ //sFE2 is a BY6
+				convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
+			}
+			else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
+			}
+			else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a R5 neighbour {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
+			}
+			else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a R5 neighbour {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
+			}
+			convSiteType(stt, stt->C2->C1, stt->C2, FE); //stt is originally the R5R6 site that will become the new FE site
+			S2 = moveIt(stt, 1); // neighbour of stt
+			int stype;
+			if ( (int)S2->type >= 2103 && (int)S2->type <= 2205 ) stype = S2->type - 100;
+			else stype = S2->type - 500;
+			convSiteType(S2, S2->C1, S2->C2, (kmcSiteType)stype);
+			/*if ((int)S2->type >= 10 && (int)S2->type <= 12){ //The site in the middle had 2R5s to each site, so lucky!
+				updateSites(S2, stt->C2, S2->C2, -3); //convert the neighbour to its same version but next to an R5
 			}
 			else{
-				convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
-				int stype = S1->type;
-				if (stype >= 2002 && stype <= 2204) {
-					stype = stype + 100;
-					convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype);
+				int stype = S2->type - 55;
+				convSiteType(S2, stt->C2, S2->C2, (kmcSiteType)stype);
+				//updateSites(S2, stt->C2, S2->C2, -5); //convert the neighbour to its same version but next to an R5
+			}
+			*/
+		}
+		else {
+			S2 = moveIt(sFE2, 1);
+			if ((int)sFE2->type == 0){ //sFE2 is a FE
+				if ((int)S2->type == 0){ //S2 is a FE
+					convSiteType(stt, stt->C1, stt->C2, ZZ);
+					convSiteType(sFE2, sFE2->C1, sFE2->C2, RFE);
+					convSiteType(checkR5_1, checkR5_1->C1, checkR5_1->C2, R5);
+					updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, +100);
 				}
 				else {
-					stype = stype + 500;
-					convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype);
-					//updateSites(S1, S1->C1, sFE2->C1, 5);
+					convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
+					int stype = S2->type;
+					if (stype >= 2002 && stype <= 2204) {
+						stype = stype + 100;
+						convSiteType(S2, S2->C1, S2->C2, (kmcSiteType)stype);
+					}
+					else {
+						stype = stype + 500;
+						convSiteType(S2, S2->C1, S2->C2, (kmcSiteType)stype);
+						//updateSites(S2, sFE2->C2, S2->C2, 5);
+					}
 				}
 			}
-		}
-		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
-			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
-		}
-		else if ((int)sFE2->type == 2){ //sFE2 is a AC
-			convSiteType(sFE2, sFE2->C1, sFE2->C2, FEACR5);
-		}
-		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
-			convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
-		}
-		else if ((int)sFE2->type == 4){ //sFE2 is a BY6
-			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
-		}
-		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
-			updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
-		}
-		else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a R5 neighbour {
-			updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
-		}
-		else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a R5 neighbour {
-			updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
-		}
-		convSiteType(stt, stt->C2->C1, stt->C2, FE); //stt is originally the R5R6 site that will become the new FE site
-		S2 = moveIt(stt, 1); // neighbour of stt
-		int stype;
-		if ( (int)S2->type >= 2103 && (int)S2->type <= 2205 ) stype = S2->type - 100;
-		else stype = S2->type - 500;
-		convSiteType(S2, S2->C1, S2->C2, (kmcSiteType)stype);
-		/*if ((int)S2->type >= 10 && (int)S2->type <= 12){ //The site in the middle had 2R5s to each site, so lucky!
-			updateSites(S2, stt->C2, S2->C2, -3); //convert the neighbour to its same version but next to an R5
-		}
-		else{
-			int stype = S2->type - 55;
-			convSiteType(S2, stt->C2, S2->C2, (kmcSiteType)stype);
-			//updateSites(S2, stt->C2, S2->C2, -5); //convert the neighbour to its same version but next to an R5
-		}
-		*/
-	}
-	else {
-		S2 = moveIt(sFE2, 1);
-		if ((int)sFE2->type == 0){ //sFE2 is a FE
-			if ((int)S2->type == 0){ //S2 is a FE
-				convSiteType(stt, stt->C1, stt->C2, ZZ);
-				convSiteType(sFE2, sFE2->C1, sFE2->C2, RFE);
-				convSiteType(checkR5_1, checkR5_1->C1, checkR5_1->C2, R5);
-				updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, +100);
+			else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
+				convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
 			}
-			else {
-				convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
-				int stype = S2->type;
-				if (stype >= 2002 && stype <= 2204) {
-					stype = stype + 100;
-					convSiteType(S2, S2->C1, S2->C2, (kmcSiteType)stype);
-				}
-				else {
-					stype = stype + 500;
-					convSiteType(S2, S2->C1, S2->C2, (kmcSiteType)stype);
-					//updateSites(S2, sFE2->C2, S2->C2, 5);
-				}
+			else if ((int)sFE2->type == 2){ //sFE2 is a AC
+				convSiteType(sFE2, sFE2->C1, sFE2->C2, FEACR5);
 			}
-		}
-		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
-			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
-		}
-		else if ((int)sFE2->type == 2){ //sFE2 is a AC
-			convSiteType(sFE2, sFE2->C1, sFE2->C2, FEACR5);
-		}
-		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
-			convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
-		}
-		else if ((int)sFE2->type == 4){ //sFE2 is a BY6
-			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
-		}
-		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
-			updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
-		}
-		else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a BY5 {
-			updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
-		}
-		else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a BY5 {
-			updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
-		}
+			else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+				convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
+			}
+			else if ((int)sFE2->type == 4){ //sFE2 is a BY6
+				convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
+			}
+			else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
+			}
+			else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a BY5 {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
+			}
+			else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a BY5 {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
+			}
+			convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
 		convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
-		S1 = moveIt(stt, -1); // neighbour of stt
-		int stype;
-		if ( (int)S1->type >= 2103 && (int)S1->type <= 2205 ) stype = S1->type - 100;
-		else stype = S1->type - 500;
-		convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype);
-		/*if ((int)S1->type >= 10 && (int)S1->type <= 12){ //The site in the middle had 2R5s to each site, so lucky!
-			updateSites(S1, S1->C1, stt->C1, -3); //convert the neighbour to its same version but next to ONLY ONE R5
+			convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
+		convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
+			convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
+			S1 = moveIt(stt, -1); // neighbour of stt
+			int stype;
+			if ( (int)S1->type >= 2103 && (int)S1->type <= 2205 ) stype = S1->type - 100;
+			else stype = S1->type - 500;
+			convSiteType(S1, S1->C1, S1->C2, (kmcSiteType)stype);
+			/*if ((int)S1->type >= 10 && (int)S1->type <= 12){ //The site in the middle had 2R5s to each site, so lucky!
+				updateSites(S1, S1->C1, stt->C1, -3); //convert the neighbour to its same version but next to ONLY ONE R5
+			}
+			else{
+				int stype = S1->type - 55;
+				convSiteType(S1, S1->C1, stt->C1, (kmcSiteType)stype);
+				//updateSites(S1, S1->C1, stt->C1, -5); //convert the neighbour to its same version but NOT next to an R5
+			}*/
 		}
-		else{
-			int stype = S1->type - 55;
-			convSiteType(S1, S1->C1, stt->C1, (kmcSiteType)stype);
-			//updateSites(S1, S1->C1, stt->C1, -5); //convert the neighbour to its same version but NOT next to an R5
-		}*/
-	}
-	steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
-	if((int)sFE2->type>=2003 && steps == 0) {
-		if(b4) addR5internal(sFE2->C2->C1->C1,sFE2->C2->C1,true);
-		else addR5internal(sFE2->C1->C2,sFE2->C1->C2->C2,true);
-	}
+		steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+		if((int)sFE2->type>=2003 && steps == 0) {
+			if(b4) addR5internal(sFE2->C2->C1->C1,sFE2->C2->C1,true);
+			else addR5internal(sFE2->C1->C2,sFE2->C1->C2->C2,true);
+		}
+	} //Migration without leaving corner or edge
 
 	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
 		if ( (int)opp_site->type >= 2100) {
@@ -14690,31 +14569,33 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//printStruct();
 	// update combined sites for all sites involved and their neighbours
 	// (excluding new FE sites, since their combined site type will still be None)
-	if (b4){
-		S3 = moveIt(S1, -1);
-		S4 = moveIt(S2, 1);
-		S5 = moveIt(S1, -2);
-		S6 = moveIt(S2, 2);
-	}
-	else{
-		S3 = moveIt(S1, -1);
-		S4 = moveIt(S2, 1);
-		S5 = moveIt(S1, -2);
-		S6 = moveIt(S2, 2);
-	}
-	updateCombinedSitesMigration(stt); updateCombinedSitesMigration(sFE2); updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2);
-	if (b4){
-		updateCombinedSitesMigration(S3);
-		updateCombinedSitesMigration(S4);
-		updateCombinedSitesMigration(S5);
-		updateCombinedSitesMigration(S6);
-		
-	}
-	else{
-		updateCombinedSitesMigration(S3);
-		updateCombinedSitesMigration(S4); // neighbours
-		updateCombinedSitesMigration(S5);
-		updateCombinedSitesMigration(S6);
+	if (!leave_corner && !leave_edge){
+		if (b4){
+			S3 = moveIt(S1, -1);
+			S4 = moveIt(S2, 1);
+			S5 = moveIt(S1, -2);
+			S6 = moveIt(S2, 2);
+		}
+		else{
+			S3 = moveIt(S1, -1);
+			S4 = moveIt(S2, 1);
+			S5 = moveIt(S1, -2);
+			S6 = moveIt(S2, 2);
+		}
+		updateCombinedSitesMigration(stt); updateCombinedSitesMigration(sFE2); updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2);
+		if (b4){
+			updateCombinedSitesMigration(S3);
+			updateCombinedSitesMigration(S4);
+			updateCombinedSitesMigration(S5);
+			updateCombinedSitesMigration(S6);
+			
+		}
+		else{
+			updateCombinedSitesMigration(S3);
+			updateCombinedSitesMigration(S4); // neighbours
+			updateCombinedSitesMigration(S5);
+			updateCombinedSitesMigration(S6);
+		}
 	}
 }
 
