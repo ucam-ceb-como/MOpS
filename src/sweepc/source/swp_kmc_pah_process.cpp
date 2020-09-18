@@ -2945,7 +2945,7 @@ void PAHProcess::passbackPAH(OpenBabel::OBMol mol) {
 	}
 	m_pah->m_optimised = true;
 }
-
+int total_error_counter = 0;
 int forcefield_error_counter = 0;
 //! Minimisation of a PAH
 OpenBabel::OBMol PAHProcess::optimisePAH(OpenBabel::OBMol mol, int nsteps, std::string forcefield) {
@@ -6263,6 +6263,16 @@ int r7_error_counter = 0;
 //! Structure processes: returns success or failure
 bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID)
 {
+	total_error_counter = perform_process_error_counter + r5_error_counter + r7_error_counter + 
+						forcefield_error_counter + updatesites_error_counter + convSiteType_error_counter;
+	if (total_error_counter >=20){
+		std::ostringstream msg;
+		msg << "ERROR: Over 20 error files have been written. Terminating program."
+			<< " (Sweep::KMC_ARS::PAHProcess::performProcess)";
+		throw std::runtime_error(msg.str());
+		assert(false);
+		abort();
+	}
     //printStruct();
     //cout << "Start Performing Process..\n";
     kmcSiteType stp = jp.getSiteType();
@@ -13776,7 +13786,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 
 
 	Spointer sFE2, checkR5_1, checkR5_2;
-	Cpointer CRem, CRem_before, CRem_next, CFE, CR5_otherside_1, CR5_otherside_2;
+	Cpointer CRem, CRem_next, CFE, CR5_otherside_1, CR5_otherside_2;
 	if (b4) {
 		sFE2 = moveIt(stt, -1);
 		checkR5_1 = moveIt(stt, -2);
@@ -13784,14 +13794,16 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		CFE = C_1->C2; //Not modified but pointer created
 		CRem = sFE2->C2; //Not modified but pointer created
 		CRem_next = CRem->C1;
-		CRem_before = CRem->C2;
-		if (SiteSize(stt)==4) {
-			CR5_otherside_1 = C_1->C2;
-			CR5_otherside_2 = C_1->C1;
-		}else{
+		if (steps == 0){
 			CR5_otherside_1 = C_1->C2->C2;
 			CR5_otherside_2 = C_1->C2;
-		}
+			CRem_next = CRem->C1;
+		} else {
+			CR5_otherside_1 = C_1->C2;
+			CR5_otherside_2 = C_1->C1;
+			if (CR5_otherside_2->C1->A=='H') CRem_next = CR5_otherside_2->C1->C1;
+			else CRem_next = CR5_otherside_2->C1;
+		} 
 	}
 	else {
 		sFE2 = moveIt(stt, 1);
@@ -13800,14 +13812,16 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		CFE = C_2->C1->C1; //Not modified but pointer created
 		CRem = sFE2->C1; //Not modified but pointer created
 		CRem_next = CRem->C2; 
-		CRem_before = CRem->C1;
-		if (SiteSize(stt)==4) {
+		if (steps == 0){
+			CR5_otherside_1 = C_2->C1->C1;
+			CR5_otherside_2 = C_2->C1;
+			CRem_next = CRem->C2;
+		} else {
 			CR5_otherside_1 = C_2->C1;
 			CR5_otherside_2 = C_2->C2;
-		} else {
-			CR5_otherside_1 = C_2->C1->C1;
-		 	CR5_otherside_2 = C_2->C1;
-		}
+			if (CR5_otherside_2->C2->A=='H') CRem_next = CR5_otherside_2->C2->C2;
+			else CRem_next = CR5_otherside_2->C2;
+		} 
 	}
 
 	// check if ACR5 has an opposite site.
@@ -13831,7 +13845,12 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	}
 	if (thirdC2 != NULLC) {
 		opp_site_second = findSite(thirdC2);
-		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
+		if (opp_site_bool && opp_site_second == opp_site) opp_site_bool_second = false;
+		else if (opp_site_second != m_pah->m_siteList.end()) {
+			opp_site_bool_second = true;
+			int jj = findWalker(opp_site_second);
+			ii = remOppsiteR5Walker(ii, jj);
+		}
 	}
 	bool end_site_allowed = true;
 	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
@@ -13855,6 +13874,32 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	}
 
 	//After this point we know that the process is accepted!
+	//Check migration on the other side
+	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+	}else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+		addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+	}else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		int jj = findWalker(opp_site_second);
+		ii = remOppsiteR5Walker(ii, jj);
+	}else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after){
+		int jj = findWalker(opp_site_second);
+		ii = remOppsiteR5Walker(ii, jj);
+		addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+			addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+		addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}
+	
 	if (b4) {
 		std::get<2>(m_pah->m_R5walker_sites[ii])--;
 	}
@@ -14236,17 +14281,27 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	checkR5Walkers(ii);
 
 	Spointer sFE2, checkR5_1, checkR5_2;
-	Cpointer CRem, CRem_before, CRem_next, CFE, CR5_otherside_1, CR5_otherside_2;
+	Cpointer CRem, CRem_next, CFE, CR5_otherside_1, CR5_otherside_2;
 	if (b4) {
 		sFE2 = moveIt(stt, -1);
 		checkR5_1 = moveIt (stt, -2);
 		checkR5_2 = moveIt (stt, -3);
 		CFE = C_1->C2;
 		CRem = sFE2->C2;
-		CRem_next = CRem->C1;
-		CRem_before = CRem->C2;
-		CR5_otherside_1 = C_2->C2;
-		CR5_otherside_2 = C_2->C1;
+		if (steps == 0){
+			CRem_next = CRem->C1;
+			CR5_otherside_1 = C_2->C2;
+			CR5_otherside_2 = C_2->C1;
+		} else if (steps > 0){
+			CR5_otherside_1 = C_2->C2;
+			CR5_otherside_2 = C_2->C1->C1;
+			if (C_2->C1->C1->C1->A=='H') CRem_next = C_2->C1->C1->C1->C1;
+			else CRem_next = C_2->C1->C1->C1;
+		} else{
+			CR5_otherside_1 = C_2->C2->C2;
+			CR5_otherside_2 = C_2->C1;
+			CRem_next = C_1->C1;
+		}
 	}
 	else {
 		sFE2 = moveIt(stt, 1);
@@ -14254,10 +14309,20 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		checkR5_2 = moveIt (stt, 3);
 		CFE = C_1;
 		CRem = sFE2->C1;
-		CRem_next = CRem->C2;
-		CRem_before = CRem->C1;
-		CR5_otherside_1 = C_1->C1;
-		CR5_otherside_2 = C_1->C2;
+		if (steps == 0){
+			CRem_next = CRem->C2;
+			CR5_otherside_1 = C_1->C1;
+			CR5_otherside_2 = C_1->C2;
+		} else if (steps > 0){
+			CR5_otherside_1 = C_1->C1->C1;
+			CR5_otherside_2 = C_1->C2;
+			CRem_next = C_2->C2;
+		} else{
+			CR5_otherside_1 = C_1->C1;
+			CR5_otherside_2 = C_1->C2->C2;
+			if (C_1->C2->C2->C2->A=='H') CRem_next = C_1->C2->C2->C2->C2;
+			else CRem_next = C_1->C2->C2->C2;
+		}
 	}
 
 	// check if R5R6 has an opposite site.
@@ -14304,6 +14369,32 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	}
 
 	//After this point we know that the process is accepted!
+		//Check migration on the other side
+	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+	}else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+		addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+	}else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		int jj = findWalker(opp_site_second);
+		ii = remOppsiteR5Walker(ii, jj);
+	}else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after){
+		int jj = findWalker(opp_site_second);
+		ii = remOppsiteR5Walker(ii, jj);
+		addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+			addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+		addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}
+	//Modify
 	if (leave_edge){
 		//The R5 will leave the current edge and move to other edge. 
 		//This movement around the corner needs to correct the number of sites. 
@@ -14660,31 +14751,6 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		boost::variate_generator<rng_type&, boost::bernoulli_distribution<> > choiceGenerator(rng, choiceDistrib);
 		b4 = choiceGenerator(); // if FE3 on both sides, choose a random one
 	}*/
-	Spointer sFE2, checkR5_1, checkR5_2;
-	Cpointer CRem, CFE, CRem_before, CRem_next, CR5_otherside_1, CR5_otherside_2;
-	if (b4) {
-		sFE2 = moveIt(stt, -1);
-		checkR5_1 = moveIt(stt, -2);
-		checkR5_2 = moveIt(stt, -3);
-		CFE = C_1->C2; 
-		CRem = sFE2->C2; 
-		CRem_next = CRem->C1;
-		CRem_before = CRem->C2;
-		CR5_otherside_1 = C_1->C2->C2;
-		CR5_otherside_2 = C_1->C2;
-	}
-	else {
-		sFE2 = moveIt(stt, 1);
-		checkR5_1 = moveIt(stt, 2);
-		checkR5_2 = moveIt(stt, 3);
-		CFE = C_2->C1->C1; //Not modified but pointer created
-		CRem = sFE2->C1; //Not modified but pointer created
-		CRem_next = CRem->C2; 
-		CRem_before = CRem->C1;
-		CR5_otherside_1 = C_2->C1->C1;
-		CR5_otherside_2 = C_2->C1;
-	}
-	//cpair R5coords = findR5internal(stt->C1->C2,stt->C1->C2->C2);
 
 	int steps=-99999;
 	unsigned int ii = 0;
@@ -14723,6 +14789,43 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	if (CRem_next->bridge) allowed = false;
 	if (CRem_next->C2->bridge) allowed = false; if (CRem_next->C1->bridge) allowed = false;
 	if (CRem_next->C2->C2->bridge) allowed = false; if (CRem_next->C1->C1->bridge) allowed = false;*/
+
+	Spointer sFE2, checkR5_1, checkR5_2;
+	Cpointer CRem, CFE, CRem_next, CR5_otherside_1, CR5_otherside_2;
+	if (b4) {
+		sFE2 = moveIt(stt, -1);
+		checkR5_1 = moveIt(stt, -2);
+		checkR5_2 = moveIt(stt, -3);
+		CFE = C_1->C2; 
+		CRem = sFE2->C2; 
+		if (steps == 0){
+			CR5_otherside_1 = C_1->C2->C2;
+			CR5_otherside_2 = C_1->C2;
+			CRem_next = CRem->C1;
+		} else {
+			CR5_otherside_1 = C_1->C2;
+			CR5_otherside_2 = C_1->C1;
+			if (CR5_otherside_2->C1->A=='H') CRem_next = CR5_otherside_2->C1->C1;
+			else CRem_next = CR5_otherside_2->C1;
+		} 
+	}
+	else {
+		sFE2 = moveIt(stt, 1);
+		checkR5_1 = moveIt(stt, 2);
+		checkR5_2 = moveIt(stt, 3);
+		CFE = C_2->C1->C1; //Not modified but pointer created
+		CRem = sFE2->C1; //Not modified but pointer created
+		if (steps == 0){
+			CR5_otherside_1 = C_2->C1->C1;
+			CR5_otherside_2 = C_2->C1;
+			CRem_next = CRem->C2;
+		} else {
+			CR5_otherside_1 = C_2->C1;
+			CR5_otherside_2 = C_2->C2;
+			if (CR5_otherside_2->C2->A=='H') CRem_next = CR5_otherside_2->C2->C2;
+			else CRem_next = CR5_otherside_2->C2;
+		} 
+	}
 	
 	// check if ACR5 has an opposite site.
 	Spointer opp_site, opp_site_second, opp_site_after;
@@ -14768,6 +14871,31 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	}
 
 	//After this point we know that the process is accepted!
+		//Check migration on the other side
+	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+	}else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+		addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+	}else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		int jj = findWalker(opp_site_second);
+		ii = remOppsiteR5Walker(ii, jj);
+	}else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after){
+		int jj = findWalker(opp_site_second);
+		ii = remOppsiteR5Walker(ii, jj);
+		addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+			addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after){
+		int jj = findWalker(opp_site);
+		ii = remOppsiteR5Walker(ii, jj);
+		addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}
 	if (b4) {
 		std::get<2>(m_pah->m_R5walker_sites[ii])--;
 	}
@@ -15883,4 +16011,61 @@ void PAHProcess::checkRemR5Walkers(int jj, bool b4, Spointer sFE2){
 			}
 		}
 	}
+}
+
+//! Find the walker associated with a site .
+int PAHProcess::findWalker(Spointer current_site){
+	unsigned int ii = -9999;
+	for (unsigned int jj=0;jj!=m_pah->m_R5walker_sites.size();jj++){
+		Spointer start_site = std::get<0>(m_pah->m_R5walker_sites[jj]);
+		Spointer start_site_2 = std::get<1>(m_pah->m_R5walker_sites[jj]);
+		int steps = std::get<2>(m_pah->m_R5walker_sites[jj]);
+		Spointer check_site = moveIt(start_site, steps);
+		Spointer check_site_2 = moveIt(start_site_2, steps);
+		if (check_site == current_site || check_site_2 == current_site){
+			ii = jj;
+			return ii;
+		}
+	}
+	std::cout << "Error. findWalker could not find associated walker." << std::endl;
+	std::ostringstream msg;
+            msg << "Error. findWalker could not find associated walker." << std::endl;
+	printSitesMigration();
+	throw std::runtime_error(msg.str());
+    assert(false);
+}
+
+//! Adds walker when an opposite side site can now migrate.
+void PAHProcess::addOppsiteR5Walker(Spointer opp_site, Spointer opp_site_coupled){
+	std::tuple<Spointer,Spointer,int> new_walker = std::make_tuple(opp_site,opp_site_coupled,0);
+	m_pah->m_R5walker_sites.push_back(new_walker);
+}
+
+//! Remove opposite side site walker and modifies structure if needed. Removes walker jj and modifies walker ii. Returns the new position of ii.
+int PAHProcess::remOppsiteR5Walker(int ii, int jj){
+	//ii is the walker that is moving.
+	//jj is the walker on the opposite side.
+	int ii_steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+	if (ii_steps == 0){
+		//The current walker has 0 steps and an opposite side site. This means that the walker comes from other edge.
+		//Move walker jj to where it jumped edges.
+		Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[jj]);
+		Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[jj]);
+		int steps = std::get<2>(m_pah->m_R5walker_sites[jj]);
+		Spointer sFE2 = moveIt(site_perf,steps);
+		bool b4;
+		if(steps < 0) b4 = true;
+		else b4 = false;
+		if (site_perf->type == FE) proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		else if((int)site_perf->type < 2000) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		else if ((int)site_perf->type>=2000 && (int)site_perf->type<=2100) proc_M5R_FEACR5_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+		//Delete walker jj
+		m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin() + jj);
+	} else{
+		//The current walker has non-zero steps and an opposite side site. This means that the walker is on this edge.
+		//Remove walker jj.
+		m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin() + jj);
+	}
+	if (ii>jj) ii--;
+	return ii;
 }

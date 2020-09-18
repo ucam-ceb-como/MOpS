@@ -206,6 +206,12 @@ public:
     void checkR5Walkers(int jj);
     //! Modifies pointer for R5 walker that moves into one of the coupled sites of other walker.
     void checkRemR5Walkers(int jj, bool b4, Spointer sFE2);
+    //! Find the walker associated with a site .
+    int findWalker(Spointer current_site);
+    //! Adds walker when an opposite side site can now migrate.
+    void addOppsiteR5Walker(Spointer opp_site, Spointer opp_site_coupled);
+    //! Remove opposite side site walker and modifies structure if needed. Removes walker jj and modifies walker ii. Returns the new position of ii.
+    int remOppsiteR5Walker(int ii, int jj);
 	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.
 	OpenBabel::OBMol passPAH(bool detectBonds=true);
 	//! Connects the atoms in a PAH using OpenBabel routines. Equivalent to OpenBabel::OBMol::ConnectTheDots();
