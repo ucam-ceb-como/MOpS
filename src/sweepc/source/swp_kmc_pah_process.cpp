@@ -5717,6 +5717,7 @@ PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, int, cpair, cpa
 					Cpos->C3 = Cbridge; Cbridge->C3 = Cpos;
 					connectToC(newC, Cpos);
 					Cbridge->C2 = NULLC;
+					newC = Cbridge;
 				}
 				it++;
 			}
@@ -5725,7 +5726,7 @@ PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, int, cpair, cpa
 	
 	m_pah->m_clast = newC;
 	connectToC(m_pah->m_clast, m_pah->m_cfirst);
-	printStruct();
+	//printStruct();
 
 	//Add sites	
 	m_pah->m_siteList.clear(); //cout << "m_pah->m_siteList cleared!\n";
@@ -9328,6 +9329,7 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     }
 	CRem_before = CRem->C1;
 	CRem_next = CRem->C2;
+	if (S1->type==RFE || S2->type==RFE || S1->type==R5R6 || S2->type==R5R6) return;
 	
 	//This section assumes that the oxidation of an FE2 site on an heptagon forms a six-member ring. Needs confirmation.
 	bool heptagon_flag = false;
@@ -9349,7 +9351,7 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		cpair R5coords_end = endposR5internal(CRem_before, CRem);
 		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
 			double distR5s = getDistance_twoC(*it, R5coords_end);
-			if (distR5s < 2.8) {
+			if (distR5s < 3.0) {
 				//This distance is a parameter of this jump process. Might need some more tuning. 
 				//2.8 seems appropiate but may reject too many jumps.
 				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
@@ -14342,7 +14344,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		Cpointer start_site_C2 = start_site->C2;
 
 		proc_M5R_R5R6_out_of_corner(start_site,start_site_C1,start_site_C2,sFE2,b4,ii);
-		return;
 	}
 
 	Spointer S3, S4, S5, S6;
@@ -14378,10 +14379,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 						S6 = moveIt(S2, 2);
 						updateCombinedSitesMigration(start_site);
 						updateCombinedSitesMigration(end_site); 
-					updateCombinedSitesMigration(end_site); 
-						updateCombinedSitesMigration(end_site); 
-					updateCombinedSitesMigration(end_site); 
-						updateCombinedSitesMigration(end_site); 
 						updateCombinedSitesMigration(S1);
 						updateCombinedSitesMigration(S2);
 						updateCombinedSitesMigration(S3);
@@ -14393,9 +14390,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 						start_site = moveIt(stt,-1);
 						end_site = moveIt(start_site, +1);
 						S1 = moveIt(start_site, -1); 
-					S1 = moveIt(start_site, -1); 
-						S1 = moveIt(start_site, -1); 
-					S1 = moveIt(start_site, -1); 
 						S1 = moveIt(start_site, -1); 
 						S2 = moveIt(end_site, 1);
 						S3 = moveIt(S1, -1);
@@ -14403,10 +14397,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 						S5 = moveIt(S1, -2);
 						S6 = moveIt(S2, 2);
 						updateCombinedSitesMigration(start_site);
-						updateCombinedSitesMigration(end_site); 
-					updateCombinedSitesMigration(end_site); 
-						updateCombinedSitesMigration(end_site); 
-					updateCombinedSitesMigration(end_site); 
 						updateCombinedSitesMigration(end_site); 
 						updateCombinedSitesMigration(S1);
 						updateCombinedSitesMigration(S2);
@@ -14517,10 +14507,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a BY5 {
 				updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
 			}
-			convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
-		convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
-			convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
-		convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
 			convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
 			S1 = moveIt(stt, -1); // neighbour of stt
 			int stype;
