@@ -399,6 +399,8 @@ void PAHStructure::Serialize(std::ostream &out) const
 	Cpointer Cprev = m_cfirst;
 	
 	//If a carbon is bridged it is stored twice. This way we ensure to recover the pointers correctly.
+	int values_to_write = numofBridges()*2 + numofEdgeC();
+	int values_written = 0;
 	do {
 		val_pos = std::get<0>(Cnow->coords);
 		out.write(reinterpret_cast<const char *>(&val_pos), sizeof(val_pos));
@@ -438,7 +440,8 @@ void PAHStructure::Serialize(std::ostream &out) const
 			Cprev = Cnow;
 			Cnow = Cnow->C2;
 		}
-	}while (Cnow != m_cfirst);
+		values_written++;
+	}while (values_written!=values_to_write);
 	
 	//Save internal coordinates
 	val = m_InternalCarbons.size();

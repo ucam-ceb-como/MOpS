@@ -238,12 +238,20 @@ bool PAHProcess::HasCurvedMoeities() const {
 void PAHProcess::printStruct() const{
     // iterator set to first C in structure
     Cpointer prev = m_pah->m_cfirst;
-    Cpointer now = m_pah->m_cfirst->C2;
+    Cpointer now;
+	bool bridged_first=false;
+	if (prev->bridge) {
+		now = m_pah->m_cfirst->C3;
+		bridged_first=true;
+	}
+	else now = m_pah->m_cfirst->C2;
     // counts the number of C at edge
     unsigned int count = 0;
     // a string to display if current C is a bridge
     std::string btxt;
     angletype angle;
+	std::cout << "-----------------------------" << std::endl;
+	std::cout << "Printing detailed structure." << std::endl;
     do {
         count++;
         // checks if bridge
@@ -255,18 +263,25 @@ void PAHProcess::printStruct() const{
             angle = prev->bondAngle1;
         }
         // outputs text in the form of "X: (C-H or C-C)    bond angle with next C"
-		std::cout << "coords (" << std::get<0>(prev->coords) << "," << std::get<1>(prev->coords) << "," << std::get<2>(prev->coords) << ")" << btxt << ": C-" << prev->A << "\t" << angle << '\n';
-        // moves iterator to next C
+		std::cout << "coords (" << std::get<0>(prev->coords) << "," << std::get<1>(prev->coords) << "," << std::get<2>(prev->coords) << ")" << btxt << ": C-" << prev->A << "\t" << angle << std::endl;
+        if (bridged_first){
+			if (now == m_pah->m_cfirst->C2 && prev == m_pah->m_cfirst){
+				bridged_first = false;
+			}
+		}
+		// moves iterator to next C
         Cpointer oldnow = now;
         now = moveCPointer(prev, now);
         prev = oldnow;
     } while 
 		(!(count != 1 && std::get<0>(prev->coords) == std::get<0>(m_pah->m_cfirst->coords)
 		&& std::get<1>(prev->coords) == std::get<1>(m_pah->m_cfirst->coords)
-		&& std::get<2>(prev->coords) == std::get<2>(m_pah->m_cfirst->coords)));
+		&& std::get<2>(prev->coords) == std::get<2>(m_pah->m_cfirst->coords)
+		&& !bridged_first));
     // displays C and H counts
-    std::cout << "C Count: " << m_pah->m_counts.first << '\n';
-    std::cout << "H Count: " << m_pah->m_counts.second << '\n';
+    std::cout << "C Count: " << m_pah->m_counts.first << std::endl;
+    std::cout << "H Count: " << m_pah->m_counts.second << std::endl;
+	std::cout << "-----------------------------" << std::endl;
 }
 
 bool PAHProcess::havebridgeC(){
@@ -5662,6 +5677,18 @@ PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, int, cpair, cpa
 			if (std::get<2>(*it) == 0) updateA(newC, 'C', std::get<3>(*it));
 			if (std::get<2>(*it) == 1) updateA(newC, 'H', std::get<3>(*it));
 			if (std::get<2>(*it) == 2) updateA(newC, 'M', std::get<3>(*it));
+			if (std::get<1>(*it) == 1){
+				it++;
+				Cpointer Cbridge = addC(newC, std::make_tuple(1.0,0.0,0.0), 7.17);
+				moveC(Cbridge, std::get<0>(*it));
+				if (std::get<2>(*it) == 0) updateA(Cbridge, 'C', std::get<3>(*it));
+				if (std::get<2>(*it) == 1) updateA(Cbridge, 'H', std::get<3>(*it));
+				if (std::get<2>(*it) == 2) updateA(Cbridge, 'M', std::get<3>(*it));
+				newC->bridge = true; Cbridge->bridge = true;
+				newC->C3 = Cbridge; Cbridge->C3 = newC;
+				newC->C2 = NULLC; Cbridge->C1 = NULLC;
+				newC = Cbridge;
+			}
 		}
 		else {
 			if( !checkHindrance_C_PAH(std::get<0>(*it))){
@@ -5680,11 +5707,17 @@ PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, int, cpair, cpa
 			}
 			else{ //position already occupied
 				Cpointer Cpos = findC(std::get<0>(*it));
-				Cpointer Cbridge = Cpos->C1;
-				Cpos->bridge = true; Cbridge->bridge = true;
-				Cpos->C3 = Cbridge; Cbridge->C3 = Cpos;
-				connectToC(newC, Cpos);
-				Cbridge->C2 = NULLC;
+				Cpointer Cbridge;
+				if (Cpos == m_pah->m_cfirst->C3){
+					connectToC(newC, Cpos);
+					newC = m_pah->m_cfirst;
+				} else {
+					Cbridge = Cpos->C1;
+					Cpos->bridge = true; Cbridge->bridge = true;
+					Cpos->C3 = Cbridge; Cbridge->C3 = Cpos;
+					connectToC(newC, Cpos);
+					Cbridge->C2 = NULLC;
+				}
 				it++;
 			}
 		}
@@ -5692,7 +5725,8 @@ PAHStructure& PAHProcess::initialise(std::vector<std::tuple<int, int, cpair, cpa
 	
 	m_pah->m_clast = newC;
 	connectToC(m_pah->m_clast, m_pah->m_cfirst);
-	
+	printStruct();
+
 	//Add sites	
 	m_pah->m_siteList.clear(); //cout << "m_pah->m_siteList cleared!\n";
     for(std::vector<std::tuple<int, int, cpair, cpair>>::iterator it=siteList_vector.begin(); it!=siteList_vector.end(); it++) {
@@ -5812,7 +5846,7 @@ PAHStructure& PAHProcess::initialise_sitelist_string(std::string siteList_str, i
 
 // Create Structure from vector of site types. This function is used to assign PAHs from output files.
 void PAHProcess::createPAH_sitelist_string(std::vector<kmcSiteType>& vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, int num_C, int num_H, int num_CH3) {
-    //This function worked with Serialise and Deserialaise to recognise identical PAHs through the simulation and avoid memory requirements.
+    //This function worked with Serialise and Deserialise to recognise identical PAHs through the simulation and avoid memory requirements.
 	//However, the existence of 3D structures makes it extremely hard for the program to recognise repeated structures. Because of this,
 	//it was decided that this function would just reproduce the statistics saved from the binary files to be able to compute mass spectra. 
 	//If a PAH is desired for postprocessing, defining it in an additional list "tracked_pahs.txt" will produce its output through the OB routines.
@@ -15294,7 +15328,10 @@ std::vector<std::tuple<cpair, int, int, cpair>> PAHProcess::EdgeCarbonVector_clo
 			Cprev = Cnow;
 			Cnow = Cnow->C2;
 		}
-	}while (Cnow!=m_pah->m_cfirst);
+	}while (temp.size() < m_pah->m_cpositions.size() + numberOfBridges()*2);
+	if (Cnow!=m_pah->m_cfirst){
+		std::cout << "Warning. EdgeCarbonVector_clone() did not finish at m_pah->m_cfirst." <<std::endl;
+	}
 	return temp;
 }
 
