@@ -7667,7 +7667,7 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		newpos = std::make_tuple(std::get<0>(CRem_before->C1->coords) + dist * std::get<0>(start_dir) + dist2 * std::get<0>(crossvec), std::get<1>(CRem_before->C1->coords) + dist * std::get<1>(start_dir) + dist2 * std::get<1>(crossvec), std::get<2>(CRem_before->C1->coords) + dist * std::get<2>(start_dir) + dist2 * std::get<2>(crossvec));
 	} else{
 		dist = dist /2.0;
-		newpos = std::make_tuple(std::get<0>(CRem_before->C1->coords) + dist * std::get<0>(start_dir), std::get<1>(CRem_before->C1->coords) + dist * std::get<1>(start_dir) , std::get<2>(CRem_before->C1->coords) + dist * std::get<2>(start_dir));
+		newpos = std::make_tuple(std::get<0>(CRem_before->C1->coords) + dist * std::get<0>(start_dir) + dist/2.0 * std::get<0>(crossvec), std::get<1>(CRem_before->C1->coords) + dist * std::get<1>(start_dir)  + dist/2.0 * std::get<1>(crossvec), std::get<2>(CRem_before->C1->coords) + dist * std::get<2>(start_dir)  + dist/2.0 * std::get<2>(crossvec));
 		optimise_flag = true;
 	}
 	//Find if ring is exposed on other side
@@ -7688,6 +7688,7 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	updateA(CRem_before, 'H', Hdir);
 	
 	if (optimise_flag && !m_pah->m_optimised){
+		saveXYZ("KMC_DEBUG/Beforeoptimoxid");
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -9636,7 +9637,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	}
 	if (thirdC2 != NULLC) {
 		opp_site_second = findSite(thirdC2);
-		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
+		if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) opp_site_bool_second = true;
 	}
 	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
 		opp_site_after = findSite(thirdC_after);
@@ -10327,7 +10328,7 @@ void PAHProcess::proc_MR5_R6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	}
 	if (thirdC2 != NULLC) {
 		opp_site_second = findSite(thirdC2);
-		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
+		if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) opp_site_bool_second = true;
 	}
 	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
 		opp_site_after = findSite(thirdC_after);
@@ -13354,7 +13355,7 @@ void PAHProcess::proc_M5R_FEACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	}
 	if (thirdC2 != NULLC) {
 		opp_site_second = findSite(thirdC2);
-		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
+		if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) opp_site_bool_second = true;
 	}
 	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
 		opp_site_after = findSite(thirdC_after);
@@ -14253,7 +14254,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	}
 	if (thirdC2 != NULLC) {
 		opp_site_second = findSite(thirdC2);
-		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
+		if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) opp_site_bool_second = true;
 	}
 	bool end_site_allowed = true;
 	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
@@ -14301,6 +14302,87 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		ii = remOppsiteR5Walker(ii, jj);
 		addOppsiteR5Walker(opp_site_after,opp_site_after);
 	}
+
+	Spointer S1_check, S2_check;
+	if (b4){
+		S1_check = moveIt(sFE2, -1);
+		S2_check = moveIt(stt, +1);
+	} else{
+		S1_check = moveIt(stt, -1); 
+		S2_check = moveIt(sFE2, 1); 
+	}
+	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
+		if ( (int)opp_site->type >= 2100) {
+			Spointer S1_opp_site = moveIt(opp_site, -1);
+			Spointer S2_opp_site = moveIt(opp_site, +1);
+			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
+				updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+			}
+			else updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
+		}
+		else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+		Spointer S1_opp_site = moveIt(opp_site, -1);
+		Spointer S2_opp_site = moveIt(opp_site, +1);
+		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site); updateCombinedSitesMigration(S2_opp_site);
+	}
+	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+		updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+		if (opp_site_after != S1_check && opp_site_after != S2_check) {
+			if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
+			else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
+			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
+			Spointer S1_opp_site = moveIt(opp_site_after, -1);
+			Spointer S2_opp_site = moveIt(opp_site_after, +1);
+			Spointer S3_opp_site = moveIt(opp_site_after, -2);
+			Spointer S4_opp_site = moveIt(opp_site_after, +2);
+			if ((int)opp_site_after->type < 2000){
+				if (b4) updateSites(S1_opp_site, S1_opp_site->C1, S1_opp_site->C2, +500);
+				else updateSites(S2_opp_site, S2_opp_site->C1, S2_opp_site->C2, +500);
+				int kk = findWalker(opp_site_after);
+				fixOppsiteR5Walker(kk);
+			}
+			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site); updateCombinedSitesMigration(S2_opp_site);
+			updateCombinedSitesMigration(S3_opp_site); updateCombinedSitesMigration(S4_opp_site);
+		}
+		updateCombinedSitesMigration(opp_site);
+	}
+	else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		if (opp_site != opp_site_second){
+			updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
+			//convSiteType(opp_site_second, opp_site_second->C1, opp_site_second->C2, (kmcSiteType)new_stype);
+			updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, +1500);
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_second);
+		}
+	}
+	else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		updateCombinedSitesMigration(opp_site_second);
+	}
+	else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
+		updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -1500);
+		updateCombinedSitesMigration(opp_site_second);
+		if (opp_site_after != S1_check && opp_site_after != S2_check) {
+			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
+			updateCombinedSitesMigration(opp_site_after);
+		}
+	}
+	else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+		if (opp_site_after != S1_check && opp_site_after != S2_check) {
+			if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
+			else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
+			updateCombinedSitesMigration(opp_site_after);
+		}
+	}
+	else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
+		if ( (opp_site != opp_site_after) && (opp_site != opp_site_second) ){
+			updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
+			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_second);
+			updateCombinedSitesMigration(opp_site_after);
+		}
+	}
+
 	//Modify
 	if (leave_edge){
 		//The R5 will leave the current edge and move to other edge. 
@@ -14528,70 +14610,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			else addR5internal(sFE2->C1->C2,sFE2->C1->C2->C2,true);
 		}
 	} //Migration without leaving corner or edge
-
-	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
-		if ( (int)opp_site->type >= 2100) {
-			Spointer S1_opp_site = moveIt(opp_site, -1);
-			Spointer S2_opp_site = moveIt(opp_site, +1);
-			if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
-				updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
-			}
-			else updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
-		}
-		else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
-		Spointer S1_opp_site = moveIt(opp_site, -1);
-		Spointer S2_opp_site = moveIt(opp_site, +1);
-		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site); updateCombinedSitesMigration(S2_opp_site);
-	}
-	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
-		updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
-		if (opp_site_after != S1 && opp_site_after != S2) {
-			if ((int)opp_site_after->type >= 500 && (int)opp_site_after->type <= 700) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -400);
-			else if ((int)opp_site_after->type >= 1000 && (int)opp_site_after->type <= 2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, -800);
-			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
-			Spointer S1_opp_site = moveIt(opp_site_after, -1);
-			Spointer S2_opp_site = moveIt(opp_site_after, +1);
-			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site); updateCombinedSitesMigration(S2_opp_site);
-		}
-		updateCombinedSitesMigration(opp_site);
-	}
-	else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
-		if (opp_site != opp_site_second){
-			updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
-			//convSiteType(opp_site_second, opp_site_second->C1, opp_site_second->C2, (kmcSiteType)new_stype);
-			updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, +1500);
-			updateCombinedSitesMigration(opp_site);
-			updateCombinedSitesMigration(opp_site_second);
-		}
-	}
-	else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
-		updateCombinedSitesMigration(opp_site_second);
-	}
-	else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
-		updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -1500);
-		updateCombinedSitesMigration(opp_site_second);
-		if (opp_site_after != S1 && opp_site_after != S2) {
-			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
-			updateCombinedSitesMigration(opp_site_after);
-		}
-	}
-	else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
-		if (opp_site_after != S1 && opp_site_after != S2) {
-			if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
-			else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
-			updateCombinedSitesMigration(opp_site_after);
-		}
-	}
-	else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
-		if ( (opp_site != opp_site_after) && (opp_site != opp_site_second) ){
-			updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
-			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
-			updateCombinedSitesMigration(opp_site);
-			updateCombinedSitesMigration(opp_site_second);
-			updateCombinedSitesMigration(opp_site_after);
-		}
-	}
-	
 	// update H atoms
 	/*if (b4){
 		updateA(S1->C2->C1, C_2, 'H');
@@ -14621,7 +14639,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			updateCombinedSitesMigration(S4);
 			updateCombinedSitesMigration(S5);
 			updateCombinedSitesMigration(S6);
-			
 		}
 		else{
 			updateCombinedSitesMigration(S3);
@@ -14762,7 +14779,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	}
 	if (thirdC2 != NULLC) {
 		opp_site_second = findSite(thirdC2);
-		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
+		if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) opp_site_bool_second = true;
 	}
 	bool allowed = true;
 	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
@@ -15122,7 +15139,7 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	}
 	if (thirdC2 != NULLC) {
 		opp_site_second = findSite(thirdC2);
-		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
+		if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) opp_site_bool_second = true;
 	}
 
 	//Add a new carbon between current R5 carbons of ACR5
@@ -16009,6 +16026,23 @@ int PAHProcess::findWalker(Spointer current_site){
 void PAHProcess::addOppsiteR5Walker(Spointer opp_site, Spointer opp_site_coupled){
 	std::tuple<Spointer,Spointer,int> new_walker = std::make_tuple(opp_site,opp_site_coupled,0);
 	m_pah->m_R5walker_sites.push_back(new_walker);
+}
+
+//! Fixes opposite side walker if needed.
+void PAHProcess::fixOppsiteR5Walker(int ii){
+	Spointer start_site = std::get<0>(m_pah->m_R5walker_sites[ii]);
+	Spointer start_site_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
+	if (start_site==start_site_2 && start_site->type==R5R6){
+		int dir = coupledSiteDirection(start_site);
+		start_site_2 = moveIt(start_site, dir);
+		if (dir==-1){
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = start_site_2;
+			std::get<1>(m_pah->m_R5walker_sites[ii]) = start_site;
+		} else{
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = start_site;
+			std::get<1>(m_pah->m_R5walker_sites[ii]) = start_site_2;
+		}
+	}
 }
 
 //! Remove opposite side site walker and modifies structure if needed. Removes walker jj and modifies walker ii. Returns the new position of ii.

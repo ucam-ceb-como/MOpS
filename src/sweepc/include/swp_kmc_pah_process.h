@@ -210,6 +210,8 @@ public:
     int findWalker(Spointer current_site);
     //! Adds walker when an opposite side site can now migrate.
     void addOppsiteR5Walker(Spointer opp_site, Spointer opp_site_coupled);
+    //! Fixes opposite side walker if needed.
+    void fixOppsiteR5Walker(int ii);
     //! Remove opposite side site walker and modifies structure if needed. Removes walker jj and modifies walker ii. Returns the new position of ii.
     int remOppsiteR5Walker(int ii, int jj);
 	//! Passes a PAH from MOpS to OpenBabel. Returns a mol object.

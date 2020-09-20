@@ -323,7 +323,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     xyzname.append(std::to_string(m_t*1000000.0));
                     xyzname.append("_B");
                     savePAH(PAH_ID, xyzname); 
-                    cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
+                    //cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<"\n";
                 }
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
                 if (finder != m_tracked_pahs.end() && !m_migrate){
