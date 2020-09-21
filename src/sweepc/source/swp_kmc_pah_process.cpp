@@ -15757,10 +15757,12 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 		if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) return false;
 		if ((int)checkR5_1->type >= 2002 && (int)checkR5_1->type <= 2204) return false;
 		if ((int)checkR5_1->type >= 2204 && (int)checkR5_1->type <= 2205) return false;
+		if ((int)checkR5_1->type == 9999 ) return false;
 		if ((int)checkR5_1->type == 0){
 			if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) return false;
 			if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) return false;
 			if ((int)checkR5_2->type >= 2002 && (int)checkR5_2->type <= 2205) return false;
+			if ((int)checkR5_2->type == 9999) return false;
 		}
 	}
 	if ((int)stt->type == 1 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0 && (int)checkR5_3->type == 2002) return false;
