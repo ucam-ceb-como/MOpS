@@ -7688,7 +7688,7 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	updateA(CRem_before, 'H', Hdir);
 	
 	if (optimise_flag && !m_pah->m_optimised){
-		saveXYZ("KMC_DEBUG/Beforeoptimoxid");
+		//saveXYZ("KMC_DEBUG/Beforeoptimoxid");
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -8618,9 +8618,14 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		R5normvec = norm_vector(sR5->C1->coords, sR5->C2->coords, sR5->C2->C2->coords);
 		R6normvec = norm_vector(C_2->C1->coords, C_2->coords, C_2->C2->coords);
         C_AC = sR5->C1->C1;
-		starting_direction = get_vector(C_2->C1->coords, C_2->coords);
+		cpair FEvector = get_vector(C_1->C2->C2->coords,C_2->C1->coords);
+		cpair AGvector = get_vector(C_1->C2->C2->coords,C_1->C2->coords);
+		starting_direction = add_vector(FEvector, AGvector);
+		cpair AJvector = get_vector(C_2->C1->coords,C_2->coords);
+		FEdir = add_vector(AJvector, invert_vector(AGvector));
+		//starting_direction = get_vector(C_2->C1->coords, C_2->coords);
 		Hdir1 = get_vector(C_1->C2->C2->coords, C_1->C2->coords);
-		FEdir = get_vector(C_1->C2->coords, C_2->coords);
+		//FEdir = get_vector(C_1->C2->coords, C_2->coords);
 		Hdir2 = starting_direction;
 		Hdir = starting_direction;
 		CZZdir = get_vector(C_1->C2->coords, C_1->C2->C2->coords);
@@ -8629,9 +8634,14 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		R5normvec = norm_vector(sR5->C1->coords, sR5->C2->coords, sR5->C2->C2->coords);
 		R6normvec = norm_vector(C_1->C1->coords, C_1->coords, C_1->C2->coords);
         C_AC = sR5->C2->C2;
-		starting_direction = get_vector(C_2->C1->C1->coords, C_2->C1->coords);
+		cpair FEvector = get_vector(C_1->C2->coords,C_2->C1->C1->coords);
+		cpair AGvector = get_vector(C_1->C2->coords,C_1->coords);
+		starting_direction = add_vector(FEvector, AGvector);
+		cpair AJvector = get_vector(C_2->C1->C1->coords,C_2->C2->coords);
+		FEdir = add_vector(AJvector, invert_vector(AGvector));
+		//starting_direction = get_vector(C_2->C1->C1->coords, C_2->C1->coords);
 		Hdir1 = get_vector(C_1->C2->coords, C_1->coords);
-		FEdir = get_vector(C_1->coords, C_2->C1->coords);
+		//FEdir = get_vector(C_1->coords, C_2->C1->coords);
 		Hdir2 = starting_direction;
 		Hdir = Hdir1;
 		CZZdir = FEdir;
@@ -8878,7 +8888,7 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	//Add R5 to internal coordinates after the migration.
     if (!m_pah->m_optimised) addR5internal(C1_R5, C2_R5);
     // edit sites. first identify the neighbouring sites of resulting RZZ & R5
-    Spointer S1, S2, S3, S4;
+    Spointer S1, S2, S3, S4, S5, S6;
     if(b4) {
         S1 = moveIt(sR5, -1); // neighbour of R5
         S2 = moveIt(stt, 1); // neighbour of RAC (stt)
@@ -8898,9 +8908,12 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // (excluding new FE sites, since their combined site type will still be None)
     S3 = moveIt(S1, -1);
     S4 = moveIt(S2, 1);
+	S5 = moveIt(S1, -2);
+    S6 = moveIt(S2, 2);
     updateCombinedSites(stt); updateCombinedSites(sR5); // new FE and AC
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
+	updateCombinedSites(S5); updateCombinedSites(S6); // neighbours
     //printSites(stt);
     //cout<<sp.None;
 }
@@ -11772,9 +11785,74 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	//It also resets the walker position to the new edge.
 	//It assumes the starting site is an ACR5 site or similar.
 	// The pentagon migrated N times and ended at the same position.
-	if (sFE2 == stt) return;
-
 	int ii = migr_index;
+	if(stt==sFE2){
+		//Walker came back to starting position from other side without resetting.
+		if ( ((int)sFE2->type >= 1 && (int)sFE2->type <= 4) || ((int)sFE2->type >= 102 && (int)sFE2->type <= 104) ){
+			//This means that the pentagon has migrated to a basic site.
+			if (b4) {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, 2000 + (int)sFE2->type);
+				if ((int)sFE2->type<2000) {
+					Spointer S4 = moveIt(sFE2, +1);
+					updateSites(S4, S4->C1, S4->C2,+500);
+				}
+			}
+			else {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, 2000 + (int)sFE2->type);
+				if ((int)sFE2->type<2000) {
+					Spointer S3 = moveIt(sFE2, -1);
+					updateSites(S3, S3->C1, S3->C2,+500);
+				}
+			}
+		} else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){
+			//This means that the pentagon has migrated to neighbour an edge R5 edge.
+			Spointer S1_left = moveIt(sFE2, -1);
+			Spointer S2_right = moveIt(sFE2, +1);
+			if (b4) {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, 1600 + (int)sFE2->type);
+				if ((int)S2_right->type<2000) {
+					Spointer S4 = moveIt(S2_right, +1);
+					updateSites(S4, S4->C1, S4->C2,+500);
+				}
+			}
+			else {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, 1600 + (int)sFE2->type);
+				if ((int)sFE2->type<2000) {
+					Spointer S3 = moveIt(S1_left, -1);
+					updateSites(S3, S3->C1, S3->C2,+500);
+				}
+			}
+		} else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){
+			//This means that the pentagon has migrated to a bay containing an R5.
+			if (b4) {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, 100 + (int)sFE2->type);
+				if ((int)sFE2->type<2000) {
+					Spointer S4 = moveIt(sFE2, +1);
+					updateSites(S4, S4->C1, S4->C2,+500);
+				}
+			}
+			else {
+				updateSites(sFE2, sFE2->C1, sFE2->C2, 100 + (int)sFE2->type);
+				if ((int)sFE2->type<2000) {
+					Spointer S3 = moveIt(sFE2, -1);
+					updateSites(S3, S3->C1, S3->C2,+500);
+				}
+			}
+		}
+		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0; // Walker came back to pos 0
+	
+		//Update combined sites
+		Spointer S1, S2, S3, S4, S5, S6;
+		S1 = moveIt(sFE2, -1);
+		S2 = moveIt(sFE2, +1);
+		S3 = moveIt(S1, -1);
+		S4 = moveIt(S2, +1);
+		S5 = moveIt(S1, -2);
+		S6 = moveIt(S2, +2);
+		updateCombinedSitesMigration(S1); updateCombinedSitesMigration(S2);
+		updateCombinedSitesMigration(S3); updateCombinedSitesMigration(S4); updateCombinedSitesMigration(S5); updateCombinedSitesMigration(S6);
+	}
+
 	int steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 	bool dir;
 	if (steps < 0) dir = true;

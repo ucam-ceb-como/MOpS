@@ -197,6 +197,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 	rvector rates(m_kmcmech.JPList().size(), 0);
 	calcrates = true;
 
+    int migr_steps = 0;
+
     //double time_migration = 0.0;
     //clock_t timerStart, timerEnd;
 	
@@ -300,10 +302,12 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 //Migration jump processes. Set flag m_migrate to true.
                 if (!m_migrate) {
                     m_simPAHp.startMigrationProcess();
+                    migr_steps = 0;
                     m_migrate = true; 
                 }
                 //savePAH(PAH_ID,"KMC_DEBUG/BEFOREJPPERFORM");
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
+                migr_steps++;
                 //savePAH(PAH_ID,"KMC_DEBUG/AFTERJPPERFORM");
             }
             else {
@@ -316,6 +320,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     //timerEnd = clock();
                     //time_migration += (timerEnd - timerStart) / double(CLOCKS_PER_SEC);
                 }
+                if (finder != m_tracked_pahs.end()) std::cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<" Migr. steps = "<<migr_steps<<std::endl;
                 if (finder != m_tracked_pahs.end() && !m_migrate){
                     std::string xyzname = ("KMC_DEBUG/");
                     xyzname.append(std::to_string(PAH_ID));
