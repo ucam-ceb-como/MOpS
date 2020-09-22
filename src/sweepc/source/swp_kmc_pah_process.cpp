@@ -4174,10 +4174,20 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 			if ( isR5internal(st->C1->C1, st->C1)) {
 				R5coords = findR5internal(st->C1->C1, st->C1);
 				check_left = false;
+				if(S1->type==SPIRAL || S1->type==None) {
+					m_pah->m_R5loc.push_back(R5coords);
+					st->comb = None;
+					break;
+				}
 			}
 			else if ( isR5internal(st->C2, st->C2->C2) ) {
 				R5coords = findR5internal(st->C2, st->C2->C2);
 				check_right = false;
+				if(S2->type==SPIRAL || S2->type==None) {
+					m_pah->m_R5loc.push_back(R5coords);
+					st->comb = None;
+					break;
+				}
 			}
 			else {
 				//R5 not found
@@ -4392,6 +4402,11 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 			int dir = coupledSiteDirection(st);
 			if (dir==-1) check_left = false; //Coupled site is at the left, check right
 			if (dir==1) check_right = false; //Coupled site is at the right, check left
+			Spointer coupl_site_check = moveIt(st,dir);
+			if (coupl_site_check->type==SPIRAL || coupl_site_check->type==None){
+				st->comb = None;
+				break;
+			}
 			//dir = 0 check both
 		}
 		else if ( ((int)st->type>2000 && (int)st->type <= 2005) || ((int)st->type==2103)){ // Possibly site 2103 - R5ACR5 should be allowed to migrate too.
