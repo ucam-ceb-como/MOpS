@@ -11794,14 +11794,16 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 				updateSites(sFE2, sFE2->C1, sFE2->C2, 2000 + (int)sFE2->type);
 				if ((int)sFE2->type<2000) {
 					Spointer S4 = moveIt(sFE2, +1);
-					updateSites(S4, S4->C1, S4->C2,+500);
+					if ((int)S4->type<2000) updateSites(S4, S4->C1, S4->C2,+500);
+					else updateSites(S4, S4->C1, S4->C2,+100);
 				}
 			}
 			else {
 				updateSites(sFE2, sFE2->C1, sFE2->C2, 2000 + (int)sFE2->type);
 				if ((int)sFE2->type<2000) {
 					Spointer S3 = moveIt(sFE2, -1);
-					updateSites(S3, S3->C1, S3->C2,+500);
+					if ((int)S3->type<2000) updateSites(S3, S3->C1, S3->C2,+500);
+					else updateSites(S3, S3->C1, S3->C2,+100);
 				}
 			}
 		} else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){
@@ -11812,14 +11814,16 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 				updateSites(sFE2, sFE2->C1, sFE2->C2, 1600 + (int)sFE2->type);
 				if ((int)S2_right->type<2000) {
 					Spointer S4 = moveIt(S2_right, +1);
-					updateSites(S4, S4->C1, S4->C2,+500);
+					if ((int)S4->type<2000) updateSites(S4, S4->C1, S4->C2,+500);
+					else updateSites(S4, S4->C1, S4->C2,+100);
 				}
 			}
 			else {
 				updateSites(sFE2, sFE2->C1, sFE2->C2, 1600 + (int)sFE2->type);
 				if ((int)sFE2->type<2000) {
 					Spointer S3 = moveIt(S1_left, -1);
-					updateSites(S3, S3->C1, S3->C2,+500);
+					if ((int)S3->type<2000) updateSites(S3, S3->C1, S3->C2,+500);
+					else updateSites(S3, S3->C1, S3->C2,+100);
 				}
 			}
 		} else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){
@@ -11828,14 +11832,16 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 				updateSites(sFE2, sFE2->C1, sFE2->C2, 100 + (int)sFE2->type);
 				if ((int)sFE2->type<2000) {
 					Spointer S4 = moveIt(sFE2, +1);
-					updateSites(S4, S4->C1, S4->C2,+500);
+					if ((int)S4->type<2000) updateSites(S4, S4->C1, S4->C2,+500);
+					else updateSites(S4, S4->C1, S4->C2,+100);
 				}
 			}
 			else {
 				updateSites(sFE2, sFE2->C1, sFE2->C2, 100 + (int)sFE2->type);
 				if ((int)sFE2->type<2000) {
 					Spointer S3 = moveIt(sFE2, -1);
-					updateSites(S3, S3->C1, S3->C2,+500);
+					if ((int)S3->type<2000) updateSites(S3, S3->C1, S3->C2,+500);
+					else updateSites(S3, S3->C1, S3->C2,+100);
 				}
 			}
 		}
@@ -11968,7 +11974,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
+				if ((int)S4->type<2000) updateSites(S4, S4->C1, S4->C2,+500);
+				else updateSites(S4, S4->C1, S4->C2,+100);
 			}
 		}
 		else {
@@ -11977,7 +11984,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
+				if ((int)S3->type<2000) updateSites(S3, S3->C1, S3->C2,+500);
+				else updateSites(S3, S3->C1, S3->C2,+100);
 			}
 		}
 		checkRemR5Walkers(ii, b4, sFE2);
@@ -11992,7 +12000,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
+				if ((int)S4->type<2000) updateSites(S4, S4->C1, S4->C2,+500);
+				else updateSites(S4, S4->C1, S4->C2,+100);
 			}
 		}
 		else {
@@ -12001,7 +12010,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
+				if ((int)S3->type<2000) updateSites(S3, S3->C1, S3->C2,+500);
+				else updateSites(S3, S3->C1, S3->C2,+100);
 			}
 		}
 		checkRemR5Walkers(ii, b4, sFE2);
@@ -12018,7 +12028,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
+				if ((int)S4->type<2000) updateSites(S4, S4->C1, S4->C2,+500);
+				else updateSites(S4, S4->C1, S4->C2,+100);
 			}
 		}
 		else {
@@ -12027,7 +12038,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
+				if ((int)S3->type<2000) updateSites(S3, S3->C1, S3->C2,+500);
+				else updateSites(S3, S3->C1, S3->C2,+100);
 			}
 		}
 		checkRemR5Walkers(ii, b4, sFE2);
@@ -12042,7 +12054,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
+				if ((int)S4->type<2000) updateSites(S4, S4->C1, S4->C2,+500);
+				else updateSites(S4, S4->C1, S4->C2,+100);
 			}
 		}
 		else {
@@ -12051,7 +12064,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
+				if ((int)S3->type<2000) updateSites(S3, S3->C1, S3->C2,+500);
+				else updateSites(S3, S3->C1, S3->C2,+100);
 			}
 		}
 		checkRemR5Walkers(ii, b4, sFE2);
@@ -12225,14 +12239,18 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	else if ((int)sFE2->type == 0){
 		//This means that the pentagon has migrated to the edge but will have a single carbon out of the structure.
 		if (b4) {
-			updateSites(S1, S1->C1, sFE2->C1, 500);
-			updateSites(S2, sFE2->C1, S2->C2, 500);
+			if ((int)S1->type<2000) updateSites(S1, S1->C1, sFE2->C1, 500);
+			else updateSites(S1, S1->C1, sFE2->C1, 100);
+			if ((int)S2->type<2000) updateSites(S2, sFE2->C1, S2->C2, 500);
+			else updateSites(S2, sFE2->C1, S2->C2, 100);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 		}
 		else {
-			updateSites(S1, S1->C1, sFE2->C2, 500);
-			updateSites(S2, sFE2->C2, S2->C2, 500);
+			if ((int)S1->type<2000) updateSites(S1, S1->C1, sFE2->C2, 500);
+			else updateSites(S1, S1->C1, sFE2->C2, 100);
+			if ((int)S2->type<2000) updateSites(S2, sFE2->C2, S2->C2, 500);
+			else updateSites(S2, sFE2->C2, S2->C2, 100);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 		}
@@ -12248,7 +12266,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
+				if ((int)S4->type<2000) updateSites(S4, S4->C1, S4->C2,+500);
+				else updateSites(S4, S4->C1, S4->C2,+100);
 			}
 		}
 		else {
@@ -12257,7 +12276,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
+				if ((int)S3->type<2000) updateSites(S3, S3->C1, S3->C2,+500);
+				else updateSites(S3, S3->C1, S3->C2,+100);
 			}
 		}
 		checkRemR5Walkers(ii, b4, sFE2);
@@ -12272,7 +12292,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
+				if ((int)S4->type<2000) updateSites(S4, S4->C1, S4->C2,+500);
+				else updateSites(S4, S4->C1, S4->C2,+100);
 			}
 		}
 		else {
@@ -12281,7 +12302,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
+				if ((int)S3->type<2000) updateSites(S3, S3->C1, S3->C2,+500);
+				else updateSites(S3, S3->C1, S3->C2,+100);
 			}
 		}
 		checkRemR5Walkers(ii, b4, sFE2);
@@ -12298,7 +12320,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
+				if ((int)S4->type<2000) updateSites(S4, S4->C1, S4->C2,+500);
+				else updateSites(S4, S4->C1, S4->C2,+100);
 			}
 		}
 		else {
@@ -12307,7 +12330,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
+				if ((int)S3->type<2000) updateSites(S3, S3->C1, S3->C2,+500);
+				else updateSites(S3, S3->C1, S3->C2,+100);
 			}
 		}
 		checkRemR5Walkers(ii, b4, sFE2);
@@ -12322,7 +12346,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 			if ((int)S2->type<2000) {
 				Spointer S4 = moveIt(S2, +1);
-				updateSites(S4, S4->C1, S4->C2,+500);
+				if ((int)S4->type<2000) updateSites(S4, S4->C1, S4->C2,+500);
+				else updateSites(S4, S4->C1, S4->C2,+100);
 			}
 		}
 		else {
@@ -12331,7 +12356,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
 			if ((int)S1->type<2000) {
 				Spointer S3 = moveIt(S1, -1);
-				updateSites(S3, S3->C1, S3->C2,+500);
+				if ((int)S3->type<2000) updateSites(S3, S3->C1, S3->C2,+500);
+				else updateSites(S3, S3->C1, S3->C2,+100);
 			}
 		}
 		checkRemR5Walkers(ii, b4, sFE2);
@@ -14030,7 +14056,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		else if ((int)sFE2->type == 0 ){ 
 			//This means that the pentagon has migrated to a edge but will have a carbon out of the structure.
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
-			updateSites(S1, S1->C1, S1->C2, 500);
+			if ((int)S1->type<2000) updateSites(S1, S1->C1, S1->C2, 500);
+			else updateSites(S1, S1->C1, S1->C2, 100);
 		}
 		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
@@ -14069,7 +14096,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		else if ((int)sFE2->type == 0){
 			//This means that the pentagon has migrated to the edge but will have a carbon out of the structure.
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
-			updateSites(S2, S2->C1, S2->C2, 500);
+			if ((int)S2->type<2000) updateSites(S2, S2->C1, S2->C2, 500);
+			else updateSites(S2, S2->C1, S2->C2, 100);
 		}
 		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
@@ -14577,10 +14605,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 					}
 					return;
 					//Need to check for opposite site logic before returning.			
-				//Need to check for opposite site logic before returning.			
-					//Need to check for opposite site logic before returning.			
-				//Need to check for opposite site logic before returning.			
-					//Need to check for opposite site logic before returning.			
+		
 				}
 				else{
 					convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
@@ -15071,7 +15096,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		else if ((int)sFE2->type == 0 ){ 
 			//This means that the pentagon has migrated to the edge but will have a carbon out of the structure.
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
-			updateSites(S1, S1->C1, S1->C2, 500);
+			if ((int)S1->type < 2000 ) updateSites(S1, S1->C1, S1->C2, 500);
+			else updateSites(S1, S1->C1, S1->C2, 100);
 		}
 		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
@@ -15107,7 +15133,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		else if ((int)sFE2->type == 0){
 			//This means that the pentagon has migrated to the edge but will have a carbon out of the structure.
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
-			updateSites(S2, S2->C1, S2->C2, 500);
+			if ((int)S2->type<2000) updateSites(S2, S2->C1, S2->C2, 500);
+			else updateSites(S2, S2->C1, S2->C2, 100);
 		}
 		else if ((int)sFE2->type == 1){ //sFE2 is a ZZ
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACR5);
