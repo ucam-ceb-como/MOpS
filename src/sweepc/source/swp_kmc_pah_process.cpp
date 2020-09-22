@@ -13773,12 +13773,17 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			CR5_otherside_1 = C_1->C2->C2;
 			CR5_otherside_2 = C_1->C2;
 			CRem_next = CRem->C1;
-		} else {
+		} else if (steps>0){
 			CR5_otherside_1 = C_1->C2;
 			CR5_otherside_2 = C_1->C1;
 			if (CR5_otherside_2->C1->A=='H') CRem_next = CR5_otherside_2->C1->C1;
 			else CRem_next = CR5_otherside_2->C1;
-		} 
+		} else{
+			CR5_otherside_1 = C_2->C2;
+			CR5_otherside_2 = C_2->C1;
+			if (CR5_otherside_2->C1->A=='H') CRem_next = CR5_otherside_2->C1->C1;
+			else CRem_next = CR5_otherside_2->C1;
+		}
 	}
 	else {
 		sFE2 = moveIt(stt, 1);
@@ -13791,12 +13796,17 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			CR5_otherside_1 = C_2->C1->C1;
 			CR5_otherside_2 = C_2->C1;
 			CRem_next = CRem->C2;
-		} else {
+		} else if (steps<0) {
 			CR5_otherside_1 = C_2->C1;
 			CR5_otherside_2 = C_2->C2;
 			if (CR5_otherside_2->C2->A=='H') CRem_next = CR5_otherside_2->C2->C2;
 			else CRem_next = CR5_otherside_2->C2;
-		} 
+		} else{
+			CR5_otherside_1 = C_1->C1;
+			CR5_otherside_2 = C_1->C2;
+			if (CR5_otherside_2->C2->A=='H') CRem_next = CR5_otherside_2->C2->C2;
+			else CRem_next = CR5_otherside_2->C2;
+		}
 	}
 
 	// check if ACR5 has an opposite site.
@@ -14811,12 +14821,17 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			CR5_otherside_1 = C_1->C2->C2;
 			CR5_otherside_2 = C_1->C2;
 			CRem_next = CRem->C1;
-		} else {
+		} else if (steps>0){
 			CR5_otherside_1 = C_1->C2;
 			CR5_otherside_2 = C_1->C1;
 			if (CR5_otherside_2->C1->A=='H') CRem_next = CR5_otherside_2->C1->C1;
 			else CRem_next = CR5_otherside_2->C1;
-		} 
+		} else{
+			CR5_otherside_1 = C_2->C2;
+			CR5_otherside_2 = C_2->C1;
+			if (CR5_otherside_2->C1->A=='H') CRem_next = CR5_otherside_2->C1->C1;
+			else CRem_next = CR5_otherside_2->C1;
+		}
 	}
 	else {
 		sFE2 = moveIt(stt, 1);
@@ -14828,12 +14843,17 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			CR5_otherside_1 = C_2->C1->C1;
 			CR5_otherside_2 = C_2->C1;
 			CRem_next = CRem->C2;
-		} else {
+		} else if (steps<0) {
 			CR5_otherside_1 = C_2->C1;
 			CR5_otherside_2 = C_2->C2;
 			if (CR5_otherside_2->C2->A=='H') CRem_next = CR5_otherside_2->C2->C2;
 			else CRem_next = CR5_otherside_2->C2;
-		} 
+		} else{
+			CR5_otherside_1 = C_1->C1;
+			CR5_otherside_2 = C_1->C2;
+			if (CR5_otherside_2->C2->A=='H') CRem_next = CR5_otherside_2->C2->C2;
+			else CRem_next = CR5_otherside_2->C2;
+		}
 	}
 	
 	// check if ACR5 has an opposite site.
