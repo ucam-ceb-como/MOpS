@@ -6889,7 +6889,7 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     m_pah->m_rings++;
     //printSites(stt);
 	//Optimise PAH if needed.
-	if (getDistance_twoC(newC2,C_2) > 1.7 && !m_pah->m_optimised) {
+	if ( (getDistance_twoC(newC2,C_2) > 1.7 || getDistance_twoC(newC2,newC2->C2->C2) < 1.8 || getDistance_twoC(newC1,newC1->C1->C1) < 1.8) && !m_pah->m_optimised) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -7676,7 +7676,7 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	cpair Hdir = crossvec;
 	bool optimise_flag = false;
 	double dist = getDistance_twoC(CRem_before->C1,CRem->C2);
-	if (dist < 3.4){
+	if (dist < 3.3){
 		dist = dist /2.0;
 		double dist2 = sqrt(2.89 - dist * dist);
 		newpos = std::make_tuple(std::get<0>(CRem_before->C1->coords) + dist * std::get<0>(start_dir) + dist2 * std::get<0>(crossvec), std::get<1>(CRem_before->C1->coords) + dist * std::get<1>(start_dir) + dist2 * std::get<1>(crossvec), std::get<2>(CRem_before->C1->coords) + dist * std::get<2>(start_dir) + dist2 * std::get<2>(crossvec));
