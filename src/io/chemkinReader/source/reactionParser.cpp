@@ -119,7 +119,8 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
     for (size_t i=0; i<reactionStringLines_.size(); ++i)
     {
 
-        cout << reactionStringLines_[i] << endl;
+        // comment out printing reaction mechanism 
+        // cout << reactionStringLines_[i] << endl;
 
         Reaction reaction;
 
@@ -174,8 +175,8 @@ void IO::ReactionParser::parse(vector<IO::Reaction>& reactions)
 
             while (i < reactionStringLines_.size()-1)
             {
-
-                cout << "Next = " << reactionStringLines_[i+1] << endl;
+                // Comment out hard coded print to terminal of reaction mechanism:
+                // cout << "Next = " << reactionStringLines_[i+1] << endl;
 
                 start = reactionStringLines_[i+1].begin();
                 end = reactionStringLines_[i+1].end();
