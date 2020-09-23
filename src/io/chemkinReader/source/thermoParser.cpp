@@ -106,21 +106,22 @@ void IO::ThermoParser::parseAllThermoData() {
         }
     }
 
+    // this would be better checked as a bool flag instead of against a string. e.g. if(readSurfFile())
     if (thermoSurf_file_ != "NOT READ" ){ // only pass if surf therm not empty
 
-     thermo_lines = getThermoSection(linesSurf_);
-     getGlobalTemperatures(thermoSurf_file_string_);// moved to here by mm864
-   
+        thermo_lines = getThermoSection(linesSurf_);
+        getGlobalTemperatures(thermoSurf_file_string_);// moved to here by mm864
+    
 
-    for (unsigned int i = 0; i < thermo_lines.size(); i++) {
-        if (isSectionMatchedNASA(thermo_lines, i)) {
-            parseNASASection(thermo_lines[i], thermo_lines[i + 1], thermo_lines[i + 2], thermo_lines[i + 3]);
-            i += 3;
-        } else if (!regex_match(thermo_lines[i], empty, regex_constants::match_single_line)) {
-            // Only print unmatched lines if it is not empty.
-            cout << "Unmatched : " << thermo_lines[i] << endl;
+        for (unsigned int i = 0; i < thermo_lines.size(); i++) {
+            if (isSectionMatchedNASA(thermo_lines, i)) {
+                parseNASASection(thermo_lines[i], thermo_lines[i + 1], thermo_lines[i + 2], thermo_lines[i + 3]);
+                i += 3;
+            } else if (!regex_match(thermo_lines[i], empty, regex_constants::match_single_line)) {
+                // Only print unmatched lines if it is not empty.
+                cout << "Unmatched : " << thermo_lines[i] << endl;
+            }
         }
-    }
 
     }
 
@@ -129,7 +130,8 @@ void IO::ThermoParser::parseAllThermoData() {
 
 bool IO::ThermoParser::parseNASASection(string l1, string l2, string l3, string l4) {
 
-    cout << l1 << endl;
+    // Comment out hardcoded output of thermodata:
+    // cout << l1 << endl;
     // line 1
 
     string speciesString = l1.substr(0, 18);
