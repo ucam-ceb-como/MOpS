@@ -108,26 +108,26 @@ def writeStreamline(data, number, comment=""):
     reactor.set('units', "mol/mol")
     temperature = ET.SubElement(reactor, 'temperature')
     temperature.set('units', "K")
-    temperature.text = str(dfInputs.loc[0, 'T'])
+    temperature.text = str(data.loc[0, 'T'])
     pressure = ET.SubElement(reactor, 'pressure')
     pressure.set('units', 'bar')
-    pressure.text = str(dfInputs.loc[0, 'P'])
+    pressure.text = str(data.loc[0, 'P'])
 
     component1 = ET.SubElement(reactor, 'component')
     component1.set('id', "C12H28O4TI")
-    component1.text = str(dfInputs.loc[0, 'C12H28O4TI'])
+    component1.text = str(data.loc[0, 'C12H28O4TI'])
 
     component2 = ET.SubElement(reactor, 'component')
     component2.set('id', "AR")
-    component2.text = str(dfInputs.loc[0, 'AR'])
+    component2.text = str(data.loc[0, 'AR'])
 
     component3 = ET.SubElement(reactor, 'component')
     component3.set('id', "O2")
-    component3.text = str(dfInputs.loc[0, 'O2'])
+    component3.text = str(data.loc[0, 'O2'])
 
     component4 = ET.SubElement(reactor, 'component')
     component4.set('id', "C2H4")
-    component4.text = str(dfInputs.loc[0, 'C2H4'])
+    component4.text = str(data.loc[0, 'C2H4'])
 
     # Time Intervals:
     timeintervals = ET.SubElement(root, 'timeintervals')
