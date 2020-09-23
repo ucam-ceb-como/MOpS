@@ -39,8 +39,10 @@ class case():
                  gasphaseFile="gasphase.csv"
                  ):
         # Early declaration of object properties:
+        self._sweepFilePath = ""
+        self._sweepFile = None
         self._inputFilePath = ""
-        self._inputFile = ""
+        self._inputFile = None
         self._caseName = ""
         self._outputFileName = ""
         self.files = []
@@ -60,9 +62,13 @@ class case():
         # Read input file; returns true on success.
         if(not self._readInputFile()):
             raise ValueError("{} is not a file".format(self._inputFile))
+        # Check for sweep file:
+        self._sweepFilePath = os.path.join(self.directoryPath, sweepFile)
+        if(not self._readSweepFile()):
+            raise ValueError("{} is not a file".format(self._sweepFilePath))        
         self._caseName = path
         print("Reading in case from {}".format(self.directoryPath))
-        self._readOutputFiles()
+        # self._readOutputFiles()
 
     # read Input file
     def _readInputFile(self):
@@ -76,13 +82,13 @@ class case():
             print("The input file {} does not exist".format(self._inputFile))
             return False
         # Try to read input file.
-        tree = ET.parse(self._inputFilePath)
-        self._inputFile = tree.getroot()
-        element_filename = self._inputFile.find("./output/filename")
+        self._inputFile = ET.parse(self._inputFilePath)
+        self._inputFileRoot = self._inputFile.getroot()
+        element_filename = self._inputFileRoot.find("./output/filename")
         self._outputFileName = element_filename.text
         # element_time_start = self._inputFile.find("./timeintervals/start")
         # self.timearray.append(element_time_start.text)
-        times = self._inputFile.findall("./timeintervals/time")
+        times = self._inputFileRoot.findall("./timeintervals/time")
         for time in times:
             # psl files have 6 sig fig in their names, truncate to match:
             t = time.text
@@ -90,8 +96,36 @@ class case():
             self.timearray.append(tstr)
         return True
 
+    # re-write Input file to disk
+    def _writeInputFile(self, newTree=None, newName=""):
+        if not newTree:
+            newTree = self._inputFile
+        if not newName:
+            newName=self._inputFilePath
+        newTree.write(newName)
+        return None
+
+
+    # read Sweep file
+    def _readSweepFile(self):
+        """
+            Reads the particle input file (sweep.xml)
+            Use ElementTree module to read the input file and extract information
+        """
+        # Check that self._inputFile is a valid file
+        if(not os.path.isfile(self._sweepFilePath)):
+            print("The input file {} does not exist".format(self._sweepFilePath))
+            return False
+        # Try to read input file.
+        tree = ET.parse(self._sweepFilePath)
+        self._sweepFile = tree.getroot()
+        # Do nothing currently with sweep file
+        return True
+
     def readOutputFiles(self):
         "Reads the output files of kinetics"
+        # ensure latest input file is read:
+        self._readInputFile()
         read = self._readOutputFiles()
         return read
 
@@ -104,6 +138,55 @@ class case():
     def path(self):
         "Returns the absolute case path"
         return os.path.abspath(self.directoryPath)
+
+    # get M0 
+    def getM0(self):
+        "Gets the value of M0 in the input file"
+        M0 = -1
+        element_M0 = self._inputFileRoot.find("./maxm0")
+        M0 = float(element_M0.text)
+        return M0
+
+    # Set M0 
+    def setM0(self, newM0):
+        "Sets the value of M0 in the input file"
+        element_M0 = self._inputFileRoot.find("./maxm0")
+        element_M0.text = str(newM0)
+        return None       
+
+    # Get pcount
+    def getpcount(self):
+        "Gets the value of pcount in the input file"
+        pcount = -1
+        element_pcount = self._inputFileRoot.find("./pcount")
+        pcount = float(element_pcount.text)
+        return pcount
+
+    # Set pcount
+    def setpcount(self, newpcount):
+        "Sets the value of pcount in the input file"
+        element_pcount = self._inputFileRoot.find("./pcount")
+        element_pcount.text = str(newpcount)
+        return None  
+
+    # get filename_string 
+    def getFilename(self):
+        "Gets the value of output/filename"
+        element = self._inputFileRoot.find("./output/filename")
+        fname = element.text
+        return fname
+
+    # Set M0 
+    def setFilename(self, newfname):
+        "Sets the value of M0 in the input file"
+        element = self._inputFileRoot.find("./output/filename")
+        element.text = newfname
+        return None  
+
+    # Save input file
+    def saveInputFile(self, newName=""):
+        self._writeInputFile(newName=newName)
+        return None
 
     # return file keys:
     def filenames(self):
@@ -119,7 +202,7 @@ class case():
 
     # return InputParamsElementTree
     def inputfile(self):
-        return self.inputParamsXML
+        return self._inputFileRoot
 
     # Read Catalogue file
     def _readOutputFiles(self):
@@ -202,7 +285,7 @@ class exec():
             # append filesep to casename
             rundir = caseobj.path()
             print("Running case: {}".format(rundir))
-            command = ['cd', rundir, ";"] + [os.path.join(self._execPath, self._execName)] + self._args
+            command = [os.path.join(self._execPath, self._execName)] + self._args
             try:
                 completed = subprocess.run(command, text=True,cwd=rundir)
             except FileNotFoundError:
