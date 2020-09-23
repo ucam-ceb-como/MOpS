@@ -2567,7 +2567,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 		}
 		
-		vector<int> valence_2_carbons, valence_4_carbons;
+		std::vector<int> valence_2_carbons, valence_4_carbons;
 		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
 			auto find_methyl = std::find(methyl_list_flat.begin(), methyl_list_flat.end(), a->GetIdx()); 
 			if (find_methyl == methyl_list_flat.end()){
@@ -2582,12 +2582,13 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		
 		//Adds bond between two carbons with valence 2. 
 		if(valence_2_carbons.size() != 0){ 
-			for (unsigned int ii=0; ii!=valence_2_carbons.size(); ++ii){
+			for (std::vector<int>::iterator it=valence_2_carbons.begin(); it!=valence_2_carbons.end();){
+				unsigned int ii = std::distance(valence_2_carbons.begin(),it);
 				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_2_carbons[ii]);
 				if (my_atom->GetValence() == 2){
 					int kk = ii;
 					double min_dist = 1e3;
-					for (unsigned int jj =0; jj!=valence_2_carbons.size(); ++jj){
+					for (unsigned int jj=0; jj!=valence_2_carbons.size(); ++jj){
 						if (jj!= ii){
 							double my_dist = my_atom->GetDistance(valence_2_carbons[jj]);
 							if (my_dist < min_dist){
@@ -2604,14 +2605,21 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 							std::cout << "WARNING. Bond length larger than 8 Armstrongs before optimisation. Deleting bond." << std::endl;
 							mol.DeleteBond(my_bond);
 						}
+						if (my_bond!=NULL) {
+							valence_2_carbons.erase(std::remove(valence_2_carbons.begin(), valence_2_carbons.end(),valence_2_carbons[ii]),valence_2_carbons.end());
+							valence_2_carbons.erase(std::remove(valence_2_carbons.begin(), valence_2_carbons.end(),valence_2_carbons[kk]),valence_2_carbons.end());
+						}
 					}
+					else it++;
 				}
+				else it++;
 			}
 		}
 		
 		//Deletes bond between two carbons with valence 4. 
 		if(valence_4_carbons.size() != 0){ 
-			for (unsigned int ii=0; ii!=valence_4_carbons.size(); ++ii){
+			for (std::vector<int>::iterator it=valence_4_carbons.begin(); it!=valence_4_carbons.end();){
+				unsigned int ii = std::distance(valence_4_carbons.begin(),it);
 				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_4_carbons[ii]);
 				if (my_atom->GetValence() == 4){
 					int kk = ii;
@@ -2627,9 +2635,76 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					}
 					if (kk != ii){
 						OpenBabel::OBBond* my_bond = mol.GetBond(valence_4_carbons[ii], valence_4_carbons[kk]);
-						if (my_bond != NULL) mol.DeleteBond(my_bond, true);
+						if (my_bond != NULL) {
+							mol.DeleteBond(my_bond, true);
+							valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),valence_4_carbons[ii]),valence_4_carbons.end());
+							valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),valence_4_carbons[kk]),valence_4_carbons.end());
+						}
+					}
+					else it++;
+				}
+				else it++;
+			}
+		}
+
+		if(valence_2_carbons.size() != 0 && valence_4_carbons.size() != 0){ 
+			for (std::vector<int>::iterator it=valence_4_carbons.begin(); it!=valence_4_carbons.end();){
+				unsigned int ii = std::distance(valence_4_carbons.begin(),it);
+				OpenBabel::OBAtom *my_atom4  = mol.GetAtom(valence_4_carbons[ii]);
+				int xx = my_atom4->GetIdx(); // The sp3 carbon
+				unsigned int kk = 0;
+				double min_dist = 1e3;
+				for (unsigned int jj=0; jj!=valence_2_carbons.size(); ++jj){
+					OpenBabel::OBAtom *my_atom2  = mol.GetAtom(valence_2_carbons[jj]);
+					double my_dist = my_atom4->GetDistance(my_atom2);
+					if (my_dist < min_dist){
+						kk = jj;
+						min_dist = my_dist;
 					}
 				}
+				OpenBabel::OBAtom *my_atom2  = mol.GetAtom(valence_2_carbons[kk]);
+				int yy = my_atom2->GetIdx(); // The sp carbon
+				std::vector<int> neighb_vector; // The neighbours of the sp3 carbon
+				for( OpenBabel::OBAtomAtomIter     nbr(&*my_atom4); nbr; ++nbr ){
+					neighb_vector.push_back(nbr->GetIdx());
+				}
+				std::vector<int> possible_carbons; 
+				for (unsigned int jj=0; jj!=neighb_vector.size();jj++){
+					OpenBabel::OBAtom *neighbour = mol.GetAtom(neighb_vector[jj]);
+					std::vector<int> neighb_neighbours;
+					std::vector<int>::iterator n_it;
+					for( OpenBabel::OBAtomAtomIter     nbr(&*neighbour); nbr; ++nbr ){
+						OpenBabel::OBAtom *neighb2 = mol.GetAtom(nbr->GetIdx());
+						neighb_neighbours.push_back(nbr->GetIdx());
+					}
+					for (unsigned int rr=0; rr!=neighb_vector.size();rr++){
+						n_it = std::find(neighb_neighbours.begin(), neighb_neighbours.end(), neighb_vector[rr]);
+						if (n_it!=neighb_neighbours.end()){
+							possible_carbons.push_back(neighbour->GetIdx());
+						}
+					}
+				}
+				min_dist = 1e3;
+				int zz = -99; // The wrongly bonded carbon
+				for (unsigned int jj=0; jj!=possible_carbons.size();jj++){
+					OpenBabel::OBAtom *neighbour = mol.GetAtom(possible_carbons[jj]);
+					double my_dist = my_atom2->GetDistance(neighbour);
+					if (my_dist < min_dist){
+						zz = neighbour->GetIdx();
+						min_dist = my_dist;
+					}
+				}
+				if (zz!=-99){
+					OpenBabel::OBBond* bond_to_delete = mol.GetBond(xx, zz);
+					OpenBabel::OBBond* bond_to_add = mol.GetBond(zz, yy);
+					if (bond_to_delete != NULL && bond_to_add==NULL) {
+						mol.DeleteBond(bond_to_delete, true);
+						mol.AddBond(zz, yy,5);
+						bond_to_add = mol.GetBond(zz, yy);
+						valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),valence_4_carbons[ii]),valence_4_carbons.end());
+						valence_2_carbons.erase(std::remove(valence_2_carbons.begin(), valence_2_carbons.end(),valence_2_carbons[kk]),valence_2_carbons.end());
+					}
+				} else it++;
 			}
 		}
 		
@@ -3929,7 +4004,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	}
 	if (!checkSiteValid(stype + bulkCchange)){
 		//There are two options. An invalid transformation or an spiral formation.
-		if ( (stype + bulkCchange)%10 >=5 && (stype + bulkCchange)%10 <=7 ){
+		if ( (stype + bulkCchange)%10 >=5 && (stype + bulkCchange)%10 <=10 ){
 			//The transformation just formed a 7 to 9 member site that will not react further. Transform it into a SPIRAL site.
 			delSiteFromMap(st->type, st);
 			stype = 9999; 
