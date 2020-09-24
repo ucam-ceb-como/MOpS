@@ -8827,6 +8827,12 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // check if R5 is before or after RZZ
     bool b4 = false;
     if(moveIt(stt,-1)->type == R5) b4 = true;
+	if (getDistance_twoC(C_1->C1->C1, C_1) < 2.0 || getDistance_twoC(C_1, C_1->C2->C2) < 2.0 || getDistance_twoC(C_1->C2,C_2) < 2.0 || getDistance_twoC(C_2, C_2->C2->C2) < 2.0){
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
+
     // R5 will be removed and replaced by ZZ. first identify the C member of the
     // resulting RZZ site, C_RZZ. Identify where the R5 site is too.
     Spointer sR5;
@@ -16001,12 +16007,12 @@ int PAHProcess::coupledSiteDirection(Spointer stt){
 		if ((int)check_left->type<500) left_bool = false;
 		if ((int)check_left->type>2000 && (int)check_left->type<2016) left_bool = false;
 		if ((int)check_left->type>=2114 && (int)check_left->type<=2115) left_bool = false;
-		if ((int)check_left->type==9999) left_bool = false;
+		//if ((int)check_left->type==9999) left_bool = false;
 
 		if ((int)check_right->type<500) right_bool = false;
 		if ((int)check_right->type>2000 && (int)check_right->type<2016) right_bool = false;
 		if ((int)check_right->type>=2114 && (int)check_right->type<=2115) right_bool = false;
-		if ((int)check_right->type==9999) right_bool = false;
+		//if ((int)check_right->type==9999) right_bool = false;
 
 		bool invert;
 		if (ii%2 == 0) invert = false;
