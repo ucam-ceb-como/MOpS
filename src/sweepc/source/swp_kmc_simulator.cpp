@@ -161,6 +161,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 		readTrackedPAH();
 	};
 	
+    // Checks if information will be saved for this PAH.
+    auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
     bool tracked_csv = false;
     auto fix_finder = std::find(std::begin(m_tracked_pahs_fixed), std::end(m_tracked_pahs_fixed), PAH_ID);
     if (fix_finder != m_tracked_pahs_fixed.end()) {
@@ -193,10 +195,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
     //double oldtnext;
     int loopcount=0;
 	bool proceed = true;
-	Spointer Sp1;
-	rvector rates(m_kmcmech.JPList().size(), 0);
 	calcrates = true;
-
+    //Local variable to control the number of migration steps between non-migration steps.
     int migr_steps = 0;
 
     //double time_migration = 0.0;
@@ -263,7 +263,6 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); 
             }*/
             //Save information for a single PAH
-            auto finder = std::find(std::begin(m_tracked_pahs), std::end(m_tracked_pahs), PAH_ID);
             if (finder != m_tracked_pahs.end() && !m_migrate){
                 std::string xyzname = ("KMC_DEBUG/");
                 xyzname.append(std::to_string(PAH_ID));
@@ -368,12 +367,14 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
     //std::cout << "Wall time used for PAH_ID " << PAH_ID << " = " << time_migration << "s." << std::endl;
     
     if (tracked_csv) closetrackedPAHCSV();
-    std::string xyzname = ("KMC_DEBUG/");
-    xyzname.append(std::to_string(PAH_ID));
-    xyzname.append("/");
-    xyzname.append(std::to_string(m_t*1000000.0));
-    xyzname.append("_B");
-    savePAH(PAH_ID, xyzname); 
+    if (finder != m_tracked_pahs.end()){
+        std::string xyzname = ("KMC_DEBUG/");
+        xyzname.append(std::to_string(PAH_ID));
+        xyzname.append("/");
+        xyzname.append(std::to_string(m_t*1000000.0));
+        xyzname.append("_D");
+        savePAH(PAH_ID, xyzname); 
+    }
 	return m_t;
 }
 
