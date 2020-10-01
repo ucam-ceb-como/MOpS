@@ -1767,7 +1767,7 @@ void O6R_FE_HACA::initialise() {
     addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S82 // S83                           - 12
     addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S87 // S88                            - 13
     addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S94                                   - 14
-    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S97 // S98                              - 15
+    addReaction(rxnV3, Reaction(0.0*1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S97 // S98                              - 15
     addReaction(rxnV3, Reaction(0.0*1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S101 // S102                       - 16 //It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
     //addReaction(rxnV3, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f                                       - 
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 17              - Frenklach et al. 2018
@@ -1846,7 +1846,8 @@ double O6R_FE_HACA::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	double Crad_fraction = arr2(0);
 	double CO_fraction = arr2(1);
 	double COH_fraction = arr2(2);
-	return m_rate = (m_r[6] * CO_fraction + m_r[16] * Crad_fraction)*site_count*2.0;
+	if (CO_fraction >= 1.0 || COH_fraction >= 1.0) return m_rate = 0.0;
+	else return m_rate = (m_r[6] * CO_fraction + (m_r[15] + m_r[16]) * Crad_fraction)*site_count*2.0;
 	/*if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) {
 		return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0) + m_r[6] * arr2(4) + m_r[16] * arr2(3))*site_count;
 	}
@@ -2874,7 +2875,7 @@ void O6R_FE2_side::initialise() {
     addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S80                                  - 12
     addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85                                   - 13
     addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93                                   - 14
-    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96                                     - 15
+    addReaction(rxnV3, Reaction(0.0*1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96                                     - 15
     addReaction(rxnV3, Reaction(0.0*1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100    								- 16	//It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
 	addReaction(rxnV3, Reaction(1.76e23, -3.681, 24155.0*8.314/4.184/1000.0,sp::None));  // S52                               - 17	//Using reaction from He Lin et al @1atm
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 18              - Frenklach et al. 2018
@@ -2960,7 +2961,8 @@ double O6R_FE2_side::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const
 	double Crad_fraction = arr2(0);
 	double CO_fraction = arr2(1);
 	double COH_fraction = arr2(2);
-	return m_rate = (m_r[17] * CO_fraction + m_r[16] * Crad_fraction)*site_count;
+	if (CO_fraction >= 1.0 || COH_fraction >= 1.0) return m_rate = 0.0;
+	else return m_rate = (m_r[17] * CO_fraction + (m_r[15] + m_r[16]) * Crad_fraction)*site_count;
 	/*if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) return m_rate = (m_r[17] * arr2(1) + m_r[16] * arr2(0))*site_count;
 	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.*/
 }
@@ -3006,7 +3008,7 @@ void O6R_FE2_top::initialise() {
     addReaction(rxnV3, Reaction(1.70e14, 0.00, 9635.0*8.314/4.184/1000.0,sp::H2));  // S80                                  - 12
     addReaction(rxnV3, Reaction(2.00e14, 0.00, 2670.0*8.314/4.184/1000.0,sp::H));  // S85                                   - 13
     addReaction(rxnV3, Reaction(4.00e12, 0.00, 2328.0*8.314/4.184/1000.0,sp::O));  // S93                                   - 14
-    addReaction(rxnV3, Reaction(1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96                                     - 15
+    addReaction(rxnV3, Reaction(0.0*1.00e14, 0.00, 0.0*8.314/4.184/1000.0,sp::OH));  // S96                                     - 15
     addReaction(rxnV3, Reaction(0.0*1.00e10, 0.00, 0.0*8.314/4.184/1000.0,sp::H2O));  // S100									- 16	//It is 1.00e12 in Frenkalch's paper but that's too high. Lowered here.
 	addReaction(rxnV3, Reaction(1.76e23, -3.681, 24155.0*8.314/4.184/1000.0,sp::None));  // S52                               - 17	//Using reaction from He Lin et al @1atm
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 18              - Frenklach et al. 2018
@@ -3092,7 +3094,8 @@ double O6R_FE2_top::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const 
 	double Crad_fraction = arr2(0);
 	double CO_fraction = arr2(1);
 	double COH_fraction = arr2(2);
-	return m_rate = (m_r[6] * CO_fraction + m_r[16] * Crad_fraction)*site_count;
+	if (CO_fraction >= 1.0 || COH_fraction >= 1.0) return m_rate = 0.0;
+	else return m_rate = (m_r[6] * CO_fraction + (m_r[15] + m_r[16]) * Crad_fraction)*site_count;
 	/*if (arr2(1) < arr2(0) && arr2(2) < arr2(0)) return m_rate = (m_r[6] * arr2(1) + m_r[16] * arr2(0))*site_count;
 	else return m_rate = 0.0; // The SS approximation breaks so the rate approximation is wrong.*/
 }
@@ -3371,7 +3374,8 @@ void M5R_ACR5_ZZ::initialise() {
 	addReaction(rxnV, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
 	addReaction(rxnV, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
 	addReaction(rxnV, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
-	//Assumes the mirgation of embedded rings is similar to migration to the edge	
+	addReaction(rxnV, Reaction(5.188e+13, 0.000E+00, 3.340e+01, sp::None));  		// Whitesides2009 system b. 			- 8
+	//Assumes the migration of embedded rings is similar to migration to the edge	
 	
 	//ABF and old
 	/*addReaction(rxnV, Reaction(1.74e08, 1.740, 9.370, sp::H));     // 0 - r1f
@@ -3407,7 +3411,7 @@ double M5R_ACR5_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*, c
 	}
 	else r_f = 0;
 	//return m_rate = m_r[7] * r_f*site_count; // Rate Equation //Violi
-	return m_rate = 1.00E+10 * r_f*site_count; // Rate Equation //Whitesides
+	return m_rate = m_r[8] * r_f*site_count; // Rate Equation //Whitesides
 }
 double M5R_ACR5_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	return setRate0p0267(gp, pah_st);
@@ -3860,6 +3864,8 @@ void MR5_R6::initialise() {
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
+	addReaction(rxnV, Reaction(5.188e+13, 0.000E+00, 3.340e+01, sp::None));  		// Whitesides2009 system b. 			- 8
+	//Assumes the migration of embedded rings is similar to migration to the edge	
 	
 	//H addition & migration
 	/*addReaction(rxnV3, Reaction(5.400e+11, 4.500e-01, 1.820e+00, sp::H));          //0  //R12 in Whitesides2010
@@ -3895,7 +3901,7 @@ double MR5_R6::setRate1(const KMCGasPoint& gp, PAHProcess& pah_st/*, const doubl
 	}
 	else r_f = 0;
 	//return m_rate = m_r[7] * r_f* site_count / 2.0; // Rate Equation // Violi
-	return m_rate = 1.00E+10 * r_f* site_count * 2.0; // Rate Equation // Whitesides
+	return m_rate = m_r[8] * r_f* site_count * 2.0; // Rate Equation // Whitesides
 }
 
 // ************************************************************
@@ -6320,7 +6326,8 @@ void M5R_ACR5_ZZ_ZZ::initialise() {
 	addReaction(rxnV, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
 	addReaction(rxnV, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
 	addReaction(rxnV, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
-	//Assumes the mirgation of embedded rings is similar to migration to the edge	
+	addReaction(rxnV, Reaction(5.188e+13, 0.000E+00, 3.340e+01, sp::None));  		// Whitesides2009 system b. 			- 8
+	//Assumes the migration of embedded rings is similar to migration to the edge	
 	
 	//ABF and old
 	/*addReaction(rxnV, Reaction(1.74e08, 1.740, 9.370, sp::H));     // 0 - r1f
@@ -6356,7 +6363,7 @@ double M5R_ACR5_ZZ_ZZ::setRate0p0267(const KMCGasPoint& gp, PAHProcess& pah_st/*
 	}
 	else r_f = 0;
 	//return m_rate = m_r[7] * r_f*site_count; // Rate Equation //Violi
-	return m_rate = 1.00E+10 * r_f*site_count * 2.0; // Rate Equation //Whitesides
+	return m_rate = m_r[8] * r_f*site_count * 2.0; // Rate Equation //Whitesides
 }
 double M5R_ACR5_ZZ_ZZ::setRate0p12(const KMCGasPoint& gp, PAHProcess& pah_st/*, const double& time_now*/) {
 	return setRate0p0267(gp, pah_st);

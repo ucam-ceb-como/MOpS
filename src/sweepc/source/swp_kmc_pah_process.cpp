@@ -13990,6 +13990,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	}else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after){
 		int jj = findWalker(opp_site);
 		ii = remOppsiteR5Walker(ii, jj);
+		addOppsiteR5Walker(opp_site_second,opp_site_second);
 	}else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
 		int jj = findWalker(opp_site_second);
 		ii = remOppsiteR5Walker(ii, jj);
@@ -14108,6 +14109,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
 		//convSiteType(opp_site_second, opp_site_second->C1, opp_site_second->C2, (kmcSiteType)new_stype);
 		updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, +1500);
+		if((int)opp_site_second->type>=2003) {
+			if(b4) addR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2,true);
+			else addR5internal(opp_site_second->C2->C1->C1,opp_site_second->C2->C1,true);
+		}
 		updateCombinedSitesMigration(opp_site);
 		updateCombinedSitesMigration(opp_site_second);
 	}
@@ -14420,7 +14425,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		} else{
 			CR5_otherside_1 = C_2->C2->C2;
 			CR5_otherside_2 = C_2->C1;
-			CRem_next = C_1->C1;
+			if (C_1->C1->A=='H') CRem_next = C_1->C1->C1;
+			else CRem_next = C_1->C1;
 		}
 	}
 	else {
@@ -14436,7 +14442,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		} else if (steps > 0){
 			CR5_otherside_1 = C_1->C1->C1;
 			CR5_otherside_2 = C_1->C2;
-			CRem_next = C_2->C2;
+			if (C_2->C2->A=='H') CRem_next = C_2->C2->C2;
+			else CRem_next = C_2->C2;
 		} else{
 			CR5_otherside_1 = C_1->C1;
 			CR5_otherside_2 = C_1->C2->C2;
@@ -15867,9 +15874,11 @@ void PAHProcess::performMigrationProcess(){
 		}
 	}
 	//Optimise once after all sites have been moved
+	saveXYZ("KMC_DEBUG/before_optim");
 	OpenBabel::OBMol mol = passPAH();
 	mol = optimisePAH(mol, 500);
 	passbackPAH(mol);
+	saveXYZ("KMC_DEBUG/after_optim");
 	//Clear the walkers vector.
 	m_pah->m_R5walker_sites.clear();
 }
@@ -16238,6 +16247,7 @@ int PAHProcess::findWalker(Spointer current_site){
 		}
 	}
 	std::cout << "Error. findWalker could not find associated walker." << std::endl;
+	saveXYZ("KMC_DEBUG/findwalker_error");
 	std::ostringstream msg;
             msg << "Error. findWalker could not find associated walker." << std::endl;
 	printSitesMigration();
