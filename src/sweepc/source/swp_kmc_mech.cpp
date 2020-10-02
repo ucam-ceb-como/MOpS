@@ -3864,7 +3864,7 @@ void MR5_R6::initialise() {
 	addReaction(rxnV3, Reaction(4.240E+14,  2.500E-02, 3.308E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H            - 5              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));        // A3* + C2H2 -> A3C2H + H        	- 6              - Frenklach et al. 2018
 	addReaction(rxnV3, Reaction(4.960e+11, 7.550e-01, 5.000e+01, sp::None));  		// Violi2005. 							- 7
-	addReaction(rxnV, Reaction(5.188e+13, 0.000E+00, 3.340e+01, sp::None));  		// Whitesides2009 system b. 			- 8
+	addReaction(rxnV3, Reaction(5.188e+13, 0.000E+00, 3.340e+01, sp::None));  		// Whitesides2009 system b. 			- 8
 	//Assumes the migration of embedded rings is similar to migration to the edge	
 	
 	//H addition & migration

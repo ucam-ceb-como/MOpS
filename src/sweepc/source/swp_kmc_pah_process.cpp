@@ -2146,7 +2146,7 @@ bool PAHProcess::isR7internal(Cpointer C_1, Cpointer C_2) {
 		double dist1 = abs(a_1*std::get<0>(*it1) + b_1*std::get<1>(*it1) + c_1*std::get<2>(*it1) + d_1);
 		double dist2 = abs(a_2*std::get<0>(*it1) + b_2*std::get<1>(*it1) + c_2*std::get<2>(*it1) + d_2);
 		double dist3 = getDistance_point_to_line(*it1,C_1->coords,C_2->coords);
-		if (dist1 <= bond_length && dist2 <= bond_length && dist3 <= bond_length*0.95) return true;
+		if (dist1 <= bond_length && dist2 <= bond_length && dist3 <= bond_length*1.2) return true;
 	}
 	return false;
 	//Previous method
@@ -4235,7 +4235,7 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				R5coords_R7 = findR5internal(st->C2->C1->C1, st->C2->C1);
 			}
 			double distR5R7 = getDistance_twoC(R7coords, R5coords_R7);
-			if (distR5R7 < 2.6){
+			if (distR5R7 < 3.1){
 				st->comb = R5R7;
 				m_pah->m_siteMap[R5R7].push_back(st);
 				m_pah->m_R7loc.push_back(R7coords);
@@ -7452,10 +7452,12 @@ void PAHProcess::proc_L6_BY6(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     removeSite(Srem2);
     // update combined sites and neighbours
     Spointer S1 = moveIt(stt,-1); Spointer S2 = moveIt(stt,1);
-    //Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
+    Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
+	Spointer S5 = moveIt(S1,-2); Spointer S6 = moveIt(S2,2);
     updateCombinedSites(stt);
     updateCombinedSites(S1); updateCombinedSites(S2);
-    //updateCombinedSites(S3); updateCombinedSites(S4);
+    updateCombinedSites(S3); updateCombinedSites(S4);
+	updateCombinedSites(S5); updateCombinedSites(S6);
 
     //printSites(stt);
     // update H count
@@ -9298,10 +9300,12 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	removeSite(Srem2);
 	// update combined sites and neighbours
 	Spointer S1 = moveIt(stt, -1); Spointer S2 = moveIt(stt, 1);
-	//Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
+	Spointer S3 = moveIt(S1,-1); Spointer S4 = moveIt(S2,1);
+	Spointer S5 = moveIt(S1,-2); Spointer S6 = moveIt(S2,2);
 	updateCombinedSites(stt);
 	updateCombinedSites(S1); updateCombinedSites(S2); 
-	//updateCombinedSites(S3); updateCombinedSites(S4);
+	updateCombinedSites(S3); updateCombinedSites(S4);
+	updateCombinedSites(S5); updateCombinedSites(S6);
 
 	//printSites(stt);
 	// update H count
@@ -11796,7 +11800,7 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 		if (other_side != m_pah->m_siteList.end()){
 			updateSites(other_side, other_side->C1, other_side->C2, -2000);
 			Spointer S1_os = moveIt(other_side, -1); Spointer S2_os = moveIt(other_side, +1);
-			updateCombinedSites(S1_os); updateCombinedSites(S2_os);
+			updateCombinedSites(other_side); updateCombinedSites(S1_os); updateCombinedSites(S2_os);
 		}
 	}
 	
@@ -15874,11 +15878,11 @@ void PAHProcess::performMigrationProcess(){
 		}
 	}
 	//Optimise once after all sites have been moved
-	saveXYZ("KMC_DEBUG/before_optim");
+	//saveXYZ("KMC_DEBUG/before_optim");
 	OpenBabel::OBMol mol = passPAH();
 	mol = optimisePAH(mol, 500);
 	passbackPAH(mol);
-	saveXYZ("KMC_DEBUG/after_optim");
+	//saveXYZ("KMC_DEBUG/after_optim");
 	//Clear the walkers vector.
 	m_pah->m_R5walker_sites.clear();
 }
