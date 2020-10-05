@@ -2686,12 +2686,23 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 				}
 				min_dist = 1e3;
 				int zz = -99; // The wrongly bonded carbon
-				for (unsigned int jj=0; jj!=possible_carbons.size();jj++){
-					OpenBabel::OBAtom *neighbour = mol.GetAtom(possible_carbons[jj]);
-					double my_dist = my_atom2->GetDistance(neighbour);
-					if (my_dist < min_dist){
-						zz = neighbour->GetIdx();
-						min_dist = my_dist;
+				if (possible_carbons.size()!=0){
+					for (unsigned int jj=0; jj!=possible_carbons.size();jj++){
+						OpenBabel::OBAtom *neighbour = mol.GetAtom(possible_carbons[jj]);
+						double my_dist = my_atom2->GetDistance(neighbour);
+						if (my_dist < min_dist){
+							zz = neighbour->GetIdx();
+							min_dist = my_dist;
+						}
+					}
+				} else{
+					for (unsigned int jj=0; jj!=neighb_vector.size();jj++){
+						OpenBabel::OBAtom *neighbour = mol.GetAtom(neighb_vector[jj]);
+						double my_dist = my_atom2->GetDistance(neighbour);
+						if (my_dist < min_dist){
+							zz = neighbour->GetIdx();
+							min_dist = my_dist;
+						}
 					}
 				}
 				if (zz!=-99){
@@ -15878,11 +15889,11 @@ void PAHProcess::performMigrationProcess(){
 		}
 	}
 	//Optimise once after all sites have been moved
-	//saveXYZ("KMC_DEBUG/before_optim");
+	saveXYZ("KMC_DEBUG/before_optim");
 	OpenBabel::OBMol mol = passPAH();
 	mol = optimisePAH(mol, 500);
 	passbackPAH(mol);
-	//saveXYZ("KMC_DEBUG/after_optim");
+	saveXYZ("KMC_DEBUG/after_optim");
 	//Clear the walkers vector.
 	m_pah->m_R5walker_sites.clear();
 }
