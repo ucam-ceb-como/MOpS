@@ -11138,6 +11138,13 @@ void PAHProcess::proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
     updateCombinedSites(stt); updateCombinedSites(sR5); // new FE and AC
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
+
+	if (getDistance_twoC(sR5->C1,sR5->C1->C2->C2) < 2.2 || getDistance_twoC(sR5->C1->C2,sR5->C2) < 2.2 ){
+		OpenBabel::OBMol mol = passPAH();
+		mol = optimisePAH(mol);
+		passbackPAH(mol);
+	}
+
     // add ring counts
     m_pah->m_rings++;
     m_pah->m_rings5_Lone--;
