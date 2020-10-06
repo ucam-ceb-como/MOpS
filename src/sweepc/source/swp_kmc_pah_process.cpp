@@ -8814,7 +8814,7 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update combined sites for all sites involved and their neighbours
     // (excluding new FE sites, since their combined site type will still be None)
 	//saveXYZ("KMC_DEBUG/RAC_beforeoptim");
-	if (angle_norm_vectors < 0.30){
+	if (angle_norm_vectors < 0.30 || getDistance_twoC(C2_new,C2_new->C2) < 1.1){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -15779,13 +15779,13 @@ void PAHProcess::startMigrationProcess(){
 				else migr_site_ii = std::make_tuple(current_site, coupled_site, steps);
 				migr_sites.push_back(migr_site_ii);
 				migr_sites_appended.push_back(current_site);
-				if (coupled_site->type != R5ACR5) migr_sites_appended.push_back(coupled_site);
+				if (coupled_site->type != R5ACR5 && coupled_site->type != R5FEACR5) migr_sites_appended.push_back(coupled_site);
 			}
 		}
 	}
 
 	//Append sites that are currently locked walkers
-	std::vector<kmcSiteType> migr_site_types = {ACR5, FEACR5, ZZACR5, ACACR5, R5ACR5, R5R6, R5R6FER5R6};
+	std::vector<kmcSiteType> migr_site_types = {ACR5, FEACR5, ZZACR5, ACACR5, R5ACR5, R5FEACR5, R5R6, R5R6FER5R6};
 	std::vector<Spointer> possible_locked_sites;
 	for(unsigned int iii=0; iii!=migr_site_types.size();iii++){
 		for(unsigned int ii=0;ii!=m_pah->m_siteMap[migr_site_types[iii]].size();ii++){
@@ -15800,7 +15800,7 @@ void PAHProcess::startMigrationProcess(){
 		if(it==migr_sites_appended.end()){
 			//The site st has not been appended. Needs to be checked.
 			cpair R5coords;
-			if (st->type == ACR5 || st->type == FEACR5 || st->type == ZZACR5 || st->type == R5ACR5){
+			if (st->type == ACR5 || st->type == FEACR5 || st->type == ZZACR5 || st->type == R5ACR5 || st->type == R5FEACR5){
 				std::tuple<Spointer,Spointer,int> migr_site_ii= std::make_tuple(st, st, 0);
 				migr_sites.push_back(migr_site_ii);
 				migr_sites_appended.push_back(st);

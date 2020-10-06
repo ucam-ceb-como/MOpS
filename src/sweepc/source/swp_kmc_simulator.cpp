@@ -320,6 +320,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     //time_migration += (timerEnd - timerStart) / double(CLOCKS_PER_SEC);
                 }
                 if (finder != m_tracked_pahs.end()) std::cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<" Migr. steps = "<<migr_steps<<std::endl;
+                migr_steps = 0;
                 if (finder != m_tracked_pahs.end() && !m_migrate){
                     std::string xyzname = ("KMC_DEBUG/");
                     xyzname.append(std::to_string(PAH_ID));
