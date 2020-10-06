@@ -15927,11 +15927,18 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 	if ((int)stt->type >= 1002 && (int)stt->type <= 1004) return false; // This would violate the IPR.
 	if ((int)stt->type == 9999 || (int)stt->type == -1 || stt->type == None) return false;
 	if ((int)stt->type == 0){
-		if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100) return false;
+		if ((int)checkR5_1->type == 101 || (int)checkR5_1->type == 501 || (int)checkR5_1->type == 100 || (int)checkR5_1->type == 2002) return false;
 		if ((int)checkR5_1->type >= 1002 && (int)checkR5_1->type <= 1004) return false;
-		if ((int)checkR5_1->type >= 2002 && (int)checkR5_1->type <= 2204) return false;
+		if ((int)checkR5_1->type >= 2103 && (int)checkR5_1->type <= 2204) return false;
 		if ((int)checkR5_1->type >= 2204 && (int)checkR5_1->type <= 2205) return false;
 		if ((int)checkR5_1->type == 9999 ) return false;
+		if ( ((int)checkR5_1->type >= 2003 && (int)checkR5_1->type <= 2005) || ((int)checkR5_1->type >= 2104 && (int)checkR5_1->type <= 2105 )){
+			if (b4) {
+				if (isR5internal(checkR5_1->C2->C1->C1,checkR5_1->C2->C1)) return false;
+			} else{
+				if (isR5internal(checkR5_1->C1->C2,checkR5_1->C1->C2->C2)) return false;
+			}
+		}
 		if ((int)checkR5_1->type == 0){
 			if ((int)checkR5_2->type == 101 || (int)checkR5_2->type == 501) return false;
 			if ((int)checkR5_2->type >= 1002 && (int)checkR5_2->type <= 1004) return false;
@@ -15940,7 +15947,15 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 		}
 	}
 	if ((int)stt->type == 1 && (int)checkR5_1->type == 0 && (int)checkR5_2->type == 0 && (int)checkR5_3->type == 2002) return false;
-	if((int)stt->type == 2002 || (int)stt->type == 2003 || (int)stt->type == 2103 || (int)stt->type == 2104 || (int)stt->type == 9999) return false;
+	if((int)stt->type == 2002 || (int)stt->type == 2103 || (int)stt->type == 2104 || (int)stt->type == 9999) return false;
+	if ( ((int)stt->type >= 2003 && (int)stt->type <= 2005) || ((int)stt->type >= 2104 && (int)stt->type <= 2105 )){
+		if (b4) {
+			if (isR5internal(stt->C2->C1->C1,stt->C2->C1)) return false;
+		} else{
+			if (isR5internal(stt->C1->C2,stt->C1->C2->C2)) return false;
+		}
+	}
+	
 	//Check for other sites
 	Cpointer CR5_otherside_end;
 	if (b4) CR5_otherside_end = stt->C2->C1;
