@@ -2584,6 +2584,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		if(valence_2_carbons.size() != 0){ 
 			for (std::vector<int>::iterator it=valence_2_carbons.begin(); it!=valence_2_carbons.end();){
 				unsigned int ii = std::distance(valence_2_carbons.begin(),it);
+				int xx = valence_2_carbons[ii];
 				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_2_carbons[ii]);
 				if (my_atom->GetValence() == 2){
 					int kk = ii;
@@ -2598,16 +2599,17 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 						}
 					}
 					if (kk != ii){
-						OpenBabel::OBBond* my_bond = mol.GetBond(valence_2_carbons[ii], valence_2_carbons[kk]);
-						if (my_bond == NULL) mol.AddBond(valence_2_carbons[ii], valence_2_carbons[kk],5);
-						my_bond = mol.GetBond(valence_2_carbons[ii], valence_2_carbons[kk]);
+						int yy = valence_2_carbons[kk];
+						OpenBabel::OBBond* my_bond = mol.GetBond(xx, yy);
+						if (my_bond == NULL) mol.AddBond(xx, yy,5);
+						my_bond = mol.GetBond(xx, yy);
 						if (my_bond->GetLength()>8.0) {
 							std::cout << "WARNING. Bond length larger than 8 Armstrongs before optimisation. Deleting bond." << std::endl;
 							mol.DeleteBond(my_bond);
 						}
 						if (my_bond!=NULL) {
-							valence_2_carbons.erase(std::remove(valence_2_carbons.begin(), valence_2_carbons.end(),valence_2_carbons[ii]),valence_2_carbons.end());
-							valence_2_carbons.erase(std::remove(valence_2_carbons.begin(), valence_2_carbons.end(),valence_2_carbons[kk]),valence_2_carbons.end());
+							valence_2_carbons.erase(std::remove(valence_2_carbons.begin(), valence_2_carbons.end(),xx),valence_2_carbons.end());
+							valence_2_carbons.erase(std::remove(valence_2_carbons.begin(), valence_2_carbons.end(),yy),valence_2_carbons.end());
 						}
 					}
 					else it++;
@@ -2620,6 +2622,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		if(valence_4_carbons.size() != 0){ 
 			for (std::vector<int>::iterator it=valence_4_carbons.begin(); it!=valence_4_carbons.end();){
 				unsigned int ii = std::distance(valence_4_carbons.begin(),it);
+				int xx = valence_4_carbons[ii];
 				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_4_carbons[ii]);
 				if (my_atom->GetValence() == 4){
 					int kk = ii;
@@ -2634,11 +2637,12 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 						}
 					}
 					if (kk != ii){
-						OpenBabel::OBBond* my_bond = mol.GetBond(valence_4_carbons[ii], valence_4_carbons[kk]);
+						int yy = valence_4_carbons[kk];
+						OpenBabel::OBBond* my_bond = mol.GetBond(xx, yy);
 						if (my_bond != NULL) {
 							mol.DeleteBond(my_bond, true);
-							valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),valence_4_carbons[ii]),valence_4_carbons.end());
-							valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),valence_4_carbons[kk]),valence_4_carbons.end());
+							valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),xx),valence_4_carbons.end());
+							valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),yy),valence_4_carbons.end());
 						}
 					}
 					else it++;
@@ -2752,7 +2756,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		//mol.PerceiveBondOrders();
 
 		//Comment in to print the details of every bond in the OBmol object
-		mol.SetAromaticPerceived();
+		//mol.SetAromaticPerceived();
 		/*std::cout << "Bond  First Atom     Second Atom     Length    Order   Aromatic\n";
 		for (OpenBabel::OBBondIterator bond_iter=mol.BeginBonds(); bond_iter != mol.EndBonds(); bond_iter++){
 			OpenBabel::OBBond* bond = *bond_iter;
