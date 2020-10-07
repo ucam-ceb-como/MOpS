@@ -2698,10 +2698,13 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 				} else{
 					for (unsigned int jj=0; jj!=neighb_vector.size();jj++){
 						OpenBabel::OBAtom *neighbour = mol.GetAtom(neighb_vector[jj]);
-						double my_dist = my_atom2->GetDistance(neighbour);
-						if (my_dist < min_dist){
-							zz = neighbour->GetIdx();
-							min_dist = my_dist;
+						OpenBabel::OBBond* bond_exist = mol.GetBond(yy, neighbour->GetIdx());
+						if (bond_exist==NULL){
+							double my_dist = my_atom2->GetDistance(neighbour);
+							if (my_dist < min_dist){
+								zz = neighbour->GetIdx();
+								min_dist = my_dist;
+							}
 						}
 					}
 				}
@@ -2714,7 +2717,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 						bond_to_add = mol.GetBond(zz, yy);
 						valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),valence_4_carbons[ii]),valence_4_carbons.end());
 						valence_2_carbons.erase(std::remove(valence_2_carbons.begin(), valence_2_carbons.end(),valence_2_carbons[kk]),valence_2_carbons.end());
-					}
+					} else it++;
 				} else it++;
 			}
 		}
