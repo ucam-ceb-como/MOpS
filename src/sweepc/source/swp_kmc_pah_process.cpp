@@ -15907,11 +15907,11 @@ void PAHProcess::performMigrationProcess(){
 		}
 	}
 	//Optimise once after all sites have been moved
-	saveXYZ("KMC_DEBUG/before_optim");
+	//saveXYZ("KMC_DEBUG/before_optim");
 	OpenBabel::OBMol mol = passPAH();
 	mol = optimisePAH(mol, 500);
 	passbackPAH(mol);
-	saveXYZ("KMC_DEBUG/after_optim");
+	//saveXYZ("KMC_DEBUG/after_optim");
 	//Clear the walkers vector.
 	m_pah->m_R5walker_sites.clear();
 }
