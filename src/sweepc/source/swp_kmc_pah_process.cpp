@@ -6883,6 +6883,7 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			passbackPAH(mol);
 		}
 	}
+	saveXYZ("KMC_DEBUG/g6r_ac_before_addc");
     Cpointer newC1;
     Cpointer newC2;
     if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
@@ -6981,12 +6982,14 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // add ring counts
     m_pah->m_rings++;
     //printSites(stt);
+	saveXYZ("KMC_DEBUG/g6r_ac_after_addc");
 	//Optimise PAH if needed.
 	if ( (getDistance_twoC(newC2,C_2) > 1.7 || getDistance_twoC(newC2,newC2->C2->C2) < 1.8 || getDistance_twoC(newC1,newC1->C1->C1) < 1.8) && !m_pah->m_optimised) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 	}
+	saveXYZ("KMC_DEBUG/g6r_ac_after_optim");
 }
 // 
 // ************************************************************
@@ -11767,7 +11770,7 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 	Cpointer thirdC2 = findThirdC(CRem_next);
 	Spointer other_side;
 	bool bridged = false;
-	cpair Cdir1, Cdir2, normdir, Cdir0;
+	cpair Cdir1, Cdir2, normdir, Cdir0, Cdir;
 	if (thirdC != NULLC && thirdC2 != NULLC) {
 		bridged = true;
 		other_side = findSite(thirdC);
@@ -11781,8 +11784,24 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 		Cdir1 = cross_vector(get_vector(CRem_before->coords, CRem_next->coords), normdir);
 		Cdir2 = get_vector(CRem_before->coords, CRem_next->coords);
 		double Cdist = getDistance_twoC(CRem_before, CRem_next);
+		if (Cdist/4.0 < 1.47) {
+			double magn = 1.47 * sin (acos (Cdist/4.0 / 1.47));
+			Cdir = std::make_tuple(	std::get<0>(Cdir2) * Cdist/4.0 + std::get<0>(Cdir1) * magn,
+									std::get<1>(Cdir2) * Cdist/4.0 + std::get<1>(Cdir1) * magn,
+									std::get<2>(Cdir2) * Cdist/4.0 + std::get<2>(Cdir1) * magn);
+			Cdir = scale_vector(Cdir);
+		} else{
+			//Assume 60 degree angle
+			double magn = 1.47 * 0.8660;
+			Cdir = std::make_tuple(	std::get<0>(Cdir2) * 0.5 + std::get<0>(Cdir1) * magn,
+									std::get<1>(Cdir2) * 0.5 + std::get<1>(Cdir1) * magn,
+									std::get<2>(Cdir2) * 0.5 + std::get<2>(Cdir1) * magn);
+			Cdir = scale_vector(Cdir);
+		}
+
 		//Add carbons from internal positions
-		Cpointer newC = addC(CRem_before, Cdir1, Cdist/2.40*1.47, true);
+		Cpointer newC = addC(CRem_before, Cdir, 1.47, true);
+		//Cpointer newC = addC(CRem_before, Cdir1, Cdist/2.40*1.47, true);
 		newC = addC(newC, Cdir2, 1.45, true);
 	}
 	else{
