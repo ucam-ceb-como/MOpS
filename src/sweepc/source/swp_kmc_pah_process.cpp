@@ -2610,7 +2610,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 						if (my_bond!=NULL) {
 							valence_2_carbons.erase(std::remove(valence_2_carbons.begin(), valence_2_carbons.end(),xx),valence_2_carbons.end());
 							valence_2_carbons.erase(std::remove(valence_2_carbons.begin(), valence_2_carbons.end(),yy),valence_2_carbons.end());
-						}
+						} else it++;
 					}
 					else it++;
 				}
@@ -2643,7 +2643,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 							mol.DeleteBond(my_bond, true);
 							valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),xx),valence_4_carbons.end());
 							valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),yy),valence_4_carbons.end());
-						}
+						} else it++;
 					}
 					else it++;
 				}
@@ -12199,7 +12199,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	}
 
 	Spointer finsite = std::get<0>(m_pah->m_R5walker_sites[ii]);
-	if((int)finsite->type>=2003) {
+	if((int)finsite->type>=2003 && finsite == std::get<1>(m_pah->m_R5walker_sites[ii])) {
 		if(dir) addR5internal(finsite->C2->C1->C1,finsite->C2->C1,true);
 		else addR5internal(finsite->C1->C2,finsite->C1->C2->C2,true);
 	}
@@ -12491,7 +12491,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	}
 
 	Spointer finsite = std::get<0>(m_pah->m_R5walker_sites[ii]);
-	if((int)finsite->type>=2003) {
+	if((int)finsite->type>=2003 && finsite == std::get<1>(m_pah->m_R5walker_sites[ii])) {
 		if(b4) addR5internal(finsite->C2->C1->C1,finsite->C2->C1,true);
 		else addR5internal(finsite->C1->C2,finsite->C1->C2->C2,true);
 	}
