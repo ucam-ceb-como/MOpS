@@ -8795,7 +8795,7 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	updateA(Cstart, 'C', Hdir1);
 	C2_new = addC(C1_new, FEdir, 1.4);
 	updateA(C2_new, 'H', Hdir2);
-	updateA(C_2, 'C', FEdir);
+	updateA(C2_new->C2, 'C', FEdir);
     //C1_new = addC(Cstart, normAngle(Cstart->bondAngle1+120), 0, 1.4);
     //C2_new = addC(C1_new, normAngle(C1_new->C1->bondAngle1-60), normAngle(C1_new->C1->bondAngle1-120), 1.4);
     // edit sites. first identify the neighbouring sites of resulting AC & FE3
@@ -8821,7 +8821,7 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update combined sites for all sites involved and their neighbours
     // (excluding new FE sites, since their combined site type will still be None)
 	//saveXYZ("KMC_DEBUG/RAC_beforeoptim");
-	if (angle_norm_vectors < 0.30 || getDistance_twoC(C2_new,C2_new->C2) < 1.1){
+	if (angle_norm_vectors < 0.30 || getDistance_twoC(C2_new,C2_new->C2) < 1.1 || bridge){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -12076,14 +12076,18 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	else if ((int)sFE2->type == 0){
 		//This means that the pentagon has migrated to the edge but will have a single carbon out of the structure.
 		if (b4) {
-			updateSites(S1, S1->C1, sFE2->C1, 500);
-			updateSites(S2, sFE2->C1, S2->C2, 500);
+			if ((int)S1->type>2000) updateSites(S1, S1->C1, sFE2->C1, 100);
+			else updateSites(S1, S1->C1, sFE2->C1, 500);
+			if ((int)S2->type>2000) updateSites(S2, sFE2->C1, S2->C2, 100);
+			else updateSites(S2, sFE2->C1, S2->C2, 500);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 		}
 		else {
-			updateSites(S1, S1->C1, sFE2->C2, 500);
-			updateSites(S2, sFE2->C2, S2->C2, 500);
+			if ((int)S1->type>2000) updateSites(S1, S1->C1, sFE2->C2, 100);
+			else updateSites(S1, S1->C1, sFE2->C2, 500);
+			if ((int)S2->type>2000) updateSites(S2, sFE2->C2, S2->C2, 100);
+			else updateSites(S2, sFE2->C2, S2->C2, 500);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 		}
