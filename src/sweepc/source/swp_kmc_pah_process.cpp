@@ -3799,6 +3799,9 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
     // check if site type change is valid (as long as site still principal site)
 	int stype = (int)st->type;
 	int original_stype = stype;
+	bool optim = false;
+	std::list<cpair>R5loc_copy;
+	std::list<cpair>R7loc_copy;
 	if (!checkSiteValid(stype)){
 		cout << "ERROR: updateSites: Invalid site type before update.\n"; //SETBREAKPOINT
 		cout << "Site type: " << kmcSiteName(st->type)<< "\n";
@@ -3905,6 +3908,9 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		st->C1 = Carb1;
 		st->C2 = Carb2;
 		if (!m_pah->m_optimised){
+			optim = true;
+			R5loc_copy = m_pah->m_R5loc;
+			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol);
 			passbackPAH(mol);
@@ -3933,6 +3939,9 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		st->C1 = Carb1;
 		st->C2 = Carb2;
 		if (!m_pah->m_optimised){
+			optim = true;
+			R5loc_copy = m_pah->m_R5loc;
+			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol);
 			passbackPAH(mol);
@@ -3960,6 +3969,9 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		st->C1 = Carb1;
 		st->C2 = Carb2;
 		if (!m_pah->m_optimised){
+			optim = true;
+			R5loc_copy = m_pah->m_R5loc;
+			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol);
 			passbackPAH(mol);
@@ -4036,6 +4048,9 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			st->C1 = Carb1;
 			st->C2 = Carb2;
 			if (!m_pah->m_optimised){
+				optim = true;
+				R5loc_copy = m_pah->m_R5loc;
+				R7loc_copy = m_pah->m_R7loc;
 				OpenBabel::OBMol mol = passPAH();
 				mol = optimisePAH(mol);
 				passbackPAH(mol);
@@ -4089,6 +4104,24 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			++updatesites_error_counter;
 			return;
 		}
+	}
+	//Reassigns the R5 and R7 locations with same size.
+	if (m_pah->m_R5loc.size() != R5loc_copy.size() && optim) {
+		std::list<cpair> newR5loclist;
+		for(std::list<cpair>::iterator it = R5loc_copy.begin(); it != R5loc_copy.end(); ++it) {
+			double mindist = 1e3;
+			std::list<cpair>::iterator it3;
+			for(std::list<cpair>::iterator it2 = m_pah->m_R5loc.begin(); it2 != m_pah->m_R5loc.end(); ++it2) {
+				double my_dist = getDistance_twoCsquared(*it, *it2);
+				if (my_dist < mindist){
+					mindist = my_dist;
+					it3 = it2;
+				}
+			}
+			newR5loclist.push_back(*it3);
+		}
+		m_pah->m_R5loc = newR5loclist;
+		m_pah->m_optimised = false;
 	}
 	// removes site from m_pah->m_siteMap (principal site)
 	delSiteFromMap(st->type, st);
@@ -6205,10 +6238,18 @@ Cpointer PAHProcess::findThirdC(Cpointer C_1) {
 		if (C_check != C_1 && C_check != C_1->C1 && C_check != C_1->C1->C1 && C_check != C_1->C2 && C_check != C_1->C2->C2 && C_check != C_1->C3){
 			double dist = getDistance_twoC(C_check, C_1);
 			if (dist < 1.8) {
-				cpair vec1 = get_vector(C_1->C1->coords, C_1->coords);
-				cpair vec2 = get_vector(C_1->C2->coords, C_1->coords);
-				cpair addvec = add_vector(vec1, vec2);
-				addvec = jumpToPos(C_1->coords,addvec,1.4);
+				cpair addvec;
+				if (C_1->A=='C'){
+					cpair vec1 = get_vector(C_1->C1->coords, C_1->coords);
+					cpair vec2 = get_vector(C_1->C2->coords, C_1->coords);
+					addvec = add_vector(vec1, vec2);
+					addvec = jumpToPos(C_1->coords,addvec,1.4);
+				} else{
+					cpair vec1 = get_vector(C_1->coords, C_1->C1->coords);
+					cpair vec2 = get_vector(C_1->coords, C_1->C2->coords);
+					addvec = add_vector(vec1, vec2);
+					addvec = jumpToPos(C_1->coords,addvec,1.8);
+				}
 				if (getDistance_twoC(C_check->coords, addvec)<1.8) return C_check; 
 			}
 		}
@@ -6883,7 +6924,6 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			passbackPAH(mol);
 		}
 	}
-	saveXYZ("KMC_DEBUG/g6r_ac_before_addc");
     Cpointer newC1;
     Cpointer newC2;
     if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
@@ -6982,14 +7022,12 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // add ring counts
     m_pah->m_rings++;
     //printSites(stt);
-	saveXYZ("KMC_DEBUG/g6r_ac_after_addc");
 	//Optimise PAH if needed.
 	if ( (getDistance_twoC(newC2,C_2) > 1.7 || getDistance_twoC(newC2,newC2->C2->C2) < 1.8 || getDistance_twoC(newC1,newC1->C1->C1) < 1.8) && !m_pah->m_optimised) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 	}
-	saveXYZ("KMC_DEBUG/g6r_ac_after_optim");
 }
 // 
 // ************************************************************
@@ -8920,7 +8958,7 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			//Adjust angle of previous carbon
 			//Cstart->bondAngle1 = normAngle(Cstart->C1->bondAngle1 - 60);
 			//Connect carbon to existing ZZ carbon
-			saveXYZ("KMC_DEBUG/Migration_over_bridge");
+			//saveXYZ("KMC_DEBUG/Migration_over_bridge");
 			Cpointer C_newbridge, C_sharedbridge, C_oldbridge;
 			if (b4) Cstart = C_RZZ->C2->C2;
 			else Cstart = C_1;
@@ -8960,7 +8998,7 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			//Adjust angle of previous carbon
 			//Cstart->bondAngle1 = normAngle(Cstart->C1->bondAngle1 - 60);
 			//Connect carbon to existing ZZ carbon
-			saveXYZ("KMC_DEBUG/Migration_over_bridge");
+			//saveXYZ("KMC_DEBUG/Migration_over_bridge");
 			Cpointer C_newbridge, C_sharedbridge, C_oldbridge;
 			Ccheck->C1 = findC(mpos);
 			C_newbridge = Ccheck->C1;
@@ -16075,7 +16113,7 @@ int PAHProcess::coupledSiteDirection(Spointer stt){
 			Spointer left_site = moveIt(check_left,-1);
 			if (left_site->type==R5) left_bool = false;
 		}
-		if(check_left->type==R5FEACR5 || check_left->type==R5ACR5){
+		if(check_right->type==R5FEACR5 || check_right->type==R5ACR5){
 			Spointer right_site = moveIt(check_right,+1);
 			if (right_site->type==R5) right_bool = false;
 		}
