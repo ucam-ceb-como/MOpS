@@ -16270,53 +16270,59 @@ void PAHProcess::checkR5Walkers(int jj){
 					}
 				}
 				if (check_site == start_site_ii || check_site == start_site_ii2 || check_site2 == start_site_ii || check_site == start_site_ii2){
-					//The next position of walker jj will become the start location of walker ii.
-					//This will mess up the sites.
-					//First - Move walker ii to current position and steps = 0
-					//Second - Return the PAH to the program. It should handle walker jj now
-					bool local_b4;
-					if (jj_steps<0) {
-						local_b4 = true;
-					}
-					else {
-						local_b4 = false;
-					}
-					//saveXYZ("KMC_DEBUG/BEFORE_II_TERMINATION");
-					proc_M5R_ACR5_termination(start_site_ii, start_site_ii->C1,start_site_ii->C2,end_site_ii,local_b4);
-					if ((int)end_site_ii->type>500 && (int)end_site_ii->type<1100){
-						if (ii_steps<0) {
-							end_site_ii = moveIt(start_site_ii2,ii_steps-1);
-							end_site_ii2 = moveIt(start_site_ii2,ii_steps);
+					//Check that the ending site is not an FEACR5 or ZZACR5 that can migrate to.
+					bool move_walker = true;
+					if (jj_steps<0 && (int)check_site2->type>=2003) move_walker = false;
+					if (jj_steps>0 && (int)check_site->type>=2003) move_walker = false;
+					if (move_walker){
+						//The next position of walker jj will become the start location of walker ii.
+						//This will mess up the sites.
+						//First - Move walker ii to current position and steps = 0
+						//Second - Return the PAH to the program. It should handle walker jj now
+						bool local_b4;
+						if (jj_steps<0) {
+							local_b4 = true;
+						}
+						else {
+							local_b4 = false;
+						}
+						//saveXYZ("KMC_DEBUG/BEFORE_II_TERMINATION");
+						proc_M5R_ACR5_termination(start_site_ii, start_site_ii->C1,start_site_ii->C2,end_site_ii,local_b4);
+						if ((int)end_site_ii->type>500 && (int)end_site_ii->type<1100){
+							if (ii_steps<0) {
+								end_site_ii = moveIt(start_site_ii2,ii_steps-1);
+								end_site_ii2 = moveIt(start_site_ii2,ii_steps);
+							}
+							else{
+								end_site_ii = moveIt(start_site_ii2,ii_steps);
+								end_site_ii2 = moveIt(start_site_ii2,ii_steps+1);
+							}
 						}
 						else{
-							end_site_ii = moveIt(start_site_ii2,ii_steps);
-							end_site_ii2 = moveIt(start_site_ii2,ii_steps+1);
+							end_site_ii = moveIt(start_site_ii,ii_steps);
+							end_site_ii2 = moveIt(start_site_ii,ii_steps);
 						}
+						std::get<0>(m_pah->m_R5walker_sites[ii]) = end_site_ii;
+						std::get<1>(m_pah->m_R5walker_sites[ii]) = end_site_ii2;
+						std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
+						if((int)end_site_ii->type>=2003 && local_b4==false) {
+							if(ii_steps < 0) addR5internal(end_site_ii->C2->C1->C1,end_site_ii->C2->C1,true);
+							else addR5internal(end_site_ii->C1->C2,end_site_ii->C1->C2->C2,true);
+						} else if ((int)end_site_ii2->type>=2003 && local_b4==true) {
+							if(ii_steps < 0) addR5internal(end_site_ii2->C2->C1->C1,end_site_ii2->C2->C1,true);
+							else addR5internal(end_site_ii2->C1->C2,end_site_ii2->C1->C2->C2,true);
+						}
+						//saveXYZ("KMC_DEBUG/AFTER_II_TERMINATION");
+						//Reread the pointers
+						/*end_site_jj = moveIt(start_site_jj,jj_steps);
+						end_site_jj2 = moveIt(start_site_jj2,jj_steps);
+						proc_M5R_ACR5_termination(start_site_jj, start_site_jj->C1,start_site_jj->C2,end_site_jj,local_b4);
+						std::get<0>(m_pah->m_R5walker_sites[jj]) = end_site_jj;
+						std::get<1>(m_pah->m_R5walker_sites[jj]) = end_site_jj2;
+						if (local_b4) std::get<2>(m_pah->m_R5walker_sites[jj]) = -1;
+						else std::get<2>(m_pah->m_R5walker_sites[jj]) = 1;*/
+						//saveXYZ("KMC_DEBUG/AFTER_JJ_TERMINATION");
 					}
-					else{
-						end_site_ii = moveIt(start_site_ii,ii_steps);
-						end_site_ii2 = moveIt(start_site_ii,ii_steps);
-					}
-					std::get<0>(m_pah->m_R5walker_sites[ii]) = end_site_ii;
-					std::get<1>(m_pah->m_R5walker_sites[ii]) = end_site_ii2;
-					std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
-					if((int)end_site_ii->type>=2003 && local_b4==false) {
-						if(ii_steps < 0) addR5internal(end_site_ii->C2->C1->C1,end_site_ii->C2->C1,true);
-						else addR5internal(end_site_ii->C1->C2,end_site_ii->C1->C2->C2,true);
-					} else if ((int)end_site_ii2->type>=2003 && local_b4==true) {
-						if(ii_steps < 0) addR5internal(end_site_ii2->C2->C1->C1,end_site_ii2->C2->C1,true);
-						else addR5internal(end_site_ii2->C1->C2,end_site_ii2->C1->C2->C2,true);
-					}
-					//saveXYZ("KMC_DEBUG/AFTER_II_TERMINATION");
-					//Reread the pointers
-					/*end_site_jj = moveIt(start_site_jj,jj_steps);
-					end_site_jj2 = moveIt(start_site_jj2,jj_steps);
-					proc_M5R_ACR5_termination(start_site_jj, start_site_jj->C1,start_site_jj->C2,end_site_jj,local_b4);
-					std::get<0>(m_pah->m_R5walker_sites[jj]) = end_site_jj;
-					std::get<1>(m_pah->m_R5walker_sites[jj]) = end_site_jj2;
-					if (local_b4) std::get<2>(m_pah->m_R5walker_sites[jj]) = -1;
-					else std::get<2>(m_pah->m_R5walker_sites[jj]) = 1;*/
-					//saveXYZ("KMC_DEBUG/AFTER_JJ_TERMINATION");
 				}
 			}
 		}
