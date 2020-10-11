@@ -7857,11 +7857,12 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			updateCombinedSites(other_side);
 		}
 	}
-    Spointer S3, S4;
+    Spointer S3, S4, S5, S6;
     // update combined sites for all sites and their neighbours
-    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1); S5 = moveIt(S1, -2); S6 = moveIt(S2, 2); 
     updateCombinedSites(S1); updateCombinedSites(S2);
     updateCombinedSites(S3); updateCombinedSites(S4);
+	updateCombinedSites(S5); updateCombinedSites(S6);
     addCount(0,-1);
     m_pah->m_rings--;
 	m_pah->m_rings5_Lone++;
