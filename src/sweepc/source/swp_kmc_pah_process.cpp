@@ -4185,7 +4185,7 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
         delSiteFromMap(st->comb, st);
     }
 	int s_type = (int)st->type;
-	if (s_type >= 500) s_type = 500;
+	if (s_type >= 500 && s_type!=9999) s_type = 500;
 	cpair R5coords;
 	Spointer S1 = moveIt(st,-1);
 	Spointer S2 = moveIt(st,+1);
@@ -4404,7 +4404,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
         delSiteFromMap(st->comb, st);
     }
 	int s_type = (int)st->type;
-	if (s_type >= 500) s_type = 500;
+	if (s_type >= 500 && s_type!=9999) s_type = 500;
 	Spointer S1 = moveIt(st,-1);
 	Spointer S2 = moveIt(st,+1);
 	bool check_left = true;
