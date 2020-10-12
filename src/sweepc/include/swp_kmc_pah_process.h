@@ -135,6 +135,9 @@ public:
     //! Called after migration processes. Loops through the random walker sites and moves them to end locations.
     void performMigrationProcess();
 
+    //! Moves individual walker ii when called without calling optimiser. 
+    void moveWalker(int ii);
+
     // Read Processes
     //! Get Counts
     intpair getCHCount() const;

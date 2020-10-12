@@ -8863,7 +8863,7 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update combined sites for all sites involved and their neighbours
     // (excluding new FE sites, since their combined site type will still be None)
 	//saveXYZ("KMC_DEBUG/RAC_beforeoptim");
-	if (angle_norm_vectors < 0.30 || getDistance_twoC(C2_new,C2_new->C2) < 1.1 || bridge){
+	if (angle_norm_vectors < 0.30 || getDistance_twoC(C2_new,C2_new->C2) < 1.1 || getDistance_twoC(C2_new,C2_new->C2) > 1.80 || bridge){
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
@@ -14248,6 +14248,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		else if ((int)sFE2->type == 0 ){ 
 			//This means that the pentagon has migrated to a edge but will have a carbon out of the structure.
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
+			if ((int)S1->type>=2004) moveWalker(ii);
 			if ((int)S1->type<2000) updateSites(S1, S1->C1, S1->C2, 500);
 			else updateSites(S1, S1->C1, S1->C2, 100);
 		}
@@ -14264,12 +14265,15 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
+			moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
 		}
 		else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a R5 neighbour {
+			if ((int)sFE2->type>=103) moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
 		}
 		else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a R5 neighbour {
+			if ((int)sFE2->type>=503) moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
 		}
 		if ((int)stt->type>2100){
@@ -14288,6 +14292,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		else if ((int)sFE2->type == 0){
 			//This means that the pentagon has migrated to the edge but will have a carbon out of the structure.
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
+			if ((int)S2->type>=2004) moveWalker(ii);
 			if ((int)S2->type<2000) updateSites(S2, S2->C1, S2->C2, 500);
 			else updateSites(S2, S2->C1, S2->C2, 100);
 		}
@@ -14304,12 +14309,15 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
+			moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
 		}
 		else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a BY5 {
+			if ((int)sFE2->type>=103) moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
 		}
 		else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a BY5 {
+			if ((int)sFE2->type>=503) moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
 		}
 		if ((int)stt->type>2100){
@@ -15290,6 +15298,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		else if ((int)sFE2->type == 0 ){ 
 			//This means that the pentagon has migrated to the edge but will have a carbon out of the structure.
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
+			if ((int)S1->type>=2004) moveWalker(ii);
 			if ((int)S1->type < 2000 ) updateSites(S1, S1->C1, S1->C2, 500);
 			else updateSites(S1, S1->C1, S1->C2, 100);
 		}
@@ -15305,13 +15314,16 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		else if ((int)sFE2->type == 4){ //sFE2 is a BY6
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
-		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
+		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a complex bay site {
+			moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
 		}
 		else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a R5 neighbour {
+			if ((int)sFE2->type>=103) moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
 		}
 		else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a R5 neighbour {
+			if ((int)sFE2->type>=503) moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
 		}
 		convSiteType(stt, stt->C1, stt->C2, ZZ);
@@ -15327,6 +15339,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		else if ((int)sFE2->type == 0){
 			//This means that the pentagon has migrated to the edge but will have a carbon out of the structure.
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
+			if ((int)S2->type>=2004) moveWalker(ii);
 			if ((int)S2->type<2000) updateSites(S2, S2->C1, S2->C2, 500);
 			else updateSites(S2, S2->C1, S2->C2, 100);
 		}
@@ -15343,12 +15356,15 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
+			moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
 		}
 		else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a BY5 {
+			if ((int)sFE2->type>=103) moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
 		}
 		else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a BY5 {
+			if ((int)sFE2->type>=503) moveWalker(ii);
 			updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
 		}
 		convSiteType(stt, stt->C1, stt->C2, ZZ);
@@ -15950,9 +15966,8 @@ void PAHProcess::performMigrationProcess(){
 		Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
 		int steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 		Spointer sFE2 = moveIt(site_perf,steps);
-		bool b4;
+		bool b4 = false;
 		if(steps < 0) b4 = true;
-		else b4 = false;
 		if (site_perf->type == FE) proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else if((int)site_perf->type <= 4) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 		else if((int)site_perf->type <= 104) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
@@ -15976,6 +15991,35 @@ void PAHProcess::performMigrationProcess(){
 	//saveXYZ("KMC_DEBUG/after_optim");
 	//Clear the walkers vector.
 	m_pah->m_R5walker_sites.clear();
+}
+
+//! Moves individual walker ii when called without calling optimiser. 
+void PAHProcess::moveWalker(int ii){
+	Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[ii]);
+	Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
+	int steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+	Spointer sFE2 = moveIt(site_perf,steps);
+	bool b4 = false;
+	if(steps < 0) b4 = true;
+	if (site_perf->type == FE) proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+	else proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+	if (sFE2->type==FE || sFE2->type==R5R6){
+		Spointer S1 = moveIt(sFE2,-1);
+		Spointer S2 = moveIt(sFE2,+1);
+		if (b4) {
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
+			std::get<1>(m_pah->m_R5walker_sites[ii]) = sFE2;
+			std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
+		} else{
+			std::get<0>(m_pah->m_R5walker_sites[ii]) = sFE2;
+			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
+			std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
+		}
+	} else{
+		std::get<0>(m_pah->m_R5walker_sites[ii]) = sFE2;
+		std::get<1>(m_pah->m_R5walker_sites[ii]) = sFE2;
+		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
+	}
 }
 
 //! Returns true if site is allowed for migration
