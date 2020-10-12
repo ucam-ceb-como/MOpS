@@ -15486,7 +15486,7 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	double magn = dist2 * cos(theta);
 	cpair R5dir = get_vector(CFE->coords,CFE->C2->coords);
 	cpair normvec;
-	if (CFE->C2->C2->A=='C') normvec = invert_vector(norm_vector(CFE->coords, CFE->C2->coords, CFE->C2->C2->coords));
+	if (CFE->C2->C2->A=='C' && CFE->C2->A=='H') normvec = invert_vector(norm_vector(CFE->coords, CFE->C2->coords, CFE->C2->C2->coords));
 	else normvec = norm_vector(CFE->coords, CFE->C2->coords, CFE->C2->C2->coords);
 	cpair crossvec = cross_vector(R5dir, normvec);
 	cpair resultantvec = std::make_tuple(R5_dist/2.0 * std::get<0>(R5dir) + magn * std::get<0>(crossvec), R5_dist/2.0 * std::get<1>(R5dir) + magn * std::get<1>(crossvec), R5_dist/2.0 * std::get<2>(R5dir)+ magn * std::get<2>(crossvec));
