@@ -3982,7 +3982,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		//There are two possible sites ZZACR5 and FEACR5FE. Decide which one.
 		Cpointer Ccheck = Carb1->C2;
 		Cpointer Ccheck2 = Ccheck->C2;
-		Cpointer Ccheck3 = Carb2->C1;
+		Cpointer Ccheck3 = Carb2->C1->C1;
 		Cpointer Ccheck4 = Ccheck3->C2;
 		bool decide_PAH = false;
 		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
