@@ -2111,7 +2111,7 @@ bool PAHProcess::isR5internal(Cpointer C_1, Cpointer C_2) {
 		double dist1 = abs(a_1*std::get<0>(*it1) + b_1*std::get<1>(*it1) + c_1*std::get<2>(*it1) + d_1);
 		double dist2 = abs(a_2*std::get<0>(*it1) + b_2*std::get<1>(*it1) + c_2*std::get<2>(*it1) + d_2);
 		double dist3 = getDistance_point_to_line(*it1,C_1->coords,C_2->coords);
-		if (dist1 <= bond_length && dist2 <= bond_length && dist3 <= bond_length*0.95) return true;
+		if (dist1 <= bond_length && dist2 <= bond_length && dist3 <= bond_length*1.05) return true;
 	}
 	return false;
 	//Previous version - uses endposR5internal
@@ -4405,12 +4405,6 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
     }
 	int s_type = (int)st->type;
 	if (s_type >= 500 && s_type!=9999) s_type = 500;
-	Spointer S1 = moveIt(st,-1);
-	Spointer S2 = moveIt(st,+1);
-	bool check_left = true;
-	bool check_right = true;
-	cpair R5coords;
-	int steps=-99999;
     switch(s_type) {
     case 0:
         // Check for FE3 (if there's FE on each side of the FE)
@@ -4494,7 +4488,14 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 			else st->comb = None;
         }else st->comb = None;
         break;
-	case 500:
+	case 500:{
+		Spointer S1 = moveIt(st,-1);
+		Spointer S2 = moveIt(st,+1);
+		bool check_left = true;
+		bool check_right = true;
+		bool remR5coords = false;
+		cpair R5coords;
+		int steps=-99999;
 		//Check for R5R7
 		if (isR7internal(st->C1,st->C1->C2) || isR7internal(st->C2->C1,st->C2)){
 			cpair R5coords_R7, R7coords;
@@ -4604,9 +4605,196 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 			break;
 		}
 
+		//Check for opposite side sites that may contain an R5
+		if (st->type==ACR5 || st->type==R5R6){
+			Cpointer CR5_checkotherside_left, CRem_next_left;
+			Cpointer CR5_checkotherside_right, CRem_next_right;
+			for(unsigned int ii=0;ii!=m_pah->m_R5walker_sites.size();ii++){
+				Spointer start_site = std::get<0>(m_pah->m_R5walker_sites[ii]);
+				Spointer start_site_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
+				int num_steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+				Spointer check_site = moveIt(start_site,num_steps);
+				if (check_site==st){
+					steps = num_steps;
+					break;
+				}
+			}
+			if (steps == 0){
+				CR5_checkotherside_left = st->C1->C2;
+				CRem_next_left = st->C1->C1;
+				CR5_checkotherside_right = st->C2->C1;
+				CRem_next_right = st->C2->C2;
+			} else if (steps>0){
+				CR5_checkotherside_left = st->C1->C1;
+				if (CR5_checkotherside_left->C1->A=='H') CRem_next_left = CR5_checkotherside_left->C1->C1;
+				else CRem_next_left = CR5_checkotherside_left->C1;
+				CR5_checkotherside_right = st->C1->C2;
+				if (CR5_checkotherside_right->C2->A=='H') CRem_next_right = CR5_checkotherside_right->C2->C2;
+				else CRem_next_right = CR5_checkotherside_right->C2;
+			} else{
+				CR5_checkotherside_left = st->C2->C1;
+				if (CR5_checkotherside_left->C1->A=='H') CRem_next_left = CR5_checkotherside_left->C1->C1;
+				else CRem_next_left = CR5_checkotherside_left->C1;
+				CR5_checkotherside_right = st->C2->C2;
+				if (CR5_checkotherside_right->C2->A=='H') CRem_next_right = CR5_checkotherside_right->C2->C2;
+				else CRem_next_right = CR5_checkotherside_right->C2;
+			}
+
+			Cpointer CR5_otherside_left = findThirdC(CR5_checkotherside_left);
+			Cpointer CR5_otherside_after_left = findThirdC(CRem_next_left); // For now assume that this will be handled by call to that site.
+			Cpointer CR5_otherside_right = findThirdC(CR5_checkotherside_right);
+			Cpointer CR5_otherside_after_right = findThirdC(CRem_next_right); // For now assume that this will be handled by call to that site.
+			if (CR5_otherside_left != NULLC || CR5_otherside_right != NULLC) {
+				//Current position has other side
+				Spointer other_side_site_1 = st;
+				Spointer other_side_site_2 = st;
+				int sites_to_check = 0;
+				if (CR5_otherside_left != NULLC) other_side_site_1 = findSite(CR5_otherside_left);
+				if (CR5_otherside_right != NULLC) other_side_site_2 = findSite(CR5_otherside_right);
+				if (other_side_site_1 == other_side_site_2 && other_side_site_1 != st) sites_to_check = 1; //Just need to check one site
+				else if (other_side_site_1 == st && other_side_site_2 != st){
+					sites_to_check = 1; //Just need to check one site
+					other_side_site_1 = other_side_site_2;
+				}else if (other_side_site_2 == st && other_side_site_1 != st) sites_to_check = 1; //Just need to check one site
+				else if (other_side_site_1 != st && other_side_site_2 != st && other_side_site_1 != other_side_site_2) sites_to_check = 2; //Need to check two sites
+				else {
+					std::cout << "Failed condition in PAHProcess::updateCombinedSitesMigration. Found opposite side sites but case not recognised." <<std::endl;
+				}
+
+				if (sites_to_check >= 1) {
+					//First opposite side site needs to be checked.
+					Spointer S1_oppsite = moveIt(other_side_site_1, -1);
+					Spointer S2_oppsite = moveIt(other_side_site_1, +1);
+					int jj = findWalker(other_side_site_1);
+					if (jj!=-9999){
+						//Site is declared as a walker. Check if it contains R5 information.
+						int other_walker_steps = std::get<2>(m_pah->m_R5walker_sites[jj]);
+						int other_walker_type = (int)other_side_site_1->type;
+						if (other_walker_steps==0 && other_walker_type>=2003){
+							if ((int)other_side_site_1->type==2103){
+								int coupled_site_dir = coupledSiteDirection(other_side_site_1);
+								if (coupled_site_dir == -1){
+									R5coords = findR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1);
+									remR5coords = true;
+								}
+								else if (coupled_site_dir == 1){
+									R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
+									remR5coords = true;
+								}
+								else{
+									if (S1_oppsite->type==R5) {
+										R5coords = findR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1);
+										remR5coords = true;
+									}
+									else if(S2_oppsite->type==R5) {
+										R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
+										remR5coords = true;
+									} else{
+										std::cout << "Could not find coupled site of R5ACR5 site on updateCombinedSitesMigration." << std::endl;
+										R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
+										remR5coords = true;
+									}
+								}
+							} else{
+								if (isR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2)) {
+									R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
+									remR5coords = true;
+								}
+								else if (isR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1)) {
+									R5coords = findR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1);
+									remR5coords = true;
+								}
+								else{
+									std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
+								}
+							}
+						}	
+					} else{
+						//Site is not declared as a walker. Remove R5 position.
+						if (isR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2)) {
+							R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
+							remR5coords = true;
+						}
+						else if (isR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1)) {
+							R5coords = findR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1);
+							remR5coords = true;
+						}
+						else{
+							std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
+						}
+					}
+				}
+
+				if (sites_to_check == 2) {
+					//Second opposite side site needs to be checked.
+					Spointer S1_oppsite = moveIt(other_side_site_2, -1);
+					Spointer S2_oppsite = moveIt(other_side_site_2, +1);
+					int jj = findWalker(other_side_site_2);
+					if (jj!=-9999){
+						//Site is declared as a walker. Check if it contains R5 information.
+						int other_walker_steps = std::get<2>(m_pah->m_R5walker_sites[jj]);
+						int other_walker_type = (int)other_side_site_2->type;
+						if (other_walker_steps==0 && other_walker_type>=2003){
+							if ((int)other_side_site_2->type==2103){
+								int coupled_site_dir = coupledSiteDirection(other_side_site_2);
+								if (coupled_site_dir == -1){
+									R5coords = findR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1);
+									remR5coords = true;
+								}
+								else if (coupled_site_dir == 1){
+									R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
+									remR5coords = true;
+								}
+								else{
+									if (S1_oppsite->type==R5) {
+										R5coords = findR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1);
+										remR5coords = true;
+									}
+									else if(S2_oppsite->type==R5) {
+										R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
+										remR5coords = true;
+									} else{
+										std::cout << "Could not find coupled site of R5ACR5 site on updateCombinedSitesMigration." << std::endl;
+										R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
+										remR5coords = true;
+									}
+								}
+							} else{
+								if (isR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2)) {
+									R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
+									remR5coords = true;
+								}
+								else if (isR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1)) {
+									R5coords = findR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1);
+									remR5coords = true;
+								}
+								else{
+									std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
+								}
+							}
+						}	
+					} else{
+						//Site is not declared as a walker. Remove R5 position.
+						if (isR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2)) {
+							R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
+							remR5coords = true;
+						}
+						else if (isR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1)) {
+							R5coords = findR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1);
+							remR5coords = true;
+						}
+						else{
+							std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
+						}
+					}
+				}
+			}
+		}
+
 		//Check for MIGR, MIGR2 OR R5R6_MIGR
 		if (check_left) check_left = checkSiteMigration(S1,true);
 		if (check_right) check_right = checkSiteMigration(S2,false);
+		if (remR5coords) m_pah->m_R5loc.push_back(R5coords);
 
 		if (check_left && check_right && st->type==ACR5) {
 			st->comb = MIGR2;
@@ -4628,6 +4816,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 		if (steps == 0 && (int)st->type>2002 && (int)st->type < 2099) m_pah->m_R5loc.push_back(R5coords);
 		else if (steps == 0 && (int)st->type==2103) m_pah->m_R5loc.push_back(R5coords);
 		break;
+		}
     default:
         st->comb = None;
         break;
@@ -14025,6 +14214,9 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	// check if ACR5 has an opposite site.
 	Spointer opp_site, opp_site_second, opp_site_after;
 	bool opp_site_bool = false; bool opp_site_bool_second = false; bool opp_site_bool_after = false;
+	int jj_opp = -9999;
+	int jj_opp_second = -9999;
+	int jj_opp_after = -9999;
 	Cpointer thirdC = findThirdC(CR5_otherside_1);
 	Cpointer thirdC2 = findThirdC(CR5_otherside_2);
 	Cpointer thirdC_after = findThirdC(CRem_next);
@@ -14040,38 +14232,80 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	if (thirdC != NULLC) {
 		opp_site = findSite(thirdC);
 		if (opp_site != m_pah->m_siteList.end()) opp_site_bool = true;
+		jj_opp = findWalker(opp_site);
+		moveWalker(ii);
+		moveWalker(jj_opp);
 	}
 	if (thirdC2 != NULLC) {
 		opp_site_second = findSite(thirdC2);
-		if (opp_site_bool && opp_site_second == opp_site) opp_site_bool_second = false;
-		else if (opp_site_second != m_pah->m_siteList.end()) {
+		if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) {
 			opp_site_bool_second = true;
+			jj_opp_second = findWalker(opp_site_second);
+			moveWalker(ii);
+			moveWalker(jj_opp_second);
 		}
 	}
-	bool end_site_allowed = true;
+	bool allowed = true;
 	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
 		opp_site_after = findSite(thirdC_after);
 		if (opp_site_after != m_pah->m_siteList.end()) {
 			opp_site_bool_after = true;
 			int os_endtype = opp_site_after->type;
-			if (os_endtype >= 200 && os_endtype <= 203) end_site_allowed = false;
-			if (os_endtype == 101) end_site_allowed = false;
-			if (os_endtype >= 600 && os_endtype <= 603) end_site_allowed = false;
-			if (os_endtype >= 1000 && os_endtype <= 1003) end_site_allowed = false;
-			if (os_endtype >= 500 && os_endtype <= 504) end_site_allowed = false;
-			if (os_endtype >= 2000 && os_endtype <= 2205) end_site_allowed = false;
-			if (os_endtype >= 2103 && os_endtype <= 2105) end_site_allowed = false;
-			if (os_endtype >= 2204 && os_endtype <= 2205) end_site_allowed = false;
+			if (os_endtype >= 200 && os_endtype <= 203) allowed = false;
+			if (os_endtype == 101) allowed = false;
+			if (os_endtype >= 600 && os_endtype <= 603) allowed = false;
+			if (os_endtype >= 1000 && os_endtype <= 1003) allowed = false;
+			if (os_endtype >= 500 && os_endtype <= 504) allowed = false;
+			if (os_endtype >= 2000 && os_endtype <= 2205) allowed = false;
+			if (os_endtype >= 2103 && os_endtype <= 2105) allowed = false;
+			if (os_endtype >= 2204 && os_endtype <= 2205) allowed = false;
+			jj_opp_after = findWalker(opp_site_after);
+			moveWalker(ii);
+			moveWalker(jj_opp_after);
 		}
 	}
-	if (!end_site_allowed){
-		//m_pah->m_R5loc.push_back(R5coords);
+	if (!allowed){
 		return;
 	}
 
 	//After this point we know that the process is accepted!
+	cpair R5coords_end;
+	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
+		if (steps==0){
+			if (b4) {
+				if (CR5_otherside_2->C1->A=='H') R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2);
+				else R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2,true);
+			}
+			else {
+				if (CR5_otherside_2->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2);
+				else R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2,true);
+			}
+		}
+		else if (steps<0){
+			if (b4) {
+				if (CR5_otherside_2->C1->A=='H') R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2);
+				else R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2,true);
+			}
+			else {
+				if (CR5_otherside_2->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2);
+				else R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2,true);
+			}
+		}
+		else {
+			if (b4) {
+				if (CR5_otherside_2->C1->A=='H') R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2);
+				else R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2,true);
+			}
+			else {
+				if (CR5_otherside_2->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2);
+				else R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2,true);
+			}
+		}
+	}
+
+	//After this point we know that the process is accepted!
 	//Check migration on the other side
-	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after){
+	/*if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after){
 		int jj = findWalker(opp_site);
 		ii = remOppsiteR5Walker(ii, jj);
 	}else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after){
@@ -14083,8 +14317,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		ii = remOppsiteR5Walker(ii, jj);
 		addOppsiteR5Walker(opp_site_second,opp_site_second);
 	}else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
-		int jj = findWalker(opp_site_second);
-		ii = remOppsiteR5Walker(ii, jj);
+		//int jj = findWalker(opp_site_second);
+		//ii = remOppsiteR5Walker(ii, jj);
 	}else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after){
 		int jj = findWalker(opp_site_second);
 		ii = remOppsiteR5Walker(ii, jj);
@@ -14095,13 +14329,50 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		int jj = findWalker(opp_site);
 		ii = remOppsiteR5Walker(ii, jj);
 		addOppsiteR5Walker(opp_site_after,opp_site_after);
-	}
+	}*/
 	
 	if (b4) {
 		std::get<2>(m_pah->m_R5walker_sites[ii])--;
 	}
 	else {
 		std::get<2>(m_pah->m_R5walker_sites[ii])++;
+	}
+
+	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
+		moveWalker(ii);
+		if (jj_opp != -9999) {
+			moveWalker(jj_opp);
+			if ((int)opp_site->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp])==0){
+				if (isR5internal(opp_site->C1->C2,opp_site->C1->C2->C2)) {
+					cpair R5_coords_rem = findR5internal(opp_site->C1->C2,opp_site->C1->C2->C2);
+				} else if (isR5internal(opp_site->C2->C1->C1,opp_site->C2->C1)) {
+					cpair R5_coords_rem = findR5internal(opp_site->C2->C1->C1,opp_site->C2->C1);
+				}
+				m_pah->m_R5loc.push_back(R5coords_end);
+			}
+		}
+		if (jj_opp_second != -9999) {
+			moveWalker(jj_opp_second);
+			if ((int)opp_site_second->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_second])==0){
+				if (isR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2)) {
+					cpair R5_coords_rem = findR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2);
+				} else if (isR5internal(opp_site_second->C2->C1->C1,opp_site_second->C2->C1)) {
+					cpair R5_coords_rem = findR5internal(opp_site_second->C2->C1->C1,opp_site_second->C2->C1);
+				}
+				m_pah->m_R5loc.push_back(R5coords_end);
+			}
+		}
+		if (jj_opp_after != -9999) {
+			moveWalker(jj_opp_after);
+			if ((int)opp_site_after->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_after])==0){
+				if (isR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2)) {
+					cpair R5_coords_rem = findR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2);
+				} else if (isR5internal(opp_site_after->C2->C1->C1,opp_site_after->C2->C1)) {
+					cpair R5_coords_rem = findR5internal(opp_site_after->C2->C1->C1,opp_site_after->C2->C1);
+				}
+				m_pah->m_R5loc.push_back(R5coords_end);
+			}
+		}
 	}
 	checkR5Walkers(ii);
 	bool opp_site_logic = false;
@@ -14495,14 +14766,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		std::cout << "Error on R5 migration in proc_MR5_R6_light. Walker not found." << std::endl;
 		printSitesMigration();
 	}
-	
-	if (b4) {
-		std::get<2>(m_pah->m_R5walker_sites[ii])--;
-	}
-	else {
-		std::get<2>(m_pah->m_R5walker_sites[ii])++;
-	}
-	checkR5Walkers(ii);
 
 	Spointer sFE2, checkR5_1, checkR5_2;
 	Cpointer CRem, CRem_next, CFE, CR5_otherside_1, CR5_otherside_2;
@@ -14554,6 +14817,9 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	// check if R5R6 has an opposite site.
 	Spointer opp_site, opp_site_second, opp_site_after;
 	bool opp_site_bool = false; bool opp_site_bool_second = false; bool opp_site_bool_after = false;
+	int jj_opp = -9999;
+	int jj_opp_second = -9999;
+	int jj_opp_after = -9999;
 	Cpointer thirdC = findThirdC(CR5_otherside_1);
 	Cpointer thirdC2 = findThirdC(CR5_otherside_2);
 	Cpointer thirdC_after = findThirdC(CRem_next);
@@ -14569,34 +14835,79 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	if (thirdC != NULLC) {
 		opp_site = findSite(thirdC);
 		if (opp_site != m_pah->m_siteList.end()) opp_site_bool = true;
+		jj_opp = findWalker(opp_site);
+		moveWalker(ii);
+		moveWalker(jj_opp);
 	}
 	if (thirdC2 != NULLC) {
 		opp_site_second = findSite(thirdC2);
-		if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) opp_site_bool_second = true;
-	}
-	bool end_site_allowed = true;
-	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
-		opp_site_after = findSite(thirdC_after);
-		if (opp_site_after != m_pah->m_siteList.end()){
-			opp_site_bool_after = true;
-			int os_endtype = opp_site_after->type;
-			if (os_endtype >= 200 && os_endtype <= 203) end_site_allowed = false;
-			if (os_endtype == 101) end_site_allowed = false;
-			if (os_endtype >= 600 && os_endtype <= 603) end_site_allowed = false;
-			if (os_endtype >= 1000 && os_endtype <= 1003) end_site_allowed = false;
-			if (os_endtype >= 500 && os_endtype <= 504) end_site_allowed = false;
-			if (os_endtype >= 2000 && os_endtype <= 2205) end_site_allowed = false;
-			if (os_endtype >= 2103 && os_endtype <= 2105) end_site_allowed = false;
-			if (os_endtype >= 2204 && os_endtype <= 2205) end_site_allowed = false;
+		if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) {
+			opp_site_bool_second = true;
+			jj_opp_second = findWalker(opp_site_second);
+			moveWalker(ii);
+			moveWalker(jj_opp_second);
 		}
 	}
-	if(!end_site_allowed){
+	bool allowed = true;
+	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
+		opp_site_after = findSite(thirdC_after);
+		if (opp_site_after != m_pah->m_siteList.end()) {
+			opp_site_bool_after = true;
+			int os_endtype = opp_site_after->type;
+			if (os_endtype >= 200 && os_endtype <= 203) allowed = false;
+			if (os_endtype == 101) allowed = false;
+			if (os_endtype >= 600 && os_endtype <= 603) allowed = false;
+			if (os_endtype >= 1000 && os_endtype <= 1003) allowed = false;
+			if (os_endtype >= 500 && os_endtype <= 504) allowed = false;
+			if (os_endtype >= 2000 && os_endtype <= 2205) allowed = false;
+			if (os_endtype >= 2103 && os_endtype <= 2105) allowed = false;
+			if (os_endtype >= 2204 && os_endtype <= 2205) allowed = false;
+			jj_opp_after = findWalker(opp_site_after);
+			moveWalker(ii);
+			moveWalker(jj_opp_after);
+		}
+	}
+	if (!allowed){
 		return;
 	}
 
 	//After this point we know that the process is accepted!
-		//Check migration on the other side
-	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after){
+	cpair R5coords_end;
+	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
+		if (steps==0){
+			if (b4) {
+				if (CR5_otherside_2->C1->A=='H') R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2);
+				else R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2,true);
+			}
+			else {
+				if (CR5_otherside_2->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2);
+				else R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2,true);
+			}
+		}
+		else if (steps<0){
+			if (b4) {
+				if (CR5_otherside_2->C1->A=='H') R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2);
+				else R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2,true);
+			}
+			else {
+				if (CR5_otherside_2->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2);
+				else R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2,true);
+			}
+		}
+		else {
+			if (b4) {
+				if (CR5_otherside_2->C1->A=='H') R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2);
+				else R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2,true);
+			}
+			else {
+				if (CR5_otherside_2->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2);
+				else R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2,true);
+			}
+		}
+	}
+
+	//Check migration on the other side
+	/*if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after){
 		int jj = findWalker(opp_site);
 		ii = remOppsiteR5Walker(ii, jj);
 	}else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after){
@@ -14607,8 +14918,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		int jj = findWalker(opp_site);
 		ii = remOppsiteR5Walker(ii, jj);
 	}else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
-		int jj = findWalker(opp_site_second);
-		ii = remOppsiteR5Walker(ii, jj);
+		//int jj = findWalker(opp_site_second);
+		//ii = remOppsiteR5Walker(ii, jj);
 	}else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after){
 		int jj = findWalker(opp_site_second);
 		ii = remOppsiteR5Walker(ii, jj);
@@ -14619,7 +14930,51 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		int jj = findWalker(opp_site);
 		ii = remOppsiteR5Walker(ii, jj);
 		addOppsiteR5Walker(opp_site_after,opp_site_after);
+	}*/
+
+	if (b4) {
+		std::get<2>(m_pah->m_R5walker_sites[ii])--;
 	}
+	else {
+		std::get<2>(m_pah->m_R5walker_sites[ii])++;
+	}
+	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
+		moveWalker(ii);
+		if (jj_opp != -9999) {
+			moveWalker(jj_opp);
+			if ((int)opp_site->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp])==0){
+				if (isR5internal(opp_site->C1->C2,opp_site->C1->C2->C2)) {
+					cpair R5_coords_rem = findR5internal(opp_site->C1->C2,opp_site->C1->C2->C2);
+				} else if (isR5internal(opp_site->C2->C1->C1,opp_site->C2->C1)) {
+					cpair R5_coords_rem = findR5internal(opp_site->C2->C1->C1,opp_site->C2->C1);
+				}
+				m_pah->m_R5loc.push_back(R5coords_end);
+			}
+		}
+		if (jj_opp_second != -9999) {
+			moveWalker(jj_opp_second);
+			if ((int)opp_site_second->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_second])==0){
+				if (isR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2)) {
+					cpair R5_coords_rem = findR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2);
+				} else if (isR5internal(opp_site_second->C2->C1->C1,opp_site_second->C2->C1)) {
+					cpair R5_coords_rem = findR5internal(opp_site_second->C2->C1->C1,opp_site_second->C2->C1);
+				}
+				m_pah->m_R5loc.push_back(R5coords_end);
+			}
+		}
+		if (jj_opp_after != -9999) {
+			moveWalker(jj_opp_after);
+			if ((int)opp_site_after->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_after])==0){
+				if (isR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2)) {
+					cpair R5_coords_rem = findR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2);
+				} else if (isR5internal(opp_site_after->C2->C1->C1,opp_site_after->C2->C1)) {
+					cpair R5_coords_rem = findR5internal(opp_site_after->C2->C1->C1,opp_site_after->C2->C1);
+				}
+				m_pah->m_R5loc.push_back(R5coords_end);
+			}
+		}
+	}
+	checkR5Walkers(ii);
 
 	Spointer S1_check, S2_check;
 	if (b4){
@@ -15086,6 +15441,9 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	// check if ACR5 has an opposite site.
 	Spointer opp_site, opp_site_second, opp_site_after;
 	bool opp_site_bool = false; bool opp_site_bool_second = false; bool opp_site_bool_after = false;
+	int jj_opp = -9999;
+	int jj_opp_second = -9999;
+	int jj_opp_after = -9999;
 	Cpointer thirdC = findThirdC(CR5_otherside_1);
 	Cpointer thirdC2 = findThirdC(CR5_otherside_2);
 	Cpointer thirdC_after = findThirdC(CRem_next);
@@ -15101,10 +15459,18 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	if (thirdC != NULLC) {
 		opp_site = findSite(thirdC);
 		if (opp_site != m_pah->m_siteList.end()) opp_site_bool = true;
+		jj_opp = findWalker(opp_site);
+		moveWalker(ii);
+		moveWalker(jj_opp);
 	}
 	if (thirdC2 != NULLC) {
 		opp_site_second = findSite(thirdC2);
-		if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) opp_site_bool_second = true;
+		if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) {
+			opp_site_bool_second = true;
+			jj_opp_second = findWalker(opp_site_second);
+			moveWalker(ii);
+			moveWalker(jj_opp_second);
+		}
 	}
 	bool allowed = true;
 	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
@@ -15120,6 +15486,9 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			if (os_endtype >= 2000 && os_endtype <= 2205) allowed = false;
 			if (os_endtype >= 2103 && os_endtype <= 2105) allowed = false;
 			if (os_endtype >= 2204 && os_endtype <= 2205) allowed = false;
+			jj_opp_after = findWalker(opp_site_after);
+			moveWalker(ii);
+			moveWalker(jj_opp_after);
 		}
 	}
 	if (!allowed){
@@ -15127,7 +15496,41 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	}
 
 	//After this point we know that the process is accepted!
-		//Check migration on the other side
+	cpair R5coords_end;
+	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
+		if (steps==0){
+			if (b4) {
+				if (CR5_otherside_2->C1->A=='H') R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2);
+				else R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2,true);
+			}
+			else {
+				if (CR5_otherside_2->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2);
+				else R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2,true);
+			}
+		}
+		else if (steps<0){
+			if (b4) {
+				if (CR5_otherside_2->C1->A=='H') R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2);
+				else R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2,true);
+			}
+			else {
+				if (CR5_otherside_2->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2);
+				else R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2,true);
+			}
+		}
+		else {
+			if (b4) {
+				if (CR5_otherside_2->C1->A=='H') R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2);
+				else R5coords_end = endposR5internal(CR5_otherside_2->C1, CR5_otherside_2,true);
+			}
+			else {
+				if (CR5_otherside_2->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2);
+				else R5coords_end = endposR5internal(CR5_otherside_2, CR5_otherside_2->C2,true);
+			}
+		}
+	}
+	/*
+	//Check migration on the other side
 	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after){
 		int jj = findWalker(opp_site);
 		ii = remOppsiteR5Walker(ii, jj);
@@ -15140,7 +15543,16 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		ii = remOppsiteR5Walker(ii, jj);
 	}else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
 		int jj = findWalker(opp_site_second);
+		if ((int)opp_site_second->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj])==0){
+			if (isR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2)) {
+				cpair R5_coords_rem = findR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2);
+			} else if (isR5internal(opp_site_second->C2->C1->C1,opp_site_second->C2->C1)) {
+				cpair R5_coords_rem = findR5internal(opp_site_second->C2->C1->C1,opp_site_second->C2->C1);
+			}
+			m_pah->m_R5loc.push_back(R5coords_end);
+		}
 		ii = remOppsiteR5Walker(ii, jj);
+		addOppsiteR5Walker(opp_site_second,opp_site_second);
 	}else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after){
 		int jj = findWalker(opp_site_second);
 		ii = remOppsiteR5Walker(ii, jj);
@@ -15151,12 +15563,48 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		int jj = findWalker(opp_site);
 		ii = remOppsiteR5Walker(ii, jj);
 		addOppsiteR5Walker(opp_site_after,opp_site_after);
-	}
+	}*/
 	if (b4) {
 		std::get<2>(m_pah->m_R5walker_sites[ii])--;
 	}
 	else {
 		std::get<2>(m_pah->m_R5walker_sites[ii])++;
+	}
+	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
+		moveWalker(ii);
+		if (jj_opp != -9999) {
+			moveWalker(jj_opp);
+			if ((int)opp_site->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp])==0){
+				if (isR5internal(opp_site->C1->C2,opp_site->C1->C2->C2)) {
+					cpair R5_coords_rem = findR5internal(opp_site->C1->C2,opp_site->C1->C2->C2);
+				} else if (isR5internal(opp_site->C2->C1->C1,opp_site->C2->C1)) {
+					cpair R5_coords_rem = findR5internal(opp_site->C2->C1->C1,opp_site->C2->C1);
+				}
+				m_pah->m_R5loc.push_back(R5coords_end);
+			}
+		}
+		if (jj_opp_second != -9999) {
+			moveWalker(jj_opp_second);
+			if ((int)opp_site_second->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_second])==0){
+				if (isR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2)) {
+					cpair R5_coords_rem = findR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2);
+				} else if (isR5internal(opp_site_second->C2->C1->C1,opp_site_second->C2->C1)) {
+					cpair R5_coords_rem = findR5internal(opp_site_second->C2->C1->C1,opp_site_second->C2->C1);
+				}
+				m_pah->m_R5loc.push_back(R5coords_end);
+			}
+		}
+		if (jj_opp_after != -9999) {
+			moveWalker(jj_opp_after);
+			if ((int)opp_site_after->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_after])==0){
+				if (isR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2)) {
+					cpair R5_coords_rem = findR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2);
+				} else if (isR5internal(opp_site_after->C2->C1->C1,opp_site_after->C2->C1)) {
+					cpair R5_coords_rem = findR5internal(opp_site_after->C2->C1->C1,opp_site_after->C2->C1);
+				}
+				m_pah->m_R5loc.push_back(R5coords_end);
+			}
+		}
 	}
 	checkR5Walkers(ii);
 	bool opp_site_logic = false;
@@ -15771,9 +16219,10 @@ void PAHProcess::startMigrationProcess(){
 					Spointer opp_site;
 					if (C_other_side!=NULLC) opp_site = findSite(C_other_side);
 					else opp_site = findSite(C_other_side2);
-					std::vector<Spointer>::iterator it;
-					it = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),opp_site);
-					if(it==migr_sites_appended.end()) m_pah->m_R5loc.push_back(R5coords);
+					if ((int)opp_site->type>=2003) m_pah->m_R5loc.push_back(R5coords);
+					//std::vector<Spointer>::iterator it;
+					//it = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),opp_site);
+					//if(it==migr_sites_appended.end()) m_pah->m_R5loc.push_back(R5coords);
 				}
 			}
 			/*else{
@@ -15807,9 +16256,10 @@ void PAHProcess::startMigrationProcess(){
 					Spointer opp_site;
 					if (C_other_side!=NULLC) opp_site = findSite(C_other_side);
 					else opp_site = findSite(C_other_side2);
-					std::vector<Spointer>::iterator it;
-					it = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),opp_site);
-					if(it==migr_sites_appended.end()) m_pah->m_R5loc.push_back(R5coords);
+					if ((int)opp_site->type>=2003) m_pah->m_R5loc.push_back(R5coords);
+					//std::vector<Spointer>::iterator it;
+					//it = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),opp_site);
+					//if(it==migr_sites_appended.end()) m_pah->m_R5loc.push_back(R5coords);
 				}
 			}
 			else{
@@ -15903,9 +16353,10 @@ void PAHProcess::startMigrationProcess(){
 						Spointer opp_site;
 						if (C_other_side!=NULLC) opp_site = findSite(C_other_side);
 						else opp_site = findSite(C_other_side2);
-						std::vector<Spointer>::iterator it;
-						it = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),opp_site);
-						if(it==migr_sites_appended.end()) m_pah->m_R5loc.push_back(R5coords);
+						if ((int)opp_site->type>=2003) m_pah->m_R5loc.push_back(R5coords);
+						//std::vector<Spointer>::iterator it;
+						//it = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),opp_site);
+						//if(it==migr_sites_appended.end()) m_pah->m_R5loc.push_back(R5coords);
 					}
 				}
 				/*else {
@@ -16074,20 +16525,50 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 	}
 	
 	//Check for other sites
-	Cpointer CR5_otherside_end;
-	if (b4) CR5_otherside_end = stt->C2->C1;
-	else CR5_otherside_end = stt->C1->C2;
+	Cpointer CR5_otherside, CR5_otherside_end;
+	if (SiteRightSize(stt)){
+		if (b4) {
+			CR5_otherside = stt->C2->C2;
+			CR5_otherside_end = stt->C2->C1;
+		}
+		else {
+			CR5_otherside = stt->C1->C1;
+			CR5_otherside_end = stt->C1->C2;
+		}
+	} else{
+		if (b4) {
+			CR5_otherside = stt->C2->C1;
+			CR5_otherside_end = stt->C2->C1->C1;
+		}
+		else {
+			CR5_otherside = stt->C1->C2;
+			CR5_otherside_end = stt->C1->C2->C2;
+		}
+	}
+	
+	if (CR5_otherside->bridge) return false;
+	if (CR5_otherside->C2->bridge) return false; 
+	if (CR5_otherside->C1->bridge) return false;
+	if (CR5_otherside->C2->C2->bridge) return false; 
+	if (CR5_otherside->C1->C1->bridge) return false;
 	if (CR5_otherside_end->bridge) return false;
 	if (CR5_otherside_end->C2->bridge) return false; 
 	if (CR5_otherside_end->C1->bridge) return false;
 	if (CR5_otherside_end->C2->C2->bridge) return false; 
 	if (CR5_otherside_end->C1->C1->bridge) return false;
-	
+
+	Cpointer thirdC_now = findThirdC(CR5_otherside);
+	Spointer opp_site;
+	bool opp_site_bool = false;
+	if (thirdC_now != NULLC) {
+		opp_site = findSite(thirdC_now);
+		opp_site_bool = true;
+	}
+
 	//Check for other side being valid
 	Cpointer thirdC_after = findThirdC(CR5_otherside_end);
 	if (thirdC_after != NULLC && (int)checkR5_1->type%10 < 4){
 		Spointer opp_site_after = findSite(thirdC_after);
-		//I have no clue how to flag an Spointer as error. This can cause seg faults.
 		if (opp_site_after != m_pah->m_siteList.end()){
 			int os_endtype = opp_site_after->type;
 			if (os_endtype >= 200 && os_endtype <= 203) return false;
@@ -16095,9 +16576,11 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 			if (os_endtype >= 600 && os_endtype <= 603) return false;
 			if (os_endtype >= 1000 && os_endtype <= 1003) return false;
 			if (os_endtype >= 500 && os_endtype <= 504) return false;
-			if (os_endtype >= 2000 && os_endtype <= 2205) return false;
-			if (os_endtype >= 2103 && os_endtype <= 2105) return false;
-			if (os_endtype >= 2204 && os_endtype <= 2205) return false;
+			if (!opp_site_bool){
+				if (os_endtype >= 2000 && os_endtype <= 2205) return false;
+				if (os_endtype >= 2103 && os_endtype <= 2105) return false;
+				if (os_endtype >= 2204 && os_endtype <= 2205) return false;
+			}
 			if (os_endtype == 9999 || os_endtype == -1 || opp_site_after->type == None) return false;
 		}
 	}
@@ -16394,6 +16877,7 @@ void PAHProcess::checkRemR5Walkers(int jj, bool b4, Spointer sFE2){
 
 //! Find the walker associated with a site .
 int PAHProcess::findWalker(Spointer current_site){
+	if (m_pah->m_R5walker_sites.size()==0) return -9999;
 	unsigned int ii = -9999;
 	for (unsigned int jj=0;jj!=m_pah->m_R5walker_sites.size();jj++){
 		Spointer start_site = std::get<0>(m_pah->m_R5walker_sites[jj]);
