@@ -3552,6 +3552,7 @@ void PAHProcess::removeSite(Spointer& stt) {
     delSiteFromMap(stt->type, stt);
     delSiteFromMap(stt->comb, stt);
     //then remove existence of site altogether
+	stt->type = Inv;
     m_pah->m_siteList.erase(stt);
 }
 //! Sets the number of counts of C and H
@@ -4804,7 +4805,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 		if ( (check_left || check_right) && ( ((int)st->type>=2000 && (int)st->type <=2005) || ((int)st->type==2103))) {
 			st->comb = MIGR;
 			m_pah->m_siteMap[MIGR].push_back(st);
-			if (steps == 0) m_pah->m_R5loc.push_back(R5coords);
+			if (steps == 0 && st->type!=ACR5) m_pah->m_R5loc.push_back(R5coords);
 			break;
 		}
 		if ( (check_left || check_right) && st->type==R5R6) {
