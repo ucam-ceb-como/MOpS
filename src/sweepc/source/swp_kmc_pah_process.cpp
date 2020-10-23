@@ -2567,7 +2567,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			}
 		}
 		
-		std::vector<int> valence_2_carbons, valence_4_carbons;
+		std::vector<int> valence_2_carbons, valence_4_carbons, valence_5_carbons, valence_6_carbons;
 		for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
 			auto find_methyl = std::find(methyl_list_flat.begin(), methyl_list_flat.end(), a->GetIdx()); 
 			if (find_methyl == methyl_list_flat.end()){
@@ -2576,6 +2576,11 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 					//Check for carbons with valence 2 and add them to list.
 					if (a->GetValence() == 2) valence_2_carbons.push_back(a->GetIdx());
 					if (a->GetValence() == 4) valence_4_carbons.push_back(a->GetIdx());
+					if (a->GetValence() == 5) valence_5_carbons.push_back(a->GetIdx());
+					if (a->GetValence() == 6) valence_6_carbons.push_back(a->GetIdx());
+					if (a->GetValence() > 6) {
+						std::cout << "Error. in PAHProcess::passPAH(). Atom with more than 6 bonds detected." << std::endl;
+					}
 				}
 			}
 		}
@@ -2619,20 +2624,149 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		}
 		
 		//Deletes bond between two carbons with valence 4. 
-		if(valence_4_carbons.size() != 0){ 
+		if(valence_4_carbons.size() != 0 || valence_5_carbons.size() != 0 || valence_6_carbons.size() != 0){ 
+			for (std::vector<int>::iterator it=valence_6_carbons.begin(); it!=valence_6_carbons.end();){
+				unsigned int ii = std::distance(valence_6_carbons.begin(),it);
+				int xx = valence_6_carbons[ii];
+				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_6_carbons[ii]);
+				Cpointer current_C = findC(std::make_tuple(my_atom->GetX(),my_atom->GetY(),my_atom->GetZ()));
+				if (my_atom->GetValence() == 6){
+					int kk = ii;
+					double min_dist = 1e3;
+					unsigned int list_6 = 0;
+					for (unsigned int jj =0; jj!=valence_6_carbons.size(); ++jj){
+						if (jj!= ii){
+							OpenBabel::OBAtom *other_atom = mol.GetAtom(valence_6_carbons[jj]);
+							Cpointer other_C = findC(std::make_tuple(other_atom->GetX(),other_atom->GetY(),other_atom->GetZ()));
+							OpenBabel::OBBond* my_bond = mol.GetBond(my_atom->GetIdx(), other_atom->GetIdx());
+							if (my_bond != NULL) {
+								double my_dist = my_atom->GetDistance(valence_6_carbons[jj]);
+								if (my_dist < min_dist && other_C!=current_C->C1 && other_C!=current_C->C2 && other_C!=current_C->C3){
+									kk = jj;
+									min_dist = my_dist;
+								}
+							}
+						}
+					}
+					for (unsigned int jj =0; jj!=valence_5_carbons.size(); ++jj){
+						OpenBabel::OBAtom *other_atom = mol.GetAtom(valence_5_carbons[jj]);
+						Cpointer other_C = findC(std::make_tuple(other_atom->GetX(),other_atom->GetY(),other_atom->GetZ()));
+						OpenBabel::OBBond* my_bond = mol.GetBond(my_atom->GetIdx(), other_atom->GetIdx());
+						if (my_bond != NULL) {
+							double my_dist = my_atom->GetDistance(valence_5_carbons[jj]);
+							if (my_dist < min_dist && other_C!=current_C->C1 && other_C!=current_C->C2 && other_C!=current_C->C3){
+								kk = jj;
+								min_dist = my_dist;
+								list_6 = 1;
+							}
+						}
+					}
+					for (unsigned int jj =0; jj!=valence_4_carbons.size(); ++jj){
+						OpenBabel::OBAtom *other_atom = mol.GetAtom(valence_4_carbons[jj]);
+						Cpointer other_C = findC(std::make_tuple(other_atom->GetX(),other_atom->GetY(),other_atom->GetZ()));
+						OpenBabel::OBBond* my_bond = mol.GetBond(my_atom->GetIdx(), other_atom->GetIdx());
+						if (my_bond != NULL) {
+							double my_dist = my_atom->GetDistance(valence_4_carbons[jj]);
+							if (my_dist < min_dist && other_C!=current_C->C1 && other_C!=current_C->C2 && other_C!=current_C->C3){
+								kk = jj;
+								min_dist = my_dist;
+								list_6 = 2;
+							}
+						}
+					}
+					int yy;
+					if (list_6 == 0) yy = valence_6_carbons[kk];
+					else if (list_6 == 1) yy = valence_5_carbons[kk];
+					else yy = valence_4_carbons[kk];
+					OpenBabel::OBBond* my_bond = mol.GetBond(xx, yy);
+					if (my_bond != NULL) {
+						mol.DeleteBond(my_bond, true);
+						valence_6_carbons.erase(std::remove(valence_6_carbons.begin(), valence_6_carbons.end(),xx),valence_6_carbons.end());
+						valence_5_carbons.push_back(xx);
+						if (list_6 == 0) {
+							valence_6_carbons.erase(std::remove(valence_6_carbons.begin(), valence_6_carbons.end(),yy),valence_6_carbons.end());
+							valence_5_carbons.push_back(yy);
+						}
+						else if (list_6 == 1) {
+							valence_5_carbons.erase(std::remove(valence_5_carbons.begin(), valence_5_carbons.end(),yy),valence_5_carbons.end());
+							valence_4_carbons.push_back(yy);
+						}
+						else valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),yy),valence_4_carbons.end());
+					} else it++;
+				}else it++;
+			}
+			for (std::vector<int>::iterator it=valence_5_carbons.begin(); it!=valence_5_carbons.end();){
+				unsigned int ii = std::distance(valence_5_carbons.begin(),it);
+				int xx = valence_5_carbons[ii];
+				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_5_carbons[ii]);
+				Cpointer current_C = findC(std::make_tuple(my_atom->GetX(),my_atom->GetY(),my_atom->GetZ()));
+				if (my_atom->GetValence() == 5){
+					int kk = ii;
+					double min_dist = 1e3;
+					bool list_5 = true;
+					for (unsigned int jj =0; jj!=valence_5_carbons.size(); ++jj){
+						if (jj!= ii){
+							OpenBabel::OBAtom *other_atom = mol.GetAtom(valence_5_carbons[jj]);
+							Cpointer other_C = findC(std::make_tuple(other_atom->GetX(),other_atom->GetY(),other_atom->GetZ()));
+							OpenBabel::OBBond* my_bond = mol.GetBond(my_atom->GetIdx(), other_atom->GetIdx());
+							if (my_bond != NULL) {
+								double my_dist = my_atom->GetDistance(valence_5_carbons[jj]);
+								if (my_dist < min_dist && other_C!=current_C->C1 && other_C!=current_C->C2 && other_C!=current_C->C3){
+									kk = jj;
+									min_dist = my_dist;
+								}
+							}
+						}
+					}
+					for (unsigned int jj =0; jj!=valence_4_carbons.size(); ++jj){
+						OpenBabel::OBAtom *other_atom = mol.GetAtom(valence_4_carbons[jj]);
+						Cpointer other_C = findC(std::make_tuple(other_atom->GetX(),other_atom->GetY(),other_atom->GetZ()));
+						OpenBabel::OBBond* my_bond = mol.GetBond(my_atom->GetIdx(), other_atom->GetIdx());
+						if (my_bond != NULL) {
+							double my_dist = my_atom->GetDistance(valence_4_carbons[jj]);
+							if (my_dist < min_dist && other_C!=current_C->C1 && other_C!=current_C->C2 && other_C!=current_C->C3){
+								kk = jj;
+								min_dist = my_dist;
+								list_5 = false;
+							}
+						}
+					}
+					int yy;
+					if (list_5) yy = valence_5_carbons[kk];
+					else yy = valence_4_carbons[kk];
+					OpenBabel::OBBond* my_bond = mol.GetBond(xx, yy);
+					if (my_bond != NULL) {
+						mol.DeleteBond(my_bond, true);
+						valence_5_carbons.erase(std::remove(valence_5_carbons.begin(), valence_5_carbons.end(),xx),valence_5_carbons.end());
+						valence_4_carbons.push_back(xx);
+						if (list_5) {
+							valence_5_carbons.erase(std::remove(valence_5_carbons.begin(), valence_5_carbons.end(),yy),valence_5_carbons.end());
+							valence_4_carbons.push_back(yy);
+						}
+						else valence_4_carbons.erase(std::remove(valence_4_carbons.begin(), valence_4_carbons.end(),yy),valence_4_carbons.end());
+					} else it++;
+				}
+				else it++;
+			}
 			for (std::vector<int>::iterator it=valence_4_carbons.begin(); it!=valence_4_carbons.end();){
 				unsigned int ii = std::distance(valence_4_carbons.begin(),it);
 				int xx = valence_4_carbons[ii];
 				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_4_carbons[ii]);
+				Cpointer current_C = findC(std::make_tuple(my_atom->GetX(),my_atom->GetY(),my_atom->GetZ()));
 				if (my_atom->GetValence() == 4){
 					int kk = ii;
 					double min_dist = 1e3;
 					for (unsigned int jj =0; jj!=valence_4_carbons.size(); ++jj){
 						if (jj!= ii){
-							double my_dist = my_atom->GetDistance(valence_4_carbons[jj]);
-							if (my_dist < min_dist){
-								kk = jj;
-								min_dist = my_dist;
+							OpenBabel::OBAtom *other_atom = mol.GetAtom(valence_4_carbons[jj]);
+							Cpointer other_C = findC(std::make_tuple(other_atom->GetX(),other_atom->GetY(),other_atom->GetZ()));
+							OpenBabel::OBBond* my_bond = mol.GetBond(my_atom->GetIdx(), other_atom->GetIdx());
+							if (my_bond != NULL) {
+								double my_dist = my_atom->GetDistance(valence_4_carbons[jj]);
+								if (my_dist < min_dist && other_C!=current_C->C1 && other_C!=current_C->C2 && other_C!=current_C->C3){
+									kk = jj;
+									min_dist = my_dist;
+								}
 							}
 						}
 					}
