@@ -419,8 +419,10 @@ private:
 	void moveC(Cpointer C_1, Cpointer Cprev, double new_distance);
 	//! Move a carbon in z direction.
 	void moveC_z(Cpointer C_1, double z_distance);
-	//! Adds an R5 to the list of R5s and R7s
+	//! Adds an R5 to the list of R5s
 	void addR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir=false);
+    //! Adds an R5 to the list of R5s at the middle of two carbon atoms.
+    void addR5internal_edge(Cpointer C_1, Cpointer C_2);
 	//! Removes an R5 from the list of R5s and R7s
 	void removeR5internal(Cpointer C_1, Cpointer C_2);
 	//! Removes an R7 from the list of R5s and R7s

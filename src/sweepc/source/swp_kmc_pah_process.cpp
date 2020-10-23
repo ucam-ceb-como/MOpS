@@ -2002,11 +2002,20 @@ void PAHProcess::moveC_z(Cpointer C_1, double z_distance) {
 	C_1->coords = temp;
 	m_pah->m_cpositions.insert(C_1->coords);
 }
-//! Adds an R5 to the list of R5s and R7s
+//! Adds an R5 to the list of R5s
 void PAHProcess::addR5internal(Cpointer C_1, Cpointer C_2, bool invert_dir) {
 	cpair mpos = endposR5internal(C_1, C_2, invert_dir);
 	m_pah->m_R5loc.push_back(mpos);
 }
+
+//! Adds an R5 to the list of R5s at the middle of two carbon atoms.
+void PAHProcess::addR5internal_edge(Cpointer C_1, Cpointer C_2) {
+	cpair vec1 = get_vector(C_1->coords,C_2->coords);
+	double dist = getDistance_twoC(C_1,C_2);
+	cpair mpos = jumpToPos(C_1->coords,vec1,dist*0.5);
+	m_pah->m_R5loc.push_back(mpos);
+}
+
 //! Removes an R5 from the list of R5s and R7s
 void PAHProcess::removeR5internal(Cpointer C_1, Cpointer C_2) {
 	std::list<cpair>::iterator it1, it2;
@@ -14777,8 +14786,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	}
 	steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 	if((int)sFE2->type>=2003 && steps == 0) {
-		if(b4) addR5internal(sFE2->C2->C1->C1,sFE2->C2->C1,true);
-		else addR5internal(sFE2->C1->C2,sFE2->C1->C2->C2,true);
+		if(b4) addR5internal_edge(sFE2->C2->C1->C1,sFE2->C2->C1);
+		else addR5internal_edge(sFE2->C1->C2,sFE2->C1->C2->C2);
 	}
 	// update H atoms
 	/*if (b4){
@@ -15455,8 +15464,8 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		}
 		steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 		if((int)sFE2->type>=2003 && steps == 0) {
-			if(b4) addR5internal(sFE2->C2->C1->C1,sFE2->C2->C1,true);
-			else addR5internal(sFE2->C1->C2,sFE2->C1->C2->C2,true);
+			if(b4) addR5internal_edge(sFE2->C2->C1->C1,sFE2->C2->C1);
+			else addR5internal_edge(sFE2->C1->C2,sFE2->C1->C2->C2);
 		}
 	} //Migration without leaving corner or edge
 	// update H atoms
@@ -16042,8 +16051,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	}
 	steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 	if((int)sFE2->type>=2003 && steps == 0) {
-		if(b4) addR5internal(sFE2->C2->C1->C1,sFE2->C2->C1,true);
-		else addR5internal(sFE2->C1->C2,sFE2->C1->C2->C2,true);
+		if(b4) addR5internal_edge(sFE2->C2->C1->C1,sFE2->C2->C1);
+		else addR5internal_edge(sFE2->C1->C2,sFE2->C1->C2->C2);
 	}
 	// update H atoms
 	/*if (b4){
