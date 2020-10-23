@@ -16133,6 +16133,10 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 		CRem = C_2;
 		CFE = C_2->C1->C1;
 	}
+	if (!isR5internal(CFE,CFE->C2)) {
+		updateCombinedSites(stt);
+		return;
+	}
 
 	// check if ACR5 has an opposite site.
 	Spointer opp_site, opp_site_second;
