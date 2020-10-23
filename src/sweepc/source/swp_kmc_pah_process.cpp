@@ -16186,14 +16186,18 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	mol = optimisePAH(mol);
 	passbackPAH(mol);
 
+	int stt_stype = (int)stt->type;
+
 	if (b4) {
 		if( (int)stt->type>2000){
 			//An ACR5 site or similar.
 			updateSites(stt, Cnew, C_2, -2001);
 			Spointer S_other = moveIt(stt,-1);
 			updateSites(S_other, S_other->C1, Cnew, +1);
-			Spointer S_otherR5 = moveIt(stt,+1);
-			if((int)S_otherR5->type>500 && (int)S_otherR5->type<510) updateSites(stt, stt->C1, stt->C2, +400);
+			if (stt_stype==2103){ 
+				Spointer S_otherR5 = moveIt(stt,+1);
+				if((int)S_otherR5->type>500 && (int)S_otherR5->type<510) updateSites(stt, stt->C1, stt->C2, +400);
+			}
 		}
 		else{
 			//An R5R6 site or similar
@@ -16211,8 +16215,10 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 			updateSites(stt, C_1, Cnew, -2001);
 			Spointer S_other = moveIt(stt,+1);
 			updateSites(S_other, Cnew, S_other->C2, +1);
-			Spointer S_otherR5 = moveIt(stt,-1);
-			if((int)S_otherR5->type>500 && (int)S_otherR5->type<510) updateSites(stt, stt->C1, stt->C2, +400);
+			if (stt_stype==2103){ 
+				Spointer S_otherR5 = moveIt(stt,-1);
+				if((int)S_otherR5->type>500 && (int)S_otherR5->type<510) updateSites(stt, stt->C1, stt->C2, +400);
+			}
 		}
 		else{
 			//An R5R6 site or similar
