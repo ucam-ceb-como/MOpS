@@ -11150,11 +11150,11 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		// Add and remove C
 		//if(C_1->C2->C3 != NULL) C_1->C2->C3->C3 = NULL;
 		//if(C_2->C1->C3 != NULL) C_2->C1->C3->C3 = NULL;
-		moveC_z(C_1->C2, 0.2);
+		//moveC_z(C_1->C2, 0.2);
 		removeC(C_1->C2, true);
-		moveC_z(C_1->C2, 0.2);
+		//moveC_z(C_1->C2, 0.2);
 		removeC(C_1->C2, true);
-		moveC_z(C_2->C1, 0.2);
+		//moveC_z(C_2->C1, 0.2);
 		removeC(C_2->C1, true);
 		newC1 = addC(C_1, starting_direction, 1.55);
 		updateA(C_1,'C', C_1->growth_vector);
