@@ -17065,7 +17065,7 @@ void PAHProcess::checkR5Walkers(int jj){
 				Spointer check_corner_site, check_site, check_site2;
 				if (jj_steps<0) check_corner_site = moveIt(start_site_jj,jj_steps+1);
 				else check_corner_site = moveIt(start_site_jj,jj_steps-1);
-				if( ((int)check_corner_site->type>=501 && (int)check_corner_site->type<=1004) || (int)check_corner_site->type==2103 ){
+				if( ((int)check_corner_site->type>=501 && (int)check_corner_site->type<=1004) || (int)check_corner_site->type==2103 || (int)check_corner_site->type==2104 || (int)check_corner_site->type==2105 ){
 					if (jj_steps<0) {
 						check_site = moveIt(start_site_jj,jj_steps-1);
 						check_site2 = moveIt(start_site_jj,jj_steps);
