@@ -2486,8 +2486,8 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			if (my_bond == NULL) mol.AddBond(*sn_iter, *sn_iter1,5);
 			if (my_bond2 != NULL) mol.DeleteBond(my_bond2);
 			my_bond = mol.GetBond(*sn_iter, *sn_iter1);
-			if (my_bond->GetLength()>8.0) {
-				std::cout << "WARNING. Bond length larger than 8 Armstrongs before optimisation. Deleting bond." << std::endl;
+			if (my_bond->GetLength()>15.0) {
+				std::cout << "WARNING. Bond length larger than 15 Armstrongs before optimisation. Deleting bond." << std::endl;
 				mol.DeleteBond(my_bond);
 			}
 			++sn_iter1;
@@ -11364,6 +11364,7 @@ void PAHProcess::proc_L7_ACACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		mol = mol = optimisePAH(mol);
 		passbackPAH(mol);
 	}
+	if (getDistance_twoC(C_1,C_2)>7.0) return;
 	proc_L6_BY6(stt, C_1, C_2);
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
@@ -11392,6 +11393,7 @@ void PAHProcess::proc_L7_FEZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		mol = mol = optimisePAH(mol);
 		passbackPAH(mol);
 	}
+	if (getDistance_twoC(C_1,C_2)>7.0) return;
 	proc_L6_BY6(stt, C_1, C_2);
 	m_pah->m_rings5_Lone--; m_pah->m_rings5_Embedded++;
 	m_pah->m_rings--; m_pah->m_rings7_Embedded++;
@@ -11806,6 +11808,7 @@ void PAHProcess::proc_L7_R5ZZACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		mol = mol = optimisePAH(mol);
 		passbackPAH(mol);
 	}
+	if (getDistance_twoC(C_1,C_2)>7.0) return;
 	// check if ZZACR5 has an opposite site of the R5.
 	Cpointer Ccheck = C_1->C2;
 	Cpointer Ccheck2;
@@ -11922,6 +11925,7 @@ void PAHProcess::proc_L7_ACR5R5R6ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		mol = mol = optimisePAH(mol);
 		passbackPAH(mol);
 	}
+	if (getDistance_twoC(C_1,C_2)>7.0) return;
 	// check if ZZACR5 has an opposite site of the R5.
 	Cpointer Ccheck = C_1->C2;
 	Cpointer Ccheck2;
