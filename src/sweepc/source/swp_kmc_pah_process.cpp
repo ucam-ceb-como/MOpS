@@ -14403,6 +14403,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			if (os_endtype >= 2000 && os_endtype <= 2205) allowed = false;
 			if (os_endtype >= 2103 && os_endtype <= 2105) allowed = false;
 			if (os_endtype >= 2204 && os_endtype <= 2205) allowed = false;
+			addOppsiteR5Walker(opp_site_after,opp_site_after);
 			jj_opp_after = findWalker(opp_site_after);
 			moveWalker(ii);
 			moveWalker(jj_opp_after);
@@ -14483,7 +14484,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	}
 
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
-		moveWalker(ii);
+		//moveWalker(ii);
 		if (jj_opp != -9999) {
 			moveWalker(jj_opp);
 			if ((int)opp_site->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp])==0){
@@ -14598,6 +14599,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		Spointer S1_opp_site = moveIt(opp_site, -1);
 		Spointer S2_opp_site = moveIt(opp_site, +1);
 		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+		
 	}
 	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
 		updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
@@ -14831,6 +14833,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		updateCombinedSitesMigration(S5);
 		updateCombinedSitesMigration(S6);
 	}
+	if (jj_opp!=-9999) remOppsiteR5Walker(ii, jj_opp);
 }
 
 // ************************************************************
@@ -15050,6 +15053,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			if (os_endtype >= 2000 && os_endtype <= 2205) allowed = false;
 			if (os_endtype >= 2103 && os_endtype <= 2105) allowed = false;
 			if (os_endtype >= 2204 && os_endtype <= 2205) allowed = false;
+			addOppsiteR5Walker(opp_site_after,opp_site_after);
 			jj_opp_after = findWalker(opp_site_after);
 			moveWalker(ii);
 			moveWalker(jj_opp_after);
@@ -15127,7 +15131,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		std::get<2>(m_pah->m_R5walker_sites[ii])++;
 	}
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
-		moveWalker(ii);
+		//moveWalker(ii);
 		if (jj_opp != -9999) {
 			moveWalker(jj_opp);
 			if ((int)opp_site->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp])==0){
@@ -15505,6 +15509,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			updateCombinedSitesMigration(S6);
 		}
 	}
+	if (jj_opp!=-9999) remOppsiteR5Walker(ii, jj_opp);
 }
 
 // ************************************************************
@@ -15674,6 +15679,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			if (os_endtype >= 2000 && os_endtype <= 2205) allowed = false;
 			if (os_endtype >= 2103 && os_endtype <= 2105) allowed = false;
 			if (os_endtype >= 2204 && os_endtype <= 2205) allowed = false;
+			addOppsiteR5Walker(opp_site_after,opp_site_after);
 			jj_opp_after = findWalker(opp_site_after);
 			moveWalker(ii);
 			moveWalker(jj_opp_after);
@@ -15759,7 +15765,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		std::get<2>(m_pah->m_R5walker_sites[ii])++;
 	}
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
-		moveWalker(ii);
+		//moveWalker(ii);
 		if (jj_opp != -9999) {
 			moveWalker(jj_opp);
 			if ((int)opp_site->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp])==0){
@@ -16106,7 +16112,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			updateCombinedSitesMigration(S1_3);
 		}
 	}
-
+	if (jj_opp!=-9999) remOppsiteR5Walker(ii, jj_opp);
 }
 
 // ************************************************************
@@ -16854,7 +16860,7 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 	if (m_pah->m_R7loc.size()>=1){
 		for (std::list<cpair>::iterator it = m_pah->m_R7loc.begin(); it!= m_pah->m_R7loc.end(); ++it){
 			double distR5R7 = getDistance_twoC(*it, R5coords_end);
-			if (distR5R7 < 2.6) {
+			if (distR5R7 < 2.5) {
 				//This distance is a parameter of this jump process. Might need some more tuning. 
 				//2.8 seems appropiate but may reject too many jumps.
 				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
@@ -16901,6 +16907,45 @@ int PAHProcess::coupledSiteDirection(Spointer stt){
 		if ((int)check_right->type>2000 && (int)check_right->type<2016) right_bool = false;
 		if ((int)check_right->type>=2114 && (int)check_right->type<=2115) right_bool = false;
 		//if ((int)check_right->type==9999) right_bool = false;
+
+		bool invert;
+		if (ii%2 == 0) invert = false;
+		else invert = true;
+		if(left_bool && !right_bool && !invert) return -1;
+		if(!left_bool && right_bool && !invert) return 1;
+		if(left_bool && !right_bool && invert) return 1;
+		if(!left_bool && right_bool && invert) return -1;
+	}
+	//If ths algorithm has returned 0 repeat but this time assume that SPIRALS cannot be counted.
+	left_bool = true;
+	right_bool = true;
+	for (int ii=0;ii!=7;ii++){
+		check_left = moveIt(check_left,-1);
+		check_right = moveIt(check_right,+1);
+		while ((int)check_left->type>=1000 && (int)check_left->type<=1004){
+			check_left = moveIt(check_left,-1);
+		}
+		while ((int)check_right->type>=1000 && (int)check_right->type<=1004){
+			check_right = moveIt(check_right,+1);
+		}
+		if(check_left->type==R5FEACR5 || check_left->type==R5ACR5){
+			Spointer left_site = moveIt(check_left,-1);
+			if (left_site->type==R5) left_bool = false;
+		}
+		if(check_right->type==R5FEACR5 || check_right->type==R5ACR5){
+			Spointer right_site = moveIt(check_right,+1);
+			if (right_site->type==R5) right_bool = false;
+		}
+		
+		if ((int)check_left->type<500) left_bool = false;
+		if ((int)check_left->type>2000 && (int)check_left->type<2016) left_bool = false;
+		if ((int)check_left->type>=2114 && (int)check_left->type<=2115) left_bool = false;
+		if ((int)check_left->type==9999) left_bool = false;
+
+		if ((int)check_right->type<500) right_bool = false;
+		if ((int)check_right->type>2000 && (int)check_right->type<2016) right_bool = false;
+		if ((int)check_right->type>=2114 && (int)check_right->type<=2115) right_bool = false;
+		if ((int)check_right->type==9999) right_bool = false;
 
 		bool invert;
 		if (ii%2 == 0) invert = false;
