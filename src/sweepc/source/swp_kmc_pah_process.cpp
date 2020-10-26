@@ -7356,7 +7356,9 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     m_pah->m_rings++;
     //printSites(stt);
 	//Optimise PAH if needed.
-	if ( (getDistance_twoC(newC2,C_2) > 1.7 || getDistance_twoC(newC2,newC2->C2->C2) < 1.8 || getDistance_twoC(newC1,newC1->C1->C1) < 1.8) && !m_pah->m_optimised) {
+	if ( (getDistance_twoC(newC2,C_2) > 1.7 || getDistance_twoC(newC2,newC2->C2->C2) < 1.8 || 
+			getDistance_twoC(newC2,newC2->C2->C2->C2) < 2.1 || getDistance_twoC(newC1,newC1->C1->C1->C1) < 2.1 ||
+			getDistance_twoC(newC1,newC1->C1->C1) < 1.8) && !m_pah->m_optimised) {
 		OpenBabel::OBMol mol = passPAH();
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
