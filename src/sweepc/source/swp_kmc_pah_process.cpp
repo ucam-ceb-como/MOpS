@@ -4538,9 +4538,11 @@ void PAHProcess::updateCombinedSites(Spointer& st) {
 				st->comb = R5R7;
 				m_pah->m_siteMap[R5R7].push_back(st);
 				m_pah->m_R7loc.push_back(R7coords);
+				m_pah->m_R5loc.push_back(R5coords_R7);
 				break;
 			}
 			m_pah->m_R7loc.push_back(R7coords);
+			m_pah->m_R5loc.push_back(R5coords_R7);
 		}
 		//Get R5 internal coordinates if they have not been cleared!
 		if (st->type == ACR5) R5coords = findR5internal(st->C1->C2, st->C1->C2->C2);
