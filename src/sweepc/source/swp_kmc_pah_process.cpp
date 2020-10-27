@@ -661,7 +661,7 @@ void PAHProcess::saveXYZ(const std::string &filename, bool optimise) {
 }
 
 //! Stores structure into a file with given format.
-void PAHProcess::save_formatfile(const std::string &filename, const std::string format, bool optimise) {
+void PAHProcess::save_formatfile(const std::string &filename, const std::string format_string, bool optimise) {
 	OpenBabel::OBMol mol = passPAH(optimise);
 	if (optimise){
 		if (HasCurvedMoeities()) mol = optimisePAH(mol, 8000, "mmff94");
@@ -671,9 +671,9 @@ void PAHProcess::save_formatfile(const std::string &filename, const std::string 
 	ofstream ofs1;
 	std::string filename1 = filename;
 	filename1.append(".");
-	filename1.append("format");
+	filename1.append(format_string);
 	OpenBabel::OBConversion conv;
-	OpenBabel::OBFormat *format_out = conv.FindFormat(format); // default output format
+	OpenBabel::OBFormat *format_out = conv.FindFormat(format_string); // default output format
 	conv.SetInAndOutFormats(format_out, format_out);
 	ofs1.open(filename1);
 	conv.Write(&mol, &ofs1);
@@ -3565,6 +3565,9 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 	//Checks for sites with similar number of R6s and R5s.
 	int stype = (int)t;
 	int prev_stype = (int)st->type;
+	bool optim = false;
+	std::list<cpair>R5loc_copy;
+	std::list<cpair>R7loc_copy;
 	if (prev_stype == 9999){
 		//Site being converted is an SPIRAL. Keep it as an SPIRAL.
 		return;
@@ -3581,6 +3584,9 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		st->C1 = Carb1;
 		st->C2 = Carb2;
 		if (!m_pah->m_optimised){
+			optim = true;
+			R5loc_copy = m_pah->m_R5loc;
+			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol);
 			passbackPAH(mol);
@@ -3609,6 +3615,9 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		st->C1 = Carb1;
 		st->C2 = Carb2;
 		if (!m_pah->m_optimised){
+			optim = true;
+			R5loc_copy = m_pah->m_R5loc;
+			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol);
 			passbackPAH(mol);
@@ -3637,6 +3646,9 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		st->C1 = Carb1;
 		st->C2 = Carb2;
 		if (!m_pah->m_optimised){
+			optim = true;
+			R5loc_copy = m_pah->m_R5loc;
+			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol);
 			passbackPAH(mol);
@@ -3665,6 +3677,9 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 		st->C1 = Carb1;
 		st->C2 = Carb2;
 		if (!m_pah->m_optimised){
+			optim = true;
+			R5loc_copy = m_pah->m_R5loc;
+			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol);
 			passbackPAH(mol);
@@ -3686,6 +3701,41 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 			stype = 2015;
 		}
 		t = (kmcSiteType) stype;
+	}
+	//Reassigns the R5 and R7 locations with same size.
+	if (m_pah->m_R5loc.size() != R5loc_copy.size() && optim) {
+		std::list<cpair> newR5loclist;
+		for(std::list<cpair>::iterator it = R5loc_copy.begin(); it != R5loc_copy.end(); ++it) {
+			double mindist = 1e3;
+			std::list<cpair>::iterator it3;
+			for(std::list<cpair>::iterator it2 = m_pah->m_R5loc.begin(); it2 != m_pah->m_R5loc.end(); ++it2) {
+				double my_dist = getDistance_twoCsquared(*it, *it2);
+				if (my_dist < mindist){
+					mindist = my_dist;
+					it3 = it2;
+				}
+			}
+			newR5loclist.push_back(*it3);
+		}
+		m_pah->m_R5loc = newR5loclist;
+		m_pah->m_optimised = false;
+	}
+	if (m_pah->m_R7loc.size() != R7loc_copy.size() && optim) {
+		std::list<cpair> newR7loclist;
+		for(std::list<cpair>::iterator it = R7loc_copy.begin(); it != R7loc_copy.end(); ++it) {
+			double mindist = 1e3;
+			std::list<cpair>::iterator it3;
+			for(std::list<cpair>::iterator it2 = m_pah->m_R7loc.begin(); it2 != m_pah->m_R7loc.end(); ++it2) {
+				double my_dist = getDistance_twoCsquared(*it, *it2);
+				if (my_dist < mindist){
+					mindist = my_dist;
+					it3 = it2;
+				}
+			}
+			newR7loclist.push_back(*it3);
+		}
+		m_pah->m_R7loc = newR7loclist;
+		m_pah->m_optimised = false;
 	}
     // removes site from m_pah->m_siteMap (principal site)
     delSiteFromMap(st->type, st);
@@ -4302,6 +4352,23 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			newR5loclist.push_back(*it3);
 		}
 		m_pah->m_R5loc = newR5loclist;
+		m_pah->m_optimised = false;
+	}
+	if (m_pah->m_R7loc.size() != R7loc_copy.size() && optim) {
+		std::list<cpair> newR7loclist;
+		for(std::list<cpair>::iterator it = R7loc_copy.begin(); it != R7loc_copy.end(); ++it) {
+			double mindist = 1e3;
+			std::list<cpair>::iterator it3;
+			for(std::list<cpair>::iterator it2 = m_pah->m_R7loc.begin(); it2 != m_pah->m_R7loc.end(); ++it2) {
+				double my_dist = getDistance_twoCsquared(*it, *it2);
+				if (my_dist < mindist){
+					mindist = my_dist;
+					it3 = it2;
+				}
+			}
+			newR7loclist.push_back(*it3);
+		}
+		m_pah->m_R7loc = newR7loclist;
 		m_pah->m_optimised = false;
 	}
 	// removes site from m_pah->m_siteMap (principal site)
@@ -14457,6 +14524,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	}
 
 	//After this point we know that the process is accepted!
+	m_pah->m_optimised = false;
 	cpair R5coords_end;
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
 		if (steps==0){
@@ -14725,9 +14793,11 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, FEACR5);
 		}
 		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+			moveWalker(ii);
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type == 4){ //sFE2 is a BY6
+			moveWalker(ii);
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
@@ -14791,9 +14861,11 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, FEACR5);
 		}
 		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+			moveWalker(ii);
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type == 4){ //sFE2 is a BY6
+			moveWalker(ii);
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
@@ -15107,6 +15179,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	}
 
 	//After this point we know that the process is accepted!
+	m_pah->m_optimised = false;
 	cpair R5coords_end;
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
 		if (steps==0){
@@ -15420,18 +15493,39 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				convSiteType(sFE2, sFE2->C1, sFE2->C2, FEACR5);
 			}
 			else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+				moveWalker(ii);
 				convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 			}
 			else if ((int)sFE2->type == 4){ //sFE2 is a BY6
+				moveWalker(ii);
 				convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 			}
 			else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
+				moveWalker(ii);
+				if (!checkSiteValid(stt)){
+					if (b4) stt = moveIt(sFE2,+1);
+					else stt = moveIt(sFE2,-1);
+				}
 				updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
 			}
 			else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a R5 neighbour {
+				if ((int)sFE2->type>=103) {
+					moveWalker(ii);
+					if (!checkSiteValid(stt)){
+						if (b4) stt = moveIt(sFE2,+1);
+						else stt = moveIt(sFE2,-1);
+					}
+				}
 				updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
 			}
 			else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a R5 neighbour {
+				if ((int)sFE2->type>=503) {
+					moveWalker(ii);
+					if (!checkSiteValid(stt)){
+						if (b4) stt = moveIt(sFE2,+1);
+						else stt = moveIt(sFE2,-1);
+					}
+				}
 				updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
 			}
 			convSiteType(stt, stt->C2->C1, stt->C2, FE); //stt is originally the R5R6 site that will become the new FE site
@@ -15480,18 +15574,39 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				convSiteType(sFE2, sFE2->C1, sFE2->C2, FEACR5);
 			}
 			else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+				moveWalker(ii);
 				convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 			}
 			else if ((int)sFE2->type == 4){ //sFE2 is a BY6
+				moveWalker(ii);
 				convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 			}
 			else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
+				moveWalker(ii);
+				if (!checkSiteValid(stt)){
+					if (b4) stt = moveIt(sFE2,+1);
+					else stt = moveIt(sFE2,-1);
+				}
 				updateSites(sFE2, sFE2->C1, sFE2->C2, +101);
 			}
 			else if ((int)sFE2->type >= 102 && (int)sFE2->type <= 104){ //sFE2 is a BY5 {
+				if ((int)sFE2->type>=103) {
+					moveWalker(ii);
+					if (!checkSiteValid(stt)){
+						if (b4) stt = moveIt(sFE2,+1);
+						else stt = moveIt(sFE2,-1);
+					}
+				}
 				updateSites(sFE2, sFE2->C1, sFE2->C2, +2001);
 			}
 			else if ((int)sFE2->type >= 502 && (int)sFE2->type <= 504){ //sFE2 is a BY5 {
+				if ((int)sFE2->type>=503) {
+					moveWalker(ii);
+					if (!checkSiteValid(stt)){
+						if (b4) stt = moveIt(sFE2,+1);
+						else stt = moveIt(sFE2,-1);
+					}
+				}
 				updateSites(sFE2, sFE2->C1, sFE2->C2, +1601);
 			}
 			convSiteType(stt, stt->C1, stt->C1->C2, FE); //stt is originally the R5R6 site that will become the new FE site	
@@ -15733,6 +15848,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	}
 
 	//After this point we know that the process is accepted!
+	m_pah->m_optimised = false;
 	cpair R5coords_end;
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
 		if (steps==0){
@@ -16000,9 +16116,11 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, FEACR5);
 		}
 		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+			moveWalker(ii);
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type == 4){ //sFE2 is a BY6
+			moveWalker(ii);
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a complex bay site {
@@ -16063,9 +16181,11 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, FEACR5);
 		}
 		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
+			moveWalker(ii);
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type == 4){ //sFE2 is a BY6
+			moveWalker(ii);
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
@@ -16240,10 +16360,11 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	if (b4) {
 		if( (int)stt->type>2000){
 			//An ACR5 site or similar.
-			updateSites(stt, Cnew, C_2, -2001);
+			if (stt_stype == 2114 || stt_stype == 2115) updateSites(stt, Cnew, C_2, -101);
+			else updateSites(stt, Cnew, C_2, -2001);
 			Spointer S_other = moveIt(stt,-1);
 			updateSites(S_other, S_other->C1, Cnew, +1);
-			if (stt_stype==2103){ 
+			if (stt_stype>=2103 && stt_stype<=2105){ 
 				Spointer S_otherR5 = moveIt(stt,+1);
 				if((int)S_otherR5->type>500 && (int)S_otherR5->type<510) updateSites(stt, stt->C1, stt->C2, +400);
 			}
@@ -16261,10 +16382,11 @@ void PAHProcess::proc_MR5R7_edge(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
 	else {
 		if( (int)stt->type>2000){
 			//An ACR5 site or similar.
-			updateSites(stt, C_1, Cnew, -2001);
+			if (stt_stype == 2114 || stt_stype == 2115) updateSites(stt, C_1, Cnew, -101);
+			else updateSites(stt, C_1, Cnew, -2001);
 			Spointer S_other = moveIt(stt,+1);
 			updateSites(S_other, Cnew, S_other->C2, +1);
-			if (stt_stype==2103){ 
+			if (stt_stype>=2103 && stt_stype<=2105){ 
 				Spointer S_otherR5 = moveIt(stt,-1);
 				if((int)S_otherR5->type>500 && (int)S_otherR5->type<510) updateSites(stt, stt->C1, stt->C2, +400);
 			}

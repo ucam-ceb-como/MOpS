@@ -1133,6 +1133,7 @@ void KMCSimulator::TestGP() {
 void KMCSimulator::savePAH(int PAH_number, const std::string &filename, bool optimise){
 	std::string xyzname = filename;
 	m_simPAHp.saveXYZ(xyzname, optimise);
+    //m_simPAHp.save_formatfile(xyzname, "pdb", optimise);
 	//m_simPAHp.printSites();
 }
 
