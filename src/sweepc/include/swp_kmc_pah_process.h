@@ -178,6 +178,7 @@ public:
     bool saveDOT(const std::string &filename) const;
     bool saveDOT(const std::string &filename, const std::string &title) const;
 	void saveXYZ(const std::string &filename, bool optimise=false);
+    void save_formatfile(const std::string &filename, const std::string format, bool optimise=false);
 	void save_trajectory_xyz(const std::string &filename, bool optimise=false);
 	bool saveDOT3D(const std::string &filename) const;
 	bool saveDOT3D(const std::string &filename, const std::string &title) const;

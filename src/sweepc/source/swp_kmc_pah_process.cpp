@@ -660,6 +660,26 @@ void PAHProcess::saveXYZ(const std::string &filename, bool optimise) {
 	ofs1.close();
 }
 
+//! Stores structure into a file with given format.
+void PAHProcess::save_formatfile(const std::string &filename, const std::string format, bool optimise) {
+	OpenBabel::OBMol mol = passPAH(optimise);
+	if (optimise){
+		if (HasCurvedMoeities()) mol = optimisePAH(mol, 8000, "mmff94");
+		else mol = optimisePAH(mol, 4000, "mmff94");
+		//mol = optimisePAH(mol, 4000, "Ghemical");
+	}
+	ofstream ofs1;
+	std::string filename1 = filename;
+	filename1.append(".");
+	filename1.append("format");
+	OpenBabel::OBConversion conv;
+	OpenBabel::OBFormat *format_out = conv.FindFormat(format); // default output format
+	conv.SetInAndOutFormats(format_out, format_out);
+	ofs1.open(filename1);
+	conv.Write(&mol, &ofs1);
+	ofs1.close();
+}
+
 //! Stores structure into a XYZ file.
 void PAHProcess::save_trajectory_xyz(const std::string &filename, bool optimise) {
 	OpenBabel::OBMol mol = passPAH(optimise);
@@ -2811,46 +2831,63 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 				}
 				OpenBabel::OBAtom *my_atom2  = mol.GetAtom(valence_2_carbons[kk]);
 				int yy = my_atom2->GetIdx(); // The sp carbon
-				std::vector<int> neighb_vector; // The neighbours of the sp3 carbon
-				for( OpenBabel::OBAtomAtomIter     nbr(&*my_atom4); nbr; ++nbr ){
-					neighb_vector.push_back(nbr->GetIdx());
-				}
-				std::vector<int> possible_carbons; 
-				for (unsigned int jj=0; jj!=neighb_vector.size();jj++){
-					OpenBabel::OBAtom *neighbour = mol.GetAtom(neighb_vector[jj]);
-					std::vector<int> neighb_neighbours;
-					std::vector<int>::iterator n_it;
-					for( OpenBabel::OBAtomAtomIter     nbr(&*neighbour); nbr; ++nbr ){
-						OpenBabel::OBAtom *neighb2 = mol.GetAtom(nbr->GetIdx());
-						neighb_neighbours.push_back(nbr->GetIdx());
-					}
-					for (unsigned int rr=0; rr!=neighb_vector.size();rr++){
-						n_it = std::find(neighb_neighbours.begin(), neighb_neighbours.end(), neighb_vector[rr]);
-						if (n_it!=neighb_neighbours.end()){
-							possible_carbons.push_back(neighbour->GetIdx());
-						}
-					}
-				}
-				min_dist = 1e3;
 				int zz = -99; // The wrongly bonded carbon
-				if (possible_carbons.size()!=0){
-					for (unsigned int jj=0; jj!=possible_carbons.size();jj++){
-						OpenBabel::OBAtom *neighbour = mol.GetAtom(possible_carbons[jj]);
-						double my_dist = my_atom2->GetDistance(neighbour);
-						if (my_dist < min_dist){
-							zz = neighbour->GetIdx();
-							min_dist = my_dist;
+				OpenBabel::OBBond* bond_between_val2_and_val4 = mol.GetBond(xx, yy);
+				if (bond_between_val2_and_val4!=NULL){
+					//The valence 2 carbon and the valence 4 carbon are bonded.
+					//Find closest sp3 neighbour to the sp carbon and exchange bonds.
+					double min_dist_2_4 = 1e3;
+					for( OpenBabel::OBAtomAtomIter     nbr(&*my_atom4); nbr; ++nbr ){
+						OpenBabel::OBAtom *neighb = mol.GetAtom(nbr->GetIdx());
+						double my_dist = my_atom2->GetDistance(neighb);
+						if (my_dist < min_dist_2_4){
+							min_dist_2_4 = my_dist;
+							zz = neighb->GetIdx();
 						}
 					}
-				} else{
+				}
+				else{
+					//The valence 2 and valence 4 carbons are not bonded. Check neighbours.
+					std::vector<int> neighb_vector; // The neighbours of the sp3 carbon
+					for( OpenBabel::OBAtomAtomIter     nbr(&*my_atom4); nbr; ++nbr ){
+						neighb_vector.push_back(nbr->GetIdx());
+					}
+					std::vector<int> possible_carbons; 
 					for (unsigned int jj=0; jj!=neighb_vector.size();jj++){
 						OpenBabel::OBAtom *neighbour = mol.GetAtom(neighb_vector[jj]);
-						OpenBabel::OBBond* bond_exist = mol.GetBond(yy, neighbour->GetIdx());
-						if (bond_exist==NULL){
+						std::vector<int> neighb_neighbours;
+						std::vector<int>::iterator n_it;
+						for( OpenBabel::OBAtomAtomIter     nbr(&*neighbour); nbr; ++nbr ){
+							OpenBabel::OBAtom *neighb2 = mol.GetAtom(nbr->GetIdx());
+							neighb_neighbours.push_back(nbr->GetIdx());
+						}
+						for (unsigned int rr=0; rr!=neighb_vector.size();rr++){
+							n_it = std::find(neighb_neighbours.begin(), neighb_neighbours.end(), neighb_vector[rr]);
+							if (n_it!=neighb_neighbours.end()){
+								possible_carbons.push_back(neighbour->GetIdx());
+							}
+						}
+					}
+					min_dist = 1e3;
+					if (possible_carbons.size()!=0){
+						for (unsigned int jj=0; jj!=possible_carbons.size();jj++){
+							OpenBabel::OBAtom *neighbour = mol.GetAtom(possible_carbons[jj]);
 							double my_dist = my_atom2->GetDistance(neighbour);
 							if (my_dist < min_dist){
 								zz = neighbour->GetIdx();
 								min_dist = my_dist;
+							}
+						}
+					} else{
+						for (unsigned int jj=0; jj!=neighb_vector.size();jj++){
+							OpenBabel::OBAtom *neighbour = mol.GetAtom(neighb_vector[jj]);
+							OpenBabel::OBBond* bond_exist = mol.GetBond(yy, neighbour->GetIdx());
+							if (bond_exist==NULL){
+								double my_dist = my_atom2->GetDistance(neighbour);
+								if (my_dist < min_dist){
+									zz = neighbour->GetIdx();
+									min_dist = my_dist;
+								}
 							}
 						}
 					}
