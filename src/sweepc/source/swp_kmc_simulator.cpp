@@ -263,7 +263,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 						|| jp_perf.first->getID() == 41 || (jp_perf.first->getID() >= 44 && jp_perf.first->getID() < 54) || m_simPAHp.numberOfMethyl() >= 3) addTrackedPAH(PAH_ID); 
             }*/
             //Save information for a single PAH
-            if (finder != m_tracked_pahs.end() && !m_migrate){
+            if (finder != m_tracked_pahs.end() && m_migrate){
                 std::string xyzname = ("KMC_DEBUG/");
                 xyzname.append(std::to_string(PAH_ID));
                 xyzname.append("/");
