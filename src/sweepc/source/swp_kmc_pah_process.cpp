@@ -14552,7 +14552,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
 		jj_opp_second = findWalker(opp_site_second);
 		moveWalker(ii);
-		if(jj_opp_second>0) moveWalker(jj_opp_second);
+		if(jj_opp_second>=0) moveWalker(jj_opp_second);
 		/*if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) {
 			opp_site_bool_second = true;
 			jj_opp_second = findWalker(opp_site_second);
@@ -14630,7 +14630,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
 		moveWalker(ii);
 		opt_opp_sites = true;
-		if (jj_opp>0) {
+		if (jj_opp>=0) {
 			moveWalker(jj_opp);
 			if ((int)opp_site->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp])==0){
 				if (isR5internal(opp_site->C1->C2,opp_site->C1->C2->C2)) {
@@ -14641,7 +14641,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 				m_pah->m_R5loc.push_back(R5coords_end);
 			}
 		}
-		if (jj_opp_second>0) {
+		if (jj_opp_second>=0) {
 			moveWalker(jj_opp_second);
 			if ((int)opp_site_second->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_second])==0){
 				if (isR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2)) {
@@ -14652,7 +14652,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 				m_pah->m_R5loc.push_back(R5coords_end);
 			}
 		}
-		if (jj_opp_after>0) {
+		if (jj_opp_after>=0) {
 			moveWalker(jj_opp_after);
 			if ((int)opp_site_after->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_after])==0){
 				if (isR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2)) {
@@ -14744,7 +14744,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		Spointer S1_opp_site = moveIt(opp_site, -1);
 		Spointer S2_opp_site = moveIt(opp_site, +1);
 		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
-		if(jj_opp>0){
+		if(jj_opp>=0){
 			//This walker should be deleted
 			ii = remOppsiteR5Walker(ii, jj_opp);
 		}
@@ -14760,8 +14760,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
 		}
 		updateCombinedSitesMigration(opp_site);
-		if(jj_opp>0) ii = remOppsiteR5Walker(ii, jj_opp); //This walker should be deleted
-		if(jj_opp_after>0) {
+		if(jj_opp>=0) ii = remOppsiteR5Walker(ii, jj_opp); //This walker should be deleted
+		if(jj_opp_after>=0) {
 			//Walker after existed. This is weird.
 			std::cout << "WARNING. Walker after existed in possition 0 and 2 in M5R_ACR5_ZZ" << std::endl;
 		}else if (jj_opp_after==-1000){
@@ -14783,7 +14783,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			Spointer S1_opp_site = moveIt(opp_site, -1);
 			Spointer S2_opp_site = moveIt(opp_site, +1);
 			updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
-			if(jj_opp>0){
+			if(jj_opp>=0){
 				//This walker should be deleted
 				ii = remOppsiteR5Walker(ii, jj_opp);
 			}
@@ -14798,10 +14798,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			}
 			updateCombinedSitesMigration(opp_site);
 			updateCombinedSitesMigration(opp_site_second);
-			if(jj_opp>0 && jj_opp==jj_opp_second){
+			if(jj_opp>=0 && jj_opp==jj_opp_second){
 				//This walker should be deleted
 				ii = remOppsiteR5Walker(ii, jj_opp);
-			}else if (jj_opp>0 && jj_opp!=jj_opp_second){
+			}else if (jj_opp>=0 && jj_opp!=jj_opp_second){
 				//Two walkers existed. This is weird.
 				std::cout << "WARNING. Different walkers in possition 0 and 1 in M5R_ACR5_ZZ" << std::endl;
 			}else if (jj_opp<0 && jj_opp==jj_opp_second){
@@ -14828,7 +14828,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 				updateCombinedSitesMigration(opp_site_after);
 			}
 		}
-		if(jj_opp_second>0){
+		if(jj_opp_second>=0){
 			//This walker should be deleted
 			ii = remOppsiteR5Walker(ii, jj_opp);
 		}
@@ -14851,26 +14851,23 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		}
 	}
 	else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
-		if ( (opp_site != opp_site_after) && (opp_site != opp_site_second) ){
+		if ( (opp_site != opp_site_after) && (opp_site != opp_site_second) && (opp_site_second != opp_site_after)){
 			updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
 			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
 			updateCombinedSitesMigration(opp_site);
 			updateCombinedSitesMigration(opp_site_second);
 			updateCombinedSitesMigration(opp_site_after);
+			if (jj_opp>=0) ii = remOppsiteR5Walker(ii, jj_opp);
+			if (b4) addOppsiteR5Walker(opp_site_second,opp_site_after);
+			else addOppsiteR5Walker(opp_site_after, opp_site_second);
 		} else if ( (opp_site != opp_site_after) && (opp_site == opp_site_second) ){
 			updateSites(opp_site, opp_site->C1, opp_site->C2, -1500);
 			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
 			updateCombinedSitesMigration(opp_site);
 			updateCombinedSitesMigration(opp_site_after);
-			if (b4) {
-				std::get<0>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site;
-				std::get<1>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site_after;
-				std::get<2>(m_pah->m_R5walker_sites[jj_opp_after]) = 0;
-			} else{
-				std::get<0>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site_after;
-				std::get<1>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site;
-				std::get<2>(m_pah->m_R5walker_sites[jj_opp_after]) = 0;
-			}
+			if (jj_opp>=0) ii = remOppsiteR5Walker(ii, jj_opp);
+			if (b4) addOppsiteR5Walker(opp_site,opp_site_after);
+			else addOppsiteR5Walker(opp_site_after, opp_site);
 		} else if ( (opp_site != opp_site_second) && (opp_site_second == opp_site_after) ){
 			updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
 			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +1500);
@@ -15265,18 +15262,15 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		opp_site = findSite(thirdC);
 		if (opp_site != m_pah->m_siteList.end()) opp_site_bool = true;
 		jj_opp = findWalker(opp_site);
-		//moveWalker(ii); Walker ii is not moved in MR5R6_migration
-		if(jj_opp!=-9999) moveWalker(jj_opp);
+		moveWalker(ii);
+		if(jj_opp>=0) moveWalker(jj_opp);
 	}
 	if (thirdC2 != NULLC) {
 		opp_site_second = findSite(thirdC2);
 		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
 		jj_opp_second = findWalker(opp_site_second);
-		//moveWalker(ii); Walker ii is not moved in MR5R6_migration
-		if(jj_opp_second!=-9999) moveWalker(jj_opp_second);
-		else {
-			addOppsiteR5Walker(opp_site_second,opp_site_second);
-		}
+		moveWalker(ii);
+		if(jj_opp_second>=0) moveWalker(jj_opp_second);
 		/*if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) {
 			opp_site_bool_second = true;
 			jj_opp_second = findWalker(opp_site_second);
@@ -15290,21 +15284,16 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		if (opp_site_after != m_pah->m_siteList.end()) {
 			opp_site_bool_after = true;
 			int os_endtype = opp_site_after->type;
-			if (os_endtype >= 200 && os_endtype <= 203) allowed = false;
-			if (os_endtype == 101) allowed = false;
-			if (os_endtype >= 600 && os_endtype <= 603) allowed = false;
-			if (os_endtype >= 1000 && os_endtype <= 1003) allowed = false;
-			if (os_endtype >= 500 && os_endtype <= 504) allowed = false;
-			if (os_endtype >= 2000 && os_endtype <= 2205) allowed = false;
-			if (os_endtype >= 2103 && os_endtype <= 2105) allowed = false;
-			if (os_endtype >= 2204 && os_endtype <= 2205) allowed = false;
-			if (jj_opp_second==-9999){
-				addOppsiteR5Walker(opp_site_after,opp_site_after);
-				if(jj_opp_after!=-9999) jj_opp_after = findWalker(opp_site_after);
-				//moveWalker(ii); Walker ii is not moved in MR5R6_migration
-				moveWalker(jj_opp_after);
-			}else{
-				jj_opp_after = jj_opp_second;
+			jj_opp_after = findWalker(opp_site_after);
+			if (opp_site_after != opp_site_second){
+				if (os_endtype >= 200 && os_endtype <= 203) allowed = false;
+				if (os_endtype == 101) allowed = false;
+				if (os_endtype >= 600 && os_endtype <= 603) allowed = false;
+				if (os_endtype >= 1000 && os_endtype <= 1003) allowed = false;
+				if (os_endtype >= 500 && os_endtype <= 504) allowed = false;
+				if (os_endtype >= 2000 && os_endtype <= 2205) allowed = false;
+				if (os_endtype >= 2103 && os_endtype <= 2105) allowed = false;
+				if (os_endtype >= 2204 && os_endtype <= 2205) allowed = false;
 			}
 		}
 	}
@@ -15380,10 +15369,11 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else {
 		std::get<2>(m_pah->m_R5walker_sites[ii])++;
 	}
+	//Handle new R5 coordinates for walkers
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
-		//moveWalker(ii); Walker ii is not moved in MR5R6_migration
+		//moveWalker(ii);
 		opt_opp_sites = true;
-		if (jj_opp != -9999) {
+		if (jj_opp>=0) {
 			moveWalker(jj_opp);
 			if ((int)opp_site->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp])==0){
 				if (isR5internal(opp_site->C1->C2,opp_site->C1->C2->C2)) {
@@ -15394,7 +15384,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				m_pah->m_R5loc.push_back(R5coords_end);
 			}
 		}
-		if (jj_opp_second != -9999) {
+		if (jj_opp_second>=0) {
 			moveWalker(jj_opp_second);
 			if ((int)opp_site_second->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_second])==0){
 				if (isR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2)) {
@@ -15405,7 +15395,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 				m_pah->m_R5loc.push_back(R5coords_end);
 			}
 		}
-		if (jj_opp_after != -9999) {
+		if (jj_opp_after>=0) {
 			moveWalker(jj_opp_after);
 			if ((int)opp_site_after->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_after])==0){
 				if (isR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2)) {
@@ -15439,7 +15429,11 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
 		Spointer S1_opp_site = moveIt(opp_site, -1);
 		Spointer S2_opp_site = moveIt(opp_site, +1);
-		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site); updateCombinedSitesMigration(S2_opp_site);
+		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+		if(jj_opp>=0){
+			//This walker should be deleted
+			ii = remOppsiteR5Walker(ii, jj_opp);
+		}
 	}
 	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
 		updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
@@ -15449,37 +15443,85 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
 			Spointer S1_opp_site = moveIt(opp_site_after, -1);
 			Spointer S2_opp_site = moveIt(opp_site_after, +1);
-			Spointer S3_opp_site = moveIt(opp_site_after, -2);
-			Spointer S4_opp_site = moveIt(opp_site_after, +2);
-			if ((int)opp_site_after->type < 2000){
-				if (b4) updateSites(S1_opp_site, S1_opp_site->C1, S1_opp_site->C2, +500);
-				else updateSites(S2_opp_site, S2_opp_site->C1, S2_opp_site->C2, +500);
-				int kk = findWalker(opp_site_after);
-				fixOppsiteR5Walker(kk);
-			}
-			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site); updateCombinedSitesMigration(S2_opp_site);
-			updateCombinedSitesMigration(S3_opp_site); updateCombinedSitesMigration(S4_opp_site);
+			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
 		}
 		updateCombinedSitesMigration(opp_site);
+		if(jj_opp>=0) ii = remOppsiteR5Walker(ii, jj_opp); //This walker should be deleted
+		if(jj_opp_after>=0) {
+			//Walker after existed. This is weird.
+			std::cout << "WARNING. Walker after existed in possition 0 and 2 in M5R_ACR5_ZZ" << std::endl;
+		}else if (jj_opp_after==-1000){
+			addOppsiteR5Walker(opp_site_after,opp_site_after);
+		}
 	}
 	else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
-		if (opp_site != opp_site_second){
+		if (opp_site == opp_site_second){
+			//Position 0 and 1 point to same site.
+			if ( (int)opp_site->type >= 2100) {
+				Spointer S1_opp_site = moveIt(opp_site, -1);
+				Spointer S2_opp_site = moveIt(opp_site, +1);
+				if (S1_opp_site->type==R5 || S2_opp_site->type==R5){
+					updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+				}
+				else updateSites(opp_site, opp_site->C1, opp_site->C2, -100);
+			}
+			else updateSites(opp_site, opp_site->C1, opp_site->C2, -2000);
+			Spointer S1_opp_site = moveIt(opp_site, -1);
+			Spointer S2_opp_site = moveIt(opp_site, +1);
+			updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+			if(jj_opp>=0){
+				//This walker should be deleted
+				ii = remOppsiteR5Walker(ii, jj_opp);
+			}
+		} else{
+			//Position 0 and 1 point to different sites.
 			updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
 			//convSiteType(opp_site_second, opp_site_second->C1, opp_site_second->C2, (kmcSiteType)new_stype);
 			updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, +1500);
+			if((int)opp_site_second->type>=2003) {
+				if(b4) addR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2,true);
+				else addR5internal(opp_site_second->C2->C1->C1,opp_site_second->C2->C1,true);
+			}
 			updateCombinedSitesMigration(opp_site);
 			updateCombinedSitesMigration(opp_site_second);
-		}
+			if(jj_opp>=0 && jj_opp==jj_opp_second){
+				//This walker should be deleted
+				ii = remOppsiteR5Walker(ii, jj_opp);
+			}else if (jj_opp>=0 && jj_opp!=jj_opp_second){
+				//Two walkers existed. This is weird.
+				std::cout << "WARNING. Different walkers in possition 0 and 1 in M5R_ACR5_ZZ" << std::endl;
+			}else if (jj_opp<0 && jj_opp==jj_opp_second){
+				//New walker added. 
+				addOppsiteR5Walker(opp_site_second,opp_site_second);
+			} else if (jj_opp_second<0){
+				//New walker added. 
+				addOppsiteR5Walker(opp_site_second,opp_site_second);
+			}
+		}	
 	}
 	else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
 		updateCombinedSitesMigration(opp_site_second);
 	}
 	else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
-		updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -1500);
-		updateCombinedSitesMigration(opp_site_second);
-		if (opp_site_after != S1_check && opp_site_after != S2_check) {
-			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
-			updateCombinedSitesMigration(opp_site_after);
+		if (opp_site_second == opp_site_after){
+			std::cout << "WARNING. Same site in position 1 and 2 on other side." << std::endl;
+		}
+		else{
+			updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -1500);
+			updateCombinedSitesMigration(opp_site_second);
+			if (opp_site_after != S1_check && opp_site_after != S2_check) {
+				updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
+				updateCombinedSitesMigration(opp_site_after);
+			}
+		}
+		if(jj_opp_second>=0){
+			//This walker should be deleted
+			ii = remOppsiteR5Walker(ii, jj_opp);
+		}
+		if (b4){
+			addOppsiteR5Walker(opp_site_second,opp_site_after);
+		} else{
+			addOppsiteR5Walker(opp_site_after,opp_site_second);
 		}
 	}
 	else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
@@ -15487,6 +15529,11 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			if ( (int)opp_site_after->type >=2000) updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +100);
 			else updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +2000);
 			updateCombinedSitesMigration(opp_site_after);
+		}
+		addOppsiteR5Walker(opp_site_after,opp_site_after);
+		if((int)opp_site_after->type>=2003) {
+			if(b4) addR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2,true);
+			else addR5internal(opp_site_after->C2->C1->C1,opp_site_after->C2->C1,true);
 		}
 	}
 	else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
@@ -15496,20 +15543,17 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			updateCombinedSitesMigration(opp_site);
 			updateCombinedSitesMigration(opp_site_second);
 			updateCombinedSitesMigration(opp_site_after);
+			if (jj_opp>=0) ii = remOppsiteR5Walker(ii, jj_opp);
+			if (b4) addOppsiteR5Walker(opp_site_second,opp_site_after);
+			else addOppsiteR5Walker(opp_site_after, opp_site_second);
 		} else if ( (opp_site != opp_site_after) && (opp_site == opp_site_second) ){
 			updateSites(opp_site, opp_site->C1, opp_site->C2, -1500);
 			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
 			updateCombinedSitesMigration(opp_site);
 			updateCombinedSitesMigration(opp_site_after);
-			if (b4) {
-				std::get<0>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site;
-				std::get<1>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site_after;
-				std::get<2>(m_pah->m_R5walker_sites[jj_opp_after]) = 0;
-			} else{
-				std::get<0>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site_after;
-				std::get<1>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site;
-				std::get<2>(m_pah->m_R5walker_sites[jj_opp_after]) = 0;
-			} 
+			if (jj_opp>=0) ii = remOppsiteR5Walker(ii, jj_opp);
+			if (b4) addOppsiteR5Walker(opp_site,opp_site_after);
+			else addOppsiteR5Walker(opp_site_after, opp_site);
 		} else if ( (opp_site != opp_site_second) && (opp_site_second == opp_site_after) ){
 			updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
 			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +1500);
@@ -15981,7 +16025,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
 		jj_opp_second = findWalker(opp_site_second);
 		moveWalker(ii);
-		if(jj_opp_second>0) moveWalker(jj_opp_second);
+		if(jj_opp_second>=0) moveWalker(jj_opp_second);
 		/*if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) {
 			opp_site_bool_second = true;
 			jj_opp_second = findWalker(opp_site_second);
@@ -16092,7 +16136,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
 		moveWalker(ii);
 		opt_opp_sites = true;
-		if (jj_opp>0) {
+		if (jj_opp>=0) {
 			moveWalker(jj_opp);
 			if ((int)opp_site->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp])==0){
 				if (isR5internal(opp_site->C1->C2,opp_site->C1->C2->C2)) {
@@ -16103,7 +16147,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 				m_pah->m_R5loc.push_back(R5coords_end);
 			}
 		}
-		if (jj_opp_second>0) {
+		if (jj_opp_second>=0) {
 			moveWalker(jj_opp_second);
 			if ((int)opp_site_second->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_second])==0){
 				if (isR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2)) {
@@ -16114,7 +16158,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 				m_pah->m_R5loc.push_back(R5coords_end);
 			}
 		}
-		if (jj_opp_after>0) {
+		if (jj_opp_after>=0) {
 			moveWalker(jj_opp_after);
 			if ((int)opp_site_after->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_after])==0){
 				if (isR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2)) {
@@ -16206,7 +16250,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		Spointer S1_opp_site = moveIt(opp_site, -1);
 		Spointer S2_opp_site = moveIt(opp_site, +1);
 		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
-		if(jj_opp>0){
+		if(jj_opp>=0){
 			//This walker should be deleted
 			ii = remOppsiteR5Walker(ii, jj_opp);
 		}
@@ -16222,8 +16266,8 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
 		}
 		updateCombinedSitesMigration(opp_site);
-		if(jj_opp>0) ii = remOppsiteR5Walker(ii, jj_opp); //This walker should be deleted
-		if(jj_opp_after>0) {
+		if(jj_opp>=0) ii = remOppsiteR5Walker(ii, jj_opp); //This walker should be deleted
+		if(jj_opp_after>=0) {
 			//Walker after existed. This is weird.
 			std::cout << "WARNING. Walker after existed in possition 0 and 2 in M5R_ACR5_ZZ" << std::endl;
 		}else if (jj_opp_after==-1000){
@@ -16245,7 +16289,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			Spointer S1_opp_site = moveIt(opp_site, -1);
 			Spointer S2_opp_site = moveIt(opp_site, +1);
 			updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
-			if(jj_opp>0){
+			if(jj_opp>=0){
 				//This walker should be deleted
 				ii = remOppsiteR5Walker(ii, jj_opp);
 			}
@@ -16260,10 +16304,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			}
 			updateCombinedSitesMigration(opp_site);
 			updateCombinedSitesMigration(opp_site_second);
-			if(jj_opp>0 && jj_opp==jj_opp_second){
+			if(jj_opp>=0 && jj_opp==jj_opp_second){
 				//This walker should be deleted
 				ii = remOppsiteR5Walker(ii, jj_opp);
-			}else if (jj_opp>0 && jj_opp!=jj_opp_second){
+			}else if (jj_opp>=0 && jj_opp!=jj_opp_second){
 				//Two walkers existed. This is weird.
 				std::cout << "WARNING. Different walkers in possition 0 and 1 in M5R_ACR5_ZZ" << std::endl;
 			}else if (jj_opp<0 && jj_opp==jj_opp_second){
@@ -16290,7 +16334,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 				updateCombinedSitesMigration(opp_site_after);
 			}
 		}
-		if(jj_opp_second>0){
+		if(jj_opp_second>=0){
 			//This walker should be deleted
 			ii = remOppsiteR5Walker(ii, jj_opp);
 		}
@@ -16319,20 +16363,17 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			updateCombinedSitesMigration(opp_site);
 			updateCombinedSitesMigration(opp_site_second);
 			updateCombinedSitesMigration(opp_site_after);
+			if (jj_opp>=0) ii = remOppsiteR5Walker(ii, jj_opp);
+			if (b4) addOppsiteR5Walker(opp_site_second,opp_site_after);
+			else addOppsiteR5Walker(opp_site_after, opp_site_second);
 		} else if ( (opp_site != opp_site_after) && (opp_site == opp_site_second) ){
 			updateSites(opp_site, opp_site->C1, opp_site->C2, -1500);
 			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +500);
 			updateCombinedSitesMigration(opp_site);
 			updateCombinedSitesMigration(opp_site_after);
-			if (b4) {
-				std::get<0>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site;
-				std::get<1>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site_after;
-				std::get<2>(m_pah->m_R5walker_sites[jj_opp_after]) = 0;
-			} else{
-				std::get<0>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site_after;
-				std::get<1>(m_pah->m_R5walker_sites[jj_opp_after]) = opp_site;
-				std::get<2>(m_pah->m_R5walker_sites[jj_opp_after]) = 0;
-			}
+			if (jj_opp>=0) ii = remOppsiteR5Walker(ii, jj_opp);
+			if (b4) addOppsiteR5Walker(opp_site,opp_site_after);
+			else addOppsiteR5Walker(opp_site_after, opp_site);
 		} else if ( (opp_site != opp_site_second) && (opp_site_second == opp_site_after) ){
 			updateSites(opp_site, opp_site->C1, opp_site->C2, -500);
 			updateSites(opp_site_after, opp_site_after->C1, opp_site_after->C2, +1500);
