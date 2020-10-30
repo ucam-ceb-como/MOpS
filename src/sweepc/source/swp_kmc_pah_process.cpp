@@ -14818,7 +14818,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	}
 	else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
 		if (opp_site_second == opp_site_after){
-			std::cout << "WARNING. Same site in position 1 and 2 on other side." << std::endl;
+			updateCombinedSitesMigration(opp_site_second);
 		}
 		else{
 			updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -1500);
@@ -14830,7 +14830,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		}
 		if(jj_opp_second>=0){
 			//This walker should be deleted
-			ii = remOppsiteR5Walker(ii, jj_opp);
+			ii = remOppsiteR5Walker(ii, jj_opp_second);
 		}
 		if (b4){
 			addOppsiteR5Walker(opp_site_second,opp_site_after);
@@ -15504,7 +15504,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	}
 	else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
 		if (opp_site_second == opp_site_after){
-			std::cout << "WARNING. Same site in position 1 and 2 on other side." << std::endl;
+			updateCombinedSitesMigration(opp_site_second);
 		}
 		else{
 			updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -1500);
@@ -15516,7 +15516,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		}
 		if(jj_opp_second>=0){
 			//This walker should be deleted
-			ii = remOppsiteR5Walker(ii, jj_opp);
+			ii = remOppsiteR5Walker(ii, jj_opp_second);
 		}
 		if (b4){
 			addOppsiteR5Walker(opp_site_second,opp_site_after);
@@ -16324,7 +16324,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	}
 	else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
 		if (opp_site_second == opp_site_after){
-			std::cout << "WARNING. Same site in position 1 and 2 on other side." << std::endl;
+			updateCombinedSitesMigration(opp_site_second);
 		}
 		else{
 			updateSites(opp_site_second, opp_site_second->C1, opp_site_second->C2, -1500);
@@ -16336,7 +16336,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		}
 		if(jj_opp_second>=0){
 			//This walker should be deleted
-			ii = remOppsiteR5Walker(ii, jj_opp);
+			ii = remOppsiteR5Walker(ii, jj_opp_second);
 		}
 		if (b4){
 			addOppsiteR5Walker(opp_site_second,opp_site_after);
