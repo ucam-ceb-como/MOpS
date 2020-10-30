@@ -8976,7 +8976,7 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	updateA(C1_res, 'H', Hdir);
 	updateA(C2_res, 'H', Hdir);
     // update sites and neighbours
-    Spointer S1, S2, S3, S4;
+    Spointer S1, S2, S3, S4, S5, S6;
     // neighbours
     S1 = moveIt(stt,-1); S2 = moveIt(stt,1);
     convSiteType(stt, C1_res, C2_res, ZZ);
@@ -8984,9 +8984,11 @@ void PAHProcess::proc_D5R_R5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     remR5fromSite(S2, C2_res, S2->C2);
     // update combined sites
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+	S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt); // update resulting site
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
+	updateCombinedSites(S5); updateCombinedSites(S6); // update neighbours of neighbours
     // add ring counts
     m_pah->m_rings5_Lone--;
 }
@@ -9087,7 +9089,7 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
     removeSite(FE1);
     removeSite(FE2);
     // convert the AC site, FE site, and update the neighbours
-    Spointer S1, S2, S3, S4;
+    Spointer S1, S2, S3, S4, S5, S6;
     if(b4){
         S1 = moveIt(FE_res, -1);
         S2 = moveIt(stt, 1);
@@ -9105,9 +9107,11 @@ void PAHProcess::proc_C6R_AC_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_
     }
     // update combined sites for all the sites involved and their neighbours
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+	S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt); updateCombinedSites(FE_res);// update resulting sites
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
+	updateCombinedSites(S5); updateCombinedSites(S6); // update neighbours of neighbours
     // update H count
     addCount(0, -2);
 	if (!m_pah->m_optimised){
@@ -9195,7 +9199,7 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     C3_new = addC(C2_new, normAngle(C2_new->C1->bondAngle1-60), 0, 1.4);
     C4_new = addC(C3_new, normAngle(C3_new->C1->bondAngle1-60), normAngle(C3_new->C1->bondAngle1-120), 1.4);*/
     // edit sites. first identify the neighbouring sites of resulting AC & FE3
-    Spointer S1, S2, S3, S4;
+    Spointer S1, S2, S3, S4, S5, S6;
     if(b4) {
         S1 = moveIt(sR5, -1); // neighbour of R5
         S2 = moveIt(stt, 1); // neighbour of RFE (stt)
@@ -9220,11 +9224,12 @@ void PAHProcess::proc_C5R_RFE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //else updateA(C_1, C_AC->C2, 'H');
     // update combined sites for all sites involved and their neighbours
     // (excluding new FE sites, since their combined site type will still be None)
-    S3 = moveIt(S1, -1);
-    S4 = moveIt(S2, 1);
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt); updateCombinedSites(sR5); // new FE3 and AC
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
+	updateCombinedSites(S5); updateCombinedSites(S6); // neighbours
     // update H count
     addCount(0, 2);
     // add ring counts
@@ -9330,7 +9335,7 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     //C1_new = addC(Cstart, normAngle(Cstart->bondAngle1+120), 0, 1.4);
     //C2_new = addC(C1_new, normAngle(C1_new->C1->bondAngle1-60), normAngle(C1_new->C1->bondAngle1-120), 1.4);
     // edit sites. first identify the neighbouring sites of resulting AC & FE3
-    Spointer S1, S2, S3, S4;
+    Spointer S1, S2, S3, S4, S5, S6;
     if(b4) {
         S1 = moveIt(sR5, -1); // neighbour of R5
         S2 = moveIt(stt, 1); // neighbour of RAC (stt)
@@ -9358,11 +9363,12 @@ void PAHProcess::proc_C5R_RAC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		passbackPAH(mol);
 		//saveXYZ("KMC_DEBUG/RAC_afteroptim");
 	}
-    S3 = moveIt(S1, -1);
-    S4 = moveIt(S2, 1);
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt); updateCombinedSites(sR5); // new FE and AC
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
+	updateCombinedSites(S5); updateCombinedSites(S6); // neighbours
     // add ring counts
     m_pah->m_rings++;
     m_pah->m_rings5_Lone--;
@@ -9553,10 +9559,8 @@ void PAHProcess::proc_M5R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     }
     // update combined sites for all sites involved and their neighbours
     // (excluding new FE sites, since their combined site type will still be None)
-    S3 = moveIt(S1, -1);
-    S4 = moveIt(S2, 1);
-	S5 = moveIt(S1, -2);
-    S6 = moveIt(S2, 2);
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt); updateCombinedSites(sR5); // new FE and AC
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
@@ -9632,7 +9636,7 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     removeSite(Srem1);
     removeSite(Srem2);
     // edit sites. first identify the neighbouring sites of resulting RFE & R5
-    Spointer S1, S2, S3, S4;
+    Spointer S1, S2, S3, S4, S5, S6;
     if(b4) {
         S1 = moveIt(sFE3, -1); // neighbour of FE3
         S2 = moveIt(stt, 1); // neighbour of BY5 (stt)
@@ -9657,11 +9661,12 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     //updateA(S1->C2->C1, S2->C1->C2, 'H');
     // update combined sites for all sites involved and their neighbours
     // (excluding new FE sites, since their combined site type will still be None)
-    S3 = moveIt(S1, -1);
-    S4 = moveIt(S2, 1);
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt); updateCombinedSites(sFE3); // new R5 and RFE
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
+	updateCombinedSites(S5); updateCombinedSites(S6); // neighbours
 
     addCount(0, -2);
     // add ring counts
@@ -9928,7 +9933,7 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     removeSite(Srem1);
     removeSite(Srem2);
     // edit sites. first identify the neighbouring sites of original BY5 and R6
-    Spointer S1, S2, S3, S4;
+    Spointer S1, S2, S3, S4, S5, S6;
     if(b4) {
         S1 = moveIt(sFE3, -1); // neighbour of FE3
         S2 = moveIt(stt, 1); // neighbour of BY5 (stt)
@@ -9951,11 +9956,12 @@ void PAHProcess::proc_M6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     //updateA(S1->C2->C1, S2->C1->C2, 'H');
     // update combined sites for all sites involved and their neighbours
     // (excluding new FE sites, since their combined site type will still be None)
-    S3 = moveIt(S1, -1);
-    S4 = moveIt(S2, 1);
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt); updateCombinedSites(sFE3); // new FE and ZZ
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
+	updateCombinedSites(S5); updateCombinedSites(S6); // neighbours of neighbours
 
     addCount(0, -2);
     //printSites(stt);
@@ -10049,12 +10055,14 @@ void PAHProcess::proc_O6R_FE2(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		m_pah->m_rings++;
 		removeR7internal(CRem_before, CRem_next);
 	}
-    Spointer S3, S4;
+    Spointer S3, S4, S5, S6;
     // update combined sites for all sites and their neighbours
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+	S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt);
     updateCombinedSites(S1); updateCombinedSites(S2);
     updateCombinedSites(S3); updateCombinedSites(S4);
+	updateCombinedSites(S5); updateCombinedSites(S6);
     addCount(0,-1);
 }
 
@@ -11488,11 +11496,12 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		updateSites(S2, newC2, S2->C2, 1);
 	}
 	// Update combined site for Site and neighbours
-	Spointer S3, S4;
-	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+	Spointer S3, S4, S5, S6;
+	S3 = moveIt(S1, -1); S4 = moveIt(S2, 1); S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
 	updateCombinedSites(stt);
 	updateCombinedSites(S1); updateCombinedSites(S2);
 	updateCombinedSites(S3); updateCombinedSites(S4);
+	updateCombinedSites(S5); updateCombinedSites(S6);
 	// add ring counts
 	m_pah->m_rings7_Embedded++;
 	//printSites(stt);
@@ -11643,7 +11652,7 @@ void PAHProcess::proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 	updateA(C2_new, 'H', Hdir2);
 	updateA(C_2, 'C', FEdir);
     // edit sites. first identify the neighbouring sites of resulting AC & FE3
-    Spointer S1, S2, S3, S4;
+    Spointer S1, S2, S3, S4, S5, S6;
     if(b4) {
         S1 = moveIt(sR5, -1); // neighbour of R5
         S2 = moveIt(stt, 1); // neighbour of RZZR (stt)
@@ -11679,11 +11688,12 @@ void PAHProcess::proc_C5R_RZZR(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 			if ((int)S3->type < 2000) updateSites(S3, S3->C1, S3->C2, +400); // update resulting FE neighbour
 		}
     }
-    S3 = moveIt(S1, -1);
-    S4 = moveIt(S2, 1);
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt); updateCombinedSites(sR5); // new FE and AC
     updateCombinedSites(S1); updateCombinedSites(S2); 
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours
+	updateCombinedSites(S5); updateCombinedSites(S6); // neighbours
 
 	if (getDistance_twoC(sR5->C1,sR5->C1->C2->C2) < 2.2 || getDistance_twoC(sR5->C1->C2,sR5->C2) < 2.2 ){
 		OpenBabel::OBMol mol = passPAH();
@@ -17231,9 +17241,10 @@ void PAHProcess::performMigrationProcess(){
 
 //! Moves individual walker ii when called without calling optimiser. 
 void PAHProcess::moveWalker(int ii){
+	int steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+	if (steps==0) return;
 	Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[ii]);
 	Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
-	int steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 	Spointer sFE2 = moveIt(site_perf,steps);
 	bool b4 = false;
 	if(steps < 0) b4 = true;
