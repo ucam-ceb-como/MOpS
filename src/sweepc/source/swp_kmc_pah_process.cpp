@@ -5047,14 +5047,14 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 					} else if (jj==-1000) {
 						//There are walker sites but current site is not declared as a walker.
 						//Site is not declared as a walker. Remove R5 position.
-						int s_other_type = (int)other_side_site_1->type;
+						int s_other_type = (int)other_side_site_2->type;
 						if (s_other_type>2000||(s_other_type>500&&s_other_type<505)){
-							if (isR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2)) {
-								R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
+							if (isR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2)) {
+								R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
 								remR5coords = true;
 							}
-							else if (isR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1)) {
-								R5coords = findR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1);
+							else if (isR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1)) {
+								R5coords = findR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1);
 								remR5coords = true;
 							}
 							else{
@@ -5064,14 +5064,14 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 					} else{
 						//There are no walker sites declared.
 						//Site is not declared as a walker. Remove R5 position.
-						int s_other_type = (int)other_side_site_1->type;
+						int s_other_type = (int)other_side_site_2->type;
 						if (s_other_type>2000||(s_other_type>500&&s_other_type<505)){
-							if (isR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2)) {
-								R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
+							if (isR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2)) {
+								R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
 								remR5coords = true;
 							}
-							else if (isR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1)) {
-								R5coords = findR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1);
+							else if (isR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1)) {
+								R5coords = findR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1);
 								remR5coords = true;
 							}
 							else{
@@ -14801,6 +14801,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			if(jj_opp>=0 && jj_opp==jj_opp_second){
 				//This walker should be deleted
 				ii = remOppsiteR5Walker(ii, jj_opp);
+				addOppsiteR5Walker(opp_site_second,opp_site_second);
 			}else if (jj_opp>=0 && jj_opp!=jj_opp_second){
 				//Two walkers existed. This is weird.
 				std::cout << "WARNING. Different walkers in possition 0 and 1 in M5R_ACR5_ZZ" << std::endl;
@@ -15487,6 +15488,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			if(jj_opp>=0 && jj_opp==jj_opp_second){
 				//This walker should be deleted
 				ii = remOppsiteR5Walker(ii, jj_opp);
+				addOppsiteR5Walker(opp_site_second,opp_site_second);
 			}else if (jj_opp>=0 && jj_opp!=jj_opp_second){
 				//Two walkers existed. This is weird.
 				std::cout << "WARNING. Different walkers in possition 0 and 1 in M5R_ACR5_ZZ" << std::endl;
@@ -16307,6 +16309,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			if(jj_opp>=0 && jj_opp==jj_opp_second){
 				//This walker should be deleted
 				ii = remOppsiteR5Walker(ii, jj_opp);
+				addOppsiteR5Walker(opp_site_second,opp_site_second);
 			}else if (jj_opp>=0 && jj_opp!=jj_opp_second){
 				//Two walkers existed. This is weird.
 				std::cout << "WARNING. Different walkers in possition 0 and 1 in M5R_ACR5_ZZ" << std::endl;
@@ -17234,6 +17237,7 @@ void PAHProcess::moveWalker(int ii){
 	Spointer sFE2 = moveIt(site_perf,steps);
 	bool b4 = false;
 	if(steps < 0) b4 = true;
+	if (sFE2->comb==FE2) return;
 	if (site_perf->type == FE) proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 	else proc_M5R_ACR5_termination(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
 	if (sFE2->type==FE || sFE2->type==R5R6){
