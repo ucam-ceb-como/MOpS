@@ -14555,6 +14555,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		if (opp_site != m_pah->m_siteList.end()) opp_site_bool = true;
 		jj_opp = findWalker(opp_site);
 		moveWalker(ii);
+		if (!checkSiteValid(stt)){
+			if (b4) stt = moveIt(sFE2,+1);
+			else stt = moveIt(sFE2,-1);
+		}
 		if(jj_opp>=0) moveWalker(jj_opp);
 	}
 	if (thirdC2 != NULLC) {
@@ -14562,6 +14566,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
 		jj_opp_second = findWalker(opp_site_second);
 		moveWalker(ii);
+		if (!checkSiteValid(stt)){
+			if (b4) stt = moveIt(sFE2,+1);
+			else stt = moveIt(sFE2,-1);
+		}
 		if(jj_opp_second>=0) moveWalker(jj_opp_second);
 		/*if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) {
 			opp_site_bool_second = true;
@@ -14639,6 +14647,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	//Handle new R5 coordinates for walkers
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
 		moveWalker(ii);
+		if (!checkSiteValid(stt)){
+			if (b4) stt = moveIt(sFE2,+1);
+			else stt = moveIt(sFE2,-1);
+		}
 		opt_opp_sites = true;
 		if (jj_opp>=0) {
 			moveWalker(jj_opp);
@@ -14921,10 +14933,18 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		}
 		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
 			moveWalker(ii);
+			if (!checkSiteValid(stt)){
+				if (b4) stt = moveIt(sFE2,+1);
+				else stt = moveIt(sFE2,-1);
+			}
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type == 4){ //sFE2 is a BY6
 			moveWalker(ii);
+			if (!checkSiteValid(stt)){
+				if (b4) stt = moveIt(sFE2,+1);
+				else stt = moveIt(sFE2,-1);
+			}
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
@@ -14989,10 +15009,18 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		}
 		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
 			moveWalker(ii);
+			if (!checkSiteValid(stt)){
+				if (b4) stt = moveIt(sFE2,+1);
+				else stt = moveIt(sFE2,-1);
+			}
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type == 4){ //sFE2 is a BY6
 			moveWalker(ii);
+			if (!checkSiteValid(stt)){
+				if (b4) stt = moveIt(sFE2,+1);
+				else stt = moveIt(sFE2,-1);
+			}
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
@@ -15274,6 +15302,10 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		if (opp_site != m_pah->m_siteList.end()) opp_site_bool = true;
 		jj_opp = findWalker(opp_site);
 		moveWalker(ii);
+		if (!checkSiteValid(stt)){
+			if (b4) stt = moveIt(sFE2,+1);
+			else stt = moveIt(sFE2,-1);
+		}
 		if(jj_opp>=0) moveWalker(jj_opp);
 	}
 	if (thirdC2 != NULLC) {
@@ -15706,10 +15738,18 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			}
 			else if ((int)sFE2->type == 3){ //sFE2 is a BY5
 				moveWalker(ii);
+				if (!checkSiteValid(stt)){
+					if (b4) stt = moveIt(sFE2,+1);
+					else stt = moveIt(sFE2,-1);
+				}
 				convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 			}
 			else if ((int)sFE2->type == 4){ //sFE2 is a BY6
 				moveWalker(ii);
+				if (!checkSiteValid(stt)){
+					if (b4) stt = moveIt(sFE2,+1);
+					else stt = moveIt(sFE2,-1);
+				}
 				convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 			}
 			else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
@@ -15787,10 +15827,18 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			}
 			else if ((int)sFE2->type == 3){ //sFE2 is a BY5
 				moveWalker(ii);
+				if (!checkSiteValid(stt)){
+					if (b4) stt = moveIt(sFE2,+1);
+					else stt = moveIt(sFE2,-1);
+				}
 				convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 			}
 			else if ((int)sFE2->type == 4){ //sFE2 is a BY6
 				moveWalker(ii);
+				if (!checkSiteValid(stt)){
+					if (b4) stt = moveIt(sFE2,+1);
+					else stt = moveIt(sFE2,-1);
+				}
 				convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 			}
 			else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
@@ -16030,6 +16078,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		if (opp_site != m_pah->m_siteList.end()) opp_site_bool = true;
 		jj_opp = findWalker(opp_site);
 		moveWalker(ii);
+		if (!checkSiteValid(stt)){
+			if (b4) stt = moveIt(sFE2,+1);
+			else stt = moveIt(sFE2,-1);
+		}
 		if(jj_opp>=0) moveWalker(jj_opp);
 	}
 	if (thirdC2 != NULLC) {
@@ -16037,6 +16089,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		if (opp_site_second != m_pah->m_siteList.end()) opp_site_bool_second = true;
 		jj_opp_second = findWalker(opp_site_second);
 		moveWalker(ii);
+		if (!checkSiteValid(stt)){
+			if (b4) stt = moveIt(sFE2,+1);
+			else stt = moveIt(sFE2,-1);
+		}
 		if(jj_opp_second>=0) moveWalker(jj_opp_second);
 		/*if (opp_site_second != m_pah->m_siteList.end() && opp_site_second!=opp_site) {
 			opp_site_bool_second = true;
@@ -16147,6 +16203,10 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	//Handle new R5 coordinates for walkers
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
 		moveWalker(ii);
+		if (!checkSiteValid(stt)){
+			if (b4) stt = moveIt(sFE2,+1);
+			else stt = moveIt(sFE2,-1);
+		}
 		opt_opp_sites = true;
 		if (jj_opp>=0) {
 			moveWalker(jj_opp);
@@ -16429,10 +16489,18 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		}
 		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
 			moveWalker(ii);
+			if (!checkSiteValid(stt)){
+				if (b4) stt = moveIt(sFE2,+1);
+				else stt = moveIt(sFE2,-1);
+			}
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type == 4){ //sFE2 is a BY6
 			moveWalker(ii);
+			if (!checkSiteValid(stt)){
+				if (b4) stt = moveIt(sFE2,+1);
+				else stt = moveIt(sFE2,-1);
+			}
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a complex bay site {
@@ -16494,10 +16562,18 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		}
 		else if ((int)sFE2->type == 3){ //sFE2 is a BY5
 			moveWalker(ii);
+			if (!checkSiteValid(stt)){
+				if (b4) stt = moveIt(sFE2,+1);
+				else stt = moveIt(sFE2,-1);
+			}
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ZZACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type == 4){ //sFE2 is a BY6
 			moveWalker(ii);
+			if (!checkSiteValid(stt)){
+				if (b4) stt = moveIt(sFE2,+1);
+				else stt = moveIt(sFE2,-1);
+			}
 			convSiteType(sFE2, sFE2->C1, sFE2->C2, ACACR5); //BY6 with an R5 inside is treated same as a BY6
 		}
 		else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){ //sFE2 is a BY5 {
