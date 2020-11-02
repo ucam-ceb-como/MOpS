@@ -4034,16 +4034,17 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	std::list<cpair>R5loc_copy;
 	std::list<cpair>R7loc_copy;
 	if (!checkSiteValid(stype)){
+		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_prev_";
+		std::ostringstream msg;
 		cout << "ERROR: updateSites: Invalid site type before update.\n"; //SETBREAKPOINT
 		cout << "Site type: " << kmcSiteName(st->type)<< "\n";
 		cout << "Bulk change: " << bulkCchange<< "\n";
-		std::ostringstream msg;
 		msg << "ERROR: updateSites: Invalid site type before update.\n"
 			<< "Site type: " << kmcSiteName(st->type)<< "\n"
 			<< "Bulk change: " << bulkCchange<< "\n";
 		//saveDOT("KMC_DEBUG/KMC_PAH_X_UPDATE_prev.dot");
 		if (m_debug_pah){
-			ifstream  src("KMC_DEBUG/BEFORE.xyz");
+			ifstream src("KMC_DEBUG/BEFORE.xyz");
 			std::string filename = "KMC_DEBUG/BEFORE_";
 			filename.append(std::to_string(updatesites_error_counter));
 			filename.append(".xyz");
@@ -4054,7 +4055,6 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
-		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_prev_";
 		filename2.append(std::to_string(updatesites_error_counter));
 		//filename2.append("_");
 		//filename2.append(std::to_string(this->m_pah->m_parent->ID()));
@@ -4070,10 +4070,11 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		return;
 	}
 	if ((stype + bulkCchange) < 0){
+		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_";
+		std::ostringstream msg;
 		cout << "ERROR: updateSites: Bulk C change invalid (Principal)\n"; //SETBREAKPOINT
 		cout << "Trying to add " << bulkCchange << " bulk C to a " << kmcSiteName(st->type);
 		cout << " (Sweep::KMC_ARS::PAHProcess::updateSites)";
-		std::ostringstream msg;
 		msg << "ERROR: Bulk C change invalid (Principal). Trying to add "
 			<< bulkCchange << " bulk C to a " << kmcSiteName(st->type)
 			<< " (Sweep::KMC_ARS::PAHProcess::updateSites)";
@@ -4090,7 +4091,6 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
-		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_";
 		filename2.append(std::to_string(updatesites_error_counter));
 		saveXYZ(filename2);
 		cout<<"Saving file: "<< filename2<<".xyz\n";
@@ -4230,6 +4230,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 	if (st->type == None)
 	{
 		//This means a None site is modified.
+		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_None_site_";
 		cout << "Error. Added " << bulkCchange << " carbons to a None site.\n"; //SETBREAKPOINT
 		bulkCchange = 0;
 		if(m_debug_pah){
@@ -4243,7 +4244,6 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			dst.close();
 			cout<<"Saving file: "<< filename<<"\n";
 		}
-		std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_None_site_";
 		filename2.append(std::to_string(updatesites_error_counter));
 		//filename2.append(std::to_string(this->m_pah->m_parent->ID()));
 		saveXYZ(filename2);
@@ -4293,6 +4293,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		}
 		else {
 			//cout << "JP performed: " << pahpjp.getName();
+			std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_BulkplusC_";
 			cout << "ERROR: updateSites: Created undefined site:\n"; //SETBREAKPOINT
 			cout << "Type = " << stype << "\n";
 			cout << "BulkC change = " << bulkCchange << "\n";
@@ -4314,7 +4315,6 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 				dst.close();
 				cout<<"Saving file: "<< filename<<"\n";
 			}
-			std::string filename2 = "KMC_DEBUG/KMC_PAH_X_UPDATE_BulkplusC_";
 			filename2.append(std::to_string(updatesites_error_counter));
 			//filename2.append("_");
 			//filename2.append(std::to_string(this->m_pah->m_parent->ID()));
@@ -12651,8 +12651,9 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			updateSites(checkR5_2, CRem_next, checkR5_2->C2, +100);
 		}
 		removeSite(sFE2);
-		std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
-		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
+		m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
+		/*std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
+		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;*/
 	}
 	else if ((int)sFE2->type == 0){
 		//This means that the pentagon has migrated to the edge but will have a single carbon out of the structure.
@@ -12942,9 +12943,10 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			updateSites(checkR5_2, CRem_next, checkR5_2->C2, +100);
 		}
 		removeSite(sFE2);
-		std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
+		m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
+		/*std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 		std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
-		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;
+		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;*/
 	}
 	else if ((int)sFE2->type == 0){
 		//This means that the pentagon has migrated to the edge but will have a single carbon out of the structure.
@@ -15689,46 +15691,25 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 					m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
 					addR5internal(checkR5_1->C1,checkR5_1->C2);
 					Spointer start_site, end_site, S1, S2, S3, S4, S5, S6;
-					if (b4) {
-						start_site = moveIt(stt,1);
-						end_site = moveIt(start_site, -1);
-						S1 = moveIt(end_site, -1);
-						S2 = moveIt(start_site, +1);
-						S3 = moveIt(S1, -1);
-						S4 = moveIt(S2, 1);
-						S5 = moveIt(S1, -2);
-						S6 = moveIt(S2, 2);
-						updateCombinedSitesMigration(start_site);
-						updateCombinedSitesMigration(end_site); 
-						updateCombinedSitesMigration(S1);
-						updateCombinedSitesMigration(S2);
-						updateCombinedSitesMigration(S3);
-						updateCombinedSitesMigration(S4);
-						updateCombinedSitesMigration(S5);
-						updateCombinedSitesMigration(S6);
-					}
-					else {
-						start_site = moveIt(stt,-1);
-						end_site = moveIt(start_site, +1);
-						S1 = moveIt(start_site, -1); 
-						S1 = moveIt(start_site, -1); 
-						S2 = moveIt(end_site, 1);
-						S3 = moveIt(S1, -1);
-						S4 = moveIt(S2, 1);
-						S5 = moveIt(S1, -2);
-						S6 = moveIt(S2, 2);
-						updateCombinedSitesMigration(start_site);
-						updateCombinedSitesMigration(end_site); 
-						updateCombinedSitesMigration(S1);
-						updateCombinedSitesMigration(S2);
-						updateCombinedSitesMigration(S3);
-						updateCombinedSitesMigration(S4);
-						updateCombinedSitesMigration(S5);
-						updateCombinedSitesMigration(S6);
-					}
+					start_site = moveIt(stt,1);
+					end_site = moveIt(start_site, -1);
+					S1 = moveIt(end_site, -1);
+					S2 = moveIt(start_site, +1);
+					S3 = moveIt(S1, -1);
+					S4 = moveIt(S2, 1);
+					S5 = moveIt(S1, -2);
+					S6 = moveIt(S2, 2);
+					updateCombinedSitesMigration(start_site);
+					updateCombinedSitesMigration(end_site); 
+					updateCombinedSitesMigration(S1);
+					updateCombinedSitesMigration(S2);
+					updateCombinedSitesMigration(S3);
+					updateCombinedSitesMigration(S4);
+					updateCombinedSitesMigration(S5);
+					updateCombinedSitesMigration(S6);
+					
 					return;
 					//Need to check for opposite site logic before returning.			
-		
 				}
 				else{
 					convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
@@ -15813,11 +15794,42 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		else {
 			S2 = moveIt(sFE2, 1);
 			if ((int)sFE2->type == 0){ //sFE2 is a FE
-				if ((int)S2->type == 0){ //S2 is a FE
-					convSiteType(stt, stt->C1, stt->C2, ZZ);
-					convSiteType(sFE2, sFE2->C1, sFE2->C2, RFE);
+				if ((int)S2->type == 0){ //S1 is a FE
+					//R5 has moved to the edge and will now be free.
+					//Since the FE2 will not move anymore it is probably a good idea to remove the walker.
+					convSiteType(stt, stt->C1, stt->C2, RFE);
+					convSiteType(sFE2, sFE2->C1, sFE2->C2, R5);
 					convSiteType(checkR5_1, checkR5_1->C1, checkR5_1->C2, R5);
 					updateSites(checkR5_2, checkR5_2->C1, checkR5_2->C2, +100);
+					Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[ii]);
+					Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
+					if(site_perf==site_perf_2) proc_M5R_ACR5_termination_toR5(site_perf,site_perf->C1,site_perf->C2,sFE2,b4,steps);
+					else proc_M5R_R5R6_multiple_sites(site_perf,site_perf->C1,site_perf->C2,sFE2,b4);
+					//sFE2 is deleted in the previous call so we must not call it again from here.
+					//updateCombinedSitesMigration(stt); updateCombinedSitesMigration(checkR5_1); updateCombinedSitesMigration(checkR5_2);
+					m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
+					addR5internal(checkR5_1->C1,checkR5_1->C2);
+					Spointer start_site, end_site, S1, S2, S3, S4, S5, S6;
+					start_site = moveIt(stt,-1);
+					end_site = moveIt(start_site, +1);
+					S1 = moveIt(start_site, -1); 
+					S1 = moveIt(start_site, -1); 
+					S2 = moveIt(end_site, 1);
+					S3 = moveIt(S1, -1);
+					S4 = moveIt(S2, 1);
+					S5 = moveIt(S1, -2);
+					S6 = moveIt(S2, 2);
+					updateCombinedSitesMigration(start_site);
+					updateCombinedSitesMigration(end_site); 
+					updateCombinedSitesMigration(S1);
+					updateCombinedSitesMigration(S2);
+					updateCombinedSitesMigration(S3);
+					updateCombinedSitesMigration(S4);
+					updateCombinedSitesMigration(S5);
+					updateCombinedSitesMigration(S6);
+
+					return;
+					//Need to check for opposite site logic before returning.			
 				}
 				else {
 					convSiteType(sFE2, sFE2->C1, sFE2->C2, R5R6);
