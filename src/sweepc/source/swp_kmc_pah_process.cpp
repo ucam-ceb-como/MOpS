@@ -7441,6 +7441,8 @@ void PAHProcess::proc_G6R_AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
         C_2->C1->C2 = C_2->C1->C3;
         C_1->C2->bridge = false;
         C_2->C1->bridge = false;
+		C_2->C1->C3 = NULL;
+		C_1->C2->C3 = NULL;
         connectToC(C_1, C_2);
         // Add C
 		newC1 = addC(C_1, start_direction, dist/2.0);
@@ -10148,6 +10150,8 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		C_2->C1->C2 = C_2->C1->C3;
 		C_1->C2->bridge = false;
 		C_2->C1->bridge = false;
+		C_1->C2->C3 = NULL;
+		C_2->C1->C3 = NULL;
 		//angletype a = C_2->C1->bondAngle1;
 		//C_2->C1->bondAngle1 = C_2->C1->bondAngle2;
 		//C_2->C1->bondAngle2 = a;
@@ -10739,6 +10743,8 @@ void PAHProcess::proc_G6R_RZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		C_2->C1->C2 = C_2->C1->C3;
 		C_1->C2->bridge = false;
 		C_2->C1->bridge = false;
+		C_1->C2->C3 = NULL;
+		C_2->C1->C3 = NULL;
 		//angletype a = C_2->C1->bondAngle1;
 		//C_2->C1->bondAngle1 = C_2->C1->bondAngle2;
 		//C_2->C1->bondAngle2 = a;
@@ -12253,6 +12259,7 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 				OpenBabel::OBMol mol = passPAH();
 				mol = mol = optimisePAH(mol);
 				passbackPAH(mol);
+				break;
 			}
 		}
 	}
@@ -12328,7 +12335,8 @@ void PAHProcess::proc_O5R_R5R6(Spointer& stt, Cpointer C_1, Cpointer C_2, rng_ty
 	if (thirdC != NULLC && thirdC2 != NULLC) {
 		bridged = true;
 		other_side = findSite(thirdC);
-	}
+	} else if (thirdC != NULLC && thirdC2 == NULLC) return;
+	else if (thirdC == NULLC && thirdC2 != NULLC) return;
 	//Get normal vector
 	normdir = norm_vector(CRem_before->coords, CRem->coords, CRem_next->coords);
 	//Remove carbon first
@@ -17035,11 +17043,9 @@ void PAHProcess::startMigrationProcess(){
 						if(it==migr_sites_appended.end()) {
 							R5coords = findR5internal(st->C1->C2, st->C2->C1); //The other side site was not found in migr_sites_appended.
 							if ((int)opp_site->type>=2003) m_pah->m_R5loc.push_back(R5coords);
-						}
-					} else{
-						R5coords = findR5internal(st->C1->C2, st->C2->C1);
-					}
-				}
+						} 
+					}else R5coords = findR5internal(st->C1->C2, st->C2->C1);
+				}else R5coords = findR5internal(st->C1->C2, st->C2->C1);
 			}
 			/*else{
 				if ( isR5internal(st->C1->C2, st->C1->C2->C2,false) || isR5internal(st->C1->C2, st->C1->C2->C2,true) ) {
@@ -17077,11 +17083,9 @@ void PAHProcess::startMigrationProcess(){
 						if(it==migr_sites_appended.end()) {
 							R5coords = findR5internal(st->C1->C2, st->C2->C1);
 							if ((int)opp_site->type>=2003) m_pah->m_R5loc.push_back(R5coords);
-						}
-					} else{
-						R5coords = findR5internal(st->C1->C2, st->C2->C1);
-					}
-				}
+						} 
+					}else R5coords = findR5internal(st->C1->C2, st->C2->C1);
+				}else R5coords = findR5internal(st->C1->C2, st->C2->C1);
 			}
 			else{
 				//This should never be called.
@@ -17127,13 +17131,11 @@ void PAHProcess::startMigrationProcess(){
 								R5coords = findR5internal(current_site->C1->C1,current_site->C1);
 								if ((int)opp_site->type>=2003) m_pah->m_R5loc.push_back(R5coords);
 							}
-						} else{
-							R5coords = findR5internal(current_site->C1->C1,current_site->C1);
-						}
-						//coupled_site = moveIt(current_site,-1);
-						steps=0;
-						b4 = true;
-					}
+						}else R5coords = findR5internal(current_site->C1->C1,current_site->C1);
+					}else R5coords = findR5internal(current_site->C1->C1,current_site->C1);
+					//coupled_site = moveIt(current_site,-1);
+					steps=0;
+					b4 = true;	
 				}else if (coupled_site_dir == 1){
 					Cpointer C_check_other_side = current_site->C2->C1;
 					Cpointer C_check_other_side2 = current_site->C2->C2;
@@ -17143,20 +17145,18 @@ void PAHProcess::startMigrationProcess(){
 						Spointer opp_site;
 						if (C_other_side!=NULLC) opp_site = findSite(C_other_side);
 						else opp_site = findSite(C_other_side2);
-							if (opp_site != m_pah->m_siteList.end()){
+						if (opp_site != m_pah->m_siteList.end()){
 							std::vector<Spointer>::iterator it;
 							it = std::find(migr_sites_appended.begin(),migr_sites_appended.end(),opp_site);
 							if(it==migr_sites_appended.end()) {
 								R5coords = findR5internal(current_site->C2,current_site->C2->C2);
 								if ((int)opp_site->type>=2003) m_pah->m_R5loc.push_back(R5coords);
 							}
-						}else{
-							R5coords = findR5internal(current_site->C2,current_site->C2->C2);
-						}
-						//coupled_site = moveIt(current_site,+1);
-						steps=0;
-						b4 = false;
-					}
+						}else R5coords = findR5internal(current_site->C2,current_site->C2->C2);
+					}else R5coords = findR5internal(current_site->C2,current_site->C2->C2);
+					//coupled_site = moveIt(current_site,+1);
+					steps=0;
+					b4 = false;
 				} else{
 					std::cout << "Error. R5 not found in StartMigrationProcess for R5R6_MIGR site." << std::endl;
 				}
@@ -17208,10 +17208,8 @@ void PAHProcess::startMigrationProcess(){
 								R5coords = findR5internal(st->C1->C2, st->C2->C1);
 								if ((int)opp_site->type>=2003) m_pah->m_R5loc.push_back(R5coords);
 							}
-						} else{
-							R5coords = findR5internal(st->C1->C2, st->C2->C1);
-						}
-					}
+						}else R5coords = findR5internal(st->C1->C2, st->C2->C1);
+					}else R5coords = findR5internal(st->C1->C2, st->C2->C1);
 				}
 				/*else {
 					if ( isR5internal(st->C1->C2, st->C1->C2->C2,false) || isR5internal(st->C1->C2, st->C1->C2->C2,true) ) {
@@ -17256,11 +17254,9 @@ void PAHProcess::startMigrationProcess(){
 									R5coords = findR5internal(st->C1->C1,st->C1);
 									if ((int)opp_site->type>=2003) m_pah->m_R5loc.push_back(R5coords);
 								}
-							} else{
-								R5coords = findR5internal(st->C1->C1,st->C1);
-							}
-							b4 = true;
-						}
+							}else R5coords = findR5internal(st->C1->C1,st->C1);
+						}else R5coords = findR5internal(st->C1->C1,st->C1);
+						b4 = true;
 					}else if(direction_int == 1){
 						Cpointer C_check_other_side = st->C2->C1;
 						Cpointer C_check_other_side2 = st->C2->C2;
@@ -17277,11 +17273,9 @@ void PAHProcess::startMigrationProcess(){
 									R5coords = findR5internal(st->C2,st->C2->C2);
 									if ((int)opp_site->type>=2003) m_pah->m_R5loc.push_back(R5coords);
 								}
-							}else{
-								R5coords = findR5internal(st->C2,st->C2->C2);
-							}
-							b4 = false;
-						}
+							}else R5coords = findR5internal(st->C2,st->C2->C2);
+						}else R5coords = findR5internal(st->C2,st->C2->C2);
+						b4 = false;
 					} else{
 						if (st->type==R5R6) std::cout << "Error in startMigrationProcess(). R5 not found." << std::endl;
 					}
