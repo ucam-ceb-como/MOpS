@@ -8331,17 +8331,24 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		passbackPAH(mol);
 	}
     // Update Sites and neighbouring sites
-	removeSite(stt);
-	if ( (int)S1->type < 2000) updateSites(S1, S1->C1, CRem_before, +500);
-	else updateSites(S1, S1->C1, CRem_before, +100);
-	if ( (int)S2->type < 2000) updateSites(S2, CRem_before, S2->C2, +500);
-	else updateSites(S2, CRem_before, S2->C2, +100);
-	stt = S1;
-	if (other_side_bool) {
-		if (other_side != m_pah->m_siteList.end()) {
-			updateSites(other_side, other_side->C1, other_side->C2, +2000);
-			updateCombinedSites(other_side);
+	if (!R7flag){
+		removeSite(stt);
+		if ( (int)S1->type < 2000) updateSites(S1, S1->C1, CRem_before, +500);
+		else updateSites(S1, S1->C1, CRem_before, +100);
+		if ( (int)S2->type < 2000) updateSites(S2, CRem_before, S2->C2, +500);
+		else updateSites(S2, CRem_before, S2->C2, +100);
+		stt = S1;
+		if (other_side_bool) {
+			if (other_side != m_pah->m_siteList.end()) {
+				updateSites(other_side, other_side->C1, other_side->C2, +2000);
+				updateCombinedSites(other_side);
+			}
 		}
+	} else{
+		removeSite(stt);
+		updateSites(S1, S1->C1, CRem_before, +0);
+		updateSites(S2, CRem_before, S2->C2, +0);
+		stt = S1;
 	}
     Spointer S3, S4, S5, S6;
     // update combined sites for all sites and their neighbours
