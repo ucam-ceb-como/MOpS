@@ -4796,14 +4796,15 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 					Spointer start_site_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
 					int num_steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 					Spointer check_site = moveIt(start_site,num_steps);
-					if (check_site==st){
+					Spointer check_site2 = moveIt(start_site_2,num_steps);
+					if (check_site==st && check_site2==st){
 						steps = num_steps;
 						break;
 					}
 				}
 				if (steps < 0) check_left = false;
 				else if (steps > 0) check_right = false;
-				else{
+				else if (steps == 0){
 					if ((int)st->type==2103){
 						int coupled_site_dir = coupledSiteDirection(st);
 						if (coupled_site_dir == -1){
@@ -4847,6 +4848,9 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 							}
 						}
 					}
+				} else{
+					//Steps == -9999
+					int pause = -1;
 				}
 			}
 		}
@@ -4864,7 +4868,16 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 				Spointer start_site_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
 				int num_steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 				Spointer check_site = moveIt(start_site,num_steps);
-				if (check_site==st){
+				Spointer check_site2 = moveIt(start_site_2,num_steps);
+				if (check_site == check_site2){
+					//An ACR5 site
+					if (check_site==st){
+						steps = num_steps;
+						break;
+					}
+				}
+				else if(check_site==st || check_site2==st){
+					//An R5R6 site
 					steps = num_steps;
 					break;
 				}
@@ -12792,7 +12805,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	}
 
 	Spointer finsite = std::get<0>(m_pah->m_R5walker_sites[ii]);
-	if((int)finsite->type>=2003 && finsite == std::get<1>(m_pah->m_R5walker_sites[ii])) {
+	if((int)finsite->type>=2003 && (finsite == std::get<1>(m_pah->m_R5walker_sites[ii]) && finsite == std::get<0>(m_pah->m_R5walker_sites[ii]))) {
 		if(dir) addR5internal(finsite->C2->C1->C1,finsite->C2->C1,true);
 		else addR5internal(finsite->C1->C2,finsite->C1->C2->C2,true);
 	}
@@ -13085,7 +13098,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	}
 
 	Spointer finsite = std::get<0>(m_pah->m_R5walker_sites[ii]);
-	if((int)finsite->type>=2003 && finsite == std::get<1>(m_pah->m_R5walker_sites[ii])) {
+	if((int)finsite->type>=2003 && finsite == std::get<0>(m_pah->m_R5walker_sites[ii]) && finsite == std::get<1>(m_pah->m_R5walker_sites[ii])) {
 		if(b4) addR5internal(finsite->C2->C1->C1,finsite->C2->C1,true);
 		else addR5internal(finsite->C1->C2,finsite->C1->C2->C2,true);
 	}
@@ -15080,7 +15093,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		} else updateSites(stt, stt->C1, sFE2->C1, -2001);
 	}
 	steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
-	if((int)sFE2->type>=2003 && steps == 0) {
+	if((int)sFE2->type>=2003 && steps == 0 && std::get<0>(m_pah->m_R5walker_sites[ii]) == std::get<1>(m_pah->m_R5walker_sites[ii])) {
 		if(b4) addR5internal_edge(sFE2->C2->C1->C1,sFE2->C2->C1);
 		else addR5internal_edge(sFE2->C1->C2,sFE2->C1->C2->C2);
 	}
@@ -15918,7 +15931,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			}*/
 		}
 		steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
-		if((int)sFE2->type>=2003 && steps == 0) {
+		if((int)sFE2->type>=2003 && steps == 0 && std::get<0>(m_pah->m_R5walker_sites[ii]) == std::get<1>(m_pah->m_R5walker_sites[ii])) {
 			if(b4) addR5internal_edge(sFE2->C2->C1->C1,sFE2->C2->C1);
 			else addR5internal_edge(sFE2->C1->C2,sFE2->C1->C2->C2);
 		}
@@ -16640,7 +16653,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		convSiteType(stt, stt->C1, stt->C2, ZZ);
 	}
 	steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
-	if((int)sFE2->type>=2003 && steps == 0) {
+	if((int)sFE2->type>=2003 && steps == 0 && std::get<0>(m_pah->m_R5walker_sites[ii]) == std::get<1>(m_pah->m_R5walker_sites[ii])) {
 		if(b4) addR5internal_edge(sFE2->C2->C1->C1,sFE2->C2->C1);
 		else addR5internal_edge(sFE2->C1->C2,sFE2->C1->C2->C2);
 	}
