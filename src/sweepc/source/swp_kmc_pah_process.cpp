@@ -8958,18 +8958,19 @@ void PAHProcess::proc_G5R_ZZ(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     // update sites and neighbours
     convSiteType(stt, C1_res, C2_res, R5);
 	addR5internal(C1_res,C2_res);
-    Spointer S1, S2, S3, S4;
+    Spointer S1, S2, S3, S4, S5, S6;
     // neighbours
     S1 = moveIt(stt,-1); 
     S2 = moveIt(stt,1);
     addR5toSite(S1, S1->C1, C1_res);
     addR5toSite(S2, C2_res, S2->C2);
     // update combined sites
-    S3 = moveIt(S1, -1); 
-    S4 = moveIt(S2, 1);
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt); // update resulting site
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
+	updateCombinedSites(S5); updateCombinedSites(S6); // update neighbours of neighbours
     // add ring counts
     m_pah->m_rings5_Lone++;
 	if ( (dist > 2.7 && !m_pah->m_optimised) || (getDistance_twoC(C2_res, C2_res->C2->C2)<2.4&& !m_pah->m_optimised) ) {
