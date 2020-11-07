@@ -2620,15 +2620,21 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 				unsigned int ii = std::distance(valence_2_carbons.begin(),it);
 				int xx = valence_2_carbons[ii];
 				OpenBabel::OBAtom *my_atom  = mol.GetAtom(valence_2_carbons[ii]);
+				Cpointer current_C = findC(std::make_tuple(my_atom->GetX(),my_atom->GetY(),my_atom->GetZ()));
 				if (my_atom->GetValence() == 2){
 					int kk = ii;
 					double min_dist = 1e3;
 					for (unsigned int jj=0; jj!=valence_2_carbons.size(); ++jj){
 						if (jj!= ii){
-							double my_dist = my_atom->GetDistance(valence_2_carbons[jj]);
-							if (my_dist < min_dist){
-								kk = jj;
-								min_dist = my_dist;
+							OpenBabel::OBAtom *other_atom = mol.GetAtom(valence_2_carbons[jj]);
+							Cpointer other_C = findC(std::make_tuple(other_atom->GetX(),other_atom->GetY(),other_atom->GetZ()));
+							OpenBabel::OBBond* my_bond = mol.GetBond(my_atom->GetIdx(), other_atom->GetIdx());
+							if (my_bond == NULL){
+								double my_dist = my_atom->GetDistance(valence_2_carbons[jj]);
+								if (my_dist < min_dist && other_C!=current_C->C1->C1 && other_C!=current_C->C2->C2){
+									kk = jj;
+									min_dist = my_dist;
+								}
 							}
 						}
 					}
@@ -12806,8 +12812,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 
 	Spointer finsite = std::get<0>(m_pah->m_R5walker_sites[ii]);
 	if((int)finsite->type>=2003 && (finsite == std::get<1>(m_pah->m_R5walker_sites[ii]) && finsite == std::get<0>(m_pah->m_R5walker_sites[ii]))) {
-		if(dir) addR5internal(finsite->C2->C1->C1,finsite->C2->C1,true);
-		else addR5internal(finsite->C1->C2,finsite->C1->C2->C2,true);
+		if(dir) addR5internal_edge(finsite->C2->C1->C1,finsite->C2->C1);
+		else addR5internal_edge(finsite->C1->C2,finsite->C1->C2->C2);
 	}
 	
 	//Update combined sites
@@ -13099,8 +13105,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 
 	Spointer finsite = std::get<0>(m_pah->m_R5walker_sites[ii]);
 	if((int)finsite->type>=2003 && finsite == std::get<0>(m_pah->m_R5walker_sites[ii]) && finsite == std::get<1>(m_pah->m_R5walker_sites[ii])) {
-		if(b4) addR5internal(finsite->C2->C1->C1,finsite->C2->C1,true);
-		else addR5internal(finsite->C1->C2,finsite->C1->C2->C2,true);
+		if(b4) addR5internal_edge(finsite->C2->C1->C1,finsite->C2->C1);
+		else addR5internal_edge(finsite->C1->C2,finsite->C1->C2->C2);
 	}
 
 	//Update combined sites
