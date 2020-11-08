@@ -2258,6 +2258,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 	std::vector<int>::iterator R6_iter1, R6_iter2;
 	std::vector<Cpointer>CR6_pair1, CR6_pair2;
 	std::vector<Cpointer>::iterator resR6, resR62;
+	//std::vector<tuple<int,int,int,int>> torsion_list;
 	//Second neighbours bond detection
 	std::vector<int> C_intlist, first_neighbour, second_neighbour, bridge_neighbour, bridge_neighbour2;
 	std::vector<Cpointer>C_list, C_first_neighbour, C_second_neighbour, C_bridge_neighbour, C_bridge_neighbour2;
@@ -2966,46 +2967,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			std::cout << bond_number << "     " << first_idx << " (" << aromatic_a1 <<") ("<< hyb_a1 << ")       " << second_idx << " (" << aromatic_a2 <<") ("<< hyb_a2 << ")       " << length_bond << "      " << order << "       " << aromatic << "\n";
 		}*/
 		
-		//Checks for sp3 carbon //NEEDS DEBUGGING. NOT COMPLETE.
-		/*for(OpenBabel::OBMolAtomIter     a(mol); a; ++a) {
-			if (a->GetAtomicNum() == 6 && a->GetValence() >= 4){
-				OpenBabel::OBAtomAtomIter wrong_nbr; 
-				double maxdist = 0.1;
-				for( OpenBabel::OBAtomAtomIter     nbr(*a); nbr; ++nbr ) {
-					if (nbr->GetAtomicNum() == 6 && a->GetDistance(nbr->GetIdx()) > maxdist){
-						wrong_nbr = nbr;
-						maxdist = a->GetDistance(nbr->GetIdx());
-					}
-				}
-				
-				OpenBabel::OBBond* my_bond_del = mol.GetBond(a->GetIdx(), wrong_nbr->GetIdx());
-				mol.DeleteBond(my_bond_del);
-			}
-		}*/
-		
-		//Assign aromatic bond orders to all bonds. //NOT WORKING. DO NOT USE.
-		/*for (OpenBabel::OBBondIterator bond_iter=mol.BeginBonds(); bond_iter != mol.EndBonds(); bond_iter++){
-			OpenBabel::OBBond* my_bond = *bond_iter;
-			int BOrder = my_bond->GetBO();
-			int a1 = my_bond->GetBeginAtomIdx(); int a2 = my_bond->GetEndAtomIdx(); 
-			cout << a1 << "-" << a2 << " Bond order = " << BOrder << "\n";
-		}*/
-		
-		
-		/*for (OpenBabel::OBBondIterator bond_iter=mol.BeginBonds(); bond_iter != mol.EndBonds(); bond_iter++){
-			OpenBabel::OBBond* my_bond = *bond_iter;
-			OpenBabel::OBAtom *a1 = my_bond->GetBeginAtom(); OpenBabel::OBAtom *a2 = my_bond->GetEndAtom(); 
-			//int a1int = my_bond->GetBeginAtomIdx(); int a2int = my_bond->GetEndAtomIdx();
-			if ( a1->GetAtomicNum() == 6 && a2->GetAtomicNum() == 6){
-				my_bond->SetBO(5);
-			}
-			int BOrder = my_bond->GetBO();
-			//cout << a1int << "-" << a2int << " Bond order = " << BOrder << "\n";
-		}
-		mol.SetAromaticPerceived();*/
-		
 	}
-	//mol.AddHydrogens();
 	mol.EndModify();
 	if (nanflag){
 		//NaN in coordinates. Output a txt file with all coordinates.
@@ -3025,145 +2987,6 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 	}
 	return mol;
 }
-//Needed for connect the dots.
-bool SortAtomZ(const std::pair<OpenBabel::OBAtom*,double> &a, const std::pair<OpenBabel::OBAtom*,double> &b){
-    return (a.second < b.second);
-}
-
-//! Connects the atoms in a PAH using OpenBabel routines. Equivalent to OpenBabel::OBMol::ConnectTheDots();
-void PAHProcess::connectPAH(OpenBabel::OBMol my_mol) {
-    int j,k,max;
-    //bool unset = false;
-    OpenBabel::OBAtom *atom,*nbr;
-    vector<OpenBabel::OBAtom*>::iterator i;
-    vector<pair<OpenBabel::OBAtom*,double> > zsortedAtoms;
-    vector<double> rad;
-    vector<int> zsorted;
-    vector<int> bondCount; // existing bonds (e.g., from residues in PDB)
-
-    double *c = new double [my_mol.NumAtoms()*3];
-    rad.resize(my_mol.NumAtoms());
-
-    for (j = 0, atom = my_mol.BeginAtom(i) ; atom ; atom = my_mol.NextAtom(i), ++j)
-      {
-        (atom->GetVector()).Get(&c[j*3]);
-        pair<OpenBabel::OBAtom*,double> entry(atom, atom->GetVector().z());
-        zsortedAtoms.push_back(entry);
-        bondCount.push_back(atom->GetValence());
-      }
-    sort(zsortedAtoms.begin(), zsortedAtoms.end(), SortAtomZ);
-
-    max = zsortedAtoms.size();
-
-    for ( j = 0 ; j < max ; j++ )
-      {
-        atom   = zsortedAtoms[j].first;
-        rad[j] = OpenBabel::etab.GetCovalentRad(atom->GetAtomicNum());
-        zsorted.push_back(atom->GetIdx()-1);
-      }
-
-    int idx1, idx2;
-    double d2,cutoff,zd;
-    for (j = 0 ; j < max ; ++j)
-      {
-        idx1 = zsorted[j];
-        for (k = j + 1 ; k < max ; k++ )
-          {
-            idx2 = zsorted[k];
-
-            // bonded if closer than elemental Rcov + tolerance
-            cutoff = SQUARE(rad[j] + rad[k] + 0.45);
-
-            zd  = SQUARE(c[idx1*3+2] - c[idx2*3+2]);
-            if (zd > 25.0 )
-              break; // bigger than max cutoff
-
-            d2  = SQUARE(c[idx1*3]   - c[idx2*3]);
-            d2 += SQUARE(c[idx1*3+1] - c[idx2*3+1]);
-            d2 += zd;
-
-            if (d2 > cutoff)
-              continue;
-            if (d2 < 0.40)
-              continue;
-
-            atom = my_mol.GetAtom(idx1+1);
-            nbr  = my_mol.GetAtom(idx2+1);
-
-            if (atom->IsConnected(nbr))
-              continue;
-            if (atom->IsHydrogen() && nbr->IsHydrogen())
-              continue;
-
-            my_mol.AddBond(idx1+1,idx2+1,1);
-          }
-      }
-
-    // If between BeginModify and EndModify, coord pointers are NULL
-    // setup molecule to handle current coordinates
-/*
-    if (_c == NULL)
-      {
-        _c = c;
-        for (atom = my_mol.BeginAtom(i);atom;atom = my_mol.NextAtom(i))
-          atom->SetCoordPtr(&_c);
-        _vconf.push_back(c);
-        unset = true;
-      }
-*/
-    // Cleanup -- delete long bonds that exceed max valence
-    OpenBabel::OBBond *maxbond, *bond;
-    double maxlength;
-    vector<OpenBabel::OBBond*>::iterator l;
-    int valCount;
-
-    for (atom = my_mol.BeginAtom(i);atom;atom = my_mol.NextAtom(i))
-      {
-        while (atom->BOSum() > static_cast<unsigned int>(OpenBabel::etab.GetMaxBonds(atom->GetAtomicNum()))
-               || atom->SmallestBondAngle() < 45.0)
-          {
-            bond = atom->BeginBond(l);
-            maxbond = bond;
-            // Fix from Liu Zhiguo 2008-01-26
-            // loop past any bonds
-            // which existed before ConnectTheDots was called
-            // (e.g., from PDB resdata.txt)
-            valCount = 0;
-            while (valCount < bondCount[atom->GetIdx() - 1]) {
-              bond = atom->NextBond(l);
-              if (!bond) // so we add an additional check
-                break;
-              maxbond = bond;
-              valCount++;
-            }
-            if (!bond) // no new bonds added for this atom, just skip it
-              break;
-
-            maxlength = maxbond->GetLength();
-            for (bond = atom->NextBond(l);bond;bond = atom->NextBond(l))
-              {
-                if (!bond)
-                  break;
-                if (bond->GetLength() > maxlength)
-                  {
-                    maxbond = bond;
-                    maxlength = bond->GetLength();
-                  }
-              }
-            my_mol.DeleteBond(maxbond); // delete the new bond with the longest length
-          }
-      }
-
-    /*if (unset)
-      {
-        _c = NULL;
-        for (atom = BeginAtom(i);atom;atom = NextAtom(i))
-          atom->ClearCoordPtr();
-        _vconf.resize(_vconf.size()-1);
-      }*/
-
-    delete [] c;
- }
 
 //! Passes a PAH from OpenBabel to MOpS. Returns a mol object.
 void PAHProcess::passbackPAH(OpenBabel::OBMol mol) {
