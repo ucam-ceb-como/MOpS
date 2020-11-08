@@ -11346,12 +11346,21 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		mol = optimisePAH(mol);
 		passbackPAH(mol);
 	}
-	Cpointer newC1;
-	Cpointer newC2;
-	cpair Hdir1 = get_vector(C_1->C2->coords, C_1->coords);
-	cpair Hdir2 = get_vector(C_2->C1->coords, C_2->coords);
-	cpair starting_direction = get_vector(C_1->C2->C2->coords,C_2->coords);
-	cpair FEdir = get_vector(C_1->coords,C_2->coords);
+	Cpointer newC1, newC2;
+	cpair Hdir1, Hdir2, starting_direction, FEdir;
+	Hdir1 = get_vector(C_1->C2->coords, C_1->coords);
+	Hdir2 = get_vector(C_2->C1->coords, C_2->coords);
+	double site_dist = getDistance_twoC(C_1,C_2);
+	if (site_dist < 3.8){
+		starting_direction = get_vector(C_1->C2->C2->coords,C_2->coords);
+		FEdir = get_vector(C_1->coords,C_2->coords);
+	} else{
+		cpair FEvector = get_vector(C_1->C2->coords,C_2->C1->coords);
+		cpair AGvector = get_vector(C_1->C2->coords,C_1->coords);
+		starting_direction = add_vector(FEvector, AGvector);
+		cpair AJvector = get_vector(C_2->C1->coords,C_2->coords);
+		FEdir = add_vector(AJvector, invert_vector(AGvector));
+	}
 	if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
 		/*cout<<"Site hindered, process not performed.\n"*/ return;
 	}
@@ -11365,19 +11374,21 @@ void PAHProcess::proc_GR7_R5R6AC(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		removeC(C_1->C2, true);
 		//moveC_z(C_2->C1, 0.2);
 		removeC(C_2->C1, true);
-		newC1 = addC(C_1, starting_direction, 1.55);
-		updateA(C_1,'C', C_1->growth_vector);
-		updateA(newC1, 'H', Hdir1);
-		newC2 = addC(newC1, FEdir, 1.4);
-		updateA(C_2,'C', C_2->growth_vector);
-		updateA(newC2, 'H', Hdir2);
-		//addOBbond(newC2, C_2, mol);
-		/*removeC(C_1->C2, true);
-		removeC(C_1->C2, true);
-		removeC(C_2->C1, true);
-		//moveC(C_1, C_1->C1, 1.5);
-		newC1 = addC(C_1, normAngle(C_1->bondAngle1 + 120 - atan(0.5/1.5) * 180.0/M_PI), 0, pow(2.5,0.5));
-		newC2 = addC(newC1, normAngle(newC1->C1->C1->bondAngle1 - 30), normAngle(newC1->C1->C1->bondAngle1 - 90), 1.4*2.0);*/
+		if (site_dist < 3.8){
+			newC1 = addC(C_1, starting_direction, 1.55);
+			updateA(C_1,'C', C_1->growth_vector);
+			updateA(newC1, 'H', Hdir1);
+			newC2 = addC(newC1, FEdir, 1.4);
+			updateA(C_2,'C', C_2->growth_vector);
+			updateA(newC2, 'H', Hdir2);
+		} else{
+			newC1 = addC(C_1, starting_direction, site_dist/2.0);
+			updateA(C_1,'C', C_1->growth_vector);
+			updateA(newC1, 'H', Hdir1);
+			newC2 = addC(newC1, FEdir, site_dist/2.0);
+			updateA(C_2,'C', C_2->growth_vector);
+			updateA(newC2, 'H', Hdir2);
+		}
 	}
 	else {
 		// update bridges info, both are no longer bridges
