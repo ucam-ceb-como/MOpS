@@ -57,6 +57,7 @@
 #include <map>
 #include <set>
 
+#include <openbabel/forcefield.h>
 #include <openbabel/babelconfig.h>
 #include <openbabel/base.h>
 #include <openbabel/mol.h>
@@ -224,8 +225,10 @@ public:
 	void connectPAH(OpenBabel::OBMol my_mol);
 	//! Passes a PAH from OpenBabel to MOpS.
 	void passbackPAH(OpenBabel::OBMol mol);
-	//! Runs optimisation of a PAHusing Openbabel
+	//! Runs optimisation of a PAH using Openbabel
 	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, int nsteps=4000, std::string forcefield="mmff94") ;
+    //! Runs a constrained optimisation of a PAH using Openbabel
+	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, OpenBabel::OBFFConstraints constraints, int nsteps=4000, std::string forcefield="mmff94") ;
 	//! Includes curvature in a PAH after a pentagon is integrated in the structure.
 	//OpenBabel::OBMol includeCurvature(OpenBabel::OBMol mol, cpair CR5_1, cpair CR5_2) ;
     

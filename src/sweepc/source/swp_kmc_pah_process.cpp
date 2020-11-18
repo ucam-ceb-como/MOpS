@@ -2254,11 +2254,12 @@ int nancounter = 0;
 OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 	std::vector<int> methyl_list_flat;
 	//R6 Bay detection
-	std::vector<int> R6pairs1, R6pairs2;
+	std::vector<int> R6pairs1, R6pairs2, R6pairs3, R6pairs4;
 	std::vector<int>::iterator R6_iter1, R6_iter2;
-	std::vector<Cpointer>CR6_pair1, CR6_pair2;
+	std::vector<Cpointer>CR6_pair1, CR6_pair2, CR6_pair3, CR6_pair4;
 	std::vector<Cpointer>::iterator resR6, resR62;
-	//std::vector<tuple<int,int,int,int>> torsion_list;
+	std::vector<double> torsion_list;
+	OpenBabel::OBFFConstraints constraints;
 	//Second neighbours bond detection
 	std::vector<int> C_intlist, first_neighbour, second_neighbour, bridge_neighbour, bridge_neighbour2;
 	std::vector<Cpointer>C_list, C_first_neighbour, C_second_neighbour, C_bridge_neighbour, C_bridge_neighbour2;
@@ -2268,12 +2269,14 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			if ( (int)site_it->type % 10 >= 4 ){
 				Cpointer CR6_1 = site_it->C1;
 				Cpointer CR6_2 = site_it->C2;
-				if (getDistance_twoC (CR6_1,CR6_2) <=2.17){
-					CR6_pair1.push_back(CR6_1);
-					CR6_pair2.push_back(CR6_2);
-					R6pairs1.push_back(0);
-					R6pairs2.push_back(0);
-				}
+				CR6_pair1.push_back(CR6_1);
+				CR6_pair2.push_back(CR6_2);
+				CR6_pair3.push_back(CR6_1->C2);
+				CR6_pair4.push_back(CR6_2->C1);
+				R6pairs1.push_back(0);
+				R6pairs2.push_back(0);
+				R6pairs3.push_back(0);
+				R6pairs4.push_back(0);
 			}
 		}
 		Ccontainer::iterator itCsn;
@@ -2323,17 +2326,35 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 			if (resR6 != std::end(CR6_pair1)){
 				int indexR6_1 = std::distance(CR6_pair1.begin(), resR6);
 				R6_iter1 = R6pairs1.begin();
+				resR62 = CR6_pair2.begin();
 				std::advance(R6_iter1, indexR6_1);
+				std::advance(resR62, indexR6_1);
 				*R6_iter1 = (atom->GetIdx());
-				R6C1 = true;
+				if (getDistance_twoC (C_change,*resR62) <=2.17) R6C1 = true;
 			}
 			resR62 = std::find(std::begin(CR6_pair2), std::end(CR6_pair2), C_change);
 			if (resR62 != std::end(CR6_pair2)){
 				int indexR6_2 = std::distance(CR6_pair2.begin(), resR62);
 				R6_iter2 = R6pairs2.begin();
+				resR6 = CR6_pair1.begin();
 				std::advance(R6_iter2, indexR6_2);
+				std::advance(resR6, indexR6_2);
 				*R6_iter2 = (atom->GetIdx());
-				R6C2 = true;
+				if (getDistance_twoC (C_change,*resR6) <=2.17) R6C2 = true;
+			}
+			resR6 = std::find(std::begin(CR6_pair3), std::end(CR6_pair3), C_change);
+			if (resR6 != std::end(CR6_pair3)){
+				int indexR6_3 = std::distance(CR6_pair3.begin(), resR6);
+				R6_iter1 = R6pairs3.begin();
+				std::advance(R6_iter1, indexR6_3);
+				*R6_iter1 = (atom->GetIdx());
+			}
+			resR6 = std::find(std::begin(CR6_pair4), std::end(CR6_pair4), C_change);
+			if (resR6 != std::end(CR6_pair4)){
+				int indexR6_4 = std::distance(CR6_pair4.begin(), resR6);
+				R6_iter1 = R6pairs4.begin();
+				std::advance(R6_iter1, indexR6_4);
+				*R6_iter1 = (atom->GetIdx());
 			}
 			
 			auto result = std::find(std::begin(C_list), std::end(C_list), C_change);
@@ -2523,7 +2544,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		}
 		
 		//Deletes bonds within unclosed BY6.
-		std::vector<int>::iterator it_R6pairs1, it_R6pairs2;
+		std::vector<int>::iterator it_R6pairs1, it_R6pairs2, it_R6pairs3, it_R6pairs4;
 		it_R6pairs2 = R6pairs2.begin();
 		for(it_R6pairs1 = R6pairs1.begin(); it_R6pairs1 != R6pairs1.end(); ++it_R6pairs1){
 			OpenBabel::OBBond* my_bond = mol.GetBond(*it_R6pairs1, *it_R6pairs2);
@@ -2966,9 +2987,51 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 
 			std::cout << bond_number << "     " << first_idx << " (" << aromatic_a1 <<") ("<< hyb_a1 << ")       " << second_idx << " (" << aromatic_a2 <<") ("<< hyb_a2 << ")       " << length_bond << "      " << order << "       " << aromatic << "\n";
 		}*/
-		
+		//Get vector of torsions
+		/*it_R6pairs2 = R6pairs2.begin();
+		it_R6pairs3 = R6pairs3.begin();
+		it_R6pairs4 = R6pairs4.begin();
+		for(it_R6pairs1 = R6pairs1.begin(); it_R6pairs1 != R6pairs1.end(); ++it_R6pairs1){
+			double my_torsion = mol.GetTorsion(*it_R6pairs1, *it_R6pairs2, *it_R6pairs3, *it_R6pairs4);
+			if (abs(my_torsion)>80){
+				torsion_list.push_back(my_torsion);
+				vector<OpenBabel::OBRing*>::iterator iring, ering;
+				OpenBabel::vector3 ecentre, enorm1, enorm2;
+				vector<int>::iterator j;
+				vector<OpenBabel::OBRing*> vr;
+				vr = mol.GetSSSR();
+				OpenBabel::OBAtom *atom1 = mol.GetAtom(*it_R6pairs3);
+				//OpenBabel::OBAtom *atom2 = mol.GetAtom(*it_R6pairs4);
+				//vector<OpenBabel::OBRing*> *rlist = (vector<OpenBabel::OBRing*>*)mol.GetData("RingList");
+				double min_dist = 1e3;
+				if (m_pah->m_R5loc.size()>0){
+					for (iring = vr.begin();iring != vr.end();++iring){
+						//cout<<(**iring).PathSize()<<"\n";
+						if( (**iring).PathSize()==5 ){
+							OpenBabel::vector3 centre, norm1, norm2;
+							bool centre_found = (**iring).findCenterAndNormal(centre, norm1, norm2);
+							double my_dist = atom1->GetDistance(centre);
+							if (my_dist < min_dist){
+								min_dist = my_dist;
+								ering = iring;
+								ecentre = centre;
+								enorm1 = norm1;
+								enorm2 = norm2;
+							}
+						}
+					}
+					vector<int>::iterator j_it;
+					for(j_it = (*ering)->_path.begin(); j_it != (*ering)->_path.end(); ++j_it){
+						
+					}
+				}
+
+			}
+			++it_R6pairs2; ++it_R6pairs3; ++it_R6pairs4; 
+		}*/
 	}
 	mol.EndModify();
+	if (torsion_list.size()>0) mol = optimisePAH(mol, constraints, 20000);
 	if (nanflag){
 		//NaN in coordinates. Output a txt file with all coordinates.
 		ofstream ofs1;
@@ -3084,6 +3147,67 @@ OpenBabel::OBMol PAHProcess::optimisePAH(OpenBabel::OBMol mol, int nsteps, std::
 	
 	//Initialise minimisation
 	if (!pFF->Setup(mol)) {
+	  /*std::string filename = "KMC_DEBUG/Forcefield_log.txt";
+	  ofstream ofs_ff(filename);
+	  pFF->SetLogFile(&ofs_ff);
+	  pFF->SetLogLevel(OBFF_LOGLVL_MEDIUM);
+	  pFF->Setup(mol);*/
+      cout << "Error: could not setup force field.\n" << endl;
+	  cout << "Sites before calling optimiser:\n"; //SETBREAKPOINT
+	  printSites();
+	  std::string filename_error = "KMC_DEBUG/Forcefield_error_";
+	  filename_error.append(std::to_string(forcefield_error_counter));
+	  saveXYZ(filename_error);
+	  cout<<"Saving file: "<< filename_error<<".xyz\n";
+	  //cerr << ": could not setup force field." << endl;
+      //exit (-1);
+	  ++forcefield_error_counter;
+	  return mol;
+    }
+	
+	/////// Method that uses initialisation. Not recommended by OpenBabel documentation.
+	/*bool done = true;
+	pFF->SteepestDescentInitialize(nsteps, 1e-7);
+	
+	//Perform minimisation
+	unsigned int totalSteps = 1;
+    while (done) {
+		done = pFF->SteepestDescentTakeNSteps(1);
+		totalSteps++;
+		if (pFF->DetectExplosion()) {
+			cerr << "explosion has occured!" << endl;
+		}
+		else
+        pFF->GetCoordinates(mol);
+	}*/
+	//// Method recommended in case minimisation is just used until the nsteps without modifications.
+	pFF->SteepestDescent(nsteps, 1e-5);
+	
+	pFF->GetCoordinates(mol);
+	mol.EndModify();
+	return mol;
+}
+
+//! Minimisation of a PAH
+OpenBabel::OBMol PAHProcess::optimisePAH(OpenBabel::OBMol mol, OpenBabel::OBFFConstraints constraints, int nsteps, std::string forcefield) {
+	mol.BeginModify();
+	//Defines a forcefield object
+	//OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField("Ghemical");
+	OpenBabel::OBForceField* pFF = OpenBabel::OBForceField::FindForceField(forcefield);
+	if (!pFF) {
+    cerr << ": could not find forcefield " << forcefield << "." <<endl;
+    exit (-1);
+	}
+	
+	//pFF->SetLogFile(&cerr);
+	//pFF->SetLogLevel(OBFF_LOGLVL_MEDIUM);
+	/*pFF->SetVDWCutOff(6.0);
+	pFF->SetElectrostaticCutOff(10.0);
+	pFF->SetUpdateFrequency(10);
+	pFF->EnableCutOff(false);*/
+	
+	//Initialise minimisation
+	if (!pFF->Setup(mol, constraints)) {
 	  /*std::string filename = "KMC_DEBUG/Forcefield_log.txt";
 	  ofstream ofs_ff(filename);
 	  pFF->SetLogFile(&ofs_ff);
@@ -3968,26 +4092,29 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		st->C1 = Carb1;
 		st->C2 = Carb2;
 		if (!m_pah->m_optimised){
+			saveXYZ("KMC_DEBUG/bef2104optim");
 			optim = true;
 			R5loc_copy = m_pah->m_R5loc;
 			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol);
 			passbackPAH(mol);
-		}
-		// change site type back to original site.
-		st->type = (kmcSiteType)(original_stype);
-		///////////////////////////////////////////////////////////
-		
-		//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
-		Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
-		bool decide_PAH = false;
-		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
-		if(decide_PAH == true){
-			stype = 2104; bulkCchange = 0;
-		}
-		else {
-			stype = 2114; bulkCchange = 0;
+
+			// change site type back to original site.
+			st->type = (kmcSiteType)(original_stype);
+			///////////////////////////////////////////////////////////
+			
+			//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
+			Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+			bool decide_PAH = false;
+			if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
+			if(decide_PAH == true){
+				stype = 2104; bulkCchange = 0;
+			}
+			else {
+				stype = 2114; bulkCchange = 0;
+			}
+			saveXYZ("KMC_DEBUG/aft2104optim");
 		}
 	}
 	if (stype + bulkCchange == 2105 || stype + bulkCchange == 2115) {
@@ -6770,6 +6897,7 @@ int r7_error_counter = 0;
 //! Structure processes: returns success or failure
 bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID)
 {
+	std::list<std::string> Sitelist_before;
 	total_error_counter = perform_process_error_counter + r5_error_counter + r7_error_counter + 
 						forcefield_error_counter + updatesites_error_counter + convSiteType_error_counter;
 	if (total_error_counter >=20){
@@ -6822,7 +6950,7 @@ bool PAHProcess::performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID
 	//Save an XYZ
 	if(m_debug_pah) saveXYZ("KMC_DEBUG/BEFORE");
 	//Copy site list before performing process
-	std::list<std::string> Sitelist_before = copySites(site_perf);
+	Sitelist_before = copySites(site_perf);
 	//Check if the site has the right number of carbons
 	if(!SiteRightSize(site_perf) && (id != 24 && id != 34 && id != 66)  ){
 		std::cout << "ERROR: Site selected has incorrect number of carbons. Process not performed."
@@ -16873,6 +17001,8 @@ int PAHProcess::SiteSize(Spointer& stt) const{
 			Cnow = Cnow->C2;
 		}
 		counter +=1;
+		if (counter>=30 && (int)stt->type==9999) Cnow = Cend; // An SPIRAL site of over 30 carbons will trigger an error. Highly unlikely.
+		if (counter>=15) Cnow = Cend; // Error condition, over 15 carbons and site should have less. Trigerring error.
 	} while(Cnow != Cend);
 	return counter;
 }
@@ -16885,6 +17015,13 @@ bool PAHProcess::SiteRightSize(Spointer& stt) const{
 
 	int counter = SiteSize(stt);
 	stype = stype%10 + 2;
+	if ( (counter>=15 && (int)stt->type!=9999) || (counter>=30 && (int)stt->type==9999) ) {
+		std::cout << "Error in PAHProcess::SiteRightSize. Site connectivity has been lost." <<std::endl;
+		std::ostringstream msg;
+		msg << "Error in PAHProcess::SiteRightSize. Site connectivity has been lost." << std::endl;
+		throw std::runtime_error(msg.str());
+		assert(false);
+	}
 	if (counter != stype) return false;
 	return true;
 }
