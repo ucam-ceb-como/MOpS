@@ -12723,6 +12723,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		Spointer S1 = moveIt(sFE2, -1);
 		Spointer S2 = moveIt(sFE2, +1);
 		if (b4) {
+			int kk = findWalker(S1);
+			if (kk!=-1000) moveWalker(kk);
 			updateSites(S2, sFE2->C1, S2->C2, 1600 + (int)sFE2->type);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
@@ -12733,6 +12735,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			}
 		}
 		else {
+			int kk = findWalker(S2);
+			if (kk!=-1000) moveWalker(kk);
 			updateSites(S1, S1->C1, sFE2->C2, 1600 + (int)sFE2->type);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
@@ -12749,6 +12753,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 	else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){
 		//This means that the pentagon has migrated to a bay containing an R5.
 		if (b4) {
+			int kk = findWalker(S1);
+			if (kk!=-1000) moveWalker(kk);
 			updateSites(S2, sFE2->C1, S2->C2, 100 + (int)sFE2->type);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
@@ -12759,6 +12765,8 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 			}
 		}
 		else {
+			int kk = findWalker(S2);
+			if (kk!=-1000) moveWalker(kk);
 			updateSites(S1, S1->C1, sFE2->C2, 100 + (int)sFE2->type);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
@@ -13016,6 +13024,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		Spointer S1 = moveIt(sFE2, -1);
 		Spointer S2 = moveIt(sFE2, +1);
 		if (b4) {
+			int kk = findWalker(S1);
+			if (kk!=-1000) moveWalker(kk);
 			updateSites(S2, sFE2->C1, S2->C2, 1600 + (int)sFE2->type);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
@@ -13026,6 +13036,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			}
 		}
 		else {
+			int kk = findWalker(S2);
+			if (kk!=-1000) moveWalker(kk);
 			updateSites(S1, S1->C1, sFE2->C2, 1600 + (int)sFE2->type);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
@@ -13042,6 +13054,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 	else if ((int)sFE2->type >= 2003 && (int)sFE2->type <= 2115){
 		//This means that the pentagon has migrated to a bay containing an R5.
 		if (b4) {
+			int kk = findWalker(S1);
+			if (kk!=-1000) moveWalker(kk);
 			updateSites(S2, sFE2->C1, S2->C2, 100 + (int)sFE2->type);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
@@ -13052,6 +13066,8 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 			}
 		}
 		else {
+			int kk = findWalker(S2);
+			if (kk!=-1000) moveWalker(kk);
 			updateSites(S1, S1->C1, sFE2->C2, 100 + (int)sFE2->type);
 			std::get<0>(m_pah->m_R5walker_sites[ii]) = S1;
 			std::get<1>(m_pah->m_R5walker_sites[ii]) = S1;
