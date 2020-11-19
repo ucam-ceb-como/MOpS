@@ -3541,7 +3541,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 			R5loc_copy = m_pah->m_R5loc;
 			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
+			mol = optimisePAH(mol, 500);
 			passbackPAH(mol);
 		}
 		// change site type back to original site.
@@ -3572,7 +3572,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 			R5loc_copy = m_pah->m_R5loc;
 			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
+			mol = optimisePAH(mol, 500);
 			passbackPAH(mol);
 		}
 		// change site type back to original site.
@@ -3603,7 +3603,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 			R5loc_copy = m_pah->m_R5loc;
 			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
+			mol = optimisePAH(mol, 500);
 			passbackPAH(mol);
 		}
 		// change site type back to original site.
@@ -3634,7 +3634,7 @@ void PAHProcess::convSiteType(Spointer& st, Cpointer Carb1, Cpointer Carb2, kmcS
 			R5loc_copy = m_pah->m_R5loc;
 			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
+			mol = optimisePAH(mol, 500);
 			passbackPAH(mol);
 		}
 		// change site type back to original site.
@@ -4092,12 +4092,11 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 		st->C1 = Carb1;
 		st->C2 = Carb2;
 		if (!m_pah->m_optimised){
-			saveXYZ("KMC_DEBUG/bef2104optim");
 			optim = true;
 			R5loc_copy = m_pah->m_R5loc;
 			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
+			mol = optimisePAH(mol, 500);
 			passbackPAH(mol);
 
 			// change site type back to original site.
@@ -4114,7 +4113,6 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			else {
 				stype = 2114; bulkCchange = 0;
 			}
-			saveXYZ("KMC_DEBUG/aft2104optim");
 		}
 	}
 	if (stype + bulkCchange == 2105 || stype + bulkCchange == 2115) {
@@ -4130,7 +4128,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			R5loc_copy = m_pah->m_R5loc;
 			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
+			mol = optimisePAH(mol, 500);
 			passbackPAH(mol);
 		}
 		// change site type back to original site.
@@ -4160,7 +4158,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			R5loc_copy = m_pah->m_R5loc;
 			R7loc_copy = m_pah->m_R7loc;
 			OpenBabel::OBMol mol = passPAH();
-			mol = optimisePAH(mol);
+			mol = optimisePAH(mol, 500);
 			passbackPAH(mol);
 		}
 		// change site type back to original site.
@@ -4239,7 +4237,7 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 				R5loc_copy = m_pah->m_R5loc;
 				R7loc_copy = m_pah->m_R7loc;
 				OpenBabel::OBMol mol = passPAH();
-				mol = optimisePAH(mol);
+				mol = optimisePAH(mol, 500);
 				passbackPAH(mol);
 			}
 			// change site type back to original site.
@@ -17638,10 +17636,13 @@ int PAHProcess::coupledSiteDirection(Spointer stt){
 		if(!left_bool && right_bool && !invert) return 1;
 		if(left_bool && !right_bool && invert) return 1;
 		if(!left_bool && right_bool && invert) return -1;
+		if(!left_bool && !right_bool) break;
 	}
 	//If ths algorithm has returned 0 repeat but this time assume that SPIRALS cannot be counted.
 	left_bool = true;
 	right_bool = true;
+	check_left = stt;
+	check_right = stt;
 	for (int ii=0;ii!=7;ii++){
 		check_left = moveIt(check_left,-1);
 		check_right = moveIt(check_right,+1);
@@ -17677,6 +17678,7 @@ int PAHProcess::coupledSiteDirection(Spointer stt){
 		if(!left_bool && right_bool && !invert) return 1;
 		if(left_bool && !right_bool && invert) return 1;
 		if(!left_bool && right_bool && invert) return -1;
+		if(!left_bool && !right_bool) break;
 	}
 	return 0;
 }
