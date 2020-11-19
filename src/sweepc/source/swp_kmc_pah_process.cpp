@@ -4098,21 +4098,20 @@ void PAHProcess::updateSites(Spointer& st, // site to be updated
 			OpenBabel::OBMol mol = passPAH();
 			mol = optimisePAH(mol, 500);
 			passbackPAH(mol);
-
-			// change site type back to original site.
-			st->type = (kmcSiteType)(original_stype);
-			///////////////////////////////////////////////////////////
-			
-			//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
-			Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
-			bool decide_PAH = false;
-			if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
-			if(decide_PAH == true){
-				stype = 2104; bulkCchange = 0;
-			}
-			else {
-				stype = 2114; bulkCchange = 0;
-			}
+		}
+		// change site type back to original site.
+		st->type = (kmcSiteType)(original_stype);
+		///////////////////////////////////////////////////////////
+		
+		//There are two possible sites R5FEACR5 and ACR5R5R6. Decide which one.
+		Cpointer Ccheck = Carb1; Cpointer Ccheck2 = Ccheck->C2; Cpointer Ccheck3 = Carb2->C1;	Cpointer Ccheck4 = Ccheck3->C2;
+		bool decide_PAH = false;
+		if (isR5internal(Ccheck, Ccheck2) || isR5internal(Ccheck3, Ccheck4)) decide_PAH = true;
+		if(decide_PAH == true){
+			stype = 2104; bulkCchange = 0;
+		}
+		else {
+			stype = 2114; bulkCchange = 0;
 		}
 	}
 	if (stype + bulkCchange == 2105 || stype + bulkCchange == 2115) {

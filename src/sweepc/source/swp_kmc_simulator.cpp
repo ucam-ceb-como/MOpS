@@ -235,7 +235,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
         //Artificially fix that a PAH with 4 or less sites has rate 0
 		size_t site_size = m_simPAHp.SiteListSize();
-		if ( (int)site_size <=4 ) {
+		if ( (int)site_size <=6 ) {
             std::cout << "PAH " << PAH_ID << " reached to " << site_size << " sites. Freezing and saving structure." << std::endl;
             addTrackedPAH(PAH_ID);
             //m_simPAHp.printSites();
