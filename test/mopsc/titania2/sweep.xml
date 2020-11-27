@@ -194,7 +194,8 @@
         <!-- g, cm, s -->
         <reactant id="TIOCL" stoich="1" m="1.6506e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="CL2" stoich="+1.0" />
+        <product id="CL2" stoich="+2.0" />
+        <product id="O2"  stoich="-1.0" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+2.0"/>
     </inception>
@@ -335,7 +336,8 @@
         <!-- g, cm, s -->
         <reactant id="TIOCL2" stoich="1" m="2.2401e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="CL2" stoich="+1.5" />
+        <product id="CL2" stoich="+2.5" />
+        <product id="O2"  stoich="-1.0" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+2.0"/>
     </inception>
@@ -465,7 +467,8 @@
         <!-- g, cm, s -->
         <reactant id="TIOCL3" stoich="1" m="2.8296e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="CL2" stoich="+2.0" />
+        <product id="CL2" stoich="+3.0" />
+        <product id="O2"  stoich="-1.0" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+2.0"/>
     </inception>
@@ -582,8 +585,8 @@
         <!-- g, cm, s -->
         <reactant id="TIO2CL2" stoich="1" m="2.5058e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="O2"  stoich="+0.5" />
-        <product id="CL2" stoich="+1.5" />
+        <product id="O2"  stoich="-0.5" />
+        <product id="CL2" stoich="+2.5" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+2.0"/>
     </inception>
@@ -690,8 +693,8 @@
         <!-- g, cm, s -->
         <reactant id="TIO2CL3" stoich="1" m="3.0952e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="O2"  stoich="+0.5" />
-        <product id="CL2" stoich="+2.0" />
+        <product id="O2"  stoich="-0.5" />
+        <product id="CL2" stoich="+3.0" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+2.0"/>
     </inception>
@@ -788,8 +791,8 @@
         <!-- g, cm, s -->
         <reactant id="TI2O2CL3" stoich="1" m="3.8906e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="O2"  stoich="-0.5" />
-        <product id="CL2" stoich="+2.0" />
+        <product id="O2"  stoich="-1.5" />
+        <product id="CL2" stoich="+3.0" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+3.0"/>
     </inception>
@@ -875,8 +878,8 @@
         <!-- g, cm, s -->
         <reactant id="TI2O2CL4" stoich="1" m="4.4801e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="O2"  stoich="-0.5" />
-        <product id="CL2" stoich="+2.5" />
+        <product id="O2"  stoich="-1.5" />
+        <product id="CL2" stoich="+3.5" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+3.0"/>
     </inception>
@@ -951,7 +954,8 @@
         <!-- g, cm, s -->
         <reactant id="TI2O3CL2" stoich="1" m="3.5668e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="CL2" stoich="+1.5" />
+        <product id="CL2" stoich="+2.5" />
+        <product id="O2"  stoich="-1.0" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+3.0"/>
     </inception>
@@ -1015,7 +1019,8 @@
         <!-- g, cm, s -->
         <reactant id="TI2O3CL3" stoich="1" m="4.1563e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="CL2" stoich="+2.0" />
+        <product id="CL2" stoich="+3.0" />
+        <product id="O2"  stoich="-1.0" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+3.0"/>
     </inception>
@@ -1068,8 +1073,8 @@
         <!-- g, cm, s -->
         <reactant id="TI3O4CL4" stoich="1" m="5.8069e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="O2"  stoich="-0.5" />
-        <product id="CL2" stoich="+2.5" />
+        <product id="O2"  stoich="-1.5" />
+        <product id="CL2" stoich="+3.5" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+4.0"/>
     </inception>
@@ -1111,8 +1116,8 @@
         <!-- g, cm, s -->
         <reactant id="TI5O6CL8" stoich="1" m="1.0287e-021" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="O2"  stoich="-1.5" />
-        <product id="CL2" stoich="+4.5" />
+        <product id="O2"  stoich="-2.5" />
+        <product id="CL2" stoich="+5.5" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+6.0"/>
     </inception>
@@ -1143,8 +1148,8 @@
         <!-- g, cm, s -->
         <reactant id="TI2O2CL6" stoich="1" m="5.6591e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="O2"  stoich="-0.5" />
-        <product id="CL2" stoich="+3.5" />
+        <product id="O2"  stoich="-1.5" />
+        <product id="CL2" stoich="+4.5" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+3.0"/>
     </inception>
@@ -1164,8 +1169,8 @@
         <!-- g, cm, s -->
         <reactant id="TI2O2CL5" stoich="1" m="5.0696e-022" d="6.5423e-8" />
         <reactant id="TICL2OCL" stoich="1" m="2.1819e-022" d="6.5423e-8" />
-        <product id="O2"  stoich="-0.5" />
-        <product id="CL2" stoich="+3.0" />
+        <product id="O2"  stoich="-1.5" />
+        <product id="CL2" stoich="+4.0" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+3.0"/>
     </inception>
@@ -1174,12 +1179,9 @@
         <formula>"TICL2OCL + TICL2OCL to [Ru2]</formula>
         <!-- g, cm, s -->
         <reactant id="TICL2OCL" stoich="2" m="2.1819e-022" d="6.5423e-8" />
-        <product id="O2"  stoich="+1.0" />
-        <product id="CL2" stoich="+1.0" />
+        <product id="O2"  stoich="-1.0" />
+        <product id="CL2" stoich="+3.0" />
         <particleout id="[Ru]"/>
         <component id="Rutile" dx="+2.0"/>
-    </inception>
-
-
+    </inception>     
 </mechanism>
-
