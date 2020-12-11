@@ -9580,11 +9580,13 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 	Spointer neighbour;
 	if (b4) {
 		neighbour = moveIt(stt, -4);
-		if ((int)neighbour->type >= 2002 && (int)neighbour->type <= 2005) return;
+		if (isR5internal(neighbour->C2->C1,neighbour->C2)) return;
+		//if ((int)neighbour->type >= 2002 && (int)neighbour->type <= 2005) return;
 	}
 	else {
 		neighbour = moveIt(stt, 4);
-		if ((int)neighbour->type >= 2002 && (int)neighbour->type <= 2005) return;
+		if (isR5internal(neighbour->C1,neighbour->C1->C2)) return;
+		//if ((int)neighbour->type >= 2002 && (int)neighbour->type <= 2005) return;
 	}
 
     // first the R6 will be changed to R5 by removing a C. locate where the FE3 is and which
@@ -9625,7 +9627,7 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		convSiteType(sFE3, CR5_1, CR5_1->C2, R5); // convert FE3 to R5
 		convSiteType(stt, CR5_1->C2, C_1->C2, RFE); // convert BY5 to RFE
         updateSites(S2, C_1->C2, S2->C2, +1); // add a bulk C to S2
-		if ((int)S1->type <= 2000) updateSites(S1, S1->C1, CR5_1, -1);
+		updateSites(S1, S1->C1, CR5_1, -1);
 		addR5internal(CR5_1, CR5_1->C2);
         addR5toSite(S1, S1->C1, CR5_1); // remove a bulk C from S1 and add R5
     } else {
@@ -9634,7 +9636,7 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
 		convSiteType(sFE3, CR5_1, CR5_1->C2, R5); // convert FE3 to R5
 		convSiteType(stt, C_1->C2, CR5_1, RFE); // convert BY5 to RFE
         updateSites(S1, S1->C1, C_1->C2, +1); // add a bulk C to S1
-		if ((int)S2->type <= 2000) updateSites(S2, CR5_1->C2, S2->C2, -1);
+		updateSites(S2, CR5_1->C2, S2->C2, -1);
 		addR5internal(CR5_1, CR5_1->C2);
         addR5toSite(S2, CR5_1->C2, S2->C2); // remove a bulk C from S2 and add R5
     }
@@ -9658,7 +9660,7 @@ void PAHProcess::proc_C6R_BY5_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2, rng
     //Currently the pentagons formed by this jump process are too large. Use optimiser to fix it. Not ideal but quick solution.
 	if (!m_pah->m_optimised){
 		OpenBabel::OBMol mol = passPAH();
-		mol = optimisePAH(mol);
+		mol = optimisePAH(mol, 500);
 		passbackPAH(mol);
 	}
 }
