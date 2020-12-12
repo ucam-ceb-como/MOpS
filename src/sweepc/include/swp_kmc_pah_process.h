@@ -139,6 +139,9 @@ public:
     //! Moves individual walker ii when called without calling optimiser. 
     void moveWalker(int ii);
 
+    //! Returns the number of walker sites
+    int getNumberWalkerSites();
+
     // Read Processes
     //! Get Counts
     intpair getCHCount() const;

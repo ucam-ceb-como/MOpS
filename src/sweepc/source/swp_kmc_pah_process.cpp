@@ -17041,6 +17041,21 @@ bool PAHProcess::SiteRightSize(Spointer& stt) const{
 	return true;
 }
 
+//! Returns the number of walker sites
+int PAHProcess::getNumberWalkerSites() {
+	int counter = 0;
+	counter += getSiteCount(ACR5);
+	counter += getSiteCount(FEACR5);
+	counter += getSiteCount(ZZACR5);
+	counter += getSiteCount(ACACR5);
+	counter += getSiteCount(R5ACR5);
+	counter += getSiteCount(R5FEACR5);
+	counter += getSiteCount(R5R6);
+	counter += getSiteCount(R5R6FER5R6);
+	return counter;
+}
+
+
 //! Called before migration process starts. Loops through the random walker sites and appends them.
 void PAHProcess::startMigrationProcess(){
 	std::vector<std::tuple<Spointer,Spointer,int>> migr_sites;

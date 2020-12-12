@@ -361,6 +361,11 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             t_next = t_max;
             m_t = t_next;
         }
+        int num_walker = m_simPAHp.getNumberWalkerSites();
+        if (num_walker>=1){
+            std::string f_exac = std::to_string(m_t);
+            savePAH_exactness_test(PAH_ID, num_walker, f_exac);
+        }
     }
 
     writeRxnCountCSV();
@@ -1280,4 +1285,37 @@ void KMCSimulator::removeTrackedPAH(int PAH_number){
 //! Sets the debug flag for PAHProcess.
 void KMCSimulator::setDebugPAH(const bool debug_pah) {
     m_simPAHp.m_debug_pah = debug_pah;
+}
+
+//! Save PAH for exactness test
+void KMCSimulator::savePAH_exactness_test(int PAH_number, int walker_number, const std::string &filename){
+    // Check if PAH_number is the PAHs printed to file.
+    std::string dir_path = "PRINTED_PAHS/";
+    std::pair<int,int> check_pair = std::make_pair(PAH_number, walker_number);
+	auto finder = std::find(std::begin(m_printed_pahs_exact), std::end(m_printed_pahs_exact), check_pair); 
+	if (finder == m_printed_pahs_exact.end()){
+		std::cout << "Adding PAH number " << PAH_number << " with " << walker_number << " walkers to printed PAH list for exactness test. \n";
+		m_printed_pahs_exact.push_back(check_pair);
+	
+        // Check if saving folder exists.
+        boost::filesystem::path dir(dir_path);
+        if (boost::filesystem::exists(dir)){
+            // Folder already existed.
+            std::cout << "Folder " << dir << " already existed. \n";
+        }
+        else {
+            if(boost::filesystem::create_directory(dir)) {
+                std::cout << "Creating folder " << dir << ". \n";
+            }
+            else{
+                std::cout << "Error creating folder " << dir << ". \n Continuing simulation. PAH coordinates may not be saved. \n";
+            }
+        }
+        dir_path.append(std::to_string(PAH_number));
+        dir_path.append("_");
+        dir_path.append(std::to_string(walker_number));
+        dir_path.append("_");
+        dir_path.append(filename);
+        m_simPAHp.savePAH_tofile(dir_path);
+    }
 }

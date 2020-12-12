@@ -133,6 +133,8 @@ namespace Sweep{
             void saveDOTperXsec(const double& X, const int& seed, const double& time, const double &time_max, KMCMechanism& copyMod, int& intervalcount);
 			//! Save DEBUG information for a single PAH
 			void savePAH(int PAH_number, const std::string &filename, bool optimise=false);
+            //! Save PAH for exactness test
+            void savePAH_exactness_test(int PAH_number, int walker_number, const std::string &filename);
 			//! Read PAHs to be tracked through the simulation from file.
 			void readTrackedPAH(const std::string &filename="tracked_pahs.txt");
             //! Open csv file for tracked PAH
@@ -170,6 +172,8 @@ namespace Sweep{
             std::string    m_timestep_name;
             //! returns the reaction counts
             std::vector<int> ReactionCounts() const; 
+            //! list of PAHs that have been saved for the exactness test
+			std::vector<std::pair<int,int>> m_printed_pahs_exact;
 			//! list of PAHs to output coordinates and trajectory
 			std::vector<int> m_tracked_pahs;
 			//! list of PAHs to output coordinates and trajectory
