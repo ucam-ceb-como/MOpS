@@ -374,6 +374,14 @@ void Simulator::RunSimulation(Mops::Reactor &r,
     std::auto_ptr<Mixture> initmix(r.Mixture()->Clone());
 
     // Initialise the reactor with the start time.
+    int timestep_counter = 0;
+    for (int step_counter = 0; step_counter<m_times.size(); step_counter++ ){
+        if (timestep_counter == m_initial_timestep) {
+            SetInitialTimeStep(step_counter);
+            break;
+        }
+        timestep_counter += m_times[step_counter].StepCount();        
+    }
     t2 = m_times[m_initial_timestep].StartTime();
     r.SetTime(t2);
     //r.Mixture()->GasPhase().SetMaxM0(m_maxm0);
