@@ -235,7 +235,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
         //Artificially fix that a PAH with 4 or less sites has rate 0
 		size_t site_size = m_simPAHp.SiteListSize();
-		if ( (int)site_size <=6 ) {
+        int R6count = std::get<0>(m_simPAHp.getRingsCount());
+		if ( (int)site_size <=6 && R6count >= 10) {
             std::cout << "PAH " << PAH_ID << " reached to " << site_size << " sites. Freezing and saving structure." << std::endl;
             addTrackedPAH(PAH_ID);
             //m_simPAHp.printSites();
@@ -364,8 +365,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
         int num_walker = m_simPAHp.getNumberWalkerSites();
         if (num_walker>=1){
             //Save a max of 10 PAHs per walker*R6rings 
-            std::tuple<int,int,int> rr_rings = m_simPAHp.getRingsCount();
-            int R6rr = std::get<0>(rr_rings);
+            int R6rr = std::get<0>(m_simPAHp.getRingsCount());
             if (m_printed_pahs_per_size[R6rr][num_walker] < 10){
                 int f_exac_int = (int)(m_t*1000000.0);
                 std::string f_exac = std::to_string(f_exac_int);
