@@ -363,8 +363,15 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
         }
         int num_walker = m_simPAHp.getNumberWalkerSites();
         if (num_walker>=1){
-            std::string f_exac = std::to_string(m_t);
-            savePAH_exactness_test(PAH_ID, num_walker, f_exac);
+            //Save a max of 10 PAHs per walker*R6rings 
+            std::tuple<int,int,int> rr_rings = m_simPAHp.getRingsCount();
+            int R6rr = std::get<0>(rr_rings);
+            if (m_printed_pahs_per_size[R6rr][num_walker] < 10){
+                int f_exac_int = (int)(m_t*1000000.0);
+                std::string f_exac = std::to_string(f_exac_int);
+                savePAH_exactness_test(PAH_ID, R6rr, num_walker, f_exac);
+                m_printed_pahs_per_size[R6rr][num_walker] += 1;
+            }
         }
     }
 
@@ -1288,22 +1295,18 @@ void KMCSimulator::setDebugPAH(const bool debug_pah) {
 }
 
 //! Save PAH for exactness test
-void KMCSimulator::savePAH_exactness_test(int PAH_number, int walker_number, const std::string &filename){
+void KMCSimulator::savePAH_exactness_test(int PAH_number, int ring_number, int walker_number, const std::string &filename){
     // Check if PAH_number is the PAHs printed to file.
     std::string dir_path = "PRINTED_PAHS/";
     std::pair<int,int> check_pair = std::make_pair(PAH_number, walker_number);
 	auto finder = std::find(std::begin(m_printed_pahs_exact), std::end(m_printed_pahs_exact), check_pair); 
 	if (finder == m_printed_pahs_exact.end()){
-		std::cout << "Adding PAH number " << PAH_number << " with " << walker_number << " walkers to printed PAH list for exactness test. \n";
+		//std::cout << "Adding PAH number " << PAH_number << " with " << walker_number << " walkers to printed PAH list for exactness test. \n";
 		m_printed_pahs_exact.push_back(check_pair);
 	
         // Check if saving folder exists.
         boost::filesystem::path dir(dir_path);
-        if (boost::filesystem::exists(dir)){
-            // Folder already existed.
-            std::cout << "Folder " << dir << " already existed. \n";
-        }
-        else {
+        if (!(boost::filesystem::exists(dir))){
             if(boost::filesystem::create_directory(dir)) {
                 std::cout << "Creating folder " << dir << ". \n";
             }
@@ -1311,7 +1314,7 @@ void KMCSimulator::savePAH_exactness_test(int PAH_number, int walker_number, con
                 std::cout << "Error creating folder " << dir << ". \n Continuing simulation. PAH coordinates may not be saved. \n";
             }
         }
-        dir_path.append(std::to_string(PAH_number));
+        dir_path.append(std::to_string(ring_number));
         dir_path.append("_");
         dir_path.append(std::to_string(walker_number));
         dir_path.append("_");
