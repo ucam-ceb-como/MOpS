@@ -4796,7 +4796,7 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 								break;
 							}else {
 								std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
-								saveXYZ("R5_miss");
+								//saveXYZ("R5_miss");
 								st->comb = None;
 								break;
 							}
@@ -9714,6 +9714,12 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			}
 		}while (bridgecheck != C_2);
 	}
+
+	Cpointer thirdC2 = NULLC;
+	Cpointer thirdC3 = NULLC;
+	Cpointer thirdC = findThirdC(now);
+	if (!now->bridge) thirdC2 = findThirdC(now->C2);
+	if (!now->bridge && !now->C2->bridge) thirdC3 = findThirdC(now->C2->C2);
 	
 	do{
 		Cpointer next;
@@ -9855,6 +9861,41 @@ void PAHProcess::proc_L5R_BY5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	updateCombinedSites(S1); updateCombinedSites(S2); 
 	updateCombinedSites(S3); updateCombinedSites(S4);
 	updateCombinedSites(S5); updateCombinedSites(S6);
+
+	//Update possible other side sites
+	if (thirdC!=NULLC){
+		Spointer S_op = findSite(thirdC);
+		if (S_op!=m_pah->m_siteList.end()){
+			Spointer S1_op = moveIt(S_op, -1);
+			Spointer S2_op = moveIt(S_op, +1);
+			Spointer S3_op = moveIt(S_op, -2);
+			Spointer S4_op = moveIt(S_op, +2);
+			updateCombinedSites(S_op); updateCombinedSites(S1_op); updateCombinedSites(S2_op); 
+			updateCombinedSites(S3_op); updateCombinedSites(S4_op);
+		}
+	}
+	if (thirdC2!=NULLC){
+		Spointer S_op = findSite(thirdC2);
+		if (S_op!=m_pah->m_siteList.end()){
+			Spointer S1_op = moveIt(S_op, -1);
+			Spointer S2_op = moveIt(S_op, +1);
+			Spointer S3_op = moveIt(S_op, -2);
+			Spointer S4_op = moveIt(S_op, +2);
+			updateCombinedSites(S_op); updateCombinedSites(S1_op); updateCombinedSites(S2_op); 
+			updateCombinedSites(S3_op); updateCombinedSites(S4_op);
+		}
+	}
+	if (thirdC3!=NULLC){
+		Spointer S_op = findSite(thirdC3);
+		if (S_op!=m_pah->m_siteList.end()){
+			Spointer S1_op = moveIt(S_op, -1);
+			Spointer S2_op = moveIt(S_op, +1);
+			Spointer S3_op = moveIt(S_op, -2);
+			Spointer S4_op = moveIt(S_op, +2);
+			updateCombinedSites(S_op); updateCombinedSites(S1_op); updateCombinedSites(S2_op); 
+			updateCombinedSites(S3_op); updateCombinedSites(S4_op);
+		}
+	}
 
 	//printSites(stt);
 	// update H count
@@ -17600,6 +17641,40 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 				//Two pentagons will be next to each other violating the Isolated Pentagon Rule
 				if (R5coords_rem_bool) m_pah->m_R5loc.push_back(R5coords_rem);
 				return false;
+			}
+		}
+	}
+
+	//check that pentagons implicit on walker sites will not collide
+	if (m_pah->m_R5walker_sites.size()>=1){
+		for (int ii=0; ii!=m_pah->m_R5walker_sites.size();ii++){
+			Spointer start_site_ii = std::get<0>(m_pah->m_R5walker_sites[ii]);
+			Spointer start_site_ii2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
+			int ii_steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+			Spointer end_site_ii = moveIt(start_site_ii, ii_steps);
+			Spointer end_site_ii2 = moveIt(start_site_ii2, ii_steps);
+			Spointer current_position2 = current_position;
+			if (current_position->type==R5R6){
+				if (b4) current_position2 = moveIt(current_position, +1);
+				else current_position2 = moveIt(current_position, -1);
+			}
+			if (current_position != end_site_ii && current_position != end_site_ii2 && 
+				current_position2 != end_site_ii && current_position2 != end_site_ii2 && 
+				end_site_ii != opp_site && end_site_ii != opp_site_second &&
+				end_site_ii2 != opp_site && end_site_ii2 != opp_site_second){
+
+				if (end_site_ii->type==R5R6 || end_site_ii2->type==R5R6){
+					cpair tempR5loc = endposR5internal(end_site_ii->C2->C1,end_site_ii2->C2);
+					double distR5s = getDistance_twoC(tempR5loc, R5coords_end);
+					if (distR5s < 2.8) return false;
+				}
+				if (end_site_ii->type==ACR5 && end_site_ii2->type==ACR5){
+					cpair tempR5loc;
+					if (end_site_ii->C1->C2->C2->A=='H') tempR5loc = endposR5internal(end_site_ii->C1->C2,end_site_ii->C1->C2->C2,false);
+					else tempR5loc = endposR5internal(end_site_ii->C1->C2,end_site_ii->C1->C2->C2,true);
+					double distR5s = getDistance_twoC(tempR5loc, R5coords_end);
+					if (distR5s < 2.8) return false;
+				}
 			}
 		}
 	}
