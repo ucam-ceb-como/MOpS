@@ -6661,6 +6661,7 @@ Cpointer PAHProcess::findC(cpair coordinates) {
 
 //! Find Site to the other side of a bridge
 Spointer PAHProcess::findSite(Cpointer C_1) {
+	if (C_1 == NULLC) return m_pah->m_siteList.end();
 	Spointer temp;
 	Cpointer C_check = C_1;
 	for (int k = 0; k != 6; k++){
@@ -15234,6 +15235,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			updateCombinedSitesMigration(opp_site_after);
 		}
 	}
+	updateWalkersCombinedSitesMigration(ii);
 	if (jj_opp!=-9999 && jj_opp_second!=jj_opp) remOppsiteR5Walker(ii, jj_opp);
 	if (opt_opp_sites) {
 		performMigrationProcess();
@@ -16124,6 +16126,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			updateCombinedSitesMigration(opp_site_after);
 		}
 	}
+	updateWalkersCombinedSitesMigration(ii);
 	if (jj_opp!=-9999 && jj_opp_second!=jj_opp) remOppsiteR5Walker(ii, jj_opp);
 	if (opt_opp_sites) {
 		performMigrationProcess();
@@ -16915,7 +16918,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			updateCombinedSitesMigration(opp_site_after);
 		}
 	}
-
+	updateWalkersCombinedSitesMigration(ii);
 	if (jj_opp!=-9999 && jj_opp_second!=jj_opp) remOppsiteR5Walker(ii, jj_opp);
 	if (opt_opp_sites) {
 		performMigrationProcess();
@@ -18236,4 +18239,19 @@ int PAHProcess::remOppsiteR5Walker(int ii, int jj){
 	}
 	if (ii>jj) ii--;
 	return ii;
+}
+
+//! Calls updateCombinedSitesMigration for all other walkers not involved in current migration
+void PAHProcess::updateWalkersCombinedSitesMigration(int tt){
+	for (int ii=0; ii!=m_pah->m_R5walker_sites.size(); ii++){
+		if (tt!=ii){
+			Spointer start_site = std::get<0>(m_pah->m_R5walker_sites[ii]);
+			Spointer start_site_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
+			int num_steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
+			Spointer check_site = moveIt(start_site,num_steps);
+			Spointer check_site2 = moveIt(start_site_2,num_steps);
+			updateCombinedSitesMigration(check_site);
+			if (check_site!=check_site2) updateCombinedSitesMigration(check_site2);
+		}
+	}
 }

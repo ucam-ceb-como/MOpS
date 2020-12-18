@@ -506,6 +506,8 @@ private:
     void updateCombinedSites(Spointer& st);
     //! Combined site for a particular site, special case for migration processes.
     void updateCombinedSitesMigration(Spointer& st);
+    //! Calls updateCombinedSitesMigration for all other walkers not involved in current migration
+    void updateWalkersCombinedSitesMigration(int tt);
     //! Sets third species bonded to C to a species sp if it is a reactive surface carbon
     void updateA(Cpointer C, char sp);
 	//! Overload function, forces char to C atom.
