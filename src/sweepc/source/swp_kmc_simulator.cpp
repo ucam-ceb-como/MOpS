@@ -83,6 +83,9 @@ static std::vector<kmcSiteType> allSiteType = vectSiteType();
 KMCSimulator::KMCSimulator():
      m_gasprof(), m_mech(), m_gas(), m_simPAH(), m_t(), m_fromfile(false), m_kmcmech(),m_simPAHp()
 {
+    for (int i = 0; i < sizeof(m_printed_pahs_per_size)/sizeof(m_printed_pahs_per_size[0]); i++)
+        for (int j = 0; j < sizeof(m_printed_pahs_per_size[0])/sizeof(m_printed_pahs_per_size[0][0]); j++)
+            m_printed_pahs_per_size[i][j] = 0;
 }
 
 //! Constructor from chemkin and gasphase files
@@ -92,6 +95,9 @@ KMCSimulator::KMCSimulator(const std::string gasphase, const std::string chemfil
     m_gasprof = new Sweep::GasProfile();
     LoadGasProfiles(gasphase, chemfile, thermfile);
     m_fromfile = true;
+    for (int i = 0; i < sizeof(m_printed_pahs_per_size)/sizeof(m_printed_pahs_per_size[0]); i++)
+        for (int j = 0; j < sizeof(m_printed_pahs_per_size[0])/sizeof(m_printed_pahs_per_size[0][0]); j++)
+            m_printed_pahs_per_size[i][j] = 0;
 }
 //! Constructor from a GasProfile object
 KMCSimulator::KMCSimulator(Sweep::GasProfile& gprofile):
@@ -101,6 +107,9 @@ KMCSimulator::KMCSimulator(Sweep::GasProfile& gprofile):
     m_gasprof = &gprofile;
     m_gas = new KMCGasPoint(gprofile, *gprofile[0].Gas.Species());
     m_mech = NULL;
+    for (int i = 0; i < sizeof(m_printed_pahs_per_size)/sizeof(m_printed_pahs_per_size[0]); i++)
+        for (int j = 0; j < sizeof(m_printed_pahs_per_size[0])/sizeof(m_printed_pahs_per_size[0][0]); j++)
+            m_printed_pahs_per_size[i][j] = 0;
 }
 
 //! Copy Constructor
@@ -113,6 +122,9 @@ KMCSimulator::KMCSimulator(KMCSimulator& s):
     m_gas = new KMCGasPoint(*s.m_gas);
     //m_simPAH = new PAHStructure(*(s.m_simPAH));
     m_simPAHp = PAHProcess(*m_simPAH);
+    for (int i = 0; i < sizeof(m_printed_pahs_per_size); i++)
+        for (int j = 0; j < sizeof(m_printed_pahs_per_size[0]); j++)
+            m_printed_pahs_per_size[i][j] = 0;
 }
 
 //! Default Destructor
