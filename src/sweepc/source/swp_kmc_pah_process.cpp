@@ -10134,6 +10134,8 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	Cpointer thirdC2 = findThirdC(C_1->C2->C2);
 	if (thirdC != NULLC || thirdC2 != NULLC) {
 		opp_site_bool = true;
+		opp_site = findSite(thirdC);
+		opp_site_second = findSite(thirdC2);
 	}
 	if(checkHindrance_newCposition(C_1) || checkHindrance_newCposition(C_2)) {
         /*cout<<"Site hindered, process not performed.\n"*/ return;}
@@ -10220,6 +10222,8 @@ void PAHProcess::proc_B6R_ACR5(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	if (opp_site_bool) {
 		m_pah->m_rings5_Lone++;
 		m_pah->m_rings5_Embedded--;
+		if (opp_site != m_pah->m_siteList.end()) updateCombinedSites(opp_site);
+		if (opp_site_second != m_pah->m_siteList.end()) updateCombinedSites(opp_site_second);
 	}
 	m_pah->m_rings++;
 	m_pah->m_rings5_Lone--;
@@ -15175,6 +15179,61 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		updateCombinedSitesMigration(S5);
 		updateCombinedSitesMigration(S6);
 	}
+
+	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
+		Spointer S1_opp_site = moveIt(opp_site, -1);
+		Spointer S2_opp_site = moveIt(opp_site, +1);
+		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+	}
+	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+		if (opp_site_after != S1_check && opp_site_after != S2_check) {
+			Spointer S1_opp_site = moveIt(opp_site_after, -1);
+			Spointer S2_opp_site = moveIt(opp_site_after, +1);
+			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+		}
+		updateCombinedSitesMigration(opp_site);
+	}
+	else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		if (opp_site == opp_site_second){
+			Spointer S1_opp_site = moveIt(opp_site, -1);
+			Spointer S2_opp_site = moveIt(opp_site, +1);
+			updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+		} else{
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_second);
+		}	
+	}
+	else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		updateCombinedSitesMigration(opp_site_second);
+	}
+	else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
+		if (opp_site_second == opp_site_after){
+			updateCombinedSitesMigration(opp_site_second);
+		}
+		else{
+			updateCombinedSitesMigration(opp_site_second);
+			if (opp_site_after != S1_check && opp_site_after != S2_check) {
+				updateCombinedSitesMigration(opp_site_after);
+			}
+		}
+	}
+	else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+		updateCombinedSitesMigration(opp_site_after);
+	}
+	else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
+		if ( (opp_site != opp_site_after) && (opp_site != opp_site_second) && (opp_site_second != opp_site_after)){
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_second);
+			updateCombinedSitesMigration(opp_site_after);
+		} else if ( (opp_site != opp_site_after) && (opp_site == opp_site_second) ){
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_after);
+		} else if ( (opp_site != opp_site_second) && (opp_site_second == opp_site_after) ){
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_second);
+			updateCombinedSitesMigration(opp_site_after);
+		}
+	}
 	if (jj_opp!=-9999 && jj_opp_second!=jj_opp) remOppsiteR5Walker(ii, jj_opp);
 	if (opt_opp_sites) {
 		performMigrationProcess();
@@ -16010,6 +16069,61 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			updateCombinedSitesMigration(S6);
 		}
 	}
+
+	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
+		Spointer S1_opp_site = moveIt(opp_site, -1);
+		Spointer S2_opp_site = moveIt(opp_site, +1);
+		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+	}
+	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+		if (opp_site_after != S1_check && opp_site_after != S2_check) {
+			Spointer S1_opp_site = moveIt(opp_site_after, -1);
+			Spointer S2_opp_site = moveIt(opp_site_after, +1);
+			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+		}
+		updateCombinedSitesMigration(opp_site);
+	}
+	else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		if (opp_site == opp_site_second){
+			Spointer S1_opp_site = moveIt(opp_site, -1);
+			Spointer S2_opp_site = moveIt(opp_site, +1);
+			updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+		} else{
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_second);
+		}	
+	}
+	else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		updateCombinedSitesMigration(opp_site_second);
+	}
+	else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
+		if (opp_site_second == opp_site_after){
+			updateCombinedSitesMigration(opp_site_second);
+		}
+		else{
+			updateCombinedSitesMigration(opp_site_second);
+			if (opp_site_after != S1_check && opp_site_after != S2_check) {
+				updateCombinedSitesMigration(opp_site_after);
+			}
+		}
+	}
+	else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+		updateCombinedSitesMigration(opp_site_after);
+	}
+	else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
+		if ( (opp_site != opp_site_after) && (opp_site != opp_site_second) && (opp_site_second != opp_site_after)){
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_second);
+			updateCombinedSitesMigration(opp_site_after);
+		} else if ( (opp_site != opp_site_after) && (opp_site == opp_site_second) ){
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_after);
+		} else if ( (opp_site != opp_site_second) && (opp_site_second == opp_site_after) ){
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_second);
+			updateCombinedSitesMigration(opp_site_after);
+		}
+	}
 	if (jj_opp!=-9999 && jj_opp_second!=jj_opp) remOppsiteR5Walker(ii, jj_opp);
 	if (opt_opp_sites) {
 		performMigrationProcess();
@@ -16746,6 +16860,62 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			updateCombinedSitesMigration(S1_3);
 		}
 	}
+
+	if (opp_site_bool && !opp_site_bool_second && !opp_site_bool_after) {
+		Spointer S1_opp_site = moveIt(opp_site, -1);
+		Spointer S2_opp_site = moveIt(opp_site, +1);
+		updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+	}
+	else if (opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+		if (opp_site_after != S1_check && opp_site_after != S2_check) {
+			Spointer S1_opp_site = moveIt(opp_site_after, -1);
+			Spointer S2_opp_site = moveIt(opp_site_after, +1);
+			updateCombinedSitesMigration(opp_site_after); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+		}
+		updateCombinedSitesMigration(opp_site);
+	}
+	else if (opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		if (opp_site == opp_site_second){
+			Spointer S1_opp_site = moveIt(opp_site, -1);
+			Spointer S2_opp_site = moveIt(opp_site, +1);
+			updateCombinedSitesMigration(opp_site); updateCombinedSitesMigration(S1_opp_site);  updateCombinedSitesMigration(S2_opp_site); 
+		} else{
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_second);
+		}	
+	}
+	else if (!opp_site_bool && opp_site_bool_second && !opp_site_bool_after) {
+		updateCombinedSitesMigration(opp_site_second);
+	}
+	else if (!opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
+		if (opp_site_second == opp_site_after){
+			updateCombinedSitesMigration(opp_site_second);
+		}
+		else{
+			updateCombinedSitesMigration(opp_site_second);
+			if (opp_site_after != S1_check && opp_site_after != S2_check) {
+				updateCombinedSitesMigration(opp_site_after);
+			}
+		}
+	}
+	else if (!opp_site_bool && !opp_site_bool_second && opp_site_bool_after) {
+		updateCombinedSitesMigration(opp_site_after);
+	}
+	else if (opp_site_bool && opp_site_bool_second && opp_site_bool_after) {
+		if ( (opp_site != opp_site_after) && (opp_site != opp_site_second) && (opp_site_second != opp_site_after)){
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_second);
+			updateCombinedSitesMigration(opp_site_after);
+		} else if ( (opp_site != opp_site_after) && (opp_site == opp_site_second) ){
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_after);
+		} else if ( (opp_site != opp_site_second) && (opp_site_second == opp_site_after) ){
+			updateCombinedSitesMigration(opp_site);
+			updateCombinedSitesMigration(opp_site_second);
+			updateCombinedSitesMigration(opp_site_after);
+		}
+	}
+
 	if (jj_opp!=-9999 && jj_opp_second!=jj_opp) remOppsiteR5Walker(ii, jj_opp);
 	if (opt_opp_sites) {
 		performMigrationProcess();
