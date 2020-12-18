@@ -7297,12 +7297,14 @@ void PAHProcess::proc_G6R_FE(Spointer& stt, Cpointer C_1, Cpointer C_2) {
     Spointer newS1 = addSite(FE, newC1, newC2, stt);
     Spointer newS2 = addSite(FE, newC3, newC4, S2);
     // Update combined sites for all new sites and original neighbours
-    Spointer S3, S4;
+    Spointer S3, S4, S5, S6;
     S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+	S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt);
     updateCombinedSites(newS1); updateCombinedSites(newS2); // new sites
     updateCombinedSites(S1); updateCombinedSites(S2); // original neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // neighbours of neighbours
+	updateCombinedSites(S5); updateCombinedSites(S6); // neighbours of neighbours
     // Add H count
     addCount(0, 2);
     // add ring counts
