@@ -4813,243 +4813,6 @@ void PAHProcess::updateCombinedSitesMigration(Spointer& st) {
 			break;
 		}
 
-		/*//Check for opposite side sites that may contain an R5
-		if (st->type==ACR5 || st->type==R5R6){
-			Cpointer CR5_checkotherside_left, CRem_next_left;
-			Cpointer CR5_checkotherside_right, CRem_next_right;
-			for(unsigned int ii=0;ii!=m_pah->m_R5walker_sites.size();ii++){
-				Spointer start_site = std::get<0>(m_pah->m_R5walker_sites[ii]);
-				Spointer start_site_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
-				int num_steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
-				Spointer check_site = moveIt(start_site,num_steps);
-				Spointer check_site2 = moveIt(start_site_2,num_steps);
-				if (check_site == check_site2){
-					//An ACR5 site
-					if (check_site==st){
-						steps = num_steps;
-						break;
-					}
-				}
-				else if(check_site==st || check_site2==st){
-					//An R5R6 site
-					steps = num_steps;
-					break;
-				}
-			}
-			if (steps == 0){
-				CR5_checkotherside_left = st->C1->C2;
-				CRem_next_left = st->C1->C1;
-				CR5_checkotherside_right = st->C2->C1;
-				CRem_next_right = st->C2->C2;
-			} else if (steps>0){
-				CR5_checkotherside_left = st->C1->C1;
-				if (CR5_checkotherside_left->C1->A=='H') CRem_next_left = CR5_checkotherside_left->C1->C1;
-				else CRem_next_left = CR5_checkotherside_left->C1;
-				CR5_checkotherside_right = st->C1->C2;
-				if (CR5_checkotherside_right->C2->A=='H') CRem_next_right = CR5_checkotherside_right->C2->C2;
-				else CRem_next_right = CR5_checkotherside_right->C2;
-			} else{
-				CR5_checkotherside_left = st->C2->C1;
-				if (CR5_checkotherside_left->C1->A=='H') CRem_next_left = CR5_checkotherside_left->C1->C1;
-				else CRem_next_left = CR5_checkotherside_left->C1;
-				CR5_checkotherside_right = st->C2->C2;
-				if (CR5_checkotherside_right->C2->A=='H') CRem_next_right = CR5_checkotherside_right->C2->C2;
-				else CRem_next_right = CR5_checkotherside_right->C2;
-			}
-
-			Cpointer CR5_otherside_left = findThirdC(CR5_checkotherside_left);
-			Cpointer CR5_otherside_after_left = findThirdC(CRem_next_left); // For now assume that this will be handled by call to that site.
-			Cpointer CR5_otherside_right = findThirdC(CR5_checkotherside_right);
-			Cpointer CR5_otherside_after_right = findThirdC(CRem_next_right); // For now assume that this will be handled by call to that site.
-			if (CR5_otherside_left != NULLC || CR5_otherside_right != NULLC) {
-				//Current position has other side
-				Spointer other_side_site_1 = st;
-				Spointer other_side_site_2 = st;
-				int sites_to_check = 0;
-				if (CR5_otherside_left != NULLC) other_side_site_1 = findSite(CR5_otherside_left);
-				if (CR5_otherside_right != NULLC) other_side_site_2 = findSite(CR5_otherside_right);
-				if (other_side_site_1 == other_side_site_2 && other_side_site_1 != st) sites_to_check = 1; //Just need to check one site
-				else if (other_side_site_1 == st && other_side_site_2 != st){
-					sites_to_check = 1; //Just need to check one site
-					other_side_site_1 = other_side_site_2;
-				}else if (other_side_site_2 == st && other_side_site_1 != st) sites_to_check = 1; //Just need to check one site
-				else if (other_side_site_1 != st && other_side_site_2 != st && other_side_site_1 != other_side_site_2) sites_to_check = 2; //Need to check two sites
-				else {
-					std::cout << "Failed condition in PAHProcess::updateCombinedSitesMigration. Found opposite side sites but case not recognised." <<std::endl;
-				}
-
-				if (sites_to_check >= 1) {
-					//First opposite side site needs to be checked.
-					Spointer S1_oppsite = moveIt(other_side_site_1, -1);
-					Spointer S2_oppsite = moveIt(other_side_site_1, +1);
-					int jj = findWalker(other_side_site_1);
-					if (jj!=-9999 && jj!=-1000){
-						//Site is declared as a walker and detected as a walker. Check if it contains R5 information.
-						int other_walker_steps = std::get<2>(m_pah->m_R5walker_sites[jj]);
-						int other_walker_type = (int)other_side_site_1->type;
-						if (other_walker_steps==0 && other_walker_type>=2003){
-							if ((int)other_side_site_1->type==2103){
-								int coupled_site_dir = coupledSiteDirection(other_side_site_1);
-								if (coupled_site_dir == -1){
-									R5coords = findR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1);
-									remR5coords = true;
-								}
-								else if (coupled_site_dir == 1){
-									R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
-									remR5coords = true;
-								}
-								else{
-									if (S1_oppsite->type==R5) {
-										R5coords = findR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1);
-										remR5coords = true;
-									}
-									else if(S2_oppsite->type==R5) {
-										R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
-										remR5coords = true;
-									} else{
-										std::cout << "Could not find coupled site of R5ACR5 site on updateCombinedSitesMigration." << std::endl;
-										R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
-										remR5coords = true;
-									}
-								}
-							} else{
-								if (isR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2)) {
-									R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
-									remR5coords = true;
-								}
-								else if (isR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1)) {
-									R5coords = findR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1);
-									remR5coords = true;
-								}
-								else{
-									std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
-								}
-							}
-						}	
-					} else if (jj==-1000) {
-						//There are walker sites but current site is not declared as a walker.
-						//Site is not declared as a walker. Remove R5 position.
-						int s_other_type = (int)other_side_site_1->type;
-						if (s_other_type>2000||(s_other_type>500&&s_other_type<505)){
-							if (isR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2)) {
-								R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
-								remR5coords = true;
-							}
-							else if (isR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1)) {
-								R5coords = findR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1);
-								remR5coords = true;
-							}
-							else{
-								std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
-							}
-						}
-					} else{
-						//There are no walker sites declared.
-						//Site is not declared as a walker. Remove R5 position.
-						int s_other_type = (int)other_side_site_1->type;
-						if (s_other_type>2000||(s_other_type>500&&s_other_type<505)){
-							if (isR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2)) {
-								R5coords = findR5internal(other_side_site_1->C1->C2,other_side_site_1->C1->C2->C2);
-								remR5coords = true;
-							}
-							else if (isR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1)) {
-								R5coords = findR5internal(other_side_site_1->C2->C1->C1,other_side_site_1->C2->C1);
-								remR5coords = true;
-							}
-							else{
-								std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
-							}
-						}
-					}
-				}
-
-				if (sites_to_check == 2) {
-					//Second opposite side site needs to be checked.
-					Spointer S1_oppsite = moveIt(other_side_site_2, -1);
-					Spointer S2_oppsite = moveIt(other_side_site_2, +1);
-					int jj = findWalker(other_side_site_2);
-					if (jj!=-9999 && jj!=-1000){
-						//Site is declared as a walker. Check if it contains R5 information.
-						int other_walker_steps = std::get<2>(m_pah->m_R5walker_sites[jj]);
-						int other_walker_type = (int)other_side_site_2->type;
-						if (other_walker_steps==0 && other_walker_type>=2003){
-							if ((int)other_side_site_2->type==2103){
-								int coupled_site_dir = coupledSiteDirection(other_side_site_2);
-								if (coupled_site_dir == -1){
-									R5coords = findR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1);
-									remR5coords = true;
-								}
-								else if (coupled_site_dir == 1){
-									R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
-									remR5coords = true;
-								}
-								else{
-									if (S1_oppsite->type==R5) {
-										R5coords = findR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1);
-										remR5coords = true;
-									}
-									else if(S2_oppsite->type==R5) {
-										R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
-										remR5coords = true;
-									} else{
-										std::cout << "Could not find coupled site of R5ACR5 site on updateCombinedSitesMigration." << std::endl;
-										R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
-										remR5coords = true;
-									}
-								}
-							} else{
-								if (isR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2)) {
-									R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
-									remR5coords = true;
-								}
-								else if (isR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1)) {
-									R5coords = findR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1);
-									remR5coords = true;
-								}
-								else{
-									std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
-								}
-							}
-						}	
-					} else if (jj==-1000) {
-						//There are walker sites but current site is not declared as a walker.
-						//Site is not declared as a walker. Remove R5 position.
-						int s_other_type = (int)other_side_site_2->type;
-						if (s_other_type>2000||(s_other_type>500&&s_other_type<505)){
-							if (isR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2)) {
-								R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
-								remR5coords = true;
-							}
-							else if (isR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1)) {
-								R5coords = findR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1);
-								remR5coords = true;
-							}
-							else{
-								std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
-							}
-						}
-					} else{
-						//There are no walker sites declared.
-						//Site is not declared as a walker. Remove R5 position.
-						int s_other_type = (int)other_side_site_2->type;
-						if (s_other_type>2000||(s_other_type>500&&s_other_type<505)){
-							if (isR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2)) {
-								R5coords = findR5internal(other_side_site_2->C1->C2,other_side_site_2->C1->C2->C2);
-								remR5coords = true;
-							}
-							else if (isR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1)) {
-								R5coords = findR5internal(other_side_site_2->C2->C1->C1,other_side_site_2->C2->C1);
-								remR5coords = true;
-							}
-							else{
-								std::cout << "Could not find R5 on FEACR5 or similar site that has walker with 0 steps." << std::endl;
-							}
-						}
-					}
-				}
-			}
-		}*/
-
 		//Check for MIGR, MIGR2 OR R5R6_MIGR
 		if (check_left) check_left = checkSiteMigration(S1,true);
 		if (check_right) check_right = checkSiteMigration(S2,false);
@@ -14752,7 +14515,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 		}
 		if (jj_opp_after>=0 && jj_opp_after!= jj_opp_second) {
 			moveWalker(jj_opp_after);
-			m_pah->m_R5loc.push_back(R5coords_end);
+			if (jj_opp_after<1000) m_pah->m_R5loc.push_back(R5coords_end);
 			/*if ((int)opp_site_after->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_after])==0){
 				if (isR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2)) {
 					cpair R5_coords_rem = findR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2);
@@ -15573,7 +15336,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		}
 		if (jj_opp_after>=0 && jj_opp_after!= jj_opp_second) {
 			moveWalker(jj_opp_after);
-			m_pah->m_R5loc.push_back(R5coords_end);
+			if (jj_opp_after<1000) m_pah->m_R5loc.push_back(R5coords_end);
 			/*if ((int)opp_site_after->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_after])==0){
 				if (isR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2)) {
 					cpair R5_coords_rem = findR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2);
@@ -16432,7 +16195,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 		}
 		if (jj_opp_after>=0 && jj_opp_after!= jj_opp_second) {
 			moveWalker(jj_opp_after);
-			m_pah->m_R5loc.push_back(R5coords_end);
+			if (jj_opp_after<1000) m_pah->m_R5loc.push_back(R5coords_end);
 			/*if ((int)opp_site_after->type>=2003 && std::get<2>(m_pah->m_R5walker_sites[jj_opp_after])==0){
 				if (isR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2)) {
 					cpair R5_coords_rem = findR5internal(opp_site_after->C1->C2,opp_site_after->C1->C2->C2);
@@ -17597,6 +17360,7 @@ void PAHProcess::performMigrationProcess(){
 
 //! Moves individual walker ii when called without calling optimiser. 
 void PAHProcess::moveWalker(int ii){
+	if (ii>=1000) ii -= 1000;
 	int steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 	if (steps==0) return;
 	Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[ii]);
@@ -18176,6 +17940,10 @@ int PAHProcess::findWalker(Spointer current_site){
 		Spointer check_site_2 = moveIt(start_site_2, steps);
 		if (check_site == current_site || check_site_2 == current_site){
 			ii = jj;
+			return ii;
+		}
+		if (start_site == current_site || start_site_2 == current_site){
+			ii = jj+1000; // Return 1000+jj to indicate that other site needs to be moved.
 			return ii;
 		}
 	}
