@@ -14484,7 +14484,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	else {
 		std::get<2>(m_pah->m_R5walker_sites[ii])++;
 	}
-
+	checkR5Walkers(ii);
 	//Handle new R5 coordinates for walkers
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
 		moveWalker(ii);
@@ -14528,7 +14528,6 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 			}*/
 		}
 	}
-	checkR5Walkers(ii);
 	bool opp_site_logic = false;
 	
 	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
@@ -15310,6 +15309,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	else {
 		std::get<2>(m_pah->m_R5walker_sites[ii])++;
 	}
+	checkR5Walkers(ii);
 	//Handle new R5 coordinates for walkers
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
 		//moveWalker(ii);
@@ -15349,7 +15349,6 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 			}*/
 		}
 	}
-	checkR5Walkers(ii);
 
 	Spointer S1_check, S2_check;
 	if (b4){
@@ -16165,6 +16164,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	else {
 		std::get<2>(m_pah->m_R5walker_sites[ii])++;
 	}
+	checkR5Walkers(ii);
 	//Handle new R5 coordinates for walkers
 	if (opp_site_bool || opp_site_bool_second || opp_site_bool_after){
 		moveWalker(ii);
@@ -16208,7 +16208,6 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 			}*/
 		}
 	}
-	checkR5Walkers(ii);
 	bool opp_site_logic = false;
 	
 	if ((int)checkR5_1->type == 0 && (int)sFE2->type == 0){
