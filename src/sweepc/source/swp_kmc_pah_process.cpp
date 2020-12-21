@@ -2258,7 +2258,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 	std::vector<int>::iterator R6_iter1, R6_iter2;
 	std::vector<Cpointer>CR6_pair1, CR6_pair2, CR6_pair3, CR6_pair4;
 	std::vector<Cpointer>::iterator resR6, resR62;
-	std::vector<double> torsion_list;
+	//std::vector<double> torsion_list;
 	OpenBabel::OBFFConstraints constraints;
 	//Second neighbours bond detection
 	std::vector<int> C_intlist, first_neighbour, second_neighbour, bridge_neighbour, bridge_neighbour2;
@@ -2933,6 +2933,18 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 				} else it++;
 			}
 		}
+
+		vector<OpenBabel::OBRing*>::iterator iring;
+		vector<OpenBabel::OBRing*> vr = mol.GetSSSR();
+		//vector<OpenBabel::OBRing*> *rlist = (vector<OpenBabel::OBRing*>*)mol.GetData("RingList");
+		for (iring = vr.begin();iring != vr.end();++iring){
+			//cout<<(**iring).PathSize()<<"\n";
+			if( (**iring).PathSize()==3){
+				OpenBabel::vector3 centre, norm1, norm2;
+				bool centre_found = (**iring).findCenterAndNormal(centre, norm1, norm2);
+				std::cout << "Ring of size 3 found." <<std::endl;
+			}
+		}
 		
 		mol.SetAromaticPerceived();
 		//Comment in to print the details of every bond in the OBmol object
@@ -3031,7 +3043,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 		}*/
 	}
 	mol.EndModify();
-	if (torsion_list.size()>0) mol = optimisePAH(mol, constraints, 20000);
+	//if (torsion_list.size()>0) mol = optimisePAH(mol, constraints, 20000);
 	if (nanflag){
 		//NaN in coordinates. Output a txt file with all coordinates.
 		ofstream ofs1;
@@ -3181,9 +3193,55 @@ OpenBabel::OBMol PAHProcess::optimisePAH(OpenBabel::OBMol mol, int nsteps, std::
         pFF->GetCoordinates(mol);
 	}*/
 	//// Method recommended in case minimisation is just used until the nsteps without modifications.
-	pFF->SteepestDescent(nsteps, 1e-5);
-	
+	pFF->SteepestDescent(nsteps, 1e-7);
 	pFF->GetCoordinates(mol);
+
+	//In case a criteria is not met try a second optimisation with ConjugateGradients
+	bool sec_opt = false;
+	vector<OpenBabel::OBRing*>::iterator iring;
+	vector<int>::iterator jj, kk;
+	vector<OpenBabel::OBRing*> vr;
+    vr = mol.GetSSSR();
+	//vector<OpenBabel::OBRing*> *rlist = (vector<OpenBabel::OBRing*>*)mol.GetData("RingList");
+	for (iring = vr.begin();iring != vr.end();++iring){
+		//cout<<(**iring).PathSize()<<"\n";
+		for(jj = (*iring)->_path.begin(); jj != (*iring)->_path.end(); ++jj){
+			OpenBabel::OBAtom *atom  = mol.GetAtom(*jj);
+			OpenBabel::OBAtom *prev_atom;
+			OpenBabel::OBAtom *next_atom;
+			if (*jj == (*iring)->_path.front()) prev_atom = mol.GetAtom((*iring)->_path.back());
+			else {
+				kk = jj;
+				kk--;
+				prev_atom = mol.GetAtom(*kk);
+			}
+			if (*jj == (*iring)->_path.back()) next_atom = mol.GetAtom((*iring)->_path.front());
+			else {
+				kk = jj;
+				kk++;
+				next_atom = mol.GetAtom(*kk);
+			}
+          	double my_angle = prev_atom->GetAngle(atom,next_atom);
+			if (my_angle >= 178.0 && my_angle <= 182.0) {
+				sec_opt = true;
+				OpenBabel::vector3 centre, norm1, norm2;
+				bool centre_found = (**iring).findCenterAndNormal(centre, norm1, norm2);
+				cpair coords = std::make_tuple(atom->GetX(),atom->GetY(),atom->GetZ());
+				cpair norm_dir = std::make_tuple(norm1.GetX(),norm1.GetY(),norm1.GetZ());
+				cpair new_coords = jumpToPos(coords,norm_dir,0.5);
+				atom->SetVector(std::get<0>(new_coords),std::get<1>(new_coords),std::get<2>(new_coords));
+				break;
+			}
+		}
+		if (sec_opt) break;
+	}
+	
+	if (sec_opt){
+		if (!pFF->Setup(mol)) return mol;
+		pFF->SteepestDescent(nsteps, 1e-7);
+		//pFF->ConjugateGradients(nsteps, 1e-7);
+		pFF->GetCoordinates(mol);
+	}
 	mol.EndModify();
 	return mol;
 }
@@ -5749,8 +5807,8 @@ void PAHProcess::createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<i
 void PAHProcess::savePAH_tofile(const std::string &filename){
 	ofstream dst(filename);
 	if (dst.is_open()){
-		dst << std::to_string(getCHCount().first) << " " << std::to_string(getCHCount().second) << "\n";
 		std::string site_list_line;
+		dst << std::to_string(getCHCount().first) << " " << std::to_string(getCHCount().second) << "\n";
 		for(std::list<Site>::iterator i=m_pah->m_siteList.begin(); i!=m_pah->m_siteList.end(); i++) {
 			// convert site type into string
 			site_list_line = kmcSiteName(i->type);

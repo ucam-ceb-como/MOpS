@@ -277,6 +277,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             }*/
             //Save information for a single PAH
             if (finder != m_tracked_pahs.end() && !m_migrate){
+            //if (finder != m_tracked_pahs.end()){
                 std::string xyzname = ("KMC_DEBUG/");
                 xyzname.append(std::to_string(PAH_ID));
                 xyzname.append("/");
@@ -378,7 +379,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
         if (num_walker>=1 && !m_migrate){
             //Save a max of 10 PAHs per walker*R6rings 
             int R6rr = std::get<0>(m_simPAHp.getRingsCount());
-            if (m_printed_pahs_per_size[R6rr][num_walker] < 10){
+            if (m_printed_pahs_per_size[R6rr][num_walker] < 20){
                 int f_exac_int = (int)(m_t*1000000.0);
                 std::string f_exac = std::to_string(f_exac_int);
                 savePAH_exactness_test(PAH_ID, R6rr, num_walker, f_exac);
@@ -1310,7 +1311,7 @@ void KMCSimulator::setDebugPAH(const bool debug_pah) {
 void KMCSimulator::savePAH_exactness_test(int PAH_number, int ring_number, int walker_number, const std::string &filename){
     // Check if PAH_number is the PAHs printed to file.
     std::string dir_path = "PRINTED_PAHS/";
-    std::pair<int,int> check_pair = std::make_pair(PAH_number, walker_number);
+    std::tuple<int,int,int> check_pair = std::make_tuple(PAH_number, walker_number, ring_number);
 	auto finder = std::find(std::begin(m_printed_pahs_exact), std::end(m_printed_pahs_exact), check_pair); 
 	if (finder == m_printed_pahs_exact.end()){
 		//std::cout << "Adding PAH number " << PAH_number << " with " << walker_number << " walkers to printed PAH list for exactness test. \n";
@@ -1329,6 +1330,8 @@ void KMCSimulator::savePAH_exactness_test(int PAH_number, int ring_number, int w
         dir_path.append(std::to_string(ring_number));
         dir_path.append("_");
         dir_path.append(std::to_string(walker_number));
+        dir_path.append("_");
+        dir_path.append(std::to_string(PAH_number));
         dir_path.append("_");
         dir_path.append(filename);
         m_simPAHp.savePAH_tofile(dir_path);
