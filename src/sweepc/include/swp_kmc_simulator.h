@@ -173,7 +173,7 @@ namespace Sweep{
             //! returns the reaction counts
             std::vector<int> ReactionCounts() const; 
             //! list of PAHs that have been saved for the exactness test
-			std::vector<std::pair<int,int>> m_printed_pahs_exact;
+			std::vector<std::tuple<int,int,int>> m_printed_pahs_exact;
             //! list of PAHs that have been saved for the exactness test
 			int m_printed_pahs_per_size[200][20];
 			//! list of PAHs to output coordinates and trajectory
