@@ -17606,7 +17606,8 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 		if (opp_site != m_pah->m_siteList.end()) jj_opp = findWalker(opp_site);
 		if (jj_opp>=0) {
 			if ((int)opp_site->type>=2003 && opp_site == std::get<0>(m_pah->m_R5walker_sites[jj_opp]) && opp_site == std::get<1>(m_pah->m_R5walker_sites[jj_opp]) && std::get<2>(m_pah->m_R5walker_sites[jj_opp]) == 0){
-				R5coords_rem = findR5internal(opp_site->C1->C2,opp_site->C1->C2->C2);
+				if (isR5internal(opp_site->C1->C2,opp_site->C1->C2->C2)) R5coords_rem = findR5internal(opp_site->C1->C2,opp_site->C1->C2->C2);
+				else R5coords_rem = findR5internal(opp_site->C2->C1->C1,opp_site->C2->C1);
 				R5coords_rem_bool = true;
 			}
 		}
@@ -17614,7 +17615,8 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 		if (opp_site_second != m_pah->m_siteList.end()) jj_opp_second = findWalker(opp_site_second);
 		if (jj_opp_second>=0 && opp_site_second != opp_site) {
 			if ((int)opp_site_second->type>=2003 && opp_site_second == std::get<0>(m_pah->m_R5walker_sites[jj_opp_second]) && opp_site_second == std::get<1>(m_pah->m_R5walker_sites[jj_opp_second]) && std::get<2>(m_pah->m_R5walker_sites[jj_opp_second]) == 0){
-				R5coords_rem = findR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2);
+				if (isR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2)) R5coords_rem = findR5internal(opp_site_second->C1->C2,opp_site_second->C1->C2->C2);
+				else R5coords_rem = findR5internal(opp_site_second->C2->C1->C1,opp_site_second->C2->C1);
 				R5coords_rem_bool = true;
 			}
 		}
