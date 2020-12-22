@@ -129,6 +129,7 @@ namespace Sweep{
             Sweep::AggModels::PAH* m_parent; // pointer to parent PAH
             
             void saveDOTperLoop(int PAH_ID, int i);
+            void saveXYZ(const std::string &filename, bool optimise);
 
             //! serialization (incomplete)
             void Serialize(std::ostream &out) const;

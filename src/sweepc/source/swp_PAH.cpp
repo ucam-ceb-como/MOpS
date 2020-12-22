@@ -121,6 +121,10 @@ void PAH::saveDOTperLoop(int ID, int i) const{
 	m_pahstruct->saveDOTperLoop(ID,i);
 }
 
+void PAH::saveXYZ(const std::string &filename, bool optimise) const{
+	m_pahstruct->saveXYZ(filename, optimise);
+}
+
 Sweep::KMC_ARS::PAHStructure* PAH::Structure()
 {
    return m_pahstruct;

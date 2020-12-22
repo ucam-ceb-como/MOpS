@@ -63,6 +63,7 @@
 
 #include <boost/functional/hash.hpp>
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace Mops;
 using namespace std;
@@ -2548,6 +2549,35 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
             out[i]->Write(header);
         }
 
+        //Read tracked PAHs from file
+        std::ifstream src("tracked_pahs.txt");
+        std::vector<int> tracked_pahs;
+        std::vector<int>::iterator tr_it;
+        if (src.is_open()){
+            //File exists
+            int PAH_number;
+
+            while (src >> PAH_number){
+                std::string dir_path = "KMC_DEBUG/";
+                tracked_pahs.push_back(PAH_number);
+                
+                // Check if saving folder exists.
+                dir_path.append(std::to_string(PAH_number));
+                boost::filesystem::path dir(dir_path);
+                if (!(boost::filesystem::exists(dir))){
+                    if(boost::filesystem::create_directory(dir)) {
+                        std::cout << "Creating folder " << dir << ". \n";
+                    }
+                    else{
+                        std::cout << "Error creating folder " << dir << ". \n Continuing simulation. PAH coordinates may not be saved. \n";
+                    }
+                }
+            }
+        }
+        src.close();
+
+        
+
         // Loop over all time intervals.
         for (unsigned int i=0; i!=times.size(); ++i) {
             // Calculate the total step count after this interval.
@@ -2577,12 +2607,23 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
                         Sweep::Particle* sp=r->Mixture()->Particles().At(j);
                         Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
                         pah->OutputPAHPSL(temp_PAH, j, den, duplicates, Mapping, i);
+                        if (temp_PAH.size()>0){
+                            tr_it = std::find(std::begin(tracked_pahs), std::end(tracked_pahs), (int)temp_PAH[j][18]);
+                            if (tr_it != tracked_pahs.end()){
+                                //Tracked PAH that needs to be saved.
+                                std::string savefile = "KMC_DEBUG/";
+                                savefile.append(std::to_string(*tr_it));
+                                savefile.append("/");
+                                savefile.append(std::to_string(times[i].EndTime()));
+                                pah->saveXYZ(savefile, false);
+                            }
+                        }
 						if (j == r->Mixture()->ParticleCount() - 1){
-							for (size_t ii = 0; ii!=temp_PAH.size(); ++ii) 
+							for (size_t ii = 0; ii!=temp_PAH.size(); ++ii) {
 								out[i]->Write(temp_PAH[ii]);
-
-							    //! temp_PAH must be cleared before next output.
-							    temp_PAH.clear();
+                            }
+                            //! temp_PAH must be cleared before next output.
+                            temp_PAH.clear();
 						}
                     }
 

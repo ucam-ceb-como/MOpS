@@ -272,6 +272,8 @@ public:
     double MassforXmer() const;
     //! store the mass of individual PAH within this soot aggregate
     void mass_PAH(std::vector<double> &out) const;
+    //! save XYZ coordinates for individual PAH within this soot aggregate
+    void saveXYZ(const std::string &filename, bool optimise) const;
     //! output PAH information in a vector of vector and then index the info
     void OutputPAHPSL(std::vector<std::vector<double> > &out, const int index, const double density, std::set<void*> &pah_duplicates, std::vector<std::string> &Mapping, const double timeStep) const;
 	//! output primary particle information in a vector of vector and then index the info

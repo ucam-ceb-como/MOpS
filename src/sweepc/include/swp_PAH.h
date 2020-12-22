@@ -68,6 +68,7 @@ public:
     //returen ID of PAH
     int ID() const;
     void saveDOTperLoop(int ID, int i) const;
+    void saveXYZ(const std::string &filename, bool optimise=false) const;
     Sweep::KMC_ARS::PAHStructure* Structure();
 
     //! this default conscustor is only used for serialization.

@@ -286,6 +286,12 @@ void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
     p.saveDOT(filename);
 }
 
+void PAHStructure::saveXYZ(const std::string &filename, bool optimise)
+{
+    PAHProcess p(*this);
+    p.saveXYZ(filename, optimise);
+}
+
 
 // currently the serialization is incomplete, and some info is lost during this process
 // for instance, m_carbonList, m_siteList, m_siteMap, m_cfirst, m_clast
