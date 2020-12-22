@@ -8141,7 +8141,10 @@ void PAHProcess::proc_O6R_FE_HACA(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		stt = S1;
 		if (other_side_bool) {
 			if (other_side != m_pah->m_siteList.end()) {
-				updateSites(other_side, other_side->C1, other_side->C2, +2000);
+				if ((int)other_side->type <205) updateSites(other_side, other_side->C1, other_side->C2, +2000);
+				else if ((int)other_side->type <605) updateSites(other_side, other_side->C1, other_side->C2, +1600);
+				else if ((int)other_side->type <1005) updateSites(other_side, other_side->C1, other_side->C2, +1000);
+				else updateSites(other_side, other_side->C1, other_side->C2, +100);
 				updateCombinedSites(other_side);
 			}
 		}
