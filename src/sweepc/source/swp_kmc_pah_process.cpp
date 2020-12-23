@@ -2259,7 +2259,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 	std::vector<Cpointer>CR6_pair1, CR6_pair2, CR6_pair3, CR6_pair4;
 	std::vector<Cpointer>::iterator resR6, resR62;
 	//std::vector<double> torsion_list;
-	OpenBabel::OBFFConstraints constraints;
+	//OpenBabel::OBFFConstraints constraints;
 	//Second neighbours bond detection
 	std::vector<int> C_intlist, first_neighbour, second_neighbour, bridge_neighbour, bridge_neighbour2;
 	std::vector<Cpointer>C_list, C_first_neighbour, C_second_neighbour, C_bridge_neighbour, C_bridge_neighbour2;
@@ -18048,6 +18048,7 @@ void PAHProcess::fixOppsiteR5Walker(int ii){
 int PAHProcess::remOppsiteR5Walker(int ii, int jj){
 	//ii is the walker that is moving.
 	//jj is the walker on the opposite side.
+	if (jj<0) return ii;
 	int ii_steps = std::get<2>(m_pah->m_R5walker_sites[ii]);
 	if (ii_steps == 0){
 		//The current walker has 0 steps and an opposite side site. This means that the walker comes from other edge.
