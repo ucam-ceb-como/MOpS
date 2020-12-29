@@ -5577,10 +5577,10 @@ PAHStructure& PAHProcess::initialise_fromfile(){
 	if (src.is_open()){
 		std::getline(src,line); //Read first line. Not needed here.
 		std::getline(src,line); //Read second line. This contains the site list.
-		line.erase(line.end()-1, line.end());
+		if (line.back()==',' || line.back()==' ') line.erase(line.end()-1, line.end());
 		siteList_str.assign(line);
 		std::getline(src,line); //Read third line. This contains the ring information.
-		line.erase(line.end()-1, line.end());
+		if (line.back()==',' || line.back()==' ') line.erase(line.end()-1, line.end());
 		std::stringstream ss(line);
 		int ii = 0;
 		while(std::getline(ss, line, ' ')){
@@ -5594,17 +5594,17 @@ PAHStructure& PAHProcess::initialise_fromfile(){
 		std::getline(src,line); //Read fourth line. This should say Coordinates
 		
 		
-		while(std::getline (src,line) && line != "Internal\r"){
+		while(std::getline (src,line) && (line != "Internal\r" && line != "Internal")){
 			line.erase(line.end()-1, line.end());
 			edgeCarbons.push_back(line);
 		}
 		
-		while(std::getline (src,line) && line != "R5_locs\r"){
+		while(std::getline (src,line) && (line != "R5_locs\r" && line != "R5_locs")){
 			line.erase(line.end()-1, line.end());
 			internalCarbons.push_back(line);
 		}
 		
-		while(std::getline (src,line) && line != "R7_locs\r"){
+		while(std::getline (src,line) && (line != "R7_locs\r" && line != "R7_locs")){
 			line.erase(line.end()-1, line.end());
 			R5_locs.push_back(line);
 		}
