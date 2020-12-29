@@ -17059,7 +17059,7 @@ int PAHProcess::SiteSize(Spointer& stt) const{
 	Cpointer Cend = stt->C2;
 	int counter = 1;
 	do{
-		if (Cnow->bridge && !Cprev->bridge) {
+		if (Cnow->bridge && Cprev==Cnow->C1) {
 			Cprev = Cnow;
 			Cnow = Cnow->C3;
 		}

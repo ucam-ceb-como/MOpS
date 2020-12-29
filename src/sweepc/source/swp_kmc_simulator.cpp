@@ -211,8 +211,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
     //Local variable to control the number of migration steps between non-migration steps.
     int migr_steps = 0;
 
-    //double time_migration = 0.0;
-    //clock_t timerStart, timerEnd;
+    double time_migration = 0.0;
+    clock_t timerStart, timerEnd;
 	
     while (m_t < t_max && proceed) {
         //this->m_simPAHp.printStruct();// print out structure of this pah on the screen
@@ -299,19 +299,19 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			writeRatesCSV(m_t, rates);*/
 
             //Saves the site list to file. Used to verify that migration by both methods gives same results
-            /*std::vector<std::string> temp = m_simPAHp.SiteVectorString();
+            std::vector<std::string> temp = m_simPAHp.SiteVectorString();
             temp.push_back(std::to_string(PAH_ID));
             std::ostringstream streamObj;
             streamObj << std::setprecision(7);
             streamObj << m_t;
             std::string streamObj_string = streamObj.str();
             temp.push_back(streamObj_string);
-            m_pah_sitelist_csv.Write(temp);*/
+            m_pah_sitelist_csv.Write(temp);
             // Update data structure -- Perform jump process
 			//printRates(m_t, m_kmcmech.Rates());
             //cout << m_t << std::endl;
             if (jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34 || jp_perf.first->getID() == 66 ) {
-                //timerStart = clock();
+                timerStart = clock();
                 //Migration jump processes. Set flag m_migrate to true.
                 if (!m_migrate) {
                     m_simPAHp.startMigrationProcess();
@@ -321,6 +321,10 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 //savePAH(PAH_ID,"KMC_DEBUG/BEFOREJPPERFORM");
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
                 migr_steps++;
+                //Added for old method
+                m_simPAHp.performMigrationProcess();
+                m_migrate = false;
+                migr_steps = 0;
                 //savePAH(PAH_ID,"KMC_DEBUG/AFTERJPPERFORM");
             }
             else {
@@ -330,8 +334,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     m_simPAHp.performMigrationProcess();
                     //savePAH(PAH_ID,"KMC_DEBUG/AFTERMIGRATION");
                     m_migrate = false;
-                    //timerEnd = clock();
-                    //time_migration += (timerEnd - timerStart) / double(CLOCKS_PER_SEC);
+                    timerEnd = clock();
+                    time_migration += (timerEnd - timerStart) / double(CLOCKS_PER_SEC);
                 }
                 if (finder != m_tracked_pahs.end()) std::cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<" Migr. steps = "<<migr_steps<<std::endl;
                 migr_steps = 0;
@@ -375,7 +379,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             t_next = t_max;
             m_t = t_next;
         }
-        int num_walker = m_simPAHp.getNumberWalkerSites();
+        // Print PAH walkers for eactness test.
+        /*int num_walker = m_simPAHp.getNumberWalkerSites();
         if (num_walker>=1 && !m_migrate){
             //Save a max of 10 PAHs per walker*R6rings 
             int R6rr = std::get<0>(m_simPAHp.getRingsCount());
@@ -385,12 +390,12 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 savePAH_exactness_test(PAH_ID, R6rr, num_walker, f_exac);
                 m_printed_pahs_per_size[R6rr][num_walker] += 1;
             }
-        }
+        }*/
     }
 
     writeRxnCountCSV();
     writeCHSiteCountCSV(PAH_ID);
-    //std::cout << "Wall time used for PAH_ID " << PAH_ID << " = " << time_migration << "s." << std::endl;
+    std::cout << "Wall time used for PAH_ID " << PAH_ID << " = " << time_migration << "s." << std::endl;
     
     if (tracked_csv) closetrackedPAHCSV();
     if (finder != m_tracked_pahs.end()){
@@ -660,7 +665,7 @@ void KMCSimulator::initCSVIO() {
     m_rates_csv.Open(m_rates_name, true);
 	m_testrates_csv.Open(m_testrates_name, true);
     m_timestep_csv.Open(m_timestep_name, true);//##
-    //m_pah_sitelist_csv.Open("KMC_Model/Site_list_arrange.csv",true);
+    m_pah_sitelist_csv.Open("KMC_Model/Site_list_old.csv",true);
     // Write column headings for CSV files
     writeCSVlabels();
 }
