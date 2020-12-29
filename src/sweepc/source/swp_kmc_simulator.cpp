@@ -322,9 +322,9 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
                 migr_steps++;
                 //Added for old method
-                m_simPAHp.performMigrationProcess();
-                m_migrate = false;
-                migr_steps = 0;
+                //m_simPAHp.performMigrationProcess();
+                //m_migrate = false;
+                //migr_steps = 0;
                 //savePAH(PAH_ID,"KMC_DEBUG/AFTERJPPERFORM");
             }
             else {
@@ -665,7 +665,7 @@ void KMCSimulator::initCSVIO() {
     m_rates_csv.Open(m_rates_name, true);
 	m_testrates_csv.Open(m_testrates_name, true);
     m_timestep_csv.Open(m_timestep_name, true);//##
-    m_pah_sitelist_csv.Open("KMC_Model/Site_list_old.csv",true);
+    m_pah_sitelist_csv.Open("KMC_Model/Site_list_new.csv",true);
     // Write column headings for CSV files
     writeCSVlabels();
 }
