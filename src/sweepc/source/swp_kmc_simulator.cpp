@@ -380,7 +380,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             m_t = t_next;
         }
         // Print PAH walkers for eactness test.
-        /*int num_walker = m_simPAHp.getNumberWalkerSites();
+        int num_walker = m_simPAHp.getNumberWalkerSites();
         if (num_walker>=1 && !m_migrate){
             //Save a max of 10 PAHs per walker*R6rings 
             int R6rr = std::get<0>(m_simPAHp.getRingsCount());
@@ -390,7 +390,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 savePAH_exactness_test(PAH_ID, R6rr, num_walker, f_exac);
                 m_printed_pahs_per_size[R6rr][num_walker] += 1;
             }
-        }*/
+        }
     }
 
     writeRxnCountCSV();

@@ -125,7 +125,7 @@ public:
 	//! Save a PAH to file with all details from current typespace. Such file can be opened with initialise_fromfile
 	void savePAH_tofile(const std::string &filename="InceptedPAH.inx");
     //! Create a PAH structure from a file. Allows debugging cases for any structure.
-	void createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<int>& carb_vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::vector<std::string> edCarbons, std::vector<std::string> inCarbs, std::vector<std::string> R5loc, std::vector<std::string> R7loc);
+	void createPAH_fromfile(std::vector<kmcSiteType>& site_vec, std::vector<std::tuple<cpair, cpair>>& carb_pos, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::vector<std::string> edCarbons, std::vector<std::string> inCarbs, std::vector<std::string> R5loc, std::vector<std::string> R7loc);
 	
 	//! Structure processes: returns success or failure
     bool performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID);

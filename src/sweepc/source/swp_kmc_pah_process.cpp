@@ -5568,7 +5568,8 @@ PAHStructure& PAHProcess::initialise_fromfile(){
 	
 	ifstream src("InceptedPAH.inx");
 	std::string line;
-	std::string siteList_str;
+	std::vector<kmcSiteType> siteList_vec;
+	std::vector<std::tuple<cpair, cpair>> siteList_vec_carbs;
 	int R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded;
 	std::vector<std::string> edgeCarbons;
 	std::vector<std::string> internalCarbons;
@@ -5576,9 +5577,35 @@ PAHStructure& PAHProcess::initialise_fromfile(){
 	std::vector<std::string> R7_locs;
 	if (src.is_open()){
 		std::getline(src,line); //Read first line. Not needed here.
-		std::getline(src,line); //Read second line. This contains the site list.
-		if (line.back()==',' || line.back()==' ') line.erase(line.end()-1, line.end());
-		siteList_str.assign(line);
+		while(std::getline(src, line) && !(line.empty())){
+			std::vector<std::string> siteList_strvec;
+    		Strings::split(line, siteList_strvec, std::string(" "));
+			kmcSiteType temp = kmcSiteType_str(siteList_strvec[0]);
+			if(temp == Inv) {
+				//Check if site has defined length as last char
+				int last_char = siteList_strvec[0].back() - '0';
+				if(last_char >= 1 && last_char<=9){
+					std::string my_string = siteList_strvec[0];
+					my_string.pop_back();
+					temp = kmcSiteType_str(my_string);
+				}
+				if(temp == Inv) {
+					std::cout<<"ERROR: Starting Structure site List contains invalid site type"
+						<<".. (PAHProcess::initialise)\n\n";
+					std::cout<<"Site = " << siteList_strvec[0] << "\n";
+					std::ostringstream msg;
+					msg << "ERROR: Starting Structure site List contains invalid site type."
+						<< " (Sweep::KMC_ARS::PAHProcess::initialise)";
+						throw std::runtime_error(msg.str());
+						assert(false);
+				}
+			}
+			siteList_vec.push_back(temp);
+			cpair c1coords = std::make_tuple(std::stod(siteList_strvec[1]),std::stod(siteList_strvec[2]),std::stod(siteList_strvec[3]));
+			cpair c2coords = std::make_tuple(std::stod(siteList_strvec[4]),std::stod(siteList_strvec[5]),std::stod(siteList_strvec[6]));
+
+			siteList_vec_carbs.push_back(std::make_tuple(c1coords, c2coords));
+		}
 		std::getline(src,line); //Read third line. This contains the ring information.
 		if (line.back()==',' || line.back()==' ') line.erase(line.end()-1, line.end());
 		std::stringstream ss(line);
@@ -5623,134 +5650,79 @@ PAHStructure& PAHProcess::initialise_fromfile(){
                 assert(false);
 	}
 	src.close();
-	
-    // create a vector from the string
-    std::vector<std::string> siteList_strvec;
-    Strings::split(siteList_str, siteList_strvec, std::string(","));
-    // convert into vector of siteTypes
-    std::vector<kmcSiteType> siteList_vec;
-	std::vector<int> carb_siteList_vec;
-    for(size_t i=0; i<siteList_strvec.size(); i++) {
-		bool defined_length_site = false;
-		int number_carbs;
-		kmcSiteType temp = kmcSiteType_str(siteList_strvec[i]);
-        if(temp == Inv) {
-			//Check if site has defined length as last char
-			int last_char = siteList_strvec[i].back() - '0';
-			if(last_char >= 1 && last_char<=9){
-				number_carbs = last_char-1;
-				std::string my_string = siteList_strvec[i];
-				my_string.pop_back();
-				temp = kmcSiteType_str(my_string);
-				defined_length_site = true;
-			}
-			if(temp == Inv) {
-				std::cout<<"ERROR: Starting Structure site List contains invalid site type"
-					<<".. (PAHProcess::initialise)\n\n";
-				std::cout<<"Site = " << siteList_strvec[i] << "\n";
-				std::ostringstream msg;
-				msg << "ERROR: Starting Structure site List contains invalid site type."
-					<< " (Sweep::KMC_ARS::PAHProcess::initialise)";
-					throw std::runtime_error(msg.str());
-					assert(false);
-			}
-        }
-        siteList_vec.push_back(temp);
-		if (!defined_length_site){
-			if (i==0) number_carbs = (int)temp %10 + 2; // First site accounts for m_cfirst
-			else if (i==siteList_strvec.size()-1) number_carbs = (int)temp %10; // Last site closes PAH on m_cfirst.
-			else number_carbs = (int)temp %10 + 1;
-		} 
-		carb_siteList_vec.push_back(number_carbs);
-    }
-	createPAH_fromfile(siteList_vec, carb_siteList_vec, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, edgeCarbons, internalCarbons, R5_locs, R7_locs);
+
+	createPAH_fromfile(siteList_vec, siteList_vec_carbs, R6_num, R5_num_Lone, R5_num_Embedded, R7_num_Lone, R7_num_Embedded, edgeCarbons, internalCarbons, R5_locs, R7_locs);
     return *m_pah;
 }
 
 // Create Structure from a file 
-void PAHProcess::createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<int>& carb_vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::vector<std::string> edCarbons, std::vector<std::string> inCarbs, std::vector<std::string> R5loc, std::vector<std::string> R7loc) {
-	Cpointer newC;
-	// start drawing..
-	// This loops through sites.
-	int carb_vec_sum = 0;
-	Cpointer site_carb_1;
-    for(size_t i=0; i<vec.size(); i++) {
-		int vec_carb_number = carb_vec[i];
-		
-		//This loops through carbons
-		for (int j=carb_vec_sum; j<vec_carb_number+carb_vec_sum; j++) {
-			cpair carbon_coords;
-			std::string carbon_string;
-			carbon_string.assign(edCarbons[j]);
-			std::vector<std::string> carbon_vector;
-			Strings::split(carbon_string, carbon_vector, std::string(" "));
-			carbon_coords = std::make_tuple(std::stod(carbon_vector[0]), std::stod(carbon_vector[1]), std::stod(carbon_vector[2]));
-			
-			if (i == 0 && j == 0){
-				//Add first carbon.
-				newC = addC();
-				m_pah->m_cfirst = newC;
-				m_pah->m_clast = NULLC;
-				moveC(newC, carbon_coords);
-				if (getDistance_twoC(newC, newC->C1)>1.8){
-					std::cout << "Warning. Adding carbon from file with bond length > 1.8." << std::endl;
-					std::cout << "Carbon numbers: " << j << " and " << j-1 << "." << std::endl;
-				}
-				if (std::stoi(carbon_vector[3]) == 1) newC->bridge = true;
-				else newC->bridge = false;
-				char cstr[carbon_vector[4].size()+1];
-				std::strcpy(cstr, carbon_vector[4].c_str());
-				updateA(newC, *cstr, std::make_tuple(std::stod(carbon_vector[5]), std::stod(carbon_vector[6]), std::stod(carbon_vector[7])));
-			}
-			else if ( !checkHindrance_C_PAH(carbon_coords)){
-				//Only add carbons that are not occupied. Handles bridged atoms.
-				newC = addC(newC, std::make_tuple(1.0,0.0,0.0), 7.17);
-				moveC(newC, carbon_coords);
-				if (std::stoi(carbon_vector[3]) == 1) newC->bridge = true;
-				else newC->bridge = false;
-				char cstr[carbon_vector[4].size()+1];
-				std::strcpy(cstr, carbon_vector[4].c_str());
-				cpair Hloc = std::make_tuple(std::stod(carbon_vector[5]), std::stod(carbon_vector[6]), std::stod(carbon_vector[7]));
-				double square = std::stod(carbon_vector[5])*std::stod(carbon_vector[5]) + std::stod(carbon_vector[6])*std::stod(carbon_vector[6]) + std::stod(carbon_vector[7])*std::stod(carbon_vector[7]);
-				if (square < 1.01 && square > 0.99 ){
-					//Assume the growth_vector coords are stored.
-					updateA(newC, *cstr, Hloc);
-				} else{
-					//Assume the H coords are stored.
-					cpair Hdir = get_vector(newC->coords,Hloc);
-					updateA(newC, *cstr, Hdir);
-				}
-				if (newC->bridge && newC->C1->bridge) {
-					newC->C3 = newC->C1;
-					newC->C1->C3 = newC;
-					newC->C1 = NULLC;
-					newC->C3->C2 = NULLC;
-				}
+void PAHProcess::createPAH_fromfile(std::vector<kmcSiteType>& site_vec, std::vector<std::tuple<cpair, cpair>>& carb_pos, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::vector<std::string> edCarbons, std::vector<std::string> inCarbs, std::vector<std::string> R5loc, std::vector<std::string> R7loc) {
+	Cpointer newC = addC();
+	m_pah->m_cfirst = newC;
+	m_pah->m_clast = NULLC;
+	// start drawing...
+	//Add edge carbons
+	for(unsigned int ii=0; ii<edCarbons.size(); ii++){
+		cpair carbon_coords;
+		std::string carbon_string = edCarbons[ii];
+		std::vector<std::string> carbon_vector;
+		Strings::split(carbon_string, carbon_vector, std::string(" "));
+		carbon_coords = std::make_tuple(std::stod(carbon_vector[0]), std::stod(carbon_vector[1]), std::stod(carbon_vector[2]));
+		if (ii == 0) {
+			moveC(newC, carbon_coords);
+		}else if ( !checkHindrance_C_PAH(carbon_coords)){
+			//Only add carbons that are not occupied. Handles bridged atoms.
+			newC = addC(newC, std::make_tuple(1.0,0.0,0.0), 7.17);
+			moveC(newC, carbon_coords);
+		}else{
+			//Adding a carbon for the second time. This means bridge.
+			Cpointer bridgedC = findC(carbon_coords);
+			if (!newC->bridge){
+				newC->C2 = bridgedC;
+				bridgedC->C1 = newC;
+				newC = bridgedC;
 			}
 			else {
-				//Adding a carbon for the second time. This means bridge.
-				Cpointer bridgedC = findC(carbon_coords);
-				if (!newC->bridge){
-					newC->C2 = bridgedC;
-					bridgedC->C1 = newC;
-					newC = bridgedC;
-				}
-				else {
-					newC = bridgedC;
-				}
+				newC = bridgedC;
 			}
-			if (j == 0) site_carb_1 = newC;
 		}
-		carb_vec_sum += vec_carb_number;
-		Cpointer site_carb_2 = newC;
-		if (i==vec.size()-1) site_carb_2 = m_pah->m_cfirst;
-		addSite(vec[i], site_carb_1, site_carb_2);
-		site_carb_1 = site_carb_2;
+		if (getDistance_twoC(newC, newC->C1)>1.8 && ii != 0){
+			std::cout << "Warning. Adding carbon from file with bond length > 1.8." << std::endl;
+			std::cout << "Carbon numbers: " << ii << " and " << ii-1 << "." << std::endl;
+		}
+		if (std::stoi(carbon_vector[3]) == 1) newC->bridge = true;
+		else newC->bridge = false;
+		char cstr[carbon_vector[4].size()+1];
+		std::strcpy(cstr, carbon_vector[4].c_str());
+		cpair Hloc = std::make_tuple(std::stod(carbon_vector[5]), std::stod(carbon_vector[6]), std::stod(carbon_vector[7]));
+		double square = std::stod(carbon_vector[5])*std::stod(carbon_vector[5]) + std::stod(carbon_vector[6])*std::stod(carbon_vector[6]) + std::stod(carbon_vector[7])*std::stod(carbon_vector[7]);
+		if (square < 1.01 && square > 0.99 ){
+			//Assume the growth_vector coords are stored.
+			updateA(newC, *cstr, Hloc);
+		} else{
+			//Assume the H coords are stored.
+			cpair Hdir = get_vector(newC->coords,Hloc);
+			updateA(newC, *cstr, Hdir);
+		}
+		if (newC->bridge && newC->C1->bridge) {
+			newC->C3 = newC->C1;
+			newC->C1->C3 = newC;
+			newC->C1 = NULLC;
+			newC->C3->C2 = NULLC;
+		}
 	}
 	connectToC(newC, m_pah->m_cfirst);
 	m_pah->m_clast = newC;
 	newC = newC->C2;
 
+	//Add sites
+	for(int ii=0; ii<site_vec.size();ii++){
+		Cpointer site_C1 = findC(std::get<0>(carb_pos[ii]));
+		Cpointer site_C2 = findC(std::get<1>(carb_pos[ii]));
+		addSite(site_vec[ii], site_C1, site_C2);
+	}
+
+	//Add general state variables
     m_pah->m_rings = R6;
 	m_pah->m_rings5_Lone = R5_Lone;
 	m_pah->m_rings5_Embedded = R5_Embedded;
@@ -5758,6 +5730,7 @@ void PAHProcess::createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<i
 	m_pah->m_rings7_Embedded = R7_Embedded;
 	m_pah->m_optimised = false;
 	
+	//Add internal carbons, R5 and R7 locations
 	for (size_t i = 0; i<inCarbs.size(); i++){
 		cpair carbon_coords;
 		std::string carbon_string;
@@ -5789,7 +5762,7 @@ void PAHProcess::createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<i
 	//int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded) / 2 + numberOfBridges() + m_pah->m_rings5_Lone + m_pah->m_rings5_Embedded + 1;
 	int totalC_num = 2 * m_pah->m_rings + (CarbonListSize() + 3 * m_pah->m_rings5_Lone + 3 * m_pah->m_rings5_Embedded + 5 * m_pah->m_rings7_Lone + 5 * m_pah->m_rings7_Embedded) / 2 + numberOfBridges() + 1 + numberOfMethyl();
 	m_pah->setnumofC(totalC_num);
-    m_pah->setnumofH((int)vec.size() + 2 * numberOfMethyl());
+    m_pah->setnumofH((int)site_vec.size() + 2 * numberOfMethyl());
     updateCombinedSites();
 	
 	// check if PAH closes correctly
