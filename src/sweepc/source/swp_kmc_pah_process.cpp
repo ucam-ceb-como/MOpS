@@ -5710,7 +5710,16 @@ void PAHProcess::createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<i
 				else newC->bridge = false;
 				char cstr[carbon_vector[4].size()+1];
 				std::strcpy(cstr, carbon_vector[4].c_str());
-				updateA(newC, *cstr, std::make_tuple(std::stod(carbon_vector[5]), std::stod(carbon_vector[6]), std::stod(carbon_vector[7])));
+				cpair Hloc = std::make_tuple(std::stod(carbon_vector[5]), std::stod(carbon_vector[6]), std::stod(carbon_vector[7]));
+				double square = std::stod(carbon_vector[5])*std::stod(carbon_vector[5]) + std::stod(carbon_vector[6])*std::stod(carbon_vector[6]) + std::stod(carbon_vector[7])*std::stod(carbon_vector[7]);
+				if (square < 1.01 && square > 0.99 ){
+					//Assume the growth_vector coords are stored.
+					updateA(newC, *cstr, Hloc);
+				} else{
+					//Assume the H coords are stored.
+					cpair Hdir = get_vector(newC->coords,Hloc);
+					updateA(newC, *cstr, Hdir);
+				}
 				if (newC->bridge && newC->C1->bridge) {
 					newC->C3 = newC->C1;
 					newC->C1->C3 = newC;
@@ -5812,7 +5821,20 @@ void PAHProcess::savePAH_tofile(const std::string &filename){
 		for(std::list<Site>::iterator i=m_pah->m_siteList.begin(); i!=m_pah->m_siteList.end(); i++) {
 			// convert site type into string
 			site_list_line = kmcSiteName(i->type);
-			dst << site_list_line << ",";
+			site_list_line.append(" ");
+			site_list_line.append(std::to_string(std::get<0>(i->C1->coords)));
+			site_list_line.append(" ");
+			site_list_line.append(std::to_string(std::get<1>(i->C1->coords)));
+			site_list_line.append(" ");
+			site_list_line.append(std::to_string(std::get<2>(i->C1->coords)));
+			site_list_line.append(" ");
+			site_list_line.append(std::to_string(std::get<0>(i->C2->coords)));
+			site_list_line.append(" ");
+			site_list_line.append(std::to_string(std::get<1>(i->C2->coords)));
+			site_list_line.append(" ");
+			site_list_line.append(std::to_string(std::get<2>(i->C2->coords)));
+			site_list_line.append("\n");
+			dst << site_list_line;
 		}
 		dst << "\n";
 		//Save state
