@@ -212,6 +212,8 @@ namespace Sweep{
              CSV_IO m_timestep_csv;
             //! CSV io for ordered sites 
              CSV_IO m_pah_sitelist_csv;
+             //! CSV io for wall times and simulation times 
+             CSV_IO m_pah_walltime_csv;
              //! CSV io object for tracked PAHs
              CSV_IO m_trackedpah_csv;
 			 //! Save PAHs at certain conditions
