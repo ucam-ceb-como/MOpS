@@ -402,6 +402,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
     std::cout << "Migration steps = " << total_migr_steps << "." << std::endl;
     std::vector<std::string> temp2;
     temp2.push_back(std::to_string(PAH_ID));
+    temp2.push_back(std::to_string(total_migr_steps));
     std::ostringstream streamObj2;
     streamObj2 << std::setprecision(7);
     streamObj2 << m_t;
