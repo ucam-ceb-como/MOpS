@@ -312,9 +312,9 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 			//printRates(m_t, m_kmcmech.Rates());
             //cout << m_t << std::endl;
             if (jp_perf.first->getID() == 24 || jp_perf.first->getID() == 34 || jp_perf.first->getID() == 66 ) {
-                timerStart = clock();
                 //Migration jump processes. Set flag m_migrate to true.
                 if (!m_migrate) {
+                    timerStart = clock();
                     m_simPAHp.startMigrationProcess();
                     migr_steps = 0;
                     m_migrate = true; 
@@ -325,6 +325,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 //Added for old method
                 //m_simPAHp.performMigrationProcess();
                 //m_migrate = false;
+                //total_migr_steps += migr_steps;
                 //migr_steps = 0;
                 //savePAH(PAH_ID,"KMC_DEBUG/AFTERJPPERFORM");
             }
@@ -335,8 +336,8 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                     m_simPAHp.performMigrationProcess();
                     //savePAH(PAH_ID,"KMC_DEBUG/AFTERMIGRATION");
                     m_migrate = false;
+                    timerEnd = clock();
                 }
-                timerEnd = clock();
                 time_migration += (timerEnd - timerStart) / double(CLOCKS_PER_SEC);
                 if (finder != m_tracked_pahs.end()) std::cout << "PAH ID = " << PAH_ID << ", Jump process -> " << jp_perf.first->getName()<< ", Time = " << m_t<<" Migr. steps = "<<migr_steps<<std::endl;
                 total_migr_steps += migr_steps;
@@ -400,7 +401,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
     std::cout << "Wall time used for PAH_ID " << PAH_ID << " = " << time_migration << "s." << std::endl;
     std::cout << "Simulation time for PAH_ID " << PAH_ID << " = " << m_t << "s." << std::endl;
     std::cout << "Migration steps = " << total_migr_steps << "." << std::endl;
-    std::vector<std::string> temp2;
+    {std::vector<std::string> temp2;
     temp2.push_back(std::to_string(PAH_ID));
     temp2.push_back(std::to_string(total_migr_steps));
     std::ostringstream streamObj2;
@@ -413,7 +414,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
     streamObj3 << time_migration;
     std::string streamObj_string3 = streamObj3.str();
     temp2.push_back(streamObj_string3);
-    m_pah_walltime_csv.Write(temp2);
+    m_pah_walltime_csv.Write(temp2);}
     
     if (tracked_csv) closetrackedPAHCSV();
     if (finder != m_tracked_pahs.end()){
