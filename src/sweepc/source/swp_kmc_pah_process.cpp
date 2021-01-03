@@ -3064,7 +3064,7 @@ OpenBabel::OBMol PAHProcess::passPAH(bool detectBonds) {
 }
 
 //! Passes a PAH from OpenBabel to MOpS. Returns a mol object.
-void PAHProcess::passbackPAH(OpenBabel::OBMol mol) {
+void PAHProcess::passbackPAH(OpenBabel::OBMol mol, bool R5coordsmod) {
 	//Passes new coordinates back to MOPS
 	Ccontainer::iterator it = m_pah->m_carbonList.begin();
 	std::list<cpair>::iterator it2 = m_pah->m_InternalCarbons.begin();
@@ -3119,20 +3119,22 @@ void PAHProcess::passbackPAH(OpenBabel::OBMol mol) {
 		}
 	}
 	//Modify the R5 and R7 centers and pass them back to MOpS.
-	m_pah->m_R5loc.clear(); m_pah->m_R7loc.clear();
-	vector<OpenBabel::OBRing*>::iterator iring;
-	vector<int>::iterator j;
-	vector<OpenBabel::OBRing*> vr;
-    vr = mol.GetSSSR();
-	//vector<OpenBabel::OBRing*> *rlist = (vector<OpenBabel::OBRing*>*)mol.GetData("RingList");
-	for (iring = vr.begin();iring != vr.end();++iring){
-		//cout<<(**iring).PathSize()<<"\n";
-		if( (**iring).PathSize()==5 || (**iring).PathSize()==7 ){
-			OpenBabel::vector3 centre, norm1, norm2;
-			bool centre_found = (**iring).findCenterAndNormal(centre, norm1, norm2);
-			cpair temp = std::make_tuple(centre.GetX(),centre.GetY(),centre.GetZ());
-			if ((**iring).PathSize()==5) m_pah->m_R5loc.push_back(temp);
-			else m_pah->m_R7loc.push_back(temp);
+	if (R5coordsmod){
+		m_pah->m_R5loc.clear(); m_pah->m_R7loc.clear();
+		vector<OpenBabel::OBRing*>::iterator iring;
+		vector<int>::iterator j;
+		vector<OpenBabel::OBRing*> vr;
+		vr = mol.GetSSSR();
+		//vector<OpenBabel::OBRing*> *rlist = (vector<OpenBabel::OBRing*>*)mol.GetData("RingList");
+		for (iring = vr.begin();iring != vr.end();++iring){
+			//cout<<(**iring).PathSize()<<"\n";
+			if( (**iring).PathSize()==5 || (**iring).PathSize()==7 ){
+				OpenBabel::vector3 centre, norm1, norm2;
+				bool centre_found = (**iring).findCenterAndNormal(centre, norm1, norm2);
+				cpair temp = std::make_tuple(centre.GetX(),centre.GetY(),centre.GetZ());
+				if ((**iring).PathSize()==5) m_pah->m_R5loc.push_back(temp);
+				else m_pah->m_R7loc.push_back(temp);
+			}
 		}
 	}
 	m_pah->m_optimised = true;

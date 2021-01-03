@@ -227,7 +227,7 @@ public:
 	//! Connects the atoms in a PAH using OpenBabel routines. Equivalent to OpenBabel::OBMol::ConnectTheDots();
 	void connectPAH(OpenBabel::OBMol my_mol);
 	//! Passes a PAH from OpenBabel to MOpS.
-	void passbackPAH(OpenBabel::OBMol mol);
+	void passbackPAH(OpenBabel::OBMol mol, bool R5coordsmod=true);
 	//! Runs optimisation of a PAH using Openbabel
 	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, int nsteps=4000, std::string forcefield="mmff94") ;
     //! Runs a constrained optimisation of a PAH using Openbabel

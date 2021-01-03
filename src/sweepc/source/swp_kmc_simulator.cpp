@@ -323,10 +323,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
                 m_simPAHp.performProcess(*jp_perf.first, rng, PAH_ID);
                 migr_steps++;
                 //Added for old method
-                //m_simPAHp.performMigrationProcess();
-                //m_migrate = false;
-                //total_migr_steps += migr_steps;
-                //migr_steps = 0;
+                optimise_simPAH();
                 //savePAH(PAH_ID,"KMC_DEBUG/AFTERJPPERFORM");
             }
             else {
@@ -684,8 +681,8 @@ void KMCSimulator::initCSVIO() {
     m_rates_csv.Open(m_rates_name, true);
 	m_testrates_csv.Open(m_testrates_name, true);
     m_timestep_csv.Open(m_timestep_name, true);//##
-    m_pah_sitelist_csv.Open("KMC_Model/Site_list_new.csv",true);
-    m_pah_walltime_csv.Open("KMC_Model/Wall_time_new.csv",true);
+    m_pah_sitelist_csv.Open("KMC_Model/Site_list_old.csv",true);
+    m_pah_walltime_csv.Open("KMC_Model/Wall_time_old.csv",true);
     // Write column headings for CSV files
     writeCSVlabels();
 }
@@ -1177,6 +1174,13 @@ void KMCSimulator::TestGP() {
         cout<<endl;
     }
     cout<<"---(Sweep, KMC_ARS::KMCSimulator) Finished testing..."<<endl<<endl;
+}
+
+//Optimise current PAH structure
+void KMCSimulator::optimise_simPAH(){
+	OpenBabel::OBMol mol = m_simPAHp.passPAH();
+	mol = m_simPAHp.optimisePAH(mol);
+	m_simPAHp.passbackPAH(mol, false);
 }
 
 //Save DEBUG information for a single PAH
