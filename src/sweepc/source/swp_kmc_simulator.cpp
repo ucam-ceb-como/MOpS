@@ -375,6 +375,10 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             if (m_migrate){
                 m_simPAHp.performMigrationProcess();
                 m_migrate = false;
+                timerEnd = clock();
+                time_migration += (timerEnd - timerStart) / double(CLOCKS_PER_SEC);
+                total_migr_steps += migr_steps;
+                migr_steps = 0;
             }
             t_next = t_max;
             m_t = t_next;
