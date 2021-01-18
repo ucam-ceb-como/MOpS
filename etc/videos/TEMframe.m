@@ -10,7 +10,8 @@ function TEMframe()
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     %% location of data
-    coords_file = '.\test\Z1-video(3).csv';
+    %coords_file = '.\test\Z1-video(3).csv';
+    coords_file = ['.' filesep 'streamline_10_M0_2e13_splits_1_steps_1-video(43).csv'];
     
     %% draw scale bar (width metres)?
     scale_bar_width = 10e-9;
