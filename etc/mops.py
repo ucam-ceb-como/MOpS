@@ -88,6 +88,7 @@ class case():
         self._outputFileName = element_filename.text
         # element_time_start = self._inputFile.find("./timeintervals/start")
         # self.timearray.append(element_time_start.text)
+        self.timearray=[]
         times = self._inputFileRoot.findall("./timeintervals/time")
         for time in times:
             # psl files have 6 sig fig in their names, truncate to match:
@@ -215,6 +216,7 @@ class case():
         # Read Aggregate Data files
         self._readFile("part")
         self._readFile("primary")
+        self._readFile("part-rates")
         self._readFile("primary-nodes")
         return True
 
