@@ -12,7 +12,8 @@ function TEMvideo()
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     %% location of data
-    coords_file = ['.' filesep 'test' filesep 'Z1-video(3).csv'];
+    %coords_file = ['.' filesep 'test' filesep 'Z1-video(3).csv'];
+    coords_file = ['.' filesep 'streamline_10_M0_2e13_splits_1_steps_1-video(43).csv'];
     
     %% video parameters
     frame_rate = 20;
