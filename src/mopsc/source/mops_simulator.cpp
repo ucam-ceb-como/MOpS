@@ -2536,8 +2536,8 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
                 for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
                 {
                     stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), nodes, prims, k);
-                    primaryparticleout[i]->Write(nodes[k]);
-                    primaryparticlenodesout[i]->Write(prims[k]);
+                    primaryparticleout[i]->Write(prims[k]);
+                    primaryparticlenodesout[i]->Write(nodes[k]);
                 }
 
 				delete r;
