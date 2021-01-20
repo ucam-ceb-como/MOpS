@@ -221,6 +221,7 @@ int main(int argc, char* argv[])
         cout << "  schem: " << surfcfile << "\n" <<
                 "  stherm: " << surftfile << "\n";
     }
+    cout << "Diagnostic Level: " << diag << "\n"; 
 
     // Define all the objects required to run the simulation.
     Mops::Solver *solver   = NULL; // The solver.
