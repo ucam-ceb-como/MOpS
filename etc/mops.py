@@ -212,12 +212,16 @@ class case():
         for time in self.timearray:
             # check if PSL file exists:
             pslFileName = "psl("+str(time)+"s)"
+            ppslFileName = "primary-psl("+str(time)+"s)"
+            pnFileName = "primary-nodes("+str(time)+"s)"
             self._readFile(pslFileName)
+            self._readFile(ppslFileName)
+            self._readFile(pnFileName)
         # Read Aggregate Data files
         self._readFile("part")
-        self._readFile("primary")
+        #self._readFile("primary")
         self._readFile("part-rates")
-        self._readFile("primary-nodes")
+        #self._readFile("primary-nodes")
         return True
 
     def _readFile(self, fileName):
