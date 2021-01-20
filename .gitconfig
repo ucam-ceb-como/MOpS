@@ -8,7 +8,7 @@
     remote = origin
     merge = refs/heads/master
 [remote "origin"]
-    url = ssh://vienna.cheng.cam.ac.uk/home/userspace/CoMoCommon/Codes/mops-c-Git
+    url = https://github.com/ucam-ceb-como/MOpS.git
     fetch = +refs/heads/*:refs/remotes/origin/*
 [alias]
     logf = log --follow
