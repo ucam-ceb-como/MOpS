@@ -114,6 +114,9 @@ void MechanismParser::ReadChemkin
     const std::string &transFile
     )
 {
+    // Check verbosity:
+    cout << "MechanismParser::ReadChemkin Arg: Verbosity: " << verbose << "\n" << endl; 
+
     // member function added by vniod to enable the reading of transport data.
     // This function utilizes the ReadChemkin function which was provided earlier.
 
