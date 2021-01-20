@@ -454,7 +454,7 @@ void Sweep::Ensemble::SetSimulator(Sweep::GasProfile& gp)
 {   
     Sweep::KMC_ARS::KMCSimulator* kmc = new Sweep::KMC_ARS::KMCSimulator(gp);
     m_kmcsimulator= kmc;
-    m_kmcsimulator->TestGP();
+    // m_kmcsimulator->TestGP();
 }
 
 
@@ -1414,7 +1414,8 @@ void Sweep::Ensemble::dble()
 		bool proceed = true;
 
         // Continue while there are too few particles in the ensemble.
-        while ((m_count + m_total_number) < m_dblelimit && proceed) {
+        // doubling includes particle number list... dubious?
+        while ((m_count + m_total_number) < m_dblelimit && proceed) { 
             /*if(m_count == 0) {
                 throw std::runtime_error("Attempt to double particle ensemble with 0 particles");
             }*/
