@@ -751,7 +751,7 @@ void Simulator::postProcessSimulation(
         multVals(agpfwdrates[0], m_nruns*m_niter);
         multVals(agprevrates[0], m_nruns*m_niter);
         multVals(agpwdot[0], m_nruns*m_niter);
-    multVals(agpsdot[0], m_nruns*m_niter); // added by mm864
+        multVals(agpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(apprates[0], m_nruns*m_niter);
         multVals(appjumps[0], m_nruns*m_niter);
         multVals(appwdot[0], m_nruns*m_niter);
@@ -762,7 +762,7 @@ void Simulator::postProcessSimulation(
         multVals(egpfwdrates[0], m_nruns*m_niter);
         multVals(egprevrates[0], m_nruns*m_niter);
         multVals(egpwdot[0], m_nruns*m_niter);
-    multVals(egpsdot[0], m_nruns*m_niter); // added by mm864
+        multVals(egpsdot[0], m_nruns*m_niter); // added by mm864
         multVals(epprates[0], m_nruns*m_niter);
         multVals(eppjumps[0], m_nruns*m_niter);
         multVals(eppwdot[0], m_nruns*m_niter);
@@ -775,19 +775,19 @@ void Simulator::postProcessSimulation(
         multVals(agpfwdrates[0], m_nruns);
         multVals(agprevrates[0], m_nruns);
         multVals(agpwdot[0], m_nruns);
-    multVals(agpsdot[0], m_nruns); // added by mm864
+        multVals(agpsdot[0], m_nruns); // added by mm864
         multVals(apprates[0], m_nruns);
         multVals(appjumps[0], m_nruns);
         multVals(appwdot[0], m_nruns);
         multVals(acpu[0], m_nruns);
-	multVals(aPN[0], m_nruns);
+	    multVals(aPN[0], m_nruns);
         multVals(echem[0], m_nruns); 
         multVals(estat[0], m_nruns);
         multVals(egprates[0], m_nruns);
         multVals(egpfwdrates[0], m_nruns);
         multVals(egprevrates[0], m_nruns);
         multVals(egpwdot[0], m_nruns);
-    multVals(egpsdot[0], m_nruns); // added by mm864
+        multVals(egpsdot[0], m_nruns); // added by mm864
         multVals(epprates[0], m_nruns);
         multVals(eppjumps[0], m_nruns);
         multVals(eppwdot[0], m_nruns);
@@ -930,7 +930,7 @@ void Simulator::postProcessSimulation(
         /*!
          * Useful for reproduction of Stein and Fahr's stabilomer grid.
          * Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
-         * J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
+         * J. Phys. Chem. 89, 3714ï¿½3725. doi:10.1021/j100263a027.
          */
         // postProcessPAHinfo(mech, times);
 
@@ -943,7 +943,7 @@ void Simulator::postProcessSimulation(
 		/*!
 		* Useful for reproduction of Stein and Fahr's stabilomer grid.
 		* Stein, S. E., Fahr, A. (1985). High-temperature stabilities of hydrocarbons.
-		* J. Phys. Chem. 89, 3714–3725. doi:10.1021/j100263a027.
+		* J. Phys. Chem. 89, 3714ï¿½3725. doi:10.1021/j100263a027.
 		*/
 		// postProcessPAHinfo(mech, times);
 
@@ -2414,11 +2414,15 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	fvector psl;
 	vector<fvector> ppsl;
 	vector<fvector> nodes;
-	vector<string> nodes_header;
 	vector<fvector> prims;
-	vector<string> primary_header;
-	CSV_IO nodesout(m_output_filename + "-primary-nodes.csv", true);
-	CSV_IO primsout(m_output_filename + "-primary.csv", true);
+
+    // Vector to hold all PSL CSV Output files, primary particle size list, and primary node lists
+    // This is unnecessary, as a single CSV_IO can be created and then destroyed at each time step
+    // A vector holding these is unnecessary. 
+	vector<CSV_IO*> out(times.size(), NULL);
+	vector<CSV_IO*> primaryparticleout(times.size(), NULL);
+	vector<CSV_IO*> primaryparticlenodesout(times.size(), NULL);
+
 
 	// Get reference to the particle mechanism.
 	const Sweep::Mechanism &pmech = mech.ParticleMech();
@@ -2430,19 +2434,67 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	vector<string> header;
 	stats.PSL_Names(header);
 
-	// Open output files for all PSL save points.  Remember to
-	// write the header row as well.
-	vector<CSV_IO*> out(times.size(), NULL);
+    // Build header row for primaryParticle CSV output files. 
+	vector<string> nodes_header;
+	// Write bintreeprimary connectivity data 
+	nodes_header.push_back("Particle Index");
+	nodes_header.push_back("Number of primaries below node");
+	nodes_header.push_back("Common surface area (m2)");
+	nodes_header.push_back("Sintering level");
+	nodes_header.push_back("Separation (m)");
+	nodes_header.push_back("Neck radius (m)");
+	nodes_header.push_back("Left radius (m)");
+	nodes_header.push_back("Right radius (m)");
+	nodes_header.push_back("Left Index");
+	nodes_header.push_back("Right Index");
+
+    // Build header row for BinaryTreeNodesLists CSV output files.
+	vector<string> primary_header;
+	primary_header.push_back("Particle Index");
+	primary_header.push_back("Primary diameter (m)");
+	primary_header.push_back("Sph. equiv. diameter (m)");
+	primary_header.push_back("(Geom.) Primary volume (m3)");
+	primary_header.push_back("(Comp.) Primary volume (m3)");
+	primary_header.push_back("Primary surface (m2)");
+	primary_header.push_back("Position x");
+	primary_header.push_back("Position y");
+	primary_header.push_back("Position z");
+	primary_header.push_back("Radius (m)");
+
+	// Get ParticleModel composition
+	const Sweep::ParticleModel &model = mech.ParticleMech();
+	unsigned int ncomp = model.ComponentCount();
+	// Add component to header
+	for (unsigned int i = 0; i != ncomp; ++i) {
+		primary_header.push_back(model.Components(i)->Name());
+	}
+
+    // Old last time only files:
+	CSV_IO nodesout(m_output_filename + "-primary-nodes.csv", true);
+	CSV_IO primsout(m_output_filename + "-primary.csv", true);
+
+
+	// Loop over all time intervals.
 	for (unsigned int i = 0; i != times.size(); ++i) {
-		double t = times[i].EndTime();
+		// Simulation time:
+        double t = times[i].EndTime();
+
+        // Initialise CSV_IO objects for PSL, PPSL, and BinaryTree Nodes Lists
+        // at all times; write headers to files. 
 		out[i] = new CSV_IO();
 		out[i]->Open(m_output_filename + "-psl(" +
 			cstr(t) + "s).csv", true);
 		out[i]->Write(header);
-	}
+        // primary particle size lists:
+		primaryparticleout[i] = new CSV_IO();
+		primaryparticleout[i]->Open(m_output_filename + "-primary-psl(" +
+			cstr(t) + "s).csv", true);
+		primaryparticleout[i]->Write(primary_header);
+		primaryparticlenodesout[i] = new CSV_IO();
+		primaryparticlenodesout[i]->Open(m_output_filename + "-primary-nodes(" +
+			cstr(t) + "s).csv", true);
+		primaryparticlenodesout[i]->Write(nodes_header);
 
-	// Loop over all time intervals.
-	for (unsigned int i = 0; i != times.size(); ++i) {
 		// Calculate the total step count after this interval.
 		step += times[i].StepCount();
 
@@ -2480,14 +2532,13 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 					file.close();
 				}
 
-				// Print primary and connectivity data
-				// This is currently only done at the last save point
-				if (i == times.size() - 1){
-					for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
-					{
-						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), nodes, prims, k);
-					}
-				}
+				// Write primary and connectivity data for particle k
+                for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
+                {
+                    stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), nodes, prims, k);
+                    primaryparticleout[i]->Write(nodes[k]);
+                    primaryparticlenodesout[i]->Write(prims[k]);
+                }
 
 				delete r;
 			}
@@ -2496,65 +2547,24 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 				throw runtime_error("Unable to read reactor from save point "
 					"(Mops, ParticleSolver::postProcessPSLs).");
 			}
-
-			
 		}
 		
-		//out[i]->Close(); 
-		//delete out[i];
-	}
-
-	// Write bintreeprimary connectivity data 
-	nodes_header.push_back("Particle Index");
-	nodes_header.push_back("Number of primaries below node");
-	nodes_header.push_back("Common surface area (m2)");
-	nodes_header.push_back("Sintering level");
-	nodes_header.push_back("Separation (m)");
-	nodes_header.push_back("Neck radius (m)");
-	nodes_header.push_back("Left radius (m)");
-	nodes_header.push_back("Right radius (m)");
-	nodes_header.push_back("Left Index");
-	nodes_header.push_back("Right Index");
-
-	nodesout.Write(nodes_header);
-	for (unsigned int k = 0; k < nodes.size(); k++)
-	{
-		nodesout.Write(nodes[k]);
-	}
-	nodesout.Close();
-
-	// Write primary particle data 
-	primary_header.push_back("Particle Index");
-	primary_header.push_back("Primary diameter (m)");
-	primary_header.push_back("Sph. equiv. diameter (m)");
-	primary_header.push_back("(Geom.) Primary volume (m3)");
-	primary_header.push_back("(Comp.) Primary volume (m3)");
-	primary_header.push_back("Primary surface (m2)");
-	primary_header.push_back("Position x");
-	primary_header.push_back("Position y");
-	primary_header.push_back("Position z");
-	primary_header.push_back("Radius (m)");
-	
-	// Get composition
-	const Sweep::ParticleModel &model = mech.ParticleMech();
-	unsigned int ncomp = model.ComponentCount();
-	// Add component to header
-	for (unsigned int i = 0; i != ncomp; ++i) {
-		primary_header.push_back(model.Components(i)->Name());
-	}
-
-	primsout.Write(primary_header);
-	for (unsigned int k = 0; k < prims.size(); k++)
-	{
-		primsout.Write(prims[k]);
-	}
-	primsout.Close();
-
-	//// Close output CSV files.
-	for (unsigned int i = 0; i != times.size(); ++i) {
-		out[i]->Close();
+        // Close and Delete files from memory: 
+        primaryparticlenodesout[i]->Close();
+        primaryparticleout[i]->Close();
+		out[i]->Close(); 
 		delete out[i];
+		delete primaryparticlenodesout[i];
+		delete primaryparticleout[i];
+
+        // clear nodes and prims vectors for next time step:
+        nodes.clear();
+        prims.clear();
 	}
+
+
+
+
 }
 
 // Processes the particle-number PSLs at each save point into single files.
