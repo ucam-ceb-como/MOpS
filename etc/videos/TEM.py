@@ -1,5 +1,5 @@
 #
-# Author:    Casper Lindberg (csl37)
+# Author:    Eric J. Bringley (eb656) and Casper Lindberg (csl37)
 #
 # Purpose:   Draws a single TEM frame from a video file
 #
@@ -160,7 +160,8 @@ def reorientate(frames):
     #in not supplied reorientate all coordinates
 
     n_frames = len(frames)
-    print(n_frames)
+    if(debug):
+        print(n_frames)
     frame_range = np.arange(0,n_frames,1)
     for j in frame_range:     #loops over frames
         
@@ -206,27 +207,51 @@ def reorientate(frames):
     return new_frames
 
 
-def draw_particle(ren, coordinates,solid=0.5,opacity=1):
+def draw_particle(ren, coordinates,solid=0.5,ambient = 0.6, diffuse = 0.3, specular = 0.0,opacity=1,color=None):
+    # check for solid and opacity range
     if (solid<0 or solid > 1):
         solid = 0.5
     if (opacity<0 or opacity > 1):
-        solid = 1   
+        opacity = 1   
     ##loop over primaries
     L = len(coordinates)
     for i in range(L):
         # check if primary (radius > 0)
         if (coordinates[i][3] > 0 ):
             # Draw primary sphere:
-            draw_primary(ren, coordinates[i][0], coordinates[i][1], coordinates[i][2], coordinates[i][3], opacity=opacity)
+            draw_primary(ren, coordinates[i][0], coordinates[i][1], coordinates[i][2], coordinates[i][3], opacity=opacity, color=color,ambient = ambient, diffuse = diffuse, specular = specular)
 
     return None
 
-def draw_primary(ren, x, y, z, r, ambient = 0.6, diffuse = 0.3, specular = 0.0,opacity = 0.2):
+def draw_primary(ren, x, y, z, r, ambient = 0.6, diffuse = 0.3, specular = 0.0,opacity = 0.2, color='Seashell'):
+    """
+    Draw a primary given a rendering window, coordiates, radius, and optical properties
+
+    :param ren: The VTK render window
+    :param x: x-coordinage (nm).
+    :param y: y-coordinage (nm).
+    :param z: z-coordinage (nm).
+    :param r: sphere radius (nm).
+    :param ambient: Sphere Ambient light, range [0,1], default = 0.6.
+    :param diffuse: Sphere Light Diffusivity, range [0,1], default = 0.3.
+    :param specular: Sphere Specular... yeah not sure..
+    :param opacity: Sphere opacity, ranged [0,1], default = 0.2.
+    :param color: String of named color to set sphere color, default 'Seashell'
+    :return:
+    """
+    # Check color name: use seashell by default if not a real color:
     colors = vtk.vtkNamedColors()
+    if(colors.ColorExists(color)):
+        sphere_color = colors.GetColor3d(color)
+    else:
+        sphere_color = colors.GetColor3d("Seashell")
+    # Check for other argument values, 
+    # implement later
+    # Sphere source:
     sphere = vtk.vtkSphereSource()
     sphere.SetThetaResolution(100)
     sphere.SetPhiResolution(50)
-    sphere.SetRadius(r*1e9)
+    sphere.SetRadius(r*1e9) # m
     # The mapper is responsible for pushing the geometry into the graphics
     # library. It may also do color mapping, if scalars or other attributes
     # are defined.
@@ -235,7 +260,7 @@ def draw_primary(ren, x, y, z, r, ambient = 0.6, diffuse = 0.3, specular = 0.0,o
     sphereMapper.SetInputConnection(sphere.GetOutputPort())
     spheres_actor= vtk.vtkActor()
     spheres_actor.SetMapper(sphereMapper)
-    spheres_actor.GetProperty().SetColor(colors.GetColor3d("Seashell"))
+    spheres_actor.GetProperty().SetColor(sphere_color)
     spheres_actor.GetProperty().SetAmbient(ambient)
     spheres_actor.GetProperty().SetDiffuse(diffuse)
     spheres_actor.GetProperty().SetSpecular(specular)
@@ -337,6 +362,20 @@ def TEMframe():
     iren = vtk.vtkRenderWindowInteractor()
     iren.SetRenderWindow(renWin)
 
+
+    ren.SetBackground(colors.GetColor3d("bkg"))
+    renWin.SetSize(500, 500)
+    renWin.SetWindowName("Particle")
+
+    light = vtk.vtkLight()
+    light.SetFocalPoint(1.875, 0.6125, 0)
+    light.SetPosition(0.875, 1.6125, 1)
+    ren.AddLight(light)
+
+    camera = vtk.vtkCamera()
+    ren.SetActiveCamera(camera)
+    ren.GetActiveCamera().SetFocalPoint(0, 0, 0)
+
     ##############################################
     ##############################################
         
@@ -351,11 +390,11 @@ def TEMframe():
     print('Drawing frame: '+str(n_frame)+' of '+str(n-1))
     
     #reorient frame
-    # new_frames = reorientate(frames, n_frame)
+    new_frames = reorientate(frames, n_frame)
     
     ##draw particle
 
-    draw_particle(ren, frames[n_frame]["coords"],1)
+    draw_particle(ren, frames[n_frame]["coords"],1, color=black, opacity=0.15)
     
     # change axis color
     #ax.Color = [0.7 0.7 0.7]
@@ -373,17 +412,9 @@ def TEMframe():
         # fig.plot([-0.9*half_size_x, -0.9*half_size_x+scale_bar_width],[-sh*half_size_y,-sh*half_size_y],'-k','linewidth',6)
         # text(-0.9*half_size_x,-(sh+0.05)*half_size_y,strcat(num2str(scale_bar_width*1e9),' nm'),'fontsize',20)
 
-    ren.SetBackground(colors.GetColor3d("bkg"))
-    renWin.SetSize(640, 480)
-    renWin.SetWindowName("Ambient Spheres")   
-    light = vtk.vtkLight()
-    light.SetFocalPoint(1.875, 0.6125, 0)
-    light.SetPosition(0.875, 1.6125, 1)
-    ren.AddLight(light)
+    
 
-    camera = vtk.vtkCamera()
-    ren.SetActiveCamera(camera)
-    ren.GetActiveCamera().SetFocalPoint(0, 0, 0)
+
     # Adjust Position and view before resetting camera to change view:
     ren.GetActiveCamera().SetPosition(10, 15, 100)
     ren.GetActiveCamera().SetViewUp(0, 1, 0)
@@ -433,6 +464,19 @@ def TEMvideo():
     iren = vtk.vtkRenderWindowInteractor()
     iren.SetRenderWindow(renWin)
 
+    ren.SetBackground(colors.GetColor3d("bkg"))
+    renWin.SetSize(640, 480)
+    renWin.SetWindowName("Ambient Spheres") 
+
+    light = vtk.vtkLight()
+    light.SetFocalPoint(1.875, 0.6125, 0)
+    light.SetPosition(0.875, 1.6125, 1)
+    ren.AddLight(light)
+
+    camera = vtk.vtkCamera()
+    ren.SetActiveCamera(camera)
+    ren.GetActiveCamera().SetFocalPoint(0, 0, 0)
+
     ##############################################
     ##############################################
         
@@ -461,8 +505,8 @@ def TEMvideo():
     #reorient frame
     new_frames = reorientate(frames)
 
-
     if(debug):
+        print("done reorientate")
         for j in range(n):
             print(new_frames[j].keys())
             print("Description of frame: {}".format(j))
@@ -475,7 +519,7 @@ def TEMvideo():
     # print(frames[n_frame]["coords"])
 
     draw_particle(ren, new_frames[n_frame]["coords"],1)
-    
+    if(debug):print("Drew particle")
     # change axis color
     #ax.Color = [0.7 0.7 0.7]
     
@@ -492,17 +536,6 @@ def TEMvideo():
         # fig.plot([-0.9*half_size_x, -0.9*half_size_x+scale_bar_width],[-sh*half_size_y,-sh*half_size_y],'-k','linewidth',6)
         # text(-0.9*half_size_x,-(sh+0.05)*half_size_y,strcat(num2str(scale_bar_width*1e9),' nm'),'fontsize',20)
 
-    ren.SetBackground(colors.GetColor3d("bkg"))
-    renWin.SetSize(640, 480)
-    renWin.SetWindowName("Ambient Spheres")   
-    light = vtk.vtkLight()
-    light.SetFocalPoint(1.875, 0.6125, 0)
-    light.SetPosition(0.875, 1.6125, 1)
-    ren.AddLight(light)
-
-    camera = vtk.vtkCamera()
-    ren.SetActiveCamera(camera)
-    ren.GetActiveCamera().SetFocalPoint(0, 0, 0)
     # Adjust Position and view before resetting camera to change view:
     ren.GetActiveCamera().SetPosition(10, 15, 100)
     ren.GetActiveCamera().SetViewUp(0, 1, 0)
@@ -513,8 +546,10 @@ def TEMvideo():
     renWin.Render()
     WriteImage("last.png", renWin)
     # iren.Start()
-    for frame in frames:
-        print(frame)
+    if(debug):
+        print('Wrote last.png')
+        for frame in frames:
+            print(frame)
     for i in range(len(frames)):
         ren.RemoveAllViewProps()
         if("coords" in frames[i].keys()):
@@ -522,6 +557,8 @@ def TEMvideo():
             draw_particle(ren, new_frames[i]["coords"],1)
             renWin.Render()
         WriteImage("test"+str(i)+".png", renWin)
+
+    
 
 
 if __name__ == '__main__':
