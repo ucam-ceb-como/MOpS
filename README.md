@@ -1,113 +1,34 @@
-# <img align="top" src="https://user-images.githubusercontent.com/32139876/92795750-8767bf00-f3a8-11ea-921a-17fac1435171.png" alt="como_group" width="150"/> MOpS Particle Simulator
+# <img align="top" src="https://user-images.githubusercontent.com/32139876/92795750-8767bf00-f3a8-11ea-921a-17fac1435171.png" alt="como_group" width="150"/> MOpS particle simulator
 
-## Installation:
+Welcome to the **MOpS particle simulator**. This program has been developed by the Computational Modelling Group at the University of Cambridge under the supervision of Prof Markus Kraft.
 
-The current installation of the **MOpS particle simulator** uses [cmake](https://cmake.org/) to compile the program. The installation procedure below refers to installation on Linux systems, but can easily be modified for other operating systems.
+## Description
 
-### Requirements:
+The **MOpS particle simulator** uses stochastic numerical methods to solve population balance equations. A weighting time algorithm is used to sample the processes that produce and transform molecules and particles in the model.
 
-- [Boost C++ Libraries](https://www.boost.org/) v1.47 or later.
-- [CMake](https://cmake.org/) v2.6 or later.
-- [PkgConfig](https://www.freedesktop.org/wiki/Software/pkg-config/)
-- [OpenBabel](http://openbabel.org/wiki/Main_Page) v2.3.1 or later (only for PAH and carbonaceous particle simulations)
+It has been used to simulate:
+ - The production of titanium dioxide particles from titanium tetraisopropoxide (TTIP) and titanium tetrachloride.
+ - The production of silicon particles from the thermal decomposition of silane.
+ - The formation and growth of polycyclic aromatic hydrocarbons (PAHs) and carbonaceous particles associated with hydrocarbon combustion.
 
-### Download the source code
+The stochastic numerical methods enable the use of detailed particle models. For example, the carbonaceous particle model describes the chemical composition of each PAH in the system, and tracks which PAHs belong to which primary particles and which primary particles belong to which aggregates. The use of such a model allows the simulation of quantities that can be directly compared to experimental data.
 
-Download the latest version of the code from the [MOpS Github Repository](https://github.com/ucam-ceb-como/MOpS).
+## Source code repository
 
-Alternatively use [git](https://git-scm.com/) to set up your download:
+[MOpS Github Repository](https://github.com/ucam-ceb-como/MOpS) - contains the latest source code for MOpS.
 
-	git clone https://github.com/ucam-ceb-como/MOpS
-	
-### Set git variables
+## How to install
 
-Set the following variables (substitute for your name/email):
+Please download the source code from Github and follow the [installation](https://github.com/ucam-ceb-como/MOpS/blob/master/INSTALLATION.md) section for detailed instructions.
 
-    git config --global user.name "John Doe"
-    git config --global user.email "jdoe@cam.ac.uk"
+## Documentation
 
-### Build MOpS
+Visit the link for a detailed list of [publications](https://como.ceb.cam.ac.uk/publications/nano/) associated with the MOpS Particle Simulator.
 
-#### Build OpenBabel
+## How to contribute
 
-The PAH part of the carbonaceous particle model requires [OpenBabel](http://openbabel.org/wiki/Main_Page) to be built as a statically linked library. OpenBabel has been added as a submodule of the MOpS Particle Simulator. 
+Contact [Prof Markus Kraft](https://como.ceb.cam.ac.uk/people/mk306/) if you are interested to contribute to the development of the MOpS Particle Simulator.
+## Credits
 
-Before installing OpenBabel make sure you have [PkgConfig](https://www.freedesktop.org/wiki/Software/pkg-config/) on your system. This is used with cmake/modules/FindOpenBabel2.cmake for MOpS to use the [OpenBabel API](http://openbabel.org/dev-api/cmake_project.shtml).
- 
-The following commands build OpenBabel 2.3.1 as a submodule of MOpS and should be run **before** building MOpS:
-
-    git submodule init
-    git submodule update
-    cd openbabel-2.3.1-Git
-    bash build.sh
-
-You should now set up the OpenBabel environmental variables in your bashrc. A reminder of these variables is shown by the build.sh script. Remember to source the updated bashrc before continuing.
-
-#### Build MOpS (DEBUG)
-
-The following commands should be called from the MOpS Particle Simulator main folder to complete the DEBUG build of the MOpS Particle Simulator:
-
-    mkdir debug
-    cd debug
-    cmake -D CMAKE_BUILD_TYPE=Debug ..
-    make -j 4   #for 4 threads of compilation (more if you can!)
-    ctest -j 4  #for 4 threads of testing
-
-#### Build MOpS (RELEASE)
-
-The following commands should be called from the MOpS Particle Simulator main folder to complete the RELEASE build of the MOpS Particle Simulator:
-
-    mkdir release
-    cd release
-    cmake -D CMAKE_BUILD_TYPE=Release ..
-    make -j 4   #for 4 threads of compilation (more if you can!)
-    ctest -j 4  #for 4 threads of testing
-
-### Run a case
-
-Examples of different simulations are found in the folder /test/mopsc/
-
-Use the MOpS Particle Simulator help to see the different options for running the program. 
-
-	mops-app --help
-	
-	Generic options:
-	  -h [ --help ]         print usage message
-	  -v [ --version ]      print version number
-	  -w [ --new ]          use new network interface
-
-	Input file options:
-	  -r [ --mops ] arg (=mops.inx)         path to main input file
-	  -c [ --chem ] arg (=chem.inp)         path to chemical mechanism
-	  -t [ --therm ] arg (=therm.dat)       path to thermochemical data
-	  -n [ --trans ] arg (=tran.dat)        path to transport data
-	  -g [ --gasphase ] arg (=gasphase.inp) path to gas phase profile
-	  -s [ --sweep ] arg (=sweep.xml)       path to particle mechanism
-	  -q [ --sensi ] arg (=sensi.xml)       path to sensitivity analysis
-	  --schem arg (=surfchem.inp)           path to surface chemical mechanism
-	  --stherm arg (=surftherm.dat)         path to surface thermochemical data
-
-	Solver options:
-	  -e [ --rand ] arg (=456) adjust random seed value
-	  --surf                   turn-on surface chemistry
-	  --opsplit                use (simple) opsplit solver
-	  --strang                 use strang solver
-	  --predcor                use predcor solver
-	  --flamepp                use flamepp solver
-
-	Output options:
-	  -p [ --postproc ]     postprocess files
-	  -o [ --only ]         postprocess files only (don't solve)
-	  --diag arg (=0)       set diagnostics level (0-4)
-	  --ensemble            write full ensembles to binary files
-	  --ppah                write full PAHPP data
-	  --ppri                write full primary particle data
-	  --jumps               write stochastic jumps data
-	  --wdotA4              postprocess based on the molar rate of production 
-							                  by 	chemical reaction of the inception species
-
-
-######################################################################################\
-[Computational Modelling Group](https://como.ceb.cam.ac.uk), [University of Cambridge](https://www.cam.ac.uk/). \
-10 September 2020 \
-######################################################################################
+- [Prof. Markus Kraft](https://como.ceb.cam.ac.uk/people/mk306/)
+- [Computational Modelling Group](https://como.ceb.cam.ac.uk) at the [University of Cambridge](https://www.cam.ac.uk/).
