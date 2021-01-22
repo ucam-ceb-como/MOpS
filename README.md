@@ -19,7 +19,7 @@ The stochastic numerical methods enable the use of detailed particle models. For
 
 ## How to install
 
-Please download the source code from Github and follow the [installation](https://github.com/ucam-ceb-como/MOpS/blob/master/INSTALLATION.md) section for detailed instructions.
+Please download the source code from Github and follow the [installation](./INSTALLATION.md) section for detailed instructions.
 
 ## Documentation
 
