@@ -15,11 +15,11 @@ The stochastic numerical methods enable the use of detailed particle models. For
 
 ## Source code repository
 
-[MOpS Github Repository](https://github.com/ucam-ceb-como/MOpS/blob/master/INSTALLATION.md) - contains the latest source code for MOpS.
+[MOpS Github Repository](https://github.com/ucam-ceb-como/MOpS) - contains the latest source code for MOpS.
 
 ## How to install
 
-Please download the source code from Github and follow the [installation](https://github.com/ucam-ceb-como/MOpS_installation) section for detailed instructions.
+Please download the source code from Github and follow the [installation](https://github.com/ucam-ceb-como/MOpS/blob/master/INSTALLATION.md) section for detailed instructions.
 
 ## Documentation
 
