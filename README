@@ -1,151 +1,113 @@
-###############################################################################
-MOPS: A suite of C++ libraries and solvers.
-###############################################################################
+# <img align="top" src="https://user-images.githubusercontent.com/32139876/92795750-8767bf00-f3a8-11ea-921a-17fac1435171.png" alt="como_group" width="150"/> MOpS Particle Simulator
 
-Oh Huzzah!
+## Installation:
 
-Installation:
+The current installation of the **MOpS particle simulator** uses [cmake](https://cmake.org/) to compile the program. The installation procedure below refers to installation on Linux systems, but can easily be modified for other operating systems.
 
-1) Set the following variables (substitute for your name/email):
+### Requirements:
 
-    git config --global user.name "Laurence McGlashan"
-    git config --global user.email "lrm29@cam.ac.uk"
+- [Boost C++ Libraries](https://www.boost.org/) v1.47 or later.
+- [CMake](https://cmake.org/) v2.6 or later.
+- [PkgConfig](https://www.freedesktop.org/wiki/Software/pkg-config/)
+- [OpenBabel](http://openbabel.org/wiki/Main_Page) v2.3.1 or later (only for PAH and carbonaceous particle simulations)
 
-2) Once cloned, execute "./INSTALL.sh". It will copy the .gitconfig file into
-your .git folder and make all the Doxygen documentation which can be accessed 
-by opening doc/documentationIndex.html in a web browser.
+### Download the source code
 
--------------------------------------------------------------------------------
+Download the latest version of the code from the [MOpS Github Repository](https://github.com/ucam-ceb-como/MOpS).
 
-CMake:
+Alternatively use [git](https://git-scm.com/) to set up your download:
 
-There is more than one way to use CMake to generate build files
-and to generate Eclipse (and Visual Studio) project files.  If
-you do not care about using an IDE and just want a clean tidy
-build, scroll down to the instructions on out-of-source builds.
+	git clone https://github.com/ucam-ceb-como/MOpS
+	
+### Set git variables
 
-1) In-source build (for those who use an IDE):
+Set the following variables (substitute for your name/email):
 
-This is not as tidy as option two, but is the only way (I can find)
-to get proper Eclipse integration.
+    git config --global user.name "John Doe"
+    git config --global user.email "jdoe@cam.ac.uk"
 
-Before starting (ie before you read this file) you should do
-mkdir workspace1
-#This is where eclipse will put its workspace, which must be distinct
-#from the location of the projects we are about to create.
-cd workspace1
-git clone ssh://riap2@vienna.cheng.cam.ac.uk/home/userspace/CoMoCommon/Codes/mops-c-Git proj
-cd proj
-#If you have not got this kind of set up with a dedicated directory
-#above the one containing this file, you should do a fresh clone
-#either from vienna as above, or from your modified code if necessary.
+### Build MOpS
 
-cmake -G"Eclipse CDT4 - Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug .
+#### Build OpenBabel
 
-At this point you can run Eclipse and put a new workspace in workspace1.
-Once in Eclipse right click in the Project Explorer on the left and select
-Import.  Then choose General/Exisiting Projects into Workspace.  This will
-give a new pop-up, where you should click Browse..., then select proj (or
-whatever you called the directory containing this file) and click OK.
-Highlight proj in the list of possible projects (it should be the only
-entry) and click Finish.  Eclipse will kick off its parser and builder,
-which should not take too long, but then you are up and running.
-(Make sure you select the C++ perspective, eclipse generally defaults
-to java.) 
+The PAH part of the carbonaceous particle model requires [OpenBabel](http://openbabel.org/wiki/Main_Page) to be built as a statically linked library. OpenBabel has been added as a submodule of the MOpS Particle Simulator. 
 
-To use EGit, right-click on the project and select Team > Share Project. 
-Choose Git.
+Before installing OpenBabel make sure you have [PkgConfig](https://www.freedesktop.org/wiki/Software/pkg-config/) on your system. This is used with cmake/modules/FindOpenBabel2.cmake for MOpS to use the [OpenBabel API](http://openbabel.org/dev-api/cmake_project.shtml).
+ 
+The following commands build OpenBabel 2.3.1 as a submodule of MOpS and should be run **before** building MOpS:
 
-CMakeEd provides some useful tools for CMake integration into Eclipse.
-You can install it from within Eclipse using the following download site:
-http://cmakeed.sourceforge.net/eclipse/
+    git submodule init
+    git submodule update
+    cd openbabel-2.3.1-Git
+    bash build.sh
 
-CTest can be run by double-clicking ": test" in the Make Target panel.
+You should now set up the OpenBabel environmental variables in your bashrc. A reminder of these variables is shown by the build.sh script. Remember to source the updated bashrc before continuing.
 
-With this set up you are limited to Debug builds (or Release if you specify
-that when you run cmake).  To have both build types one needs to use "out
-of source builds" with cmake, but that does not integrate well with eclipse.
-Assuming you have done your development with a debug build and now want to
-make a release build to run some big calcs, you are recommended to do the
-following (an out of source build as described in 2):
+#### Build MOpS (DEBUG)
 
-Commit your changes to you local git repo (pushing to vienna is optional):
-git add myfile.c
-git commit -m "A ground breaking new algorithm"
-cd ..
-git clone proj release-tree
-cd release-tree
-mkdir release
-cd release
-cmake .. -D CMAKE_BUILD_TYPE=Release
-make -j 4 #for 4 threads of compilation (more if you can!)
+The following commands should be called from the MOpS Particle Simulator main folder to complete the DEBUG build of the MOpS Particle Simulator:
 
-2) Out-source build (for those who don't use an IDE):
+    mkdir debug
+    cd debug
+    cmake -D CMAKE_BUILD_TYPE=Debug ..
+    make -j 4   #for 4 threads of compilation (more if you can!)
+    ctest -j 4  #for 4 threads of testing
 
-The KMC-ARS code requires OpenBabel built as an statically linked library for PAH optimisation.
-OpenBabel version 2.3.1 is the one currently used and has been added as a submodule of mops.
-The following commands build this version as a submodule:
+#### Build MOpS (RELEASE)
 
-git submodule init
-git submodule update
-cd openbabel-2.3.1-Git
-bash build.sh
-#Add openbabel environmental variables to bashrc. A reminder of these variables is shown by bash build.sh
-source ~/.bashrc
-cd mops_directory
+The following commands should be called from the MOpS Particle Simulator main folder to complete the RELEASE build of the MOpS Particle Simulator:
 
-#The following commands complete the out-source build of mops:
-mkdir debug
-cd debug
-cmake -D CMAKE_BUILD_TYPE=Debug ..
-make -j 4   #for 4 threads of compilation (more if you can!)
-ctest -j 4  #for 4 threads of testing
+    mkdir release
+    cd release
+    cmake -D CMAKE_BUILD_TYPE=Release ..
+    make -j 4   #for 4 threads of compilation (more if you can!)
+    ctest -j 4  #for 4 threads of testing
 
-AND/OR
+### Run a case
 
-mkdir release
-cd release
-cmake -D CMAKE_BUILD_TYPE=Release ..
-make -j 4   #for 4 threads of compilation (more if you can!)
-ctest -j 4  #for 4 threads of testing
+Examples of different simulations are found in the folder /test/mopsc/
 
--------------------------------------------------------------------------------
+Use the MOpS Particle Simulator help to see the different options for running the program. 
 
-How to run a case (assuming debug build):
+	mops-app --help
+	
+	Generic options:
+	  -h [ --help ]         print usage message
+	  -v [ --version ]      print version number
+	  -w [ --new ]          use new network interface
 
-1) Go to Run > Debug Configurations.
+	Input file options:
+	  -r [ --mops ] arg (=mops.inx)         path to main input file
+	  -c [ --chem ] arg (=chem.inp)         path to chemical mechanism
+	  -t [ --therm ] arg (=therm.dat)       path to thermochemical data
+	  -n [ --trans ] arg (=tran.dat)        path to transport data
+	  -g [ --gasphase ] arg (=gasphase.inp) path to gas phase profile
+	  -s [ --sweep ] arg (=sweep.xml)       path to particle mechanism
+	  -q [ --sensi ] arg (=sensi.xml)       path to sensitivity analysis
+	  --schem arg (=surfchem.inp)           path to surface chemical mechanism
+	  --stherm arg (=surftherm.dat)         path to surface thermochemical data
 
-2) Create a new Configuration and select your app (e.g. mops-app or camflow-app).
+	Solver options:
+	  -e [ --rand ] arg (=456) adjust random seed value
+	  --surf                   turn-on surface chemistry
+	  --opsplit                use (simple) opsplit solver
+	  --strang                 use strang solver
+	  --predcor                use predcor solver
+	  --flamepp                use flamepp solver
 
-3) You'll need to change Arguments > Working directory to the location of the
-   case that you are interested in, and also to add any arguments.
-   
-4) Hit debug.
+	Output options:
+	  -p [ --postproc ]     postprocess files
+	  -o [ --only ]         postprocess files only (don't solve)
+	  --diag arg (=0)       set diagnostics level (0-4)
+	  --ensemble            write full ensembles to binary files
+	  --ppah                write full PAHPP data
+	  --ppri                write full primary particle data
+	  --jumps               write stochastic jumps data
+	  --wdotA4              postprocess based on the molar rate of production 
+							                  by 	chemical reaction of the inception species
 
--------------------------------------------------------------------------------
 
-Viewing Documentation:
-
-1) Execute ./etc/makeDocs to make the documentation.
-   Options: -cleanall      Cleans all the source and libraries
-
-2) Open doc/documentationIndex.html in a web browser. 
-   Edit doc/mainpage to add your name!
-
--------------------------------------------------------------------------------
-
-Remaining Tasks:
-
-1) Edit all the visual studio project files.
-2) done
-3) done
-4) Integrate the documentation better.
-5) Sort out flamelab.
-
-###############################################################################
-Robert Patterson 07 June 2011
-Robert.Patterson@wias-berlin.de
-
-Laurence McGlashan 25 February 2011
-lrm29@cam.ac.uk
-###############################################################################
+######################################################################################\
+[Computational Modelling Group](https://como.ceb.cam.ac.uk), [University of Cambridge](https://www.cam.ac.uk/). \
+10 September 2020 \
+######################################################################################
