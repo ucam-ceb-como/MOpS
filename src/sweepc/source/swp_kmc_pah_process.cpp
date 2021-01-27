@@ -5579,7 +5579,7 @@ PAHStructure& PAHProcess::initialise_fromfile(){
 	std::vector<std::string> R7_locs;
 	if (src.is_open()){
 		std::getline(src,line); //Read first line. Not needed here.
-		while(std::getline(src, line) && !(line.empty())){
+		while(std::getline(src, line) && !(line.empty()) && line!="\r"){
 			std::vector<std::string> siteList_strvec;
     		Strings::split(line, siteList_strvec, std::string(" "));
 			kmcSiteType temp = kmcSiteType_str(siteList_strvec[0]);
