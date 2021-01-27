@@ -125,7 +125,7 @@ public:
 	//! Save a PAH to file with all details from current typespace. Such file can be opened with initialise_fromfile
 	void savePAH_tofile(const std::string &filename="InceptedPAH.inx");
     //! Create a PAH structure from a file. Allows debugging cases for any structure.
-	void createPAH_fromfile(std::vector<kmcSiteType>& vec, std::vector<int>& carb_vec, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::vector<std::string> edCarbons, std::vector<std::string> inCarbs, std::vector<std::string> R5loc, std::vector<std::string> R7loc);
+	void createPAH_fromfile(std::vector<kmcSiteType>& site_vec, std::vector<std::tuple<cpair, cpair>>& carb_pos, int R6, int R5_Lone, int R5_Embedded, int R7_Lone, int R7_Embedded, std::vector<std::string> edCarbons, std::vector<std::string> inCarbs, std::vector<std::string> R5loc, std::vector<std::string> R7loc);
 	
 	//! Structure processes: returns success or failure
     bool performProcess(const JumpProcess& jp, rng_type &rng, int PAH_ID);
@@ -138,6 +138,9 @@ public:
 
     //! Moves individual walker ii when called without calling optimiser. 
     void moveWalker(int ii);
+
+    //! Returns the number of walker sites
+    int getNumberWalkerSites();
 
     // Read Processes
     //! Get Counts
@@ -224,7 +227,7 @@ public:
 	//! Connects the atoms in a PAH using OpenBabel routines. Equivalent to OpenBabel::OBMol::ConnectTheDots();
 	void connectPAH(OpenBabel::OBMol my_mol);
 	//! Passes a PAH from OpenBabel to MOpS.
-	void passbackPAH(OpenBabel::OBMol mol);
+	void passbackPAH(OpenBabel::OBMol mol, bool R5coordsmod=true);
 	//! Runs optimisation of a PAH using Openbabel
 	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, int nsteps=4000, std::string forcefield="mmff94") ;
     //! Runs a constrained optimisation of a PAH using Openbabel
@@ -503,6 +506,8 @@ private:
     void updateCombinedSites(Spointer& st);
     //! Combined site for a particular site, special case for migration processes.
     void updateCombinedSitesMigration(Spointer& st);
+    //! Calls updateCombinedSitesMigration for all other walkers not involved in current migration
+    void updateWalkersCombinedSitesMigration(int tt);
     //! Sets third species bonded to C to a species sp if it is a reactive surface carbon
     void updateA(Cpointer C, char sp);
 	//! Overload function, forces char to C atom.
