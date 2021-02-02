@@ -285,6 +285,16 @@ void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
     filename.append(".dot");
     p.saveDOT(filename);
 }
+//! Save PAH structure PAH_ID at loop i. The folder KMC_DEBUG/PAH_ENSEMBLE/ needs to be created.
+void PAHStructure::saveXYZ_struct(int PAH_ID, int i)
+{
+    PAHProcess p(*this);
+    string filename = "KMC_DEBUG/PAH_ENSEMBLE/ID_";
+    filename.append(Strings::cstr(PAH_ID));
+    filename.append("_");
+    filename.append(Strings::cstr(i));
+    p.saveXYZ(filename);
+}
 
 
 // currently the serialization is incomplete, and some info is lost during this process

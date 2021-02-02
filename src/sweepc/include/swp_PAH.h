@@ -68,6 +68,10 @@ public:
     //returen ID of PAH
     int ID() const;
     void saveDOTperLoop(int ID, int i) const;
+
+  //! Saves XYZ structure for PAH_ID ID and loop i.
+    void saveXYZ_PAH(int ID, int i) const;
+
     Sweep::KMC_ARS::PAHStructure* Structure();
 
     //! this default conscustor is only used for serialization.

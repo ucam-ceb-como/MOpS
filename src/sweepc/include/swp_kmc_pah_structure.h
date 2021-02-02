@@ -130,6 +130,9 @@ namespace Sweep{
             
             void saveDOTperLoop(int PAH_ID, int i);
 
+            //! Save PAH structure PAH_ID at loop i. 
+            void saveXYZ_struct(int PAH_ID, int i);
+
             //! serialization (incomplete)
             void Serialize(std::ostream &out) const;
             void Deserialize(std::istream &in);
