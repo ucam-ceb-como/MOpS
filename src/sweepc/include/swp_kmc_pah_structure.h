@@ -131,7 +131,7 @@ namespace Sweep{
             void saveDOTperLoop(int PAH_ID, int i);
 
             //! Save PAH structure as XYZ files. 
-            void saveXYZ(const std::string &filename, bool optimise) const;
+            void saveXYZ(const std::string &filename, bool optimise);
 
             //! serialization (incomplete)
             void Serialize(std::ostream &out) const;

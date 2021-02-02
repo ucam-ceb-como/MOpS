@@ -70,7 +70,7 @@ public:
     void saveDOTperLoop(int ID, int i) const;
 
     //! Saves XYZ structure.
-    void PAH::saveXYZ(const std::string &filename, bool optimise) const;
+    void saveXYZ(const std::string &filename, bool optimise) const;
 
     Sweep::KMC_ARS::PAHStructure* Structure();
 

@@ -286,7 +286,7 @@ void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
     p.saveDOT(filename);
 }
 //! Save PAH structure as XYZ files. 
-void PAHStructure::saveXYZ(const std::string &filename, bool optimise) const
+void PAHStructure::saveXYZ(const std::string &filename, bool optimise)
 {
     PAHProcess p(*this);
     p.saveXYZ(filename, optimise);

@@ -2257,6 +2257,7 @@ Reactor *const Simulator::readSavePoint(unsigned int step,
             // The file step number does not match!
             throw runtime_error("File step number does not match file name "
                                 "(Mops, Simulator::readSavePoint).");
+            //return NULL;
         }
         if (frun != run) {
             // The file run number does not match!
@@ -2569,16 +2570,27 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
                         Sweep::Particle* sp=r->Mixture()->Particles().At(j);
                         Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
                         pah->OutputPAHPSL(temp_PAH, j, den, duplicates, Mapping, i);
+                        // Save the PAH ensemble at the last time.
+                        if (i == times.size()-1 || i == times.size()/2-1){
+                            std::string savefile = "KMC_DEBUG/PAH_ENSEMBLE/";
+                            std::stringstream stream;
+                            //Tracked PAH that needs to be saved.
+                            int PAH_ID_read = (int)temp_PAH[j][18];
+                            //Time saved
+                            double t = times[i].EndTime();
+                            stream << std::fixed << std::setprecision(1) << t*1000.0;
+                            savefile.append(std::to_string(PAH_ID_read));
+                            savefile.append("_");
+                            savefile.append(stream.str());
+                            pah->saveXYZ(savefile, false);
+                        }
 						if (j == r->Mixture()->ParticleCount() - 1){
 							for (size_t ii = 0; ii!=temp_PAH.size(); ++ii) {
 								out[i]->Write(temp_PAH[ii]);
-
-							    //! temp_PAH must be cleared before next output.
-							    temp_PAH.clear();
                             }
+                            //! temp_PAH must be cleared before next output.
+                            temp_PAH.clear();
 						}
-                        //Save PAH ensemble as XYZ files.
-                        pah->saveXYZ()
                     }
 
                     delete r;
