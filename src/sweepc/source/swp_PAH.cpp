@@ -120,9 +120,10 @@ int PAH::ID() const {
 void PAH::saveDOTperLoop(int ID, int i) const{
 	m_pahstruct->saveDOTperLoop(ID,i);
 }
-//! Saves XYZ structure for PAH_ID ID and loop i.
-void PAH::saveXYZ_PAH(int ID, int i) const{
-	m_pahstruct->saveXYZ_struct(ID,i);
+
+//! Saves XYZ structure.
+void PAH::saveXYZ(const std::string &filename, bool optimise) const{
+	m_pahstruct->saveXYZ(filename,optimise);
 }
 
 Sweep::KMC_ARS::PAHStructure* PAH::Structure()

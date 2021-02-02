@@ -69,8 +69,8 @@ public:
     int ID() const;
     void saveDOTperLoop(int ID, int i) const;
 
-  //! Saves XYZ structure for PAH_ID ID and loop i.
-    void saveXYZ_PAH(int ID, int i) const;
+    //! Saves XYZ structure.
+    void PAH::saveXYZ(const std::string &filename, bool optimise) const;
 
     Sweep::KMC_ARS::PAHStructure* Structure();
 

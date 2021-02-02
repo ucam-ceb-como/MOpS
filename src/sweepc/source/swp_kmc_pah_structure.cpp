@@ -285,15 +285,11 @@ void PAHStructure::saveDOTperLoop(int PAH_ID, int i)
     filename.append(".dot");
     p.saveDOT(filename);
 }
-//! Save PAH structure PAH_ID at loop i. The folder KMC_DEBUG/PAH_ENSEMBLE/ needs to be created.
-void PAHStructure::saveXYZ_struct(int PAH_ID, int i)
+//! Save PAH structure as XYZ files. 
+void PAHStructure::saveXYZ(const std::string &filename, bool optimise) const
 {
     PAHProcess p(*this);
-    string filename = "KMC_DEBUG/PAH_ENSEMBLE/ID_";
-    filename.append(Strings::cstr(PAH_ID));
-    filename.append("_");
-    filename.append(Strings::cstr(i));
-    p.saveXYZ(filename);
+    p.saveXYZ(filename, optimise);
 }
 
 

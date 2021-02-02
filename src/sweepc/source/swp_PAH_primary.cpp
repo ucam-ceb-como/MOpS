@@ -3095,6 +3095,18 @@ int PAHPrimary::InceptedPAH(const int k) const
     out.push_back(divider);
     ID++;
 }
+
+//! SaveXYZ files for every PAH in a primary particle.
+void PAHPrimary::saveXYZ(const std::string &filename, bool optimise) const{
+	for (size_t i = 0; i != m_PAH.size(); ++i)
+	{
+		std::string filename_pah = filename;
+		filename_pah.append("_");
+		filename_pah.append(std::to_string(i));
+		m_PAH[i]->saveXYZ(filename_pah, optimise);
+	}
+}
+
  // only for num of Primary == 1, carbon only
 double PAHPrimary::ReducedMass() const
 {
@@ -3324,9 +3336,6 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
 
             //! Uncomment the call to saveDOTperLoop to print out the structure of each PAH.
 			//m_PAH[i]->saveDOTperLoop(timeStep,uniquePAHCounter);
-
-			//! Uncomment the call to saveXYZ files at a given time for each PAH.
-			//m_PAH[i]->saveXYZ_PAH(timeStep,uniquePAHCounter);
 
 			uniquePAHCounter = uniquePAHCounter + 1;
 

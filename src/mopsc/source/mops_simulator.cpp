@@ -2570,12 +2570,15 @@ void Simulator::postProcessPAHPSLs(const Mechanism &mech,
                         Sweep::AggModels::PAHPrimary *pah = dynamic_cast<Sweep::AggModels::PAHPrimary*>(sp->Primary());
                         pah->OutputPAHPSL(temp_PAH, j, den, duplicates, Mapping, i);
 						if (j == r->Mixture()->ParticleCount() - 1){
-							for (size_t ii = 0; ii!=temp_PAH.size(); ++ii) 
+							for (size_t ii = 0; ii!=temp_PAH.size(); ++ii) {
 								out[i]->Write(temp_PAH[ii]);
 
 							    //! temp_PAH must be cleared before next output.
 							    temp_PAH.clear();
+                            }
 						}
+                        //Save PAH ensemble as XYZ files.
+                        pah->saveXYZ()
                     }
 
                     delete r;
