@@ -3325,6 +3325,9 @@ void PAHPrimary::OutputPAHPSL(std::vector<std::vector<double> > &out, const int 
             //! Uncomment the call to saveDOTperLoop to print out the structure of each PAH.
 			//m_PAH[i]->saveDOTperLoop(timeStep,uniquePAHCounter);
 
+			//! Uncomment the call to saveXYZ files at a given time for each PAH.
+			//m_PAH[i]->saveXYZ_PAH(timeStep,uniquePAHCounter);
+
 			uniquePAHCounter = uniquePAHCounter + 1;
 
 			//! Number of PAHs pointing to the same memory location.
