@@ -17623,12 +17623,22 @@ bool PAHProcess::checkSiteMigration(Spointer stt, bool b4){
 	cpair R5coords_end;
 	/*if (b4) R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
 	else R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);*/
-	if (b4) {
-		if (CR5_otherside_end->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
-		else R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2,true);
+	if ( !SiteRightSize(stt) && !SiteRightSize(checkR5_1) ){
+		if (b4) {
+			if (CR5_otherside_end->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end);
+			else R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
+		}else{
+			if (CR5_otherside_end->A=='H') R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+			else R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2,true);
+		}
 	}else{
-		if (CR5_otherside_end->A=='H') R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end);
-		else R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
+		if (b4) {
+			if (CR5_otherside_end->C2->A=='H') R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2);
+			else R5coords_end = endposR5internal(CR5_otherside_end, CR5_otherside_end->C2,true);
+		}else{
+			if (CR5_otherside_end->A=='H') R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end);
+			else R5coords_end = endposR5internal(CR5_otherside_end->C1, CR5_otherside_end,true);
+		}
 	}
 	if (m_pah->m_R5loc.size()>=1){
 		for (std::list<cpair>::iterator it = m_pah->m_R5loc.begin(); it!= m_pah->m_R5loc.end(); ++it){
