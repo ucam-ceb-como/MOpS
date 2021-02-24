@@ -113,7 +113,8 @@ public:
     // Writes a line of comma-separated long doubles to the file.
     void Write(const std::vector<long double> &values);
 
-
+    //Flush the CSV_IO file.
+    void flush_file();
 
 private:
     std::string m_name;  // The file name.

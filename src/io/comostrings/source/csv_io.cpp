@@ -194,6 +194,12 @@ void CSV_IO::Write(const std::vector<long double> &values)
 
 // INTERNAL READ/WRITE FUNCTIONS.
 
+// Flush CSV_IO file.
+void CSV_IO::flush_file()
+{
+    m_file.flush();
+}
+
 // Reads a string line from the file.
 void CSV_IO::readLine(std::string &line)
 {
