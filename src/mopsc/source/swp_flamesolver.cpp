@@ -580,6 +580,8 @@ void FlameSolver::Solve(Mops::Reactor &r, double tstop, int nsteps, int niter,
 			//adjust sample volume
 			r.Mixture()->AdjustSampleVolume(scale_factor);
 		}
+        //Write PAH processes to CSV file
+        r.Mixture()->Particles().Simulator()->writeRxnCountCSV();
     
     }
 

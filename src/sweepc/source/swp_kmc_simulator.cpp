@@ -363,7 +363,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
         }
     }
 
-    writeRxnCountCSV();
+    //writeRxnCountCSV();
     writeCHSiteCountCSV(PAH_ID);
     //std::cout << "Wall time used for PAH_ID " << PAH_ID << " = " << time_migration << "s." << std::endl;
     
@@ -520,6 +520,7 @@ void KMCSimulator::writeRxnCountCSV() {
     for(size_t i=0; i<m_rxn_count.size(); i++)
         temp.push_back(Strings::cstr(m_rxn_count[i]));
     m_rxn_csv.Write(temp);
+    m_rxn_csv.flush_file();
 }
 //! Writes data for CH_site_list.csv
 void KMCSimulator::writeCHSiteCountCSV(int ID) {
