@@ -47,6 +47,7 @@
 #include "mops_ode_solver.h"
 #include "mops_reactor.h"
 #include "mops_rhs_func.h"
+#include "mops_psr.h"
 #include "cvodes_utils.h"
 
 // CVODE includes.
@@ -56,6 +57,8 @@
 #include <vector>
 #include <cmath>
 #include <stdexcept>
+
+//#define CHECK_PTR // only enable for PSR/PSR network
 
 using namespace Mops;
 using namespace std;
@@ -247,6 +250,9 @@ void ODE_Solver::ResetSolver(void)
 // contents has been changed between calls to Solve().
 void ODE_Solver::ResetSolver(Reactor &reac)
 {
+    // aab64 check mixture pointer not NULL
+    assert(&reac.Mixture()->GasPhase());
+	
     // Check that this reactor has the same problem size
     // as the last reactor.  If not then we have to resize the
     // workspace, which is done by the Initialise() routine.
@@ -265,6 +271,9 @@ void ODE_Solver::ResetSolver(Reactor &reac)
     } else {
         Initialise(reac);
     }
+	
+    // aab64 check mixture pointer not NULL
+    assert(&reac.Mixture()->GasPhase());
 }
 
 
@@ -273,6 +282,21 @@ void ODE_Solver::ResetSolver(Reactor &reac)
 // Solves the reactor up to the given time.
 void ODE_Solver::Solve(Reactor &reac, double stop_time)
 {
+#ifdef CHECK_PTR
+	// aab64 check inflow pointers not NULL
+	// Cast the reactor to a PSR reactor
+	Mops::PSR *psr = dynamic_cast<Mops::PSR*>(&reac);
+	if (psr != NULL)
+	{
+		Mops::FlowPtrVector::const_iterator it = psr->Mops::PSR::Inflows().begin();
+		Mops::FlowPtrVector::const_iterator itend = psr->Mops::PSR::Inflows().end();
+		while (it != itend) {
+			assert(&(*it)->Mixture()->GasPhase());
+			++it;
+		}
+	}
+#endif
+	
     // Check that the reactor has the same problem size
     // as set in the solver.
     if (m_neq != reac.ODE_Count()) {

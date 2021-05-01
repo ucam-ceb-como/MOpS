@@ -124,6 +124,10 @@ int DimerInception::Perform(const double t, Cell &sys,
 
     // This routine performs the inception on the given chemical system.
 
+    // Check if hybrid particle-number/particle model
+    // If not, add particle to ensemble.
+    if (!m_mech->IsHybrid())
+    {
     // Create a new particle of the type specified
     // by the system ensemble.
     Particle *sp = m_mech->CreateParticle(t);
@@ -149,11 +153,32 @@ int DimerInception::Perform(const double t, Cell &sys,
     sp->Primary()->SetValues(ParticleTrackers());
     sp->UpdateCache();
 
+	double spwt = sp->getStatisticalWeight();
+
     // Add particle to system's ensemble.
     sys.Particles().Add(*sp, rng);
 
     // Update gas-phase chemistry of system.
-    adjustGas(sys, sp->getStatisticalWeight());
+    if (!sys.GetIsAdiabaticFlag())
+        adjustGas(sys, spwt);
+    // Update gas-phase chemistry and temperature of system.
+    else
+        adjustParticleTemperature(sys, spwt, 1, ParticleComp()[0], 1);
+    }
+    else
+    {
+        // Adjust particle number properties
+        sys.Particles().UpdateNumberAtIndex(ParticleComp()[0], 1);
+        sys.Particles().UpdateTotalParticleNumber(1);
+        sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
+
+        // Update gas-phase chemistry of system.
+        if (!sys.GetIsAdiabaticFlag())
+            adjustGas(sys, 1);
+        // Update gas-phase chemistry and temperature of system.
+        else
+            adjustParticleTemperature(sys, 1, 1, ParticleComp()[0], 1);
+    }
 
     return 0;
 }
@@ -215,9 +240,9 @@ double DimerInception::Rate(double t, const Cell &sys, const Geometry::LocalGeom
     // Get the current chemical conditions.
     double T = sys.GasPhase().Temperature();
     double P = sys.GasPhase().Pressure();
-
-    // Calculate the rate.
-    return Rate(sys.GasPhase(), sqrt(T),
+	
+	// Calculate the rate.
+	return Rate(sys.GasPhase(), sqrt(T),
                 MeanFreePathAir(T,P),
                 sys.SampleVolume());
 }
@@ -315,7 +340,7 @@ double DimerInception::RateTerms(const double t, const Cell &sys,
             Rate = 0.0;
 
         *iterm = Rate; 
-    } else {
+	}else{
         *iterm = Rate(sys.GasPhase(), sqrt(T),
                       MeanFreePathAir(T,P),
                       sys.SampleVolume());

@@ -41,15 +41,15 @@ END
 REACTIONS
 
 
-TiCl4 + M = TiCl3 + Cl + M                  5.4e+18     0.0      80267.6
+TiCl4 + M = TiCl3 + Cl + M                  5.4e+18     0.0      80305.92734
      TiO2/0.0/
 
 
-TiCl3 + M = TiCl2 + Cl + M                  7.7e+18     0.0      92451.0
+TiCl3 + M = TiCl2 + Cl + M                  7.7e+18     0.0      92495.21989
      TiO2/0.0/
 
 
-TiCl2 + M = TiCl + Cl + M                   3.2e+17     0.0      122073.6
+TiCl2 + M = TiCl + Cl + M                   3.2e+17     0.0      122131.9312
      TiO2/0.0/
 
 
@@ -83,13 +83,13 @@ Cl2 + Ti2O2Cl3 = Cl + Ti2O2Cl4              1.00e+13    0.0      0.0
 
 
 
-2TiCl3 = TiCl2 + TiCl4                      9.6e+12     0.0      8361.20
+2TiCl3 = TiCl2 + TiCl4                      9.6e+12     0.0      8365.200765
 
 TiCl3 + TiCl = 2TiCl2	                    1.00e+13    0.0      0.0
 
 
 
-TiCl3 + O2 (+M) <=> TiO2Cl3 (+M)     	    1.9247e+35  -6.577  9886.2
+TiCl3 + O2 (+M) <=> TiO2Cl3 (+M)     	    1.9247e+35  -6.577   9890.899857
      TiO2/0.0/
      LOW  /  1.0596e+36      -6.3189            0.0   /
      TROE /  0.11832       26.931        1e+05  5219.3 /
@@ -136,22 +136,23 @@ TiO2Cl2 + Cl = TiOCl2 + ClO                 1.00e+13    0.0      0.0
 O + O2 + M = O3 + M                         1.84e+21    -2.8    0.0
      TiO2/0.0/
 
-ClOO + M => Cl + O2 + M                     1.69e+14    0.0      3614.4
+ClOO + M => Cl + O2 + M                     1.69e+14    0.0      3616.156788
      TiO2/0.0/
 
 Cl + O2 + M => ClOO + M                     8.68e+21    -2.9    0.0
      TiO2/0.0/
 
-Cl + O3 = ClO + O2                          1.75e+13    0.0      520.78
+Cl + O3 = ClO + O2                          1.75e+13    0.0      521.0325048
 
-Cl2O + Cl = Cl2 + ClO                       3.73e+13    0.0      -260.39
+Cl2O + Cl = Cl2 + ClO                       3.73e+13    0.0      -260.5162524
 
-Cl + O2 = ClO + O                           8.79e+14    0.0      55064.5
+Cl + O2 = ClO + O                           8.79e+14    0.0      55090.82218
 
-O + Cl2 = ClO + Cl                          4.46e+12    0.0      891.07
+!comment: this is 13730 J/mol = 3281.5488 cal/mol in West et al 2009, here it was 891.4913958 cal/mol
+O + Cl2 = ClO + Cl                          4.46e+12    0.0      3281.5488
 
 
-2Cl + M = Cl2 + M      	                    2.23e+14    0.0      -1798.85
+2Cl + M = Cl2 + M      	                    2.23e+14    0.0      -1799.713193
      TiO2/0.0/
 
 
@@ -203,9 +204,9 @@ ClOO + Cl = Cl2 + O2                        1.39e+14    0.0      0.0
 
 TiCl3 + ClOO = TiCl4 + O2                   1.00e+13    0.0      0.0
 
-TiCl4 + O3 = TiCl3 + ClO + O2               1.00e+13    0.0      53989.5
+TiCl4 + O3 = TiCl3 + ClO + O2               1.00e+13    0.0      54015.29637
 
-O3 + O = 2O2      	                        5.47e+12    0.00322 4156.7
+O3 + O = 2O2      	                        5.47e+12    0.00322 4158.699809
 
 
 

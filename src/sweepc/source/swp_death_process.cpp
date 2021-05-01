@@ -154,7 +154,8 @@ double DeathProcess::InternalRate(
         double t,
         const Cell &sys,
         const Geometry::LocalGeometry1d &local_geom) const {
-    return m_a * sys.Particles().Count();
+    unsigned int n_total = sys.Particles().Count() + sys.Particles().GetTotalParticleNumber();
+    return m_a * n_total;
 }
 
 // RATE TERM CALCULATIONS.
@@ -195,7 +196,34 @@ int DeathProcess::Perform(double t, Sweep::Cell &sys,
                           rng_type &rng) const
 {
     // Get particle index
-    int i = sys.Particles().Select(rng);
+    int i = 0;
+    // Check if using hybrid particle-number/particle model
+    // If not, select a particle from the ensemble
+    if (!(m_mech->IsHybrid()))
+        i = sys.Particles().Select(rng);
+    else
+    {
+        // Check if should remove from ensemble or number list
+        unsigned int ntotal_pn = sys.Particles().GetTotalParticleNumber();
+        unsigned int ntotal_ens = sys.ParticleCount();
+        boost::uniform_01<rng_type&, double> unifDistrib(rng);
+        double test = unifDistrib() * (ntotal_pn + ntotal_ens);
+        if (ntotal_pn >= test)
+        {
+            unsigned int index = m_mech->SetRandomParticle(sys.Particles(), t, test, iUniform, rng);
+            if (index > 0)
+            {
+                sys.Particles().UpdateTotalsWithIndex(index, -1.0);
+                sys.Particles().UpdateNumberAtIndex(index, -1);
+                sys.Particles().UpdateTotalParticleNumber(-1);
+            }
+            i = -1;
+        }
+        else
+        {
+            i = sys.Particles().Select_usingGivenRand(iUniform, test - ntotal_pn, rng);
+        }
+    }
 
     if (i >= 0) DoParticleDeath(t, i, sys, rng);
     return 0;

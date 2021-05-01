@@ -63,6 +63,7 @@
 
 #include <boost/functional/hash.hpp>
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace Mops;
 using namespace std;
@@ -80,7 +81,7 @@ Simulator::Simulator(void)
   m_write_ensemble_file(false),
   m_write_PAH(false), m_write_PP(false), m_mass_spectra(true), m_mass_spectra_ensemble(true),
   m_mass_spectra_xmer(1), m_mass_spectra_frag(false), 
-  m_ptrack_count(0)
+  m_ptrack_count(0), m_track_bintree_particle_count(0)
 {
 }
 
@@ -123,6 +124,7 @@ Simulator &Simulator::operator=(const Mops::Simulator &rhs) {
         m_mass_spectra_xmer = rhs.m_mass_spectra_xmer;
         m_mass_spectra_frag = rhs.m_mass_spectra_frag;
         m_ptrack_count = rhs.m_ptrack_count;
+		m_track_bintree_particle_count = rhs.m_track_bintree_particle_count;
     }
     return *this;
 }
@@ -305,6 +307,14 @@ void Simulator::SetOutputStatBoundary(Sweep::PropID pid, double lower, double up
     m_statbound.PID   = pid;
 }
 
+// PARTICLE TRACKING FOR VIDEOS 
+
+//! Set number of track particles 
+void Simulator::SetTrackBintreeParticleCount(unsigned int val) { m_track_bintree_particle_count = val; }
+
+//! Return the (max) number of tracked particles 
+const unsigned int Simulator::TrackBintreeParticleCount() const { return m_track_bintree_particle_count; }
+
 // POVRAY OUTPUT.
 
 void Simulator::SetParticleTrackCount(unsigned int ptcount) {
@@ -404,6 +414,32 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 	if (rank==0)						//ms785
 	#endif
 	m_output_step = m_initial_timestep;
+
+	// Create output files for particle tracking videos
+	// (This is not currently done as a post-process)
+	if (m_track_bintree_particle_count>0){
+
+		//open files for each tracked particle
+		for (unsigned int i = 0; i < m_track_bintree_particle_count; i++){
+
+			// file name
+			m_TrackParticlesName.push_back(m_output_filename + "-video(" + cstr(i) + ").csv");
+
+			//get component names
+			std::string component_names;
+			for (unsigned int j = 0; j < r.Mech()->ParticleMech().ComponentCount(); j++){
+				component_names.append(",");
+				component_names.append(r.Mech()->ParticleMech().Components(j)->Name());
+			}
+
+			// write headers
+			std::ofstream TrackParticlesFile;
+			TrackParticlesFile.open(m_TrackParticlesName[i].c_str(), ios::app);
+			TrackParticlesFile << "Time (s),x (m),y (m),z (m),r (m),orient-x_x (m),orient-x_y (m),orient-x_z (m),orient-z_x (m),orient-z_y (m),orient-z_z (m)" << component_names << "\n";
+			TrackParticlesFile.close();
+		}
+	}
+
     fileOutput(m_output_step, m_output_iter, r, s, this);
 
 	#ifdef USE_MPI
@@ -457,6 +493,35 @@ void Simulator::RunSimulation(Mops::Reactor &r,
 
         // Initialise some LOI stuff
         if (s.GetLOIStatus() == true) setupLOI(r, s);
+
+		/*
+			Initialise bintree particle tracking for videos
+			This is not currently done as a post-process 
+			TODO: do this as a post-process
+		*/
+		if (m_track_bintree_particle_count>0){
+			
+			//initialise tracking			
+			r.Mixture()->Particles().SetParticleTrackingNumber(m_track_bintree_particle_count);
+			r.Mixture()->Particles().InitialiseParticleTracking();
+		}
+
+        // Initialise the register of particle-number particles
+        if (r.Mech()->ParticleMech().IsHybrid())
+        {
+            r.Mech()->ParticleMech().InitialisePNParticles(0.0, *r.Mixture(), r.Mech()->ParticleMech());
+        }
+
+		// Check if particle terms are to be included in the energy balance
+		if (r.IncludeParticles())
+			r.Mixture()->SetIsAdiabaticFlag(true);
+		else
+			r.Mixture()->SetIsAdiabaticFlag(false);
+		// Check if constant volume
+		if (r.IsConstV())
+			r.Mixture()->setConstV(true);
+		else
+			r.Mixture()->setConstV(false);
 
         // Loop over the time intervals.
         unsigned int global_step = m_initial_timestep;
@@ -669,6 +734,9 @@ void Simulator::postProcessSimulation(
     // Runs -> time steps -> particles -> coordinate.
     vector<vector<vector<fvector> > > ptrack(m_nruns);
 
+    // aab64 Declare particle-number count outputs (averages and errors).
+    vector<vector<double> > aPN(npoints), ePN(npoints);
+
     // OPEN SIMULATION OUTPUT FILES.
 
     // Build the simulation input file name.
@@ -712,6 +780,7 @@ void Simulator::postProcessSimulation(
     for(unsigned int irun=1; irun!=m_nruns; ++irun) {
         ptrack[irun][0].assign(ptrack[0][0].begin(), ptrack[0][0].end());
     }
+	readParticleNumberListDataPoint(fin, mech, aPN[0], ePN[0], true);
 
     // The initial conditions need to be multiplied by the number
     // of runs and iterations in order for the calcAvgConf to give
@@ -739,6 +808,7 @@ void Simulator::postProcessSimulation(
         multVals(eppjumps[0], m_nruns*m_niter);
         multVals(eppwdot[0], m_nruns*m_niter);
         multVals(ecpu[0], m_nruns*m_niter);
+        multVals(ePN[0], m_nruns*m_niter);
     } else {
         multVals(achem[0], m_nruns);
         multVals(astat[0], m_nruns);
@@ -751,6 +821,7 @@ void Simulator::postProcessSimulation(
         multVals(appjumps[0], m_nruns);
         multVals(appwdot[0], m_nruns);
         multVals(acpu[0], m_nruns);
+	multVals(aPN[0], m_nruns);
         multVals(echem[0], m_nruns); 
         multVals(estat[0], m_nruns);
         multVals(egprates[0], m_nruns);
@@ -762,6 +833,7 @@ void Simulator::postProcessSimulation(
         multVals(eppjumps[0], m_nruns);
         multVals(eppwdot[0], m_nruns);
         multVals(ecpu[0], m_nruns);
+        multVals(ePN[0], m_nruns);
     }
 
     // READ ALL OUTPUT POINTS.
@@ -793,6 +865,7 @@ void Simulator::postProcessSimulation(
                         readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                         readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                         readPartTrackPoint(fin, pmech, ptrack[irun][step]);
+						readParticleNumberListDataPoint(fin, mech, aPN[step], ePN[step], true);
                     }
                 }
                 else  {
@@ -810,6 +883,7 @@ void Simulator::postProcessSimulation(
                     readPartRxnDataPoint(fin, mech.ParticleMech(), apprates[step], epprates[step], appwdot[step], eppwdot[step], appjumps[step], eppjumps[step], true);
                     readCTDataPoint(fin, ncput, acpu[step], ecpu[step], true);
                     readPartTrackPoint(fin, pmech, ptrack[irun][step]);
+                    readParticleNumberListDataPoint(fin, mech, aPN[step], ePN[step], true);
                 }
             }
         }
@@ -832,6 +906,7 @@ void Simulator::postProcessSimulation(
         calcAvgConf(appjumps, eppjumps, m_nruns*m_niter);
         calcAvgConf(appwdot, eppwdot, m_nruns*m_niter);
         calcAvgConf(acpu, ecpu, m_nruns*m_niter);
+        calcAvgConf(aPN, ePN, m_nruns*m_niter);
     } else {
         calcAvgConf(achem, echem, m_nruns);
         calcAvgConf(astat, estat, m_nruns);
@@ -844,6 +919,7 @@ void Simulator::postProcessSimulation(
         calcAvgConf(appjumps, eppjumps, m_nruns);
         calcAvgConf(appwdot, eppwdot, m_nruns);
         calcAvgConf(acpu, ecpu, m_nruns);
+		calcAvgConf(aPN, ePN, m_nruns);
     }
 
     // POST-PROCESS ELEMENT FLUX
@@ -869,6 +945,7 @@ void Simulator::postProcessSimulation(
         writePartTrackCSV(m_output_filename+"("+cstr(irun)+")-track", mech,
                           times, ptrack[irun]);
     }
+    writeParticleNumberListCSV(m_output_filename + "-total-particle-number.csv", mech, times, aPN, ePN);
 
     // Only write jump file if the flag has been set.
     if (m_write_jumps) {
@@ -883,6 +960,10 @@ void Simulator::postProcessSimulation(
 
     // Now post-process the PSLs.
     postProcessPSLs(mech, times);
+
+    // Now post-process the PSLs.
+    if (mech.ParticleMech().GetHybridThreshold() > 0)
+        postProcessParticleNumberPSLs(mech, times);
 
     //! Post-process the ensemble.
     if (m_write_PAH && pmech.WriteBinaryTrees()) {
@@ -970,6 +1051,14 @@ void Simulator::outputGasPhase(const Reactor &r) const
     m_file.write((char*)&D, sizeof(D));
     double P = r.Mixture()->GasPhase().Pressure();
     m_file.write((char*)&P, sizeof(P));
+}
+
+// Writes the particle-number count (number of particles in list using the hybrid model) 
+// of the given reactor to the binary output file. 
+void Simulator::outputParticleNumber(const Reactor &r) const
+{
+    double PN = r.Mixture()->Particles().GetTotalParticleNumber();
+    m_file.write((char*)&PN, sizeof(PN));
 }
 
 // Writes the particle stats to the binary output file.
@@ -1096,8 +1185,45 @@ void Simulator::fileOutput(unsigned int step, unsigned int iter,
 
             // Write sensitivityto file.
             s.OutputSensitivity(me->m_senfile, r, me);
+
+            // Write the particle-number count to the output file.
+            me->outputParticleNumber(r);
         }
     }
+
+	/*
+	Print bintree particle coordinate tracking for videos
+	This is not currently done as a post-process
+	TODO: do this as a post-process
+	*/
+	for (unsigned int i = 0; i < me->m_track_bintree_particle_count; i++){
+
+		std::string TrackParticlesName = me->m_TrackParticlesName[i];
+
+		//get primary coordinates
+
+		if (r.Mixture()->Particles().TrackedAt(i) != NULL){
+
+			vector<fvector> coords;
+			r.Mixture()->Particles().TrackedAt(i)->getFrameCoords(coords);
+
+			//time
+			double time = r.Time();
+
+			//iterate through vector printing primary coordinates
+			std::ofstream fileout;
+			fileout.open(TrackParticlesName.c_str(), ios::app);
+			for (vector<fvector>::const_iterator it = coords.begin(); it != coords.end(); it++){
+				//print time, x, y, z, r, orientation, composition
+				fileout << time;
+				for (fvector::const_iterator iit = (*it).begin(); iit != (*it).end(); iit++){
+					fileout << "," << (*iit);
+				}
+				fileout <<"\n";
+			}
+			fileout.close();
+		}
+	}
 }
 
 
@@ -1377,6 +1503,34 @@ void Simulator::readGasPhaseDataPoint(std::istream &in, const Mops::Mechanism &m
             sumsqr[N+2] += (P*P);
         }
     }
+}
+
+// Reads a particle-number list data point from the binary file.
+// To allow the averages and confidence intervals to be calculated
+// the data point is added to a vector of sums, and the squares are
+// added to the vector sumsqr if necessary.
+void Simulator::readParticleNumberListDataPoint(std::istream &in, const Mops::Mechanism &mech,
+	fvector &sum, fvector &sumsqr, bool calcsqrs)
+{
+	// Check for valid stream.
+	if (in.good()) {
+		double PN = 0.0;
+
+		in.read(reinterpret_cast<char*>(&PN), sizeof(PN));
+
+		// Resize vectors.
+		sum.resize(1, 0.0);
+		sumsqr.resize(1, 0.0);
+
+		// Calculate sums and sums of square (for average and
+		// error calculation).
+
+		// Calculates sums and sums of squares of count
+		sum[0] += PN;
+		if (calcsqrs) {
+			sumsqr[0] += (PN*PN);
+		}
+	}
 }
 
 // Reads a CPU timing data from the binary file.
@@ -1673,8 +1827,8 @@ void Simulator::calcAvgConf(std::vector<fvector> &avg,
 void Simulator::buildOutputVector(unsigned int step, double time,
                                   fvector &avg, const fvector &err)
 {
-    for (unsigned int i=avg.size(); i!=0; --i) {
-        if (i < err.size()) {
+    for (int i=avg.size(); i!=0; --i) {
+        if (i <= err.size()) {
             avg.insert(avg.begin()+i, *(err.begin()+i-1));
         } else {
             avg.insert(avg.begin()+i, 0.0);
@@ -1731,6 +1885,48 @@ void Simulator::writeGasPhaseCSV(const std::string &filename,
     // Close the CSV files.
     csv.Close();
 }
+
+// Writes particle-number total to a CSV file.
+void Simulator::writeParticleNumberListCSV(const std::string &filename,
+	const Mechanism &mech,
+	const timevector &times,
+	std::vector<fvector> &avg,
+	const std::vector<fvector> &err)
+{
+	// Open file for the CSV results.
+	CSV_IO csv(filename, true);
+
+	// Write the header row to the CSV file.
+	vector<string> head;
+	head.push_back("Step");
+	head.push_back("Time (s)");
+	head.push_back("Particle-number count (-)");
+
+	for (unsigned int i = head.size(); i != 2; --i) {
+		head.insert(head.begin() + i, "Err");
+	}
+	csv.Write(head);
+
+	// Output initial conditions.
+	buildOutputVector(0, times[0].StartTime(), avg[0], err[0]);
+	csv.Write(avg[0]);
+
+	// Loop over all points, performing output.
+	unsigned int step = 1;
+	for (timevector::const_iterator iint = times.begin(); iint != times.end(); ++iint) {
+		// Loop over all time steps in this interval.
+		double t = iint->StartTime();
+		for (unsigned int istep = 0; istep<(*iint).StepCount(); ++istep, ++step) {
+			t += iint->StepSize();
+			buildOutputVector(step, t, avg[step], err[step]);
+			csv.Write(avg[step]);
+		}
+	}
+
+	// Close the CSV files.
+	csv.Close();
+}
+
 
 // Writes computation times profile to a CSV file.
 void Simulator::writeCT_CSV(const std::string &filename,
@@ -2345,15 +2541,12 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 	unsigned int step = 0;
 	fvector psl;
 	vector<fvector> ppsl;
-
-	////////////////////////////////////////// csl37-pp
-	vector<fvector> surface;
-	vector<string> surfout_header;
-	vector<fvector> primary_diameter;
+	vector<fvector> nodes;
+	vector<string> nodes_header;
+	vector<fvector> prims;
 	vector<string> primary_header;
-	CSV_IO surfout(m_output_filename + "-primary-surface.csv", true);
-	CSV_IO diamout(m_output_filename + "-primary-diameter.csv", true);
-	///////////////////////////////////////////
+	CSV_IO nodesout(m_output_filename + "-primary-nodes.csv", true);
+	CSV_IO primsout(m_output_filename + "-primary.csv", true);
 
 	// Get reference to the particle mechanism.
 	const Sweep::Mechanism &pmech = mech.ParticleMech();
@@ -2389,6 +2582,7 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 			if (r != NULL) {
 				double scale = (double)m_nruns;
 				if (m_output_every_iter) scale *= (double)m_niter;
+				// Note for hybrid model: particles in list not added here.
 
 				// Get PSL for all particles.
 				for (unsigned int j = 0; j != r->Mixture()->ParticleCount(); ++j) {
@@ -2414,16 +2608,14 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 					file.close();
 				}
 
-				////////////////////////////////////////// csl37-pp
-				// print primary data and connection data
-				// loop over particles at last save point
+				// Print primary and connectivity data
+				// This is currently only done at the last save point
 				if (i == times.size() - 1){
 					for (unsigned int k = 0; k != r->Mixture()->ParticleCount(); k++)
 					{
-						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), surface, primary_diameter, k);
+						stats.PrintPrimary(*(r->Mixture()->Particles().At(k)), mech.ParticleMech(), nodes, prims, k);
 					}
 				}
-				/////////////////////////////////////////
 
 				delete r;
 			}
@@ -2439,50 +2631,165 @@ void Simulator::postProcessPSLs(const Mechanism &mech,
 		//out[i]->Close(); 
 		//delete out[i];
 	}
-	//////////////////////////////////////////// csl37-pp
-	surfout_header.push_back("Particle Index");
-	surfout_header.push_back("Number of primaries below node");
-	surfout_header.push_back("Common surface area (m2)");
-	surfout_header.push_back("Sintering level");
-	surfout_header.push_back("Separation (m)");
-	surfout_header.push_back("Neck radius (m)");
-	surfout_header.push_back("Left radius (m)");
-	surfout_header.push_back("Right radius (m)");
-	surfout_header.push_back("Left Index");
-	surfout_header.push_back("Right Index");
 
-	surfout.Write(surfout_header);
-	for (unsigned int k = 0; k < surface.size(); k++)
+	// Write bintreeprimary connectivity data 
+	nodes_header.push_back("Particle Index");
+	nodes_header.push_back("Number of primaries below node");
+	nodes_header.push_back("Common surface area (m2)");
+	nodes_header.push_back("Sintering level");
+	nodes_header.push_back("Separation (m)");
+	nodes_header.push_back("Neck radius (m)");
+	nodes_header.push_back("Left radius (m)");
+	nodes_header.push_back("Right radius (m)");
+	nodes_header.push_back("Left Index");
+	nodes_header.push_back("Right Index");
+
+	nodesout.Write(nodes_header);
+	for (unsigned int k = 0; k < nodes.size(); k++)
 	{
-		surfout.Write(surface[k]);
+		nodesout.Write(nodes[k]);
 	}
-	surfout.Close();
+	nodesout.Close();
 
+	// Write primary particle data 
 	primary_header.push_back("Particle Index");
 	primary_header.push_back("Primary diameter (m)");
 	primary_header.push_back("Sph. equiv. diameter (m)");
-	primary_header.push_back("True primary volume (m3)");
-	primary_header.push_back("Primary volume (m3)");
+	primary_header.push_back("(Geom.) Primary volume (m3)");
+	primary_header.push_back("(Comp.) Primary volume (m3)");
 	primary_header.push_back("Primary surface (m2)");
 	primary_header.push_back("Position x");
 	primary_header.push_back("Position y");
 	primary_header.push_back("Position z");
 	primary_header.push_back("Radius (m)");
-
-	diamout.Write(primary_header);
-	for (unsigned int k = 0; k < primary_diameter.size(); k++)
-	{
-		diamout.Write(primary_diameter[k]);
+	
+	// Get composition
+	const Sweep::ParticleModel &model = mech.ParticleMech();
+	unsigned int ncomp = model.ComponentCount();
+	// Add component to header
+	for (unsigned int i = 0; i != ncomp; ++i) {
+		primary_header.push_back(model.Components(i)->Name());
 	}
-	diamout.Close();
 
-	///////////////////////////////////////////
+	primsout.Write(primary_header);
+	for (unsigned int k = 0; k < prims.size(); k++)
+	{
+		primsout.Write(prims[k]);
+	}
+	primsout.Close();
+
 	//// Close output CSV files.
 	for (unsigned int i = 0; i != times.size(); ++i) {
 		out[i]->Close();
 		delete out[i];
 	}
 }
+
+// Processes the particle-number PSLs at each save point into single files.
+void Simulator::postProcessParticleNumberPSLs(const Mechanism &mech,
+	const timevector &times) const
+{
+	if (mech.ParticleMech().IsHybrid())
+	{
+		Reactor *r = NULL;
+		unsigned int step = 0;
+
+		// CSV header 
+		vector<string> pn_particles_header;
+		pn_particles_header.push_back("Composition index (-)");
+		pn_particles_header.push_back("Diameter at index (m)");
+		pn_particles_header.push_back("Mass at index (kg)");
+		pn_particles_header.push_back("Ave. number at index (-)");
+		pn_particles_header.push_back("Err");
+		pn_particles_header.push_back("Ave. density at index (m-3)");
+		pn_particles_header.push_back("Err");
+		pn_particles_header.push_back("Total number at index (-)");
+
+		// Values string
+		vector<string> pn_particles(8);
+
+		// Get hybrid threshold
+		unsigned int threshold = mech.ParticleMech().GetHybridThreshold();
+
+		unsigned int count = 0;
+
+		double scale = (double)m_nruns;
+		if (m_output_every_iter)
+			scale *= (double)m_niter;
+
+		// Loop over all time intervals.
+		for (unsigned int i = 0; i != times.size(); ++i) {
+			// Calculate the total step count after this interval.
+			step += times[i].StepCount();
+
+			// Vectors to store sums
+			vector<vector<double> > sum_N(threshold), sumsqr_N(threshold), indexVals(threshold);
+
+			// File output
+			string fname_pn = m_output_filename + "-particle-numbers(" + cstr(times[i].EndTime()) + "s).csv";
+			CSV_IO pn_particles_out(fname_pn, true);
+			pn_particles_out.Write(pn_particles_header);
+
+			// Loop over all runs.
+			for (unsigned int irun = 0; irun != m_nruns; ++irun) {
+				// Read the save point for this step and run.
+				r = readSavePoint(step, irun, mech);
+
+				if (r != NULL) {
+
+					for (unsigned int i = 0; i < threshold; ++i)
+					{
+						if (irun == 0)
+						{
+							sum_N[i].resize(2, 0.0);     // Store: number at index, density at index
+							sumsqr_N[i].resize(2, 0.0);  // Store: uncertainty in number and density at index
+							indexVals[i].push_back(i);   // Store: index, diameter at index, mass at index
+							indexVals[i].push_back(r->Mixture()->Particles().DiameterAtIndex(i));
+							indexVals[i].push_back(r->Mixture()->Particles().MassAtIndex(i));
+						}
+
+						count = r->Mixture()->Particles().NumberAtIndex(i);
+						sum_N[i][0] += count;
+						sumsqr_N[i][0] += (count * count);
+						count = count / r->Mixture()->SampleVolume();
+						sum_N[i][1] += count;
+						sumsqr_N[i][1] += (count * count);
+					}
+
+					delete r;
+				}
+				else {
+					// Throw error if the reactor was not read.
+					throw runtime_error("Unable to read reactor from save point "
+						"(Mops, ParticleSolver::postProcessParticleNumberPSLs).");
+				}
+			}
+
+			vector<vector<double> > totalSum = sum_N;
+
+			calcAvgConf(sum_N, sumsqr_N, scale);
+
+			// Write output
+			for (unsigned int i = 0; i < threshold; ++i) {
+				pn_particles[0] = boost::lexical_cast<std::string>(indexVals[i][0]); // Size index
+				pn_particles[1] = boost::lexical_cast<std::string>(indexVals[i][1]); // Diameter of particles of size index
+				pn_particles[2] = boost::lexical_cast<std::string>(indexVals[i][2]); // Mass of particles of size index
+				pn_particles[3] = boost::lexical_cast<std::string>(sum_N[i][0]);     // Average number of particles at size index
+				pn_particles[4] = boost::lexical_cast<std::string>(sumsqr_N[i][0]);  // Uncertainty in average number
+				pn_particles[5] = boost::lexical_cast<std::string>(sum_N[i][1]);     // Average number density of particles at size index
+				pn_particles[6] = boost::lexical_cast<std::string>(sumsqr_N[i][1]);  // Uncertainty in average number density
+				pn_particles[7] = boost::lexical_cast<std::string>(totalSum[i][0]);  // Total number of particles at size index
+				pn_particles_out.Write(pn_particles);
+
+			}
+			// Close file
+			pn_particles_out.Close();
+		}
+	}
+}
+
+
+
 
 /*
  * @brief Processes the PAH-PSLs at each save point into single files.

@@ -41,6 +41,9 @@
 
 #include "mops_rhs_func.h"
 #include "mops_ode_solver.h"
+#include "mops_psr.h"
+
+//#define CHECK_PTR //only enable for PSR/PSR network
 
 // RHS FUNCTION AND GOVERNING EQUATIONS.
 
@@ -57,6 +60,21 @@ int rhsFn_CVODE(double t,      // Independent variable.
     // Cast the Solver object.
     Mops::ODE_Solver *s = static_cast<Mops::ODE_Solver*>(solver);
     Mops::Reactor *r    = s->GetReactor();
+	
+#ifdef CHECK_PTR
+	// aab64 check mixture pointer not NULL
+	assert(&r->Mixture()->GasPhase());
+	// aab64 check inflow pointers not NULL
+	// Cast the reactor to a PSR reactor
+	Mops::PSR *psr = dynamic_cast<Mops::PSR*>(s->GetReactor());
+	if (psr != NULL)
+	{
+		for (Mops::FlowPtrVector::const_iterator it = psr->Mops::PSR::Inflows().begin();
+			it != psr->Mops::PSR::Inflows().end(); ++it) {
+			assert(&(*it)->Mixture()->GasPhase());
+		}
+	}
+#endif
 
     // Get the RHS from the system model.
     if (r->EnergyEquation() == Mops::Reactor::ConstT) {

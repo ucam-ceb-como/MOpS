@@ -209,6 +209,9 @@ private:
     double m_inv_sqrtmass; // Inverse of the square-root of the mass.
     double m_d2_m_1_2;     // D^2 * M^-1/2.
 
+    //! Statistical weight
+    double m_weight;
+
 	// The free surface available for other particles to sinter
 	double m_freesurface;
 };

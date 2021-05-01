@@ -126,6 +126,11 @@ public:
         const Particle &sp
         ) const;
 
+    // Return just the rate constant and chemistry part for hybrid method
+    double Rate(
+        double t,
+        const Cell &sys) const;
+
     //! Writes the object to a binary stream.
     void Serialize(std::ostream &out) const;
 

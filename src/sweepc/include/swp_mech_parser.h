@@ -49,6 +49,7 @@
 #include "swp_dimer_inception.h"
 #include "swp_silicon_inception.h"
 #include "swp_surface_reaction.h"
+#include "swp_titania_phase_transformation.h"
 #include "swp_condensation.h"
 #include "swp_maths_functional.h"
 #include "swp_silica_interparticle.h"
@@ -95,6 +96,9 @@ private:
         CamXML::Document &xml, // CamXML document pre-constructed from file.
         Mechanism &mech        // Mechanism to construct from XML.
         );
+
+	// Assign phases
+	static void assignPhases(Sweep::Mechanism &mech);
 
     // INCEPTIONS.
 
@@ -182,6 +186,19 @@ private:
         Processes::InterParticle &intpart // Interparticle reaction to construct from XML.
         );
 
+	// PHASE TRANSFORMATION REACTIONS.
+
+    // Reads phase transformation reaction processes from a sweep mechanism XML file.
+    static void readPhaseTransformation(
+        CamXML::Document &xml, // CamXML document pre-constructed from file.
+        Mechanism &mech        // Mechanism to construct from XML.
+        );
+
+    // Reads a phase transformation from a sweep mechanism XML file.
+    static void readPhaseTransformation(
+        CamXML::Element &xml,         // CamXML document pre-constructed from file.
+        Processes::TitaniaPhaseTransformation &phasetransform // Phase transformation reaction to construct from XML.
+        );
 
     // COAGULATION
     //! Allow user to choose coagulation kernel via a sweep mechanism XML file.

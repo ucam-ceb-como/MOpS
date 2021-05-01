@@ -179,7 +179,10 @@ public:
     // Adds the given particle to the ensemble.  Returns the new
     // particle's index in the ensemble.  The ensemble then takes
     // control of destruction of the particle.
-    int Add(Particle &sp, rng_type &rng);
+    // For particle-number/particle (hybrid) model: the final two inputs 
+    // flag events in which we cannot delete the particle with index i2 
+    // if a contraction is triggered
+    int Add(Particle &sp, rng_type &rng, int i2 = 0, bool hybrid_event_flag = false);
 
 	//Find a particle that is a single PAH of a given structure
 	int CheckforPAH(Sweep::KMC_ARS::PAHStructure &m_PAH, double t, int ind);
@@ -230,6 +233,13 @@ public:
     // negative.
     int Select(Sweep::PropID id, rng_type &rng) const;
 
+    // Randomly selects a particle using a pre-chosen random number weighted
+    // by the given particle property index. 
+    // The particle properties are those stored in
+    // the ParticleData type. Returns particle index on success, otherwise
+    // negative.
+    int Select_usingGivenRand(Sweep::PropID id, double rng_number, rng_type &rng) const;
+
     // ENSEMBLE CAPACITY AND PARTICLE COUNT.
 
     //! Returns the particle count.
@@ -271,6 +281,57 @@ public:
     //! Get alpha for the ensemble (ABF model)
     double Alpha(double T) const;
 
+    // Hybrid particle-number/particle model functions
+    // ===============================================
+    // Set/get threshold size 
+    void SetHybridThreshold(unsigned int threshold) { m_hybrid_threshold = threshold; }
+    unsigned int GetHybridThreshold() const { return m_hybrid_threshold; }
+    
+    // Functions to update/reset the number count at a specific particle-number index
+    unsigned int SetTotalParticleNumber();
+    void ResetNumberAtIndex(unsigned int index);
+    void UpdateNumberAtIndex(unsigned int index, int update);
+    void UpdateTotalParticleNumber(int update) { m_total_number += update; }
+    void UpdateTotalsWithIndex(unsigned int index, double change);
+    void UpdateTotalsWithIndices(unsigned int i1, unsigned int i2);
+
+    // Recalculate property sums to avoid accummulation of rounding errors
+    void RecalcPNPropertySums();
+
+    // Functions to initialise properties
+    void InitialiseParticleNumberModel();
+    void InitialiseDiameters(double molecularWeight, double density);
+    int SetPNParticle(Particle &sp, unsigned int index);
+
+    // Functions to get properties (at specified index)	
+    double PropertyAtIndex(Sweep::PropID prop, unsigned int index) const;
+    double GetPropertyTotal (Sweep::PropID prop) const;
+    unsigned int GetTotalParticleNumber() const { return m_total_number; }
+    unsigned int NumberAtIndex(unsigned int index) const;
+    double Diameter2AtIndex(unsigned int index) const { return m_pn_diameters2[index]; }
+    double DiameterAtIndex(unsigned int index) const { return m_pn_diameters[index]; }
+    double MassAtIndex(unsigned int index) const { return m_pn_mass[index]; }
+    Particle *const GetPNParticleAt(unsigned int index);
+	
+    // This could be a single function with a case statement
+    // but it would be slower and some propIDs don't exist
+    double GetTotalDiameter() const;
+    double GetTotalDiameter2() const;
+    double GetTotalDiameter_1() const;
+    double GetTotalDiameter_2() const;
+    double GetTotalDiameter3() const;
+    double GetTotalDiameter2_mass_1_2() const;
+    double GetTotalMass_1_2() const;
+    double GetTotalMass() const;
+    double GetTotalMass2() const;
+    double GetTotalMass3() const;
+    unsigned int GetTotalComponent() const;
+
+    // Function to double totals when doubling is triggered
+    void DoubleTotals();
+
+    // ===============================================
+
     // READ/WRITE/COPY.
 
     //! Writes the object to a binary stream.
@@ -292,12 +353,37 @@ public:
     //void SetNumOfInceptedPAH(int m_amount);
     //void SetNumOfInceptedPAH(int m_amount, Sweep::AggModels::Primary *m_primary);
 
+	// PARTICLE TRACKING OUTPUT FOR VIDEOS
+
+	//! Updates tracking after a coagulation event
+	void UpdateTracking(int p_old, int p_merged);
+
+	//! Returns a pointer to the given tracked particle.
+	const Particle *const TrackedAt(unsigned int i) const;
+	
+	//! Set number of particle tracked for videos
+	void SetParticleTrackingNumber(unsigned int val);
+
+	//! Return number of particles currently being tracked for videos
+	unsigned int TrackedParticleNumber() const;
+
+	//! Initialise tracking of initial particle population 
+	void InitialiseParticleTracking();
+
 private:
     //! Vector of particles in the ensemble.
     PartPtrVector m_particles;
     Sweep::KMC_ARS::KMCSimulator *m_kmcsimulator;
 
-    // ENSEMBLE CAPACITY VARIABLES.
+	// PARTICLE TRACKING OUTPUT FOR VIDEOS
+
+	//! (maximum) number of particles tracked for videos
+	unsigned int m_tracked_number;
+
+	//! Vector of pointers of tracked particles 
+	PartPtrVector m_tracked_particles;    
+
+// ENSEMBLE CAPACITY VARIABLES.
     unsigned int m_levels;   // Number of levels in the binary tree.
     unsigned int m_capacity; // The ensemble capacity (max. particle count).
     unsigned int m_halfcap;  // Half the ensemble capacity.
@@ -307,6 +393,7 @@ private:
     // ENSEMBLE SCALING VARIABLES.
     double m_contfactor;       // Contraction scaling factor, precalculated for speed.
     unsigned int m_ncont;    // Number of ensemble contractions that have occurred.
+    double m_wtdcontfctr;    // Track change due to loss of particles (needed to account for unequal weights or PN/P model).
     bool m_contwarn;         // Has a contraction warning msg been printed?
 
     // DOUBLING ALGORITHM VARIABLES.
@@ -317,6 +404,36 @@ private:
     unsigned int m_dblelimit;  // Particle count below which ensemble is doubled (if active).
     unsigned int m_dbleslack;  // Slack space at end of ensemble after doubling operation.
     bool m_dbleon;             // Allows user to manually switch off/on doubling.  Does not affect activation criterion.
+
+    // Hybrid particle number model variables
+    // ===============================================
+    unsigned int m_hybrid_threshold; 
+    unsigned int m_total_number;
+    unsigned int m_total_component;
+    double m_total_diameter;
+    double m_total_diameter2;
+    double m_total_diameter_1;
+    double m_total_diameter_2;
+    double m_total_diameter2_mass_1_2;
+    double m_total_mass_1_2;
+    double m_total_mass;
+    double m_total_mass2;
+    double m_total_mass3;
+    double m_total_diameter3;
+    std::vector<unsigned int> m_particle_numbers;
+    std::vector<double> m_pn_diameters;
+    std::vector<double> m_pn_diameters2;
+    std::vector<double> m_pn_diameters_1;
+    std::vector<double> m_pn_diameters_2;
+    std::vector<double> m_pn_diameters2_mass_1_2;
+    std::vector<double> m_pn_mass_1_2;
+    std::vector<double> m_pn_mass;
+    std::vector<double> m_pn_mass2;
+    std::vector<double> m_pn_mass3;
+    std::vector<double> m_pn_diameters3;
+    PartPtrVector m_pn_particles;
+
+    // ===============================================
 
     //! Reset the contents of the binary tree
     void rebuildTree();

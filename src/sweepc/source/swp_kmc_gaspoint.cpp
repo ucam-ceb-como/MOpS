@@ -126,7 +126,7 @@ void KMCGasPoint::initData() {
 void KMCGasPoint::Interpolate(double t, double fact) {
     // get time point after t
     GasProfile::const_iterator j = LocateGasPoint(*m_gasprof, t);
-    if(j == m_gasprof->begin() || j == m_gasprof->end()) {
+    if(j == m_gasprof->begin() || j == m_gasprof->end()-1) {
         m_data[Time] = j->Time;
         m_data[T] = j->Gas.Temperature();
         m_data[P] = j->Gas.Pressure();

@@ -63,6 +63,7 @@ Sweep::TreeCache::TreeCache()
 , m_inv_sqrtmass(0.0)
 , m_d2_m_1_2(0.0)
 , m_freesurface(0.0)
+, m_weight(0.0)
 {}
 
 /*!
@@ -98,6 +99,7 @@ Sweep::TreeCache::TreeCache(const Sweep::Particle &part)
     m_inv_dcolsqr  = 1.0 / m_dcolsqr;
     m_inv_sqrtmass = 1.0 / std::sqrt(m_mass);
     m_d2_m_1_2     = m_dcolsqr * m_inv_sqrtmass;
+    m_weight       = part.getStatisticalWeight();
 }
 
 // OPERATOR OVERLOADS.
@@ -124,6 +126,7 @@ Sweep::TreeCache &Sweep::TreeCache::operator+=(const TreeCache &rhs)
     m_inv_sqrtmass += rhs.m_inv_sqrtmass;
     m_d2_m_1_2     += rhs.m_d2_m_1_2;
     m_freesurface  += rhs.m_freesurface;
+    m_weight       += rhs.m_weight;
     return *this;
 }
 
@@ -153,6 +156,7 @@ void Sweep::TreeCache::Clear(void)
     m_inv_sqrtmass = 0.0;
     m_d2_m_1_2     = 0.0;
     m_freesurface  = 0.0;
+    m_weight       = 0.0;
 }
 
 
@@ -228,6 +232,8 @@ double Sweep::TreeCache::Property(PropID id) const
             return m_d2_m_1_2;
 		case iFS:
 			return m_freesurface;
+	case iW:
+	    return m_weight;
         case -1:
             // Special case property, used to select particles
             // uniformly.

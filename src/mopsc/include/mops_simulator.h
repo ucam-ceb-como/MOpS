@@ -212,7 +212,6 @@ public:
     //! set the option whehter including the xmer in the large soot aggregate
     void SetMassSpectraFrag(const bool val);
 
-
     // STATISTICAL BOUNDS OUTPUT
 
     // Set simulator to output data of a given statistical range.
@@ -226,6 +225,14 @@ public:
 
     // Set number of particle trackings.
     void SetParticleTrackCount(unsigned int ptcount);
+
+	// PARTICLE TRACKING FOR VIDEOS  (alternative to POVRAY)
+
+	//! Set number of track particles 
+	void SetTrackBintreeParticleCount(unsigned int val);
+
+	//! Return the (max) number of tracked particles 
+	const unsigned int TrackBintreeParticleCount() const;
 
     // SOLUTION AND POST-PROCESSING.
 	
@@ -425,6 +432,10 @@ private:
     // the binary output file.
     void outputGasPhase(const Reactor &r) const;
 
+    // Writes the particle-number count of the given 
+    // reactor to the binary output file. 
+    void outputParticleNumber(const Reactor &r) const;
+
     // Writes the particle stats to the binary output file.
     void outputParticleStats(const Reactor &r) const;
 
@@ -444,6 +455,13 @@ private:
     // given reactor to the binary output file.
     void outputPartRxnRates(const Reactor &r) const;
 
+	// PARTICLE TRACKING OUTPUT FOR VIDEOS
+
+	// Vector of file names
+	std::vector<std::string> m_TrackParticlesName;
+
+	//! (Maximum) number of particles tracked
+	unsigned int m_track_bintree_particle_count;
 
     // CONSOLE OUTPUT.
 
@@ -487,6 +505,18 @@ private:
         fvector &sumsqr,             // Sums of the squares.
         bool calcsqrs = false        // Set =true to also calculate sums of squares.
         );
+
+    // Reads a particle-number list data point from the binary file.
+    // To allow the averages and confidence intervals to be calculated -
+    // the data point is added to a vector of sums, and the squares are
+    // added to the vector sumsqr if necessary.
+    static void readParticleNumberListDataPoint(
+	std::istream &in,            // Input stream.
+	const Mops::Mechanism &mech, // Chemical mechanism.
+	fvector &sum,                // Sums of chemistry data.
+	fvector &sumsqr,             // Sums of the squares.
+	bool calcsqrs = false        // Set =true to also calculate sums of squares.
+	);
 
     // Reads a CPU timing data from the binary file.
     // To allow the averages and confidence intervals to be calculated
@@ -599,6 +629,15 @@ private:
         std::vector<fvector> &avg,       // Vector of gas-phase time points.
         const std::vector<fvector> &err  // Vector of confidence intervals.
         );
+
+    // Writes the particle-number list count to a CSV file.
+    static void writeParticleNumberListCSV(
+	const std::string &filename,     // Output file name (incl. extension).
+	const Mechanism &mech,           // Mechanism defining chemical species.
+	const timevector &times,         // Output time profile.
+	std::vector<fvector> &avg,       // Vector of gas-phase time points.
+	const std::vector<fvector> &err  // Vector of confidence intervals.
+	);
 
     // Writes computation times profile to a CSV file.
     void writeCT_CSV(
@@ -729,6 +768,12 @@ private:
         const Mechanism &mech,  // Mechanism use to solve system.
         const timevector &times // Simulation output time intervals.
         ) const;
+
+	// Processes the particle-number list PSLs at each save point into single files.
+	void postProcessParticleNumberPSLs(
+		const Mechanism &mech,  // Mechanism use to solve system.
+		const timevector &times // Simulation output time intervals.
+		) const;
 
     // Processes the PSLs at each save point into single files for PAHs.
     void postProcessPAHPSLs(

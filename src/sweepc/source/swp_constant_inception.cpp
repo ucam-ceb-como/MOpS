@@ -146,10 +146,6 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
                           const unsigned int iterm,
                           rng_type &rng) const {
 
-    // Create a new particle of the type specified
-    // by the system ensemble.
-    Particle * const sp = m_mech->CreateParticle(t);
-
     // Position of newly incepted particle
     double posn;
 
@@ -174,8 +170,6 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
         posn += width * unifDistrib();
     }
 
-    sp->setPositionAndTime(posn, t);
-
 
     // Initialise the new particle.
     std::vector<double> newComposition(mComponentDistributions.size());
@@ -187,16 +181,45 @@ int Sweep::Processes::ConstantInception::Perform(const double t, Cell &sys,
         newComposition[i] = boost::random::lognormal_distribution<double>(mComponentDistributions[i].first,
                                                                   mComponentDistributions[i].second)(rng);
     }
-    sp->Primary()->SetComposition(newComposition);
 
-    sp->Primary()->SetValues(ParticleTrackers());
-    sp->UpdateCache();
+    // Check if using hybrid particle-number/particle model
+    // If hybrid_flag is active, track the number of particles in a list
+    // Otherwise add particle to system's ensemble.
+    if (!m_mech->IsHybrid())
+    {
+        // Create a new particle of the type specified
+        // by the system ensemble.
+        Particle * sp = m_mech->CreateParticle(t);
 
-    // Add particle to system's ensemble.
-    sys.Particles().Add(*sp, rng);
+        sp->setPositionAndTime(posn, t);
 
-    // Update gas-phase chemistry of system.
-    adjustGas(sys, sp->getStatisticalWeight());
+        sp->Primary()->SetComposition(newComposition);
+
+        sp->Primary()->SetValues(ParticleTrackers());
+        sp->UpdateCache();
+
+        sys.Particles().Add(*sp, rng);
+
+        // Update gas-phase chemistry of system.
+        if (!sys.GetIsAdiabaticFlag())
+            adjustGas(sys, sp->getStatisticalWeight());
+        // Update gas-phase chemistry and temperature of system.
+        else
+           adjustParticleTemperature(sys, sp->getStatisticalWeight(), 1, ParticleComp()[0], 1);
+    }
+    else
+    {
+        // Adjust particle number properties
+        sys.Particles().UpdateNumberAtIndex(ParticleComp()[0], 1);
+        sys.Particles().UpdateTotalParticleNumber(1);
+        sys.Particles().UpdateTotalsWithIndex(ParticleComp()[0], 1.0);
+        // Update gas-phase chemistry of system.
+        if (!sys.GetIsAdiabaticFlag())
+            adjustGas(sys, 1);
+        // Update gas-phase chemistry and temperature of system.
+        else
+            adjustParticleTemperature(sys, 1, 1, ParticleComp()[0], 1);
+    }
 
     return 0;
 }

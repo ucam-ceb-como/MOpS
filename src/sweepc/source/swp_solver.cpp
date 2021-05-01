@@ -98,21 +98,23 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
     fvector rates(mech.TermCount(), 0.0);
     // Global maximum time step.
     dtg     = tstop - t;
+    double tin = t; //store start time 
 
     // Loop over time until we reach the stop time.
     while (t < tstop)
     {
-        if (mech.AnyDeferred() && (sys.ParticleCount() > 0))  {
+        if (mech.AnyDeferred() && (sys.ParticleCount() + sys.Particles().GetTotalParticleNumber() > 0))  {
             // Get the process jump rates (and the total rate).
             jrate = mech.CalcJumpRateTerms(t, sys, Geometry::LocalGeometry1d(), rates);
 
             // Calculate split end time.
-            tsplit = calcSplitTime(t, std::min(t+dtg, tstop), jrate, sys.ParticleCount());
+            tsplit = calcSplitTime(t, std::min(t+dtg, tstop), jrate, sys.ParticleCount() + sys.Particles().GetTotalParticleNumber());
         } else {
             // There are no deferred processes, therefore there
             // is no need to perform LPDA splitting steps.
             tsplit = tstop;
         }
+	tin = t;
 
         // Perform stochastic jump processes.
         while (t < tsplit) {
@@ -132,6 +134,12 @@ int Solver::Run(double &t, double tstop, Cell &sys, const Mechanism &mech,
         // update all deferred processes.
         mech.LPDA(t, sys, rng);
 
+        // Perform deferred processes on particle-number particles
+	if (mech.IsHybrid() && sys.Particles().GetTotalParticleNumber() > 0)
+	{
+		sys.Particles().RecalcPNPropertySums();
+		mech.UpdateSections(t, t - tin, sys, rng);
+	}
     }
 
     return err;
@@ -208,7 +216,6 @@ void Solver::timeStep(double &t, double t_stop, Cell &sys, const Geometry::Local
     if (t+dt <= t_stop) {
         boost::uniform_01<rng_type &> uniformGenerator(rng);
         const int i = chooseIndex(rates, uniformGenerator);
-        //std::cout << ' ' << i <<endl;
         mech.DoProcess(i, t+dt, sys, geom, rng);
         t += dt;
     } else {

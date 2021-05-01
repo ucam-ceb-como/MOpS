@@ -47,12 +47,12 @@ CheckErr $?
 # Run the perl script as a here document (laziness)
 perl << EOF
 ##################################################################
-# Comparison values, generated with N=4096, L=4 and rounded-up
-# Commit ff908b50e250d49e65dc7f1e9faa384cc69d78d5
+# Comparison values, generated with N=4096, L=4 and rounded-off
+# Updated SHA-1: aa72af443a1a0de64f4ddb65595ead7221add564
 ##################################################################
 my @names = (  "M0",        "Fv",     "dcol",   "dpri",    "sint level");
-my @true = (4.2903E+015, 1.7843E-09, 8.8883E-09, 7.0741E-09,  0.7991);
-my @errs = (0.1838E+015, 0.0092E-09, 0.1509E-09, 0.0901E-09,  0.0201);
+my @true = (4.3391E+015, 1.7752E-09, 8.6742E-09, 6.9869E-09,  0.84218);
+my @errs = (0.1526E+015, 0.0022E-09, 0.0787E-09, 0.0821E-09,  0.0050);
 
 # Open file and parse results
 my @results;

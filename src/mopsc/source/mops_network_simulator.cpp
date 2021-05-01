@@ -125,6 +125,24 @@ void NetworkSimulator::Run(
         // Fill the reactors with their initial mixtures
         net.ResetNetwork();
 
+		for (it = this->Begin(); it != this->End(); ++it) {
+			// Initialise the register of particle-number particles
+            if ((it->reac)->Mech()->ParticleMech().IsHybrid())
+            {
+                (it->reac)->Mech()->ParticleMech().InitialisePNParticles(0.0, *(it->reac)->Mixture(), (it->reac)->Mech()->ParticleMech());
+			}
+			// Check if particle terms are to be included in the energy balance
+			if ((it->reac)->IncludeParticles())
+				(it->reac)->Mixture()->SetIsAdiabaticFlag(true);
+			else
+				(it->reac)->Mixture()->SetIsAdiabaticFlag(false);
+			// Check if constant volume
+			if ((it->reac)->IsConstV())
+				(it->reac)->Mixture()->setConstV(true);
+			else
+				(it->reac)->Mixture()->setConstV(false);
+        }
+
         // Initialise reactors and simulators
         t2 = mTimes[0].StartTime();
         for (it=this->Begin(); it!=this->End(); ++it) {

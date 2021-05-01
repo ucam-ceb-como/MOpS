@@ -114,6 +114,11 @@ namespace Settings_IO
     Sweep::PartPtrList ReadInitialParticles(const CamXML::Element &node,
                                             const Sweep::Mechanism & particle_mech);
 
+    //! Read initial particles from a file into a list
+    //! This function is used to create detailed particles by sampling from a distribution
+    Sweep::PartPtrList ReadInitialParticlesDetailed(const CamXML::Element &node,
+		const Sweep::Mechanism & particle_mech);
+
     //! Read limits that define extreme particles to be excluded from particle population statistics
     void ReadStatsBound(const CamXML::Element &node, Sweep::PropID &property_id,
                         double &lower_bound, double &upper_bound);

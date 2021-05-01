@@ -199,12 +199,36 @@ public:
         std::istream &in,                 // Input stream.
         const Sweep::ParticleModel &model // Model used to define particles.
         );
+	
+    // Flag to track whether energy balance is active for particle phase updates
+    void SetIsAdiabaticFlag(bool flag) { m_adiabatic_flag = flag; }
+
+    // Flag to track whether energy balance is active for particle phase updates 
+    bool GetIsAdiabaticFlag() { return m_adiabatic_flag; }
+
+    // Functions to store gas-phase properties used during splitting step 
+    // (faster than updating each time)
+    void setGasPhaseProperties(double C_bulk,       // Heat capacity
+                               double C_particle,   // Particle heat capacity
+                               double rhop,         // Particle density
+                               fvector enthalpies); // Enthalpies
+    double getBulkHeatCapacity() const { return m_bulk_heat_capacity; }
+    double getParticleHeatCapacity() const { return m_particle_heat_capacity; }
+    double getParticleDensity() const { return m_particle_density; }
+    void getEnthalpies(fvector &enthalpies) { enthalpies = m_enthalpies; }
+
+    // Set constv/constp flag for particle energy balance
+    void setConstV(bool flag) { m_constv = flag; }
+    bool IsConstV() { return m_constv; }
 
 protected:
     // Default constructor is protected as it makes no
     // sense to define a mixture without knowledge of the
     // defining species.  This trait is brought over from Sprog.
     Cell();
+	
+    // Check internal consistency 
+    bool isValid() const;
 
 private:
     //! Gas mixture
@@ -233,6 +257,18 @@ private:
     // mechanism, but are used by the Mechanism class when
     // calculating rates.
     Processes::DeathPtrVector m_outflow;
+	
+    // Flag for adiabatic operation
+    bool m_adiabatic_flag;
+
+    // Variables to store gas-phase properties used during splitting step
+    double m_bulk_heat_capacity;
+    double m_particle_density;
+    double m_particle_heat_capacity;
+    fvector m_enthalpies;
+
+    // Flag constant volume/pressure for particle temperature update
+    bool m_constv;
 };
 
 } //namespace Sweep

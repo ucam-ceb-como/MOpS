@@ -61,6 +61,7 @@
 #include "swp_kmc_simulator.h"
 #include "swp_cell.h"
 #include "swp_bintree_serializer.h"
+#include "swp_coords.h"
 #include <boost/shared_ptr.hpp>
 
 #include "swp_coords.h"
@@ -87,7 +88,7 @@ public:
     /// be able to access the private members of the PAHPrimary class.
     ///////////////////////////////////////////////////////////////////////////
     template <class ParticleClass>
-    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimarySeparation);
+    friend void Sweep::Imaging::ParticleImage::ConstructTree(const ParticleClass *p, Sweep::rng_type &rng, const bool trackPrimaryCoordinates);
 
     template <class ParticleClass>
     friend void Sweep::Imaging::ParticleImage::ConstructTreeLoop(const ParticleClass *p);

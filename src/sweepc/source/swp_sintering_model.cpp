@@ -56,7 +56,7 @@ using namespace std;
 
 // Default constructor.
 SinteringModel::SinteringModel()
-: m_enable(false), m_A(0.0), m_E(0.0), m_dpmin(0.0), m_type(GBD)
+: m_enable(false), m_A(0.0), m_E(0.0), m_dpmin(0.0), m_alpha(0.0), m_type(GBD)
 {
 }
 
@@ -131,6 +131,13 @@ double SinteringModel::Dpmin(void) const {return m_dpmin;}
 // Sets the minimum primary particle diameter in the system (Dpmin) in m.
 void SinteringModel::SetDpmin(double dpmin) {m_dpmin = dpmin;}
 
+// CRITICAL EXPONENT
+
+// Returns the critical exponent.
+double SinteringModel::alpha(void) const { return m_alpha; }
+
+// Sets the critical exponent.
+void SinteringModel::Setalpha(double alpha) { m_alpha = alpha; }
 
 // SINTERING MODEL TYPE.
 
@@ -167,7 +174,7 @@ double SinteringModel::SintTime(const Cell &sys,const AggModels::Primary &p) con
         case GBD:
         default:
             return m_A * dp * dp * dp * dp * sys.GasPhase().Temperature() *
-                   exp((m_E*(1-(m_dpmin/dp)))/sys.GasPhase().Temperature());
+                   exp((m_E*(1-pow(m_dpmin/dp,m_alpha)))/sys.GasPhase().Temperature());
             break;
         case SSD:
             return m_A * dp * dp * dp * sys.GasPhase().Temperature() *
@@ -269,6 +276,14 @@ void SinteringModel::Serialize(std::ostream &out) const
         val = (double)m_E;
         out.write((char*)&val, sizeof(val));
 
+		// Write minimum primary particle diameter.
+		val = (double)m_dpmin;
+		out.write((char*)&val, sizeof(val));
+
+		// Write critical exponent.
+		val = (double)m_alpha;
+		out.write((char*)&val, sizeof(val));
+
         // Write type.
         unsigned int t = (unsigned int)m_type;
         out.write((char*)&t, sizeof(t));
@@ -304,6 +319,14 @@ void SinteringModel::Deserialize(std::istream &in)
                 // Read characteristic temperature.
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_E = (double)val;
+
+				// Read minimum primary particle diameter.
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+				m_dpmin = (double)val;
+
+				// Read critical exponent.
+				in.read(reinterpret_cast<char*>(&val), sizeof(val));
+				m_alpha = (double)val;
 
                 // Read type.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));

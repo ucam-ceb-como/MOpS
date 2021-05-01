@@ -248,7 +248,8 @@ bool checkCoagulationKernel(int old_id, int this_id) {
  */
 Sweep::PartPtrList readEnsembleFile(
         const string fname,
-        const Sweep::Mechanism &smech) {
+        const Sweep::Mechanism &smech, 
+	std::vector<unsigned int> &particle_numbers_list) {
     // Open the save point file.
     ifstream fin;
     fin.open(fname.c_str(), ios_base::in | ios_base::binary);
@@ -296,6 +297,16 @@ Sweep::PartPtrList readEnsembleFile(
             particles.push_back(sp);
         }
 
+	// Read hybrid model particle-number info into list 
+	if (fileensemble.GetHybridThreshold() > 0)
+	{
+	    particle_numbers_list.resize(fileensemble.GetHybridThreshold(), 0);
+	    for (unsigned int i = 0; i < fileensemble.GetHybridThreshold(); ++i)
+	    {
+	        particle_numbers_list[i] = fileensemble.NumberAtIndex(i);
+	    }
+	}
+
         // Close the input file.
         fin.close();
 
@@ -339,11 +350,42 @@ void readInitialPopulation(
         std::string filename;
         filename = fnode->Data();
         std::cout << "parser: binary file " << filename << " specified for input.\n";
-        fileParticleList = readEnsembleFile(filename, mech.ParticleMech());
+	std::vector<unsigned int> particle_numbers;
+	particle_numbers.resize(0, 0);
+        fileParticleList = readEnsembleFile(filename, mech.ParticleMech(), particle_numbers);
+	// Initialise and store hybrid particle-number info for the cell
+	// Note this only works if the primary particle model is univariate
+	if (particle_numbers.size() > 0)
+	{
+            mix.Particles().SetHybridThreshold(particle_numbers.size());
+            mix.Particles().InitialiseParticleNumberModel();
+            mix.Particles().InitialiseDiameters(mix.ParticleModel()->Components()[0]->MolWt(),
+            mix.ParticleModel()->Components()[0]->Density()); 
+            for (unsigned int i = 0; i < mix.Particles().GetHybridThreshold(); ++i)
+            {
+                mix.Particles().UpdateTotalsWithIndex(i, particle_numbers[i]);
+                mix.Particles().UpdateNumberAtIndex(i, particle_numbers[i]);
+                mix.Particles().UpdateTotalParticleNumber(particle_numbers[i]);
+            }
+	}
+    }
+
+    // Choose which file reader to use depending if particle distributions are required
+    vector<CamXML::Element*> subitems;
+    subnode.GetChildren("particle", subitems); 
+    string dflag;
+    for (vector<CamXML::Element*>::iterator j = subitems.begin(); j != subitems.end(); ++j) {
+	// Get component ID.
+	dflag = (*j)->GetAttributeValue("usedistribution");
     }
 
     // Now read in the list of particles and sum up their statistical weights
-    inxParticleList = Settings_IO::ReadInitialParticles(subnode, mech.ParticleMech());
+    if (dflag == "true") {
+	// Use detailed reader to create particles based on distributions specified in input file
+	inxParticleList = Settings_IO::ReadInitialParticlesDetailed(subnode, mech.ParticleMech()); 
+    }
+    else 
+	inxParticleList = Settings_IO::ReadInitialParticles(subnode, mech.ParticleMech());
 
     // Join the particle lists
     allParticleList.splice(allParticleList.end(), fileParticleList);
@@ -356,6 +398,8 @@ void readInitialPopulation(
     while(it != itEnd) {
         weightSum += (*it++)->getStatisticalWeight();
     }
+    // Add particle-number particles to the total weight
+    weightSum += mix.Particles().GetTotalParticleNumber(); 
 
     mix.SetParticles(allParticleList.begin(), allParticleList.end(), initialM0 / weightSum);
 }
@@ -445,7 +489,12 @@ Mops::Mixture* readMixture(
     }
 
     // Now load some particles
+	if (mech.ParticleMech().IsHybrid())
+		mix->Particles().SetHybridThreshold(mech.ParticleMech().GetHybridThreshold());
+	else
+		mix->Particles().SetHybridThreshold(0);
     mix->Particles().Initialise(pcount);
+    mix->Particles().InitialiseParticleNumberModel();
     mix->Reset(maxm0);
     subnode = NULL; subnode = node.GetFirstChild("population");
     if (subnode != NULL) {
@@ -504,6 +553,25 @@ Mops::PSR *const readPSR(
         // The constt attribute is undefined, so use adiabatic
         // energy equation.
         reac->SetEnergyEquation(Reactor::Adiabatic);
+    }
+    // Now check if particle terms should be included in the EB.
+    // This is only relevant with adiabatic energy equation.
+    if (reac->EnergyEquation() == Reactor::Adiabatic)
+    {
+        attr = node.GetAttribute("includeParticleTerms");
+        if (attr != NULL) {
+            str = attr->GetValue();
+			if (str.compare("true") == 0) {
+				if (reac->Mech()->ParticleMech().Components()[0]->Name().compare("Rutile") == 0)
+				{
+					reac->Mech()->ParticleMech().SetParticleSpeciesIndex(28);
+					reac->SetIncludeParticles();
+				}
+				else
+					throw std::runtime_error("Only Rutile primary particle supported for particle contributions to energy balance."
+					" (::readPSR)");
+            }
+        }
     }
 
     // Now check for constant volume.
@@ -680,6 +748,25 @@ Reactor *const readReactor(const CamXML::Element &node,
         // The constt attribute is undefined, so use adiabatic
         // energy equation.
         reac->SetEnergyEquation(Reactor::Adiabatic);
+    }
+    // Now check if particle terms should be included in the EB.
+    // This is only relevant with adiabatic energy equation.
+    if (reac->EnergyEquation() == Reactor::Adiabatic)
+    {
+        attr = node.GetAttribute("includeParticleTerms");
+        if (attr != NULL) {
+            str = attr->GetValue();
+            if (str.compare("true") == 0) {
+				if (reac->Mech()->ParticleMech().Components()[0]->Name().compare("Rutile") == 0)
+				{
+					reac->Mech()->ParticleMech().SetParticleSpeciesIndex(28);
+					reac->SetIncludeParticles();
+				}
+				else
+					throw std::runtime_error("Only Rutile primary particle supported for particle contributions to energy balance."
+					" (Mops::Settings_IO::readReactor)");
+			}
+        }
     }
 
     // Now check for constant volume.
@@ -926,6 +1013,13 @@ void readNetwork(
 
                 flows.push_back(fn);
             }
+            // Check if particle terms are to be included in the energy balance
+            if (reac->IncludeParticles()) {
+                reac->Mixture()->SetIsAdiabaticFlag(true);
+            }
+            else {
+                reac->Mixture()->SetIsAdiabaticFlag(false);
+            }
         }
         // Now that the reactors have been loaded, make node connections.
         for (std::vector<flowNode>::iterator it=flows.begin(); it!=flows.end(); ++it) {
@@ -1134,6 +1228,7 @@ void readOutput(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
             // Also need to ensure full binary trees are written for certain
             // particle models.
             mech.ParticleMech().SetWriteBinaryTrees(true);
+
         } else if (str_enable.compare("false") == 0) {
             sim.SetParticleTrackCount(0);
         } else {
@@ -1177,6 +1272,25 @@ void readOutput(const CamXML::Element &node, Simulator &sim, Mechanism &mech)
             sim.SetMassSpectra(false);
         }
     }
+
+	// PARTICLE TRACKING FOR VIDEOS (alternative to POVRAY output)
+	// This is relevant for the bintree primary model
+	subnode = node.GetFirstChild("trackparticle");
+	if (subnode != NULL) {
+		std::string str_enable = subnode->GetAttributeValue("enable");
+		if (str_enable.compare("true") == 0) {
+			std::cout << "sweep: Warning! Tracking particles for videos.\n";
+			//set number of tracked particles
+			std::string str_ptcount = subnode->GetAttributeValue("pcount");			
+			sim.SetTrackBintreeParticleCount((unsigned int)Strings::cdble(str_ptcount));
+		}
+		else {
+			sim.SetTrackBintreeParticleCount(0);
+		}
+	}
+	else {
+		sim.SetTrackBintreeParticleCount(0);
+	}
 }
 
 } // anonymous namespace
@@ -1496,6 +1610,106 @@ Sweep::PartPtrList Settings_IO::ReadInitialParticles(const CamXML::Element& popu
     }
     return particleList;
 }
+
+
+// Version of the above reader that will construct (bintree) particles given 
+// (mean,std) number of primaries per particle and (mean,std) number of component
+// units per particle (assuming lognormal distributions).
+// This has not been tested much. 
+/**
+* Read a list of initial particles specified in an XML file
+*
+*@param[in]    population_xml      xml node containing initial particles as children
+*@param[in]    particle_mech       Mechanism defining the meaning of the particles
+*
+*@return       Container of the particles that form the initial population
+*
+*@exception    std::runtime_error  If particles are specified they must have strictly positive counts
+*/
+Sweep::PartPtrList Settings_IO::ReadInitialParticlesDetailed(const CamXML::Element& population_xml,
+	const Sweep::Mechanism & particle_mech)
+{
+	// Generate a random number generator for use inside this once-off function
+	boost::mt19937 rng_temp(0);
+
+	// Accumulate in this container a collection of particles to be inserted into the ensemble
+	Sweep::PartPtrList particleList;
+
+	// Now get the XML defining the particles
+	std::vector<CamXML::Element*> particleXML;
+	population_xml.GetChildren("particle", particleXML);
+
+	// An empty population means nothing to do
+	if (particleXML.empty())
+	{
+		return particleList;
+	}
+
+	// See if there is a spatial position for the particles
+	const CamXML::Attribute *attr = population_xml.GetAttribute("x");
+	double position = 0.0;
+	if (attr) {
+		position = atof(attr->GetValue().c_str());
+	}
+
+	// Now loop through the particles one by one
+	std::vector<CamXML::Element*>::const_iterator it(particleXML.begin());
+	const std::vector<CamXML::Element*>::const_iterator itEnd(particleXML.end());
+	while (it != itEnd)
+	{
+		// Build a particle from the xml and use an auto_ptr so the particle
+		// instance will be deleted if an exception is thrown while processing
+		// the rest of the input.
+		const std::auto_ptr<Sweep::Particle>
+			pParticle(Sweep::Particle::createFromXMLNodeDetailed(**it, particle_mech, rng_temp));
+
+		// Assume particle population applies at time 0.
+		pParticle->setPositionAndTime(position, 0.0);
+
+		// See how many times this particle appears (default is 1)
+		int repeatCount = 1;
+
+		// Will initialise to NULL if no count attribute present and if block
+		// will be skipped.
+		const CamXML::Attribute* const  countAttrib = (*it)->GetAttribute("count");
+		if (countAttrib)
+		{
+			// Read the count specified by the user
+			const std::string countString = countAttrib->GetValue();
+			repeatCount = atoi(countString.c_str());
+
+			// The count must be a strictly positive integer
+			if (repeatCount <= 0)
+			{
+				// Delete any particles already read into the local list
+				// The list itself will be destroyed when the throw std::takes
+				// place so there is no need to nullify the pointers
+				Sweep::PartPtrList::iterator it = particleList.begin();
+				const Sweep::PartPtrList::iterator itEnd = particleList.end();
+				while (it != itEnd)
+				{
+					delete *it++;
+				}
+				throw std::runtime_error("Particle counts must be > 0. Mops Reactor::ReadInitialParticles");
+			}
+		}
+
+		// Add the specified number of copies of the particle to the initial
+		// particle container
+		Sweep::Particle *pParticle2;
+		while (repeatCount--){
+			pParticle2 = Sweep::Particle::createFromXMLNodeDetailed(**it, particle_mech, rng_temp);
+			// Assume particle population applies at time 0.
+			pParticle2->setPositionAndTime(position, 0.0);
+			particleList.push_back(new Sweep::Particle(*pParticle2));
+		}
+
+		// Move on to the next particle in the xml
+		++it;
+	}
+	return particleList;
+}
+
 
 /*!
  * Parse XML and set values specifying the boundaries that defined extreme particles to be excluded

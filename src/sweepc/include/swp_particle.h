@@ -104,6 +104,10 @@ public:
     static Particle* createFromXMLNode(const CamXML::Element& xml,
                                        const Sweep::ParticleModel& model);
 
+    //! Create a new polydisperse particle using the model according to the xml data
+    static Particle* createFromXMLNodeDetailed(const CamXML::Element& xml,
+		const Sweep::ParticleModel& model, rng_type &rng);
+
     // Operators.
     Particle &operator=(const Particle &rhs);
 
@@ -159,6 +163,10 @@ public:
     //! Geometric average diameter of aggregate sub-units
     double avgeomdiam(double) const;
 
+	//! Phase composition term for phase transformation process
+    double GetPhaseTerm(void) const;
+
+
     //! Returns the property with the given ID.
     double Property(Sweep::PropID id) const;
 
@@ -180,6 +188,9 @@ public:
     //! Returns the ith tracked value.  Returns 0.0 if i invalid.
     double Values(unsigned int i) const;
 
+	// PHASE
+
+	double PhaseMass(int i) const;
 
     // POSITION DATA
     
@@ -248,6 +259,15 @@ public:
         unsigned int n                    // Number of times to perform adjustment.
         );
 
+	//! Adjust particle composition as a result of a phase transformation process
+	unsigned int AdjustPhase(const fvector &dcomp,
+                              const fvector &dvalues,
+                              rng_type &rng,
+                              unsigned int n);
+	
+	//! Melting point dependent phase change
+	void Melt(rng_type &rng, Cell &sys);
+
     //! Combines this particle with another.
     Particle &Coagulate(const Particle &sp, rng_type &rng);
 
@@ -266,6 +286,17 @@ public:
 
     // Recalculate derived properties from the primary particle
     void UpdateCache();
+
+	// PARTICLE TRACKING FOR VIDEOS
+
+	//! Returns the frame position and orientation, and primary coordinates
+	void getFrameCoords(std::vector<fvector> &coords) const;
+
+	//! Initialise primary particle tracking for videos
+	void setTracking();
+
+	//! Remove primary tracking
+	void removeTracking();
 
     // READ/WRITE/COPY.
 

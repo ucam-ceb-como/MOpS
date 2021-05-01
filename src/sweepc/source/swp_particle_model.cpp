@@ -100,6 +100,12 @@ ParticleModel &ParticleModel::operator=(const ParticleModel &rhs)
             m_trackers.push_back((*i)->Clone());
         }
 
+		// Copy phases
+		for (PhasePtrVector::const_iterator i=rhs.m_phases.begin();
+			i != rhs.m_phases.end(); ++i) {
+			m_phases.push_back((*i)->Clone());
+		}
+
         // Copy aggregation model.
         m_aggmodel = rhs.m_aggmodel;
 
@@ -305,6 +311,51 @@ void ParticleModel::SetTrackers(const TrackPtrVector &track)
     }
 }
 
+// PHASE
+
+// Add phase to particle model
+void ParticleModel::AddPhase(Phase &phase)
+{
+	m_phases.push_back(&phase);
+}
+
+// Returns the number of phases in the ParticleModel.
+unsigned int ParticleModel::PhaseCount(void) const
+{
+	return m_phases.size();
+}
+
+// Returns if the phase in liquid
+bool ParticleModel::PhaseIsLiquid(int i) const
+{
+	return m_phases[i]->GetLiquid();
+}
+
+// Returns the component indices
+std::vector<unsigned int> ParticleModel::GetPhaseComponents(int i) const
+{
+	return m_phases[i]->GetComponents();
+}
+
+// Returns the index of the phase with the
+// given name in the ParticleModel if found, otherwise
+// return negative.
+int ParticleModel::PhaseIndex(const std::string &name) const
+{
+	for (unsigned int i = 0; i != m_phases.size(); ++i) {
+		if (name.compare(m_phases[i]->Name()) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+// Returns the phase with the given index.
+Phase *const ParticleModel::Phases(unsigned int i)
+{
+	return m_phases[i];
+}
+
 // AGGREGATION MODEL TYPE.
 
 // Returns the ID of the aggregation model used by dependent particles.
@@ -319,6 +370,8 @@ void ParticleModel::SetAggModel(AggModels::AggModelType id) {m_aggmodel = id;}
 // Returns the sintering model.
 Processes::SinteringModel &ParticleModel::SintModel(void) const {return m_sint_model;}
 
+// Return titania phase transformation (melting) model
+Processes::MeltingModel &ParticleModel::MeltModel(void) const { return m_melt_model; }
 
 // PARTICLE FUNCTIONS.
 
@@ -552,6 +605,16 @@ void ParticleModel::Serialize(std::ostream &out) const
             (*i)->Serialize(out);
         }
 
+		// Write number of phases
+		n = (unsigned int)m_phases.size();
+		out.write((char*)&n, sizeof(n));
+
+		// Write phases
+		for (PhasePtrVector::const_iterator i = m_phases.begin();
+			i != m_phases.end(); ++i) {
+			(*i)->Serialize(out);
+		}
+
         // Write the aggregation model ID.
         n = (unsigned int)m_aggmodel;
         out.write((char*)&n, sizeof(n));
@@ -664,6 +727,14 @@ void ParticleModel::Deserialize(std::istream &in)
                 for (unsigned int i=0; i!=n; ++i) {
                     m_trackers.push_back(new Tracker(in));
                 }
+
+				// Read number of phases.
+				in.read(reinterpret_cast<char*>(&n), sizeof(n));
+
+				// Read phases.
+				for (unsigned int i = 0; i != n; ++i) {
+					m_phases.push_back(new Phase(in));
+				}
 
                 // Read the aggregation model ID.
                 in.read(reinterpret_cast<char*>(&n), sizeof(n));
@@ -784,7 +855,7 @@ void ParticleModel::init(void)
     m_efm = 2.2;
 
     //! Postprocess based on the inception species concentration.
-    m_postprocessingType = XA4;
+    m_postprocessingType = concentration;
 
     //! Primary particles are assumed to be in contact.
     m_trackPrimarySeparation = false;
@@ -810,6 +881,14 @@ void ParticleModel::releaseMem(void)
         delete *i;
     }
     m_trackers.clear();
+
+
+	// Delete phases.
+	for (PhasePtrVector::iterator i = m_phases.begin();
+		i != m_phases.end(); ++i) {
+		delete *i;
+	}
+	m_phases.clear();
 
     // Set aggregation model to default value.
     m_aggmodel     = AggModels::Spherical_ID;

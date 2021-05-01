@@ -138,6 +138,13 @@ public:
     // Sets the under-relaxation coefficient.
     void SetUnderRelaxCoeff(double relax);
 
+    // Calculates and stores various properties used to complete the 
+    // energy balance so they can be computed less frequently. 
+    void storeTemperatureProperties(
+            Reactor &r,           // The reactor to solve.
+            Sweep::rng_type &rng  // Random number generator
+    );
+
     // SOLUTION.
 
     // Runs the solver for the given reactor, advancing it

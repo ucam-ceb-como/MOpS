@@ -238,6 +238,40 @@ void ParticleStats::Calculate(const Ensemble &e, double scale)
         }
     }
 
+	// Add contributions from hybrid particle-number/particle model
+	if (e.GetTotalParticleNumber() != 0)
+	{
+		double wt = e.GetTotalParticleNumber();
+		double dpri = e.GetTotalDiameter();
+		double surf = PI * e.GetTotalDiameter2();
+		double vol = (PI / 6.0) * e.GetTotalDiameter3();
+		double mass = e.GetTotalMass();
+		double mass2 = e.GetTotalMass2();
+		double mass3 = e.GetTotalMass3();
+		double comp = e.GetTotalComponent();
+
+		// Sum component and tracker values.
+		fvector::iterator i = m_stats.begin() + STAT_COUNT;
+		for (unsigned int j = 0; j != m_ncomp; ++j, ++i) {
+			*i += comp;
+			*(++i) += comp;
+		}
+
+		m_stats[iM0] += wt;
+		m_stats[iD] += dpri;
+		m_stats[iDcol] += dpri;
+		m_stats[iDmob] += dpri;
+		m_stats[iS] += surf;
+		m_stats[iS + 1] += surf;
+		m_stats[iV] += vol;
+		m_stats[iV + 1] += vol;
+		m_stats[iM] += mass;
+		m_stats[iM + 1] += mass;
+		m_stats[iM2] += mass2;
+		m_stats[iM3] += mass3;
+	}
+
+
     // Get the particle count.
     m_stats[iNP] = (double)e.Count();
 
@@ -248,7 +282,7 @@ void ParticleStats::Calculate(const Ensemble &e, double scale)
     // Note that m_stats[iM0] at this point does not in fact contain an M0 value,
     // since it has not yet been scaled by sample volume.  This is intentional
     // since here one should divide by the total statistical weight of all particles.
-    const double invWeight = (e.Count()>0) ? 1.0 / m_stats[iM0] : 0.0;
+    const double invWeight = ((e.Count() + e.GetTotalParticleNumber())>0) ? 1.0 / m_stats[iM0] : 0.0;
 
     // Scale the summed stats and calculate the averages,
     for (unsigned int i=1; i!=STAT_COUNT; ++i) {
@@ -568,8 +602,6 @@ void ParticleStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mo
     }
 }
 
-/////////////////////////////////////////////////csl37-pp
-void ParticleStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const
+void ParticleStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const
 {
 }
-//////////////////////////////////////////////////

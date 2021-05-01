@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mops version="2">
+    <!-- Sim parameters -->
+    <runs>3</runs>
+    <iter>10</iter>
+    <atol>1.0e-17</atol>
+    <rtol>1.0e-4</rtol>
+    <maxm0>0.5e12</maxm0>
+    <pcount>1024</pcount>
+    <relax>0.8</relax>
+	
+    <!-- Stage 1 -->
+    <reactor constt="true" constv="false" id="stage1" type="psr" units="mol/mol" order="1" dtype="cdelete">
+        <temperature units="K">1000</temperature>
+        <pressure units="bar">1</pressure>
+        <component id="O2">1.0</component>	
+	    <inflow>
+            <temperature units="K">1000</temperature>
+            <pressure units="bar">1</pressure>	
+            <component id="TICL4">0.01</component>
+            <component id="O2">0.99</component>	
+	    </inflow>
+        <restime unit="s">0.01</restime>
+    </reactor>
+
+    <!-- Time stepping -->
+    <timeintervals>
+      	<start>0.0</start>
+        <time splits="20" steps="1000">0.05</time>
+    </timeintervals>
+   
+    <!-- Output specifications -->
+    <output>
+        <statsbound property="dcol">
+            <lower>0</lower>
+            <upper>1.0e30</upper>
+        </statsbound>
+        <console interval="1" msgs="true">
+            <tabular>
+                <column fmt="sci">time</column>
+                <column fmt="float">#sp</column>
+	            <column fmt="sci">T</column>
+                <column fmt="sci">TICL4</column>
+                <column fmt="sci">O2</column>
+                <column fmt="sci">M0</column>
+            </tabular>
+        </console>
+        <ptrack enable="true" ptcount="1"/>
+        <filename>PSR</filename>
+    </output>
+</mops>

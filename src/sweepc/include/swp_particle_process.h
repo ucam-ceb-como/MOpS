@@ -131,6 +131,12 @@ public:
         const Geometry::LocalGeometry1d &local_geom
         ) const = 0;
 
+    // Return rate constant and chemistry part for hybrid method
+    virtual double Rate(
+	double dt,          // Time.
+	const Cell &sys     // System for which to calculate rate.
+        ) const;
+
     static double CalcRates(
         double t, // Time.
         const Cell &sys, // System for which to calculate rates.
@@ -176,6 +182,27 @@ public:
         unsigned int n // Number of times to perform the process.
         ) const = 0;
 
+	// Surface growth updates for the hybrid particle model (particle-number updates)
+	// ==============================================================================
+	// Just do gas-phase adjustment for surface growth
+	virtual int Perform(
+		double t,                        // Current time (s).
+		Cell &sys,                       // System to which the particle belongs.
+		rng_type &rng,                   // Random number generator
+		unsigned int n                   // Number of times to perform the process.)
+		) const;
+
+	// Performs the process on a given particle in the system.  Particle
+	// is given by index.  The process is performed n times.
+	virtual int Perform(
+		double t,                        // Current time (s).
+		Cell &sys,                       // System to which the particle belongs.
+		Particle &sp,                    // Particle for which to perform process.
+		rng_type &rng,                   // Random number generator
+		unsigned int n,                  // Number of times to perform the process.
+		bool isParticleNumberUpdate      // Differentiate this call as a particle-number update
+		) const;
+	// ==============================================================================
 
     // READ/WRITE/COPY.
     

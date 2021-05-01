@@ -45,9 +45,11 @@
 #include "swp_condensation.h"
 #include "swp_actsites_reaction.h"
 #include "swp_transcoag.h"
+#include "swp_hybrid_transcoag.h"
 #include "swp_transcoag_weighted_PAHs.h"
 #include "swp_addcoag.h"
 #include "swp_constcoag.h"
+#include "swp_hybrid_constcoag.h"
 #include "swp_weighted_addcoag.h"
 #include "swp_weighted_constcoag.h"
 #include "swp_weighted_transcoag.h"
@@ -61,6 +63,7 @@
 #include "swp_constant_inception.h"
 #include "swp_silica_interparticle.h"
 #include "swp_titania_surface_reaction.h"
+#include "swp_titania_phase_transformation.h"
 #include <stdexcept>
 
 using namespace Sweep;
@@ -140,6 +143,8 @@ ParticleProcess *const ProcessFactory::ReadPartProcess(std::istream &in,
                 return new ActSiteReaction(in, mech);
             case TitaniaSR_ID:
                 return new TitaniaSurfaceReaction(in, mech);
+			case TitaniaPhase_ID:
+                return new TitaniaPhaseTransformation(in, mech);
             default:
                 throw runtime_error("Invalid particle process type read from "
                                     "input stream (Sweep, "
@@ -172,6 +177,9 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
             case Transition_Coagulation_ID:
                 proc = new TransitionCoagulation(in, mech);
                 break;
+            case Hybrid_Transition_Coagulation_ID:
+                proc = new HybridTransitionCoagulation(in, mech);
+                break;
 			case Transition_Coagulation_Weighted_PAHs_ID:
 				proc = new TransitionCoagulationWeightedPAHs(in, mech);
 				break;
@@ -180,6 +188,9 @@ Coagulation *const ProcessFactory::ReadCoag(std::istream &in,
                 break;
             case Constant_Coagulation_ID:
                 proc = new ConstantCoagulation(in, mech);
+                break;
+            case Hybrid_Constant_Coagulation_ID:
+                proc = new HybridConstantCoagulation(in, mech);
                 break;
             case Weighted_Additive_Coagulation_ID:
                 proc = new WeightedAdditiveCoagulation(in, mech);

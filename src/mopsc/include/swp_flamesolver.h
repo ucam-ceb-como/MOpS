@@ -65,6 +65,8 @@ public:
     // Destructors.
     virtual ~FlameSolver(void); // Default destructor.
 
+	// Set the end conditions flag
+	void SetEndConditions(bool val);
 
     // PROFILE INPUT.
 
@@ -104,6 +106,9 @@ protected:
 	
 	//! Test rates flag for PAH model
 	bool m_test_rates=false;
+
+	//! Flag to impose the gas-phase conditions at the end of the time step over the entire time step
+	bool m_endconditions;
 
     // HELPER FUNCTIONS.
 

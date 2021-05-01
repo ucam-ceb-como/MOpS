@@ -43,7 +43,7 @@
 #include "gpc_transport_factory.h"
 #include "gpc_idealgas.h"
 #include "gpc_params.h"
-
+#include <stdexcept> 
 #include <cmath>
 
 using namespace Sprog;

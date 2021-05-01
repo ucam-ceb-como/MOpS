@@ -136,6 +136,7 @@ std::ostream& operator<<(
     os << "[PSR]," <<
             " ConstP=" << r.IsConstP() <<
             " ConstV=" << r.IsConstV() <<
+            " Include particles in energy model=" << r.IncludeParticles() <<
             "\n";
     os << "filled with: " << *(r.Mixture());
     for (Mops::FlowPtrVector::const_iterator it=r.m_inflow_ptrs.begin();
@@ -175,7 +176,9 @@ Mops::FlowStream *const PSR::Inflow(unsigned int i) const {
 }
 
 // Returns the inflow stream pointers
-Mops::FlowPtrVector PSR::Inflows() const {
+// aab64: changed definition from 
+// Mops::FlowPtrVector PSR::Inflows() const {
+const Mops::FlowPtrVector & PSR::Inflows() const {
     return m_inflow_ptrs;
 }
 
@@ -186,7 +189,9 @@ Mops::FlowStream *const PSR::Outflow(unsigned int i) const {
 }
 
 // Returns the Outflow stream pointers
-Mops::FlowPtrVector PSR::Outflows() const {
+// aab64: changed definition from 
+//Mops::FlowPtrVector PSR::Outflows() const {
+const Mops::FlowPtrVector & PSR::Outflows() const {
     return m_outflow_ptrs;
 }
 
@@ -437,6 +442,13 @@ Serial_ReactorType PSR::SerialType() const
  * @param ydot  First derivative of the solution.
  */
 void PSR::RHS_Complete(double t, const double *const y, double *ydot) const {
+	
+	// aab64: Debug loop for inflow pointers checking the pointer to the 
+	// inflow mixture doesn't go NULL
+	for (Mops::FlowPtrVector::const_iterator it = m_inflow_ptrs.begin();
+		it != m_inflow_ptrs.end(); ++it) {
+		assert(&(*it)->Mixture()->GasPhase());
+	}
 
     if (m_sarea > 0.0)
         throw std::runtime_error("PSR untested for surface chemistry.");
@@ -488,15 +500,29 @@ void PSR::RHS_Complete(double t, const double *const y, double *ydot) const {
             hsum += hval * (*it)->Mixture()->GasPhase().Density()
                     * (*it)->GetFlowFraction();
         }
-        ydot[m_iT] += hsum * m_invrt * m_iscaling / (y[m_iDens] * C * Sprog::R);
-
+        // Account for the particles in thermal bulk term on denominator
+        if (m_include_particle_terms) 
+        {
+            ydot[m_iT] += hsum * m_invrt * m_iscaling / (y[m_iDens] * C * Sprog::R + m_mix->getParticleDensity());
+        }
+        else
+        {
+            ydot[m_iT] += hsum * m_invrt * m_iscaling / (y[m_iDens] * C * Sprog::R);
+        }
         // Loop over species in the reactor to get energy change due to mol change
         hsum = 0.0;
         for (unsigned int i=0; i!=m_nsp; ++i) {
             hsum -= wdot[i] * H_wdot[i];
             if (m_sarea > 0.0) hsum -= sdot[i] * H_wdot[i] * m_sarea / m_svol;
         }
-        ydot[m_iT] += hsum / (y[m_iDens] * C * Sprog::R);
+        if (m_include_particle_terms)
+        {
+            ydot[m_iT] += hsum / (y[m_iDens] * C * Sprog::R + m_mix->getParticleDensity());
+        }
+        else
+        {
+            ydot[m_iT] += hsum / (y[m_iDens] * C * Sprog::R);
+        }
     }
     // Add imposed temperature gradient, if defined
     if (m_Tfunc) ydot[m_iT] += m_Tfunc(t, y, ydot, *this);
@@ -506,6 +532,9 @@ void PSR::RHS_Complete(double t, const double *const y, double *ydot) const {
     double dn_dt(0.0);
     for (Mops::FlowPtrVector::const_iterator it=m_inflow_ptrs.begin();
             it!=m_inflow_ptrs.end(); ++it) {
+        // Debug check for inflow pointer
+        assert(&(*it)->Mixture()->GasPhase());
+		
         dn_dt += (*it)->GetFlowFraction() * (*it)->Mixture()->GasPhase().Density();
     }
     dn_dt = (dn_dt * m_iscaling - y[m_iDens]) * m_invrt + wtot;

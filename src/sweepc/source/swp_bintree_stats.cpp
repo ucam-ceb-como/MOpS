@@ -61,7 +61,8 @@ const std::string BinTreeStats::m_statnames[BinTreeStats::STAT_COUNT] = {
     std::string("GStdev of Avg. Primary Diameter (-)"),
     std::string("Mean GStdev of Primary Diameter (-)"),
     std::string("GMean of Collision Diameter (m)"),
-    std::string("GMean of Avg. Primary Diameter (m)")
+    std::string("GMean of Avg. Primary Diameter (m)"),
+	std::string("Avg. Radius of Gyration (m)")
 };
 
 const IModelStats::StatType BinTreeStats::m_mask[BinTreeStats::STAT_COUNT] = {
@@ -74,7 +75,8 @@ const IModelStats::StatType BinTreeStats::m_mask[BinTreeStats::STAT_COUNT] = {
     IModelStats::Avg,  // Gstdev of mean dpri
     IModelStats::Avg,  // Mean gstdev of dpri
     IModelStats::Avg,  // Gmean of dcol
-    IModelStats::Avg   // Gmean of avg dpri
+    IModelStats::Avg,  // Gmean of avg dpri
+	IModelStats::Avg   // Radius of gyration
 };
 
 const std::string BinTreeStats::m_const_pslnames[BinTreeStats::PSL_COUNT] = {
@@ -140,8 +142,8 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
     fill(m_stats.begin(), m_stats.end(), 0.0);
 
     // Calculate total weight
-    double TotalWeight = e.Count()>0 ? e.GetSum(iW) : 0.0;
-    double invTotalWeight = e.Count()>0 ? 1.0/e.GetSum(iW) : 0.0;
+    double TotalWeight = (e.Count() + e.GetTotalParticleNumber())>0 ? (e.GetSum(iW) + e.GetTotalParticleNumber()) : 0.0;
+    double invTotalWeight = (e.Count() + e.GetTotalParticleNumber())>0 ? 1.0/(e.GetSum(iW) + e.GetTotalParticleNumber()) : 0.0;
 
     // Loop over all particles, getting the stats from each.
     Ensemble::const_iterator ip;
@@ -164,13 +166,13 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
         //! Check if the value of the property is within the stats bound.
         if ((m_statbound.Lower < sz) && (sz < m_statbound.Upper) ) {
             // Sum stats from this particle.
-            m_stats[iNPrim]      += prim->GetNumPrimary()  * wt;
-            m_stats[iPrimDiam]   += prim->GetPrimaryDiam() * wt
-                                  / (double) prim->GetNumPrimary();
-            m_stats[iSintLevel]  += prim->GetAvgSinterLevel() * wt;
-            m_stats[iSintRate]   += prim->GetSintRate() * wt;
-            m_stats[iSintTime]   += prim->GetSintTime() * wt;
-            m_stats[iGStdevMean] += prim->GetPrimaryGStdDev() * wt;
+            m_stats[iNPrim]     += prim->GetNumPrimary()  * wt;
+            m_stats[iPrimDiam]  += prim->GetPrimaryDiam() * wt
+                    / (double) prim->GetNumPrimary();
+            m_stats[iSintLevel] += prim->GetAvgSinterLevel() * wt;
+            m_stats[iSintRate]  += prim->GetSintRate() * wt;
+            m_stats[iSintTime]  += prim->GetSintTime() * wt;
+            m_stats[iGStdevMean]+= prim->GetPrimaryGStdDev() * wt;
             m_stats[iRg]         += prim->GetRadiusOfGyration() * wt;
 
             // Collect the collision and primary diameters
@@ -182,6 +184,20 @@ void BinTreeStats::Calculate(const Ensemble &e, double scale)
 
             ++n;
         }
+    }
+
+    // Add contributions from the hybrid particle model
+    if (e.GetTotalParticleNumber() != 0)
+    {
+        double wt = e.GetTotalParticleNumber() * invTotalWeight;
+        double dpri = e.GetTotalDiameter() * invTotalWeight;
+		
+        m_stats[iNPrim] += wt;
+        m_stats[iPrimDiam] += dpri;
+        m_stats[iSintLevel] += wt;
+        m_stats[iSintRate] += 0;
+        m_stats[iSintTime] += 0;
+        m_stats[iGStdevMean] += wt; 
     }
 
     // Now get the geometric standard devs, using [0] for dcol, [1] for dpri
@@ -484,14 +500,13 @@ void BinTreeStats::Deserialize(std::istream &in, const Sweep::ParticleModel &mod
     }
 }
 
-/////////////////////////////////////////////////// csl37-pp
-void BinTreeStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &surface, std::vector<fvector> &primary_diameter, int k) const
+// Return primary particle details and connectivity
+void BinTreeStats::PrintPrimary(const Sweep::Particle &sp, std::vector<fvector> &nodes, std::vector<fvector> &primaries, int k) const
 {
-	const AggModels::BinTreePrimary* const prim =
-		dynamic_cast<const AggModels::BinTreePrimary *>(sp.Primary());
+    const AggModels::BinTreePrimary* const prim =
+        dynamic_cast<const AggModels::BinTreePrimary *>(sp.Primary());
 
-	if (prim != NULL) {
-		prim->PrintPrimary(surface, primary_diameter, k);
-	}
+    if (prim != NULL) {
+        prim->PrintPrimary(nodes, primaries, k);
+    }
 }
-//////////////////////////////////////////////////

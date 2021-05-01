@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mechanism name="Titanium Dioxide" units="CGS">
+
+<!-- Define particle components. -->
+<component id="Anatase">
+    <description>Anatase</description>
+    <density>3.9</density>
+    <molwt>79.87</molwt>
+</component>
+
+<!-- Define particle types. -->
+<particle id="[An]" model="bintree" subtree="false" track="primaryCoordinates">
+<description>An anatase particle.</description>
+	<efm>2.2</efm>
+	<fractdim>1.8</fractdim>
+	<coalthresh>1.0</coalthresh>
+	<sintering enable="true" model="GBD">
+		<!-- GBD model params based on Eggersdorfer et al. (2012)-->
+		<A units="s/m4K">9.112e+17</A>
+		<E units="K">31030</E>
+		<Dpmin units="m">0</Dpmin>
+	</sintering>
+</particle>
+
+<!-- Coagulation -->
+<coagulation>
+    <A>1.0</A>
+    <kernel>transition</kernel>
+</coagulation>
+
+<!-- Dimer Inception -->
+<inception name="2Ti(OH)4 molecule inception" rate="freemolecular">
+    <formula>"H4O4TI + H4O4TI to [Ru2]</formula>
+    <A>1</A>
+    <!-- g, cm, s -->
+    <reactant id="H4O4TI" stoich="2" m="1.925e-022" d="5.128e-8" />
+    <product id="H2O" stoich="+4.0" />
+    <particleout id="[An]"/>
+    <component id="Anatase" dx="+2.0"/>
+</inception>
+
+<!-- Condensation reaction -->
+<condensation type="condensation" name="Ti(OH)4 condensation" defer="true">
+    <formula>[An] + Ti(OH)4 to [An+1]</formula> 
+    <A>1</A>
+    <!-- g, cm, s -->
+    <reactant id="H4O4TI" stoich="1" m="1.323e-22" d="1e-100"/>
+	 <product id="H2O" stoich="+2.0" />
+    <component id="Anatase" dx="+1"/>
+</condensation>
+
+</mechanism>

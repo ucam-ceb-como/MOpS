@@ -94,6 +94,20 @@ public:
 
     double MinPAH() const;
 
+	// PHASE
+
+	// Return phase
+	const std::string &Phase() const;
+
+	// Set phase
+	void SetPhase(const std::string &phase);
+
+	// Return element
+	const std::string &Element() const;
+
+	// Set element
+	void SetElement(const std::string &element);
+
     //! If a jump process reduces the total number of 6-member rings (excludes 5-member rings) in a PAH below a certain threshold it is removed. Return this threshold in terms of the total number of 6-member rings.
     double ThresholdOxidation() const;
 
@@ -183,6 +197,12 @@ private:
 	
 	//! Enable saving test rates and debugging PAHs (saving to files)
 	bool m_debugPAH=false;
+
+	//! Component phase
+	std::string m_phase;
+
+	//! Component element
+	std::string m_element;
 };
 
 // Typedef of a vector of pointers to Component objects.

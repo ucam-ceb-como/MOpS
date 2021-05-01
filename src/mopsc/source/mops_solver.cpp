@@ -229,6 +229,36 @@ void Solver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     if (out) out(nsteps, niter, r, *this, data);
 }
 
+// Calculates and stores various properties used to complete the 
+// energy balance with particles so they can be computed less frequently. 
+void Solver::storeTemperatureProperties(Reactor &r, Sweep::rng_type &rng)
+{
+	// Check if particle terms are to be included in the energy balance
+	if (r.IncludeParticles())
+	{
+		Sprog::Thermo::IdealGas *tmpGasPhase = (&r.Mixture()->GasPhase());
+		double mw = r.Mixture()->ParticleModel()->Components()[0]->MolWt();
+		fvector Hs, Cs;
+		double bulkCg;
+		double rhop = (r.Mixture()->Particles().GetSum(Sweep::iM) +
+			r.Mixture()->Particles().GetTotalMass())
+			/ (mw * r.Mixture()->SampleVolume());
+		if (r.IsConstV()) {
+			// Constant volume reactor: Use Cv, Us.
+			tmpGasPhase->Us(Hs);
+			tmpGasPhase->Cvs(Cs);
+			bulkCg = tmpGasPhase->BulkCv();
+		}
+		else {
+			// Constant pressure reactor: Use Cp, Hs.
+			tmpGasPhase->Hs(Hs);
+			tmpGasPhase->Cps(Cs);
+			bulkCg = tmpGasPhase->BulkCp();
+		}
+		int pindex = r.Mech()->ParticleMech().GetParticleSpeciesIndex();
+		r.Mixture()->setGasPhaseProperties(bulkCg, Cs[pindex], rhop * Cs[pindex], Hs);
+	}
+}
 
 /*!
 Retrieves the solution vector if the basic gpc ode solver is called

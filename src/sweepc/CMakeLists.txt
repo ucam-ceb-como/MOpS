@@ -30,6 +30,8 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_fixed_mixture.cpp
                   source/swp_fragmentation.cpp
                   source/swp_gas_profile.cpp
+                  source/swp_hybrid_constcoag.cpp
+                  source/swp_hybrid_transcoag.cpp
                   source/swp_imgnode.cpp
                   source/swp_inception.cpp
                   source/swp_mechanism.cpp
@@ -44,6 +46,7 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_particle_model.cpp
                   source/swp_particle_process.cpp
                   source/swp_particle_stats.cpp
+				  source/swp_phase.cpp
                   source/swp_primary.cpp
                   source/swp_process.cpp
                   source/swp_process_factory.cpp
@@ -59,6 +62,8 @@ add_library(sweep source/swp_actsites_reaction.cpp
                   source/swp_surfvolhydrogen_stats.cpp
                   source/swp_surfvol_silica_primary.cpp
                   source/swp_symmetricfrag.cpp
+				  source/swp_titania_melting_model.cpp
+				  source/swp_titania_phase_transformation.cpp
                   source/swp_titania_surface_reaction.cpp
                   source/swp_tracker.cpp
                   source/swp_transcoag.cpp

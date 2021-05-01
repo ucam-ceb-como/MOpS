@@ -86,7 +86,11 @@ namespace Sweep
 		// Silicon properties
 		iCoverage,     // Ratio of component 0 to component 1
 
-		iUniform1
+		iUniform1,
+
+
+		//Titania model properties
+		iAn_2_3_comp	//Anatase fraction ^ (2/3) * total composition
     };
 }
 

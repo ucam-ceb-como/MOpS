@@ -97,6 +97,9 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     // scaled with gas-phase expansion.
     double rho = 0.0;
 
+    // This function stores heat capacity and particle density for the step
+    storeTemperatureProperties(r, rng);
+
     m_cpu_mark = clock();
         // Solve first half-step of gas-phase chemistry.
         rho = r.Mixture()->GasPhase().MassDensity();
@@ -105,34 +108,42 @@ void StrangSolver::Solve(Reactor &r, double tstop, int nsteps, int niter,
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
     m_cpu_mark = clock();
+	
+    // Update heat capacity and particle density for the step
+    storeTemperatureProperties(r, rng);
 
     // Solve one whole step of population balance (Sweep).
-        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+    r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+    Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
-        m_swp_ctime += calcDeltaCT(m_cpu_mark);
-    
+    m_swp_ctime += calcDeltaCT(m_cpu_mark);
+
     for (int i=1; i<nsteps; ++i) {
         m_cpu_mark = clock();
-            // Solve whole step of gas-phase chemistry.
-            rho = r.Mixture()->GasPhase().MassDensity();
-            m_ode.ResetSolver();
-            m_ode.Solve(r, t2+=dt);
-            r.SetTime(t2);
+        // Solve whole step of gas-phase chemistry.
+        rho = r.Mixture()->GasPhase().MassDensity();
+        m_ode.ResetSolver();
+        m_ode.Solve(r, t2+=dt);
+        r.SetTime(t2);
         m_chemtime += calcDeltaCT(m_cpu_mark);
-
         m_cpu_mark = clock();
-            // Solve whole step of population balance (Sweep).
-            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
-        m_swp_ctime += calcDeltaCT(m_cpu_mark);        
+
+        // Update heat capacity and particle density for the step
+        storeTemperatureProperties(r, rng);
+
+        // Solve whole step of population balance (Sweep).
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+        m_swp_ctime += calcDeltaCT(m_cpu_mark);
     }
 
     m_cpu_mark = clock();
-        // Solve last half-step of gas-phase chemistry.    
-        m_ode.ResetSolver();
-        m_ode.Solve(r, t2+=h);
-        r.SetTime(t2);
+    // Solve last half-step of gas-phase chemistry.  
+    rho = r.Mixture()->GasPhase().MassDensity();
+    m_ode.ResetSolver();
+    m_ode.Solve(r, t2+=h);
+    r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+    r.SetTime(t2);
     m_chemtime += calcDeltaCT(m_cpu_mark);
 
     // Calculate total computation time.
@@ -170,8 +181,8 @@ void StrangSolver::multiStrangStep(double dt, unsigned int n, Mops::Reactor &r,
     m_cpu_mark = clock();
 
     // Solve one whole step of population balance (Sweep).
-        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+    r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+    Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
 
         m_swp_ctime += calcDeltaCT(m_cpu_mark);
     
@@ -185,9 +196,9 @@ void StrangSolver::multiStrangStep(double dt, unsigned int n, Mops::Reactor &r,
         m_chemtime += calcDeltaCT(m_cpu_mark);
 
         m_cpu_mark = clock();
-            // Solve whole step of population balance (Sweep).
-            r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
-            Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
+        // Solve whole step of population balance (Sweep).
+        r.Mixture()->AdjustSampleVolume(rho / r.Mixture()->GasPhase().MassDensity());
+        Run(ts1, ts2+=dt, *r.Mixture(), r.Mech()->ParticleMech(), rng);
         m_swp_ctime += calcDeltaCT(m_cpu_mark);
         
     }

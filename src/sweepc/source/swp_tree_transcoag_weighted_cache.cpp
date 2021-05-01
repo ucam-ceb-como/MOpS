@@ -88,6 +88,7 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache()
 , m_sinterrate(0.0)
 , m_coverage(0.0)
 , m_select(0.0)
+, m_phaseterm(0.0)
 {}
 
 /*!
@@ -184,6 +185,9 @@ Sweep::TreeTransCoagWeightedCache::TreeTransCoagWeightedCache(const Sweep::Parti
 	else{
 		m_select = m_weight;
 	}
+
+	//Titania parameters
+	m_phaseterm = part.GetPhaseTerm();
 }
 
 // OPERATOR OVERLOADS.
@@ -222,6 +226,7 @@ Sweep::TreeTransCoagWeightedCache &Sweep::TreeTransCoagWeightedCache::operator+=
     m_sinterrate   += rhs.m_sinterrate;
     m_coverage     += rhs.m_coverage;
 	m_select       += rhs.m_select;
+	m_phaseterm    += rhs.m_phaseterm;
 
     return *this;
 }
@@ -264,6 +269,7 @@ void Sweep::TreeTransCoagWeightedCache::Clear(void)
     m_sinterrate   = 0.0;
     m_coverage     = 0.0;
 	m_select = 0.0;
+	m_phaseterm = 0.0;
 }
 
 /**
@@ -338,6 +344,8 @@ double Sweep::TreeTransCoagWeightedCache::Property(PropID id) const
             // Special case property, used to select particles
             // uniformly.
             return 1.0;
+		case iAn_2_3_comp:
+			return m_phaseterm;
         default:
             return 0.0;
     }

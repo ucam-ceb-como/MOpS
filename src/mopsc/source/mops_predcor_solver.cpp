@@ -41,6 +41,7 @@
 
 #include "mops_predcor_solver.h"
 #include "mops_reactor_factory.h"
+#include "mops_psr.h"
 
 #include "sweep.h"
 #include "string_functions.h"
@@ -48,6 +49,8 @@
 #include "local_geometry1d.h"
 
 #include <stdexcept>
+
+//#define CHECK_PTR
 
 using namespace Mops;
 using namespace std;
@@ -90,6 +93,10 @@ void PredCorSolver::Initialise(Reactor &r)
 {
     // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
     r.Mixture()->SetFixedChem(true);
+    if (r.IsConstV())
+    {
+        r.Mixture()->setConstV(true);
+    }
 
     // Set up ODE solver.
     FlameSolver::Initialise(r);
@@ -138,6 +145,10 @@ void PredCorSolver::Reset(Reactor &r)
 
     // Ensure 'fixed-chemistry' is set so no stochastic adjustments are made
     r.Mixture()->SetFixedChem(true);
+    if (r.IsConstV())
+    {
+        r.Mixture()->setConstV(true);
+    }
 
     // Clone the reactor.
     delete m_reac_copy;
@@ -146,6 +157,20 @@ void PredCorSolver::Reset(Reactor &r)
 
 
 // SOLVING REACTORS.
+
+
+/* aab64 - warning on using predcor with mops network simulator:
+ The predcor solver appears to be incompatible with the network simulator 
+ This is due to the way that the reactor class and PSR derived class are 
+ set up. Essentially, because the PSR class has inflow and outflow pointers
+ but the setup in the solver is for a generic reactor object, the information
+ about the mixtures pointed to is lost when the reactor is copied for the 
+ predcor iterations e.g. in the assignment r=*m_reac_copy. This has not currently
+ been fixed. One option would be to restructure things so that the reactor, r, is 
+ passed by reference to the iteration() function etc. The clone function r.Clone() 
+ works correctly and could be used for the assignment. 
+ To investigate enable the ifdef CHECK_PTR checks */
+
 
 // Solves the coupled reactor using the predictor-corrector splitting
 // algorithm up to the stop time.  Calls the output function after
@@ -365,8 +390,55 @@ void PredCorSolver::beginIteration(Reactor &r, unsigned int step, double dt)
 // the source terms for the gas-phase effect on the particle model.
 void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
 {
+	
+    // aab64: check what happens to flow pointers during assignment
+#ifdef CHECK_PTR
+    cout << "in iteration check 1\n";
+    // Cast the reactor to a PSR reactor and check outflow pointers
+    Mops::PSR *psr = dynamic_cast<Mops::PSR*>(&r);
+    if (psr != NULL)
+    {
+	Mops::FlowPtrVector::const_iterator itbeg = psr->Mops::PSR::Outflows().begin();
+	Mops::FlowPtrVector::const_iterator itend = psr->Mops::PSR::Outflows().end();
+	while (itbeg != itend) {
+	    assert(&(*itbeg)->Mixture()->GasPhase());
+	    ++itbeg;
+	}
+    }
+    
+    cout << "in iteration check 2\n";
+    // Cast the reactor copy to a PSR reactor and check outflow pointers
+    Mops::PSR *psr_copy = dynamic_cast<Mops::PSR*>(&(*m_reac_copy));
+    if (psr_copy != NULL)
+    {
+	Mops::FlowPtrVector::const_iterator itbeg = psr_copy->Mops::PSR::Outflows().begin();
+	Mops::FlowPtrVector::const_iterator itend = psr_copy->Mops::PSR::Outflows().end();
+	while (itbeg != itend) {
+	    assert(&(*itbeg)->Mixture()->GasPhase());
+	    ++itbeg;
+	}
+    }
+#endif
+
     // Reset reactor and solver for another iteration.
     r = *m_reac_copy;
+	
+    // aab64: check what happens to flow pointers during assignment
+#ifdef CHECK_PTR
+    cout << "in iteration check 3, post assignment\n";
+    // Cast the reactor to a PSR reactor and check outflow pointers
+    //Mops::PSR *psr = dynamic_cast<Mops::PSR*>(&r);
+    if (psr != NULL)
+    {
+	Mops::FlowPtrVector::const_iterator itbeg = psr->Mops::PSR::Outflows().begin();
+	Mops::FlowPtrVector::const_iterator itend = psr->Mops::PSR::Outflows().end();
+	while (itbeg != itend) {
+	    assert(&(*itbeg)->Mixture()->GasPhase());
+            ++itbeg;
+	}
+    }
+    cout << "in iteration checks complete\n";
+#endif
 
     // Note the start time.
     double ts1=r.Time();
@@ -393,8 +465,8 @@ void PredCorSolver::iteration(Reactor &r, double dt, Sweep::rng_type &rng)
         double ts2 = ts1+dt;
 
         // Scale M0 according to gas-phase expansion.
-        r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()
-                / r.Mixture()->GasPhase().MassDensity());
+       r.Mixture()->AdjustSampleVolume(m_reac_copy->Mixture()->GasPhase().MassDensity()		
+                / r.Mixture()->GasPhase().MassDensity());									
 
         // Run Sweep for this time step.
         Run(ts1, ts2, *r.Mixture(), r.Mech()->ParticleMech(), rng);
@@ -445,20 +517,38 @@ void PredCorSolver::calcSrcTerms(SrcPoint &src, const Reactor &r)
     r.Mech()->ParticleMech().CalcGasChangeRates(r.Time(), *r.Mixture(), 
                                                 Geometry::LocalGeometry1d(), src.Terms);
 
+    // Convert to concentrations to compute change in enthalpy
+    Mops::fvector csrc;
+    csrc.resize(r.Mech()->GasMech().SpeciesCount() + 2, 0.0);
+    fvector::iterator rhodot = src.Terms.begin() + r.Mech()->GasMech().SpeciesCount() + 1;
+    for (unsigned int k=0; k!=r.Mech()->GasMech().SpeciesCount(); ++k) {
+        csrc[k] = (r.Mixture()->GasPhase().Density() * src.Terms[k]) + 
+            (r.Mixture()->GasPhase().MoleFraction(k) * (*rhodot));
+    }
+
     // Calculate the enthalpy-based temperature change 
     // rate using the species change rates and an adiabatic
     // assumption.
+    double dT_dt = 0.0;
     if (r.EnergyEquation() == Reactor::ConstT) {
-        src.Terms[r.Mech()->GasMech().SpeciesCount()] = 0.0;
+        src.Terms[r.Mech()->GasMech().SpeciesCount()] = dT_dt;
     } else {
-        src.Terms[r.Mech()->GasMech().SpeciesCount()] += energySrcTerm(r, src.Terms);
+        // Note this does not account for particle formation so it should only be
+        // used for systems where enthalpy of particle formation is insignificant
+        dT_dt = energySrcTerm(r, csrc); 
+        src.Terms[r.Mech()->GasMech().SpeciesCount()] += dT_dt;
     }
 
     // Calculate density change based on whether reactor is constant
     // volume or constant pressure.
     if (r.IsConstP()) {
-        // Constant pressure: zero density derivative.
-        src.Terms[r.Mech()->GasMech().SpeciesCount()+1] = 0.0;
+        // Constant pressure: density change due to change in temperature.
+        double rho_T = r.Mixture()->GasPhase().Density() / r.Mixture()->GasPhase().Temperature();
+        src.Terms[r.Mech()->GasMech().SpeciesCount() + 1] = dT_dt * (-1.0 * rho_T);
+    } else {
+        // Constant volume: add gdot to wdot for density derivative.
+        // This was already done in calcGasChangeRates - no action required. 
+        src.Terms[r.Mech()->GasMech().SpeciesCount()+1] += 0.0;
     }
 }
 
@@ -471,16 +561,15 @@ double PredCorSolver::energySrcTerm(const Reactor &r, fvector &src)
         fvector Hs;
         double C;
 
-        // Calculate species enthalpies
-        r.Mixture()->GasPhase().Hs(Hs);
-
-        // Calculate heat capacity.
+        // Calculate heat capacity and enthalpy/internal energy.
         if (r.IsConstV()) {
-            // Constant volume reactor: Use Cv.
+            // Constant volume reactor: Use Cv, Us.
             C = r.Mixture()->GasPhase().BulkCv();
+            r.Mixture()->GasPhase().Us(Hs);
         } else {
-            // Constant pressure reactor: Use Cp.
+            // Constant pressure reactor: Use Cp, Hs.
             C = r.Mixture()->GasPhase().BulkCp();
+            r.Mixture()->GasPhase().Hs(Hs);
         }
 
         // Calculate and return temperature source term.

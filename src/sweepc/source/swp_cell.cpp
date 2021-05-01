@@ -62,13 +62,15 @@ namespace Sweep {
 // Default constructor (public).
 Cell::Cell(const Sweep::ParticleModel &model, const bool const_gas)
 : m_ensemble(), m_model(&model),
-  m_smpvol(1.0), m_fixed_chem(false)
+  m_smpvol(1.0), m_fixed_chem(false),
+  m_constv(false), m_particle_density(0.0), m_adiabatic_flag(false)
 {
     if(const_gas)
         m_gas = new Sweep::FixedMixture(fvector(7 + model.Species()->size()), *model.Species());
     else
         m_gas = new Sweep::SprogIdealGasWrapper(*model.Species());
 
+    assert(isValid());
 }
 
 // Copy constructor.
@@ -76,6 +78,7 @@ Cell::Cell(const Cell &copy)
 : m_gas(copy.m_gas->Clone())
 {
     *this = copy;
+	assert(isValid());
 }
 
 // Stream-reading constructor.
@@ -83,11 +86,13 @@ Cell::Cell(std::istream &in, const Sweep::ParticleModel &model)
 : m_model(&model), m_gas(new Sweep::SprogIdealGasWrapper(*model.Species()))
 {
     Deserialize(in, model);
+	assert(isValid());
 }
 
 // Default destructor.
 Cell::~Cell(void)
 {
+	assert(isValid());
     delete m_gas;
 }
 
@@ -98,6 +103,7 @@ Cell::~Cell(void)
 Cell &Cell::operator=(const Sweep::Cell &rhs)
 {
     if (this != &rhs) {
+	//assert(rhs.isValid());
         delete m_gas;
         m_gas        = rhs.m_gas->Clone();
         m_ensemble   = rhs.m_ensemble;
@@ -106,7 +112,14 @@ Cell &Cell::operator=(const Sweep::Cell &rhs)
         m_fixed_chem = rhs.m_fixed_chem;
         m_inflow     = rhs.m_inflow;
         m_outflow    = rhs.m_outflow;
+        m_adiabatic_flag = rhs.m_adiabatic_flag;          // flag for adiabatic operation
+        m_bulk_heat_capacity = rhs.m_bulk_heat_capacity;  // temperature update variables
+	m_particle_heat_capacity = rhs.m_particle_heat_capacity;
+        m_particle_density = rhs.m_particle_density;
+        m_enthalpies = rhs.m_enthalpies;
+	m_constv = rhs.m_constv;                          // flag for constant volume operation
     }
+    assert(isValid());
     return *this;
 }
 
@@ -126,6 +139,7 @@ std::ostream& operator<<(
           " P=" << c.GasPhase().Pressure() <<
           " SP0=" << c.GasPhase().SpeciesConcentration(0) <<
           " \n";
+  assert(c.isValid());
   return os;
 }
 
@@ -139,6 +153,7 @@ const Ensemble &Cell::Particles(void) const {return m_ensemble;}
 // Returns the particle count.
 unsigned int Cell::ParticleCount(void) const
 {
+    assert(isValid());
     return m_ensemble.Count();
 }
 
@@ -171,6 +186,7 @@ void Cell::SetParticles(
     m_ensemble.SetParticles(particle_list_begin, particle_list_end, rng);
 
     m_smpvol = 1.0 / statistical_weight;
+    assert(isValid());
 }
 
 /**
@@ -204,6 +220,7 @@ void Cell::SetParticles(
     assert(rngCopy == rng);
 
     m_smpvol = 1.0 / statistical_weight;
+    assert(isValid());
 }
 
 // Returns particle statistics.
@@ -238,6 +255,7 @@ void Cell::AdjustSampleVolume(double scale_factor)
     // The effects of ensemble rescalings are now incorporated in this sample
     // volume.
     m_ensemble.ResetScaling();
+    assert(isValid());
 }
 
 unsigned int Cell::NumOfStartingSpecies(const int index) const 
@@ -267,6 +285,7 @@ void Cell::Reset(const double m0)
         // The ensemble has not yet been initialised
         m_smpvol = 1.0;
     }
+    assert(isValid());
 
 }
 
@@ -343,6 +362,14 @@ void Cell::AddOutflow(double rate, const Sweep::Mechanism &mech)
     m_outflow.push_back(death);
 }
 
+// Store temperature properties to be used in particle step
+void Cell::setGasPhaseProperties(double C_bulk, double C_particle, double rhop, fvector enthalpies)
+{
+    m_bulk_heat_capacity = C_bulk;
+    m_particle_heat_capacity = C_particle;
+    m_particle_density = rhop;
+    m_enthalpies = enthalpies;
+}
 
 // READ/WRITE/COPY.
 
@@ -353,6 +380,7 @@ void Cell::AddOutflow(double rate, const Sweep::Mechanism &mech)
  */
 void Cell::Serialize(std::ostream &out) const
 {
+    assert(isValid());
     if (out.good()) {
         // Output the gas mixture
         // First check how the mixture is stored
@@ -381,6 +409,14 @@ void Cell::Serialize(std::ostream &out) const
 
         // Output if fixed chem.
         out.write((char*)&m_fixed_chem, sizeof(m_fixed_chem));
+
+
+		// Output if constant volume. 
+		out.write((char*)&m_constv, sizeof(m_constv));
+
+
+		// Output if fully adiabatic.
+		out.write((char*)&m_adiabatic_flag, sizeof(m_adiabatic_flag));
 
         // Output the ensemble.
         m_ensemble.Serialize(out);
@@ -432,6 +468,12 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
         // Read if fixed chem.
         in.read(reinterpret_cast<char*>(&m_fixed_chem), sizeof(m_fixed_chem));
 
+		// Read if constant volume.
+		in.read(reinterpret_cast<char*>(&m_constv), sizeof(m_constv));
+
+		// Read if fully adiabatic.
+		in.read(reinterpret_cast<char*>(&m_adiabatic_flag), sizeof(m_adiabatic_flag));
+
         // Read the ensemble.
         m_ensemble.Deserialize(in, model);
 
@@ -439,6 +481,11 @@ void Cell::Deserialize(std::istream &in, const Sweep::ParticleModel &model)
         throw invalid_argument("Input stream not ready "
                                "(Sweep, Cell::Deserialize).");
     }
+}
+
+// Check cell consistency, ensure gas phase mixture pointers are never null 
+bool Cell::isValid() const {
+    return m_gas != NULL; 
 }
 
 } // Sweep namespace

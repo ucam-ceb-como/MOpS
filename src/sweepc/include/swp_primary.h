@@ -63,6 +63,7 @@
 #include "swp_particle_model.h"
 #include "swp_aggmodel_type.h"
 #include "swp_sintering_model.h"
+#include "swp_titania_melting_model.h"
 #include "swp_property_indices.h"
 
 #include <iostream>
@@ -119,6 +120,9 @@ public:
 
     // PRIMARY COMPOSITION.
 
+	//Returns named component
+	double GetComponent(std::string name) const;
+
     // Returns the composition vector.
     const fvector &Composition(void) const;
 
@@ -143,6 +147,10 @@ public:
     // Sets the ith trackervalue.
     void SetValue(unsigned int i, double val);
 
+	// PHASE
+
+	// Get mass of a specific phase
+	double GetPhaseMass(int i) const;
 
     // PRIMARY CREATE TIME.
 
@@ -254,6 +262,17 @@ public:
         unsigned int n=1        // Number of times to perform adjustment.
         );
 
+	//Adjusts the particle n times for the phase transformation process
+	virtual unsigned int AdjustPhase(
+		const fvector &dcomp,	// Composition changes.
+        const fvector &dvalues,	// Tracker variable changes.
+        rng_type &rng,			// Random number for leaf node
+        unsigned int n			// Number of times to perform adjustment.
+		);
+
+	//Melting point dependent phase change
+	virtual void Melt( rng_type &rng, Cell &sys	);
+
     // Combines this primary with another.  This is also the
     // implementation of the + and += operators.
     virtual Primary &Coagulate(const Primary &rhs,
@@ -273,6 +292,18 @@ public:
         rng_type &rng,  // Random number generator
         double wt     // Statistical weight
         );
+	
+	// PARTICLE TRACKING FOR VIDEOS
+
+	//! Returns the frame position and orientation, and primary coordinates
+	//	Used by bintree_primary for particle tracking
+	virtual void GetFrameCoords(std::vector<fvector> &coords) const;
+
+	//! Set primary tracking
+	virtual void setTracking();
+
+	//! Remove primary tracking
+	virtual void removeTracking();
 
     // READ/WRITE/COPY.
 
@@ -300,6 +331,9 @@ public:
     //! that of the inception species.
     int InceptedPAH() const;
 
+	// Term for titania phase transformation
+	virtual double GetPhaseTerm(void) const;
+
 protected:
     // Particle model used to define the Primary.
     const Sweep::ParticleModel *m_pmodel;
@@ -321,6 +355,9 @@ protected:
     int m_frag;      //!< Fragmentation flag.
 	int m_numOf6Rings;
 
+	// Property for titania phase transformation model
+	double m_phaseterm;
+
     // Primary class cannot be created without knowledge of the
     // particle model, therefore default constructor is protected.
     Primary(void);
@@ -333,6 +370,9 @@ protected:
 
     //! Calculate the number of allowable adjustments for a LPDA process
     unsigned int CalculateMaxAdjustments(const fvector &dcomp, unsigned int n) const;
+
+	//! Calculate the maxmimum number of allowable adjustments for a process
+	unsigned int CalculateMaxAdjustments(const fvector &dcomp) const;
 
     // MEMORY MANAGEMENT.
 

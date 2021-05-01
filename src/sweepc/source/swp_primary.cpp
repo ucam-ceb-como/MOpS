@@ -48,6 +48,8 @@
 #include <stdexcept>
 #include <memory.h>
 
+#include <boost/random/uniform_smallint.hpp>
+
 using namespace Sweep;
 using namespace Sweep::KMC_ARS;
 
@@ -58,7 +60,7 @@ using namespace std;
 //! Default constructor (protected).
 AggModels::Primary::Primary(void)
 : m_pmodel(NULL), m_createt(0.0), m_time(0.0), m_diam(0.0), m_dcol(0.0), 
-m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0), m_frag(0), m_numOf6Rings(0)
+m_dmob(0.0), m_surf(0.0), m_vol(0.0), m_mass(0.0), m_numcarbon(0), m_frag(0), m_numOf6Rings(0), m_phaseterm(0.0)
 {
 }
 
@@ -133,7 +135,9 @@ AggModels::Primary &AggModels::Primary::operator=(const Primary &rhs)
         m_mass = rhs.m_mass;
         m_numcarbon = rhs.m_numcarbon;
 		m_numOf6Rings = rhs.m_numOf6Rings;
-        m_frag = rhs.m_frag;    }
+        m_frag = rhs.m_frag;
+		m_phaseterm = rhs.m_phaseterm;
+    }
     return *this;
 }
 
@@ -147,6 +151,13 @@ const Sweep::ParticleModel *const AggModels::Primary::ParticleModel(void) const
 
 
 // PARTICLE COMPOSITION.
+
+//Returns named component
+double AggModels::Primary::GetComponent(std::string name) const
+{
+	int index = m_pmodel->ComponentIndex(name);
+	return Composition(index);
+}
 
 // Returns the composition vector.
 const fvector &AggModels::Primary::Composition() const
@@ -203,6 +214,22 @@ void AggModels::Primary::SetValue(unsigned int i, double val)
 	}
 }
 
+// PHASE VARIABLES
+
+// Get the mass of a specific phase
+double AggModels::Primary::GetPhaseMass(int i) const{
+
+	// Get component indices for phase 
+	std::vector<unsigned int> indices = m_pmodel->GetPhaseComponents(i);
+
+	// Loop over composition and calculate mass and volume.
+	double mass = 0.0;
+	for (std::vector<unsigned int>::const_iterator it = indices.begin(); it != indices.end(); ++it){
+		mass += m_pmodel->Components((*it))->MolWt() * m_comp[(*it)] / NA;
+	}
+
+	return mass;
+}
 
 // PRIMARY CREATE TIME.
 
@@ -279,6 +306,12 @@ void AggModels::Primary::UpdateCache(void)
         m_numcarbon_temp = m_comp[i];
         m_numcarbon += m_numcarbon_temp;
     }
+
+	// phaseterm for kinetic titania phase transformation
+	// Components An and Ru assumed, 0 if components don't exist
+	double An = AggModels::Primary::GetComponent("An");
+	double Ru = AggModels::Primary::GetComponent("Ru");
+	m_phaseterm = pow( An, TWO_THIRDS) * pow((An + Ru), ONE_THIRD);
 }
 
 // Returns the particle equivalent sphere diameter.
@@ -409,7 +442,9 @@ unsigned int AggModels::Primary::Adjust(const fvector &dcomp, const fvector &dva
 	}
 
     // Update property cache.
-    AggModels::Primary::UpdateCache();
+	if (n > 0) {
+		AggModels::Primary::UpdateCache();
+	}
 
     return n;
 }
@@ -448,12 +483,128 @@ unsigned int AggModels::Primary::CalculateMaxAdjustments(
     return n;
 }
 
+/*!
+* Calculates the maximum possible number of adjustments
+*
+* This is relevant for Processes which remove components from a Primary,
+* particularly where multiple components are present in a particle.
+*
+* @param dcomp     The component changes for the Process
+* @return          Number of times allowed
+*/
+unsigned int AggModels::Primary::CalculateMaxAdjustments(const fvector &dcomp) const
+{
+	unsigned int i;
+	unsigned int n = 0;
+
+	// First check if there is a negative in dcomp
+	bool neg_change(false);
+	for (i = 0; i != dcomp.size(); ++i) {
+		if (dcomp[i] < 0.0) {
+			neg_change = true;
+			n = std::numeric_limits<unsigned int>::max();
+		}
+	}
+
+	// Calculate the actual number of events only if there is a negative
+	// change in the component amount
+	if (neg_change) {
+		for (i = 0; i != min(m_comp.size(), dcomp.size()); ++i) {
+			if (dcomp[i] < 0.0)
+				n = std::min(n, (unsigned int)abs(m_comp[i] / dcomp[i]));
+		}
+	}
+
+	return n;
+}
+
 // Adjusts the particle n times for IntParticle reaction
 unsigned int AggModels::Primary::AdjustIntPar(const fvector &dcomp, const fvector &dvalues, rng_type &rng, unsigned int n)
 {
     n = AggModels::Primary::Adjust(dcomp, dvalues, rng, n);
 
     return n;
+}
+
+//Adjusts the particle n times for the phase transformation process
+unsigned int AggModels::Primary::AdjustPhase(const fvector &dcomp,
+                              const fvector &dvalues,
+                              rng_type &rng,
+							  unsigned int n)
+{
+	n = AggModels::Primary::Adjust(dcomp, dvalues, rng, n);
+	
+    return n;
+}
+
+//Thermodynamic phase transformation (melting model)
+void AggModels::Primary::Melt(rng_type &rng, Cell &sys)
+{
+	
+	fvector dcomp(m_pmodel->ComponentCount(), 0.0);
+	std::vector<fvector> all_dcomp;
+	fvector dvalues(m_pmodel->TrackerCount(), 0.0); //for now the transformation model doesn't adjust the tracker variables
+	unsigned int n = 0;
+
+	//check if liquid
+	bool Liquid = ParticleModel()->MeltModel().IsLiquid(sys, *this);
+
+	//has the particle melted?
+	if (Liquid == true){
+		// melt the particle
+		ParticleModel()->MeltModel().MeltingCompositionChange(all_dcomp);
+	}
+	else{ //particle is solid
+		//total composition excluding liquid phase
+		double mass = 0.0;
+		fvector phaseMass(m_pmodel->PhaseCount(), 0.0);
+		
+		//add all components excluding liquid components
+		for (unsigned int i = 0; i < m_pmodel->PhaseCount(); i++){
+			if (!m_pmodel->PhaseIsLiquid(i)){
+				phaseMass[i] = GetPhaseMass(i);
+				mass += phaseMass[i];
+			}
+		}
+
+		if (mass > 0.0){
+			//if solid phases exist then convert liquid to solid phase probabilistically
+			//weighted by mass of existing solid phases
+			boost::uniform_01<rng_type&, double> uniformGenerator(rng);
+			double j = uniformGenerator() * mass; //generate random number
+			for (unsigned int i = 0; i < m_pmodel->PhaseCount(); i++){
+
+				if (j <= phaseMass[i]){ 
+					//get change in composition	
+					ParticleModel()->MeltModel().CompositionChange(i, all_dcomp);
+					break;
+				}
+				else{
+					j -= phaseMass[i];
+				}
+			}
+		}
+		else{
+			//if everything is liquid then tranform based on melting model
+			ParticleModel()->MeltModel().CompositionChange(sys, *this, all_dcomp); //get change in composition	
+		}
+	}
+
+	//loop over all composition changes and transform components
+	for (std::vector<fvector>::const_iterator it = all_dcomp.begin(); it != all_dcomp.end(); ++it){
+
+		dcomp = *it;
+
+		// transform components
+		n = Primary::CalculateMaxAdjustments(dcomp); //transform everything: get max adjustment
+		if (n > 0){ n = Primary::Adjust(dcomp, dvalues, rng, n); }; //adjust primary
+	}
+}
+
+// Property for titania phase transformation model
+double AggModels::Primary::GetPhaseTerm(void) const
+{
+	return m_phaseterm;	
 }
 
 /*!
@@ -646,7 +797,12 @@ void AggModels::Primary::Serialize(std::ostream &out) const
 
         //! Write fragmentation flag.
         val = (int)m_frag;
-        out.write((char*)&val, sizeof(val));    } else {
+        out.write((char*)&val, sizeof(val));
+
+		// Write phaseterm.
+        val = (double)m_phaseterm;
+        out.write((char*)&val, sizeof(val));
+    } else {
         throw invalid_argument("Output stream not ready "
                                "(Sweep, AggModels::Primary::Serialize).");
     }
@@ -728,6 +884,10 @@ void AggModels::Primary::Deserialize(std::istream &in, const Sweep::ParticleMode
                 in.read(reinterpret_cast<char*>(&val), sizeof(val));
                 m_frag = (int)val;
 
+				// Read phaseterm.
+                in.read(reinterpret_cast<char*>(&val), sizeof(val));
+                m_phaseterm = (double)val;
+
                 break;
             default:
                 throw runtime_error("Serialized version number is invalid "
@@ -764,6 +924,7 @@ void AggModels::Primary::init(void)
     m_numcarbon = 0;
 	m_numOf6Rings = 0;
     m_frag = 0;      //!< Fragmentation flag.
+	m_phaseterm = 0.0; // Phase term.
     releaseMem();
 }
 
@@ -809,4 +970,21 @@ int AggModels::Primary::InceptedPAH() const
 		}
 	}
 	return 0;
+}
+
+//! Returns the frame position and orientation, and primary coordinates
+//	Used by bintree_primary for particle tracking
+void AggModels::Primary::GetFrameCoords(std::vector<fvector> &coords) const
+{
+	//unused
+}
+
+void AggModels::Primary::setTracking()
+{
+	//spherical particles don't have primaries
+}
+
+void AggModels::Primary::removeTracking()
+{
+	//spherical particles don't have primaries
 }

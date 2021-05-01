@@ -53,7 +53,9 @@
 #include "swp_tracker.h"
 #include "swp_aggmodel_type.h"
 #include "swp_sintering_model.h"
+#include "swp_titania_melting_model.h"
 #include "swp_environment_interface.h"
+#include "swp_phase.h"
 
 #include "local_geometry1d.h"
 
@@ -151,6 +153,28 @@ public:
     // Sets the vector of tracker variables.
     void SetTrackers(const TrackPtrVector &track);
 
+	// PHASES
+
+	// Phases
+	PhasePtrVector m_phases;
+
+	// Add phase to particle model
+	void AddPhase(Phase &phase);
+	
+	// Return component indices for a phase 
+	std::vector<unsigned int> GetPhaseComponents(int i) const;
+
+	// Returns the number of phases in the ParticleModel
+	unsigned int PhaseCount(void) const;
+
+	// Return if the phase is liquid
+	bool PhaseIsLiquid(int i) const;
+
+	// Return the phase index
+	int PhaseIndex(const std::string &name) const;
+
+	// Return phase with given index
+	Phase *const Phases(unsigned int i);
 
     // AGGREGATION MODEL TYPE.
 
@@ -166,7 +190,11 @@ public:
     // Returns the sintering model.
     Processes::SinteringModel &SintModel(void) const;
 
+	// MELTING MODEL
 
+	// Return the titania phase melting model
+	Processes::MeltingModel &MeltModel(void) const;
+	
     // PARTICLE FUNCTIONS.
 	
 	//! Create a new particle on the heap
@@ -265,12 +293,14 @@ public:
         A1, A1CH3, A2, A4, A4CH3, R5A3, A5, A7, FromFile
     };
 
-    //! Postprocess based on the inception species concentration (XA4) or based
-    //! on the molar rate of production by chemical reaction of the inception
+    //! Postprocess based on the inception species concentration 
+	//! (XA4 for soot, concentration otherwise) or based on the 
+    //! molar rate of production by chemical reaction of the inception
     //! species per unit volume (wdotA4).
     enum postprocessingType {
         XA4,
         wdotA4,
+		concentration,
     };
 
     //! Choose between drag models
@@ -390,6 +420,9 @@ protected:
 
     //! The sintering model.
     mutable Processes::SinteringModel m_sint_model;
+
+	//! Titania phase transformation (melting) model
+	mutable Processes::MeltingModel m_melt_model;
 
     //! Calculate a phsyical particle diffusion coefficient from its drag
     double EinsteinDiffusionCoefficient(const Cell &sys, const Particle &sp) const;

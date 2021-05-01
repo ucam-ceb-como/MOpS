@@ -151,6 +151,12 @@ public:
         unsigned int start=0             // Optional vector start index.
         ) const;
 
+    // Initialise a list of particle-number particles using the given mechanism
+    void InitialisePNParticles(
+        double t,                  // Current solution time.
+        Cell &sys,                 // System to update.
+        const Mechanism &mech      // Mechanism to use.
+        ) const;
 
 	// RATE CALCULATION.
 
@@ -254,6 +260,23 @@ public:
         rng_type &rng
         ) const;
 
+    //! For particle-number model: updates particles at each index
+    //! for surface growth over dt 
+	void UpdateSections(
+		double t,   // Time up to which to integrate.
+		double dt,
+		Cell &sys,// System to update.
+		rng_type &rng
+		) const;
+
+    //! Set properties of particle picked for coagulation/outflow using 
+    //! distribution parameters
+	unsigned int SetRandomParticle(
+		Sweep::Ensemble &ens,
+		double t,
+		double random_number, 
+		Sweep::PropID prop,
+		rng_type &rng) const;
 
     //! LPDA for one particle
     void UpdateParticle(
@@ -279,6 +302,23 @@ public:
     //! Get the number of times each process has been performed
     std::vector<unsigned int> GetProcessUsageCounts() const {return m_proccount;}
 	
+    // Particle-number/particle hybrid model parameters
+    // ================================================
+    // Set/get flags for hybrid model behaviour
+    void SetHybrid(bool hybrid_flag) const { m_hybrid = hybrid_flag; }
+    bool IsHybrid() const { return m_hybrid; }
+    bool CoagulateInList() const { return m_coagulate_in_list; }
+    void SetCoagulateInList(bool flag) const { m_coagulate_in_list = flag; }
+
+    // Set/get hybrid threshold
+    void SetHybridThreshold(unsigned int threshold) const { m_hybrid_threshold = threshold; }
+    unsigned int GetHybridThreshold() const { return m_hybrid_threshold; }
+    // ================================================
+
+	//! Set/get the index that corresponds to the particle species in the gas-phase vector
+	void SetParticleSpeciesIndex(int index) const { m_i_particle_species = index; }
+	int GetParticleSpeciesIndex() const { return m_i_particle_species; }
+
 	//! return a vector contain the information of particular primary particle with X molecules
 	void Mass_pah(Ensemble &m_ensemble) const;
 
@@ -311,6 +351,15 @@ private:
 
     // Process counters.
     mutable std::vector<unsigned int> m_proccount, m_fictcount; 
+
+    // Particle-number/particle hybrid model parameters
+    // ================================================ 
+    mutable bool m_hybrid;                    // Identify hybrid particle model
+    mutable bool m_coagulate_in_list;         // Do coagulation below threshold size in the particle
+    mutable unsigned int m_hybrid_threshold;  // Hybrid threshold value-number list
+    // ================================================
+
+	mutable int m_i_particle_species;         // Index of particulate species in gas-phase vector, used for enthalpy etc.
 
     // Clears the mechanism from memory.
     void releaseMem(void);
