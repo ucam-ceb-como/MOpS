@@ -134,7 +134,7 @@ public:
     void startMigrationProcess();
 
     //! Called after migration processes. Loops through the random walker sites and moves them to end locations.
-    void performMigrationProcess();
+    void performMigrationProcess(bool opt_bool=false);
 
     //! Moves individual walker ii when called without calling optimiser. 
     void moveWalker(int ii);

@@ -235,7 +235,7 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
 
         //Artificially fix that a PAH with 4 or less sites has rate 0
 		size_t site_size = m_simPAHp.SiteListSize();
-		if ( (int)site_size <=6 ) {
+		if ( (int)site_size <=6 && std::get<0>(m_simPAHp.getRingsCount()) > 1) {
             std::cout << "PAH " << PAH_ID << " reached to " << site_size << " sites. Freezing and saving structure." << std::endl;
             addTrackedPAH(PAH_ID);
             //m_simPAHp.printSites();
@@ -355,7 +355,9 @@ double KMCSimulator::updatePAH(PAHStructure* pah,
             m_t = t_next;
         }else{
             if (m_migrate){
+                //savePAH(PAH_ID,"KMC_DEBUG/BEFOREMIGRATION");
                 m_simPAHp.performMigrationProcess();
+                //savePAH(PAH_ID,"KMC_DEBUG/AFTERMIGRATION");
                 m_migrate = false;
             }
             t_next = t_max;

@@ -310,9 +310,22 @@ const std::vector<JumpProcess*>& KMCMechanism::JPList() const {
     return m_jplist;
 }
 
+
 //! Returns vector of jump rates
 const std::vector<double>& KMCMechanism::Rates() const {
     return m_rates;
+}
+
+//! Returns vector of non-zero jump rates and processes
+std::vector<std::tuple<int,std::string,double>> KMCMechanism::NonZeroRates() const {
+	std::vector<std::tuple<int,std::string,double>> jp_rate_v;
+    for (unsigned int i = 0; i!= (int) m_jplist.size() ; i++) {
+		if (m_jplist[i]->getRate() > 1e-5){
+			double rate = m_rates[i];
+			jp_rate_v.push_back(std::make_tuple(m_jplist[i]->getID(), m_jplist[i]->getName(), rate));
+		}
+	}
+	return jp_rate_v;
 }
 
 //! Returns total rates

@@ -8023,11 +8023,12 @@ void PAHProcess::proc_D6R_FE3(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 		//updateA(C1_new->C1, C2_new->C2, 'H');
 	}
     // update combined sites
-    Spointer S3, S4;
-    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1);
+    Spointer S3, S4, S5, S6;
+    S3 = moveIt(S1, -1); S4 = moveIt(S2, 1); S5 = moveIt(S1, -2); S6 = moveIt(S2, 2);
     updateCombinedSites(stt); // update resulting site
     updateCombinedSites(S1); updateCombinedSites(S2); // update neighbours
     updateCombinedSites(S3); updateCombinedSites(S4); // update neighbours of neighbours
+	updateCombinedSites(S5); updateCombinedSites(S6); // update neighbours of neighbours
     
     // update H count
     addCount(0,-2);
@@ -12519,6 +12520,7 @@ void PAHProcess::proc_M5R_ACR5_around_corner(Spointer& stt, Cpointer C_1, Cpoint
 		}
 		removeSite(sFE2);
 		m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
+		addR5internal(checkR5_1->C1,checkR5_1->C2,false);
 		/*std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;*/
 	}
@@ -12819,6 +12821,7 @@ void PAHProcess::proc_M5R_R5R6_out_of_corner(Spointer& stt, Cpointer C_1, Cpoint
 		}
 		removeSite(sFE2);
 		m_pah->m_R5walker_sites.erase(m_pah->m_R5walker_sites.begin()+ii);
+		addR5internal(checkR5_1->C1,checkR5_1->C2,false);
 		/*std::get<0>(m_pah->m_R5walker_sites[ii]) = S2;
 		std::get<1>(m_pah->m_R5walker_sites[ii]) = S2;
 		std::get<2>(m_pah->m_R5walker_sites[ii]) = 0;*/
@@ -15060,7 +15063,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer C_
 	updateWalkersCombinedSitesMigration(ii);
 	if (jj_opp!=-9999 && jj_opp_second!=jj_opp) remOppsiteR5Walker(ii, jj_opp);
 	if (opt_opp_sites) {
-		performMigrationProcess();
+		performMigrationProcess(true);
 		startMigrationProcess();
 	}
 }
@@ -15951,7 +15954,7 @@ void PAHProcess::proc_MR5_R6_light(Spointer& stt, Cpointer C_1, Cpointer C_2) {
 	updateWalkersCombinedSitesMigration(ii);
 	if (jj_opp!=-9999 && jj_opp_second!=jj_opp) remOppsiteR5Walker(ii, jj_opp);
 	if (opt_opp_sites) {
-		performMigrationProcess();
+		performMigrationProcess(true);
 		startMigrationProcess();
 	}
 }
@@ -16743,7 +16746,7 @@ void PAHProcess::proc_M5R_ACR5_ZZ_ZZ_light(Spointer& stt, Cpointer C_1, Cpointer
 	updateWalkersCombinedSitesMigration(ii);
 	if (jj_opp!=-9999 && jj_opp_second!=jj_opp) remOppsiteR5Walker(ii, jj_opp);
 	if (opt_opp_sites) {
-		performMigrationProcess();
+		performMigrationProcess(true);
 		startMigrationProcess();
 	}
 }
@@ -17384,7 +17387,7 @@ void PAHProcess::startMigrationProcess(){
 }
 
 //! Called after migration processes. Loops through the random walker sites and moves them to end locations.
-void PAHProcess::performMigrationProcess(){
+void PAHProcess::performMigrationProcess(bool opt_bool){
 	for(unsigned int ii=0;ii!=m_pah->m_R5walker_sites.size();ii++){
 		Spointer site_perf = std::get<0>(m_pah->m_R5walker_sites[ii]);
 		Spointer site_perf_2 = std::get<1>(m_pah->m_R5walker_sites[ii]);
@@ -17407,12 +17410,15 @@ void PAHProcess::performMigrationProcess(){
 			}
 		}
 	}
-	//Optimise once after all sites have been moved
-	//saveXYZ("KMC_DEBUG/before_optim");
-	OpenBabel::OBMol mol = passPAH();
-	mol = optimisePAH(mol, 2000);
-	passbackPAH(mol);
-	//saveXYZ("KMC_DEBUG/after_optim");
+	//Optimise once after all sites have been moved and only if there were walker sites left
+	if (m_pah->m_R5walker_sites.size()>0 || opt_bool == true){
+		//saveXYZ("KMC_DEBUG/before_optim");
+		OpenBabel::OBMol mol = passPAH();
+		if (m_pah->m_R5walker_sites.size()>0) mol = optimisePAH(mol, 2000);
+		else mol = optimisePAH(mol, 100);
+		passbackPAH(mol);
+		//saveXYZ("KMC_DEBUG/after_optim");
+	}
 	//Clear the walkers vector.
 	m_pah->m_R5walker_sites.clear();
 }

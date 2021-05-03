@@ -114,6 +114,9 @@ namespace KMC_ARS {
         //! Returns vector of jump rates
         const std::vector<double>& Rates() const;
 
+		//! Returns vector of non-zero jump rates and processes
+		std::vector<std::tuple<int,std::string,double>> NonZeroRates() const;
+
         //! Returns total rates
         double TotalRate() const;
 		
