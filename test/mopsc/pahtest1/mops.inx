@@ -6,7 +6,7 @@
   <atol>1.0e-22</atol> 
   <rtol>1.0e-4</rtol>
     <pcount>512</pcount>
-  <maxm0>1.25e14</maxm0>
+  <maxm0>2.3e14</maxm0>
   <relax>0.5</relax>
   
 
