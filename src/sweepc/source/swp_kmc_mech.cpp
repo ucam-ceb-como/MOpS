@@ -5643,7 +5643,7 @@ void A_CH3::initialise() {
     addReaction(rxnV2, Reaction(1.87e7, 1.787, 3.262, sp::C2H2));   //5 - r4f
 	//addReaction(rxnV2, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
 	//addReaction(rxnV, Reaction(5.354E-09, 1.45, -104.4, sp::None));  //6				Keq: A1- + CH3 -> A1CH3             - Klippenstein 2007
-	addReaction(rxnV, Reaction(2.331E+14, -0.283, -0.191, sp::CH3));  //6				kinf: A1- + CH3 -> A1CH3            - Klippenstein 2007
+	addReaction(rxnV2, Reaction(2.331E+14, -0.283, -0.191, sp::CH3));  //6				kinf: A1- + CH3 -> A1CH3            - Klippenstein 2007
 	//addReaction(rxnV, Reaction(6.528E+102, -20.22, 14.98, sp::CH3));  //8				k0: A1- + CH3 -> A1CH3              - Klippenstein 2007
 	//addReaction(rxnV, Reaction(1.30E-03, 14.98, -3.11, sp::None));  //9				    Fcent: A1- + CH3 -> A1CH3           - Klippenstein 2007
     //addReaction(rxnV2, Reaction(9.7e3, 2.42, 38.46338, sp::O2));          //6 - r5f
@@ -5663,7 +5663,7 @@ void A_CH3::initialise() {
 	addReaction(rxnV3, Reaction(7.640E-02,  3.950E+00, 1.6495E+01, sp::C2H2));         // A3* + C2H2 -> A3C2H + H        	- 8              - Frenklach et al. 2018
 	//addReaction(rxnV3, Reaction(1.070E+65, -1.564E+01, 2.2720E+01, sp::CH3));         // A1- + CH3 -> A1CH3          	    - 9              - Richter, Howard 2005
 	//addReaction(rxnV, Reaction(5.354E-09, 1.45, -104.4, sp::None));  //9				Keq: A1- + CH3 -> A1CH3             - Klippenstein 2007
-	addReaction(rxnV, Reaction(2.331E+14, -0.283, -0.191, sp::CH3));  //9				kinf: A1- + CH3 -> A1CH3            - Klippenstein 2007
+	addReaction(rxnV3, Reaction(2.331E+14, -0.283, -0.191, sp::CH3));  //9				kinf: A1- + CH3 -> A1CH3            - Klippenstein 2007
 	//addReaction(rxnV, Reaction(6.528E+102, -20.22, 14.98, sp::CH3));  //11				k0: A1- + CH3 -> A1CH3              - Klippenstein 2007
 	//addReaction(rxnV, Reaction(1.30E-03, 14.98, -3.11, sp::None));  //12				Fcent: A1- + CH3 -> A1CH3           - Klippenstein 2007
 
