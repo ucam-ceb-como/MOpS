@@ -1,0 +1,11 @@
+prefix=/home/eb656/Codes/mops-babel/openbabel-2.3.1-Git
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+pkgincludedir=${includedir}/openbabel-2.0
+
+Name: Open Babel library
+Description: libopenbabel
+Version: 2.3.1
+Libs: -L${libdir} -lopenbabel -lz
+Cflags: -I${pkgincludedir}
