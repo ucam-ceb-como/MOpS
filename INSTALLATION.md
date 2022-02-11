@@ -36,10 +36,10 @@ Before installing OpenBabel make sure you have [PkgConfig](https://www.freedeskt
 
 Installation procedure:
 
-	Download OpenBabel 2.3.1 from the download website (https://github.com/openbabel/openbabel/releases/tag/openbabel-2-3-1). Note that newer versions have not been tested.
-	Place the unzipped source files inside the openbabel_location folder: MOpS/openbabel_location/openbabel-2-3-1
+Download OpenBabel 2.3.1 from the download website (https://github.com/openbabel/openbabel/releases/tag/openbabel-2-3-1). Note that newer versions have not been tested. Place the unzipped source files inside the openbabel_location folder like MOpS/openbabel_location/openbabel-2-3-1 and then use the following commands:
+	
 	cd openbabel_location
-    bash build.sh
+	bash build.sh
 
 You should now set up the OpenBabel environmental variables in your bashrc. A reminder of these variables is shown by the build.sh script. Remember to source the updated bashrc before continuing.
 
