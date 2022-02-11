@@ -2,7 +2,7 @@
 
 ## Installation:
 
-The current installation of the **MOpS particle simulator** uses [cmake](https://cmake.org/) to compile the program. The installation procedure below refers to installation on Linux systems, but can easily be modified for other operating systems.
+The current installation of the **MOpS Particle Simulator** uses [cmake](https://cmake.org/) to compile the program. The installation procedure below refers to installation on Linux systems, but can easily be modified for other operating systems.
 
 ### Requirements:
 
@@ -30,15 +30,15 @@ Set the following variables (substitute for your name/email):
 
 #### Build OpenBabel
 
-The PAH part of the carbonaceous particle model requires [OpenBabel](http://openbabel.org/wiki/Main_Page) to be built as a statically linked library. OpenBabel has been added as a submodule of the MOpS Particle Simulator. 
+The PAH layer of the carbonaceous particle model requires [OpenBabel](http://openbabel.org/wiki/Main_Page) to be built as a statically linked library. Folders to locate and install OpenBabel have been added to the MOpS Particle Simulator. **IMPORTANT:** If you do not plan to use the **MOpS Particle Simulator** to resolve carbonaceous structures skip this section.
 
 Before installing OpenBabel make sure you have [PkgConfig](https://www.freedesktop.org/wiki/Software/pkg-config/) on your system. This is used with cmake/modules/FindOpenBabel2.cmake for MOpS to use the [OpenBabel API](http://openbabel.org/dev-api/cmake_project.shtml).
- 
-The following commands build OpenBabel 2.3.1 as a submodule of MOpS and should be run **before** building MOpS:
 
-    git submodule init
-    git submodule update
-    cd openbabel-2.3.1-Git
+Installation procedure:
+
+	Download OpenBabel 2.3.1 from the download website (https://github.com/openbabel/openbabel/releases/tag/openbabel-2-3-1). Note that newer versions have not been tested.
+	Place the unzipped source files inside the openbabel_location folder: MOpS/openbabel_location/openbabel-2-3-1
+	cd openbabel_location
     bash build.sh
 
 You should now set up the OpenBabel environmental variables in your bashrc. A reminder of these variables is shown by the build.sh script. Remember to source the updated bashrc before continuing.
