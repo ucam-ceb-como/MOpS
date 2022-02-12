@@ -2,7 +2,7 @@
 
 ## Installation:
 
-The current installation of the **MOpS Particle Simulator** uses [cmake](https://cmake.org/) to compile the program. The installation procedure below refers to installation on Linux systems, but can easily be modified for other operating systems.
+The current installation of the **MOpS Particle Simulator** uses [cmake](https://cmake.org/) to compile the program. The installation procedure below refers to installation on Linux systems, but can easily be modified for other operating systems. Additional resources to install and develop the **MOpS Particle Simulator** under a Windows subsystem for Linux can be found on the [Installation on WSL page](./INSTALLATION_ON_WSL.md).
 
 ### Requirements:
 
