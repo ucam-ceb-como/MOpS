@@ -1,6 +1,6 @@
 # <img align="top" src="https://user-images.githubusercontent.com/32139876/92795750-8767bf00-f3a8-11ea-921a-17fac1435171.png" alt="como_group" width="150"/> MOpS Particle Simulator
 
-This document details steps needed to install and run the MOpS Particle Simulator on a Windows Supported Linux (WSL) environment. The installation requires admin (sudo) privileges.
+This document details steps needed to install and run the MOpS Particle Simulator on a Windows subsystem for Linux (WSL). The installation requires admin (sudo) privileges.
 
 ## Install WSL (Ubuntu)
 The main procedure can be found on https://docs.microsoft.com/en-us/windows/wsl/install. On an elevated Powershell run
