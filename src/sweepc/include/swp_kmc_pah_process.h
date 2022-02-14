@@ -229,9 +229,9 @@ public:
 	//! Passes a PAH from OpenBabel to MOpS.
 	void passbackPAH(OpenBabel::OBMol mol, bool R5coordsmod=true);
 	//! Runs optimisation of a PAH using Openbabel
-	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, int nsteps=4000, std::string forcefield="mmff94") ;
+	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, int nsteps=200, std::string forcefield="mmff94") ;
     //! Runs a constrained optimisation of a PAH using Openbabel
-	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, OpenBabel::OBFFConstraints constraints, int nsteps=4000, std::string forcefield="mmff94") ;
+	OpenBabel::OBMol optimisePAH(OpenBabel::OBMol mol, OpenBabel::OBFFConstraints constraints, int nsteps=200, std::string forcefield="mmff94") ;
 	//! Includes curvature in a PAH after a pentagon is integrated in the structure.
 	//OpenBabel::OBMol includeCurvature(OpenBabel::OBMol mol, cpair CR5_1, cpair CR5_2) ;
     
