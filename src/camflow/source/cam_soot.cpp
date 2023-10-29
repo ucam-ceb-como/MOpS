@@ -518,7 +518,7 @@ CamSoot::realVector CamSoot::rateAll
 
     realVector rates;  // Total rate of change of moments
     //realVector nucRates, coagRates, cdRates, sRates;	// Rate of change of moments
-    realVector prodRates; 	// Rate of change of has phase species due to surface chem
+    realVector prodRates; 	// Rate of change of gas phase species due to surface chem
     double prodRatePAHCond; 	// Rate of change of PAH due to condensation
 
     rates.resize(moments.size(),0.0);
@@ -535,17 +535,11 @@ CamSoot::realVector CamSoot::rateAll
     // Calculate nucleation rate
     // nucRates is rate of change of moments due to nucleation
     nucRates = rateNucleation(conc[iInception],T);
-
     // Remove two PAH.
     surfProdRate[iInception]= -2.0 * nucRates[0] / NA;
 
 	// Check the nucleation rates
     //std::cout << "nucRates[0]  " << nucRates[0] << std::endl;
-    //std::cout << "nucRates[1]  " << nucRates[1] << std::endl;
-    //std::cout << "nucRates[2]  " << nucRates[2] << std::endl;
-    //std::cout << "nucRates[3]  " << nucRates[3] << std::endl;
-    //std::cout << "nucRates[4]  " << nucRates[4] << std::endl;
-    //std::cout << "nucRates[5]  " << nucRates[5] << std::endl;
     //std::cout << "surfProdRate[iInception]  " << surfProdRate[iInception] << std::endl;
 
 
@@ -560,52 +554,55 @@ CamSoot::realVector CamSoot::rateAll
 
     // Calculate coagulation rates
     // coagRates is rate of change of moments due to coagulation
-    if (moments[0] > m0Threshold)			// Threshold check
+    if (moments[0] > m0Threshold) 		// Threshold check
     	coagRates = rateCoagulation(moments,T);
-
+    else // This else statement is essential.  Ommiting this can result in coagRates being undefined, which leads to negative moments. 
+    {
+        for(int r=0; r<nMoments; ++r)
+          coagRates[r] = 0.0;
+    }
 	// Check the coagulation rates
     //std::cout << "coagRates[0]  " << coagRates[0] << std::endl;
-    //std::cout << "coagRates[1]  " << coagRates[1] << std::endl;
-    //std::cout << "coagRates[2]  " << coagRates[2] << std::endl;
-    //std::cout << "coagRates[3]  " << coagRates[3] << std::endl;
-    //std::cout << "coagRates[4]  " << coagRates[4] << std::endl;
-    //std::cout << "coagRates[5]  " << coagRates[5] << std::endl;
+
 
     // Condensation rates
-    // Call this after coagulation. Reduced moments are calculated in Coag
-    // cdRates is rate of change of moments due to condensation
+    // Call this after coagulation, as the reduced moments are calculated in the Coagulation function
+    // cdRates is rate of change of moments due to condensation\
     // prodRatePAHCond is rate of change in PAH due to condensation.
-    //double tempPAHConc = conc[iInception];
+    // double tempPAHConc = conc[iInception];
 
-    if (moments[0] > m0Threshold)		// Threshold check
+    if (moments[0] > m0Threshold) 		// Threshold check
     {
     	cdRates = rateCondensation(moments, T,conc[iInception]);
     	prodRatePAHCond = -cdRates[1]/numCAtomInception/NA;
     	surfProdRate[iInception] += prodRatePAHCond;
     }
+    else  // This else statement is essential.  Ommiting this can result in cdRates being undefined, which leads to negative moments. 
+    {
+        for(int r=0; r<nMoments; ++r)
+          cdRates[r] = 0.0;
+    }
+
 	// Check the condensation rates
     //std::cout << "cdRates[0]  " << cdRates[0] << std::endl;
-    //std::cout << "cdRates[1]  " << cdRates[1] << std::endl;
-    //std::cout << "cdRates[2]  " << cdRates[2] << std::endl;
-    //std::cout << "cdRates[3]  " << cdRates[3] << std::endl;
-    //std::cout << "cdRates[4]  " << cdRates[4] << std::endl;
-    //std::cout << "cdRates[5]  " << cdRates[5] << std::endl;
     //std::cout << "prodRatePAHCond  " << prodRatePAHCond << std::endl;
 
     // Surface rates
-    // Call this after coagulation. Reduced moments are calculated in Coag
+    // Call this after coagulation as the reduced moments are calculated in the Coagulation function
     // prodRatesSurface is rate of change of gas phase species due to surface chemistry
     // sRates is rate of change of moments due to surface chemistry
 
     if (moments[0] > m0Threshold)		// Threshold check
     {
     	rateSurface(conc,T,moments,prodRates,sRates);
-    	sRates[0] = 0.0; // Surface chem should not affect M0.  (Why is this needed here?)
+    	//rateSurfaceHACARC(conc,T,moments,prodRates,sRates);
+        //sRates[0] = 0.0; // Surface growth should not affect M0. However oxidation should decrease the particle count (burnout) therefore commented out on 4/6/21
 
 
     // Oxidation regime.
-    // todo: it would be better to include all this in rateSurface function
-    if(sRates[1] <= 0){
+    // TODO: It would be better to include all this in rateSurface function
+    // 20 Jan 2022 -- commented out the oxidation sub-code below 
+      if(sRates[1] <= 0){
 
         //std::cout << "In oxidation regime."  << std::endl;
 
@@ -622,22 +619,25 @@ CamSoot::realVector CamSoot::rateAll
             reducedMoments(n) = exp(a+b*n/6.0);
         }
 
-        rateSurface(conc,T,moments,prodRates,sRates);
+        //rateSurface(conc,T,moments,prodRates,sRates);
+    	rateSurfaceHACARC(conc,T,moments,prodRates,sRates);
 
         for(int n=1; n<nMoments; n++){
             sRates[n] *= (moments[n]/(exp(a+b*n)*moments[0]));
         }
-        sRates[0] = 0.0;
+        //sRates[0] = 0.0;   Commented out on 4/6/21
+      } 
+    }   
+    else  // This else statement is essential.  Ommiting this can result in sRates being undefined, which leads to negative moments. 
+    {
+        for(int r=0; r<nMoments; ++r)
+          sRates[r] = 0.0;
     }
 
-    }
+
+
 	// Check the surface rates
     //std::cout << "sRates[0]  " << sRates[0] << std::endl;
-    //std::cout << "sRates[1]  " << sRates[1] << std::endl;
-    //std::cout << "sRates[2]  " << sRates[2] << std::endl;
-    //std::cout << "sRates[3]  " << sRates[3] << std::endl;
-    //std::cout << "sRates[4]  " << sRates[4] << std::endl;
-    //std::cout << "sRates[5]  " << sRates[5] << std::endl;
 
     //std::cout << "prodRates[iInception]  " << prodRates[iInception] << std::endl;
     //std::cout << "prodRates[iC2H2]  " << prodRates[iC2H2] << std::endl;
@@ -651,7 +651,7 @@ CamSoot::realVector CamSoot::rateAll
     // Store the surface production rates
     // To be returned to batch reactor via CamSoot::showGasPhaseRates
     // Or used in calculating the residual for flamelets.
-    surfProdRate[iInception] += prodRates[iInception];
+    surfProdRate[iInception] += prodRates[iInception];    // RHS is calculated above as part of nucleation step
     surfProdRate[iC2H2] += prodRates[iC2H2];
     surfProdRate[iCO] += prodRates[iCO];
     surfProdRate[iO2] += prodRates[iO2];
@@ -663,13 +663,9 @@ CamSoot::realVector CamSoot::rateAll
     rates.resize(nMoments,0.0);
     for (int m=0; m<nMoments; ++m)
     {
-    	//rates[m] = (nucRates[m]);
-    	//rates[m] = (nucRates[m]+coagRates[m]);
     	//rates[m] = (nucRates[m]+coagRates[m]+sRates[m]);
-    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);
-    	//rates[m] = (nucRates[m]+coagRates[m]+cdRates[m]);
+    	rates[m] = (nucRates[m]+coagRates[m]+sRates[m]+cdRates[m]);    /// Base case        
     }
-
     // Note: This only returns the rate of change of moments.
     // Does not return the rate of change of gas phase species.
     return rates;
@@ -912,6 +908,135 @@ CamSoot::realVector CamSoot::rateCondensation(const realVector& mom,
     return cdRates;
 }
 
+void CamSoot::rateSurfaceHACARC(const realVector& conc,
+                            const double& T,
+                            const realVector& mom,
+                            realVector& prodRates,
+                            realVector& sRates){
+
+    // Balthasar = p20 of his thesis 
+    // Appel = p130 of Appel, Henning, Bockhurn, 2000     
+    // Mauss = Mauss, Trilkne, Breithbach. p325 of Bockurn (ed)
+    // This is coded up as the HACARC mech but with the assumption that f3a = 1.
+    // This means that the HACARC reduces to the HACA                    
+
+
+    double RT = 1.987e-3*T;
+
+    double A_1a_f = 4.2e13;               // Appel (S1 fwd).  Balthasar (1a fwd)
+    double A_1a_r = 3.9e12;               // Appel (S1 rev).  Balthasar (1a rev)  
+    double A_1b_f = 1.0e10;               // Appel (S2 fwd).  Balthasar (1b fwd)  
+    double A_1b_r = 3.68e08;              // Appel (S2 rev).  Balthasar (1b rev) 
+    double A_2 = 2e13;                    // Appel (S3). Balthasar (2)
+    double A_3a_f = 8.0e7;                // Appel (S4). Balthasar (3a fwd)  
+    double A_4a = 2.2e12;                 // Appel (S5). Balthasar (4a and/or 4b)  
+    double A_5 = 0.13;    // Reac. prob.  // Appel (S6). Balthasar (5) 
+
+    double k_1a_f = A_1a_f * exp(-13.0/RT);		           // Appel (S1 fwd).  Balthasar (1a fwd)
+    double k_1a_r = A_1a_r * exp(-11.0/RT);                // Appel (S1 rev).  Balthasar (1a rev)  
+    double k_1b_f = A_1b_f * pow(T,0.734) * exp(-1.43/RT); // Appel (S2 fwd).  Balthasar (1b fwd)  
+    double k_1b_r = A_1b_r * pow(T,1.139) * exp(-17.1/RT); // Appel (S2 rev).  Balthasar (1b rev) 
+    double k_2 = A_2;                                      // Appel (S3). Balthasar (2)
+    double k_3a_f = A_3a_f * pow(T,1.56) * exp(-3.8/RT);   // Appel (S4). Balthasar (3a fwd)  
+    double k_4a = A_4a * exp(-7.5/RT);                     // Appel (S5). Balthasar (4a and/or 4b)  
+    double k_5 = A_5;   // React. Prob.                    // Appel (S6). Balthasar (5) 
+
+    double r_1a_f = k_1a_f*conc[iH]/1e6;	         // Appel (S1 fwd).  Balthasar (1a fwd)
+    double r_1a_r = k_1a_r*conc[iH2]/1e6;            // Appel (S1 rev).  Balthasar (1a rev)  
+    double r_1b_f = k_1b_f*conc[iOH]/1e6;            // Appel (S2 fwd).  Balthasar (1b fwd)  
+    double r_1b_r = k_1b_r*conc[iH2O]/1e6;           // Appel (S2 rev).  Balthasar (1b rev) 
+    double r_2 = k_2 * conc[iH]/1e6;                 // Appel (S3). Balthasar (2)
+    double r_3a_f = k_3a_f*conc[iC2H2]/1e6;          // Appel (S4). Balthasar (3a fwd)  
+    double r_4a = k_4a*conc[iO2]/1e6;                // Appel (S5). Balthasar (4a and/or 4b)  
+    double r_5 = k_5*conc[iOH]/1e6;                  // Appel (S6). Balthasar (5) 
+
+
+    // The temperature dependent forulations for a and b can result in negatve alpha 
+    // so instead use fixed paramters from table 4 of Appel 
+    //double par_a = 12.65 - 5.63e-03*T;
+    //double par_b = -1.38 + 6.80e-04*T;
+    double par_a = 1.1;
+    double par_b = -0.06;
+    double alpha = tanh(par_a/log10(reducedMoments(6)) + par_b );         // reducedMoments(6) is first reduced whole moment.  
+
+   
+    // Eqn 2.51 in Balthasar
+    // This formualtion assumes f3a = 1. See eqn 21.36 in Mauss p340 for full eqn. 
+    double A_numer = r_1a_f + r_1b_f + r_5 ;
+    double A_denom = r_1a_r +r_1b_r + r_2 + r_3a_f  + r_4a + 1e-10;  // Add small epsilon to avoid divide by zero
+    double par_A = A_numer / A_denom;
+ 
+    double par_Beta = 0.01;  //  Mauss p340 -- Alternativley can use Beta_surf_CGS as defined above. 
+    //double f3a = k3b_f /  (k3b_f +k_3a_r + k_4a* conc[iO2]/1e6)  ;       
+    double f3a = 1.0;    // f3a is between 0 and 1.  Setting f3a reduces the mech to HACA
+                         // See p22 of Balthasar and p339 of Mauss
+
+
+    realVector rateC2H2, rateO2, rateOH;		// In cgs units.
+    double coef;
+
+    // Rate of change of moments due to C2H2  (eqn 2.47 & 2.48 in Balthasar)
+    // Note:  This formulation assumes that f3a  = 1 
+    // If f3a !=0 then see p240 in Mauss for formualtion 
+    rateC2H2.resize(nMoments,0.0);
+    coef = alpha * r_3a_f * f3a * par_A; 
+
+    sums(nMoments,2,coef,rateC2H2);
+    rateC2H2[0] = 0;    // Eqn 2.47 in Balthasar
+
+    // Rate of change of moments due to O2  (part of 2.50 & 2.52 in Balthasar)
+    rateO2.resize(nMoments,0.0);
+    coef = alpha * r_4a * par_A; 
+    sums(nMoments,-2,coef,rateO2);
+    // Eqn 2.50 in Balthasar and 21.38 p340 in Mauss
+    // Note: Baltahasar has omitted Beta (typo?). Mauss has Beta = 0.01
+    // reducedMoment(-2) is the negative 1/3 moment 
+    rateO2[0] = -r_4a * par_A * par_Beta * reducedMoments(-2);
+
+   // Rate of change of moments due to OH  (part of 2.50 & 2.52 in Balthasar)
+    rateOH.resize(nMoments,0.0); 
+    coef = alpha * r_5; 
+    sums(nMoments,-2,coef,rateOH);
+    // Eqn 2.50 in Balthasar and 21.38 p340 in Mauss
+    // Note: Baltahasar has omitted Beta (typo?). Mauss has Beta = 0.01
+    // reducedMoment(-2) is the negative 1/3 moment 
+    rateOH[0] = -r_5 * par_A * par_Beta * reducedMoments(-2);
+
+
+    // And finally calculate the contribution of each surface reaction
+    // to the moments (and convert from cgs back to SI)
+    sRates.resize(nMoments,0.0);
+    for(int r=0; r<nMoments; r++){
+        sRates[r] = (rateC2H2[r]+rateO2[r]+rateOH[r]) * 1e6;
+     
+    }
+
+
+    prodRates.resize(conc.size(),0.0);	
+ 
+    // Calcualte the rates of production and consumption of gas phase species 
+    double cArea = alpha*par_Beta;    
+    double cRad = par_A * alpha * par_Beta;   
+
+    prodRates.resize(conc.size(),0.0);		
+    prodRates[iC2H2] = -rateC2H2[1]/(2*NA);
+    prodRates[iO2] = rateO2[1]/(2*NA);
+    prodRates[iOH] =((r_1b_r*cRad - r_1b_f*cArea) *reducedMoments(4) + rateOH[1]) / NA;     
+    prodRates[iH] = ((r_1a_r + r_3a_f )*cRad - r_1a_f *cArea - r_2*cRad)*reducedMoments(4)/NA;
+    prodRates[iH2] = (r_1a_f*cArea - r_1a_r*cRad)*reducedMoments(4)/NA;                                  
+    prodRates[iH2O] = (r_1b_f*cArea - r_1b_r*cRad)*reducedMoments(4)/NA; 	
+    prodRates[iCO]= -(rateO2[1] + rateOH[1]) / NA;
+
+    // Now convert prodRates from cgs to SI
+    prodRates[iC2H2] = prodRates[iC2H2] * 1e6;
+    prodRates[iO2] = prodRates[iO2] * 1e6;
+    prodRates[iOH] = prodRates[iOH] * 1e6;
+    prodRates[iH] = prodRates[iH] * 1e6;
+    prodRates[iH2] = prodRates[iH2] * 1e6;
+    prodRates[iH2O] = prodRates[iH2O] * 1e6;
+    prodRates[iCO] = prodRates[iCO] * 1e6;
+}
+
 /*!
  * Surface reaction rates
  * This function modifies both prodRates and sRates.
@@ -1000,12 +1125,12 @@ void CamSoot::rateSurface(const realVector& conc,
     prodRates[iH2O] = prodRates[iH2O] * 1e6;
     prodRates[iCO] = prodRates[iCO] * 1e6;
 
+
     // And finally calculate the contribution of each surface reaction
     // to the moments (and convert from cgs to SI)
     sRates.resize(nMoments,0.0);
     for(int r=0; r<nMoments; r++){
         sRates[r] = (rateC2H2[r]+rateO2[r]+rateOH[r]) * 1e6;
-        //sRates[r] = (rateC2H2[r]+rateOH[r])*1e6;  //+rateO2[r]) * 1e6;
     }
 }
 
@@ -1075,8 +1200,6 @@ void CamSoot::momentResidual
             double phi_w = y[(i-1)*nVar+l+nSpec];
             convection = -u[i]*(phi_e - phi_w)/dz[i];
             f[i*nMoments+l] =  convection + wdot(i,l);
-            //std::cout << "moment resid " << phi_e << "  " << phi_w << "  " << wdot(i,l) << std::endl;
-
         }
     }
 }

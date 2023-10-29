@@ -276,11 +276,22 @@ class CamSoot {
         /*
          *calculate surface reaction rates
          */
-        void rateSurface(const realVector& conc,          //concentration
+        void rateSurface(const realVector& conc,       //concentration
                             const double& T,           //temperature
-                            const realVector& mom,        //moment vector
-                            realVector& prodRates,  //surf prod rates
-                            realVector& sRates);//rates returned
+                            const realVector& mom,     //moment vector
+                            realVector& prodRates,     //surf prod rates
+                            realVector& sRates);       //rates returned
+
+        /*
+         *calculate surface reaction rates using HACARC 
+         */
+        void rateSurfaceHACARC(const realVector& conc, //concentration
+                            const double& T,           //temperature
+                            const realVector& mom,     //moment vector
+                            realVector& prodRates,     //surf prod rates
+                            realVector& sRates);       //rates returned
+
+
 
         void interpolateReducedMoments(realVector& wom);
 

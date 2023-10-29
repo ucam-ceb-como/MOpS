@@ -114,14 +114,14 @@ void FlameLet::solve
     if (control_.getSolutionMode() == control_.COUPLED)
     {
     std::cout << "AK: Dontrol_.COUPLED is true inside solve\n";
-        csolve(interface);   //ank25:temp while testing splitSolve
-        //splitSolve(interface);
+        csolve(interface);   
     }
     else
     {
-    std::cout << "AK: Dontrol_.COUPLED is false inside solve\n";
+    std::cout << "AK-: Dontrol_.COUPLED is false inside solve\n";
         ssolve(interface);
-        csolve(interface);
+        //csolve(interface);
+        //splitSolve(interface);
     }
 
     if (admin_.getRestartType() == admin_.BINARY)
@@ -313,24 +313,21 @@ void FlameLet::initSolutionVector()
     // Also initial constants
     if (sootMom_.active())
     {
+        cout << "Initializing soot moments M_i / rho" << endl;
         vMom_rho.resize(len*nMoments,0.0);
         for (size_t i=0; i<dz.size(); i++)
         {
 
-            // ank25: Temp. Hard wire initial moment values.
-            //vMom[i*nMoments] = 1.0e10;
-            //vMom[i*nMoments+1] = 1.0e10;
-            //vMom[i*nMoments+2] = 1.0e10;
-
 
             vMom_rho[i*nMoments] = sootMom_.getFirstMoment();
-            //cout << "vMom[i*nMoments]  " << i*nMoments <<"  "  << vMom[i*nMoments] << endl;
+            cout << "vMom / rho [i*nMoments]  " << i*nMoments <<"  "  << vMom_rho[i*nMoments] << endl;
             for (size_t l=1; l<nMoments; ++l)
             {
                 // ank25: Do we need to multiply by 1e6 here?
-                //vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(double(sootMom_.getAtomsPerDiamer()));
-                vMom_rho[i*nMoments+l] = vMom_rho[i*nMoments+l-1] * 1e3;
-                //cout << "vMom[i*nMoments+l]  " << i*nMoments+l <<"  " << vMom[i*nMoments+l] << endl;
+                // Original --- vMom[i*nMoments+l] = vMom[i*nMoments+l-1] + 1e6 * log(double(sootMom_.getAtomsPerDiamer()));
+                vMom_rho[i*nMoments+l] = vMom_rho[i*nMoments+l-1] + 1e6 * log(double(sootMom_.getAtomsPerDiamer()));
+                //vMom_rho[i*nMoments+l] = vMom_rho[i*nMoments+l-1]; //* 1e3;  // simple scale by 3 OoM 
+                cout << "vMom / rho[i*nMoments+l]  " << i*nMoments+l <<"  " << vMom_rho[i*nMoments+l] << endl;
             }
 
         }
@@ -426,13 +423,48 @@ void FlameLet::csolve
         cout << "Species Abs  Tol: " << control_.getSpeciesAbsTol() << endl;
         cout << "Species Rel Tol: " << control_.getSpeciesRelTol() << endl;
         cout << "Residual Tol: " << control_.getResTol() << endl;
+        cout << "Moment Tol is hardwired in code!.  " << endl;
 
-        cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
-            control_.getMaxTime(),band,*this);
+        // ank25 -- AbsTol as ascaler
+        //cvw.init(nEqn,solvect,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
+        //    control_.getMaxTime(),band,*this);
 
-        //cvw.initVectorTol(nEqn,solvect,atolVector,control_.getSpeciesRelTol(),
-        //		control_.getMaxTime(),band,*this);
 
+        // Need to create and define atolVector before using 
+        double atolVector[(nVar + nMoments)* mCord];          
+
+//        for(int i=0; i<(nVar * mCord); i++)   
+//            atolVector[i] = control_.getSpeciesAbsTol();
+
+        for(int i=0; i<cellEnd; i++)
+        {
+            for(int l=0; l<nSpc; l++)
+                atolVector[i*nVar+l] = control_.getSpeciesAbsTol();
+                // ank25 -- TODO: chanage this to use temp. Tol read in from camflow.xml
+                atolVector[i*nVar+ptrT] = control_.getSpeciesAbsTol();
+            
+                // ank25 -- add moment tols to atolVector
+                // TODO: Read them in as a paramters from camflow.xml 
+                if (sootMom_.active())
+                {           
+                    for (int l=0; l<nMoments; l++)
+                      // atolVector[i*nVar+ptrT+1+l] = 1e6; // too large ? 
+                      atolVector[i*nVar+ptrT+1+l] = 1.0e1 * pow(10.0,(l+1)*4.0);    // Scale the atol of moments as power of moment.  
+                }
+        }
+
+        // ank25 -- Output the aTol vector to file so we can check it  
+        // ank25 -- delete output later. clutters up the output     
+        //cout << "atolVector contents follow:" << endl;        
+        //for(int i=0; i<(nVar * mCord); i++)   
+        //    cout << "Row " << i << " aTol Value " << atolVector[i] << endl;
+
+        cout << "Calling initVectorTol " << endl;
+        cout << "Number of equations is " << nEqn << endl;        
+        cvw.initVectorTol(nEqn,solvect,atolVector,control_.getSpeciesRelTol(),
+        		control_.getMaxTime(),band,*this);
+
+        cout << "Calling solve " << endl;
         cvw.solve(CV_ONE_STEP,control_.getResTol());
 
         // Calculate the mixture viscosity.
@@ -603,7 +635,7 @@ void FlameLet::ssolve
         /*
             *solve soot moment equations
             */
-        if (sootMom_.active())
+/*         if (sootMom_.active())
         {
             cout << "Solving moment equations  " << i << endl;
             //int dd; cin >> dd;
@@ -616,7 +648,7 @@ void FlameLet::ssolve
                 control_.getMaxTime(),band,*this,0.0);
             cvw.solve(CV_ONE_STEP,control_.getResTol());
             mergeSootMoments(&seg_soln_vec[0]);
-        }
+        } */
 
         /*
         *solve species equations
@@ -645,6 +677,25 @@ void FlameLet::ssolve
             control_.getMaxTime(),band,*this,0.0);
         cvw.solve(CV_ONE_STEP,control_.getResTol());
         mergeEnergyVector(&seg_soln_vec[0]);
+
+        /*
+            *solve soot moment equations
+            */
+        if (sootMom_.active())
+        {
+            cout << "Solving moment equations  " << i << endl;
+            //int dd; cin >> dd;
+            eqn_slvd = EQN_MOMENTS;
+            seg_eqn = nMoments*mCord;
+            band = nMoments*2;
+            extractSootMoments(seg_soln_vec);
+            // Might need to change tolerances for moments
+            cvw.init(seg_eqn,seg_soln_vec,control_.getSpeciesAbsTol(),control_.getSpeciesRelTol(),
+                control_.getMaxTime(),band,*this,0.0);
+            cvw.solve(CV_ONE_STEP,control_.getResTol());
+            mergeSootMoments(&seg_soln_vec[0]);
+        }
+
 
     }
 
@@ -1150,7 +1201,7 @@ void FlameLet::sootMomentResidual
             for (int l=0; l<nMoments; ++l)
             {
             	// ank25: Set all moment residuals to zero when solving ELFM
-            	// (Quick and dirst way of still generating soot moments,
+            	// (Quick and dirty way of still generating soot moments,
             	// but not solving a flamelet equation for soot)
                 f[i*nMoments+l] = 0.0;
             }

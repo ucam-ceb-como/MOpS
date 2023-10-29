@@ -2,6 +2,7 @@
 #include "cvode_wrapper.h"
 using namespace Camflow;
 
+
 extern "C"{
 
     int cvodeResid(double time, N_Vector y, N_Vector ydot, void *udata){
@@ -69,14 +70,15 @@ void CVodeWrapper::initVectorTol(int n, std::vector<double>& solnVec, double aTo
     ///atol = tol;					////  ank25
     currentTime = iniTime;
     maxTime = maxIntTime;
+
+    std::cout << "Calling CVodeCreate " << std::endl;   /// ank25 
     cvode_mem = CVodeCreate(CV_BDF,CV_NEWTON);
 
     aTolVector = NULL;
     aTolVector = N_VMake_Serial(n,aTolTemp);
 
+    std::cout << "Calling CVodeMalloc " << std::endl; /// ank25  
     CVodeMalloc(cvode_mem,cvodeResid,currentTime,y,CV_SV,rtol,aTolVector);
-
-    //-------------
 
     if(band==n){
         CVDense(cvode_mem,n);
@@ -183,7 +185,7 @@ void CVodeWrapper::calcResNorm(){
     resNorm = 0;
     double *yp;
     yp = NV_DATA_S(yPrime);
-    for(int i=0; i<eqnSize; i++)
+    for(int i=0; i<(eqnSize); i++)   
         resNorm += yp[i]*yp[i];
 
     resNorm = sqrt(resNorm);
